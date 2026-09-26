@@ -1,0 +1,842 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mpwd; git rev-parse --show-toplevel; git status --short | head -n 100; git branch --show-current; git log --oneline -5
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/train398r.json
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+A  artifacts/claude-brd9-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd9-20260926/gpu/brd9_summary.json
+A  artifacts/claude-brd9-20260926/gpu/log.txt
+A  artifacts/claude-brd9-20260926/gpu/practice.json
+A  artifacts/claude-brd9-20260926/gpu/streams.json
+A  artifacts/claude-brd9-20260926/gpu/transfer_streams.json
+A  artifacts/claude-k1a-20260926/RESULTS-rent.md
+A  artifacts/claude-k1a-20260926/run/creative_B.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_K.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_KB.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_KB0.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_T.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_X.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_judge.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_judge_u.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_key.json
+A  artifacts/claude-k1a-20260926/run/creative_key_u.json
+A  artifacts/claude-k1a-20260926/run/dev/creative_K.jsonl
+A  artifacts/claude-k1a-20260926/run/dev/creative_KB.jsonl
+A  artifacts/claude-k1a-20260926/run/dev/logdev.txt
+A  artifacts/claude-k1a-20260926/run/dev/logdevkb.txt
+A  artifacts/claude-k1a-20260926/run/logB.txt
+A  artifacts/claude-k1a-20260926/run/logK.txt
+A  artifacts/claude-k1a-20260926/run/logKB.txt
+A  artifacts/claude-k1a-20260926/run/logKB0.txt
+A  artifacts/claude-k1a-20260926/run/logT.txt
+A  artifacts/claude-k1a-20260926/run/logX.txt
+A  artifacts/claude-k1a-20260926/run/summary_creative.json
+A  artifacts/claude-rd378L-20260926/RESULTS.md
+A  artifacts/claude-rd378L-20260926/notes_recall.json
+A  artifacts/claude-rd378L-20260926/ranked_turns.jsonl
+A  artifacts/claude-rd378u-20260926/RESULTS.md
+A  artifacts/claude-rd378u-20260926/notes_confirm.json
+A  artifacts/claude-rd378u-20260926/ranked_turns.jsonl
+A  artifacts/claude-rd379q-20260926/RESULTS.md
+A  artifacts/claude-rd379q-20260926/notes_recall.json
+A  artifacts/claude-rd379q-20260926/notes_recall_v3.json
+A  artifacts/claude-rd379q-20260926/notes_recall_v3_facts.json
+A  artifacts/claude-rd379q-20260926/ranked_turns.jsonl
+A  artifacts/claude-rt02d-20260926/RESULTS-rent.md
+MM artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+claude/card-experiment-handoff-7c5b27
+3809bc699 k1e-teacher-b phase 1: GLM teacher labels 157 DEV drafts, 240 practice chats, teacher log
+5178aa2c4 rd378k teacher phase 1: gate labels, 160 GLM dialogs, teacher log
+230457f0a rv-390 raw results (rental)
+796f0cdbd orphan check 0926i: 6 instances, 358t already gone (id 52780312), 0 destroys (own path only)
+9cf1f3f59 claude-fixsleep-dl5: grid nights from go-back search hits GPU run (verdict FAIL; G1/G2/G2b pass, G3 fail) + ledger line (own paths only)
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -n 20; echo FETCH_DONE:$?; git rev-parse origin/main -- | head; git log --oneline origin/main -5
+FETCH_DONE:0
+b7573e0ae802878b296117cead3199b5fc30219c
+--
+b7573e0ae k1e-teacher-c queued (Thread manager's go, 17:58 UTC): split and label rule sealed before any call (SEAL-teacher-c); Mac CPU, OpenRouter < $0.20
+96afad8aa k1e-teacher-c (held): one labeller change for GLM (reasoning high, or majority of 3), chosen on half of DEV, checked once on the other half against the same label rule; selftest 3/3
+32acbba0c k1e teacher phase 1 FAIL on the label rule: GLM agrees with the blind judges on 121 of 157 DEV drafts (77%, needs 85%), kappa 0.537; GLM too lenient (76 vs 56 useful). 240 GLM practice chats kept
+0791e9f9f k1f sealed (not launched): fresh blind k1fpanel (100 items, 63 reworded by the blind audit) + marks, judge words and code; job stays in handoff/held until Ben says yes
+f4a0515cd bm-riv arm (ii) grid-given runner for 0.2d row A (Month-end ADDENDUM-26): rivals get the code-read grid (read_latin, disclosed stand-in) in plain text above the message; claude_bmriv_rivals.py unchanged; selftest 11/11
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_k1e_teacher_c.py | head -n 300
+#!/usr/bin/env python3
+"""k1e teacher, label fix (Creative answers in chat thread, 2026-09-26). New file; claude_k1e_teacher.py is unchanged.
+
+Why: phase 1 (artifacts/claude-k1e-20260926/VERIFY-teacher-dev.md) failed the label rule fixed before it ran
+(>= 85% useful agreement with the blind judges AND kappa >= 0.5): GLM 5.3 Flash agreed on 121 of 157 DEV drafts
+(77%), kappa 0.537, and called 76 drafts useful where the judges called 56 (28 of the 36 disagreements were GLM
+"yes", judges "no"). The judges' words, the packet and the parser stay; only how GLM is asked changes.
+
+Two candidate labellers (each ONE change from phase 1's labeller: JUDGE-k1a.md words + JUDGE_TAIL, 10 lines per
+call, temperature 0, reasoning effort low):
+  high   reasoning effort "high" instead of "low".
+  vote3  three labels per line at temperature 0.7 (reasoning low), the majority kept (useful yes if >= 2 of 3;
+         made_up_user_facts = the median of the three).
+DEV is split by chat (DEV item ids sorted, shuffled with seed 4556, the first 20 chats = half A, the other 20 =
+half B). Both candidates label half A; the one with more agreement on A (ties: higher kappa, then "high") is chosen,
+and only the chosen one labels half B, where the phase-1 rule is applied once. PASS on B -> the chosen labeller
+labels the critic's training drafts (phase 2). FAIL -> no GLM labels are trained on; the thread reports and asks.
+Written before any candidate label was seen.
+
+  python -B scripts/claude_k1e_teacher_c.py split --packet DEV/packet_dev.jsonl --key DEV/key_dev.json --out DIR
+  python -B scripts/claude_k1e_teacher_c.py label --packet DIR/packet_A.jsonl --how high|vote3 --out DIR/A_<how>
+  python -B scripts/claude_k1e_teacher_c.py choose --dir DIR --key DEV/key_dev.json --verdicts DEV/verdicts_dev.json
+  python -B scripts/claude_k1e_teacher_c.py label --packet DIR/packet_B.jsonl --how <chosen> --out DIR/B_<chosen>
+  python -B scripts/claude_k1e_teacher_c.py check --dir DIR --key DEV/key_dev.json --verdicts DEV/verdicts_dev.json
+  python -B scripts/claude_k1e_teacher_c.py selftest      (no network)
+Key rules as in claude_k1e_teacher.py: the key is read from ~/.config/openrouter/key into memory only.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import statistics
+import sys
+import tempfile
+import time
+import urllib.request
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_k1e_teacher as T  # noqa: E402
+
+SPLIT_SEED, HALF = 4556, 20
+HOW = {"high": {"effort": "high", "temperature": 0, "votes": 1},
+       "vote3": {"effort": "low", "temperature": 0.7, "votes": 3}}
+
+
+def call(key, model, text, temperature, effort, tries=4):
+    body = json.dumps({"model": model, "messages": [{"role": "user", "content": text}], "temperature": temperature,
+                       "max_tokens": 16000, "reasoning": {"effort": effort}}).encode()
+    for i in range(tries):
+        req = urllib.request.Request("https://openrouter.ai/api/v1/chat/completions", data=body, headers={
+            "Authorization": "Bearer " + key, "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=300) as r:
+                d = json.loads(r.read().decode())
+            return d["choices"][0]["message"]["content"] or "", d.get("usage", {})
+        except Exception as e:                        # the message of an HTTP error never carries the key
+            print(f"[k1e-teacher-c] try {i + 1} failed: {type(e).__name__} {str(e)[:120]}", flush=True)
+            time.sleep(2 ** (i + 1))
+    return "", {}
+
+
+def split(a) -> None:
+    lines = T.load(a.packet)
+    key = json.loads(Path(a.key).read_text(encoding="utf-8"))
+    chats = sorted({key[x["id"]]["item_id"] for x in lines})
+    random.Random(SPLIT_SEED).shuffle(chats)
+    half_a = set(chats[:HALF])
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    for name, keep in (("A", lambda i: i in half_a), ("B", lambda i: i not in half_a)):
+        sel = [x for x in lines if keep(key[x["id"]]["item_id"])]
+        (out / f"packet_{name}.jsonl").write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in sel),
+                                                  encoding="utf-8")
+    na = sum(key[x["id"]]["item_id"] in half_a for x in lines)
+    print(json.dumps({"chats": len(chats), "chats_A": len(half_a), "lines_A": na, "lines_B": len(lines) - na}))
+
+
+def label(a, key, caller=None) -> None:
+    caller = caller or call
+    h = HOW[a.how]
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    lines = T.load(a.packet)
+    rows, usage, failed = [], [], []
+    for s in range(0, len(lines), 10):
+        chunk = [{k: x[k] for k in ("id", "chat", "request", "reply")} for x in lines[s:s + 10]]
+        want = [x["id"] for x in chunk]
+        text = T.JUDGE + T.JUDGE_TAIL + "\n".join(json.dumps(x, ensure_ascii=False) for x in chunk)
+        votes = []
+        for _ in range(h["votes"]):
+            got = None
+            for _ in range(3):
+                txt, u = caller(key, a.model, text, h["temperature"], h["effort"])
+                usage.append(u)
+                v = T.json_list(txt)
+                if v and [str(r.get("id")) for r in v if isinstance(r, dict)] == want:
+                    got = v
+                    break
+            if got is None:
+                break
+            votes.append(got)
+        if len(votes) < h["votes"]:
+            failed += want
+            print(f"[k1e-teacher-c] lines {s}-{s + len(chunk) - 1} unparsed", flush=True)
+            continue
+        for n, cid in enumerate(want):
+            ys = [str(v[n].get("useful")).strip().lower() == "yes" for v in votes]
+            mu = [int(v[n].get("made_up_user_facts") or 0) for v in votes]
+            rows.append({"id": cid, "useful": "yes" if 2 * sum(ys) > len(ys) else "no",
+                         "made_up_user_facts": int(statistics.median(mu)), "votes_yes": sum(ys)})
+        print(f"[k1e-teacher-c] lines {s}-{s + len(chunk) - 1} ok", flush=True)
+    (out / "labels.jsonl").write_text("".join(json.dumps(x) + "\n" for x in rows), encoding="utf-8")
+    cost = sum(float(u.get("cost", 0) or 0) for u in usage)
+    print(json.dumps({"how": a.how, "lines": len(lines), "labelled": len(rows), "unparsed": len(failed),
+                      "calls": len(usage), "useful_yes": sum(r["useful"] == "yes" for r in rows),
+                      "cost_usd": round(cost, 4)}))
+
+
+def _agree(labels, key, verdicts) -> dict:
+    ns = argparse.Namespace(labels=labels, key=key, verdicts=verdicts)
+    return T.agree(ns)
+
+
+def choose(a) -> str:
+    d = Path(a.dir)
+    reps = {}
+    for how in ("high", "vote3"):
+        p = d / f"A_{how}" / "labels.jsonl"
+        if not p.exists():
+            raise SystemExit(f"k1e-teacher-c: {p} missing")
+        reps[how] = _agree(str(p), a.key, a.verdicts)
+        if reps[how]["compared"] != len(T.load(d / "packet_A.jsonl")):
+            raise SystemExit(f"k1e-teacher-c: {how} did not label every half-A line")
+    best = max(("high", "vote3"), key=lambda h: (reps[h]["agree"], reps[h]["kappa"], h == "high"))
+    (d / "chosen.txt").write_text(best + "\n", encoding="utf-8")
+    print(json.dumps({"chosen": best, **{f"A_{h}": r for h, r in reps.items()}}))
+    return best
+
+
+def check(a) -> dict:
+    d = Path(a.dir)
+    best = (d / "chosen.txt").read_text(encoding="utf-8").strip()
+    rep = _agree(str(d / f"B_{best}" / "labels.jsonl"), a.key, a.verdicts)
+    n_b = len(T.load(d / "packet_B.jsonl"))
+    rep = {"chosen": best, "lines_B": n_b, **rep,
+           "verdict": "PASS" if rep["passes_label_rule"] and rep["compared"] == n_b else "FAIL"}
+    print(json.dumps(rep))
+    return rep
+
+
+def selftest() -> None:
+    ok = 0
+    with tempfile.TemporaryDirectory() as td:
+        t = Path(td)
+        lines, key, ver = [], {}, {}
+        for c in range(40):
+            for k in range(4 if c % 3 else 3):
+                cid = f"E{len(lines):04d}"
+                rep = f"r{c}-{k}"
+                lines.append({"id": cid, "chat": [], "request": "q", "reply": rep, "extra": 1})
+                key[cid] = {"item_id": f"k1dev-{c + 1:02d}", "reply": rep}
+                ver[f"k1dev-{c + 1:02d}\t{rep}"] = k == 0
+        (t / "p.jsonl").write_text("".join(json.dumps(x) + "\n" for x in lines), encoding="utf-8")
+        (t / "k.json").write_text(json.dumps(key), encoding="utf-8")
+        (t / "v.json").write_text(json.dumps(ver), encoding="utf-8")
+        ns = argparse.Namespace(packet=str(t / "p.jsonl"), key=str(t / "k.json"), out=str(t / "d"))
+        split(ns)
+        pa, pb = T.load(t / "d" / "packet_A.jsonl"), T.load(t / "d" / "packet_B.jsonl")
+        ca = {key[x["id"]]["item_id"] for x in pa}
+        cb = {key[x["id"]]["item_id"] for x in pb}
+        assert len(ca) == 20 and len(cb) == 20 and not ca & cb and len(pa) + len(pb) == len(lines)
+        ok += 1
+
+        def fake(right_rate, how):
+            calls = {"n": 0}
+
+            def caller(k, model, text, temperature, effort):
+                assert effort == HOW[how]["effort"] and temperature == HOW[how]["temperature"]
+                calls["n"] += 1
+                chunk = [json.loads(x) for x in text.split("Packet:\n", 1)[1].splitlines()]
+                out = []
+                for x in chunk:
+                    truth = x["reply"].endswith("-0")
+                    wrong = (hash((x["id"], calls["n"])) % 100) < 100 * (1 - right_rate)
+                    out.append({"id": x["id"], "useful": "yes" if truth != wrong else "no", "made_up_user_facts": 0})
+                return "\n".join(json.dumps(o) for o in out), {"cost": 0.001}
+            return caller
+        for how, rate in (("high", 1.0), ("vote3", 0.8)):
+            label(argparse.Namespace(packet=str(t / "d" / "packet_A.jsonl"), how=how, out=str(t / "d" / f"A_{how}"),
+                                     model="m"), "KEY", fake(rate, how))
+        rows = T.load(t / "d" / "A_vote3" / "labels.jsonl")
+        assert all(r["votes_yes"] in (0, 1, 2, 3) for r in rows) and len(rows) == len(pa)
+        ok += 1
+        c = choose(argparse.Namespace(dir=str(t / "d"), key=str(t / "k.json"), verdicts=str(t / "v.json")))
+        assert c == "high"
+        label(argparse.Namespace(packet=str(t / "d" / "packet_B.jsonl"), how="high", out=str(t / "d" / "B_high"),
+                                 model="m"), "KEY", fake(1.0, "high"))
+        r = check(argparse.Namespace(dir=str(t / "d"), key=str(t / "k.json"), verdicts=str(t / "v.json")))
+        assert r["verdict"] == "PASS" and r["agree"] == len(pb)
+        ok += 1
+    print(f"k1e teacher-c selftest {ok}/3 ok")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("mode", choices=["split", "label", "choose", "check", "selftest"])
+    ap.add_argument("--packet", default="")
+    ap.add_argument("--key", default="")
+    ap.add_argument("--verdicts", default="")
+    ap.add_argument("--out", default="")
+    ap.add_argument("--dir", default="")
+    ap.add_argument("--how", choices=sorted(HOW), default="high")
+    ap.add_argument("--model", default="z-ai/glm-5.3-flash")
+    a = ap.parse_args()
+    if a.mode == "selftest":
+        selftest()
+    elif a.mode == "split":
+        split(a)
+    elif a.mode == "label":
+        key = (Path.home() / ".config" / "openrouter" / "key").read_text(encoding="utf-8").strip()
+        label(a, key)
+    elif a.mode == "choose":
+        choose(a)
+    else:
+        check(a)
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mls ~/.config/openrouter/key 2>&1; echo KEY_EXISTS:$?; which uv; uv --version 2>&1 | head; python3 --version; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1 | head
+/Users/ben-hannan/.config/openrouter/key
+KEY_EXISTS:0
+/Users/ben-hannan/.local/bin/uv
+uv 0.12.7 (61291a8ca 2026-08-27 aarch64-apple-darwin)
+Python 3.9.6
+bm391logs
+bm391rent.env
+bm391split
+e2e330tree
+gen_part6.py
+grade_b_part1_writer.py
+guard-296b
+guard-350
+k1e-teacher-tVmTTH
+lis313b-armA.log
+[0m
+[0m$ [0mmktemp -d /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-XXXXXX; git archive origin/main scripts/claude_k1e_teacher.py scripts/claude_k1e_teacher_c.py artifacts/claude-k1e-20260926/dev artifacts/claude-k1e-20260926/teacher-c-split artifacts/claude-k1e-20260926/SEAL-teacher-c.sha256.txt | tar -t | head -n 50
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj
+artifacts/
+artifacts/claude-k1e-20260926/
+artifacts/claude-k1e-20260926/SEAL-teacher-c.sha256.txt
+artifacts/claude-k1e-20260926/dev/
+artifacts/claude-k1e-20260926/dev/key_dev.json
+artifacts/claude-k1e-20260926/dev/packet_dev.jsonl
+artifacts/claude-k1e-20260926/dev/verdicts_dev.json
+artifacts/claude-k1e-20260926/teacher-c-split/
+artifacts/claude-k1e-20260926/teacher-c-split/packet_A.jsonl
+artifacts/claude-k1e-20260926/teacher-c-split/packet_B.jsonl
+scripts/
+scripts/claude_k1e_teacher.py
+scripts/claude_k1e_teacher_c.py
+[0m
+[0m$ [0mTMP=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj; git archive origin/main scripts/claude_k1e_teacher.py scripts/claude_k1e_teacher_c.py artifacts/claude-k1e-20260926/dev artifacts/claude-k1e-20260926/teacher-c-split artifacts/claude-k1e-20260926/SEAL-teacher-c.sha256.txt | tar -x -C "$TMP"; echo EXTRACT_DONE:$?; ls -R "$TMP/artifacts/claude-k1e-20260926" | head -n 20; cat "$TMP/artifacts/claude-k1e-20260926/SEAL-teacher-c.sha256.txt"
+EXTRACT_DONE:0
+dev
+SEAL-teacher-c.sha256.txt
+teacher-c-split
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj/artifacts/claude-k1e-20260926/dev:
+key_dev.json
+packet_dev.jsonl
+verdicts_dev.json
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj/artifacts/claude-k1e-20260926/teacher-c-split:
+packet_A.jsonl
+packet_B.jsonl
+767226294692cec96499988268e96abe6c5ab1dd9a80b7a2bf890fcf7023e331  scripts/claude_k1e_teacher_c.py
+f951eb5469f2f3cd82a338f904249d8ba2bc8e5fac6537ceb0cd4993bbf4abb8  scripts/claude_k1e_teacher.py
+ad9d48c140ac174e19e65f2a4b4c8f13153a7b4cc009c9f64a15933a190aec96  artifacts/claude-k1e-20260926/dev/packet_dev.jsonl
+fe39175a1e363bd7084a96152fc92674592e29433c74059c39962c2a2d176d1a  artifacts/claude-k1e-20260926/dev/key_dev.json
+5f85f27ee0a6fa821fbb9cc218fd2dc28cf623fc5812b9fa71d5af11505e80ef  artifacts/claude-k1e-20260926/dev/verdicts_dev.json
+e3ffa1766f72a51bb9fc699c13375c9cd8eb34290bf1596eec41f77468e840d3  artifacts/claude-k1e-20260926/teacher-c-split/packet_A.jsonl
+d172e618b6bad2ff5a57e8c1f65aa76b935aac93c81a36beb0cc65881f87b1be  artifacts/claude-k1e-20260926/teacher-c-split/packet_B.jsonl
+[0m
+[0m$ [0mTMP=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj; uv run --offline --no-project --python 3.12 python -B -c "import sys; print(sys.version)" 2>&1 | head
+3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]
+[0m
+[0m$ [0mTMP=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj; uv run --offline --no-project --python 3.12 python -B -c "import pathlib; print('ok')"; sha256sum -c artifacts/claude-k1e-20260926/SEAL-teacher-c.sha256.txt 2>&1; echo SEAL_EXIT:$?
+ok
+scripts/claude_k1e_teacher_c.py: OK
+scripts/claude_k1e_teacher.py: OK
+artifacts/claude-k1e-20260926/dev/packet_dev.jsonl: OK
+artifacts/claude-k1e-20260926/dev/key_dev.json: OK
+artifacts/claude-k1e-20260926/dev/verdicts_dev.json: OK
+artifacts/claude-k1e-20260926/teacher-c-split/packet_A.jsonl: OK
+artifacts/claude-k1e-20260926/teacher-c-split/packet_B.jsonl: OK
+SEAL_EXIT:0
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher_c.py selftest 2>&1; echo SELFTEST_EXIT:$?
+{"chats": 40, "chats_A": 20, "lines_A": 73, "lines_B": 73}
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-72 ok
+{"how": "high", "lines": 73, "labelled": 73, "unparsed": 0, "calls": 8, "useful_yes": 20, "cost_usd": 0.008}
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-72 ok
+{"how": "vote3", "lines": 73, "labelled": 73, "unparsed": 0, "calls": 24, "useful_yes": 23, "cost_usd": 0.024}
+{"compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true}
+{"compared": 73, "teacher_useful": 23, "opus_useful": 20, "both_useful": 18, "agree": 66, "kappa": 0.77, "passes_label_rule": true}
+{"chosen": "high", "A_high": {"compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true}, "A_vote3": {"compared": 73, "teacher_useful": 23, "opus_useful": 20, "both_useful": 18, "agree": 66, "kappa": 0.77, "passes_label_rule": true}}
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-72 ok
+{"how": "high", "lines": 73, "labelled": 73, "unparsed": 0, "calls": 8, "useful_yes": 20, "cost_usd": 0.008}
+{"compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true}
+{"chosen": "high", "lines_B": 73, "compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true, "verdict": "PASS"}
+k1e teacher-c selftest 3/3 ok
+SELFTEST_EXIT:0
+[0m
+[0m$ [0mrm -rf artifacts/claude-k1e-20260926/teacher-c; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher_c.py split --packet artifacts/claude-k1e-20260926/dev/packet_dev.jsonl --key artifacts/claude-k1e-20260926/dev/key_dev.json --out artifacts/claude-k1e-20260926/teacher-c 2>&1; echo SPLIT_EXIT:$?; cmp artifacts/claude-k1e-20260926/teacher-c/packet_A.jsonl artifacts/claude-k1e-20260926/teacher-c-split/packet_A.jsonl && echo CMP_A_SILENT_OK; cmp artifacts/claude-k1e-20260926/teacher-c/packet_B.jsonl artifacts/claude-k1e-20260926/teacher-c-split/packet_B.jsonl && echo CMP_B_SILENT_OK
+{"chats": 40, "chats_A": 20, "lines_A": 78, "lines_B": 79}
+SPLIT_EXIT:0
+CMP_A_SILENT_OK
+CMP_B_SILENT_OK
+[0m
+[0m$ [0mrm -rf artifacts/claude-k1e-20260926/teacher-c; mkdir -p /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/logs; echo CLEANED
+CLEANED
+[0m
+[0m$ [0mD=artifacts/claude-k1e-20260926/dev; O=artifacts/claude-k1e-20260926/teacher-c; LOG=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj/console.log; : > "$LOG"; echo "\$ sha256sum -c artifacts/claude-k1e-20260926/SEAL-teacher-c.sha256.txt" | tee -a "$LOG"; sha256sum -c artifacts/claude-k1e-20260926/SEAL-teacher-c.sha256.txt 2>&1 | tee -a "$LOG"; echo "\$ python -B scripts/claude_k1e_teacher_c.py selftest" | tee -a "$LOG"; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher_c.py selftest 2>&1 | tee -a "$LOG"; echo "\$ split" | tee -a "$LOG"; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher_c.py split --packet "$D/packet_dev.jsonl" --key "$D/key_dev.json" --out "$O" 2>&1 | tee -a "$LOG"; cmp "$O/packet_A.jsonl" artifacts/claude-k1e-20260926/teacher-c-split/packet_A.jsonl 2>&1 | tee -a "$LOG"; cmp "$O/packet_B.jsonl" artifacts/claude-k1e-20260926/teacher-c-split/packet_B.jsonl 2>&1 | tee -a "$LOG"; echo CMP_DONE | tee -a "$LOG"; ls -l "$O" 2>&1 | tee -a "$LOG"
+$ sha256sum -c artifacts/claude-k1e-20260926/SEAL-teacher-c.sha256.txt
+scripts/claude_k1e_teacher_c.py: OK
+scripts/claude_k1e_teacher.py: OK
+artifacts/claude-k1e-20260926/dev/packet_dev.jsonl: OK
+artifacts/claude-k1e-20260926/dev/key_dev.json: OK
+artifacts/claude-k1e-20260926/dev/verdicts_dev.json: OK
+artifacts/claude-k1e-20260926/teacher-c-split/packet_A.jsonl: OK
+artifacts/claude-k1e-20260926/teacher-c-split/packet_B.jsonl: OK
+$ python -B scripts/claude_k1e_teacher_c.py selftest
+{"chats": 40, "chats_A": 20, "lines_A": 73, "lines_B": 73}
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-72 ok
+{"how": "high", "lines": 73, "labelled": 73, "unparsed": 0, "calls": 8, "useful_yes": 20, "cost_usd": 0.008}
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-72 ok
+{"how": "vote3", "lines": 73, "labelled": 73, "unparsed": 0, "calls": 24, "useful_yes": 22, "cost_usd": 0.024}
+{"compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true}
+{"compared": 73, "teacher_useful": 22, "opus_useful": 20, "both_useful": 17, "agree": 65, "kappa": 0.733, "passes_label_rule": true}
+{"chosen": "high", "A_high": {"compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true}, "A_vote3": {"compared": 73, "teacher_useful": 22, "opus_useful": 20, "both_useful": 17, "agree": 65, "kappa": 0.733, "passes_label_rule": true}}
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-72 ok
+{"how": "high", "lines": 73, "labelled": 73, "unparsed": 0, "calls": 8, "useful_yes": 20, "cost_usd": 0.008}
+{"compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true}
+{"chosen": "high", "lines_B": 73, "compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true, "verdict": "PASS"}
+k1e teacher-c selftest 3/3 ok
+$ split
+{"chats": 40, "chats_A": 20, "lines_A": 78, "lines_B": 79}
+CMP_DONE
+total 176
+-rw-r--r--  1 ben-hannan  staff  44948 Sep 26 14:01 packet_A.jsonl
+-rw-r--r--  1 ben-hannan  staff  44339 Sep 26 14:01 packet_B.jsonl
+[0m
+[0m$ [0mO=artifacts/claude-k1e-20260926/teacher-c; LOG=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj/console.log; echo "\$ python -B scripts/claude_k1e_teacher_c.py label --packet O/packet_A.jsonl --how high --out O/A_high" | tee -a "$LOG"; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher_c.py label --packet "$O/packet_A.jsonl" --how high --out "$O/A_high" 2>&1 | tee -a "$LOG"; echo LABEL_HIGH_EXIT:${pipestatus[1]:-$?} | tee -a "$LOG"
+$ python -B scripts/claude_k1e_teacher_c.py label --packet O/packet_A.jsonl --how high --out O/A_high
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-77 ok
+{"how": "high", "lines": 78, "labelled": 78, "unparsed": 0, "calls": 8, "useful_yes": 38, "cost_usd": 0.0066}
+LABEL_HIGH_EXIT:0
+[0m
+[0m$ [0mO=artifacts/claude-k1e-20260926/teacher-c; LOG=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj/console.log; echo "\$ python -B scripts/claude_k1e_teacher_c.py label --packet O/packet_A.jsonl --how vote3 --out O/A_vote3" | tee -a "$LOG"; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher_c.py label --packet "$O/packet_A.jsonl" --how vote3 --out "$O/A_vote3" 2>&1 | tee -a "$LOG"; echo LABEL_VOTE3_EXIT:${pipestatus[1]:-$?} | tee -a "$LOG"
+$ python -B scripts/claude_k1e_teacher_c.py label --packet O/packet_A.jsonl --how vote3 --out O/A_vote3
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-77 ok
+{"how": "vote3", "lines": 78, "labelled": 78, "unparsed": 0, "calls": 25, "useful_yes": 37, "cost_usd": 0.0115}
+LABEL_VOTE3_EXIT:0
+[0m
+[0m$ [0mD=artifacts/claude-k1e-20260926/dev; O=artifacts/claude-k1e-20260926/teacher-c; LOG=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj/console.log; echo "\$ python -B scripts/claude_k1e_teacher_c.py choose --dir O --key D/key_dev.json --verdicts D/verdicts_dev.json" | tee -a "$LOG"; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher_c.py choose --dir "$O" --key "$D/key_dev.json" --verdicts "$D/verdicts_dev.json" 2>&1 | tee -a "$LOG"; echo CHOOSE_EXIT:${pipestatus[1]:-$?} | tee -a "$LOG"; cat "$O/chosen.txt" 2>&1 | tee -a "$LOG"
+$ python -B scripts/claude_k1e_teacher_c.py choose --dir O --key D/key_dev.json --verdicts D/verdicts_dev.json
+{"compared": 78, "teacher_useful": 38, "opus_useful": 25, "both_useful": 23, "agree": 61, "kappa": 0.56, "passes_label_rule": false}
+{"compared": 78, "teacher_useful": 37, "opus_useful": 25, "both_useful": 22, "agree": 60, "kappa": 0.53, "passes_label_rule": false}
+{"chosen": "high", "A_high": {"compared": 78, "teacher_useful": 38, "opus_useful": 25, "both_useful": 23, "agree": 61, "kappa": 0.56, "passes_label_rule": false}, "A_vote3": {"compared": 78, "teacher_useful": 37, "opus_useful": 25, "both_useful": 22, "agree": 60, "kappa": 0.53, "passes_label_rule": false}}
+CHOOSE_EXIT:0
+high
+[0m
+[0m$ [0mO=artifacts/claude-k1e-20260926/teacher-c; LOG=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj/console.log; echo "\$ python -B scripts/claude_k1e_teacher_c.py label --packet O/packet_B.jsonl --how high --out O/B_high  [C=high chosen]" | tee -a "$LOG"; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher_c.py label --packet "$O/packet_B.jsonl" --how high --out "$O/B_high" 2>&1 | tee -a "$LOG"; echo LABEL_B_EXIT:${pipestatus[1]:-$?} | tee -a "$LOG"
+$ python -B scripts/claude_k1e_teacher_c.py label --packet O/packet_B.jsonl --how high --out O/B_high  [C=high chosen]
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-78 ok
+{"how": "high", "lines": 79, "labelled": 79, "unparsed": 0, "calls": 8, "useful_yes": 43, "cost_usd": 0.0071}
+LABEL_B_EXIT:0
+[0m
+[0m$ [0mD=artifacts/claude-k1e-20260926/dev; O=artifacts/claude-k1e-20260926/teacher-c; LOG=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj/console.log; echo "\$ python -B scripts/claude_k1e_teacher_c.py check --dir O --key D/key_dev.json --verdicts D/verdicts_dev.json" | tee -a "$LOG"; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher_c.py check --dir "$O" --key "$D/key_dev.json" --verdicts "$D/verdicts_dev.json" 2>&1 | tee -a "$LOG"; echo CHECK_EXIT:${pipestatus[1]:-$?} | tee -a "$LOG"; ls -R "$O" 2>&1 | tee -a "$LOG"
+$ python -B scripts/claude_k1e_teacher_c.py check --dir O --key D/key_dev.json --verdicts D/verdicts_dev.json
+{"compared": 79, "teacher_useful": 43, "opus_useful": 31, "both_useful": 29, "agree": 63, "kappa": 0.603, "passes_label_rule": false}
+{"chosen": "high", "lines_B": 79, "compared": 79, "teacher_useful": 43, "opus_useful": 31, "both_useful": 29, "agree": 63, "kappa": 0.603, "passes_label_rule": false, "verdict": "FAIL"}
+CHECK_EXIT:0
+A_high
+A_vote3
+B_high
+chosen.txt
+packet_A.jsonl
+packet_B.jsonl
+
+artifacts/claude-k1e-20260926/teacher-c/A_high:
+labels.jsonl
+
+artifacts/claude-k1e-20260926/teacher-c/A_vote3:
+labels.jsonl
+
+artifacts/claude-k1e-20260926/teacher-c/B_high:
+labels.jsonl
+[0m
+[0m$ [0mLOG=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj/console.log; echo "---LOG---"; cat "$LOG"; echo "---CHECK-KEY-LEAK---"; if grep -q "sk-or" "$LOG"; then echo "LEAK-FOUND"; else echo "NO-LEAK"; fi; echo "---O-LIST---"; ls -R artifacts/claude-k1e-20260926/teacher-c; echo "---COST-SUM---"; python3 -c "import json,glob; print('files:', glob.glob('artifacts/claude-k1e-20260926/teacher-c/*/labels.jsonl'))"
+---LOG---
+$ sha256sum -c artifacts/claude-k1e-20260926/SEAL-teacher-c.sha256.txt
+scripts/claude_k1e_teacher_c.py: OK
+scripts/claude_k1e_teacher.py: OK
+artifacts/claude-k1e-20260926/dev/packet_dev.jsonl: OK
+artifacts/claude-k1e-20260926/dev/key_dev.json: OK
+artifacts/claude-k1e-20260926/dev/verdicts_dev.json: OK
+artifacts/claude-k1e-20260926/teacher-c-split/packet_A.jsonl: OK
+artifacts/claude-k1e-20260926/teacher-c-split/packet_B.jsonl: OK
+$ python -B scripts/claude_k1e_teacher_c.py selftest
+{"chats": 40, "chats_A": 20, "lines_A": 73, "lines_B": 73}
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-72 ok
+{"how": "high", "lines": 73, "labelled": 73, "unparsed": 0, "calls": 8, "useful_yes": 20, "cost_usd": 0.008}
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-72 ok
+{"how": "vote3", "lines": 73, "labelled": 73, "unparsed": 0, "calls": 24, "useful_yes": 22, "cost_usd": 0.024}
+{"compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true}
+{"compared": 73, "teacher_useful": 22, "opus_useful": 20, "both_useful": 17, "agree": 65, "kappa": 0.733, "passes_label_rule": true}
+{"chosen": "high", "A_high": {"compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true}, "A_vote3": {"compared": 73, "teacher_useful": 22, "opus_useful": 20, "both_useful": 17, "agree": 65, "kappa": 0.733, "passes_label_rule": true}}
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-72 ok
+{"how": "high", "lines": 73, "labelled": 73, "unparsed": 0, "calls": 8, "useful_yes": 20, "cost_usd": 0.008}
+{"compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true}
+{"chosen": "high", "lines_B": 73, "compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true, "verdict": "PASS"}
+k1e teacher-c selftest 3/3 ok
+$ split
+{"chats": 40, "chats_A": 20, "lines_A": 78, "lines_B": 79}
+CMP_DONE
+total 176
+-rw-r--r--  1 ben-hannan  staff  44948 Sep 26 14:01 packet_A.jsonl
+-rw-r--r--  1 ben-hannan  staff  44339 Sep 26 14:01 packet_B.jsonl
+$ python -B scripts/claude_k1e_teacher_c.py label --packet O/packet_A.jsonl --how high --out O/A_high
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-77 ok
+{"how": "high", "lines": 78, "labelled": 78, "unparsed": 0, "calls": 8, "useful_yes": 38, "cost_usd": 0.0066}
+LABEL_HIGH_EXIT:0
+$ python -B scripts/claude_k1e_teacher_c.py label --packet O/packet_A.jsonl --how vote3 --out O/A_vote3
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-77 ok
+{"how": "vote3", "lines": 78, "labelled": 78, "unparsed": 0, "calls": 25, "useful_yes": 37, "cost_usd": 0.0115}
+LABEL_VOTE3_EXIT:0
+$ python -B scripts/claude_k1e_teacher_c.py choose --dir O --key D/key_dev.json --verdicts D/verdicts_dev.json
+{"compared": 78, "teacher_useful": 38, "opus_useful": 25, "both_useful": 23, "agree": 61, "kappa": 0.56, "passes_label_rule": false}
+{"compared": 78, "teacher_useful": 37, "opus_useful": 25, "both_useful": 22, "agree": 60, "kappa": 0.53, "passes_label_rule": false}
+{"chosen": "high", "A_high": {"compared": 78, "teacher_useful": 38, "opus_useful": 25, "both_useful": 23, "agree": 61, "kappa": 0.56, "passes_label_rule": false}, "A_vote3": {"compared": 78, "teacher_useful": 37, "opus_useful": 25, "both_useful": 22, "agree": 60, "kappa": 0.53, "passes_label_rule": false}}
+CHOOSE_EXIT:0
+high
+$ python -B scripts/claude_k1e_teacher_c.py label --packet O/packet_B.jsonl --how high --out O/B_high  [C=high chosen]
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-78 ok
+{"how": "high", "lines": 79, "labelled": 79, "unparsed": 0, "calls": 8, "useful_yes": 43, "cost_usd": 0.0071}
+LABEL_B_EXIT:0
+$ python -B scripts/claude_k1e_teacher_c.py check --dir O --key D/key_dev.json --verdicts D/verdicts_dev.json
+{"compared": 79, "teacher_useful": 43, "opus_useful": 31, "both_useful": 29, "agree": 63, "kappa": 0.603, "passes_label_rule": false}
+{"chosen": "high", "lines_B": 79, "compared": 79, "teacher_useful": 43, "opus_useful": 31, "both_useful": 29, "agree": 63, "kappa": 0.603, "passes_label_rule": false, "verdict": "FAIL"}
+CHECK_EXIT:0
+A_high
+A_vote3
+B_high
+chosen.txt
+packet_A.jsonl
+packet_B.jsonl
+
+artifacts/claude-k1e-20260926/teacher-c/A_high:
+labels.jsonl
+
+artifacts/claude-k1e-20260926/teacher-c/A_vote3:
+labels.jsonl
+
+artifacts/claude-k1e-20260926/teacher-c/B_high:
+labels.jsonl
+---CHECK-KEY-LEAK---
+NO-LEAK
+---O-LIST---
+A_high
+A_vote3
+B_high
+chosen.txt
+packet_A.jsonl
+packet_B.jsonl
+
+artifacts/claude-k1e-20260926/teacher-c/A_high:
+labels.jsonl
+
+artifacts/claude-k1e-20260926/teacher-c/A_vote3:
+labels.jsonl
+
+artifacts/claude-k1e-20260926/teacher-c/B_high:
+labels.jsonl
+---COST-SUM---
+files: ['artifacts/claude-k1e-20260926/teacher-c/B_high/labels.jsonl', 'artifacts/claude-k1e-20260926/teacher-c/A_vote3/labels.jsonl', 'artifacts/claude-k1e-20260926/teacher-c/A_high/labels.jsonl']
+[0m
+[0m$ [0mgrep -r "sk-or" artifacts/claude-k1e-20260926/teacher-c 2>&1 && echo LEAK || echo NO-LEAK-IN-O; wc -l artifacts/claude-k1e-20260926/teacher-c/*/labels.jsonl artifacts/claude-k1e-20260926/teacher-c/*.jsonl; cat artifacts/claude-k1e-20260926/teacher-c/chosen.txt; head -n 2 artifacts/claude-k1e-20260926/teacher-c/A_high/labels.jsonl
+NO-LEAK-IN-O
+      78 artifacts/claude-k1e-20260926/teacher-c/A_high/labels.jsonl
+      78 artifacts/claude-k1e-20260926/teacher-c/A_vote3/labels.jsonl
+      79 artifacts/claude-k1e-20260926/teacher-c/B_high/labels.jsonl
+      78 artifacts/claude-k1e-20260926/teacher-c/packet_A.jsonl
+      79 artifacts/claude-k1e-20260926/teacher-c/packet_B.jsonl
+     392 total
+high
+{"id": "E0003", "useful": "no", "made_up_user_facts": 0, "votes_yes": 0}
+{"id": "E0008", "useful": "yes", "made_up_user_facts": 0, "votes_yes": 1}
+[0m
+[0m$ [0mls -R artifacts/claude-k1e-20260926 2>&1 | head -n 60; echo ---; git status --short artifacts/claude-k1e-20260926 2>&1 | head -n 40
+teacher-dev
+teacher-log.txt
+train
+
+artifacts/claude-k1e-20260926/teacher-dev:
+labels.jsonl
+
+artifacts/claude-k1e-20260926/train:
+items.jsonl
+---
+[0m
+[0m$ [0mTMP=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj; WT=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27; mkdir -p "$WT/artifacts/claude-k1e-20260926/teacher-c/A_high" "$WT/artifacts/claude-k1e-20260926/teacher-c/A_vote3" "$WT/artifacts/claude-k1e-20260926/teacher-c/B_high"; cp "$TMP/artifacts/claude-k1e-20260926/teacher-c/packet_A.jsonl" "$WT/artifacts/claude-k1e-20260926/teacher-c/packet_A.jsonl"; cp "$TMP/artifacts/claude-k1e-20260926/teacher-c/packet_B.jsonl" "$WT/artifacts/claude-k1e-20260926/teacher-c/packet_B.jsonl"; cp "$TMP/artifacts/claude-k1e-20260926/teacher-c/chosen.txt" "$WT/artifacts/claude-k1e-20260926/teacher-c/chosen.txt"; cp "$TMP/artifacts/claude-k1e-20260926/teacher-c/A_high/labels.jsonl" "$WT/artifacts/claude-k1e-20260926/teacher-c/A_high/labels.jsonl"; cp "$TMP/artifacts/claude-k1e-20260926/teacher-c/A_vote3/labels.jsonl" "$WT/artifacts/claude-k1e-20260926/teacher-c/A_vote3/labels.jsonl"; cp "$TMP/artifacts/claude-k1e-20260926/teacher-c/B_high/labels.jsonl" "$WT/artifacts/claude-k1e-20260926/teacher-c/B_high/labels.jsonl"; cp "$TMP/console.log" "$WT/artifacts/claude-k1e-20260926/teacher-c-log.txt"; echo COPIED; ls -R "$WT/artifacts/claude-k1e-20260926/teacher-c"; wc -l "$WT/artifacts/claude-k1e-20260926/teacher-c-log.txt" "$WT/artifacts/claude-k1e-20260926/teacher-c/"*.jsonl "$WT/artifacts/claude-k1e-20260926/teacher-c/"*/*.jsonl
+COPIED
+A_high
+A_vote3
+B_high
+chosen.txt
+packet_A.jsonl
+packet_B.jsonl
+
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-k1e-20260926/teacher-c/A_high:
+labels.jsonl
+
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-k1e-20260926/teacher-c/A_vote3:
+labels.jsonl
+
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-k1e-20260926/teacher-c/B_high:
+labels.jsonl
+     107 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-k1e-20260926/teacher-c-log.txt
+      78 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-k1e-20260926/teacher-c/packet_A.jsonl
+      79 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-k1e-20260926/teacher-c/packet_B.jsonl
+      78 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-k1e-20260926/teacher-c/A_high/labels.jsonl
+      78 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-k1e-20260926/teacher-c/A_vote3/labels.jsonl
+      79 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-k1e-20260926/teacher-c/B_high/labels.jsonl
+     499 total
+[0m
+[0m$ [0mTMP=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-c-UQfONj; for f in packet_A.jsonl packet_B.jsonl chosen.txt A_high/labels.jsonl A_vote3/labels.jsonl B_high/labels.jsonl; do cmp "$TMP/artifacts/claude-k1e-20260926/teacher-c/$f" "artifacts/claude-k1e-20260926/teacher-c/$f" && echo "OK $f" || echo "DIFF $f"; done; cmp "$TMP/console.log" artifacts/claude-k1e-20260926/teacher-c-log.txt && echo "OK log"; grep -r "sk-or" artifacts/claude-k1e-20260926/teacher-c artifacts/claude-k1e-20260926/teacher-c-log.txt && echo LEAK || echo NO-LEAK; git status --short artifacts/claude-k1e-20260926/teacher-c artifacts/claude-k1e-20260926/teacher-c-log.txt
+OK packet_A.jsonl
+OK packet_B.jsonl
+OK chosen.txt
+OK A_high/labels.jsonl
+OK A_vote3/labels.jsonl
+OK B_high/labels.jsonl
+OK log
+NO-LEAK
+[0m
+[0m$ [0mgit status --short | grep -E "teacher-c|k1e" | head -n 20; echo ---; git check-ignore artifacts/claude-k1e-20260926/teacher-c/A_high/labels.jsonl || echo NOT_IGNORED
+---
+artifacts/claude-k1e-20260926/teacher-c/A_high/labels.jsonl
+[0m
+[0m$ [0mgit status --short | head -n 30; echo ===; git status | head -n 40; echo ===; cat .gitignore 2>&1 | head -n 40; git check-ignore -v artifacts/claude-k1e-20260926/teacher-c/A_high/labels.jsonl artifacts/claude-k1e-20260926/teacher-c-log.txt 2>&1
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/train398r.json
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+A  artifacts/claude-brd9-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd9-20260926/gpu/brd9_summary.json
+A  artifacts/claude-brd9-20260926/gpu/log.txt
+A  artifacts/claude-brd9-20260926/gpu/practice.json
+A  artifacts/claude-brd9-20260926/gpu/streams.json
+A  artifacts/claude-brd9-20260926/gpu/transfer_streams.json
+A  artifacts/claude-k1a-20260926/RESULTS-rent.md
+A  artifacts/claude-k1a-20260926/run/creative_B.jsonl
+zsh:1: == not found
+[0m
+[0m$ [0mgit status --short | wc -l; git ls-files --others --exclude-standard | grep k1e | head
+317
+[0m
+[0m$ [0mgit ls-files --others | head -n 20; git check-ignore -v artifacts/claude-k1e-20260926/teacher-c-log.txt; true
+.claude/agents/opus-medium.md
+.pytest_cache/.gitignore
+.pytest_cache/CACHEDIR.TAG
+.pytest_cache/README.md
+.pytest_cache/v/cache/lastfailed
+.pytest_cache/v/cache/nodeids
+artifacts/claude-adapters-20260926d/REPORT.md
+artifacts/claude-blurt1-dev-20260925/RESULTS-blurt1.md
+artifacts/claude-blurt1-dev-20260925/run/ideas_t10.jsonl
+artifacts/claude-blurt1-dev-20260925/run/log_ideas_t10.txt
+artifacts/claude-blurt1-dev-20260925/run/log_puzzle_t06.txt
+artifacts/claude-blurt1-dev-20260925/run/log_puzzle_t10.txt
+artifacts/claude-blurt1-dev-20260925/run/puzzles_t06.jsonl
+artifacts/claude-blurt1-dev-20260925/run/puzzles_t10.jsonl
+artifacts/claude-blurt2-20260925/RESULTS-gpu.md
+artifacts/claude-blurt2-20260925/gpu/log_loop.txt
+artifacts/claude-blurt2-20260925/gpu/loop_summary.json
+artifacts/claude-blurt2-20260925/gpu/wins.jsonl
+artifacts/claude-bm390-20260925/RESULTS-benspc.md
+artifacts/claude-bm390-20260925/RESULTS-benspc2.md
+.gitignore:5:artifacts/	artifacts/claude-k1e-20260926/teacher-c-log.txt
+[0m
