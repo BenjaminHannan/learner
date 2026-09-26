@@ -73,3 +73,24 @@ before the run, sends the next dollar to evidence-conditioned training, not to m
   - it must not become an "I don't know" machine: abstentions on cat 1-4 ≤ T's + 20.
 - Proved wrong if F1 gains under +2: then training for brevity does not reach the content either.
 - Needs a GPU (BensPC or a rental). Not before Ben's OK on money.
+
+## bm-397t result (05:20 UTC) and what is queued next
+bm-397t ran that step (artifacts/claude-bm397t-20260926/RESULTS-score.md): registered FAIL.
+- LoCoMo F1 rose 27.50 → 37.07 (A1 passed), and abstentions stayed within the bar (A4 passed).
+- GSM8K fell 191 → 42 (A2 failed): the model stopped showing its working.
+- Blind correctness went 112 → 107 of 300 against a bar of 109 (A3 failed). The F1 gain is shorter wording, not more
+  right answers.
+Queued, each one change, registered before any run, nothing before Ben's OK on money:
+- bm-397u (training mix):
+  - Change: the same recipe, plus two code-made parts. The first is made-up arithmetic word problems whose target is
+    the base 1B's own step-by-step working, kept only when its final number is right (graded own drafts). The
+    second is made-up unanswerable questions about the made-up chats, labelled "not mentioned".
+  - Marks: bm-397t's A1-A4, plus confident wrong ≤ T's.
+  - Proved wrong if GSM8K still drops below 182 while LoCoMo gains.
+- bm-397m (routing):
+  - Change: the bm-397t adapter is switched on only when answering from a chat (the memory path) inside the joined
+    agent, and never for math or general questions.
+  - Scoring: on the agent, not the plain 1B, after 0.2c.
+  - Needs a check that the switch itself picks the right path. Month-end owns the agent; this does not join 0.2c.
+- The next real gain on LoCoMo needs more right answers, not fewer words. bm-398 (evidence expansion) is the
+  candidate.
