@@ -109,3 +109,21 @@ agent's tokenizer and model (no second copy), and D1.train_copy leaves the model
   300) and H6 = its N1 (GSM8K X − T ≥ −3 points, paired), scored by Benchmarks. They run as background lanes in the
   same rental on the slept agent and are cut at 10:35 UTC; a lane that does not finish makes its mark "not measured"
   (reported as open, not as a pass).
+- ~03:20 UTC: Ben's ChatGPT evaluator reply (posted 02:11 UTC), sections 3, 6 and 10, claims checked against the code
+  and dl-2's VERIFY.md first. No mark above changes. Taken into the freeze, report only:
+  1. MANIFEST-02c.md, written at the cutoff and sealed with the code: for X, G and T, the exact reader (path, sha256,
+     save bar), the history interface (claude_lis319_arms class, pairs of history), memory store module and k, route
+     (route02c/route383 and its caps), output handling (trims, guards, gram360), the sleep adapter (sha256 after the
+     nights, base model revision, LoRA rank), every switch in scripts/claude_e2e02c.py, and each layer in order.
+  2. Three labels for every part, never merged in the report: "fixed in code" (CPU test only: F1-F4, store v3),
+     "passed its own test" (named registered PASS), and "passed in the joined assistant" (only if 0.2c passes every
+     mark here). A part that passed alone stays a component claim if 0.2c fails a row.
+  3. Resources beside the results: total parameters and resident weight bytes per arm (scripts/claude_params02c.py,
+     reads file headers only; rent-02c step 7a), the reasoner's size, context used, sampling (greedy or n at T), and
+     median ms per turn where logged. X and G keep two full 1B models (generator + fine-tuned reader), so the joined
+     assistant is described as about 2B resident, not "1B".
+  The evaluator's "learns during downtime" check (same build with and without the update) is L2 above: TEST is
+  measured on X's own model before the first night (adapter at zero) and after night 3. "Retains earlier abilities"
+  is L4/L6 (losses counted apart from gains). "Recoverable" (interrupted update, restart) is NOT tested in 0.2c: the
+  adapter is saved via a temp file and os.replace and reloaded to exactly the trained weights every night (L1), but
+  there is no interruption test, so the report lists it as open.
