@@ -26,3 +26,11 @@ reports the same three readings as RESULTS-critic.md, so the two rows compare li
 - the pooled count-only baseline.
 If 358i2 is again not GOOD ENOUGH, the Stream of Search proposal goes to the Thread manager as a plan with marks and a
 plain-words paragraph. Training the reasoner on its own traces needs Ben's yes. No critic variants.
+
+Added 22:42 UTC by date -u, after the 358i2 verdict (RESULTS-critic-358i2.md, PROVED WRONG). The line above that says
+"Training the reasoner on its own traces needs Ben's yes" was wrong, and it stays as written. The Thread manager
+corrected it at 22:29 UTC. Ben's yes is reserved for architecture changes (design/v3/30-modes/ben-goals-2026-09-26.md:96)
+and for money. The pencil-mark test trains copies of the nets on BensPC at $0, adds no new weights, and uses
+code-made puzzles and targets. Nothing joins the build, so under Own your problem it is this thread's call. It is
+registered as rv-393 (artifacts/claude-rv393-20260926/PLAN.md). Ben's yes would be needed only if the change later
+joined the build.

@@ -53,3 +53,8 @@ questions it. So one bad guess ruins the whole puzzle. The fix: write guesses in
 its own old attempts, including the ones where its pencil marks were wrong, and show it the right answer. If it
 learns to say "that pencil mark is wrong", it can erase it and try again, the way a person does. It is free
 (Ben's PC) and takes about an hour or two of training.
+
+Note added 22:42 UTC by date -u: this proposal became rv-393 (artifacts/claude-rv393-20260926/PLAN.md, with a
+no-pencil control arm and sealed marks). "Needs Ben's yes" in the title is withdrawn: the Thread manager noted at
+22:29 UTC that a $0 test with no new weights is this thread's call, and Ben's yes is reserved for architecture changes
+and money (ben-goals-2026-09-26.md:96). The marks in rv-393's PLAN.md replace the draft marks above.
