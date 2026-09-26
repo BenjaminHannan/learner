@@ -141,30 +141,41 @@ def load(p):
     return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
 
 
-def run(seeds, out_path, caller, model, temperature):
-    """caller(prompt) -> (text, usage). Appends one JSON line per dialog to out_path."""
+def run(seeds, out_path, caller, model, temperature, workers=1):
+    """caller(prompt) -> (text, usage). Appends one JSON line per dialog to out_path (in finishing order when
+    workers > 1; calls run in threads, every write and key check happens in this thread)."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
     out = Path(out_path)
     done = {r["dialog_id"] for r in load(out)} if out.exists() else set()
     tot = {"calls": 0, "parsed": 0, "prompt_tokens": 0, "completion_tokens": 0, "cost_usd": 0.0, "skipped": 0}
-    with out.open("a", encoding="utf-8") as fh:
-        for d in seeds:
-            if d["dialog_id"] in done:
-                tot["skipped"] += 1
-                continue
-            prompt = build_prompt(d)
-            txt, u = caller(prompt)
-            guard(txt, json.dumps(u))
-            got = parse(txt, len(d["turns"]))
-            tot["calls"] += 1
-            tot["parsed"] += got is not None
-            tot["prompt_tokens"] += int(u.get("prompt_tokens", 0) or 0)
-            tot["completion_tokens"] += int(u.get("completion_tokens", 0) or 0)
-            tot["cost_usd"] += float(u.get("cost", 0) or 0)
-            fh.write(json.dumps({"dialog_id": d["dialog_id"], "model": model, "temperature": temperature,
-                                 "prompt_chars": len(prompt), "parsed": got, "raw": txt, "usage": u},
-                                ensure_ascii=False) + "\n")
-            fh.flush()
-            print(f"[glm320] {d['dialog_id']} {'ok' if got else 'unparsed'}", flush=True)
+    todo = []
+    for d in seeds:
+        if d["dialog_id"] in done:
+            tot["skipped"] += 1
+        else:
+            todo.append(d)
+    with out.open("a", encoding="utf-8") as fh, ThreadPoolExecutor(max_workers=max(1, workers)) as ex:
+        futs = {ex.submit(caller, build_prompt(d)): d for d in todo}
+        try:
+            for fut in as_completed(futs):
+                d = futs[fut]
+                txt, u = fut.result()
+                guard(txt, json.dumps(u))
+                got = parse(txt, len(d["turns"]))
+                tot["calls"] += 1
+                tot["parsed"] += got is not None
+                tot["prompt_tokens"] += int(u.get("prompt_tokens", 0) or 0)
+                tot["completion_tokens"] += int(u.get("completion_tokens", 0) or 0)
+                tot["cost_usd"] += float(u.get("cost", 0) or 0)
+                fh.write(json.dumps({"dialog_id": d["dialog_id"], "model": model, "temperature": temperature,
+                                     "prompt_chars": len(build_prompt(d)), "parsed": got, "raw": txt, "usage": u},
+                                    ensure_ascii=False) + "\n")
+                fh.flush()
+                print(f"[glm320] {d['dialog_id']} {'ok' if got else 'unparsed'}", flush=True)
+        except KeyLeak:
+            for f in futs:
+                f.cancel()
+            raise
     tot["cost_usd"] = round(tot["cost_usd"], 5)
     return tot
 
@@ -202,6 +213,13 @@ def selftest():
         except KeyLeak:
             pass
         assert len(load(outp)) == 1
+        many = make_seeds(2, 12)
+        outq = Path(td) / "raw_par.jsonl"
+        fk = lambda p: (json.dumps({"turns": [{"n": i + 1, "reply_before": "", "user": "x"}  # noqa: E731
+                                              for i in range(p.count("\nTurn "))]}), {"cost": 0.001})
+        tot3 = run(many, outq, fk, MODEL, 1.0, workers=4)
+        assert tot3["calls"] == 12 and tot3["parsed"] == 12, tot3
+        assert sorted(r["dialog_id"] for r in load(outq)) == sorted(d["dialog_id"] for d in many)
     print(f"glm selftest OK: prompt {len(p)} chars for {n} turns; parse, resume and key guard checked")
 
 
@@ -214,6 +232,7 @@ def main():
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--dialog")
+    ap.add_argument("--workers", type=int, default=1, help="parallel calls (full run: 8)")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     if a.selftest:
@@ -227,7 +246,8 @@ def main():
         seeds = seeds[: a.limit]
     key = (Path.home() / ".config" / "openrouter" / "key").read_text().strip()
     try:
-        tot = run(seeds, a.out, lambda p: call(key, a.model, p, a.temperature), a.model, a.temperature)
+        tot = run(seeds, a.out, lambda p: call(key, a.model, p, a.temperature), a.model, a.temperature,
+                  workers=a.workers)
     except KeyLeak as e:
         del key
         raise SystemExit(f"[glm320] ABORT: {e}")
