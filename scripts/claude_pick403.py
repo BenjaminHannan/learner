@@ -24,13 +24,19 @@ that object would change three layers at once. on_layer() swaps only one layer's
   undo = on_layer(C333D, "install_creative333d", make_score, "k1c")        # creative only
 
 make_score(gen) is called once at install time with the layer's real writer (Gen338; its 1B is gen.g) and returns
-score_fn. Call on_layer before building the agent; the PickGen is kept at loop.pick403_<tag> for its counts.
+score_fn. Call on_layer before building the agent; each PickGen it makes is appended to PICKERS for its counts.
 
   python3 -B scripts/claude_pick403.py      (selftest, CPU, no model)
 """
 from __future__ import annotations
 
 import math
+
+# Every PickGen that on_layer made, in build order (read .tag and .stats for counts). Never hang a picker (or anything
+# that reaches the 1B) on the loop: fix260's per-turn snapshot deep-copies plain containers on the loop's helpers,
+# and one of them (parts90["ears"]) reaches back to the loop, so any loop attribute leading to the model makes every
+# turn crash with "cannot pickle 'module' object" (CPU smoke of build_02c, 09-26).
+PICKERS: list = []
 
 
 def _key(v):
@@ -87,8 +93,8 @@ def on_layer(module, installer: str, make_score, tag: str):
 
     def patched(loop, gen, *a, **k):
         p = PickGen(gen, make_score(gen), tag)
-        setattr(loop, f"pick403_{tag}", p)          # an attribute, never inside a dict/list on the loop: fix260's
-        return orig(loop, p, *a, **k)                # per-turn snapshot deep-copies plain containers (and the 1B)
+        PICKERS.append(p)                            # NOT on the loop: see PICKERS
+        return orig(loop, p, *a, **k)
 
     patched._pick403 = tag
     patched.__name__ = f"{installer}_pick403_{tag}"
@@ -148,7 +154,7 @@ def selftest() -> None:
     mod.install_chat(loop, shared)
     mod.install_cre(loop, shared)
     assert isinstance(seen["chat"], PickGen) and seen["cre"] is shared; ok += 1             # one layer only
-    assert loop.pick403_ground is seen["chat"] and made == ["one_b"]; ok += 1
+    assert PICKERS[-1] is seen["chat"] and not vars(loop) and made == ["one_b"]; ok += 1
     try:
         on_layer(mod, "install_chat", lambda gen: None, "k1c")
         raise AssertionError("second picker on one layer accepted")

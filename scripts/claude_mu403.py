@@ -30,16 +30,17 @@ if str(SCRIPTS) not in sys.path:
 VARIANT_LINE = (" Only say things about the user that they actually told you in this chat. Do not guess their "
                 "feelings, plans, situation or past; if something matters and you don't know it, ask.")
 TOTALS403 = {"calls": 0, "scored": 0, "reordered": 0, "top_changed": 0}
-_PICKERS: list = []
 _PRINTED: list = []
 
 
 def _report():
-    for p in _PICKERS:
+    import claude_pick403 as P
+    ps = [p for p in P.PICKERS if p.tag == "ground"]
+    for p in ps:
         for k in TOTALS403:
             TOTALS403[k] += p.stats[k]
-    if _PICKERS:
-        print(f"mu403: pick totals over {len(_PICKERS)} builds = {TOTALS403}", flush=True)
+    if ps:
+        print(f"mu403: pick totals over {len(ps)} builds = {TOTALS403}", flush=True)
 
 
 def make_ground(gen):
@@ -57,7 +58,6 @@ def build_ground02c(state_dir, args):
         P.on_layer(C38B, "install_chat338b", make_ground, "ground")
         atexit.register(_report)
     loop = M402.build_null02c(state_dir, args)
-    _PICKERS.append(loop.pick403_ground)
     loop.layers330c = list(loop.layers330c) + ["pick403:ground@chat338b"]
     if not _PRINTED:
         _PRINTED.append(1)
