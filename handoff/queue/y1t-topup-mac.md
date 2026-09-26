@@ -11,7 +11,7 @@ WHY: artifacts/claude-y1t-20260926/ADDENDUM-3-opencode-topup.md (on origin/main)
    $PY scripts/claude_y1t_topup.py split --seeds $O/seeds.jsonl --raw artifacts/claude-y1t-20260926/glm/raw.jsonl --out $O/split
    Check with `shasum -a 256`: $O/seeds.jsonl = 42b344fba2dad802fa3109295dd3548c8aa7bdd5c947a356ba1c61c480360f43, $O/split/seeds_redo.jsonl = e80e84156cb2ac003711c97ad8d9d4761962c6c42b83d3730477dad8abc4ef8b, scripts/claude_glm_opencode.py = 3b597086511d18270cea2d2614027ea54f0e4142cf87e9a2c30a68b2ad4c5ad2, scripts/claude_lis320_glm_oc.py = 6fe3c80f44d2dff93ff27f643265d07e6bef41303858803d1073e2958874bb09. Any mismatch: stop with SEED-MISMATCH and run nothing. Record the split's printed line (expected "to_redo": 1755).
 3. CHECKS: $PY scripts/claude_lis320_glm_oc.py --selftest and $PY scripts/claude_y1t_topup.py --selftest (each must pass). `uptime`, `df -g /`.
-4. WORKERS: W=4 (the Director's 19:41 UTC probe: 4 parallel calls took 6 s, 8 took 99 s, and the route is shared with lis-320, gate3oc, g406 and k1h).
+4. WORKERS: W=3 (the Director's 20:06 UTC share of the opencode route's budget of 16 parallel calls).
    $PY scripts/claude_lis320_glm_oc.py --seeds $O/split/seeds_redo.jsonl --out $O/raw_new.jsonl --workers $W --batch 40 --max-minutes 150 --max-failed 50 > $O/topup.log 2>&1
    Its last line is the totals JSON with "stopped": "done" | "time" | "failed". Record it verbatim. Do not rerun on "failed"; report the first line of each distinct error in topup.log.
 5. COUNT: line count of $O/raw_new.jsonl, rows with "parsed" not null, rows with parsed null, distinct dialog ids (counts only; a short python one-liner is fine).
