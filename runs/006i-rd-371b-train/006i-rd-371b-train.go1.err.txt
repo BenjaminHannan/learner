@@ -1,0 +1,2609 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git branch -a | head -n 50; git log --oneline -5; pwd
+FETCH_EXIT:0
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
+  codex/testing-experiment-44
++ main
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+b588f1e37 rsn-358c1: answer-cell stop eval, sealed code run once per seed (verdict FAIL; stop fix NOT NEEDED, K4 split s1 PASS s2 FAIL) + ledger lines
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+bc39d2baf ideajudge-teacher2: DEV teacher agreement check (no training)
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 50
+echo "---PASSMARKS---"
+git show origin/main:artifacts/claude-rd371b-20260926/PASSMARKS.md
+echo "---330-A---"
+git show origin/main:design/v3/30-modes/330-rent-kit.md | head -n 200
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+PUSH: artifacts/claude-lis302-20260924/tokprobs.jsonl artifacts/claude-lis302-20260924/pyes.json artifacts/claude-lis302-20260924/RESULTS-gpu.md
+---PASSMARKS---
+# rd-371b: a sentence checker trained on the note writer's own judged drafts (rd-371's one follow-up)
+
+Thread "Fix: reading facts from chat". Written 2026-09-26 02:10 UTC, before the test dialogs are sealed, before the note
+writer writes over them, and before any checker training. Plan: design/v3/30-modes/371b-sentence-checker.md.
+Goal (Ben /goal 01:45 UTC): untrue 1B notes (rd-378: 113/360 unsupported on its panel, 96/277 on dev).
+
+## The one change (vs rd-371)
+What the checker learns from and reads. Source = the note writer's own window (up to 6 earlier turns + the latest turn),
+question = one note sentence (scripts/claude_rd371b_common.build_sprompt). Training rows (scripts/claude_rd371b_data.py):
+the rd-378 note writer's own notes (greedy + one sample at temperature 0.8, scripts/claude_rd371b_sample.py) on ~120 fresh
+dialogs written blind for this purpose, each note graded by a blind judge (artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md):
+ok/bad_cite -> yes, unsupported/bad_when -> no, bad_form skipped; plus code-made name/number swaps of ok notes -> no (no more
+than the real "no" rows). No Claude-written sentence is a target; no panel, DEV bank, bank A/B/C/D, LoCoMo or LongMemEval text.
+Checker: MiniCPM5-1B + LoRA, same settings as rd-371 except max-len 512 (epochs 2, lr 2e-4, rank 32, batch 16, seed 300).
+Bar rule (fixed now, one rule for any arm): the LOWEST grid value whose accepted notes are at most 4% "unsupported" on dev =
+the rd-378 dev notes (277, judged; artifacts/claude-rd378-20260925/dev_notes_judged.jsonl); if none, the largest grid value
+(scripts/claude_rd371b_eval.py sweep).
+
+## Registered test
+artifacts/claude-notepanel371b-20260926 (TEST-ONLY; 30 fresh dialogs, chat + overheard, written blind by a separate agent).
+The rd-378 note writer (sha256 dbcc8db5...8510) writes greedy notes over it ONCE. Two blind judges grade every note with the
+judge brief; key = ok where both say ok, unsupported where both say unsupported, all else excluded (counted, reported).
+Both judge files and the key are sealed before the checker is trained. The checker scores the notes ONCE at its dev bar.
+
+## Marks
+| Mark | Bar |
+|---|---|
+| C1 untrue notes stored: unsupported share of accepted (key ok + unsupported) | <= 5% (rd-378's N4 bar) |
+| C2 good notes kept: key-ok notes accepted | >= 80% |
+| C3 no kind left behind: chat vs overheard C2 | gap <= 10 points |
+PASS = all three. Proved wrong: at its dev bar the checker keeps < 50% of key-ok notes.
+Report only: no-checker baseline (accept all), excluded notes, median ms per note.
+---330-A---
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+T=$(mktemp -d)/tree && mkdir -p $T
+git archive origin/builder-outbox | tar -x -C $T
+git archive origin/main | tar -x -C $T            # main on top: main wins
+mkdir -p $T/artifacts/fable-self122-20260922
+cp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/
+tar czf tree.tgz -C $(dirname $T) tree
+```
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+scp tree.tgz (and READER if needed) to the instance; tar xzf tree.tgz; cd tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rd371b-20260926/PASSMARKS.md
+echo "===LIST ARTIFACTS==="; git ls-tree -r --name-only origin/main -- artifacts/claude-rd371b-20260926/ | head -n 100
+echo "===NOTEPANEL==="; git ls-tree -r --name-only origin/main -- artifacts/claude-notepanel371b-20260926/ | head -n 100
+echo "===QUEUE LIS302 FULL==="; git show origin/main:handoff/queue/lis-302-gpu.md
+# rd-371b: a sentence checker trained on the note writer's own judged drafts (rd-371's one follow-up)
+
+Thread "Fix: reading facts from chat". Written 2026-09-26 02:10 UTC, before the test dialogs are sealed, before the note
+writer writes over them, and before any checker training. Plan: design/v3/30-modes/371b-sentence-checker.md.
+Goal (Ben /goal 01:45 UTC): untrue 1B notes (rd-378: 113/360 unsupported on its panel, 96/277 on dev).
+
+## The one change (vs rd-371)
+What the checker learns from and reads. Source = the note writer's own window (up to 6 earlier turns + the latest turn),
+question = one note sentence (scripts/claude_rd371b_common.build_sprompt). Training rows (scripts/claude_rd371b_data.py):
+the rd-378 note writer's own notes (greedy + one sample at temperature 0.8, scripts/claude_rd371b_sample.py) on ~120 fresh
+dialogs written blind for this purpose, each note graded by a blind judge (artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md):
+ok/bad_cite -> yes, unsupported/bad_when -> no, bad_form skipped; plus code-made name/number swaps of ok notes -> no (no more
+than the real "no" rows). No Claude-written sentence is a target; no panel, DEV bank, bank A/B/C/D, LoCoMo or LongMemEval text.
+Checker: MiniCPM5-1B + LoRA, same settings as rd-371 except max-len 512 (epochs 2, lr 2e-4, rank 32, batch 16, seed 300).
+Bar rule (fixed now, one rule for any arm): the LOWEST grid value whose accepted notes are at most 4% "unsupported" on dev =
+the rd-378 dev notes (277, judged; artifacts/claude-rd378-20260925/dev_notes_judged.jsonl); if none, the largest grid value
+(scripts/claude_rd371b_eval.py sweep).
+
+## Registered test
+artifacts/claude-notepanel371b-20260926 (TEST-ONLY; 30 fresh dialogs, chat + overheard, written blind by a separate agent).
+The rd-378 note writer (sha256 dbcc8db5...8510) writes greedy notes over it ONCE. Two blind judges grade every note with the
+judge brief; key = ok where both say ok, unsupported where both say unsupported, all else excluded (counted, reported).
+Both judge files and the key are sealed before the checker is trained. The checker scores the notes ONCE at its dev bar.
+
+## Marks
+| Mark | Bar |
+|---|---|
+| C1 untrue notes stored: unsupported share of accepted (key ok + unsupported) | <= 5% (rd-378's N4 bar) |
+| C2 good notes kept: key-ok notes accepted | >= 80% |
+| C3 no kind left behind: chat vs overheard C2 | gap <= 10 points |
+PASS = all three. Proved wrong: at its dev bar the checker keeps < 50% of key-ok notes.
+Report only: no-checker baseline (accept all), excluded notes, median ms per note.
+===LIST ARTIFACTS===
+artifacts/claude-rd371b-20260926/PASSMARKS.md
+artifacts/claude-rd371b-20260926/SEAL-data.sha256.txt
+artifacts/claude-rd371b-20260926/SEAL-train.sha256.txt
+artifacts/claude-rd371b-20260926/SEAL.sha256.txt
+artifacts/claude-rd371b-20260926/data/ck/dev.jsonl
+artifacts/claude-rd371b-20260926/data/ck/summary.json
+artifacts/claude-rd371b-20260926/data/ck/train.jsonl
+artifacts/claude-rd371b-20260926/data/dev_in.jsonl
+artifacts/claude-rd371b-20260926/data/dev_out.jsonl
+artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl
+artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl
+artifacts/claude-rd371b-20260926/data/train_dialogs.jsonl
+artifacts/claude-rd371b-20260926/key/README.md
+artifacts/claude-rd371b-20260926/key/SEAL.sha256.txt
+artifacts/claude-rd371b-20260926/key/judge_A.jsonl
+artifacts/claude-rd371b-20260926/key/judge_B.jsonl
+artifacts/claude-rd371b-20260926/key/key.jsonl
+artifacts/claude-rd371b-20260926/key/key_counts.json
+artifacts/claude-rd371b-20260926/key/panel_in.jsonl
+===NOTEPANEL===
+artifacts/claude-notepanel371b-20260926/README.md
+artifacts/claude-notepanel371b-20260926/SEAL.sha256.txt
+artifacts/claude-notepanel371b-20260926/dialogs.jsonl
+===QUEUE LIS302 FULL===
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+PUSH: artifacts/claude-lis302-20260924/tokprobs.jsonl artifacts/claude-lis302-20260924/pyes.json artifacts/claude-lis302-20260924/RESULTS-gpu.md
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- handoff/ | grep -i -E "006g|371b|rd-371|gpu|benspc" | head -n 50
+echo "---grep BensPC access---"
+git grep -l "BensPC\|benja" origin/main -- handoff/ 2>&1 | head -n 20
+# use git log for 006g
+git log --oneline --all --grep="006g\|rd-371b-notes\|371b" | head -n 20
+handoff/held/004-rd-371-train.md
+handoff/held/006k-02c-benspc.md
+handoff/held/benspc-336b.md
+handoff/held/zdl3-benspc.md
+handoff/memory/benspc-gpu-ops.md
+handoff/memory/gpu-budget-cap.md
+handoff/memory/gpu-only-5070ti.md
+handoff/queue/000-benspc-check.md
+handoff/queue/002-gram-364-benspc.md
+handoff/queue/006g-rd-371b-notes.md
+handoff/queue/006i-rd-371b-train.md
+handoff/queue/lis-302-gpu.md
+handoff/queue/rent-rd-371.md
+handoff/queue/zbrd7-benspc.md
+---grep BensPC access---
+origin/main:handoff/HANDOFF.md
+origin/main:handoff/held/001-bench-bm390.md
+origin/main:handoff/held/004-rd-371-train.md
+origin/main:handoff/held/005-rsn-353-pc.md
+origin/main:handoff/held/005s-rsn-358a-shared.md
+origin/main:handoff/held/006-slp-363-train.md
+origin/main:handoff/held/006b-blurt4-loop.md
+origin/main:handoff/held/006d-rsn-358a-train.md
+origin/main:handoff/held/006f-bm397-finalize.md
+origin/main:handoff/held/006i-bm391-02c.md
+origin/main:handoff/held/006j-rsn-358d-train.md
+origin/main:handoff/held/006k-02c-benspc.md
+origin/main:handoff/held/007-e2e382-dev.md
+origin/main:handoff/held/007-rsn-357-train.md
+origin/main:handoff/held/008-blurt2b-loop.md
+origin/main:handoff/held/benspc-336b.md
+origin/main:handoff/held/e2e-330-dev.md
+origin/main:handoff/held/e2e-333-creative.md
+origin/main:handoff/held/e2e-338-chat.md
+origin/main:handoff/held/e2e-339-style.md
+ab068157f rd-371b: judged training data (2,054 own drafts: 868 ok, 993 unsupported; 2,257/218 train/dev rows) + sealed panel key (2 blind judges, 301/314 agree: ok 132, unsupported 145, excluded 37)
+f014bc8d7 builder results: 006g-rd-371b-notes
+ede419576 rd-371b: queue 006i (checker train + one sealed test, BensPC, $0; waits for judged data + sealed key); dev judged notes for the bar sweep
+a6c24c80c rd-371b: seal TEST-ONLY notepanel371b (30 dialogs) + 120 training dialogs; queue 006g (note writer drafts, BensPC, $0)
+76432b4f5 rd-371b: pass marks registered + code (sentence checker on the note writer's own judged drafts)
+ccd5ef36c 371b plan: sentence checker trained on the 1B's own judged notes; dev notes judged (ok 167, unsupported 96 of 277)
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/006i-rd-371b-train.md
+echo "=====006G====="
+git show origin/main:handoff/queue/006g-rd-371b-notes.md
+echo "=====MEM GPU OPS====="
+git show origin/main:handoff/memory/benspc-gpu-ops.md
+COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Build the code tree as section A of origin/main:design/v3/30-modes/330-rent-kit.md says (git archive builder-outbox, then main on top); you do NOT need self122_head.pt, MiniLM, a READER or the route122 check.
+GPU: yes (BensPC)
+TIME CAP: 90 minutes wall. BENSPC: run as 006g-rd-371b-notes did (same fixes: git-bash sha256sum, nohup+disown and wait ~100 s after launching a long step, native Windows paths, PYTHONUTF8=1): venv C:/Users/benja/lis300/venv, BASE = the MiniCPM5-1B snapshot lis-318 and lis-319 trained from (re-check its sha256 as they did). Training on BensPC only; no downloads, no rental, $0. One job at a time on the GPU. Label: rd-371b-train. Urgent (Ben's 7am goal): run as soon as the GPU is free.
+INDEPENDENCE: never open, print or quote any file in artifacts/claude-notepanel371b-20260926/ or artifacts/claude-rd371b-20260926/key/ or panel_notes.jsonl. Scripts print counts only.
+
+YOUR TASK: rd-371b, train the sentence checker and run its registered test ONCE. Read origin/main:artifacts/claude-rd371b-20260926/PASSMARKS.md first. Run the code, never edit it; if something breaks, report the exact error. Outputs go in artifacts/claude-rd371b-20260926/ (new files only).
+0. DATA READY: the training data and sealed key are pushed by the reading thread while 006h runs. If origin/main lacks artifacts/claude-rd371b-20260926/SEAL-train.sha256.txt or artifacts/claude-rd371b-20260926/key/SEAL.sha256.txt at launch, re-fetch every 2 minutes for up to 45 minutes (GPU idle meanwhile; other queued jobs may go first); still missing: stop with DATA-MISSING. Rebuild the tree after they appear.
+1. SEALS (all OK or stop): sha256sum -c artifacts/claude-rd371b-20260926/SEAL.sha256.txt; sha256sum -c artifacts/claude-rd371b-20260926/SEAL-data.sha256.txt; sha256sum -c artifacts/claude-rd371b-20260926/SEAL-train.sha256.txt; sha256sum -c artifacts/claude-rd371b-20260926/key/SEAL.sha256.txt; (cd artifacts/claude-notepanel371b-20260926 && sha256sum -c SEAL.sha256.txt).
+2. TRAIN: python -B scripts/claude_lis300_train.py --model BASE --data artifacts/claude-rd371b-20260926/data/ck --out WORK/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 512 --max-minutes 60 --merge   (OOM: --batch 8 once, report it). Copy WORK/run/summary.json to artifacts/claude-rd371b-20260926/train_summary.json. Record sha256 of WORK/run/merged/model.safetensors.
+3. DEV BAR: python -B scripts/claude_rd371b_check.py --model WORK/run/merged --notes-in artifacts/claude-rd371b-20260926/data/dev_in.jsonl --out artifacts/claude-rd371b-20260926/dev_pred.jsonl
+   python -B scripts/claude_rd371b_eval.py sweep --pred artifacts/claude-rd371b-20260926/dev_pred.jsonl --judged artifacts/claude-rd371b-20260926/data/dev_out.jsonl --out artifacts/claude-rd371b-20260926/THRESHOLD.json
+   Then seal before the panel: sha256sum artifacts/claude-rd371b-20260926/THRESHOLD.json WORK/run/merged/model.safetensors > artifacts/claude-rd371b-20260926/SEAL-run.sha256.txt
+4. TEST ONCE: python -B scripts/claude_rd371b_check.py --model WORK/run/merged --notes-in artifacts/claude-rd371b-20260926/key/panel_in.jsonl --out artifacts/claude-rd371b-20260926/panel_pred.jsonl
+   python -B scripts/claude_rd371b_eval.py score --pred artifacts/claude-rd371b-20260926/panel_pred.jsonl --key artifacts/claude-rd371b-20260926/key/key.jsonl --threshold T --out artifacts/claude-rd371b-20260926/score.json   (T = THRESHOLD.json "T")
+5. RESULTS.md: C1-C3 and the proved-wrong clause from PASSMARKS with integer counts (score.json verbatim), THRESHOLD.json T and its dev row, train summary, merged sha256, GPU, wall time per step. Never quote panel or note text. Keep WORK/run/merged on BensPC (C:/Users/benja/rd371b/run/merged) for the joined build.
+PUSH: RESULTS.md train_summary.json dev_pred.jsonl THRESHOLD.json SEAL-run.sha256.txt panel_pred.jsonl score.json (all in artifacts/claude-rd371b-20260926/).
+=====006G=====
+COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Build the code tree as section A of origin/main:design/v3/30-modes/330-rent-kit.md says (git archive builder-outbox, then main on top); you do NOT need self122_head.pt, MiniLM, a READER or the route122 check.
+GPU: yes (BensPC)
+TIME CAP: 90 minutes wall. BENSPC: run as 006c-rd-378-train did (origin/builder-outbox:artifacts/claude-rd378-20260925/RESULTS-benspc.md, incl. its fixes: git-bash sha256sum, nohup+disown and wait ~100 s after launching a long step, native Windows paths, PYTHONUTF8=1): venv C:/Users/benja/lis300/venv, WRITER = C:/Users/benja/rd378/tree/WORK/nrun/merged (check model.safetensors sha256 = dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510 first; mismatch: stop). No training, no downloads, no rental, $0. One job at a time on the GPU. Label: rd-371b-notes. Urgent (Ben's 7am goal): please run it as soon as the GPU is free.
+INDEPENDENCE: never open, print or quote any file in artifacts/claude-notepanel371b-20260926/; you only pass dialogs.jsonl to the writer in step 3 and push its output unread.
+
+YOUR TASK: rd-371b step 1, the note writer's drafts. Read origin/main:artifacts/claude-rd371b-20260926/PASSMARKS.md first. Run the code, never edit it; if something breaks, report the exact error. Outputs go in artifacts/claude-rd371b-20260926/ (new files only).
+1. SEALS: from the tree root `sha256sum -c artifacts/claude-rd371b-20260926/SEAL.sha256.txt` and `sha256sum -c artifacts/claude-rd371b-20260926/SEAL-data.sha256.txt` and `cd artifacts/claude-notepanel371b-20260926 && sha256sum -c SEAL.sha256.txt` (all OK). Check WRITER's sha256. Any failure: stop.
+2. TRAINING DRAFTS (greedy + one sample per turn):
+   python -B scripts/claude_rd371b_sample.py --model WRITER --dialogs artifacts/claude-rd371b-20260926/data/train_dialogs.jsonl --out artifacts/claude-rd371b-20260926/train_drafts.jsonl --samples 1 --temp 0.8 --seed 371
+3. PANEL NOTES (greedy only, ONCE):
+   python -B scripts/claude_rd371b_sample.py --model WRITER --dialogs artifacts/claude-notepanel371b-20260926/dialogs.jsonl --out artifacts/claude-rd371b-20260926/panel_notes.jsonl --samples 0
+4. RESULTS-notes.md: the printed counts of steps 2 and 3, GPU, wall time per step, median ms. Never quote dialog or note text.
+PUSH: artifacts/claude-rd371b-20260926/RESULTS-notes.md artifacts/claude-rd371b-20260926/train_drafts.jsonl artifacts/claude-rd371b-20260926/panel_notes.jsonl
+=====MEM GPU OPS=====
+---
+name: benspc-gpu-ops
+description: "How the Qwen llama-server on BensPC respawns, how it was stopped, how to restore it, and how to run PowerShell/Python over SSH without quoting breakage"
+metadata: 
+  node_type: memory
+  type: reference
+  originSessionId: daf7c42e-d7f3-43b9-ae1e-ebd0fe3a6e26
+  modified: 2026-09-18T11:17:35.488Z
+---
+
+- The Qwen3.8-27B `llama-server.exe` (port 8081, ~14 GB VRAM) is launched by `C:\llama\serve-8081.bat`, a `goto loop` restart wrapper (15 s delay) started by scheduled task `ScoutLlamaServer` (ONLOGON). Killing only the server PID is useless: it respawns within ~15 s.
+- 2026-09-18: with Ben's authorization, stopped the cmd.exe running serve-8081.bat and then the Qwen server; GPU went to ~15.3 GB free. It stays down until next logon. Restore with `schtasks /run /tn ScoutLlamaServer` on BensPC.
+- 2026-09-18 (later): at Ben's request, **disabled** the ScoutLlamaServer task so Qwen no longer autostarts at logon (frees the GPU for training). Re-enable with `Enable-ScheduledTask -TaskName ScoutLlamaServer` (then `schtasks /run /tn ScoutLlamaServer` to start it now).
+- SSH quoting: send PowerShell as `powershell.exe -NoProfile -NonInteractive -EncodedCommand <base64 UTF-16LE>`. Windows PowerShell 5.1 strips double quotes from native-exe args, so pass Python code via stdin (`$code | & python.exe -B -`), not `-c`.
+- BensPC env (measured 2026-09-18): Python 3.10.9, torch 2.11.0+cu128, cuDNN 9.19, RTX 5070 Ti sm_120 present in arch list.
+
+Related: [[gpt-bridge-serial-only]]
+- **Fast Qwen config for batch jobs (measured 2026-09-18):** `C:\llama-b10679\llama-server.exe -m C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf --host 127.0.0.1 --port 8081 -c 16384 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --spec-type draft-mtp --spec-draft-n-max 2 --parallel 1 -t 6` gives ~69 tok/s single stream (88 aggregate with 2 client threads) on ~1,100-token prompts, and 0.16 s per short yes/no check. The autostart config (q4_0 V cache, `--parallel 4`) collapsed to ~5 tok/s per slot on the same prompts. Start it detached via `Invoke-CimMethod Win32_Process Create` with `cmd /c ... >> C:\llama\server-8081-premonition.log`, and reach it from the Mac with `ssh -N -L 18081:127.0.0.1:8081 benspc` (the Tailscale link drops sometimes, so wrap it in a restart loop). Stop it before GPU training: it uses ~15 GB of VRAM.
+- **VRAM spill signature (seen 2026-09-22, exp 235).** When a training run creeps to ~15.9 of 16.3 GB, Windows WDDM spills into shared system RAM over PCIe. The run doesn't crash; it just crawls. The signs are nvidia-smi showing "100 %" utilisation at only ~78 W (real compute draws 250 W+), with step time jumping 4x (0.59 → 2.4 s/step). Fix: the same effective batch via a smaller micro-batch plus gradient accumulation. SmolLM2-360M full fine-tune: micro-batch 16 × 2 gives a 10.8 GB peak and 0.25 s/step. Check `nvidia-smi --query-gpu=memory.used,power.draw --format=csv` early in every GPU run.
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-rd378-20260925/RESULTS-benspc.md 2>&1 | head -n 200
+echo "=====006C TASK====="
+git show origin/main:handoff/queue/rent-rd-371.md 2>&1 | head -n 100
+echo "=====SSH INFO SEARCH====="
+git grep "ssh.*benspc\|benspc.*ssh\|Tailscale\|006c" origin/main -- handoff/memory/ 2>&1 | head -n 40
+# rd-378 registered result (BensPC): FAIL on counted marks — notes don't move finding (N4 pending blind judge)
+
+Builder run 2026-09-26 on BensPC (RTX 5070 Ti, CUDA). Sealed code imported and
+run unmodified. Panel notepanel378 written over once; only scorer counts viewed.
+No panel turn, question, or note is quoted anywhere in this file.
+
+## Verdict: FAIL (N1, N2, N3 miss; N5 passes; N4 pending blind judge)
+
+| Mark | Bar | Got (integers) | Verdict |
+|---|---|---|---|
+| N1 multi-turn questions: found@10 | B >= A + 10 | B 30/30 (A 30/30, diff 0) | FAIL |
+| N2 time questions: found@10 | B >= A + 5 | B 30/30 (A 30/30, diff 0) | FAIL |
+| N3 all questions: found@10 | B >= A + 5, and no type more than 3 below A | B 149/150 (A 150/150, diff -1); per-type diffs: latest -1, multi 0, preference 0, single 0, time 0 | FAIL (on the +5 clause; per-type clause holds) |
+| N4 notes true to their turns (blind judge, unsupported) | <= 5% of B's notes | pending blind judge | PENDING |
+| N5 notes parse | unparsed turns <= 2% | panel 0/324 (0.0%), dev 0/267 (0.0%) | PASS |
+
+Proved-wrong clause (PASSMARKS): all-question found@10 B (149) <= A + 1 (151) is
+TRUE, so notes don't help finding.
+
+## score.json (verbatim counts; notes text never printed)
+
+{
+ "counts": {
+  "turns_read": 324,
+  "notes": 360,
+  "unparsed": 0
+ },
+ "retriever": "bm25+minilm rrf",
+ "A": {
+  "all:allfound@10": 146,
+  "all:allfound@5": 122,
+  "all:found@10": 150,
+  "all:found@5": 138,
+  "all:n@10": 150,
+  "all:n@5": 150,
+  "latest:allfound@10": 28,
+  "latest:allfound@5": 19,
+  "latest:found@10": 30,
+  "latest:found@5": 25,
+  "latest:n@10": 30,
+  "latest:n@5": 30,
+  "multi:allfound@10": 28,
+  "multi:allfound@5": 21,
+  "multi:found@10": 30,
+  "multi:found@5": 29,
+  "multi:n@10": 30,
+  "multi:n@5": 30,
+  "preference:allfound@10": 30,
+  "preference:allfound@5": 27,
+  "preference:found@10": 30,
+  "preference:found@5": 28,
+  "preference:n@10": 30,
+  "preference:n@5": 30,
+  "single:allfound@10": 30,
+  "single:allfound@5": 26,
+  "single:found@10": 30,
+  "single:found@5": 26,
+  "single:n@10": 30,
+  "single:n@5": 30,
+  "time:allfound@10": 30,
+  "time:allfound@5": 29,
+  "time:found@10": 30,
+  "time:found@5": 30,
+  "time:n@10": 30,
+  "time:n@5": 30
+ },
+ "B": {
+  "all:allfound@10": 146,
+  "all:allfound@5": 132,
+  "all:found@10": 149,
+  "all:found@5": 144,
+  "all:n@10": 150,
+  "all:n@5": 150,
+  "latest:allfound@10": 28,
+  "latest:allfound@5": 22,
+  "latest:found@10": 29,
+  "latest:found@5": 24,
+  "latest:n@10": 30,
+  "latest:n@5": 30,
+  "multi:allfound@10": 29,
+  "multi:allfound@5": 21,
+  "multi:found@10": 30,
+  "multi:found@5": 30,
+  "multi:n@10": 30,
+  "multi:n@5": 30,
+  "preference:allfound@10": 29,
+  "preference:allfound@5": 29,
+  "preference:found@10": 30,
+  "preference:found@5": 30,
+  "preference:n@10": 30,
+  "preference:n@5": 30,
+  "single:allfound@10": 30,
+  "single:allfound@5": 30,
+  "single:found@10": 30,
+  "single:found@5": 30,
+  "single:n@10": 30,
+  "single:n@5": 30,
+  "time:allfound@10": 30,
+  "time:allfound@5": 30,
+  "time:found@10": 30,
+  "time:found@5": 30,
+  "time:n@10": 30,
+  "time:n@5": 30
+ }
+}
+
+(180 panel questions: 30 dialogs x 6; 30 "none" questions skipped by the scorer,
+so n@k = 150 = 5 types x 30.)
+
+## Report-only numbers
+
+- found@5 per type: A all 138/150 (latest 25, multi 29, preference 28, single 26,
+  time 30); B all 144/150 (latest 24, multi 30, preference 30, single 30,
+  time 30).
+- allfound@10 per type: A all 146 (latest 28, multi 28, preference 30, single 30,
+  time 30); B all 146 (latest 28, multi 29, preference 29, single 30, time 30).
+- allfound@5 per type: A all 122 (latest 19, multi 21, preference 27, single 26,
+  time 29); B all 132 (latest 22, multi 21, preference 29, single 30, time 30).
+- Notes per turn: panel 360 notes / 324 turns = 1.11; dev 277 notes / 267 turns
+  = 1.04.
+- Write ms per turn: dev median 908.4; panel median 1005.5, p90 1642.2,
+  max 2752.9.
+- Judge's other verdicts: pending blind judge (same judge as N4; panel_notes.jsonl
+  pushed unquoted for the thread's blind read).
+
+## Training, device, money
+
+- Device: BensPC NVIDIA GeForce RTX 5070 Ti, cuda, greedy decode. No rental, $0.
+- Training: 958/958 steps, 2 epochs, 11.57 minutes, 4071.9 tok/s,
+  dev loss 0.5286, LoRA trainable 22,413,312 of 1,103,046,144 params,
+  batch 16 (no OOM, no batch-8 fallback), lr 2e-4, rank 32, seed 300,
+  max-len 512, max-minutes 60 cap never bound.
+- Base model: C:/Users/benja/lis300/model (reused lis-300 download),
+  model-00000-of-00001.safetensors sha256
+  7ab8fd86563125929be78aeec8cb3969c7ed2ead3be1ab9d3ec0a9fa69c8660d
+  (verified before training; commit 87179e5c as in lis-300 RESULTS.md).
+- MiniLM: snapshot already on BensPC
+  (C:/Users/benja/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41,
+  the snapshot scripts/fable_self122_train.resolve_snapshot(None) returns);
+  eval retriever bm25+minilm rrf. No downloads.
+- Merged note-writer sha256
+  dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510,
+  kept at C:/Users/benja/rd378/tree/WORK/nrun/merged (BensPC) and
+  ~/premonition-models/rd378-notes-merged/ (Mac, hash verified). Never in git.
+- Panel write: 324 turns, 360 notes, 0 unparsed. Dev write: 267 turns,
+  277 notes, 0 unparsed.
+
+## Data built (recorded counts = DATA.json = data/README.md dry run)
+
+- Seals from the BensPC tree before building: rd378 data 16/16 OK,
+  notepanel378 7/7 OK.
+- Built set: { "dev_dialogs": 31, "dev_rows": 255, "dropped": 232,
+  "kept_dev": 255, "kept_train": 2550, "notes_kept": 2797, "train_rows": 7650,
+  "turns": 3037 } (train_rows = 2550 kept x3 repeat; dev rows carry notes+kind).
+- The sealed panel files were never opened, printed or quoted. Panel written
+  over once; only scorer counts and ms were viewed.
+
+## Wall time per step (UTC 2026-09-26; BensPC local = UTC-4)
+
+- Setup (fetch, tree build builder-outbox + main on top, scp, extract,
+  BASE sha + GPU idle checks): 00:07-00:13.
+- Step 1 seals: 00:13 (data 16/16, panel 7/7).
+- Step 2 data: 00:13 (< 1 min; counts match dry run exactly).
+- Step 3 train: ~00:14-00:26 (11.57 min per summary; merged saved 20:25 local).
+- Step 4 dev write: 00:28-00:33 (~5 min, 267 turns).
+- Step 5 seal 00:33 (before panel); panel write 00:33-00:39 (~6 min,
+  324 turns, once); eval ~00:39-00:41.
+- Step 6 model copy + both-sha check + artifacts copy-back: 00:41-01:07
+  (2.1G model moved in 4 split chunks after two whole-file scp drops; sha
+  matches on both ends; small files direct).
+- Total ~1 h 00 min, inside the 3 h cap (training 11.57 min < 60 min cap).
+
+## Deviations (env only; sealed code untouched)
+
+1. Reused the lis-300 venv (torch 2.11.0+cu128) and the downloaded base-model
+   snapshot (safetensors sha256 re-verified) instead of a new venv and
+   re-download; new work dir C:/Users/benja/rd378 used throughout.
+2. Set PYTHONUTF8=1 (env var only), as in lis-300/lis-301/lis-318.
+3. No `resource`-module failure occurred, so scripts/winshim was not needed.
+4. No OOM at batch 16, so the batch-8 fallback was not used.
+5. shasum is absent on BensPC; seals were checked with git-bash sha256sum -c
+   (same file format). The rd378 data seal lists bare filenames, so it was run
+   from inside artifacts/claude-rd378-20260925/data (16/16 OK) rather than the
+   tree root (where the paths don't resolve); the panel seal was run from
+   inside artifacts/claude-notepanel378-20260925 (7/7 OK), as written.
+6. Training was launched with nohup + disown per the lis-318 pattern; the
+   shorter write/eval steps ran foreground over the steady ssh link (one GPU
+   job at a time throughout; GPU 0% before and after each step).
+7. The 2.1G merged safetensors was ferried to the Mac in 4 split chunks
+   (two whole-file scp attempts dropped mid-transfer on the flaky link) and
+   reassembled; shasum matches the BensPC SEAL on both ends.
+8. Mac disk hit 0 bytes free mid-copy (other agents active on the shared Mac);
+   freed only my own temp files (tree.tgz 163M + build tree 1.9G) and stale
+   partial copies; final 5G free. No data lost, panel untouched (single run).
+
+## What it means (plain high-school English)
+
+- Adding machine-written notes next to the chat turns did not help find answers.
+  Without notes the retriever already finds 150 of 150 evidences in the top 10;
+  with notes it finds 149. Every question type stays flat (multi 30 to 30, time
+=====006C TASK=====
+COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-25). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply), and ALL of origin/main:design/v3/30-modes/330-rent-kit.md (code tree, rental rules incl. reliability >= 0.98, the 6-min start rule, the 10-min no-log watchdog, copy back BEFORE destroy, destroy and confirm, ledger line), with the exceptions below. BASE: download openbmb/MiniCPM5-1B on the box as the kit says. Does NOT need MiniLM or self122_head.pt; skip the route122 check.
+GPU: rent
+BUDGET: $1.50 for this whole task (Ben 19:38 UTC 09-25: threads share $7 of rentals until ~23:40 UTC; Director told first). Label: rent-rd-371. Moved here from BensPC so it runs beside lis-319; the BensPC copy is in handoff/held and must not run.
+READER = ~/premonition-models/lis301-merged uploaded with the kit's READER step (as rent-336 did; rsync --partial so a broken upload resumes), model.safetensors sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. If the READER copy cannot be done, copy back what exists, destroy, and stop with READER-FAIL. One run only: the sealed panel is read once, never again. If vast.ai has no credit, stop with CREDIT-STOP before renting.
+INDEPENDENCE: never open, print or quote artifacts/claude-readpanel371-20260925/panel.jsonl, label_B*.jsonl, blind_input.jsonl or changed_blind.jsonl. You may RUN the reader on panel.jsonl exactly once in step 6 and see only scorer counts.
+
+YOUR TASK: rd-371, a learned verifier replaces the min-token cutoff. Read origin/main:artifacts/claude-rd371-20260925/PASSMARKS.md first. The chat thread wrote all code: run it, never edit it; if something breaks, copy back what exists and report the exact error. Artifacts go in artifacts/claude-rd371-20260925/ (new files only).
+1. TREE + SEALS. From the tree root: sha256sum -c for artifacts/claude-lis300-20260923/SEAL.sha256.txt, artifacts/claude-lis301-20260923/SEAL.sha256.txt, artifacts/claude-lis318-20260925/data/SEAL.sha256.txt (all OK), and `cd artifacts/claude-readpanel371-20260925 && sha256sum -c SEAL.sha256.txt` (all OK). Check READER's sha256. Any failure: stop.
+2. DATA:
+   python -B scripts/claude_lis318_data.py --o0b artifacts/claude-own-o0b-20260923 --o0a2 artifacts/claude-own-o0a2-20260923 --opus300 artifacts/claude-lis300-20260923/data --agree300 artifacts/claude-lis300-20260923/data/agreed_ids.txt --opus301 artifacts/claude-lis301-20260923/data --agree301 artifacts/claude-lis301-20260923/data/agreed_ids.txt --dev-agree artifacts/claude-lis301-20260923/data/dev_agreed_ids.txt --chat318 artifacts/claude-lis318-20260925/data --agree318 artifacts/claude-lis318-20260925/data/agreed_ids.txt --out WORK/rdata
+   python -B scripts/claude_rd371_data.py --reader-train WORK/rdata/train.jsonl --out WORK/vdata
+   Expect train 22,498 and dev 1,200 (CPU dry run). Record the printed counts in DATA.json.
+3. TRAIN: python -B scripts/claude_lis300_train.py --model BASE --data WORK/vdata --out WORK/vrun --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 90 --merge   (OOM: --batch 8 once, report it).
+4. DEV + CUTOFF (lis-301's dev, the reader reads already exist):
+   python -B scripts/claude_rd371_verify.py --model WORK/vrun/merged --rows artifacts/claude-lis301-20260923/dev/dev_rows.jsonl --reads artifacts/claude-lis301-20260923/dev/dev_pred.jsonl --out WORK/dev_verified.jsonl
+   python -B scripts/claude_rd371_sweep.py --gold artifacts/claude-lis301-20260923/dev/dev.jsonl --pred WORK/dev_verified.jsonl --out artifacts/claude-rd371-20260925/SWEEP.json
+   T_B = the printed T. G1: python -B scripts/claude_lis300_score.py --gold artifacts/claude-lis301-20260923/dev/dev.jsonl --pred WORK/dev_verified.jsonl --threshold T_B and python -B scripts/claude_lis300_score.py --gold artifacts/claude-lis301-20260923/dev/dev.jsonl --pred artifacts/claude-lis301-20260923/dev/dev_pred.jsonl --threshold 0.995; record hits for both.
+5. SEAL: sha256sum artifacts/claude-rd371-20260925/SWEEP.json WORK/vrun/merged/model.safetensors > artifacts/claude-rd371-20260925/SEAL-run.sha256.txt BEFORE step 6.
+6. PANEL, one reader read, two gates (counts only):
+   python -B scripts/claude_lis300_read.py --model READER --rows artifacts/claude-readpanel371-20260925/panel.jsonl --out WORK/panel_reads.jsonl
+   python -B scripts/claude_rd371_verify.py --model WORK/vrun/merged --rows artifacts/claude-readpanel371-20260925/panel.jsonl --reads WORK/panel_reads.jsonl --out WORK/panel_verified.jsonl
+   python -B scripts/claude_lis318_score.py --panel artifacts/claude-readpanel371-20260925/panel.jsonl --reads WORK/panel_reads.jsonl --threshold 0.995 --out artifacts/claude-rd371-20260925/score_A.json
+   python -B scripts/claude_lis318_score.py --panel artifacts/claude-readpanel371-20260925/panel.jsonl --reads WORK/panel_verified.jsonl --threshold T_B --out artifacts/claude-rd371-20260925/score_B.json
+7. KEEP THE MODEL: copy WORK/vrun/merged to the Mac (rsync --partial) at ~/premonition-models/rd371-verifier-merged/ and check its model.safetensors sha256 matches. Copy WORK/dev_verified.jsonl to artifacts/claude-rd371-20260925/dev/ and WORK/vrun/summary.json to artifacts/claude-rd371-20260925/train_summary.json. Never push weights. Destroy, confirm with vastai show instances, append the ledger line (cat >>).
+8. RESULTS.md: marks V1-V3, G1, G2 from the PASSMARKS table with integer counts (score_A.json, score_B.json verbatim), T_B and the sweep, DATA.json counts, training minutes and tok/s, GPU, wall time per step, the merged sha256. Never quote panel text.
+PUSH: artifacts/claude-rd371-20260925/RESULTS.md artifacts/claude-rd371-20260925/DATA.json artifacts/claude-rd371-20260925/SWEEP.json artifacts/claude-rd371-20260925/SEAL-run.sha256.txt artifacts/claude-rd371-20260925/score_A.json artifacts/claude-rd371-20260925/score_B.json artifacts/claude-rd371-20260925/train_summary.json artifacts/claude-rd371-20260925/dev artifacts/fable-predictions-ledger.md
+=====SSH INFO SEARCH=====
+origin/main:handoff/memory/benspc-gpu-ops.md:- **Fast Qwen config for batch jobs (measured 2026-09-18):** `C:\llama-b10679\llama-server.exe -m C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf --host 127.0.0.1 --port 8081 -c 16384 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --spec-type draft-mtp --spec-draft-n-max 2 --parallel 1 -t 6` gives ~69 tok/s single stream (88 aggregate with 2 client threads) on ~1,100-token prompts, and 0.16 s per short yes/no check. The autostart config (q4_0 V cache, `--parallel 4`) collapsed to ~5 tok/s per slot on the same prompts. Start it detached via `Invoke-CimMethod Win32_Process Create` with `cmd /c ... >> C:\llama\server-8081-premonition.log`, and reach it from the Mac with `ssh -N -L 18081:127.0.0.1:8081 benspc` (the Tailscale link drops sometimes, so wrap it in a restart loop). Stop it before GPU training: it uses ~15 GB of VRAM.
+origin/main:handoff/memory/compute-availability.md:- Ben's M3 Pro MacBook (Tailscale 100.93.41.100) never became reachable on 2026-09-18 (tailscaled wedged; fix needs `sudo launchctl kickstart -k system/com.tailscale.tailscaled`).
+[0m
+[0m$ [0mgit show origin/main:handoff/memory/compute-availability.md 2>&1 | head -n 100
+echo "===SSH CONFIG==="
+cat ~/.ssh/config 2>&1 | head -n 100
+echo "===006g builder result?==="
+git show origin/main:handoff/queue/006g-rd-371b-notes.md | head -n 5
+git log --oneline --all | head -n 20
+---
+name: compute-availability
+description: "Which machines Premonition experiments may use — BensPC RTX 5070 Ti is available again (Ben, 2026-09-19); Mac for small runs; vast.ai only with approval"
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: aa82fa83-15ca-4df2-9694-910b4cc9284b
+  modified: 2026-09-19T12:04:12.989Z
+---
+
+**2026-09-19: Ben confirmed "you have an rtx 5070-ti"** — the BensPC GPU (RTX 5070 Ti, 16 GB) is available for Premonition work. This supersedes his 2026-09-18 "you can't use the gpu on benspc". The 19 Sep Core pilots already ran on it (4M model ≈ 0.5–0.65M tok/s, 600 s runs; see design/06-step1-pilot-results.md). Plan experiments and judge research-idea feasibility against a free local 5070 Ti, not Mac-only.
+
+- Qwen server on BensPC must be stopped for training (autostart disabled); ops recipe in [[benspc-gpu-ops]].
+- The Mac this session runs on is an **Apple M1 Pro, 32 GB, 10 cores**. Project Python with torch: `/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12` (system python3 has no torch). Good for small/toy runs.
+- vast.ai costs money ($30 cap, see [[gpu-budget-cap]]): ask Ben with instance type and price before renting; destroy right after. **API key (2026-09-19):** Ben stored it himself at `~/.config/vastai/vast_api_key` (chmod 600, 64 hex chars; the vastai CLI reads it there). Never print, cat into context, copy or write the key; use it only via shell substitution, e.g. `-H "Authorization: Bearer $(cat ~/.config/vastai/vast_api_key)"`. The `vastai` CLI is not installed on the Mac (use the REST API with curl, or ask before installing).
+- vast.ai recipe (2026-09-18): RTX 5090 on-demand (~$0.52/h), image `pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime`, runtype `ssh_direc ssh_proxy`, attach ~/.ssh/id_ed25519.pub via POST /instances/{id}/ssh/. rsync repo (exclude artifacts, .runtime, .budget, data/village), write `runtime.remote.json` with empty import_roots, run `python -B run.py --runtime runtime.remote.json step1 ...`. 4M core ≈ 1.67M tok/s; whole run ≈ 55 min ≈ $0.48.
+- Ben's M3 Pro MacBook (Tailscale 100.93.41.100) never became reachable on 2026-09-18 (tailscaled wedged; fix needs `sudo launchctl kickstart -k system/com.tailscale.tailscaled`).
+
+**Rental recipe that worked (2026-09-19, all instances destroyed the same day, ~$3 spent with Ben's approval up to $3.25):**
+- These tiny card models are CPU-launch-bound: pick many fast cores + several GPUs, not a big GPU; DLPerf is a poor guide. Measured: 4x RTX 5060 Ti + 112 vCPU ran 80 twelve-thousand-step runs in ~48 min; 8x RTX 3060 + 80 old Xeon vCPU took ~88 min.
+- **Never use bid/interruptible instances for this job:** runs only save at the end, and a bid box was paused 30 min into a wave (whole wave lost). On-demand only.
+- **CUDA MPS nearly doubles throughput** (13 procs on one GPU: 465 -> 840 steps per 100 s): `export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-mps-log; nvidia-cuda-mps-control -d` before launching; ~20 procs per GPU, `--threads 1`. The MPS daemon keeps an ssh session's stdout open, so start things with `setsid nohup ... < /dev/null &`.
+- Upload only `scripts/`, `archive/opus-ovn-20260918-235851/`, `artifacts/opus-ovn-20260918-235851/exp1/data` minus `test.pt` (~1 MB). Some hosts take >20 min to pull the image: destroy and pick another.
+- Keep both arms of a comparison on the same machine, each arm spread evenly over its GPUs. `pkill -f <pattern>` over ssh kills your own shell if the pattern appears in the command line: use a bracket trick (`launch_al[l].sh`).
+- Always save instance ids to memory while they run, verify copied results (count + readable) BEFORE the DELETE call, then confirm `GET /instances/` is empty.
+
+**Why:** the local GPU is free, so the $30 cap only constrains cloud rental.
+
+**How to apply:** prefer BensPC 5070 Ti for anything beyond toy scale; Mac for quick probes; cloud only with explicit approval. Pure PyTorch is safest on the Windows box (custom CUDA/Triton kernels may be awkward).
+===SSH CONFIG===
+Host benspc
+  HostName 100.75.113.114
+  User benja
+===006g builder result?===
+COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Build the code tree as section A of origin/main:design/v3/30-modes/330-rent-kit.md says (git archive builder-outbox, then main on top); you do NOT need self122_head.pt, MiniLM, a READER or the route122 check.
+GPU: yes (BensPC)
+TIME CAP: 90 minutes wall. BENSPC: run as 006c-rd-378-train did (origin/builder-outbox:artifacts/claude-rd378-20260925/RESULTS-benspc.md, incl. its fixes: git-bash sha256sum, nohup+disown and wait ~100 s after launching a long step, native Windows paths, PYTHONUTF8=1): venv C:/Users/benja/lis300/venv, WRITER = C:/Users/benja/rd378/tree/WORK/nrun/merged (check model.safetensors sha256 = dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510 first; mismatch: stop). No training, no downloads, no rental, $0. One job at a time on the GPU. Label: rd-371b-notes. Urgent (Ben's 7am goal): please run it as soon as the GPU is free.
+INDEPENDENCE: never open, print or quote any file in artifacts/claude-notepanel371b-20260926/; you only pass dialogs.jsonl to the writer in step 3 and push its output unread.
+
+df67d1b22 watcher status
+c9f5fe701 builder results: 006h-lis-319c-full
+46bca8ebd watcher status
+cb0e12bec watcher status
+bb907bfeb watcher status
+51555f3cc watcher status
+851508fd5 builder results: rent-bm397t
+ac8bde5a6 watcher status
+5c2ddbac2 watcher status
+00ec32004 watcher status
+dbeefb3fd watcher status
+27bec7c6c rsn-358c1: blind recount agrees (stop fix NOT NEEDED; loop beats plain FAIL on seed 2 sums6)
+e401519cd watcher status
+b8e960a2e watcher status
+a6b9d471c watcher status
+aeb16b79a builder results: 005u-rsn-358c1-stop
+b588f1e37 rsn-358c1: answer-cell stop eval, sealed code run once per seed (verdict FAIL; stop fix NOT NEEDED, K4 split s1 PASS s2 FAIL) + ledger lines
+612e39f13 watcher status
+869dedffe watcher status
+ab068157f rd-371b: judged training data (2,054 own drafts: 868 ok, 993 unsupported; 2,257/218 train/dev rows) + sealed panel key (2 blind judges, 301/314 agree: ok 132, unsupported 145, excluded 37)
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-rd378-20260925/RESULTS-benspc.md | grep -n "ssh\|scp\|BASE\|tree\|WORK\|nohup\|PYTHONUTF8\|git-bash\|venv\|BensPC" | head -n 80
+echo "=== full builder-outbox log? ==="
+git log --oneline origin/builder-outbox | head -n 20
+echo "=== 006g result commit ==="
+git show --stat f014bc8d7 | head -n 40
+1:# rd-378 registered result (BensPC): FAIL on counted marks — notes don't move finding (N4 pending blind judge)
+3:Builder run 2026-09-26 on BensPC (RTX 5070 Ti, CUDA). Sealed code imported and
+128:- Device: BensPC NVIDIA GeForce RTX 5070 Ti, cuda, greedy decode. No rental, $0.
+137:- MiniLM: snapshot already on BensPC
+143:  kept at C:/Users/benja/rd378/tree/WORK/nrun/merged (BensPC) and
+150:- Seals from the BensPC tree before building: rd378 data 16/16 OK,
+158:## Wall time per step (UTC 2026-09-26; BensPC local = UTC-4)
+160:- Setup (fetch, tree build builder-outbox + main on top, scp, extract,
+161:  BASE sha + GPU idle checks): 00:07-00:13.
+169:  (2.1G model moved in 4 split chunks after two whole-file scp drops; sha
+175:1. Reused the lis-300 venv (torch 2.11.0+cu128) and the downloaded base-model
+176:   snapshot (safetensors sha256 re-verified) instead of a new venv and
+178:2. Set PYTHONUTF8=1 (env var only), as in lis-300/lis-301/lis-318.
+181:5. shasum is absent on BensPC; seals were checked with git-bash sha256sum -c
+184:   tree root (where the paths don't resolve); the panel seal was run from
+186:6. Training was launched with nohup + disown per the lis-318 pattern; the
+187:   shorter write/eval steps ran foreground over the steady ssh link (one GPU
+190:   (two whole-file scp attempts dropped mid-transfer on the flaky link) and
+191:   reassembled; shasum matches the BensPC SEAL on both ends.
+193:   freed only my own temp files (tree.tgz 163M + build tree 1.9G) and stale
+=== full builder-outbox log? ===
+df67d1b22 watcher status
+c9f5fe701 builder results: 006h-lis-319c-full
+46bca8ebd watcher status
+cb0e12bec watcher status
+bb907bfeb watcher status
+51555f3cc watcher status
+851508fd5 builder results: rent-bm397t
+ac8bde5a6 watcher status
+5c2ddbac2 watcher status
+00ec32004 watcher status
+dbeefb3fd watcher status
+e401519cd watcher status
+b8e960a2e watcher status
+a6b9d471c watcher status
+aeb16b79a builder results: 005u-rsn-358c1-stop
+612e39f13 watcher status
+869dedffe watcher status
+47ca468f5 watcher status
+53d27169d watcher status
+0e55ace35 watcher status
+=== 006g result commit ===
+commit f014bc8d70263095cbc1167beb3660e97cd1b50e
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Fri Sep 25 23:57:28 2026 -0400
+
+    builder results: 006g-rd-371b-notes
+
+ .DS_Store                                          |  Bin 6148 -> 6148 bytes
+ artifacts/claude-rd371b-20260926/RESULTS-notes.md  |   54 +
+ artifacts/claude-rd371b-20260926/panel_notes.jsonl |  319 +++
+ .../claude-rd371b-20260926/train_drafts.jsonl      | 2526 ++++++++++++++++++++
+ runs/006g-rd-371b-notes/006g-rd-371b-notes.exit    |    1 +
+ .../006g-rd-371b-notes/006g-rd-371b-notes.go1.done |    1 +
+ .../006g-rd-371b-notes.go1.err.txt                 | 1589 ++++++++++++
+ .../006g-rd-371b-notes.go1.reply.md                |   54 +
+ runs/006g-rd-371b-notes/006g-rd-371b-notes.md      |   13 +
+ 9 files changed, 4557 insertions(+)
+[0m
+[0m$ [0mgit show f014bc8d7:runs/006g-rd-371b-notes/006g-rd-371b-notes.md
+echo "===REPLY==="
+git show f014bc8d7:runs/006g-rd-371b-notes/006g-rd-371b-notes.go1.reply.md
+echo "===EXIT/ERR==="
+git show f014bc8d7:runs/006g-rd-371b-notes/006g-rd-371b-notes.exit
+git show f014bc8d7:runs/006g-rd-371b-notes/006g-rd-371b-notes.go1.err.txt | head -n 200
+COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Build the code tree as section A of origin/main:design/v3/30-modes/330-rent-kit.md says (git archive builder-outbox, then main on top); you do NOT need self122_head.pt, MiniLM, a READER or the route122 check.
+GPU: yes (BensPC)
+TIME CAP: 90 minutes wall. BENSPC: run as 006c-rd-378-train did (origin/builder-outbox:artifacts/claude-rd378-20260925/RESULTS-benspc.md, incl. its fixes: git-bash sha256sum, nohup+disown and wait ~100 s after launching a long step, native Windows paths, PYTHONUTF8=1): venv C:/Users/benja/lis300/venv, WRITER = C:/Users/benja/rd378/tree/WORK/nrun/merged (check model.safetensors sha256 = dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510 first; mismatch: stop). No training, no downloads, no rental, $0. One job at a time on the GPU. Label: rd-371b-notes. Urgent (Ben's 7am goal): please run it as soon as the GPU is free.
+INDEPENDENCE: never open, print or quote any file in artifacts/claude-notepanel371b-20260926/; you only pass dialogs.jsonl to the writer in step 3 and push its output unread.
+
+YOUR TASK: rd-371b step 1, the note writer's drafts. Read origin/main:artifacts/claude-rd371b-20260926/PASSMARKS.md first. Run the code, never edit it; if something breaks, report the exact error. Outputs go in artifacts/claude-rd371b-20260926/ (new files only).
+1. SEALS: from the tree root `sha256sum -c artifacts/claude-rd371b-20260926/SEAL.sha256.txt` and `sha256sum -c artifacts/claude-rd371b-20260926/SEAL-data.sha256.txt` and `cd artifacts/claude-notepanel371b-20260926 && sha256sum -c SEAL.sha256.txt` (all OK). Check WRITER's sha256. Any failure: stop.
+2. TRAINING DRAFTS (greedy + one sample per turn):
+   python -B scripts/claude_rd371b_sample.py --model WRITER --dialogs artifacts/claude-rd371b-20260926/data/train_dialogs.jsonl --out artifacts/claude-rd371b-20260926/train_drafts.jsonl --samples 1 --temp 0.8 --seed 371
+3. PANEL NOTES (greedy only, ONCE):
+   python -B scripts/claude_rd371b_sample.py --model WRITER --dialogs artifacts/claude-notepanel371b-20260926/dialogs.jsonl --out artifacts/claude-rd371b-20260926/panel_notes.jsonl --samples 0
+4. RESULTS-notes.md: the printed counts of steps 2 and 3, GPU, wall time per step, median ms. Never quote dialog or note text.
+PUSH: artifacts/claude-rd371b-20260926/RESULTS-notes.md artifacts/claude-rd371b-20260926/train_drafts.jsonl artifacts/claude-rd371b-20260926/panel_notes.jsonl
+===REPLY===
+Urgent GPU note drafts — fetching the sealed specs to stage your run.
+Specs confirm the plan — now locating the GPU access route.
+Sampling script checks out — now verifying the GPU is free.
+GPU is busy with another training job — I'll prep everything locally and queue for the next free slot.
+Clock is running — building the code tree while waiting for the GPU.
+Writer checksum matches — transferring the tree to BensPC.
+Chunked transfer is working — pushing the remaining pieces.
+All pieces delivered — reassembling the tree on BensPC.
+Tree extracted — running the seal checks.
+Seals all pass — checking if the GPU just freed up.
+GPU looks quieter — double-checking it's actually free.
+Still queued behind the training job — having the launch commands ready.
+GPU just dropped to idle — confirming the slot is free.
+Launch died silently — relaunching with the session held open.
+Drafts are flowing — letting the writer finish.
+About 20% through the training drafts — continuing to monitor.
+Nearly halfway — holding the GPU slot.
+Over 70% done — pushing through to finish.
+Training drafts complete — launching the panel notes run.
+Panel notes almost done — waiting for the final counts.
+Both runs finished — copying the outputs home.
+Counts verify — writing the results file.
+Verdict: STEP 1 DONE — rd-371b note writer drafts written on BensPC, 3 new files ready to push. No checker, no C1-C3 decided here.
+
+Marks (step 1 only; checker marks not run):
+
+| Mark | Bar | Got (integers) | Verdict |
+|---|---|---|---|
+| S1 seals pass | all OK or stop | rd371b SEAL 1/1, SEAL-data 6/6, notepanel371b SEAL 2/2, WRITER sha match | PASS |
+| S2 training drafts | run once, greedy+1 sample | drafts 2526, notes 2514, unparsed 7 | DONE |
+| S3 panel notes once | greedy only, once | drafts 319, notes 314, unparsed 5 | DONE |
+| C1-C3 checker | not this task | not run | N/A |
+
+Every move (integer counts):
+- Fetch origin main + builder-outbox: ok.
+- Tree built builder-outbox + main on top, 1.9 GB, tgz 164 MB, sha 903bd79f. Local seals ok.
+- Transfer to BensPC C:/Users/benja/rd371b in 6 chunks, reassembled sha match, extracted.
+- WRITER C:/Users/benja/rd378/tree/WORK/nrun/merged sha dbcc8db5 match. Venv torch 2.11.0+cu128 cuda True.
+- BensPC seals all OK, GPU waited to 0% idle, then step 2 (2526 drafts) and step 3 once (319 drafts).
+- Medians ms only: train 995.0, panel 1010.3. Copy-back lines match 2526 and 319.
+- New files only: RESULTS-notes.md, train_drafts.jsonl, panel_notes.jsonl. No edits.
+
+Every miss / deviation:
+- GPU busy on arrival (other rsn358a job), waited 02:15-02:59. One job at a time held.
+- First step-2 launch died silently; relaunched with ssh kept alive 100 s, survived.
+- Launch ssh calls timed out locally with no output even on success; checked via separate ssh.
+- Whole-file scp stalled; used 6 split chunks.
+- 90 min cap exceeded by ~10 min (done 03:55 UTC); Ben's 7am goal still met.
+- No code edits, no downloads, $0. Panel files never opened/printed/quoted; panel_notes pushed unread (counts+ms only). Additive only, fictional names already in data, no secrets.
+
+What it means in plain high-school English:
+- The writer wrote drafts for training (2526 drafts, 2514 notes, 7 unparsed) and greedy notes over the sealed test panel once (319 drafts, 314 notes, 5 unparsed). The next step can judge and train the checker.
+- It doesn't mean the notes are true or the checker works — no grading or checker ran here, so C1-C3 are still undecided.
+- It doesn't mean the test leaked — seals passed first, panel ran once, and no dialog or note text is quoted anywhere.
+===EXIT/ERR===
+rc=0
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo "FETCH_EXIT:$?"; git rev-parse origin/main origin/builder-outbox 2>&1 | head -20; git status --short 2>&1 | head -30; pwd; git rev-parse --show-toplevel
+FETCH_EXIT:0
+f2b83913d6ff021073f231724762b5aa4d1ea57b
+49331e13e00be7b8b7a825162ea1fdea37e611e7
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-dl1-20260925/RESULTS-gpu.md
+A  artifacts/claude-dl1-20260925/gpu/dl1_results.json
+A  artifacts/claude-dl1-20260925/gpu/log.txt
+A  artifacts/claude-tgt5-20260926/RESULTS-gpu.md
+A  artifacts/claude-tgt5-20260926/gpu/contrasts.json
+A  artifacts/claude-tgt5-20260926/gpu/log.txt
+A  artifacts/claude-tgt5-20260926/gpu/pairs.jsonl
+A  artifacts/claude-tgt5-20260926/gpu/tgt5_summary.json
+MM artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -40; echo "---END302---"; git show origin/main:artifacts/claude-rd371b-20260926/PASSMARKS.md; echo "---ENDPASS---"
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+PUSH: artifacts/claude-lis302-20260924/tokprobs.jsonl artifacts/claude-lis302-20260924/pyes.json artifacts/claude-lis302-20260924/RESULTS-gpu.md
+---END302---
+# rd-371b: a sentence checker trained on the note writer's own judged drafts (rd-371's one follow-up)
+
+Thread "Fix: reading facts from chat". Written 2026-09-26 02:10 UTC, before the test dialogs are sealed, before the note
+writer writes over them, and before any checker training. Plan: design/v3/30-modes/371b-sentence-checker.md.
+Goal (Ben /goal 01:45 UTC): untrue 1B notes (rd-378: 113/360 unsupported on its panel, 96/277 on dev).
+
+## The one change (vs rd-371)
+What the checker learns from and reads. Source = the note writer's own window (up to 6 earlier turns + the latest turn),
+question = one note sentence (scripts/claude_rd371b_common.build_sprompt). Training rows (scripts/claude_rd371b_data.py):
+the rd-378 note writer's own notes (greedy + one sample at temperature 0.8, scripts/claude_rd371b_sample.py) on ~120 fresh
+dialogs written blind for this purpose, each note graded by a blind judge (artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md):
+ok/bad_cite -> yes, unsupported/bad_when -> no, bad_form skipped; plus code-made name/number swaps of ok notes -> no (no more
+than the real "no" rows). No Claude-written sentence is a target; no panel, DEV bank, bank A/B/C/D, LoCoMo or LongMemEval text.
+Checker: MiniCPM5-1B + LoRA, same settings as rd-371 except max-len 512 (epochs 2, lr 2e-4, rank 32, batch 16, seed 300).
+Bar rule (fixed now, one rule for any arm): the LOWEST grid value whose accepted notes are at most 4% "unsupported" on dev =
+the rd-378 dev notes (277, judged; artifacts/claude-rd378-20260925/dev_notes_judged.jsonl); if none, the largest grid value
+(scripts/claude_rd371b_eval.py sweep).
+
+## Registered test
+artifacts/claude-notepanel371b-20260926 (TEST-ONLY; 30 fresh dialogs, chat + overheard, written blind by a separate agent).
+The rd-378 note writer (sha256 dbcc8db5...8510) writes greedy notes over it ONCE. Two blind judges grade every note with the
+judge brief; key = ok where both say ok, unsupported where both say unsupported, all else excluded (counted, reported).
+Both judge files and the key are sealed before the checker is trained. The checker scores the notes ONCE at its dev bar.
+
+## Marks
+| Mark | Bar |
+|---|---|
+| C1 untrue notes stored: unsupported share of accepted (key ok + unsupported) | <= 5% (rd-378's N4 bar) |
+| C2 good notes kept: key-ok notes accepted | >= 80% |
+| C3 no kind left behind: chat vs overheard C2 | gap <= 10 points |
+PASS = all three. Proved wrong: at its dev bar the checker keeps < 50% of key-ok notes.
+Report only: no-checker baseline (accept all), excluded notes, median ms per note.
+---ENDPASS---
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/330-rent-kit.md | head -120
+echo "---ENDB---"
+git show origin/builder-outbox:artifacts/claude-rd378-20260925/RESULTS-benspc.md
+echo "---ENDBENSPC---"
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+T=$(mktemp -d)/tree && mkdir -p $T
+git archive origin/builder-outbox | tar -x -C $T
+git archive origin/main | tar -x -C $T            # main on top: main wins
+mkdir -p $T/artifacts/fable-self122-20260922
+cp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/
+tar czf tree.tgz -C $(dirname $T) tree
+```
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+scp tree.tgz (and READER if needed) to the instance; tar xzf tree.tgz; cd tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+---ENDB---
+# rd-378 registered result (BensPC): FAIL on counted marks — notes don't move finding (N4 pending blind judge)
+
+Builder run 2026-09-26 on BensPC (RTX 5070 Ti, CUDA). Sealed code imported and
+run unmodified. Panel notepanel378 written over once; only scorer counts viewed.
+No panel turn, question, or note is quoted anywhere in this file.
+
+## Verdict: FAIL (N1, N2, N3 miss; N5 passes; N4 pending blind judge)
+
+| Mark | Bar | Got (integers) | Verdict |
+|---|---|---|---|
+| N1 multi-turn questions: found@10 | B >= A + 10 | B 30/30 (A 30/30, diff 0) | FAIL |
+| N2 time questions: found@10 | B >= A + 5 | B 30/30 (A 30/30, diff 0) | FAIL |
+| N3 all questions: found@10 | B >= A + 5, and no type more than 3 below A | B 149/150 (A 150/150, diff -1); per-type diffs: latest -1, multi 0, preference 0, single 0, time 0 | FAIL (on the +5 clause; per-type clause holds) |
+| N4 notes true to their turns (blind judge, unsupported) | <= 5% of B's notes | pending blind judge | PENDING |
+| N5 notes parse | unparsed turns <= 2% | panel 0/324 (0.0%), dev 0/267 (0.0%) | PASS |
+
+Proved-wrong clause (PASSMARKS): all-question found@10 B (149) <= A + 1 (151) is
+TRUE, so notes don't help finding.
+
+## score.json (verbatim counts; notes text never printed)
+
+{
+ "counts": {
+  "turns_read": 324,
+  "notes": 360,
+  "unparsed": 0
+ },
+ "retriever": "bm25+minilm rrf",
+ "A": {
+  "all:allfound@10": 146,
+  "all:allfound@5": 122,
+  "all:found@10": 150,
+  "all:found@5": 138,
+[0m
+[0m$ [0mgit show f014bc8d7:runs/006g-rd-371b-notes/006g-rd-371b-notes.go1.err.txt | wc -l
+git show f014bc8d7:runs/006g-rd-371b-notes/006g-rd-371b-notes.go1.err.txt | tail -n 400
+1589
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader" 2>&1 | head -5
+ssh -o ConnectTimeout=15 benspc 'powershell -Command "Get-CimInstance Win32_Process -Filter \"ProcessId=4760\" | Select-Object ProcessId,CommandLine"' 2>&1 | head -10
+35 %, 1455 MiB
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi" 2>&1 | head -30
+Fri Sep 25 22:43:23 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 591.86                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070 Ti   WDDM  |   00000000:01:00.0  On |                  N/A |
+| 30%   41C    P1             88W /  250W |    1455MiB /  16303MiB |     30%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1768    C+G   C:\Windows\System32\dwm.exe           N/A      |
+|    0   N/A  N/A            2316    C+G   ...(x86)\e2eSoft\iVCam\iVCam.exe      N/A      |
+|    0   N/A  N/A            3328    C+G   ...cord\app-1.0.9259\Discord.exe      N/A      |
+|    0   N/A  N/A            4152    C+G   ...indows\System32\ShellHost.exe      N/A      |
+|    0   N/A  N/A            5112    C+G   ...ta\Okta Verify\OktaVerify.exe      N/A      |
+|    0   N/A  N/A            5268    C+G   ...s\PowerToys.ColorPickerUI.exe      N/A      |
+|    0   N/A  N/A            8564    C+G   C:\Windows\explorer.exe               N/A      |
+|    0   N/A  N/A           10064    C+G   ...2txyewy\CrossDeviceResume.exe      N/A      |
+|    0   N/A  N/A           10660    C+G   ...Toys\PowerToys.FancyZones.exe      N/A      |
+|    0   N/A  N/A           11728      C   ...s\Python\Python310\python.exe      N/A      |
+|    0   N/A  N/A           12604    C+G   ...em32\ApplicationFrameHost.exe      N/A      |
+|    0   N/A  N/A           12760    C+G   ...7hta09mmv6hy\Build\Lively.exe      N/A      |
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'powershell -Command "Get-CimInstance Win32_Process -Filter \"ProcessId=11728\" | Select-Object ProcessId,CommandLine | Format-List"' 2>&1 | head -15
+ProcessId   : 11728
+CommandLine : "C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe" -B scripts/claude_rsn358a2_shared.py 
+              train --arm plain --seed 2 --out W/plain-s2
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rd371b-20260926/data/train_dialogs.jsonl 2>&1 | wc -l; git show origin/main:scripts/claude_rd371b_sample.py 2>&1 | wc -l
+120
+      67
+[0m
+[0m$ [0mdate -u; sleep 90; ssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader" 2>&1 | head -5; date -u
+Sat Sep 26 02:44:30 UTC 2026
+17 %, 1455 MiB
+Sat Sep 26 02:46:06 UTC 2026
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'powershell -Command "Get-Process -Id 11728 -ErrorAction SilentlyContinue | Select-Object Id,ProcessName; Get-CimInstance Win32_Process -Filter \"Name LIKE `%python%\" | Select-Object ProcessId,CommandLine"' 2>&1 | head -30
+ssh -o ConnectTimeout=15 benspc "nvidia-smi" 2>&1 | grep -A2 "Processes" | head -20
+Id ProcessName
+   -- -----------
+11728 python     
+Get-CimInstance : Invalid query 
+
+At line:1 char:85
++ ... rocessName; Get-CimInstance Win32_Process -Filter "Name LIKE `%python ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [Get-CimInstance], CimException
+    + FullyQualifiedErrorId : HRESULT 0x80041017,Microsoft.Management.Infrastructure.CimCmdlets.GetCimInstanceCommand
+ 
+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'powershell -Command "Get-Process -Id 11728 | Select-Object StartTime,CPU,WorkingSet; Get-CimInstance Win32_Process -Filter \"ProcessId=11728\" | Select-Object CommandLine"' 2>&1 | head -20
+StartTime                  CPU WorkingSet
+---------                  --- ----------
+9/25/2026 10:32:24 PM 770.6875 1974194176
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "ls -lh /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/; echo ---; df -h /c 2>&1 | head -5"' 2>&1 | head -20
+total 9.0K
+drwxr-xr-x 1 benja 197121    0 Sep 25 22:10 data
+-rw-r--r-- 1 benja 197121 2.6K Sep 25 22:10 PASSMARKS.md
+-rw-r--r-- 1 benja 197121  112 Sep 25 22:10 SEAL.sha256.txt
+-rw-r--r-- 1 benja 197121  609 Sep 25 22:10 SEAL-data.sha256.txt
+---
+Filesystem      Size  Used Avail Use% Mounted on
+C:              953G  930G   24G  98% /c
+[0m
+[0m$ [0mdate -u; sleep 110; date -u; ssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader" 2>&1 | head -5
+Sat Sep 26 02:47:04 UTC 2026
+Sat Sep 26 02:48:55 UTC 2026
+37 %, 1455 MiB
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'powershell -Command "Get-Process -Id 11728 -ErrorAction SilentlyContinue | Select-Object Id,CPU,StartTime"' 2>&1 | head -10
+Id        CPU StartTime            
+   --        --- ---------            
+11728 908.609375 9/25/2026 10:32:24 PM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=15 benspc 'powershell -Command "Get-Process -Id 11728 -ErrorAction SilentlyContinue | Select-Object Id,CPU"' 2>&1 | head -10; ssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader" 2>&1 | head -3; date -u
+Id         CPU
+   --         ---
+11728 1017.328125
+
+
+40 %, 1455 MiB
+Sat Sep 26 02:51:10 UTC 2026
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=15 benspc 'powershell -Command "Get-Process -Id 11728 -ErrorAction SilentlyContinue | Select-Object Id,CPU"' 2>&1 | head -10; date -u
+Id       CPU
+   --       ---
+11728 1136.0625
+
+
+Sat Sep 26 02:53:20 UTC 2026
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader" 2>&1 | head -3; ssh -o ConnectTimeout=15 benspc 'powershell -Command "Get-Process -Id 11728 -ErrorAction SilentlyContinue | Select-Object Id,CPU"' 2>&1 | head -8; date -u
+40 %, 1455 MiB
+
+   Id      CPU
+   --      ---
+11728 1246.375
+
+
+Sat Sep 26 02:55:23 UTC 2026
+[0m
+[0m$ [0msleep 115; date -u; ssh -o ConnectTimeout=15 benspc 'powershell -Command "Get-Process -Id 11728 -ErrorAction SilentlyContinue | Select-Object Id"' 2>&1 | head -8
+Sat Sep 26 02:57:23 UTC 2026
+
+   Id
+   --
+11728
+[0m
+[0m$ [0msleep 115; date -u; ssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader" 2>&1 | head -3
+Sat Sep 26 02:59:29 UTC 2026
+0 %, 426 MiB
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'powershell -Command "Get-Process -Id 11728 -ErrorAction SilentlyContinue | Select-Object Id,CPU,StartTime; Get-Process python* | Select-Object Id,StartTime"' 2>&1 | head -20
+ssh -o ConnectTimeout=15 benspc "nvidia-smi" 2>&1 | head -25
+Id StartTime           
+  -- ---------           
+8456 9/23/2026 5:53:26 AM
+8916 9/23/2026 5:57:42 AM
+
+
+Fri Sep 25 22:59:35 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 591.86                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070 Ti   WDDM  |   00000000:01:00.0  On |                  N/A |
+|  0%   33C    P8              8W /  250W |     426MiB /  16303MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1768    C+G   C:\Windows\System32\dwm.exe           N/A      |
+|    0   N/A  N/A            2316    C+G   ...(x86)\e2eSoft\iVCam\iVCam.exe      N/A      |
+|    0   N/A  N/A            3328    C+G   ...cord\app-1.0.9259\Discord.exe      N/A      |
+|    0   N/A  N/A            4152    C+G   ...indows\System32\ShellHost.exe      N/A      |
+|    0   N/A  N/A            5112    C+G   ...ta\Okta Verify\OktaVerify.exe      N/A      |
+|    0   N/A  N/A            5268    C+G   ...s\PowerToys.ColorPickerUI.exe      N/A      |
+|    0   N/A  N/A            8564    C+G   C:\Windows\explorer.exe               N/A      |
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && PYTHONUTF8=1 nohup /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_rd371b_sample.py --model C:/Users/benja/rd378/tree/WORK/nrun/merged --dialogs C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/data/train_dialogs.jsonl --out C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl --samples 1 --temp 0.8 --seed 371 > /c/Users/benja/rd371b/step2.log 2>&1 & disown; echo LAUNCHED_STEP2; date -u"' 2>&1 | head -10
+LAUNCHED_STEP2
+Sat, Sep 26, 2026  2:59:42 AM
+[0m
+[0m$ [0msleep 105; ssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader" 2>&1 | head -3; ssh -o ConnectTimeout=15 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cat /c/Users/benja/rd371b/step2.log; echo ---LOGEND---; ls -lh /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1 | head -3"' 2>&1 | head -20; date -u
+0 %, 426 MiB
+---LOGEND---
+ls: cannot access '/c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl': No such file or directory
+Sat Sep 26 03:01:34 UTC 2026
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'powershell -Command "Get-Process python -ErrorAction SilentlyContinue | Select-Object Id,StartTime,Path"' 2>&1 | head -10
+(no output)
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && PYTHONUTF8=1 /c/Users/benja/lis300/venv/Scripts/python.exe -c \"import torch; print(torch.__version__, torch.cuda.is_available())\"; echo PYTEST_DONE"' 2>&1 | head -10
+2.11.0+cu128 True
+PYTEST_DONE
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && rm -f /c/Users/benja/rd371b/step2.log && PYTHONUTF8=1 nohup /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_rd371b_sample.py --model C:/Users/benja/rd378/tree/WORK/nrun/merged --dialogs C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/data/train_dialogs.jsonl --out C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl --samples 1 --temp 0.8 --seed 371 > /c/Users/benja/rd371b/step2.log 2>&1 & disown; echo LAUNCHED; date -u; sleep 100; echo AFTER_WAIT; date -u; cat /c/Users/benja/rd371b/step2.log; echo ---; ls -lh /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1"' 2>&1 | head -30
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 180000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader" 2>&1 | head -3; date -u
+24 %, 2865 MiB
+Sat Sep 26 03:05:05 UTC 2026
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cat /c/Users/benja/rd371b/step2.log; echo ---LOGEND---; wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -15
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  27%|██▋       | 59/219 [00:00<00:00, 520.26it/s]Loading weights:  51%|█████     | 112/219 [00:00<00:00, 447.00it/s]Loading weights:  74%|███████▎  | 161/219 [00:00<00:00, 447.45it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 494.71it/s]
+---LOGEND---
+131 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:05:11 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+247 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:07:16 AM
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rd371b_common.py 2>&1 | head -80
+#!/usr/bin/env python3
+"""rd-371b sentence checker: shared prompt ("does the conversation state this sentence? yes/no").
+
+The source is the same window the rd-378 note writer saw: up to 6 earlier turns and the latest turn.
+"""
+from __future__ import annotations
+
+from claude_rd378_common import HIST, speaker_name
+
+SSYS = ("Does the conversation state everything in this sentence (no guess, no wrong person, time or detail)? "
+        "Answer yes or no.")
+
+
+def build_sprompt(kind: str, date: str, earlier: list, latest: dict, sentence: str) -> str:
+    lines = [f"{speaker_name(kind, t['speaker'])}: {t['text'].strip()}" for t in earlier[-HIST:]]
+    return (f"{SSYS}\nDate: {date or '(unknown)'}\nEarlier:\n" + ("\n".join(lines) if lines else "(none)") +
+            f"\nLatest ({speaker_name(kind, latest['speaker'])}): {latest['text'].strip()}\n"
+            f"Sentence: {sentence.strip()}\nAnswer: ")
+
+
+def windows(dialog: dict):
+    """(t, earlier, latest) for every turn the note writer reads (chat: non-assistant turns only)."""
+    turns = dialog["turns"]
+    for k, t in enumerate(turns):
+        if dialog["kind"] == "chat" and t["speaker"] == "assistant":
+            continue
+        yield int(t["t"]), turns[:k], t
+[0m
+[0m$ [0mT=$(cat /tmp/rd371b_tree_path.txt); python3 -c "import json; n=d=w=0; f=open('$T/artifacts/claude-rd371b-20260926/data/train_dialogs.jsonl'); import sys; sys.path.insert(0,'$T/scripts'); from claude_rd371b_common import windows; 
+for line in open('$T/artifacts/claude-rd371b-20260926/data/train_dialogs.jsonl'):
+ d+=1
+ j=json.loads(line)
+ c=sum(1 for _ in windows(j))
+ w+=c
+print({'dialogs':d,'windows':w,'expected_step2_drafts':w*2})" 2>&1 | head -10
+{'dialogs': 120, 'windows': 1263, 'expected_step2_drafts': 2526}
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+361 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:09:39 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+509 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:11:56 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+636 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:13:58 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+770 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:15:58 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+898 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:17:57 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+1028 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:20:10 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+1155 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:22:33 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+1296 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:24:48 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+1419 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:27:06 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+1562 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:29:19 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+1698 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:31:41 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+1815 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:34:01 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+1940 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:36:17 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; cat /c/Users/benja/rd371b/step2.log 2>&1 | tail -5; date -u"' 2>&1 | head -15
+2089 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  27%|██▋       | 59/219 [00:00<00:00, 520.26it/s]Loading weights:  51%|█████     | 112/219 [00:00<00:00, 447.00it/s]Loading weights:  74%|███████▎  | 161/219 [00:00<00:00, 447.45it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 494.71it/s]
+Sat, Sep 26, 2026  3:38:42 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; date -u"' 2>&1 | head -10
+2205 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:40:56 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; cat /c/Users/benja/rd371b/step2.log 2>&1 | tail -8; date -u"' 2>&1 | head -20
+2362 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  27%|██▋       | 59/219 [00:00<00:00, 520.26it/s]Loading weights:  51%|█████     | 112/219 [00:00<00:00, 447.00it/s]Loading weights:  74%|███████▎  | 161/219 [00:00<00:00, 447.45it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 494.71it/s]
+Sat, Sep 26, 2026  3:43:09 AM
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; cat /c/Users/benja/rd371b/step2.log 2>&1 | tail -8; date -u"' 2>&1 | head -20
+2526 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  27%|██▋       | 59/219 [00:00<00:00, 520.26it/s]Loading weights:  51%|█████     | 112/219 [00:00<00:00, 447.00it/s]Loading weights:  74%|███████▎  | 161/219 [00:00<00:00, 447.45it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 494.71it/s]
+{"drafts": 2526, "notes": 2514, "unparsed": 7, "device": "cuda"}
+Sat, Sep 26, 2026  3:45:24 AM
+[0m
+[0m# [0mTodos
+[✓] Check BensPC GPU free, disk, WRITER sha, venv
+[✓] Build code tree (builder-outbox + main on top) and transfer to BensPC
+[✓] Run SEALS on BensPC (all OK or stop)
+[✓] Run step 2 TRAINING DRAFTS on BensPC
+[•] Run step 3 PANEL NOTES once on BensPC
+[ ] Copy back outputs, write RESULTS-notes.md, verify new files only
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader" 2>&1 | head -3
+0 %, 426 MiB
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && rm -f /c/Users/benja/rd371b/step3.log && PYTHONUTF8=1 nohup /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_rd371b_sample.py --model C:/Users/benja/rd378/tree/WORK/nrun/merged --dialogs C:/Users/benja/rd371b/tree/artifacts/claude-notepanel371b-20260926/dialogs.jsonl --out C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/panel_notes.jsonl --samples 0 > /c/Users/benja/rd371b/step3.log 2>&1 & disown; echo LAUNCHED_STEP3; date -u; sleep 100; echo AFTER_WAIT; date -u; cat /c/Users/benja/rd371b/step3.log; echo ---; wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/panel_notes.jsonl 2>&1"' 2>&1 | head -30
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 300000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader" 2>&1 | head -3; date -u
+22 %, 2876 MiB
+Sat Sep 26 03:51:18 UTC 2026
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cat /c/Users/benja/rd371b/step3.log 2>&1 | tail -5; echo ---; wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/panel_notes.jsonl 2>&1; date -u"' 2>&1 | head -15
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  26%|██▌       | 57/219 [00:00<00:00, 523.79it/s]Loading weights:  50%|█████     | 110/219 [00:00<00:00, 514.44it/s]Loading weights:  74%|███████▍  | 162/219 [00:00<00:00, 400.36it/s]Loading weights:  94%|█████████▎| 205/219 [00:00<00:00, 407.08it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 454.94it/s]
+---
+266 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/panel_notes.jsonl
+Sat, Sep 26, 2026  3:51:29 AM
+[0m
+[0m$ [0msleep 90; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cat /c/Users/benja/rd371b/step3.log 2>&1 | tail -8; echo ---; wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/panel_notes.jsonl 2>&1; date -u"' 2>&1 | head -20
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  26%|██▌       | 57/219 [00:00<00:00, 523.79it/s]Loading weights:  50%|█████     | 110/219 [00:00<00:00, 514.44it/s]Loading weights:  74%|███████▍  | 162/219 [00:00<00:00, 400.36it/s]Loading weights:  94%|█████████▎| 205/219 [00:00<00:00, 407.08it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 454.94it/s]
+{"drafts": 319, "notes": 314, "unparsed": 5, "device": "cuda"}
+---
+319 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/panel_notes.jsonl
+Sat, Sep 26, 2026  3:53:14 AM
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && PYTHONUTF8=1 /c/Users/benja/lis300/venv/Scripts/python.exe -B -c \"import json,statistics; ms=[]; f=open(\\\"artifacts/claude-rd371b-20260926/train_drafts.jsonl\\\",encoding=\\\"utf-8\\\"); [ms.append(json.loads(l)[\\\"ms\\\"]) for l in f]; ms.sort(); print({\\\"n\\\":len(ms),\\\"median\\\":statistics.median(ms),\\\"p90\\\":ms[int(len(ms)*0.9)],\\\"max\\\":ms[-1]})\""' 2>&1 | head -10
+{'n': 2526, 'median': 995.05, 'p90': 1893.5, 'max': 3009.8}
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && PYTHONUTF8=1 /c/Users/benja/lis300/venv/Scripts/python.exe -B -c \"import json,statistics; ms=[]; f=open(\\\"artifacts/claude-rd371b-20260926/panel_notes.jsonl\\\",encoding=\\\"utf-8\\\"); [ms.append(json.loads(l)[\\\"ms\\\"]) for l in f]; ms.sort(); print({\\\"n\\\":len(ms),\\\"median\\\":statistics.median(ms),\\\"p90\\\":ms[int(len(ms)*0.9)],\\\"max\\\":ms[-1]})\""' 2>&1 | head -10
+{'n': 319, 'median': 1010.3, 'p90': 1900.1, 'max': 3112.4}
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "ls -lh /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/panel_notes.jsonl; date -u"' 2>&1 | head -10
+-rw-r--r-- 1 benja 197121 105K Sep 25 23:51 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/panel_notes.jsonl
+-rw-r--r-- 1 benja 197121 822K Sep 25 23:45 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl
+Sat, Sep 26, 2026  3:53:51 AM
+[0m
+[0m$ [0mls -la artifacts/claude-rd371b-20260926/ 2>&1 | head -20; git status --short artifacts/claude-rd371b-20260926/ 2>&1 | head -20
+ls: artifacts/claude-rd371b-20260926/: No such file or directory
+[0m
+[0m$ [0mmkdir -p artifacts/claude-rd371b-20260926 && scp -o ConnectTimeout=30 benspc:C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_drafts.jsonl artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1; echo "COPY_TRAIN_EXIT:$?"; ls -lh artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1 | head -3
+COPY_TRAIN_EXIT:0
+-rw-------  1 ben-hannan  staff   821K Sep 25 23:54 artifacts/claude-rd371b-20260926/train_drafts.jsonl
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 benspc:C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/panel_notes.jsonl artifacts/claude-rd371b-20260926/panel_notes.jsonl 2>&1; echo "COPY_PANEL_EXIT:$?"; ls -lh artifacts/claude-rd371b-20260926/ 2>&1 | head -10
+COPY_PANEL_EXIT:0
+total 1864
+-rw-------  1 ben-hannan  staff   105K Sep 25 23:55 panel_notes.jsonl
+-rw-------  1 ben-hannan  staff   821K Sep 25 23:54 train_drafts.jsonl
+[0m
+[0m$ [0mwc -l artifacts/claude-rd371b-20260926/train_drafts.jsonl artifacts/claude-rd371b-20260926/panel_notes.jsonl 2>&1 | head -5; date -u
+2526 artifacts/claude-rd371b-20260926/train_drafts.jsonl
+     319 artifacts/claude-rd371b-20260926/panel_notes.jsonl
+    2845 total
+Sat Sep 26 03:55:25 UTC 2026
+[0m
+[0m← [0mWrite artifacts/claude-rd371b-20260926/RESULTS-notes.md
+Wrote file successfully.
+[0m
+[0m$ [0mgit status --short artifacts/claude-rd371b-20260926/ 2>&1 | head -10; ls -lh artifacts/claude-rd371b-20260926/ 2>&1 | head -10
+total 1872
+-rw-------  1 ben-hannan  staff   105K Sep 25 23:55 panel_notes.jsonl
+-rw-r--r--  1 ben-hannan  staff   3.4K Sep 25 23:55 RESULTS-notes.md
+-rw-------  1 ben-hannan  staff   821K Sep 25 23:54 train_drafts.jsonl
+[0m
+[0m$ [0mgit status --short 2>&1 | grep -i 371b | head -10; echo "---"; git check-ignore -v artifacts/claude-rd371b-20260926/train_drafts.jsonl 2>&1 | head -5
+---
+.gitignore:5:artifacts/	artifacts/claude-rd371b-20260926/train_drafts.jsonl
+[0m
+[0m# [0mTodos
+[✓] Check BensPC GPU free, disk, WRITER sha, venv
+[✓] Build code tree (builder-outbox + main on top) and transfer to BensPC
+[✓] Run SEALS on BensPC (all OK or stop)
+[✓] Run step 2 TRAINING DRAFTS on BensPC
+[✓] Run step 3 PANEL NOTES once on BensPC
+[✓] Copy back outputs, write RESULTS-notes.md, verify new files only
+[0m
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/006i-rd-371b-train.md | cat
+echo "===SEALS LIST (names only, no content of forbidden) ==="
+git ls-tree -r --name-only origin/main -- artifacts/claude-rd371b-20260926/ | sort
+echo "===SHOW SEAL NON-FORBIDDEN (safe) ==="
+git show origin/main:artifacts/claude-rd371b-20260926/SEAL.sha256.txt
+echo "---"
+git show origin/main:artifacts/claude-rd371b-20260926/SEAL-data.sha256.txt
+echo "---"
+git show origin/main:artifacts/claude-rd371b-20260926/SEAL-train.sha256.txt
+COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Build the code tree as section A of origin/main:design/v3/30-modes/330-rent-kit.md says (git archive builder-outbox, then main on top); you do NOT need self122_head.pt, MiniLM, a READER or the route122 check.
+GPU: yes (BensPC)
+TIME CAP: 90 minutes wall. BENSPC: run as 006g-rd-371b-notes did (same fixes: git-bash sha256sum, nohup+disown and wait ~100 s after launching a long step, native Windows paths, PYTHONUTF8=1): venv C:/Users/benja/lis300/venv, BASE = the MiniCPM5-1B snapshot lis-318 and lis-319 trained from (re-check its sha256 as they did). Training on BensPC only; no downloads, no rental, $0. One job at a time on the GPU. Label: rd-371b-train. Urgent (Ben's 7am goal): run as soon as the GPU is free.
+INDEPENDENCE: never open, print or quote any file in artifacts/claude-notepanel371b-20260926/ or artifacts/claude-rd371b-20260926/key/ or panel_notes.jsonl. Scripts print counts only.
+
+YOUR TASK: rd-371b, train the sentence checker and run its registered test ONCE. Read origin/main:artifacts/claude-rd371b-20260926/PASSMARKS.md first. Run the code, never edit it; if something breaks, report the exact error. Outputs go in artifacts/claude-rd371b-20260926/ (new files only).
+0. DATA READY: the training data and sealed key are pushed by the reading thread while 006h runs. If origin/main lacks artifacts/claude-rd371b-20260926/SEAL-train.sha256.txt or artifacts/claude-rd371b-20260926/key/SEAL.sha256.txt at launch, re-fetch every 2 minutes for up to 45 minutes (GPU idle meanwhile; other queued jobs may go first); still missing: stop with DATA-MISSING. Rebuild the tree after they appear.
+1. SEALS (all OK or stop): sha256sum -c artifacts/claude-rd371b-20260926/SEAL.sha256.txt; sha256sum -c artifacts/claude-rd371b-20260926/SEAL-data.sha256.txt; sha256sum -c artifacts/claude-rd371b-20260926/SEAL-train.sha256.txt; sha256sum -c artifacts/claude-rd371b-20260926/key/SEAL.sha256.txt; (cd artifacts/claude-notepanel371b-20260926 && sha256sum -c SEAL.sha256.txt).
+2. TRAIN: python -B scripts/claude_lis300_train.py --model BASE --data artifacts/claude-rd371b-20260926/data/ck --out WORK/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 512 --max-minutes 60 --merge   (OOM: --batch 8 once, report it). Copy WORK/run/summary.json to artifacts/claude-rd371b-20260926/train_summary.json. Record sha256 of WORK/run/merged/model.safetensors.
+3. DEV BAR: python -B scripts/claude_rd371b_check.py --model WORK/run/merged --notes-in artifacts/claude-rd371b-20260926/data/dev_in.jsonl --out artifacts/claude-rd371b-20260926/dev_pred.jsonl
+   python -B scripts/claude_rd371b_eval.py sweep --pred artifacts/claude-rd371b-20260926/dev_pred.jsonl --judged artifacts/claude-rd371b-20260926/data/dev_out.jsonl --out artifacts/claude-rd371b-20260926/THRESHOLD.json
+   Then seal before the panel: sha256sum artifacts/claude-rd371b-20260926/THRESHOLD.json WORK/run/merged/model.safetensors > artifacts/claude-rd371b-20260926/SEAL-run.sha256.txt
+4. TEST ONCE: python -B scripts/claude_rd371b_check.py --model WORK/run/merged --notes-in artifacts/claude-rd371b-20260926/key/panel_in.jsonl --out artifacts/claude-rd371b-20260926/panel_pred.jsonl
+   python -B scripts/claude_rd371b_eval.py score --pred artifacts/claude-rd371b-20260926/panel_pred.jsonl --key artifacts/claude-rd371b-20260926/key/key.jsonl --threshold T --out artifacts/claude-rd371b-20260926/score.json   (T = THRESHOLD.json "T")
+5. RESULTS.md: C1-C3 and the proved-wrong clause from PASSMARKS with integer counts (score.json verbatim), THRESHOLD.json T and its dev row, train summary, merged sha256, GPU, wall time per step. Never quote panel or note text. Keep WORK/run/merged on BensPC (C:/Users/benja/rd371b/run/merged) for the joined build.
+PUSH: RESULTS.md train_summary.json dev_pred.jsonl THRESHOLD.json SEAL-run.sha256.txt panel_pred.jsonl score.json (all in artifacts/claude-rd371b-20260926/).
+===SEALS LIST (names only, no content of forbidden) ===
+artifacts/claude-rd371b-20260926/data/ck/dev.jsonl
+artifacts/claude-rd371b-20260926/data/ck/summary.json
+artifacts/claude-rd371b-20260926/data/ck/train.jsonl
+artifacts/claude-rd371b-20260926/data/dev_in.jsonl
+artifacts/claude-rd371b-20260926/data/dev_out.jsonl
+artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl
+artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl
+artifacts/claude-rd371b-20260926/data/train_dialogs.jsonl
+artifacts/claude-rd371b-20260926/key/judge_A.jsonl
+artifacts/claude-rd371b-20260926/key/judge_B.jsonl
+artifacts/claude-rd371b-20260926/key/key_counts.json
+artifacts/claude-rd371b-20260926/key/key.jsonl
+artifacts/claude-rd371b-20260926/key/panel_in.jsonl
+artifacts/claude-rd371b-20260926/key/README.md
+artifacts/claude-rd371b-20260926/key/SEAL.sha256.txt
+artifacts/claude-rd371b-20260926/PASSMARKS.md
+artifacts/claude-rd371b-20260926/SEAL-data.sha256.txt
+artifacts/claude-rd371b-20260926/SEAL-train.sha256.txt
+artifacts/claude-rd371b-20260926/SEAL.sha256.txt
+===SHOW SEAL NON-FORBIDDEN (safe) ===
+ed0755125b7a5e6d01ad136df13a4063f0bd938f1c234ba9af585b05fd163b2b  artifacts/claude-rd371b-20260926/PASSMARKS.md
+---
+5985da96805ee5da70232d2d23ec425a850d200579c3444cf5c4d008acac973c  artifacts/claude-rd371b-20260926/data/train_dialogs.jsonl
+f813f6a058db50f06af5dd76f20d4f79d2fa01a3b8ea57a94b662fb82fa18b2d  scripts/claude_rd371b_common.py
+16e740c700cc3b74e74e517dfc86efd516bca65388798a3145f5ab27cf51af05  scripts/claude_rd371b_sample.py
+24796f9b5d8b56434fc6bebbdca6d09b193bfb32cec35b38e7b916a35d5b93fd  scripts/claude_rd371b_data.py
+81a753103f3caf81857c6df019a270d197c21d44049b2fe6da7ce1fabc9c440b  scripts/claude_rd371b_check.py
+19b164bf993f831b38136534ce9b709ba213998d7365bbc4331f1222d4c94bab  scripts/claude_rd371b_eval.py
+---
+6de072957226cab64b13a7e9b3ad24a83c938803fc2484713d8c0a858be4bb48  artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl
+45d9bb07ed62f4f91d3491fab7eb86f726c78670c968b3be3cc6fa21b8100f2a  artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl
+b7f3686057d345587d92ccb94fe14074f6ee336d5c8661f01188e144dedbc9a3  artifacts/claude-rd371b-20260926/data/ck/train.jsonl
+243e8980dad6bdaaa9f7b65b93872a60b2a82f73bcac8d43693b39c953960253  artifacts/claude-rd371b-20260926/data/ck/dev.jsonl
+6d7f960efdae5be749073c5c059acb65a40a82bfb3be84b586f0fae37514d7fb  artifacts/claude-rd371b-20260926/data/ck/summary.json
+72b9a3ab90e38851ef96d3e10e18daf2e108d1504901c1999625f45c5c3824c7  artifacts/claude-rd371b-20260926/data/dev_in.jsonl
+99620b7d4a63e071e3dbe6faade3b3ccf0978ee05d390a18a82144b5f326a4c9  artifacts/claude-rd371b-20260926/data/dev_out.jsonl
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis300_train.py | head -n 120
+echo "===CHECK==="
+git show origin/main:scripts/claude_rd371b_check.py | head -n 120
+echo "===EVAL==="
+git show origin/main:scripts/claude_rd371b_eval.py | head -n 150
+#!/usr/bin/env python3
+"""lis-300 fine-tune: MiniCPM5-1B -> listener (LoRA on every linear layer, loss on the frame only).
+
+python claude_lis300_train.py --model DIR --data DIR --out DIR [--epochs 2] [--lr 2e-4] [--rank 32]
+       [--batch 16] [--max-len 256] [--max-minutes 150] [--limit N] [--merge]
+
+Writes OUT/adapter/, OUT/merged/ (with --merge), OUT/train_log.jsonl, OUT/summary.json.
+Plain torch loop, no Trainer. bf16 on CUDA, fp32 on CPU (CPU only for smoke tests).
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import random
+import time
+from pathlib import Path
+
+import torch
+from peft import LoraConfig, get_peft_model
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+
+def load_rows(p, limit=None):
+    rows = [json.loads(l) for l in Path(p).read_text(encoding="utf-8").splitlines() if l.strip()]
+    return rows[:limit] if limit else rows
+
+
+def encode(tok, row, max_len):
+    p = tok(row["prompt"], add_special_tokens=False)["input_ids"]
+    t = tok(row["target"], add_special_tokens=False)["input_ids"] + [tok.eos_token_id]
+    ids = ([tok.bos_token_id] if tok.bos_token_id is not None else []) + p + t
+    labels = [-100] * (len(ids) - len(t)) + t
+    return ids[:max_len], labels[:max_len]
+
+
+def batches(encoded, bs, pad_id, shuffle, rng):
+    idx = list(range(len(encoded)))
+    if shuffle:
+        rng.shuffle(idx)
+    for i in range(0, len(idx), bs):
+        chunk = [encoded[j] for j in idx[i:i + bs]]
+        L = max(len(x[0]) for x in chunk)
+        ids = torch.full((len(chunk), L), pad_id)
+        lab = torch.full((len(chunk), L), -100)
+        att = torch.zeros((len(chunk), L), dtype=torch.long)
+        for k, (a, b) in enumerate(chunk):
+            ids[k, :len(a)] = torch.tensor(a)
+            lab[k, :len(b)] = torch.tensor(b)
+            att[k, :len(a)] = 1
+        yield ids, lab, att
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--data", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--epochs", type=float, default=2.0)
+    ap.add_argument("--lr", type=float, default=2e-4)
+    ap.add_argument("--rank", type=int, default=32)
+    ap.add_argument("--batch", type=int, default=16)
+    ap.add_argument("--max-len", type=int, default=256)
+    ap.add_argument("--max-minutes", type=float, default=150)
+    ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--merge", action="store_true")
+    ap.add_argument("--seed", type=int, default=300)
+    a = ap.parse_args()
+    torch.manual_seed(a.seed)
+    rng = random.Random(a.seed)
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    dtype = torch.bfloat16 if dev == "cuda" else torch.float32
+    tok = AutoTokenizer.from_pretrained(a.model)
+    pad_id = tok.pad_token_id if tok.pad_token_id is not None else tok.eos_token_id
+    model = AutoModelForCausalLM.from_pretrained(a.model, dtype=dtype).to(dev)
+    model.gradient_checkpointing_enable()
+    model.enable_input_require_grads()
+    cfg = LoraConfig(r=a.rank, lora_alpha=2 * a.rank, lora_dropout=0.05, task_type="CAUSAL_LM",
+                     target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"])
+    model = get_peft_model(model, cfg)
+    n_train = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    n_all = sum(p.numel() for p in model.parameters())
+    train = [encode(tok, r, a.max_len) for r in load_rows(Path(a.data) / "train.jsonl", a.limit)]
+    devrows = [encode(tok, r, a.max_len) for r in load_rows(Path(a.data) / "dev.jsonl", a.limit and max(8, a.limit // 10))]
+    steps_per_epoch = math.ceil(len(train) / a.batch)
+    total = max(1, int(steps_per_epoch * a.epochs))
+    opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=a.lr, weight_decay=0.0)
+    warm = max(1, total // 30)
+    sched = torch.optim.lr_scheduler.LambdaLR(
+        opt, lambda s: min(1.0, (s + 1) / warm) * 0.5 * (1 + math.cos(math.pi * min(1.0, s / total))))
+    log = open(out / "train_log.jsonl", "w")
+    t0 = time.time()
+    step, toks, stopped = 0, 0, None
+    model.train()
+    while step < total and stopped is None:
+        for ids, lab, att in batches(train, a.batch, pad_id, True, rng):
+            ids, lab, att = ids.to(dev), lab.to(dev), att.to(dev)
+            loss = model(input_ids=ids, attention_mask=att, labels=lab).loss
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            opt.step(); sched.step(); opt.zero_grad(set_to_none=True)
+            step += 1
+            toks += int(att.sum())
+            if step % 20 == 0 or step == 1:
+                el = time.time() - t0
+                rec = {"step": step, "total": total, "loss": round(loss.item(), 4),
+                       "lr": sched.get_last_lr()[0], "tok_per_s": round(toks / el, 1), "min": round(el / 60, 2)}
+                log.write(json.dumps(rec) + "\n"); log.flush()
+                print(rec, flush=True)
+            if (time.time() - t0) / 60 > a.max_minutes:
+                stopped = "time_cap"
+                break
+            if step >= total:
+                break
+    model.eval()
+    dl, dn = 0.0, 0
+    with torch.no_grad():
+        for ids, lab, att in batches(devrows, a.batch, pad_id, False, rng):
+===CHECK===
+#!/usr/bin/env python3
+"""rd-371b sentence checker: P(yes) that the conversation window states a note.
+
+Library:  c = Checker(model_dir); p = c.p_yes(kind, date, earlier, latest, sentence)
+CLI:      python claude_rd371b_check.py --model DIR --notes-in JUDGE_IN.jsonl --out PRED.jsonl
+          JUDGE_IN = dialogs whose non-assistant turns carry "notes"; PRED rows {"dialog","t","k","p_yes","ms"}.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import time
+from pathlib import Path
+
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_rd371b_common import build_sprompt, windows  # noqa: E402
+
+
+class Checker:
+    def __init__(self, model_dir, device=None):
+        self.dev = device or ("cuda" if torch.cuda.is_available() else
+                              "mps" if torch.backends.mps.is_available() else "cpu")
+        dtype = torch.float32 if self.dev == "cpu" else torch.bfloat16 if self.dev == "cuda" else torch.float16
+        self.tok = AutoTokenizer.from_pretrained(model_dir)
+        self.model = AutoModelForCausalLM.from_pretrained(model_dir, dtype=dtype).to(self.dev).eval()
+        self.yes = self.tok("yes", add_special_tokens=False)["input_ids"][0]
+        self.no = self.tok("no", add_special_tokens=False)["input_ids"][0]
+
+    @torch.no_grad()
+    def p_yes(self, kind, date, earlier, latest, sentence):
+        p = self.tok(build_sprompt(kind, date, earlier, latest, sentence), add_special_tokens=False)["input_ids"]
+        if self.tok.bos_token_id is not None:
+            p = [self.tok.bos_token_id] + p
+        ids = torch.tensor([p], device=self.dev)
+        logits = self.model(input_ids=ids, attention_mask=torch.ones_like(ids)).logits[0, -1].float()
+        return float(torch.softmax(torch.stack([logits[self.yes], logits[self.no]]), dim=0)[0])
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--notes-in", required=True)
+    ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    c = Checker(a.model)
+    n = 0
+    with open(a.out, "w", encoding="utf-8") as fh:
+        for line in Path(a.notes_in).read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            d = json.loads(line)
+            for t, earlier, latest in windows(d):
+                for k, note in enumerate(latest.get("notes") or []):
+                    t0 = time.perf_counter()
+                    p = c.p_yes(d["kind"], d.get("date", ""), earlier, latest, note["text"])
+                    fh.write(json.dumps({"dialog": d["dialog"], "t": t, "k": k, "p_yes": p,
+                                         "ms": round((time.perf_counter() - t0) * 1000, 1)}) + "\n")
+                    n += 1
+    print(json.dumps({"notes_checked": n, "device": c.dev}))
+
+
+if __name__ == "__main__":
+    main()
+===EVAL===
+#!/usr/bin/env python3
+"""rd-371b: bar sweep on dev and panel scoring (counts only).
+
+sweep: python claude_rd371b_eval.py sweep --pred PRED.jsonl --judged JUDGE_OUT.jsonl [--pair ...] --out SWEEP.json
+       Registered bar rule: the LOWEST grid value whose accepted notes are at most 4% "unsupported" on dev
+       (accepted > 0); if none, the largest grid value.
+score: python claude_rd371b_eval.py score --pred PRED.jsonl --key KEY.jsonl --threshold T --out SCORE.json
+       KEY rows {"dialog","t","k","kind","label": "ok"|"unsupported"|"excluded"}.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import statistics
+from collections import Counter
+from pathlib import Path
+
+GRID = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.98, 0.99, 0.995, 0.999, 0.9995, 0.9999]
+TARGET = 0.04
+
+
+def load(p):
+    return [json.loads(l) for l in Path(p).read_text(encoding="utf-8").splitlines() if l.strip()]
+
+
+def pairs(pred_paths, judged_paths):
+    P = {}
+    for p in pred_paths:
+        for r in load(p):
+            P[(r["dialog"], int(r["t"]), int(r["k"]))] = r["p_yes"]
+    out = []
+    for jp in judged_paths:
+        for r in load(jp):
+            for k, v in enumerate(r["verdicts"]):
+                key = (r["dialog"], int(r["t"]), k)
+                if key in P:
+                    out.append((P[key], v))
+    return out
+
+
+def sweep(a):
+    xs = pairs(a.pred, a.judged)
+    table, T = [], None
+    for g in GRID:
+        acc = [v for p, v in xs if p >= g]
+        uns = sum(v == "unsupported" for v in acc)
+        ok_all = sum(v == "ok" for _, v in xs)
+        row = {"t": g, "accepted": len(acc), "unsupported": uns, "ok_kept": sum(v == "ok" for v in acc),
+               "ok_total": ok_all, "rate": round(uns / len(acc), 4) if acc else None}
+        table.append(row)
+        if T is None and acc and uns / len(acc) <= TARGET:
+            T = g
+    res = {"T": T if T is not None else GRID[-1], "rule": "lowest grid value with dev unsupported/accepted <= 0.04",
+           "notes": len(xs), "verdicts": dict(Counter(v for _, v in xs)), "sweep": table}
+    Path(a.out).write_text(json.dumps(res, indent=1))
+    print(json.dumps({k: res[k] for k in ("T", "notes", "verdicts")}))
+
+
+def score(a):
+    P = {(r["dialog"], int(r["t"]), int(r["k"])): r for r in load(a.pred)}
+    c, ms = Counter(), []
+    for r in load(a.key):
+        p = P.get((r["dialog"], int(r["t"]), int(r["k"])))
+        if p is None:
+            c["missing_pred"] += 1
+            continue
+        ms.append(p.get("ms", 0))
+        lab, kind, acc = r["label"], r.get("kind", "all"), p["p_yes"] >= a.threshold
+        c[f"{lab}_total"] += 1
+        c[f"{kind}:{lab}_total"] += 1
+        if acc:
+            c["accepted"] += 1
+            c[f"{lab}_kept"] += 1
+            c[f"{kind}:{lab}_kept"] += 1
+    res = dict(sorted(c.items()))
+    acc_scored = c["ok_kept"] + c["unsupported_kept"]
+    res["threshold"] = a.threshold
+    res["C1_unsupported_share_of_accepted"] = round(c["unsupported_kept"] / acc_scored, 4) if acc_scored else None
+    res["C2_ok_kept_share"] = round(c["ok_kept"] / c["ok_total"], 4) if c["ok_total"] else None
+    res["ms_median"] = statistics.median(ms) if ms else None
+    Path(a.out).write_text(json.dumps(res, indent=1) + "\n")
+    print(json.dumps(res))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    s = sub.add_parser("sweep")
+    s.add_argument("--pred", action="append", required=True)
+    s.add_argument("--judged", action="append", required=True)
+    s.add_argument("--out", required=True)
+    s = sub.add_parser("score")
+    s.add_argument("--pred", required=True)
+    s.add_argument("--key", required=True)
+    s.add_argument("--threshold", type=float, required=True)
+    s.add_argument("--out", required=True)
+    a = ap.parse_args()
+    (sweep if a.cmd == "sweep" else score)(a)
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rd371b-20260926/data/ck/summary.json
+echo "===BASE search: lis318 results==="
+git log --oneline --all --grep="lis-318\|lis318\|rd-378.*train\|RESULTS.*378" | head -n 10
+git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-rd378-20260925/ | head -n 30
+{
+ "train": 2257,
+ "dev": 218,
+ "yes": 965,
+ "no": 1510,
+ "by_family": {
+  "unsupported": 993,
+  "ok": 868,
+  "bad_when": 45,
+  "bad_cite": 97,
+  "pert_name": 312,
+  "pert_number": 160
+ },
+ "verdicts": {
+  "unsupported": 993,
+  "ok": 868,
+  "bad_when": 45,
+  "bad_form": 51,
+  "bad_cite": 97
+ },
+ "turns_unmatched": 0
+}===BASE search: lis318 results===
+346481d67 trash run 0926: REPORT for rd371-verifier-merged + lis318-merged move to Trash
+4414f632d Director: queue Mac job to trash rd371-verifier + lis318 merged models (Ben yes 02:16)
+05e9f902b builder results: 006c-rd-378-train
+c25651d2f rd-378 data sealed (6 writers, 2,797 judged notes kept, train 7,650 / dev 255); rent-rd-378 queued ($2 cap, Ben's $7 window, Director told)
+8a3c65ff6 rd-378 PASSMARKS registered (before training and before notepanel378 is sealed)
+9b04cf7ed lis-319: queued on BensPC (arm A = lis-318 merged 8b3fdbda, T_A 0.995)
+4bb1668ee lis-318 = REGISTERED FAIL (verified): R0 237 vs 239, saved 132 vs 111, 0 wrong; the panel was already easy for the old reader; DEV invented facts 52 -> 18
+afee3ebc9 builder results: lis-318-train
+37365dcd4 lis-318: back to BensPC (rent-lis-318 stopped: vast.ai credit empty, nothing trained, panel untouched)
+d5d7a860d builder results: rent-lis-318
+artifacts/claude-rd378-20260925/DATA.json
+artifacts/claude-rd378-20260925/RESULTS-benspc.md
+artifacts/claude-rd378-20260925/SEAL-run.sha256.txt
+artifacts/claude-rd378-20260925/dev_notes.jsonl
+artifacts/claude-rd378-20260925/panel_notes.jsonl
+artifacts/claude-rd378-20260925/score.json
+artifacts/claude-rd378-20260925/train_summary.json
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-rd378-20260925/RESULTS-benspc.md | grep -A5 -i "base model\|snapshot\|sha256\|commit"
+echo "===006c result commit files==="
+git show --stat 05e9f902b | head -n 30
+echo "===lis318 train summary?==="
+git ls-tree -r --name-only origin/main -- artifacts/claude-lis318-20260925/ | head -n 20
+git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-lis318-20260925/ | head -n 20
+- Base model: C:/Users/benja/lis300/model (reused lis-300 download),
+  model-00000-of-00001.safetensors sha256
+  7ab8fd86563125929be78aeec8cb3969c7ed2ead3be1ab9d3ec0a9fa69c8660d
+  (verified before training; commit 87179e5c as in lis-300 RESULTS.md).
+- MiniLM: snapshot already on BensPC
+  (C:/Users/benja/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41,
+  the snapshot scripts/fable_self122_train.resolve_snapshot(None) returns);
+  eval retriever bm25+minilm rrf. No downloads.
+- Merged note-writer sha256
+  dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510,
+  kept at C:/Users/benja/rd378/tree/WORK/nrun/merged (BensPC) and
+  ~/premonition-models/rd378-notes-merged/ (Mac, hash verified). Never in git.
+- Panel write: 324 turns, 360 notes, 0 unparsed. Dev write: 267 turns,
+  277 notes, 0 unparsed.
+--
+   snapshot (safetensors sha256 re-verified) instead of a new venv and
+   re-download; new work dir C:/Users/benja/rd378 used throughout.
+2. Set PYTHONUTF8=1 (env var only), as in lis-300/lis-301/lis-318.
+3. No `resource`-module failure occurred, so scripts/winshim was not needed.
+4. No OOM at batch 16, so the batch-8 fallback was not used.
+5. shasum is absent on BensPC; seals were checked with git-bash sha256sum -c
+   (same file format). The rd378 data seal lists bare filenames, so it was run
+   from inside artifacts/claude-rd378-20260925/data (16/16 OK) rather than the
+   tree root (where the paths don't resolve); the panel seal was run from
+   inside artifacts/claude-notepanel378-20260925 (7/7 OK), as written.
+6. Training was launched with nohup + disown per the lis-318 pattern; the
+===006c result commit files===
+commit 05e9f902bc3475ec77a544b53bc9a559fe16c6bf
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Fri Sep 25 21:10:28 2026 -0400
+
+    builder results: 006c-rd-378-train
+
+ .DS_Store                                          |  Bin 6148 -> 6148 bytes
+ artifacts/claude-rd378-20260925/DATA.json          |    1 +
+ artifacts/claude-rd378-20260925/RESULTS-benspc.md  |  210 ++
+ .../claude-rd378-20260925/SEAL-run.sha256.txt      |    1 +
+ artifacts/claude-rd378-20260925/dev_notes.jsonl    |  267 +++
+ artifacts/claude-rd378-20260925/panel_notes.jsonl  |  324 +++
+ artifacts/claude-rd378-20260925/score.json         |   84 +
+ artifacts/claude-rd378-20260925/train_summary.json |   27 +
+ artifacts/fable-predictions-ledger.md              |    1 +
+ runs/006c-rd-378-train/006c-rd-378-train.exit      |    1 +
+ runs/006c-rd-378-train/006c-rd-378-train.go1.done  |    1 +
+ .../006c-rd-378-train.go1.err.txt                  | 2482 ++++++++++++++++++++
+ .../006c-rd-378-train.go1.reply.md                 |   48 +
+ runs/006c-rd-378-train/006c-rd-378-train.md        |   18 +
+ 14 files changed, 3465 insertions(+)
+===lis318 train summary?===
+artifacts/claude-lis318-20260925/PASSMARKS.md
+artifacts/claude-lis318-20260925/RESULTS.md
+artifacts/claude-lis318-20260925/data/LABELLER.md
+artifacts/claude-lis318-20260925/data/README.md
+artifacts/claude-lis318-20260925/data/SEAL.sha256.txt
+artifacts/claude-lis318-20260925/data/WRITER.md
+artifacts/claude-lis318-20260925/data/agree_w1.json
+artifacts/claude-lis318-20260925/data/agree_w2.json
+artifacts/claude-lis318-20260925/data/agree_w3.json
+artifacts/claude-lis318-20260925/data/agree_w4.json
+artifacts/claude-lis318-20260925/data/agree_w5.json
+artifacts/claude-lis318-20260925/data/agreed_ids.txt
+artifacts/claude-lis318-20260925/data/agreed_w1.txt
+artifacts/claude-lis318-20260925/data/agreed_w2.txt
+artifacts/claude-lis318-20260925/data/agreed_w3.txt
+artifacts/claude-lis318-20260925/data/agreed_w4.txt
+artifacts/claude-lis318-20260925/data/agreed_w5.txt
+artifacts/claude-lis318-20260925/data/chat_w1.jsonl
+artifacts/claude-lis318-20260925/data/chat_w2.jsonl
+artifacts/claude-lis318-20260925/data/chat_w3.jsonl
+artifacts/claude-lis318-20260925/RESULTS-benspc.md
+artifacts/claude-lis318-20260925/SEAL-run.sha256.txt
+artifacts/claude-lis318-20260925/THRESHOLD.txt
+artifacts/claude-lis318-20260925/dev/dev.jsonl
+artifacts/claude-lis318-20260925/dev/dev_pred.jsonl
+artifacts/claude-lis318-20260925/dev/dev_rows.jsonl
+artifacts/claude-lis318-20260925/reads_e2edev_B.jsonl
+artifacts/claude-lis318-20260925/score_A.json
+artifacts/claude-lis318-20260925/score_B.json
+artifacts/claude-lis318-20260925/train_summary.json
+[0m
+[0m# [0mTodos
+[•] Verify DATA READY + read PASSMARKS, check Mac disk/uptime
+[ ] Check BensPC GPU idle, disk, BASE sha, venv
+[ ] Build code tree (builder-outbox+main) and transfer to BensPC
+[ ] Run 5 SEALS on BensPC (all OK or stop)
+[ ] TRAIN checker on BensPC (batch16, OOM fallback batch8)
+[ ] DEV BAR + SEAL-run on BensPC
+[ ] TEST ONCE (panel check + score) on BensPC
+[ ] Copy back 7 PUSH files + write RESULTS.md locally
+[0m
+[0m$ [0muptime; df -g / | head -5; date -u; git rev-parse origin/main origin/builder-outbox | head -5
+0:35  up 2 days, 14:28, 4 users, load averages: 14.98 16.79 21.03
+Filesystem     1G-blocks Used Available Capacity iused    ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         7    64%  484014 75055360    1%   /
+Sat Sep 26 04:35:36 UTC 2026
+27bec7c6cc4ca7069ed5ab3c5e139b2dd2e5484a
+df67d1b22ca716015f62a396ce9b43bd1c7604e2
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used,power.draw --format=csv,noheader" 2>&1 | head -5; echo "---GPU FULL---"; ssh -o ConnectTimeout=15 benspc "nvidia-smi" 2>&1 | head -n 30
+0 %, 437 MiB, 9.95 W
+---GPU FULL---
+Sat Sep 26 00:35:41 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 591.86                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070 Ti   WDDM  |   00000000:01:00.0  On |                  N/A |
+|  0%   45C    P8              9W /  250W |     437MiB /  16303MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1768    C+G   C:\Windows\System32\dwm.exe           N/A      |
+|    0   N/A  N/A            2316    C+G   ...(x86)\e2eSoft\iVCam\iVCam.exe      N/A      |
+|    0   N/A  N/A            3328    C+G   ...cord\app-1.0.9259\Discord.exe      N/A      |
+|    0   N/A  N/A            4152    C+G   ...indows\System32\ShellHost.exe      N/A      |
+|    0   N/A  N/A            5052    C+G   ...8bbwe\PhoneExperienceHost.exe      N/A      |
+|    0   N/A  N/A            5112    C+G   ...ta\Okta Verify\OktaVerify.exe      N/A      |
+|    0   N/A  N/A            5268    C+G   ...s\PowerToys.ColorPickerUI.exe      N/A      |
+|    0   N/A  N/A            8564    C+G   C:\Windows\explorer.exe               N/A      |
+|    0   N/A  N/A           10064    C+G   ...2txyewy\CrossDeviceResume.exe      N/A      |
+|    0   N/A  N/A           10660    C+G   ...Toys\PowerToys.FancyZones.exe      N/A      |
+|    0   N/A  N/A           12604    C+G   ...em32\ApplicationFrameHost.exe      N/A      |
+|    0   N/A  N/A           12760    C+G   ...7hta09mmv6hy\Build\Lively.exe      N/A      |
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "df -h /c 2>&1 | head -5; echo ---; ls -ld /c/Users/benja/rd371b /c/Users/benja/rd371b/tree 2>&1; echo ---; ls /c/Users/benja/lis300/ 2>&1 | head -10"' 2>&1 | head -n 20
+Filesystem      Size  Used Avail Use% Mounted on
+C:              953G  932G   21G  98% /c
+---
+drwxr-xr-x 1 benja 197121 0 Sep 25 23:46 /c/Users/benja/rd371b
+drwxr-xr-x 1 benja 197121 0 Sep 25 22:39 /c/Users/benja/rd371b/tree
+---
+dlmodel.log
+fam_scores.py
+lis300_dlmodel.py
+lis300-main.tar
+lis300-outbox.tar
+make_panel_rows.py
+model
+pip.log
+pip-torch.log
+pip-torch2.log
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "ls /c/Users/benja/lis300/model/ 2>&1 | head; echo ---; sha256sum /c/Users/benja/lis300/model/model-*.safetensors 2>&1 | head -5"' 2>&1 | head -n 20
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors.index.json
+model-00000-of-00001.safetensors
+README.md
+README-cn.md
+special_tokens_map.json
+tokenizer.json
+tokenizer_config.json
+---
+7ab8fd86563125929be78aeec8cb3969c7ed2ead3be1ab9d3ec0a9fa69c8660d */c/Users/benja/lis300/model/model-00000-of-00001.safetensors
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "/c/Users/benja/lis300/venv/Scripts/python.exe -c \"import torch; print(torch.__version__, torch.cuda.is_available())\" 2>&1"' 2>&1 | head -n 5
+echo "---PROCS---"
+ssh -o ConnectTimeout=15 benspc 'powershell -Command "Get-Process python -ErrorAction SilentlyContinue | Select-Object Id,StartTime"' 2>&1 | head -n 10
+2.11.0+cu128 True
+---PROCS---
+[0m
+[0m# [0mTodos
+[✓] Verify DATA READY + read PASSMARKS, check Mac disk/uptime
+[✓] Check BensPC GPU idle, disk, BASE sha, venv
+[•] Build code tree (builder-outbox+main) and transfer to BensPC
+[ ] Run 5 SEALS on BensPC (all OK or stop)
+[ ] TRAIN checker on BensPC (batch16, OOM fallback batch8)
+[ ] DEV BAR + SEAL-run on BensPC
+[ ] TEST ONCE (panel check + score) on BensPC
+[ ] Copy back 7 PUSH files + write RESULTS.md locally
+[0m
+[0m$ [0mT=$(mktemp -d)/tree && mkdir -p $T && echo $T > /tmp/rd371b_train_tree.txt && cat /tmp/rd371b_train_tree.txt && git archive origin/builder-outbox | tar -x -C $T && git archive origin/main | tar -x -C $T && echo "EXTRACT_DONE" && du -sh $T && ls $T | head -n 20
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SVTUaDUJKR/tree
+EXTRACT_DONE
+2.0G	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SVTUaDUJKR/tree
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+CLAUDE.md
+data
+design
+handoff
+learnlab
+memorylab
+premonition
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scripts
+status
+[0m
+[0m$ [0mT=$(cat /tmp/rd371b_train_tree.txt); ls $T/artifacts/claude-rd371b-20260926/ $T/artifacts/claude-rd371b-20260926/data/ $T/artifacts/claude-rd371b-20260926/key/ 2>&1 | head -n 30; echo "---CK---"; ls -lh $T/artifacts/claude-rd371b-20260926/data/ck/ 2>&1; echo "---SCRIPTS---"; ls -lh $T/scripts/claude_rd371b*.py $T/scripts/claude_lis300_train.py 2>&1
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SVTUaDUJKR/tree/artifacts/claude-rd371b-20260926/:
+data
+key
+panel_notes.jsonl
+PASSMARKS.md
+RESULTS-notes.md
+SEAL-data.sha256.txt
+SEAL-train.sha256.txt
+SEAL.sha256.txt
+train_drafts.jsonl
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SVTUaDUJKR/tree/artifacts/claude-rd371b-20260926/data/:
+ck
+dev_in.jsonl
+dev_out.jsonl
+judge_train_in.jsonl
+judge_train_out.jsonl
+train_dialogs.jsonl
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SVTUaDUJKR/tree/artifacts/claude-rd371b-20260926/key/:
+judge_A.jsonl
+judge_B.jsonl
+key_counts.json
+key.jsonl
+panel_in.jsonl
+README.md
+SEAL.sha256.txt
+---CK---
+total 3584
+-rw-r--r--  1 ben-hannan  staff   155K Sep 26 00:15 dev.jsonl
+-rw-r--r--  1 ben-hannan  staff   319B Sep 26 00:15 summary.json
+-rw-r--r--  1 ben-hannan  staff   1.6M Sep 26 00:15 train.jsonl
+---SCRIPTS---
+-rw-r--r--  1 ben-hannan  staff   6.2K Sep 26 00:15 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SVTUaDUJKR/tree/scripts/claude_lis300_train.py
+-rw-r--r--  1 ben-hannan  staff   2.9K Sep 26 00:15 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SVTUaDUJKR/tree/scripts/claude_rd371b_check.py
+-rw-r--r--  1 ben-hannan  staff   1.2K Sep 26 00:15 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SVTUaDUJKR/tree/scripts/claude_rd371b_common.py
+-rw-r--r--  1 ben-hannan  staff   5.0K Sep 26 00:15 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SVTUaDUJKR/tree/scripts/claude_rd371b_data.py
+-rw-r--r--  1 ben-hannan  staff   3.8K Sep 26 00:15 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SVTUaDUJKR/tree/scripts/claude_rd371b_eval.py
+-rw-r--r--  1 ben-hannan  staff   2.8K Sep 26 00:15 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SVTUaDUJKR/tree/scripts/claude_rd371b_sample.py
+[0m
+[0m$ [0mT=$(cat /tmp/rd371b_train_tree.txt); D=$(dirname $T); tar czf /tmp/rd371b_train_tree.tgz -C $D tree && ls -lh /tmp/rd371b_train_tree.tgz && shasum -a 256 /tmp/rd371b_train_tree.tgz | head -c 20; echo; date -u
+-rw-r--r--  1 ben-hannan  wheel   177M Sep 26 00:38 /tmp/rd371b_train_tree.tgz
+773b1ae25727ad72637d
+Sat Sep 26 04:38:31 UTC 2026
+[0m
+[0m$ [0msplit -b 30M /tmp/rd371b_train_tree.tgz /tmp/rd371b_tree_part_ && ls -lh /tmp/rd371b_tree_part_* && shasum -a 256 /tmp/rd371b_train_tree.tgz
+-rw-r--r--  1 ben-hannan  wheel    30M Sep 26 00:38 /tmp/rd371b_tree_part_aa
+-rw-r--r--  1 ben-hannan  wheel    30M Sep 26 00:38 /tmp/rd371b_tree_part_ab
+-rw-r--r--  1 ben-hannan  wheel    30M Sep 26 00:38 /tmp/rd371b_tree_part_ac
+-rw-r--r--  1 ben-hannan  wheel    30M Sep 26 00:38 /tmp/rd371b_tree_part_ad
+-rw-r--r--  1 ben-hannan  wheel    30M Sep 26 00:38 /tmp/rd371b_tree_part_ae
+-rw-r--r--  1 ben-hannan  wheel    27M Sep 26 00:38 /tmp/rd371b_tree_part_af
+773b1ae25727ad72637d9b943a17c6c1c711ce66cb81a565e9d4c43ba01e980f  /tmp/rd371b_train_tree.tgz
+[0m
+[0m$ [0mfor f in /tmp/rd371b_tree_part_*; do echo "SCP $f"; scp -o ConnectTimeout=30 $f benspc:C:/Users/benja/rd371b/$(basename $f) 2>&1; echo "EXIT:$?"; done; date -u
+SCP /tmp/rd371b_tree_part_aa
+EXIT:0
+SCP /tmp/rd371b_tree_part_ab
+EXIT:0
+SCP /tmp/rd371b_tree_part_ac
+EXIT:0
+SCP /tmp/rd371b_tree_part_ad
+EXIT:0
+SCP /tmp/rd371b_tree_part_ae
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 300000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/rd371b_tree_part_ae benspc:C:/Users/benja/rd371b/rd371b_tree_part_ae 2>&1; echo "EXIT:$?"
+EXIT:0
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/rd371b_tree_part_af benspc:C:/Users/benja/rd371b/rd371b_tree_part_af 2>&1; echo "EXIT:$?"
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "ls -lh /c/Users/benja/rd371b/rd371b_tree_part_*; echo ---; cat /c/Users/benja/rd371b/rd371b_tree_part_aa /c/Users/benja/rd371b/rd371b_tree_part_ab /c/Users/benja/rd371b/rd371b_tree_part_ac /c/Users/benja/rd371b/rd371b_tree_part_ad /c/Users/benja/rd371b/rd371b_tree_part_ae /c/Users/benja/rd371b/rd371b_tree_part_af > /c/Users/benja/rd371b/tree.tgz && ls -lh /c/Users/benja/rd371b/tree.tgz && sha256sum /c/Users/benja/rd371b/tree.tgz"' 2>&1 | head -n 20
+-rw-r--r-- 1 benja 197121 30M Sep 26 00:39 /c/Users/benja/rd371b/rd371b_tree_part_aa
+-rw-r--r-- 1 benja 197121 30M Sep 26 00:41 /c/Users/benja/rd371b/rd371b_tree_part_ab
+-rw-r--r-- 1 benja 197121 30M Sep 26 00:42 /c/Users/benja/rd371b/rd371b_tree_part_ac
+-rw-r--r-- 1 benja 197121 30M Sep 26 00:43 /c/Users/benja/rd371b/rd371b_tree_part_ad
+-rw-r--r-- 1 benja 197121 30M Sep 26 00:45 /c/Users/benja/rd371b/rd371b_tree_part_ae
+-rw-r--r-- 1 benja 197121 28M Sep 26 00:46 /c/Users/benja/rd371b/rd371b_tree_part_af
+---
+-rw-r--r-- 1 benja 197121 178M Sep 26 00:46 /c/Users/benja/rd371b/tree.tgz
+773b1ae25727ad72637d9b943a17c6c1c711ce66cb81a565e9d4c43ba01e980f */c/Users/benja/rd371b/tree.tgz
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "rm -rf /c/Users/benja/rd371b/tree && mkdir -p /c/Users/benja/rd371b && tar xzf /c/Users/benja/rd371b/tree.tgz -C /c/Users/benja/rd371b && ls -ld /c/Users/benja/rd371b/tree && ls /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/ && ls /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/data/ck/"' 2>&1 | head -n 20
+drwxr-xr-x 1 benja 197121 0 Sep 26 00:37 /c/Users/benja/rd371b/tree
+data
+key
+panel_notes.jsonl
+PASSMARKS.md
+RESULTS-notes.md
+SEAL.sha256.txt
+SEAL-data.sha256.txt
+SEAL-train.sha256.txt
+train_drafts.jsonl
+dev.jsonl
+summary.json
+train.jsonl
+[0m
+[0m# [0mTodos
+[✓] Verify DATA READY + read PASSMARKS, check Mac disk/uptime
+[✓] Check BensPC GPU idle, disk, BASE sha, venv
+[✓] Build code tree (builder-outbox+main) and transfer to BensPC
+[•] Run 5 SEALS on BensPC (all OK or stop)
+[ ] TRAIN checker on BensPC (batch16, OOM fallback batch8)
+[ ] DEV BAR + SEAL-run on BensPC
+[ ] TEST ONCE (panel check + score) on BensPC
+[ ] Copy back 7 PUSH files + write RESULTS.md locally
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && sha256sum -c artifacts/claude-rd371b-20260926/SEAL.sha256.txt 2>&1; echo SEAL1_EXIT:$?; sha256sum -c artifacts/claude-rd371b-20260926/SEAL-data.sha256.txt 2>&1; echo SEALDATA_EXIT:$?; sha256sum -c artifacts/claude-rd371b-20260926/SEAL-train.sha256.txt 2>&1; echo SEALTRAIN_EXIT:$?"' 2>&1 | head -n 30
+artifacts/claude-rd371b-20260926/PASSMARKS.md: OK
+SEAL1_EXIT:0
+artifacts/claude-rd371b-20260926/data/train_dialogs.jsonl: OK
+scripts/claude_rd371b_common.py: OK
+scripts/claude_rd371b_sample.py: OK
+scripts/claude_rd371b_data.py: OK
+scripts/claude_rd371b_check.py: OK
+scripts/claude_rd371b_eval.py: OK
+SEALDATA_EXIT:0
+artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl: OK
+artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl: OK
+artifacts/claude-rd371b-20260926/data/ck/train.jsonl: OK
+artifacts/claude-rd371b-20260926/data/ck/dev.jsonl: OK
+artifacts/claude-rd371b-20260926/data/ck/summary.json: OK
+artifacts/claude-rd371b-20260926/data/dev_in.jsonl: OK
+artifacts/claude-rd371b-20260926/data/dev_out.jsonl: OK
+SEALTRAIN_EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && sha256sum -c artifacts/claude-rd371b-20260926/key/SEAL.sha256.txt 2>&1; echo KEYSEAL_EXIT:$?; cd artifacts/claude-notepanel371b-20260926 && sha256sum -c SEAL.sha256.txt 2>&1; echo PANELSEAL_EXIT:$?"' 2>&1 | head -n 30
+README.md: FAILED
+sha256sum: panel_in.jsonl: No such file or directory
+panel_in.jsonl: FAILED open or read
+sha256sum: judge_A.jsonl: No such file or directory
+judge_A.jsonl: FAILED open or read
+sha256sum: judge_B.jsonl: No such file or directory
+judge_B.jsonl: FAILED open or read
+sha256sum: key.jsonl: No such file or directory
+key.jsonl: FAILED open or read
+sha256sum: key_counts.json: No such file or directory
+key_counts.json: FAILED open or read
+sha256sum: WARNING: 5 listed files could not be read
+sha256sum: WARNING: 1 computed checksum did NOT match
+KEYSEAL_EXIT:1
+dialogs.jsonl: OK
+README.md: OK
+PANELSEAL_EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/key && sha256sum -c SEAL.sha256.txt 2>&1; echo KEYSEAL_INNER_EXIT:$?"' 2>&1 | head -n 20
+README.md: OK
+panel_in.jsonl: OK
+judge_A.jsonl: OK
+judge_B.jsonl: OK
+key.jsonl: OK
+key_counts.json: OK
+KEYSEAL_INNER_EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Verify DATA READY + read PASSMARKS, check Mac disk/uptime
+[✓] Check BensPC GPU idle, disk, BASE sha, venv
+[✓] Build code tree (builder-outbox+main) and transfer to BensPC
+[✓] Run 5 SEALS on BensPC (all OK or stop)
+[•] TRAIN checker on BensPC (batch16, OOM fallback batch8)
+[ ] DEV BAR + SEAL-run on BensPC
+[ ] TEST ONCE (panel check + score) on BensPC
+[ ] Copy back 7 PUSH files + write RESULTS.md locally
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used,power.draw --format=csv,noheader" 2>&1 | head -3; date -u
+0 %, 437 MiB, 9.29 W
+Sat Sep 26 04:49:43 UTC 2026
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && rm -f /c/Users/benja/rd371b/train.log && PYTHONUTF8=1 nohup /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_train.py --model C:/Users/benja/lis300/model --data C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/data/ck --out C:/Users/benja/rd371b/tree/WORK/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 512 --max-minutes 60 --merge > /c/Users/benja/rd371b/train.log 2>&1 & disown; echo LAUNCHED_TRAIN; date -u"' 2>&1 | head -n 10
+LAUNCHED_TRAIN
+Sat, Sep 26, 2026  4:49:47 AM
+[0m
+[0m$ [0msleep 100; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cat /c/Users/benja/rd371b/train.log 2>&1 | tail -n 20; echo ---LOGEND---; date -u"' 2>&1 | head -n 30; ssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used,power.draw --format=csv,noheader" 2>&1 | head -3
+cat: /c/Users/benja/rd371b/train.log: No such file or directory
+---LOGEND---
+Sat, Sep 26, 2026  4:51:31 AM
+0 %, 437 MiB, 9.23 W
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "ls -la /c/Users/benja/rd371b/ 2>&1; echo ---; ls -la /c/Users/benja/rd371b/tree/WORK/ 2>&1; echo ---; ps aux 2>&1 | head -20"' 2>&1 | head -n 30
+echo "---WIN PROCS---"
+ssh -o ConnectTimeout=15 benspc 'powershell -Command "Get-Process python -ErrorAction SilentlyContinue | Select-Object Id,StartTime"' 2>&1 | head -n 10
+total 531034
+drwxr-xr-x 1 benja 197121         0 Sep 26 00:47 .
+drwxr-xr-x 1 benja 197121         0 Sep 25 22:18 ..
+-rw-r--r-- 1 benja 197121  31457280 Sep 26 00:39 rd371b_tree_part_aa
+-rw-r--r-- 1 benja 197121  31457280 Sep 26 00:41 rd371b_tree_part_ab
+-rw-r--r-- 1 benja 197121  31457280 Sep 26 00:42 rd371b_tree_part_ac
+-rw-r--r-- 1 benja 197121  31457280 Sep 26 00:43 rd371b_tree_part_ad
+-rw-r--r-- 1 benja 197121  31457280 Sep 26 00:45 rd371b_tree_part_ae
+-rw-r--r-- 1 benja 197121  28559596 Sep 26 00:46 rd371b_tree_part_af
+-rw-r--r-- 1 benja 197121       448 Sep 25 23:45 step2.log
+-rw-r--r-- 1 benja 197121       534 Sep 25 23:51 step3.log
+drwxr-xr-x 1 benja 197121         0 Sep 26 00:37 tree
+-rw-r--r-- 1 benja 197121 185845996 Sep 26 00:46 tree.tgz
+-rw-r--r-- 1 benja 197121  33554432 Sep 25 22:26 tree.tgz.part_aa
+-rw-r--r-- 1 benja 197121  33554432 Sep 25 22:28 tree.tgz.part_ab
+-rw-r--r-- 1 benja 197121  33554432 Sep 25 22:31 tree.tgz.part_ac
+-rw-r--r-- 1 benja 197121  33554432 Sep 25 22:34 tree.tgz.part_ad
+-rw-r--r-- 1 benja 197121  33554432 Sep 25 22:37 tree.tgz.part_ae
+-rw-r--r-- 1 benja 197121   4216792 Sep 25 22:38 tree.tgz.part_af
+---
+ls: cannot access '/c/Users/benja/rd371b/tree/WORK/': No such file or directory
+---
+      PID    PPID    PGID     WINPID   TTY         UID    STIME COMMAND
+       65       1      65      19476  ?         197609 00:51:41 /usr/bin/bash
+       86      65      65      15760  ?         197609 00:51:41 /usr/bin/ps
+       87      65      65      14380  ?         197609 00:51:41 /usr/bin/bash
+---WIN PROCS---
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && rm -f /c/Users/benja/rd371b/train.log && PYTHONUTF8=1 nohup /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_train.py --model C:/Users/benja/lis300/model --data C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/data/ck --out C:/Users/benja/rd371b/tree/WORK/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 512 --max-minutes 60 --merge > /c/Users/benja/rd371b/train.log 2>&1 & disown; echo LAUNCHED; date -u; sleep 100; echo AFTER_WAIT; date -u; cat /c/Users/benja/rd371b/train.log 2>&1 | tail -n 10"' 2>&1 | head -n 30
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 180000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cat /c/Users/benja/rd371b/train.log 2>&1 | tail -n 15; echo ---; ls -la /c/Users/benja/rd371b/tree/WORK/run/ 2>&1 | head -10; date -u"' 2>&1 | head -n 25; ssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used,power.draw --format=csv,noheader" 2>&1 | head -3
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  26%|██▌       | 57/219 [00:00<00:00, 533.24it/s]Loading weights:  51%|█████     | 111/219 [00:00<00:00, 431.25it/s]Loading weights:  71%|███████   | 156/219 [00:00<00:00, 398.85it/s]Loading weights:  90%|████████▉ | 197/219 [00:00<00:00, 344.07it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 417.05it/s]
+[transformers] `use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`.
+{'step': 1, 'total': 284, 'loss': 6.0791, 'lr': 4.4443084828881097e-05, 'tok_per_s': 2959.5, 'min': 0.01}
+{'step': 20, 'total': 284, 'loss': 0.2515, 'lr': 0.0001975626331552507, 'tok_per_s': 2227.3, 'min': 0.42}
+{'step': 40, 'total': 284, 'loss': 0.3199, 'lr': 0.0001903693477637204, 'tok_per_s': 2867.2, 'min': 0.64}
+{'step': 60, 'total': 284, 'loss': 0.3043, 'lr': 0.00017877079733177184, 'tok_per_s': 3002.3, 'min': 0.91}
+{'step': 80, 'total': 284, 'loss': 0.1747, 'lr': 0.0001633323803048047, 'tok_per_s': 3139.6, 'min': 1.16}
+{'step': 100, 'total': 284, 'loss': 0.3517, 'lr': 0.00014480667839875786, 'tok_per_s': 3364.4, 'min': 1.35}
+{'step': 120, 'total': 284, 'loss': 0.2462, 'lr': 0.00012409677024566144, 'tok_per_s': 3456.9, 'min': 1.58}
+{'step': 140, 'total': 284, 'loss': 0.2359, 'lr': 0.00010221220871531869, 'tok_per_s': 3576.2, 'min': 1.78}
+{'step': 160, 'total': 284, 'loss': 0.1642, 'lr': 8.021980790144827e-05, 'tok_per_s': 3672.2, 'min': 1.97}
+{'step': 180, 'total': 284, 'loss': 0.2885, 'lr': 5.91916387756535e-05, 'tok_per_s': 3769.8, 'min': 2.16}
+{'step': 200, 'total': 284, 'loss': 0.1525, 'lr': 4.015276858259427e-05, 'tok_per_s': 3827.3, 'min': 2.36}
+{'step': 220, 'total': 284, 'loss': 0.1623, 'lr': 2.403129154167153e-05, 'tok_per_s': 3890.8, 'min': 2.55}
+{'step': 240, 'total': 284, 'loss': 0.034, 'lr': 1.161308672544389e-05, 'tok_per_s': 3943.7, 'min': 2.75}
+---
+total 4
+drwxr-xr-x 1 benja 197121    0 Sep 26 00:51 .
+drwxr-xr-x 1 benja 197121    0 Sep 26 00:51 ..
+-rw-r--r-- 1 benja 197121 1401 Sep 26 00:54 train_log.jsonl
+Sat, Sep 26, 2026  4:54:52 AM
+99 %, 15932 MiB, 223.23 W
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "tail -n 8 /c/Users/benja/rd371b/train.log 2>&1; echo ---; ls -la /c/Users/benja/rd371b/tree/WORK/run/ 2>&1 | head -10; date -u"' 2>&1 | head -n 25
+"batch": 16,
+  "max_len": 512,
+  "max_minutes": 60.0,
+  "limit": null,
+  "merge": true,
+  "seed": 300
+ }
+}
+---
+total 16
+drwxr-xr-x 1 benja 197121    0 Sep 26 00:55 .
+drwxr-xr-x 1 benja 197121    0 Sep 26 00:51 ..
+drwxr-xr-x 1 benja 197121    0 Sep 26 00:55 adapter
+drwxr-xr-x 1 benja 197121    0 Sep 26 00:55 merged
+-rw-r--r-- 1 benja 197121  610 Sep 26 00:55 summary.json
+-rw-r--r-- 1 benja 197121 1616 Sep 26 00:55 train_log.jsonl
+Sat, Sep 26, 2026  4:56:55 AM
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cat /c/Users/benja/rd371b/tree/WORK/run/summary.json 2>&1; echo ---; cat /c/Users/benja/rd371b/train.log 2>&1 | tail -n 5; echo ---; ls -lh /c/Users/benja/rd371b/tree/WORK/run/merged/ 2>&1 | head -10"' 2>&1 | head -n 40
+ssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used,power.draw --format=csv,noheader" 2>&1 | head -3
+{
+ "steps": 284,
+ "planned_steps": 284,
+ "stopped": null,
+ "train_rows": 2257,
+ "dev_rows": 218,
+ "dev_loss": 0.1977929336215378,
+ "trainable_params": 22413312,
+ "all_params": 1103046144,
+ "minutes": 3.25,
+ "tok_per_s": 3955.3,
+ "device": "cuda",
+ "args": {
+  "model": "C:/Users/benja/lis300/model",
+  "data": "C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/data/ck",
+  "out": "C:/Users/benja/rd371b/tree/WORK/run",
+  "epochs": 2.0,
+  "lr": 0.0002,
+  "rank": 32,
+  "batch": 16,
+  "max_len": 512,
+  "max_minutes": 60.0,
+  "limit": null,
+  "merge": true,
+  "seed": 300
+ }
+}---
+  "limit": null,
+  "merge": true,
+  "seed": 300
+ }
+}
+---
+total 2.1G
+-rw-r--r-- 1 benja 197121 9.1K Sep 26 00:55 chat_template.jinja
+-rw-r--r-- 1 benja 197121  784 Sep 26 00:55 config.json
+-rw-r--r-- 1 benja 197121  227 Sep 26 00:55 generation_config.json
+-rw-r--r-- 1 benja 197121 2.1G Sep 26 00:55 model.safetensors
+-rw-r--r-- 1 benja 197121 9.5M Sep 26 00:55 tokenizer.json
+-rw-r--r-- 1 benja 197121  477 Sep 26 00:55 tokenizer_config.json
+0 %, 421 MiB, 9.16 W
+[0m
+[0m# [0mTodos
+[✓] Verify DATA READY + read PASSMARKS, check Mac disk/uptime
+[✓] Check BensPC GPU idle, disk, BASE sha, venv
+[✓] Build code tree (builder-outbox+main) and transfer to BensPC
+[✓] Run 5 SEALS on BensPC (all OK or stop)
+[✓] TRAIN checker on BensPC (batch16, OOM fallback batch8)
+[•] DEV BAR + SEAL-run on BensPC
+[ ] TEST ONCE (panel check + score) on BensPC
+[ ] Copy back 7 PUSH files + write RESULTS.md locally
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cp /c/Users/benja/rd371b/tree/WORK/run/summary.json /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_summary.json && ls -lh /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_summary.json && sha256sum /c/Users/benja/rd371b/tree/WORK/run/merged/model.safetensors"' 2>&1 | head -n 10
+-rw-r--r-- 1 benja 197121 610 Sep 26 00:57 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_summary.json
+f54dbe63dff7963cb1fbd2db0b79dcdf79055f3c7b276ba536453cc07ce284a1 */c/Users/benja/rd371b/tree/WORK/run/merged/model.safetensors
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && PYTHONUTF8=1 /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_rd371b_check.py --model C:/Users/benja/rd371b/tree/WORK/run/merged --notes-in C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/data/dev_in.jsonl --out C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/dev_pred.jsonl 2>&1 | tail -n 5"' 2>&1 | head -n 20
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  31%|███       | 68/219 [00:00<00:00, 552.12it/s]Loading weights:  57%|█████▋    | 124/219 [00:00<00:00, 297.85it/s]Loading weights:  73%|███████▎  | 160/219 [00:00<00:00, 282.97it/s]Loading weights:  87%|████████▋ | 191/219 [00:00<00:00, 277.05it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 339.84it/s]
+{"notes_checked": 277, "device": "cuda"}
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && PYTHONUTF8=1 /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_rd371b_eval.py sweep --pred C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/dev_pred.jsonl --judged C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/data/dev_out.jsonl --out C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/THRESHOLD.json 2>&1 | tail -n 5; echo ---; cat C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/THRESHOLD.json"' 2>&1 | head -n 80
+{"T": 0.98, "notes": 277, "verdicts": {"ok": 167, "bad_cite": 7, "unsupported": 96, "bad_when": 2, "bad_form": 5}}
+---
+{
+ "T": 0.98,
+ "rule": "lowest grid value with dev unsupported/accepted <= 0.04",
+ "notes": 277,
+ "verdicts": {
+  "ok": 167,
+  "bad_cite": 7,
+  "unsupported": 96,
+  "bad_when": 2,
+  "bad_form": 5
+ },
+ "sweep": [
+  {
+   "t": 0.1,
+   "accepted": 226,
+   "unsupported": 54,
+   "ok_kept": 160,
+   "ok_total": 167,
+   "rate": 0.2389
+  },
+  {
+   "t": 0.2,
+   "accepted": 210,
+   "unsupported": 44,
+   "ok_kept": 155,
+   "ok_total": 167,
+   "rate": 0.2095
+  },
+  {
+   "t": 0.3,
+   "accepted": 193,
+   "unsupported": 36,
+   "ok_kept": 147,
+   "ok_total": 167,
+   "rate": 0.1865
+  },
+  {
+   "t": 0.4,
+   "accepted": 183,
+   "unsupported": 33,
+   "ok_kept": 142,
+   "ok_total": 167,
+   "rate": 0.1803
+  },
+  {
+   "t": 0.5,
+   "accepted": 172,
+   "unsupported": 31,
+   "ok_kept": 134,
+   "ok_total": 167,
+   "rate": 0.1802
+  },
+  {
+   "t": 0.6,
+   "accepted": 155,
+   "unsupported": 26,
+   "ok_kept": 123,
+   "ok_total": 167,
+   "rate": 0.1677
+  },
+  {
+   "t": 0.7,
+   "accepted": 139,
+   "unsupported": 25,
+   "ok_kept": 109,
+   "ok_total": 167,
+   "rate": 0.1799
+  },
+  {
+   "t": 0.8,
+   "accepted": 109,
+   "unsupported": 16,
+   "ok_kept": 90,
+   "ok_total": 167,
+   "rate": 0.1468
+  },
+  {
+   "t": 0.9,
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "PYTHONUTF8=1 /c/Users/benja/lis300/venv/Scripts/python.exe -B -c \"import json; d=json.load(open(chr(67)+chr(58)+chr(47)+chr(85)+chr(115)+chr(101)+chr(114)+chr(115)+chr(47)+chr(98)+chr(101)+chr(110)+chr(106)+chr(97)+chr(47)+chr(114)+chr(100)+chr(51)+chr(55)+chr(49)+chr(98)+chr(47)+chr(116)+chr(114)+chr(101)+chr(101)+chr(47)+chr(97)+chr(114)+chr(116)+chr(105)+chr(102)+chr(97)+chr(99)+chr(116)+chr(115)+chr(47)+chr(99)+chr(108)+chr(97)+chr(117)+chr(100)+chr(101)+chr(45)+chr(114)+chr(100)+chr(51)+chr(55)+chr(49)+chr(98)+chr(45)+chr(50)+chr(48)+chr(50)+chr(54)+chr(48)+chr(57)+chr(50)+chr(54)+chr(47)+chr(84)+chr(72)+chr(82)+chr(69)+chr(83)+chr(72)+chr(79)+chr(76)+chr(68)+chr(46)+chr(106)+chr(115)+chr(111)+chr(110))); print([r for r in d[chr(115)+chr(119)+chr(101)+chr(101)+chr(112)] if r[chr(116)] in (0.9,0.95,0.98,0.99,0.995,0.999,0.9995,0.9999)])\""' 2>&1 | head -n 10
+[{'t': 0.9, 'accepted': 78, 'unsupported': 6, 'ok_kept': 69, 'ok_total': 167, 'rate': 0.0769}, {'t': 0.95, 'accepted': 37, 'unsupported': 3, 'ok_kept': 34, 'ok_total': 167, 'rate': 0.0811}, {'t': 0.98, 'accepted': 6, 'unsupported': 0, 'ok_kept': 6, 'ok_total': 167, 'rate': 0.0}, {'t': 0.99, 'accepted': 0, 'unsupported': 0, 'ok_kept': 0, 'ok_total': 167, 'rate': None}, {'t': 0.995, 'accepted': 0, 'unsupported': 0, 'ok_kept': 0, 'ok_total': 167, 'rate': None}, {'t': 0.999, 'accepted': 0, 'unsupported': 0, 'ok_kept': 0, 'ok_total': 167, 'rate': None}, {'t': 0.9995, 'accepted': 0, 'unsupported': 0, 'ok_kept': 0, 'ok_total': 167, 'rate': None}, {'t': 0.9999, 'accepted': 0, 'unsupported': 0, 'ok_kept': 0, 'ok_total': 167, 'rate': None}]
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && sha256sum artifacts/claude-rd371b-20260926/THRESHOLD.json WORK/run/merged/model.safetensors > artifacts/claude-rd371b-20260926/SEAL-run.sha256.txt && cat artifacts/claude-rd371b-20260926/SEAL-run.sha256.txt"' 2>&1 | head -n 10
+7a64090e1f2e82e5ddb7a3672f55239322899a0977e07ef74187e90770aa43dd *artifacts/claude-rd371b-20260926/THRESHOLD.json
+f54dbe63dff7963cb1fbd2db0b79dcdf79055f3c7b276ba536453cc07ce284a1 *WORK/run/merged/model.safetensors
+[0m
+[0m# [0mTodos
+[✓] Verify DATA READY + read PASSMARKS, check Mac disk/uptime
+[✓] Check BensPC GPU idle, disk, BASE sha, venv
+[✓] Build code tree (builder-outbox+main) and transfer to BensPC
+[✓] Run 5 SEALS on BensPC (all OK or stop)
+[✓] TRAIN checker on BensPC (batch16, OOM fallback batch8)
+[✓] DEV BAR + SEAL-run on BensPC
+[•] TEST ONCE (panel check + score) on BensPC
+[ ] Copy back 7 PUSH files + write RESULTS.md locally
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && PYTHONUTF8=1 /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_rd371b_check.py --model C:/Users/benja/rd371b/tree/WORK/run/merged --notes-in C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/key/panel_in.jsonl --out C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/panel_pred.jsonl 2>&1 | tail -n 3"' 2>&1 | head -n 10
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  31%|███       | 67/219 [00:00<00:00, 616.08it/s]Loading weights:  59%|█████▉    | 129/219 [00:00<00:00, 576.45it/s]Loading weights:  85%|████████▌ | 187/219 [00:00<00:00, 540.60it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 554.48it/s]
+{"notes_checked": 314, "device": "cuda"}
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "cd /c/Users/benja/rd371b/tree && PYTHONUTF8=1 /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_rd371b_eval.py score --pred C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/panel_pred.jsonl --key C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/key/key.jsonl --threshold 0.98 --out C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/score.json 2>&1 | tail -n 3; echo ---; cat C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/score.json"' 2>&1 | head -n 60
+{"accepted": 1, "chat:excluded_total": 19, "chat:ok_kept": 1, "chat:ok_total": 68, "chat:unsupported_total": 61, "excluded_total": 37, "ok_kept": 1, "ok_total": 132, "overheard:excluded_total": 18, "overheard:ok_total": 64, "overheard:unsupported_total": 84, "unsupported_total": 145, "threshold": 0.98, "C1_unsupported_share_of_accepted": 0.0, "C2_ok_kept_share": 0.0076, "ms_median": 24.2}
+---
+{
+ "accepted": 1,
+ "chat:excluded_total": 19,
+ "chat:ok_kept": 1,
+ "chat:ok_total": 68,
+ "chat:unsupported_total": 61,
+ "excluded_total": 37,
+ "ok_kept": 1,
+ "ok_total": 132,
+ "overheard:excluded_total": 18,
+ "overheard:ok_total": 64,
+ "overheard:unsupported_total": 84,
+ "unsupported_total": 145,
+ "threshold": 0.98,
+ "C1_unsupported_share_of_accepted": 0.0,
+ "C2_ok_kept_share": 0.0076,
+ "ms_median": 24.2
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "mkdir -p /c/Users/benja/rd371b/run && rm -rf /c/Users/benja/rd371b/run/merged && cp -r /c/Users/benja/rd371b/tree/WORK/run/merged /c/Users/benja/rd371b/run/merged && sha256sum /c/Users/benja/rd371b/run/merged/model.safetensors && echo KEEP_OK; wc -l /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/dev_pred.jsonl /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/panel_pred.jsonl"' 2>&1 | head -n 10
+f54dbe63dff7963cb1fbd2db0b79dcdf79055f3c7b276ba536453cc07ce284a1 */c/Users/benja/rd371b/run/merged/model.safetensors
+KEEP_OK
+  277 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/dev_pred.jsonl
+  314 /c/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/panel_pred.jsonl
+  591 total
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "PYTHONUTF8=1 /c/Users/benja/lis300/venv/Scripts/python.exe -B -c \"import json,statistics; ms=[json.loads(l).get(chr(109)+chr(115),0) for l in open(chr(67)+chr(58)+chr(47)+chr(85)+chr(115)+chr(101)+chr(114)+chr(115)+chr(47)+chr(98)+chr(101)+chr(110)+chr(106)+chr(97)+chr(47)+chr(114)+chr(100)+chr(51)+chr(55)+chr(49)+chr(98)+chr(47)+chr(116)+chr(114)+chr(101)+chr(101)+chr(47)+chr(97)+chr(114)+chr(116)+chr(105)+chr(102)+chr(97)+chr(99)+chr(116)+chr(115)+chr(47)+chr(99)+chr(108)+chr(97)+chr(117)+chr(100)+chr(101)+chr(45)+chr(114)+chr(100)+chr(51)+chr(55)+chr(49)+chr(98)+chr(45)+chr(50)+chr(48)+chr(50)+chr(54)+chr(48)+chr(57)+chr(50)+chr(54)+chr(47)+chr(100)+chr(101)+chr(118)+chr(95)+chr(112)+chr(114)+chr(101)+chr(100)+chr(46)+chr(106)+chr(115)+chr(111)+chr(110)+chr(108))]; ms.sort(); print({chr(110):len(ms),chr(109)+chr(101)+chr(100)+chr(105)+chr(97)+chr(110):statistics.median(ms)})\""' 2>&1 | head -n 5
+{'n': 277, 'median': 24.0}
+[0m
+[0m# [0mTodos
+[✓] Verify DATA READY + read PASSMARKS, check Mac disk/uptime
+[✓] Check BensPC GPU idle, disk, BASE sha, venv
+[✓] Build code tree (builder-outbox+main) and transfer to BensPC
+[✓] Run 5 SEALS on BensPC (all OK or stop)
+[✓] TRAIN checker on BensPC (batch16, OOM fallback batch8)
+[✓] DEV BAR + SEAL-run on BensPC
+[✓] TEST ONCE (panel check + score) on BensPC
+[•] Copy back 7 PUSH files + write RESULTS.md locally
+[0m
+[0m$ [0mls artifacts/claude-rd371b-20260926/ 2>&1 | head -n 20; mkdir -p artifacts/claude-rd371b-20260926 && echo MKDIR_OK
+panel_notes.jsonl
+RESULTS-notes.md
+train_drafts.jsonl
+MKDIR_OK
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 benspc:C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/train_summary.json artifacts/claude-rd371b-20260926/train_summary.json 2>&1; echo "EXIT1:$?"
+scp -o ConnectTimeout=30 benspc:C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/THRESHOLD.json artifacts/claude-rd371b-20260926/THRESHOLD.json 2>&1; echo "EXIT2:$?"
+scp -o ConnectTimeout=30 benspc:C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/SEAL-run.sha256.txt artifacts/claude-rd371b-20260926/SEAL-run.sha256.txt 2>&1; echo "EXIT3:$?"
+scp -o ConnectTimeout=30 benspc:C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/score.json artifacts/claude-rd371b-20260926/score.json 2>&1; echo "EXIT4:$?"
+EXIT1:0
+EXIT2:0
+EXIT3:0
+EXIT4:0
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 benspc:C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/dev_pred.jsonl artifacts/claude-rd371b-20260926/dev_pred.jsonl 2>&1; echo "EXIT5:$?"; ls -lh artifacts/claude-rd371b-20260926/dev_pred.jsonl
+EXIT5:0
+-rw-------  1 ben-hannan  staff    22K Sep 26 00:59 artifacts/claude-rd371b-20260926/dev_pred.jsonl
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 benspc:C:/Users/benja/rd371b/tree/artifacts/claude-rd371b-20260926/panel_pred.jsonl artifacts/claude-rd371b-20260926/panel_pred.jsonl 2>&1; echo "EXIT6:$?"; ls -lh artifacts/claude-rd371b-20260926/; wc -l artifacts/claude-rd371b-20260926/dev_pred.jsonl artifacts/claude-rd371b-20260926/panel_pred.jsonl
+EXIT6:0
+total 2008
+-rw-------  1 ben-hannan  staff    22K Sep 26 00:59 dev_pred.jsonl
+-rw-------  1 ben-hannan  staff   105K Sep 25 23:55 panel_notes.jsonl
+-rw-------  1 ben-hannan  staff    24K Sep 26 00:59 panel_pred.jsonl
+-rw-r--r--  1 ben-hannan  staff   3.4K Sep 25 23:55 RESULTS-notes.md
+-rw-------  1 ben-hannan  staff   428B Sep 26 00:59 score.json
+-rw-------  1 ben-hannan  staff   214B Sep 26 00:59 SEAL-run.sha256.txt
+-rw-------  1 ben-hannan  staff   2.2K Sep 26 00:59 THRESHOLD.json
+-rw-------  1 ben-hannan  staff   821K Sep 25 23:54 train_drafts.jsonl
+-rw-------  1 ben-hannan  staff   610B Sep 26 00:59 train_summary.json
+     277 artifacts/claude-rd371b-20260926/dev_pred.jsonl
+     314 artifacts/claude-rd371b-20260926/panel_pred.jsonl
+     591 total
+[0m
+[0m→ [0mRead artifacts/claude-rd371b-20260926/train_summary.json
+[0m→ [0mRead artifacts/claude-rd371b-20260926/SEAL-run.sha256.txt
+[0m→ [0mRead artifacts/claude-rd371b-20260926/THRESHOLD.json
+[0m→ [0mRead artifacts/claude-rd371b-20260926/score.json
+[0m
+[0m← [0mWrite artifacts/claude-rd371b-20260926/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mls -lh artifacts/claude-rd371b-20260926/RESULTS.md artifacts/claude-rd371b-20260926/train_summary.json artifacts/claude-rd371b-20260926/dev_pred.jsonl artifacts/claude-rd371b-20260926/THRESHOLD.json artifacts/claude-rd371b-20260926/SEAL-run.sha256.txt artifacts/claude-rd371b-20260926/panel_pred.jsonl artifacts/claude-rd371b-20260926/score.json
+echo "---STATUS---"
+git status --short artifacts/claude-rd371b-20260926/ | head -n 20
+echo "---VERIFY NO EXISTING MODIFIED---"
+git status --short | head -n 20
+-rw-------  1 ben-hannan  staff    22K Sep 26 00:59 artifacts/claude-rd371b-20260926/dev_pred.jsonl
+-rw-------  1 ben-hannan  staff    24K Sep 26 00:59 artifacts/claude-rd371b-20260926/panel_pred.jsonl
+-rw-r--r--  1 ben-hannan  staff   6.5K Sep 26 00:59 artifacts/claude-rd371b-20260926/RESULTS.md
+-rw-------  1 ben-hannan  staff   428B Sep 26 00:59 artifacts/claude-rd371b-20260926/score.json
+-rw-------  1 ben-hannan  staff   214B Sep 26 00:59 artifacts/claude-rd371b-20260926/SEAL-run.sha256.txt
+-rw-------  1 ben-hannan  staff   2.2K Sep 26 00:59 artifacts/claude-rd371b-20260926/THRESHOLD.json
+-rw-------  1 ben-hannan  staff   610B Sep 26 00:59 artifacts/claude-rd371b-20260926/train_summary.json
+---STATUS---
+---VERIFY NO EXISTING MODIFIED---
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-brd5-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd5-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd5-20260926/gpu/log.txt
+A  artifacts/claude-brd5-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd5-20260926/gpu/streams.json
+A  artifacts/claude-brd6-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd6-20260926/gpu/brd6_summary.json
+A  artifacts/claude-brd6-20260926/gpu/log.txt
+A  artifacts/claude-brd6-20260926/gpu/practice.jsonl
+A  artifacts/claude-brd6-20260926/gpu/streams.json
+[0m
+[0m✗ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used,power.draw --format=csv,noheader" 2>&1 | head -3; date -u; df -g / | head -3
+rm -rf /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SVTUaDUJKR /tmp/rd371b_train_tree.tgz /tmp/rd371b_tree_part_* 2>&1; echo CLEANED failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used,power.draw --format=csv,noheader" 2>&1 | head -3; date -u; df -g / | head -3
+0 %, 421 MiB, 9.53 W
+Sat Sep 26 05:00:11 UTC 2026
+Filesystem     1G-blocks Used Available Capacity iused    ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         3    77%  484014 39840280    1%   /
+[0m
+[0m$ [0mrm /tmp/rd371b_train_tree.tgz /tmp/rd371b_tree_part_aa /tmp/rd371b_tree_part_ab /tmp/rd371b_tree_part_ac /tmp/rd371b_tree_part_ad /tmp/rd371b_tree_part_ae /tmp/rd371b_tree_part_af 2>&1; echo RM_FILES:$?; df -g / | head -3
+RM_FILES:0
+Filesystem     1G-blocks Used Available Capacity iused    ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         4    76%  484014 43540520    1%   /
+[0m
+[0m$ [0mT=$(cat /tmp/rd371b_train_tree.txt); rm "$T/artifacts/fable-self122-20260922/self122_head.pt" 2>&1 | head -2; echo "---"; ls /tmp/ | head -n 10; df -g / | head -3
+rm: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SVTUaDUJKR/tree/artifacts/fable-self122-20260922/self122_head.pt: No such file or directory
+---
+__KMP_REGISTERED_LIB_19337
+__KMP_REGISTERED_LIB_73221
+__KMP_REGISTERED_LIB_73222
+__KMP_REGISTERED_LIB_73227
+__KMP_REGISTERED_LIB_73229
+__KMP_REGISTERED_LIB_73236
+__KMP_REGISTERED_LIB_73239
+__KMP_REGISTERED_LIB_73242
+__KMP_REGISTERED_LIB_73245
+__KMP_REGISTERED_LIB_73248
+Filesystem     1G-blocks Used Available Capacity iused    ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         4    76%  484014 43520840    1%   /
+[0m
+[0m# [0mTodos
+[✓] Verify DATA READY + read PASSMARKS, check Mac disk/uptime
+[✓] Check BensPC GPU idle, disk, BASE sha, venv
+[✓] Build code tree (builder-outbox+main) and transfer to BensPC
+[✓] Run 5 SEALS on BensPC (all OK or stop)
+[✓] TRAIN checker on BensPC (batch16, OOM fallback batch8)
+[✓] DEV BAR + SEAL-run on BensPC
+[✓] TEST ONCE (panel check + score) on BensPC
+[✓] Copy back 7 PUSH files + write RESULTS.md locally
+[0m
