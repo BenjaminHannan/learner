@@ -57,9 +57,9 @@ while [ ! -e "$H/STOP" ]; do
     # Ben 06:54 UTC 09-26 made Mac disk the pipeline's job ("You have this responsibility"): jobs marked LOWDISK-OK
     # (no model copy-back to the Mac) may launch down to 2 GB free; everything else keeps the 5 GB rule
     if [ "${freegb:-0}" -lt 5 ] && [ "${freegb:-0}" -ge 2 ] && git -C "$W" show "origin/$IN:$f" 2>/dev/null | grep -q '^LOWDISK-OK: yes'; then log "disk ${freegb} GB free, launching LOWDISK-OK $n"; freegb=5; fi
-    # Ben 11:26 UTC 09-26 "yes, clean pipeline files": below 5 GB, remove scratch the pipeline itself made once the job
+    # Ben 11:26 UTC 09-26 "yes, clean pipeline files" / "I can't be your storage babysitter": below 10 GB (before it fills), remove scratch the pipeline itself made once the job
     # that made it is gone (rent-kit mktemp code trees and tree.tgz bundles), then re-read free space. Never models or Ben's files.
-    if [ "${freegb:-0}" -lt 5 ] && [ ! -e "$H/clean.$(date +%Y%m%d%H%M | cut -c1-11)" ]; then touch "$H/clean.$(date +%Y%m%d%H%M | cut -c1-11)"
+    if [ "${freegb:-0}" -lt 10 ] && [ ! -e "$H/clean.$(date +%Y%m%d%H%M | cut -c1-11)" ]; then touch "$H/clean.$(date +%Y%m%d%H%M | cut -c1-11)"
       b=$freegb; TD=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null || echo "${TMPDIR:-/tmp}")
       log "clean: ${b} GB free; largest in temp: $(du -sk "$TD"/tmp.* 2>/dev/null | sort -rn | head -3 | awk '{printf "%s %dMB; ", $2, $1/1024}')"
       for t in "$TD"/tmp.*/tree; do [ -d "$t" ] || continue
@@ -69,6 +69,10 @@ while [ ! -e "$H/STOP" ]; do
         [ -n "$(find "$z" -mmin -120)" ] && continue
         rm -f "$z" && log "clean: removed $z"; done
       freegb=$(df -g / | tail -1 | awk '{print $4}'); log "clean: ${b} -> ${freegb} GB free"; fi
+    # per-job reservation: header "DISK: <GB>" = the job's peak Mac use (default 3 for rent-*, else 1); launch only if it fits above the floor
+    need=$(git -C "$W" show "origin/$IN:$f" 2>/dev/null | sed -n 's/^DISK: *\([0-9]*\).*/\1/p' | head -1); case "$n" in rent-*) need=${need:-3};; *) need=${need:-1};; esac
+    floor=5; git -C "$W" show "origin/$IN:$f" 2>/dev/null | grep -q '^LOWDISK-OK: yes' && floor=2
+    if [ "${freegb:-0}" -ge 5 ] && [ $((freegb - need)) -lt "$floor" ]; then log "disk ${freegb} GB free, $n reserves ${need} GB, holding"; continue; fi
     if [ "${freegb:-0}" -lt 5 ]; then log "disk ${freegb} GB free, holding new launches"
       # uv cache prune when low (never uv cache clean); Trash emptied at most once
       # Ben 02:16/02:17 UTC 09-26: yes to trashing these two models and "also have it empty the trash"; Finder timed out, so remove exactly these two from the Trash

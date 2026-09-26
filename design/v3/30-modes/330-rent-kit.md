@@ -8,13 +8,14 @@ where the agent needed a Unix-only module (fixed for later with scripts/winshim/
 Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
 merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
 ```
-T=$(mktemp -d)/tree && mkdir -p $T
-git archive origin/builder-outbox | tar -x -C $T
-git archive origin/main | tar -x -C $T            # main on top: main wins
-mkdir -p $T/artifacts/fable-self122-20260922
-cp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/
-tar czf tree.tgz -C $(dirname $T) tree
+# MAC DISK (09-26): never stage the full tree or a tree.tgz on the Mac (that took ~3 GB and filled it).
+# Stream only the paths your task needs straight to the target, then delete nothing else:
+git archive origin/builder-outbox <paths> | ssh <target> 'mkdir -p ~/tree && tar -x -C ~/tree'
+git archive origin/main <paths> | ssh <target> 'tar -x -C ~/tree'          # main on top: main wins
+scp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt <target>:tree/artifacts/fable-self122-20260922/   # only if needed
 ```
+For BensPC use its ssh host in place of <target>. If you truly must stage on the Mac, use one mktemp dir and
+remove it by exact path before you finish. Put `DISK: <GB>` in the job header (peak Mac use; default 3 for rent-*).
 self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
 If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
 model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
@@ -38,7 +39,7 @@ model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85e
 
 ## C. On the rental
 ```
-scp tree.tgz (and READER if needed) to the instance; tar xzf tree.tgz; cd tree
+(tree already streamed to ~/tree; scp READER only if needed); cd ~/tree
 python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
 pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
 HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
