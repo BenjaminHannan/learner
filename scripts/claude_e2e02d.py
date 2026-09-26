@@ -23,16 +23,31 @@ Ben's design, one path on every user turn:
   sleep     the H-B recipe's adapter on the talker's 1B (SLEEP02D), trained by the nights of a separate sleep run on
             code-made number puzzles (Z1, disclosed), loaded at start as 0.2c did. No slot value exists until H-B
             passes; e2e_end_day only makes sure everything is on disk.
+Hand-written parts on this path, each disclosed scaffolding with the learned part it stands in for:
+  P1  read_latin, the code grid reader (learned: gr-1, owed by Sleep research)
+  P3  the loop net's stop rule, 3 steady rounds (learned: a stop head, owed)
+  C1  the code check of the net's square against the square read (learned: the reasoner's own confidence, owed)
+  H1  the hand-off to the talker (reasoner_note): the checked square, or "no square fits", as plain data in one fixed
+      frame in the talker's system input. It adds no reasoning; it is the reasoner-to-talker interface, which Ben's
+      design makes learned (the talker trained to read the reasoner's output, owed). Without it the net cannot reach
+      the reply.
+  D15 the date line read by ep-382's pattern DATE382 ("today is ..."; audit D15, borderline), used only to stamp
+      store rows (learned: the reader reading dates, owed)
+  F1  the fact book keeps one value per owner + relation, newest wins (0.2c's notebook rule; learned: the reader's
+      CORRECT mode deciding supersession, owed)
+  N0  a note's text is owner + relation + value joined by spaces (ADDENDUM-20 fallback; learned: rd-378g's writer)
+  W   the whole-chat / top-k switch at CTX_CHARS02D characters (mechanical length limit, as y1w)
 Not here (ADDENDUM-24/27): stock lines, templates, the 292t question reader, lookup "reasoner", declines, think299,
 chat338 and its length rules, vary330c, gram360, confirm rows, lis-313b/314b/315/316, B10/B20 screens, W1 trigger,
 D1 creative regex, D2 context_facts, D3 k1a guards. "I don't know" (DOUBT02D) is chosen at the seal: y1t if it has a
-verified PASS, else y1g's agreement check as disclosed scaffolding with S1/H3 reported, not claimed.
+verified PASS, else no doubt step at all (ADDENDUM-29), with S1/H3 reported, not claimed.
 
 Harness: scripts/claude_e2e336_run.py --arm claude_e2e02d:build_02d --model LIS320 --gen-model BASE
          (args.max_new, when a runner sets it, overrides the twin's 160; row A's runner passes the rivals' cap)
 Each turn is logged to <state>/e2e02d_log.jsonl (counts and ids only), and also to $E2E02D_LOG_DIR/<state dir name>.jsonl
 when that is set. D0 (ADDENDUM-26) counts come from those logs (scripts/claude_e2e02d_d0.py).
-  python -B scripts/claude_e2e02d.py selftest          (no model: stub reader, talker and solver)
+  python -B scripts/claude_e2e02d.py selftest          (wiring check only: stub reader, talker and solver, no model
+                                                         loaded, slots empty; it says nothing about model quality)
 """
 from __future__ import annotations
 
@@ -197,14 +212,12 @@ def rows_text(grid) -> str:
 
 
 def reasoner_note(res: dict | None) -> str:
+    """H1 (disclosed): the reasoner's result as data for the talker, nothing more."""
     if res is None:
         return ""
     if res["ok"]:
-        return ("\n\nThe user's last message holds a number square. Your own reasoning worked it out, and a check "
-                "confirmed every row and column uses each number once. The finished square is:\n"
-                + rows_text(res["grid"]))
-    return ("\n\nThe user's last message holds a number square. Your own reasoning could not find a finished square "
-            "that fits its clues.")
+        return "\n\nReasoner result for the number square in the last message (checked):\n" + rows_text(res["grid"])
+    return "\n\nReasoner result for the number square in the last message: no square fits its clues."
 
 
 def system_text(rows: list[dict], note: str) -> str:
@@ -365,9 +378,9 @@ def selftest() -> None:
         a.turn("Can you finish this number square?\n1 2 _\n_ 3 1\n3 _ 2")
         ok["reasoner result reaches the talker"] = "1 2 3\n2 3 1\n3 1 2" in tk.seen[-1][0]
         a.turn("Finish this one:\n1 1 _\n_ 3 1\n3 _ 2")
-        ok["clash square: no finished square offered"] = "could not find" in tk.seen[-1][0]
+        ok["clash square: no finished square offered"] = "no square fits" in tk.seen[-1][0]
         a.turn("thanks")
-        ok["non-grid turn: no reasoner note"] = "Your own reasoning" not in tk.seen[-1][0]
+        ok["non-grid turn: no reasoner note"] = "Reasoner result" not in tk.seen[-1][0]
         ok["chat window <= 6 pairs + turn"] = len(tk.seen[-1][1]) == 2 * min(HIST_PAIRS, 6) + 1
         # restart from the same state dir
         b = mk()
@@ -384,7 +397,7 @@ def selftest() -> None:
         ok["too long: store top-k used"] = json.loads((Path(d) / LOG02D).read_text().splitlines()[-1])["w"] == "top_k"
     for name, v in ok.items():
         print(("PASS " if v else "FAIL ") + name)
-    print("E2E02D-SELFTEST " + ("PASS" if all(ok.values()) else "FAIL") + f" {sum(ok.values())}/{len(ok)}")
+    print("E2E02D-WIRING-SELFTEST " + ("PASS" if all(ok.values()) else "FAIL") + f" {sum(ok.values())}/{len(ok)}")
     if not all(ok.values()):
         raise SystemExit(1)
 
