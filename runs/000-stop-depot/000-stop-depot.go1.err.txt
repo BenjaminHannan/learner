@@ -1,0 +1,405 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m✗ [0mGlob "**/OPUS-RULES*" failed[90m in .[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0muptime; echo ---; df -g /; echo ---; pwd; git rev-parse --show-toplevel 2>&1 | head -5
+14:54  up 3 days,  4:47, 4 users, load averages: 141.19 127.60 93.94
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        55    19%  484014 577072400    0%   /
+---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mls scratchpad/briefs/ 2>&1; echo ---; ls artifacts/ 2>&1 | head -30; echo ---; git status --short 2>&1 | head -20
+ls: scratchpad/briefs/: No such file or directory
+---
+claude-adapters-20260926d
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm391-20260926
+claude-bm395-20260925
+claude-bm397t-20260926
+claude-bm398e-20260926
+claude-bm398i-20260926
+claude-bm398r-20260926
+claude-bmriv-smoke-20260926
+claude-boundary259-20260922
+claude-brd5-20260926
+claude-brd6-20260926
+claude-brd7-20260926
+claude-brd8-20260926
+claude-brd8w-20260926
+claude-brd9-20260926
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+---
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+[0m
+[0m$ [0mls scratchpad/ 2>&1 | head; echo ---; ls scratchpad/briefs/ 2>&1 | head -30; echo ---; ls /private/tmp/claude-502/ 2>&1 | head
+o0c-scratch-20260923
+srv270b.ps1
+stop270b_panel.ps1
+stop270b.ps1
+w255
+w255b
+---
+ls: scratchpad/briefs/: No such file or directory
+---
+-private-var-folders-6q-27cy8k2s7w7cyb5spxrkj2mm0000gp-T-claude-sandbox-status-D5zpSz
+-private-var-folders-6q-27cy8k2s7w7cyb5spxrkj2mm0000gp-T-claude-sandbox-status-x1nZ1n
+-Users-ben-hannan
+-Users-ben-hannan-Desktop
+-Users-ben-hannan-Desktop-projects-beautiful-model
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-fact-saving-note-filtering-4ff1ff
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-forgetting-plain-english-gap-9258f0
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-architecture-review-0161ce
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-issues-audit-abcf60
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/" 2>&1 | head -20
+76c622f5-1395-42cc-b432-71b65f256cf4
+e74bc27e-706d-45b2-849a-15f682aeceaf
+[0m
+[0m$ [0mls -R "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/" 2>&1 | head -40
+scratchpad
+
+/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4//scratchpad:
+[0m
+[0m$ [0mls ~/premonition-models/ 2>&1; echo ---; shasum -a 256 ~/premonition-models/lis319f-merged/model.safetensors 2>&1; echo ---; ls -la ~/premonition-models/lis319-merged/model.safetensors 2>&1; ls ~/premonition-models/lis319-merged/ 2>&1
+bm397t-adapter397t.pt
+bm398r-adapter398r.pt
+dl5-adapters
+lis301-merged
+lis319-merged
+lis319f-merged
+minilm
+own-m1n-mouth
+rd378-notes-merged
+rsn353
+rsn358a
+rsn358i
+---
+970ef0acd5966f9e1a42049025d4ed807dee3989225201fd9dbcc6b4aa6b4f9b  /Users/ben-hannan/premonition-models/lis319f-merged/model.safetensors
+---
+-rw-------  1 ben-hannan  staff  2161290944 Sep 25 16:21 /Users/ben-hannan/premonition-models/lis319-merged/model.safetensors
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer_config.json
+tokenizer.json
+[0m
+[0m$ [0mwhich vastai 2>&1; vastai --help 2>&1 | head -30
+/Users/ben-hannan/.local/bin/vastai
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+
+options:
+ -h, --help                    show this help message and exit
+ --url URL                     Server REST API URL
+ --retry RETRY                 Retry limit
+ --explain                     Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                         Output machine-readable json
+ --full                        Print full results instead of paging with `less` for commands that support it
+ --curl                        Show a curl equivalency to the call
+ --api-key API_KEY             API Key to use. defaults to using the one stored in /Users/ben-hannan/.config/vastai/vast_api_key
+ --version                     Show CLI version
+ --no-color                    Disable colored output for commands that support it
+
+Search:
+ search offers                 Search for instance types using custom query
+ search benchmarks             Search for benchmark results using custom query
+ search templates              Search for template results using custom query
+ search invoices               Search for invoices using custom query
+ create template               Create a new template
+ update template               Update an existing template
+ delete template               Delete a Template
+
+Instances:
+ show instance                 Display user's current instances
+ create instance               Create a new instance
+ create instances              Create instances from a list of offers
+ destroy instance              Destroy an instance (irreversible, deletes data)
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai show instances --raw 2>&1 | head -100
+[
+ {
+  "actual_status": "running",
+  "bundle_id": 418554589,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 890,
+  "country_code": "US",
+  "cpu_arch": "amd64",
+  "cpu_cores": 64,
+  "cpu_cores_effective": 5.333333333333333,
+  "cpu_name": "AMD EPYC 7452 32-Core Processor",
+  "cpu_ram": 257597,
+  "cpu_util": 0.0,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.1,
+  "cuda_max_good": 12.2,
+  "cur_state": "running",
+  "direct_port_count": 66,
+  "direct_port_end": -1,
+  "direct_port_start": 65535,
+  "disk_bw": 3485.0,
+  "disk_name": "nvme",
+  "disk_space": 25.0,
+  "disk_usage": 4.099999904632568,
+  "disk_util": 4.099999904632568,
+  "dlperf": 33.73777018282411,
+  "dlperf_per_dphtotal": 296.958368357376,
+  "dph_base": 0.10666666666666667,
+  "dph_total": 0.11361111111111112,
+  "driver_version": "535.154.05",
+  "duration": 18562.01897072792,
+  "end_date": 1791572440.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 259.9587990220049,
+  "geolocation": "Washington, US",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 0.08333333333333333,
+  "gpu_lanes": 8,
+  "gpu_mem_bw": 439.3,
+  "gpu_name": "RTX 4070",
+  "gpu_ram": 12282,
+  "gpu_temp": 31.999969,
+  "gpu_totalram": 12282,
+  "gpu_util": 0.0,
+  "has_avx": 1,
+  "host_id": 86202,
+  "host_run_time": 2592000.0,
+  "hosting_type": null,
+  "id": 52755827,
+  "image_args": [],
+  "image_runtype": "ssh_proxy",
+  "image_uuid": "ubuntu:22.04",
+  "inet_down": 811.5,
+  "inet_down_billed": 4267555.014922,
+  "inet_down_cost": 0.00390625,
+  "inet_up": 876.4,
+  "inet_up_billed": 11831226.707227,
+  "inet_up_cost": 0.00390625,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.006944444444444444,
+   "gpuCostPerHour": 0.10666666666666667,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.11361111111111112
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 4.0,
+  "internet_up_cost_per_tb": 4.0,
+  "is_bid": false,
+  "jupyter_token": "5715f64780e7eb7b05d471c4d5d29664db77e732e150d3c965944e5fd4f91eb3",
+  "label": "claude-director-depot",
+  "local_ipaddrs": "10.0.60.17 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 53900,
+  "machine_id": 18337,
+  "mem_limit": 73.09623296,
+  "mem_usage": 0.0730112,
+  "min_bid": 0.05333333,
+  "mobo_name": "ROMED8-2T",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "20.04",
+  "pci_gen": 3.0,
+  "pcie_bw": 6.4,
+  "public_ipaddr": "174.31.68.94",
+  "reliability2": 0.9993024,
+  "rentable": true,
+  "score": 294.90080321470145,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.11361111111111112,
+   "diskHour": 0.006944444444444444,
+   "gpuCostPerHour": 0.10666666666666667,
+   "slaPremiumPerHour": 0.0,
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai show instance 52755827 --raw 2>&1 | python3 -c "import json,sys,datetime; d=json.load(sys.stdin); keys=['id','label','actual_status','cur_state','intended_status','next_state','created','start_date','duration','dph_total','dph_base','total_charges','labels' if False else 'label']; keep={k:d.get(k,'<absent>') for k in ['id','label','actual_status','cur_state','intended_status','next_state','start_date','created_at','duration','dph_total','dph_base','total_charges','disk_space','storage_cost','instance']}; print(json.dumps(keep,indent=1))"
+{
+ "id": 52755827,
+ "label": "claude-director-depot",
+ "actual_status": "running",
+ "cur_state": "running",
+ "intended_status": "running",
+ "next_state": "running",
+ "start_date": 1790430329.5646422,
+ "created_at": "<absent>",
+ "duration": 18566.441651821136,
+ "dph_total": 0.11361111111111112,
+ "dph_base": 0.10666666666666667,
+ "total_charges": "<absent>",
+ "disk_space": 25.0,
+ "storage_cost": 0.19999999999999998,
+ "instance": {
+  "discountTotalHour": 0,
+  "discountedTotalPerHour": 0,
+  "diskHour": 0.006944444444444444,
+  "gpuCostPerHour": 0.10666666666666667,
+  "slaPremiumPerHour": 0.0,
+  "totalHour": 0.11361111111111112
+ }
+}
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai show instances --raw 2>&1 | python3 -c "import json,sys,datetime; ds=json.load(sys.stdin); print('count:',len(ds)); [print(x['id'],repr(x.get('label')),x.get('actual_status'),x.get('cur_state')) for x in ds]"; echo ---; python3 -c "import datetime; print(datetime.datetime.fromtimestamp(1790430329.5646422,datetime.timezone.utc).isoformat()); print(datetime.datetime.fromtimestamp(18566.44))"
+count: 4
+52755827 'claude-director-depot' running running
+52799251 'claude-fixsleep-dl7b' running running
+52800271 'claude-creativechat-k1f' running running
+52800405 'claude-sleep-358t3' loading stopped
+---
+2026-09-26T13:45:29.564642+00:00
+1970-01-01 00:09:26.440000
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai stop instance 52755827 2>&1; echo "EXIT:$?"
+stopping instance 52755827.
+EXIT:0
+[0m
+[0m$ [0msleep 20; export VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai show instance 52755827 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps({k:d.get(k) for k in ['id','label','actual_status','cur_state','intended_status','next_state','start_date','duration','dph_total','disk_space','storage_cost','instance']},indent=1))"
+{
+ "id": 52755827,
+ "label": "claude-director-depot",
+ "actual_status": "exited",
+ "cur_state": "stopped",
+ "intended_status": "stopped",
+ "next_state": "stopped",
+ "start_date": 1790430329.5646422,
+ "duration": 18599.621809720993,
+ "dph_total": 0.11361111111111112,
+ "disk_space": 25.0,
+ "storage_cost": 0.19999999999999998,
+ "instance": {
+  "discountTotalHour": 0,
+  "discountedTotalPerHour": 0.006944444444444444,
+  "diskHour": 0.006944444444444444,
+  "gpuCostPerHour": 0,
+  "slaPremiumPerHour": 0,
+  "totalHour": 0.006944444444444444
+ }
+}
+[0m
+[0m$ [0mdate -u +%Y-%m-%d\ %H:%M\ UTC; python3 -c "dur=18599.621809720993; h=dur/3600; dph=0.11361111111111112; print(f'hours={h:.4f}'); print(f'cost=\${h*dph:.4f}'); sh=0.006944444444444444; print(f'storage_hr=\${sh:.6f}'); print(f'storage_day=\${sh*24:.4f}')"
+2026-09-26 18:55 UTC
+hours=5.1666
+cost=$0.5870
+storage_hr=$0.006944
+storage_day=$0.1667
+[0m
+[0m$ [0mwc -l artifacts/fable-predictions-ledger.md; ls artifacts/claude-stop-depot-20260926/ 2>&1
+3040 artifacts/fable-predictions-ledger.md
+ls: artifacts/claude-stop-depot-20260926/: No such file or directory
+[0m
+[0m→ [0mRead artifacts/fable-predictions-ledger.md[90m [offset=3030][0m
+[0m
+[0m$ [0mls artifacts/ | head -3; mkdir artifacts/claude-stop-depot-20260926 && ls artifacts/claude-stop-depot-20260926/
+claude-adapters-20260926d
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+[0m
+[0m← [0mWrite artifacts/claude-stop-depot-20260926/REPORT.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- 2026-09-26 18:55 UTC depot 52755827 STOPPED (disk kept); 5.17 h x $0.1136 = $0.59; storage $0.1667/day.
+EOF
+tail -2 artifacts/fable-predictions-ledger.md
+- 2026-09-26 18:55 UTC rent-mu405 STOPPED by owner (duplicate of CPU run); 0.056 h, ~$0.03.
+- 2026-09-26 18:55 UTC depot 52755827 STOPPED (disk kept); 5.17 h x $0.1136 = $0.59; storage $0.1667/day.
+[0m
+[0m$ [0mgit status --short artifacts/claude-stop-depot-20260926/ artifacts/fable-predictions-ledger.md 2>&1; git branch --show-current 2>&1
+M artifacts/fable-predictions-ledger.md
+claude/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mls -la artifacts/claude-stop-depot-20260926/; git status --short 2>&1 | grep -i -E "stop-depot|ledger"; git check-ignore artifacts/claude-stop-depot-20260926/REPORT.md 2>&1; echo "ignore-exit:$?"
+total 8
+drwxr-xr-x    3 ben-hannan  staff     96 Sep 26 14:55 .
+drwxr-xr-x@ 581 ben-hannan  staff  18592 Sep 26 14:55 ..
+-rw-r--r--    1 ben-hannan  staff   2766 Sep 26 14:55 REPORT.md
+ M artifacts/fable-predictions-ledger.md
+artifacts/claude-stop-depot-20260926/REPORT.md
+ignore-exit:0
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-stop-depot-20260926/REPORT.md 2>&1; echo ---; git status --short 2>&1 | grep -c "^"; git log --oneline -3 2>&1
+.gitignore:5:artifacts/	artifacts/claude-stop-depot-20260926/REPORT.md
+---
+255
+5484e6460 rent-mu405 STOPPED by owner (duplicate of CPU run) 2026-09-26
+4dd0adf85 claude-credit-20260926j: read-only vast money check 2026-09-26
+d45b9eb16 peek-358i2pc read-only progress peek 2026-09-26 (BensPC nvidia-smi + loop-s1..s4 train logs)
+[0m
+[0m$ [0mgit add -f artifacts/claude-stop-depot-20260926/REPORT.md artifacts/fable-predictions-ledger.md && git status --short -- artifacts/claude-stop-depot-20260926/ artifacts/fable-predictions-ledger.md; git diff --cached --stat
+A  artifacts/claude-stop-depot-20260926/REPORT.md
+M  artifacts/fable-predictions-ledger.md
+ artifacts/claude-stop-depot-20260926/REPORT.md | 50 ++++++++++++++++++++++++++
+ artifacts/fable-predictions-ledger.md          |  1 +
+ 2 files changed, 51 insertions(+)
+[0m
+[0m✗ [0mgit diff --cached -- artifacts/fable-predictions-ledger.md | head -12; git commit -m "depot 52755827 STOPPED (disk kept) 2026-09-26" 2>&1 | tail -3 && git push 2>&1 | tail -5 failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mgit diff --cached -- artifacts/fable-predictions-ledger.md | head -12
+diff --git a/artifacts/fable-predictions-ledger.md b/artifacts/fable-predictions-ledger.md
+index fc8c49408..ea2f311f2 100644
+--- a/artifacts/fable-predictions-ledger.md
++++ b/artifacts/fable-predictions-ledger.md
+@@ -3038,3 +3038,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
+ - 2026-09-26 17:40 UTC rent-zdl6b BUDGET-STOP (label claude-fixsleep-dl6b, origin/main de083cd30c code never edited, selftest ok): 1 rental (52778152, offer 45669547 RTX 5090 KR rel 0.9980, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 40, torch 2.8.0+cu128 transformers 5.17.0 pip-installed; proxy-fail offers 43165145/46753301 and stuck offer 43982861 skipped). BASE openbmb/MiniCPM5-1B 87179e5c1f455ef22e6223592d2d61351b525bfc (2.1 GB snapshot, same files as dl-2). Run launched detached 16:30:31Z, first "[dl6] S s10 night 1" ~16:35 (no TOO-SLOW). Killed by exact PID at $0.57 line (70.8 min x dph $0.4852 = $0.573) during L s11 night 6; task total ~$0.59 of $0.60. Partial: base lucky 75 reached 35 greedy 7 harm 200/300; S s10 n7 lucky 198 lost 25, S s11 n7 lucky 237 lost 27, L s10 n7 lucky 140 reached 50 lost 13 (json, 21 nights); log adds L s11 n1-6 (lucky 100/135/151/120/125/115, lost 3/4/6/4/7/7); L s11 n7 never ran, marks never computed, no verdict. Copy-back partial json+log, rental destroyed, 0 claude-fixsleep-dl6b live. Credit at gate 9.01 (balance 0), 8.93 at re-check. See artifacts/claude-dl6-20260926/RESULTS-gpu.md + gpu/ (partial).
+ - 2026-09-26 18:05 UTC rent-bm398e SPANS-COMPLETE (label claude-benchmarks-bm398e, sealed origin/main code never edited): 1 rental (52789000, offer 45996848, RTX 4090 24GB, image pytorch/pytorch disk 80, torch upgraded 2.2.1->2.11.0+cu130 per kit TORCH UPGRADE, torchvision/torchaudio removed, transformers 5.17.0, pyarrow + nltk pip-installed for sealed imports, Python 3.10.13). Created 17:35:42Z, running 17:40:07Z (6-min rule met), destroyed ~18:03:55Z; ~0.470h x dph $0.35111111 = ~$0.17 of $0.35. BASE openbmb/MiniCPM5-1B 87179e5c1f455ef22e6223592d2d61351b525bfc. SEAL 10/10 OK, SEAL-amend1 3/3 OK, selftest 8/8 PASS, T sha256 35bdf151 match. Fetch OK locomo_qa 1986. Lane1 spans_made 432 rows done seconds=46 (17:51:38-17:52:24Z) sha f045117a; lane2 spans_T 1540 rows done seconds=281 (relaunched 17:56:42-18:01:23Z after cwd-misfire crash, zero rows first try) sha 59e1fe24. Copy-back 2 .gz files (176974 B sha e25ab892; 1318109 B sha 3d15791a) size+sha verified both ends, rental destroyed, 0 claude-benchmarks-bm398e live. Credit at gate 4.582765401269754. Deviations: torch upgrade; nltk install; lane2 relaunch; exit codes/peak-GPU-mem not captured (end times from mtimes x-checked vs log seconds). No fit/score/judge here. See artifacts/claude-bm398e-20260926/RESULTS-rent.md + spans/.
+ - 2026-09-26 18:55 UTC rent-mu405 STOPPED by owner (duplicate of CPU run); 0.056 h, ~$0.03.
++- 2026-09-26 18:55 UTC depot 52755827 STOPPED (disk kept); 5.17 h x $0.1136 = $0.59; storage $0.1667/day.
+[0m
+[0m$ [0mgit commit -m "depot 52755827 STOPPED (disk kept) 2026-09-26" 2>&1 | tail -3; git log --oneline -2; git status --short -- artifacts/claude-stop-depot-20260926/ artifacts/fable-predictions-ledger.md; echo "clean-check-done"
+[claude/card-experiment-handoff-7c5b27 ef311c7bd] depot 52755827 STOPPED (disk kept) 2026-09-26
+ 2 files changed, 51 insertions(+)
+ create mode 100644 artifacts/claude-stop-depot-20260926/REPORT.md
+ef311c7bd depot 52755827 STOPPED (disk kept) 2026-09-26
+5484e6460 rent-mu405 STOPPED by owner (duplicate of CPU run) 2026-09-26
+clean-check-done
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai show instance 52755827 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['id'],repr(d.get('label')),d.get('actual_status'),d.get('cur_state'),'disk:',d.get('disk_space'))"
+52755827 'claude-director-depot' exited stopped disk: 25.0
+[0m
