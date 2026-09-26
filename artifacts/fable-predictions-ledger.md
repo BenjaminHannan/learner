@@ -2630,3 +2630,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-26 14:14 UTC Director: rent-ch403 released, $1.60 of Everyday chat's $2.
 - 2026-09-26 14:22 UTC Director: rent-y1f released, $0.30 of Answering from memory's $2 (y1d ~$0.14 spent).
 - 2026-09-26 14:28 UTC Director: rent-02dr queued by Month-end, $0.80 of its $2 (q-404 holds $1.20).
+- 2026-09-26 14:33 UTC Director: rent-zdl6 queued by Fix sleep, $0.80 (with dl-4b $1.20 = its full $2).
