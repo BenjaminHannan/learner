@@ -103,3 +103,21 @@ byte-identical to score/, and its judge score equals audit/A3-score.json.
 - Caveat on blindness: it saw this commit's subject line before computing. It did not open this file.
 - One wording note: PLAN.md's "Why" gives T's median answer as 10 words. That is the scored first line (bm-397's
   measure). bm-391's prf script counts whole replies and gives 8. PLAN is sealed and stays as written.
+
+## Outside review, checked against the code (added ~12:05 UTC)
+Ben pasted an outside review at 11:50 UTC (saved as reviews/outside-review-bm397t-2026-09-26.md). Each claim was
+rechecked here on CPU from the files above.
+- True: of T's 112 A-labelled answers, 71 stayed A, 41 were lost (A→B 1, A→C 14, A→D 26) and 36 were gained
+  elsewhere. 33 of the 41 losses are category 4 (single-hop); gains were 22 cat 4, 7 cat 2, 4 cat 1, 3 cat 3.
+- True: the conversation-level 95% interval of the A-rate change (−1.67 points) is −8.2 to +5.3 (seed 396, 10k).
+  So correctness was neither shown to improve nor shown to hold. A3's point-count mark failed, but the data cannot
+  tell a small loss from no change.
+- True: GSM8K with the sealed pick lost 156 of T's 191 and gained 7. All 300 TS replies contain a number, so this
+  is not a parsing failure.
+- True, and a correction to the dev lines above: claude_bm397t_data.correct() only checks that every answer word
+  appears in the reply. It accepts "Not Varnholt" and "Varnholt or Eskbridge" for "Varnholt". The dev count 199/200
+  is word coverage, not semantic accuracy.
+- True: training chats are ~1.6k tokens against ~19k (chat text alone, measured here) to ~24k (with the harness
+  framing) on LoCoMo. The trainer averages each example's token loss, then averages examples.
+- True: best_span_f1 45.14 vs actual 37.07, and Qwen was never blind-judged here. So "the rest of the gap is
+  correctness" is not shown. It was said too strongly in the chat and is withdrawn.

@@ -94,3 +94,31 @@ Queued, each one change, registered before any run, nothing before Ben's OK on m
   - Needs a check that the switch itself picks the right path. Month-end owns the agent; this does not join 0.2c.
 - The next real gain on LoCoMo needs more right answers, not fewer words. bm-398 (evidence expansion) is the
   candidate.
+
+## Revised after the outside review (Ben, 11:50 UTC; claims checked, see bm-397t RESULTS-score.md)
+The review's order is taken. The "bm-397u" line above is withdrawn: it changed two things at once (math replay AND
+unanswerable questions). Each experiment below is one change, registered before its run.
+1. **bm-398d, evidence diagnostic (registered next, $0 CPU; artifacts/claude-bm398d-20260926/PLAN.md).**
+   - The same judged 300 LoCoMo questions (those with annotated evidence) are answered by the plain 1B from four
+     inputs: the right evidence lines (G), the right lines plus retrieved distractors up to 20 lines (GD), the
+     store's top 20 (E20, exists), and the whole chat (T, exists). Qwen's whole-chat replies (Q2, exist) are added.
+   - All five are blind-judged together; judges also see the annotated evidence lines.
+   - It says whether finding, distraction or reading costs the most right answers. A fresh, independently written
+     bank with evidence recorded at construction confirms it afterwards.
+2. **Adapter isolation and routing.** Keep the base frozen and the LoRA unmerged, with an explicit bypass. Pass:
+   bypass reproduces the base exactly, and switching between requests changes no later general answer. Two
+   separate decisions: needs memory? needs calculation? Memory + math questions keep their working.
+3. **Evidence-trained memory adapter.**
+   - Practice: new code-made chats with similar facts about different people, corrections, negations,
+     former vs current facts, lists of varying length, relative dates, arithmetic over remembered facts, and
+     missing, partial and conflicting evidence. Lengths nearer LoCoMo's, with evidence at different positions.
+   - Target: the shortest complete supported answer, with no word cap.
+   - Held out: templates, entities and reasoning patterns, not only seeds.
+   - Dev check: a real semantic checker (negation and alternatives count as wrong).
+4. **Math replay, separately, only if 2 does not already protect math.** Verified worked solutions (code-checked
+   steps); explicit task weights; report supervised tokens per task; pick checkpoints on memory correctness AND
+   reasoning, not training loss.
+- The copy-only finaliser is dropped. It checks vocabulary, not meaning.
+- The next semantic audits include supporting context and Qwen.
+- A replacement for the MMLU no-harm baseline gets its own registered evaluation. T's 50/300 mostly measures
+  missing letters, so holding 50 protects nothing.
