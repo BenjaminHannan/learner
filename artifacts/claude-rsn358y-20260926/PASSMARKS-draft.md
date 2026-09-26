@@ -68,7 +68,7 @@ All four are measured against 358i's plain on 358i's sealed tests.
 
 ---
 
-## Draft v2 (16:47 UTC): a depth sweep at equal weights
+## Draft v2 (16:44 UTC): a depth sweep at equal weights
 This replaces the single-shape plan above. It was written after Ben's 16:41 question, relayed by the Thread manager (cmsg_01FuvegZXjMmeUzStiEFVnEWHbM8QUmm8t3NhU56WpKFqp): "So why not have like 50 layers with smaller sizes? Can we find the optimal balance of size to layers?" It is still unsealed, and it still waits on 358t's verdict and seed 5-8 replication, as in the branch table.
 
 **Shapes.** Weights are counted from R.Net with 358t's patches. Plain = 6,385,149.
