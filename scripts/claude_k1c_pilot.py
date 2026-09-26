@@ -16,6 +16,13 @@ Candidate scores (lower = better; ties keep draw order, as claude_pick403.PickGe
       haiku (3), couplet (2) or a four-line poem (4); 0 when the request names no count or form.
   R   minus the MiniLM cosine between the sample and the user's words in this chat (request + earlier messages).
   FR  F first, then R.
+Added 15:37 UTC 09-26 after F/R/FR were scored (FR 16 vs first 12 of 40, oracle 26), before any P score was seen:
+  P   minus the 1B's own pointwise information: mean over the reply's tokens of log p(token | the writer's prompt)
+      - log p(token | the system line and an empty user message). A reply that uses the request and the chat gains
+      more from them than a generic one does. No training; the writer's own 1B.
+  FP  F first, then P.
+  python -B scripts/claude_k1c_pilot.py pmi --form W1 --items DEV/items.jsonl --model <MiniCPM5-1B> --out OUT
+      (adds pmi.jsonl; score then reports P and FP too)
 
   python -B scripts/claude_k1c_pilot.py samples --form W2 --items DEV/items.jsonl --model <MiniCPM5-1B> --out OUT
   python -B scripts/claude_k1c_pilot.py packets --items DEV/items.jsonl --out OUT --judged J.json
@@ -120,6 +127,62 @@ def run_samples(a):
             print(f"[k1c-pilot] {it['item_id']} {time.time() - t0:.0f}s", flush=True)
 
 
+def _prompt_msgs(a, it, g, gen, C38, CD, K):
+    text = it["last"]
+    if a.form == "W1":
+        import claude_e2e336_twin as OLD
+        import claude_e2e336_twinb as TB
+        OLD._CACHE[a.model] = (g.tok, g.model, g.dev)
+        hist = []
+        with tempfile.TemporaryDirectory() as d:
+            tw = TB.Twin336b(d, a.model)
+            for lead in it["turns"]:
+                hist += [{"role": "user", "content": lead}, {"role": "assistant", "content": tw.turn(lead)[0]}]
+        return [{"role": "system", "content": CD.SYSTEM333D}] + hist + [{"role": "user", "content": text}]
+    said = [s.strip() for s in it["turns"] if s and s.strip()]
+    system = CD.SYSTEM333D + (K.SAID_K1A + " ".join(json.dumps(s, ensure_ascii=False) for s in said) if said else "")
+    return [{"role": "system", "content": system}, {"role": "user", "content": text}]
+
+
+def reply_logp(g, gen, msgs, reply) -> float:
+    """Mean log p of the reply's tokens after the rendered prompt (the writer's own template)."""
+    torch = g.torch
+    prompt = gen._render(msgs)
+    p_ids = g.tok(prompt, return_tensors="pt")["input_ids"]
+    f_ids = g.tok(prompt + reply, return_tensors="pt")["input_ids"]
+    n = p_ids.shape[1]
+    if f_ids.shape[1] <= n:
+        return 0.0
+    with torch.no_grad():
+        logits = g.model(input_ids=f_ids.to(g.dev)).logits[0, n - 1:-1].float()
+    lp = torch.log_softmax(logits, -1).gather(1, f_ids[0, n:].to(g.dev).unsqueeze(1))
+    return float(lp.mean())
+
+
+def run_pmi(a):
+    import claude_chat338_agent as C38
+    import claude_cre333b_agent as CB
+    import claude_cre333d_agent as CD
+    import claude_k1a_cre as K
+    g = CB.Gen333b(a.model)
+    gen = C38.Gen338(share=g)
+    items = {it["item_id"]: it for it in load(a.items)}
+    path = Path(a.out) / "pmi.jsonl"
+    done = {r["item_id"] for r in load(path)} if path.exists() else set()
+    null = [{"role": "system", "content": CD.SYSTEM333D}, {"role": "user", "content": ""}]
+    with open(path, "a", encoding="utf-8") as fh:
+        for r in load(Path(a.out) / "samples.jsonl"):
+            if r["item_id"] in done:
+                continue
+            t0 = time.time()
+            msgs = _prompt_msgs(a, items[r["item_id"]], g, gen, C38, CD, K)
+            pmi = [reply_logp(g, gen, msgs, s["trimmed"]) - reply_logp(g, gen, null, s["trimmed"])
+                   if s["guard"] is None else None for s in r["samples"]]
+            fh.write(json.dumps({"item_id": r["item_id"], "pmi": pmi}) + "\n")
+            fh.flush()
+            print(f"[k1c-pmi] {r['item_id']} {time.time() - t0:.0f}s", flush=True)
+
+
 def packets(a):
     items = {it["item_id"]: it for it in load(a.items)}
     judged = json.loads(Path(a.judged).read_text(encoding="utf-8")) if a.judged else {}
@@ -147,6 +210,8 @@ def score(a):
     items = {it["item_id"]: it for it in load(a.items)}
     verdict = json.loads(Path(a.verdicts).read_text(encoding="utf-8"))   # {"item\ttext": true/false}
     res = {"items": 0, "first": 0, "oracle": 0, "F": 0, "R": 0, "FR": 0, "no_passing": 0, "unjudged": 0}
+    pp = Path(a.out) / "pmi.jsonl"
+    pmis = {r["item_id"]: r["pmi"] for r in load(pp)} if pp.exists() else {}
     for r in load(Path(a.out) / "samples.jsonl"):
         it = items[r["item_id"]]
         ok = [s for s in r["samples"] if s["guard"] is None]
@@ -165,6 +230,11 @@ def score(a):
         pick = {"F": min(range(len(ok)), key=lambda i: (f[i], i)),
                 "R": min(range(len(ok)), key=lambda i: (-cos[i], i)),
                 "FR": min(range(len(ok)), key=lambda i: (f[i], -cos[i], i))}
+        if r["item_id"] in pmis:
+            pm = [x for x, s in zip(pmis[r["item_id"]], r["samples"]) if s["guard"] is None]
+            pick["P"] = min(range(len(ok)), key=lambda i: (-pm[i], i))
+            pick["FP"] = min(range(len(ok)), key=lambda i: (f[i], -pm[i], i))
+            res.setdefault("P", 0), res.setdefault("FP", 0)
         res["first"] += bool(v[0])
         res["oracle"] += any(v)
         for k, i in pick.items():
@@ -174,7 +244,7 @@ def score(a):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", choices=["samples", "packets", "score"])
+    ap.add_argument("mode", choices=["samples", "packets", "score", "pmi"])
     ap.add_argument("--items", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--form", choices=["W1", "W2"], default="W2")
@@ -183,7 +253,7 @@ def main():
     ap.add_argument("--judged", default="")
     ap.add_argument("--verdicts", default="")
     a = ap.parse_args()
-    {"samples": run_samples, "packets": packets, "score": score}[a.mode](a)
+    {"samples": run_samples, "packets": packets, "score": score, "pmi": run_pmi}[a.mode](a)
 
 
 if __name__ == "__main__":
