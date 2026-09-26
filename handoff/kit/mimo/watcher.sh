@@ -61,6 +61,9 @@ while [ ! -e "$H/STOP" ]; do
       # uv cache prune when low (never uv cache clean); Trash emptied at most once
       if [ ! -e "$H/lowdisk.$(date +%Y%m%d%H)" ]; then touch "$H/lowdisk.$(date +%Y%m%d%H)"
         { U=$(command -v uv || echo "$HOME/.local/bin/uv"); "$U" cache prune >/dev/null 2>&1 && log "lowdisk: uv cache prune" || log "lowdisk: uv cache prune failed"; }
+        # Ben 02:16/02:17 UTC 09-26: yes to trashing these two models and "also have it empty the trash"; Finder timed out, so remove exactly these two from the Trash
+        for d in rd371-verifier-merged lis318-merged; do [ -d "$HOME/.Trash/$d" ] || continue
+          b=$(df -g / | tail -1 | awk '{print $4}'); rm -rf "$HOME/.Trash/$d" 2>>"$LOG" && log "lowdisk: removed Trash/$d (${b} -> $(df -g / | tail -1 | awk '{print $4}') GB)" || log "lowdisk: remove Trash/$d failed"; done
         # one time only (Ben's 02:17 yes covered the two models moved to the Trash that night); never a standing auto-delete
         if [ ! -e "$H/lowdisk.trash-once" ]; then touch "$H/lowdisk.trash-once"
           osascript -e 'with timeout of 900 seconds' -e 'tell application "Finder" to empty trash' -e 'end timeout' >/dev/null 2>&1 && log "lowdisk: emptied Trash (one time)" || log "lowdisk: empty Trash failed"; fi
