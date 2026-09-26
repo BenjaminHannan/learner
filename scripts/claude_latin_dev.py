@@ -25,23 +25,12 @@ DEV_SEEDS = range(900000, 901000)
 
 
 def blanks_form(item):
-    """Reply form B (DEV probe): ask only for the missing numbers in reading order. The item keeps its square; check_b
-    fills the blanks from the reply and uses the world's exact check."""
-    s = item["size"]
-    text = item["prompt"].split(": ", 1)[1].split(". Reply", 1)[0]
-    return dict(item, prompt=(f"In this {s}x{s} square every row and every column must hold 1 to {s} once: {text}. "
-                              f"Reply with only the missing numbers, left to right and top to bottom, separated by spaces."))
+    """Reply form B: the shared world's blanks mode (claude_world_latin.prompt_blanks / check_blanks, exact count)."""
+    return dict(item, prompt=W.prompt_blanks(item))
 
 
 def check_b(item, reply):
-    s, puz = item["size"], item["puz"]
-    k = sum(v == 0 for row in puz for v in row)
-    vals = [int(x) for x in __import__("re").findall(r"\d+", reply)][:k]
-    if len(vals) < k:
-        return False
-    it = iter(vals)
-    full = [[v if v else next(it) for v in row] for row in puz]
-    return W.check(item, " / ".join(" ".join(map(str, r)) for r in full))
+    return W.check_blanks(item, reply)
 
 
 class Sampler:
@@ -63,8 +52,9 @@ class Sampler:
         kw = {"do_sample": True, "temperature": temp, "top_p": 1.0, "num_return_sequences": n} if temp else \
              {"do_sample": False}
         s = item["size"]
+        cap = 3 * item["blanks"] + 8 if "missing numbers" in item["prompt"] else 4 * s * s + 16
         with self.torch.no_grad():
-            out = m.generate(**ids, max_new_tokens=4 * s * s + 16, pad_token_id=self.tok.eos_token_id, **kw)
+            out = m.generate(**ids, max_new_tokens=cap, pad_token_id=self.tok.eos_token_id, **kw)
         return [self.tok.decode(o[cut:], skip_special_tokens=True).strip() for o in out]
 
 
