@@ -6,3 +6,4 @@
 - Cap end: 2026-09-27T04:43:40Z, 6 hours after the first STEP line.
 - Restarts: none so far.
 - 2026-09-26T23:20:02Z: training is still running. The STEP train line is at 22:43:43Z.
+- 2026-09-26T23:57:56Z: training finished (73.9 minutes; adapter sha256 9f19edb7..., 16568343 bytes, kept off git). The dev gate started at 23:57:47Z.
