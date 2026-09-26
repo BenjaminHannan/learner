@@ -2638,3 +2638,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-26 14:58 UTC Director: rent-bmrivsmoke queued, $0.30 of Benchmarks' $2 ($0.20 left after bm398r's $1.50).
 - 2026-09-26 15:09 UTC Director: rent-zdl5 queued by Fix sleep (e548356d0), cap $1.60 = Ben's 14:37 extra; leftovers from dl-4b/dl-6 count first.
 - 2026-09-26 15:13 UTC Director: rent-k1a queued, $0.80 of Creative answers in chat's $2.
+- 2026-09-26 15:15 UTC Director: rent-mu404 released, $1.00 (Making things up total $1.36 of $2 with mu-402's $0.36).
