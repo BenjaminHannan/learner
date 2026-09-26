@@ -45,3 +45,20 @@ One kind of day work (number puzzles). Two seeds (dl-3 saw 39 vs 24 lost under o
 capitals entirely, so a pass means protection carried over to facts never rehearsed; a fail does not rule out
 rehearsing the same kind of fact. The base's shaky answers may be wrong; the anchor keeps the base's distribution
 either way, which is the point (keep, not sharpen).
+
+## Addendum 1 (2026-09-26 16:15:40 UTC, after sealing at b15629064, before any run; the Thread manager's round-3 pushes)
+- Premise status: SUGGESTED, not shown. fd-1 missed its own 60% bar (17 of 29 = 58.6%), and its capitals split was not
+  in its plan. Premise check, report-only, fixed now: in dl-7's S arm, pool both seeds' night-7 lost items and count how
+  many fall in the lowest third of base-right panel items by base_panel_conf (measured in this run). 60% or more =
+  premise supported on fresh seeds; 40% or less = premise shown wrong, and then any F-arm result is not evidence for it.
+- Anchor source (no panel contact): short quiz questions written by the base from two fixed prompts, filtered with
+  dl-3's panel_words (every panel kind, country, city, word, and any digit dropped), answered greedily by the base,
+  lowest-confidence third kept. The panel's items and kinds are never used to find, choose or train anchors; every lost
+  item the marks count is a fact the nights never rehearsed.
+- Brain framing: the brain's answer to forgetting is sleep that replays old memories mixed with new ones
+  (complementary learning systems, simplified). dl-7 is a NARROWER version: it replays only the weakest old memories.
+  The broad version has already run twice: dl-3 (greedy copies of base chat answers, FAIL) and dl-4 (matching the base's
+  whole output distribution on a broad sample of base-written prompts, which is the "silicon" exact-replay idea, FAIL).
+- Next fallbacks, one change each, in order: EWC per-weight guard (important weights get less plastic); broad exact
+  replay at a higher dose (dl-4's anchor, weight 1 -> more anchor items per night) only if a reason appears why dl-4's
+  dose was too low.
