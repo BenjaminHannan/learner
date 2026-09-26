@@ -1,0 +1,971 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git log --oneline -5 origin/main -- 2>&1 | head -20; echo ---; git branch -a 2>&1 | head -30
+FETCH_EXIT:0
+6dfccd702 q-404: Q404_ROUTE=1 (383 verified PASS); rent-q404 released to the queue
+b285cebc3 Goals page: Ben 16:05 - when stuck, ask how the brain does it
+057664ed3 VERIFY 382b/383: 383 registered PASS (Q1 +5, Q2 0, Q3 +1); 382b registered FAIL (R1, L1, S1; Y2 +10.1 passes)
+328b97c78 Goals page: Ben 16:04 Redirect - no new work on hand-written rules; design work carries on
+62bcd77b7 creative: DEV-only plain-1B coverage probe for the shared number-square world (seeds 900000-900999; tests will use 901000+)
+---
+* claude/card-experiment-handoff-7c5b27
++ claude/fact-saving-note-filtering-4ff1ff
++ claude/forgetting-plain-english-gap-9258f0
++ claude/locomo-length-penalty-408e2a
++ claude/loop-net-generalization-analysis-729ee3
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/pull-from-main-629dc4
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
+  codex/testing-experiment-44
++ main
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/builder-outbox-tmp
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -30; echo "===13LINES-END==="; echo "---QUEUE LIST---"; git ls-tree -r --name-only origin/main -- handoff/queue/ | head -30; echo "---Q404 DIR origin/main---"; git ls-tree -r --name-only origin/main -- artifacts/claude-q404-20260926/ | head -50; echo "---Q404 DIR builder-outbox---"; git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-q404-20260926/ 2>&1 | head -50
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+===13LINES-END===
+---QUEUE LIST---
+handoff/queue/000-adapters-0926d.md
+handoff/queue/000-benspc-check.md
+handoff/queue/000-cache-pin.md
+handoff/queue/000-ckpt-copy.md
+handoff/queue/000-credit-0926b.md
+handoff/queue/000-diskcheck-0926.md
+handoff/queue/000-instances-0926c.md
+handoff/queue/000-probe-007b.md
+handoff/queue/000-push-rd371b.md
+handoff/queue/000-republish-0926f.md
+handoff/queue/000-republish-0926g.md
+handoff/queue/000-smoke.md
+handoff/queue/000-trash-0926.md
+handoff/queue/000-vast-rescue.md
+handoff/queue/000-watcher-dedupe.md
+handoff/queue/000-watcher-upgrade.md
+handoff/queue/000-zdl4-0926e.md
+handoff/queue/001-bench-bm390w.md
+handoff/queue/001-bench-bm390x.md
+handoff/queue/002-gram-364-benspc.md
+handoff/queue/002b-blurt3r-loop.md
+handoff/queue/003-lis-319-train.md
+handoff/queue/005t-rsn-358a-shared.md
+handoff/queue/005u-rsn-358c1-stop.md
+handoff/queue/006c-rd-378-train.md
+handoff/queue/006e-lis-319c-bar.md
+handoff/queue/006g-rd-371b-notes.md
+handoff/queue/006h-lis-319c-full.md
+handoff/queue/006i-rd-371b-train.md
+handoff/queue/006k-02c-benspc.md
+---Q404 DIR origin/main---
+artifacts/claude-q404-20260926/ADDENDUM-q404-route.md
+artifacts/claude-q404-20260926/PASSMARKS-q404.md
+artifacts/claude-q404-20260926/SEAL-code-q404.sha256.txt
+artifacts/claude-q404-20260926/SEAL-marks.sha256.txt
+---Q404 DIR builder-outbox---
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -13 | cat -n; echo "==="; git show origin/main:artifacts/claude-q404-20260926/PASSMARKS-q404.md; echo "===ADDENDUM==="; git show origin/main:artifacts/claude-q404-20260926/ADDENDUM-q404-route.md; echo "===SEAL-CODE==="; git show origin/main:artifacts/claude-q404-20260926/SEAL-code-q404.sha256.txt; echo "===SEAL-MARKS==="; git show origin/main:artifacts/claude-q404-20260926/SEAL-marks.sha256.txt
+1	COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+     2	First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+     3	- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+     4	- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+     5	- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+     6	- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+     7	- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+     8	- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+     9	- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+    10	Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+    11	BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+    12	
+    13	GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+===
+# PASSMARKS q-404 — math asked with "you" reaches the thinking step (registered 2026-09-26 ~14:15 UTC)
+
+Owner: Month-end (problem #3, refuses too much). Registered while 383 (007b) runs, so the next step is ready either way.
+Marks, arms and test data fixed now; code and the blind panel come after. Sealed; never edited.
+
+## Why (shown in code)
+claude_think299_agent.is_reasoning() refuses every turn that contains "you", "your" or "yourself" (SELF, line 29),
+meant to keep questions about the assistant out of the think path. It also blocks ordinary math asked the way people
+ask it ("Can you work out ...", "If you buy 3 ... how much do you pay?"). Those turns fall to the chat fallback, which
+answers with one unchecked reply or an "I'm not sure" line. Fix sleep's chat-gap check (08ca12cb3) and the Mac
+agent's doorway diagnosis both found this gate on 0.2c's puzzle wording. Untested: how many everyday math asks it blocks.
+
+## One change
+think299's "you" test is narrowed from "any you/your" to "a question about the assistant itself": the turn is
+refused only if it asks about the assistant (who/what are you, your name/age/opinion/feelings/memory, do/can/will
+you remember/like/think/feel/know me, about yourself), written as a short rule list on dev wordings only. Every other
+think299 condition (question form, number signal, no notebook name) is unchanged. New wrapper builder; the sealed
+builders stay untouched.
+
+## Arms
+Base B = the best joined build at run time, fixed now: X' (build_02c + lis-319 via claude_readersha_wrap + adapter
+a33211dc…) with ROUTE02C on if and only if 383 is a verified PASS. Arm Q = B + q-404. Same machine, same seeds.
+
+## Test data (written blind before the code; TEST-ONLY)
+- math panel: 100 fresh everyday word problems with one integer answer (code-checked), written by blind agents:
+  60 phrased with "you"/"your" as people naturally do, 40 without.
+- self panel: 60 questions about the assistant or about the user that contain 2+ numbers (e.g. about the assistant's
+  own abilities, or "how many of the 3 kids I told you about ..."), which must NOT go to the think path.
+Never opened by me; only the runner and scorer read them.
+
+## Marks
+| Row | Test | Bar |
+|---|---|---|
+| M1 | math panel right (script, integer in the reply's answer line), Q − B | ≥ +10 |
+| M2 | the 60 "you" items, Q − B | ≥ +8 |
+| M3 | self panel: turns sent to the think path by Q | ≤ 3 of 60 |
+| M4 | the 40 no-"you" items: Q's reply byte-identical to B's (the gate decision cannot change there) | 40/40 |
+| M5 | math panel replies that state a wrong number as the answer, Q − B | ≤ +5 |
+
+q-404 PASSES only if every row passes. A FAIL stays a FAIL.
+Report only: gate decisions per wording; think vote splits ("worked it out a few times"); ms per turn.
+
+## What would prove it wrong (fixed now)
+- M2 < +3: the "you" gate is not what costs the math; look next at the vote-split rate (17 of 33 think turns split in
+  0.2c's chat panel, Everyday chat's count) or at the fallback.
+- M3 > 3: the narrowed rule lets questions about the user/assistant into the calculator; the rule needs the notebook.
+===ADDENDUM===
+# ADDENDUM q-404: route setting (2026-09-26 16:06 UTC, before any q-404 run)
+
+383 is a verified registered PASS (artifacts/claude-e2e382-20260925/VERIFY-382b-383.md, main 057664ed3: Q1 +5, Q2 0, Q3 +1).
+So, as PASSMARKS-q404 fixed in advance: **Q404_ROUTE=1** (base B = X' with ROUTE02C on; Q = B + q-404).
+No mark, bar, panel, seed or line of code changes.
+===SEAL-CODE===
+c83b8ceb883cbad5b6caa647ecc7fc66af892ce20c28a0da3b7fae59d7c8f14e  scripts/claude_q404.py
+36911f0ce0591beaddf49b12b97bb4f780f82803f1ab60e0c6e047bd1e1c723e  scripts/claude_readersha_wrap.py
+2b53252410457f00b24b4cfe837a8693e00f634471c4dd55f10a8b861f2ab49a  artifacts/claude-e2e02c-20260926/SEAL-code.sha256.txt
+d91f6598f70810efc008a4629d15e5b9a41caf22f3e2876e02069c649a1f7e6b  artifacts/claude-panel-q404-20260926/SEAL-panel.sha256.txt
+1030b3d80941982c3337e97291941382bd5fce87b1992573d55815294eef40fe  artifacts/claude-q404-20260926/PASSMARKS-q404.md
+===SEAL-MARKS===
+1030b3d80941982c3337e97291941382bd5fce87b1992573d55815294eef40fe  artifacts/claude-q404-20260926/PASSMARKS-q404.md
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/rent-rt02d.md; echo "===END==="
+COMMON RULES (the Plain-English puzzles thread, Claude, wrote this task on 2026-09-26; the Month-end thread built and sealed rt-02d and handed it over at ~13:36 UTC, and agreed to this move). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply), and ALL of origin/main:design/v3/30-modes/330-rent-kit.md (code tree, rental rules, setup, independence). ONLY the Plain-English puzzles thread or the Director may stop or destroy claude-plainpuzzles-rt02d.
+GPU: rent
+BUDGET: $1.50 for this whole task, re-rents included, from the Plain-English puzzles thread's $2 (Ben, 12:59 UTC 09-26; ledger line f123f966c; the Director may lower this). Label: claude-plainpuzzles-rt02d. Needs READER319 and the 0.2c ADAPTER (SETUP S4, S5). Re-run the offer search before every create. This is 1B inference only: take the cheapest RTX 5090 or RTX 4090 offer that meets the kit's filter.
+DISK: 1
+TIME CAP: 4.5 hours on the rental (the Mac fallback in S4 alone can take ~90 min; BUDGET is the real guard). If reached: stop by exact PID, copy back what exists, destroy, report "partial".
+DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-rt02d-20260926/run, if a live instance is labelled claude-plainpuzzles-rt02d, or if the watcher shows 007s-rt02d-benspc running or finished.
+
+YOUR TASK: rt-02d, THE REGISTERED RUN (marks: artifacts/claude-rt02d-20260926/PASSMARKS-rt02d.md, ADDENDUM-rt02d.md and ADDENDUM2-rt02d-machine.md; read them). Chat route to the slept puzzle skill. Month-end wrote the code: run it, never edit it. If something breaks, copy back what exists, destroy, and report the exact error and traceback; do not patch. TEST-ONLY, never open, print or quote: artifacts/claude-panel-rt02d-20260926 (only claude_rt02d.py run/score read it). Each registered process is launched ONCE (check `ps` before any retry).
+
+SETUP (R = the rental's ssh target; settle S4's source first, then rent; start the reader copy in the background and do S1-S3 and S5 while it copies)
+S1. Code tree (kit A, compressed, nothing staged on the Mac):
+    git archive origin/builder-outbox | gzip -1 | ssh R 'mkdir -p ~/tree && tar -xz -C ~/tree'
+    git archive origin/main | gzip -1 | ssh R 'tar -xz -C ~/tree'          # main on top: main wins
+    self122_head.pt as kit A says (sha256 5ca02173...ee25).
+S2. Kit C on the rental (torch check, pip line, snapshot_download of MiniCPM5-1B and all-MiniLM-L6-v2, the route122 check). BASE = the first printed snapshot path; record its commit hash (expected 87179e5c1f455ef22e6223592d2d61351b525bfc).
+S3. Sleep's base checkpoint (not in git), as rent-02c's step 2 did: python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out /tmp/r44 && cp /tmp/r44/base-seed4102.pt artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt
+S4. READER319 = ~/reader319 on the rental (the lis-319 merged reader, about 2 GB). Source, in this order:
+    (a) DEPOT (preferred; the Director's rent-depot job copies the reader rental to rental). BEFORE RENTING ANYTHING, poll every 5 min for up to 120 min until origin/builder-outbox (or origin/main) has artifacts/claude-depot-20260926/REPORT.md giving the depot's instance id, path /root/reader319 and sha e688e1b2... below, AND `vastai show instances` lists a running instance labelled claude-director-depot. Then rent, and copy inside vast: `vastai copy <depot_id>:/root/reader319 <new_id>:/root/reader319` (or `ssh -A` into the new rental and rsync from the depot's ssh host/port in REPORT.md). Read only on the depot; never stop or change it.
+    (b) MAC FALLBACK, only if REPORT.md says NO-SOURCE or the copy failed, or 120 min pass with no depot: rent, then on the Mac check `shasum -a 256 ~/premonition-models/lis319-merged/model.safetensors` = e688e1b2... below and `rsync -a --partial ~/premonition-models/lis319-merged/ R:reader319/` (about 90 min). If the Mac copy is missing or its sha differs: stream C:/Users/benja/lis319/work/run/merged from BensPC through the Mac without keeping a copy (ssh <benspc> tar -c ... | ssh R tar -x ...; reading files is fine while C:\Users\benja\GPU-BUSY.txt exists; the GPU is not touched). Never run (b) while rent-lis-319f's own reader rsync is still going (it shares the same uplink).
+    On the rental `sha256sum ~/reader319/model.safetensors` must equal e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76. If it cannot be made equal: destroy and stop with READER-FAIL. Report which source was used and how long it took.
+S5. ADAPTER (16.6 MB), streamed from BensPC through the Mac without keeping a copy:
+    ssh <benspc> tar -c -C C:/Users/benja/lis301/work/e2e02c/tree/artifacts/claude-e2e02c-20260926/run/sleep adapter02c.pt adapter02c.json | ssh R 'mkdir -p ~/tree/artifacts/claude-e2e02c-20260926/run/sleep && tar -x -C ~/tree/artifacts/claude-e2e02c-20260926/run/sleep'
+    ADAPTER = ~/tree/artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.pt. Its sha256 must be a33211dc9bdb4e26bc7161b62147cb4dfc04fb605ba1aecbb26948f86e7936f5 and adapter02c.json must sit next to it (install_sleep02c refuses a mismatched pair). Mismatch or missing: destroy and stop.
+S6. From ~/tree: `sha256sum -c artifacts/claude-e2e02c-20260926/SEAL-code.sha256.txt`, `sha256sum -c artifacts/claude-rt02d-20260926/SEAL-code-rt02d.sha256.txt`, and inside artifacts/claude-panel-rt02d-20260926 `sha256sum -c SEAL-panel.sha256.txt`: all OK. `python -B scripts/claude_rt02d.py --selftest` prints 55/55 and `python -B scripts/claude_readersha_wrap.py --selftest` prints 9/9. Any failure: destroy and stop with SEAL-MISMATCH and the failing lines.
+
+STEPS: exactly steps 1-5 of origin/main:handoff/held/007s-rt02d-benspc.md (1 dev gate, 2 panel B0/B1/B1off, 3 negatives B1, 4 no-harm general and chatdev B0/B1, 5 score), with these substitutions only:
+- every command runs from ~/tree on the rental under nohup/setsid with its own log, one process at a time;
+- READER319 = ~/reader319; SHA319 as in S4; ADAPTER as in S5; BASE as in S2;
+- env on every command: READER_SHA=SHA319 SLEEP02C_ADAPTER=ADAPTER CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONUTF8=1 HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 (CUBLAS_WORKSPACE_CONFIG must be set in the env before python starts; Month-end's note).
+NONDETERMINISTIC at the dev gate: copy the two dev files back, destroy, stop. Never loosen R4 or rerun a registered step.
+6. Copy back to the Mac (small files only; never the adapter, the reader or any weights): artifacts/claude-rt02d-20260926/run and artifacts/claude-rt02d-20260926/score, plus the step logs as artifacts/claude-rt02d-20260926/logs/; check sizes and sha256 on both ends BEFORE destroying. Destroy, confirm it is gone with `vastai show instances`, append one ledger line (cat >> artifacts/fable-predictions-ledger.md): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+7. RESULTS-rent.md in artifacts/claude-rt02d-20260926/: setup checks (S1-S6 lines, BASE commit hash, which reader source and how long), the dev gate result, rows/routed per run (the one JSON line each run prints), the score line, wall time per step, VRAM peak if logged, GPU name, instance id, hours, dph, dollars. Never open or quote puzzles_*, negatives_* rows or the panel files.
+PUSH: artifacts/claude-rt02d-20260926/RESULTS-rent.md artifacts/claude-rt02d-20260926/run artifacts/claude-rt02d-20260926/score artifacts/claude-rt02d-20260926/logs artifacts/fable-predictions-ledger.md
+===END===
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- handoff/ | grep -i q404; echo "===held?==="; git show origin/main:handoff/queue/lis-302-gpu.md | head -13 > /tmp/lis13.txt; cat /tmp/lis13.txt | wc -l; echo "===OPUS-RULES exists?==="; ls -l "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt" 2>&1; echo "===rent-kit==="; git show origin/main:design/v3/30-modes/330-rent-kit.md | head -150
+handoff/queue/rent-q404.md
+===held?===
+      13
+===OPUS-RULES exists?===
+ls: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt: No such file or directory
+===rent-kit===
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+# MAC DISK (09-26): never stage the full tree or a tree.tgz on the Mac (that took ~3 GB and filled it).
+# Stream only the paths your task needs straight to the target, then delete nothing else:
+git archive origin/builder-outbox <paths> | ssh <target> 'mkdir -p ~/tree && tar -x -C ~/tree'
+git archive origin/main <paths> | ssh <target> 'tar -x -C ~/tree'          # main on top: main wins
+scp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt <target>:tree/artifacts/fable-self122-20260922/   # only if needed
+```
+For BensPC use its ssh host in place of <target>. If you truly must stage on the Mac, use one mktemp dir and
+remove it by exact path before you finish. Put `DISK: <GB>` in the job header (peak Mac use; default 3 for rent-*).
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+- 0.2c STACK (Director 14:43 UTC 09-26, from mu-402): any rental that runs the 0.2c agent with route122 must also stream artifacts/fable-self127-20260922 (fable_self127.load_deltas reads deltas127.json every turn; missing it crashed mu-402's first A/B launch).
+- TORCH UPGRADE (Director 15:25 UTC 09-26, from rd-378L WRITE-FAIL): if a job upgrades the image's torch (e.g. to 2.11), run `pip uninstall -y torchvision torchaudio` right after (the image's torchvision is built for torch 2.8 and breaks transformers/peft lazy imports), then an import check before any work.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+- LABELS (Director 13:33 UTC 2026-09-26): Ben's own agents share this vast account and one destroyed a rental it thought was its own. Every rental label starts with `claude-<thread>-<job>` (e.g. claude-fixsleep-dl4, claude-reading-lis319f). Never destroy an instance whose label your task did not create.
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+(tree already streamed to ~/tree; scp READER only if needed); cd ~/tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/rent-q404.md; echo "===END Q404 TASK==="
+COMMON RULES (the Month-end thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply).
+GPU: rent
+BUDGET: $1.20 for this whole task, re-rents included, from Month-end's $2 (Ben, 12:59 UTC 09-26). Label: claude-monthend-q404. Needs READER319 and the 0.2c ADAPTER. Re-run the offer search before every create.
+DISK: 1
+TIME CAP: 3 hours on the rental. If reached: stop by exact PID, copy back what exists, destroy, report "partial".
+HELD until Month-end writes artifacts/claude-q404-20260926/ADDENDUM-q404-route.md (after 383's verdict) saying Q404_ROUTE=1 or 0, then moves this file to queue.
+DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-q404-20260926/run, or a live instance is labelled claude-monthend-q404.
+
+YOUR TASK: q-404, THE REGISTERED RUN (marks: artifacts/claude-q404-20260926/PASSMARKS-q404.md and ADDENDUM-q404-route.md; read them). TEST-ONLY, never open, print or quote: artifacts/claude-panel-q404-20260926 (only scripts/claude_q404.py run/score read it). Run the code; never edit it. Each registered process is launched ONCE.
+
+SETUP: exactly S1-S5 of origin/main:handoff/queue/rent-rt02d.md (code tree streamed, kit C models, sleep base checkpoint, READER319 from the Director's depot with the Mac fallback and the sha e688e1b2... check, ADAPTER a33211dc... with its json), with this task's label and budget. If rent-rt02d or 007r's rental is live at the same time, ask the Director whether to share it (only after their runs exit, separate OUT).
+S6. From ~/tree: `sha256sum -c artifacts/claude-e2e02c-20260926/SEAL-code.sha256.txt`, `sha256sum -c artifacts/claude-q404-20260926/SEAL-code-q404.sha256.txt`, inside artifacts/claude-panel-q404-20260926 `sha256sum -c SEAL-panel.sha256.txt`: all OK. `python -B scripts/claude_q404.py --selftest` prints 24/24 and `python -B scripts/claude_readersha_wrap.py --selftest` prints 9/9. Any failure: destroy and stop.
+
+Every command runs from ~/tree under nohup/setsid with its own log, one at a time, with env READER_SHA=e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76 SLEEP02C_ADAPTER=ADAPTER Q404_ROUTE=<value from ADDENDUM-q404-route.md> CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONUTF8=1 HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 and the prefix
+  PFX = python -B scripts/claude_readersha_wrap.py scripts/claude_twinb_wrap.py scripts/claude_q404.py run --model ~/reader319 --gen-model BASE --out artifacts/claude-q404-20260926/run --panel-dir artifacts/claude-panel-q404-20260926
+STEPS
+1. DEV GATE (not registered; my dev cases, you may read them): PFX --task dev --arm claude_q404:build_b --name Ba, then --name Bb. If any reply in dev_Ba.jsonl differs from dev_Bb.jsonl: copy both back, destroy, stop with NONDETERMINISTIC.
+2. Registered, each ONCE: PFX --task math --arm claude_q404:build_b --name B; PFX --task math --arm claude_q404:build_q --name Q; PFX --task self --arm claude_q404:build_q --name Q.
+3. Score: `python -B scripts/claude_q404.py score --out artifacts/claude-q404-20260926/run --panel-dir artifacts/claude-panel-q404-20260926 --score artifacts/claude-q404-20260926/score`. Put its printed line in RESULTS.
+4. Copy back to the Mac (small files only; never the adapter, reader or weights): run/, score/, step logs as logs/; check sizes and sha256 on both ends BEFORE destroying. Destroy and confirm it's gone.
+5. RESULTS-rent.md in artifacts/claude-q404-20260926/: setup checks, reader source and time, dev gate, the JSON line each run prints, the score line, wall time per step, GPU, instance id, hours, cost. Counts only: never open or quote math_*/self_* rows or the panel.
+PUSH to builder-outbox: artifacts/claude-q404-20260926/RESULTS-rent.md artifacts/claude-q404-20260926/run artifacts/claude-q404-20260926/score artifacts/claude-q404-20260926/logs
+===END Q404 TASK===
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/330-rent-kit.md | tail -60; echo "===UPTIME==="; uptime 2>&1; echo "===DISK==="; df -h / 2>&1 | head -5; df -g / 2>&1 | head -5; echo "===VASTAI INSTANCES==="; vastai show instances 2>&1 | head -60
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+# MAC DISK (09-26): never stage the full tree or a tree.tgz on the Mac (that took ~3 GB and filled it).
+# Stream only the paths your task needs straight to the target, then delete nothing else:
+git archive origin/builder-outbox <paths> | ssh <target> 'mkdir -p ~/tree && tar -x -C ~/tree'
+git archive origin/main <paths> | ssh <target> 'tar -x -C ~/tree'          # main on top: main wins
+scp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt <target>:tree/artifacts/fable-self122-20260922/   # only if needed
+```
+For BensPC use its ssh host in place of <target>. If you truly must stage on the Mac, use one mktemp dir and
+remove it by exact path before you finish. Put `DISK: <GB>` in the job header (peak Mac use; default 3 for rent-*).
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+- 0.2c STACK (Director 14:43 UTC 09-26, from mu-402): any rental that runs the 0.2c agent with route122 must also stream artifacts/fable-self127-20260922 (fable_self127.load_deltas reads deltas127.json every turn; missing it crashed mu-402's first A/B launch).
+- TORCH UPGRADE (Director 15:25 UTC 09-26, from rd-378L WRITE-FAIL): if a job upgrades the image's torch (e.g. to 2.11), run `pip uninstall -y torchvision torchaudio` right after (the image's torchvision is built for torch 2.8 and breaks transformers/peft lazy imports), then an import check before any work.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+- LABELS (Director 13:33 UTC 2026-09-26): Ben's own agents share this vast account and one destroyed a rental it thought was its own. Every rental label starts with `claude-<thread>-<job>` (e.g. claude-fixsleep-dl4, claude-reading-lis319f). Never destroy an instance whose label your task did not create.
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+(tree already streamed to ~/tree; scp READER only if needed); cd ~/tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+===UPTIME===
+12:07  up 3 days, 2 hrs, 4 users, load averages: 110.53 85.84 88.46
+===DISK===
+Filesystem        Size    Used   Avail Capacity iused ifree %iused  Mounted on
+/dev/disk3s1s1   460Gi    13Gi    53Gi    20%    484k  560M    0%   /
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        53    20%  484014 560118200    0%   /
+===VASTAI INSTANCES===
+[K[97;48;2;0;0;0m╭─[0m[97;48;2;0;0;0m─────────[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mFilterable Values[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m─────────[0m[97;48;2;0;0;0m─╮[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--status:       [0m[1;33;48;2;0;0;0mloading[0m[97;48;2;0;0;0m  ·  [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m  [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--verification: [0m[38;5;83;48;2;0;0;0mverified[0m[48;2;0;0;0m             [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--gpu-name:     [0m[97;48;2;0;0;0mRTX 4070[0m[97;48;2;0;0;0m  ·  [0m[97;48;2;0;0;0mRTX 5090[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m╰───────────────────────────────────────╯[0m
+
+[93;48;2;0;0;0m╭─[0m[93;48;2;0;0;0m─────────────────────────────[0m[93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mResults Summary[0m[93;48;2;0;0;0m [0m[93;48;2;0;0;0m──────────────────────────────[0m[93;48;2;0;0;0m─╮[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mTotal: [0m[1;97;48;2;0;0;0m9 instances[0m[48;2;0;0;0m                                                          [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mLabels: [0m[97;48;2;0;0;0mclaude-benchmarks-bm398r: 1  ·  claude-director-depot: 1  ·  [0m[48;2;0;0;0m       [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-fixsleep-dl5: 1  ·  claude-fixsleep-dl6: 1  ·  claude-notes-rd378Lb: [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m1  ·  claude-plainpuzzles-rt02d: 1  ·  claude-sleep-358t: 1  ·  [0m[48;2;0;0;0m            [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-sleep-358x: 1  ·  rent-brd9: 1[0m[48;2;0;0;0m                                       [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╔══════╤═════════╤═══════════════════╤═══════════════╤═════════╤══════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m ID [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mStatus [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m      Label      [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m     GPU     [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m $/hr  [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m            I[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╟──────┼─────────┼───────────────────┼───────────────┼─────────┼──────────────[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-director-…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 4070 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.1136[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mubuntu:22.04 [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-plainpuzz…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.5630[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-benchmark…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.5037[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-notes-rd3…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.5037[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-sleep-358t[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.5208[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-fixsleep-…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.4806[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;33;48;5;234mloading[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-fixsleep-…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090  [0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.4852[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;33;48;2;0;0;0mloading[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-sleep-358x[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090  [0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.4602[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;33;48;5;234mloading[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mrent-brd9        [0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090  [0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.4944[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╚══════╧═════════╧═══════════════════╧═══════════════╧═════════╧══════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[48;2;0;0;0m                                                                              [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[2;48;2;0;0;0mColumns hidden to fit terminal width: Disk  ·  use --cols to customize (see --[0m[48;2;0;0;0m [0m
+[0m
+[0m$ [0mvastai show instances --raw 2>&1 | head -100; echo "===TRY JSON==="; vastai show instances -o json 2>&1 | head -c 5000
+[
+ {
+  "actual_status": "running",
+  "bundle_id": 418554589,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 890,
+  "country_code": "US",
+  "cpu_arch": "amd64",
+  "cpu_cores": 64,
+  "cpu_cores_effective": 5.333333333333333,
+  "cpu_name": "AMD EPYC 7452 32-Core Processor",
+  "cpu_ram": 257597,
+  "cpu_util": 0.0,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.1,
+  "cuda_max_good": 12.2,
+  "cur_state": "running",
+  "direct_port_count": 66,
+  "direct_port_end": -1,
+  "direct_port_start": 65535,
+  "disk_bw": 3323.6,
+  "disk_name": "nvme",
+  "disk_space": 25.0,
+  "disk_usage": 4.099999904632568,
+  "disk_util": 4.099999904632568,
+  "dlperf": 33.73777018282411,
+  "dlperf_per_dphtotal": 296.958368357376,
+  "dph_base": 0.10666666666666667,
+  "dph_total": 0.11361111111111112,
+  "driver_version": "535.154.05",
+  "duration": 8518.367610692978,
+  "end_date": 1791572440.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 259.9587990220049,
+  "geolocation": "Washington, US",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 0.08333333333333333,
+  "gpu_lanes": 8,
+  "gpu_mem_bw": 439.3,
+  "gpu_name": "RTX 4070",
+  "gpu_ram": 12282,
+  "gpu_temp": 0.0,
+  "gpu_totalram": 12282,
+  "gpu_util": 0.0,
+  "has_avx": 1,
+  "host_id": 86202,
+  "host_run_time": 2592000.0,
+  "hosting_type": null,
+  "id": 52755827,
+  "image_args": [],
+  "image_runtype": "ssh_proxy",
+  "image_uuid": "ubuntu:22.04",
+  "inet_down": 811.5,
+  "inet_down_billed": 4183668.514023,
+  "inet_down_cost": 0.00390625,
+  "inet_up": 876.4,
+  "inet_up_billed": 6796938.329688,
+  "inet_up_cost": 0.00390625,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.006944444444444444,
+   "gpuCostPerHour": 0.10666666666666667,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.11361111111111112
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 4.0,
+  "internet_up_cost_per_tb": 4.0,
+  "is_bid": false,
+  "jupyter_token": "5715f64780e7eb7b05d471c4d5d29664db77e732e150d3c965944e5fd4f91eb3",
+  "label": "claude-director-depot",
+  "local_ipaddrs": "10.0.60.17 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 53900,
+  "machine_id": 18337,
+  "mem_limit": 73.09623296,
+  "mem_usage": 0.0686592,
+  "min_bid": 0.05333333,
+  "mobo_name": "ROMED8-2T",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "20.04",
+  "pci_gen": 3.0,
+  "pcie_bw": 6.4,
+  "public_ipaddr": "174.31.68.94",
+  "reliability2": 0.9993022,
+  "rentable": true,
+  "score": 294.9003577771489,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.11361111111111112,
+   "diskHour": 0.006944444444444444,
+   "gpuCostPerHour": 0.10666666666666667,
+   "slaPremiumPerHour": 0.0,
+===TRY JSON===
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+vastai: error: unrecognized arguments: -o json
+[0m
+[0m$ [0mvastai show instances --raw 2>&1 | python3 -c "import json,sys; data=json.load(sys.stdin); print('\n'.join(f\"{d['id']} {d.get('actual_status')} {d.get('label')} {d.get('gpu_name')} \${d.get('dph_total')}\" for d in data))"
+52755827 running claude-director-depot RTX 4070 $0.11361111111111112
+52763126 running claude-plainpuzzles-rt02d RTX 5090 $0.5629629629629629
+52768265 running claude-benchmarks-bm398r RTX 5090 $0.5037037037037037
+52770443 running claude-notes-rd378Lb RTX 5090 $0.5037037037037037
+52770861 running claude-sleep-358t RTX 5090 $0.5208333333333333
+52771192 running claude-fixsleep-dl5 RTX 5090 $0.4805555555555555
+52773184 loading claude-fixsleep-dl6 RTX 5090 $0.48518518518518516
+52775064 loading claude-sleep-358x RTX 5090 $0.46018518518518514
+52775111 loading rent-brd9 RTX 5090 $0.4944444444444444
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-depot-20260926/ 2>&1 | head; echo "===main depot?==="; git ls-tree -r --name-only origin/main -- artifacts/claude-depot-20260926/ 2>&1 | head; echo "===show REPORT main==="; git show origin/main:artifacts/claude-depot-20260926/REPORT.md 2>&1 | head -40; echo "===show REPORT outbox==="; git show origin/builder-outbox:artifacts/claude-depot-20260926/REPORT.md 2>&1 | head -40
+artifacts/claude-depot-20260926/REPORT.md
+===main depot?===
+===show REPORT main===
+fatal: path 'artifacts/claude-depot-20260926/REPORT.md' exists on disk, but not in 'origin/main'
+===show REPORT outbox===
+# READER DEPOT REPORT — claude-director-depot — 2026-09-26
+
+Task: set up a READER DEPOT on vast.ai (director, 2026-09-26 13:45 UTC).
+Source: rent-lis-319f instance, `~/old/lis319-merged/model.safetensors`.
+Expected sha256: `e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76`
+
+## Verdict: DEPOT READY (source verified, copy verified, depot left RUNNING)
+
+- Depot instance id: **52755827** (label `claude-director-depot`)
+- Depot SSH: **ssh3.vast.ai:35826** (user `root`; direct port also mapped, proxy is the tested route)
+- Depot path: **/root/reader319** (6 files, flattened to match spec)
+- Depot sha256 (`/root/reader319/model.safetensors`): **e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76** — MATCHES source and expected value
+- Depot $/hr: **$0.1136** (RTX 4070, 25 GB disk, verified host, Washington US)
+- Depot rented: 2026-09-26 13:45:36 UTC. Status at handoff: **running** (left RUNNING per task; NOT destroyed)
+- Copy: `vastai copy 52751954:/root/old/lis319-merged 52755827:/root/reader319`, initiated 14:08:28 UTC, verified complete 14:12:32 UTC → **about 4 minutes**, rental-to-rental, nothing landed on the Mac (DISK 0)
+- Source instance rent-lis-319f (52751954): untouched except reads — still running, nothing stopped or destroyed. No other instance touched, stopped, or destroyed.
+
+## Depot contents (`/root/reader319/`, `ls -la`)
+
+- chat_template.jinja (9241 B)
+- config.json (784 B)
+- generation_config.json (227 B)
+- model.safetensors (2161290944 B, sha256 e688e1b2…776a76)
+- tokenizer.json (9894271 B)
+- tokenizer_config.json (477 B)
+
+## Marks table (integer counts)
+
+| # | Check | Count |
+|---|-------|-------|
+| 1 | 319f source polls (read-only ssh) | 5 polls |
+| 2 | Polls seeing partial upload + live rsync writer (correctly waited, not copied) | 4 |
+| 3 | Polls seeing complete file + no writer | 1 |
+| 4 | Source sha256 runs on 319f | 1, match 1/1 |
+| 5 | Depot rentals created by this task | 1 (52755827) |
+| 6 | Duplicate-label conflicts | 0 |
+| 7 | `vastai copy` attempts | 1, success 1/1 (fallback rsync not needed) |
+| 8 | Files present on depot with exact source byte sizes | 6/6 |
+| 9 | Depot sha256 runs | 1, match 1/1 |
+| 10 | Foreign instances touched/stopped/destroyed | 0 |
+[0m
+[0m# [0mTodos
+[•] Verify HELD released + DUPLICATE GATE (done: ROUTE=1, no run, no live label)
+[ ] Offer search + credit check, rent claude-monthend-q404
+[ ] S1-S5 setup (tree, kit C, sleep ckpt, reader via depot copy, adapter)
+[ ] S6 seal checks + selftests
+[ ] Dev gate Ba/Bb determinism check
+[ ] Registered runs B/Q math + Q self, score
+[ ] Copy back, verify, destroy, RESULTS-rent.md + PUSH paths
+[0m
+[0m$ [0mvastai show credit 2>&1 | head -20; echo "===SEARCH 5090==="; vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph 2>&1 | head -40
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+vastai: error: argument command: invalid choice: 'show credit' (choose from help, show instance, create instance, create instances, destroy instance, destroy instances, start instance, start instances, stop instance, stop instances, reboot instance, recycle instance, update instance, label instance, prepay instance, change bid, launch instance, show instances, show instances-v1, search offers, search instances, search benchmarks, search templates, search invoices, create template, update template, delete template, show machine, show machines, show maints, show network-disks, list machine, list machines, unlist machine, delete machine, cleanup machine, defrag machines, set min-bid, set defjob, remove defjob, schedule maint, cancel maint, add network-disk, dump-logs, self-test machine, create team, destroy team, create team-role, show team-role, show team-roles, update team-role, remove team-role, invite member, show members, remove member, create api-key, show api-key, show api-keys, delete api-key, reset api-key, create ssh-key, show ssh-keys, delete ssh-key, update ssh-key, attach ssh, detach ssh, create endpoint, show endpoints, update endpoint, delete endpoint, get endpt-logs, get endpt-workers, create workergroup, show workergroups, update workergroup, update workers, delete workergroup, get wrkgrp-logs, show invoices, show invoices-v1, show earnings, show deposit, show user, set user, show subaccounts, create subaccount, show ipaddrs, transfer credit, show scheduled-jobs, delete scheduled-job, copy, cancel copy, cancel sync, cloud copy, show connections, search volumes, search network-volumes, create volume, create network-volume, delete volume, clone volume, show volumes, show instance-backups, show instance-backup-files, list volume, list volumes, list network-volume, unlist volume, unlist network-volume, set api-key, set role, show audit-logs, show env-vars, create env-var, update env-var, delete env-var, tfa activate, tfa delete, tfa login, tfa resend-sms, tfa regen-codes, tfa send-sms, tfa send-email, tfa auth-new, tfa status, tfa totp-setup, tfa update, execute, logs, reports, ssh-url, scp-url, take snapshot, show deployments, show deployment, show deployment-versions, stop deployment, start deployment, delete deployment, metrics gpu, metrics gpu-trends, metrics gpu-locations, run benchmarks, show pending-price-increases, accept price-increase, reject price-increase, repl, update, uninstall)
+===SEARCH 5090===
+[40m[97m  #  ID        CUDA   N  Model     PCIE  cpu_ghz  vCPUs    RAM  VRAM  Disk[0m
+[48;5;240m[97m  1  46753302  13.0  1x  RTX_5090  22.0  2.2      32.0    32.2  32.6  138 [0m
+[40m[97m  2  43165147  13.0  1x  RTX_5090  23.4  2.2      32.0    32.2  32.6  276 [0m
+[48;5;240m[97m  3  45520225  13.0  1x  RTX_5090  27.5  5.1      16.0    31.2  32.6  480 [0m
+[40m[97m  4  44077681  13.0  1x  RTX_5090  47.8  5.1      16.0    31.2  32.6  402 [0m
+[48;5;240m[97m  5  45380572  13.2  1x  RTX_5090  51.8  5.1      8.0     31.2  32.6  540 [0m
+[40m[97m  6  48989810  13.0  1x  RTX_5090  51.8  5.1      8.0     31.2  32.6  533 [0m
+[48;5;240m[97m  7  49298968  13.0  1x  RTX_5090  25.8  2.8      24.0    40.2  32.6  294 [0m
+[40m[97m  8  51858236  13.0  1x  RTX_5090  22.9  2.8      24.0    64.5  32.6  357 [0m
+[48;5;240m[97m  9  47347942  13.0  1x  RTX_5090  25.3  2.6      24.0    64.4  32.6  712 [0m
+[40m[97m 10  52008649  13.2  1x  RTX_5090  23.5  6.0      16.0    32.0  32.6  213 [0m
+[48;5;240m[97m 11  52224283  13.0  1x  RTX_5090  26.9  2.2      32.0    64.4  32.6  685 [0m
+[40m[97m 12  45409906  13.0  1x  RTX_5090  26.8  2.4      18.3    73.7  32.6  806 [0m
+[48;5;240m[97m 13  50617790  13.2  1x  RTX_5090  27.3  3.4      32.0   128.7  32.6  1355[0m
+[40m[97m 14  34905061  13.0  1x  RTX_5090  12.4  3.3      14.0    32.1  32.6  140 [0m
+[48;5;240m[97m 15  50734486  12.8  1x  RTX_5090  13.1  3.7      6.0     32.1  32.6  718 [0m
+[40m[97m 16  50849750  12.9  1x  RTX_5090  27.0  3.2      64.0    64.4  32.6  613 [0m
+[48;5;240m[97m 17  51924751  13.0  1x  RTX_5090  54.1  2.5      48.0   110.6  32.6  1647[0m
+[40m[97m 18  29716998  13.0  1x  RTX_5090  26.9  3.7      24.0    64.4  32.6  542 [0m
+[48;5;240m[97m 19  52061349  13.2  1x  RTX_5090  27.0  3.3      32.0    64.4  32.6  1508[0m
+[40m[97m 20  50425365  13.2  1x  RTX_5090  27.5  5.8      16.0    47.1  32.6  1204[0m
+[48;5;240m[97m 21  43110769  13.1  1x  RTX_5090  54.1  2.4      38.4    77.4  32.6  983 [0m
+[40m[97m 22  21212914  13.2  1x  RTX_5090  25.0  3.7      32.0   129.0  32.6  1010[0m
+[48;5;240m[97m 23  46953695  13.0  1x  RTX_5090  53.8  2.4      48.0    96.7  32.6  548 [0m
+[40m[97m 24  47092855  13.0  1x  RTX_5090  54.1  3.1      16.0    96.7  32.6  508 [0m
+[48;5;240m[97m 25  26371148  13.3  1x  RTX_5090  22.3  2.2      32.0    64.5  32.6  300 [0m
+[40m[97m 26  42383212  13.0  1x  RTX_5090  27.5  5.8      16.0   127.7  32.6  1553[0m
+[48;5;240m[97m 27  40871605  13.0  1x  RTX_5090  45.4  5.2      14.0    63.9  32.6  1051[0m
+[40m[97m 28  51326861  13.3  1x  RTX_5090  24.0  2.2      32.0   112.8  32.6  501 [0m
+[48;5;240m[97m 29  52070420  13.2  1x  RTX_5090  26.5  2.2      32.0   129.0  32.6  1427[0m
+[40m[97m 30  52118595  13.2  1x  RTX_5090  27.5  5.6      8.0     63.2  32.6  719 [0m
+[48;5;240m[97m 31  51102918  13.3  1x  RTX_5090  25.2  3.5      32.0   129.0  32.6  728 [0m
+[40m[97m 32  51969555  13.0  1x  RTX_5090  54.3  2.6      12.0    64.3  32.6  275 [0m
+[48;5;240m[97m 33  51969538  13.2  1x  RTX_5090  54.3  2.6      12.0    64.3  32.6  50  [0m
+[40m[97m 34  51969548  13.0  1x  RTX_5090  54.3  2.6      12.0    64.3  32.6  68  [0m
+[48;5;240m[97m 35  51969550  13.0  1x  RTX_5090  54.2  2.6      12.0    64.3  32.6  225 [0m
+[40m[97m 36  51969533  13.2  1x  RTX_5090  54.2  2.6      12.0    64.3  32.6  227 [0m
+[48;5;240m[97m 37  51969543  13.0  1x  RTX_5090  54.3  2.6      12.0    64.3  32.6  61  [0m
+[40m[97m 38  47067002  13.1  1x  RTX_5090  27.0  2.9      64.0   515.6  32.6  1226[0m
+[48;5;240m[97m 39  51754996  13.0  1x  RTX_5090  54.1  5.4      32.0   128.6  32.6  3174[0m
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+# vastai --raw prints json array?
+try:
+  data=json.loads(raw)
+  rows=sorted(data, key=lambda d: d.get('dph_total',9))[:12]
+  for d in rows:
+    print(f\"{d.get('id')} dph={d.get('dph_total'):.4f} cpu={d.get('cpu_cores_effective',d.get('cpu_cores'))} ram={d.get('cpu_ram')} disk={d.get('disk_space')} up={d.get('inet_up')} down={d.get('inet_down')} cuda={d.get('cuda_max_good\")} rel={d.get('reliability2')}\")
+except Exception as e:
+  print('PARSE FAIL', e); print(raw[:3000])
+"
+File "<string>", line 9
+    print(f"{d.get('id')} dph={d.get('dph_total'):.4f} cpu={d.get('cpu_cores_effective',d.get('cpu_cores'))} ram={d.get('cpu_ram')} disk={d.get('disk_space')} up={d.get('inet_up')} down={d.get('inet_down')} cuda={d.get('cuda_max_good")} rel={d.get('reliability2')}")
+                                                                                                                                                                                                                                          ^
+SyntaxError: f-string: unterminated string
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' --raw 2>&1 | python3 -c "import json,sys; data=json.load(sys.stdin); rows=sorted(data, key=lambda d: d.get('dph_total',9))[:12]; [print(d.get('id'), round(d.get('dph_total',-1),4), d.get('cpu_cores_effective'), d.get('disk_space'), d.get('inet_up'), d.get('inet_down')) for d in rows]"
+46753302 0.406 32.0 138.1625 63.4 848.2
+43165161 0.406 32.0 275.875 51.1 513.5
+45669449 0.469 16.0 529.0 560.1 532.7
+49024471 0.469 16.0 628.0 448.4 376.8
+48989696 0.469 8.0 589.0 516.8 557.7
+45669186 0.469 8.0 514.0 436.8 492.4
+30739371 0.4961 32.0 464.0 721.0 733.6
+43690888 0.4961 24.0 610.0 879.1 954.1
+35467640 0.5352 48.0 1276.5 6198.9 6745.3
+41974071 0.5747 12.0 247.625 1278.9 2997.0
+47088901 0.5747 48.0 522.5 876.7 705.7
+50937631 0.617 48.0 1526.3 7590.7 8353.2
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' --raw 2>&1 | python3 -c "import json,sys; data=json.load(sys.stdin); m={d['id']:d for d in data}; print(json.dumps([m[i] for i in [46753302,43165161,45669449,30739371] if i in m], indent=1))" | head -120
+[
+ {
+  "ask_contract_id": 43165161,
+  "avail_vol_ask_id": 43165162,
+  "avail_vol_dph": 0.003981481481481482,
+  "avail_vol_size": 1091.0,
+  "bundle_id": 1618734672,
+  "bundled_results": null,
+  "bw_nvlink": 0.0,
+  "cluster_id": null,
+  "compute_cap": 1200,
+  "cpu_arch": "amd64",
+  "cpu_cores": 256,
+  "cpu_cores_effective": 32.0,
+  "cpu_ghz": 2.25,
+  "cpu_name": "AMD EPYC 7B12 64-Core Processor",
+  "cpu_ram": 32214,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "direct_port_count": 12,
+  "discount_rate": 0.0,
+  "discounted_dph_total": 0.4060185185185185,
+  "discounted_hourly": 0.0,
+  "disk_bw": 2308.3,
+  "disk_name": "nvme",
+  "disk_space": 275.875,
+  "dlperf": 193.62730757287417,
+  "dlperf_per_dphtotal": 476.8927985831337,
+  "dph_base": 0.39999999999999997,
+  "dph_total": 0.4060185185185185,
+  "dph_total_adj": 0.4255497685185185,
+  "driver_vers": 580159003,
+  "driver_version": "580.159.03",
+  "duration": 8154104.420818806,
+  "end_date": 1798592980.0,
+  "expected_reliability": 0.0,
+  "external": null,
+  "flops_per_dphtotal": 266.253077309008,
+  "geolocation": "United States, US",
+  "geolocode": 433199645,
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 0.125,
+  "gpu_ids": [
+   207805
+  ],
+  "gpu_lanes": 16,
+  "gpu_max_power": 520.0,
+  "gpu_max_temp": 55.0,
+  "gpu_mem_bw": 1451.4,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_total_ram": 32607,
+  "has_avx": 1,
+  "host_id": 410852,
+  "hosting_type": 0,
+  "hostname": null,
+  "id": 43165161,
+  "inet_down": 513.5,
+  "inet_down_cost": 0.015625,
+  "inet_up": 51.1,
+  "inet_up_cost": 0.016927083333333332,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.006018518518518518,
+   "diskHour": 0.006018518518518518,
+   "gpuCostPerHour": 0,
+   "slaPremiumPerHour": 0,
+   "totalHour": 0.006018518518518518
+  },
+  "internet_down_cost_per_tb": 16.0,
+  "internet_up_cost_per_tb": 17.333333333333332,
+  "is_bid": false,
+  "is_vm_deverified": false,
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_id": 142018,
+  "min_bid": 0.32,
+  "mobo_name": "ROME2D32GM-2T",
+  "num_gpus": 1,
+  "nw_disk_avg_bw": null,
+  "nw_disk_max_bw": null,
+  "nw_disk_min_bw": null,
+  "os_version": "22.04",
+  "pci_gen": 4.0,
+  "pcie_bw": 26.6,
+  "public_ipaddr": "137.175.22.196",
+  "reliability": 0.9956152,
+  "reliability2": 0.9956152,
+  "reliability_mult": 0.9579649,
+  "rentable": true,
+  "rented": false,
+  "resource_type": "gpu",
+  "rn": 1,
+  "score": 295.39740831976525,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.4060185185185185,
+   "diskHour": 0.006018518518518518,
+   "gpuCostPerHour": 0.39999999999999997,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.4060185185185185
+  },
+  "sla_broker_rate": null,
+  "sla_r_claim": 0.0,
+  "sla_sigma_x": null,
+  "start_date": 1790435532.175,
+  "static_ip": false,
+  "storage_cost": 0.8666666666666666,
+  "storage_total_cost": 0.006018518518518518,
+  "target_reliability": 0.0,
+  "time_remaining": "",
+  "time_remaining_isbid": "",
+  "total_flops": 108.10368,
+  "vericode": 1,
+  "verification": "verified",
+  "vms_enabled": false,
+  "vram_costperhour": 0.012561719876100223,
+  "webpage": null
+ }
+]
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' --raw 2>&1 | python3 -c "import json,sys; data=json.load(sys.stdin); cand=[d for d in data if d.get('rentable') and d.get('cpu_cores_effective',0)>=8 and (d.get('disk_space') or 0)>=60]; cand.sort(key=lambda d: d.get('dph_total',9)); print('total meeting cpu/disk:',len(cand)); [print(d['id'], round(d['dph_total'],4), 'cpu',d.get('cpu_cores_effective'),'disk',round(d.get('disk_space') or 0),'up',round(d.get('inet_up') or 0),'down',round(d.get('inet_down') or 0),'rel',round(d.get('reliability2') or 0,4)) for d in cand[:15]]"
+total meeting cpu/disk: 64
+46753301 0.406 cpu 32.0 disk 143 up 63 down 848 rel 0.9957
+43165161 0.406 cpu 32.0 disk 276 up 51 down 514 rel 0.9956
+45669560 0.469 cpu 16.0 disk 393 up 571 down 586 rel 0.9971
+45668954 0.469 cpu 8.0 disk 543 up 467 down 517 rel 0.9978
+48989810 0.469 cpu 8.0 disk 533 up 500 down 528 rel 0.9942
+44173659 0.469 cpu 16.0 disk 450 up 537 down 397 rel 0.9986
+51858236 0.4727 cpu 24.0 disk 357 up 484 down 341 rel 0.9964
+52224283 0.486 cpu 32.0 disk 685 up 333 down 380 rel 0.9915
+48521258 0.4994 cpu 24.0 disk 324 up 1185 down 1149 rel 0.981
+52766387 0.5081 cpu 12.0 disk 1375 up 477 down 794 rel 0.9896
+48284957 0.5228 cpu 16.0 disk 570 up 556 down 472 rel 0.9889
+50847105 0.5352 cpu 24.0 disk 1019 up 5996 down 6667 rel 0.9967
+47088901 0.5747 cpu 48.0 disk 522 up 877 down 706 rel 0.9976
+36263957 0.6009 cpu 12.0 disk 1395 up 850 down 819 rel 0.9991
+51349253 0.617 cpu 48.0 disk 1661 up 7147 down 12822 rel 0.9957
+[0m
+[0m$ [0mvastai show user --raw 2>&1 | head -c 2000; echo; echo "===OFFER DETAIL 45669560==="; vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' --raw 2>&1 | python3 -c "import json,sys; data=json.load(sys.stdin); m={d['id']:d for d in data}; import json as j; d=m.get(45669560,{}); print('id',d.get('id'),'dph',d.get('dph_total'),'cuda',d.get('cuda_max_good'),'verif',d.get('verification'),'rentable',d.get('rentable'),'disk',d.get('disk_space'),'image',d.get('image_uuid') if 'image_uuid' in d else 'n/a')"
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 5.29395680626979,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+ "discord_id": null,
+ "email": "benjamin.a.hannan@gmail.com",
+ "email_verified": true,
+ "fullname": null,
+ "got_signup_credit": 0,
+ "has_billing": true,
+ "has_payout": false,
+ "has_rented": true,
+ "has_stripe_payout": false,
+ "host_agreement_accepted": false,
+ "host_only": false,
+ "huggingface_cloud_sync_enabled": true,
+ "id": 553012,
+ "is_subject_to_unpaid_deletion": false,
+ "key_id": 28637247,
+ "last4": null,
+ "oauth_provider": "google",
+ "paid_expected": 0.0,
+ "paid_verified": 0.0,
+ "password_resettable": null,
+ "payout_enabled": true,
+ "paypal_email": null,
+ "phone_number": null,
+ "rights": {
+  "api": {
+   "*": {
+    "api.auth.apikeys": {
+     "GET": {}
+    },
+    "api.auth.sessions": {
+     "GET": {}
+    },
+    "api.hubspot.newsletters": {
+     "GET": {}
+    },
+    "api.instances": {
+     "GET": {}
+    },
+    "api.instances.count": {
+     "GET": {}
+    },
+    "api.instances_v1": {
+     "GET": {}
+    },
+    "api.ssh.keys": {},
+    "api.team": {
+     "POST": {}
+    },
+    "api.template": {
+     "GET": {}
+    },
+    "api.template.params": {
+     "GET": {}
+    },
+    "api.template_v1": {
+     "GET": {}
+    },
+    "api.user.created_templates": {
+     "GET": {}
+    },
+    "api.user.save_context": {
+     "PUT": {}
+    },
+    "api.user.verify-email": {
+     "POST": {}
+    },
+    "api.users.crisp-identity": {
+     "GET": {}
+    },
+    "api.users.current": {
+     "GET": {}
+    },
+    "api.users.root": {
+     "GET":
+===OFFER DETAIL 45669560===
+id None dph None cuda None verif None rentable None disk None image n/a
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' --raw 2>&1 | python3 -c "import json,sys; data=json.load(sys.stdin); cand=[d for d in data if d.get('rentable') and d.get('cpu_cores_effective',0)>=8 and (d.get('disk_space') or 0)>=60]; cand.sort(key=lambda d: d.get('dph_total',9)); [print(d['id'], round(d['dph_total'],4), 'cpu',d.get('cpu_cores_effective'),'disk',round(d.get('disk_space') or 0),'up',round(d.get('inet_up') or 0),'down',round(d.get('inet_down') or 0)) for d in cand[:10]]"
+43165161 0.406 cpu 32.0 disk 276 up 51 down 514
+45669445 0.469 cpu 16.0 disk 572 up 559 down 483
+45520225 0.469 cpu 16.0 disk 480 up 475 down 490
+45669442 0.469 cpu 8.0 disk 596 up 464 down 484
+45669284 0.469 cpu 8.0 disk 507 up 486 down 493
+51858236 0.4727 cpu 24.0 disk 357 up 484 down 341
+52224283 0.486 cpu 32.0 disk 685 up 333 down 380
+43690890 0.4961 cpu 24.0 disk 610 up 879 down 954
+52723074 0.5104 cpu 24.0 disk 295 up 842 down 901
+48851746 0.5347 cpu 18.0 disk 574 up 604 down 889
+[0m
+[0m$ [0mvastai create instance --help 2>&1 | head -40
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+[0m
+[0m$ [0mvastai create instance 45669445 --image pytorch/pytorch --disk 80 --label claude-monthend-q404 --ssh --raw 2>&1 | head -c 2000
+{
+ "instance_api_key": "cabd2fb5b2f0f6b8f7f82b8e4517c8c4c9cd5a6d6ae9a3385433cfd299fb6f14",
+ "new_contract": 52775380,
+ "success": true
+}
+[0m
+[0m# [0mTodos
+[✓] Verify HELD released + DUPLICATE GATE (done: ROUTE=1, no run, no live label)
+[✓] Offer search + credit check, rent claude-monthend-q404 (created 52775380 @~$0.469)
+[•] Wait running + S1-S5 setup (tree, kit C, sleep ckpt, reader via depot copy, adapter)
+[ ] S6 seal checks + selftests
+[ ] Dev gate Ba/Bb determinism check
+[ ] Registered runs B/Q math + Q self, score
+[ ] Copy back, verify, destroy, RESULTS-rent.md + PUSH paths
+[0m
