@@ -41,6 +41,8 @@ LAYERS = [8, 16, 24]
 TAGS = ("O", "B", "I")
 TRAIN_SEED = 486000
 _CELL = re.compile(r"[0-9]|_")
+_MENTION = re.compile(r"\b(blanks?|underscores?)\b", re.I)
+_MARKS = (" (_)", ' ("_")', " '_'", " _")
 
 
 # ------------------------------------------------------------------ squares as text, with cell positions
@@ -144,17 +146,25 @@ def build(a) -> None:
     wr = [json.loads(x) for x in Path(a.wrap).read_text().splitlines()]
     openers = [r["text"] for r in wr if r["keep"] and r["kind"] == "opener"]
     closers = [r["text"] for r in wr if r["keep"] and r["kind"] == "closer"]
+    named = [t for t in openers + closers if _MENTION.search(t)]    # 1B words that name the blank mark (ADDENDUM-gr1-2)
+
+    def mark(t):
+        """code writes the blank mark after the 1B's own word for it, e.g. 'blanks' -> 'blanks (_)'"""
+        m = _MENTION.search(t)
+        return t[:m.end()] + rng.choice(_MARKS) + t[m.end():]
     d1b = [json.loads(x) for x in Path(a.rt02h).read_text().splitlines()]
     everyday = [r["raw"] for r in d1b]
     out = []
     for i in range(360):                                            # squares inside the 1B's words
         s = rng.choice([3, 4, 5, 5, 6, 6, 7, 7, 8])
         puz = B.make_requests(TRAIN_SEED + i, 1, s, False)[0]["puz"]
-        if rng.random() < 0.2:
+        if rng.random() < 0.2 and any(any(row) and not all(row) for row in puz):    # a row with a clue and a blank
             puz = P3._broken(rng, puz, s)
         layout = rng.choice(["row", "bare"] + list(LAYOUTS))
         sq, cells = render(puz, layout, rng.randrange(4))
         o, c = rng.choice(openers), (rng.choice(closers) if closers and rng.random() < 0.5 else "")
+        if named and rng.random() < 0.3:
+            o = mark(rng.choice(named))
         if rng.random() < 0.75:
             pre, post = o + "\n", ("\n" + c if c else "")
         else:
@@ -165,6 +175,8 @@ def build(a) -> None:
         out.append({"text": t, "cells": [], "grid": None, "kind": "everyday"})
     for t in rng.sample(openers, min(60, len(openers))):             # asks with no square pasted
         out.append({"text": t, "cells": [], "grid": None, "kind": "opener_only"})
+    for t in (rng.choice(named) for _ in range(40 if named else 0)):  # the blank mark in words, no square
+        out.append({"text": mark(t), "cells": [], "grid": None, "kind": "mark_only"})
     for i in range(160):                                            # number blocks that are not squares
         s = rng.randint(3, 7)
         kind = ["ragged", "big", "short", "wide", "oneline", "fmt_wide", "fmt_big"][i % 7]
