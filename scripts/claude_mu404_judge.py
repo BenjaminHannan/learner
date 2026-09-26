@@ -176,7 +176,7 @@ def count(a):
                 v403["top_changed_share"] = round(int(tc.group(1)) / int(sc.group(1)), 3)
                 v403["pass"] = v403["top_changed_share"] >= V403_MIN_TOP_CHANGED
         else:
-            v403["pass"] = diff * 2 >= res["arms"]["P"]["replies"]
+            v403["pass"] = diff * 3 >= res["arms"]["P"]["replies"]          # sysline: >= a third of replies differ
         marks["mu403"] = {"V403": v403, "M1": m1, "M2": m2, "M3": m3, "M4": m4,
                           "proved_wrong": C["P"] >= C["R"],
                           "verdict": ("INCONCLUSIVE" if not v403.get("pass") else

@@ -31,7 +31,7 @@ SCRIPTS = Path(__file__).resolve().parent
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-MU403_FIX = "UNSET"          # set to "ground" or "sysline" at seal time, from claude_mu403_auc.py's decision
+MU403_FIX = "sysline"        # sealed 09-26: claude_mu403_auc.py AUC 0.537 < 0.65 (artifacts/claude-mu403-20260926/AUC.md)
 FACTS404 = {"calls": 0, "with_facts": 0, "facts": 0, "blanked": 0}
 _STATE = {"wrapped": False, "blank": False, "printed": False}
 
