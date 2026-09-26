@@ -36,3 +36,12 @@ Source: Ben's pasted outside review (11:50 UTC). Every number it gave was re-che
    teacher writing corrections, or deletion-only corrections (drop the unsupported clause).
 
 Answers keep coming only from original messages; notes only point to them (Benchmarks' store: heard-only by default).
+
+## Change of order, 12:10 UTC (Ben's pasted report, checked against the data)
+The whole-claim wrong saves are systematic label problems, not random slips: former jobs saved as current (the modes
+cannot say "used to"; training labels teach it), "works in" vs "lives in" when a job and a place share a sentence, and
+a missing label (orthodontist). A verifier trained on the same labels would copy them, so step 3 is PAUSED. Next save
+change = lis-319f (a FORMER mode: code relabel + code-made rows; marks artifacts/claude-lis319f-20260926/PASSMARKS.md,
+fresh sealed panel readpanel371c with ~45 former rows). After it: one rule for job + place, then re-decide the bar.
+Step 4 (note writer): Ben chose "Cut only" (12:02 UTC): corrections may only delete the untrue part of the writer's
+own note. Its own true-vs-untrue note pairs (497 in the rd-371b judged drafts) add no new words either.
