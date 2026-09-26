@@ -16,5 +16,6 @@ How it is read:
 - rv-392 (sealed 1a23d9b7c) runs on the same 358i2 nets in the same job.
 - If 358i2 is not delivered, no default is set from rv-390 alone. The Thread manager is told.
 
-Where: BensPC at $0 if it is free when the nets land, otherwise a vast rental from this thread's line (it stays under
-$2: $0.77 booked or spent so far, plus about $0.4 per rerun).
+Where: BensPC at $0 if it is free when the nets land, otherwise a vast rental from this thread's line. The Director's ledger books $1.30 of $2 (rv-387's share at up to
+$0.40, and rv-390's $0.90 cap); the builder reports rv-390 cost about $0.37. Any spend past $2 goes to the Thread
+manager first.
