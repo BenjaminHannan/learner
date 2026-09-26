@@ -8,9 +8,14 @@ panel (Month-end ADDENDUM-8) come from the same generator with different seeds. 
 Kinds: "solve" (a square with one answer) and "broken" (a lookalike with a clue repeated in one row, so no answer
 exists; the right reply gives no finished square).
 
-Replies come as {"id", "reply"} (Benchmarks' OUT/rival_<NAME>.jsonl format). Scoring uses the 358b2 parser: the
-first s lines holding exactly s numbers 1..s. Per kind: right (solve: a valid solution; broken: no grid given),
-wrong_grid (a grid that is not a valid solution, or any grid on a broken item), no_grid (solve item, nothing usable).
+Replies come as {"id", "reply", optional "hit_max", "think_closed"} (Benchmarks' OUT/rival_<NAME>.jsonl format).
+The answer read from a reply is its FINAL grid: the last run of s consecutive lines that each hold exactly s numbers
+1..s ("Row k:", table bars, commas and blank lines inside the run are allowed; any other line ends a run). This
+skips echoed puzzles (they hold "_") and working rows shown before the answer. Every arm is scored the same way.
+Per kind: right (solve: the final grid is a valid solution; broken: a complete, non-empty reply with no final grid),
+wrong_grid (a final grid that is not a valid solution, or any final grid on a broken item), no_grid (solve item,
+nothing usable), and cut_off counts (reply hit the token cap or its thinking never closed; never right on a broken
+item, reported beside every score). A missing reply counts as no_grid / not right.
 
   python -B scripts/claude_rsn358b3_panel.py make --seed S --n N --sizes 5,6,7 [--broken-share 0.2] --out DIR
   python -B scripts/claude_rsn358b3_panel.py score --panel DIR --replies FILE.jsonl
@@ -23,6 +28,7 @@ import argparse
 import hashlib
 import json
 import random
+import re
 import sys
 from pathlib import Path
 
@@ -65,16 +71,52 @@ def make_panel(seed, n, sizes, broken_share=0.2):
     return panel, answers
 
 
+def final_grid(text, s):
+    """the last run of s consecutive rows of exactly s numbers 1..s (see the module docstring)"""
+    runs, cur = [], []
+    for line in text.splitlines():
+        body = re.sub(r"^\s*(row\s*\d+\s*[:.)-]?)", "", line.replace("*", "").strip(), flags=re.I).strip("|` ")
+        if not body or re.fullmatch(r"[\s|:\-]+", body):            # blank lines and table rules keep a run going
+            continue
+        if "_" not in body and re.fullmatch(r"[\d\s,|;.\-]+", body):
+            cells = [int(c) for c in re.findall(r"\d+", body)]
+            if len(cells) == s + 1 and cells[0] == len(cur) + 1:    # a leading row-number column
+                cells = cells[1:]
+            if len(cells) == s and all(1 <= c <= s for c in cells):
+                cur.append(cells)
+                continue
+        if cur:
+            runs.append(cur)
+        cur = []
+    if cur:
+        runs.append(cur)
+    runs = [r for r in runs if len(r) >= s]
+    return runs[-1][-s:] if runs else None
+
+
 def score_panel(answers, replies):
-    """answers: list of answer rows; replies: {id: reply text}; missing replies count as no_grid / right-for-broken"""
+    """answers: list of answer rows; replies: {id: {"reply", "hit_max", "think_closed"}} or {id: text}"""
     out = {}
     for a in answers:
         key = "%s%d" % (a["kind"], a["size"])
-        res = out.setdefault(key, {"n": 0, "right": 0, "wrong_grid": 0, "no_grid": 0})
+        res = out.setdefault(key, {"n": 0, "right": 0, "wrong_grid": 0, "no_grid": 0, "cut_off": 0, "missing": 0})
         res["n"] += 1
-        grid = B.parse_grid(replies.get(a["id"], ""), a["size"], False)
+        r = replies.get(a["id"])
+        if r is None:
+            res["missing"] += 1
+            r = {"reply": ""}
+        elif isinstance(r, str):
+            r = {"reply": r}
+        cut = bool(r.get("hit_max")) or r.get("think_closed") is False
+        res["cut_off"] += cut
+        grid = final_grid(r["reply"], a["size"])
         if a["kind"] == "broken":
-            res["right" if grid is None else "wrong_grid"] += 1
+            if grid is not None:
+                res["wrong_grid"] += 1
+            elif cut or not r["reply"].strip():
+                res["no_grid"] += 1
+            else:
+                res["right"] += 1
         elif grid is None:
             res["no_grid"] += 1
         elif B.is_solution(a["puz"], grid):
@@ -110,6 +152,22 @@ def selftest():
     echo = {a["id"]: B.rows_text(a["puz"]) for a in answers}
     res2 = score_panel(answers, echo)
     assert sum(v["right"] for k, v in res2.items() if k.startswith("solve")) == 0, res2
+    a0 = next(a for a in answers if a["kind"] == "solve")
+    sol = B.rows_text(a0["sol"])
+    work = "Row 1: " + " ".join(map(str, a0["sol"][0])) + "\nthinking...\n"
+    assert B.is_solution(a0["puz"], final_grid(work + "Final:\n```\n" + sol + "\n```\nDone.", a0["size"]))
+    wrong = [row[:] for row in a0["sol"]]
+    wrong[0][0], wrong[0][1] = wrong[0][1], wrong[0][0]
+    assert final_grid(sol + "\nwait, correction:\n" + B.rows_text(wrong), a0["size"]) == wrong   # last grid counts
+    assert final_grid(B.rows_text(a0["puz"]), a0["size"]) is None                                 # echo has blanks
+    table = "| " + " |\n|---|---|\n| ".join(" | ".join("**%d**" % v for v in row) for row in a0["sol"]) + " |"
+    assert final_grid(table, a0["size"]) == a0["sol"], table                                     # markdown table
+    idx = "\n".join("| %d | " % (i + 1) + " | ".join(map(str, row)) + " |" for i, row in enumerate(a0["sol"]))
+    assert final_grid(idx, a0["size"]) == a0["sol"]                                              # row-number column
+    b0 = next(a for a in answers if a["kind"] == "broken")
+    r3 = score_panel([b0], {b0["id"]: {"reply": "No square works here.", "hit_max": True}})
+    assert r3["broken%d" % b0["size"]]["right"] == 0, r3                                        # cut off: not right
+    assert score_panel([b0], {})["broken%d" % b0["size"]]["right"] == 0                          # missing: not right
     print("selftest ok", json.dumps(res))
 
 
@@ -141,7 +199,7 @@ def main():
     for l in Path(a.replies).read_text().splitlines():
         if l.strip():
             r = json.loads(l)
-            replies[r["id"]] = r["reply"]
+            replies[r["id"]] = r
     print(json.dumps(score_panel(answers, replies), indent=1))
 
 
