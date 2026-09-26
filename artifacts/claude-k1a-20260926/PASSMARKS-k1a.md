@@ -84,5 +84,22 @@ on the DEV lead-in chats (mean of two blind judges, judged in the same batch as 
 a miscount: DEV has 32 lead-in chats and 8 without) is at least W1's minus 1;
 otherwise K uses W1.
 
-## Expected (said before running)
-(filled from the DEV practice check before sealing)
+Result on DEV and the choice (two blind judges, a third on splits; DEV only, readable, no test item seen): on the 32
+lead-in chats W1 and W2 were each useful 11 times, so the rule above picks W2. But W2's replies stated a wrong or
+made-up fact about the user 8 times against W1's 2 (both judges agreed on all 10): quoted in the system line, the
+user's words got misread (numbers changed, the user cast as someone else in their own story). That would likely fail
+K1a.2 (made-up K <= X + 2). The rule looked at usefulness only, which was an oversight, so it is overridden in the
+open: **K uses W1, the chat as messages** (claude_k1a_cre.install_creative_k1a, unchanged). No W1 reply on DEV copied
+an earlier assistant line (the 333e E.2 failure). Limit: under the NullReader the lead turns are answered by the
+chat writer, never by the reader's "Got it"-style acknowledgements, so this run cannot show whether the writer
+copies those in the full build; the full build's history can hold them. KB uses the same W1 form (claude_k1ab_cre).
+
+## Expected (said before running; DEV practice, no sleep adapter, 40 chats: 32 with a lead-in, 8 without)
+- Useful on the lead-in chats: W1 (= K's writer) 10 of 32 in the first batch and 11 of 32 in the second; W0 (= X's
+  writer) 2 of 32; plain 1B 9 of 32. Scaled to the 40 lead items: K - X about +8 to +11, so K1a.1 should pass.
+- Made-up replies (all 40): W1 2, W0 3, plain 1B 2. K1a.2 should pass.
+- Fallbacks: none in any DEV arm. K1a.3 should pass.
+- k1b: 3 of 40 W0 replies ended on their own and were changed by trim; kept whole, 1 of the 3 became useful (0 were
+  before). Bare list endings: W0 1, W3 (= B's writer) 0. K1b should pass, with a small gain.
+- The K1 line (>= 36 of 60 and >= T): not expected. On DEV the writer with the chat is useful 12 of 40 and the plain
+  1B 12 of 40, far under 60%. Closing the bar needs the next step (pick the best of the 4 drafts, k1c).
