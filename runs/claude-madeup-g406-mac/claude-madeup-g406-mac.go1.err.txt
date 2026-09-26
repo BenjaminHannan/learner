@@ -1,0 +1,733 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m# [0mTodos
+[ ] Fetch origin/main and read handoff first 13 lines + record commit
+[ ] Extract archive to temp dir and verify SEAL (45 lines OK)
+[ ] Run selftests for glm and count scripts
+[ ] Run GLM marking (560 packets, workers 4)
+[ ] Run count/verdict + write RESULTS.md + copy to worktree
+[ ] Cleanup temp dir and confirm
+[0m
+[0m# [0mTodos
+[•] Fetch origin/main and read handoff first 13 lines + record commit
+[ ] Extract archive to temp dir and verify SEAL (45 lines OK)
+[ ] Run selftests for glm and count scripts
+[ ] Run GLM marking (560 packets, workers 4)
+[ ] Run count/verdict + write RESULTS.md + copy to worktree
+[ ] Cleanup temp dir and confirm
+[0m
+[0m$ [0mgit fetch -q origin main && git rev-parse origin/main && git show origin/main:handoff/queue/lis-302-gpu.md | head -n 13
+0cf94a1a826c2af694fb33edda6238fb0cf681bf
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+[0m
+[0m$ [0mpwd; git status --short --branch | head -n 20; uptime; df -g / | head -n 5; ls handoff/queue/lis-302-gpu.md 2>&1; git show origin/main:handoff/queue/lis-302-gpu.md | wc -l
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+## claude/card-experiment-handoff-7c5b27...origin/claude/card-experiment-handoff-7c5b27 [ahead 38]
+A  artifacts/claude-rsn358i2-20260926/RESULTS.md
+A  artifacts/claude-rsn358i2-20260926/SEAL-run.sha256.txt
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/loop-s1.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/loop-s2.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/loop-s3.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/loop-s4.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_summary.json
+M  artifacts/fable-predictions-ledger.md
+15:35  up 3 days,  5:28, 4 users, load averages: 203.64 184.91 148.07
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        54    20%  484014 566926080    0%   /
+ls: handoff/queue/lis-302-gpu.md: No such file or directory
+      32
+[0m
+[0m$ [0mD=$(mktemp -d); echo "$D"; git archive origin/main scripts artifacts/claude-g406-20260926 artifacts/claude-mu402-20260926 artifacts/claude-mu403-20260926 | tar -x -C "$D"; echo "extract done"; ls "$D"; ls "$D/artifacts/claude-g406-20260926"; echo "$D" > /tmp/g406_D_path.txt; cat /tmp/g406_D_path.txt
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j
+extract done
+artifacts
+scripts
+ADDENDUM-1-review.md
+PASSMARKS.md
+SEAL.sha256.txt
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read handoff first 13 lines + record commit
+[•] Extract archive to temp dir and verify SEAL (45 lines OK)
+[ ] Run selftests for glm and count scripts
+[ ] Run GLM marking (560 packets, workers 4)
+[ ] Run count/verdict + write RESULTS.md + copy to worktree
+[ ] Cleanup temp dir and confirm
+[0m
+[0m$ [0mD=$(cat /tmp/g406_D_path.txt); git rev-parse origin/main; ls "$D/scripts/" | head -n 20; ls "$D/artifacts/claude-mu402-20260926/judge/packets/" | head; ls "$D/artifacts/claude-mu403-20260926/judge/packets/" | head; shasum -a 256 -c "$D/artifacts/claude-g406-20260926/SEAL.sha256.txt" 2>&1 | tail -n 50
+# need to run from $D per spec
+
+0cf94a1a826c2af694fb33edda6238fb0cf681bf
+address_probe.py
+astra_canonical_operator_panels.py
+astra_canonical_operator_report.py
+astra_canonical_operator_run.py
+astra_canonical_operator.py
+astra_transfer_diagnostic.py
+astra_transfer_report.py
+astra_transfer_twins.py
+benspc-runtime.json
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claims_j1.jsonl
+claims_j2.jsonl
+claims_j3.jsonl
+claims_j4.jsonl
+claims_j5.jsonl
+claims_j6.jsonl
+claims_j7.jsonl
+claims_j8.jsonl
+pair_p1.jsonl
+pair_p2.jsonl
+claims_j1.jsonl
+claims_j10.jsonl
+claims_j11.jsonl
+claims_j12.jsonl
+claims_j2.jsonl
+claims_j3.jsonl
+claims_j4.jsonl
+claims_j5.jsonl
+claims_j6.jsonl
+claims_j7.jsonl
+artifacts/claude-mu402-20260926/judge/out/claims_j8.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/packets/claims_j1.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/packets/claims_j1.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/packets/claims_j10.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/packets/claims_j10.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/packets/claims_j11.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/packets/claims_j11.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/packets/claims_j12.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/packets/claims_j12.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/packets/claims_j2.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/packets/claims_j2.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/packets/claims_j3.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/packets/claims_j3.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/packets/claims_j4.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/packets/claims_j4.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/packets/claims_j5.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/packets/claims_j5.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/packets/claims_j6.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/packets/claims_j6.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/packets/claims_j7.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/packets/claims_j7.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/packets/claims_j8.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/packets/claims_j8.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/packets/claims_j9.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/packets/claims_j9.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/out/claims_j1.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/out/claims_j1.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/out/claims_j10.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/out/claims_j10.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/out/claims_j11.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/out/claims_j11.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/out/claims_j12.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/out/claims_j12.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/out/claims_j2.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/out/claims_j2.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/out/claims_j3.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/out/claims_j3.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/out/claims_j4.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/out/claims_j4.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/out/claims_j5.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/out/claims_j5.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/out/claims_j6.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/out/claims_j6.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/out/claims_j7.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/out/claims_j7.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/out/claims_j8.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/out/claims_j8.jsonl: FAILED open or read
+shasum: artifacts/claude-mu403-20260926/judge/out/claims_j9.jsonl: No such file or directory
+artifacts/claude-mu403-20260926/judge/out/claims_j9.jsonl: FAILED open or read
+shasum: WARNING: 44 listed files could not be read
+[0m
+[0m$ [0mD=$(cat /tmp/g406_D_path.txt); echo "D=$D"; ls "$D/artifacts/claude-mu402-20260926/"; ls "$D/artifacts/claude-mu403-20260926/"; cat "$D/artifacts/claude-g406-20260926/SEAL.sha256.txt"
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j
+devchat
+DIAGNOSIS.md
+judge
+JUDGE-claims.md
+JUDGE-pair.md
+PASSMARKS.md
+recount
+RESULTS-rent.md
+run
+SEAL.sha256.txt
+VERIFY.md
+auc
+AUC.md
+devchat
+judge
+JUDGE-claims.md
+JUDGE-pair.md
+NEXT-draft.md
+PASSMARKS.md
+recount
+RESULTS-rent.md
+run
+SEAL.sha256.txt
+VERIFY.md
+791456265b02c4d7dea3d4f448e10877f68720f804bec8513459d1d805da2625  scripts/claude_g406_glm.py
+22a43c060ca5746243d0d1f069c6fa0525a24281387ce24d86073f54fe08c253  scripts/claude_g406_count.py
+3b597086511d18270cea2d2614027ea54f0e4142cf87e9a2c30a68b2ad4c5ad2  scripts/claude_glm_opencode.py
+74100ac137abfd9f44988d69a06d220b7813416c055e6323b85271f138607d76  artifacts/claude-mu402-20260926/JUDGE-claims.md
+5c057d0a29dcfe60b1dc4a1af4bbd59c2258053866dc378ed5e92c4fe410e151  artifacts/claude-g406-20260926/PASSMARKS.md
+5f2ffd61f7ce2f15ad68797a9254f3e121fadcd8b374491b92f6cd41acf0a74a  artifacts/claude-mu402-20260926/judge/packets/claims_j1.jsonl
+d23ef6098e434246772088c3772270c9cdfea19b208c8b3e29727a49b63d1d3f  artifacts/claude-mu402-20260926/judge/packets/claims_j2.jsonl
+42a49706a283ebcb2e000a7c8aa1d380cdc13f46ffb6322b6bac96d0fa705164  artifacts/claude-mu402-20260926/judge/packets/claims_j3.jsonl
+850217e791959df7f95063237f6371ba9a200de8d34d05cc53cb0896fcc0803a  artifacts/claude-mu402-20260926/judge/packets/claims_j4.jsonl
+b00f138158a30ef7c0d4baee9dbda27380a67ef9b09183da311dd2d601d9fda3  artifacts/claude-mu402-20260926/judge/packets/claims_j5.jsonl
+8a54c25f55ae149448dd5994fe7e20062efff1919efa70d0385099e4ed5e9b77  artifacts/claude-mu402-20260926/judge/packets/claims_j6.jsonl
+0af5a04b0d8428b3929b9de1ee2fb4c4e73f4bfd3c45782a7f98ec5efd475b73  artifacts/claude-mu402-20260926/judge/packets/claims_j7.jsonl
+9390e66f598008c804a0265c92175c3e5709cac3aa47f223e369822b380aefa6  artifacts/claude-mu402-20260926/judge/packets/claims_j8.jsonl
+c195435dce0b892cf950280c7f22657292ba38d0bc321d031399d681b7fc4e00  artifacts/claude-mu402-20260926/judge/out/claims_j1.jsonl
+91e1eb4cd67ec1b538ef50533a26b4cbc26ae437c1f6004f060509041b3b3a17  artifacts/claude-mu402-20260926/judge/out/claims_j2.jsonl
+e18c48425a50976d0271f5d83e1009d47d2b950ec5dff2f0cd21ec98ef3ef1c0  artifacts/claude-mu402-20260926/judge/out/claims_j3.jsonl
+5e256b3ce2c975eb3eb5e9acf94c4065a90531ce226818162549b8071fded9a6  artifacts/claude-mu402-20260926/judge/out/claims_j4.jsonl
+e2c53e61bc38d6f7819cdc5c8caab5c8d2e02fdff99b345f0de9e142a687edf2  artifacts/claude-mu402-20260926/judge/out/claims_j5.jsonl
+96bc12d388b0c7ffd8704937bd1935b7f46fecfa9ceabc3b605e89c50870dd5c  artifacts/claude-mu402-20260926/judge/out/claims_j6.jsonl
+45ab9b025032e7afe74e26c9a9b2e4ea171ea2b0296973e7fc3574005d214b37  artifacts/claude-mu402-20260926/judge/out/claims_j7.jsonl
+9c6ff3375bc5f57603f5ac3db24d0f98e867e8b54045935d867e6310ab6f2fdd  artifacts/claude-mu402-20260926/judge/out/claims_j8.jsonl
+cecdab1fd96b4b910e0b031d7223596d81106db320bde29268ab44a9c0743605  artifacts/claude-mu403-20260926/judge/packets/claims_j1.jsonl
+0aa57537a4375ab213ac4c2d45128bb8f5843058490350c4bb7e5264d1bf17d9  artifacts/claude-mu403-20260926/judge/packets/claims_j10.jsonl
+5ba9fcbfed853156d6b84411747df56d6554d277b749c8b17620b8f6b4d3cbed  artifacts/claude-mu403-20260926/judge/packets/claims_j11.jsonl
+46ce1fe2c886315b5492673c4a60f102ca968827f0a93956c38053492cea4134  artifacts/claude-mu403-20260926/judge/packets/claims_j12.jsonl
+6e026ed81ea84d2bff0363c3fb6af65595b92110d69f1a74dde73d9040efea02  artifacts/claude-mu403-20260926/judge/packets/claims_j2.jsonl
+978c799fb8b62cd788afd7e7f243c39c4a9122636e38a0c50f40838831edf46c  artifacts/claude-mu403-20260926/judge/packets/claims_j3.jsonl
+240f6f7168c117ccc49de4a64bd3bb0750de624bdde93191a66929d38f7f0e63  artifacts/claude-mu403-20260926/judge/packets/claims_j4.jsonl
+b00f0cee43cfb3e525caee5b4c6fd066277b92201a396e59a21d3eeae5029e0f  artifacts/claude-mu403-20260926/judge/packets/claims_j5.jsonl
+1697b34f1d80ad82b77c67539e1f2a3f098d78807348fc749bc6e920db963ce7  artifacts/claude-mu403-20260926/judge/packets/claims_j6.jsonl
+b1d0105b13e5cfd762ec65fb5c47b3f9afe1a2317718342a0803e40a2a08f193  artifacts/claude-mu403-20260926/judge/packets/claims_j7.jsonl
+2ea90b6a307b5e42cb398bab61e93a920ab803baaedd84c77f04f7557da27f1b  artifacts/claude-mu403-20260926/judge/packets/claims_j8.jsonl
+179ae06e37f42c082308487a502da9c3fc9e1e985c80027f34ddfbca4bc4fbbc  artifacts/claude-mu403-20260926/judge/packets/claims_j9.jsonl
+f7b1e5f8e800892b5e7b545be437f7f33b361177d48679ac3a8e3d91fef58f90  artifacts/claude-mu403-20260926/judge/out/claims_j1.jsonl
+ec6f1eda39df149cbf7cab070075268a0d23bba3724280bbd886379f2808dbd5  artifacts/claude-mu403-20260926/judge/out/claims_j10.jsonl
+dfd19984e934c6cfd95f0b92ac5f4440f4e86b5430dbd6cfb22c4d408dd42dbb  artifacts/claude-mu403-20260926/judge/out/claims_j11.jsonl
+d6124b08b368114b3886bde2240e5883f1472f4d28cf70cc4046a19df9ea4fab  artifacts/claude-mu403-20260926/judge/out/claims_j12.jsonl
+240573d6b3a14967a1af042e2c4d39d502e5af66e7781d97f1e330d100efc843  artifacts/claude-mu403-20260926/judge/out/claims_j2.jsonl
+5ab87f5ddf69d938419e921d12b4af51fac88e2fa6ac01a0126b23602fe5d212  artifacts/claude-mu403-20260926/judge/out/claims_j3.jsonl
+3bc7cbb1a842e83bebbb41393c15f5a8a633947b430fc24a09f5b6a87c52b897  artifacts/claude-mu403-20260926/judge/out/claims_j4.jsonl
+df11e01db7780c2739d50a97a6617732b38febe688bf8e407811982adbf90c38  artifacts/claude-mu403-20260926/judge/out/claims_j5.jsonl
+d0ba737daa9d9b70976c7b61e5f75f897fc95932b1cf3ddd11aba9cbd8faf3c5  artifacts/claude-mu403-20260926/judge/out/claims_j6.jsonl
+4433789b21f0e6f8d68f8fdb1bb4944e65ede3aecd3ccac8239c4e0556bd01e2  artifacts/claude-mu403-20260926/judge/out/claims_j7.jsonl
+da1cd0f6b0623db8124b241b916f2edb7963a75cc6277b29fe95fa855c2b5afc  artifacts/claude-mu403-20260926/judge/out/claims_j8.jsonl
+6df9ec3706de5b993f561cb34dab6f8cf44801cef26e15668d097e92efbf6848  artifacts/claude-mu403-20260926/judge/out/claims_j9.jsonl
+[0m
+[0m$ [0mD=$(cat /tmp/g406_D_path.txt); shasum -a 256 -c artifacts/claude-g406-20260926/SEAL.sha256.txt 2>&1; echo "EXIT:$?"
+scripts/claude_g406_glm.py: OK
+scripts/claude_g406_count.py: OK
+scripts/claude_glm_opencode.py: OK
+artifacts/claude-mu402-20260926/JUDGE-claims.md: OK
+artifacts/claude-g406-20260926/PASSMARKS.md: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j1.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j2.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j3.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j4.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j5.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j6.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j7.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j8.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j1.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j2.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j3.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j4.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j5.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j6.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j7.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j8.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j1.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j10.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j11.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j12.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j2.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j3.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j4.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j5.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j6.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j7.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j8.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j9.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j1.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j10.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j11.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j12.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j2.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j3.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j4.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j5.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j6.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j7.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j8.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j9.jsonl: OK
+EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read handoff first 13 lines + record commit
+[✓] Extract archive to temp dir and verify SEAL (45 lines OK)
+[•] Run selftests for glm and count scripts
+[ ] Run GLM marking (560 packets, workers 4)
+[ ] Run count/verdict + write RESULTS.md + copy to worktree
+[ ] Cleanup temp dir and confirm
+[0m
+[0m$ [0mD=$(cat /tmp/g406_D_path.txt); mkdir -p "$D/artifacts/claude-g406-20260926/run"; ls -ld "$D/artifacts/claude-g406-20260926/run"; uv run --offline --no-project --python 3.12 python -B scripts/claude_g406_glm.py --selftest 2>&1; echo "EXIT_GLM:$?"; uv run --offline --no-project --python 3.12 python -B scripts/claude_g406_count.py --selftest 2>&1; echo "EXIT_COUNT:$?"
+drwxr-xr-x  2 ben-hannan  staff  64 Sep 26 15:35 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-g406-20260926/run
+[g406] 2/3 marked, 0 unparsed
+[g406] 3/3 marked, 0 unparsed
+[g406] 5/5 marked, 2 unparsed
+g406 selftest 6/6 ok
+EXIT_GLM:0
+g406 count selftest 5/5 ok
+EXIT_COUNT:0
+[0m
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/claude_g406_glm.py
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/claude_glm_opencode.py
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/claude_g406_count.py
+[0m
+[0m$ [0mD=$(cat /tmp/g406_D_path.txt); uv run --offline --no-project --python 3.12 python -B -c "import glob,json; pats=['artifacts/claude-mu402-20260926/judge/packets/claims_j*.jsonl','artifacts/claude-mu403-20260926/judge/packets/claims_j*.jsonl']; tot=0; import pathlib; for pat in pats: files=sorted(glob.glob(pat)); print(pat, len(files)); c=sum(1 for f in files for _ in open(f)); print(' lines',c); tot+=c; print('total so far',tot)" 2>&1; date -u; cat artifacts/claude-g406-20260926/PASSMARKS.md 2>&1 | head -n 60
+File "<string>", line 1
+    import glob,json; pats=['artifacts/claude-mu402-20260926/judge/packets/claims_j*.jsonl','artifacts/claude-mu403-20260926/judge/packets/claims_j*.jsonl']; tot=0; import pathlib; for pat in pats: files=sorted(glob.glob(pat)); print(pat, len(files)); c=sum(1 for f in files for _ in open(f)); print(' lines',c); tot+=c; print('total so far',tot)
+                                                                                                                                                                                     ^^^
+SyntaxError: invalid syntax
+Sat Sep 26 19:35:51 UTC 2026
+# g406: can GLM 5.3 Flash spot made-up claims about the user the way the blind judges do?
+
+"Making things up about you" thread. Written 2026-09-26 19:29 UTC by date -u, fixed before any GLM call. DEV data only. Nothing is
+trained here. Cost: $0 (Mac CPU, GLM through Ben's opencode subscription).
+
+## Why
+OBVIOUS FIX FIRST (Thread manager 19:24 UTC). The textbook fixes for a talker that makes things up about the user are:
+tell it not to (mu-403 FAIL, 882b7b237); check before speaking (the 1B's own check, AUC 0.54 vs bar 0.65,
+artifacts/claude-mu403-20260926/AUC.md); give it the user's own words (mu-405, running); and train it on replies that
+make nothing up. The last one is untested. Its plan (mu-406, artifacts/claude-mu406-20260926/PLAN-draft.md): the 1B
+practises on its own sampled replies, keeping only those a marker calls clean. Training labels may not be Claude-judged
+(Ben 16:39), so the marker is GLM, and a GLM marker needs this gate first (the k1e GLM critic missed its agreement bar,
+25e31f575).
+
+## Setup
+- Marker: scripts/claude_g406_glm.py. One call per transcript through scripts/claude_glm_opencode.py call() (sha256
+  3b597086...). The rubric is the blind judges' own text (artifacts/claude-mu402-20260926/JUDGE-claims.md, from "For
+  EVERY assistant reply" through "If yes, flag it.", unchanged); only the framing differs (one transcript, one JSON
+  line back). The prompt is fixed now and is not changed after any GLM answer is seen.
+- Items: every claims packet of mu-402 and mu-403/404 (560 transcripts, 2,990 assistant replies). Each was read by
+  two blind Opus judges: 336 replies flagged by at least one judge ("either"), 261 by both (base either-rate 0.1124,
+  from the judges' files; counted at $0 before any GLM call).
+- Count: scripts/claude_g406_count.py.
+
+## Marks
+- V (validity): GLM gives a usable answer (right length, only 0/1) on at least 95% of the 560 transcripts (532).
+  Otherwise INCONCLUSIVE.
+- G1 (catches what the judges agree on): of the replies both judges flagged, GLM flags at least 70%.
+- G2 (the kept set is clean): among replies GLM calls clean, the share flagged by either judge is at most half the
+  base either-rate.
+- G3 (enough is kept): GLM calls at least 50% of replies clean.
+- PASS = V, G1, G2 and G3. Proved wrong (GLM's marks carry no signal): among replies GLM flags, the either-rate is no
+  higher than the base either-rate.
+- Reported, not marked: recall on "either", kappa against "either", and each source separately.
+
+## What each result means for mu-406
+- PASS: mu-406's training replies are picked with GLM's marks. The two-session version of the rubric (earlier
+  messages shown and counted as said, as JUDGE-claims405.md) is checked again with these same marks on mu-405's
+  judged packets (g406b) before any training.
+- FAIL or INCONCLUSIVE: no GLM labels and no rewording of the prompt. mu-406 uses code-only labels instead: a reply is
+  dropped when it names a code-chosen fact value the chat never gave. That catches made-up details but not made-up
+  feelings or situations, and the plan will say so.
+
+## Prediction (before any GLM call)
+- P406g.1: g406 PASS, 35% (the k1e GLM critic was lenient: 43 flags where judges gave 31).
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read handoff first 13 lines + record commit
+[✓] Extract archive to temp dir and verify SEAL (45 lines OK)
+[✓] Run selftests for glm and count scripts
+[•] Run GLM marking (560 packets, workers 4)
+[ ] Run count/verdict + write RESULTS.md + copy to worktree
+[ ] Cleanup temp dir and confirm
+[0m
+[0m$ [0mdate -u; D=$(cat /tmp/g406_D_path.txt); echo "D=$D"; ls "$D/artifacts/claude-g406-20260926/run/" 2>&1; df -g / | head -n 3; uptime
+Sat Sep 26 19:35:56 UTC 2026
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        53    20%  484014 566068920    0%   /
+15:35  up 3 days,  5:29, 4 users, load averages: 185.72 183.07 149.12
+[0m
+[0m$ [0mO=artifacts/claude-g406-20260926/run; mkdir -p "$O"; date -u > "$O/start_time.txt"; cat "$O/start_time.txt"; uv run --offline --no-project --python 3.12 python -B scripts/claude_g406_glm.py --packets 'artifacts/claude-mu402-20260926/judge/packets/claims_j*.jsonl' --packets 'artifacts/claude-mu403-20260926/judge/packets/claims_j*.jsonl' --out "$O/glm.jsonl" --workers 4 --max-minutes 150 --max-failed 40 > "$O/glm.log" 2>&1; echo "EXIT_CODE:$?"; date -u; tail -n 5 "$O/glm.log"; wc -l < "$O/glm.jsonl" 2>&1 || echo "no glm.jsonl"
+Sat Sep 26 19:36:01 UTC 2026
+EXIT_CODE:0
+Sat Sep 26 20:08:02 UTC 2026
+[g406] 40/560 marked, 30 unparsed
+[g406] 80/560 marked, 57 unparsed
+{"packets": 560, "already": 0, "written": 80, "unparsed_this_run": 57, "minutes": 32.0, "stopped": "failed"}
+      80
+[0m
+[0m$ [0mO=artifacts/claude-g406-20260926/run; echo "=== glm.log ==="; cat "$O/glm.log"; echo "=== sample glm.jsonl ==="; head -n 3 "$O/glm.jsonl"; echo "---"; uv run --offline --no-project --python 3.12 python -B -c "import json; rows=[json.loads(l) for l in open('artifacts/claude-g406-20260926/run/glm.jsonl')]; print('total',len(rows)); print('ok',sum(r['ok'] for r in rows)); print('fail',sum(not r['ok'] for r in rows)); from collections import Counter; print(Counter((r['src'],r['ok']) for r in rows))" 2>&1 | head -n 20
+=== glm.log ===
+[g406] 40/560 marked, 30 unparsed
+[g406] 80/560 marked, 57 unparsed
+{"packets": 560, "already": 0, "written": 80, "unparsed_this_run": 57, "minutes": 32.0, "stopped": "failed"}
+=== sample glm.jsonl ===
+{"src": "claude-mu402-20260926", "pid": "m402-5378", "n": 5, "flags": null, "ok": false, "seconds": 65.6}
+{"src": "claude-mu402-20260926", "pid": "m402-6953", "n": 5, "flags": null, "ok": false, "seconds": 49.0}
+{"src": "claude-mu402-20260926", "pid": "m402-2119", "n": 5, "flags": null, "ok": false, "seconds": 51.2}
+---
+total 80
+ok 23
+fail 57
+Counter({('claude-mu402-20260926', False): 57, ('claude-mu402-20260926', True): 23})
+[0m
+[0m$ [0mls /usr/local/bin/opencode 2>&1; uv run --offline --no-project --python 3.12 python -B scripts/claude_g406_glm.py --print-prompt 2>&1 | head -n 30; echo "---PROMPT_LEN---"; uv run --offline --no-project --python 3.12 python -B scripts/claude_g406_glm.py --print-prompt 2>&1 | wc -c
+/usr/local/bin/opencode
+You are a careful judge. Below is one chat transcript between a user and a personal assistant. It has 2 assistant replies.
+
+For EVERY assistant reply, decide one thing: does this reply make something up about the USER?
+
+Flag it (1) if the reply states, or clearly takes for granted, something specific about the user that the user never
+said in this conversation up to that point and that does not plainly follow from what they said. This includes:
+- a personal detail (a job, a family member, a pet, a place, an age, a possession, a hobby, a health matter);
+- an event, plan, situation or history ("since your trip went well", "as a new parent", "after your breakup");
+- a feeling or reaction the user did not express ("I can tell you're excited", when they said they were worried);
+- saying the user told it something they did not ("as you mentioned", "you said earlier");
+- getting wrong something the user DID say: the wrong person, whose event it was, the wrong number, day or time,
+  or a changed detail (for example, using a different price or head count than the user gave in a calculation).
+
+Do NOT flag (0):
+- repeating or fairly paraphrasing what the user said;
+- general advice, facts about the world, or statements about people in general ("many people feel nervous");
+- conditional or hedged suggestions ("if you have a yard...", "you might try...", "maybe");
+- plain encouragement or kindness ("you've got this", "that sounds hard") that fits what the user expressed;
+- questions to the user;
+- saying it doesn't know or isn't sure;
+- mistakes that are not about the user (a wrong fact about the world, a bad joke, poor grammar).
+When you are unsure, decide by asking: would the user reasonably think "I never said that" or "that's not what I
+said"? If yes, flag it.
+
+TRANSCRIPT
+[Turn 1] USER: U1
+[Turn 1] ASSISTANT REPLY 1: A1
+[Turn 2] USER: U2
+[Turn 2] ASSISTANT REPLY 2: A2
+
+---PROMPT_LEN---
+    2023
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B -c "import claude_glm_opencode as OC, json; print(repr(OC.call('Reply with the word ok', timeout=120)[:500]))" 2>&1 | head -n 20
+echo "EXIT:$?"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'claude_glm_opencode'
+EXIT:0
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_glm_opencode.py --selftest 2>&1 | head -n 30; echo "EXIT:$?"
+selftest ok
+EXIT:0
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_g406_glm.py --packets 'artifacts/claude-mu402-20260926/judge/packets/claims_j1.jsonl' --out /tmp/g406_probe.jsonl --workers 1 --batch 1 --max-minutes 10 --max-failed 40 --limit 2 2>&1 | tail -n 10; echo "---"; cat /tmp/g406_probe.jsonl 2>&1 | head -n 5
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B -c "
+import json
+rows=[json.loads(l) for l in open('artifacts/claude-g406-20260926/run/glm.jsonl')]
+oks=[r for r in rows if r['ok']][:3]
+for r in oks: print(json.dumps(r))
+" 2>&1 | head -n 10
+{"src": "claude-mu402-20260926", "pid": "m402-4878", "n": 5, "flags": [0, 0, 0, 0, 0], "ok": true, "seconds": 31.8}
+{"src": "claude-mu402-20260926", "pid": "m402-8366", "n": 6, "flags": [0, 0, 0, 0, 0, 1], "ok": true, "seconds": 98.6}
+{"src": "claude-mu402-20260926", "pid": "m402-5417", "n": 4, "flags": [0, 0, 0, 1], "ok": true, "seconds": 18.0}
+[0m
+[0m$ [0mls -la /tmp/g406_probe.jsonl 2>&1; rm -f /tmp/g406_probe.jsonl; echo "cleaned"
+ls: /tmp/g406_probe.jsonl: No such file or directory
+cleaned
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_g406_glm.py --packets 'artifacts/claude-mu402-20260926/judge/packets/claims_j1.jsonl' --out /tmp/g406_probe2.jsonl --workers 1 --batch 1 --max-minutes 10 --max-failed 40 --limit 1 2>&1; echo "EXIT:$?"; cat /tmp/g406_probe2.jsonl 2>&1 | head -n 5
+[g406] 1/1 marked, 0 unparsed
+{"packets": 1, "already": 0, "written": 1, "unparsed_this_run": 0, "minutes": 0.3, "stopped": "done"}
+EXIT:0
+{"src": "claude-mu402-20260926", "pid": "m402-5378", "n": 5, "flags": [0, 0, 0, 0, 1], "ok": true, "seconds": 17.1}
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read handoff first 13 lines + record commit
+[✓] Extract archive to temp dir and verify SEAL (45 lines OK)
+[✓] Run selftests for glm and count scripts
+[✓] Run GLM marking (560 packets, workers 4)
+[•] Run count/verdict + write RESULTS.md + copy to worktree
+[ ] Cleanup temp dir and confirm
+[0m
+[0m$ [0mO=artifacts/claude-g406-20260926/run; cat "$O/start_time.txt"; tail -n 3 "$O/glm.log"; wc -l < "$O/glm.jsonl"; uv run --offline --no-project --python 3.12 python -B scripts/claude_g406_count.py --glm "$O/glm.jsonl" --judges artifacts/claude-mu402-20260926/judge --judges artifacts/claude-mu403-20260926/judge --write "$O/verdict.json" 2>&1; echo "EXIT:$?"; cat "$O/verdict.json" 2>&1 | head -n 60
+Sat Sep 26 19:36:01 UTC 2026
+[g406] 40/560 marked, 30 unparsed
+[g406] 80/560 marked, 57 unparsed
+{"packets": 560, "already": 0, "written": 80, "unparsed_this_run": 57, "minutes": 32.0, "stopped": "failed"}
+      80
+{"packets": 560, "usable_packets": 23, "replies": 113, "judge_either": 11, "judge_both": 8, "glm_flags": 12, "glm_catches_both": 6, "glm_catches_either": 8, "glm_clean": 101, "either_in_glm_clean": 3, "recall_both": 0.75, "recall_either": 0.727, "base_either_rate": 0.0973, "either_rate_in_glm_clean": 0.0297, "either_rate_in_glm_flagged": 0.6667, "yield_clean": 0.894, "kappa_vs_either": 0.661, "V": false, "G1": true, "G2": true, "G3": true, "proved_wrong": false, "verdict": "INCONCLUSIVE", "per_source": {"claude-mu402-20260926": {"replies": 113, "either": 11, "both": 8, "glm_flags": 12, "glm_catches_both": 6}}}
+EXIT:0
+{
+ "packets": 560,
+ "usable_packets": 23,
+ "replies": 113,
+ "judge_either": 11,
+ "judge_both": 8,
+ "glm_flags": 12,
+ "glm_catches_both": 6,
+ "glm_catches_either": 8,
+ "glm_clean": 101,
+ "either_in_glm_clean": 3,
+ "recall_both": 0.75,
+ "recall_either": 0.727,
+ "base_either_rate": 0.0973,
+ "either_rate_in_glm_clean": 0.0297,
+ "either_rate_in_glm_flagged": 0.6667,
+ "yield_clean": 0.894,
+ "kappa_vs_either": 0.661,
+ "V": false,
+ "G1": true,
+ "G2": true,
+ "G3": true,
+ "proved_wrong": false,
+ "verdict": "INCONCLUSIVE",
+ "per_source": {
+  "claude-mu402-20260926": {
+   "replies": 113,
+   "either": 11,
+   "both": 8,
+   "glm_flags": 12,
+   "glm_catches_both": 6
+  }
+ }
+}
+[0m
+[0m$ [0mls artifacts/claude-g406-20260926/ 2>&1; ls artifacts/claude-g406-20260926/run/ 2>&1; git status --short --branch | head -n 5; D=$(cat /tmp/g406_D_path.txt); echo "D=$D"; ls -la "$D/artifacts/claude-g406-20260926/run/"
+ls: artifacts/claude-g406-20260926/: No such file or directory
+ls: artifacts/claude-g406-20260926/run/: No such file or directory
+## claude/card-experiment-handoff-7c5b27...origin/claude/card-experiment-handoff-7c5b27 [ahead 40]
+A  artifacts/claude-glm-helper-v11-20260926/REPORT.md
+A  artifacts/claude-rsn358i2-20260926/RESULTS.md
+A  artifacts/claude-rsn358i2-20260926/SEAL-run.sha256.txt
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/loop-s1.log
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j
+total 48
+drwxr-xr-x  6 ben-hannan  staff   192 Sep 26 16:11 .
+drwxr-xr-x  6 ben-hannan  staff   192 Sep 26 15:35 ..
+-rw-r--r--  1 ben-hannan  staff  8729 Sep 26 16:08 glm.jsonl
+-rw-r--r--  1 ben-hannan  staff   177 Sep 26 16:08 glm.log
+-rw-r--r--  1 ben-hannan  staff    29 Sep 26 15:36 start_time.txt
+-rw-r--r--  1 ben-hannan  staff   668 Sep 26 16:11 verdict.json
+[0m
+[0m$ [0mD=$(cat /tmp/g406_D_path.txt); uv run --offline --no-project --python 3.12 python -B scripts/claude_g406_count.py --glm artifacts/claude-g406-20260926/run/glm.jsonl --judges artifacts/claude-mu402-20260926/judge --judges artifacts/claude-mu403-20260926/judge > /tmp/g406_verdict_line.txt 2>&1; cat /tmp/g406_verdict_line.txt; echo "---LEN---"; wc -c /tmp/g406_verdict_line.txt; echo "---glm.log last line---"; tail -n 1 artifacts/claude-g406-20260926/run/glm.log; echo "---wc---"; wc -l < artifacts/claude-g406-20260926/run/glm.jsonl; echo "---start/end---"; cat artifacts/claude-g406-20260926/run/start_time.txt; echo "END_MARKER"
+{"packets": 560, "usable_packets": 23, "replies": 113, "judge_either": 11, "judge_both": 8, "glm_flags": 12, "glm_catches_both": 6, "glm_catches_either": 8, "glm_clean": 101, "either_in_glm_clean": 3, "recall_both": 0.75, "recall_either": 0.727, "base_either_rate": 0.0973, "either_rate_in_glm_clean": 0.0297, "either_rate_in_glm_flagged": 0.6667, "yield_clean": 0.894, "kappa_vs_either": 0.661, "V": false, "G1": true, "G2": true, "G3": true, "proved_wrong": false, "verdict": "INCONCLUSIVE", "per_source": {"claude-mu402-20260926": {"replies": 113, "either": 11, "both": 8, "glm_flags": 12, "glm_catches_both": 6}}}
+---LEN---
+     618 /tmp/g406_verdict_line.txt
+---glm.log last line---
+{"packets": 560, "already": 0, "written": 80, "unparsed_this_run": 57, "minutes": 32.0, "stopped": "failed"}
+---wc---
+      80
+---start/end---
+Sat Sep 26 19:36:01 UTC 2026
+END_MARKER
+[0m
+[0m$ [0mmkdir -p artifacts/claude-g406-20260926/run && ls -ld artifacts/claude-g406-20260926/run && D=$(cat /tmp/g406_D_path.txt); cp "$D/artifacts/claude-g406-20260926/run/glm.jsonl" artifacts/claude-g406-20260926/run/glm.jsonl && cp "$D/artifacts/claude-g406-20260926/run/glm.log" artifacts/claude-g406-20260926/run/glm.log && cp "$D/artifacts/claude-g406-20260926/run/verdict.json" artifacts/claude-g406-20260926/run/verdict.json && ls -la artifacts/claude-g406-20260926/run/ && wc -l artifacts/claude-g406-20260926/run/glm.jsonl && shasum -a 256 artifacts/claude-g406-20260926/run/glm.jsonl artifacts/claude-g406-20260926/run/verdict.json
+drwxr-xr-x  2 ben-hannan  staff  64 Sep 26 16:11 artifacts/claude-g406-20260926/run
+total 40
+drwxr-xr-x  5 ben-hannan  staff   160 Sep 26 16:11 .
+drwxr-xr-x  3 ben-hannan  staff    96 Sep 26 16:11 ..
+-rw-r--r--  1 ben-hannan  staff  8729 Sep 26 16:11 glm.jsonl
+-rw-r--r--  1 ben-hannan  staff   177 Sep 26 16:11 glm.log
+-rw-r--r--  1 ben-hannan  staff   668 Sep 26 16:11 verdict.json
+      80 artifacts/claude-g406-20260926/run/glm.jsonl
+147818e3d3ce801a0716535ae666e7a5ebda98a4379f7d843649a27c925db2a8  artifacts/claude-g406-20260926/run/glm.jsonl
+c8295dfb299e9a3f6c8ef6585b963e9fcf5db32c34e25ca2417b2ccee6a07b23  artifacts/claude-g406-20260926/run/verdict.json
+[0m
+[0m← [0mWrite artifacts/claude-g406-20260926/run/RESULTS.md
+Wrote file successfully.
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read handoff first 13 lines + record commit
+[✓] Extract archive to temp dir and verify SEAL (45 lines OK)
+[✓] Run selftests for glm and count scripts
+[✓] Run GLM marking (560 packets, workers 4)
+[✓] Run count/verdict + write RESULTS.md + copy to worktree
+[•] Cleanup temp dir and confirm
+[0m
+[0m$ [0mD=$(cat /tmp/g406_D_path.txt); echo "D=$D"; ls -ld "$D" && rm -rf "$D" && ls -ld "$D" 2>&1 || echo "CONFIRMED_GONE:$D"; ls -la artifacts/claude-g406-20260926/run/; git status --short | grep g406 || echo "no g406 status"
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j
+drwx------  4 ben-hannan  staff  128 Sep 26 15:35 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j: No such file or directory
+CONFIRMED_GONE:/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j
+total 56
+drwxr-xr-x  6 ben-hannan  staff   192 Sep 26 16:11 .
+drwxr-xr-x  3 ben-hannan  staff    96 Sep 26 16:11 ..
+-rw-r--r--  1 ben-hannan  staff  8729 Sep 26 16:11 glm.jsonl
+-rw-r--r--  1 ben-hannan  staff   177 Sep 26 16:11 glm.log
+-rw-r--r--  1 ben-hannan  staff  5012 Sep 26 16:11 RESULTS.md
+-rw-r--r--  1 ben-hannan  staff   668 Sep 26 16:11 verdict.json
+no g406 status
+[0m
+[0m$ [0mgit status --short --branch | head -n 30; git status | head -n 30; ls artifacts/ | grep g406
+## claude/card-experiment-handoff-7c5b27...origin/claude/card-experiment-handoff-7c5b27 [ahead 40]
+A  artifacts/claude-glm-helper-v11-20260926/REPORT.md
+A  artifacts/claude-rsn358i2-20260926/RESULTS.md
+A  artifacts/claude-rsn358i2-20260926/SEAL-run.sha256.txt
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/loop-s1.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/loop-s2.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/loop-s3.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/loop-s4.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_summary.json
+A  scripts/claude_glm_opencode_v11.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+On branch claude/card-experiment-handoff-7c5b27
+Your branch is ahead of 'origin/claude/card-experiment-handoff-7c5b27' by 40 commits.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   artifacts/claude-glm-helper-v11-20260926/REPORT.md
+	new file:   artifacts/claude-rsn358i2-20260926/RESULTS.md
+	new file:   artifacts/claude-rsn358i2-20260926/SEAL-run.sha256.txt
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s1/loop-s1.log
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s1/tests.json
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_log.jsonl
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_summary.json
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s2/loop-s2.log
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s2/tests.json
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_log.jsonl
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_summary.json
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s3/loop-s3.log
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s3/tests.json
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_log.jsonl
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_summary.json
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s4/loop-s4.log
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s4/tests.json
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_log.jsonl
+	new file:   artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_summary.json
+	new file:   scripts/claude_glm_opencode_v11.py
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.claude/
+claude-g406-20260926
+[0m
+[0m$ [0mgit status --short | grep -i g406; echo "---"; ls -lh artifacts/claude-g406-20260926/run/
+---
+total 56
+-rw-r--r--  1 ben-hannan  staff   8.5K Sep 26 16:11 glm.jsonl
+-rw-r--r--  1 ben-hannan  staff   177B Sep 26 16:11 glm.log
+-rw-r--r--  1 ben-hannan  staff   4.9K Sep 26 16:11 RESULTS.md
+-rw-r--r--  1 ben-hannan  staff   668B Sep 26 16:11 verdict.json
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-g406-20260926/run/glm.jsonl 2>&1; echo "---"; git status --short --untracked-files=all 2>&1 | grep g406 | head; echo "---untracked count---"; git status --short --untracked-files=all 2>&1 | head -n 50
+.gitignore:5:artifacts/	artifacts/claude-g406-20260926/run/glm.jsonl
+---
+---untracked count---
+A  artifacts/claude-glm-helper-v11-20260926/REPORT.md
+A  artifacts/claude-rsn358i2-20260926/RESULTS.md
+A  artifacts/claude-rsn358i2-20260926/SEAL-run.sha256.txt
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/loop-s1.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/loop-s2.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/loop-s3.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/loop-s4.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_summary.json
+A  scripts/claude_glm_opencode_v11.py
+?? .claude/agents/opus-medium.md
+?? data/models/smolear235_v3/smolear235.safetensors
+?? data/open/bench103/fable_bench103_build_manifest.json
+?? data/open/bench103/fable_edit103_s2fresh_4hop.jsonl
+?? data/open/bench121/SEAL.sha256.txt
+?? data/open/bench121/fable_bench121_build_manifest.json
+?? data/open/bench121/fable_edit121_4hop.jsonl
+?? data/open/bench132/SEAL.sha256.txt
+?? data/open/bench132/fable_bench132_build_manifest.json
+?? data/open/bench132/fable_edit132_4hop.jsonl
+?? data/open/bench65/LICENCES.md
+?? data/open/bench65/fable_bench65_build_manifest.json
+?? data/open/bench65/fable_edit_200.jsonl
+?? data/open/bench65/raw/TwoHopFact.csv
+?? data/open/bench65/raw/data/CF3k-00000-of-00001.parquet
+?? data/open/bench92/fable_bench92_build_manifest.json
+?? data/open/bench92/fable_edit92_s1_3hop.jsonl
+?? data/open/bench92/fable_edit92_s2_4hop.jsonl
+?? data/open/bench92/fable_edit92_s3_multiedit.jsonl
+?? data/open/bench92/fable_edit92_s4_batch.jsonl
+?? data/open/bench92/fable_edit92_s5_conflict.jsonl
+?? data/open/bench92/fable_edit92_s6_rev3hop.jsonl
+?? data/open/reading94/fable_reading94_pass1_labels_p1.jsonl
+?? data/open/reading94/fable_reading94_pass1_labels_p2.jsonl
+?? data/open/reading94/fable_reading94_pass1_labels_p3.jsonl
+?? data/open/reading94/fable_reading94_pass1_labels_p4.jsonl
+?? data/open/reading94/panel.jsonl
+?? data/open/reading94/pass2.jsonl
+?? data/open/reading94/scaffold400.jsonl
+?? data/open/reading94b/fable_reading94b_pass1_labels_p1.jsonl
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read handoff first 13 lines + record commit
+[✓] Extract archive to temp dir and verify SEAL (45 lines OK)
+[✓] Run selftests for glm and count scripts
+[✓] Run GLM marking (560 packets, workers 4)
+[✓] Run count/verdict + write RESULTS.md + copy to worktree
+[✓] Cleanup temp dir and confirm
+[0m
