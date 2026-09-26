@@ -2628,3 +2628,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-26 13:52 UTC Director: rent-y1d released, $0.40 of Answering from memory's $2.
 - 2026-09-26 14:12 UTC Director: rent-sf401 released, $1.50 of Wrong answers stated as fact's $2.
 - 2026-09-26 14:14 UTC Director: rent-ch403 released, $1.60 of Everyday chat's $2.
+- 2026-09-26 14:22 UTC Director: rent-y1f released, $0.30 of Answering from memory's $2 (y1d ~$0.14 spent).
