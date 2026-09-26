@@ -58,3 +58,10 @@ and it could not show whether notes help. Before spending on making notes truer,
   blind judges marked not ok deleted (rd-371b judged drafts: 2,526 drafts of 1,263 turns; 868 ok / 993 unsupported
   notes); more drafts judged the same way if needed. Marks (from the 12:00 report): untrue share on a fresh sealed note
   panel drops >= 15 points vs rd-378; missed memorable items rise <= 10%; proved wrong if the drop is < 5 points.
+
+## 13:55 UTC: problem split and corrections (reading thread)
+Ben 13:30: one thread per problem. Notes (step 3 checker, step 4a rd-378L, 4b cut-only writer) moved to the
+"Trustworthy notes" thread. This thread keeps saves, now including corrections heard but not saved (0.2c ME1).
+Next save changes, one at a time: lis-319f FORMER (running on a rental), lis-319k corrections at 0.95
+(artifacts/claude-lis319k-20260926/PASSMARKS.md; bar change only, one read of a fresh blind correction panel),
+then the job + place rule, then 0.98 vs 0.995 for ASSERT.
