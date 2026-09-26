@@ -2635,3 +2635,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-26 14:39 UTC Director: Ben 14:37 (decision card, via coordinator) allowed Fix sleep up to $1.60 beyond its $2 for dl-5 (handoff/held/rent-zdl5.md); release after dl-4b when Fix sleep asks.
 - 2026-09-26 14:45 UTC Director: claude-sleep-358b2 queued, $0.40 of Sleep research's $2.
 - 2026-09-26 14:53 UTC Director: Ben 14:51 (via Thread manager): over-$2 money order = reasoning first (Sleep research) ahead of overnight learning (Fix sleep, sleep-side Memory work). Order only; each over-$2 spend still needs Ben's yes with a figure.
+- 2026-09-26 14:58 UTC Director: rent-bmrivsmoke queued, $0.30 of Benchmarks' $2 ($0.20 left after bm398r's $1.50).
