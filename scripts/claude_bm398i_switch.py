@@ -39,7 +39,7 @@ RANK, ALPHA = 16, 32                 # bm-397t's LoRA
 NAMES = ("q_proj", "k_proj", "v_proj", "o_proj")
 ADAPTER_SEED, B_STD = 3989, 0.02     # the fixed-seed random adapter
 MIX_SEED = 3988
-N_GSM, N_MMLU, N_LOCOMO = 25, 40, 25
+N_GSM, N_MMLU, N_LOCOMO = 15, 40, 20
 LOGIT_ITEMS = 3                      # per kind: last-position logits compared exactly
 
 
