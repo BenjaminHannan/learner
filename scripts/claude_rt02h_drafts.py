@@ -15,6 +15,7 @@ not a TEST seed (4797, 4799) or a dev/practice seed (4880, 4881); the same numbe
 the head must learn what is asked, not which numbers appear. Never reads any TEST panel.
 
   HF_HUB_OFFLINE=1 OMP_NUM_THREADS=4 python -B scripts/claude_rt02h_drafts.py --model BASE --out FILE.jsonl
+  python -B scripts/claude_rt02h_drafts.py --relabel FILE.jsonl CLEAN.jsonl      (first paragraph only, labels redone)
 """
 from __future__ import annotations
 
@@ -88,6 +89,11 @@ def prompts():
     return out
 
 
+def first_para(text: str) -> str:
+    """The 1B often writes the message and then keeps going (tries a solution, adds notes): keep its first paragraph."""
+    return (text or "").strip().strip('"').split("\n\n")[0].strip().strip('"').strip()
+
+
 def label(kind, text, p) -> bool:
     import claude_rt02e as RE
     import claude_rt02g as G
@@ -98,7 +104,21 @@ def label(kind, text, p) -> bool:
     return True
 
 
+def relabel(src: str, dst: str) -> None:
+    """Re-apply first_para + label to drafts written before first_para existed (raw text kept)."""
+    out = []
+    for r in (json.loads(x) for x in Path(src).read_text().splitlines()):
+        raw = r.get("raw", r["text"])
+        t = first_para(raw)
+        out.append({**r, "text": t, "raw": raw, "keep": label(r["kind"], t, {"nums": r["nums"], "target": r["target"]})})
+    Path(dst).write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in out), encoding="utf-8")
+    print(json.dumps(Counter((r["kind"], r["keep"]) for r in out).most_common()))
+
+
 def main() -> None:
+    if len(sys.argv) == 4 and sys.argv[1] == "--relabel":
+        relabel(sys.argv[2], sys.argv[3])
+        return
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
     ap.add_argument("--out", required=True)
@@ -116,8 +136,9 @@ def main() -> None:
         torch.manual_seed(SEED * 1000 + pi)
         rows = []
         for s in g.sample(prompt, a.n):
+            t = first_para(s)
             rows.append({"pi": pi, "kind": kind, "style": style, "nums": p["nums"], "target": p["target"],
-                         "text": s, "keep": label(kind, s, p)})
+                         "text": t, "raw": s, "keep": label(kind, t, p)})
         with out.open("a", encoding="utf-8") as f:
             f.write("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows))
         print(pi, kind, sum(r["keep"] for r in rows), round(time.time() - t0), flush=True)
