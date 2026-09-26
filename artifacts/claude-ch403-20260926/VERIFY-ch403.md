@@ -34,3 +34,6 @@ states a real fact about themselves (their age), so a save there is right; the D
 wrong. On dev02e-chat-57 turn 4 neither reader saves anything at the 0.995 bar. lis-314's confirm path needs an exact
 "yes" (claude_lis310_agent.YES310), and that turn was not one. So the source of that turn's 3 events is not identified.
 The runner keeps event counts only, not their content. Lead passed to Trustworthy notes.
+Update 2026-09-26 17:04 UTC: Trustworthy notes traced the unidentified turn (44c4b4341, from the readable DEV rows). It is a false
+save: turn 4's reply reads as a save of a fact about a person the user never named, right after the build's own
+confirm question at turn 3. The suspected path is read from code, not reproduced. It is handed to Reading facts.
