@@ -272,8 +272,9 @@ def marks(a) -> None:
                f"{x['ask_unknown']}; told-and-asked right X403 {x3['ask_known_right']} vs X {x['ask_known_right']} "
                f"of {x['ask_known']}; bar each >= X - 1")
     ma3, ma = ja["madeup"].get("X403", 0), ja["madeup"].get("X", 0)
-    m["M4"] = ("PASS" if ma3 <= ma + 2 else "FAIL",
-               f"judged made-up facts about the user in the differing pairs X403 {ma3} vs X {ma}; bar <= X + 2")
+    m["M4"] = ("PASS" if ma3 <= ma else "FAIL",
+               f"judged replies stating or assuming something about the user they never said, in the differing "
+               f"pairs: X403 {ma3} vs X {ma}; bar X403 <= X")
     m["M5"] = ("PASS" if x3["events_on_non_teach"] <= x["events_on_non_teach"] else "FAIL",
                f"notebook events on non-teach turns X403 {x3['events_on_non_teach']} vs X {x['events_on_non_teach']}")
     verdict = "PASS" if all(v[0] == "PASS" for v in m.values()) else \

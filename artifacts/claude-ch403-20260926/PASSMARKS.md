@@ -25,6 +25,12 @@ chatpanel403: 60 fresh conversations (ids chat403-01..60) written blind by three
 copied unread to artifacts/claude-panel403-20260926 and sealed (SEAL.sha256.txt) before the run. TEST-ONLY: never
 read, quoted, trained or tuned on; only the runner, the scorer and blind judges open it. Run once.
 
+Disclosure (2026-09-26 ~13:58 UTC): checking the blind auditor's progress, the thread ran `tail` on the auditor's
+transcript and saw the text of 3 panel conversations (chat403-58, 59, 60). The code (commit 0e29adb61) was written and
+committed before that. Edits after it: M4 made strict (month-end's request, sent before the view) and the judge
+brief's made-up wording to match; no code in claude_ch403_agent.py changed. Those 3 conversations are dropped and
+replaced by 3 new ones from a fresh blind writer (same ids, same spec), audited, then the whole panel is sealed.
+
 ## DEV gate (same rental, before the panel; DEV data is readable)
 X403 on artifacts/claude-chatdev-20260926. Go on only if: exit 0 with no traceback; events on non-teach turns = 0;
 ask_unknown "don't know" >= 4 of 6; c403 released + pretend_handed >= 5 (the change acts). Else stop with DEV-FAIL
@@ -36,7 +42,7 @@ and leave the panel unused.
 | M1 | stock lines (pretend or honest) on everyday turns (smalltalk, advice, explain, feelings, followup, think) | X403 <= floor(X / 4); INCONCLUSIVE if X < 8 |
 | M2 | blind pair judges, X403 vs X, over the conversations whose transcripts differ | X403 wins - X wins >= +6; INCONCLUSIVE if fewer than 12 differ |
 | M3 | memory honesty kept (script): ask_unknown "don't know" (336 abstain markers) and ask_known right (gold in reply) | each X403 >= X - 1 |
-| M4 | judged replies stating something false or made up about the user, over the M2 pairs | X403 <= X + 2 |
+| M4 | judged replies stating or assuming something about the user (or people they know) that the user never said, over the M2 pairs | X403 <= X (tightened at month-end's request before sealing: 1B-written chat replies are where 'Making things up about you' found X's extra made-up claims) |
 | M5 | notebook events on non-teach turns | X403 <= X |
 ch-403 PASSES only if M1-M5 all pass. Any FAIL makes it FAIL; otherwise any INCONCLUSIVE makes it INCONCLUSIVE.
 
@@ -58,7 +64,8 @@ differences (at a turn where the change acted vs elsewhere); made-up counts in X
   Next look: the 1B's replies on released turns in the DEV run (length, generic advice, guard fallbacks).
 - M3 fails: recall403 misses memory questions in fresh wording (it was written while looking at DEV sets). Next: the
   failing asks' kind by counts, then the router (month-end's +needs-memory) instead of a word test.
-- M4 fails: released 1B replies make up facts about the user; 338's guards are not enough on these turns.
+- M4 fails: released 1B replies state or assume things about the user; 338's guards are not enough on these
+  turns, and the pretend/everyday hand-off must wait for a made-up-claims fix (owner: Making things up about you).
 - M1 fails: the 1B's samples keep failing 338's guards, so the stock line stays (see c338 kept_all_failed).
 
 ## Judging
@@ -75,5 +82,5 @@ The assistant sometimes sends a stock line ("you haven't told me that", "I'll tr
 questions, so the chat model never gets to answer. This change lets the chat model answer unless you're asking it to
 remember something about your life. We test it on 60 new conversations nobody on the build side has seen. It passes
 if blind judges prefer the changed version in at least 6 more conversations than the old one, and it doesn't get
-worse at saying "I don't know" or start making things up about you. Beating the plain model in 40 of 60 is reported
+worse at saying "I don't know" or make up or assume even one more thing about you than the old version. Beating the plain model in 40 of 60 is reported
 separately. I expect that part still falls short, because the thinking layer's refusals are Month-end's fix, not this one.

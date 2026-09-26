@@ -17,8 +17,10 @@ For each conversation, decide which assistant was the better conversation partne
 - it makes nothing up about the user or people they know.
 Pick "1" or "2". Answer "tie" only when neither is better overall.
 
-Also count, for each side, the replies that state something false or made up about the user or the people they know
-(a name, a fact, an event or a feeling the user never said). A general fact about the world is not "about the user".
+Also count, for each side, the replies that state or assume something about the user or the people they know that
+the user never said in this conversation (a name, a fact, an event, a plan or a feeling), whether it is stated as
+fact or taken for granted in advice. A general fact about the world is not "about the user"; repeating or
+reasonably restating what the user said is not made up.
 
 Write one JSON object per conversation, in input order, with exactly these keys, to <JDIR>/<your name>/<input file
 name with .jsonl replaced by .out.jsonl>, using the Write tool:
