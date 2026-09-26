@@ -1,4 +1,4 @@
-# rsn-358z CANDIDATE, not drafted or sealed: every layer reads a learned mix of all earlier layers (sleep research thread, 2026-09-26 16:49 UTC)
+# rsn-358z CANDIDATE, not drafted or sealed: every layer reads a learned mix of all earlier layers (sleep research thread, 2026-09-26 16:47 UTC)
 
 **Source:** Ben, 16:46 UTC (cmsg_01FuvegZXjMmeUzStiEFVnEW6SCkmAo5r7XiZpgEPisbEM): "what if we had past layers feed into new layers?" The Thread manager relayed it.
 
