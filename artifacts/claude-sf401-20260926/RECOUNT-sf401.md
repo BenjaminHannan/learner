@@ -1,4 +1,4 @@
-# sf-401 blind recount brief (fixed 2026-09-26 ~14:30 UTC, before any run)
+# sf-401 blind recount brief (fixed 2026-09-26 ~14:11 UTC, before any run)
 
 Given verbatim to one recount agent after the judges and scripts/claude_sf401_judges.py marks have run. It must not
 read or run scripts/claude_sf401_judges.py or claude_sf401_diag.py, and must not see the builder's mark table.

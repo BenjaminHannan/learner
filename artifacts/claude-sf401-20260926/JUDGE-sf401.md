@@ -1,4 +1,4 @@
-# sf-401 judge brief (fixed 2026-09-26 ~14:30 UTC, after the seal, before any run; follows PASSMARKS.md "Judging")
+# sf-401 judge brief (fixed 2026-09-26 ~14:11 UTC, after the seal, before any run; follows PASSMARKS.md "Judging")
 
 Given verbatim to each blind judge agent (two judges on every packet, a third on splits). Judges see only the packet
 file; never the arm key, the code, the marks, or the other judge's file.
