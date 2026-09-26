@@ -26,7 +26,7 @@ I read 21 dropped rows. Most doubt, ask, confirm and former drops were good rows
 - Also in the next pilot: the ask-back families (ADDENDUM-1) and the hashed test-name avoid list.
 Pilot 2: handoff/queue/lis320-pilot2-mac.md (seed 321, 60 dialogs). The same thresholds apply.
 
-## Pilot 2 (seed 321, 60 dialogs, 17:28-17:35 UTC, $0.0148): no threshold triggered (checked 18:10 UTC)
+## Pilot 2 (seed 321, 60 dialogs, 17:28-17:35 UTC, $0.0148): no threshold triggered (checked 18:08 UTC)
 Pass rate 390 of 425 (92%). Every family is at 70% or above: ack_after_ask 11 of 15, yes_after_ask 9 of 10, doubt 7 of 9,
 former 22 of 26. Style: lowercase 0.995, missing-apostrophe contractions 0.323, turns over 20 words 0.213, shapes 100 per
 100, write facts in long turns 0.312. Cost is about $0.038 per 1,000 kept rows. I read 24 kept rows (all 10 ask-back rows
