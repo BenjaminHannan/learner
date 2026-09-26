@@ -15,9 +15,9 @@ For Month-end:
     m = N.adapter_model(s, "state/night.pt")           # base + the adapter saved last night (or a fresh one)
     groups = N.day(s, m, todays_puzzles)               # the day's work: greedy + 30 checked guesses each
       # or: groups = N.groups_from_attempts("attempts.jsonl")   (shared attempts format v0; try 0 = greedy)
-    out = N.night(s, m, groups, seed=night_number, tripwire=True)
-    N.save_adapter(m, "state/night.pt")
-  out = {"trained": examples, "train": {...}, "tripwire": {...}, "undone": bool}
+    log = N.night_to_file(s, m, groups, "state/night.pt", seed=night_number, tripwire=True)
+  log = {"eligible_examples", "optimizer_steps", "weight_change", "candidate_saved", "accepted",
+         "active_after_reload", "train", "tripwire"}; the active file changes only if the night was accepted.
 
 Tripwire (research REPORT.md Q7: a tripwire, not a gate): before and after the night, the 300-item general panel of
 claude_dl1_nights; if the night loses more than 5 net items (lost minus gained vs the pre-night adapter), the night is
@@ -133,6 +133,53 @@ def night(s, m, groups, seed=0, tripwire=True, panel=None) -> dict:
     return out
 
 
+def weight_change(m, snap: dict) -> float:
+    """L2 norm of the adapter's change since snap (0.0 means the night changed nothing)."""
+    tot = 0.0
+    for n, p in adapter_params(m).items():
+        tot += float(((p.detach().cpu().float() - snap[n].float()) ** 2).sum())
+    return round(tot ** 0.5, 6)
+
+
+def night_to_file(s, m, groups, active_path, seed=0, tripwire=True, panel=None) -> dict:
+    """A night with a milestone log and an atomic switch (outside review 2026-09-26, sections 10-11).
+    Trains m in place; on any exception the adapter goes back to its pre-night weights and the active file is
+    untouched. The candidate is written beside the active file, read back and compared, then swapped in with
+    os.replace (atomic on one filesystem). Milestones: eligible examples, optimizer steps, weight change,
+    candidate saved, accepted (tripwire), active after reload. "Night ran" never implies "the model learned"."""
+    import math
+    import os
+    import torch
+    snap = snapshot(m)
+    ex = copy_examples(groups)
+    log = {"groups": len(groups), "eligible_examples": len(ex),
+           "optimizer_steps": RECIPE["epochs"] * math.ceil(len(ex) / 8) if ex else 0,
+           "weight_change": 0.0, "candidate_saved": False, "accepted": False, "active_after_reload": False}
+    try:
+        out = night(s, m, groups, seed=seed, tripwire=tripwire, panel=panel)
+    except BaseException:
+        restore(m, snap)
+        raise
+    log.update({k: out[k] for k in ("train", "tripwire") if k in out})
+    log["weight_change"] = weight_change(m, snap)
+    log["accepted"] = bool(ex) and not out["undone"] and log["weight_change"] > 0
+    if not log["accepted"]:
+        return log
+    active = Path(active_path)
+    cand = active.with_name(active.name + ".candidate")
+    save_adapter(m, cand)
+    log["candidate_saved"] = True
+    back = torch.load(str(cand), map_location="cpu")
+    if any(not torch.equal(back[n], v) for n, v in snapshot(m).items()):
+        restore(m, snap)
+        log["accepted"] = False
+        return log
+    os.replace(cand, active)
+    back = torch.load(str(active), map_location="cpu")
+    log["active_after_reload"] = all(torch.equal(back[n], v) for n, v in snapshot(m).items())
+    return log
+
+
 def selftest() -> None:
     import tempfile
     import claude_attempts as A
@@ -154,9 +201,13 @@ def demo(a) -> None:
     s = load(a.model)
     m = adapter_model(s)
     groups = day(s, m, B2.puzzles(70001, 4), 4)
-    out = night(s, m, groups, seed=1, tripwire=True, panel=D1.harm_panel()[:6])
+    for g in groups:                    # plumbing only: give each missed puzzle one known-right answer
+        if not g["greedy_right"] and not any(g["rewards"]):
+            e = B1.solve(g["puzzle"]["nums"], g["puzzle"]["target"])
+            if e and B1.check(e, g["puzzle"]["nums"], g["puzzle"]["target"]):
+                g["guesses"], g["rewards"] = g["guesses"] + [e], g["rewards"] + [1]
     p = Path(a.out) / "night.pt"
-    save_adapter(m, p)
+    out = night_to_file(s, m, groups, p, seed=1, tripwire=True, panel=D1.harm_panel()[:6])
     m2 = adapter_model(s, p)
     same = all((x.detach().cpu() == y.detach().cpu()).all() for x, y in
                zip(adapter_params(m).values(), adapter_params(m2).values()))
