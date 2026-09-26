@@ -1,10 +1,11 @@
-# uw-2: can a trained note-update step apply corrections that the save path drops? (DRAFT for the Thread manager's review, not sealed)
+# uw-2: can a trained note-update step apply corrections that the save path drops?
 
-Drafted 2026-09-26 20:33 UTC (`date -u`) by the wrong-as-fact thread (0.2c row H1). No training card, no model and no
-test panel exists yet.
+Drafted 2026-09-26 20:33 UTC (`date -u`) by the wrong-as-fact thread (0.2c row H1). The Thread manager reviewed it
+(no blocking objection; three points written in below). Registered and sealed 2026-09-26 20:36 UTC (SEAL-uw2.sha256.txt).
+At sealing, no training card, no trained model and no test panel exists.
 
-Status: this file is sealed only after the Thread manager's review. Any change after sealing goes in a dated addendum
-and never moves a bar. A FAIL stays a FAIL. It joins no build without Ben's yes.
+Any change after sealing goes in a dated addendum and never moves a bar. A FAIL stays a FAIL. It joins no build
+without Ben's yes.
 
 ## Why (counts, with sources)
 - H1: the joined assistant states old corrected values as fact (0.2c X 8 vs G 5; 0.2d-r X' 12 vs G 6).
@@ -14,6 +15,9 @@ and never moves a bar. A FAIL stays a FAIL. It joins no build without Ben's yes.
   owner was named only in an earlier turn ("sorry, she's 13").
 - The compiler rejects such an owner by rule (scripts/claude_lis300_compiler.py:54-55). So a better reader alone
   cannot save these corrections in the 0.2d path (Reading facts, 20:31 UTC).
+- How many facts are out of reach: on lis-320's sealed reader panel, 22 of 52 corrections and 93 of 96 backref facts
+  are unreachable for any reader under the sealed compiler (lis-320 ADDENDUM-5, 6c6313a94; counts by code). This is
+  the number that justifies this test.
 - Textbook fix: supersede on write. The writer sees the old note and updates it (Mem0's UPDATE step; Zep/Graphiti
   invalidate the old edge).
 - A note pointer takes the owner from the note, which was checked when it was first saved. Only the new value needs
@@ -25,6 +29,11 @@ and never moves a bar. A FAIL stays a FAIL. It joins no build without Ben's yes.
   changes in 522.
 - The plain fix for a small model that cannot do a task zero-shot is to train it on that task. That is the one
   change here.
+- What this test can and cannot move: the notes are oracle and complete, so the test measures using a note, not
+  finding it or having it. A PASS moves H1 only where the save path already holds the old note. In sf-401's B arm
+  (BLAME), 28 of 42 missed correction questions never got the new value into the notebook. 12 of those still held
+  the old value: that is exactly the case this step acts on. The other 16 held no value for that fact at all, so they
+  are outside it. The 14 answer-step misses (new value held) are also outside it.
 
 ## One change
 - A: the plain MiniCPM5-1B, snapshot 87179e5c (BensPC's BASE). It uses the note form of
@@ -32,6 +41,9 @@ and never moves a bar. A FAIL stays a FAIL. It joins no build without Ben's yes.
 - B: the same model and prompt with a LoRA trained on uw-2's training cards (below), merged. The recipe is
   scripts/claude_bm398r_train.py unchanged: rank 16, alpha 32, q/k/v/o, 1 epoch, AdamW 2e-4, 8 cards a step, seed
   3992. The loss is on the answer tokens only.
+- The prompt text (system line, question, output form), the parse and the grader are shared by A and B. They are
+  fixed before training in scripts/claude_uw1_cards.py, whose sha256 is in the seal. So B's gain cannot come from a
+  prompt change.
 - Nothing else differs.
 
 ## Disclosed stand-ins (hand-written scaffolding)
@@ -72,7 +84,11 @@ and never moves a bar. A FAIL stays a FAIL. It joins no build without Ben's yes.
 - A fresh third judge settles any disagreement.
 - PASS if at least 54 of 60 agree with the code label. Otherwise no training, and the labels are fixed from the text
   by code or GLM, never from the judges.
+- The judges' 60 cards come from the training cards only. No judge, panel writer or auditor sees the uw-1 DEV cards,
+  the lis-320 seeds or the test panel (beyond the panel writers' and auditor's own work).
 - The judges only decide whether the data is used. Nothing trained on is written or judged by Claude (Ben 16:39).
+- Reported beside the card counts: the value-span drop count, the implicit-change and former-of-current skips, and
+  the dropped-turn count.
 
 ## DEV stop rule (before the test panel is used)
 - After training, B runs on the 569 uw-1 DEV cards (pilots 320 and 321, readable).
