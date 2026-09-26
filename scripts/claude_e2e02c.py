@@ -11,6 +11,7 @@ each), and then the code is sealed. A switch is on only when its fix's own regis
   READER02C  "r319" = the lis-319 history reader at 0.995 (claude_lis319_arms, registered PASS), "r319c" = the
              same at 0.98 (only if lis-319c passes), "" = 0.1's reader; with r319/r319c, --model is the lis-319
              merged reader (sha256 e688e1b2...6a76), not lis-301
+  TRIM02C    bm-397's answer trim (claude_e2e397.install_trim397) right on top of answer382, memory answers only
   FIX02C     the boundary fixes of scripts/claude_fix02c.py (Ben's outside review, each with a CPU test):
              route02c (route383 keeping a final answer after the last full stop), heard02c (date kept across
              restarts), delivered02c (the chat history holds the reply the user saw), support02c (report only)
@@ -31,6 +32,7 @@ ROUTE02C = True
 SLEEP02C = True
 READER02C = "r319"
 FIX02C = True
+TRIM02C = False    # bm-397's answer trim on memory answers only (Benchmarks); on only if bm-397 passes
 
 
 def build_02c(state_dir, args):
@@ -72,6 +74,10 @@ def build_02c(state_dir, args):
     if store is not None:
         E382.install_answer382(loop, gen, store, k=MEM02C)
         layers.append("answer382")
+        if TRIM02C:
+            import claude_e2e397 as T397
+            T397.install_trim397(loop, T397.greedy397(one_b))
+            layers.append("trim397")
         if FIX02C:
             FX.install_support02c(loop, store)
             layers.append("support02c")
