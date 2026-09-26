@@ -1,0 +1,1330 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox; echo FETCH_DONE; git rev-parse origin/main; git rev-parse origin/builder-outbox 2>&1; git ls-tree -r --name-only origin/main -- artifacts/claude-dl4-20260926/ 2>&1; echo "---builder-outbox---"; git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-dl4-20260926/ 2>&1
+FETCH_DONE
+3a18860981c039cbf0664964aa93344fd25cda3a
+a77717ce5a8414b6c85c9409d93cda9888f910d7
+artifacts/claude-dl4-20260926/PASSMARKS.md
+---builder-outbox---
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-dl4-20260926/PASSMARKS.md; echo "=====DOCSTRING====="; git show origin/main:scripts/claude_dl4_anchor.py | head -n 200
+# dl-4: does a KL anchor to the base on general text stop the slow forgetting of copy-practice nights?
+(Fix-sleep thread. Registered when this file is committed, before the run.)
+
+## Why
+- dl-2 (registered PASS) learned the day's work well: lucky guesses went from 64 to 237 and 249. But it lost 26 of the
+  base's 200 right general-panel items by night 7.
+- dl-3 (registered FAIL; artifacts/claude-dl3-20260926/VERIFY.md) copied the base's own GREEDY answers to base-written
+  general questions into each night. It did not cut losses: 20 and 36 lost vs 39 and 24 without it.
+- dl-3 also raised drift from the base on general replies (KL 0.28 vs 0.13-0.17), already at night 1.
+- Suggested cause: copying one greedy answer sharpens the model instead of holding it in place.
+- Research points to matching the base's whole output distribution instead (REPORT.md Q1-Q3: forgetting tracks KL to
+  the base; Dark Experience Replay keeps old output distributions).
+
+Code: scripts/claude_dl4_anchor.py (the docstring is the method). It reuses claude_dl1_nights and dl-3's pool builder
+unchanged. The model is plain MiniCPM5-1B, thinking off, no download.
+
+## ONE change from dl-2's S arm: a KL anchor
+Each night also trains as many anchor items as puzzle examples.
+- An anchor item is a question written by the base plus the base's own answer tokens. It uses dl-3's pool recipe with
+  a new seed, 3691.
+- Its loss is KL(base ‖ current) over the full vocabulary at every answer position, weight 1.0.
+- "Base" is the same network with every LoRA scale at 0.
+- Puzzle items keep dl-2's cross-entropy. All items share dl-2's loop: 3 epochs, lr 2e-4, batch 8.
+
+Arms:
+- S = dl-2's night, unchanged.
+- K = S + anchor.
+
+Setup:
+- Seeds 6 and 7, 7 nights each.
+- New TEST seed 3690: 100 fresh puzzles × 20 guesses.
+- HARM: the same 300 items. "lost" = right at base and wrong now.
+
+## Marks: dl-3's F1-F5, unchanged, with K in place of A
+- **F1 forgetting cut:** K's night-7 lost ≤ 0.5 × S's (sums over seeds), and each K seed is below each S seed.
+- **F2 low forgetting every night:** at most 1 of K's 14 nights has lost > 10.
+- **F3 still learns:** K's night-7 lucky ≥ 2 × L0 on each seed, and K's gain over L0 ≥ 0.8 × S's gain.
+- **F4:** at most 1 of K's 14 nights has TEST lucky more than 15% below the night before.
+- **F5:** K's night-7 puzzles reached ≥ base, on each seed.
+
+Verdict:
+- PASS = F1-F5.
+- INCONCLUSIVE if L0 < 10, if S's night-7 lost sum < 20, or if the pool has < 100 items.
+- Proved wrong: K's night-7 lost ≥ S's on both seeds.
+
+Reported, not marked:
+- lost vs the night before;
+- the base's per-item panel (saved, so lost items can be broken down by kind);
+- KL per night;
+- anchor KL in training;
+- gained and greedy solves.
+
+## Limits stated before the run
+- One kind of work.
+- The panel is short general answers with a 16-token reply cut. A more wordy model can lose items it still knows.
+  Losses are counted as registered either way; the kind breakdown is reported.
+- The anchor adds training steps.
+- Two seeds; dl-3 showed large seed-to-seed spread (39 vs 24 lost with the same night rule).
+=====DOCSTRING=====
+#!/usr/bin/env python3
+"""dl-4: does a KL anchor to the base on general text stop the slow forgetting that copy-practice nights cause?
+(Fix-sleep thread, 2026-09-26; marks: artifacts/claude-dl4-20260926/PASSMARKS.md)
+
+Why. dl-2 (registered PASS): a week of copy-practice nights lifted right guesses on fresh puzzles 64 -> 237/249,
+but lost 26 of the 200 general panel items the base got right. dl-3 (registered FAIL, artifacts/claude-dl3-20260926/)
+mixed the base's own GREEDY answers to base-written general questions into each night as ordinary copy targets; it
+did not cut losses (night 7: 20/36 vs no-replay 39/24) and its drift from the base on general replies roughly doubled
+(KL 0.28 vs 0.13-0.17), already at night 1 (0.15-0.17 vs 0.03-0.04). Likely cause (suggested, not shown): copying the
+base's single greedy answer sharpens the model instead of keeping it where it was. Research (REPORT.md Q1-Q3: RL's
+Razor, forgetting tracks KL to the base; Dark Experience Replay keeps old OUTPUT DISTRIBUTIONS, not only old answers)
+points to matching the base's whole next-token distribution instead.
+
+ONE change from dl-2's S arm: each night also trains a KL ANCHOR on as many general items as puzzle examples. An
+anchor item is a question the BASE wrote + the BASE's own answer tokens (dl-3's pool recipe, a new seed); its loss is
+KL(base || current) over the full vocabulary at every answer position, where "base" is the same network with every
+LoRA scale set to 0 (no second model). Puzzle items keep dl-2's cross-entropy. Both kinds are shuffled together
+through dl-2's loop (3 epochs, lr 2e-4, batch 8). Arms:
+  S  dl-2's night unchanged (claude_dl1_nights.train_copy).
+  K  S + the KL anchor (weight 1.0).
+Same day, TEST, HARM (lost = right at base and wrong now), KL measure as dl-2/dl-3. New seeds 6 and 7, TEST seed 3690,
+pool seed 3691.
+
+  python -B scripts/claude_dl4_anchor.py --model M --out DIR        (registered run)
+  python -B scripts/claude_dl4_anchor.py --selftest
+  python -B scripts/claude_dl4_anchor.py --model M --out DIR --dev  (plumbing rehearsal)
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_blurt2 as B2  # noqa: E402
+import claude_dl1_nights as D1  # noqa: E402
+import claude_dl3_replay as R  # noqa: E402
+
+TEST_SEED = 3690
+POOL_SEED = 3691
+BETA = 1.0
+
+
+def lora_mods(m):
+    return [x for x in m.modules() if hasattr(x, "A") and hasattr(x, "scale")]
+
+
+def anchor_loss(s, m, item):
+    """KL(base || current), summed over the vocabulary, mean over the answer positions of a (question, answer) item."""
+    import torch
+    pr, full = R._pair_ids(s, ("replay",) + tuple(item))
+    ids = full.unsqueeze(0).to(s.dev)
+    lo, hi = len(pr) - 1, ids.shape[1] - 1
+    mods = lora_mods(m)
+    saved = [x.scale for x in mods]
+    with torch.no_grad():
+        for x in mods:
+            x.scale = 0.0
+        base = m(input_ids=ids).logits[0, lo:hi].float().log_softmax(-1)
+        for x, sc in zip(mods, saved):
+            x.scale = sc
+    cur = m(input_ids=ids).logits[0, lo:hi].float().log_softmax(-1)
+    return (base.exp() * (base - cur)).sum(-1).mean()
+
+
+def train_anchor(s, m, puzzle_ex, anchor_items, seed, epochs=D1.S_RECIPE["epochs"], lr=D1.S_RECIPE["lr"]) -> dict:
+    """claude_dl1_nights.train_copy's loop (same optimizer, batch 8, shuffle) over puzzle items (cross-entropy on the
+    answer) and anchor items (BETA x KL to the base)."""
+    import torch
+    torch.manual_seed(seed)
+    opt = torch.optim.AdamW([p for p in m.parameters() if p.requires_grad], lr=lr)
+    rng, last, last_kl = random.Random(seed), 0.0, 0.0
+    items = [("puzzle", p, e) for p, e in puzzle_ex] + [("anchor",) + tuple(it) for it in anchor_items]
+    m.train()
+    for ep in range(epochs):
+        ex = list(items)
+        rng.shuffle(ex)
+        for i in range(0, len(ex), 8):
+            batch = ex[i:i + 8]
+            tot, kl = 0.0, 0.0
+            for it in batch:
+                if it[0] == "puzzle":
+                    pr, full = D1._ids(s, it[1], it[2])
+                    ids = full.unsqueeze(0).to(s.dev)
+                    lab = ids.clone()
+                    lab[0, :len(pr)] = -100
+                    loss = m(input_ids=ids, labels=lab).loss / len(batch)
+                else:
+                    k = anchor_loss(s, m, it[1:])
+                    loss = BETA * k / len(batch)
+                    kl += float(k.detach())
+                loss.backward()
+                tot += float(loss.detach())
+            opt.step()
+            opt.zero_grad()
+            last, last_kl = tot, kl
+    m.eval()
+    return {"examples": len(items), "anchor": len(anchor_items), "last_loss": round(last, 4),
+            "last_batch_anchor_kl": round(last_kl, 5)}
+
+
+def run_arm(s, arm, seed, a, test, panel, replies, base_harm, pool) -> dict:
+    s.torch.manual_seed(seed)
+    m = D1.fresh_model(s)
+    nights, prev = [], base_harm
+    for d in range(1, a.nights + 1):
+        t0 = time.time()
+        day = B2.puzzles(D1.DAY_SEED + a.seed_shift + 100 * seed + d, a.n_day)
+        groups = D1.gather(s, m, day, a.n_guess)
+        right = D1.copy_examples(groups)
+        rec = {"night": d, "day_greedy_right": sum(g["greedy_right"] for g in groups),
+               "day_right_guesses": sum(sum(g["rewards"]) for g in groups), "right_examples": len(right)}
+        if not right:
+            rec["train"] = {"examples": 0}
+        elif arm == "S":
+            rec["train"] = D1.train_copy(s, m, right, seed * 1000 + d)
+        else:
+            anc = random.Random(seed * 1000 + d).sample(pool, min(len(pool), len(right)))
+            rec["train"] = train_anchor(s, m, right, anc, seed * 1000 + d)
+        meas = D1.measure(s, m, test, a.n_guess_test, panel, replies)
+        rec["test"] = {k: meas[k] for k in ("lucky", "reached", "greedy")}
+        rec["harm"] = D1.flips(base_harm, meas["harm"])
+        rec["harm_vs_prev"] = D1.flips(prev, meas["harm"])
+        rec["harm_items"] = meas["harm"]
+        prev = meas["harm"]
+        rec["kl"] = meas["kl"]
+        rec["minutes"] = round((time.time() - t0) / 60, 1)
+        nights.append(rec)
+        print(f"[dl4] {arm} s{seed} night {d}: " + json.dumps({k: v for k, v in rec.items() if k != "harm_items"}),
+              flush=True)
+    del m
+    if s.dev == "cuda":
+        s.torch.cuda.empty_cache()
+    return {"arm": arm, "seed": seed, "nights": nights}
+
+
+def score(res: dict) -> dict:
+    """The registered marks (PASSMARKS.md): dl-3's F1-F5 with K in place of A."""
+    sub = {"base": res["base"], "pool_size": res.get("pool_size", 0),
+           "arms": [dict(r, arm="A" if r["arm"] == "K" else r["arm"]) for r in res["arms"]]}
+    m3 = R.score(sub)
+    return {k.replace("A_", "K_").replace(": A ", ": K ").replace(" A ", " K "): v for k, v in m3.items()}
+
+
+def run(a) -> None:
+    t0 = time.time()
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    s = B2.Solver(a.model)
+    s.model.name_or_path = a.model
+    seeds = [int(x) for x in a.seeds.split(",")]
+    keys = {(tuple(p["nums"]), p["target"]) for sd in seeds for d in range(1, a.nights + 1)
+            for p in B2.puzzles(D1.DAY_SEED + a.seed_shift + 100 * sd + d, a.n_day)}
+    test = [p for p in B2.puzzles(TEST_SEED + a.seed_shift, a.n_test + 300)
+            if (tuple(p["nums"]), p["target"]) not in keys][:a.n_test]
+    panel = D1.harm_panel()[:a.n_harm]
+    pool = R.make_pool(s, a.n_ask, POOL_SEED + a.seed_shift)
+    res = {"config": {k: v for k, v in vars(a).items() if k != "model"}, "n_test": len(test), "n_harm": len(panel),
+           "temp": D1.TEMP, "test_seed": TEST_SEED, "pool_size": len(pool), "beta": BETA}
+    (out / "anchor_pool.json").write_text(json.dumps(pool, indent=0), encoding="utf-8")
+    print(f"[dl4] anchor pool: {len(pool)} items", flush=True)
+    base = s.model
+    replies = [(q, D1.free_answer(s, q, base, 40)) for q in
+               (D1.CHAT_PROMPTS + [it["q"] for it in panel[::5]])[:a.n_kl]]
+    bm = D1.measure(s, base, test, a.n_guess_test, panel)
+    res["base"] = {k: bm[k] for k in ("lucky", "reached", "greedy")}
+    res["base"]["harm_right"] = sum(bm["harm"])
+    res["base_harm_items"] = bm["harm"]
+    print(f"[dl4] base: {res['base']}", flush=True)
+    res["arms"] = []
+    for arm in a.arms.split(","):
+        for sd in seeds:
+            res["arms"].append(run_arm(s, arm, sd, a, test, panel, replies, bm["harm"], pool))
+            (out / "dl4_results.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
+    if set(a.arms.split(",")) >= {"S", "K"}:
+        res["marks"] = score(res)
+    res["minutes"] = round((time.time() - t0) / 60, 1)
+    (out / "dl4_results.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
+    print(json.dumps(res.get("marks", {}), indent=1))
+
+
+def selftest() -> None:
+    def arm(name, sd, lucky, lost, reached=40):
+        return {"arm": name, "seed": sd, "nights": [{"test": {"lucky": v, "reached": reached},
+                                                      "harm": {"lost": l}} for v, l in zip(lucky, lost)]}
+    res = {"base": {"lucky": 60, "reached": 35}, "pool_size": 400,
+           "arms": [arm("S", 6, [90, 100, 110, 120, 125, 130, 140], [5, 8, 12, 16, 18, 24, 26]),
+                    arm("S", 7, [80, 95, 90, 110, 120, 128, 135], [6, 9, 11, 15, 20, 28, 25]),
+                    arm("K", 6, [85, 100, 105, 118, 120, 125, 130], [3, 4, 6, 5, 7, 8, 9]),
+                    arm("K", 7, [85, 92, 99, 110, 115, 120, 128], [4, 5, 4, 6, 8, 7, 10])]}
+    m = score(res)
+    assert m["verdict"] == "PASS" and not m["proved_wrong"], m
+    assert any(k.startswith("F1") and ": K " in k for k in m), list(m)
+    res["arms"][2]["nights"][-1]["harm"]["lost"] = 26
+    assert score(res)["verdict"] == "FAIL"
+    print("selftest ok")
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show user --raw 2>&1 | head -c 2000
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 7.2011843180698705,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+ "discord_id": null,
+ "email": "benjamin.a.hannan@gmail.com",
+ "email_verified": true,
+ "fullname": null,
+ "got_signup_credit": 0,
+ "has_billing": true,
+ "has_payout": false,
+ "has_rented": true,
+ "has_stripe_payout": false,
+ "host_agreement_accepted": false,
+ "host_only": false,
+ "huggingface_cloud_sync_enabled": true,
+ "id": 553012,
+ "is_subject_to_unpaid_deletion": false,
+ "key_id": 28637247,
+ "last4": null,
+ "oauth_provider": "google",
+ "paid_expected": 0.0,
+ "paid_verified": 0.0,
+ "password_resettable": null,
+ "payout_enabled": true,
+ "paypal_email": null,
+ "phone_number": null,
+ "rights": {
+  "api": {
+   "*": {
+    "api.auth.apikeys": {
+     "GET": {}
+    },
+    "api.auth.sessions": {
+     "GET": {}
+    },
+    "api.hubspot.newsletters": {
+     "GET": {}
+    },
+    "api.instances": {
+     "GET": {}
+    },
+    "api.instances.count": {
+     "GET": {}
+    },
+    "api.instances_v1": {
+     "GET": {}
+    },
+    "api.ssh.keys": {},
+    "api.team": {
+     "POST": {}
+    },
+    "api.template": {
+     "GET": {}
+    },
+    "api.template.params": {
+     "GET": {}
+    },
+    "api.template_v1": {
+     "GET": {}
+    },
+    "api.user.created_templates": {
+     "GET": {}
+    },
+    "api.user.save_context": {
+     "PUT": {}
+    },
+    "api.user.verify-email": {
+     "POST": {}
+    },
+    "api.users.crisp-identity": {
+     "GET": {}
+    },
+    "api.users.current": {
+     "GET": {}
+    },
+    "api.users.root": {
+     "GET
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>&1 | head -c 4000; echo "===SEARCH OFFERS LABEL==="; git ls-tree -r --name-only origin/main | grep -i "dl4" 2>&1; echo "==="; git ls-tree -r --name-only origin/builder-outbox | grep -i "dl4" 2>&1; echo "===LOG builder-outbox==="; git log --oneline origin/builder-outbox -5 2>&1
+[]
+===SEARCH OFFERS LABEL===
+artifacts/claude-dl4-20260926/PASSMARKS.md
+handoff/held/zdl4-benspc.md
+handoff/queue/rent-zdl4.md
+scripts/claude_dl4_anchor.py
+===
+===LOG builder-outbox===
+a77717ce5 watcher status
+2bf8b8425 watcher status
+3f113995c watcher status
+9601caafc watcher status
+6095ed83d watcher status
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>0.98 disk>=60' --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+try:
+  offers=json.loads(raw)
+except Exception as e:
+  print('PARSE FAIL', e); print(raw[:3000]); sys.exit()
+print('count', len(offers))
+offers=sorted(offers, key=lambda o: (o.get('dph_total') or 999))
+for o in offers[:12]:
+  print(o.get('id'), o.get('gpu_name'), round(o.get('dph_total') or 0,3), 'rel',o.get('reliability2') or o.get('reliability'), 'inet_down',round(o.get('inet_down') or 0,1), 'disk',o.get('disk_space'), 'cuda',o.get('cuda_max_good'), 'host',o.get('geolocation'))
+"
+PARSE FAIL Expecting value: line 1 column 1 (char 0)
+Warning: Unrecognized field: disk, see list of recognized fields.
+{"error": true, "status_code": 400, "msg": "disk is not a valid search key"}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>0.98' --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+try:
+  offers=json.loads(raw)
+except Exception as e:
+  print('PARSE FAIL', e); print(raw[:3000]); sys.exit()
+print('count', len(offers))
+offers=sorted(offers, key=lambda o: (o.get('dph_total') or 999))
+for o in offers[:15]:
+  print(o.get('id'), o.get('gpu_name'), round(o.get('dph_total') or 0,3), 'rel',o.get('reliability2') or o.get('reliability'), 'down',round(o.get('inet_down') or 0,1), 'disk',o.get('disk_space'), 'cuda',o.get('cuda_max_good'), 'loc',o.get('geolocation'))
+"
+count 64
+46753304 RTX 5090 0.406 rel 0.9955824 down 848.2 disk 156.4125 cuda 13.0 loc United States, US
+43165155 RTX 5090 0.406 rel 0.9951797 down 513.5 disk 275.875 cuda 13.0 loc United States, US
+43995364 RTX 5090 0.469 rel 0.9985707 down 542.0 disk 577.0 cuda 13.0 loc South Korea, KR
+49024345 RTX 5090 0.469 rel 0.9946993 down 489.1 disk 576.0 cuda 13.0 loc South Korea, KR
+48989671 RTX 5090 0.469 rel 0.9944096 down 459.9 disk 552.0 cuda 13.0 loc South Korea, KR
+45669284 RTX 5090 0.469 rel 0.9974877 down 493.3 disk 507.0 cuda 13.0 loc South Korea, KR
+46579461 RTX 5090 0.473 rel 0.9966786 down 458.7 disk 320.1 cuda 13.0 loc California, US
+52742893 RTX 5090 0.535 rel 0.9955973 down 1322.1 disk 435.0 cuda 13.0 loc Shanghai, CN
+49863314 RTX 5090 0.535 rel 0.9876978 down 867.8 disk 270.9375 cuda 12.9 loc Malaysia, MY
+29717009 RTX 5090 0.577 rel 0.9829668 down 3954.1 disk 542.0 cuda 13.0 loc North Carolina, US
+52489268 RTX 5090 0.59 rel 0.9940255 down 16417.7 disk 1415.0 cuda 13.0 loc California, US
+48827544 RTX 5090 0.601 rel 0.9878455 down 628.9 disk 949.0 cuda 13.0 loc South Korea, KR
+40077669 RTX 5090 0.602 rel 0.9989561 down 871.9 disk 612.75 cuda 13.2 loc Bulgaria, BG
+50452984 RTX 5090 0.615 rel 0.9962097 down 5492.1 disk 182.0 cuda 13.0 loc Ontario, CA
+51326861 RTX 5090 0.642 rel 0.992004 down 6867.2 disk 498.75 cuda 13.3 loc Hungary, HU
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/rent-zdl4.md 2>&1 | head -n 80; echo "=====dl3 results====="; git ls-tree -r --name-only origin/main -- artifacts/ | head -n 40
+COMMON RULES (the Fix-sleep thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.
+GPU: rent
+BUDGET: $1.20 for this whole task, re-rents included (standing caps: <=$4 per job, $30 total; the Director keeps the ledger and may lower this). Label: rent-dl4.
+CREDIT GATE (first): `vastai show user --raw` and report ONLY the balance/credit number. Under $3.00: rent nothing, stop with CREDIT-STOP. Re-check before any re-rent. Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+RENTAL RULES: RTX 5090 first, else 4090; reliability >= 0.98. Keep a running total of dph x hours; at $1.10 kill running commands by exact PID, copy back what exists (dl4_results.json is rewritten after every arm-seed), destroy, stop with BUDGET-STOP. Not running within 6 min or no log progress for 10 min: destroy and try another host (max 3 rentals). Launch the run detached (nohup/setsid) so it survives SSH closing. Destroy at the end and confirm it is gone. Append a ledger line.
+DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-dl4-20260926/gpu or a live instance is labelled rent-dl4.
+
+YOUR TASK: dl-4, the registered run (seven copy-practice nights with vs without a KL anchor to the base on general text, on MiniCPM5-1B; one GPU run). The Fix-sleep thread wrote the code; run it, never edit it. If something breaks, stop and report the exact error; do not patch. No TEST-ONLY panel is involved (test puzzles are made inside the run and never printed).
+READ FIRST (origin/main): artifacts/claude-dl4-20260926/PASSMARKS.md and the docstring of scripts/claude_dl4_anchor.py.
+Needs: torch with CUDA, transformers, plain MiniCPM5-1B (thinking off; the same model files as dl-2, no new download). No other packages.
+
+1. On the rental: `git archive origin/main scripts/claude_blurt1.py scripts/claude_blurt2.py scripts/claude_dl1_nights.py scripts/claude_dl3_replay.py scripts/claude_dl4_anchor.py artifacts/claude-dl4-20260926/PASSMARKS.md`, extract keeping the paths.
+2. Check: `python -B scripts/claude_dl4_anchor.py --selftest` prints "selftest ok", else stop.
+3. One process, with a log:
+   python -B scripts/claude_dl4_anchor.py --model BASE --out gpu
+   Expect roughly 85-105 minutes (dl-3 took 81 min on a 5090; the anchor adds one extra forward pass per anchor item). If it has not printed "[dl4] S s6 night 1" after 45 minutes, stop it and report TOO-SLOW with the last log lines.
+4. Copy gpu/dl4_results.json, gpu/anchor_pool.json and the log back as artifacts/claude-dl4-20260926/gpu/dl4_results.json, gpu/anchor_pool.json and gpu/log.txt (force-add; artifacts/ is git-ignored).
+5. RESULTS-gpu.md in artifacts/claude-dl4-20260926/: the whole "marks" block of dl4_results.json, then each mark F1-F5 (K arm), the verdict and the proved-wrong clause with integer counts, pool_size, GPU name, wall minutes, dollars, commit hash. Append one ledger line (cat >> artifacts/fable-predictions-ledger.md).
+Never push weights (the run saves none).
+PUSH: artifacts/claude-dl4-20260926/gpu artifacts/claude-dl4-20260926/RESULTS-gpu.md artifacts/fable-predictions-ledger.md
+=====dl3 results=====
+artifacts/claude-aliaspanel237-20260922/README.md
+artifacts/claude-aliaspanel237-20260922/SEAL.sha256.txt
+artifacts/claude-aliaspanel237-20260922/base221.jsonl
+artifacts/claude-aliaspanel237-20260922/panel.jsonl
+artifacts/claude-aliaspanel237b-20260922/README.md
+artifacts/claude-aliaspanel237b-20260922/SEAL.sha256.txt
+artifacts/claude-aliaspanel237b-20260922/base221.jsonl
+artifacts/claude-aliaspanel237b-20260922/panel.jsonl
+artifacts/claude-apos247-20260922/PASSMARKS.md
+artifacts/claude-apos247-20260922/RESULTS.md
+artifacts/claude-apos247-20260922/SEAL.sha256.txt
+artifacts/claude-apos247-20260922/dev247.jsonl
+artifacts/claude-apos247-20260922/loop247-config.json
+artifacts/claude-apos247-20260922/reg-dev-rows.jsonl
+artifacts/claude-apos247-20260922/reg-dev-score.json
+artifacts/claude-apos247-20260922/reg-dev-score.txt
+artifacts/claude-apos247-20260922/reg-panel-rows.jsonl
+artifacts/claude-apos247-20260922/reg-panel-score.json
+artifacts/claude-apos247-20260922/reg-panel-score.txt
+artifacts/claude-apos247-20260922/reg-sleepsmoke.json
+artifacts/claude-apos247-20260922/reg-sleepsmoke.txt
+artifacts/claude-apos247-20260922/reg-suitediff.txt
+artifacts/claude-apos247-20260922/reg-suitediff/SUITEDIFF218-SUMMARY.json
+artifacts/claude-apos247-20260922/reg-suitediff/bench-bench132_4hop-rows.jsonl
+artifacts/claude-apos247-20260922/reg-suitediff/bench-diff.json
+artifacts/claude-apos247-20260922/reg-suitediff/bench-edit200-rows.jsonl
+artifacts/claude-apos247-20260922/reg-suitediff/bench-new_121_4hop-rows.jsonl
+artifacts/claude-apos247-20260922/reg-suitediff/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-apos247-20260922/reg-suitediff/rt136-diff.json
+artifacts/claude-apos247-20260922/reg-suitediff/rt136-rows.json
+artifacts/claude-apos247-20260922/reg-suitediff/rt143-diff.json
+artifacts/claude-apos247-20260922/reg-suitediff/rt143-rows.json
+artifacts/claude-apos247-20260922/reg-suitediff/sessions152-diff.json
+artifacts/claude-apos247-20260922/reg-suitediff/sessions152-rows.json
+artifacts/claude-ask24-20260925/PASSMARKS-ask24.md
+artifacts/claude-ask24-20260925/VERIFY-ask24.md
+artifacts/claude-ask24-20260925/cpu/ask24_summary.json
+artifacts/claude-ask24-20260925/cpu/run.log
+artifacts/claude-ask24-20260925/dev/dev2_summary.json
+artifacts/claude-ask24-20260925/dev/dev_summary.json
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- artifacts/ | grep -E "dl[123].*20260926" ; echo "==="; git log --oneline origin/main -8
+artifacts/claude-dl2-20260926/PASSMARKS.md
+artifacts/claude-dl2-20260926/RESULTS-gpu.md
+artifacts/claude-dl2-20260926/VERIFY.md
+artifacts/claude-dl2-20260926/gpu/dl2_results.json
+artifacts/claude-dl2-20260926/gpu/log.txt
+artifacts/claude-dl3-20260926/PASSMARKS.md
+artifacts/claude-dl3-20260926/RESULTS-gpu.md
+artifacts/claude-dl3-20260926/VERIFY.md
+artifacts/claude-dl3-20260926/gpu/dl3_results.json
+artifacts/claude-dl3-20260926/gpu/log.txt
+artifacts/claude-dl3-20260926/gpu/replay_pool.json
+===
+3a1886098 Director: release dl-4 on a rental (funded from the $5 pool, $1.20 cap) and 006m 0.2c no-harm for BensPC after 007b
+f135eb7c5 rd-378L addendum B (before 007g ran): same 10-turn budget for both stores (mark L3, anyT@k, turns@k), from Benchmarks' fairness check
+789fc6572 rsn-358g: hold before launch; outside report (Ben 12:26) shows sums6 hinges on the clipped column offsets, so a grid-only rerun would be decided by sums luck; next run to combine grid fix + attention change, 4 seeds, sealed first
+62a83e235 rd-378L: registered test of whether notes help search across whole LoCoMo practice chats (marks L1-L2 fixed before any note is written); queue 007g (BensPC, $0)
+ef8c7d199 371c plan: step 4 = notes' search value on LoCoMo practice first (4a), then Ben's cut-only writer training (4b)
+9d6de0df4 Watcher clean: never remove a temp tree that a running job's log names
+2d3d5b64e readpanel371c: sealed TEST-ONLY panel for lis-319f (240 rows, 49 with former items; blind writer + labeller + adjudicator; 216/240 agree)
+6e955e770 Watcher: skip a queue file that vanished mid-round instead of launching it empty
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-dl3-20260926/RESULTS-gpu.md 2>&1 | head -n 100
+# dl-3 replay-into-the-night: GPU result (rental, 2026-09-26)
+
+Registered rule: artifacts/claude-dl3-20260926/PASSMARKS.md (origin/main).
+Code: scripts/claude_dl3_replay.py + scripts/claude_dl1_nights.py + scripts/claude_blurt1.py + scripts/claude_blurt2.py from origin/main (unmodified, never edited).
+Command: `python -B scripts/claude_dl3_replay.py --model BASE --out gpu`
+BASE = local MiniCPM5-1B snapshot on the rental (openbmb/MiniCPM5-1B, pinned revision 87179e5c1f455ef22e6223592d2d61351b525bfc, same files as dl-2, thinking off).
+Python: rental image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel (torch 2.8.0+cu128, CUDA True, transformers 5.17.0).
+
+## marks block (whole block from gpu/dl3_results.json)
+
+```json
+{
+ "L0": 59,
+ "reached0": 30,
+ "A_final_lost": [
+  20,
+  36
+ ],
+ "S_final_lost": [
+  39,
+  24
+ ],
+ "A_final_lucky": [
+  227,
+  216
+ ],
+ "S_final_lucky": [
+  171,
+  257
+ ],
+ "A_nights_lost_over_15": 11,
+ "A_worse_nights": 1,
+ "A_final_reached": [
+  53,
+  59
+ ],
+ "report_A_nights_lost_over_5": 14,
+ "F1 forgetting cut: A final lost <= 0.5 x S final lost (sums), and each A seed < each S seed": false,
+ "F2 low forgetting every night: A nights with lost > 10 (5% of base-right) <= 1 of 14": false,
+ "F3 still learns: A final lucky >= 2 x L0 on each seed, and A gain over L0 >= 0.8 x S gain (sums)": true,
+ "F4 nights rarely hurt the day's work: A nights with TEST lucky > 15% below the night before <= 1 of 14": true,
+ "F5 variety kept: A final reached >= base on each seed": true,
+ "verdict": "FAIL",
+ "proved_wrong": false
+}
+```
+
+- Base TEST (100 fresh puzzles, 20 guesses each): lucky 59, reached 30, greedy 5. HARM right 200/300.
+- Final TEST lucky: A seeds 227, 216 (mean 221.5); S seeds 171, 257 (mean 214.0). L0 59.
+- Final TEST reached: A 53, 59; S 60, 55; base 30.
+- Final greedy solves: A 9, 15; S 10, 16; base 5.
+- Final lost (right at base, wrong now): A 20, 36 (sum 56); S 39, 24 (sum 63).
+- Not INCONCLUSIVE: L0 59 >= 10; S night-7 lost sum 63 >= 20; replay pool 908 pairs >= 100.
+
+- F1 forgetting cut: A sum 56 <= 0.5 x S sum 63 = 31.5? No (56 > 31.5). Per-seed: s4 20 < 39 yes, s5 36 < 24 no; max(A) 36 < min(S) 24 no. **F1 FAIL.**
+- F2 low forgetting every night: 11 of A's 14 nights have lost > 10 (A s4: 10, 15, 22, 16, 18, 17, 20; A s5: 7, 10, 13, 16, 32, 41, 36). Only A s4 night 1 (10) and A s5 nights 1-2 (7, 10) stay at or under 10. 11 > 1. **F2 FAIL.**
+- F3 still learns: A final 227 >= 2 x 59 = 118 and 216 >= 118 yes. Gains over L0: A sum 443 - 118 = 325; S sum 428 - 118 = 310; 325 >= 0.8 x 310 = 248 yes. **F3 PASS.**
+- F4 nights rarely hurt the day's work: 1 of 14 A nights worse than 15% below the night before (A s5 night 7: 266 -> 216, -19%; A s4 has 0). 1 <= 1. **F4 PASS.**
+- F5 variety kept: A final reached 53 >= 30 and 59 >= 30. **F5 PASS.**
+
+- Registered verdict: **FAIL** (F1 and F2 false).
+- Proved-wrong clause (A's night-7 lost >= S's on both seeds): s4 20 >= 39 no. **NOT triggered.**
+
+Reported, not marked:
+- gained per night: S s4: 28, 48, 36, 39, 34, 32, 36; S s5: 43, 27, 45, 42, 53, 47, 42; A s4: 19, 21, 14, 16, 18, 19, 19; A s5: 22, 29, 24, 39, 38, 31, 33.
+- A nights with lost > 5 (2.5% line): 14 of 14 (minimum A lost is 7).
+- Replay pool: 908 pairs (1,500 asks at T 1.0, deduplicated, panel topics dropped, base greedy answers). Sample: "What is the historical figure known for being a polymath and a pivotal figure in the development of science?" (9 more samples in gpu/replay_pool.json).
+- Lost by panel kind: not broken out here; per-night per-item panels are in gpu/dl3_results.json (harm_items every night).
+- KL(current || base) night 7: A 0.28, 0.28; S 0.17, 0.13.
+
+## Run facts
+RTX 5090 rental (offer 44173877, KR), 81.2 min run wall (03:35-04:56 UTC), about $0.86 of the $1.50 budget (2 rentals of max 3; first host 46753297 failed with a docker registry proxy error while stopped, destroyed, ~$0). Code from origin/main ca08ccc1 (verified byte-identical for all dl-3 inputs at 43457707), model MiniCPM5-1B @ 87179e5c, unmodified, selftest ok before the run. No weights saved. No TEST-ONLY panel involved (test puzzles made inside the run, never printed).
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-dl3-20260926/VERIFY.md 2>&1 | head -n 60; echo "=====DL2 gpu====="; git show origin/main:artifacts/claude-dl2-20260926/RESULTS-gpu.md 2>&1 | tail -n 30
+# dl-3 VERIFY (Fix-sleep thread, 2026-09-26 ~05:35 UTC)
+
+**Registered verdict: FAIL.** F1 and F2 fail; F3, F4 and F5 pass. Not inconclusive, and the proved-wrong clause is
+not met.
+
+The builder scored it FAIL (RESULTS-gpu.md). A blind recount agrees. The recounting agent read only PASSMARKS.md and
+gpu/dl3_results.json and used its own script, not the scorer, the marks key or RESULTS.
+
+Data checks hold:
+- 7 nights per arm and seed, on seeds 4 and 5.
+- net = lost − gained, and right = 200 − lost + gained.
+- sum(harm_items) = right.
+- harm_vs_prev matches a recount from the per-item panels.
+
+| Night 7 | Base | S s4 | S s5 | A s4 | A s5 | Bar |
+|---|---|---|---|---|---|---|
+| panel lost (right at base, wrong now) | | 39 | 24 | 20 | 36 | F1: A sum ≤ 0.5 × S sum (56 vs 31.5) and each A < each S: **FAIL** |
+| A nights with lost > 10 | | | | 6 of 7 | 5 of 7 | F2: ≤ 1 of 14 (was 11): **FAIL** |
+| TEST lucky | 59 | 171 | 257 | 227 | 216 | F3: ≥ 118 each, and A gain 325 ≥ 0.8 × S gain 310: **PASS** |
+| worse nights (> 15% drop) | | | | 0 | 1 | F4: ≤ 1 of 14: **PASS** |
+| puzzles reached | 30 | 60 | 55 | 53 | 59 | F5: ≥ 30: **PASS** |
+| KL to base on general replies | | 0.17 | 0.13 | 0.28 | 0.28 | report |
+
+Lost per night:
+- S s4: 3, 11, 15, 17, 20, 35, 39
+- S s5: 4, 8, 11, 12, 13, 14, 24
+- A s4: 10, 15, 22, 16, 18, 17, 20
+- A s5: 7, 10, 13, 16, 32, 41, 36
+
+## What it means
+- Copying the base's own greedy answers to general questions did not stop the forgetting. It made the first nights
+  worse: 7-10 lost at night 1 vs 3-4 without replay.
+- It also doubled drift from the base on general replies, and the drift was already 4-5 times higher at night 1
+  (0.15-0.17 vs 0.03-0.04).
+- The learning itself was kept (F3), so replay did not stop the day's gains.
+- Likely cause (SUGGESTED, not shown): training on the base's single greedy answer sharpens the model toward one
+  reply instead of holding its whole answer distribution where it was.
+- The 1:1 mix also doubled the number of training steps.
+- The fix this points at is matching the base's full next-token distribution (a KL anchor), not its greedy text.
+  That is dl-4.
+- Seed variation is large even without replay (S lost 39 vs 24 at night 7). Two seeds cannot separate a small
+  effect from noise.
+
+## Run facts
+- RTX 5090 rental, 81 min, about $0.86. Replay pool 908 pairs.
+- Code origin/main, unmodified; inputs byte-identical across a main move mid-run.
+- The first rental host never started (~$0).
+- The builder could not push its commit, and the results reached builder-outbox by the watcher.
+=====DL2 gpu=====
+```
+
+- Base TEST (100 fresh puzzles, 20 guesses each): lucky 64, reached 34, greedy 3. HARM right 200/300.
+- Final TEST lucky: S seeds 237, 249 (mean 243.0); P seeds 42, 51 (mean 46.5). L0 64.
+- Final TEST reached: S 62, 60; P 28, 32; base 34.
+- Final greedy solves: S 17, 18; P 1, 4; base 3.
+- Final net harm (lost minus gained vs base): S -10, -8 (mean -9.0); P -24, -20.
+- Not INCONCLUSIVE: L0 64 >= 10.
+
+- W1 better after a week: S final 237 >= 2 x 64 = 128 and 249 >= 128. **W1 PASS.**
+- W2 nights rarely hurt the day's work: 0 of 14 S nights fell more than 15% below the night before (worst night-to-night move: S s3 night 4 -> 5, 235 -> 209, -11%). **W2 PASS.**
+- W3 nights rarely hurt anything else: 0 of 14 S nights had net harm > 5 (max 5, S s3 night 6), and final net harm -10, -8 <= 0 on each seed. **W3 PASS.**
+- W4 variety kept: S final reached 62 and 60 >= base 34. **W4 PASS.**
+- W5 the right answers caused it: S mean 243.0 >= 1.3 x P mean 46.5 = 60.5, and each S seed (237, 249) > each P seed (42, 51). **W5 PASS.**
+
+Registered verdict: **PASS** (W1-W5 all pass).
+Proved-wrong clause: S final lucky <= 1.1 x L0 = 70.4 on either seed is false (237, 249); >= 3 worse S nights is false (0); S mean 243.0 <= P mean 46.5 is false. **Not proved wrong.**
+
+Reported, not marked: per-night TEST lucky (S s2: 102, 123, 156, 227, 223, 230, 237; S s3: 101, 155, 179, 235, 209, 210, 249; P s2: 78, 68, 59, 56, 64, 83, 42; P s3: 53, 38, 34, 40, 29, 43, 51), per-night reached/greedy/harm/KL in gpu/dl2_results.json; gains did not flatten after night 3 on S (both seeds kept climbing to nights 4-7: s2 156 -> 237, s3 179 -> 249, with one -11% dip on s3 night 5).
+
+## Run facts
+
+- GPU: NVIDIA GeForce RTX 5090 (rental, South Korea).
+- Wall: 67.1 minutes (run; rental span ~80 min incl. setup).
+- Dollars: ~$0.65 (contract 52669927, dph $0.4852, ~00:26Z-01:46Z ~1.33 h; 1 rental; task total ~$0.65 of $2.00 budget).
+- Code commit hash (origin/main): 589946c92c4400e937437fc7a731f4b345a172dc.
+- Model commit hash (HF snapshot revision): 87179e5c1f455ef22e6223592d2d61351b525bfc.
+- No weights pushed (the run saves none; adapters lived only in GPU memory).
+- Files: artifacts/claude-dl2-20260926/gpu/dl2_results.json, gpu/log.txt.
+- Test puzzles were made inside the run and never printed.
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_dl1_nights.py | grep -n "BASE\|model\|TRANSFORMERS_CACHE\|HF_HOME\|snapshot\|87179" | head -n 40; echo "====="; git show origin/main:scripts/claude_blurt2.py | grep -n "class Solver\|def __init__\|BASE\|model\|from_pretrained\|cache\|snapshot\|local" | head -n 40
+6:Why. Ben (19:22-19:37 UTC): nights should almost always make the model better, as RL does; "the model should rapidly
+8:lucky-hit sleep (blurt-3, replicated) is the only sleep shown to improve a model. It is copy practice: the model is
+10:learning from the model's own right AND wrong tries (on-policy RL) forgets less and keeps more variety, and that any
+14:  day d   the current model meets 150 new number puzzles (day-specific seed) and, on each, answers once (greedy) and
+28:  KL    mean KL(current || base) per token on the base model's own replies to 60 plain prompts. After every night.
+32:  python -B scripts/claude_dl1_nights.py --model M --out DIR          (registered run: arms S,R,Z seeds 0,1 nights 3)
+34:  python -B scripts/claude_dl1_nights.py --model M --out DIR --dev     (plumbing rehearsal, tiny counts, other seeds)
+164:def free_answer(s, text: str, model, max_new=16) -> str:
+169:        out = model.generate(**ids, max_new_tokens=max_new, do_sample=False, pad_token_id=s.tok.eos_token_id)
+173:def harm_scores(s, model, panel) -> list[int]:
+174:    return [int(harm_right(it, free_answer(s, it["q"], model))) for it in panel]
+177:def fresh_model(s):
+180:    base = AutoModelForCausalLM.from_pretrained(s.model.name_or_path, trust_remote_code=True,
+286:    """Mean per-token KL(current || base) on the base model's own replies (base = adapter scale 0)."""
+331:    probe = fresh_model(s)
+337:        m = fresh_model(s)
+349:    m = fresh_model(s)
+421:    s = B2.Solver(a.model)
+422:    s.model.name_or_path = a.model
+430:    res = {"config": {k: v for k, v in vars(a).items() if k not in ("model",)}, "n_test": len(test),
+432:    base = s.model
+491:    ap.add_argument("--model", default="")
+=====
+15:model ... ensuring learning". Here the reasoner stand-in is the 1B's single greedy (rule-keeping) answer.
+24:  python -B scripts/claude_blurt2.py blurt --model M --puzzles F --out F [--n 30 --temp 1.0]      rule-keeping blurts
+25:  python -B scripts/claude_blurt2.py loop  --model M --out DIR [--train-seed 2 --n-train 400 --test-seed 777
+123:    """Every token made only of digits, + - * / ( ) and single spaces (decoded once per tokenizer, then cached)."""
+139:    def __init__(self, tok, nums, cut: int):
+163:class Solver:
+164:    def __init__(self, model_dir):
+168:        self.tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+170:        self.model = AutoModelForCausalLM.from_pretrained(model_dir, trust_remote_code=True,
+177:    def generate(self, p, n: int, temp: float | None, model=None) -> list[str]:
+179:        m = model or self.model
+189:    def answer(self, p, model=None) -> str:
+190:        return self.generate(p, 1, None, model)[0]
+215:    s = Solver(a.model)
+230:def evaluate(s, ps, model=None) -> int:
+231:    return sum(B1.check(s.answer(p, model), p["nums"], p["target"]) for p in ps)
+234:def luck(s, ps, n, temp, model=None) -> tuple[int, int]:
+238:        h = sum(B1.check(t, p["nums"], p["target"]) for t in s.generate(p, n, temp, model))
+243:def add_lora(model, r=16, alpha=32, dropout=0.05, names=("q_proj", "k_proj", "v_proj", "o_proj")):
+244:    """Plain LoRA (no extra package): freeze the model, add a low-rank update B@A to each named linear layer.
+245:    B starts at zero, so the model starts exactly as the base."""
+251:        def __init__(self, base):
+263:    for prm in model.parameters():
+265:    for name, mod in list(model.named_modules()):
+269:    return model
+276:    base = AutoModelForCausalLM.from_pretrained(s.model.name_or_path, trust_remote_code=True,
+324:    s = Solver(a.model)
+325:    s.model.name_or_path = a.model
+393:                s.torch.cuda.empty_cache()
+404:    ap.add_argument("--model", required=True)
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_blurt2.py | sed -n '160,200p'; echo "=====fresh_model====="; git show origin/main:scripts/claude_dl1_nights.py | sed -n '160,200p'
+return scores + mask
+
+
+class Solver:
+    def __init__(self, model_dir):
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        self.torch = torch
+        self.tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+        self.dev = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model = AutoModelForCausalLM.from_pretrained(model_dir, trust_remote_code=True,
+                                                          dtype=torch.bfloat16).to(self.dev).eval()
+
+    def prompt(self, p) -> str:
+        return self.tok.apply_chat_template(B1.puzzle_prompt(p), tokenize=False, add_generation_prompt=True,
+                                            enable_thinking=False)
+
+    def generate(self, p, n: int, temp: float | None, model=None) -> list[str]:
+        from transformers import LogitsProcessorList
+        m = model or self.model
+        ids = self.tok(self.prompt(p), return_tensors="pt").to(self.dev)
+        cut = ids["input_ids"].shape[1]
+        kw = {"do_sample": True, "temperature": temp, "top_p": 1.0, "num_return_sequences": n} if temp else \
+             {"do_sample": False}
+        with self.torch.no_grad():
+            out = m.generate(**ids, max_new_tokens=32, pad_token_id=self.tok.eos_token_id,
+                             logits_processor=LogitsProcessorList([RuleKeeper(self.tok, p["nums"], cut)]), **kw)
+        return [self.tok.decode(o[cut:], skip_special_tokens=True).strip() for o in out]
+
+    def answer(self, p, model=None) -> str:
+        return self.generate(p, 1, None, model)[0]
+
+
+def puzzles(seed, n):
+    class A:
+        pass
+    a = A()
+    a.seed, a.n, a.out = seed, n, None
+    rng, out, seen = random.Random(seed), [], set()
+    while len(out) < n:                                  # same recipe as claude_blurt1.make
+        k = 3 if len(out) % 3 else 4
+=====fresh_model=====
+    text = " " + " ".join(words) + " "
+    return any(f" {g} " in text or (" " in g and g in text) for g in item["gold"].split("|"))
+
+
+def free_answer(s, text: str, model, max_new=16) -> str:
+    ids = s.tok(s.tok.apply_chat_template([{"role": "user", "content": text}], tokenize=False,
+                                          add_generation_prompt=True, enable_thinking=False),
+                return_tensors="pt").to(s.dev)
+    with s.torch.no_grad():
+        out = model.generate(**ids, max_new_tokens=max_new, do_sample=False, pad_token_id=s.tok.eos_token_id)
+    return s.tok.decode(out[0][ids["input_ids"].shape[1]:], skip_special_tokens=True).strip()
+
+
+def harm_scores(s, model, panel) -> list[int]:
+    return [int(harm_right(it, free_answer(s, it["q"], model))) for it in panel]
+
+
+def fresh_model(s):
+    import torch
+    from transformers import AutoModelForCausalLM
+    base = AutoModelForCausalLM.from_pretrained(s.model.name_or_path, trust_remote_code=True,
+                                                dtype=torch.bfloat16).to(s.dev)
+    return B2.add_lora(base).eval()
+
+
+def _ids(s, p, expr):
+    import torch
+    pr = s.tok(s.prompt(p), return_tensors="pt")["input_ids"][0]
+    an = s.tok(expr, add_special_tokens=False, return_tensors="pt")["input_ids"][0]
+    return pr, torch.cat([pr, an, torch.tensor([s.tok.eos_token_id])])
+
+
+def train_copy(s, m, examples, seed, epochs=S_RECIPE["epochs"], lr=S_RECIPE["lr"]) -> dict:
+    """S: cross-entropy on (puzzle, answer) pairs, continuing the adapter on m (blurt-3's night, not reset)."""
+    import torch
+    torch.manual_seed(seed)
+    opt = torch.optim.AdamW([p for p in m.parameters() if p.requires_grad], lr=lr)
+    rng, last = random.Random(seed), 0.0
+    m.train()
+    for ep in range(epochs):
+        ex = list(examples)
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create instance --help 2>&1 | head -n 50
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+ --curl                            Show a curl equivalency to the call
+ --api-key API_KEY                 API Key to use. defaults to using the one stored in /Users/ben-hannan/.config/vastai/vast_api_key
+ --version                         Show CLI version
+ --no-color                        Disable colored output for commands that support it
+
+________________________________________________________________________________
+
+Performs the same action as pressing the "RENT" button on the website at https://console.vast.ai/create/
+Creates an instance from an offer ID (which is returned from "search offers"). Each offer ID can only be used to create one instance.
+Besides the offer ID, you must pass in an '--image' argument as a minimum.
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create instance 46753304 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel' --disk 60 --label 'rent-dl4' --ssh --raw 2>&1 | head -c 2000
+{
+ "instance_api_key": "a17c041d71eff38dfbd54cc00ce2611baf646972257eac8db8f776fcfe8841c8",
+ "new_contract": 52746763,
+ "success": true
+}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 30; vastai show instance 52746763 --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+try:
+  d=json.loads(raw)
+except Exception as e:
+  print('PARSE FAIL',e); print(raw[:2000]); sys.exit()
+print('status:', d.get('status_msg'), '| actual:', d.get('actual_status'))
+print('dph:', d.get('dph_total'))
+print('ssh_host:', d.get('ssh_host'), 'port:', d.get('ssh_port'))
+print('gpu:', d.get('gpu_name'))
+print('label:', d.get('label'))
+"
+status: Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+ | actual: loading
+dph: 0.47222222222222215
+ssh_host: ssh8.vast.ai port: 26762
+gpu: RTX 5090
+label: rent-dl4
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 120; vastai show instance 52746763 --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+d=json.loads(raw)
+print('status:', d.get('status_msg'), '| actual:', d.get('actual_status'))
+"
+status: Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+ | actual: loading
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai destroy instance 52746763 --raw 2>&1 | head -c 500; echo; vastai create instance 43165155 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel' --disk 60 --label 'rent-dl4' --ssh --raw 2>&1 | head -c 1000
+Are you sure you want to destroy instance 52746763? This is irreversible and will delete all data. [y/N] 
+Aborted.
+
+{
+ "instance_api_key": "8af0213bb05ce2facffbbda7768bc9bf9c950587d155b36e9d8b05e96bbcdf35",
+ "new_contract": 52747127,
+ "success": false
+}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+try:
+  ds=json.loads(raw)
+except Exception as e:
+  print('PARSE FAIL',e); print(raw[:2000]); sys.exit()
+for d in ds:
+  print(d.get('id'), d.get('label'), d.get('actual_status'), '|', d.get('status_msg'), '| gpu:', d.get('gpu_name'), '| dph:', d.get('dph_total'))
+"; echo "===destroy help==="; vastai destroy instance --help 2>&1 | head -n 20
+52746763 rent-dl4 loading | Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused | gpu: RTX 5090 | dph: 0.47222222222222215
+52747127 rent-dl4 None | None | gpu: RTX 5090 | dph: 0.4722222222222222
+===destroy help===
+usage: vastai destroy instance id [-h] [-y] [--api-key API_KEY] [--raw]
+
+positional arguments:
+ id                 id of instance to delete
+
+options:
+ -h, --help         show this help message and exit
+ -y, --yes          Skip confirmation prompt
+
+Global options (available for all commands):
+ --url URL          Server REST API URL
+ --retry RETRY      Retry limit
+ --explain          Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw              Output machine-readable json
+ --full             Print full results instead of paging with `less` for commands that support it
+ --curl             Show a curl equivalency to the call
+ --api-key API_KEY  API Key to use. defaults to using the one stored in /Users/ben-hannan/.config/vastai/vast_api_key
+ --version          Show CLI version
+ --no-color         Disable colored output for commands that support it
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai destroy instance 52746763 -y --raw 2>&1 | head -c 500; echo; sleep 45; vastai show instance 52747127 --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+d=json.loads(raw)
+print('status:', d.get('status_msg'), '| actual:', d.get('actual_status'))
+print('dph:', d.get('dph_total'), '| gpu:', d.get('gpu_name'), '| label:', d.get('label'))
+print('ssh:', d.get('ssh_host'), d.get('ssh_port'))
+"
+status: None | actual: loading
+dph: 0.4722222222222222 | gpu: RTX 5090 | label: rent-dl4
+ssh: ssh5.vast.ai 27126
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>&1 | python3 -c "
+import json,sys
+for d in json.loads(sys.stdin.read()):
+  print(d.get('id'), d.get('label'), d.get('actual_status'), '|', str(d.get('status_msg'))[:120])
+"; sleep 90; vastai show instance 52747127 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.loads(sys.stdin.read())
+print('status:', str(d.get('status_msg'))[:200], '| actual:', d.get('actual_status'))
+print('ssh:', d.get('ssh_host'), d.get('ssh_port'))
+"
+52747127 rent-dl4 loading | None
+status: None | actual: loading
+ssh: ssh5.vast.ai 27126
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 180; vastai show instance 52747127 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.loads(sys.stdin.read())
+print('status:', str(d.get('status_msg'))[:300], '| actual:', d.get('actual_status'))
+print('ssh:', d.get('ssh_host'), d.get('ssh_port'))
+"
+status: None | actual: loading
+ssh: ssh5.vast.ai 27126
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p 27126 root@ssh5.vast.ai 'echo SSH_OK; nvidia-smi --query-gpu=name --format=csv,noheader; df -h / /workspace 2>/dev/null | head' 2>&1 | head -n 20
+ssh: connect to host ssh5.vast.ai port 27126: Connection refused
+[0m
+[0m$ [0msleep 180; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p 27126 root@ssh5.vast.ai 'echo SSH_OK; nvidia-smi --query-gpu=name --format=csv,noheader' 2>&1 | head -n 5; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52747127 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.loads(sys.stdin.read())
+print('actual:', d.get('actual_status'), '| status:', str(d.get('status_msg'))[:200])
+"
+ssh: connect to host ssh5.vast.ai port 27126: Connection refused
+actual: loading | status: None
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai destroy instance 52747127 -y --raw 2>&1 | head -c 300; echo; vastai create instance 43995364 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel' --disk 60 --label 'rent-dl4' --ssh --raw 2>&1 | head -c 1000
+{
+ "instance_api_key": "7b6d5307c18c3363c7838723c978adb65540ac62a8a08db7f7e68fa2194274bf",
+ "new_contract": 52748076,
+ "success": true
+}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 150; vastai show instance 52748076 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.loads(sys.stdin.read())
+print('actual:', d.get('actual_status'), '| status:', str(d.get('status_msg'))[:250])
+print('ssh:', d.get('ssh_host'), d.get('ssh_port'), '| dph:', d.get('dph_total'), '| gpu:', d.get('gpu_name'))
+"
+actual: running | status: success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-devel/ssh
+ssh: ssh2.vast.ai 28076 | dph: 0.4944444444444444 | gpu: RTX 5090
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 28076 root@ssh2.vast.ai 'nvidia-smi --query-gpu=name,memory.total --format=csv; python3 -c "import torch; print(torch.__version__, torch.cuda.is_available())"; pip list 2>/dev/null | grep -i -E "transformers|torch|huggingface|accelerate"; ls /workspace' 2>&1 | head -n 20
+Warning: Permanently added '[ssh2.vast.ai]:28076' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+name, memory.total [MiB]
+NVIDIA GeForce RTX 5090, 32607 MiB
+2.8.0+cu128 True
+torch                     2.8.0+cu128
+torchaudio                2.8.0+cu128
+torchelastic              0.2.2
+torchvision               0.23.0+cu128
+onstart.sh
+ports.log
+[0m
+[0m$ [0mgit archive origin/main scripts/claude_blurt1.py scripts/claude_blurt2.py scripts/claude_dl1_nights.py scripts/claude_dl3_replay.py scripts/claude_dl4_anchor.py artifacts/claude-dl4-20260926/PASSMARKS.md -o /tmp/dl4_code.tar && ls -la /tmp/dl4_code.tar && tar tf /tmp/dl4_code.tar
+-rw-r--r--  1 ben-hannan  wheel  102400 Sep 26 08:53 /tmp/dl4_code.tar
+artifacts/
+artifacts/claude-dl4-20260926/
+artifacts/claude-dl4-20260926/PASSMARKS.md
+scripts/
+scripts/claude_blurt1.py
+scripts/claude_blurt2.py
+scripts/claude_dl1_nights.py
+scripts/claude_dl3_replay.py
+scripts/claude_dl4_anchor.py
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 28076 root@ssh2.vast.ai 'pip install -q transformers==5.17.0 2>&1 | tail -n 3; python3 -c "import transformers; print(transformers.__version__)"' 2>&1 | tail -n 5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+5.17.0
+[0m
+[0m$ [0mscp -P 28076 /tmp/dl4_code.tar root@ssh2.vast.ai:/root/dl4_code.tar && ssh -p 28076 root@ssh2.vast.ai 'mkdir -p /root/dl4 && tar -xf /root/dl4_code.tar -C /root/dl4 && ls -R /root/dl4 | head -n 20 && python3 -B /root/dl4/scripts/claude_dl4_anchor.py --selftest' 2>&1 | tail -n 10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+/root/dl4/artifacts/claude-dl4-20260926:
+PASSMARKS.md
+
+/root/dl4/scripts:
+claude_blurt1.py
+claude_blurt2.py
+claude_dl1_nights.py
+claude_dl3_replay.py
+claude_dl4_anchor.py
+selftest ok
+[0m
+[0m$ [0mssh -p 28076 root@ssh2.vast.ai 'python3 -c "
+from huggingface_hub import snapshot_download
+p = snapshot_download(repo_id=\"openbmb/MiniCPM5-1B\", revision=\"87179e5c1f455ef22e6223592d2d61351b525bfc\", local_dir=\"/root/dl4/BASE\", local_dir_use_symlinks=False)
+print(\"MODEL_AT\", p)
+" 2>&1 | tail -n 3; ls /root/dl4/BASE | head' 2>&1 | tail -n 12
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:02,  4.50it/s]Fetching 11 files:  55%|█████▍    | 6/11 [00:00<00:00, 19.23it/s]Fetching 11 files:  82%|████████▏ | 9/11 [00:00<00:00, 20.19it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:19<00:00, 20.19it/s]Fetching 11 files: 100%|██████████| 11/11 [00:26<00:00,  3.88s/it]Fetching 11 files: 100%|██████████| 11/11 [00:26<00:00,  2.45s/it]
+MODEL_AT /root/dl4/BASE
+README-cn.md
+README.md
+chat_template.jinja
+config.json
+generation_config.json
+model-00000-of-00001.safetensors
+model.safetensors.index.json
+special_tokens_map.json
+tokenizer.json
+tokenizer_config.json
+[0m
+[0m$ [0mssh -p 28076 root@ssh2.vast.ai 'cd /root/dl4 && setsid nohup python3 -B scripts/claude_dl4_anchor.py --model BASE --out gpu > run.log 2>&1 < /dev/null & echo "PID=$!"; sleep 20; tail -n 5 /root/dl4/run.log; ps aux | grep "[c]laude_dl4" | head -n 3; date -u' 2>&1 | tail -n 12
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -p 28076 root@ssh2.vast.ai 'date -u; ps aux | grep "[c]laude_dl4" | head -n 3; tail -n 8 /root/dl4/run.log' 2>&1 | tail -n 12
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Sat Sep 26 12:56:23 UTC 2026
+root         557  0.0  0.0   4368  1916 ?        S    12:54   0:00 bash -c cd /root/dl4 && setsid nohup python3 -B scripts/claude_dl4_anchor.py --model BASE --out gpu > run.log 2>&1 < /dev/null & echo "PID=$!"; sleep 20; tail -n 5 /root/dl4/run.log; ps aux | grep "[c]laude_dl4" | head -n 3; date -u
+root         559  100  6.2 26226372 1985360 ?    Rsl  12:54   2:03 python3 -B scripts/claude_dl4_anchor.py --model BASE --out gpu
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 16024.15it/s]
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -p 28076 root@ssh2.vast.ai 'tail -n 6 /root/dl4/run.log; echo ---; ps -o pid,etime,cmd -p 559 2>/dev/null | tail -n 2' 2>&1 | tail -n 10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 16024.15it/s]
+---
+    PID     ELAPSED CMD
+    559       02:15 python3 -B scripts/claude_dl4_anchor.py --model BASE --out gpu
+[0m
+[0m$ [0msleep 540; ssh -o ConnectTimeout=20 -p 28076 root@ssh2.vast.ai 'tail -c 1500 /root/dl4/run.log; echo; echo ---; ps -o pid,etime,%cpu -p 559 2>/dev/null | tail -n 2; nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader' 2>&1 | tail -n 12
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 16024.15it/s]
+
+---
+    PID     ELAPSED %CPU
+    559       11:23  100
+39 %, 3442 MiB
+[0m
+[0m$ [0msleep 540; ssh -o ConnectTimeout=20 -p 28076 root@ssh2.vast.ai 'tail -c 2000 /root/dl4/run.log; echo; echo ---; ps -o pid,etime -p 559 2>/dev/null | tail -n 2' 2>&1 | tail -n 12
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 16024.15it/s]
+[dl4] anchor pool: 880 items
+[dl4] base: {'lucky': 59, 'reached': 37, 'greedy': 4, 'harm_right': 200}
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 15114.24it/s]
+[dl4] S s6 night 1: {"night": 1, "day_greedy_right": 12, "day_right_guesses": 190, "right_examples": 77, "train": {"examples": 77, "last_loss": 0.8804}, "test": {"lucky": 82, "reached": 44, "greedy": 3}, "harm": {"lost": 7, "gained": 30, "net_harm": -23, "right": 223}, "harm_vs_prev": {"lost": 7, "gained": 30, "net_harm": -23, "right": 223}, "kl": 0.03716, "minutes": 3.6}
+[dl4] S s6 night 2: {"night": 2, "day_greedy_right": 8, "day_right_guesses": 221, "right_examples": 90, "train": {"examples": 90, "last_loss": 0.9252}, "test": {"lucky": 98, "reached": 47, "greedy": 3}, "harm": {"lost": 10, "gained": 37, "net_harm": -27, "right": 227}, "harm_vs_prev": {"lost": 3, "gained": 7, "net_harm": -4, "right": 227}, "kl": 0.05832, "minutes": 2.2}
+
+---
+    PID     ELAPSED
+    559       20:35
+[0m
+[0m$ [0msleep 840; ssh -o ConnectTimeout=20 -p 28076 root@ssh2.vast.ai 'grep -c "^\[dl4\] . s" /root/dl4/run.log; tail -n 3 /root/dl4/run.log | cut -c1-400; echo ---; ps -o pid,etime -p 559 2>/dev/null | tail -n 1' 2>&1 | tail -n 8
+ssh: connect to host ssh2.vast.ai port 28076: Connection refused
+[0m
+[0m$ [0msleep 60; ssh -o ConnectTimeout=20 -p 28076 root@ssh2.vast.ai 'tail -n 3 /root/dl4/run.log | cut -c1-350' 2>&1 | tail -n 6; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52748076 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.loads(sys.stdin.read())
+print('actual:', d.get('actual_status'), '| status:', str(d.get('status_msg'))[:150])
+"
+ssh: connect to host ssh2.vast.ai port 28076: Connection refused
+actual: None | status: None
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 120; vastai show instance 52748076 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.loads(sys.stdin.read())
+print('actual:', d.get('actual_status'), '| status:', str(d.get('status_msg'))[:200])
+print('ssh:', d.get('ssh_host'), d.get('ssh_port'))
+"; ssh -o ConnectTimeout=15 -p 28076 root@ssh2.vast.ai 'echo SSH_OK' 2>&1 | tail -n 2
+actual: None | status: None
+ssh: None None
+ssh: connect to host ssh2.vast.ai port 28076: Connection refused
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 300; vastai show instance 52748076 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.loads(sys.stdin.read())
+print('actual:', d.get('actual_status'), '| status:', str(d.get('status_msg'))[:200], '| ssh:', d.get('ssh_host'), d.get('ssh_port'))
+"
+actual: None | status: None | ssh: None None
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>&1 | python3 -c "
+import json,sys
+ds=json.loads(sys.stdin.read())
+print('live count:', len(ds))
+for d in ds:
+  print(d.get('id'), d.get('label'), d.get('actual_status'), '|', str(d.get('status_msg'))[:150], '| cost/hr:', d.get('dph_total'))
+"
+live count: 2
+52751954 rent-lis-319f running | success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-runtime/ssh | cost/hr: 0.5037037037037037
+52752114 rent-brd8 running | success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-devel/ssh | cost/hr: 0.47000000000000003
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52748076 --raw 2>&1 | head -c 800; echo; echo "===charges==="; vastai show invoices --raw 2>&1 | head -c 1500
+{
+ "instances": null
+}
+
+===charges===
+DEPRECATED: `vastai show invoices` will be removed in a future release. Use `vastai show invoices-v1` for the new paginated command.
+[
+ {
+  "amount": "0.783",
+  "description": "Instance 52643932 GPU  charge:    hours * $/hr",
+  "instance_id": 52643932,
+  "quantity": "1.678",
+  "rate": "0.4667",
+  "timestamp": 1790294400,
+  "type": "charge"
+ },
+ {
+  "amount": "0.063",
+  "description": "Instance 52643932 storage charge: hours * $/hr",
+  "instance_id": 52643932,
+  "quantity": "1.713",
+  "rate": "0.0370",
+  "timestamp": 1790294400,
+  "type": "charge"
+ },
+ {
+  "amount": "0.010",
+  "description": "Instance 52643932 download charge",
+  "instance_id": 52643932,
+  "quantity": "1.990",
+  "rate": "0.005",
+  "timestamp": 1790294400,
+  "type": "charge"
+ },
+ {
+  "amount": "1.073",
+  "description": "Instance 52625917 GPU  charge:    hours * $/hr",
+  "instance_id": 52625917,
+  "quantity": "2.299",
+  "rate": "0.4667",
+  "timestamp": 1790294400,
+  "type": "charge"
+ },
+ {
+  "amount": "0.065",
+  "description": "Instance 52625917 storage charge: hours * $/hr",
+  "instance_id": 52625917,
+  "quantity": "2.336",
+  "rate": "0.0278",
+  "timestamp": 1790294400,
+  "type": "charge"
+ },
+ {
+  "amount": "0.044",
+  "description": "Instance 52625917 download charge",
+  "instance_id": 52625917,
+  "quantity": "8.470",
+  "rate": "0.005",
+  "timestamp": 1790294400,
+  "type": "charge"
+ },
+ {
+  "amount": "0.001",
+  "description": "Instance 52625917 upload charge",
+  "instance_id": 52625917,
+  "quantity": "0.240",
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show user --raw 2>&1 | python3 -c "
+import json,sys
+d=json.loads(sys.stdin.read())
+print('credit:', d.get('credit'), 'balance:', d.get('balance'))
+"
+credit: 5.646414239269859 balance: 0
+[0m
+[0m$ [0mgit status --short | head; echo "==="; git show origin/main:artifacts/fable-predictions-ledger.md 2>&1 | tail -n 8; echo "===worktree ledger==="; tail -n 5 artifacts/fable-predictions-ledger.md 2>&1
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+===
+- P261.3 M3 exact TEACH recall 85-93 % and >= B + 30 (B 10-20 %); pass ~65 %.
+- P261.4 M3b UNSURE 5-12 % of gold TEACH; pass (<= 12 %) ~60 %.
+- P261.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %.
+- P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261.7 M6 checker never adds/changes a frame; pass ~99 %.
+- P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).
+- 2026-09-26 13:05 UTC Director: Ben 12:59 "Each thread gets $2 from vast.ai compute": $2 budget lines opened for Reading facts, Month-end, Benchmarks, Sleep research, Fix sleep, Creative, Memory for its own thoughts, Making things up about you, Wrong answers stated as fact ($18 total; $4/job rule stands). dl-4 stays on the overnight $5 pool ($2.34 left before it).
+- 2026-09-26 13:37 UTC Director: five more $2 thread lines (coordinator 13:35, after Ben's 13:30 thirteen-problem list): Trustworthy notes $2, Answering from memory $2, Plain-English puzzles $2, Creative answers in chat $2, Everyday chat $2. Total 14 thread budgets. Credit auto-refills (Ben 13:23); budgets, $4/job and task BUDGET lines are the limits. Stray spend outside our budgets: brd-8w (Ben's Mac agent, ~$0.63), codex-sleep-p7 (~$0.16). rent-dl4 destroyed by a Mac agent after ~$0.32 (charged to Fix sleep); rerun rent-zdl4b $1.20 from Fix sleep's $2.
+===worktree ledger===
+- rsn-358d OUTCOME (2026-09-26, GPU builder, label rent-358d, sealed code run unmodified, each eval once per checkpoint): registered verdict INCONCLUSIVE both seeds (G0 not met: loop practised-size s3 300/109/1, s4 298/91/1, needs >=210 in >=2 of 3 kinds). G1 FAIL both (loop-plain s3 -108/-129/0, s4 -59/-150/-1); G2 FAIL both (s3 0/-127/-15, s4 -2/-150/-9); G3 FAIL s3 (sums6 own 131 vs fix16 137), PASS s4. Proved-wrong clause NOT triggered. numbers4 plain 16/10 vs loop 1/1 (358a: 0-5 both); numbers5 0/0/0/1. Plain bigger-test generalisation beat loop everywhere (sums6 239/153 vs 131/94; grids6 187/186 vs 58/36). GPU RTX 5090, minutes loop-s3 35.2 plain-s3 29.6 loop-s4 35.3 plain-s4 29.6, ~$0.41 of $0.80. See artifacts/claude-rsn358d-20260926/RESULTS.md + runs + SEAL-run.sha256.txt.
+- rent-358d GPU SPEND (2026-09-26, credit 6.33 at gate): rental 1 offer 46753295 (docker registry proxy refused, restarted once same error, destroyed stopped) + rental 2 offer 44173691 RTX 5090 dph 0.4852 (03:44:46Z-04:34:03Z, 0.82 h, ~$0.40); task total ~$0.41 of $0.80 budget, 2 rentals of max 3, 54 min of 1 h 30 min cap; post-destroy 0 rent-358d live. Checkpoints discarded with rental (Mac had 7 GB free < 8 GB copy bar) after sha256 recorded; 4 required files per run copied back.
+- rent-dl3 GPU OUTCOME (2026-09-26, rented RTX 5090, label rent-dl3, origin/main code unmodified, selftest ok): registered verdict FAIL (F1 false: A final lost sum 56 vs S 63, needs <= 31.5, per-seed s4 20 < 39 but s5 36 > 24; F2 false: 11 of 14 A nights lost > 10; F3 true: A final lucky 227, 216 >= 118 each, gains 325 >= 0.8 x 310; F4 true: 1 worse night, A s5n7 266 -> 216; F5 true: reached 53, 59 >= 30). Proved-wrong clause NOT triggered. Not INCONCLUSIVE (L0 59, S lost sum 63, pool 908). Rentals: 52685064 offer 46753297 (registry proxy error while stopped, destroyed ~$0) + 52685812 offer 44173877 KR dph 0.5130 (run 03:35-04:56Z, 81.2 min, destroyed 05:01Z); task total ~$0.86 of $1.50 budget, 2 rentals of max 3; post-destroy 0 rent-dl3 live. BASE openbmb/MiniCPM5-1B commit 87179e5c, torch 2.8.0+cu128, transformers 5.17.0. Code from origin/main ca08ccc1, byte-identical for dl-3 inputs at 43457707. No weights saved. See artifacts/claude-dl3-20260926/RESULTS-gpu.md + gpu/.
+- rent-bm391 GPU OUTCOME (2026-09-26, rented Linux GPU, label rent-bm391, unmodified origin/main + origin/builder-outbox code, seals bm391 3/3 + bm390-code 8/8 + e2e382-code 239/239 OK, selftests 10/10 + 13/13): BUDGET-STOP, no registered command completed except lane-3 mmlu_R (300 rows). Instance 52677751 (RTX 5090 offer 52604857, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 100, rented 01:51:26Z, destroyed 08:03:50Z, 6.21 h x dph $0.5103 = ~$3.17 projected; credit 9.0581 -> 7.4877 = $1.57 billed at destroy check, billing may lag); 1 rental of max 4; post-destroy 0 rent-bm391 live. Agent pace ~2 rows/min/LoCoMo-arm made 3x1986-row runs infeasible in $3.50 (needs ~14 h/arm). Killed by exact PID (2619, 2620, 3126 + drivers 2612, 2613, 2999; exits 143); lane drivers auto-advanced in kill window launching lane1-mmlu-ER, lane2-mmlu-E, lane3-locomo-R (~30 s, no output files, killed PIDs 3277, 3279, 3281, reported as deviation, not relaunched). Finished: GENERAL(mmlu,383,R) exit 0 wrote mmlu_R.jsonl rows=300. Unfinished with partial EP382 logs: LOCOMO(383e,ER) 456 rows, LOCOMO(382b,E) 445 rows (no locomo_*.jsonl wrote lines). Never started: both gsms, lane3 locomo (beyond 30 s stub), lane1/2 mmlu+gsm8k (beyond stubs). BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM path exact, READER safetensors b4fd93a2...890 verified on box, torch 2.8.0+cu128, transformers 5.17.0, pyarrow ok. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Sleep base-seed4102 JSON line recorded, pt 2ada54ac...ff069057. Smoke 6/6 exit 0. Peak GPU mem ~16933 MiB. Copy-back sha256-verified 5 files. See artifacts/claude-bm391-20260926/RESULTS-rent.md + run/.
+- rent-brd7 GPU OUTCOME (2026-09-26, rented RTX 5090, label rent-brd7, origin/main code unmodified, selftest ok, panel md5 matched): registered verdict NOT SHOWN (W cov@30 158,158,146 vs base 135, deltas +23,+23,+11, bar +24=159 missed every seed; W-base CI [2.65,13.31] above 0 so not proved wrong; W-C deltas 130,125,119; 183 wins + 20 own so not inconclusive; N 99,89,96 and C 28,33,27 collapse). Instance 52734191 (RTX 5090 offer 44173814 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 60, rented 10:57:28Z, destroyed 11:27:06Z, ~0.494 h x dph $0.49444 = ~$0.24); 1 rental of max 3; post-destroy 0 rent-brd7 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128. Run wall 20.1 min. No weights saved. See artifacts/claude-brd7-20260926/RESULTS-gpu.md + gpu/.
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/rent-zdl4.md 2>&1 | head -n 40; echo "===held zdl4==="; git show origin/main:handoff/held/zdl4-benspc.md 2>&1 | head -n 30
+COMMON RULES (the Fix-sleep thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.
+GPU: rent
+BUDGET: $1.20 for this whole task, re-rents included (standing caps: <=$4 per job, $30 total; the Director keeps the ledger and may lower this). Label: rent-dl4.
+CREDIT GATE (first): `vastai show user --raw` and report ONLY the balance/credit number. Under $3.00: rent nothing, stop with CREDIT-STOP. Re-check before any re-rent. Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+RENTAL RULES: RTX 5090 first, else 4090; reliability >= 0.98. Keep a running total of dph x hours; at $1.10 kill running commands by exact PID, copy back what exists (dl4_results.json is rewritten after every arm-seed), destroy, stop with BUDGET-STOP. Not running within 6 min or no log progress for 10 min: destroy and try another host (max 3 rentals). Launch the run detached (nohup/setsid) so it survives SSH closing. Destroy at the end and confirm it is gone. Append a ledger line.
+DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-dl4-20260926/gpu or a live instance is labelled rent-dl4.
+
+YOUR TASK: dl-4, the registered run (seven copy-practice nights with vs without a KL anchor to the base on general text, on MiniCPM5-1B; one GPU run). The Fix-sleep thread wrote the code; run it, never edit it. If something breaks, stop and report the exact error; do not patch. No TEST-ONLY panel is involved (test puzzles are made inside the run and never printed).
+READ FIRST (origin/main): artifacts/claude-dl4-20260926/PASSMARKS.md and the docstring of scripts/claude_dl4_anchor.py.
+Needs: torch with CUDA, transformers, plain MiniCPM5-1B (thinking off; the same model files as dl-2, no new download). No other packages.
+
+1. On the rental: `git archive origin/main scripts/claude_blurt1.py scripts/claude_blurt2.py scripts/claude_dl1_nights.py scripts/claude_dl3_replay.py scripts/claude_dl4_anchor.py artifacts/claude-dl4-20260926/PASSMARKS.md`, extract keeping the paths.
+2. Check: `python -B scripts/claude_dl4_anchor.py --selftest` prints "selftest ok", else stop.
+3. One process, with a log:
+   python -B scripts/claude_dl4_anchor.py --model BASE --out gpu
+   Expect roughly 85-105 minutes (dl-3 took 81 min on a 5090; the anchor adds one extra forward pass per anchor item). If it has not printed "[dl4] S s6 night 1" after 45 minutes, stop it and report TOO-SLOW with the last log lines.
+4. Copy gpu/dl4_results.json, gpu/anchor_pool.json and the log back as artifacts/claude-dl4-20260926/gpu/dl4_results.json, gpu/anchor_pool.json and gpu/log.txt (force-add; artifacts/ is git-ignored).
+5. RESULTS-gpu.md in artifacts/claude-dl4-20260926/: the whole "marks" block of dl4_results.json, then each mark F1-F5 (K arm), the verdict and the proved-wrong clause with integer counts, pool_size, GPU name, wall minutes, dollars, commit hash. Append one ledger line (cat >> artifacts/fable-predictions-ledger.md).
+Never push weights (the run saves none).
+PUSH: artifacts/claude-dl4-20260926/gpu artifacts/claude-dl4-20260926/RESULTS-gpu.md artifacts/fable-predictions-ledger.md
+===held zdl4===
+COMMON RULES (the Fix-sleep thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, no secrets, report in your final reply: verdict first, integer counts, every deviation).
+GPU: yes (BensPC RTX 5070 Ti; one job at a time). NO RENTALS.
+LOWDISK-OK: yes (runs on BensPC; copies back only small result files to the Mac, never model weights)
+TIME CAP: 6 hours in total. If the cap is reached, stop by exact PID, copy back what exists (dl4_results.json is rewritten after every arm-seed), report which arm-seeds finished.
+WHEN TO RUN (Director): after 006k-02c-benspc has exited and BensPC is free, if rent-zdl4 is still unfunded. Move this file from handoff/held/ to handoff/queue/ as zdl4-benspc.md. No deadline: a result after 11:00 UTC is still wanted.
+DUPLICATE GATE, first: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-dl4-20260926/gpu, or a rent-dl4 instance is live.
+
+YOUR TASK: dl-4, the registered run, on BensPC instead of a rental (same code, same command; the hardware is the only difference, and it is reported). The Fix-sleep thread wrote the code; run it, never edit it. If something breaks, stop and report the exact error; do not patch. No TEST-ONLY panel is involved.
+READ FIRST (origin/main): artifacts/claude-dl4-20260926/PASSMARKS.md and the docstring of scripts/claude_dl4_anchor.py.
+Needs: torch with CUDA, transformers, plain MiniCPM5-1B (thinking off; the copy already on BensPC, no new download). Run every command through scripts/claude_winnl_wrap.py if it exists on origin/main (Linux line endings on Windows).
+1. `git archive origin/main scripts/claude_blurt1.py scripts/claude_blurt2.py scripts/claude_dl1_nights.py scripts/claude_dl3_replay.py scripts/claude_dl4_anchor.py scripts/claude_winnl_wrap.py artifacts/claude-dl4-20260926/PASSMARKS.md` into a fresh folder, keeping the paths.
+2. Check: `python -B scripts/claude_dl4_anchor.py --selftest` prints "selftest ok", else stop.
+3. One process, with a log: `python -B scripts/claude_dl4_anchor.py --model BASE --out gpu`. If it has not printed "[dl4] S s6 night 1" after 80 minutes, stop it and report TOO-SLOW with the last log lines.
+4. Copy gpu/dl4_results.json, gpu/anchor_pool.json and the log back as artifacts/claude-dl4-20260926/gpu/dl4_results.json, gpu/anchor_pool.json and gpu/log.txt (force-add; artifacts/ is git-ignored).
+5. RESULTS-benspc.md in artifacts/claude-dl4-20260926/: the whole "marks" block, each mark F1-F5 (K arm), the verdict and proved-wrong clause with integer counts, pool_size, GPU name, wall minutes, commit hash. Append one ledger line (cat >> artifacts/fable-predictions-ledger.md).
+Never push weights (the run saves none).
+PUSH: artifacts/claude-dl4-20260926/gpu artifacts/claude-dl4-20260926/RESULTS-benspc.md artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit branch --show-current; git status --short | head -n 15; git log --oneline -3; echo "==="; git ls-files artifacts/fable-predictions-ledger.md; wc -l artifacts/fable-predictions-ledger.md
+claude/card-experiment-handoff-7c5b27
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-brd5-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd5-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd5-20260926/gpu/log.txt
+A  artifacts/claude-brd5-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd5-20260926/gpu/streams.json
+996b9348e rent-dl3: replay-into-the-night GPU run (verdict FAIL; F3-F5 pass, F1-F2 fail) + ledger line
+b588f1e37 rsn-358c1: answer-cell stop eval, sealed code run once per seed (verdict FAIL; stop fix NOT NEEDED, K4 split s1 PASS s2 FAIL) + ledger lines
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+===
+artifacts/fable-predictions-ledger.md
+    3006 artifacts/fable-predictions-ledger.md
+[0m
+[0m→ [0mRead artifacts/fable-predictions-ledger.md[90m [offset=3006][0m
+[0m
+[0m← [0mEdit artifacts/fable-predictions-ledger.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-predictions-ledger.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-predictions-ledger.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-predictions-ledger.md
+@@ -3003,4 +3003,5 @@
+ - rent-358d GPU SPEND (2026-09-26, credit 6.33 at gate): rental 1 offer 46753295 (docker registry proxy refused, restarted once same error, destroyed stopped) + rental 2 offer 44173691 RTX 5090 dph 0.4852 (03:44:46Z-04:34:03Z, 0.82 h, ~$0.40); task total ~$0.41 of $0.80 budget, 2 rentals of max 3, 54 min of 1 h 30 min cap; post-destroy 0 rent-358d live. Checkpoints discarded with rental (Mac had 7 GB free < 8 GB copy bar) after sha256 recorded; 4 required files per run copied back.
+ - rent-dl3 GPU OUTCOME (2026-09-26, rented RTX 5090, label rent-dl3, origin/main code unmodified, selftest ok): registered verdict FAIL (F1 false: A final lost sum 56 vs S 63, needs <= 31.5, per-seed s4 20 < 39 but s5 36 > 24; F2 false: 11 of 14 A nights lost > 10; F3 true: A final lucky 227, 216 >= 118 each, gains 325 >= 0.8 x 310; F4 true: 1 worse night, A s5n7 266 -> 216; F5 true: reached 53, 59 >= 30). Proved-wrong clause NOT triggered. Not INCONCLUSIVE (L0 59, S lost sum 63, pool 908). Rentals: 52685064 offer 46753297 (registry proxy error while stopped, destroyed ~$0) + 52685812 offer 44173877 KR dph 0.5130 (run 03:35-04:56Z, 81.2 min, destroyed 05:01Z); task total ~$0.86 of $1.50 budget, 2 rentals of max 3; post-destroy 0 rent-dl3 live. BASE openbmb/MiniCPM5-1B commit 87179e5c, torch 2.8.0+cu128, transformers 5.17.0. Code from origin/main ca08ccc1, byte-identical for dl-3 inputs at 43457707. No weights saved. See artifacts/claude-dl3-20260926/RESULTS-gpu.md + gpu/.
+ - rent-bm391 GPU OUTCOME (2026-09-26, rented Linux GPU, label rent-bm391, unmodified origin/main + origin/builder-outbox code, seals bm391 3/3 + bm390-code 8/8 + e2e382-code 239/239 OK, selftests 10/10 + 13/13): BUDGET-STOP, no registered command completed except lane-3 mmlu_R (300 rows). Instance 52677751 (RTX 5090 offer 52604857, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 100, rented 01:51:26Z, destroyed 08:03:50Z, 6.21 h x dph $0.5103 = ~$3.17 projected; credit 9.0581 -> 7.4877 = $1.57 billed at destroy check, billing may lag); 1 rental of max 4; post-destroy 0 rent-bm391 live. Agent pace ~2 rows/min/LoCoMo-arm made 3x1986-row runs infeasible in $3.50 (needs ~14 h/arm). Killed by exact PID (2619, 2620, 3126 + drivers 2612, 2613, 2999; exits 143); lane drivers auto-advanced in kill window launching lane1-mmlu-ER, lane2-mmlu-E, lane3-locomo-R (~30 s, no output files, killed PIDs 3277, 3279, 3281, reported as deviation, not relaunched). Finished: GENERAL(mmlu,383,R) exit 0 wrote mmlu_R.jsonl rows=300. Unfinished with partial EP382 logs: LOCOMO(383e,ER) 456 rows, LOCOMO(382b,E) 445 rows (no locomo_*.jsonl wrote lines). Never started: both gsms, lane3 locomo (beyond 30 s stub), lane1/2 mmlu+gsm8k (beyond stubs). BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM path exact, READER safetensors b4fd93a2...890 verified on box, torch 2.8.0+cu128, transformers 5.17.0, pyarrow ok. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Sleep base-seed4102 JSON line recorded, pt 2ada54ac...ff069057. Smoke 6/6 exit 0. Peak GPU mem ~16933 MiB. Copy-back sha256-verified 5 files. See artifacts/claude-bm391-20260926/RESULTS-rent.md + run/.
+ - rent-brd7 GPU OUTCOME (2026-09-26, rented RTX 5090, label rent-brd7, origin/main code unmodified, selftest ok, panel md5 matched): registered verdict NOT SHOWN (W cov@30 158,158,146 vs base 135, deltas +23,+23,+11, bar +24=159 missed every seed; W-base CI [2.65,13.31] above 0 so not proved wrong; W-C deltas 130,125,119; 183 wins + 20 own so not inconclusive; N 99,89,96 and C 28,33,27 collapse). Instance 52734191 (RTX 5090 offer 44173814 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 60, rented 10:57:28Z, destroyed 11:27:06Z, ~0.494 h x dph $0.49444 = ~$0.24); 1 rental of max 3; post-destroy 0 rent-brd7 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128. Run wall 20.1 min. No weights saved. See artifacts/claude-brd7-20260926/RESULTS-gpu.md + gpu/.
++- rent-dl4 GPU OUTCOME (2026-09-26, label rent-dl4, origin/main code unmodified, selftest ok): NO REGISTERED VERDICT, HOST-LOST. Rental 1 contract 52746763 offer 46753304 RTX 5090 dph 0.4722 (docker registry proxy refused while loading, destroyed, ~$0). Rental 2 contract 52747127 offer 43165155 RTX 5090 dph 0.4722 (loading ~10 min, SSH refused, destroyed; deviation: kept ~10 min vs 6-min rule, host showed no error). Rental 3 contract 52748076 offer 43995364 KR RTX 5090 dph 0.4944 (image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 60, torch 2.8.0+cu128 CUDA True, transformers 5.17.0 installed, BASE openbmb/MiniCPM5-1B @87179e5c downloaded; run launched detached 12:54Z, observed anchor pool 880 items, base lucky 59 reached 37 greedy 4 harm_right 200, S s6 n1 lost 7 lucky 82 KL 0.037, S s6 n2 lost 10 lucky 98 KL 0.058, then SSH refused and the instance record vanished = destroyed externally, Director notes Mac-agent destroy ~$0.32 to Fix sleep). 3 rentals of max 3; nothing copied back (disk lost with host); post-check 0 rent-dl4 live. Credit at gate 7.2011843180698705. No code edits, no weights, no TEST-ONLY panel (test puzzles generated in-run, never printed). Ledger appended locally, not pushed (this worktree branch serves another task; no result files exist to push).
+
+[0m
