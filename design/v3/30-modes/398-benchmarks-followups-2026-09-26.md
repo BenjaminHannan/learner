@@ -50,3 +50,11 @@ touched. Ben's overnight goal comes first; the queued items run after it, with t
 Correction (02:16 UTC): the third point above misreads the reply. Its section 10 already says the complete assistant
 also holds a separately fine-tuned reader, and asks us to stop calling the whole system "1B". That is the same point,
 not an error. Only the first two are out of date, and both have been fixed since the reply was written.
+
+## Also queued (02:20 UTC; section 7's answer-boundary parts, agreed with Reading facts, which owns the note checker)
+- The evidence set per personal claim: each memory answer internally records the claim, the supporting heard-line
+  ids and spans, the speaker, the time, and any derivation. A word-overlap check is not a support check.
+- Notes reach answers only through their cited heard lines. Recall itself is already heard-only (store v3).
+- An attributed-quote fallback until a support check passes: "On <date>, <speaker> said: '<exact line>'", given
+  instead of an unsupported paraphrase. It needs its own test, with marks fixed before any run: unsupported
+  personal answers must not rise, and useful answers must rise. It is registered separately from bm-398.
