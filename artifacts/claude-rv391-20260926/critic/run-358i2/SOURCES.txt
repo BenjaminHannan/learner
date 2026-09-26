@@ -1,0 +1,22 @@
+rv-391 dev 2 critic probe rerun on retrained nets (label rv391critic2) SOURCES
+date_utc 2026-09-26T21:56:27Z (runs finished; started 2026-09-26T21:45:22Z)
+code origin/main 885df2bc3cffd4e0fba6dc527796f0320204553e (sealed; SEAL-critic 14/14 OK, never edited)
+torch 2.14.0 (uv --offline --no-project --python 3.12 --with torch --with numpy)
+env OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; Mac CPU, fp32
+numpy 2.5.3
+
+nets (~/premonition-models/rsn358i2/loop-sN/final.pt, sha256 as checked = NETS-358i2.sha256.txt line):
+s1 /Users/ben-hannan/premonition-models/rsn358i2/loop-s1/final.pt d30887c59f57496a1a195d7250e130bb1c51393d973ce45f4bdd898ba5eb8261
+s2 /Users/ben-hannan/premonition-models/rsn358i2/loop-s2/final.pt 4085df22366b96190b087a7b46333daec9f19d078332ea5bf6328a15f2ed6594
+s3 /Users/ben-hannan/premonition-models/rsn358i2/loop-s3/final.pt 5d571cc276d88f5af5da34c79e0d198878f9e674888b2150107095e27adc4a7a
+s4 /Users/ben-hannan/premonition-models/rsn358i2/loop-s4/final.pt f0a84b11d1722d97739a5999f3b2b487c0bc09dc1c927fde14e6566adedd6621
+
+minutes per run (from critic json sec; wall batch1 s1-s3 21:45:22-21:52:07 UTC ~6.75 min, batch2 s4 finished 21:56:17 UTC; 70-min stop not needed, all 4 finished):
+s1 393 sec = 6.55 min
+s2 381 sec = 6.35 min
+s3 404 sec = 6.73 min
+s4 245 sec = 4.08 min
+
+outputs per net: critic-sN.json + critic-sN.rows.jsonl + log-sN.txt (s1-s4); 4 nets ran, 0 skipped
+no untrained net this time
+train/practice only; no test puzzle

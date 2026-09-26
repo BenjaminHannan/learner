@@ -1,0 +1,874 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mpwd; git status --short | head -n 50; git rev-parse --show-toplevel; git branch --show-current; ls artifacts/claude-rv391-20260926/critic/ 2>&1 | head -n 50
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+?? scripts/claude_280n_panel.sh
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+run
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo FETCH_MAIN_EXIT:$?; git fetch -q origin builder-outbox 2>&1; echo FETCH_OUTBOX_EXIT:$?; echo "--- main check ---"; git ls-tree -r --name-only origin/main -- artifacts/claude-rv391-20260926/critic/run-358i2/ 2>&1 | head -n 20; echo "COUNT_MAIN:$(git ls-tree -r --name-only origin/main -- artifacts/claude-rv391-20260926/critic/run-358i2/ 2>&1 | wc -l)"; echo "--- outbox check ---"; git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-rv391-20260926/critic/run-358i2/ 2>&1 | head -n 20; echo "COUNT_OUTBOX:$(git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-rv391-20260926/critic/run-358i2/ 2>&1 | wc -l)"
+FETCH_MAIN_EXIT:0
+FETCH_OUTBOX_EXIT:0
+--- main check ---
+COUNT_MAIN:       0
+--- outbox check ---
+COUNT_OUTBOX:       0
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rv391-20260926/NOTE-critic-plan.md 2>&1; echo "=====EXIT:$?====="
+# rv-391 dev 2: a learned critic for going back (thought-memory thread; written 2026-09-26 19:29 UTC by date -u, before any trained-net number)
+
+Why: the Thread manager's OBVIOUS FIX FIRST rule (19:33 UTC relay of Ben's 19:20 message). The textbook fix for going
+back inside a search is a learned critic, a value head trained on the states the search itself visits, with outcome
+labels. Examples are AlphaZero's value net, the evaluator in Tree of Thoughts, and our own plan 384b's dead-end judge.
+It has never been tested on the loop reasoner. rv-388 (c3542bb56) tested a judge trained on other states, and only on
+the 1B. rv-391 dev (NOTE-dev-result.md) showed that none of the net's untrained signals mark a wrong guess.
+Brain first: the anterior cingulate's error signal and dopamine prediction errors are learned from outcomes. This is
+textbook-level, and mapping it onto the net is a guess. Silicon can check every answer exactly, so the labels come from
+code.
+
+## Step 1 (this note): an unregistered probe, $0 on Mac CPU
+- Code: scripts/claude_rv391_critic.py (sealed below). The loop net stays frozen. The critic is a logistic regression
+  on the net's own state after each written guess:
+  - the mean of h over the answer cells;
+  - the mean of h over the written cells;
+  - the stop value q.
+- Label: dead = 1 if any written guess differs from the puzzle's one solution, checked by code. It is a bare 0/1 target
+  (test-hygiene rule 1). It comes from the text, not a prompt (rule 2).
+- Training puzzles are fresh and made by code: critic/train/ with seeds 39311 (7x7) and 39312 (6x6), 1000 each. None
+  clashes with 358i's test items, rv-390's day or practice puzzles, or rv-392's day. The check puzzles are rv-390's
+  practice sets. No test puzzle is touched (rule 3).
+- The settings are fixed in the code and nothing is tuned on practice.
+- Nets: 358i's four loop nets (the Mac copy, each sha256 against 358i's SEAL-run), plus r0, an untrained net
+  (scripts/claude_rv392_randnet.py --seed 0), as a report-only row.
+
+## Marks (fixed now; unit = practice 7x7 states from the four trained nets)
+- GOOD ENOUGH TO USE: the critic's AUC for dead vs live states on p-grids7 has a mean of at least 0.65 over the four
+  nets and is above 0.5 in every net. Its mean must also beat the count-only baseline (how many guesses are written) by
+  at least 0.05.
+- PROVED WRONG: a mean of at most 0.55, or a mean no better than the count-only baseline.
+- Anything else: no clear result, and the time slice (W = 16) stays.
+- Check: on p-grids6, the same critic and cut must flag a larger share of dead states than of live ones in at least 3 of
+  4 nets. If not, it is reported as not holding up.
+- Report only: the cut, which flags at most 20% of live TRAINING states, and the shares of practice states it flags;
+  the training AUC; and r0's row.
+
+Changed before any trained-net number, and disclosed: on the Thread manager I also proposed that r0 must score at least
+0.10 lower. A smoke on the untrained net (40 puzzles per set, scratchpad only) gave r0's critic an AUC of 0.80 on
+p-grids7, against 0.70 for count-only. So a critic can learn the page's own clashes even from an untrained net's state.
+That is still a learned critic, and it is what going back needs. So r0 is now a report-only row, not a mark. The
+question "does it come from what the net learned?" is reported, not required.
+
+## Step 2 (if GOOD ENOUGH TO USE): registered rv-391
+- One change from the between-messages worker that rv-392 picks: go back when the critic flags the page. Going back
+  restores the page before the latest guess and writes the next candidate.
+- It runs against the same worker without going back.
+- The critic is retrained inside the job on the nets being tested (rsn-358i2's if they exist).
+- It uses fresh test grids, 4 nets, and BensPC ($0).
+- Marks and predictions are sealed before any run. Whether a critic head may join the reasoner as a learned part is
+  the Thread manager's call, and Ben's if it counts as an architecture change.
+
+## Predictions
+- P391c.1: GOOD ENOUGH TO USE (the smoke suggests the page's clashes are learnable).
+- P391c.2: r0's critic AUC is within 0.10 of the trained nets' mean.
+=====EXIT:0=====
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rv391-20260926/ADDENDUM-critic-1.md 2>&1; echo "=====EXIT:$?====="
+# rv-391 dev 2, addendum 1: what the critic probe can and cannot show (thought-memory thread; written 19:31 UTC by date -u, before any trained-net number)
+
+The Thread manager reviewed 8ec8392fe at 19:36 UTC. This addendum is a separate file because NOTE-critic-plan.md is
+listed in SEAL-critic.sha256.txt, and the queued job checks that seal. Nothing sealed changes.
+
+1. The r0 mark was changed after seeing a smoke number. The smoke ran r0 on 40 puzzles per set and gave a critic AUC of
+   0.80 on p-grids7, against 0.70 for the count-only baseline. That smoke number is data, and the change was made after
+   seeing it. The plan note's wording "before any trained-net number" is true, but the change was not blind.
+2. An untrained net's critic reaching 0.80 means the critic can read the page's own clashes from the state. The written
+   symbols go into the net's input, so even random features carry them. So this probe answers one question: "can a
+   critic predict dead ends from the page plus the net's state?" That is all step 2 needs, because a go-back trigger
+   only needs predictive power. It does NOT answer "does the trained reasoner's state carry the signal".
+3. Added report row: for each practice set, the trained nets' mean AUC minus r0's AUC. That row will be read later
+   against the second question. It is not a clean answer on its own, for two reasons:
+   - r0 searches differently (most of its guesses are wrong), so its states and dead share differ from the trained
+     nets';
+   - a fair test would give both critics the same page states.
+   It is suggested, and it changes no mark.
+=====EXIT:0=====
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rv391-20260926/ADDENDUM-critic-2-358i2.md 2>&1; echo "=====EXIT:$?====="
+# rv-391 dev 2, addendum 2: the same probe on the retrained nets (thought-memory thread; written 21:14 UTC by date -u, AFTER seeing the 358i probe numbers, before any 358i2 probe number)
+
+Why: the registered going-back test (rv-391) will run on rsn-358i2's nets, the retrained nets whose loop blocks now
+learn (Sleep research, SUSPECT CONFIRMED, c761f8717). The first probe ran on 358i's nets, which were probably
+undertrained. A critic reads the net's state, so the verdict that matters for rv-391 is the one on the nets it will
+run on. This is the same test on the fixed nets, not a new variant.
+
+What runs: scripts/claude_rv391_critic.py exactly as sealed (SEAL-critic.sha256.txt), with the same training and
+practice puzzles, the same settings and the same marks (NOTE-critic-plan.md, "Marks"). The only change is the nets:
+rsn-358i2 loop-s1..s4, checked against ../claude-rv390-20260926/NETS-358i2.sha256.txt. No untrained net, since its row
+does not depend on the trained nets. Job: handoff/queue/rv391critic2-mac.md (Mac CPU, $0, no GLM). Output:
+critic/run-358i2/.
+
+How it is read (fixed now):
+- The 358i verdict stands for 358i's nets. The 358i2 verdict is reported beside it, and neither overrides the other.
+- rv-391's trigger comes from the 358i2 verdict. GOOD ENOUGH TO USE there means the critic is the trigger. Otherwise
+  the time slice (W = 16) stays, and the next plain fix goes to the Thread manager as a proposal: training the
+  reasoner on search traces that include its own dead ends and backtracks (Stream of Search, 2404.03683; plan 384b).
+- Report only, added after seeing 358i's rows: the critic's AUC within groups of states with the same number of
+  written guesses (k). It shows what the critic knows beyond counting. On 358i, p-grids7: 0.535, 0.617, 0.610, 0.703.
+
+Added 21:19 UTC by date -u, at the Thread manager's 21:20 note, before any 358i2 probe number: the 358i2 write-up
+reports the same three readings as RESULTS-critic.md, so the two rows compare like for like:
+- the per-net-mean margin that the mark uses;
+- the puzzle-level bootstrap range (1,000 resamples, critic/verify/extra.py);
+- the pooled count-only baseline.
+If 358i2 is again not GOOD ENOUGH, the Stream of Search proposal goes to the Thread manager as a plan with marks and a
+plain-words paragraph. Training the reasoner on its own traces needs Ben's yes. No critic variants.
+=====EXIT:0=====
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rv391-20260926/SEAL-critic.sha256.txt 2>&1; echo "=====EXIT:$?====="; echo "---NETS---"; git show origin/main:artifacts/claude-rv390-20260926/NETS-358i2.sha256.txt 2>&1; echo "=====EXIT:$?====="
+af0652116d59451c1a25376d2f909c99466d1a9b4bcd68ee5e9aee00fd517432  scripts/claude_rv391_critic.py
+2e747d49c33dde9eb6a4c874439d1bd75ae2e6121ee1b4891c39bb3190db551b  scripts/claude_rv392_randnet.py
+2376358fe1ee86644068b615e8282067f6273493816366424e46150c5d0a4b40  scripts/claude_rv390.py
+a06f168cc9471a2ca6a9a08b2b991b197359e7df0c5f3ced953954da45381d85  scripts/claude_rv387.py
+4b9dfb907e49d47caefbbe606bc1610d12f15a85b39bce6aaa32ef78771f5ef4  scripts/claude_rsn358i_run.py
+0a82d5a512fe3da9a737a07935f9cd07fa78fbecd4446b736e85230355c0c928  scripts/claude_rsn358g_run.py
+80513101e4a6820f3fc32b2d23d01bcfc1ccca9457ae928826bdf37d89d816fe  scripts/claude_rsn358a2_run.py
+9b0e1a03ffdf354575e0a19acc58042c869c261565ba62e91e71af899cbca9b0  scripts/claude_rsn358a_run.py
+af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0  scripts/claude_rsn358a_envs.py
+f180a3ea4abee5c34d05089363cbeb38e49d16660650bf7b1593be3497ac8bf3  artifacts/claude-rv391-20260926/critic/train/t-grids7.jsonl
+54109d96db89a331d13844b39dff2a11d65cb2ebc94ac9db46ba26deaf531b6b  artifacts/claude-rv391-20260926/critic/train/t-grids6.jsonl
+ea9706fcb08702b73620e515b7012977097466836367c702adad0051ef6e802e  artifacts/claude-rv390-20260926/day/p-grids7.jsonl
+12abc632a24453c6bd42f33eba040071208f23e2268d648013ea44251e43b3e6  artifacts/claude-rv390-20260926/day/p-grids6.jsonl
+9f9f389a23f7289529888613251cb4143bdbbda97a6f64d8333417eb8c87dd16  artifacts/claude-rv391-20260926/NOTE-critic-plan.md
+=====EXIT:0=====
+---NETS---
+d30887c59f57496a1a195d7250e130bb1c51393d973ce45f4bdd898ba5eb8261  loop-s1/final.pt
+4085df22366b96190b087a7b46333daec9f19d078332ea5bf6328a15f2ed6594  loop-s2/final.pt
+5d571cc276d88f5af5da34c79e0d198878f9e674888b2150107095e27adc4a7a  loop-s3/final.pt
+f0a84b11d1722d97739a5999f3b2b487c0bc09dc1c927fde14e6566adedd6621  loop-s4/final.pt
+=====EXIT:0=====
+[0m
+[0m$ [0mD=$(mktemp -d); echo "D=$D"; git archive origin/main scripts artifacts/claude-rv390-20260926/day artifacts/claude-rv390-20260926/NETS-358i2.sha256.txt artifacts/claude-rv391-20260926 | tar -x -C "$D"; echo "ARCHIVE_EXIT:$?"; ls "$D" 2>&1; echo "$D" > /tmp/rv391critic2_D.txt; cat /tmp/rv391critic2_D.txt
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.GcJ2ZY3Xsy
+ARCHIVE_EXIT:0
+artifacts
+scripts
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.GcJ2ZY3Xsy
+[0m
+[0m$ [0mD=$(cat /tmp/rv391critic2_D.txt); shasum -a 256 -c artifacts/claude-rv391-20260926/SEAL-critic.sha256.txt 2>&1
+scripts/claude_rv391_critic.py: OK
+scripts/claude_rv392_randnet.py: OK
+scripts/claude_rv390.py: OK
+scripts/claude_rv387.py: OK
+scripts/claude_rsn358i_run.py: OK
+scripts/claude_rsn358g_run.py: OK
+scripts/claude_rsn358a2_run.py: OK
+scripts/claude_rsn358a_run.py: OK
+scripts/claude_rsn358a_envs.py: OK
+artifacts/claude-rv391-20260926/critic/train/t-grids7.jsonl: OK
+artifacts/claude-rv391-20260926/critic/train/t-grids6.jsonl: OK
+artifacts/claude-rv390-20260926/day/p-grids7.jsonl: OK
+artifacts/claude-rv390-20260926/day/p-grids6.jsonl: OK
+artifacts/claude-rv391-20260926/NOTE-critic-plan.md: OK
+[0m
+[0m$ [0mls -la ~/premonition-models/rsn358i2/ 2>&1; for s in 1 2 3 4; do echo "--- s$s ---"; ls -la ~/premonition-models/rsn358i2/loop-s$s/final.pt 2>&1; done; cat artifacts/claude-rv390-20260926/NETS-358i2.sha256.txt 2>&1
+total 16
+drwxr-xr-x   7 ben-hannan  staff   224 Sep 26 15:33 .
+drwxr-xr-x  16 ben-hannan  staff   512 Sep 26 15:32 ..
+-rw-r--r--@  1 ben-hannan  staff  6148 Sep 26 15:33 .DS_Store
+drwxr-xr-x   3 ben-hannan  staff    96 Sep 26 15:32 loop-s1
+drwxr-xr-x   3 ben-hannan  staff    96 Sep 26 15:32 loop-s2
+drwxr-xr-x   3 ben-hannan  staff    96 Sep 26 15:32 loop-s3
+drwxr-xr-x   3 ben-hannan  staff    96 Sep 26 15:32 loop-s4
+--- s1 ---
+-rw-------  1 ben-hannan  staff  25764244 Sep 26 15:32 /Users/ben-hannan/premonition-models/rsn358i2/loop-s1/final.pt
+--- s2 ---
+-rw-------  1 ben-hannan  staff  25764244 Sep 26 15:32 /Users/ben-hannan/premonition-models/rsn358i2/loop-s2/final.pt
+--- s3 ---
+-rw-------  1 ben-hannan  staff  25764244 Sep 26 15:32 /Users/ben-hannan/premonition-models/rsn358i2/loop-s3/final.pt
+--- s4 ---
+-rw-------  1 ben-hannan  staff  25764244 Sep 26 15:32 /Users/ben-hannan/premonition-models/rsn358i2/loop-s4/final.pt
+d30887c59f57496a1a195d7250e130bb1c51393d973ce45f4bdd898ba5eb8261  loop-s1/final.pt
+4085df22366b96190b087a7b46333daec9f19d078332ea5bf6328a15f2ed6594  loop-s2/final.pt
+5d571cc276d88f5af5da34c79e0d198878f9e674888b2150107095e27adc4a7a  loop-s3/final.pt
+f0a84b11d1722d97739a5999f3b2b487c0bc09dc1c927fde14e6566adedd6621  loop-s4/final.pt
+[0m
+[0m$ [0mfor s in 1 2 3 4; do shasum -a 256 ~/premonition-models/rsn358i2/loop-s$s/final.pt 2>&1; done
+d30887c59f57496a1a195d7250e130bb1c51393d973ce45f4bdd898ba5eb8261  /Users/ben-hannan/premonition-models/rsn358i2/loop-s1/final.pt
+4085df22366b96190b087a7b46333daec9f19d078332ea5bf6328a15f2ed6594  /Users/ben-hannan/premonition-models/rsn358i2/loop-s2/final.pt
+5d571cc276d88f5af5da34c79e0d198878f9e674888b2150107095e27adc4a7a  /Users/ben-hannan/premonition-models/rsn358i2/loop-s3/final.pt
+f0a84b11d1722d97739a5999f3b2b487c0bc09dc1c927fde14e6566adedd6621  /Users/ben-hannan/premonition-models/rsn358i2/loop-s4/final.pt
+[0m
+[0m$ [0mD=$(cat /tmp/rv391critic2_D.txt); ls "$D/scripts/" | head -n 30; ls "$D/artifacts/claude-rv391-20260926/critic/" 2>&1; ls "$D/artifacts/claude-rv391-20260926/" 2>&1
+address_probe.py
+astra_canonical_operator_panels.py
+astra_canonical_operator_report.py
+astra_canonical_operator_run.py
+astra_canonical_operator.py
+astra_transfer_diagnostic.py
+astra_transfer_report.py
+astra_transfer_twins.py
+benspc-runtime.json
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+run
+train
+verify
+ADDENDUM-critic-1.md
+ADDENDUM-critic-2-358i2.md
+critic
+dev
+NOTE-critic-plan.md
+NOTE-dev-plan.md
+NOTE-dev-result.md
+RESULTS-critic.md
+SEAL-critic.sha256.txt
+[0m
+[0m$ [0mD=$(cat /tmp/rv391critic2_D.txt); "$D/scripts/claude_rv391_critic.py" 2>&1 | head; echo "---"; head -n 100 "$D/scripts/claude_rv391_critic.py" 2>&1 | tail -n 80
+zsh:1: permission denied: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.GcJ2ZY3Xsy/scripts/claude_rv391_critic.py
+---
+  python -B scripts/claude_rv391_critic.py make-train --out artifacts/claude-rv391-20260926/critic/train
+  python -B scripts/claude_rv391_critic.py probe --ckpt F --out DIR/critic-sN.json
+"""
+from __future__ import annotations
+
+import argparse
+import bisect
+import json
+import sys
+import time
+from pathlib import Path
+
+import torch
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+import claude_rv390 as W  # noqa: E402
+
+V = W.V
+TRAIN = [("t-grids7", "grids", 7, 39311), ("t-grids6", "grids", 6, 39312)]
+N_TRAIN = 1000
+PRACTICE = ["p-grids7", "p-grids6"]
+RV390_DAY = ROOT / "artifacts/claude-rv390-20260926/day"
+TRAIN_DIR = ROOT / "artifacts/claude-rv391-20260926/critic/train"
+RESERVED = [W.RESERVED_TEST_DIR, RV390_DAY, ROOT / "artifacts/claude-rv392-20260926/day"]
+ROUNDS = 96
+FLAG_LIVE = 0.20          # the cut flags at most this share of live TRAINING states
+
+
+def make_train(a):
+    _, R, E = W.mods()
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    reserved = set()
+    for d in RESERVED:
+        for f in sorted(Path(d).glob("*.jsonl")):
+            for line in f.read_text().splitlines():
+                reserved.add(json.dumps(json.loads(line)["tokens"]))
+    report = {"reserved_items": len(reserved)}
+    for name, env, size, seed in TRAIN:
+        items = W.make_items(E, env, size, seed, N_TRAIN)
+        clash = sum(json.dumps(i.tokens) in reserved for i in items)
+        items = [i for i in items if json.dumps(i.tokens) not in reserved]
+        (out / f"{name}.jsonl").write_text("".join(json.dumps(R.item_to_json(i)) + "\n" for i in items))
+        report[name] = {"seed": seed, "kept": len(items), "clash_with_tests_day_or_practice": clash}
+        print(name, report[name])
+    (out / "make-train.json").write_text(json.dumps(report, indent=1) + "\n")
+
+
+@torch.no_grad()
+def states(w, it, rounds=ROUNDS):
+    """rv-387's GUESS on one puzzle, recording (features, dead, k) at each check round with a written guess."""
+    E, net = w.E, w.net
+    names = [E.SYM + n for n in it.meta["names"]]
+    Wd = len(it.tokens[0])
+    ans = torch.tensor([r * Wd + c for r, row in enumerate(it.slot) for c, v in enumerate(row) if v == 1])
+    page = W.AnyPage(it, E)
+    e, (dr, dc) = w.embed(page)
+    h = torch.zeros_like(e)
+    out, since = [], 0
+    for _ in range(rounds):
+        h = net.step(h, e, dr, dc)
+        lg, qq = net.read(h)
+        q = float(torch.sigmoid(qq.float())[0])
+        if E.check(it, w.final(page, lg[0].argmax(-1).tolist())):
+            break
+        since += 1
+        if since < V.CHECK_EVERY:
+            continue
+        since = 0
+        if page.written:
+            wr = torch.tensor([r * Wd + c for r, c in page.written])
+            hf = h[0].float().cpu()
+            feat = torch.cat([hf[ans].mean(0), hf[wr].mean(0), torch.tensor([q])])
+            dead = int(any(tok != it.target[r][c] for (r, c), tok in page.written.items()))
+            out.append((feat, dead, len(page.written)))
+        if q >= V.CUT:
+            continue
+        cell, cands = w.pick(page, lg[0], names)
+        if cell is None:
+[0m
+[0m$ [0mls runs/rv391critic-mac/ 2>&1 | head -n 20; ls artifacts/claude-rv391-20260926/critic/ 2>&1 | head -n 20
+ls: runs/rv391critic-mac/: No such file or directory
+run
+[0m
+[0m$ [0mls runs/ 2>&1 | head -n 30; find . -maxdepth 3 -name "*rv391*" 2>&1 | head -n 30; git log --oneline -5 -- artifacts/claude-rv391-20260926/ 2>&1 | head
+000-cache-pin
+000-vast-rescue
+own-probe-1
+./artifacts/claude-rv391-20260926
+[0m
+[0m$ [0mD=$(cat /tmp/rv391critic2_D.txt); mkdir -p "$D/artifacts/claude-rv391-20260926/critic/run-358i2"; ls -la "$D/artifacts/claude-rv391-20260926/critic/run-358i2/"; date -u; df -h "$D" 2>&1 | head
+total 0
+drwxr-xr-x  2 ben-hannan  staff   64 Sep 26 17:45 .
+drwxr-xr-x  6 ben-hannan  staff  192 Sep 26 17:45 ..
+Sat Sep 26 21:45:14 UTC 2026
+Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on
+/dev/disk3s3   460Gi   359Gi    51Gi    88%     10M  531M    2%   /System/Volumes/Data
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import torch,numpy,sys; print(torch.__version__); print(numpy.__version__)" 2>&1 | tail -n 10
+2.14.0
+2.5.3
+[0m
+[0m$ [0mD=$(cat /tmp/rv391critic2_D.txt); cd "$D"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; date -u > artifacts/claude-rv391-20260926/critic/run-358i2/START-UTC.txt; cat artifacts/claude-rv391-20260926/critic/run-358i2/START-UTC.txt; for s in 1 2 3; do uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rv391_critic.py probe --ckpt ~/premonition-models/rsn358i2/loop-s$s/final.pt --out artifacts/claude-rv391-20260926/critic/run-358i2/critic-s$s.json > artifacts/claude-rv391-20260926/critic/run-358i2/log-s$s.txt 2>&1 & echo "STARTED s$s PID $!"; done; wait; echo "WAIT_DONE_EXIT:$?"; date -u; ls -la artifacts/claude-rv391-20260926/critic/run-358i2/
+Sat Sep 26 21:45:22 UTC 2026
+STARTED s1 PID 96792
+STARTED s2 PID 96793
+STARTED s3 PID 96794
+WAIT_DONE_EXIT:0
+Sat Sep 26 21:52:07 UTC 2026
+total 288
+drwxr-xr-x  12 ben-hannan  staff    384 Sep 26 17:52 .
+drwxr-xr-x   6 ben-hannan  staff    192 Sep 26 17:45 ..
+-rw-r--r--   1 ben-hannan  staff    996 Sep 26 17:51 critic-s1.json
+-rw-r--r--   1 ben-hannan  staff  38155 Sep 26 17:51 critic-s1.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff    998 Sep 26 17:51 critic-s2.json
+-rw-r--r--   1 ben-hannan  staff  29441 Sep 26 17:51 critic-s2.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff   1004 Sep 26 17:52 critic-s3.json
+-rw-r--r--   1 ben-hannan  staff  42815 Sep 26 17:52 critic-s3.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff    541 Sep 26 17:51 log-s1.txt
+-rw-r--r--   1 ben-hannan  staff    542 Sep 26 17:51 log-s2.txt
+-rw-r--r--   1 ben-hannan  staff    548 Sep 26 17:52 log-s3.txt
+-rw-r--r--   1 ben-hannan  staff     29 Sep 26 17:45 START-UTC.txt
+[0m
+[0m$ [0mD=$(cat /tmp/rv391critic2_D.txt); cd "$D"; echo "=== log-s1 ==="; cat artifacts/claude-rv391-20260926/critic/run-358i2/log-s1.txt; echo "=== log-s2 ==="; cat artifacts/claude-rv391-20260926/critic/run-358i2/log-s2.txt; echo "=== log-s3 ==="; cat artifacts/claude-rv391-20260926/critic/run-358i2/log-s3.txt; echo "=== critic-s1.json ==="; cat artifacts/claude-rv391-20260926/critic/run-358i2/critic-s1.json; echo "=== critic-s2.json ==="; cat artifacts/claude-rv391-20260926/critic/run-358i2/critic-s2.json; echo "=== critic-s3.json ==="; cat artifacts/claude-rv391-20260926/critic/run-358i2/critic-s3.json
+=== log-s1 ===
+t-grids7 {"unfinished": 323, "states": 1740, "dead": 745, "auc": 0.9833, "auc_count_only": 0.8512, "dead_flagged": 730, "live_flagged": 198}
+t-grids6 {"unfinished": 28, "states": 105, "dead": 66, "auc": 0.9946, "auc_count_only": 0.8974, "dead_flagged": 66, "live_flagged": 9}
+p-grids7 {"unfinished": 97, "states": 534, "dead": 244, "auc": 0.7999, "auc_count_only": 0.7794, "dead_flagged": 192, "live_flagged": 94}
+p-grids6 {"unfinished": 6, "states": 16, "dead": 7, "auc": 0.873, "auc_count_only": 1.0, "dead_flagged": 6, "live_flagged": 1}
+=== log-s2 ===
+t-grids7 {"unfinished": 161, "states": 1257, "dead": 747, "auc": 0.9907, "auc_count_only": 0.764, "dead_flagged": 745, "live_flagged": 105}
+t-grids6 {"unfinished": 9, "states": 99, "dead": 75, "auc": 0.9994, "auc_count_only": 0.8183, "dead_flagged": 75, "live_flagged": 2}
+p-grids7 {"unfinished": 52, "states": 393, "dead": 260, "auc": 0.62, "auc_count_only": 0.7825, "dead_flagged": 186, "live_flagged": 79}
+p-grids6 {"unfinished": 4, "states": 33, "dead": 26, "auc": 0.9615, "auc_count_only": 0.9478, "dead_flagged": 25, "live_flagged": 1}
+=== log-s3 ===
+t-grids7 {"unfinished": 356, "states": 2058, "dead": 1001, "auc": 0.977, "auc_count_only": 0.8173, "dead_flagged": 971, "live_flagged": 211}
+t-grids6 {"unfinished": 48, "states": 97, "dead": 61, "auc": 0.995, "auc_count_only": 0.8786, "dead_flagged": 61, "live_flagged": 8}
+p-grids7 {"unfinished": 110, "states": 578, "dead": 241, "auc": 0.7845, "auc_count_only": 0.7929, "dead_flagged": 214, "live_flagged": 162}
+p-grids6 {"unfinished": 12, "states": 39, "dead": 20, "auc": 0.9447, "auc_count_only": 0.9474, "dead_flagged": 15, "live_flagged": 1}
+=== critic-s1.json ===
+{
+ "ckpt": "/Users/ben-hannan/premonition-models/rsn358i2/loop-s1/final.pt",
+ "sha256": "d30887c59f57496a1a195d7250e130bb1c51393d973ce45f4bdd898ba5eb8261",
+ "torch": "2.14.0",
+ "rounds": 96,
+ "sets": {
+  "t-grids7": {
+   "unfinished": 323,
+   "states": 1740,
+   "dead": 745,
+   "auc": 0.9833,
+   "auc_count_only": 0.8512,
+   "dead_flagged": 730,
+   "live_flagged": 198
+  },
+  "t-grids6": {
+   "unfinished": 28,
+   "states": 105,
+   "dead": 66,
+   "auc": 0.9946,
+   "auc_count_only": 0.8974,
+   "dead_flagged": 66,
+   "live_flagged": 9
+  },
+  "p-grids7": {
+   "unfinished": 97,
+   "states": 534,
+   "dead": 244,
+   "auc": 0.7999,
+   "auc_count_only": 0.7794,
+   "dead_flagged": 192,
+   "live_flagged": 94
+  },
+  "p-grids6": {
+   "unfinished": 6,
+   "states": 16,
+   "dead": 7,
+   "auc": 0.873,
+   "auc_count_only": 1.0,
+   "dead_flagged": 6,
+   "live_flagged": 1
+  }
+ },
+ "train": {
+  "states": 1845,
+  "dead": 811,
+  "loss": 0.178,
+  "auc": 0.9842,
+  "cut": -1.4250376224517822
+ },
+ "sec": 393
+}
+=== critic-s2.json ===
+{
+ "ckpt": "/Users/ben-hannan/premonition-models/rsn358i2/loop-s2/final.pt",
+ "sha256": "4085df22366b96190b087a7b46333daec9f19d078332ea5bf6328a15f2ed6594",
+ "torch": "2.14.0",
+ "rounds": 96,
+ "sets": {
+  "t-grids7": {
+   "unfinished": 161,
+   "states": 1257,
+   "dead": 747,
+   "auc": 0.9907,
+   "auc_count_only": 0.764,
+   "dead_flagged": 745,
+   "live_flagged": 105
+  },
+  "t-grids6": {
+   "unfinished": 9,
+   "states": 99,
+   "dead": 75,
+   "auc": 0.9994,
+   "auc_count_only": 0.8183,
+   "dead_flagged": 75,
+   "live_flagged": 2
+  },
+  "p-grids7": {
+   "unfinished": 52,
+   "states": 393,
+   "dead": 260,
+   "auc": 0.62,
+   "auc_count_only": 0.7825,
+   "dead_flagged": 186,
+   "live_flagged": 79
+  },
+  "p-grids6": {
+   "unfinished": 4,
+   "states": 33,
+   "dead": 26,
+   "auc": 0.9615,
+   "auc_count_only": 0.9478,
+   "dead_flagged": 25,
+   "live_flagged": 1
+  }
+ },
+ "train": {
+  "states": 1356,
+  "dead": 822,
+  "loss": 0.1517,
+  "auc": 0.9915,
+  "cut": -1.0349849462509155
+ },
+ "sec": 381
+}
+=== critic-s3.json ===
+{
+ "ckpt": "/Users/ben-hannan/premonition-models/rsn358i2/loop-s3/final.pt",
+ "sha256": "5d571cc276d88f5af5da34c79e0d198878f9e674888b2150107095e27adc4a7a",
+ "torch": "2.14.0",
+ "rounds": 96,
+ "sets": {
+  "t-grids7": {
+   "unfinished": 356,
+   "states": 2058,
+   "dead": 1001,
+   "auc": 0.977,
+   "auc_count_only": 0.8173,
+   "dead_flagged": 971,
+   "live_flagged": 211
+  },
+  "t-grids6": {
+   "unfinished": 48,
+   "states": 97,
+   "dead": 61,
+   "auc": 0.995,
+   "auc_count_only": 0.8786,
+   "dead_flagged": 61,
+   "live_flagged": 8
+  },
+  "p-grids7": {
+   "unfinished": 110,
+   "states": 578,
+   "dead": 241,
+   "auc": 0.7845,
+   "auc_count_only": 0.7929,
+   "dead_flagged": 214,
+   "live_flagged": 162
+  },
+  "p-grids6": {
+   "unfinished": 12,
+   "states": 39,
+   "dead": 20,
+   "auc": 0.9447,
+   "auc_count_only": 0.9474,
+   "dead_flagged": 15,
+   "live_flagged": 1
+  }
+ },
+ "train": {
+  "states": 2155,
+  "dead": 1062,
+  "loss": 0.2075,
+  "auc": 0.978,
+  "cut": -1.0000885725021362
+ },
+ "sec": 404
+}
+[0m
+[0m$ [0mD=$(cat /tmp/rv391critic2_D.txt); cd "$D"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rv391_critic.py probe --ckpt ~/premonition-models/rsn358i2/loop-s4/final.pt --out artifacts/claude-rv391-20260926/critic/run-358i2/critic-s4.json > artifacts/claude-rv391-20260926/critic/run-358i2/log-s4.txt 2>&1 & echo "STARTED s4 PID $!"; wait; echo "WAIT_DONE_EXIT:$?"; date -u; ls -la artifacts/claude-rv391-20260926/critic/run-358i2/; cat artifacts/claude-rv391-20260926/critic/run-358i2/log-s4.txt
+STARTED s4 PID 194
+WAIT_DONE_EXIT:0
+Sat Sep 26 21:56:17 UTC 2026
+total 392
+drwxr-xr-x  15 ben-hannan  staff    480 Sep 26 17:56 .
+drwxr-xr-x   6 ben-hannan  staff    192 Sep 26 17:45 ..
+-rw-r--r--   1 ben-hannan  staff    996 Sep 26 17:51 critic-s1.json
+-rw-r--r--   1 ben-hannan  staff  38155 Sep 26 17:51 critic-s1.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff    998 Sep 26 17:51 critic-s2.json
+-rw-r--r--   1 ben-hannan  staff  29441 Sep 26 17:51 critic-s2.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff   1004 Sep 26 17:52 critic-s3.json
+-rw-r--r--   1 ben-hannan  staff  42815 Sep 26 17:52 critic-s3.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff   1000 Sep 26 17:56 critic-s4.json
+-rw-r--r--   1 ben-hannan  staff  42509 Sep 26 17:56 critic-s4.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff    541 Sep 26 17:51 log-s1.txt
+-rw-r--r--   1 ben-hannan  staff    542 Sep 26 17:51 log-s2.txt
+-rw-r--r--   1 ben-hannan  staff    548 Sep 26 17:52 log-s3.txt
+-rw-r--r--   1 ben-hannan  staff    543 Sep 26 17:56 log-s4.txt
+-rw-r--r--   1 ben-hannan  staff     29 Sep 26 17:45 START-UTC.txt
+t-grids7 {"unfinished": 367, "states": 2076, "dead": 953, "auc": 0.9717, "auc_count_only": 0.8471, "dead_flagged": 913, "live_flagged": 221}
+t-grids6 {"unfinished": 33, "states": 120, "dead": 75, "auc": 0.9976, "auc_count_only": 0.9425, "dead_flagged": 75, "live_flagged": 13}
+p-grids7 {"unfinished": 105, "states": 588, "dead": 283, "auc": 0.847, "auc_count_only": 0.8205, "dead_flagged": 244, "live_flagged": 121}
+p-grids6 {"unfinished": 11, "states": 25, "dead": 3, "auc": 1.0, "auc_count_only": 1.0, "dead_flagged": 3, "live_flagged": 12}
+[0m
+[0m$ [0mD=$(cat /tmp/rv391critic2_D.txt); cd "$D"; cat artifacts/claude-rv391-20260926/critic/run-358i2/critic-s4.json; echo "---"; ls -la artifacts/claude-rv391-20260926/critic/run-358i2/; stat -f "%Sm %N" -t "%Y-%m-%d %H:%M:%S" artifacts/claude-rv391-20260926/critic/run-358i2/log-*.txt artifacts/claude-rv391-20260926/critic/run-358i2/critic-*.json 2>&1
+{
+ "ckpt": "/Users/ben-hannan/premonition-models/rsn358i2/loop-s4/final.pt",
+ "sha256": "f0a84b11d1722d97739a5999f3b2b487c0bc09dc1c927fde14e6566adedd6621",
+ "torch": "2.14.0",
+ "rounds": 96,
+ "sets": {
+  "t-grids7": {
+   "unfinished": 367,
+   "states": 2076,
+   "dead": 953,
+   "auc": 0.9717,
+   "auc_count_only": 0.8471,
+   "dead_flagged": 913,
+   "live_flagged": 221
+  },
+  "t-grids6": {
+   "unfinished": 33,
+   "states": 120,
+   "dead": 75,
+   "auc": 0.9976,
+   "auc_count_only": 0.9425,
+   "dead_flagged": 75,
+   "live_flagged": 13
+  },
+  "p-grids7": {
+   "unfinished": 105,
+   "states": 588,
+   "dead": 283,
+   "auc": 0.847,
+   "auc_count_only": 0.8205,
+   "dead_flagged": 244,
+   "live_flagged": 121
+  },
+  "p-grids6": {
+   "unfinished": 11,
+   "states": 25,
+   "dead": 3,
+   "auc": 1.0,
+   "auc_count_only": 1.0,
+   "dead_flagged": 3,
+   "live_flagged": 12
+  }
+ },
+ "train": {
+  "states": 2196,
+  "dead": 1028,
+  "loss": 0.2239,
+  "auc": 0.9735,
+  "cut": -1.0227824449539185
+ },
+ "sec": 245
+}
+---
+total 392
+drwxr-xr-x  15 ben-hannan  staff    480 Sep 26 17:56 .
+drwxr-xr-x   6 ben-hannan  staff    192 Sep 26 17:45 ..
+-rw-r--r--   1 ben-hannan  staff    996 Sep 26 17:51 critic-s1.json
+-rw-r--r--   1 ben-hannan  staff  38155 Sep 26 17:51 critic-s1.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff    998 Sep 26 17:51 critic-s2.json
+-rw-r--r--   1 ben-hannan  staff  29441 Sep 26 17:51 critic-s2.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff   1004 Sep 26 17:52 critic-s3.json
+-rw-r--r--   1 ben-hannan  staff  42815 Sep 26 17:52 critic-s3.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff   1000 Sep 26 17:56 critic-s4.json
+-rw-r--r--   1 ben-hannan  staff  42509 Sep 26 17:56 critic-s4.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff    541 Sep 26 17:51 log-s1.txt
+-rw-r--r--   1 ben-hannan  staff    542 Sep 26 17:51 log-s2.txt
+-rw-r--r--   1 ben-hannan  staff    548 Sep 26 17:52 log-s3.txt
+-rw-r--r--   1 ben-hannan  staff    543 Sep 26 17:56 log-s4.txt
+-rw-r--r--   1 ben-hannan  staff     29 Sep 26 17:45 START-UTC.txt
+2026-09-26 17:51:55 artifacts/claude-rv391-20260926/critic/run-358i2/log-s1.txt
+2026-09-26 17:51:44 artifacts/claude-rv391-20260926/critic/run-358i2/log-s2.txt
+2026-09-26 17:52:07 artifacts/claude-rv391-20260926/critic/run-358i2/log-s3.txt
+2026-09-26 17:56:17 artifacts/claude-rv391-20260926/critic/run-358i2/log-s4.txt
+2026-09-26 17:51:55 artifacts/claude-rv391-20260926/critic/run-358i2/critic-s1.json
+2026-09-26 17:51:44 artifacts/claude-rv391-20260926/critic/run-358i2/critic-s2.json
+2026-09-26 17:52:07 artifacts/claude-rv391-20260926/critic/run-358i2/critic-s3.json
+2026-09-26 17:56:17 artifacts/claude-rv391-20260926/critic/run-358i2/critic-s4.json
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- artifacts/claude-rv391-20260926/critic/ 2>&1 | head -n 30
+artifacts/claude-rv391-20260926/critic/run/SOURCES.txt
+artifacts/claude-rv391-20260926/critic/run/critic-r0.json
+artifacts/claude-rv391-20260926/critic/run/critic-r0.rows.jsonl
+artifacts/claude-rv391-20260926/critic/run/critic-s1.json
+artifacts/claude-rv391-20260926/critic/run/critic-s1.rows.jsonl
+artifacts/claude-rv391-20260926/critic/run/critic-s2.json
+artifacts/claude-rv391-20260926/critic/run/critic-s2.rows.jsonl
+artifacts/claude-rv391-20260926/critic/run/critic-s3.json
+artifacts/claude-rv391-20260926/critic/run/critic-s3.rows.jsonl
+artifacts/claude-rv391-20260926/critic/run/critic-s4.json
+artifacts/claude-rv391-20260926/critic/run/critic-s4.rows.jsonl
+artifacts/claude-rv391-20260926/critic/run/log-r0.txt
+artifacts/claude-rv391-20260926/critic/run/log-s1.txt
+artifacts/claude-rv391-20260926/critic/run/log-s2.txt
+artifacts/claude-rv391-20260926/critic/run/log-s3.txt
+artifacts/claude-rv391-20260926/critic/run/log-s4.txt
+artifacts/claude-rv391-20260926/critic/train/make-train.json
+artifacts/claude-rv391-20260926/critic/train/t-grids6.jsonl
+artifacts/claude-rv391-20260926/critic/train/t-grids7.jsonl
+artifacts/claude-rv391-20260926/critic/verify/extra.py
+artifacts/claude-rv391-20260926/critic/verify/recount.py
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rv391-20260926/critic/run/SOURCES.txt 2>&1
+rv-391 dev 2 critic probe (label rv391critic) SOURCES
+date_utc 2026-09-26T21:06:32Z (runs finished; started 2026-09-26T20:27:44Z)
+code origin/main bcbbd35025f5f525ac522e0cae6ae4beefdd603c (sealed; SEAL-critic 14/14 OK, never edited)
+torch 2.14.0 (uv --offline --no-project --python 3.12 --with torch --with numpy)
+env OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; Mac CPU, fp32, no autocast
+
+nets (~/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-sN/final.pt, sha256 as checked = SEAL-run line):
+s1 /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s1/final.pt f916b8b562379c583d9e98164f65d7dbdc95610a3b1df07b7c8d078c42745832
+s2 /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s2/final.pt 1f9b68c113c8749ce0414486b546b4ef64d89bfb166b887c6e3f707048e858c5
+s3 /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s3/final.pt 7bb0a62fd5c2ae63cac389c54c8d83d1cdc6949fb9b12f0a043a334169959fa4
+s4 /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s4/final.pt 088f49d1cf9f8ed52689ef500ca21b9ff63102e586198e926ad4882def66cb26
+
+r0 untrained control (built in $D/RAND, never pushed):
+untrained loop net RAND/loop-r0.pt init seed 0 weights 6438302 weights_sha256 05f2870442dbceae7bf61c82e0ea14d588d77d7bd0910e5e6f0fb530b0787b40 file_sha256 a1acc254aba65fa424a06908dac74525d1a7e30d7c5dd09a030e0eed8fadf483
+r0 ckpt used for probe: $D/RAND/loop-r0.pt (file_sha256 a1acc254aba65fa424a06908dac74525d1a7e30d7c5dd09a030e0eed8fadf483)
+
+minutes per run (from critic json sec; wall batch1 s1-s3 ~16 min, batch2 s4+r0 ~19 min; 85-min stop not needed, all 5 finished):
+s1 915 sec = 15.25 min
+s2 957 sec = 15.95 min
+s3 835 sec = 13.92 min
+s4 964 sec = 16.07 min
+r0 1136 sec = 18.93 min
+
+outputs per net: critic-sN.json + critic-sN.rows.jsonl + log-sN.txt (s1-s4, r0); 5 nets ran, 0 skipped
+train/practice only; no test puzzle
+[0m
+[0m$ [0mgit rev-parse origin/main 2>&1; D=$(cat /tmp/rv391critic2_D.txt); cd "$D"; date -u; cat artifacts/claude-rv391-20260926/critic/run-358i2/START-UTC.txt
+885df2bc3cffd4e0fba6dc527796f0320204553e
+Sat Sep 26 21:56:27 UTC 2026
+Sat Sep 26 21:45:22 UTC 2026
+[0m
+[0m← [0mWrite /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.GcJ2ZY3Xsy/artifacts/claude-rv391-20260926/critic/run-358i2/SOURCES.txt
+Wrote file successfully.
+[0m
+[0m$ [0mD=$(cat /tmp/rv391critic2_D.txt); rm "$D/artifacts/claude-rv391-20260926/critic/run-358i2/START-UTC.txt"; ls -la "$D/artifacts/claude-rv391-20260926/critic/run-358i2/"; echo "--- worktree dest ---"; ls -la artifacts/claude-rv391-20260926/critic/ 2>&1 | head -n 20
+total 392
+drwxr-xr-x  15 ben-hannan  staff    480 Sep 26 17:56 .
+drwxr-xr-x   6 ben-hannan  staff    192 Sep 26 17:45 ..
+-rw-r--r--   1 ben-hannan  staff    996 Sep 26 17:51 critic-s1.json
+-rw-r--r--   1 ben-hannan  staff  38155 Sep 26 17:51 critic-s1.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff    998 Sep 26 17:51 critic-s2.json
+-rw-r--r--   1 ben-hannan  staff  29441 Sep 26 17:51 critic-s2.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff   1004 Sep 26 17:52 critic-s3.json
+-rw-r--r--   1 ben-hannan  staff  42815 Sep 26 17:52 critic-s3.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff   1000 Sep 26 17:56 critic-s4.json
+-rw-r--r--   1 ben-hannan  staff  42509 Sep 26 17:56 critic-s4.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff    541 Sep 26 17:51 log-s1.txt
+-rw-r--r--   1 ben-hannan  staff    542 Sep 26 17:51 log-s2.txt
+-rw-r--r--   1 ben-hannan  staff    548 Sep 26 17:52 log-s3.txt
+-rw-r--r--   1 ben-hannan  staff    543 Sep 26 17:56 log-s4.txt
+-rw-r--r--   1 ben-hannan  staff   1463 Sep 26 17:56 SOURCES.txt
+--- worktree dest ---
+total 0
+drwxr-xr-x   3 ben-hannan  staff   96 Sep 26 17:06 .
+drwxr-xr-x   4 ben-hannan  staff  128 Sep 26 17:06 ..
+drwxr-xr-x  18 ben-hannan  staff  576 Sep 26 17:06 run
+[0m
+[0m$ [0mD=$(cat /tmp/rv391critic2_D.txt); mkdir -p artifacts/claude-rv391-20260926/critic/run-358i2 && cp "$D/artifacts/claude-rv391-20260926/critic/run-358i2/"* artifacts/claude-rv391-20260926/critic/run-358i2/ && ls -la artifacts/claude-rv391-20260926/critic/run-358i2/ && shasum -a 256 artifacts/claude-rv391-20260926/critic/run-358i2/* | head -n 20
+total 392
+drwxr-xr-x  15 ben-hannan  staff    480 Sep 26 17:56 .
+drwxr-xr-x   4 ben-hannan  staff    128 Sep 26 17:56 ..
+-rw-r--r--   1 ben-hannan  staff    996 Sep 26 17:56 critic-s1.json
+-rw-r--r--   1 ben-hannan  staff  38155 Sep 26 17:56 critic-s1.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff    998 Sep 26 17:56 critic-s2.json
+-rw-r--r--   1 ben-hannan  staff  29441 Sep 26 17:56 critic-s2.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff   1004 Sep 26 17:56 critic-s3.json
+-rw-r--r--   1 ben-hannan  staff  42815 Sep 26 17:56 critic-s3.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff   1000 Sep 26 17:56 critic-s4.json
+-rw-r--r--   1 ben-hannan  staff  42509 Sep 26 17:56 critic-s4.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff    541 Sep 26 17:56 log-s1.txt
+-rw-r--r--   1 ben-hannan  staff    542 Sep 26 17:56 log-s2.txt
+-rw-r--r--   1 ben-hannan  staff    548 Sep 26 17:56 log-s3.txt
+-rw-r--r--   1 ben-hannan  staff    543 Sep 26 17:56 log-s4.txt
+-rw-r--r--   1 ben-hannan  staff   1463 Sep 26 17:56 SOURCES.txt
+f14bae35c2a03b616e1b7d86ef397566140dabce1985b37f120b8a590d5a6e1a  artifacts/claude-rv391-20260926/critic/run-358i2/critic-s1.json
+6806bf57cec6d66da36b5905ee304f9b8ce9ddfad2909612915fa9a5c4dbf33b  artifacts/claude-rv391-20260926/critic/run-358i2/critic-s1.rows.jsonl
+9a517914e935a7cd74c8ce7fb9ab2a7c9c966468f4b76048cd0fba04eb408a76  artifacts/claude-rv391-20260926/critic/run-358i2/critic-s2.json
+b0c11ed4f764125c6ab8e0c93b0eb1aa775ebf1bf108e26fdddaf3b4f56c19c2  artifacts/claude-rv391-20260926/critic/run-358i2/critic-s2.rows.jsonl
+354737e02ef7544c600299381d3970e8a2bedc9d07c6338eb0cc0fb82a9f6eca  artifacts/claude-rv391-20260926/critic/run-358i2/critic-s3.json
+5167b417bbb2d6718cba2f11e7983a25c99bb583b605b930f2d941a4f4d27367  artifacts/claude-rv391-20260926/critic/run-358i2/critic-s3.rows.jsonl
+04446f2b22cd1aa5ac3d532fc86de4ea61fce9ff6cab571b257af2f1330f5d39  artifacts/claude-rv391-20260926/critic/run-358i2/critic-s4.json
+4d4fdfca4dd8b7231788cb919abe5bdc81e15f48b606e5637848f5e6cabf63d5  artifacts/claude-rv391-20260926/critic/run-358i2/critic-s4.rows.jsonl
+6800b9184e882a69466c37029acd64462f3f66443eeea44638fb1070a30fa84d  artifacts/claude-rv391-20260926/critic/run-358i2/log-s1.txt
+a79193b1354a3aff7f318569022692f7eb66df9627174478a4849533fc0a037e  artifacts/claude-rv391-20260926/critic/run-358i2/log-s2.txt
+cd2c61143a198e4e9660c96ba58aad8cb0fc1352be969e8254bcfd2e16b4598c  artifacts/claude-rv391-20260926/critic/run-358i2/log-s3.txt
+c0594509701e7ce7c062af37b132b6c4da41f78db402a5d457f70c4dd8bff88b  artifacts/claude-rv391-20260926/critic/run-358i2/log-s4.txt
+b664e80abd01226cab00b285e10772e41a28f18a265eb67dee1cc048256ff52c  artifacts/claude-rv391-20260926/critic/run-358i2/SOURCES.txt
+[0m
+[0m$ [0mD=$(cat /tmp/rv391critic2_D.txt); echo "D=[$D]"; diff -r "$D/artifacts/claude-rv391-20260926/critic/run-358i2" artifacts/claude-rv391-20260926/critic/run-358i2 && echo "DIFF_OK:13 files identical"; rm -rf "$D"; echo "RM_EXIT:$?"; ls -ld "$D" 2>&1; echo "CONFIRM_GONE_EXIT:$?"; rm /tmp/rv391critic2_D.txt; git status --short -- artifacts/claude-rv391-20260926/critic/run-358i2/ 2>&1 | head -n 20
+D=[/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.GcJ2ZY3Xsy]
+DIFF_OK:13 files identical
+RM_EXIT:0
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.GcJ2ZY3Xsy: No such file or directory
+CONFIRM_GONE_EXIT:1
+[0m
+[0m$ [0mgit status --short 2>&1 | head -n 30; echo "---"; ls -la artifacts/claude-rv391-20260926/critic/run-358i2/
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+---
+total 392
+drwxr-xr-x  15 ben-hannan  staff    480 Sep 26 17:56 .
+drwxr-xr-x   4 ben-hannan  staff    128 Sep 26 17:56 ..
+-rw-r--r--   1 ben-hannan  staff    996 Sep 26 17:56 critic-s1.json
+-rw-r--r--   1 ben-hannan  staff  38155 Sep 26 17:56 critic-s1.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff    998 Sep 26 17:56 critic-s2.json
+-rw-r--r--   1 ben-hannan  staff  29441 Sep 26 17:56 critic-s2.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff   1004 Sep 26 17:56 critic-s3.json
+-rw-r--r--   1 ben-hannan  staff  42815 Sep 26 17:56 critic-s3.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff   1000 Sep 26 17:56 critic-s4.json
+-rw-r--r--   1 ben-hannan  staff  42509 Sep 26 17:56 critic-s4.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff    541 Sep 26 17:56 log-s1.txt
+-rw-r--r--   1 ben-hannan  staff    542 Sep 26 17:56 log-s2.txt
+-rw-r--r--   1 ben-hannan  staff    548 Sep 26 17:56 log-s3.txt
+-rw-r--r--   1 ben-hannan  staff    543 Sep 26 17:56 log-s4.txt
+-rw-r--r--   1 ben-hannan  staff   1463 Sep 26 17:56 SOURCES.txt
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-rv391-20260926/critic/run-358i2/critic-s1.json 2>&1; echo "EXIT:$?"; git status --short --untracked-files=all -- artifacts/claude-rv391-20260926/critic/run-358i2 2>&1 | head; git ls-files --others --exclude-standard -- artifacts/claude-rv391-20260926/critic/ 2>&1 | head
+.gitignore:5:artifacts/	artifacts/claude-rv391-20260926/critic/run-358i2/critic-s1.json
+EXIT:0
+[0m
