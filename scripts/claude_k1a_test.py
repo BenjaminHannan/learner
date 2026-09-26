@@ -118,7 +118,26 @@ def main():
     finally:
         E02C.build_02c = real
     ok += 1
-    print(f"k1a tests: {ok}/6 OK")
+    # 7. build_null_k1a: the same swap around mu402's build_null02c (NullReader harness)
+    import claude_mu402 as MU
+    seen.clear()
+    real = MU.build_null02c
+
+    def fake2(state_dir, args):
+        seen["fn"] = CD.install_creative333d
+        o = type("L", (), {})()
+        o.layers330c = ["330a_334", "cre333d", "seed402"]
+        return o
+    MU.build_null02c = fake2
+    try:
+        before = CD.install_creative333d
+        out = K.build_null_k1a("x", None)
+        assert seen["fn"] is K.install_creative_k1a and CD.install_creative333d is before
+        assert out.layers330c == ["330a_334", "cre_k1a", "seed402"]
+    finally:
+        MU.build_null02c = real
+    ok += 1
+    print(f"k1a tests: {ok}/7 OK")
 
 
 if __name__ == "__main__":

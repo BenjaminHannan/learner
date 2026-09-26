@@ -29,7 +29,7 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-ARMS = ("T", "W0", "W1")
+ARMS = ("T", "W0", "W1", "W2", "W3")
 
 
 def load(p):
@@ -77,6 +77,41 @@ def run(a):
                 fh.write(json.dumps(r, ensure_ascii=False) + "\n")
             fh.flush()
             print(f"[k1a-practice] {it['item_id']} {time.time() - t0:.0f}s", flush=True)
+
+
+def run_w2(a):
+    """W2 (added after the 333e E.2 precedent, before any judging): the writer gets only the user's earlier messages,
+    quoted inside its system line, not the chat as messages (so it can't copy an earlier reply). W3 = k1b
+    (scripts/claude_k1b_cre.py): W0's samples, but a reply that ended on its own is not trimmed. Same seed as W0/W1."""
+    import torch
+    import claude_chat338_agent as C38
+    import claude_cre333_agent as C
+    import claude_cre333b_agent as CB
+    import claude_k1a_cre as K
+    g = CB.Gen333b(a.model)
+    gen = C38.Gen338(share=g)
+    path = Path(a.out) / "rows.jsonl"
+    done = {(r["item_id"], r["arm"]) for r in load(path)}
+    items = load(a.items)[: a.limit] if a.limit else load(a.items)
+    with open(path, "a", encoding="utf-8") as fh:
+        for i, it in enumerate(items):
+            t0 = time.time()
+            for arm in ("W2", "W3"):
+                if (it["item_id"], arm) in done:
+                    continue
+                torch.manual_seed(a.seed * 1000 + i)
+                stats: dict = {}
+                if arm == "W2":
+                    r = K.write_k1a_said(gen, it["last"], "", list(it["turns"]), stats)
+                else:                        # W3 = k1b: W0's exact samples, a finished reply kept whole
+                    import claude_k1b_cre as KB
+                    r = KB.write_k1b(gen, it["last"], "", stats)
+                row = {"item_id": it["item_id"], "arm": arm, "reply": r if r is not None else C.FALLBACK,
+                       "fallback": r is None, "guards": stats, "hist_msgs": len(it["turns"]) if arm == "W2" else 0,
+                       "routed": CB.is_creative333c(it["last"]), "lead": len(it["turns"])}
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+                fh.flush()
+            print(f"[k1a-practice-w2] {it['item_id']} {time.time() - t0:.0f}s", flush=True)
 
 
 def packets(a):
@@ -131,7 +166,7 @@ def score(a):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", choices=["run", "packets", "score"])
+    ap.add_argument("mode", choices=["run", "run_w2", "packets", "score"])
     ap.add_argument("--items", required=True)
     ap.add_argument("--model", default="")
     ap.add_argument("--out", required=True)
@@ -139,7 +174,7 @@ def main():
     ap.add_argument("--seed", type=int, default=4111)
     ap.add_argument("--judges", default="")
     a = ap.parse_args()
-    {"run": run, "packets": packets, "score": score}[a.mode](a)
+    {"run": run, "run_w2": run_w2, "packets": packets, "score": score}[a.mode](a)
 
 
 if __name__ == "__main__":

@@ -16,7 +16,10 @@ for an invented one. Unchanged: routing (is_creative333c), SYSTEM333D and the no
 that passes guard333d, trim, the FALLBACK line, counters, the WORK entry, and no notebook writes.
 
 build_k1a(state_dir, args) = claude_e2e02c.build_02c (sealed, not edited) with install_creative_k1a swapped in for
-install_creative333d while it builds. New file only.
+install_creative333d while it builds. build_null_k1a(state_dir, args) = the same swap around
+claude_mu402.build_null02c (the Making-things-up thread's rental harness: a NullReader under --model NULL, so no
+2 GB reader upload, and torch/random seeded per turn from (turn number, text), the same seeds for every arm), so
+the k1a arm differs from mu402's build_null02c arm by the writer's chat only. New file only.
 """
 from __future__ import annotations
 
@@ -34,6 +37,7 @@ import claude_cre333b_agent as CB      # noqa: E402
 import claude_cre333d_agent as CD      # noqa: E402
 
 HISTORY_K1A = C38.HISTORY338           # 12 messages, the window chat338 already feeds the 1B
+_PRINTED: list = []
 
 
 def chat_history(loop) -> list[dict]:
@@ -52,6 +56,27 @@ def write_k1a(gen, text: str, facts: str, hist: list[dict], stats: dict, n: int 
     known = C38._words([text, facts] + [m["content"] for m in hist])
     system = CD.SYSTEM333D + (" Facts the user has told you: " + facts if facts else "")
     msgs = [{"role": "system", "content": system}] + list(hist) + [{"role": "user", "content": text}]
+    for c in gen.sample_chat(msgs, n):
+        c = C38.trim(c)
+        g = CD.guard333d(c, text, known)
+        if g is None:
+            return c
+        stats[g] = stats.get(g, 0) + 1
+    return None
+
+
+SAID_K1A = " Earlier in this chat the user said: "
+
+
+def write_k1a_said(gen, text: str, facts: str, said: list[str], stats: dict, n: int = CD.N333D) -> str | None:
+    """Practice variant W2 (not the registered change unless PASSMARKS says so): only the user's earlier messages,
+    quoted in the system line; the chat is not passed as messages, so an earlier reply can't be copied."""
+    said = [s.strip() for s in said if s and s.strip()]
+    known = C38._words([text, facts] + said)
+    system = CD.SYSTEM333D + (" Facts the user has told you: " + facts if facts else "")
+    if said:
+        system += SAID_K1A + " ".join(json.dumps(s, ensure_ascii=False) for s in said)
+    msgs = [{"role": "system", "content": system}, {"role": "user", "content": text}]
     for c in gen.sample_chat(msgs, n):
         c = C38.trim(c)
         g = CD.guard333d(c, text, known)
@@ -92,13 +117,25 @@ def install_creative_k1a(loop, gen, n: int = CD.N333D) -> None:
     loop.turn = turn_k1a
 
 
-def build_k1a(state_dir, args):
-    import claude_e2e02c as E02C
+def _swapped(build, state_dir, args):
     old = CD.install_creative333d
     CD.install_creative333d = install_creative_k1a
     try:
-        loop = E02C.build_02c(state_dir, args)
+        loop = build(state_dir, args)
     finally:
         CD.install_creative333d = old
     loop.layers330c = [("cre_k1a" if x == "cre333d" else x) for x in loop.layers330c]
+    if not _PRINTED:
+        _PRINTED.append(1)
+        print(f"k1a: creative writer = install_creative_k1a; layers = {loop.layers330c}", flush=True)
     return loop
+
+
+def build_k1a(state_dir, args):
+    import claude_e2e02c as E02C
+    return _swapped(E02C.build_02c, state_dir, args)
+
+
+def build_null_k1a(state_dir, args):
+    import claude_mu402 as MU
+    return _swapped(MU.build_null02c, state_dir, args)
