@@ -25,8 +25,12 @@ have a solution reachable through at least one permitted sub-puzzle. Plain solve
 solved 5, so the pieces were available and the model did not find them within about 2-3 samples per piece (11.9
 pieces per four-number puzzle on average).
 
-A/B yes-probability ranking (diagnostic, the same frozen model and panel as ask-24ab): filled in below when the CPU
-re-score finishes.
+A/B yes-probability ranking (diagnostic, not a verdict; the same frozen model and seed-790 panel as ask-24ab,
+artifacts/claude-ask24ab-20260925/rescore/): GPT's alternative ("useful scores under the threshold") does NOT hold.
+The yes-share of the two letters ranks solvable above impossible hands with AUC 0.539 (AB1) and 0.455 (AB2), about
+chance. It ranks the solvable twin higher in 66/120 and 52/120 matched pairs. The mean yes-share is 0.643 vs 0.642
+(AB1) and 0.634 vs 0.636 (AB2), and every hand sits between 0.59 and 0.68. So the frozen 1B carries no usable
+solvability signal in this answer, not just a badly placed threshold.
 
 Adopted from the answer:
 - Next test: GPT's A ("does sleep make the model match answers to their own targets?"). It scores fixed strings, so it
