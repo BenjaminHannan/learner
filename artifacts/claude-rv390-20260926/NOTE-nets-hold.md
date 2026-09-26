@@ -18,7 +18,7 @@ rv-387's result (RESULTS.md there) was on the same nets. The same caveat applies
 The rv-391 dev measurement on the Mac also uses these nets. It is free and practice-only, so it is not held, but the
 trigger it picks will be re-measured on retrained nets before rv-391 is sealed.
 
-## Update 2026-09-26 17:01 UTC (date -u)
+## Update 2026-09-26 17:00 UTC (date -u)
 The job had already launched at 16:32 UTC (Director, 17:00 UTC); the watcher does not read a STATUS line. The Director
 moved the job file to handoff/held/ so it cannot relaunch. I chose to let the running job finish rather than stop it:
 most of its cost was already spent, and the interruptibility mark does not depend on how well the nets trained. The
