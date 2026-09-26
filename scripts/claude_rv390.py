@@ -52,6 +52,75 @@ def mods():
     return V.modules("net")
 
 
+# ---------------- transfer row (report only; addendum 2026-09-26, Ben's 15:41 UTC goal) ----------------
+class AnyPage(V.Page):
+    """rv-387's page for any kind: open cells are the item's answer slots; no visible rule outside grids."""
+
+    def open_cells(self):
+        return [(r, c) for r, row in enumerate(self.it.slot) for c, v in enumerate(row)
+                if v == 1 and (r, c) not in self.written]
+
+    def copy(self):
+        p = AnyPage.__new__(AnyPage)
+        p.it, p.E = self.it, self.E
+        p.tokens, p.slot, p.written = [r[:] for r in self.tokens], [r[:] for r in self.slot], dict(self.written)
+        return p
+
+    def write(self, r, c, tok):
+        assert self.it.slot[r][c] == 1
+        self.tokens[r][c], self.slot[r][c] = tok, 0
+        self.written[(r, c)] = tok
+
+    def visible(self, r, c):
+        return super().visible(r, c) if self.it.env == "grids" else set()
+
+
+class AnyRunner(V.Runner):
+    """rv-387's BACK, unchanged in logic, on a kind it was not built for (sums: candidates are blank or a digit)."""
+
+    @torch.no_grad()
+    def solve(self, it, arm="back", budget=DOWN, check_every=V.CHECK_EVERY, cut=V.CUT):
+        E, net = self.E, self.net
+        page = AnyPage(it, E)
+        e, (dr, dc) = self.embed(page)
+        h = torch.zeros_like(e)
+        stack, used, guesses, backs, since, q, exhausted = [], 0, 0, 0, 0, 0.0, False
+        names = [E.SYM + n for n in it.meta["names"]] if it.env == "grids" else [E.BLANK] + [E.DIG + d for d in range(10)]
+        while used < budget:
+            h = net.step(h, e, dr, dc)
+            used += 1
+            since += 1
+            lg, qq = net.read(h)
+            q = float(torch.sigmoid(qq.float())[0])
+            if E.check(it, self.final(page, lg.argmax(-1)[0].tolist())):
+                return {"solved": True, "rounds": used, "guesses": guesses, "backs": backs}
+            if since < check_every:
+                continue
+            since = 0
+            if stack and q < stack[-1]["q"]:
+                backs += 1
+                while stack:
+                    fr = stack[-1]
+                    page, h = fr["page"].copy(), fr["h"].clone()
+                    if fr["cands"]:
+                        page.write(*fr["cell"], fr["cands"].pop(0))
+                        break
+                    stack.pop()
+                exhausted = not stack
+                e, (dr, dc) = self.embed(page)
+                continue
+            if q >= cut or exhausted:
+                continue
+            cell, cands = self.pick(page, lg[0], names)
+            if cell is None:
+                continue
+            stack.append({"page": page.copy(), "h": h.clone(), "q": q, "cell": cell, "cands": cands[1:]})
+            page.write(*cell, cands[0])
+            guesses += 1
+            e, (dr, dc) = self.embed(page)
+        return {"solved": False, "rounds": used, "guesses": guesses, "backs": backs}
+
+
 def make_items(E, env, size, seed, n=N_DAY):
     rng = random.Random(seed)
     if env == "sums":
@@ -181,6 +250,11 @@ def run(a):
             b = [runner.solve(it, "back", budget=DOWN) for it in unf]
             rec["back"] = {"solved": sum(x["solved"] for x in b), "guesses": sum(x["guesses"] for x in b),
                            "backs": sum(x["backs"] for x in b)}
+        else:   # transfer row, report only: grid-built going back applied to sums
+            b = [AnyRunner(net, E, dev).solve(it) for it in unf]
+            rec["back_transfer_report_only"] = {"solved": sum(x["solved"] for x in b),
+                                                "guesses": sum(x["guesses"] for x in b),
+                                                "backs": sum(x["backs"] for x in b)}
         rec["sec"] = round(time.time() - t0)
         res["sets"][name] = rec
         print(name, json.dumps(rec), flush=True)
