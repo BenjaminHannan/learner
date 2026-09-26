@@ -44,23 +44,67 @@ _CELL = re.compile(r"[0-9]|_")
 
 
 # ------------------------------------------------------------------ squares as text, with cell positions
-def render(grid, layout):
-    """text of the square and [(char index, row, col)] of every cell in it"""
-    lines, cells, pos = [], [], 0
+RECIPE_KEYS = ("before", "after", "row_prefix", "sep", "row_suffix", "row_join", "divider", "header", "header_prefix",
+               "header_sep", "header_suffix")
+LAYOUTS = ("row", "bare", "pipe", "comma", "md", "latex", "label", "colhead")      # practice layouts (ADDENDUM-gr1-1)
+
+
+def render_recipe(grid, rc):
+    """a grid written in a format recipe (the RECIPE_KEYS; {i} = row number, {A} = row letter in row_prefix):
+    the text and [(char index, row, col)] of every cell in it"""
+    L = "ABCDEFGHI"
+    text, cells = (rc["before"] + "\n") if rc["before"] else "", []
+    m = max(len(r) for r in grid)
+    if rc["header"] != "none":
+        labels = [str(c + 1) if rc["header"] == "numbers" else L[c] for c in range(m)]
+        text += rc["header_prefix"] + rc["header_sep"].join(labels) + rc["header_suffix"] + "\n"
     for r, row in enumerate(grid):
-        vals = ["_" if v == 0 else str(v) for v in row]
-        pre, sep, post = {"row": ("Row %d: " % (r + 1), " ", ""), "bare": ("", " ", ""), "pipe": ("| ", " | ", " |"),
-                          "comma": ("", ", ", "")}[layout]
-        line = pre
-        for c, v in enumerate(vals):
+        if r:
+            text += rc["row_join"]
+            if rc["row_join"] == "\n" and rc["divider"]:
+                text += rc["divider"] + "\n"
+        text += rc["row_prefix"].replace("{i}", str(r + 1)).replace("{A}", L[r])
+        for c, v in enumerate(row):
             if c:
-                line += sep
-            cells.append((pos + len(line), r, c))
-            line += v
-        line += post
-        lines.append(line)
-        pos += len(line) + 1
-    return "\n".join(lines), cells
+                text += rc["sep"]
+            cells.append((len(text), r, c))
+            text += "_" if v == 0 else str(v)
+        text += rc["row_suffix"]
+    if rc["after"]:
+        text += "\n" + rc["after"]
+    return text, cells
+
+
+def layout_recipe(layout, m, variant=0):
+    """the practice layouts as recipes (m = number of columns)"""
+    rc = dict.fromkeys(RECIPE_KEYS, "")
+    rc.update(row_join="\n", header="none", sep=" ")
+    if layout == "row":
+        rc.update(row_prefix="Row {i}: ")
+    elif layout == "pipe":
+        rc.update(row_prefix="| ", sep=" | ", row_suffix=" |")
+    elif layout == "comma":
+        rc.update(sep=", ")
+    elif layout == "md":
+        rc.update(header=("letters", "numbers")[variant % 2], header_prefix="| " + ("", "C")[variant % 2],
+                  header_sep=(" | ", " | C")[variant % 2], header_suffix=" |\n|" + "---|" * m, row_prefix="| ",
+                  sep=" | ", row_suffix=" |")
+    elif layout == "latex":
+        rc.update(before=("", "$$\n")[variant % 2] + "\\begin{array}{" + "c" * m + "}", sep=" & ", row_suffix=" \\\\",
+                  after="\\end{array}" + ("", "\n$$")[variant % 2])
+    elif layout == "label":
+        rc.update(row_prefix=("{A}: ", "R{i}: ", "{i}) ", "row {i} - ")[variant % 4])
+    elif layout == "colhead":
+        rc.update(header=("numbers", "letters")[variant % 2], header_prefix="    ", header_sep=" ",
+                  row_prefix=("{i} | ", "{A} | ")[(variant // 2) % 2])
+    else:
+        assert layout == "bare", layout
+    return rc
+
+
+def render(grid, layout, variant=0):
+    """text of the square and [(char index, row, col)] of every cell in it"""
+    return render_recipe(grid, layout_recipe(layout, max(len(r) for r in grid), variant))
 
 
 def decode(text, spans, tags):
@@ -108,8 +152,8 @@ def build(a) -> None:
         puz = B.make_requests(TRAIN_SEED + i, 1, s, False)[0]["puz"]
         if rng.random() < 0.2:
             puz = P3._broken(rng, puz, s)
-        layout = rng.choice(["row", "bare", "row", "bare", "pipe", "comma"])
-        sq, cells = render(puz, layout)
+        layout = rng.choice(["row", "bare"] + list(LAYOUTS))
+        sq, cells = render(puz, layout, rng.randrange(4))
         o, c = rng.choice(openers), (rng.choice(closers) if closers and rng.random() < 0.5 else "")
         if rng.random() < 0.75:
             pre, post = o + "\n", ("\n" + c if c else "")
@@ -123,7 +167,7 @@ def build(a) -> None:
         out.append({"text": t, "cells": [], "grid": None, "kind": "opener_only"})
     for i in range(160):                                            # number blocks that are not squares
         s = rng.randint(3, 7)
-        kind = ["ragged", "big", "short", "wide", "oneline"][i % 5]
+        kind = ["ragged", "big", "short", "wide", "oneline", "fmt_wide", "fmt_big"][i % 7]
         if kind == "ragged":
             g = [[rng.randint(1, s) for _ in range(s + (1 if r == 1 else 0))] for r in range(s)]
         elif kind == "big":
@@ -132,9 +176,16 @@ def build(a) -> None:
             g = [[rng.randint(1, s) for _ in range(s)] for _ in range(2)]
         elif kind == "wide":
             g = [[rng.randint(1, s) for _ in range(s + 1)] for _ in range(s)]
-        else:
+        elif kind == "oneline":
             g = [[rng.randint(1, 9) for _ in range(s * 2)]]
-        blk = "\n".join(" ".join(str(v) for v in row) for row in g)
+        elif kind == "fmt_wide":                                    # practice layouts with a column too many
+            g = [[rng.randint(1, s) for _ in range(s + 1)] for _ in range(s)]
+        else:                                                       # practice layouts with numbers above 9
+            g = [[rng.randint(10, 59) for _ in range(s)] for _ in range(s)]
+        if kind.startswith("fmt_"):
+            blk = render(g, rng.choice(LAYOUTS[2:]), rng.randrange(4))[0]
+        else:
+            blk = "\n".join(" ".join(str(v) for v in row) for row in g)
         t = rng.choice(everyday + openers)
         out.append({"text": t + "\n" + blk if rng.random() < 0.6 else blk + "\n" + t, "cells": [], "grid": None,
                     "kind": "block_" + kind})
@@ -304,7 +355,8 @@ def run(a) -> None:
     if a.task == "general":
         items = [{"id": "gen-%03d" % i, "text": it["q"]} for i, it in enumerate(D1.harm_panel())]
     else:
-        items = _load(Path(a.panel_dir) / {"squares": "squares.jsonl", "lookalikes": "lookalikes.jsonl"}[a.task])
+        items = _load(Path(a.panel_dir) / {"squares": "squares.jsonl", "lookalikes": "lookalikes.jsonl",
+                                           "unseen": "unseen.jsonl"}[a.task])
     head = torch.load(a.head)
     one_b = G.load_one_b(a.model)
     rows = []
@@ -358,14 +410,45 @@ def score(a) -> None:
                       "pass": res["pass"]}))
 
 
+def scoreu(a) -> None:
+    """gr-1U (ADDENDUM-gr1-1): the same head on squares in 20 formats practice never had (a blind writer's recipes)"""
+    import claude_puzzle_reader as R
+    out, pd = Path(a.out), Path(a.panel_dir)
+    un = _load(pd / "unseen.jsonl")
+    Lu = {r["id"]: r["grid"] for r in _load(out / "L_unseen.jsonl")}
+    assert set(Lu) == {r["id"] for r in un}
+    res = {}
+    for arm, rd in (("L", lambda r: Lu[r["id"]]), ("C", lambda r: (R.read_latin(r["text"]) or {}).get("grid"))):
+        got = {r["id"]: rd(r) for r in un}
+        ex = {r["id"]: int(got[r["id"]] == r["grid"]) for r in un}
+        by_fmt = Counter()
+        for r in un:
+            by_fmt[r["format_id"]] += ex[r["id"]]
+        res[arm] = {"exact": sum(ex.values()),
+                    "wrong": sum(int(got[r["id"]] is not None and got[r["id"]] != r["grid"]) for r in un),
+                    "none": sum(int(got[r["id"]] is None) for r in un),
+                    "exact_without_token_clash": sum(ex[r["id"]] for r in un if not r["token_clash"]),
+                    "formats_all_exact": sum(int(by_fmt[f] == 3) for f in {r["format_id"] for r in un}),
+                    "formats_none_exact": sum(int(by_fmt[f] == 0) for f in {r["format_id"] for r in un}),
+                    "exact_by_format": dict(sorted(by_fmt.items()))}
+    res["n"], res["token_clash_items"] = len(un), sum(int(r["token_clash"]) for r in un)
+    res["marks"] = {"U1": res["L"]["exact"] >= 48, "U2": res["L"]["wrong"] <= 2}
+    res["pass"] = all(res["marks"].values())
+    sd = Path(a.score)
+    sd.mkdir(parents=True, exist_ok=True)
+    (sd / "gr1u_score.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
+    print(json.dumps({k: ({kk: vv for kk, vv in v.items() if kk != "exact_by_format"} if isinstance(v, dict) and
+                          k in "LC" else v) for k, v in res.items()}))
+
+
 # ------------------------------------------------------------------ selftest (no model)
 def selftest() -> None:
     import claude_rsn358b2_bridge as B
     n = 0
-    for layout in ("row", "bare", "pipe", "comma"):
+    for layout in LAYOUTS:
         for s in (3, 5, 8):
             puz = B.make_requests(489000 + s, 1, s, False)[0]["puz"]
-            txt, cells = render(puz, layout)
+            txt, cells = render(puz, layout, s)
             assert len(cells) == s * s and all(txt[i] in "_123456789" for i, _, _ in cells)
             # character-level "tokens": each char its own span
             spans = [(i, i + 1) for i in range(len(txt))]
@@ -382,11 +465,11 @@ def main() -> None:
         selftest()
         return
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["build", "feats", "fit", "dev", "run", "score"])
+    ap.add_argument("cmd", choices=["build", "feats", "fit", "dev", "run", "score", "scoreu"])
     for k in ("wrap", "rt02h", "out", "model", "train", "feats", "head", "task", "panel-dir", "score"):
         ap.add_argument("--" + k, default="")
     a = ap.parse_args()
-    {"build": build, "feats": feats, "fit": fit, "dev": dev, "run": run, "score": score}[a.cmd](a)
+    {"build": build, "feats": feats, "fit": fit, "dev": dev, "run": run, "score": score, "scoreu": scoreu}[a.cmd](a)
 
 
 if __name__ == "__main__":
