@@ -14,8 +14,10 @@ For each seed and arm, two nets practise mazes identically (sizes 5 and 7, batch
 warm-up, CARRY_STEPS = 4,000 steps, the arm's own 358i training schedule, the same maze stream):
   pre    starts from the 358i checkpoint
   fresh  starts from random weights (same architecture)
-Every 250 steps both are scored on 400 fresh dev mazes (200 at 7x7, 200 at 9x9; seeded, never the test files).
-Learning-curve score = the mean dev count over those 16 checks (0-400). Carry-over = pre's score - fresh's score.
+After 0, 125, 250, 500, 750, 1000, 1500, 2000, 3000 and 4000 steps (batch 256, so 32,000 to 1,024,000 mazes) both are
+scored on 400 fresh dev mazes (200 at 7x7, 200 at 9x9; seeded, never the test files). Primary number (Ben 15:42,
+"a person learns to drive in about 40 hours"): steps to the bar = the first check with >= 150/200 right on 7x7 dev
+(5000 if never). The check at 0 steps is solving mazes cold (report only).
 At the end each net is scored once on the sealed maze tests (artifacts/claude-rsn358m-20260926/tests: maze7/9/11/13).
 
   python -B scripts/claude_rsn358x_run.py carry --arm loop|plain --init pre|fresh --seed S [--ckpt SRC.pt] --out DIR
@@ -39,7 +41,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import claude_rsn358m_run as MR  # noqa: E402  (358i design + the maze kind, maze check, maze test makers)
 
 R, E, M = MR.R, MR.E, MR.M
-CARRY_STEPS, CHECK_EVERY, WARMUP = 4000, 250, 200
+CARRY_STEPS, WARMUP = 4000, 200
+CHECKS = [0, 125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000]     # dev checks after these many steps (0 = cold)
+BAR7, NEVER = 150, 5000                                               # steps-to-bar; NEVER if not reached by 4000
 MAZE_TESTS = [t for t in R.TESTS if t[1] == "mazes"]
 R.TESTS[:] = MAZE_TESTS                                   # eval here scores the maze tests only
 
@@ -74,7 +78,20 @@ def carry(a):
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     log = open(out / "carry_log.jsonl", "w", encoding="utf-8")
-    t0, curve = time.time(), []
+    t0, curve = time.time(), {}
+
+    def check(step, loss=None, exact=None):
+        res = {k: R.evaluate(net, v, device)["right"] for k, v in dev.items()}
+        curve[step] = res
+        rec = {"step": step, "min": round((time.time() - t0) / 60, 1), "dev": res}
+        if loss is not None:
+            rec.update(loss=round(loss.item(), 4), exact=round(exact.mean().item(), 3))
+        log.write(json.dumps(rec) + "\n"); log.flush()
+        print(json.dumps(rec), flush=True)
+
+    checks = [c for c in a.checks if c <= a.steps]
+    if 0 in checks:
+        check(0)
     for step in range(1, a.steps + 1):
         net.train()
         size = rng.choice(M.SIZES_PRACTICE)
@@ -96,18 +113,12 @@ def carry(a):
         loss.backward()
         torch.nn.utils.clip_grad_norm_(net.parameters(), 1.0)
         opt.step(); sched.step()
-        if step % a.check_every == 0 or step == a.steps:
-            res = {k: R.evaluate(net, v, device)["right"] for k, v in dev.items()}
-            if step % a.check_every == 0:
-                curve.append(res["maze7"] + res["maze9"])
-            rec = {"step": step, "loss": round(loss.item(), 4), "exact": round(exact.mean().item(), 3),
-                   "min": round((time.time() - t0) / 60, 1), "dev": res}
-            log.write(json.dumps(rec) + "\n"); log.flush()
-            print(json.dumps(rec), flush=True)
+        if step in checks:
+            check(step, loss, exact)
     torch.save({"arm": a.arm, "seed": a.seed, "state": net.state_dict(), "init": a.init}, out / "final-carry.pt")
     json.dump({"arm": a.arm, "init": a.init, "seed": a.seed, "src": str(a.ckpt) if a.init == "pre" else None,
-               "steps": a.steps, "batch": a.batch, "lr": a.lr, "curve_dev_7plus9": curve,
-               "curve_score": round(sum(curve) / max(1, len(curve)), 2), "minutes": round((time.time() - t0) / 60, 1),
+               "steps": a.steps, "batch": a.batch, "lr": a.lr, "curve": {str(k): v for k, v in curve.items()},
+               "steps_to_bar7": next((c for c in checks if curve[c]["maze7"] >= BAR7), NEVER), "minutes": round((time.time() - t0) / 60, 1),
                "device": device}, open(out / "carry_summary.json", "w"), indent=1)
 
 
@@ -136,7 +147,7 @@ def smoke(_):
         for init in ("pre", "fresh"):
             o = tmp / f"{arm}-{init}"
             carry(argparse.Namespace(arm=arm, init=init, seed=1, ckpt=tmp / f"{arm}-src.pt", out=o, steps=4, batch=8,
-                                     lr=3e-4, check_every=2))
+                                     lr=3e-4, checks=[0, 2, 4]))
             R.run_eval(argparse.Namespace(ckpt=o / "final-carry.pt", tests=tmp / "tests", limit=10, out=o / "t.json"))
     print("smoke ok", tmp)
 
@@ -148,8 +159,9 @@ if __name__ == "__main__":
         ap.add_argument("--init", choices=["pre", "fresh"], required=True); ap.add_argument("--seed", type=int, required=True)
         ap.add_argument("--ckpt"); ap.add_argument("--out", required=True)
         ap.add_argument("--steps", type=int, default=CARRY_STEPS); ap.add_argument("--batch", type=int, default=256)
-        ap.add_argument("--lr", type=float, default=3e-4); ap.add_argument("--check-every", type=int, default=CHECK_EVERY)
+        ap.add_argument("--lr", type=float, default=3e-4); ap.add_argument("--checks", default=",".join(map(str, CHECKS)))
         args = ap.parse_args()
+        args.checks = [int(x) for x in args.checks.split(",")]
         assert args.init == "fresh" or args.ckpt, "--init pre needs --ckpt"
         carry(args)
     elif sys.argv[1:] == ["smoke"]:

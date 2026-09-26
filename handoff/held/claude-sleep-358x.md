@@ -7,11 +7,11 @@ RENTAL RULES: RTX 5090 first, else 4090; reliability >= 0.98; at least 40 GB dis
 DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-rsn358x-20260926/RESULTS.md, or a live instance is labelled claude-sleep-358x.
 
 YOUR TASK: builder for rsn-358x (does practice on sums/grids/number puzzles carry over to mazes, and more for the loop than for plain?). The sleep research thread wrote and sealed all code. Run it and never edit it. If something breaks, stop and report the exact error; do not patch. Artifacts go in artifacts/claude-rsn358x-20260926/.
-READ FIRST (origin/main): artifacts/claude-rsn358x-20260926/PASSMARKS.md and the docstring of scripts/claude_rsn358x_run.py.
+READ FIRST (origin/main): artifacts/claude-rsn358x-20260926/PASSMARKS-v2.md (replaces PASSMARKS.md) and the docstring of scripts/claude_rsn358x_run.py.
 Needs: torch with CUDA and numpy only. No model downloads.
 INDEPENDENCE: artifacts/claude-rsn358m-20260926/tests/ is TEST-ONLY. Never open or print an item; the eval command writes counts only. Run each eval exactly once per final-carry.pt.
 1. On the rental: `git archive origin/main scripts artifacts/claude-rsn358x-20260926 artifacts/claude-rsn358m-20260926/tests`, and extract it keeping paths.
-2. SEAL: `sha256sum -c artifacts/claude-rsn358x-20260926/SEAL-code.sha256.txt` must show all 14 lines OK. Then check each output:
+2. SEAL: `sha256sum -c artifacts/claude-rsn358x-20260926/SEAL-code-v2.sha256.txt` must show all 14 lines OK. Then check each output:
    - `python -B scripts/claude_rsn358a_envs.py selftest` prints "selftest ok";
    - `python -B scripts/claude_rsn358x_run.py selftest` prints "selftest ok".
    Anything else: stop.
@@ -25,8 +25,8 @@ INDEPENDENCE: artifacts/claude-rsn358m-20260926/tests/ is TEST-ONLY. Never open 
 6. EVAL once each: python -B scripts/claude_rsn358x_run.py eval --ckpt W/R/final-carry.pt --tests artifacts/claude-rsn358m-20260926/tests --out W/R/tests.json
    Copy carry_log.jsonl, carry_summary.json, tests.json and the log into artifacts/claude-rsn358x-20260926/runs/<R>/. Force-add them.
 7. RESULTS.md, verdict first:
-   - X0-X3 exactly as PASSMARKS.md defines them, and PASS / FAIL / INCONCLUSIVE, plus the proved-wrong clause.
-   - Per seed: each net's curve score, loop gain, plain gain, and loop gain - plain gain; then the 4-seed means.
+   - X0-X3 exactly as PASSMARKS-v2.md defines them, and PASS / FAIL / INCONCLUSIVE, plus the proved-wrong clause.
+   - Per seed: each net's steps-to-bar (from carry_summary.json) and the ratios X1/X2 use; then the 4-seed means.
    - Steps to 150/200 on 7x7 dev.
    - Test counts for all 16 nets.
    - GPU name, minutes, dollars, every deviation.
