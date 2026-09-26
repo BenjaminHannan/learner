@@ -91,3 +91,10 @@ agent's tokenizer and model (no second copy), and D1.train_copy leaves the model
   Open, not in 0.2c (named in the report): explicit routing states instead of the refusal trigger; one evidence
   record per claim; durable store writes (fsync, torn tail); chunking long turns; the reader's evaluator ignoring
   the relation (Reading facts' line); sleep rollback in a separate process.
+- ~02:40 UTC: dl-2 = registered PASS, blind recount agrees (artifacts/claude-dl2-20260926/VERIFY.md), so SLEEP02C
+  is on. Added before sealing, from Fix sleep and the review (sections 10-11): L1 now also needs, every night, a
+  weight change > 0 (L2 norm of the adapter's change) and the saved adapter reloading to exactly the trained weights
+  ("sleep ran" never stands in for "the model learned"); L6 losses counted apart from gains: items lost on dl-1's
+  300-item panel after night 3 ≤ 20 (dl-2 was at 10 and 18 after night 3). Per night the log keeps eligible
+  examples, optimizer steps, weight change, adapter saved, active after reload. Wording for the report: the
+  right-answer night works and the wrong-answer night doesn't (dl-2 W5); not "correctness alone caused it".

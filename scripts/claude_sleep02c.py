@@ -76,6 +76,19 @@ def save_adapter(one_b, path) -> None:
     torch.save([(m.A.detach().cpu(), m.B.detach().cpu()) for m in lora_mods(one_b.model)], path)
 
 
+def lora_vector(one_b):
+    import torch
+    return torch.cat([t.detach().float().flatten().cpu() for m in lora_mods(one_b.model) for t in (m.A, m.B)])
+
+
+def reload_matches(one_b, path) -> bool:
+    """The saved night, loaded again, equals the weights in memory (active after a reload)."""
+    import torch
+    state = torch.load(path, map_location="cpu")
+    return all(torch.equal(a, m.A.detach().cpu()) and torch.equal(b, m.B.detach().cpu())
+               for m, (a, b) in zip(lora_mods(one_b.model), state)) and len(state) == len(lora_mods(one_b.model))
+
+
 def solver_shim(one_b):
     """claude_blurt2.Solver's prompt/generate/answer on the agent's own tokenizer and model (no second load)."""
     import claude_blurt2 as B2
@@ -137,7 +150,9 @@ def run(a) -> None:
         groups = D1.gather(s, m, day, N_GUESS)
         ex = D1.copy_examples(groups)
         tries = sum(1 + len(g["guesses"]) for g in groups)
+        w0 = lora_vector(one_b)
         tr = D1.train_copy(s, m, ex, seed=d)
+        change = float((lora_vector(one_b) - w0).norm())
         one_b.sleep02c_trained = True
         if m.training:
             raise RuntimeError("sleep02c: model left in train mode after the night")
@@ -145,12 +160,17 @@ def run(a) -> None:
         row = {"night": d, "tries": tries, "day_puzzles": len(day),
                "day_greedy_right": sum(g["greedy_right"] for g in groups),
                "day_reached": sum(1 for g in groups if g["greedy_right"] or any(g["rewards"])),
-               "train": tr, "test": {k: now[k] for k in ("lucky", "reached", "greedy")},
+               "train": tr, "eligible_examples": len(ex), "optimizer_steps": 3 * -(-len(ex) // 8),
+               "weight_change_l2": round(change, 6), "test": {k: now[k] for k in ("lucky", "reached", "greedy")},
                "harm": D1.flips(b["harm"], now["harm"]), "kl": now["kl"],
                "chat_solved": sum(chat_solved(agent(), chat)), "minutes": round((time.time() - t1) / 60, 1)}
+        tmp = out / "adapter02c.tmp"
+        save_adapter(one_b, tmp)
+        os.replace(tmp, out / "adapter02c.pt")          # candidate -> active in one step
+        row["adapter_saved"] = (out / "adapter02c.pt").exists()
+        row["active_after_reload"] = reload_matches(one_b, out / "adapter02c.pt")
         res["nights"].append(row)
         print(f"[sleep02c] night {d}: {json.dumps(row)}", flush=True)
-        save_adapter(one_b, out / "adapter02c.pt")
         (out / "sleep02c_results.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
     res["minutes"] = round((time.time() - t0) / 60, 1)
     (out / "sleep02c_results.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
@@ -194,6 +214,7 @@ def selftest() -> None:
         ob2.model.eval()
         ob.model.eval()
         assert torch.allclose(ob2.model(x), ob.model(x)); ok += 1         # a saved night reloads exactly
+        assert reload_matches(ob, Path(d) / "a.pt") and reload_matches(ob2, Path(d) / "a.pt"); ok += 1
     assert len({(tuple(p["nums"]), p["target"]) for p in B2.puzzles(DAY_SEED02C + 1, 20)}) == 20; ok += 1
     ob.sleep02c_trained = True
     with tempfile.TemporaryDirectory() as d:
@@ -202,7 +223,7 @@ def selftest() -> None:
             install_sleep02c(ob, str(Path(d) / "b.pt"))
         except RuntimeError:
             ok += 1                                                        # never reloads over trained weights
-    print(f"claude_sleep02c selftest: {ok}/6 OK")
+    print(f"claude_sleep02c selftest: {ok}/7 OK")
 
 
 def main():
