@@ -42,3 +42,12 @@ Sleeping on checked 5-6 digit sums made the small reasoner much better at 8-digi
 seeds (+88 and +48 of 200 over an equally long night of old practice). On 6x6 grids it helped a lot on one seed (+63)
 but only +12 on the other, where the net had barely learned grids at all, so the registered test fails. Limits: small
 nets on CPU, 3 nights, two puzzle kinds; the marks were set after seeing slp-358n2's report-only transfer counts.
+
+## Blind recount (VERIFY.md): agrees, registered FAIL. Wording corrections
+- The day_grids ranges above (61-90, 136-264) leave out the placebo arm Z (5-19 and 6-11).
+- The placebo is below S and R on harm_sums4 on both seeds, but below N only on seed 6 (seed 5: Z 217 vs N 190).
+- Seed 6's sums8 gap was only +8 after night 2 (122 vs 114); its T1 pass rests on the night-3 reading.
+- "Barely learned grids" overstates it: seed 6 gets 149-161 of 300 practised 4x4 grids. That weak grid skill caused
+  its small 6x6 gain is a guess, not tested.
+- Design: S − R compares nights with and without the day's checked puzzles; T3 against N (untrained base) is an easy
+  bar, and vs R sleep is −2/−2 (seed 5) and 0/−6 (seed 6) on practised sizes.
