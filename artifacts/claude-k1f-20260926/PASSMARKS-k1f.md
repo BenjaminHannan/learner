@@ -22,14 +22,18 @@ MiniCPM5-1B to LFM2.5-1.2B-Instruct @0f604ada3f766f9f257460c4c9f0b5d6f69d431b (e
 adapter on it). Same routing (is_creative333c), same prompt (SYSTEM333D + notebook facts, the chat's last 12 messages,
 the request), same sampling (4 samples, temperature 0.7, top_p 0.9, 200 new tokens, thinking off), same trim, same
 guards (guard333d: 140 words, refusals, memory claims, unknown relatives' names), same FALLBACK line, no notebook
-writes. Everything else in the build, the sleep adapter included, stays on MiniCPM5-1B.
-Tests: scripts/claude_k1f_test.py (6/6; the prompt, reply, counters and WORK entry equal k1a's for the same drafts).
+writes. Everything else in the build, the sleep adapter included, stays on MiniCPM5-1B. Which turns count as creative
+is decided by is_creative333c (scripts/claude_cre333b_agent.py:57), a hand-written regex in the build since 0.2c; k1f
+adds no rule but depends on that one.
+Tests: scripts/claude_k1f_test.py (8/8; the prompt, reply, counters and WORK entry equal k1a's for the same drafts; the
+draft log below is a pass-through).
 The LFM model is not in the cloud container, so no CPU check with the real model was possible; the DEV gate below
 is the first run with it.
 
 ## Arms (one rental; runner scripts/claude_panel382_run.py unchanged; per-turn seeds identical in F and K)
-- K = claude_k1a_cre:build_null_k1a (k1a as registered: 0.2c's build with the k1a writer, NullReader, per-turn seeds,
-  SLEEP02C_ADAPTER = 0.2c's adapter02c.pt, sha256 a33211dc...36f5). The base.
+- K = claude_k1f_cre:build_null_k1a_log = claude_k1a_cre:build_null_k1a (k1a as registered: 0.2c's build with the
+  k1a writer, NullReader, per-turn seeds, SLEEP02C_ADAPTER = 0.2c's adapter02c.pt, sha256 a33211dc...36f5) with the
+  pass-through draft log on its writer. The base.
 - F = claude_k1f_cre:build_null_k1f = K with the writer on LFM2.5-1.2B-Instruct. Registered (marks K1f).
 - T = plain MiniCPM5-1B @87179e5c, Q = plain Qwen3.5-2B @15852e8c16360a2fea060d615a32b45270f8a8fc,
   L = plain LFM2.5-1.2B-Instruct @0f604ada3f766f9f257460c4c9f0b5d6f69d431b, all on the plain twin recipe
@@ -70,6 +74,15 @@ For F and for K: claude_k1rival_score.score (sealed for 0.2d, 6fdf00563) on this
 reading ("behind" / "level" / "ahead", one-sided exact sign test at p <= 0.05) and the made-up margin (build <= rival
 + 3); the row passes when all three pass.
 
+## The drafts (report only; added 17:45 UTC before the seal, at the Thread manager's question)
+K and F run with the draft log (claude_k1f_cre.DraftLog: the 4 drafts of every creative turn, trimmed and guarded as
+the writer does; no random numbers, no reply changed). Every distinct guard-passing draft of the last request goes in
+a separate blind packet (claude_k1f_score.py --draft-packet, ids H...., seed 3825), judged with the same words and
+procedure (judges 1 and 2, judge 3 on splits). Readings per arm: items with no passing draft, first passing draft
+useful, at least one passing draft useful (all in that one judging), and the check that every run reply is its first
+passing draft. What it answers: how much a perfect picker could add to each writer (an upper bound; "any of 4" is
+inflated by judge noise). DEV said 26 of 40 for MiniCPM5-1B's drafts against 12 for its first passing draft.
+
 ## Report only
 F - K on lead, no-lead and uses_facts items; F vs L (the same model on our writer vs on the plain recipe): difference,
 items only one side got, reading; per arm: made-up, fallbacks, empty replies, bare list endings, median words.
@@ -81,8 +94,9 @@ mark most at risk (the 140-word guard; see the DEV gate). The K1 line needs F >=
 so the K1 line and 0.2d's row against Q may still fail even if k1f passes.
 
 ## What would prove it wrong
-F - K < +8, or F-only items not clearly more than K-only items: the k1c gap came from the plain recipe (greedy
-decoding, the twin's system line, no guards), not from the model. Then the F vs L reading says which: F well below L
+K1f.1 failing (F - K below +8, or sign p above 0.05) proves the swap wrong: LFM's drafts in our writer are not more
+useful, and k1c's gap came from the plain recipe (greedy decoding, the twin's system line, no guards), not from the
+model. F's made-up replies above K's + 4, or its fallbacks above K's + 2, also fail it. Report-only: F vs L "behind"
 means our prompt, sampling or guards cost LFM its lead.
 
 ## After the verdict

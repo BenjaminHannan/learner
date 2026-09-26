@@ -141,7 +141,79 @@ def main():
         finally:
             setattr(mod, attr, real)
     ok += 1
-    print(f"k1f tests: {ok}/6 OK")
+    # 7. the draft log is a pass-through: same reply, same calls; it records the drafts as the writer trims and guards
+    bad = "I'm sorry, but I can't help with that."
+    outs = [bad, good[0] + " More", good[0], "Your sister Wenna would love it."]
+    for logged in (False, True):
+        w = with_writer(outs)
+        with tempfile.TemporaryDirectory() as d:
+            log = Path(d) / "drafts.jsonl"
+            if logged:
+                os.environ[K.DRAFTS_ENV] = str(log)
+            else:
+                os.environ.pop(K.DRAFTS_ENV, None)
+            (Path(d) / C38.STATE_NAME338).write_text(json.dumps({"history": hist}), encoding="utf-8")
+            loop = T1A.Loop(d)
+            K.install_creative_k1f(loop, None)
+            r = loop.turn(req)
+            if not logged:
+                r0, calls0 = r, w.calls
+                assert not log.exists()
+                continue
+            assert r == r0 and w.calls == calls0, (r, r0)
+            rows = [json.loads(x) for x in log.read_text(encoding="utf-8").splitlines()]
+            assert len(rows) == 1 and rows[0]["request"] == req and rows[0]["hist_msgs"] == 2
+            assert rows[0]["dir"] == Path(d).name
+            dr = rows[0]["drafts"]
+            assert [x["guard"] for x in dr] == ["G5", None, None, "G2"], dr
+            assert [x["trimmed"] for x in dr] == [C38.trim(o) for o in outs]
+            assert next(x["trimmed"] for x in dr if x["guard"] is None) == r[0]
+    os.environ.pop(K.DRAFTS_ENV, None)
+    # facts in the system line count as known words, as in write_k1a
+    with tempfile.TemporaryDirectory() as d:
+        log = Path(d) / "drafts.jsonl"
+        dl = K.DraftLog(T1A.Gen(["Your sister Wenna would love it."]), T1A.Loop(d), str(log))
+        sysl = CD.SYSTEM333D + " Facts the user has told you: Your sister is Wenna."
+        dl.sample_chat([{"role": "system", "content": sysl}, {"role": "user", "content": req}], 4)
+        dl.sample_chat([{"role": "system", "content": CD.SYSTEM333D}, {"role": "user", "content": req}], 4)
+        g = [json.loads(x)["drafts"][0]["guard"] for x in log.read_text(encoding="utf-8").splitlines()]
+        assert g == [None, "G2"], g
+    ok += 1
+    # 8. the logged K arm is k1a's own build: same install name, V1 line and replies; the swap never leaks
+    import claude_mu402 as MU
+    real_b, real_i = MU.build_null02c, K1A.install_creative_k1a
+    got = {}
+
+    def fake_b(state_dir, args):
+        lp = T1A.Loop(state_dir)
+        lp.layers330c = ["330a_334", "cre333d", "seed402"]
+        CD.install_creative333d(lp, T1A.Gen(outs))
+        got["loop"] = lp
+        return lp
+    MU.build_null02c = fake_b
+    try:
+        for logged in (False, True):
+            with tempfile.TemporaryDirectory() as d:
+                log = Path(d) / "drafts.jsonl"
+                if logged:
+                    os.environ[K.DRAFTS_ENV] = str(log)
+                K1A._PRINTED.clear()
+                buf = io.StringIO()
+                with redirect_stdout(buf):
+                    lp = (K.build_null_k1a_log if logged else K1A.build_null_k1a)(d, None)
+                r = lp.turn(req)
+                assert buf.getvalue().startswith("k1a: creative writer = install_creative_k1a; layers = ")
+                assert lp.layers330c == ["330a_334", "cre_k1a", "seed402"]
+                if not logged:
+                    rk = r
+                    continue
+                assert r == rk and len(log.read_text(encoding="utf-8").splitlines()) == 1
+        assert K1A.install_creative_k1a is real_i and CD.install_creative333d.__name__ == "install_creative333d"
+    finally:
+        MU.build_null02c = real_b
+        os.environ.pop(K.DRAFTS_ENV, None)
+    ok += 1
+    print(f"k1f tests: {ok}/8 OK")
 
 
 if __name__ == "__main__":

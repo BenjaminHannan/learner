@@ -18,12 +18,24 @@ Step 2, after judges 1 and 2 judged the packet (and judge 3 the lines they split
 Marks: artifacts/claude-k1f-20260926/PASSMARKS-k1f.md (fixed before any registered run). K1f.1-3 compare F with K.
 The rival readings for F and for K are claude_k1rival_score.score, the scorer sealed for 0.2d's K1 row, unchanged.
   python -B scripts/claude_k1f_score.py --selftest     (CPU, synthetic data)
+
+Report-only, the drafts (added 17:45 UTC before the seal, at the Thread manager's question "how often is a useful
+draft among the 4?"). The K and F arms run with K1F_DRAFTS=OUT/drafts_K.jsonl and OUT/drafts_F.jsonl (a pass-through
+log; claude_k1f_cre.DraftLog). Then:
+  python -B scripts/claude_k1f_score.py --draft-packet OUT --panel P/items.jsonl
+      one line per distinct (item, guard-passing draft of the last request) over K and F, shuffled with seed 3825,
+      ids H0000..: OUT/drafts_judge.jsonl and OUT/drafts_key.json; counts only.
+  python -B scripts/claude_k1f_score.py --draft-score OUT --panel P/items.jsonl --judges J1,J2[,J3] [--splits-out F]
+      per arm: items with a creative last request, items with no passing draft, first passing draft useful (k1a's
+      reply) and at least one passing draft useful, all in this one judging; and how often the arm's run reply is
+      its first passing draft (it must be every time). Same judge words (JUDGE-k1f.md), a separate packet.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import math
+import random
 import statistics
 import sys
 import tempfile
@@ -139,6 +151,94 @@ def score(panel: str, runs: str, keyp: str, judge_spec: str, splits_out: str = "
     return res
 
 
+def _last_records(panel: str, logp: Path) -> dict:
+    """{item_id: the draft-log record of the item's last request}; a state folder whose last creative request is not
+    an item's last message (the last message went down the chat path) has none."""
+    items = load(panel)
+    by_last = {}
+    for it in items:
+        if it["last"] in by_last:
+            raise SystemExit("k1f drafts: two items share a last message")
+        by_last[it["last"]] = it["item_id"]
+    per_dir: dict = {}
+    for r in (load(logp) if logp.exists() else []):
+        per_dir.setdefault(r["dir"], []).append(r)
+    out = {}
+    for recs in per_dir.values():
+        iid = by_last.get(recs[-1]["request"])
+        if iid is None:
+            continue
+        if iid in out:
+            raise SystemExit(f"k1f drafts: item {iid} logged twice")
+        out[iid] = recs[-1]
+    return out
+
+
+def draft_packet(out: str, panel: str) -> None:
+    items = {it["item_id"]: it for it in load(panel)}
+    groups: dict = {}
+    counts = {}
+    for arm in ("K", "F"):
+        recs = _last_records(panel, Path(out) / f"drafts_{arm}.jsonl")
+        n_pass = 0
+        for iid, r in sorted(recs.items()):
+            for k, d in enumerate(r["drafts"]):
+                if d["guard"] is None:
+                    n_pass += 1
+                    groups.setdefault((iid, d["trimmed"]), []).append({"arm": arm, "item_id": iid, "draw": k})
+        counts[arm] = {"items_logged": len(recs), "passing_drafts": n_pass}
+    pool = sorted(groups)
+    random.Random(3825).shuffle(pool)
+    key = {}
+    with open(Path(out) / "drafts_judge.jsonl", "w", encoding="utf-8") as fh:
+        for n, (iid, t) in enumerate(pool):
+            cid = f"H{n:04d}"
+            key[cid] = groups[(iid, t)]
+            lead = [x if isinstance(x, str) else x.get("text", "") for x in items[iid]["turns"]]
+            fh.write(json.dumps({"id": cid, "chat": lead, "request": items[iid]["last"], "reply": t},
+                                ensure_ascii=False) + "\n")
+    (Path(out) / "drafts_key.json").write_text(json.dumps(key, indent=1), encoding="utf-8")
+    print(json.dumps({"lines": len(pool), **counts}))
+
+
+def draft_score(out: str, panel: str, judge_spec: str, splits_out: str = "") -> dict | None:
+    key = json.loads((Path(out) / "drafts_key.json").read_text(encoding="utf-8"))
+    js = KC._judges(judge_spec)
+    j1, j2 = js[0], js[1]
+    if any(c not in j1 or c not in j2 for c in key):
+        raise SystemExit("k1f drafts: ids missing from judge 1 or 2")
+    split = sorted(c for c in key if yes(j1[c]["useful"]) != yes(j2[c]["useful"]))
+    if len(js) < 3:
+        if splits_out:
+            Path(splits_out).write_text(json.dumps(split), encoding="utf-8")
+        print(json.dumps({"lines": len(key), "useful_splits": len(split)}))
+        return None
+    j3 = js[2]
+    if any(c not in j3 for c in split):
+        raise SystemExit("k1f drafts: split ids missing from judge 3")
+    verdict = {}
+    for c, who in key.items():
+        v = yes(j1[c]["useful"]) if c not in split else yes(j3[c]["useful"])
+        for w in who:
+            verdict[(w["arm"], w["item_id"], w["draw"])] = v
+    res = {"lines": len(key), "judge12_useful_agree": len(key) - len(split), "third_judged": len(split)}
+    for arm in ("K", "F"):
+        recs = _last_records(panel, Path(out) / f"drafts_{arm}.jsonl")
+        run = {r["item_id"]: r.get("reply") or "" for r in load(Path(out) / f"creative_{arm}.jsonl") if r.get("last")}
+        first = anyu = nopass = same = 0
+        for iid, r in recs.items():
+            ok = [k for k, d in enumerate(r["drafts"]) if d["guard"] is None]
+            if not ok:
+                nopass += 1
+                continue
+            same += r["drafts"][ok[0]]["trimmed"] == run.get(iid)
+            first += verdict[(arm, iid, ok[0])]
+            anyu += any(verdict[(arm, iid, k)] for k in ok)
+        res[arm] = {"items_logged": len(recs), "no_passing_draft": nopass, "first_passing_useful": first,
+                    "any_passing_useful": anyu, "reply_is_first_passing": same}
+    return res
+
+
 def selftest() -> None:
     ok = 0
     import claude_cre333_agent as C
@@ -212,13 +312,47 @@ def selftest() -> None:
         except SystemExit:
             pass
         ok += 1
-    print(f"k1f score selftest {ok}/5 ok")
+        # 6. drafts: map log records to items by the last request, packet, score
+        its = load(t / "p.jsonl")
+        for x in its:
+            x["last"] = f"request {x['item_id']}"
+        (t / "p.jsonl").write_text("".join(json.dumps(x) + "\n" for x in its), encoding="utf-8")
+        for arm in ("K", "F"):
+            recs, run = [], []
+            for n, it in enumerate(its[:5]):
+                d = f"p382-{arm}-{n}"
+                if n == 1:
+                    recs.append({"dir": d, "request": "a creative lead-in", "hist_msgs": 0, "drafts": []})
+                if n == 4:                                     # last request went down the chat path: no record
+                    continue
+                dr = [{"trimmed": f"{arm}{n}-a", "guard": "G5"}, {"trimmed": f"{arm}{n}-b", "guard": None},
+                      {"trimmed": f"shared{n}", "guard": None}, {"trimmed": f"{arm}{n}-d", "guard": None}]
+                if n == 3:
+                    dr = [dict(x, guard="G4") for x in dr]
+                recs.append({"dir": d, "request": it["last"], "hist_msgs": 0, "drafts": dr})
+                run.append({"item_id": it["item_id"], "last": True, "reply": f"{arm}{n}-b" if n != 3 else C.FALLBACK})
+            (s / f"drafts_{arm}.jsonl").write_text("".join(json.dumps(x) + "\n" for x in recs), encoding="utf-8")
+            (s / f"creative_{arm}.jsonl").write_text("".join(json.dumps(x) + "\n" for x in run), encoding="utf-8")
+        draft_packet(str(s), str(t / "p.jsonl"))
+        dk = json.loads((s / "drafts_key.json").read_text())
+        assert len(dk) == 15                               # items 0-2: K b,d + F b,d + one shared draft each
+        pk = load(s / "drafts_judge.jsonl")
+        jd = [{"id": r["id"], "useful": "yes" if r["reply"].endswith("-d") or r["reply"] == "F0-b" else "no"} for r in pk]
+        (t / "d1.jsonl").write_text("".join(json.dumps(x) + "\n" for x in jd), encoding="utf-8")
+        dr = draft_score(str(s), str(t / "p.jsonl"), f"{t / 'd1.jsonl'},{t / 'd1.jsonl'},{t / 'd1.jsonl'}")
+        assert dr["K"] == {"items_logged": 4, "no_passing_draft": 1, "first_passing_useful": 0,
+                           "any_passing_useful": 3, "reply_is_first_passing": 3}, dr["K"]
+        assert dr["F"]["first_passing_useful"] == 1 and dr["F"]["any_passing_useful"] == 3
+        ok += 1
+    print(f"k1f score selftest {ok}/6 ok")
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--dedupe", default="")
+    ap.add_argument("--draft-packet", default="")
+    ap.add_argument("--draft-score", default="")
     ap.add_argument("--panel", default="")
     ap.add_argument("--runs", default="")
     ap.add_argument("--key", default="")
@@ -231,6 +365,16 @@ def main():
         return
     if a.dedupe:
         KC.dedupe(a.dedupe, "F")
+        return
+    if a.draft_packet:
+        draft_packet(a.draft_packet, a.panel)
+        return
+    if a.draft_score:
+        res = draft_score(a.draft_score, a.panel, a.judges, a.splits_out)
+        if res is not None:
+            print(json.dumps(res, indent=1))
+            if a.out:
+                Path(a.out).write_text(json.dumps(res, indent=1), encoding="utf-8")
         return
     res = score(a.panel, a.runs, a.key, a.judges, a.splits_out)
     if res is None:
