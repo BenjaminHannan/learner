@@ -2660,3 +2660,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-26 16:43 UTC Director: rent-bm398r actual ~$0.65 (rental 3: 1.30 h x $0.5037; rentals 1-2 $0). Benchmarks committed $0.65 + $0.261 + $0.20 = $1.11 of $2.
 - 2026-09-26 16:43 UTC Director: k1e-teacher queued by Creative answers in chat (e4d671199): Mac CPU, no vast; OpenRouter GLM 5.3 Flash under $1 (30-60 calls), Ben approved on the Thread manager card 16:39 ("Use GLM"). Not on the vast line.
 - 2026-09-26 16:58 UTC Director: Trustworthy notes queued Mac GLM-only jobs rd378k-teacher (573cf7f9c) and rd378g-teacher (b0c9e28d6): OpenRouter, no GPU/rental, not on the vast line; each reports cost_usd. Vast ask +$1.10 over two rentals waits on Ben (Thread manager card); nothing queued.
+- 2026-09-26 17:10 UTC Director: rent-k1c actual ~$0.26 of $0.80 (5090, 0.52 h; first host refused image pull, destroyed). Creative answers in chat ~$0.56 of $2.
