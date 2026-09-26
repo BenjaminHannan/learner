@@ -1,0 +1,458 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mpwd; git status --short; git rev-parse --abbrev-ref HEAD; git log --oneline -5
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/train398r.json
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+A  artifacts/claude-k1a-20260926/RESULTS-rent.md
+A  artifacts/claude-k1a-20260926/run/creative_B.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_K.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_KB.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_KB0.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_T.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_X.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_judge.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_judge_u.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_key.json
+A  artifacts/claude-k1a-20260926/run/creative_key_u.json
+A  artifacts/claude-k1a-20260926/run/dev/creative_K.jsonl
+A  artifacts/claude-k1a-20260926/run/dev/creative_KB.jsonl
+A  artifacts/claude-k1a-20260926/run/dev/logdev.txt
+A  artifacts/claude-k1a-20260926/run/dev/logdevkb.txt
+A  artifacts/claude-k1a-20260926/run/logB.txt
+A  artifacts/claude-k1a-20260926/run/logK.txt
+A  artifacts/claude-k1a-20260926/run/logKB.txt
+A  artifacts/claude-k1a-20260926/run/logKB0.txt
+A  artifacts/claude-k1a-20260926/run/logT.txt
+A  artifacts/claude-k1a-20260926/run/logX.txt
+A  artifacts/claude-k1a-20260926/run/summary_creative.json
+A  artifacts/claude-rd378L-20260926/RESULTS.md
+A  artifacts/claude-rd378L-20260926/notes_recall.json
+A  artifacts/claude-rd378L-20260926/ranked_turns.jsonl
+A  artifacts/claude-rd379q-20260926/RESULTS.md
+A  artifacts/claude-rd379q-20260926/notes_recall.json
+A  artifacts/claude-rd379q-20260926/notes_recall_v3.json
+A  artifacts/claude-rd379q-20260926/notes_recall_v3_facts.json
+A  artifacts/claude-rd379q-20260926/ranked_turns.jsonl
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+?? scripts/claude_280n_panel.sh
+?? scripts/claude_280p_panel.sh
+?? scripts/claude_281_panel.sh
+?? scripts/claude_281_panelrun.sh
+?? scripts/claude_281_runall.sh
+?? scripts/claude_281b_panel.sh
+?? scripts/claude_281b_runall.sh
+?? scripts/claude_282_panel.sh
+?? scripts/claude_282_panelrun.sh
+?? scripts/claude_282_runall.sh
+?? scripts/claude_282b_panelrun.sh
+?? scripts/claude_282b_runall.sh
+?? scripts/claude_291_m1.py
+?? scripts/claude_291_m7run.py
+?? scripts/claude_291_m8.sh
+?? scripts/claude_291_panel.sh
+?? scripts/claude_291_runall.sh
+?? scripts/claude_291_score.py
+?? scripts/claude_292_corrarm_run.py
+?? scripts/claude_292_m5.sh
+?? scripts/claude_292_m5run.py
+?? scripts/claude_292_panelrun.py
+?? scripts/claude_292_runall.sh
+?? scripts/claude_292_score.py
+?? scripts/claude_called281_devcases.py
+?? scripts/claude_called281_panelrun.py
+?? scripts/claude_called281_panelscore.py
+?? scripts/claude_called281_regscore.py
+?? scripts/claude_called281_run.py
+?? scripts/claude_called281_score.py
+?? scripts/claude_called281b_devcases.py
+?? scripts/claude_called281b_panelrun.py
+?? scripts/claude_called281b_panelscore.py
+?? scripts/claude_called281b_regscore.py
+?? scripts/claude_called281b_run.py
+?? scripts/claude_called281b_score.py
+?? scripts/claude_capab280_devcases.py
+?? scripts/claude_capab280_regscore.py
+?? scripts/claude_capab280_run.py
+?? scripts/claude_capab280_score.py
+?? scripts/claude_capab280b_devcases.py
+?? scripts/claude_capab280b_paneladapt.py
+?? scripts/claude_capab280b_regscore.py
+?? scripts/claude_capab280b_run.py
+?? scripts/claude_capab280b_score.py
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_diag267_c3.py
+?? scripts/claude_diag267_c3client.py
+?? scripts/claude_diag267_qbuild.py
+?? scripts/claude_diag267_score.py
+?? scripts/claude_diag267_turns.py
+?? scripts/claude_diag271_roc.py
+?? scripts/claude_diag290_bisect.py
+?? scripts/claude_diag290_bisect2.py
+?? scripts/claude_diag290_pilot.py
+?? scripts/claude_diag290_probe.py
+?? scripts/claude_diag290_probe2.py
+?? scripts/claude_diag290_run.py
+?? scripts/claude_diag290_summary.py
+?? scripts/claude_diag293_pilot.py
+?? scripts/claude_diag293_pilot2.py
+?? scripts/claude_diag293_run.py
+?? scripts/claude_diag293_summary.py
+?? scripts/claude_ear265_armb.py
+?? scripts/claude_ear265_arms.py
+?? scripts/claude_ear265_canon.py
+?? scripts/claude_ear265_devset.py
+?? scripts/claude_ear265_panel.py
+?? scripts/claude_ear265_qbuild.py
+?? scripts/claude_ear265_scoremain.py
+?? scripts/claude_ear265_turns.py
+?? scripts/claude_ear269_armb.py
+?? scripts/claude_ear269_arms.py
+?? scripts/claude_ear269_devset.py
+?? scripts/claude_ear269_groupcheck.py
+?? scripts/claude_ear269_panel.py
+?? scripts/claude_ear269_qbuild.py
+?? scripts/claude_ear269_scoremain.py
+?? scripts/claude_ear269_turns.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/claude_earcheck264_armb.py
+?? scripts/claude_earcheck264_arms.py
+?? scripts/claude_earcheck264_client.py
+?? scripts/claude_earcheck264_commatags.py
+?? scripts/claude_earcheck264_devreport.py
+?? scripts/claude_earcheck264_devset.py
+?? scripts/claude_earcheck264_panel.py
+?? scripts/claude_earcheck264_qa.py
+?? scripts/claude_earcheck264_qbuild.py
+?? scripts/claude_earcheck264_scoremain.py
+?? scripts/claude_earcheck264_turns.py
+?? scripts/claude_fix138nb_label.py
+?? scripts/claude_fix255b_test.py
+?? scripts/claude_fix255b_text.py
+?? scripts/claude_fix263_comma.py
+?? scripts/claude_fix266_chainlift.py
+?? scripts/claude_fix266b_detector.py
+?? scripts/claude_fix268_nhopdir.py
+?? scripts/claude_fix280_capab.py
+?? scripts/claude_fix280b_general.py
+?? scripts/claude_fix281_called.py
+?? scripts/claude_fix281b_casual.py
+?? scripts/claude_fix282_small.py
+?? scripts/claude_fix282b_vocab.py
+?? scripts/claude_fix291_glue.py
+?? scripts/claude_join280m_regscore.py
+?? scripts/claude_join280m_run.py
+?? scripts/claude_join280m_score.py
+?? scripts/claude_join280n_score.py
+?? scripts/claude_join280p_score.py
+?? scripts/claude_lis310_agent.py
+?? scripts/claude_lis310_demo.py
+?? scripts/claude_lis310_test.py
+?? scripts/claude_lis311_agent.py
+?? scripts/claude_lis311_server.py
+?? scripts/claude_lis311_start.sh
+?? scripts/claude_lis311_try.py
+?? scripts/claude_loop138nb_agent.py
+?? scripts/claude_loop138p_agent.py
+?? scripts/claude_loop255b_agent.py
+?? scripts/claude_loop263_agent.py
+?? scripts/claude_loop266_agent.py
+?? scripts/claude_loop266b_agent.py
+?? scripts/claude_loop268_agent.py
+?? scripts/claude_loop280_agent.py
+?? scripts/claude_loop280b_agent.py
+?? scripts/claude_loop280m_agent.py
+?? scripts/claude_loop281_agent.py
+?? scripts/claude_loop281b_agent.py
+?? scripts/claude_loop282_agent.py
+?? scripts/claude_loop282b_agent.py
+?? scripts/claude_loop291_agent.py
+?? scripts/claude_loop292_agent.py
+?? scripts/claude_mouth241b_devrender_r.py
+?? scripts/claude_mouth241b_rer241_r.py
+?? scripts/claude_mut1_k1.py
+?? scripts/claude_mut1_k2.py
+?? scripts/claude_mut1_k3.py
+?? scripts/claude_mut1_k4.py
+?? scripts/claude_nb321_store.py
+?? scripts/claude_nb321_test.py
+?? scripts/claude_own_m0_build.py
+?? scripts/claude_own_m0_check.py
+?? scripts/claude_own_o0a2_compiler.py
+?? scripts/claude_own_o0a3_mutate.py
+?? scripts/claude_own_o0a_compiler.py
+?? scripts/claude_own_o0b_check.py
+?? scripts/claude_own_o0b_gen.py
+?? scripts/claude_own_o0c_prep.py
+?? scripts/claude_own_o0c_tok.py
+?? scripts/claude_own_o0d2_model.py
+?? scripts/claude_own_o0d2_test.py
+?? scripts/claude_own_o0d2_train.py
+?? scripts/claude_own_o0d_model.py
+?? scripts/claude_own_o0d_test.py
+?? scripts/claude_own_o0d_train.py
+?? scripts/claude_own_o0e2_model.py
+?? scripts/claude_own_o0e2_tests.py
+?? scripts/claude_own_o0e_model.py
+?? scripts/claude_own_o0e_serialize.py
+?? scripts/claude_own_o0e_tests.py
+?? scripts/claude_own_o0e_train.py
+?? scripts/claude_own_o0f_bench.py
+?? scripts/claude_probe255b_director.py
+?? scripts/claude_probe280p_run.py
+?? scripts/claude_probe280p_score.py
+?? scripts/claude_small282_devcases.py
+?? scripts/claude_small282_panelrun2.py
+?? scripts/claude_small282_regscore.py
+?? scripts/claude_small282_run.py
+?? scripts/claude_small282_score.py
+?? scripts/claude_small282b_devcases.py
+?? scripts/claude_small282b_regscore.py
+?? scripts/claude_small282b_run.py
+?? scripts/claude_small282b_score.py
+?? scripts/claude_type270_agent.py
+?? scripts/claude_type270_devrun.py
+?? scripts/claude_type270_devscore.py
+?? scripts/claude_type270_devset.py
+?? scripts/claude_type270_normalise.py
+?? scripts/claude_type270_panelrun.py
+?? scripts/claude_type270_panelscore.py
+?? scripts/claude_type270b_devscore.py
+?? scripts/claude_type270b_devset.py
+?? scripts/claude_type270b_normalise.py
+?? scripts/claude_type270b_panelscore.py
+?? scripts/claude_type270b_panelscore2.py
+?? scripts/claude_type270b_panelturns.py
+?? scripts/claude_type270b_qbuild.py
+?? scripts/claude_type270b_turns.py
+?? scripts/claude_typepanel270b_make.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+claude/card-experiment-handoff-7c5b27
+6ce4bf7b0 rsn-358x builder results: FAIL + proved-wrong (X0 pass, X1/X2 fail); 16 runs, seals, ledger line (own paths only)
+c86fbe886 stop rent-q404 by owner (Redirect): PIDs 4529+4563 killed, instance 52775380 destroyed, 0 files to copy back
+cf67c618e depot319f: lis-319f reader added to claude-director-depot 52755827 (verdict READY; sha 970ef0ac match 1/1, scp fallback, reader319 untouched)
+6b5a3abee handoff: commit staged artifact backlog incl grab358i REPORT (8/8 sha OK)
+98e4564c7 claude-sleep-358b2: chat bridge run (verdict INCONCLUSIVE; B0 copy-exact 25/39/28) + ledger line
+[0m
+[0m$ [0mgit fetch -q origin main && git rev-parse origin/main && git log --oneline origin/main -5; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1 | head -20
+c4b3fe6bfc2f046dfee08008de6540191d167724
+c4b3fe6bf ledger: bm398r actual $0.65; k1e-teacher (OpenRouter, Ben 16:39)
+e4d671199 queue k1e-teacher (Mac, OpenRouter GLM 5.3 Flash, under $1): DEV label agreement check + 240 GLM-written practice chats, per Ben's 'Use GLM' 16:39 UTC
+4ae0ff675 lis-320 draft plan: reader training data with no Claude-written or Claude-judged rows (GLM wording, code labels)
+9d66746df bm-398i RESULTS-gpu: correct the header time to the real 16:41 UTC
+3d26d1438 k1e teacher route (if Ben picks GLM): stdlib script for GLM-written practice chats and GLM draft labels with the blind judges' own words; DEV agreement packet (157 drafts, blind verdicts); Mac job drafted, not queued
+bm391logs
+bm391rent.env
+bm391split
+e2e330tree
+gen_part6.py
+grade_b_part1_writer.py
+guard-296b
+guard-350
+lis313b-armA.log
+lis313b-armC.log
+lis313b-armD.log
+lis313b-report.txt
+lis313b-tree
+lis314b-armA.log
+lis314b-armC.log
+lis314b-armG.log
+lis314b-armK.log
+lis314b-armP.log
+lis314b-armS.log
+lis314b-box.log
+[0m
+[0m$ [0mTMPD=$(mktemp -d /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-XXXXXX); echo "$TMPD"; git archive origin/main scripts/claude_k1e_teacher.py artifacts/claude-k1e-20260926/dev | tar -x -C "$TMPD"; find "$TMPD" -type f | head -20; git show origin/main:scripts/claude_k1e_teacher.py | head -c 2000
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-tVmTTH
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-tVmTTH/artifacts/claude-k1e-20260926/dev/key_dev.json
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-tVmTTH/artifacts/claude-k1e-20260926/dev/verdicts_dev.json
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-tVmTTH/artifacts/claude-k1e-20260926/dev/packet_dev.jsonl
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-tVmTTH/scripts/claude_k1e_teacher.py
+#!/usr/bin/env python3
+"""k1e teacher jobs on the Mac (Creative answers in chat thread, 2026-09-26): the open-weights teacher (GLM via
+OpenRouter, the teacher Ben approved) writes the practice chats and labels the 1B's drafts for the learned critic
+(scripts/claude_k1e_critic.py), so that no Claude-written text or Claude label is used for training. Standard library
+only; Mac CPU; no model runs here.
+
+Key rules: the key is read from ~/.config/openrouter/key into memory only. Never printed, logged or written.
+The endpoint requires reasoning, so reasoning effort is low; the answer is read from the final message only
+(as in scripts/claude_ideajudge_teacher.py, whose call pattern this copies).
+
+write  240 practice chats (the same recipe as the DEV set and the test panels: 84 idea with 1 lead-in turn, 84 idea
+       with none, 72 uses_facts with 1/2/3 teach turns, 24 each), in 12 calls of 20, each call given its own subject
+       area so calls don't repeat each other. Structure is checked in code; a call that breaks it is retried (3 tries).
+       ids kt-001..kt-240 in call order.
+         python -B scripts/claude_k1e_teacher.py write --out DIR [--model M]
+label  the teacher judges draft replies with the blind judges' own instructions (JUDGE-k1a.md, same words), 10 lines
+       per call; writes DIR/labels.jsonl {id, useful, made_up_user_facts}.
+         python -B scripts/claude_k1e_teacher.py label --packet P.jsonl --out DIR [--model M]
+agree  teacher labels vs the blind Opus judges' verdicts on the same DEV drafts. The rule for a label source (from the
+       creative research thread, RESULTS-selfjudge.md): useful agreement >= 85% and kappa >= 0.5.
+         python -B scripts/claude_k1e_teacher.py agree --labels DIR/labels.jsonl --key K.json --verdicts V.json
+selftest (no network)
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import time
+import urllib.request
+from pathlib import Path
+
+AREAS = ("hobbies and crafts", "work and coworkers", "fa
+[0m
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-tVmTTH/scripts/claude_k1e_teacher.py
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher.py selftest
+k1e teacher selftest 2/2 ok
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher.py label --packet artifacts/claude-k1e-20260926/dev/packet_dev.jsonl --out artifacts/claude-k1e-20260926/teacher-dev 2>&1
+[k1e-teacher] lines 0-9 unparsed
+[k1e-teacher] lines 10-19 unparsed
+[k1e-teacher] lines 20-29 unparsed
+[k1e-teacher] lines 30-39 unparsed
+[k1e-teacher] lines 40-49 unparsed
+[k1e-teacher] lines 50-59 unparsed
+[k1e-teacher] lines 60-69 unparsed
+[k1e-teacher] lines 70-79 unparsed
+[k1e-teacher] lines 80-89 unparsed
+[k1e-teacher] lines 90-99 unparsed
+[k1e-teacher] lines 100-109 unparsed
+[k1e-teacher] lines 110-119 unparsed
+[k1e-teacher] lines 120-129 unparsed
+[k1e-teacher] lines 130-139 unparsed
+[k1e-teacher] lines 140-149 unparsed
+[k1e-teacher] lines 150-156 unparsed
+{"lines": 157, "labelled": 0, "unparsed": 157, "calls": 48, "useful_yes": 0, "cost_usd": 0.024}
+[0m
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1e-teacher-tVmTTH/artifacts/claude-k1e-20260926/dev/packet_dev.jsonl[90m [limit=5][0m
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_k1e_teacher.py | grep -n "model.*default\|OPENROUTER\|openrouter" | head; git log --oneline origin/main -- scripts/claude_k1e_teacher.py | head
+7:Key rules: the key is read from ~/.config/openrouter/key into memory only. Never printed, logged or written.
+91:        req = urllib.request.Request("https://openrouter.ai/api/v1/chat/completions", data=body, headers={
+249:    ap.add_argument("--model", default="z-ai/glm-5.3-flash")
+257:    key = (Path.home() / ".config" / "openrouter" / "key").read_text().strip()
+3d26d1438 k1e teacher route (if Ben picks GLM): stdlib script for GLM-written practice chats and GLM draft labels with the blind judges' own words; DEV agreement packet (157 drafts, blind verdicts); Mac job drafted, not queued
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B -c "
+import json, urllib.request, pathlib
+from pathlib import Path
+import sys
+sys.path.insert(0, 'scripts')
+import claude_k1e_teacher as t
+key = (Path.home()/'.config'/'openrouter'/'key').read_text().strip()
+lines = t.load('artifacts/claude-k1e-20260926/dev/packet_dev.jsonl')[:2]
+chunk=[{k:x[k] for k in ('id','chat','request','reply')} for x in lines]
+txt,u = t.call(key,'z-ai/glm-5.3-flash', t.JUDGE+t.JUDGE_TAIL+'\n'.join(json.dumps(x,ensure_ascii=False) for x in chunk),0,tries=1)
+del key
+print('LEN',len(txt))
+print('USAGE',json.dumps(u))
+print('HEAD_START')
+print(txt[:4000])
+print('HEAD_END')
+print('json_list_ok', t.json_list(txt) is not None)
+" 2>&1
+LEN 312
+USAGE {"prompt_tokens": 626, "completion_tokens": 168, "total_tokens": 794, "cost": 0.00010904, "is_byok": false, "prompt_tokens_details": {"cached_tokens": 0, "cache_write_tokens": 0, "audio_tokens": 0, "video_tokens": 0}, "cost_details": {"upstream_inference_cost": 0.00010904, "upstream_inference_prompt_cost": 2.504e-05, "upstream_inference_completions_cost": 8.4e-05}, "completion_tokens_details": {"reasoning_tokens": 68, "image_tokens": 0, "audio_tokens": 0}}
+HEAD_START
+{"id": "E0000", "useful": "no", "made_up_user_facts": 0, "reason": "The user asked for gifts for the coaches, but the reply suggests gifts for the swimmers instead."}
+{"id": "E0001", "useful": "no", "made_up_user_facts": 0, "reason": "The names only reference tea and ignore the bookshop aspect of the request."}
+HEAD_END
+json_list_ok False
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher.py agree --labels artifacts/claude-k1e-20260926/teacher-dev/labels.jsonl --key artifacts/claude-k1e-20260926/dev/key_dev.json --verdicts artifacts/claude-k1e-20260926/dev/verdicts_dev.json 2>&1; echo "---labels head---"; head -5 artifacts/claude-k1e-20260926/teacher-dev/labels.jsonl; wc -l artifacts/claude-k1e-20260926/teacher-dev/labels.jsonl artifacts/claude-k1e-20260926/dev/packet_dev.jsonl
+{"compared": 0, "teacher_useful": 0, "opus_useful": 0, "both_useful": 0, "agree": 0, "kappa": 0.0, "passes_label_rule": false}
+---labels head---
+       0 artifacts/claude-k1e-20260926/teacher-dev/labels.jsonl
+     157 artifacts/claude-k1e-20260926/dev/packet_dev.jsonl
+     157 total
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher.py write --out artifacts/claude-k1e-20260926/train 2>&1
+[k1e-teacher] batch 0 try 1: not 20 chats
+[k1e-teacher] batch 0 try 2: fact not in teach turns
+[k1e-teacher] batch 0 try 3: fact not in teach turns
+k1e-teacher: batch 0 failed 3 times
+[0m
