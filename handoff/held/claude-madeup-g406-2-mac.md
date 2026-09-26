@@ -1,0 +1,23 @@
+COMMON RULES (the "Making things up about you" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).
+GPU: no (Mac CPU; 800 GLM 5.3 Flash calls plus retries and 1 leak-check call through Ben's opencode subscription; $0). No reader, no rental, no BensPC, no OpenRouter. Label: madeup-g406-2. TIME CAP: 180 minutes. DISK: 1.
+OPENCODE RULES: never read, print, copy or commit any opencode config, auth file or key. The scripts delete only the sessions they create; never delete any other session.
+PYTHON: run every script as `uv run --offline --no-project --python 3.12 python -B <script> ...` (standard library only).
+THINKING SETTING: reasoning effort "low" (`--variant low`), set inside scripts/claude_lis320_glm_oclow.py (called by scripts/claude_g406_2_glm.py). Do not add or change any flag.
+WHY: g406-2 and g406b ask whether GLM at reasoning effort low marks made-up claims about the user the way two blind judges did, on 560 plus 240 judged DEV transcripts (artifacts/claude-g406-2-20260926/PASSMARKS.md). Nothing is trained. This replaces the held g406 resume (claude-madeup-g406r-mac.md), which must not run.
+
+1. TREE: D=$(mktemp -d); git archive origin/main scripts artifacts/claude-g406-2-20260926 artifacts/claude-mu402-20260926 artifacts/claude-mu403-20260926 artifacts/claude-mu405-20260926/JUDGE-claims405.md artifacts/claude-mu405b-20260926/judge | tar -x -C $D; cd $D; O=artifacts/claude-g406-2-20260926/run; mkdir -p $O. Record `git rev-parse origin/main` and `uptime`.
+2. SEAL (run from $D): `shasum -a 256 -c artifacts/claude-g406-2-20260926/SEAL.sha256.txt` must print OK on every line. Else stop and report.
+3. SELFTESTS (each must print ok, else stop): scripts/claude_g406_2_glm.py --selftest ("g406-2 selftest 7/7 ok"); scripts/claude_g406_count.py --selftest ("g406 count selftest 5/5 ok"); scripts/claude_lis320_glm_oclow.py --selftest (last line "lis320 glm_oclow selftest ok ...").
+4. LEAK CHECK (one call): scripts/claude_glm_leakcheck.py --worktree <absolute path of your worktree>. Record its JSON line. Exit code 2 (ROUTE-FAIL) or 3 (LEAK): stop and report.
+5. SHARE: N=$(pgrep -f "opencode run" | wc -l | tr -d ' '); W=$((16 - N)); if W > 3 then W=3. If W < 1, wait 2 minutes and count again (at most 15 times, then stop and report). Record `date -u`, `uptime`, N and W.
+6. g406b first: record `date -u`; scripts/claude_g406_2_glm.py --mode two --packets 'artifacts/claude-mu405b-20260926/judge/packets/claims_j*.jsonl' --out $O/glm_b.jsonl --workers $W --max-minutes 70 > $O/glm_b.log 2>&1 ; record `date -u` and `uptime`. Then g406-2: redo step 5's count, record it, and run scripts/claude_g406_2_glm.py --mode one --packets 'artifacts/claude-mu402-20260926/judge/packets/claims_j*.jsonl' --packets 'artifacts/claude-mu403-20260926/judge/packets/claims_j*.jsonl' --out $O/glm_one.jsonl --workers $W --max-minutes 100 > $O/glm_one.log 2>&1 ; record `date -u` and `uptime`. For each log: its last line verbatim, `wc -l` of its jsonl, and a count of the "error" field's distinct first 60 characters (a short script; no transcript text).
+7. COUNT:
+   scripts/claude_g406_2_glm.py --glm $O/glm_b.jsonl --best-to $O/best_b.jsonl
+   scripts/claude_g406_count.py --glm $O/best_b.jsonl --judges artifacts/claude-mu405b-20260926/judge --write $O/verdict_b.json
+   scripts/claude_g406_2_glm.py --arm-report --glm $O/glm_b.jsonl --judge artifacts/claude-mu405b-20260926/judge > $O/arms_b.json
+   scripts/claude_g406_2_glm.py --glm $O/glm_one.jsonl --best-to $O/best_one.jsonl
+   scripts/claude_g406_count.py --glm $O/best_one.jsonl --judges artifacts/claude-mu402-20260926/judge --judges artifacts/claude-mu403-20260926/judge --write $O/verdict_one.json
+   Record every printed line verbatim.
+8. Copy $O (glm_b.jsonl, glm_b.log, best_b.jsonl, verdict_b.json, arms_b.json, glm_one.jsonl, glm_one.log, best_one.jsonl, verdict_one.json) into artifacts/claude-g406-2-20260926/run/ of your worktree and write RESULTS.md there: the origin/main commit, uptimes, every `date -u`, seal/selftest/leak-check lines, N and W, each log's last line, error-prefix counts, and the count lines. Counts only: no transcript text, no GLM reply text. Then rm -rf "$D" (exact path) and confirm it is gone.
+If stopped by the time cap or by failed calls: still do steps 7 and 8 with what exists and say "partial".
+PUSH: artifacts/claude-g406-2-20260926/run
