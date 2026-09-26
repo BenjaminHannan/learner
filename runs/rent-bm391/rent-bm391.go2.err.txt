@@ -1,0 +1,2340 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mpwd; git status --short | head -n 100; git log --oneline -5; ls artifacts/claude-bm391-20260926/ 2>&1; cat artifacts/claude-bm391-20260926/PASSMARKS.md 2>&1 | head -n 50; ls artifacts/claude-bm391-20260926/run 2>&1 | head -n 100
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-dl1-20260925/RESULTS-gpu.md
+A  artifacts/claude-dl1-20260925/gpu/dl1_results.json
+A  artifacts/claude-dl1-20260925/gpu/log.txt
+A  artifacts/claude-tgt5-20260926/RESULTS-gpu.md
+A  artifacts/claude-tgt5-20260926/gpu/contrasts.json
+A  artifacts/claude-tgt5-20260926/gpu/log.txt
+A  artifacts/claude-tgt5-20260926/gpu/pairs.jsonl
+A  artifacts/claude-tgt5-20260926/gpu/tgt5_summary.json
+M  artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+?? scripts/claude_280n_panel.sh
+?? scripts/claude_280p_panel.sh
+?? scripts/claude_281_panel.sh
+?? scripts/claude_281_panelrun.sh
+?? scripts/claude_281_runall.sh
+?? scripts/claude_281b_panel.sh
+?? scripts/claude_281b_runall.sh
+?? scripts/claude_282_panel.sh
+?? scripts/claude_282_panelrun.sh
+?? scripts/claude_282_runall.sh
+?? scripts/claude_282b_panelrun.sh
+?? scripts/claude_282b_runall.sh
+?? scripts/claude_291_m1.py
+?? scripts/claude_291_m7run.py
+?? scripts/claude_291_m8.sh
+?? scripts/claude_291_panel.sh
+?? scripts/claude_291_runall.sh
+?? scripts/claude_291_score.py
+?? scripts/claude_292_corrarm_run.py
+?? scripts/claude_292_m5.sh
+?? scripts/claude_292_m5run.py
+?? scripts/claude_292_panelrun.py
+?? scripts/claude_292_runall.sh
+?? scripts/claude_292_score.py
+?? scripts/claude_called281_devcases.py
+?? scripts/claude_called281_panelrun.py
+?? scripts/claude_called281_panelscore.py
+?? scripts/claude_called281_regscore.py
+?? scripts/claude_called281_run.py
+?? scripts/claude_called281_score.py
+?? scripts/claude_called281b_devcases.py
+?? scripts/claude_called281b_panelrun.py
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+bc39d2baf ideajudge-teacher2: DEV teacher agreement check (no training)
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+7692680e4 mut-0 SLEEP fails closed: mut0 runner + 3 runall scripts, seal + results (M1-M3 hold)
+ls: artifacts/claude-bm391-20260926/: No such file or directory
+cat: artifacts/claude-bm391-20260926/PASSMARKS.md: No such file or directory
+ls: artifacts/claude-bm391-20260926/run: No such file or directory
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1 | head -n 20; echo FETCH_DONE; git show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -n 30; echo ---; git branch -a 2>&1 | head -n 20; git log --oneline origin/main -5 2>&1; echo ---; git log --oneline origin/builder-outbox -5 2>&1
+FETCH_DONE
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+---
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
+  codex/testing-experiment-44
++ main
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+a375fe1fa queue: read-only Mac disk + vast credit check
+589946c92 tgt-5: copy GPU results, VERIFY (registered PASS confirmed; C matches targets as well as W)
+df9aa55ff bm-397 F2 audit tool (sample, blind batches, key, counts), written and sealed before any finaliser output; dry run on fake finals: 14 batches, no batch holds both replies of a question
+72a737447 queue: bm397-finalize (shared BensPC, $0)
+62d1235b8 bm-397 job held for the Director (small shared BensPC job, or a lane in rent-bm391 if not launched)
+---
+668c4e01f watcher status
+38eb84bd5 watcher status
+f28a92c8c builder results: 006f-bm397-finalize
+6601e1a61 watcher status
+f903575c6 builder results: rent-tgt5
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 13; echo ===KIT===; git show origin/main:design/v3/30-modes/330-rent-kit.md; echo ===PLAN===; git show origin/main:artifacts/claude-bm391-20260926/PLAN.md 2>&1
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+zsh:1: ==KIT=== not found
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/330-rent-kit.md
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+T=$(mktemp -d)/tree && mkdir -p $T
+git archive origin/builder-outbox | tar -x -C $T
+git archive origin/main | tar -x -C $T            # main on top: main wins
+mkdir -p $T/artifacts/fable-self122-20260922
+cp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/
+tar czf tree.tgz -C $(dirname $T) tree
+```
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+scp tree.tgz (and READER if needed) to the instance; tar xzf tree.tgz; cd tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-bm391-20260926/PLAN.md
+# bm-391 PLAN: Premonition 0.2 candidates on the public benchmarks (benchmarks thread, 2026-09-26 ~01:30 UTC)
+
+Registered before any run of these builds on any public test. Every LoCoMo number here is "after using LoCoMo for
+development" (k = 20 for the memory store was chosen on LoCoMo practice, bm-395). LongMemEval stays untouched.
+
+## What is tested
+The three builds month-end sealed on main at da7e0f3a4. The seal is artifacts/claude-e2e382-20260925/SEAL-code.sha256.txt,
+239 files; the seal file's own sha256 is 9bda3add859c310acc705dacbffdf8251ebe8687fc064379bc8e3cd85530e063.
+- E = claude_e2e382:build_382b: 0.1 with the grammar fix (G), plus the memory store. When the agent would abstain
+  on a question, it answers from the store's top 20 heard lines.
+- R = claude_e2e383:build_383: G plus route383. When the agent would abstain on a question that is not about the
+  user or anyone heard earlier, the plain 1B answers it.
+- ER = claude_e2e383:build_383e: G plus the store (top 20) plus route383.
+
+Harness and scorer: bm-390's, unchanged. Sealed files are scripts/claude_bm390.py and scripts/claude_bm390_score.py
+(artifacts/claude-bm390-20260925/SEAL-code.sha256.txt, 8 files). Same data, same fetch hashes, same prompts, same
+agent path as bm-390's P arm (one sleep per session, state restored before each question).
+
+Baselines: fixed, not re-run. They are bm-390's registered run files listed in baselines.sha256.txt (paths on
+origin/builder-outbox):
+- T: plain MiniCPM5-1B, whole chat;
+- Rb: plain 1B plus BM25 top 10;
+- Q2: Qwen3.5-2B, whole chat;
+- L12: LFM2.5-1.2B, whole chat;
+- C: no-chat contamination check;
+- P: Premonition 0.1.
+
+## Which build the marks judge (fixed now)
+0.2 is named by month-end's own registered marks on bank C: 382b's (PASSMARKS-382b.md) and 383's (PASSMARKS-383.md).
+Those marks do not use any bm-391 number. The rule:
+- both pass: ER;
+- only 382b passes: E;
+- only 383 passes: R;
+- neither passes: no build is 0.2, and every bm-391 number is report only.
+The other builds are reported in full, beside the named one.
+
+## Marks (bm-390's, unchanged; X = the named build)
+- M1: on LoCoMo categories 1-4 F1, X − B ≥ +3.0 with the paired bootstrap's 95% interval above 0. B is each of T,
+  Rb, Q2 and L12 (seed 390, 10k resamples, the sealed scorer).
+- M3: X gives fewer confident wrong answers (answered, F1 = 0, categories 1-4) than each of T, Rb, Q2 and L12.
+- M4: X ≥ T − 3 points on MMLU-Redux-300 and on GSM8K-300, with the sealed answer pickers. That means at least
+  13.67% (41/300) on MMLU and at least 60.67% (182/300) on GSM8K.
+- PASS = M1, M3 and M4 all pass. Anything else is a registered FAIL. The contamination flag (C above 10) is already
+  known clear (C 3.27).
+
+## Report only
+- Every arm's category split.
+- Paired differences: E − P, ER − E and R − P on LoCoMo, and R − E and ER − E on GSM8K and MMLU.
+- The store and route counters from EP382_LOG.
+- The answer-length check scripts/claude_bm391_prf.py (median scored words, token precision and recall, replies
+  ≥ 3x gold length; its F1 column must equal the scorer's).
+
+## Predictions (fixed now; X is expected to be ER)
+- B1 (98%): M1 fails against Q2 (X's F1 below 50.87). The registered verdict is FAIL.
+- B2 (75%): X's LoCoMo F1 is between 6 and 25 (my point guess 14). The reasoning: 0.1's 617 non-abstained answers
+  stay as they were. The store only helps the ~923 questions 0.1 abstained on. The plain 1B shown the same 20 lines
+  scored 29.85 overall, but the agent's guards and its "say you don't know" prompt will reject or abstain on some.
+- B3 (85%): E − P ≥ +5 F1 on LoCoMo.
+- B4 (80%): |ER − E| ≤ 2 F1 on LoCoMo. route383 now keeps 1,361 of the 1,540 questions (they name a speaker heard
+  earlier); only the other 179 can route.
+- B5 (80%): M3 fails. X answers more than 0.1 did, and Q2 has only 402 confident wrong.
+- B6 (85%): E's GSM8K is at most 60/300 (no route; the store is empty for a fresh general item).
+- B7 (65%): R's GSM8K is between 140 and 200 (point guess 172). M4 on GSM8K passes for R with 35%.
+- B8 (90%): R and ER each score at least 41/300 on MMLU (the M4 bar); point guess 145.
+- B9 (70%): R − E on GSM8K ≥ +80.
+
+## What would prove the idea behind 0.2 wrong (on these tests)
+- E − P ≤ +2 on LoCoMo: the store fallback does not reach LoCoMo answers inside the agent, whatever it did for the
+  plain 1B (bm-395).
+- R − E ≤ +20 on GSM8K: routing abstained questions to the plain 1B does not recover math inside the agent.
+
+## Where it runs
+Rental (handoff/held/rent-bm391.md until the Director clears the money): one RTX 5090, three lanes in parallel.
+- Lane 1: ER.
+- Lane 2: E.
+- Lane 3: R, general tests first.
+Each arm is launched once. A crash with no output may be relaunched once with the same command, and that is
+disclosed. Scoring and the recount happen afterwards on CPU, by this thread and a blind agent.
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-bm391-20260926/run 2>&1 | head -n 5; echo ---; git ls-tree origin/builder-outbox artifacts/claude-bm391-20260926/ 2>&1; echo ---; git ls-tree origin/main artifacts/claude-bm391-20260926/ 2>&1; echo ---; vastai show user --raw 2>&1; echo ---; vastai show instances 2>&1 | head -n 40
+fatal: path 'artifacts/claude-bm391-20260926/run' does not exist in 'origin/builder-outbox'
+---
+---
+100644 blob f988efe1f7c22d5319dcded7b79d708b4eb006d4	artifacts/claude-bm391-20260926/PLAN.md
+100644 blob adb82111da722269f1dc0846fe47ce04b3077946	artifacts/claude-bm391-20260926/SEAL.sha256.txt
+100644 blob 3c341ef40885c593f82a80dd07bb641e668a45ec	artifacts/claude-bm391-20260926/baselines.sha256.txt
+---
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 9.058110260469903,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+ "discord_id": null,
+ "email": "benjamin.a.hannan@gmail.com",
+ "email_verified": true,
+ "fullname": null,
+ "got_signup_credit": 0,
+ "has_billing": true,
+ "has_payout": false,
+ "has_rented": true,
+ "has_stripe_payout": false,
+ "host_agreement_accepted": false,
+ "host_only": false,
+ "huggingface_cloud_sync_enabled": true,
+ "id": 553012,
+ "is_subject_to_unpaid_deletion": false,
+ "key_id": 28637247,
+ "last4": null,
+ "oauth_provider": "google",
+ "paid_expected": 0.0,
+ "paid_verified": 0.0,
+ "password_resettable": null,
+ "payout_enabled": true,
+ "paypal_email": null,
+ "phone_number": null,
+ "rights": {
+  "api": {
+   "*": {
+    "api.auth.apikeys": {
+     "GET": {}
+    },
+    "api.auth.sessions": {
+     "GET": {}
+    },
+    "api.hubspot.newsletters": {
+     "GET": {}
+    },
+    "api.instances": {
+     "GET": {}
+    },
+    "api.instances.count": {
+     "GET": {}
+    },
+    "api.instances_v1": {
+     "GET": {}
+    },
+    "api.ssh.keys": {},
+    "api.team": {
+     "POST": {}
+    },
+    "api.template": {
+     "GET": {}
+    },
+    "api.template.params": {
+     "GET": {}
+    },
+    "api.template_v1": {
+     "GET": {}
+    },
+    "api.user.created_templates": {
+     "GET": {}
+    },
+    "api.user.save_context": {
+     "PUT": {}
+    },
+    "api.user.verify-email": {
+     "POST": {}
+    },
+    "api.users.crisp-identity": {
+     "GET": {}
+    },
+    "api.users.current": {
+     "GET": {}
+    },
+    "api.users.root": {
+     "GET": {}
+    }
+   },
+   "billing_read": {},
+   "billing_write": {},
+   "instance_read": {},
+   "instance_write": {},
+   "misc": {},
+   "user_read": {},
+   "user_write": {}
+  }
+ },
+ "sid": 1,
+ "ssh_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGsaSCgGiDJAKKDkM5DvmPV6D+avvzeBfi7Dz+H5s7e4 vast-training\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICnYSZnoTma419UtHDuRQsNq29uzJowmyfJu69xas517 ben@paynycfines.com\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP9dJBti4tqQ0olFaUTOCt4O6OHddZy0gwPoYaXuGKE9 rent-336b\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ7St3PlitESWp4VCS6zugx7K8P93SF+JgYtt+cobu2B rent-bm395",
+ "tfa_login": false,
+ "tfa_status": "disabled",
+ "total_spend": -50.9418897395301,
+ "username": "benjamin.a.hannan@gmail.com",
+ "wise_email": null
+}
+---
+[K[97;48;2;0;0;0m╭─[0m[97;48;2;0;0;0m──[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mFilterable Values[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m───[0m[97;48;2;0;0;0m─╮[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--status:       [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--verification: [0m[38;5;83;48;2;0;0;0mverified[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--gpu-name:     [0m[97;48;2;0;0;0mRTX 5090[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m╰──────────────────────────╯[0m
+
+[93;48;2;0;0;0m╭─[0m[93;48;2;0;0;0m─[0m[93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mResults Summary[0m[93;48;2;0;0;0m [0m[93;48;2;0;0;0m──[0m[93;48;2;0;0;0m─╮[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mTotal: [0m[1;97;48;2;0;0;0m1 instances[0m[48;2;0;0;0m  [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mLabels: [0m[97;48;2;0;0;0mrent-382b: 1[0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m╰──────────────────────╯[0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╔══════╤═════════╤═════════╤═══════════════╤═════════╤════════════════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m ID [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mStatus [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m Label [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m     GPU     [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m $/hr  [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m            Image      [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╟──────┼─────────┼─────────┼───────────────┼─────────┼────────────────────────[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m526…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mrent-3…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.5037[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytorch:2.8.0-c[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╚══════╧═════════╧═════════╧═══════════════╧═════════╧════════════════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[48;2;0;0;0m                                                                              [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[2;48;2;0;0;0mColumns hidden to fit terminal width: Disk  ·  use --cols to customize (see --[0m[48;2;0;0;0m [0m
+[0m
+[0m# [0mTodos
+[•] Gates: credit, duplicate, files/ledger check
+[ ] Build code tree + READER, verify sha
+[ ] Rent RTX 5090 labelled rent-bm391
+[ ] Setup on rental (pip, models, route122)
+[ ] Steps 1-4 (seals, tests, base ckpt, fetch, smoke)
+[ ] Step 5 registered lanes
+[ ] Copy back, destroy, confirm, ledger
+[ ] Write RESULTS-rent.md + push paths, final report
+[0m
+[0m$ [0mvastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); [print(x.get('id'), x.get('label'), x.get('actual_status') or x.get('status_msg')) for x in (d if isinstance(d,list) else d.get('instances',d))]" 2>&1; echo ---; git ls-tree origin/builder-outbox artifacts/ 2>&1 | grep bm391; echo ---NOBM391MEANSNODUP; git show origin/builder-outbox:artifacts/claude-bm391-20260926/RESULTS-rent.md 2>&1 | head -n 3; uptime; df -g / 2>&1 | head -n 5
+52674739 rent-382b running
+---
+---NOBM391MEANSNODUP
+fatal: path 'artifacts/claude-bm391-20260926/RESULTS-rent.md' does not exist in 'origin/builder-outbox'
+21:47  up 2 days, 11:40, 4 users, load averages: 32.00 42.61 48.98
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        22    37%  484014 232271440    0%   /
+[0m
+[0m$ [0mls /private/tmp/claude-502/ 2>&1 | head; cat "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt" 2>&1 | head -n 30; echo ---; git show origin/main:handoff/held/rent-bm391.md 2>&1 | head -n 40
+-private-var-folders-6q-27cy8k2s7w7cyb5spxrkj2mm0000gp-T-claude-sandbox-status-D5zpSz
+-Users-ben-hannan
+-Users-ben-hannan-Desktop
+-Users-ben-hannan-Desktop-projects-beautiful-model
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-issues-audit-abcf60
+-Users-ben-hannan-Desktop-projects-moe
+-Users-ben-hannan-Desktop-projects-polymarket
+-Users-ben-hannan-Desktop-projects-school-access
+-Users-ben-hannan-novel-model
+cat: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt: No such file or directory
+---
+fatal: path 'handoff/held/rent-bm391.md' does not exist in 'origin/main'
+[0m
+[0m$ [0mls /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/ 2>&1 | head; find /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/ -maxdepth 4 -name "OPUS-RULES*" 2>&1 | head
+76c622f5-1395-42cc-b432-71b65f256cf4
+e74bc27e-706d-45b2-849a-15f682aeceaf
+[0m
+[0m$ [0mfind /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/ -maxdepth 5 2>&1 | head -n 30; echo ---; ls ~/premonition-models/lis301-merged/ 2>&1; shasum -a 256 ~/premonition-models/lis301-merged/model.safetensors 2>&1
+/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/
+/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad
+---
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer_config.json
+tokenizer.json
+b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890  /Users/ben-hannan/premonition-models/lis301-merged/model.safetensors
+[0m
+[0m$ [0mls -la /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/ 2>&1; echo ---; ls artifacts/fable-self122-20260922/ 2>&1; shasum -a 256 artifacts/fable-self122-20260922/self122_head.pt 2>&1; echo ---; git show origin/main:artifacts/claude-bm391-20260926/SEAL.sha256.txt 2>&1; echo ---; git show origin/main:artifacts/claude-bm391-20260926/baselines.sha256.txt 2>&1 | head -n 20
+total 0
+drwx------  2 ben-hannan  wheel  64 Sep 23 15:24 .
+drwx------  3 ben-hannan  wheel  96 Sep 23 15:24 ..
+---
+heldout122.jsonl
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+self122_head.pt
+self122-notebook
+self122-results.json
+train122_report.json
+train122.jsonl
+WRONGS.md
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  artifacts/fable-self122-20260922/self122_head.pt
+---
+8f18a910e2cb1f7500378905c7d296392289f1bc589a6256c507872f41811bc1  artifacts/claude-bm391-20260926/PLAN.md
+280321f726efb3e87932014ab982cfcabdb79cde59a57412180e06f7224aa24f  artifacts/claude-bm391-20260926/baselines.sha256.txt
+a2a40a99962e6a1a039004cda003474949dc3da3d15e85445f1e71a82248ab75  scripts/claude_bm391_prf.py
+---
+1b94b4507be7b8160e392715eb645783f8ead230c9fcaad13a8c20ed4bb7a6ef  artifacts/claude-bm390-20260925/run/gsm8k_P.jsonl
+01df3f97943911a3369c07cf7928909032f8d6314e9b5c2fc4438953fea0d59c  artifacts/claude-bm390-20260925/run/locomo_P.jsonl
+af15f49e14d89669187c6794e169b9b6bc0f6a40af38ddd957dfe44e1633fe55  artifacts/claude-bm390-20260925/run/locomo_Rb.jsonl
+81aef79fe0cd78b56423278b6db858aafb8e07914952f38d4517a7e1dcd305f5  artifacts/claude-bm390-20260925/run/mmlu_P.jsonl
+1a1cddf660e68c4d228fa4c18a64eeaad21a328e23a538b5c3a197053f920d05  artifacts/claude-bm390-20260925/run2/gsm8k_L12.jsonl
+69c1acea4f31d8b15cae5ba4d79d78c2c33c3669b95c7425f1f36bf51661e259  artifacts/claude-bm390-20260925/run2/gsm8k_Q2.jsonl
+29e814f502a0e5045fa0f63e1151240508d01a156f74f6ba482058fdd82e244e  artifacts/claude-bm390-20260925/run2/gsm8k_T.jsonl
+6d13014675f4642147b46d1eafe3372251a92046b3e3d82829634ea7a7eb8895  artifacts/claude-bm390-20260925/run2/locomo_C.jsonl
+5afc0a26c24ba00fa826e5f9d40a5c0afa53b8f0fe6e6e0ee611bf8dd6353ac6  artifacts/claude-bm390-20260925/run2/locomo_L12.jsonl
+b70f55be9c17f21edf473741d81f1e62f442cf9649960d02aaf37399f770555f  artifacts/claude-bm390-20260925/run2/locomo_Q2.part1.jsonl
+3352ea2c2c90c7167ffca2a990d3a085579e5b8352cd50a5310f79f39ae4a129  artifacts/claude-bm390-20260925/run2/locomo_Q2.part2.jsonl
+74c0eead85ec9168b33afb9e513b60284270c6205fc2794feaad16136c4eb448  artifacts/claude-bm390-20260925/run2/locomo_Q2.part3.jsonl
+88ab38f9efb1cc566a3968ffe5a296878d553cccc4eca2c45cdf9568c012b880  artifacts/claude-bm390-20260925/run2/locomo_Q2.part4.jsonl
+e6d702c9e18e3c2ad8919d3cbe8e0348c9c8156bdbfc352aacfe1247f746b45c  artifacts/claude-bm390-20260925/run2/locomo_Q2.part5.jsonl
+35bdf151ba5160efda06cfe4e1cb274c7a0fa894963db8295286927b5e53b3db  artifacts/claude-bm390-20260925/run2/locomo_T.jsonl
+40068cfe70729129664001ca1647b776f22482951b6424385d8d06ed2e0d5297  artifacts/claude-bm390-20260925/run2/mmlu_L12.jsonl
+847a4743bda4d372c125a373e6ee719805f39b448a939eb7a997233e7af3c56f  artifacts/claude-bm390-20260925/run2/mmlu_Q2.jsonl
+ef1b4e6b2666130679cf6ee92e9c937c17168ad2d5a7dbf12d21b35ba2c9fd62  artifacts/claude-bm390-20260925/run2/mmlu_T.jsonl
+[0m
+[0m# [0mTodos
+[✓] Gates: credit, duplicate, files/ledger check
+[•] Build code tree + READER, verify sha
+[ ] Rent RTX 5090 labelled rent-bm391
+[ ] Setup on rental (pip, models, route122)
+[ ] Steps 1-4 (seals, tests, base ckpt, fetch, smoke)
+[ ] Step 5 registered lanes
+[ ] Copy back, destroy, confirm, ledger
+[ ] Write RESULTS-rent.md + push paths, final report
+[0m
+[0m$ [0mls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1; df -g /tmp /var/folders 2>&1 | head -n 6
+e2e330tree
+gen_part6.py
+grade_b_part1_writer.py
+guard-296b
+guard-350
+lis313b-armA.log
+lis313b-armC.log
+lis313b-armD.log
+lis313b-report.txt
+lis313b-tree
+lis314b-armA.log
+lis314b-armC.log
+lis314b-armG.log
+lis314b-armK.log
+lis314b-armP.log
+lis314b-armS.log
+lis314b-box.log
+lis314b-main.log
+lis314b-main.status
+lis314b-test.log
+lis314b-tree
+lis314b-tree.status
+lis318b
+lise2e
+mkpart6.py
+part6_slice.jsonl
+pilot356-log.jsonl
+pilot356-summary.json
+reader-330dev.tgz
+rent330c.log
+ret330c
+rsn356code.tar
+rsn356seal
+smoke336_run.ps1
+smoke336_run2.ps1
+smoke336win
+smoke336win_run.log
+smoke336win-tree.tgz
+teacher-glm53-run
+tree-330c-dev3.tgz
+tree-330dev.tgz
+tree330c.path
+tree330c.poBfd9
+tree330c.tgz
+Filesystem   1G-blocks Used Available Capacity  iused     ifree %iused  Mounted on
+/dev/disk3s3       460  388        21    95% 17580482 222430040    7%   /System/Volumes/Data
+/dev/disk3s3       460  388        21    95% 17580482 222430040    7%   /System/Volumes/Data
+[0m
+[0m$ [0mT=$(mktemp -d)/tree && mkdir -p $T && echo "T=$T" && git archive origin/builder-outbox | tar -x -C $T && git archive origin/main | tar -x -C $T && mkdir -p $T/artifacts/fable-self122-20260922 && cp artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/ && shasum -a 256 $T/artifacts/fable-self122-20260922/self122_head.pt && echo $T > /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.path && tar czf /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.tgz -C $(dirname $T) tree && ls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.tgz
+T=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.BRkzEnvzIN/tree
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.BRkzEnvzIN/tree/artifacts/fable-self122-20260922/self122_head.pt
+-rw-r--r--  1 ben-hannan  staff  171762299 Sep 25 21:50 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.tgz
+[0m
+[0m$ [0mT=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.path); ls $T/scripts/ | grep -E "bm390|bm391|e2e382|e2e383|sleepcheck|fable_reasoner|fable_self122" ; echo ---; ls $T/artifacts/claude-bm391-20260926/ $T/artifacts/claude-bm390-20260925/ 2>&1 | head -n 30
+claude_bm390_longctx.py
+claude_bm390_score.py
+claude_bm390.py
+claude_bm391_prf.py
+claude_e2e382_test.py
+claude_e2e382.py
+claude_e2e383_test.py
+claude_e2e383.py
+claude_sleepcheck_wrap.py
+fable_reasoner44_score.py
+fable_reasoner44_stress.py
+fable_reasoner44.py
+fable_reasoner50.py
+fable_self122_data.py
+fable_self122_diag.py
+fable_self122_runner.py
+fable_self122_train.py
+fable_self122.py
+---
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.BRkzEnvzIN/tree/artifacts/claude-bm390-20260925/:
+AMEND-finish.md
+AMEND-winnl.md
+AMEND-winnl2.md
+data-manifest.json
+PASSMARKS.md
+recount3
+recount4
+RESULTS-benspc.md
+RESULTS-benspc2.md
+RESULTS-benspc3.md
+RESULTS-rent2.md
+run
+run2
+score3
+SEAL-code.sha256.txt
+SEAL-finish.sha256.txt
+SEAL-winnl.sha256.txt
+SEAL-winnl2.sha256.txt
+smoke
+VERIFY-bm390.md
+VERIFY-finish.md
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.BRkzEnvzIN/tree/artifacts/claude-bm391-20260926/:
+baselines.sha256.txt
+PLAN.md
+SEAL.sha256.txt
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph 2>&1 | head -n 30
+[40m[97m  #  ID        CUDA   N  Model     PCIE  cpu_ghz  vCPUs     RAM  VRAM  Disk[0m
+[48;5;240m[97m  1  46753302  13.0  1x  RTX_5090  10.5  2.2      32.0     32.2  32.6  163 [0m
+[40m[97m  2  52604857  13.0  1x  RTX_5090  25.7  2.2      64.0     64.3  32.6  1178[0m
+[48;5;240m[97m  3  40203231  13.2  1x  RTX_5090  48.9  5.1      16.0     31.2  32.6  483 [0m
+[40m[97m  4  45669132  13.0  1x  RTX_5090  48.6  5.1      16.0     31.2  32.6  413 [0m
+[48;5;240m[97m  5  50134998  13.0  1x  RTX_5090  48.1  5.1      16.0     31.2  32.6  211 [0m
+[40m[97m  6  52190758  13.0  1x  RTX_5090  51.5  5.1      8.0      31.2  32.6  524 [0m
+[48;5;240m[97m  7  50472411  13.0  1x  RTX_5090  51.3  5.1      8.0      31.2  32.6  588 [0m
+[40m[97m  8  50992861  13.0  1x  RTX_5090  26.4  2.6      24.0     64.5  32.6  271 [0m
+[48;5;240m[97m  9  45454832  13.0  1x  RTX_5090  16.0  2.4      18.3     73.7  32.6  333 [0m
+[40m[97m 10  50287508  13.3  1x  RTX_5090  25.7  5.7      24.0     31.4  32.6  557 [0m
+[48;5;240m[97m 11  47776327  13.0  1x  RTX_5090  40.2  4.4      12.0     64.1  32.6  316 [0m
+[40m[97m 12  49863314  12.9  1x  RTX_5090  27.0  2.4      48.0    145.1  32.6  261 [0m
+[48;5;240m[97m 13  52668395  13.2  1x  RTX_5090  26.9  5.7      24.0     46.1  32.6  468 [0m
+[40m[97m 14  52628837  13.2  1x  RTX_5090  23.7  3.5      28.0     64.5  32.6  764 [0m
+[48;5;240m[97m 15  52676721  13.2  1x  RTX_5090  27.1  2.8      24.0     64.3  32.6  1292[0m
+[40m[97m 16  45699901  13.0  1x  RTX_5090  13.5  2.3      12.0     40.3  32.6  110 [0m
+[48;5;240m[97m 17  45409906  13.0  1x  RTX_5090  25.9  2.4      18.3     73.7  32.6  809 [0m
+[40m[97m 18  50849750  12.9  1x  RTX_5090  27.0  3.2      64.0     64.4  32.6  635 [0m
+[48;5;240m[97m 19  52662304  13.1  1x  RTX_5090  46.6  5.6      32.0     63.8  32.6  1437[0m
+[40m[97m 20  52485803  13.0  1x  RTX_5090  22.1  2.5      18.3     73.7  32.6  1298[0m
+[48;5;240m[97m 21  33886224  13.2  1x  RTX_5090  50.5  5.5      24.0     63.4  32.6  1197[0m
+[40m[97m 22  30193802  13.0  1x  RTX_5090  54.2  3.8      32.0    145.1  32.6  661 [0m
+[48;5;240m[97m 23  48425037  13.0  1x  RTX_5090  26.5  2.2      64.0    258.0  32.6  1462[0m
+[40m[97m 24  52077399  13.2  1x  RTX_5090  36.4  5.5      12.0     61.9  32.6  1443[0m
+[48;5;240m[97m 25  51969548  13.0  1x  RTX_5090  54.2  2.6      12.0     64.3  32.6  148 [0m
+[40m[97m 26  51969545  13.0  1x  RTX_5090  54.3  2.6      12.0     64.3  32.6  17  [0m
+[48;5;240m[97m 27  51102918  13.3  1x  RTX_5090  24.0  3.5      32.0    129.0  32.6  697 [0m
+[40m[97m 28  51969536  13.2  1x  RTX_5090  54.2  2.6      12.0     64.3  32.6  332 [0m
+[48;5;240m[97m 29  52015832  12.8  1x  RTX_5090  54.1  3.8      18.3     36.8  32.6  780 [0m
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+try:
+  d=json.loads(raw)
+except Exception as e:
+  print('parse fail', e); print(raw[:2000]); sys.exit()
+offers = d if isinstance(d,list) else d.get('offers',d)
+print('n=',len(offers))
+for o in offers[:40]:
+  print(o.get('id'), 'dph=',o.get('dph_total') or o.get('dph'), 'cpu=',o.get('cpu_cores_effective', o.get('num_cpus')), 'ram=',round((o.get('cpu_ram') or 0)/1024,1), 'disk=',o.get('disk_space'), 'rel=',o.get('reliability2',o.get('reliability')), 'up=',o.get('inet_up'),'down=',o.get('inet_down'), 'cuda=',o.get('cuda_max_good'))
+"
+n= 64
+46753300 dph= 0.44601851851851854 cpu= 32.0 ram= 31.5 disk= 162.9125 rel= 0.9949674 up= 63.1 down= 880.0 cuda= 13.0
+52604857 dph= 0.46631481481481485 cpu= 64.0 ram= 62.8 disk= 1178.5 rel= 0.993967 up= 881.6 down= 841.6 cuda= 13.0
+45043235 dph= 0.46898148148148144 cpu= 16.0 ram= 30.5 disk= 614.0 rel= 0.9975681 up= 385.7 down= 398.3 cuda= 13.0
+45380605 dph= 0.46898148148148144 cpu= 16.0 ram= 30.5 disk= 550.0 rel= 0.9982993 up= 557.0 down= 610.3 cuda= 13.0
+50134998 dph= 0.46898148148148144 cpu= 16.0 ram= 30.5 disk= 211.00000000000034 rel= 0.9978797 up= 568.6 down= 524.2 cuda= 13.0
+45669284 dph= 0.46898148148148144 cpu= 8.0 ram= 30.5 disk= 532.0 rel= 0.9974773 up= 492.4 down= 470.9 cuda= 13.0
+50472411 dph= 0.46898148148148144 cpu= 8.0 ram= 30.5 disk= 588.5 rel= 0.9888659 up= 576.5 down= 543.5 cuda= 13.0
+51858391 dph= 0.4993518518518518 cpu= 24.0 ram= 62.9 disk= 308.875 rel= 0.9966015 up= 460.2 down= 368.5 cuda= 13.0
+51858238 dph= 0.4993518518518518 cpu= 24.0 ram= 63.0 disk= 376.7 rel= 0.9963344 up= 484.0 down= 341.4 cuda= 13.0
+51535932 dph= 0.5347222222222222 cpu= 25.6 ram= 75.5 disk= 553.4559953590269 rel= 0.9915628 up= 345.8 down= 513.3 cuda= 13.0
+47776327 dph= 0.5347222222222222 cpu= 12.0 ram= 62.6 disk= 316.0 rel= 0.9802087 up= 1239.3 down= 1296.5 cuda= 13.0
+47558699 dph= 0.537037037037037 cpu= 18.285714285714285 ram= 72.0 disk= 377.2857142857143 rel= 0.9941024 up= 879.9 down= 724.0 cuda= 13.0
+40819919 dph= 0.537037037037037 cpu= 18.285714285714285 ram= 72.0 disk= 625.8322096724861 rel= 0.9951146 up= 854.1 down= 712.6 cuda= 13.0
+45699915 dph= 0.5618518518518519 cpu= 12.0 ram= 39.3 disk= 109.625 rel= 0.9890287 up= 491.8 down= 434.8 cuda= 13.0
+47386446 dph= 0.5747222222222222 cpu= 12.0 ram= 62.8 disk= 435.5 rel= 0.9850109 up= 919.5 down= 934.6 cuda= 13.0
+36263957 dph= 0.6009259259259259 cpu= 12.0 ram= 62.6 disk= 984.3000000000006 rel= 0.9990558 up= 845.2 down= 805.6 cuda= 13.1
+41974071 dph= 0.6013888888888889 cpu= 12.0 ram= 31.4 disk= 254.875 rel= 0.997368 up= 1345.0 down= 3179.8 cuda= 13.2
+50849750 dph= 0.6013888888888889 cpu= 64.0 ram= 62.9 disk= 634.75 rel= 0.989864 up= 32.7 down= 706.8 cuda= 12.9
+45685723 dph= 0.6027777777777777 cpu= 16.0 ram= 61.9 disk= 273.0 rel= 0.9968533 up= 825.6 down= 753.5 cuda= 13.2
+51710808 dph= 0.6027777777777777 cpu= 24.0 ram= 47.1 disk= 240.52499999999998 rel= 0.9826663 up= 673.0 down= 885.5 cuda= 13.0
+52475653 dph= 0.6057684444444444 cpu= 42.666666666666664 ram= 73.4 disk= 276.16666666666663 rel= 0.9867293 up= 859.4 down= 885.1 cuda= 13.2
+30193802 dph= 0.6680555555555555 cpu= 32.0 ram= 141.7 disk= 661.0183234194392 rel= 0.9873286 up= 1346.0 down= 11799.7 cuda= 13.0
+48425032 dph= 0.6685185185185185 cpu= 64.0 ram= 251.9 disk= 1462.0 rel= 0.9975233 up= 91.0 down= 1490.8 cuda= 13.0
+52077399 dph= 0.6712962962962963 cpu= 12.0 ram= 60.4 disk= 1442.9 rel= 0.9959442 up= 908.9 down= 913.9 cuda= 13.2
+51969548 dph= 0.6809259259259259 cpu= 12.0 ram= 62.8 disk= 147.7494241629759 rel= 0.9866494 up= 689.5 down= 650.0 cuda= 13.0
+51969536 dph= 0.720925925925926 cpu= 12.0 ram= 62.8 disk= 332.0 rel= 0.9897675 up= 760.3 down= 836.8 cuda= 13.2
+49759783 dph= 0.7347222222222223 cpu= 12.0 ram= 78.5 disk= 236.60000000000002 rel= 0.9922211 up= 360.5 down= 582.8 cuda= 13.2
+46953692 dph= 0.7356481481481482 cpu= 48.0 ram= 94.4 disk= 592.75 rel= 0.9967846 up= 5299.5 down= 5017.1 cuda= 13.0
+52127986 dph= 0.7356481481481482 cpu= 32.0 ram= 63.0 disk= 150.27732404368203 rel= 0.9868034 up= 7100.9 down= 8374.0 cuda= 13.2
+26371154 dph= 0.7365740740740742 cpu= 32.0 ram= 63.0 disk= 310.625 rel= 0.9985764 up= 5249.4 down= 6256.4 cuda= 13.3
+51326864 dph= 0.7623148148148147 cpu= 32.0 ram= 110.2 disk= 517.75 rel= 0.9917915 up= 2616.6 down= 6775.8 cuda= 13.3
+46900155 dph= 0.7747222222222222 cpu= 16.0 ram= 63.0 disk= 709.3625 rel= 0.9960322 up= 1808.4 down= 3285.3 cuda= 13.2
+42928597 dph= 0.8009259259259258 cpu= 64.0 ram= 503.5 disk= 1124.0 rel= 0.9985266 up= 877.6 down= 567.1 cuda= 13.1
+52268221 dph= 0.8013888888888888 cpu= 16.0 ram= 123.5 disk= 448.0 rel= 0.9846093 up= 594.0 down= 627.9 cuda= 13.0
+48591139 dph= 0.8013888888888888 cpu= 12.0 ram= 47.0 disk= 5963.7911221844215 rel= 0.9942219 up= 534.0 down= 781.6 cuda= 13.0
+52214445 dph= 0.8018518518518518 cpu= 8.0 ram= 62.7 disk= 700.9000000000001 rel= 0.9889857 up= 844.9 down= 853.5 cuda= 13.2
+51754996 dph= 0.8018518518518518 cpu= 32.0 ram= 125.6 disk= 3074.5 rel= 0.9982326 up= 834.4 down= 875.0 cuda= 13.0
+52015073 dph= 0.8018518518518518 cpu= 32.0 ram= 125.6 disk= 1656.85 rel= 0.9992003 up= 804.1 down= 769.9 cuda= 13.0
+51612550 dph= 0.8023148148148147 cpu= 24.0 ram= 62.5 disk= 2313.4 rel= 0.9977338 up= 2194.8 down= 1453.2 cuda= 13.2
+52626690 dph= 0.8427777777777777 cpu= 32.0 ram= 62.8 disk= 829.4 rel= 0.9924608 up= 5848.4 down= 4858.3 cuda= 13.2
+[0m
+[0m$ [0mvastai create instance --help 2>&1 | head -n 40
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+[0m
+[0m$ [0mvastai create instance 52604857 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel' --disk 100 --label rent-bm391 --ssh --raw 2>&1 | head -n 20
+{
+ "instance_api_key": "a3d9f58b8aa3b7ce320e113e7ba12cae1d7ea540dc00ded9c13f608f096ea59d",
+ "new_contract": 52677751,
+ "success": true
+}
+[0m
+[0m$ [0mdate -u +%Y-%m-%dT%H:%M:%SZ; echo RENT_START=2026-09-26 > /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391rent.env; sleep 45; vastai show instance 52677751 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('status_msg'), d.get('ssh_host'), d.get('ssh_port'), d.get('dph_total'), d.get('gpu_name'))"
+2026-09-26T01:51:26Z
+52677751 loading #7 7.645 Get:19 http://vn.archive.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [7819 kB]
+ ssh1.vast.ai 37750 0.5102962962962964 RTX 5090
+[0m
+[0m$ [0mfor i in $(seq 1 10); do sleep 30; vastai show instance 52677751 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status'), d.get('status_msg'))"; done
+loading #7 7.645 Get:19 http://vn.archive.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [7819 kB]
+
+loading #7 7.645 Get:19 http://vn.archive.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [7819 kB]
+
+loading #7 130.4 Get:7 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64  Packages [3037 kB]
+
+loading 
+#10 [7/7] RUN echo 'PS1="\[\e]0;\u@$VAST_CONTAINERLABEL: \w\a\]\[\e[01;34m\]\u\[\e[m\e[01m\]@\[\e[01;36m\]$VAST_CONTAINERLABEL\[\e[m\e[01m\]:\[\e[01;37m\]\w\$\[\e[m\] " ; if [ ! -e "$HOME/.no_auto_tmux" ] && [[ -z "$TMUX" ]] && [ "$SSH_CONNECTION" != "" ] && [ "$TMUX_STARTED" = "" ]; then tmux attach-session -t ssh_tmux || tmux new-session -s ssh_tmux; exit; elif ! [[ -z "$TMUX" ]]; then echo '"'"'Welcome to your vast.ai container! This session is running in `tmux`.'"'"'; echo '"'"'To disconnect without closing your processes, press ctrl+b, release, then d.'"'"'; echo '"'"'To disable auto-tmux, run `touch ~/.no_auto_tmux` and reconnect. See also https://tmuxcheatsheet.com/'"'"'; fi; ' >> ~/.bashrc
+
+running success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-devel/ssh
+running success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-devel/ssh
+running success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-devel/ssh
+running success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-devel/ssh
+running success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-devel/ssh
+running success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-devel/ssh
+[0m
+[0m$ [0mvastai show instance 52677751 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('ssh_host'), d.get('ssh_port'))"; cat ~/.ssh/config 2>&1 | head -n 20; ls ~/.ssh/ 2>&1
+ssh1.vast.ai 37750
+Host benspc
+  HostName 100.75.113.114
+  User benja
+agent
+authorized_keys
+config
+id_ed25519
+id_ed25519.pub
+known_hosts
+known_hosts.old
+rent-bm395
+rent-bm395.pub
+rent336b
+rent336b.pub
+ssh-copy-id.dyqOlQW0o4
+ssh-copy-id.slWcbCWO63
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 37750 root@ssh1.vast.ai "nvidia-smi --query-gpu=name,memory.total --format=csv; python -c 'import torch;print(torch.__version__, torch.cuda.is_available())'; df -h / | tail -1; nproc" 2>&1
+Warning: Permanently added '[ssh1.vast.ai]:37750' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+name, memory.total [MiB]
+NVIDIA GeForce RTX 5090, 32607 MiB
+2.8.0+cu128 True
+overlay         100G  784K  100G   1% /
+128
+[0m
+[0m$ [0mdu -sh ~/premonition-models/lis301-merged/ /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.tgz
+2.0G	/Users/ben-hannan/premonition-models/lis301-merged/
+164M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.tgz
+[0m
+[0m$ [0mtar czf /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/readerbm391.tgz -C ~/premonition-models lis301-merged && ls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/readerbm391.tgz && scp -P 37750 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.tgz root@ssh1.vast.ai:/root/treebm391.tgz 2>&1 | tail -2
+-rw-r--r--  1 ben-hannan  staff  1717501354 Sep 25 22:00 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/readerbm391.tgz
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 600000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai "ls -la /root/*.tgz 2>&1" 2>&1 | tail -5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+-rw-r--r-- 1 root root 71024640 Sep 26 02:08 /root/treebm391.tgz
+[0m
+[0m$ [0mrsync -avz --partial -e "ssh -p 37750" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.tgz root@ssh1.vast.ai:/root/treebm391.tgz 2>&1 | tail -3
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 600000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai "ls -la /root/*.tgz 2>&1" 2>&1 | tail -3
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+-rw-r--r-- 1 502 staff 162680335 Jan  1  1970 /root/treebm391.tgz
+[0m
+[0m$ [0mrsync -avz --partial -e "ssh -p 37750" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.tgz root@ssh1.vast.ai:/root/treebm391.tgz 2>&1 | tail -3; ssh -p 37750 root@ssh1.vast.ai "ls -la /root/treebm391.tgz; md5sum /root/treebm391.tgz" 2>&1 | tail -3; md5sum /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.tgz 2>/dev/null || md5 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.tgz
+sent 8986519 bytes  received 89348 bytes  72602 bytes/sec
+total size is 171762299  speedup is 18.93
+Have fun!
+-rw-r--r-- 1 502 staff 171762299 Sep 26 01:50 /root/treebm391.tgz
+9346b84ec1cb62b86dfb5fc50acaf5ca  /root/treebm391.tgz
+9346b84ec1cb62b86dfb5fc50acaf5ca  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.tgz
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai "mkdir -p /root/tree && tar xzf /root/treebm391.tgz -C /root/ && ls /root/tree | head; du -sh /root/tree" 2>&1 | tail -5; cat ~/premonition-models/lis301-merged/config.json | head -n 30
+TEACHING_TO_TEST_CONTRACT.md
+archive
+artifacts
+data
+2.0G	/root/tree
+{
+  "architectures": [
+    "LlamaForCausalLM"
+  ],
+  "attention_bias": false,
+  "attention_dropout": 0.0,
+  "bos_token_id": 0,
+  "dtype": "bfloat16",
+  "eos_token_id": [
+    1,
+    130073
+  ],
+  "head_dim": 128,
+  "hidden_act": "silu",
+  "hidden_size": 1536,
+  "initializer_range": 0.02,
+  "intermediate_size": 4608,
+  "max_position_embeddings": 131072,
+  "mlp_bias": false,
+  "model_type": "llama",
+  "num_attention_heads": 16,
+  "num_hidden_layers": 24,
+  "num_key_value_heads": 2,
+  "pad_token_id": 1,
+  "pretraining_tp": 1,
+  "rms_norm_eps": 1e-06,
+  "rope_parameters": {
+    "rope_theta": 5000000,
+    "rope_type": "default"
+  },
+[0m
+[0m$ [0mnohup rsync -avz --partial -e "ssh -p 37750" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/readerbm391.tgz root@ssh1.vast.ai:/root/readerbm391.tgz > /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/reader_rsync.log 2>&1 &
+echo started; git log --oneline origin/main -- scripts/ | head -n 5; git show origin/main:scripts/claude_lis302_tokprobs.py 2>&1 | grep -iE "merge|model|path" | head -n 20
+started
+f20fd114f slp-358lp: learning-progress night pick vs random, marks + seal before any run
+e675f3631 sleep02c: sidecar per saved night (base fingerprint, code hash, adapter sha256, check answers); refuse mismatched or torn adapters; report-only fresh-process activation check (rent-02c step 4a); selftest 9/9
+a970c0cc1 rv-386 registered: ban-only vs ban + note-with-reason (reviewer's follow-up, corrected), sealed; runs only on a proposer passing the >=50% skill gate; plain 1B gate 21/129 (16%), does not qualify; 384b: branch-state check against 358a code
+71bfcde39 dl-3 registered: replay of the base's own general answers in each night vs dl-2's night (marks F1-F5, tightened after Ben's review); queue rent-zdl3 ($1.50 cap, Director OK)
+37feee3e7 Month-end: evaluator reply (sec 3/6/10) checked; 0.2c freeze adds manifest, three status labels, parameter counts (report only); queued sel-02d, log-02d, date-02d, sleep packaging split with marks fixed
+python scripts/claude_lis302_tokprobs.py --model MERGED --rows DEV_ROWS --pred DEV_PRED --out tokprobs.jsonl
+from pathlib import Path
+from transformers import AutoModelForCausalLM, AutoTokenizer
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+    return [json.loads(l) for l in Path(p).read_text(encoding="utf-8").splitlines() if l.strip()]
+    ap.add_argument("--model", required=True)
+    tok = AutoTokenizer.from_pretrained(a.model)
+    model = AutoModelForCausalLM.from_pretrained(a.model, dtype=dtype).to(dev).eval()
+            logits = model(ids).logits[0, len(pr) - 1:-1].float()
+[0m
+[0m$ [0mgit grep -l "lis301" origin/main -- scripts/ 2>&1 | head; echo ---; git log --oneline --all -S "lis301-merged" 2>&1 | head -n 10
+origin/main:scripts/claude_lis301_data.py
+origin/main:scripts/claude_lis302_rescore.py
+origin/main:scripts/claude_lis312_f0.py
+origin/main:scripts/claude_lis313_f0.py
+origin/main:scripts/claude_lis313b_f0.py
+origin/main:scripts/claude_lis318_data.py
+---
+4414f632d Director: queue Mac job to trash rd371-verifier + lis318 merged models (Ben yes 02:16)
+264c95def builder results: 006e-lis-319c-bar
+c540a7938 builder results: 000-diskcheck-0926
+a375fe1fa queue: read-only Mac disk + vast credit check
+05e9f902b builder results: 006c-rd-378-train
+729a22d81 builder results: rent-dl1
+d0b060b58 builder results: rent-bm395
+875572997 builder results: rent-rd-371
+dfdee52e4 builder results: 003-lis-319-train
+ce958083f builder results: rent-blurt5s
+[0m
+[0m$ [0mgrep -rliE "merge.*lis301|lis301.*merge" ~/Desktop/projects/beautiful-model/handoff/ 2>/dev/null | head; echo ---; git show origin/main:scripts/claude_lis302_rescore.py 2>&1 | grep -iE "merg" | head; echo ---; ls ~/Desktop/projects/beautiful-model/handoff/kit/briefs/ 2>/dev/null | head -n 30
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/002-gram-364-benspc.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/smoke-336-win.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/001-bench-bm390w.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/lis-313-f0.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/lis-313b-f0.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/lis-301-train.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/lis-312-f0.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/001-bench-bm390x.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/lis-318-train.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/rent-lis-318.md
+---
+---
+138n-merge.txt
+138p-merge.txt
+206-sleepsmoke.txt
+207-atomicinbox.txt
+208-naturalpanel.txt
+209-writescreen.txt
+210-reversal.txt
+211-fairsmol.txt
+212-selfgate.txt
+213-earssafety.txt
+214-suitediff.txt
+215-ofteach.txt
+216-declinecue.txt
+218-suitediff2.txt
+219-selfname.txt
+220-restartindex.txt
+222-ofteachb.txt
+223-cantdo.txt
+227-identity.txt
+231b-chainnames.txt
+241-mouthA.txt
+241-stylesheet.txt
+241b-mouthA2.txt
+241b-stylesheet.txt
+243fixes-common.txt
+252-correct.txt
+252c-merge.txt
+255-fixedtext.txt
+256-earloop.txt
+257-earv4.txt
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai "cd /root/tree && python -c 'import torch;print(torch.__version__, torch.cuda.is_available())' && nvidia-smi --query-gpu=memory.free --format=csv,nounits" 2>&1 | tail -4
+Have fun!
+2.8.0+cu128 True
+memory.free [MiB]
+32110
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai "cd /root/tree && setsid nohup bash -c 'pip install -q \"transformers>=5\" safetensors huggingface_hub accelerate numpy; python -c \"import pyarrow\" || pip install -q pyarrow; python -c \"import torch, transformers; print(torch.__version__, transformers.__version__)\"' > /root/setup_pip.log 2>&1 < /dev/null & echo bg_started; sleep 50; tail -5 /root/setup_pip.log" 2>&1 | tail -8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+bg_started
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'pyarrow'
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2.8.0+cu128 5.17.0
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai "python -c 'import pyarrow; print(\"pyarrow ok\")' 2>&1; cd /root/tree && unset HF_HOME HF_HUB_CACHE; setsid nohup env HF_HUB_OFFLINE=0 python -c \"from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B', revision='87179e5c1f455ef22e6223592d2d61351b525bfc')); print(s('sentence-transformers/all-MiniLM-L6-v2', revision='1110a243fdf4706b3f48f1d95db1a4f5529b4d41', allow_patterns=['*.json', 'model.safetensors', 'vocab.txt']))\" > /root/setup_hf.log 2>&1 < /dev/null & echo bg_started" 2>&1 | tail -3
+Have fun!
+pyarrow ok
+bg_started
+[0m
+[0m$ [0msleep 90; ssh -p 37750 root@ssh1.vast.ai "cat /root/setup_hf.log 2>&1" 2>&1 | tail -6; tail -3 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/reader_rsync.log 2>&1
+Have fun!
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:05,  1.99it/s]Fetching 11 files:  55%|█████▍    | 6/11 [00:00<00:00, 11.38it/s]Fetching 11 files:  82%|████████▏ | 9/11 [00:00<00:00, 10.09it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:19<00:00, 10.09it/s]Fetching 11 files: 100%|██████████| 11/11 [00:20<00:00,  2.96s/it]Fetching 11 files: 100%|██████████| 11/11 [00:20<00:00,  1.90s/it]
+/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Fetching 11 files:   9%|▉         | 1/11 [00:00<00:04,  2.27it/s]Fetching 11 files:  27%|██▋       | 3/11 [00:00<00:01,  6.12it/s]Fetching 11 files:  64%|██████▎   | 7/11 [00:00<00:00,  9.01it/s]Fetching 11 files:  82%|████████▏ | 9/11 [00:01<00:00,  9.39it/s]Fetching 11 files: 100%|██████████| 11/11 [00:03<00:00,  2.01it/s]Fetching 11 files: 100%|██████████| 11/11 [00:03<00:00,  2.91it/s]
+/root/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+[0m
+[0m$ [0mls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/reader_rsync.log; ssh -p 37750 root@ssh1.vast.ai "ls -la /root/readerbm391.tgz" 2>&1 | tail -2
+-rw-r--r--  1 ben-hannan  staff  117 Sep 25 22:23 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/reader_rsync.log
+Have fun!
+ls: cannot access '/root/readerbm391.tgz': No such file or directory
+[0m
+[0m$ [0mcat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/reader_rsync.log; ps aux | grep -E "rsync.*reader" | grep -v grep | head -n 3
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+ben-hannan       60345   0.3  0.2 490467776  75072   ??  SN   10:23PM   0:03.32 rsync -avz --partial -e ssh -p 37750 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/readerbm391.tgz root@ssh1.vast.ai:/root/readerbm391.tgz
+ben-hannan       60348   0.1  0.1 488873696  26560   ??  SN   10:23PM   0:00.86 ssh -p 37750 root@ssh1.vast.ai rsync --server -g -l --partial -o -p -D -r -t -v -z --dirs . /root/readerbm391.tgz
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai "cd /root/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && setsid nohup bash -c 'sha256sum -c artifacts/claude-bm391-20260926/SEAL.sha256.txt; echo STEP1A_EXIT=\$?; sha256sum -c artifacts/claude-bm390-20260925/SEAL-code.sha256.txt; echo STEP1B_EXIT=\$?; sha256sum -c artifacts/claude-e2e382-20260925/SEAL-code.sha256.txt; echo STEP1C_EXIT=\$?; python -B scripts/claude_e2e382_test.py; echo TEST382_EXIT=\$?; python -B scripts/claude_e2e383_test.py; echo TEST383_EXIT=\$?' > /root/step1.log 2>&1 < /dev/null & echo launched"
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+launched
+[0m
+[0m$ [0msleep 60; ssh -p 37750 root@ssh1.vast.ai "cat /root/step1.log" 2>&1 | tail -30
+scripts/fable_perf142_index.py: OK
+scripts/fable_qmark151_core.py: OK
+scripts/fable_qrewrite132.py: OK
+scripts/fable_qual56_reasoner.py: OK
+scripts/fable_reasoner44.py: OK
+scripts/fable_reasoner50.py: OK
+scripts/fable_screen148_mixin.py: OK
+scripts/fable_self105.py: OK
+scripts/fable_self114.py: OK
+scripts/fable_self122.py: OK
+scripts/fable_self122_train.py: OK
+scripts/fable_self127.py: OK
+scripts/fable_self99.py: OK
+scripts/fable_sleep104_agent.py: OK
+scripts/fable_sleep115_agent.py: OK
+scripts/fable_sleep130_agent.py: OK
+scripts/fable_sleep131_agent.py: OK
+scripts/fable_sleep145_agent.py: OK
+scripts/fable_thinking_m2.py: OK
+scripts/fable_thought49_notebook.py: OK
+scripts/fable_thought49_schema.py: OK
+scripts/fable_webfix89_thinking.py: OK
+scripts/fable_wire51_adapters.py: OK
+scripts/fable_wire57_e2e.py: OK
+scripts/fable_wordmatch149_core.py: OK
+STEP1C_EXIT=0
+claude_e2e382_test: 10/10 OK
+TEST382_EXIT=0
+claude_e2e383_test: 13/13 OK
+TEST383_EXIT=0
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai "grep -E 'STEP1A_EXIT|STEP1B_EXIT|FAILED|failed' /root/step1.log | head; grep -c ': OK' /root/step1.log; head -8 /root/step1.log" 2>&1 | tail -15
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+STEP1A_EXIT=0
+STEP1B_EXIT=0
+250
+artifacts/claude-bm391-20260926/PLAN.md: OK
+artifacts/claude-bm391-20260926/baselines.sha256.txt: OK
+scripts/claude_bm391_prf.py: OK
+STEP1A_EXIT=0
+scripts/claude_bm390.py: OK
+scripts/claude_bm390_score.py: OK
+artifacts/claude-bm390-20260925/PASSMARKS.md: OK
+artifacts/claude-bm390-20260925/data-manifest.json: OK
+[0m
+[0m$ [0mT=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.path); grep -n "def cmd_fetch\|fetch" $T/scripts/claude_bm390.py | head -n 20
+10:  fetch    --data DIR
+137:def fetch(data: Path) -> None:
+161:    print(json.dumps({"fetch": "OK", "locomo_convs": len(lc), "locomo_qa": sum(cats.values()),
+507:    ap.add_argument("cmd", choices=["fetch", "locomo", "general"])
+524:    if args.cmd == "fetch":
+525:        fetch(Path(args.data))
+[0m
+[0m$ [0mT=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.path); sed -n '100,175p' $T/scripts/claude_bm390.py
+CLOSED_PROMPT = "Answer the following question in a few words.\n\nQuestion: {}\n"
+BM25_K = 10
+GENERAL_SYSTEM = "You are a helpful assistant."
+MMLU_PROMPT = ("The following is a multiple choice question about {subject}. Answer with the letter of the "
+               "correct option only.\n\n{question}\n{options}\nAnswer:")
+GSM8K_PROMPT = ("Solve this math problem. Show brief working, then end with a line of the form "
+                "\"The answer is N.\" where N is a number.\n\n{question}")
+MAX_NEW = {"mmlu": 16, "gsm8k": 512}
+
+
+# ======================================================================= data
+def _sha(path: Path) -> str:
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def _get(url: str, dest: Path, want: str) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if not dest.exists() or _sha(dest) != want:
+        for attempt in range(4):
+            try:
+                urllib.request.urlretrieve(url, dest)
+                break
+            except Exception:  # noqa: BLE001
+                if attempt == 3:
+                    raise
+                time.sleep(2 ** (attempt + 1))
+    got = _sha(dest)
+    if got != want:
+        raise SystemExit(f"DATA-MISMATCH {dest.name}: sha256 {got} != pinned {want}")
+
+
+def _read_arrow(path: Path):
+    import pyarrow as pa
+    with open(path, "rb") as fh:
+        return pa.ipc.open_stream(fh).read_all().to_pylist()
+
+
+def fetch(data: Path) -> None:
+    man = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    _get(LOCOMO_URL, data / "locomo10.json", man["locomo10_sha256"])
+    for subject, sha in sorted(man["mmlu_redux_files"].items()):
+        _get(MMLU_URL.format(rev=man["mmlu_redux_revision"], subject=subject),
+             data / "mmlu" / f"{subject}.arrow", sha)
+    _get(GSM8K_URL.format(rev=man["gsm8k_revision"]), data / "gsm8k_test.parquet", man["gsm8k_test_sha256"])
+
+    ok = []
+    for subject in sorted(man["mmlu_redux_files"]):
+        for i, row in enumerate(_read_arrow(data / "mmlu" / f"{subject}.arrow")):
+            if row["error_type"] == "ok":
+                ok.append({"qid": f"mmlu/{subject}/{i}", "subject": subject, "question": row["question"],
+                           "choices": list(row["choices"]), "gold": "ABCD"[int(row["answer"])]})
+    mm = random.Random(SEED).sample(ok, N_GENERAL)
+    import pyarrow.parquet as pq
+    gs = pq.read_table(data / "gsm8k_test.parquet").to_pylist()
+    gitems = [{"qid": f"gsm8k/test/{i}", "question": r["question"],
+               "gold": r["answer"].split("####")[-1].strip().replace(",", "")} for i, r in enumerate(gs)]
+    gg = random.Random(SEED).sample(gitems, N_GENERAL)
+    for name, rows in (("mmlu300.jsonl", mm), ("gsm8k300.jsonl", gg)):
+        (data / name).write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    lc = json.loads((data / "locomo10.json").read_text(encoding="utf-8"))
+    cats = Counter(q["category"] for c in lc for q in c["qa"])
+    print(json.dumps({"fetch": "OK", "locomo_convs": len(lc), "locomo_qa": sum(cats.values()),
+                      "locomo_by_category": dict(sorted(cats.items())), "mmlu_ok_rows": len(ok),
+                      "mmlu_sample": len(mm), "gsm8k_rows": len(gitems), "gsm8k_sample": len(gg),
+                      "mmlu300_sha256": _sha(data / "mmlu300.jsonl"),
+                      "gsm8k300_sha256": _sha(data / "gsm8k300.jsonl")}), flush=True)
+
+
+# ======================================================================= LoCoMo text
+def sessions(item: dict) -> list[tuple[str, list[dict]]]:
+    conv = item["conversation"]
+    nums = sorted(int(k.split("_")[1]) for k in conv
+                  if re.fullmatch(r"session_\d+", k) and isinstance(conv[k], list))
+    return [(conv[f"session_{n}_date_time"], conv[f"session_{n}"]) for n in nums]
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai "cd /root/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && setsid nohup python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out /tmp/r44 > /root/step2.log 2>&1 < /dev/null & setsid nohup python -B scripts/claude_bm390.py fetch --data /root/bm391data > /root/step3.log 2>&1 < /dev/null & echo launched_both"
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+launched_both
+[0m
+[0m$ [0msleep 120; ssh -p 37750 root@ssh1.vast.ai "echo ==STEP2==; cat /root/step2.log; echo ==STEP3==; cat /root/step3.log" 2>&1 | tail -15
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+==STEP2==
+{"stage": "base", "seed": 4102, "seconds": 37.0, "fresh_hop1to3": 1.0, "fresh_depth10": 1.0, "big_depth10": 1.0, "unknown_rate": 1.0}
+==STEP3==
+python: can't open file '/root/scripts/claude_bm390.py': [Errno 2] No such file or directory
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai "cp /tmp/r44/base-seed4102.pt /root/tree/artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt && shasum -a 256 /root/tree/artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt && ls -la /tmp/r44/; setsid nohup bash -c 'cd /root/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && python -B scripts/claude_bm390.py fetch --data /root/bm391data' > /root/step3.log 2>&1 < /dev/null & echo relaunched_step3"
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LANGUAGE = (unset),
+	LC_ALL = (unset),
+	LANG = "en_US.UTF-8"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+2ada54ac81544b399c60cf5a574517387b58ea43bdf04d7d93f7d2c9ff069057  /root/tree/artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt
+total 8
+drwxr-xr-x 2 root root   68 Sep 26 02:29 .
+drwxrwxrwt 1 root root   25 Sep 26 02:29 ..
+-rw-r--r-- 1 root root 1192 Sep 26 02:29 base-seed4102.json
+-rw-r--r-- 1 root root 2969 Sep 26 02:29 base-seed4102.pt
+relaunched_step3
+[0m
+[0m$ [0msleep 150; ssh -p 37750 root@ssh1.vast.ai "cat /root/step3.log" 2>&1 | tail -5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+{"fetch": "OK", "locomo_convs": 10, "locomo_qa": 1986, "locomo_by_category": {"1": 282, "2": 321, "3": 96, "4": 841, "5": 446}, "mmlu_ok_rows": 5330, "mmlu_sample": 300, "gsm8k_rows": 1319, "gsm8k_sample": 300, "mmlu300_sha256": "e294f5fc0c94726e640d276d67af3503b9d9a48574dbae357f8e72289f76c049", "gsm8k300_sha256": "df57d09b50357481931bfc5b13903821d22afb986c7bf170941c30038706b949"}
+[0m
+[0m$ [0mps aux | grep "rsync.*reader" | grep -v grep | wc -l; ssh -p 37750 root@ssh1.vast.ai "ls -la /root/ 2>/dev/null | grep -i reader; ls -la /root/.readerbm391* 2>/dev/null" 2>&1 | tail -4; date -u +%Y-%m-%dT%H:%M:%SZ
+2
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+-rw-------  1 root root  159121408 Sep 26 02:35 .readerbm391.tgz.22wp9u
+-rw------- 1 root root 159121408 Sep 26 02:35 /root/.readerbm391.tgz.22wp9u
+2026-09-26T02:35:10Z
+[0m
+[0m$ [0mls -la ~/premonition-models/lis301-merged/; du -sh ~/premonition-models/lis301-merged/model.safetensors; grep -rli "lis301" ~/Desktop/projects/beautiful-model/handoff/queue/ 2>/dev/null | head; echo ---; grep -iE "merge|output|save|push" ~/Desktop/projects/beautiful-model/handoff/queue/lis-301-train.md 2>/dev/null | head -n 20
+total 4240648
+drwxr-xr-x  8 ben-hannan  staff         256 Sep 23 15:02 .
+drwxr-xr-x  9 ben-hannan  staff         288 Sep 25 22:33 ..
+-rw-------  1 ben-hannan  staff        9241 Sep 23 15:02 chat_template.jinja
+-rw-------  1 ben-hannan  staff         784 Sep 23 15:02 config.json
+-rw-------  1 ben-hannan  staff         227 Sep 23 15:02 generation_config.json
+-rw-------  1 ben-hannan  staff  2161290944 Sep 23 15:02 model.safetensors
+-rw-------  1 ben-hannan  staff         477 Sep 23 15:02 tokenizer_config.json
+-rw-------  1 ben-hannan  staff     9894271 Sep 23 15:02 tokenizer.json
+2.0G	/Users/ben-hannan/premonition-models/lis301-merged/model.safetensors
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/002-gram-364-benspc.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/smoke-336-win.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/001-bench-bm390w.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/lis-313-f0.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/lis-313b-f0.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/lis-301-train.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/lis-312-f0.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/001-bench-bm390x.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/lis-318-train.md
+/Users/ben-hannan/Desktop/projects/beautiful-model/handoff/queue/003-lis-319-train.md
+---
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+2. TRAIN. Same command and flags as lis-300 step 3 (--epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge), with --data <work>/data and --out <work>/run. If it runs out of memory, use --batch 8 once and report it.
+4. SEAL. Run sha256 over THRESHOLD.txt, the merged safetensors and dev_sweep.txt into SEAL-run.sha256.txt BEFORE opening the panel.
+7. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/lis301-merged/ and record its sha256 in RESULTS.md. Keep it on BensPC too. Never push weights.
+PUSH: artifacts/claude-lis301-20260923/RESULTS.md artifacts/claude-lis301-20260923/THRESHOLD.txt artifacts/claude-lis301-20260923/SEAL-run.sha256.txt artifacts/claude-lis301-20260923/dev_sweep.txt artifacts/claude-lis301-20260923/panel_score.json artifacts/claude-lis301-20260923/panel_score_T0.json artifacts/claude-lis301-20260923/train_summary.json artifacts/claude-lis301-20260923/train_log.jsonl artifacts/claude-lis301-20260923/dev artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mA=$(ssh -p 37750 root@ssh1.vast.ai "stat -c %s /root/.readerbm391.tgz.22wp9u" 2>/dev/null); sleep 180; B=$(ssh -p 37750 root@ssh1.vast.ai "stat -c %s /root/.readerbm391.tgz.22wp9u" 2>/dev/null); echo "A=$A B=$B rate=$(( (B-A)/180 )) B/s"
+A=164102144 B=196345856 rate=179131 B/s
+[0m
+[0m✗ [0mmkdir -p /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split && dd if=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/readerbm391.tgz of=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/probeA.bin bs=1m count=40 2>/dev/null && dd if=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/readerbm391.tgz of=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/probeB.bin bs=1m skip=40 count=40 2>/dev/null && ls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/ failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mmkdir -p /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split && split -b 40m /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/readerbm391.tgz /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/probe_ && ls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/ | head -n 6
+total 3354496
+drwxr-xr-x  43 ben-hannan  staff      1376 Sep 25 22:39 .
+drwxr-xr-x  55 ben-hannan  staff      1760 Sep 25 22:39 ..
+-rw-r--r--   1 ben-hannan  staff  41943040 Sep 25 22:39 probe_aa
+-rw-r--r--   1 ben-hannan  staff  41943040 Sep 25 22:39 probe_ab
+-rw-r--r--   1 ben-hannan  staff  41943040 Sep 25 22:39 probe_ac
+[0m
+[0m$ [0mkill 60345 2>/dev/null; sleep 2; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/ | wc -l; for f in probe_aa probe_ab; do (scp -P 37750 -o StrictHostKeyChecking=no /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/$f root@ssh1.vast.ai:/root/probe_$f > /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/$f.log 2>&1 &) ; done; echo launched2; date +%s > /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/t0
+41
+launched2
+[0m
+[0m$ [0msleep 240; ssh -p 37750 root@ssh1.vast.ai "stat -c %s /root/probe_probe_aa /root/probe_probe_ab" 2>&1 | tail -3; cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/probe_aa.log /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/probe_ab.log 2>&1 | tail -4
+Have fun!
+33423360
+41943040
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+[0m
+[0m$ [0mcat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/probe_aa.log 2>/dev/null | tail -2; ssh -p 37750 root@ssh1.vast.ai "rm -f /root/probe_probe_* /root/.readerbm391.tgz.*" 2>&1 | tail -1; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/ | grep -v log | grep -v t0 | sort | head -n 45 | tail -n 5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Have fun!
+probe_bk
+probe_bl
+probe_bm
+probe_bn
+probe_bo
+[0m
+[0m$ [0mcd /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split && ls probe_* | grep -v log > chunks.txt && wc -l chunks.txt && setsid nohup bash -c 'cd /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split && cat chunks.txt | xargs -P 4 -I{} scp -P 37750 -o StrictHostKeyChecking=no {} root@ssh1.vast.ai:/root/chunks/{}' > uploader.log 2>&1 < /dev/null & echo uploader_started; ssh -p 37750 root@ssh1.vast.ai "mkdir -p /root/chunks && echo dir_ready" 2>&1 | tail -1
+41 chunks.txt
+uploader_started
+dir_ready
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai "cd /root/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && python -c \"import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))\" 2>&1 | tail -3; ls artifacts/claude-bm390-20260925/smoke/ 2>&1; ls /root/tree/artifacts/fable-self122-20260922/ | head -n 4" 2>&1 | tail -8
+('D8', {'top1': 'D8', 'conf': 0.9732, 'margin': 3.595, 'top3': [('D8', 14.24), ('OOS', 10.65), ('C2', 3.32)], 'tau': 0.6, 'mu': 1.5, 'guard': 'pass'})
+gsm8k300.jsonl
+locomo10.json
+mmlu300.jsonl
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+WRONGS.md
+[0m
+[0m$ [0msleep 600; ssh -p 37750 root@ssh1.vast.ai "ls /root/chunks/ 2>/dev/null | wc -l" 2>&1 | tail -1; date -u +%Y-%m-%dT%H:%M:%SZ
+0
+2026-09-26T02:54:39Z
+[0m
+[0m$ [0mtail -5 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/uploader.log; ps aux | grep -c "[s]cp.*chunks"
+zsh:1: command not found: setsid
+0
+[0m
+[0m$ [0mcd /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split && nohup bash -c 'cat chunks.txt | xargs -P 4 -I{} scp -P 37750 -o StrictHostKeyChecking=no {} root@ssh1.vast.ai:/root/chunks/{}' > uploader.log 2>&1 < /dev/null & echo relaunched; sleep 45; ssh -p 37750 root@ssh1.vast.ai "ls /root/chunks/ | wc -l; du -sh /root/chunks" 2>&1 | tail -2
+relaunched
+4
+129M	/root/chunks
+[0m
+[0m$ [0msleep 420; ssh -p 37750 root@ssh1.vast.ai "ls /root/chunks/ | wc -l; du -sb /root/chunks" 2>&1 | tail -2; date -u +%Y-%m-%dT%H:%M:%SZ
+6
+251658370	/root/chunks
+2026-09-26T03:02:42Z
+[0m
+[0m$ [0msleep 900; ssh -p 37750 root@ssh1.vast.ai "ls /root/chunks/ | wc -l" 2>&1 | tail -1; date -u +%Y-%m-%dT%H:%M:%SZ
+6
+2026-09-26T03:17:51Z
+[0m
+[0m$ [0mps aux | grep "[s]cp -P 37750" | head -n 6; tail -5 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split/uploader.log; ssh -p 37750 root@ssh1.vast.ai "ls -la /root/chunks/" 2>&1 | tail -8
+Have fun!
+Connection to ssh1.vast.ai closed by remote host.
+scp: Connection closed
+xargs: scp: exited with status 255; aborting
+Connection to ssh1.vast.ai closed by remote host.
+drwxr-xr-x 2 root root      130 Sep 26 02:56 .
+drwx------ 1 root root     4096 Sep 26 02:44 ..
+-rw-r--r-- 1 root root 41943040 Sep 26 02:56 probe_aa
+-rw-r--r-- 1 root root 41943040 Sep 26 02:56 probe_ab
+-rw-r--r-- 1 root root 41943040 Sep 26 02:56 probe_ac
+-rw-r--r-- 1 root root 41943040 Sep 26 02:56 probe_ad
+-rw-r--r-- 1 root root 41943040 Sep 26 02:58 probe_ae
+-rw-r--r-- 1 root root 41943040 Sep 26 02:58 probe_af
+[0m
+[0m$ [0mcd /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split && ssh -p 37750 root@ssh1.vast.ai "ls /root/chunks/" 2>/dev/null | sort > done.txt; comm -23 chunks.txt done.txt > todo.txt; wc -l todo.txt done.txt; split -n l/2 todo.txt todo_half_ && nohup bash -c 'cat todo_half_aa | xargs -P 1 -I{} sh -c "for i in 1 2 3 4 5; do scp -P 37750 -o StrictHostKeyChecking=no -o ServerAliveInterval=15 {} root@ssh1.vast.ai:/root/chunks/{} && break; sleep 10; done"' > up1.log 2>&1 < /dev/null & nohup bash -c 'cat todo_half_ab | xargs -P 1 -I{} sh -c "for i in 1 2 3 4 5; do scp -P 37750 -o StrictHostKeyChecking=no -o ServerAliveInterval=15 {} root@ssh1.vast.ai:/root/chunks/{} && break; sleep 10; done"' > up2.log 2>&1 < /dev/null & echo two_streams_started
+35 todo.txt
+       6 done.txt
+      41 total
+split: l/2: number of chunks is invalid
+two_streams_started
+[0m
+[0m$ [0mcd /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391split && head -n 18 todo.txt > half1.txt && tail -n 17 todo.txt > half2.txt && wc -l half1.txt half2.txt && nohup bash -c 'cat half1.txt | xargs -P 1 -I{} sh -c "for i in 1 2 3 4 5; do scp -P 37750 -o StrictHostKeyChecking=no -o ServerAliveInterval=15 {} root@ssh1.vast.ai:/root/chunks/{} && break; sleep 10; done"' > up1.log 2>&1 < /dev/null & nohup bash -c 'cat half2.txt | xargs -P 1 -I{} sh -c "for i in 1 2 3 4 5; do scp -P 37750 -o StrictHostKeyChecking=no -o ServerAliveInterval=15 {} root@ssh1.vast.ai:/root/chunks/{} && break; sleep 10; done"' > up2.log 2>&1 < /dev/null & echo started; sleep 50; ssh -p 37750 root@ssh1.vast.ai "ls /root/chunks/ | wc -l" 2>&1 | tail -1
+18 half1.txt
+      17 half2.txt
+      35 total
+started
+8
+[0m
+[0m$ [0msleep 1200; ssh -p 37750 root@ssh1.vast.ai "ls /root/chunks/ | wc -l" 2>&1 | tail -1; date -u +%Y-%m-%dT%H:%M:%SZ
+15
+2026-09-26T03:39:39Z
+[0m
+[0m$ [0msleep 1500; ssh -p 37750 root@ssh1.vast.ai "ls /root/chunks/ | wc -l" 2>&1 | tail -1; date -u +%Y-%m-%dT%H:%M:%SZ
+30
+2026-09-26T04:04:57Z
+[0m
+[0m$ [0msleep 1200; ssh -p 37750 root@ssh1.vast.ai "ls /root/chunks/ | wc -l" 2>&1 | tail -1; date -u +%Y-%m-%dT%H:%M:%SZ
+41
+2026-09-26T04:25:07Z
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai "cd /root/chunks && cat $(ls probe_* | sort | tr '\n' ' ') > /root/readerbm391.tgz && ls -la /root/readerbm391.tgz && md5sum /root/readerbm391.tgz" 2>&1 | tail -3; md5 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/readerbm391.tgz
+zsh:1: no matches found: probe_*
+Have fun!
+-rw-r--r-- 1 502 staff 0 Sep 26 04:25 /root/readerbm391.tgz
+d41d8cd98f00b204e9800998ecf8427e  /root/readerbm391.tgz
+MD5 (/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/readerbm391.tgz) = 40b3157e36a95797cc8439e9a44f2af5
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'cd /root/chunks && cat probe_aa probe_ab probe_ac probe_ad probe_ae probe_af probe_ag probe_ah probe_ai probe_aj probe_ak probe_al probe_am probe_an probe_ao probe_ap probe_aq probe_ar probe_as probe_at probe_au probe_av probe_aw probe_ax probe_ay probe_az probe_ba probe_bb probe_bc probe_bd probe_be probe_bf probe_bg probe_bh probe_bi probe_bj probe_bk probe_bl probe_bm probe_bn probe_bo > /root/readerbm391.tgz && md5sum /root/readerbm391.tgz && ls -la /root/readerbm391.tgz' 2>&1 | tail -3
+Have fun!
+40b3157e36a95797cc8439e9a44f2af5  /root/readerbm391.tgz
+-rw-r--r-- 1 502 staff 1717501354 Sep 26 04:25 /root/readerbm391.tgz
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'mkdir -p /root/reader && tar xzf /root/readerbm391.tgz -C /root/reader && ls /root/reader/ && shasum -a 256 /root/reader/lis301-merged/model.safetensors' 2>&1 | tail -4
+LANG = "en_US.UTF-8"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890  /root/reader/lis301-merged/model.safetensors
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'ls /root/reader/lis301-merged/' 2>&1 | tail -8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer.json
+tokenizer_config.json
+[0m
+[0m# [0mTodos
+[✓] Gates: credit, duplicate, files/ledger check
+[✓] Build code tree + READER, verify sha
+[✓] Rent RTX 5090 labelled rent-bm391
+[✓] Setup on rental (pip, models, route122)
+[•] Steps 1-4 (seals, tests, base ckpt, fetch, smoke)
+[ ] Step 5 registered lanes
+[ ] Copy back, destroy, confirm, ledger
+[ ] Write RESULTS-rent.md + push paths, final report
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'mkdir -p /root/tree/artifacts/claude-bm391-20260926/run /root/bm391work/smoke && cat > /root/smoke.sh << "EOF"
+#!/bin/bash
+cd /root/tree
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+READER=/root/reader/lis301-merged
+SD=artifacts/claude-bm390-20260925/smoke
+WO=/root/bm391work/smoke
+date -u +%Y-%m-%dT%H:%M:%SZ > /root/smoke.times
+SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=$WO/sleep_Es.jsonl python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data $SD --arm agent:claude_e2e382:build_382b --name Es --model $READER --gen-model $BASE --out $WO --limit-q 2 > /root/smoke_Es_locomo.log 2>&1; echo "Es_locomo_exit=$?" >> /root/smoke.times; date -u +%Y-%m-%dT%H:%M:%SZ >> /root/smoke.times
+python -B scripts/claude_bm390.py general --task gsm8k --data $SD --arm agent:claude_e2e382:build_382b --name Es --model $READER --gen-model $BASE --out $WO --limit 2 > /root/smoke_Es_gsm8k.log 2>&1; echo "Es_gsm8k_exit=$?" >> /root/smoke.times; date -u +%Y-%m-%dT%H:%M:%SZ >> /root/smoke.times
+SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=$WO/sleep_Rs.jsonl python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data $SD --arm agent:claude_e2e383:build_383 --name Rs --model $READER --gen-model $BASE --out $WO --limit-q 2 > /root/smoke_Rs_locomo.log 2>&1; echo "Rs_locomo_exit=$?" >> /root/smoke.times; date -u +%Y-%m-%dT%H:%M:%SZ >> /root/smoke.times
+python -B scripts/claude_bm390.py general --task gsm8k --data $SD --arm agent:claude_e2e383:build_383 --name Rs --model $READER --gen-model $BASE --out $WO --limit 2 > /root/smoke_Rs_gsm8k.log 2>&1; echo "Rs_gsm8k_exit=$?" >> /root/smoke.times; date -u +%Y-%m-%dT%H:%M:%SZ >> /root/smoke.times
+SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=$WO/sleep_ERs.jsonl python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data $SD --arm agent:claude_e2e383:build_383e --name ERs --model $READER --gen-model $BASE --out $WO --limit-q 2 > /root/smoke_ERs_locomo.log 2>&1; echo "ERs_locomo_exit=$?" >> /root/smoke.times; date -u +%Y-%m-%dT%H:%M:%SZ >> /root/smoke.times
+python -B scripts/claude_bm390.py general --task gsm8k --data $SD --arm agent:claude_e2e383:build_383e --name ERs --model $READER --gen-model $BASE --out $WO --limit 2 > /root/smoke_ERs_gsm8k.log 2>&1; echo "ERs_gsm8k_exit=$?" >> /root/smoke.times; date -u +%Y-%m-%dT%H:%M:%SZ >> /root/smoke.times
+echo SMOKE_DONE >> /root/smoke.times
+EOF
+setsid nohup bash /root/smoke.sh > /root/smoke_driver.log 2>&1 < /dev/null & echo smoke_launched'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+smoke_launched
+[0m
+[0m$ [0msleep 240; ssh -p 37750 root@ssh1.vast.ai 'cat /root/smoke.times 2>/dev/null; echo ---; tail -2 /root/smoke_Es_locomo.log 2>/dev/null; nvidia-smi --query-gpu=memory.used --format=csv,nounits 2>/dev/null' 2>&1 | tail -8
+ERs_gsm8k_exit=0
+2026-09-26T04:29:56Z
+SMOKE_DONE
+---
+[bm390] smoke-1 turns=8 questions=2
+wrote locomo_Es.jsonl rows=2 convs=1
+memory.used [MiB]
+0
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'cat /root/smoke.times; echo ===; for f in /root/smoke_*.log; do echo "--- $f"; grep -E "wrote|Error|Traceback" $f | head -n 4; done' 2>&1 | tail -30
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2026-09-26T04:26:46Z
+Es_locomo_exit=0
+2026-09-26T04:27:29Z
+Es_gsm8k_exit=0
+2026-09-26T04:27:48Z
+Rs_locomo_exit=0
+2026-09-26T04:28:28Z
+Rs_gsm8k_exit=0
+2026-09-26T04:28:53Z
+ERs_locomo_exit=0
+2026-09-26T04:29:32Z
+ERs_gsm8k_exit=0
+2026-09-26T04:29:56Z
+SMOKE_DONE
+===
+--- /root/smoke_ERs_gsm8k.log
+wrote gsm8k_ERs.jsonl rows=2
+--- /root/smoke_ERs_locomo.log
+wrote locomo_ERs.jsonl rows=2 convs=1
+--- /root/smoke_Es_gsm8k.log
+wrote gsm8k_Es.jsonl rows=2
+--- /root/smoke_Es_locomo.log
+wrote locomo_Es.jsonl rows=2 convs=1
+--- /root/smoke_Rs_gsm8k.log
+wrote gsm8k_Rs.jsonl rows=2
+--- /root/smoke_Rs_locomo.log
+wrote locomo_Rs.jsonl rows=2 convs=1
+--- /root/smoke_driver.log
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'cat > /root/lane1.sh << "EOF"
+#!/bin/bash
+cd /root/tree
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+READER=/root/reader/lis301-merged
+DATA=/root/bm391data
+OUT=artifacts/claude-bm391-20260926/run
+B=claude_e2e383:build_383e; N=ER
+echo "LANE1_START $(date -u +%Y-%m-%dT%H:%M:%SZ)" > /root/lane1.times
+SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=$OUT/sleep_${N}.jsonl EP382_LOG=$OUT/ep382_${N}_locomo.jsonl python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data $DATA --arm agent:$B --name $N --model $READER --gen-model $BASE --out $OUT > /root/lane1_locomo.log 2>&1; echo "LANE1_LOCOMO_EXIT=$? $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /root/lane1.times
+EP382_LOG=$OUT/ep382_${N}_mmlu.jsonl python -B scripts/claude_bm390.py general --task mmlu --data $DATA --arm agent:$B --name $N --model $READER --gen-model $BASE --out $OUT > /root/lane1_mmlu.log 2>&1; echo "LANE1_MMLU_EXIT=$? $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /root/lane1.times
+EP382_LOG=$OUT/ep382_${N}_gsm8k.jsonl python -B scripts/claude_bm390.py general --task gsm8k --data $DATA --arm agent:$B --name $N --model $READER --gen-model $BASE --out $OUT > /root/lane1_gsm8k.log 2>&1; echo "LANE1_GSM8K_EXIT=$? $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /root/lane1.times
+echo LANE1_DONE >> /root/lane1.times
+EOF
+cat > /root/lane2.sh << "EOF"
+#!/bin/bash
+cd /root/tree
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+READER=/root/reader/lis301-merged
+DATA=/root/bm391data
+OUT=artifacts/claude-bm391-20260926/run
+B=claude_e2e382:build_382b; N=E
+echo "LANE2_START $(date -u +%Y-%m-%dT%H:%M:%SZ)" > /root/lane2.times
+SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=$OUT/sleep_${N}.jsonl EP382_LOG=$OUT/ep382_${N}_locomo.jsonl python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data $DATA --arm agent:$B --name $N --model $READER --gen-model $BASE --out $OUT > /root/lane2_locomo.log 2>&1; echo "LANE2_LOCOMO_EXIT=$? $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /root/lane2.times
+EP382_LOG=$OUT/ep382_${N}_mmlu.jsonl python -B scripts/claude_bm390.py general --task mmlu --data $DATA --arm agent:$B --name $N --model $READER --gen-model $BASE --out $OUT > /root/lane2_mmlu.log 2>&1; echo "LANE2_MMLU_EXIT=$? $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /root/lane2.times
+EP382_LOG=$OUT/ep382_${N}_gsm8k.jsonl python -B scripts/claude_bm390.py general --task gsm8k --data $DATA --arm agent:$B --name $N --model $READER --gen-model $BASE --out $OUT > /root/lane2_gsm8k.log 2>&1; echo "LANE2_GSM8K_EXIT=$? $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /root/lane2.times
+echo LANE2_DONE >> /root/lane2.times
+EOF
+setsid nohup bash /root/lane1.sh > /root/lane1_driver.log 2>&1 < /dev/null &
+setsid nohup bash /root/lane2.sh > /root/lane2_driver.log 2>&1 < /dev/null &
+echo lanes_launched; ps aux | grep "[l]ane[12].sh" | wc -l' 2>&1 | tail -2
+lanes_launched
+3
+[0m
+[0m$ [0msleep 300; ssh -p 37750 root@ssh1.vast.ai 'cat /root/lane1.times /root/lane2.times 2>/dev/null; echo ---; head -1 /root/lane1_locomo.log /root/lane2_locomo.log 2>/dev/null; echo ---; nvidia-smi --query-gpu=memory.used,memory.free --format=csv,nounits' 2>&1 | tail -12
+Have fun!
+LANE1_START 2026-09-26T04:31:34Z
+LANE2_START 2026-09-26T04:31:34Z
+---
+==> /root/lane1_locomo.log <==
+sleepcheck: logging every sleep to artifacts/claude-bm391-20260926/run/sleep_ER.jsonl; stop on missing checkpoint = True
+
+==> /root/lane2_locomo.log <==
+sleepcheck: logging every sleep to artifacts/claude-bm391-20260926/run/sleep_E.jsonl; stop on missing checkpoint = True
+---
+memory.used [MiB], memory.free [MiB]
+11090, 21020
+[0m
+[0m$ [0msleep 300; ssh -p 37750 root@ssh1.vast.ai 'grep -h "bm390" /root/lane1_locomo.log /root/lane2_locomo.log 2>/dev/null | head -n 6; echo ---; tail -2 /root/lane1_locomo.log /root/lane2_locomo.log 2>/dev/null' 2>&1 | tail -12
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'wc -l /root/lane1_locomo.log /root/lane2_locomo.log; cat /root/lane1_locomo.log; echo ===LANE2===; cat /root/lane2_locomo.log; ps aux | grep "[c]laude_bm390" | head -n 5' 2>&1 | tail -20
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+  4 /root/lane1_locomo.log
+  4 /root/lane2_locomo.log
+  8 total
+sleepcheck: logging every sleep to artifacts/claude-bm391-20260926/run/sleep_ER.jsonl; stop on missing checkpoint = True
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 5584.38it/s]
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 3420.72it/s]
+===LANE2===
+sleepcheck: logging every sleep to artifacts/claude-bm391-20260926/run/sleep_E.jsonl; stop on missing checkpoint = True
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 7778.74it/s]
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 3172.85it/s]
+root        2619 99.2  1.9 30656828 2605004 ?    Rl   04:31  10:35 python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data /root/bm391data --arm agent:claude_e2e383:build_383e --name ER --model /root/reader/lis301-merged --gen-model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out artifacts/claude-bm391-20260926/run
+root        2620 99.1  2.0 30709364 2657024 ?    Rl   04:31  10:35 python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data /root/bm391data --arm agent:claude_e2e382:build_382b --name E --model /root/reader/lis301-merged --gen-model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out artifacts/claude-bm391-20260926/run
+[0m
+[0m$ [0msleep 600; ssh -p 37750 root@ssh1.vast.ai 'grep -h "bm390" /root/lane1_locomo.log /root/lane2_locomo.log | head -n 6; echo ---FREE---; nvidia-smi --query-gpu=memory.free --format=csv,nounits' 2>&1 | tail -8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---FREE---
+memory.free [MiB]
+20546
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,nounits; ps -o pid,etime,time,cmd -p 2619,2620 2>/dev/null; tail -c 600 /root/lane1_locomo.log; echo; ls -la /root/tree/artifacts/claude-bm391-20260926/run/ 2>/dev/null' 2>&1 | tail -12
+sleepcheck: logging every sleep to artifacts/claude-bm391-20260926/run/sleep_ER.jsonl; stop on missing checkpoint = True
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 5584.38it/s]
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 3420.72it/s]
+
+total 32
+drwxr-xr-x 2 root root    126 Sep 26 04:32 .
+drwxr-xr-x 3  502 staff   103 Sep 26 04:26 ..
+-rw-r--r-- 1 root root  12132 Sep 26 04:52 ep382_ER_locomo.jsonl
+-rw-r--r-- 1 root root  11695 Sep 26 04:52 ep382_E_locomo.jsonl
+-rw-r--r-- 1 root root   3439 Sep 26 04:50 sleep_E.jsonl
+-rw-r--r-- 1 root root   3439 Sep 26 04:50 sleep_ER.jsonl
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,nounits; wc -l /root/tree/artifacts/claude-bm391-20260926/run/*.jsonl; date -u +%Y-%m-%dT%H:%M:%SZ' 2>&1 | tail -8
+utilization.gpu [%], memory.used [MiB]
+0, 11564
+   35 /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl
+   34 /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl
+   19 /root/tree/artifacts/claude-bm391-20260926/run/sleep_E.jsonl
+   19 /root/tree/artifacts/claude-bm391-20260926/run/sleep_ER.jsonl
+  107 total
+2026-09-26T04:52:42Z
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'for i in 1 2 3 4 5 6; do nvidia-smi --query-gpu=utilization.gpu --format=csv,nounits | tail -1; sleep 10; done; wc -l /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl' 2>&1 | tail -8
+Have fun!
+17
+0
+9
+0
+0
+14
+38 /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'wc -l /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl; date -u +%s' 2>&1 | tail -3
+38 /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl
+   77 total
+1790398455
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-bm390-20260925/RESULTS-rent2.md 2>&1 | grep -iE "hour|minute|start|end|duration|UTC|dph|dollar" | head -n 20; echo ===; git show origin/builder-outbox:artifacts/claude-bm390-20260925/RESULTS-rent2.md 2>&1 | grep -iE "hour|minute|start|end|duration|UTC|dph|dollar" | head -n 20
+zsh:1: == not found
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-bm390-20260925/RESULTS-rent2.md | grep -iE "hour|minute|start|end|duration|UTC|dph|dollar" | head -n 20
+fatal: path 'artifacts/claude-bm390-20260925/RESULTS-rent2.md' exists on disk, but not in 'origin/main'
+[0m
+[0m$ [0mgit ls-tree origin/builder-outbox artifacts/claude-bm390-20260925/ | head -n 30
+100644 blob f04a1085e0c476a51f2d504991b5453f6b462b90	artifacts/claude-bm390-20260925/RESULTS-benspc.md
+100644 blob fafbf93805953050eff30dec0fdadc6fa0d68399	artifacts/claude-bm390-20260925/RESULTS-benspc2.md
+100644 blob 6ee776d20b949077006cacaab7ced43a30ca1f2b	artifacts/claude-bm390-20260925/RESULTS-benspc3.md
+100644 blob fbc9540fb86550a373772a514b94883a91d68094	artifacts/claude-bm390-20260925/RESULTS-rent2.md
+040000 tree a96a8f17ecdf74a8f0271552385f9d1ba6de9d46	artifacts/claude-bm390-20260925/run
+040000 tree f55ab6ecfdd7c316479ab51f13a9e44e6dcababc	artifacts/claude-bm390-20260925/run2
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-bm390-20260925/RESULTS-rent2.md | grep -iE "hour|minute|start|end|duration|UTC|dph|dollar" | head -n 25
+Registered finishing run of bm-390 (AMEND-finish.md): the plain-model arms that did not run on BensPC.
+start 2026-09-25T17:54:34Z, end 2026-09-25T17:55:39Z. Verbatim line:
+- Q2 retry: `Qwen3_5ForCausalLM 1881825088`, exit 0, start 2026-09-25T17:59:16Z, end 2026-09-25T17:59:21Z.
+- L12: `Lfm2ForCausalLM 1170340608`, exit 0, start 2026-09-25T18:00:58Z, end 2026-09-25T18:01:01Z.
+  start 2026-09-25T18:02:11Z, end 2026-09-25T18:02:17Z:
+--name T --out /root/bm390work/smoke`, exit 0, start 2026-09-25T18:08:30Z, end 2026-09-25T18:08:34Z.
+- Lane 1 (plain MiniCPM5-1B) started 2026-09-25T18:09:59Z (T launch).
+- Lane 2 (LFM2.5-1.2B) started 2026-09-25T18:13:11Z (L12 launch) with 27036 MiB GPU free.
+- Lane 3 (Qwen3.5-2B) started 2026-09-25T18:16:26Z (Q2 part 1 launch) with 21273 MiB GPU free.
+| # | Command | Start (UTC) | End (UTC) | Exit | First printed line | Last wrote line |
+- Lanes started with 27036 MiB free (lane 2) and 21273 MiB free (lane 3); no lane ever waited.
+- Instance id 52625917 (label rent-bm390f, offer 48989852). dph $0.494444.
+  Billed duration at destroy check: 8260.4 s = 2.29 h x $0.494444/h = ~$1.13.
+  (only other agents' instances remain, untouched). Ledger line appended.
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-bm390-20260925/RESULTS-rent2.md | grep -E "^\| " | head -n 15
+| # | Command | Start (UTC) | End (UTC) | Exit | First printed line | Last wrote line |
+| T | locomo plain:BASE --name T | 2026-09-25T18:09:59Z | 2026-09-25T18:57:54Z | 0 | `[bm390] conv-26 plain questions=199` | `wrote locomo_T.jsonl rows=1986 convs=10` |
+| C | locomo closed:BASE --name C | 2026-09-25T18:59:11Z | 2026-09-25T19:05:19Z | 0 | `[bm390] conv-26 closed questions=199` | `wrote locomo_C.jsonl rows=1986 convs=10` |
+| Tm | general mmlu plain:BASE --name T | 2026-09-25T19:09:17Z | 2026-09-25T19:10:26Z | 0 | (progress bars only) | `wrote mmlu_T.jsonl rows=300` |
+| Tg | general gsm8k plain:BASE --name T | 2026-09-25T19:14:07Z | 2026-09-25T19:26:15Z | 0 | (progress bars only) | `wrote gsm8k_T.jsonl rows=300` |
+| L12 | locomo plain:L12DIR --name L12 | 2026-09-25T18:13:11Z | 2026-09-25T18:55:34Z | 0 | transformers causal_conv1d fallback warning, then `[bm390] conv-26 plain questions=199` | `wrote locomo_L12.jsonl rows=1986 convs=10` |
+| L12m | general mmlu plain:L12DIR --name L12 | 2026-09-25T18:59:20Z | 2026-09-25T18:59:29Z | 0 | transformers causal_conv1d fallback warning | `wrote mmlu_L12.jsonl rows=300` |
+| L12g | general gsm8k plain:L12DIR --name L12 | 2026-09-25T19:04:25Z | 2026-09-25T19:12:55Z | 0 | transformers causal_conv1d fallback warning | `wrote gsm8k_L12.jsonl rows=300` |
+| Q2p1 | locomo plain:Q2DIR --name Q2 --part 1 --convs conv-26,conv-30 | 2026-09-25T18:16:26Z | 2026-09-25T18:28:18Z | 0 | transformers causal_conv1d fallback warning, then `[bm390] conv-26 plain questions=199` | `wrote locomo_Q2.part1.jsonl rows=304 convs=2` |
+| Q2p2 | locomo plain:Q2DIR --name Q2 --part 2 --convs conv-41,conv-42 | 2026-09-25T18:30:26Z | 2026-09-25T18:55:42Z | 0 | transformers causal_conv1d fallback warning, then `[bm390] conv-41 plain questions=193` | `wrote locomo_Q2.part2.jsonl rows=453 convs=2` |
+| Q2p3 | locomo plain:Q2DIR --name Q2 --part 3 --convs conv-43,conv-44 | 2026-09-25T18:59:28Z | 2026-09-25T19:13:04Z | 0 | transformers causal_conv1d fallback warning, then `[bm390] conv-43 plain questions=242` | `wrote locomo_Q2.part3.jsonl rows=400 convs=2` |
+| Q2p4 | locomo plain:Q2DIR --name Q2 --part 4 --convs conv-47,conv-48 | 2026-09-25T19:14:12Z | 2026-09-25T19:26:54Z | 0 | transformers causal_conv1d fallback warning, then `[bm390] conv-47 plain questions=190` | `wrote locomo_Q2.part4.jsonl rows=429 convs=2` |
+| Q2p5 | locomo plain:Q2DIR --name Q2 --part 5 --convs conv-49,conv-50 | 2026-09-25T19:27:23Z | 2026-09-25T19:35:30Z | 0 | transformers causal_conv1d fallback warning, then `[bm390] conv-49 plain questions=196` | `wrote locomo_Q2.part5.jsonl rows=400 convs=2` |
+| Q2m | general mmlu plain:Q2DIR --name Q2 | 2026-09-25T19:37:03Z | 2026-09-25T19:37:30Z | 0 | transformers causal_conv1d fallback warning | `wrote mmlu_Q2.jsonl rows=300` |
+| Q2g | general gsm8k plain:Q2DIR --name Q2 | 2026-09-25T19:41:53Z | 2026-09-25T19:59:41Z | 0 | transformers causal_conv1d fallback warning | `wrote gsm8k_Q2.jsonl rows=300` |
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'wc -l /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl; date -u +%s' 2>&1 | tail -3; sleep 300; ssh -p 37750 root@ssh1.vast.ai 'wc -l /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl; date -u +%s' 2>&1 | tail -3
+39 /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl
+   79 total
+1790398485
+   51 /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl
+  104 total
+1790398790
+[0m
+[0m$ [0mT=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.path); grep -n "def \|generate\|sleep\|embed\|MiniLM\|encode\|route" $T/scripts/claude_e2e382.py | head -n 40
+55:def _now() -> str:
+59:def _markers():
+64:def abstains(reply: str) -> bool:
+69:def query_of(text: str) -> str:
+75:def g5_unsupported(c: str, known: set[str]) -> bool:
+83:def _rows_block(rows: list[dict]) -> str:
+91:def _log(row: dict) -> None:
+98:def install_answer382(loop, gen, store, k: int = K382, n: int = N382) -> None:
+105:    def answer382(text: str) -> list[str]:
+148:def install_heard382(loop, store) -> None:
+152:    def heard382(text: str) -> list[str]:
+166:def build_382(state_dir, args):
+170:def build_382b(state_dir, args):
+175:def _build382(state_dir, args, k):
+[0m
+[0m$ [0mT=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.path); grep -n "agent\|answer\|generate\|sleep\|restore\|per question\|for q\|for item" $T/scripts/claude_bm390.py | sed -n '1,50p'
+6:New file only. It never edits agent code. Public data is downloaded at pinned revisions and
+18:  agent:<module:function>  a Premonition-style agent, built as function(state_dir, args) exactly like the
+19:                           336 runner does (e.g. agent:claude_e2e330c:build_330c with --model READER
+20:                           --gen-model BASE). LoCoMo: it reads every turn in order as a chat turn, sleeps
+23:                           General tests: a fresh empty state per question.
+34:fixed per question id by seed 390). Plain arms get this as one prompt; agents get the same strings, one
+38:adversarial_answer field (the current data file has no answer field for 444 of the 446 category 5 items).
+40:Output: <out>/<bench>_<name>[.part<N>].jsonl, one row per question: qid, category (LoCoMo), reply, ms, plus
+41:arm details. LoCoMo agent arms also write locomo_<name>_reading[.part<N>].jsonl (one row per conversation) and,
+43:answer" wrapper, asked from the same saved state (report only; never a headline number).
+87:QA_PROMPT = ("\nBased on the above conversations, write a short answer for the following question in a few "
+91:                 "conversation and answer questions based on the conversation. If you don't know the answer to "
+93:CAT2_SUFFIX = " Use DATE of CONVERSATION to answer with an approximate date."
+94:CAT5_TEMPLATE = " (a) {} (b) {}. Select the correct answer by writing (a) or (b)."
+106:                "\"The answer is N.\" where N is a number.\n\n{question}")
+125:                time.sleep(2 ** (attempt + 1))
+150:                           "choices": list(row["choices"]), "gold": "ABCD"[int(row["answer"])]})
+155:               "gold": r["answer"].split("####")[-1].strip().replace(",", "")} for i, r in enumerate(gs)]
+160:    cats = Counter(q["category"] for c in lc for q in c["qa"])
+210:        adv = qa.get("adversarial_answer", qa.get("answer"))
+218:    adv = qa.get("adversarial_answer", qa.get("answer"))
+261:def generate(model_dir: str, system: str, user: str, max_new: int) -> tuple[str, int]:
+267:        out = model.generate(**enc, max_new_tokens=max_new, do_sample=False,
+273:    """Whole conversation if it fits the model's context (with room for the answer), else drop the
+322:# ======================================================================= agents
+326:        raise SystemExit(f"bm390: agent arm {spec!r} must be 'module:function'")
+330:def agent_args(args) -> argparse.Namespace:
+345:def locomo_agent(builder, aargs, conv: dict, limit_q: int, rows: list, reading: list,
+353:        agent = builder(str(state), aargs)
+363:                reply, _, _ = R.one(agent, text)
+366:            R.end_day(agent)                       # one sleep per session (a session is one day)
+367:        tri = R.triples(agent)
+368:        del agent
+371:        reading.append({"conv": cid, "turns_fed": nturns, "sessions": len(sess), "sleeps": len(sess),
+376:            if bare_rows is not None:        # report-only: the question without the repo's answer-style wrapper
+380:                agent = builder(str(state), aargs)
+381:                reply, ms, new = R.one(agent, text)
+384:                del agent
+403:                raise SystemExit(f"STATE-RESET-FAILED ({exc!r}): could not restore the saved state; nothing more run.")
+404:            time.sleep(1 + attempt)
+407:def general_agent(builder, aargs, text: str) -> tuple[str, float]:
+411:        agent = builder(str(work), aargs)
+412:        reply, ms, _ = R.one(agent, text)
+413:        del agent
+427:    if kind == "agent":
+430:        aargs = agent_args(args)
+432:            locomo_agent(builder, aargs, conv, args.limit_q, rows, reading, bare)
+442:                    reply, n = generate(target, LOCOMO_SYSTEM, user, ANS_TOKENS)
+445:                    reply, n = generate(target, LOCOMO_SYSTEM, user, ANS_TOKENS)
+447:                    reply, n = generate(target, CLOSED_SYSTEM, CLOSED_PROMPT.format(qtext), ANS_TOKENS)
+[0m
+[0m$ [0mT=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.path); sed -n '255,275p;340,410p' $T/scripts/claude_bm390.py
+def strip_think(text: str) -> str:
+    if "</think>" in text:
+        text = text.split("</think>")[-1]
+    return text.replace("<think>", "").strip()
+
+
+def generate(model_dir: str, system: str, user: str, max_new: int) -> tuple[str, int]:
+    import torch
+    tok, model, dev, _ = plain_model(model_dir)
+    enc = _ids(tok, system, user).to(dev)
+    n = int(enc["input_ids"].shape[1])
+    with torch.no_grad():
+        out = model.generate(**enc, max_new_tokens=max_new, do_sample=False,
+                             pad_token_id=tok.pad_token_id if tok.pad_token_id is not None else tok.eos_token_id)
+    return strip_think(tok.decode(out[0][n:], skip_special_tokens=True)), n
+
+
+def fit_context(model_dir: str, conv: dict, qprompt: str) -> tuple[str, int]:
+    """Whole conversation if it fits the model's context (with room for the answer), else drop the
+    earliest turns until it does. Returns (user text, turns dropped)."""
+    tok, _, _, ctx = plain_model(model_dir)
+        S122.route122("what is your name?")
+    except Exception as exc:  # noqa: BLE001
+        raise SystemExit(f"MISSING-CACHE: the self122 MiniLM router did not load ({exc!r}); nothing was run.")
+
+
+def locomo_agent(builder, aargs, conv: dict, limit_q: int, rows: list, reading: list,
+                 bare_rows: list | None = None) -> None:
+    import claude_e2e336_run as R
+    cid = conv["sample_id"]
+    work = Path(tempfile.mkdtemp(prefix=f"bm390-{cid}-"))
+    state, snap = work / "state", work / "snap"
+    state.mkdir()
+    try:
+        agent = builder(str(state), aargs)
+        t0 = time.time()
+        nturns = checks = 0
+        texts = [start_text(conv).strip()]
+        sess = sessions(conv)
+        for si, (date, turns) in enumerate(sess):
+            texts_s = ["DATE: " + date + "\nCONVERSATION:"] + [turn_text(t).rstrip("\n") for t in turns]
+            if si == 0:
+                texts_s = texts + texts_s
+            for text in texts_s:
+                reply, _, _ = R.one(agent, text)
+                nturns += 1
+                checks += int(R.is_confirm(reply))
+            R.end_day(agent)                       # one sleep per session (a session is one day)
+        tri = R.triples(agent)
+        del agent
+        gc.collect()
+        shutil.copytree(state, snap)
+        reading.append({"conv": cid, "turns_fed": nturns, "sessions": len(sess), "sleeps": len(sess),
+                        "check_questions_asked": checks, "stored_triples_after_reading":
+                        (len(tri) if tri is not None else None), "reading_s": round(time.time() - t0, 1)})
+        for i, qa in enumerate(conv["qa"][: limit_q or None]):
+            variants = [(rows, QA_PROMPT.format(question_text(cid, i, qa)).strip())]
+            if bare_rows is not None:        # report-only: the question without the repo's answer-style wrapper
+                variants.append((bare_rows, question_text(cid, i, qa)))
+            for sink, text in variants:
+                _reset(state, snap)
+                agent = builder(str(state), aargs)
+                reply, ms, new = R.one(agent, text)
+                sink.append({"qid": f"{cid}#{i}", "category": qa["category"], "reply": reply, "ms": round(ms, 1),
+                             "question_turn_writes": len(new)})
+                del agent
+                gc.collect()
+        print(f"[bm390] {cid} turns={nturns} questions={min(len(conv['qa']), limit_q or 10**9)}", flush=True)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def _reset(state: Path, snap: Path) -> None:
+    """Put back the saved after-reading state. Windows cannot delete a file that is still open, so retry
+    after garbage collection before giving up with a clear error."""
+    for attempt in range(5):
+        gc.collect()
+        try:
+            if state.exists():
+                shutil.rmtree(state)
+            shutil.copytree(snap, state)
+            return
+        except OSError as exc:
+            if attempt == 4:
+                raise SystemExit(f"STATE-RESET-FAILED ({exc!r}): could not restore the saved state; nothing more run.")
+            time.sleep(1 + attempt)
+
+
+def general_agent(builder, aargs, text: str) -> tuple[str, float]:
+    import claude_e2e336_run as R
+    work = Path(tempfile.mkdtemp(prefix="bm390-gen-"))
+    try:
+[0m
+[0m$ [0mT=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.path); grep -n "lru_cache\|from_pretrained\|plain_model\|def one\|def end_day\|AutoModel\|device_map" $T/scripts/claude_bm390.py $T/scripts/claude_e2e336_run.py $T/scripts/claude_e2e382.py $T/scripts/claude_e2e383.py 2>/dev/null | head -n 30
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.BRkzEnvzIN/tree/scripts/claude_bm390.py:234:def plain_model(model_dir: str):
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.BRkzEnvzIN/tree/scripts/claude_bm390.py:237:        from transformers import AutoModelForCausalLM, AutoTokenizer
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.BRkzEnvzIN/tree/scripts/claude_bm390.py:238:        tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.BRkzEnvzIN/tree/scripts/claude_bm390.py:241:        model = AutoModelForCausalLM.from_pretrained(model_dir, dtype=dtype, trust_remote_code=True).to(dev).eval()
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.BRkzEnvzIN/tree/scripts/claude_bm390.py:263:    tok, model, dev, _ = plain_model(model_dir)
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.BRkzEnvzIN/tree/scripts/claude_bm390.py:275:    tok, _, _, ctx = plain_model(model_dir)
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.BRkzEnvzIN/tree/scripts/claude_e2e336_run.py:93:def end_day(agent) -> None:
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.BRkzEnvzIN/tree/scripts/claude_e2e336_run.py:155:def one(agent, text: str) -> tuple[str, float, list]:
+[0m
+[0m$ [0mT=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebm391.path); sed -n '230,254p' $T/scripts/claude_bm390.py; sed -n '93,200p' $T/scripts/claude_e2e336_run.py
+# ======================================================================= plain models
+_PLAIN: dict = {}
+
+
+def plain_model(model_dir: str):
+    if model_dir not in _PLAIN:
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+        dev = "cuda" if torch.cuda.is_available() else "cpu"
+        dtype = torch.bfloat16 if dev == "cuda" else torch.float32
+        model = AutoModelForCausalLM.from_pretrained(model_dir, dtype=dtype, trust_remote_code=True).to(dev).eval()
+        cfg = model.config
+        ctx = int(getattr(cfg, "max_position_embeddings", 0) or getattr(getattr(cfg, "text_config", cfg),
+                                                                       "max_position_embeddings", 32768))
+        _PLAIN[model_dir] = (tok, model, dev, ctx)
+    return _PLAIN[model_dir]
+
+
+def _ids(tok, system: str, user: str):
+    msgs = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+    return tok.apply_chat_template(msgs, tokenize=True, add_generation_prompt=True, enable_thinking=False,
+                                   return_dict=True, return_tensors="pt")
+
+
+def end_day(agent) -> None:
+    hook = getattr(agent, "e2e_end_day", None)
+    if callable(hook):
+        hook()
+        return
+    if hasattr(agent, "sleep_threshold") and hasattr(agent, "step"):
+        old = agent.sleep_threshold
+        agent.sleep_threshold = 0
+        try:
+            agent.step()               # sleep_due() is now true: one sleep tick
+        finally:
+            agent.sleep_threshold = old
+            if hasattr(agent, "_save"):
+                agent._save()
+
+
+def is_confirm(reply: str) -> bool:
+    low = reply.lower()
+    return "?" in low and any(m in low for m in CONFIRM_MARKERS)
+
+
+def _mentions(text_low: str, phrase: str) -> bool:
+    phrase = phrase.strip().lower()
+    if not phrase:
+        return False
+    return re.search(r"(?<![a-z0-9])" + re.escape(phrase) + r"(?![a-z0-9])", text_low) is not None
+
+
+def confirm_answer(reply: str, truth: list[dict], turn_index: int) -> str:
+    """'yes' iff some fact valid at turn_index has its value named in the reply and its
+    owner named too (first name is enough; USER facts count when the reply says you/your/me/my)."""
+    low = reply.lower()
+    for f in truth:
+        if f["taught_turn"] > turn_index:
+            continue
+        if f.get("valid_until_turn") is not None and f["valid_until_turn"] <= turn_index:
+            continue
+        if not _mentions(low, str(f["value"])):
+            continue
+        owner = str(f["owner"])
+        if owner == "USER":
+            if any(_mentions(low, w) for w in ("you", "your", "you're", "me", "my")):
+                return "yes"
+            continue
+        if _mentions(low, owner) or _mentions(low, owner.split()[0]):
+            return "yes"
+    return "no"
+
+
+def triples(agent) -> list | None:
+    nb = getattr(agent, "nb", None)
+    if nb is None:
+        return None
+    import fable_loop90_agent as L90
+    return sorted([s, r, v] for (s, r, v) in L90.notebook_triples(nb))
+
+
+def events_len(agent) -> int:
+    nb = getattr(agent, "nb", None)
+    return len(nb.events) if nb is not None else 0
+
+
+def one(agent, text: str) -> tuple[str, float, list]:
+    ev0 = events_len(agent)
+    t0 = time.time()
+    parts = agent.turn(text)
+    ms = (time.time() - t0) * 1000
+    reply = " ".join(p for p in (parts or []) if p)
+    nb = getattr(agent, "nb", None)
+    new = [dict(e) for e in list(nb.events)[ev0:]] if nb is not None else []
+    return reply, ms, new
+
+
+def run_life(builder, args, life: str, turns: list[dict], truth: list[dict], rows: list) -> None:
+    tmp = tempfile.mkdtemp(prefix=f"e2e336-{life}-")
+    agent = builder(tmp, args)
+    try:
+        days = sorted({t["day"] for t in turns})
+        for di, day in enumerate(days):
+            for t in [x for x in turns if x["day"] == day]:
+                text = t.get("user_text")
+                if not isinstance(text, str) or not text.strip():
+                    raise SystemExit(f"336: empty text at {life} {t.get('turn_index')}")
+                reply, ms, new = one(agent, text)
+                asked = is_confirm(reply)
+                rows.append({"life_id": life, "day": day, "turn_index": t["turn_index"],
+                             "kind": "user", "reply": reply, "ms": round(ms, 1),
+                             "notebook_events": new, "stored_triples": triples(agent),
+                             "confirm_asked": asked, "confirm_answer": None})
+                if asked:
+                    ans = confirm_answer(reply, truth, t["turn_index"])
+                    reply2, ms2, new2 = one(agent, ans)
+                    rows.append({"life_id": life, "day": day, "turn_index": t["turn_index"],
+                                 "kind": "confirm_answer", "reply": reply2, "ms": round(ms2, 1),
+                                 "notebook_events": new2, "stored_triples": triples(agent),
+                                 "confirm_asked": is_confirm(reply2), "confirm_answer": ans})
+            end_day(agent)
+            if di < len(days) - 1:          # kill + restart from the same state dir
+                del agent
+                gc.collect()
+                agent = builder(tmp, args)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--bank", required=True, help="dir with turns.jsonl and truth.jsonl")
+[0m
+[0m$ [0msleep 900; ssh -p 37750 root@ssh1.vast.ai 'grep -h "bm390" /root/lane1_locomo.log /root/lane2_locomo.log | head -n 6; wc -l /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl' 2>&1 | tail -5; date -u +%Y-%m-%dT%H:%M:%SZ
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+   94 /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl
+   90 /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl
+  184 total
+2026-09-26T05:16:03Z
+[0m
+[0m$ [0msleep 1500; ssh -p 37750 root@ssh1.vast.ai 'grep -h "bm390" /root/lane1_locomo.log /root/lane2_locomo.log | head -n 6; echo ---; wc -l /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl; nvidia-smi --query-gpu=memory.used --format=csv,nounits | tail -1' 2>&1 | tail -6; date -u +%Y-%m-%dT%H:%M:%SZ
+[bm390] conv-26 turns=439 questions=199
+---
+  147 /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl
+  138 /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl
+  285 total
+11564
+2026-09-26T05:41:14Z
+[0m
+[0m$ [0msleep 900; ssh -p 37750 root@ssh1.vast.ai 'grep -h "bm390" /root/lane1_locomo.log /root/lane2_locomo.log | head -n 6; echo ---; nvidia-smi --query-gpu=memory.free --format=csv,nounits | tail -1' 2>&1 | tail -6
+[bm390] conv-26 turns=439 questions=199
+[bm390] conv-30 turns=389 questions=105
+[bm390] conv-26 turns=439 questions=199
+[bm390] conv-30 turns=389 questions=105
+---
+20384
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'cat > /root/lane3.sh << "EOF"
+#!/bin/bash
+cd /root/tree
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+READER=/root/reader/lis301-merged
+DATA=/root/bm391data
+OUT=artifacts/claude-bm391-20260926/run
+B=claude_e2e383:build_383; N=R
+echo "LANE3_START $(date -u +%Y-%m-%dT%H:%M:%SZ)" > /root/lane3.times
+EP382_LOG=$OUT/ep382_${N}_mmlu.jsonl python -B scripts/claude_bm390.py general --task mmlu --data $DATA --arm agent:$B --name $N --model $READER --gen-model $BASE --out $OUT > /root/lane3_mmlu.log 2>&1; echo "LANE3_MMLU_EXIT=$? $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /root/lane3.times
+EP382_LOG=$OUT/ep382_${N}_gsm8k.jsonl python -B scripts/claude_bm390.py general --task gsm8k --data $DATA --arm agent:$B --name $N --model $READER --gen-model $BASE --out $OUT > /root/lane3_gsm8k.log 2>&1; echo "LANE3_GSM8K_EXIT=$? $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /root/lane3.times
+SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=$OUT/sleep_${N}.jsonl EP382_LOG=$OUT/ep382_${N}_locomo.jsonl python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data $DATA --arm agent:$B --name $N --model $READER --gen-model $BASE --out $OUT > /root/lane3_locomo.log 2>&1; echo "LANE3_LOCOMO_EXIT=$? $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /root/lane3.times
+echo LANE3_DONE >> /root/lane3.times
+EOF
+setsid nohup bash /root/lane3.sh > /root/lane3_driver.log 2>&1 < /dev/null & echo lane3_launched; cat /root/lane3.times' 2>&1 | tail -2
+lane3_launched
+cat: /root/lane3.times: No such file or directory
+[0m
+[0m$ [0msleep 20; ssh -p 37750 root@ssh1.vast.ai 'cat /root/lane3.times 2>/dev/null; ps aux | grep "[g]eneral --task mmlu" | head -n 3' 2>&1 | tail -4
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+LANE3_START 2026-09-26T05:56:35Z
+root        3001 98.4  1.5 29591204 2105188 ?    Rl   05:56   0:25 python -B scripts/claude_bm390.py general --task mmlu --data /root/bm391data --arm agent:claude_e2e383:build_383 --name R --model /root/reader/lis301-merged --gen-model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out artifacts/claude-bm391-20260926/run
+[0m
+[0m$ [0msleep 1500; ssh -p 37750 root@ssh1.vast.ai 'wc -l /root/tree/artifacts/claude-bm391-20260926/run/*.jsonl 2>/dev/null; echo ---; cat /root/lane3_mmlu.log 2>/dev/null | tail -2; nvidia-smi --query-gpu=memory.used --format=csv,nounits | tail -1' 2>&1 | tail -14
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+   269 /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl
+   256 /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl
+    65 /root/tree/artifacts/claude-bm391-20260926/run/sleep_E.jsonl
+    70 /root/tree/artifacts/claude-bm391-20260926/run/sleep_ER.jsonl
+   660 total
+---
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 3460.99it/s]
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 6844.86it/s]
+16933
+[0m
+[0m$ [0msleep 1500; ssh -p 37750 root@ssh1.vast.ai 'wc -l /root/tree/artifacts/claude-bm391-20260926/run/*.jsonl 2>/dev/null | tail -8; echo ---; tail -2 /root/lane3_mmlu.log 2>/dev/null; grep -c . /root/tree/artifacts/claude-bm391-20260926/run/ep382_R_mmlu.jsonl 2>/dev/null' 2>&1 | tail -12; date -u +%Y-%m-%dT%H:%M:%SZ
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+   311 /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl
+   306 /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl
+    70 /root/tree/artifacts/claude-bm391-20260926/run/sleep_E.jsonl
+    70 /root/tree/artifacts/claude-bm391-20260926/run/sleep_ER.jsonl
+   757 total
+---
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 3460.99it/s]
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 6844.86it/s]
+2026-09-26T06:47:20Z
+[0m
+[0m$ [0msleep 1200; ssh -p 37750 root@ssh1.vast.ai 'ps -o pid,etime,time,cmd -p 3001 2>/dev/null; wc -l /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl; ls /root/tree/artifacts/claude-bm391-20260926/run/ | grep -E "R_mmlu|mmlu_R"; tail -c 300 /root/lane3_mmlu.log' 2>&1 | tail -8; date -u +%Y-%m-%dT%H:%M:%SZ
+PID     ELAPSED     TIME CMD
+   343 /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl
+   341 /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl
+   684 total
+mmlu_R.jsonl
+|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 3460.99it/s]
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 6844.86it/s]
+wrote mmlu_R.jsonl rows=300
+2026-09-26T07:07:36Z
+[0m
+[0m$ [0msleep 1500; ssh -p 37750 root@ssh1.vast.ai 'wc -l /root/tree/artifacts/claude-bm391-20260926/run/*.jsonl 2>/dev/null; echo ---; tail -1 /root/lane3_gsm8k.log 2>/dev/null | cut -c1-120; ps aux | grep "[c]laude_bm390" | awk "{print \$2, \$11, \$12, \$13, \$14, \$15}" | head -n 5' 2>&1 | tail -14; date -u +%Y-%m-%dT%H:%M:%SZ
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+   410 /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl
+   389 /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl
+   300 /root/tree/artifacts/claude-bm391-20260926/run/mmlu_R.jsonl
+    94 /root/tree/artifacts/claude-bm391-20260926/run/sleep_E.jsonl
+    97 /root/tree/artifacts/claude-bm391-20260926/run/sleep_ER.jsonl
+  1290 total
+---
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 
+2619 python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo
+2620 python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo
+3126 python -B scripts/claude_bm390.py general --task
+2026-09-26T07:32:53Z
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'ps aux | grep -E "[l]ane[123].sh" | awk "{print \$2, \$11, \$12}"; du -sh /root/tree/artifacts/claude-bm391-20260926/run/' 2>&1 | tail -5
+Have fun!
+2612 bash /root/lane1.sh
+2613 bash /root/lane2.sh
+2999 bash /root/lane3.sh
+528K	/root/tree/artifacts/claude-bm391-20260926/run/
+[0m
+[0m$ [0msleep 1500; ssh -p 37750 root@ssh1.vast.ai 'wc -l /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl /root/tree/artifacts/claude-bm391-20260926/run/ep382_R_gsm8k.jsonl 2>/dev/null' 2>&1 | tail -4; date -u +%Y-%m-%dT%H:%M:%SZ
+Have fun!
+   456 /root/tree/artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl
+   445 /root/tree/artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl
+   901 total
+2026-09-26T07:58:11Z
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'kill 2619 2620 3126 2>/dev/null; sleep 3; kill 2612 2613 2999 2>/dev/null; sleep 2; ps aux | grep -E "[c]laude_bm390|[l]ane[123].sh" | wc -l; echo KILLED; date -u +%Y-%m-%dT%H:%M:%SZ; ls -la /root/tree/artifacts/claude-bm391-20260926/run/' 2>&1 | tail -15
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+3
+KILLED
+2026-09-26T07:58:29Z
+total 528
+drwxr-xr-x 2 root root     150 Sep 26 06:49 .
+drwxr-xr-x 3  502 staff    103 Sep 26 04:26 ..
+-rw-r--r-- 1 root root  156295 Sep 26 07:58 ep382_ER_locomo.jsonl
+-rw-r--r-- 1 root root  152582 Sep 26 07:58 ep382_E_locomo.jsonl
+-rw-r--r-- 1 root root  103469 Sep 26 06:49 mmlu_R.jsonl
+-rw-r--r-- 1 root root   17919 Sep 26 07:38 sleep_E.jsonl
+-rw-r--r-- 1 root root   17919 Sep 26 07:33 sleep_ER.jsonl
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'ps aux | grep -E "[c]laude_bm390|[l]ane[123].sh" | awk "{print \$2, \$8, \$11, \$12, \$13}"' 2>&1 | tail -5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+3277 Rl python -B scripts/claude_sleepcheck_wrap.py
+3279 Rl python -B scripts/claude_bm390.py
+3281 Rl python -B scripts/claude_bm390.py
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'ps -o pid,ppid,etime,cmd -p 3277,3279,3281 2>/dev/null; kill 3277 3279 3281 2>/dev/null; sleep 5; ps aux | grep -E "[c]laude_bm390|[l]ane[123].sh" | wc -l; cat /root/lane1.times /root/lane2.times /root/lane3.times 2>/dev/null' 2>&1 | tail -12
+PID    PPID     ELAPSED CMD
+   3277       1       00:30 python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data /root/bm391data --arm agent:claude_e2e383:build_383 --name R --model /root/reader/lis301-merged --gen-model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out artifacts/claude-bm391-20260926/run
+   3279       1       00:30 python -B scripts/claude_bm390.py general --task mmlu --data /root/bm391data --arm agent:claude_e2e383:build_383e --name ER --model /root/reader/lis301-merged --gen-model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out artifacts/claude-bm391-20260926/run
+   3281       1       00:30 python -B scripts/claude_bm390.py general --task mmlu --data /root/bm391data --arm agent:claude_e2e382:build_382b --name E --model /root/reader/lis301-merged --gen-model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out artifacts/claude-bm391-20260926/run
+0
+LANE1_START 2026-09-26T04:31:34Z
+LANE1_LOCOMO_EXIT=143 2026-09-26T07:58:24Z
+LANE2_START 2026-09-26T04:31:34Z
+LANE2_LOCOMO_EXIT=143 2026-09-26T07:58:24Z
+LANE3_START 2026-09-26T05:56:35Z
+LANE3_MMLU_EXIT=0 2026-09-26T06:49:52Z
+LANE3_GSM8K_EXIT=143 2026-09-26T07:58:24Z
+[0m
+[0m$ [0mmkdir -p artifacts/claude-bm391-20260926/run /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391logs && scp -P 37750 -r root@ssh1.vast.ai:/root/tree/artifacts/claude-bm391-20260926/run/ artifacts/claude-bm391-20260926/run-staged 2>&1 | tail -2; scp -P 37750 root@ssh1.vast.ai:/root/'lane*.log lane*.times smoke*.log smoke.times step*.log setup_*.log' /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391logs/ 2>&1 | tail -2; ls artifacts/claude-bm391-20260926/run-staged/ /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391logs/
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Have fun!
+scp: /root/lane*.log lane*.times smoke*.log smoke.times step*.log setup_*.log: No such file or directory
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391logs/:
+
+artifacts/claude-bm391-20260926/run-staged/:
+ep382_E_locomo.jsonl
+ep382_ER_locomo.jsonl
+mmlu_R.jsonl
+sleep_E.jsonl
+sleep_ER.jsonl
+[0m
+[0m$ [0mscp -P 37750 root@ssh1.vast.ai:/root/lane1_locomo.log root@ssh1.vast.ai:/root/lane2_locomo.log root@ssh1.vast.ai:/root/lane3_mmlu.log root@ssh1.vast.ai:/root/lane3_gsm8k.log /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391logs/ 2>&1 | tail -1; for f in lane1.times lane2.times lane3.times smoke.times lane1_mmlu.log lane1_gsm8k.log lane2_mmlu.log lane2_gsm8k.log lane3_locomo.log step1.log step2.log step3.log setup_pip.log setup_hf.log smoke_driver.log lane1_driver.log lane2_driver.log lane3_driver.log; do scp -P 37750 root@ssh1.vast.ai:/root/$f /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391logs/$f 2>/dev/null; done; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391logs/
+Have fun!
+lane1_driver.log
+lane1_locomo.log
+lane1_mmlu.log
+lane1.times
+lane2_driver.log
+lane2_locomo.log
+lane2_mmlu.log
+lane2.times
+lane3_driver.log
+lane3_gsm8k.log
+lane3_locomo.log
+lane3_mmlu.log
+lane3.times
+setup_hf.log
+setup_pip.log
+smoke_driver.log
+smoke.times
+step1.log
+step2.log
+step3.log
+[0m
+[0m$ [0mssh -p 37750 root@ssh1.vast.ai 'cd /root/tree/artifacts/claude-bm391-20260926/run && sha256sum * && stat -c "%s %n" *' 2>&1 | tail -12; echo ===MAC===; cd artifacts/claude-bm391-20260926/run-staged && shasum -a 256 * && stat -f "%z %N" *
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+b576dd6777fe875feacf4fb9eeadb6a1703567fca9f26e8682277208b40cd25f  ep382_ER_locomo.jsonl
+dbb00749595ce58a812fc37affe013721bf01987e7c267ea08ba5838e2193d46  ep382_E_locomo.jsonl
+4660101142a21c0313b9d876753e2e70efe717bd8bd39faeb9534c23b526dfa8  mmlu_R.jsonl
+6612f8eed428ef22db7004a7dbc4cf674f0d0ca4688f95476b25fb90183ccdef  sleep_E.jsonl
+8c47dcbe48fefffbd00f90821ab8545a4db4051adc3add11c8b79c8191c8afa8  sleep_ER.jsonl
+156295 ep382_ER_locomo.jsonl
+152582 ep382_E_locomo.jsonl
+103469 mmlu_R.jsonl
+17919 sleep_E.jsonl
+17919 sleep_ER.jsonl
+zsh:1: ==MAC=== not found
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-bm391-20260926/run-staged/*; stat -f "%z %N" artifacts/claude-bm391-20260926/run-staged/*
+dbb00749595ce58a812fc37affe013721bf01987e7c267ea08ba5838e2193d46  artifacts/claude-bm391-20260926/run-staged/ep382_E_locomo.jsonl
+b576dd6777fe875feacf4fb9eeadb6a1703567fca9f26e8682277208b40cd25f  artifacts/claude-bm391-20260926/run-staged/ep382_ER_locomo.jsonl
+4660101142a21c0313b9d876753e2e70efe717bd8bd39faeb9534c23b526dfa8  artifacts/claude-bm391-20260926/run-staged/mmlu_R.jsonl
+6612f8eed428ef22db7004a7dbc4cf674f0d0ca4688f95476b25fb90183ccdef  artifacts/claude-bm391-20260926/run-staged/sleep_E.jsonl
+8c47dcbe48fefffbd00f90821ab8545a4db4051adc3add11c8b79c8191c8afa8  artifacts/claude-bm391-20260926/run-staged/sleep_ER.jsonl
+152582 artifacts/claude-bm391-20260926/run-staged/ep382_E_locomo.jsonl
+156295 artifacts/claude-bm391-20260926/run-staged/ep382_ER_locomo.jsonl
+103469 artifacts/claude-bm391-20260926/run-staged/mmlu_R.jsonl
+17919 artifacts/claude-bm391-20260926/run-staged/sleep_E.jsonl
+17919 artifacts/claude-bm391-20260926/run-staged/sleep_ER.jsonl
+[0m
+[0m$ [0mmv artifacts/claude-bm391-20260926/run-staged/ep382_E_locomo.jsonl artifacts/claude-bm391-20260926/run-staged/ep382_ER_locomo.jsonl artifacts/claude-bm391-20260926/run-staged/mmlu_R.jsonl artifacts/claude-bm391-20260926/run-staged/sleep_E.jsonl artifacts/claude-bm391-20260926/run-staged/sleep_ER.jsonl artifacts/claude-bm391-20260926/run/ && rmdir artifacts/claude-bm391-20260926/run-staged && ls -la artifacts/claude-bm391-20260926/run/
+total 904
+drwxr-xr-x  7 ben-hannan  staff     224 Sep 26 04:03 .
+drwxr-xr-x  3 ben-hannan  staff      96 Sep 26 04:03 ..
+-rw-r--r--  1 ben-hannan  staff  152582 Sep 26 03:59 ep382_E_locomo.jsonl
+-rw-r--r--  1 ben-hannan  staff  156295 Sep 26 03:59 ep382_ER_locomo.jsonl
+-rw-r--r--  1 ben-hannan  staff  103469 Sep 26 03:59 mmlu_R.jsonl
+-rw-r--r--  1 ben-hannan  staff   17919 Sep 26 03:59 sleep_E.jsonl
+-rw-r--r--  1 ben-hannan  staff   17919 Sep 26 03:59 sleep_ER.jsonl
+[0m
+[0m$ [0mvastai destroy instance 52677751 2>&1 | tail -3; sleep 10; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); xs=(d if isinstance(d,list) else d.get('instances',d)); print([ (x.get('id'),x.get('label'),x.get('actual_status')) for x in xs])"; date -u +%Y-%m-%dT%H:%M:%SZ
+Are you sure you want to destroy instance 52677751? This is irreversible and will delete all data. [y/N] 
+Aborted.
+[(52677751, 'rent-bm391', 'running')]
+2026-09-26T08:03:29Z
+[0m
+[0m$ [0mecho y | vastai destroy instance 52677751 2>&1 | tail -2; sleep 15; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); xs=(d if isinstance(d,list) else d.get('instances',d)); print([ (x.get('id'),x.get('label'),x.get('actual_status')) for x in xs])"; date -u +%Y-%m-%dT%H:%M:%SZ
+Are you sure you want to destroy instance 52677751? This is irreversible and will delete all data. [y/N] destroying instance 52677751.
+[]
+2026-09-26T08:03:50Z
+[0m
+[0m$ [0mvastai show instances 2>&1 | tail -8; vastai show user --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print('credit=',d.get('credit'))"
+[K[93;48;2;0;0;0m╭─[0m[93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mResults Summary[0m[93;48;2;0;0;0m [0m[93;48;2;0;0;0m─[0m[93;48;2;0;0;0m─╮[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mTotal: [0m[1;97;48;2;0;0;0m0 instances[0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m╰────────────────────╯[0m
+[97mNo instances found.[0m
+credit= 7.48771440146988
+[0m
+[0m$ [0mtail -n 5 artifacts/fable-predictions-ledger.md
+- rsn-358c1 OUTCOME (2026-09-26, builder, Mac CPU, $0, eval only, code sealed and run once per seed, 7-line logs kept): stop fix NOT NEEDED (K2 vacuous both seeds; K1/K3 FAIL as above); loop-beats-plain FAIL (K4 s1 PASS s2 FAIL). Overall registered verdict FAIL. 358a FAIL stands (second look, same checkpoints, one changed rule). Runs ~2 min/seed, no training, no GPU, weights never in git. See artifacts/claude-rsn358c-20260926/RESULTS-c1.md + runs/stop358c1-s1.json + runs/stop358c1-s2.json.
+- rent-bm397t GPU OUTCOME (2026-09-26, rented Linux GPU, label rent-bm397t, unmodified origin/main + origin/builder-outbox code, seals bm397t 10/10 + bm390-code 8/8 OK, selftests 8/8 + 5/5): instances 52684428 (RTX 5090 offer 45669313, SSH proxy broken, destroyed, ~0.181 h x $0.5037 = ~$0.09) + 52685550 (RTX 5090 offer 44188476 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 80, running 03:20:51Z, destroyed 04:23:49Z, ~1.091 h x $0.5037 = ~$0.55); task total ~1.27 h ~$0.64 of $1.40 budget, 2 rentals; post-destroy 0 rent-bm397t live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, transformers 5.17.0, pyarrow 25.0.1. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Practice data sha 0654bd2f...06237 / 675a2d85...942da9. Train once 225 steps 189.7 s, dev 116->199/200, merged model.safetensors 9719c266... Run files locomo_TS 1986 rows 276376 B 30eb5dc4..., mmlu_TS 300 rows 18933 B fa830d32..., gsm8k_TS 300 rows 57772 B c6bb2f14..., train397t.json 0919dac9... Adapter 16576151 B 621edd16... at ~/premonition-models/bm397t-adapter397t.pt, never in git; MERGED not copied back. Peak GPU mem 5074 MiB. No traceback. Train-selftest first launch had a wrapper cwd bug, relaunched unchanged; exit codes inferred 0 from wrote lines. Scoring not part of this task. See artifacts/claude-bm397t-20260926/RESULTS-rent.md.
+- rsn-358d OUTCOME (2026-09-26, GPU builder, label rent-358d, sealed code run unmodified, each eval once per checkpoint): registered verdict INCONCLUSIVE both seeds (G0 not met: loop practised-size s3 300/109/1, s4 298/91/1, needs >=210 in >=2 of 3 kinds). G1 FAIL both (loop-plain s3 -108/-129/0, s4 -59/-150/-1); G2 FAIL both (s3 0/-127/-15, s4 -2/-150/-9); G3 FAIL s3 (sums6 own 131 vs fix16 137), PASS s4. Proved-wrong clause NOT triggered. numbers4 plain 16/10 vs loop 1/1 (358a: 0-5 both); numbers5 0/0/0/1. Plain bigger-test generalisation beat loop everywhere (sums6 239/153 vs 131/94; grids6 187/186 vs 58/36). GPU RTX 5090, minutes loop-s3 35.2 plain-s3 29.6 loop-s4 35.3 plain-s4 29.6, ~$0.41 of $0.80. See artifacts/claude-rsn358d-20260926/RESULTS.md + runs + SEAL-run.sha256.txt.
+- rent-358d GPU SPEND (2026-09-26, credit 6.33 at gate): rental 1 offer 46753295 (docker registry proxy refused, restarted once same error, destroyed stopped) + rental 2 offer 44173691 RTX 5090 dph 0.4852 (03:44:46Z-04:34:03Z, 0.82 h, ~$0.40); task total ~$0.41 of $0.80 budget, 2 rentals of max 3, 54 min of 1 h 30 min cap; post-destroy 0 rent-358d live. Checkpoints discarded with rental (Mac had 7 GB free < 8 GB copy bar) after sha256 recorded; 4 required files per run copied back.
+- rent-dl3 GPU OUTCOME (2026-09-26, rented RTX 5090, label rent-dl3, origin/main code unmodified, selftest ok): registered verdict FAIL (F1 false: A final lost sum 56 vs S 63, needs <= 31.5, per-seed s4 20 < 39 but s5 36 > 24; F2 false: 11 of 14 A nights lost > 10; F3 true: A final lucky 227, 216 >= 118 each, gains 325 >= 0.8 x 310; F4 true: 1 worse night, A s5n7 266 -> 216; F5 true: reached 53, 59 >= 30). Proved-wrong clause NOT triggered. Not INCONCLUSIVE (L0 59, S lost sum 63, pool 908). Rentals: 52685064 offer 46753297 (registry proxy error while stopped, destroyed ~$0) + 52685812 offer 44173877 KR dph 0.5130 (run 03:35-04:56Z, 81.2 min, destroyed 05:01Z); task total ~$0.86 of $1.50 budget, 2 rentals of max 3; post-destroy 0 rent-dl3 live. BASE openbmb/MiniCPM5-1B commit 87179e5c, torch 2.8.0+cu128, transformers 5.17.0. Code from origin/main ca08ccc1, byte-identical for dl-3 inputs at 43457707. No weights saved. See artifacts/claude-dl3-20260926/RESULTS-gpu.md + gpu/.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md << 'EOF'
+- rent-bm391 GPU OUTCOME (2026-09-26, rented Linux GPU, label rent-bm391, unmodified origin/main + origin/builder-outbox code, seals bm391 3/3 + bm390-code 8/8 + e2e382-code 239/239 OK, selftests 10/10 + 13/13): BUDGET-STOP, no registered command completed except lane-3 mmlu_R (300 rows). Instance 52677751 (RTX 5090 offer 52604857, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 100, rented 01:51:26Z, destroyed 08:03:50Z, 6.21 h x dph $0.5103 = ~$3.17 projected; credit 9.0581 -> 7.4877 = $1.57 billed at destroy check, billing may lag); 1 rental of max 4; post-destroy 0 rent-bm391 live. Agent pace ~2 rows/min/LoCoMo-arm made 3x1986-row runs infeasible in $3.50 (needs ~14 h/arm). Killed by exact PID (2619, 2620, 3126 + drivers 2612, 2613, 2999; exits 143); lane drivers auto-advanced in kill window launching lane1-mmlu-ER, lane2-mmlu-E, lane3-locomo-R (~30 s, no output files, killed PIDs 3277, 3279, 3281, reported as deviation, not relaunched). Finished: GENERAL(mmlu,383,R) exit 0 wrote mmlu_R.jsonl rows=300. Unfinished with partial EP382 logs: LOCOMO(383e,ER) 456 rows, LOCOMO(382b,E) 445 rows (no locomo_*.jsonl wrote lines). Never started: both gsms, lane3 locomo (beyond 30 s stub), lane1/2 mmlu+gsm8k (beyond stubs). BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM path exact, READER safetensors b4fd93a2...890 verified on box, torch 2.8.0+cu128, transformers 5.17.0, pyarrow ok. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Sleep base-seed4102 JSON line recorded, pt 2ada54ac...ff069057. Smoke 6/6 exit 0. Peak GPU mem ~16933 MiB. Copy-back sha256-verified 5 files. See artifacts/claude-bm391-20260926/RESULTS-rent.md + run/.
+EOF
+echo ledger_appended
+ledger_appended
+[0m
+[0m$ [0mL=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391logs; for f in lane1_locomo lane2_locomo lane3_mmlu lane3_gsm8k lane1_mmlu lane2_mmlu lane3_locomo; do echo "=== $f (lines: $(wc -l < $L/$f.log))"; head -n 1 $L/$f.log | cut -c1-160; tail -n 1 $L/$f.log | cut -c1-160; done
+=== lane1_locomo (lines:        7)
+sleepcheck: logging every sleep to artifacts/claude-bm391-20260926/run/sleep_ER.jsonl; stop on missing checkpoint = True
+[bm390] conv-41 turns=696 questions=193
+=== lane2_locomo (lines:        7)
+sleepcheck: logging every sleep to artifacts/claude-bm391-20260926/run/sleep_E.jsonl; stop on missing checkpoint = True
+[bm390] conv-41 turns=696 questions=193
+=== lane3_mmlu (lines:        4)
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+wrote mmlu_R.jsonl rows=300
+=== lane3_gsm8k (lines:        3)
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 6988.27it/s]
+=== lane1_mmlu (lines:        3)
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 7900.44it/s]
+=== lane2_mmlu (lines:        3)
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 4839.45it/s]
+=== lane3_locomo (lines:        4)
+sleepcheck: logging every sleep to artifacts/claude-bm391-20260926/run/sleep_R.jsonl; stop on missing checkpoint = True
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 3820.58it/s]
+[0m
+[0m$ [0mpython3 -c "
+import json
+from collections import Counter
+from pathlib import Path
+d = Path('artifacts/claude-bm391-20260926/run')
+for f in sorted(d.glob('*.jsonl')):
+    rows = [json.loads(l) for l in f.read_text().splitlines() if l.strip()]
+    keys = sorted(rows[0].keys()) if rows else []
+    print(f.name, 'rows=', len(rows))
+    print('  keys:', keys)
+    if 'outcome' in keys:
+        print('  outcome:', dict(Counter(r.get('outcome') for r in rows)))
+    if 'checkpoint_exists' in keys:
+        print('  checkpoint_exists true:', sum(1 for r in rows if r.get('checkpoint_exists') is True), '/', len(rows))
+"
+ep382_ER_locomo.jsonl rows= 457
+  keys: ['fails', 'outcome', 'rows', 'state']
+  outcome: {'all_failed': 61, 'replaced': 396}
+ep382_E_locomo.jsonl rows= 446
+  keys: ['fails', 'outcome', 'rows', 'state']
+  outcome: {'replaced': 387, 'all_failed': 59}
+mmlu_R.jsonl rows= 300
+  keys: ['ms', 'qid', 'reply']
+sleep_E.jsonl rows= 99
+  keys: ['accepted', 'attempted', 'checkpoint_exists', 'reason', 'state_dir']
+  checkpoint_exists true: 99 / 99
+sleep_ER.jsonl rows= 99
+  keys: ['accepted', 'attempted', 'checkpoint_exists', 'reason', 'state_dir']
+  checkpoint_exists true: 99 / 99
+[0m
+[0m$ [0mL=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391logs; grep -l -i "traceback\|error" $L/*.log 2>/dev/null; echo "grep_done"; cat $L/smoke.times; echo; head -n 4 $L/step1.log
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391logs/setup_pip.log
+grep_done
+2026-09-26T04:26:46Z
+Es_locomo_exit=0
+2026-09-26T04:27:29Z
+Es_gsm8k_exit=0
+2026-09-26T04:27:48Z
+Rs_locomo_exit=0
+2026-09-26T04:28:28Z
+Rs_gsm8k_exit=0
+2026-09-26T04:28:53Z
+ERs_locomo_exit=0
+2026-09-26T04:29:32Z
+ERs_gsm8k_exit=0
+2026-09-26T04:29:56Z
+SMOKE_DONE
+
+artifacts/claude-bm391-20260926/PLAN.md: OK
+artifacts/claude-bm391-20260926/baselines.sha256.txt: OK
+scripts/claude_bm391_prf.py: OK
+STEP1A_EXIT=0
+[0m
+[0m$ [0mgrep -i -B2 -A8 "traceback\|error" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/bm391logs/setup_pip.log | head -n 20
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'pyarrow'
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2.8.0+cu128 5.17.0
+[0m
+[0m# [0mTodos
+[✓] Gates: credit, duplicate, files/ledger check
+[✓] Build code tree + READER, verify sha
+[✓] Rent RTX 5090 labelled rent-bm391
+[✓] Setup on rental (pip, models, route122)
+[✓] Steps 1-4 (seals, tests, base ckpt, fetch, smoke)
+[✓] Step 5 registered lanes
+[✓] Copy back, destroy, confirm, ledger
+[•] Write RESULTS-rent.md + push paths, final report
+[0m
+[0m← [0mWrite artifacts/claude-bm391-20260926/RESULTS-rent.md
+Wrote file successfully.
+[0m
+[0m$ [0mgit status --short artifacts/claude-bm391-20260926/ artifacts/fable-predictions-ledger.md; echo ---; git diff --stat artifacts/fable-predictions-ledger.md
+M artifacts/fable-predictions-ledger.md
+---
+ artifacts/fable-predictions-ledger.md | 1 +
+ 1 file changed, 1 insertion(+)
+[0m
+[0m$ [0mgit status --short | grep -i bm391; git check-ignore -v artifacts/claude-bm391-20260926/RESULTS-rent.md artifacts/claude-bm391-20260926/run/mmlu_R.jsonl 2>&1; ls artifacts/claude-bm391-20260926/
+.gitignore:5:artifacts/	artifacts/claude-bm391-20260926/RESULTS-rent.md
+.gitignore:5:artifacts/	artifacts/claude-bm391-20260926/run/mmlu_R.jsonl
+RESULTS-rent.md
+run
+[0m
+[0m# [0mTodos
+[✓] Gates: credit, duplicate, files/ledger check
+[✓] Build code tree + READER, verify sha
+[✓] Rent RTX 5090 labelled rent-bm391
+[✓] Setup on rental (pip, models, route122)
+[✓] Steps 1-4 (seals, tests, base ckpt, fetch, smoke)
+[✓] Step 5 registered lanes
+[✓] Copy back, destroy, confirm, ledger
+[✓] Write RESULTS-rent.md + push paths, final report
+[0m

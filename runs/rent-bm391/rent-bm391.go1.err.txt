@@ -1,0 +1,360 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git branch -a | head -20; git log --oneline -5
+FETCH_EXIT:0
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
+  codex/testing-experiment-44
++ main
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+bc39d2baf ideajudge-teacher2: DEV teacher agreement check (no training)
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+7692680e4 mut-0 SLEEP fails closed: mut0 runner + 3 runall scripts, seal + results (M1-M3 hold)
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -30; echo ===RENTKIT===; wc -l $(git rev-parse --show-toplevel)/dummy 2>&1 | head
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+zsh:1: ==RENTKIT=== not found
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -13; echo "---LINES ABOVE---"
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+---LINES ABOVE---
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/330-rent-kit.md
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+T=$(mktemp -d)/tree && mkdir -p $T
+git archive origin/builder-outbox | tar -x -C $T
+git archive origin/main | tar -x -C $T            # main on top: main wins
+mkdir -p $T/artifacts/fable-self122-20260922
+cp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/
+tar czf tree.tgz -C $(dirname $T) tree
+```
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+scp tree.tgz (and READER if needed) to the instance; tar xzf tree.tgz; cd tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-bm391-20260926/PLAN.md
+# bm-391 PLAN: Premonition 0.2 candidates on the public benchmarks (benchmarks thread, 2026-09-26 ~01:30 UTC)
+
+Registered before any run of these builds on any public test. Every LoCoMo number here is "after using LoCoMo for
+development" (k = 20 for the memory store was chosen on LoCoMo practice, bm-395). LongMemEval stays untouched.
+
+## What is tested
+The three builds month-end sealed on main at da7e0f3a4. The seal is artifacts/claude-e2e382-20260925/SEAL-code.sha256.txt,
+239 files; the seal file's own sha256 is 9bda3add859c310acc705dacbffdf8251ebe8687fc064379bc8e3cd85530e063.
+- E = claude_e2e382:build_382b: 0.1 with the grammar fix (G), plus the memory store. When the agent would abstain
+  on a question, it answers from the store's top 20 heard lines.
+- R = claude_e2e383:build_383: G plus route383. When the agent would abstain on a question that is not about the
+  user or anyone heard earlier, the plain 1B answers it.
+- ER = claude_e2e383:build_383e: G plus the store (top 20) plus route383.
+
+Harness and scorer: bm-390's, unchanged. Sealed files are scripts/claude_bm390.py and scripts/claude_bm390_score.py
+(artifacts/claude-bm390-20260925/SEAL-code.sha256.txt, 8 files). Same data, same fetch hashes, same prompts, same
+agent path as bm-390's P arm (one sleep per session, state restored before each question).
+
+Baselines: fixed, not re-run. They are bm-390's registered run files listed in baselines.sha256.txt (paths on
+origin/builder-outbox):
+- T: plain MiniCPM5-1B, whole chat;
+- Rb: plain 1B plus BM25 top 10;
+- Q2: Qwen3.5-2B, whole chat;
+- L12: LFM2.5-1.2B, whole chat;
+- C: no-chat contamination check;
+- P: Premonition 0.1.
+
+## Which build the marks judge (fixed now)
+0.2 is named by month-end's own registered marks on bank C: 382b's (PASSMARKS-382b.md) and 383's (PASSMARKS-383.md).
+Those marks do not use any bm-391 number. The rule:
+- both pass: ER;
+- only 382b passes: E;
+- only 383 passes: R;
+- neither passes: no build is 0.2, and every bm-391 number is report only.
+The other builds are reported in full, beside the named one.
+
+## Marks (bm-390's, unchanged; X = the named build)
+- M1: on LoCoMo categories 1-4 F1, X − B ≥ +3.0 with the paired bootstrap's 95% interval above 0. B is each of T,
+  Rb, Q2 and L12 (seed 390, 10k resamples, the sealed scorer).
+- M3: X gives fewer confident wrong answers (answered, F1 = 0, categories 1-4) than each of T, Rb, Q2 and L12.
+- M4: X ≥ T − 3 points on MMLU-Redux-300 and on GSM8K-300, with the sealed answer pickers. That means at least
+  13.67% (41/300) on MMLU and at least 60.67% (182/300) on GSM8K.
+- PASS = M1, M3 and M4 all pass. Anything else is a registered FAIL. The contamination flag (C above 10) is already
+  known clear (C 3.27).
+
+## Report only
+- Every arm's category split.
+- Paired differences: E − P, ER − E and R − P on LoCoMo, and R − E and ER − E on GSM8K and MMLU.
+- The store and route counters from EP382_LOG.
+- The answer-length check scripts/claude_bm391_prf.py (median scored words, token precision and recall, replies
+  ≥ 3x gold length; its F1 column must equal the scorer's).
+
+## Predictions (fixed now; X is expected to be ER)
+- B1 (98%): M1 fails against Q2 (X's F1 below 50.87). The registered verdict is FAIL.
+- B2 (75%): X's LoCoMo F1 is between 6 and 25 (my point guess 14). The reasoning: 0.1's 617 non-abstained answers
+  stay as they were. The store only helps the ~923 questions 0.1 abstained on. The plain 1B shown the same 20 lines
+  scored 29.85 overall, but the agent's guards and its "say you don't know" prompt will reject or abstain on some.
+- B3 (85%): E − P ≥ +5 F1 on LoCoMo.
+- B4 (80%): |ER − E| ≤ 2 F1 on LoCoMo. route383 now keeps 1,361 of the 1,540 questions (they name a speaker heard
+  earlier); only the other 179 can route.
+- B5 (80%): M3 fails. X answers more than 0.1 did, and Q2 has only 402 confident wrong.
+- B6 (85%): E's GSM8K is at most 60/300 (no route; the store is empty for a fresh general item).
+- B7 (65%): R's GSM8K is between 140 and 200 (point guess 172). M4 on GSM8K passes for R with 35%.
+- B8 (90%): R and ER each score at least 41/300 on MMLU (the M4 bar); point guess 145.
+- B9 (70%): R − E on GSM8K ≥ +80.
+
+## What would prove the idea behind 0.2 wrong (on these tests)
+- E − P ≤ +2 on LoCoMo: the store fallback does not reach LoCoMo answers inside the agent, whatever it did for the
+  plain 1B (bm-395).
+- R − E ≤ +20 on GSM8K: routing abstained questions to the plain 1B does not recover math inside the agent.
+
+## Where it runs
+Rental (handoff/held/rent-bm391.md until the Director clears the money): one RTX 5090, three lanes in parallel.
+- Lane 1: ER.
+- Lane 2: E.
+- Lane 3: R, general tests first.
+Each arm is launched once. A crash with no output may be relaunched once with the same command, and that is
+disclosed. Scoring and the recount happen afterwards on CPU, by this thread and a blind agent.
+[0m
+[0m$ [0mgit ls-tree -r origin/builder-outbox --name-only | grep -E "claude-bm391-20260926" | head -30; echo "---EXIT:$?---"; git show origin/builder-outbox:artifacts/claude-bm391-20260926/RESULTS-rent.md 2>&1 | head -5; echo "---R2---"; git ls-tree origin/builder-outbox artifacts/claude-bm391-20260926/run 2>&1 | head -5
+---EXIT:0---
+fatal: path 'artifacts/claude-bm391-20260926/RESULTS-rent.md' does not exist in 'origin/builder-outbox'
+---R2---
+[0m
+[0m$ [0mgit ls-tree -r origin/builder-outbox --name-only | grep -i bm391 | head -20; echo DONE; git ls-tree -r origin/main --name-only | grep -i bm391 | head -20; echo DONE2
+DONE
+artifacts/claude-bm391-20260926/PLAN.md
+artifacts/claude-bm391-20260926/SEAL.sha256.txt
+artifacts/claude-bm391-20260926/baselines.sha256.txt
+handoff/queue/rent-bm391.md
+scripts/claude_bm391_prf.py
+DONE2
+[0m
+[0m$ [0mvastai show user --raw 2>&1 | head -20; echo "---"; vastai show instances 2>&1 | head -40
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 9.1290710534699,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+---
+[K[97;48;2;0;0;0m╭─[0m[97;48;2;0;0;0m──[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mFilterable Values[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m───[0m[97;48;2;0;0;0m─╮[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--status:       [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--verification: [0m[38;5;83;48;2;0;0;0mverified[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--gpu-name:     [0m[97;48;2;0;0;0mRTX 5090[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m╰──────────────────────────╯[0m
+
+[93;48;2;0;0;0m╭─[0m[93;48;2;0;0;0m─────────[0m[93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mResults Summary[0m[93;48;2;0;0;0m [0m[93;48;2;0;0;0m──────────[0m[93;48;2;0;0;0m─╮[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mTotal: [0m[1;97;48;2;0;0;0m2 instances[0m[48;2;0;0;0m                  [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mLabels: [0m[97;48;2;0;0;0mrent-382b: 1  ·  rent-dl2: 1[0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m╰──────────────────────────────────────╯[0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╔══════╤═════════╤═════════╤═══════════════╤═════════╤════════════════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m ID [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mStatus [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m Label [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m     GPU     [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m $/hr  [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m            Image      [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╟──────┼─────────┼─────────┼───────────────┼─────────┼────────────────────────[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m526…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mrent-d…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.4852[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytorch:2.8.0-c[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m526…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mrent-3…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.5037[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytorch:2.8.0-c[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╚══════╧═════════╧═════════╧═══════════════╧═════════╧════════════════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[48;2;0;0;0m                                                                              [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[2;48;2;0;0;0mColumns hidden to fit terminal width: Disk  ·  use --cols to customize (see --[0m[48;2;0;0;0m [0m
+[0m
+[0m$ [0mvastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); [print(x.get('id'), x.get('label'), x.get('actual_status') or x.get('status_msg')) for x in (d if isinstance(d,list) else [d])]" 2>&1 | head -10
+52669927 rent-dl2 running
+52674739 rent-382b running
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-bm391-20260926/SEAL.sha256.txt; echo ===; git show origin/main:artifacts/claude-bm390-20260925/SEAL-code.sha256.txt; echo ===; git show origin/main:handoff/queue/rent-bm391.md 2>&1 | head -100
+8f18a910e2cb1f7500378905c7d296392289f1bc589a6256c507872f41811bc1  artifacts/claude-bm391-20260926/PLAN.md
+280321f726efb3e87932014ab982cfcabdb79cde59a57412180e06f7224aa24f  artifacts/claude-bm391-20260926/baselines.sha256.txt
+a2a40a99962e6a1a039004cda003474949dc3da3d15e85445f1e71a82248ab75  scripts/claude_bm391_prf.py
+zsh:1: == not found
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-bm390-20260925/SEAL-code.sha256.txt
+eb50c203fdcf38821b49b4439d31d340e53a83f0bba2faae33d1baaa797467b3  scripts/claude_bm390.py
+f53dd2966ba3a8de492ae89ce8658c2468f3029872b24d15a57bc98aee7b81e0  scripts/claude_bm390_score.py
+bfbe2753c947cbdde9d8651d2d41e85efc16bb2b498e12a8923cb6795d3a3dc1  artifacts/claude-bm390-20260925/PASSMARKS.md
+c945527f89c0cadb2bc9e53628a39e3720010b2ebebde0c3010c097b9d87c56d  artifacts/claude-bm390-20260925/data-manifest.json
+edd1ca6b6a521d6a1968d5a666e62d7015f1bd8c94c3dafa08a58d004c708bff  artifacts/claude-bm390-20260925/smoke/locomo10.json
+50043247e37ad8d032f09302f18a139a61f39ebcb33e4b1974cc33a0aa5f1b07  artifacts/claude-bm390-20260925/smoke/mmlu300.jsonl
+ac1cdbfd2140b256061e5dbe1e7e7de76b3ea5724267f47972f8194f824c17fe  artifacts/claude-bm390-20260925/smoke/gsm8k300.jsonl
+77a3d80201d8e6f10832530dd97c38c736b9553294f57c7d8f9767eb1a7f3980  design/v3/30-modes/390-public-bench-plan.md
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/rent-bm391.md | head -120
+COMMON RULES (the benchmarks thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply), and ALL of origin/main:design/v3/30-modes/330-rent-kit.md (code tree, rental rules incl. reliability >= 0.98, the 6-min start rule, the 10-min no-log watchdog, copy back BEFORE destroy, destroy and confirm, ledger line), with the additions below. This job NEEDS READER (kit section A) and the kit's route122 check.
+GPU: rent
+BUDGET: $3.50 for this whole task. Label: rent-bm391. RTX 5090 first (32 GB: three lanes share it); a 4090 only if no 5090 passes the kit's filter, and then run the lanes one after another.
+TIME CAP: 7 hours on the rental. If reached: stop every command still running (kill by exact PID), copy back what exists, destroy, report which commands finished.
+CREDIT GATE (first): `vastai show user --raw` and report ONLY the balance/credit number. Under $4.00: rent nothing, stop with CREDIT-STOP.
+MONEY RULE: keep the kit's running total. At $3.20 spent, stop every command still running (kill by exact PID), copy back what exists, destroy, stop with BUDGET-STOP and list which commands finished.
+DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox has artifacts/claude-bm391-20260926/run or artifacts/claude-bm391-20260926/RESULTS-rent.md, or `vastai show instances` shows a live instance labelled rent-bm391.
+
+YOUR TASK: rent-bm391, the public-benchmark scorecard of the three Premonition 0.2 candidates (E, R, ER) on bm-390's harness. Read origin/main:artifacts/claude-bm391-20260926/PLAN.md. Run ONCE. The benchmark files are public test sets: the scripts download and read them; you never open, print or quote a question, an answer or a reply (count rows only). Nothing is trained. Edit no file (the month-end and benchmarks threads wrote all code: run it, never edit it); if something breaks, copy back what exists, destroy, report the exact error and full traceback.
+
+SETUP ON THE RENTAL (kit section C, with these exact downloads; they are the ONLY downloads allowed):
+- Tree: kit section A (builder-outbox, then main on top), with self122_head.pt and READER. OUT = artifacts/claude-bm391-20260926/run (inside the tree, a NEW folder). DATA = /root/bm391data (outside the tree). WORK = /root/bm391work.
+- pip: the kit's line, plus `python -c "import pyarrow" || pip install -q pyarrow`. Install nothing else. Record `python -c "import torch, transformers; print(torch.__version__, transformers.__version__)"`.
+- `unset HF_HOME HF_HUB_CACHE`, then with HF_HUB_OFFLINE=0 for this one command: `python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B', revision='87179e5c1f455ef22e6223592d2d61351b525bfc')); print(s('sentence-transformers/all-MiniLM-L6-v2', revision='1110a243fdf4706b3f48f1d95db1a4f5529b4d41', allow_patterns=['*.json', 'model.safetensors', 'vocab.txt']))"`. BASE = the first printed path. The second must be ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41; if not, destroy and stop with MINILM-PATH, report the line.
+- Then `export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1` for everything else, and run the kit's route122 check (must not raise). Run every command under nohup/setsid with its own log file, one log per command.
+
+STEPS
+1. From the tree root BEFORE anything else, each must be OK on every line:
+   `sha256sum -c artifacts/claude-bm391-20260926/SEAL.sha256.txt`
+   `sha256sum -c artifacts/claude-bm390-20260925/SEAL-code.sha256.txt` (8 OK)
+   `sha256sum -c artifacts/claude-e2e382-20260925/SEAL-code.sha256.txt` (239 OK)
+   Then `python -B scripts/claude_e2e382_test.py` (prints "10/10 OK") and `python -B scripts/claude_e2e383_test.py` (prints "13/13 OK"). Any mismatch or failure: destroy, stop with SEAL-MISMATCH, report the failing lines.
+2. Sleep's base checkpoint: `python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out /tmp/r44`, then `cp /tmp/r44/base-seed4102.pt artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt`. Report the JSON line and the .pt sha256.
+3. `python -B scripts/claude_bm390.py fetch --data DATA` must print one line starting {"fetch": "OK" with locomo_qa 1986, mmlu300_sha256 e294f5fc0c94726e640d276d67af3503b9d9a48574dbae357f8e72289f76c049 and gsm8k300_sha256 df57d09b50357481931bfc5b13903821d22afb986c7bf170941c30038706b949. Report the line verbatim. A different hash or a network error: destroy, stop, report.
+4. SMOKE on made-up data (SD = artifacts/claude-bm390-20260925/smoke), each once, WORK/smoke as --out; for each of the three builds B in {claude_e2e382:build_382b as Es, claude_e2e383:build_383 as Rs, claude_e2e383:build_383e as ERs}:
+   `SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=WORK/smoke/sleep_<name>.jsonl python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data SD --arm agent:<B> --name <name> --model READER --gen-model BASE --out WORK/smoke --limit-q 2`
+   `python -B scripts/claude_bm390.py general --task gsm8k --data SD --arm agent:<B> --name <name> --model READER --gen-model BASE --out WORK/smoke --limit 2`
+   Each must exit 0 with a "wrote ..." line. If not: destroy, stop with SMOKE-FAIL, full traceback.
+5. REGISTERED COMMANDS. Each is its own process, launched ONCE (check `ps` before any relaunch). A command that crashed with NO output file may be relaunched once, unchanged; report it as a deviation. Env for every LoCoMo command: SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=OUT/sleep_<name>.jsonl EP382_LOG=OUT/ep382_<name>_locomo.jsonl. Env for every general command: EP382_LOG=OUT/ep382_<name>_<task>.jsonl.
+   LOCOMO(<B>,<name>) = `python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data DATA --arm agent:<B> --name <name> --model READER --gen-model BASE --out OUT`
+   GENERAL(<task>,<B>,<name>) = `python -B scripts/claude_bm390.py general --task <task> --data DATA --arm agent:<B> --name <name> --model READER --gen-model BASE --out OUT`
+   Lane 1 (in order): LOCOMO(claude_e2e383:build_383e, ER); GENERAL(mmlu, claude_e2e383:build_383e, ER); GENERAL(gsm8k, claude_e2e383:build_383e, ER).
+   Lane 2 (in order): LOCOMO(claude_e2e382:build_382b, E); GENERAL(mmlu, claude_e2e382:build_382b, E); GENERAL(gsm8k, claude_e2e382:build_382b, E).
+   Lane 3 (in order): GENERAL(mmlu, claude_e2e383:build_383, R); GENERAL(gsm8k, claude_e2e383:build_383, R); LOCOMO(claude_e2e383:build_383, R).
+   Start lanes 1 and 2 together. Start lane 3 once both have printed their first [bm390] line AND `nvidia-smi` shows at least 11 GiB free (check every 5 min; report the free memory at its start). Expect "wrote locomo_<name>.jsonl rows=1986 convs=10", "wrote mmlu_<name>.jsonl rows=300", "wrote gsm8k_<name>.jsonl rows=300". A failing command does not stop its lane's later commands or the other lanes; report its traceback.
+6. Copy OUT (all of run/, including every sleep_*, ep382_* and *_reading file) back to the Mac, check sizes and sha256 match the box, THEN destroy, confirm with vastai show instances, append the ledger line (cat >>).
+7. RESULTS-rent.md (a NEW file) in artifacts/claude-bm391-20260926/, counts only: credit number; all seal and test results; step 2's line and sha256; torch and transformers versions; the fetch line; both model paths; READER sha256; smoke results; for each registered command its first printed line, last printed "wrote ..." line, exit code, start and end time (UTC); the row count of every run/*.jsonl file; per EP382 log: rows and counts per "outcome"; per sleep log: rows and how many have checkpoint_exists true; peak GPU memory seen; GPU, instance id(s), hours, dph, dollars; any traceback in full. Quote no question, answer or reply.
+PUSH: artifacts/claude-bm391-20260926/RESULTS-rent.md artifacts/claude-bm391-20260926/run artifacts/fable-predictions-ledger.md
+[0m
+[0m# [0mTodos
+[•] Credit gate + duplicate gate (done: credit 9.12, no duplicate)
+[ ] Verify local READER + self122_head.pt sha256
+[ ] Build tree.tgz (builder-outbox + main + weights)
+[ ] Search offers RTX 5090 reliability>=0.98, rent labelled rent-bm391
+[ ] Setup on rental: scp, pip, downloads, route122 check
+[ ] Steps 1-4: seals, base ckpt, fetch, smoke
+[ ] Step 5: 9 registered commands in 3 lanes
+[ ] Copy back, verify, destroy, ledger, RESULTS-rent.md
+[0m
+[0m$ [0mpwd; ls ~/premonition-models/lis301-merged/ 2>&1; sha256sum ~/premonition-models/lis301-merged/model.safetensors 2>&1 | head -2; echo "---"; ls artifacts/fable-self122-20260922/self122_head.pt 2>&1; sha256sum artifacts/fable-self122-20260922/self122_head.pt 2>&1 | head -2; echo "---"; df -g / 2>&1 | head -5; uptime 2>&1
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer_config.json
+tokenizer.json
+b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890  /Users/ben-hannan/premonition-models/lis301-merged/model.safetensors
+---
+artifacts/fable-self122-20260922/self122_head.pt
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  artifacts/fable-self122-20260922/self122_head.pt
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        22    37%  484014 232276800    0%   /
+21:43  up 2 days, 11:36, 4 users, load averages: 66.61 51.10 53.05
+[0m
+[91m[1mError: [0munknown certificate verification error
