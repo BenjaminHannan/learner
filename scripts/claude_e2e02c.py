@@ -29,13 +29,13 @@ SCRIPTS = Path(__file__).resolve().parent
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-MEM02C = 20        # 0 = off
-ROUTE02C = True
-SLEEP02C = True
-READER02C = "r319"
-FIX02C = True
+MEM02C = 0         # 0 = off. FROZEN 2026-09-26 ~05:15 UTC: 382b has no verdict (rent-382b INCOMPLETE, reader upload), so off
+ROUTE02C = False   # FROZEN: 383 has no verdict (same run), so off
+SLEEP02C = True    # FROZEN: dl-2 registered PASS (artifacts/claude-dl2-20260926/VERIFY.md)
+READER02C = "r319" # FROZEN: lis-319 PASS; lis-319c-full FAIL (F2), so 0.995 not 0.98
+FIX02C = True      # FROZEN: with memory and route off, only delivered02c (F1) is active
 STORE02C = "claude_ep382_store_v3"   # v2's ranking + torn-tail recovery, fsync, heard-only answers (Benchmarks)
-TRIM02C = False    # bm-397's answer trim on memory answers only (Benchmarks); on only if bm-397 passes
+TRIM02C = False    # FROZEN: bm-397 registered FAIL
 
 
 def build_02c(state_dir, args):
