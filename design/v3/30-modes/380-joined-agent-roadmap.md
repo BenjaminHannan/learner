@@ -95,3 +95,17 @@ turns; Reader319 in scripts/claude_lis319_read.py), as 0.2b on bank D. Then rd-3
 rd-371 as the checker, each after its own PASS. The new sleep (Fix sleep: night(model, day_groups) -> adapter)
 joins after dl-1 decides the learning rule.
 - 20:40 UTC: rd-371 (learned checker) is a registered FAIL, so it leaves the join order. 0.2's answers from memory keep the plain cite check (every name and number must appear in the retrieved turns; scripts/claude_e2e382.py G3/G5). A new checker is a follow-up after rd-378.
+
+## Outside review, 2026-09-26 ~01:35 UTC (GPT review pasted by Ben into Reading facts; section 7 on 0.2)
+- "Keep changes separate": already so. gram-360 passed alone; 382b (E) and 383 (R) are each registered against G on
+  the same runs; ER (both) is report only; the 0.98 save bar goes in 0.2b alone. A combined build still gets its own run.
+- "Fall back when the notebook lacks sufficient evidence, not only when nothing matches": a real gap. answer382 and
+  route383 fire only when the final reply abstains, so a partial or out-of-date notebook answer never reaches the
+  memory store. Not changed before 382b (one change). Candidate after 0.2: a sufficiency check (does the notebook
+  answer name what the question asks for, and is there a later heard row about the same thing?), tested on its own.
+- "Route by whether the answer needs the user's history, not by names": partly taken. about_user383 uses wording
+  (my/our, recall and tag questions) plus names; a memory question with none of these ("where do I work?") would go
+  to the plain 1B, where only 338's non-strict guard stands in the way. Registered marks Q2/Q3 test exactly this leak
+  on bank C; if they fail, the "proved wrong" clause of PASSMARKS-383 applies. (GSM8K 300 practice: 0 questions use
+  i/me/we/us/my/our, so a first-person rule would cost no GSM8K routing there.)
+- LoCoMo practice bar 32.85 for 0.2: Benchmarks' call in bm-391.
