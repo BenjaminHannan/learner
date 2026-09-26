@@ -72,6 +72,18 @@ def pick_hands(seed, n, pool):
     return good[:n]
 
 
+TEST_SEEDS = (388101, 388202)
+
+
+def test_hands(seed, n):
+    """the registered test: one fixed shuffle of the 348 solvable held-out hands, cut into disjoint blocks per seed."""
+    test, _ = held_out_hands()
+    good = sorted(h for h in test if F.reach(tuple(sorted(h))))
+    random.Random("rv388-test").shuffle(good)
+    k = TEST_SEEDS.index(seed)
+    return good[k * n:(k + 1) * n]
+
+
 # ---------------- steps ----------------
 def moves(state):
     """[(text, next_state)] for every step from a state (sorted tuple of Fractions)."""
@@ -327,8 +339,8 @@ def run(a):
     model.load_feats(a.feats)
     heads, trained, _ = fit_heads(model)
     cuts = json.loads(Path(a.cuts).read_text()) if a.cuts else {"judge": 0.0, "placebo": 0.0}
-    test, practice = held_out_hands()
-    hands = pick_hands(a.seed, a.n, practice if a.practice else test)
+    _, practice = held_out_hands()
+    hands = pick_hands(a.seed, a.n, practice) if a.practice else test_hands(a.seed, a.n)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     for arm in a.arms.split(","):
@@ -353,6 +365,8 @@ def selftest():
     assert len(test) == 455 and not set(test) & set(practice)
     th = pick_hands(1, 20, test)
     assert all(F.reach(tuple(sorted(x))) for x in th) and len(set(th)) == 20
+    a_, b_ = test_hands(TEST_SEEDS[0], 80), test_hands(TEST_SEEDS[1], 80)
+    assert len(a_) == len(b_) == 80 and not set(a_) & set(b_) and set(a_) <= set(test)
     # with uniform scores the arms make identical choices until a flag fires; END never flags
     fake = lambda s: {nxt: 0.0 for _, nxt in moves(s)}
     for hand in th[:5]:
