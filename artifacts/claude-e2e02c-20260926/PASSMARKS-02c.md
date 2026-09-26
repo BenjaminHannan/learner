@@ -137,3 +137,10 @@ agent's tokenizer and model (no second copy), and D1.train_copy leaves the model
 - ~04:00 UTC, logistics only (Director, low vast credit): if the rental stops on credit, the same registered run goes
   to BensPC (handoff/held/006k-02c-benspc.md): same sealed code, commands and order; the GSM8K/MMLU lanes (H5/H6) run
   after the panels instead of alongside them, so they are more likely to be "not measured". No mark changes.
+- ~05:20 UTC FREEZE (before any registered run; MANIFEST-02c.md). The rental cannot run 0.2c: both rentals measured the
+  Mac -> vast upload at 0.37 MB/s, about 91 minutes per 2 GB reader, and X and G need two readers. So the run goes to
+  BensPC, where both readers live (handoff/held/006k-02c-benspc.md), starting when it frees (~06:00 UTC), which
+  needs the freeze now instead of 07:30. Nothing still pending could join by 07:30: 382b/383 cannot be rerun before
+  then, and the note checker has no joining code. Composition by the rule: X = G + copy-practice sleep + lis-319
+  reader at 0.995 + F1. Out: 382b memory and 383 route (no verdict: rent-382b INCOMPLETE), 0.98 bar and bm-397 trim
+  (registered FAILs), breadth (INCONCLUSIVE). No mark changes. Expected: Q1 and Y1 unlikely to pass (MANIFEST).
