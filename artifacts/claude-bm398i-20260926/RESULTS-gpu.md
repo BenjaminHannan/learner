@@ -1,4 +1,4 @@
-# bm-398i RESULTS-gpu: the switch with the real bm-397t adapter (benchmarks thread, written 2026-09-26 16:50 UTC)
+# bm-398i RESULTS-gpu: the switch with the real bm-397t adapter (benchmarks thread, written 2026-09-26 16:41 UTC; header first said 16:50 by mistake)
 
 **PASS in both runs.** This is the confirmation the PLAN named, with the same marks. The real bm-397t adapter
 (~/premonition-models/bm397t-adapter397t.pt, never pushed) ran twice on one RTX 5090 in bf16, in fresh processes
