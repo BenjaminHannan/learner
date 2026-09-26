@@ -20,12 +20,13 @@ Intents (one per turn, 6-8 turns per dialog):
                ambiguous_pronoun (two same-gender people named, pronoun owner kept as typed, UNCLEAR)
   smalltalk    CHAT, no facts
 
-python3 claude_lis320_seed.py --seed 320 --n 30 --out seeds.jsonl [--avoid-names FILE]
+python3 claude_lis320_seed.py --seed 320 --n 30 --out seeds.jsonl [--avoid-names FILE] [--avoid-hashes FILE]
 python3 claude_lis320_seed.py --selftest
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import random
@@ -148,6 +149,10 @@ def role_word(role: str) -> str:
     return role.replace("_", " ")
 
 
+AVOID_HASHES: set = set()
+ORG_SUF_LOW = {x.lower() for x in ORG_SUF}  # fixed suffixes are not invented names
+
+
 class World:
     def __init__(self, rng: random.Random, avoid: set):
         self.rng, self.avoid, self.used = rng, avoid, set()
@@ -157,6 +162,8 @@ class World:
             s = make()
             low = s.lower()
             if (4 <= len(low.replace(" ", "")) <= 14 and low not in BLOCK and low not in self.avoid
+                    and not any(hashlib.sha256(w.encode("utf-8")).hexdigest() in AVOID_HASHES
+                            for w in low.split() if w not in ORG_SUF_LOW)
                     and not any(w in self.used for w in low.split()) and not any(c * 3 in low for c in low)
                     and not any(v * 2 in low for v in "iuy")):
                 self.used.update(low.split())
@@ -529,6 +536,7 @@ def main():
     ap.add_argument("--n", type=int, default=30)
     ap.add_argument("--out")
     ap.add_argument("--avoid-names", help="file, one name per line (dev/test names to never use)")
+    ap.add_argument("--avoid-hashes", help="file, sha256 of lowercased words (claude_lis320_avoidtest.py; test panels)")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     if a.selftest:
@@ -536,6 +544,8 @@ def main():
     avoid = set()
     if a.avoid_names:
         avoid = {x.strip().lower() for x in Path(a.avoid_names).read_text().splitlines() if x.strip()}
+    if a.avoid_hashes:
+        AVOID_HASHES.update(x.strip() for x in Path(a.avoid_hashes).read_text().splitlines() if x.strip())
     seeds = make_seeds(a.seed, a.n, avoid)
     Path(a.out).write_text("".join(json.dumps(d, ensure_ascii=False) + "\n" for d in seeds), encoding="utf-8")
     c = Counter(t["intent"] for d in seeds for t in d["turns"])
