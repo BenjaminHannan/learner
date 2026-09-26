@@ -2,7 +2,7 @@
 
 "Making things up about you" thread. Written 2026-09-26, committed 23:45 UTC (date -u). DRAFT for the Thread manager's review. It will be sealed
 before any GLM call, and nothing below changes after an answer has been seen. DEV data only. Nothing is trained.
-Cost: $0 (Mac CPU, GLM through Ben's opencode subscription, this thread's share of 3 calls at a time).
+Cost: $0 (Mac CPU, GLM through Ben's opencode subscription, at most 6 calls at a time under pilot 4's Mac-wide cap W = min(6, 16 - running opencode processes), per the Thread manager at 23:39 UTC).
 
 ## Why a new gate, not g406's resume
 g406 (sealed 79032cbd8) got 80 of 560 answers before stopping, with 57 of them unusable (VERIFY-run1.md 81be47cc3,

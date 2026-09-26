@@ -30,9 +30,10 @@ case where GLM cannot be the marker.
   only when the present turn calls for it.
 
 ## Draft design (one change: a LoRA trained on the 1B's own clean replies, against the same plain 1B)
-- Input: the U form for both practice and test, because that is where the plain 1B reads its memory. U is
-  claude_y1f_layout.L1_HEAD, then session 1's 'User said, "..."' lines, then a blank line, then the user's turn, all
-  in the latest user message (scripts/claude_mu405b_talk.py).
+- Input: the U form for both practice and test, because that is where the plain 1B reads its memory. U puts a
+  header, then session 1's user lines, then a blank line, then the user's turn, all in the latest user message
+  (scripts/claude_mu405b_talk.py). For mu-406, the header, line prefix and system line are GLM-written (see
+  Training data source).
   - 0.2d keeps the block in the system message for now (Month-end ADDENDUM-36).
   - A mu-406 PASS would give Month-end a talker that can use the U form. Whether to adopt it stays Month-end's call.
 - Practice chats:
@@ -66,6 +67,22 @@ case where GLM cannot be the marker.
   - Pair judges (P vs T) for chat quality.
   - Stored-fact asks right, by code.
   - A small MMLU-Redux and GSM8K no-harm check on the LoRA.
+
+## Training data source (Ben's 16:39 rule: nothing trained is Claude-written or Claude-judged, frames included)
+- Targets: only the plain 1B's own sampled replies. They are kept or dropped by GLM's marks (only after g406b passes)
+  and by code checks. The distillation fallback would use GLM-written replies instead.
+- Chats: code picks the facts; GLM writes the practice chats' user turns.
+- Frames: the words around the memory in the input are Claude-written today. That covers the twin's system line
+  (claude_e2e336_twin.SYSTEM), y1f's header (L1_HEAD) and the 'User said, "' line prefix. So, before the test panel
+  is sealed, GLM writes the three pieces once: a system line, a memory header and a per-line prefix. The GLM prompt
+  describes each piece's job without giving its words. Code uses GLM's words verbatim in every practice input and in
+  both test arms, P and T.
+- The frame change is not a second change against P, because P gets the same GLM frames. It does mean mu-405b's U
+  numbers are not P's baseline. P is measured fresh on the test panel.
+- The mu-405 panel transfer check uses the GLM frames too.
+- No Claude judgement touches a training row. The blind Claude judges read only test outputs after training. GLM's
+  marking prompt carries the judges' rubric as instructions, not as training text.
+- The memory block stays in every training and test input.
 
 ## Draft marks (fixed before sealing; the Thread manager's review first)
 - PASS needs all of the following:
