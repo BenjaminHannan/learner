@@ -23,3 +23,17 @@ labels are the problem).
 Next (a plan, not sealed): one change to the labeller, chosen on one half of DEV (split by chat) and checked once on
 the other half against the same rule before any training: either GLM with reasoning effort "high" instead of "low",
 or the majority of 3 GLM labels per draft. Cost about $0.05 on OpenRouter, Mac CPU only.
+
+## Labeller fix, k1e-teacher-c (added 2026-09-26 18:50 UTC): FAIL, the critic waits
+Sealed before any call (SEAL-teacher-c.sha256.txt, b7573e0ae); Mac job k1e-teacher-c, rc 0, 41 OpenRouter calls,
+about $0.03. Recomputed here from the pushed labels with the same agree code: the same numbers.
+
+| Labeller (one change from phase 1) | Half | Agree | Kappa | GLM useful | Judges useful |
+|---|---|---|---|---|---|
+| reasoning "high" | A (78) | 61 | 0.56 | 38 | 25 |
+| majority of 3, temperature 0.7 | A (78) | 60 | 0.53 | 37 | 25 |
+| reasoning "high" (chosen on A) | B (79), the check | 63 (80%) | 0.603 | 43 | 31 |
+
+The check needed 68 of 79 (85%): **FAIL**. Both changes stay lenient (GLM "useful" about 1.4 times as often as the
+judges). As agreed with the Thread manager before the run: no third labeller is tried without telling them, and the
+critic is not trained on GLM labels.

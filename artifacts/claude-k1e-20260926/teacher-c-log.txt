@@ -1,0 +1,107 @@
+$ sha256sum -c artifacts/claude-k1e-20260926/SEAL-teacher-c.sha256.txt
+scripts/claude_k1e_teacher_c.py: OK
+scripts/claude_k1e_teacher.py: OK
+artifacts/claude-k1e-20260926/dev/packet_dev.jsonl: OK
+artifacts/claude-k1e-20260926/dev/key_dev.json: OK
+artifacts/claude-k1e-20260926/dev/verdicts_dev.json: OK
+artifacts/claude-k1e-20260926/teacher-c-split/packet_A.jsonl: OK
+artifacts/claude-k1e-20260926/teacher-c-split/packet_B.jsonl: OK
+$ python -B scripts/claude_k1e_teacher_c.py selftest
+{"chats": 40, "chats_A": 20, "lines_A": 73, "lines_B": 73}
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-72 ok
+{"how": "high", "lines": 73, "labelled": 73, "unparsed": 0, "calls": 8, "useful_yes": 20, "cost_usd": 0.008}
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-72 ok
+{"how": "vote3", "lines": 73, "labelled": 73, "unparsed": 0, "calls": 24, "useful_yes": 22, "cost_usd": 0.024}
+{"compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true}
+{"compared": 73, "teacher_useful": 22, "opus_useful": 20, "both_useful": 17, "agree": 65, "kappa": 0.733, "passes_label_rule": true}
+{"chosen": "high", "A_high": {"compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true}, "A_vote3": {"compared": 73, "teacher_useful": 22, "opus_useful": 20, "both_useful": 17, "agree": 65, "kappa": 0.733, "passes_label_rule": true}}
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-72 ok
+{"how": "high", "lines": 73, "labelled": 73, "unparsed": 0, "calls": 8, "useful_yes": 20, "cost_usd": 0.008}
+{"compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true}
+{"chosen": "high", "lines_B": 73, "compared": 73, "teacher_useful": 20, "opus_useful": 20, "both_useful": 20, "agree": 73, "kappa": 1.0, "passes_label_rule": true, "verdict": "PASS"}
+k1e teacher-c selftest 3/3 ok
+$ split
+{"chats": 40, "chats_A": 20, "lines_A": 78, "lines_B": 79}
+CMP_DONE
+total 176
+-rw-r--r--  1 ben-hannan  staff  44948 Sep 26 14:01 packet_A.jsonl
+-rw-r--r--  1 ben-hannan  staff  44339 Sep 26 14:01 packet_B.jsonl
+$ python -B scripts/claude_k1e_teacher_c.py label --packet O/packet_A.jsonl --how high --out O/A_high
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-77 ok
+{"how": "high", "lines": 78, "labelled": 78, "unparsed": 0, "calls": 8, "useful_yes": 38, "cost_usd": 0.0066}
+LABEL_HIGH_EXIT:0
+$ python -B scripts/claude_k1e_teacher_c.py label --packet O/packet_A.jsonl --how vote3 --out O/A_vote3
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-77 ok
+{"how": "vote3", "lines": 78, "labelled": 78, "unparsed": 0, "calls": 25, "useful_yes": 37, "cost_usd": 0.0115}
+LABEL_VOTE3_EXIT:0
+$ python -B scripts/claude_k1e_teacher_c.py choose --dir O --key D/key_dev.json --verdicts D/verdicts_dev.json
+{"compared": 78, "teacher_useful": 38, "opus_useful": 25, "both_useful": 23, "agree": 61, "kappa": 0.56, "passes_label_rule": false}
+{"compared": 78, "teacher_useful": 37, "opus_useful": 25, "both_useful": 22, "agree": 60, "kappa": 0.53, "passes_label_rule": false}
+{"chosen": "high", "A_high": {"compared": 78, "teacher_useful": 38, "opus_useful": 25, "both_useful": 23, "agree": 61, "kappa": 0.56, "passes_label_rule": false}, "A_vote3": {"compared": 78, "teacher_useful": 37, "opus_useful": 25, "both_useful": 22, "agree": 60, "kappa": 0.53, "passes_label_rule": false}}
+CHOOSE_EXIT:0
+high
+$ python -B scripts/claude_k1e_teacher_c.py label --packet O/packet_B.jsonl --how high --out O/B_high  [C=high chosen]
+[k1e-teacher-c] lines 0-9 ok
+[k1e-teacher-c] lines 10-19 ok
+[k1e-teacher-c] lines 20-29 ok
+[k1e-teacher-c] lines 30-39 ok
+[k1e-teacher-c] lines 40-49 ok
+[k1e-teacher-c] lines 50-59 ok
+[k1e-teacher-c] lines 60-69 ok
+[k1e-teacher-c] lines 70-78 ok
+{"how": "high", "lines": 79, "labelled": 79, "unparsed": 0, "calls": 8, "useful_yes": 43, "cost_usd": 0.0071}
+LABEL_B_EXIT:0
+$ python -B scripts/claude_k1e_teacher_c.py check --dir O --key D/key_dev.json --verdicts D/verdicts_dev.json
+{"compared": 79, "teacher_useful": 43, "opus_useful": 31, "both_useful": 29, "agree": 63, "kappa": 0.603, "passes_label_rule": false}
+{"chosen": "high", "lines_B": 79, "compared": 79, "teacher_useful": 43, "opus_useful": 31, "both_useful": 29, "agree": 63, "kappa": 0.603, "passes_label_rule": false, "verdict": "FAIL"}
+CHECK_EXIT:0
+A_high
+A_vote3
+B_high
+chosen.txt
+packet_A.jsonl
+packet_B.jsonl
+
+artifacts/claude-k1e-20260926/teacher-c/A_high:
+labels.jsonl
+
+artifacts/claude-k1e-20260926/teacher-c/A_vote3:
+labels.jsonl
+
+artifacts/claude-k1e-20260926/teacher-c/B_high:
+labels.jsonl
