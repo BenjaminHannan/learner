@@ -105,12 +105,12 @@ def score(a) -> None:
                     "H3": res["wrong_puzzle"]["H"] <= 2,
                     "H4": res["general_items_reaching_head"] == 0}
     res["pass"] = all(res["marks"].values())
-    res["replace_rules"] = res["pass"] and n["H"] <= n["E"]
+    res["join_as_decider"] = res["pass"]            # ADDENDUM-rt02h-1: decision rule no longer compares with E
     sd = Path(a.score)
     sd.mkdir(parents=True, exist_ok=True)
     (sd / "rt02h_score.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
     print(json.dumps({k: res[k] for k in ("exact_reads", "fires_negatives", "wrong_puzzle", "marks", "pass",
-                                          "replace_rules")}))
+                                          "join_as_decider")}))
 
 
 def selftest(head_path: str) -> None:
