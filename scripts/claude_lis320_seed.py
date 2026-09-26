@@ -118,7 +118,7 @@ LOOK_MODE = {"question": ("ASK", "QUESTION"), "plan": ("PLAN", "PLAN"), "doubt":
              "confirm": ("CHECK", "CHECK"), "ambiguous_pronoun": ("UNCLEAR", "UNCLEAR")}
 LOOKALIKES = ["question", "plan", "doubt", "someone_else", "hypothetical", "negation_only", "confirm",
               "ambiguous_pronoun"]
-WEIGHTS = {"teach": 3.0, "correct": 2.0, "backref": 2.0, "former": 1.5, "jobhome": 1.0, "ask": 1.5,
+WEIGHTS = {"teach": 3.0, "correct": 3.0, "backref": 2.0, "former": 1.5, "jobhome": 1.0, "ask": 1.5,
            "smalltalk": 0.8, **{k: 0.6 for k in LOOKALIKES}}
 # assistant asks a yes/no about a detail, user only acknowledges (no save) or says yes (save from the question);
 # Trustworthy notes' ch-403 lead + Thread manager 17:04. Off unless --ask-back (the 30-call pilot ran without them).
@@ -345,8 +345,24 @@ class Dialog:
         must = [new] + ([o] if o != "me" else []) + ([old] if name_old else [])
         lines = [self.fact_line(f), f"old value said earlier: \"{old}\" ("
                  + ("the message must name the old value too)" if name_old else "the message must NOT name it)")]
-        self.add("correct", frame("CORRECT", [f]), must, lines, first_person=o == "me",
-                 must_not=[] if name_old else [old], names=[o] if o != "me" else [])
+        # correction variety (Thread manager 17:22; sf-401: the notebook held the new value at 24 of 74 corrections):
+        # an update (it changed) or a fix (it was said by mistake), and sometimes a second, new fact in the same message
+        lines.append(r.choice(["why: the old value was true before and has changed since (moved, new job, renamed, "
+                               "and so on); the user updates it",
+                               "why: the old value was said by mistake; the user fixes it"]))
+        facts, names = [f], [o] if o != "me" else []
+        if r.random() < 0.35:
+            o2 = r.choice(self.owners_pool())
+            f2 = self.new_attr(o2, ATTR_RELS)
+            if f2 is not None and (o2, f2["rel"]) != (o, rel):
+                self.stored[(o2, f2["rel"])] = f2["value"]
+                facts.append(f2)
+                must += [f2["value"]] + ([o2] if o2 != "me" else [])
+                names += [o2] if o2 != "me" else []
+                lines.append("in the same message, also a new fact told as plainly true now: " + self.fact_line(f2))
+        self.add("correct", frame("CORRECT", facts), must, lines,
+                 first_person=any(x["owner"] == "me" for x in facts),
+                 must_not=[] if name_old else [old], names=names)
         return True
 
     def backref(self):

@@ -180,6 +180,7 @@ def check_turn(d, parsed, i):
         elif not any(forms(o, h_u) and any_word(ref["words"], h_u) for h_u, _ in vis):
             R.append("role_link_not_visible")
     intent = t["intent"]
+    cue_hit = None   # report only: which cue let a look-alike or former row through (Thread manager 17:22)
     ra = t.get("reply_ask")
     if ra:
         rv = typed_form(ra["value"], rb)
@@ -210,13 +211,17 @@ def check_turn(d, parsed, i):
             if f["rel"] in CURRENT_RELS and is_former(ff, u):
                 R.append("reads_former")
     elif intent == "former":
-        if not PAST.search(u):
+        m = PAST.search(u)
+        cue_hit = m.group(0).lower() if m else None
+        if not m:
             R.append("no_past_cue")
         if PRESENT.search(NEG_NOW.sub(" ", u)):
             R.append("former_present_cue")
     elif intent in LOOK or intent == "ask":
         assert not any(f["mode"] in WRITE for f in gold["facts"]), (d["dialog_id"], t["k"])
-        if intent in CUES and not CUES[intent].search(u):
+        m = CUES[intent].search(u) if intent in CUES else None
+        cue_hit = m.group(0).lower() if m else None
+        if intent in CUES and not m:
             R.append("no_cue")
     elif intent == "smalltalk" and SELF_STATE.search(u):
         R.append("smalltalk_self")
@@ -241,7 +246,7 @@ def check_turn(d, parsed, i):
     fr = canon_frame(fr)
     row = {"id": f"glm320-{d['dialog_id']}-t{t['k']}", "prompt": build_prompt_hist(u, rb, history),
            "target": frame_text(fr), "src": "glm320", "family": intent, "turn": u, "prev_reply": rb, "frame": fr,
-           "history": [list(h) for h in history]}
+           "history": [list(h) for h in history], "cue_hit": cue_hit}
     return row, [("recased" if rename and any(k != v for k, v in rename.items()) else "")]
 
 
@@ -273,6 +278,8 @@ def check_all(seeds, raws):
                 c["kept"] += 1
                 c["recased"] += why == ["recased"]
                 fam[row["family"]] += 1
+                if row.get("cue_hit"):
+                    c[f"cue:{row['family']}:{row['cue_hit']}"] += 1
                 rows.append(row)
     return rows, drops, c, fam
 
