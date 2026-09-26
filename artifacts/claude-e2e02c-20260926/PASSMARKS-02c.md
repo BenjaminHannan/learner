@@ -134,3 +134,6 @@ agent's tokenizer and model (no second copy), and D1.train_copy leaves the model
   matches the model; otherwise the run stops (selftest 9/9). Report only: a fresh-process activation check
   (rent-02c step 4a): with the adapter the 10 answers equal the saved night's, and with every LoRA scale at 0 at
   least 1 differs. No mark changes.
+- ~04:00 UTC, logistics only (Director, low vast credit): if the rental stops on credit, the same registered run goes
+  to BensPC (handoff/held/006k-02c-benspc.md): same sealed code, commands and order; the GSM8K/MMLU lanes (H5/H6) run
+  after the panels instead of alongside them, so they are more likely to be "not measured". No mark changes.
