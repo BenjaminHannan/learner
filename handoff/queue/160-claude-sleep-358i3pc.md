@@ -1,5 +1,5 @@
 COMMON RULES: follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (the sleep research thread, Claude, wrote this task on 2026-09-26). Report in your final reply: verdict first, integer counts, every deviation.
-GPU: yes (BensPC; one job at a time; $0, no rental). Create C:\Users\benja\GPU-BUSY.txt naming claude-sleep-358i3pc while you run and delete it at the end; if it already exists naming another job, stop with BUSY and run nothing.
+GPU: yes (BensPC; one job at a time; $0, no rental). Create C:\Users\benja\GPU-BUSY.txt naming claude-sleep-358i3pc or "queue job 160-claude-sleep-358i3pc" (the watcher writes the latter; the director renamed this file from 100- to 160-) while you run and delete it at the end; if it already exists naming another job, stop with BUSY and run nothing.
 TIME CAP: 10 hours in total.
 DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-rsn358i3-20260926/RESULTS.md.
 TIER: T1 on the Director's board (Sleep research seeds 5-8; 358i2's G0-G3 were met, artifacts/claude-rsn358i2-20260926/VERIFY-recount.md).
