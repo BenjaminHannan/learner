@@ -1,0 +1,639 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo FETCH_EXIT:$?; git rev-parse origin/main; git log --oneline -5 origin/main -- artifacts/claude-rd378k-20260926/ | cat
+FETCH_EXIT:0
+69eb49b0405a9251ec18c5ac0fa6ffcdf57a851f
+5f938199b rd-378k addendum D / rd-378g addendum A: accept the shared trainer's logging-only change (f99793d78, grad-none count after the first backward); new hash sealed
+81d13ba1c rd-378k addendum C: the teacher's unusable answers were all overheard dialogs (10 of 16 vs 0 of 23 chat); labeller v2 grades at most 7 turns per call; gate re-measured with it, plus a per-kind coverage row (>= 90%)
+4d67f3a96 rd-378k label gate PASS on both rows (GLM vs blind judges 424/485 = 87.4%, kappa 0.751; GLM ok on 30/216 = 13.9% of judge-unsupported notes); 160 GLM practice dialogs; teacher cost $0.068
+07a0d896d rd-378k addendum B (before any teacher label): untrue-note gate row (<=15% of judge-unsupported notes graded ok); A becomes the Claude-free rd-378g writer per the Thread manager's 16:53 ruling; rd-378 writer out of every build
+3316b3ba2 rd-378k registered and sealed: cut-only note writer (371c 4b) under Ben's Use GLM rule (GLM writes practice dialogs and grades the writer's own notes; blind Claude judges only on the sealed test); label gate, K1-K5 marks, brain-first fallback; teacher script, row builder, scorer; panel brief
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rd378k-20260926/PASSMARKS-C.md 2>&1; echo "---EXIT:$?"
+# rd-378k addendum C (2026-09-26 17:35 UTC): the labeller, fixed for long dialogs, and the gate measured again
+
+Written after the label gate's first result (VERIFY-gate.md: PASS on both rows) and before any training grade is used.
+PASSMARKS.md, PASSMARKS-B.md stay as sealed; this file adds to them.
+
+## What was found (shown, from gate/labels.jsonl and the rd-371b judge input; Thread manager asked for it by kind)
+The teacher's answer was unusable for 10 of the 39 gate dialogs, and all 10 are overheard: 0 of 23 chat dialogs failed,
+10 of 16 overheard dialogs failed (same median length, 14 turns). An overheard dialog asks for a grade on every turn at
+once; a chat dialog on about 7. So the first gate mostly measured chat notes (23 of 29 usable dialogs), and training on
+version-1 grades would drop most overheard dialogs: the writer would learn mostly from chats with an assistant.
+
+## The one change to the labeller
+scripts/claude_rd378k_teacher2.py: at most 7 graded turns per call (the dialog up to the window's last turn; only the
+window's turns carry notes). Same prompt words, verdicts, checks and output format. Failed calls keep the teacher's raw
+answer for reading. All training grades for rd-378g and rd-378k come from this labeller.
+
+## The gate again, with the labeller that will be used (same 39 dialogs, sha256(id) % 3 == 0; same bars)
+- overall: agreement >= 85% and kappa >= 0.5;
+- untrue notes: teacher "ok" on <= 15% of judge-unsupported notes;
+- coverage (new): usable dialogs >= 90% of the picked ones in EACH kind (chat, overheard).
+Report only: both rows per kind. If any row fails, nothing trains on teacher grades; the two-pass teacher of addendum B
+is measured on the sha256(id) % 3 == 1 dialogs with this labeller and these rows.
+---EXIT:0
+[0m
+[0m$ [0mgit show-ref | grep -E "builder-outbox|main" | head -20; echo ---; git ls-tree -r --name-only origin/main -- artifacts/claude-rd378k-20260926/gate2 2>&1; echo "---EXIT:$?"; git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-rd378k-20260926/gate2 2>&1; echo "---EXIT2:$?"
+edab57103506854948ddee8d6759b5242e284053 refs/heads/claude/pull-from-main-629dc4
+3a18860981c039cbf0664964aa93344fd25cda3a refs/heads/main
+9126a0645cbe5f0a644a930791fdeaafd9d62a1f refs/remotes/origin/builder-outbox
+daecec3db2e4a1782cc00082ba378138b043c18b refs/remotes/origin/builder-outbox-tmp
+69eb49b0405a9251ec18c5ac0fa6ffcdf57a851f refs/remotes/origin/main
+---
+---EXIT:0
+---EXIT2:0
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rd378k_teacher2.py | head -100; echo "===TEACHER1==="; git show origin/main:scripts/claude_rd378k_teacher.py | head -100
+#!/usr/bin/env python3
+"""rd-378k teacher labeller, version 2 (Trustworthy notes thread, 2026-09-26). New file; claude_rd378k_teacher.py stays.
+
+Why: in the label gate (artifacts/claude-rd378k-20260926/VERIFY-gate.md) the teacher's output was unusable for 10 of 39
+dialogs, and all 10 were overheard dialogs (0 of 23 chat dialogs failed; 10 of 16 overheard failed). An overheard dialog
+asks for a grade on every turn (12-16 at once); a chat dialog on about 7. The one change: the teacher grades at most 7
+turns per call. Each call shows the dialog up to the last turn of its window, and only the window's turns carry their
+"notes" list (earlier turns are context only). Prompt words, verdicts, checks and output format are claude_rd378k_teacher's.
+Failed calls are logged with the teacher's raw answer (training data only, never a key) so a failure can be read.
+
+label  python -B scripts/claude_rd378k_teacher2.py label --judge-in J.jsonl --out DIR [--only-hash K] [--window 7]
+       writes DIR/labels.jsonl {dialog, t, verdicts, missed} and DIR/failures.jsonl; prints one JSON line of counts
+       (per kind as well).
+selftest (no network)
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_rd378k_teacher import JUDGE, VERDICTS, call, check_labels, json_list, load, picked  # noqa: E402
+
+
+def windows(d, size):
+    """Yield (window_dialog, n_turns_graded): the dialog cut after the window's last turn, notes kept only in the window."""
+    graded = [k for k, t in enumerate(d["turns"]) if "notes" in t]
+    for s in range(0, len(graded), size):
+        keep = set(graded[s:s + size])
+        last = max(keep)
+        turns = [t if k in keep else {x: v for x, v in t.items() if x != "notes"}
+                 for k, t in enumerate(d["turns"][:last + 1])]
+        yield dict(d, turns=turns), len(keep)
+
+
+def label(a, key):
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    dialogs = [d for d in load(a.judge_in) if picked(d["dialog"], a.only_hash)]
+    rows, usage, failed, fails = [], [], [], []
+    per_kind = {}
+    for d in dialogs:
+        got_all = []
+        for wi, (w, _n) in enumerate(windows(d, a.window)):
+            got = None
+            for tr in range(3):
+                txt, u = call(key, a.model, JUDGE + json.dumps(w, ensure_ascii=False), 0)
+                usage.append(u)
+                got = check_labels(w, json_list(txt))
+                if got is not None:
+                    break
+                fails.append({"dialog": d["dialog"], "window": wi, "try": tr + 1, "raw": (txt or "")[:4000]})
+            if got is None:
+                got_all = None
+                break
+            got_all += got
+        k = per_kind.setdefault(d["kind"], {"dialogs": 0, "unusable": 0})
+        k["dialogs"] += 1
+        if got_all is None:
+            k["unusable"] += 1
+            failed.append(d["dialog"])
+            print(f"[rd378k-teacher2] {d['dialog']} unparsed", flush=True)
+            continue
+        rows += got_all
+        print(f"[rd378k-teacher2] {d['dialog']} ok", flush=True)
+    (out / "labels.jsonl").write_text("".join(json.dumps(x) + "\n" for x in rows), encoding="utf-8")
+    (out / "failures.jsonl").write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in fails),
+                                        encoding="utf-8")
+    cost = sum(float(u.get("cost", 0) or 0) for u in usage)
+    verdicts = [x for r in rows for x in r["verdicts"]]
+    print(json.dumps({"dialogs": len(dialogs), "labelled": len(dialogs) - len(failed), "unparsed": len(failed),
+                      "per_kind": per_kind, "calls": len(usage), "failed_calls": len(fails), "notes": len(verdicts),
+                      **{v: verdicts.count(v) for v in VERDICTS}, "cost_usd": round(cost, 4)}))
+
+
+def selftest():
+    d = {"dialog": "x", "kind": "overheard", "turns": [
+        {"t": k, "speaker": "AB"[k % 2], "text": f"m{k}", "notes": [{"text": f"n{k}"}] if k % 3 else []}
+        for k in range(15)]}
+    ws = list(windows(d, 7))
+    assert [n for _w, n in ws] == [7, 7, 1]
+    w0, w1 = ws[0][0], ws[1][0]
+    assert len(w0["turns"]) == 7 and all("notes" in t for t in w0["turns"])
+    assert len(w1["turns"]) == 14 and [("notes" in t) for t in w1["turns"]] == [False] * 7 + [True] * 7
+    good = [{"t": t["t"], "verdicts": ["ok"] * len(t["notes"]), "missed": 0} for t in w1["turns"] if "notes" in t]
+    assert len(check_labels(w1, good)) == 7
+    c = {"dialog": "c", "kind": "chat", "turns": [
+        {"t": k, "speaker": "user", "text": "u", "notes": []} if k % 2 == 0 else {"t": k, "speaker": "assistant",
+                                                                                   "text": "a"} for k in range(14)]}
+    assert [n for _w, n in windows(c, 7)] == [7]           # a chat dialog stays one call, as in version 1
+    print("rd378k teacher2 selftest 1/1 ok")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("mode", choices=["label", "selftest"])
+    ap.add_argument("--judge-in", default="")
+    ap.add_argument("--out", default="")
+===TEACHER1===
+#!/usr/bin/env python3
+"""rd-378k teacher jobs on the Mac (Trustworthy notes thread, 2026-09-26): the open-weights teacher (GLM via OpenRouter,
+the teacher Ben approved; goals page 5f38f110e: nothing a model trains on is written or judged by Claude) writes the
+practice dialogs the note writer drafts over, and grades the writer's own notes, so the cut-only rows
+(scripts/claude_rd378k_data.py) hold no Claude-written or Claude-judged text. Standard library only; no model runs here.
+
+Key rules: the key is read from ~/.config/openrouter/key into memory only. Never printed, logged or written.
+Call pattern copied from scripts/claude_k1e_teacher.py (reasoning effort low, answer read from the final message).
+
+write  160 practice dialogs in 20 calls of 8 (4 chat with an assistant + 4 overheard between two named people,
+       12-16 turns), each call with its own subject area. Structure checked in code; a call that breaks it is retried
+       (3 tries). ids kd-001..kd-160 in call order; t counts from 1.
+         python -B scripts/claude_rd378k_teacher.py write --out DIR [--model M]
+label  the teacher grades every note of a judge-input file (claude_rd378k_data.py judgein) with the judge brief's own
+       verdict words (artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md), one dialog per call, temperature 0;
+       writes DIR/labels.jsonl {dialog, t, verdicts, missed} (the judge-output format). [--only-hash K: only dialogs
+       whose sha256(id) % K == 0.]
+         python -B scripts/claude_rd378k_teacher.py label --judge-in J.jsonl --out DIR [--only-hash K] [--model M]
+agree  teacher verdicts vs the blind judges' verdicts on the same notes, ok vs not ok. Label rule fixed before any
+       teacher label exists (the creative thread's rule for a label source, k1e): agreement >= 85% and kappa >= 0.5.
+         python -B scripts/claude_rd378k_teacher.py agree --labels L.jsonl --verdicts V.jsonl
+selftest (no network)
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import re
+import time
+import urllib.request
+from pathlib import Path
+
+AREAS = ("hobbies and crafts", "work and coworkers", "family visits", "school and exams", "food and cooking",
+         "travel and trips", "pets", "moving house", "neighbours and community", "sports and fitness",
+         "music and concerts", "gardening", "health and appointments", "money and shopping", "weddings and parties",
+         "cars and commuting", "books and films (invented titles only)", "volunteering", "holidays and seasons",
+         "new jobs and interviews")
+VERDICTS = ("ok", "unsupported", "bad_cite", "bad_when", "bad_form")
+MONTHS = ("January February March April May June July August September October November December").split()
+
+WRITE = """Write 8 realistic conversations as a JSON list of 8 objects. Each object has exactly the keys "kind",
+"speakers", "date", "turns".
+- 4 with kind "chat": a user talks with a personal assistant. speakers = ["user", "assistant"]. Turns alternate,
+  starting with the user. The user tells the assistant about their life; the assistant's turns are short natural replies.
+- 4 with kind "overheard": two friends, relatives or coworkers talk. speakers = their two first names. Turns alternate,
+  starting with the first name.
+- date: the day the conversation happens, like "8 May 2023", a different day for each, between 2021 and 2025.
+- turns: 12 to 16 objects {"speaker": one of the speakers, "text": the message}.
+What the talk should contain, mixed naturally: things that happened, plans, preferences and opinions, times said in the
+chat ("last May", "next Friday", "two weeks ago", "in 2019"), changes (moved, new job, got a pet, broke up), things one
+person says about someone else, the odd joke, sarcasm or "what if", a correction of something said earlier ("wait, it
+was Tuesday"), pronouns pointing back to earlier messages, and some small talk with nothing to remember.
+Style: real texting, some typos in ordinary words (never in names), run-ons, mixed lengths (3 to 60 words).
+Subject area for all 8: {area}. Fictional names only: invented first names from many cultures and made-up places; no
+real public figures, brands, or book, film or game titles.
+
+Reply with ONLY the JSON list, no other text."""
+
+JUDGE = """You are checking memory notes that a small model wrote about a conversation. Below is one conversation as JSON:
+{"dialog","kind","speakers","date","turns":[{"t","speaker","text","notes":[{"text","cites","when"}]}]}.
+cites are offsets from the note's own turn (0 = that turn, -1 = the turn before, ...).
+
+For EVERY note, read the dialog up to and including the note's turn and give one verdict:
+- ok: one plain sentence, third person with names (or "the user"), and everything in it is stated by the cited turns
+  (reading the earlier turns only to know who "she"/"that" is); plans stay plans, claims about others stay claims.
+- unsupported: it says something the cited turns do not state (a guess, an inference, a wrong detail, wrong person).
+- bad_cite: true to the dialog but a turn it needs is not cited, or a cited turn is not needed.
+- bad_when: "when" is wrong (not the time the turns give for this note, or missing when the turn gives one).
+- bad_form: pronoun instead of a name, first/second person, more than one sentence, a joke or hypothetical turned into a fact.
+For EVERY turn that has a "notes" list (even an empty one), also say "missed": the number of clearly memorable things in
+that turn (an event, plan, preference, change, time, person or pet fact) that no note of that turn covers (0 if none).
+
+Reply with ONLY a JSON list with one object per turn that has a "notes" list, in order:
+{"t": <the turn's t>, "verdicts": [one verdict word per note, in order], "missed": <integer>}.
+
+Conversation:
+"""
+
+
+def load(p):
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def call(key, model, text, temperature, tries=4):
+    body = json.dumps({"model": model, "messages": [{"role": "user", "content": text}], "temperature": temperature,
+                       "max_tokens": 16000, "reasoning": {"effort": "low"}}).encode()
+    for i in range(tries):
+        req = urllib.request.Request("https://openrouter.ai/api/v1/chat/completions", data=body, headers={
+            "Authorization": "Bearer " + key, "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=240) as r:
+                d = json.loads(r.read().decode())
+            return d["choices"][0]["message"]["content"] or "", d.get("usage", {})
+        except Exception as e:                        # the message of an HTTP error never carries the key
+            print(f"[rd378k-teacher] try {i + 1} failed: {type(e).__name__} {str(e)[:120]}", flush=True)
+            time.sleep(2 ** (i + 1))
+    return "", {}
+[0m
+[0m$ [0mCOMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378k-20260926/SEAL-ADD-D.sha256.txt); echo "COMMIT=$COMMIT"; git show origin/main:artifacts/claude-rd378k-20260926/SEAL-ADD-D.sha256.txt; echo ---; git show origin/main:artifacts/claude-rd378k-20260926/SEAL-ADD-C.sha256.txt; echo ---; git show origin/main:artifacts/claude-rd378k-20260926/SEAL.sha256.txt
+COMMIT=5f938199bcc15f9f0740f26be4d52678635d8b06
+a6ea52dc7ccccb95d3396a31e99007fde9b8ffdb4e3fd3fa5bdd6ce2a8598e1a  artifacts/claude-rd378k-20260926/PASSMARKS-D.md
+a6d4843fda254b9b4e2b8f4e3e47822db4b5fb6f456c0167767049726c20576d  scripts/claude_lis300_train.py
+---
+6ca79efee36502af2701ec58f26884cf1a4998f9bbee5c1c8ffdd18772c4adb8  artifacts/claude-rd378k-20260926/PASSMARKS-C.md
+a8d46af115de43fe99f5ec703be8d9aca1d65642acd3eae0b8aaf6ae9d326935  scripts/claude_rd378k_teacher2.py
+---
+fc77cd0f0996b74a5c1ccfc131375024b26b1ae65c7f2919506bfb7ced832cab  artifacts/claude-rd378k-20260926/PASSMARKS.md
+86edf23c46df53e807baa36cff5ea74e55ad269aa0b1d3826425982c2fe1fe23  scripts/claude_rd378k_data.py
+244df45ae05103d507657b40b08b335a3e887791719608d4ea866e34103c82a9  scripts/claude_rd378k_teacher.py
+5eba422d1d4f156f75c125f95a2c1f1313c4621dd811118ec1c7c438fbc60119  scripts/claude_rd378k_score.py
+51ba27929a73d56c32585c3f11c030517b71070f3c429fc865e2bb4ef5e580b9  scripts/claude_rd378_common.py
+72a991c9ae430ba9996bcce1fcb0c12fdbcd9c314dfcdf3ae4a941e9e0ec8513  scripts/claude_rd378_write.py
+16e740c700cc3b74e74e517dfc86efd516bca65388798a3145f5ab27cf51af05  scripts/claude_rd371b_sample.py
+f813f6a058db50f06af5dd76f20d4f79d2fa01a3b8ea57a94b662fb82fa18b2d  scripts/claude_rd371b_common.py
+d9e4b3db4cacc6890ab4fc440a8bfa63739f42455c5114a7ab63f1bbe5ea1f1a  scripts/claude_lis300_train.py
+0e67f9b8b2077e7bcaed84cd1c4b3fd4f5c6529e6dabd6a5ae51c8ca92f1c98f  scripts/claude_rd378L_rebuild.py
+bcb1b793e609a0f44f34368703b9e4f382e75f5a1034f3893fd5c91e1e6b7e84  scripts/claude_rd378u_confirm.py
+6b9398c0e309b6cf15e1aa71a764e33782c5961b32c7f558cfdb879850c27987  scripts/claude_rd378L_recall.py
+a3c4ed9e03e4d1dc4f422fb13c5f9d47a1064d43fb5aaf8aa3c7437abadd91bb  scripts/claude_ep382_store_v2.py
+da1b4ab9dbbf53ef0ed2f0150b4bae0987540f5f4ffedffb197d1729f74bd30d  scripts/claude_ep382_store_v3.py
+43bb0e9e76066c40dab835493b0a581e11422ef1c105aa70c31c0b616c91a780  scripts/claude_ep382_store_v4.py
+c56a78e5e416b9cf7c33c1a0bbf97b3b42e3c4702a82455196a01b78924eb3f5  artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md
+[0m
+[0m$ [0mls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1 | head; pwd; git status --short | head -20
+bm391logs
+bm391rent.env
+bm391split
+e2e330tree
+gen_part6.py
+grade_b_part1_writer.py
+guard-296b
+guard-350
+k1e-teacher-c-UQfONj
+k1e-teacher-tVmTTH
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/train398r.json
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+[0m
+[0m$ [0mmkdir -p /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2b && COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378k-20260926/SEAL-ADD-D.sha256.txt); echo "COMMIT=$COMMIT"; git archive $COMMIT scripts artifacts/claude-rd378k-20260926 artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl | tar -x -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2b && echo EXTRACT_OK && ls -R /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2b/artifacts/claude-rd378k-20260926 | head -30
+COMMIT=5f938199bcc15f9f0740f26be4d52678635d8b06
+EXTRACT_OK
+gate
+glm
+PASSMARKS-B.md
+PASSMARKS-C.md
+PASSMARKS-D.md
+PASSMARKS.md
+SEAL-ADD-B.sha256.txt
+SEAL-ADD-C.sha256.txt
+SEAL-ADD-D.sha256.txt
+SEAL.sha256.txt
+teacher-log.txt
+VERIFY-gate.md
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2b/artifacts/claude-rd378k-20260926/gate:
+labels.jsonl
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2b/artifacts/claude-rd378k-20260926/glm:
+dialogs.jsonl
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL-ADD-C.sha256.txt 2>&1; echo "EXIT_C:$?"; shasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL-ADD-D.sha256.txt 2>&1; echo "EXIT_D:$?"; shasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL.sha256.txt 2>&1; echo "EXIT_SEAL:$?"
+artifacts/claude-rd378k-20260926/PASSMARKS-C.md: OK
+scripts/claude_rd378k_teacher2.py: OK
+EXIT_C:0
+artifacts/claude-rd378k-20260926/PASSMARKS-D.md: OK
+scripts/claude_lis300_train.py: OK
+EXIT_D:0
+artifacts/claude-rd378k-20260926/PASSMARKS.md: OK
+scripts/claude_rd378k_data.py: OK
+scripts/claude_rd378k_teacher.py: OK
+scripts/claude_rd378k_score.py: OK
+scripts/claude_rd378_common.py: OK
+scripts/claude_rd378_write.py: OK
+scripts/claude_rd371b_sample.py: OK
+scripts/claude_rd371b_common.py: OK
+scripts/claude_lis300_train.py: FAILED
+scripts/claude_rd378L_rebuild.py: OK
+scripts/claude_rd378u_confirm.py: OK
+scripts/claude_rd378L_recall.py: OK
+scripts/claude_ep382_store_v2.py: OK
+scripts/claude_ep382_store_v3.py: OK
+scripts/claude_ep382_store_v4.py: OK
+artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md: OK
+shasum: WARNING: 1 computed checksum did NOT match
+EXIT_SEAL:1
+[0m
+[0m$ [0mls artifacts/claude-rd378k-20260926/ 2>&1; ls artifacts/claude-rd378k-20260926/gate2 2>&1; echo "---"; ls scripts/claude_rd378k_teacher*.py 2>&1; ls ~/.config/openrouter/key 2>&1 | head -1; wc -l artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl 2>&1
+gate
+glm
+PASSMARKS-B.md
+PASSMARKS-C.md
+PASSMARKS-D.md
+PASSMARKS.md
+SEAL-ADD-B.sha256.txt
+SEAL-ADD-C.sha256.txt
+SEAL-ADD-D.sha256.txt
+SEAL.sha256.txt
+teacher-log.txt
+VERIFY-gate.md
+ls: artifacts/claude-rd378k-20260926/gate2: No such file or directory
+---
+scripts/claude_rd378k_teacher.py
+scripts/claude_rd378k_teacher2.py
+/Users/ben-hannan/.config/openrouter/key
+     120 artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl
+    1263 artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl
+    1383 total
+[0m
+[0m$ [0mtime uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378k_teacher2.py selftest 2>&1; echo "EXIT:$?"
+rd378k teacher2 selftest 1/1 ok
+uv run --offline --no-project --python 3.12 python -B  selftest 2>&1  0.05s user 0.02s system 75% cpu 0.094 total
+EXIT:0
+[0m
+[0m$ [0mtime uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378k_teacher2.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --out artifacts/claude-rd378k-20260926/gate2 2>&1; echo "EXIT:$?"
+[rd378k-teacher2] ta-d01 ok
+[rd378k-teacher2] ta-d05 ok
+[rd378k-teacher2] ta-d12 ok
+[rd378k-teacher2] ta-d13 ok
+[rd378k-teacher2] ta-d15 ok
+[rd378k-teacher2] ta-d17 ok
+[rd378k-teacher2] ta-d20 ok
+[rd378k-teacher2] tb-d01 ok
+[rd378k-teacher2] tb-d02 unparsed
+[rd378k-teacher2] tb-d04 ok
+[rd378k-teacher2] tb-d05 ok
+[rd378k-teacher2] tb-d08 unparsed
+[rd378k-teacher2] tb-d10 ok
+[rd378k-teacher2] tb-d17 ok
+[rd378k-teacher2] tb-d18 ok
+[rd378k-teacher2] tb-d20 unparsed
+[rd378k-teacher2] tb-d21 ok
+[rd378k-teacher2] tc-d01 ok
+[rd378k-teacher2] tc-d03 ok
+[rd378k-teacher2] tc-d05 ok
+[rd378k-teacher2] tc-d06 ok
+[rd378k-teacher2] tc-d07 ok
+[rd378k-teacher2] tc-d11 ok
+[rd378k-teacher2] tc-d16 ok
+[rd378k-teacher2] tc-d17 ok
+[rd378k-teacher2] tc-d21 unparsed
+[rd378k-teacher2] tc-d23 ok
+[rd378k-teacher2] td-d07 ok
+[rd378k-teacher2] td-d09 ok
+[rd378k-teacher2] td-d11 ok
+[rd378k-teacher2] td-d14 ok
+[rd378k-teacher2] td-d22 ok
+[rd378k-teacher2] te-d01 ok
+[rd378k-teacher2] te-d08 unparsed
+[rd378k-teacher2] te-d09 ok
+[rd378k-teacher2] te-d12 ok
+[rd378k-teacher2] te-d14 unparsed
+[rd378k-teacher2] te-d19 ok
+[rd378k-teacher2] te-d22 ok
+{"dialogs": 39, "labelled": 33, "unparsed": 6, "per_kind": {"chat": {"dialogs": 23, "unusable": 1}, "overheard": {"dialogs": 16, "unusable": 5}}, "calls": 74, "failed_calls": 27, "notes": 555, "ok": 296, "unsupported": 210, "bad_cite": 36, "bad_when": 2, "bad_form": 11, "cost_usd": 0.0324}
+uv run --offline --no-project --python 3.12 python -B  label --judge-in   3    0.57s user 0.25s system 0% cpu 8:53.01 total
+EXIT:0
+[0m
+[0m$ [0mtime uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378k_teacher.py agree --labels artifacts/claude-rd378k-20260926/gate2/labels.jsonl --verdicts artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl 2>&1; echo "EXIT:$?"
+{"compared": 555, "teacher_ok": 296, "judges_ok": 254, "both_ok": 233, "agree": 471, "kappa": 0.699, "judges_unsupported_teacher_ok": 35, "judges_unsupported": 252, "passes_label_rule": false}
+uv run --offline --no-project --python 3.12 python -B  agree --labels    2>&1  0.04s user 0.02s system 70% cpu 0.094 total
+EXIT:0
+[0m
+[0m$ [0mls -la artifacts/claude-rd378k-20260926/gate2/ 2>&1; wc -l artifacts/claude-rd378k-20260926/gate2/labels.jsonl artifacts/claude-rd378k-20260926/gate2/failures.jsonl 2>&1; head -3 artifacts/claude-rd378k-20260926/gate2/labels.jsonl 2>&1 | cut -c1-300
+total 72
+drwxr-xr-x   4 ben-hannan  staff    128 Sep 26 14:25 .
+drwxr-xr-x  15 ben-hannan  staff    480 Sep 26 14:16 ..
+-rw-r--r--   1 ben-hannan  staff  10120 Sep 26 14:25 failures.jsonl
+-rw-r--r--   1 ben-hannan  staff  22978 Sep 26 14:25 labels.jsonl
+     308 artifacts/claude-rd378k-20260926/gate2/labels.jsonl
+      27 artifacts/claude-rd378k-20260926/gate2/failures.jsonl
+     335 total
+{"dialog": "ta-d01", "t": 0, "verdicts": ["unsupported", "ok"], "missed": 0}
+{"dialog": "ta-d01", "t": 2, "verdicts": ["unsupported", "ok", "ok", "unsupported"], "missed": 0}
+{"dialog": "ta-d01", "t": 4, "verdicts": ["ok", "ok"], "missed": 0}
+[0m
+[0m$ [0mls artifacts/claude-rd378k-20260926/ 2>&1; ls artifacts/claude-rd378k-20260926/gate2 2>&1; echo "---worktree branch:"; git rev-parse --abbrev-ref HEAD; git status --short -- artifacts/claude-rd378k-20260926/ | head
+gate
+glm
+teacher-log.txt
+ls: artifacts/claude-rd378k-20260926/gate2: No such file or directory
+---worktree branch:
+claude/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mpython3 -c "import pathlib; files=['artifacts/claude-rd378k-20260926/gate2/labels.jsonl','artifacts/claude-rd378k-20260926/gate2/failures.jsonl']; print([(f, 'sk-or' in pathlib.Path(f).read_text()) for f in files])"
+[('artifacts/claude-rd378k-20260926/gate2/labels.jsonl', False), ('artifacts/claude-rd378k-20260926/gate2/failures.jsonl', False)]
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rd378k-20260926/teacher-log.txt | head -60; echo "..."; git show origin/main:artifacts/claude-rd378k-20260926/teacher-log.txt | wc -l
+{"compared": 4, "teacher_ok": 2, "judges_ok": 2, "both_ok": 1, "agree": 2, "kappa": 0.0, "judges_unsupported_teacher_ok": 1, "judges_unsupported": 2, "passes_label_rule": false}
+rd378k teacher selftest 3/3 ok
+[rd378k-teacher] ta-d01 ok
+[rd378k-teacher] ta-d05 ok
+[rd378k-teacher] ta-d12 ok
+[rd378k-teacher] ta-d13 ok
+[rd378k-teacher] ta-d15 ok
+[rd378k-teacher] ta-d17 ok
+[rd378k-teacher] ta-d20 ok
+[rd378k-teacher] tb-d01 ok
+[rd378k-teacher] tb-d02 unparsed
+[rd378k-teacher] tb-d04 unparsed
+[rd378k-teacher] tb-d05 ok
+[rd378k-teacher] tb-d08 ok
+[rd378k-teacher] tb-d10 ok
+[rd378k-teacher] tb-d17 ok
+[rd378k-teacher] tb-d18 unparsed
+[rd378k-teacher] tb-d20 unparsed
+[rd378k-teacher] tb-d21 ok
+[rd378k-teacher] tc-d01 ok
+[rd378k-teacher] tc-d03 ok
+[rd378k-teacher] tc-d05 ok
+[rd378k-teacher] tc-d06 unparsed
+[rd378k-teacher] tc-d07 ok
+[rd378k-teacher] tc-d11 ok
+[rd378k-teacher] tc-d16 unparsed
+[rd378k-teacher] tc-d17 ok
+[rd378k-teacher] tc-d21 ok
+[rd378k-teacher] tc-d23 ok
+[rd378k-teacher] td-d07 ok
+[rd378k-teacher] td-d09 ok
+[rd378k-teacher] td-d11 ok
+[rd378k-teacher] td-d14 ok
+[rd378k-teacher] td-d22 unparsed
+[rd378k-teacher] te-d01 ok
+[rd378k-teacher] te-d08 unparsed
+[rd378k-teacher] te-d09 ok
+[rd378k-teacher] te-d12 ok
+[rd378k-teacher] te-d14 unparsed
+[rd378k-teacher] te-d19 ok
+[rd378k-teacher] te-d22 unparsed
+{"dialogs": 39, "labelled": 29, "unparsed": 10, "calls": 66, "notes": 485, "ok": 269, "unsupported": 172, "bad_cite": 29, "bad_when": 1, "bad_form": 14, "cost_usd": 0.0301}
+LABEL_WALL=941 EC=
+{"compared": 485, "teacher_ok": 269, "judges_ok": 222, "both_ok": 215, "agree": 424, "kappa": 0.751, "judges_unsupported_teacher_ok": 30, "judges_unsupported": 216, "passes_label_rule": true}
+AGREE_WALL=0
+[rd378k-teacher] batch 0 ok (8 dialogs)
+[rd378k-teacher] batch 1 ok (16 dialogs)
+[rd378k-teacher] batch 2 ok (24 dialogs)
+[rd378k-teacher] batch 3 ok (32 dialogs)
+[rd378k-teacher] batch 4 ok (40 dialogs)
+[rd378k-teacher] batch 5 ok (48 dialogs)
+[rd378k-teacher] batch 6 ok (56 dialogs)
+[rd378k-teacher] batch 7 ok (64 dialogs)
+[rd378k-teacher] batch 8 ok (72 dialogs)
+[rd378k-teacher] batch 9 ok (80 dialogs)
+[rd378k-teacher] batch 10 ok (88 dialogs)
+[rd378k-teacher] batch 11 ok (96 dialogs)
+[rd378k-teacher] batch 12 ok (104 dialogs)
+[rd378k-teacher] batch 13 ok (112 dialogs)
+[rd378k-teacher] batch 14 ok (120 dialogs)
+...
+      68
+[0m
+[0m$ [0mpython3 -B -c "
+lines = [
+'rd378k teacher2 selftest 1/1 ok',
+'[rd378k-teacher2] ta-d01 ok',
+'[rd378k-teacher2] ta-d05 ok',
+'[rd378k-teacher2] ta-d12 ok',
+'[rd378k-teacher2] ta-d13 ok',
+'[rd378k-teacher2] ta-d15 ok',
+'[rd378k-teacher2] ta-d17 ok',
+'[rd378k-teacher2] ta-d20 ok',
+'[rd378k-teacher2] tb-d01 ok',
+'[rd378k-teacher2] tb-d02 unparsed',
+'[rd378k-teacher2] tb-d04 ok',
+'[rd378k-teacher2] tb-d05 ok',
+'[rd378k-teacher2] tb-d08 unparsed',
+'[rd378k-teacher2] tb-d10 ok',
+'[rd378k-teacher2] tb-d17 ok',
+'[rd378k-teacher2] tb-d18 ok',
+'[rd378k-teacher2] tb-d20 unparsed',
+'[rd378k-teacher2] tb-d21 ok',
+'[rd378k-teacher2] tc-d01 ok',
+'[rd378k-teacher2] tc-d03 ok',
+'[rd378k-teacher2] tc-d05 ok',
+'[rd378k-teacher2] tc-d06 ok',
+'[rd378k-teacher2] tc-d07 ok',
+'[rd378k-teacher2] tc-d11 ok',
+'[rd378k-teacher2] tc-d16 ok',
+'[rd378k-teacher2] tc-d17 ok',
+'[rd378k-teacher2] tc-d21 unparsed',
+'[rd378k-teacher2] tc-d23 ok',
+'[rd378k-teacher2] td-d07 ok',
+'[rd378k-teacher2] td-d09 ok',
+'[rd378k-teacher2] td-d11 ok',
+'[rd378k-teacher2] td-d14 ok',
+'[rd378k-teacher2] td-d22 ok',
+'[rd378k-teacher2] te-d01 ok',
+'[rd378k-teacher2] te-d08 unparsed',
+'[rd378k-teacher2] te-d09 ok',
+'[rd378k-teacher2] te-d12 ok',
+'[rd378k-teacher2] te-d14 unparsed',
+'[rd378k-teacher2] te-d19 ok',
+'[rd378k-teacher2] te-d22 ok',
+'{\"dialogs\": 39, \"labelled\": 33, \"unparsed\": 6, \"per_kind\": {\"chat\": {\"dialogs\": 23, \"unusable\": 1}, \"overheard\": {\"dialogs\": 16, \"unusable\": 5}}, \"calls\": 74, \"failed_calls\": 27, \"notes\": 555, \"ok\": 296, \"unsupported\": 210, \"bad_cite\": 36, \"bad_when\": 2, \"bad_form\": 11, \"cost_usd\": 0.0324}',
+'{\"compared\": 555, \"teacher_ok\": 296, \"judges_ok\": 254, \"both_ok\": 233, \"agree\": 471, \"kappa\": 0.699, \"judges_unsupported_teacher_ok\": 35, \"judges_unsupported\": 252, \"passes_label_rule\": false}',
+]
+open('artifacts/claude-rd378k-20260926/gate2/teacher-log.txt','w').write('\n'.join(lines)+'\n')
+print('wrote', len(lines), 'lines')
+"
+ls -la artifacts/claude-rd378k-20260926/gate2/; python3 -c "import pathlib; t=pathlib.Path('artifacts/claude-rd378k-20260926/gate2/teacher-log.txt').read_text(); print('sk-or' in t)"
+wrote 42 lines
+total 80
+drwxr-xr-x   5 ben-hannan  staff    160 Sep 26 14:25 .
+drwxr-xr-x  15 ben-hannan  staff    480 Sep 26 14:16 ..
+-rw-r--r--   1 ben-hannan  staff  10120 Sep 26 14:25 failures.jsonl
+-rw-r--r--   1 ben-hannan  staff  22978 Sep 26 14:25 labels.jsonl
+-rw-r--r--   1 ben-hannan  staff   1644 Sep 26 14:25 teacher-log.txt
+False
+[0m
+[0m$ [0mls artifacts/claude-rd378k-20260926/ | head -20
+gate
+glm
+teacher-log.txt
+[0m
+[0m$ [0mmkdir -p artifacts/claude-rd378k-20260926/gate2 && cp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2b/artifacts/claude-rd378k-20260926/gate2/labels.jsonl artifacts/claude-rd378k-20260926/gate2/labels.jsonl && cp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2b/artifacts/claude-rd378k-20260926/gate2/failures.jsonl artifacts/claude-rd378k-20260926/gate2/failures.jsonl && cp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2b/artifacts/claude-rd378k-20260926/gate2/teacher-log.txt artifacts/claude-rd378k-20260926/gate2/teacher-log.txt && ls -la artifacts/claude-rd378k-20260926/gate2/ && wc -l artifacts/claude-rd378k-20260926/gate2/* && git status --short -- artifacts/claude-rd378k-20260926/gate2/
+total 80
+drwxr-xr-x  5 ben-hannan  staff    160 Sep 26 14:25 .
+drwxr-xr-x  6 ben-hannan  staff    192 Sep 26 14:25 ..
+-rw-r--r--  1 ben-hannan  staff  10120 Sep 26 14:25 failures.jsonl
+-rw-r--r--  1 ben-hannan  staff  22978 Sep 26 14:25 labels.jsonl
+-rw-r--r--  1 ben-hannan  staff   1644 Sep 26 14:25 teacher-log.txt
+      27 artifacts/claude-rd378k-20260926/gate2/failures.jsonl
+     308 artifacts/claude-rd378k-20260926/gate2/labels.jsonl
+      42 artifacts/claude-rd378k-20260926/gate2/teacher-log.txt
+     377 total
+[0m
+[0m$ [0mgit status --short | head -30; echo ---; git diff --stat | head; echo ---; python3 -c "import pathlib; [print(f+':'+str('sk-or' in pathlib.Path(f).read_text())) for f in ['artifacts/claude-rd378k-20260926/gate2/labels.jsonl','artifacts/claude-rd378k-20260926/gate2/failures.jsonl','artifacts/claude-rd378k-20260926/gate2/teacher-log.txt']]"; cmp artifacts/claude-rd378k-20260926/gate2/labels.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2b/artifacts/claude-rd378k-20260926/gate2/labels.jsonl && echo LABELS_IDENTICAL; cmp artifacts/claude-rd378k-20260926/gate2/failures.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2b/artifacts/claude-rd378k-20260926/gate2/failures.jsonl && echo FAILURES_IDENTICAL
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/train398r.json
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+A  artifacts/claude-brd9-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd9-20260926/gpu/brd9_summary.json
+A  artifacts/claude-brd9-20260926/gpu/log.txt
+A  artifacts/claude-brd9-20260926/gpu/practice.json
+A  artifacts/claude-brd9-20260926/gpu/streams.json
+A  artifacts/claude-brd9-20260926/gpu/transfer_streams.json
+A  artifacts/claude-k1a-20260926/RESULTS-rent.md
+A  artifacts/claude-k1a-20260926/run/creative_B.jsonl
+---
+ artifacts/fable-predictions-ledger.md | 3 +++
+ 1 file changed, 3 insertions(+)
+---
+artifacts/claude-rd378k-20260926/gate2/labels.jsonl:False
+artifacts/claude-rd378k-20260926/gate2/failures.jsonl:False
+artifacts/claude-rd378k-20260926/gate2/teacher-log.txt:False
+LABELS_IDENTICAL
+FAILURES_IDENTICAL
+[0m
+[0m$ [0mgit status --short -- artifacts/claude-rd378k-20260926/gate2/; echo "EXIT:$?"; git check-ignore artifacts/claude-rd378k-20260926/gate2/labels.jsonl; echo "IGNORE_EXIT:$?"
+EXIT:0
+artifacts/claude-rd378k-20260926/gate2/labels.jsonl
+IGNORE_EXIT:0
+[0m
