@@ -12,10 +12,14 @@ Replies come as {"id", "reply", optional "hit_max", "think_closed"} (Benchmarks'
 The answer read from a reply is its FINAL grid: the last run of s consecutive lines that each hold exactly s numbers
 1..s ("Row k:", table bars, commas and blank lines inside the run are allowed; any other line ends a run). This
 skips echoed puzzles (they hold "_") and working rows shown before the answer. Every arm is scored the same way.
-Per kind: right (solve: the final grid is a valid solution; broken: a complete, non-empty reply with no final grid),
-wrong_grid (a final grid that is not a valid solution, or any final grid on a broken item), no_grid (solve item,
-nothing usable), and cut_off counts (reply hit the token cap or its thinking never closed; never right on a broken
-item, reported beside every score). A missing reply counts as no_grid / not right.
+Per kind: right (solve: the final grid is a valid solution; broken: a complete, non-empty reply with no attempted
+square, where an attempted square is s rows of s numbers even if some fall outside 1..s),
+wrong_grid (a final grid that is not a valid solution, or any attempted square on a broken item), no_grid (solve item,
+nothing usable), and cut_off counts (the reply hit the token cap: never right on any item, reported beside every
+score). think_closed is NOT a cut-off signal: the rival runner writes false for every thinking-off reply, and an
+unclosed thinking reply is already "" (not right). A missing reply counts as no_grid / not right.
+(Fix 2026-09-26 17:09 UTC, before any sealed panel: think_closed false marked every thinking-off reply cut off, so
+broken items could never be right; and a capped solve reply could still count right. Found on smoke 2.)
 
   python -B scripts/claude_rsn358b3_panel.py make --seed S --n N --sizes 5,6,7 [--broken-share 0.2] --out DIR
   python -B scripts/claude_rsn358b3_panel.py score --panel DIR --replies FILE.jsonl
@@ -71,18 +75,23 @@ def make_panel(seed, n, sizes, broken_share=0.2):
     return panel, answers
 
 
-def final_grid(text, s):
-    """the last run of s consecutive rows of exactly s numbers 1..s (see the module docstring)"""
+def final_grid(text, s, any_values=False):
+    """the last run of s consecutive rows of exactly s numbers 1..s (see the module docstring); any_values=True also
+    takes rows whose numbers fall outside 1..s (an attempted square, used for broken items)"""
     runs, cur = [], []
     for line in text.splitlines():
-        body = re.sub(r"^\s*(row\s*\d+\s*[:.)-]?)", "", line.replace("*", "").strip(), flags=re.I).strip("|` ")
-        if not body or re.fullmatch(r"[\s|:\-]+", body):            # blank lines and table rules keep a run going
-            continue
+        raw = line.replace("*", "").replace("\\\\", " ").replace("&", " ").strip()   # LaTeX array rows: & and \\
+        cols = [c.strip() for c in raw.strip("|").split("|")] if raw.startswith("|") else None
+        if cols and cols[0] == "" and [c for c in cols[1:] if c] == [str(i) for i in range(1, s + 1)]:
+            continue                                                 # a table header "| | 1 | 2 | ... |" keeps a run going
+        body = re.sub(r"^\s*(row\s*\d+\s*[:.)|-]?)", "", raw.lstrip("|` ").strip(), flags=re.I).strip("|` ")
+        if not body or re.fullmatch(r"[\s|:\-]+", body) or re.fullmatch(r"\\hline", body):
+            continue                                                 # blank lines and table rules keep a run going
         if "_" not in body and re.fullmatch(r"[\d\s,|;.\-]+", body):
             cells = [int(c) for c in re.findall(r"\d+", body)]
             if len(cells) == s + 1 and cells[0] == len(cur) + 1:    # a leading row-number column
                 cells = cells[1:]
-            if len(cells) == s and all(1 <= c <= s for c in cells):
+            if len(cells) == s and (any_values or all(1 <= c <= s for c in cells)):
                 cur.append(cells)
                 continue
         if cur:
@@ -107,11 +116,14 @@ def score_panel(answers, replies):
             r = {"reply": ""}
         elif isinstance(r, str):
             r = {"reply": r}
-        cut = bool(r.get("hit_max")) or r.get("think_closed") is False
+        cut = bool(r.get("hit_max"))
         res["cut_off"] += cut
         grid = final_grid(r["reply"], a["size"])
-        if a["kind"] == "broken":
-            if grid is not None:
+        tried = final_grid(r["reply"], a["size"], any_values=True)
+        if cut:
+            res["wrong_grid" if grid is not None else "no_grid"] += 1
+        elif a["kind"] == "broken":
+            if tried is not None:
                 res["wrong_grid"] += 1
             elif cut or not r["reply"].strip():
                 res["no_grid"] += 1
@@ -164,10 +176,27 @@ def selftest():
     assert final_grid(table, a0["size"]) == a0["sol"], table                                     # markdown table
     idx = "\n".join("| %d | " % (i + 1) + " | ".join(map(str, row)) + " |" for i, row in enumerate(a0["sol"]))
     assert final_grid(idx, a0["size"]) == a0["sol"]                                              # row-number column
+    hdr = "| | " + " | ".join(str(i) for i in range(1, a0["size"] + 1)) + " |\n|" + "---|" * (a0["size"] + 1) + "\n"
+    lab = hdr + "\n".join("| **Row %d** | " % (i + 1) + " | ".join("**%d**" % v for v in row) + " |" for i, row in enumerate(a0["sol"]))
+    assert final_grid(lab, a0["size"]) == a0["sol"], lab                                         # header + Row labels
+    num = hdr + "\n".join("| **%d** | " % (i + 1) + " | ".join(map(str, row)) + " |" for i, row in enumerate(a0["sol"]))
+    assert final_grid(num, a0["size"]) == a0["sol"], num                                         # header + bold index
+    tex = "$$\n\\begin{array}{|c|}\n\\hline\n" + "\n\\hline\n".join(" & ".join(map(str, row)) + " \\\\" for row in a0["sol"]) + "\n\\hline\n\\end{array}\n$$"
+    assert final_grid(tex, a0["size"]) == a0["sol"], tex                                         # LaTeX array
     b0 = next(a for a in answers if a["kind"] == "broken")
     r3 = score_panel([b0], {b0["id"]: {"reply": "No square works here.", "hit_max": True}})
     assert r3["broken%d" % b0["size"]]["right"] == 0, r3                                        # cut off: not right
     assert score_panel([b0], {})["broken%d" % b0["size"]]["right"] == 0                          # missing: not right
+    bad = "Here it is:\n" + "\n".join(" ".join(str(c + r + 2) for c in range(b0["size"])) for r in range(b0["size"]))
+    assert final_grid(bad, b0["size"]) is None and final_grid(bad, b0["size"], any_values=True) is not None
+    r7 = score_panel([b0], {b0["id"]: {"reply": bad, "hit_max": False}})
+    assert r7["broken%d" % b0["size"]]["right"] == 0, r7                                        # bad square attempted
+    r4 = score_panel([b0], {b0["id"]: {"reply": "No square works here.", "hit_max": False, "think_closed": False}})
+    assert r4["broken%d" % b0["size"]]["right"] == 1, r4                                        # thinking off: fine
+    r5 = score_panel([a0], {a0["id"]: {"reply": sol, "hit_max": True}})
+    assert r5["solve%d" % a0["size"]]["right"] == 0 and r5["solve%d" % a0["size"]]["cut_off"] == 1, r5  # capped
+    r6 = score_panel([a0], {a0["id"]: {"reply": sol, "hit_max": False, "think_closed": False}})
+    assert r6["solve%d" % a0["size"]]["right"] == 1, r6
     print("selftest ok", json.dumps(res))
 
 
