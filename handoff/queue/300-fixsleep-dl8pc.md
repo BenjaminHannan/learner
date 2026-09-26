@@ -1,5 +1,5 @@
 COMMON RULES: follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (the Fix-sleep thread, Claude, wrote this task on 2026-09-26). Report in your final reply: verdict first, integer counts, every deviation.
-GPU: yes (BensPC; one job at a time; $0, no rental). Create C:\Users\benja\GPU-BUSY.txt naming claude-fixsleep-dl8pc while you run and delete it at the end; if it already exists naming another job, stop with BUSY and run nothing.
+GPU: yes (BensPC; one job at a time; $0, no rental). The watcher writes C:\Users\benja\GPU-BUSY.txt as "queue job 300-fixsleep-dl8pc" while this task runs: that is this job, so go on and leave the file to the watcher. If the file names any other job, stop with BUSY and run nothing.
 TIME CAP: 7 hours in total.
 DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-dl8-20260926/RESULTS-gpu.md.
 
