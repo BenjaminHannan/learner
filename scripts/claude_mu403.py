@@ -57,7 +57,7 @@ def build_ground02c(state_dir, args):
         P.on_layer(C38B, "install_chat338b", make_ground, "ground")
         atexit.register(_report)
     loop = M402.build_null02c(state_dir, args)
-    _PICKERS.append(loop.pick403["ground"])
+    _PICKERS.append(loop.pick403_ground)
     loop.layers330c = list(loop.layers330c) + ["pick403:ground@chat338b"]
     if not _PRINTED:
         _PRINTED.append(1)

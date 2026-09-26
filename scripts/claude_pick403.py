@@ -24,7 +24,7 @@ that object would change three layers at once. on_layer() swaps only one layer's
   undo = on_layer(C333D, "install_creative333d", make_score, "k1c")        # creative only
 
 make_score(gen) is called once at install time with the layer's real writer (Gen338; its 1B is gen.g) and returns
-score_fn. Call on_layer before building the agent; the PickGen is kept at loop.pick403[tag] for its counts.
+score_fn. Call on_layer before building the agent; the PickGen is kept at loop.pick403_<tag> for its counts.
 
   python3 -B scripts/claude_pick403.py      (selftest, CPU, no model)
 """
@@ -87,12 +87,8 @@ def on_layer(module, installer: str, make_score, tag: str):
 
     def patched(loop, gen, *a, **k):
         p = PickGen(gen, make_score(gen), tag)
-        d = getattr(loop, "pick403", None)
-        if d is None:
-            d = {}
-            loop.pick403 = d
-        d[tag] = p
-        return orig(loop, p, *a, **k)
+        setattr(loop, f"pick403_{tag}", p)          # an attribute, never inside a dict/list on the loop: fix260's
+        return orig(loop, p, *a, **k)                # per-turn snapshot deep-copies plain containers (and the 1B)
 
     patched._pick403 = tag
     patched.__name__ = f"{installer}_pick403_{tag}"
@@ -152,7 +148,7 @@ def selftest() -> None:
     mod.install_chat(loop, shared)
     mod.install_cre(loop, shared)
     assert isinstance(seen["chat"], PickGen) and seen["cre"] is shared; ok += 1             # one layer only
-    assert loop.pick403["ground"] is seen["chat"] and made == ["one_b"]; ok += 1
+    assert loop.pick403_ground is seen["chat"] and made == ["one_b"]; ok += 1
     try:
         on_layer(mod, "install_chat", lambda gen: None, "k1c")
         raise AssertionError("second picker on one layer accepted")
