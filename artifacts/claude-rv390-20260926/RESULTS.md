@@ -12,6 +12,11 @@ CAVEAT: 358i's loop nets were probably trained with a torch 2.8 bug that left mo
 possibly undertrained loop nets. Comparisons within a net stay fair. The rental ran torch 2.11 for inference: its
 image had 2.2.1 with no 5090 kernels, so the builder upgraded the environment and left the code untouched.
 
+SCOPE (added 17:47 UTC by date -u, at the Thread manager's 17:44 ask): every verdict below covers 358i's four loop
+nets only. Getting stuck on a wrong answer may be a symptom of loop blocks that were barely trained, not of looping
+itself. So "start fresh by default" is PROVISIONAL. rv-390 is rerun unchanged on the retrained rsn-358i2 nets
+(ADDENDUM-358i2-rerun.md) before any default is set.
+
 ## Verdicts (hard grids7 puzzles: unfinished, and no round of the day's 48 accepted)
 
 | seed | hard | KEEP | RESTART | GUESS | KEEP - RESTART | GUESS - KEEP |
@@ -73,7 +78,8 @@ pencilled-in guess is like the new cue. This is suggested by textbook-level psyc
 untested.
 
 ## Next (fixed before the result in NOTE-fallback-before-result.md)
-- H proved wrong: the worker starts fresh by default. G passed: the worker writes guesses by default.
+- H proved wrong: the worker starts fresh by default, PROVISIONALLY, until the rerun on rsn-358i2 (see SCOPE). G
+  passed: the worker writes guesses by default, also provisionally.
 - So the next single change is RESTART + GUESS against RESTART: guesses written during each fresh 48-round start. It
   runs on a new day seed with the same hard-puzzle marks, on the retrained nets (rsn-358i2) if they exist.
 - Going back is then built on top of that, with the trigger rv-391's measurement picks.
