@@ -16,8 +16,10 @@ Ben's design, one path on every user turn:
   reasoner  the rsn-358b3 loop net. The grid reaches it through the disclosed code reader read_latin (P1; gr-1, the
             learned reader, is owed), and it stops by its disclosed stop rule (P3). Code checks the net's square against
             the square it read. The result goes to the talker as input; the reasoner never writes the reply.
-  talker    plain MiniCPM5-1B, greedy, enable_thinking off, the 336 plain twin's system line. The W input (y1f's L1
-            form, mu-405's W arm) is on every turn: every earlier user turn, oldest first, when they fit in
+  talker    plain MiniCPM5-1B, greedy, enable_thinking off, the 336 plain twin's system line. The W input (mu-405's W
+            arm: y1f's L1 header and 'User said' lines, but placed in the SYSTEM message, not in the user message as
+            y1f's L1 does, and with no QA prompt; mu-405 V405b: 4 of 60 stored-fact asks answered in this form;
+            placement follows mu-405b, ADDENDUM-35) is on every turn: every earlier user turn, oldest first, when they fit in
             CTX_CHARS02D characters, else the store's top K02D for this turn, oldest first. The last 6 (user, reply)
             pairs of this session are the chat messages.
   sleep     whatever recipe passes H-B, in its own form (SLEEP02D): an adapter, error-gated nights (dl-8) or a separate
