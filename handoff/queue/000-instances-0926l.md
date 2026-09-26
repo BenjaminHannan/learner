@@ -9,7 +9,7 @@ First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-
 - You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
 GPU: no (vast CLI only).
 
-YOUR TASK: vast instance check (director, 2026-09-26 20:05 UTC). Key only via $(cat ~/.config/vastai/vast_api_key), never printed.
+YOUR TASK: vast instance check (director, 2026-09-26 20:00 UTC). Key only via $(cat ~/.config/vastai/vast_api_key), never printed.
 1. `vastai show instances --raw`: every instance's id, label, actual_status, dph_total, start_date; `date -u`.
 2. If instance 52807320 (label claude-sleep-358t3, created by the director's 358t3 task, which has ended) still exists: `vastai destroy instance 52807320`, then show instances again and confirm it is gone. Destroy NOTHING else: not 52799251 (dl7b, running its job), not 52755827 (depot, stopped on purpose), not any instance whose label does not start with claude-sleep-358t3.
 3. `vastai show user --raw`: the credit number only.
