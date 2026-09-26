@@ -1,0 +1,2008 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git branch -r | head -20; git log --oneline origin/builder-outbox -5; echo ---; git log --oneline origin/main -5
+FETCH_EXIT:0
+  origin/HEAD -> origin/main
+  origin/builder-outbox
+  origin/builder-outbox-tmp
+  origin/chat-flags
+  origin/claude/card-experiment-handoff-7c5b27
+  origin/claude/model-architecture-review-0161ce
+  origin/claude/project-thread-0181x3
+  origin/claude/project-thread-h8jbxv
+  origin/claude/project-thread-p68q5v
+  origin/codex/testing-experiment-44
+  origin/main
+  origin/worktree-research
+cfe172b88 watcher status
+fb504fea3 watcher status
+31138f5f9 builder results: lis319f-ch403chk-mac
+1821da2a8 builder results: 000-republish-0926g
+f151091a7 watcher status
+---
+7278ad2e2 Goals page: Ben chose Next version for the always-on reasoner (rv-390 joins after 0.2d)
+1a5f2e37e 0.2d ADDENDUM-16: Ben's principles -> rows table; H-C always-on reasoner gate (rv-390, Memory for its own thoughts) pending Ben's card
+9ab8b349c Goals page: Ben 16:23 - first joined demo is small scale, principles only; always-on reasoner question open
+cb649dc0b sf-401 VERIFY: PASS on all six marks (judged wrong-as-fact A 8 -> B 2; edit right 21 -> 32; control unchanged), baseline only under the Redirect
+5a1d0b66d ledger: bmrivsmoke actual, bmrivsmoke2 $0.20
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-bmriv-smoke-20260926/ 2>&1; echo ---; git show origin/builder-outbox:artifacts/fable-predictions-ledger.md 2>&1 | tail -20
+artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+---
+- rent-brd7 GPU OUTCOME (2026-09-26, rented RTX 5090, label rent-brd7, origin/main code unmodified, selftest ok, panel md5 matched): registered verdict NOT SHOWN (W cov@30 158,158,146 vs base 135, deltas +23,+23,+11, bar +24=159 missed every seed; W-base CI [2.65,13.31] above 0 so not proved wrong; W-C deltas 130,125,119; 183 wins + 20 own so not inconclusive; N 99,89,96 and C 28,33,27 collapse). Instance 52734191 (RTX 5090 offer 44173814 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 60, rented 10:57:28Z, destroyed 11:27:06Z, ~0.494 h x dph $0.49444 = ~$0.24); 1 rental of max 3; post-destroy 0 rent-brd7 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128. Run wall 20.1 min. No weights saved. See artifacts/claude-brd7-20260926/RESULTS-gpu.md + gpu/.
+- rent-dl4 GPU OUTCOME (2026-09-26, label rent-dl4, origin/main code unmodified, selftest ok): NO REGISTERED VERDICT, HOST-LOST. Rental 1 contract 52746763 offer 46753304 RTX 5090 dph 0.4722 (docker registry proxy refused while loading, destroyed, ~$0). Rental 2 contract 52747127 offer 43165155 RTX 5090 dph 0.4722 (loading ~10 min, SSH refused, destroyed; deviation: kept ~10 min vs 6-min rule, host showed no error). Rental 3 contract 52748076 offer 43995364 KR RTX 5090 dph 0.4944 (image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 60, torch 2.8.0+cu128 CUDA True, transformers 5.17.0 installed, BASE openbmb/MiniCPM5-1B @87179e5c downloaded; run launched detached 12:54Z, observed anchor pool 880 items, base lucky 59 reached 37 greedy 4 harm_right 200, S s6 n1 lost 7 lucky 82 KL 0.037, S s6 n2 lost 10 lucky 98 KL 0.058, then SSH refused and the instance record vanished = destroyed externally, Director notes Mac-agent destroy ~$0.32 to Fix sleep). 3 rentals of max 3; nothing copied back (disk lost with host); post-check 0 rent-dl4 live. Credit at gate 7.2011843180698705. No code edits, no weights, no TEST-ONLY panel (test puzzles generated in-run, never printed). Ledger appended locally, not pushed (this worktree branch serves another task; no result files exist to push).
+- y1d GPU OUTCOME (2026-09-26, rented RTX 5090, label claude-memory-y1d, origin/main code unmodified, SEAL 8/8 OK, selftest ok): diagnosis on DEV (71 asks x gold/all/k20, 4 samples + 1 greedy, seed 4021): answerable_right gold|p382 3, all|p382 13, k20|p382 9 (greedy 0/5/5); never_told idk all 5/10 (p382) 9/10 (greedy), k20 8/10 (p382) 10/10 (greedy). D1: A_gold 3 < 20, reading is the bottleneck. D2: F = -10, finding costs nothing. D3: A_k20 9 < A_all-3 = 10, ranking costs 4. D4 guard cost gold 1, all 1, k20 0. Routing not met (A_all 13 < 25). Proved-wrong clause NOT triggered (A_all 13 > 10). Instance 52757085 (offer 45043246, image pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime disk 80, rented 13:55:31Z, destroyed 14:08:33Z, ~0.22 h x dph $0.469 = ~$0.10) + failed rental 52756144 (offer 46753297, host docker-registry proxy error in loading ~6 min, destroyed, ~$0.04); task total ~$0.14 of $0.40 budget, 2 rentals of max 4, run wall ~2 min; post-destroy 0 claude-memory-y1d live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM 1110a243f, torch 2.8.0+cu129, credit at gate 5.499236376269863. Copy-back sha256-verified 3 files. No weights saved. See artifacts/claude-y1d-20260926/RESULTS-gpu.md + gpu/.
+2026-09-26, claude-director-depot (reader depot for lis319), instance 52755827 (RTX 4070, $0.1136/hr), rented 13:45:36 UTC, verified done ~14:13 UTC (~0.46h, ~$0.05), LEFT RUNNING, sha e688e1b2 match 1/1, copy ~4min rental-to-rental, outcome DEPOT-READY
+- mu402 GPU OUTCOME (2026-09-26, label rent-mu402, origin/main code unmodified, SEAL 7/7 OK, SEAL-code 336 OK, selftest 7/7): RUN COMPLETE, V1 VALID (A adapter line = /root/adapter/adapter02c.pt, B = none; 402 rows x 80 items per arm A/B/T; medians ms A 1212.5 B 1104.1 T 926.1; walls min T 6.0 A 10.3 B 12.4). Rentals: 52756154 (5090 dph 0.4963, host docker-proxy dead, ~$0.04) + 52756713 (same proxy failure, ~$0.04) + 52757240 (success False husk, $0) + 52757517 (offer 45669386, 5090 dph 0.5037, ran 14:03:48Z-14:36:01Z ~0.53h ~$0.28); task total ~$0.36 of $1.00; 0 rent-mu402 live post-destroy. Deviations: scp-3 fallback via one mktemp dir (removed); tree spec missed artifacts/fable-self127-20260922 so first A/B crashed FileNotFoundError deltas127.json -> streamed that committed dir opaque+hash-verified, crash logs kept, A/B relaunched exact commands; B relaunch cwd bug once (fixed); exit codes numeric uncaptured (completion evidenced); score file is summary_chat.json. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, credit gate 5.499236376269863. Copy-back sha256-verified 7 files. No weights, no TEST-ONLY panel. See artifacts/claude-mu402-20260926/RESULTS-rent.md + run/.
+- rent-lis-319f GPU OUTCOME (2026-09-26, label rent-lis-319f, origin/main code unmodified, 6/6 seals 0 failures): RUN COMPLETE, M1-M3 pending judges (reading thread judges the pairs files). Panel former_as_current OLD 6 / NEW 0 (64 former items, 49 former rows, 240 rows, T 0.995; panel valid: 49>=30 rows, 6>=2 old saves); pairs OLD saved 125 exact 72 needs_judge 46 nomatch 7 pairs 47 / NEW saved 119 exact 76 needs_judge 42 nomatch 1 pairs 43 (gold 355); BUILD train 51244 dev 1461 (parsed-JSON-equal to dryrun); LENGTHS 0 over (train max 491 p99 320, dev max 382 p99 315); train 6406 steps 33.96 min 6753.9 tok/s batch 16 no-OOM device cuda; dev report: NEW dev_score turns 1461 pred_writes 659 wrong_turns 2 ms_median 748.2, dev_former NEW 3 vs OLD 27 (117 scored, saved_right 17 vs 1). Rentals: 52750756 (offer 46753304 host 410852, 5090 dph 0.4963, docker-proxy fail in loading past 6-min rule, destroyed ~13:17Z, ~0.11h ~$0.05) + 52751954 (offer 49024414 host 406325 KR, 5090 dph 0.5037, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 60...80, torch 2.8.0+cu128 CUDA True, rented 13:17:32Z running 13:19:05Z destroyed 15:04:43Z, 1.79h ~$0.90); task total ~$0.95 of $2.00 budget, 2 rentals of max 4; post-destroy 0 rent-lis-319f live. OLD reader e688e1b2 verified on rental (direct Mac rsync, BensPC fallback unused); NEW reader 970ef0ac sealed on rental and sha-matched on Mac before destroy. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, credit at gate 6.749200177269863. Deviations: 4 design text files + lis319 dev_pred.jsonl streamed to rental (TREE list omits seal/score inputs); peft 0.21.0 pip-installed; pairs scorer re-run CPU-only byte-identical. No code edits, no weights pushed, no panel text quoted. See artifacts/claude-lis319f-20260926/RESULTS-rent.md.
+- claude-sleep-358b2 GPU OUTCOME (2026-09-26, label claude-sleep-358b2, origin/main code unmodified, SEAL-code 6/6 OK, selftest ok): RUN COMPLETE, verdict INCONCLUSIVE (B0 validity not met at any size: copy_exact 25/39/28 vs >=80/100; a copying problem). Per size (n=100, seed 35900): 5x5 A 0/0/100 B 19/73/8 stages 25/63/27/27/21 C 100/0/0 rounds 9.05; 6x6 A 0/0/100 B 30/63/7 stages 39/57/37/37/31 C 95/0/5 rounds 5.21; 7x7 A 0/0/100 B 13/78/9 stages 28/66/22/22/13 C 71/0/29 rounds 6.21. B1 not met (+30/+13, need +40 on 6 and 7); B2 met (8/7/9 <= 100); proved-wrong clause N/A (B0 unmet). Instance 52766179 (offer 45520225, RTX 5090, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 60, torch 2.8.0+cu128, transformers 5.17.0, numpy 2.3.2, rented 15:01:21Z destroyed 15:09:35Z ~0.137h x dph $0.49444444 = ~$0.07 of $0.40); 1 rental of max 3; post-destroy 0 claude-sleep-358b2 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc (HF download on rental); loop-s1 final.pt sha c9f4934f... (25764244 B) verified both ends. Credit at gate 6.236215526269859 (gate: none). Copy-back sha256-verified 5 files. No code edits, no weights pushed. See artifacts/claude-rsn358b2-20260926/RESULTS.md + run/.
+- rent-brd8 GPU OUTCOME (2026-09-26, label rent-brd8, origin/main code unmodified, selftest ok): RUN COMPLETE, verdict NOT SHOWN for compounding, G7 MET (ITER cov@30 143/161/166 vs CTRL 152/152/167 vs base 108 of 240; per-seed ITER-CTRL -9/+9/-1, need +12 each; CI ITER-CTRL [-3.96,+3.33] not above 0, upper 3.33% = 8 puzzles of 240, not below 6-puzzle proved-wrong bar; ITER-base +35/+53/+58, need +24 each, CI [+14.66,+25.65]; round-1 wins 165; ITER round-2 wins 200/215/185 vs CTRL 171, posed). Rentals: 52750932 (offer 43165147 US, 5090 dph 0.4722, stuck loading past 6-min rule, destroyed ~13:18Z, ~0.10h ~$0.05) + 52752114 (offer 52583402 RO, 5090 dph 0.47, ran 13:23Z-~14:20Z, host died mid-seed-1 exited/stopped, restart queued-unavailable, destroyed, ~1.0h ~$0.47) + 52761669 (offer 45669213 KR, 5090 dph 0.4944, ran 14:32Z-15:05Z script 31.2 min, destroyed 15:13Z, ~0.72h ~$0.36); task total ~$0.88 of $1.00 budget, 3 rentals of max 3; post-destroy 0 rent-brd8 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, credit at gate 6.67843962726986. Copy-back 4 files (brd8_summary.json, streams.json, practice.json, log.txt). No code edits, no weights. See artifacts/claude-brd8-20260926/RESULTS-gpu.md + gpu/.
+- 2026-09-26 15:15 UTC claude-notes-rd378L (rd-378L): RTX 5090 rental 52757951 (~1.16h x $0.4944 = ~$0.58) + loading-only 52756139/52757075 (worst-case ~$0.11 if vast bills loading; two success:False creates 52757822/52757917 destroyed, $0). Total <= ~$0.69 of $1.80 BUDGET. Outcome: WRITE-FAIL, nothing scored. transformers==5.17.0 hard-imports torchvision at image_utils.py:54, and the mandated torch==2.11.0 upgrade left the image's torchvision 0.23.0 ABI-broken (torchvision::nms does not exist), so LlamaConfig is unimportable and the sealed writer cannot load; peft==0.21.0 also unimportable (needs BloomPreTrainedModel, removed in transformers 5.x), so the rebuild path failed too. Writer reached rental via Mac rsync fallback (sha dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510 OK) but could not run. Copied back before destroy: dialogs.jsonl (2760 turns, sha 82b56b441abd57fb88b1e5076ceb3be209c7ea5e2b02d301fd6d7fdf467677f9) + setup/rebuild/write/data/selftest logs to ~/rd378L-private/ (outside git). No RESULTS.md/notes_recall.json/ranked_turns.jsonl created (retry not blocked).
+- 2026-09-26 15:33 UTC 0.2d-r rent (label claude-monthend-02dr, code unmodified, R0 refusal ok, SEAL-code 347/347 OK, SEAL-02dr 3/3 OK, bankD SEAL 3/3 OK, selftest 9/9): RUN COMPLETE. X' 816 rows 40 lives (0.2c X: 953/40); Tr 658 rows 40 lives. Score mechanical: X RIGHT 77 / ABSTAIN 99 ms 955.5/1800.5; G RIGHT 53 / ABSTAIN 109 ms 1515.5/2491.7; T RIGHT 28 / ABSTAIN 42 ms 906.5/1318.6; Tr RIGHT 23 / ABSTAIN 52 ms 473.2/718.5 (Tr never_told RIGHT 13 vs T 12, edit RIGHT 0 vs 3). Instance 52763487 (RTX 5090, offer 49024471, dph 0.5037, 14:42:02Z-15:33:30Z ~0.86h ~$0.43 of $0.80); 1 rental of max 4; post-destroy 0 claude-monthend-02dr live. Reader depot 52755827 read-only (~12 min depot-to-rental incl. flatten, sha e688e1b2 match); adapter a33211dc match. Deviations: ep382_X.jsonl and sleep_Tr.jsonl never written; ssh launch client-timeouts (server processes ok, each launched once); dph actual vs estimate. Copy-back 24 files sha-verified. No weights, no TEST-ONLY panel. See artifacts/claude-e2e02dr-20260926/RESULTS-rent.md + run/ + score/ + score-machine/ + logs/.
+- 2026-09-26 15:38 UTC claude-benchmarks-bmrivsmoke (Benchmarks bm-riv smoke, origin/main code unmodified, panel seal da7202db ok, selftest 12/12): BUDGET-STOP (killed at ~$0.257, final ~$0.261 of $0.30; would have breached $0.27). Finished: plain1b 30 rows, qwen2b 30 rows. Killed (exit 143, rows kept): lfm12b 10 rows, qwen2b_think_s0/s1/s2 6 rows each; merge skipped. Rentals: 52766147 (offer 52652212, 4090 dph 0.43437, created 15:01:12Z, SSH key-sync fail incl. fresh attached key, destroyed ~15:10:10Z, ~0.15h ~$0.065) + 52767389 (offer 39064492, 4090 dph 0.42222, image pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime disk 80, torch 2.8.0+cu129 transformers 5.17.0 py 3.11.13, created 15:10:22Z running 15:16:32Z lanes 15:19:17Z killed 15:36:48Z destroyed 15:38:15Z, ~0.46h ~$0.196); task total ~$0.261 of $0.30 budget, 2 rentals of max 4; post-destroy 0 claude-benchmarks-bmrivsmoke live. Credit at gate 6.303551406269861. Copy-back 6 files sha-verified. Peak GPU mem 16926/24564 MiB. No code edits, no traceback, no replies quoted. See artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md + run/.
+- mu404+mu403 GPU OUTCOME (2026-09-26, label claude-madeup-mu404, no code run, nothing copied): HOST-FAIL, 0 of 4 arms launched, 0 rows. Rentals: 52768279 (offer 43165153 US, 5090 dph 0.4060, loading ~0.10h docker-registry proxy refused, destroyed, ~$0) + 52769227/52769253 (success:False husks, $0) + 52769291 (offer 45043241 KR, 5090 dph 0.5037, running ~0.06h but ssh reverse-tunnel dead + all keys denied incl. after reboot, destroyed, ~$0.03) + 52770417 (offer 46753295 US, 5090 dph 0.4060, loading ~0.14h same proxy refusal, destroyed, ~$0); task total ~$0.03 of $1.00 budget, 3 live rentals of max 3 (+2 stillborn husks); post-destroy 0 claude-madeup-mu404 live. Gates: credit 4.87558057626984, duplicate 0/0, depot 52755827 running sha-match. Deviations: 5 creates vs max-3 (3 live + 2 husks); credit not re-checked before re-rents; no run/ outputs; reboot tried once; fresh ssh key id 1438174 left on account. Depot untouched, no weights, no TEST-ONLY panel. See artifacts/claude-mu403-20260926/RESULTS-rent.md (no run/ dir).
+- rent-dl4: KL-anchor week GPU run (verdict FAIL; F3-F5 pass, F1-F2 fail; proved-wrong false) + ledger line (2026-09-26, label claude-fixsleep-dl4b, origin/main code unmodified, selftest ok, sealed files byte-identical across a main move mid-run). Base TEST lucky 59/reached 37/greedy 4, HARM right 200/300, pool 880. Final lost K 6,19 (sum 25) vs S 16,17 (sum 33): F1 needs <=16.5 and each K < each S, FAIL. K nights lost>10: 4 of 14 (all K s7 n4-7), FAIL. F3: K final 208,298 >= 118 each, gain 388 >= 0.8x419=335.2, PASS. F4: 0 worse nights, PASS. F5: reached 64,59 >= 37, PASS. KL night-7 K 0.035/0.031 vs S 0.175/0.186. Rentals: 52756261 (offer 46753293 US 5090 dph 0.4963, image-pull proxy failure, ~$0.09) + 52757337 (offer 43165150 US same host, same failure, ~$0.08) + 52758310 (offer 48989650 KR 5090 dph 0.5037, ran 14:06Z-15:44Z 84.7 min, $0.823); task total ~$0.99 of $1.20, 3 rentals of max 3; post-destroy 0 claude-fixsleep-dl4b live. Credit at gate 5.487064616269862. Copy-back 3 files (dl4_results.json, anchor_pool.json, log.txt). No code edits, no weights. See artifacts/claude-dl4-20260926/RESULTS-gpu.md + gpu/.
+- 2026-09-26 15:52 UTC claude-creativechat-k1a (k1a/k1b registered run, origin/main code unmodified, SEAL-k1a all-OK, SEAL-code present-OK, panel seal OK, k1a 7/7 k1b 5/5 k1ab 4/4 mu402-selftest 7/7, DEV K+KB 3/3 exit 0, V1 all-pass): RUN COMPLETE. Six arms x 60 items (X/K/B/KB/KB0/T), exits 0 by 60/60+outputs+no-traceback, wall min X4.10 K5.08 B5.12 KB5.07 KB0 4.77 T2.88, ms-median X1393.3 K1672.2 B1845.8 KB1764.4 KB0 1714.6 T1049.9. Scorers exit 0: score items60 msgs120 distinct115; dedupe lines360 distinct206 shared84. Instance 52768302 (offer 39998394, RTX 5090, dph 0.496296, 15:15:49Z-~15:52:15Z ~0.607h ~$0.30 of $0.80); 1 rental of max 3; post-destroy 0 claude-creativechat-k1a live. Credit at gate 0 (auto-refill). Duplicate gate 0/0. Copy-back 21 files sha-verified. Deviations: scp-3 port conflict -> one Mac mktemp (removed by exact path); transformers5.17 vs image torch2.2.1 -> torch2.11.0+cu128 + torchvision0.26.0+cu128 + torchaudio2.11.0+cu128 (no code edits); 6-arm launch split across ssh calls after client timeout (each arm once); exit codes inferred; dph actual vs estimate. No weights, no TEST-ONLY panel opened, no replies quoted. See artifacts/claude-k1a-20260926/RESULTS-rent.md + run/.
+- 2026-09-26 15:58 UTC rent-sf401: THE REGISTERED RUN of sf-401 (stale-fact guard), A=build_02c+lis319 reader, B=A+guard, 24 lives each on sealed correction panel. Instances 52760159+52761301 (6-min-rule destroys) + 52762309 (RTX 5090, 2.35 h x $0.4944 = $1.16); whole-task ~$1.27 of $1.50. A rows=747, B rows=759; WRONG_CANDIDATE A 23 / B 13 (edit 9 / 3); guard fired 17 (confirm 17). M1-M6 pending judges.
+- 2026-09-26 15:58 UTC rent-ch403 (label claude-everydaychat-ch403, origin/main code unmodified, SEAL-code 347/347 OK, SEAL-ch403 13/13 OK, panel seal items.jsonl OK, ch403 11/11, run selftest 6/6, ch404 9/9, readersha 9/9, sleep02c 9/9): DEV-FAIL (X403 events_on_non_teach 6 vs bar 0; dont_know 5/6; c403 released 22 + pretend_handed 2 = 24; X identical 6 events so not from the change; 336 rows/arm, ms-median X 1737.8 / X403 1835.3). Panel unused, 6b skipped. Rentals: 52759906 (offer 46753307 5090 dph 0.4770, registry-proxy loading fail, ~0.11h ~$0.052) + 52761064 (offer 43165153 same fail, ~0.11h ~$0.052) + 52761986 (success:false husk, $0) + 52761993 (offer 49006813 5090 dph 0.4963, 14:34:43Z-15:57:32Z ~1.38h ~$0.685); task total ~$0.79 of $1.60, 4 creates of max 4; post-destroy 0 claude-everydaychat-ch403 live. Credit at gate 4.247095086269866. Depot 52755827 read-only (2 failed copies: dest parent missing; 3rd ok ~2min, flattened, sha e688e1b2 match); adapter BensPC stream sha a33211dc match; BASE commit 87179e5c match; self122_head 5ca02173 match; reasoner base bc44f919 (differs from 0.2c 4655b761, reported). Deviations: rental env fixes only (torch 2.14.0+cu130, torchvision 0.29.0, torchaudio 2.11.0, gcc; no code edits); task step-1 list missed runtime data (self127 dir, nameval171b + 472-file set streamed rental-only); 4 pre-gate DEV attempts crashed on env/data (tracebacks in RESULTS). Copy-back 8 files sha-verified (dev/ + run/logs/). No weights, no TEST-ONLY panel opened, no replies quoted. See artifacts/claude-ch403-20260926/RESULTS-rent.md + run/ + dev/.
+- 2026-09-26 16:01 UTC rent-y1f actual ~$0.23 (2x ~$0.04 stuck hosts with docker-registry proxy error + rental 3 ~$0.14, RTX 5090, ~3 min run, 71 asks, winner L0|p382 15/56 NO-GO) of Answering-from-memory's $2 ($0.30 cap).
+- 2026-09-26 16:06 UTC depot319f (lis-319f reader upload to claude-director-depot 52755827): scp fallback (depot /usr/bin/rsync is 0-byte stub, 6 rsync attempts exit 126; scp 2 attempts, 1 drop + 1 clean ~32 min, ~46 min wall), 6/6 files byte-match, sha 970ef0ac match 1/1, /root/reader319 untouched (0 writes), depot LEFT RUNNING, $0 rent this task, outcome DEPOT-319f READY. See artifacts/claude-depot319f-20260926/REPORT.md.
+- 2026-09-26 16:17 UTC rent-q404 STOPPED by owner (Redirect); instance 52775380, 0.14 h, $0.07; partial output kept, not scored.
+- 2026-09-26 17:00 UTC rent-dl6 HOST-FAIL (label claude-fixsleep-dl6): 0 nights run, 0 marks; rental 1 (52771530, RTX 5090, $0.448/hr) + rental 2 (52772278, RTX 5090, $0.406/hr) both died on host docker-registry proxy error (connection refused to 127.0.0.1:7890), rental 3 (52773184, RTX 5090 KR, $0.485/hr) stuck loading ~30 min then destroyed; all 3 destroyed, none running; failed-host spend roughly ~$0.15-0.40 of the $0.80 cap; code never edited, nothing pushed.
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/330-rent-kit.md > /tmp/kit.md; wc -l /tmp/kit.md; git show origin/main:handoff/queue/rent-bmrivsmoke.md > /tmp/rentsetup.md; wc -l /tmp/rentsetup.md; git show origin/main:artifacts/claude-bmriv-smoke-20260926/README.md > /tmp/readme.md; wc -l /tmp/readme.md; git show origin/main:artifacts/claude-bmriv-smoke-20260926/NOTES-smoke1.md > /tmp/notes.md; wc -l /tmp/notes.md; echo OK
+59 /tmp/kit.md
+      29 /tmp/rentsetup.md
+      26 /tmp/readme.md
+      35 /tmp/notes.md
+OK
+[0m
+[0m→ [0mRead /tmp/kit.md
+[0m→ [0mRead /tmp/rentsetup.md
+[0m→ [0mRead /tmp/readme.md
+[0m→ [0mRead /tmp/notes.md
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- handoff/queue/ | grep bmriv; echo ---; git ls-tree -r --name-only origin/main -- scripts/claude_bmriv_rivals.py artifacts/claude-panel-rsn358b3-smoke-20260926/ artifacts/claude-bmriv-smoke-20260926/ 2>&1; echo ---; git show origin/main:artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md 2>&1 | head -60
+handoff/queue/rent-bmrivsmoke.md
+handoff/queue/rent-bmrivsmoke2.md
+---
+artifacts/claude-bmriv-smoke-20260926/NOTES-smoke1.md
+artifacts/claude-bmriv-smoke-20260926/README.md
+artifacts/claude-panel-rsn358b3-smoke-20260926/answers.jsonl
+artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl
+scripts/claude_bmriv_rivals.py
+---
+fatal: path 'artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md' exists on disk, but not in 'origin/main'
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/rent-bmrivsmoke2.md 2>&1; echo ===END===; git show origin/builder-outbox:artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md 2>&1 | head -80
+COMMON RULES (the Benchmarks thread, Claude, wrote this task on 2026-09-26 at 16:23 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/<branch>:<path>` (your worktree is NOT up to date). Follow ALL of origin/main:design/v3/30-modes/330-rent-kit.md (stream only the listed paths, never stage a tree on the Mac, reliability >= 0.98, the 6-min start rule, the 10-min no-log watchdog, copy back BEFORE destroy, destroy and confirm, ledger line), plus: additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: every result line asked for, integer counts, every deviation. ONLY the Benchmarks thread or the Director may stop or destroy claude-benchmarks-bmrivsmoke2. This job does NOT need READER, self122_head.pt, MiniLM or the route122 check.
+GPU: rent
+DISK: 1
+BUDGET: $0.20 for this whole task, re-rents included, from the Benchmarks thread's $2 (Ben, 12:59 UTC 09-26; $1.50 on rent-bm398r and $0.261 spent on rent-bmrivsmoke; the Director keeps the ledger and may lower this). Label: claude-benchmarks-bmrivsmoke2. The cheapest RTX 4090 or 5090 that passes the kit's filter.
+TIME CAP: 30 min on the rental in total. At it, stop every command still running (kill by exact PID), copy back what exists (rows are written as they finish), destroy, and report which commands finished.
+CREDIT GATE (first): `vastai show user --raw` and report ONLY the balance/credit number. Under $0.20: rent nothing, stop with CREDIT-STOP (vast auto-refills; the gate only guards this cap). Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+MONEY RULE: keep the kit's running total. At $0.18 spent, stop every command still running (kill by exact PID), copy back what exists, destroy, stop with BUDGET-STOP and list which commands finished.
+DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox has artifacts/claude-bmriv-smoke-20260926/run2 or artifacts/claude-bmriv-smoke-20260926/RESULTS-rent2.md, or `vastai show instances` shows a live instance labelled claude-benchmarks-bmrivsmoke2.
+
+YOUR TASK: smoke run 2, not a registered experiment. The first smoke run (RESULTS-rent.md on builder-outbox) showed that a 512-token cap cuts every rival off before its final answer. This run gives three rival arms 4,096 new tokens on 8 of the 30 SMOKE panel items (seed 36000; NOT a test panel) so Sleep research can check its scorer on whole replies. Read origin/main:artifacts/claude-bmriv-smoke-20260926/README.md and NOTES-smoke1.md. The Benchmarks thread wrote all code: run it, never edit it. If something breaks, copy back what exists, destroy, report the exact error and full traceback. Nothing is trained. Print counts only; do not quote replies in the report.
+
+SETUP (the ONLY downloads and uploads allowed): exactly as origin/main:handoff/queue/rent-bmrivsmoke.md's SETUP (same streamed paths, the kit's pip line only, the same three pinned snapshot_download revisions giving BASE, Q2DIR, L12DIR, then HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1). PANEL = artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl, OUT = artifacts/claude-bmriv-smoke-20260926/run2 (a NEW folder in the tree).
+
+STEPS
+1. `sha256sum PANEL` must be da7202db858cee9537acbb4d40d2316921673e00cf27a19a60ef09c1973012e7, and `python -B scripts/claude_bmriv_rivals.py selftest --tok BASE` must end "BMRIV-SELFTEST PASS 12/12". Else destroy, stop with SEAL-MISMATCH, report the failing lines.
+2. Start these three lanes together, each a fresh process with its own log (R = `python -B scripts/claude_bmriv_rivals.py run --panel PANEL --out OUT --max-new 4096 --shard 1/4`):
+   Lane 1: `R --model BASE --name plain1b_4k`. Lane 2: `R --model Q2DIR --name qwen2b_4k`. Lane 3: `R --model L12DIR --name lfm12b_4k`.
+   Each run ends with one JSON line (counts only). Report every line verbatim, with exit code and start/end time (UTC).
+3. Copy back OUT (all files) to the Mac, check sizes and sha256 match the box, THEN destroy, confirm with vastai show instances, append the ledger line (cat >>).
+4. RESULTS-rent2.md (a NEW file) in artifacts/claude-bmriv-smoke-20260926/, counts only: credit number; the panel hash and selftest result; torch, transformers and python versions; GPU; the three model paths; every JSON line from step 2 with exit codes and times; the row count and sha256 of every OUT file; peak GPU memory seen; instance id(s), hours, dph, dollars; any traceback in full.
+PUSH (builder-outbox): artifacts/claude-bmriv-smoke-20260926/RESULTS-rent2.md artifacts/claude-bmriv-smoke-20260926/run2 artifacts/fable-predictions-ledger.md
+zsh:1: ==END=== not found
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show user --raw 2>&1 | head -5; echo ===; vastai show instances 2>&1 | head -40
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+zsh:1: == not found
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show user --raw
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 8.83074058626977,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+ "discord_id": null,
+ "email": "benjamin.a.hannan@gmail.com",
+ "email_verified": true,
+ "fullname": null,
+ "got_signup_credit": 0,
+ "has_billing": true,
+ "has_payout": false,
+ "has_rented": true,
+ "has_stripe_payout": false,
+ "host_agreement_accepted": false,
+ "host_only": false,
+ "huggingface_cloud_sync_enabled": true,
+ "id": 553012,
+ "is_subject_to_unpaid_deletion": false,
+ "key_id": 28637247,
+ "last4": null,
+ "oauth_provider": "google",
+ "paid_expected": 0.0,
+ "paid_verified": 0.0,
+ "password_resettable": null,
+ "payout_enabled": true,
+ "paypal_email": null,
+ "phone_number": null,
+ "rights": {
+  "api": {
+   "*": {
+    "api.auth.apikeys": {
+     "GET": {}
+    },
+    "api.auth.sessions": {
+     "GET": {}
+    },
+    "api.hubspot.newsletters": {
+     "GET": {}
+    },
+    "api.instances": {
+     "GET": {}
+    },
+    "api.instances.count": {
+     "GET": {}
+    },
+    "api.instances_v1": {
+     "GET": {}
+    },
+    "api.ssh.keys": {},
+    "api.team": {
+     "POST": {}
+    },
+    "api.template": {
+     "GET": {}
+    },
+    "api.template.params": {
+     "GET": {}
+    },
+    "api.template_v1": {
+     "GET": {}
+    },
+    "api.user.created_templates": {
+     "GET": {}
+    },
+    "api.user.save_context": {
+     "PUT": {}
+    },
+    "api.user.verify-email": {
+     "POST": {}
+    },
+    "api.users.crisp-identity": {
+     "GET": {}
+    },
+    "api.users.current": {
+     "GET": {}
+    },
+    "api.users.root": {
+     "GET": {}
+    }
+   },
+   "billing_read": {},
+   "billing_write": {},
+   "instance_read": {},
+   "instance_write": {},
+   "misc": {},
+   "user_read": {},
+   "user_write": {}
+  }
+ },
+ "sid": 1,
+ "ssh_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGsaSCgGiDJAKKDkM5DvmPV6D+avvzeBfi7Dz+H5s7e4 vast-training\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICnYSZnoTma419UtHDuRQsNq29uzJowmyfJu69xas517 ben@paynycfines.com\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP9dJBti4tqQ0olFaUTOCt4O6OHddZy0gwPoYaXuGKE9 rent-336b\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ7St3PlitESWp4VCS6zugx7K8P93SF+JgYtt+cobu2B rent-bm395\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILpK1RJmmgVC2xsIwTVkgPcg56IcW5IKsSrWgJFynPYF bmrivsmoke\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILw9KdbLBbofYbC4VQyVl+NtjSAY3jCsMP06NEIJ3GjD mu404",
+ "tfa_login": false,
+ "tfa_status": "disabled",
+ "total_spend": -71.16925941373023,
+ "username": "benjamin.a.hannan@gmail.com",
+ "wise_email": null
+}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw
+[
+ {
+  "actual_status": "running",
+  "bundle_id": 418554589,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 890,
+  "country_code": "US",
+  "cpu_arch": "amd64",
+  "cpu_cores": 64,
+  "cpu_cores_effective": 5.333333333333333,
+  "cpu_name": "AMD EPYC 7452 32-Core Processor",
+  "cpu_ram": 257597,
+  "cpu_util": 0.0,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.1,
+  "cuda_max_good": 12.2,
+  "cur_state": "running",
+  "direct_port_count": 66,
+  "direct_port_end": -1,
+  "direct_port_start": 65535,
+  "disk_bw": 3739.0,
+  "disk_name": "nvme",
+  "disk_space": 25.0,
+  "disk_usage": 4.099999904632568,
+  "disk_util": 4.099999904632568,
+  "dlperf": 33.73777018282411,
+  "dlperf_per_dphtotal": 296.958368357376,
+  "dph_base": 0.10666666666666667,
+  "dph_total": 0.11361111111111112,
+  "driver_version": "535.154.05",
+  "duration": 9668.884499788284,
+  "end_date": 1791572440.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 259.9587990220049,
+  "geolocation": "Washington, US",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 0.08333333333333333,
+  "gpu_lanes": 8,
+  "gpu_mem_bw": 439.3,
+  "gpu_name": "RTX 4070",
+  "gpu_ram": 12282,
+  "gpu_temp": 31.999969,
+  "gpu_totalram": 12282,
+  "gpu_util": 0.0,
+  "has_avx": 1,
+  "host_id": 86202,
+  "host_run_time": 2592000.0,
+  "hosting_type": null,
+  "id": 52755827,
+  "image_args": [],
+  "image_runtype": "ssh_proxy",
+  "image_uuid": "ubuntu:22.04",
+  "inet_down": 811.5,
+  "inet_down_billed": 4267554.761992,
+  "inet_down_cost": 0.00390625,
+  "inet_up": 876.4,
+  "inet_up_billed": 8477715.312109,
+  "inet_up_cost": 0.00390625,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.006944444444444444,
+   "gpuCostPerHour": 0.10666666666666667,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.11361111111111112
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 4.0,
+  "internet_up_cost_per_tb": 4.0,
+  "is_bid": false,
+  "jupyter_token": "5715f64780e7eb7b05d471c4d5d29664db77e732e150d3c965944e5fd4f91eb3",
+  "label": "claude-director-depot",
+  "local_ipaddrs": "10.0.60.17 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 53900,
+  "machine_id": 18337,
+  "mem_limit": 73.09623296,
+  "mem_usage": 0.06864896000000001,
+  "min_bid": 0.05333333,
+  "mobo_name": "ROMED8-2T",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "20.04",
+  "pci_gen": 3.0,
+  "pcie_bw": 6.4,
+  "public_ipaddr": "174.31.68.94",
+  "reliability2": 0.9993023,
+  "rentable": true,
+  "score": 294.9004171688225,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.11361111111111112,
+   "diskHour": 0.006944444444444444,
+   "gpuCostPerHour": 0.10666666666666667,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.11361111111111112
+  },
+  "sla_r_claim": null,
+  "sla_sigma_x": null,
+  "ssh_host": "ssh3.vast.ai",
+  "ssh_idx": "3",
+  "ssh_port": 35826,
+  "start_date": 1790430329.5646422,
+  "static_ip": false,
+  "status_msg": "Done copying",
+  "storage_cost": 0.19999999999999998,
+  "storage_total_cost": 0.006944444444444444,
+  "target_reliability": 0.0,
+  "template_hash_id": null,
+  "template_id": null,
+  "template_name": null,
+  "time_remaining": "Unlimited",
+  "time_remaining_isbid": "Unlimited",
+  "total_flops": 29.534208,
+  "uptime_mins": -259.34317254225414,
+  "verification": "verified",
+  "vmem_usage": 0.268554,
+  "volume_info": [],
+  "vram_costperhour": 9.250212596573126e-06,
+  "webpage": null
+ },
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "US",
+  "cpu_arch": "amd64",
+  "cpu_cores": 192,
+  "cpu_cores_effective": 24.0,
+  "cpu_name": "AMD EPYC 7R32 48-Core Processor",
+  "cpu_ram": 515783,
+  "cpu_util": 0.0,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 12,
+  "direct_port_end": -1,
+  "direct_port_start": 65535,
+  "disk_bw": 2819.322280126424,
+  "disk_name": "INTEL SSDPE2KX040T7",
+  "disk_space": 80.0,
+  "disk_usage": 15.0,
+  "disk_util": 15.0,
+  "dlperf": 198.21495568737987,
+  "dlperf_per_dphtotal": 352.09235549731955,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.5629629629629629,
+  "driver_version": "580.159.03",
+  "duration": 6410.988056182861,
+  "end_date": 1829009324.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 191.09861052631578,
+  "geolocation": "California, US",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 0.125,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1450.7,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 0.0,
+  "gpu_totalram": 32607,
+  "gpu_util": 0.0,
+  "has_avx": 1,
+  "host_id": 483833,
+  "host_run_time": 2592000.0,
+  "hosting_type": null,
+  "id": 52763126,
+  "image_args": [],
+  "image_runtype": "ssh_proxy",
+  "image_uuid": "pytorch/pytorch",
+  "inet_down": 341.4,
+  "inet_down_billed": 9206346.919258,
+  "inet_down_cost": 0.015625,
+  "inet_up": 484.0,
+  "inet_up_billed": 87756.8,
+  "inet_up_cost": 0.016927083333333332,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.0962962962962963,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5629629629629629
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 16.0,
+  "internet_up_cost_per_tb": 17.333333333333332,
+  "is_bid": false,
+  "jupyter_token": "e812a66b5a11211777bfd6a6f1877e627dfc673cec7165e12134603948234261",
+  "label": "claude-plainpuzzles-rt02d",
+  "local_ipaddrs": "192.168.9.110 172.17.0.1 fdf8:3533:2a5f::899 fdf8:3533:2a5f:0:7ec2:55ff:fe4f:5832",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 22399,
+  "machine_id": 140735,
+  "mem_limit": 179.306496,
+  "mem_usage": 4.098883584,
+  "min_bid": 0.45333333333333337,
+  "mobo_name": "H12DSG-O-",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "22.04",
+  "pci_gen": 4.0,
+  "pcie_bw": 22.5,
+  "public_ipaddr": "38.64.63.175",
+  "reliability2": 0.9963865,
+  "rentable": true,
+  "score": 339.80552940447177,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.5629629629629629,
+   "diskHour": 0.0962962962962963,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5629629629629629
+  },
+  "sla_r_claim": null,
+  "sla_sigma_x": null,
+  "ssh_host": "ssh3.vast.ai",
+  "ssh_idx": "3",
+  "ssh_port": 13126,
+  "start_date": 1790433587.4611318,
+  "static_ip": false,
+  "status_msg": "Done receiving copy",
+  "storage_cost": 0.8666666666666666,
+  "storage_total_cost": 0.0962962962962963,
+  "target_reliability": 0.0,
+  "template_hash_id": null,
+  "template_id": null,
+  "template_name": null,
+  "time_remaining": "Unlimited",
+  "time_remaining_isbid": "Unlimited",
+  "total_flops": 107.58143999999999,
+  "uptime_mins": 107.79750786225001,
+  "verification": "verified",
+  "vmem_usage": 0.0,
+  "volume_info": [],
+  "vram_costperhour": 1.7265095315820617e-05,
+  "webpage": null
+ },
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "KR",
+  "cpu_arch": "amd64",
+  "cpu_cores": 8,
+  "cpu_cores_effective": 8.0,
+  "cpu_name": "AMD Ryzen 7 7800X3D 8-Core Processor",
+  "cpu_ram": 31200,
+  "cpu_util": 12.54625,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 100,
+  "direct_port_end": -1,
+  "direct_port_start": 65535,
+  "disk_bw": 406.0,
+  "disk_name": "nvme",
+  "disk_space": 80.0,
+  "disk_usage": 4.599999904632568,
+  "disk_util": 4.599999904632568,
+  "dlperf": 194.04026848402728,
+  "dlperf_per_dphtotal": 385.22700360799536,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.5037037037037037,
+  "driver_version": "580.105.08",
+  "duration": 4265.342522859573,
+  "end_date": 1792335600.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 214.6176,
+  "geolocation": "South Korea, KR",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 1.0,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1455.3,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 69.999931,
+  "gpu_totalram": 32607,
+  "gpu_util": 99.999908,
+  "has_avx": 1,
+  "host_id": 406325,
+  "host_run_time": 2592000.0,
+  "hosting_type": 1,
+  "id": 52768265,
+  "image_args": [],
+  "image_runtype": "ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime",
+  "inet_down": 586.0,
+  "inet_down_billed": 2181038.08,
+  "inet_down_cost": 0.005208333333333333,
+  "inet_up": 541.5,
+  "inet_up_billed": 39628.8,
+  "inet_up_cost": 0.005208333333333333,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.037037037037037035,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5037037037037037
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 5.333333333333333,
+  "internet_up_cost_per_tb": 5.333333333333333,
+  "is_bid": false,
+  "jupyter_token": "f1f08eb71fc497af2f8211be2635aa056f2c107188518a75328ae068c8a6352e",
+  "label": "claude-benchmarks-bm398r",
+  "local_ipaddrs": "172.30.31.145 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 26599,
+  "machine_id": 144936,
+  "mem_limit": 30.670848,
+  "mem_usage": 2.11288064,
+  "min_bid": 0.907,
+  "mobo_name": "B850 EAGLE ICE",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "24.04",
+  "pci_gen": 5.0,
+  "pcie_bw": 49.8,
+  "public_ipaddr": "180.189.55.43",
+  "reliability2": 0.9984382,
+  "rentable": true,
+  "score": 379.30105661149355,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.5037037037037037,
+   "diskHour": 0.037037037037037035,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5037037037037037
+  },
+  "sla_r_claim": null,
+  "sla_sigma_x": null,
+  "ssh_host": "ssh6.vast.ai",
+  "ssh_idx": "6",
+  "ssh_port": 18264,
+  "start_date": 1790435733.106717,
+  "static_ip": true,
+  "status_msg": "success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-runtime/ssh",
+  "storage_cost": 0.3333333333333333,
+  "storage_total_cost": 0.037037037037037035,
+  "target_reliability": 0.0,
+  "template_hash_id": null,
+  "template_id": null,
+  "template_name": null,
+  "time_remaining": "Unlimited",
+  "time_remaining_isbid": "Unlimited",
+  "total_flops": 108.10368,
+  "uptime_mins": 68.93461080392201,
+  "verification": "verified",
+  "vmem_usage": 5.439448,
+  "volume_info": [],
+  "vram_costperhour": 1.544771686152371e-05,
+  "webpage": null
+ },
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "US",
+  "cpu_arch": "amd64",
+  "cpu_cores": 192,
+  "cpu_cores_effective": 24.0,
+  "cpu_name": "AMD EPYC 7R32 48-Core Processor",
+  "cpu_ram": 515783,
+  "cpu_util": 16.644166666666667,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 12,
+  "direct_port_end": 22386,
+  "direct_port_start": 22386,
+  "disk_bw": 2819.322280126424,
+  "disk_name": "INTEL SSDPE2KX040T7",
+  "disk_space": 45.0,
+  "disk_usage": 0.12399999797344208,
+  "disk_util": 0.12399999797344208,
+  "dlperf": 198.38664947599128,
+  "dlperf_per_dphtotal": 380.9023669939033,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.5208333333333333,
+  "driver_version": "580.159.03",
+  "duration": 3214.1759910583496,
+  "end_date": 1829009324.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 206.5563648,
+  "geolocation": "California, US",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 0.125,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1451.1,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 0.0,
+  "gpu_totalram": 32607,
+  "gpu_util": 0.0,
+  "has_avx": 1,
+  "host_id": 483833,
+  "host_run_time": 2592000.0,
+  "hosting_type": null,
+  "id": 52770861,
+  "image_args": [],
+  "image_runtype": "ssh_direc ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime",
+  "inet_down": 341.4,
+  "inet_down_billed": 61337.6,
+  "inet_down_cost": 0.015625,
+  "inet_up": 484.0,
+  "inet_up_billed": 1085.44,
+  "inet_up_cost": 0.016927083333333332,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.054166666666666655,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5208333333333333
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 16.0,
+  "internet_up_cost_per_tb": 17.333333333333332,
+  "is_bid": false,
+  "jupyter_token": "82b1f272ff40555ba0c8705c040f0c0cca39aebe8722da5a16cbfd70ae441761",
+  "label": "claude-sleep-358t",
+  "local_ipaddrs": "192.168.9.110 172.17.0.1 fdf8:3533:2a5f::899 fdf8:3533:2a5f:0:7ec2:55ff:fe4f:5832",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 22399,
+  "machine_id": 140735,
+  "mem_limit": 179.306496,
+  "mem_usage": 6.492782592,
+  "min_bid": 0.45333333333333337,
+  "mobo_name": "H12DSG-O-",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "22.04",
+  "pci_gen": 4.0,
+  "pcie_bw": 27.0,
+  "ports": {
+   "22/tcp": [
+    {
+     "HostIp": "0.0.0.0",
+     "HostPort": "22386"
+    },
+    {
+     "HostIp": "::",
+     "HostPort": "22386"
+    }
+   ]
+  },
+  "public_ipaddr": "38.64.63.175",
+  "reliability2": 0.9963865,
+  "rentable": true,
+  "score": 367.6101694538638,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.5208333333333333,
+   "diskHour": 0.054166666666666655,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5208333333333333
+  },
+  "sla_r_claim": null,
+  "sla_sigma_x": null,
+  "ssh_host": "ssh9.vast.ai",
+  "ssh_idx": "9",
+  "ssh_port": 10860,
+  "start_date": 1790436784.273315,
+  "static_ip": false,
+  "status_msg": "success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-runtime/ssh",
+  "storage_cost": 0.8666666666666666,
+  "storage_total_cost": 0.054166666666666655,
+  "target_reliability": 0.0,
+  "template_hash_id": null,
+  "template_id": null,
+  "template_name": null,
+  "time_remaining": "Unlimited",
+  "time_remaining_isbid": "Unlimited",
+  "total_flops": 107.58143999999999,
+  "uptime_mins": 54.586905964215596,
+  "verification": "verified",
+  "vmem_usage": 0.0,
+  "volume_info": [],
+  "vram_costperhour": 1.597305282096891e-05,
+  "webpage": null
+ },
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "KR",
+  "cpu_arch": "amd64",
+  "cpu_cores": 16,
+  "cpu_cores_effective": 16.0,
+  "cpu_name": "AMD Ryzen 7 7800X3D 8-Core Processor",
+  "cpu_ram": 31192,
+  "cpu_util": 6.263125,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 100,
+  "direct_port_end": 43306,
+  "direct_port_start": 43306,
+  "disk_bw": 3184.3265604543667,
+  "disk_name": "GIGABYTE AG4731TB N",
+  "disk_space": 30.0,
+  "disk_usage": 2.299999952316284,
+  "disk_util": 2.299999952316284,
+  "dlperf": 199.22531326412368,
+  "dlperf_per_dphtotal": 414.57290621436147,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.4805555555555555,
+  "driver_version": "580.173.02",
+  "duration": 3079.0153596401215,
+  "end_date": 1792335600.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 224.95563468208093,
+  "geolocation": "South Korea, KR",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 1.0,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1456.7,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 51.99995,
+  "gpu_totalram": 32607,
+  "gpu_util": 40.999962,
+  "has_avx": 1,
+  "host_id": 406325,
+  "host_run_time": 2592000.0,
+  "hosting_type": 1,
+  "id": 52771192,
+  "image_args": [],
+  "image_runtype": "ssh_direc ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime",
+  "inet_down": 554.9,
+  "inet_down_billed": 2086666.24,
+  "inet_down_cost": 0.005208333333333333,
+  "inet_up": 589.7,
+  "inet_up_billed": 41574.4,
+  "inet_up_cost": 0.005208333333333333,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.013888888888888888,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.4805555555555555
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 5.333333333333333,
+  "internet_up_cost_per_tb": 5.333333333333333,
+  "is_bid": false,
+  "jupyter_token": "5b3f3454b06a0aa36e649a1fb82450f6816910e676428e13694dc81d83c3aa69",
+  "label": "claude-fixsleep-dl5",
+  "local_ipaddrs": "172.30.33.27 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 43399,
+  "machine_id": 146699,
+  "mem_limit": 30.660362239999998,
+  "mem_usage": 1.673527296,
+  "min_bid": 0.907,
+  "mobo_name": "B850 EAGLE ICE",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "24.04",
+  "pci_gen": 5.0,
+  "pcie_bw": 48.5,
+  "ports": {
+   "22/tcp": [
+    {
+     "HostIp": "0.0.0.0",
+     "HostPort": "43306"
+    },
+    {
+     "HostIp": "::",
+     "HostPort": "43306"
+    }
+   ]
+  },
+  "public_ipaddr": "180.189.55.38",
+  "reliability2": 0.9962212,
+  "rentable": true,
+  "score": 399.46777654727873,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.4805555555555555,
+   "diskHour": 0.013888888888888888,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.4805555555555555
+  },
+  "sla_r_claim": null,
+  "sla_sigma_x": null,
+  "ssh_host": "ssh2.vast.ai",
+  "ssh_idx": "2",
+  "ssh_port": 11192,
+  "start_date": 1790436919.4339902,
+  "static_ip": true,
+  "status_msg": "success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-runtime/ssh",
+  "storage_cost": 0.3333333333333333,
+  "storage_total_cost": 0.013888888888888888,
+  "target_reliability": 0.0,
+  "template_hash_id": null,
+  "template_id": null,
+  "template_name": null,
+  "time_remaining": "Unlimited",
+  "time_remaining_isbid": "Unlimited",
+  "total_flops": 108.10368,
+  "uptime_mins": 49.34133721192678,
+  "verification": "verified",
+  "vmem_usage": 7.211907,
+  "volume_info": [],
+  "vram_costperhour": 1.4737803402813982e-05,
+  "webpage": null
+ },
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "KR",
+  "cpu_arch": "amd64",
+  "cpu_cores": 16,
+  "cpu_cores_effective": 16.0,
+  "cpu_name": "AMD Ryzen 7 7800X3D 8-Core Processor",
+  "cpu_ram": 31197,
+  "cpu_util": 0.646875,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 100,
+  "direct_port_end": -1,
+  "direct_port_start": 65535,
+  "disk_bw": 6710.8,
+  "disk_name": "nvme",
+  "disk_space": 60.0,
+  "disk_usage": 12.0,
+  "disk_util": 12.0,
+  "dlperf": 199.05361647130263,
+  "dlperf_per_dphtotal": 402.5803479194885,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.4944444444444444,
+  "driver_version": "580.95.05",
+  "duration": 1207.5723617076874,
+  "end_date": 1792335600.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 218.6366561797753,
+  "geolocation": "South Korea, KR",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 1.0,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1455.4,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 39.999962,
+  "gpu_totalram": 32607,
+  "gpu_util": 0.0,
+  "has_avx": 1,
+  "host_id": 406325,
+  "host_run_time": 2592000.0,
+  "hosting_type": 1,
+  "id": 52775111,
+  "image_args": [],
+  "image_runtype": "ssh_proxy",
+  "image_uuid": "pytorch/pytorch",
+  "inet_down": 479.9,
+  "inet_down_billed": 9552527.36,
+  "inet_down_cost": 0.005208333333333333,
+  "inet_up": 396.7,
+  "inet_up_billed": 187392.0,
+  "inet_up_cost": 0.005208333333333333,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.027777777777777776,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.4944444444444444
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 5.333333333333333,
+  "internet_up_cost_per_tb": 5.333333333333333,
+  "is_bid": false,
+  "jupyter_token": "affe2559b690b8306a6c605c3fcda1ddb0b29e8ea0f2e84a7fca88c5551cfa81",
+  "label": "rent-brd9",
+  "local_ipaddrs": "172.30.20.75 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 49399,
+  "machine_id": 148953,
+  "mem_limit": 30.670848,
+  "mem_usage": 0.4936704,
+  "min_bid": 0.907,
+  "mobo_name": "B850 EAGLE ICE",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "24.04",
+  "pci_gen": 5.0,
+  "pcie_bw": 48.9,
+  "public_ipaddr": "180.189.55.43",
+  "reliability2": 0.9953033,
+  "rentable": true,
+  "score": 384.5075499085476,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.4944444444444444,
+   "diskHour": 0.027777777777777776,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.4944444444444444
+  },
+  "sla_r_claim": null,
+  "sla_sigma_x": null,
+  "ssh_host": "ssh1.vast.ai",
+  "ssh_idx": "1",
+  "ssh_port": 15110,
+  "start_date": 1790438790.8770273,
+  "static_ip": true,
+  "status_msg": "success, running pytorch/pytorch/ssh",
+  "storage_cost": 0.3333333333333333,
+  "storage_total_cost": 0.027777777777777776,
+  "target_reliability": 0.0,
+  "template_hash_id": null,
+  "template_id": null,
+  "template_name": null,
+  "time_remaining": "Unlimited",
+  "time_remaining_isbid": "Unlimited",
+  "total_flops": 108.10368,
+  "uptime_mins": 17.888779811064403,
+  "verification": "verified",
+  "vmem_usage": 0.486328,
+  "volume_info": [],
+  "vram_costperhour": 1.516375147803982e-05,
+  "webpage": null
+ },
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "KR",
+  "cpu_arch": "amd64",
+  "cpu_cores": 16,
+  "cpu_cores_effective": 16.0,
+  "cpu_name": "AMD Ryzen 7 7800X3D 8-Core Processor",
+  "cpu_ram": 31197,
+  "cpu_util": 25.083125,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 100,
+  "direct_port_end": 48144,
+  "direct_port_start": 48144,
+  "disk_bw": 3252.7000000000003,
+  "disk_name": "nvme",
+  "disk_space": 50.0,
+  "disk_usage": 0.4740000069141388,
+  "disk_util": 0.4740000069141388,
+  "dlperf": 199.14606910785832,
+  "dlperf_per_dphtotal": 406.57420536197924,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.48981481481481476,
+  "driver_version": "580.105.08",
+  "duration": 1006.5230820178986,
+  "end_date": 1792335600.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 220.70316521739133,
+  "geolocation": "South Korea, KR",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 1.0,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1456.1,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 65.999939,
+  "gpu_totalram": 32607,
+  "gpu_util": 97.999908,
+  "has_avx": 1,
+  "host_id": 406325,
+  "host_run_time": 2592000.0,
+  "hosting_type": 1,
+  "id": 52775569,
+  "image_args": [],
+  "image_runtype": "ssh_direc ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime",
+  "inet_down": 480.8,
+  "inet_down_billed": null,
+  "inet_down_cost": 0.005208333333333333,
+  "inet_up": 524.2,
+  "inet_up_billed": null,
+  "inet_up_cost": 0.005208333333333333,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.023148148148148143,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.48981481481481476
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 5.333333333333333,
+  "internet_up_cost_per_tb": 5.333333333333333,
+  "is_bid": false,
+  "jupyter_token": "682c6bfe27030c786dd9790094e1b18db825c7f6b7e288e0e5e4973b4c3bb0be",
+  "label": "claude-sleep-358x",
+  "local_ipaddrs": "172.30.31.36 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 48199,
+  "machine_id": 142831,
+  "mem_limit": 30.670848,
+  "mem_usage": 6.36485632,
+  "min_bid": 0.907,
+  "mobo_name": "B850 EAGLE ICE",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "24.04",
+  "pci_gen": 5.0,
+  "pcie_bw": 48.6,
+  "ports": {
+   "22/tcp": [
+    {
+     "HostIp": "0.0.0.0",
+     "HostPort": "48144"
+    },
+    {
+     "HostIp": "::",
+     "HostPort": "48144"
+    }
+   ]
+  },
+  "public_ipaddr": "180.189.55.38",
+  "reliability2": 0.9985823,
+  "rentable": true,
+  "score": 400.8888343038795,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.48981481481481476,
+   "diskHour": 0.023148148148148143,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.48981481481481476
+  },
+  "sla_r_claim": null,
+  "sla_sigma_x": null,
+  "ssh_host": "ssh9.vast.ai",
+  "ssh_idx": "9",
+  "ssh_port": 15568,
+  "start_date": 1790438991.926354,
+  "static_ip": true,
+  "status_msg": "success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-runtime/ssh",
+  "storage_cost": 0.3333333333333333,
+  "storage_total_cost": 0.023148148148148143,
+  "target_reliability": 0.0,
+  "template_hash_id": null,
+  "template_id": null,
+  "template_name": null,
+  "time_remaining": "Unlimited",
+  "time_remaining_isbid": "Unlimited",
+  "total_flops": 108.10368,
+  "uptime_mins": 14.381991823514303,
+  "verification": "verified",
+  "vmem_usage": 16.220688,
+  "volume_info": [],
+  "vram_costperhour": 1.5021768786297873e-05,
+  "webpage": null
+ },
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "KR",
+  "cpu_arch": "amd64",
+  "cpu_cores": 16,
+  "cpu_cores_effective": 16.0,
+  "cpu_name": "AMD Ryzen 7 7800X3D 8-Core Processor",
+  "cpu_ram": 31197,
+  "cpu_util": 0.0,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 100,
+  "direct_port_end": -1,
+  "direct_port_start": 65535,
+  "disk_bw": 6496.0,
+  "disk_name": "nvme",
+  "disk_space": 80.0,
+  "disk_usage": 2.0999999046325684,
+  "disk_util": 2.0999999046325684,
+  "dlperf": 198.98757813413474,
+  "dlperf_per_dphtotal": 395.04886835453226,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.5037037037037037,
+  "driver_version": "580.95.05",
+  "duration": 849.475998878479,
+  "end_date": 1792335600.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 214.6176,
+  "geolocation": "South Korea, KR",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 1.0,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1454.9,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 36.999966,
+  "gpu_totalram": 32607,
+  "gpu_util": 0.0,
+  "has_avx": 1,
+  "host_id": 406325,
+  "host_run_time": 2592000.0,
+  "hosting_type": 1,
+  "id": 52775913,
+  "image_args": [],
+  "image_runtype": "ssh",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime",
+  "inet_down": 541.5,
+  "inet_down_billed": 1683756.199258,
+  "inet_down_cost": 0.005208333333333333,
+  "inet_up": 566.2,
+  "inet_up_billed": 197.0,
+  "inet_up_cost": 0.005208333333333333,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.037037037037037035,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5037037037037037
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 5.333333333333333,
+  "internet_up_cost_per_tb": 5.333333333333333,
+  "is_bid": false,
+  "jupyter_token": "df38d69bcbc9ab331b5964da868644846ac87cbea0a6f4df2fec3b614f8c3f2e",
+  "label": "claude-madeup-mu404b",
+  "local_ipaddrs": "172.30.22.164 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 31199,
+  "machine_id": 144983,
+  "mem_limit": 30.670848,
+  "mem_usage": 0.2432,
+  "min_bid": 0.907,
+  "mobo_name": "B850 EAGLE ICE",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "24.04",
+  "pci_gen": 5.0,
+  "pcie_bw": 47.5,
+  "public_ipaddr": "180.189.55.43",
+  "reliability2": 0.9974687,
+  "rentable": true,
+  "score": 385.2909242768543,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.5037037037037037,
+   "diskHour": 0.037037037037037035,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5037037037037037
+  },
+  "sla_r_claim": null,
+  "sla_sigma_x": null,
+  "ssh_host": "ssh4.vast.ai",
+  "ssh_idx": "4",
+  "ssh_port": 15912,
+  "start_date": 1790439148.97348,
+  "static_ip": true,
+  "status_msg": "Done receiving copy",
+  "storage_cost": 0.3333333333333333,
+  "storage_total_cost": 0.037037037037037035,
+  "target_reliability": 0.0,
+  "template_hash_id": null,
+  "template_id": null,
+  "template_name": null,
+  "time_remaining": "Unlimited",
+  "time_remaining_isbid": "Unlimited",
+  "total_flops": 108.10368,
+  "uptime_mins": 11.754436059792836,
+  "verification": "verified",
+  "vmem_usage": 0.486328,
+  "volume_info": [],
+  "vram_costperhour": 1.544771686152371e-05,
+  "webpage": null
+ },
+ {
+  "actual_status": "loading",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "US",
+  "cpu_arch": "amd64",
+  "cpu_cores": 256,
+  "cpu_cores_effective": 32.0,
+  "cpu_name": "AMD EPYC 7B12 64-Core Processor",
+  "cpu_ram": 257714,
+  "cpu_util": 0.0,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 12,
+  "direct_port_end": -1,
+  "direct_port_start": -1,
+  "disk_bw": 2230.3700000000003,
+  "disk_name": "nvme",
+  "disk_space": 80.0,
+  "disk_usage": -1,
+  "disk_util": -1,
+  "dlperf": 192.9647078134482,
+  "dlperf_per_dphtotal": 388.8094858927688,
+  "dph_base": 0.39999999999999997,
+  "dph_total": 0.49629629629629624,
+  "driver_version": "580.159.03",
+  "duration": 115.78761315345764,
+  "end_date": 1798592980.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 217.82084776119405,
+  "geolocation": "United States, US",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 0.125,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1451.5,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": null,
+  "gpu_totalram": 32607,
+  "gpu_util": null,
+  "has_avx": 1,
+  "host_id": 410852,
+  "host_run_time": 2592000.0,
+  "hosting_type": null,
+  "id": 52777941,
+  "image_args": [],
+  "image_runtype": "ssh_direc ssh_proxy",
+  "image_uuid": "pytorch/pytorch",
+  "inet_down": 513.5,
+  "inet_down_billed": null,
+  "inet_down_cost": 0.015625,
+  "inet_up": 51.1,
+  "inet_up_billed": null,
+  "inet_up_cost": 0.016927083333333332,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.0962962962962963,
+   "diskHour": 0.0962962962962963,
+   "gpuCostPerHour": 0,
+   "slaPremiumPerHour": 0,
+   "totalHour": 0.0962962962962963
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 16.0,
+  "internet_up_cost_per_tb": 17.333333333333332,
+  "is_bid": false,
+  "jupyter_token": "4e58a61e5478228ec7b97765bdcd59517f7a2520e3aadc6a2a5f976f7a60c81e",
+  "label": "claude-memory-y1g",
+  "local_ipaddrs": "192.168.100.196 172.17.0.1 fd3d:3873:b075::bab fd3d:3873:b075:0:9e6b:ff:fe74:4da6",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 25799,
+  "machine_id": 142018,
+  "mem_limit": null,
+  "mem_usage": null,
+  "min_bid": 0.32,
+  "mobo_name": "ROME2D32GM-2T",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "22.04",
+  "pci_gen": 4.0,
+  "pcie_bw": 22.7,
+  "public_ipaddr": "137.175.22.196",
+  "reliability2": 0.9956202,
+  "rentable": true,
+  "score": 372.4834533420286,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.49629629629629624,
+   "diskHour": 0.0962962962962963,
+   "gpuCostPerHour": 0.39999999999999997,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.49629629629629624
+  },
+  "sla_r_claim": null,
+  "sla_sigma_x": null,
+  "ssh_host": "ssh2.vast.ai",
+  "ssh_idx": "2",
+  "ssh_port": 17940,
+  "start_date": 1790439882.6619496,
+  "static_ip": false,
+  "status_msg": "Error response from daemon: Get \"https://registry-1.docker.io/v2/\": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused",
+  "storage_cost": 0.8666666666666666,
+  "storage_total_cost": 0.0962962962962963,
+  "target_reliability": 0.0,
+  "template_hash_id": null,
+  "template_id": null,
+  "template_name": null,
+  "time_remaining": "",
+  "time_remaining_isbid": "",
+  "total_flops": 108.10368,
+  "uptime_mins": null,
+  "verification": "verified",
+  "vmem_usage": null,
+  "volume_info": [],
+  "vram_costperhour": 1.5220544554736598e-05,
+  "webpage": null
+ },
+ {
+  "actual_status": "loading",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "KR",
+  "cpu_arch": "amd64",
+  "cpu_cores": 8,
+  "cpu_cores_effective": 8.0,
+  "cpu_name": "AMD Ryzen 7 7800X3D 8-Core Processor",
+  "cpu_ram": 31198,
+  "cpu_util": 0.0,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 100,
+  "direct_port_end": -1,
+  "direct_port_start": -1,
+  "disk_bw": 2454.0,
+  "disk_name": "nvme",
+  "disk_space": 40.0,
+  "disk_usage": -1,
+  "disk_util": -1,
+  "dlperf": 194.11349506156407,
+  "dlperf_per_dphtotal": 400.081249363529,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.48518518518518516,
+  "driver_version": "580.95.05",
+  "duration": 65.62570118904114,
+  "end_date": 1792335600.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 222.8091114503817,
+  "geolocation": "South Korea, KR",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 1.0,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1456.1,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": null,
+  "gpu_totalram": 32607,
+  "gpu_util": null,
+  "has_avx": 1,
+  "host_id": 406325,
+  "host_run_time": 2592000.0,
+  "hosting_type": 1,
+  "id": 52778152,
+  "image_args": [],
+  "image_runtype": "ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime",
+  "inet_down": 442.6,
+  "inet_down_billed": null,
+  "inet_down_cost": 0.005208333333333333,
+  "inet_up": 496.8,
+  "inet_up_billed": null,
+  "inet_up_cost": 0.005208333333333333,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.018518518518518517,
+   "diskHour": 0.018518518518518517,
+   "gpuCostPerHour": 0,
+   "slaPremiumPerHour": 0,
+   "totalHour": 0.018518518518518517
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 5.333333333333333,
+  "internet_up_cost_per_tb": 5.333333333333333,
+  "is_bid": false,
+  "jupyter_token": "8be572fce6d6521f16d4715a92b97b8491919c01418a540209364872aba7731f",
+  "label": "claude-fixsleep-dl6b",
+  "local_ipaddrs": "172.30.22.237 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 37999,
+  "machine_id": 145158,
+  "mem_limit": null,
+  "mem_usage": null,
+  "min_bid": 0.907,
+  "mobo_name": "B850 EAGLE ICE",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "24.04",
+  "pci_gen": 5.0,
+  "pcie_bw": 47.6,
+  "public_ipaddr": "180.189.55.43",
+  "reliability2": 0.9980415,
+  "rentable": true,
+  "score": 392.3930480270098,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.48518518518518516,
+   "diskHour": 0.018518518518518517,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.48518518518518516
+  },
+  "sla_r_claim": null,
+  "sla_sigma_x": null,
+  "ssh_host": "ssh3.vast.ai",
+  "ssh_idx": "3",
+  "ssh_port": 18152,
+  "start_date": 1790439932.8239048,
+  "static_ip": true,
+  "status_msg": "4f4fb700ef54: Verifying Checksum",
+  "storage_cost": 0.3333333333333333,
+  "storage_total_cost": 0.018518518518518517,
+  "target_reliability": 0.0,
+  "template_hash_id": null,
+  "template_id": null,
+  "template_name": null,
+  "time_remaining": "",
+  "time_remaining_isbid": "",
+  "total_flops": 108.10368,
+  "uptime_mins": null,
+  "verification": "verified",
+  "vmem_usage": null,
+  "volume_info": [],
+  "vram_costperhour": 1.4879786094555929e-05,
+  "webpage": null
+ }
+]
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_4090 reliability>=0.98 rentable=true num_gpus=1' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('num offers:',len(d))
+for o in d[:12]:
+    print(o.get('id'), o.get('gpu_name'), round(o.get('dph_total',0),4), o.get('cpu_cores_effective'), o.get('disk_space'), round(o.get('reliability2',0) or o.get('reliability',0),4), o.get('geolocation'), o.get('inet_up',0), o.get('inet_down',0))
+"
+num offers: 57
+43681503 RTX 4090 0.3614 18.285714285714285 151.42857142857142 0.9942 Malaysia, MY 798.2 924.4
+52604639 RTX 4090 0.3996 12.0 1444.0 0.994 Vietnam, VN 845.7 924.1
+42183818 RTX 4090 0.4014 32.0 724.75 0.9892 The Netherlands, NL 1242.0 1504.8
+31202342 RTX 4090 0.4014 32.0 769.125 0.9927 The Netherlands, NL 1001.1 1329.6
+32131322 RTX 4090 0.4014 32.0 496.625 0.996 The Netherlands, NL 1260.8 1508.0
+41130304 RTX 4090 0.406 16.0 168.5875 0.9985 California, US 360.4 172.4
+41890585 RTX 4090 0.406 18.285714285714285 397.5142857142857 0.9957 California, US 412.0 271.2
+46151938 RTX 4090 0.4145 16.0 70.25 0.9973 Japan, JP 330.1 405.3
+52658729 RTX 4090 0.4271 16.0 685.2856650396852 0.9895 Romania, RO 659.7 691.6
+48470912 RTX 4090 0.4412 16.0 435.2353613844856 0.9972 Japan, JP 383.4 424.7
+49784348 RTX 4090 0.4547 12.0 1501.0 0.997 Nevada, US 922.2 910.1
+50985407 RTX 4090 0.457 32.0 891.0 0.9872 California, US 7992.0 15548.3
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true num_gpus=1' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('num offers:',len(d))
+for o in d[:8]:
+    print(o.get('id'), o.get('gpu_name'), round(o.get('dph_total',0),4), o.get('cpu_cores_effective'), o.get('disk_space'), round(o.get('reliability2',0) or o.get('reliability',0),4), o.get('geolocation'), o.get('inet_up',0), o.get('inet_down',0))
+"
+num offers: 54
+46753300 RTX 5090 0.406 32.0 136.6625 0.9957 United States, US 63.3 824.1
+44173704 RTX 5090 0.469 16.0 558.0 0.9985 South Korea, KR 393.6 374.2
+45520225 RTX 5090 0.469 16.0 480.0 0.9974 South Korea, KR 475.2 489.6
+45669364 RTX 5090 0.469 8.0 472.0 0.9983 South Korea, KR 531.0 560.5
+45669177 RTX 5090 0.469 8.0 549.0 0.9982 South Korea, KR 529.4 539.4
+47347942 RTX 5090 0.4727 24.0 707.025 0.994 United States, US 365.8 721.5
+50739127 RTX 5090 0.5104 18.285714285714285 420.71428571428567 0.9858 Estonia, EE 862.5 785.1
+50287508 RTX 5090 0.5343 24.0 561.0 0.9894 Mexico, MX 322.1 367.7
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_4090 reliability>=0.98 rentable=true num_gpus=1 id=43681503' --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+o=d[0]
+for k in ['id','gpu_name','dph_total','cpu_cores','cpu_cores_effective','cpu_ram','disk_space','reliability2','geolocation','inet_up','inet_down','cuda_max_good','driver_version','host_id','num_gpus','rentable','verification']:
+    print(k,'=',o.get(k))
+"; vastai create instance --help 2>&1 | head -40
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+IndexError: list index out of range
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_4090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+o=[x for x in d if x.get('id')==43681503][0]
+for k in ['id','gpu_name','dph_total','cpu_cores','cpu_cores_effective','cpu_ram','disk_space','reliability2','geolocation','inet_up','inet_down','cuda_max_good','driver_version','host_id','num_gpus','rentable','verification','machine_id']:
+    print(k,'=',o.get(k))
+"
+id = 43681503
+gpu_name = RTX 4090
+dph_total = 0.3613888888888889
+cpu_cores = 256
+cpu_cores_effective = 18.285714285714285
+cpu_ram = 73703
+disk_space = 151.42857142857142
+reliability2 = 0.994218
+geolocation = Malaysia, MY
+inet_up = 798.2
+inet_down = 924.4
+cuda_max_good = 13.0
+driver_version = 580.105.08
+host_id = 86991
+num_gpus = 1
+rentable = True
+verification = verified
+machine_id = 138228
+[0m
+[0m$ [0mls ~/.ssh/ 2>&1; date -u +%FT%TZ
+agent
+authorized_keys
+config
+id_ed25519
+id_ed25519.pub
+known_hosts
+known_hosts.old
+mu404
+mu404.pub
+rent-bm395
+rent-bm395.pub
+rent-bmrivsmoke
+rent-bmrivsmoke.pub
+rent336b
+rent336b.pub
+ssh-copy-id.dyqOlQW0o4
+ssh-copy-id.slWcbCWO63
+2026-09-26T16:27:06Z
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); date -u +%FT%TZ; vastai create instance 43681503 --image 'pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime' --disk 80 --label claude-benchmarks-bmrivsmoke2 --ssh --direct 2>&1 | tail -5; date -u +%FT%TZ
+2026-09-26T16:27:10Z
+Started. {'success': True, 'new_contract': 52778379, 'instance_api_key': '33595749d1ef5cd97c79d4a453b022e9ef8d4254ff62e67d550befb1415f8082'}
+2026-09-26T16:27:10Z
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 45; vastai show instance 52778379 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('id',d.get('id'),'actual',d.get('actual_status'),'cur',d.get('cur_state'),'msg',str(d.get('status_msg'))[:120])
+print('ssh_host',d.get('ssh_host'),'port',d.get('ssh_port'),'dph',d.get('dph_total'),'gpu',d.get('gpu_name'))
+"; date -u +%FT%TZ
+id 52778379 actual loading cur running msg f5718f919d50: Pull complete
+
+ssh_host ssh8.vast.ai port 18378 dph 0.38222222222222224 gpu RTX 4090
+2026-09-26T16:27:59Z
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 90; vastai show instance 52778379 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('id',d.get('id'),'actual',d.get('actual_status'),'cur',d.get('cur_state'),'msg',str(d.get('status_msg'))[:160])
+print('ssh_host',d.get('ssh_host'),'port',d.get('ssh_port'),'dph',d.get('dph_total'))
+"; date -u +%FT%TZ
+id 52778379 actual loading cur running msg #6 3.485 Get:8 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+
+ssh_host ssh8.vast.ai port 18378 dph 0.38222222222222224
+2026-09-26T16:29:31Z
+[0m
+[0m$ [0mssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'echo SSH_OK; nvidia-smi --query-gpu=name,memory.total --format=csv 2>&1 | head -3' 2>&1 | head -10; date -u +%FT%TZ
+ssh: connect to host ssh8.vast.ai port 18378: Connection refused
+2026-09-26T16:29:33Z
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 120; vastai show instance 52778379 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('actual',d.get('actual_status'),'msg',str(d.get('status_msg'))[:160])
+"; date -u +%FT%TZ
+actual running msg success, running pytorch/pytorch_2.8.0-cuda12.9-cudnn9-runtime/ssh
+2026-09-26T16:31:36Z
+[0m
+[0m$ [0mfor i in 1 2 3 4 5 6; do ssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p 18378 root@ssh8.vast.ai 'echo SSH_OK' 2>&1 | head -2 && break; sleep 15; done; date -u +%FT%TZ
+Warning: Permanently added '[ssh8.vast.ai]:18378' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+2026-09-26T16:31:42Z
+[0m
+[0m$ [0msleep 20; ssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'echo SSH_OK; python -c "import torch;print(torch.__version__, torch.cuda.is_available())"' 2>&1 | head -5; date -u +%FT%TZ
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+SSH_OK
+2.8.0+cu129 True
+2026-09-26T16:32:11Z
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- scripts/claude_bm390.py scripts/claude_bmriv_rivals.py artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl artifacts/claude-bmriv-smoke-20260926/ 2>&1
+artifacts/claude-bmriv-smoke-20260926/NOTES-smoke1.md
+artifacts/claude-bmriv-smoke-20260926/README.md
+artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl
+scripts/claude_bm390.py
+scripts/claude_bmriv_rivals.py
+[0m
+[0m$ [0mgit archive origin/main scripts/claude_bm390.py scripts/claude_bmriv_rivals.py artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl artifacts/claude-bmriv-smoke-20260926 | ssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -p 18378 root@ssh8.vast.ai 'mkdir -p ~/tree && tar -x -C ~/tree && find ~/tree -type f | sort' 2>&1 | head -15; date -u +%FT%TZ
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+/root/tree/artifacts/claude-bmriv-smoke-20260926/NOTES-smoke1.md
+/root/tree/artifacts/claude-bmriv-smoke-20260926/README.md
+/root/tree/artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl
+/root/tree/scripts/claude_bm390.py
+/root/tree/scripts/claude_bmriv_rivals.py
+2026-09-26T16:32:19Z
+[0m
+[0m$ [0mssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -p 18378 root@ssh8.vast.ai 'cd ~/tree && setsid nohup bash -c "pip install -q \"transformers>=5\" safetensors huggingface_hub accelerate numpy > ~/setup-pip.log 2>&1; echo PIP_EXIT:\$? >> ~/setup-pip.log; python -c \"import torch, transformers; print(torch.__version__, transformers.__version__)\" >> ~/setup-pip.log 2>&1; python --version >> ~/setup-pip.log 2>&1" >/dev/null 2>&1 < /dev/null & echo LAUNCHED; date -u +%FT%TZ' 2>&1 | tail -3
+Have fun!
+LAUNCHED
+2026-09-26T16:32:26Z
+[0m
+[0m$ [0msleep 90; ssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -p 18378 root@ssh8.vast.ai 'cat ~/setup-pip.log 2>&1' 2>&1 | tail -8; date -u +%FT%TZ
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+PIP_EXIT:0
+2.8.0+cu129 5.17.0
+Python 3.11.13
+2026-09-26T16:34:15Z
+[0m
+[0m$ [0mssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -p 18378 root@ssh8.vast.ai 'setsid nohup bash -c "unset HF_HOME HF_HUB_CACHE; HF_HUB_OFFLINE=0 python -c \"from huggingface_hub import snapshot_download as s; print(s('\''openbmb/MiniCPM5-1B'\'', revision='\''87179e5c1f455ef22e6223592d2d61351b525bfc'\'')); print(s('\''Qwen/Qwen3.5-2B'\'', revision='\''15852e8c16360a2fea060d615a32b45270f8a8fc'\'')); print(s('\''LiquidAI/LFM2.5-1.2B-Instruct'\'', revision='\''0f604ada3f766f9f257460c4c9f0b5d6f69d431b'\''))\" > ~/setup-dl.log 2>&1; echo DL_EXIT:\$? >> ~/setup-dl.log" >/dev/null 2>&1 < /dev/null & echo LAUNCHED; date -u +%FT%TZ' 2>&1 | tail -2
+LAUNCHED
+2026-09-26T16:34:21Z
+[0m
+[0m$ [0msleep 150; ssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -p 18378 root@ssh8.vast.ai 'cat ~/setup-dl.log 2>&1; echo ---; nvidia-smi --query-gpu=memory.used,memory.total --format=csv 2>&1 | head -3' 2>&1 | tail -10; date -u +%FT%TZ
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:03,  3.03it/s]Fetching 11 files:  73%|███████▎  | 8/11 [00:00<00:00, 14.69it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:00<00:00, 14.50it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:19<00:00, 14.50it/s]Fetching 11 files: 100%|██████████| 11/11 [00:22<00:00,  3.63s/it]Fetching 11 files: 100%|██████████| 11/11 [00:22<00:00,  2.07s/it]
+/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+Fetching 13 files:   0%|          | 0/13 [00:00<?, ?it/s]Fetching 13 files:   8%|▊         | 1/13 [00:00<00:03,  3.11it/s]Fetching 13 files:  62%|██████▏   | 8/13 [00:00<00:00, 15.07it/s]Fetching 13 files:  92%|█████████▏| 12/13 [00:01<00:00,  5.91it/s]Fetching 13 files:  92%|█████████▏| 12/13 [00:16<00:00,  5.91it/s]Fetching 13 files: 100%|██████████| 13/13 [00:38<00:00,  4.94s/it]Fetching 13 files: 100%|██████████| 13/13 [00:38<00:00,  2.94s/it]
+/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Fetching 11 files:   9%|▉         | 1/11 [00:00<00:03,  3.21it/s]Fetching 11 files:  64%|██████▎   | 7/11 [00:00<00:00, 14.28it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:00<00:00, 17.73it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:18<00:00, 17.73it/s]Fetching 11 files: 100%|██████████| 11/11 [00:21<00:00,  3.35s/it]Fetching 11 files: 100%|██████████| 11/11 [00:21<00:00,  1.98s/it]
+/root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b
+DL_EXIT:0
+---
+memory.used [MiB], memory.total [MiB]
+0 MiB, 24564 MiB
+2026-09-26T16:36:58Z
+[0m
+[0m$ [0mssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -p 18378 root@ssh8.vast.ai 'cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc && sha256sum artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl && setsid nohup python -B scripts/claude_bmriv_rivals.py selftest --tok $BASE > ~/selftest.log 2>&1 < /dev/null & echo LAUNCHED; date -u +%FT%TZ' 2>&1 | tail -4
+Have fun!
+LAUNCHED
+2026-09-26T16:37:03Z
+da7202db858cee9537acbb4d40d2316921673e00cf27a19a60ef09c1973012e7  artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl
+[0m
+[0m$ [0msleep 100; ssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -p 18378 root@ssh8.vast.ai 'tail -5 ~/selftest.log 2>&1' 2>&1 | tail -6; date -u +%FT%TZ
+Have fun!
+PASS thinking off: whole text
+PASS message and system are in the prompt
+PASS think flag reaches the chat template
+PASS duplicate ids refused
+BMRIV-SELFTEST PASS 12/12
+2026-09-26T16:38:57Z
+[0m
+[0m$ [0mssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -p 18378 root@ssh8.vast.ai 'cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc && Q2DIR=/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc && L12DIR=/root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b && PANEL=artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl && OUT=artifacts/claude-bmriv-smoke-20260926/run2 && date -u +%FT%TZ > ~/lanes-start.txt && setsid nohup python -B scripts/claude_bmriv_rivals.py run --panel $PANEL --out $OUT --max-new 4096 --shard 1/4 --model $BASE --name plain1b_4k > ~/lane1.log 2>&1 < /dev/null & echo LANE1_PID:$! && setsid nohup python -B scripts/claude_bmriv_rivals.py run --panel $PANEL --out $OUT --max-new 4096 --shard 1/4 --model $Q2DIR --name qwen2b_4k > ~/lane2.log 2>&1 < /dev/null & echo LANE2_PID:$! && setsid nohup python -B scripts/claude_bmriv_rivals.py run --panel $PANEL --out $OUT --max-new 4096 --shard 1/4 --model $L12DIR --name lfm12b_4k > ~/lane3.log 2>&1 < /dev/null & echo LANE3_PID:$! && sleep 2 && ps aux | grep bmriv_rivals | grep -v grep' 2>&1 | tail -8
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 60000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'cat ~/lanes-start.txt; ps aux | grep bmriv_rivals | grep -v grep | head -5; tail -2 ~/lane1.log ~/lane2.log ~/lane3.log' 2>&1 | tail -15
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2026-09-26T16:39:05Z
+root         972 98.5  0.1 15530908 1611364 ?    Rsl  16:39   1:03 python -B scripts/claude_bmriv_rivals.py run --panel artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl --out artifacts/claude-bmriv-smoke-20260926/run2 --max-new 4096 --shard 1/4 --model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --name plain1b_4k
+tail: option used in invalid context -- 2
+[0m
+[0m$ [0mssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'cd ~/tree; export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; Q2DIR=/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc; setsid nohup python -B scripts/claude_bmriv_rivals.py run --panel artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl --out artifacts/claude-bmriv-smoke-20260926/run2 --max-new 4096 --shard 1/4 --model $Q2DIR --name qwen2b_4k > ~/lane2.log 2>&1 < /dev/null & disown; echo LANE2_STARTED; date -u +%FT%TZ' 2>&1 | tail -3
+Have fun!
+LANE2_STARTED
+2026-09-26T16:40:22Z
+[0m
+[0m$ [0mssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'cd ~/tree; export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; L12DIR=/root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b; setsid nohup python -B scripts/claude_bmriv_rivals.py run --panel artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl --out artifacts/claude-bmriv-smoke-20260926/run2 --max-new 4096 --shard 1/4 --model $L12DIR --name lfm12b_4k > ~/lane3.log 2>&1 < /dev/null & disown; echo LANE3_STARTED; date -u +%FT%TZ' 2>&1 | tail -3
+Have fun!
+LANE3_STARTED
+2026-09-26T16:40:28Z
+[0m
+[0m$ [0mssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'ps aux | grep bmriv_rivals | grep -v grep | awk "{print \$2, \$11, \$12, \$13, \$14, \$NF}"; nvidia-smi --query-gpu=memory.used,memory.total --format=csv' 2>&1 | tail -6
+Have fun!
+972 python -B scripts/claude_bmriv_rivals.py run plain1b_4k
+1030 python -B scripts/claude_bmriv_rivals.py run qwen2b_4k
+1068 python -B scripts/claude_bmriv_rivals.py run lfm12b_4k
+memory.used [MiB], memory.total [MiB]
+9665 MiB, 24564 MiB
+[0m
+[0m$ [0msleep 420; ssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'ps aux | grep bmriv_rivals | grep -v grep | awk "{print \$2, \$NF}"; ls -la ~/tree/artifacts/claude-bmriv-smoke-20260926/run2/ 2>&1; nvidia-smi --query-gpu=memory.used,memory.total --format=csv' 2>&1 | tail -12; date -u +%FT%TZ
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+1030 qwen2b_4k
+total 96
+drwxr-xr-x 2 root root   110 Sep 26 16:40 .
+drwxrwxr-x 3 root root    74 Sep 26 16:39 ..
+-rw-r--r-- 1 root root 40403 Sep 26 16:44 rival_lfm12b_4k.jsonl
+-rw-r--r-- 1 root root 33197 Sep 26 16:43 rival_plain1b_4k.jsonl
+-rw-r--r-- 1 root root 17444 Sep 26 16:45 rival_qwen2b_4k.jsonl
+memory.used [MiB], memory.total [MiB]
+4251 MiB, 24564 MiB
+2026-09-26T16:47:43Z
+[0m
+[0m$ [0mssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'tail -c 600 ~/lane1.log; echo; echo LANE1_END; tail -c 600 ~/lane3.log; echo; echo LANE3_END; tail -c 300 ~/lane2.log; echo; echo LANE2_END; wc -l ~/tree/artifacts/claude-bmriv-smoke-20260926/run2/*.jsonl' 2>&1 | tail -14
+but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[bmriv] lfm12b_4k 5/8 seconds=172
+{"name": "lfm12b_4k", "rows": 8, "think": "off", "max_new": 4096, "shard": "1/4", "seconds": 258, "hit_max": 0, "think_closed": 0, "empty_replies": 0, "median_new_tokens": 2175.0, "median_ms": 31916.3, "sha256": "2277023dc9a113a4a8d1772cf37ab4dcc4e5c78f32a39a9e6f7130b5731e2bde"}
+
+LANE3_END
+ install `causal_conv1d` for the optimized kernel.
+[transformers] `fused_recurrent_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+
+LANE2_END
+    8 /root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_lfm12b_4k.jsonl
+    8 /root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_plain1b_4k.jsonl
+    3 /root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_qwen2b_4k.jsonl
+   19 total
+[0m
+[0m$ [0mssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'grep -h "^{" ~/lane1.log ~/lane3.log; echo ---; tail -c 200 ~/lane2.log; echo; ps aux | grep bmriv | grep -v grep | awk "{print \$2, \$NF}"' 2>&1 | tail -8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+{"name": "plain1b_4k", "rows": 8, "think": "off", "max_new": 4096, "shard": "1/4", "seconds": 277, "hit_max": 2, "think_closed": 0, "empty_replies": 0, "median_new_tokens": 841.0, "median_ms": 20351.050000000003, "sha256": "596f1386a95b701cdad3fbbabbc6f4ec42880e3700138a510a29e31e2d8f65d7"}
+{"name": "lfm12b_4k", "rows": 8, "think": "off", "max_new": 4096, "shard": "1/4", "seconds": 258, "hit_max": 0, "think_closed": 0, "empty_replies": 0, "median_new_tokens": 2175.0, "median_ms": 31916.3, "sha256": "2277023dc9a113a4a8d1772cf37ab4dcc4e5c78f32a39a9e6f7130b5731e2bde"}
+---
+ is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+
+1030 qwen2b_4k
+[0m
+[0m$ [0msleep 150; ssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'tail -c 200 ~/lane2.log; echo; ps aux | grep bmriv | grep -v grep | awk "{print \$2, \$NF}"; wc -l ~/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_qwen2b_4k.jsonl; nvidia-smi --query-gpu=memory.used,memory.total --format=csv | head -2' 2>&1 | tail -7; date -u +%FT%TZ
+Have fun!
+ is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+
+1030 qwen2b_4k
+4 /root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_qwen2b_4k.jsonl
+memory.used [MiB], memory.total [MiB]
+4251 MiB, 24564 MiB
+2026-09-26T16:50:39Z
+[0m
+[0m$ [0msleep 200; ssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'grep -h "^{" ~/lane2.log; tail -c 150 ~/lane2.log; echo; ps aux | grep bmriv | grep -v grep | awk "{print \$2, \$NF}"; wc -l ~/tree/artifacts/claude-bmriv-smoke-20260926/run2/*.jsonl' 2>&1 | tail -8; date -u +%FT%TZ
+tion` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[bmriv] qwen2b_4k 5/8 seconds=697
+
+1030 qwen2b_4k
+     8 /root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_lfm12b_4k.jsonl
+     8 /root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_plain1b_4k.jsonl
+     5 /root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_qwen2b_4k.jsonl
+    21 total
+2026-09-26T16:54:06Z
+[0m
+[0m$ [0msleep 75; ssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'grep -h "^{" ~/lane2.log; ps aux | grep bmriv | grep -v grep | awk "{print \$2, \$NF}"; wc -l ~/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_qwen2b_4k.jsonl' 2>&1 | tail -5; date -u +%FT%TZ
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+1030 qwen2b_4k
+7 /root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_qwen2b_4k.jsonl
+2026-09-26T16:56:45Z
+[0m
+[0m$ [0mssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'kill 1030; sleep 3; ps -p 1030 > /dev/null 2>&1 && echo STILL_ALIVE || echo KILLED_1030; tail -c 300 ~/lane2.log; echo; wc -l ~/tree/artifacts/claude-bmriv-smoke-20260926/run2/*.jsonl; sha256sum ~/tree/artifacts/claude-bmriv-smoke-20260926/run2/*.jsonl; ls -la ~/tree/artifacts/claude-bmriv-smoke-20260926/run2/; nvidia-smi --query-gpu=memory.used,memory.total --format=csv | head -2; date -u +%FT%TZ' 2>&1 | tail -12
+2277023dc9a113a4a8d1772cf37ab4dcc4e5c78f32a39a9e6f7130b5731e2bde  /root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_lfm12b_4k.jsonl
+596f1386a95b701cdad3fbbabbc6f4ec42880e3700138a510a29e31e2d8f65d7  /root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_plain1b_4k.jsonl
+cdfedadb760aa3ab09d746bac21de6765b3f0156e374de654e1971194cfe2a0b  /root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_qwen2b_4k.jsonl
+total 128
+drwxr-xr-x 2 root root   110 Sep 26 16:40 .
+drwxrwxr-x 3 root root    74 Sep 26 16:39 ..
+-rw-r--r-- 1 root root 40403 Sep 26 16:44 rival_lfm12b_4k.jsonl
+-rw-r--r-- 1 root root 33197 Sep 26 16:43 rival_plain1b_4k.jsonl
+-rw-r--r-- 1 root root 49956 Sep 26 16:55 rival_qwen2b_4k.jsonl
+memory.used [MiB], memory.total [MiB]
+0 MiB, 24564 MiB
+2026-09-26T16:56:58Z
+[0m
+[0m$ [0mssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'ps -p 1030 -o pid,comm 2>&1; ps aux | grep bmriv | grep -v grep | wc -l; wc -l ~/tree/artifacts/claude-bmriv-smoke-20260926/run2/*.jsonl' 2>&1 | tail -6
+PID COMMAND
+0
+     8 /root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_lfm12b_4k.jsonl
+     8 /root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_plain1b_4k.jsonl
+     7 /root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_qwen2b_4k.jsonl
+    23 total
+[0m
+[0m$ [0mls artifacts/claude-bmriv-smoke-20260926/ 2>&1; git status --short 2>&1 | head -5
+RESULTS-rent.md
+run
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+[0m
+[0m$ [0mmkdir -p artifacts/claude-bmriv-smoke-20260926/run2 && scp -P 18378 -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no root@ssh8.vast.ai:'~/tree/artifacts/claude-bmriv-smoke-20260926/run2/*.jsonl' artifacts/claude-bmriv-smoke-20260926/run2/ 2>&1 | tail -4; ls -la artifacts/claude-bmriv-smoke-20260926/run2/; sha256sum artifacts/claude-bmriv-smoke-20260926/run2/*.jsonl; wc -l artifacts/claude-bmriv-smoke-20260926/run2/*.jsonl
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+total 256
+drwxr-xr-x  5 ben-hannan  staff    160 Sep 26 12:57 .
+drwxr-xr-x  5 ben-hannan  staff    160 Sep 26 12:57 ..
+-rw-r--r--  1 ben-hannan  staff  40403 Sep 26 12:57 rival_lfm12b_4k.jsonl
+-rw-r--r--  1 ben-hannan  staff  33197 Sep 26 12:57 rival_plain1b_4k.jsonl
+-rw-r--r--  1 ben-hannan  staff  49956 Sep 26 12:57 rival_qwen2b_4k.jsonl
+2277023dc9a113a4a8d1772cf37ab4dcc4e5c78f32a39a9e6f7130b5731e2bde  artifacts/claude-bmriv-smoke-20260926/run2/rival_lfm12b_4k.jsonl
+596f1386a95b701cdad3fbbabbc6f4ec42880e3700138a510a29e31e2d8f65d7  artifacts/claude-bmriv-smoke-20260926/run2/rival_plain1b_4k.jsonl
+cdfedadb760aa3ab09d746bac21de6765b3f0156e374de654e1971194cfe2a0b  artifacts/claude-bmriv-smoke-20260926/run2/rival_qwen2b_4k.jsonl
+       8 artifacts/claude-bmriv-smoke-20260926/run2/rival_lfm12b_4k.jsonl
+       8 artifacts/claude-bmriv-smoke-20260926/run2/rival_plain1b_4k.jsonl
+       7 artifacts/claude-bmriv-smoke-20260926/run2/rival_qwen2b_4k.jsonl
+      23 total
+[0m
+[0m$ [0mssh -i ~/.ssh/rent-bmrivsmoke -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 18378 root@ssh8.vast.ai 'stat -c "%n %s %y" ~/lane1.log ~/lane2.log ~/lane3.log ~/lanes-start.txt ~/tree/artifacts/claude-bmriv-smoke-20260926/run2/*.jsonl; date -u +%FT%TZ' 2>&1 | tail -8
+/root/lane1.log 473 2026-09-26 16:43:41.842879822 +0000
+/root/lane2.log 1103 2026-09-26 16:51:59.332682458 +0000
+/root/lane3.log 895 2026-09-26 16:44:46.503106100 +0000
+/root/lanes-start.txt 21 2026-09-26 16:39:05.013955398 +0000
+/root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_lfm12b_4k.jsonl 40403 2026-09-26 16:44:46.503106100 +0000
+/root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_plain1b_4k.jsonl 33197 2026-09-26 16:43:41.838879808 +0000
+/root/tree/artifacts/claude-bmriv-smoke-20260926/run2/rival_qwen2b_4k.jsonl 49956 2026-09-26 16:55:19.705435549 +0000
+2026-09-26T16:57:44Z
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); date -u +%FT%TZ; vastai destroy instance 52778379 2>&1 | tail -2; sleep 10; vastai show instances --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('live:',[(x.get('id'),x.get('label')) for x in d])
+"; date -u +%FT%TZ
+2026-09-26T16:57:48Z
+Are you sure you want to destroy instance 52778379? This is irreversible and will delete all data. [y/N] 
+Aborted.
+live: [(52755827, 'claude-director-depot'), (52771192, 'claude-fixsleep-dl5'), (52775111, 'rent-brd9'), (52775913, 'claude-madeup-mu404b'), (52778152, 'claude-fixsleep-dl6b'), (52778379, 'claude-benchmarks-bmrivsmoke2'), (52779278, 'claude-creativechat-k1c'), (52779987, 'claude-notes-rd378u'), (52780312, 'claude-sleep-358t'), (52780943, 'claude-thought-rv390')]
+2026-09-26T16:58:00Z
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); echo y | vastai destroy instance 52778379 2>&1 | tail -2; date -u +%FT%TZ; sleep 15; vastai show instances --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+mine=[(x.get('id'),x.get('label'),x.get('actual_status')) for x in d if 'bmrivsmoke2' in str(x.get('label'))]
+print('bmrivsmoke2 live:',mine)
+"
+Are you sure you want to destroy instance 52778379? This is irreversible and will delete all data. [y/N] destroying instance 52778379.
+2026-09-26T16:58:03Z
+bmrivsmoke2 live: []
+[0m
+[0m$ [0mtail -3 artifacts/fable-predictions-ledger.md 2>&1; wc -l artifacts/fable-predictions-ledger.md 2>&1
+- 2026-09-26 16:40 UTC rsn-358x GPU BUILD (label claude-sleep-358x, sealed origin/main code, SEAL-code-v2 14/14 OK, selftests ok, sources 8/8 sha match, code never edited): rentals 1 (52774371) + 2 (52775064) died on host docker-registry proxy error while loading, destroyed per 6-min rule, $0; rental 3 (52775569, RTX 5090 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime, disk 50) ran 16:09:51-16:39:41Z ~0.50 h x $0.4898 = ~$0.24 of $0.60 (Ben 15:50 approve card cmsg_01FuvegZXjMmeUzStiEFVnEW1ZcuTEwvWrMr3xypKg1TBi); 16-at-once OOMed (loop ~4 GB/proc), ran 8 plains (~4.9 min each) then loops 2x4 (~5.4 min each); 16/16 carry done, SEAL-run 16 lines, evals 1x each counts-only; 16x4 files back, 0 weights pushed, rental destroyed, 0 live. VERDICT FAIL + PROVED-WRONG: X0 pass (plain-fresh bar 4/4 at 2000; sources 8/8), X1 fail (loop-pre mean 5000 vs loop-fresh 5000, ratio 1.00, 0/4), X2 fail (loop-pre 5000 vs plain-pre 812.5, ratio 6.15, 0/4); plain-pre vs plain-fresh 812.5 vs 2000 (4/4). Tests /300: plains maze7 300x8; loops maze7 103,134,90,114,39,92,8,81. Credit at gate 5.894937036269795. See artifacts/claude-rsn358x-20260926/RESULTS.md + runs/ + SEAL-run.sha256.txt.
+- 2026-09-26 16:45 UTC y1g GPU DIAGNOSIS (label claude-memory-y1g, sealed origin/main code, SEAL-y1g 9/9 OK, selftest ok, code never edited): rentals 1 (52776862) + 2 (52777941) stuck loading past 6-min rule, destroyed, $0; rental 3 (52778874, RTX 5090, image pytorch/pytorch disk 60, torch upgraded 2.2.1->2.14.0+cu130 per rent-kit note, gcc installed env-only after first launch crashed in triton bmm_outer_product with no C compiler, relaunched unchanged) ran 16:33-16:45:23Z ~0.21h x $0.4944 = ~$0.10 of $0.30; task total ~$0.10. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc. Run 71 DEV asks (~2 min wall): pick winner C4 go=false; answerable_right A0 26 A1 26 C3 16 C4 10 V 10; answerable_wrong A0 27 A1 24 C3 5 C4 1 V 5; never_told_idk A0 1 A1 2 C3 6 C4 9 V 9; signal C3/C4/V all true, any true. Files back gpu/y1g_rows.jsonl (71 rows) + y1g_summary.json + log.txt, hashes match both ends, rental destroyed, 0 claude-memory-y1g live. Credit at gate 9.54. See artifacts/claude-y1g-20260926/RESULTS-gpu.md + gpu/.
+- 2026-09-26 16:45 UTC rent-rt02d PARTIAL (label claude-plainpuzzles-rt02d, sealed origin/main code, never edited): instances 52760176 (success False, loading>6min, destroyed, ~$0) + 52761382 (RTX 5090, host ssh broken, ~0.17h x $0.5037 ~$0.08) + 52763126 (RTX 5090, ~2.05h x $0.563 ~$1.15); total ~$1.23 of $1.50. Setup S1-S6 green (BASE 87179e5c, reader depot copy sha e688e1b2 match, adapter a33211dc match, seals OK, selftests 55/55 + 9/9); dev gate PASS (B0a/B0b 55 rows each, 0 diffs). Env fix only: torch 2.11.0+cu128, torchvision 0.26.0, torchaudio removed (transformers 5.17 vs image torch 2.2.1). Panel B0 launched 16:26, rental ssh died ~16:31, reboot failed, outcome unknown; run/score/logs unrecoverable, nothing pushed but RESULTS-rent.md. Outcome: PARTIAL (infra).
+    3030 artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md << 'EOF'
+- 2026-09-26 16:58 UTC claude-benchmarks-bmrivsmoke2 (Benchmarks bm-riv smoke 2, origin/main code unmodified, panel seal da7202db ok, selftest 12/12): BUDGET-STOP (killed at ~$0.189, final ~$0.197 of $0.20; money rule $0.18 crossed between polls). Finished: plain1b_4k 8 rows, lfm12b_4k 8 rows. Killed (rows kept): qwen2b_4k 7 rows. Instance 52778379 (offer 43681503, RTX 4090 MY, image pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime disk 80, torch 2.8.0+cu129 transformers 5.17.0 py 3.11.13, created 16:27:10Z running ~16:31:36Z lanes 16:39:05-16:40:28Z killed 16:56:55Z destroyed 16:58:03Z, ~0.515h x dph $0.38222 = ~$0.197); 1 rental of max 4; post-destroy 0 claude-benchmarks-bmrivsmoke2 live. Credit at gate 8.83074058626977. Copy-back 3 files sha-verified. Peak GPU mem seen 9665/24564 MiB. No code edits, no traceback, no replies quoted. See artifacts/claude-bmriv-smoke-20260926/RESULTS-rent2.md + run2/.
+EOF
+tail -1 artifacts/fable-predictions-ledger.md | head -c 200; echo
+- 2026-09-26 16:58 UTC claude-benchmarks-bmrivsmoke2 (Benchmarks bm-riv smoke 2, origin/main code unmodified, panel seal da7202db ok, selftest 12/12): BUDGET-STOP (killed at ~$0.189, final ~$0.197 of
+[0m
+[0m← [0mWrite artifacts/claude-bmriv-smoke-20260926/RESULTS-rent2.md
+Wrote file successfully.
+[0m
+[0m$ [0mgit status --short -- artifacts/claude-bmriv-smoke-20260926/ artifacts/fable-predictions-ledger.md 2>&1; echo ---; ls -la artifacts/claude-bmriv-smoke-20260926/ artifacts/claude-bmriv-smoke-20260926/run2/; echo ---; grep -c . artifacts/claude-bmriv-smoke-20260926/RESULTS-rent2.md
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+MM artifacts/fable-predictions-ledger.md
+---
+artifacts/claude-bmriv-smoke-20260926/:
+total 32
+drwxr-xr-x    6 ben-hannan  staff    192 Sep 26 12:58 .
+drwxr-xr-x@ 564 ben-hannan  staff  18048 Sep 26 12:53 ..
+-rw-r--r--    1 ben-hannan  staff   6809 Sep 26 11:39 RESULTS-rent.md
+-rw-r--r--    1 ben-hannan  staff   4136 Sep 26 12:58 RESULTS-rent2.md
+drwxr-xr-x    8 ben-hannan  staff    256 Sep 26 11:38 run
+drwxr-xr-x    5 ben-hannan  staff    160 Sep 26 12:57 run2
+
+artifacts/claude-bmriv-smoke-20260926/run2/:
+total 256
+drwxr-xr-x  5 ben-hannan  staff    160 Sep 26 12:57 .
+drwxr-xr-x  6 ben-hannan  staff    192 Sep 26 12:58 ..
+-rw-r--r--  1 ben-hannan  staff  40403 Sep 26 12:57 rival_lfm12b_4k.jsonl
+-rw-r--r--  1 ben-hannan  staff  33197 Sep 26 12:57 rival_plain1b_4k.jsonl
+-rw-r--r--  1 ben-hannan  staff  49956 Sep 26 12:57 rival_qwen2b_4k.jsonl
+---
+40
+[0m
+[0m$ [0mgit status --short artifacts/claude-bmriv-smoke-20260926/RESULTS-rent2.md artifacts/claude-bmriv-smoke-20260926/run2/ 2>&1; git check-ignore artifacts/claude-bmriv-smoke-20260926/run2/rival_plain1b_4k.jsonl 2>&1; echo CHECK_DONE
+artifacts/claude-bmriv-smoke-20260926/run2/rival_plain1b_4k.jsonl
+CHECK_DONE
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-bmriv-smoke-20260926/run2/rival_plain1b_4k.jsonl artifacts/claude-bmriv-smoke-20260926/RESULTS-rent2.md 2>&1; echo ---; git status --short --untracked-files=all -- artifacts/claude-bmriv-smoke-20260926/ 2>&1 | head -15
+.gitignore:5:artifacts/	artifacts/claude-bmriv-smoke-20260926/run2/rival_plain1b_4k.jsonl
+.gitignore:5:artifacts/	artifacts/claude-bmriv-smoke-20260926/RESULTS-rent2.md
+---
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+[0m
