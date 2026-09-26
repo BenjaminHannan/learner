@@ -73,3 +73,8 @@ and carrying on, helped the net finish 11 to 17 more 7x7 grids out of 300.
   signal silent. That is measured first on practice grids, never on these test grids, before anything is registered.
 - Why writing a guess helps is also a guess: a loop network stuck between two equally good answers settles once one
   is pushed (like pencilling in a number). Untested.
+
+## Caveat added 2026-09-26 16:59 UTC (date -u)
+The Thread manager (16:58 UTC) reports that 358i's loop nets were probably trained with a torch 2.8 bug that left the loop
+block without a gradient on most steps. Sleep research is checking; it is not verified here. If so, these counts come
+from undertrained loop nets. Comparisons within a net stay fair. See ../claude-rv390-20260926/NOTE-nets-hold.md.
