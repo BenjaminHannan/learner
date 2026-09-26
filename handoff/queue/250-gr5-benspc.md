@@ -5,7 +5,7 @@ TIME CAP: 2 hours in total. If the cap is reached, stop by exact PID, copy back 
 DUPLICATE GUARD, before anything else: stop with DUPLICATE if artifacts/claude-gr5-20260926/run or artifacts/claude-gr5-20260926/RESULTS-benspc.md exists on origin/builder-outbox or origin/main.
 
 YOUR TASK: gr-5, the registered run. Train a small adapter so the reader 1B copies a number square out of a chat message (or says "none"), check it on held-out practice rows, then run it ONCE on a sealed blind panel and score it. The thread wrote the code: run it, never edit it. If something breaks, copy back what exists and report the exact error and full traceback.
-READ FIRST (origin/main): artifacts/claude-gr5-20260926/PASSMARKS-gr5.md and the docstring of scripts/claude_gr5.py.
+READ FIRST (origin/main): artifacts/claude-gr5-20260926/PASSMARKS-gr5.md, ADDENDUM-gr5-1.md and ADDENDUM-gr5-2.md (everything below runs on BensPC), and the docstring of scripts/claude_gr5.py.
 TEST-ONLY, never open, print or quote: artifacts/claude-panel-gr5-20260926 (only claude_gr5.py run and score read it) and every file the run writes into outgr5/ (L_*.jsonl, P0_*.jsonl). Report counts only. The training rows (artifacts/claude-gr5-20260926/train/rows.jsonl) and the smoke panel are practice data, but report counts only there too.
 
 SETUP (Windows, as k1f-benspc and gram-364-benspc did):
@@ -16,7 +16,7 @@ SETUP (Windows, as k1f-benspc and gram-364-benspc did):
 - Keep the adapter OFF git: create the NEW folder C:/Users/benja/lis301/work/gr5/adapter (outside the tree) before step 3; the adapter is written there as gr5_adapter.pt.
 
 STEPS (from the tree root, each through W, each with its own log):
-1. Seals (sha256sum -c, or the same check in Python): artifacts/claude-gr5-20260926/SEAL-marks.sha256.txt (3 OK) and artifacts/claude-gr5-20260926/SEAL-code-gr5.sha256.txt (9 OK) and artifacts/claude-gr5-20260926/SEAL-addendum1.sha256.txt (2 OK) from the tree root; artifacts/claude-panel-gr5-20260926/SEAL-panel.sha256.txt from inside that folder (4 OK). Any mismatch: stop with SEAL-MISMATCH.
+1. Seals (sha256sum -c, or the same check in Python): artifacts/claude-gr5-20260926/SEAL-marks.sha256.txt (3 OK) and artifacts/claude-gr5-20260926/SEAL-code-gr5.sha256.txt (9 OK) and artifacts/claude-gr5-20260926/SEAL-addendum1.sha256.txt (2 OK) and artifacts/claude-gr5-20260926/SEAL-addendum2.sha256.txt (1 OK) from the tree root; artifacts/claude-panel-gr5-20260926/SEAL-panel.sha256.txt from inside that folder (4 OK). Any mismatch: stop with SEAL-MISMATCH.
 2. Tests: scripts/claude_gr5.py --selftest must print "gr5 selftest 4/4"; scripts/claude_gr4.py --selftest must print "gr4 selftest 15/15"; scripts/claude_gr5_devclean.py --selftest must print "gr5 devclean selftest 1/1 (clean 53, shared 19)". Else stop.
 3. TRAIN: W scripts/claude_gr5.py train --model BASE --rows artifacts/claude-gr5-20260926/train/rows.jsonl --adapter C:/Users/benja/lis301/work/gr5/adapter/gr5_adapter.pt > logtrain.txt 2>&1
    -> the last line is one JSON line (device, train_rows 739, examples_seen 2217, mean_loss_by_epoch, minutes). device must be "cuda". Record the adapter's sha256 and size.
