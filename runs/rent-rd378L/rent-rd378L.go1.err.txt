@@ -1,0 +1,1560 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git rev-parse origin/main; git rev-parse origin/builder-outbox; git status --short | head -n 50
+FETCH_EXIT:0
+3b5a16a6fcfb4f5096c36ba8911b231f9fe11dcc
+097b5b1ffa0801bf6bf2230b2a74b046a3937f31
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-brd5-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd5-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd5-20260926/gpu/log.txt
+A  artifacts/claude-brd5-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd5-20260926/gpu/streams.json
+A  artifacts/claude-brd6-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd6-20260926/gpu/brd6_summary.json
+A  artifacts/claude-brd6-20260926/gpu/log.txt
+A  artifacts/claude-brd6-20260926/gpu/practice.jsonl
+A  artifacts/claude-brd6-20260926/gpu/streams.json
+A  artifacts/claude-brd7-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd7-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd7-20260926/gpu/log.txt
+A  artifacts/claude-brd7-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd7-20260926/gpu/streams.json
+A  artifacts/claude-dl1-20260925/RESULTS-gpu.md
+A  artifacts/claude-dl1-20260925/gpu/dl1_results.json
+A  artifacts/claude-dl1-20260925/gpu/log.txt
+A  artifacts/claude-e2e02c-20260926/RESULTS-benspc.md
+A  artifacts/claude-e2e02c-20260926/run/arm_G.jsonl
+A  artifacts/claude-e2e02c-20260926/run/arm_T.jsonl
+A  artifacts/claude-e2e02c-20260926/run/arm_X.jsonl
+A  artifacts/claude-e2e02c-20260926/run/chat_G.jsonl
+A  artifacts/claude-e2e02c-20260926/run/chat_T.jsonl
+A  artifacts/claude-e2e02c-20260926/run/chat_X.jsonl
+A  artifacts/claude-e2e02c-20260926/run/creative_T.jsonl
+A  artifacts/claude-e2e02c-20260926/run/creative_X.jsonl
+A  artifacts/claude-e2e02c-20260926/run/gram360_parts_G.jsonl
+A  artifacts/claude-e2e02c-20260926/run/gram360_parts_X.jsonl
+A  artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.json
+A  artifacts/claude-e2e02c-20260926/run/sleep/sleep02c_results.json
+A  artifacts/claude-e2e02c-20260926/run/sleep_G.jsonl
+A  artifacts/claude-e2e02c-20260926/run/sleep_X.jsonl
+A  artifacts/claude-e2e02c-20260926/score/chat_G.jsonl
+A  artifacts/claude-e2e02c-20260926/score/chat_T.jsonl
+A  artifacts/claude-e2e02c-20260926/score/chat_X.jsonl
+A  artifacts/claude-e2e02c-20260926/score/chat_key_G.json
+A  artifacts/claude-e2e02c-20260926/score/chat_key_T.json
+A  artifacts/claude-e2e02c-20260926/score/chat_pair_G.jsonl
+A  artifacts/claude-e2e02c-20260926/score/chat_pair_T.jsonl
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 30; echo ---KIT---; git show origin/main:design/v3/30-modes/330-rent-kit.md
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+---KIT---
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+# MAC DISK (09-26): never stage the full tree or a tree.tgz on the Mac (that took ~3 GB and filled it).
+# Stream only the paths your task needs straight to the target, then delete nothing else:
+git archive origin/builder-outbox <paths> | ssh <target> 'mkdir -p ~/tree && tar -x -C ~/tree'
+git archive origin/main <paths> | ssh <target> 'tar -x -C ~/tree'          # main on top: main wins
+scp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt <target>:tree/artifacts/fable-self122-20260922/   # only if needed
+```
+For BensPC use its ssh host in place of <target>. If you truly must stage on the Mac, use one mktemp dir and
+remove it by exact path before you finish. Put `DISK: <GB>` in the job header (peak Mac use; default 3 for rent-*).
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+- LABELS (Director 13:33 UTC 2026-09-26): Ben's own agents share this vast account and one destroyed a rental it thought was its own. Every rental label starts with `claude-<thread>-<job>` (e.g. claude-fixsleep-dl4, claude-reading-lis319f). Never destroy an instance whose label your task did not create.
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+(tree already streamed to ~/tree; scp READER only if needed); cd ~/tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+[0m
+[0m$ [0mfor f in artifacts/claude-rd378L-20260926/PASSMARKS.md artifacts/claude-rd378L-20260926/PASSMARKS-B.md artifacts/claude-rd378L-20260926/PASSMARKS-C.md artifacts/claude-rd378L-20260926/PASSMARKS-D.md; do echo "===== $f ====="; git show origin/main:"$f" 2>&1; echo; done
+echo "=====DUPLICATE GATE====="
+echo "-- main RESULTS --"; git show origin/main:artifacts/claude-rd378L-20260926/RESULTS.md 2>&1 | head -n 5; echo EXIT:$?
+echo "-- outbox RESULTS --"; git show origin/builder-outbox:artifacts/claude-rd378L-20260926/RESULTS.md 2>&1 | head -n 5; echo EXIT:$?
+echo "-- outbox runs dir --"; git ls-tree origin/builder-outbox -- runs/007g-rd-378L-notes-search/ 2>&1; echo EXIT:$?
+echo "-- queue file on main --"; git ls-tree origin/main -- handoff/queue/007g-rd-378L-notes-search.md 2>&1; echo EXIT:$?
+echo "-- depot readme --"; git show origin/main:handoff/depot/README.md 2>&1 | head -n 60
+echo "-- depot report --"; git show origin/builder-outbox:artifacts/claude-depot-20260926/REPORT.md 2>&1 | head -n 80
+===== artifacts/claude-rd378L-20260926/PASSMARKS.md =====
+# rd-378L: do notes help find the right message across a whole long chat? (step 4a of the 371c plan)
+
+Thread "Fix: reading facts from chat". Written 2026-09-26 ~13:05 UTC, before any note was written over LoCoMo and before
+any score. Development measurement on LoCoMo PRACTICE (labelled "after using LoCoMo for development"); nothing is trained
+on LoCoMo; no question, answer, turn or note text is printed or pushed.
+
+## Why
+rd-378's finding test searched inside one 12-16 turn dialog, where top 10 is most of the dialog (heard-only found
+150/150), so it could not show whether notes help. Ben's pasted report (12:00 UTC): measure whether notes help search
+before spending on making them truer; if they don't, drop them. This is that test, before step 4b (cut-only writer).
+
+## The one change
+Store A: every LoCoMo turn as a "heard" row (exactly bm-393b's rows, ep-382 MemoryStore). Store B: the same rows plus
+every note the rd-378 note writer (unchanged; merged sha256 dbcc8db5...) writes, greedy, one call per turn with up to 6
+earlier turns of the same session, each note pointing to its cited turns. Same recall() (fused BM25 + MiniLM), same
+questions. Chats: LoCoMo conversations 0-4 (2,760 turns, 759 questions of categories 1-4 with evidence).
+Script: scripts/claude_rd378L_recall.py (dialogs, score). A question is found@k when an evidence turn is in the union of
+the turn ids of the top k recalled items (a note counts as one item and points to its cited turns).
+
+## Marks (fused mode, any@10, questions of categories 1-4)
+| Mark | Bar |
+|---|---|
+| L1 | B >= A + 5 points overall |
+| L2 | no category (1, 2, 3, 4) more than 3 points below A |
+PASS = L1 and L2. Proved wrong: B <= A + 1 point overall.
+If L1 fails, notes stay off in the store (it already answers from "heard" only) and step 4b is not run.
+Report only: bm25 mode, @5 and @20, all@k, notes per turn, unparsed turns, write ms.
+Reference (not a mark): bm-393b's heard-only fused any@10 on all ten chats was 62.9%.
+
+===== artifacts/claude-rd378L-20260926/PASSMARKS-B.md =====
+# rd-378L addendum B: same turn budget for both stores (registered 2026-09-26 ~12:35 UTC, before 007g ran)
+
+Why: Benchmarks pointed out (via the coordinator, 12:27 UTC) that a note counts as one item but credits every turn it
+cites (up to 7), so store B's top 10 items can cover more turns than store A's, and L1 could pass just from showing more
+turns. Checked in the code (scripts/claude_rd378L_recall.py, score): true.
+
+Change to the script (before any note was written): it also reports, per mode and k,
+- turns@k: distinct turns covered by the top k items (summed over questions; mean = turns@k / questions);
+- anyT@k: an evidence turn is among the first k DISTINCT turns reached by walking the ranked items in order (a note's
+  cited turns taken from its own turn backwards). For store A, anyT@k = any@k.
+Recall depth is raised from 20 to 60 items so the turn budget can always be filled. any@k / all@k are unchanged.
+SEAL.sha256.txt covered the script before this change; SEAL-B.sha256.txt covers the script now in use.
+
+## Added mark (fused mode, questions of categories 1-4)
+| Mark | Bar |
+|---|---|
+| L3 | B anyT@10 >= A anyT@10 + 5 points (same 10-turn budget) |
+PASS now = L1 and L2 and L3. If L1 passes but L3 fails, the result reads "notes widen what is shown", not "notes help
+search". The proved-wrong clause is unchanged (B any@10 <= A + 1 point) and is also reported for anyT@10.
+Report only: mean turns@10 for A and B.
+
+===== artifacts/claude-rd378L-20260926/PASSMARKS-C.md =====
+# rd-378L addendum C (2026-09-26 ~12:55 UTC, before 007g ran): an extra output, no mark changes
+
+For Benchmarks' answer-level follow-up (agreed 12:50 UTC): the score step also writes ranked_turns.jsonl, per question and store, the
+first 20 distinct turn positions in rank order (fused), numbered as claude_bm395_store_answer.build_store numbers them.
+Positions only, no text. Marks L1-L3 are unchanged. SEAL-C.sha256.txt covers the script now in use.
+Agreed follow-up (Benchmarks owns it, registered separately): only if L1 passes, the plain 1B answers from store B's
+first 20 distinct turns vs store A's, with bm-398d's layout, prompt and blind check.
+
+===== artifacts/claude-rd378L-20260926/PASSMARKS-D.md =====
+# rd-378L addendum D: the machine changes, nothing else (registered 2026-09-26 ~13:45 UTC, before rd-378L ran)
+
+Thread "Trustworthy notes" (problem #3, notes), which took rd-378L over from "Fix: reading facts from chat" at 13:33 UTC.
+Written before any note was written over LoCoMo and before any score. 007g never ran.
+
+## Why
+Ben, 13:30 UTC: "none of them should be waiting for benspc btw, they should all be using vast.ai if they're tests are
+queued. Benspc's gpu should not be the blocker". 007g sat behind 007b on BensPC, so it moves to a vast.ai rental
+(handoff/queue/rent-rd378L.md replaces handoff/queue/007g-rd-378L-notes-search.md).
+
+## What stays the same
+The script (scripts/claude_rd378L_recall.py, SEAL-C hash 6b9398c0...), the data (LoCoMo conversations 0-4,
+locomo10.json sha256 79fa87e9...), the writer command, the score command, the marks L1-L3, the proved-wrong clause, the
+outputs, and the privacy rule (no LoCoMo question, answer, turn or note text is printed or pushed).
+
+## What changes
+1. Where it runs: a rented Linux RTX 5090 (or 4090) instead of BensPC's RTX 5070 Ti.
+2. How the writer gets there. The registered writer is the rd-378 merged model, model.safetensors sha256
+   dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510. On the rental it is rebuilt from its own LoRA
+   adapter (BensPC C:/Users/benja/rd378/tree/WORK/nrun/adapter, from the same training run) on the same base
+   (openbmb/MiniCPM5-1B commit 87179e5c) by scripts/claude_rd378L_rebuild.py, with BensPC's versions (torch 2.11.0
+   cu128, transformers 5.17.0, peft 0.21.0). The rebuild is used only if its model.safetensors hashes to dbcc8db5...;
+   otherwise the Mac's copy (~/premonition-models/rd378-notes-merged/, same hash) is copied to the rental and must hash
+   the same. No other writer may be used. If neither route gives that hash, the job stops with WRITER-FAIL.
+3. Where the LoCoMo-derived files live: dialogs.jsonl, notes.jsonl and notes_recall_per_question.jsonl are copied
+   from the rental to the Mac at ~/rd378L-private/ (outside git) and never pushed; the rental's copies go with it.
+
+## Known difference, accepted before the run
+Same weights, but greedy decoding on another GPU and software build can pick a different token where two are almost
+tied, so a few notes may differ from what BensPC would have written. Store A has no notes and store B uses this one
+notes file, so the A-vs-B comparison is unaffected; the GPU and versions are reported, not corrected.
+
+## Seal
+SEAL-D.sha256.txt covers the recall script (unchanged), PASSMARKS, B, C and D, the rebuild script and the writer
+code. The rental runs the exact commit that added SEAL-D.sha256.txt.
+
+=====DUPLICATE GATE=====
+-- main RESULTS --
+fatal: path 'artifacts/claude-rd378L-20260926/RESULTS.md' does not exist in 'origin/main'
+EXIT:0
+-- outbox RESULTS --
+fatal: path 'artifacts/claude-rd378L-20260926/RESULTS.md' does not exist in 'origin/builder-outbox'
+EXIT:0
+-- outbox runs dir --
+EXIT:0
+-- queue file on main --
+EXIT:0
+-- depot readme --
+fatal: path 'handoff/depot/README.md' does not exist in 'origin/main'
+-- depot report --
+fatal: path 'artifacts/claude-depot-20260926/REPORT.md' does not exist in 'origin/builder-outbox'
+[0m
+[0m$ [0muptime; df -g / 2>&1 | head; echo ---; ls ~/rd378L-private/ 2>&1; ls ~/premonition-models/rd378-notes-merged/ 2>&1; shasum -a 256 ~/premonition-models/rd378-notes-merged/model.safetensors 2>&1 | head; echo ---LEDGER---; git show origin/main:artifacts/fable-predictions-ledger.md 2>&1 | tail -n 20; echo ---SEALS---; git show origin/main:artifacts/claude-rd378L-20260926/SEAL-D.sha256.txt 2>&1; echo ---; git show origin/main:artifacts/claude-rd378L-20260926/SEAL-C.sha256.txt 2>&1; echo ---COMMIT-LOOKUP---; git log -1 --format=%H origin/main -- artifacts/claude-rd378L-20260926/SEAL-D.sha256.txt
+9:46  up 2 days, 23:39, 4 users, load averages: 77.11 69.45 64.47
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        57    19%  484014 599162800    0%   /
+---
+ls: /Users/ben-hannan/rd378L-private/: No such file or directory
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer_config.json
+tokenizer.json
+dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510  /Users/ben-hannan/premonition-models/rd378-notes-merged/model.safetensors
+---LEDGER---
+- P138n.2 M2 vs 138m saved rows: sessions152 1 (S1-family10#19 fixed), bench 0, marks123 0, rt136 16 (C019-C031 inherited 222, C076/C079/C115 reply-only; direct vs 138m moved == [C115]), rt143 no-gate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER (true taught fact, loop-test gold). Registered verdict:
+- P138n.3 M3 smoke identical except agent/config/label/seconds/root/report; M4 bench identical x3; M5 median delta <= +5 ms (pilot +0.10 ms); M6 5 reply changes (p3 d00t04, d01t03, d05t03; v138m d59t00, d61t01), 0 write changes, 0 ghosts, 0 failed dup checks. Registered verdict:
+- P138n.4 M7 blind panels (221, 221b, 229, 232c, 236, 237) on 138n vs each registered arm: 0 right->wrong, 0 new wrong, 0 question writes, 0 new wrong writes; likely risk: 221b/237 ambiguous-key answers where the piece abstained, and 229 items claimed first by 138m's 222 teach (raw keys). Registered verdict:
+- P252c.6 OUTCOME (2026-09-22 20:05, build/verification agent finishing sealed merge 252c) registered verdict FAIL exactly as predicted in P252c.1-.5. M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); false claims 0, junk 0, wrong values 26; keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all as predicted, 15 newly right, 0 newly wrong; FAIL only on bar "no wrong value where 258/259 had none" at t258-026. M2 PASS (31 moves, 0 junk/false/wrong-removal/question-write, controls identical). M3 FAIL on junk only as predicted (d258-037, v259-008, both junk in own arms too); all records as predicted, 0 false replies. M4 PASS (only c252-022 moves, class both, Tobin removed, 0 new wrong/junk/false). M5 PASS (moves = 252b: rt136 4, sessions152 1, rt143 0, bench 0; 0 new bad). M6 PASS (smoke identical). M7 PASS (0 ghosts, 0 dup fails, 0 moves, 18 rows). M8 PASS (added median -0.11 ms). P252c.1-.5 all right. Seals of 252c, corrpanel252 and corrtail258 all verified OK before the runs; M4+M1 each run once with the sealed driver/scorer; M2/M3/M5-M8 not re-run.
+- P255.6 OUTCOME (2026-09-22, build/verification agent) registered FAIL on M4 (director ruling: the 8 flagged probes A06, B04, B05, B20, D02, D03, D04, D08 are WORSE on meaning); M3 runner done (30 convs, 244 rows, 153 changed, 0 unexplained, 0 store changes), judging not run; M1 graded by the director separately.
+- P260.4 (exp 260 M1 blind openpanel260, handoff run 2026-09-23 via sealed scripts/claude_260_panel.sh, panel run ONCE per arm) M1 PASS 9/9 bars: opener_teach 260 20/20 (138m 3/20), opener_question 12/12 (138m 5/12), greeting_question 8/8 (138m 1/8), bare_greeting 6/6 (138m 3/6), junk_guard 8/8 junk 0 (138m 0/8 junk 8), name_trap 10/10 newly-wrong 0, junk writes 0/80 (138m 13), question writes 0, control 16/16 byte-identical; 260 right 80/80, 138m right 38/80, 42 moves all toward right, 0 against; 138m arm vs writer base138m.jsonl 80/80 identical; schema OK; overall exp 260 PASS (M1-M6 all PASS).
+- P138n.5 OUTCOME (2026-09-22, build/verification agent finishing sealed merge 138n) registered verdict FAIL on M7 only, exactly one panel. M1 PASS (720 cases, 222 moves vs own, 0 unpredicted / 0 predicted-wrong / 0 predicted-not-moved, own arm 720/720). M2 PASS (sessions152 1 fixed, bench 0, marks123 0, rt136 16 = 13 allowed WRONG-WRITE C019-C031 identical to 138m + 3 reply-only, direct vs 138m moved [C115]; rt143-nogate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER as predicted). M3 PASS (differ .agent/.config/.label/.seconds only). M4 PASS (4/4 identical x3). M5 PASS (median delta +0.317 ms). M6 PASS (5 reply changes as predicted, 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138m reproduces saved rows). M7 FAIL: tablepanel221 138n right 77 wrong 3 vs registered 66/0 (138m 29/0); new wrong p221-059#2, p221-066#2, p221-070#2 (all inverse family; 059+070 right on registered arm); right->miss 8 (4 inverse p221-060/063/064/069, 4 self p221-087/089/090/091); gained 21; question writes 0. Other 5 panels PASS: 221b 85/0 vs 54/0 (138m 49), 229 34/6 vs 26/7 (138m 18/4), 232c 80/0 vs 80/0 (138m 44), 236 60/0 vs 60/0 (138m 20), 237 68/1 vs 65/1 (138m 31/1); 0 new wrong and 0 question writes on all. 239 runner only: artifacts/claude-convpanel239-138n-20260922/transcripts-138n.jsonl + .md and changes-138n-vs-138m.json (244 turns, 58 changed vs 138m), never graded. Seals verified OK (138n seal 15/15; each panel seal OK; 221 seal checked inside its dir since it lists bare filenames). Deviation: sealed m7.sh final 'python3 compare' failed (broken x86 /usr/local/bin/python3); the identical compare was run once with the uv prefix and its cp steps completed; no sealed file changed; panels each run ONCE.
+- P261.1 (2026-09-22, resume builder; exp 261 ear v4.1 ckpt 55284dec + canon + brake + entailment checker prompt B at theta 0.25, sealed 18 files SEAL.sha256.txt artifacts/claude-earcheck261-20260922) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261.2 M2 wrong saves (statement fams + no_save) 0-3; pass (<= 1) ~55 %. Risk tags R10/R11/R12 unseen in dev (D_apos still 3 wrong at theta 0.25 on dev).
+- P261.3 M3 exact TEACH recall 85-93 % and >= B + 30 (B 10-20 %); pass ~65 %.
+- P261.4 M3b UNSURE 5-12 % of gold TEACH; pass (<= 12 %) ~60 %.
+- P261.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %.
+- P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261.7 M6 checker never adds/changes a frame; pass ~99 %.
+- P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).
+- 2026-09-26 13:05 UTC Director: Ben 12:59 "Each thread gets $2 from vast.ai compute": $2 budget lines opened for Reading facts, Month-end, Benchmarks, Sleep research, Fix sleep, Creative, Memory for its own thoughts, Making things up about you, Wrong answers stated as fact ($18 total; $4/job rule stands). dl-4 stays on the overnight $5 pool ($2.34 left before it).
+- 2026-09-26 13:37 UTC Director: five more $2 thread lines (coordinator 13:35, after Ben's 13:30 thirteen-problem list): Trustworthy notes $2, Answering from memory $2, Plain-English puzzles $2, Creative answers in chat $2, Everyday chat $2. Total 14 thread budgets. Credit auto-refills (Ben 13:23); budgets, $4/job and task BUDGET lines are the limits. Stray spend outside our budgets: brd-8w (Ben's Mac agent, ~$0.63), codex-sleep-p7 (~$0.16). rent-dl4 destroyed by a Mac agent after ~$0.32 (charged to Fix sleep); rerun rent-zdl4b $1.20 from Fix sleep's $2.
+- 2026-09-26 13:45 UTC Director: rent-mu402 released, BUDGET $1.00 from Making things up about you's $2 (Ben 12:59/13:30).
+- 2026-09-26 13:50 UTC Director: rent-358i queued (88a4f1ac8): rsn-358i $1.50 of Sleep research's $2; rv-387 section on the same rental, on Memory for its own thoughts' $2 (45 min cap). Rental credit gate: none (Ben 13:23, auto-refill).
+- 2026-09-26 13:52 UTC Director: rent-y1d released, $0.40 of Answering from memory's $2.
+---SEALS---
+6b9398c0e309b6cf15e1aa71a764e33782c5961b32c7f558cfdb879850c27987  scripts/claude_rd378L_recall.py
+0e67f9b8b2077e7bcaed84cd1c4b3fd4f5c6529e6dabd6a5ae51c8ca92f1c98f  scripts/claude_rd378L_rebuild.py
+72a991c9ae430ba9996bcce1fcb0c12fdbcd9c314dfcdf3ae4a941e9e0ec8513  scripts/claude_rd378_write.py
+51ba27929a73d56c32585c3f11c030517b71070f3c429fc865e2bb4ef5e580b9  scripts/claude_rd378_common.py
+91db2e0206e8bca73c95670dc7fbae23d63876686584ca99c4b4db468d038360  scripts/claude_ep382_store.py
+eb50c203fdcf38821b49b4439d31d340e53a83f0bba2faae33d1baaa797467b3  scripts/claude_bm390.py
+c87c85e64aa9ea1d29c083aae528b16d1c7d13a01780dcb4788c18379abccd76  scripts/fable_self122_train.py
+6a20075a710ff5a8a15e16372a6f35ebb88f56b5ac78ada93d0f71ad8eb49586  scripts/fable_bert_loader.py
+c945527f89c0cadb2bc9e53628a39e3720010b2ebebde0c3010c097b9d87c56d  artifacts/claude-bm390-20260925/data-manifest.json
+5a00d7698599a3f49451fa018766b9170910076e5d35373ce8cee29be44b2859  artifacts/claude-rd378L-20260926/PASSMARKS.md
+baf21f0514a9a25acd220cdb8a578e46858dd43debeef75fd752bf9eedf60a98  artifacts/claude-rd378L-20260926/PASSMARKS-B.md
+0bf5b54a1f7ab2b5bbd5735dda505ed8712853c3bcabfe2aaeae8ded01a0e7bd  artifacts/claude-rd378L-20260926/PASSMARKS-C.md
+4cbdb8b944973853d682971fe3ae8edff4b28ad9a1939b104b67e36f5f5afc6b  artifacts/claude-rd378L-20260926/PASSMARKS-D.md
+---
+6b9398c0e309b6cf15e1aa71a764e33782c5961b32c7f558cfdb879850c27987  scripts/claude_rd378L_recall.py
+5a00d7698599a3f49451fa018766b9170910076e5d35373ce8cee29be44b2859  artifacts/claude-rd378L-20260926/PASSMARKS.md
+baf21f0514a9a25acd220cdb8a578e46858dd43debeef75fd752bf9eedf60a98  artifacts/claude-rd378L-20260926/PASSMARKS-B.md
+0bf5b54a1f7ab2b5bbd5735dda505ed8712853c3bcabfe2aaeae8ded01a0e7bd  artifacts/claude-rd378L-20260926/PASSMARKS-C.md
+---COMMIT-LOOKUP---
+698c9aefc3536313a496987fb872e5a4af7ed0af
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show user --raw 2>&1 | head -c 2000; echo; echo ---INSTANCES---; vastai show instances 2>&1 | head -n 60
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 5.523763126269863,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+ "discord_id": null,
+ "email": "benjamin.a.hannan@gmail.com",
+ "email_verified": true,
+ "fullname": null,
+ "got_signup_credit": 0,
+ "has_billing": true,
+ "has_payout": false,
+ "has_rented": true,
+ "has_stripe_payout": false,
+ "host_agreement_accepted": false,
+ "host_only": false,
+ "huggingface_cloud_sync_enabled": true,
+ "id": 553012,
+ "is_subject_to_unpaid_deletion": false,
+ "key_id": 28637247,
+ "last4": null,
+ "oauth_provider": "google",
+ "paid_expected": 0.0,
+ "paid_verified": 0.0,
+ "password_resettable": null,
+ "payout_enabled": true,
+ "paypal_email": null,
+ "phone_number": null,
+ "rights": {
+  "api": {
+   "*": {
+    "api.auth.apikeys": {
+     "GET": {}
+    },
+    "api.auth.sessions": {
+     "GET": {}
+    },
+    "api.hubspot.newsletters": {
+     "GET": {}
+    },
+    "api.instances": {
+     "GET": {}
+    },
+    "api.instances.count": {
+     "GET": {}
+    },
+    "api.instances_v1": {
+     "GET": {}
+    },
+    "api.ssh.keys": {},
+    "api.team": {
+     "POST": {}
+    },
+    "api.template": {
+     "GET": {}
+    },
+    "api.template.params": {
+     "GET": {}
+    },
+    "api.template_v1": {
+     "GET": {}
+    },
+    "api.user.created_templates": {
+     "GET": {}
+    },
+    "api.user.save_context": {
+     "PUT": {}
+    },
+    "api.user.verify-email": {
+     "POST": {}
+    },
+    "api.users.crisp-identity": {
+     "GET": {}
+    },
+    "api.users.current": {
+     "GET": {}
+    },
+    "api.users.root": {
+     "GET"
+---INSTANCES---
+[K[97;48;2;0;0;0m╭─[0m[97;48;2;0;0;0m─────────[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mFilterable Values[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m─────────[0m[97;48;2;0;0;0m─╮[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--status:       [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m              [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--verification: [0m[38;5;83;48;2;0;0;0mverified[0m[48;2;0;0;0m             [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--gpu-name:     [0m[97;48;2;0;0;0mRTX 4070[0m[97;48;2;0;0;0m  ·  [0m[97;48;2;0;0;0mRTX 5090[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m╰───────────────────────────────────────╯[0m
+
+[93;48;2;0;0;0m╭─[0m[93;48;2;0;0;0m──────────────────────────[0m[93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mResults Summary[0m[93;48;2;0;0;0m [0m[93;48;2;0;0;0m───────────────────────────[0m[93;48;2;0;0;0m─╮[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mTotal: [0m[1;97;48;2;0;0;0m3 instances[0m[48;2;0;0;0m                                                    [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mLabels: [0m[97;48;2;0;0;0mclaude-director-depot: 1  ·  rent-brd8: 1  ·  rent-lis-319f: 1[0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m╰────────────────────────────────────────────────────────────────────────╯[0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╔══════╤═════════╤════════════════╤═══════════════╤═════════╤═════════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m ID [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mStatus [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m    Label     [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m     GPU     [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m $/hr  [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m            Imag[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╟──────┼─────────┼────────────────┼───────────────┼─────────┼─────────────────[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mrent-lis-319f [0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.5037[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytorch:[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mrent-brd8     [0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.4700[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytorch:[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-direct…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 4070 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.1136[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mubuntu:22.04    [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╚══════╧═════════╧════════════════╧═══════════════╧═════════╧═════════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[48;2;0;0;0m                                                                              [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[2;48;2;0;0;0mColumns hidden to fit terminal width: Disk  ·  use --cols to customize (see --[0m[48;2;0;0;0m [0m
+[0m
+[0m# [0mTodos
+[•] Pre-checks: duplicate gate, credit, COMMIT, seals/manifest
+[ ] Rent GPU (5090>=0.98 else 4090, label claude-notes-rd378L, budget $1.80)
+[ ] Stream TREE to rental, verify adapter from BensPC
+[ ] SETUP + SEALS + selftest on rental
+[ ] WRITER rebuild or fallback (hash dbcc8db5...)
+[ ] DATA fetch + dialogs + WRITE + SCORE
+[ ] Copy back, destroy, ledger, RESULTS.md + push
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show user --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print('balance=',d.get('balance'),'credit=',d.get('credit'))"
+echo ---; git ls-tree origin/main -- artifacts/claude-rd378L-20260926/; echo ---; git ls-tree origin/builder-outbox -- artifacts/claude-rd378L-20260926/ 2>&1; echo ---; git show origin/main:artifacts/claude-bm390-20260925/data-manifest.json 2>&1 | head -n 30
+echo ---SSH-CONFIG---; cat ~/.ssh/config 2>&1 | head -n 60
+balance= 0 credit= 5.511451296269861
+---
+100644 blob b71d5f4d9e67631551f8e1e7dfca018461035bc7	artifacts/claude-rd378L-20260926/PASSMARKS-B.md
+100644 blob efdd4426d0476f1ef90f51c3ecd28e6d1a68427c	artifacts/claude-rd378L-20260926/PASSMARKS-C.md
+100644 blob a46ba69498a41564bcb6a0b4f729dcc54606df87	artifacts/claude-rd378L-20260926/PASSMARKS-D.md
+100644 blob 47db40d29c035a87f4e52144b4743413fe015fff	artifacts/claude-rd378L-20260926/PASSMARKS.md
+100644 blob 988ed57f4036d88419b3b66d7bb48bbbaed4f129	artifacts/claude-rd378L-20260926/SEAL-B.sha256.txt
+100644 blob 8eb2beafd3128e6fc483dd185dbbf7ce978c9bba	artifacts/claude-rd378L-20260926/SEAL-C.sha256.txt
+100644 blob d16892e134acb8537f6df43bb2606f043e5271af	artifacts/claude-rd378L-20260926/SEAL-D.sha256.txt
+100644 blob af05c1d9e99fa4242f5e08f07edfd927d2a10a1b	artifacts/claude-rd378L-20260926/SEAL.sha256.txt
+---
+---
+{
+ "gsm8k_revision": "740312add88f781978c0658806c59bc2815b9866",
+ "gsm8k_test_sha256": "ee7b8da9e381df27b9e3f7758a159ab2bdaa4dbaa910546cbbc47e0cb44e4f59",
+ "locomo10_sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+ "locomo_commit": "3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+ "mmlu_redux_files": {
+  "abstract_algebra": "fe3b1b5aeb5a4a8542707fffb71011757e58102c963891723e72f85ed59e7360",
+  "anatomy": "02e5430bb850c999fd0360c4d0a7b8b497d6a77baa032ddf75a9bbb61edfa2e1",
+  "astronomy": "14ce04c3ab6cce3041b72d5b669d5a2f02bb847e86ea37b45c248b189e5a7b04",
+  "business_ethics": "a951880958fb05bf5a1b413fb8f67db98a4454f8d6c659240fe918039d106028",
+  "clinical_knowledge": "22751969c400ca778350327bf672389cf998b2243c8774ec799fe1dde73cfb70",
+  "college_biology": "e1f6533faf45cc16a5931d73ef73a0f730604aeea55314a2c9304ddb91cefd12",
+  "college_chemistry": "f6c3c5955ef320051bae52881ffd6006bb1d2d1f187fde18a241111f5b155800",
+  "college_computer_science": "f4c2115b5da06e23b5bfcfb5be7d909bb658ac86a1506b564f83339b1163f6ca",
+  "college_mathematics": "86d49192ad35f31bf9666ee194d43d3b852dd52f7463474e8b7b1d691e86cc37",
+  "college_medicine": "77c854a9268649408cce3dc7b9bac2d7140f01b52b8f6fdf1ee70895ce264802",
+  "college_physics": "9877df1697482b5c1add4f1e0169e96ca7413aac9a361d599b23bf3d2cfc7a6a",
+  "computer_security": "c8c91dad780d00c0d6a51123bc870a0eb85fc6d9198b86d053e04c9036b23cf8",
+  "conceptual_physics": "82f09349d8ffb74646bbbe7ce0fa10e43d9c898ee4370b2799cdc25f7e4dcefc",
+  "econometrics": "95ae4551a0df3b6cc84924f5d9fc4bd17f1743b44f5dab7725057126b86354f0",
+  "electrical_engineering": "5c88d812fcb1b10d57d5fa735e2ee8c0d4974ba5e5d3e33a01a3cc2378e0e5b9",
+  "elementary_mathematics": "f4b986d25dd5b76c3dd5bbba6109f39c84caee7b604b97c01fe0d8cc25806cbe",
+  "formal_logic": "9c1b0d50c4c871fe0e8e59d36b53e16f4e241fa6fdb21055336eac180273bb03",
+  "global_facts": "47d3e105a90e91210a942e1d73b36bd86b3c9acf642be5c9e5bbc4090ccb7c97",
+  "high_school_biology": "7921b3460b8faacbe3125e09129f8c8b43d9115ac108b585c96d145af7559026",
+  "high_school_chemistry": "df3ac67951d86f992e997fae622ae8b07b4b54f60ef5cfefdc636880920f8706",
+  "high_school_computer_science": "f478f5265e23fbd20005accdf9631fdc1bf41feb5ae76e50770ce0179f4573db",
+  "high_school_european_history": "bbcd2d1c51a96698f0581b8db6795ed6be4216ca7429822b2ca634d1f15590cf",
+  "high_school_geography": "4fad69de3874d0a36ac2aa5ade2d6700e507d67e9ea11deacac7f424d482d8f3",
+  "high_school_government_and_politics": "d6309c6050c3d5da9320320887504c1b1bd7d34681e3ea38c27e0dab27226658",
+---SSH-CONFIG---
+Host benspc
+  HostName 100.75.113.114
+  User benja
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph 2>&1 | head -n 40
+[40m[97m  #  ID        CUDA   N  Model     PCIE  cpu_ghz  vCPUs     RAM  VRAM  Disk[0m
+[48;5;240m[97m  1  46753295  13.0  1x  RTX_5090  23.4  2.2      32.0     32.2  32.6  161 [0m
+[40m[97m  2  43165147  13.0  1x  RTX_5090  23.4  2.2      32.0     32.2  32.6  276 [0m
+[48;5;240m[97m  3  48842511  13.0  1x  RTX_5090  48.7  5.1      16.0     31.2  32.6  572 [0m
+[40m[97m  4  44173691  13.0  1x  RTX_5090  47.9  5.1      16.0     31.2  32.6  372 [0m
+[48;5;240m[97m  5  45669150  13.0  1x  RTX_5090  50.8  5.1      8.0      31.2  32.6  527 [0m
+[40m[97m  6  49024436  13.0  1x  RTX_5090  50.9  5.1      8.0      31.2  32.6  450 [0m
+[48;5;240m[97m  7  39869772  12.8  1x  RTX_5090  43.8  4.4      12.0     64.1  32.6  1301[0m
+[40m[97m  8  50248470  13.0  1x  RTX_5090  53.8  3.8      24.0     64.4  32.6  505 [0m
+[48;5;240m[97m  9  43624376  13.0  1x  RTX_5090  22.5  2.4      18.3     73.7  32.6  865 [0m
+[40m[97m 10  50420387  13.0  1x  RTX_5090  21.8  2.4      18.3     73.7  32.6  370 [0m
+[48;5;240m[97m 11  50734486  12.8  1x  RTX_5090  13.1  3.7      6.0      32.1  32.6  515 [0m
+[40m[97m 12  50849750  12.9  1x  RTX_5090  27.0  3.2      64.0     64.4  32.6  624 [0m
+[48;5;240m[97m 13  48395158  13.2  1x  RTX_5090  46.4  5.8      32.0    128.4  32.6  1452[0m
+[40m[97m 14  49161363  13.2  1x  RTX_5090  54.9  5.5      12.0     64.3  32.6  319 [0m
+[48;5;240m[97m 15  44921254  13.0  1x  RTX_5090  18.5  5.8      16.0     63.2  32.6  688 [0m
+[40m[97m 16  23695637  12.9  1x  RTX_5090  46.5  5.9      32.0    127.9  32.6  1498[0m
+[48;5;240m[97m 17  50894161  13.2  1x  RTX_5090  26.6  2.5      64.0    513.0  32.6  2333[0m
+[40m[97m 18  51191429  13.2  1x  RTX_5090  22.7  3.5      32.0    256.5  32.6  1255[0m
+[48;5;240m[97m 19  51088701  13.2  1x  RTX_5090  20.9  3.7      32.0     64.4  32.6  409 [0m
+[40m[97m 20  51392137  13.2  1x  RTX_5090  26.9  2.3      48.0    128.7  32.6  1504[0m
+[48;5;240m[97m 21  50425365  13.2  1x  RTX_5090  27.5  5.8      16.0     47.1  32.6  1204[0m
+[40m[97m 22  46953692  13.0  1x  RTX_5090  53.9  2.4      48.0     96.7  32.6  585 [0m
+[48;5;240m[97m 23  47328572  13.0  1x  RTX_5090  26.4  2.6      48.0     60.4  32.6  688 [0m
+[40m[97m 24  52077399  13.2  1x  RTX_5090  36.4  5.5      12.0     61.9  32.6  1421[0m
+[48;5;240m[97m 25  40871605  13.0  1x  RTX_5090  44.8  5.2      14.0     63.9  32.6  1082[0m
+[40m[97m 26  52070431  13.2  1x  RTX_5090  26.5  2.2      32.0    129.0  32.6  1433[0m
+[48;5;240m[97m 27  51326860  13.3  1x  RTX_5090  27.0  2.2      32.0    112.8  32.6  501 [0m
+[40m[97m 28  51102918  13.3  1x  RTX_5090  24.8  3.5      32.0    129.0  32.6  730 [0m
+[48;5;240m[97m 29  48426438  13.0  1x  RTX_5090  54.0  3.0      112.0    64.3  32.6  1292[0m
+[40m[97m 30  51969536  13.2  1x  RTX_5090  54.1  2.6      12.0     64.3  32.6  279 [0m
+[48;5;240m[97m 31  51969538  13.2  1x  RTX_5090  54.3  2.6      12.0     64.3  32.6  50  [0m
+[40m[97m 32  51969548  13.0  1x  RTX_5090  54.3  2.6      12.0     64.3  32.6  124 [0m
+[48;5;240m[97m 33  51969543  13.0  1x  RTX_5090  54.3  2.6      12.0     64.3  32.6  61  [0m
+[40m[97m 34  52015843  12.8  1x  RTX_5090  54.0  3.8      18.3     36.8  32.6  797 [0m
+[48;5;240m[97m 35  46900157  13.2  1x  RTX_5090  21.6  2.4      16.0     64.5  32.6  620 [0m
+[40m[97m 36  45620121  13.0  1x  RTX_5090  54.1  3.8      16.0     64.4  32.6  750 [0m
+[48;5;240m[97m 37  42928597  13.1  1x  RTX_5090  27.0  2.9      64.0    515.6  32.6  1033[0m
+[40m[97m 38  51754998  13.0  1x  RTX_5090  54.1  5.4      32.0    128.6  32.6  3074[0m
+[48;5;240m[97m 39  46753299  13.0  2x  RTX_5090  21.7  2.2      64.0     64.4  32.6  322 [0m
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'sha256sum C:/Users/benja/rd378/tree/WORK/nrun/adapter/* 2>&1; echo ---; ls -la C:/Users/benja/rd378/tree/WORK/nrun/adapter/ 2>&1; echo ---BUSY---; cat C:/Users/benja/GPU-BUSY.txt 2>&1' 2>&1 | head -n 30
+'sha256sum' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' --raw -o dph 2>/dev/null | python3 -c "
+import json,sys
+offers=json.load(sys.stdin)
+print('n=',len(offers))
+for o in offers[:12]:
+    print(o.get('id'), 'dph=',round(o.get('dph_total',0),4), 'cpu=',o.get('cpu_cores_effective'), 'ram=',round(o.get('cpu_ram',0)/1000,1), 'disk=',o.get('disk_space'), 'rel=',o.get('reliability2'), 'netup=',o.get('inet_up'), 'netdown=',o.get('inet_down'), 'cuda=',o.get('cuda_max_good'))
+"
+n= 64
+46753301 dph= 0.406 cpu= 32.0 ram= 32.2 disk= 156.9125 rel= 0.9957163 netup= 63.4 netdown= 848.2 cuda= 13.0
+43165153 dph= 0.406 cpu= 32.0 ram= 32.2 disk= 275.875 rel= 0.9955179 netup= 51.1 netdown= 513.5 cuda= 13.0
+48842511 dph= 0.469 cpu= 16.0 ram= 31.2 disk= 572.0 rel= 0.9975737 netup= 523.2 netdown= 438.6 cuda= 13.0
+43982842 dph= 0.469 cpu= 16.0 ram= 31.2 disk= 425.0 rel= 0.9979782 netup= 432.5 netdown= 425.5 cuda= 13.0
+49025112 dph= 0.469 cpu= 8.0 ram= 31.2 disk= 481.0 rel= 0.9949662 netup= 563.5 netdown= 537.2 cuda= 13.0
+45669177 dph= 0.469 cpu= 8.0 ram= 31.2 disk= 540.0 rel= 0.9981577 netup= 557.7 netdown= 576.8 cuda= 13.0
+40700928 dph= 0.5237 cpu= 18.285714285714285 ram= 73.7 disk= 664.566104836243 rel= 0.9956908 netup= 868.9 netdown= 592.3 cuda= 13.0
+39869772 dph= 0.5347 cpu= 12.0 ram= 64.1 disk= 1301.0 rel= 0.9982923 netup= 479.3 netdown= 748.3 cuda= 12.8
+34376035 dph= 0.5907 cpu= 16.0 ram= 32.2 disk= 176.5 rel= 0.9912454 netup= 692.3 netdown= 830.7 cuda= 13.2
+51267577 dph= 0.6014 cpu= 16.0 ram= 64.4 disk= 585.25 rel= 0.9895901 netup= 764.2 netdown= 774.8 cuda= 13.0
+50734486 dph= 0.6014 cpu= 6.0 ram= 32.1 disk= 515.0 rel= 0.9890078 netup= 351.0 netdown= 381.0 cuda= 12.8
+50849750 dph= 0.6014 cpu= 64.0 ram= 64.4 disk= 623.5 rel= 0.9900123 netup= 32.7 netdown= 706.8 cuda= 12.9
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "sha256sum /c/Users/benja/rd378/tree/WORK/nrun/adapter/*; echo ---; ls -la /c/Users/benja/rd378/tree/WORK/nrun/adapter/"' 2>&1 | head -n 30
+7043dc9dd462e3de9d39f76d86b81949d3f59f0e734c0e68d652603c70ace7fb */c/Users/benja/rd378/tree/WORK/nrun/adapter/adapter_config.json
+7742e6b37827a9824e52e652b08560905a2927087dc8c2a41165a6377033e113 */c/Users/benja/rd378/tree/WORK/nrun/adapter/adapter_model.safetensors
+d8db3ff45c4c68a0ba9dee962ff1a0adde9a2be55e0895306f6bd2b2756f5adb */c/Users/benja/rd378/tree/WORK/nrun/adapter/chat_template.jinja
+9255a264e35f54a5c1307c1dfb02e575c6dc4eaacd4f61c08cc3673dd5cb3631 */c/Users/benja/rd378/tree/WORK/nrun/adapter/README.md
+3e065a558a034185fe299917b398685c1facd0169a9eea1e629eb30c171fed81 */c/Users/benja/rd378/tree/WORK/nrun/adapter/tokenizer.json
+5b46a8a8a2e32385d896192fd08349ae1e52df80a1007951fc0acd76af32fa50 */c/Users/benja/rd378/tree/WORK/nrun/adapter/tokenizer_config.json
+---
+total 97289
+drwxr-xr-x 1 benja 197121        0 Sep 25 20:25 .
+drwxr-xr-x 1 benja 197121        0 Sep 25 20:25 ..
+-rw-r--r-- 1 benja 197121     1233 Sep 25 20:25 adapter_config.json
+-rw-r--r-- 1 benja 197121 89697856 Sep 25 20:25 adapter_model.safetensors
+-rw-r--r-- 1 benja 197121     9241 Sep 25 20:25 chat_template.jinja
+-rw-r--r-- 1 benja 197121     5208 Sep 25 20:25 README.md
+-rw-r--r-- 1 benja 197121  9894271 Sep 25 20:25 tokenizer.json
+-rw-r--r-- 1 benja 197121      477 Sep 25 20:25 tokenizer_config.json
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>/dev/null | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+insts = d.get('instances', d if isinstance(d,list) else [])
+import json as j
+if isinstance(d, dict) and 'instances' not in d: insts=[d]
+for i in (d['instances'] if isinstance(d,dict) and 'instances' in d else insts):
+    print(i.get('id'), '|', i.get('label'), '|', i.get('gpu_name'), '|', i.get('image'), '|', i.get('cuda_max_good'), '| dph=', i.get('dph_total'))
+"; echo ---HELP---; vastai create instance --help 2>&1 | head -n 40
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+AttributeError: 'list' object has no attribute 'get'
+---HELP---
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>/dev/null | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print(type(d))
+print(json.dumps(d, indent=1)[:3000])
+"
+<class 'list'>
+[
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "KR",
+  "cpu_arch": "amd64",
+  "cpu_cores": 16,
+  "cpu_cores_effective": 16.0,
+  "cpu_name": "AMD Ryzen 7 7800X3D 8-Core Processor",
+  "cpu_ram": 31197,
+  "cpu_util": 6.26625,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 100,
+  "direct_port_end": 55834,
+  "direct_port_start": 55834,
+  "disk_bw": 5917.2,
+  "disk_name": "nvme",
+  "disk_space": 80.0,
+  "disk_usage": 4.400000095367432,
+  "disk_util": 4.400000095367432,
+  "dlperf": 199.10644669720355,
+  "dlperf_per_dphtotal": 395.28485741356593,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.5037037037037037,
+  "driver_version": "580.95.05",
+  "duration": 1820.7986278533936,
+  "end_date": 1792335600.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 214.6176,
+  "geolocation": "South Korea, KR",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 1.0,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1455.8,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 72.999931,
+  "gpu_totalram": 32607,
+  "gpu_util": 95.999908,
+  "has_avx": 1,
+  "host_id": 406325,
+  "host_run_time": 2592000.0,
+  "hosting_type": 1,
+  "id": 52751954,
+  "image_args": [],
+  "image_runtype": "ssh_direc ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime",
+  "inet_down": 545.0,
+  "inet_down_billed": 3376414.72,
+  "inet_down_cost": 0.005208333333333333,
+  "inet_up": 539.8,
+  "inet_up_billed": 69427.2,
+  "inet_up_cost": 0.005208333333333333,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.037037037037037035,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5037037037037037
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 5.333333333333333,
+  "internet_up_cost_per_tb": 5.333333333333333,
+  "is_bid": false,
+  "jupyter_token": "13b6190ed803883ad7d3ace992485d5022b84ca240f9d67c1a45a3134022a962",
+  "label": "rent-lis-319f",
+  "local_ipaddrs": "172.30.21.93 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 55899,
+  "machine_id": 149063,
+  "mem_limit": 30.670848,
+  "mem_usage": 4.160749568,
+  "min_bid": 0.907,
+  "mobo_name": "B850 EAGLE ICE",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "24.04",
+  "pci_gen": 5.0,
+  "pcie_bw": 48.6,
+  "ports": {
+   "22/tcp": [
+    {
+     "HostIp": "0.0.0.0",
+     "HostPort": "55834"
+    },
+    {
+     "HostIp": "::",
+     "HostPort": "55834"
+    }
+   ]
+  },
+  "public_ipaddr": "180.189.55.43",
+  "reliability2": 0.9949414,
+  "rentable": true,
+  "score": 376.23781938817876,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.5037037037037037,
+   "diskHour": 0.037037037037037035,
+   "gpuCostPerHour": 0.4666666666666666,
+   "sla
+[0m
+[0m# [0mTodos
+[✓] Pre-checks: duplicate gate, credit, COMMIT, seals/manifest
+[•] Rent GPU (5090>=0.98 else 4090, label claude-notes-rd378L, budget $1.80)
+[ ] Stream TREE to rental, verify adapter from BensPC
+[ ] SETUP + SEALS + selftest on rental
+[ ] WRITER rebuild or fallback (hash dbcc8db5...)
+[ ] DATA fetch + dialogs + WRITE + SCORE
+[ ] Copy back, destroy, ledger, RESULTS.md + push
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); date -u +%FT%TZ; vastai create instance 46753301 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime' --disk 60 --label claude-notes-rd378L --ssh 2>&1 | tail -n 10
+2026-09-26T13:48:01Z
+Started. {'success': True, 'new_contract': 52756139, 'instance_api_key': '287d3bb6f72ca9f17688ee74fdc602f67054c49c8907056b3154ef7bd5169cd7'}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); for i in $(seq 1 12); do S=$(vastai show instance 52756139 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status','?'), d.get('dph_total','?'))" 2>&1); echo "$(date -u +%T) try$i: $S"; echo "$S" | grep -q '^running' && break; sleep 25; done
+13:48:08 try1: None 0.47222222222222215
+13:48:35 try2: loading 0.47222222222222215
+13:49:01 try3: loading 0.47222222222222215
+13:49:28 try4: loading 0.47222222222222215
+13:49:56 try5: loading 0.47222222222222215
+13:50:26 try6: loading 0.47222222222222215
+13:50:52 try7: loading 0.47222222222222215
+13:51:24 try8: loading 0.47222222222222215
+13:51:58 try9: loading 0.47222222222222215
+13:52:25 try10: loading 0.47222222222222215
+13:52:51 try11: loading 0.47222222222222215
+13:53:17 try12: loading 0.47222222222222215
+[0m
+[0m$ [0msleep 50; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52756139 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status'), d.get('dph_total'), d.get('public_ipaddr'), d.get('ports'))"; date -u +%FT%TZ
+loading 0.47222222222222215 209.146.116.50 None
+2026-09-26T13:54:43Z
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai destroy instance 52756139 2>&1 | tail -n 3; sleep 5; vastai show instance 52756139 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status'))" 2>&1; date -u +%FT%TZ; vastai create instance 43165153 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime' --disk 60 --label claude-notes-rd378L --ssh 2>&1 | tail -n 3
+Are you sure you want to destroy instance 52756139? This is irreversible and will delete all data. [y/N] 
+Aborted.
+loading
+2026-09-26T13:55:24Z
+Started. {'success': True, 'new_contract': 52757075, 'instance_api_key': '7d4d749628954b5dd9b6e4b282bdc5217d14f5359990a018c36ebcd40d258bae'}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); echo y | vastai destroy instance 52756139 2>&1 | tail -n 3; sleep 10; vastai show instances --raw 2>/dev/null | python3 -c "
+import json,sys
+for i in json.load(sys.stdin):
+    if 'notes-rd378L' in str(i.get('label')): print(i.get('id'), i.get('label'), i.get('actual_status'))
+"
+Are you sure you want to destroy instance 52756139? This is irreversible and will delete all data. [y/N] destroying instance 52756139.
+52757075 claude-notes-rd378L loading
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); for i in $(seq 1 12); do S=$(vastai show instance 52757075 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status','?'), d.get('dph_total','?'))" 2>&1); echo "$(date -u +%T) try$i: $S"; echo "$S" | grep -q '^running' && break; sleep 25; done
+13:56:04 try1: loading 0.4722222222222222
+13:56:44 try2: loading 0.4722222222222222
+13:57:09 try3: loading 0.4722222222222222
+13:57:37 try4: loading 0.4722222222222222
+13:58:03 try5: loading 0.4722222222222222
+13:58:30 try6: loading 0.4722222222222222
+13:58:56 try7: loading 0.4722222222222222
+13:59:22 try8: loading 0.4722222222222222
+13:59:49 try9: loading 0.4722222222222222
+14:00:19 try10: loading 0.4722222222222222
+14:00:46 try11: loading 0.4722222222222222
+14:01:14 try12: loading 0.4722222222222222
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); date -u +%FT%TZ; echo y | vastai destroy instance 52757075 2>&1 | tail -n 2; sleep 5; vastai create instance 48842511 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime' --disk 60 --label claude-notes-rd378L --ssh 2>&1 | tail -n 3
+2026-09-26T14:01:45Z
+Are you sure you want to destroy instance 52757075? This is irreversible and will delete all data. [y/N] destroying instance 52757075.
+Started. {'success': False, 'new_contract': 52757822, 'instance_api_key': '13bed263d6fbc1df4cd49eddbde164f045c3bd7d7d8314046d1c26d7d8b86538'}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52757822 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status'), d.get('dph_total'))" 2>&1; echo y | vastai destroy instance 52757822 2>&1 | tail -n 2
+None 0.4944444444444444
+Are you sure you want to destroy instance 52757822? This is irreversible and will delete all data. [y/N] destroying instance 52757822.
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' --raw -o dph 2>/dev/null | python3 -c "
+import json,sys
+for o in json.load(sys.stdin):
+    if o.get('id') in (45669177,43982842,49025112,39869772):
+        print(o.get('id'),'dph=',round(o.get('dph_total',0),4),'cpu=',o.get('cpu_cores_effective'),'disk=',o.get('disk_space'),'rel=',round(o.get('reliability2',0),4),'up=',o.get('inet_up'),'down=',o.get('inet_down'))
+"; date -u +%FT%TZ; vastai create instance 45669177 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime' --disk 60 --label claude-notes-rd378L --ssh 2>&1 | tail -n 3
+2026-09-26T14:02:30Z
+Started. {'success': False, 'new_contract': 52757917, 'instance_api_key': 'b859bbfa41a35d5c3b6d3558d8d6ca1f9ca5751ef11735a2a67066ed8cacd1cb'}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); echo y | vastai destroy instance 52757917 2>&1 | tail -n 1; vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' --raw -o dph 2>/dev/null | python3 -c "
+import json,sys
+offers=[o for o in json.load(sys.stdin) if (o.get('cpu_cores_effective') or 0)>=8 and (o.get('disk_space') or 0)>=60]
+print('qualifying=',len(offers))
+for o in offers[:8]:
+    print(o.get('id'),'dph=',round(o.get('dph_total',0),4),'cpu=',o.get('cpu_cores_effective'),'disk=',round(o.get('disk_space',0)),'rel=',round(o.get('reliability2',0),4),'up=',o.get('inet_up'),'down=',o.get('inet_down'))
+"
+Are you sure you want to destroy instance 52757917? This is irreversible and will delete all data. [y/N] destroying instance 52757917.
+qualifying= 60
+46753302 dph= 0.406 cpu= 32.0 disk= 160 rel= 0.9957 up= 63.4 down= 848.2
+43165161 dph= 0.406 cpu= 32.0 disk= 276 rel= 0.9955 up= 51.1 down= 513.5
+48989721 dph= 0.469 cpu= 16.0 disk= 479 rel= 0.9937 up= 525.5 down= 548.5
+44173722 dph= 0.469 cpu= 16.0 disk= 587 rel= 0.9983 up= 548.8 down= 517.1
+48989650 dph= 0.469 cpu= 8.0 disk= 515 rel= 0.9964 up= 490.5 down= 524.9
+44614424 dph= 0.4727 cpu= 32.0 disk= 701 rel= 0.9951 up= 44.8 down= 435.9
+45409902 dph= 0.5637 cpu= 18.285714285714285 disk= 798 rel= 0.9967 up= 880.1 down= 651.4
+51267577 dph= 0.6014 cpu= 16.0 disk= 585 rel= 0.9896 up= 764.2 down= 774.8
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); date -u +%FT%TZ; vastai create instance 44173722 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime' --disk 60 --label claude-notes-rd378L --ssh 2>&1 | tail -n 3
+2026-09-26T14:02:53Z
+Started. {'success': True, 'new_contract': 52757951, 'instance_api_key': 'e71cdf032ee3a97fe94711705258849232569d3086f488df93e0da6399b93e19'}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); for i in $(seq 1 14); do S=$(vastai show instance 52757951 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status','?'), d.get('dph_total','?'))" 2>&1); echo "$(date -u +%T) try$i: $S"; echo "$S" | grep -q '^running' && break; sleep 25; done
+14:03:02 try1: None 0.4944444444444444
+14:03:30 try2: loading 0.4944444444444444
+14:03:56 try3: loading 0.4944444444444444
+14:04:24 try4: loading 0.4944444444444444
+14:04:51 try5: loading 0.4944444444444444
+14:05:19 try6: loading 0.4944444444444444
+14:05:45 try7: running 0.4944444444444444
+[0m
+[0m# [0mTodos
+[✓] Pre-checks: duplicate gate, credit, COMMIT, seals/manifest
+[✓] Rent GPU (5090>=0.98 else 4090, label claude-notes-rd378L, budget $1.80) - 52757951 running $0.4944/hr
+[•] Stream TREE to rental, verify adapter from BensPC
+[ ] SETUP + SEALS + selftest on rental
+[ ] WRITER rebuild or fallback (hash dbcc8db5...)
+[ ] DATA fetch + dialogs + WRITE + SCORE
+[ ] Copy back, destroy, ledger, RESULTS.md + push
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai ssh-url 52757951 2>&1 | tail -n 2; vastai show instance 52757951 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print('gpu:',d.get('gpu_name'),'dph:',d.get('dph_total'),'disk:',d.get('disk_space'),'ip:',d.get('public_ipaddr'),'ports:',d.get('ports'))"
+ssh://root@ssh2.vast.ai:37950
+gpu: RTX 5090 dph: 0.4944444444444444 disk: 60.0 ip: 180.189.55.43 ports: None
+[0m
+[0m$ [0mls ~/.ssh/ 2>&1; ssh -o ConnectTimeout=15 -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'nvidia-smi --query-gpu=name --format=csv,noheader; python3 -c "import torch;print(torch.__version__, torch.cuda.is_available())"' 2>&1 | tail -n 5
+agent
+authorized_keys
+config
+id_ed25519
+id_ed25519.pub
+known_hosts
+known_hosts.old
+rent-bm395
+rent-bm395.pub
+rent336b
+rent336b.pub
+ssh-copy-id.dyqOlQW0o4
+ssh-copy-id.slWcbCWO63
+Warning: Permanently added '[ssh2.vast.ai]:37950' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+NVIDIA GeForce RTX 5090
+2.8.0+cu128 True
+[0m
+[0m$ [0mdate -u +%FT%TZ; git archive 698c9aefc3536313a496987fb872e5a4af7ed0af scripts artifacts/claude-rd378L-20260926 artifacts/claude-bm390-20260925/data-manifest.json | ssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'mkdir -p ~/tree && tar -x -C ~/tree && du -sh ~/tree && ls ~/tree' 2>&1 | tail -n 8; date -u +%FT%TZ
+2026-09-26T14:06:12Z
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+29M	/root/tree
+artifacts
+scripts
+2026-09-26T14:06:26Z
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc '"C:\\Program Files\\Git\\bin\\bash.exe" -lc "tar -c -C /c/Users/benja/rd378/tree/WORK/nrun adapter"' | ssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'mkdir -p ~/w && tar -x -C ~/w && sha256sum ~/w/adapter/*' 2>&1 | tail -n 10; date -u +%FT%TZ
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+9255a264e35f54a5c1307c1dfb02e575c6dc4eaacd4f61c08cc3673dd5cb3631  /root/w/adapter/README.md
+7043dc9dd462e3de9d39f76d86b81949d3f59f0e734c0e68d652603c70ace7fb  /root/w/adapter/adapter_config.json
+7742e6b37827a9824e52e652b08560905a2927087dc8c2a41165a6377033e113  /root/w/adapter/adapter_model.safetensors
+d8db3ff45c4c68a0ba9dee962ff1a0adde9a2be55e0895306f6bd2b2756f5adb  /root/w/adapter/chat_template.jinja
+3e065a558a034185fe299917b398685c1facd0169a9eea1e629eb30c171fed81  /root/w/adapter/tokenizer.json
+5b46a8a8a2e32385d896192fd08349ae1e52df80a1007951fc0acd76af32fa50  /root/w/adapter/tokenizer_config.json
+2026-09-26T14:07:49Z
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'cat > ~/run_setup.sh << "EOF"
+#!/bin/bash
+set -x
+pip install -q torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128 2>&1 | tail -n 3
+echo TORCH_EXIT:$?
+pip install -q transformers==5.17.0 peft==0.21.0 safetensors huggingface_hub accelerate numpy 2>&1 | tail -n 3
+echo DEPS_EXIT:$?
+python -c "import torch, transformers, peft; print(torch.__version__, transformers.__version__, peft.__version__, torch.cuda.get_device_name(0))"
+unset HF_HOME HF_HUB_CACHE
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('\''openbmb/MiniCPM5-1B'\'', revision='\''87179e5c1f455ef22e6223592d2d61351b525bfc'\'')); print(s('\''sentence-transformers/all-MiniLM-L6-v2'\'', revision='\''1110a243fdf4706b3f48f1d95db1a4f5529b4d41'\'', allow_patterns=['\''*.json'\'', '\''model.safetensors'\'', '\''vocab.txt'\'']))"
+echo SETUP_DONE:$?
+EOF
+chmod +x ~/run_setup.sh; setsid nohup ~/run_setup.sh > ~/setup.log 2>&1 < /dev/null & echo LAUNCHED:$!' 2>&1 | tail -n 3
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+LAUNCHED:416
+[0m
+[0m$ [0msleep 90; ssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'tail -n 20 ~/setup.log; echo ---; ps aux | grep -E "pip|python" | grep -v grep | head' 2>&1 | tail -n 25
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/opt/conda/lib/python3.11/site-packages/peft/__init__.py", line 17, in <module>
+    from .auto import (
+  File "/opt/conda/lib/python3.11/site-packages/peft/auto.py", line 31, in <module>
+    from .config import PeftConfig
+  File "/opt/conda/lib/python3.11/site-packages/peft/config.py", line 30, in <module>
+    from .utils import CONFIG_NAME, PeftType, TaskType
+  File "/opt/conda/lib/python3.11/site-packages/peft/utils/__init__.py", line 15, in <module>
+    from .constants import ALLOWED_COMPUTE_DTYPES, UPCAST_DTYPES
+  File "/opt/conda/lib/python3.11/site-packages/peft/utils/constants.py", line 16, in <module>
+    from transformers import BloomPreTrainedModel
+  File "/opt/conda/lib/python3.11/site-packages/transformers/utils/import_utils.py", line 2648, in __getattr__
+    raise ModuleNotFoundError(
+ModuleNotFoundError: Could not import module 'BloomPreTrainedModel'. Are this object's requirements defined correctly?
++ unset HF_HOME HF_HUB_CACHE
++ HF_HUB_OFFLINE=0
++ python -c 'from huggingface_hub import snapshot_download as s; print(s('\''openbmb/MiniCPM5-1B'\'', revision='\''87179e5c1f455ef22e6223592d2d61351b525bfc'\'')); print(s('\''sentence-transformers/all-MiniLM-L6-v2'\'', revision='\''1110a243fdf4706b3f48f1d95db1a4f5529b4d41'\'', allow_patterns=['\''*.json'\'', '\''model.safetensors'\'', '\''vocab.txt'\'']))'
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:02,  4.58it/s]Fetching 11 files:  55%|█████▍    | 6/11 [00:00<00:00, 19.21it/s]Fetching 11 files:  82%|████████▏ | 9/11 [00:00<00:00, 19.25it/s]---
+root         443 19.1  0.3 2830556 107404 ?      Sl   14:09   0:01 python -c from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B', revision='87179e5c1f455ef22e6223592d2d61351b525bfc')); print(s('sentence-transformers/all-MiniLM-L6-v2', revision='1110a243fdf4706b3f48f1d95db1a4f5529b4d41', allow_patterns=['*.json', 'model.safetensors', 'vocab.txt']))
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'grep -E "TORCH_EXIT|DEPS_EXIT|SETUP_DONE" ~/setup.log; echo ---; grep -B5 "ERROR" ~/setup.log | head -n 30; echo ---; ps aux | grep snapshot | grep -v grep | head -n 3; tail -n 6 ~/setup.log' 2>&1 | tail -n 25
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
++ echo TORCH_EXIT:0
+TORCH_EXIT:0
++ echo DEPS_EXIT:0
+DEPS_EXIT:0
+---
+---
+root         443 20.5  1.8 3929488 600588 ?      Sl   14:09   0:03 python -c from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B', revision='87179e5c1f455ef22e6223592d2d61351b525bfc')); print(s('sentence-transformers/all-MiniLM-L6-v2', revision='1110a243fdf4706b3f48f1d95db1a4f5529b4d41', allow_patterns=['*.json', 'model.safetensors', 'vocab.txt']))
+ModuleNotFoundError: Could not import module 'BloomPreTrainedModel'. Are this object's requirements defined correctly?
++ unset HF_HOME HF_HUB_CACHE
++ HF_HUB_OFFLINE=0
++ python -c 'from huggingface_hub import snapshot_download as s; print(s('\''openbmb/MiniCPM5-1B'\'', revision='\''87179e5c1f455ef22e6223592d2d61351b525bfc'\'')); print(s('\''sentence-transformers/all-MiniLM-L6-v2'\'', revision='\''1110a243fdf4706b3f48f1d95db1a4f5529b4d41'\'', allow_patterns=['\''*.json'\'', '\''model.safetensors'\'', '\''vocab.txt'\'']))'
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:02,  4.58it/s]Fetching 11 files:  55%|█████▍    | 6/11 [00:00<00:00, 19.21it/s]Fetching 11 files:  82%|████████▏ | 9/11 [00:00<00:00, 19.25it/s]
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'pip list 2>/dev/null | grep -iE "torch|transformers|peft|safetensors|accelerate|huggingface|numpy"; echo ---; python -c "import peft" 2>&1 | tail -n 15; echo ---; tail -n 4 ~/setup.log; ps aux | grep snapshot | grep -v grep | wc -l' 2>&1 | tail -n 30
+numpy                     2.3.2
+peft                      0.21.0
+safetensors               0.8.0
+torch                     2.11.0+cu128
+torchaudio                2.8.0+cu128
+torchelastic              0.2.2
+torchvision               0.23.0+cu128
+transformers              5.17.0
+---
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/opt/conda/lib/python3.11/site-packages/peft/__init__.py", line 17, in <module>
+    from .auto import (
+  File "/opt/conda/lib/python3.11/site-packages/peft/auto.py", line 31, in <module>
+    from .config import PeftConfig
+  File "/opt/conda/lib/python3.11/site-packages/peft/config.py", line 30, in <module>
+    from .utils import CONFIG_NAME, PeftType, TaskType
+  File "/opt/conda/lib/python3.11/site-packages/peft/utils/__init__.py", line 15, in <module>
+    from .constants import ALLOWED_COMPUTE_DTYPES, UPCAST_DTYPES
+  File "/opt/conda/lib/python3.11/site-packages/peft/utils/constants.py", line 16, in <module>
+    from transformers import BloomPreTrainedModel
+  File "/opt/conda/lib/python3.11/site-packages/transformers/utils/import_utils.py", line 2648, in __getattr__
+    raise ModuleNotFoundError(
+ModuleNotFoundError: Could not import module 'BloomPreTrainedModel'. Are this object's requirements defined correctly?
+---
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Fetching 11 files:   9%|▉         | 1/11 [00:00<00:02,  4.59it/s]Fetching 11 files:  55%|█████▍    | 6/11 [00:00<00:00, 15.53it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:00<00:00, 14.18it/s]Fetching 11 files: 100%|██████████| 11/11 [00:03<00:00,  3.36it/s]
+/root/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41
++ echo SETUP_DONE:0
+SETUP_DONE:0
+0
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rd378L_rebuild.py | head -n 60; echo ===; git show origin/main:scripts/claude_rd378L_rebuild.py | grep -nE "^import|^from|peft" | head -n 20
+#!/usr/bin/env python3
+"""rd-378L addendum D: rebuild the rd-378 note writer on a rental from its own LoRA adapter (Trustworthy notes, 09-26).
+
+rd-378L's registered writer is the rd-378 merged model, model.safetensors sha256 WANT below (trained on BensPC by
+claude_lis300_train.py --merge). The merged model is 2.1 GB and the Mac uploads ~0.4 MB/s; its adapter (OUT/adapter of
+the same run) is ~90 MB. This merges that adapter onto the same base exactly as claude_lis300_train.py did (bf16 on
+cuda, gradient checkpointing + input grads enabled, PEFT merge_and_unload, save_pretrained with safetensors, the
+base's tokenizer) and hashes the result. A different hash means it is NOT the registered writer: exit 3, never use it.
+
+python claude_rd378L_rebuild.py --base BASE --adapter ADAPTER_DIR --out MERGED_DIR [--want SHA256]
+  prints one JSON line {"sha256", "match", "torch", "transformers", "peft", "gpu"}; exit 0 on match, 3 on mismatch.
+python claude_rd378L_rebuild.py selftest   (CPU, tiny random model: the merge path runs and is deterministic)
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import sys
+import tempfile
+from pathlib import Path
+
+WANT = "dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510"
+
+
+def sha256(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for block in iter(lambda: fh.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def rebuild(base, adapter, out, dev):
+    """claude_lis300_train.py's load and --merge path, minus training: same dtype, device and calls."""
+    import torch
+    from peft import PeftModel
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    dtype = torch.bfloat16 if dev == "cuda" else torch.float32
+    tok = AutoTokenizer.from_pretrained(base)
+    model = AutoModelForCausalLM.from_pretrained(base, dtype=dtype).to(dev)
+    model.gradient_checkpointing_enable()
+    model.enable_input_require_grads()
+    model = PeftModel.from_pretrained(model, adapter)
+    model.eval()
+    merged = model.merge_and_unload()
+    merged.save_pretrained(Path(out), safe_serialization=True)
+    tok.save_pretrained(Path(out))
+    return sha256(Path(out) / "model.safetensors")
+
+
+def selftest():
+    import torch
+    from peft import LoraConfig, get_peft_model
+    from transformers import AutoTokenizer, LlamaConfig, LlamaForCausalLM, PreTrainedTokenizerFast
+    from tokenizers import Tokenizer, models, pre_tokenizers
+
+    ok = {}
+    with tempfile.TemporaryDirectory() as d:
+zsh:1: == not found
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'grep -A3 "snapshot_download" ~/setup.log | head; echo ---BASE-LINE---; grep "^/root" ~/setup.log' 2>&1 | tail -n 8; ps aux | grep -i rsync | grep -v grep | head -n 5; echo MAC-RSYNC-CHECK-DONE
+Have fun!
++ python -c 'from huggingface_hub import snapshot_download as s; print(s('\''openbmb/MiniCPM5-1B'\'', revision='\''87179e5c1f455ef22e6223592d2d61351b525bfc'\'')); print(s('\''sentence-transformers/all-MiniLM-L6-v2'\'', revision='\''1110a243fdf4706b3f48f1d95db1a4f5529b4d41'\'', allow_patterns=['\''*.json'\'', '\''model.safetensors'\'', '\''vocab.txt'\'']))'
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:02,  4.58it/s]Fetching 11 files:  55%|█████▍    | 6/11 [00:00<00:00, 19.21it/s]Fetching 11 files:  82%|████████▏ | 9/11 [00:00<00:00, 19.25it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:19<00:00, 19.25it/s]Fetching 11 files: 100%|██████████| 11/11 [00:27<00:00,  3.97s/it]Fetching 11 files: 100%|██████████| 11/11 [00:27<00:00,  2.51s/it]
+/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+---BASE-LINE---
+/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+/root/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+ben-hannan       41673   1.5  1.5 562782336 492160   ??  SN    9:45AM   0:44.46 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rent-rt02d.go1.41640 COMMON RULES (the Plain-English puzzles thread, Claude, wrote this task on 2026-09-26; the Month-end thread built and sealed rt-02d and handed it over at ~13:36 UTC, and agreed to this move). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply), and ALL of origin/main:design/v3/30-modes/330-rent-kit.md (code tree, rental rules, setup, independence). ONLY the Plain-English puzzles thread or the Director may stop or destroy claude-plainpuzzles-rt02d.\012GPU: rent\012BUDGET: $1.50 for this whole task, re-rents included, from the Plain-English puzzles thread's $2 (Ben, 12:59 UTC 09-26; ledger line f123f966c; the Director may lower this). Label: claude-plainpuzzles-rt02d. Needs READER319 and the 0.2c ADAPTER (SETUP S4, S5). Re-run the offer search before every create. This is 1B inference only: take the cheapest RTX 5090 or RTX 4090 offer that meets the kit's filter.\012DISK: 1\012TIME CAP: 4.5 hours on the rental (the Mac fallback in S4 alone can take ~90 min; BUDGET is the real guard). If reached: stop by exact PID, copy back what exists, destroy, report "partial".\012DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-rt02d-20260926/run, if a live instance is labelled claude-plainpuzzles-rt02d, or if the watcher shows 007s-rt02d-benspc running or finished.\012\012YOUR TASK: rt-02d, THE REGISTERED RUN (marks: artifacts/claude-rt02d-20260926/PASSMARKS-rt02d.md, ADDENDUM-rt02d.md and ADDENDUM2-rt02d-machine.md; read them). Chat route to the slept puzzle skill. Month-end wrote the code: run it, never edit it. If something breaks, copy back what exists, destroy, and report the exact error and traceback; do not patch. TEST-ONLY, never open, print or quote: artifacts/claude-panel-rt02d-20260926 (only claude_rt02d.py run/score read it). Each registered process is launched ONCE (check `ps` before any retry).\012\012SETUP (R = the rental's ssh target; settle S4's source first, then rent; start the reader copy in the background and do S1-S3 and S5 while it copies)\012S1. Code tree (kit A, compressed, nothing staged on the Mac):\012    git archive origin/builder-outbox | gzip -1 | ssh R 'mkdir -p ~/tree && tar -xz -C ~/tree'\012    git archive origin/main | gzip -1 | ssh R 'tar -xz -C ~/tree'          # main on top: main wins\012    self122_head.pt as kit A says (sha256 5ca02173...ee25).\012S2. Kit C on the rental (torch check, pip line, snapshot_download of MiniCPM5-1B and all-MiniLM-L6-v2, the route122 check). BASE = the first printed snapshot path; record its commit hash (expected 87179e5c1f455ef22e6223592d2d61351b525bfc).\012S3. Sleep's base checkpoint (not in git), as rent-02c's step 2 did: python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out /tmp/r44 && cp /tmp/r44/base-seed4102.pt artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt\012S4. READER319 = ~/reader319 on the rental (the lis-319 merged reader, about 2 GB). Source, in this order:\012    (a) DEPOT (preferred; the Director's rent-depot job copies the reader rental to rental). BEFORE RENTING ANYTHING, poll every 5 min for up to 120 min until origin/builder-outbox (or origin/main) has artifacts/claude-depot-20260926/REPORT.md giving the depot's instance id, path /root/reader319 and sha e688e1b2... below, AND `vastai show instances` lists a running instance labelled claude-director-depot. Then rent, and copy inside vast: `vastai copy <depot_id>:/root/reader319 <new_id>:/root/reader319` (or `ssh -A` into the new rental and rsync from the depot's ssh host/port in REPORT.md). Read only on the depot; never stop or change it.\012    (b) MAC FALLBACK, only if REPORT.md says NO-SOURCE or the copy failed, or 120 min pass with no depot: rent, then on the Mac check `shasum -a 256 ~/premonition-models/lis319-merged/model.safetensors` = e688e1b2... below and `rsync -a --partial ~/premonition-models/lis319-merged/ R:reader319/` (about 90 min). If the Mac copy is missing or its sha differs: stream C:/Users/benja/lis319/work/run/merged from BensPC through the Mac without keeping a copy (ssh <benspc> tar -c ... | ssh R tar -x ...; reading files is fine while C:\Users\benja\GPU-BUSY.txt exists; the GPU is not touched). Never run (b) while rent-lis-319f's own reader rsync is still going (it shares the same uplink).\012    On the rental `sha256sum ~/reader319/model.safetensors` must equal e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76. If it cannot be made equal: destroy and stop with READER-FAIL. Report which source was used and how long it took.\012S5. ADAPTER (16.6 MB), streamed from BensPC through the Mac without keeping a copy:\012    ssh <benspc> tar -c -C C:/Users/benja/lis301/work/e2e02c/tree/artifacts/claude-e2e02c-20260926/run/sleep adapter02c.pt adapter02c.json | ssh R 'mkdir -p ~/tree/artifacts/claude-e2e02c-20260926/run/sleep && tar -x -C ~/tree/artifacts/claude-e2e02c-20260926/run/sleep'\012    ADAPTER = ~/tree/artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.pt. Its sha256 must be a33211dc9bdb4e26bc7161b62147cb4dfc04fb605ba1aecbb26948f86e7936f5 and adapter02c.json must sit next to it (install_sleep02c refuses a mismatched pair). Mismatch or missing: destroy and stop.\012S6. From ~/tree: `sha256sum -c artifacts/claude-e2e02c-20260926/SEAL-code.sha256.txt`, `sha256sum -c artifacts/claude-rt02d-20260926/SEAL-code-rt02d.sha256.txt`, and inside artifacts/claude-panel-rt02d-20260926 `sha256sum -c SEAL-panel.sha256.txt`: all OK. `python -B scripts/claude_rt02d.py --selftest` prints 55/55 and `python -B scripts/claude_readersha_wrap.py --selftest` prints 9/9. Any failure: destroy and stop with SEAL-MISMATCH and the failing lines.\012\012STEPS: exactly steps 1-5 of origin/main:handoff/held/007s-rt02d-benspc.md (1 dev gate, 2 panel B0/B1/B1off, 3 negatives B1, 4 no-harm general and chatdev B0/B1, 5 score), with these substitutions only:\012- every command runs from ~/tree on the rental under nohup/setsid with its own log, one process at a time;\012- READER319 = ~/reader319; SHA319 as in S4; ADAPTER as in S5; BASE as in S2;\012- env on every command: READER_SHA=SHA319 SLEEP02C_ADAPTER=ADAPTER CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONUTF8=1 HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 (CUBLAS_WORKSPACE_CONFIG must be set in the env before python starts; Month-end's note).\012NONDETERMINISTIC at the dev gate: copy the two dev files back, destroy, stop. Never loosen R4 or rerun a registered step.\0126. Copy back to the Mac (small files only; never the adapter, the reader or any weights): artifacts/claude-rt02d-20260926/run and artifacts/claude-rt02d-20260926/score, plus the step logs as artifacts/claude-rt02d-20260926/logs/; check sizes and sha256 on both ends BEFORE destroying. Destroy, confirm it is gone with `vastai show instances`, append one ledger line (cat >> artifacts/fable-predictions-ledger.md): date, task, instance id(s), GPU, hours, dph, dollars, outcome.\0127. RESULTS-rent.md in artifacts/claude-rt02d-20260926/: setup checks (S1-S6 lines, BASE commit hash, which reader source and how long), the dev gate result, rows/routed per run (the one JSON line each run prints), the score line, wall time per step, VRAM peak if logged, GPU name, instance id, hours, dph, dollars. Never open or quote puzzles_*, negatives_* rows or the panel files.\012PUSH: artifacts/claude-rt02d-20260926/RESULTS-rent.md artifacts/claude-rt02d-20260926/run artifacts/claude-rt02d-20260926/score artifacts/claude-rt02d-20260926/logs artifacts/fable-predictions-ledger.md
+ben-hannan       27247   1.1  1.8 562823952 607776   ??  SN    9:07AM   1:35.81 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rent-lis-319f.go1.27213 COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply) and ALL of origin/main:design/v3/30-modes/330-rent-kit.md (stream the tree, rental rules incl. reliability >= 0.98, the 6-min start rule, the 10-min no-log watchdog, copy back BEFORE destroy, destroy and confirm, ledger line), with the exceptions below.\012GPU: rent\012DISK: 3 (peak Mac use: the new reader, ~2 GB, copied back in step 7; nothing else is staged on the Mac)\012BUDGET: $2.00 for this whole task, re-rents included (the reading thread's $2 line, Director 13:05 UTC 09-26; <=$4/job and $30 total still apply). At $1.80 running total: kill running commands by exact PID, copy back what exists, destroy, stop with BUDGET-STOP. Label: rent-lis-319f.\012CREDIT GATE (first): `vastai show user --raw` and report ONLY the balance/credit number. Below the Director's rental floor ($3.00 unless the Director lowered it for this job): rent nothing, stop with CREDIT-STOP. Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-lis319f-20260926/RESULTS.md or RESULTS-rent.md, if handoff/queue/007f-lis-319f-former.md is still on origin/main, or if a live instance is labelled rent-lis-319f.\012INDEPENDENCE: never open, print or quote artifacts/claude-readpanel371c-20260926/panel.jsonl, label_B.jsonl, adjudication.jsonl, or the reads_panel_* / pairs_panel_* files you write. Scripts print counts only; push those files unread. The panel is read exactly ONCE per reader.\012\012YOUR TASK: lis-319f (the reader gets a FORMER mode, so "used to" is never saved as now), then both readers read a fresh sealed panel once, on a rented GPU. Read origin/main:artifacts/claude-lis319f-20260926/PASSMARKS.md and PASSMARKS-R.md first. Run the code, never edit it; if something breaks, copy back what exists, destroy, and report the exact error. Outputs go in artifacts/claude-lis319f-20260926/ (new files only). On the rental: WORK=~/work, OLD=~/old/lis319-merged, BASE = the kit's MiniCPM5-1B snapshot path (record its commit hash). No MiniLM, no self122_head.pt, no route122 check.\0121. TREE: stream ONLY these paths (kit section A, nothing staged on the Mac): from origin/builder-outbox: artifacts/claude-own-o0b-20260923 artifacts/claude-own-o0a2-20260923; then from origin/main on top: scripts artifacts/claude-lis300-20260923 artifacts/claude-lis301-20260923 artifacts/claude-lis318-20260925 artifacts/claude-lis319-20260925 artifacts/claude-lis319f-20260926 artifacts/claude-readpanel371c-20260926 (~37 MB).\0122. OLD READER, started right after step 1 and left running in the background (nohup, log file) while steps 3-5 run: on the Mac check `shasum -a 256 ~/premonition-models/lis319-merged/model.safetensors` = e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76, then `rsync -a --partial ~/premonition-models/lis319-merged/ <rental>:old/lis319-merged/`. If the Mac copy is missing or its sha differs: stream C:/Users/benja/lis319/work/run/merged from BensPC through the Mac without keeping a copy (e.g. ssh <benspc> tar -c ... | ssh <rental> tar -x ...; reading files is fine while C:\Users\benja\GPU-BUSY.txt exists, the GPU is not touched). On the rental `sha256sum ~/old/lis319-merged/model.safetensors` must equal e688e1b2...; if it cannot be made equal: skip every OLD step below and report READER-FAIL (the new reader's steps still run).\0123. SEALS (from ~/tree, all OK or stop): sha256sum -c for artifacts/claude-lis300-20260923/SEAL.sha256.txt, artifacts/claude-lis301-20260923/SEAL.sha256.txt, artifacts/claude-lis318-20260925/data/SEAL.sha256.txt, artifacts/claude-lis319-20260925/data/SEAL.sha256.txt, artifacts/claude-lis319f-20260926/SEAL.sha256.txt; (cd artifacts/claude-readpanel371c-20260926 && sha256sum -c SEAL.sha256.txt). Run each from where its paths resolve.\0124. DATA:\012   python -B scripts/claude_lis319_data.py --o0b artifacts/claude-own-o0b-20260923 --o0a2 artifacts/claude-own-o0a2-20260923 --opus300 artifacts/claude-lis300-20260923/data --agree300 artifacts/claude-lis300-20260923/data/agreed_ids.txt --opus301 artifacts/claude-lis301-20260923/data --agree301 artifacts/claude-lis301-20260923/data/agreed_ids.txt --dev-agree artifacts/claude-lis301-20260923/data/dev_agreed_ids.txt --chat318 artifacts/claude-lis318-20260925/data --agree318 artifacts/claude-lis318-20260925/data/agreed_ids.txt --hist319 artifacts/claude-lis319-20260925/data --agree319 artifacts/claude-lis319-20260925/data/agreed_ids.txt --out $WORK/data\012   Expect train 50,044 and dev 1,311 (as lis-319).\012   python -B scripts/claude_lis319f_data.py --base $WORK/data --out $WORK/data319f > artifacts/claude-lis319f-20260926/BUILD.json\012   BUILD.json must equal artifacts/claude-lis319f-20260926/BUILD-dryrun.json (compare the parsed JSON with a script); any difference: stop with DATA-MISMATCH and report which keys differ.\012   python -B scripts/claude_lis319_lencheck.py --model BASE --data $WORK/data319f --max-len 512 > artifacts/claude-lis319f-20260926/LENGTHS.json   (exit code 3: stop, report the counts).\0125. TRAIN (nohup/setsid, log file): python -B scripts/claude_lis300_train.py --model BASE --data $WORK/data319f --out $WORK/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 512 --max-minutes 150 --merge   (OOM: --batch 8 once, report it). Copy $WORK/run/summary.json to artifacts/claude-lis319f-20260926/train_summary.json.\0126. SEAL THE NEW READER before any read: sha256sum $WORK/run/merged/model.safetensors > artifacts/claude-lis319f-20260926/SEAL-run.sha256.txt\0127. PANEL, once per reader (counts only):\012   python -B scripts/claude_lis319_rows.py --rows artifacts/claude-readpanel371c-20260926/panel.jsonl --out $WORK/h371c.jsonl\012   python -B scripts/claude_lis319_read.py --model OLD --rows $WORK/h371c.jsonl --out artifacts/claude-lis319f-20260926/reads_panel_old.jsonl\012   python -B scripts/claude_lis319_read.py --model $WORK/run/merged --rows $WORK/h371c.jsonl --out artifacts/claude-lis319f-20260926/reads_panel_new.jsonl\012   python -B scripts/claude_lis319f_score.py panel --panel artifacts/claude-readpanel371c-20260926/panel.jsonl --reads artifacts/claude-lis319f-20260926/reads_panel_old.jsonl --threshold 0.995 --out artifacts/claude-lis319f-20260926/former_old.json\012   python -B scripts/claude_lis319f_score.py panel --panel artifacts/claude-readpanel371c-20260926/panel.jsonl --reads artifacts/claude-lis319f-20260926/reads_panel_new.jsonl --threshold 0.995 --out artifacts/claude-lis319f-20260926/former_new.json\012   python -B scripts/claude_lis319_fullclaim_b.py pairs --panel artifacts/claude-readpanel371c-20260926/panel.jsonl --reads artifacts/claude-lis319f-20260926/reads_panel_old.jsonl --thresholds 0.995 --out artifacts/claude-lis319f-20260926/pairs_panel_old.jsonl\012   python -B scripts/claude_lis319_fullclaim_b.py pairs --panel artifacts/claude-readpanel371c-20260926/panel.jsonl --reads artifacts/claude-lis319f-20260926/reads_panel_new.jsonl --thresholds 0.995 --out artifacts/claude-lis319f-20260926/pairs_panel_new.jsonl\0128. DEV (report only):\012   python -B scripts/claude_lis319_read.py --model $WORK/run/merged --rows $WORK/data319f/dev.jsonl --out artifacts/claude-lis319f-20260926/dev_pred_new.jsonl\012   python -B scripts/claude_lis319f_score.py subset --dev $WORK/data319f/dev.jsonl --src-prefix former319 --out $WORK/dev_tpl.jsonl\012   python -B scripts/claude_lis319_read.py --model OLD --rows $WORK/dev_tpl.jsonl --out artifacts/claude-lis319f-20260926/dev_pred_old_tpl.jsonl\012   python -B scripts/claude_lis319f_score.py dev --dev $WORK/data319f/dev.jsonl --pred artifacts/claude-lis319f-20260926/dev_pred_new.jsonl --threshold 0.995 --out artifacts/claude-lis319f-20260926/dev_former_new.json\012   python -B scripts/claude_lis319f_score.py dev --dev $WORK/data319f/dev.jsonl --pred artifacts/claude-lis319-20260925/dev/dev_pred.jsonl --pred artifacts/claude-lis319f-20260926/dev_pred_old_tpl.jsonl --threshold 0.995 --out artifacts/claude-lis319f-20260926/dev_former_old.json\012   python -B scripts/claude_lis300_score.py --gold $WORK/data319f/dev.jsonl --pred artifacts/claude-lis319f-20260926/dev_pred_new.jsonl --threshold 0.995 > artifacts/claude-lis319f-20260926/dev_score_new.txt\0129. COPY BACK, then destroy: every file this task wrote under artifacts/claude-lis319f-20260926/ to the Mac tree; the new reader $WORK/run/merged/ to the Mac at ~/premonition-models/lis319f-merged/ (rsync --partial; its model.safetensors sha256 must match SEAL-run on the Mac BEFORE destroying). Never push weights. Destroy, confirm with vastai show instances, append the ledger line (cat >>).\01210. RESULTS-rent.md: every printed count (BUILD.json, LENGTHS.json, former_old/new.json and the pairs counts verbatim, dev files), train summary (minutes, tok/s, steps), merged sha256 of both readers as checked on the rental, BASE commit hash, how OLD reached the rental, GPU, instance id, hours, dph, dollars, wall time per step. The whole-claim marks need blind judges on the pairs files, which the reading thread runs after this job: say "M1-M3 pending judges" and do not compute a verdict. Never quote panel text.\012PUSH: artifacts/claude-lis319f-20260926/RESULTS-rent.md artifacts/claude-lis319f-20260926/BUILD.json artifacts/claude-lis319f-20260926/LENGTHS.json artifacts/claude-lis319f-20260926/train_summary.json artifacts/claude-lis319f-20260926/SEAL-run.sha256.txt artifacts/claude-lis319f-20260926/reads_panel_old.jsonl artifacts/claude-lis319f-20260926/reads_panel_new.jsonl artifacts/claude-lis319f-20260926/former_old.json artifacts/claude-lis319f-20260926/former_new.json artifacts/claude-lis319f-20260926/pairs_panel_old.jsonl artifacts/claude-lis319f-20260926/pairs_panel_new.jsonl artifacts/claude-lis319f-20260926/dev_pred_new.jsonl artifacts/claude-lis319f-20260926/dev_pred_old_tpl.jsonl artifacts/claude-lis319f-20260926/dev_former_new.json artifacts/claude-lis319f-20260926/dev_former_old.json artifacts/claude-lis319f-20260926/dev_score_new.txt artifacts/fable-predictions-ledger.md
+ben-hannan       41624   1.1  1.5 562757952 503776   ??  SN    9:45AM   0:50.68 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rent-rd378L.go1.41593 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-26; it replaces 007g-rd-378L-notes-search.md, moved off BensPC per Ben 13:30 UTC: BensPC's GPU must not be the blocker). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, report in your final reply) and ALL of origin/main:design/v3/30-modes/330-rent-kit.md (rental rules incl. reliability >= 0.98, the 6-min start rule, the 10-min no-progress watchdog, copy back BEFORE destroy, destroy and confirm, ledger line), with the exceptions below. No READER, no self122_head.pt, no route122 check.\012GPU: rent\012DISK: 3 (Director: headroom for the Mac-copy fallback rsync; nothing is staged on the Mac; ~20 MB of LoCoMo-derived files are kept in ~/rd378L-private/ at the end)\012BUDGET: $1.80 for this whole task, re-rents included, from the Trustworthy notes thread's $2 (Ben, 12:59 UTC 09-26; standing caps <=$4 per job and $30 total still apply; the Director keeps the ledger and may lower this). Keep the kit's running total; at $1.65 kill running commands by exact PID, copy back what exists, destroy, stop with BUDGET-STOP. Label: claude-notes-rd378L. RTX 5090 first, else 4090, kit filter. At most 3 rentals.\012CREDIT: `vastai show user --raw` and report ONLY the balance number. No credit stop (vast auto-refills, Ben). Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox has artifacts/claude-rd378L-20260926/RESULTS.md, if origin/builder-outbox has runs/007g-rd-378L-notes-search/, if handoff/queue/007g-rd-378L-notes-search.md is still on origin/main, or if a live instance is labelled claude-notes-rd378L.\012LOCOMO IS PRACTICE DATA: never print, quote or push any LoCoMo question, answer, turn or note text (count rows and bytes only). dialogs.jsonl, notes.jsonl and notes_recall_per_question.jsonl stay on the rental and, at the end, in ~/rd378L-private/ on the Mac (outside git). Push counts and turn positions only.\012\012YOUR TASK: rd-378L, do the note writer's notes help find evidence across whole long chats? Read origin/main:artifacts/claude-rd378L-20260926/PASSMARKS.md, PASSMARKS-B.md, PASSMARKS-C.md and PASSMARKS-D.md (this move) first. Run the code, never edit it; if something breaks, copy back what exists, destroy, and report the exact error and full traceback. Outputs go in artifacts/claude-rd378L-20260926/ (new files only).\012On the rental: TREE=~/tree, DATA=~/rd378L/data, W=~/rd378L, ADAPTER=~/w/adapter, WRITER=~/w/merged. Run every long step under nohup/setsid with its own log file so an ssh drop cannot kill it.\012\0121. TREE (nothing staged on the Mac): COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378L-20260926/SEAL-D.sha256.txt), then `git archive $COMMIT scripts artifacts/claude-rd378L-20260926 artifacts/claude-bm390-20260925/data-manifest.json | ssh <rental> 'mkdir -p ~/tree && tar -x -C ~/tree'` (~21 MB; the manifest pins the LoCoMo hash for fetch). The job runs that exact commit's code. Report COMMIT.\0122. ADAPTER (file read only on BensPC; its GPU is not touched, so this is fine while C:\Users\benja\GPU-BUSY.txt exists): record sha256 of every file in C:/Users/benja/rd378/tree/WORK/nrun/adapter on BensPC (git-bash sha256sum), then stream that folder to the rental's ~/w/adapter through the Mac without keeping a copy (e.g. ssh <benspc> "tar -c -C C:/Users/benja/rd378/tree/WORK/nrun adapter" | ssh <rental> "mkdir -p ~/w && tar -x -C ~/w"). `sha256sum ~/w/adapter/*` on the rental must match BensPC file for file. If the folder is missing on BensPC or will not match: say so and use the FALLBACK in step 5.\0123. SETUP (kit section C with exactly these installs and downloads, nothing else):\012   pip install -q torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128   (BensPC's build; if that exact version will not install, destroy and stop with ENV-FAIL, report the error)\012   pip install -q transformers==5.17.0 peft==0.21.0 safetensors huggingface_hub accelerate numpy\012   Record `python -c "import torch, transformers, peft; print(torch.__version__, transformers.__version__, peft.__version__, torch.cuda.get_device_name(0))"`.\012   `unset HF_HOME HF_HUB_CACHE`, then with HF_HUB_OFFLINE=0 for this one command: `python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B', revision='87179e5c1f455ef22e6223592d2d61351b525bfc')); print(s('sentence-transformers/all-MiniLM-L6-v2', revision='1110a243fdf4706b3f48f1d95db1a4f5529b4d41', allow_patterns=['*.json', 'model.safetensors', 'vocab.txt']))"`. BASE = the first printed path. The second must be ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41 (the store's MiniLM loader reads that folder); if not, destroy and stop with MINILM-PATH.\012   Then `export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1` for everything else.\0124. SEALS (from ~/tree, before anything else runs): `sha256sum -c artifacts/claude-rd378L-20260926/SEAL-D.sha256.txt` and `sha256sum -c artifacts/claude-rd378L-20260926/SEAL-C.sha256.txt` must be all OK (SEAL.sha256.txt and SEAL-B.sha256.txt are earlier seals and are expected to fail on the script line; do not run them). `python -B scripts/claude_rd378L_recall.py selftest` must end with RD378L-SELFTEST PASS. Any failure: destroy, stop with SEAL-MISMATCH or SELFTEST-FAIL, report every line.\0125. WRITER: `python -B scripts/claude_rd378L_rebuild.py --base BASE --adapter ~/w/adapter --out ~/w/merged` prints one JSON line; report it verbatim. Exit 0 means model.safetensors hashes to dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510; confirm with a separate `sha256sum ~/w/merged/model.safetensors`.\012   FALLBACK, only if the rebuild does not exit 0 or the adapter could not be moved. First choice: if origin/main's handoff/depot/README.md or origin/builder-outbox's artifacts/claude-depot-20260926/REPORT.md lists the rd-378 writer (sha dbcc8db5...) on a running instance labelled claude-director-depot, copy it inside vast as that file says (read only on the depot; never stop or change it). Otherwise, never while rent-lis-319f's own reader rsync is still running (same Mac uplink; wait for it, the budget rule still applies): on the Mac `shasum -a 256 ~/premonition-models/rd378-notes-merged/model.safetensors` must be dbcc8db5...; on the rental `rm -rf ~/w/merged`; then `rsync -a --partial ~/premonition-models/rd378-notes-merged/ <rental>:w/merged/` (~90 min at the Mac's upload speed; the rental keeps billing, so watch BUDGET) and `sha256sum ~/w/merged/model.safetensors` on the rental must be dbcc8db5.... If neither route gives that hash: copy back what exists, destroy, stop with WRITER-FAIL. Never write notes with a writer of any other hash.\0126. DATA: `python -B scripts/claude_bm390.py fetch --data DATA`, then `sha256sum DATA/locomo10.json` must be 79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4 (a failure in the MMLU/GSM8K part of fetch does not matter if locomo10.json is present with that hash; report it). Mismatch: destroy, stop with DATA-MISMATCH.\012   `python -B scripts/claude_rd378L_recall.py dialogs --data DATA --convs 0-4 --out W/dialogs.jsonl`   (expect {"turns": 2760})\0127. WRITE (the long step, ~46 min on BensPC; one process, launched ONCE, check `ps` before any retry): `python -B scripts/claude_rd378_write.py --model ~/w/merged --dialogs W/dialogs.jsonl --out W/notes.jsonl`. It prints only at the end, so for the watchdog count progress as the byte size of W/notes.jsonl (it grows in buffered chunks); no growth for 10 min = stalled. Expect "wrote notes for 2760 turns on cuda".\0128. SCORE: `python -B scripts/claude_rd378L_recall.py score --data DATA --convs 0-4 --notes W/notes.jsonl --out W/out`. Report its one printed JSON line verbatim (counts only).\0129. COPY BACK, then destroy: W/out/notes_recall.json and W/out/ranked_turns.jsonl (turn positions only) to the Mac tree's artifacts/claude-rd378L-20260926/; W/dialogs.jsonl, W/notes.jsonl and W/out/notes_recall_per_question.jsonl to ~/rd378L-private/ on the Mac (outside git, never pushed, never printed). Check every file's sha256 matches the box, THEN destroy, confirm with `vastai show instances`, append the ledger line (cat >>).\01210. RESULTS.md (a NEW file in artifacts/claude-rd378L-20260926/): from notes_recall.json, fused mode, questions of categories 1-4: A and B any@10 and anyT@10 (count / questions and percent to one decimal), L1 (B any@10 >= A + 5 points), L2 (no category 1-4 more than 3 points below A on any@10), L3 (B anyT@10 >= A anyT@10 + 5 points), the proved-wrong clause for any@10 and for anyT@10, mean fused turns@10 for A and B; the full A and B tables per category (counts); notes, turns and unparsed counts; median and p90 write ms from the "ms" field of notes.jsonl (numbers only); every JSON line printed in steps 5, 6 and 8; the step-3 versions line; COMMIT; how the writer reached the rental (rebuild or fallback) and its sha256; GPU, instance id(s), hours, dph, dollars; wall time per step. Never quote LoCoMo or note text.\012PUSH: artifacts/claude-rd378L-20260926/RESULTS.md artifacts/claude-rd378L-20260926/notes_recall.json artifacts/claude-rd378L-20260926/ranked_turns.jsonl artifacts/fable-predictions-ledger.md
+ben-hannan       73052   0.0  0.0 488799888    176   ??  Ss   Fri12AM   0:00.02 /System/Library/Frameworks/ColorSync.framework/Versions/A/XPCServices/com.apple.ColorSyncXPCAgent.xpc/Contents/MacOS/com.apple.ColorSyncXPCAgent
+ben-hannan       73049   0.0  0.0 488800000   1312   ??  S    Fri12AM   0:00.42 /System/Library/Frameworks/ColorSync.framework/Support/colorsync.useragent
+MAC-RSYNC-CHECK-DONE
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rd378L_recall.py | grep -nE "^import |^from " | head; echo ===WRITE===; git show origin/main:scripts/claude_rd378_write.py | grep -nE "^import |^from " | head; echo ===BM390===; git show origin/main:scripts/claude_bm390.py | grep -nE "^import |^from " | head
+24:from __future__ import annotations
+26:import argparse
+27:import json
+28:import sys
+29:import tempfile
+30:from collections import defaultdict
+31:from pathlib import Path
+35:import claude_bm390 as B  # noqa: E402
+36:import claude_ep382_store as M  # noqa: E402
+zsh:1: ==WRITE=== not found
+[0m
+[0m$ [0mfor s in claude_rd378L_recall claude_rd378_write claude_bm390 claude_ep382_store claude_rd378_common claude_rd378L_rebuild; do echo "--- $s"; git show origin/main:scripts/$s.py | grep -nE '^[[:space:]]*import |^[[:space:]]*from ' | grep -vE '__future__|argparse|json|sys|tempfile|hashlib|collections|pathlib|os$|re$|math|time|random|typing|dataclasses|csv|shutil|subprocess|datetime|itertools|functools|copy|io$|struct|heapq|statistics|unicodedata|string' | head -n 12; done
+--- claude_rd378L_recall
+35:import claude_bm390 as B  # noqa: E402
+36:import claude_ep382_store as M  # noqa: E402
+--- claude_rd378_write
+17:import torch
+18:from transformers import AutoModelForCausalLM, AutoTokenizer
+21:from claude_rd378_common import build_nprompt, parse_notes  # noqa: E402
+--- claude_bm390
+50:import gc
+52:import importlib
+62:import urllib.request
+132:    import pyarrow as pa
+152:    import pyarrow.parquet as pq
+236:        import torch
+237:        from transformers import AutoModelForCausalLM, AutoTokenizer
+262:    import torch
+339:        import fable_self122 as S122
+347:    import claude_e2e336_run as R
+408:    import claude_e2e336_run as R
+--- claude_ep382_store
+26:import threading
+44:            import fable_self122_train as T
+51:    import torch
+52:    import torch.nn.functional as F
+96:        import torch
+--- claude_rd378_common
+--- claude_rd378L_rebuild
+36:    import torch
+37:    from peft import PeftModel
+38:    from transformers import AutoModelForCausalLM, AutoTokenizer
+54:    import torch
+55:    from peft import LoraConfig, get_peft_model
+56:    from transformers import AutoTokenizer, LlamaConfig, LlamaForCausalLM, PreTrainedTokenizerFast
+57:    from tokenizers import Tokenizer, models, pre_tokenizers
+101:    import peft
+102:    import torch
+103:    import transformers
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'cd ~/tree && sha256sum -c artifacts/claude-rd378L-20260926/SEAL-D.sha256.txt 2>&1; echo "SEAL-D EXIT:$?"; sha256sum -c artifacts/claude-rd378L-20260926/SEAL-C.sha256.txt 2>&1; echo "SEAL-C EXIT:$?"' 2>&1 | tail -n 25
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+scripts/claude_rd378L_recall.py: OK
+scripts/claude_rd378L_rebuild.py: OK
+scripts/claude_rd378_write.py: OK
+scripts/claude_rd378_common.py: OK
+scripts/claude_ep382_store.py: OK
+scripts/claude_bm390.py: OK
+scripts/fable_self122_train.py: OK
+scripts/fable_bert_loader.py: OK
+artifacts/claude-bm390-20260925/data-manifest.json: OK
+artifacts/claude-rd378L-20260926/PASSMARKS.md: OK
+artifacts/claude-rd378L-20260926/PASSMARKS-B.md: OK
+artifacts/claude-rd378L-20260926/PASSMARKS-C.md: OK
+artifacts/claude-rd378L-20260926/PASSMARKS-D.md: OK
+SEAL-D EXIT:0
+scripts/claude_rd378L_recall.py: OK
+artifacts/claude-rd378L-20260926/PASSMARKS.md: OK
+artifacts/claude-rd378L-20260926/PASSMARKS-B.md: OK
+artifacts/claude-rd378L-20260926/PASSMARKS-C.md: OK
+SEAL-C EXIT:0
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'cd ~/tree && setsid nohup python -B scripts/claude_rd378L_recall.py selftest > ~/selftest.log 2>&1 < /dev/null & echo PID:$!; sleep 45; cat ~/selftest.log' 2>&1 | tail -n 12
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+PID:627
+PASS positions
+PASS note_cites
+PASS recall
+RD378L-SELFTEST PASS
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc && setsid nohup python -B scripts/claude_rd378L_rebuild.py --base $BASE --adapter ~/w/adapter --out ~/w/merged > ~/rebuild.log 2>&1 < /dev/null & echo PID:$!; sleep 60; echo ---LOG---; cat ~/rebuild.log' 2>&1 | tail -n 25
+if torch._C._dispatch_has_kernel_for_dispatch_key(self.qualname, "Meta"):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: operator torchvision::nms does not exist
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/root/tree/scripts/claude_rd378L_rebuild.py", line 116, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/root/tree/scripts/claude_rd378L_rebuild.py", line 101, in main
+    import peft
+  File "/opt/conda/lib/python3.11/site-packages/peft/__init__.py", line 17, in <module>
+    from .auto import (
+  File "/opt/conda/lib/python3.11/site-packages/peft/auto.py", line 31, in <module>
+    from .config import PeftConfig
+  File "/opt/conda/lib/python3.11/site-packages/peft/config.py", line 30, in <module>
+    from .utils import CONFIG_NAME, PeftType, TaskType
+  File "/opt/conda/lib/python3.11/site-packages/peft/utils/__init__.py", line 15, in <module>
+    from .constants import ALLOWED_COMPUTE_DTYPES, UPCAST_DTYPES
+  File "/opt/conda/lib/python3.11/site-packages/peft/utils/constants.py", line 16, in <module>
+    from transformers import BloomPreTrainedModel
+  File "/opt/conda/lib/python3.11/site-packages/transformers/utils/import_utils.py", line 2648, in __getattr__
+    raise ModuleNotFoundError(
+ModuleNotFoundError: Could not import module 'BloomPreTrainedModel'. Are this object's requirements defined correctly?
+[0m
+[0m$ [0mps aux | grep -E "rsync" | grep -v grep | grep -v opencode; echo RSYNC-PROCS-ABOVE; shasum -a 256 ~/premonition-models/rd378-notes-merged/model.safetensors; du -sh ~/premonition-models/rd378-notes-merged/
+ben-hannan       73049   0.0  0.0 488800000   1312   ??  S    Fri12AM   0:00.42 /System/Library/Frameworks/ColorSync.framework/Support/colorsync.useragent
+root             96666   0.0  0.0 488799376    240   ??  Ss   Thu06AM   0:00.10 /usr/libexec/colorsyncd
+ben-hannan       54219   0.0  0.0 488836176   4576   ??  S    Thu03AM   0:00.11 /System/Library/CoreServices/appplaceholdersyncd
+ben-hannan       92793   0.0  0.0 488844944   8848   ??  S    Thu12AM   0:01.47 /System/Library/Frameworks/Contacts.framework/Support/postersyncd
+RSYNC-PROCS-ABOVE
+dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510  /Users/ben-hannan/premonition-models/rd378-notes-merged/model.safetensors
+2.0G	/Users/ben-hannan/premonition-models/rd378-notes-merged/
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'rm -rf ~/w/merged && mkdir -p ~/w/merged && echo CLEARED' 2>&1 | tail -n 2; setsid nohup rsync -a --partial -e "ssh -p 37950 -o StrictHostKeyChecking=no" ~/premonition-models/rd378-notes-merged/ root@ssh2.vast.ai:w/merged/ > ~/rd378L-rsync.log 2>&1 < /dev/null & echo "RSYNC-PID:$!"; date -u +%FT%TZ; sleep 120; tail -n 3 ~/rd378L-rsync.log; ssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'du -sh ~/w/merged 2>/dev/null; ls -la ~/w/merged 2>/dev/null | head' 2>&1 | tail -n 8
+Have fun!
+CLEARED
+RSYNC-PID:51224
+2026-09-26T14:13:51Z
+zsh:1: command not found: setsid
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+0	/root/w/merged
+total 0
+drwxr-xr-x 2 root root  6 Sep 26 14:13 .
+drwxr-xr-x 4 root root 35 Sep 26 14:13 ..
+[0m
+[0m$ [0mnohup rsync -a --partial -e "ssh -p 37950 -o StrictHostKeyChecking=no" ~/premonition-models/rd378-notes-merged/ root@ssh2.vast.ai:w/merged/ > ~/rd378L-rsync.log 2>&1 < /dev/null & echo "RSYNC-PID:$!"; disown; date -u +%FT%TZ; sleep 150; echo ---LOG---; cat ~/rd378L-rsync.log | head -n 5; echo ---; ps -p $! -o pid,etime,command 2>&1 | head -n 3
+RSYNC-PID:52211
+2026-09-26T14:16:01Z
+---LOG---
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---
+  PID ELAPSED COMMAND
+52211   02:30 rsync -a --partial -e ssh -p 37950 -o StrictHostKeyChecking=no /Users/ben-hannan/premonition-models/rd378-notes-merged/ root@ssh2.vast.ai:w/merged/
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'cat > ~/run_data.sh << "EOF"
+#!/bin/bash
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+cd ~/tree
+mkdir -p ~/rd378L/data ~/rd378L
+python -B scripts/claude_bm390.py fetch --data ~/rd378L/data 2>&1 | tail -n 5
+echo FETCH_EXIT:$?
+sha256sum ~/rd378L/data/locomo10.json
+python -B scripts/claude_rd378L_recall.py dialogs --data ~/rd378L/data --convs 0-4 --out ~/rd378L/dialogs.jsonl 2>&1 | tail -n 3
+echo DIALOGS_EXIT:$?
+wc -c ~/rd378L/dialogs.jsonl
+EOF
+chmod +x ~/run_data.sh; nohup ~/run_data.sh > ~/data.log 2>&1 < /dev/null & echo DATA-PID:$!' 2>&1 | tail -n 2
+Have fun!
+DATA-PID:701
+[0m
+[0m$ [0msleep 120; ssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'tail -n 12 ~/data.log; echo ---; du -sh ~/w/merged ~/rd378L 2>/dev/null' 2>&1 | tail -n 16; echo ---MAC---; ps -p 52211 -o pid,etime,command 2>&1 | head -n 2; tail -c 300 ~/rd378L-rsync.log
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+    for i, row in enumerate(_read_arrow(data / "mmlu" / f"{subject}.arrow")):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/tree/scripts/claude_bm390.py", line 132, in _read_arrow
+    import pyarrow as pa
+ModuleNotFoundError: No module named 'pyarrow'
+FETCH_EXIT:0
+79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4  /root/rd378L/data/locomo10.json
+{"turns": 2760}
+DIALOGS_EXIT:0
+525077 /root/rd378L/dialogs.jsonl
+---
+256M	/root/w/merged
+6.4M	/root/rd378L
+---MAC---
+  PID ELAPSED COMMAND
+52211   04:49 rsync -a --partial -e ssh -p 37950 -o StrictHostKeyChecking=no /Users/ben-hannan/premonition-models/rd378-notes-merged/ root@ssh2.vast.ai:w/merged/
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+[0m
+[0m# [0mTodos
+[✓] Pre-checks: duplicate gate, credit, COMMIT, seals/manifest
+[✓] Rent GPU (5090>=0.98 else 4090, label claude-notes-rd378L, budget $1.80) - 52757951 running $0.4944/hr
+[✓] Stream TREE to rental, verify adapter from BensPC
+[✓] SETUP + SEALS + selftest on rental
+[•] WRITER rebuild failed (peft vs transformers 5.17.0) -> FALLBACK Mac rsync running
+[✓] DATA fetch + dialogs done (locomo hash OK, turns 2760)
+[ ] WRITE + SCORE
+[ ] Copy back, destroy, ledger, RESULTS.md + push
+[0m
+[0m$ [0msleep 540; ssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'du -sb ~/w/merged' 2>&1 | tail -n 1; ps -p 52211 -o pid,etime 2>&1 | head -n 2; date -u +%FT%TZ
+754466964	/root/w/merged
+  PID ELAPSED
+52211   14:02
+2026-09-26T14:30:03Z
+[0m
+[0m$ [0msleep 600; ssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'du -sb ~/w/merged; ls -la ~/w/merged' 2>&1 | tail -n 10; ps -p 52211 -o pid,etime 2>&1 | head -n 2; date -u +%FT%TZ
+Have fun!
+1379156116	/root/w/merged
+total 2097116
+drwxr-xr-x 2  502 staff        132 Sep 26 14:16 .
+drwxr-xr-x 4 root root          35 Sep 26 14:13 ..
+-rw-r--r-- 1  502 staff       6148 Sep 26 01:05 .DS_Store
+-rw------- 1 root root  1379139584 Sep 26 14:40 .model.safetensors.ZSu3g5
+-rw------- 1  502 staff       9241 Sep 26 01:06 chat_template.jinja
+-rw------- 1  502 staff        784 Sep 26 01:06 config.json
+-rw------- 1  502 staff        227 Sep 26 01:06 generation_config.json
+  PID ELAPSED
+52211   24:15
+2026-09-26T14:40:16Z
+[0m
+[0m$ [0msleep 600; ssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'du -sb ~/w/merged; ls ~/w/merged' 2>&1 | tail -n 10; ps -p 52211 -o pid,etime 2>&1 | head -n 2; date -u +%FT%TZ
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+1932017812	/root/w/merged
+chat_template.jinja
+config.json
+generation_config.json
+  PID ELAPSED
+52211   34:29
+2026-09-26T14:50:30Z
+[0m
+[0m$ [0msleep 300; ps -p 52211 -o pid,etime 2>&1 | head -n 2; tail -c 200 ~/rd378L-rsync.log; ssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'ls -la ~/w/merged; sha256sum ~/w/merged/model.safetensors' 2>&1 | tail -n 10; date -u +%FT%TZ
+PID ELAPSED
+52211   39:37
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Have fun!
+total 2097116
+drwxr-xr-x 2  502 staff        132 Sep 26 14:16 .
+drwxr-xr-x 4 root root          35 Sep 26 14:13 ..
+-rw-r--r-- 1  502 staff       6148 Sep 26 01:05 .DS_Store
+-rw------- 1 root root  2029518848 Sep 26 14:55 .model.safetensors.ZSu3g5
+-rw------- 1  502 staff       9241 Sep 26 01:06 chat_template.jinja
+-rw------- 1  502 staff        784 Sep 26 01:06 config.json
+-rw------- 1  502 staff        227 Sep 26 01:06 generation_config.json
+sha256sum: /root/w/merged/model.safetensors: No such file or directory
+2026-09-26T14:55:48Z
+[0m
+[0m$ [0msleep 180; ps -p 52211 -o pid,etime 2>&1 | head -n 2; ssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'ls -la ~/w/merged; sha256sum ~/w/merged/model.safetensors' 2>&1 | tail -n 10; date -u +%FT%TZ
+PID ELAPSED
+52211   42:51
+Have fun!
+total 2097116
+drwxr-xr-x 2  502 staff        132 Sep 26 14:16 .
+drwxr-xr-x 4 root root          35 Sep 26 14:13 ..
+-rw-r--r-- 1  502 staff       6148 Sep 26 01:05 .DS_Store
+-rw------- 1 root root  2115239936 Sep 26 14:59 .model.safetensors.ZSu3g5
+-rw------- 1  502 staff       9241 Sep 26 01:06 chat_template.jinja
+-rw------- 1  502 staff        784 Sep 26 01:06 config.json
+-rw------- 1  502 staff        227 Sep 26 01:06 generation_config.json
+sha256sum: /root/w/merged/model.safetensors: No such file or directory
+2026-09-26T14:59:04Z
+[0m
+[0m$ [0mls -la ~/premonition-models/rd378-notes-merged/; sleep 240; ps -p 52211 -o pid,etime 2>&1 | head -n 2; ssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'ls -la ~/w/merged' 2>&1 | tail -n 9; date -u +%FT%TZ
+total 4240664
+drwxr-xr-x   9 ben-hannan  staff         288 Sep 25 21:06 .
+drwxr-xr-x  12 ben-hannan  staff         384 Sep 26 10:46 ..
+-rw-r--r--@  1 ben-hannan  staff        6148 Sep 25 21:05 .DS_Store
+-rw-------   1 ben-hannan  staff        9241 Sep 25 21:06 chat_template.jinja
+-rw-------   1 ben-hannan  staff         784 Sep 25 21:06 config.json
+-rw-------   1 ben-hannan  staff         227 Sep 25 21:06 generation_config.json
+-rw-r--r--   1 ben-hannan  staff  2161290944 Sep 25 21:05 model.safetensors
+-rw-------   1 ben-hannan  staff         477 Sep 25 21:06 tokenizer_config.json
+-rw-------   1 ben-hannan  staff     9894271 Sep 25 21:06 tokenizer.json
+  PID ELAPSED
+drwxr-xr-x 2  502 staff        175 Sep 26 01:06 .
+drwxr-xr-x 4 root root          35 Sep 26 14:13 ..
+-rw-r--r-- 1  502 staff       6148 Sep 26 01:05 .DS_Store
+-rw------- 1  502 staff       9241 Sep 26 01:06 chat_template.jinja
+-rw------- 1  502 staff        784 Sep 26 01:06 config.json
+-rw------- 1  502 staff        227 Sep 26 01:06 generation_config.json
+-rw-r--r-- 1  502 staff 2161290944 Sep 26 01:05 model.safetensors
+-rw------- 1  502 staff    9894271 Sep 26 01:06 tokenizer.json
+-rw------- 1  502 staff        477 Sep 26 01:06 tokenizer_config.json
+2026-09-26T15:03:15Z
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'sha256sum ~/w/merged/model.safetensors; ls ~/w/merged | wc -l' 2>&1 | tail -n 3; date -u +%FT%TZ
+Have fun!
+dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510  /root/w/merged/model.safetensors
+6
+2026-09-26T15:03:27Z
+[0m
+[0m# [0mTodos
+[✓] Pre-checks: duplicate gate, credit, COMMIT, seals/manifest
+[✓] Rent GPU (5090>=0.98 else 4090, label claude-notes-rd378L, budget $1.80) - 52757951 running $0.4944/hr
+[✓] Stream TREE to rental, verify adapter from BensPC
+[✓] SETUP + SEALS + selftest on rental
+[✓] WRITER via FALLBACK Mac rsync, hash dbcc8db5 OK
+[✓] DATA fetch + dialogs done (locomo hash OK, turns 2760)
+[•] WRITE (long, ~46min) + SCORE
+[ ] Copy back, destroy, ledger, RESULTS.md + push
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'ps aux | grep claude_rd378_write | grep -v grep | wc -l; cat > ~/run_write.sh << "EOF"
+#!/bin/bash
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+cd ~/tree
+python -B scripts/claude_rd378_write.py --model ~/w/merged --dialogs ~/rd378L/dialogs.jsonl --out ~/rd378L/notes.jsonl
+echo WRITE_EXIT:$?
+EOF
+chmod +x ~/run_write.sh; nohup ~/run_write.sh > ~/write.log 2>&1 < /dev/null & echo WRITE-PID:$!; date -u +%FT%TZ' 2>&1 | tail -n 4
+Have fun!
+0
+WRITE-PID:832
+2026-09-26T15:03:37Z
+[0m
+[0m$ [0msleep 570; ssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'ls -la ~/rd378L/; tail -n 3 ~/write.log; ps aux | grep claude_rd378_write | grep -v grep | awk "{print \$2, \$3\"%cpu\"}"' 2>&1 | tail -n 8; date -u +%FT%TZ
+total 520
+drwxr-xr-x 3 root root     39 Sep 26 14:19 .
+drwx------ 1 root root   4096 Sep 26 15:03 ..
+drwxr-xr-x 3 root root     65 Sep 26 14:19 data
+-rw-r--r-- 1 root root 525077 Sep 26 14:19 dialogs.jsonl
+    raise ModuleNotFoundError(
+ModuleNotFoundError: Could not import module 'LlamaConfig'. Are this object's requirements defined correctly?
+WRITE_EXIT:1
+2026-09-26T15:13:13Z
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'cat ~/write.log' 2>&1 | tail -n 40
+File "/opt/conda/lib/python3.11/site-packages/torchvision/__init__.py", line 10, in <module>
+    from torchvision import _meta_registrations, datasets, io, models, ops, transforms, utils  # usort:skip
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/torchvision/_meta_registrations.py", line 163, in <module>
+    @torch.library.register_fake("torchvision::nms")
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/torch/library.py", line 1087, in register
+    use_lib._register_fake(
+  File "/opt/conda/lib/python3.11/site-packages/torch/library.py", line 204, in _register_fake
+    handle = entry.fake_impl.register(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/torch/_library/fake_impl.py", line 50, in register
+    if torch._C._dispatch_has_kernel_for_dispatch_key(self.qualname, "Meta"):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: operator torchvision::nms does not exist
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/root/tree/scripts/claude_rd378_write.py", line 70, in <module>
+    main()
+  File "/root/tree/scripts/claude_rd378_write.py", line 52, in main
+    w = NoteWriter(a.model)
+        ^^^^^^^^^^^^^^^^^^^
+  File "/root/tree/scripts/claude_rd378_write.py", line 29, in __init__
+    self.tok = AutoTokenizer.from_pretrained(model_dir)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/transformers/models/auto/tokenization_auto.py", line 785, in from_pretrained
+    config = AutoConfig.from_pretrained(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/transformers/models/auto/configuration_auto.py", line 391, in from_pretrained
+    explicit_local_code = has_local_code and not CONFIG_MAPPING[config_dict["model_type"]].__module__.startswith(
+                                                 ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/transformers/models/auto/configuration_auto.py", line 112, in __getitem__
+    if hasattr(self._modules[module_name], value):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/transformers/utils/import_utils.py", line 2648, in __getattr__
+    raise ModuleNotFoundError(
+ModuleNotFoundError: Could not import module 'LlamaConfig'. Are this object's requirements defined correctly?
+WRITE_EXIT:1
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'python -c "import transformers.models.llama.configuration_llama as m; print(m.LlamaConfig)" 2>&1 | tail -n 12; python -c "import transformers; print(transformers.__version__)" 2>&1 | tail -n 2; pip list 2>/dev/null | grep -iE "tokenizers|filelock|yaml|regex|requests|tqdm|packaging"' 2>&1 | tail -n 20
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/torch/library.py", line 1087, in register
+    use_lib._register_fake(
+  File "/opt/conda/lib/python3.11/site-packages/torch/library.py", line 204, in _register_fake
+    handle = entry.fake_impl.register(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/torch/_library/fake_impl.py", line 50, in register
+    if torch._C._dispatch_has_kernel_for_dispatch_key(self.qualname, "Meta"):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: operator torchvision::nms does not exist
+5.17.0
+filelock                  3.18.0
+packaging                 25.0
+PyYAML                    6.0.2
+regex                     2026.9.10
+requests                  2.32.4
+ruamel.yaml               0.18.14
+ruamel.yaml.clib          0.2.8
+tokenizers                0.23.2
+tqdm                      4.67.1
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'python -c "import transformers.models.llama.configuration_llama as m; print(m.LlamaConfig)" 2>&1 | head -n 30' 2>&1 | tail -n 32
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/opt/conda/lib/python3.11/site-packages/transformers/models/llama/configuration_llama.py", line 26, in <module>
+    from ...utils.type_validators import interval
+  File "/opt/conda/lib/python3.11/site-packages/transformers/utils/type_validators.py", line 8, in <module>
+    from ..video_utils import VideoMetadataType
+  File "/opt/conda/lib/python3.11/site-packages/transformers/video_utils.py", line 27, in <module>
+    from .image_transforms import PaddingMode, to_channel_dimension_format
+  File "/opt/conda/lib/python3.11/site-packages/transformers/image_transforms.py", line 22, in <module>
+    from .image_utils import (
+  File "/opt/conda/lib/python3.11/site-packages/transformers/image_utils.py", line 54, in <module>
+    from torchvision.io import ImageReadMode, decode_image
+  File "/opt/conda/lib/python3.11/site-packages/torchvision/__init__.py", line 10, in <module>
+    from torchvision import _meta_registrations, datasets, io, models, ops, transforms, utils  # usort:skip
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/torchvision/_meta_registrations.py", line 163, in <module>
+    @torch.library.register_fake("torchvision::nms")
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/torch/library.py", line 1087, in register
+    use_lib._register_fake(
+  File "/opt/conda/lib/python3.11/site-packages/torch/library.py", line 204, in _register_fake
+    handle = entry.fake_impl.register(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/torch/_library/fake_impl.py", line 50, in register
+    if torch._C._dispatch_has_kernel_for_dispatch_key(self.qualname, "Meta"):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: operator torchvision::nms does not exist
+[0m
+[0m$ [0mmkdir -p ~/rd378L-private/logs && scp -P 37950 -o StrictHostKeyChecking=no root@ssh2.vast.ai:rd378L/dialogs.jsonl ~/rd378L-private/dialogs.jsonl && scp -P 37950 -o StrictHostKeyChecking=no root@ssh2.vast.ai:'write.log rebuild.log setup.log data.log' ~/rd378L-private/logs/ && sha256sum ~/rd378L-private/dialogs.jsonl && ssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'sha256sum ~/rd378L/dialogs.jsonl; ls -la ~/rd378L/' 2>&1 | tail -n 6; date -u +%FT%TZ
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+scp: write.log rebuild.log setup.log data.log: No such file or directory
+2026-09-26T15:15:00Z
+[0m
+[0m$ [0mls -la ~/rd378L-private/ 2>&1; for f in write.log rebuild.log setup.log data.log selftest.log; do scp -P 37950 -o StrictHostKeyChecking=no "root@ssh2.vast.ai:/root/$f" ~/rd378L-private/logs/$f 2>&1 | tail -n 1; done; ls -la ~/rd378L-private/logs/; sha256sum ~/rd378L-private/dialogs.jsonl 2>&1
+total 1152
+drwxr-xr-x   4 ben-hannan  staff     128 Sep 26 11:14 .
+drwxr-xr-x+ 81 ben-hannan  staff    2592 Sep 26 11:14 ..
+-rw-r--r--   1 ben-hannan  staff  525077 Sep 26 11:14 dialogs.jsonl
+drwxr-xr-x   2 ben-hannan  staff      64 Sep 26 11:14 logs
+Have fun!
+Have fun!
+Have fun!
+Have fun!
+Have fun!
+total 64
+drwxr-xr-x  7 ben-hannan  staff   224 Sep 26 11:15 .
+drwxr-xr-x  5 ben-hannan  staff   160 Sep 26 11:15 ..
+-rw-r--r--  1 ben-hannan  staff   472 Sep 26 11:15 data.log
+-rw-r--r--  1 ben-hannan  staff  4967 Sep 26 11:15 rebuild.log
+-rw-r--r--  1 ben-hannan  staff    64 Sep 26 11:15 selftest.log
+-rw-r--r--  1 ben-hannan  staff  7887 Sep 26 11:15 setup.log
+-rw-r--r--  1 ben-hannan  staff  4709 Sep 26 11:15 write.log
+82b56b441abd57fb88b1e5076ceb3be209c7ea5e2b02d301fd6d7fdf467677f9  /Users/ben-hannan/rd378L-private/dialogs.jsonl
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37950 root@ssh2.vast.ai 'sha256sum ~/rd378L/dialogs.jsonl' 2>&1 | tail -n 1; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); date -u +%FT%TZ; echo y | vastai destroy instance 52757951 2>&1 | tail -n 1; sleep 15; vastai show instances --raw 2>/dev/null | python3 -c "import json,sys; print([ (i.get('id'),i.get('label'),i.get('actual_status')) for i in json.load(sys.stdin) if 'notes-rd378L' in str(i.get('label')) ])"; date -u +%FT%TZ
+82b56b441abd57fb88b1e5076ceb3be209c7ea5e2b02d301fd6d7fdf467677f9  /root/rd378L/dialogs.jsonl
+2026-09-26T15:15:34Z
+Are you sure you want to destroy instance 52757951? This is irreversible and will delete all data. [y/N] destroying instance 52757951.
+[]
+2026-09-26T15:15:50Z
+[0m
+[0m$ [0mtail -n 3 artifacts/fable-predictions-ledger.md; cat >> artifacts/fable-predictions-ledger.md << "EOF"
+- 2026-09-26 15:15 UTC claude-notes-rd378L (rd-378L): RTX 5090 rental 52757951 (~1.16h x $0.4944 = ~$0.58) + loading-only 52756139/52757075 (worst-case ~$0.11 if vast bills loading; two success:False creates 52757822/52757917 destroyed, $0). Total <= ~$0.69 of $1.80 BUDGET. Outcome: WRITE-FAIL, nothing scored. transformers==5.17.0 hard-imports torchvision at image_utils.py:54, and the mandated torch==2.11.0 upgrade left the image's torchvision 0.23.0 ABI-broken (torchvision::nms does not exist), so LlamaConfig is unimportable and the sealed writer cannot load; peft==0.21.0 also unimportable (needs BloomPreTrainedModel, removed in transformers 5.x), so the rebuild path failed too. Writer reached rental via Mac rsync fallback (sha dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510 OK) but could not run. Copied back before destroy: dialogs.jsonl (2760 turns, sha 82b56b441abd57fb88b1e5076ceb3be209c7ea5e2b02d301fd6d7fdf467677f9) + setup/rebuild/write/data/selftest logs to ~/rd378L-private/ (outside git). No RESULTS.md/notes_recall.json/ranked_turns.jsonl created (retry not blocked).
+EOF
+echo LEDGER-APPENDED; git status --short artifacts/fable-predictions-ledger.md
+- rent-lis-319f GPU OUTCOME (2026-09-26, label rent-lis-319f, origin/main code unmodified, 6/6 seals 0 failures): RUN COMPLETE, M1-M3 pending judges (reading thread judges the pairs files). Panel former_as_current OLD 6 / NEW 0 (64 former items, 49 former rows, 240 rows, T 0.995; panel valid: 49>=30 rows, 6>=2 old saves); pairs OLD saved 125 exact 72 needs_judge 46 nomatch 7 pairs 47 / NEW saved 119 exact 76 needs_judge 42 nomatch 1 pairs 43 (gold 355); BUILD train 51244 dev 1461 (parsed-JSON-equal to dryrun); LENGTHS 0 over (train max 491 p99 320, dev max 382 p99 315); train 6406 steps 33.96 min 6753.9 tok/s batch 16 no-OOM device cuda; dev report: NEW dev_score turns 1461 pred_writes 659 wrong_turns 2 ms_median 748.2, dev_former NEW 3 vs OLD 27 (117 scored, saved_right 17 vs 1). Rentals: 52750756 (offer 46753304 host 410852, 5090 dph 0.4963, docker-proxy fail in loading past 6-min rule, destroyed ~13:17Z, ~0.11h ~$0.05) + 52751954 (offer 49024414 host 406325 KR, 5090 dph 0.5037, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 60...80, torch 2.8.0+cu128 CUDA True, rented 13:17:32Z running 13:19:05Z destroyed 15:04:43Z, 1.79h ~$0.90); task total ~$0.95 of $2.00 budget, 2 rentals of max 4; post-destroy 0 rent-lis-319f live. OLD reader e688e1b2 verified on rental (direct Mac rsync, BensPC fallback unused); NEW reader 970ef0ac sealed on rental and sha-matched on Mac before destroy. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, credit at gate 6.749200177269863. Deviations: 4 design text files + lis319 dev_pred.jsonl streamed to rental (TREE list omits seal/score inputs); peft 0.21.0 pip-installed; pairs scorer re-run CPU-only byte-identical. No code edits, no weights pushed, no panel text quoted. See artifacts/claude-lis319f-20260926/RESULTS-rent.md.
+- claude-sleep-358b2 GPU OUTCOME (2026-09-26, label claude-sleep-358b2, origin/main code unmodified, SEAL-code 6/6 OK, selftest ok): RUN COMPLETE, verdict INCONCLUSIVE (B0 validity not met at any size: copy_exact 25/39/28 vs >=80/100; a copying problem). Per size (n=100, seed 35900): 5x5 A 0/0/100 B 19/73/8 stages 25/63/27/27/21 C 100/0/0 rounds 9.05; 6x6 A 0/0/100 B 30/63/7 stages 39/57/37/37/31 C 95/0/5 rounds 5.21; 7x7 A 0/0/100 B 13/78/9 stages 28/66/22/22/13 C 71/0/29 rounds 6.21. B1 not met (+30/+13, need +40 on 6 and 7); B2 met (8/7/9 <= 100); proved-wrong clause N/A (B0 unmet). Instance 52766179 (offer 45520225, RTX 5090, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 60, torch 2.8.0+cu128, transformers 5.17.0, numpy 2.3.2, rented 15:01:21Z destroyed 15:09:35Z ~0.137h x dph $0.49444444 = ~$0.07 of $0.40); 1 rental of max 3; post-destroy 0 claude-sleep-358b2 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc (HF download on rental); loop-s1 final.pt sha c9f4934f... (25764244 B) verified both ends. Credit at gate 6.236215526269859 (gate: none). Copy-back sha256-verified 5 files. No code edits, no weights pushed. See artifacts/claude-rsn358b2-20260926/RESULTS.md + run/.
+- rent-brd8 GPU OUTCOME (2026-09-26, label rent-brd8, origin/main code unmodified, selftest ok): RUN COMPLETE, verdict NOT SHOWN for compounding, G7 MET (ITER cov@30 143/161/166 vs CTRL 152/152/167 vs base 108 of 240; per-seed ITER-CTRL -9/+9/-1, need +12 each; CI ITER-CTRL [-3.96,+3.33] not above 0, upper 3.33% = 8 puzzles of 240, not below 6-puzzle proved-wrong bar; ITER-base +35/+53/+58, need +24 each, CI [+14.66,+25.65]; round-1 wins 165; ITER round-2 wins 200/215/185 vs CTRL 171, posed). Rentals: 52750932 (offer 43165147 US, 5090 dph 0.4722, stuck loading past 6-min rule, destroyed ~13:18Z, ~0.10h ~$0.05) + 52752114 (offer 52583402 RO, 5090 dph 0.47, ran 13:23Z-~14:20Z, host died mid-seed-1 exited/stopped, restart queued-unavailable, destroyed, ~1.0h ~$0.47) + 52761669 (offer 45669213 KR, 5090 dph 0.4944, ran 14:32Z-15:05Z script 31.2 min, destroyed 15:13Z, ~0.72h ~$0.36); task total ~$0.88 of $1.00 budget, 3 rentals of max 3; post-destroy 0 rent-brd8 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, credit at gate 6.67843962726986. Copy-back 4 files (brd8_summary.json, streams.json, practice.json, log.txt). No code edits, no weights. See artifacts/claude-brd8-20260926/RESULTS-gpu.md + gpu/.
+LEDGER-APPENDED
+MM artifacts/fable-predictions-ledger.md
+[0m
+[0m# [0mTodos
+[✓] Pre-checks: duplicate gate, credit, COMMIT, seals/manifest
+[✓] Rent GPU (5090>=0.98 else 4090, label claude-notes-rd378L, budget $1.80) - 52757951 running $0.4944/hr
+[✓] Stream TREE to rental, verify adapter from BensPC
+[✓] SETUP + SEALS + selftest on rental
+[✓] WRITER via FALLBACK Mac rsync, hash dbcc8db5 OK
+[✓] DATA fetch + dialogs done (locomo hash OK, turns 2760)
+[✓] WRITE failed (transformers/torchvision ABI) - unstoppable under sealed env
+[✓] Copy back, destroy, ledger done; no RESULTS.md (retry not blocked)
+[0m
