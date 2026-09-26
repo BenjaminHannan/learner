@@ -1,0 +1,41 @@
+# DEV note: can the plain 1B get lucky in the two new worlds? (creative research thread; written 2026-09-26 23:47 UTC by `date -u`)
+
+DEV items only (seeds 900000-900011, the creative range Sleep research never uses; no test items). Plain
+MiniCPM5-1B (commit 87179e5c, no adapter, thinking off, chat template), on this container's CPU. For each item: one
+greedy reply, then 30 samples at temperature 1.0 (plain sampling, no constrained decoding). "Reached" = at least one
+of the 30 samples passes the exact code checker. Raw outputs: dev/*.json in this folder.
+
+| world and reply form | code (commit) | items | greedy right | reached in 30 | right samples |
+|---|---|---|---|---|---|
+| squares 3x3, 3 blanks, whole square back (world's own prompt) | claude_latin_dev.py (62bcd77b7) | 10 | 0 | 0 | 0 |
+| squares 3x3, 2 blanks, missing numbers only * | (0fd5f0902) | 10 | 0 | 7 | 28 |
+| squares 3x3, 3 blanks, missing numbers only * | (0fd5f0902) | 10 | 1 | 6 | 12 |
+| squares 4x4, 3 blanks, missing numbers only, exact count | (f31e26172) | 12 | 0 | 0 | 0 |
+| squares 4x4, 5 blanks, same | (f31e26172) | 12 | 0 | 0 | 0 |
+| squares 4x4, 7 blanks, same | (f31e26172) | 12 | 0 | 0 | 0 |
+| text game keys, level 1 (plans 3-8 steps) | --form game (9c7c0de05) | 10 | 0 | 0 | 0 |
+| text game recipes, level 1 (plans 4-6 steps) | --form game (9c7c0de05) | 10 | 0 | 0 | 0 |
+
+\* These two rows used my first check, which read the first k numbers of the reply. It lets echoed clues count as
+luck (greedy replies such as "3 1 2 2 1 3 2 1 3 …"), so they overstate luck and are not comparable to the exact-count
+rows. Sleep research's check_blanks (exact count) replaced it for every later row. 3x3 is too small a world for
+practice plus a test anyway (12 distinct squares).
+
+Commands (the model path is the local snapshot of plain MiniCPM5-1B):
+    python3 -B scripts/claude_latin_dev.py --model M --out F --settings 3:3 --items 10                  (whole square)
+    python3 -B scripts/claude_latin_dev.py --model M --out F --form blanks --settings 3:2,3:3 --items 10
+    python3 -B scripts/claude_latin_dev.py --model M --out F --form blanks --settings 4:3,4:5,4:7 --items 12
+    python3 -B scripts/claude_latin_dev.py --model M --out F --form game --settings keys:1,recipes:1 --items 10
+
+Three wrong greedy replies each (copied from the outputs):
+- 4x4, 5 blanks: "1 3 4 2 5 6 7 8 9 10 11 12"; "3 4 1 2 4 3 1 2 3 4 2 1"; "3 4 1 2 4 3 1 2 4 3 2 1" (too many numbers).
+- keys level 1: "go Ivystone / take blue key / go Glimmer Den / go Kestrel Attic / go Ivystone";
+  "go ivystone / take blue key / go cobblenook / go lanterncellar / take green key / go kestrel Attic";
+  "go Lantern Cellar / take gold key / go Cobble Nook / go Dunmere" (well formed, wrong).
+- recipes level 1: "make flint"; "make resin / make honey / make reed / make thorn"; "make salt / make ash / make chalk /
+  make twine".
+
+Finding: with 4x4 squares (exact check) and level-1 text games, the plain 1B got no lucky hits in 30 samples on any
+DEV item. A loop that learns from its own lucky hits has nothing to start from there. Next: text games at level 0
+(1-2 step plans, Sleep research aec0ae1da), reported by plan length; and the replication moves to a wider number world
+(brd-11).
