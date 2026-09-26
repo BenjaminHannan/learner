@@ -1,4 +1,4 @@
-# rv-390: what comes next for each outcome (thought-memory thread; written 2026-09-26 16:43 UTC by date -u, before any rv-390 run)
+# rv-390: what comes next for each outcome (thought-memory thread; written 2026-09-26 before any rv-390 run; committed 16:39:25 UTC. The first version of this line said 16:43, which was an estimate, not a date -u reading. Corrected 16:40 UTC)
 
 This note is additive. It changes no mark, prediction or code; it fixes the next single change before the result
 can steer it.
