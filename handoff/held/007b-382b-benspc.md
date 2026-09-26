@@ -1,0 +1,19 @@
+COMMON RULES (the month-end thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply).
+GPU: yes (BensPC RTX 5070 Ti; one job at a time). Queue ONLY after 006k-02c-benspc has finished (the Director releases it). $0, no rental.
+TIME CAP: 5 hours wall. If reached: stop by exact PID, copy back what exists, report "partial".
+
+YOUR TASK: 382b-benspc, the REST of the registered run 382b/383 (marks: artifacts/claude-e2e382-20260925/PASSMARKS-382.md, PASSMARKS-382b.md, PASSMARKS-383.md). rent-382b (origin/main:handoff/queue/rent-382b.md) stopped INCOMPLETE because the reader could not be uploaded to the rental; it finished only its T arms (origin/builder-outbox:artifacts/claude-e2e382-20260925/run/arm_T.jsonl, chat_T.jsonl, creative_T.jsonl; RESULTS-rent.md). This task runs every step rent-382b did not, on BensPC, with the SAME sealed code (artifacts/claude-e2e382-20260925/SEAL-code.sha256.txt) and commands. The three T files are reused as they are (unread); T is never rerun. TEST-ONLY, never open, print or quote: artifacts/claude-e2e331-bankC-20260925, artifacts/claude-panel382-20260925 (only runners and scorers read them).
+DUPLICATE: if artifacts/claude-e2e382-20260925/run/arm_E.jsonl or arm_R.jsonl exists on origin/builder-outbox, stop with DUPLICATE.
+
+SETUP: exactly as origin/main:handoff/queue/006k-02c-benspc.md SETUP (tree as a NEW folder C:/Users/benja/lis301/work/e2e382b/tree, python, env, BASE, READER = lis-301 with its sha256 check, MiniLM check). Copy the three T files from origin/builder-outbox into the tree's artifacts/claude-e2e382-20260925/run/ first and report their sha256 (must equal RESULTS-rent.md's: ea1d5436..., 42fe7744..., f6d628db...).
+
+STEPS (rent-382b's numbering; each registered process launched ONCE; check the process list before any retry):
+1. rent-382b step 1 (seals; e2e382 test 10/10; e2e383 test 13/13).
+2. rent-382b step 2, with /tmp/r44 -> C:/Users/benja/lis301/work/e2e382b/r44.
+2b. rent-382b step 2b (DEV GATE, E and R), unchanged.
+3. Bank C arms E and G (rent-382b step 3), then R and ER (step 3b). Not T.
+4. The scorer (step 4) with --runs OUT/arm_E.jsonl OUT/arm_G.jsonl OUT/arm_T.jsonl OUT/arm_R.jsonl OUT/arm_ER.jsonl.
+5. Panels: chat E, chat G, creative E (step 5), chat R and chat ER (step 5b). Not T. Then the chat score with --names E,T,G,R,ER and the creative score with --names E,T (copy OUT/chat_*.jsonl and OUT/creative_*.jsonl into score/ first).
+6. Copy run/, score/ and the dev folder back to the Mac; check sizes and sha256.
+7. RESULTS-benspc.md in artifacts/claude-e2e382-20260925/, the contents rent-382b step 7 lists (counts only; never open judge_*, chat_pair_*, chat_turns_*, creative_judge*, grammar_* files, the bank or the panels; quote no reply), plus: machine BensPC, "T reused from rent-382b", wall time per step.
+PUSH: artifacts/claude-e2e382-dev-20260925 artifacts/claude-e2e382-20260925/RESULTS-benspc.md artifacts/claude-e2e382-20260925/run artifacts/claude-e2e382-20260925/score

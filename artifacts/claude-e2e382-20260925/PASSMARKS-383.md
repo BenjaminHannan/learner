@@ -35,3 +35,9 @@ Benchmarks ran 338's trim() and guard() over bm-390's plain-1B GSM8K replies: 17
 (G4), and only 93 of the 191 right answers fit, so R's route would reject most worked math answers for length
 alone. The route now samples up to 512 new tokens (was 200) and caps its replies at 350 words (guard383); the G1-G3
 checks are 338's, unchanged, and still apply to the whole reply. Nothing else changes. Checks: scripts/claude_e2e383_test.py 13/13.
+
+## Addendum 3, 2026-09-26 ~05:40 UTC (logistics only, before any E/G/R/ER output exists)
+rent-382b stopped INCOMPLETE: the 2 GB reader could not be uploaded to the rental (0.37 MB/s); only its T arms ran and
+no result was read. The rest of the same registered run (same sealed code, commands and marks) runs on BensPC where the
+reader lives (handoff/held/007b-382b-benspc.md), after the 0.2c run, reusing the rental's T files unread. No mark
+changes. 382b and 383 had no verdict at the 0.2c freeze, so neither is in 0.2c.
