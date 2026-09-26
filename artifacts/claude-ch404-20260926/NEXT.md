@@ -105,3 +105,19 @@ writing and saying "I don't know" carry on; the next build is judged against pla
 - Money: recommended to measure tk-1 inside the next build's rival comparison (Benchmarks runs the rivals), with no
   separate rental, because reasoning gets money first. A separate run would cost about $0.50 and take this thread past
   $2, so it needs Ben's yes through the Thread manager.
+
+## tk-1 folded into 0.2d's talker (written 2026-09-26 16:14 UTC, before any result)
+Month-end's 0.2d ADDENDUM-12 (9fda097de, 16:08 UTC) already defines the design's talker: plain MiniCPM5-1B fed the
+notebook through y1f's W input (whole chat when it fits), k1a for creative, "I don't know" when the notebook has
+nothing, and no rule layers. That is the tk-1 described above, so this thread does not build a second talker; tk-1 is
+withdrawn before any code or run. Brain check: speech has no separate everyday-chat module; one language system
+puts whatever is in mind into words, so everyday chat is the talker's own job, not a layer on top.
+This thread's part of 0.2d's everyday-chat row (C1, pair judge vs each rival):
+- Panel: chatpanel404 (artifacts/claude-panel404-20260926, sealed 81bd131db, never read or run), offered to Month-end.
+  chatpanel403 (sealed 78fc677bd, never run) is the spare.
+- Rival arms need no new code: claude_ch403_run.py run --arm twin --gen-model <rival dir> under
+  claude_twinb_wrap.py (plain twin recipe, thinking off, greedy, 160 tokens) for MiniCPM5-1B, Qwen3.5-2B, LFM2.5-1.2B.
+- Judging: JUDGE-BRIEF.md (artifacts/claude-ch403-20260926) and claude_ch403_run.packets for any pair.
+- What the diagnosis says the talker must not bring back on everyday turns: stock lines, a 1-to-4-sentence rule, a
+  90-word cap (DIAG.md sections 2-4).
+Spend: none now. ch-403 used about $0.79 of this thread's $2.
