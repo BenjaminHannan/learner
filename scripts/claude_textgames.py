@@ -2,7 +2,7 @@
 """Code-made text games (sleep research thread, 2026-09-26; Ben 15:55 UTC: "What if we gave the model text based
 games to train on?"). No outside game sets, fictional names only.
 
-Three kinds, each with a difficulty knob `level` (1 = tiny), a seeded generator, an exact simulator, a shortest-plan
+Three kinds, each with a difficulty knob `level` (1 = tiny; 0 = 1-2 step plans, added for Creative's curriculum), a seeded generator, an exact simulator, a shortest-plan
 solver (breadth-first, fixed action order, so the canonical plan is unique) and a checker that accepts ANY valid
 plan (optimality reported separately):
   keys      rooms joined by passages, some passages behind coloured doors; keys lie in rooms. Reach the goal room.
@@ -231,7 +231,9 @@ def switches_solve(g):
 MAKERS = {"keys": make_keys, "recipes": make_recipes, "switches": make_switches}
 TEXT = {"keys": keys_text, "recipes": recipes_text, "switches": switches_text}
 SOLVE = {"keys": keys_solve, "recipes": recipes_solve, "switches": switches_solve}
-MIN_LEN = {"keys": lambda lv: lv + 2, "recipes": lambda lv: lv + 2, "switches": lambda lv: lv + 1}
+MIN_LEN = {"keys": lambda lv: lv + 2 if lv else 1, "recipes": lambda lv: lv + 2 if lv else 1,
+           "switches": lambda lv: lv + 1}
+MAX_LEN = {0: 2}                   # level 0 (added 2026-09-26 for Creative's curriculum): 1-2 step plans only
 
 
 def make_game(kind, seed, level):
@@ -240,7 +242,7 @@ def make_game(kind, seed, level):
     for _ in range(500):
         g = MAKERS[kind](rng, level)
         plan = SOLVE[kind](g)
-        if plan and len(plan) >= MIN_LEN[kind](level):
+        if plan and MIN_LEN[kind](level) <= len(plan) <= MAX_LEN.get(level, len(plan)):
             g["plan"] = plan
             g["text"] = TEXT[kind](g)
             g["seed"], g["level"] = seed, level
@@ -289,6 +291,13 @@ def selftest():
                 seen.add(g["text"]); lens.append(len(g["plan"]))
             print(f"{kind} level {level}: plan length min {min(lens)} mean {sum(lens) / len(lens):.1f} max {max(lens)}")
         assert len(seen) >= 175, (kind, len(seen))                     # tiny level-1 spaces may repeat
+    for kind in KINDS:                                                  # level 0: 1-2 step plans
+        lens, texts = [], set()
+        for seed in range(60):
+            g = make_game(kind, seed, 0)
+            assert check(g, "\n".join(g["plan"]))["optimal"] and 1 <= len(g["plan"]) <= 2, (kind, seed)
+            lens.append(len(g["plan"])); texts.add(g["text"])
+        print(f"{kind} level 0: plan lengths 1: {lens.count(1)}, 2: {lens.count(2)}; {len(texts)} distinct of 60")
     g = make_game("keys", 1, 2)
     bad = check(g, "go Nowhere Street")
     assert not bad["ok"] and bad["illegal"] == "go nowhere street"
