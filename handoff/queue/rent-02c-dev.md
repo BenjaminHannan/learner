@@ -1,6 +1,7 @@
 COMMON RULES (the month-end thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md, and ALL of origin/main:design/v3/30-modes/330-rent-kit.md (code tree, rental rules, setup, independence).
 GPU: rent
 BUDGET: $0.50 (Ben's 01:45 UTC 09-26 goal pool; the director OKs it). Label: 02c-dev. Needs READER319 (the lis-319 merged reader, Mac ~/premonition-models/lis319-merged). Re-run the offer search before every create.
+CREDIT GATE: before any create, `vastai show user --raw` credit must be >= $3.00 (report the number only; the key is never printed); if lower and BensPC is not being used, stop with LOW-CREDIT and report.
 TIME CAP: 50 minutes on the rental. If reached: stop, copy back what exists, destroy, report.
 
 YOUR TASK: 02c-dev, a DEV plumbing rehearsal of the 0.2c joined agent (scripts/claude_e2e02c.py:build_02c) BEFORE its registered run, so crashes are found while there is time to fix them. DEV data only (readable): artifacts/claude-e2e331-dev-20260924 and artifacts/claude-panel382-dev-20260925. No TEST-ONLY bank or panel is touched. If artifacts/claude-e2e02c-dev0-20260926 already exists on origin/builder-outbox, stop with DUPLICATE. DOUT = artifacts/claude-e2e02c-dev0-20260926.
