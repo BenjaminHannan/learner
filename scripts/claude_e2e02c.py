@@ -11,6 +11,9 @@ each), and then the code is sealed. A switch is on only when its fix's own regis
   READER02C  "r319" = the lis-319 history reader at 0.995 (claude_lis319_arms, registered PASS), "r319c" = the
              same at 0.98 (only if lis-319c passes), "" = 0.1's reader; with r319/r319c, --model is the lis-319
              merged reader (sha256 e688e1b2...6a76), not lis-301
+  FIX02C     the boundary fixes of scripts/claude_fix02c.py (Ben's outside review, each with a CPU test):
+             route02c (route383 keeping a final answer after the last full stop), heard02c (date kept across
+             restarts), delivered02c (the chat history holds the reply the user saw), support02c (report only)
 Layer order as claude_e2e383._build: 330a_334 -> rec360 -> cre333d -> think299b -> chat338b -> [answer382] ->
 [route383] -> vary330c -> gram360 -> [heard382] -> turnlog323.
 """
@@ -27,6 +30,7 @@ MEM02C = 20        # 0 = off
 ROUTE02C = True
 SLEEP02C = True
 READER02C = "r319"
+FIX02C = True
 
 
 def build_02c(state_dir, args):
@@ -39,6 +43,7 @@ def build_02c(state_dir, args):
     import claude_e2e330c as E330C
     import claude_e2e382 as E382
     import claude_e2e383 as E383
+    import claude_fix02c as FX
     import claude_gram360 as GR
     import claude_nb323_turnlog as NB
     import claude_sleep02c as SL
@@ -62,20 +67,36 @@ def build_02c(state_dir, args):
     C333D.install_creative333d(loop, gen)
     T299B.install_think299b(loop, one_b)
     C38B.install_chat338b(loop, gen)
+    chat_state = FX.chat338_state(loop.turn) if FIX02C else None
     layers = ["330a_334", "rec360", "cre333d", "think299b", "chat338b"]
     if store is not None:
         E382.install_answer382(loop, gen, store, k=MEM02C)
         layers.append("answer382")
+        if FIX02C:
+            FX.install_support02c(loop, store)
+            layers.append("support02c")
     if ROUTE02C:
-        E383.install_route383(loop, C38.Gen338(share=one_b, max_new=E383.MAXNEW383))
-        layers.append("route383")
+        route_gen = C38.Gen338(share=one_b, max_new=E383.MAXNEW383)
+        if FIX02C:
+            FX.install_route02c(loop, route_gen)
+            layers.append("route02c")
+        else:
+            E383.install_route383(loop, route_gen)
+            layers.append("route383")
     VARY.install_vary330c(loop)
     GR.install_gram360(loop)
     layers += ["vary330c", "gram360"]
     if store is not None:
-        E382.install_heard382(loop, store)
+        if FIX02C:
+            FX.install_heard02c(loop, store)
+            layers.append("heard02c")
+        else:
+            E382.install_heard382(loop, store)
+            layers.append("heard382")
         loop.store382 = store
-        layers.append("heard382")
+    if FIX02C:
+        FX.install_delivered02c(loop, *chat_state)
+        layers.append("delivered02c")
     NB.install_turnlog323(loop, str(Path(state_dir) / E330C.TURNLOG330C))
     loop.layers330c = layers + ["turnlog323"]
     loop.sleep02c = getattr(one_b, "sleep02c_loaded", None)

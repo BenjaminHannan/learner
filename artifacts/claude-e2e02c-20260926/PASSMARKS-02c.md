@@ -78,3 +78,16 @@ agent's tokenizer and model (no second copy), and D1.train_copy leaves the model
   VERIFY.md), joined through claude_lis319_arms (Reading facts); at 0.995, or 0.98 only if lis-319c passes. X then
   uses the lis-319 merged reader; G and T are unchanged (G keeps 0.1's lis-301 reader, so H1-H4 and Y1 compare the
   whole of 0.2c with the last accepted build).
+- ~02:30 UTC: Ben's outside code review (posted 01:54 UTC). Claims checked against the code before acting. Four
+  boundary fixes go into X, each confirmed in the code and covered by a CPU test (scripts/claude_fix02c_test.py
+  12/12): F1 the chat history holds the reply the user saw (chat338 kept its own, replaced reply); F2 route answers
+  keep a final answer after the last full stop (338's trim cut "The answer is 17" and "Answer: B"); F3 heard rows keep
+  their date across restarts; F4 report only: how many memory answers are supported by ONE retrieved row (the word
+  guards accept words spread over several rows). These are bug fixes without their own registered GPU test; they
+  are named here so 0.2c's result is read as "all of it together", and the report lists each one's counters.
+  One row added from the review's first integrated milestone: ME1 bank D asks after a correction (ask_type "edit",
+  across restarts), X right ≥ G right. The milestone's other parts are rows above: plain math (Q1), declining an
+  unsupported personal claim (H3, S1), retrieving what was said (Y1).
+  Open, not in 0.2c (named in the report): explicit routing states instead of the refusal trigger; one evidence
+  record per claim; durable store writes (fsync, torn tail); chunking long turns; the reader's evaluator ignoring
+  the relation (Reading facts' line); sleep rollback in a separate process.
