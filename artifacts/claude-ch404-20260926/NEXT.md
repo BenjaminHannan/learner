@@ -26,7 +26,9 @@ Longer replies only on the everyday-chat path: ch-404 swaps 338's system line an
 own code runs; every layer below it (reader, notebook, creative, think, any memory-answer layer a joined build puts
 there) and above it (answer382, trim397, route383/route02c) keeps 338's values. Memory and past-chat questions never
 reach the long path: recall403 gives them the honest line. Checked by scripts/claude_ch404_test.py (a memory layer
-below and above the chat layer both see 90 words), proposed to Benchmarks by message; N6 below makes it a mark.
+below and above the chat layer both see 90 words); N6 below makes it a mark. AGREED with Benchmarks 14:37 UTC:
+longer replies only on the everyday-chat path; memory and past-chat answers keep the 90-word cap and their own caps;
+past-chat length is owned by bm-398e (copy-only span trimmer, sealed 3b6fc7b1e) if it passes, else by those caps.
 
 ## Registered run of the chosen candidate (marks fixed now; arm C = the chosen candidate, B = X403)
 Fresh panel chatpanel404: 60 conversations written blind by three writers from 338-chat-panel-spec.md +
