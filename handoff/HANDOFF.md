@@ -1,5 +1,7 @@
 # Premonition — handoff (2026-09-22 ~21:00 ET)
 
+
+**Ben's goals (2026-09-26 14:57 UTC):** [design/v3/30-modes/ben-goals-2026-09-26.md](../design/v3/30-modes/ben-goals-2026-09-26.md). It beats any thread's own framing. Extra money goes to reasoning threads first; only Ben approves architecture changes.
 Also in this folder: `kit/` (director briefs, Muse runner scripts, recount scripts — rebuilt from the session transcript after the scratchpad was wiped), `memory/` (the previous director's memory notes, one fact per file).
 
 ## Goal
