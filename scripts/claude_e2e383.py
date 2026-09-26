@@ -80,9 +80,10 @@ def install_route383(loop, gen, n: int = N383) -> None:
         parts = inner(text)
         names = C38B.notebook_names(loop) | heard
         new = heard_names383(text) - heard
-        if new and getattr(loop, "dir", None) is not None:
+        if new:
             heard.update(new)
-            npath.write_text(json.dumps(sorted(heard)), encoding="utf-8")
+            if getattr(loop, "dir", None) is not None:
+                npath.write_text(json.dumps(sorted(heard)), encoding="utf-8")
         reply = " ".join(p for p in (parts or []) if p)
         if not (E382.abstains(reply) and C38B.is_question(text) and len(loop.nb.events) == ev0
                 and getattr(loop, "lis314_confirming", None) is None):
