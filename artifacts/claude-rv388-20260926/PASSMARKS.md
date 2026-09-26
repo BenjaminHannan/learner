@@ -1,4 +1,4 @@
-# rv-388 pass marks (thought-memory thread; written 2026-09-26 15:04 UTC by `date -u`, before any test hand is played)
+# rv-388 pass marks (thought-memory thread; written 2026-09-26 15:04 UTC, revised and sealed 15:06 UTC by `date -u`, before any test hand is played)
 
 Question: does Creative's learned "is this still solvable?" judge make going back pay off in step-by-step search, and is
 that because of what it knows (not just because it prunes)?
@@ -31,10 +31,13 @@ along the way (the split is by state); the share of entered states in the judge'
 
 ## Marks (unit = hand)
 - PASS: JUDGE solves at least 6 more hands than END AND at least 6 more than PLACEBO, in both seeds.
-- PROVED WRONG: JUDGE solves no more hands than END in both seeds, OR no more than PLACEBO in both seeds (what the judge
-  knows adds nothing over pruning the same share at random).
+- PROVED WRONG: JUDGE solves no more hands than END in both seeds, OR JUDGE minus PLACEBO summed over both seeds is 0 or
+  less (what the judge knows adds nothing over pruning the same share at random). Summed, per Creative's note (15:05
+  UTC): with almost every state dead the two arms may land within a hand or two, and a both-seeds rule would call a
+  small real edge proved wrong too often by chance.
 - Anything else: no clear result.
-- Report only: ORACLE; steps used; flags on live vs dead states (exact reachability) per arm; judge forward passes per
+- Report only: ORACLE; steps used; flags on live vs dead states (exact reachability) per arm, split into 3-number and
+  2-number states (Creative's note: feas-24b was weak on 3-number states); judge forward passes per
   arm (the judge is not free compute); share of entered states that were in the judge's training rows.
 
 ## Predictions

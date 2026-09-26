@@ -238,6 +238,7 @@ class Search:
         self.steps = self.flags = self.backs = 0
         self.solved = False
         self.visited = set()
+        self.flagged = []                    # states set aside by the flag
         self.rng = random.Random(f"rv388|{seed}|{hand}")      # same numbers in every arm
 
     def step(self, scores):
@@ -262,6 +263,7 @@ class Search:
         elif self.flag is not None and nxt not in aside and self.flag(nxt):
             aside.add(nxt)
             self.flags += 1
+            self.flagged.append(nxt)
         else:
             self.visited.add(nxt)
             self.path.append(nxt)          # (a state reached again by another route keeps its bans)
@@ -351,6 +353,9 @@ def run(a):
                "solved": sum(x.solved for x in xs), "steps": sum(x.steps for x in xs),
                "flags": sum(x.flags for x in xs), "backs": sum(x.backs for x in xs),
                "entered_states": len(seen), "entered_in_judge_training": len(seen & trained),
+               "flags_by_stage": {f"{k}-number": {"dead": sum(len(st) == k and not F.reach(st) for x in xs for st in x.flagged),
+                                                  "live": sum(len(st) == k and F.reach(st) for x in xs for st in x.flagged)}
+                                  for k in (3, 2)},
                "cuts": cuts, "calls": dict(model.calls), "sec": round(time.time() - t0)}
         (out / f"{arm}-seed{a.seed}{'-practice' if a.practice else ''}.jsonl").write_text(
             "".join(json.dumps(x.result()) + "\n" for x in xs))
