@@ -1,0 +1,557 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo "FETCH_EXIT:$?"; git rev-parse origin/main origin/builder-outbox 2>&1
+FETCH_EXIT:0
+df9aa55ffd85ee2233cf9d1808853fa1aa97299e
+6601e1a61e2fc31c42d223a1d59f7ecc527e5f1e
+[0m
+[0m$ [0mnvidia-smi 2>&1; echo "NVSMI_EXIT:$?"; uname -a; pwd
+zsh:1: command not found: nvidia-smi
+NVSMI_EXIT:127
+Darwin MacBook-Pro.local 27.0.0 Darwin Kernel Version 27.0.0: Tue Aug 11 21:22:49 PDT 2026; root:xnu-13432.1.9~1/RELEASE_ARM64_T6000 arm64
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -n 50; echo "---EXIT:$?"
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+PUSH: artifacts/claude-lis302-20260924/tokprobs.jsonl artifacts/claude-lis302-20260924/pyes.json artifacts/claude-lis302-20260924/RESULTS-gpu.md
+---EXIT:0
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -n 13 | cat -n; echo "==="; git show origin/main:artifacts/claude-bm397-20260926/PLAN.md 2>&1; echo "---PLAN_EXIT:$?"
+1	COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+     2	First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+     3	- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+     4	- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+     5	- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+     6	- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+     7	- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+     8	- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+     9	- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+    10	Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+    11	
+    12	GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+    13	INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+===
+# bm-397 PLAN: a copy-only answer finaliser on the plain 1B's existing LoCoMo replies (benchmarks thread, 2026-09-26 ~02:00 UTC)
+
+This is change 1 of GPT-6 Pro's reply to reviews/gpt6pro-benchmark-gap-2026-09-26.md. It is registered before any
+finaliser output exists. Every number is "after using LoCoMo for development". The instruction below was written
+once, without seeing any output. No second version will be tried on LoCoMo: any later version must be built on
+non-LoCoMo material.
+
+## Why
+bm-396 measured the gap on existing replies:
+- If the plain 1B's whole-chat replies (T, 27.50) were each cut to their best run of words, the gold-guided bound is
+  48.30. Qwen3.5-2B is at 47.87, with its own bound at 54.15.
+- T's replies contain every gold word in 402 cases; Qwen's do in 469.
+- The open question: can a real shortener, which cannot see the gold, recover part of that without changing
+  meaning?
+
+## The one change
+scripts/claude_bm397_finalize.py. The frozen plain MiniCPM5-1B (revision 87179e5c, greedy, thinking off, at most 32
+new tokens) sees the question and one existing reply (the draft), and nothing else: no gold, no chat, no evidence.
+- System: "You shorten answers. You never add information."
+- User: the question, the draft, then: "Write the shortest answer to the question that uses only words from the
+  draft answer. Keep every name, date, number and list item the question needs. If the draft does not answer the
+  question, says it does not know, or gives more than one possible answer, write the draft unchanged."
+Code enforces copy-only. The draft is kept unchanged when it abstains (the scorer's abstain rule), when the output
+is empty, or when the output uses any word more often than the draft does. Categories 1-4 only; category 5 is
+untouched.
+
+Arms (drafts are existing files, sha256 in bm-391's baselines.sha256.txt and bm-395's run/):
+- TF = finaliser on T (bm-390 run2/locomo_T.jsonl).
+- E20F = finaliser on E20 (bm-395 run/locomo_E20.jsonl). Report only.
+
+## Marks (fixed now)
+- F1 (gain): TF − T ≥ +5.0 F1 on categories 1-4 (the sealed bm-390 scorer's per-question F1). The 95% interval
+  from the conversation-level bootstrap (scripts/claude_bm396_audit.py cluster_boot, seed 396, 10k) must be above 0.
+- F2 (faithful): a blind semantic audit of the rows TF changed.
+  - Sample: 300 question ids, drawn with random.Random(397).sample from the sorted ids whose final_kept is
+    "changed" (all of them if fewer than 300).
+  - For each sampled question, the draft and the final reply are each judged by a different blind judge, who sees
+    the question, the gold answer and one reply, and never learns which kind it is.
+  - Labels: A = right and complete (extra words are fine); B = contains the right answer and also an incompatible
+    alternative; C = partly right; D = wrong; E = says it doesn't know.
+  - Counts: lost = draft A becoming C, D or E; picked = draft B becoming A (choosing between guesses).
+  - F2 passes when lost ≤ 3 and picked ≤ 3.
+  - A second judge relabels 60 of the items (the first 60 of the sample, both kinds), and the agreement is reported.
+- PASS = F1 and F2. A pass is reported as a formatting improvement (the same facts, written as asked), not better
+  memory or better answering.
+
+## Proved wrong
+TF − T ≤ +1.0. Then cutting the 1B's own drafts recovers little, and the gap is content. The next dollar goes to
+evidence-conditioned training (GPT's change 4), not to more shortening.
+
+## Report only
+- E20F − E20 (same bootstrap).
+- Counts per final_kept reason.
+- Median scored words before and after.
+- bm-396's bound columns for TF and E20F.
+- The semantic label table for drafts and finals.
+
+## Predictions
+- P1 (70%): TF − T is between +2 and +12 F1 (my point guess +6).
+- P2 (50%): F1 passes.
+- P3 (70%): F2 passes.
+- P4 (60%): at least 15% of attempted rows are kept as not_copy (the 1B paraphrases).
+- P5 (70%): E20F − E20 is smaller than TF − T.
+
+## Where it runs
+With the plain MiniCPM5-1B on a GPU, roughly 3,080 short greedy calls. Wherever the Director has room: as a
+fourth lane in rent-bm391, or as a small shared BensPC job. Scoring, the bootstrap and the audit happen afterwards
+on CPU. Blind judges are separate agents that return labels only.
+---PLAN_EXIT:0
+[0m
+[0m$ [0muptime 2>&1; echo "---"; df -g / 2>&1 || df -h / 2>&1; echo "---"; git show origin/main:artifacts/claude-bm397-20260926/SEAL.sha256.txt 2>&1; echo "==="; git show origin/main:artifacts/claude-bm397-20260926/drafts.sha256.txt 2>&1; echo "==="; git show origin/main:artifacts/claude-bm390-20260925/RESULTS-benspc3.md 2>&1 | head -n 120
+21:39  up 2 days, 11:32, 4 users, load averages: 32.12 45.23 53.05
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        22    37%  484014 232632800    0%   /
+---
+632baa12f7a76f3d081687dd710c316c52247a72db7abe1c4fd1358babd89ba5  artifacts/claude-bm397-20260926/PLAN.md
+d4957bdbce0542c97b4e5d73813b54e541dd1feee8352b3d635af8b6e156baa5  artifacts/claude-bm397-20260926/drafts.sha256.txt
+580bc9189319b3165e874515a475e86fda3524a57cb11dea72fa71729ea2a6be  scripts/claude_bm397_finalize.py
+e57ac50e5cb8989abad9fc6f8f529c7a429161b507d4f93bdd199d76fa7550b2  scripts/claude_bm396_audit.py
+eb50c203fdcf38821b49b4439d31d340e53a83f0bba2faae33d1baaa797467b3  scripts/claude_bm390.py
+f53dd2966ba3a8de492ae89ce8658c2468f3029872b24d15a57bc98aee7b81e0  scripts/claude_bm390_score.py
+===
+35bdf151ba5160efda06cfe4e1cb274c7a0fa894963db8295286927b5e53b3db  artifacts/claude-bm390-20260925/run2/locomo_T.jsonl
+e7f70f5703768697709b2cf93197fdb18aa5b13a9a58caacf8becb9b60e7bcef  artifacts/claude-bm395-20260925/run/locomo_E20.jsonl
+===
+# bm-390 RESULTS-benspc3: TIME-CAP partial, winnl2 PASS (BensPC, 2026-09-25, third attempt)
+
+Verdict: TIME-CAP. The 7-hour cap was reached with lane 1 complete (P, Pm, Pg) and lane 2 partial (Rb OK, T OOM, C killed with no output, Q2 stopped at cap, rest not run). No file was edited; nothing was trained. No benchmark question, answer or reply is quoted anywhere in this file; only counts, hashes, paths, timings and tracebacks.
+Winnl2 wrapper: PASS. Smoke passed with 0 CRLF. Seals ALL-OK.
+
+Time: start 2026-09-25 09:35:50 UTC (Mac date), cap 2026-09-25 16:35:50 UTC (7 h). Stopped Q2 at 2026-09-25 16:37:15 UTC (exact PIDs 10028,14012). GPU work only on BensPC; no rentals.
+DUPLICATE guard: PASS (origin/builder-outbox has only artifacts/claude-bm390-20260925/RESULTS-benspc.md and RESULTS-benspc2.md; no run/, no RESULTS-rent.md, no RESULTS-benspc3.md before start).
+
+## 1. Seals (step 1, BensPC tree3 C:/Users/benja/lis301/work/bm390/tree3): ALL-OK
+
+- artifacts/claude-bm390-20260925/SEAL-code.sha256.txt: 8 lines, 8 OK, 0 FAIL.
+- artifacts/claude-bm390-20260925/SEAL-winnl2.sha256.txt: 3 lines, 3 OK, 0 FAIL.
+- artifacts/claude-e2e336b-20260925/SEAL-code.sha256.txt: 229 lines, 229 OK, 0 FAIL.
+
+## W CHECK (right after step 1, from tree3 root)
+
+- (a) no wrapper `python -B scripts/claude_winnl2_test.py probe` printed one JSON line:
+{"python": "3.10.9", "pathlib_loaded_before_fix": false, "sim": false, "fix": "none", "ok": true, "crlf": 3, "text_ok": true, "metadata_ok": true}
+  Expected ok true with crlf above 0 (plain Windows writes \r\n): met (crlf 3).
+- (b) with wrapper `python -B scripts/claude_winnl2_wrap.py scripts/claude_winnl2_test.py probe` printed first line:
+winnl2: Windows text-mode writes use Linux line endings (newline='')
+  then one JSON line:
+{"python": "3.10.9", "pathlib_loaded_before_fix": false, "sim": false, "fix": "none", "ok": true, "crlf": 0, "text_ok": true, "metadata_ok": true}
+  Expected ok true and crlf 0: met. Not WINNL-FAIL.
+
+## 2. Sleep base checkpoint (step 2, plain as listed)
+
+- Command: `python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out C:/Users/benja/lis301/work/bm390/r44c`. Exit 0.
+- Printed JSON line:
+{"stage": "base", "seed": 4102, "seconds": 13.4, "fresh_hop1to3": 1.0, "fresh_depth10": 1.0, "big_depth10": 1.0, "unknown_rate": 1.0}
+- Copied to artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt in tree3.
+- .pt sha256: 4655b7610b50e91b57dbb6a780f1935dba8863e3810c4877408d901f1be5edb3, size 2969 bytes.
+
+## 3. Data and rival models (step 3, plain as listed)
+
+- Fetch `python -B scripts/claude_bm390.py fetch --data C:/Users/benja/lis301/work/bm390/data3` printed exactly one JSON line (exit 0):
+{"fetch": "OK", "locomo_convs": 10, "locomo_qa": 1986, "locomo_by_category": {"1": 282, "2": 321, "3": 96, "4": 841, "5": 446}, "mmlu_ok_rows": 5330, "mmlu_sample": 300, "gsm8k_rows": 1319, "gsm8k_sample": 300, "mmlu300_sha256": "1a44e3041355e7fcc1e4d2b188dec0f2362a2ceb9820f62acd957b29909e3850", "gsm8k300_sha256": "073acc01184dc13caa732adf33fb9d69e049153549d8364401f4320ca0bc555b"}
+  locomo_qa 1986, mmlu_sample 300, gsm8k_sample 300 as registered. DATA = C:/Users/benja/lis301/work/bm390/data3 (new folder).
+- Rival paths (already downloaded, download nothing):
+  - Q2DIR = C:/Users/benja/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc (exists)
+  - L12DIR = C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b (exists)
+- Load checks (each separately, HF_HUB_OFFLINE=1, to cuda, dtype bfloat16): both RUN, exit 0.
+  - Q2: Qwen3_5ForCausalLM 1881825088
+  - L12: Lfm2ForCausalLM 1170340608
+
+## 4. Smoke on made-up data (step 4, both through W): PASS
+
+Smoke data: artifacts/claude-bm390-20260925/smoke (fictional people, not a benchmark). OUT = C:/Users/benja/lis301/work/bm390/smoke3. SLEEPCHECK_LOG = C:/Users/benja/lis301/work/bm390/smoke3/sleep_P.jsonl.
+
+- P (agent through W + sleepcheck): exit 0. Start 2026-09-25T09:45:16Z, end 2026-09-25T09:45:55Z (wall 39 s).
+  First printed line: `winnl2: Windows text-mode writes use Linux line endings (newline='')`.
+  Second line: `sleepcheck: logging every sleep to C:/Users/benja/lis301/work/bm390/smoke3/sleep_P.jsonl; stop on missing checkpoint = True`.
+  Last line: `wrote locomo_P.jsonl rows=5 convs=1 bare=5`.
+- T (plain through W): exit 0. Start 2026-09-25T09:46:01Z, end 2026-09-25T09:46:09Z (wall 8 s).
+  First printed line: `winnl2: Windows text-mode writes use Linux line endings (newline='')`.
+  Last line: `wrote locomo_T.jsonl rows=5 convs=1`.
+- sleep_P.jsonl: 2 rows, both checkpoint_exists true (2), attempted true 0.
+- Files under smoke3: 5 files. CRLF byte counts (all 0):
+  locomo_P.jsonl bytes=718 crlf=0; locomo_P_bare.jsonl bytes=852 crlf=0; locomo_P_reading.jsonl bytes=146 crlf=0; locomo_T.jsonl bytes=645 crlf=0; sleep_P.jsonl bytes=434 crlf=0.
+  locomo_P.jsonl rows=5; locomo_T.jsonl rows=5.
+- Required bar (both exit 0 rows=5, sleep 2 rows both checkpoint_exists true, 0 CRLF): met. Nothing ran on real data before smoke passed.
+- Each smoke command launched once; process list checked (GPU free 15460 MiB, only background pythonw, no python.exe jobs).
+
+## 5. Registered arms (step 5): TIME-CAP partial
+
+OUT = artifacts/claude-bm390-20260925/run (inside tree3). DATA = C:/Users/benja/lis301/work/bm390/data3.
+W = `python -B scripts/claude_winnl2_wrap.py`. First printed line of every W command is the winnl2 line above. Env every command: PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1 (plus SLEEPCHECK_STOP=1 SLEEPCHECK_LOG for P).
+Each command its own process, launched once. Process list checked before each launch (no stray python.exe; background pythonw only).
+
+Lane 1 (in order): P, Pm, Pg — all complete.
+Lane 2 (in order, plain LoCoMo first): T, Rb, C, Q2, L12, Tm, Tg, Q2m, Q2g, L12m, L12g.
+Lane 2 parallel or after: AFTER. P printed first `[bm390] conv-` line at 2026-09-25 ~10:19Z (`[bm390] conv-26 turns=439 questions=199`); nvidia-smi at that time showed 8089 MiB free (below 8192 MiB = 8 GB), so lane 2 ran after lane 1 per the registered rule. GPU free later dropped to 6787 MiB during P QA and 6189 MiB during Pm; never 8 GB free while P ran.
+
+### Lane 1
+
+- P: SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=artifacts/claude-bm390-20260925/run/sleep_P.jsonl W scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data DATA --arm agent:claude_e2e330c:build_330c --name P --also-bare --model READER --gen-model BASE --out OUT.
+  Start 2026-09-25T09:48:09Z, end 2026-09-25T14:08:47Z (wall ~4 h 20 min). Exit 0 (inferred: wrote line present, no traceback, processes exited, output files present; Mac monitor ssh timed out at ~11:00Z due to client network timeout, server process survived with no relaunch, monitoring resumed by polling BensPC logs — reported as deviation, no duplicate launch).
+  First printed line: `winnl2: Windows text-mode writes use Linux line endings (newline='')`.
+  Second line: `sleepcheck: logging every sleep to artifacts/claude-bm390-20260925/run/sleep_P.jsonl; stop on missing checkpoint = True`.
+  Last line: `wrote locomo_P.jsonl rows=1986 convs=10 bare=1986`.
+  No SLEEP-NOT-LEARNING, no STATE-RESET-FAILED, no traceback.
+- Pm: W scripts/claude_bm390.py general --task mmlu --data DATA --arm agent:claude_e2e330c:build_330c --name P --model READER --gen-model BASE --out OUT.
+  Start 2026-09-25T14:09:09Z, end 2026-09-25T14:52:33Z (wall 43 min). Exit 0.
+  First: winnl2 line. Last: `wrote mmlu_P.jsonl rows=300`. No traceback.
+- Pg: W scripts/claude_bm390.py general --task gsm8k --data DATA --arm agent:claude_e2e330c:build_330c --name P --model READER --gen-model BASE --out OUT.
+  Start 2026-09-25T14:52:38Z, end 2026-09-25T15:59:17Z (wall ~1 h 07 min). Exit 0.
+  First: winnl2 line. Last: `wrote gsm8k_P.jsonl rows=300`. No traceback.
+
+### Lane 2
+
+- T: W scripts/claude_bm390.py locomo --data DATA --arm plain:BASE --name T --out OUT.
+  Start 2026-09-25T15:59:31Z, end before 2026-09-25T16:00:14Z (failed fast). Exit non-zero (OOM, no wrote line, no output file).
+  First: winnl2 line. Last: no wrote line (crashed on first generate). Full traceback below (CUDA OOM).
+  A lane-2 failure does not stop the others.
+- Rb: W scripts/claude_bm390.py locomo --data DATA --arm bm25:BASE --name Rb --out OUT.
+  Start 2026-09-25T16:00:14Z, end 2026-09-25T16:08:13Z (wall 8 min). Exit 0.
+  First: winnl2 line. Last: `wrote locomo_Rb.jsonl rows=1986 convs=10`. No traceback.
+- C: W scripts/claude_bm390.py locomo --data DATA --arm closed:BASE --name C --out OUT.
+  Start 2026-09-25T16:08:20Z. Mac tool timeout 10 min killed the Mac ssh client at ~16:18:20Z; BensPC process continued (9 conv lines in Mac log, no wrote, no traceback), gone by 2026-09-25T16:26:38Z with no output file. Launched once; process list checked (no python.exe before launch). No wrote line, no traceback captured, no locomo_C.jsonl. Reported as killed/no-output (tool timeout, not cap).
+  First: winnl2 line. Last: no wrote line (`[bm390] conv-49 ...` was last conv in partial log, conv-50 missing).
+- Q2: W scripts/claude_bm390.py locomo --data DATA --arm plain:Q2DIR --name Q2 --out OUT.
+  Start 2026-09-25T16:26:57Z. At time cap 2026-09-25T16:35:50Z still running (loading done, warnings about causal_conv1d/flash-linear-attention fallback, no conv line, no wrote, no traceback). Stopped at 2026-09-25T16:37:15Z by exact PIDs 10028 and 14012 (both StartTime 9/25/2026 12:26:58 PM, paths venv python and system python; no other python processes; GPU free after stop 15540 MiB). No output file. Launched once.
+  First: winnl2 line. Last: no wrote line.
+- L12, Tm, Tg, Q2m, Q2g, L12m, L12g: never launched (0 files). Time cap reached.
+
+### Run files (counts only, local copy verified against BensPC sizes and sha256)
+
+- gsm8k_P.jsonl bytes=40929 crlf=0 rows=300 sha256=1b94b4507be7b8160e392715eb645783f8ead230c9fcaad13a8c20ed4bb7a6ef
+- locomo_P.jsonl bytes=267386 crlf=0 rows=1986 sha256=01df3f97943911a3369c07cf7928909032f8d6314e9b5c2fc4438953fea0d59c
+- locomo_P_bare.jsonl bytes=321073 crlf=0 rows=1986 sha256=6cc23aa16c85503008edb9a0827fab88b0d0252995a5048af647a3b4e3210391
+- locomo_P_reading.jsonl bytes=1536 crlf=0 rows=10 sha256=255f8ca78925b0f75a12a79d077656bbdfc680471cc2bc68d6f2052795a1b5e6
+- locomo_Rb.jsonl bytes=274510 crlf=0 rows=1986 sha256=af15f49e14d89669187c6794e169b9b6bc0f6a40af38ddd957dfe44e1633fe55
+- mmlu_P.jsonl bytes=45339 crlf=0 rows=300 sha256=81aef79fe0cd78b56423278b6db858aafb8e07914952f38d4517a7e1dcd305f5
+- sleep_P.jsonl bytes=59024 crlf=0 rows=272 sha256=7694e95e8a655e6fe8fabe0956b8703d52595c5709bb4b7477526da571d98cf6
+- Total run/*.jsonl files: 7. Row counts above. CRLF counts all 0.
+- sleep_P.jsonl: rows 272, checkpoint_exists true 272, attempted true 0.
+- Missing (never finished, 0 files): locomo_T.jsonl, locomo_C.jsonl, locomo_Q2.jsonl, locomo_L12.jsonl, general_T_mmlu/gsm8k, general_Q2_mmlu/gsm8k, general_L12_mmlu/gsm8k (names per runner; none exist).
+
+## 6. Copy-back (step 6)
+[0m
+[0m$ [0mgit status --porcelain 2>&1; echo "---STATUS_EXIT:$?"; git ls-tree --name-only origin/main -- artifacts/claude-bm397-20260926/ scripts/claude_bm397_finalize.py 2>&1; echo "---"; git ls-tree --name-only origin/builder-outbox -- artifacts/claude-bm390-20260925/run2/locomo_T.jsonl artifacts/claude-bm395-20260925/run/locomo_E20.jsonl 2>&1; echo "---"; ls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt" 2>&1; echo "---"; git show origin/main:artifacts/claude-bm397-20260926/PLAN.md 2>&1 | wc -l
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-dl1-20260925/RESULTS-gpu.md
+A  artifacts/claude-dl1-20260925/gpu/dl1_results.json
+A  artifacts/claude-dl1-20260925/gpu/log.txt
+A  artifacts/claude-tgt5-20260926/RESULTS-gpu.md
+A  artifacts/claude-tgt5-20260926/gpu/contrasts.json
+A  artifacts/claude-tgt5-20260926/gpu/log.txt
+A  artifacts/claude-tgt5-20260926/gpu/pairs.jsonl
+A  artifacts/claude-tgt5-20260926/gpu/tgt5_summary.json
+M  artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+?? scripts/claude_280n_panel.sh
+?? scripts/claude_280p_panel.sh
+?? scripts/claude_281_panel.sh
+?? scripts/claude_281_panelrun.sh
+?? scripts/claude_281_runall.sh
+?? scripts/claude_281b_panel.sh
+?? scripts/claude_281b_runall.sh
+?? scripts/claude_282_panel.sh
+?? scripts/claude_282_panelrun.sh
+?? scripts/claude_282_runall.sh
+?? scripts/claude_282b_panelrun.sh
+?? scripts/claude_282b_runall.sh
+?? scripts/claude_291_m1.py
+?? scripts/claude_291_m7run.py
+?? scripts/claude_291_m8.sh
+?? scripts/claude_291_panel.sh
+?? scripts/claude_291_runall.sh
+?? scripts/claude_291_score.py
+?? scripts/claude_292_corrarm_run.py
+?? scripts/claude_292_m5.sh
+?? scripts/claude_292_m5run.py
+?? scripts/claude_292_panelrun.py
+?? scripts/claude_292_runall.sh
+?? scripts/claude_292_score.py
+?? scripts/claude_called281_devcases.py
+?? scripts/claude_called281_panelrun.py
+?? scripts/claude_called281_panelscore.py
+?? scripts/claude_called281_regscore.py
+?? scripts/claude_called281_run.py
+?? scripts/claude_called281_score.py
+?? scripts/claude_called281b_devcases.py
+?? scripts/claude_called281b_panelrun.py
+?? scripts/claude_called281b_panelscore.py
+?? scripts/claude_called281b_regscore.py
+?? scripts/claude_called281b_run.py
+?? scripts/claude_called281b_score.py
+?? scripts/claude_capab280_devcases.py
+?? scripts/claude_capab280_regscore.py
+?? scripts/claude_capab280_run.py
+?? scripts/claude_capab280_score.py
+?? scripts/claude_capab280b_devcases.py
+?? scripts/claude_capab280b_paneladapt.py
+?? scripts/claude_capab280b_regscore.py
+?? scripts/claude_capab280b_run.py
+?? scripts/claude_capab280b_score.py
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_diag267_c3.py
+?? scripts/claude_diag267_c3client.py
+?? scripts/claude_diag267_qbuild.py
+?? scripts/claude_diag267_score.py
+?? scripts/claude_diag267_turns.py
+?? scripts/claude_diag271_roc.py
+?? scripts/claude_diag290_bisect.py
+?? scripts/claude_diag290_bisect2.py
+?? scripts/claude_diag290_pilot.py
+?? scripts/claude_diag290_probe.py
+?? scripts/claude_diag290_probe2.py
+?? scripts/claude_diag290_run.py
+?? scripts/claude_diag290_summary.py
+?? scripts/claude_diag293_pilot.py
+?? scripts/claude_diag293_pilot2.py
+?? scripts/claude_diag293_run.py
+?? scripts/claude_diag293_summary.py
+?? scripts/claude_ear265_armb.py
+?? scripts/claude_ear265_arms.py
+?? scripts/claude_ear265_canon.py
+?? scripts/claude_ear265_devset.py
+?? scripts/claude_ear265_panel.py
+?? scripts/claude_ear265_qbuild.py
+?? scripts/claude_ear265_scoremain.py
+?? scripts/claude_ear265_turns.py
+?? scripts/claude_ear269_armb.py
+?? scripts/claude_ear269_arms.py
+?? scripts/claude_ear269_devset.py
+?? scripts/claude_ear269_groupcheck.py
+?? scripts/claude_ear269_panel.py
+?? scripts/claude_ear269_qbuild.py
+?? scripts/claude_ear269_scoremain.py
+?? scripts/claude_ear269_turns.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/claude_earcheck264_armb.py
+?? scripts/claude_earcheck264_arms.py
+?? scripts/claude_earcheck264_client.py
+?? scripts/claude_earcheck264_commatags.py
+?? scripts/claude_earcheck264_devreport.py
+?? scripts/claude_earcheck264_devset.py
+?? scripts/claude_earcheck264_panel.py
+?? scripts/claude_earcheck264_qa.py
+?? scripts/claude_earcheck264_qbuild.py
+?? scripts/claude_earcheck264_scoremain.py
+?? scripts/claude_earcheck264_turns.py
+?? scripts/claude_fix138nb_label.py
+?? scripts/claude_fix255b_test.py
+?? scripts/claude_fix255b_text.py
+?? scripts/claude_fix263_comma.py
+?? scripts/claude_fix266_chainlift.py
+?? scripts/claude_fix266b_detector.py
+?? scripts/claude_fix268_nhopdir.py
+?? scripts/claude_fix280_capab.py
+?? scripts/claude_fix280b_general.py
+?? scripts/claude_fix281_called.py
+?? scripts/claude_fix281b_casual.py
+?? scripts/claude_fix282_small.py
+?? scripts/claude_fix282b_vocab.py
+?? scripts/claude_fix291_glue.py
+?? scripts/claude_join280m_regscore.py
+?? scripts/claude_join280m_run.py
+?? scripts/claude_join280m_score.py
+?? scripts/claude_join280n_score.py
+?? scripts/claude_join280p_score.py
+?? scripts/claude_lis310_agent.py
+?? scripts/claude_lis310_demo.py
+?? scripts/claude_lis310_test.py
+?? scripts/claude_lis311_agent.py
+?? scripts/claude_lis311_server.py
+?? scripts/claude_lis311_start.sh
+?? scripts/claude_lis311_try.py
+?? scripts/claude_loop138nb_agent.py
+?? scripts/claude_loop138p_agent.py
+?? scripts/claude_loop255b_agent.py
+?? scripts/claude_loop263_agent.py
+?? scripts/claude_loop266_agent.py
+?? scripts/claude_loop266b_agent.py
+?? scripts/claude_loop268_agent.py
+?? scripts/claude_loop280_agent.py
+?? scripts/claude_loop280b_agent.py
+?? scripts/claude_loop280m_agent.py
+?? scripts/claude_loop281_agent.py
+?? scripts/claude_loop281b_agent.py
+?? scripts/claude_loop282_agent.py
+?? scripts/claude_loop282b_agent.py
+?? scripts/claude_loop291_agent.py
+?? scripts/claude_loop292_agent.py
+?? scripts/claude_mouth241b_devrender_r.py
+?? scripts/claude_mouth241b_rer241_r.py
+?? scripts/claude_mut1_k1.py
+?? scripts/claude_mut1_k2.py
+?? scripts/claude_mut1_k3.py
+?? scripts/claude_mut1_k4.py
+?? scripts/claude_nb321_store.py
+?? scripts/claude_nb321_test.py
+?? scripts/claude_own_m0_build.py
+?? scripts/claude_own_m0_check.py
+?? scripts/claude_own_o0a2_compiler.py
+?? scripts/claude_own_o0a3_mutate.py
+?? scripts/claude_own_o0a_compiler.py
+?? scripts/claude_own_o0b_check.py
+?? scripts/claude_own_o0b_gen.py
+?? scripts/claude_own_o0c_prep.py
+?? scripts/claude_own_o0c_tok.py
+?? scripts/claude_own_o0d2_model.py
+?? scripts/claude_own_o0d2_test.py
+?? scripts/claude_own_o0d2_train.py
+?? scripts/claude_own_o0d_model.py
+?? scripts/claude_own_o0d_test.py
+?? scripts/claude_own_o0d_train.py
+?? scripts/claude_own_o0e2_model.py
+?? scripts/claude_own_o0e2_tests.py
+?? scripts/claude_own_o0e_model.py
+?? scripts/claude_own_o0e_serialize.py
+?? scripts/claude_own_o0e_tests.py
+?? scripts/claude_own_o0e_train.py
+?? scripts/claude_own_o0f_bench.py
+?? scripts/claude_probe255b_director.py
+?? scripts/claude_probe280p_run.py
+?? scripts/claude_probe280p_score.py
+?? scripts/claude_small282_devcases.py
+?? scripts/claude_small282_panelrun2.py
+?? scripts/claude_small282_regscore.py
+?? scripts/claude_small282_run.py
+?? scripts/claude_small282_score.py
+?? scripts/claude_small282b_devcases.py
+?? scripts/claude_small282b_regscore.py
+?? scripts/claude_small282b_run.py
+?? scripts/claude_small282b_score.py
+?? scripts/claude_type270_agent.py
+?? scripts/claude_type270_devrun.py
+?? scripts/claude_type270_devscore.py
+?? scripts/claude_type270_devset.py
+?? scripts/claude_type270_normalise.py
+?? scripts/claude_type270_panelrun.py
+?? scripts/claude_type270_panelscore.py
+?? scripts/claude_type270b_devscore.py
+?? scripts/claude_type270b_devset.py
+?? scripts/claude_type270b_normalise.py
+?? scripts/claude_type270b_panelscore.py
+?? scripts/claude_type270b_panelscore2.py
+?? scripts/claude_type270b_panelturns.py
+?? scripts/claude_type270b_qbuild.py
+?? scripts/claude_type270b_turns.py
+?? scripts/claude_typepanel270b_make.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+---STATUS_EXIT:0
+artifacts/claude-bm397-20260926/PLAN.md
+artifacts/claude-bm397-20260926/SEAL-judge.sha256.txt
+artifacts/claude-bm397-20260926/SEAL.sha256.txt
+artifacts/claude-bm397-20260926/drafts.sha256.txt
+scripts/claude_bm397_finalize.py
+---
+artifacts/claude-bm390-20260925/run2/locomo_T.jsonl
+artifacts/claude-bm395-20260925/run/locomo_E20.jsonl
+---
+ls: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt: No such file or directory
+---
+      68
+[0m
