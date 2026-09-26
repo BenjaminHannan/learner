@@ -92,13 +92,16 @@ def main():
         opt, lambda s: min(1.0, (s + 1) / warm) * 0.5 * (1 + math.cos(math.pi * min(1.0, s / total))))
     log = open(out / "train_log.jsonl", "w")
     t0 = time.time()
-    step, toks, stopped = 0, 0, None
+    step, toks, stopped, grad_none = 0, 0, None, None
     model.train()
     while step < total and stopped is None:
         for ids, lab, att in batches(train, a.batch, pad_id, True, rng):
             ids, lab, att = ids.to(dev), lab.to(dev), att.to(dev)
             loss = model(input_ids=ids, attention_mask=att, labels=lab).loss
             loss.backward()
+            if step == 0:   # every trainable weight must get a gradient (Thread manager 17:14, torch autocast finding)
+                grad_none = sum(1 for p in model.parameters() if p.requires_grad and p.grad is None)
+                print({"grad_none_after_first_backward": grad_none}, flush=True)
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step(); sched.step(); opt.zero_grad(set_to_none=True)
             step += 1
@@ -130,7 +133,8 @@ def main():
     summ = {"steps": step, "planned_steps": total, "stopped": stopped, "train_rows": len(train),
             "dev_rows": len(devrows), "dev_loss": dl / max(1, dn), "trainable_params": n_train,
             "all_params": n_all, "minutes": round((time.time() - t0) / 60, 2),
-            "tok_per_s": round(toks / max(1e-9, time.time() - t0), 1), "device": dev, "args": vars(a)}
+            "tok_per_s": round(toks / max(1e-9, time.time() - t0), 1), "device": dev,
+            "grad_none_after_first_backward": grad_none, "args": vars(a)}
     (out / "summary.json").write_text(json.dumps(summ, indent=1))
     print(json.dumps(summ, indent=1))
 
