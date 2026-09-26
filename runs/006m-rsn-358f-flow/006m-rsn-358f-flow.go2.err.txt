@@ -1,0 +1,1413 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead .
+[0m→ [0mRead state.json
+[0m
+[0m$ [0mgit status --short; echo "---LOG---"; git log --oneline -20; echo "---BRANCH---"; git branch --show-current; echo "---WORKTREE---"; git worktree list | head -20
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-brd5-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd5-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd5-20260926/gpu/log.txt
+A  artifacts/claude-brd5-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd5-20260926/gpu/streams.json
+A  artifacts/claude-brd6-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd6-20260926/gpu/brd6_summary.json
+A  artifacts/claude-brd6-20260926/gpu/log.txt
+A  artifacts/claude-brd6-20260926/gpu/practice.jsonl
+A  artifacts/claude-brd6-20260926/gpu/streams.json
+A  artifacts/claude-brd7-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd7-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd7-20260926/gpu/log.txt
+A  artifacts/claude-brd7-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd7-20260926/gpu/streams.json
+A  artifacts/claude-dl1-20260925/RESULTS-gpu.md
+A  artifacts/claude-dl1-20260925/gpu/dl1_results.json
+A  artifacts/claude-dl1-20260925/gpu/log.txt
+A  artifacts/claude-e2e02c-20260926/RESULTS-benspc.md
+A  artifacts/claude-e2e02c-20260926/run/arm_G.jsonl
+A  artifacts/claude-e2e02c-20260926/run/arm_T.jsonl
+A  artifacts/claude-e2e02c-20260926/run/arm_X.jsonl
+A  artifacts/claude-e2e02c-20260926/run/chat_G.jsonl
+A  artifacts/claude-e2e02c-20260926/run/chat_T.jsonl
+A  artifacts/claude-e2e02c-20260926/run/chat_X.jsonl
+A  artifacts/claude-e2e02c-20260926/run/creative_T.jsonl
+A  artifacts/claude-e2e02c-20260926/run/creative_X.jsonl
+A  artifacts/claude-e2e02c-20260926/run/gram360_parts_G.jsonl
+A  artifacts/claude-e2e02c-20260926/run/gram360_parts_X.jsonl
+A  artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.json
+A  artifacts/claude-e2e02c-20260926/run/sleep/sleep02c_results.json
+A  artifacts/claude-e2e02c-20260926/run/sleep_G.jsonl
+A  artifacts/claude-e2e02c-20260926/run/sleep_X.jsonl
+A  artifacts/claude-e2e02c-20260926/score/chat_G.jsonl
+A  artifacts/claude-e2e02c-20260926/score/chat_T.jsonl
+A  artifacts/claude-e2e02c-20260926/score/chat_X.jsonl
+A  artifacts/claude-e2e02c-20260926/score/chat_key_G.json
+A  artifacts/claude-e2e02c-20260926/score/chat_key_T.json
+A  artifacts/claude-e2e02c-20260926/score/chat_pair_G.jsonl
+A  artifacts/claude-e2e02c-20260926/score/chat_pair_T.jsonl
+A  artifacts/claude-e2e02c-20260926/score/chat_turns_X.jsonl
+A  artifacts/claude-e2e02c-20260926/score/creative_T.jsonl
+A  artifacts/claude-e2e02c-20260926/score/creative_X.jsonl
+A  artifacts/claude-e2e02c-20260926/score/creative_judge.jsonl
+A  artifacts/claude-e2e02c-20260926/score/creative_key.json
+A  artifacts/claude-e2e02c-20260926/score/grammar_G.jsonl
+A  artifacts/claude-e2e02c-20260926/score/grammar_T.jsonl
+A  artifacts/claude-e2e02c-20260926/score/grammar_X.jsonl
+A  artifacts/claude-e2e02c-20260926/score/grammar_chat_X.jsonl
+A  artifacts/claude-e2e02c-20260926/score/grammar_creative_X.jsonl
+A  artifacts/claude-e2e02c-20260926/score/judge_asks_G.jsonl
+A  artifacts/claude-e2e02c-20260926/score/judge_asks_T.jsonl
+A  artifacts/claude-e2e02c-20260926/score/judge_asks_X.jsonl
+A  artifacts/claude-e2e02c-20260926/score/judge_saves_G.jsonl
+A  artifacts/claude-e2e02c-20260926/score/judge_saves_T.jsonl
+A  artifacts/claude-e2e02c-20260926/score/judge_saves_X.jsonl
+A  artifacts/claude-e2e02c-20260926/score/mechanical.json
+A  artifacts/claude-e2e02c-20260926/score/summary_chat.json
+A  artifacts/claude-e2e02c-20260926/score/summary_creative.json
+A  artifacts/claude-e2e02c-dev-20260926/arm_X.jsonl
+A  artifacts/claude-e2e02c-dev-20260926/chat_X.jsonl
+A  artifacts/claude-e2e02c-dev-20260926/sleep/adapter02c.json
+A  artifacts/claude-e2e02c-dev-20260926/sleep/sleep02c_results.json
+A  artifacts/claude-e2e02c-dev-20260926/sleep_X.jsonl
+A  artifacts/claude-lis319c-20260926/full/RESULTS-full-reads.md
+A  artifacts/claude-lis319c-20260926/full/check_319.json
+A  artifacts/claude-lis319c-20260926/full/check_A.json
+A  artifacts/claude-lis319c-20260926/full/check_B.json
+A  artifacts/claude-lis319c-20260926/full/pairs_319.jsonl
+A  artifacts/claude-lis319c-20260926/full/pairs_319c.jsonl
+A  artifacts/claude-lis319c-20260926/full/reads_319.jsonl
+A  artifacts/claude-lis319c-20260926/full/reads_319c.jsonl
+A  artifacts/claude-tgt5-20260926/RESULTS-gpu.md
+A  artifacts/claude-tgt5-20260926/gpu/contrasts.json
+A  artifacts/claude-tgt5-20260926/gpu/log.txt
+A  artifacts/claude-tgt5-20260926/gpu/pairs.jsonl
+A  artifacts/claude-tgt5-20260926/gpu/tgt5_summary.json
+M  artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+?? scripts/claude_280n_panel.sh
+?? scripts/claude_280p_panel.sh
+?? scripts/claude_281_panel.sh
+?? scripts/claude_281_panelrun.sh
+?? scripts/claude_281_runall.sh
+?? scripts/claude_281b_panel.sh
+?? scripts/claude_281b_runall.sh
+?? scripts/claude_282_panel.sh
+?? scripts/claude_282_panelrun.sh
+?? scripts/claude_282_runall.sh
+?? scripts/claude_282b_panelrun.sh
+?? scripts/claude_282b_runall.sh
+?? scripts/claude_291_m1.py
+?? scripts/claude_291_m7run.py
+?? scripts/claude_291_m8.sh
+?? scripts/claude_291_panel.sh
+?? scripts/claude_291_runall.sh
+?? scripts/claude_291_score.py
+?? scripts/claude_292_corrarm_run.py
+?? scripts/claude_292_m5.sh
+?? scripts/claude_292_m5run.py
+?? scripts/claude_292_panelrun.py
+?? scripts/claude_292_runall.sh
+?? scripts/claude_292_score.py
+?? scripts/claude_called281_devcases.py
+?? scripts/claude_called281_panelrun.py
+?? scripts/claude_called281_panelscore.py
+?? scripts/claude_called281_regscore.py
+?? scripts/claude_called281_run.py
+?? scripts/claude_called281_score.py
+?? scripts/claude_called281b_devcases.py
+?? scripts/claude_called281b_panelrun.py
+?? scripts/claude_called281b_panelscore.py
+?? scripts/claude_called281b_regscore.py
+?? scripts/claude_called281b_run.py
+?? scripts/claude_called281b_score.py
+?? scripts/claude_capab280_devcases.py
+?? scripts/claude_capab280_regscore.py
+?? scripts/claude_capab280_run.py
+?? scripts/claude_capab280_score.py
+?? scripts/claude_capab280b_devcases.py
+?? scripts/claude_capab280b_paneladapt.py
+?? scripts/claude_capab280b_regscore.py
+?? scripts/claude_capab280b_run.py
+?? scripts/claude_capab280b_score.py
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_diag267_c3.py
+?? scripts/claude_diag267_c3client.py
+?? scripts/claude_diag267_qbuild.py
+?? scripts/claude_diag267_score.py
+?? scripts/claude_diag267_turns.py
+?? scripts/claude_diag271_roc.py
+?? scripts/claude_diag290_bisect.py
+?? scripts/claude_diag290_bisect2.py
+?? scripts/claude_diag290_pilot.py
+?? scripts/claude_diag290_probe.py
+?? scripts/claude_diag290_probe2.py
+?? scripts/claude_diag290_run.py
+?? scripts/claude_diag290_summary.py
+?? scripts/claude_diag293_pilot.py
+?? scripts/claude_diag293_pilot2.py
+?? scripts/claude_diag293_run.py
+?? scripts/claude_diag293_summary.py
+?? scripts/claude_ear265_armb.py
+?? scripts/claude_ear265_arms.py
+?? scripts/claude_ear265_canon.py
+?? scripts/claude_ear265_devset.py
+?? scripts/claude_ear265_panel.py
+?? scripts/claude_ear265_qbuild.py
+?? scripts/claude_ear265_scoremain.py
+?? scripts/claude_ear265_turns.py
+?? scripts/claude_ear269_armb.py
+?? scripts/claude_ear269_arms.py
+?? scripts/claude_ear269_devset.py
+?? scripts/claude_ear269_groupcheck.py
+?? scripts/claude_ear269_panel.py
+?? scripts/claude_ear269_qbuild.py
+?? scripts/claude_ear269_scoremain.py
+?? scripts/claude_ear269_turns.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/claude_earcheck264_armb.py
+?? scripts/claude_earcheck264_arms.py
+?? scripts/claude_earcheck264_client.py
+?? scripts/claude_earcheck264_commatags.py
+?? scripts/claude_earcheck264_devreport.py
+?? scripts/claude_earcheck264_devset.py
+?? scripts/claude_earcheck264_panel.py
+?? scripts/claude_earcheck264_qa.py
+?? scripts/claude_earcheck264_qbuild.py
+?? scripts/claude_earcheck264_scoremain.py
+?? scripts/claude_earcheck264_turns.py
+?? scripts/claude_fix138nb_label.py
+?? scripts/claude_fix255b_test.py
+?? scripts/claude_fix255b_text.py
+?? scripts/claude_fix263_comma.py
+?? scripts/claude_fix266_chainlift.py
+?? scripts/claude_fix266b_detector.py
+?? scripts/claude_fix268_nhopdir.py
+?? scripts/claude_fix280_capab.py
+?? scripts/claude_fix280b_general.py
+?? scripts/claude_fix281_called.py
+?? scripts/claude_fix281b_casual.py
+?? scripts/claude_fix282_small.py
+?? scripts/claude_fix282b_vocab.py
+?? scripts/claude_fix291_glue.py
+?? scripts/claude_join280m_regscore.py
+?? scripts/claude_join280m_run.py
+?? scripts/claude_join280m_score.py
+?? scripts/claude_join280n_score.py
+?? scripts/claude_join280p_score.py
+?? scripts/claude_lis310_agent.py
+?? scripts/claude_lis310_demo.py
+?? scripts/claude_lis310_test.py
+?? scripts/claude_lis311_agent.py
+?? scripts/claude_lis311_server.py
+?? scripts/claude_lis311_start.sh
+?? scripts/claude_lis311_try.py
+?? scripts/claude_loop138nb_agent.py
+?? scripts/claude_loop138p_agent.py
+?? scripts/claude_loop255b_agent.py
+?? scripts/claude_loop263_agent.py
+?? scripts/claude_loop266_agent.py
+?? scripts/claude_loop266b_agent.py
+?? scripts/claude_loop268_agent.py
+?? scripts/claude_loop280_agent.py
+?? scripts/claude_loop280b_agent.py
+?? scripts/claude_loop280m_agent.py
+?? scripts/claude_loop281_agent.py
+?? scripts/claude_loop281b_agent.py
+?? scripts/claude_loop282_agent.py
+?? scripts/claude_loop282b_agent.py
+?? scripts/claude_loop291_agent.py
+?? scripts/claude_loop292_agent.py
+?? scripts/claude_mouth241b_devrender_r.py
+?? scripts/claude_mouth241b_rer241_r.py
+?? scripts/claude_mut1_k1.py
+?? scripts/claude_mut1_k2.py
+?? scripts/claude_mut1_k3.py
+?? scripts/claude_mut1_k4.py
+?? scripts/claude_nb321_store.py
+?? scripts/claude_nb321_test.py
+?? scripts/claude_own_m0_build.py
+?? scripts/claude_own_m0_check.py
+?? scripts/claude_own_o0a2_compiler.py
+?? scripts/claude_own_o0a3_mutate.py
+?? scripts/claude_own_o0a_compiler.py
+?? scripts/claude_own_o0b_check.py
+?? scripts/claude_own_o0b_gen.py
+?? scripts/claude_own_o0c_prep.py
+?? scripts/claude_own_o0c_tok.py
+?? scripts/claude_own_o0d2_model.py
+?? scripts/claude_own_o0d2_test.py
+?? scripts/claude_own_o0d2_train.py
+?? scripts/claude_own_o0d_model.py
+?? scripts/claude_own_o0d_test.py
+?? scripts/claude_own_o0d_train.py
+?? scripts/claude_own_o0e2_model.py
+?? scripts/claude_own_o0e2_tests.py
+?? scripts/claude_own_o0e_model.py
+?? scripts/claude_own_o0e_serialize.py
+?? scripts/claude_own_o0e_tests.py
+?? scripts/claude_own_o0e_train.py
+?? scripts/claude_own_o0f_bench.py
+?? scripts/claude_probe255b_director.py
+?? scripts/claude_probe280p_run.py
+?? scripts/claude_probe280p_score.py
+?? scripts/claude_small282_devcases.py
+?? scripts/claude_small282_panelrun2.py
+?? scripts/claude_small282_regscore.py
+?? scripts/claude_small282_run.py
+?? scripts/claude_small282_score.py
+?? scripts/claude_small282b_devcases.py
+?? scripts/claude_small282b_regscore.py
+?? scripts/claude_small282b_run.py
+?? scripts/claude_small282b_score.py
+?? scripts/claude_type270_agent.py
+?? scripts/claude_type270_devrun.py
+?? scripts/claude_type270_devscore.py
+?? scripts/claude_type270_devset.py
+?? scripts/claude_type270_normalise.py
+?? scripts/claude_type270_panelrun.py
+?? scripts/claude_type270_panelscore.py
+?? scripts/claude_type270b_devscore.py
+?? scripts/claude_type270b_devset.py
+?? scripts/claude_type270b_normalise.py
+?? scripts/claude_type270b_panelscore.py
+?? scripts/claude_type270b_panelscore2.py
+?? scripts/claude_type270b_panelturns.py
+?? scripts/claude_type270b_qbuild.py
+?? scripts/claude_type270b_turns.py
+?? scripts/claude_typepanel270b_make.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+---LOG---
+996b9348e rent-dl3: replay-into-the-night GPU run (verdict FAIL; F3-F5 pass, F1-F2 fail) + ledger line
+b588f1e37 rsn-358c1: answer-cell stop eval, sealed code run once per seed (verdict FAIL; stop fix NOT NEEDED, K4 split s1 PASS s2 FAIL) + ledger lines
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+bc39d2baf ideajudge-teacher2: DEV teacher agreement check (no training)
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+7692680e4 mut-0 SLEEP fails closed: mut0 runner + 3 runall scripts, seal + results (M1-M3 hold)
+d45774581 builder results: 274-build (never deaf step A: reply-first turn + deaf meter, PASS M1-M4)
+e201282b5 judge F1 M4 naturalness: 13 blind pair judgments (X9 Y4 tie0, meaning_change 1)
+241ee9f5d grader B part 6: English grades for F1 M1 rows 2246-2690
+5bc2a7c0d Add grader B part5 (h1797-h2245) English grammar marks
+83f77071a builder results: F1 241b rewriter on 292t (registered PASS M2/M3/M5 mechanical; M1/M4 director-graded)
+ae3e5f02f nb-320 baseline of notebook store at 20k/100k/1M-DNF: runner, workload, seal + results
+22d7c0125 273: listen-before-sleep on 292t (registered PASS M1-M4)
+e2386323a convbench-f0 baseline on base 292 (F0): runner, scorer, run + results
+7493e5e14 292t: talking layers on main base 292 (registered PASS M1-M3)
+96f7f690a Add blind join panel 292t plus already-staged chatdemo and nhopdiag artifacts
+c97092367 builder results: yesno293 reader on 138nb (registered PASS M1-M5)
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+---BRANCH---
+claude/card-experiment-handoff-7c5b27
+---WORKTREE---
+/Users/ben-hannan/Desktop/projects/beautiful-model                                                     123f01b9e [main]
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358d-push                         d2f4c096e (detached HEAD)
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/trash-outbox                         346481d67 (detached HEAD)
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27    996b9348e [claude/card-experiment-handoff-7c5b27]
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/fact-saving-note-filtering-4ff1ff 123f01b9e [claude/fact-saving-note-filtering-4ff1ff]
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/model-architecture-review-0161ce  123f01b9e [claude/loop-net-generalization-analysis-729ee3]
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/premonition-design-review-792236  123f01b9e [claude/locomo-length-penalty-408e2a]
+[0m
+[0m→ [0mRead handoff
+[0m→ [0mRead .claude
+[0m
+[0m$ [0mgit diff --cached --stat; echo "=== unstaged ==="; git diff --stat; echo "=== ledger diff ==="; git diff --cached artifacts/fable-predictions-ledger.md | head -n 200
+ls -lt artifacts/ | head -n 40
+echo "=== recent scripts ==="; ls -lt scripts/ | head -n 60
+artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md |  79 ++
+ .../claude-blurt2-20260925/gpu-3r/log_loop.txt     |  26 +
+ .../gpu-3r/loop_summary.json                       |  42 +
+ artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl | 158 ++++
+ artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md  |  86 ++
+ .../gpu-4/blurt4_summary.json                      |  46 +
+ artifacts/claude-blurt4-20260925/gpu-4/log.txt     |  36 +
+ .../claude-blurt5s-20260925/RESULTS-gpu-5s.md      | 145 ++++
+ .../gpu-5s/blurt5s_summary.json                    |  98 +++
+ artifacts/claude-blurt5s-20260925/gpu-5s/log.txt   |  51 ++
+ artifacts/claude-brd5-20260926/RESULTS-gpu.md      | 148 ++++
+ .../claude-brd5-20260926/gpu/brd5_summary.json     | 101 +++
+ artifacts/claude-brd5-20260926/gpu/log.txt         |  51 ++
+ .../claude-brd5-20260926/gpu/narrow_picks.jsonl    |  20 +
+ artifacts/claude-brd5-20260926/gpu/streams.json    |   1 +
+ artifacts/claude-brd6-20260926/RESULTS-gpu.md      |  76 ++
+ .../claude-brd6-20260926/gpu/brd6_summary.json     |  87 ++
+ artifacts/claude-brd6-20260926/gpu/log.txt         |  30 +
+ artifacts/claude-brd6-20260926/gpu/practice.jsonl  | 800 +++++++++++++++++
+ artifacts/claude-brd6-20260926/gpu/streams.json    |   1 +
+ artifacts/claude-brd7-20260926/RESULTS-gpu.md      | 124 +++
+ .../claude-brd7-20260926/gpu/brd5_summary.json     | 101 +++
+ artifacts/claude-brd7-20260926/gpu/log.txt         |  51 ++
+ .../claude-brd7-20260926/gpu/narrow_picks.jsonl    |  20 +
+ artifacts/claude-brd7-20260926/gpu/streams.json    |   1 +
+ artifacts/claude-dl1-20260925/RESULTS-gpu.md       |  85 ++
+ artifacts/claude-dl1-20260925/gpu/dl1_results.json | 557 ++++++++++++
+ artifacts/claude-dl1-20260925/gpu/log.txt          |  92 ++
+ artifacts/claude-e2e02c-20260926/RESULTS-benspc.md | 175 ++++
+ artifacts/claude-e2e02c-20260926/run/arm_G.jsonl   | 860 +++++++++++++++++++
+ artifacts/claude-e2e02c-20260926/run/arm_T.jsonl   | 658 ++++++++++++++
+ artifacts/claude-e2e02c-20260926/run/arm_X.jsonl   | 953 +++++++++++++++++++++
+ artifacts/claude-e2e02c-20260926/run/chat_G.jsonl  | 335 ++++++++
+ artifacts/claude-e2e02c-20260926/run/chat_T.jsonl  | 335 ++++++++
+ artifacts/claude-e2e02c-20260926/run/chat_X.jsonl  | 335 ++++++++
+ .../claude-e2e02c-20260926/run/creative_T.jsonl    |  92 ++
+ .../claude-e2e02c-20260926/run/creative_X.jsonl    |  92 ++
+ .../run/gram360_parts_G.jsonl                      | 860 +++++++++++++++++++
+ .../run/gram360_parts_X.jsonl                      | 953 +++++++++++++++++++++
+ .../run/sleep/adapter02c.json                      |   1 +
+ .../run/sleep/sleep02c_results.json                | 139 +++
+ artifacts/claude-e2e02c-20260926/run/sleep_G.jsonl | 120 +++
+ artifacts/claude-e2e02c-20260926/run/sleep_X.jsonl | 120 +++
+ .../claude-e2e02c-20260926/score/chat_G.jsonl      | 335 ++++++++
+ .../claude-e2e02c-20260926/score/chat_T.jsonl      | 335 ++++++++
+ .../claude-e2e02c-20260926/score/chat_X.jsonl      | 335 ++++++++
+ .../claude-e2e02c-20260926/score/chat_key_G.json   | 242 ++++++
+ .../claude-e2e02c-20260926/score/chat_key_T.json   | 242 ++++++
+ .../claude-e2e02c-20260926/score/chat_pair_G.jsonl |  60 ++
+ .../claude-e2e02c-20260926/score/chat_pair_T.jsonl |  60 ++
+ .../score/chat_turns_X.jsonl                       |  60 ++
+ .../claude-e2e02c-20260926/score/creative_T.jsonl  |  92 ++
+ .../claude-e2e02c-20260926/score/creative_X.jsonl  |  92 ++
+ .../score/creative_judge.jsonl                     | 100 +++
+ .../claude-e2e02c-20260926/score/creative_key.json | 402 +++++++++
+ .../claude-e2e02c-20260926/score/grammar_G.jsonl   | 630 ++++++++++++++
+ .../claude-e2e02c-20260926/score/grammar_T.jsonl   | 312 +++++++
+ .../claude-e2e02c-20260926/score/grammar_X.jsonl   | 682 +++++++++++++++
+ .../score/grammar_chat_X.jsonl                     | 271 ++++++
+ .../score/grammar_creative_X.jsonl                 |  81 ++
+ .../score/judge_asks_G.jsonl                       |  17 +
+ .../score/judge_asks_T.jsonl                       | 174 ++++
+ .../score/judge_asks_X.jsonl                       |  18 +
+ .../score/judge_saves_G.jsonl                      | 237 +++++
+ .../score/judge_saves_T.jsonl                      |   0
+ .../score/judge_saves_X.jsonl                      | 249 ++++++
+ .../claude-e2e02c-20260926/score/mechanical.json   | 200 +++++
+ .../claude-e2e02c-20260926/score/summary_chat.json |  46 +
+ .../score/summary_creative.json                    |  22 +
+ artifacts/claude-e2e02c-dev-20260926/arm_X.jsonl   | 276 ++++++
+ artifacts/claude-e2e02c-dev-20260926/chat_X.jsonl  |  10 +
+ .../sleep/adapter02c.json                          |   1 +
+ .../sleep/sleep02c_results.json                    |  75 ++
+ artifacts/claude-e2e02c-dev-20260926/sleep_X.jsonl |  30 +
+ .../full/RESULTS-full-reads.md                     |  84 ++
+ .../claude-lis319c-20260926/full/check_319.json    |  21 +
+ .../claude-lis319c-20260926/full/check_A.json      |  28 +
+ .../claude-lis319c-20260926/full/check_B.json      |  28 +
+ .../claude-lis319c-20260926/full/pairs_319.jsonl   |  22 +
+ .../claude-lis319c-20260926/full/pairs_319c.jsonl  |  81 ++
+ .../claude-lis319c-20260926/full/reads_319.jsonl   | 240 ++++++
+ .../claude-lis319c-20260926/full/reads_319c.jsonl  | 239 ++++++
+ artifacts/claude-tgt5-20260926/RESULTS-gpu.md      | 103 +++
+ artifacts/claude-tgt5-20260926/gpu/contrasts.json  |   1 +
+ artifacts/claude-tgt5-20260926/gpu/log.txt         |  51 ++
+ artifacts/claude-tgt5-20260926/gpu/pairs.jsonl     | 120 +++
+ .../claude-tgt5-20260926/gpu/tgt5_summary.json     |  80 ++
+ artifacts/fable-predictions-ledger.md              |   2 +
+ 88 files changed, 15927 insertions(+)
+=== unstaged ===
+=== ledger diff ===
+diff --git a/artifacts/fable-predictions-ledger.md b/artifacts/fable-predictions-ledger.md
+index 9f5811214..4bc6f87c1 100644
+--- a/artifacts/fable-predictions-ledger.md
++++ b/artifacts/fable-predictions-ledger.md
+@@ -3002,3 +3002,5 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
+ - rsn-358d OUTCOME (2026-09-26, GPU builder, label rent-358d, sealed code run unmodified, each eval once per checkpoint): registered verdict INCONCLUSIVE both seeds (G0 not met: loop practised-size s3 300/109/1, s4 298/91/1, needs >=210 in >=2 of 3 kinds). G1 FAIL both (loop-plain s3 -108/-129/0, s4 -59/-150/-1); G2 FAIL both (s3 0/-127/-15, s4 -2/-150/-9); G3 FAIL s3 (sums6 own 131 vs fix16 137), PASS s4. Proved-wrong clause NOT triggered. numbers4 plain 16/10 vs loop 1/1 (358a: 0-5 both); numbers5 0/0/0/1. Plain bigger-test generalisation beat loop everywhere (sums6 239/153 vs 131/94; grids6 187/186 vs 58/36). GPU RTX 5090, minutes loop-s3 35.2 plain-s3 29.6 loop-s4 35.3 plain-s4 29.6, ~$0.41 of $0.80. See artifacts/claude-rsn358d-20260926/RESULTS.md + runs + SEAL-run.sha256.txt.
+ - rent-358d GPU SPEND (2026-09-26, credit 6.33 at gate): rental 1 offer 46753295 (docker registry proxy refused, restarted once same error, destroyed stopped) + rental 2 offer 44173691 RTX 5090 dph 0.4852 (03:44:46Z-04:34:03Z, 0.82 h, ~$0.40); task total ~$0.41 of $0.80 budget, 2 rentals of max 3, 54 min of 1 h 30 min cap; post-destroy 0 rent-358d live. Checkpoints discarded with rental (Mac had 7 GB free < 8 GB copy bar) after sha256 recorded; 4 required files per run copied back.
+ - rent-dl3 GPU OUTCOME (2026-09-26, rented RTX 5090, label rent-dl3, origin/main code unmodified, selftest ok): registered verdict FAIL (F1 false: A final lost sum 56 vs S 63, needs <= 31.5, per-seed s4 20 < 39 but s5 36 > 24; F2 false: 11 of 14 A nights lost > 10; F3 true: A final lucky 227, 216 >= 118 each, gains 325 >= 0.8 x 310; F4 true: 1 worse night, A s5n7 266 -> 216; F5 true: reached 53, 59 >= 30). Proved-wrong clause NOT triggered. Not INCONCLUSIVE (L0 59, S lost sum 63, pool 908). Rentals: 52685064 offer 46753297 (registry proxy error while stopped, destroyed ~$0) + 52685812 offer 44173877 KR dph 0.5130 (run 03:35-04:56Z, 81.2 min, destroyed 05:01Z); task total ~$0.86 of $1.50 budget, 2 rentals of max 3; post-destroy 0 rent-dl3 live. BASE openbmb/MiniCPM5-1B commit 87179e5c, torch 2.8.0+cu128, transformers 5.17.0. Code from origin/main ca08ccc1, byte-identical for dl-3 inputs at 43457707. No weights saved. See artifacts/claude-dl3-20260926/RESULTS-gpu.md + gpu/.
++- rent-bm391 GPU OUTCOME (2026-09-26, rented Linux GPU, label rent-bm391, unmodified origin/main + origin/builder-outbox code, seals bm391 3/3 + bm390-code 8/8 + e2e382-code 239/239 OK, selftests 10/10 + 13/13): BUDGET-STOP, no registered command completed except lane-3 mmlu_R (300 rows). Instance 52677751 (RTX 5090 offer 52604857, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 100, rented 01:51:26Z, destroyed 08:03:50Z, 6.21 h x dph $0.5103 = ~$3.17 projected; credit 9.0581 -> 7.4877 = $1.57 billed at destroy check, billing may lag); 1 rental of max 4; post-destroy 0 rent-bm391 live. Agent pace ~2 rows/min/LoCoMo-arm made 3x1986-row runs infeasible in $3.50 (needs ~14 h/arm). Killed by exact PID (2619, 2620, 3126 + drivers 2612, 2613, 2999; exits 143); lane drivers auto-advanced in kill window launching lane1-mmlu-ER, lane2-mmlu-E, lane3-locomo-R (~30 s, no output files, killed PIDs 3277, 3279, 3281, reported as deviation, not relaunched). Finished: GENERAL(mmlu,383,R) exit 0 wrote mmlu_R.jsonl rows=300. Unfinished with partial EP382 logs: LOCOMO(383e,ER) 456 rows, LOCOMO(382b,E) 445 rows (no locomo_*.jsonl wrote lines). Never started: both gsms, lane3 locomo (beyond 30 s stub), lane1/2 mmlu+gsm8k (beyond stubs). BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM path exact, READER safetensors b4fd93a2...890 verified on box, torch 2.8.0+cu128, transformers 5.17.0, pyarrow ok. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Sleep base-seed4102 JSON line recorded, pt 2ada54ac...ff069057. Smoke 6/6 exit 0. Peak GPU mem ~16933 MiB. Copy-back sha256-verified 5 files. See artifacts/claude-bm391-20260926/RESULTS-rent.md + run/.
++- rent-brd7 GPU OUTCOME (2026-09-26, rented RTX 5090, label rent-brd7, origin/main code unmodified, selftest ok, panel md5 matched): registered verdict NOT SHOWN (W cov@30 158,158,146 vs base 135, deltas +23,+23,+11, bar +24=159 missed every seed; W-base CI [2.65,13.31] above 0 so not proved wrong; W-C deltas 130,125,119; 183 wins + 20 own so not inconclusive; N 99,89,96 and C 28,33,27 collapse). Instance 52734191 (RTX 5090 offer 44173814 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 60, rented 10:57:28Z, destroyed 11:27:06Z, ~0.494 h x dph $0.49444 = ~$0.24); 1 rental of max 3; post-destroy 0 rent-brd7 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128. Run wall 20.1 min. No weights saved. See artifacts/claude-brd7-20260926/RESULTS-gpu.md + gpu/.
+total 8640
+-rw-r--r--   1 ben-hannan  staff   678763 Sep 26 07:27 fable-predictions-ledger.md
+drwxr-xr-x@  4 ben-hannan  staff      128 Sep 26 07:27 claude-brd7-20260926
+drwxr-xr-x   5 ben-hannan  staff      160 Sep 26 06:49 claude-e2e02c-20260926
+drwxr-xr-x   6 ben-hannan  staff      192 Sep 26 06:48 claude-e2e02c-dev-20260926
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 26 04:05 claude-bm391-20260926
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 26 01:02 claude-dl3-20260926
+drwxr-xr-x  12 ben-hannan  staff      384 Sep 26 00:59 claude-rd371b-20260926
+drwxr-xr-x   7 ben-hannan  staff      224 Sep 26 00:35 claude-rsn358d-20260926
+drwxr-xr-x   6 ben-hannan  staff      192 Sep 26 00:32 claude-lis319c-20260926
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 26 00:25 claude-bm397t-20260926
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 26 00:06 claude-rsn358c-20260926
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 25 23:36 claude-brd6-20260926
+drwxr-xr-x   5 ben-hannan  staff      160 Sep 25 23:03 claude-rsn358a-20260925
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 25 22:56 claude-e2e382-20260925
+drwxr-xr-x   3 ben-hannan  staff       96 Sep 25 22:54 claude-e2e382-dev-20260925
+drwxr-xr-x   3 ben-hannan  staff       96 Sep 25 22:36 claude-trash-0926
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 25 22:26 claude-brd5-20260926
+drwxr-xr-x   3 ben-hannan  staff       96 Sep 25 21:55 claude-diskcheck-20260926
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 25 21:47 claude-dl2-20260926
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 25 21:37 claude-tgt5-20260926
+drwxr-xr-x   9 ben-hannan  staff      288 Sep 25 21:08 claude-rd378-20260925
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 25 17:56 claude-dl1-20260925
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 25 16:58 claude-bm395-20260925
+drwxr-xr-x  10 ben-hannan  staff      320 Sep 25 16:32 claude-rd371-20260925
+drwxr-xr-x  11 ben-hannan  staff      352 Sep 25 16:22 claude-lis319-20260925
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 25 16:06 claude-blurt5s-20260925
+drwxr-xr-x   8 ben-hannan  staff      256 Sep 25 16:02 claude-bm390-20260925
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 25 15:55 claude-blurt4-20260925
+drwxr-xr-x   5 ben-hannan  staff      160 Sep 25 13:48 claude-rsn353-20260925
+drwxr-xr-x   8 ben-hannan  staff      256 Sep 25 13:42 claude-blurt2-20260925
+drwxr-xr-x   6 ben-hannan  staff      192 Sep 25 12:57 claude-gram364-20260925
+drwxr-xr-x  10 ben-hannan  staff      320 Sep 25 05:33 claude-lis318-20260925
+drwxr-xr-x   5 ben-hannan  staff      160 Sep 25 02:26 claude-rsn356-20260925
+drwxr-xr-x   5 ben-hannan  staff      160 Sep 24 23:15 claude-rsn355-20260925
+drwxr-xr-x   5 ben-hannan  staff      160 Sep 24 23:06 claude-e2e336b-20260925
+drwxr-xr-x   6 ben-hannan  staff      192 Sep 24 22:24 claude-gram360-20260925
+drwxr-xr-x   6 ben-hannan  staff      192 Sep 24 22:03 claude-lis317-20260925
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 24 22:00 claude-blurt1-dev-20260925
+drwxr-xr-x   5 ben-hannan  staff      160 Sep 24 21:18 claude-rsn351-20260925
+=== recent scripts ===
+total 36832
+-rw-r--r--   1 ben-hannan  staff    4573 Sep 24 00:33 claude_mut1_k4.py
+-rw-r--r--   1 ben-hannan  staff    4154 Sep 24 00:33 claude_mut1_k3.py
+-rw-r--r--   1 ben-hannan  staff    4411 Sep 24 00:33 claude_mut1_k2.py
+-rw-r--r--   1 ben-hannan  staff    4346 Sep 24 00:33 claude_mut1_k1.py
+-rw-r--r--   1 ben-hannan  staff   17986 Sep 23 23:17 claude_nb323_turnlog.py
+-rw-r--r--   1 ben-hannan  staff   24021 Sep 23 23:15 claude_nb323_test.py
+-rw-r--r--   1 ben-hannan  staff   15238 Sep 23 22:00 claude_loop274_test.py
+-rw-r--r--   1 ben-hannan  staff   11928 Sep 23 22:00 claude_loop274_agent.py
+-rwxr-xr-x   1 ben-hannan  staff    3592 Sep 23 21:54 claude_f1_runall_mut0.sh
+-rwxr-xr-x   1 ben-hannan  staff    3465 Sep 23 21:54 claude_273_runall_mut0.sh
+-rwxr-xr-x   1 ben-hannan  staff    3151 Sep 23 21:54 claude_292t_runall_mut0.sh
+-rwxr-xr-x   1 ben-hannan  staff   10341 Sep 23 21:54 claude_marks_mut0.py
+-rw-r--r--   1 ben-hannan  staff   28449 Sep 23 15:47 claude_nb321_test.py
+-rw-r--r--   1 ben-hannan  staff   48668 Sep 23 15:46 claude_nb321_store.py
+-rw-r--r--   1 ben-hannan  staff   20765 Sep 23 15:21 claude_nb320_scale.py
+-rw-r--r--   1 ben-hannan  staff   12395 Sep 23 15:14 claude_nb320_workload.py
+-rw-r--r--   1 ben-hannan  staff    6944 Sep 23 15:09 claude_loop273_test.py
+-rw-r--r--   1 ben-hannan  staff    7261 Sep 23 15:09 claude_loop273_agent.py
+drwxr-xr-x  11 ben-hannan  staff     352 Sep 23 14:53 __pycache__
+-rw-r--r--   1 ben-hannan  staff    2630 Sep 23 14:53 claude_f1_runall.sh
+-rw-r--r--   1 ben-hannan  staff    4713 Sep 23 14:52 claude_f1_wall.py
+-rw-r--r--   1 ben-hannan  staff    4169 Sep 23 14:52 claude_f1_joinscore.py
+-rw-r--r--   1 ben-hannan  staff    3137 Sep 23 14:52 claude_f1_convscore.py
+-rw-r--r--   1 ben-hannan  staff    4560 Sep 23 14:52 claude_f1_convrun.py
+-rw-r--r--   1 ben-hannan  staff    1919 Sep 23 14:50 claude_f1_suites.py
+-rw-r--r--   1 ben-hannan  staff    7370 Sep 23 14:50 claude_f1_regscore.py
+-rw-r--r--   1 ben-hannan  staff    5882 Sep 23 14:43 claude_f1_pilot.py
+-rw-r--r--   1 ben-hannan  staff    9062 Sep 23 14:43 claude_loopf1_agent.py
+-rw-r--r--   1 ben-hannan  staff    7191 Sep 23 14:15 claude_convf0_score.py
+-rw-r--r--   1 ben-hannan  staff   45526 Sep 23 14:15 claude_own_m0_build.py
+-rw-r--r--   1 ben-hannan  staff    3940 Sep 23 14:15 claude_convf0_run.py
+-rw-r--r--   1 ben-hannan  staff    8028 Sep 23 14:13 claude_own_m0_check.py
+-rw-r--r--   1 ben-hannan  staff    3470 Sep 23 14:10 claude_292t_panel.sh
+-rw-r--r--   1 ben-hannan  staff    2070 Sep 23 14:10 claude_292t_runall.sh
+-rw-r--r--   1 ben-hannan  staff    6814 Sep 23 14:10 claude_292t_regscore.py
+-rw-r--r--   1 ben-hannan  staff   15958 Sep 23 14:04 claude_join292t_score.py
+-rw-r--r--   1 ben-hannan  staff    4722 Sep 23 14:04 claude_probe280p_score.py
+-rw-r--r--   1 ben-hannan  staff    8008 Sep 23 14:04 claude_join292t_run.py
+-rw-r--r--   1 ben-hannan  staff    2157 Sep 23 14:03 claude_probe280p_run.py
+-rw-r--r--   1 ben-hannan  staff    5299 Sep 23 14:03 claude_292t_282b_agent.py
+-rw-r--r--   1 ben-hannan  staff    5306 Sep 23 14:03 claude_292t_280b_agent.py
+-rw-r--r--   1 ben-hannan  staff    5043 Sep 23 14:03 claude_292t_281_agent.py
+-rw-r--r--   1 ben-hannan  staff   11860 Sep 23 14:02 claude_loop292t_agent.py
+-rwxr-xr-x@  1 ben-hannan  staff    1093 Sep 23 10:02 claude_lis311_start.sh
+-rw-r--r--@  1 ben-hannan  staff   12805 Sep 23 10:02 claude_lis311_server.py
+-rw-r--r--@  1 ben-hannan  staff   16688 Sep 23 10:01 claude_lis311_try.py
+-rw-r--r--@  1 ben-hannan  staff    7631 Sep 23 09:59 claude_lis311_agent.py
+-rwxr-xr-x@  1 ben-hannan  staff    3531 Sep 23 09:58 claude_280p_panel.sh
+-rwxr-xr-x@  1 ben-hannan  staff   12042 Sep 23 09:57 claude_join280p_score.py
+-rw-r--r--@  1 ben-hannan  staff    5588 Sep 23 08:47 claude_292_corrarm_run.py
+-rw-r--r--   1 ben-hannan  staff    9770 Sep 23 08:44 claude_292_score.py
+-rw-r--r--   1 ben-hannan  staff    8158 Sep 23 08:44 claude_292_runall.sh
+-rw-r--r--   1 ben-hannan  staff   15479 Sep 23 08:16 claude_loop292_agent.py
+-rw-r--r--   1 ben-hannan  staff    3542 Sep 23 07:59 claude_280n_panel.sh
+-rw-r--r--   1 ben-hannan  staff   12688 Sep 23 07:59 claude_join280n_score.py
+drwxr-xr-x@ 45 ben-hannan  staff    1440 Sep 23 07:49 scratchpad
+-rw-r--r--   1 ben-hannan  staff   12766 Sep 23 07:30 claude_lis310_test.py
+-rw-r--r--   1 ben-hannan  staff   23088 Sep 23 07:29 claude_lis310_agent.py
+-rw-r--r--   1 ben-hannan  staff   10004 Sep 23 07:29 claude_type270b_panelscore2.py
+[0m
+[0m→ [0mRead handoff/HANDOFF.md
+[0m
+[0m$ [0mls -lt handoff/kit/ handoff/memory/ handoff/replies/ 2>&1 | head -n 100
+echo "=== git stash ==="; git stash list | head
+echo "=== recent commits files ==="; git show --stat HEAD | head -n 100
+handoff/memory/:
+total 720
+-rw-r--r--  1 ben-hannan  staff   1129 Sep 22 20:58 workflows-research-only.md
+-rw-r--r--  1 ben-hannan  staff   1495 Sep 22 20:58 web-trust-and-reading-requests.md
+-rw-r--r--  1 ben-hannan  staff   3126 Sep 22 20:58 web-search-tool-idea.md
+-rw-r--r--  1 ben-hannan  staff   1429 Sep 22 20:58 token-memory-result.md
+-rw-r--r--  1 ben-hannan  staff   5459 Sep 22 20:58 three-modes-goal.md
+-rw-r--r--  1 ben-hannan  staff   1384 Sep 22 20:58 test-time-limit-30min.md
+-rw-r--r--  1 ben-hannan  staff   1701 Sep 22 20:58 teachable-roadmap-fable-review.md
+-rw-r--r--  1 ben-hannan  staff   1540 Sep 22 20:58 teachable-assistant-goal.md
+-rw-r--r--  1 ben-hannan  staff   3872 Sep 22 20:58 talker-route-b.md
+-rw-r--r--  1 ben-hannan  staff    981 Sep 22 20:58 talker-must-be-our-architecture.md
+-rw-r--r--  1 ben-hannan  staff   2232 Sep 22 20:58 subagents-gpt-xhigh.md
+-rw-r--r--  1 ben-hannan  staff    774 Sep 22 20:58 sleep-derived-priority-ruling.md
+-rw-r--r--  1 ben-hannan  staff   1405 Sep 22 20:58 sleep-automatic-mathematical.md
+-rw-r--r--  1 ben-hannan  staff    747 Sep 22 20:58 router-sleep-approved.md
+-rw-r--r--  1 ben-hannan  staff   1229 Sep 22 20:58 rented-cpu-standing-ok.md
+-rw-r--r--  1 ben-hannan  staff   1423 Sep 22 20:58 rented-cpu-slow-for-this-workload.md
+-rw-r--r--  1 ben-hannan  staff   1303 Sep 22 20:58 rental-create-blocked-by-classifier.md
+-rw-r--r--  1 ben-hannan  staff   1221 Sep 22 20:58 proactive-literature-scouting.md
+-rw-r--r--  1 ben-hannan  staff   1540 Sep 22 20:58 pretraining-english-only.md
+-rw-r--r--  1 ben-hannan  staff   1277 Sep 22 20:58 placeholder-english-ok.md
+-rw-r--r--  1 ben-hannan  staff   1137 Sep 22 20:58 parallelize-when-possible.md
+-rw-r--r--  1 ben-hannan  staff   1505 Sep 22 20:58 parallel-opus-build-20260921.md
+-rw-r--r--  1 ben-hannan  staff   1289 Sep 22 20:58 overnight-loop-directive.md
+-rw-r--r--  1 ben-hannan  staff   1814 Sep 22 20:58 outside-review-option.md
+-rw-r--r--  1 ben-hannan  staff   1824 Sep 22 20:58 outside-review-28-adjudication.md
+-rw-r--r--  1 ben-hannan  staff   2328 Sep 22 20:58 opus55-agents-allowed.md
+-rw-r--r--  1 ben-hannan  staff    678 Sep 22 20:58 minimize-usage.md
+-rw-r--r--  1 ben-hannan  staff   4834 Sep 22 20:58 mimo-skill.md
+-rw-r--r--  1 ben-hannan  staff   1401 Sep 22 20:58 milestone2-thinking-websearch.md
+-rw-r--r--  1 ben-hannan  staff    982 Sep 22 20:58 milestone1-notebook-listening.md
+-rw-r--r--  1 ben-hannan  staff  15074 Sep 22 20:58 MEMORY.md
+-rw-r--r--  1 ben-hannan  staff   1706 Sep 22 20:58 learned-reader-decision.md
+-rw-r--r--  1 ben-hannan  staff  10493 Sep 22 20:58 human-learning-redesign.md
+-rw-r--r--  1 ben-hannan  staff   1259 Sep 22 20:58 handoff-copy-box-format.md
+-rw-r--r--  1 ben-hannan  staff   1092 Sep 22 20:58 gpu-only-5070ti.md
+-rw-r--r--  1 ben-hannan  staff   1137 Sep 22 20:58 gpu-budget-cap.md
+-rw-r--r--  1 ben-hannan  staff   1115 Sep 22 20:58 gpt-scouts-20260921.md
+-rw-r--r--  1 ben-hannan  staff   1786 Sep 22 20:58 gpt-bridge-serial-only.md
+-rw-r--r--  1 ben-hannan  staff   2242 Sep 22 20:58 focused-priorities-and-claims.md
+-rw-r--r--  1 ben-hannan  staff   1377 Sep 22 20:58 explain-each-step.md
+-rw-r--r--  1 ben-hannan  staff   1160 Sep 22 20:58 exp46-harden-before-gate.md
+-rw-r--r--  1 ben-hannan  staff   1223 Sep 22 20:58 exp45-noisy-teacher.md
+-rw-r--r--  1 ben-hannan  staff   1434 Sep 22 20:58 exp44-reasoner-skills-router.md
+-rw-r--r--  1 ben-hannan  staff   1681 Sep 22 20:58 exp43j-learned-parity.md
+-rw-r--r--  1 ben-hannan  staff   1592 Sep 22 20:58 exp43i-learned-addressing.md
+-rw-r--r--  1 ben-hannan  staff   1442 Sep 22 20:58 exp43g-transport-router-control.md
+-rw-r--r--  1 ben-hannan  staff   1834 Sep 22 20:58 exp43e-rank4-sleep-confirmed.md
+-rw-r--r--  1 ben-hannan  staff   2066 Sep 22 20:58 exp43-length-gate-and-shared-sleep.md
+-rw-r--r--  1 ben-hannan  staff   1604 Sep 22 20:58 exp42-automatic-sleep-result.md
+-rw-r--r--  1 ben-hannan  staff   1458 Sep 22 20:58 exp29-newnames-result.md
+-rw-r--r--  1 ben-hannan  staff   1474 Sep 22 20:58 exp27-newnames-result.md
+-rw-r--r--  1 ben-hannan  staff   1276 Sep 22 20:58 exp26-probes-result.md
+-rw-r--r--  1 ben-hannan  staff   1450 Sep 22 20:58 exp21-newnames-result.md
+-rw-r--r--  1 ben-hannan  staff   1489 Sep 22 20:58 exp19b-u8-result.md
+-rw-r--r--  1 ben-hannan  staff   1625 Sep 22 20:58 exp19-replay-result.md
+-rw-r--r--  1 ben-hannan  staff   1887 Sep 22 20:58 english-listening-qwen-result.md
+-rw-r--r--  1 ben-hannan  staff   1612 Sep 22 20:58 ears-vocab-and-transformer-ruling.md
+-rw-r--r--  1 ben-hannan  staff   1457 Sep 22 20:58 ears-decisions-20260921.md
+-rw-r--r--  1 ben-hannan  staff   1662 Sep 22 20:58 ear235b-gate-result.md
+-rw-r--r--  1 ben-hannan  staff   1245 Sep 22 20:58 dreamer-checker-idea.md
+-rw-r--r--  1 ben-hannan  staff   2449 Sep 22 20:58 disk-full-agent-limit.md
+-rw-r--r--  1 ben-hannan  staff   1834 Sep 22 20:58 director-role.md
+-rw-r--r--  1 ben-hannan  staff   1277 Sep 22 20:58 demo-requirements-uncle.md
+-rw-r--r--  1 ben-hannan  staff   1056 Sep 22 20:58 decide-better-option.md
+-rw-r--r--  1 ben-hannan  staff   1219 Sep 22 20:58 ct20-v12-result.md
+-rw-r--r--  1 ben-hannan  staff   1210 Sep 22 20:58 creative-stop-toy-result.md
+-rw-r--r--  1 ben-hannan  staff   1018 Sep 22 20:58 conversation-first-priority.md
+-rw-r--r--  1 ben-hannan  staff   4079 Sep 22 20:58 compute-availability.md
+-rw-r--r--  1 ben-hannan  staff   1124 Sep 22 20:58 cardfold-sleep-result.md
+-rw-r--r--  1 ben-hannan  staff   4169 Sep 22 20:58 canonical-operator-roadmap.md
+-rw-r--r--  1 ben-hannan  staff   1256 Sep 22 20:58 borrowed-ears-weights-ok.md
+-rw-r--r--  1 ben-hannan  staff   2991 Sep 22 20:58 benspc-gpu-ops.md
+-rw-r--r--  1 ben-hannan  staff   1058 Sep 22 20:58 benchmark-goal.md
+-rw-r--r--  1 ben-hannan  staff   3801 Sep 22 20:58 ben-vision-20260921.md
+-rw-r--r--  1 ben-hannan  staff   1552 Sep 22 20:58 ben-runs-mimo-agents.md
+-rw-r--r--  1 ben-hannan  staff   2193 Sep 22 20:58 ben-delegation-preference.md
+-rw-r--r--  1 ben-hannan  staff   1513 Sep 22 20:58 ben-decisions-20260922.md
+-rw-r--r--  1 ben-hannan  staff   1012 Sep 22 20:58 baseline-v2-fits.md
+-rw-r--r--  1 ben-hannan  staff   1902 Sep 22 20:58 astra-audit-18.md
+-rw-r--r--  1 ben-hannan  staff    975 Sep 22 20:58 assistant-name-premonition.md
+-rw-r--r--  1 ben-hannan  staff   1373 Sep 22 20:58 ask-fable-max-subagent.md
+-rw-r--r--  1 ben-hannan  staff   1204 Sep 22 20:58 a3-teacher-delay-v2-result.md
+
+handoff/replies/:
+total 256
+-rw-r--r--  1 ben-hannan  staff    4193 Sep 22 21:30 261build.md
+-rw-r--r--  1 ben-hannan  staff    4625 Sep 22 21:30 261build.go2.reply.md
+-rw-r--r--  1 ben-hannan  staff  103453 Sep 22 21:30 261build.go2.err.txt
+-rw-r--r--  1 ben-hannan  staff      39 Sep 22 21:30 261build.go2.done
+-rw-r--r--  1 ben-hannan  staff      63 Sep 22 21:30 261build.go1.reply.md
+
+handoff/kit/:
+total 112
+-rw-r--r--   1 ben-hannan  staff   704 Sep 22 20:58 dialog.py
+-rw-r--r--   1 ben-hannan  staff  1727 Sep 22 20:58 diskscan.py
+-rw-r--r--   1 ben-hannan  staff  1468 Sep 22 20:58 secretscan.py
+-rw-r--r--   1 ben-hannan  staff  6456 Sep 22 20:58 rebuild_kit.py
+-rw-r--r--   1 ben-hannan  staff  2991 Sep 22 20:58 recount260.py
+=== git stash ===
+=== recent commits files ===
+commit 996b9348e5b647a53090707e3a6387fbed9d0add
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Sat Sep 26 01:03:24 2026 -0400
+
+    rent-dl3: replay-into-the-night GPU run (verdict FAIL; F3-F5 pass, F1-F2 fail) + ledger line
+
+ artifacts/claude-dl3-20260926/RESULTS-gpu.md       |   72 +
+ artifacts/claude-dl3-20260926/gpu/dl3_results.json | 9372 ++++++++++++++++++++
+ artifacts/claude-dl3-20260926/gpu/log.txt          |   69 +
+ artifacts/claude-dl3-20260926/gpu/replay_pool.json | 4542 ++++++++++
+ artifacts/fable-predictions-ledger.md              |    4 +
+ 5 files changed, 14059 insertions(+)
+[0m
+[0m$ [0mls -R artifacts/claude-brd7-20260926 2>&1
+echo "---brd7 RESULTS---"
+cat artifacts/claude-brd7-20260926/RESULTS-gpu.md 2>&1 | head -n 200
+echo "=== SEAL check ==="
+ls artifacts/claude-brd7-20260926/*/SEAL* artifacts/claude-brd7-20260926/SEAL* 2>&1
+ls artifacts/claude-e2e02c-20260926/ 2>&1
+cat artifacts/claude-e2e02c-20260926/RESULTS-benspc.md 2>&1 | head -n 200
+gpu
+RESULTS-gpu.md
+
+artifacts/claude-brd7-20260926/gpu:
+brd5_summary.json
+log.txt
+narrow_picks.jsonl
+streams.json
+---brd7 RESULTS---
+# brd-7: fresh-panel confirmation GPU result (rental, 2026-09-26)
+
+Registered rule: artifacts/claude-brd7-20260926/PASSMARKS-brd7.md (origin/main).
+Code: scripts/claude_brd5.py + scripts/claude_blurt1.py + scripts/claude_blurt2.py + scripts/claude_blurt4.py + scripts/claude_blurt5s.py + scripts/claude_cre333b_agent.py from origin/main, UNMODIFIED, run only.
+Command: `python -B scripts/claude_brd5.py --model BASE --out gpu --temps 1.0,1.5 --dev-puzzles artifacts/claude-blurt1-dev-20260925/puzzles.jsonl --test-puzzles artifacts/claude-brd7-20260926/test_puzzles.jsonl --train-seed 9`
+BASE = /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc, commit 87179e5c1f455ef22e6223592d2d61351b525bfc (expected hash, plain MiniCPM5-1B, no other model downloaded).
+Selftest: `python -B scripts/claude_brd5.py --selftest` printed "selftest ok".
+Test panel md5: 6977ea8626e47c004a25b1e495743b1d (matched, run proceeded).
+GPU: RTX 5090 (vastai offer 44173814, KR, reliability 0.9981, 16 cores, 60 GB disk, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel, torch 2.8.0+cu128). Run wall: 20.1 min (script-reported; rental 10:57:28Z-11:27:06Z, ~0.494 h x dph $0.49444 = ~$0.24 of $1.00 budget, 1 rental). Instance destroyed, confirmed gone (`vastai show instances` empty).
+No weights saved or pushed. No secrets. Fictional names only (none used).
+
+## brd5_summary.json (whole file)
+
+```json
+{
+ "dev_missed": 58,
+ "dev_lucky_by_temp": {
+  "1.0": 24,
+  "1.5": 50
+ },
+ "temp_chosen": 1.5,
+ "n_train": 400,
+ "n_test": 240,
+ "temp": 1.5,
+ "n_test_3num": 160,
+ "base": {
+  "cov@1": 12,
+  "cov@5": 39,
+  "cov@10": 76,
+  "cov@30": 135,
+  "lucky": 330
+ },
+ "own": 20,
+ "wins": 183,
+ "examples": 203,
+ "N_distinct_wins": 20,
+ "N_distinct_puzzles": 40,
+ "W_distinct_puzzles": 203,
+ "W_seed0": {
+  "cov@1": 18,
+  "cov@5": 75,
+  "cov@10": 110,
+  "cov@30": 158,
+  "lucky": 590
+ },
+ "W_seed1": {
+  "cov@1": 20,
+  "cov@5": 64,
+  "cov@10": 95,
+  "cov@30": 158,
+  "lucky": 564
+ },
+ "W_seed2": {
+  "cov@1": 21,
+  "cov@5": 68,
+  "cov@10": 100,
+  "cov@30": 146,
+  "lucky": 547
+ },
+ "N_seed0": {
+  "cov@1": 26,
+  "cov@5": 65,
+  "cov@10": 80,
+  "cov@30": 99,
+  "lucky": 690
+ },
+ "N_seed1": {
+  "cov@1": 26,
+  "cov@5": 50,
+  "cov@10": 65,
+  "cov@30": 89,
+  "lucky": 808
+ },
+ "N_seed2": {
+  "cov@1": 23,
+  "cov@5": 56,
+  "cov@10": 71,
+  "cov@30": 96,
+  "lucky": 686
+ },
+ "C_seed0": {
+  "cov@1": 21,
+  "cov@5": 25,
+  "cov@10": 27,
+  "cov@30": 28,
+  "lucky": 633
+ },
+ "C_seed1": {
+  "cov@1": 20,
+  "cov@5": 25,
+  "cov@10": 28,
+  "cov@30": 33,
+  "lucky": 640
+ },
+ "C_seed2": {
+  "cov@1": 20,
+  "cov@5": 23,
+  "cov@10": 23,
+  "cov@30": 27,
+  "lucky": 603
+ },
+ "ci95_W_minus_N_cov30_pct": [
+  20.03,
+  29.34
+ ],
+ "ci95_W_minus_base_cov30_pct": [
+  2.65,
+  13.31
+ ],
+ "ci95_N_minus_base_cov30_pct": [
+  -22.78,
+  -10.53
+ ],
+ "minutes": 20.1
+}
+```
+
+## Registered marks (PASSMARKS-brd7.md clauses with numbers)
+
+- PASS: W's cov@30 >= base cov@30 + 24 (= 159) in EVERY seed: W = 158, 158, 146 vs base 135 (deltas +23, +23, +11) -- FAILS (none reaches 159). 95% interval for W - base = [2.65, 13.31], above 0 -- holds. W >= C + 24 every seed: C = 28, 33, 27, W - C = 130, 125, 119 -- holds. First clause fails, so NO PASS.
+- Proved wrong: upper 95% bound of W - base below +5 points (12 puzzles): upper bound 13.31 > 5 -- NOT proved wrong.
+- Inconclusive: 183 won practice puzzles (>= 40) and 20 own greedy-correct answers (>= 10) -- NOT inconclusive.
+- Otherwise: NOT SHOWN. Registered verdict: NOT SHOWN.
+- Reported, not marks: cov@1 base 12 / W 18,20,21 / N 26,26,23 / C 21,20,20; W - N interval [20.03, 29.34]; N collapses coverage (89-99 vs base 135); C collapses further (27-33).
+=== SEAL check ===
+RESULTS-benspc.md
+run
+score
+zsh:5: no matches found: artifacts/claude-brd7-20260926/*/SEAL*
+# 02c-benspc RESULTS: Premonition 0.2c registered run on BensPC (COMPLETE, 4b not measured)
+
+Verdict: COMPLETE. Every registered step 1, 2, 3 (DEV GATE PASS), 4 (sleep 3/3 nights),
+4a (activation pass=true), 5 (bank D X/G/T + score), 6 (chat X/T/G, creative X/T + scores),
+7a (params) ran once each to exit 0 with no traceback. All GPU work finished 10:47 UTC,
+inside the 10:50 UTC cap: NOT partial. Step 4b (GSM8K/MMLU lanes) NOT run: step 6 ended
+10:44 UTC, past the 09:30 UTC cutoff, so H5/H6 are "not measured" (open, not a pass).
+Blind-judge rows (H1-H4, C1, C2, K1, S1) are pending off-box judging; only script counts
+are reported below. No reply is quoted; no bank/panel item opened.
+
+Machine: BensPC, NVIDIA GeForce RTX 5070 Ti 16303 MiB, driver 591.86, CUDA 13.1.
+Dollars: $0, no rental. BACKUP condition held: no rent-02c run on origin/builder-outbox
+(no run/, no RESULTS-rent.md) and no live rent-02c rental (only rent-bm391) at launch.
+VRAM peak observed: 9151 MiB (creative X tail); sleep 5935, bank X 5645, bank G 5679,
+bank T 5697, chat X 6005, chat T 3579, chat G 6221 MiB. Idle baseline 423 MiB.
+
+## Step 1: seals + selftests (tree C:/Users/benja/lis301/work/e2e02c/tree)
+- SEAL-code.sha256.txt: 347/347 OK (git-bash sha256sum -c, exit 0).
+- Bank D SEAL.sha256.txt: 3/3 OK (turns.jsonl, truth.jsonl, README.md).
+- Panel02c SEAL.sha256.txt: 2/2 OK (chat/items.jsonl, creative/items.jsonl).
+- claude_e2e382_test.py: 10/10 OK. claude_e2e383_test.py: 13/13 OK.
+- claude_sleep02c.py --selftest: 9/9 OK. claude_fix02c_test.py: 12/12 OK.
+- claude_params02c.py --selftest: 1/1 OK.
+- READER C:/Users/benja/lis301/work/run/merged model.safetensors sha256
+  b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890 (match).
+- READER319 C:/Users/benja/lis319/work/run/merged model.safetensors sha256
+  e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76 (match).
+- MiniLM present; route122 check printed a route (D8, conf 0.9732).
+- W CHECK: `W scripts/claude_winnl2_test.py probe` -> "ok": true, "crlf": 0.
+
+## Step 2: sleep base checkpoint
+- {"stage": "base", "seed": 4102, "seconds": 12.9, "fresh_hop1to3": 1.0,
+  "fresh_depth10": 1.0, "big_depth10": 1.0, "unknown_rate": 1.0}
+- runs/base-seed4102.pt sha256 4655b7610b50e91b57dbb6a780f1935dba8863e3810c4877408d901f1be5edb3.
+
+## Step 3: DEV GATE (PASS)
+- Dev sleep (1 night, 10 day, 10 test, 3 chat): exit 0, no traceback; 1 night,
+  tries=310 > 0; adapter saved (16,568,145 bytes dev adapter, not pushed).
+- Dev bank X: exit 0, no traceback; wrote arm_X.jsonl rows=276 lives=10.
+- Dev chat X: exit 0, no traceback; chat_X.jsonl 10 rows (3/3 items).
+- Dev sleep_X.jsonl: 30 rows, checkpoint_exists true 30/30.
+
+## Step 4: sleep (registered, 3 nights, 150 day, TEST 100, chat 40)
+- Base: lucky 74, reached 39, greedy 5, harm_right 201, chat_solved 0.
+- Night 1: tries 4650, day 150, day_greedy_right 1, day_reached 66, examples 66,
+  optimizer_steps 27, weight_change_l2 2.609708, test lucky/reached/greedy 116/47/7,
+  harm lost/gained/net 7/29/-22 right 223, kl 0.03273, chat_solved 0, minutes 11.1,
+  adapter_saved true, sha256 92ca438cf0fcd2c68cf324b678e8914f6740b059501faf610812efa3b5496ca9,
+  check_greedy_right 0, active_after_reload true.
+- Night 2: tries 4650, day_greedy_right 11, day_reached 83, examples 83, steps 33,
+  weight_change_l2 2.080267, test 140/57/11, harm 10/48/-38 right 239, kl 0.05355,
+  chat_solved 0, minutes 8.1, adapter_saved true,
+  sha256 533bb7220101238d32c3cc62841b85c063d8dd8d950ed4f25f96aacbe13a81a3,
+  check_greedy_right 2, active_after_reload true.
+- Night 3: tries 4650, day_greedy_right 14, day_reached 95, examples 95, steps 36,
+  weight_change_l2 2.173805, test 192/61/12, harm 10/47/-37 right 238, kl 0.06264,
+  chat_solved 0, minutes 8.2, adapter_saved true,
+  sha256 a33211dc9bdb4e26bc7161b62147cb4dfc04fb605ba1aecbb26948f86e7936f5,
+  check_greedy_right 0, active_after_reload true.
+- Adapter (NOT pushed): run/sleep/adapter02c.pt 16,568,145 bytes,
+  sha256 a33211dc9bdb4e26bc7161b62147cb4dfc04fb605ba1aecbb26948f86e7936f5.
+  run/sleep/adapter02c.json 395 bytes,
+  sha256 07d3c41eecc6f29f9e1df24c4612456c7406971befacba9bef739bebb5afb73a (pushed).
+
+## Step 4a: activation check (fresh process)
+- {"check_activation": {"night": 3, "puzzles": 10, "on_equals_saved": 10,
+  "on_differs_from_off": 10, "on_again_equals_on": 10, "pass": true}}.
+
+## Step 5: bank D (40/40 lives each) + score
+- X: wrote arm_X.jsonl rows=953 lives=40. First lines: sleepcheck line then
+  "twinb: the plain twin is Twin336b (enable_thinking=False)". No refusing-to-load error.
+- G: wrote arm_G.jsonl rows=860 lives=40. Same first two lines.
+- T: wrote arm_T.jsonl rows=658 lives=40. Same first two lines. sleep_T.jsonl absent (expected).
+- Scorer mechanical per arm (asks ALL / user_rows 658 each):
+  X: ABSTAIN 94, CONFIRM_OTHER 69, RIGHT 29, RIGHT_CONFIRM 34, WRONG_CANDIDATE 18;
+    edit: ABSTAIN 8, CONFIRM_OTHER 10, RIGHT 1, RIGHT_CONFIRM 2, WRONG_CANDIDATE 9;
+    never_told: CONFIRM_OTHER 16, RIGHT 18, WRONG_CANDIDATE 2;
+    one_hop RIGHT 6 RIGHT_CONFIRM 27; two_hop RIGHT 1 RIGHT_CONFIRM 3;
+    confirm_rows 295, facts_saved 224/369, distinct_replies 477,
+    ms_median 1877.2, ms_p90 2768.6.
+  G: ABSTAIN 109, CONFIRM_OTHER 41, RIGHT 53, RIGHT_CONFIRM 24, WRONG_CANDIDATE 17;
+    edit: ABSTAIN 11, CONFIRM_OTHER 6, RIGHT 3, RIGHT_CONFIRM 1, WRONG_CANDIDATE 9;
+    never_told: CONFIRM_OTHER 3, RIGHT 33;
+    confirm_rows 202, facts_saved 219/369, distinct_replies 468,
+    ms_median 1515.5, ms_p90 2491.7.
+  T: ABSTAIN 42, RIGHT 28, WRONG_CANDIDATE 174;
+    edit: ABSTAIN 8, RIGHT 3, WRONG_CANDIDATE 19;
+    never_told: RIGHT 12, WRONG_CANDIDATE 24;
+    confirm_rows 0, facts_saved 0/369, distinct_replies 312,
+    ms_median 906.5, ms_p90 1318.6.
+- Sleep logs: sleep_X.jsonl 120 rows, checkpoint_exists true 120, attempted true 0;
+  sleep_G.jsonl 120 rows, true 120, attempted true 0.
+- EP382 logs: none written (OUT/ep382_X.jsonl, ep382_chat_X.jsonl,
+  ep382_creative_X.jsonl all absent, 0 rows). Expected: sealed build_02c has
+  MEM02C=0 (382b memory frozen out), so no ep382_stats exist. GRAM360 logs present
+  (gram360_parts_X.jsonl 295,743 bytes; gram360_parts_G.jsonl 283,716 bytes).
+
+## Step 6: panels (60/60 items each) + scores
+- Chat X (--model READER319): 60/60 conversations, exit 0, no traceback.
+- Chat T: 60/60, exit 0, no traceback.
+- Chat G: 60/60, exit 0, no traceback.
+- Creative X (--model READER319): 60/60 items, exit 0, no traceback.
+- Creative T: 60/60 items, exit 0, no traceback.
+- Chat panel summary (items 60): X messages 335, distinct_replies 271,
+  think_turns 33, think_numeric 27, think_numeric_right 10, ask_known 8
+  (ask_known_right 3), ask_unknown 6 (dont_know 6), ms_median 3084.0;
+  T think_numeric_right 11, ask_known_right 0, ask_unknown_dont_know 4, ms_median 3026.5;
+  G think_numeric_right 12, ask_known_right 2, ask_unknown_dont_know 6, ms_median 2384.3.
+- Creative panel summary (items 60): X messages 92, distinct_replies 81,
+  puzzles 10, puzzles_solved 0, ms_median 3566.8;
+  T messages 92, distinct_replies 90, puzzles_solved 0, ms_median 1519.9.
+
+## Step 7a: params (CPU)
+- {"generator": {"params": 1080632832, "bytes": 2161265664, "files": 1},
+  "reader_X": {"params": 1080632832, "bytes": 2161265664, "files": 1},
+  "reader_G": {"params": 1080632832, "bytes": 2161265664, "files": 1},
+  "adapter": {"params": 0, "bytes": 0}, "total_params": 3241898496}.
+  (Adapter 0/0: script reads file headers only; the LoRA adapter's 16,568,145 bytes
+  are reported in step 4 above, not counted here.) Joined assistant is ~2B resident
+  per arm (generator + reader), ~3.24B total across the three model files.
+
+## Step 4b: Benchmarks lanes (NOT MEASURED)
+- Not run: step 6 ended 10:44 UTC, past the 09:30 UTC cutoff. H5/H6 open, not a pass.
+  No FETCH line, no run02c/ outputs.
+
+## Script-mechanical mark readings (judge rows pending)
+- L1 (3/3 nights tries>0, examples>0, weight change>0, reload exact): 3/3 PASS.
+- L2 (TEST right after night 3 >= 1.5x before): greedy 12 vs 5 = 2.4x PASS
+  (reached 61 vs 39 = 1.56x; lucky 192 vs 74).
+- L3 (drops >15% vs prior night, <= 1 of 3): greedy 5->7->11->12, no drops PASS.
+- L4 (dl-1 300-item net flips <= 5 every night and <= 0 after night 3):
+  net -22/-38/-37 PASS (lost 7/10/10).
+- L5 (TEST reached after night 3 >= before): 61 >= 39 PASS.
+- L6 (items lost after night 3 <= 20): 10 PASS.
+- Q1 (chat think-numeric right X-G >= +3): 10-12 = -2 (count; bar not met).
+- Q2 (X-T >= 0): 10-11 = -1 (count; bar not met).
+- K2 (creative puzzles solved X >= T): 0 vs 0 (count; tie).
+- ME1 (bank edit asks right X >= G): X 1+2=3, G 3+1=4 (count).
+- Y1 mechanical (bank ALL RIGHT+RIGHT_CONFIRM X-G): X 63, G 77, diff -14 (count).
+- H1/H2/H3/H4, C1/C2, K1, S1: pending blind judges (packets in score/).
+
+## Integrity
+- CRLF ("\r\n") byte count: run/ 0 (14 files), score/ 0 (26 files), dev 0 (5 files).
+- No traceback in any registered log. One non-registered first attempt (dev sleep
+  without W) crashed with TurnLog323Corrupt; disclosed under Deviations, full text
+  in the BensPC dev_sleep.log (overwritten by the registered attempt's log).
+- Copied back and hash-checked on the Mac (sha256 table in repo command log):
+  run/ 14 files, score/ 26 files, dev 5 files; adapter02c.pt named above, never pushed.
+
+## Wall time per step (UTC 2026-09-26)
+- Seals+tests 07:11; base checkpoint 07:11:50-07:12:05; dev sleep 07:20:22-~07:26;
+  dev bank X 07:27:09-~07:36; dev panel X 07:36:15-~07:41;
+  sleep reg 07:41:50-08:21:23; 4a 08:21:34-08:24:58;
+  bank X 08:25:21-08:49:57; bank G 08:50:07-~09:13; bank T 09:13:20-09:25:44;
+  bank score 09:25:56-09:28; chat X 09:28:24-09:50:36; chat T 09:50:53-10:04:13;
+  chat G 10:04:22-10:22:35; creative X 10:22:52-10:38:32; creative T 10:39:05-10:44:32;
+  chat score ~10:39-10:41 (concurrent, CPU-only); creative score + 7a 10:44:44-10:46:50;
+  copy-back 10:47-10:49. GPU idle at 10:47. Inside the 10:50 cap.
+
+## Deviations (all disclosed; code never edited)
+- D1 WINNL: every python runner command was prefixed with sealed
+  scripts/claude_winnl2_wrap.py (W), the repo's tested Windows-newline shim
+  (precedent: gram-364-benspc VERIFY-364). Without it the registered run is
+  impossible on Windows: the first attempt (dev sleep, exact rent-02c command)
+  loaded both models then crashed at the first turnlog append with
+  "TurnLog323Corrupt: turnlog323: read-back mismatch" (text-mode \r\n vs binary
+  read-back). W makes Windows writes byte-identical to Linux (CRLF count 0 above).
+- D2 LAUNCH: long steps were launched via Win32_Process Create (survives SSH exit;
+  git-bash nohup/background procs are killed when the SSH session closes on this
+  box) with PID recorded per step; each step ran alone on the GPU; polls only read
+  log tails and nvidia-smi. Stop-by-exact-PID was available throughout, never needed.
+- D3 CONCURRENCY: chat --score (CPU-only, no model) ran concurrently with creative T
+  to fit the 10:50 cap; GPU stayed on creative T throughout (2953 MiB, single python).
+- Bank X used --model READER and chat/creative X used --model READER319 exactly as
+  rent-02c steps 5-6 specify (arm build_02c selects the r319 loop internally).
+[0m
+[0m$ [0mls artifacts/ | tail -n 30
+echo "=== PASSMARKS/SEAL search ==="
+find artifacts -maxdepth 2 -name "PASSMARKS*" -o -name "SEAL*" | head -n 40
+echo "=== recent modified ==="
+find artifacts scripts -type f -mmin -200 2>/dev/null | head -n 50
+echo "=== design board ==="
+ls design/v3/30-modes/ | tail -n 20
+echo "=== ledger tail ==="
+tail -n 20 artifacts/fable-predictions-ledger.md
+echo "=== runs ==="
+ls -lt runs/ 2>&1 | head -n 20
+echo "=== scratchpad queue ==="
+ls scratchpad/mimo/queue/ 2>&1 | head -n 20; ls scratchpad/ 2>&1 | head -n 20
+fable-talker101-20260921
+fable-talker120-20260922
+fable-talker120b-20260922
+fable-talker120c-20260922
+fable-talker120d-20260922
+fable-talker24-20260920
+fable-thename162-20260922
+fable-thought49-20260921
+fable-thought62-20260921
+fable-title157c-20260922
+fable-transport43g-20260921
+fable-turns84-20260921
+fable-twohop160c-20260922
+fable-typo165-20260922
+fable-username173-20260922
+fable-username173b-20260922
+fable-verb167-20260922
+fable-verb167b-20260922
+fable-verb167d-20260922
+fable-webfix89-20260921
+fable-whcity158c-20260922
+fable-whrel158b-20260922
+fable-widelengths43k-20260921
+fable-wire51-20260921
+fable-wire57-20260921
+fable-wordmatch149-20260922
+fable-writescreen209-20260922
+fable-yesno154-20260922
+fable-yesno154d-20260922
+or-keycheck-20260924
+=== PASSMARKS/SEAL search ===
+artifacts/fable-doubt146b-20260922/PASSMARKS.md
+artifacts/fable-doubt146b-20260922/SEAL.sha256.txt
+artifacts/fable-redteam110-20260921/PASSMARKS.md
+artifacts/fable-redteam110-20260921/SEAL.sha256.txt
+artifacts/fable-bench65-20260921/PASSMARKS.md
+artifacts/fable-bench65-20260921/SEAL.sha256.txt
+artifacts/claude-firstnamepanel236-20260922/SEAL.sha256.txt
+artifacts/fable-talker24-20260920/SEALED-SPLITS.md
+artifacts/claude-chain231b-20260922/PASSMARKS.md
+artifacts/claude-chain231b-20260922/SEAL.sha256.txt
+artifacts/claude-comma263-20260923/PASSMARKS.md
+artifacts/claude-comma263-20260923/SEAL.sha256.txt
+artifacts/fable-lengthgate43-20260921/PASSMARKS-43D.md
+artifacts/fable-lengthgate43-20260921/PASSMARKS.md
+artifacts/fable-lengthgate43-20260921/SEAL-43C.sha256.txt
+artifacts/fable-lengthgate43-20260921/SEAL.sha256.txt
+artifacts/fable-lengthgate43-20260921/PASSMARKS-43C.md
+artifacts/fable-lengthgate43-20260921/SEAL-43D.sha256.txt
+artifacts/fable-ears119f-20260922/PASSMARKS.md
+artifacts/fable-ears119f-20260922/SEAL.sha256.txt
+artifacts/fable-ears119g-20260922/PASSMARKS.md
+artifacts/fable-ears119g-20260922/SEAL.sha256.txt
+artifacts/claude-namecheck230b-20260922/PASSMARKS.md
+artifacts/claude-namecheck230b-20260922/SEAL.sha256.txt
+artifacts/claude-namecheck230c-20260922/PASSMARKS.md
+artifacts/claude-namecheck230c-20260922/SEAL.sha256.txt
+artifacts/claude-join280m-20260923/PASSMARKS.md
+artifacts/claude-join280m-20260923/SEAL.sha256.txt
+artifacts/claude-merge292-20260923/PASSMARKS.md
+artifacts/claude-merge292-20260923/SEAL.sha256.txt
+artifacts/fable-session152-20260922/PASSMARKS.md
+artifacts/fable-session152-20260922/SEAL.sha256.txt
+artifacts/claude-own-o0b-20260923/PASSMARKS.md
+artifacts/claude-own-o0b-20260923/SEAL.sha256.txt
+artifacts/claude-own-o0c-20260923/PASSMARKS.md
+artifacts/claude-own-o0c-20260923/SEAL.sha256.txt
+artifacts/fable-hedgecase150d-20260922/PASSMARKS.md
+artifacts/fable-hedgecase150d-20260922/SEAL.sha256.txt
+artifacts/fable-loop96-20260921/PASSMARKS.md
+artifacts/fable-loop96-20260921/SEAL.sha256.txt
+=== recent modified ===
+artifacts/claude-brd7-20260926/gpu/streams.json
+artifacts/claude-brd7-20260926/gpu/log.txt
+artifacts/claude-brd7-20260926/gpu/narrow_picks.jsonl
+artifacts/claude-brd7-20260926/gpu/brd5_summary.json
+artifacts/claude-brd7-20260926/RESULTS-gpu.md
+artifacts/fable-predictions-ledger.md
+artifacts/claude-e2e02c-dev-20260926/arm_X.jsonl
+artifacts/claude-e2e02c-dev-20260926/chat_X.jsonl
+artifacts/claude-e2e02c-dev-20260926/sleep/adapter02c.json
+artifacts/claude-e2e02c-dev-20260926/sleep/sleep02c_results.json
+artifacts/claude-e2e02c-dev-20260926/sleep_X.jsonl
+artifacts/claude-e2e02c-20260926/score/judge_asks_G.jsonl
+artifacts/claude-e2e02c-20260926/score/chat_G.jsonl
+artifacts/claude-e2e02c-20260926/score/grammar_T.jsonl
+artifacts/claude-e2e02c-20260926/score/chat_X.jsonl
+artifacts/claude-e2e02c-20260926/score/judge_asks_X.jsonl
+artifacts/claude-e2e02c-20260926/score/chat_pair_T.jsonl
+artifacts/claude-e2e02c-20260926/score/grammar_creative_X.jsonl
+artifacts/claude-e2e02c-20260926/score/judge_saves_T.jsonl
+artifacts/claude-e2e02c-20260926/score/creative_X.jsonl
+artifacts/claude-e2e02c-20260926/score/judge_saves_X.jsonl
+artifacts/claude-e2e02c-20260926/score/creative_T.jsonl
+artifacts/claude-e2e02c-20260926/score/mechanical.json
+artifacts/claude-e2e02c-20260926/score/summary_creative.json
+artifacts/claude-e2e02c-20260926/score/chat_pair_G.jsonl
+artifacts/claude-e2e02c-20260926/score/chat_key_T.json
+artifacts/claude-e2e02c-20260926/score/judge_saves_G.jsonl
+artifacts/claude-e2e02c-20260926/score/grammar_chat_X.jsonl
+artifacts/claude-e2e02c-20260926/score/creative_key.json
+artifacts/claude-e2e02c-20260926/score/judge_asks_T.jsonl
+artifacts/claude-e2e02c-20260926/score/chat_T.jsonl
+artifacts/claude-e2e02c-20260926/score/grammar_X.jsonl
+artifacts/claude-e2e02c-20260926/score/creative_judge.jsonl
+artifacts/claude-e2e02c-20260926/score/chat_turns_X.jsonl
+artifacts/claude-e2e02c-20260926/score/summary_chat.json
+artifacts/claude-e2e02c-20260926/score/grammar_G.jsonl
+artifacts/claude-e2e02c-20260926/score/chat_key_G.json
+artifacts/claude-e2e02c-20260926/RESULTS-benspc.md
+artifacts/claude-e2e02c-20260926/run/chat_G.jsonl
+artifacts/claude-e2e02c-20260926/run/arm_X.jsonl
+artifacts/claude-e2e02c-20260926/run/arm_G.jsonl
+artifacts/claude-e2e02c-20260926/run/chat_X.jsonl
+artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.json
+artifacts/claude-e2e02c-20260926/run/sleep/sleep02c_results.json
+artifacts/claude-e2e02c-20260926/run/creative_X.jsonl
+artifacts/claude-e2e02c-20260926/run/creative_T.jsonl
+artifacts/claude-e2e02c-20260926/run/sleep_G.jsonl
+artifacts/claude-e2e02c-20260926/run/sleep_X.jsonl
+artifacts/claude-e2e02c-20260926/run/chat_T.jsonl
+artifacts/claude-e2e02c-20260926/run/gram360_parts_X.jsonl
+=== design board ===
+86-simple-english-reading-data-muse.md
+87-own-small-lm-from-scratch-research-muse.md
+88-demo-rehearsal-transcript-muse.md
+89-web-quarantine-fixes-muse.md
+90-integrated-loop-muse.md
+91-fakeears-guard-muse.md
+92-fable-edit-scale-muse.md
+93-daemon-soak-muse.md
+94-reading-panel-muse.md
+95-ears47-fail-diagnosis-muse.md
+96-loop-gaps-closed-muse.md
+97-relcanon-independent-panel-muse.md
+98-redteam-integrated-agent-muse.md
+99-self-questions-muse.md
+decided-inputs-fable.md
+gpt-xhigh-bored-mode.md
+gpt-xhigh-creative-mode.md
+gpt-xhigh-working-mode.md
+review-20260922-improvements.md
+shared-brief.md
+=== ledger tail ===
+- brd5 GPU OUTCOME (2026-09-26, registered run of brd-5 breadth-vs-newness, rental label rent-brd5, unmodified origin/main code): instance 52678258 RTX 5090 offer 44173765 rel 0.9985 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime, running ~2 min after create, destroyed after copy-back, ~0.46 h x $0.5037/h = ~$0.23 (budget $1.00, credit 8.94 at start; 1 rental, no re-rents); post-destroy 0 rent-brd5 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc (no other model). Selftest ok; test-panel md5 968b9f2f...185050 verified on rental. DEV temp 1.5 (46 vs 45 on 58 missed). Base cov@30 123/240; own 20, wins 167, examples 187; W cov@30 144/145/136; N 91/83/97 (20 distinct wins, 40 distinct puzzles); C 22/22/18; CI W-N [16.52,26.15]pp. PASS sub-conditions all TRUE (per-seed gaps +53/+62/+39, CI above 0); proved-wrong FALSE (upper 26.15); but INCONCLUSIVE fires (no W seed >= base+24=147). Registered verdict INCONCLUSIVE. Wall 20.0 min, no weights saved. gpu/ (brd5_summary.json + streams.json + narrow_picks.jsonl 20 lines + log.txt) md5-verified before destroy. Code unedited. See artifacts/claude-brd5-20260926/RESULTS-gpu.md.
+- rent-382b GPU OUTCOME (2026-09-26, registered run 382b Premonition 0.2 candidate, rental label rent-382b, origin/main code + builder-outbox tree): instance 52674739 RTX 5090 offer 43982846 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 80 GB, running 01:16:34Z, destroyed ~02:56Z, ~1.64 h x $0.50370/h = ~$0.83 (budget $2.50, credit 9.77 at start; 1 rental, no re-rents); post-destroy 0 rent-382b live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, route122 ok. Seals all OK, e2e382 10/10, e2e383 13/13. Base seed4102 13.2 s, pt sha 1dfd95f5e6917cb5a5a73a408456555e27f4706a5bfae752cd0b0b632db63c86. INCOMPLETE: READER 2 GB upload infeasible in TIME CAP (~6 MB/min, 16/104 chunks; 3+ parallel scp "Result too large"; projected 7.3 h). No DEV gate, no E/G/R/ER, no scorer, no panel scores, no EP382/sleep logs. Partial: Bank C T arm_T 653 rows 40 lives; T chat 318 rows 60/60; T creative 91 rows 60/60; copied back verified before destroy. Code unedited on rental; Mac additive only (new RESULTS-rent.md + run/arm_T,chat_T,creative_T). See artifacts/claude-e2e382-20260925/RESULTS-rent.md.
+- G0 OUTCOME (2026-09-26, rsn-358a loop vs plain general puzzles, BensPC RTX 5070 Ti shared, unmodified origin/main code, seals 14/14 + 1/1 OK): practised-size both-arms>=210/300 in >=2 of 3 kinds: s1 sums 300/300 grids 240/243 numbers 1/3 MET; s2 sums 300/300 grids 244/248 numbers 2/4 MET. Numbers unsolved by all 4 runs.
+- G1 OUTCOME (2026-09-26, rsn-358a bigger tests loop-minus-plain, 300 each, each eval once): s1 sums6 +59 grids6 +67 numbers5 0 PASS; s2 sums6 -11 grids6 +76 numbers5 +2 FAIL (needs +30 on 2 of 3 and >=-10 on third; only grids6 hits). Registered verdict FAIL (G0 met both seeds, G1 fails s2).
+- G2 OUTCOME (2026-09-26, rsn-358a practised-size loop-minus-plain): s1 0/+3/+2 PASS; s2 0/+4/+2 PASS (all >= -10).
+- G3 OUTCOME (2026-09-26, rsn-358a stop rule own-stop vs fixed-16, report right_v1_rule): s1 256>=251 270>=266 1>=-4 mean 8.82>7.14 PASS; s2 244>=239 265>=262 2>=-4 mean 8.01>6.52 PASS. Proved-wrong clause NOT triggered (s1 +59/+67, s2 +76). Train 32.2/25.9/32.9/25.8 min, GPU $0, no OOM, weights BensPC-only. See artifacts/claude-rsn358a-20260925/RESULTS.md.
+- rsn-358a CORRECTION (2026-09-26, builder): the G3 line above says weights BensPC-only; after Mac disk space freed up (df 11 GB free), all 4 final.pt were also copied to ~/premonition-models/rsn358a/<run>/final.pt with sha256 matching SEAL-run.sha256.txt (RESULTS.md checkpoint section updated). Nothing else changes; verdict stays FAIL.
+- brd6 GPU OUTCOME (2026-09-26, registered run of brd-6 more-distinct-won-puzzles at equal exposure, rental label rent-brd6, unmodified origin/main code): instance 52683960 RTX 5090 offer 45669284 rel 0.9975 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 80 GB, created 03:00:40Z, running ~4 min after create, run launched 03:08:20Z detached via setsid, destroyed 03:35:25Z, ~0.58 h x $0.469/h = ~$0.27 (budget $1.00, credit 7.48 at start; 1 rental, no re-rents); post-destroy 0 rent-brd6 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc (no other model). Selftest ok; test-panel md5 018f09ff751477d0b9b001ec78ad2ab2 verified on rental. DEV temp 1.5 (47 vs 41 on 58 missed). Base cov@30 108/240; W4 examples 199 (own 20 + wins 179), W8 examples 398 (own 33 + wins 365), 597 passes and 75 optimizer steps each, matched len 7.74 and 3num share 0.859. cov@30 W4 162/159/160, W8 161/160/147 (seed diffs -1/+1/-13, need >= +12 every seed: 0 of 3); CI W8-W4 [-5.72, 2.09]pp. PASS FALSE; proved-wrong TRUE (upper 2.09 < 2.5); NOT inconclusive (W8 398 >= 300, W4-base lower 15.79 > 0). Registered verdict PROVED WRONG. Wall 20.8 min, no weights saved. gpu/ (brd6_summary.json + streams.json + practice.jsonl + log.txt) copied back before destroy. Code unedited. See artifacts/claude-brd6-20260926/RESULTS-gpu.md.
+- V OUTCOME (2026-09-26, rsn-358c1 answer-cell stop, Mac CPU torch, unmodified origin/main code from git-archive extract, seal-c1 7/7 OK, smoke ok, checkpoints ~/premonition-models/rsn358a/<run>/final.pt sha-verified with plain-s2 65-char typo accepted per rule): practised-size plain+loop-fixed each >=210/300 on sums4 and grids5: s1 sums4 300/300 grids5 255/256 MET; s2 sums4 300/300 grids5 253/262 MET. Fresh check sets (pick 36000+, check 36100+, 300 each), sealed 358a tests never opened. See artifacts/claude-rsn358c-20260926/RESULTS-c1.md.
+- K1 OUTCOME (2026-09-26, rsn-358c1 answer-cell >= fixed-3, all five graded families): s1 sums4 300>=297 grids5 257>=253 sums6 247>=252 MISS by 5 grids6 261>=257 numbers5 0>=-3 FAIL; s2 sums4 300>=297 grids5 262>=259 sums6 221>=232 MISS by 11 grids6 254>=255 MISS by 1 numbers5 0>=-3 FAIL.
+- K2 OUTCOME (2026-09-26, rsn-358c1 recovery where fixed-v2 >= 10): s1 gaps 0/-1/4/-1/0, s2 gaps 0/0/3/4/0, no graded family qualifies on either seed. NOT NEEDED on both seeds (nothing to recover).
+- K3 OUTCOME (2026-09-26, rsn-358c1 answer-cell >= v2-3, all five graded families): s1 sums6 247>=248 MISS by 1 (rest hold) FAIL; s2 sums6 221>=229 MISS by 8 (rest hold) FAIL. No miss exceeds 10 anywhere.
+- K4 OUTCOME (2026-09-26, rsn-358c1 loop answer-cell stop minus plain): s1 sums6 +45 grids6 +63 numbers5 0, practised 0/+2 PASS; s2 sums6 -38 (floor break) grids6 +78 numbers5 0, practised 0/+9 FAIL. Registered loop-beats-plain verdict FAIL (V met both, K4 split). Proved-wrong clause NOT triggered.
+- rsn-358c1 OUTCOME (2026-09-26, builder, Mac CPU, $0, eval only, code sealed and run once per seed, 7-line logs kept): stop fix NOT NEEDED (K2 vacuous both seeds; K1/K3 FAIL as above); loop-beats-plain FAIL (K4 s1 PASS s2 FAIL). Overall registered verdict FAIL. 358a FAIL stands (second look, same checkpoints, one changed rule). Runs ~2 min/seed, no training, no GPU, weights never in git. See artifacts/claude-rsn358c-20260926/RESULTS-c1.md + runs/stop358c1-s1.json + runs/stop358c1-s2.json.
+- rent-bm397t GPU OUTCOME (2026-09-26, rented Linux GPU, label rent-bm397t, unmodified origin/main + origin/builder-outbox code, seals bm397t 10/10 + bm390-code 8/8 OK, selftests 8/8 + 5/5): instances 52684428 (RTX 5090 offer 45669313, SSH proxy broken, destroyed, ~0.181 h x $0.5037 = ~$0.09) + 52685550 (RTX 5090 offer 44188476 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 80, running 03:20:51Z, destroyed 04:23:49Z, ~1.091 h x $0.5037 = ~$0.55); task total ~1.27 h ~$0.64 of $1.40 budget, 2 rentals; post-destroy 0 rent-bm397t live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, transformers 5.17.0, pyarrow 25.0.1. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Practice data sha 0654bd2f...06237 / 675a2d85...942da9. Train once 225 steps 189.7 s, dev 116->199/200, merged model.safetensors 9719c266... Run files locomo_TS 1986 rows 276376 B 30eb5dc4..., mmlu_TS 300 rows 18933 B fa830d32..., gsm8k_TS 300 rows 57772 B c6bb2f14..., train397t.json 0919dac9... Adapter 16576151 B 621edd16... at ~/premonition-models/bm397t-adapter397t.pt, never in git; MERGED not copied back. Peak GPU mem 5074 MiB. No traceback. Train-selftest first launch had a wrapper cwd bug, relaunched unchanged; exit codes inferred 0 from wrote lines. Scoring not part of this task. See artifacts/claude-bm397t-20260926/RESULTS-rent.md.
+- rsn-358d OUTCOME (2026-09-26, GPU builder, label rent-358d, sealed code run unmodified, each eval once per checkpoint): registered verdict INCONCLUSIVE both seeds (G0 not met: loop practised-size s3 300/109/1, s4 298/91/1, needs >=210 in >=2 of 3 kinds). G1 FAIL both (loop-plain s3 -108/-129/0, s4 -59/-150/-1); G2 FAIL both (s3 0/-127/-15, s4 -2/-150/-9); G3 FAIL s3 (sums6 own 131 vs fix16 137), PASS s4. Proved-wrong clause NOT triggered. numbers4 plain 16/10 vs loop 1/1 (358a: 0-5 both); numbers5 0/0/0/1. Plain bigger-test generalisation beat loop everywhere (sums6 239/153 vs 131/94; grids6 187/186 vs 58/36). GPU RTX 5090, minutes loop-s3 35.2 plain-s3 29.6 loop-s4 35.3 plain-s4 29.6, ~$0.41 of $0.80. See artifacts/claude-rsn358d-20260926/RESULTS.md + runs + SEAL-run.sha256.txt.
+- rent-358d GPU SPEND (2026-09-26, credit 6.33 at gate): rental 1 offer 46753295 (docker registry proxy refused, restarted once same error, destroyed stopped) + rental 2 offer 44173691 RTX 5090 dph 0.4852 (03:44:46Z-04:34:03Z, 0.82 h, ~$0.40); task total ~$0.41 of $0.80 budget, 2 rentals of max 3, 54 min of 1 h 30 min cap; post-destroy 0 rent-358d live. Checkpoints discarded with rental (Mac had 7 GB free < 8 GB copy bar) after sha256 recorded; 4 required files per run copied back.
+- rent-dl3 GPU OUTCOME (2026-09-26, rented RTX 5090, label rent-dl3, origin/main code unmodified, selftest ok): registered verdict FAIL (F1 false: A final lost sum 56 vs S 63, needs <= 31.5, per-seed s4 20 < 39 but s5 36 > 24; F2 false: 11 of 14 A nights lost > 10; F3 true: A final lucky 227, 216 >= 118 each, gains 325 >= 0.8 x 310; F4 true: 1 worse night, A s5n7 266 -> 216; F5 true: reached 53, 59 >= 30). Proved-wrong clause NOT triggered. Not INCONCLUSIVE (L0 59, S lost sum 63, pool 908). Rentals: 52685064 offer 46753297 (registry proxy error while stopped, destroyed ~$0) + 52685812 offer 44173877 KR dph 0.5130 (run 03:35-04:56Z, 81.2 min, destroyed 05:01Z); task total ~$0.86 of $1.50 budget, 2 rentals of max 3; post-destroy 0 rent-dl3 live. BASE openbmb/MiniCPM5-1B commit 87179e5c, torch 2.8.0+cu128, transformers 5.17.0. Code from origin/main ca08ccc1, byte-identical for dl-3 inputs at 43457707. No weights saved. See artifacts/claude-dl3-20260926/RESULTS-gpu.md + gpu/.
+- rent-bm391 GPU OUTCOME (2026-09-26, rented Linux GPU, label rent-bm391, unmodified origin/main + origin/builder-outbox code, seals bm391 3/3 + bm390-code 8/8 + e2e382-code 239/239 OK, selftests 10/10 + 13/13): BUDGET-STOP, no registered command completed except lane-3 mmlu_R (300 rows). Instance 52677751 (RTX 5090 offer 52604857, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 100, rented 01:51:26Z, destroyed 08:03:50Z, 6.21 h x dph $0.5103 = ~$3.17 projected; credit 9.0581 -> 7.4877 = $1.57 billed at destroy check, billing may lag); 1 rental of max 4; post-destroy 0 rent-bm391 live. Agent pace ~2 rows/min/LoCoMo-arm made 3x1986-row runs infeasible in $3.50 (needs ~14 h/arm). Killed by exact PID (2619, 2620, 3126 + drivers 2612, 2613, 2999; exits 143); lane drivers auto-advanced in kill window launching lane1-mmlu-ER, lane2-mmlu-E, lane3-locomo-R (~30 s, no output files, killed PIDs 3277, 3279, 3281, reported as deviation, not relaunched). Finished: GENERAL(mmlu,383,R) exit 0 wrote mmlu_R.jsonl rows=300. Unfinished with partial EP382 logs: LOCOMO(383e,ER) 456 rows, LOCOMO(382b,E) 445 rows (no locomo_*.jsonl wrote lines). Never started: both gsms, lane3 locomo (beyond 30 s stub), lane1/2 mmlu+gsm8k (beyond stubs). BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM path exact, READER safetensors b4fd93a2...890 verified on box, torch 2.8.0+cu128, transformers 5.17.0, pyarrow ok. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Sleep base-seed4102 JSON line recorded, pt 2ada54ac...ff069057. Smoke 6/6 exit 0. Peak GPU mem ~16933 MiB. Copy-back sha256-verified 5 files. See artifacts/claude-bm391-20260926/RESULTS-rent.md + run/.
+- rent-brd7 GPU OUTCOME (2026-09-26, rented RTX 5090, label rent-brd7, origin/main code unmodified, selftest ok, panel md5 matched): registered verdict NOT SHOWN (W cov@30 158,158,146 vs base 135, deltas +23,+23,+11, bar +24=159 missed every seed; W-base CI [2.65,13.31] above 0 so not proved wrong; W-C deltas 130,125,119; 183 wins + 20 own so not inconclusive; N 99,89,96 and C 28,33,27 collapse). Instance 52734191 (RTX 5090 offer 44173814 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 60, rented 10:57:28Z, destroyed 11:27:06Z, ~0.494 h x dph $0.49444 = ~$0.24); 1 rental of max 3; post-destroy 0 rent-brd7 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128. Run wall 20.1 min. No weights saved. See artifacts/claude-brd7-20260926/RESULTS-gpu.md + gpu/.
+=== runs ===
+total 0
+drwxr-xr-x  3 ben-hannan  staff   96 Sep 24 00:24 000-cache-pin
+drwxr-xr-x  5 ben-hannan  staff  160 Sep 23 15:07 own-probe-1
+drwxr-xr-x  3 ben-hannan  staff   96 Sep 23 14:41 000-vast-rescue
+=== scratchpad queue ===
+ls: scratchpad/mimo/queue/: No such file or directory
+o0c-scratch-20260923
+srv270b.ps1
+stop270b_panel.ps1
+stop270b.ps1
+w255
+w255b
+[0m
+[0m$ [0mls .claude/agents/ 2>&1
+find . -maxdepth 3 -name "*card*" 2>/dev/null | head -n 20
+find /tmp -maxdepth 2 -name "*.md" -mmin -120 2>/dev/null | head -n 20
+ls -lt /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ 2>&1 | head -n 20
+git diff HEAD --name-only | head -n 100
+echo "=== untracked scripts count ==="; git status --short | grep "?? scripts" | wc -l
+echo "=== check PASSMARKS-brd7 ==="; find . -name "PASSMARKS-brd7*" 2>/dev/null; cat design/v3/30-modes/*brd* 2>/dev/null | head -n 50; ls design/v3/ | head -n 30
+opus-medium.md
+./artifacts/fable-selfcard161-20260922
+./artifacts/fable-selfcard161-20260922/selfcard161-marks.json
+./artifacts/fable-cardfold-sleep-20260922
+./handoff/memory/cardfold-sleep-result.md
+./tests/test_premonition_card_pools.py
+./premonition/card_pools.py
+./scripts/fable_cardfold_sleep.py
+./scripts/fable_selfcard161_marks.py
+./scripts/scratchpad/fable_selfcard161_probe.py
+./scripts/scratchpad/fable_selfcard161_dev.py
+./scripts/fable_selfcard161.py
+./reviews/opus-next-2026-09-19-two-pool-cards.md
+total 8364352
+drwxr-xr-x  22 ben-hannan  staff         704 Sep 26 04:02 bm391logs
+drwxr-xr-x   9 ben-hannan  staff         288 Sep 26 00:36 rsn358d-push
+drwxr-xr-x   4 ben-hannan  staff         128 Sep 26 00:00 rsn358c1-seal
+drwxr-xr-x  54 ben-hannan  staff        1728 Sep 25 23:18 bm391split
+drwxr-xr-x   9 ben-hannan  staff         288 Sep 25 22:36 trash-outbox
+-rw-r--r--   1 ben-hannan  staff         117 Sep 25 22:23 reader_rsync.log
+-rw-r--r--   1 ben-hannan  staff  1717501354 Sep 25 22:00 readerbm391.tgz
+-rw-r--r--   1 ben-hannan  staff       21770 Sep 25 21:58 treebrd5.tgz
+-rw-r--r--   1 ben-hannan  staff          69 Sep 25 21:58 treebrd5.path
+-rw-r--r--   1 ben-hannan  staff          22 Sep 25 21:51 bm391rent.env
+-rw-r--r--   1 ben-hannan  staff   171762299 Sep 25 21:50 treebm391.tgz
+-rw-r--r--   1 ben-hannan  staff          69 Sep 25 21:49 treebm391.path
+drwxr-xr-x   4 ben-hannan  staff         128 Sep 25 02:47 lis318b
+-rw-------   1 ben-hannan  staff         314 Sep 25 00:16 pilot356-log.jsonl
+-rw-------   1 ben-hannan  staff         212 Sep 25 00:16 pilot356-summary.json
+-rw-r--r--   1 ben-hannan  staff    22118400 Sep 25 00:14 rsn356code.tar
+drwxr-xr-x  24 ben-hannan  staff         768 Sep 25 00:13 rsn356seal
+drwxr-xr-x   5 ben-hannan  staff         160 Sep 24 23:45 teacher-glm53-run
+drwxr-xr-x   6 ben-hannan  staff         192 Sep 24 17:44 guard-350
+artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+artifacts/claude-blurt4-20260925/gpu-4/log.txt
+artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+artifacts/claude-brd5-20260926/RESULTS-gpu.md
+artifacts/claude-brd5-20260926/gpu/brd5_summary.json
+artifacts/claude-brd5-20260926/gpu/log.txt
+artifacts/claude-brd5-20260926/gpu/narrow_picks.jsonl
+artifacts/claude-brd5-20260926/gpu/streams.json
+artifacts/claude-brd6-20260926/RESULTS-gpu.md
+artifacts/claude-brd6-20260926/gpu/brd6_summary.json
+artifacts/claude-brd6-20260926/gpu/log.txt
+artifacts/claude-brd6-20260926/gpu/practice.jsonl
+artifacts/claude-brd6-20260926/gpu/streams.json
+artifacts/claude-brd7-20260926/RESULTS-gpu.md
+artifacts/claude-brd7-20260926/gpu/brd5_summary.json
+artifacts/claude-brd7-20260926/gpu/log.txt
+artifacts/claude-brd7-20260926/gpu/narrow_picks.jsonl
+artifacts/claude-brd7-20260926/gpu/streams.json
+artifacts/claude-dl1-20260925/RESULTS-gpu.md
+artifacts/claude-dl1-20260925/gpu/dl1_results.json
+artifacts/claude-dl1-20260925/gpu/log.txt
+artifacts/claude-e2e02c-20260926/RESULTS-benspc.md
+artifacts/claude-e2e02c-20260926/run/arm_G.jsonl
+artifacts/claude-e2e02c-20260926/run/arm_T.jsonl
+artifacts/claude-e2e02c-20260926/run/arm_X.jsonl
+artifacts/claude-e2e02c-20260926/run/chat_G.jsonl
+artifacts/claude-e2e02c-20260926/run/chat_T.jsonl
+artifacts/claude-e2e02c-20260926/run/chat_X.jsonl
+artifacts/claude-e2e02c-20260926/run/creative_T.jsonl
+artifacts/claude-e2e02c-20260926/run/creative_X.jsonl
+artifacts/claude-e2e02c-20260926/run/gram360_parts_G.jsonl
+artifacts/claude-e2e02c-20260926/run/gram360_parts_X.jsonl
+artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.json
+artifacts/claude-e2e02c-20260926/run/sleep/sleep02c_results.json
+artifacts/claude-e2e02c-20260926/run/sleep_G.jsonl
+artifacts/claude-e2e02c-20260926/run/sleep_X.jsonl
+artifacts/claude-e2e02c-20260926/score/chat_G.jsonl
+artifacts/claude-e2e02c-20260926/score/chat_T.jsonl
+artifacts/claude-e2e02c-20260926/score/chat_X.jsonl
+artifacts/claude-e2e02c-20260926/score/chat_key_G.json
+artifacts/claude-e2e02c-20260926/score/chat_key_T.json
+artifacts/claude-e2e02c-20260926/score/chat_pair_G.jsonl
+artifacts/claude-e2e02c-20260926/score/chat_pair_T.jsonl
+artifacts/claude-e2e02c-20260926/score/chat_turns_X.jsonl
+artifacts/claude-e2e02c-20260926/score/creative_T.jsonl
+artifacts/claude-e2e02c-20260926/score/creative_X.jsonl
+artifacts/claude-e2e02c-20260926/score/creative_judge.jsonl
+artifacts/claude-e2e02c-20260926/score/creative_key.json
+artifacts/claude-e2e02c-20260926/score/grammar_G.jsonl
+artifacts/claude-e2e02c-20260926/score/grammar_T.jsonl
+artifacts/claude-e2e02c-20260926/score/grammar_X.jsonl
+artifacts/claude-e2e02c-20260926/score/grammar_chat_X.jsonl
+artifacts/claude-e2e02c-20260926/score/grammar_creative_X.jsonl
+artifacts/claude-e2e02c-20260926/score/judge_asks_G.jsonl
+artifacts/claude-e2e02c-20260926/score/judge_asks_T.jsonl
+artifacts/claude-e2e02c-20260926/score/judge_asks_X.jsonl
+artifacts/claude-e2e02c-20260926/score/judge_saves_G.jsonl
+artifacts/claude-e2e02c-20260926/score/judge_saves_T.jsonl
+artifacts/claude-e2e02c-20260926/score/judge_saves_X.jsonl
+artifacts/claude-e2e02c-20260926/score/mechanical.json
+artifacts/claude-e2e02c-20260926/score/summary_chat.json
+artifacts/claude-e2e02c-20260926/score/summary_creative.json
+artifacts/claude-e2e02c-dev-20260926/arm_X.jsonl
+artifacts/claude-e2e02c-dev-20260926/chat_X.jsonl
+artifacts/claude-e2e02c-dev-20260926/sleep/adapter02c.json
+artifacts/claude-e2e02c-dev-20260926/sleep/sleep02c_results.json
+artifacts/claude-e2e02c-dev-20260926/sleep_X.jsonl
+artifacts/claude-lis319c-20260926/full/RESULTS-full-reads.md
+artifacts/claude-lis319c-20260926/full/check_319.json
+artifacts/claude-lis319c-20260926/full/check_A.json
+artifacts/claude-lis319c-20260926/full/check_B.json
+artifacts/claude-lis319c-20260926/full/pairs_319.jsonl
+artifacts/claude-lis319c-20260926/full/pairs_319c.jsonl
+artifacts/claude-lis319c-20260926/full/reads_319.jsonl
+artifacts/claude-lis319c-20260926/full/reads_319c.jsonl
+artifacts/claude-tgt5-20260926/RESULTS-gpu.md
+artifacts/claude-tgt5-20260926/gpu/contrasts.json
+artifacts/claude-tgt5-20260926/gpu/log.txt
+artifacts/claude-tgt5-20260926/gpu/pairs.jsonl
+artifacts/claude-tgt5-20260926/gpu/tgt5_summary.json
+artifacts/fable-predictions-ledger.md
+=== untracked scripts count ===
+     243
+=== check PASSMARKS-brd7 ===
+zsh:7: no matches found: design/v3/30-modes/*brd*
+19-development-readout-and-next-step.md
+19-novelty-experiment-preregistration-draft.md
+19-novelty-mechanism-research.md
+19-rulings-1.md
+20-concept-toy-build-plan.md
+20-concept-toy-preregistration-draft.md
+20-concept-toy-rulings-1.md
+20-concept-toy-rulings-2.md
+20-concept-toy-rulings-3-fable-review.md
+20-concept-toy-simulator-spec.md
+20-top-mechanism-preregistration-draft.md
+20-undercovered-brain-mechanisms.md
+21-teachable-assistant-roadmap-fable-review.md
+21b-new-names-rulings-fable-review.md
+24-talker-from-scratch-fable-design.md
+24b-talker-decisions-ben.md
+25-gpt6pro-eight-problems-answer.md
+25b-gpt6pro-answer-adjudication-fable-review.md
+26-dispatcher-stop-probes-registration-fable-review.md
+27-new-names-followup-design-fable-review.md
+28-all-problems-handoff-fable.md
+28-outside-review-adjudication-fable.md
+28-outside-review-answer-verbatim.txt
+29-new-names-gap-followup-design-fable-review.md
+30-modes
+40-talker
+[0m
+[0m$ [0mls /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/ 2>&1
+cat /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/.claude/agents/opus-medium.md 2>&1 | head -n 50
+echo "=== check parent ==="
+git log --all --oneline --grep="card" -i | head -n 20
+echo "=== worktree metadata ==="
+ls -la /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/ 2>&1 | head -n 30
+card-experiment-handoff-7c5b27
+fact-saving-note-filtering-4ff1ff
+model-architecture-review-0161ce
+premonition-design-review-792236
+---
+name: opus-medium
+description: Opus worker at medium reasoning effort, for building, auditing and managing long-running jobs (Ben's default for delegated work).
+model: opus
+effort: medium
+---
+
+You are a careful, economical worker. Follow the task prompt exactly, verify before claiming, report honestly (failures and unverified items included), and do not spend more reasoning or tool calls than the task needs.
+=== check parent ===
+d2257a7cc slp-366: multi-night scorecard (6 growing days, restart each morning, SLEEP vs NOSLEEP); marks registered and sealed. Add slp-367 idle-sleep code (not yet sealed)
+813bb6ae4 365: sleep roadmap (stage 1 tonight at $0: 364 gate, 366 multi-night scorecard, 367 idle sleep; 363 waits on the step embedding; 362 parked by default)
+7c0216220 Merge claude/card-experiment-handoff-7c5b27 into main
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+=== worktree metadata ===
+total 16
+drwxr-xr-x   6 ben-hannan  staff  192 Sep 25 21:18 .
+drwxr-xr-x@ 28 ben-hannan  staff  896 Sep 25 21:18 ..
+-rw-r--r--@  1 ben-hannan  staff   84 Sep 25 21:18 settings.json
+-rw-r--r--   1 ben-hannan  staff  339 Sep 20 11:35 settings.local.json
+drwxr-xr-x   3 ben-hannan  staff   96 Sep 21 23:42 skills
+drwxr-xr-x   6 ben-hannan  staff  192 Sep 26 07:37 worktrees
+[0m
