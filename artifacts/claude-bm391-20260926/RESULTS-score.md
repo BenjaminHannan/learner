@@ -29,3 +29,10 @@ a FAIL of 0.2. Counts only.
 A separate agent reran the sealed scorer and recounted with its mmlu_pick. The counts: R 109 of 300 and T 50, both
 matching score-R/. It also counted replies with no letter: R 85 and T 234. That supports the format reading above,
 which was inferred when written.
+
+## 0.2c's no-harm rows (AMEND-02c): not measured yet (added ~11:05 UTC)
+0.2c's registered run went to BensPC as 006k (case (a), the BensPC copy of rent-02c). Its step 4b, these two lanes,
+did not run: step 6 ended at 10:44 UTC, after the 09:30 cutoff (artifacts/claude-e2e02c-20260926/RESULTS-benspc.md).
+So M4b and N1 (month-end's H5/H6) are not measured. That leaves them open, not passed. No lane produced any output,
+so the placement addendum's fallback applies. 006i is re-issued as handoff/held/006m-bm391-02c.md: the same job with
+a fresh wall-time cap and a duplicate gate, for the Director to release when BensPC is free ($0).
