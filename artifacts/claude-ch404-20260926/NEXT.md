@@ -78,3 +78,10 @@ ch-405 helpfulness score for the shared picker is dropped. Questions for Ben go 
 ch-403's job is capped at $1.60 of this thread's $2 (Ben, 12:59 UTC). A registered ch-404 run (three arms, 60
 conversations) is likely to take the thread past $2; before it is queued the thread first asks month-end whether it can
 ride in the 0.2d build run, and otherwise asks Ben once, with a recommendation, per the coordinator's rule.
+
+## Joining with mu-403's system line (written 2026-09-26 15:17 UTC, before any ch-403 or DEV result)
+Making things up's mu-403 arm P appends one sentence to SYSTEM338 at build time; build_404 swaps in a SYSTEM404 made at
+import, so in a joined build that sentence would be dropped while ch-404's chat turn runs. scripts/claude_ch404_join.py
+(build_404_live, selftest 5/5) recomputes the swap from the SYSTEM338 in force at each turn; with SYSTEM338 unchanged it
+sends exactly what build_404 sends. The registered ch-404 run keeps build_404 (the DEV-probed code); a joined build that
+takes both uses build_404_live. ch-404g needs nothing.
