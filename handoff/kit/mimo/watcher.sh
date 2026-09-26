@@ -87,7 +87,7 @@ while [ ! -e "$H/STOP" ]; do
           osascript -e 'with timeout of 900 seconds' -e 'tell application "Finder" to empty trash' -e 'end timeout' >/dev/null 2>&1 && log "lowdisk: emptied Trash (one time)" || log "lowdisk: empty Trash failed"; fi
         log "lowdisk: now $(df -g / | tail -1 | awk '{print $4}') GB free"; fi
       break; fi
-    git -C "$W" show "origin/$IN:$f" > "$Q/$n.md.tmp"
+    git -C "$W" show "origin/$IN:$f" > "$Q/$n.md.tmp" 2>/dev/null; [ -s "$Q/$n.md.tmp" ] || { rm -f "$Q/$n.md.tmp"; continue; }   # file moved to held mid-round: skip, never launch empty
     if grep -q '^QUIET: yes' "$Q/$n.md.tmp" && { [ "$running" -gt 0 ] || [ "$load" -gt 20 ]; }; then rm -f "$Q/$n.md.tmp"; continue; fi   # timing jobs wait for an idle Mac
     if ls "$Q"/*.running >/dev/null 2>&1 && grep -l '^QUIET: yes' $(ls "$Q"/*.running | sed 's/\.running$/.md/') 2>/dev/null | grep -q .; then rm -f "$Q/$n.md.tmp"; break; fi   # nothing starts beside a quiet job
     if grep -q '^GPU: yes' "$Q/$n.md.tmp" && grep -l '^GPU: yes' $(ls "$Q"/*.running 2>/dev/null | sed 's/\.running$/.md/') 2>/dev/null | grep -q .; then
