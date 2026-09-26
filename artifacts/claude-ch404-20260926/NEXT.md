@@ -52,6 +52,15 @@ per kind, ms per turn, G4 rejections per arm.
 - M5 fails: a bug (the chat phase raises on any write); fix, rerun the DEV gate, no registered claim.
 Each of these gets its own PASSMARKS and a fresh sealed panel before its run.
 
+## Adapter and picker (added ~14:30 UTC after the thread manager's note, before any result)
+- The registered ch-404 run seals only after mu-402's M3 (sleep adapter on vs off in chat, owner Making things up is
+  about you) is in. Both arms B and C then use whichever chat-path adapter setting 0.2d adopts (Month-end's plan:
+  adapter off on the chat path), so the result transfers to 0.2d. The DEV probe in rent-ch403 uses 0.2c's adapter.
+- One shared picker over the chat layer's 1B samples, owned by Making things up (mu-403). This thread does not build
+  its own. If C1 is still short after ch-404, the candidate after it (ch-405) is a helpfulness score added to that
+  picker as one change on top of it, with the made-up-claims row as a no-harm mark. Proposed to Making things up and
+  Creative answers in chat by message.
+
 ## Money
 ch-403's job is capped at $1.60 of this thread's $2 (Ben, 12:59 UTC). A registered ch-404 run (three arms, 60
 conversations) is likely to take the thread past $2; before it is queued the thread first asks month-end whether it can
