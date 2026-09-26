@@ -1,0 +1,27 @@
+COMMON RULES (the Answering-from-memory thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md and ALL of origin/main:design/v3/30-modes/330-rent-kit.md (streaming, labels, rental rules, setup, the 6-min start rule, the 10-min no-log watchdog, copy back BEFORE destroy, destroy and confirm, ledger line). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.
+GPU: rent
+DISK: 1
+BUDGET: $0.60 for this whole task, re-rents included, from the Answering-from-memory thread's $2 (Ben, 12:59 UTC 09-26; about $0.47 already spent); the Director keeps the ledger and may lower it. Label: claude-memory-y1t. The cheapest RTX 5090 or 4090 that passes the kit's filter. Only this thread or the Director may stop or destroy claude-memory-y1t; never destroy any other label.
+CREDIT: check and record the balance number only (vast auto-refills, per Ben); no credit stop.
+TIME CAP: 90 minutes on the rental. If reached: stop by exact PID, copy back what exists, destroy, report PARTIAL with which steps finished.
+DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-y1t-20260926/run, or a live instance is labelled claude-memory-y1t.
+WAITS FOR: origin/builder-outbox:artifacts/claude-y1t-20260926/glm/items/items_train.jsonl and items_dev.jsonl (the y1t-glm-mac job). If they are missing, stop with NO-DATA before renting.
+
+YOUR TASK: y1t, trained doubt, selection on DEV data (readable; no TEST-ONLY bank or panel is involved). The plain MiniCPM5-1B answers GLM-written practice questions, code grades its drafts, a LoRA is trained on its own right drafts and "I don't know" rows, and the merged model is checked on the DEV bank. The thread wrote all code: run it, never edit it. If something breaks, copy back what exists, destroy, report the exact error and full traceback; do not patch. Print and report counts only.
+READ FIRST (origin/main): artifacts/claude-y1t-20260926/PLAN.md and the docstring of scripts/claude_y1t_data.py.
+Needs: torch with CUDA, transformers, plain MiniCPM5-1B from the rent kit's section C download (Ben's yes covers it; no other model). NO reader weights and no store.
+
+1. Stream only code and data (nothing staged on the Mac), two commands:
+   `git archive origin/main scripts artifacts/claude-e2e331-dev-20260924 artifacts/claude-y1t-20260926 | ssh <rental> 'mkdir -p ~/tree && tar -x -C ~/tree'`
+   `git archive origin/builder-outbox artifacts/claude-y1t-20260926/glm/items | ssh <rental> 'tar -x -C ~/tree'`
+   Record sha256 of items_train.jsonl and items_dev.jsonl on the rental.
+2. Rent kit section C setup (torch check, pip line, snapshot_download of MiniCPM5-1B, HF_HUB_OFFLINE=1). Record the MiniCPM commit (expected 87179e5c1f455ef22e6223592d2d61351b525bfc). y1g's rental needed the TORCH UPGRADE note and gcc for torch 2.14's triton kernels; do the same if needed and say so.
+3. Checks, from ~/tree: `sha256sum -c artifacts/claude-y1t-20260926/SEAL-y1t.sha256.txt` (all 19 OK, else stop with SEAL-FAIL); `python -B scripts/claude_y1t_data.py --selftest`, `python -B scripts/claude_y1g_doubt.py --selftest` (each prints "selftest ok") and `python -B scripts/claude_bm398r_train.py selftest` (must exit 0). Else stop and report.
+   D=artifacts/claude-y1t-20260926/glm/items
+4. Drafts: `python -B scripts/claude_y1t_data.py drafts --model BASE --dir $D > drafts_log.txt 2>&1` (prints "[y1t] drafts n/N" every 100 items, then one JSON line). No new line for 10 minutes: stop by exact PID, report STALLED.
+5. Train: `python -B scripts/claude_bm398r_train.py --base BASE --train $D/train.jsonl --dev $D/dev.jsonl --out tr > train_log.txt 2>&1` (prints dev_before, step lines, dev_after_lora, dev_after_merged_first40, then one JSON line; writes tr/adapter398r.pt, tr/merged/, tr/train398r.json).
+6. DEV check, both on this machine: `python -B scripts/claude_y1g_doubt.py --model tr/merged --out eval > eval_log.txt 2>&1` and `python -B scripts/claude_y1g_doubt.py --model BASE --out eval_plain > eval_plain_log.txt 2>&1` (71 "[y1g]" lines and 2 JSON lines each).
+7. Copy back to the worktree under artifacts/claude-y1t-20260926/run/: $D/drafts.jsonl, $D/train.jsonl, $D/dev.jsonl, $D/drafts_summary.json, tr/train398r.json, eval/ and eval_plain/ (rows + summary), and the five logs (force-add; artifacts/ is git-ignored). Also copy tr/adapter398r.pt to the Mac at ~/y1t-adapter/adapter398r.pt (NEVER pushed; record its sha256 on both ends). Do not copy tr/merged. Check sizes and sha256 on both ends, THEN destroy and confirm it is gone.
+8. RESULTS-rent.md in artifacts/claude-y1t-20260926/run/: the last line of drafts_log.txt, train_log.txt, eval_log.txt's last two lines and eval_plain_log.txt's last two lines, each copied by script (`tail -n ... >> RESULTS-rent.md`, never retyped); versions; GPU; MiniCPM commit; items sha256; adapter sha256; wall minutes per step; instance id(s), hours, dph, dollars. DEV data and GLM text may be quoted, but keep it to counts. Append one ledger line (cat >> artifacts/fable-predictions-ledger.md).
+Never push weights.
+PUSH: artifacts/claude-y1t-20260926/run artifacts/fable-predictions-ledger.md

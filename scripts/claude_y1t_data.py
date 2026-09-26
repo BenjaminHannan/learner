@@ -16,7 +16,8 @@ trained on is written or judged by Claude. So:
   is graded wrong (Wrong answers stated as fact asked for this, 16:15 UTC).
 - targets: the greedy draft if it is graded right, else the first right sample (the 1B's own words); if no draft is
   right, or the ask is a never-told twin, the fixed "I don't know." (Y.FALLBACK). "I don't know" rows are capped at
-  the number of answer rows (seeded subsample), so the practice does not teach refusing.
+  the number of answer rows (seeded subsample), so the practice does not teach refusing. A small set is repeated
+  so about 1500 rows pass through training (each row at most 3 times; the trainer's recipe is 1 pass).
 Output rows are bm-398r's trainer format ({"system", "user", "answer"}; dev rows add "kind" and "layout"), so the
 sealed trainer (scripts/claude_bm398r_train.py: rank 16 LoRA on q/k/v/o, 1 epoch, lr 2e-4, batch 8, loss on the answer
 tokens) is used unchanged, and the sealed y1g harness scores the merged model on DEV.
@@ -32,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import random
 import sys
 import tempfile
@@ -48,6 +50,7 @@ import claude_y1f_layout as F  # noqa: E402  (sealed: messages, checked)
 
 CURRENT = ("ASSERT", "CORRECT")
 K_SAMPLES = 4
+MIN_ROW_PASSES, MAX_REPEAT = 1500, 3     # small practice sets: each row repeated so ~1500 rows pass (at most 3 times)
 SEED = 4027
 
 
@@ -170,7 +173,9 @@ def drafts(gen, d: Path, k: int, seed: int, max_items: int, log=print) -> dict:
     rng = random.Random(seed)
     rng.shuffle(rows_idk)
     rows_idk = rows_idk[:len(rows_ans)]
-    train = rows_ans + rows_idk
+    base = rows_ans + rows_idk
+    repeat = min(MAX_REPEAT, max(1, math.ceil(MIN_ROW_PASSES / max(1, len(base)))))
+    train = base * repeat
     rng.shuffle(train)
     (d / "train.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in train), encoding="utf-8")
     dev = []
@@ -178,7 +183,8 @@ def drafts(gen, d: Path, k: int, seed: int, max_items: int, log=print) -> dict:
         r = trainer_row(it, it["gold"]["values"][0] if it["gold"]["values"] else "")
         dev.append(r | {"kind": "missing" if it["kind"] == "never_told" else "value", "layout": "L1"})
     (d / "dev.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in dev), encoding="utf-8")
-    res = {"items": len(items), "train_rows": len(train), "answer_rows": len(rows_ans), "idk_rows": len(rows_idk),
+    res = {"items": len(items), "train_rows": len(train), "repeat": repeat, "answer_rows": len(rows_ans),
+           "idk_rows": len(rows_idk),
            "dev_rows": len(dev), "counts": dict(sorted(c.items()))}
     (d / "drafts_summary.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
     return res
@@ -236,8 +242,10 @@ def selftest() -> None:
         (d / "items_train.jsonl").write_text("".join(json.dumps(x) + "\n" for x in items))
         (d / "items_dev.jsonl").write_text("".join(json.dumps(x) + "\n" for x in items))
         res = drafts(_Fake(), d, 4, 4027, 0, log=lambda s: None)
-        assert res["items"] == 2 and res["answer_rows"] == 1 and res["idk_rows"] == 1, res
+        assert res["items"] == 2 and res["answer_rows"] == 1 and res["idk_rows"] == 1 and res["repeat"] == 3, res
         tr = load(d / "train.jsonl")
+        assert len(tr) == 6
+        tr = tr[:2] if tr[0]["answer"] != tr[1]["answer"] else [tr[0], next(r for r in tr if r["answer"] != tr[0]["answer"])]
         assert {r["answer"] for r in tr} == {"Tansy.", Y.FALLBACK}
         assert all(set(r) == {"system", "user", "answer"} for r in tr) and "Question: whats mira" in tr[0]["user"] + \
             tr[1]["user"]
