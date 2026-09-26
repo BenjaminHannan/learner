@@ -152,6 +152,8 @@ def score(res: dict) -> dict:
         all(x >= b + 15 for x in m["S_final_pts"])
     m["G2 right answers caused it: S final >= P final + 10 points on each seed"] = \
         all(x >= y + 10 for x, y in zip(m["S_final_pts"], m["P_final_pts"]))
+    m["G2b right answers beat legal-looking wrong ones: S final >= P final + 10 points on OPEN states, each seed"] = \
+        all(x >= y + 10 for x, y in zip(m["S_final_open_pts"], m["P_final_open_pts"]))
     m["G3 no harm: S final lost <= 20 of the base-right panel items on each seed"] = \
         all(x <= 20 for x in m["S_final_lost"])
     keys = [k for k in m if k[:1] == "G" and k[1].isdigit()]
@@ -234,6 +236,9 @@ def selftest() -> None:
     res = {"base": {"test": sc(44)},
            "arms": [arm("S", 8, 60, fr=58), arm("S", 9, 60, fr=58), arm("P", 8, 50, fr=45), arm("P", 9, 50, fr=45)]}
     assert score(res)["proved_wrong"]                                         # open: S 2 vs P 5 on both seeds
+    res = {"base": {"test": sc(44)},
+           "arms": [arm("S", 8, 70, fr=64), arm("S", 9, 70, fr=64), arm("P", 8, 50, fr=45), arm("P", 9, 50, fr=45)]}
+    assert score(res)["verdict"] == "FAIL" and not score(res)["proved_wrong"]  # G2 overall ok, open 20.0 vs 16.7
     print("selftest ok")
 
 
@@ -256,7 +261,7 @@ def main():
     if a.selftest:
         return selftest()
     if a.dev:
-        a.nights, a.n_day, a.n_test, a.n_harm, a.budget = 2, 3, 2, 12, 20
+        a.nights, a.n_day, a.n_test, a.n_harm, a.budget = 2, 4, 2, 12, G.BUDGET
         a.seed_shift, a.seeds, a.save_adapters = a.seed_shift or DEV_SHIFT, "8", 0
     run(a)
 
