@@ -45,3 +45,16 @@ change = lis-319f (a FORMER mode: code relabel + code-made rows; marks artifacts
 fresh sealed panel readpanel371c with ~45 former rows). After it: one rule for job + place, then re-decide the bar.
 Step 4 (note writer): Ben chose "Cut only" (12:02 UTC): corrections may only delete the untrue part of the writer's
 own note. Its own true-vs-untrue note pairs (497 in the rd-371b judged drafts) add no new words either.
+
+## Step 4 order, 12:55 UTC: usefulness first, then the cut-only writer
+rd-378's finding test searched inside one 12-16 turn dialog, so top 10 was most of the dialog (heard-only found 150/150)
+and it could not show whether notes help. Before spending on making notes truer, measure whether they help search at all:
+- 4a (no training): the rd-378 writer writes notes over the LoCoMo PRACTICE conversations (whole multi-session chats,
+  one pair of speakers each); evidence recall_any@k across the whole conversation, heard only vs heard + notes (notes
+  resolve to their cited turns), with bm-393's retrievers (scripts/claude_bm393_evrecall.py). Development use of LoCoMo
+  only, never trained on. Marks to be fixed before the run: heard+notes >= heard + 5 points recall_any@10 overall, no
+  category more than 3 points below; proved wrong if <= +1. If notes don't help, notes are dropped and 4b is skipped.
+- 4b (only if 4a passes): Ben's "Cut only" (12:02): continue training the writer on its own drafts with every note the
+  blind judges marked not ok deleted (rd-371b judged drafts: 2,526 drafts of 1,263 turns; 868 ok / 993 unsupported
+  notes); more drafts judged the same way if needed. Marks (from the 12:00 report): untrue share on a fresh sealed note
+  panel drops >= 15 points vs rd-378; missed memorable items rise <= 10%; proved wrong if the drop is < 5 points.
