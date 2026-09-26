@@ -75,12 +75,13 @@ the next suspects are the writer's pick rule (first of 4 samples that passes the
 KB vs KB0). K1b.1 failing means the cut-off items don't come from trim; K1b.2 failing (B < X) means trim was
 protecting usefulness (a reply that ended on its own but badly) and the finished-reply rule is wrong.
 
-## Which form of the chat (fixed 14:44 UTC, before the DEV judges saw the second batch)
+## Which form of the chat (committed to main in cdd6701ac at 14:45 UTC, before the DEV judges saw the second batch)
 Two forms were tried on the 40 DEV practice chats (artifacts/claude-k1a-dev-20260926, readable): W1 = the chat as
 chat messages (user and assistant turns), W2 = only the user's earlier words, quoted in the system line. The 333e
 E.2 test (09-25) gave a writer the chat as messages and was proved wrong (7 -> 6 of 40): the 1B copied earlier
 "Got it." replies. W2 cannot copy an assistant line. Rule, set before W2 was judged: K uses W2 if W2's useful count
-on the 20 DEV lead-in chats (mean of two blind judges, judged in the same batch as W1) is at least W1's minus 1;
+on the DEV lead-in chats (mean of two blind judges, judged in the same batch as W1; the committed draft said "20",
+a miscount: DEV has 32 lead-in chats and 8 without) is at least W1's minus 1;
 otherwise K uses W1.
 
 ## Expected (said before running)
