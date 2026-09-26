@@ -26,6 +26,7 @@ model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85e
 - Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
   Label every instance with the task name. Never 2 instances for one task at once.
 - Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+- LABELS (Director 13:33 UTC 2026-09-26): Ben's own agents share this vast account and one destroyed a rental it thought was its own. Every rental label starts with `claude-<thread>-<job>` (e.g. claude-fixsleep-dl4, claude-reading-lis319f). Never destroy an instance whose label your task did not create.
   The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
 - Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
   copy back what exists, destroy everything and stop with BUDGET-STOP.
