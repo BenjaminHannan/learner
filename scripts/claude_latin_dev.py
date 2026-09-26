@@ -6,7 +6,9 @@ For each (size, blanks) setting: DEV items from seeds 900000-900999 only (test s
 greedy reply, then n free samples at temperature T (thinking off, the chat template, no constrained decoding).
 Reports cov@1 (greedy right), cov@30 (any of n samples right) and lucky samples. Writes one JSON summary.
 
-  python -B scripts/claude_latin_dev.py --model M --out F.json --settings 4:4,4:6,4:8,5:5,5:8 --items 12
+  python -B scripts/claude_latin_dev.py --model M --out F.json --settings 4:4,4:6,4:8,5:5,5:8 --items 12 [--form blanks]
+Form "square" (the world's own prompt: reply with the whole square) got 0 of 10 at 3x3 with 3 blanks, 30 samples: the
+1B writes only some rows. Form "blanks" asks for the missing numbers only.
 """
 from __future__ import annotations
 
@@ -20,6 +22,26 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import claude_world_latin as W  # noqa: E402
 
 DEV_SEEDS = range(900000, 901000)
+
+
+def blanks_form(item):
+    """Reply form B (DEV probe): ask only for the missing numbers in reading order. The item keeps its square; check_b
+    fills the blanks from the reply and uses the world's exact check."""
+    s = item["size"]
+    text = item["prompt"].split(": ", 1)[1].split(". Reply", 1)[0]
+    return dict(item, prompt=(f"In this {s}x{s} square every row and every column must hold 1 to {s} once: {text}. "
+                              f"Reply with only the missing numbers, left to right and top to bottom, separated by spaces."))
+
+
+def check_b(item, reply):
+    s, puz = item["size"], item["puz"]
+    k = sum(v == 0 for row in puz for v in row)
+    vals = [int(x) for x in __import__("re").findall(r"\d+", reply)][:k]
+    if len(vals) < k:
+        return False
+    it = iter(vals)
+    full = [[v if v else next(it) for v in row] for row in puz]
+    return W.check(item, " / ".join(" ".join(map(str, r)) for r in full))
 
 
 class Sampler:
@@ -46,14 +68,18 @@ class Sampler:
         return [self.tok.decode(o[cut:], skip_special_tokens=True).strip() for o in out]
 
 
-def measure(smp, size, blanks, items, n, temp):
+def measure(smp, size, blanks, items, n, temp, form="square"):
     rows = []
+    chk = W.check if form == "square" else check_b
     for seed in list(DEV_SEEDS)[:items]:
         it = W.make(seed, size, blanks)
+        if form == "blanks":
+            it = blanks_form(it)
         g = smp.generate(it, 1, None)[0]
-        hits = [W.check(it, t) for t in smp.generate(it, n, temp)]
-        rows.append({"seed": seed, "greedy_ok": W.check(it, g), "hits": sum(hits), "greedy": g})
-    return {"size": size, "blanks": blanks, "items": len(rows), "cov@1": sum(r["greedy_ok"] for r in rows),
+        hits = [chk(it, t) for t in smp.generate(it, n, temp)]
+        rows.append({"seed": seed, "greedy_ok": chk(it, g), "hits": sum(hits), "greedy": g})
+    return {"form": form, "size": size, "blanks": blanks, "items": len(rows),
+            "cov@1": sum(r["greedy_ok"] for r in rows),
             f"cov@{n}": sum(r["hits"] > 0 for r in rows), "lucky": sum(r["hits"] for r in rows),
             "greedy_examples": [r["greedy"] for r in rows[:3]]}
 
@@ -66,13 +92,14 @@ def main():
     ap.add_argument("--items", type=int, default=12)
     ap.add_argument("--n", type=int, default=30)
     ap.add_argument("--temp", type=float, default=1.0)
+    ap.add_argument("--form", default="square", choices=["square", "blanks"])
     a = ap.parse_args()
     t0 = time.time()
     smp = Sampler(a.model)
     res = {"n": a.n, "temp": a.temp, "settings": []}
     for st in a.settings.split(","):
         size, blanks = (int(x) for x in st.split(":"))
-        r = measure(smp, size, blanks, a.items, a.n, a.temp)
+        r = measure(smp, size, blanks, a.items, a.n, a.temp, a.form)
         res["settings"].append(r)
         print(json.dumps({k: v for k, v in r.items() if k != "greedy_examples"}), flush=True)
         Path(a.out).write_text(json.dumps(res, indent=1), encoding="utf-8")
