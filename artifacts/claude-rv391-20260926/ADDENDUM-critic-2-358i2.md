@@ -18,3 +18,11 @@ How it is read (fixed now):
   reasoner on search traces that include its own dead ends and backtracks (Stream of Search, 2404.03683; plan 384b).
 - Report only, added after seeing 358i's rows: the critic's AUC within groups of states with the same number of
   written guesses (k). It shows what the critic knows beyond counting. On 358i, p-grids7: 0.535, 0.617, 0.610, 0.703.
+
+Added 21:19 UTC by date -u, at the Thread manager's 21:20 note, before any 358i2 probe number: the 358i2 write-up
+reports the same three readings as RESULTS-critic.md, so the two rows compare like for like:
+- the per-net-mean margin that the mark uses;
+- the puzzle-level bootstrap range (1,000 resamples, critic/verify/extra.py);
+- the pooled count-only baseline.
+If 358i2 is again not GOOD ENOUGH, the Stream of Search proposal goes to the Thread manager as a plan with marks and a
+plain-words paragraph. Training the reasoner on its own traces needs Ben's yes. No critic variants.
