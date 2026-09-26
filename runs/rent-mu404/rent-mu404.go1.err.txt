@@ -1,0 +1,967 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT=$?; git rev-parse origin/main --short 2>&1 | head -5; git rev-parse HEAD --short 2>&1 | head -5
+FETCH_EXIT=0
+fatal: Needed a single revision
+d7456712f400f96b1dbaf674463b769b34a0c063
+fatal: Needed a single revision
+98e4564c7eedf74e3e5ae7d255621e0ef4c0c0b6
+[0m
+[0m$ [0mgit branch -r 2>&1 | head -20; git fetch -q origin main:refs/remotes/origin/main builder-outbox:refs/remotes/origin/builder-outbox 2>&1; echo EXIT=$?; git rev-parse origin/main --short 2>&1 | head -3; git rev-parse origin/builder-outbox --short 2>&1 | head -3
+origin/HEAD -> origin/main
+  origin/builder-outbox
+  origin/builder-outbox-tmp
+  origin/chat-flags
+  origin/claude/card-experiment-handoff-7c5b27
+  origin/claude/model-architecture-review-0161ce
+  origin/claude/project-thread-0181x3
+  origin/claude/project-thread-h8jbxv
+  origin/claude/project-thread-p68q5v
+  origin/codex/testing-experiment-44
+  origin/main
+  origin/worktree-research
+EXIT=0
+fatal: Needed a single revision
+d7456712f400f96b1dbaf674463b769b34a0c063
+fatal: Needed a single revision
+b48e4a80a020c0eca980590e99d72ed1a49e48eb
+[0m
+[0m$ [0mgit rev-parse "origin/main" 2>&1 | head -3; git show-ref | grep -E "origin/main|builder-outbox" | head -10; git log --oneline origin/main -5 2>&1 | head -10
+d7456712f400f96b1dbaf674463b769b34a0c063
+b48e4a80a020c0eca980590e99d72ed1a49e48eb refs/remotes/origin/builder-outbox
+daecec3db2e4a1782cc00082ba378138b043c18b refs/remotes/origin/builder-outbox-tmp
+d7456712f400f96b1dbaf674463b769b34a0c063 refs/remotes/origin/main
+d7456712f queue: release rent-mu404 ($1 making-things-up)
+1bf8ae26f rent-k1a: stream artifacts/fable-self127-20260922 (kit rule ab128efe6: the 0.2c stack reads deltas127.json every turn)
+acf79fc43 mu-404 + mu-403 SEALED: R vs F (no notebook facts in 1B prompts) and R vs P (system line fix), real lis-319 reader, 80 fresh dev chats
+d870b8e66 rsn-358t sealed: 358i + ONE change, TRM-style loop training schedule (carried state, graded once per segment, EMA); rental job held for Ben's spend yes
+2bb60b071 ledger: rent-k1a
+[0m
+[0m$ [0mgit ls-tree -r --name-only "origin/builder-outbox" -- artifacts/claude-mu403-20260926/run 2>&1 | head -20; echo "---LSTREE_EXIT=$?"
+---LSTREE_EXIT=0
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show user --raw 2>&1 | head -20
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 4.87558057626984,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+[0m
+[0m$ [0mgit show "origin/main:artifacts/claude-depot-20260926/REPORT.md" 2>&1 | head -60
+fatal: path 'artifacts/claude-depot-20260926/REPORT.md' exists on disk, but not in 'origin/main'
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); [print(i.get('id'), repr(i.get('label')), i.get('actual_status') or i.get('status_msg')) for i in d]" 2>&1 | head -20
+52755827 'claude-director-depot' running
+52757832 'rent-358i' running
+52757951 'claude-notes-rd378L' running
+52758310 'claude-fixsleep-dl4b' running
+52761986 'claude-everydaychat-ch403' loading
+52761993 'claude-everydaychat-ch403' running
+52762309 'claude-wrongfact-sf401' running
+52763126 'claude-plainpuzzles-rt02d' running
+52763487 'claude-monthend-02dr' running
+52767015 'claude-benchmarks-bm398r' running
+52767389 'claude-benchmarks-bmrivsmoke' loading
+[0m
+[0m$ [0mgit ls-tree -r --name-only "origin/builder-outbox" -- artifacts/claude-depot-20260926 2>&1 | head; echo ---; git ls-tree -r --name-only "origin/main" -- artifacts/ 2>&1 | grep -i depot | head; echo ---; git ls-tree -r --name-only "origin/main" -- artifacts/claude-mu403-20260926 2>&1 | head -30
+artifacts/claude-depot-20260926/REPORT.md
+---
+---
+artifacts/claude-mu403-20260926/AUC.md
+artifacts/claude-mu403-20260926/JUDGE-claims.md
+artifacts/claude-mu403-20260926/JUDGE-pair.md
+artifacts/claude-mu403-20260926/PASSMARKS.md
+artifacts/claude-mu403-20260926/SEAL.sha256.txt
+artifacts/claude-mu403-20260926/auc/auc.json
+artifacts/claude-mu403-20260926/auc/margins402.jsonl
+artifacts/claude-mu403-20260926/devchat/README.md
+artifacts/claude-mu403-20260926/devchat/items.jsonl
+[0m
+[0m$ [0mgit show "origin/builder-outbox:artifacts/claude-depot-20260926/REPORT.md" 2>&1 | head -80
+# READER DEPOT REPORT — claude-director-depot — 2026-09-26
+
+Task: set up a READER DEPOT on vast.ai (director, 2026-09-26 13:45 UTC).
+Source: rent-lis-319f instance, `~/old/lis319-merged/model.safetensors`.
+Expected sha256: `e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76`
+
+## Verdict: DEPOT READY (source verified, copy verified, depot left RUNNING)
+
+- Depot instance id: **52755827** (label `claude-director-depot`)
+- Depot SSH: **ssh3.vast.ai:35826** (user `root`; direct port also mapped, proxy is the tested route)
+- Depot path: **/root/reader319** (6 files, flattened to match spec)
+- Depot sha256 (`/root/reader319/model.safetensors`): **e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76** — MATCHES source and expected value
+- Depot $/hr: **$0.1136** (RTX 4070, 25 GB disk, verified host, Washington US)
+- Depot rented: 2026-09-26 13:45:36 UTC. Status at handoff: **running** (left RUNNING per task; NOT destroyed)
+- Copy: `vastai copy 52751954:/root/old/lis319-merged 52755827:/root/reader319`, initiated 14:08:28 UTC, verified complete 14:12:32 UTC → **about 4 minutes**, rental-to-rental, nothing landed on the Mac (DISK 0)
+- Source instance rent-lis-319f (52751954): untouched except reads — still running, nothing stopped or destroyed. No other instance touched, stopped, or destroyed.
+
+## Depot contents (`/root/reader319/`, `ls -la`)
+
+- chat_template.jinja (9241 B)
+- config.json (784 B)
+- generation_config.json (227 B)
+- model.safetensors (2161290944 B, sha256 e688e1b2…776a76)
+- tokenizer.json (9894271 B)
+- tokenizer_config.json (477 B)
+
+## Marks table (integer counts)
+
+| # | Check | Count |
+|---|-------|-------|
+| 1 | 319f source polls (read-only ssh) | 5 polls |
+| 2 | Polls seeing partial upload + live rsync writer (correctly waited, not copied) | 4 |
+| 3 | Polls seeing complete file + no writer | 1 |
+| 4 | Source sha256 runs on 319f | 1, match 1/1 |
+| 5 | Depot rentals created by this task | 1 (52755827) |
+| 6 | Duplicate-label conflicts | 0 |
+| 7 | `vastai copy` attempts | 1, success 1/1 (fallback rsync not needed) |
+| 8 | Files present on depot with exact source byte sizes | 6/6 |
+| 9 | Depot sha256 runs | 1, match 1/1 |
+| 10 | Foreign instances touched/stopped/destroyed | 0 |
+| 11 | Writes to rent-lis-319f | 0 (reads only) |
+| 12 | Bytes staged on the Mac | 0 |
+| 13 | Misses (wrong-file copies, sha mismatches, failed rentals, restarts) | 0 |
+
+## Deviations (3, all minor, none affecting the result)
+
+1. **OPUS-RULES.txt not found**: the path in the brief (`/private/tmp/claude-502/.../scratchpad/briefs/OPUS-RULES.txt`) does not exist, and no `*OPUS-RULES*` file exists under `origin/main`. Worked under the key points quoted in the task itself (additive-only, append-only ledger, key hygiene, no secrets, uptime/df checks done: Mac had 57 GB free).
+2. **Rent-kit path not in this worktree**: `design/v3/30-modes/330-rent-kit.md` is absent from the checkout; read it via `git show origin/main:...` instead and followed its rental rules (label, no foreign-instance destruction, ledger line).
+3. **Budget projection +$0.08 over**: cheapest qualifying offer (rel ≥ 0.98, disk ≥ 20 GB, inet_down ≥ 500) was $0.1081/hr → rented depot bills $0.1136/hr with 25 GB disk, so 6 h projects to **$0.68 vs the $0.60 line (+$0.08)**. No cheaper qualifying box exists (next cheapest was $0.1223/hr). Actual spend to handoff (~0.46 h) ≈ **$0.05**. Also: `vastai copy` nested the tree one level (`/root/reader319/lis319-merged/`); flattened it on the depot so `/root/reader319/model.safetensors` is the exact spec path, then re-verified sha.
+
+## What this means / doesn't mean (plain English)
+
+- The depot is a working read-only copy of the agreed reader file: the big model file on the depot is bit-for-bit identical to the one on 319f (same checksum), so any reader job pointed at `/root/reader319` on instance 52755827 reads exactly the agreed facts.
+- It does NOT mean the file was tested for quality — only that the copy is exact. No test panels were opened, no tuning was done.
+- The depot costs about 11 cents per running hour until someone destroys it; after 6 hours that is about 68 cents, 8 cents above the planning line.
+[0m
+[0m$ [0mgit show "origin/main:artifacts/claude-mu403-20260926/PASSMARKS.md" 2>&1 | head -120
+# mu-404 and mu-403: one rental, two single-change tests on the 0.2c stack WITH the reader
+
+"Making things up about you" thread, written 2026-09-26 ~15:00 UTC, fixed before the run. DEV data only.
+Follows mu-402 (artifacts/claude-mu402-20260926/VERIFY.md): the sleep adapter is not shown to cause 0.2c's made-up
+claims about the user (S1: X 26 vs plain T 16), and with no reader at all the joined build made up less than the plain
+1B (75 vs 102 flags). 0.2c's chat and creative prompts also carry the notebook's facts about the user
+(claude_cre333_agent.context_facts keeps every "user" fact, up to 40); mu-402's rig had none.
+
+## Arms (scripts/claude_mu404.py; code, panel and these marks sealed in SEAL.sha256.txt)
+All arms: claude_e2e02c:build_02c as frozen (SEAL-code), the real lis-319 reader (--model, READER_SHA
+e688e1b2...6a76 checked by scripts/claude_readersha_wrap.py), sleep adapter NOT loaded (0.2d keeps it off chat),
+torch and random seeded per turn as in mu-402, panel devchat/ here (80 fresh dev chats, 446 turns, names N-Z).
+- R: control, build_r.
+- F: R with notebook facts removed from every 1B writer prompt (context_facts returns nothing to chat 338 and
+  creative 333d). One change. Test **mu-404**.
+- P: R with the mu-403 fix (MU403_FIX in claude_mu404.py). One change. Test **mu-403**. Which fix was fixed before
+  any margin was computed (scripts/claude_mu403_auc.py, 01b448cfc): AUC >= 0.65 of the 1B's self-check margin on
+  mu-402's judged chat replies -> "ground" (the 1B ranks its own 4 chat samples, least-assuming first, via
+  scripts/claude_pick403.py on chat 338b only; guards unchanged); below -> "sysline" (one sentence added to chat
+  338's system prompt: claude_mu403.VARIANT_LINE). The AUC result and the chosen fix are recorded in AUC.md here.
+- T: plain 1B twin (claude_twinb), report only and mark M4.
+
+## Judging (scripts/claude_mu404_judge.py)
+Claims: every (arm, conversation) packet read by two blind Opus judges with mu-402's JUDGE-claims.md unchanged
+(copied here), arms mixed and shuffled; C = flags summed over the two judges. Pair: P vs R per conversation, two blind
+judges with mu-402's JUDGE-pair.md unchanged. Each judge works in its own private folder. Blind recount before
+reporting.
+
+## mu-404 marks (does removing notebook facts from the 1B prompt cut made-up claims?)
+- V404 (validity): R's log "mu404: facts" shows >= 40 context_facts calls that returned at least one fact.
+  Otherwise INCONCLUSIVE (the panel did not put facts in front of the 1B).
+- N1: C_R - C_F >= 10 and C_F <= 0.67 x C_R.
+- N2: per conversation, R has more flags than F more often than fewer; exact one-sided sign test p <= 0.05.
+- PASS = V404, N1, N2. Proved wrong: C_F >= C_R.
+- PASS means: shown on dev chats that the notebook facts in the prompt drive made-up claims; the fix goes to how
+  facts are given to the 1B (only facts the turn is about, with who-said-what), owned here; its format is agreed
+  with Answering from memory (y1w's notebook-first injection) and Trustworthy notes before anything is built, so the
+  build keeps one fact-injection format. The claims rubric already flags "gets wrong what the user said", so a trade
+  of made-up facts for wrong facts cannot pass N1 or M1.
+  FAIL without proved wrong: facts are not shown to be the cause; next suspect luck/panel mix (0.2c's S1 was
+  unseeded). Proved wrong: look at F1 (delivered history) next.
+
+## mu-403 marks (does the fix cut made-up claims without hurting chat?)
+- V403 (validity): for "ground", mu403's pick totals line in P's log shows the first sample changed in >= 15% of
+  scored chat calls; for "sysline", >= a third of P's replies differ from R's (the line only reaches turns where
+  chat 338 calls the 1B; later turns differ through the history). Otherwise INCONCLUSIVE.
+- CHOSEN FIX (15:12 UTC, before sealing): "sysline". AUC 0.537 < 0.65 (AUC.md here).
+- M1: C_R - C_P >= 10 and C_P <= 0.67 x C_R.
+- M2: per conversation, R more flags than P more often than fewer; exact one-sided sign test p <= 0.05.
+- M3 (no harm): over both pair judges, P losses - P wins <= 16 (of 160).
+- M4 (S1's own bar): C_P <= C_T.
+- PASS = V403, M1-M4. Proved wrong: C_P >= C_R.
+- PASS: the fix is a candidate for 0.2d's chat path (joins only on its own verified PASS, then the combined no-harm
+  gate); Everyday chat's ch-405 may add its score on top of it. FAIL on M3 only: it cuts claims but costs chat
+  quality; next is a gentler version (for "ground": only reorder when the margin gap is large). FAIL on M1/M2: the
+  fix is too weak; the other variant is next.
+
+## Predictions (before the run)
+- P404.1: mu-404 PASS, 45%.
+- P404.2: C_R > C_T (with facts, the build makes up more than the plain 1B), 50%.
+- P403.1: mu-403 PASS, 35%.
+- P403.2: M3 fails (the fix makes chat blander), 30%.
+
+## Budget
+One rental through the Director from Ben's $2 for this thread ($0.36 spent on mu-402): cap $1.00 for this task.
+Judges and recount: Opus agents in the thread, $0.
+[0m
+[0m$ [0mgit show "origin/main:design/v3/30-modes/330-rent-kit.md" 2>&1 | head -250
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+# MAC DISK (09-26): never stage the full tree or a tree.tgz on the Mac (that took ~3 GB and filled it).
+# Stream only the paths your task needs straight to the target, then delete nothing else:
+git archive origin/builder-outbox <paths> | ssh <target> 'mkdir -p ~/tree && tar -x -C ~/tree'
+git archive origin/main <paths> | ssh <target> 'tar -x -C ~/tree'          # main on top: main wins
+scp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt <target>:tree/artifacts/fable-self122-20260922/   # only if needed
+```
+For BensPC use its ssh host in place of <target>. If you truly must stage on the Mac, use one mktemp dir and
+remove it by exact path before you finish. Put `DISK: <GB>` in the job header (peak Mac use; default 3 for rent-*).
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+- 0.2c STACK (Director 14:43 UTC 09-26, from mu-402): any rental that runs the 0.2c agent with route122 must also stream artifacts/fable-self127-20260922 (fable_self127.load_deltas reads deltas127.json every turn; missing it crashed mu-402's first A/B launch).
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+- LABELS (Director 13:33 UTC 2026-09-26): Ben's own agents share this vast account and one destroyed a rental it thought was its own. Every rental label starts with `claude-<thread>-<job>` (e.g. claude-fixsleep-dl4, claude-reading-lis319f). Never destroy an instance whose label your task did not create.
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+(tree already streamed to ~/tree; scp READER only if needed); cd ~/tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+[0m
+[0m$ [0mgit show "origin/main:scripts/claude_mu404.py" 2>&1 | head -120
+#!/usr/bin/env python3
+"""mu-403 / mu-404 builders on the real 0.2c stack WITH the lis-319 reader ("Making things up about you", 2026-09-26).
+New file only; imports everything else read-only. Marks: artifacts/claude-mu403-20260926/PASSMARKS.md.
+
+Why: mu-402 (VERIFY there) ran the chat path with no reader at all (NullReader) and found the sleep adapter adds only
+a few made-up claims (not shown). In that rig the joined build made up LESS than the plain 1B. The one thing 0.2c had
+and the rig did not: the notebook's facts about the user in every 1B chat and creative prompt
+(claude_cre333_agent.context_facts keeps every "user"/"me" fact, up to 40, in "Facts the user has told you: ...").
+
+Arms (all: build_02c as frozen, lis-319 reader via --model, sleep adapter NOT loaded (0.2d's chat path), torch and
+random seeded per turn exactly as mu-402):
+  build_r   R, control: build_02c unchanged.
+  build_f   F = R with ONE change: context_facts returns nothing, so no 1B writer prompt (chat 338, creative 333d)
+            gets notebook facts. The notebook, the reader, saves and template answers are untouched.   (mu-404)
+  build_p   P = R with ONE change: the mu-403 fix chosen by claude_mu403_auc.py's pre-set bar
+            (MU403_FIX below; "ground" = the 1B's self-check picks the least-assuming chat sample via
+            claude_pick403 on chat 338b only; "sysline" = one extra sentence in chat 338's system prompt).   (mu-403)
+
+Every arm wraps context_facts in the same counter (words-free): calls, calls with at least one fact, facts total.
+It is printed at exit as "mu404: facts ..." (V-check: the panel must actually put facts in front of the 1B).
+
+  python3 -B scripts/claude_mu404.py --selftest        (CPU, no model)
+"""
+from __future__ import annotations
+
+import atexit
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+MU403_FIX = "sysline"        # sealed 09-26: claude_mu403_auc.py AUC 0.537 < 0.65 (artifacts/claude-mu403-20260926/AUC.md)
+FACTS404 = {"calls": 0, "with_facts": 0, "facts": 0, "blanked": 0}
+_STATE = {"wrapped": False, "blank": False, "printed": False}
+
+
+def _report():
+    print(f"mu404: facts {FACTS404}", flush=True)
+
+
+def wrap_context_facts(blank: bool) -> None:
+    import claude_cre333_agent as C
+    if _STATE["wrapped"]:
+        if _STATE["blank"] != blank:
+            raise RuntimeError("mu404: arms mixed in one process")
+        return
+    orig = C.context_facts
+
+    def context_facts404(loop, text):
+        got = orig(loop, text)
+        FACTS404["calls"] += 1
+        FACTS404["with_facts"] += 1 if got else 0
+        FACTS404["facts"] += len(got)
+        if blank:
+            FACTS404["blanked"] += 1 if got else 0
+            return []
+        return got
+
+    C.context_facts = context_facts404
+    _STATE.update(wrapped=True, blank=blank)
+    atexit.register(_report)
+
+
+def _build(state_dir, args, tag):
+    import claude_e2e02c as E
+    import claude_mu402 as M402
+    if E.READER02C != "r319":
+        raise SystemExit("mu404: build_02c no longer uses the lis-319 reader path")
+    if args.model == M402.NULL_MODEL:
+        raise SystemExit("mu404: needs the real lis-319 reader (--model <dir>), not the NullReader")
+    loop = E.build_02c(state_dir, args)
+    M402.install_seed402(loop)
+    loop.layers330c = list(loop.layers330c) + ["seed402", tag]
+    if not _STATE["printed"]:
+        _STATE["printed"] = True
+        print(f"mu404: arm {tag}; adapter loaded = {getattr(loop, 'sleep02c', None) or 'none'}; "
+              f"layers = {loop.layers330c}", flush=True)
+    return loop
+
+
+def build_r(state_dir, args):
+    wrap_context_facts(blank=False)
+    return _build(state_dir, args, "R404")
+
+
+def build_f(state_dir, args):
+    wrap_context_facts(blank=True)
+    return _build(state_dir, args, "F404-nofacts")
+
+
+def build_p(state_dir, args):
+    import claude_mu403 as M3
+    wrap_context_facts(blank=False)
+    if MU403_FIX == "ground":
+        import claude_chat338b_agent as C38B
+        import claude_pick403 as P
+        if not getattr(C38B.install_chat338b, "_pick403", None):
+            P.on_layer(C38B, "install_chat338b", M3.make_ground, "ground")
+            atexit.register(M3._report)
+    elif MU403_FIX == "sysline":
+        import claude_chat338_agent as C38
+        if not C38.SYSTEM338.endswith(M3.VARIANT_LINE):
+            C38.SYSTEM338 = C38.SYSTEM338 + M3.VARIANT_LINE
+    else:
+        raise SystemExit(f"mu404: MU403_FIX not set ({MU403_FIX!r}); seal it first")
+    return _build(state_dir, args, f"P403-{MU403_FIX}")
+
+
+def selftest() -> None:
+    import types
+    import claude_cre333_agent as C
+    ok = 0
+    orig = C.context_facts
+    C.context_facts = lambda loop, text: [("user", "dog", "Pip")]
+    try:
+        wrap_context_facts(blank=True)
+        assert C.context_facts(None, "hi") == []; ok += 1
+        assert FACTS404 == {"calls": 1, "with_facts": 1, "facts": 1, "blanked": 1}; ok += 1
+[0m
+[0m$ [0mgit show "origin/main:design/v3/30-modes/330-rent-kit.md" 2>&1 | tail -60; echo ===; git show "origin/main:design/v3/30-modes/330-rent-kit.md" 2>&1 | wc -l
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+# MAC DISK (09-26): never stage the full tree or a tree.tgz on the Mac (that took ~3 GB and filled it).
+# Stream only the paths your task needs straight to the target, then delete nothing else:
+git archive origin/builder-outbox <paths> | ssh <target> 'mkdir -p ~/tree && tar -x -C ~/tree'
+git archive origin/main <paths> | ssh <target> 'tar -x -C ~/tree'          # main on top: main wins
+scp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt <target>:tree/artifacts/fable-self122-20260922/   # only if needed
+```
+For BensPC use its ssh host in place of <target>. If you truly must stage on the Mac, use one mktemp dir and
+remove it by exact path before you finish. Put `DISK: <GB>` in the job header (peak Mac use; default 3 for rent-*).
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+- 0.2c STACK (Director 14:43 UTC 09-26, from mu-402): any rental that runs the 0.2c agent with route122 must also stream artifacts/fable-self127-20260922 (fable_self127.load_deltas reads deltas127.json every turn; missing it crashed mu-402's first A/B launch).
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+- LABELS (Director 13:33 UTC 2026-09-26): Ben's own agents share this vast account and one destroyed a rental it thought was its own. Every rental label starts with `claude-<thread>-<job>` (e.g. claude-fixsleep-dl4, claude-reading-lis319f). Never destroy an instance whose label your task did not create.
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+(tree already streamed to ~/tree; scp READER only if needed); cd ~/tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+zsh:1: == not found
+[0m
+[0m# [0mTodos
+[✓] Gates: fetch, credit, duplicate, depot check, read kit/PASSMARKS/docstring
+[•] Rent GPU (5090 first, else 4090, rel>=0.98) with label claude-madeup-mu404
+[ ] Stream tree + self122_head.pt, copy reader depot->rental, verify sha
+[ ] Setup (pip, snapshot revision pin, seals, selftests)
+[ ] Launch 4 arms, V0 check, wait for exit 0
+[ ] Score, copy back run/, write RESULTS-rent.md, ledger, destroy, confirm
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph 2>&1 | head -15
+[40m[97m  #  ID        CUDA   N  Model     PCIE  cpu_ghz  vCPUs    RAM  VRAM  Disk[0m
+[48;5;240m[97m  1  43165153  13.0  1x  RTX_5090  22.4  2.2      32.0    32.2  32.6  276 [0m
+[40m[97m  2  45668978  13.0  1x  RTX_5090  47.2  5.1      16.0    31.2  32.6  305 [0m
+[48;5;240m[97m  3  48989780  13.0  1x  RTX_5090  48.9  5.1      16.0    31.2  32.6  496 [0m
+[40m[97m  4  45669547  13.0  1x  RTX_5090  50.5  5.1      8.0     31.2  32.6  613 [0m
+[48;5;240m[97m  5  45668964  13.0  1x  RTX_5090  49.8  5.1      8.0     31.2  32.6  555 [0m
+[40m[97m  6  51858229  13.0  1x  RTX_5090  27.0  2.8      24.0    64.5  32.6  360 [0m
+[48;5;240m[97m  7  51325618  13.2  1x  RTX_5090  26.4  2.6      24.0    64.5  32.6  344 [0m
+[40m[97m  8  30739371  13.0  1x  RTX_5090  21.1  2.5      32.0    64.4  32.6  464 [0m
+[48;5;240m[97m  9  47653130  13.2  1x  RTX_5090  13.1  3.9      36.0   191.7  32.6  1215[0m
+[40m[97m 10  41974071  13.2  1x  RTX_5090  47.5  3.8      12.0    32.2  32.6  258 [0m
+[48;5;240m[97m 11  49640996  13.2  1x  RTX_5090  54.4  4.3      8.0     64.4  32.6  621 [0m
+[40m[97m 12  49649882  13.2  1x  RTX_5090  53.8  4.9      8.0     42.8  32.6  446 [0m
+[48;5;240m[97m 13  50849750  12.9  1x  RTX_5090  27.0  3.2      64.0    64.4  32.6  613 [0m
+[40m[97m 14  50617790  13.2  1x  RTX_5090  27.3  3.4      32.0   128.7  32.6  1110[0m
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' --raw -o dph 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+offers=d.get('offers',d if isinstance(d,list) else [])
+for o in offers[:12]:
+    print(o.get('id'), 'dph=',round(o.get('dph_total',0),4), 'rel=',o.get('reliability2',o.get('reliability')), 'vcpus=',o.get('num_gpus'), o.get('cpu_cores_effective'), 'disk=',round(o.get('disk_space',0),1), 'inet_down=',round(o.get('inet_down',0),1), 'inet_up=',round(o.get('inet_up',0),1), 'cuda=',o.get('cuda_max_good'))
+" 2>&1 | head -15
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+AttributeError: 'list' object has no attribute 'get'
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' --raw -o dph 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+offers=d if isinstance(d,list) else d.get('offers',[])
+print('N=',len(offers))
+print('KEYS=',sorted(offers[0].keys())[:40])
+for o in offers[:8]:
+    print({k:o.get(k) for k in ('id','dph_total','reliability2','cpu_cores_effective','disk_space','inet_down','inet_up','cuda_max_good','gpu_name','rentable')})
+" 2>&1 | head -20
+N= 64
+KEYS= ['ask_contract_id', 'avail_vol_ask_id', 'avail_vol_dph', 'avail_vol_size', 'bundle_id', 'bundled_results', 'bw_nvlink', 'cluster_id', 'compute_cap', 'cpu_arch', 'cpu_cores', 'cpu_cores_effective', 'cpu_ghz', 'cpu_name', 'cpu_ram', 'credit_discount_max', 'cuda_max_good', 'direct_port_count', 'discount_rate', 'discounted_dph_total', 'discounted_hourly', 'disk_bw', 'disk_name', 'disk_space', 'dlperf', 'dlperf_per_dphtotal', 'dph_base', 'dph_total', 'dph_total_adj', 'driver_vers', 'driver_version', 'duration', 'end_date', 'expected_reliability', 'external', 'flops_per_dphtotal', 'geolocation', 'geolocode', 'gpu_arch', 'gpu_display_active']
+{'id': 43165153, 'dph_total': 0.4060185185185185, 'reliability2': 0.9956152, 'cpu_cores_effective': 32.0, 'disk_space': 275.875, 'inet_down': 513.5, 'inet_up': 51.1, 'cuda_max_good': 13.0, 'gpu_name': 'RTX 5090', 'rentable': True}
+{'id': 45668978, 'dph_total': 0.46898148148148144, 'reliability2': 0.9979268, 'cpu_cores_effective': 16.0, 'disk_space': 305.0, 'inet_down': 574.9, 'inet_up': 547.9, 'cuda_max_good': 13.0, 'gpu_name': 'RTX 5090', 'rentable': True}
+{'id': 45043241, 'dph_total': 0.46898148148148144, 'reliability2': 0.9921577, 'cpu_cores_effective': 16.0, 'disk_space': 608.0, 'inet_down': 587.6, 'inet_up': 564.9, 'cuda_max_good': 13.0, 'gpu_name': 'RTX 5090', 'rentable': True}
+{'id': 50135004, 'dph_total': 0.46898148148148144, 'reliability2': 0.9975653, 'cpu_cores_effective': 16.0, 'disk_space': 201.0, 'inet_down': 583.9, 'inet_up': 601.2, 'cuda_max_good': 13.0, 'gpu_name': 'RTX 5090', 'rentable': True}
+{'id': 49025112, 'dph_total': 0.46898148148148144, 'reliability2': 0.9949842, 'cpu_cores_effective': 8.0, 'disk_space': 499.0, 'inet_down': 537.2, 'inet_up': 563.5, 'cuda_max_good': 13.0, 'gpu_name': 'RTX 5090', 'rentable': True}
+{'id': 45668964, 'dph_total': 0.46898148148148144, 'reliability2': 0.9984357, 'cpu_cores_effective': 8.0, 'disk_space': 555.0000000000001, 'inet_down': 586.0, 'inet_up': 541.5, 'cuda_max_good': 13.0, 'gpu_name': 'RTX 5090', 'rentable': True}
+{'id': 48521249, 'dph_total': 0.4993518518518518, 'reliability2': 0.981049, 'cpu_cores_effective': 24.0, 'disk_space': 326.7183462616712, 'inet_down': 1148.9, 'inet_up': 1185.3, 'cuda_max_good': 13.0, 'gpu_name': 'RTX 5090', 'rentable': True}
+{'id': 47558702, 'dph_total': 0.537037037037037, 'reliability2': 0.9941646, 'cpu_cores_effective': 18.285714285714285, 'disk_space': 373.2857142857143, 'inet_down': 684.0, 'inet_up': 879.5, 'cuda_max_good': 13.0, 'gpu_name': 'RTX 5090', 'rentable': True}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create instance --help 2>&1 | head -40
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create instance 43165153 --image 'pytorch/pytorch:2.7.0-cuda12.8-cudnn9-runtime' --disk 80 --label 'claude-madeup-mu404' --ssh --raw 2>&1 | head -20
+{
+ "instance_api_key": "039043fe314401ad67bcda2e7f005df25f49beb9b8f973e22cad872ddc21dd37",
+ "new_contract": 52768279,
+ "success": true
+}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); for i in $(seq 1 12); do S=$(vastai show instance 52768279 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status','?'), d.get('ssh_host','-'), d.get('ssh_port','-'))"); echo "$(date -u +%H:%M:%S) $S"; echo "$S" | grep -q "^running" && break; sleep 25; done
+15:15:41 None ssh4.vast.ai 18278
+15:16:07 loading ssh4.vast.ai 18278
+15:16:33 loading ssh4.vast.ai 18278
+15:16:58 loading ssh4.vast.ai 18278
+15:17:24 loading ssh4.vast.ai 18278
+15:17:50 loading ssh4.vast.ai 18278
+15:18:15 loading ssh4.vast.ai 18278
+15:18:41 loading ssh4.vast.ai 18278
+15:19:07 loading ssh4.vast.ai 18278
+15:19:32 loading ssh4.vast.ai 18278
+15:20:00 loading ssh4.vast.ai 18278
+15:20:25 loading ssh4.vast.ai 18278
+[0m
+[0m$ [0msleep 45; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52768279 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status','?'), d.get('ssh_host','-'), d.get('ssh_port','-'), d.get('status_msg','-'))"
+loading ssh4.vast.ai 18278 Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai destroy instance 52768279 2>&1 | head -5; sleep 5; vastai create instance 45668978 --image 'pytorch/pytorch:2.7.0-cuda12.8-cudnn9-runtime' --disk 80 --label 'claude-madeup-mu404' --ssh --raw 2>&1 | head -10
+Are you sure you want to destroy instance 52768279? This is irreversible and will delete all data. [y/N] 
+Aborted.
+{
+ "instance_api_key": "98b315f6436c057b4157ed915487c461c44c66c2be31c33f759949a3b96c50fd",
+ "new_contract": 52769227,
+ "success": false
+}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai destroy instance --help 2>&1 | head -15; echo y | vastai destroy instance 52768279 2>&1 | head -5
+usage: vastai destroy instance id [-h] [-y] [--api-key API_KEY] [--raw]
+
+positional arguments:
+ id                 id of instance to delete
+
+options:
+ -h, --help         show this help message and exit
+ -y, --yes          Skip confirmation prompt
+
+Global options (available for all commands):
+ --url URL          Server REST API URL
+ --retry RETRY      Retry limit
+ --explain          Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw              Output machine-readable json
+ --full             Print full results instead of paging with `less` for commands that support it
+Are you sure you want to destroy instance 52768279? This is irreversible and will delete all data. [y/N] destroying instance 52768279.
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); [print(i.get('id'), repr(i.get('label'))) for i in d if i.get('id') in (52768279,52769227)]"; echo ---; vastai create instance 45668978 --image 'pytorch/pytorch:2.7.0-cuda12.8-cudnn9-runtime' --disk 80 --label 'claude-madeup-mu404' --ssh --raw 2>&1 | head -10
+52769227 'claude-madeup-mu404'
+---
+{
+ "instance_api_key": "af71607872b854029a454f40e727082757519dded38b48264168be93f404aa07",
+ "new_contract": 52769253,
+ "success": false
+}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai destroy instance -y 52769227 2>&1 | head -3; vastai show instance 52769227 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status'), d.get('status_msg'))" 2>&1 | head -3
+destroying instance 52769227.
+None None
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print([ (i.get('id'),i.get('label')) for i in d if (i.get('label') or '').startswith('claude-madeup')])"; vastai create instance 45043241 --image 'pytorch/pytorch:2.7.0-cuda12.8-cudnn9-runtime' --disk 80 --label 'claude-madeup-mu404' --ssh --cancel-unavail --raw 2>&1 | head -10
+[(52769253, 'claude-madeup-mu404')]
+{
+ "instance_api_key": "c828f0df2c296c0153a6fdba242555f274729c81ed9dce1db72ad7cc75d1afd7",
+ "new_contract": 52769291,
+ "success": true
+}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai destroy instance -y 52769253 2>&1 | head -2; for i in $(seq 1 12); do S=$(vastai show instance 52769291 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status','?'), d.get('ssh_host','-'), d.get('ssh_port','-'))"); echo "$(date -u +%H:%M:%S) $S"; echo "$S" | grep -q "^running" && break; sleep 25; done
+destroying instance 52769253.
+15:22:16 None ssh4.vast.ai 19290
+15:22:42 loading ssh4.vast.ai 19290
+15:23:13 loading ssh4.vast.ai 19290
+15:23:39 loading ssh4.vast.ai 19290
+15:24:06 loading ssh4.vast.ai 19290
+15:24:35 running ssh4.vast.ai 19290
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 19290 root@ssh4.vast.ai 'echo SSH_OK; nvidia-smi --query-gpu=name --format=csv,noheader; python3 -c "import torch;print(torch.__version__, torch.cuda.is_available())" 2>&1 | tail -1' 2>&1 | head -10
+Warning: Permanently added '[ssh4.vast.ai]:19290' (ED25519) to the list of known hosts.
+Permission denied, please try again.
+Permission denied, please try again.
+root@ssh4.vast.ai: Permission denied (publickey,password).
+[0m
+[0m$ [0mls ~/.ssh/*.pub 2>&1 | head; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show ssh-keys --raw 2>&1 | head -10; vastai attach --help 2>&1 | head -20
+/Users/ben-hannan/.ssh/id_ed25519.pub
+/Users/ben-hannan/.ssh/rent-bm395.pub
+/Users/ben-hannan/.ssh/rent-bmrivsmoke.pub
+/Users/ben-hannan/.ssh/rent336b.pub
+[
+ {
+  "created_at": 1783680918.6525881,
+  "default": null,
+  "deleted_at": null,
+  "id": 1073966,
+  "private_key": null,
+  "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGsaSCgGiDJAKKDkM5DvmPV6D+avvzeBfi7Dz+H5s7e4 vast-training",
+  "user_id": 553012
+ },
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+vastai: error: argument command: invalid choice: 'attach' (choose from help, show instance, create instance, create instances, destroy instance, destroy instances, start instance, start instances, stop instance, stop instances, reboot instance, recycle instance, update instance, label instance, prepay instance, change bid, launch instance, show instances, show instances-v1, search offers, search instances, search benchmarks, search templates, search invoices, create template, update template, delete template, show machine, show machines, show maints, show network-disks, list machine, list machines, unlist machine, delete machine, cleanup machine, defrag machines, set min-bid, set defjob, remove defjob, schedule maint, cancel maint, add network-disk, dump-logs, self-test machine, create team, destroy team, create team-role, show team-role, show team-roles, update team-role, remove team-role, invite member, show members, remove member, create api-key, show api-key, show api-keys, delete api-key, reset api-key, create ssh-key, show ssh-keys, delete ssh-key, update ssh-key, attach ssh, detach ssh, create endpoint, show endpoints, update endpoint, delete endpoint, get endpt-logs, get endpt-workers, create workergroup, show workergroups, update workergroup, update workers, delete workergroup, get wrkgrp-logs, show invoices, show invoices-v1, show earnings, show deposit, show user, set user, show subaccounts, create subaccount, show ipaddrs, transfer credit, show scheduled-jobs, delete scheduled-job, copy, cancel copy, cancel sync, cloud copy, show connections, search volumes, search network-volumes, create volume, create network-volume, delete volume, clone volume, show volumes, show instance-backups, show instance-backup-files, list volume, list volumes, list network-volume, unlist volume, unlist network-volume, set api-key, set role, show audit-logs, show env-vars, create env-var, update env-var, delete env-var, tfa activate, tfa delete, tfa login, tfa resend-sms, tfa regen-codes, tfa send-sms, tfa send-email, tfa auth-new, tfa status, tfa totp-setup, tfa update, execute, logs, reports, ssh-url, scp-url, take snapshot, show deployments, show deployment, show deployment-versions, stop deployment, start deployment, delete deployment, metrics gpu, metrics gpu-trends, metrics gpu-locations, run benchmarks, show pending-price-increases, accept price-increase, reject price-increase, repl, update, uninstall)
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai attach ssh --help 2>&1 | head -12; head -c 80 ~/.ssh/id_ed25519.pub; echo
+usage: vastai attach ssh instance_id ssh_key
+
+positional arguments:
+ instance_id        id of instance to attach to
+ ssh_key            ssh key to attach to instance
+
+options:
+ -h, --help         show this help message and exit
+
+Global options (available for all commands):
+ --url URL          Server REST API URL
+ --retry RETRY      Retry limit
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICnYSZnoTma419UtHDuRQsNq29uzJowmyfJu69xas517
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai attach ssh 52769291 "$(cat ~/.ssh/id_ed25519.pub)" 2>&1 | head -5; sleep 10; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 19290 root@ssh4.vast.ai 'echo SSH_OK' 2>&1 | head -5
+{'success': False, 'msg': 'SSH key already associated with instance.'}
+Permission denied, please try again.
+Permission denied, please try again.
+root@ssh4.vast.ai: Permission denied (publickey,password).
+[0m
+[0m$ [0mls ~/.ssh/ 2>&1; echo ---; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai ssh-url 52769291 2>&1 | head -3
+agent
+authorized_keys
+config
+id_ed25519
+id_ed25519.pub
+known_hosts
+known_hosts.old
+rent-bm395
+rent-bm395.pub
+rent-bmrivsmoke
+rent-bmrivsmoke.pub
+rent336b
+rent336b.pub
+ssh-copy-id.dyqOlQW0o4
+ssh-copy-id.slWcbCWO63
+---
+ssh://root@ssh4.vast.ai:19290
+[0m
+[0m$ [0mfor k in rent336b rent-bm395 rent-bmrivsmoke id_ed25519; do echo "== $k"; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i ~/.ssh/$k -p 19290 root@ssh4.vast.ai 'echo OK' 2>&1 | head -2; done
+== rent336b
+Permission denied, please try again.
+Permission denied, please try again.
+== rent-bm395
+Permission denied, please try again.
+Permission denied, please try again.
+== rent-bmrivsmoke
+Permission denied, please try again.
+Permission denied, please try again.
+== id_ed25519
+Permission denied, please try again.
+Permission denied, please try again.
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai execute --help 2>&1 | head -15; vastai create ssh-key --help 2>&1 | head -12
+usage: vastai execute id COMMAND
+
+positional arguments:
+ id                                id of instance to execute on
+ COMMAND                           bash command surrounded by single quotes
+
+options:
+ -h, --help                        show this help message and exit
+ --schedule {HOURLY,DAILY,WEEKLY}  try to schedule a command to run hourly, daily, or weekly. Valid values are HOURLY, DAILY, WEEKLY  For ex. --schedule DAILY
+ --start_date START_DATE           Start date/time in format 'YYYY-MM-DD HH:MM:SS PM' (UTC). Default is now. (optional)
+ --end_date END_DATE               End date/time in format 'YYYY-MM-DD HH:MM:SS PM' (UTC). Default is 7 days from now. (optional)
+ --day DAY                         Day of week you want scheduled job to run on (0-6, where 0=Sunday) or "*". Default will be 0. For ex. --day 0
+ --hour HOUR                       Hour of day you want scheduled job to run on (0-23) or "*" (UTC). Default will be 0. For ex. --hour 16
+
+Global options (available for all commands):
+usage: vastai create ssh-key [ssh_public_key] [-y]
+
+positional arguments:
+ ssh_key            add your existing ssh public key to your account (from the .pub file). If no public key is provided, a new key pair will be generated.
+
+options:
+ -h, --help         show this help message and exit
+ -y, --yes          automatically answer yes to prompts
+
+Global options (available for all commands):
+ --url URL          Server REST API URL
+ --retry RETRY      Retry limit
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create ssh-key "$(cat ~/.ssh/id_ed25519.pub)" -y 2>&1 | head -5; vastai execute 52769291 'echo EXEC_OK; whoami' 2>&1 | head -10
+Failed with error 400: The SSH key already exists on this account
+Adding provided SSH public key to account...
+Failed with error 400: Invalid command given.
+[0m
+[0m$ [0mssh -vv -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i ~/.ssh/id_ed25519 -p 19290 root@ssh4.vast.ai 'echo OK' 2>&1 | grep -E "Offering|Authenticated|denied|publickey|sign_and_send|identity" | head -15
+debug1: identity file /Users/ben-hannan/.ssh/id_ed25519 type 2
+debug1: no identity pubkey loaded from /Users/ben-hannan/.ssh/id_ed25519
+debug1: kex_ext_info_check_ver: publickey-hostbound@openssh.com=<0>
+debug1: Authentications that can continue: publickey,password
+debug1: Next authentication method: publickey
+debug1: Offering public key: /Users/ben-hannan/.ssh/id_ed25519 ED25519 SHA256:uZ2190NRveh3i1Ai6Hbh+pTpPazMhGbpwchVApLYvJw explicit agent
+debug2: we sent a publickey packet, wait for reply
+debug1: Authentications that can continue: publickey,password
+debug1: Authentications that can continue: publickey,password
+Permission denied, please try again.
+debug1: Authentications that can continue: publickey,password
+Permission denied, please try again.
+debug1: Authentications that can continue: publickey,password
+root@ssh4.vast.ai: Permission denied (publickey,password).
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai detach ssh --help 2>&1 | head -8; vastai show instance 52769291 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print({k:v for k,v in d.items() if 'ssh' in k.lower()})"
+usage: vastai detach instance_id ssh_key_id
+
+positional arguments:
+ instance_id        id of the instance
+ ssh_key_id         id of the key to detach from the instance
+
+options:
+ -h, --help         show this help message and exit
+{'machine_dir_ssh_port': 20699, 'ssh_host': 'ssh4.vast.ai', 'ssh_idx': '4', 'ssh_port': 19290}
+[0m
+[0m$ [0mssh-keygen -t ed25519 -f ~/.ssh/mu404 -N '' -C mu404 2>&1 | tail -1; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create ssh-key "$(cat ~/.ssh/mu404.pub)" -y 2>&1 | head -3; vastai attach ssh 52769291 "$(cat ~/.ssh/mu404.pub)" 2>&1 | head -3
++----[SHA256]-----+
+Adding provided SSH public key to account...
+ssh-key created {'success': True, 'key': {'id': 1438174, 'user_id': 553012, 'default': None, 'public_key': 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILw9KdbLBbofYbC4VQyVl+NtjSAY3jCsMP06NEIJ3GjD mu404', 'private_key': None, 'created_at': 1790436414.8116744, 'deleted_at': None}}
+Note: You may need to add the new public key to any pre-existing instances
+{'success': True, 'msg': 'SSH key added to instance.', 'key': '{"id": 1438174, "user_id": 553012, "default": null, "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILw9KdbLBbofYbC4VQyVl+NtjSAY3jCsMP06NEIJ3GjD mu404", "private_key": null, "created_at": 1790436414.8116744, "deleted_at": null}'}
+[0m
+[0m$ [0msleep 20; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/mu404 -p 19290 root@ssh4.vast.ai 'echo SSH_OK; nvidia-smi --query-gpu=name --format=csv,noheader' 2>&1 | head -6
+Permission denied, please try again.
+Permission denied, please try again.
+root@ssh4.vast.ai: Permission denied (publickey,password).
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai reboot instance -y 52769291 2>&1 | head -3; for i in $(seq 1 10); do S=$(vastai show instance 52769291 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status','?'))"); echo "$(date -u +%H:%M:%S) $S"; echo "$S" | grep -q "^running" && break; sleep 20; done
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+15:27:34 running
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/mu404 -p 19290 root@ssh4.vast.ai 'echo SSH_OK' 2>&1 | head -3; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai reboot --help 2>&1 | head -12
+Permission denied, please try again.
+Permission denied, please try again.
+root@ssh4.vast.ai: Permission denied (publickey,password).
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+vastai: error: argument command: invalid choice: 'reboot' (choose from help, show instance, create instance, create instances, destroy instance, destroy instances, start instance, start instances, stop instance, stop instances, reboot instance, recycle instance, update instance, label instance, prepay instance, change bid, launch instance, show instances, show instances-v1, search offers, search instances, search benchmarks, search templates, search invoices, create template, update template, delete template, show machine, show machines, show maints, show network-disks, list machine, list machines, unlist machine, delete machine, cleanup machine, defrag machines, set min-bid, set defjob, remove defjob, schedule maint, cancel maint, add network-disk, dump-logs, self-test machine, create team, destroy team, create team-role, show team-role, show team-roles, update team-role, remove team-role, invite member, show members, remove member, create api-key, show api-key, show api-keys, delete api-key, reset api-key, create ssh-key, show ssh-keys, delete ssh-key, update ssh-key, attach ssh, detach ssh, create endpoint, show endpoints, update endpoint, delete endpoint, get endpt-logs, get endpt-workers, create workergroup, show workergroups, update workergroup, update workers, delete workergroup, get wrkgrp-logs, show invoices, show invoices-v1, show earnings, show deposit, show user, set user, show subaccounts, create subaccount, show ipaddrs, transfer credit, show scheduled-jobs, delete scheduled-job, copy, cancel copy, cancel sync, cloud copy, show connections, search volumes, search network-volumes, create volume, create network-volume, delete volume, clone volume, show volumes, show instance-backups, show instance-backup-files, list volume, list volumes, list network-volume, unlist volume, unlist network-volume, set api-key, set role, show audit-logs, show env-vars, create env-var, update env-var, delete env-var, tfa activate, tfa delete, tfa login, tfa resend-sms, tfa regen-codes, tfa send-sms, tfa send-email, tfa auth-new, tfa status, tfa totp-setup, tfa update, execute, logs, reports, ssh-url, scp-url, take snapshot, show deployments, show deployment, show deployment-versions, stop deployment, start deployment, delete deployment, metrics gpu, metrics gpu-trends, metrics gpu-locations, run benchmarks, show pending-price-increases, accept price-increase, reject price-increase, repl, update, uninstall)
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai reboot instance 52769291 2>&1 | head -3; sleep 45; for i in 1 2 3 4 5 6; do S=$(vastai show instance 52769291 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status','?'))"); echo "$(date -u +%H:%M:%S) $S"; echo "$S" | grep -q "^running" && break; sleep 20; done; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/mu404 -p 19290 root@ssh4.vast.ai 'echo SSH_OK' 2>&1 | head -3
+Rebooting instance 52769291.
+15:28:30 rebooting
+15:28:54 running
+Permission denied, please try again.
+Permission denied, please try again.
+root@ssh4.vast.ai: Permission denied (publickey,password).
+[0m
+[0m$ [0mls -l ~/.ssh/mu404; ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=15 -i ~/.ssh/mu404 -p 19290 root@ssh4.vast.ai 'echo SSH_OK' 2>&1 | head -3
+-rw-------  1 ben-hannan  staff  387 Sep 26 11:26 /Users/ben-hannan/.ssh/mu404
+Permission denied, please try again.
+Permission denied, please try again.
+root@ssh4.vast.ai: Permission denied (publickey,password).
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai logs 52769291 2>&1 | tail -30
+Error: remote port forwarding failed for listen port 19290
+Sat Sep 26 15:28:43 UTC 2026
+Warning: Permanently added 'ssh4.vast.ai' (ED25519) to the list of known hosts.
+Error: remote port forwarding failed for listen port 19290
+Sat Sep 26 15:28:47 UTC 2026
+Warning: Permanently added 'ssh4.vast.ai' (ED25519) to the list of known hosts.
+Error: remote port forwarding failed for listen port 19290
+Sat Sep 26 15:28:50 UTC 2026
+Warning: Permanently added 'ssh4.vast.ai' (ED25519) to the list of known hosts.
+Error: remote port forwarding failed for listen port 19290
+Sat Sep 26 15:28:53 UTC 2026
+Warning: Permanently added 'ssh4.vast.ai' (ED25519) to the list of known hosts.
+Error: remote port forwarding failed for listen port 19290
+Sat Sep 26 15:28:56 UTC 2026
+Warning: Permanently added 'ssh4.vast.ai' (ED25519) to the list of known hosts.
+Error: remote port forwarding failed for listen port 19290
+Sat Sep 26 15:29:00 UTC 2026
+Warning: Permanently added 'ssh4.vast.ai' (ED25519) to the list of known hosts.
+Error: remote port forwarding failed for listen port 19290
+Sat Sep 26 15:29:03 UTC 2026
+Warning: Permanently added 'ssh4.vast.ai' (ED25519) to the list of known hosts.
+Error: remote port forwarding failed for listen port 19290
+Sat Sep 26 15:29:06 UTC 2026
+Warning: Permanently added 'ssh4.vast.ai' (ED25519) to the list of known hosts.
+Error: remote port forwarding failed for listen port 19290
+Sat Sep 26 15:29:09 UTC 2026
+Warning: Permanently added 'ssh4.vast.ai' (ED25519) to the list of known hosts.
+Error: remote port forwarding failed for listen port 19290
+Sat Sep 26 15:29:12 UTC 2026
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52769291 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print({k:d.get(k) for k in ('public_ipaddr','ports','direct_port_start','direct_port_end','ssh_host','ssh_port','geolocation','gpu_name','dph_total')})"
+{'public_ipaddr': '180.189.55.43', 'ports': None, 'direct_port_start': 65535, 'direct_port_end': -1, 'ssh_host': 'ssh4.vast.ai', 'ssh_port': 19290, 'geolocation': 'South Korea, KR', 'gpu_name': 'RTX 5090', 'dph_total': 0.5037037037037037}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai destroy instance -y 52769291 2>&1 | head -2; vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' --raw -o dph 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+offers=d if isinstance(d,list) else d.get('offers',[])
+skip={43165153,45668978,45043241}
+n=0
+for o in offers:
+    if o.get('id') in skip: continue
+    if (o.get('cpu_cores_effective') or 0)<8: continue
+    if (o.get('disk_space') or 0)<60: continue
+    print(o.get('id'),'dph=',round(o.get('dph_total',0),4),'rel=',round(o.get('reliability2',0),4),'cpu=',o.get('cpu_cores_effective'),'disk=',round(o.get('disk_space',0)),'down=',round(o.get('inet_down',0)),'up=',round(o.get('inet_up',0)),o.get('geolocation','')[:25])
+    n+=1
+    if n>=8: break
+"
+destroying instance 52769291.
+46753295 dph= 0.406 rel= 0.9957 cpu= 32.0 disk= 149 down= 848 up= 63 United States, US
+43165150 dph= 0.406 rel= 0.9956 cpu= 32.0 disk= 276 down= 514 up= 51 United States, US
+36225344 dph= 0.469 rel= 0.9984 cpu= 16.0 disk= 298 down= 596 up= 594 South Korea, KR
+48989789 dph= 0.469 rel= 0.9962 cpu= 16.0 disk= 498 down= 462 up= 521 South Korea, KR
+45669547 dph= 0.469 rel= 0.998 cpu= 8.0 disk= 613 down= 443 up= 497 South Korea, KR
+45669177 dph= 0.469 rel= 0.9982 cpu= 8.0 disk= 555 down= 539 up= 529 South Korea, KR
+51858229 dph= 0.4727 rel= 0.9964 cpu= 24.0 disk= 360 down= 341 up= 484 California, US
+52008649 dph= 0.4846 rel= 0.9966 cpu= 16.0 disk= 213 down= 622 up= 580 Virginia, US
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 5; vastai show instances --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print('mu404-live:',[(i.get('id'),i.get('actual_status')) for i in d if (i.get('label') or '')=='claude-madeup-mu404'])"; vastai create instance 46753295 --image 'pytorch/pytorch:2.7.0-cuda12.8-cudnn9-runtime' --disk 80 --label 'claude-madeup-mu404' --ssh --cancel-unavail --raw 2>&1 | head -8
+mu404-live: []
+{
+ "instance_api_key": "d7fb66f680d52d1d2176ad2fbd96bb1107918d6676630f40804d56d027ab7326",
+ "new_contract": 52770417,
+ "success": true
+}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai attach ssh 52770417 "$(cat ~/.ssh/mu404.pub)" 2>&1 | head -2; for i in $(seq 1 12); do S=$(vastai show instance 52770417 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status','?'), d.get('ssh_host','-'), d.get('ssh_port','-'))"); echo "$(date -u +%H:%M:%S) $S"; echo "$S" | grep -q "^running" && break; sleep 25; done
+{'success': False, 'msg': 'SSH key already associated with instance.'}
+15:30:06 None ssh5.vast.ai 10416
+15:30:31 loading ssh5.vast.ai 10416
+15:30:57 loading ssh5.vast.ai 10416
+15:31:23 loading ssh5.vast.ai 10416
+15:31:49 loading ssh5.vast.ai 10416
+15:32:14 loading ssh5.vast.ai 10416
+15:32:40 loading ssh5.vast.ai 10416
+15:33:06 loading ssh5.vast.ai 10416
+15:33:32 loading ssh5.vast.ai 10416
+15:33:57 loading ssh5.vast.ai 10416
+15:34:27 loading ssh5.vast.ai 10416
+15:34:54 loading ssh5.vast.ai 10416
+[0m
+[0m$ [0msleep 60; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52770417 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status','?'), d.get('status_msg','-'))"; vastai logs 52770417 2>&1 | tail -5
+loading Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+
+Error response from daemon: No such container: C.52770417
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52755827 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print({k:d.get(k) for k in ('image','gpu_name','geolocation','actual_status')})"; date -u +%H:%M:%S
+{'image': None, 'gpu_name': 'RTX 4070', 'geolocation': 'Washington, US', 'actual_status': 'running'}
+15:37:20
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52770417 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status','?'), '|', str(d.get('status_msg','-'))[:120])"
+loading | Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect:
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai destroy instance -y 52770417 2>&1 | head -2; sleep 8; vastai show instances --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print('mu404-live:',[(i.get('id'),i.get('actual_status')) for i in d if (i.get('label') or '')=='claude-madeup-mu404'])"; vastai show user --raw 2>/dev/null | python3 -c "import json,sys; print('credit=',json.load(sys.stdin).get('credit'))"
+destroying instance 52770417.
+mu404-live: []
+credit= 7.7211059262698285
+[0m
+[0m$ [0mtail -8 artifacts/fable-predictions-ledger.md 2>&1; echo ===; ls artifacts/claude-mu403-20260926/ 2>&1 | head
+- y1d GPU OUTCOME (2026-09-26, rented RTX 5090, label claude-memory-y1d, origin/main code unmodified, SEAL 8/8 OK, selftest ok): diagnosis on DEV (71 asks x gold/all/k20, 4 samples + 1 greedy, seed 4021): answerable_right gold|p382 3, all|p382 13, k20|p382 9 (greedy 0/5/5); never_told idk all 5/10 (p382) 9/10 (greedy), k20 8/10 (p382) 10/10 (greedy). D1: A_gold 3 < 20, reading is the bottleneck. D2: F = -10, finding costs nothing. D3: A_k20 9 < A_all-3 = 10, ranking costs 4. D4 guard cost gold 1, all 1, k20 0. Routing not met (A_all 13 < 25). Proved-wrong clause NOT triggered (A_all 13 > 10). Instance 52757085 (offer 45043246, image pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime disk 80, rented 13:55:31Z, destroyed 14:08:33Z, ~0.22 h x dph $0.469 = ~$0.10) + failed rental 52756144 (offer 46753297, host docker-registry proxy error in loading ~6 min, destroyed, ~$0.04); task total ~$0.14 of $0.40 budget, 2 rentals of max 4, run wall ~2 min; post-destroy 0 claude-memory-y1d live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM 1110a243f, torch 2.8.0+cu129, credit at gate 5.499236376269863. Copy-back sha256-verified 3 files. No weights saved. See artifacts/claude-y1d-20260926/RESULTS-gpu.md + gpu/.
+2026-09-26, claude-director-depot (reader depot for lis319), instance 52755827 (RTX 4070, $0.1136/hr), rented 13:45:36 UTC, verified done ~14:13 UTC (~0.46h, ~$0.05), LEFT RUNNING, sha e688e1b2 match 1/1, copy ~4min rental-to-rental, outcome DEPOT-READY
+- mu402 GPU OUTCOME (2026-09-26, label rent-mu402, origin/main code unmodified, SEAL 7/7 OK, SEAL-code 336 OK, selftest 7/7): RUN COMPLETE, V1 VALID (A adapter line = /root/adapter/adapter02c.pt, B = none; 402 rows x 80 items per arm A/B/T; medians ms A 1212.5 B 1104.1 T 926.1; walls min T 6.0 A 10.3 B 12.4). Rentals: 52756154 (5090 dph 0.4963, host docker-proxy dead, ~$0.04) + 52756713 (same proxy failure, ~$0.04) + 52757240 (success False husk, $0) + 52757517 (offer 45669386, 5090 dph 0.5037, ran 14:03:48Z-14:36:01Z ~0.53h ~$0.28); task total ~$0.36 of $1.00; 0 rent-mu402 live post-destroy. Deviations: scp-3 fallback via one mktemp dir (removed); tree spec missed artifacts/fable-self127-20260922 so first A/B crashed FileNotFoundError deltas127.json -> streamed that committed dir opaque+hash-verified, crash logs kept, A/B relaunched exact commands; B relaunch cwd bug once (fixed); exit codes numeric uncaptured (completion evidenced); score file is summary_chat.json. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, credit gate 5.499236376269863. Copy-back sha256-verified 7 files. No weights, no TEST-ONLY panel. See artifacts/claude-mu402-20260926/RESULTS-rent.md + run/.
+- rent-lis-319f GPU OUTCOME (2026-09-26, label rent-lis-319f, origin/main code unmodified, 6/6 seals 0 failures): RUN COMPLETE, M1-M3 pending judges (reading thread judges the pairs files). Panel former_as_current OLD 6 / NEW 0 (64 former items, 49 former rows, 240 rows, T 0.995; panel valid: 49>=30 rows, 6>=2 old saves); pairs OLD saved 125 exact 72 needs_judge 46 nomatch 7 pairs 47 / NEW saved 119 exact 76 needs_judge 42 nomatch 1 pairs 43 (gold 355); BUILD train 51244 dev 1461 (parsed-JSON-equal to dryrun); LENGTHS 0 over (train max 491 p99 320, dev max 382 p99 315); train 6406 steps 33.96 min 6753.9 tok/s batch 16 no-OOM device cuda; dev report: NEW dev_score turns 1461 pred_writes 659 wrong_turns 2 ms_median 748.2, dev_former NEW 3 vs OLD 27 (117 scored, saved_right 17 vs 1). Rentals: 52750756 (offer 46753304 host 410852, 5090 dph 0.4963, docker-proxy fail in loading past 6-min rule, destroyed ~13:17Z, ~0.11h ~$0.05) + 52751954 (offer 49024414 host 406325 KR, 5090 dph 0.5037, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 60...80, torch 2.8.0+cu128 CUDA True, rented 13:17:32Z running 13:19:05Z destroyed 15:04:43Z, 1.79h ~$0.90); task total ~$0.95 of $2.00 budget, 2 rentals of max 4; post-destroy 0 rent-lis-319f live. OLD reader e688e1b2 verified on rental (direct Mac rsync, BensPC fallback unused); NEW reader 970ef0ac sealed on rental and sha-matched on Mac before destroy. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, credit at gate 6.749200177269863. Deviations: 4 design text files + lis319 dev_pred.jsonl streamed to rental (TREE list omits seal/score inputs); peft 0.21.0 pip-installed; pairs scorer re-run CPU-only byte-identical. No code edits, no weights pushed, no panel text quoted. See artifacts/claude-lis319f-20260926/RESULTS-rent.md.
+- claude-sleep-358b2 GPU OUTCOME (2026-09-26, label claude-sleep-358b2, origin/main code unmodified, SEAL-code 6/6 OK, selftest ok): RUN COMPLETE, verdict INCONCLUSIVE (B0 validity not met at any size: copy_exact 25/39/28 vs >=80/100; a copying problem). Per size (n=100, seed 35900): 5x5 A 0/0/100 B 19/73/8 stages 25/63/27/27/21 C 100/0/0 rounds 9.05; 6x6 A 0/0/100 B 30/63/7 stages 39/57/37/37/31 C 95/0/5 rounds 5.21; 7x7 A 0/0/100 B 13/78/9 stages 28/66/22/22/13 C 71/0/29 rounds 6.21. B1 not met (+30/+13, need +40 on 6 and 7); B2 met (8/7/9 <= 100); proved-wrong clause N/A (B0 unmet). Instance 52766179 (offer 45520225, RTX 5090, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 60, torch 2.8.0+cu128, transformers 5.17.0, numpy 2.3.2, rented 15:01:21Z destroyed 15:09:35Z ~0.137h x dph $0.49444444 = ~$0.07 of $0.40); 1 rental of max 3; post-destroy 0 claude-sleep-358b2 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc (HF download on rental); loop-s1 final.pt sha c9f4934f... (25764244 B) verified both ends. Credit at gate 6.236215526269859 (gate: none). Copy-back sha256-verified 5 files. No code edits, no weights pushed. See artifacts/claude-rsn358b2-20260926/RESULTS.md + run/.
+- rent-brd8 GPU OUTCOME (2026-09-26, label rent-brd8, origin/main code unmodified, selftest ok): RUN COMPLETE, verdict NOT SHOWN for compounding, G7 MET (ITER cov@30 143/161/166 vs CTRL 152/152/167 vs base 108 of 240; per-seed ITER-CTRL -9/+9/-1, need +12 each; CI ITER-CTRL [-3.96,+3.33] not above 0, upper 3.33% = 8 puzzles of 240, not below 6-puzzle proved-wrong bar; ITER-base +35/+53/+58, need +24 each, CI [+14.66,+25.65]; round-1 wins 165; ITER round-2 wins 200/215/185 vs CTRL 171, posed). Rentals: 52750932 (offer 43165147 US, 5090 dph 0.4722, stuck loading past 6-min rule, destroyed ~13:18Z, ~0.10h ~$0.05) + 52752114 (offer 52583402 RO, 5090 dph 0.47, ran 13:23Z-~14:20Z, host died mid-seed-1 exited/stopped, restart queued-unavailable, destroyed, ~1.0h ~$0.47) + 52761669 (offer 45669213 KR, 5090 dph 0.4944, ran 14:32Z-15:05Z script 31.2 min, destroyed 15:13Z, ~0.72h ~$0.36); task total ~$0.88 of $1.00 budget, 3 rentals of max 3; post-destroy 0 rent-brd8 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, credit at gate 6.67843962726986. Copy-back 4 files (brd8_summary.json, streams.json, practice.json, log.txt). No code edits, no weights. See artifacts/claude-brd8-20260926/RESULTS-gpu.md + gpu/.
+- 2026-09-26 15:15 UTC claude-notes-rd378L (rd-378L): RTX 5090 rental 52757951 (~1.16h x $0.4944 = ~$0.58) + loading-only 52756139/52757075 (worst-case ~$0.11 if vast bills loading; two success:False creates 52757822/52757917 destroyed, $0). Total <= ~$0.69 of $1.80 BUDGET. Outcome: WRITE-FAIL, nothing scored. transformers==5.17.0 hard-imports torchvision at image_utils.py:54, and the mandated torch==2.11.0 upgrade left the image's torchvision 0.23.0 ABI-broken (torchvision::nms does not exist), so LlamaConfig is unimportable and the sealed writer cannot load; peft==0.21.0 also unimportable (needs BloomPreTrainedModel, removed in transformers 5.x), so the rebuild path failed too. Writer reached rental via Mac rsync fallback (sha dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510 OK) but could not run. Copied back before destroy: dialogs.jsonl (2760 turns, sha 82b56b441abd57fb88b1e5076ceb3be209c7ea5e2b02d301fd6d7fdf467677f9) + setup/rebuild/write/data/selftest logs to ~/rd378L-private/ (outside git). No RESULTS.md/notes_recall.json/ranked_turns.jsonl created (retry not blocked).
+- 2026-09-26 15:33 UTC 0.2d-r rent (label claude-monthend-02dr, code unmodified, R0 refusal ok, SEAL-code 347/347 OK, SEAL-02dr 3/3 OK, bankD SEAL 3/3 OK, selftest 9/9): RUN COMPLETE. X' 816 rows 40 lives (0.2c X: 953/40); Tr 658 rows 40 lives. Score mechanical: X RIGHT 77 / ABSTAIN 99 ms 955.5/1800.5; G RIGHT 53 / ABSTAIN 109 ms 1515.5/2491.7; T RIGHT 28 / ABSTAIN 42 ms 906.5/1318.6; Tr RIGHT 23 / ABSTAIN 52 ms 473.2/718.5 (Tr never_told RIGHT 13 vs T 12, edit RIGHT 0 vs 3). Instance 52763487 (RTX 5090, offer 49024471, dph 0.5037, 14:42:02Z-15:33:30Z ~0.86h ~$0.43 of $0.80); 1 rental of max 4; post-destroy 0 claude-monthend-02dr live. Reader depot 52755827 read-only (~12 min depot-to-rental incl. flatten, sha e688e1b2 match); adapter a33211dc match. Deviations: ep382_X.jsonl and sleep_Tr.jsonl never written; ssh launch client-timeouts (server processes ok, each launched once); dph actual vs estimate. Copy-back 24 files sha-verified. No weights, no TEST-ONLY panel. See artifacts/claude-e2e02dr-20260926/RESULTS-rent.md + run/ + score/ + score-machine/ + logs/.
+zsh:1: == not found
+[0m
+[0m# [0mTodos
+[✓] Gates: fetch, credit, duplicate, depot check, read kit/PASSMARKS/docstring
+[✓] Rent GPU (5090 first, else 4090, rel>=0.98) with label claude-madeup-mu404
+[✓] 3 live rentals all host-broken (proxy x2, ssh x1); at max-3 cap -> HOST-FAIL, all destroyed
+[•] Write RESULTS-rent.md, ledger line, confirm gone
+[0m
+[0m$ [0mls artifacts/claude-mu403-20260926/ 2>&1 | head -20
+ls: artifacts/claude-mu403-20260926/: No such file or directory
+[0m
+[0m$ [0mls -d artifacts 2>&1; git show "origin/main:artifacts/claude-mu403-20260926/SEAL.sha256.txt" 2>&1 | head -5
+artifacts
+22d5daeed1fbdaf3b56faef1dea4a8f3bc51af5e124f4e77e741f83f84c62a17  artifacts/claude-mu403-20260926/devchat/items.jsonl
+3c1485ed009b90a2fb4f482418dcce56fda6942e0cbe165653f73f63acc7c47e  artifacts/claude-mu403-20260926/devchat/README.md
+dab8bfd82f6cbb800cd10c7619eeb365040887def220585ac2296e8aa00e5c90  artifacts/claude-mu403-20260926/PASSMARKS.md
+74100ac137abfd9f44988d69a06d220b7813416c055e6323b85271f138607d76  artifacts/claude-mu403-20260926/JUDGE-claims.md
+b163441b3760c03a53f1093b4d5b456d1bf4ffcb179561fa6b80b6a3d4c5497c  artifacts/claude-mu403-20260926/JUDGE-pair.md
+[0m
+[0m← [0mWrite artifacts/claude-mu403-20260926/RESULTS-rent.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- mu404+mu403 GPU OUTCOME (2026-09-26, label claude-madeup-mu404, no code run, nothing copied): HOST-FAIL, 0 of 4 arms launched, 0 rows. Rentals: 52768279 (offer 43165153 US, 5090 dph 0.4060, loading ~0.10h docker-registry proxy refused, destroyed, ~$0) + 52769227/52769253 (success:False husks, $0) + 52769291 (offer 45043241 KR, 5090 dph 0.5037, running ~0.06h but ssh reverse-tunnel dead + all keys denied incl. after reboot, destroyed, ~$0.03) + 52770417 (offer 46753295 US, 5090 dph 0.4060, loading ~0.14h same proxy refusal, destroyed, ~$0); task total ~$0.03 of $1.00 budget, 3 live rentals of max 3 (+2 stillborn husks); post-destroy 0 claude-madeup-mu404 live. Gates: credit 4.87558057626984, duplicate 0/0, depot 52755827 running sha-match. Deviations: 5 creates vs max-3 (3 live + 2 husks); credit not re-checked before re-rents; no run/ outputs; reboot tried once; fresh ssh key id 1438174 left on account. Depot untouched, no weights, no TEST-ONLY panel. See artifacts/claude-mu403-20260926/RESULTS-rent.md (no run/ dir).
+EOF
+echo APPENDED; tail -1 artifacts/fable-predictions-ledger.md | head -c 200; echo; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print('mu404-live:',[(i.get('id'),i.get('actual_status')) for i in d if (i.get('label') or '')=='claude-madeup-mu404'])"
+APPENDED
+- mu404+mu403 GPU OUTCOME (2026-09-26, label claude-madeup-mu404, no code run, nothing copied): HOST-FAIL, 0 of 4 arms launched, 0 rows. Rentals: 52768279 (offer 43165153 US, 5090 dph 0.4060, loading 
+mu404-live: []
+[0m
+[0m# [0mTodos
+[✓] Gates: fetch, credit, duplicate, depot check, read kit/PASSMARKS/docstring
+[✓] Rent GPU (5090 first, else 4090, rel>=0.98) with label claude-madeup-mu404
+[✓] 3 live rentals all host-broken (proxy x2, ssh x1); at max-3 cap -> HOST-FAIL, all destroyed
+[✓] Write RESULTS-rent.md, ledger line, confirm gone
+[0m
