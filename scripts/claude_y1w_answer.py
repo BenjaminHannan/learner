@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """y1w: memory questions the notebook does not answer get answered from the user's own words (Answering-from-memory
-thread, 2026-09-26). New file; imports the sealed 0.2c build and ep-382 without editing them. DRAFT until sealed.
+thread, 2026-09-26). New file; imports the sealed 0.2c build, ep-382 and y1f without editing them. DRAFT until sealed.
 
 The one change, on top of the 0.2c joined agent (claude_e2e02c.build_02c, lis-319 reader, sleep adapter):
-the ep-382 memory store is on (heard rows only; STORE02C = store v3, as build_02c already wires it) and ep-382's
-answer step runs on a question turn when the agent's final reply
+the ep-382 memory store is on (heard user turns only; STORE02C = store v3, as build_02c already wires it) and an answer
+step runs on a question turn when the agent's final reply
   (a) abstains or asks to rephrase (382b's trigger), or
   (b) is turn310's ask-back ("Just to check: ...?"), which on a question turn means the reader misread the question
       as a statement to save.
-The answer step is ep-382's own (SYSTEM382, 4 samples, 338 strict guard + G5, abstaining samples skipped, fail
-closed). Two settings, fixed at the seal from the DEV diagnosis y1d (artifacts/claude-y1d-20260926):
-  K_Y1W      rows recalled (20, as 382b)
-  ORDER_Y1W  "rank" (store order, as 382b) or "time" (the recalled rows sorted oldest first)
+The answer step reads the recalled heard turns oldest first in the prompt layout and decoding that y1f picked on DEV
+by its pre-set rule (artifacts/claude-y1f-20260926/PLAN.md; scripts/claude_y1f_layout.py: messages() and checked(),
+i.e. 338 strict guard + G5, abstaining answers skipped). It fails closed: if no answer passes, the agent's own reply
+stays. Settings, fixed at the seal:
+  K_Y1W       rows recalled (20, as 382b; on bank-sized lives this is every earlier user turn)
+  LAYOUT_Y1W  y1f's winning layout (L0, L1, L1i or L2)
+  DECODE_Y1W  y1f's winning decoding: "p382" (4 samples T 0.7 / top-p 0.9, first pass wins) or "g1" (one greedy)
 When (b) is replaced, turn310's pending ask-back is dropped (loop.lis310_pending = None), so a later "yes" cannot
 save the misread fact. lis-314's confirm-at-use ("I think you told me ..., is that right?") is never replaced: it
 names a held fact for the very thing asked, and a "yes" to it is how that fact gets saved.
@@ -30,7 +33,9 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 K_Y1W = 20
-ORDER_Y1W = "rank"
+LAYOUT_Y1W = ""          # set at the seal from y1f's pick (winner), never after
+DECODE_Y1W = ""          # "p382" or "g1", same
+MAX_NEW_G1 = 200         # y1f's greedy answer length
 ASKBACK_PREFIX = "just to check:"
 
 
@@ -39,15 +44,35 @@ def askback_reply(reply: str) -> bool:
 
 
 def _order(rows: list[dict]) -> list[dict]:
-    if ORDER_Y1W == "time":
-        return sorted(rows, key=lambda r: (min(r.get("turn_ids") or [0]), r.get("id", "")))
-    return rows
+    """Recalled rows oldest first (y1f's rows are in time order)."""
+    return sorted(rows, key=lambda r: (min(r.get("turn_ids") or [0]), r.get("id", "")))
+
+
+def _greedy(gen, msgs: list[dict]) -> str:
+    """One greedy answer on the agent's own chat model (Gen338 over the shared 1B), as y1f's g1."""
+    g = gen.g
+    ids = g.tok(gen._render(msgs), return_tensors="pt").to(g.dev)
+    with g.torch.no_grad():
+        out = g.model.generate(**ids, max_new_tokens=MAX_NEW_G1, do_sample=False, pad_token_id=g.tok.eos_token_id)
+    return g.tok.decode(out[0][ids["input_ids"].shape[1]:], skip_special_tokens=True).strip()
+
+
+def _answers(gen, msgs: list[dict], n: int) -> list[str]:
+    if DECODE_Y1W == "p382":
+        return gen.sample_chat(msgs, n)
+    if DECODE_Y1W == "g1":
+        own = getattr(gen, "greedy_chat", None)          # CPU stand-ins only; Gen338 has none
+        return [own(msgs) if own else _greedy(gen, msgs)]
+    raise ValueError(f"DECODE_Y1W unset or unknown: {DECODE_Y1W!r}")
 
 
 def install_answer_y1w(loop, gen, store, k: int = K_Y1W, n: int | None = None) -> None:
     import claude_chat338_agent as C38
     import claude_chat338b_agent as C38B
     import claude_e2e382 as E
+    import claude_y1f_layout as F
+    if LAYOUT_Y1W not in F.LAYOUTS or DECODE_Y1W not in ("p382", "g1"):
+        raise ValueError(f"y1w settings unset: LAYOUT_Y1W={LAYOUT_Y1W!r} DECODE_Y1W={DECODE_Y1W!r}")
     n = E.N382 if n is None else n
     inner = loop.turn
     loop.ep382_stats = {"turns": 0, "tried": 0, "tried_askback": 0, "no_rows": 0, "replaced": 0,
@@ -75,18 +100,13 @@ def install_answer_y1w(loop, gen, store, k: int = K_Y1W, n: int | None = None) -
             return parts
         fails = []
         known = C38._words([text] + [r["text"] for r in rows] + [r.get("said_at") or "" for r in rows])
-        msgs = [{"role": "system", "content": E.SYSTEM382 + "\n\n" + E._rows_block(rows)},
-                {"role": "user", "content": text}]
-        for c in gen.sample_chat(msgs, n):
+        msgs = F.messages(LAYOUT_Y1W, text, rows)
+        for c in _answers(gen, msgs, n):
             c = C38.trim(c)
-            g = C38.guard(c, text, known, strict=True) or ("G5" if E.g5_unsupported(c, known) else None)
-            if g is not None:
-                st[g] += 1
-                fails.append(g)
-                continue
-            if E.abstains(c):
-                st["abstained"] += 1
-                fails.append("abstained")
+            f = F.checked(c, text, known)
+            if f is not None:
+                st["abstained" if f == "abstained" else f] += 1
+                fails.append(f)
                 continue
             if len(loop.nb.events) != ev0:
                 raise RuntimeError("y1w: answer phase wrote to the notebook")
@@ -119,7 +139,7 @@ def build_y1w(state_dir, args):
     finally:
         X.MEM02C, E.install_answer382 = old_mem, old_install
     loop.layers330c = [("answer_y1w" if x == "answer382" else x) for x in loop.layers330c]
-    loop.y1w = {"k": K_Y1W, "order": ORDER_Y1W}
+    loop.y1w = {"k": K_Y1W, "layout": LAYOUT_Y1W, "decode": DECODE_Y1W, "order": "time"}
     return loop
 
 
@@ -148,18 +168,28 @@ class _Gen:
         self.seen.append(msgs)
         return list(self.outs)
 
+    def greedy_chat(self, msgs):
+        self.seen.append(msgs)
+        return self.outs[0]
+
 
 def selftest() -> None:
     import tempfile
     import claude_e2e382 as E
     import claude_ep382_store_v2 as ST
+    import claude_y1f_layout as F
 
     class BM25Store(ST.MemoryStore):
         def recall(self, query, **kw):
-            return super().recall(query, mode="bm25", **kw)
+            return list(reversed(super().recall(query, mode="bm25", **kw)))   # newest first, to test the sort
 
-    global ORDER_Y1W
+    global LAYOUT_Y1W, DECODE_Y1W
     ok = 0
+    try:
+        install_answer_y1w(_Loop(lambda lp, t: ""), _Gen([]), None)
+    except ValueError:
+        ok += 1                                                   # unset settings refuse to run
+    LAYOUT_Y1W, DECODE_Y1W = "L1i", "p382"
     with tempfile.TemporaryDirectory() as d:
         st = BM25Store(d)
 
@@ -183,6 +213,9 @@ def selftest() -> None:
             loop.turn(t)
         assert len(st.rows) == 3; ok += 1
         assert loop.turn("how old is ziggy?") == ["Ziggy is 4."]; ok += 1               # (a) abstain replaced
+        m = gen.seen[-1]                                                                 # y1f's layout, oldest first
+        assert m == F.messages("L1i", "how old is ziggy?", st.rows[:3]), m                # the store saves it after
+        assert m[1]["content"].index("my beagle Ziggy") < m[1]["content"].index("i moved to Tarrow"); ok += 1
         gen.outs = ["Yes, Ziggy is a beagle."]
         assert loop.turn("ziggy's a beagle, right?") == ["Yes, Ziggy is a beagle."]; ok += 1   # (b) ask-back replaced
         assert loop.lis310_pending is None and loop.ep382_stats["replaced_askback"] == 1; ok += 1
@@ -192,7 +225,13 @@ def selftest() -> None:
         assert loop.turn("tell me a joke?") == ["Sure, here is one."]; ok += 1              # a real answer is kept
         gen.outs = ["I don't know.", "Your sister Quill lives there."]                    # abstain + G2/G3 -> fail closed
         assert loop.turn("how old is my sister?") == ["I don't know."]; ok += 1
-        # ask-back with the samples all failing: the ask-back stays and stays pending
+        # g1: one greedy answer through the same checks
+        DECODE_Y1W = "g1"
+        gen.outs = ["Smudge.", "Quill."]
+        n0 = len(gen.seen)
+        loop.reply = lambda lp, t: "I don't know."
+        assert loop.turn("what is my cat called?") == ["Smudge."] and len(gen.seen) == n0 + 1; ok += 1
+        # ask-back with every answer failing: the ask-back stays and stays pending
         gen.outs = ["I don't know."]
 
         def agent2(lp, t):
@@ -200,13 +239,10 @@ def selftest() -> None:
             return "Just to check: is Wren's age 9?"
         loop.reply = agent2
         assert loop.turn("wren's 9 right?") == ["Just to check: is Wren's age 9?"] and loop.lis310_pending; ok += 1
-        # order: time sorts recalled rows oldest first
-        ORDER_Y1W = "time"
         rows = [{"id": "h2", "turn_ids": [5]}, {"id": "h1", "turn_ids": [2]}]
         assert [r["id"] for r in _order(rows)] == ["h1", "h2"]; ok += 1
-        ORDER_Y1W = "rank"
-        assert [r["id"] for r in _order(rows)] == ["h2", "h1"]; ok += 1
-    print(f"selftest ok ({ok}/10)")
+    LAYOUT_Y1W, DECODE_Y1W = "", ""
+    print(f"selftest ok ({ok}/12)")
 
 
 if __name__ == "__main__":
