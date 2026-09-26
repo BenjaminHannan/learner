@@ -1,0 +1,1627 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git rev-parse origin/main; git rev-parse origin/builder-outbox 2>&1; git status --porcelain=v1 | head -20; git log --oneline -3
+FETCH_EXIT:0
+a0cab45ccea1cb8560a7deff02b2e1c79e7645ea
+9418ba20563bda576b07e95239b5086c6600de9b
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-brd5-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd5-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd5-20260926/gpu/log.txt
+A  artifacts/claude-brd5-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd5-20260926/gpu/streams.json
+A  artifacts/claude-dl1-20260925/RESULTS-gpu.md
+A  artifacts/claude-dl1-20260925/gpu/dl1_results.json
+A  artifacts/claude-dl1-20260925/gpu/log.txt
+A  artifacts/claude-tgt5-20260926/RESULTS-gpu.md
+A  artifacts/claude-tgt5-20260926/gpu/contrasts.json
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+bc39d2baf ideajudge-teacher2: DEV teacher agreement check (no training)
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/330-rent-kit.md 2>&1
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+T=$(mktemp -d)/tree && mkdir -p $T
+git archive origin/builder-outbox | tar -x -C $T
+git archive origin/main | tar -x -C $T            # main on top: main wins
+mkdir -p $T/artifacts/fable-self122-20260922
+cp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/
+tar czf tree.tgz -C $(dirname $T) tree
+```
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+scp tree.tgz (and READER if needed) to the instance; tar xzf tree.tgz; cd tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-brd6-20260926/PASSMARKS-brd6.md 2>&1; echo ====DOCSTRING====; git show origin/main:scripts/claude_brd6.py 2>&1 | head -120
+# brd-6: at equal exposure, do twice as many different won puzzles widen coverage more? (registered 2026-09-26 ~03:05 UTC, before any run)
+
+Source: follow-up to brd-5 (registered INCONCLUSIVE; artifacts/claude-brd5-20260926/VERIFY-brd5.md), for Ben's
+overnight goal (problem 7: turn lucky hits into lasting skill). Ben is asleep; this is the thread's default choice.
+Why: brd-5 showed that, at equal exposure, FEWER distinct won puzzles (20 repeated) drop coverage below the untrained
+model. This asks the same question in the other direction: do MORE distinct puzzles, at the same exposure, help?
+
+Procedure: scripts/claude_brd6.py (docstring). Practice = puzzles(seed 9, 800); the first 400 are brd-5's practice set.
+- W4 = brd-5's W, unchanged: own greedy-correct answers + first lucky hit per won puzzle, from the first 400; 3 epochs.
+- W8 = the same from all 800, trained for the same number of example passes as W4 (3 x len(W4)): examples shuffled
+  and repeated in turn to that length, one pass. Optimizer steps equal up to rounding (both are reported).
+- ONE change: the number of distinct practice puzzles behind the examples (about double) at equal exposure.
+- LoRA r16, lr 2e-4, batch 8, seeds 0/1/2; DEV temperature rule 1.0 vs 1.5 (blurt-1 DEV panel); 30 samples per
+  test puzzle. One GPU run on a rental. That run is the registered result.
+Test panel FIXED NOW: artifacts/claude-brd6-20260926/test_puzzles.jsonl (md5 018f09ff751477d0b9b001ec78ad2ab2):
+240 puzzles (160 with 3 numbers, 80 with 4 numbers and target 24; 177 hands), seed 799, with no overlap with the 800
+practice puzzles or DEV. 34 of them also appear in brd-5's test panel; that panel was only ever tested, never
+trained or tuned on. The script stops if it finds overlap with practice or DEV.
+
+Measure: cov@30 = test puzzles with at least one correct sample in 30 (= distinct puzzles reached). Intervals: 95%,
+bootstrap over number hands (2,000 draws), seed-averaged (claude_blurt5s.boot_ci).
+- PASS ("more distinct puzzles help at equal exposure"): W8's cov@30 ≥ W4's cov@30 + 12 in EVERY seed (seed k vs
+  seed k), AND the 95% interval for W8 − W4 is above 0.
+- Proved wrong: the upper 95% bound of W8 − W4 is below +2.5 points (6 puzzles).
+- Otherwise: NOT SHOWN.
+- Inconclusive: W8 has fewer than 300 examples, OR the lower 95% bound of W4 − base is at or below 0 (the brd-5 gain
+  over the untrained model did not show at all).
+Reported, not marks: for base, W4 and W8, cov@1 (first sample), cov@30, 3-number and 4-number cov@30 separately,
+lucky samples; intervals for W4 − base and W8 − base; own/win counts, mean answer length, 3-number share and
+optimizer steps for W4 and W8 (the arm-matching check Ben's evaluator asked for); practice.jsonl saves every
+practice puzzle's outcome, so the matching can be rechecked.
+Why these bars: 12 puzzles is 5% of the panel, half of brd-5's 24, because this compares two good arms rather than
+good against collapsed. The brd-5 "base + 24" replication gate is replaced by "W4 beats base at all": the claim here
+is W8 vs its matched control, not the size of W4's gain.
+Limit: W8 examples are seen 1-2 times, W4's 3 times; fewer repeats per example is part of the change, as in brd-5.
+CPU smoke (before registering; 30 practice, 3 test puzzles, 1 seed, 1 epoch; not panel results): runs end to end.
+zsh:1: ===DOCSTRING==== not found
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_brd6.py > /tmp/brd6_head.py 2>&1; python3 -c "import ast; src=open('/tmp/brd6_head.py').read(); m=ast.parse(src); print(ast.get_docstring(m))"
+brd-6: at EQUAL training exposure, does sleeping on twice as many different won puzzles widen coverage more?
+(creative research thread, 2026-09-26; follow-up to brd-5, artifacts/claude-brd5-20260926/VERIFY-brd5.md)
+
+Why: brd-5 (registered INCONCLUSIVE) showed, at equal exposure, that 20 won puzzles repeated drop fresh coverage below
+the untrained model while one hit on each of ~190 won puzzles raises it. This asks the same question upward: if
+fewer distinct puzzles hurt, do MORE distinct puzzles help, with the number of training passes held fixed?
+
+Practice: puzzles(seed 9, 800); its first 400 are exactly brd-5's practice set. Each practice puzzle gets the greedy
+answer; a miss gets 30 blurts at the DEV-chosen temperature; the first hit wins it (brd-5 / blurt-5s recipe).
+Arms (LoRA r16, lr 2e-4, batch 8, seeds 0/1/2):
+- W4 = brd-5's W, unchanged: own + wins from the first 400 practice puzzles, 3 epochs.
+- W8 = own + wins from all 800, trained for the SAME number of example passes as W4 (3 x len(W4)): the W8 examples
+  are shuffled and repeated in turn up to that length, then trained as one pass (train_lora epochs=1). So every W8
+  example is seen once or twice instead of three times; the optimizer steps are equal up to rounding.
+ONE change from W4: the number of distinct practice puzzles behind the examples (about double), at equal exposure.
+Test: a panel FIXED BEFORE REGISTRATION (artifacts/claude-brd6-20260926/test_puzzles.jsonl: 240 puzzles, 160 with
+3 numbers and 80 with 4, seed 799, no overlap with the 800 practice puzzles or DEV); 30 samples each.
+
+  python -B scripts/claude_brd6.py --model M --out DIR --temps 1.0,1.5 --dev-puzzles F --test-puzzles T
+  python -B scripts/claude_brd6.py --make-panel --dev-puzzles F --out-panel T
+  python -B scripts/claude_brd6.py --selftest
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- artifacts/claude-brd6-20260926/ 2>&1; echo ====; git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-brd6-20260926/ 2>&1
+artifacts/claude-brd6-20260926/PASSMARKS-brd6.md
+artifacts/claude-brd6-20260926/test_puzzles.jsonl
+zsh:1: === not found
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show user --raw 2>&1 | head -5; echo ====; vastai show instances --raw 2>&1 | head -50
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+zsh:1: === not found
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-brd6-20260926/
+(no output)
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show user --raw
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 7.479923517469871,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+ "discord_id": null,
+ "email": "benjamin.a.hannan@gmail.com",
+ "email_verified": true,
+ "fullname": null,
+ "got_signup_credit": 0,
+ "has_billing": true,
+ "has_payout": false,
+ "has_rented": true,
+ "has_stripe_payout": false,
+ "host_agreement_accepted": false,
+ "host_only": false,
+ "huggingface_cloud_sync_enabled": true,
+ "id": 553012,
+ "is_subject_to_unpaid_deletion": false,
+ "key_id": 28637247,
+ "last4": null,
+ "oauth_provider": "google",
+ "paid_expected": 0.0,
+ "paid_verified": 0.0,
+ "password_resettable": null,
+ "payout_enabled": true,
+ "paypal_email": null,
+ "phone_number": null,
+ "rights": {
+  "api": {
+   "*": {
+    "api.auth.apikeys": {
+     "GET": {}
+    },
+    "api.auth.sessions": {
+     "GET": {}
+    },
+    "api.hubspot.newsletters": {
+     "GET": {}
+    },
+    "api.instances": {
+     "GET": {}
+    },
+    "api.instances.count": {
+     "GET": {}
+    },
+    "api.instances_v1": {
+     "GET": {}
+    },
+    "api.ssh.keys": {},
+    "api.team": {
+     "POST": {}
+    },
+    "api.template": {
+     "GET": {}
+    },
+    "api.template.params": {
+     "GET": {}
+    },
+    "api.template_v1": {
+     "GET": {}
+    },
+    "api.user.created_templates": {
+     "GET": {}
+    },
+    "api.user.save_context": {
+     "PUT": {}
+    },
+    "api.user.verify-email": {
+     "POST": {}
+    },
+    "api.users.crisp-identity": {
+     "GET": {}
+    },
+    "api.users.current": {
+     "GET": {}
+    },
+    "api.users.root": {
+     "GET": {}
+    }
+   },
+   "billing_read": {},
+   "billing_write": {},
+   "instance_read": {},
+   "instance_write": {},
+   "misc": {},
+   "user_read": {},
+   "user_write": {}
+  }
+ },
+ "sid": 1,
+ "ssh_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGsaSCgGiDJAKKDkM5DvmPV6D+avvzeBfi7Dz+H5s7e4 vast-training\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICnYSZnoTma419UtHDuRQsNq29uzJowmyfJu69xas517 ben@paynycfines.com\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP9dJBti4tqQ0olFaUTOCt4O6OHddZy0gwPoYaXuGKE9 rent-336b\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ7St3PlitESWp4VCS6zugx7K8P93SF+JgYtt+cobu2B rent-bm395",
+ "tfa_login": false,
+ "tfa_status": "disabled",
+ "total_spend": -52.52007648253013,
+ "username": "benjamin.a.hannan@gmail.com",
+ "wise_email": null
+}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw
+[
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "VN",
+  "cpu_arch": "amd64",
+  "cpu_cores": 128,
+  "cpu_cores_effective": 64.0,
+  "cpu_name": "AMD EPYC 7742 64-Core Processor",
+  "cpu_ram": 128635,
+  "cpu_util": 0.0,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 499,
+  "direct_port_end": -1,
+  "direct_port_start": 65535,
+  "disk_bw": 1849.2544644188172,
+  "disk_name": "SPCC M.2 PCIe SSD",
+  "disk_space": 100.0,
+  "disk_usage": 4.900000095367432,
+  "disk_util": 4.900000095367432,
+  "dlperf": 198.91491189859983,
+  "dlperf_per_dphtotal": 389.80277407912575,
+  "dph_base": 0.464,
+  "dph_total": 0.5102962962962964,
+  "driver_version": "580.119.02",
+  "duration": 4133.403341054916,
+  "end_date": 1805885726.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 210.821518362607,
+  "geolocation": "Vietnam, VN",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 0.5,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1455.6,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 37.999966,
+  "gpu_totalram": 32607,
+  "gpu_util": 99.999908,
+  "has_avx": 1,
+  "host_id": 55116,
+  "host_run_time": 2592000.0,
+  "hosting_type": null,
+  "id": 52677751,
+  "image_args": [],
+  "image_runtype": "ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel",
+  "inet_down": 841.6,
+  "inet_down_billed": 2684354.56,
+  "inet_down_cost": 0.0390625,
+  "inet_up": 881.6,
+  "inet_up_billed": 26214.4,
+  "inet_up_cost": 0.0390625,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.04629629629629629,
+   "gpuCostPerHour": 0.464,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5102962962962964
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 40.0,
+  "internet_up_cost_per_tb": 40.0,
+  "is_bid": false,
+  "jupyter_token": "010d7c66c95bbfe79855e868d8efb478b7bc2246b836c980176b2df73a2d66be",
+  "label": "rent-bm391",
+  "local_ipaddrs": "192.168.1.49 192.168.122.1 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 49998,
+  "machine_id": 43336,
+  "mem_limit": 89.41207552,
+  "mem_usage": 1.377828864,
+  "min_bid": 0.2666667,
+  "mobo_name": "H12D-8D",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "22.04",
+  "pci_gen": 4.0,
+  "pcie_bw": 25.2,
+  "public_ipaddr": "115.73.216.179",
+  "reliability2": 0.9940577,
+  "rentable": true,
+  "score": 367.9221698631292,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.5102962962962964,
+   "diskHour": 0.04629629629629629,
+   "gpuCostPerHour": 0.464,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5102962962962964
+  },
+  "sla_r_claim": null,
+  "sla_sigma_x": null,
+  "ssh_host": "ssh1.vast.ai",
+  "ssh_idx": "1",
+  "ssh_port": 37750,
+  "start_date": 1790387475.747467,
+  "static_ip": false,
+  "status_msg": "success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-devel/ssh",
+  "storage_cost": 0.3333333333333333,
+  "storage_total_cost": 0.04629629629629629,
+  "target_reliability": 0.0,
+  "template_hash_id": null,
+  "template_id": null,
+  "template_name": null,
+  "time_remaining": "Unlimited",
+  "time_remaining_isbid": "Unlimited",
+  "total_flops": 107.58143999999999,
+  "uptime_mins": 65.60196425914765,
+  "verification": "verified",
+  "vmem_usage": 0.485351,
+  "volume_info": [],
+  "vram_costperhour": 1.5649900214564244e-05,
+  "webpage": null
+ },
+ {
+  "actual_status": "loading",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 890,
+  "country_code": "US",
+  "cpu_arch": "amd64",
+  "cpu_cores": 24,
+  "cpu_cores_effective": 24.0,
+  "cpu_name": "AMD Ryzen 9 3900XT 12-Core Processor",
+  "cpu_ram": 32014,
+  "cpu_util": 0.0,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 99,
+  "direct_port_end": -1,
+  "direct_port_start": -1,
+  "disk_bw": 1115.0,
+  "disk_name": "MSI M371 500GB",
+  "disk_space": 80.0,
+  "disk_usage": -1,
+  "disk_util": -1,
+  "dlperf": 97.01290945668947,
+  "dlperf_per_dphtotal": 272.84880784693917,
+  "dph_base": 0.3333333333333333,
+  "dph_total": 0.3555555555555555,
+  "driver_version": "580.126.09",
+  "duration": 95.41488432884216,
+  "end_date": 1790438402.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 228.92544000000004,
+  "geolocation": "Indiana, US",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 1.0,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 879.1,
+  "gpu_name": "RTX 4090",
+  "gpu_ram": 24564,
+  "gpu_temp": null,
+  "gpu_totalram": 24564,
+  "gpu_util": null,
+  "has_avx": 1,
+  "host_id": 102082,
+  "host_run_time": 2592000.0,
+  "hosting_type": null,
+  "id": 52683743,
+  "image_args": [],
+  "image_runtype": "ssh_direc ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime",
+  "inet_down": 440.1,
+  "inet_down_billed": null,
+  "inet_down_cost": 0.0026041666666666665,
+  "inet_up": 914.0,
+  "inet_up_billed": null,
+  "inet_up_cost": 0.00390625,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.02222222222222222,
+   "diskHour": 0.02222222222222222,
+   "gpuCostPerHour": 0,
+   "slaPremiumPerHour": 0,
+   "totalHour": 0.02222222222222222
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 2.6666666666666665,
+  "internet_up_cost_per_tb": 4.0,
+  "is_bid": false,
+  "jupyter_token": "b54f3efcc5bd4d4a27154daaa4f24c409d49cf63d12287c1a0daad79bfaa41ba",
+  "label": "02c-dev",
+  "local_ipaddrs": "192.168.1.58 192.168.122.1 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 40698,
+  "machine_id": 56863,
+  "mem_limit": null,
+  "mem_usage": null,
+  "min_bid": 0.3066666666666667,
+  "mobo_name": "B550M PRO-VDH WIFI6",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "22.04",
+  "pci_gen": 4.0,
+  "pcie_bw": 23.3,
+  "public_ipaddr": "64.38.158.67",
+  "reliability2": 0.9973863,
+  "rentable": true,
+  "score": 265.8953924033638,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.3555555555555555,
+   "diskHour": 0.02222222222222222,
+   "gpuCostPerHour": 0.3333333333333333,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.3555555555555555
+  },
+  "sla_r_claim": null,
+  "sla_sigma_x": null,
+  "ssh_host": "ssh2.vast.ai",
+  "ssh_idx": "2",
+  "ssh_port": 13742,
+  "start_date": 1790391513.7359998,
+  "static_ip": true,
+  "status_msg": "27f025450560: Download complete",
+  "storage_cost": 0.19999999999999998,
+  "storage_total_cost": 0.02222222222222222,
+  "target_reliability": 0.0,
+  "template_hash_id": null,
+  "template_id": null,
+  "template_name": null,
+  "time_remaining": "",
+  "time_remaining_isbid": "",
+  "total_flops": 81.395712,
+  "uptime_mins": null,
+  "verification": "verified",
+  "vmem_usage": null,
+  "volume_info": [],
+  "vram_costperhour": 1.4474660297816133e-05,
+  "webpage": null
+ }
+]
+[0m
+[0m# [0mTodos
+[✓] Credit + duplicate gates (done: credit 7.48, no dup)
+[•] Find RTX 5090 (else 4090) offer, rent with label rent-brd6
+[ ] Build tree.tgz from origin/main + scp to rental
+[ ] Setup rental: torch check, pip install, fetch MiniCPM5-1B BASE, record hash
+[ ] Run selftest + main brd6 run detached with log
+[ ] Copy back gpu/ + log, write RESULTS-gpu.md + ledger, destroy instance
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph 2>&1 | head -30
+[40m[97m  #  ID        CUDA   N  Model     PCIE  cpu_ghz  vCPUs     RAM  VRAM  Disk[0m
+[48;5;240m[97m  1  50556737  13.0  1x  RTX_5090  53.7  4.8      12.0     32.1  32.6  628 [0m
+[40m[97m  2  49024423  13.0  1x  RTX_5090  47.9  5.1      16.0     31.2  32.6  350 [0m
+[48;5;240m[97m  3  45669300  13.0  1x  RTX_5090  48.6  5.1      16.0     31.2  32.6  381 [0m
+[40m[97m  4  45669284  13.0  1x  RTX_5090  51.8  5.1      8.0      31.2  32.6  532 [0m
+[48;5;240m[97m  5  49024380  13.0  1x  RTX_5090  48.9  5.1      8.0      31.2  32.6  512 [0m
+[40m[97m  6  51858396  13.0  1x  RTX_5090  26.5  2.6      24.0     64.5  32.6  320 [0m
+[48;5;240m[97m  7  48284957  13.0  1x  RTX_5090  26.1  4.9      16.0     48.1  32.6  516 [0m
+[40m[97m  8  51535930  13.0  1x  RTX_5090  22.4  2.9      25.6     77.4  32.6  553 [0m
+[48;5;240m[97m  9  51111638  13.2  1x  RTX_5090  26.6  2.2      64.0     64.3  32.6  1316[0m
+[40m[97m 10  52628832  13.2  1x  RTX_5090  26.6  3.5      28.0     64.5  32.6  806 [0m
+[48;5;240m[97m 11  45699901  13.0  1x  RTX_5090  13.5  2.3      12.0     40.3  32.6  110 [0m
+[40m[97m 12  50248464  13.0  1x  RTX_5090  53.7  3.8      24.0     64.4  32.6  515 [0m
+[48;5;240m[97m 13  29717012  13.0  1x  RTX_5090  26.9  3.7      24.0     64.4  32.6  532 [0m
+[40m[97m 14  42747937  13.0  1x  RTX_5090  18.2  4.4      12.0     64.1  32.6  968 [0m
+[48;5;240m[97m 15  50187024  13.2  1x  RTX_5090  51.5  5.8      32.0     61.8  32.6  1397[0m
+[40m[97m 16  51624361  13.2  1x  RTX_5090  12.3  3.3      28.0     64.2  32.6  306 [0m
+[48;5;240m[97m 17  52475653  13.2  1x  RTX_5090  24.1  3.7      42.7     75.2  32.6  276 [0m
+[40m[97m 18  51969545  13.0  1x  RTX_5090  54.3  2.6      12.0     64.3  32.6  79  [0m
+[48;5;240m[97m 19  33886224  13.2  1x  RTX_5090  50.5  5.5      24.0     63.4  32.6  1297[0m
+[40m[97m 20  50680571  13.2  1x  RTX_5090  38.1  4.4      12.0     64.1  32.6  491 [0m
+[48;5;240m[97m 21  50680407  13.2  1x  RTX_5090  27.1  3.5      56.0    128.8  32.6  708 [0m
+[40m[97m 22  48425032  13.0  1x  RTX_5090  26.6  2.2      64.0    258.0  32.6  1462[0m
+[48;5;240m[97m 23  43110769  13.1  1x  RTX_5090  54.2  2.4      38.4     77.4  32.6  983 [0m
+[40m[97m 24  50716299  13.1  1x  RTX_5090  54.9  3.7      48.0     96.7  32.6  2790[0m
+[48;5;240m[97m 25  26371148  13.3  1x  RTX_5090  22.7  2.2      32.0     64.5  32.6  311 [0m
+[40m[97m 26  52077399  13.2  1x  RTX_5090  36.4  5.5      12.0     61.9  32.6  1443[0m
+[48;5;240m[97m 27  51969536  13.2  1x  RTX_5090  54.2  2.6      12.0     64.3  32.6  352 [0m
+[40m[97m 28  29436756  13.0  1x  RTX_5090  54.0  3.7      48.0     64.4  32.6  705 [0m
+[48;5;240m[97m 29  51326859  13.3  1x  RTX_5090  27.0  2.2      32.0    112.8  32.6  518 [0m
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' --raw 2>/dev/null | python3 -c "
+import json,sys
+offers=json.load(sys.stdin)
+print('count',len(offers))
+rows=[]
+for o in offers:
+    try:
+        cores=o.get('cpu_cores_effective') or o.get('cpu_cores') or 0
+        disk=o.get('disk_space') or 0
+        dph=o.get('dph_total') or o.get('dph_base')
+        rows.append((dph,o.get('id'),cores,o.get('cpu_ram'),disk,o.get('inet_down',0),o.get('inet_up',0),o.get('reliability2'),o.get('cuda_max_good'),o.get('geolocation','')))
+    except Exception as e:
+        pass
+rows.sort()
+for r in rows[:12]:
+    print('dph=%.3f id=%s cores=%s ram=%s disk=%s down=%s up=%s rel=%s cuda=%s %s'%r)
+"
+count 64
+dph=0.446 id=46753300 cores=32.0 ram=32213 disk=156.6625 down=880.0 up=63.1 rel=0.9952644 cuda=13.0 United States, US
+dph=0.469 id=45669284 cores=8.0 ram=31198 disk=532.0 down=481.3 up=474.6 rel=0.9974782 cuda=13.0 South Korea, KR
+dph=0.469 id=45669313 cores=16.0 ram=31197 disk=423.0 down=566.1 up=567.4 rel=0.9975961 cuda=13.0 South Korea, KR
+dph=0.469 id=50472411 cores=8.0 ram=31200 disk=560.5 down=543.5 up=576.5 rel=0.9888717 cuda=13.0 South Korea, KR
+dph=0.469 id=52190765 cores=16.0 ram=31196 disk=505.0 down=391.8 up=381.5 rel=0.9970812 cuda=13.0 South Korea, KR
+dph=0.495 id=50405677 cores=16.0 ram=64398 disk=255.5 down=699.6 up=823.2 rel=0.9868747 cuda=13.2 South Korea, KR
+dph=0.499 id=51858238 cores=24.0 ram=64472 disk=376.7 down=341.4 up=484.0 rel=0.9963499 cuda=13.0 California, US
+dph=0.509 id=51325614 cores=24.0 ram=64471 disk=346.25 down=937.0 up=383.6 rel=0.9901581 cuda=13.2 California, US
+dph=0.524 id=40700925 cores=18.285714285714285 ram=73686 disk=654.2310003008575 down=550.5 up=857.1 rel=0.995658 cuda=13.0 Estonia, EE
+dph=0.537 id=43913577 cores=24.0 ram=64471 disk=300.125 down=777.7 up=713.6 rel=0.9948889 cuda=13.0 Delaware, US
+dph=0.537 id=50793292 cores=18.285714285714285 ram=73686 disk=359.5285714285714 down=633.2 up=856.6 rel=0.9917689 cuda=13.0 Estonia, EE
+dph=0.549 id=52628832 cores=28.0 ram=64470 disk=806.2625 down=821.5 up=861.9 rel=0.9979037 cuda=13.2 Norway, NO
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create instance --help 2>&1 | head -40
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create instance 45669284 --image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel --disk 80 --label rent-brd6 --ssh --raw 2>&1 | tail -5
+{
+ "instance_api_key": "a47a40f3a9645931bcb76cd9f8f9557fe815588444dea3163d29c94a58ffec81",
+ "new_contract": 52683960,
+ "success": true
+}
+[0m
+[0m$ [0mdate -u +%FT%TZ; echo "instance=52683960 dph=0.469"
+2026-09-26T03:00:40Z
+instance=52683960 dph=0.469
+[0m
+[0m$ [0mls /tmp/; mkdir -p /tmp/brd6work/tree && git archive origin/main scripts/claude_blurt1.py scripts/claude_blurt2.py scripts/claude_blurt4.py scripts/claude_blurt5s.py scripts/claude_brd5.py scripts/claude_brd6.py scripts/claude_cre333b_agent.py artifacts/claude-blurt1-dev-20260925/puzzles.jsonl artifacts/claude-brd6-20260926/test_puzzles.jsonl artifacts/claude-brd6-20260926/PASSMARKS-brd6.md | tar -x -C /tmp/brd6work/tree && find /tmp/brd6work/tree -type f | sort && md5sum /tmp/brd6work/tree/artifacts/claude-brd6-20260926/test_puzzles.jsonl
+__KMP_REGISTERED_LIB_19337
+__KMP_REGISTERED_LIB_73221
+__KMP_REGISTERED_LIB_73222
+__KMP_REGISTERED_LIB_73227
+__KMP_REGISTERED_LIB_73229
+__KMP_REGISTERED_LIB_73236
+__KMP_REGISTERED_LIB_73239
+__KMP_REGISTERED_LIB_73242
+__KMP_REGISTERED_LIB_73245
+__KMP_REGISTERED_LIB_73248
+__KMP_REGISTERED_LIB_73252
+__KMP_REGISTERED_LIB_73255
+__KMP_REGISTERED_LIB_73272
+__KMP_REGISTERED_LIB_73281
+__KMP_REGISTERED_LIB_73282
+__KMP_REGISTERED_LIB_73285
+__KMP_REGISTERED_LIB_73290
+__KMP_REGISTERED_LIB_73292
+__KMP_REGISTERED_LIB_73294
+__KMP_REGISTERED_LIB_73297
+__KMP_REGISTERED_LIB_73306
+__KMP_REGISTERED_LIB_73309
+__KMP_REGISTERED_LIB_73313
+__KMP_REGISTERED_LIB_73324
+__KMP_REGISTERED_LIB_73328
+__KMP_REGISTERED_LIB_73334
+241b.txt
+280m_doc.md
+350doc.md
+358a_spec.md
+af-aa
+af-ab
+af-ac
+af-ad
+ah-aa
+ah-ab
+ah-ac
+ah-ad
+amend.md
+an-aa
+an-ab
+an-ac
+an-ad
+anAA-aa
+anAA-ab
+anAA-ac
+anAA-ad
+anAA-ae
+base-seed4102-rental.pt
+baseprobe333.py
+benspc_ps.py
+benspc3.md
+blurt2gpu.tar
+blurt3r.tar
+blurt4
+blurt5s-tree.tar
+bm390_lanes
+bm390_tree_path.txt
+bm390_tree.tgz
+bm390_tree3_path.txt
+bm390logs
+bm395back
+bm395tree
+brd6_head.py
+build_part3.py
+cc-socks
+check_seal.py
+ckpt-s1.log
+ckpt-s2.log
+claude-502
+claude-mcp-browser-bridge-ben-hannan
+clr-debug-pipe-634-1790180002-in
+clr-debug-pipe-634-1790180002-out
+codearm.py
+codex-browser-use
+com.openai.sky.CUAService
+CommCenter.KeepAlive.Enabled
+core.py
+cre333_Tpath.txt
+cre333_tree.tgz
+cre333b_Tpath.txt
+cre333b_tree.tgz
+cre333bc_tree.tgz
+cre333e_arm_e1.log
+cre333e_arm_e2.log
+cre333e_full.log
+cre333e_Tpath.txt
+cre333e_tree.tgz
+create333_2.json
+create333_2err.txt
+create333_3.json
+create333_4.json
+create333_err.txt
+create333.json
+det292_1.err
+det292_1.txt
+det292_2.err
+det292_2.txt
+dev_pred301.jsonl
+dev_rows301.jsonl
+dev_sweep301.txt
+dev301.jsonl
+dev3err.txt
+devmouth.jsonl
+devpilot3.json
+dl1_code.tgz
+dl1_ledger_line.txt
+dl2_code.tar
+dotnet-diagnostic-634-1790180002-socket
+eval-rsn355.ps1
+f1mouth.jsonl
+f1pilot2.json
+fam_scores301.py
+gen_probe280p_dialogs.py
+grade_part2.py
+gradeB_part5
+gram364_tree_path.txt
+gram364_tree.tgz
+hashprobe.py
+hello333.txt
+hx0.err
+hx0.txt
+hx1.err
+hx1.txt
+i4.json
+i5.json
+i6.json
+ideajudge-teacher2-20auoE
+ideajudge-teacher2-20auoE-console.log
+ingest_daily.kalshi.mW7GSP
+ingest_daily.poly.obJm16
+inst_err.txt
+inst_poll.json
+inst3.json
+instances.json
+instances2.json
+join280m_full.md
+kc.txt
+l12code.b64
+l241b.py
+l292t.py
+lane1_P_start.txt
+lane1_P.ssh.log
+lane1_Pg_start.txt
+lane1_Pg.ssh.log
+lane1_Pm_start.txt
+lane1_Pm.ssh.log
+lane2_C.ssh.log
+lane2_Q2.ssh.log
+lane2_Rb.ssh.log
+lane2_T_start.txt
+lane2_T.ssh.log
+launch-rsn355.ps1
+launch.bat
+launch3r.bat
+lis13.txt
+lis300.sha
+lis300err.txt
+lis301-main.tar
+lis301-outbox.tar
+lis301.sha
+lis302stage
+lis311_real.log
+lis313_f0_view.py
+lis313-armA.log
+lis313-armB.log
+lis313-build
+lis314-armA.log
+lis314-armC.log
+lis314-build
+lis317_back
+lis317_reader.tar
+lis317_tree.env
+lis317_tree.tgz
+lis318_run_part1.sh
+lis318_tree_path.txt
+lis318_tree.tgz
+lis319_Tpath.txt
+lis319-tree.tgz
+lis319-work-backup
+lis319c_tree_path.txt
+lis319c_upd_path.txt
+lisC.log
+lisG.log
+lisS.log
+load_l12.py
+load_q2.py
+local_sums.txt
+log_panelTchat.txt
+log_panelTcre.txt
+log_T-rental.txt
+loop-s1-tests.json
+loop-s1-train_log.jsonl
+loop-s1-train_summary.json
+loop-s2-tests.json
+loop-s2-train_log.jsonl
+loop-s2-train_summary.json
+m0pilot
+m0pilot2
+m124_274.json
+m1n-copy.log
+m1n-counts.json
+m1n-rsync.log
+m1n-sample.jsonl
+m1n-sealcheck
+m1n-trainlog.jsonl
+m1n-trainsum.json
+m1n-trainsum2.json
+m1n-tree
+m273_m12.json
+m3_274.json
+m3_274b.json
+m3_274c.json
+main294.tar
+make_part2.py
+minilm.tgz
+mkpart1.py
+MuseHubDrm_ipc2
+MuseHubSdk_ipc2
+mut1
+nb323_274.py
+offers_err.txt
+offers.err
+offers.json
+offers4090.txt
+offers4090b.txt
+offers5090.json
+opencode-rent382b-T.txt
+opus-rules.txt
+own-m1-remote
+own-m1b-bundle
+own-m1b-check
+own-m1b-results
+own-m1v-code.tar
+own-m1v-dev_out.jsonl
+own-m1v-dev_summary_utf8.json
+own-m1v-dev_summary.json
+own-m1v-quotes.py
+own-m1v-recount.py
+own-m1v-seal
+pairs_f1.jsonl
+panel_score_T030.json
+panel_score301.json
+part2_in.jsonl
+part3_in.jsonl
+part3_slice.jsonl
+part4_ids.txt
+part4_order.txt
+part4_slice.jsonl
+part5_input.jsonl
+PASS.md
+pass318.md
+PASSMARKS.md
+persrc_helper.py
+pilot-reg-backup.json
+plain-s1-tests.json
+plain-s1-train_log.jsonl
+plain-s1-train_summary.json
+plan.txt
+plasticd5.exe.lock
+plasticdshell
+pm.md
+pm333d.md
+powerlog
+probe_raw.err
+probe_raw.json
+probe_teacher.py
+probe292.py
+pt1.log
+pt2.log
+pt3.log
+pt4.log
+ptcopy-loop-s1.log
+ptcopy-loop-s2.log
+ptcopy-plain-s1.log
+ptcopy-plain-s2.log
+ptcopy1.log
+ptcopy2.log
+px1.err
+px1.txt
+px2.err
+px2.txt
+pzcheck_compare.py
+pzcheck_win.jsonl
+q2code.b64
+qwenweb.log
+rd371_data.log
+rd371_panel.log
+rd371_train.log
+rd371_tree_path.txt
+rd371_tree.tgz
+rd371_verify.log
+rd371b_tree_path.txt
+rd371b_tree.tgz
+rd371b_tree.tgz.part_aa
+rd371b_tree.tgz.part_ab
+rd371b_tree.tgz.part_ac
+rd371b_tree.tgz.part_ad
+rd371b_tree.tgz.part_ae
+rd371b_tree.tgz.part_af
+rd378_tree_path.txt
+reader-chunks
+reader336.safetensors
+ref_puzzles.jsonl
+remote_run333e.sh
+remote_sums.txt
+rent330cdev2_T.txt
+rent330cdev2_tree.tgz
+rent333_meta.txt
+rent333d_meta.txt
+rent333d.md
+rent336b_arm_B.log
+rent336b_arm_G.log
+rent336b_arm_P.log
+rent336b_arm_T.log
+rent336b_score.log
+rent336b_tree_path.txt
+rent336b_tree.tgz
+rent339_T.txt
+rent339_times.txt
+rent339_tree.tgz
+rent360_full.log
+rent360_remote.log
+rent360_T_path.txt
+rentkit.md
+resolve_base.py
+resolve_base4.py
+results_274.json
+rsn294_guard_state.json
+rsn294_guard.log
+rsn294_guard.py
+rsn294_run.py
+rsn294.tar
+rsn296_guard_state.json
+rsn296_guard.log
+rsn296_guard.py
+rsn296_poll1.err
+rsn296_poll1.json
+rsn296-code.tar.gz
+rsn296b-main.tar.gz
+rsn296b-W
+rsn296diag
+rsn296re
+rsn296re-eval1.log
+rsn296re-eval10.log
+rsn296re-eval11.log
+rsn296re-eval12.log
+rsn296re-eval13.log
+rsn296re-eval14.log
+rsn296re-eval15.log
+rsn296re-eval16.log
+rsn296re-eval2.log
+rsn296re-eval3.log
+rsn296re-eval4.log
+rsn296re-eval5.log
+rsn296re-eval6.log
+rsn296re-eval7.log
+rsn296re-eval8.log
+rsn296re-eval9.log
+rsn299bpanel.tgz
+rsn299dev
+rsn299dev.jsonl
+rsn299dev2.tar.gz
+rsn299dev2fresh
+rsn299dev3.tar
+rsn299dev4.tar
+rsn299panel.tgz
+rsn299run_head.py
+rsn350-code.tar.gz
+rsn351-code.tar.gz
+rsn351-guard-report.txt
+rsn351-guard-state.json
+rsn351-guard-stdout.txt
+rsn351-guard.log
+rsn351-guard.sh
+rsn351-instances-1.json
+rsn351-instances-10.json
+rsn351-instances-11.json
+rsn351-instances-12.json
+rsn351-instances-13.json
+rsn351-instances-14.json
+rsn351-instances-15.json
+rsn351-instances-16.json
+rsn351-instances-17.json
+rsn351-instances-18.json
+rsn351-instances-19.json
+rsn351-instances-2.json
+rsn351-instances-20.json
+rsn351-instances-21.json
+rsn351-instances-22.json
+rsn351-instances-23.json
+rsn351-instances-24.json
+rsn351-instances-25.json
+rsn351-instances-26.json
+rsn351-instances-27.json
+rsn351-instances-28.json
+rsn351-instances-29.json
+rsn351-instances-3.json
+rsn351-instances-30.json
+rsn351-instances-31.json
+rsn351-instances-32.json
+rsn351-instances-33.json
+rsn351-instances-34.json
+rsn351-instances-35.json
+rsn351-instances-36.json
+rsn351-instances-37.json
+rsn351-instances-38.json
+rsn351-instances-39.json
+rsn351-instances-4.json
+rsn351-instances-40.json
+rsn351-instances-41.json
+rsn351-instances-42.json
+rsn351-instances-43.json
+rsn351-instances-44.json
+rsn351-instances-45.json
+rsn351-instances-46.json
+rsn351-instances-47.json
+rsn351-instances-48.json
+rsn351-instances-49.json
+rsn351-instances-5.json
+rsn351-instances-50.json
+rsn351-instances-51.json
+rsn351-instances-52.json
+rsn351-instances-53.json
+rsn351-instances-54.json
+rsn351-instances-55.json
+rsn351-instances-56.json
+rsn351-instances-57.json
+rsn351-instances-58.json
+rsn351-instances-59.json
+rsn351-instances-6.json
+rsn351-instances-60.json
+rsn351-instances-61.json
+rsn351-instances-62.json
+rsn351-instances-63.json
+rsn351-instances-64.json
+rsn351-instances-65.json
+rsn351-instances-66.json
+rsn351-instances-67.json
+rsn351-instances-68.json
+rsn351-instances-69.json
+rsn351-instances-7.json
+rsn351-instances-8.json
+rsn351-instances-9.json
+rsn351-live-1.tsv
+rsn351-live-10.tsv
+rsn351-live-11.tsv
+rsn351-live-12.tsv
+rsn351-live-13.tsv
+rsn351-live-14.tsv
+rsn351-live-15.tsv
+rsn351-live-16.tsv
+rsn351-live-17.tsv
+rsn351-live-18.tsv
+rsn351-live-19.tsv
+rsn351-live-2.tsv
+rsn351-live-20.tsv
+rsn351-live-21.tsv
+rsn351-live-22.tsv
+rsn351-live-23.tsv
+rsn351-live-24.tsv
+rsn351-live-25.tsv
+rsn351-live-26.tsv
+rsn351-live-27.tsv
+rsn351-live-28.tsv
+rsn351-live-29.tsv
+rsn351-live-3.tsv
+rsn351-live-30.tsv
+rsn351-live-31.tsv
+rsn351-live-32.tsv
+rsn351-live-33.tsv
+rsn351-live-34.tsv
+rsn351-live-35.tsv
+rsn351-live-36.tsv
+rsn351-live-37.tsv
+rsn351-live-38.tsv
+rsn351-live-39.tsv
+rsn351-live-4.tsv
+rsn351-live-40.tsv
+rsn351-live-41.tsv
+rsn351-live-42.tsv
+rsn351-live-43.tsv
+rsn351-live-44.tsv
+rsn351-live-45.tsv
+rsn351-live-46.tsv
+rsn351-live-47.tsv
+rsn351-live-48.tsv
+rsn351-live-49.tsv
+rsn351-live-5.tsv
+rsn351-live-50.tsv
+rsn351-live-51.tsv
+rsn351-live-52.tsv
+rsn351-live-53.tsv
+rsn351-live-54.tsv
+rsn351-live-55.tsv
+rsn351-live-56.tsv
+rsn351-live-57.tsv
+rsn351-live-58.tsv
+rsn351-live-59.tsv
+rsn351-live-6.tsv
+rsn351-live-60.tsv
+rsn351-live-61.tsv
+rsn351-live-62.tsv
+rsn351-live-63.tsv
+rsn351-live-64.tsv
+rsn351-live-65.tsv
+rsn351-live-66.tsv
+rsn351-live-67.tsv
+rsn351-live-68.tsv
+rsn351-live-69.tsv
+rsn351-live-7.tsv
+rsn351-live-8.tsv
+rsn351-live-9.tsv
+rsn353_final.err
+rsn353_final.json
+rsn353_guard.done
+rsn353_guard.log
+rsn353_guard.sh
+rsn353_guard.stdout
+rsn353_last.json
+rsn353_ledger.done
+rsn353_poll0.err
+rsn353_poll0.json
+rsn353_state.json
+rsn353_summary.json
+rsn353-code.tar
+rsn353-main.tar.gz
+rsn353-min.tar
+rsn355-code.tar
+rsn355-results.tar
+rsn355-seal
+rsn358a-code.tar
+rsn358a-design.tar
+rsn358a-main.tar
+rsn358a-sealcheck
+run-eval.sh
+run.py
+rund-back
+scp294.log
+seal-check.txt
+SEAL-code-twinb.sha256.txt
+SEAL-run.txt
+sealcheck.py
+sealcheck2.py
+sealcheck3.py
+sealcheck333.py
+slp363code.tar
+slp363seal
+smoke_check.py
+smoke_P_console.txt
+smoke_p.ps1
+smoke_T.jsonl
+smoke_t.ps1
+spec_origin.txt
+spec358a.md
+speedtest10m
+ss.json
+ss.txt
+stats299b.py
+style_241b.txt
+style_b.txt
+style241b.txt
+styleprobe.err
+styleprobe.py
+stylesheet.txt
+sweep_all.jsonl
+sweep_full.jsonl
+sweep_ids.txt
+sweep_order.txt
+sweep_part2.jsonl
+sweep.jsonl
+t292t
+teacher_console.log
+tfplan.md
+tgt5back
+THRESHOLD-319.txt
+train_log301.jsonl
+train_summary301.json
+tree_path.txt
+tree-382b-chunk-aa
+tree-382b-chunk-ab
+tree-382b-chunk-ac
+tree-382b-chunk-ad
+tree-382b-chunk-ae
+tree-382b-chunk-af
+tree-382b-chunk-ag
+tree-382b-chunk-ah
+tree-382b-chunk-ai
+tree-382b.tgz
+tree-builder.tar.gz
+tree-main.tar.gz
+tree-twinb.tgz
+tree.tgz
+tree02c
+tree02c_path.txt
+tree02c.tgz
+tree3.tgz
+tree336.tgz
+tree360.tgz
+treebuild
+treedir.txt
+v333.md
+vast_err.txt
+vast_raw.json
+verify_seal299b.py
+verify_seal301.py
+verify.md
+winnl_debug.py
+write_part3.py
+x.html
+x.txt
+zeb_def_ipc_10414
+zeb_def_ipc_12047
+zeb_def_ipc_12197
+zeb_def_ipc_18768
+zeb_def_ipc_19015
+zeb_def_ipc_20302
+zeb_def_ipc_20986
+zeb_def_ipc_22312
+zeb_def_ipc_24894
+zeb_def_ipc_26278
+zeb_def_ipc_26405
+zeb_def_ipc_26768
+zeb_def_ipc_3081
+zeb_def_ipc_3241
+zeb_def_ipc_35045
+zeb_def_ipc_35067
+zeb_def_ipc_36618
+zeb_def_ipc_37264
+zeb_def_ipc_38822
+zeb_def_ipc_4422
+zeb_def_ipc_44650
+zeb_def_ipc_45237
+zeb_def_ipc_47085
+zeb_def_ipc_47153
+zeb_def_ipc_49380
+zeb_def_ipc_49497
+zeb_def_ipc_54274
+zeb_def_ipc_54780
+zeb_def_ipc_57396
+zeb_def_ipc_58281
+zeb_def_ipc_59315
+zeb_def_ipc_6178
+zeb_def_ipc_62406
+zeb_def_ipc_62832
+zeb_def_ipc_64481
+zeb_def_ipc_64802
+zeb_def_ipc_6669
+zeb_def_ipc_67154
+zeb_def_ipc_73012
+zeb_def_ipc_73052
+zeb_def_ipc_73240
+zeb_def_ipc_74087
+zeb_def_ipc_75264
+zeb_def_ipc_75683
+zeb_def_ipc_76698
+zeb_def_ipc_7983
+zeb_def_ipc_8272
+zeb_def_ipc_85382
+zeb_def_ipc_86550
+zeb_def_ipc_87650
+zeb_def_ipc_88071
+zeb_def_ipc_88110
+zeb_def_ipc_88998
+zeb_def_ipc_8930
+zeb_def_ipc_90033
+zeb_def_ipc_90869
+zeb_def_ipc_92914
+zeb_def_ipc_95544
+zeb_def_ipc_98777
+/tmp/brd6work/tree/artifacts/claude-blurt1-dev-20260925/puzzles.jsonl
+/tmp/brd6work/tree/artifacts/claude-brd6-20260926/PASSMARKS-brd6.md
+/tmp/brd6work/tree/artifacts/claude-brd6-20260926/test_puzzles.jsonl
+/tmp/brd6work/tree/scripts/claude_blurt1.py
+/tmp/brd6work/tree/scripts/claude_blurt2.py
+/tmp/brd6work/tree/scripts/claude_blurt4.py
+/tmp/brd6work/tree/scripts/claude_blurt5s.py
+/tmp/brd6work/tree/scripts/claude_brd5.py
+/tmp/brd6work/tree/scripts/claude_brd6.py
+/tmp/brd6work/tree/scripts/claude_cre333b_agent.py
+018f09ff751477d0b9b001ec78ad2ab2  /tmp/brd6work/tree/artifacts/claude-brd6-20260926/test_puzzles.jsonl
+[0m
+[0m$ [0mtar czf /tmp/brd6work/tree.tgz -C /tmp/brd6work tree && ls -la /tmp/brd6work/tree.tgz
+-rw-r--r--  1 ben-hannan  wheel  23458 Sep 25 23:00 /tmp/brd6work/tree.tgz
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 45; vastai show instances --raw | python3 -c "
+import json,sys
+for i in json.load(sys.stdin):
+    if i.get('id')==52683960 or (i.get('label') or '')=='rent-brd6':
+        print(i['id'], i.get('label'), i.get('actual_status'), i.get('cur_state'), i.get('status_msg','')[:100], 'ssh', str(i.get('ssh_host'))+':'+str(i.get('ssh_port')))
+"
+52683960 rent-brd6 loading running 4f4fb700ef54: Verifying Checksum ssh ssh6.vast.ai:13960
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 90; vastai show instances --raw | python3 -c "
+import json,sys
+for i in json.load(sys.stdin):
+    if i.get('id')==52683960:
+        print(i['id'], i.get('label'), i.get('actual_status'), i.get('cur_state'), (i.get('status_msg') or '')[:120], 'ssh', str(i.get('ssh_host'))+':'+str(i.get('ssh_port')))
+"
+52683960 rent-brd6 loading running 8e7374fdf2ff: Verifying Checksum ssh ssh6.vast.ai:13960
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 120; vastai show instances --raw | python3 -c "
+import json,sys
+for i in json.load(sys.stdin):
+    if i.get('id')==52683960:
+        print(i['id'], i.get('label'), i.get('actual_status'), i.get('cur_state'), (i.get('status_msg') or '')[:120], 'ssh', str(i.get('ssh_host'))+':'+str(i.get('ssh_port')))
+"
+52683960 rent-brd6 running running success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-devel/ssh ssh ssh6.vast.ai:13960
+[0m
+[0m$ [0mls ~/.ssh/ 2>/dev/null; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 13960 root@ssh6.vast.ai "echo SSH_OK; nvidia-smi --query-gpu=name --format=csv,noheader; python -c \"import torch;print(torch.__version__, torch.cuda.is_available())\"" 2>&1 | tail -8
+agent
+authorized_keys
+config
+id_ed25519
+id_ed25519.pub
+known_hosts
+known_hosts.old
+rent-bm395
+rent-bm395.pub
+rent336b
+rent336b.pub
+ssh-copy-id.dyqOlQW0o4
+ssh-copy-id.slWcbCWO63
+Warning: Permanently added '[ssh6.vast.ai]:13960' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+SSH_OK
+NVIDIA GeForce RTX 5090
+2.8.0+cu128 True
+[0m
+[0m$ [0mscp -P 13960 -o StrictHostKeyChecking=no /tmp/brd6work/tree.tgz root@ssh6.vast.ai:/root/tree.tgz && ssh -o StrictHostKeyChecking=no -p 13960 root@ssh6.vast.ai "cd /root && tar xzf tree.tgz && ls tree/scripts/ | head; md5sum tree/artifacts/claude-brd6-20260926/test_puzzles.jsonl"
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+claude_blurt1.py
+claude_blurt2.py
+claude_blurt4.py
+claude_blurt5s.py
+claude_brd5.py
+claude_brd6.py
+claude_cre333b_agent.py
+018f09ff751477d0b9b001ec78ad2ab2  tree/artifacts/claude-brd6-20260926/test_puzzles.jsonl
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 13960 root@ssh6.vast.ai "cd /root/tree && setsid nohup bash -c 'pip install -q \"transformers>=5\" safetensors huggingface_hub accelerate numpy > /root/setup.log 2>&1; HF_HUB_OFFLINE=0 python -c \"from huggingface_hub import snapshot_download as s; print(s(\\\"openbmb/MiniCPM5-1B\\\"))\" >> /root/setup.log 2>&1; echo SETUP_DONE >> /root/setup.log' < /dev/null > /dev/null 2>&1 & echo LAUNCHED"
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+LAUNCHED
+[0m
+[0m$ [0msleep 100; ssh -o StrictHostKeyChecking=no -p 13960 root@ssh6.vast.ai "cat /root/setup.log 2>/dev/null | tail -5"
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:02,  4.46it/s]Fetching 11 files:  73%|███████▎  | 8/11 [00:00<00:00, 20.65it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:19<00:00, 20.65it/s]Fetching 11 files: 100%|██████████| 11/11 [00:27<00:00,  3.28s/it]Fetching 11 files: 100%|██████████| 11/11 [00:27<00:00,  2.52s/it]
+/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+SETUP_DONE
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 13960 root@ssh6.vast.ai "cd /root/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && python -B scripts/claude_brd6.py --selftest" 2>&1 | tail -5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+selftest ok
+[0m
+[0m$ [0mdate -u +%FT%TZ; ssh -o StrictHostKeyChecking=no -p 13960 root@ssh6.vast.ai "cd /root/tree && setsid nohup env HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 python -B scripts/claude_brd6.py --model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out gpu --temps 1.0,1.5 --dev-puzzles artifacts/claude-blurt1-dev-20260925/puzzles.jsonl --test-puzzles artifacts/claude-brd6-20260926/test_puzzles.jsonl --train-seed 9 --n-train 800 > /root/tree/gpu_run.log 2>&1 < /dev/null & echo RUN_PID:\$!"
+2026-09-26T03:08:20Z
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+RUN_PID:530
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 60000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p 13960 root@ssh6.vast.ai "ps aux | grep '[c]laude_brd6' | head -3; echo ----; tail -5 /root/tree/gpu_run.log 2>/dev/null; ls /root/tree/gpu 2>/dev/null"
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+root         530  0.0  0.0   4376  1684 ?        S    03:08   0:00 bash -c cd /root/tree && setsid nohup env HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 python -B scripts/claude_brd6.py --model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out gpu --temps 1.0,1.5 --dev-puzzles artifacts/claude-blurt1-dev-20260925/puzzles.jsonl --test-puzzles artifacts/claude-brd6-20260926/test_puzzles.jsonl --train-seed 9 --n-train 800 > /root/tree/gpu_run.log 2>&1 < /dev/null & echo RUN_PID:$!
+root         531 98.9  6.0 23208500 1927100 ?    Rsl  03:08   1:06 python -B scripts/claude_brd6.py --model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out gpu --temps 1.0,1.5 --dev-puzzles artifacts/claude-blurt1-dev-20260925/puzzles.jsonl --test-puzzles artifacts/claude-brd6-20260926/test_puzzles.jsonl --train-seed 9 --n-train 800
+----
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 13848.43it/s]
+[dev] T 1.0: lucky blurts 41/1740 on 58 missed DEV puzzles
+[0m
+[0m# [0mTodos
+[✓] Credit + duplicate gates (done: credit 7.48, no dup)
+[✓] Find RTX 5090 offer, rent with label rent-brd6 (id 52683960, $0.469/hr, start 03:00:40Z)
+[✓] Build tree.tgz from origin/main + scp to rental (md5 ok)
+[✓] Setup rental: torch ok, pip + MiniCPM5-1B BASE 87179e5c (done)
+[•] Run selftest (ok) + main brd6 run detached (PID 531, launched 03:08:20Z)
+[ ] Copy back gpu/ + log, write RESULTS-gpu.md + ledger, destroy instance
+[0m
+[0m$ [0msleep 280; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p 13960 root@ssh6.vast.ai "ps -o pid,etime -p 531 2>/dev/null; echo ----; tail -6 /root/tree/gpu_run.log" 2>&1 | grep -v "vast.ai\|Have fun"
+PID     ELAPSED
+    531       06:01
+----
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 13848.43it/s]
+[dev] T 1.0: lucky blurts 41/1740 on 58 missed DEV puzzles
+[dev] T 1.5: lucky blurts 47/1740 on 58 missed DEV puzzles
+[brd6] base {'cov@1': 11, 'cov@5': 31, 'cov@10': 56, 'cov@30': 108, 'lucky': 231}
+[0m
+[0m$ [0msleep 280; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p 13960 root@ssh6.vast.ai "ps -o pid,etime -p 531 2>/dev/null; echo ----; tail -6 /root/tree/gpu_run.log" 2>&1 | grep -v "vast.ai\|Have fun"
+PID     ELAPSED
+    531       10:55
+----
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 13848.43it/s]
+[dev] T 1.0: lucky blurts 41/1740 on 58 missed DEV puzzles
+[dev] T 1.5: lucky blurts 47/1740 on 58 missed DEV puzzles
+[brd6] base {'cov@1': 11, 'cov@5': 31, 'cov@10': 56, 'cov@30': 108, 'lucky': 231}
+[0m
+[0m$ [0msleep 280; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p 13960 root@ssh6.vast.ai "ps -o pid,etime,%cpu -p 531 2>/dev/null; echo ----; tail -8 /root/tree/gpu_run.log; echo ----; nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader" 2>&1 | grep -v "vast.ai\|Have fun"
+PID     ELAPSED %CPU
+    531       15:51 99.9
+----
+[sleep] epoch 1/3 last batch loss 0.966
+[sleep] epoch 2/3 last batch loss 0.676
+[sleep] epoch 3/3 last batch loss 0.863
+[brd6] W4 seed 1: {'cov@1': 20, 'cov@5': 67, 'cov@10': 104, 'cov@30': 159, 'lucky': 531}
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 17021.27it/s]
+[sleep] epoch 1/3 last batch loss 0.891
+[sleep] epoch 2/3 last batch loss 0.881
+[sleep] epoch 3/3 last batch loss 0.695
+----
+33 %
+[0m
+[0m$ [0msleep 280; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p 13960 root@ssh6.vast.ai "ps -o pid,etime -p 531 2>/dev/null; echo ----; grep -a 'brd6' /root/tree/gpu_run.log | tail -8" 2>&1 | grep -v "vast.ai\|Have fun"
+PID     ELAPSED
+    531       20:46
+----
+[brd6] base {'cov@1': 11, 'cov@5': 31, 'cov@10': 56, 'cov@30': 108, 'lucky': 231}
+[brd6] W4 199 examples, W8 398 examples, 597 passes each
+[brd6] W4 seed 0: {'cov@1': 18, 'cov@5': 64, 'cov@10': 95, 'cov@30': 162, 'lucky': 499}
+[brd6] W4 seed 1: {'cov@1': 20, 'cov@5': 67, 'cov@10': 104, 'cov@30': 159, 'lucky': 531}
+[brd6] W4 seed 2: {'cov@1': 15, 'cov@5': 57, 'cov@10': 98, 'cov@30': 160, 'lucky': 498}
+[brd6] W8 seed 0: {'cov@1': 18, 'cov@5': 70, 'cov@10': 109, 'cov@30': 161, 'lucky': 536}
+[brd6] W8 seed 1: {'cov@1': 20, 'cov@5': 64, 'cov@10': 102, 'cov@30': 160, 'lucky': 521}
+[0m
+[0m$ [0msleep 200; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p 13960 root@ssh6.vast.ai "ps -o pid,etime -p 531 2>/dev/null; echo ----; tail -12 /root/tree/gpu_run.log; echo ----; ls -la /root/tree/gpu/ 2>/dev/null" 2>&1 | grep -v "vast.ai\|Have fun"
+PID     ELAPSED
+----
+[sleep] epoch 3/3 last batch loss 0.695
+[brd6] W4 seed 2: {'cov@1': 15, 'cov@5': 57, 'cov@10': 98, 'cov@30': 160, 'lucky': 498}
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 17585.68it/s]
+[sleep] epoch 1/1 last batch loss 0.742
+[brd6] W8 seed 0: {'cov@1': 18, 'cov@5': 70, 'cov@10': 109, 'cov@30': 161, 'lucky': 536}
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 16878.02it/s]
+[sleep] epoch 1/1 last batch loss 0.837
+[brd6] W8 seed 1: {'cov@1': 20, 'cov@5': 64, 'cov@10': 102, 'cov@30': 160, 'lucky': 521}
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 16624.78it/s]
+[sleep] epoch 1/1 last batch loss 0.875
+[brd6] W8 seed 2: {'cov@1': 17, 'cov@5': 51, 'cov@10': 83, 'cov@30': 147, 'lucky': 508}
+{"dev_missed": 58, "dev_lucky_by_temp": {"1.0": 41, "1.5": 47}, "temp_chosen": 1.5, "n_train": 800, "n_test": 240, "temp": 1.5, "n_test_3num": 160, "base": {"cov@1": 11, "cov@5": 31, "cov@10": 56, "cov@30": 108, "lucky": 231}, "W4_examples": 199, "W8_examples": 398, "passes_each": 597, "W4_own": 20, "W4_wins": 179, "W8_own": 33, "W8_wins": 365, "W4_mean_len": 7.74, "W8_mean_len": 7.74, "W4_share_3num": 0.859, "W8_share_3num": 0.859, "W4_steps": 75, "W8_steps": 75, "W4_seed0": {"cov@1": 18, "cov@5": 64, "cov@10": 95, "cov@30": 162, "lucky": 499}, "W4_seed1": {"cov@1": 20, "cov@5": 67, "cov@10": 104, "cov@30": 159, "lucky": 531}, "W4_seed2": {"cov@1": 15, "cov@5": 57, "cov@10": 98, "cov@30": 160, "lucky": 498}, "W8_seed0": {"cov@1": 18, "cov@5": 70, "cov@10": 109, "cov@30": 161, "lucky": 536}, "W8_seed1": {"cov@1": 20, "cov@5": 64, "cov@10": 102, "cov@30": 160, "lucky": 521}, "W8_seed2": {"cov@1": 17, "cov@5": 51, "cov@10": 83, "cov@30": 147, "lucky": 508}, "ci95_W8_minus_W4_cov30_pct": [-5.72, 2.09], "ci95_W4_minus_base_cov30_pct": [15.79, 27.87], "ci95_W8_minus_base_cov30_pct": [13.77, 26.61], "minutes": 20.8}
+----
+total 100
+drwxr-xr-x 2 root root    73 Sep 26 03:29 .
+drwxr-xr-x 5  502 root    68 Sep 26 03:08 ..
+-rw-r--r-- 1 root root  1279 Sep 26 03:29 brd6_summary.json
+-rw-r--r-- 1 root root 81860 Sep 26 03:20 practice.jsonl
+-rw-r--r-- 1 root root 13933 Sep 26 03:29 streams.json
+[0m
+[0m$ [0mmkdir -p "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-brd6-20260926/gpu" && scp -P 13960 -o StrictHostKeyChecking=no root@ssh6.vast.ai:/root/tree/gpu/brd6_summary.json root@ssh6.vast.ai:/root/tree/gpu/streams.json root@ssh6.vast.ai:/root/tree/gpu/practice.jsonl root@ssh6.vast.ai:/root/tree/gpu_run.log "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-brd6-20260926/gpu/" && ls -la "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-brd6-20260926/gpu/" && cp "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-brd6-20260926/gpu/gpu_run.log" "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-brd6-20260926/gpu/log.txt" && rm "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-brd6-20260926/gpu/gpu_run.log" && wc -c "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-brd6-20260926/gpu/"*
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+total 208
+drwxr-xr-x  6 ben-hannan  staff    192 Sep 25 23:34 .
+drwxr-xr-x  3 ben-hannan  staff     96 Sep 25 23:33 ..
+-rw-r--r--  1 ben-hannan  staff   1279 Sep 25 23:33 brd6_summary.json
+-rw-r--r--  1 ben-hannan  staff   3432 Sep 25 23:34 gpu_run.log
+-rw-r--r--  1 ben-hannan  staff  81860 Sep 25 23:34 practice.jsonl
+-rw-r--r--  1 ben-hannan  staff  13933 Sep 25 23:33 streams.json
+    1279 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-brd6-20260926/gpu/brd6_summary.json
+    3432 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-brd6-20260926/gpu/log.txt
+   81860 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-brd6-20260926/gpu/practice.jsonl
+   13933 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-brd6-20260926/gpu/streams.json
+  100504 total
+[0m
+[0m→ [0mRead artifacts/claude-brd6-20260926/gpu/brd6_summary.json
+[0m
+[0m$ [0mgit show origin/main:artifacts/fable-predictions-ledger.md | tail -8; echo ----LOCAL----; tail -8 artifacts/fable-predictions-ledger.md
+- P261.1 (2026-09-22, resume builder; exp 261 ear v4.1 ckpt 55284dec + canon + brake + entailment checker prompt B at theta 0.25, sealed 18 files SEAL.sha256.txt artifacts/claude-earcheck261-20260922) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261.2 M2 wrong saves (statement fams + no_save) 0-3; pass (<= 1) ~55 %. Risk tags R10/R11/R12 unseen in dev (D_apos still 3 wrong at theta 0.25 on dev).
+- P261.3 M3 exact TEACH recall 85-93 % and >= B + 30 (B 10-20 %); pass ~65 %.
+- P261.4 M3b UNSURE 5-12 % of gold TEACH; pass (<= 12 %) ~60 %.
+- P261.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %.
+- P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261.7 M6 checker never adds/changes a frame; pass ~99 %.
+- P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).
+----LOCAL----
+- dl2 GPU OUTCOME (2026-09-26, registered run of dl-2 copy-practice week vs wrong-answer placebo, rental label rent-dl2, unmodified origin/main code): contract 52669927 (RTX 5090 South Korea offer 43982829 rel 0.9977 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime, created ~00:26Z, run launched 00:33Z detached via setsid, destroyed ~01:46Z, ~1.33 h x $0.4852/h = ~$0.65); task total ~$0.65 of $2.00 budget, 1 rental, no re-rents (account credit 5.12 at start); post-destroy 0 rent-dl2 live. selftest ok; first "[dl2] S s2 night 1" at ~7 min (no TOO-SLOW). Base TEST lucky 64 reached 34 greedy 3 (100 fresh puzzles seed 3890); HARM right 200/300. Final lucky S 237/249 (mean 243.0), P 42/51 (mean 46.5); final reached S 62/60, P 28/32; final greedy S 17/18, P 1/4; final net harm S -10/-8, P -24/-20. W1 PASS (237/249 >= 128); W2 PASS (0 worse nights of 14); W3 PASS (0 harm>5 nights, final -10/-8 <= 0); W4 PASS (62/60 >= 34); W5 PASS (243.0 >= 60.5, min S 237 > max P 51). Registered verdict PASS, not proved wrong (237/249 > 70.4; 0 worse < 3; 243.0 > 46.5), not inconclusive (L0 64 >= 10). S kept climbing nights 4-7 (s2 156 -> 237, s3 179 -> 249; one -11% dip s3 night 5). Wall 67.1 min, BASE commit 87179e5c1f455ef22e6223592d2d61351b525bfc, code origin/main 589946c92c4400e937437fc7a731f4b345a172dc, torch 2.8.0+cu128, transformers 5.17.0, no weights saved. gpu/ (dl2_results.json + log.txt 63 lines) copied back before destroy. Code unedited, no TEST-ONLY panel. See artifacts/claude-dl2-20260926/RESULTS-gpu.md.
+- brd5 GPU OUTCOME (2026-09-26, registered run of brd-5 breadth-vs-newness, rental label rent-brd5, unmodified origin/main code): instance 52678258 RTX 5090 offer 44173765 rel 0.9985 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime, running ~2 min after create, destroyed after copy-back, ~0.46 h x $0.5037/h = ~$0.23 (budget $1.00, credit 8.94 at start; 1 rental, no re-rents); post-destroy 0 rent-brd5 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc (no other model). Selftest ok; test-panel md5 968b9f2f...185050 verified on rental. DEV temp 1.5 (46 vs 45 on 58 missed). Base cov@30 123/240; own 20, wins 167, examples 187; W cov@30 144/145/136; N 91/83/97 (20 distinct wins, 40 distinct puzzles); C 22/22/18; CI W-N [16.52,26.15]pp. PASS sub-conditions all TRUE (per-seed gaps +53/+62/+39, CI above 0); proved-wrong FALSE (upper 26.15); but INCONCLUSIVE fires (no W seed >= base+24=147). Registered verdict INCONCLUSIVE. Wall 20.0 min, no weights saved. gpu/ (brd5_summary.json + streams.json + narrow_picks.jsonl 20 lines + log.txt) md5-verified before destroy. Code unedited. See artifacts/claude-brd5-20260926/RESULTS-gpu.md.
+- rent-382b GPU OUTCOME (2026-09-26, registered run 382b Premonition 0.2 candidate, rental label rent-382b, origin/main code + builder-outbox tree): instance 52674739 RTX 5090 offer 43982846 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 80 GB, running 01:16:34Z, destroyed ~02:56Z, ~1.64 h x $0.50370/h = ~$0.83 (budget $2.50, credit 9.77 at start; 1 rental, no re-rents); post-destroy 0 rent-382b live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, route122 ok. Seals all OK, e2e382 10/10, e2e383 13/13. Base seed4102 13.2 s, pt sha 1dfd95f5e6917cb5a5a73a408456555e27f4706a5bfae752cd0b0b632db63c86. INCOMPLETE: READER 2 GB upload infeasible in TIME CAP (~6 MB/min, 16/104 chunks; 3+ parallel scp "Result too large"; projected 7.3 h). No DEV gate, no E/G/R/ER, no scorer, no panel scores, no EP382/sleep logs. Partial: Bank C T arm_T 653 rows 40 lives; T chat 318 rows 60/60; T creative 91 rows 60/60; copied back verified before destroy. Code unedited on rental; Mac additive only (new RESULTS-rent.md + run/arm_T,chat_T,creative_T). See artifacts/claude-e2e382-20260925/RESULTS-rent.md.
+- G0 OUTCOME (2026-09-26, rsn-358a loop vs plain general puzzles, BensPC RTX 5070 Ti shared, unmodified origin/main code, seals 14/14 + 1/1 OK): practised-size both-arms>=210/300 in >=2 of 3 kinds: s1 sums 300/300 grids 240/243 numbers 1/3 MET; s2 sums 300/300 grids 244/248 numbers 2/4 MET. Numbers unsolved by all 4 runs.
+- G1 OUTCOME (2026-09-26, rsn-358a bigger tests loop-minus-plain, 300 each, each eval once): s1 sums6 +59 grids6 +67 numbers5 0 PASS; s2 sums6 -11 grids6 +76 numbers5 +2 FAIL (needs +30 on 2 of 3 and >=-10 on third; only grids6 hits). Registered verdict FAIL (G0 met both seeds, G1 fails s2).
+- G2 OUTCOME (2026-09-26, rsn-358a practised-size loop-minus-plain): s1 0/+3/+2 PASS; s2 0/+4/+2 PASS (all >= -10).
+- G3 OUTCOME (2026-09-26, rsn-358a stop rule own-stop vs fixed-16, report right_v1_rule): s1 256>=251 270>=266 1>=-4 mean 8.82>7.14 PASS; s2 244>=239 265>=262 2>=-4 mean 8.01>6.52 PASS. Proved-wrong clause NOT triggered (s1 +59/+67, s2 +76). Train 32.2/25.9/32.9/25.8 min, GPU $0, no OOM, weights BensPC-only. See artifacts/claude-rsn358a-20260925/RESULTS.md.
+- rsn-358a CORRECTION (2026-09-26, builder): the G3 line above says weights BensPC-only; after Mac disk space freed up (df 11 GB free), all 4 final.pt were also copied to ~/premonition-models/rsn358a/<run>/final.pt with sha256 matching SEAL-run.sha256.txt (RESULTS.md checkpoint section updated). Nothing else changes; verdict stays FAIL.
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai destroy instance 52683960 2>&1 | tail -2; date -u +%FT%TZ; sleep 10; vastai show instances --raw | python3 -c "
+import json,sys
+ids=[i['id'] for i in json.load(sys.stdin)]
+print('live:',ids)
+print('rent-brd6 gone:', 52683960 not in ids)
+"
+Are you sure you want to destroy instance 52683960? This is irreversible and will delete all data. [y/N] 
+Aborted.
+2026-09-26T03:34:48Z
+live: [52677751, 52683960, 52685550, 52685812]
+rent-brd6 gone: False
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); echo y | vastai destroy instance 52683960 2>&1 | tail -2; date -u +%FT%TZ
+Are you sure you want to destroy instance 52683960? This is irreversible and will delete all data. [y/N] destroying instance 52683960.
+2026-09-26T03:35:25Z
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 15; vastai show instances --raw | python3 -c "
+import json,sys
+rows=[(i['id'],i.get('label'),i.get('actual_status')) for i in json.load(sys.stdin)]
+print(rows)
+print('rent-brd6 gone:', all(r[0]!=52683960 for r in rows))
+"
+[(52677751, 'rent-bm391', 'running'), (52685550, 'rent-bm397t', 'running'), (52685812, 'rent-dl3', 'running')]
+rent-brd6 gone: True
+[0m
+[0m← [0mWrite artifacts/claude-brd6-20260926/RESULTS-gpu.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- brd6 GPU OUTCOME (2026-09-26, registered run of brd-6 more-distinct-won-puzzles at equal exposure, rental label rent-brd6, unmodified origin/main code): instance 52683960 RTX 5090 offer 45669284 rel 0.9975 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 80 GB, created 03:00:40Z, running ~4 min after create, run launched 03:08:20Z detached via setsid, destroyed 03:35:25Z, ~0.58 h x $0.469/h = ~$0.27 (budget $1.00, credit 7.48 at start; 1 rental, no re-rents); post-destroy 0 rent-brd6 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc (no other model). Selftest ok; test-panel md5 018f09ff751477d0b9b001ec78ad2ab2 verified on rental. DEV temp 1.5 (47 vs 41 on 58 missed). Base cov@30 108/240; W4 examples 199 (own 20 + wins 179), W8 examples 398 (own 33 + wins 365), 597 passes and 75 optimizer steps each, matched len 7.74 and 3num share 0.859. cov@30 W4 162/159/160, W8 161/160/147 (seed diffs -1/+1/-13, need >= +12 every seed: 0 of 3); CI W8-W4 [-5.72, 2.09]pp. PASS FALSE; proved-wrong TRUE (upper 2.09 < 2.5); NOT inconclusive (W8 398 >= 300, W4-base lower 15.79 > 0). Registered verdict PROVED WRONG. Wall 20.8 min, no weights saved. gpu/ (brd6_summary.json + streams.json + practice.jsonl + log.txt) copied back before destroy. Code unedited. See artifacts/claude-brd6-20260926/RESULTS-gpu.md.
+EOF
+tail -1 artifacts/fable-predictions-ledger.md | head -c 200; echo; git add -f artifacts/claude-brd6-20260926/gpu artifacts/claude-brd6-20260926/RESULTS-gpu.md artifacts/fable-predictions-ledger.md && git status --porcelain=v1 | grep -E "brd6|ledger"
+- brd6 GPU OUTCOME (2026-09-26, registered run of brd-6 more-distinct-won-puzzles at equal exposure, rental label rent-brd6, unmodified origin/main code): instance 52683960 RTX 5090 offer 45669284 rel
+A  artifacts/claude-brd6-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd6-20260926/gpu/brd6_summary.json
+A  artifacts/claude-brd6-20260926/gpu/log.txt
+A  artifacts/claude-brd6-20260926/gpu/practice.jsonl
+A  artifacts/claude-brd6-20260926/gpu/streams.json
+M  artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mpython3 -c "
+import json
+n=sum(1 for _ in open('artifacts/claude-brd6-20260926/gpu/practice.jsonl'))
+s=json.load(open('artifacts/claude-brd6-20260926/gpu/brd6_summary.json'))
+st=json.load(open('artifacts/claude-brd6-20260926/gpu/streams.json'))
+print('practice lines:',n,'streams type:',type(st).__name__,'summary keys:',len(s))
+" && git diff --cached --stat | tail -8
+practice lines: 800 streams type: dict summary keys: 31
+ artifacts/claude-dl1-20260925/gpu/log.txt          |  92 +++
+ artifacts/claude-tgt5-20260926/RESULTS-gpu.md      | 103 +++
+ artifacts/claude-tgt5-20260926/gpu/contrasts.json  |   1 +
+ artifacts/claude-tgt5-20260926/gpu/log.txt         |  51 ++
+ artifacts/claude-tgt5-20260926/gpu/pairs.jsonl     | 120 ++++
+ .../claude-tgt5-20260926/gpu/tgt5_summary.json     |  80 +++
+ artifacts/fable-predictions-ledger.md              |  77 ++
+ 29 files changed, 3248 insertions(+)
+[0m
+[0m# [0mTodos
+[✓] Credit + duplicate gates (done: credit 7.48, no dup)
+[✓] Find RTX 5090 offer, rent with label rent-brd6 (id 52683960, $0.469/hr, start 03:00:40Z)
+[✓] Build tree.tgz from origin/main + scp to rental (md5 ok)
+[✓] Setup rental: torch ok, pip + MiniCPM5-1B BASE 87179e5c (done)
+[✓] Run selftest (ok) + main brd6 run detached (finished, summary written)
+[✓] Copy back gpu/ + log, write RESULTS-gpu.md + ledger, destroy instance (gone, staged for push)
+[0m
