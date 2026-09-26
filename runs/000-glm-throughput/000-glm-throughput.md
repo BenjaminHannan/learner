@@ -1,0 +1,17 @@
+COMMON RULES (the director, Claude, wrote this task on 2026-09-26). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+GPU: no (Mac CPU; opencode network calls on Ben's subscription, $0 extra).
+
+YOUR TASK: GLM 5.3 Flash throughput test (director, 2026-09-26 19:25 UTC). Never read, print, copy or commit any opencode config/auth file or any key. Rent nothing.
+A. CLI route, with scripts/claude_glm_opencode.py from origin/main (sha256 3b597086511d18270cea2d2614027ea54f0e4142cf87e9a2c30a68b2ad4c5ad2; check it, never edit it). Build 50 prompts of real size: each = about 6,000 characters of fictional chat (make it with a fixed-seed Python generator: fictional names only) + "List three facts about the speaker, one per line." Run all 50 at 4 parallel, then at 8, then at 16 (stop raising at the first level with >5 errors). For each level: wall time, calls per hour, error count and the first line of each distinct error, median and max seconds per call. Confirm sessions are cleaned up (session count before/after).
+B. Key route, ONLY if ~/.config/opencode-go/key exists (test with `[ -s ~/.config/opencode-go/key ]`; never cat it). Find the OpenCode Go HTTP API endpoint and request format from `opencode --help`/its docs or provider list output (NOT from any config/auth file). If you find it, write scripts/claude_glm_opencode2.py: same `call(text, model, timeout) -> str` interface; reads the key file inside the script only; direct HTTPS first, falls back to claude_glm_opencode.call on any failure; never logs the key; after every run grep all its logs and outputs for the first 8 characters of the key read in memory (never print them) and abort on a hit. Add --selftest. Run the same 50x{4,8,16} test on it. If no key file or no endpoint found, say so and skip B.
+Write artifacts/claude-glm-throughput-20260926/REPORT.md (numbers, errors verbatim, sha256 of any new script).
+PUSH: artifacts/claude-glm-throughput-20260926/REPORT.md scripts/claude_glm_opencode2.py
+DISK: 0
