@@ -97,3 +97,15 @@ GD − E20, split:
    lookup for multi-part questions.
    - Pass: complete-evidence recall up, and the blind check on the new top 20 against E20.
    - The ceiling is GD's 119, or 41 gained against 10 lost.
+
+## Blind recount: agrees (added ~13:25 UTC)
+A separate agent recomputed every number above from the raw files with its own code. It did not see score(),
+score.json or this file.
+- Every count, pair, interval, relabel figure and precision number is equal.
+- All 1,605 items carry one A-E label.
+- No judge saw two arms of one question, and the relabel judges saw neither L0 nor L1.
+- Every batch reply is byte-equal to the reply in its arm's file.
+- Its caveat: D3 is close to the line. A net swing of 2 questions (to +9.8) would make it false. Nearly all of the
+  gain is on the 111 retrieval-missed questions: 35 gained, 1 lost.
+- On the 186 same-lines questions, 15 A/not-A flips separate GD and E20. 6 are judge disagreement on identical
+  replies; 9 come from number precision.
