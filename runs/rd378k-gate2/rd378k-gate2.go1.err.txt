@@ -1,0 +1,704 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo FETCH_EXIT:$?
+git log -1 --format=%H origin/main -- artifacts/claude-rd378k-20260926/SEAL-ADD-C.sha256.txt 2>&1
+echo "---"
+git ls-tree -r --name-only origin/main -- artifacts/claude-rd378k-20260926/gate2/ 2>&1
+echo "---builder-outbox---"
+git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-rd378k-20260926/gate2/ 2>&1 || echo "no builder-outbox branch or no gate2"
+FETCH_EXIT:0
+81d13ba1c78fa2b5304f341e629300429917b624
+---
+---builder-outbox---
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rd378k-20260926/PASSMARKS-C.md
+echo "=====END PASSMARKS-C====="
+# rd-378k addendum C (2026-09-26 17:35 UTC): the labeller, fixed for long dialogs, and the gate measured again
+
+Written after the label gate's first result (VERIFY-gate.md: PASS on both rows) and before any training grade is used.
+PASSMARKS.md, PASSMARKS-B.md stay as sealed; this file adds to them.
+
+## What was found (shown, from gate/labels.jsonl and the rd-371b judge input; Thread manager asked for it by kind)
+The teacher's answer was unusable for 10 of the 39 gate dialogs, and all 10 are overheard: 0 of 23 chat dialogs failed,
+10 of 16 overheard dialogs failed (same median length, 14 turns). An overheard dialog asks for a grade on every turn at
+once; a chat dialog on about 7. So the first gate mostly measured chat notes (23 of 29 usable dialogs), and training on
+version-1 grades would drop most overheard dialogs: the writer would learn mostly from chats with an assistant.
+
+## The one change to the labeller
+scripts/claude_rd378k_teacher2.py: at most 7 graded turns per call (the dialog up to the window's last turn; only the
+window's turns carry notes). Same prompt words, verdicts, checks and output format. Failed calls keep the teacher's raw
+answer for reading. All training grades for rd-378g and rd-378k come from this labeller.
+
+## The gate again, with the labeller that will be used (same 39 dialogs, sha256(id) % 3 == 0; same bars)
+- overall: agreement >= 85% and kappa >= 0.5;
+- untrue notes: teacher "ok" on <= 15% of judge-unsupported notes;
+- coverage (new): usable dialogs >= 90% of the picked ones in EACH kind (chat, overheard).
+Report only: both rows per kind. If any row fails, nothing trains on teacher grades; the two-pass teacher of addendum B
+is measured on the sha256(id) % 3 == 1 dialogs with this labeller and these rows.
+=====END PASSMARKS-C=====
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rd378k_teacher2.py | head -n 120
+echo "=====SEPARATOR teacher.py====="
+git show origin/main:scripts/claude_rd378k_teacher.py | head -n 120
+#!/usr/bin/env python3
+"""rd-378k teacher labeller, version 2 (Trustworthy notes thread, 2026-09-26). New file; claude_rd378k_teacher.py stays.
+
+Why: in the label gate (artifacts/claude-rd378k-20260926/VERIFY-gate.md) the teacher's output was unusable for 10 of 39
+dialogs, and all 10 were overheard dialogs (0 of 23 chat dialogs failed; 10 of 16 overheard failed). An overheard dialog
+asks for a grade on every turn (12-16 at once); a chat dialog on about 7. The one change: the teacher grades at most 7
+turns per call. Each call shows the dialog up to the last turn of its window, and only the window's turns carry their
+"notes" list (earlier turns are context only). Prompt words, verdicts, checks and output format are claude_rd378k_teacher's.
+Failed calls are logged with the teacher's raw answer (training data only, never a key) so a failure can be read.
+
+label  python -B scripts/claude_rd378k_teacher2.py label --judge-in J.jsonl --out DIR [--only-hash K] [--window 7]
+       writes DIR/labels.jsonl {dialog, t, verdicts, missed} and DIR/failures.jsonl; prints one JSON line of counts
+       (per kind as well).
+selftest (no network)
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_rd378k_teacher import JUDGE, VERDICTS, call, check_labels, json_list, load, picked  # noqa: E402
+
+
+def windows(d, size):
+    """Yield (window_dialog, n_turns_graded): the dialog cut after the window's last turn, notes kept only in the window."""
+    graded = [k for k, t in enumerate(d["turns"]) if "notes" in t]
+    for s in range(0, len(graded), size):
+        keep = set(graded[s:s + size])
+        last = max(keep)
+        turns = [t if k in keep else {x: v for x, v in t.items() if x != "notes"}
+                 for k, t in enumerate(d["turns"][:last + 1])]
+        yield dict(d, turns=turns), len(keep)
+
+
+def label(a, key):
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    dialogs = [d for d in load(a.judge_in) if picked(d["dialog"], a.only_hash)]
+    rows, usage, failed, fails = [], [], [], []
+    per_kind = {}
+    for d in dialogs:
+        got_all = []
+        for wi, (w, _n) in enumerate(windows(d, a.window)):
+            got = None
+            for tr in range(3):
+                txt, u = call(key, a.model, JUDGE + json.dumps(w, ensure_ascii=False), 0)
+                usage.append(u)
+                got = check_labels(w, json_list(txt))
+                if got is not None:
+                    break
+                fails.append({"dialog": d["dialog"], "window": wi, "try": tr + 1, "raw": (txt or "")[:4000]})
+            if got is None:
+                got_all = None
+                break
+            got_all += got
+        k = per_kind.setdefault(d["kind"], {"dialogs": 0, "unusable": 0})
+        k["dialogs"] += 1
+        if got_all is None:
+            k["unusable"] += 1
+            failed.append(d["dialog"])
+            print(f"[rd378k-teacher2] {d['dialog']} unparsed", flush=True)
+            continue
+        rows += got_all
+        print(f"[rd378k-teacher2] {d['dialog']} ok", flush=True)
+    (out / "labels.jsonl").write_text("".join(json.dumps(x) + "\n" for x in rows), encoding="utf-8")
+    (out / "failures.jsonl").write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in fails),
+                                        encoding="utf-8")
+    cost = sum(float(u.get("cost", 0) or 0) for u in usage)
+    verdicts = [x for r in rows for x in r["verdicts"]]
+    print(json.dumps({"dialogs": len(dialogs), "labelled": len(dialogs) - len(failed), "unparsed": len(failed),
+                      "per_kind": per_kind, "calls": len(usage), "failed_calls": len(fails), "notes": len(verdicts),
+                      **{v: verdicts.count(v) for v in VERDICTS}, "cost_usd": round(cost, 4)}))
+
+
+def selftest():
+    d = {"dialog": "x", "kind": "overheard", "turns": [
+        {"t": k, "speaker": "AB"[k % 2], "text": f"m{k}", "notes": [{"text": f"n{k}"}] if k % 3 else []}
+        for k in range(15)]}
+    ws = list(windows(d, 7))
+    assert [n for _w, n in ws] == [7, 7, 1]
+    w0, w1 = ws[0][0], ws[1][0]
+    assert len(w0["turns"]) == 7 and all("notes" in t for t in w0["turns"])
+    assert len(w1["turns"]) == 14 and [("notes" in t) for t in w1["turns"]] == [False] * 7 + [True] * 7
+    good = [{"t": t["t"], "verdicts": ["ok"] * len(t["notes"]), "missed": 0} for t in w1["turns"] if "notes" in t]
+    assert len(check_labels(w1, good)) == 7
+    c = {"dialog": "c", "kind": "chat", "turns": [
+        {"t": k, "speaker": "user", "text": "u", "notes": []} if k % 2 == 0 else {"t": k, "speaker": "assistant",
+                                                                                   "text": "a"} for k in range(14)]}
+    assert [n for _w, n in windows(c, 7)] == [7]           # a chat dialog stays one call, as in version 1
+    print("rd378k teacher2 selftest 1/1 ok")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("mode", choices=["label", "selftest"])
+    ap.add_argument("--judge-in", default="")
+    ap.add_argument("--out", default="")
+    ap.add_argument("--only-hash", type=int, default=1)
+    ap.add_argument("--window", type=int, default=7)
+    ap.add_argument("--model", default="z-ai/glm-5.3-flash")
+    a = ap.parse_args()
+    if a.mode == "selftest":
+        selftest()
+        return
+    key = (Path.home() / ".config" / "openrouter" / "key").read_text().strip()
+    try:
+        label(a, key)
+    finally:
+        del key
+
+
+if __name__ == "__main__":
+    main()
+=====SEPARATOR teacher.py=====
+#!/usr/bin/env python3
+"""rd-378k teacher jobs on the Mac (Trustworthy notes thread, 2026-09-26): the open-weights teacher (GLM via OpenRouter,
+the teacher Ben approved; goals page 5f38f110e: nothing a model trains on is written or judged by Claude) writes the
+practice dialogs the note writer drafts over, and grades the writer's own notes, so the cut-only rows
+(scripts/claude_rd378k_data.py) hold no Claude-written or Claude-judged text. Standard library only; no model runs here.
+
+Key rules: the key is read from ~/.config/openrouter/key into memory only. Never printed, logged or written.
+Call pattern copied from scripts/claude_k1e_teacher.py (reasoning effort low, answer read from the final message).
+
+write  160 practice dialogs in 20 calls of 8 (4 chat with an assistant + 4 overheard between two named people,
+       12-16 turns), each call with its own subject area. Structure checked in code; a call that breaks it is retried
+       (3 tries). ids kd-001..kd-160 in call order; t counts from 1.
+         python -B scripts/claude_rd378k_teacher.py write --out DIR [--model M]
+label  the teacher grades every note of a judge-input file (claude_rd378k_data.py judgein) with the judge brief's own
+       verdict words (artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md), one dialog per call, temperature 0;
+       writes DIR/labels.jsonl {dialog, t, verdicts, missed} (the judge-output format). [--only-hash K: only dialogs
+       whose sha256(id) % K == 0.]
+         python -B scripts/claude_rd378k_teacher.py label --judge-in J.jsonl --out DIR [--only-hash K] [--model M]
+agree  teacher verdicts vs the blind judges' verdicts on the same notes, ok vs not ok. Label rule fixed before any
+       teacher label exists (the creative thread's rule for a label source, k1e): agreement >= 85% and kappa >= 0.5.
+         python -B scripts/claude_rd378k_teacher.py agree --labels L.jsonl --verdicts V.jsonl
+selftest (no network)
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import re
+import time
+import urllib.request
+from pathlib import Path
+
+AREAS = ("hobbies and crafts", "work and coworkers", "family visits", "school and exams", "food and cooking",
+         "travel and trips", "pets", "moving house", "neighbours and community", "sports and fitness",
+         "music and concerts", "gardening", "health and appointments", "money and shopping", "weddings and parties",
+         "cars and commuting", "books and films (invented titles only)", "volunteering", "holidays and seasons",
+         "new jobs and interviews")
+VERDICTS = ("ok", "unsupported", "bad_cite", "bad_when", "bad_form")
+MONTHS = ("January February March April May June July August September October November December").split()
+
+WRITE = """Write 8 realistic conversations as a JSON list of 8 objects. Each object has exactly the keys "kind",
+"speakers", "date", "turns".
+- 4 with kind "chat": a user talks with a personal assistant. speakers = ["user", "assistant"]. Turns alternate,
+  starting with the user. The user tells the assistant about their life; the assistant's turns are short natural replies.
+- 4 with kind "overheard": two friends, relatives or coworkers talk. speakers = their two first names. Turns alternate,
+  starting with the first name.
+- date: the day the conversation happens, like "8 May 2023", a different day for each, between 2021 and 2025.
+- turns: 12 to 16 objects {"speaker": one of the speakers, "text": the message}.
+What the talk should contain, mixed naturally: things that happened, plans, preferences and opinions, times said in the
+chat ("last May", "next Friday", "two weeks ago", "in 2019"), changes (moved, new job, got a pet, broke up), things one
+person says about someone else, the odd joke, sarcasm or "what if", a correction of something said earlier ("wait, it
+was Tuesday"), pronouns pointing back to earlier messages, and some small talk with nothing to remember.
+Style: real texting, some typos in ordinary words (never in names), run-ons, mixed lengths (3 to 60 words).
+Subject area for all 8: {area}. Fictional names only: invented first names from many cultures and made-up places; no
+real public figures, brands, or book, film or game titles.
+
+Reply with ONLY the JSON list, no other text."""
+
+JUDGE = """You are checking memory notes that a small model wrote about a conversation. Below is one conversation as JSON:
+{"dialog","kind","speakers","date","turns":[{"t","speaker","text","notes":[{"text","cites","when"}]}]}.
+cites are offsets from the note's own turn (0 = that turn, -1 = the turn before, ...).
+
+For EVERY note, read the dialog up to and including the note's turn and give one verdict:
+- ok: one plain sentence, third person with names (or "the user"), and everything in it is stated by the cited turns
+  (reading the earlier turns only to know who "she"/"that" is); plans stay plans, claims about others stay claims.
+- unsupported: it says something the cited turns do not state (a guess, an inference, a wrong detail, wrong person).
+- bad_cite: true to the dialog but a turn it needs is not cited, or a cited turn is not needed.
+- bad_when: "when" is wrong (not the time the turns give for this note, or missing when the turn gives one).
+- bad_form: pronoun instead of a name, first/second person, more than one sentence, a joke or hypothetical turned into a fact.
+For EVERY turn that has a "notes" list (even an empty one), also say "missed": the number of clearly memorable things in
+that turn (an event, plan, preference, change, time, person or pet fact) that no note of that turn covers (0 if none).
+
+Reply with ONLY a JSON list with one object per turn that has a "notes" list, in order:
+{"t": <the turn's t>, "verdicts": [one verdict word per note, in order], "missed": <integer>}.
+
+Conversation:
+"""
+
+
+def load(p):
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def call(key, model, text, temperature, tries=4):
+    body = json.dumps({"model": model, "messages": [{"role": "user", "content": text}], "temperature": temperature,
+                       "max_tokens": 16000, "reasoning": {"effort": "low"}}).encode()
+    for i in range(tries):
+        req = urllib.request.Request("https://openrouter.ai/api/v1/chat/completions", data=body, headers={
+            "Authorization": "Bearer " + key, "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=240) as r:
+                d = json.loads(r.read().decode())
+            return d["choices"][0]["message"]["content"] or "", d.get("usage", {})
+        except Exception as e:                        # the message of an HTTP error never carries the key
+            print(f"[rd378k-teacher] try {i + 1} failed: {type(e).__name__} {str(e)[:120]}", flush=True)
+            time.sleep(2 ** (i + 1))
+    return "", {}
+
+
+def json_list(txt):
+    m = re.search(r"\[.*\]", txt, re.S)
+    if not m:
+        return None
+    try:
+        v = json.loads(m.group(0))
+    except json.JSONDecodeError:
+        return None
+    return v if isinstance(v, list) else None
+
+
+def check_dialog(r) -> str | None:
+    if not isinstance(r, dict) or set(r) != {"kind", "speakers", "date", "turns"}:
+        return "keys"
+    sp = r["speakers"]
+    if r["kind"] == "chat":
+        if sp != ["user", "assistant"]:
+            return "chat speakers"
+    elif r["kind"] == "overheard":
+        if not (isinstance(sp, list) and len(sp) == 2 and all(isinstance(s, str) and re.fullmatch(r"[A-Z][\w'-]+", s)
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rd378k-20260926/SEAL-ADD-C.sha256.txt
+echo "---"
+git show origin/main:artifacts/claude-rd378k-20260926/SEAL.sha256.txt
+echo "---branches---"
+git branch -a | head -n 30
+echo "--- gate2 check main ---"
+git ls-tree origin/main -- artifacts/claude-rd378k-20260926/ | head -n 40
+6ca79efee36502af2701ec58f26884cf1a4998f9bbee5c1c8ffdd18772c4adb8  artifacts/claude-rd378k-20260926/PASSMARKS-C.md
+a8d46af115de43fe99f5ec703be8d9aca1d65642acd3eae0b8aaf6ae9d326935  scripts/claude_rd378k_teacher2.py
+---
+fc77cd0f0996b74a5c1ccfc131375024b26b1ae65c7f2919506bfb7ced832cab  artifacts/claude-rd378k-20260926/PASSMARKS.md
+86edf23c46df53e807baa36cff5ea74e55ad269aa0b1d3826425982c2fe1fe23  scripts/claude_rd378k_data.py
+244df45ae05103d507657b40b08b335a3e887791719608d4ea866e34103c82a9  scripts/claude_rd378k_teacher.py
+5eba422d1d4f156f75c125f95a2c1f1313c4621dd811118ec1c7c438fbc60119  scripts/claude_rd378k_score.py
+51ba27929a73d56c32585c3f11c030517b71070f3c429fc865e2bb4ef5e580b9  scripts/claude_rd378_common.py
+72a991c9ae430ba9996bcce1fcb0c12fdbcd9c314dfcdf3ae4a941e9e0ec8513  scripts/claude_rd378_write.py
+16e740c700cc3b74e74e517dfc86efd516bca65388798a3145f5ab27cf51af05  scripts/claude_rd371b_sample.py
+f813f6a058db50f06af5dd76f20d4f79d2fa01a3b8ea57a94b662fb82fa18b2d  scripts/claude_rd371b_common.py
+d9e4b3db4cacc6890ab4fc440a8bfa63739f42455c5114a7ab63f1bbe5ea1f1a  scripts/claude_lis300_train.py
+0e67f9b8b2077e7bcaed84cd1c4b3fd4f5c6529e6dabd6a5ae51c8ca92f1c98f  scripts/claude_rd378L_rebuild.py
+bcb1b793e609a0f44f34368703b9e4f382e75f5a1034f3893fd5c91e1e6b7e84  scripts/claude_rd378u_confirm.py
+6b9398c0e309b6cf15e1aa71a764e33782c5961b32c7f558cfdb879850c27987  scripts/claude_rd378L_recall.py
+a3c4ed9e03e4d1dc4f422fb13c5f9d47a1064d43fb5aaf8aa3c7437abadd91bb  scripts/claude_ep382_store_v2.py
+da1b4ab9dbbf53ef0ed2f0150b4bae0987540f5f4ffedffb197d1729f74bd30d  scripts/claude_ep382_store_v3.py
+43bb0e9e76066c40dab835493b0a581e11422ef1c105aa70c31c0b616c91a780  scripts/claude_ep382_store_v4.py
+c56a78e5e416b9cf7c33c1a0bbf97b3b42e3c4702a82455196a01b78924eb3f5  artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md
+---branches---
+* claude/card-experiment-handoff-7c5b27
++ claude/fact-saving-note-filtering-4ff1ff
++ claude/forgetting-plain-english-gap-9258f0
++ claude/locomo-length-penalty-408e2a
++ claude/loop-net-generalization-analysis-729ee3
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/pull-from-main-629dc4
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
+  codex/testing-experiment-44
++ main
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/builder-outbox-tmp
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+--- gate2 check main ---
+100644 blob 28de100de48695ceb0e6a2f6f94d8c52fa1c7db1	artifacts/claude-rd378k-20260926/PASSMARKS-B.md
+100644 blob 6438071d3ccbabff5bfb127cc4d284b01a071b48	artifacts/claude-rd378k-20260926/PASSMARKS-C.md
+100644 blob 0b854fc457f31d11223f816c1a450be09338f304	artifacts/claude-rd378k-20260926/PASSMARKS.md
+100644 blob 18422184ac0345a1c154cf1364a4a9af53605446	artifacts/claude-rd378k-20260926/SEAL-ADD-B.sha256.txt
+100644 blob 4b7649c85ac330aa850bdb399c0a8d54ceab3544	artifacts/claude-rd378k-20260926/SEAL-ADD-C.sha256.txt
+100644 blob 49b8edf44457ad3605f981cb5e96988414d32d5e	artifacts/claude-rd378k-20260926/SEAL.sha256.txt
+100644 blob a68daed4544df4dffcd3ac385498cbfd59983751	artifacts/claude-rd378k-20260926/VERIFY-gate.md
+040000 tree 8dbd61a39004d62fe8cdca4f3001c0838ad31fe3	artifacts/claude-rd378k-20260926/gate
+040000 tree 2f5c6cd1a0f4defa3ffe9586653a8b343103ae4d	artifacts/claude-rd378k-20260926/glm
+100644 blob 45b47544c89fda4aebd5f8f638e6692acbccb15a	artifacts/claude-rd378k-20260926/teacher-log.txt
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-rd378k-20260926/ | head -n 60
+echo "---exit:$?---"
+git log --oneline -3 origin/main
+git log --oneline -3 origin/builder-outbox
+artifacts/claude-rd378k-20260926/gate/labels.jsonl
+artifacts/claude-rd378k-20260926/glm/dialogs.jsonl
+artifacts/claude-rd378k-20260926/teacher-log.txt
+---exit:0---
+39076e330 dl-6 results copied from builder-outbox (BUDGET-STOP at 27/28 nights) + blind recount: registered FAIL determined regardless of the missing night (F3 140 < 150, F4 3 drops > 1); lost halved (13 vs 25/27) with learning halved
+b804ca81b rv-390 results: H PROVED WRONG (KEEP <= RESTART 4/4; hard grids7 KEEP 5/1/11/0 vs RESTART 17/18/24/17), G PASS (GUESS - KEEP +19/+33/+21/+14), I PASS (pauses identical, max wait 0.13 s); undertrained-nets caveat; raw files came in c3542bb56; blind recount agrees
+ec47b79d9 rt-02h-T run + VERIFY: registered verdict 'memorised wordings' (T2: styles 0, 2, 5 below 90% at k=5; median k* infinity), blind recount agrees; confound: a blind count finds 77 of 144 rt-02h practice positives do not ask (code labels never checked)
+528d51080 watcher status
+5f54890c3 builder results: lis320-pilot2-mac
+9e3463c01 builder results: k1e-teacher-b
+[0m
+[0m$ [0mls -l ~/.config/openrouter/key; test -f ~/.config/openrouter/key && echo KEY_EXISTS
+which uv; uv --version 2>&1
+ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1 | head
+-rw-------  1 ben-hannan  staff  73 Sep 24 15:29 /Users/ben-hannan/.config/openrouter/key
+KEY_EXISTS
+/Users/ben-hannan/.local/bin/uv
+uv 0.12.7 (61291a8ca 2026-08-27 aarch64-apple-darwin)
+bm391logs
+bm391rent.env
+bm391split
+e2e330tree
+gen_part6.py
+grade_b_part1_writer.py
+guard-296b
+guard-350
+k1e-teacher-tVmTTH
+lis313b-armA.log
+[0m
+[0m$ [0mTMPD=$(mktemp -d /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2-XXXXXX); echo "$TMPD"
+COMMIT=81d13ba1c78fa2b5304f341e629300429917b624
+git archive $COMMIT scripts artifacts/claude-rd378k-20260926 artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl | tar -x -C "$TMPD"
+echo ARCHIVE_EXIT:$?
+ls "$TMPD" | head -n 20
+ls "$TMPD/artifacts/claude-rd378k-20260926/" | head -n 30
+ls "$TMPD/scripts/" | grep -E "rd378"
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2-C2NWcx
+ARCHIVE_EXIT:0
+artifacts
+scripts
+gate
+glm
+PASSMARKS-B.md
+PASSMARKS-C.md
+PASSMARKS.md
+SEAL-ADD-B.sha256.txt
+SEAL-ADD-C.sha256.txt
+SEAL.sha256.txt
+teacher-log.txt
+VERIFY-gate.md
+claude_rd378_common.py
+claude_rd378_data.py
+claude_rd378_eval.py
+claude_rd378_write.py
+claude_rd378g_teacher.py
+claude_rd378k_data.py
+claude_rd378k_score.py
+claude_rd378k_teacher.py
+claude_rd378k_teacher2.py
+claude_rd378L_rebuild.py
+claude_rd378L_recall.py
+claude_rd378u_confirm.py
+[0m
+[0m$ [0mdate +%s.%N
+shasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL-ADD-C.sha256.txt 2>&1
+echo "EXIT:$?"
+shasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL.sha256.txt 2>&1
+echo "EXIT:$?"
+1790444769.408161000
+artifacts/claude-rd378k-20260926/PASSMARKS-C.md: OK
+scripts/claude_rd378k_teacher2.py: OK
+EXIT:0
+artifacts/claude-rd378k-20260926/PASSMARKS.md: OK
+scripts/claude_rd378k_data.py: OK
+scripts/claude_rd378k_teacher.py: OK
+scripts/claude_rd378k_score.py: OK
+scripts/claude_rd378_common.py: OK
+scripts/claude_rd378_write.py: OK
+scripts/claude_rd371b_sample.py: OK
+scripts/claude_rd371b_common.py: OK
+scripts/claude_lis300_train.py: FAILED
+scripts/claude_rd378L_rebuild.py: OK
+scripts/claude_rd378u_confirm.py: OK
+scripts/claude_rd378L_recall.py: OK
+scripts/claude_ep382_store_v2.py: OK
+scripts/claude_ep382_store_v3.py: OK
+scripts/claude_ep382_store_v4.py: OK
+shasum: artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md: No such file or directory
+artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md: FAILED open or read
+shasum: WARNING: 1 listed file could not be read
+shasum: WARNING: 1 computed checksum did NOT match
+EXIT:1
+[0m
+[0m$ [0mgit log --oneline --format="%H %s" origin/main -- scripts/claude_lis300_train.py | head -n 10
+echo "---"
+git log --oneline --format="%H %s %ad" --date=iso -5 origin/main -- artifacts/claude-rd378k-20260926/SEAL.sha256.txt
+echo "--- COMMIT in question ---"
+git show -s --format="%H %ad %s" --date=iso 81d13ba1c78fa2b5304f341e629300429917b624
+echo "--- diff SEAL commit vs COMMIT for lis300 ---"
+SEALCOMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378k-20260926/SEAL.sha256.txt); echo "SEALCOMMIT=$SEALCOMMIT"
+git diff $SEALCOMMIT 81d13ba1c78fa2b5304f341e629300429917b624 --stat | head -n 30
+f99793d78c783120595cc654bdfa6c2f307cc97e reader training: log how many trainable weights have no gradient after the first backward (should be 0)
+25de414ed3c1cdcfaeb7a7daa1c58435a7012965 lis-300: own 1B listener (MiniCPM5-1B) - frame spec, compiler, data builder, trainer, reader, scorer, pass marks, blind panel
+---
+3316b3ba2703a451e8f0c50189da2c723e9f53a6 rd-378k registered and sealed: cut-only note writer (371c 4b) under Ben's Use GLM rule (GLM writes practice dialogs and grades the writer's own notes; blind Claude judges only on the sealed test); label gate, K1-K5 marks, brain-first fallback; teacher script, row builder, scorer; panel brief 2026-09-26 16:50:25 +0000
+--- COMMIT in question ---
+81d13ba1c78fa2b5304f341e629300429917b624 2026-09-26 17:35:21 +0000 rd-378k addendum C: the teacher's unusable answers were all overheard dialogs (10 of 16 vs 0 of 23 chat); labeller v2 grades at most 7 turns per call; gate re-measured with it, plus a per-kind coverage row (>= 90%)
+--- diff SEAL commit vs COMMIT for lis300 ---
+SEALCOMMIT=3316b3ba2703a451e8f0c50189da2c723e9f53a6
+ artifacts/claude-bm398c-20260926/INSTRUCTIONS.md   |   21 +
+ artifacts/claude-bm398c-20260926/PLAN.md           |   74 +
+ artifacts/claude-bm398c-20260926/RESULTS.md        |   93 +
+ artifacts/claude-bm398c-20260926/SEAL.sha256.txt   |    8 +
+ artifacts/claude-bm398c-20260926/diag/diag.py      |   35 +
+ artifacts/claude-bm398c-20260926/diag/diag2.py     |   22 +
+ artifacts/claude-bm398c-20260926/diag/diag3.py     |   19 +
+ artifacts/claude-bm398c-20260926/diag/diag4.py     |   34 +
+ artifacts/claude-bm398c-20260926/diag/diag5.py     |   23 +
+ artifacts/claude-bm398c-20260926/jscore.json       |    1 +
+ artifacts/claude-bm398c-20260926/judge/key.json    |    1 +
+ .../claude-bm398c-20260926/judge/labels/L001.jsonl |   58 +
+ .../claude-bm398c-20260926/judge/labels/L101.jsonl |   58 +
+ .../claude-bm398c-20260926/judge/labels/L201.jsonl |   58 +
+ .../claude-bm398c-20260926/judge/labels/X101.jsonl |   20 +
+ artifacts/claude-bm398c-20260926/score.json        |   24 +
+ artifacts/claude-bm398e-20260926/AMEND-1.md        |   26 +
+ .../claude-bm398e-20260926/SEAL-amend1.sha256.txt  |    3 +
+ .../claude-bm398e-20260926/inputs/drafts.jsonl     |  432 ++
+ artifacts/claude-bm398e-20260926/inputs/made.json  |    1 +
+ artifacts/claude-brd9-20260926/RESULTS-gpu.md      |  323 +
+ artifacts/claude-brd9-20260926/VERIFY-brd9.md      |   42 +
+ .../claude-brd9-20260926/gpu/brd9_summary.json     |  246 +
+ artifacts/claude-brd9-20260926/gpu/log.txt         |   56 +
+ artifacts/claude-brd9-20260926/gpu/practice.json   |    1 +
+ artifacts/claude-brd9-20260926/gpu/streams.json    |    1 +
+ .../claude-brd9-20260926/gpu/transfer_streams.json |    1 +
+ artifacts/claude-ch403-20260926/VERIFY-ch403.md    |   12 +
+ artifacts/claude-crepanel02d-20260926/README.md    |   28 +
+ .../SEAL-scoring.sha256.txt                        |   10 +
+[0m
+[0m$ [0mgit diff 3316b3ba2703a451e8f0c50189da2c723e9f53a6 81d13ba1c78fa2b5304f341e629300429917b624 -- scripts/claude_lis300_train.py | head -n 40
+echo "--- check lis300 at SEALCOMMIT vs sealed hash ---"
+git show 3316b3ba2703a451e8f0c50189da2c723e9f53a6:artifacts/claude-rd378k-20260926/SEAL.sha256.txt | grep lis300
+git show 3316b3ba2703a451e8f0c50189da2c723e9f53a6:scripts/claude_lis300_train.py | shasum -a 256
+git show 81d13ba1c78fa2b5304f341e629300429917b624:scripts/claude_lis300_train.py | shasum -a 256
+echo "--- JUDGE_NOTES history ---"
+git log --oneline --format="%H %s" origin/main -- artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md | head
+diff --git a/scripts/claude_lis300_train.py b/scripts/claude_lis300_train.py
+index 44625534b..65c548258 100644
+--- a/scripts/claude_lis300_train.py
++++ b/scripts/claude_lis300_train.py
+@@ -92,13 +92,16 @@ def main():
+         opt, lambda s: min(1.0, (s + 1) / warm) * 0.5 * (1 + math.cos(math.pi * min(1.0, s / total))))
+     log = open(out / "train_log.jsonl", "w")
+     t0 = time.time()
+-    step, toks, stopped = 0, 0, None
++    step, toks, stopped, grad_none = 0, 0, None, None
+     model.train()
+     while step < total and stopped is None:
+         for ids, lab, att in batches(train, a.batch, pad_id, True, rng):
+             ids, lab, att = ids.to(dev), lab.to(dev), att.to(dev)
+             loss = model(input_ids=ids, attention_mask=att, labels=lab).loss
+             loss.backward()
++            if step == 0:   # every trainable weight must get a gradient (Thread manager 17:14, torch autocast finding)
++                grad_none = sum(1 for p in model.parameters() if p.requires_grad and p.grad is None)
++                print({"grad_none_after_first_backward": grad_none}, flush=True)
+             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+             opt.step(); sched.step(); opt.zero_grad(set_to_none=True)
+             step += 1
+@@ -130,7 +133,8 @@ def main():
+     summ = {"steps": step, "planned_steps": total, "stopped": stopped, "train_rows": len(train),
+             "dev_rows": len(devrows), "dev_loss": dl / max(1, dn), "trainable_params": n_train,
+             "all_params": n_all, "minutes": round((time.time() - t0) / 60, 2),
+-            "tok_per_s": round(toks / max(1e-9, time.time() - t0), 1), "device": dev, "args": vars(a)}
++            "tok_per_s": round(toks / max(1e-9, time.time() - t0), 1), "device": dev,
++            "grad_none_after_first_backward": grad_none, "args": vars(a)}
+     (out / "summary.json").write_text(json.dumps(summ, indent=1))
+     print(json.dumps(summ, indent=1))
+ 
+--- check lis300 at SEALCOMMIT vs sealed hash ---
+d9e4b3db4cacc6890ab4fc440a8bfa63739f42455c5114a7ab63f1bbe5ea1f1a  scripts/claude_lis300_train.py
+d9e4b3db4cacc6890ab4fc440a8bfa63739f42455c5114a7ab63f1bbe5ea1f1a  -
+a6d4843fda254b9b4e2b8f4e3e47822db4b5fb6f456c0167767049726c20576d  -
+--- JUDGE_NOTES history ---
+c25651d2fde2b0564b7f5e3724f93ce7d89e8501 rd-378 data sealed (6 writers, 2,797 judged notes kept, train 7,650 / dev 255); rent-rd-378 queued ($2 cap, Ben's $7 window, Director told)
+[0m
+[0m$ [0mgit ls-tree 81d13ba1c78fa2b5304f341e629300429917b624 -- artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md
+echo "---"
+git show 81d13ba1c78fa2b5304f341e629300429917b624:artifacts/claude-rd378k-20260926/SEAL.sha256.txt | head -n 20
+echo "--- lis300 change commit vs SEAL commits ordering ---"
+git log --oneline --format="%H %ad %s" --date=iso-strict origin/main -8 | cat
+echo "--- f99793d date ---"
+git show -s --format="%H %ad %s" --date=iso-strict f99793d78c783120595cc654bdfa6c2f307cc97e | cat
+100644 blob 3ac96b56684dcce4c7802d9f890ee6c85bd27bcd	artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md
+---
+fc77cd0f0996b74a5c1ccfc131375024b26b1ae65c7f2919506bfb7ced832cab  artifacts/claude-rd378k-20260926/PASSMARKS.md
+86edf23c46df53e807baa36cff5ea74e55ad269aa0b1d3826425982c2fe1fe23  scripts/claude_rd378k_data.py
+244df45ae05103d507657b40b08b335a3e887791719608d4ea866e34103c82a9  scripts/claude_rd378k_teacher.py
+5eba422d1d4f156f75c125f95a2c1f1313c4621dd811118ec1c7c438fbc60119  scripts/claude_rd378k_score.py
+51ba27929a73d56c32585c3f11c030517b71070f3c429fc865e2bb4ef5e580b9  scripts/claude_rd378_common.py
+72a991c9ae430ba9996bcce1fcb0c12fdbcd9c314dfcdf3ae4a941e9e0ec8513  scripts/claude_rd378_write.py
+16e740c700cc3b74e74e517dfc86efd516bca65388798a3145f5ab27cf51af05  scripts/claude_rd371b_sample.py
+f813f6a058db50f06af5dd76f20d4f79d2fa01a3b8ea57a94b662fb82fa18b2d  scripts/claude_rd371b_common.py
+d9e4b3db4cacc6890ab4fc440a8bfa63739f42455c5114a7ab63f1bbe5ea1f1a  scripts/claude_lis300_train.py
+0e67f9b8b2077e7bcaed84cd1c4b3fd4f5c6529e6dabd6a5ae51c8ca92f1c98f  scripts/claude_rd378L_rebuild.py
+bcb1b793e609a0f44f34368703b9e4f382e75f5a1034f3893fd5c91e1e6b7e84  scripts/claude_rd378u_confirm.py
+6b9398c0e309b6cf15e1aa71a764e33782c5961b32c7f558cfdb879850c27987  scripts/claude_rd378L_recall.py
+a3c4ed9e03e4d1dc4f422fb13c5f9d47a1064d43fb5aaf8aa3c7437abadd91bb  scripts/claude_ep382_store_v2.py
+da1b4ab9dbbf53ef0ed2f0150b4bae0987540f5f4ffedffb197d1729f74bd30d  scripts/claude_ep382_store_v3.py
+43bb0e9e76066c40dab835493b0a581e11422ef1c105aa70c31c0b616c91a780  scripts/claude_ep382_store_v4.py
+c56a78e5e416b9cf7c33c1a0bbf97b3b42e3c4702a82455196a01b78924eb3f5  artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md
+--- lis300 change commit vs SEAL commits ordering ---
+39076e330d5f34f1804ca1e8d938ca89833583e2 2026-09-26T17:45:03Z dl-6 results copied from builder-outbox (BUDGET-STOP at 27/28 nights) + blind recount: registered FAIL determined regardless of the missing night (F3 140 < 150, F4 3 drops > 1); lost halved (13 vs 25/27) with learning halved
+b804ca81bd8fcda78211ea06bbdda04594924da3 2026-09-26T17:43:28Z rv-390 results: H PROVED WRONG (KEEP <= RESTART 4/4; hard grids7 KEEP 5/1/11/0 vs RESTART 17/18/24/17), G PASS (GUESS - KEEP +19/+33/+21/+14), I PASS (pauses identical, max wait 0.13 s); undertrained-nets caveat; raw files came in c3542bb56; blind recount agrees
+ec47b79d9b1f27375ffca06c9b087f7a00967c00 2026-09-26T17:40:12Z rt-02h-T run + VERIFY: registered verdict 'memorised wordings' (T2: styles 0, 2, 5 below 90% at k=5; median k* infinity), blind recount agrees; confound: a blind count finds 77 of 144 rt-02h practice positives do not ask (code labels never checked)
+c3542bb565d90128c4b49449000b59a9417764f0 2026-09-26T17:38:00Z rv-388 results: NO CLEAR RESULT (JUDGE-END +8/+7 holds; JUDGE-PLACEBO +5/+2 under 6); ORACLE 80/80; P388.1-3 right; blind recount agrees (369 solved paths checked exactly)
+b35b15071033ab7c1e11749927920c4d3b6b0058 2026-09-26T17:37:35Z k1f (held): pass-through draft log on K and F so blind judges can count how often any of the 4 drafts is useful (report-only); tests 8/8, scorer 6/6. k1g: DEV check of MiniCPM5-1B Think mode (CPU, $0)
+de083cd30c442262d209b36553df9e556d26a2de 2026-09-26T17:36:08Z rd-378g report-only row: confirm scoring with the note 'when' append off (Thread manager 17:31: how much rides on that hand step)
+cfbe2530a850d188c041fba63b053d617225ec9d 2026-09-26T17:35:40Z gr-1U blind panel sealed before any head is trained: 60 squares in 20 blind-written formats practice never had (3 messages in 1 format put two cells in one token; the code stand-in reads 9 of 60)
+55b4fc800898c9776deeb76b23fb03682b4bfcbc 2026-09-26T17:35:38Z readpanel320 sealed (TEST-ONLY): 336 rows, 52 corrections, 76 backref, 36 former, 14 ambiguous, 16 ack, 11 yes; blind labeller + adjudicator; all PASSMARKS validity bars met
+--- f99793d date ---
+f99793d78c783120595cc654bdfa6c2f307cc97e 2026-09-26T17:15:36Z reader training: log how many trainable weights have no gradient after the first backward (should be 0)
+[0m
+[0m$ [0mgit show -s --format="%H %ad %s" --date=iso-strict 3316b3ba2703a451e8f0c50189da2c723e9f53a6 | cat
+echo "---"
+git log --format="%H %ad %s" --date=iso-strict --ancestry-path 3316b3ba2703a451e8f0c50189da2c723e9f53a6..81d13ba1c78fa2b5304f341e629300429917b624 | cat | head -n 20
+echo "--- was lis300 changed between SEAL and ADD-C? ---"
+git log --format="%H %ad %s" --date=iso-strict 3316b3ba2703a451e8f0c50189da2c723e9f53a6..81d13ba1c78fa2b5304f341e629300429917b624 -- scripts/claude_lis300_train.py | cat
+3316b3ba2703a451e8f0c50189da2c723e9f53a6 2026-09-26T16:50:25Z rd-378k registered and sealed: cut-only note writer (371c 4b) under Ben's Use GLM rule (GLM writes practice dialogs and grades the writer's own notes; blind Claude judges only on the sealed test); label gate, K1-K5 marks, brain-first fallback; teacher script, row builder, scorer; panel brief
+---
+81d13ba1c78fa2b5304f341e629300429917b624 2026-09-26T17:35:21Z rd-378k addendum C: the teacher's unusable answers were all overheard dialogs (10 of 16 vs 0 of 23 chat); labeller v2 grades at most 7 turns per call; gate re-measured with it, plus a per-kind coverage row (>= 90%)
+1adf3b0abd3645cfcc9c26f6b577f165d65ca479 2026-09-26T17:35:14Z rt-02h-T registered and sealed before running: how many examples of a new asking style the learned puzzle check needs (practice data only; T1 median k* <= 3, T2 >= 3 of 6 styles below 90% at their largest k)
+73c146db2789cd3c8ff85a3b2b6cd7e479a48e64 2026-09-26T17:34:06Z bm-398c RESULTS: section time from date -u is 17:33 (first said 17:37 by mistake)
+9e82034e6f8739d09499a9830509af2075f3e1cf 2026-09-26T17:33:51Z bm-398c RESULTS: scope and corrections (format failure 32 vs rough time-word miss 16; proved wrong = prompted copying + strict parser, not a learned translator; the 3-question smoke on test items flagged 1 of 3 unread and was not chased)
+881f0235140c3bb91a63dc5b6e8cc90cb861f461 2026-09-26T17:33:25Z ledger: bm398e $0.35
+cf2d9603a5a7dac1b8aa6aa03bc27c7580134592 2026-09-26T17:33:13Z gr-1 addendum 1 (before any head is trained): practice adds markdown tables with header rows, LaTeX arrays, row labels and column-header lines; gr-1U, a second blind test on 20 formats practice never had (U1 >= 48/60 exact, U2 <= 2 wrong)
+9e03eb1ec82e42deaf859ecb81edafe7a04e60f0 2026-09-26T17:33:02Z bm-398e AMEND-1 (sealed): span scores on one GPU rental instead of CPU (~16 h here); drafts and made-up chats committed with hashes; disclosures (header time, Claude-written fit data blocks a build, Redirect: report only). Queued rent-bm398e ($0.35)
+78779aef45b3466c369d12f4c0761706b4e8ea06 2026-09-26T17:32:25Z ledger: rd378u actual; notes line <= $1.55
+c0c236b350e9e1e9fd7b44a5268f25f306439591 2026-09-26T17:31:59Z VERIFY-k1c: correction, 'the drafts are the limit' was inferred and overstated (DEV: a useful draft among 4 on 26 of 40, first 12, own picks 15 and 14)
+4d67f3a96e8dc494adcd856b470b704be2db6d3b 2026-09-26T17:31:52Z rd-378k label gate PASS on both rows (GLM vs blind judges 424/485 = 87.4%, kappa 0.751; GLM ok on 30/216 = 13.9% of judge-unsupported notes); 160 GLM practice dialogs; teacher cost $0.068
+624a8d2ec28224b37393b4daaf78521f26cd1f01 2026-09-26T17:31:02Z 0.2d ADDENDUM-23: recall store v4 (notes as pointers to raw lines; identical to v3 with no notes)
+f4edf55ac4796890609bdac75909a6d185f77986 2026-09-26T17:30:18Z rd-378u VERIFY: PASS on unseen LoCoMo 5-9 (blind recount: any@10 489 -> 585 of 772, +12.4; every category up, +7.9..+22.2); store v4 offered; rd-378 writer stays out of builds (16:53 ruling), its 585 is rd-378g's G2 bar
+f0ec5dfc3f56a879016cc7f9c3fb2919f61d2cf6 2026-09-26T17:29:57Z bm-398c RESULTS: FAIL and proved wrong (blind A: 1B+calendar 4 of 58 vs 1B alone 9, Qwen 11; recount agrees). The 1B's copying broke: no DATE line on 32, missed time words on 16 of 21
+a87d52a4a54fbcdeea2120fa4f9ccdec4b5ae762 2026-09-26T17:29:33Z queue: 000-find-brd8w (copy Mac agent brd-8w files to outbox)
+943319938d866e5da338297709528364596d860c 2026-09-26T17:28:39Z k1f built, not launched: the k1a writer on LFM2.5-1.2B-Instruct (creative turns only); tests 6/6, scorer 5/5; pass marks fixed; rental job held until Ben says yes; fresh panel being written blind
+f71f677502bcc4e127194c9b43d5e2cddbf3eaee 2026-09-26T17:26:51Z dl-5 carry row also saves harm-panel replies (base + S adapters) to split lost/gained into wrong fact vs format; PASSMARKS addendum 2 (report-only)
+e9426db9b42eb931034aa1e9a7f619f8b1fd5a3d 2026-09-26T17:24:51Z gr-1: learned grid reader code (selftest 14/14) and sealed blind panel (100 squares, 40 lookalikes)
+9004c8c9a53baa7a6532e07cbde16bcc4af5e296 2026-09-26T17:24:26Z y1t-H1 addendum 2: a pass shows reconsolidation on short chats only (25-27 user turns per life vs ~590 per LoCoMo chat)
+83622d6a27f0b407adb64b4cd1bc90021135395c 2026-09-26T17:23:45Z brd-9 VERIFY addendum: forgetting not measured; replication gets a sealed no-harm mark
+8a0f8e4d577121a4dea800cb169f0066a3273aa4 2026-09-26T17:23:38Z world_latin: shared 'blanks' reply mode (prompt_blanks/check_blanks, exact blank count) for Creative
+--- was lis300 changed between SEAL and ADD-C? ---
+f99793d78c783120595cc654bdfa6c2f307cc97e 2026-09-26T17:15:36Z reader training: log how many trainable weights have no gradient after the first backward (should be 0)
+[0m
+[0m$ [0mgit show 81d13ba1c78fa2b5304f341e629300429917b624:artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md | shasum -a 256
+git show 81d13ba1c78fa2b5304f341e629300429917b624:artifacts/claude-rd378k-20260926/SEAL.sha256.txt | grep JUDGE_NOTES
+echo "--- full SEAL file at COMMIT ---"
+git show 81d13ba1c78fa2b5304f341e629300429917b624:artifacts/claude-rd378k-20260926/SEAL.sha256.txt
+echo "--- SEAL-ADD-C at COMMIT ---"
+git show 81d13ba1c78fa2b5304f341e629300429917b624:artifacts/claude-rd378k-20260926/SEAL-ADD-C.sha256.txt
+c56a78e5e416b9cf7c33c1a0bbf97b3b42e3c4702a82455196a01b78924eb3f5  -
+c56a78e5e416b9cf7c33c1a0bbf97b3b42e3c4702a82455196a01b78924eb3f5  artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md
+--- full SEAL file at COMMIT ---
+fc77cd0f0996b74a5c1ccfc131375024b26b1ae65c7f2919506bfb7ced832cab  artifacts/claude-rd378k-20260926/PASSMARKS.md
+86edf23c46df53e807baa36cff5ea74e55ad269aa0b1d3826425982c2fe1fe23  scripts/claude_rd378k_data.py
+244df45ae05103d507657b40b08b335a3e887791719608d4ea866e34103c82a9  scripts/claude_rd378k_teacher.py
+5eba422d1d4f156f75c125f95a2c1f1313c4621dd811118ec1c7c438fbc60119  scripts/claude_rd378k_score.py
+51ba27929a73d56c32585c3f11c030517b71070f3c429fc865e2bb4ef5e580b9  scripts/claude_rd378_common.py
+72a991c9ae430ba9996bcce1fcb0c12fdbcd9c314dfcdf3ae4a941e9e0ec8513  scripts/claude_rd378_write.py
+16e740c700cc3b74e74e517dfc86efd516bca65388798a3145f5ab27cf51af05  scripts/claude_rd371b_sample.py
+f813f6a058db50f06af5dd76f20d4f79d2fa01a3b8ea57a94b662fb82fa18b2d  scripts/claude_rd371b_common.py
+d9e4b3db4cacc6890ab4fc440a8bfa63739f42455c5114a7ab63f1bbe5ea1f1a  scripts/claude_lis300_train.py
+0e67f9b8b2077e7bcaed84cd1c4b3fd4f5c6529e6dabd6a5ae51c8ca92f1c98f  scripts/claude_rd378L_rebuild.py
+bcb1b793e609a0f44f34368703b9e4f382e75f5a1034f3893fd5c91e1e6b7e84  scripts/claude_rd378u_confirm.py
+6b9398c0e309b6cf15e1aa71a764e33782c5961b32c7f558cfdb879850c27987  scripts/claude_rd378L_recall.py
+a3c4ed9e03e4d1dc4f422fb13c5f9d47a1064d43fb5aaf8aa3c7437abadd91bb  scripts/claude_ep382_store_v2.py
+da1b4ab9dbbf53ef0ed2f0150b4bae0987540f5f4ffedffb197d1729f74bd30d  scripts/claude_ep382_store_v3.py
+43bb0e9e76066c40dab835493b0a581e11422ef1c105aa70c31c0b616c91a780  scripts/claude_ep382_store_v4.py
+c56a78e5e416b9cf7c33c1a0bbf97b3b42e3c4702a82455196a01b78924eb3f5  artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md
+--- SEAL-ADD-C at COMMIT ---
+6ca79efee36502af2701ec58f26884cf1a4998f9bbee5c1c8ffdd18772c4adb8  artifacts/claude-rd378k-20260926/PASSMARKS-C.md
+a8d46af115de43fe99f5ec703be8d9aca1d65642acd3eae0b8aaf6ae9d326935  scripts/claude_rd378k_teacher2.py
+[0m
+[0m$ [0mmkdir -p artifacts/claude-rd378-20260925/data
+git -C "$PWD" show 81d13ba1c78fa2b5304f341e629300429917b624:artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md > artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md
+echo WROTE:$?
+shasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL-ADD-C.sha256.txt 2>&1; echo "EXIT_ADD_C:$?"
+shasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL.sha256.txt 2>&1; echo "EXIT_SEAL:$?"
+fatal: not a git repository (or any of the parent directories): .git
+WROTE:128
+artifacts/claude-rd378k-20260926/PASSMARKS-C.md: OK
+scripts/claude_rd378k_teacher2.py: OK
+EXIT_ADD_C:0
+artifacts/claude-rd378k-20260926/PASSMARKS.md: OK
+scripts/claude_rd378k_data.py: OK
+scripts/claude_rd378k_teacher.py: OK
+scripts/claude_rd378k_score.py: OK
+scripts/claude_rd378_common.py: OK
+scripts/claude_rd378_write.py: OK
+scripts/claude_rd371b_sample.py: OK
+scripts/claude_rd371b_common.py: OK
+scripts/claude_lis300_train.py: FAILED
+scripts/claude_rd378L_rebuild.py: OK
+scripts/claude_rd378u_confirm.py: OK
+scripts/claude_rd378L_recall.py: OK
+scripts/claude_ep382_store_v2.py: OK
+scripts/claude_ep382_store_v3.py: OK
+scripts/claude_ep382_store_v4.py: OK
+artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md: FAILED
+shasum: WARNING: 2 computed checksums did NOT match
+EXIT_SEAL:1
+[0m
+[0m$ [0mgit show 81d13ba1c78fa2b5304f341e629300429917b624:artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md > /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2-C2NWcx/artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md
+echo WROTE:$?
+shasum -a 256 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2-C2NWcx/artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md
+WROTE:0
+c56a78e5e416b9cf7c33c1a0bbf97b3b42e3c4702a82455196a01b78924eb3f5  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate2-C2NWcx/artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL.sha256.txt 2>&1; echo "EXIT_SEAL:$?"
+echo "--- actual lis300 ---"
+shasum -a 256 scripts/claude_lis300_train.py
+echo "--- expected lis300 ---"
+git show 81d13ba1c78fa2b5304f341e629300429917b624:artifacts/claude-rd378k-20260926/SEAL.sha256.txt | grep lis300
+artifacts/claude-rd378k-20260926/PASSMARKS.md: OK
+scripts/claude_rd378k_data.py: OK
+scripts/claude_rd378k_teacher.py: OK
+scripts/claude_rd378k_score.py: OK
+scripts/claude_rd378_common.py: OK
+scripts/claude_rd378_write.py: OK
+scripts/claude_rd371b_sample.py: OK
+scripts/claude_rd371b_common.py: OK
+scripts/claude_lis300_train.py: FAILED
+scripts/claude_rd378L_rebuild.py: OK
+scripts/claude_rd378u_confirm.py: OK
+scripts/claude_rd378L_recall.py: OK
+scripts/claude_ep382_store_v2.py: OK
+scripts/claude_ep382_store_v3.py: OK
+scripts/claude_ep382_store_v4.py: OK
+artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md: OK
+shasum: WARNING: 1 computed checksum did NOT match
+EXIT_SEAL:1
+--- actual lis300 ---
+a6d4843fda254b9b4e2b8f4e3e47822db4b5fb6f456c0167767049726c20576d  scripts/claude_lis300_train.py
+--- expected lis300 ---
+fatal: not a git repository (or any of the parent directories): .git
+[0m
+[0m$ [0mgit status --porcelain -- artifacts/claude-rd378k-20260926/gate2/ 2>&1; echo "STATUS_EXIT:$?"
+ls artifacts/claude-rd378k-20260926/ 2>&1 | head -n 20
+STATUS_EXIT:0
+gate
+glm
+teacher-log.txt
+[0m
