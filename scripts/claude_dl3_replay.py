@@ -40,8 +40,10 @@ import claude_dl1_nights as D1  # noqa: E402
 
 TEST_SEED = 3790
 POOL_SEED = 3791
-ASK = "Write one short question that a person might ask a helpful assistant. Reply with the question only."
-MAX_Q, MAX_A = 32, 64
+ASKS = ("Write one question that a curious student might ask about science, history, cooking, travel, health, or "
+        "daily life. Reply with the question only.",
+        "Write one question someone might type into a search engine. Reply with the question only.")
+MAX_Q, MAX_A = 48, 96
 
 
 def panel_words() -> set:
@@ -74,26 +76,28 @@ def chat_ids(s, q):
 
 
 def base_answer(s, q):
-    """The base's own greedy answer; None if it did not finish within MAX_A tokens (never train a cut answer)."""
+    """The base's own greedy answer (first MAX_A tokens) and whether it finished there. A cut answer is still the
+    base's behaviour; it is trained without an end-of-reply token, so it never teaches stopping mid-sentence."""
     ids = chat_ids(s, q).unsqueeze(0).to(s.dev)
     with s.torch.no_grad():
         out = s.model.generate(input_ids=ids, attention_mask=s.torch.ones_like(ids), max_new_tokens=MAX_A,
                                do_sample=False, pad_token_id=s.tok.eos_token_id)
     new = out[0][ids.shape[1]:]
-    if len(new) >= MAX_A and int(new[-1]) != s.tok.eos_token_id:
-        return None
+    done = int(new[-1]) == s.tok.eos_token_id or len(new) < MAX_A
     a = s.tok.decode(new, skip_special_tokens=True).strip()
-    return a or None
+    return (a, done) if a else None
 
 
 def make_pool(s, n_ask, seed) -> list:
-    """(question, base answer) pairs, both written by the base 1B, deduplicated, panel topics dropped."""
+    """(question, base answer, finished) triples, both texts written by the base 1B, deduplicated, panel topics
+    dropped. The two asking prompts alternate, batch by batch."""
     s.torch.manual_seed(seed)
     bad = panel_words()
-    ids = chat_ids(s, ASK).unsqueeze(0).to(s.dev)
     qs, seen = [], set()
-    left = n_ask
+    left, b = n_ask, 0
     while left > 0:
+        ids = chat_ids(s, ASKS[b % len(ASKS)]).unsqueeze(0).to(s.dev)
+        b += 1
         k = min(50, left)
         with s.torch.no_grad():
             out = s.model.generate(input_ids=ids.repeat(k, 1), attention_mask=s.torch.ones_like(ids.repeat(k, 1)),
@@ -109,18 +113,19 @@ def make_pool(s, n_ask, seed) -> list:
     for q in qs:
         a = base_answer(s, q)
         if a:
-            pool.append((q, a))
+            pool.append((q, a[0], a[1]))
     return pool
 
 
 def _pair_ids(s, item):
     import torch
-    kind, x, y = item
+    kind, x, y = item[:3]
     if kind == "puzzle":
         return D1._ids(s, x, y)
     pr = chat_ids(s, x)
     an = s.tok(y, add_special_tokens=False, return_tensors="pt")["input_ids"][0]
-    return pr, torch.cat([pr, an, torch.tensor([s.tok.eos_token_id])])
+    tail = [torch.tensor([s.tok.eos_token_id])] if item[3] else []
+    return pr, torch.cat([pr, an] + tail)
 
 
 def train_mixed(s, m, items, seed, epochs=D1.S_RECIPE["epochs"], lr=D1.S_RECIPE["lr"]) -> dict:
@@ -155,7 +160,7 @@ def train_mixed(s, m, items, seed, epochs=D1.S_RECIPE["epochs"], lr=D1.S_RECIPE[
 def run_arm(s, arm, seed, a, test, panel, replies, base_harm, pool) -> dict:
     s.torch.manual_seed(seed)
     m = D1.fresh_model(s)
-    nights = []
+    nights, prev = [], base_harm
     for d in range(1, a.nights + 1):
         t0 = time.time()
         day = B2.puzzles(D1.DAY_SEED + a.seed_shift + 100 * seed + d, a.n_day)
@@ -169,11 +174,14 @@ def run_arm(s, arm, seed, a, test, panel, replies, base_harm, pool) -> dict:
             rec["train"] = D1.train_copy(s, m, right, seed * 1000 + d)
         else:
             rp = random.Random(seed * 1000 + d).sample(pool, min(len(pool), len(right)))
-            items = [("puzzle", p, e) for p, e in right] + [("replay", q, ans) for q, ans in rp]
+            items = [("puzzle", p, e) for p, e in right] + [("replay", q, ans, fin) for q, ans, fin in rp]
             rec["train"] = train_mixed(s, m, items, seed * 1000 + d)
         meas = D1.measure(s, m, test, a.n_guess_test, panel, replies)
         rec["test"] = {k: meas[k] for k in ("lucky", "reached", "greedy")}
         rec["harm"] = D1.flips(base_harm, meas["harm"])
+        rec["harm_vs_prev"] = D1.flips(prev, meas["harm"])     # report only: lost/gained vs the night before
+        rec["harm_items"] = meas["harm"]
+        prev = meas["harm"]
         rec["kl"] = meas["kl"]
         rec["minutes"] = round((time.time() - t0) / 60, 1)
         nights.append(rec)
@@ -194,24 +202,25 @@ def score(res: dict) -> dict:
     s_lost = [fin[("S", sd)]["harm"]["lost"] for sd in seeds]
     a_luck = [fin[("A", sd)]["test"]["lucky"] for sd in seeds]
     s_luck = [fin[("S", sd)]["test"]["lucky"] for sd in seeds]
-    high = sum(1 for sd in seeds for n in by[("A", sd)] if n["harm"]["lost"] > 15)
+    high = sum(1 for sd in seeds for n in by[("A", sd)] if n["harm"]["lost"] > 10)
     worse = 0
     for sd in seeds:
         seq = [L0] + [n["test"]["lucky"] for n in by[("A", sd)]]
         worse += sum(1 for x, y in zip(seq, seq[1:]) if y < 0.85 * x)
     m = {"L0": L0, "reached0": R0, "A_final_lost": a_lost, "S_final_lost": s_lost, "A_final_lucky": a_luck,
          "S_final_lucky": s_luck, "A_nights_lost_over_15": high, "A_worse_nights": worse,
-         "A_final_reached": [fin[("A", sd)]["test"]["reached"] for sd in seeds]}
+         "A_final_reached": [fin[("A", sd)]["test"]["reached"] for sd in seeds],
+         "report_A_nights_lost_over_5": sum(1 for sd in seeds for n in by[("A", sd)] if n["harm"]["lost"] > 5)}
     m["F1 forgetting cut: A final lost <= 0.5 x S final lost (sums), and each A seed < each S seed"] = \
         sum(a_lost) <= 0.5 * sum(s_lost) and max(a_lost) < min(s_lost)
-    m["F2 low forgetting all week: A nights with lost > 15 <= 1 of 14"] = high <= 1
-    m["F3 still learns: A final lucky >= 2 x L0 on each seed, and A sum >= 0.85 x S sum"] = \
-        all(x >= 2 * L0 for x in a_luck) and sum(a_luck) >= 0.85 * sum(s_luck)
+    m["F2 low forgetting every night: A nights with lost > 10 (5% of base-right) <= 1 of 14"] = high <= 1
+    m["F3 still learns: A final lucky >= 2 x L0 on each seed, and A gain over L0 >= 0.8 x S gain (sums)"] = \
+        all(x >= 2 * L0 for x in a_luck) and sum(a_luck) - len(seeds) * L0 >= 0.8 * (sum(s_luck) - len(seeds) * L0)
     m["F4 nights rarely hurt the day's work: A nights with TEST lucky > 15% below the night before <= 1 of 14"] = \
         worse <= 1
     m["F5 variety kept: A final reached >= base on each seed"] = all(x >= R0 for x in m["A_final_reached"])
     keys = [k for k in m if k[:1] == "F" and k[1].isdigit()]
-    m["verdict"] = ("INCONCLUSIVE" if L0 < 10 or sum(s_lost) < 20 else
+    m["verdict"] = ("INCONCLUSIVE" if L0 < 10 or sum(s_lost) < 20 or res.get("pool_size", 100) < 100 else
                     ("PASS" if all(m[k] for k in keys) else "FAIL"))
     m["proved_wrong"] = all(x >= y for x, y in zip(a_lost, s_lost))
     return m
@@ -268,11 +277,18 @@ def selftest() -> None:
            "arms": [arm("S", 4, [90, 100, 110, 120, 125, 130, 140], [5, 8, 12, 16, 18, 24, 26]),
                     arm("S", 5, [80, 95, 90, 110, 120, 128, 135], [6, 9, 11, 15, 20, 28, 25]),
                     arm("A", 4, [85, 100, 105, 118, 120, 125, 130], [3, 4, 6, 5, 7, 8, 9]),
-                    arm("A", 5, [85, 92, 99, 110, 115, 120, 128], [4, 5, 4, 6, 8, 7, 10])]}
+                    arm("A", 5, [85, 92, 99, 110, 115, 120, 128], [4, 5, 4, 6, 8, 7, 10])], "pool_size": 400}
     m = score(res)
     assert m["verdict"] == "PASS" and not m["proved_wrong"], m
+    res["arms"][2]["nights"][2]["harm"]["lost"] = 12
+    assert score(res)["verdict"] == "PASS"
+    res["arms"][3]["nights"][2]["harm"]["lost"] = 12
+    assert score(res)["verdict"] == "FAIL"
+    res["arms"][3]["nights"][2]["harm"]["lost"] = 4
     res["arms"][2]["nights"][-1]["harm"]["lost"] = 26
     assert score(res)["verdict"] == "FAIL"
+    res["pool_size"] = 50
+    assert score(res)["verdict"] == "INCONCLUSIVE"
     print("selftest ok")
 
 
@@ -297,7 +313,7 @@ def main():
     if a.selftest:
         return selftest()
     if a.dev:
-        a.nights, a.n_day, a.n_guess, a.n_test, a.n_guess_test, a.n_harm, a.n_kl, a.n_ask = 2, 4, 4, 3, 3, 12, 4, 30
+        a.nights, a.n_day, a.n_guess, a.n_test, a.n_guess_test, a.n_harm, a.n_kl, a.n_ask = 2, 6, 6, 3, 3, 12, 4, 12
         a.seed_shift, a.seeds = a.seed_shift or 60000, "4"
     run(a)
 
