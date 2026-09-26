@@ -43,3 +43,14 @@ they were already moving", made no measurable difference: the flipped choice (th
 well. At this scale the night's gain comes from practising the day's checked puzzles at all, not from picking among
 similar batches. Limits: small nets on CPU, 3 nights, a pick among only 4 random batches (the paper trained a writer
 to make new items), two puzzle kinds.
+
+## Blind recount (VERIFY.md): agrees, registered FAIL. Corrections
+- "Nights 1-2 show the same picture" is wrong for seed 7: after night 1 L trailed S by 36 on day_sums (272 vs 308) and
+  18 on sums8 (61 vs 79); after night 2 by 11 on sums8. The gaps closed by night 3.
+- "The gain comes from practising the day's checked puzzles at all" is not shown by this run (no rehearsal-only arm);
+  slp-358n2 showed that, not this run.
+- The even spread of pick positions proves nothing (candidates are drawn alike); scores and picked kinds were not logged.
+- "All OK at launch" is not recorded in the run. The PASSMARKS header says 03:00 UTC; the commit is 02:21 UTC.
+- Design: candidates are scored at different random thinking depths (noise pushes L and F toward random); the
+  "movement" includes weight decay and rehearsal steps; L vs F is the clean comparison (same batches), L vs S is not;
+  P4 against N is nearly automatic.
