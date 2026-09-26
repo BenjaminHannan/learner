@@ -29,6 +29,8 @@ about the user?
   mixed and shuffled, so a drift in the judges cannot favour U.
 - Smoke: the 3 smoke chats (mu405-s1..s3) are separate items, never among the 60; the smoke is a format check only
   (rows written, no empty replies, no <think> leftovers) and nothing from it changes a mark.
+  Result (22:38 UTC, date -u, CPU alone): 15 of 15 session-2 rows, 0 empty, 0 <think> leftovers, 0 tracebacks; asks
+  right 1 of 3 (too few to read anything into).
 - $0 counts before the run: every U prompt carries all 3 of its chat's facts (300 of 300); the system line carries none.
 - Claims judging: mu-405's text (JUDGE-claims405.md: mu-402's rubric, the earlier session's user messages shown and
   counted as said), one packet per (arm, chat) for arms N, W, U, H (240 packets), arms mixed and shuffled (seeds
