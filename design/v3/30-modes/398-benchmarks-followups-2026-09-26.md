@@ -132,3 +132,34 @@ unanswerable questions). Each experiment below is one change, registered before 
   - the evidence-trained reader adapter first (step 3 above, with dates and multi-part questions weighted);
   - a retrieval change registered alongside at $0;
   - adapter isolation (step 2) as bm-398i, $0 on CPU. Month-end owns the router and bm-397m (agreed 12:50 UTC).
+
+## After the Mac agent's report (Ben pasted 12:54 UTC; checked, reviews/mac-agent-locomo-length-2026-09-26.md)
+Holds:
+- the single-hop gap (cat 4: TS 42.5 vs Qwen 60.7);
+- TS's far-fact loss, on cat 4 only (−10.2);
+- the "the week before" habit (203 of 321 date replies);
+- the practice chats were short (median 1.6k tokens against ~24k).
+
+Corrected:
+- Only 3 of the 203 "week before" replies are fully right, not 28.
+- The question-word rule gives +4.9 over all 10 chats. It helps only T and lowers Qwen and TS.
+- The proxy counts are T 110, TS 103, Qwen 128 (not 98, 86, 114).
+
+Superseded: Qwen is now blind-judged (bm-398d: 138 vs T 109).
+
+Not checkable here: GSM8K 188 with an extract step, and the six-tries headroom (68 vs 44 of 200).
+
+Taken, one change each:
+- **bm-398e (next, $0 CPU): a learned copy-only span trimmer on the plain 1B's untouched replies.** This is the
+  direct fix for problem #4 (answers too long).
+  - It is trained on the 1B's own drafts to made-up chats, never on LoCoMo.
+  - Marks: F1 above the fixed rule (32.39 over all 10), no fewer blind-right answers than T, and GSM8K untouched
+    (it never runs on math).
+  - It is not the dropped bm-397 finaliser: it picks one contiguous span, so it can't delete a word from the
+    middle. The blind check guards meaning.
+- **The reader adapter (step 3) takes the report's causes into its practice set:** chats near LoCoMo length with
+  evidence at every distance; many date phrasings, not one template; and why/how questions. It needs a GPU, from
+  this thread's $2 (Ben 12:59 UTC; spent through the Director).
+- **E3 (a picker over several tries):** waits until the six-tries headroom is measured here, with a registered
+  plan.
+- **E2:** done by bm-398d for Qwen. The MMLU letter-only baseline is already queued.
