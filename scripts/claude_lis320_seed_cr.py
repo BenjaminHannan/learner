@@ -6,7 +6,7 @@ Gap found by the Wrong answers thread (20:28 UTC): claude_lis320_seed.correct() 
 correction turn (:345), so lis-320 never practised the owner_not_span case, 14 of lis-319f's 60 correction misses
 (claude-lis319k VERIFY.md:17-21). New intent correct_ref = correct() + backref(): a CORRECT fact about a person named in
 the last HIST_TURNS turns, referred to only by pronoun (when that person is the only one of that gender named in view)
-or by role word, never by name; the old value is named about half the time. One fact per turn. Weight 1.5.
+or by role word, never by name; the old value is named about half the time. One fact per turn. Weight 2.0 (as backref).
 Everything else (world, names, other intents and weights, ask-back) is claude_lis320_seed's.
 
 python -B scripts/claude_lis320_seed_cr.py --seed 324 --n 6000 --ask-back --avoid-names F --avoid-hashes H --out S.jsonl
@@ -24,7 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import claude_lis320_seed as S  # noqa: E402
 
-CR_W = {"correct_ref": 1.5}
+CR_W = {"correct_ref": 2.0}
 S.INTENT_GLOSS["correct_ref"] = ("the user corrects something said earlier about a person they named earlier: the new "
                                  "value replaces the old one; the user refers to that person only in the way given "
                                  "(never by name)")
