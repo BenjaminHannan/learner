@@ -2621,3 +2621,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
 - P261.7 M6 checker never adds/changes a frame; pass ~99 %.
 - P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).
+- 2026-09-26 13:05 UTC Director: Ben 12:59 "Each thread gets $2 from vast.ai compute": $2 budget lines opened for Reading facts, Month-end, Benchmarks, Sleep research, Fix sleep, Creative, Memory for its own thoughts, Making things up about you, Wrong answers stated as fact ($18 total; $4/job rule stands). dl-4 stays on the overnight $5 pool ($2.34 left before it).
