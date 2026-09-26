@@ -63,6 +63,8 @@ def q(s):
 
 def turn_block(t) -> str:
     lines = [f"Turn {t['k']}. intent: {t['intent']}. {t['gloss']}."]
+    if t.get("reply_ask"):
+        lines.append("  reply_before for this turn (overrides the general reply_before rule): " + t["reply_ask"]["text"])
     lines += [f"  {x}" for x in t["lines"]]
     inc = [q(s) for s in t["must"]]
     if t.get("first_person"):

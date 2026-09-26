@@ -8,6 +8,8 @@ extra:   python claude_lis320_score.py extra --panel P --reads R --out X.json
                             gold fact's value while the owner is not that fact's owner, and which matches no gold fact
                             (owner + value); relation names are ignored;
          ambiguous_saves    saves on lookalike rows with reason "ambiguous";
+         ack_saves          saves on rows with reason "ack_after_ask" (the assistant asked, the user did not answer);
+         yes_saved_right    saves matching gold on rows with reason "yes_after_ask" (report only);
          panel counts for validity: correction_gold, backref_rows, former_items, ambiguous_rows.
 verdict: python claude_lis320_score.py verdict --old-k OK.json --new-k NK.json --old-x OX.json --new-x NX.json
          (K = claude_lis319k_score.py final on each reader's reads, same pairs and verdicts; X = extra)
@@ -36,10 +38,15 @@ def is_backref(row):
 def extra_counts(panel, reads):
     rd = {r["id"]: r for r in reads}
     c = Counter({k: 0 for k in ("rows", "missing_rows", "correction_gold", "backref_rows", "former_items",
-                                "ambiguous_rows", "former_as_current", "wrong_person", "ambiguous_saves")})
+                                "ambiguous_rows", "former_as_current", "wrong_person", "ambiguous_saves",
+                                "ack_rows", "ack_saves", "yes_rows", "yes_gold", "yes_saved_right")})
     for row in panel:
         gold, former = row.get("facts") or [], row.get("former") or []
         amb = row.get("kind") == "lookalike" and row.get("reason") == "ambiguous"
+        ack, yes = row.get("reason") == "ack_after_ask", row.get("reason") == "yes_after_ask"
+        c["ack_rows"] += ack
+        c["yes_rows"] += yes
+        c["yes_gold"] += len(gold) if yes else 0
         c["rows"] += 1
         c["correction_gold"] += sum(bool(g.get("correction")) for g in gold)
         c["backref_rows"] += is_backref(row)
@@ -55,6 +62,8 @@ def extra_counts(panel, reads):
             c["wrong_person"] += (is_backref(row) and not right
                                   and any(n(g["value"]) == n(f.get("value")) for g in gold))
             c["ambiguous_saves"] += amb
+            c["ack_saves"] += ack
+            c["yes_saved_right"] += yes and right
     return dict(c)
 
 
@@ -70,8 +79,9 @@ def decide(ok, nk, ox, nx):
          "R3": nk["correction_right"] >= ok["correction_right"] - 2,
          "R4": nx["former_as_current"] <= max(1, ox["former_as_current"]),
          "R5": nx["wrong_person"] <= ox["wrong_person"] + 1,
-         "R6": nx["ambiguous_saves"] <= ox["ambiguous_saves"] and nk["lookalike_saves"] <= ok["lookalike_saves"] + 2}
-    valid = (ox["correction_gold"] >= 40 and ox["backref_rows"] >= 50 and ox["former_items"] >= 30
+         "R6": nx["ambiguous_saves"] <= ox["ambiguous_saves"] and nk["lookalike_saves"] <= ok["lookalike_saves"] + 2,
+         "R7": nx["ack_saves"] == 0}
+    valid = (nx["ack_rows"] >= 12 and ox["correction_gold"] >= 40 and ox["backref_rows"] >= 50 and ox["former_items"] >= 30
              and ox["ambiguous_rows"] >= 10 and ok["saved_right_full"] >= 60)
     wrong = nk["saved_right_full"] < 0.90 * ok["saved_right_full"] or nk["wrong_turns_full"] > ok["wrong_turns_full"] + 5
     v = "INCONCLUSIVE" if not valid else ("PASS" if all(m.values()) else "FAIL")
@@ -82,7 +92,8 @@ def verdict(a):
     ok, nk, ox, nx = (json.loads(Path(p).read_text()) for p in (a.old_k, a.new_k, a.old_x, a.new_x))
     keys_k = ("saved_right_full", "wrong_turns_full", "saved_wrong_full", "correction_right", "correction_gold",
               "stale_saves", "lookalike_saves")
-    keys_x = ("former_as_current", "wrong_person", "ambiguous_saves", "backref_rows", "former_items", "ambiguous_rows")
+    keys_x = ("former_as_current", "wrong_person", "ambiguous_saves", "backref_rows", "former_items", "ambiguous_rows",
+              "ack_rows", "ack_saves", "yes_rows", "yes_gold", "yes_saved_right")
     print(json.dumps(decide(ok, nk, ox, nx) | {k: [ok[k], nk[k]] for k in keys_k} | {k: [ox[k], nx[k]] for k in keys_x},
                      indent=1))
 
@@ -98,14 +109,20 @@ def selftest(_a):
          "facts": [{"owner": "USER", "relation": "lives_in", "value": "Tolby"}],
          "former": [{"owner": "USER", "relation": "lives_in", "value": "Garrow"}], "replaced": []},
         {"id": "d1-t3", "kind": "lookalike", "reason": "ambiguous", "turn": "she's 21 now", "prev_reply": "",
-         "facts": [], "former": [], "replaced": []}]
+         "facts": [], "former": [], "replaced": []},
+        {"id": "d1-t4", "kind": "lookalike", "reason": "ack_after_ask", "turn": "ok ty night",
+         "prev_reply": "Does Lenka live in Velbrook?", "facts": [], "former": [], "replaced": []},
+        {"id": "d1-t5", "kind": "ordinary", "reason": "yes_after_ask", "turn": "yep", "prev_reply": "Is Lenka a nurse?",
+         "facts": [{"owner": "Lenka", "relation": "job", "value": "nurse"}], "former": [], "replaced": []}]
 
     def rd(i, facts):
         return {"id": i, "frame": {"facts": facts}, "conf": [1.0] * len(facts)}
     reads = [rd("d1-t1", [{"owner": "Tamsin", "rel": "employer", "value": "Pellwood", "mode": "ASSERT"}]),
              rd("d1-t2", [{"owner": "me", "rel": "city", "value": "Garrow", "mode": "ASSERT"},
                           {"owner": "me", "rel": "city", "value": "Tolby", "mode": "ASSERT"}]),
-             rd("d1-t3", [{"owner": "Tamsin", "rel": "age", "value": "21", "mode": "ASSERT"}])]
+             rd("d1-t3", [{"owner": "Tamsin", "rel": "age", "value": "21", "mode": "ASSERT"}]),
+             rd("d1-t4", [{"owner": "Lenka", "rel": "city", "value": "Velbrook", "mode": "ASSERT"}]),
+             rd("d1-t5", [{"owner": "Lenka", "rel": "occupation", "value": "nurse", "mode": "ASSERT"}])]
     import claude_lis300_compiler as CMP
     orig = CMP.check_fact
     CMP.check_fact = lambda f, t, p: None   # the compiler is not under test here
@@ -114,10 +131,11 @@ def selftest(_a):
     finally:
         CMP.check_fact = orig
     ok = [x["wrong_person"] == 1, x["former_as_current"] == 1, x["ambiguous_saves"] == 1, x["backref_rows"] == 1,
-          x["former_items"] == 1, x["ambiguous_rows"] == 1]
+          x["former_items"] == 1, x["ambiguous_rows"] == 1, x["ack_rows"] == 1, x["ack_saves"] == 1,
+          x["yes_rows"] == 1, x["yes_saved_right"] == 1]
     base = {"saved_right_full": 100, "wrong_turns_full": 5, "correction_right": 20, "lookalike_saves": 1}
     bx = {"former_as_current": 0, "wrong_person": 2, "ambiguous_saves": 0, "correction_gold": 50, "backref_rows": 60,
-          "former_items": 40, "ambiguous_rows": 10}
+          "former_items": 40, "ambiguous_rows": 10, "ack_rows": 15, "ack_saves": 0}
     ok.append(decide(base, dict(base, saved_right_full=95), bx, bx)["verdict"] == "PASS")
     ok.append(decide(base, dict(base, saved_right_full=94), bx, bx)["verdict"] == "FAIL")
     ok.append(decide(base, base, bx, dict(bx, wrong_person=4))["R5"] is False)
@@ -125,6 +143,8 @@ def selftest(_a):
     ok.append(decide(base, base, bx, dict(bx, former_as_current=1))["R4"] is True)
     ok.append(decide(base, base, dict(bx, ambiguous_rows=9), bx)["verdict"] == "INCONCLUSIVE")
     ok.append(decide(base, dict(base, saved_right_full=89), bx, bx)["proved_wrong"] is True)
+    ok.append(decide(base, base, dict(bx, ack_saves=3), dict(bx, ack_saves=1))["R7"] is False)
+    ok.append(decide(base, base, bx, dict(bx, ack_rows=11))["verdict"] == "INCONCLUSIVE")
     print(json.dumps(x))
     print("LIS320-SCORE-SELFTEST " + ("PASS" if all(ok) else "FAIL " + str(ok)))
     return 0 if all(ok) else 1

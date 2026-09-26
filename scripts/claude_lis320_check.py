@@ -65,6 +65,10 @@ CUES = {
     "negation_only": re.compile(r"\b(not|no|never|none|without)\b|n'?t\b", re.I),
     "confirm": re.compile(r"\?|\b(right|yeah|yea|yes|correct|innit)\b", re.I),
 }
+# ask-back families: the user's answer to the assistant's yes/no question (check-only)
+YES = re.compile(r"\b(yes|yeah|yep|yup|yea|ya|yh|correct|right|exactly|true|sure is|she is|he is|i am|i do|she does|"
+                 r"he does|that'?s it|thats it|that'?s right|thats right)\b", re.I)
+NO = re.compile(r"\b(no|nope|nah|not|never|wrong)\b|n'?t\b", re.I)
 SELF_STATE = re.compile(r"\b(i'?m|i am|i feel|i was|i'?ve been)\b", re.I)
 ALT = {
     "mother": "mother|mom|mum|mama|mommy|mummy|ma", "father": "father|dad|daddy|papa|pops|pa",
@@ -139,9 +143,13 @@ def check_turn(d, parsed, i):
     if any(forms(s, rb) for s in t.get("reply_must_not") or []):
         R.append("forbidden_in_reply")
     names = [p["name"] for p in d["people"]] + list(d.get("proper_values") or [])
-    if any(forms(n, u) for n in names if n not in t["must"] and n not in (t.get("must_not") or [])):
+    ok_names = set(t["must"]) | set(t.get("must_not") or [])
+    if t["intent"] == "yes_after_ask":
+        ok_names.add(t["reply_ask"]["owner"])   # "yes, Mira is" names the person asked about
+    if any(forms(n, u) for n in names if n not in ok_names):
         R.append("stray_name")
-    if any(forms(n, rb) and not forms(n, earlier_users) for n in names):
+    asked_val = (t.get("reply_ask") or {}).get("value")   # the ask-back question may name the value it asks about
+    if any(forms(n, rb) and not forms(n, earlier_users) for n in names if n != asked_val):
         R.append("reply_new_name")
     owner_typed = None
     if t["intent"] == "backref":
@@ -163,6 +171,24 @@ def check_turn(d, parsed, i):
         elif not any(forms(o, h_u) and any_word(ref["words"], h_u) for h_u, _ in vis):
             R.append("role_link_not_visible")
     intent = t["intent"]
+    ra = t.get("reply_ask")
+    if ra:
+        rv = typed_form(ra["value"], rb)
+        if not rb.endswith("?") or not rv or (ra["owner"] != "me" and not typed_form(ra["owner"], rb)):
+            R.append("reply_ask_missing")
+        elif ra["owner"] == "me" and not re.search(r"\byou\b", rb, re.I):
+            R.append("reply_ask_missing")
+        else:
+            rename[ra["value"]] = rv
+            if ra["owner"] != "me":
+                rename[ra["owner"]] = typed_form(ra["owner"], rb)
+        if intent == "ack_after_ask" and (YES.search(u) or NO.search(u)):
+            R.append("ack_answers")
+        if intent == "yes_after_ask":
+            if not YES.search(u) or NO.search(u):
+                R.append("yes_missing")
+            if HEDGE.search(u):
+                R.append("assert_hedged")
     if intent in ASSERTING:
         if HEDGE.search(u):
             R.append("assert_hedged")
@@ -308,6 +334,39 @@ def selftest():
     amb["turns"][2]["user"] = "Selka came over, she just moved to Velbrook btw"
     _, why = check_turn(seed, amb["turns"], 2)
     assert "pronoun_not_unique" in why and "stray_name" in why, why
+    # ask-back families: the assistant asks a yes/no; the user only acknowledges (no fact) or says yes (fact from the ask)
+    RA = lambda o, r_, v: {"owner": o, "rel": r_, "value": v, "text": "x"}  # noqa: E731
+    sa = {"dialog_id": "st-4", "opener": False, "proper_values": ["Velbrook"],
+          "people": [{"name": "Mira", "gender": "f", "role": "sister"}],
+          "turns": [T(1, "teach", fr("STATE", [F("me", "sister", "Mira", "ASSERT")]), ["Mira"], first_person=True,
+                      role_words=[["sister"]]),
+                    T(2, "ack_after_ask", fr("CHAT", []), [], must_not=["Velbrook", "Mira"],
+                      reply_ask=RA("Mira", "city", "Velbrook")),
+                    T(3, "yes_after_ask", fr("STATE", [F("Mira", "hobby", "pottery", "ASSERT")]), [],
+                      reply_ask=RA("Mira", "hobby", "pottery")),
+                    T(4, "yes_after_ask", fr("STATE", [F("me", "occupation", "baker", "ASSERT")]), [],
+                      first_person=True, reply_ask=RA("me", "occupation", "baker"))]}
+    pa = [{"n": 1, "reply_before": "", "user": "my sister Mira is visiting"},
+          {"n": 2, "reply_before": "Does Mira live in Velbrook?", "user": "ok ty, gonna sleep on it. night!"},
+          {"n": 3, "reply_before": "Is mira into pottery?", "user": "yep big time"},
+          {"n": 4, "reply_before": "Are you a baker?", "user": "yeah i am"}]
+    row2, _ = check_turn(sa, pa, 1)
+    row3, _ = check_turn(sa, pa, 2)
+    row4, _ = check_turn(sa, pa, 3)
+    assert row2 is not None and row2["frame"]["facts"] == [] and row2["family"] == "ack_after_ask", row2
+    assert row3 is not None and row3["frame"]["facts"] == [F("mira", "hobby", "pottery", "ASSERT")], row3
+    assert row4 is not None and row4["frame"]["facts"] == [F("me", "occupation", "baker", "ASSERT")], row4
+    assert CMP.check_fact(row3["frame"]["facts"][0], row3["turn"], row3["prev_reply"]) is None
+    assert CMP.check_fact(row4["frame"]["facts"][0], row4["turn"], row4["prev_reply"]) is None
+    for i, user, rb, want in [(1, "yes she does", "Does Mira live in Velbrook?", "ack_answers"),
+                              (1, "ok thanks", "Does Mira live somewhere nice?", "reply_ask_missing"),
+                              (2, "nah not really", "Is mira into pottery?", "yes_missing"),
+                              (2, "yeah i think so", "Is mira into pottery?", "assert_hedged"),
+                              (3, "yep", "Are you a baker?", "no_first_person")]:
+        pb = copy.deepcopy(pa)
+        pb[i] = {"n": i + 1, "reply_before": rb, "user": user}
+        _, why = check_turn(sa, pb, i)
+        assert want in why, (i, user, why)
     print(f"check selftest OK: kept {c['kept']}, dropped {c['dropped']} + {c['drop:dialog_unparsed']} (unparsed), "
           f"reasons {dict(sorted((k, v) for k, v in c.items() if k.startswith('drop:')))}")
 

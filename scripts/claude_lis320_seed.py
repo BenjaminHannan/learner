@@ -120,6 +120,10 @@ LOOKALIKES = ["question", "plan", "doubt", "someone_else", "hypothetical", "nega
               "ambiguous_pronoun"]
 WEIGHTS = {"teach": 3.0, "correct": 2.0, "backref": 2.0, "former": 1.5, "jobhome": 1.0, "ask": 1.5,
            "smalltalk": 0.8, **{k: 0.6 for k in LOOKALIKES}}
+# assistant asks a yes/no about a detail, user only acknowledges (no save) or says yes (save from the question);
+# Trustworthy notes' ch-403 lead + Thread manager 17:04. Off unless --ask-back (the 30-call pilot ran without them).
+ASK_BACK_W = {"ack_after_ask": 0.8, "yes_after_ask": 0.8}
+ASK_BACK_RELS = ["occupation", "employer", "city", "age", "hobby", "instrument", "allergy", "dog", "cat"]
 # what the intent means, in the abstract (no example wording)
 INTENT_GLOSS = {
     "teach": "the user tells the assistant these facts as plainly true now",
@@ -142,6 +146,10 @@ INTENT_GLOSS = {
     "ambiguous_pronoun": "the user names both people in the message, then tells the fact about one of them using "
                          "only the pronoun given as the subject, so it is unclear which of the two it means",
     "smalltalk": "chit-chat with no facts about anyone (not even the user) and no names",
+    "ack_after_ask": "the assistant has just asked a yes/no question about a detail; the user does not answer it: they "
+                     "only acknowledge, thank, say goodbye or change the subject, with no yes, no or the detail",
+    "yes_after_ask": "the assistant has just asked a yes/no question about a detail; the user answers yes and adds "
+                     "nothing new",
 }
 
 
@@ -226,6 +234,7 @@ def frame(act, facts=(), ask=None):
 class Dialog:
     def __init__(self, did, rng, avoid):
         self.id, self.rng = did, rng
+        self.ask_back = False
         self.W = World(rng, avoid)
         n = rng.choice([3, 4, 4, 5])
         roles, people, spouse = [], [], False
@@ -274,8 +283,9 @@ class Dialog:
         return fact(owner, rel, value_for(rel, self.W, self.taken), "ASSERT")
 
     def add(self, intent, gold, must, lines, first_person=False, must_not=(), reply_must_not=(), ref=None,
-            role_words=(), cue=None, names=()):
-        t = {"k": self.k(), "intent": intent, "gloss": INTENT_GLOSS[intent], "lines": lines, "gold": gold,
+            role_words=(), cue=None, names=(), reply_ask=None):
+        t = {"reply_ask": reply_ask} if reply_ask else {}
+        t |= {"k": self.k(), "intent": intent, "gloss": INTENT_GLOSS[intent], "lines": lines, "gold": gold,
              "must": list(dict.fromkeys(must)), "first_person": first_person, "must_not": list(must_not),
              "reply_must_not": list(reply_must_not), "ref": ref, "role_words": [list(x) for x in role_words],
              "cue": cue or intent}
@@ -465,12 +475,46 @@ class Dialog:
         self.add("smalltalk", frame("CHAT", []), [], ["no facts"], must_not=list(self.by))
         return True
 
+    def _ask_back(self):
+        r = self.rng
+        cands = [(o, rel) for o in self.owners_pool() for rel in ASK_BACK_RELS if (o, rel) not in self.stored]
+        if not cands:
+            return None
+        o, rel = r.choice(cands)
+        val = value_for(rel, self.W, self.taken)
+        ra = {"owner": o, "rel": rel, "value": val,
+              "text": f"the assistant asks a yes/no question checking this detail: "
+                      f"{self.fact_line(fact(o, rel, val, 'ASSERT'))}; it includes \"{val}\"" + (f" and \"{o}\"" if o != "me" else " and asks the user as "
+                      "\"you\"") + " and ends with a question mark"}
+        return o, rel, val, ra
+
+    def ack_after_ask(self):
+        x = self._ask_back()
+        if x is None:
+            return False
+        o, rel, val, ra = x
+        self.add("ack_after_ask", frame("CHAT", []), [], ["no facts; the question stays unanswered"],
+                 must_not=[val] + ([o] if o != "me" else []), reply_ask=ra)
+        return True
+
+    def yes_after_ask(self):
+        x = self._ask_back()
+        if x is None:
+            return False
+        o, rel, val, ra = x
+        f = fact(o, rel, val, "ASSERT")
+        self.stored[(o, rel)] = val
+        self.add("yes_after_ask", frame("STATE", [f]), [], [self.fact_line(f) + " (confirmed by the user's yes)"],
+                 first_person=o == "me", reply_ask=ra)
+        return True
+
     def run(self, n_turns):
         r = self.rng
         self.teach()
+        W = WEIGHTS | (ASK_BACK_W if self.ask_back else {})
         while len(self.turns) < n_turns:
-            ks = list(WEIGHTS)
-            kind = r.choices(ks, [WEIGHTS[x] for x in ks])[0]
+            ks = list(W)
+            kind = r.choices(ks, [W[x] for x in ks])[0]
             fn = getattr(self, kind, None)
             ok = fn() if fn else self.lookalike(kind)
             if not ok:
@@ -480,11 +524,12 @@ class Dialog:
                 "turns": self.turns}
 
 
-def make_seeds(seed: int, n: int, avoid=frozenset()):
+def make_seeds(seed: int, n: int, avoid=frozenset(), ask_back=False):
     out = []
     for i in range(n):
         rng = random.Random(f"lis320-{seed}-{i}")
         d = Dialog(f"s320-{seed}-{i:05d}", rng, set(avoid))
+        d.ask_back = ask_back
         out.append(d.run(rng.randint(6, 8)))
     return out
 
@@ -528,6 +573,20 @@ def selftest():
             assert "used to" not in blob.lower()
     assert all(c[k] > 0 for k in WEIGHTS), c
     print("seed selftest OK:", len(a), "dialogs,", sum(c.values()), "turns;", dict(sorted(c.items())))
+    b = make_seeds(7, 300, ask_back=True)
+    cb = Counter(t["intent"] for d in b for t in d["turns"])
+    assert cb["ack_after_ask"] > 0 and cb["yes_after_ask"] > 0, cb
+    for d in b:
+        for t in d["turns"]:
+            if t["intent"] in ASK_BACK_W:
+                ra = t["reply_ask"]
+                assert ra["value"] in ra["text"] and ra["rel"] in REL_NAMES
+                if t["intent"] == "ack_after_ask":
+                    assert not t["gold"]["facts"] and ra["value"] in t["must_not"]
+                else:
+                    f = t["gold"]["facts"][0]
+                    assert (f["owner"], f["rel"], f["value"], f["mode"]) == (ra["owner"], ra["rel"], ra["value"], "ASSERT")
+    print("ask-back selftest OK:", {k: cb[k] for k in ASK_BACK_W})
 
 
 def main():
@@ -537,6 +596,7 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--avoid-names", help="file, one name per line (dev/test names to never use)")
     ap.add_argument("--avoid-hashes", help="file, sha256 of lowercased words (claude_lis320_avoidtest.py; test panels)")
+    ap.add_argument("--ask-back", action="store_true", help="add the ack_after_ask / yes_after_ask intents")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     if a.selftest:
@@ -546,7 +606,7 @@ def main():
         avoid = {x.strip().lower() for x in Path(a.avoid_names).read_text().splitlines() if x.strip()}
     if a.avoid_hashes:
         AVOID_HASHES.update(x.strip() for x in Path(a.avoid_hashes).read_text().splitlines() if x.strip())
-    seeds = make_seeds(a.seed, a.n, avoid)
+    seeds = make_seeds(a.seed, a.n, avoid, ask_back=a.ask_back)
     Path(a.out).write_text("".join(json.dumps(d, ensure_ascii=False) + "\n" for d in seeds), encoding="utf-8")
     c = Counter(t["intent"] for d in seeds for t in d["turns"])
     print(json.dumps({"dialogs": len(seeds), "turns": sum(c.values()), "intents": dict(sorted(c.items()))}))
