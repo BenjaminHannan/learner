@@ -1,0 +1,1079 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo FETCH_EXIT:$?; git log --oneline -5 origin/main 2>&1 | head -20
+FETCH_EXIT:0
+44c4b4341 Trustworthy notes: traced ch-403's 3 events after a goodnight to a wrong save (0.2c saved 'Kim's occupation is marine biology'; Kim never named by the user; its own confirm question re-read as prev); handed to Reading facts
+3ecb2a83b lis-319o VERIFY: all 3 wrong admitted saves were the wrong person (count undercounted synonym relations)
+a266f217b watcher: accept numbered PUSH lines; 000-check-358t autocast check + 358x republish
+fc936b117 lis-320 pilot thresholds fixed before the pilot lands
+14dc0c013 Stage 0 (CPU): autocast cache leaves 8/12 loop block matrices without gradient on torch 2.8, none on 2.14
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rd378g-20260926/PASSMARKS.md 2>&1; echo "---EXISTS-CHECK---"; git cat-file -e origin/main:artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl 2>&1 && echo DUPLICATE_EXISTS || echo NO_DUPLICATE; git cat-file -e origin/builder-outbox:artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl 2>&1 && echo OUTBOX_DUPLICATE || echo NO_OUTBOX_DUPLICATE
+# rd-378g: a note writer with no Claude in its training (registered 2026-09-26 16:58 UTC)
+
+Thread "Trustworthy notes". Written before any GLM note, grade or training row for it exists.
+
+## Why
+Ben's 16:39 rule (goals page 5f38f110e): nothing a model trains on is written or judged by Claude. Thread manager ruling
+16:53 (after Ben's "Retrain first" for the reader, 16:46): the rule covers trained models that could join a build.
+The rd-378 note writer learned from 7,650 rows of Opus-written dialogs and notes, kept only where an Opus judge found
+every note ok (artifacts/claude-rd378-20260925/data/README.md). It stays out of every build. rd-378L's PASS (notes
+help search, 274fae558) stands as a finding about that writer; the writer that could ship has to earn it again.
+
+## The one change
+The training rows' author. G = MiniCPM5-1B (commit 87179e5c1f455ef22e6223592d2d61351b525bfc) + LoRA, trained exactly
+as the rd-378 writer was (scripts/claude_rd378_data.py: a turn is kept only if every note on it is graded "ok" and
+nothing was missed; repeat 3; scripts/claude_lis300_train.py epochs 2, lr 2e-4, rank 32, batch 16, max-len 512,
+seed 300, --merge), but on GLM rows:
+- dialogs and notes: GLM 5.3 Flash writes 240 dialogs with notes (scripts/claude_rd378g_teacher.py writenotes, the rd-378
+  writer brief's note rules; structure and note form checked in code);
+- grades: GLM grades every note with the judge brief's verdict words (scripts/claude_rd378k_teacher.py label).
+Used only if the label gate passes (artifacts/claude-rd378k-20260926/PASSMARKS.md and PASSMARKS-B.md, both rows).
+No panel, bank, LoCoMo or LongMemEval text, and no Claude-written or Claude-judged row.
+
+## Registered test (real chats decide)
+LoCoMo conversations 5-9 (PRACTICE: "after using LoCoMo for development"; never trained on; no question, answer, turn or
+note text printed or pushed), through the store the build would use: scripts/claude_rd378u_confirm.py score with G's
+greedy notes (scripts/claude_rd378_write.py over claude_rd378L_recall.py dialogs --convs 5-9), exactly as rd-378u
+scored the rd-378 writer. A = heard rows only (store v3); G = store v4 with G's notes.
+R = the rd-378 writer's figure from rd-378u's verified notes_confirm.json (same questions; the A rows must match).
+
+## Marks (any@10, categories 1-4)
+| Mark | Bar |
+|---|---|
+| G1 notes still help | G any@10 >= A any@10 + 5 points |
+| G2 as good a search aid as the Claude-trained writer | G any@10 >= R any@10 - 2 points |
+| G3 no category left behind | no category (1, 2, 3, 4) more than 3 points below A |
+| G4 notes parse | unparsed turns <= 2% |
+PASS = G1-G4. Proved wrong: G any@10 <= A any@10 + 1 point.
+Runs only if rd-378u is a verified PASS; otherwise notes are out of search and this test is not run.
+Report only: @5, @20, all@k, lines reached through a note, notes per turn, median and p90 write ms, dev loss, the GLM
+grade counts, teacher cost.
+
+## What happens next (fixed now)
+PASS: G is the Claude-free note writer. It is offered to Month-end for 0.2d's notes slot (store v4), and rd-378k (the
+cut-only step) runs with A = G, as PASSMARKS-B of rd-378k says.
+FAIL: the Claude-free writer is not yet as good a search aid. First ask how the brain does it. Brain-first next step,
+one change: in the brain an episode's index binds who, what and when together (episodic binding in the hippocampus;
+textbook level, the mapping is a guess), so the teacher is asked to name every person and resolve every "that" and "she"
+inside each note, with the same marks on fresh GLM chats.
+
+## Seal
+SEAL.sha256.txt (this file and the scripts named here) is written before any GLM note for rd-378g exists; SEAL-B adds
+the GLM dialogs, grades and rows before training.
+---EXISTS-CHECK---
+fatal: path 'artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl' does not exist in 'origin/main'
+NO_DUPLICATE
+fatal: path 'artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl' does not exist in 'origin/builder-outbox'
+NO_OUTBOX_DUPLICATE
+[0m
+[0m$ [0mCOMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378g-20260926/SEAL.sha256.txt); echo "COMMIT=$COMMIT"; git show -s --format=%H\ %s origin/main; echo "---SEAL---"; git show origin/main:artifacts/claude-rd378g-20260926/SEAL.sha256.txt
+COMMIT=854f2166002bfc7e0475a234672397d64022661d
+44c4b4341c3f57ac2b7607caaa0b56f73c25c5c3 Trustworthy notes: traced ch-403's 3 events after a goodnight to a wrong save (0.2c saved 'Kim's occupation is marine biology'; Kim never named by the user; its own confirm question re-read as prev); handed to Reading facts
+---SEAL---
+659b2ab4d82eec65f1556fe8ff7bbcbd471aae0d368f308302d043f9f8631f33  artifacts/claude-rd378g-20260926/PASSMARKS.md
+c93558468550fb2e76dc8301acac56ca4051f666247cc00a425db109a7370293  scripts/claude_rd378g_teacher.py
+244df45ae05103d507657b40b08b335a3e887791719608d4ea866e34103c82a9  scripts/claude_rd378k_teacher.py
+a69f6b55f37192140cd26a0eece3b8f3dc9092f61297d494212dc063471e24a9  scripts/claude_rd378_data.py
+51ba27929a73d56c32585c3f11c030517b71070f3c429fc865e2bb4ef5e580b9  scripts/claude_rd378_common.py
+d9e4b3db4cacc6890ab4fc440a8bfa63739f42455c5114a7ab63f1bbe5ea1f1a  scripts/claude_lis300_train.py
+72a991c9ae430ba9996bcce1fcb0c12fdbcd9c314dfcdf3ae4a941e9e0ec8513  scripts/claude_rd378_write.py
+16e740c700cc3b74e74e517dfc86efd516bca65388798a3145f5ab27cf51af05  scripts/claude_rd371b_sample.py
+f813f6a058db50f06af5dd76f20d4f79d2fa01a3b8ea57a94b662fb82fa18b2d  scripts/claude_rd371b_common.py
+bcb1b793e609a0f44f34368703b9e4f382e75f5a1034f3893fd5c91e1e6b7e84  scripts/claude_rd378u_confirm.py
+6b9398c0e309b6cf15e1aa71a764e33782c5961b32c7f558cfdb879850c27987  scripts/claude_rd378L_recall.py
+a3c4ed9e03e4d1dc4f422fb13c5f9d47a1064d43fb5aaf8aa3c7437abadd91bb  scripts/claude_ep382_store_v2.py
+da1b4ab9dbbf53ef0ed2f0150b4bae0987540f5f4ffedffb197d1729f74bd30d  scripts/claude_ep382_store_v3.py
+43bb0e9e76066c40dab835493b0a581e11422ef1c105aa70c31c0b616c91a780  scripts/claude_ep382_store_v4.py
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rd378g_teacher.py | head -100; echo "=====K-DOCSTRING====="; git show origin/main:scripts/claude_rd378k_teacher.py | head -100
+#!/usr/bin/env python3
+"""rd-378g teacher job on the Mac (Trustworthy notes thread, 2026-09-26): the GLM teacher writes practice dialogs WITH
+memory notes, so a note writer can be trained from the plain 1B with no Claude-written or Claude-judged row (Ben 16:39
+"Use GLM"; Thread manager ruling 16:53: the rd-378 writer, trained on Opus-written notes, stays out of every build).
+The recipe is rd-378's (artifacts/claude-rd378-20260925/data/WRITER_NOTES.md) with GLM in place of the Opus writers;
+the teacher then grades its own notes with claude_rd378k_teacher.py label, and scripts/claude_rd378_data.py keeps a
+turn only if every note is "ok" and nothing was missed, exactly as for rd-378. Standard library only.
+
+writenotes  240 dialogs in 40 calls of 6 (3 chat + 3 overheard, 10-14 turns, notes on every non-assistant turn), each
+            call with its own subject area and name letters. Structure and note form checked in code (cites in [-6, 0],
+            never before turn 1, a "when" must appear in a cited turn); a call that breaks them is retried (3 tries).
+            Output DIR/notes_w1.jsonl in the rd-378 notes format (ids kg-001.., t from 1; assistant turns carry no
+            "notes" key, so the grader skips them).
+              python -B scripts/claude_rd378g_teacher.py writenotes --out DIR [--model M]
+split       python -B scripts/claude_rd378g_teacher.py split --file F --parts N   (F.0 .. F.N-1, round robin; counts only)
+selftest    (no network)
+Key rules as claude_rd378k_teacher.py: the key is read from ~/.config/openrouter/key into memory only, never printed.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_rd378k_teacher import MONTHS, call, json_list  # noqa: E402
+
+AREAS = ("a new pet", "moving to a new town", "a job change", "a school project", "a family trip", "a wedding",
+         "a sports season", "learning an instrument", "a garden", "a house renovation", "a new friend", "a breakup",
+         "a birthday party", "a hiking trip", "cooking for guests", "a work deadline", "a volunteering day",
+         "a holiday abroad", "a sick relative", "buying a car", "a book club (invented titles)", "a new baby in the family",
+         "a band rehearsal", "a road trip", "starting a small business", "exam season", "a neighbourhood fair",
+         "a camping weekend", "a job interview", "a craft market", "a fishing trip", "a dance class", "a move abroad",
+         "a surprise gift", "a lost item", "a new apartment", "a charity run", "a family reunion", "an art class",
+         "a long commute")
+LETTERS = "ABCDEFGHIJKLMNOPRSTVWYZ"
+
+WRITE = """Write 6 realistic conversations with memory notes, as a JSON list of 6 objects. Each object has exactly the
+keys "kind", "speakers", "date", "turns".
+- 3 with kind "chat": a user talks with a personal assistant. speakers = ["user", "assistant"]. Turns alternate, starting
+  with the user. The assistant's turns are short natural replies.
+- 3 with kind "overheard": two friends, relatives or coworkers talk. speakers = their two first names. Turns alternate,
+  starting with the first name.
+- date: the day the conversation happens, like "8 May 2023", a different day for each, between 2021 and 2025.
+- turns: 10 to 14 objects {"speaker", "text", "notes"}. "notes" is [] on every assistant turn.
+Notes are short MEMORY NOTES about the turn they sit on: plain sentences worth remembering later (what happened, what is
+planned, when, who said it, what someone likes or thinks, people and pets in their lives, changes over time). Each note
+is {"text": ..., "cites": [...], "when": ... or null}:
+- text: ONE plain sentence, third person, names not pronouns ("the user" for the user in chat dialogs), true to the cited
+  turns only, nothing guessed. Plans stay plans ("Kai plans to ..."), hopes stay hopes, jokes, sarcasm and "what if" talk
+  give no note, a claim about someone else stays a claim ("Mira said Tal quit his job"), a correction gives the corrected
+  fact only.
+- cites: offsets from the current turn: 0 = this turn, -1 = the previous turn, ... (never below -6, never before the
+  first turn), listing every turn the note needs (a pronoun or "that" pointing back, an answer to a question).
+- when: a time the chat itself gives for this note, copied exactly as typed ("last May", "next Friday", "in 2019",
+  "yesterday"), else null. Never turn it into a calendar date.
+- Turns with nothing worth remembering (greetings, small talk, reactions) have "notes": []. About 30% of non-assistant
+  turns have no note.
+Across the 6 conversations: many events, plans and preferences, several notes with a "when", several with a cite other
+than 0, some changes over time; at most a quarter of the notes about who is related to whom.
+Style of the messages: real texting, some typos in ordinary words (never in names), run-ons, mixed lengths (3 to 60
+words). Topic for all 6: {area}. Fictional names only: invented first names from many cultures starting with the letters
+{letters}, and made-up places; no real public figures, brands, or book, film or game titles.
+
+Reply with ONLY the JSON list, no other text."""
+
+
+def check_note(n, k, turns) -> str | None:
+    if not isinstance(n, dict) or set(n) != {"text", "cites", "when"}:
+        return "note keys"
+    if not isinstance(n["text"], str) or not n["text"].strip():
+        return "note text"
+    c = n["cites"]
+    if not isinstance(c, list) or not c or not all(isinstance(x, int) and -6 <= x <= 0 and k + x >= 0 for x in c):
+        return "cites"
+    w = n["when"]
+    if w is not None:
+        if not isinstance(w, str) or not w.strip():
+            return "when"
+        if not any(w.strip().lower() in turns[k + x]["text"].lower() for x in c):
+            return "when not in a cited turn"
+    return None
+
+
+def check_dialog(r) -> str | None:
+    if not isinstance(r, dict) or set(r) != {"kind", "speakers", "date", "turns"}:
+        return "keys"
+    sp = r["speakers"]
+    if r["kind"] == "chat":
+        if sp != ["user", "assistant"]:
+            return "chat speakers"
+    elif r["kind"] == "overheard":
+        if not (isinstance(sp, list) and len(sp) == 2 and all(isinstance(s, str) and re.fullmatch(r"[A-Z][\w'-]+", s)
+                                                               for s in sp) and sp[0] != sp[1]):
+            return "overheard speakers"
+    else:
+        return "kind"
+    m = re.fullmatch(r"(\d{1,2}) ([A-Z][a-z]+) (20\d\d)", str(r["date"]))
+=====K-DOCSTRING=====
+#!/usr/bin/env python3
+"""rd-378k teacher jobs on the Mac (Trustworthy notes thread, 2026-09-26): the open-weights teacher (GLM via OpenRouter,
+the teacher Ben approved; goals page 5f38f110e: nothing a model trains on is written or judged by Claude) writes the
+practice dialogs the note writer drafts over, and grades the writer's own notes, so the cut-only rows
+(scripts/claude_rd378k_data.py) hold no Claude-written or Claude-judged text. Standard library only; no model runs here.
+
+Key rules: the key is read from ~/.config/openrouter/key into memory only. Never printed, logged or written.
+Call pattern copied from scripts/claude_k1e_teacher.py (reasoning effort low, answer read from the final message).
+
+write  160 practice dialogs in 20 calls of 8 (4 chat with an assistant + 4 overheard between two named people,
+       12-16 turns), each call with its own subject area. Structure checked in code; a call that breaks it is retried
+       (3 tries). ids kd-001..kd-160 in call order; t counts from 1.
+         python -B scripts/claude_rd378k_teacher.py write --out DIR [--model M]
+label  the teacher grades every note of a judge-input file (claude_rd378k_data.py judgein) with the judge brief's own
+       verdict words (artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md), one dialog per call, temperature 0;
+       writes DIR/labels.jsonl {dialog, t, verdicts, missed} (the judge-output format). [--only-hash K: only dialogs
+       whose sha256(id) % K == 0.]
+         python -B scripts/claude_rd378k_teacher.py label --judge-in J.jsonl --out DIR [--only-hash K] [--model M]
+agree  teacher verdicts vs the blind judges' verdicts on the same notes, ok vs not ok. Label rule fixed before any
+       teacher label exists (the creative thread's rule for a label source, k1e): agreement >= 85% and kappa >= 0.5.
+         python -B scripts/claude_rd378k_teacher.py agree --labels L.jsonl --verdicts V.jsonl
+selftest (no network)
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import re
+import time
+import urllib.request
+from pathlib import Path
+
+AREAS = ("hobbies and crafts", "work and coworkers", "family visits", "school and exams", "food and cooking",
+         "travel and trips", "pets", "moving house", "neighbours and community", "sports and fitness",
+         "music and concerts", "gardening", "health and appointments", "money and shopping", "weddings and parties",
+         "cars and commuting", "books and films (invented titles only)", "volunteering", "holidays and seasons",
+         "new jobs and interviews")
+VERDICTS = ("ok", "unsupported", "bad_cite", "bad_when", "bad_form")
+MONTHS = ("January February March April May June July August September October November December").split()
+
+WRITE = """Write 8 realistic conversations as a JSON list of 8 objects. Each object has exactly the keys "kind",
+"speakers", "date", "turns".
+- 4 with kind "chat": a user talks with a personal assistant. speakers = ["user", "assistant"]. Turns alternate,
+  starting with the user. The user tells the assistant about their life; the assistant's turns are short natural replies.
+- 4 with kind "overheard": two friends, relatives or coworkers talk. speakers = their two first names. Turns alternate,
+  starting with the first name.
+- date: the day the conversation happens, like "8 May 2023", a different day for each, between 2021 and 2025.
+- turns: 12 to 16 objects {"speaker": one of the speakers, "text": the message}.
+What the talk should contain, mixed naturally: things that happened, plans, preferences and opinions, times said in the
+chat ("last May", "next Friday", "two weeks ago", "in 2019"), changes (moved, new job, got a pet, broke up), things one
+person says about someone else, the odd joke, sarcasm or "what if", a correction of something said earlier ("wait, it
+was Tuesday"), pronouns pointing back to earlier messages, and some small talk with nothing to remember.
+Style: real texting, some typos in ordinary words (never in names), run-ons, mixed lengths (3 to 60 words).
+Subject area for all 8: {area}. Fictional names only: invented first names from many cultures and made-up places; no
+real public figures, brands, or book, film or game titles.
+
+Reply with ONLY the JSON list, no other text."""
+
+JUDGE = """You are checking memory notes that a small model wrote about a conversation. Below is one conversation as JSON:
+{"dialog","kind","speakers","date","turns":[{"t","speaker","text","notes":[{"text","cites","when"}]}]}.
+cites are offsets from the note's own turn (0 = that turn, -1 = the turn before, ...).
+
+For EVERY note, read the dialog up to and including the note's turn and give one verdict:
+- ok: one plain sentence, third person with names (or "the user"), and everything in it is stated by the cited turns
+  (reading the earlier turns only to know who "she"/"that" is); plans stay plans, claims about others stay claims.
+- unsupported: it says something the cited turns do not state (a guess, an inference, a wrong detail, wrong person).
+- bad_cite: true to the dialog but a turn it needs is not cited, or a cited turn is not needed.
+- bad_when: "when" is wrong (not the time the turns give for this note, or missing when the turn gives one).
+- bad_form: pronoun instead of a name, first/second person, more than one sentence, a joke or hypothetical turned into a fact.
+For EVERY turn that has a "notes" list (even an empty one), also say "missed": the number of clearly memorable things in
+that turn (an event, plan, preference, change, time, person or pet fact) that no note of that turn covers (0 if none).
+
+Reply with ONLY a JSON list with one object per turn that has a "notes" list, in order:
+{"t": <the turn's t>, "verdicts": [one verdict word per note, in order], "missed": <integer>}.
+
+Conversation:
+"""
+
+
+def load(p):
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def call(key, model, text, temperature, tries=4):
+    body = json.dumps({"model": model, "messages": [{"role": "user", "content": text}], "temperature": temperature,
+                       "max_tokens": 16000, "reasoning": {"effort": "low"}}).encode()
+    for i in range(tries):
+        req = urllib.request.Request("https://openrouter.ai/api/v1/chat/completions", data=body, headers={
+            "Authorization": "Bearer " + key, "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=240) as r:
+                d = json.loads(r.read().decode())
+            return d["choices"][0]["message"]["content"] or "", d.get("usage", {})
+        except Exception as e:                        # the message of an HTTP error never carries the key
+            print(f"[rd378k-teacher] try {i + 1} failed: {type(e).__name__} {str(e)[:120]}", flush=True)
+            time.sleep(2 ** (i + 1))
+    return "", {}
+[0m
+[0m$ [0mCOMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378g-20260926/SEAL.sha256.txt); echo $COMMIT; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1 | head; date -u +%FT%TZ
+854f2166002bfc7e0475a234672397d64022661d
+bm391logs
+bm391rent.env
+bm391split
+e2e330tree
+gen_part6.py
+grade_b_part1_writer.py
+guard-296b
+guard-350
+k1e-teacher-tVmTTH
+lis313b-armA.log
+2026-09-26T17:04:02Z
+[0m
+[0m$ [0mCOMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378g-20260926/SEAL.sha256.txt); mkdir -p /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher && git archive $COMMIT scripts artifacts/claude-rd378g-20260926 | tar -x -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher && echo EXTRACT_OK && ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/artifacts/claude-rd378g-20260926/ && ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/ | head -30
+EXTRACT_OK
+PASSMARKS.md
+SEAL.sha256.txt
+address_probe.py
+astra_canonical_operator_panels.py
+astra_canonical_operator_report.py
+astra_canonical_operator_run.py
+astra_canonical_operator.py
+astra_transfer_diagnostic.py
+astra_transfer_report.py
+astra_transfer_twins.py
+benspc-runtime.json
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-rd378g-20260926/SEAL.sha256.txt 2>&1
+artifacts/claude-rd378g-20260926/PASSMARKS.md: OK
+scripts/claude_rd378g_teacher.py: OK
+scripts/claude_rd378k_teacher.py: OK
+scripts/claude_rd378_data.py: OK
+scripts/claude_rd378_common.py: OK
+scripts/claude_lis300_train.py: OK
+scripts/claude_rd378_write.py: OK
+scripts/claude_rd371b_sample.py: OK
+scripts/claude_rd371b_common.py: OK
+scripts/claude_rd378u_confirm.py: OK
+scripts/claude_rd378L_recall.py: OK
+scripts/claude_ep382_store_v2.py: OK
+scripts/claude_ep382_store_v3.py: OK
+scripts/claude_ep382_store_v4.py: OK
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_rd378g_teacher.py selftest 2>&1; echo "EXIT:$?"; uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378k_teacher.py selftest 2>&1; echo "EXIT:$?"
+rd378g teacher selftest 1/1 ok
+EXIT:0
+{"compared": 4, "teacher_ok": 2, "judges_ok": 2, "both_ok": 1, "agree": 2, "kappa": 0.0, "judges_unsupported_teacher_ok": 1, "judges_unsupported": 2, "passes_label_rule": false}
+rd378k teacher selftest 3/3 ok
+EXIT:0
+[0m
+[0m$ [0mdate -u +%FT%TZ; echo START_WRITE; START=$(date +%s); uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378g_teacher.py writenotes --out artifacts/claude-rd378g-20260926/glm 2>&1 | tee /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/write.log; echo "WRITE_EXIT:${PIPESTATUS[0]}"; END=$(date +%s); echo "WRITE_WALL_S=$((END-START))"; date -u +%FT%TZ; wc -l artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl 2>&1
+2026-09-26T17:04:13Z
+START_WRITE
+[rd378g-teacher] batch 0 try 1: when not in a cited turn
+[rd378g-teacher] batch 0 ok (6 dialogs)
+[rd378g-teacher] batch 1 try 1: not 6 dialogs
+[rd378g-teacher] batch 1 ok (12 dialogs)
+[rd378g-teacher] batch 2 ok (18 dialogs)
+[rd378g-teacher] batch 3 try 1: turn keys
+[rd378g-teacher] batch 3 try 2: cites
+[rd378g-teacher] batch 3 ok (24 dialogs)
+[rd378g-teacher] batch 4 try 1: when not in a cited turn
+[rd378g-teacher] batch 4 try 2: when not in a cited turn
+[rd378g-teacher] batch 4 ok (30 dialogs)
+[rd378g-teacher] batch 5 ok (36 dialogs)
+[rd378g-teacher] batch 6 try 1: when not in a cited turn
+[rd378g-teacher] batch 6 try 2: when not in a cited turn
+[rd378g-teacher] batch 6 try 3: when not in a cited turn
+[rd378g-teacher] batch 6 skipped after 3 tries
+[rd378g-teacher] batch 7 ok (42 dialogs)
+[rd378g-teacher] batch 8 ok (48 dialogs)
+[rd378g-teacher] batch 9 try 1: not 6 dialogs
+[rd378g-teacher] batch 9 try 2: turn count
+[rd378g-teacher] batch 9 try 3: when not in a cited turn
+[rd378g-teacher] batch 9 skipped after 3 tries
+[rd378g-teacher] batch 10 try 1: when not in a cited turn
+[rd378g-teacher] batch 10 try 2: when not in a cited turn
+[rd378g-teacher] batch 10 try 3: turn keys
+[rd378g-teacher] batch 10 skipped after 3 tries
+[rd378g-teacher] batch 11 ok (54 dialogs)
+[rd378g-teacher] batch 12 try 1: cites
+[rd378g-teacher] batch 12 try 2: when not in a cited turn
+[rd378g-teacher] batch 12 ok (60 dialogs)
+[rd378g-teacher] batch 13 ok (66 dialogs)
+[rd378g-teacher] batch 14 try 1: when not in a cited turn
+[rd378g-teacher] batch 14 try 2: when not in a cited turn
+[rd378g-teacher] batch 14 try 3: when not in a cited turn
+[rd378g-teacher] batch 14 skipped after 3 tries
+[rd378g-teacher] batch 15 try 1: cites
+[rd378g-teacher] batch 15 try 2: when not in a cited turn
+[rd378g-teacher] batch 15 try 3: when not in a cited turn
+[rd378g-teacher] batch 15 skipped after 3 tries
+[rd378g-teacher] batch 16 try 1: cites
+[rd378g-teacher] batch 16 try 2: assistant turn has notes
+[rd378g-teacher] batch 16 try 3: cites
+[rd378g-teacher] batch 16 skipped after 3 tries
+[rd378g-teacher] batch 17 ok (72 dialogs)
+[rd378g-teacher] batch 18 try 1: note keys
+[rd378g-teacher] batch 18 try 2: not 6 dialogs
+[rd378g-teacher] batch 18 try 3: when not in a cited turn
+[rd378g-teacher] batch 18 skipped after 3 tries
+[rd378g-teacher] batch 19 try 1: cites
+[rd378g-teacher] batch 19 try 2: when not in a cited turn
+[rd378g-teacher] batch 19 try 3: cites
+[rd378g-teacher] batch 19 skipped after 3 tries
+[rd378g-teacher] batch 20 ok (78 dialogs)
+[rd378g-teacher] batch 21 try 1: when not in a cited turn
+[rd378g-teacher] batch 21 ok (84 dialogs)
+[rd378g-teacher] batch 22 ok (90 dialogs)
+[rd378g-teacher] batch 23 try 1: when not in a cited turn
+[rd378g-teacher] batch 23 try 2: not 6 dialogs
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 3600000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m✗ [0mGrep "def (writenotes|main|split)|resume|existing|append|overwrite|out.*mkdir|batches|range\(40\)|N_BATCH|n_batch" failed[90m in /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mls -la artifacts/claude-rd378g-20260926/glm/ 2>&1; tail -5 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/write.log 2>&1; ps aux | grep -c "rd378g_teacher" 2>&1
+total 0
+drwxr-xr-x  2 ben-hannan  staff   64 Sep 26 13:04 .
+drwxr-xr-x  5 ben-hannan  staff  160 Sep 26 13:04 ..
+[rd378g-teacher] batch 21 try 1: when not in a cited turn
+[rd378g-teacher] batch 21 ok (84 dialogs)
+[rd378g-teacher] batch 22 ok (90 dialogs)
+[rd378g-teacher] batch 23 try 1: when not in a cited turn
+[rd378g-teacher] batch 23 try 2: not 6 dialogs
+3
+[0m
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_rd378g_teacher.py
+[0m
+[0m$ [0mps aux | grep rd378 | grep -v grep 2>&1 | head; echo ---; ls -la artifacts/claude-rd378g-20260926/glm/ 2>&1; wc -l /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/write.log 2>&1
+ben-hannan       39358   8.5  2.2 562825200 736160   ??  RN    1:03PM   1:39.13 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rd378g-teacher.go1.39327 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-26 16:58 UTC). Get every file with `git fetch -q origin main` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.\012GPU: no (Mac CPU only; about 40 writing calls and about 240 grading calls to OpenRouter GLM 5.3 Flash; no rental). Ben chose "Use GLM" at 16:39:45 UTC 09-26; Thread manager ruling 16:53: the note writer is retrained with no Claude-written or Claude-judged row. The model is the script default z-ai/glm-5.3-flash.\012\012YOUR TASK: rd378g-teacher (read origin/main:artifacts/claude-rd378g-20260926/PASSMARKS.md): GLM writes 240 practice dialogs with memory notes, then GLM grades every note. No training, no GPU. Code: scripts/claude_rd378g_teacher.py and scripts/claude_rd378k_teacher.py (read their docstrings). Run them, never edit them; if something breaks, stop and report the exact error.\012KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The scripts read it themselves. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.\012ORDER: this job may run at the same time as rd378k-teacher (both only call OpenRouter).\012\0121. COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378g-20260926/SEAL.sha256.txt). `git archive $COMMIT scripts artifacts/claude-rd378g-20260926 | tar -x -C <tmp>` and run from there (python via `uv run --offline --no-project --python 3.12 python -B`; standard library only). Report COMMIT.\0122. SEAL: `shasum -a 256 -c artifacts/claude-rd378g-20260926/SEAL.sha256.txt` must print OK for all 14 lines, else stop with SEAL-MISMATCH and every line.\0123. python -B scripts/claude_rd378g_teacher.py selftest   -> "rd378g teacher selftest 1/1 ok"; python -B scripts/claude_rd378k_teacher.py selftest -> "rd378k teacher selftest 3/3 ok"; else stop.\0124. WRITE: `python -B scripts/claude_rd378g_teacher.py writenotes --out artifacts/claude-rd378g-20260926/glm` (prints one JSON line at the end).\0125. GRADE in 4 parallel parts (each part is its own process under nohup with its own log):\012   python -B scripts/claude_rd378g_teacher.py split --file artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --parts 4\012   for i in 0 1 2 3: python -B scripts/claude_rd378k_teacher.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.$i --out artifacts/claude-rd378g-20260926/glm/lab$i\012   Wait for all four, then `cat artifacts/claude-rd378g-20260926/glm/lab{0,1,2,3}/labels.jsonl > artifacts/claude-rd378g-20260926/glm/judge_w1.jsonl`, and report `wc -l` of it and the number of non-assistant turns in notes_w1.jsonl (turns that have a "notes" key).\0126. Copy into the worktree: artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl, artifacts/claude-rd378g-20260926/glm/judge_w1.jsonl, and the console output of steps 3-5 (all logs) as artifacts/claude-rd378g-20260926/teacher-log.txt (check it for "sk-or" first). Do NOT copy the .0-.3 part files or the lab* folders. Report every printed JSON line verbatim, wall time per step, and the total cost_usd.\012PUSH: artifacts/claude-rd378g-20260926/glm artifacts/claude-rd378g-20260926/teacher-log.txt
+ben-hannan       39327   0.0  0.0 488781888   1424   ??  SN    1:03PM   0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rd378g-teacher.md
+---
+total 0
+drwxr-xr-x  2 ben-hannan  staff   64 Sep 26 13:04 .
+drwxr-xr-x  5 ben-hannan  staff  160 Sep 26 13:04 ..
+      58 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/write.log
+[0m
+[0m$ [0mdate -u +%FT%TZ > WRITE_START_UTC.txt; date +%s > WRITE_START_EPOCH.txt; rm -f write.log; nohup uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378g_teacher.py writenotes --out artifacts/claude-rd378g-20260926/glm > write.log 2>&1 & echo "PID:$!"; sleep 5; tail -5 write.log 2>&1
+PID:69498
+[0m
+[0m$ [0msleep 100; tail -8 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 0 ok (6 dialogs)
+[rd378g-teacher] batch 1 try 1: not 6 dialogs
+---
+ALIVE
+[0m
+[0m$ [0msleep 110; tail -3 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 2 try 1: turn keys
+[rd378g-teacher] batch 2 ok (18 dialogs)
+[rd378g-teacher] batch 3 try 1: when not in a cited turn
+---
+ALIVE
+[0m
+[0m$ [0msleep 110; tail -3 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 3 ok (24 dialogs)
+[rd378g-teacher] batch 4 try 1: when not in a cited turn
+[rd378g-teacher] batch 4 try 2: cites
+---
+ALIVE
+[0m
+[0m$ [0msleep 110; tail -3 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 4 ok (30 dialogs)
+[rd378g-teacher] batch 5 try 1: turn count
+[rd378g-teacher] batch 5 try 2: when not in a cited turn
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -3 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 5 ok (36 dialogs)
+[rd378g-teacher] batch 6 try 1: when not in a cited turn
+[rd378g-teacher] batch 6 try 2: cites
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -3 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 7 try 2: cites
+[rd378g-teacher] batch 7 try 3: when not in a cited turn
+[rd378g-teacher] batch 7 skipped after 3 tries
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -3 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 8 try 2: when not in a cited turn
+[rd378g-teacher] batch 8 try 3: speakers do not alternate
+[rd378g-teacher] batch 8 skipped after 3 tries
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -3 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 9 ok (48 dialogs)
+[rd378g-teacher] batch 10 try 1: turn count
+[rd378g-teacher] batch 10 ok (54 dialogs)
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -3 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 10 try 1: turn count
+[rd378g-teacher] batch 10 ok (54 dialogs)
+[rd378g-teacher] batch 11 try 1: when not in a cited turn
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -3 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 10 ok (54 dialogs)
+[rd378g-teacher] batch 11 try 1: when not in a cited turn
+[rd378g-teacher] batch 11 try 2: when not in a cited turn
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 11 try 3: when not in a cited turn
+[rd378g-teacher] batch 11 skipped after 3 tries
+[rd378g-teacher] batch 12 try 1: when not in a cited turn
+[rd378g-teacher] batch 12 ok (60 dialogs)
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 14 try 1: when not in a cited turn
+[rd378g-teacher] batch 14 try 2: cites
+[rd378g-teacher] batch 14 try 3: cites
+[rd378g-teacher] batch 14 skipped after 3 tries
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 15 ok (72 dialogs)
+[rd378g-teacher] batch 16 try 1: cites
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -8 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 14 skipped after 3 tries
+[rd378g-teacher] batch 15 try 1: speakers do not alternate
+[rd378g-teacher] batch 15 try 2: date
+[rd378g-teacher] batch 15 ok (72 dialogs)
+[rd378g-teacher] batch 16 try 1: cites
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[rd378g-teacher] batch 16 ok (78 dialogs)
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[rd378g-teacher] batch 16 ok (78 dialogs)
+[rd378g-teacher] batch 17 try 1: cites
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 17 try 1: cites
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378g-teacher] batch 17 ok (84 dialogs)
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 18 try 1: cites
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 18 try 1: cites
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -5 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378g-teacher] batch 18 try 1: cites
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -5 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378g-teacher] batch 18 try 1: cites
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+---
+ALIVE
+[0m
+[0m$ [0mps aux | grep -E "rd378|teacher" | grep -v grep | head -10; echo ---; tail -3 write.log 2>&1
+ben-hannan       39358  12.1  1.6 562824080 530272   ??  SN    1:03PM   2:38.67 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rd378g-teacher.go1.39327 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-26 16:58 UTC). Get every file with `git fetch -q origin main` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.\012GPU: no (Mac CPU only; about 40 writing calls and about 240 grading calls to OpenRouter GLM 5.3 Flash; no rental). Ben chose "Use GLM" at 16:39:45 UTC 09-26; Thread manager ruling 16:53: the note writer is retrained with no Claude-written or Claude-judged row. The model is the script default z-ai/glm-5.3-flash.\012\012YOUR TASK: rd378g-teacher (read origin/main:artifacts/claude-rd378g-20260926/PASSMARKS.md): GLM writes 240 practice dialogs with memory notes, then GLM grades every note. No training, no GPU. Code: scripts/claude_rd378g_teacher.py and scripts/claude_rd378k_teacher.py (read their docstrings). Run them, never edit them; if something breaks, stop and report the exact error.\012KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The scripts read it themselves. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.\012ORDER: this job may run at the same time as rd378k-teacher (both only call OpenRouter).\012\0121. COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378g-20260926/SEAL.sha256.txt). `git archive $COMMIT scripts artifacts/claude-rd378g-20260926 | tar -x -C <tmp>` and run from there (python via `uv run --offline --no-project --python 3.12 python -B`; standard library only). Report COMMIT.\0122. SEAL: `shasum -a 256 -c artifacts/claude-rd378g-20260926/SEAL.sha256.txt` must print OK for all 14 lines, else stop with SEAL-MISMATCH and every line.\0123. python -B scripts/claude_rd378g_teacher.py selftest   -> "rd378g teacher selftest 1/1 ok"; python -B scripts/claude_rd378k_teacher.py selftest -> "rd378k teacher selftest 3/3 ok"; else stop.\0124. WRITE: `python -B scripts/claude_rd378g_teacher.py writenotes --out artifacts/claude-rd378g-20260926/glm` (prints one JSON line at the end).\0125. GRADE in 4 parallel parts (each part is its own process under nohup with its own log):\012   python -B scripts/claude_rd378g_teacher.py split --file artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --parts 4\012   for i in 0 1 2 3: python -B scripts/claude_rd378k_teacher.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.$i --out artifacts/claude-rd378g-20260926/glm/lab$i\012   Wait for all four, then `cat artifacts/claude-rd378g-20260926/glm/lab{0,1,2,3}/labels.jsonl > artifacts/claude-rd378g-20260926/glm/judge_w1.jsonl`, and report `wc -l` of it and the number of non-assistant turns in notes_w1.jsonl (turns that have a "notes" key).\0126. Copy into the worktree: artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl, artifacts/claude-rd378g-20260926/glm/judge_w1.jsonl, and the console output of steps 3-5 (all logs) as artifacts/claude-rd378g-20260926/teacher-log.txt (check it for "sk-or" first). Do NOT copy the .0-.3 part files or the lab* folders. Report every printed JSON line verbatim, wall time per step, and the total cost_usd.\012PUSH: artifacts/claude-rd378g-20260926/glm artifacts/claude-rd378g-20260926/teacher-log.txt
+ben-hannan       81454   0.1  0.1 488904896  25424   ??  SN    2:33PM   0:00.62 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_rd378k_teacher3.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --hash-rem 1 --out artifacts/claude-rd378k-20260926/gate3
+ben-hannan       81453   0.0  0.0 488782224    288   ??  SN    2:33PM   0:00.01 tee /tmp/rd378k-gate3-step4.log
+ben-hannan       81452   0.0  0.0 463603904  12096   ??  SN    2:33PM   0:00.01 uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378k_teacher3.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --hash-rem 1 --out artifacts/claude-rd378k-20260926/gate3
+ben-hannan       81449   0.0  0.0 488786048   1456   ??  SNs   2:33PM   0:00.01 /bin/zsh -c date -u +%FT%TZ; START=$(date +%s); uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378k_teacher3.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --hash-rem 1 --out artifacts/claude-rd378k-20260926/gate3 2>&1 | tee /tmp/rd378k-gate3-step4.log; EC=${PIPESTATUS[0]}; END=$(date +%s); echo "LABEL_EXIT=$EC WALL=$((END-START))s"; date -u +%FT%TZ
+ben-hannan       81115   0.0  1.6 562768736 548320   ??  SN    2:32PM   0:29.71 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rd378k-gate3.go1.81081 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-26 18:31 UTC; the fallback that rd378k-gate2b's FAIL triggers). Get every file with `git fetch -q origin main` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.\012GPU: no (Mac CPU only; about 110-130 calls to OpenRouter GLM 5.3 Flash, well under $0.10; no rental). Ben chose "Use GLM" at 16:39:45 UTC 09-26.\012\012YOUR TASK: rd378k-gate3 (read origin/main:artifacts/claude-rd378k-20260926/PASSMARKS-E.md): the label gate on fresh dialogs with labeller v3 (parser fix + two passes). No training, no GPU. Code: scripts/claude_rd378k_teacher3.py and scripts/claude_rd378k_teacher.py (read their docstrings). Run them, never edit them; if something breaks, stop and report the exact error.\012KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The scripts read it themselves. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-rd378k-20260926/gate3/labels.jsonl.\012\0121. COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378k-20260926/SEAL-ADD-E.sha256.txt). `git archive $COMMIT scripts artifacts/claude-rd378k-20260926 artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl | tar -x -C <tmp>` and run from there (python via `uv run --offline --no-project --python 3.12 python -B`; standard library only). Report COMMIT.\0122. SEAL: `shasum -a 256 -c` on artifacts/claude-rd378k-20260926/SEAL-ADD-E.sha256.txt (2 OK), SEAL-ADD-D.sha256.txt (2 OK), SEAL-ADD-C.sha256.txt (2 OK), and SEAL.sha256.txt (15 OK; the ONLY allowed FAILED line is scripts/claude_lis300_train.py, which PASSMARKS-D.md replaces with SEAL-ADD-D's hash). Anything else: stop with SEAL-MISMATCH and every line.\0123. python -B scripts/claude_rd378k_teacher3.py selftest -> "rd378k teacher3 selftest 1/1 ok", else stop.\0124. python -B scripts/claude_rd378k_teacher3.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --hash-rem 1 --out artifacts/claude-rd378k-20260926/gate3\0125. python -B scripts/claude_rd378k_teacher.py agree --labels artifacts/claude-rd378k-20260926/gate3/labels.jsonl --verdicts artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl\0126. python -B scripts/claude_rd378k_teacher.py agree --labels artifacts/claude-rd378k-20260926/gate3/labels_passA.jsonl --verdicts artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl   (report only)\0127. Copy into the worktree: artifacts/claude-rd378k-20260926/gate3/labels.jsonl, gate3/labels_passA.jsonl, gate3/failures.jsonl, and the console output of steps 3-6 as gate3/teacher-log.txt (check all four for "sk-or" first). Report every printed JSON line verbatim, wall time per step, and cost_usd.\012PUSH: artifacts/claude-rd378k-20260926/gate3
+ben-hannan       81081   0.0  0.0 488781488   1360   ??  SN    2:32PM   0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rd378k-gate3.md
+ben-hannan       69500   0.0  0.1 488896864  27408   ??  SN    2:04PM   0:00.78 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_rd378g_teacher.py writenotes --out artifacts/claude-rd378g-20260926/glm
+ben-hannan       69498   0.0  0.0 463621312  12736   ??  SN    2:04PM   0:00.02 uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378g_teacher.py writenotes --out artifacts/claude-rd378g-20260926/glm
+ben-hannan       39327   0.0  0.0 488781888   1184   ??  SN    1:03PM   0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rd378g-teacher.md
+---
+[rd378g-teacher] batch 18 try 2: not 6 dialogs
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+[rd378g-teacher] batch 19 try 3: not 6 dialogs
+[rd378g-teacher] batch 19 skipped after 3 tries
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+[rd378g-teacher] batch 19 try 3: not 6 dialogs
+[rd378g-teacher] batch 19 skipped after 3 tries
+[rd378g-teacher] batch 20 try 1: when not in a cited turn
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+[rd378g-teacher] batch 19 try 3: not 6 dialogs
+[rd378g-teacher] batch 19 skipped after 3 tries
+[rd378g-teacher] batch 20 try 1: when not in a cited turn
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 20 try 1: when not in a cited turn
+[rd378g-teacher] batch 20 try 2: when not in a cited turn
+[rd378g-teacher] batch 20 try 3: when not in a cited turn
+[rd378g-teacher] batch 20 skipped after 3 tries
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 20 try 2: when not in a cited turn
+[rd378g-teacher] batch 20 try 3: when not in a cited turn
+[rd378g-teacher] batch 20 skipped after 3 tries
+[rd378g-teacher] batch 21 try 1: when not in a cited turn
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 20 try 3: when not in a cited turn
+[rd378g-teacher] batch 20 skipped after 3 tries
+[rd378g-teacher] batch 21 try 1: when not in a cited turn
+[rd378g-teacher] batch 21 ok (90 dialogs)
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+[rd378g-teacher] batch 23 try 1: not 6 dialogs
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -4 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; tail -5 write.log 2>&1; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE; ps aux | grep "rd378k_teacher3" | grep -v grep | wc -l
+[rd378g-teacher] batch 26 skipped after 3 tries
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+---
+ALIVE
+       4
+[0m
+[0m$ [0mgrep -E "batch [0-9]+ (ok|skipped)" write.log; echo ---; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 0 ok (6 dialogs)
+[rd378g-teacher] batch 1 ok (12 dialogs)
+[rd378g-teacher] batch 2 ok (18 dialogs)
+[rd378g-teacher] batch 3 ok (24 dialogs)
+[rd378g-teacher] batch 4 ok (30 dialogs)
+[rd378g-teacher] batch 5 ok (36 dialogs)
+[rd378g-teacher] batch 6 ok (42 dialogs)
+[rd378g-teacher] batch 7 skipped after 3 tries
+[rd378g-teacher] batch 8 skipped after 3 tries
+[rd378g-teacher] batch 9 ok (48 dialogs)
+[rd378g-teacher] batch 10 ok (54 dialogs)
+[rd378g-teacher] batch 11 skipped after 3 tries
+[rd378g-teacher] batch 12 ok (60 dialogs)
+[rd378g-teacher] batch 13 ok (66 dialogs)
+[rd378g-teacher] batch 14 skipped after 3 tries
+[rd378g-teacher] batch 15 ok (72 dialogs)
+[rd378g-teacher] batch 16 ok (78 dialogs)
+[rd378g-teacher] batch 17 ok (84 dialogs)
+[rd378g-teacher] batch 18 skipped after 3 tries
+[rd378g-teacher] batch 19 skipped after 3 tries
+[rd378g-teacher] batch 20 skipped after 3 tries
+[rd378g-teacher] batch 21 ok (90 dialogs)
+[rd378g-teacher] batch 22 skipped after 3 tries
+[rd378g-teacher] batch 23 skipped after 3 tries
+[rd378g-teacher] batch 24 skipped after 3 tries
+[rd378g-teacher] batch 25 skipped after 3 tries
+[rd378g-teacher] batch 26 skipped after 3 tries
+---
+ALIVE
+[0m
+[0m$ [0msleep 115; grep -E "batch [0-9]+ (ok|skipped)" write.log | tail -4; tail -2 write.log; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 24 skipped after 3 tries
+[rd378g-teacher] batch 25 skipped after 3 tries
+[rd378g-teacher] batch 26 skipped after 3 tries
+[rd378g-teacher] batch 27 skipped after 3 tries
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+ALIVE
+[0m
+[0m$ [0msleep 115; grep -E "batch [0-9]+ (ok|skipped)" write.log | tail -3; tail -2 write.log; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 26 skipped after 3 tries
+[rd378g-teacher] batch 27 skipped after 3 tries
+[rd378g-teacher] batch 28 skipped after 3 tries
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+ALIVE
+[0m
+[0m$ [0msleep 115; grep -E "batch [0-9]+ (ok|skipped)" write.log | tail -3; tail -2 write.log; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 28 skipped after 3 tries
+[rd378g-teacher] batch 29 skipped after 3 tries
+[rd378g-teacher] batch 30 skipped after 3 tries
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+ALIVE
+[0m
+[0m$ [0msleep 115; grep -E "batch [0-9]+ (ok|skipped)" write.log | tail -3; tail -2 write.log; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 29 skipped after 3 tries
+[rd378g-teacher] batch 30 skipped after 3 tries
+[rd378g-teacher] batch 31 skipped after 3 tries
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+ALIVE
+[0m
+[0m$ [0msleep 115; grep -E "batch [0-9]+ (ok|skipped)" write.log | tail -3; tail -2 write.log; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 30 skipped after 3 tries
+[rd378g-teacher] batch 31 skipped after 3 tries
+[rd378g-teacher] batch 32 skipped after 3 tries
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+ALIVE
+[0m
+[0m$ [0msleep 115; grep -E "batch [0-9]+ (ok|skipped)" write.log | tail -3; tail -2 write.log; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 31 skipped after 3 tries
+[rd378g-teacher] batch 32 skipped after 3 tries
+[rd378g-teacher] batch 33 skipped after 3 tries
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+ALIVE
+[0m
+[0m$ [0msleep 115; grep -E "batch [0-9]+ (ok|skipped)" write.log | tail -3; tail -3 write.log; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 33 skipped after 3 tries
+[rd378g-teacher] batch 34 skipped after 3 tries
+[rd378g-teacher] batch 35 skipped after 3 tries
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+ALIVE
+[0m
+[0m$ [0msleep 115; grep -E "batch [0-9]+ (ok|skipped)" write.log | tail -3; tail -3 write.log; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 34 skipped after 3 tries
+[rd378g-teacher] batch 35 skipped after 3 tries
+[rd378g-teacher] batch 36 skipped after 3 tries
+[rd378g-teacher] batch 37 try 1: not 6 dialogs
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+ALIVE
+[0m
+[0m$ [0msleep 115; grep -E "batch [0-9]+ (ok|skipped)" write.log | tail -3; tail -3 write.log; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 35 skipped after 3 tries
+[rd378g-teacher] batch 36 skipped after 3 tries
+[rd378g-teacher] batch 37 skipped after 3 tries
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+ALIVE
+[0m
+[0m$ [0msleep 115; grep -E "batch [0-9]+ (ok|skipped)" write.log | tail -3; tail -5 write.log; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 36 skipped after 3 tries
+[rd378g-teacher] batch 37 skipped after 3 tries
+[rd378g-teacher] batch 38 skipped after 3 tries
+[rd378g-teacher] batch 39 try 2: not 6 dialogs
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+ALIVE
+[0m
+[0m$ [0msleep 115; grep -E "batch 39|dialogs.*batches_skipped" write.log | tail -5; tail -6 write.log; ps -p 69498 > /dev/null 2>&1 && echo ALIVE || echo DONE
+[rd378g-teacher] batch 39 try 1: not 6 dialogs
+[rd378g-teacher] batch 39 try 2: not 6 dialogs
+[rd378g-teacher] batch 39 try 3: not 6 dialogs
+[rd378g-teacher] batch 39 skipped after 3 tries
+{"dialogs": 90, "batches_skipped": 25, "turns": 897, "notes": 767, "empty_turns": 284, "calls": 106, "cost_usd": 0.1128}
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+[rd378g-teacher] batch 39 try 3: not 6 dialogs
+[rd378g-teacher] batch 39 skipped after 3 tries
+{"dialogs": 90, "batches_skipped": 25, "turns": 897, "notes": 767, "empty_turns": 284, "calls": 106, "cost_usd": 0.1128}
+DONE
+[0m
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_rd378k_teacher.py[90m [offset=100][0m
+[0m
+[0m$ [0mls -la artifacts/claude-rd378g-20260926/glm/ 2>&1; ps aux | grep "rd378k_teacher3" | grep -v grep | wc -l; date -u +%FT%TZ; date +%s > GRADE_START_EPOCH.txt; uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378g_teacher.py split --file artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --parts 4 2>&1 | tee split.log
+total 472
+drwxr-xr-x  3 ben-hannan  staff      96 Sep 26 15:22 .
+drwxr-xr-x  5 ben-hannan  staff     160 Sep 26 13:04 ..
+-rw-r--r--  1 ben-hannan  staff  241293 Sep 26 15:22 notes_w1.jsonl
+       0
+2026-09-26T19:24:56Z
+{"lines": 90, "parts": [23, 23, 22, 22]}
+[0m
+[0m$ [0mfor i in 0 1 2 3; do nohup uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378k_teacher.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.$i --out artifacts/claude-rd378g-20260926/glm/lab$i > lab$i.log 2>&1 & echo "lab$i PID:$!"; done; sleep 5; tail -2 lab0.log lab1.log lab2.log lab3.log 2>&1
+lab0 PID:8867
+lab1 PID:8868
+lab2 PID:8869
+lab3 PID:8870
+==> lab0.log <==
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+
+==> lab1.log <==
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+
+==> lab2.log <==
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+
+==> lab3.log <==
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[0m
+[0m$ [0msleep 115; grep -c " ok$" lab0.log lab1.log lab2.log lab3.log 2>&1; grep -c "unparsed" lab0.log lab1.log lab2.log lab3.log 2>&1; tail -1 lab0.log lab1.log lab2.log lab3.log 2>&1
+lab0.log:0
+lab1.log:0
+lab2.log:0
+lab3.log:0
+lab0.log:1
+lab1.log:1
+lab2.log:1
+lab3.log:1
+==> lab0.log <==
+[rd378k-teacher] try 1 failed: HTTPError HTTP Error 402: Payment Required
+
+==> lab1.log <==
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+
+==> lab2.log <==
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+
+==> lab3.log <==
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+[0m
+[0m$ [0msleep 115; grep -E " (ok|unparsed)$" lab0.log lab1.log lab2.log lab3.log 2>&1 | head -20; echo ---; for p in 8867 8868 8869 8870; do ps -p $p > /dev/null 2>&1 && echo "$p ALIVE" || echo "$p DONE"; done
+lab0.log:[rd378k-teacher] kg-001 unparsed
+lab0.log:[rd378k-teacher] kg-005 unparsed
+lab1.log:[rd378k-teacher] kg-002 unparsed
+lab1.log:[rd378k-teacher] kg-006 unparsed
+lab2.log:[rd378k-teacher] kg-003 unparsed
+lab2.log:[rd378k-teacher] kg-007 unparsed
+lab3.log:[rd378k-teacher] kg-004 unparsed
+lab3.log:[rd378k-teacher] kg-008 unparsed
+---
+8867 ALIVE
+8868 ALIVE
+8869 ALIVE
+8870 ALIVE
+[0m
+[0m$ [0msleep 115; echo "== ok counts =="; grep -h -c " ok$" lab0.log lab1.log lab2.log lab3.log 2>&1; echo "== unparsed counts =="; grep -h -c "unparsed$" lab0.log lab1.log lab2.log lab3.log 2>&1; echo "== 402 in last 2 min =="; tail -4 lab0.log | grep -c 402
+== ok counts ==
+0
+0
+0
+0
+== unparsed counts ==
+3
+3
+3
+3
+== 402 in last 2 min ==
+4
+[0m
+[0m$ [0msleep 115; echo "== ok =="; grep -h -c " ok$" lab0.log lab1.log lab2.log lab3.log; echo "== unparsed =="; grep -h -c "unparsed$" lab0.log lab1.log lab2.log lab3.log; tail -2 lab0.log
+== ok ==
+0
+0
+0
+0
+== unparsed ==
+5
+5
+5
+5
+[rd378k-teacher] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+[0m
+[0m$ [0mps aux | grep -E "teacher[0-9]?\.py|rd378" | grep -v grep | grep -v "opencode run" | head; echo ---; sleep 100; echo "== ok =="; grep -h -c " ok$" lab0.log lab1.log lab2.log lab3.log; echo "== unparsed =="; grep -h -c "unparsed$" lab0.log lab1.log lab2.log lab3.log
+ben-hannan        8874   0.0  0.1 488903968  24224   ??  SN    3:24PM   0:00.37 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_rd378k_teacher.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.2 --out artifacts/claude-rd378g-20260926/glm/lab2
+ben-hannan        8875   0.0  0.1 488900048  23920   ??  SN    3:24PM   0:00.36 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_rd378k_teacher.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.3 --out artifacts/claude-rd378g-20260926/glm/lab3
+ben-hannan        8873   0.0  0.1 488904256  23856   ??  SN    3:24PM   0:00.36 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_rd378k_teacher.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.1 --out artifacts/claude-rd378g-20260926/glm/lab1
+ben-hannan        8872   0.0  0.1 488896512  23728   ??  SN    3:24PM   0:00.36 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_rd378k_teacher.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.0 --out artifacts/claude-rd378g-20260926/glm/lab0
+ben-hannan        8869   0.0  0.0 463660224  11808   ??  SN    3:24PM   0:00.01 uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378k_teacher.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.2 --out artifacts/claude-rd378g-20260926/glm/lab2
+ben-hannan        8870   0.0  0.0 463648960  11808   ??  SN    3:24PM   0:00.02 uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378k_teacher.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.3 --out artifacts/claude-rd378g-20260926/glm/lab3
+ben-hannan        8867   0.0  0.0 463660224  11808   ??  SN    3:24PM   0:00.02 uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378k_teacher.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.0 --out artifacts/claude-rd378g-20260926/glm/lab0
+ben-hannan        8868   0.0  0.0 463638720  11808   ??  SN    3:24PM   0:00.02 uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378k_teacher.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.1 --out artifacts/claude-rd378g-20260926/glm/lab1
+ben-hannan       39327   0.0  0.0 488781888   1168   ??  SN    1:03PM   0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rd378g-teacher.md
+---
+== ok ==
+0
+0
+0
+0
+== unparsed ==
+6
+6
+6
+6
+[0m
+[0m$ [0mkill 8867 8868 8869 8870 2>&1; sleep 3; for p in 8867 8868 8869 8870; do ps -p $p > /dev/null 2>&1 && echo "$p STILL-ALIVE" || echo "$p DEAD"; done; echo "WRITE_START_UTC=$(cat WRITE_START_UTC.txt) WRITE_START_EPOCH=$(cat WRITE_START_EPOCH.txt)"; echo "GRADE_START_EPOCH=$(cat GRADE_START_EPOCH.txt)"; date -u +%FT%TZ; date +%s
+8867 DEAD
+8868 DEAD
+8869 DEAD
+8870 DEAD
+WRITE_START_UTC=2026-09-26T18:04:32Z WRITE_START_EPOCH=1790445872
+GRADE_START_EPOCH=1790450696
+2026-09-26T19:35:16Z
+1790451316
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_rd378g_teacher.py selftest > selftest-g.log 2>&1; uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378k_teacher.py selftest > selftest-k.log 2>&1; cat selftest-g.log selftest-k.log; echo ---; uv run --offline --no-project --python 3.12 python -B -c "
+import json
+lines=[json.loads(x) for x in open('artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl',encoding='utf-8') if x.strip()]
+print('dialogs:',len(lines))
+print('ids:',lines[0]['dialog'],'..',lines[-1]['dialog'])
+tn=sum(1 for d in lines for t in d['turns'] if 'notes' in t)
+print('turns_with_notes_key:',tn)
+nn=sum(len(t['notes']) for d in lines for t in d['turns'] if 'notes' in t)
+print('notes:',nn)
+print('empty:',tn-sum(1 for d in lines for t in d['turns'] if 'notes' in t and t['notes']))
+kinds={}
+for d in lines: kinds[d['kind']]=kinds.get(d['kind'],0)+1
+print('kinds:',kinds)
+"; ls -la --time-style=full-iso artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl 2>&1 || stat -f "%Sm %N" artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl
+rd378g teacher selftest 1/1 ok
+{"compared": 4, "teacher_ok": 2, "judges_ok": 2, "both_ok": 1, "agree": 2, "kappa": 0.0, "judges_unsupported_teacher_ok": 1, "judges_unsupported": 2, "passes_label_rule": false}
+rd378k teacher selftest 3/3 ok
+---
+dialogs: 90
+ids: kg-001 .. kg-090
+turns_with_notes_key: 897
+notes: 767
+empty: 284
+kinds: {'chat': 45, 'overheard': 45}
+ls: unrecognized option `--time-style=full-iso'
+usage: ls [-@ABCFGHILOPRSTUWXabcdefghiklmnopqrstuvwxy1%,] [--color=when] [-D format] [file ...]
+Sep 26 15:22:59 2026 artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl
+[0m
+[0m$ [0mls -la --time-style=long-iso artifacts/claude-rd378g-20260926/glm/ 2>/dev/null || ls -lT artifacts/claude-rd378g-20260926/glm/; echo ---; grep -c "402" lab0.log lab1.log lab2.log lab3.log; grep -h -c "unparsed$" lab0.log lab1.log lab2.log lab3.log; grep -h -c " ok$" lab0.log lab1.log lab2.log lab3.log; tail -1 lab0.log lab1.log lab2.log lab3.log
+total 952
+drwxr-xr-x  2 ben-hannan  staff      64 Sep 26 15:25:00 2026 lab0
+drwxr-xr-x  2 ben-hannan  staff      64 Sep 26 15:25:00 2026 lab1
+drwxr-xr-x  2 ben-hannan  staff      64 Sep 26 15:25:00 2026 lab2
+drwxr-xr-x  2 ben-hannan  staff      64 Sep 26 15:25:00 2026 lab3
+-rw-r--r--  1 ben-hannan  staff  241293 Sep 26 15:22:59 2026 notes_w1.jsonl
+-rw-r--r--  1 ben-hannan  staff   60871 Sep 26 15:24:57 2026 notes_w1.jsonl.0
+-rw-r--r--  1 ben-hannan  staff   64366 Sep 26 15:24:57 2026 notes_w1.jsonl.1
+-rw-r--r--  1 ben-hannan  staff   56668 Sep 26 15:24:57 2026 notes_w1.jsonl.2
+-rw-r--r--  1 ben-hannan  staff   59388 Sep 26 15:24:57 2026 notes_w1.jsonl.3
+---
+lab0.log:80
+lab1.log:80
+lab2.log:80
+lab3.log:80
+6
+6
+6
+6
+0
+0
+0
+0
+==> lab0.log <==
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+
+==> lab1.log <==
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+
+==> lab2.log <==
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+
+==> lab3.log <==
+[rd378k-teacher] try 4 failed: HTTPError HTTP Error 402: Payment Required
+[0m
+[0m$ [0m{ echo "===== STEP 3a: claude_rd378g_teacher.py selftest ====="; cat selftest-g.log; echo "===== STEP 3b: claude_rd378k_teacher.py selftest ====="; cat selftest-k.log; echo "===== STEP 4: claude_rd378g_teacher.py writenotes --out artifacts/claude-rd378g-20260926/glm ====="; cat write.log; echo "===== STEP 5a: split ====="; cat split.log; echo "===== STEP 5b: label part 0 ====="; cat lab0.log; echo "===== STEP 5b: label part 1 ====="; cat lab1.log; echo "===== STEP 5b: label part 2 ====="; cat lab2.log; echo "===== STEP 5b: label part 3 ====="; cat lab3.log; } > teacher-log.txt 2>&1; wc -l teacher-log.txt; grep -c "sk-or" teacher-log.txt || echo "SK-OR-COUNT:0"; grep -c "402" teacher-log.txt
+723 teacher-log.txt
+0
+SK-OR-COUNT:0
+555
+[0m
+[0m$ [0mgit status --short 2>&1 | head; echo ---; ls artifacts/claude-rd378g-20260926/ 2>&1
+A  artifacts/claude-rsn358i2-20260926/RESULTS.md
+A  artifacts/claude-rsn358i2-20260926/SEAL-run.sha256.txt
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/loop-s1.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/loop-s2.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_summary.json
+---
+ls: artifacts/claude-rd378g-20260926/: No such file or directory
+[0m
+[0m$ [0mls -d artifacts 2>&1; mkdir -p artifacts/claude-rd378g-20260926/glm && echo MKDIR_OK
+artifacts
+MKDIR_OK
+[0m
+[0m$ [0mcp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl && cp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/teacher-log.txt artifacts/claude-rd378g-20260926/teacher-log.txt && wc -l artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl artifacts/claude-rd378g-20260926/teacher-log.txt && grep -c "sk-or" artifacts/claude-rd378g-20260926/teacher-log.txt || echo "WORKTREE-LOG-SK-OR:0"
+90 artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl
+     723 artifacts/claude-rd378g-20260926/teacher-log.txt
+     813 total
+0
+WORKTREE-LOG-SK-OR:0
+[0m
+[0m$ [0mls -la artifacts/claude-rd378g-20260926/glm/ artifacts/claude-rd378g-20260926/ 2>&1; git status --short artifacts/claude-rd378g-20260926/ 2>&1
+artifacts/claude-rd378g-20260926/:
+total 96
+drwxr-xr-x    4 ben-hannan  staff    128 Sep 26 15:36 .
+drwxr-xr-x@ 588 ben-hannan  staff  18816 Sep 26 15:36 ..
+drwxr-xr-x    3 ben-hannan  staff     96 Sep 26 15:36 glm
+-rw-r--r--    1 ben-hannan  staff  48823 Sep 26 15:36 teacher-log.txt
+
+artifacts/claude-rd378g-20260926/glm/:
+total 472
+drwxr-xr-x  3 ben-hannan  staff      96 Sep 26 15:36 .
+drwxr-xr-x  4 ben-hannan  staff     128 Sep 26 15:36 ..
+-rw-r--r--  1 ben-hannan  staff  241293 Sep 26 15:36 notes_w1.jsonl
+[0m
