@@ -43,8 +43,9 @@ is the first run with it.
 ## Panel (TEST-ONLY, never read by the builder)
 k1fpanel, artifacts/claude-k1fpanel-20260926/creative: 100 fresh items written blind by a separate agent from the same
 spec as k1cpanel and crepanel02d (35 idea with 1 lead-in turn, 35 idea with none, 30 uses_facts with 1, 2 or 3 teach
-turns), audited blind by another agent against the DEV set, k1apanel, k1cpanel and crepanel02d (near-copies
-reworded). Fresh because LFM was chosen from k1c's results on k1cpanel and k1apanel. Never run before.
+turns), audited blind by another agent against the DEV set, k1apanel, k1cpanel and crepanel02d (63 items reworded as
+near-copies or for a reused name; creative/AUDIT.md, counts only). Sealed: artifacts/claude-k1fpanel-20260926/
+SEAL.sha256.txt. Fresh because LFM was chosen from k1c's results on k1cpanel and k1apanel. Never run before.
 
 ## DEV gate (before any panel run; readable DEV data, artifacts/claude-k1a-dev-20260926, 40 chats)
 F runs once on the 40 DEV chats. It must exit 0 with 40 item lines, print the V1 line, and have at most 2 fallback
