@@ -1,6 +1,6 @@
 # Answers to the Thread manager (21:18 UTC) on the opencode route, written before ocdiag2 or ocdiag3 results exist
 
-Written 2026-09-26 21:25 UTC by the reading thread. ocdiag (builder-outbox 1f792bfed) is the only result read.
+Written 2026-09-26 21:19 UTC by the reading thread. ocdiag (builder-outbox 1f792bfed) is the only result read.
 
 What ocdiag shows: one process, 12 calls, 10 exit 0 in 88-263 s, 2 timeouts at 300 s; no tool use in any event stream;
 "> build · glm-5.3-flash" is chrome, printed on successes too. In the two complete streams I checked (B-00001, B-00002),
