@@ -56,3 +56,6 @@ about the user?
 
 ## Predictions (before the run)
 - P405b.1: VB and R PASS, 60%. P405b.2: Q3 PASS, 35%.
+- Revised before sealing (22:37 UTC, date -u), after mu-405's report-only arm H ended: with both sessions as real
+  chat history the plain 1B answered 1 of 60 asks, so the 1B may not recall in plain chat wherever the words sit.
+  P405b.1 lowered to 35%; P405b.2 unchanged. The marks do not change.
