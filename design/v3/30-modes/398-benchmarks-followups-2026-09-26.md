@@ -58,3 +58,18 @@ not an error. Only the first two are out of date, and both have been fixed since
 - An attributed-quote fallback until a support check passes: "On <date>, <speaker> said: '<exact line>'", given
   instead of an unsupported paraphrase. It needs its own test, with marks fixed before any run: unsupported
   personal answers must not rise, and useful answers must rise. It is registered separately from bm-398.
+
+## Queued after bm-397's FAIL (03:00 UTC): teach the answerer to answer short (bm-397's registered next step)
+bm-397 failed (+0.28 F1; the prompted 1B handed back its draft unchanged 1,019 of 1,533 times). Its plan, registered
+before the run, sends the next dollar to evidence-conditioned training, not to more prompt-shortening.
+- One change: a LoRA on the plain MiniCPM5-1B, trained to answer a question from given chat lines in the fewest
+  words that carry the answer. Training data comes only from non-benchmark conversations (the project's own
+  fictional banks, or code-made from templates), with short answers taken from code-made labels or the GLM teacher.
+  Never Claude-written answers, and never LoCoMo, LongMemEval, GSM8K or MMLU items.
+- Marks, fixed before any run:
+  - LoCoMo cat 1-4 F1 of the trained 1B, whole chat, ≥ T + 5.0 (32.50), with the conversation-level interval above 0;
+  - GSM8K and MMLU within T − 3 points (bm-390's M4);
+  - blind-judged correctness on 300 sampled LoCoMo questions no lower than T's (the same A–E labels as bm-397 F2);
+  - it must not become an "I don't know" machine: abstentions on cat 1-4 ≤ T's + 20.
+- Proved wrong if F1 gains under +2: then training for brevity does not reach the content either.
+- Needs a GPU (BensPC or a rental). Not before Ben's OK on money.
