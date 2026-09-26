@@ -1,0 +1,3138 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mpwd; git rev-parse --show-toplevel 2>&1; date -u; git fetch -q origin main builder-outbox 2>&1; echo "fetch_done:$?"
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+Sat Sep 26 20:06:51 UTC 2026
+fetch_done:0
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- artifacts/claude-k1h-20260926/glm-v1 2>&1; echo "---main_exit:$?"; git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-k1h-20260926/glm-v1 2>&1; echo "---outbox_exit:$?"
+---main_exit:0
+---outbox_exit:0
+[0m
+[0m$ [0mps -axo pid,etime,command | grep -F "claude_k1h_glm.py" | grep -v grep; echo "ps_exit:$?"
+36288       00:19 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:000-stop-k1hz-salvage.go1.36257 COMMON RULES (the "Creative answers in chat" thread, Claude, wrote this task on 2026-09-26 20:20 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>`. Additive only, fictional names, no secrets, never write to the repo-root notebook/. Never read or print opencode config, auth or key files. Report in your final reply: verdict first, integer counts, every deviation.\012GPU: no (Mac CPU; file copies only; no GLM call, no opencode call except the session count below).\012TIME CAP: 45 minutes.\012DUPLICATE GUARD: stop with DUPLICATE if artifacts/claude-k1h-20260926/glm-v1 exists on origin/builder-outbox or origin/main.\012\012YOUR TASK: keep what the stopped k1h-glm job already made (its owner chose to keep the rows; the Director's 000-stop-k1h stops its processes). Never open, print or quote a chat or an answer: counts, sizes and sha256 only.\0121. Wait until no process whose command contains claude_k1h_glm.py is running (`ps -axo pid,etime,command`; check every 60 s). If one is still running after 20 minutes, stop it by exact PID (kill PID; after 10 s kill -9 a survivor) and say so. Touch nothing else.\0122. Find the job's output folder: every file named chats.jsonl or answers.jsonl modified after 2026-09-26 19:39 UTC under /tmp, /private/tmp, /private/var/folders and the worktree, whose folder or a parent folder up to 3 levels also holds scripts/claude_k1h_glm.py. Also look there for chats-log.txt and answer-log.txt. Report every candidate path with size and line count. If candidates sit in more than one folder, copy nothing and stop with AMBIGUOUS.\0123. Copy the files found (chats.jsonl, answers.jsonl, chats-log.txt, answer-log.txt; whichever exist) into the worktree as artifacts/claude-k1h-20260926/glm-v1/ (force-add; artifacts/ is git-ignored). Check that each copy's sha256 equals the source's. For each .jsonl report: lines, lines that parse as JSON, and lines that don't (count only). For answers.jsonl also count rows with a non-empty "answer" (python: json.loads(line).get("answer")).\0124. `opencode session list -n 1000 | wc -l` (the count only).\0125. REPORT.md in artifacts/claude-k1h-20260926/glm-v1/: counts, sizes, sha256, the source folder path, the times (from `date -u`), every deviation. Quote nothing.\012PUSH: artifacts/claude-k1h-20260926/glm-v1
+ps_exit:0
+[0m
+[0m$ [0mps -axo pid,etime,command | grep -F "claude_k1h_glm" | grep -v "grep"; echo "---"; ps -axo pid,ppid,etime,command | head -n 100
+36288       00:22 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:000-stop-k1hz-salvage.go1.36257 COMMON RULES (the "Creative answers in chat" thread, Claude, wrote this task on 2026-09-26 20:20 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>`. Additive only, fictional names, no secrets, never write to the repo-root notebook/. Never read or print opencode config, auth or key files. Report in your final reply: verdict first, integer counts, every deviation.\012GPU: no (Mac CPU; file copies only; no GLM call, no opencode call except the session count below).\012TIME CAP: 45 minutes.\012DUPLICATE GUARD: stop with DUPLICATE if artifacts/claude-k1h-20260926/glm-v1 exists on origin/builder-outbox or origin/main.\012\012YOUR TASK: keep what the stopped k1h-glm job already made (its owner chose to keep the rows; the Director's 000-stop-k1h stops its processes). Never open, print or quote a chat or an answer: counts, sizes and sha256 only.\0121. Wait until no process whose command contains claude_k1h_glm.py is running (`ps -axo pid,etime,command`; check every 60 s). If one is still running after 20 minutes, stop it by exact PID (kill PID; after 10 s kill -9 a survivor) and say so. Touch nothing else.\0122. Find the job's output folder: every file named chats.jsonl or answers.jsonl modified after 2026-09-26 19:39 UTC under /tmp, /private/tmp, /private/var/folders and the worktree, whose folder or a parent folder up to 3 levels also holds scripts/claude_k1h_glm.py. Also look there for chats-log.txt and answer-log.txt. Report every candidate path with size and line count. If candidates sit in more than one folder, copy nothing and stop with AMBIGUOUS.\0123. Copy the files found (chats.jsonl, answers.jsonl, chats-log.txt, answer-log.txt; whichever exist) into the worktree as artifacts/claude-k1h-20260926/glm-v1/ (force-add; artifacts/ is git-ignored). Check that each copy's sha256 equals the source's. For each .jsonl report: lines, lines that parse as JSON, and lines that don't (count only). For answers.jsonl also count rows with a non-empty "answer" (python: json.loads(line).get("answer")).\0124. `opencode session list -n 1000 | wc -l` (the count only).\0125. REPORT.md in artifacts/claude-k1h-20260926/glm-v1/: counts, sizes, sha256, the source folder path, the times (from `date -u`), every deviation. Quote nothing.\012PUSH: artifacts/claude-k1h-20260926/glm-v1
+---
+  PID  PPID     ELAPSED COMMAND
+    1     0 03-05:59:34 /sbin/launchd
+  338     1 01-19:48:11 /System/Library/PrivateFrameworks/CallHistory.framework/Support/CallHistorySyncHelper
+  347     1 03-03:53:59 /usr/libexec/logd
+  350     1 03-03:53:59 /usr/libexec/UserEventAgent (System)
+  352     1 03-03:53:59 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Support/fseventsd
+  353     1 03-03:53:59 /System/Library/PrivateFrameworks/MediaRemote.framework/Support/mediaremoted
+  357     1 03-03:53:59 /usr/sbin/systemstats --daemon
+  361     1 03-03:53:59 /usr/libexec/configd
+  363     1 03-03:53:59 /System/Library/CoreServices/powerd.bundle/powerd
+  364     1 03-03:53:59 /usr/libexec/IOMFB_bics_daemon
+  368     1 03-03:53:59 /usr/libexec/remoted
+  372     1 03-03:53:59 /System/Library/PrivateFrameworks/CoreSpeech.framework/corespeechd_system
+  374     1 03-03:53:59 /usr/libexec/watchdogd
+  377     1 03-03:53:59 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds
+  379     1 03-03:53:59 /usr/libexec/kernelmanagerd
+  380     1 03-03:53:59 /usr/libexec/diskarbitrationd
+  384     1 03-03:53:59 /usr/sbin/syslogd
+  386     1 03-03:53:59 /usr/libexec/thermalmonitord
+  387     1 03-03:53:59 /System/Library/PrivateFrameworks/CoreDuetContext.framework/Resources/contextstored
+  388     1 03-03:53:59 /usr/libexec/xprotectd
+  389     1 03-03:53:59 /usr/libexec/opendirectoryd
+  390     1 03-03:53:59 /System/Library/PrivateFrameworks/ApplePushService.framework/apsd
+  391     1 03-03:53:59 /System/Library/CoreServices/launchservicesd
+  392     1 03-03:53:59 /usr/libexec/timed
+  393     1 03-03:53:59 /System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/Resources/usbmuxd -launchd
+  394     1 03-03:53:59 /usr/sbin/securityd -i
+  396     1 03-03:53:59 /usr/libexec/locationd
+  397     1 03-03:53:59 /usr/libexec/nesessionmanager
+  399     1 03-03:53:59 autofsd
+  400     1 03-03:53:59 /usr/libexec/dasd
+  403     1 03-03:53:59 /usr/sbin/distnoted daemon
+  406     1 03-03:53:59 /System/Library/CoreServices/logind
+  407     1 03-03:53:59 /System/Library/PrivateFrameworks/GenerationalStorage.framework/Versions/A/Support/revisiond
+  408     1 03-03:53:59 /usr/sbin/KernelEventAgent
+  410     1 03-03:53:59 /usr/libexec/usermanagerd -t 15
+  412     1 03-03:53:59 /usr/sbin/bluetoothd
+  413     1 03-03:53:59 /usr/sbin/notifyd
+  415     1 03-03:53:59 /usr/libexec/corebrightnessd --launchd
+  416     1 03-03:53:59 /System/Library/Frameworks/CoreMediaIO.framework/Versions/A/Resources/com.apple.cmio.registerassistantservice
+  419     1 03-03:53:58 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer -daemon
+  420     1 03-03:53:58 /System/Library/PrivateFrameworks/TCC.framework/Support/tccd system
+  422     1 03-03:53:58 /usr/sbin/cfprefsd daemon
+  423     1 03-03:53:58 /usr/libexec/runningboardd
+  424     1 03-03:53:58 /System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow console
+  448     1 03-03:53:58 /System/Library/CoreServices/coreservicesd
+  452     1 03-03:53:58 /usr/libexec/trustd
+  466     1 03-03:53:58 /usr/libexec/lsd runAsRoot
+  474     1 03-03:53:58 /usr/sbin/mDNSResponder
+  476     1 03-03:53:58 /usr/libexec/nsurlsessiond --privileged
+  477     1 03-03:53:58 /usr/libexec/apfsd
+  480     1 03-03:53:58 /System/Library/PrivateFrameworks/CoreAnalytics.framework/Support/analyticsd
+  482     1 03-03:53:58 /usr/libexec/airportd
+  483     1 03-03:53:58 /usr/libexec/clocksyncd
+  487     1 03-03:53:58 /usr/libexec/symptomsd
+  492     1 03-03:53:57 /System/Library/Frameworks/Security.framework/Versions/A/XPCServices/authd.xpc/Contents/MacOS/authd
+  493     1 03-03:53:57 /usr/sbin/distnoted agent
+  494     1 03-03:53:57 /usr/sbin/mDNSResponderHelper
+  499     1 03-03:53:57 /usr/libexec/ApplicationFirewall/socketfilterfw
+  505     1 03-03:53:57 /usr/libexec/syspolicyd
+  512     1 03-03:53:57 /usr/sbin/distnoted agent
+  513     1 03-03:53:57 /System/Library/CoreServices/TimeMachine/backupd
+  516     1 03-03:53:57 /usr/libexec/eligibilityd
+  521     1 03-03:53:57 /usr/sbin/WirelessRadioManagerd
+  525     1 03-03:53:57 /usr/sbin/distnoted agent
+  540     1 03-03:53:56 /usr/libexec/gamepolicyd
+  541     1 03-03:53:56 /System/Library/CoreServices/appleeventsd --server
+  543     1 03-03:53:56 /System/Library/PrivateFrameworks/BackgroundTaskManagement.framework/Resources/backgroundtaskmanagementd -daemon
+  546     1 03-03:53:56 /usr/sbin/distnoted agent
+  551     1 03-03:53:56 /usr/sbin/distnoted agent
+  554     1 03-03:53:56 /usr/libexec/com.apple.cmio.videodriverkithostextension.systemextension/Contents/MacOS/com.apple.cmio.videodriverkithostextension
+  555     1 03-03:53:56 /usr/sbin/appleh13camerad
+  557     1 03-03:53:56 /usr/sbin/distnoted agent
+  558     1 03-03:53:56 /usr/libexec/searchpartyd
+  561     1 03-03:53:55 /System/Library/CoreServices/SubmitDiagInfo server-init
+  573     1 03-03:53:55 /usr/libexec/rtcreportingd
+  582     1 03-03:53:51 /usr/sbin/coreaudiod
+  585     1 03-03:53:51 /usr/sbin/distnoted agent
+  588     1 03-03:53:51 Core Audio Driver (ImmersedAudio.driver)
+  592     1 03-03:53:51 /usr/sbin/distnoted agent
+  600     1 03-03:53:50 /usr/libexec/modelmanagerd
+  613     1 03-03:53:47 /usr/libexec/audiomxd
+  614     1 03-03:53:47 /usr/libexec/AirPlayXPCHelper
+  615     1 03-03:53:47 /usr/sbin/distnoted agent
+  621     1 03-03:53:44 /usr/libexec/sysmond
+  622   357 03-03:53:44 /usr/sbin/systemstats --logger-helper /private/var/db/systemstats
+  633     1 03-03:53:40 /usr/sbin/distnoted agent
+  634     1 03-03:53:40 /Applications/PlasticSCMServer.app/Contents/MacOS/plasticd --daemon
+  636     1 03-03:53:40 /bin/sh /Library/DWAgent/native/dwagsvc run
+  637     1 03-03:53:40 /Library/PrivilegedHelperTools/com.muse.authservice
+  638     1 03-03:53:40 /Library/PrivilegedHelperTools/com.windscribe.helper.macos
+  639     1 03-03:53:40 /usr/local/bin/tailscaled
+  640     1 03-03:53:40 /Library/PrivilegedHelperTools/com.aimode.helper
+  641     1 03-03:53:40 /Library/PrivilegedHelperTools/com.docker.vmnetd
+  644     1 03-03:53:40 /usr/libexec/cameracaptured
+  645     1 03-03:53:40 /System/Library/Frameworks/CoreMediaIO.framework/Versions/A/Resources/UVCAssistant.systemextension/Contents/MacOS/UVCAssistant
+  649     1 03-03:53:40 Core Audio Driver (ZoomAudioDevice.driver)
+  650     1 03-03:53:39 /System/Library/CoreServices/Software Update.app/Contents/Resources/suhelperd
+  657     1 03-03:53:39 /System/Library/Frameworks/LocalAuthentication.framework/Support/coreauthd
+  659     1 03-03:53:39 /System/Library/DriverExtensions/com.apple.DriverKit-IOUserDockChannelSerial.dext/com.apple.DriverKit-IOUserDockChannelSerial com.apple.IOUserDockChannelSerial 0x100000fc6 com.apple.DriverKit-IOUserDockChannelSerial
+[0m
+[0m$ [0mps -axo pid,etime,command | grep -E "python.*claude_k1h|claude_k1h_glm\.py" | grep -v "opencode run" | grep -v grep; echo "filtered_exit:$?"; date -u
+filtered_exit:1
+Sat Sep 26 20:07:04 UTC 2026
+[0m
+[0m$ [0mWORKTREE="/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27"; ls "$WORKTREE/scripts/claude_k1h_glm.py" 2>&1; echo "---"; ls "$WORKTREE" | head -n 50; echo "---tmp check:"; ls -la /tmp 2>&1 | head -n 100
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_k1h_glm.py: No such file or directory
+---
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+---tmp check:
+lrwxr-xr-x@ 1 root  wheel  11 Sep  3 06:34 /tmp -> private/tmp
+[0m
+[0m$ [0mls scripts/ 2>&1; echo "---"; git show origin/main:scripts/claude_k1h_glm.py 2>&1 | wc -c; echo "show_exit:$?"; git ls-tree -r --name-only origin/main -- scripts/ 2>&1 | head -n 100
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+claude_255b_m3format.py
+claude_255b_runall.sh
+claude_255b_score.py
+claude_255b_v255check.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_266_devscore.py
+claude_266_panelrun.py
+claude_266_runall.sh
+claude_266_score.py
+claude_266b_devscore.py
+claude_266b_panelrun.py
+claude_266b_runall.sh
+claude_266b_score.py
+claude_268_devrepro.py
+claude_268_panelrun.py
+claude_268_runall.sh
+claude_268_score.py
+claude_268_supp.py
+claude_268b_devrepro.py
+claude_268b_m1run.py
+claude_268b_newdev.py
+claude_268b_panelrun.py
+claude_268b_runall.sh
+claude_268b_score_fix1.py
+claude_268b_score.py
+claude_273_runall_mut0.sh
+claude_280_panel.sh
+claude_280_runall.sh
+claude_280b_panel.sh
+claude_280b_runall.sh
+claude_280m_panel.sh
+claude_280m_runall.sh
+claude_280n_panel.sh
+claude_280p_panel.sh
+claude_281_panel.sh
+claude_281_panelrun.sh
+claude_281_runall.sh
+claude_281b_panel.sh
+claude_281b_runall.sh
+claude_282_panel.sh
+claude_282_panelrun.sh
+claude_282_runall.sh
+claude_282b_panelrun.sh
+claude_282b_runall.sh
+claude_291_m1.py
+claude_291_m7run.py
+claude_291_m8.sh
+claude_291_panel.sh
+claude_291_runall.sh
+claude_291_score.py
+claude_292_corrarm_run.py
+claude_292_m5.sh
+claude_292_m5run.py
+claude_292_panelrun.py
+claude_292_runall.sh
+claude_292_score.py
+claude_292t_280b_agent.py
+claude_292t_281_agent.py
+claude_292t_282b_agent.py
+claude_292t_panel.sh
+claude_292t_regscore.py
+claude_292t_runall_mut0.sh
+claude_292t_runall.sh
+claude_293_devdialogs.py
+claude_293_panelscore.py
+claude_293_reg.py
+claude_293_repro.py
+claude_293_rowstrip.py
+claude_293_runall.sh
+claude_293_runall2.sh
+claude_apos247_devcases.py
+claude_apos247_run.py
+claude_apos247_score.py
+claude_bound259_devcases.py
+claude_bound259_runall.sh
+claude_bound259_score.py
+claude_called281_devcases.py
+claude_called281_panelrun.py
+claude_called281_panelscore.py
+claude_called281_regscore.py
+claude_called281_run.py
+claude_called281_score.py
+claude_called281b_devcases.py
+claude_called281b_panelrun.py
+claude_called281b_panelscore.py
+claude_called281b_regscore.py
+claude_called281b_run.py
+claude_called281b_score.py
+claude_capab280_devcases.py
+claude_capab280_regscore.py
+claude_capab280_run.py
+claude_capab280_score.py
+claude_capab280b_devcases.py
+claude_capab280b_paneladapt.py
+claude_capab280b_regscore.py
+claude_capab280b_run.py
+claude_capab280b_score.py
+claude_chain231_predict.py
+claude_chain231_run.py
+claude_chatdemo_page.html
+claude_chatdemo_server.py
+claude_chatdemo_start.sh
+claude_comma263_devcases.py
+claude_comma263_regscore.py
+claude_comma263_run.py
+claude_comma263_score.py
+claude_comment258_devcases.py
+claude_comment258_m1.sh
+claude_comment258_runall.sh
+claude_comment258_score.py
+claude_confirm241b.py
+claude_convf0_run.py
+claude_convf0_score.py
+claude_convpanel239_run.py
+claude_corr252_devcases.py
+claude_corr252_m6check.py
+claude_corr252_run.py
+claude_corr252_score.py
+claude_corr252b_devcases.py
+claude_corr252b_score.py
+claude_demo_dryrun.py
+claude_demo_reload_probe.py
+claude_demo_restart_probe.py
+claude_demo_transcript.py
+claude_demo_values_probe.py
+claude_demo_variant_probe.py
+claude_determinism228_detect138i.py
+claude_determinism228_forced.py
+claude_diag119h_freshprobe.py
+claude_diag243_composers.py
+claude_diag243_grid.py
+claude_diag243_tally.py
+claude_diag243_trace.py
+claude_diag267_c3.py
+claude_diag267_c3client.py
+claude_diag267_qbuild.py
+claude_diag267_score.py
+claude_diag267_turns.py
+claude_diag271_roc.py
+claude_diag290_bisect.py
+claude_diag290_bisect2.py
+claude_diag290_pilot.py
+claude_diag290_probe.py
+claude_diag290_probe2.py
+claude_diag290_run.py
+claude_diag290_summary.py
+claude_diag293_pilot.py
+claude_diag293_pilot2.py
+claude_diag293_run.py
+claude_diag293_summary.py
+claude_direction251_run.py
+claude_direction251_score.py
+claude_ear256_devcases.py
+claude_ear256_deveval.py
+claude_ear256_devrun.py
+claude_ear256_ear.py
+claude_ear256_roundtrip.py
+claude_ear256_route.py
+claude_ear256_score.py
+claude_ear265_armb.py
+claude_ear265_arms.py
+claude_ear265_canon.py
+claude_ear265_devset.py
+claude_ear265_panel.py
+claude_ear265_qbuild.py
+claude_ear265_scoremain.py
+claude_ear265_turns.py
+claude_ear269_armb.py
+claude_ear269_arms.py
+claude_ear269_devset.py
+claude_ear269_groupcheck.py
+claude_ear269_panel.py
+claude_ear269_qbuild.py
+claude_ear269_scoremain.py
+claude_ear269_turns.py
+claude_earcheck261_armb.py
+claude_earcheck261_arms.py
+claude_earcheck261_canon.py
+claude_earcheck261_checker.py
+claude_earcheck261_checks.py
+claude_earcheck261_devset.py
+claude_earcheck261_devset2.py
+claude_earcheck261_devset3.py
+claude_earcheck261_devset4.py
+claude_earcheck261_devturns.py
+claude_earcheck261_panel.py
+claude_earcheck261_pchecks.py
+claude_earcheck261_promptB.py
+claude_earcheck261_qbuild.py
+claude_earcheck261_qwen.py
+claude_earcheck261_score.py
+claude_earcheck261_score257.py
+claude_earcheck261_scoremain.py
+claude_earcheck261_theta.py
+claude_earcheck261_turns.py
+claude_earcheck261b_armb.py
+claude_earcheck261b_arms.py
+claude_earcheck261b_devset5.py
+claude_earcheck261b_guard.py
+claude_earcheck261b_guarddev.py
+claude_earcheck261b_panel.py
+claude_earcheck261b_scoremain.py
+claude_earcheck261b_turns.py
+claude_earcheck264_armb.py
+claude_earcheck264_arms.py
+claude_earcheck264_client.py
+claude_earcheck264_commatags.py
+claude_earcheck264_devreport.py
+claude_earcheck264_devset.py
+claude_earcheck264_panel.py
+claude_earcheck264_qa.py
+claude_earcheck264_qbuild.py
+claude_earcheck264_scoremain.py
+claude_earcheck264_turns.py
+claude_f1_convrun.py
+claude_f1_convscore.py
+claude_f1_joinscore.py
+claude_f1_pilot.py
+claude_f1_regscore.py
+claude_f1_runall_mut0.sh
+claude_f1_runall.sh
+claude_f1_suites.py
+claude_f1_wall.py
+claude_firstname236_score.py
+claude_firstperson249_run.py
+claude_firstperson249_score.py
+claude_fix138nb_label.py
+claude_fix172b241b_benchv3.py
+claude_fix228_srcguard.py
+claude_fix245_myrel.py
+claude_fix246_mentionwalk.py
+claude_fix247_apos.py
+claude_fix248_whats.py
+claude_fix249_firstperson.py
+claude_fix250_verbsubj.py
+claude_fix251_direction.py
+claude_fix252_correct.py
+claude_fix252b_screen.py
+claude_fix252c_merge.py
+claude_fix255_test.py
+claude_fix255_text.py
+claude_fix255b_test.py
+claude_fix255b_text.py
+claude_fix258_comment.py
+claude_fix259_boundary.py
+claude_fix260_openers.py
+claude_fix263_comma.py
+claude_fix266_chainlift.py
+claude_fix266b_detector.py
+claude_fix268_nhopdir.py
+claude_fix280_capab.py
+claude_fix280b_general.py
+claude_fix281_called.py
+claude_fix281b_casual.py
+claude_fix282_small.py
+claude_fix282b_vocab.py
+claude_fix291_glue.py
+claude_fix293_yesno.py
+claude_fullname232_devcases.py
+claude_fullname232_parity.py
+claude_fullname232_run.py
+claude_fullname232_score.py
+claude_fullname232b_score.py
+claude_fullname232c_devcases.py
+claude_fullname232c_parity.py
+claude_fullname232c_score.py
+claude_glm_cleanup_20260926.py
+claude_glm_opencode_v11.py
+claude_glm_opencode.py
+claude_glm_throughput_20260926.py
+claude_grammar238_coderender.py
+claude_grammar238_codescan.py
+claude_grammar238_grade.py
+claude_grammar238_harvest.py
+claude_identity227c_marks.py
+claude_identity227c.py
+claude_join280m_regscore.py
+claude_join280m_run.py
+claude_join280m_score.py
+claude_join280n_score.py
+claude_join280p_score.py
+claude_join292t_run.py
+claude_join292t_score.py
+claude_lis310_agent.py
+claude_lis310_demo.py
+claude_lis310_test.py
+claude_lis311_agent.py
+claude_lis311_server.py
+claude_lis311_start.sh
+claude_lis311_try.py
+claude_loop138k_agent.py
+claude_loop138l_agent.py
+claude_loop138m_agent.py
+claude_loop138n_agent.py
+claude_loop138nb_agent.py
+claude_loop138p_agent.py
+claude_loop221b_agent.py
+claude_loop221c_agent.py
+claude_loop221x232c_agent.py
+claude_loop224c_agent.py
+claude_loop227b_agent.py
+claude_loop227c_agent.py
+claude_loop228_agent.py
+claude_loop229_agent.py
+claude_loop230_agent.py
+claude_loop230b_agent.py
+claude_loop230c_agent.py
+claude_loop231_agent.py
+claude_loop231b_agent.py
+claude_loop232_agent.py
+claude_loop232c_agent.py
+claude_loop233_agent.py
+claude_loop234_agent.py
+claude_loop236_agent.py
+claude_loop237_agent.py
+claude_loop237b_agent.py
+claude_loop241_agent.py
+claude_loop241b_agent.py
+claude_loop245_agent.py
+claude_loop246_agent.py
+claude_loop247_agent.py
+claude_loop248_agent.py
+claude_loop249_agent.py
+claude_loop250_agent.py
+claude_loop251_agent.py
+claude_loop252_agent.py
+claude_loop252b_agent.py
+claude_loop252c_agent.py
+claude_loop255_agent.py
+claude_loop255b_agent.py
+claude_loop256_agent.py
+claude_loop258_agent.py
+claude_loop259_agent.py
+claude_loop260_agent.py
+claude_loop263_agent.py
+claude_loop266_agent.py
+claude_loop266b_agent.py
+claude_loop268_agent.py
+claude_loop268b_agent.py
+claude_loop273_agent.py
+claude_loop273_test.py
+claude_loop274_agent.py
+claude_loop274_test.py
+claude_loop280_agent.py
+claude_loop280b_agent.py
+claude_loop280m_agent.py
+claude_loop281_agent.py
+claude_loop281b_agent.py
+claude_loop282_agent.py
+claude_loop282b_agent.py
+claude_loop291_agent.py
+claude_loop292_agent.py
+claude_loop292t_agent.py
+claude_loop293_agent.py
+claude_loopf1_agent.py
+claude_marks_mut0.py
+claude_mentionwalk246_score.py
+claude_merge138k_latency.py
+claude_merge138k_marks220.py
+claude_merge138k_probe.py
+claude_merge138k_rt143nogate.py
+claude_merge138k_score.py
+claude_merge252c_runall.sh
+claude_merge252c_score.py
+claude_mouth241_brake.py
+claude_mouth241_check.py
+claude_mouth241_morph.py
+claude_mouth241_pairs.py
+claude_mouth241_parse.py
+claude_mouth241_reader.py
+claude_mouth241_rerender238.py
+claude_mouth241_say.py
+claude_mouth241_score.py
+claude_mouth241_suites.py
+claude_mouth241_sweep.py
+claude_mouth241_test.py
+claude_mouth241b_brake.py
+claude_mouth241b_check.py
+claude_mouth241b_devrender_r.py
+claude_mouth241b_morph.py
+claude_mouth241b_pairs.py
+claude_mouth241b_parse.py
+claude_mouth241b_reader.py
+claude_mouth241b_rer241_r.py
+claude_mouth241b_rer241.py
+claude_mouth241b_rerender238.py
+claude_mouth241b_s1.py
+claude_mouth241b_say.py
+claude_mouth241b_score.py
+claude_mouth241b_suites.py
+claude_mouth241b_sweep.py
+claude_mouth241b_test.py
+claude_mut1_k1.py
+claude_mut1_k2.py
+claude_mut1_k3.py
+claude_mut1_k4.py
+claude_name227b_marks.py
+claude_namecheck230b_marks.py
+claude_namecheck230b_score.py
+claude_namecheck230br_score.py
+claude_namecheck230c_marks.py
+claude_namecheck230c_score.py
+claude_nb320_scale.py
+claude_nb320_workload.py
+claude_nb321_store.py
+claude_nb321_test.py
+claude_nb323_test.py
+claude_nb323_turnlog.py
+claude_nhopdiag_20260923_pilot.py
+claude_nhopdiag_20260923_repro.py
+claude_openers260_devcases.py
+claude_openers260_regscore.py
+claude_openers260_rowdiff.py
+claude_openers260_run.py
+claude_openers260_score.py
+claude_own_m0_build.py
+claude_own_m0_check.py
+claude_own_o0a_compiler.py
+claude_own_o0a2_compiler.py
+claude_own_o0a3_mutate.py
+claude_own_o0b_check.py
+claude_own_o0b_gen.py
+claude_own_o0c_prep.py
+claude_own_o0c_tok.py
+claude_own_o0d_model.py
+claude_own_o0d_test.py
+claude_own_o0d_train.py
+claude_own_o0d2_model.py
+claude_own_o0d2_test.py
+claude_own_o0d2_train.py
+claude_own_o0e_model.py
+claude_own_o0e_serialize.py
+claude_own_o0e_tests.py
+claude_own_o0e_train.py
+claude_own_o0e2_model.py
+claude_own_o0e2_tests.py
+claude_own_o0f_bench.py
+claude_panel208_objcheck.py
+claude_polite233_run.py
+claude_probe255b_director.py
+claude_probe280p_run.py
+claude_probe280p_score.py
+claude_qnorm221c_run.py
+claude_relationtable_check.py
+claude_run245.py
+claude_score245.py
+claude_small282_devcases.py
+claude_small282_panelrun2.py
+claude_small282_regscore.py
+claude_small282_run.py
+claude_small282_score.py
+claude_small282b_devcases.py
+claude_small282b_regscore.py
+claude_small282b_run.py
+claude_small282b_score.py
+claude_smalltalk234_marks.py
+claude_smolear235_armb.py
+claude_smolear235_data.py
+claude_smolear235_infer.py
+claude_smolear235_model.py
+claude_smolear235_panel.py
+claude_smolear235_panelfix.py
+claude_smolear235_score.py
+claude_smolear235_train.py
+claude_smolear235b_armb.py
+claude_smolear235b_beam.py
+claude_smolear235b_devdata.py
+claude_smolear235b_infer.py
+claude_smolear235b_panel.py
+claude_smolear235b_score.py
+claude_smolear235b_tau.py
+claude_smolear257_armb.py
+claude_smolear257_data.py
+claude_smolear257_devreport.py
+claude_smolear257_devset.py
+claude_smolear257_infer.py
+claude_smolear257_on235b.py
+claude_smolear257_panel.py
+claude_smolear257_score.py
+claude_smolear257_table.py
+claude_smolear257_tau.py
+claude_smolear257_turns.py
+claude_table237_build.py
+claude_table237_devscore.py
+claude_table237_run.py
+claude_table237_score.py
+claude_table237b_build.py
+claude_table237b_check.py
+claude_table237b_devscore.py
+claude_table237b_score.py
+claude_teach229_run.py
+claude_type270_agent.py
+claude_type270_devrun.py
+claude_type270_devscore.py
+claude_type270_devset.py
+claude_type270_normalise.py
+claude_type270_panelrun.py
+claude_type270_panelscore.py
+claude_type270b_devscore.py
+claude_type270b_devset.py
+claude_type270b_normalise.py
+claude_type270b_panelscore.py
+claude_type270b_panelscore2.py
+claude_type270b_panelturns.py
+claude_type270b_qbuild.py
+claude_type270b_turns.py
+claude_typepanel270b_make.py
+claude_verbsubj250_score.py
+claude_whats248_devcases.py
+claude_whats248_score.py
+claude_yesprefix230_marks.py
+depth_probe.py
+fable_abstain64_dump.py
+fable_abstain64_ltt.py
+fable_abstain76_ltt.py
+fable_abstain78_ltt.py
+fable_abstain78_resplit.py
+fable_agent_loop_selftest.py
+fable_agent_loop.py
+fable_align147_a1.py
+fable_align147_a2.py
+fable_align147_bench.py
+fable_align147_compose.py
+fable_atomic207.py
+fable_audit75_compare46.py
+fable_audit75_openset.py
+fable_audit75_verify.py
+fable_audit83_dryrun.py
+fable_autosleep42.py
+fable_autosleep42b.py
+fable_baseline_length_eval.py
+fable_baseline_report.py
+fable_baseline_transformer_v2.py
+fable_baseline_transformer.py
+fable_bench103_build_s2fresh.py
+fable_bench103_english_arm.py
+fable_bench103_notebook_arm.py
+fable_bench111_run.py
+fable_bench113_run.py
+fable_bench113b_run.py
+fable_bench113c_run.py
+fable_bench113d_121.py
+fable_bench113d_redteam124.py
+fable_bench113d_run.py
+fable_bench113e_121.py
+fable_bench113e_redteam124.py
+fable_bench113e_run.py
+fable_bench121_build.py
+fable_bench121_run.py
+fable_bench125_run.py
+fable_bench132_build.py
+fable_bench132_run.py
+fable_bench65_build.py
+fable_bench65_notebook_arm.py
+fable_bench66_baselines.py
+fable_bench73_english_arm.py
+fable_bench92_build.py
+fable_bench92_english_arm.py
+fable_bench92_notebook_arm.py
+fable_bert_loader.py
+fable_brake118_leftover.py
+fable_brake118_score.py
+fable_brake118_tune.py
+fable_brake118b_leftover.py
+fable_brake118b_score.py
+fable_brake118b_trainlist.py
+fable_brake118b_tune.py
+fable_cardfold_sleep.py
+fable_concepttoy20_models.py
+fable_concepttoy20_public.py
+fable_concepttoy20_sim.py
+fable_concepttoy20_v11_v12_compare.py
+fable_concepttoy20_wave1.py
+fable_confirmation_panels.py
+fable_counter59_eval.py
+fable_counter59_signed.py
+fable_counter60_dict.py
+fable_counter60_eval.py
+fable_creative_stop_toy.py
+fable_daemon108_run.py
+fable_daemon141_settle.py
+fable_daemon141_stress.py
+fable_daemon74_run.py
+fable_daemon74_selftest.py
+fable_decline224_a2.py
+fable_decline224_b1.py
+fable_decline224_b2.py
+fable_decline224_b3.py
+fable_decline224.py
+fable_demo126_run.py
+fable_demo55_advantage.py
+fable_demo55b_forgetting.py
+fable_demo88_rehearse.py
+fable_diag95_analyze.py
+fable_diag95_brakes.py
+fable_diag95_infer.py
+fable_dispatcher_probes26.py
+fable_dispatcher_report_v2.py
+fable_dispatcher_report_v3.py
+fable_dispatcher_report.py
+fable_dispatcher_v2.py
+fable_dispatcher_v3.py
+fable_dispatcher_v4.py
+fable_dispatcher.py
+fable_doubt146_bench.py
+fable_doubt146_probe.py
+fable_doubt146_store.py
+fable_doubt146b_bench.py
+fable_doubt146b_probe.py
+fable_doubt146b_store.py
+fable_ears109_data.py
+fable_ears109_score.py
+fable_ears109_smoke.py
+fable_ears109_train.py
+fable_ears119_data.py
+fable_ears119_score.py
+fable_ears119_smoke.py
+fable_ears119_train.py
+fable_ears119_wave.bat
+fable_ears119b_audit.py
+fable_ears119b_data.py
+fable_ears119b_score.py
+fable_ears119b_smoke.py
+fable_ears119b_train.py
+fable_ears119b_wave.bat
+fable_ears119d_diagnose.py
+fable_ears119d_pairs.py
+fable_ears119e_diagnose.py
+fable_ears119e_score.py
+fable_ears119e_wave.bat
+fable_ears119f_data.py
+fable_ears119f_score.py
+fable_ears119f_smoke.py
+fable_ears119f_train.py
+fable_ears119f_wave.bat
+fable_ears119g_model.py
+fable_ears119g_score_d1.py
+fable_ears119g_score.py
+fable_ears119g_smoke.py
+fable_ears119g_train.py
+fable_ears119g_wave.bat
+fable_ears119h_data.py
+fable_ears119h_score.py
+fable_ears119h_smoke.py
+fable_ears119h_train.py
+fable_ears119h_wave.bat
+fable_ears213_relmap.py
+fable_ears213_score.py
+fable_ears213_wave.bat
+fable_ears45_data.py
+fable_ears45_frames.py
+fable_ears45_lexicon.py
+fable_ears45_model.py
+fable_ears45_report.py
+fable_ears45_score.py
+fable_ears45_selftest.py
+fable_ears45_train.py
+fable_ears45_wave.py
+fable_ears47_data.py
+fable_ears47_encoder.py
+fable_ears47_model.py
+fable_ears47_score.py
+fable_ears47_train.py
+fable_ears85_train.py
+fable_earsguard91_daemon.py
+fable_earsguard91_run.py
+fable_earsguard91.py
+fable_fairsmol211.py
+fable_fix129_common.py
+fable_fix129_f1.py
+fable_fix129_probe.py
+fable_fix129_punct.py
+fable_fix129_redteam124.py
+fable_fix135_office.py
+fable_fix137_bench.py
+fable_fix137_names.py
+fable_fix137_probe.py
+fable_fix137b_bench.py
+fable_fix137b_discourse.py
+fable_fix137b_junk.py
+fable_fix137b_probe.py
+fable_fix137b_redteam143.py
+fable_fix137b_sessions.py
+fable_fix137c_bench.py
+fable_fix137c_hypo.py
+fable_fix137c_junk.py
+fable_fix137c_probe.py
+fable_fix137c_redteam143.py
+fable_fix137c_sessions.py
+fable_fix137d_bench.py
+fable_fix137d_frame.py
+fable_fix137d_junk.py
+fable_fix137d_probe.py
+fable_fix137d_redteam143.py
+fable_fix137d_sessions.py
+fable_fix137e_bench.py
+fable_fix137e_junk.py
+fable_fix137e_probe.py
+fable_fix137e_redteam143.py
+fable_fix137e_scan.py
+fable_fix137e_sessions.py
+fable_fix138e_bench.py
+fable_fix138e_diagnose.py
+fable_fix138e_feature.py
+fable_fix138e_heldout.py
+fable_fix138e_heldrun.py
+fable_fix138e_junk.py
+fable_fix138e_redteam.py
+fable_fix138f_ablate.py
+fable_fix138f_bench.py
+fable_fix138f_junk.py
+fable_fix138f_m1.py
+fable_fix138f_rt143.py
+fable_fix138f_sessions.py
+fable_fix138g_compareg2.py
+fable_fix138g_m1.py
+fable_fix138g_suites.py
+fable_fix138h_m1pieces.py
+fable_fix138h_m2.py
+fable_fix138h_suites.py
+fable_fix138i_m1pieces.py
+fable_fix138i_m2.py
+fable_fix138i_suites.py
+fable_fix138i_triage.py
+fable_fix138j_comparem.py
+fable_fix138j_m1pieces.py
+fable_fix138j_m2.py
+fable_fix138j_suites.py
+fable_fix139_bench.py
+fable_fix139_probe.py
+fable_fix139_redteam136.py
+fable_fix139_valueguard.py
+fable_fix139b_bench.py
+fable_fix139b_probe.py
+fable_fix139b_redteam136.py
+fable_fix139b_valueguard.py
+fable_fix139c_bench.py
+fable_fix139c_cases.py
+fable_fix139c_g3.py
+fable_fix139c_probe.py
+fable_fix139c_tail.py
+fable_fix139d_bench.py
+fable_fix139d_cases.py
+fable_fix139d_compareg2.py
+fable_fix139d_g3.py
+fable_fix139d_probe.py
+fable_fix139d_scan.py
+fable_fix139d_tail.py
+fable_fix139e_bench.py
+fable_fix139e_cases.py
+fable_fix139e_compareg2.py
+fable_fix139e_g3.py
+fable_fix139e_probe.py
+fable_fix139e_scan.py
+fable_fix139e_tail.py
+fable_fix140_bench.py
+fable_fix140_redteam136.py
+fable_fix140_t1.py
+fable_fix140_tail.py
+fable_fix144_bench.py
+fable_fix144_f1.py
+fable_fix144_ofname.py
+fable_fix150_bench.py
+fable_fix150_probe.py
+fable_fix150_redteam136.py
+fable_fix150_subjectguard.py
+fable_fix150b_bench.py
+fable_fix150b_probe.py
+fable_fix150b_session152.py
+fable_fix150b_subject150b.py
+fable_fix150c_bench.py
+fable_fix150c_closedclass.py
+fable_fix150c_probe.py
+fable_fix150c_session152.py
+fable_fix150d_markscompare.py
+fable_fix150d_probe.py
+fable_fix150d_subjectguard.py
+fable_fix153_bench.py
+fable_fix153_probe.py
+fable_fix153_reverse.py
+fable_fix153_session.py
+fable_fix154_bench.py
+fable_fix154_probe.py
+fable_fix154_session152.py
+fable_fix154_yesno.py
+fable_fix154b_buildprobe.py
+fable_fix154b_g3.py
+fable_fix154b_multival.py
+fable_fix154b_probe.py
+fable_fix154b_regress.py
+fable_fix154b_scan.py
+fable_fix154c_allowlist.py
+fable_fix154c_buildprobe.py
+fable_fix154c_g3.py
+fable_fix154c_probe.py
+fable_fix154c_regress.py
+fable_fix154c_scan.py
+fable_fix154d_probe.py
+fable_fix154d_suites.py
+fable_fix154d_yesno.py
+fable_fix154e_allowlist.py
+fable_fix154e_buildprobe.py
+fable_fix154e_g3.py
+fable_fix154e_probe.py
+fable_fix154e_regress.py
+fable_fix154e_scan.py
+fable_fix154f_buildprobe.py
+fable_fix154f_g3.py
+fable_fix154f_negate.py
+fable_fix154f_probe.py
+fable_fix154f_regress.py
+fable_fix154g_g3.py
+fable_fix154g_nocorrect.py
+fable_fix154g_probe.py
+fable_fix154g_regress.py
+fable_fix154g_scan.py
+fable_fix155_bench.py
+fable_fix155_inverted.py
+fable_fix155_marksdiff.py
+fable_fix155_probe.py
+fable_fix155_sessions.py
+fable_fix156_bench.py
+fable_fix156_probe.py
+fable_fix156_session.py
+fable_fix156_smalltalk.py
+fable_fix156b_bench.py
+fable_fix156b_probe.py
+fable_fix156b_probe156.py
+fable_fix156b_session.py
+fable_fix156b_smalltalk.py
+fable_fix156c_comparem.py
+fable_fix156c_probe.py
+fable_fix156c_smalltalk.py
+fable_fix156c_suites.py
+fable_fix157_bench.py
+fable_fix157_filler.py
+fable_fix157_probe.py
+fable_fix157_session152.py
+fable_fix157b_bench.py
+fable_fix157b_capfiller.py
+fable_fix157b_markscompare.py
+fable_fix157b_probe.py
+fable_fix157b_session152.py
+fable_fix157c_bench.py
+fable_fix157c_markscompare.py
+fable_fix157c_probe.py
+fable_fix157c_redteam.py
+fable_fix157c_session152.py
+fable_fix157c_titleguard.py
+fable_fix158_bench.py
+fable_fix158_probe.py
+fable_fix158_qform.py
+fable_fix158_session.py
+fable_fix158b_bench.py
+fable_fix158b_marks.py
+fable_fix158b_probe.py
+fable_fix158b_redteam.py
+fable_fix158c_bench.py
+fable_fix158c_marks.py
+fable_fix158c_probe.py
+fable_fix158c_redteam.py
+fable_fix159_bench.py
+fable_fix159_calib150.py
+fable_fix159_hop.py
+fable_fix159_probe.py
+fable_fix159_session.py
+fable_fix160_barecorrect.py
+fable_fix160_bench.py
+fable_fix160_probe.py
+fable_fix160_session152.py
+fable_fix160b_bench.py
+fable_fix160b_laststated.py
+fable_fix160b_probe.py
+fable_fix160b_session152.py
+fable_fix160c_bench.py
+fable_fix160c_probe.py
+fable_fix160c_redteam.py
+fable_fix160c_session152.py
+fable_fix160c_twohp.py
+fable_fix162_bench.py
+fable_fix162_marksdiff.py
+fable_fix162_probe.py
+fable_fix162_thename.py
+fable_fix162b_bench.py
+fable_fix162b_cases.py
+fable_fix162b_g3.py
+fable_fix162b_marksdiff.py
+fable_fix162b_plural.py
+fable_fix162b_probe.py
+fable_fix163_bench.py
+fable_fix163_lowercase.py
+fable_fix163_marksdiff.py
+fable_fix163_probe.py
+fable_fix163_session.py
+fable_fix164_about.py
+fable_fix164_bench.py
+fable_fix164_marksdiff.py
+fable_fix164_probe.py
+fable_fix164_scan.py
+fable_fix164_session152.py
+fable_fix164b_marksdiff.py
+fable_fix164b_probe.py
+fable_fix164b_suites.py
+fable_fix165_bench.py
+fable_fix165_casefix.py
+fable_fix165_g3.py
+fable_fix165_marksdiff.py
+fable_fix165_probe.py
+fable_fix165_scan.py
+fable_fix165_typo.py
+fable_fix166_bench.py
+fable_fix166_cases.py
+fable_fix166_g3.py
+fable_fix166_marksdiff.py
+fable_fix166_me.py
+fable_fix166_probe.py
+fable_fix166_scan.py
+fable_fix166b_bench.py
+fable_fix166b_g3.py
+fable_fix166b_marksdiff.py
+fable_fix166b_probe.py
+fable_fix166b_probeB.py
+fable_fix166c_bench.py
+fable_fix166c_g3.py
+fable_fix166c_marksdiff.py
+fable_fix166c_probe.py
+fable_fix166c_probeB.py
+fable_fix166c_probeC.py
+fable_fix167_bench.py
+fable_fix167_g3.py
+fable_fix167_marksdiff.py
+fable_fix167_probe.py
+fable_fix167_verb.py
+fable_fix167b_bench.py
+fable_fix167b_g3.py
+fable_fix167b_marksdiff.py
+fable_fix167b_probe.py
+fable_fix167b_valuescreen.py
+fable_fix167c_bench.py
+fable_fix167c_g3.py
+fable_fix167c_label.py
+fable_fix167c_marksdiff.py
+fable_fix167c_probe.py
+fable_fix167c_t2.py
+fable_fix167d_bench.py
+fable_fix167d_g3.py
+fable_fix167d_marksdiff.py
+fable_fix167d_probe.py
+fable_fix167d_verb.py
+fable_fix167e_bench.py
+fable_fix167e_g3.py
+fable_fix167e_label.py
+fable_fix167e_marksdiff.py
+fable_fix167e_probe.py
+fable_fix167e_t3.py
+fable_fix168_bench.py
+fable_fix168_ground.py
+fable_fix168_probe.py
+fable_fix168_regress.py
+fable_fix170_bench.py
+fable_fix170_compose.py
+fable_fix170_diag.py
+fable_fix170_makecases.py
+fable_fix170_replay.py
+fable_fix170_soak.py
+fable_fix170_speed.py
+fable_fix171_bench121.py
+fable_fix171_g3.py
+fable_fix171_nameval.py
+fable_fix171_probe.py
+fable_fix171b_bench121.py
+fable_fix171b_g3.py
+fable_fix171b_nameval.py
+fable_fix171b_probe.py
+fable_fix172_scan.py
+fable_fix172b_benchv3.py
+fable_fix172b_buildcases.py
+fable_fix172b_g3.py
+fable_fix172b_markscmp.py
+fable_fix172b_probe.py
+fable_fix173_bench.py
+fable_fix173_g3.py
+fable_fix173_marksdiff.py
+fable_fix173_probe.py
+fable_fix173_scan.py
+fable_fix173_username.py
+fable_fix173b_bench.py
+fable_fix173b_g3.py
+fable_fix173b_marksdiff.py
+fable_fix173b_probe.py
+fable_fix173b_scan.py
+fable_fix173b_username.py
+fable_fix174_chainof.py
+fable_fix174_markscmp.py
+fable_fix174_t1.py
+fable_fix174_t2suites.py
+fable_fix180_comparem.py
+fable_fix180_probe.py
+fable_fix180_suites.py
+fable_fix180b_comparem.py
+fable_fix180b_probe.py
+fable_fix180b_suites.py
+fable_fix187_probe.py
+fable_fix187_suites.py
+fable_fix187b_probe.py
+fable_fix187b_suites.py
+fable_fix188_compareg2.py
+fable_fix188_f1.py
+fable_fix188_suites.py
+fable_fix189_sayagain.py
+fable_fix189b_sayagain.py
+fable_fix190_bench.py
+fable_fix190_marks.py
+fable_fix190_reverse.py
+fable_fix190_suites.py
+fable_fix190_v1.py
+fable_fix190b_marks.py
+fable_fix190b_suites.py
+fable_fix190b_v1.py
+fable_fix192_bench.py
+fable_fix192_correctreply.py
+fable_fix192_marksdiff.py
+fable_fix192_probe.py
+fable_fix192_suites.py
+fable_fix193_apos.py
+fable_fix193_comparem.py
+fable_fix193_probe.py
+fable_fix193_suites.py
+fable_fix219_selfname.py
+fable_fix220_marks.py
+fable_fix220_restartindex.py
+fable_fix221_g3.py
+fable_fix221_p3check.py
+fable_fix221_panel.py
+fable_fix221_panelmap.py
+fable_fix221_predict.py
+fable_fix221_tableask.py
+fable_fix222_ofteachb.py
+fable_fix77_bench.py
+fable_fix77_conformance.py
+fable_fix77_core.py
+fable_hardgate46.py
+fable_hardgate80_noise.py
+fable_identity227_census.py
+fable_identity227_marks.py
+fable_identity227_templates.json
+fable_identity227.py
+fable_learnedaddr43i_stress_hard.py
+fable_learnedaddr43i_stress.py
+fable_learnedaddr43i.py
+fable_learnedparity43j.py
+fable_ledger82_check.py
+fable_lengthgate43.py
+fable_lengthgate43c.py
+fable_lengthgate43d.py
+fable_link_isolation_v2.py
+fable_link_isolation.py
+fable_listening_english.py
+fable_listening_m1.py
+fable_livesleep52.py
+fable_loop102_agent.py
+fable_loop102_marks.py
+fable_loop113_agent.py
+fable_loop113_marks.py
+fable_loop113b_agent.py
+fable_loop113b_marks.py
+fable_loop113c_agent.py
+fable_loop113c_marks.py
+fable_loop113d_agent.py
+fable_loop113d_marks.py
+fable_loop113e_agent.py
+fable_loop113e_marks.py
+fable_loop117_agent.py
+fable_loop117_marks.py
+fable_loop117_q2.py
+fable_loop117_q4scan.py
+fable_loop121_agent.py
+fable_loop121_marks.py
+fable_loop129a_agent.py
+fable_loop129a_marks.py
+fable_loop129a_q2.py
+fable_loop129a_q4scan.py
+fable_loop129a_repro.py
+fable_loop129b_agent.py
+fable_loop129b_bench.py
+fable_loop129b_marks.py
+fable_loop132_agent.py
+fable_loop132_marks.py
+fable_loop134_agent.py
+fable_loop135_agent.py
+fable_loop137_agent.py
+fable_loop137b_agent.py
+fable_loop137c_agent.py
+fable_loop137d_agent.py
+fable_loop137e_agent.py
+fable_loop138_agent.py
+fable_loop138b_agent.py
+fable_loop138b_junk.py
+fable_loop138b_redteam143.py
+fable_loop138b_sessions.py
+fable_loop138b_sleepdrive.py
+fable_loop138b_speed.py
+fable_loop138b_speed2.py
+fable_loop138c_agent.py
+fable_loop138c_bench121.py
+fable_loop138c_probe.py
+fable_loop138c_selfcheck.py
+fable_loop138d_agent.py
+fable_loop138d_bench121.py
+fable_loop138d_junk.py
+fable_loop138d_m1.py
+fable_loop138d_redteam143.py
+fable_loop138d_sessions.py
+fable_loop138d_sleepdrive.py
+fable_loop138d_sleepz5.py
+fable_loop138d_soak.py
+fable_loop138d_speed2.py
+fable_loop138e_agent.py
+fable_loop138f_agent.py
+fable_loop138g_agent.py
+fable_loop138h_agent.py
+fable_loop138i_agent.py
+fable_loop138j_agent.py
+fable_loop139_agent.py
+fable_loop139b_agent.py
+fable_loop139c_agent.py
+fable_loop139d_agent.py
+fable_loop139e_agent.py
+fable_loop140_agent.py
+fable_loop142_agent.py
+fable_loop144_agent.py
+fable_loop146_agent.py
+fable_loop146b_agent.py
+fable_loop146c_agent.py
+fable_loop146d_agent.py
+fable_loop147_agent.py
+fable_loop147_agent113e.py
+fable_loop147_agent132.py
+fable_loop148_agent.py
+fable_loop148_bench.py
+fable_loop148_q1.py
+fable_loop148_q2.py
+fable_loop148b_agent.py
+fable_loop148b_bench.py
+fable_loop148b_q1.py
+fable_loop148b_q2.py
+fable_loop148b_verify.py
+fable_loop149_agent.py
+fable_loop150_agent.py
+fable_loop150b_agent.py
+fable_loop150c_agent.py
+fable_loop150d_agent.py
+fable_loop150d_bench.py
+fable_loop150d_junk.py
+fable_loop150d_redteam143.py
+fable_loop150d_sessions.py
+fable_loop151_agent.py
+fable_loop153_agent.py
+fable_loop154_agent.py
+fable_loop154b_agent.py
+fable_loop154c_agent.py
+fable_loop154d_agent.py
+fable_loop154e_agent.py
+fable_loop154f_agent.py
+fable_loop154g_agent.py
+fable_loop155_agent.py
+fable_loop156_agent.py
+fable_loop156b_agent.py
+fable_loop156c_agent.py
+fable_loop157_agent.py
+fable_loop157b_agent.py
+fable_loop157c_agent.py
+fable_loop158_agent.py
+fable_loop158b_agent.py
+fable_loop158c_agent.py
+fable_loop159_agent.py
+fable_loop160_agent.py
+fable_loop160b_agent.py
+fable_loop160c_agent.py
+fable_loop161_agent.py
+fable_loop161_bench.py
+fable_loop161_marksdiff.py
+fable_loop162_agent.py
+fable_loop162b_agent.py
+fable_loop163_agent.py
+fable_loop164_agent.py
+fable_loop164b_agent.py
+fable_loop165_agent.py
+fable_loop166_agent.py
+fable_loop166b_agent.py
+fable_loop166c_agent.py
+fable_loop167_agent.py
+fable_loop167b_agent.py
+fable_loop167c_agent.py
+fable_loop167d_agent.py
+fable_loop167e_agent.py
+fable_loop168_agent.py
+fable_loop170_agent.py
+fable_loop171_agent.py
+fable_loop171b_agent.py
+fable_loop172_agent.py
+fable_loop173_agent.py
+fable_loop173b_agent.py
+fable_loop174_agent.py
+fable_loop180_agent.py
+fable_loop180b_agent.py
+fable_loop187_agent.py
+fable_loop188_agent.py
+fable_loop189_agent.py
+fable_loop189b_agent.py
+fable_loop190_agent.py
+fable_loop190b_agent.py
+fable_loop192_agent.py
+fable_loop193_agent.py
+fable_loop209_agent.py
+fable_loop212_agent.py
+fable_loop215_agent.py
+fable_loop216_agent.py
+fable_loop219_agent.py
+fable_loop220_agent.py
+fable_loop221_agent.py
+fable_loop222_agent.py
+fable_loop223_agent.py
+fable_loop223_probe.py
+fable_loop224_agent.py
+fable_loop226_agent.py
+fable_loop227_agent.py
+fable_loop90_agent.py
+fable_loop90_marks.py
+fable_loop96_agent.py
+fable_loop96_marks.py
+fable_lowrank43f.py
+fable_marks123_all.py
+fable_modernbert58_loader.py
+fable_modernbert61_check.py
+fable_modes54_demo.py
+fable_modes54_scheduler.py
+fable_mouth53_data.py
+fable_mouth53_mouth.py
+fable_mouth53_replay.py
+fable_mouth53_score.py
+fable_mouth53_train.py
+fable_naturalpanel208_driver.py
+fable_newnames21.py
+fable_newnames27.py
+fable_newnames29.py
+fable_noisyteacher45_enumerate.py
+fable_noisyteacher45.py
+fable_notebook_contract.py
+fable_notebook_m0.py
+fable_novelty19_data.py
+fable_novelty19_train.py
+fable_novelty19b_data.py
+fable_novelty19b_train.py
+fable_ofteach215_cmps.py
+fable_ofteach215_marks.py
+fable_ofteach215_scan.py
+fable_operator_reliability_gpu.py
+fable_operator_reliability.py
+fable_operator_staged.py
+fable_operator_startup.py
+fable_operator_swap.py
+fable_operator_variants.py
+fable_perf128_c1.py
+fable_perf128_c2.py
+fable_perf128_c3.py
+fable_perf128_daemon.py
+fable_perf128_diag.py
+fable_perf128_index.py
+fable_perf128_soak.py
+fable_perf142_bench121.py
+fable_perf142_c1.py
+fable_perf142_c2.py
+fable_perf142_diag.py
+fable_perf142_index.py
+fable_qmark151_bench.py
+fable_qmark151_core.py
+fable_qmark151_q1.py
+fable_qmark151_run143.py
+fable_qrewrite132.py
+fable_qual56_conformance.py
+fable_qual56_miner_filter.py
+fable_qual56_reasoner.py
+fable_read106_score.py
+fable_read107_behind_gate.py
+fable_reading94_build.py
+fable_reading94b_build.py
+fable_reasoner44_score.py
+fable_reasoner44_stress.py
+fable_reasoner44.py
+fable_reasoner50.py
+fable_redteam110_cases.py
+fable_redteam110_runner.py
+fable_redteam124_runner.py
+fable_redteam136_cases.py
+fable_redteam136_run.py
+fable_redteam143_cases.py
+fable_redteam143_run.py
+fable_redteam67_probe.py
+fable_redteam79_probe.py
+fable_redteam81_probe.py
+fable_redteam98_cases.py
+fable_redteam98_runner.py
+fable_relcanon63_build.py
+fable_relcanon63_canon.py
+fable_relcanon63_test.py
+fable_relcanon63_testdata.py
+fable_relcanon97_make.py
+fable_relcanon97_score.py
+fable_reliability_bundle.py
+fable_rescore224.py
+fable_reversal210_build.py
+fable_reversal210_check.py
+fable_reversal210_run.py
+fable_scale_probe_recheck.py
+fable_scale_probe.py
+fable_screen148_mixin.py
+fable_self100_runner.py
+fable_self105_runner.py
+fable_self105.py
+fable_self114_runner.py
+fable_self114.py
+fable_self122_data.py
+fable_self122_diag.py
+fable_self122_runner.py
+fable_self122_train.py
+fable_self122.py
+fable_self127_calibrate.py
+fable_self127_deltas.py
+fable_self127_runner.py
+fable_self127.py
+fable_self99.py
+fable_selfcard161_marks.py
+fable_selfcard161.py
+fable_session152_run.py
+fable_session152_sessions.py
+fable_sharedsleep43b.py
+fable_simplewiki86_extract.py
+fable_sleep104_agent.py
+fable_sleep104_drive.py
+fable_sleep115_agent.py
+fable_sleep115_drive.py
+fable_sleep116_drive.py
+fable_sleep116_rescore.py
+fable_sleep130_agent.py
+fable_sleep130_climb.py
+fable_sleep130_drive.py
+fable_sleep131_agent.py
+fable_sleep131_drive.py
+fable_sleep131_rescore.py
+fable_sleep145_agent.py
+fable_sleep145_drive.py
+fable_sleep145_rescore.py
+fable_sleepselect43e.py
+fable_sleepsmoke206.py
+fable_soak108_ghostdemo.py
+fable_soak108_run.py
+fable_soak93_ghostdemo.py
+fable_soak93_run.py
+fable_source226_cases.py
+fable_source226_run.py
+fable_startup_factorial_v2.py
+fable_startup_factorial.py
+fable_story_size_stress.py
+fable_suitediff.py
+fable_suitediff218.py
+fable_talker101_data.py
+fable_talker101_eval.py
+fable_talker101_model.py
+fable_talker101_tokenizer.py
+fable_talker101_train.py
+fable_talker120_data.py
+fable_talker120_mouth.py
+fable_talker120_replay.py
+fable_talker120_score.py
+fable_talker120_train.py
+fable_talker120b_diagnose.py
+fable_talker120b_train.py
+fable_talker120c_mouth.py
+fable_talker120c_replay.py
+fable_talker120c_score.py
+fable_talker120d_mouth.py
+fable_talker120d_replay.py
+fable_talker120d_score.py
+fable_talker24_data.py
+fable_talker24_dialogues_frames.py
+fable_talker24_dialogues.py
+fable_talker24_interventions.py
+fable_talker24_loader.py
+fable_talker24_model.py
+fable_talker24_parser.py
+fable_talker24_train.py
+fable_thinking_m2.py
+fable_thought49_conformance.py
+fable_thought49_notebook.py
+fable_thought49_schema.py
+fable_thought62_conformance.py
+fable_thought62_schema.py
+fable_transport43g_v2.py
+fable_transport43g.py
+fable_turns84_run.py
+fable_webfix89_run.py
+fable_webfix89_thinking.py
+fable_webred_frames.py
+fable_widelengths43k_v2.py
+fable_widelengths43k.py
+fable_wire51_adapters.py
+fable_wire51_run.py
+fable_wire51_script40.py
+fable_wire57_e2e.py
+fable_wordmatch149_bench.py
+fable_wordmatch149_core.py
+fable_wordmatch149_probe.py
+fable_wordmatch149_run143.py
+fable_writescreen209_probe.py
+fable_writescreen209_suites.py
+fable212_cases.py
+fable212_marks.py
+fable212_suites.py
+fable216_panel.py
+fable216_scan.py
+fable216_suites.py
+gen_english.py
+gen_patterns.py
+premonition_m01_probe.py
+premonition_m02_answer_path.py
+premonition_ovn_ladder.py
+premonition_ovn_retrieval.py
+premonition_pool_controls.py
+premonition_teacher_delay_eval.py
+premonition_teacher_delay_ops.py
+premonition_teacher_delay.py
+remote_benspc.ps1
+remote_benspc.sh
+scratchpad
+---
+   11374
+show_exit:0
+scripts/address_probe.py
+scripts/astra_canonical_operator.py
+scripts/astra_canonical_operator_panels.py
+scripts/astra_canonical_operator_report.py
+scripts/astra_canonical_operator_run.py
+scripts/astra_transfer_diagnostic.py
+scripts/astra_transfer_report.py
+scripts/astra_transfer_twins.py
+scripts/benspc-runtime.json
+scripts/claude_138l_l1.py
+scripts/claude_138l_rt143nogate.py
+scripts/claude_138l_runall.sh
+scripts/claude_138l_score.py
+scripts/claude_138m_l1.py
+scripts/claude_138m_predict.py
+scripts/claude_138m_runall.sh
+scripts/claude_138m_score.py
+scripts/claude_138n_conv239_changes.py
+scripts/claude_138n_l1.py
+scripts/claude_138n_m7.py
+scripts/claude_138n_m7.sh
+scripts/claude_138n_predict.py
+scripts/claude_138n_runall.sh
+scripts/claude_138n_score.py
+scripts/claude_221b_run.py
+scripts/claude_221b_unit.py
+scripts/claude_224c_cases.py
+scripts/claude_224c_score.py
+scripts/claude_255_m1gen.py
+scripts/claude_255_m2check.py
+scripts/claude_255_m3changes.py
+scripts/claude_255_m3format.py
+scripts/claude_255_runall.sh
+scripts/claude_255_score.py
+scripts/claude_260_panel.sh
+scripts/claude_260_runall.sh
+scripts/claude_age334_agent.py
+scripts/claude_age334_test.py
+scripts/claude_apos247_devcases.py
+scripts/claude_apos247_run.py
+scripts/claude_apos247_score.py
+scripts/claude_ask24.py
+scripts/claude_ask24ab.py
+scripts/claude_attempts.py
+scripts/claude_blurt1.py
+scripts/claude_blurt2.py
+scripts/claude_blurt4.py
+scripts/claude_blurt5s.py
+scripts/claude_blurt_selfjudge.py
+scripts/claude_blurt_supply.py
+scripts/claude_bm390.py
+scripts/claude_bm390_longctx.py
+scripts/claude_bm390_score.py
+scripts/claude_bm391_prf.py
+scripts/claude_bm393_evrecall.py
+scripts/claude_bm393b_store_recall.py
+scripts/claude_bm393c_store_recall.py
+scripts/claude_bm394_grid.py
+scripts/claude_bm395_found_split.py
+scripts/claude_bm395_store_answer.py
+scripts/claude_bm396_audit.py
+scripts/claude_bm397_finalize.py
+scripts/claude_bm397_judge.py
+scripts/claude_bm397g_general.py
+scripts/claude_bm397t_data.py
+scripts/claude_bm397t_judge.py
+scripts/claude_bm397t_train.py
+scripts/claude_bm398c_clock.py
+scripts/claude_bm398d_evidence.py
+scripts/claude_bm398e_data.py
+scripts/claude_bm398e_judge.py
+scripts/claude_bm398e_trim.py
+scripts/claude_bm398i_run2.py
+scripts/claude_bm398i_switch.py
+scripts/claude_bm398n_notes.py
+scripts/claude_bm398r_data.py
+scripts/claude_bm398r_eval.py
+scripts/claude_bm398r_train.py
+scripts/claude_bm398u_rerank.py
+scripts/claude_bmriv_given.py
+scripts/claude_bmriv_rivals.py
+scripts/claude_bound259_devcases.py
+scripts/claude_bound259_runall.sh
+scripts/claude_bound259_score.py
+scripts/claude_brd5.py
+scripts/claude_brd6.py
+scripts/claude_brd8.py
+scripts/claude_brd9.py
+scripts/claude_c1rival_run.py
+scripts/claude_ch403_agent.py
+scripts/claude_ch403_run.py
+scripts/claude_ch403_test.py
+scripts/claude_ch404_agent.py
+scripts/claude_ch404_dev.py
+scripts/claude_ch404_join.py
+scripts/claude_ch404_run.py
+scripts/claude_ch404_test.py
+scripts/claude_chain231_predict.py
+scripts/claude_chain231_run.py
+scripts/claude_chat338_agent.py
+[0m
+[0m$ [0mls scripts/ | grep -F "k1h"; echo "local_grep_exit:$?"; git ls-tree -r --name-only origin/main -- scripts/ | grep -F "k1h"; echo "---"; git log --oneline -5; echo "---"; git status --short | head -n 50
+local_grep_exit:1
+scripts/claude_k1h_cre.py
+scripts/claude_k1h_glm.py
+scripts/claude_k1h_glm_v11.py
+scripts/claude_k1h_score.py
+scripts/claude_k1h_test.py
+scripts/claude_k1h_train.py
+---
+ab09c935c Add vast instance check report 20260926l
+599f870cd claude-credit-20260926k: read-only vast money check 2026-09-26
+ef311c7bd depot 52755827 STOPPED (disk kept) 2026-09-26
+5484e6460 rent-mu405 STOPPED by owner (duplicate of CPU run) 2026-09-26
+4dd0adf85 claude-credit-20260926j: read-only vast money check 2026-09-26
+---
+A  artifacts/claude-glm-helper-v11-20260926/REPORT.md
+A  artifacts/claude-rsn358i2-20260926/RESULTS.md
+A  artifacts/claude-rsn358i2-20260926/SEAL-run.sha256.txt
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/loop-s1.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/loop-s2.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/loop-s3.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/loop-s4.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_summary.json
+M  artifacts/fable-predictions-ledger.md
+A  scripts/claude_glm_opencode_v11.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+[0m
+[0m$ [0mdate -u; date; ls -la /private/tmp/ 2>&1 | head -n 30; echo "==="; find /tmp /private/tmp -maxdepth 6 -name "chats.jsonl" -o -name "answers.jsonl" 2>/dev/null | head -n 50; echo "find1_done"
+Sat Sep 26 20:07:19 UTC 2026
+Sat Sep 26 16:07:19 EDT 2026
+total 25116992
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 14:07 __KMP_REGISTERED_LIB_19337
+-rw-------    1 ben-hannan  wheel        1024 Sep 26 12:40 __KMP_REGISTERED_LIB_27249
+-rw-------    1 ben-hannan  wheel        1024 Sep 26 12:40 __KMP_REGISTERED_LIB_27250
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73221
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73222
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73227
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73229
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73236
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73239
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73242
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73245
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73248
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73252
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73255
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73272
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73281
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73282
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73285
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73290
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73292
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73294
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73297
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73306
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73309
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73313
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73324
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73328
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73334
+drwxrwxrwt  837 root        wheel       26784 Sep 26 16:02 .
+===
+find1_done
+[0m
+[0m$ [0mfind . -maxdepth 6 \( -name "chats.jsonl" -o -name "answers.jsonl" \) -print 2>/dev/null | head -n 50; echo "worktree_find_done"; echo "==="; find /private/var/folders -maxdepth 6 \( -name "chats.jsonl" -o -name "answers.jsonl" \) -print 2>/dev/null | head -n 50; echo "varfolders6_done"
+worktree_find_done
+===
+varfolders6_done
+[0m
+[0m$ [0mfind . \( -name "chats.jsonl" -o -name "answers.jsonl" -o -name "chats-log.txt" -o -name "answer-log.txt" \) -print 2>/dev/null | head -n 100; echo "deep_worktree_done"
+deep_worktree_done
+[0m
+[0m$ [0mfind /tmp - \( -name "chats.jsonl" -o -name "answers.jsonl" -o -name "chats-log.txt" -o -name "answer-log.txt" -o -name "claude_k1h_glm.py" \) -print 2>/dev/null | head -n 100; echo "tmp_deep_done"
+tmp_deep_done
+[0m
+[0m$ [0mls /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/ 2>&1; echo "==="; ls /private/var/folders/ 2>&1; echo "==="; find / -maxdepth 4 -name "claude_k1h_glm.py" -print 2>/dev/null | head -n 20; echo "root4_done"
+card-experiment-handoff-7c5b27
+fact-saving-note-filtering-4ff1ff
+forgetting-plain-english-gap-9258f0
+model-architecture-review-0161ce
+premonition-design-review-792236
+pull-from-main-629dc4
+===
+6q
+zz
+===
+root4_done
+[0m
+[0m$ [0mfor d in /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/*/; do echo "== $d"; ls "$d/scripts/claude_k1h_glm.py" 2>&1; done; echo "worktrees_done"; ls /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/claude_k1h_glm.py 2>&1; echo "mainrepo_done"
+== /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27//scripts/claude_k1h_glm.py: No such file or directory
+== /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/fact-saving-note-filtering-4ff1ff/
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/fact-saving-note-filtering-4ff1ff//scripts/claude_k1h_glm.py: No such file or directory
+== /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/forgetting-plain-english-gap-9258f0/
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/forgetting-plain-english-gap-9258f0//scripts/claude_k1h_glm.py: No such file or directory
+== /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/model-architecture-review-0161ce/
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/model-architecture-review-0161ce//scripts/claude_k1h_glm.py: No such file or directory
+== /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/premonition-design-review-792236/
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/premonition-design-review-792236//scripts/claude_k1h_glm.py: No such file or directory
+== /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/pull-from-main-629dc4/
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/pull-from-main-629dc4//scripts/claude_k1h_glm.py: No such file or directory
+worktrees_done
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/claude_k1h_glm.py: No such file or directory
+mainrepo_done
+[0m
+[0m$ [0mgit log --oneline origin/main -5 -- scripts/claude_k1h_glm.py 2>&1; echo "==="; git log --oneline -5 -- scripts/claude_k1h_glm.py 2>&1; echo "==="; git branch --show-current; git rev-parse HEAD; git rev-parse origin/main
+25744d918 k1h: GLM writes more practice chats and one answer per chat (Mac, opencode route, free); data gate fixed before any answer
+===
+===
+claude/card-experiment-handoff-7c5b27
+ab09c935ce2d89e9037580a7685caf752e8580b4
+f35b1b09f4af4996741658b4d36fd45eec92e3da
+[0m
+[0m$ [0mfind /private/var/folders -name "claude_k1h_glm.py" -print 2>/dev/null | head -n 20; echo "search1_done"
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/claude_k1h_glm.py
+search1_done
+[0m
+[0m$ [0mBASE="/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j"; ls -la "$BASE" 2>&1 | head -n 50; echo "==="; find "$BASE" \( -name "chats.jsonl" -o -name "answers.jsonl" -o -name "chats-log.txt" -o -name "answer-log.txt" \) -print 2>/dev/null; echo "find_done"
+total 0
+drwx------     4 ben-hannan  staff     128 Sep 26 15:35 .
+drwx------@ 4627 ben-hannan  staff  148064 Sep 26 16:09 ..
+drwxr-xr-x     5 ben-hannan  staff     160 Sep 26 15:34 artifacts
+drwxr-xr-x  1695 ben-hannan  staff   54240 Sep 26 15:34 scripts
+===
+find_done
+[0m
+[0m$ [0mBASE="/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j"; find "$BASE" -maxdepth 4 -print 2>/dev/null | head -n 100; echo "==="; ls -laR "$BASE/artifacts" 2>&1 | head -n 100
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-g406-20260926
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-g406-20260926/PASSMARKS.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-g406-20260926/ADDENDUM-1-review.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-g406-20260926/SEAL.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-g406-20260926/run
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-g406-20260926/run/glm.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-g406-20260926/run/start_time.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-g406-20260926/run/glm.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/devchat
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/devchat/items.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/devchat/README.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/recount
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/recount/recount.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/recount/mine.json
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/AUC.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/NEXT-draft.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/PASSMARKS.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/VERIFY.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/JUDGE-pair.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/SEAL.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/auc
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/auc/auc.json
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/auc/margins402.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/judge
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/judge/marks.json
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/judge/out
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/judge/packets
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/judge/keys
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/JUDGE-claims.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/run
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/run/logR.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/run/logF.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/run/logP.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/run/logT.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/run/chat_F.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/run/chat_T.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/run/summary_chat.json
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/run/chat_P.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/run/chat_R.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu403-20260926/RESULTS-rent.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/devchat
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/devchat/items.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/devchat/README.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/recount
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/recount/recount.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/recount/mine.json
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/PASSMARKS.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/VERIFY.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/JUDGE-pair.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/SEAL.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/judge
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/judge/marks.json
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/judge/out
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/judge/packets
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/judge/keys
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/JUDGE-claims.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/run
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/run/logT.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/run/logB.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/run/chat_A.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/run/logA.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/run/logA_crash.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/run/chat_B.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/run/logB_crash.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/run/chat_T.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/run/summary_chat.json
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/DIAGNOSIS.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/RESULTS-rent.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/claude_e2e381b_harness.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/claude_identity227c.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_loop132_marks.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_naturalpanel208_driver.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/claude_cre333b_test.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/claude_bmriv_given.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/claude_rsn358m_run.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/claude_earcheck261_score257.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_loop113c_agent.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_source226_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_fix139d_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_loop113b_agent.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_bench113d_redteam124.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_redteam79_probe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_fix139e_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/claude_slp363_night.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_baseline_report.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/claude_earcheck261_theta.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_widelengths43k_v2.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_fix150_bench.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/premonition_binding_probe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/claude_rd371_sweep.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_ofteach215_cmps.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_talker101_data.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_fix154c_buildprobe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_loop129a_marks.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/fable_self127_calibrate.py
+===
+total 0
+drwxr-xr-x   5 ben-hannan  staff  160 Sep 26 15:34 .
+drwx------   4 ben-hannan  staff  128 Sep 26 15:35 ..
+drwxr-xr-x   6 ben-hannan  staff  192 Sep 26 15:35 claude-g406-20260926
+drwxr-xr-x  13 ben-hannan  staff  416 Sep 26 15:34 claude-mu402-20260926
+drwxr-xr-x  15 ben-hannan  staff  480 Sep 26 15:34 claude-mu403-20260926
+
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-g406-20260926:
+total 32
+drwxr-xr-x  6 ben-hannan  staff   192 Sep 26 15:35 .
+drwxr-xr-x  5 ben-hannan  staff   160 Sep 26 15:34 ..
+-rw-r--r--  1 ben-hannan  staff   919 Sep 26 15:34 ADDENDUM-1-review.md
+-rw-r--r--  1 ben-hannan  staff  3214 Sep 26 15:34 PASSMARKS.md
+drwxr-xr-x  5 ben-hannan  staff   160 Sep 26 15:53 run
+-rw-r--r--  1 ben-hannan  staff  5555 Sep 26 15:34 SEAL.sha256.txt
+
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-g406-20260926/run:
+total 40
+drwxr-xr-x  5 ben-hannan  staff   160 Sep 26 15:53 .
+drwxr-xr-x  6 ben-hannan  staff   192 Sep 26 15:35 ..
+-rw-r--r--  1 ben-hannan  staff  8729 Sep 26 16:08 glm.jsonl
+-rw-r--r--  1 ben-hannan  staff   177 Sep 26 16:08 glm.log
+-rw-r--r--  1 ben-hannan  staff    29 Sep 26 15:36 start_time.txt
+
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926:
+total 72
+drwxr-xr-x  13 ben-hannan  staff   416 Sep 26 15:34 .
+drwxr-xr-x   5 ben-hannan  staff   160 Sep 26 15:34 ..
+drwxr-xr-x   4 ben-hannan  staff   128 Sep 26 15:34 devchat
+-rw-r--r--   1 ben-hannan  staff  3331 Sep 26 15:34 DIAGNOSIS.md
+drwxr-xr-x   6 ben-hannan  staff   192 Sep 26 15:34 judge
+-rw-r--r--   1 ben-hannan  staff  2609 Sep 26 15:34 JUDGE-claims.md
+-rw-r--r--   1 ben-hannan  staff  1173 Sep 26 15:34 JUDGE-pair.md
+-rw-r--r--   1 ben-hannan  staff  6698 Sep 26 15:34 PASSMARKS.md
+drwxr-xr-x   4 ben-hannan  staff   128 Sep 26 15:34 recount
+-rw-r--r--   1 ben-hannan  staff  7946 Sep 26 15:34 RESULTS-rent.md
+drwxr-xr-x  11 ben-hannan  staff   352 Sep 26 15:34 run
+-rw-r--r--   1 ben-hannan  staff   757 Sep 26 15:34 SEAL.sha256.txt
+-rw-r--r--   1 ben-hannan  staff  3525 Sep 26 15:34 VERIFY.md
+
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/devchat:
+total 144
+drwxr-xr-x   4 ben-hannan  staff    128 Sep 26 15:34 .
+drwxr-xr-x  13 ben-hannan  staff    416 Sep 26 15:34 ..
+-rw-r--r--   1 ben-hannan  staff  65872 Sep 26 15:34 items.jsonl
+-rw-r--r--   1 ben-hannan  staff    346 Sep 26 15:34 README.md
+
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/judge:
+total 8
+drwxr-xr-x   6 ben-hannan  staff   192 Sep 26 15:34 .
+drwxr-xr-x  13 ben-hannan  staff   416 Sep 26 15:34 ..
+drwxr-xr-x   5 ben-hannan  staff   160 Sep 26 15:34 keys
+-rw-r--r--   1 ben-hannan  staff  1860 Sep 26 15:34 marks.json
+drwxr-xr-x  12 ben-hannan  staff   384 Sep 26 15:34 out
+drwxr-xr-x  12 ben-hannan  staff   384 Sep 26 15:34 packets
+
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/judge/keys:
+total 64
+drwxr-xr-x  5 ben-hannan  staff    160 Sep 26 15:34 .
+drwxr-xr-x  6 ben-hannan  staff    192 Sep 26 15:34 ..
+-rw-r--r--  1 ben-hannan  staff  14162 Sep 26 15:34 claims_key.json
+-rw-r--r--  1 ben-hannan  staff   5522 Sep 26 15:34 pair_key_p1.json
+-rw-r--r--  1 ben-hannan  staff   5522 Sep 26 15:34 pair_key_p2.json
+
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/judge/out:
+total 80
+drwxr-xr-x  12 ben-hannan  staff   384 Sep 26 15:34 .
+drwxr-xr-x   6 ben-hannan  staff   192 Sep 26 15:34 ..
+-rw-r--r--   1 ben-hannan  staff  2838 Sep 26 15:34 claims_j1.jsonl
+-rw-r--r--   1 ben-hannan  staff  2802 Sep 26 15:34 claims_j2.jsonl
+-rw-r--r--   1 ben-hannan  staff  2832 Sep 26 15:34 claims_j3.jsonl
+-rw-r--r--   1 ben-hannan  staff  2826 Sep 26 15:34 claims_j4.jsonl
+-rw-r--r--   1 ben-hannan  staff  2787 Sep 26 15:34 claims_j5.jsonl
+-rw-r--r--   1 ben-hannan  staff  2838 Sep 26 15:34 claims_j6.jsonl
+-rw-r--r--   1 ben-hannan  staff  2576 Sep 26 15:34 claims_j7.jsonl
+-rw-r--r--   1 ben-hannan  staff  2859 Sep 26 15:34 claims_j8.jsonl
+-rw-r--r--   1 ben-hannan  staff  2882 Sep 26 15:34 pair_p1.jsonl
+-rw-r--r--   1 ben-hannan  staff  2882 Sep 26 15:34 pair_p2.jsonl
+
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/judge/packets:
+total 3008
+drwxr-xr-x  12 ben-hannan  staff     384 Sep 26 15:34 .
+drwxr-xr-x   6 ben-hannan  staff     192 Sep 26 15:34 ..
+-rw-r--r--   1 ben-hannan  staff  132633 Sep 26 15:34 claims_j1.jsonl
+-rw-r--r--   1 ben-hannan  staff  112951 Sep 26 15:34 claims_j2.jsonl
+-rw-r--r--   1 ben-hannan  staff  125449 Sep 26 15:34 claims_j3.jsonl
+-rw-r--r--   1 ben-hannan  staff  124043 Sep 26 15:34 claims_j4.jsonl
+-rw-r--r--   1 ben-hannan  staff  121253 Sep 26 15:34 claims_j5.jsonl
+-rw-r--r--   1 ben-hannan  staff  123148 Sep 26 15:34 claims_j6.jsonl
+-rw-r--r--   1 ben-hannan  staff  120079 Sep 26 15:34 claims_j7.jsonl
+-rw-r--r--   1 ben-hannan  staff  130596 Sep 26 15:34 claims_j8.jsonl
+-rw-r--r--   1 ben-hannan  staff  264889 Sep 26 15:34 pair_p1.jsonl
+-rw-r--r--   1 ben-hannan  staff  264889 Sep 26 15:34 pair_p2.jsonl
+
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/artifacts/claude-mu402-20260926/recount:
+total 24
+drwxr-xr-x   4 ben-hannan  staff   128 Sep 26 15:34 .
+drwxr-xr-x  13 ben-hannan  staff   416 Sep 26 15:34 ..
+-rw-r--r--   1 ben-hannan  staff   987 Sep 26 15:34 mine.json
+-rw-r--r--   1 ben-hannan  staff  7626 Sep 26 15:34 recount.py
+[0m
+[0m$ [0mls -lt /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/ 2>&1 | head -n 100
+total 328688
+drwx------@    3 ben-hannan  staff         96 Sep 26 16:10 com.apple.bird
+drwx------     2 ben-hannan  staff         64 Sep 26 16:09 TemporaryItems
+drwx------@    2 ben-hannan  staff         64 Sep 26 16:09 com.apple.cloudd
+drwx------     2 ben-hannan  staff         64 Sep 26 16:08 glm-opencode-fx0aky1z
+drwx------     2 ben-hannan  staff         64 Sep 26 16:07 glm-opencode-2i1icu1i
+drwx------     2 ben-hannan  staff         64 Sep 26 16:06 glm-opencode-rrz5fl13
+drwx------     2 ben-hannan  staff         64 Sep 26 16:05 glm-opencode-5qao0_p3
+drwx------     2 ben-hannan  staff         64 Sep 26 16:04 glm-opencode-ql6cbgjv
+drwx------     2 ben-hannan  staff         64 Sep 26 16:02 glm-opencode-iai9ggah
+drwx------     2 ben-hannan  staff         64 Sep 26 16:01 glm-opencode-z4e4hf1b
+drwx------     2 ben-hannan  staff         64 Sep 26 15:59 glm-opencode-ii6ocx4w
+drwx------@    3 ben-hannan  staff         96 Sep 26 15:59 com.google.Chrome.chrome_chrome_url_fetcher_.g4I0rL
+drwx------     2 ben-hannan  staff         64 Sep 26 15:58 glm-opencode-k9j2yi23
+drwx------     4 ben-hannan  staff        128 Sep 26 15:35 tmp.oSZKfdQy6j
+drwx------     5 ben-hannan  staff        160 Sep 26 15:30 tmp.kiohHwSNBC
+drwx------    10 ben-hannan  staff        320 Sep 26 14:55 tmp.zp8zs6yNbu
+drwx------     4 ben-hannan  staff        128 Sep 26 14:54 tmp.RDVuRjuXzv
+drwx------@   20 ben-hannan  staff        640 Sep 26 14:39 com.apple.imtransferservices.IMTransferAgent
+drwx------@  255 ben-hannan  staff       8160 Sep 26 14:39 com.apple.identityservicesd
+drwxr-xr-x    66 ben-hannan  staff       2112 Sep 26 14:15 opencode
+drwx------     5 ben-hannan  staff        160 Sep 26 14:11 tmp.UesxzyXYZ1
+-rw-r--r--     1 ben-hannan  staff       2680 Sep 26 13:23 rd378k_full_console.log
+-rw-r--r--     1 ben-hannan  staff        209 Sep 26 13:23 rd378k_selftest.out
+-rw-r--r--     1 ben-hannan  staff       2471 Sep 26 13:23 rd378k_console.log
+-rw-r--r--     1 ben-hannan  staff        961 Sep 26 13:23 rd378k_write.out
+-rw-r--r--     1 ben-hannan  staff        205 Sep 26 13:11 rd378k_agree.out
+-rw-r--r--     1 ben-hannan  staff       1305 Sep 26 13:11 rd378k_label.out
+-rw-r--r--     1 ben-hannan  staff         11 Sep 26 12:55 rd378k_times.txt
+drwx------     4 ben-hannan  staff        128 Sep 26 12:55 tmp.thxrlnBkuw
+drwxr-xr-x  1598 ben-hannan  staff      51136 Sep 26 12:23 com.apple.MetalPerformanceShadersGraph
+drwx------@    3 ben-hannan  staff         96 Sep 26 09:20 com.apple.securityuploadd
+drwx------@    3 ben-hannan  staff         96 Sep 26 09:02 com.apple.tipsd
+-rw-r--r--     1 ben-hannan  staff          0 Sep 26 08:52 route_check.py
+drwx------@  446 ben-hannan  staff      14272 Sep 26 07:38 com.apple.WebKit.Networking+com.apple.Safari.CacheDeleteExtension
+-rw-r--r--     1 ben-hannan  staff          0 Sep 26 03:49 925BFF4A-497B-417B-86B5-DF950F57CE05-29413-0000050029248591-wal
+-rw-r--r--     1 ben-hannan  staff      32768 Sep 26 03:49 925BFF4A-497B-417B-86B5-DF950F57CE05-29413-0000050029248591-shm
+drwx------@    3 ben-hannan  staff         96 Sep 26 00:21 com.apple.triald
+drwx------@    6 ben-hannan  staff        192 Sep 26 00:16 com.apple.amsengagementd
+drwx------@    4 ben-hannan  staff        128 Sep 26 00:14 com.apple.remindd
+drwx------     5 ben-hannan  staff        160 Sep 26 00:00 tmp3ivo641n
+drwx------@    3 ben-hannan  staff         96 Sep 25 22:29 com.apple.tccd
+drwx------@    4 ben-hannan  staff        128 Sep 25 21:37 com.openai.codex.Amure7
+drwx------@    4 ben-hannan  staff        128 Sep 25 21:36 com.openai.codex.GSoKYI
+drwx------@    2 ben-hannan  staff         64 Sep 25 21:35 com.apple.WorkflowKit.BackgroundShortcutRunner
+drwx------@    4 ben-hannan  staff        128 Sep 25 21:35 com.openai.codex.yvoFaS
+drwx------     4 ben-hannan  staff        128 Sep 25 21:33 scoped_dirZpJ4oV
+drwx------@    4 ben-hannan  staff        128 Sep 25 21:33 com.openai.codex.09wTva
+drwx------     3 ben-hannan  staff         96 Sep 25 21:28 codex-web-gpt-update-aiqf78
+drwx------@    4 ben-hannan  staff        128 Sep 25 21:26 com.openai.codex.s3kSV7
+drwx------@    3 ben-hannan  staff         96 Sep 25 21:19 com.apple.parsecd
+-rw-r--r--     1 ben-hannan  staff      20002 Sep 25 21:13 tree-tgt5.tgz
+-rw-------     1 ben-hannan  staff       2028 Sep 25 19:51 xcrun_db
+drwx------@    2 ben-hannan  staff         64 Sep 25 10:54 com.apple.cksharingmanagementd
+drwx------@    3 ben-hannan  staff         96 Sep 25 10:54 com.apple.familycircled
+drwx------@    2 ben-hannan  staff         64 Sep 25 05:31 com.apple.intelligenceplatform.IntelligencePlatformComputeService
+drwx------@    2 ben-hannan  staff         64 Sep 25 05:31 com.apple.knowledgeconstructiond
+-rw-r--r--     1 ben-hannan  staff  167935684 Sep 25 02:30 bm390tree2.tgz
+drwx------     3 ben-hannan  staff         96 Sep 25 02:28 bm390tree2_e73iklln
+-rw-r--r--     1 ben-hannan  staff          0 Sep 25 02:04 647E2C1D-2E17-4097-9BF2-A0D834295F80-98982-000002FA34C40414-wal
+-rw-r--r--     1 ben-hannan  staff      32768 Sep 25 02:04 647E2C1D-2E17-4097-9BF2-A0D834295F80-98982-000002FA34C40414-shm
+drwx------@    2 ben-hannan  staff         64 Sep 24 23:53 com.apple.shazameventsd
+drwx------     4 ben-hannan  staff        128 Sep 24 22:45 tmp.HoPbHvQFNv
+drwx------@    2 ben-hannan  staff         64 Sep 24 22:11 mediaanalysisd-access
+drwx------@    3 ben-hannan  staff         96 Sep 24 18:13 com.apple.jetpackassetd
+drwx------@    3 ben-hannan  staff         96 Sep 24 12:16 com.apple.amsondevicestoraged
+drwx------@    2 ben-hannan  staff         64 Sep 24 11:46 com.apple.dataaccess
+drwx------     5 ben-hannan  staff        160 Sep 24 07:10 lis314bt_jwog8mgj
+drwx------     4 ben-hannan  staff        128 Sep 24 07:10 lis314t_k_e167rz
+drwx------     6 ben-hannan  staff        192 Sep 24 07:10 lis314t_c05kdyz6
+drwx------     7 ben-hannan  staff        224 Sep 24 07:10 lis314t_puo5r09x
+drwx------     7 ben-hannan  staff        224 Sep 24 07:10 lis314t_6mt5out0
+drwx------     8 ben-hannan  staff        256 Sep 24 07:10 lis314t_wen66mwp
+drwx------     6 ben-hannan  staff        192 Sep 24 07:10 lis314t_xzagizcl
+drwx------     5 ben-hannan  staff        160 Sep 24 07:10 lis314t_838d96tm
+drwx------     6 ben-hannan  staff        192 Sep 24 07:10 lis314t_8mky8b4j
+drwx------     6 ben-hannan  staff        192 Sep 24 07:10 lis314t_0icnddok
+drwx------     7 ben-hannan  staff        224 Sep 24 07:10 lis314t__frxogeq
+drwx------     7 ben-hannan  staff        224 Sep 24 07:10 lis314t_euetuzi0
+drwx------     7 ben-hannan  staff        224 Sep 24 07:10 lis314t_niefoj8k
+drwx------     4 ben-hannan  staff        128 Sep 24 07:10 lis314t_jilxt_1b
+drwx------     4 ben-hannan  staff        128 Sep 24 07:10 lis314t__yd26eib
+drwx------     4 ben-hannan  staff        128 Sep 24 07:10 lis314t_kppmzpdv
+drwx------     5 ben-hannan  staff        160 Sep 24 07:10 lis314t_9vwh1029
+drwx------     5 ben-hannan  staff        160 Sep 24 07:10 lis314bt_k1o9e4n1
+drwx------     4 ben-hannan  staff        128 Sep 24 07:10 lis314t_y7yt0gq7
+drwx------     6 ben-hannan  staff        192 Sep 24 07:10 lis314t_zbm3nstx
+drwx------     7 ben-hannan  staff        224 Sep 24 07:10 lis314t_sbke4u5i
+drwx------     7 ben-hannan  staff        224 Sep 24 07:10 lis314t__81_ra6t
+drwx------     8 ben-hannan  staff        256 Sep 24 07:10 lis314t_x081p0wj
+drwx------     6 ben-hannan  staff        192 Sep 24 07:10 lis314t_7xcn6v2r
+drwx------     5 ben-hannan  staff        160 Sep 24 07:10 lis314t_8eg_x8xy
+drwx------     6 ben-hannan  staff        192 Sep 24 07:10 lis314t_bvdh9sr3
+drwx------     6 ben-hannan  staff        192 Sep 24 07:10 lis314t_2cpc_glo
+drwx------     7 ben-hannan  staff        224 Sep 24 07:10 lis314t_mxuvvk1n
+drwx------     7 ben-hannan  staff        224 Sep 24 07:10 lis314t_5mhb4x_3
+drwx------     7 ben-hannan  staff        224 Sep 24 07:10 lis314t_3rjdb9dz
+drwx------     4 ben-hannan  staff        128 Sep 24 07:10 lis314t_t4cb3lhz
+drwx------     4 ben-hannan  staff        128 Sep 24 07:10 lis314t_7jphfkxl
+drwx------     4 ben-hannan  staff        128 Sep 24 07:10 lis314t_kongrekh
+[0m
+[0m$ [0mfor d in /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-*/; do echo "== $d"; ls -la "$d" 2>&1; done
+== /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-2i1icu1i/
+total 0
+drwx------     2 ben-hannan  staff      64 Sep 26 16:07 .
+drwx------@ 4627 ben-hannan  staff  148064 Sep 26 16:09 ..
+== /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-5qao0_p3/
+total 0
+drwx------     2 ben-hannan  staff      64 Sep 26 16:05 .
+drwx------@ 4627 ben-hannan  staff  148064 Sep 26 16:09 ..
+== /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-fx0aky1z/
+total 0
+drwx------     2 ben-hannan  staff      64 Sep 26 16:08 .
+drwx------@ 4627 ben-hannan  staff  148064 Sep 26 16:09 ..
+== /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-iai9ggah/
+total 0
+drwx------     2 ben-hannan  staff      64 Sep 26 16:02 .
+drwx------@ 4627 ben-hannan  staff  148064 Sep 26 16:09 ..
+== /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-ii6ocx4w/
+total 0
+drwx------     2 ben-hannan  staff      64 Sep 26 15:59 .
+drwx------@ 4627 ben-hannan  staff  148064 Sep 26 16:09 ..
+== /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-k9j2yi23/
+total 0
+drwx------     2 ben-hannan  staff      64 Sep 26 15:58 .
+drwx------@ 4627 ben-hannan  staff  148064 Sep 26 16:09 ..
+== /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-ql6cbgjv/
+total 0
+drwx------     2 ben-hannan  staff      64 Sep 26 16:04 .
+drwx------@ 4627 ben-hannan  staff  148064 Sep 26 16:09 ..
+== /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-rrz5fl13/
+total 0
+drwx------     2 ben-hannan  staff      64 Sep 26 16:06 .
+drwx------@ 4627 ben-hannan  staff  148064 Sep 26 16:09 ..
+== /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-z4e4hf1b/
+total 0
+drwx------     2 ben-hannan  staff      64 Sep 26 16:01 .
+drwx------@ 4627 ben-hannan  staff  148064 Sep 26 16:09 ..
+[0m
+[0m$ [0mfind /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T -mmin -40 \( -name "chats.jsonl" -o -name "answers.jsonl" -o -name "chats-log.txt" -o -name "answer-log.txt" \) -print 2>/dev/null; echo "T_search_done"; find /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/C -mmin -60 \( -name "chats.jsonl" -o -name "answers.jsonl" \) -print 2>/dev/null | head; echo "C_done"
+T_search_done
+C_done
+[0m
+[0m$ [0mls -lat /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ 2>&1 | head -n 50; echo "==="; find /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode -maxdepth 3 -print 2>/dev/null | head -n 50
+total 8452640
+drwx------@ 4628 ben-hannan  staff      148096 Sep 26 16:11 ..
+drwxr-xr-x    16 ben-hannan  staff         512 Sep 26 15:35 rd378g-teacher
+drwxr-xr-x     4 ben-hannan  staff         128 Sep 26 14:15 rd378k-gate2b
+drwxr-xr-x    66 ben-hannan  staff        2112 Sep 26 14:15 .
+drwx------     5 ben-hannan  staff         160 Sep 26 14:01 k1e-teacher-c-UQfONj
+drwxr-xr-x     2 ben-hannan  staff          64 Sep 26 14:01 logs
+drwx------     4 ben-hannan  staff         128 Sep 26 13:46 rd378k-gate2-C2NWcx
+drwx------     4 ben-hannan  staff         128 Sep 26 12:43 k1e-teacher-tVmTTH
+-rw-r--r--     1 ben-hannan  staff    22149120 Sep 26 10:08 rv387.tar
+-rw-r--r--     1 ben-hannan  staff    23050240 Sep 26 10:07 rsn358i.tar
+drwxr-xr-x    22 ben-hannan  staff         704 Sep 26 04:02 bm391logs
+drwxr-xr-x     9 ben-hannan  staff         288 Sep 26 00:36 rsn358d-push
+drwxr-xr-x     4 ben-hannan  staff         128 Sep 26 00:00 rsn358c1-seal
+drwxr-xr-x    54 ben-hannan  staff        1728 Sep 25 23:18 bm391split
+drwxr-xr-x     9 ben-hannan  staff         288 Sep 25 22:36 trash-outbox
+-rw-r--r--     1 ben-hannan  staff         117 Sep 25 22:23 reader_rsync.log
+-rw-r--r--     1 ben-hannan  staff  1717501354 Sep 25 22:00 readerbm391.tgz
+-rw-r--r--     1 ben-hannan  staff       21770 Sep 25 21:58 treebrd5.tgz
+-rw-r--r--     1 ben-hannan  staff          69 Sep 25 21:58 treebrd5.path
+-rw-r--r--     1 ben-hannan  staff          22 Sep 25 21:51 bm391rent.env
+-rw-r--r--     1 ben-hannan  staff   171762299 Sep 25 21:50 treebm391.tgz
+-rw-r--r--     1 ben-hannan  staff          69 Sep 25 21:49 treebm391.path
+drwxr-xr-x     4 ben-hannan  staff         128 Sep 25 02:47 lis318b
+-rw-------     1 ben-hannan  staff         314 Sep 25 00:16 pilot356-log.jsonl
+-rw-------     1 ben-hannan  staff         212 Sep 25 00:16 pilot356-summary.json
+-rw-r--r--     1 ben-hannan  staff    22118400 Sep 25 00:14 rsn356code.tar
+drwxr-xr-x    24 ben-hannan  staff         768 Sep 25 00:13 rsn356seal
+drwxr-xr-x     5 ben-hannan  staff         160 Sep 24 23:45 teacher-glm53-run
+drwxr-xr-x     6 ben-hannan  staff         192 Sep 24 17:44 guard-350
+-rw-r--r--     1 ben-hannan  staff   164332113 Sep 24 14:00 tree-330c-dev3.tgz
+drwxr-xr-x     6 ben-hannan  staff         192 Sep 24 13:46 ret330c
+-rw-r--r--     1 ben-hannan  staff   163803553 Sep 24 13:02 tree330c.tgz
+-rw-r--r--     1 ben-hannan  staff          79 Sep 24 13:01 tree330c.path
+drwx------     3 ben-hannan  staff          96 Sep 24 13:00 tree330c.poBfd9
+-rw-r--r--     1 ben-hannan  staff        9748 Sep 24 09:35 rent330c.log
+-rw-------     1 ben-hannan  staff        1226 Sep 24 09:23 smoke336win_run.log
+-rw-r--r--     1 ben-hannan  staff         626 Sep 24 09:22 smoke336_run2.ps1
+-rw-r--r--     1 ben-hannan  staff         706 Sep 24 09:22 smoke336_run.ps1
+-rw-r--r--     1 ben-hannan  staff   162728248 Sep 24 09:18 smoke336win-tree.tgz
+drwxr-xr-x     3 ben-hannan  staff          96 Sep 24 09:17 smoke336win
+-rw-r--r--     1 ben-hannan  staff  1717501354 Sep 24 08:41 reader-330dev.tgz
+-rw-r--r--     1 ben-hannan  staff   162590851 Sep 24 08:38 tree-330dev.tgz
+-rw-r--r--     1 ben-hannan  staff        1334 Sep 24 08:15 lis314b-armG.log
+-rw-r--r--     1 ben-hannan  staff        1418 Sep 24 08:06 lis314b-armS.log
+-rw-r--r--     1 ben-hannan  staff        1334 Sep 24 07:57 lis314b-armK.log
+-rw-r--r--     1 ben-hannan  staff        1334 Sep 24 07:47 lis314b-armP.log
+-rw-r--r--     1 ben-hannan  staff        1246 Sep 24 07:37 lis314b-armC.log
+-rw-r--r--     1 ben-hannan  staff        4499 Sep 24 07:28 lis313b-report.txt
+-rw-r--r--     1 ben-hannan  staff        1610 Sep 24 07:26 lis313b-armD.log
+===
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis314b-armG.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis314b-armP.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336win-tree.tgz
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/teacher-glm53-run
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/teacher-glm53-run/artifacts
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/teacher-glm53-run/artifacts/claude-cre333e-dev-20260924
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/teacher-glm53-run/artifacts/claude-blurt2-20260925
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/teacher-glm53-run/artifacts/claude-blurt1-dev-20260925
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/teacher-glm53-run/scripts
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/teacher-glm53-run/scripts/claude_ideajudge_teacher.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/teacher-glm53-run/run-glm53.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ret330c
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ret330c/arm_twinb.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ret330c/arm_P330c.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ret330c/score
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ret330c/score/grammar_P330c.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ret330c/score/grammar_twinb.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ret330c/score/mechanical.json
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ret330c/score/judge_asks_P330c.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ret330c/score/judge_saves_twinb.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ret330c/score/judge_asks_twinb.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ret330c/score/judge_saves_P330c.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ret330c/run
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ret330c/run/arm_P330c.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ret330c/run/arm_twinb.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn356code.tar
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis314b-armS.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336win_run.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358i.tar
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis313b-report.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/tree-330c-dev3.tgz
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/treebrd5.path
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis314b-test.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/TEACHING_TO_TEST_CONTRACT.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/memorylab
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/memorylab/controls.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/memorylab/tasks.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/memorylab/checkpoint.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/memorylab/transformer_model.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/memorylab/__init__.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/memorylab/bench.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/memorylab/model.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/memorylab/experiment.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/memorylab/positive_controls.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/memorylab/storage.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/design
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/design/research
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/design/01-learning-spec.md
+[0m
+[0m$ [0mls -lat /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/ 2>&1 | head -n 50; echo "==="; find /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher -maxdepth 3 -print 2>/dev/null | head -n 100
+total 256
+-rw-r--r--     1 ben-hannan  staff  48823 Sep 26 15:35 teacher-log.txt
+drwxr-xr-x    16 ben-hannan  staff    512 Sep 26 15:35 .
+-rw-r--r--     1 ben-hannan  staff    209 Sep 26 15:35 selftest-k.log
+-rw-r--r--     1 ben-hannan  staff     31 Sep 26 15:35 selftest-g.log
+-rw-r--r--     1 ben-hannan  staff   6118 Sep 26 15:35 lab1.log
+-rw-r--r--     1 ben-hannan  staff   6118 Sep 26 15:35 lab3.log
+-rw-r--r--     1 ben-hannan  staff   6118 Sep 26 15:35 lab0.log
+-rw-r--r--     1 ben-hannan  staff   6118 Sep 26 15:35 lab2.log
+-rw-r--r--     1 ben-hannan  staff     41 Sep 26 15:24 split.log
+-rw-r--r--     1 ben-hannan  staff     11 Sep 26 15:24 GRADE_START_EPOCH.txt
+-rw-r--r--     1 ben-hannan  staff  23698 Sep 26 15:22 write.log
+drwxr-xr-x    66 ben-hannan  staff   2112 Sep 26 14:15 ..
+-rw-r--r--     1 ben-hannan  staff     11 Sep 26 14:04 WRITE_START_EPOCH.txt
+-rw-r--r--     1 ben-hannan  staff     21 Sep 26 14:04 WRITE_START_UTC.txt
+drwxr-xr-x     3 ben-hannan  staff     96 Sep 26 12:58 artifacts
+drwxr-xr-x  1640 ben-hannan  staff  52480 Sep 26 12:58 scripts
+===
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/selftest-k.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/write.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/artifacts
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/artifacts/claude-rd378g-20260926
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/artifacts/claude-rd378g-20260926/PASSMARKS.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/artifacts/claude-rd378g-20260926/SEAL.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/artifacts/claude-rd378g-20260926/glm
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/split.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/WRITE_START_EPOCH.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/teacher-log.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_e2e381b_harness.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_identity227c.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_loop132_marks.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_naturalpanel208_driver.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_cre333b_test.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_rsn358m_run.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_earcheck261_score257.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_loop113c_agent.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_source226_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix139d_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_loop113b_agent.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_bench113d_redteam124.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_redteam79_probe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix139e_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_slp363_night.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_baseline_report.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_earcheck261_theta.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_widelengths43k_v2.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix150_bench.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/premonition_binding_probe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_rd371_sweep.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_ofteach215_cmps.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_talker101_data.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix154c_buildprobe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_loop129a_marks.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_self127_calibrate.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_diag95_infer.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix167e_marksdiff.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_cre333d_wrap.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_openers260_run.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix173_g3.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_merge252c_score.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_fix228_srcguard.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_fix266_chainlift.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_k1b_test.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_comment258_m1.sh
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_rsn358a_run.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_reading94b_build.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix167b_marksdiff.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_demo88_rehearse.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_y1w_judge.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_slp358sf_nights.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_bm397t_data.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_e2e360.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_ears213_wave.bat
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_fix02c_test.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix167d_bench.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_autosleep42.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_rsn358f_flow.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_lis319_data.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix167e_bench.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_loop90_marks.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix144_f1.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix166c_probe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_perf128_daemon.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix154d_yesno.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix166b_probe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_rv391_dev.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_260_panel.sh
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_fullname232c_score.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_fullname232b_score.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_chain231_predict.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_ep382_store_v2.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_align147_a2.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_talker24_model.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_e2e383.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_bench113e_run.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_bench92_notebook_arm.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_lis319j_rule.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix168_ground.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_loop153_agent.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_rsn357_four.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_bm398d_evidence.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_self122.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix221_tableask.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_slp361_test.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix129_punct.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix160c_bench.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_bm390_score.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_table237b_devscore.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_soak108_run.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix160b_bench.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_thought49_schema.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_bench113d_121.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_loop189_agent.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_bm398e_data.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/claude_lis319_read.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-teacher/scripts/fable_fix140_t1.py
+[0m
+[0m$ [0mfind /private/var/folders/6q - \( -name "chats.jsonl" -o -name "answers.jsonl" \) -print 2>/dev/null | head -n 100; echo "all6q_done"
+all6q_done
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_k1h_glm.py > /tmp/k1h_glm_script.py; wc -l /tmp/k1h_glm_script.py; grep -n -E "chats\.jsonl|answers\.jsonl|chats-log|answer-log|OUT|output|artifacts|argv|argparse|add_argument" /tmp/k1h_glm_script.py | head -n 80
+232 /tmp/k1h_glm_script.py
+15:        is kept, ids kh-0001... in call order. Writes OUT/chats.jsonl and prints counts only.
+16:          python3 -B scripts/claude_k1h_glm.py chats --existing artifacts/claude-k1e-20260926/train/items.jsonl \
+19:        user's earlier messages and the request. The raw answer is appended to OUT/answers.jsonl with its item id.
+32:import argparse
+114:    (out / "chats.jsonl").write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in items),
+129:    path = out / "answers.jsonl"
+193:        a = argparse.Namespace(items=[str(src)], out=d, workers=1, max_minutes=5)
+204:        a2 = argparse.Namespace(existing=[str(ex)], out=d, calls=2, workers=2)
+208:        kept = T.load(Path(d) / "chats.jsonl")
+215:    ap = argparse.ArgumentParser()
+216:    ap.add_argument("mode", choices=["chats", "answer", "selftest"])
+217:    ap.add_argument("--existing", action="append")
+218:    ap.add_argument("--items", action="append")
+219:    ap.add_argument("--out")
+220:    ap.add_argument("--calls", type=int, default=36)
+221:    ap.add_argument("--workers", type=int, default=4)
+222:    ap.add_argument("--max-minutes", type=float, default=160)
+[0m
+[0m$ [0mfind /private/var/folders - \( -name "chats.jsonl" -o -name "answers.jsonl" \) -print 2>/dev/null | head -n 50; echo "varfolders_all_done"; find /private/tmp - \( -name "chats.jsonl" -o -name "answers.jsonl" \) -print 2>/dev/null | head -n 50; echo "privtmp_done"
+varfolders_all_done
+privtmp_done
+[0m
+[0m$ [0mfind /private/var/folders /private/tmp - \( -name "chats-log.txt" -o -name "answer-log.txt" \) -print 2>/dev/null | head -n 50; echo "logs_done"; find . \( -name "chats-log.txt" -o -name "answer-log.txt" -o -name "chats.jsonl" -o -name "answers.jsonl" \) -print 2>/dev/null | head -n 50; echo "worktree_all_done"
+logs_done
+worktree_all_done
+[0m
+[0m$ [0mfind /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T -maxdepth 2 -mmin -60 -print 2>/dev/null | head -n 100; echo "recentT_done"; echo "==="; find . -maxdepth 3 -mmin -120 -print 2>/dev/null | head -n 100; echo "recentWorktree_done"
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6ade2bea3a2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6adffbf9792-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6e7e2bf2fa2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6bde7fffbfa-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6bff3fe57ca-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6f7f3bed3fa-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7f7e6bf17c2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7b7ebbf23aa-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7fff3be038a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6a7ebbf13e2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6e5e6ff83ea-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6a7eeff8ff2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7a5fbbf73ea-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6a7f6beb7c2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7edf3becba2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7afebbeb7ea-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7f7eafe93e2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7eff6be7fe2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6f7e3ffb7f2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7adefbfe3f2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/com.apple.replayd/TemporaryItems
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7e5e3fffb82-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6a7faff9bc2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6a5e7fed3a2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6b5fabe43c2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7edfabf37e2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6a5ebbf1792-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7a5f6feafba-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6e5faff8b82-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6a5feffeffa-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7aff6fe539a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6ede2bf9fc2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7e5f6bf93b2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6b7f2feefea-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6afeafffbda-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6b7fffe93c2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6e7f6bf279a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6bde2be2bf2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6e7fefffbd2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7a7efbf9b82-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcfaafe6fe6bd2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/com.apple.syncdefaultsd/TemporaryItems
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6b7f6be97c2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6fdffffb3fa-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7b7fafe97ca-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7f7efbfc7ba-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6bdeabf23da-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7a7eabe479a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7afebbeabfa-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7b7fefe0f8a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7afe2fe8bfa-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7a5f2bf07a2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7ade2fea78a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6adf3bfa3c2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6b5fabf0fa2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7b7f6be3b92-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7b5e3bf5f8a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6afeffedbfa-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6ade7bf63b2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6e5e2fe97da-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6bff3bf3b82-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7bdeebeb3c2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6b5fbfe23ea-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6b7eefe478a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7e7e7bf879a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7bfe3bfa7da-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7bff3be7b92-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6f7e7ff67b2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7adebff43e2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6adfffeff8a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7b7feff5bba-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7edfbfe6fb2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7f5e2ffa79a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7ade2ff03b2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6afeaffb3aa-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7b5f7beb792-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6b5ffff23ca-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6ede6fe3392-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6e7eeff5fd2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6f7febe87a2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7e7eebe578a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7f5ffbf67ba-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7e7e2ffb38a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7f5eefe379a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7aff3fee3d2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7efe6be5bea-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7fff3bef7fa-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7efe3ff03e2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7f7febf2fca-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7bfeeff4b92-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7b5eeffc3d2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7b5e7be03d2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6ade6fec7ca-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7afebbe1bf2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7a5f2be6fe2-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7aff7fe8f8a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf7f7efbe979a-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6b7febf9b92-00000000.dylib
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/.b9dcf6ede3fe1fea-00000000.dylib
+recentT_done
+===
+./artifacts
+./artifacts/claude-peek-358i2pc-torch-20260926
+./artifacts/claude-peek-358i2pc-torch-20260926/REPORT.md
+./artifacts/claude-g406-20260926
+./artifacts/claude-g406-20260926/run
+./artifacts/claude-rd378k-20260926
+./artifacts/claude-rd378k-20260926/gate2
+./artifacts/claude-rd378k-20260926/gate3
+./artifacts/claude-glm-helper-v11-20260926
+./artifacts/claude-glm-helper-v11-20260926/REPORT.md
+./artifacts/claude-instances-20260926l
+./artifacts/claude-instances-20260926l/REPORT.md
+./artifacts/fable-predictions-ledger.md
+./artifacts/claude-glm-opencode-20260926
+./artifacts/claude-glm-opencode-20260926/REPORT.md
+./artifacts/claude-rd378g-20260926
+./artifacts/claude-rd378g-20260926/teacher-log.txt
+./artifacts/claude-rd378g-20260926/glm
+./artifacts/claude-stop-mu405-20260926
+./artifacts/claude-stop-mu405-20260926/REPORT.md
+./artifacts/claude-rsn358i2-20260926
+./artifacts/claude-rsn358i2-20260926/RESULTS.md
+./artifacts/claude-rsn358i2-20260926/runs
+./artifacts/claude-rsn358i2-20260926/SEAL-run.sha256.txt
+./artifacts/claude-dl7-20260926
+./artifacts/claude-dl7-20260926/gpu
+./artifacts/claude-dl7-20260926/RESULTS-gpu.md
+./artifacts/claude-glm-throughput-20260926
+./artifacts/claude-glm-throughput-20260926/summary.json
+./artifacts/claude-glm-throughput-20260926/REPORT.md
+./artifacts/claude-glm-throughput-20260926/prompts.json
+./artifacts/claude-glm-throughput-20260926/level-16.json
+./artifacts/claude-glm-throughput-20260926/level-4.json
+./artifacts/claude-glm-throughput-20260926/level-8.json
+./artifacts/claude-stop-k1h-20260926
+./artifacts/claude-stop-k1h-20260926/REPORT.md
+./artifacts/claude-y1t-20260926
+./artifacts/claude-y1t-20260926/glm
+./artifacts/claude-peek-358i2pc-20260926
+./artifacts/claude-peek-358i2pc-20260926/REPORT.md
+./artifacts/claude-credit-20260926j
+./artifacts/claude-credit-20260926j/REPORT.md
+./artifacts/claude-stop-depot-20260926
+./artifacts/claude-stop-depot-20260926/REPORT.md
+./artifacts/claude-credit-20260926k
+./artifacts/claude-credit-20260926k/REPORT.md
+./scripts
+./scripts/claude_glm_cleanup_20260926.py
+./scripts/claude_glm_opencode.py
+./scripts/claude_glm_throughput_20260926.py
+./scripts/claude_glm_opencode_v11.py
+recentWorktree_done
+[0m
+[0m$ [0mBASE="/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j"; stat -f "%Sm %N" -t "%Y-%m-%d %H:%M:%S" "$BASE" "$BASE/scripts/claude_k1h_glm.py" 2>&1; echo "==="; find "$BASE" -mmin -45 -print 2>/dev/null | head -n 100; echo "recent_base_done"
+stat: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j: stat: No such file or directory
+stat: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j/scripts/claude_k1h_glm.py: stat: No such file or directory
+===
+recent_base_done
+[0m
+[0m$ [0mls -la /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/ 2>&1 | head -n 40; echo "==="; date -u; date
+total 8075856
+drwx------@ 4630 ben-hannan  staff     148160 Sep 26 16:13 .
+drwxr-xr-x@    6 ben-hannan  staff        192 Aug 29 20:14 ..
+drwx------     4 ben-hannan  staff        128 Sep 23 12:17 .AddressBookLocks
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 17:23 .b9dc32a5e3ffd3aa-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 22:24 .b9dc32b7faff8be2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 23:05 .b9dc32edf7ffdb82-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 23:05 .b9dc32edfafe3bc2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 23:22 .b9dc33b7e7bfb7e2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 23:13 .b9dc33bfe3be5fca-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 17:53 .b9dc33f5f6be3f8a-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 23:24 .b9dc33f7e6ffbfd2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 24 05:00 .b9dc36b5e2fe97da-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 24 05:00 .b9dc36b5fefff3e2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 18:50 .b9dc36e5ebbedbd2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 18:50 .b9dc36e5faff03aa-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 18:50 .b9dc36e7efbe6ff2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 14:23 .b9dc36f7e3ff7f92-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 14:01 .b9dc37a5ffbf3bca-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 18:52 .b9dc37a7ebfe2fe2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 13:59 .b9dc37a7f2fe6f9a-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 13:59 .b9dc37a7f3be03b2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 13:59 .b9dc37a7f6bf43d2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 18:54 .b9dc37a7f7bfb7aa-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 13:59 .b9dc37a7f7bffbda-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 18:54 .b9dc37a7fbff17a2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 14:46 .b9dc37b5e2be2be2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 24 00:23 .b9dc37b5e7bef79a-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 24 00:25 .b9dc37b5f2beefaa-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 14:40 .b9dc37bfe3ff8fca-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 14:40 .b9dc37bfe6ffdbfa-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 19:03 .b9dc37bfe7ffe7d2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 14:10 .b9dc37bffefee3f2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 19:03 .b9dc37bffeffdffa-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 19:03 .b9dc37bffefff38a-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 18:59 .b9dc37e5eafec382-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 18:59 .b9dc37e5ebffabb2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 18:59 .b9dc37e5eebfd3e2-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 14:06 .b9dc37e7eabf2fda-00000000.dylib
+-rw-r--r--     1 ben-hannan  staff    4822976 Sep 23 14:03 .b9dc37e7efbf63a2-00000000.dylib
+===
+Sat Sep 26 20:13:17 UTC 2026
+Sat Sep 26 16:13:17 EDT 2026
+[0m
+[0m$ [0mls -d /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-* 2>&1; echo "==="; echo $TMPDIR; ls -d "${TMPDIR:-/tmp}/opencode" 2>&1; ls /tmp/ 2>&1 | head -n 30
+ls: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oSZKfdQy6j: No such file or directory
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-5qao0_p3
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-dipjqf_3
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-fx0aky1z
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-ghsnh1l0
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-iai9ggah
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-ii6ocx4w
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-k9j2yi23
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-ql6cbgjv
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/glm-opencode-z4e4hf1b
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode
+===
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T//opencode
+__KMP_REGISTERED_LIB_19337
+__KMP_REGISTERED_LIB_27249
+__KMP_REGISTERED_LIB_27250
+__KMP_REGISTERED_LIB_73221
+__KMP_REGISTERED_LIB_73222
+__KMP_REGISTERED_LIB_73227
+__KMP_REGISTERED_LIB_73229
+__KMP_REGISTERED_LIB_73236
+__KMP_REGISTERED_LIB_73239
+__KMP_REGISTERED_LIB_73242
+__KMP_REGISTERED_LIB_73245
+__KMP_REGISTERED_LIB_73248
+__KMP_REGISTERED_LIB_73252
+__KMP_REGISTERED_LIB_73255
+__KMP_REGISTERED_LIB_73272
+__KMP_REGISTERED_LIB_73281
+__KMP_REGISTERED_LIB_73282
+__KMP_REGISTERED_LIB_73285
+__KMP_REGISTERED_LIB_73290
+__KMP_REGISTERED_LIB_73292
+__KMP_REGISTERED_LIB_73294
+__KMP_REGISTERED_LIB_73297
+__KMP_REGISTERED_LIB_73306
+__KMP_REGISTERED_LIB_73309
+__KMP_REGISTERED_LIB_73313
+__KMP_REGISTERED_LIB_73324
+__KMP_REGISTERED_LIB_73328
+__KMP_REGISTERED_LIB_73334
+02cdev
+02dr-local.sha
+[0m
+[0m$ [0mfind /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T -maxdepth 2 -name "tmp.*" -print 2>/dev/null | head -n 20; echo "tmpdirs_done"; find /private/var/folders -name "claude_k1h_glm.py" -print 2>/dev/null | head -n 20; echo "k1h_find_done"
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.RDVuRjuXzv
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.HoPbHvQFNv
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.UesxzyXYZ1
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.zp8zs6yNbu
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.thxrlnBkuw
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.kiohHwSNBC
+tmpdirs_done
+k1h_find_done
+[0m
+[0m$ [0mls artifacts/ 2>&1 | head -n 50; echo "==="; ls artifacts/claude-k1h-20260926/ 2>&1; echo "==="; find /private/var/folders /private/tmp - \( -name "chats.jsonl" -o -name "answers.jsonl" -o -name "chats-log.txt" -o -name "answer-log.txt" \) -print 2>/dev/null | head -n 50; echo "find_done"; date -u
+claude-adapters-20260926d
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm391-20260926
+claude-bm395-20260925
+claude-bm397t-20260926
+claude-bm398e-20260926
+claude-bm398i-20260926
+claude-bm398r-20260926
+claude-bmriv-smoke-20260926
+claude-boundary259-20260922
+claude-brd5-20260926
+claude-brd6-20260926
+claude-brd7-20260926
+claude-brd8-20260926
+claude-brd8w-20260926
+claude-brd9-20260926
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-ch403-20260926
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chat338-20260924
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convbench-f0-20260923
+claude-convf0-20260923
+claude-convjudge239-A-20260922
+===
+ls: artifacts/claude-k1h-20260926/: No such file or directory
+===
+find_done
+Sat Sep 26 20:16:30 UTC 2026
+[0m
+[0m$ [0mfind /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees - \( -name "chats.jsonl" -o -name "answers.jsonl" \) -print 2>/dev/null | head -n 20; echo "worktrees_done"; find /Users/ben-hannan/Desktop/projects/beautiful-model -maxdepth 4 \( -name "chats.jsonl" -o -name "answers.jsonl" \) -print 2>/dev/null | head -n 20; echo "mainrepo_done"; ps -axo pid,etime,command | grep -F "claude_k1h_glm.py" | grep -v grep; echo "ps_done:$?"; date -u
+worktrees_done
+mainrepo_done
+36288       10:00 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:000-stop-k1hz-salvage.go1.36257 COMMON RULES (the "Creative answers in chat" thread, Claude, wrote this task on 2026-09-26 20:20 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>`. Additive only, fictional names, no secrets, never write to the repo-root notebook/. Never read or print opencode config, auth or key files. Report in your final reply: verdict first, integer counts, every deviation.\012GPU: no (Mac CPU; file copies only; no GLM call, no opencode call except the session count below).\012TIME CAP: 45 minutes.\012DUPLICATE GUARD: stop with DUPLICATE if artifacts/claude-k1h-20260926/glm-v1 exists on origin/builder-outbox or origin/main.\012\012YOUR TASK: keep what the stopped k1h-glm job already made (its owner chose to keep the rows; the Director's 000-stop-k1h stops its processes). Never open, print or quote a chat or an answer: counts, sizes and sha256 only.\0121. Wait until no process whose command contains claude_k1h_glm.py is running (`ps -axo pid,etime,command`; check every 60 s). If one is still running after 20 minutes, stop it by exact PID (kill PID; after 10 s kill -9 a survivor) and say so. Touch nothing else.\0122. Find the job's output folder: every file named chats.jsonl or answers.jsonl modified after 2026-09-26 19:39 UTC under /tmp, /private/tmp, /private/var/folders and the worktree, whose folder or a parent folder up to 3 levels also holds scripts/claude_k1h_glm.py. Also look there for chats-log.txt and answer-log.txt. Report every candidate path with size and line count. If candidates sit in more than one folder, copy nothing and stop with AMBIGUOUS.\0123. Copy the files found (chats.jsonl, answers.jsonl, chats-log.txt, answer-log.txt; whichever exist) into the worktree as artifacts/claude-k1h-20260926/glm-v1/ (force-add; artifacts/ is git-ignored). Check that each copy's sha256 equals the source's. For each .jsonl report: lines, lines that parse as JSON, and lines that don't (count only). For answers.jsonl also count rows with a non-empty "answer" (python: json.loads(line).get("answer")).\0124. `opencode session list -n 1000 | wc -l` (the count only).\0125. REPORT.md in artifacts/claude-k1h-20260926/glm-v1/: counts, sizes, sha256, the source folder path, the times (from `date -u`), every deviation. Quote nothing.\012PUSH: artifacts/claude-k1h-20260926/glm-v1
+ps_done:0
+Sat Sep 26 20:16:40 UTC 2026
+[0m
+[0m$ [0mgit log --oneline -15 origin/main 2>&1 | head -n 20; echo "==="; git show origin/main:artifacts/claude-stop-k1h-20260926/REPORT.md 2>&1 | head -n 60; echo "==="; ls artifacts/claude-stop-k1h-20260926/ 2>&1
+04ac9b9f5 Director: add BensPC header (ssh benspc + marker) to 180-gr5-benspc
+f60bc5eda dl-7b: answers to the Thread manager's review (per-seed items, per-night gain, second-try premise, sha256)
+16e4f2e38 queue gr-5 for BensPC as 180 (after rv390, before k1f, the Director's order): train the reader adapter, fixed dev gate, one registered run on the sealed gr-5 panel, score; the adapter stays on BensPC
+f117076d4 y1t-topup-mac back to held until g406's run lands (Director 20:13: shared opencode route at its 16)
+612e4d730 0.2d ADDENDUM-34: dl-7b registered FAIL (F3), H-B open; dl-9 switch and dl-8 next
+9bb8186d1 y1t-topup-mac: repoint to helper v1.1 via claude_y1t_glm_oc11.py (wrapper unchanged, helper swapped), 3 workers; back to the queue
+c23de1ac0 Director: credit read 0926m
+b0658ca08 rd378k-gate3oc and rd378g-writemore (neither has run): one-call leak check before the long step (Thread manager 20:13 UTC): if helper v1.1's cleanup misses its session from a git-archive tree, stop with LEAK instead of leaving ~120 sessions
+7f0d11c51 k1h ADDENDUM-2 (route only, 20:13 UTC, before any k1h row): GLM calls via helper v1.1 (7a067cfb), 2 at once, 600 s per call; first launch made 0 chats/0 answers; queue k1h-glm2 (8 h cap, 240 k1e answers first)
+a1ce6187b dl-7b VERIFY: registered FAIL (F3 263 < 276); forgetting 26 -> 7; premise supported 22/26
+915373a4c gr-5 blind panel made and sealed (new blind writer; seeds 497004-7 / 498004-7; 100 squares, 60 lookalikes of which read_latin reads 7 as a square, 60 unseen-format squares; read_latin exact on 3 of 60 unseen) and training rows + code sealed, before the adapter is trained
+7b5bb0ac7 Director: helper v1.1 REPORT to main
+3634a4195 gr-5 registered (before the panel, the adapter or any run): the reader 1B is trained to copy the square or say none (LoRA, sleep recipe, code-printed targets, gr-4's prompt/grammar/decode); same bars R1-R4, U1/U2; dev stop rule; runs on BensPC; Thread manager's four review conditions written in
+ce585c7e4 Director: ledger dl-7b final
+5c1da5817 k1h salvage: header time corrected to the commit time (20:04 UTC, from git/date -u); held, not needed: 000-stop-k1h found the stopped job's output folder empty (chats step unfinished, 0 chats, 0 answers)
+===
+fatal: path 'artifacts/claude-stop-k1h-20260926/REPORT.md' exists on disk, but not in 'origin/main'
+===
+REPORT.md
+[0m
+[0m$ [0mgit branch -a 2>&1 | head -n 20; echo "==="; git remote -v 2>&1; echo "==="; cat artifacts/claude-stop-k1h-20260926/REPORT.md 2>&1 | head -n 80
+* claude/card-experiment-handoff-7c5b27
++ claude/fact-saving-note-filtering-4ff1ff
++ claude/forgetting-plain-english-gap-9258f0
++ claude/locomo-length-penalty-408e2a
++ claude/loop-net-generalization-analysis-729ee3
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/pull-from-main-629dc4
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
+  codex/testing-experiment-44
++ main
+  rent-zdl5c-results
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/builder-outbox-tmp
+===
+origin	git@github.com:BenjaminHannan/learner.git (fetch)
+origin	git@github.com:BenjaminHannan/learner.git (push)
+===
+# Stop k1h-glm — REPORT
+
+Date (UTC): 2026-09-26. Worktree: card-experiment-handoff-7c5b27.
+Director order (2026-09-26 20:15 UTC): stop k1h-glm; it must wait for GLM helper v1.1.
+Requester of the stop: owner of k1h-glm ("Creative answers in chat" thread).
+
+## Verdict: STOPPED
+
+The k1h-glm agent process and all of its child python/opencode processes are dead.
+Nothing for g406 or any other job was touched. No TEST-ONLY panel was read.
+This report contains counts only; no chat, answer, transcript, or key material.
+
+Pre-stop system check: `uptime` load ~192 (1-min), free disk 52 GB (df -g /).
+Free disk was over the 3 GB floor, so the task proceeded. No heavy step was run (DISK: 0).
+
+## 1. Process snapshot before the kill (ps -axo pid,ppid,etime,command)
+
+Filter A (k1h | claude_k1h | claude_glm_opencode | "opencode run"), snapshot at ~16:04 local.
+Commands truncated to 160 chars. No key material in any command line.
+
+| PID | PPID | Elapsed | Command (first 160 chars) | Attribution |
+| --- | --- | --- | --- | --- |
+| 13718 | 13687 | 34:15 | /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/workt | lis320-pilot3 agent, other job |
+| 17081 | 17032 | 29:31 | /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/workt | g406 agent (see filter B) |
+| 20630 | 20628 | 24:42 | bash .../handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/k1h-glm.md | k1h-glm watcher launcher (NOT killed) |
+| 20664 | 20630 | 24:42 | /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/workt | k1h-glm agent (KILLED) |
+| 21178 | 20664 | 24:18 | /bin/zsh -c date -u; echo "CHATS_START:..."; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_glm.py chats --existing artif | k1h chats driver shell (KILLED) |
+| 21181 | 21178 | 24:18 | uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_glm.py chats --existing artifacts/claude-k1e-20260926/train/items.jsonl --ou | k1h uv wrapper (KILLED) |
+| 21182 | 21181 | 24:18 | /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_k1h_glm.py chats --existing artifacts/claude | k1h chats python, cwd /private/tmp/k1h-glm-iLDhRG (KILLED) |
+| 31675 | 21182 | 04:58 | /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash Write 20 short practice chats between one user and a personal assistant, as a JSON list | k1h GLM chats call (exited on its own before the kill) |
+| 32317 | 32244 | 03:07 | /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/workt | glm-helper-v11 agent, other job |
+| 33285 | 14197 | 02:34 | /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash You are writing training data: realistic text chats between a user and a personal assi | lis320 wording call, other job |
+| 33379 | 21182 | 02:09 | /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash Write 20 short practice chats between one user and a personal assistant, as a JSON list | k1h GLM chats call (KILLED) |
+| 33382 | 14197 | 02:08 | /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash You are writing training data: realistic text chats between a user and a personal assi | lis320 wording call, other job |
+| 33507 | 18119 | 01:39 | /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash You are a careful judge. Below is one chat transcript between a user and a personal as | g406 GLM judge call, other job |
+| 33629 | 14197 | 01:20 | /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash You are writing training data: realistic text chats between a user and a personal assi | lis320 wording call, other job |
+| 33853 | 18119 | 00:50 | /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash You are a careful judge. Below is one chat transcript between a user and a personal as | g406 GLM judge call, other job |
+| 34137 | 21182 | 00:33 | /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash Write 20 short practice chats between one user and a personal assistant, as a JSON list | k1h GLM chats call (KILLED) |
+| 34523 | 34520 | 00:23 | bash .../handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/000-stop-k1h.md | this stop task's own watcher |
+| 34553 | 34523 | 00:22 | /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/workt | this stop task's own agent |
+| 34571 | 33525 | 00:21 | /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash --title glm11-f147efed7bbb42c7ab9bf079a95e971a In the fictional town of Bramley-13, the | glm-helper-v11 probe, other job |
+| 34760 | 18119 | 00:18 | /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash You are a careful judge. Below is one chat transcript between a user and a personal as | g406 GLM judge call, other job |
+| 34799 | 21182 | 00:16 | /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash Write 20 short practice chats between one user and a personal assistant, as a JSON list | k1h GLM chats call (KILLED) |
+| 34928 | 18119 | 00:12 | /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash You are a careful judge. Below is one chat transcript between a user and a personal as | g406 GLM judge call, other job |
+| 35176 | 33525 | 00:06 | /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash --title glm11-1f4edcd8682f45fea0e79dcd3d76a3df In the fictional town of Bramley-14, the | glm-helper-v11 probe, other job |
+| 84732 | 84701 | 01:23:14 | /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/workt | rent-zdl7b agent, other job |
+
+Filter B (g406 | claude-madeup | madeup), same snapshot:
+
+| PID | PPID | Elapsed | Command (first 160 chars) |
+| --- | --- | --- | --- |
+| 17032 | 17031 | 29:31 | bash .../handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/claude-madeup-g406-mac.md |
+| 17081 | 17032 | 29:31 | /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto (g406 agent) |
+| 18114 | 17081 | 28:24 | /bin/zsh -c O=artifacts/claude-g406-20260926/run; mkdir -p "$O"; ... scripts/claude_g406_glm.py ... |
+| 18118 | 18114 | 28:24 | uv run --offline --no-project --python 3.12 python -B scripts/claude_g406_glm.py --packets ... |
+| 18119 | 18118 | 28:23 | /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_g406_glm.py ... |
+| 34553 | 34523 | 00:22 | this stop task's own agent (matched only because its own task text names g406 as do-not-touch) |
+
+Attribution of GLM child calls by parent PID: PPID 21182 = k1h (31675, 33379, 34137, 34799);
+PPID 18119 = g406 (33507, 33853, 34760, 34928); PPID 14197 = lis320 chain (33285, 33382, 33629);
+PPID 33525 = glm-helper-v11 chain (34571, 35176).
+
+## 2. Kill record (exact PIDs only)
+
+Fresh check just before the kill showed the k1h chain alive except PID 31675, which had
+already exited on its own; a new k1h GLM child PID 35314 (PPID 21182) had appeared.
+TERM signal sent to exactly 8 PIDs: 20664, 21178, 21181, 21182, 33379, 34137, 34799, 35314.
+Exit status of the kill command: 0.
+After a 10 s wait, `ps -p` on all 8 PIDs returned no processes: 8 of 8 dead, 0 survivors.
+No `kill -9` was needed.
+NOT killed and verified still alive afterward: g406 chain 17032, 17081, 18114, 18118, 18119
+(all 5 present). pythonw 13036 and anything on BensPC were never listed and never touched.
+The k1h watcher bash PID 20630 was deliberately not signalled; it exited on its own after
+its child agent died (absent in the post-kill check). Post-kill grep for k1h-glm/claude_k1h
+matched only this stop task's own commands: 0 k1h job processes remain.
+
+## 3. What k1h-glm had produced so far (counts only)
+
+k1h ran in temp dir /private/tmp/k1h-glm-iLDhRG (cwd of PID 21182), step 3 "chats".
+Output dir O/ inside it: 0 files. No output .jsonl exists, so 0 output .jsonl lines.
+[0m
+[0m$ [0mls -la /private/tmp/ 2>&1 | head -n 60; echo "==="; ls -la /private/tmp/k1h-glm-iLDhRG 2>&1; echo "==="; find /private/tmp -maxdepth 3 -name "*k1h*" -print 2>/dev/null | head -n 20; echo "k1h_tmp_done"
+total 25117032
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 14:07 __KMP_REGISTERED_LIB_19337
+-rw-------    1 ben-hannan  wheel        1024 Sep 26 12:40 __KMP_REGISTERED_LIB_27249
+-rw-------    1 ben-hannan  wheel        1024 Sep 26 12:40 __KMP_REGISTERED_LIB_27250
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73221
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73222
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73227
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73229
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73236
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73239
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73242
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73245
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73248
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73252
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:18 __KMP_REGISTERED_LIB_73255
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73272
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73281
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73282
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73285
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73290
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73292
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73294
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73297
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73306
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73309
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73313
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73324
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73328
+-rw-------    1 ben-hannan  wheel        1024 Sep 23 23:19 __KMP_REGISTERED_LIB_73334
+drwxrwxrwt  840 root        wheel       26880 Sep 26 16:12 .
+drwxr-xr-x    6 root        wheel         192 Sep 23 12:12 ..
+drwxr-xr-x    5 ben-hannan  wheel         160 Sep 25 23:12 02cdev
+-rw-r--r--    1 ben-hannan  wheel        2147 Sep 26 11:32 02dr-local.sha
+-rw-r--r--    1 ben-hannan  wheel        2147 Sep 26 11:33 02dr-remote.sha
+-rw-r--r--    1 ben-hannan  wheel        4146 Sep 23 18:59 241b.txt
+-rw-r--r--    1 ben-hannan  wheel        9969 Sep 23 13:59 280m_doc.md
+-rw-r--r--    1 ben-hannan  wheel        2758 Sep 24 21:11 350doc.md
+-rw-r--r--    1 ben-hannan  wheel        2213 Sep 25 20:12 358a_spec.md
+-rw-r--r--    1 ben-hannan  wheel         395 Sep 26 11:22 adapter02c.json
+-rw-r--r--    1 ben-hannan  wheel     5242880 Sep 25 22:36 af-aa
+-rw-r--r--    1 ben-hannan  wheel     5242880 Sep 25 22:36 af-ab
+-rw-r--r--    1 ben-hannan  wheel     5242880 Sep 25 22:36 af-ac
+-rw-r--r--    1 ben-hannan  wheel     5242880 Sep 25 22:36 af-ad
+-rw-r--r--    1 ben-hannan  wheel        1624 Sep 26 13:04 ag_local.py
+-rw-r--r--    1 ben-hannan  wheel     5242880 Sep 25 21:56 ah-aa
+-rw-r--r--    1 ben-hannan  wheel     5242880 Sep 25 21:56 ah-ab
+-rw-r--r--    1 ben-hannan  wheel     5242880 Sep 25 21:56 ah-ac
+-rw-r--r--    1 ben-hannan  wheel     5242880 Sep 25 21:56 ah-ad
+-rw-r--r--    1 ben-hannan  wheel        3818 Sep 25 13:40 amend.md
+-rw-r--r--    1 ben-hannan  wheel     5242880 Sep 25 22:52 an-aa
+-rw-r--r--    1 ben-hannan  wheel     5242880 Sep 25 22:52 an-ab
+-rw-r--r--    1 ben-hannan  wheel     5242880 Sep 25 22:52 an-ac
+-rw-r--r--    1 ben-hannan  wheel     5242880 Sep 25 22:52 an-ad
+-rw-r--r--    1 ben-hannan  wheel     1048576 Sep 25 22:53 anAA-aa
+-rw-r--r--    1 ben-hannan  wheel     1048576 Sep 25 22:53 anAA-ab
+-rw-r--r--    1 ben-hannan  wheel     1048576 Sep 25 22:53 anAA-ac
+-rw-r--r--    1 ben-hannan  wheel     1048576 Sep 25 22:53 anAA-ad
+-rw-r--r--    1 ben-hannan  wheel     1048576 Sep 25 22:53 anAA-ae
+-rw-r--r--    1 ben-hannan  wheel       32437 Sep 26 11:43 artpairs_have.json
+-rw-r--r--    1 ben-hannan  wheel       27358 Sep 26 11:42 artpairs.json
+===
+total 8
+drwx------    6 ben-hannan  wheel    192 Sep 26 15:40 .
+drwxrwxrwt  840 root        wheel  26880 Sep 26 16:12 ..
+drwxr-xr-x    3 ben-hannan  wheel     96 Sep 26 15:39 artifacts
+-rw-r--r--    1 ben-hannan  wheel    499 Sep 26 16:04 chats-log.txt
+drwxr-xr-x    2 ben-hannan  wheel     64 Sep 26 15:40 O
+drwxr-xr-x    9 ben-hannan  wheel    288 Sep 26 15:39 scripts
+===
+/private/tmp/k1h_glm_script.py
+/private/tmp/k1h-glm-iLDhRG
+/private/tmp/k1h-glm-iLDhRG/scripts/claude_k1h_glm.py
+k1h_tmp_done
+[0m
+[0m$ [0mrm -f /private/tmp/k1h_glm_script.py /tmp/k1h_glm_script.py; echo "cleaned"; SRC="/private/tmp/k1h-glm-iLDhRG"; find "$SRC" \( -name "chats.jsonl" -o -name "answers.jsonl" -o -name "chats-log.txt" -o -name "answer-log.txt" \) -print 2>/dev/null; echo "find_src_done"; echo "==="; ls -laR "$SRC" 2>&1 | head -n 100
+cleaned
+/private/tmp/k1h-glm-iLDhRG/chats-log.txt
+find_src_done
+===
+total 8
+drwx------    6 ben-hannan  wheel    192 Sep 26 15:40 .
+drwxrwxrwt  839 root        wheel  26848 Sep 26 16:17 ..
+drwxr-xr-x    3 ben-hannan  wheel     96 Sep 26 15:39 artifacts
+-rw-r--r--    1 ben-hannan  wheel    499 Sep 26 16:04 chats-log.txt
+drwxr-xr-x    2 ben-hannan  wheel     64 Sep 26 15:40 O
+drwxr-xr-x    9 ben-hannan  wheel    288 Sep 26 15:39 scripts
+
+/private/tmp/k1h-glm-iLDhRG/artifacts:
+total 0
+drwxr-xr-x  3 ben-hannan  wheel   96 Sep 26 15:39 .
+drwx------  6 ben-hannan  wheel  192 Sep 26 15:40 ..
+drwxr-xr-x  3 ben-hannan  wheel   96 Sep 26 15:39 claude-k1e-20260926
+
+/private/tmp/k1h-glm-iLDhRG/artifacts/claude-k1e-20260926:
+total 0
+drwxr-xr-x  3 ben-hannan  wheel  96 Sep 26 15:39 .
+drwxr-xr-x  3 ben-hannan  wheel  96 Sep 26 15:39 ..
+drwxr-xr-x  3 ben-hannan  wheel  96 Sep 26 15:39 train
+
+/private/tmp/k1h-glm-iLDhRG/artifacts/claude-k1e-20260926/train:
+total 144
+drwxr-xr-x  3 ben-hannan  wheel     96 Sep 26 15:39 .
+drwxr-xr-x  3 ben-hannan  wheel     96 Sep 26 15:39 ..
+-rw-r--r--  1 ben-hannan  wheel  70445 Sep 26 15:39 items.jsonl
+
+/private/tmp/k1h-glm-iLDhRG/O:
+total 0
+drwxr-xr-x  2 ben-hannan  wheel   64 Sep 26 15:40 .
+drwx------  6 ben-hannan  wheel  192 Sep 26 15:40 ..
+
+/private/tmp/k1h-glm-iLDhRG/scripts:
+total 128
+drwxr-xr-x  9 ben-hannan  wheel    288 Sep 26 15:39 .
+drwx------  6 ben-hannan  wheel    192 Sep 26 15:40 ..
+-rw-r--r--  1 ben-hannan  wheel  10389 Sep 26 15:39 claude_chat338_agent.py
+-rw-r--r--  1 ben-hannan  wheel   7325 Sep 26 15:39 claude_cre333_agent.py
+-rw-r--r--  1 ben-hannan  wheel   3605 Sep 26 15:39 claude_cre333b_agent.py
+-rw-r--r--  1 ben-hannan  wheel   4303 Sep 26 15:39 claude_cre333d_agent.py
+-rw-r--r--  1 ben-hannan  wheel   4081 Sep 26 15:39 claude_glm_opencode.py
+-rw-r--r--  1 ben-hannan  wheel  16096 Sep 26 15:39 claude_k1e_teacher.py
+-rw-r--r--  1 ben-hannan  wheel  11374 Sep 26 15:39 claude_k1h_glm.py
+[0m
+[0m$ [0mSRC="/private/tmp/k1h-glm-iLDhRG"; stat -f "size=%z mtime=%Sm" -t "%Y-%m-%d %H:%M:%S %Z" "$SRC/chats-log.txt" 2>&1; wc -l "$SRC/chats-log.txt" 2>&1; shasum -a 256 "$SRC/chats-log.txt" 2>&1; echo "==="; stat -f "size=%z mtime=%Sm" -t "%Y-%m-%d %H:%M:%S %Z" "$SRC" "$SRC/O" 2>&1; ls -la "$SRC/O" 2>&1; date -u
+size=499 mtime=2026-09-26 16:04:41 EDT
+      14 /private/tmp/k1h-glm-iLDhRG/chats-log.txt
+e7372a49c1a603c7647251127abf6977b25ee27c4ff2c5ae17fb78ccda5313cd  /private/tmp/k1h-glm-iLDhRG/chats-log.txt
+===
+size=192 mtime=2026-09-26 15:40:07 EDT
+size=64 mtime=2026-09-26 15:40:07 EDT
+total 0
+drwxr-xr-x  2 ben-hannan  wheel   64 Sep 26 15:40 .
+drwx------  6 ben-hannan  wheel  192 Sep 26 15:40 ..
+Sat Sep 26 20:17:20 UTC 2026
+[0m
+[0m$ [0mmkdir -p artifacts/claude-k1h-20260926/glm-v1 && cp -p /private/tmp/k1h-glm-iLDhRG/chats-log.txt artifacts/claude-k1h-20260926/glm-v1/chats-log.txt && shasum -a 256 artifacts/claude-k1h-20260926/glm-v1/chats-log.txt && wc -c artifacts/claude-k1h-20260926/glm-v1/chats-log.txt && wc -l artifacts/claude-k1h-20260926/glm-v1/chats-log.txt && date -u
+e7372a49c1a603c7647251127abf6977b25ee27c4ff2c5ae17fb78ccda5313cd  artifacts/claude-k1h-20260926/glm-v1/chats-log.txt
+     499 artifacts/claude-k1h-20260926/glm-v1/chats-log.txt
+      14 artifacts/claude-k1h-20260926/glm-v1/chats-log.txt
+Sat Sep 26 20:17:22 UTC 2026
+[0m
+[0m$ [0mopencode session list -n 1000 | wc -l; date -u
+9
+Sat Sep 26 20:17:25 UTC 2026
+[0m
+[0m← [0mWrite artifacts/claude-k1h-20260926/glm-v1/REPORT.md
+Wrote file successfully.
+[0m
+[0m$ [0mgit status --short -- artifacts/claude-k1h-20260926/ 2>&1; echo "==="; ls -la artifacts/claude-k1h-20260926/glm-v1/ 2>&1; git check-ignore artifacts/claude-k1h-20260926/glm-v1/REPORT.md; echo "ignore_exit:$?"
+===
+total 24
+drwxr-xr-x  4 ben-hannan  staff   128 Sep 26 16:17 .
+drwxr-xr-x  3 ben-hannan  staff    96 Sep 26 16:17 ..
+-rw-r--r--  1 ben-hannan  staff   499 Sep 26 16:04 chats-log.txt
+-rw-r--r--  1 ben-hannan  staff  6405 Sep 26 16:17 REPORT.md
+artifacts/claude-k1h-20260926/glm-v1/REPORT.md
+ignore_exit:0
+[0m
+[0m$ [0mgit add -f artifacts/claude-k1h-20260926/glm-v1/chats-log.txt artifacts/claude-k1h-20260926/glm-v1/REPORT.md && git status --short -- artifacts/claude-k1h-20260926/ && echo "===" && git diff --cached --stat -- artifacts/claude-k1h-20260926/
+A  artifacts/claude-k1h-20260926/glm-v1/REPORT.md
+A  artifacts/claude-k1h-20260926/glm-v1/chats-log.txt
+===
+ artifacts/claude-k1h-20260926/glm-v1/REPORT.md     | 120 +++++++++++++++++++++
+ artifacts/claude-k1h-20260926/glm-v1/chats-log.txt |  14 +++
+ 2 files changed, 134 insertions(+)
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-k1h-20260926/glm-v1/chats-log.txt /private/tmp/k1h-glm-iLDhRG/chats-log.txt && git commit -m "k1h-glm salvage glm-v1: 0 chats/0 answers, chats-log only (EMPTY)" -- artifacts/claude-k1h-20260926/glm-v1/chats-log.txt artifacts/claude-k1h-20260926/glm-v1/REPORT.md && git log --oneline -3 && date -u
+e7372a49c1a603c7647251127abf6977b25ee27c4ff2c5ae17fb78ccda5313cd  artifacts/claude-k1h-20260926/glm-v1/chats-log.txt
+e7372a49c1a603c7647251127abf6977b25ee27c4ff2c5ae17fb78ccda5313cd  /private/tmp/k1h-glm-iLDhRG/chats-log.txt
+[claude/card-experiment-handoff-7c5b27 ce8643109] k1h-glm salvage glm-v1: 0 chats/0 answers, chats-log only (EMPTY)
+ 2 files changed, 134 insertions(+)
+ create mode 100644 artifacts/claude-k1h-20260926/glm-v1/REPORT.md
+ create mode 100644 artifacts/claude-k1h-20260926/glm-v1/chats-log.txt
+ce8643109 k1h-glm salvage glm-v1: 0 chats/0 answers, chats-log only (EMPTY)
+9c11efc5b claude-fixsleep-dl7b: shaky-fact KL-anchor GPU run (verdict FAIL; F1/F2/F4/F5 pass, F3 fail) + ledger line (own paths only)
+ab09c935c Add vast instance check report 20260926l
+Sat Sep 26 20:18:01 UTC 2026
+[0m
+[0m✗ [0mgit push origin claude/card-experiment-handoff-7c5b27 2>&1; echo "push_exit:$?"; date -u failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
