@@ -1,0 +1,605 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; git rev-parse origin/main; echo "---"; git show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -n 50
+bd6026c4e5c3902532bd4e8cd74b3845e5338504
+---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+PUSH: artifacts/claude-lis302-20260924/tokprobs.jsonl artifacts/claude-lis302-20260924/pyes.json artifacts/claude-lis302-20260924/RESULTS-gpu.md
+[0m
+[0m$ [0mpwd; git rev-parse origin/main; git status --short | head -n 50; echo "---"; ls artifacts/claude-lis320-20260926/ 2>&1; echo "---"; uptime; df -h / | head; echo "---"; ls ~/.config/openrouter/key 2>&1; wc -c ~/.config/openrouter/key 2>&1
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+bd6026c4e5c3902532bd4e8cd74b3845e5338504
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/train398r.json
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+A  artifacts/claude-brd9-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd9-20260926/gpu/brd9_summary.json
+A  artifacts/claude-brd9-20260926/gpu/log.txt
+A  artifacts/claude-brd9-20260926/gpu/practice.json
+A  artifacts/claude-brd9-20260926/gpu/streams.json
+A  artifacts/claude-brd9-20260926/gpu/transfer_streams.json
+A  artifacts/claude-k1a-20260926/RESULTS-rent.md
+A  artifacts/claude-k1a-20260926/run/creative_B.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_K.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_KB.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_KB0.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_T.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_X.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_judge.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_judge_u.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_key.json
+A  artifacts/claude-k1a-20260926/run/creative_key_u.json
+A  artifacts/claude-k1a-20260926/run/dev/creative_K.jsonl
+A  artifacts/claude-k1a-20260926/run/dev/creative_KB.jsonl
+A  artifacts/claude-k1a-20260926/run/dev/logdev.txt
+A  artifacts/claude-k1a-20260926/run/dev/logdevkb.txt
+A  artifacts/claude-k1a-20260926/run/logB.txt
+A  artifacts/claude-k1a-20260926/run/logK.txt
+A  artifacts/claude-k1a-20260926/run/logKB.txt
+A  artifacts/claude-k1a-20260926/run/logKB0.txt
+A  artifacts/claude-k1a-20260926/run/logT.txt
+A  artifacts/claude-k1a-20260926/run/logX.txt
+A  artifacts/claude-k1a-20260926/run/summary_creative.json
+---
+pilot
+pilot2
+---
+14:11  up 3 days,  4:04, 4 users, load averages: 55.48 53.48 59.23
+Filesystem        Size    Used   Avail Capacity iused ifree %iused  Mounted on
+/dev/disk3s1s1   460Gi    13Gi    55Gi    19%    484k  578M    0%   /
+---
+/Users/ben-hannan/.config/openrouter/key
+      73 /Users/ben-hannan/.config/openrouter/key
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-lis320-20260926/PILOT-THRESHOLDS.md 2>&1 | head -n 100; echo "===REVIEW==="; git show origin/main:artifacts/claude-lis320-20260926/PILOT-REVIEW.md 2>&1 | head -n 100; echo "===FILES==="; git ls-tree -r --name-only origin/main -- artifacts/claude-lis320-20260926/ scripts/claude_lis320* 2>&1 | head -n 60
+# lis-320 GLM pilot: what changes the plan (fixed before the pilot result exists)
+
+Written 2026-09-26 17:01 UTC by the reading thread. At this time no pilot output exists on either branch.
+DEV reference (claude_lis320_style.py on the everyday-chat DEV chats, 336 turns): lowercase start 1.0, apostrophe-less
+contraction 0.253, turns over 20 words 0.131, words median 14 / p90 23, distinct shapes 99.1 per 100.
+
+Any one of these changes the GLM instruction or the checks before the full run (and the pilot is re-run on new seeds):
+1. Code-check pass rate under 60% of turns, or any single intent family under 40%.
+2. Lowercase-start rate under 0.5, apostrophe-less contraction rate under 0.12, or share of turns over 20 words under 0.06
+   (half the DEV rates): the wording is too clean or too short, so the messiness/length part of the instruction changes.
+3. Distinct shapes under 90 per 100 turns: too templated.
+4. Write facts sitting in turns over 20 words under 5%: facts are never buried in longer messages.
+5. A look at 20 kept and 20 dropped rows (GLM text, not Claude text, may be read): more than 2 of the 20 kept rows whose code
+   label is wrong (an extra unlabelled fact, a wrong owner, or a stated-as-true value on a lookalike) tightens the checks or
+   adds the blind GLM re-read (plan step 4).
+6. Cost over $5 per 1,000 kept rows: batching or a cheaper call is considered first, and anything over budget goes to Ben via the Thread manager.
+If none trigger, the full run uses the same prompt and checks, on new seeds, with names from the test panels added to the avoid list by
+a counts-only script.
+===REVIEW===
+# lis-320 pilot 1 review against PILOT-THRESHOLDS.md
+
+Reading thread, written 2026-09-26 17:17 UTC. Pilot output: origin/builder-outbox:artifacts/claude-lis320-20260926/pilot/
+(30 GLM calls, 16:59-17:04 UTC, $0.0072, 29 of 30 parsed).
+
+| Threshold | Pilot 1 | Triggered? |
+|---|---|---|
+| 1 pass rate >= 60%, every family >= 40% | 182 of 211 kept (86%); doubt 2 of 8 (25%) | yes (doubt) |
+| 2 lowercase >= 0.5, noapos >= 0.12, over20 >= 0.06 | 0.962, 0.308, 0.049 | yes (over20) |
+| 3 shapes >= 90 per 100 | 100.0 | no |
+| 4 write facts in over-20-word turns >= 5% | 5.2% | no (just) |
+| 5 kept rows mislabelled <= 2 of 20 | 22 read: 1 plan-word leak ("first person" typed into the message), 1 second-hand source ("my neighbour mentioned it") labelled as stated-as-true | no (2) |
+| 6 cost <= $5 per 1,000 kept | about $0.04 | no |
+
+I read 21 dropped rows. Most doubt, ask, confirm and former drops were good rows with cues the checks did not know:
+"not even sure", "cant remember", questions typed without "?", "did i say", "not anymore", "over now", "im not one now".
+
+## Changes (before the full run; a new pilot runs on new seeds)
+- GLM instruction: about one message in four is long (25-50 words) and rambles, with the planned content in the middle or at
+  the end and no extra facts in the chatter. It also says never to copy plan words into a message.
+- Checks: wider cue lists for doubt, ask, confirm and past; the former present-cue check ignores negated present ("not
+  anymore", "over now"); plan-word leaks are dropped; asserting turns with a second-hand source ("apparently", "i heard",
+  "X mentioned it") are dropped.
+- Re-check of pilot 1 raw with the new checks: 193 of 211 kept; doubt 6 of 8, former 11 of 12, ask 13 of 13. I read every
+  newly kept doubt, ask, confirm and former row, and their seed labels are right.
+- Also in the next pilot: the ask-back families (ADDENDUM-1) and the hashed test-name avoid list.
+Pilot 2: handoff/queue/lis320-pilot2-mac.md (seed 321, 60 dialogs). The same thresholds apply.
+
+## Pilot 2 (seed 321, 60 dialogs, 17:28-17:35 UTC, $0.0148): no threshold triggered (checked 18:08 UTC)
+Pass rate 390 of 425 (92%). Every family is at 70% or above: ack_after_ask 11 of 15, yes_after_ask 9 of 10, doubt 7 of 9,
+former 22 of 26. Style: lowercase 0.995, missing-apostrophe contractions 0.323, turns over 20 words 0.213, shapes 100 per
+100, write facts in long turns 0.312. Cost is about $0.038 per 1,000 kept rows. I read 24 kept rows (all 10 ask-back rows
+plus 14 at random) and found 0 mislabelled. Per-cue counts are in the pilot 2 RESULTS.md. Full run: handoff/queue/lis320-full-mac.md.
+===FILES===
+zsh:1: no matches found: scripts/claude_lis320*
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- artifacts/claude-lis320-20260926/ 2>&1 | head -n 80; echo "==="; git ls-tree -r --name-only origin/main -- scripts/ 2>&1 | grep lis320; echo "==="; git ls-tree -r --name-only origin/main -- handoff/queue/ 2>&1 | grep -i lis320
+artifacts/claude-lis320-20260926/ADDENDUM-1-ask-back.md
+artifacts/claude-lis320-20260926/PASSMARKS.md
+artifacts/claude-lis320-20260926/PASSMARKS.sha256.txt
+artifacts/claude-lis320-20260926/PILOT-REVIEW.md
+artifacts/claude-lis320-20260926/PILOT-THRESHOLDS.md
+artifacts/claude-lis320-20260926/avoid_names_dev.txt
+artifacts/claude-lis320-20260926/avoid_test.sha256
+artifacts/claude-lis320-20260926/panel_tools/agree.py
+artifacts/claude-lis320-20260926/panel_tools/finalize.py
+artifacts/claude-lis320-20260926/panel_tools/prep.py
+===
+scripts/claude_lis320_avoidtest.py
+scripts/claude_lis320_build.py
+scripts/claude_lis320_check.py
+scripts/claude_lis320_glm.py
+scripts/claude_lis320_score.py
+scripts/claude_lis320_seed.py
+scripts/claude_lis320_style.py
+===
+handoff/queue/lis320-full-mac.md
+handoff/queue/lis320-pilot-mac.md
+handoff/queue/lis320-pilot2-mac.md
+[0m
+[0m$ [0mgit show "origin/main:handoff/queue/lis320-full-mac.md" 2>&1
+COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).
+GPU: no (Mac CPU only; about 6000 network calls to OpenRouter, GLM 5.3 Flash, 8 at a time; pilots cost $0.0148 per 60 calls, so expect about $1.50; stop and report if the running cost_usd passes $5). No reader, no rental, no BensPC. Label: lis320-full. TIME CAP: 180 minutes. DISK: 1.
+KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The script reads it itself. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.
+WHY: Ben chose "Retrain first" (16:46 UTC): lis-320 trains only on GLM-written chats with code-written, code-checked labels. Pilots 1 and 2 passed the sealed thresholds (artifacts/claude-lis320-20260926/PILOT-THRESHOLDS.md, PILOT-REVIEW.md). This is the full data run. Nothing is trained here.
+
+1. TREE: D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; cd $D; O=artifacts/claude-lis320-20260926/full; mkdir -p $O. Record `git rev-parse origin/main`.
+2. python3 -B scripts/claude_lis320_seed.py --seed 322 --n 6000 --ask-back --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl   (record the printed counts)
+3. nohup python3 -B scripts/claude_lis320_glm.py --seeds $O/seeds.jsonl --out $O/raw.jsonl --workers 8 > $O/glm.log 2>&1 &   then wait for it to finish (check every few minutes; `grep -c ok $O/glm.log`). The script resumes: if it dies, run the same command again once and report it. Record the final printed totals line (calls, parsed, tokens, cost_usd). If the log shows more than 50 "try 4 failed" lines, stop and report.
+4. python3 -B scripts/claude_lis320_check.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl > $O/check.json   (record check.json verbatim in RESULTS.md)
+5. python3 -B scripts/claude_lis320_style.py --kept $O/kept.jsonl --out $O/style.json   (record the printed line)
+6. python3 -B scripts/claude_lis320_build.py --kept $O/kept.jsonl --out $O/data --dev-pct 3 > $O/BUILD.json   (record it; this is the dry build, nothing is trained)
+7. gzip -9 -k $O/raw.jsonl; sha256sum $O/raw.jsonl $O/raw.jsonl.gz $O/seeds.jsonl $O/kept.jsonl $O/data/train.jsonl $O/data/dev.jsonl > $O/SHA256.txt
+8. Copy into artifacts/claude-lis320-20260926/full/ of your worktree ONLY: raw.jsonl.gz, check.json, style.json, BUILD.json, SHA256.txt, and RESULTS.md (every printed count verbatim, the origin/main commit from step 1, cost in USD, wall time, the number of "failed" lines in glm.log, any error). Do NOT copy seeds.jsonl, raw.jsonl, kept.jsonl, drops.jsonl or data/ (too big; the rental rebuilds them from the seed and raw.jsonl.gz by code). Keep $D until the watcher confirms the push, then rm -rf "$D" (exact path) and confirm it is gone.
+PUSH: artifacts/claude-lis320-20260926/full
+[0m
+[0m$ [0mls artifacts/claude-lis320-20260926/full/ 2>&1; echo "---"; df -h / | head -n 5; uptime
+ls: artifacts/claude-lis320-20260926/full/: No such file or directory
+---
+Filesystem        Size    Used   Avail Capacity iused ifree %iused  Mounted on
+/dev/disk3s1s1   460Gi    13Gi    55Gi    19%    484k  578M    0%   /
+14:11  up 3 days,  4:04, 4 users, load averages: 57.60 53.96 59.36
+[0m
+[0m$ [0mD=$(mktemp -d); echo "D=$D"; git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C "$D"; echo "extract exit: $?"; ls "$D" ; ls "$D/scripts" | grep lis320; O=artifacts/claude-lis320-20260926/full; mkdir -p "$D/$O"; echo "O=$D/$O"; git rev-parse origin/main
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.UesxzyXYZ1
+extract exit: 0
+artifacts
+design
+scripts
+claude_lis320_avoidtest.py
+claude_lis320_build.py
+claude_lis320_check.py
+claude_lis320_glm.py
+claude_lis320_score.py
+claude_lis320_seed.py
+claude_lis320_style.py
+O=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.UesxzyXYZ1/artifacts/claude-lis320-20260926/full
+bd6026c4e5c3902532bd4e8cd74b3845e5338504
+[0m
+[0m$ [0mpython3 -B scripts/claude_lis320_seed.py --seed 322 --n 6000 --ask-back --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out artifacts/claude-lis320-20260926/full/seeds.jsonl 2>&1
+{"dialogs": 6000, "turns": 41980, "intents": {"ack_after_ask": 1504, "ambiguous_pronoun": 1094, "ask": 2815, "backref": 3711, "confirm": 1134, "correct": 3744, "doubt": 1122, "former": 2800, "hypothetical": 1072, "jobhome": 1839, "negation_only": 1057, "plan": 1122, "question": 1149, "smalltalk": 1536, "someone_else": 1127, "teach": 13677, "yes_after_ask": 1477}}
+[0m
+[0m$ [0mgrep -n "openrouter/key\|workers\|resume\|cost" scripts/claude_lis320_glm.py | head -n 30; echo "---"; date -u; ls -la artifacts/claude-lis320-20260926/full/
+9:Key rules (as claude_ideajudge_teacher.py): the key is read from ~/.config/openrouter/key into memory only. Never
+13:        [--limit N]                  resumes: dialog ids already in --out are skipped
+144:def run(seeds, out_path, caller, model, temperature, workers=1):
+146:    workers > 1; calls run in threads, every write and key check happens in this thread)."""
+150:    tot = {"calls": 0, "parsed": 0, "prompt_tokens": 0, "completion_tokens": 0, "cost_usd": 0.0, "skipped": 0}
+157:    with out.open("a", encoding="utf-8") as fh, ThreadPoolExecutor(max_workers=max(1, workers)) as ex:
+169:                tot["cost_usd"] += float(u.get("cost", 0) or 0)
+179:    tot["cost_usd"] = round(tot["cost_usd"], 5)
+205:        tot = run([d], outp, lambda _p: (fake, {"prompt_tokens": 1000, "completion_tokens": 400, "cost": 0.001}),
+219:                                              for i in range(p.count("\nTurn "))]}), {"cost": 0.001})
+220:        tot3 = run(many, outq, fk, MODEL, 1.0, workers=4)
+223:    print(f"glm selftest OK: prompt {len(p)} chars for {n} turns; parse, resume and key guard checked")
+235:    ap.add_argument("--workers", type=int, default=1, help="parallel calls (full run: 8)")
+250:                  workers=a.workers)
+---
+Sat Sep 26 18:11:50 UTC 2026
+total 53432
+drwxr-xr-x   3 ben-hannan  staff        96 Sep 26 14:11 .
+drwxr-xr-x  11 ben-hannan  staff       352 Sep 26 14:11 ..
+-rw-r--r--   1 ben-hannan  staff  27353445 Sep 26 14:11 seeds.jsonl
+[0m
+[0m$ [0mdate +%s > artifacts/claude-lis320-20260926/full/START_EPOCH.txt; date -u; nohup python3 -B scripts/claude_lis320_glm.py --seeds artifacts/claude-lis320-20260926/full/seeds.jsonl --out artifacts/claude-lis320-20260926/full/raw.jsonl --workers 8 > artifacts/claude-lis320-20260926/full/glm.log 2>&1 & echo "pid=$!"; sleep 60; echo "---after 60s---"; grep -c ok artifacts/claude-lis320-20260926/full/glm.log 2>&1; wc -l artifacts/claude-lis320-20260926/full/raw.jsonl 2>&1; tail -n 5 artifacts/claude-lis320-20260926/full/glm.log 2>&1
+Sat Sep 26 18:11:53 UTC 2026
+pid=73021
+---after 60s---
+0
+wc: artifacts/claude-lis320-20260926/full/raw.jsonl: open: No such file or directory
+nohup: python3: Bad CPU type in executable
+[0m
+[0m$ [0mwhich python3; file $(which python3) 2>&1; arch; uname -m; ls /usr/bin/python* 2>&1; which uv 2>&1; uv --version 2>&1 | head; ls /opt/homebrew/bin/python* 2>&1 | head
+/usr/local/bin/python3
+/usr/local/bin/python3: Mach-O 64-bit executable x86_64
+arm64arm64
+/usr/bin/python3
+/Users/ben-hannan/.local/bin/uv
+uv 0.12.7 (61291a8ca 2026-08-27 aarch64-apple-darwin)
+zsh:1: no matches found: /opt/homebrew/bin/python*
+[0m
+[0m$ [0m/usr/bin/python3 --version 2>&1; /usr/bin/python3 -B --version 2>&1; echo "---"; ls /usr/local/bin/python* 2>&1; file /usr/bin/python3 2>&1
+Python 3.9.6
+Python 3.9.6
+---
+/usr/local/bin/python3
+/usr/local/bin/python3-config
+/usr/local/bin/python3.12
+/usr/local/bin/python3.12-config
+/usr/local/bin/python3.14
+/usr/local/bin/python3.14-config
+/usr/bin/python3: Mach-O universal binary with 3 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64e:Mach-O 64-bit executable arm64e] [arm64e.x1:Mach-O 64-bit executable arm64e.x1]
+/usr/bin/python3 (for architecture x86_64):	Mach-O 64-bit executable x86_64
+/usr/bin/python3 (for architecture arm64e):	Mach-O 64-bit executable arm64e
+/usr/bin/python3 (for architecture arm64e.x1):	Mach-O 64-bit executable arm64e.x1
+[0m
+[0m$ [0mfile /usr/local/bin/python3.12 /usr/local/bin/python3.14 2>&1; /usr/bin/python3 -c "import sys; print(sys.version)" 2>&1; echo "---"; /usr/bin/python3 -c "import requests; print('requests ok')" 2>&1 | head
+/usr/local/bin/python3.12: Mach-O 64-bit executable x86_64
+/usr/local/bin/python3.14: Mach-O 64-bit executable x86_64
+3.9.6 (default, Aug 25 2026, 21:26:21) 
+[Clang 21.0.0 (clang-2100.3.34.2)]
+---
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'requests'
+[0m
+[0m$ [0mhead -n 60 scripts/claude_lis320_glm.py; echo "==="; head -n 30 scripts/claude_lis320_seed.py
+#!/usr/bin/env python3
+"""lis-320 pilot, step 2 of 3: GLM writes the wording for each dialog seed (one OpenRouter call per dialog).
+
+Input: claude_lis320_seed.py output. For every turn GLM gets the intent (described in the abstract), the facts chosen by
+code, the strings that MUST appear verbatim and the strings that must NOT appear. The instruction holds no example
+sentences or phrasings: all wording comes from GLM. GLM returns JSON: per turn, the assistant's short reply just
+before the user's message ("reply_before") and the user's message ("user").
+
+Key rules (as claude_ideajudge_teacher.py): the key is read from ~/.config/openrouter/key into memory only. Never
+printed, logged or written. If any model output contains "sk-or", nothing more is written and the run aborts.
+
+python3 claude_lis320_glm.py --seeds seeds.jsonl --out raw.jsonl [--model z-ai/glm-5.3-flash] [--temperature 1.0]
+        [--limit N]                  resumes: dialog ids already in --out are skipped
+python3 claude_lis320_glm.py --seeds seeds.jsonl --dry-run [--dialog ID]   prints one prompt, no API call
+python3 claude_lis320_glm.py --selftest                                     fake reply, no network
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+import time
+import urllib.request
+from pathlib import Path
+
+MODEL = "z-ai/glm-5.3-flash"
+KEY_MARK = "sk-or"
+
+HEAD = """You are writing training data: realistic text chats between a user and a personal assistant app. Below is the plan for ONE conversation. Code chose every fact; your job is only the wording.
+
+For each numbered turn write two strings:
+- "reply_before": what the assistant said just before this user message, reacting briefly to the user's previous message. At most about 15 words. It states no facts, guesses nothing, does not ask about anything the plan has not reached yet, and uses no name the user has not already typed. {opener}
+- "user": the user's message for this turn, following the turn's plan.
+
+How the user writes: like a real person texting on a phone. Casual, often all lowercase, sometimes run-on sentences or missing punctuation, occasional small typos in ordinary words, varied lengths (very short to a few sentences) and varied openings. Every message should sound different from the others. Do not greet in every message. About one message in four is long (25 to 50 words) and rambles, with the planned content in the middle or at the end and chatter around it; the chatter adds no facts, names, places or numbers. Never copy words of the plan itself (such as "first person", "owner", "relation", "intent") into a message.
+
+Hard rules (a message that breaks one is thrown away):
+1. Each MUST INCLUDE string appears in that user message spelled exactly as given, letter for letter. Typing it all in lowercase is fine; nothing else may change: no typo, plural, hyphen, nickname or abbreviation inside it.
+2. No MUST NOT INCLUDE string appears in that user message. Where the turn says "also not in reply_before", it must not appear in that turn's reply_before either.
+3. A user message says only what its plan says: no other facts about anyone, the user included (no other jobs, places, pets, ages, relatives, likes or names). After the turn that introduced a person, do not say again how they are related to the user, unless the plan says to refer to them by their role.
+4. "first person" means the user speaks about themself.
+5. A relation's value is exactly the given value; do not add words inside it.
+
+People in this conversation (name: relation to the user, gender). Only use a name in the turns whose MUST INCLUDE lists it:
+{people}
+
+Turns:
+{turns}
+
+Answer with ONLY this JSON and no other text:
+{{"turns": [{{"n": 1, "reply_before": "...", "user": "..."}}, ... one object per turn, n = 1 to {n}]}}
+"""
+
+OPENER_YES = ('For turn 1, reply_before is a short opening line from the assistant (no names, no questions about '
+              'people).')
+OPENER_NO = 'For turn 1, reply_before is "" (the user starts the chat).'
+
+
+def q(s):
+===
+#!/usr/bin/env python3
+"""lis-320 pilot, step 1 of 3: code-only world sampler for dialog seeds (plan: design/v3/60-listener/lis-320-no-claude-data-plan.md).
+
+Code picks ONLY: people (fictional names built from syllable parts), their gender and role relative to the user,
+turn intents, relations (from relation-names.txt) and values. It writes no wording: there are no sentence templates and
+no example phrasings here. Every gold frame is built by code, in the training-target schema
+(claude_lis300_common.canon_frame: act, facts[owner, rel, value, mode, old], ask).
+
+Intents (one per turn, 6-8 turns per dialog):
+  teach        1-3 ASSERT facts; each owner named in the turn (or first person for "me"); first mention of a person is
+               an intro fact (me, <role>, Name)
+  correct      CORRECT of an earlier (owner, rel); half name the old value (fact gets "old"), half must not
+  backref      new ASSERT fact about a person named in the last 6 turns, referred to by pronoun (only when that person
+               is the only one of that gender named in the visible history) or by role word; the name must not appear
+  former       FORMER (claude_lis319f_data): past occupation / employer / city
+  jobhome      occupation + city of one owner, ASSERT, in one sentence
+  ask          ASK about a stored fact (ask object, no facts); the answer must not appear
+  lookalikes   question (QUESTION), plan (PLAN), doubt (CHECK, see LOOK_MODE), someone_else (REPORTED),
+               hypothetical (SUPPOSE), negation_only (NEGATE, no facts), confirm (CHECK of a stored fact),
+               ambiguous_pronoun (two same-gender people named, pronoun owner kept as typed, UNCLEAR)
+  smalltalk    CHAT, no facts
+
+python3 claude_lis320_seed.py --seed 320 --n 30 --out seeds.jsonl [--avoid-names FILE] [--avoid-hashes FILE]
+python3 claude_lis320_seed.py --selftest
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+[0m
+[0m$ [0mwhich python3; python3 --version 2>&1; echo "exit=$?"; /usr/bin/python3 --version 2>&1; echo "---"; ps aux | grep -i glm | head
+/usr/local/bin/python3
+Python 3.9.6
+exit=0
+Python 3.9.6
+---
+ben-hannan       72657   9.7  2.6 562816640 883328   ??  RN    2:11PM   0:17.38 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:lis320-full-mac.go1.72627 COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).\012GPU: no (Mac CPU only; about 6000 network calls to OpenRouter, GLM 5.3 Flash, 8 at a time; pilots cost $0.0148 per 60 calls, so expect about $1.50; stop and report if the running cost_usd passes $5). No reader, no rental, no BensPC. Label: lis320-full. TIME CAP: 180 minutes. DISK: 1.\012KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The script reads it itself. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.\012WHY: Ben chose "Retrain first" (16:46 UTC): lis-320 trains only on GLM-written chats with code-written, code-checked labels. Pilots 1 and 2 passed the sealed thresholds (artifacts/claude-lis320-20260926/PILOT-THRESHOLDS.md, PILOT-REVIEW.md). This is the full data run. Nothing is trained here.\012\0121. TREE: D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; cd $D; O=artifacts/claude-lis320-20260926/full; mkdir -p $O. Record `git rev-parse origin/main`.\0122. python3 -B scripts/claude_lis320_seed.py --seed 322 --n 6000 --ask-back --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl   (record the printed counts)\0123. nohup python3 -B scripts/claude_lis320_glm.py --seeds $O/seeds.jsonl --out $O/raw.jsonl --workers 8 > $O/glm.log 2>&1 &   then wait for it to finish (check every few minutes; `grep -c ok $O/glm.log`). The script resumes: if it dies, run the same command again once and report it. Record the final printed totals line (calls, parsed, tokens, cost_usd). If the log shows more than 50 "try 4 failed" lines, stop and report.\0124. python3 -B scripts/claude_lis320_check.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl > $O/check.json   (record check.json verbatim in RESULTS.md)\0125. python3 -B scripts/claude_lis320_style.py --kept $O/kept.jsonl --out $O/style.json   (record the printed line)\0126. python3 -B scripts/claude_lis320_build.py --kept $O/kept.jsonl --out $O/data --dev-pct 3 > $O/BUILD.json   (record it; this is the dry build, nothing is trained)\0127. gzip -9 -k $O/raw.jsonl; sha256sum $O/raw.jsonl $O/raw.jsonl.gz $O/seeds.jsonl $O/kept.jsonl $O/data/train.jsonl $O/data/dev.jsonl > $O/SHA256.txt\0128. Copy into artifacts/claude-lis320-20260926/full/ of your worktree ONLY: raw.jsonl.gz, check.json, style.json, BUILD.json, SHA256.txt, and RESULTS.md (every printed count verbatim, the origin/main commit from step 1, cost in USD, wall time, the number of "failed" lines in glm.log, any error). Do NOT copy seeds.jsonl, raw.jsonl, kept.jsonl, drops.jsonl or data/ (too big; the rental rebuilds them from the seed and raw.jsonl.gz by code). Keep $D until the watcher confirms the push, then rm -rf "$D" (exact path) and confirm it is gone.\012PUSH: artifacts/claude-lis320-20260926/full
+ben-hannan       39358   5.8  2.1 562821840 690544   ??  SN    1:03PM   1:52.99 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rd378g-teacher.go1.39327 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-26 16:58 UTC). Get every file with `git fetch -q origin main` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.\012GPU: no (Mac CPU only; about 40 writing calls and about 240 grading calls to OpenRouter GLM 5.3 Flash; no rental). Ben chose "Use GLM" at 16:39:45 UTC 09-26; Thread manager ruling 16:53: the note writer is retrained with no Claude-written or Claude-judged row. The model is the script default z-ai/glm-5.3-flash.\012\012YOUR TASK: rd378g-teacher (read origin/main:artifacts/claude-rd378g-20260926/PASSMARKS.md): GLM writes 240 practice dialogs with memory notes, then GLM grades every note. No training, no GPU. Code: scripts/claude_rd378g_teacher.py and scripts/claude_rd378k_teacher.py (read their docstrings). Run them, never edit them; if something breaks, stop and report the exact error.\012KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The scripts read it themselves. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.\012ORDER: this job may run at the same time as rd378k-teacher (both only call OpenRouter).\012\0121. COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378g-20260926/SEAL.sha256.txt). `git archive $COMMIT scripts artifacts/claude-rd378g-20260926 | tar -x -C <tmp>` and run from there (python via `uv run --offline --no-project --python 3.12 python -B`; standard library only). Report COMMIT.\0122. SEAL: `shasum -a 256 -c artifacts/claude-rd378g-20260926/SEAL.sha256.txt` must print OK for all 14 lines, else stop with SEAL-MISMATCH and every line.\0123. python -B scripts/claude_rd378g_teacher.py selftest   -> "rd378g teacher selftest 1/1 ok"; python -B scripts/claude_rd378k_teacher.py selftest -> "rd378k teacher selftest 3/3 ok"; else stop.\0124. WRITE: `python -B scripts/claude_rd378g_teacher.py writenotes --out artifacts/claude-rd378g-20260926/glm` (prints one JSON line at the end).\0125. GRADE in 4 parallel parts (each part is its own process under nohup with its own log):\012   python -B scripts/claude_rd378g_teacher.py split --file artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --parts 4\012   for i in 0 1 2 3: python -B scripts/claude_rd378k_teacher.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl.$i --out artifacts/claude-rd378g-20260926/glm/lab$i\012   Wait for all four, then `cat artifacts/claude-rd378g-20260926/glm/lab{0,1,2,3}/labels.jsonl > artifacts/claude-rd378g-20260926/glm/judge_w1.jsonl`, and report `wc -l` of it and the number of non-assistant turns in notes_w1.jsonl (turns that have a "notes" key).\0126. Copy into the worktree: artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl, artifacts/claude-rd378g-20260926/glm/judge_w1.jsonl, and the console output of steps 3-5 (all logs) as artifacts/claude-rd378g-20260926/teacher-log.txt (check it for "sk-or" first). Do NOT copy the .0-.3 part files or the lab* folders. Report every printed JSON line verbatim, wall time per step, and the total cost_usd.\012PUSH: artifacts/claude-rd378g-20260926/glm artifacts/claude-rd378g-20260926/teacher-log.txt
+ben-hannan       54227   0.5  1.7 562812736 559120   ??  SN    1:28PM   1:02.74 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:y1t-glm-mac.go1.54149 COMMON RULES (the "Answering from memory" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, at most 4 parallel processes, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).\012GPU: no (Mac CPU only; about 2400 network calls to OpenRouter, GLM 5.3 Flash; the lis-320 pilot cost $0.0072 for 30 calls, so expect about $0.60). No reader, no rental, no BensPC. Label: y1t-glm. TIME CAP: 120 minutes. DISK: 1.\012KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The script reads it itself. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.\012WHY: y1g (doubt at recall) was NO-GO (efa4d8923). Its named fallback is trained doubt: the 1B learns when to say "I don't know" from its own code-graded drafts. Ben's 16:39 "Use GLM": nothing trained on may be written or judged by Claude. These practice chats use Reading facts' lis-320 scripts UNCHANGED (code picks every fact, GLM writes every word, code checks every turn), on this thread's own seed. Reading facts agreed (17:12 UTC). Nothing is trained here.\012\0121. TREE: D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; cd $D; O=artifacts/claude-y1t-20260926/glm; mkdir -p $O.\0122. python3 -B scripts/claude_lis320_seed.py --seed 4027 --n 2400 --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl   (no --ask-back; record the printed counts)\0123. python3 -B scripts/claude_y1t_data.py split-seeds --seeds $O/seeds.jsonl --parts 4   (writes $O/seeds_0.jsonl .. seeds_3.jsonl; record the printed line)\0124. Start 4 GLM processes together, each with its own log, and wait for all 4 to exit:\012   for i in 0 1 2 3; do nohup python3 -B scripts/claude_lis320_glm.py --seeds $O/seeds_$i.jsonl --out $O/raw_$i.jsonl > $O/glm_$i.log 2>&1 & done; wait\012   Each prints totals at the end (calls, parsed, tokens, cost_usd); record all four lines. If the time cap nears (at 100 minutes), stop the 4 processes by exact PID and go on with what exists (raw rows are written as each dialog finishes); say so.\0125. cat $O/raw_0.jsonl $O/raw_1.jsonl $O/raw_2.jsonl $O/raw_3.jsonl > $O/raw.jsonl\012   python3 -B scripts/claude_lis320_check.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl   (record the printed counts verbatim)\0126. python3 -B scripts/claude_y1t_data.py items --seeds $O/seeds.jsonl --kept $O/kept.jsonl --out $O/items   (record the printed line verbatim)\0127. Copy $O (seeds.jsonl, raw.jsonl, kept.jsonl, drops.jsonl, items/items_train.jsonl, items/items_dev.jsonl, glm_0..3.log) into artifacts/claude-y1t-20260926/glm/ of your worktree and write RESULTS-mac.md there: every printed line verbatim, the total cost in USD (sum of the four), wall time, any error. GLM output may be quoted (it is not Claude text), but keep RESULTS-mac.md to counts. Then rm -rf "$D" (exact path) and confirm it is gone.\012PUSH: artifacts/claude-y1t-20260926/glm
+ben-hannan       73081   0.0  0.0 488781696   1312   ??  SN    2:13PM   0:00.00 grep -i glm
+ben-hannan       73077   0.0  0.0 488786544   2752   ??  SNs   2:13PM   0:00.01 /bin/zsh -c which python3; python3 --version 2>&1; echo "exit=$?"; /usr/bin/python3 --version 2>&1; echo "---"; ps aux | grep -i glm | head
+ben-hannan       69500   0.0  0.1 488895840  33120   ??  SN    2:04PM   0:00.24 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_rd378g_teacher.py writenotes --out artifacts/claude-rd378g-20260926/glm
+ben-hannan       69498   0.0  0.1 463621312  19440   ??  SN    2:04PM   0:00.02 uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378g_teacher.py writenotes --out artifacts/claude-rd378g-20260926/glm
+ben-hannan       54585   0.0  0.1 488915824  29184   ??  SN    1:29PM   0:00.95 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_lis320_glm.py --seeds artifacts/claude-y1t-20260926/glm/seeds_3.jsonl --out artifacts/claude-y1t-20260926/glm/raw_3.jsonl
+ben-hannan       54584   0.0  0.1 488915488  28640   ??  SN    1:29PM   0:00.94 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_lis320_glm.py --seeds artifacts/claude-y1t-20260926/glm/seeds_2.jsonl --out artifacts/claude-y1t-20260926/glm/raw_2.jsonl
+ben-hannan       54583   0.0  0.1 488907056  29728   ??  SN    1:29PM   0:00.93 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_lis320_glm.py --seeds artifacts/claude-y1t-20260926/glm/seeds_1.jsonl --out artifacts/claude-y1t-20260926/glm/raw_1.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with requests python -B scripts/claude_lis320_glm.py --selftest 2>&1 | head -n 20; echo "exit=$?"
+Installed 5 packages in 9ms
+[glm320] s320-1-00000 ok
+[glm320] s320-2-00008 ok
+[glm320] s320-2-00001 ok
+[glm320] s320-2-00007 ok
+[glm320] s320-2-00006 ok
+[glm320] s320-2-00000 ok
+[glm320] s320-2-00005 ok
+[glm320] s320-2-00002 ok
+[glm320] s320-2-00003 ok
+[glm320] s320-2-00004 ok
+[glm320] s320-2-00009 ok
+[glm320] s320-2-00010 ok
+[glm320] s320-2-00011 ok
+glm selftest OK: prompt 4852 chars for 7 turns; parse, resume and key guard checked
+exit=0
+[0m
+[0m$ [0mdate -u; date +%s > artifacts/claude-lis320-20260926/full/START_EPOCH.txt; cat artifacts/claude-lis320-20260926/full/START_EPOCH.txt; nohup uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_glm.py --seeds artifacts/claude-lis320-20260926/full/seeds.jsonl --out artifacts/claude-lis320-20260926/full/raw.jsonl --workers 8 > artifacts/claude-lis320-20260926/full/glm.log 2>&1 & echo "pid=$!"; sleep 90; echo "---after 90s---"; grep -c ok artifacts/claude-lis320-20260926/full/glm.log 2>&1; wc -l artifacts/claude-lis320-20260926/full/raw.jsonl 2>&1; tail -n 10 artifacts/claude-lis320-20260926/full/glm.log 2>&1
+Sat Sep 26 18:13:16 UTC 2026
+1790446396
+pid=73095
+---after 90s---
+11
+      11 artifacts/claude-lis320-20260926/full/raw.jsonl
+[glm320] s320-322-00007 ok
+[glm320] s320-322-00006 ok
+[glm320] s320-322-00004 ok
+[glm320] s320-322-00000 ok
+[glm320] s320-322-00012 ok
+[glm320] s320-322-00011 ok
+[glm320] s320-322-00010 ok
+[glm320] s320-322-00009 ok
+[glm320] s320-322-00016 ok
+[glm320] s320-322-00013 ok
+[0m
+[0m$ [0msleep 120; grep -c ok artifacts/claude-lis320-20260926/full/glm.log; wc -l artifacts/claude-lis320-20260926/full/raw.jsonl; grep -c "failed" artifacts/claude-lis320-20260926/full/glm.log; tail -n 3 artifacts/claude-lis320-20260926/full/glm.log; ps aux | grep "lis320_glm" | grep -v grep | head
+26
+      29 artifacts/claude-lis320-20260926/full/raw.jsonl
+0
+[glm320] s320-322-00017 unparsed
+[glm320] s320-322-00034 ok
+[glm320] s320-322-00026 ok
+ben-hannan       54227  14.7  1.7 562812736 558976   ??  SN    1:28PM   1:13.24 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:y1t-glm-mac.go1.54149 COMMON RULES (the "Answering from memory" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, at most 4 parallel processes, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).\012GPU: no (Mac CPU only; about 2400 network calls to OpenRouter, GLM 5.3 Flash; the lis-320 pilot cost $0.0072 for 30 calls, so expect about $0.60). No reader, no rental, no BensPC. Label: y1t-glm. TIME CAP: 120 minutes. DISK: 1.\012KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The script reads it itself. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.\012WHY: y1g (doubt at recall) was NO-GO (efa4d8923). Its named fallback is trained doubt: the 1B learns when to say "I don't know" from its own code-graded drafts. Ben's 16:39 "Use GLM": nothing trained on may be written or judged by Claude. These practice chats use Reading facts' lis-320 scripts UNCHANGED (code picks every fact, GLM writes every word, code checks every turn), on this thread's own seed. Reading facts agreed (17:12 UTC). Nothing is trained here.\012\0121. TREE: D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; cd $D; O=artifacts/claude-y1t-20260926/glm; mkdir -p $O.\0122. python3 -B scripts/claude_lis320_seed.py --seed 4027 --n 2400 --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl   (no --ask-back; record the printed counts)\0123. python3 -B scripts/claude_y1t_data.py split-seeds --seeds $O/seeds.jsonl --parts 4   (writes $O/seeds_0.jsonl .. seeds_3.jsonl; record the printed line)\0124. Start 4 GLM processes together, each with its own log, and wait for all 4 to exit:\012   for i in 0 1 2 3; do nohup python3 -B scripts/claude_lis320_glm.py --seeds $O/seeds_$i.jsonl --out $O/raw_$i.jsonl > $O/glm_$i.log 2>&1 & done; wait\012   Each prints totals at the end (calls, parsed, tokens, cost_usd); record all four lines. If the time cap nears (at 100 minutes), stop the 4 processes by exact PID and go on with what exists (raw rows are written as each dialog finishes); say so.\0125. cat $O/raw_0.jsonl $O/raw_1.jsonl $O/raw_2.jsonl $O/raw_3.jsonl > $O/raw.jsonl\012   python3 -B scripts/claude_lis320_check.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl   (record the printed counts verbatim)\0126. python3 -B scripts/claude_y1t_data.py items --seeds $O/seeds.jsonl --kept $O/kept.jsonl --out $O/items   (record the printed line verbatim)\0127. Copy $O (seeds.jsonl, raw.jsonl, kept.jsonl, drops.jsonl, items/items_train.jsonl, items/items_dev.jsonl, glm_0..3.log) into artifacts/claude-y1t-20260926/glm/ of your worktree and write RESULTS-mac.md there: every printed line verbatim, the total cost in USD (sum of the four), wall time, any error. GLM output may be quoted (it is not Claude text), but keep RESULTS-mac.md to counts. Then rm -rf "$D" (exact path) and confirm it is gone.\012PUSH: artifacts/claude-y1t-20260926/glm
+ben-hannan       73097   0.0  0.7 489164032 242960   ??  SN    2:13PM   0:00.98 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_lis320_glm.py --seeds artifacts/claude-lis320-20260926/full/seeds.jsonl --out artifacts/claude-lis320-20260926/full/raw.jsonl --workers 8
+ben-hannan       73095   0.0  0.1 463621312  19472   ??  SN    2:13PM   0:00.02 uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_glm.py --seeds artifacts/claude-lis320-20260926/full/seeds.jsonl --out artifacts/claude-lis320-20260926/full/raw.jsonl --workers 8
+ben-hannan       54585   0.0  0.1 488915824  29200   ??  SN    1:29PM   0:01.00 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_lis320_glm.py --seeds artifacts/claude-y1t-20260926/glm/seeds_3.jsonl --out artifacts/claude-y1t-20260926/glm/raw_3.jsonl
+ben-hannan       54584   0.0  0.1 488915488  28640   ??  SN    1:29PM   0:00.99 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_lis320_glm.py --seeds artifacts/claude-y1t-20260926/glm/seeds_2.jsonl --out artifacts/claude-y1t-20260926/glm/raw_2.jsonl
+ben-hannan       54583   0.0  0.1 488907056  29856   ??  SN    1:29PM   0:01.00 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_lis320_glm.py --seeds artifacts/claude-y1t-20260926/glm/seeds_1.jsonl --out artifacts/claude-y1t-20260926/glm/raw_1.jsonl
+ben-hannan       54582   0.0  0.1 488911072  29056   ??  SN    1:29PM   0:01.32 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_lis320_glm.py --seeds artifacts/claude-y1t-20260926/glm/seeds_0.jsonl --out artifacts/claude-y1t-20260926/glm/raw_0.jsonl
+ben-hannan       54580   0.0  0.0 488786800   1520   ??  SNs   1:29PM   0:00.01 /bin/zsh -c PY=/Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12; O="artifacts/claude-y1t-20260926/glm"; date -u; echo "launching 4 GLM processes with $PY"; for i in 0 1 2 3; do "$PY" -B scripts/claude_lis320_glm.py --seeds "$O/seeds_$i.jsonl" --out "$O/raw_$i.jsonl" > "$O/glm_$i.log" 2>&1 & echo "started $i pid $!"; done; wait; echo "ALL_DONE_EXIT:$?"; date -u; echo "---TAILS---"; for i in 0 1 2 3; do echo "== glm_$i.log =="; tail -n 8 "$O/glm_$i.log"; done; echo "---COUNTS---"; for i in 0 1 2 3; do echo -n "raw_$i: "; wc -l < "$O/raw_$i.jsonl"; done
+[0m
+[0m$ [0mgit show "origin/main:handoff/queue/lis320-pilot2-mac.md" 2>&1 | head -n 40
+COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).
+GPU: no (Mac CPU only; 60 network calls to OpenRouter, GLM 5.3 Flash; expected well under $1). No reader, no rental, no BensPC. Label: lis320-pilot2. TIME CAP: 40 minutes. DISK: 1.
+KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The script reads it itself. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.
+WHY: Ben chose "Retrain first" (16:46 UTC): the next reader (lis-320) trains only on GLM-written chats with code-written, code-checked labels. This second pilot (new wording rule, wider checks, ask-back families; see artifacts/claude-lis320-20260926/PILOT-REVIEW.md) measures the code-check pass rate, the cost per 1,000 rows and how chat-like GLM's wording is, before any full run. Nothing is trained.
+
+1. TREE: D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; cd $D; O=artifacts/claude-lis320-20260926/pilot2; mkdir -p $O.
+2. python3 -B scripts/claude_lis320_seed.py --seed 321 --n 60 --ask-back --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl   (record the printed counts)
+3. python3 -B scripts/claude_lis320_glm.py --seeds $O/seeds.jsonl --out $O/raw.jsonl   (60 calls; record the printed totals: calls, parsed, tokens, cost_usd). If a call fails 4 times the script moves on; report how many.
+4. python3 -B scripts/claude_lis320_check.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl   (record the printed counts verbatim)
+5. python3 -B scripts/claude_lis320_style.py --kept $O/kept.jsonl --out $O/style.json   (record the printed line)
+6. Copy $O (seeds.jsonl, raw.jsonl, kept.jsonl, drops.jsonl, style.json) into artifacts/claude-lis320-20260926/pilot2/ of your worktree and write RESULTS.md there: every printed count verbatim, the total cost in USD from step 3 (if the usage has no cost, give the token totals), wall time, and any error. GLM output may be quoted (it is not Claude text), but keep RESULTS.md to counts. Then rm -rf "$D" (exact path) and confirm it is gone.
+PUSH: artifacts/claude-lis320-20260926/pilot2
+[0m
+[0m$ [0msleep 170; echo "t=$(date -u)"; grep -c ok artifacts/claude-lis320-20260926/full/glm.log; wc -l artifacts/claude-lis320-20260926/full/raw.jsonl 2>&1; grep -c "failed" artifacts/claude-lis320-20260926/full/glm.log; tail -n 2 artifacts/claude-lis320-20260926/full/glm.log
+t=Sat Sep 26 18:19:58 UTC 2026
+49
+      55 artifacts/claude-lis320-20260926/full/raw.jsonl
+0
+[glm320] s320-322-00046 ok
+[glm320] s320-322-00048 ok
+[0m
+[0m$ [0msleep 240; echo "t=$(date -u)"; grep -c ok artifacts/claude-lis320-20260926/full/glm.log; grep -c "try" artifacts/claude-lis320-20260926/full/glm.log; grep -c "failed" artifacts/claude-lis320-20260926/full/glm.log; tail -n 2 artifacts/claude-lis320-20260926/full/glm.log; ps aux | grep lis320_glm | grep -v grep | wc -l
+t=Sat Sep 26 18:24:05 UTC 2026
+76
+0
+0
+[glm320] s320-322-00089 ok
+[glm320] s320-322-00074 ok
+       8
+[0m
+[0m$ [0msleep 280; echo "t=$(date -u)"; grep -c ok artifacts/claude-lis320-20260926/full/glm.log; grep -c "failed" artifacts/claude-lis320-20260926/full/glm.log; tail -n 2 artifacts/claude-lis320-20260926/full/glm.log
+t=Sat Sep 26 18:28:54 UTC 2026
+109
+0
+[glm320] s320-322-00124 ok
+[glm320] s320-322-00113 ok
+[0m
+[0m$ [0msleep 290; echo "t=$(date -u)"; grep -c ok artifacts/claude-lis320-20260926/full/glm.log; grep -c "failed" artifacts/claude-lis320-20260926/full/glm.log; tail -n 1 artifacts/claude-lis320-20260926/full/glm.log
+t=Sat Sep 26 18:33:52 UTC 2026
+172
+141
+[glm320] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[0m
+[0m$ [0mecho "t=$(date -u)"; grep -c "try 4 failed" artifacts/claude-lis320-20260926/full/glm.log; grep -c "try 1 failed" artifacts/claude-lis320-20260926/full/glm.log; grep -c "try 2 failed" artifacts/claude-lis320-20260926/full/glm.log; grep -c "try 3 failed" artifacts/claude-lis320-20260926/full/glm.log; grep -c ok artifacts/claude-lis320-20260926/full/glm.log; grep "failed" artifacts/claude-lis320-20260926/full/glm.log | sort | uniq -c | sort -rn | head; echo "---tail---"; tail -n 8 artifacts/claude-lis320-20260926/full/glm.log; echo "---proc---"; ps aux | grep "lis320_glm" | grep -v grep | awk '{print $NF, $NF}' | head; ps aux | grep -c "[l]is320_glm"
+t=Sat Sep 26 18:33:59 UTC 2026
+27
+48
+40
+33
+174
+  48 [glm320] try 1 failed: HTTPError HTTP Error 402: Payment Required
+  40 [glm320] try 2 failed: HTTPError HTTP Error 402: Payment Required
+  33 [glm320] try 3 failed: HTTPError HTTP Error 402: Payment Required
+  27 [glm320] try 4 failed: HTTPError HTTP Error 402: Payment Required
+---tail---
+[glm320] s320-322-00206 unparsed
+[glm320] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] s320-322-00216 ok
+[glm320] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] s320-322-00221 ok
+[glm320] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 2 failed: HTTPError HTTP Error 402: Payment Required
+---proc---
+artifacts/claude-y1t-20260926/glm artifacts/claude-y1t-20260926/glm
+8 8
+8 8
+artifacts/claude-y1t-20260926/glm/raw_3.jsonl artifacts/claude-y1t-20260926/glm/raw_3.jsonl
+artifacts/claude-y1t-20260926/glm/raw_2.jsonl artifacts/claude-y1t-20260926/glm/raw_2.jsonl
+artifacts/claude-y1t-20260926/glm/raw_1.jsonl artifacts/claude-y1t-20260926/glm/raw_1.jsonl
+artifacts/claude-y1t-20260926/glm/raw_0.jsonl artifacts/claude-y1t-20260926/glm/raw_0.jsonl
+done done
+10
+[0m
+[0m$ [0msleep 200; echo "t=$(date -u)"; echo -n "try4: "; grep -c "try 4 failed" artifacts/claude-lis320-20260926/full/glm.log; echo -n "ok: "; grep -c ok artifacts/claude-lis320-20260926/full/glm.log; tail -n 6 artifacts/claude-lis320-20260926/full/glm.log
+t=Sat Sep 26 18:37:28 UTC 2026
+try4: 55
+ok: 224
+[glm320] s320-322-00297 ok
+[glm320] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[0m
+[0m$ [0mps aux | grep "[c]laude_lis320_glm" | grep "lis320-20260926/full" ; echo "---"; kill 73097 73095 2>&1; sleep 3; ps aux | grep "[c]laude_lis320_glm" | grep "lis320-20260926/full"; echo "kill-exit=$?"; echo -n "ok: "; grep -c ok artifacts/claude-lis320-20260926/full/glm.log; echo -n "try4: "; grep -c "try 4 failed" artifacts/claude-lis320-20260926/full/glm.log; wc -l artifacts/claude-lis320-20260926/full/raw.jsonl; tail -n 3 artifacts/claude-lis320-20260926/full/glm.log
+ben-hannan       72657  18.8  1.7 562814400 564032   ??  SN    2:11PM   0:54.96 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:lis320-full-mac.go1.72627 COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).\012GPU: no (Mac CPU only; about 6000 network calls to OpenRouter, GLM 5.3 Flash, 8 at a time; pilots cost $0.0148 per 60 calls, so expect about $1.50; stop and report if the running cost_usd passes $5). No reader, no rental, no BensPC. Label: lis320-full. TIME CAP: 180 minutes. DISK: 1.\012KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The script reads it itself. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.\012WHY: Ben chose "Retrain first" (16:46 UTC): lis-320 trains only on GLM-written chats with code-written, code-checked labels. Pilots 1 and 2 passed the sealed thresholds (artifacts/claude-lis320-20260926/PILOT-THRESHOLDS.md, PILOT-REVIEW.md). This is the full data run. Nothing is trained here.\012\0121. TREE: D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; cd $D; O=artifacts/claude-lis320-20260926/full; mkdir -p $O. Record `git rev-parse origin/main`.\0122. python3 -B scripts/claude_lis320_seed.py --seed 322 --n 6000 --ask-back --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl   (record the printed counts)\0123. nohup python3 -B scripts/claude_lis320_glm.py --seeds $O/seeds.jsonl --out $O/raw.jsonl --workers 8 > $O/glm.log 2>&1 &   then wait for it to finish (check every few minutes; `grep -c ok $O/glm.log`). The script resumes: if it dies, run the same command again once and report it. Record the final printed totals line (calls, parsed, tokens, cost_usd). If the log shows more than 50 "try 4 failed" lines, stop and report.\0124. python3 -B scripts/claude_lis320_check.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl > $O/check.json   (record check.json verbatim in RESULTS.md)\0125. python3 -B scripts/claude_lis320_style.py --kept $O/kept.jsonl --out $O/style.json   (record the printed line)\0126. python3 -B scripts/claude_lis320_build.py --kept $O/kept.jsonl --out $O/data --dev-pct 3 > $O/BUILD.json   (record it; this is the dry build, nothing is trained)\0127. gzip -9 -k $O/raw.jsonl; sha256sum $O/raw.jsonl $O/raw.jsonl.gz $O/seeds.jsonl $O/kept.jsonl $O/data/train.jsonl $O/data/dev.jsonl > $O/SHA256.txt\0128. Copy into artifacts/claude-lis320-20260926/full/ of your worktree ONLY: raw.jsonl.gz, check.json, style.json, BUILD.json, SHA256.txt, and RESULTS.md (every printed count verbatim, the origin/main commit from step 1, cost in USD, wall time, the number of "failed" lines in glm.log, any error). Do NOT copy seeds.jsonl, raw.jsonl, kept.jsonl, drops.jsonl or data/ (too big; the rental rebuilds them from the seed and raw.jsonl.gz by code). Keep $D until the watcher confirms the push, then rm -rf "$D" (exact path) and confirm it is gone.\012PUSH: artifacts/claude-lis320-20260926/full
+ben-hannan       73097   0.0  0.3 489165056  87392   ??  SN    2:13PM   0:06.81 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_lis320_glm.py --seeds artifacts/claude-lis320-20260926/full/seeds.jsonl --out artifacts/claude-lis320-20260926/full/raw.jsonl --workers 8
+ben-hannan       73095   0.0  0.0 463621312  12096   ??  SN    2:13PM   0:00.02 uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_glm.py --seeds artifacts/claude-lis320-20260926/full/seeds.jsonl --out artifacts/claude-lis320-20260926/full/raw.jsonl --workers 8
+---
+ben-hannan       72657   3.1  1.7 562813840 564304   ??  SN    2:11PM   0:55.07 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:lis320-full-mac.go1.72627 COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).\012GPU: no (Mac CPU only; about 6000 network calls to OpenRouter, GLM 5.3 Flash, 8 at a time; pilots cost $0.0148 per 60 calls, so expect about $1.50; stop and report if the running cost_usd passes $5). No reader, no rental, no BensPC. Label: lis320-full. TIME CAP: 180 minutes. DISK: 1.\012KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The script reads it itself. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.\012WHY: Ben chose "Retrain first" (16:46 UTC): lis-320 trains only on GLM-written chats with code-written, code-checked labels. Pilots 1 and 2 passed the sealed thresholds (artifacts/claude-lis320-20260926/PILOT-THRESHOLDS.md, PILOT-REVIEW.md). This is the full data run. Nothing is trained here.\012\0121. TREE: D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; cd $D; O=artifacts/claude-lis320-20260926/full; mkdir -p $O. Record `git rev-parse origin/main`.\0122. python3 -B scripts/claude_lis320_seed.py --seed 322 --n 6000 --ask-back --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl   (record the printed counts)\0123. nohup python3 -B scripts/claude_lis320_glm.py --seeds $O/seeds.jsonl --out $O/raw.jsonl --workers 8 > $O/glm.log 2>&1 &   then wait for it to finish (check every few minutes; `grep -c ok $O/glm.log`). The script resumes: if it dies, run the same command again once and report it. Record the final printed totals line (calls, parsed, tokens, cost_usd). If the log shows more than 50 "try 4 failed" lines, stop and report.\0124. python3 -B scripts/claude_lis320_check.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl > $O/check.json   (record check.json verbatim in RESULTS.md)\0125. python3 -B scripts/claude_lis320_style.py --kept $O/kept.jsonl --out $O/style.json   (record the printed line)\0126. python3 -B scripts/claude_lis320_build.py --kept $O/kept.jsonl --out $O/data --dev-pct 3 > $O/BUILD.json   (record it; this is the dry build, nothing is trained)\0127. gzip -9 -k $O/raw.jsonl; sha256sum $O/raw.jsonl $O/raw.jsonl.gz $O/seeds.jsonl $O/kept.jsonl $O/data/train.jsonl $O/data/dev.jsonl > $O/SHA256.txt\0128. Copy into artifacts/claude-lis320-20260926/full/ of your worktree ONLY: raw.jsonl.gz, check.json, style.json, BUILD.json, SHA256.txt, and RESULTS.md (every printed count verbatim, the origin/main commit from step 1, cost in USD, wall time, the number of "failed" lines in glm.log, any error). Do NOT copy seeds.jsonl, raw.jsonl, kept.jsonl, drops.jsonl or data/ (too big; the rental rebuilds them from the seed and raw.jsonl.gz by code). Keep $D until the watcher confirms the push, then rm -rf "$D" (exact path) and confirm it is gone.\012PUSH: artifacts/claude-lis320-20260926/full
+kill-exit=0
+ok: 224
+try4: 60
+     298 artifacts/claude-lis320-20260926/full/raw.jsonl
+[glm320] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 4 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 4 failed: HTTPError HTTP Error 402: Payment Required
+[0m
+[0m$ [0msleep 5; ps -p 73097 -p 73095 2>&1; echo "---"; kill -9 73097 73095 2>&1; sleep 2; ps -p 73097 -p 73095 2>&1; echo "==="; echo -n "ok: "; grep -c ok artifacts/claude-lis320-20260926/full/glm.log; echo -n "unparsed: "; grep -c unparsed artifacts/claude-lis320-20260926/full/glm.log; echo -n "try1: "; grep -c "try 1 failed" artifacts/claude-lis320-20260926/full/glm.log; echo -n "try2: "; grep -c "try 2 failed" artifacts/claude-lis320-20260926/full/glm.log; echo -n "try3: "; grep -c "try 3 failed" artifacts/claude-lis320-20260926/full/glm.log; echo -n "try4: "; grep -c "try 4 failed" artifacts/claude-lis320-20260926/full/glm.log; grep "failed" artifacts/claude-lis320-20260926/full/glm.log | sort | uniq -c; wc -l artifacts/claude-lis320-20260926/full/raw.jsonl artifacts/claude-lis320-20260926/full/seeds.jsonl; date -u; cat artifacts/claude-lis320-20260926/full/START_EPOCH.txt
+PID TTY           TIME CMD
+---
+zsh:kill:1: kill 73097 failed: no such process
+zsh:kill:1: kill 73095 failed: no such process
+  PID TTY           TIME CMD
+===
+ok: 224
+unparsed: 74
+try1: 100
+try2: 82
+try3: 69
+try4: 60
+ 100 [glm320] try 1 failed: HTTPError HTTP Error 402: Payment Required
+  82 [glm320] try 2 failed: HTTPError HTTP Error 402: Payment Required
+  69 [glm320] try 3 failed: HTTPError HTTP Error 402: Payment Required
+  60 [glm320] try 4 failed: HTTPError HTTP Error 402: Payment Required
+     298 artifacts/claude-lis320-20260926/full/raw.jsonl
+    6000 artifacts/claude-lis320-20260926/full/seeds.jsonl
+    6298 total
+Sat Sep 26 18:37:54 UTC 2026
+1790446396
+[0m
+[0m$ [0mgit status --short -- artifacts/ 2>&1 | head; echo "worktree-full-exists: $(ls artifacts/claude-lis320-20260926/full/ 2>&1)"; echo "---"; grep -c "sk-or" artifacts/claude-lis320-20260926/full/glm.log artifacts/claude-lis320-20260926/full/seeds.jsonl 2>&1; ls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.UesxzyXYZ1/artifacts/claude-lis320-20260926/full/
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+worktree-full-exists: ls: artifacts/claude-lis320-20260926/full/: No such file or directory
+---
+grep: artifacts/claude-lis320-20260926/full/glm.log: No such file or directory
+grep: artifacts/claude-lis320-20260926/full/seeds.jsonl: No such file or directory
+total 54920
+drwxr-xr-x   6 ben-hannan  staff       192 Sep 26 14:13 .
+drwxr-xr-x  11 ben-hannan  staff       352 Sep 26 14:11 ..
+-rw-r--r--   1 ben-hannan  staff     29016 Sep 26 14:37 glm.log
+-rw-r--r--   1 ben-hannan  staff    659765 Sep 26 14:37 raw.jsonl
+-rw-r--r--   1 ben-hannan  staff  27353445 Sep 26 14:11 seeds.jsonl
+-rw-r--r--   1 ben-hannan  staff        11 Sep 26 14:13 START_EPOCH.txt
+[0m
+[0m$ [0mgrep -c "sk-or" artifacts/claude-lis320-20260926/full/glm.log artifacts/claude-lis320-20260926/full/raw.jsonl 2>&1; echo "---"; df -h / | head -n 2; uptime
+artifacts/claude-lis320-20260926/full/glm.log:0
+artifacts/claude-lis320-20260926/full/raw.jsonl:0
+---
+Filesystem        Size    Used   Avail Capacity iused ifree %iused  Mounted on
+/dev/disk3s1s1   460Gi    13Gi    55Gi    19%    484k  577M    0%   /
+14:38  up 3 days,  4:31, 4 users, load averages: 34.61 43.81 51.98
+[0m
