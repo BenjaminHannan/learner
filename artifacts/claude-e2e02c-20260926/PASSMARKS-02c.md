@@ -98,3 +98,9 @@ agent's tokenizer and model (no second copy), and D1.train_copy leaves the model
   300-item panel after night 3 ≤ 20 (dl-2 was at 10 and 18 after night 3). Per night the log keeps eligible
   examples, optimizer steps, weight change, adapter saved, active after reload. Wording for the report: the
   right-answer night works and the wrong-answer night doesn't (dl-2 W5); not "correctness alone caused it".
+- ~02:50 UTC: Reading facts confirmed review item 1: the lis-318/319 panel scorer (claude_lis317_gates.e2e_match)
+  ignores the relation and drops unread rows. So the reader switch follows Reading's whole-claim re-score
+  (artifacts/claude-lis319c-20260926/PASSMARKS-full.md): r319c (0.98) only if S1-S3 AND F1-F3 pass; r319 (0.995)
+  only if the whole-claim re-score does not overturn lis-319's own wrong-save result; otherwise X keeps 0.1's
+  lis-301 reader and the reader line is listed as open. On bank D, H2 (wrong saves) is judged by the blind judges,
+  who check the relation (the 336 scorer leaves relation to them).
