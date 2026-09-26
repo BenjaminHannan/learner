@@ -1,0 +1,223 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; uptime; df -g /; shasum -a 256 scripts/claude_glm_opencode_v11.py; ls scripts/claude_glm_opencode_v11.py artifacts/ 2>&1 | head -n 100
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+16:13  up 3 days,  6:06, 4 users, load averages: 80.45 89.86 102.37
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        52    20%  484014 549825240    0%   /
+7a067cfba8fd147f342d46ed71449ab3e065c46eee3615a9b263a22da5c708c4  scripts/claude_glm_opencode_v11.py
+scripts/claude_glm_opencode_v11.py
+
+artifacts/:
+claude-adapters-20260926d
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm391-20260926
+claude-bm395-20260925
+claude-bm397t-20260926
+claude-bm398e-20260926
+claude-bm398i-20260926
+claude-bm398r-20260926
+claude-bmriv-smoke-20260926
+claude-boundary259-20260922
+claude-brd5-20260926
+claude-brd6-20260926
+claude-brd7-20260926
+claude-brd8-20260926
+claude-brd8w-20260926
+claude-brd9-20260926
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-ch403-20260926
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chat338-20260924
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convbench-f0-20260923
+claude-convf0-20260923
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-cre333-20260924
+claude-credit-20260926b
+claude-credit-20260926j
+claude-credit-20260926k
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-depot-20260926
+claude-depot319f-20260926
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-diskcheck-20260926
+claude-dl1-20260925
+claude-dl2-20260926
+claude-dl3-20260926
+claude-dl4-20260926
+claude-dl5-20260926
+claude-dl6-20260926
+claude-dl7-20260926
+claude-e2e02c-20260926
+claude-e2e02c-dev-20260926
+claude-e2e02dr-20260926
+claude-e2e330-dev-20260924
+claude-e2e330c-dev-20260924
+claude-e2e330c-dev2-20260924
+claude-e2e330c-dev3-20260924
+claude-e2e336-20260924
+claude-e2e336b-20260925
+claude-e2e382-20260925
+claude-e2e382-dev-20260925
+claude-ear265-20260923
+claude-ear269-20260923
+[0m
+[0m→ [0mRead scripts/claude_glm_opencode_v11.py
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; /usr/local/bin/opencode session list -n 1000 --format json 2>&1 | /usr/bin/python3 -c "import json,sys; raw=sys.stdin.read(); 
+try:
+ items=json.loads(raw)
+ if isinstance(items,dict): items=items.get('sessions',[])
+ print('TOTAL_COUNT',len(items))
+ glm=[s for s in items if isinstance(s,dict) and str(s.get('title','')).startswith('glm11-')]
+ print('GLM11_COUNT',len(glm))
+ for s in glm[:20]: print('GLM11_TITLE',s.get('title'))
+except Exception as e:
+ print('PARSE_FAIL',e); print(raw[:2000])"
+TOTAL_COUNT 8
+GLM11_COUNT 0
+[0m
+[0m$ [0mls artifacts >/dev/null && mkdir -p artifacts/claude-glm-v11-twoproc-20260926 && ls artifacts/claude-glm-v11-twoproc-20260926
+(no output)
+[0m
+[0m← [0mWrite artifacts/claude-glm-v11-twoproc-20260926/worker.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+date -u; uptime; df -g /
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-glm-v11-twoproc-20260926/worker.py --proc A --out artifacts/claude-glm-v11-twoproc-20260926/procA.jsonl --words zircon,lantern,comet,violin > artifacts/claude-glm-v11-twoproc-20260926/procA.stdout 2>&1 &
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-glm-v11-twoproc-20260926/worker.py --proc B --out artifacts/claude-glm-v11-twoproc-20260926/procB.jsonl --words meadow,puppet,anchor,beacon > artifacts/claude-glm-v11-twoproc-20260926/procB.stdout 2>&1 &
+wait; echo "EXIT_ALL=$?"; date -u; wc -l artifacts/claude-glm-v11-twoproc-20260926/procA.jsonl artifacts/claude-glm-v11-twoproc-20260926/procB.jsonl
+Sat Sep 26 20:14:13 UTC 2026
+16:14  up 3 days,  6:07, 4 users, load averages: 82.12 88.87 101.35
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        52    20%  484014 549736840    0%   /
+EXIT_ALL=0
+Sat Sep 26 20:15:47 UTC 2026
+       4 artifacts/claude-glm-v11-twoproc-20260926/procA.jsonl
+       4 artifacts/claude-glm-v11-twoproc-20260926/procB.jsonl
+       8 total
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+for proc in ['A','B']:
+    print('=== PROC',proc,'===')
+    for line in open('artifacts/claude-glm-v11-twoproc-20260926/proc%s.jsonl'%proc):
+        r=json.loads(line)
+        print(r['proc'],r['i'],r['word'],'| before:',r['before_count'],r['before_titles'],'| after:',r['after_count'],r['after_titles'],'| reply:',repr(r['reply'][:80]),'| err:',r['error'][:100])
+"
+/usr/local/bin/opencode session list -n 1000 --format json 2>&1 | /usr/bin/python3 -c "
+import json,sys
+items=json.loads(sys.stdin.read())
+if isinstance(items,dict): items=items.get('sessions',[])
+print('FINAL_TOTAL',len(items))
+glm=[s for s in items if isinstance(s,dict) and str(s.get('title','')).startswith('glm11-')]
+print('FINAL_GLM11',len(glm))
+for s in glm: print('LEAK',s.get('title'))
+"
+=== PROC A ===
+A 0 zircon | before: 0 [] | after: 1 ['glm11-403d57013b2643a898778bd89cfb5b66'] | reply: 'zircon' | err: 
+A 1 lantern | before: 1 ['glm11-403d57013b2643a898778bd89cfb5b66'] | after: 0 [] | reply: 'lantern' | err: 
+A 2 comet | before: 1 ['glm11-5570f58f63964a67a1235a828d28d8e0'] | after: 0 [] | reply: 'comet' | err: 
+A 3 violin | before: 0 [] | after: 0 [] | reply: 'violin' | err: 
+=== PROC B ===
+B 0 meadow | before: 0 [] | after: 1 ['glm11-005eaf81973849f4a5147da234eee3fa'] | reply: 'meadow' | err: 
+B 1 puppet | before: 1 ['glm11-005eaf81973849f4a5147da234eee3fa'] | after: 1 ['glm11-005eaf81973849f4a5147da234eee3fa'] | reply: 'puppet' | err: 
+B 2 anchor | before: 0 [] | after: 1 ['glm11-59e313647e8943d9bf42bf779d544208'] | reply: 'anchor' | err: 
+B 3 beacon | before: 1 ['glm11-59e313647e8943d9bf42bf779d544208'] | after: 1 ['glm11-59e313647e8943d9bf42bf779d544208'] | reply: 'beacon' | err: 
+FINAL_TOTAL 9
+FINAL_GLM11 0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+for proc in ['A','B']:
+    for line in open('artifacts/claude-glm-v11-twoproc-20260926/proc%s.jsonl'%proc):
+        r=json.loads(line)
+        print(r['proc'],r['i'],r['t_before'],r['t_call_start'],r['t_call_end'],r['t_after'])
+"
+/usr/local/bin/opencode session list -n 1000 --format json 2>&1 | /usr/bin/python3 -c "
+import json,sys
+items=json.loads(sys.stdin.read())
+if isinstance(items,dict): items=items.get('sessions',[])
+print('RETOTAL',len(items))
+glm=[s for s in items if isinstance(s,dict) and str(s.get('title','')).startswith('glm11-')]
+print('REGLM11',len(glm))
+"
+uptime; df -g /
+A 0 2026-09-26T20:14:13.193730+00:00 2026-09-26T20:14:13.882877+00:00 2026-09-26T20:14:25.704254+00:00 2026-09-26T20:14:26.634406+00:00
+A 1 2026-09-26T20:14:26.634603+00:00 2026-09-26T20:14:29.597426+00:00 2026-09-26T20:14:57.756539+00:00 2026-09-26T20:14:59.398640+00:00
+A 2 2026-09-26T20:14:59.398751+00:00 2026-09-26T20:15:01.903410+00:00 2026-09-26T20:15:31.244208+00:00 2026-09-26T20:15:32.115373+00:00
+A 3 2026-09-26T20:15:32.115542+00:00 2026-09-26T20:15:34.999974+00:00 2026-09-26T20:15:46.396464+00:00 2026-09-26T20:15:47.137337+00:00
+B 0 2026-09-26T20:14:13.193753+00:00 2026-09-26T20:14:13.885153+00:00 2026-09-26T20:14:39.332378+00:00 2026-09-26T20:14:41.098923+00:00
+B 1 2026-09-26T20:14:41.099143+00:00 2026-09-26T20:14:43.076018+00:00 2026-09-26T20:14:55.506710+00:00 2026-09-26T20:14:56.222734+00:00
+B 2 2026-09-26T20:14:56.222870+00:00 2026-09-26T20:14:58.970409+00:00 2026-09-26T20:15:12.220085+00:00 2026-09-26T20:15:14.281365+00:00
+B 3 2026-09-26T20:15:14.281524+00:00 2026-09-26T20:15:16.288759+00:00 2026-09-26T20:15:27.129691+00:00 2026-09-26T20:15:28.048344+00:00
+RETOTAL 9
+REGLM11 0
+16:16  up 3 days,  6:09, 4 users, load averages: 131.18 110.78 108.68
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        52    20%  484014 548989520    0%   /
+[0m
+[0m$ [0mcat artifacts/claude-glm-v11-twoproc-20260926/procA.stdout artifacts/claude-glm-v11-twoproc-20260926/procB.stdout; ls -l artifacts/claude-glm-v11-twoproc-20260926/
+worker A done
+worker B done
+total 40
+-rw-r--r--  1 ben-hannan  staff  1508 Sep 26 16:15 procA.jsonl
+-rw-r--r--  1 ben-hannan  staff    14 Sep 26 16:15 procA.stdout
+-rw-r--r--  1 ben-hannan  staff  1628 Sep 26 16:15 procB.jsonl
+-rw-r--r--  1 ben-hannan  staff    14 Sep 26 16:15 procB.stdout
+-rw-r--r--  1 ben-hannan  staff  2361 Sep 26 16:14 worker.py
+[0m
+[0m← [0mWrite artifacts/claude-glm-v11-twoproc-20260926/REPORT.md
+Wrote file successfully.
+[0m
