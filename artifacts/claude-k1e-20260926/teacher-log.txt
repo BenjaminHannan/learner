@@ -1,0 +1,40 @@
+$ uv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher.py selftest
+k1e teacher selftest 2/2 ok
+$ uv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher.py label --packet artifacts/claude-k1e-20260926/dev/packet_dev.jsonl --out artifacts/claude-k1e-20260926/teacher-dev
+[k1e-teacher] lines 0-9 ok
+[k1e-teacher] lines 10-19 ok
+[k1e-teacher] lines 20-29 ok
+[k1e-teacher] lines 30-39 ok
+[k1e-teacher] lines 40-49 ok
+[k1e-teacher] lines 50-59 ok
+[k1e-teacher] lines 60-69 ok
+[k1e-teacher] lines 70-79 ok
+[k1e-teacher] lines 80-89 ok
+[k1e-teacher] lines 90-99 ok
+[k1e-teacher] lines 100-109 ok
+[k1e-teacher] lines 110-119 ok
+[k1e-teacher] lines 120-129 ok
+[k1e-teacher] lines 130-139 ok
+[k1e-teacher] lines 140-149 ok
+[k1e-teacher] lines 150-156 ok
+{"lines": 157, "labelled": 157, "unparsed": 0, "calls": 16, "useful_yes": 76, "cost_usd": 0.0089}
+$ uv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher.py agree --labels artifacts/claude-k1e-20260926/teacher-dev/labels.jsonl --key artifacts/claude-k1e-20260926/dev/key_dev.json --verdicts artifacts/claude-k1e-20260926/dev/verdicts_dev.json
+{"compared": 157, "teacher_useful": 76, "opus_useful": 56, "both_useful": 48, "agree": 121, "kappa": 0.537, "passes_label_rule": false}
+$ uv run --offline --no-project --python 3.12 python -B scripts/claude_k1e_teacher.py write --out artifacts/claude-k1e-20260926/train
+[k1e-teacher] call 0 kept 20 (20 chats)
+[k1e-teacher] call 1 kept 20 (40 chats)
+[k1e-teacher] call 2 kept 20 (60 chats)
+[k1e-teacher] call 3 kept 19 (79 chats)
+[k1e-teacher] call 4 kept 20 (99 chats)
+[k1e-teacher] call 5 kept 20 (119 chats)
+[k1e-teacher] call 6 kept 20 (139 chats)
+[k1e-teacher] call 7 kept 20 (159 chats)
+[k1e-teacher] call 8 kept 19 (178 chats)
+[k1e-teacher] call 9 kept 22 (200 chats)
+[k1e-teacher] call 10 kept 20 (220 chats)
+[k1e-teacher] call 11 kept 13 (233 chats)
+[k1e-teacher] call 12 kept 5 (238 chats)
+[k1e-teacher] call 13 kept 0 (238 chats)
+[k1e-teacher] call 14 kept 1 (239 chats)
+[k1e-teacher] call 15 kept 1 (240 chats)
+{"chats": 240, "complete": true, "open_slots": {"idea1": 0, "idea0": 0, "uf1": 0, "uf2": 0, "uf3": 0}, "rejected": {"slot full or repeat": 75, "bad: kind/turn count": 8, "bad: fact value not in teach turns": 1}, "calls": 16, "cost_usd": 0.0125}
