@@ -46,3 +46,7 @@ touched. Ben's overnight goal comes first; the queued items run after it, with t
   a second full MiniCPM5-1B, the fine-tuned reader (lis-300 PASSMARKS: base openbmb/MiniCPM5-1B). So its resident
   weights are about 2B, the same size class as Qwen3.5-2B. The plain-1B rows (T) are the 1B-vs-2B comparison; the
   agent rows are roughly 2B vs 2B.
+
+Correction (02:16 UTC): the third point above misreads the reply. Its section 10 already says the complete assistant
+also holds a separately fine-tuned reader, and asks us to stop calling the whole system "1B". That is the same point,
+not an error. Only the first two are out of date, and both have been fixed since the reply was written.
