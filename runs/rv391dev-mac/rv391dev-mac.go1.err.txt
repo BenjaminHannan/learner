@@ -1,0 +1,870 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo FETCH_EXIT:$?; git archive origin/main artifacts/claude-rv391-20260926/dev 2>&1 | head -20; echo ARCHIVE_EXIT:${PIPESTATUS[0]}
+FETCH_EXIT:0
+fatal: pathspec 'artifacts/claude-rv391-20260926/dev' did not match any files
+ARCHIVE_EXIT:
+[0m
+[0m$ [0mgit archive origin/main artifacts/claude-rv391-20260926/NOTE-dev-plan.md scripts/claude_rv391_dev.py artifacts/claude-rsn358i-20260926/SEAL-run.sha256.txt 2>&1 | tar -t; echo ---; git show origin/main:artifacts/claude-rv391-20260926/NOTE-dev-plan.md; echo ===DOCSTRING===; git show origin/main:scripts/claude_rv391_dev.py | head -150
+artifacts/
+artifacts/claude-rsn358i-20260926/
+artifacts/claude-rsn358i-20260926/SEAL-run.sha256.txt
+artifacts/claude-rv391-20260926/
+artifacts/claude-rv391-20260926/NOTE-dev-plan.md
+scripts/
+scripts/claude_rv391_dev.py
+---
+# rv-391 dev plan: a go-back trigger that fires (thought-memory thread; written 2026-09-26 16:38 UTC by date -u, before any measurement)
+
+Why: rv-387 (artifacts/claude-rv387-20260926/RESULTS.md) never went back. Its trigger was "the stop head q fell after a
+guess", and q rises after anything is written on the page.
+
+Brain first (Ben, 16:05 UTC): people go back when something clashes, not when they feel less sure. In the brain, a
+frontal region (the anterior cingulate cortex) responds to conflict between competing answers and to errors, and that
+response triggers a change of strategy. This is textbook-level, and mapping it onto this net is a guess. So the
+candidate triggers are conflict signals the net produces itself (scripts/claude_rv391_dev.py lists them). A rule-based
+clash count is measured for comparison only. Under Ben's 16:04 redirect it cannot be the trigger.
+
+## Step 1: measure, unregistered, on practice grids only
+- Nets: 358i's four loop nets (the Mac copy), each sha256 checked against 358i's SEAL-run.sha256.txt.
+- Grids: rv-390's practice sets p-grids7 and p-grids6 (seeds 39114 and 39113). No test grid of rv-387, rv-390 or 358i
+  is touched.
+- Search: rv-387's GUESS for 96 rounds on each unfinished practice grid. Each guess is labelled right or wrong from the
+  practice grid's own solution.
+- Output: artifacts/claude-rv391-20260926/dev/measure-s<seed>.json, with the AUC of each signal for wrong vs right
+  guesses, over all guesses and over first guesses only, plus the per-guess rows.
+
+## How the trigger is chosen (fixed now, before any number exists)
+- Candidates: dq, d_mean_ent, d_max_ent, flips, p_written. clash_rule_based is not a candidate.
+- The trigger is the candidate with the highest mean AUC over the four nets on p-grids7 (all guesses), if that mean
+  is at least 0.65 and it is above 0.5 in all four nets.
+- Its cut is the value, pooled over the four nets on p-grids7, that flags at most 20% of right guesses. The share of
+  wrong guesses flagged at that cut is reported.
+- p-grids6 is the check: the same signal and cut must flag more wrong than right guesses there, or the choice is
+  reported as not holding up. rv-391 then uses the fallback below.
+- Fallback (also the plan if no candidate reaches 0.65): the time slice from NOTE-rehearsal-2 in rv-387. Go back when
+  the checker has not accepted the grid W = 16 rounds after a guess. It needs no signal. On the tiny rehearsal net it
+  added nothing (27 vs 28 of 60), so it is the weaker bet.
+
+## Step 2 (after step 1): register rv-391
+One change from rv-390's GUESS worker: going back with the chosen trigger. It restores the snapshot and writes the next
+candidate, as rv-387's BACK does. Fresh 7x7 test grids with a new seed; 4 nets; 480 rounds, like the between-messages
+worker. Marks and predictions are fixed and sealed before any run. This note is a plan, not marks.
+zsh:1: ==DOCSTRING=== not found
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rv391_dev.py | head -n 150
+#!/usr/bin/env python3
+"""rv-391 DEV (thought-memory thread, 2026-09-26): which signal from the loop net itself tells a wrong written guess
+from a right one? Unregistered measurement on PRACTICE grids only (rv-390's p-grids6/p-grids7, seeds 39113-39114);
+no test grid is touched. It decides which trigger the registered go-back test (rv-391) uses.
+
+Why: rv-387 (artifacts/claude-rv387-20260926/RESULTS.md): going back when the stop head q falls never fired, because q
+rises after anything is written on the page. Brain first (Ben, 16:05 UTC): people go back when something clashes, not
+when they feel less sure; a frontal region (anterior cingulate cortex) responds to conflict and errors and triggers a
+change of strategy. Textbook-level; the mapping to this net is a guess. So the candidates are conflict signals the net
+produces itself, measured 8 rounds after each guess (the next check round), over the cells that were open when the
+guess was written:
+  dq          change in the stop head q (rv-387's trigger; a drop = wrong)
+  d_mean_ent  change in the mean read-out entropy over those cells (a rise = two answers competing = wrong)
+  d_max_ent   change in the largest read-out entropy over those cells
+  flips       how often those cells' top symbol changed during the 8 rounds (an unsettled net = wrong)
+  p_written   the net's own read-out probability of the written symbol at the written cell (low = the net "wants"
+              something else there = wrong; silent if the net just copies what is written)
+  clash       rule-based comparison only, never a candidate under Ben's 16:04 redirect: duplicate symbols in a row or
+              column of the page plus the net's read-out
+Right/wrong uses each practice item's own solution (fine for practice; the registered test's trigger never sees it).
+The search is rv-387's GUESS (claude_rv390.Worker logic), instrumented; it never goes back.
+
+  python -B scripts/claude_rv391_dev.py measure --ckpt F --out F.json [--rounds 96]
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+import torch
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+import claude_rv390 as W  # noqa: E402
+
+V = W.V
+SETS = ["p-grids7", "p-grids6"]
+SIGNALS = {  # name -> sign, so that a larger signed value should mean "wrong"
+    "dq": -1, "d_mean_ent": 1, "d_max_ent": 1, "flips": 1, "p_written": -1, "clash_rule_based": 1}
+
+
+def ent(p):
+    return -(p * p.clamp_min(1e-9).log()).sum(-1)
+
+
+def clash(page, it, arg, idx_open, names_set, Wd):
+    s = it.size
+    g = [row[:s] for row in page.tokens[:s]]
+    for i in idx_open:
+        r, c = divmod(i, Wd)
+        t = arg[i]
+        g[r][c] = t if t in names_set else -1
+    dup = 0
+    for line in g + [[g[r][c] for r in range(s)] for c in range(s)]:
+        vals = [t for t in line if t >= 0]
+        dup += len(vals) - len(set(vals))
+    return dup
+
+
+@torch.no_grad()
+def measure_item(w, it, rounds):
+    E, net = w.E, w.net
+    names = [E.SYM + n for n in it.meta["names"]]
+    names_set = set(names)
+    Wd = len(it.tokens[0])
+    page = W.AnyPage(it, E)
+    e, (dr, dc) = w.embed(page)
+    h = torch.zeros_like(e)
+    rows, pend, since, prev, solved = [], None, 0, None, False
+    for used in range(1, rounds + 1):
+        h = net.step(h, e, dr, dc)
+        lg, qq = net.read(h)
+        q = float(torch.sigmoid(qq.float())[0])
+        arg = lg[0].argmax(-1)
+        if pend is not None and prev is not None:
+            pend["flips"] += int((arg[pend["idx_t"]] != prev[pend["idx_t"]]).sum())
+        prev = arg
+        solved = E.check(it, w.final(page, arg.tolist()))
+        since += 1
+        at_check = since >= V.CHECK_EVERY
+        if pend is not None and (solved or at_check or used == rounds):
+            p = torch.softmax(lg[0][pend["idx_t"]][:, names].float(), -1)
+            r, c = pend["cell"]
+            pw = float(torch.softmax(lg[0][r * Wd + c, names].float(), -1)[names.index(pend["tok"])])
+            rows.append({"k": pend["k"], "right": pend["right"], "rounds_after": used - pend["round"],
+                         "dq": q - pend["q0"], "d_mean_ent": float(ent(p).mean()) - pend["h0"],
+                         "d_max_ent": float(ent(p).max()) - pend["m0"], "flips": pend["flips"], "p_written": pw,
+                         "clash_rule_based": clash(page, it, arg.tolist(), pend["idx"], names_set, Wd),
+                         "solved_next": solved})
+            pend = None
+        if solved:
+            break
+        if not at_check:
+            continue
+        since = 0
+        if q >= V.CUT:
+            continue
+        cell, cands = w.pick(page, lg[0], names)
+        if cell is None:
+            continue
+        r, c = cell
+        tok = cands[0]
+        page.write(r, c, tok)
+        idx = [rr * Wd + cc for rr, cc in page.open_cells()]
+        if idx:
+            p0 = torch.softmax(lg[0][idx][:, names].float(), -1)
+            pend = {"k": sum(1 for _ in page.written) - 1, "cell": cell, "tok": tok, "right": tok == it.target[r][c],
+                    "round": used, "q0": q, "h0": float(ent(p0).mean()), "m0": float(ent(p0).max()), "flips": 0,
+                    "idx": idx, "idx_t": torch.tensor(idx, device=h.device)}
+        e, (dr, dc) = w.embed(page)
+    return rows, solved
+
+
+def auc(wrong, right):
+    """P(a wrong guess's signed signal > a right guess's), ties count half."""
+    if not wrong or not right:
+        return None
+    rs = sorted(right)
+    import bisect
+    tot = 0.0
+    for x in wrong:
+        lo, hi = bisect.bisect_left(rs, x), bisect.bisect_right(rs, x)
+        tot += lo + 0.5 * (hi - lo)
+    return round(tot / (len(wrong) * len(rs)), 4)
+
+
+def summarise(rows):
+    out = {"guesses": len(rows), "wrong": sum(not r["right"] for r in rows),
+           "first_guesses": sum(r["k"] == 0 for r in rows)}
+    for sub, rr in (("all", rows), ("first", [r for r in rows if r["k"] == 0])):
+        out[sub] = {s: auc([sg * r[s] for r in rr if not r["right"]], [sg * r[s] for r in rr if r["right"]])
+                    for s, sg in SIGNALS.items()}
+    return out
+
+
+def measure(a):
+    _, R, E = W.mods()
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    net = R.load(a.ckpt, dev).eval()
+    w = W.Worker(net, E, dev)
+    items = W.load(R, a.day, SETS)
+    res = {"ckpt": str(a.ckpt), "sha256": V.sha256(a.ckpt), "rounds": a.rounds, "sets": {}}
+    all_rows = []
+    for name in SETS:
+        d = W.day_pass(net, R, E, items[name], dev)
+        unf = [it for it, r in zip(items[name], d) if not r["right"]][:a.limit or None]
+        rows, solved = [], 0
+        for i, it in enumerate(unf):
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rv391_dev.py | tail -n 100
+q = float(torch.sigmoid(qq.float())[0])
+        arg = lg[0].argmax(-1)
+        if pend is not None and prev is not None:
+            pend["flips"] += int((arg[pend["idx_t"]] != prev[pend["idx_t"]]).sum())
+        prev = arg
+        solved = E.check(it, w.final(page, arg.tolist()))
+        since += 1
+        at_check = since >= V.CHECK_EVERY
+        if pend is not None and (solved or at_check or used == rounds):
+            p = torch.softmax(lg[0][pend["idx_t"]][:, names].float(), -1)
+            r, c = pend["cell"]
+            pw = float(torch.softmax(lg[0][r * Wd + c, names].float(), -1)[names.index(pend["tok"])])
+            rows.append({"k": pend["k"], "right": pend["right"], "rounds_after": used - pend["round"],
+                         "dq": q - pend["q0"], "d_mean_ent": float(ent(p).mean()) - pend["h0"],
+                         "d_max_ent": float(ent(p).max()) - pend["m0"], "flips": pend["flips"], "p_written": pw,
+                         "clash_rule_based": clash(page, it, arg.tolist(), pend["idx"], names_set, Wd),
+                         "solved_next": solved})
+            pend = None
+        if solved:
+            break
+        if not at_check:
+            continue
+        since = 0
+        if q >= V.CUT:
+            continue
+        cell, cands = w.pick(page, lg[0], names)
+        if cell is None:
+            continue
+        r, c = cell
+        tok = cands[0]
+        page.write(r, c, tok)
+        idx = [rr * Wd + cc for rr, cc in page.open_cells()]
+        if idx:
+            p0 = torch.softmax(lg[0][idx][:, names].float(), -1)
+            pend = {"k": sum(1 for _ in page.written) - 1, "cell": cell, "tok": tok, "right": tok == it.target[r][c],
+                    "round": used, "q0": q, "h0": float(ent(p0).mean()), "m0": float(ent(p0).max()), "flips": 0,
+                    "idx": idx, "idx_t": torch.tensor(idx, device=h.device)}
+        e, (dr, dc) = w.embed(page)
+    return rows, solved
+
+
+def auc(wrong, right):
+    """P(a wrong guess's signed signal > a right guess's), ties count half."""
+    if not wrong or not right:
+        return None
+    rs = sorted(right)
+    import bisect
+    tot = 0.0
+    for x in wrong:
+        lo, hi = bisect.bisect_left(rs, x), bisect.bisect_right(rs, x)
+        tot += lo + 0.5 * (hi - lo)
+    return round(tot / (len(wrong) * len(rs)), 4)
+
+
+def summarise(rows):
+    out = {"guesses": len(rows), "wrong": sum(not r["right"] for r in rows),
+           "first_guesses": sum(r["k"] == 0 for r in rows)}
+    for sub, rr in (("all", rows), ("first", [r for r in rows if r["k"] == 0])):
+        out[sub] = {s: auc([sg * r[s] for r in rr if not r["right"]], [sg * r[s] for r in rr if r["right"]])
+                    for s, sg in SIGNALS.items()}
+    return out
+
+
+def measure(a):
+    _, R, E = W.mods()
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    net = R.load(a.ckpt, dev).eval()
+    w = W.Worker(net, E, dev)
+    items = W.load(R, a.day, SETS)
+    res = {"ckpt": str(a.ckpt), "sha256": V.sha256(a.ckpt), "rounds": a.rounds, "sets": {}}
+    all_rows = []
+    for name in SETS:
+        d = W.day_pass(net, R, E, items[name], dev)
+        unf = [it for it, r in zip(items[name], d) if not r["right"]][:a.limit or None]
+        rows, solved = [], 0
+        for i, it in enumerate(unf):
+            rr, sv = measure_item(w, it, a.rounds)
+            solved += sv
+            rows += [dict(x, set=name, item=i) for x in rr]
+        res["sets"][name] = dict(summarise(rows), unfinished=len(unf), solved=solved)
+        all_rows += rows
+        print(name, json.dumps(res["sets"][name]), flush=True)
+    Path(a.out).write_text(json.dumps(res, indent=1) + "\n")
+    Path(a.out).with_suffix(".rows.jsonl").write_text("".join(json.dumps(r) + "\n" for r in all_rows))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("cmd", choices=["measure"])
+    ap.add_argument("--ckpt", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--day", default=str(ROOT / "artifacts/claude-rv390-20260926/day"))
+    ap.add_argument("--rounds", type=int, default=96)
+    ap.add_argument("--limit", type=int, default=0)
+    a = ap.parse_args()
+    measure(a)
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358i-20260926/SEAL-run.sha256.txt
+echo ---SEEDS---
+ls ~/premonition-models/rsn358i/ 2>&1
+for s in 1 2 3 4; do ls -la ~/premonition-models/rsn358i/loop-s$s/final.pt 2>&1; done
+f916b8b562379c583d9e98164f65d7dbdc95610a3b1df07b7c8d078c42745832  W/loop-s1/final.pt
+1f9b68c113c8749ce0414486b546b4ef64d89bfb166b887c6e3f707048e858c5  W/loop-s2/final.pt
+7bb0a62fd5c2ae63cac389c54c8d83d1cdc6949fb9b12f0a043a334169959fa4  W/loop-s3/final.pt
+088f49d1cf9f8ed52689ef500ca21b9ff63102e586198e926ad4882def66cb26  W/loop-s4/final.pt
+3c0b7983774c38249257f085a8191bfe77858a546cc133b5c72bcdaffb37945b  W/plain-s1/final.pt
+7741354a3e1e29f11dce0b92f9eefbe40f7045e3625cdfceab57c658e60a76e7  W/plain-s2/final.pt
+62616c0c695d1837107427143882a8abad9377ed6cca038f1bf2bbf1ab2ad2e8  W/plain-s3/final.pt
+a67b7177320a2def07236d93316c18e23545a2bad63f7b151981b358c9434304  W/plain-s4/final.pt
+---SEEDS---
+claude-rsn358i-20260926
+ls: /Users/ben-hannan/premonition-models/rsn358i/loop-s1/final.pt: No such file or directory
+ls: /Users/ben-hannan/premonition-models/rsn358i/loop-s2/final.pt: No such file or directory
+ls: /Users/ben-hannan/premonition-models/rsn358i/loop-s3/final.pt: No such file or directory
+ls: /Users/ben-hannan/premonition-models/rsn358i/loop-s4/final.pt: No such file or directory
+[0m
+[0m$ [0mls -R ~/premonition-models/rsn358i/ 2>&1 | head -n 100; echo ---; echo HOME:$HOME; ls ~/premonition-models/ 2>&1
+claude-rsn358i-20260926
+
+/Users/ben-hannan/premonition-models/rsn358i//claude-rsn358i-20260926:
+SEAL-run.sha256.txt
+W
+
+/Users/ben-hannan/premonition-models/rsn358i//claude-rsn358i-20260926/W:
+loop-s1
+loop-s2
+loop-s3
+loop-s4
+plain-s1
+plain-s2
+plain-s3
+plain-s4
+
+/Users/ben-hannan/premonition-models/rsn358i//claude-rsn358i-20260926/W/loop-s1:
+final.pt
+
+/Users/ben-hannan/premonition-models/rsn358i//claude-rsn358i-20260926/W/loop-s2:
+final.pt
+
+/Users/ben-hannan/premonition-models/rsn358i//claude-rsn358i-20260926/W/loop-s3:
+final.pt
+
+/Users/ben-hannan/premonition-models/rsn358i//claude-rsn358i-20260926/W/loop-s4:
+final.pt
+
+/Users/ben-hannan/premonition-models/rsn358i//claude-rsn358i-20260926/W/plain-s1:
+final.pt
+
+/Users/ben-hannan/premonition-models/rsn358i//claude-rsn358i-20260926/W/plain-s2:
+final.pt
+
+/Users/ben-hannan/premonition-models/rsn358i//claude-rsn358i-20260926/W/plain-s3:
+final.pt
+
+/Users/ben-hannan/premonition-models/rsn358i//claude-rsn358i-20260926/W/plain-s4:
+final.pt
+---
+HOME:/Users/ben-hannan
+bm397t-adapter397t.pt
+bm398r-adapter398r.pt
+lis301-merged
+lis319-merged
+lis319f-merged
+minilm
+own-m1n-mouth
+rd378-notes-merged
+rsn353
+rsn358a
+rsn358i
+[0m
+[0m$ [0mfor s in 1 2 3 4; do shasum -a 256 ~/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s$s/final.pt; done; echo ---EXPECTED---; git show origin/main:artifacts/claude-rsn358i-20260926/SEAL-run.sha256.txt | head -n 10
+f916b8b562379c583d9e98164f65d7dbdc95610a3b1df07b7c8d078c42745832  /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s1/final.pt
+1f9b68c113c8749ce0414486b546b4ef64d89bfb166b887c6e3f707048e858c5  /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s2/final.pt
+7bb0a62fd5c2ae63cac389c54c8d83d1cdc6949fb9b12f0a043a334169959fa4  /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s3/final.pt
+088f49d1cf9f8ed52689ef500ca21b9ff63102e586198e926ad4882def66cb26  /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s4/final.pt
+---EXPECTED---
+f916b8b562379c583d9e98164f65d7dbdc95610a3b1df07b7c8d078c42745832  W/loop-s1/final.pt
+1f9b68c113c8749ce0414486b546b4ef64d89bfb166b887c6e3f707048e858c5  W/loop-s2/final.pt
+7bb0a62fd5c2ae63cac389c54c8d83d1cdc6949fb9b12f0a043a334169959fa4  W/loop-s3/final.pt
+088f49d1cf9f8ed52689ef500ca21b9ff63102e586198e926ad4882def66cb26  W/loop-s4/final.pt
+3c0b7983774c38249257f085a8191bfe77858a546cc133b5c72bcdaffb37945b  W/plain-s1/final.pt
+7741354a3e1e29f11dce0b92f9eefbe40f7045e3625cdfceab57c658e60a76e7  W/plain-s2/final.pt
+62616c0c695d1837107427143882a8abad9377ed6cca038f1bf2bbf1ab2ad2e8  W/plain-s3/final.pt
+a67b7177320a2def07236d93316c18e23545a2bad63f7b151981b358c9434304  W/plain-s4/final.pt
+[0m
+[0m$ [0mD=$(mktemp -d); echo "D=$D"; git archive origin/main scripts artifacts/claude-rv390-20260926/day artifacts/claude-rv391-20260926 artifacts/claude-rsn358i-20260926/SEAL-run.sha256.txt | tar -x -C "$D"; echo EXTRACT_EXIT:$?; ls "$D"; echo ---; ls "$D/scripts" | head; echo ---; ls "$D/artifacts/claude-rv391-20260926"; echo ---; ls "$D/artifacts/claude-rv390-20260926/day" | head
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7
+EXTRACT_EXIT:0
+artifacts
+scripts
+---
+address_probe.py
+astra_canonical_operator_panels.py
+astra_canonical_operator_report.py
+astra_canonical_operator_run.py
+astra_canonical_operator.py
+astra_transfer_diagnostic.py
+astra_transfer_report.py
+astra_transfer_twins.py
+benspc-runtime.json
+claude_138l_l1.py
+---
+NOTE-dev-plan.md
+---
+grids6.jsonl
+grids7.jsonl
+make-day.json
+p-grids6.jsonl
+p-grids7.jsonl
+sums6.jsonl
+sums8.jsonl
+[0m
+[0m$ [0mls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7/scripts/claude_rv39*; head -n 60 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7/scripts/claude_rv390.py 2>/dev/null || git show origin/main:scripts/claude_rv390.py | head -n 60
+which uv; uv --version 2>&1 | head
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7/scripts/claude_rv390.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7/scripts/claude_rv391_dev.py
+#!/usr/bin/env python3
+"""rv-390 DRAFT (thought-memory thread, 2026-09-26): keep working on unfinished puzzles between messages. Not sealed.
+Revised 16:2x UTC after rv-387's verdict (artifacts/claude-rv387-20260926/RESULTS.md): its going back never fired, so
+BACK here would only be GUESS under another name. BACK is replaced by GUESS; going back moves to its own test.
+
+Why: Ben, 13:57 UTC (Sleep research thread): the reasoner should keep working on unfinished problems between messages.
+Ben, 14:49 UTC: that work must be interruptible at any time. Agreed with Sleep research (13:59 UTC): this thread owns the
+unfinished list and the between-messages worker (search around a fixed 358i loop net; no weights change); Sleep research
+supplies the nets and the night's fixed test states (58600-59999 only), and its night pool takes the checked solutions
+(written to <out>.finds.jsonl).
+
+Day: fresh bigger puzzles (seeds 39101-39104: sums6, sums8, grids6, grids7, 300 each, made through 358i's script so
+grids carry the legend). The net answers each at the normal budget (48 rounds, 358's own v2 stop rule). Unfinished =
+every day puzzle whose own-stop answer the checker rejects.
+Downtime, per unfinished puzzle, 480 rounds each, the checker allowed (like running tests):
+  NOTHING  0 solved by definition.
+  KEEP     one loop of 480 rounds from h = 0; solved if the checker accepts any round. Solves at round <= 48 are
+           counted apart: those are the checker catching an answer the stop rule passed over, not longer thinking.
+  RESTART  same-compute control (Sleep research, 13:59): 10 loops of 48 rounds from h0 = sigma * Gaussian noise (a fixed
+           seed per puzzle and restart; sigma picked on practice grids only); solved if the checker accepts any round.
+  GUESS    rv-387's GUESS, unchanged in logic, 480 rounds: every 8th round while the stop head q < 0.5, the code writes
+           the net's top symbol for the open cell it is surest about (below 0.99) as if it were given, and never goes
+           back. Disclosed code parts: the checker, and on grids the candidate list skips symbols already in the cell's
+           row or column (rv-387's pick). On sums it is a report-only transfer row (built on grids).
+Headline: KEEP vs RESTART on grids7 (does carrying on beat starting over with the same compute). Second: GUESS vs KEEP
+on grids7. Interruptibility (interrupt_check): pauses change nothing and a message waits under 1 s.
+
+  python -B scripts/claude_rv390.py make-day --out artifacts/claude-rv390-20260926/day
+  python -B scripts/claude_rv390.py all --ckpt F --out DIR/rv390-sN   (selftest, pick-sigma, run; practice grids for
+                                                                       the first two only)
+  (or one at a time: selftest --ckpt F; pick-sigma --ckpt F --out S.json; run --ckpt F --sigma S --out F.json)
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import random
+import sys
+import time
+from pathlib import Path
+
+import torch
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+import claude_rv387 as V  # noqa: E402  (rv-387's Page/Runner)
+
+DAY = [("sums6", "sums", 6, 39101), ("sums8", "sums", 8, 39102), ("grids6", "grids", 6, 39103),
+       ("grids7", "grids", 7, 39104)]
+PRACTICE = [("p-grids6", "grids", 6, 39113), ("p-grids7", "grids", 7, 39114)]
+N_DAY, DAY_ROUNDS, DOWN, RESTARTS = 300, 48, 480, 10
+PAUSES, INTERRUPT_N, INTERRUPT_SEED, WAIT_LIMIT_SEC = 5, 40, 39090, 1.0
+SIGMAS = (0.1, 0.3, 1.0)
+RESERVED_TEST_DIR = ROOT / "artifacts/claude-rsn358i-20260926/tests"
+
+
+def mods():
+    return V.modules("net")
+
+/Users/ben-hannan/.local/bin/uv
+uv 0.12.7 (61291a8ca 2026-08-27 aarch64-apple-darwin)
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7
+mkdir -p "$D/artifacts/claude-rv391-20260926/dev" && ls -la "$D/artifacts/claude-rv391-20260926/"
+export D
+echo READY_D=$D
+total 8
+drwxr-xr-x  4 ben-hannan  staff   128 Sep 26 12:39 .
+drwxr-xr-x  5 ben-hannan  staff   160 Sep 26 12:39 ..
+drwxr-xr-x  2 ben-hannan  staff    64 Sep 26 12:39 dev
+-rw-r--r--  1 ben-hannan  staff  2879 Sep 26 12:39 NOTE-dev-plan.md
+READY_D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7
+cd "$D"
+echo "starting s1 s2 at $(date -u +%FT%TZ)"
+nohup uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rv391_dev.py measure --ckpt ~/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s1/final.pt --out artifacts/claude-rv391-20260926/dev/measure-s1.json > artifacts/claude-rv391-20260926/dev/log-s1.txt 2>&1 &
+echo "S1_PID=$!"
+nohup uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rv391_dev.py measure --ckpt ~/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s2/final.pt --out artifacts/claude-rv391-20260926/dev/measure-s2.json > artifacts/claude-rv391-20260926/dev/log-s2.txt 2>&1 &
+echo "S2_PID=$!"
+ps -p $! -o pid,etime,command | head
+jobs -l
+sleep 5; echo ---; ls -la artifacts/claude-rv391-20260926/dev/; echo ---; head -c 2000 artifacts/claude-rv391-20260926/dev/log-s1.txt; echo; echo ===S2===; head -c 2000 artifacts/claude-rv391-20260926/dev/log-s2.txt
+starting s1 s2 at 2026-09-26T16:40:04Z
+S1_PID=27244
+S2_PID=27245
+  PID ELAPSED COMMAND
+27245   00:00 nohup uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rv391_dev.py measure --ckpt /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s2/final.pt --out artifacts/claude-rv391-20260926/dev/measure-s2.json
+[1]  - 27244 running    nohup uv run --offline --no-project --python 3.12 --with torch --with numpy  
+[2]  + 27245 running    nohup uv run --offline --no-project --python 3.12 --with torch --with numpy  
+---
+total 0
+drwxr-xr-x  4 ben-hannan  staff  128 Sep 26 12:40 .
+drwxr-xr-x  4 ben-hannan  staff  128 Sep 26 12:39 ..
+-rw-r--r--  1 ben-hannan  staff    0 Sep 26 12:40 log-s1.txt
+-rw-r--r--  1 ben-hannan  staff    0 Sep 26 12:40 log-s2.txt
+---
+
+zsh:11: ==S2=== not found
+[0m
+[0m$ [0mps -p 27244 -o pid,etime,command; ps -p 27245 -o pid,etime,command; echo ---; ls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7/artifacts/claude-rv391-20260926/dev/; echo ---LOG1---; cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7/artifacts/claude-rv391-20260926/dev/log-s1.txt 2>&1 | head -n 20; echo ---LOG2---; cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7/artifacts/claude-rv391-20260926/dev/log-s2.txt 2>&1 | head -n 20
+PID ELAPSED COMMAND
+  PID ELAPSED COMMAND
+---
+total 0
+drwxr-xr-x  4 ben-hannan  staff  128 Sep 26 12:40 .
+drwxr-xr-x  4 ben-hannan  staff  128 Sep 26 12:39 ..
+-rw-r--r--  1 ben-hannan  staff    0 Sep 26 12:40 log-s1.txt
+-rw-r--r--  1 ben-hannan  staff    0 Sep 26 12:40 log-s2.txt
+---LOG1---
+---LOG2---
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7
+ls -la "$D/artifacts/claude-rv391-20260926/dev/"
+ps aux | grep -i claude_rv391 | grep -v grep | head
+cat "$D/artifacts/claude-rv391-20260926/dev/log-s1.txt" | head -n 50; echo EXIT_CHECK; ls "$D/nohup.out" 2>&1; cat "$D/nohup.out" 2>&1 | head -n 50
+total 0
+drwxr-xr-x  4 ben-hannan  staff  128 Sep 26 12:40 .
+drwxr-xr-x  4 ben-hannan  staff  128 Sep 26 12:39 ..
+-rw-r--r--  1 ben-hannan  staff    0 Sep 26 12:40 log-s1.txt
+-rw-r--r--  1 ben-hannan  staff    0 Sep 26 12:40 log-s2.txt
+ben-hannan       26835  12.1  2.5 562805664 830192   ??  RN   12:39PM   0:14.60 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rv391dev-mac.go1.26801 COMMON RULES (the thought-memory thread, "Memory for its own thoughts", Claude, wrote this task on 2026-09-26). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths). Report in your final reply: each step's outcome first, integer counts, every deviation.\012GPU: no (Mac CPU). Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...\012DISK: 1 (a small code tree in one mktemp dir, removed by exact path at the end; the nets are read in place).\012TIME CAP: 60 minutes. $0, no rental, no BensPC. Label: rv391dev.\012DUPLICATE GATE: stop with DUPLICATE if origin/main already has artifacts/claude-rv391-20260926/dev/.\012\012YOUR TASK: rv-391 dev, an unregistered measurement on PRACTICE grids only (which signal from the loop net marks a wrong written guess). Read origin/main:artifacts/claude-rv391-20260926/NOTE-dev-plan.md and the docstring of scripts/claude_rv391_dev.py first. Run the code, never edit it; if something breaks, stop and report the exact error.\0121. TREE: D=$(mktemp -d); git archive origin/main scripts artifacts/claude-rv390-20260926/day artifacts/claude-rv391-20260926 artifacts/claude-rsn358i-20260926/SEAL-run.sha256.txt | tar -x -C $D; cd $D.\0122. NETS: for s in 1 2 3 4, `shasum -a 256 ~/premonition-models/rsn358i/loop-s$s/final.pt` must equal the W/loop-s$s/final.pt line of artifacts/claude-rsn358i-20260926/SEAL-run.sha256.txt. A mismatch or missing file: skip that seed and say which.\0123. RUN, two at a time (seeds 1-2, then 3-4), each logging to its own file:\012   mkdir -p artifacts/claude-rv391-20260926/dev\012   python -B scripts/claude_rv391_dev.py measure --ckpt ~/premonition-models/rsn358i/loop-s$s/final.pt --out artifacts/claude-rv391-20260926/dev/measure-s$s.json > artifacts/claude-rv391-20260926/dev/log-s$s.txt 2>&1\012   Each writes measure-s$s.json and measure-s$s.rows.jsonl. At 55 minutes, stop what is running by exact PID and push what exists.\0124. Copy artifacts/claude-rv391-20260926/dev/ into artifacts/claude-rv391-20260926/dev/ of your worktree, then rm -rf "$D" (exact path) and confirm it is gone.\012PUSH: artifacts/claude-rv391-20260926/dev\0125. Final reply: which seeds ran, and the two printed lines per seed (p-grids7, p-grids6) exactly as printed.
+EXIT_CHECK
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7/nohup.out: No such file or directory
+cat: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7/nohup.out: No such file or directory
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7
+timeout 100 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import torch, numpy; print(torch.__version__, numpy.__version__)" 2>&1 | tail -n 20; echo EXIT:$?
+zsh:3: command not found: timeout
+EXIT:0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import torch, numpy; print(torch.__version__, numpy.__version__)" 2>&1 | tail -n 20; echo EXIT:${pipestatus[1]}
+2.14.0 2.5.3
+EXIT:0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7
+cd "$D"
+echo "PAIR12_START $(date -u +%FT%TZ)"
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rv391_dev.py measure --ckpt ~/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s1/final.pt --out artifacts/claude-rv391-20260926/dev/measure-s1.json > artifacts/claude-rv391-20260926/dev/log-s1.txt 2>&1 &
+P1=$!
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rv391_dev.py measure --ckpt ~/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s2/final.pt --out artifacts/claude-rv391-20260926/dev/measure-s2.json > artifacts/claude-rv391-20260926/dev/log-s2.txt 2>&1 &
+P2=$!
+echo "P1=$P1 P2=$P2"
+wait $P1; E1=$?
+wait $P2; E2=$?
+echo "PAIR12_DONE $(date -u +%FT%TZ) E1=$E1 E2=$E2"
+ls -la artifacts/claude-rv391-20260926/dev/
+PAIR12_START 2026-09-26T16:40:37Z
+P1=27332 P2=27333
+PAIR12_DONE 2026-09-26T16:43:22Z E1=0 E2=0
+total 2088
+drwxr-xr-x  8 ben-hannan  staff     256 Sep 26 12:43 .
+drwxr-xr-x  4 ben-hannan  staff     128 Sep 26 12:39 ..
+-rw-r--r--  1 ben-hannan  staff     714 Sep 26 12:43 log-s1.txt
+-rw-r--r--  1 ben-hannan  staff     721 Sep 26 12:43 log-s2.txt
+-rw-r--r--  1 ben-hannan  staff    1103 Sep 26 12:43 measure-s1.json
+-rw-r--r--  1 ben-hannan  staff  455381 Sep 26 12:43 measure-s1.rows.jsonl
+-rw-r--r--  1 ben-hannan  staff    1110 Sep 26 12:43 measure-s2.json
+-rw-r--r--  1 ben-hannan  staff  589988 Sep 26 12:43 measure-s2.rows.jsonl
+[0m
+[0m$ [0mD=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7
+echo ---LOG-S1---; cat "$D/artifacts/claude-rv391-20260926/dev/log-s1.txt"
+echo ---LOG-S2---; cat "$D/artifacts/claude-rv391-20260926/dev/log-s2.txt"
+echo ---JSON-S1---; cat "$D/artifacts/claude-rv391-20260926/dev/measure-s1.json"
+echo ---JSON-S2---; cat "$D/artifacts/claude-rv391-20260926/dev/measure-s2.json"
+---LOG-S1---
+p-grids7 {"guesses": 1311, "wrong": 306, "first_guesses": 181, "all": {"dq": 0.4163, "d_mean_ent": 0.5067, "d_max_ent": 0.4673, "flips": 0.4958, "p_written": 0.5075, "clash_rule_based": 0.5187}, "first": {"dq": 0.5846, "d_mean_ent": 0.4748, "d_max_ent": 0.5362, "flips": 0.5956, "p_written": 0.4903, "clash_rule_based": 0.531}, "unfinished": 194, "solved": 34}
+p-grids6 {"guesses": 417, "wrong": 53, "first_guesses": 114, "all": {"dq": 0.3391, "d_mean_ent": 0.655, "d_max_ent": 0.5474, "flips": 0.465, "p_written": 0.4917, "clash_rule_based": 0.559}, "first": {"dq": 0.2055, "d_mean_ent": 0.5321, "d_max_ent": 0.6, "flips": 0.544, "p_written": 0.4385, "clash_rule_based": 0.6046}, "unfinished": 124, "solved": 42}
+---LOG-S2---
+p-grids7 {"guesses": 1610, "wrong": 182, "first_guesses": 200, "all": {"dq": 0.3949, "d_mean_ent": 0.5014, "d_max_ent": 0.5031, "flips": 0.5326, "p_written": 0.5022, "clash_rule_based": 0.5086}, "first": {"dq": 0.7168, "d_mean_ent": 0.5217, "d_max_ent": 0.3278, "flips": 0.8705, "p_written": 0.5281, "clash_rule_based": 0.6907}, "unfinished": 219, "solved": 42}
+p-grids6 {"guesses": 632, "wrong": 55, "first_guesses": 131, "all": {"dq": 0.2738, "d_mean_ent": 0.5559, "d_max_ent": 0.5631, "flips": 0.5182, "p_written": 0.5656, "clash_rule_based": 0.5615}, "first": {"dq": 0.154, "d_mean_ent": 0.5571, "d_max_ent": 0.3746, "flips": 0.6198, "p_written": 0.4746, "clash_rule_based": 0.3873}, "unfinished": 151, "solved": 64}
+---JSON-S1---
+{
+ "ckpt": "/Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s1/final.pt",
+ "sha256": "f916b8b562379c583d9e98164f65d7dbdc95610a3b1df07b7c8d078c42745832",
+ "rounds": 96,
+ "sets": {
+  "p-grids7": {
+   "guesses": 1311,
+   "wrong": 306,
+   "first_guesses": 181,
+   "all": {
+    "dq": 0.4163,
+    "d_mean_ent": 0.5067,
+    "d_max_ent": 0.4673,
+    "flips": 0.4958,
+    "p_written": 0.5075,
+    "clash_rule_based": 0.5187
+   },
+   "first": {
+    "dq": 0.5846,
+    "d_mean_ent": 0.4748,
+    "d_max_ent": 0.5362,
+    "flips": 0.5956,
+    "p_written": 0.4903,
+    "clash_rule_based": 0.531
+   },
+   "unfinished": 194,
+   "solved": 34
+  },
+  "p-grids6": {
+   "guesses": 417,
+   "wrong": 53,
+   "first_guesses": 114,
+   "all": {
+    "dq": 0.3391,
+    "d_mean_ent": 0.655,
+    "d_max_ent": 0.5474,
+    "flips": 0.465,
+    "p_written": 0.4917,
+    "clash_rule_based": 0.559
+   },
+   "first": {
+    "dq": 0.2055,
+    "d_mean_ent": 0.5321,
+    "d_max_ent": 0.6,
+    "flips": 0.544,
+    "p_written": 0.4385,
+    "clash_rule_based": 0.6046
+   },
+   "unfinished": 124,
+   "solved": 42
+  }
+ }
+}
+---JSON-S2---
+{
+ "ckpt": "/Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s2/final.pt",
+ "sha256": "1f9b68c113c8749ce0414486b546b4ef64d89bfb166b887c6e3f707048e858c5",
+ "rounds": 96,
+ "sets": {
+  "p-grids7": {
+   "guesses": 1610,
+   "wrong": 182,
+   "first_guesses": 200,
+   "all": {
+    "dq": 0.3949,
+    "d_mean_ent": 0.5014,
+    "d_max_ent": 0.5031,
+    "flips": 0.5326,
+    "p_written": 0.5022,
+    "clash_rule_based": 0.5086
+   },
+   "first": {
+    "dq": 0.7168,
+    "d_mean_ent": 0.5217,
+    "d_max_ent": 0.3278,
+    "flips": 0.8705,
+    "p_written": 0.5281,
+    "clash_rule_based": 0.6907
+   },
+   "unfinished": 219,
+   "solved": 42
+  },
+  "p-grids6": {
+   "guesses": 632,
+   "wrong": 55,
+   "first_guesses": 131,
+   "all": {
+    "dq": 0.2738,
+    "d_mean_ent": 0.5559,
+    "d_max_ent": 0.5631,
+    "flips": 0.5182,
+    "p_written": 0.5656,
+    "clash_rule_based": 0.5615
+   },
+   "first": {
+    "dq": 0.154,
+    "d_mean_ent": 0.5571,
+    "d_max_ent": 0.3746,
+    "flips": 0.6198,
+    "p_written": 0.4746,
+    "clash_rule_based": 0.3873
+   },
+   "unfinished": 151,
+   "solved": 64
+  }
+ }
+}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7
+cd "$D"
+echo "PAIR34_START $(date -u +%FT%TZ)"
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rv391_dev.py measure --ckpt ~/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s3/final.pt --out artifacts/claude-rv391-20260926/dev/measure-s3.json > artifacts/claude-rv391-20260926/dev/log-s3.txt 2>&1 &
+P3=$!
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rv391_dev.py measure --ckpt ~/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s4/final.pt --out artifacts/claude-rv391-20260926/dev/measure-s4.json > artifacts/claude-rv391-20260926/dev/log-s4.txt 2>&1 &
+P4=$!
+echo "P3=$P3 P4=$P4"
+wait $P3; E3=$?
+wait $P4; E4=$?
+echo "PAIR34_DONE $(date -u +%FT%TZ) E3=$E3 E4=$E4"
+ls -la artifacts/claude-rv391-20260926/dev/
+PAIR34_START 2026-09-26T16:43:26Z
+P3=28355 P4=28356
+PAIR34_DONE 2026-09-26T16:46:58Z E3=0 E4=0
+total 5000
+drwxr-xr-x  14 ben-hannan  staff      448 Sep 26 12:46 .
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 26 12:39 ..
+-rw-r--r--   1 ben-hannan  staff      714 Sep 26 12:43 log-s1.txt
+-rw-r--r--   1 ben-hannan  staff      721 Sep 26 12:43 log-s2.txt
+-rw-r--r--   1 ben-hannan  staff      716 Sep 26 12:45 log-s3.txt
+-rw-r--r--   1 ben-hannan  staff      718 Sep 26 12:46 log-s4.txt
+-rw-r--r--   1 ben-hannan  staff     1103 Sep 26 12:43 measure-s1.json
+-rw-r--r--   1 ben-hannan  staff   455381 Sep 26 12:43 measure-s1.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff     1110 Sep 26 12:43 measure-s2.json
+-rw-r--r--   1 ben-hannan  staff   589988 Sep 26 12:43 measure-s2.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff     1105 Sep 26 12:45 measure-s3.json
+-rw-r--r--   1 ben-hannan  staff   416115 Sep 26 12:45 measure-s3.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff     1107 Sep 26 12:46 measure-s4.json
+-rw-r--r--   1 ben-hannan  staff  1053697 Sep 26 12:46 measure-s4.rows.jsonl
+[0m
+[0m$ [0mD=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7
+echo ---LOG-S3---; cat "$D/artifacts/claude-rv391-20260926/dev/log-s3.txt"
+echo ---LOG-S4---; cat "$D/artifacts/claude-rv391-20260926/dev/log-s4.txt"
+echo ---COUNT---; ls -la "$D/artifacts/claude-rv391-20260926/dev/"
+---LOG-S3---
+p-grids7 {"guesses": 1272, "wrong": 219, "first_guesses": 158, "all": {"dq": 0.3184, "d_mean_ent": 0.5552, "d_max_ent": 0.4777, "flips": 0.3725, "p_written": 0.5285, "clash_rule_based": 0.4073}, "first": {"dq": 0.776, "d_mean_ent": 0.7857, "d_max_ent": 0.6737, "flips": 0.6721, "p_written": 0.5146, "clash_rule_based": 0.9067}, "unfinished": 166, "solved": 41}
+p-grids6 {"guesses": 309, "wrong": 31, "first_guesses": 83, "all": {"dq": 0.256, "d_mean_ent": 0.6742, "d_max_ent": 0.566, "flips": 0.3196, "p_written": 0.4633, "clash_rule_based": 0.4494}, "first": {"dq": 0.0732, "d_mean_ent": 0.939, "d_max_ent": 0.7805, "flips": 0.0366, "p_written": 0.0244, "clash_rule_based": 0.9939}, "unfinished": 88, "solved": 37}
+---LOG-S4---
+p-grids7 {"guesses": 2318, "wrong": 272, "first_guesses": 260, "all": {"dq": 0.5409, "d_mean_ent": 0.5132, "d_max_ent": 0.5032, "flips": 0.6266, "p_written": 0.5661, "clash_rule_based": 0.6041}, "first": {"dq": 0.8583, "d_mean_ent": 0.4455, "d_max_ent": 0.515, "flips": 0.8368, "p_written": 0.6872, "clash_rule_based": 0.7688}, "unfinished": 277, "solved": 19}
+p-grids6 {"guesses": 1644, "wrong": 196, "first_guesses": 222, "all": {"dq": 0.4677, "d_mean_ent": 0.4871, "d_max_ent": 0.5048, "flips": 0.6541, "p_written": 0.5424, "clash_rule_based": 0.5886}, "first": {"dq": 0.6535, "d_mean_ent": 0.4, "d_max_ent": 0.4184, "flips": 0.7922, "p_written": 0.7272, "clash_rule_based": 0.73}, "unfinished": 246, "solved": 58}
+---COUNT---
+total 5000
+drwxr-xr-x  14 ben-hannan  staff      448 Sep 26 12:46 .
+drwxr-xr-x   4 ben-hannan  staff      128 Sep 26 12:39 ..
+-rw-r--r--   1 ben-hannan  staff      714 Sep 26 12:43 log-s1.txt
+-rw-r--r--   1 ben-hannan  staff      721 Sep 26 12:43 log-s2.txt
+-rw-r--r--   1 ben-hannan  staff      716 Sep 26 12:45 log-s3.txt
+-rw-r--r--   1 ben-hannan  staff      718 Sep 26 12:46 log-s4.txt
+-rw-r--r--   1 ben-hannan  staff     1103 Sep 26 12:43 measure-s1.json
+-rw-r--r--   1 ben-hannan  staff   455381 Sep 26 12:43 measure-s1.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff     1110 Sep 26 12:43 measure-s2.json
+-rw-r--r--   1 ben-hannan  staff   589988 Sep 26 12:43 measure-s2.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff     1105 Sep 26 12:45 measure-s3.json
+-rw-r--r--   1 ben-hannan  staff   416115 Sep 26 12:45 measure-s3.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff     1107 Sep 26 12:46 measure-s4.json
+-rw-r--r--   1 ben-hannan  staff  1053697 Sep 26 12:46 measure-s4.rows.jsonl
+[0m
+[0m$ [0mD=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7
+W=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ls "$W/artifacts/claude-rv391-20260926/" 2>&1
+mkdir -p "$W/artifacts/claude-rv391-20260926/dev"
+cp "$D/artifacts/claude-rv391-20260926/dev/"measure-s1.json "$W/artifacts/claude-rv391-20260926/dev/measure-s1.json"
+cp "$D/artifacts/claude-rv391-20260926/dev/"measure-s1.rows.jsonl "$W/artifacts/claude-rv391-20260926/dev/measure-s1.rows.jsonl"
+cp "$D/artifacts/claude-rv391-20260926/dev/"measure-s2.json "$W/artifacts/claude-rv391-20260926/dev/measure-s2.json"
+cp "$D/artifacts/claude-rv391-20260926/dev/"measure-s2.rows.jsonl "$W/artifacts/claude-rv391-20260926/dev/measure-s2.rows.jsonl"
+cp "$D/artifacts/claude-rv391-20260926/dev/"measure-s3.json "$W/artifacts/claude-rv391-20260926/dev/measure-s3.json"
+cp "$D/artifacts/claude-rv391-20260926/dev/"measure-s3.rows.jsonl "$W/artifacts/claude-rv391-20260926/dev/measure-s3.rows.jsonl"
+cp "$D/artifacts/claude-rv391-20260926/dev/"measure-s4.json "$W/artifacts/claude-rv391-20260926/dev/measure-s4.json"
+cp "$D/artifacts/claude-rv391-20260926/dev/"measure-s4.rows.jsonl "$W/artifacts/claude-rv391-20260926/dev/measure-s4.rows.jsonl"
+cp "$D/artifacts/claude-rv391-20260926/dev/"log-s1.txt "$W/artifacts/claude-rv391-20260926/dev/log-s1.txt"
+cp "$D/artifacts/claude-rv391-20260926/dev/"log-s2.txt "$W/artifacts/claude-rv391-20260926/dev/log-s2.txt"
+cp "$D/artifacts/claude-rv391-20260926/dev/"log-s3.txt "$W/artifacts/claude-rv391-20260926/dev/log-s3.txt"
+cp "$D/artifacts/claude-rv391-20260926/dev/"log-s4.txt "$W/artifacts/claude-rv391-20260926/dev/log-s4.txt"
+echo COPIED; ls -la "$W/artifacts/claude-rv391-20260926/dev/"
+python3 -c "import json; [print(f, json.load(open(f'/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rv391-20260926/dev/measure-s{s}.json'))[\"sha256\"][:12]) for s in (1,2,3,4)]"
+wc -l "$W/artifacts/claude-rv391-20260926/dev/"*.rows.jsonl
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rv391-20260926/: No such file or directory
+COPIED
+total 5000
+drwxr-xr-x  14 ben-hannan  staff      448 Sep 26 12:47 .
+drwxr-xr-x   3 ben-hannan  staff       96 Sep 26 12:47 ..
+-rw-r--r--   1 ben-hannan  staff      714 Sep 26 12:47 log-s1.txt
+-rw-r--r--   1 ben-hannan  staff      721 Sep 26 12:47 log-s2.txt
+-rw-r--r--   1 ben-hannan  staff      716 Sep 26 12:47 log-s3.txt
+-rw-r--r--   1 ben-hannan  staff      718 Sep 26 12:47 log-s4.txt
+-rw-r--r--   1 ben-hannan  staff     1103 Sep 26 12:47 measure-s1.json
+-rw-r--r--   1 ben-hannan  staff   455381 Sep 26 12:47 measure-s1.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff     1110 Sep 26 12:47 measure-s2.json
+-rw-r--r--   1 ben-hannan  staff   589988 Sep 26 12:47 measure-s2.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff     1105 Sep 26 12:47 measure-s3.json
+-rw-r--r--   1 ben-hannan  staff   416115 Sep 26 12:47 measure-s3.rows.jsonl
+-rw-r--r--   1 ben-hannan  staff     1107 Sep 26 12:47 measure-s4.json
+-rw-r--r--   1 ben-hannan  staff  1053697 Sep 26 12:47 measure-s4.rows.jsonl
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "<string>", line 1, in <listcomp>
+NameError: name 'f' is not defined
+    1728 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rv391-20260926/dev/measure-s1.rows.jsonl
+    2242 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rv391-20260926/dev/measure-s2.rows.jsonl
+    1581 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rv391-20260926/dev/measure-s3.rows.jsonl
+    3962 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rv391-20260926/dev/measure-s4.rows.jsonl
+    9513 total
+[0m
+[0m$ [0mrm -rf "/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7"; echo RM_EXIT:$?; ls "/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7" 2>&1; echo ---; git -C /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 status --short | head -n 20
+RM_EXIT:0
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ECmTeftkj7: No such file or directory
+---
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/train398r.json
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+[0m
+[0m$ [0mgit status --short -- artifacts/claude-rv391-20260926/ | head -n 20; echo ---; git diff --stat HEAD -- artifacts/claude-rv391-20260926/ | head
+---
+[0m
+[0m$ [0mgit status --short | grep rv391 | head -n 20; echo ---; git status --short | wc -l; git ls-files --others --exclude-standard -- artifacts/claude-rv391-20260926/dev/ | head
+---
+     308
+[0m
+[0m$ [0mls artifacts/claude-rv391-20260926/dev/; git check-ignore -v artifacts/claude-rv391-20260926/dev/measure-s1.json 2>&1; echo ---; git status --short --ignored=no artifacts/claude-rv391-20260926/dev/ 2>&1 | head; echo ---; git branch --show-current; git rev-parse --show-toplevel
+log-s1.txt
+log-s2.txt
+log-s3.txt
+log-s4.txt
+measure-s1.json
+measure-s1.rows.jsonl
+measure-s2.json
+measure-s2.rows.jsonl
+measure-s3.json
+measure-s3.rows.jsonl
+measure-s4.json
+measure-s4.rows.jsonl
+.gitignore:5:artifacts/	artifacts/claude-rv391-20260926/dev/measure-s1.json
+---
+---
+claude/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
