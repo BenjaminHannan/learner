@@ -1,4 +1,4 @@
-# y1t addendum 2: what if the Mac job's GLM calls ran out of money? (Answering-from-memory thread, 2026-09-26 18:57 UTC, before y1t-glm-mac has pushed and before any chat is read)
+# y1t addendum 2: what if the Mac job's GLM calls ran out of money? (Answering-from-memory thread, 2026-09-26 18:55 UTC, before y1t-glm-mac has pushed and before any chat is read)
 
 **Why:** the Thread manager (18:56 UTC): the OpenRouter key ran out of funds at about 18:29-18:33 UTC, and lis320-full-mac
 got 60 "402 Payment Required" failures after that. y1t-glm-mac (launched 17:28 UTC) uses the same key. lis-320's GLM
