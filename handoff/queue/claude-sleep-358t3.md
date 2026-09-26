@@ -1,5 +1,5 @@
 COMMON RULES (the sleep research thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.
-STATUS: HELD in handoff/held/ (never in queue/). It runs only after rsn-358i2 reports and Ben approves the money through the Thread manager; the Director then moves it to queue/.
+STATUS: RELEASED. Ben approved up to $1.60 (Thread manager relay 18:41 UTC 09-26 of Ben's 18:39:52 message cmsg_01FuvegZXjMmeUzStiEFVnEWVCf81aGiBZ8MSRwbKQBw7t, "you can choose to spend money"). READ ALSO artifacts/claude-rsn358t-20260926/ADDENDUM-v3-1-start-now.md.
 GPU: rent
 BUDGET: $1.60 including re-rents, on the sleep research line of the Director's ledger. Standing cap is <= $4 per job. TIME CAP: 3 h 15 min from the first rental. Label: claude-sleep-358t3. Never destroy an instance this task did not create.
 CREDIT GATE (first): `vastai show user --raw` and report ONLY the balance/credit number. Follow the Director's current rental gate. Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
@@ -20,7 +20,8 @@ INDEPENDENCE: artifacts/claude-rsn358i-20260926/tests/ is TEST-ONLY. Never open 
    - `python -B scripts/claude_rsn358t3_run.py selftest` prints "selftest ok";
    - `python -B scripts/claude_rsn358t3_run.py check-mask` prints "check-mask ok";
    - `python -B scripts/claude_rsn358t3_run.py audit` prints four "300/300 puzzles show every needed symbol" lines.
-   - STAGE 0 (report only, never stops the job): `python -c "import torch;print(torch.__version__)"` and `python -B scripts/claude_stage0_autocast_grad.py`; paste both outputs whole into RESULTS-v3.md.
+   - STAGE 0 GATE: the line starting "loop  free=3 grad=2 cache=False" must end in "0/12"; otherwise stop with FIX-FAILS-ON-CUDA before any training, destroy, report. Other Stage 0 lines are report only.
+   - STAGE 0 (report): `python -c "import torch;print(torch.__version__)"` and `python -B scripts/claude_stage0_autocast_grad.py`; paste both outputs whole into RESULTS-v3.md.
    Anything else: stop.
 3. PLAIN: do NOT train plain. 358i's plain results exist on origin/main (checked at sealing): `git show origin/main:artifacts/claude-rsn358i-20260926/runs/plain-s$s/tests.json` for s in 1 2 3 4 (your worktree is stale; read them with git show, never from the worktree). If git show fails for a seed, stop and report; do not train a substitute. (358t v2's builder trained all four plain seeds by mistake, which slowed it past its cap.)
 4. TRAIN all AT ONCE and log each to W/<R>.log:
