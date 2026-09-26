@@ -1,0 +1,898 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT=$?; git branch -r | head -20; git log --oneline origin/main -5; git log --oneline origin/builder-outbox -5
+FETCH_EXIT=0
+  origin/HEAD -> origin/main
+  origin/builder-outbox
+  origin/builder-outbox-tmp
+  origin/chat-flags
+  origin/claude/card-experiment-handoff-7c5b27
+  origin/claude/model-architecture-review-0161ce
+  origin/claude/project-thread-0181x3
+  origin/claude/project-thread-h8jbxv
+  origin/claude/project-thread-p68q5v
+  origin/codex/testing-experiment-44
+  origin/main
+  origin/worktree-research
+73c146db2 bm-398c RESULTS: section time from date -u is 17:33 (first said 17:37 by mistake)
+9e82034e6 bm-398c RESULTS: scope and corrections (format failure 32 vs rough time-word miss 16; proved wrong = prompted copying + strict parser, not a learned translator; the 3-question smoke on test items flagged 1 of 3 unread and was not chased)
+881f02351 ledger: bm398e $0.35
+cf2d9603a gr-1 addendum 1 (before any head is trained): practice adds markdown tables with header rows, LaTeX arrays, row labels and column-header lines; gr-1U, a second blind test on 20 formats practice never had (U1 >= 48/60 exact, U2 <= 2 wrong)
+9e03eb1ec bm-398e AMEND-1 (sealed): span scores on one GPU rental instead of CPU (~16 h here); drafts and made-up chats committed with hashes; disclosures (header time, Claude-written fit data blocks a build, Redirect: report only). Queued rent-bm398e ($0.35)
+78a02b287 watcher status
+ad6cda5d3 watcher status
+5ed6fd599 builder results: rent-mu404b
+1c1153590 watcher status
+5c532e5ed watcher status
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/330-rent-kit.md
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+# MAC DISK (09-26): never stage the full tree or a tree.tgz on the Mac (that took ~3 GB and filled it).
+# Stream only the paths your task needs straight to the target, then delete nothing else:
+git archive origin/builder-outbox <paths> | ssh <target> 'mkdir -p ~/tree && tar -x -C ~/tree'
+git archive origin/main <paths> | ssh <target> 'tar -x -C ~/tree'          # main on top: main wins
+scp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt <target>:tree/artifacts/fable-self122-20260922/   # only if needed
+```
+For BensPC use its ssh host in place of <target>. If you truly must stage on the Mac, use one mktemp dir and
+remove it by exact path before you finish. Put `DISK: <GB>` in the job header (peak Mac use; default 3 for rent-*).
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+- 0.2c STACK (Director 14:43 UTC 09-26, from mu-402): any rental that runs the 0.2c agent with route122 must also stream artifacts/fable-self127-20260922 (fable_self127.load_deltas reads deltas127.json every turn; missing it crashed mu-402's first A/B launch).
+- TORCH UPGRADE (Director 15:25 UTC 09-26, from rd-378L WRITE-FAIL): if a job upgrades the image's torch (e.g. to 2.11), run `pip uninstall -y torchvision torchaudio` right after (the image's torchvision is built for torch 2.8 and breaks transformers/peft lazy imports), then an import check before any work.
+- TORCH VERSION (Director 16:59 UTC 09-26, Thread manager report: torch 2.8 autocast cache can drop gradients on weights reused after no-grad steps; CPU repro, Sleep research confirming on a rental): every run report records `torch.__version__`. NEW jobs that TRAIN pin torch==2.11.0 (BensPC's version) with the TORCH UPGRADE step above, unless their seal says otherwise. Already-sealed jobs are not changed; eval-only jobs may keep 2.8.
+- HELD JOBS (Director 17:10 UTC 09-26, after 358i2 launched from queue/ at 17:08): a job waiting on anything goes in handoff/held/, never handoff/queue/. The watcher also skips any queue file with a line starting "STATUS: HELD" (3c7022eca), but held/ is the rule.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+- LABELS (Director 13:33 UTC 2026-09-26): Ben's own agents share this vast account and one destroyed a rental it thought was its own. Every rental label starts with `claude-<thread>-<job>` (e.g. claude-fixsleep-dl4, claude-reading-lis319f). Never destroy an instance whose label your task did not create.
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+(tree already streamed to ~/tree; scp READER only if needed); cd ~/tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-bm398e-20260926/PLAN.md; echo "=====AMEND-1====="; git show origin/main:artifacts/claude-bm398e-20260926/AMEND-1.md
+# bm-398e PLAN: a copy-only span trimmer for answers that are too long (benchmarks thread, 2026-09-26 ~14:15 UTC)
+
+Registered and sealed before any draft, span score or fit exists, and before the trimmer touches LoCoMo. Every
+LoCoMo number is "after using LoCoMo for development". Counts only: no question, answer or reply is quoted.
+
+## Why
+Problem #4 is that answers from past chats are too long. bm-397t shortened them by training the model itself, and
+math collapsed (GSM8K 191 → 42). The Mac agent's report (reviews/mac-agent-locomo-length-2026-09-26.md, claims
+checked) showed a safer route: leave the model alone and trim afterwards with a step that can only copy the
+model's own words. The perfect trim of T's own replies would score 48.3, and a fixed rule (delete the question's
+words) reaches 32.39 over all ten chats. Asking the 1B to rewrite its answer failed in bm-397 and in the Mac
+tests. The outside review (reviews/outside-review-bm397t-2026-09-26.md) warned that a vocabulary-only finaliser can
+drop a negation or pick the wrong person's fact. Here the trimmer picks one contiguous span, so nothing is removed
+from inside it, and a blind check guards meaning.
+
+## The one change
+T's LoCoMo replies (plain MiniCPM5-1B, whole chat, bm-390 run2, untouched) have their scored first line replaced by
+one contiguous span of that same line (scripts/claude_bm398e_trim.py):
+- The candidates are every span of 1 to 10 words within the line's first 40 words, with edge punctuation
+  stripped, plus the whole line. Lines of 3 words or fewer are kept whole.
+- The same plain 1B scores each candidate as the short answer, given only the question and the line: log P(span,
+  then end-of-answer). The prompt is TRIM_USER in the script.
+- The pick is the span maximising that score + LAMBDA × words + BETA × [whole line].
+- LAMBDA and BETA are the only fitted numbers. They are grid-fitted to mean official F1 on the plain 1B's own
+  drafts to code-made chats (scripts/claude_bm398e_data.py, seed 3980, 24 chats, 432 questions, sha256
+  c19c82b3…b137). The fit uses the first 12 chats; the other 12 are a check.
+- Nothing is trained, and nothing from LoCoMo is used to fit. GSM8K and MMLU never pass through the trimmer (it
+  runs only on memory answers), so math and general answers are unchanged by construction.
+
+The code-made chats use LoCoMo's layout and the bm-390 prompt, so the drafts are written as T's are. The question
+kinds are wider than bm-397t's: single facts, why, how, opinions, dates in eight phrasings, and lists of 2 to 4.
+Drafts are made on this CPU (fp32); T's LoCoMo replies came from a GPU (bf16).
+
+## Steps (each once)
+1. Drafts: `claude_bm398e_trim.py drafts` on the 432 code-made questions.
+2. Spans: `spans --made` on those drafts.
+3. Fit: `fit`, then write PARAMS.json.
+4. Spans on T's LoCoMo replies (run2 locomo_T.jsonl, sha256 35bdf151…b3db), categories 1-4.
+5. Apply PARAMS, giving TT.
+6. Score with `score` (official F1, sealed bm-390 scorer).
+7. Blind check with `claude_bm398e_judge.py`:
+   - bm-398d's 297 questions, T vs TT, judges seeing the evidence;
+   - 5 blind Opus judges: 4 main judges each take 3 batches of one group, 1 relabel judge;
+   - private folders, and never two arms of one question to one judge.
+
+## Marks (fixed now)
+- **X1 (shorter and better scored):** TT's official F1, categories 1-4, all ten chats, ≥ 37.07 (TS, the trained
+  short-answer model), with the conversation-level 95% interval of TT − T above 0 (seed 3984, 10,000 draws).
+- **X2 (no right answers lost, blind):** TT's A-count ≥ T's A-count − 3 on the 297.
+- **PASS** = X1 and X2.
+- **Proved wrong:** TT's F1 ≤ 32.39, no better than the fixed question-word rule.
+- Report only:
+  - F1 by category and by half;
+  - median words;
+  - gained and lost questions, and replies whose overlap dropped to zero;
+  - the fit and check numbers on code-made chats;
+  - the T-by-TT label table;
+  - relabel agreement.
+
+## Predictions
+- P1 (40%): X1 passes. Point guess: TT F1 36.
+- P2 (70%): X2 passes.
+- P3 (30%): PASS.
+- P4 (85%): not proved wrong.
+- P5 (70%): the check-half F1 on code-made chats rises over untrimmed by at least 10 points.
+
+## What it leads to
+- PASS: the trimmer is the fix for "answers too long" on the plain 1B. It goes to "Answering from memory" as one
+  change inside the assistant, and to the next benchmark scorecard.
+- X1 fails but X2 holds: a better picker is needed. The span scorer and the made-up chats are kept.
+- X2 fails: trimming loses right answers, and the trimmer is not used.
+
+## Files
+- scripts/claude_bm398e_data.py (selftest 8/8), scripts/claude_bm398e_trim.py (selftest 8/8),
+  scripts/claude_bm398e_judge.py (dry run on fake labels: prep 654 items, score ran).
+- The repository gets counts only: RESULTS.md, PARAMS.json, the score output, and the judge key and labels.
+=====AMEND-1=====
+# bm-398e AMEND-1: span scores on a rented GPU (benchmarks thread, written 2026-09-26 17:32 UTC)
+
+Written before any span score is used for anything. No mark, prediction, fitted range or line of code changes.
+
+## What changes
+- Steps 2 and 4 of the PLAN (span scores on the 432 drafts and on T's 1,540 LoCoMo replies in categories 1-4) run
+  together on one rented GPU (bf16, the precision T's replies were made at), not on this CPU. Both sets of span
+  scores come from the same device, so the fit and the LoCoMo run see the same scorer.
+- Why: on this CPU span scoring measured about 2 questions a minute, so the 1,972 questions would take about 16
+  hours. The rental task is handoff/queue/rent-bm398e.md (budget $0.35 from this thread's $2).
+- The drafts stay as made on this CPU (fp32), before this amendment: inputs/drafts.jsonl, 432 rows, sha256
+  8779cb841d7d26f2e4d8ba0e333a0b8df7f19d5f5de1bc05ef8c08a24a4b5ae9. The made-up chats are inputs/made.json, sha256
+  c19c82b3b4c6f8d522fcd44afb8f15bbdfa9f7795590ea603684259561ceb137 (as in inputs.sha256.txt). Both are code-made or
+  1B-written; neither holds benchmark text.
+- 15 span rows scored on this CPU before the switch are set aside in the scratchpad, unread, and used for nothing.
+- Steps 3, 5, 6 and 7 (fit, apply, score, blind check) run here as the PLAN says.
+
+## Disclosures added now
+- Header time: the PLAN's header says "~14:15 UTC", written as an estimate rather than from `date -u`. The
+  PLAN's seal commit is the record of when it was sealed.
+- Training-data rule (Ben, 16:39 UTC): LAMBDA and BETA, two numbers, are fitted on code-made chats built from
+  Claude-written sentence patterns (scripts/claude_bm398e_data.py, word lists from claude_bm397t_data.py). No
+  model weights are trained. Even so, under that rule the fitted trimmer cannot go into a build as it is. If it
+  passes, the two numbers must be refitted on GLM-written chats first.
+- Redirect (Ben, 16:04 UTC): bm-398e finishes as a report and is not extended. The trimmer is a bolt-on after
+  the model, not a learned part of Ben's design.
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-bm398e-20260926/spans 2>&1 | head -5; echo "---"; git ls-tree -r origin/builder-outbox -- artifacts/claude-bm398e-20260926/ 2>&1; echo "==="; git show origin/builder-outbox:artifacts/claude-bm398e-20260926/RESULTS-rent.md 2>&1 | head -20
+fatal: path 'artifacts/claude-bm398e-20260926/spans' does not exist in 'origin/builder-outbox'
+---
+===
+fatal: path 'artifacts/claude-bm398e-20260926/RESULTS-rent.md' does not exist in 'origin/builder-outbox'
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -i bm398e; echo "EXIT=$?"; git ls-tree -r --name-only origin/builder-outbox | head -30; echo "---COUNT---"; git ls-tree -r --name-only origin/builder-outbox | wc -l
+EXIT=1
+.DS_Store
+artifacts/.DS_Store
+artifacts/claude-adapters-20260926d/REPORT.md
+artifacts/claude-blurt1-dev-20260925/RESULTS-blurt1.md
+artifacts/claude-blurt1-dev-20260925/run/ideas_t10.jsonl
+artifacts/claude-blurt1-dev-20260925/run/log_ideas_t10.txt
+artifacts/claude-blurt1-dev-20260925/run/log_puzzle_t06.txt
+artifacts/claude-blurt1-dev-20260925/run/log_puzzle_t10.txt
+artifacts/claude-blurt1-dev-20260925/run/puzzles_t06.jsonl
+artifacts/claude-blurt1-dev-20260925/run/puzzles_t10.jsonl
+artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+artifacts/claude-blurt2-20260925/RESULTS-gpu.md
+artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+artifacts/claude-blurt2-20260925/gpu/log_loop.txt
+artifacts/claude-blurt2-20260925/gpu/loop_summary.json
+artifacts/claude-blurt2-20260925/gpu/wins.jsonl
+artifacts/claude-blurt2-20260925/teacher-glm53/agreement.json
+artifacts/claude-blurt2-20260925/teacher-glm53/labels_teacher.jsonl
+artifacts/claude-blurt2-20260925/teacher-glm53/log.txt
+artifacts/claude-blurt2-20260925/teacher/agreement.json
+artifacts/claude-blurt2-20260925/teacher/labels_teacher.jsonl
+artifacts/claude-blurt2-20260925/teacher/log.txt
+artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+artifacts/claude-blurt4-20260925/gpu-4/log.txt
+artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+---COUNT---
+  159256
+[0m
+[0m$ [0mwhich vastai; vastai show user --raw 2>&1 | head -20; echo "---INSTANCES---"; vastai show instances 2>&1 | head -40
+/Users/ben-hannan/.local/bin/vastai
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 4.582765401269754,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+---INSTANCES---
+[K[97;48;2;0;0;0m╭─[0m[97;48;2;0;0;0m─────────[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mFilterable Values[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m─────────[0m[97;48;2;0;0;0m─╮[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--status:       [0m[1;33;48;2;0;0;0mloading[0m[97;48;2;0;0;0m  ·  [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m  [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--verification: [0m[38;5;83;48;2;0;0;0mverified[0m[48;2;0;0;0m             [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--gpu-name:     [0m[97;48;2;0;0;0mRTX 4070[0m[97;48;2;0;0;0m  ·  [0m[97;48;2;0;0;0mRTX 5090[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m╰───────────────────────────────────────╯[0m
+
+[93;48;2;0;0;0m╭─[0m[93;48;2;0;0;0m─────────────────────────────[0m[93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mResults Summary[0m[93;48;2;0;0;0m [0m[93;48;2;0;0;0m──────────────────────────────[0m[93;48;2;0;0;0m─╮[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mTotal: [0m[1;97;48;2;0;0;0m3 instances[0m[48;2;0;0;0m                                                          [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mLabels: [0m[97;48;2;0;0;0mclaude-director-depot: 1  ·  claude-fixsleep-dl5c: 1  ·  [0m[48;2;0;0;0m           [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-fixsleep-dl6b: 1[0m[48;2;0;0;0m                                                     [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╔══════╤═════════╤════════════════╤═══════════════╤═════════╤═════════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m ID [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mStatus [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m    Label     [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m     GPU     [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m $/hr  [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m            Imag[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╟──────┼─────────┼────────────────┼───────────────┼─────────┼─────────────────[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-direct…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 4070 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.1136[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mubuntu:22.04    [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-fixsle…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.4852[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytorch:[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;33;48;5;234mloading[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-fixsle…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090  [0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.4852[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytorch:[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╚══════╧═════════╧════════════════╧═══════════════╧═════════╧═════════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[48;2;0;0;0m                                                                              [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[2;48;2;0;0;0mColumns hidden to fit terminal width: Disk  ·  use --cols to customize (see --[0m[48;2;0;0;0m [0m
+[0m
+[0m$ [0mfor p in scripts/claude_bm390.py scripts/claude_bm390_score.py scripts/claude_bm397t_data.py scripts/claude_bm398e_data.py scripts/claude_bm398e_trim.py scripts/claude_bm398e_judge.py scripts/claude_bm398d_evidence.py scripts/claude_bm397_judge.py artifacts/claude-bm390-20260925/data-manifest.json artifacts/claude-bm398d-20260926/INSTRUCTIONS.md; do git cat-file -e origin/main:"$p" 2>&1 && echo "MAIN-OK $p" || echo "MAIN-MISSING $p"; done; echo "===BOX==="; git cat-file -e "origin/builder-outbox:artifacts/claude-bm390-20260925/run2/locomo_T.jsonl" 2>&1 && echo "BOX-OK locomo_T" || echo "BOX-MISSING locomo_T"; git ls-tree -r --name-only origin/main | grep "artifacts/claude-bm398e-20260926/" | head -30
+MAIN-OK scripts/claude_bm390.py
+MAIN-OK scripts/claude_bm390_score.py
+MAIN-OK scripts/claude_bm397t_data.py
+MAIN-OK scripts/claude_bm398e_data.py
+MAIN-OK scripts/claude_bm398e_trim.py
+MAIN-OK scripts/claude_bm398e_judge.py
+MAIN-OK scripts/claude_bm398d_evidence.py
+MAIN-OK scripts/claude_bm397_judge.py
+MAIN-OK artifacts/claude-bm390-20260925/data-manifest.json
+MAIN-OK artifacts/claude-bm398d-20260926/INSTRUCTIONS.md
+===BOX===
+BOX-OK locomo_T
+artifacts/claude-bm398e-20260926/AMEND-1.md
+artifacts/claude-bm398e-20260926/PLAN.md
+artifacts/claude-bm398e-20260926/SEAL-amend1.sha256.txt
+artifacts/claude-bm398e-20260926/SEAL.sha256.txt
+artifacts/claude-bm398e-20260926/inputs.sha256.txt
+artifacts/claude-bm398e-20260926/inputs/drafts.jsonl
+artifacts/claude-bm398e-20260926/inputs/made.json
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph 2>&1 | head -60
+[40m[97m  #  ID        CUDA   N  Model     PCIE  cpu_ghz  vCPUs    RAM  VRAM  Disk[0m
+[48;5;240m[97m  1  46753297  13.0  1x  RTX_5090  26.5  2.2      32.0    32.2  32.6  156 [0m
+[40m[97m  2  43165155  13.0  1x  RTX_5090  26.6  2.2      32.0    32.2  32.6  276 [0m
+[48;5;240m[97m  3  50338868  13.0  1x  RTX_5090  27.0  2.6      24.0    32.2  32.6  503 [0m
+[40m[97m  4  52766385  13.0  1x  RTX_5090  10.8  3.5      12.0    64.3  32.6  1321[0m
+[48;5;240m[97m  5  45669267  13.0  1x  RTX_5090  48.4  5.1      16.0    31.2  32.6  470 [0m
+[40m[97m  6  45043246  13.0  1x  RTX_5090  48.0  5.1      16.0    31.2  32.6  607 [0m
+[48;5;240m[97m  7  52190826  13.0  1x  RTX_5090  47.6  5.1      16.0    31.2  32.6  180 [0m
+[40m[97m  8  45669355  13.0  1x  RTX_5090  51.2  5.1      8.0     31.2  32.6  516 [0m
+[48;5;240m[97m  9  48940756  13.0  1x  RTX_5090  51.3  5.1      8.0     31.2  32.6  519 [0m
+[40m[97m 10  52705868  13.0  1x  RTX_5090  26.6  2.6      24.0    64.5  32.6  299 [0m
+[48;5;240m[97m 11  51325614  13.2  1x  RTX_5090  25.4  2.6      24.0    64.5  32.6  345 [0m
+[40m[97m 12  40889261  13.2  1x  RTX_5090  23.0  2.6      38.4    64.4  32.6  380 [0m
+[48;5;240m[97m 13  50012122  13.0  1x  RTX_5090  20.8  2.6      48.0   128.8  32.6  1103[0m
+[40m[97m 14  45699915  13.0  1x  RTX_5090  13.6  2.3      12.0    40.3  32.6  127 [0m
+[48;5;240m[97m 15  50058862  13.0  1x  RTX_5090  26.0  5.1      32.0    64.2  32.6  1200[0m
+[40m[97m 16  52777663  13.2  1x  RTX_5090  54.2  5.4      8.0     42.9  32.6  214 [0m
+[48;5;240m[97m 17  51819053  13.2  1x  RTX_5090  26.4  2.4      16.0    64.4  32.6  740 [0m
+[40m[97m 18  50734486  12.8  1x  RTX_5090  13.1  3.7      6.0     32.1  32.6  718 [0m
+[48;5;240m[97m 19  49351766  13.0  1x  RTX_5090  27.5  3.7      10.0    60.3  32.6  364 [0m
+[40m[97m 20  50820986  13.0  1x  RTX_5090  27.1  2.6      48.0   110.6  32.6  1834[0m
+[48;5;240m[97m 21  29717005  13.0  1x  RTX_5090  26.9  3.7      24.0    64.4  32.6  538 [0m
+[40m[97m 22  51477564  13.2  1x  RTX_5090  6.8   5.8      16.0    63.2  32.6  1240[0m
+[48;5;240m[97m 23  46491761  13.1  1x  RTX_5090  50.1  5.3      32.0    62.0  32.6  483 [0m
+[40m[97m 24  52785447  13.2  1x  RTX_5090  26.6  3.7      32.0   129.0  32.6  1472[0m
+[48;5;240m[97m 25  43110769  13.1  1x  RTX_5090  54.1  2.4      38.4    77.4  32.6  983 [0m
+[40m[97m 26  46953698  13.0  1x  RTX_5090  54.0  2.4      48.0    96.7  32.6  548 [0m
+[48;5;240m[97m 27  26371148  13.3  1x  RTX_5090  22.7  2.2      32.0    64.5  32.6  322 [0m
+[40m[97m 28  52077399  13.2  1x  RTX_5090  36.4  5.5      12.0    61.9  32.6  1482[0m
+[48;5;240m[97m 29  43258196  13.0  1x  RTX_5090  20.3  3.7      32.0    56.4  32.6  326 [0m
+[40m[97m 30  52070416  13.2  1x  RTX_5090  23.7  2.2      32.0   129.0  32.6  1418[0m
+[48;5;240m[97m 31  48426438  13.0  1x  RTX_5090  54.0  3.0      112.0   64.3  32.6  1276[0m
+[40m[97m 32  52015843  12.8  1x  RTX_5090  54.2  3.8      18.3    36.8  32.6  801 [0m
+[48;5;240m[97m 33  52782996  13.2  1x  RTX_5090  26.5  3.5      42.7    86.0  32.6  1001[0m
+[40m[97m 34  52003777  13.2  1x  RTX_5090  54.3  2.6      12.0    64.3  32.6  344 [0m
+[48;5;240m[97m 35  51969541  13.0  1x  RTX_5090  3.4   -        0.0     64.3  32.6  323 [0m
+[40m[97m 36  51969538  13.2  1x  RTX_5090  54.3  2.6      12.0    64.3  32.6  50  [0m
+[48;5;240m[97m 37  51969543  13.0  1x  RTX_5090  54.3  2.6      12.0    64.3  32.6  61  [0m
+[40m[97m 38  52437387  13.3  1x  RTX_5090  44.8  4.3      8.0     48.2  32.6  781 [0m
+[48;5;240m[97m 39  42928597  13.1  1x  RTX_5090  27.0  2.9      64.0   515.6  32.6  1021[0m
+[40m[97m 40  52394017  13.0  1x  RTX_5090  26.3  4.4      32.0   128.8  32.6  514 [0m
+[48;5;240m[97m 41  51639930  13.3  1x  RTX_5090  54.1  3.7      42.7    42.9  32.6  604 [0m
+[40m[97m 42  43165146  13.0  2x  RTX_5090  22.7  2.2      64.0    64.4  32.6  552 [0m
+[48;5;240m[97m 43  46753299  13.0  2x  RTX_5090  21.8  2.2      64.0    64.4  32.6  312 [0m
+[40m[97m 44  49760560  13.2  1x  RTX_5090  54.2  3.9      16.0    96.7  32.6  210 [0m
+[48;5;240m[97m 45  25507614  13.3  1x  RTX_5090  26.6  2.4      32.0   513.0  32.6  504 [0m
+[40m[97m 46  35967353  12.8  1x  RTX_5090  52.8  3.7      40.0    96.6  32.6  1361[0m
+[48;5;240m[97m 47  44851399  13.2  1x  RTX_5090  51.2  3.7      40.0    96.6  32.6  951 [0m
+[40m[97m 48  51234145  13.2  2x  RTX_5090  26.4  2.2      64.0   128.9  32.6  618 [0m
+[48;5;240m[97m 49  51234168  13.2  2x  RTX_5090  26.4  2.2      64.0   128.9  32.6  561 [0m
+[40m[97m 50  30220756  13.0  1x  RTX_5090  54.4  4.3      32.0   386.8  32.6  2211[0m
+[48;5;240m[97m 51  50835643  13.2  1x  RTX_5090  27.0  3.5      64.0   128.9  32.6  5059[0m
+[40m[97m 52  44982926  13.0  2x  RTX_5090  54.2  3.7      96.0   128.7  32.6  1174[0m
+[48;5;240m[97m 53  52705871  13.0  2x  RTX_5090  26.5  2.6      48.0   128.9  32.6  598 [0m
+[40m[97m 54  51332093  13.0  2x  RTX_5090  26.8  2.4      36.6   147.4  32.6  783 [0m
+[48;5;240m[97m 55  28247751  13.3  1x  RTX_5090  54.1  3.7      48.0    96.7  32.6  569 [0m
+[40m[97m 56  47627478  13.2  1x  RTX_5090  50.7  4.1      24.0    32.2  32.6  1356[0m
+[48;5;240m[97m 57  49846909  13.2  1x  RTX_5090  23.0  3.5      32.0   112.8  32.6  372 [0m
+[40m[97m 58  43602288  13.0  2x  RTX_5090  26.5  2.6      48.0   128.9  32.6  769 [0m
+[48;5;240m[97m 59  52552070  13.0  2x  RTX_5090  47.4  4.0      48.0   128.9  32.6  733 [0m
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+try:
+  offers=json.loads(raw)
+except Exception as e:
+  print('PARSE-FAIL', e); print(raw[:2000]); sys.exit()
+print('N=',len(offers))
+filt=[o for o in offers if (o.get('cpu_cores_effective',0)>=8 or o.get('cpu_cores',0)>=8) and (o.get('disk_space',0)>=60)]
+print('Nfilt=',len(filt))
+for o in filt[:8]:
+  print(o.get('id'), 'dph=',o.get('dph_total'), 'cpu=',o.get('cpu_cores_effective',o.get('cpu_cores')), 'disk=',o.get('disk_space'), 'rel=',o.get('reliability2',o.get('reliability')), 'up=',o.get('inet_up'), 'down=',o.get('inet_down'), 'rentable=',o.get('rentable'), 'vram=',o.get('gpu_ram'), 'cuda=',o.get('cuda_max_good'))
+"
+Traceback (most recent call last):
+  File "<string>", line 9, in <module>
+  File "<string>", line 9, in <listcomp>
+TypeError: '>=' not supported between instances of 'NoneType' and 'int'
+N= 64
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+offers=json.loads(raw)
+print('N=',len(offers))
+print('KEYS=',sorted(list(offers[0].keys())))
+for o in offers[:5]:
+  print({k:o.get(k) for k in ['id','dph_total','num_gpus','cpu_cores_effective','disk_space','reliability2','inet_up','inet_down','rentable','gpu_ram','cuda_max_good','gpu_name','rented']})
+"
+N= 64
+KEYS= ['ask_contract_id', 'avail_vol_ask_id', 'avail_vol_dph', 'avail_vol_size', 'bundle_id', 'bundled_results', 'bw_nvlink', 'cluster_id', 'compute_cap', 'cpu_arch', 'cpu_cores', 'cpu_cores_effective', 'cpu_ghz', 'cpu_name', 'cpu_ram', 'credit_discount_max', 'cuda_max_good', 'direct_port_count', 'discount_rate', 'discounted_dph_total', 'discounted_hourly', 'disk_bw', 'disk_name', 'disk_space', 'dlperf', 'dlperf_per_dphtotal', 'dph_base', 'dph_total', 'dph_total_adj', 'driver_vers', 'driver_version', 'duration', 'end_date', 'expected_reliability', 'external', 'flops_per_dphtotal', 'geolocation', 'geolocode', 'gpu_arch', 'gpu_display_active', 'gpu_frac', 'gpu_ids', 'gpu_lanes', 'gpu_max_power', 'gpu_max_temp', 'gpu_mem_bw', 'gpu_name', 'gpu_ram', 'gpu_total_ram', 'has_avx', 'host_id', 'hosting_type', 'hostname', 'id', 'inet_down', 'inet_down_cost', 'inet_up', 'inet_up_cost', 'instance', 'internet_down_cost_per_tb', 'internet_up_cost_per_tb', 'is_bid', 'is_vm_deverified', 'logo', 'machine_id', 'min_bid', 'mobo_name', 'num_gpus', 'nw_disk_avg_bw', 'nw_disk_max_bw', 'nw_disk_min_bw', 'os_version', 'pci_gen', 'pcie_bw', 'public_ipaddr', 'reliability', 'reliability2', 'reliability_mult', 'rentable', 'rented', 'resource_type', 'rn', 'score', 'search', 'sla_broker_rate', 'sla_r_claim', 'sla_sigma_x', 'start_date', 'static_ip', 'storage_cost', 'storage_total_cost', 'target_reliability', 'time_remaining', 'time_remaining_isbid', 'total_flops', 'vericode', 'verification', 'vms_enabled', 'vram_costperhour', 'webpage']
+{'id': 46753297, 'dph_total': 0.4060185185185185, 'num_gpus': 1, 'cpu_cores_effective': 32.0, 'disk_space': 153.1625, 'reliability2': 0.9957324, 'inet_up': 63.3, 'inet_down': 824.1, 'rentable': True, 'gpu_ram': 32607, 'cuda_max_good': 13.0, 'gpu_name': 'RTX 5090', 'rented': False}
+{'id': 43165153, 'dph_total': 0.4060185185185185, 'num_gpus': 1, 'cpu_cores_effective': 32.0, 'disk_space': 275.875, 'reliability2': 0.9956241, 'inet_up': 51.1, 'inet_down': 513.5, 'rentable': True, 'gpu_ram': 32607, 'cuda_max_good': 13.0, 'gpu_name': 'RTX 5090', 'rented': False}
+{'id': 52766385, 'dph_total': 0.46138888888888885, 'num_gpus': 1, 'cpu_cores_effective': 12.0, 'disk_space': 1320.85, 'reliability2': 0.9896517, 'inet_up': 476.8, 'inet_down': 794.2, 'rentable': True, 'gpu_ram': 32607, 'cuda_max_good': 13.0, 'gpu_name': 'RTX 5090', 'rented': False}
+{'id': 45669438, 'dph_total': 0.46898148148148144, 'num_gpus': 1, 'cpu_cores_effective': 16.0, 'disk_space': 430.0, 'reliability2': 0.9977919, 'inet_up': 545.7, 'inet_down': 510.9, 'rentable': True, 'gpu_ram': 32607, 'cuda_max_good': 13.0, 'gpu_name': 'RTX 5090', 'rented': False}
+{'id': 45380600, 'dph_total': 0.46898148148148144, 'num_gpus': 1, 'cpu_cores_effective': 16.0, 'disk_space': 511.0, 'reliability2': 0.9924343, 'inet_up': 443.1, 'inet_down': 509.6, 'rentable': True, 'gpu_ram': 32607, 'cuda_max_good': 13.0, 'gpu_name': 'RTX 5090', 'rented': False}
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_4090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+offers=json.loads(sys.stdin.read())
+print('N=',len(offers))
+ok=[o for o in offers if (o.get('cpu_cores_effective') or 0)>=8 and (o.get('disk_space') or 0)>=60 and (o.get('reliability2') or 0)>=0.98 and o.get('rentable')]
+ok=sorted(ok,key=lambda o:o['dph_total'])
+print('Nfilt=',len(ok))
+for o in ok[:8]:
+  print(o['id'],'dph=',round(o['dph_total'],4),'cpu=',o.get('cpu_cores_effective'),'disk=',round(o.get('disk_space') or 0,1),'rel=',round(o.get('reliability2') or 0,4),'up=',o.get('inet_up'),'down=',o.get('inet_down'))
+"
+N= 64
+Nfilt= 60
+49234598 dph= 0.3481 cpu= 12.0 disk= 272.5 rel= 0.9972 up= 902.6 down= 935.2
+43681506 dph= 0.3614 cpu= 18.285714285714285 disk= 148.1 rel= 0.9942 up= 798.2 down= 924.4
+47256381 dph= 0.3614 cpu= 16.0 disk= 176.7 rel= 0.9919 up= 825.8 down= 924.7
+52668846 dph= 0.3614 cpu= 14.0 disk= 1370.8 rel= 0.9959 up= 484.5 down= 858.7
+34176461 dph= 0.3913 cpu= 12.0 disk= 729.2 rel= 0.9928 up= 32.9 down= 646.0
+51342266 dph= 0.3947 cpu= 16.0 disk= 221.4 rel= 0.9829 up= 654.7 down= 891.7
+22338209 dph= 0.4014 cpu= 12.8 disk= 144.4 rel= 0.9848 up= 1209.4 down= 6406.4
+36865798 dph= 0.4014 cpu= 32.0 disk= 223.9 rel= 0.9948 up= 1204.5 down= 1469.2
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_4090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+offers=json.loads(sys.stdin.read())
+o=[x for x in offers if x['id']==49234598][0]
+print(json.dumps(o,indent=1)[:3000])
+"
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+IndexError: list index out of range
+[0m
+[0m$ [0mvastai search offers 'id=49234598' --raw 2>&1 | head -30; echo "==="; vastai search offers 'gpu_name=RTX_4090' --raw 2>&1 | python3 -c "
+import json,sys
+offers=json.loads(sys.stdin.read())
+oo=[x for x in offers if str(x['id'])=='49234598']
+print('found:',len(oo))
+"
+[]
+===
+found: 0
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_4090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+offers=json.loads(sys.stdin.read())
+ok=[o for o in offers if (o.get('cpu_cores_effective') or 0)>=8 and (o.get('disk_space') or 0)>=60 and (o.get('reliability2') or 0)>=0.98 and o.get('rentable')]
+ok=sorted(ok,key=lambda o:o['dph_total'])
+print('Nfilt=',len(ok))
+for o in ok[:8]:
+  print(o['id'],'dph=',round(o['dph_total'],4),'cpu=',o.get('cpu_cores_effective'),'disk=',round(o.get('disk_space') or 0,1),'rel=',round(o.get('reliability2') or 0,4),'up=',o.get('inet_up'),'down=',o.get('inet_down'))
+"
+Nfilt= 59
+45996848 dph= 0.3094 cpu= 16.0 disk= 184.8 rel= 0.9957 up= 880.4 down= 925.4
+43681506 dph= 0.3614 cpu= 18.285714285714285 disk= 148.1 rel= 0.9942 up= 798.2 down= 924.4
+39678103 dph= 0.378 cpu= 10.666666666666666 disk= 188.8 rel= 0.9993 up= 275.2 down= 1601.1
+42420268 dph= 0.3881 cpu= 16.0 disk= 590.5 rel= 0.9914 up= 599.5 down= 597.5
+52604639 dph= 0.3996 cpu= 12.0 disk= 1445.2 rel= 0.9948 up= 845.7 down= 924.1
+22338209 dph= 0.4014 cpu= 12.8 disk= 144.4 rel= 0.9848 up= 1209.4 down= 6406.4
+36865798 dph= 0.4014 cpu= 32.0 disk= 223.9 rel= 0.9948 up= 1204.5 down= 1469.2
+44623257 dph= 0.4014 cpu= 32.0 disk= 611.4 rel= 0.9939 up= 1308.4 down= 1629.9
+[0m
+[0m$ [0mvastai create instance 45996848 --image pytorch/pytorch --disk 80 --label claude-benchmarks-bm398e --raw 2>&1 | head -20
+{
+ "instance_api_key": "c1243baf03884c70641b6d02269c553aabdc2a46be7ac3a88f5f7946a9295cef",
+ "new_contract": 52789000,
+ "success": true
+}
+[0m
+[0m$ [0mdate -u; vastai show instances --raw 2>&1 | python3 -c "
+import json,sys,os
+raw=sys.stdin.read()
+try:
+  insts=json.loads(raw)
+except Exception as e:
+  print('PARSE FAIL',e); print(raw[:3000]); sys.exit()
+for i in insts:
+  lbl=(i.get('label') or '')
+  if 'bm398e' in lbl:
+    print(json.dumps({k:i.get(k) for k in ['id','label','status','gpu_name','dph_total','ssh_host','ssh_port','actual_status','cur_state']},indent=1))
+"
+Sat Sep 26 17:35:42 UTC 2026
+{
+ "id": 52789000,
+ "label": "claude-benchmarks-bm398e",
+ "status": null,
+ "gpu_name": "RTX 4090",
+ "dph_total": 0.35111111111111115,
+ "ssh_host": "ssh5.vast.ai",
+ "ssh_port": 29000,
+ "actual_status": null,
+ "cur_state": "running"
+}
+[0m
+[0m$ [0msleep 45; vastai show instance 52789000 --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+try:
+  i=json.loads(raw)
+  if isinstance(i,list): i=i[0]
+  print(json.dumps({k:i.get(k) for k in ['id','label','actual_status','status_msg','ssh_host','ssh_port','dph_total','gpu_name']},indent=1))
+except Exception as e:
+  print('FAIL',e); print(raw[:2000])
+"; date -u
+{
+ "id": 52789000,
+ "label": "claude-benchmarks-bm398e",
+ "actual_status": "loading",
+ "status_msg": "3d552c93e873: Verifying Checksum\n3d552c93e873: Download complete\n",
+ "ssh_host": "ssh5.vast.ai",
+ "ssh_port": 29000,
+ "dph_total": 0.35111111111111115,
+ "gpu_name": "RTX 4090"
+}
+Sat Sep 26 17:36:32 UTC 2026
+[0m
+[0m$ [0msleep 90; vastai show instance 52789000 --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+i=json.loads(raw)
+if isinstance(i,list): i=i[0]
+print(json.dumps({k:i.get(k) for k in ['id','actual_status','status_msg','ssh_host','ssh_port']},indent=1))
+"; date -u
+{
+ "id": 52789000,
+ "actual_status": "loading",
+ "status_msg": "#7 18.44 Preparing to unpack .../50-libcurl4_7.81.0-1ubuntu1.29_amd64.deb ...\r\n#7 18.45 Unpacking libcurl4:amd64 (7.81.0-1ubuntu1.29) ...\r\n#7 18.51 Selecting previously unselected package curl.\r\n#7 18.51 Preparing to unpack .../51-curl_7.81.0-1ubuntu1.29_amd64.deb ...\r\n#7 18.52 Unpacking curl (7.81.0-1ubuntu1.29) ...\r\n#7 18.59 Selecting previously unselected package libpackagekit-glib2-18:amd64.\r\n",
+ "ssh_host": "ssh5.vast.ai",
+ "ssh_port": 29000
+}
+Sat Sep 26 17:38:04 UTC 2026
+[0m
+[0m$ [0msleep 120; vastai show instance 52789000 --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+i=json.loads(raw)
+if isinstance(i,list): i=i[0]
+print(json.dumps({k:i.get(k) for k in ['id','actual_status','status_msg','ssh_host','ssh_port']},indent=1))
+print('MSGTAIL:',str(i.get('status_msg'))[-500:])
+"; date -u
+{
+ "id": 52789000,
+ "actual_status": "running",
+ "status_msg": "success, running pytorch/pytorch/ssh",
+ "ssh_host": "ssh5.vast.ai",
+ "ssh_port": 29000
+}
+MSGTAIL: success, running pytorch/pytorch/ssh
+Sat Sep 26 17:40:07 UTC 2026
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 29000 root@ssh5.vast.ai 'echo SSH_OK; nvidia-smi --query-gpu=name,memory.total --format=csv; df -h / | tail -1; python3 --version' 2>&1 | tail -10
+Warning: Permanently added '[ssh5.vast.ai]:29000' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+SSH_OK
+name, memory.total [MiB]
+NVIDIA GeForce RTX 4090, 24564 MiB
+overlay          80G  764K   80G   1% /
+Python 3.10.13
+[0m
+[0m$ [0mgit archive origin/builder-outbox artifacts/claude-bm390-20260925/run2/locomo_T.jsonl | ssh -p 29000 root@ssh5.vast.ai 'mkdir -p ~/tree && tar -x -C ~/tree' 2>&1 | tail -3; echo STREAM1_EXIT=$?
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+STREAM1_EXIT=0
+[0m
+[0m$ [0mgit archive origin/main scripts/claude_bm390.py scripts/claude_bm390_score.py scripts/claude_bm397t_data.py scripts/claude_bm398e_data.py scripts/claude_bm398e_trim.py scripts/claude_bm398e_judge.py scripts/claude_bm398d_evidence.py scripts/claude_bm397_judge.py artifacts/claude-bm390-20260925/data-manifest.json artifacts/claude-bm398d-20260926/INSTRUCTIONS.md artifacts/claude-bm398e-20260926 | ssh -p 29000 root@ssh5.vast.ai 'tar -x -C ~/tree' 2>&1 | tail -3; echo STREAM2_EXIT=$?
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+STREAM2_EXIT=0
+[0m
+[0m$ [0mssh -p 29000 root@ssh5.vast.ai 'cd ~/tree && ls artifacts/claude-bm398e-20260926/ artifacts/claude-bm398e-20260926/inputs/ && sha256sum artifacts/claude-bm390-20260925/run2/locomo_T.jsonl && wc -l artifacts/claude-bm390-20260925/run2/locomo_T.jsonl artifacts/claude-bm398e-20260926/inputs/drafts.jsonl && python3 -c "import torch; print(torch.__version__, torch.cuda.is_available())"' 2>&1 | grep -v "vast.ai\|Have fun"
+artifacts/claude-bm398e-20260926/:
+AMEND-1.md
+PLAN.md
+SEAL-amend1.sha256.txt
+SEAL.sha256.txt
+inputs
+inputs.sha256.txt
+
+artifacts/claude-bm398e-20260926/inputs/:
+drafts.jsonl
+made.json
+35bdf151ba5160efda06cfe4e1cb274c7a0fa894963db8295286927b5e53b3db  artifacts/claude-bm390-20260925/run2/locomo_T.jsonl
+  1986 artifacts/claude-bm390-20260925/run2/locomo_T.jsonl
+   432 artifacts/claude-bm398e-20260926/inputs/drafts.jsonl
+  2418 total
+2.2.1 True
+[0m
+[0m$ [0mssh -p 29000 root@ssh5.vast.ai 'cd ~/tree && setsid nohup bash -c "pip install -q \"transformers>=5\" safetensors huggingface_hub accelerate numpy; python3 -c \"import pyarrow\" || pip install -q pyarrow; python3 -c \"import torch, transformers; print(torch.__version__, transformers.__version__)\"; python3 --version" > ~/setup.log 2>&1 < /dev/null & echo LAUNCHED' 2>&1 | grep -v "vast.ai\|Have fun"
+LAUNCHED
+[0m
+[0m$ [0msleep 90; ssh -p 29000 root@ssh5.vast.ai 'cat ~/setup.log; echo "---"; ps aux | grep -E "pip|python" | grep -v grep | head -5' 2>&1 | grep -v "vast.ai\|Have fun"
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'pyarrow'
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+[transformers] Disabling PyTorch because PyTorch >= 2.5 is required but found 2.2.1
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+2.2.1 5.17.0
+Python 3.10.13
+---
+[0m
+[0m$ [0mssh -p 29000 root@ssh5.vast.ai 'cd ~/tree && head -40 scripts/claude_bm398e_trim.py | grep -E "^import|^from"; python3 -c "from transformers import AutoModelForCausalLM; print(\"MODEL-IMPORT-OK\")" 2>&1 | tail -5' 2>&1 | grep -v "vast.ai\|Have fun"
+from __future__ import annotations
+import argparse
+import json
+import random
+import re
+import statistics
+import sys
+import time
+from collections import defaultdict
+from pathlib import Path
+import claude_bm390 as B  # noqa: E402
+import claude_bm390_score as SC  # noqa: E402
+[transformers] Disabling PyTorch because PyTorch >= 2.5 is required but found 2.2.1
+[transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+MODEL-IMPORT-OK
+[0m
+[0m$ [0mssh -p 29000 root@ssh5.vast.ai 'nvidia-smi | head -8; cd ~/tree && setsid nohup bash -c "pip install -q torch==2.11.0 && pip uninstall -y torchvision torchaudio; python3 -c \"import torch, transformers; print(torch.__version__, transformers.__version__)\"; python3 -c \"import torch; print(torch.cuda.is_available())\"; python3 -c \"from transformers import AutoModelForCausalLM; print(\\\"MODEL-IMPORT-OK\\\")\"" > ~/torchup.log 2>&1 < /dev/null & echo LAUNCHED; date -u' 2>&1 | grep -v "vast.ai\|Have fun"
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 60000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'cat ~/torchup.log 2>/dev/null; echo "---PS---"; ps aux | grep -E "pip|torchup" | grep -v grep | head -5' 2>&1 | grep -v "vast.ai\|Have fun"
+---PS---
+root         472  0.0  0.0   4364  1996 ?        S    17:42   0:00 bash -c nvidia-smi | head -8; cd ~/tree && setsid nohup bash -c "pip install -q torch==2.11.0 && pip uninstall -y torchvision torchaudio; python3 -c \"import torch, transformers; print(torch.__version__, transformers.__version__)\"; python3 -c \"import torch; print(torch.cuda.is_available())\"; python3 -c \"from transformers import AutoModelForCausalLM; print(\\\"MODEL-IMPORT-OK\\\")\"" > ~/torchup.log 2>&1 < /dev/null & echo LAUNCHED; date -u
+root         473  0.0  0.0   4364  3224 ?        Ss   17:42   0:00 bash -c pip install -q torch==2.11.0 && pip uninstall -y torchvision torchaudio; python3 -c "import torch, transformers; print(torch.__version__, transformers.__version__)"; python3 -c "import torch; print(torch.cuda.is_available())"; python3 -c "from transformers import AutoModelForCausalLM; print(\"MODEL-IMPORT-OK\")"
+root         474 53.3  0.0  73316 69544 ?        R    17:42   0:33 /opt/conda/bin/python /opt/conda/bin/pip install -q torch==2.11.0
+[0m
+[0m$ [0msleep 150; ssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'cat ~/torchup.log 2>/dev/null; echo "---PS---"; ps aux | grep "pip install" | grep -v grep | head -3; echo DONE' 2>&1 | grep -v "vast.ai\|Have fun"
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+Found existing installation: torchvision 0.17.1
+Uninstalling torchvision-0.17.1:
+  Successfully uninstalled torchvision-0.17.1
+Found existing installation: torchaudio 2.2.1
+Uninstalling torchaudio-2.2.1:
+  Successfully uninstalled torchaudio-2.2.1
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+2.11.0+cu130 5.17.0
+True
+MODEL-IMPORT-OK
+---PS---
+DONE
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'cd ~/tree && unset HF_HOME HF_HUB_CACHE; HF_HUB_OFFLINE=0 python3 -c "from huggingface_hub import snapshot_download as s; print(s(\"openbmb/MiniCPM5-1B\", revision=\"87179e5c1f455ef22e6223592d2d61351b525bfc\"))" 2>&1 | tail -3' 2>&1 | grep -v "vast.ai\|Have fun"
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:02,  4.82it/s]Fetching 11 files:  73%|███████▎  | 8/11 [00:00<00:00, 27.21it/s]Fetching 11 files: 100%|██████████| 11/11 [00:18<00:00,  1.69s/it]
+/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && setsid nohup bash -c "export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; sha256sum -c artifacts/claude-bm398e-20260926/SEAL.sha256.txt; sha256sum -c artifacts/claude-bm398e-20260926/SEAL-amend1.sha256.txt; sha256sum artifacts/claude-bm390-20260925/run2/locomo_T.jsonl; python3 -B scripts/claude_bm398e_trim.py selftest" > ~/step1.log 2>&1 < /dev/null & echo LAUNCHED' 2>&1 | grep -v "vast.ai\|Have fun"
+LAUNCHED
+[0m
+[0m$ [0msleep 60; ssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'cat ~/step1.log' 2>&1 | grep -v "vast.ai\|Have fun"
+artifacts/claude-bm398e-20260926/PLAN.md: OK
+scripts/claude_bm398e_data.py: OK
+scripts/claude_bm398e_trim.py: OK
+scripts/claude_bm398e_judge.py: OK
+scripts/claude_bm398d_evidence.py: OK
+scripts/claude_bm397_judge.py: OK
+scripts/claude_bm397t_data.py: OK
+scripts/claude_bm390.py: OK
+scripts/claude_bm390_score.py: OK
+artifacts/claude-bm398d-20260926/INSTRUCTIONS.md: OK
+artifacts/claude-bm398e-20260926/AMEND-1.md: OK
+artifacts/claude-bm398e-20260926/inputs/made.json: OK
+artifacts/claude-bm398e-20260926/inputs/drafts.jsonl: OK
+35bdf151ba5160efda06cfe4e1cb274c7a0fa894963db8295286927b5e53b3db  artifacts/claude-bm390-20260925/run2/locomo_T.jsonl
+Traceback (most recent call last):
+  File "/root/tree/scripts/claude_bm398e_trim.py", line 38, in <module>
+    import claude_bm390_score as SC  # noqa: E402
+  File "/root/tree/scripts/claude_bm390_score.py", line 28, in <module>
+    from nltk.stem import PorterStemmer
+ModuleNotFoundError: No module named 'nltk'
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'pip install -q nltk 2>&1 | tail -2; cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && setsid nohup bash -c "export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; python3 -B scripts/claude_bm398e_trim.py selftest" > ~/selftest.log 2>&1 < /dev/null & echo LAUNCHED' 2>&1 | grep -v "vast.ai\|Have fun"
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+LAUNCHED
+[0m
+[0m$ [0msleep 90; ssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'cat ~/selftest.log' 2>&1 | grep -v "vast.ai\|Have fun"
+PASS whole line is the first candidate
+PASS edge punctuation stripped
+PASS no candidate skips a word
+PASS spans capped at MAX_SPAN words
+PASS first_line matches the scorer
+PASS pick prefers the higher score
+PASS the keep-whole bonus can keep the line
+PASS the word bonus favours longer spans
+BM398E-TRIM-SELFTEST PASS 8/8
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'cd ~/tree && setsid nohup bash -c "export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; python3 -B scripts/claude_bm390.py fetch --data /root/bmdata" > ~/fetch.log 2>&1 < /dev/null & echo LAUNCHED; date -u' 2>&1 | grep -v "vast.ai\|Have fun"
+LAUNCHED
+Sat Sep 26 17:50:08 UTC 2026
+[0m
+[0m$ [0msleep 45; ssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'cat ~/fetch.log; echo "---PS---"; ps aux | grep "bm390.py fetch" | grep -v grep | head -3' 2>&1 | grep -v "vast.ai\|Have fun"
+{"fetch": "OK", "locomo_convs": 10, "locomo_qa": 1986, "locomo_by_category": {"1": 282, "2": 321, "3": 96, "4": 841, "5": 446}, "mmlu_ok_rows": 5330, "mmlu_sample": 300, "gsm8k_rows": 1319, "gsm8k_sample": 300, "mmlu300_sha256": "e294f5fc0c94726e640d276d67af3503b9d9a48574dbae357f8e72289f76c049", "gsm8k300_sha256": "df57d09b50357481931bfc5b13903821d22afb986c7bf170941c30038706b949"}
+---PS---
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'ps aux | grep bm398e_trim | grep -v grep | head -3; echo "PSCHECK_DONE"; cd ~/tree && mkdir -p artifacts/claude-bm398e-20260926/spans && BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc && setsid nohup bash -c "export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; python3 -B scripts/claude_bm398e_trim.py spans --made artifacts/claude-bm398e-20260926/inputs/made.json --replies artifacts/claude-bm398e-20260926/inputs/drafts.jsonl --model $BASE --out artifacts/claude-bm398e-20260926/spans/spans_made.jsonl" > ~/lane1.log 2>&1 < /dev/null & echo LANE1_PID=$!; setsid nohup bash -c "export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; python3 -B scripts/claude_bm398e_trim.py spans --data /root/bmdata --replies artifacts/claude-bm390-20260925/run2/locomo_T.jsonl --model $BASE --out artifacts/claude-bm398e-20260926/spans/spans_T.jsonl" > ~/lane2.log 2>&1 < /dev/null & echo LANE2_PID=$!; date -u' 2>&1 | grep -v "vast.ai\|Have fun"
+PSCHECK_DONE
+LANE1_PID=691
+LANE2_PID=692
+Sat Sep 26 17:51:38 UTC 2026
+[0m
+[0m$ [0msleep 240; ssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'echo "===LANE1==="; tail -5 ~/lane1.log; echo "===LANE2==="; tail -5 ~/lane2.log; echo "===PS==="; ps aux | grep bm398e_trim | grep -v grep | awk "{print \$2, \$3\"%\", \$10, substr(\$0, index(\$0,\$11), 80)}"; date -u' 2>&1 | grep -v "vast.ai\|Have fun"
+===LANE1===
+[bm398e] spans 250 seconds=30
+[bm398e] spans 300 seconds=35
+[bm398e] spans 350 seconds=39
+[bm398e] spans 400 seconds=43
+[bm398e] spans done 432 new seconds=46
+===LANE2===
+python3: can't open file '/root/scripts/claude_bm398e_trim.py': [Errno 2] No such file or directory
+===PS===
+Sat Sep 26 17:56:30 UTC 2026
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'cd ~/tree && ps aux | grep "spans --data" | grep -v grep | head -2; echo PSCHECK_DONE; BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc; setsid nohup bash -c "cd /root/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; python3 -B scripts/claude_bm398e_trim.py spans --data /root/bmdata --replies artifacts/claude-bm390-20260925/run2/locomo_T.jsonl --model $BASE --out artifacts/claude-bm398e-20260926/spans/spans_T.jsonl" > ~/lane2.log 2>&1 < /dev/null & echo RELAUNCHED; date -u' 2>&1 | grep -v "vast.ai\|Have fun"
+PSCHECK_DONE
+RELAUNCHED
+Sat Sep 26 17:56:42 UTC 2026
+[0m
+[0m$ [0msleep 120; ssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'echo "===LANE2==="; tail -8 ~/lane2.log; echo "===PS==="; ps aux | grep bm398e_trim | grep -v grep | head -3; date -u' 2>&1 | grep -v "vast.ai\|Have fun"
+===LANE2===
+[bm398e] spans 250 seconds=53
+[bm398e] spans 300 seconds=61
+[bm398e] spans 350 seconds=70
+[bm398e] spans 400 seconds=80
+[bm398e] spans 450 seconds=90
+[bm398e] spans 500 seconds=100
+[bm398e] spans 550 seconds=107
+[bm398e] spans 600 seconds=117
+===PS===
+root         752 99.9  1.0 23392824 1480588 ?    Rsl  17:56   2:02 python3 -B scripts/claude_bm398e_trim.py spans --data /root/bmdata --replies artifacts/claude-bm390-20260925/run2/locomo_T.jsonl --model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out artifacts/claude-bm398e-20260926/spans/spans_T.jsonl
+Sat Sep 26 17:58:45 UTC 2026
+[0m
+[0m$ [0msleep 240; ssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'echo "===LANE2==="; tail -6 ~/lane2.log; echo "===PS==="; ps aux | grep bm398e_trim | grep -v grep | head -3; echo "===OUT==="; ls -la ~/tree/artifacts/claude-bm398e-20260926/spans/; date -u' 2>&1 | grep -v "vast.ai\|Have fun"
+===LANE2===
+[bm398e] spans 1300 seconds=239
+[bm398e] spans 1350 seconds=245
+[bm398e] spans 1400 seconds=255
+[bm398e] spans 1450 seconds=262
+[bm398e] spans 1500 seconds=272
+[bm398e] spans done 1540 new seconds=281
+===PS===
+===OUT===
+total 12476
+drwxr-xr-x 2 root root       51 Sep 26 17:56 .
+drwxrwxr-x 4 root root      144 Sep 26 17:51 ..
+-rw-r--r-- 1 root root 11264195 Sep 26 18:01 spans_T.jsonl
+-rw-r--r-- 1 root root  1506399 Sep 26 17:52 spans_made.jsonl
+Sat Sep 26 18:02:49 UTC 2026
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -p 29000 root@ssh5.vast.ai 'cd ~/tree/artifacts/claude-bm398e-20260926/spans && wc -l spans_made.jsonl spans_T.jsonl && sha256sum spans_made.jsonl spans_T.jsonl && gzip -9 -k spans_made.jsonl spans_T.jsonl && ls -la && sha256sum spans_made.jsonl.gz spans_T.jsonl.gz && stat -c "%y %n" spans_made.jsonl spans_T.jsonl; echo "===LANE1-TAIL==="; tail -2 ~/lane1.log; echo "===LANE2-TAIL==="; tail -2 ~/lane2.log; nvidia-smi --query-gpu=memory.used,memory.total --format=csv' 2>&1 | grep -v "vast.ai\|Have fun"
+432 spans_made.jsonl
+    1540 spans_T.jsonl
+    1972 total
+f045117ad6a4689c9c24c8ca32996c3a50752358de988c03f687c14b78927843  spans_made.jsonl
+59e1fe2460da023daffb199d9a27bfeae90bba569913fa19998f22e4b61beeaf  spans_T.jsonl
+total 13940
+drwxr-xr-x 2 root root      102 Sep 26 18:02 .
+drwxrwxr-x 4 root root      144 Sep 26 17:51 ..
+-rw-r--r-- 1 root root 11264195 Sep 26 18:01 spans_T.jsonl
+-rw-r--r-- 1 root root  1318109 Sep 26 18:01 spans_T.jsonl.gz
+-rw-r--r-- 1 root root  1506399 Sep 26 17:52 spans_made.jsonl
+-rw-r--r-- 1 root root   176974 Sep 26 17:52 spans_made.jsonl.gz
+e25ab892fb1905938b04d39b2ac7c1930d7c9054dfccbc9b8d3546466bfa7e9b  spans_made.jsonl.gz
+3d15791a0795c075b65fe29a98fcd465b60877778fb8eb1c355d6070fbb996da  spans_T.jsonl.gz
+2026-09-26 17:52:24.919174671 +0000 spans_made.jsonl
+2026-09-26 18:01:23.515511249 +0000 spans_T.jsonl
+===LANE1-TAIL===
+[bm398e] spans 400 seconds=43
+[bm398e] spans done 432 new seconds=46
+===LANE2-TAIL===
+[bm398e] spans 1500 seconds=272
+[bm398e] spans done 1540 new seconds=281
+memory.used [MiB], memory.total [MiB]
+1 MiB, 24564 MiB
+[0m
+[0m$ [0mpwd; git status --short | head; ls artifacts/claude-bm398e-20260926/ 2>&1; ls artifacts/claude-bm398e-20260926/spans/ 2>&1
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+ls: artifacts/claude-bm398e-20260926/: No such file or directory
+ls: artifacts/claude-bm398e-20260926/spans/: No such file or directory
+[0m
+[0m$ [0mmkdir -p artifacts/claude-bm398e-20260926/spans && scp -P 29000 root@ssh5.vast.ai:'~/tree/artifacts/claude-bm398e-20260926/spans/spans_made.jsonl.gz ~/tree/artifacts/claude-bm398e-20260926/spans/spans_T.jsonl.gz' artifacts/claude-bm398e-20260926/spans/ 2>&1 | grep -v "vast.ai\|Have fun"; ls -la artifacts/claude-bm398e-20260926/spans/; sha256sum artifacts/claude-bm398e-20260926/spans/*.gz
+scp: ~/tree/artifacts/claude-bm398e-20260926/spans/spans_made.jsonl.gz ~/tree/artifacts/claude-bm398e-20260926/spans/spans_T.jsonl.gz: No such file or directory
+total 0
+drwxr-xr-x  2 ben-hannan  staff  64 Sep 26 14:03 .
+drwxr-xr-x  3 ben-hannan  staff  96 Sep 26 14:03 ..
+zsh:1: no matches found: artifacts/claude-bm398e-20260926/spans/*.gz
+[0m
+[0m$ [0mscp -P 29000 root@ssh5.vast.ai:tree/artifacts/claude-bm398e-20260926/spans/spans_made.jsonl.gz artifacts/claude-bm398e-20260926/spans/ 2>&1 | grep -v "vast.ai\|Have fun"; scp -P 29000 root@ssh5.vast.ai:tree/artifacts/claude-bm398e-20260926/spans/spans_T.jsonl.gz artifacts/claude-bm398e-20260926/spans/ 2>&1 | grep -v "vast.ai\|Have fun"; ls -la artifacts/claude-bm398e-20260926/spans/; sha256sum artifacts/claude-bm398e-20260926/spans/spans_made.jsonl.gz artifacts/claude-bm398e-20260926/spans/spans_T.jsonl.gz
+total 4952
+drwxr-xr-x  4 ben-hannan  staff      128 Sep 26 14:03 .
+drwxr-xr-x  3 ben-hannan  staff       96 Sep 26 14:03 ..
+-rw-r--r--  1 ben-hannan  staff   176974 Sep 26 14:03 spans_made.jsonl.gz
+-rw-r--r--  1 ben-hannan  staff  1318109 Sep 26 14:03 spans_T.jsonl.gz
+e25ab892fb1905938b04d39b2ac7c1930d7c9054dfccbc9b8d3546466bfa7e9b  artifacts/claude-bm398e-20260926/spans/spans_made.jsonl.gz
+3d15791a0795c075b65fe29a98fcd465b60877778fb8eb1c355d6070fbb996da  artifacts/claude-bm398e-20260926/spans/spans_T.jsonl.gz
+[0m
+[0m$ [0mvastai destroy instance 52789000 2>&1 | tail -3; sleep 10; date -u; vastai show instances --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+try:
+  insts=json.loads(raw)
+  mine=[i for i in insts if 'bm398e' in (i.get('label') or '')]
+  print('BM398E-LIVE:',len(mine))
+  for i in mine: print(i.get('id'),i.get('label'),i.get('actual_status'))
+except Exception as e:
+  print('PARSE:',e); print(raw[:1500])
+"
+Are you sure you want to destroy instance 52789000? This is irreversible and will delete all data. [y/N] 
+Aborted.
+Sat Sep 26 18:03:40 UTC 2026
+BM398E-LIVE: 1
+52789000 claude-benchmarks-bm398e running
+[0m
+[0m$ [0mecho y | vastai destroy instance 52789000 2>&1 | tail -3; sleep 15; date -u; vastai show instances --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+try:
+  insts=json.loads(raw)
+  mine=[i for i in insts if 'bm398e' in (i.get('label') or '')]
+  print('BM398E-LIVE:',len(mine))
+  for i in mine: print(i.get('id'),i.get('label'),i.get('actual_status'))
+except Exception as e:
+  print('PARSE:',e); print(raw[:1500])
+"
+Are you sure you want to destroy instance 52789000? This is irreversible and will delete all data. [y/N] destroying instance 52789000.
+Sat Sep 26 18:03:59 UTC 2026
+BM398E-LIVE: 0
+[0m
+[0m$ [0mls -la artifacts/fable-predictions-ledger.md 2>&1; tail -5 artifacts/fable-predictions-ledger.md 2>&1; python3 -c "print(round(1693/3600*0.35111111111111115,4))"
+-rw-r--r--  1 ben-hannan  staff  710030 Sep 26 13:38 artifacts/fable-predictions-ledger.md
+- 2026-09-26 17:12 UTC claude-fixsleep-dl5 FAIL (label claude-fixsleep-dl5, origin/main code unmodified, selftests pass, never edited): rentals 1 (52770457, RTX 5090 dph $0.4361, docker-proxy pull refusal, destroyed un-run, ~$0.04) + 2 (52771192, RTX 5090 South Korea, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 30, torch 2.8.0+cu128 transformers 5.17.0 pip-installed, ~15:35-17:11Z ~1.60h x dph $0.4806 ~$0.77); task total ~$0.81 of $1.60. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc. Run 87.7 min wall, 25 arm-nights + base, exit 0. Marks: G1 PASS (S final 93.8/93.4 pts vs night0 48.8), G2 PASS (P final 6.6/7.2), G2b PASS (open S 67.8/65.0 vs P 35.0/38.5), G3 FAIL (S lost 98/61 > 20); verdict FAIL, not INCONCLUSIVE (S night-1 rows 1144/925), not proved wrong (open S 97/93 > P 50/55). S days solved s8 101/103/105/107/113, s9 85/101/92/101/104 of 150; P legal-wrong s8 224/247/260/269/269, s9 182/236/242/250/272; K s8 right 705/715/705/715/706; test-in-day 0. Adapters local only (16,575,557 B each, sha c74b1783/s8 5352be44/s9, 192 tensors). Copy-back 6 files sha-verified, rental destroyed, 0 claude-fixsleep-dl5 live. Credit at gate 8.60 (balance 0). Deviations: rental-1 host pull failure; pip-installed transformers 5.17.0 + huggingface_hub (transformers dep) for snapshot download; first ssh foreground command ran in /root not dl5 (harmless, reran). See artifacts/claude-dl5-20260926/RESULTS-gpu.md + gpu/.
+- 2026-09-26 17:17 UTC rent-brd9 actual ~$0.63 of $0.90 (Creative): rental 52775111 RTX 5090 ~70.7 min @ dph $0.4944 (~$0.58) + unreachable first host 52774555 destroyed (~$0.05). brd-9 registered run PASS MET (N3-base +43/+39/+35 vs bar 28.8, CI [+10.56,+21.81]); G7 met; NIGHTS not met (seed2 +9 vs +12); transfer seen (N3-base CI [+18.14,+40.08]). Script wall 46.7 min, model commit 87179e5c1f455ef22e6223592d2d61351b525bfc. No weights saved.
+- 2026-09-26 17:25 UTC rd-378u GPU CONFIRM (label claude-notes-rd378u, sealed origin/main code COMMIT c4f1bfca91fec9c299e18b10c0fd501ce54bb56b, SEAL.sha256.txt 13/13 OK, 4 selftests PASS, code never edited): rental 1 (52779987, offer 39904635, RTX 5090, image pytorch/pytorch disk 80, torch 2.11.0+cu128 torchvision/torchaudio removed transformers 5.17.0 peft 0.21.0) ran 16:38:31-17:24:54Z ~0.773h x dph $0.5037 = ~$0.39 of $0.80; 1 rental of max 3. BASE openbmb/MiniCPM5-1B 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM path exact. Writer via on-rental rebuild (adapter BensPC->rental, 6/6 hashes match, no Mac copy), merged sha dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510 exit 0 match true; Mac fallback unused. DATA locomo10.json 79fa87e9 match (pyarrow MMLU fail, immaterial). Dialogs 5-9 {"turns": 3122}. WRITE "wrote notes for 3122 turns on cuda" ~16.4 min (2866 notes, 16 unparsed, median 319.2 ms p90 595.8 ms). SCORE cats 1-4 n=772: A any@10 489 (63.3%), B any@10 585 (75.8%), diff +12.4; per-cat diffs c1 +7.9 c2 +10.4 c3 +22.2 c4 +13.7; lines@10 both 7720, B via_note@10 6297. VERDICT PASS (U1 and U2 pass; proved-wrong not triggered). Copy-back 5 files sha-verified both ends, rental destroyed, 0 claude-notes-rd378u live. Credit at gate 7.912477276269769. See artifacts/claude-rd378u-20260926/RESULTS.md + notes_confirm.json + ranked_turns.jsonl.
+- 2026-09-26 17:31 UTC rent-mu404b RUN-COMPLETE (label claude-madeup-mu404b, sealed origin/main code, never edited): rental 1 (52775913, offer 45669449 host 406325 mu-402 sibling class, RTX 5090 rel 0.9975, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 80, torch 2.8.0+cu128, ~16:11-17:30Z ~1.33h x dph $0.5037 ~$0.67 of $0.87). BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, reader /root/reader319 sha e688e1b2...776a76 match, mu403 SEAL 14/14, SEAL-code 336/336, selftests 5/5 13/13 9/9. Four arms 80/80 convs each, exit 0, rows 446/arm, wall ~13 min T / ~23 min R/F/P, median ms/turn R 2094.8 F 2133.7 P 2157.0 T 1774.0; facts R 318/34/36/0 F 318/34/36/34 P 318/34/36/0. Copy-back 9 files sha-verified, rental destroyed, 0 claude-madeup-mu404b live. Credit at gate 5.094352626269782 (balance 0). Deviations: task tree list omitted fable-nameval171 (streamed extra, seal-verified); first launch misfire relaunched clean (one complete run/arm); vastai dir-copy failed on 2.1GB file, single-file copy + dir swap fixed; depot untouched. See artifacts/claude-mu403-20260926/RESULTS-rent.md + run/.
+- 2026-09-26 17:40 UTC rent-zdl6b BUDGET-STOP (label claude-fixsleep-dl6b, origin/main de083cd30c code never edited, selftest ok): 1 rental (52778152, offer 45669547 RTX 5090 KR rel 0.9980, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 40, torch 2.8.0+cu128 transformers 5.17.0 pip-installed; proxy-fail offers 43165145/46753301 and stuck offer 43982861 skipped). BASE openbmb/MiniCPM5-1B 87179e5c1f455ef22e6223592d2d61351b525bfc (2.1 GB snapshot, same files as dl-2). Run launched detached 16:30:31Z, first "[dl6] S s10 night 1" ~16:35 (no TOO-SLOW). Killed by exact PID at $0.57 line (70.8 min x dph $0.4852 = $0.573) during L s11 night 6; task total ~$0.59 of $0.60. Partial: base lucky 75 reached 35 greedy 7 harm 200/300; S s10 n7 lucky 198 lost 25, S s11 n7 lucky 237 lost 27, L s10 n7 lucky 140 reached 50 lost 13 (json, 21 nights); log adds L s11 n1-6 (lucky 100/135/151/120/125/115, lost 3/4/6/4/7/7); L s11 n7 never ran, marks never computed, no verdict. Copy-back partial json+log, rental destroyed, 0 claude-fixsleep-dl6b live. Credit at gate 9.01 (balance 0), 8.93 at re-check. See artifacts/claude-dl6-20260926/RESULTS-gpu.md + gpu/ (partial).
+0.1651
+[0m
+[0m← [0mWrite artifacts/claude-bm398e-20260926/RESULTS-rent.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md << 'EOF'
+- 2026-09-26 18:05 UTC rent-bm398e SPANS-COMPLETE (label claude-benchmarks-bm398e, sealed origin/main code never edited): 1 rental (52789000, offer 45996848, RTX 4090 24GB, image pytorch/pytorch disk 80, torch upgraded 2.2.1->2.11.0+cu130 per kit TORCH UPGRADE, torchvision/torchaudio removed, transformers 5.17.0, pyarrow + nltk pip-installed for sealed imports, Python 3.10.13). Created 17:35:42Z, running 17:40:07Z (6-min rule met), destroyed ~18:03:55Z; ~0.470h x dph $0.35111111 = ~$0.17 of $0.35. BASE openbmb/MiniCPM5-1B 87179e5c1f455ef22e6223592d2d61351b525bfc. SEAL 10/10 OK, SEAL-amend1 3/3 OK, selftest 8/8 PASS, T sha256 35bdf151 match. Fetch OK locomo_qa 1986. Lane1 spans_made 432 rows done seconds=46 (17:51:38-17:52:24Z) sha f045117a; lane2 spans_T 1540 rows done seconds=281 (relaunched 17:56:42-18:01:23Z after cwd-misfire crash, zero rows first try) sha 59e1fe24. Copy-back 2 .gz files (176974 B sha e25ab892; 1318109 B sha 3d15791a) size+sha verified both ends, rental destroyed, 0 claude-benchmarks-bm398e live. Credit at gate 4.582765401269754. Deviations: torch upgrade; nltk install; lane2 relaunch; exit codes/peak-GPU-mem not captured (end times from mtimes x-checked vs log seconds). No fit/score/judge here. See artifacts/claude-bm398e-20260926/RESULTS-rent.md + spans/.
+EOF
+tail -2 artifacts/fable-predictions-ledger.md | cut -c1-200; echo "..."; git status --short | grep bm398e
+- 2026-09-26 17:40 UTC rent-zdl6b BUDGET-STOP (label claude-fixsleep-dl6b, origin/main de083cd30c code never edited, selftest ok): 1 rental (52778152, offer 45669547 RTX 5090 KR rel 0.9980, image pyto
+- 2026-09-26 18:05 UTC rent-bm398e SPANS-COMPLETE (label claude-benchmarks-bm398e, sealed origin/main code never edited): 1 rental (52789000, offer 45996848, RTX 4090 24GB, image pytorch/pytorch disk 
+...
+[0m
+[0m$ [0mgit status --short | head -20; echo "---"; ls -la artifacts/claude-bm398e-20260926/ artifacts/claude-bm398e-20260926/spans/
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/train398r.json
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+---
+artifacts/claude-bm398e-20260926/:
+total 16
+drwxr-xr-x    4 ben-hannan  staff    128 Sep 26 14:04 .
+drwxr-xr-x@ 577 ben-hannan  staff  18464 Sep 26 14:03 ..
+-rw-r--r--    1 ben-hannan  staff   8107 Sep 26 14:04 RESULTS-rent.md
+drwxr-xr-x    4 ben-hannan  staff    128 Sep 26 14:03 spans
+
+artifacts/claude-bm398e-20260926/spans/:
+total 2928
+drwxr-xr-x  4 ben-hannan  staff      128 Sep 26 14:03 .
+drwxr-xr-x  4 ben-hannan  staff      128 Sep 26 14:04 ..
+-rw-r--r--  1 ben-hannan  staff   176974 Sep 26 14:03 spans_made.jsonl.gz
+-rw-r--r--  1 ben-hannan  staff  1318109 Sep 26 14:03 spans_T.jsonl.gz
+[0m
