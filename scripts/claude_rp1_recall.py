@@ -5,9 +5,13 @@ sealed before any bank E run.
 
 Brain idea (hippocampus): keep every experience as a pointer to the raw episode, and handle doubt at recall. The
 recall path R = every earlier user turn kept raw, read by the plain MiniCPM5-1B in y1f's L1 layout (bm-390's LoCoMo
-reading layout), one greedy answer through y1f's checks, then y1g's winning doubt step (claude_y1g_doubt.DOUBT_RP1 is
-fixed in PASSMARKS.md; here --doubt). Rivals get the same messages, greedy, thinking off, 200 new tokens, the same trim:
-  R   MiniCPM5-1B + checks + doubt step              M   plain MiniCPM5-1B (R's first answer, unchecked)
+reading layout), one greedy answer through y1f's checks, then the doubt step that passed on DEV (fixed in
+PASSMARKS.md; here --doubt, and --recall / --judge for a trained model):
+  --doubt C3 | C4 | V          y1g's configs on the plain 1B
+  --doubt A1 --recall DIR      y1t: one checked greedy answer from the trained model (merged y1t adapter)
+  --doubt V --judge DIR        y1v: the plain 1B's checked answer, kept only if the trained judge says yes
+Rivals get the same messages, greedy, thinking off, 200 new tokens, the same trim:
+  R   MiniCPM5-1B recall path + doubt step           M   plain MiniCPM5-1B (its first answer, unchecked)
   Q   plain Qwen3.5-2B                               L   plain LFM2.5-1.2B-Instruct
   Mi, Qi, Li  the same three in y1f's L1i layout (L1 plus 'If the conversations do not say, answer "I don't know."')
   report only: M1 = R without the doubt step; Mb = plain MiniCPM5-1B through bm-390's loader (harness check)
@@ -17,8 +21,8 @@ private folders, a fresh third on splits. marks applies PASSMARKS.md by script (
 ahead of every rival at <= 5% one-sided chance for an equal build, by a life-level sign-flip test).
 
   python -B scripts/claude_rp1_recall.py run --bank BANK --minicpm DIR --qwen DIR --lfm DIR --doubt C3 --out OUT
-      [--seed 4025] [--limit N]            OUT/rp1_rows.jsonl (never printed), OUT/rp1_summary.json,
-                                           OUT/score/judge_asks_<arm>.jsonl; prints counts only
+      [--recall DIR | --judge DIR] [--seed 4025] [--limit N]
+      -> OUT/rp1_rows.jsonl (never printed), OUT/rp1_summary.json, OUT/score/judge_asks_<arm>.jsonl; prints counts only
   python -B scripts/claude_rp1_recall.py prep --bank BANK --score OUT/score --out JUDGEDIR   key at JUDGEDIR/../rp1_key.json
   python -B scripts/claude_rp1_recall.py splits --out JUDGEDIR
   python -B scripts/claude_rp1_recall.py score --key KEY --out JUDGEDIR       -> JUDGEDIR/../rp1_judged.json
@@ -97,11 +101,13 @@ class Rival:
         return B.generate(self.dir, msgs[0]["content"], msgs[1]["content"], MAX_NEW)[0]
 
 
-def replies(gen, rivals: dict, text: str, rows: list[dict], doubt: str) -> tuple[dict, dict]:
-    """Every arm's reply for one ask. gen = MiniCPM5-1B (Y.Gen); rivals = {"Q": .., "L": .., "Mb": ..}."""
+def replies(gen, rivals: dict, text: str, rows: list[dict], doubt: str, rgen=None) -> tuple[dict, dict]:
+    """Every arm's reply for one ask. gen = plain MiniCPM5-1B (Y.Gen); rivals = {"Q": .., "L": .., "Mb": ..};
+    rgen = R's model when it is not the plain 1B (the y1t model, or y1v's Routed plain answerer + judge)."""
     import claude_chat338_agent as C38
     a = G.answer_all(gen, text, rows)
-    rep = {"R": a[doubt], "M": a["A0"] if rows else C38.trim(gen.greedy_chat(F.messages("L1", text, rows))),
+    r = a if rgen is None else G.answer_all(rgen, text, rows)
+    rep = {"R": r[doubt], "M": a["A0"] if rows else C38.trim(gen.greedy_chat(F.messages("L1", text, rows))),
            "M1": a["A1"]}
     l1, l1i = F.messages("L1", text, rows), F.messages("L1i", text, rows)
     rep["Mi"] = C38.trim(gen.greedy_chat(l1i))
@@ -109,13 +115,14 @@ def replies(gen, rivals: dict, text: str, rows: list[dict], doubt: str) -> tuple
         rep[k] = C38.trim(rivals[k].greedy_chat(l1))
         rep[k + "i"] = C38.trim(rivals[k].greedy_chat(l1i))
     rep["Mb"] = C38.trim(rivals["Mb"].greedy_chat(l1))
-    return rep, {"agree": a["agree"], "verify": a["verify"], "fail_a1": a["fail_a1"]}
+    return rep, {"agree": r["agree"], "verify": r["verify"], "fail_a1": r["fail_a1"]}
 
 
-def run(gen, rivals: dict, bank: str, doubt: str, seed: int, out: Path, limit: int = 0, log=print) -> dict:
+def run(gen, rivals: dict, bank: str, doubt: str, seed: int, out: Path, limit: int = 0, log=print,
+        rgen=None) -> dict:
     import claude_e2e336_score as S
-    if doubt not in ("C3", "C4", "V"):
-        raise SystemExit("--doubt must be C3, C4 or V")
+    if not ((rgen is None and doubt in ("C3", "C4", "V")) or (rgen is not None and doubt in ("A1", "V"))):
+        raise SystemExit("--doubt must be C3, C4 or V, A1 with --recall, or V with --judge")
     turns = load(Path(bank) / "turns.jsonl")
     lives = defaultdict(list)
     for t in turns:
@@ -137,7 +144,7 @@ def run(gen, rivals: dict, bank: str, doubt: str, seed: int, out: Path, limit: i
             no_rows += not rows
             Y._seed(seed + 100 * k_ask)
             t0 = time.time()
-            rep, info = replies(gen, rivals, t["user_text"], rows, doubt)
+            rep, info = replies(gen, rivals, t["user_text"], rows, doubt, rgen)
             labels = {arm: S.score_ask(t, {"reply": rep[arm]}, None) for arm in JUDGED_ARMS + REPORT_ARMS}
             row = {"life_id": life_id, "turn_index": t["turn_index"], "ask_type": t["ask_type"],
                    "gold_type": t["gold"]["type"], "n_rows": len(rows), "seed": seed + 100 * k_ask,
@@ -153,7 +160,8 @@ def run(gen, rivals: dict, bank: str, doubt: str, seed: int, out: Path, limit: i
         (out / "score" / f"judge_asks_{arm}.jsonl").write_text(
             "".join(json.dumps(x, ensure_ascii=False) + "\n" for x in items), encoding="utf-8")
     summ = counts(load(rows_path))
-    summ |= {"bank": bank, "doubt": doubt, "seed": seed, "asks": k_ask, "asks_without_rows": no_rows,
+    summ |= {"bank": bank, "doubt": doubt, "r_model": "plain" if rgen is None else type(rgen).__name__,
+             "seed": seed, "asks": k_ask, "asks_without_rows": no_rows,
              "minutes": round((time.time() - t_all) / 60, 1)}
     (out / "rp1_summary.json").write_text(json.dumps(summ, indent=1), encoding="utf-8")
     return summ
@@ -348,6 +356,13 @@ class _FakeRival:
         return (caps[0] + ".") if caps else "Pim."
 
 
+class _Shy(G._FakeGen):
+    """A recall model that always says it doesn't know."""
+
+    def greedy_chat(self, msgs):
+        return Y.FALLBACK
+
+
 def selftest() -> None:
     bank = SCRIPTS.parent / Y.BANK
     riv = {"Q": _FakeRival(True), "L": _FakeRival(False), "Mb": _FakeRival(True)}
@@ -385,6 +400,24 @@ def selftest() -> None:
         assert set(m["rivals"]) == set(RIVALS) and m["verdict"] in ("PASS", "FAIL")
         for a in JUDGED_ARMS:
             assert m["net"][a] == m["answerable_right"][a] - m["wrong_as_fact"][a], (a, m)
+    # the two trained routes: y1t (R = the recall model's A1) and y1v (R = plain A1 kept by the judge)
+    import claude_y1v_judge as V
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        s1 = run(G._FakeGen(), riv, str(bank), "A1", 4025, d / "t", limit=12, log=lambda s: None, rgen=_Shy())
+        r1 = load(d / "t/rp1_rows.jsonl")
+        assert s1["r_model"] == "_Shy" and all(r["reply"]["R"] == Y.FALLBACK for r in r1)
+        assert any(r["reply"]["M1"] != Y.FALLBACK for r in r1)
+        s2 = run(G._FakeGen(), riv, str(bank), "V", 4025, d / "v", limit=12, log=lambda s: None,
+                 rgen=V.Routed(G._FakeGen(), V._Judge()))
+        r2 = load(d / "v/rp1_rows.jsonl")
+        assert s2["r_model"] == "Routed" and all(r["reply"]["R"] in (r["reply"]["M1"], Y.FALLBACK) for r in r2)
+        for bad in (("A1", None), ("C3", _Shy())):
+            try:
+                run(G._FakeGen(), riv, str(bank), bad[0], 4025, d / "x", limit=1, log=lambda s: None, rgen=bad[1])
+                raise AssertionError("bad --doubt not caught")
+            except SystemExit:
+                pass
     # marks on hand-made rows: R answers 30 right, 0 wrong; M 40 right, 40 wrong
     rows, judged = [], {}
     for i in range(80):
@@ -423,6 +456,8 @@ def main() -> None:
     r = sub.add_parser("run")
     for k in ("--bank", "--minicpm", "--qwen", "--lfm", "--doubt", "--out"):
         r.add_argument(k, required=True)
+    r.add_argument("--recall", default="")
+    r.add_argument("--judge", default="")
     r.add_argument("--seed", type=int, default=4025)
     r.add_argument("--limit", type=int, default=0)
     p = sub.add_parser("prep")
@@ -438,9 +473,18 @@ def main() -> None:
     m.add_argument("--judged", required=True)
     a = ap.parse_args()
     if a.cmd == "run":
+        if (a.recall and a.doubt != "A1") or (a.judge and a.doubt != "V") or (a.doubt == "A1" and not a.recall):
+            raise SystemExit("--recall goes with --doubt A1 and --judge with --doubt V (one change at a time)")
         riv = {"Q": Rival(a.qwen), "L": Rival(a.lfm), "Mb": Rival(a.minicpm)}
-        summ = run(Y.Gen(a.minicpm), riv, a.bank, a.doubt, a.seed, Path(a.out), a.limit,
-                   log=lambda s: print(s, flush=True))
+        gen = Y.Gen(a.minicpm)
+        rgen = None
+        if a.recall:
+            rgen = Y.Gen(a.recall)
+        elif a.judge:
+            import claude_y1v_judge as V
+            rgen = V.Routed(gen, Y.Gen(a.judge))
+        summ = run(gen, riv, a.bank, a.doubt, a.seed, Path(a.out), a.limit,
+                   log=lambda s: print(s, flush=True), rgen=rgen)
         print(json.dumps({k: summ[k] for k in ("asks", "answerable", "never_told", "answerable_right",
                                                 "never_told_idk", "wrong_candidates", "M_equals_Mb", "R_kept",
                                                 "minutes")}, sort_keys=True), flush=True)
