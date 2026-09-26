@@ -1,0 +1,1302 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git branch -a | head -n 30; git log --oneline -5 origin/main 2>&1 | head
+error: cannot lock ref 'refs/remotes/origin/builder-outbox': is at 097b5b1ffa0801bf6bf2230b2a74b046a3937f31 but expected d2d82e42a25fa350e9504d7d7e124127b83b4be3
+FETCH_EXIT:1
+* claude/card-experiment-handoff-7c5b27
++ claude/fact-saving-note-filtering-4ff1ff
++ claude/forgetting-plain-english-gap-9258f0
++ claude/locomo-length-penalty-408e2a
++ claude/loop-net-generalization-analysis-729ee3
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/pull-from-main-629dc4
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
+  codex/testing-experiment-44
++ main
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+3b5a16a6f rent-rd378L: DISK 3 (Director: headroom for the Mac-copy fallback)
+690d2a452 queue: release rent-y1d ($0.40 Answering from memory)
+9ae8e119f y1d: memory-answer loss diagnosis on DEV (free notebook split + sealed 1B raw-turn reading test, rental job held for the Director)
+e7f6b7d7a ledger: rent-358i two budget lines
+49ab94a20 watcher: rent-*/000-* jobs may use up to 10 slots; local jobs keep MAX
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo MAIN_EXIT:$?; git fetch -q origin builder-outbox:refs/remotes/origin/builder-outbox 2>&1 || git fetch origin builder-outbox 2>&1 | head -n 20; echo OUTBOX_EXIT:$?; git log --oneline -3 origin/main; git log --oneline -3 origin/builder-outbox 2>&1 | head
+MAIN_EXIT:0
+OUTBOX_EXIT:0
+3b5a16a6f rent-rd378L: DISK 3 (Director: headroom for the Mac-copy fallback)
+690d2a452 queue: release rent-y1d ($0.40 Answering from memory)
+9ae8e119f y1d: memory-answer loss diagnosis on DEV (free notebook split + sealed 1B raw-turn reading test, rental job held for the Director)
+097b5b1ff watcher status
+2aefa1829 watcher status
+161e9a61b builder results: rent-zdl4
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 30; echo "===END302==="; git show origin/main:design/v3/30-modes/330-rent-kit.md 2>&1 | head -n 500
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+===END302===
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+# MAC DISK (09-26): never stage the full tree or a tree.tgz on the Mac (that took ~3 GB and filled it).
+# Stream only the paths your task needs straight to the target, then delete nothing else:
+git archive origin/builder-outbox <paths> | ssh <target> 'mkdir -p ~/tree && tar -x -C ~/tree'
+git archive origin/main <paths> | ssh <target> 'tar -x -C ~/tree'          # main on top: main wins
+scp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt <target>:tree/artifacts/fable-self122-20260922/   # only if needed
+```
+For BensPC use its ssh host in place of <target>. If you truly must stage on the Mac, use one mktemp dir and
+remove it by exact path before you finish. Put `DISK: <GB>` in the job header (peak Mac use; default 3 for rent-*).
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+- LABELS (Director 13:33 UTC 2026-09-26): Ben's own agents share this vast account and one destroyed a rental it thought was its own. Every rental label starts with `claude-<thread>-<job>` (e.g. claude-fixsleep-dl4, claude-reading-lis319f). Never destroy an instance whose label your task did not create.
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+(tree already streamed to ~/tree; scp READER only if needed); cd ~/tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 13 | cat -A | head -n 13; echo "---LINES---"; git show origin/main:handoff/queue/lis-302-gpu.md | head -n 13
+echo "===PLAN==="; git show origin/main:artifacts/claude-y1d-20260926/PLAN.md
+echo "===DOCSTRING==="; git show origin/main:scripts/claude_y1d_readchat.py | head -n 200
+cat: illegal option -- A
+usage: cat [-belnstuv] [file ...]
+---LINES---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+===PLAN===
+# y1d: where are memory answers lost? (Answering-from-memory thread, 2026-09-26 ~14:00 UTC)
+
+Owner: the "Answering from memory" thread (row Y1 of 0.2c: answerable memory asks right, X 45 vs G 44 of 195;
+registered FAIL, stays a FAIL). This is a DIAGNOSIS on DEV data, not a registered change. Decision rules are fixed
+below before the GPU run; the one change they point to gets its own sealed marks afterwards.
+
+## Part 1 (done, free, CPU): notebook arms on the DEV bank
+Script: scripts/claude_y1d_savesplit.py over existing DEV runs (origin/builder-outbox). 56 answerable asks
+(gold type value/yes/no). "Saved" = the 336 scorer's rule (same owner and value in stored_triples at the ask row).
+
+| arm (DEV) | right (of 56) | asks with no cited fact saved | some saved | all saved | all saved but lost |
+|---|---:|---:|---:|---:|---:|
+| G (e2e330 dev arm_G, lis-301 stack) | 5 | 39 | 7 | 10 | 8 |
+| X02c (0.2c dev, lis-319 code with lis-301 weights: same D1 error as bank D) | 5 | 30 | 13 | 13 | 11 |
+| lisC (lis e2e dev) | 0 | 27 | 16 | 13 | 13 |
+
+Losses on the question side when every fact was saved (G, read on DEV): the question itself is read as a failed teach
+("I didn't understand that well enough to save it"), relation names differ (boss vs manager, partner vs fiance,
+occupation vs job), reversal asks are not inverted, and a two-hop ask stops after one hop ("Your father is Vaughn.").
+X02c also answers 17 of 56 answerable asks with a confirm question ("Just to check ..." / "I think you told me ...")
+that does not name the answer.
+
+Bank D (TEST-ONLY, counts only from origin/builder-outbox score/mechanical.json), answerable 195:
+X right 45, abstain 84, confirm-other 50, wrong-candidate 16; G right 44, abstain 98, confirm-other 36, wrong 17.
+ep-382's answer step (382b) only runs on an abstaining reply with no confirm open, so it can reach at most X's 84.
+T (plain twin, whole chat as a conversation) is degenerate on bank D (312 distinct replies of 658, one reply 41
+times) and on DEV (twin b answers "Hello! ... How can I assist you today?" to every ask), so T's 15 of 195 does not
+measure the 1B's reading.
+
+Shown: on DEV the notebook route loses answers both at the save (39 of 56 asks for G) and at the question
+(8 of the 10 fully saved asks for G). Untested: how well the 1B answers from the user's own words.
+
+## Part 2 (GPU, rental): the 1B reading raw turns (scripts/claude_y1d_readchat.py)
+ep-382's exact answer step (SYSTEM382, rows block, 4 samples at T 0.7 / top-p 0.9, 338 strict guard + G5,
+abstaining samples skipped, else "I don't know.") on every DEV ask (71), fed three row sets:
+gold (only the turns that taught the cited facts), all (every earlier user turn, in order), k20 (store v2 recall
+top 20 = what 382b's E arm sees). Plus one greedy answer per ask and condition with no guard. Scored by the 336
+scorer's score_ask. Seed 4021. No reader weights, no notebook.
+
+Let A_c = answerable right (of 56) with ep-382's step for condition c; G_nb = 5 (notebook G on DEV).
+
+## Decision rules (fixed before the run)
+- D1 reading: A_gold >= 28 -> the 1B can read these answers from the right turns. A_gold < 20 -> the 1B's reading
+  is the bottleneck; the next change is reading (row format or trained reading on its own graded drafts), not routing.
+- D2 finding: F = A_gold - A_all. F <= 5 -> finding costs little on bank-sized lives. F >= 10 -> finding is a loss
+  even on short lives; the next change is what goes into the rows.
+- D3 382b's input: A_k20 >= A_all - 3 -> the store's ranking costs nothing here.
+- D4 guard cost (report): asks right greedy but not right with the guarded step, per condition.
+- D5 honesty: never_told asks answered "don't know" under all and k20 (of 10), and answerable wrong-candidates.
+- Routing: if A_all >= 25 and never_told under all >= 8 of 10, the next single change is the trigger: memory
+  questions the notebook does not answer directly (an abstain OR a confirm question) go to ep-382's step over the
+  heard turns. Marks for that change are written and sealed before its own run.
+
+## Proved wrong
+"Reading the user's own words beats the notebook on DEV" is wrong if A_all <= 10 (twice the notebook's 5 or less).
+
+## Plain summary for Ben
+The assistant keeps a notebook of facts. On practice chats it answered only 5 of 56 memory questions. Two things go
+wrong: most facts never make it into the notebook, and even when a fact is there, the question often isn't
+understood. This test asks a simpler thing: if the small model just reads what you actually said, can it answer?
+We try it with only the right lines, with the whole chat, and with the 20 lines the memory search picks.
+===DOCSTRING===
+#!/usr/bin/env python3
+"""y1d: where are memory answers lost, finding or reading? (Answering-from-memory thread, 2026-09-26). New file.
+
+DEV data only (artifacts/claude-e2e331-dev-20260924, readable). No reader weights, no notebook: only the plain
+MiniCPM5-1B (thinking off) and, for condition k20, the ep-382 store (MiniLM + BM25). Diagnosis, not a change.
+
+Every ask in the dev bank is answered by ep-382's own answer step (scripts/claude_e2e382.py: SYSTEM382, the rows
+block, N382 = 4 samples at 338's temperature, 338's strict guard + G5, abstaining samples skipped, first pass wins,
+else the answer counts as "I don't know."), fed three different row sets:
+  gold  only the user turns that taught the facts the ask cites (truth.jsonl taught_turn); reading alone
+  all   every earlier user turn of the life, in order (a bank life is short, so finding is free)
+  k20   the ep-382 store v2's recall(query_of(text), k=20) over every earlier user turn (what 382b's E arm sees)
+Each condition is also answered once greedily with no guard (reading ceiling). Replies are scored by the 336
+scorer's score_ask (the registered rules). never_told asks have no gold rows, so gold skips them.
+
+  python -B scripts/claude_y1d_readchat.py --model BASE --out OUT [--conds gold,all,k20] [--seed 4021]
+  python -B scripts/claude_y1d_readchat.py --selftest
+Outputs: OUT/y1d_rows.jsonl (one line per ask x condition: replies, labels, guard fails), OUT/y1d_summary.json.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import shutil
+import sys
+import tempfile
+from collections import Counter, defaultdict
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+BANK = "artifacts/claude-e2e331-dev-20260924"
+ANSWERABLE = ("value", "yes", "no")
+FALLBACK = "I don't know."
+MAX_NEW_GREEDY = 200
+
+
+def load(p) -> list[dict]:
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def gold_rows(ask: dict, life_turns: dict, facts: dict) -> list[dict]:
+    """The user turns that taught the facts this ask cites, oldest first."""
+    idx = sorted({facts[f]["taught_turn"] for f in ask["gold"]["uses_facts"]})
+    return [{"id": i, "text": life_turns[i]["user_text"], "said_at": None} for i in idx]
+
+
+def all_rows(ask: dict, life: list[dict]) -> list[dict]:
+    return [{"id": t["turn_index"], "text": t["user_text"], "said_at": None}
+            for t in life if t["turn_index"] < ask["turn_index"]]
+
+
+def answer382(gen, text: str, rows: list[dict], n: int) -> tuple[str, list[str], str | None]:
+    """ep-382's answer step on the given rows: (reply, guard fails, picked sample or None)."""
+    import claude_chat338_agent as C38
+    import claude_e2e382 as E
+    if not rows:
+        return FALLBACK, ["no_rows"], None
+    known = C38._words([text] + [r["text"] for r in rows] + [r.get("said_at") or "" for r in rows])
+    msgs = [{"role": "system", "content": E.SYSTEM382 + "\n\n" + E._rows_block(rows)},
+            {"role": "user", "content": text}]
+    fails = []
+    for c in gen.sample_chat(msgs, n):
+        c = C38.trim(c)
+        g = C38.guard(c, text, known, strict=True) or ("G5" if E.g5_unsupported(c, known) else None)
+        if g is not None:
+            fails.append(g)
+            continue
+        if E.abstains(c):
+            fails.append("abstained")
+            continue
+        return c, fails, c
+    return FALLBACK, fails, None
+
+
+def greedy(gen, text: str, rows: list[dict]) -> str:
+    import claude_chat338_agent as C38
+    import claude_e2e382 as E
+    if not rows:
+        return FALLBACK
+    msgs = [{"role": "system", "content": E.SYSTEM382 + "\n\n" + E._rows_block(rows)},
+            {"role": "user", "content": text}]
+    return C38.trim(gen.greedy_chat(msgs))
+
+
+class Gen:
+    """338's chat sampling (Gen338 over Gen333: T 0.7, top-p 0.9, 200 new tokens, thinking off) plus greedy."""
+
+    def __init__(self, model_dir: str):
+        import claude_chat338_agent as C38
+        self.g338 = C38.Gen338(model_dir)
+        self.g = self.g338.g
+
+    def sample_chat(self, msgs, n):
+        return self.g338.sample_chat(msgs, n)
+
+    def greedy_chat(self, msgs) -> str:
+        g = self.g
+        ids = g.tok(self.g338._render(msgs), return_tensors="pt").to(g.dev)
+        with g.torch.no_grad():
+            out = g.model.generate(**ids, max_new_tokens=MAX_NEW_GREEDY, do_sample=False,
+                                   pad_token_id=g.tok.eos_token_id)
+        return g.tok.decode(out[0][ids["input_ids"].shape[1]:], skip_special_tokens=True).strip()
+
+
+def run(gen, bank: str, conds: list[str], n: int, seed: int, out: Path, store_mod=None, log=print) -> dict:
+    import claude_e2e336_score as S
+    import claude_e2e382 as E
+    turns = load(Path(bank) / "turns.jsonl")
+    facts = {f["fact_id"]: f for f in load(Path(bank) / "truth.jsonl")}
+    lives = defaultdict(list)
+    for t in turns:
+        lives[t["life_id"]].append(t)
+    out.mkdir(parents=True, exist_ok=True)
+    rows_path = out / "y1d_rows.jsonl"
+    rows_path.write_text("", encoding="utf-8")
+    tab = defaultdict(Counter)            # (cond, mode, ask_type) -> outcome counts
+    k_ask = 0
+    for life_id in sorted(lives):
+        life = sorted(lives[life_id], key=lambda t: t["turn_index"])
+        by_i = {t["turn_index"]: t for t in life}
+        store, tmp = None, None
+        if "k20" in conds:
+            tmp = tempfile.mkdtemp(prefix="y1d_")
+            store = store_mod.MemoryStore(tmp)
+        for t in life:
+            if t["kind"] == "ask":
+                k_ask += 1
+                typ = t["gold"]["type"]
+                for ci, cond in enumerate(conds):
+                    if cond == "gold":
+                        if typ == "idk":
+                            continue
+                        rows = gold_rows(t, by_i, facts)
+                    elif cond == "all":
+                        rows = all_rows(t, life)
+                    else:
+                        rows = store.recall(E.query_of(t["user_text"]), k=20)
+                    gen_seed = seed + 100 * k_ask + ci
+                    _seed(gen_seed)
+                    rep, fails, _ = answer382(gen, t["user_text"], rows, n)
+                    grd = greedy(gen, t["user_text"], rows)
+                    row_turns = [r["turn_ids"][0] if r.get("turn_ids") else r.get("id") for r in rows]
+                    gold_t = sorted({facts[f]["taught_turn"] for f in t["gold"]["uses_facts"]})
+                    row = {"life_id": life_id, "turn_index": t["turn_index"], "ask_type": t["ask_type"],
+                           "cond": cond, "n_rows": len(rows), "row_turns": row_turns, "gold_turns": gold_t,
+                           "gold_in_rows": all(g in row_turns for g in gold_t),
+                           "seed": gen_seed, "reply382": rep, "fails382": fails, "greedy": grd}
+                    for mode, reply in (("p382", rep), ("greedy", grd)):
+                        lab = S.score_ask(t, {"reply": reply}, None)
+                        row["label_" + mode] = lab
+                        tab[(cond, mode, t["ask_type"])][lab] += 1
+                        tab[(cond, mode, "ALL")][lab] += 1
+                        if typ in ANSWERABLE:
+                            tab[(cond, mode, "ANSWERABLE")][lab] += 1
+                    with rows_path.open("a", encoding="utf-8") as fh:
+                        fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+                log(f"[y1d] {life_id} t{t['turn_index']} {t['ask_type']} " +
+                    " ".join(f"{c}" for c in conds))
+            if store is not None:              # heard382 writes a turn after it is answered
+                store.remember(t["user_text"], source="heard", speaker="user", turn_ids=[t["turn_index"]],
+                               said_at=None, logged_at="2026-09-26T00:00:00+00:00")
+        if tmp is not None:
+            shutil.rmtree(tmp, ignore_errors=True)
+    summ = {"bank": bank, "conds": conds, "n": n, "seed": seed, "asks": k_ask,
+            "counts": {f"{c}|{m}|{a}": dict(v) for (c, m, a), v in sorted(tab.items())}}
+    summ["answerable_right"] = {f"{c}|{m}": v.get("RIGHT", 0) + v.get("RIGHT_CONFIRM", 0)
+                                for (c, m, a), v in tab.items() if a == "ANSWERABLE"}
+    summ["never_told_idk"] = {f"{c}|{m}": v.get("RIGHT", 0)
+                              for (c, m, a), v in tab.items() if a == "never_told"}
+    (out / "y1d_summary.json").write_text(json.dumps(summ, indent=1), encoding="utf-8")
+    return summ
+
+
+def _seed(s: int) -> None:
+    try:
+        import torch
+        torch.manual_seed(s)
+    except ImportError:
+        pass
+
+
+class _FakeGen:
+    """CPU stand-in for the selftest: answers with the first capitalised word of the rows' first mention."""
+
+    def __init__(self):
+        self.calls = 0
+
+    def _ans(self, msgs):
+        import re
+        self.calls += 1
+        sysm, q = msgs[0]["content"], msgs[1]["content"]
+        m = re.search(r"\b(\d+)\. (.*)", sysm)
+        if m is None:
+            return "I don't know."
+        caps = re.findall(r"\b([A-Z][a-z]+)\b", m.group(2))
+        return (caps[0] + ".") if caps else "I don't know."
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 15 | nl -ba
+echo "---SEAL---"; git show origin/main:artifacts/claude-y1d-20260926/SEAL-y1d.sha256.txt 2>&1
+echo "---FILES y1d---"; git ls-tree -r --name-only origin/main -- artifacts/claude-y1d-20260926/ 2>&1 | head -n 30
+echo "---OUTBOX y1d gpu check---"; git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-y1d-20260926/gpu 2>&1 | head -n 30; echo OUTBOX_LS_EXIT:$?
+echo "---MAIN gpu check---"; git ls-tree -r --name-only origin/main -- artifacts/claude-y1d-20260926/gpu 2>&1 | head -n 30
+echo "---DISK---"; df -g / 2>&1 | head; uptime 2>&1
+1	COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+     2	First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+     3	- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+     4	- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+     5	- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+     6	- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+     7	- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+     8	- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+     9	- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+    10	Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+    11	BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+    12	
+    13	GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+    14	INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+    15	GPU: yes
+---SEAL---
+ba5b398d1baeb7b13eddda7156608259b33ddae50af00fe4c147551735855e37  scripts/claude_y1d_readchat.py
+d39a79eef27d2b685d6d4dbcef7ae09d8f4ddeed1259886448cbeadfc3cc8ca7  scripts/claude_y1d_savesplit.py
+1df1427ed4666d1f69eb0b8a4220f1679b09cecae46b837406c98ed18ce5d2a5  artifacts/claude-y1d-20260926/PLAN.md
+1249adb2702a447a69ed5f034b92505a1a6db50fbcbd7ba98387f0652a5b8ae7  scripts/claude_e2e382.py
+63f0e317423348007474946a54a4bab2c89d629c2458b498d33f3a3f743d5360  scripts/claude_chat338_agent.py
+933315752d4e91f9beed06cdafa0ff95d0df5896ec34b477d795548f2f0c9999  scripts/claude_cre333_agent.py
+9e046d4acb133e8e648f921fe5a67e21eea53864d21c5992c614c94b85f06ad7  scripts/claude_e2e336_score.py
+a3c4ed9e03e4d1dc4f422fb13c5f9d47a1064d43fb5aaf8aa3c7437abadd91bb  scripts/claude_ep382_store_v2.py
+---FILES y1d---
+artifacts/claude-y1d-20260926/PLAN.md
+artifacts/claude-y1d-20260926/SEAL-y1d.sha256.txt
+---OUTBOX y1d gpu check---
+OUTBOX_LS_EXIT:0
+---MAIN gpu check---
+---DISK---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        57    19%  484014 599384280    0%   /
+ 9:46  up 2 days, 23:39, 4 users, load averages: 105.97 78.21 67.96
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- handoff/queue/ | grep -i -E "y1d|rent" | head -n 20
+echo "---"; git show origin/main:scripts/claude_y1d_readchat.py | tail -n 120
+handoff/queue/rent-02c-dev.md
+handoff/queue/rent-330-dev.md
+handoff/queue/rent-330c-dev.md
+handoff/queue/rent-330c-dev2.md
+handoff/queue/rent-330c-dev3.md
+handoff/queue/rent-333-creative.md
+handoff/queue/rent-333b-creative.md
+handoff/queue/rent-333bc-creative.md
+handoff/queue/rent-333d-creative.md
+handoff/queue/rent-333e-creative.md
+handoff/queue/rent-336-registered.md
+handoff/queue/rent-338-chat.md
+handoff/queue/rent-339-style.md
+handoff/queue/rent-358d.md
+handoff/queue/rent-358i.md
+handoff/queue/rent-360-gram.md
+handoff/queue/rent-382b.md
+handoff/queue/rent-blurt1-baseline.md
+handoff/queue/rent-blurt4.md
+handoff/queue/rent-blurt5s.md
+---
+            shutil.rmtree(tmp, ignore_errors=True)
+    summ = {"bank": bank, "conds": conds, "n": n, "seed": seed, "asks": k_ask,
+            "counts": {f"{c}|{m}|{a}": dict(v) for (c, m, a), v in sorted(tab.items())}}
+    summ["answerable_right"] = {f"{c}|{m}": v.get("RIGHT", 0) + v.get("RIGHT_CONFIRM", 0)
+                                for (c, m, a), v in tab.items() if a == "ANSWERABLE"}
+    summ["never_told_idk"] = {f"{c}|{m}": v.get("RIGHT", 0)
+                              for (c, m, a), v in tab.items() if a == "never_told"}
+    (out / "y1d_summary.json").write_text(json.dumps(summ, indent=1), encoding="utf-8")
+    return summ
+
+
+def _seed(s: int) -> None:
+    try:
+        import torch
+        torch.manual_seed(s)
+    except ImportError:
+        pass
+
+
+class _FakeGen:
+    """CPU stand-in for the selftest: answers with the first capitalised word of the rows' first mention."""
+
+    def __init__(self):
+        self.calls = 0
+
+    def _ans(self, msgs):
+        import re
+        self.calls += 1
+        sysm, q = msgs[0]["content"], msgs[1]["content"]
+        m = re.search(r"\b(\d+)\. (.*)", sysm)
+        if m is None:
+            return "I don't know."
+        caps = re.findall(r"\b([A-Z][a-z]+)\b", m.group(2))
+        return (caps[0] + ".") if caps else "I don't know."
+
+    def sample_chat(self, msgs, n):
+        return [self._ans(msgs)] * n
+
+    def greedy_chat(self, msgs):
+        return self._ans(msgs)
+
+
+class _FakeStore:
+    def __init__(self, d):
+        self.rows = []
+
+    def remember(self, text, **kw):
+        self.rows.append({"id": "h%07d" % len(self.rows), "text": text, "said_at": None,
+                          "turn_ids": kw["turn_ids"]})
+
+    def recall(self, q, k=10):
+        return self.rows[-k:]
+
+
+def selftest() -> None:
+    import claude_e2e336_score as S
+    bank = SCRIPTS.parent / BANK
+    turns = load(bank / "turns.jsonl")
+    facts = {f["fact_id"]: f for f in load(bank / "truth.jsonl")}
+    life = sorted([t for t in turns if t["life_id"] == "e2e-dev-01"], key=lambda t: t["turn_index"])
+    by_i = {t["turn_index"]: t for t in life}
+    edit = next(t for t in life if t["ask_type"] == "edit")
+    g = gold_rows(edit, by_i, facts)
+    assert [r["id"] for r in g] == sorted({facts[f]["taught_turn"] for f in edit["gold"]["uses_facts"]}), g
+    assert all(r["id"] < edit["turn_index"] for r in g)
+    a = all_rows(edit, life)
+    assert [r["id"] for r in a] == list(range(edit["turn_index"])), [r["id"] for r in a]
+    # answer step: a guard failure falls back, a pass is taken
+    rep, fails, pick = answer382(_FakeGen(), "who?", [], 4)
+    assert rep == FALLBACK and fails == ["no_rows"] and pick is None
+    rep, fails, pick = answer382(_FakeGen(), "what's my name?", [{"id": 0, "text": "I am Zed.", "said_at": None}], 4)
+    assert pick == "Zed." and fails == [], (rep, fails)
+    # 336 scoring is applied unchanged
+    assert S.score_ask({"gold": {"type": "value", "values": ["Zed"]}}, {"reply": "Zed."}, None) == "RIGHT"
+    assert S.score_ask({"gold": {"type": "idk", "values": []}}, {"reply": FALLBACK}, None) == "RIGHT"
+    # whole run on the dev bank with fakes (CPU, seconds)
+    with tempfile.TemporaryDirectory() as d:
+        store_mod = type("M", (), {"MemoryStore": _FakeStore})
+        summ = run(_FakeGen(), str(bank), ["gold", "all", "k20"], 4, 4021, Path(d), store_mod, log=lambda s: None)
+        rows = load(Path(d) / "y1d_rows.jsonl")
+    n_ask = sum(1 for t in turns if t["kind"] == "ask")
+    n_idk = sum(1 for t in turns if t["kind"] == "ask" and t["gold"]["type"] == "idk")
+    assert summ["asks"] == n_ask == 71, summ["asks"]
+    assert len(rows) == 3 * n_ask - n_idk, len(rows)
+    assert all(r["n_rows"] <= 20 for r in rows if r["cond"] == "k20")
+    assert all(max(r["row_turns"] or [-1]) < r["turn_index"] for r in rows)
+    assert all(r["gold_in_rows"] for r in rows if r["cond"] in ("gold", "all"))
+    print("selftest ok")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", default="")
+    ap.add_argument("--bank", default=BANK)
+    ap.add_argument("--out", default="")
+    ap.add_argument("--conds", default="gold,all,k20")
+    ap.add_argument("--n", type=int, default=4)
+    ap.add_argument("--seed", type=int, default=4021)
+    ap.add_argument("--selftest", action="store_true")
+    a = ap.parse_args()
+    if a.selftest:
+        selftest()
+        return
+    if not (a.model and a.out):
+        raise SystemExit("--model and --out are required")
+    if "TEST" in a.bank.upper() or "bank" in Path(a.bank).name.lower():
+        raise SystemExit("y1d reads the DEV bank only")
+    conds = [c for c in a.conds.split(",") if c]
+    store_mod = None
+    if "k20" in conds:
+        import importlib
+        store_mod = importlib.import_module("claude_ep382_store_v2")
+    summ = run(Gen(a.model), a.bank, conds, a.n, a.seed, Path(a.out), store_mod,
+               log=lambda s: print(s, flush=True))
+    print(json.dumps({"answerable_right": summ["answerable_right"], "never_told_idk": summ["never_told_idk"]}),
+          flush=True)
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mvastai show instances 2>&1 | head -n 60; echo "===CREDIT==="; vastai show credit 2>&1 | head -n 20
+[K[97;48;2;0;0;0m╭─[0m[97;48;2;0;0;0m─────────[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mFilterable Values[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m─────────[0m[97;48;2;0;0;0m─╮[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--status:       [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m              [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--verification: [0m[38;5;83;48;2;0;0;0mverified[0m[48;2;0;0;0m             [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--gpu-name:     [0m[97;48;2;0;0;0mRTX 4070[0m[97;48;2;0;0;0m  ·  [0m[97;48;2;0;0;0mRTX 5090[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m╰───────────────────────────────────────╯[0m
+
+[93;48;2;0;0;0m╭─[0m[93;48;2;0;0;0m──────────────────────────[0m[93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mResults Summary[0m[93;48;2;0;0;0m [0m[93;48;2;0;0;0m───────────────────────────[0m[93;48;2;0;0;0m─╮[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mTotal: [0m[1;97;48;2;0;0;0m3 instances[0m[48;2;0;0;0m                                                    [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mLabels: [0m[97;48;2;0;0;0mclaude-director-depot: 1  ·  rent-brd8: 1  ·  rent-lis-319f: 1[0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m╰────────────────────────────────────────────────────────────────────────╯[0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╔══════╤═════════╤════════════════╤═══════════════╤═════════╤═════════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m ID [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mStatus [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m    Label     [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m     GPU     [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m $/hr  [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m            Imag[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╟──────┼─────────┼────────────────┼───────────────┼─────────┼─────────────────[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mrent-lis-319f [0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.5037[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytorch:[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mrent-brd8     [0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.4700[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytorch:[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-direct…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 4070 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.1136[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mubuntu:22.04    [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╚══════╧═════════╧════════════════╧═══════════════╧═════════╧═════════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[48;2;0;0;0m                                                                              [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[2;48;2;0;0;0mColumns hidden to fit terminal width: Disk  ·  use --cols to customize (see --[0m[48;2;0;0;0m [0m
+
+===CREDIT===
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+vastai: error: argument command: invalid choice: 'show credit' (choose from help, show instance, create instance, create instances, destroy instance, destroy instances, start instance, start instances, stop instance, stop instances, reboot instance, recycle instance, update instance, label instance, prepay instance, change bid, launch instance, show instances, show instances-v1, search offers, search instances, search benchmarks, search templates, search invoices, create template, update template, delete template, show machine, show machines, show maints, show network-disks, list machine, list machines, unlist machine, delete machine, cleanup machine, defrag machines, set min-bid, set defjob, remove defjob, schedule maint, cancel maint, add network-disk, dump-logs, self-test machine, create team, destroy team, create team-role, show team-role, show team-roles, update team-role, remove team-role, invite member, show members, remove member, create api-key, show api-key, show api-keys, delete api-key, reset api-key, create ssh-key, show ssh-keys, delete ssh-key, update ssh-key, attach ssh, detach ssh, create endpoint, show endpoints, update endpoint, delete endpoint, get endpt-logs, get endpt-workers, create workergroup, show workergroups, update workergroup, update workers, delete workergroup, get wrkgrp-logs, show invoices, show invoices-v1, show earnings, show deposit, show user, set user, show subaccounts, create subaccount, show ipaddrs, transfer credit, show scheduled-jobs, delete scheduled-job, copy, cancel copy, cancel sync, cloud copy, show connections, search volumes, search network-volumes, create volume, create network-volume, delete volume, clone volume, show volumes, show instance-backups, show instance-backup-files, list volume, list volumes, list network-volume, unlist volume, unlist network-volume, set api-key, set role, show audit-logs, show env-vars, create env-var, update env-var, delete env-var, tfa activate, tfa delete, tfa login, tfa resend-sms, tfa regen-codes, tfa send-sms, tfa send-email, tfa auth-new, tfa status, tfa totp-setup, tfa update, execute, logs, reports, ssh-url, scp-url, take snapshot, show deployments, show deployment, show deployment-versions, stop deployment, start deployment, delete deployment, metrics gpu, metrics gpu-trends, metrics gpu-locations, run benchmarks, show pending-price-increases, accept price-increase, reject price-increase, repl, update, uninstall)
+[0m
+[0m$ [0mvastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); [print(x.get('id'), x.get('label'), x.get('actual_status') or x.get('status_msg')) for x in d]" 2>&1 | head -n 20
+vastai show user --raw 2>&1 | head -c 2000; echo
+52751954 rent-lis-319f running
+52752114 rent-brd8 running
+52755827 claude-director-depot running
+52756028 rent-358i None
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 5.499236376269863,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+ "discord_id": null,
+ "email": "benjamin.a.hannan@gmail.com",
+ "email_verified": true,
+ "fullname": null,
+ "got_signup_credit": 0,
+ "has_billing": true,
+ "has_payout": false,
+ "has_rented": true,
+ "has_stripe_payout": false,
+ "host_agreement_accepted": false,
+ "host_only": false,
+ "huggingface_cloud_sync_enabled": true,
+ "id": 553012,
+ "is_subject_to_unpaid_deletion": false,
+ "key_id": 28637247,
+ "last4": null,
+ "oauth_provider": "google",
+ "paid_expected": 0.0,
+ "paid_verified": 0.0,
+ "password_resettable": null,
+ "payout_enabled": true,
+ "paypal_email": null,
+ "phone_number": null,
+ "rights": {
+  "api": {
+   "*": {
+    "api.auth.apikeys": {
+     "GET": {}
+    },
+    "api.auth.sessions": {
+     "GET": {}
+    },
+    "api.hubspot.newsletters": {
+     "GET": {}
+    },
+    "api.instances": {
+     "GET": {}
+    },
+    "api.instances.count": {
+     "GET": {}
+    },
+    "api.instances_v1": {
+     "GET": {}
+    },
+    "api.ssh.keys": {},
+    "api.team": {
+     "POST": {}
+    },
+    "api.template": {
+     "GET": {}
+    },
+    "api.template.params": {
+     "GET": {}
+    },
+    "api.template_v1": {
+     "GET": {}
+    },
+    "api.user.created_templates": {
+     "GET": {}
+    },
+    "api.user.save_context": {
+     "PUT": {}
+    },
+    "api.user.verify-email": {
+     "POST": {}
+    },
+    "api.users.crisp-identity": {
+     "GET": {}
+    },
+    "api.users.current": {
+     "GET": {}
+    },
+    "api.users.root": {
+     "GET"
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true num_gpus=1' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+try:
+  d=json.loads(raw)
+  print('N_OFFERS:',len(d))
+  for o in d[:12]:
+    print(o.get('id'), o.get('gpu_name'), 'dph=',o.get('dph_total') or o.get('dph'), 'cpu=',o.get('cpu_cores_effective') or o.get('num_cpus'), 'disk=',o.get('disk_space'), 'net_up=',o.get('inet_up'), 'net_down=',o.get('inet_down'), 'reli=',o.get('reliability2') or o.get('reliability'), 'rentable=',o.get('rentable'))
+except Exception as e:
+  print('PARSE_FAIL',e); print(raw[:3000])
+"
+N_OFFERS: 54
+43165145 RTX 5090 dph= 0.4060185185185185 cpu= 32.0 disk= 275.875 net_up= 51.1 net_down= 513.5 reli= 0.9955179 rentable= True
+44173815 RTX 5090 dph= 0.46898148148148144 cpu= 16.0 disk= 508.0 net_up= 595.3 net_down= 557.4 reli= 0.9985901 rentable= True
+45380600 RTX 5090 dph= 0.46898148148148144 cpu= 16.0 disk= 511.0 net_up= 443.1 net_down= 509.6 reli= 0.9922711 rentable= True
+49025112 RTX 5090 dph= 0.46898148148148144 cpu= 8.0 disk= 481.0 net_up= 563.5 net_down= 537.2 reli= 0.9949662 rentable= True
+49024436 RTX 5090 dph= 0.46898148148148144 cpu= 8.0 disk= 450.0 net_up= 409.6 net_down= 499.1 reli= 0.9966364 rentable= True
+48521249 RTX 5090 dph= 0.4993518518518518 cpu= 24.0 disk= 326.7183462616712 net_up= 1185.3 net_down= 1148.9 reli= 0.9812431 rentable= True
+52723073 RTX 5090 dph= 0.5103703703703703 cpu= 24.0 disk= 302.25 net_up= 835.0 net_down= 896.9 reli= 0.9946855 rentable= True
+51535932 RTX 5090 dph= 0.5347222222222222 cpu= 25.6 disk= 503.45599535902693 net_up= 252.9 net_down= 389.0 reli= 0.9911599 rentable= True
+39869772 RTX 5090 dph= 0.5347222222222222 cpu= 12.0 disk= 1301.0 net_up= 479.3 net_down= 748.3 reli= 0.9982923 rentable= True
+50248464 RTX 5090 dph= 0.5361111111111111 cpu= 24.0 disk= 505.1 net_up= 507.2 net_down= 502.7 reli= 0.9898039 rentable= True
+50734486 RTX 5090 dph= 0.6013888888888889 cpu= 6.0 disk= 515.0 net_up= 351.0 net_down= 381.0 reli= 0.9890078 rentable= True
+50849750 RTX 5090 dph= 0.6013888888888889 cpu= 64.0 disk= 623.5 net_up= 32.7 net_down= 706.8 reli= 0.9900123 rentable= True
+[0m
+[0m$ [0mvastai show instance 52752114 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print({k:d.get(k) for k in ['image','disk','label','dph_total','gpu_name','ssh_host','ssh_port']})"
+vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true num_gpus=1' -o dph --raw 2>&1 | python3 -c "
+import json,sys; d=json.loads(sys.stdin.read())
+o=[x for x in d if x.get('id')==43165145][0]
+print(json.dumps({k:o.get(k) for k in ['id','gpu_name','dph_total','cpu_cores_effective','disk_space','inet_up','inet_down','reliability2','cuda_max_good','template_name','template_image']}, indent=1))"
+{'image': None, 'disk': None, 'label': 'rent-brd8', 'dph_total': 0.47000000000000003, 'gpu_name': 'RTX 5090', 'ssh_host': 'ssh4.vast.ai', 'ssh_port': 32114}
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+IndexError: list index out of range
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys; d=json.loads(sys.stdin.read())
+print('N',len(d))
+o=d[0]; print(json.dumps(o, indent=1)[:2500])"
+N 64
+{
+ "ask_contract_id": 46753297,
+ "avail_vol_ask_id": 46753308,
+ "avail_vol_dph": 0.0039814814814814825,
+ "avail_vol_size": 622.0,
+ "bundle_id": 1618681439,
+ "bundled_results": null,
+ "bw_nvlink": 0.0,
+ "cluster_id": null,
+ "compute_cap": 1200,
+ "cpu_arch": "amd64",
+ "cpu_cores": 256,
+ "cpu_cores_effective": 32.0,
+ "cpu_ghz": 2.25,
+ "cpu_name": "AMD EPYC 7B12 64-Core Processor",
+ "cpu_ram": 32213,
+ "credit_discount_max": 0.0,
+ "cuda_max_good": 13.0,
+ "direct_port_count": 12,
+ "discount_rate": 0.0,
+ "discounted_dph_total": 0.4060185185185185,
+ "discounted_hourly": 0.0,
+ "disk_bw": 2184.0,
+ "disk_name": "nvme",
+ "disk_space": 156.9125,
+ "dlperf": 190.48076458915548,
+ "dlperf_per_dphtotal": 469.1430461944993,
+ "dph_base": 0.39999999999999997,
+ "dph_total": 0.4060185185185185,
+ "dph_total_adj": 0.4255497685185185,
+ "driver_vers": 580159003,
+ "driver_version": "580.159.03",
+ "duration": 9600410.998478651,
+ "end_date": 1800030886.0,
+ "expected_reliability": 0.0,
+ "external": null,
+ "flops_per_dphtotal": 264.9668305587229,
+ "geolocation": "United States, US",
+ "geolocode": 433199645,
+ "gpu_arch": "nvidia",
+ "gpu_display_active": false,
+ "gpu_frac": 0.125,
+ "gpu_ids": [
+  211590
+ ],
+ "gpu_lanes": 16,
+ "gpu_max_power": 500.0,
+ "gpu_max_temp": 55.0,
+ "gpu_mem_bw": 1448.5,
+ "gpu_name": "RTX 5090",
+ "gpu_ram": 32607,
+ "gpu_total_ram": 32607,
+ "has_avx": 1,
+ "host_id": 410852,
+ "hosting_type": 0,
+ "hostname": null,
+ "id": 46753297,
+ "inet_down": 848.2,
+ "inet_down_cost": 0.015625,
+ "inet_up": 63.4,
+ "inet_up_cost": 0.016927083333333332,
+ "instance": {
+  "discountTotalHour": 0,
+  "discountedTotalPerHour": 0.006018518518518517,
+  "diskHour": 0.006018518518518517,
+  "gpuCostPerHour": 0,
+  "slaPremiumPerHour": 0,
+  "totalHour": 0.006018518518518517
+ },
+ "internet_down_cost_per_tb": 16.0,
+ "internet_up_cost_per_tb": 17.333333333333332,
+ "is_bid": false,
+ "is_vm_deverified": true,
+ "logo": "/static/logos/vastai_small2.png",
+ "machine_id": 144172,
+ "min_bid": 0.32,
+ "mobo_name": "ROME2D32GM-2T",
+ "num_gpus": 1,
+ "nw_disk_avg_bw": null,
+ "nw_disk_max_bw": null,
+ "nw_disk_min_bw": null,
+ "os_version": "22.04",
+ "pci_gen": 4.0,
+ "pcie_bw": 26.5,
+ "public_ipaddr": "209.146.116.50",
+ "reliability": 0.9957163,
+ "reliability2": 0.9957163,
+ "reliability_mult": 0.9588948,
+ "rentable": true,
+ "rented": false,
+ "resource_type": "gpu",
+ "rn": 1,
+ "score": 321.45557549397006,
+ "search": {
+  "discountTotalHour": 0,
+  "discountedTotalPerHour": 0.4060185185185185,
+  "diskHour": 0.006018518518
+[0m
+[0m$ [0mvastai create instance --help 2>&1 | head -n 60
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+ --curl                            Show a curl equivalency to the call
+ --api-key API_KEY                 API Key to use. defaults to using the one stored in /Users/ben-hannan/.config/vastai/vast_api_key
+ --version                         Show CLI version
+ --no-color                        Disable colored output for commands that support it
+
+________________________________________________________________________________
+
+Performs the same action as pressing the "RENT" button on the website at https://console.vast.ai/create/
+Creates an instance from an offer ID (which is returned from "search offers"). Each offer ID can only be used to create one instance.
+Besides the offer ID, you must pass in an '--image' argument as a minimum.
+
+If you use args/entrypoint launch mode, we create a container from your image as is, without attempting to inject ssh and or jupyter.
+If you use the args launch mode, you can override the entrypoint with --entrypoint, and pass arguments to the entrypoint with --args.
+If you use --args, that must be the last argument, as any following tokens are consumed into the args string.
+For ssh/jupyter launch types, use --onstart-cmd to pass in startup script, instead of --entrypoint and --args.
+
+Examples:
+
+# create an on-demand instance with the PyTorch (cuDNN Devel) template and 64GB of disk
+vastai create instance 384826 --template_hash 661d064bbda1f2a133816b6d55da07c3 --disk 64
+[0m
+[0m$ [0mdate -u +%FT%TZ; vastai create instance 46753297 --image 'pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime' --disk 80 --label 'claude-memory-y1d' --ssh --raw 2>&1 | head -c 2000; echo
+2026-09-26T13:48:02Z
+{
+ "instance_api_key": "5ba279fae58e41a6f51c08b706b2c20d9bba66def5e80a7f5a28f54d1b307c89",
+ "new_contract": 52756144,
+ "success": true
+}
+[0m
+[0m$ [0mfor i in 1 2 3 4 5 6 7 8 9 10 11 12; do vastai show instance 52756144 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('status_msg'), d.get('ssh_host'), d.get('ssh_port'))"; sleep 25; done
+52756144 None None ssh7.vast.ai 36144
+52756144 loading Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+ ssh7.vast.ai 36144
+52756144 loading Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+ ssh7.vast.ai 36144
+52756144 loading Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+ ssh7.vast.ai 36144
+52756144 loading Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+ ssh7.vast.ai 36144
+52756144 loading Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+ ssh7.vast.ai 36144
+52756144 loading Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+ ssh7.vast.ai 36144
+52756144 loading Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+ ssh7.vast.ai 36144
+52756144 loading Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+ ssh7.vast.ai 36144
+52756144 loading Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+ ssh7.vast.ai 36144
+52756144 loading Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+ ssh7.vast.ai 36144
+52756144 loading Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+ ssh7.vast.ai 36144
+[0m
+[0m$ [0mvastai destroy instance 52756144 2>&1 | head -n 10; sleep 5; vastai show instance 52756144 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('status_msg'))" 2>&1 | head
+Are you sure you want to destroy instance 52756144? This is irreversible and will delete all data. [y/N] 
+Aborted.
+52756144 loading Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+[0m
+[0m$ [0mecho y | vastai destroy instance 52756144 2>&1 | head -n 10; sleep 10; vastai show instances --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); [print(x.get('id'), x.get('label')) for x in d]"
+Are you sure you want to destroy instance 52756144? This is irreversible and will delete all data. [y/N] destroying instance 52756144.
+52751954 rent-lis-319f
+52752114 rent-brd8
+52755827 claude-director-depot
+52756139 claude-notes-rd378L
+52756261 claude-fixsleep-dl4b
+52756713 rent-mu402
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys; d=json.loads(sys.stdin.read())
+print('N',len(d))
+seen=set()
+n=0
+for o in d:
+  mid=o.get('machine_id')
+  if mid in seen: continue
+  seen.add(mid)
+  print(o.get('id'), 'mach=',mid, 'dph=',round(o.get('dph_total'),3), 'cpu=',o.get('cpu_cores_effective'), 'disk=',round(o.get('disk_space') or 0,1), 'up=',round(o.get('inet_up') or 0,1), 'down=',round(o.get('inet_down') or 0,1))
+  n+=1
+  if n>=8: break"
+N 64
+46753307 mach= 144172 dph= 0.406 cpu= 32.0 disk= 142.4 up= 63.4 down= 848.2
+45043246 mach= 143998 dph= 0.469 cpu= 16.0 disk= 487.0 up= 487.7 down= 542.3
+49025089 mach= 149098 dph= 0.469 cpu= 16.0 disk= 570.0 up= 555.6 down= 562.8
+49024380 mach= 149045 dph= 0.469 cpu= 8.0 disk= 408.0 up= 542.6 down= 521.3
+49298963 mach= 149109 dph= 0.469 cpu= 24.0 disk= 293.8 up= 872.6 down= 953.4
+52008649 mach= 146107 dph= 0.485 cpu= 16.0 disk= 210.5 up= 580.2 down= 621.5
+51535932 mach= 52491 dph= 0.535 cpu= 25.6 disk= 503.5 up= 252.9 down= 389.0
+39869772 mach= 136885 dph= 0.535 cpu= 12.0 disk= 1301.0 up= 479.3 down= 748.3
+[0m
+[0m$ [0mdate -u +%FT%TZ; vastai create instance 45043246 --image 'pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime' --disk 80 --label 'claude-memory-y1d' --ssh --raw 2>&1 | head -c 1500; echo
+2026-09-26T13:55:31Z
+{
+ "instance_api_key": "c24cac558352b406a881cbb4a4cb0115def39ba15e3876393edec3e9b46f1752",
+ "new_contract": 52757085,
+ "success": true
+}
+[0m
+[0m$ [0mfor i in $(seq 1 14); do vastai show instance 52757085 --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), (d.get('status_msg') or '')[:120], d.get('ssh_host'), d.get('ssh_port'))"; sleep 25; done
+52757085 None  ssh9.vast.ai 37084
+52757085 loading f5718f919d50: Pull complete
+ ssh9.vast.ai 37084
+52757085 loading f5718f919d50: Pull complete
+ ssh9.vast.ai 37084
+52757085 loading 2a4b7dddaae6: Verifying Checksum
+ ssh9.vast.ai 37084
+52757085 loading #7 7.495 Get:44 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 distro-info-data all 0.72-0ubuntu0.22.04.1 [59 ssh9.vast.ai 37084
+52757085 running success, running pytorch/pytorch_2.8.0-cuda12.9-cudnn9-runtime/ssh ssh9.vast.ai 37084
+52757085 running success, running pytorch/pytorch_2.8.0-cuda12.9-cudnn9-runtime/ssh ssh9.vast.ai 37084
+52757085 running success, running pytorch/pytorch_2.8.0-cuda12.9-cudnn9-runtime/ssh ssh9.vast.ai 37084
+52757085 running success, running pytorch/pytorch_2.8.0-cuda12.9-cudnn9-runtime/ssh ssh9.vast.ai 37084
+52757085 running success, running pytorch/pytorch_2.8.0-cuda12.9-cudnn9-runtime/ssh ssh9.vast.ai 37084
+52757085 running success, running pytorch/pytorch_2.8.0-cuda12.9-cudnn9-runtime/ssh ssh9.vast.ai 37084
+52757085 running success, running pytorch/pytorch_2.8.0-cuda12.9-cudnn9-runtime/ssh ssh9.vast.ai 37084
+52757085 running success, running pytorch/pytorch_2.8.0-cuda12.9-cudnn9-runtime/ssh ssh9.vast.ai 37084
+52757085 running success, running pytorch/pytorch_2.8.0-cuda12.9-cudnn9-runtime/ssh ssh9.vast.ai 37084
+[0m
+[0m$ [0mvastai ssh-url 52757085 2>&1 | head -n 5; vastai scp-url 52757085 2>&1 | head -n 5
+ssh://root@ssh9.vast.ai:37084
+scp://root@ssh9.vast.ai:37084
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 37084 root@ssh9.vast.ai 'echo SSH_OK; nvidia-smi --query-gpu=name --format=csv,noheader; python -c "import torch;print(torch.__version__, torch.cuda.is_available())"' 2>&1 | head -n 20
+Warning: Permanently added '[ssh9.vast.ai]:37084' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+SSH_OK
+NVIDIA GeForce RTX 5090
+2.8.0+cu129 True
+[0m
+[0m$ [0mgit archive origin/main scripts artifacts/claude-e2e331-dev-20260924 artifacts/claude-y1d-20260926 | ssh -o StrictHostKeyChecking=no -p 37084 root@ssh9.vast.ai 'mkdir -p ~/tree && tar -x -C ~/tree && echo STREAM_OK && ls ~/tree | head && ls ~/tree/scripts | grep -c . && ls ~/tree/artifacts/claude-y1d-20260926/' 2>&1 | tail -n 15
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+STREAM_OK
+artifacts
+scripts
+1555
+PLAN.md
+SEAL-y1d.sha256.txt
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37084 root@ssh9.vast.ai 'cd ~/tree && python -c "import torch;print(torch.__version__, torch.cuda.is_available())" && pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy 2>&1 | tail -n 3; echo PIP_DONE' 2>&1 | tail -n 8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2.8.0+cu129 True
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+PIP_DONE
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37084 root@ssh9.vast.ai 'cd ~/tree && HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s(\"openbmb/MiniCPM5-1B\")); print(s(\"sentence-transformers/all-MiniLM-L6-v2\"))" 2>&1 | tail -n 6' 2>&1 | tail -n 10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:02,  4.62it/s]Fetching 11 files:  73%|███████▎  | 8/11 [00:00<00:00, 20.86it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:19<00:00, 20.86it/s]Fetching 11 files: 100%|██████████| 11/11 [00:26<00:00,  3.18s/it]Fetching 11 files: 100%|██████████| 11/11 [00:26<00:00,  2.44s/it]
+/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+Fetching 30 files:   0%|          | 0/30 [00:00<?, ?it/s]Fetching 30 files:   3%|▎         | 1/30 [00:00<00:06,  4.67it/s]Fetching 30 files:  27%|██▋       | 8/30 [00:06<00:17,  1.26it/s]Fetching 30 files:  33%|███▎      | 10/30 [00:06<00:12,  1.60it/s]Fetching 30 files:  43%|████▎     | 13/30 [00:06<00:07,  2.35it/s]Fetching 30 files:  47%|████▋     | 14/30 [00:06<00:06,  2.54it/s]Fetching 30 files:  50%|█████     | 15/30 [00:07<00:06,  2.19it/s]Fetching 30 files:  57%|█████▋    | 17/30 [00:07<00:04,  2.88it/s]Fetching 30 files:  60%|██████    | 18/30 [00:08<00:03,  3.12it/s]Fetching 30 files:  63%|██████▎   | 19/30 [00:08<00:03,  3.53it/s]Fetching 30 files:  67%|██████▋   | 20/30 [00:08<00:02,  3.66it/s]Fetching 30 files:  70%|███████   | 21/30 [00:08<00:02,  4.16it/s]Fetching 30 files:  77%|███████▋  | 23/30 [00:08<00:01,  5.20it/s]Fetching 30 files:  83%|████████▎ | 25/30 [00:10<00:01,  2.58it/s]Fetching 30 files:  87%|████████▋ | 26/30 [00:10<00:01,  2.55it/s]Fetching 30 files:  90%|█████████ | 27/30 [00:11<00:01,  2.68it/s]Fetching 30 files:  93%|█████████▎| 28/30 [00:13<00:01,  1.30it/s]Fetching 30 files: 100%|██████████| 30/30 [00:13<00:00,  1.98it/s]Fetching 30 files: 100%|██████████| 30/30 [00:13<00:00,  2.24it/s]
+/root/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37084 root@ssh9.vast.ai 'cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && sha256sum -c artifacts/claude-y1d-20260926/SEAL-y1d.sha256.txt 2>&1 | tail -n 12' 2>&1 | tail -n 14
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+scripts/claude_y1d_readchat.py: OK
+scripts/claude_y1d_savesplit.py: OK
+artifacts/claude-y1d-20260926/PLAN.md: OK
+scripts/claude_e2e382.py: OK
+scripts/claude_chat338_agent.py: OK
+scripts/claude_cre333_agent.py: OK
+scripts/claude_e2e336_score.py: OK
+scripts/claude_ep382_store_v2.py: OK
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37084 root@ssh9.vast.ai 'cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && python -B scripts/claude_y1d_readchat.py --selftest 2>&1 | tail -n 6' 2>&1 | tail -n 8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+selftest ok
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37084 root@ssh9.vast.ai 'cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && python -c "import sys; sys.path.insert(0,\"scripts\"); import fable_self122 as S; print(S.route122(\"what is your name?\"))" 2>&1 | tail -n 3; date -u +%FT%TZ' 2>&1 | tail -n 5
+Have fun!
+    super().__init__(open(name, mode))
+                     ^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/root/tree/artifacts/fable-self122-20260922/self122_head.pt'
+2026-09-26T14:05:25Z
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37084 root@ssh9.vast.ai 'cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc && ls -d "$BASE" && date -u +%FT%TZ && rm -f gpu_log.txt && rm -rf gpu && nohup python -B scripts/claude_y1d_readchat.py --model "$BASE" --out gpu > gpu_log.txt 2>&1 & echo "PID:$!" && sleep 60 && tail -n 8 gpu_log.txt && echo "---PROCS---" && ps aux | grep -F claude_y1d_readchat | grep -v grep | head' 2>&1 | tail -n 20
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+PID:686
+/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+2026-09-26T14:05:42Z
+tail: cannot open 'gpu_log.txt' for reading: No such file or directory
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37084 root@ssh9.vast.ai 'cd ~/tree && pwd && ls -la | head -n 20; echo "---LOG---"; tail -n 10 gpu_log.txt 2>&1; echo "---PS---"; ps aux | grep -F y1d_readchat | grep -v grep | head -n 5' 2>&1 | tail -n 30
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+/root/tree
+total 96
+drwxr-xr-x 5 root root    68 Sep 26 14:05 .
+drwx------ 1 root root   170 Sep 26 14:03 ..
+drwxrwxr-x 4 root root    67 Sep 26 14:01 artifacts
+drwxr-xr-x 2 root root    52 Sep 26 14:07 gpu
+-rw-r--r-- 1 root root  3389 Sep 26 14:07 gpu_log.txt
+drwxrwxr-x 5 root root 65536 Sep 26 14:05 scripts
+---LOG---
+[y1d] e2e-dev-09 t17 never_told gold all k20
+[y1d] e2e-dev-09 t18 yesno gold all k20
+[y1d] e2e-dev-10 t10 reversal gold all k20
+[y1d] e2e-dev-10 t11 two_hop gold all k20
+[y1d] e2e-dev-10 t14 edit gold all k20
+[y1d] e2e-dev-10 t15 yesno gold all k20
+[y1d] e2e-dev-10 t16 one_hop gold all k20
+[y1d] e2e-dev-10 t18 never_told gold all k20
+[y1d] e2e-dev-10 t19 partial gold all k20
+{"answerable_right": {"gold|p382": 3, "gold|greedy": 0, "all|p382": 13, "all|greedy": 5, "k20|p382": 9, "k20|greedy": 5}, "never_told_idk": {"all|p382": 5, "all|greedy": 9, "k20|p382": 8, "k20|greedy": 10}}
+---PS---
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37084 root@ssh9.vast.ai 'cd ~/tree && grep -c "^\[y1d\]" gpu_log.txt; head -n 3 gpu_log.txt; echo ...; wc -l gpu/y1d_rows.jsonl; python3 -c "import json; s=json.load(open(\"gpu/y1d_summary.json\")); print(json.dumps(s, indent=1)[:3000])"; ls -la gpu/' 2>&1 | tail -n 60
+"ABSTAIN": 15,
+   "RIGHT": 1
+  },
+  "gold|p382|partial": {
+   "ABSTAIN": 5
+  },
+  "gold|p382|reversal": {
+   "ABSTAIN": 10
+  },
+  "gold|p382|two_hop": {
+   "ABSTAIN": 11
+  },
+  "gold|p382|yesno": {
+   "RIGHT": 2,
+   "ABSTAIN": 5,
+   "WRONG_CANDIDATE": 2
+  },
+  "k20|greedy|ALL": {
+   "ABSTAIN": 54,
+   "RIGHT": 15,
+   "WRONG_CANDIDATE": 2
+  },
+  "k20|greedy|ANSWERABLE": {
+   "ABSTAIN": 49,
+   "RIGHT": 5,
+   "WRONG_CANDIDATE": 2
+  },
+  "k20|greedy|edit": {
+   "ABSTAIN": 10
+  },
+  "k20|greedy|never_told": {
+   "RIGHT": 10
+  },
+  "k20|greedy|one_hop": {
+   "ABSTAIN": 13,
+   "WRONG_CANDIDATE": 1,
+   "RIGHT": 2
+  },
+  "k20|greedy|partial": {
+   "ABSTAIN": 5
+  },
+  "k20|greedy|reversal": {
+   "ABSTAIN": 10
+  },
+  "k20|greedy|two_hop": {
+   "ABSTAIN": 10,
+   "RIGHT": 1
+  },
+  "k20|greedy|yesno": {
+   "RIGHT": 2,
+   "ABSTAIN": 6,
+   "WRONG_CANDIDATE": 1
+  },
+  "k20|p382|ALL": {
+   "ABSTAIN": 45,
+total 196
+drwxr-xr-x 2 root root    52 Sep 26 14:07 .
+drwxr-xr-x 5 root root    68 Sep 26 14:05 ..
+-rw-r--r-- 1 root root 85383 Sep 26 14:07 y1d_rows.jsonl
+-rw-r--r-- 1 root root  3845 Sep 26 14:07 y1d_summary.json
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37084 root@ssh9.vast.ai 'cd ~/tree && echo Y1D_LINES=$(grep -c "y1d" gpu_log.txt); echo ROWS=$(wc -l < gpu/y1d_rows.jsonl); python3 -c "import json; s=json.load(open(\"gpu/y1d_summary.json\")); print(\"ASKS:\",s[\"asks\"]); print(\"CONDS:\",s[\"conds\"]); print(\"N:\",s[\"n\"],\"SEED:\",s[\"seed\"]); print(\"AR:\",json.dumps(s[\"answerable_right\"])); print(\"NT:\",json.dumps(s[\"never_told_idk\"]))"' 2>&1 | tail -n 8
+Have fun!
+Y1D_LINES=71
+ROWS=203
+ASKS: 71
+CONDS: ['gold', 'all', 'k20']
+N: 4 SEED: 4021
+AR: {"gold|p382": 3, "gold|greedy": 0, "all|p382": 13, "all|greedy": 5, "k20|p382": 9, "k20|greedy": 5}
+NT: {"all|p382": 5, "all|greedy": 9, "k20|p382": 8, "k20|greedy": 10}
+[0m
+[0m$ [0mpwd; ls artifacts/claude-y1d-20260926/ 2>&1; git status --short -- artifacts/ 2>&1 | head
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ls: artifacts/claude-y1d-20260926/: No such file or directory
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+[0m
+[0m$ [0mmkdir -p artifacts/claude-y1d-20260926/gpu && scp -o StrictHostKeyChecking=no -P 37084 'root@ssh9.vast.ai:tree/gpu/y1d_rows.jsonl' artifacts/claude-y1d-20260926/gpu/y1d_rows.jsonl && scp -o StrictHostKeyChecking=no -P 37084 'root@ssh9.vast.ai:tree/gpu/y1d_summary.json' artifacts/claude-y1d-20260926/gpu/y1d_summary.json && scp -o StrictHostKeyChecking=no -P 37084 'root@ssh9.vast.ai:tree/gpu_log.txt' artifacts/claude-y1d-20260926/gpu/log.txt && ls -la artifacts/claude-y1d-20260926/gpu/ && wc -l artifacts/claude-y1d-20260926/gpu/y1d_rows.jsonl artifacts/claude-y1d-20260926/gpu/log.txt
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+total 184
+drwxr-xr-x  5 ben-hannan  staff    160 Sep 26 10:08 .
+drwxr-xr-x  3 ben-hannan  staff     96 Sep 26 10:08 ..
+-rw-r--r--  1 ben-hannan  staff   3389 Sep 26 10:08 log.txt
+-rw-r--r--  1 ben-hannan  staff  85383 Sep 26 10:08 y1d_rows.jsonl
+-rw-r--r--  1 ben-hannan  staff   3845 Sep 26 10:08 y1d_summary.json
+     203 artifacts/claude-y1d-20260926/gpu/y1d_rows.jsonl
+      74 artifacts/claude-y1d-20260926/gpu/log.txt
+     277 total
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 37084 root@ssh9.vast.ai 'cd ~/tree && sha256sum gpu/y1d_rows.jsonl gpu/y1d_summary.json gpu_log.txt' 2>&1 | tail -n 4; sha256sum artifacts/claude-y1d-20260926/gpu/*
+Have fun!
+68a2f934f6ac004a185c7b4afd3ba72b9c2001d7546c31686c13870d584193f6  gpu/y1d_rows.jsonl
+c09842ad4149e9d8dcbe8f76aeba7f9b4b605329d37e3107d4e8275aad382928  gpu/y1d_summary.json
+18f3a38db6121f4c72299a2c21435c9377d0b44ae700ac6f646112d7c5371711  gpu_log.txt
+18f3a38db6121f4c72299a2c21435c9377d0b44ae700ac6f646112d7c5371711  artifacts/claude-y1d-20260926/gpu/log.txt
+68a2f934f6ac004a185c7b4afd3ba72b9c2001d7546c31686c13870d584193f6  artifacts/claude-y1d-20260926/gpu/y1d_rows.jsonl
+c09842ad4149e9d8dcbe8f76aeba7f9b4b605329d37e3107d4e8275aad382928  artifacts/claude-y1d-20260926/gpu/y1d_summary.json
+[0m
+[0m$ [0mdate -u +%FT%TZ; echo y | vastai destroy instance 52757085 2>&1 | head -n 3; sleep 10; vastai show instances --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); [print(x.get('id'), x.get('label')) for x in d]"; date -u +%FT%TZ
+2026-09-26T14:08:33Z
+Are you sure you want to destroy instance 52757085? This is irreversible and will delete all data. [y/N] destroying instance 52757085.
+52751954 rent-lis-319f
+52752114 rent-brd8
+52755827 claude-director-depot
+52757517 rent-mu402
+52757832 rent-358i
+52757951 claude-notes-rd378L
+52758310 claude-fixsleep-dl4b
+2026-09-26T14:08:47Z
+[0m
+[0m$ [0mtail -n 3 artifacts/claude-y1d-20260926/gpu/log.txt; echo ---; ls artifacts/fable-predictions-ledger.md 2>&1; tail -n 5 artifacts/fable-predictions-ledger.md 2>&1
+[y1d] e2e-dev-10 t18 never_told gold all k20
+[y1d] e2e-dev-10 t19 partial gold all k20
+{"answerable_right": {"gold|p382": 3, "gold|greedy": 0, "all|p382": 13, "all|greedy": 5, "k20|p382": 9, "k20|greedy": 5}, "never_told_idk": {"all|p382": 5, "all|greedy": 9, "k20|p382": 8, "k20|greedy": 10}}
+---
+artifacts/fable-predictions-ledger.md
+- rent-358d GPU SPEND (2026-09-26, credit 6.33 at gate): rental 1 offer 46753295 (docker registry proxy refused, restarted once same error, destroyed stopped) + rental 2 offer 44173691 RTX 5090 dph 0.4852 (03:44:46Z-04:34:03Z, 0.82 h, ~$0.40); task total ~$0.41 of $0.80 budget, 2 rentals of max 3, 54 min of 1 h 30 min cap; post-destroy 0 rent-358d live. Checkpoints discarded with rental (Mac had 7 GB free < 8 GB copy bar) after sha256 recorded; 4 required files per run copied back.
+- rent-dl3 GPU OUTCOME (2026-09-26, rented RTX 5090, label rent-dl3, origin/main code unmodified, selftest ok): registered verdict FAIL (F1 false: A final lost sum 56 vs S 63, needs <= 31.5, per-seed s4 20 < 39 but s5 36 > 24; F2 false: 11 of 14 A nights lost > 10; F3 true: A final lucky 227, 216 >= 118 each, gains 325 >= 0.8 x 310; F4 true: 1 worse night, A s5n7 266 -> 216; F5 true: reached 53, 59 >= 30). Proved-wrong clause NOT triggered. Not INCONCLUSIVE (L0 59, S lost sum 63, pool 908). Rentals: 52685064 offer 46753297 (registry proxy error while stopped, destroyed ~$0) + 52685812 offer 44173877 KR dph 0.5130 (run 03:35-04:56Z, 81.2 min, destroyed 05:01Z); task total ~$0.86 of $1.50 budget, 2 rentals of max 3; post-destroy 0 rent-dl3 live. BASE openbmb/MiniCPM5-1B commit 87179e5c, torch 2.8.0+cu128, transformers 5.17.0. Code from origin/main ca08ccc1, byte-identical for dl-3 inputs at 43457707. No weights saved. See artifacts/claude-dl3-20260926/RESULTS-gpu.md + gpu/.
+- rent-bm391 GPU OUTCOME (2026-09-26, rented Linux GPU, label rent-bm391, unmodified origin/main + origin/builder-outbox code, seals bm391 3/3 + bm390-code 8/8 + e2e382-code 239/239 OK, selftests 10/10 + 13/13): BUDGET-STOP, no registered command completed except lane-3 mmlu_R (300 rows). Instance 52677751 (RTX 5090 offer 52604857, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 100, rented 01:51:26Z, destroyed 08:03:50Z, 6.21 h x dph $0.5103 = ~$3.17 projected; credit 9.0581 -> 7.4877 = $1.57 billed at destroy check, billing may lag); 1 rental of max 4; post-destroy 0 rent-bm391 live. Agent pace ~2 rows/min/LoCoMo-arm made 3x1986-row runs infeasible in $3.50 (needs ~14 h/arm). Killed by exact PID (2619, 2620, 3126 + drivers 2612, 2613, 2999; exits 143); lane drivers auto-advanced in kill window launching lane1-mmlu-ER, lane2-mmlu-E, lane3-locomo-R (~30 s, no output files, killed PIDs 3277, 3279, 3281, reported as deviation, not relaunched). Finished: GENERAL(mmlu,383,R) exit 0 wrote mmlu_R.jsonl rows=300. Unfinished with partial EP382 logs: LOCOMO(383e,ER) 456 rows, LOCOMO(382b,E) 445 rows (no locomo_*.jsonl wrote lines). Never started: both gsms, lane3 locomo (beyond 30 s stub), lane1/2 mmlu+gsm8k (beyond stubs). BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM path exact, READER safetensors b4fd93a2...890 verified on box, torch 2.8.0+cu128, transformers 5.17.0, pyarrow ok. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Sleep base-seed4102 JSON line recorded, pt 2ada54ac...ff069057. Smoke 6/6 exit 0. Peak GPU mem ~16933 MiB. Copy-back sha256-verified 5 files. See artifacts/claude-bm391-20260926/RESULTS-rent.md + run/.
+- rent-brd7 GPU OUTCOME (2026-09-26, rented RTX 5090, label rent-brd7, origin/main code unmodified, selftest ok, panel md5 matched): registered verdict NOT SHOWN (W cov@30 158,158,146 vs base 135, deltas +23,+23,+11, bar +24=159 missed every seed; W-base CI [2.65,13.31] above 0 so not proved wrong; W-C deltas 130,125,119; 183 wins + 20 own so not inconclusive; N 99,89,96 and C 28,33,27 collapse). Instance 52734191 (RTX 5090 offer 44173814 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 60, rented 10:57:28Z, destroyed 11:27:06Z, ~0.494 h x dph $0.49444 = ~$0.24); 1 rental of max 3; post-destroy 0 rent-brd7 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128. Run wall 20.1 min. No weights saved. See artifacts/claude-brd7-20260926/RESULTS-gpu.md + gpu/.
+- rent-dl4 GPU OUTCOME (2026-09-26, label rent-dl4, origin/main code unmodified, selftest ok): NO REGISTERED VERDICT, HOST-LOST. Rental 1 contract 52746763 offer 46753304 RTX 5090 dph 0.4722 (docker registry proxy refused while loading, destroyed, ~$0). Rental 2 contract 52747127 offer 43165155 RTX 5090 dph 0.4722 (loading ~10 min, SSH refused, destroyed; deviation: kept ~10 min vs 6-min rule, host showed no error). Rental 3 contract 52748076 offer 43995364 KR RTX 5090 dph 0.4944 (image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 60, torch 2.8.0+cu128 CUDA True, transformers 5.17.0 installed, BASE openbmb/MiniCPM5-1B @87179e5c downloaded; run launched detached 12:54Z, observed anchor pool 880 items, base lucky 59 reached 37 greedy 4 harm_right 200, S s6 n1 lost 7 lucky 82 KL 0.037, S s6 n2 lost 10 lucky 98 KL 0.058, then SSH refused and the instance record vanished = destroyed externally, Director notes Mac-agent destroy ~$0.32 to Fix sleep). 3 rentals of max 3; nothing copied back (disk lost with host); post-check 0 rent-dl4 live. Credit at gate 7.2011843180698705. No code edits, no weights, no TEST-ONLY panel (test puzzles generated in-run, never printed). Ledger appended locally, not pushed (this worktree branch serves another task; no result files exist to push).
+[0m
+[0m→ [0mRead artifacts/claude-y1d-20260926/gpu/y1d_summary.json
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json
+rows=[json.loads(l) for l in open('artifacts/claude-y1d-20260926/gpu/y1d_rows.jsonl')]
+def right(l): return l in ('RIGHT','RIGHT_CONFIRM')
+for c in ('gold','all','k20'):
+  rs=[r for r in rows if r['cond']==c]
+  ans=[r for r in rs if r['ask_type']!='never_told']
+  d4=sum(1 for r in ans if right(r['label_greedy']) and not right(r['label_p382']))
+  print(c,'n=',len(rs),'ans=',len(ans),'greedy_right=',sum(1 for r in ans if right(r['label_greedy'])),'p382_right=',sum(1 for r in ans if right(r['label_p382'])),'D4_guard_cost=',d4,'ans_wrongcand_p382=',sum(1 for r in ans if r['label_p382']=='WRONG_CANDIDATE'))
+"
+gold n= 61 ans= 61 greedy_right= 1 p382_right= 3 D4_guard_cost= 1 ans_wrongcand_p382= 2
+all n= 71 ans= 61 greedy_right= 5 p382_right= 13 D4_guard_cost= 1 ans_wrongcand_p382= 12
+k20 n= 71 ans= 61 greedy_right= 5 p382_right= 9 D4_guard_cost= 0 ans_wrongcand_p382= 7
+[0m
+[0m← [0mWrite artifacts/claude-y1d-20260926/RESULTS-gpu.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- y1d GPU OUTCOME (2026-09-26, rented RTX 5090, label claude-memory-y1d, origin/main code unmodified, SEAL 8/8 OK, selftest ok): diagnosis on DEV (71 asks x gold/all/k20, 4 samples + 1 greedy, seed 4021): answerable_right gold|p382 3, all|p382 13, k20|p382 9 (greedy 0/5/5); never_told idk all 5/10 (p382) 9/10 (greedy), k20 8/10 (p382) 10/10 (greedy). D1: A_gold 3 < 20, reading is the bottleneck. D2: F = -10, finding costs nothing. D3: A_k20 9 < A_all-3 = 10, ranking costs 4. D4 guard cost gold 1, all 1, k20 0. Routing not met (A_all 13 < 25). Proved-wrong clause NOT triggered (A_all 13 > 10). Instance 52757085 (offer 45043246, image pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime disk 80, rented 13:55:31Z, destroyed 14:08:33Z, ~0.22 h x dph $0.469 = ~$0.10) + failed rental 52756144 (offer 46753297, host docker-registry proxy error in loading ~6 min, destroyed, ~$0.04); task total ~$0.14 of $0.40 budget, 2 rentals of max 4, run wall ~2 min; post-destroy 0 claude-memory-y1d live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM 1110a243f, torch 2.8.0+cu129, credit at gate 5.499236376269863. Copy-back sha256-verified 3 files. No weights saved. See artifacts/claude-y1d-20260926/RESULTS-gpu.md + gpu/.
+EOF
+tail -n 1 artifacts/fable-predictions-ledger.md | head -c 300; echo; git status --short -- artifacts/claude-y1d-20260926/ artifacts/fable-predictions-ledger.md
+- y1d GPU OUTCOME (2026-09-26, rented RTX 5090, label claude-memory-y1d, origin/main code unmodified, SEAL 8/8 OK, selftest ok): diagnosis on DEV (71 asks x gold/all/k20, 4 samples + 1 greedy, seed 4021): answerable_right gold|p382 3, all|p382 13, k20|p382 9 (greedy 0/5/5); never_told idk all 5/10 (
+MM artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit add -f artifacts/claude-y1d-20260926/gpu/y1d_rows.jsonl artifacts/claude-y1d-20260926/gpu/y1d_summary.json artifacts/claude-y1d-20260926/gpu/log.txt artifacts/claude-y1d-20260926/RESULTS-gpu.md artifacts/fable-predictions-ledger.md 2>&1; git status --short -- artifacts/claude-y1d-20260926/ artifacts/fable-predictions-ledger.md
+A  artifacts/claude-y1d-20260926/RESULTS-gpu.md
+A  artifacts/claude-y1d-20260926/gpu/log.txt
+A  artifacts/claude-y1d-20260926/gpu/y1d_rows.jsonl
+A  artifacts/claude-y1d-20260926/gpu/y1d_summary.json
+M  artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit diff --cached --stat -- artifacts/claude-y1d-20260926/ artifacts/fable-predictions-ledger.md | tail -n 8; vastai show instances --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print('LIVE_LABELS:', sorted(set(x.get('label') for x in d)))"
+artifacts/claude-y1d-20260926/RESULTS-gpu.md       |  95 +++++++++
+ artifacts/claude-y1d-20260926/gpu/log.txt          |  74 +++++++
+ artifacts/claude-y1d-20260926/gpu/y1d_rows.jsonl   | 203 ++++++++++++++++++
+ artifacts/claude-y1d-20260926/gpu/y1d_summary.json | 236 +++++++++++++++++++++
+ artifacts/fable-predictions-ledger.md              |   4 +
+ 5 files changed, 612 insertions(+)
+LIVE_LABELS: ['claude-director-depot', 'claude-fixsleep-dl4b', 'claude-notes-rd378L', 'rent-358i', 'rent-brd8', 'rent-lis-319f', 'rent-mu402']
+[0m
