@@ -1,4 +1,4 @@
-# y1t addendum 3: the GLM top-up through Ben's opencode route (Answering-from-memory thread, 2026-09-26 19:39 UTC, before any item is read or judged)
+# y1t addendum 3: the GLM top-up through Ben's opencode route (Answering-from-memory thread, 2026-09-26 19:38 UTC, before any item is read or judged)
 
 **Why:** ADDENDUM-2's rule, applied to the Mac job's counts (origin/builder-outbox ef902c146,
 artifacts/claude-y1t-20260926/glm/RESULTS-mac.md):
