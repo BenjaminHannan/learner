@@ -94,3 +94,12 @@ The "proved wrong" line (TS − T < +2.0) was not reached: the practice did carr
   - switching the adapter on only when answering from a chat (the memory path), never for math or general
     questions.
   Both are queued in design/v3/30-modes/398-benchmarks-followups-2026-09-26.md. Neither is in 0.2c.
+
+## Blind recount: agrees (added ~05:35 UTC)
+A separate agent recomputed every number above from the raw files. Its score.json and per_question.json are
+byte-identical to score/, and its judge score equals audit/A3-score.json.
+- Redrawing random.Random(3972) reproduces the judged sample exactly.
+- No judge saw both arms of a question.
+- Caveat on blindness: it saw this commit's subject line before computing. It did not open this file.
+- One wording note: PLAN.md's "Why" gives T's median answer as 10 words. That is the scored first line (bm-397's
+  measure). bm-391's prf script counts whole replies and gives 8. PLAN is sealed and stays as written.
