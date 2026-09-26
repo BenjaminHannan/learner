@@ -37,3 +37,14 @@ One rental: 8 practice trainings like 358i (~80 min), then 16 short carry runs l
 ## Predictions (to be fixed at sealing)
 - X1 about 40%.
 - X2 about 20%, in line with 358x.
+
+## Added 16:01 UTC (Thread manager's checks, before sealing)
+- **Shared encoding:** all three kinds, switches included, use ONE token vocabulary and ONE layout: fact rows plus answer rows over generic entity ids, relation tokens and action tokens. That way a net practised on keys and recipes can represent a switches game at all. Without it, a FAIL would be true by construction and would say nothing.
+- **Validity mark X0:** fresh loop and fresh plain both reach the bar on switches within the 4,000-step budget on at least 3 of 4 seeds, as with 358x's X0. Otherwise the run is INCONCLUSIVE.
+- **Seeds:** no test or panel seed of this thread is in 900000-999999 (Creative's range). The ranges already used are separate:
+  - 358a/358i tests 35811-35832;
+  - mazes 35841-35844;
+  - 358b2 35900-35907;
+  - smoke panel 36000;
+  - 358x streams and dev 4100-4304.
+  The text games and the shared number squares also draw from named random streams ("keys:2:seed", "latin:4:6:seed"), so they can't collide with numeric seeds. The 358b3 blind panel seed will be chosen outside all of these, outside 47311 (Month-end's row A), and outside 900000-999999.
