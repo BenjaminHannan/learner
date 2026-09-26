@@ -127,3 +127,10 @@ agent's tokenizer and model (no second copy), and D1.train_copy leaves the model
   is L4/L6 (losses counted apart from gains). "Recoverable" (interrupted update, restart) is NOT tested in 0.2c: the
   adapter is saved via a temp file and os.replace and reloaded to exactly the trained weights every night (L1), but
   there is no interruption test, so the report lists it as open.
+- ~03:35 UTC, from Fix sleep (section 3 split: Fix sleep owns packaging and interruption tests for later versions in
+  scripts/claude_night.py; Month-end owns it inside 0.2c). scripts/claude_sleep02c.py now writes a sidecar with every
+  saved night (adapter02c.json: base-model fingerprint, code hash, adapter sha256, the night's greedy answers on 10
+  fixed day puzzles). A saved adapter loads only if the sidecar exists, its sha256 matches the file and the base
+  matches the model; otherwise the run stops (selftest 9/9). Report only: a fresh-process activation check
+  (rent-02c step 4a): with the adapter the 10 answers equal the saved night's, and with every LoRA scale at 0 at
+  least 1 differs. No mark changes.
