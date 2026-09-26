@@ -51,7 +51,8 @@ while [ ! -e "$H/STOP" ]; do
     n=$(basename "$f" .md)
     [ -e "$Q/$n.md" ] && continue
     running=$(ls "$Q"/*.running 2>/dev/null | wc -l)
-    [ "$running" -ge "$MAX" ] && break
+    # rentals mostly wait on vast (polls, uploads), so they get extra slots beyond MAX (Director 13:47 UTC 09-26, Ben 13:30 "BensPC's gpu should not be the blocker")
+    [ "$running" -ge 10 ] && break; [ "$running" -ge "$MAX" ] && case "$n" in rent-*|000-*) ;; *) continue;; esac
     load=$(sysctl -n vm.loadavg 2>/dev/null | awk '{print int($2)}'); [ -z "$load" ] && load=0
     # Ben 13:30 UTC 09-26 "BensPC's gpu should not be the blocker": rentals and read-only 000-* checks do their work off the Mac, so a busy Mac holds only local jobs
     if [ "$running" -ge 2 ] && [ "$load" -gt 60 ]; then case "$n" in rent-*|000-*) ;; *) log "load $load, holding $n ($running running)"; continue;; esac; fi
