@@ -62,3 +62,7 @@ grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If 
 exists, destroy, and report the exact error and traceback.
 
 BENSPC TASK HEADER (Director, 2026-09-26 19:50 UTC, after k1f-benspc ran nothing because the agent looked for BensPC on the Mac): every BensPC task puts the two lines of handoff/kit/benspc-task-header.txt right after its COMMON RULES line, verbatim (GPU marker rule + `ssh benspc`). The marker names the queue file as it is when it runs; the Director may rename files (1xx-/2xx-/3xx- order), so write "this file's name" rather than a fixed name, or expect the Director to fix it on rename.
+
+IMAGE TAG (Director 2026-09-26 20:05 UTC; 358t3 lost 2 rentals to `pytorch/pytorch:2.8.0`, which is not a real tag): the base image is `pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel` (or -runtime); bare `pytorch/pytorch:2.8.0` does not exist. New training still pins torch==2.11.0 inside it (TORCH VERSION rule) and follows TORCH UPGRADE.
+
+RESULTS PATH (Director 2026-09-26 20:05 UTC): Mac builders do not push to main (the worktree is ahead with unrelated files and artifacts/ is gitignored). The watcher carries runs/<job>/ reply files and every path on the task's PUSH line to builder-outbox; owners read results there and copy what main needs. Every task lists its outputs on a PUSH line; a builder that finds its push blocked stops trying and says so in its reply. Ledger lines a builder could not file go in its reply as suggested text; the Director files them.
