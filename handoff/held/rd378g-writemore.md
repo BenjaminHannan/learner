@@ -1,4 +1,4 @@
-HELD: do not run. Waiting for the Director's opencode helper v1.1 (v1 can delete other processes' sessions when calls run in parallel); the Trustworthy notes thread re-releases it by addendum.
+HELD: do not run. Waiting for the Director's opencode helper v1.1, because v1 leaks one opencode session per call (its cleanup diff is always empty: opencode files sessions under the enclosing worktree, builder-outbox cd1bf6977). The Trustworthy notes thread re-releases it by addendum.
 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-26 19:40 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.
 GPU: no (Mac CPU only; about 25-65 GLM 5.3 Flash calls through Ben's opencode subscription, $0 per run; no OpenRouter, no rental). May run at the same time as rd378k-gate3oc.
 
