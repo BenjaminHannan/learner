@@ -8,11 +8,14 @@ step runs on a question turn when the agent's final reply
   (a) abstains or asks to rephrase (382b's trigger), or
   (b) is turn310's ask-back ("Just to check: ...?"), which on a question turn means the reader misread the question
       as a statement to save.
-The answer step reads the recalled heard turns oldest first in the prompt layout and decoding that y1f picked on DEV
+The answer step reads every heard user turn, oldest first, when they fit in CTX_CHARS_Y1W characters, else the
+store's top K_Y1W for the question, oldest first (Benchmarks, 14:39 UTC: identical on bank-sized lives, where the
+top 20 is every earlier turn, and it avoids the store's misses on long histories). It reads them in the prompt layout and decoding that y1f picked on DEV
 by its pre-set rule (artifacts/claude-y1f-20260926/PLAN.md; scripts/claude_y1f_layout.py: messages() and checked(),
 i.e. 338 strict guard + G5, abstaining answers skipped). It fails closed: if no answer passes, the agent's own reply
 stays. Settings, fixed at the seal:
-  K_Y1W       rows recalled (20, as 382b; on bank-sized lives this is every earlier user turn)
+  CTX_CHARS_Y1W  12000 characters of heard turns read whole (about 3000 tokens)
+  K_Y1W       rows recalled when they don't fit (20, as 382b)
   LAYOUT_Y1W  y1f's winning layout (L0, L1, L1i or L2)
   DECODE_Y1W  y1f's winning decoding: "p382" (4 samples T 0.7 / top-p 0.9, first pass wins) or "g1" (one greedy)
 When (b) is replaced, turn310's pending ask-back is dropped (loop.lis310_pending = None), so a later "yes" cannot
@@ -33,6 +36,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 K_Y1W = 20
+CTX_CHARS_Y1W = 12000
 LAYOUT_Y1W = ""          # set at the seal from y1f's pick (winner), never after
 DECODE_Y1W = ""          # "p382" or "g1", same
 MAX_NEW_G1 = 200         # y1f's greedy answer length
@@ -46,6 +50,14 @@ def askback_reply(reply: str) -> bool:
 def _order(rows: list[dict]) -> list[dict]:
     """Recalled rows oldest first (y1f's rows are in time order)."""
     return sorted(rows, key=lambda r: (min(r.get("turn_ids") or [0]), r.get("id", "")))
+
+
+def _rows(store, query: str, k: int) -> tuple[list[dict], str]:
+    """Every heard user turn when they fit, else the store's top k; oldest first either way."""
+    heard = [r for r in store.rows if r.get("source") == "heard"]
+    if heard and sum(len(r["text"]) for r in heard) <= CTX_CHARS_Y1W:
+        return _order(heard), "whole"
+    return _order(store.recall(query, k=k)), "top_k"
 
 
 def _greedy(gen, msgs: list[dict]) -> str:
@@ -76,7 +88,7 @@ def install_answer_y1w(loop, gen, store, k: int = K_Y1W, n: int | None = None) -
     n = E.N382 if n is None else n
     inner = loop.turn
     loop.ep382_stats = {"turns": 0, "tried": 0, "tried_askback": 0, "no_rows": 0, "replaced": 0,
-                        "replaced_askback": 0, "all_failed": 0, "abstained": 0,
+                        "replaced_askback": 0, "all_failed": 0, "abstained": 0, "whole": 0, "top_k": 0,
                         "G1": 0, "G2": 0, "G3": 0, "G4": 0, "G5": 0}
     st = loop.ep382_stats
 
@@ -93,7 +105,8 @@ def install_answer_y1w(loop, gen, store, k: int = K_Y1W, n: int | None = None) -
             return parts
         st["tried"] += 1
         st["tried_askback"] += int(ask_back)
-        rows = _order(store.recall(E.query_of(text), k=k))
+        rows, how = _rows(store, E.query_of(text), k)
+        st[how] += 1
         if not rows:
             st["no_rows"] += 1
             E._log({"state": str(getattr(loop, "dir", "")), "outcome": "no_rows", "askback": ask_back})
@@ -116,7 +129,7 @@ def install_answer_y1w(loop, gen, store, k: int = K_Y1W, n: int | None = None) -
             st["replaced"] += 1
             loop.ep382_last_rows = [r["id"] for r in rows]
             E._log({"state": str(getattr(loop, "dir", "")), "outcome": "replaced", "askback": ask_back,
-                    "rows": loop.ep382_last_rows, "fails": fails})
+                    "rows": loop.ep382_last_rows, "input": how, "fails": fails})
             return [c]
         st["all_failed"] += 1
         E._log({"state": str(getattr(loop, "dir", "")), "outcome": "all_failed", "askback": ask_back,
@@ -139,7 +152,7 @@ def build_y1w(state_dir, args):
     finally:
         X.MEM02C, E.install_answer382 = old_mem, old_install
     loop.layers330c = [("answer_y1w" if x == "answer382" else x) for x in loop.layers330c]
-    loop.y1w = {"k": K_Y1W, "layout": LAYOUT_Y1W, "decode": DECODE_Y1W, "order": "time"}
+    loop.y1w = {"k": K_Y1W, "ctx_chars": CTX_CHARS_Y1W, "layout": LAYOUT_Y1W, "decode": DECODE_Y1W, "order": "time"}
     return loop
 
 
@@ -241,8 +254,17 @@ def selftest() -> None:
         assert loop.turn("wren's 9 right?") == ["Just to check: is Wren's age 9?"] and loop.lis310_pending; ok += 1
         rows = [{"id": "h2", "turn_ids": [5]}, {"id": "h1", "turn_ids": [2]}]
         assert [r["id"] for r in _order(rows)] == ["h1", "h2"]; ok += 1
+        # input: every heard turn while they fit, else the store's top k (oldest first)
+        assert loop.ep382_stats["whole"] > 0 and loop.ep382_stats["top_k"] == 0; ok += 1
+        global CTX_CHARS_Y1W
+        CTX_CHARS_Y1W = 10
+        rows, how = _rows(st, "cat", 2)
+        assert how == "top_k" and len(rows) == 2 and rows == _order(rows); ok += 1
+        CTX_CHARS_Y1W = 12000
+        rows, how = _rows(st, "cat", 2)
+        assert how == "whole" and len(rows) == len(st.rows) and rows[0]["text"] == "my beagle Ziggy turned 4 today"; ok += 1
     LAYOUT_Y1W, DECODE_Y1W = "", ""
-    print(f"selftest ok ({ok}/12)")
+    print(f"selftest ok ({ok}/15)")
 
 
 if __name__ == "__main__":
