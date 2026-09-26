@@ -20,3 +20,10 @@ never saved on the 10 ambiguous-pronoun rows. But 3 of the 27 newly admitted sav
 which is more than the bars allow. FAILs stay FAILs: the compiler is not changed.
 Since Ben chose "Retrain first" (16:46), owners named earlier in the chat become code-labelled backref rows in lis-320's
 GLM data, so the reader itself learns them. The compiler contract is re-tested only on lis-320, as its own single change.
+
+## Correction (2026-09-26 17:03 UTC)
+Line 19 says "1 of them the wrong person". That undercounts: all 3 of the wrong admitted saves were the wrong person.
+The `admitted_wrong_owner` count in scripts/claude_lis319o_owner.py only matched when the relation name was identical;
+two of the three used a synonym of the gold relation (employer vs works_at, occupation vs job), the third had the same
+relation (allergy) with a different owner. The FAIL verdict and the O2/O4 counts do not change. lis-320 will score
+wrong-person saves on backref rows as their own mark, on the owner only, whatever the relation is called.
