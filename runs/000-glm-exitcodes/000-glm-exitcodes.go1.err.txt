@@ -1,0 +1,1869 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; uptime; df -g /; ls runs/ 2>&1 | head -n 100
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+16:33  up 3 days,  6:26, 4 users, load averages: 114.87 98.58 95.73
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        51    20%  484014 543048840    0%   /
+000-cache-pin
+000-vast-rescue
+own-probe-1
+[0m
+[0m$ [0mls -la; git status --short | head -n 50; git log --oneline -5
+total 336
+drwxr-xr-x    30 ben-hannan  staff    960 Sep 26 16:27 .
+drwxr-xr-x     8 ben-hannan  staff    256 Sep 26 08:49 ..
+drwxr-xr-x@    3 ben-hannan  staff     96 Sep 22 12:29 .claude
+-rw-r--r--     1 ben-hannan  staff    105 Sep 19 18:35 .git
+-rw-r--r--     1 ben-hannan  staff     97 Sep 19 18:35 .gitignore
+drwxr-xr-x@    6 ben-hannan  staff    192 Sep 21 23:28 .pytest_cache
+-rw-r--r--     1 ben-hannan  staff  25924 Sep 19 18:35 ADVERSARIAL_REVIEW.md
+-rw-r--r--     1 ben-hannan  staff   8771 Sep 19 18:35 ARCHITECTURE_DECISION.md
+drwxr-xr-x     6 ben-hannan  staff    192 Sep 19 22:01 archive
+drwxr-xr-x@  596 ben-hannan  staff  19072 Sep 26 16:17 artifacts
+drwxr-xr-x     7 ben-hannan  staff    224 Sep 23 17:19 data
+drwxr-xr-x    14 ben-hannan  staff    448 Sep 23 22:40 design
+drwxr-xr-x@    6 ben-hannan  staff    192 Sep 23 16:06 handoff
+drwxr-xr-x    19 ben-hannan  staff    608 Sep 19 22:01 learnlab
+drwxr-xr-x    12 ben-hannan  staff    384 Sep 19 22:01 memorylab
+drwxr-xr-x@    4 ben-hannan  staff    128 Sep 22 04:38 notebook
+drwxr-xr-x    25 ben-hannan  staff    800 Sep 19 22:01 premonition
+drwxr-xr-x@    3 ben-hannan  staff     96 Sep 22 00:52 private
+-rw-r--r--     1 ben-hannan  staff   3610 Sep 19 18:35 README.md
+-rw-r--r--     1 ben-hannan  staff   8676 Sep 19 18:35 REMOTE_RUN.md
+-rw-r--r--     1 ben-hannan  staff  18053 Sep 19 18:35 RESEARCH_REVIEW.md
+drwxr-xr-x    21 ben-hannan  staff    672 Sep 19 22:01 reviews
+-rw-r--r--     1 ben-hannan  staff  10605 Sep 19 18:35 run.py
+-rwxr-xr-x     1 ben-hannan  staff    293 Sep 19 18:35 run.sh
+drwxr-xr-x     5 ben-hannan  staff    160 Sep 24 00:23 runs
+drwxr-xr-x     8 ben-hannan  staff    256 Sep 23 22:16 scratchpad
+drwxr-xr-x  1481 ben-hannan  staff  47392 Sep 26 16:02 scripts
+-rw-r--r--     1 ben-hannan  staff    799 Sep 23 14:03 state.json
+-rw-r--r--     1 ben-hannan  staff  63886 Sep 19 18:35 TEACHING_TO_TEST_CONTRACT.md
+drwxr-xr-x    78 ben-hannan  staff   2496 Sep 22 02:21 tests
+A  artifacts/claude-glm-helper-v11-20260926/REPORT.md
+A  artifacts/claude-rsn358i2-20260926/RESULTS.md
+A  artifacts/claude-rsn358i2-20260926/SEAL-run.sha256.txt
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/loop-s1.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/loop-s2.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/loop-s3.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/loop-s4.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_summary.json
+A  scripts/claude_glm_opencode_v11.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+ce8643109 k1h-glm salvage glm-v1: 0 chats/0 answers, chats-log only (EMPTY)
+9c11efc5b claude-fixsleep-dl7b: shaky-fact KL-anchor GPU run (verdict FAIL; F1/F2/F4/F5 pass, F3 fail) + ledger line (own paths only)
+ab09c935c Add vast instance check report 20260926l
+599f870cd claude-credit-20260926k: read-only vast money check 2026-09-26
+ef311c7bd depot 52755827 STOPPED (disk kept) 2026-09-26
+[0m
+[0m$ [0mls runs/; echo ---; ls artifacts/ | grep -i -E "glm|g406|gate3|writemore|k1h|y1t|lis-320" | head -n 100; echo ---; ls scratchpad/briefs/ 2>&1 | head -n 100
+000-cache-pin
+000-vast-rescue
+own-probe-1
+---
+claude-g406-20260926
+claude-glm-helper-v11-20260926
+claude-glm-opencode-20260926
+claude-glm-throughput-20260926
+claude-glm-v11-twoproc-20260926
+claude-glmframes-20260926
+claude-k1h-20260926
+claude-stop-k1h-20260926
+claude-y1t-20260926
+---
+ls: scratchpad/briefs/: No such file or directory
+[0m
+[0m$ [0mls scratchpad/; echo ===; ls artifacts/claude-g406-20260926/; echo ===; ls artifacts/claude-k1h-20260926/; echo ===; ls artifacts/claude-y1t-20260926/; echo ===; ls artifacts/claude-glm-helper-v11-20260926/ artifacts/claude-glm-opencode-20260926/ artifacts/claude-glm-throughput-20260926/ 2>&1 | head -n 200
+o0c-scratch-20260923
+srv270b.ps1
+stop270b_panel.ps1
+stop270b.ps1
+w255
+w255b
+zsh:1: == not found
+[0m
+[0m$ [0mls artifacts/claude-g406-20260926/
+run
+[0m
+[0m→ [0mRead artifacts
+[0m
+[0m$ [0mfor d in artifacts/claude-g406-20260926 artifacts/claude-rd378k-20260926 artifacts/claude-rd378g-20260926 artifacts/claude-k1h-20260926 artifacts/claude-y1t-20260926 artifacts/claude-lis320-20260926; do echo "== $d =="; ls -R "$d" 2>&1 | head -n 120; echo; done
+== artifacts/claude-g406-20260926 ==
+run
+
+artifacts/claude-g406-20260926/run:
+glm.jsonl
+glm.log
+RESULTS.md
+verdict.json
+
+== artifacts/claude-rd378k-20260926 ==
+gate
+gate2
+gate3
+glm
+teacher-log.txt
+
+artifacts/claude-rd378k-20260926/gate:
+labels.jsonl
+
+artifacts/claude-rd378k-20260926/gate2:
+failures.jsonl
+labels.jsonl
+teacher-log.txt
+
+artifacts/claude-rd378k-20260926/gate3:
+failures.jsonl
+labels_passA.jsonl
+labels.jsonl
+teacher-log.txt
+
+artifacts/claude-rd378k-20260926/glm:
+dialogs.jsonl
+
+== artifacts/claude-rd378g-20260926 ==
+glm
+teacher-log.txt
+
+artifacts/claude-rd378g-20260926/glm:
+notes_w1.jsonl
+
+== artifacts/claude-k1h-20260926 ==
+glm-v1
+
+artifacts/claude-k1h-20260926/glm-v1:
+chats-log.txt
+REPORT.md
+
+== artifacts/claude-y1t-20260926 ==
+glm
+
+artifacts/claude-y1t-20260926/glm:
+drops.jsonl
+glm_0.log
+glm_1.log
+glm_2.log
+glm_3.log
+items
+kept.jsonl
+raw.jsonl
+RESULTS-mac.md
+seeds.jsonl
+
+artifacts/claude-y1t-20260926/glm/items:
+items_dev.jsonl
+items_train.jsonl
+
+== artifacts/claude-lis320-20260926 ==
+pilot
+pilot2
+pilot3
+
+artifacts/claude-lis320-20260926/pilot:
+drops.jsonl
+kept.jsonl
+raw.jsonl
+RESULTS.md
+seeds.jsonl
+style.json
+
+artifacts/claude-lis320-20260926/pilot2:
+drops.jsonl
+kept.jsonl
+raw.jsonl
+RESULTS.md
+seeds.jsonl
+style.json
+
+artifacts/claude-lis320-20260926/pilot3:
+check.json
+drops.jsonl
+glm.log
+kept.jsonl
+raw.jsonl
+RESULTS.md
+seeds.jsonl
+style.json
+[0m
+[0m$ [0mps aux | grep -i -E "glm|g406|rd378|k1h|y1t|lis320|lis-320|opencode|claude" | grep -v grep | head -n 60; echo "---PS-FULL-COUNT---"; ps aux | wc -l; uptime; df -g /
+...output truncated...
+
+Full output saved to: /Users/ben-hannan/.local/share/opencode/tool-output/tool_0df6c9d9b001lcSYO6aBPFERTK
+
+---PS-FULL-COUNT---
+     881
+16:33  up 3 days,  6:26, 4 users, load averages: 115.61 99.82 96.24
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        51    20%  484014 542558400    0%   /
+[0m
+[0m$ [0mps aux | grep -E "claude_|glm\.log|rd378|g406|k1h|y1t" | grep -v grep | cut -c1-300 | head -n 60
+ben-hannan       50259  92.5  0.7 489395728 241712   ??  RN    4:27PM   6:11.01 /Users/ben-hannan/.cache/uv/builds-v0/.tmplhksYE/bin/python -B scripts/claude_rv391_critic.py probe --ckpt /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s3/final.pt --out artifacts/claude-rv
+ben-hannan       50258  91.0  0.8 489412672 257120   ??  RN    4:27PM   6:07.13 /Users/ben-hannan/.cache/uv/builds-v0/.tmpCxVh3f/bin/python -B scripts/claude_rv391_critic.py probe --ckpt /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s1/final.pt --out artifacts/claude-rv
+ben-hannan       50260  90.4  0.7 489395536 242144   ??  RN    4:27PM   6:10.05 /Users/ben-hannan/.cache/uv/builds-v0/.tmpVatbyE/bin/python -B scripts/claude_rv391_critic.py probe --ckpt /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s2/final.pt --out artifacts/claude-rv
+ben-hannan       53186  17.0  2.1 562806912 697424   ??  RN    4:33PM   0:14.99 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:000-glm-exitcodes.g
+ben-hannan       89454   2.7  0.4 494470448 134208   ??  S     7:37AM   5:26.23 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort xhigh --model claude-opus-5-5 --permissi
+ben-hannan       49770   2.5  1.8 562796688 609408   ??  SN    4:26PM   0:20.82 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rv391critic-mac.go1
+ben-hannan       46743   0.5  0.7 562815856 221008   ??  SN    4:22PM   0:22.61 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:k1h-glm2.go1.46711 
+ben-hannan       11177   0.4  0.4 494458448 122352   ??  S     7:44PM  11:56.89 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort medium --model claude-opus-5-5 --permiss
+ben-hannan       30460   0.3  0.4 494457888 121152   ??  S     9:09PM  11:43.67 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort medium --model claude-opus-5-5 --permiss
+ben-hannan       16147   0.3  0.4 494466544 150944   ??  S     8:49AM   6:29.12 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort xhigh --model claude-opus-5-5 --permissi
+ben-hannan       20770   0.2  0.3 494454272 116976   ??  S    Thu09PM  28:03.15 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort medium --model claude-opus-5-5 --permiss
+ben-hannan       89101   0.1  0.4 494453520 133232   ??  S     7:37AM   4:56.51 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort xhigh --model claude-opus-5-5 --permissi
+ben-hannan       13721   0.1  0.4 494466160 134800   ??  S     8:43AM   4:47.23 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort xhigh --model claude-opus-5-5 --permissi
+ben-hannan       53240   0.1  2.0 562789648 666832   ??  SN    4:33PM   0:13.92 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:000-lis320-ocdiag-m
+ben-hannan       49571   0.0  1.8 562810704 606464   ??  SN    4:26PM   0:23.32 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rd378k-gate3oc.go1.
+ben-hannan       49540   0.0  0.0 488781648   1856   ??  SN    4:26PM   0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rd378k-gate3oc.md
+ben-hannan       49522   0.0  1.8 562798704 611040   ??  SN    4:26PM   0:22.04 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rd378g-writemore.go
+ben-hannan       49465   0.0  0.0 488781696   1344   ??  SN    4:26PM   0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rd378g-writemore.md
+ben-hannan       47258   0.0  0.1 488847120  22160   ??  SN    4:23PM   0:00.65 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_k1h_glm_v11.py answer --items artifacts/claude-k1e-20260926/train/items.jsonl --out O --max-minutes 100
+ben-hannan       47257   0.0  0.0 463615168  12752   ??  SN    4:23PM   0:00.03 uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_glm_v11.py answer --items artifacts/claude-k1e-20260926/train/items.jsonl --out O --max-minutes 100
+ben-hannan       47255   0.0  0.0 488785952   1456   ??  SNs   4:23PM   0:00.01 /bin/zsh -c date -u +"%Y-%m-%d %H:%M:%S UTC ANSWER1-START"; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_glm_v11.py answer --items artifacts/claude-k1e-20260926/train/items.jsonl --out O --max
+ben-hannan       46711   0.0  0.0 488782096   1344   ??  SN    4:22PM   0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/k1h-glm2.md
+ben-hannan       36430   0.0  1.4 562798240 461600   ??  SN    4:06PM   0:40.57 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:100-claude-sleep-35
+ben-hannan       27742   0.0  0.0 488786448    736   ??  Ss    9:08AM   0:00.01 /bin/zsh -c source /Users/ben-hannan/.claude/shell-snapshots/snapshot-zsh-1790426970485-o7t71k.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \builtin unalias -- 'unsetenv'; 
+ben-hannan       16146   0.0  0.0 488781904    720   ??  S     8:49AM   0:00.00 /Applications/Claude.app/Contents/Helpers/disclaimer --pgroup -- /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-for
+ben-hannan       13720   0.0  0.0 488781600    720   ??  S     8:43AM   0:00.00 /Applications/Claude.app/Contents/Helpers/disclaimer --pgroup -- /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-for
+ben-hannan       89453   0.0  0.0 488782256    720   ??  S     7:37AM   0:00.00 /Applications/Claude.app/Contents/Helpers/disclaimer --pgroup -- /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-for
+ben-hannan       89100   0.0  0.0 488781696    720   ??  S     7:37AM   0:00.00 /Applications/Claude.app/Contents/Helpers/disclaimer --pgroup -- /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-for
+ben-hannan       88343   0.0  0.4 494471072 132992   ??  S     7:35AM   5:17.06 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort xhigh --model claude-opus-5-5 --permissi
+ben-hannan       88342   0.0  0.0 488782080    720   ??  S     7:35AM   0:00.00 /Applications/Claude.app/Contents/Helpers/disclaimer --pgroup -- /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-for
+ben-hannan       30459   0.0  0.0 488782112    720   ??  S     9:09PM   0:00.00 /Applications/Claude.app/Contents/Helpers/disclaimer --pgroup -- /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-for
+ben-hannan       11176   0.0  0.0 488781392    720   ??  S     7:44PM   0:00.00 /Applications/Claude.app/Contents/Helpers/disclaimer --pgroup -- /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-for
+ben-hannan       20769   0.0  0.0 488781360    720   ??  S    Thu09PM   0:00.00 /Applications/Claude.app/Contents/Helpers/disclaimer --pgroup -- /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-for
+ben-hannan       20072   0.0  0.3 494454176 113488   ??  S    Thu09PM  26:59.87 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort medium --model claude-opus-5-5 --permiss
+ben-hannan       20071   0.0  0.0 488781360    720   ??  S    Thu09PM   0:00.00 /Applications/Claude.app/Contents/Helpers/disclaimer --pgroup -- /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-for
+ben-hannan       17970   0.0  0.4 494450176 128560   ??  S    Thu09PM  30:47.40 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort medium --model claude-opus-5 --permissio
+ben-hannan       17969   0.0  0.0 488781792    720   ??  S    Thu09PM   0:00.00 /Applications/Claude.app/Contents/Helpers/disclaimer --pgroup -- /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.281/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-for
+ben-hannan        1535   0.0  0.0 488863536   2480   ??  S    Wed12PM   1:03.03 /Users/ben-hannan/premonition-chat/chatdemo-venv/bin/python -B -u scripts/claude_chatdemo_server.py
+ben-hannan       52553   0.0  0.0 488786640   1312   ??  SNs   4:31PM   0:00.01 /bin/zsh -c sleep 180; echo "===poll $(date -u +%H:%M:%S)==="; wc -l artifacts/claude-rd378k-20260926/gate3oc-logs/step4-label.log; tail -n 20 artifacts/claude-rd378k-20260926/gate3oc-logs/step4-label.log; ps -p 50350 -o
+ben-hannan       50352   0.0  0.1 488811024  19792   ??  SN    4:28PM   0:00.09 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_glm_v11_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_tr
+ben-hannan       50350   0.0  0.0 463630528  11968   ??  SN    4:28PM   0:00.02 uv run --offline --no-project --python 3.12 python -B scripts/claude_glm_v11_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --hash-rem
+ben-hannan       50343   0.0  0.1 488814368  19136   ??  SN    4:28PM   0:00.09 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_glm_v11_run.py scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.js
+ben-hannan       50341   0.0  0.0 463612096  12224   ??  SN    4:28PM   0:00.02 uv run --offline --no-project --python 3.12 python -B scripts/claude_glm_v11_run.py scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18-20,22-39 --out artif
+ben-hannan       50252   0.0  0.1 463766080  19568   ??  SN    4:27PM   0:00.02 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rv391_critic.py probe --ckpt /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s1/final.pt --out ar
+ben-hannan       50254   0.0  0.1 463764800  19296   ??  SN    4:27PM   0:00.02 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rv391_critic.py probe --ckpt /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s3/final.pt --out ar
+ben-hannan       50253   0.0  0.1 463764144  20608   ??  SN    4:27PM   0:00.02 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rv391_critic.py probe --ckpt /Users/ben-hannan/premonition-models/rsn358i/claude-rsn358i-20260926/W/loop-s2/final.pt --out ar
+[0m
+[0m$ [0mps aux | grep -E "g406|y1t|madeup|topup" | grep -v grep | cut -c1-400; echo "---titles---"; ps aux | grep "opencode run" | grep -v grep | cut -c1-500
+ben-hannan       53186  20.9  2.1 562806352 702240   ??  SN    4:33PM   0:15.34 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:000-glm-exitcodes.go1.53113 COMMON RULES (the director, Claude, wrote this task on 2026-09-26). You are a build/verific
+---titles---
+ben-hannan       54057  21.6  2.0 562710576 676384   ??  SN    4:33PM   0:08.06 /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash --title glm11-2b28a772cdbd4583a0ab6682ec949f75 You are checking memory notes that a small model wrote about a conversation. Below is one conversation as JSON:\012{"dialog","kind","speakers","date","turns":[{"t","speaker","text","notes":[{"text","cites","when"}]}]}.\012cites are offsets from the note's own turn (0 = that turn, -1 = the turn before, ...).\01
+ben-hannan       53186  19.8  2.1 562806352 702240   ??  SN    4:33PM   0:15.37 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:000-glm-exitcodes.go1.53113 COMMON RULES (the director, Claude, wrote this task on 2026-09-26). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/w
+ben-hannan       52643  15.7  1.7 562698544 558432   ??  SN    4:33PM   0:11.61 /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash --title glm11-877f2eea69704f258036be03b6a10435 Write 6 realistic conversations with memory notes, as a JSON list of 6 objects. Each object has exactly the\012keys "kind", "speakers", "date", "turns".\012- 3 with kind "chat": a user talks with a personal assistant. speakers = ["user", "assistant"]. Turns alternate, starting\012  with the user. The assistant
+ben-hannan       49522   1.6  1.8 562798704 611040   ??  SN    4:26PM   0:22.06 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rd378g-writemore.go1.49465 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-26 (updated for helper v1.1) 19:40 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git
+ben-hannan       49770   0.1  1.8 562796688 609408   ??  SN    4:26PM   0:20.84 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rv391critic-mac.go1.49740 COMMON RULES (the thought-memory thread, "Memory for its own thoughts", Claude, wrote this task on 2026-09-26). Additive only, fictional names, no secrets, never write to the repo-root notebook
+ben-hannan       53240   0.1  2.0 562788528 666704   ??  SN    4:33PM   0:13.95 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:000-lis320-ocdiag-mac.go1.53212 COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fict
+ben-hannan       46743   0.1  0.7 562815856 220800   ??  SN    4:22PM   0:22.62 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:k1h-glm2.go1.46711 COMMON RULES (the "Creative answers in chat" thread, Claude, wrote this task on 2026-09-26 20:13 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (
+ben-hannan       49571   0.0  1.8 562811264 606448   ??  SN    4:26PM   0:23.34 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rd378k-gate3oc.go1.49540 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-26 20:09 UTC; released after gate3's log showed 298 lines with a 402, see VERIFY-gate3.md). Get every file with `
+ben-hannan       36430   0.0  1.4 562798240 461600   ??  SN    4:06PM   0:40.60 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:100-claude-sleep-358i3pc.go1.36364 COMMON RULES: follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (the sleep research thread, Claude, wrote this task on 2026-09-26). Report in your final reply: verd
+[0m
+[0m$ [0mls /Users/ben-hannan/premonition-watch/queue/ 2>&1 | head -n 100; echo "---"; ls artifacts/claude-rd378k-20260926/gate3oc-logs/ 2>&1 | head -n 50; ls artifacts/claude-glm-helper-v11-20260926/ 2>&1 | head -n 50; ls -la artifacts/claude-g406-20260926/run/ artifacts/claude-k1h-20260926/glm-v1/ artifacts/claude-y1t-20260926/glm/ 2>&1 | head -n 100
+000-adapters-0926d.exit
+000-adapters-0926d.go1.done
+000-adapters-0926d.go1.err.txt
+000-adapters-0926d.go1.reply.md
+000-adapters-0926d.md
+000-adapters-0926d.pushed
+000-benspc-check.exit
+000-benspc-check.go1.done
+000-benspc-check.go1.err.txt
+000-benspc-check.go1.reply.md
+000-benspc-check.md
+000-benspc-check.pushed
+000-cache-pin.exit
+000-cache-pin.go1.done
+000-cache-pin.go1.err.txt
+000-cache-pin.go1.reply.md
+000-cache-pin.md
+000-cache-pin.pushed
+000-check-358t.exit
+000-check-358t.go1.done
+000-check-358t.go1.err.txt
+000-check-358t.go1.reply.md
+000-check-358t.md
+000-check-358t.pushed
+000-ckpt-copy.exit
+000-ckpt-copy.go1.done
+000-ckpt-copy.go1.err.txt
+000-ckpt-copy.go1.reply.md
+000-ckpt-copy.md
+000-ckpt-copy.pushed
+000-credit-0926b.exit
+000-credit-0926b.go1.done
+000-credit-0926b.go1.err.txt
+000-credit-0926b.go1.reply.md
+000-credit-0926b.md
+000-credit-0926b.pushed
+000-credit-0926j.exit
+000-credit-0926j.go1.done
+000-credit-0926j.go1.err.txt
+000-credit-0926j.go1.reply.md
+000-credit-0926j.md
+000-credit-0926j.pushed
+000-credit-0926k.exit
+000-credit-0926k.go1.done
+000-credit-0926k.go1.err.txt
+000-credit-0926k.go1.reply.md
+000-credit-0926k.md
+000-credit-0926k.pushed
+000-credit-0926m.exit
+000-credit-0926m.go1.done
+000-credit-0926m.go1.err.txt
+000-credit-0926m.go1.reply.md
+000-credit-0926m.md
+000-credit-0926m.pushed
+000-diskcheck-0926.exit
+000-diskcheck-0926.go1.done
+000-diskcheck-0926.go1.err.txt
+000-diskcheck-0926.go1.reply.md
+000-diskcheck-0926.md
+000-diskcheck-0926.pushed
+000-find-brd8w.exit
+000-find-brd8w.go1.done
+000-find-brd8w.go1.err.txt
+000-find-brd8w.go1.reply.md
+000-find-brd8w.md
+000-find-brd8w.pushed
+000-glm-exitcodes.go1.err.txt
+000-glm-exitcodes.go1.reply.md
+000-glm-exitcodes.md
+000-glm-exitcodes.running
+000-glm-helper-v11.exit
+000-glm-helper-v11.go1.done
+000-glm-helper-v11.go1.err.txt
+000-glm-helper-v11.go1.reply.md
+000-glm-helper-v11.md
+000-glm-helper-v11.pushed
+000-glm-opencode-probe.exit
+000-glm-opencode-probe.go1.done
+000-glm-opencode-probe.go1.err.txt
+000-glm-opencode-probe.go1.reply.md
+000-glm-opencode-probe.md
+000-glm-opencode-probe.pushed
+000-glm-throughput.exit
+000-glm-throughput.go1.done
+000-glm-throughput.go1.err.txt
+000-glm-throughput.go1.reply.md
+000-glm-throughput.md
+000-glm-throughput.pushed
+000-glm-v11-twoproc.exit
+000-glm-v11-twoproc.go1.done
+000-glm-v11-twoproc.go1.err.txt
+000-glm-v11-twoproc.go1.reply.md
+000-glm-v11-twoproc.md
+000-glm-v11-twoproc.pushed
+000-instances-0926c.exit
+000-instances-0926c.go1.done
+000-instances-0926c.go1.err.txt
+000-instances-0926c.go1.reply.md
+000-instances-0926c.md
+000-instances-0926c.pushed
+---
+ls: artifacts/claude-rd378k-20260926/gate3oc-logs/: No such file or directory
+REPORT.md
+artifacts/claude-g406-20260926/run/:
+total 56
+drwxr-xr-x  6 ben-hannan  staff   192 Sep 26 16:11 .
+drwxr-xr-x  3 ben-hannan  staff    96 Sep 26 16:11 ..
+-rw-r--r--  1 ben-hannan  staff  8729 Sep 26 16:11 glm.jsonl
+-rw-r--r--  1 ben-hannan  staff   177 Sep 26 16:11 glm.log
+-rw-r--r--  1 ben-hannan  staff  5012 Sep 26 16:11 RESULTS.md
+-rw-r--r--  1 ben-hannan  staff   668 Sep 26 16:11 verdict.json
+
+artifacts/claude-k1h-20260926/glm-v1/:
+total 24
+drwxr-xr-x  4 ben-hannan  staff   128 Sep 26 16:17 .
+drwxr-xr-x  3 ben-hannan  staff    96 Sep 26 16:17 ..
+-rw-r--r--  1 ben-hannan  staff   499 Sep 26 16:04 chats-log.txt
+-rw-r--r--  1 ben-hannan  staff  6405 Sep 26 16:17 REPORT.md
+
+artifacts/claude-y1t-20260926/glm/:
+total 37824
+drwxr-xr-x  12 ben-hannan  staff       384 Sep 26 15:28 .
+drwxr-xr-x   3 ben-hannan  staff        96 Sep 26 15:28 ..
+-rw-r--r--   1 ben-hannan  staff     83416 Sep 26 15:28 drops.jsonl
+-rw-r--r--   1 ben-hannan  staff     34076 Sep 26 15:28 glm_0.log
+-rw-r--r--   1 ben-hannan  staff     30926 Sep 26 15:28 glm_1.log
+-rw-r--r--   1 ben-hannan  staff     28242 Sep 26 15:28 glm_2.log
+-rw-r--r--   1 ben-hannan  staff     33102 Sep 26 15:28 glm_3.log
+drwxr-xr-x   4 ben-hannan  staff       128 Sep 26 15:28 items
+-rw-r--r--   1 ben-hannan  staff   6564007 Sep 26 15:28 kept.jsonl
+-rw-r--r--   1 ben-hannan  staff   1919975 Sep 26 15:28 raw.jsonl
+-rw-r--r--   1 ben-hannan  staff      7195 Sep 26 15:28 RESULTS-mac.md
+-rw-r--r--   1 ben-hannan  staff  10646336 Sep 26 15:28 seeds.jsonl
+[0m
+[0m$ [0mls /Users/ben-hannan/premonition-watch/queue/ | grep -E "g406|rd378k|rd378g|k1h|y1t|madeup|gate3oc|writemore|glm2|topup" | head -n 60
+000-stop-k1h.exit
+000-stop-k1h.go1.done
+000-stop-k1h.go1.err.txt
+000-stop-k1h.go1.reply.md
+000-stop-k1h.md
+000-stop-k1h.pushed
+000-stop-k1hz-salvage.exit
+000-stop-k1hz-salvage.go1.done
+000-stop-k1hz-salvage.go1.err.txt
+000-stop-k1hz-salvage.go1.reply.md
+000-stop-k1hz-salvage.md
+000-stop-k1hz-salvage.pushed
+claude-madeup-g406-mac.exit
+claude-madeup-g406-mac.go1.done
+claude-madeup-g406-mac.go1.err.txt
+claude-madeup-g406-mac.go1.reply.md
+claude-madeup-g406-mac.md
+claude-madeup-g406-mac.pushed
+k1h-glm.exit
+k1h-glm.go1.err.txt
+k1h-glm.go1.reply.md
+k1h-glm.md
+k1h-glm.pushed
+k1h-glm2.go1.err.txt
+k1h-glm2.go1.reply.md
+k1h-glm2.md
+k1h-glm2.running
+rd378g-teacher.exit
+rd378g-teacher.go1.done
+rd378g-teacher.go1.err.txt
+rd378g-teacher.go1.reply.md
+rd378g-teacher.md
+rd378g-teacher.pushed
+rd378g-writemore.go1.err.txt
+rd378g-writemore.go1.reply.md
+rd378g-writemore.md
+rd378g-writemore.running
+rd378k-gate2.exit
+rd378k-gate2.go1.done
+rd378k-gate2.go1.err.txt
+rd378k-gate2.go1.reply.md
+rd378k-gate2.md
+rd378k-gate2.pushed
+rd378k-gate2b.exit
+rd378k-gate2b.go1.done
+rd378k-gate2b.go1.err.txt
+rd378k-gate2b.go1.reply.md
+rd378k-gate2b.md
+rd378k-gate2b.pushed
+rd378k-gate3.exit
+rd378k-gate3.go1.done
+rd378k-gate3.go1.err.txt
+rd378k-gate3.go1.reply.md
+rd378k-gate3.md
+rd378k-gate3.pushed
+rd378k-gate3oc.go1.err.txt
+rd378k-gate3oc.go1.reply.md
+rd378k-gate3oc.md
+rd378k-gate3oc.running
+rd378k-teacher.exit
+[0m
+[0m$ [0mls /Users/ben-hannan/premonition-watch/queue/ | grep -E "y1t|lis-320|lis320" | head -n 60; echo "---sizes---"; wc -c artifacts/claude-g406-20260926/run/glm.log artifacts/claude-g406-20260926/run/glm.jsonl artifacts/claude-k1h-20260926/glm-v1/chats-log.txt artifacts/claude-rd378k-20260926/teacher-log.txt artifacts/claude-rd378g-20260926/teacher-log.txt 2>&1 | head -n 20
+000-lis320-ocdiag-mac.go1.err.txt
+000-lis320-ocdiag-mac.go1.reply.md
+000-lis320-ocdiag-mac.md
+000-lis320-ocdiag-mac.running
+lis320-full-mac.exit
+lis320-full-mac.go1.done
+lis320-full-mac.go1.err.txt
+lis320-full-mac.go1.reply.md
+lis320-full-mac.md
+lis320-full-mac.pushed
+lis320-pilot-mac.exit
+lis320-pilot-mac.go1.done
+lis320-pilot-mac.go1.err.txt
+lis320-pilot-mac.go1.reply.md
+lis320-pilot-mac.md
+lis320-pilot-mac.pushed
+lis320-pilot2-mac.exit
+lis320-pilot2-mac.go1.done
+lis320-pilot2-mac.go1.err.txt
+lis320-pilot2-mac.go1.reply.md
+lis320-pilot2-mac.md
+lis320-pilot2-mac.pushed
+lis320-pilot3-mac.exit
+lis320-pilot3-mac.go1.done
+lis320-pilot3-mac.go1.err.txt
+lis320-pilot3-mac.go1.reply.md
+lis320-pilot3-mac.md
+lis320-pilot3-mac.pushed
+y1t-glm-mac.exit
+y1t-glm-mac.go1.done
+y1t-glm-mac.go1.err.txt
+y1t-glm-mac.go1.reply.md
+y1t-glm-mac.md
+y1t-glm-mac.pushed
+---sizes---
+     177 artifacts/claude-g406-20260926/run/glm.log
+    8729 artifacts/claude-g406-20260926/run/glm.jsonl
+     499 artifacts/claude-k1h-20260926/glm-v1/chats-log.txt
+    2680 artifacts/claude-rd378k-20260926/teacher-log.txt
+   48823 artifacts/claude-rd378g-20260926/teacher-log.txt
+   60908 total
+[0m
+[0m$ [0mls /Users/ben-hannan/premonition-watch/queue/ | grep -E "topup|y1t-topup"; echo "---"; ls /Users/ben-hannan/premonition-watch/queue/y1t* 2>&1 | head -n 20; echo "---k1h-glm2-md-grep---"; grep -o -E "artifacts/[A-Za-z0-9_./-]+" /Users/ben-hannan/premonition-watch/queue/k1h-glm2.md | head -n 40
+---
+/Users/ben-hannan/premonition-watch/queue/y1t-glm-mac.exit
+/Users/ben-hannan/premonition-watch/queue/y1t-glm-mac.go1.done
+/Users/ben-hannan/premonition-watch/queue/y1t-glm-mac.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/y1t-glm-mac.go1.reply.md
+/Users/ben-hannan/premonition-watch/queue/y1t-glm-mac.md
+/Users/ben-hannan/premonition-watch/queue/y1t-glm-mac.pushed
+---k1h-glm2-md-grep---
+artifacts/claude-k1h-20260926/glm
+artifacts/claude-k1h-20260926/ADDENDUM-2-route.md
+artifacts/claude-k1e-20260926/train/items.jsonl
+artifacts/claude-k1h-20260926
+artifacts/claude-k1f-20260926
+artifacts/claude-k1fpanel-20260926/SEAL.sha256.txt
+artifacts/claude-k1h-20260926/SEAL-k1h.sha256.txt
+artifacts/claude-k1h-20260926/SEAL-addendum1.sha256.txt
+artifacts/claude-k1h-20260926/SEAL-addendum2.sha256.txt
+artifacts/claude-k1e-20260926/train/items.jsonl
+artifacts/claude-k1e-20260926/train/items.jsonl
+artifacts/claude-k1e-20260926/train/items.jsonl
+artifacts/claude-k1h-20260926/glm/
+artifacts/claude-k1h-20260926/glm/logs/
+artifacts/claude-k1h-20260926/glm/
+artifacts/claude-k1h-20260926/glm
+[0m
+[0m$ [0mgrep -o -E "artifacts/[A-Za-z0-9_./-]+" /Users/ben-hannan/premonition-watch/queue/claude-madeup-g406-mac.md | head -n 40; echo "---rd378k-gate3oc---"; grep -o -E "artifacts/[A-Za-z0-9_./-]+" /Users/ben-hannan/premonition-watch/queue/rd378k-gate3oc.md | head -n 60; echo "---rd378g-writemore---"; grep -o -E "artifacts/[A-Za-z0-9_./-]+" /Users/ben-hannan/premonition-watch/queue/rd378g-writemore.md | head -n 60; echo "---y1t-glm-mac---"; grep -o -E "artifacts/[A-Za-z0-9_./-]+" /Users/ben-hannan/premonition-watch/queue/y1t-glm-mac.md | head -n 60
+artifacts/claude-g406-20260926/PASSMARKS.md
+artifacts/claude-g406-20260926
+artifacts/claude-mu402-20260926
+artifacts/claude-mu403-20260926
+artifacts/claude-g406-20260926/run
+artifacts/claude-g406-20260926/SEAL.sha256.txt
+artifacts/claude-mu402-20260926/judge/packets/claims_j
+artifacts/claude-mu403-20260926/judge/packets/claims_j
+artifacts/claude-mu402-20260926/judge
+artifacts/claude-mu403-20260926/judge
+artifacts/claude-g406-20260926/run/
+artifacts/claude-g406-20260926/run/RESULTS.md
+artifacts/claude-g406-20260926/run
+---rd378k-gate3oc---
+artifacts/claude-rd378k-20260926/PASSMARKS-F.md
+artifacts/claude-rd378k-20260926/gate3oc/labels.jsonl.
+artifacts/claude-rd378k-20260926/SEAL-ADD-G.sha256.txt
+artifacts/claude-rd378k-20260926
+artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md
+artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl
+artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl
+artifacts/claude-rd378k-20260926/SEAL-ADD-G.sha256.txt
+artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl
+artifacts/claude-rd378k-20260926/gate3oc
+artifacts/claude-rd378k-20260926/gate3oc/labels.jsonl
+artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl
+artifacts/claude-rd378k-20260926/gate3oc/labels_passA.jsonl
+artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl
+artifacts/claude-rd378k-20260926/gate3oc/labels.jsonl
+artifacts/claude-rd378k-20260926/gate3oc
+---rd378g-writemore---
+artifacts/claude-rd378g-20260926/ADDENDUM-D.md
+artifacts/claude-rd378g-20260926/glm2/notes_w1.jsonl.
+artifacts/claude-rd378g-20260926/SEAL-ADD-E.sha256.txt
+artifacts/claude-rd378g-20260926
+artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl
+artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl
+artifacts/claude-rd378g-20260926/SEAL-ADD-E.sha256.txt
+artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl
+artifacts/claude-rd378g-20260926/glm2
+artifacts/claude-rd378g-20260926/glm2/notes_w1.jsonl
+artifacts/claude-rd378g-20260926/glm2/teacher-log.txt.
+artifacts/claude-rd378g-20260926/glm2
+---y1t-glm-mac---
+artifacts/claude-lis320-20260926
+artifacts/claude-chatdev-20260926
+artifacts/claude-e2e331-dev-20260924
+artifacts/claude-y1t-20260926/glm
+artifacts/claude-lis320-20260926/avoid_names_dev.txt
+artifacts/claude-lis320-20260926/avoid_test.sha256
+artifacts/claude-y1t-20260926/glm/
+artifacts/claude-y1t-20260926/glm
+[0m
+[0m→ [0mRead artifacts/claude-rd378k-20260926/teacher-log.txt
+[0m→ [0mRead artifacts/claude-g406-20260926/run/glm.log
+[0m→ [0mRead artifacts/claude-g406-20260926/run/verdict.json
+[0m→ [0mRead artifacts/claude-k1h-20260926/glm-v1/chats-log.txt
+[0m
+[0m$ [0mls artifacts/claude-rd378k-20260926/ artifacts/claude-rd378g-20260926/ artifacts/claude-k1h-20260926/ 2>&1; echo "---"; ls artifacts/claude-rd378k-20260926/gate3oc* artifacts/claude-rd378g-20260926/glm2* artifacts/claude-k1h-20260926/glm* 2>&1 | head -n 30; echo "---ps-logs---"; ls -la /tmp/*.log 2>&1 | head -n 20
+artifacts/claude-k1h-20260926/:
+glm-v1
+
+artifacts/claude-rd378g-20260926/:
+glm
+teacher-log.txt
+
+artifacts/claude-rd378k-20260926/:
+gate
+gate2
+gate3
+glm
+teacher-log.txt
+---
+zsh:1: no matches found: artifacts/claude-rd378k-20260926/gate3oc*
+---ps-logs---
+-rw-r--r--  1 ben-hannan  wheel    234 Sep 24 17:30 /tmp/ckpt-s1.log
+-rw-r--r--  1 ben-hannan  wheel    234 Sep 24 17:30 /tmp/ckpt-s2.log
+-rw-r--r--  1 ben-hannan  wheel    117 Sep 26 10:46 /tmp/copyback_artifacts.log
+-rw-r--r--  1 ben-hannan  wheel    117 Sep 26 10:46 /tmp/copyback_reader.log
+-rw-r--r--  1 ben-hannan  wheel   1406 Sep 24 16:46 /tmp/cre333e_arm_e1.log
+-rw-r--r--  1 ben-hannan  wheel   1405 Sep 24 16:46 /tmp/cre333e_arm_e2.log
+-rw-r--r--  1 ben-hannan  wheel   9160 Sep 24 16:46 /tmp/cre333e_full.log
+-rw-r--r--  1 ben-hannan  wheel   1717 Sep 26 11:28 /tmp/grab358i_poll.log
+-rw-r--r--  1 ben-hannan  wheel   1407 Sep 24 23:22 /tmp/ideajudge-teacher2-20auoE-console.log
+-rw-r--r--  1 ben-hannan  wheel   1669 Sep 25 06:58 /tmp/lane1_P.ssh.log
+-rw-r--r--  1 ben-hannan  wheel   1560 Sep 25 11:55 /tmp/lane1_Pg.ssh.log
+-rw-r--r--  1 ben-hannan  wheel   1500 Sep 25 10:47 /tmp/lane1_Pm.ssh.log
+-rw-r--r--  1 ben-hannan  wheel    804 Sep 25 12:17 /tmp/lane2_C.ssh.log
+-rw-r--r--  1 ben-hannan  wheel   2241 Sep 25 12:27 /tmp/lane2_Q2.ssh.log
+-rw-r--r--  1 ben-hannan  wheel    942 Sep 25 12:08 /tmp/lane2_Rb.ssh.log
+-rw-r--r--  1 ben-hannan  wheel   5914 Sep 25 11:59 /tmp/lane2_T.ssh.log
+-rw-r--r--  1 ben-hannan  wheel  10078 Sep 23 14:07 /tmp/lis311_real.log
+-rw-r--r--  1 ben-hannan  wheel   1229 Sep 23 22:28 /tmp/lis313-armA.log
+-rw-r--r--  1 ben-hannan  wheel   9581 Sep 23 23:05 /tmp/lis313-armB.log
+-rw-r--r--  1 ben-hannan  wheel    953 Sep 23 23:15 /tmp/lis314-armA.log
+[0m
+[0m✗ [0mGlob "claude_glm*" failed[90m in scripts[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mls scripts/ | grep glm | head -n 30
+claude_glm_cleanup_20260926.py
+claude_glm_opencode_v11.py
+claude_glm_opencode.py
+claude_glm_throughput_20260926.py
+[0m
+[0m$ [0mls scripts/ | grep -E "rd378|k1h|g406|y1t|glm_v11" | head -n 40
+(no output)
+[0m
+[0m$ [0mls scripts/ | head -n 100
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+claude_255b_m3format.py
+claude_255b_runall.sh
+claude_255b_score.py
+claude_255b_v255check.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_266_devscore.py
+claude_266_panelrun.py
+claude_266_runall.sh
+claude_266_score.py
+claude_266b_devscore.py
+claude_266b_panelrun.py
+claude_266b_runall.sh
+claude_266b_score.py
+claude_268_devrepro.py
+claude_268_panelrun.py
+claude_268_runall.sh
+claude_268_score.py
+claude_268_supp.py
+claude_268b_devrepro.py
+claude_268b_m1run.py
+claude_268b_newdev.py
+claude_268b_panelrun.py
+claude_268b_runall.sh
+claude_268b_score_fix1.py
+claude_268b_score.py
+claude_273_runall_mut0.sh
+claude_280_panel.sh
+claude_280_runall.sh
+claude_280b_panel.sh
+claude_280b_runall.sh
+claude_280m_panel.sh
+claude_280m_runall.sh
+claude_280n_panel.sh
+claude_280p_panel.sh
+claude_281_panel.sh
+claude_281_panelrun.sh
+claude_281_runall.sh
+claude_281b_panel.sh
+claude_281b_runall.sh
+claude_282_panel.sh
+claude_282_panelrun.sh
+claude_282_runall.sh
+claude_282b_panelrun.sh
+claude_282b_runall.sh
+claude_291_m1.py
+claude_291_m7run.py
+claude_291_m8.sh
+claude_291_panel.sh
+claude_291_runall.sh
+claude_291_score.py
+claude_292_corrarm_run.py
+claude_292_m5.sh
+claude_292_m5run.py
+claude_292_panelrun.py
+claude_292_runall.sh
+claude_292_score.py
+[0m
+[0m$ [0mls scripts/claude_*glm* scripts/claude_*rd378* scripts/claude_*k1h* 2>&1 | head -n 40; echo "---"; git status --short scripts/ 2>&1 | head -n 40; echo "---"; ls -la scripts/claude_glm_v11_run.py 2>&1 | head
+zsh:1: no matches found: scripts/claude_*rd378*
+---
+A  scripts/claude_glm_opencode_v11.py
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+---
+ls: scripts/claude_glm_v11_run.py: No such file or directory
+[0m
+[0m$ [0mps -o pid,ppid,command -p 50350 -p 50352 -p 50341 -p 50343 -p 47258 -p 54057 -p 52643 2>&1 | cut -c1-600; echo "---"; lsof -p 50350 2>&1 | head -n 20; echo "---cwd---"; for p in 50350 50343 47258; do echo "PID $p:"; ps -o command= -p $p 2>&1 | cut -c1-800; done
+PID  PPID COMMAND
+47258 47257 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_k1h_glm_v11.py answer --items artifacts/claude-k1e-20260926/train/items.jsonl --out O --max-minutes 100
+50341     1 uv run --offline --no-project --python 3.12 python -B scripts/claude_glm_v11_run.py scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18-20,22-39 --out artifacts/claude-rd378g-20260926/glm2
+50343 50341 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_glm_v11_run.py scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18-20,22-39 --out artifacts/claude-rd378g-20260926/glm2
+50350     1 uv run --offline --no-project --python 3.12 python -B scripts/claude_glm_v11_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --hash-rem 1 --out artifacts/claude-rd378k-20260926/gate3oc
+50352 50350 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_glm_v11_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --hash-rem 1 --out artifacts/claude-rd378k-20260926/gate3oc
+52643 50343 /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash --title glm11-877f2eea69704f258036be03b6a10435 Write 6 realistic conversations with memory notes, as a JSON list of 6 objects. Each object has exactly the\012keys "kind", "speakers", "date", "turns".\012- 3 with kind "chat": a user talks with a personal assistant. speakers = ["user", "assistant"]. Turns alternate, starting\012  with the user. The assistant's turns are short natural replies.\012- 3 with kind "overheard": two friends, relatives or coworkers talk. speakers = their two first names. Turns alternate,\012  star
+54057 50352 /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash --title glm11-2b28a772cdbd4583a0ab6682ec949f75 You are checking memory notes that a small model wrote about a conversation. Below is one conversation as JSON:\012{"dialog","kind","speakers","date","turns":[{"t","speaker","text","notes":[{"text","cites","when"}]}]}.\012cites are offsets from the note's own turn (0 = that turn, -1 = the turn before, ...).\012\012For EVERY note, read the dialog up to and including the note's turn and give one verdict:\012- ok: one plain sentence, third person with names (or "the user"), and
+---
+COMMAND   PID       USER   FD     TYPE             DEVICE SIZE/OFF                NODE NAME
+uv      50350 ben-hannan  cwd      DIR               1,15      128            88559459 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp
+uv      50350 ben-hannan  txt      REG               1,15 36498144              246448 /Users/ben-hannan/.local/bin/uv
+uv      50350 ben-hannan  txt      REG               1,15  4129840 1152921500312609216 /usr/lib/dyld
+uv      50350 ben-hannan    0r     CHR                3,2      0t0                 336 /dev/null
+uv      50350 ben-hannan    1w     REG               1,15       28            88567809 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step4-label.log
+uv      50350 ben-hannan    2w     REG               1,15       28            88567809 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step4-label.log
+uv      50350 ben-hannan    3u  KQUEUE                                                 count=0, state=0xa
+uv      50350 ben-hannan    4u  KQUEUE                                                 count=0, state=0xa
+uv      50350 ben-hannan    5u  KQUEUE                                                 count=0, state=0xa
+uv      50350 ben-hannan    6u    unix 0xddb433e0ee19e21f      0t0                     ->0x12207ac7c6512a6f
+uv      50350 ben-hannan    7u    unix 0x12207ac7c6512a6f      0t0                     ->0xddb433e0ee19e21f
+uv      50350 ben-hannan    8u    unix 0xddb433e0ee19e21f      0t0                     ->0x12207ac7c6512a6f
+uv      50350 ben-hannan    9u     REG               1,15        0             6013361 /Users/ben-hannan/.cache/uv/.lock
+---cwd---
+PID 50350:
+uv run --offline --no-project --python 3.12 python -B scripts/claude_glm_v11_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --hash-rem 1 --out artifacts/claude-rd378k-20260926/gate3oc
+PID 50343:
+/Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_glm_v11_run.py scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18-20,22-39 --out artifacts/claude-rd378g-20260926/glm2
+PID 47258:
+/Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_k1h_glm_v11.py answer --items artifacts/claude-k1e-20260926/train/items.jsonl --out O --max-minutes 100
+[0m
+[0m$ [0mls /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ 2>&1 | head -n 60; echo "---"; for d in rd378k-gate3oc-tmp rd378g-writemore-tmp k1h-glm2-tmp; do echo "== $d =="; find "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/$d" -maxdepth 4 2>&1 | head -n 40; done
+bm391logs
+bm391rent.env
+bm391split
+e2e330tree
+gen_part6.py
+grade_b_part1_writer.py
+guard-296b
+guard-350
+k1e-teacher-c-UQfONj
+k1e-teacher-tVmTTH
+lis313b-armA.log
+lis313b-armC.log
+lis313b-armD.log
+lis313b-report.txt
+lis313b-tree
+lis314b-armA.log
+lis314b-armC.log
+lis314b-armG.log
+lis314b-armK.log
+lis314b-armP.log
+lis314b-armS.log
+lis314b-box.log
+lis314b-main.log
+lis314b-main.status
+lis314b-test.log
+lis314b-tree
+lis314b-tree.status
+lis318b
+lise2e
+logs
+mkpart6.py
+part6_slice.jsonl
+pilot356-log.jsonl
+pilot356-summary.json
+rd378g-teacher
+rd378g-writemore
+rd378k-gate2-C2NWcx
+rd378k-gate2b
+rd378k-gate3oc-tmp
+reader_rsync.log
+reader-330dev.tgz
+readerbm391.tgz
+rent330c.log
+ret330c
+rsn356code.tar
+rsn356seal
+rsn358c1-seal
+rsn358d-push
+rsn358i.tar
+rv387.tar
+smoke336_run.ps1
+smoke336_run2.ps1
+smoke336win
+smoke336win_run.log
+smoke336win-tree.tgz
+teacher-glm53-run
+trash-outbox
+tree-330c-dev3.tgz
+tree-330dev.tgz
+tree330c.path
+---
+== rd378k-gate3oc-tmp ==
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/PASSMARKS-D.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/SEAL-ADD-E.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/PASSMARKS-E.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/SEAL-ADD-B.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/PASSMARKS.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/SEAL-ADD-G.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/teacher-log.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate2
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate2/failures.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate2/teacher-log.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate2/labels.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/SEAL-ADD-D.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/VERIFY-gate.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/VERIFY-gate2.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step4-start.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step4-label.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step3-selftest.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step3-check.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step3b-leakcheck.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/VERIFY-gate3.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/SEAL.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate/labels.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/PASSMARKS-B.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/SEAL-ADD-F.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/PASSMARKS-F.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/glm
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/glm/dialogs.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/PASSMARKS-G.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/PASSMARKS-C.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/SEAL-ADD-C.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd371b-20260926
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd371b-20260926/data
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl
+== rd378g-writemore-tmp ==
+find: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore-tmp: No such file or directory
+== k1h-glm2-tmp ==
+find: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/k1h-glm2-tmp: No such file or directory
+[0m
+[0m$ [0mls /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ | grep -E "rd378g|k1h|g406|y1t|topup|glm" | head -n 40; echo "---"; for p in 50341 47258; do echo "PID $p cwd:"; lsof -p $p 2>&1 | grep cwd | head -n 5; done
+rd378g-teacher
+rd378g-writemore
+teacher-glm53-run
+---
+PID 50341 cwd:
+uv      50341 ben-hannan  cwd      DIR               1,15      160            88563516 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore
+PID 47258 cwd:
+python3.1 47258 ben-hannan  cwd    DIR               1,15      192            88549388 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR
+[0m
+[0m$ [0mfor d in /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp; do echo "== $d =="; find "$d" -maxdepth 5 2>&1 | head -n 60; done; echo "---k1h-tmp-parent---"; ls /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/ | grep k1h | head
+== /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore ==
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/SEAL-ADD-E.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/ADDENDUM-A.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/SEAL-ADD-B.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/ADDENDUM-E.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/PASSMARKS.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/ADDENDUM-D.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/SEAL-ADD-D.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/ADDENDUM-C.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/ADDENDUM-B.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/SEAL.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/SEAL-ADD-A.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/glm
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/SEAL-ADD-C.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/writemore-write.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_e2e381b_harness.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_identity227c.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_loop132_marks.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_naturalpanel208_driver.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_cre333b_test.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_bmriv_given.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_rsn358m_run.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_earcheck261_score257.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_loop113c_agent.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_source226_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_fix139d_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_loop113b_agent.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_bench113d_redteam124.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_redteam79_probe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_fix139e_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_slp363_night.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_baseline_report.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_earcheck261_theta.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_widelengths43k_v2.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_fix150_bench.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/premonition_binding_probe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_rd371_sweep.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_ofteach215_cmps.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_talker101_data.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_fix154c_buildprobe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_loop129a_marks.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_self127_calibrate.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_diag95_infer.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_fix167e_marksdiff.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_cre333d_wrap.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_openers260_run.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_fix173_g3.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_merge252c_score.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_fix228_srcguard.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_fix266_chainlift.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_k1b_test.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_comment258_m1.sh
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_rsn358a_run.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_reading94b_build.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_fix167b_marksdiff.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/fable_demo88_rehearse.py
+== /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR ==
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1f-20260926
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1f-20260926/ADDENDUM-1-benspc.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1f-20260926/SEAL-addendum1.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1f-20260926/PASSMARKS-k1f.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1f-20260926/SEAL.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1f-20260926/JUDGE-k1f.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1h-20260926
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1h-20260926/PASSMARKS-k1h.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1h-20260926/SEAL-addendum1.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1h-20260926/DATA-GATE-k1h.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1h-20260926/SEAL-k1h.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1h-20260926/ADDENDUM-1-scope.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1h-20260926/SEAL-addendum2.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1h-20260926/ADDENDUM-2-route.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1fpanel-20260926
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1fpanel-20260926/SEAL.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1e-20260926
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1e-20260926/train
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/artifacts/claude-k1e-20260926/train/items.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/O
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/O/answers.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_e2e381b_harness.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_identity227c.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_loop132_marks.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_naturalpanel208_driver.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_cre333b_test.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_bmriv_given.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_rsn358m_run.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_earcheck261_score257.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_loop113c_agent.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_source226_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_fix139d_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_loop113b_agent.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_bench113d_redteam124.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_redteam79_probe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_fix139e_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_slp363_night.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_baseline_report.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_earcheck261_theta.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_widelengths43k_v2.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_fix150_bench.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/premonition_binding_probe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_rd371_sweep.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_ofteach215_cmps.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_talker101_data.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_fix154c_buildprobe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_loop129a_marks.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_self127_calibrate.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_diag95_infer.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_fix167e_marksdiff.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_cre333d_wrap.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_openers260_run.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/fable_fix173_g3.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_merge252c_score.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_fix228_srcguard.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_fix266_chainlift.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_k1b_test.py
+== /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp ==
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/PASSMARKS-D.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/SEAL-ADD-E.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/PASSMARKS-E.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/SEAL-ADD-B.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/PASSMARKS.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/SEAL-ADD-G.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/teacher-log.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate2
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate2/failures.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate2/teacher-log.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate2/labels.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/SEAL-ADD-D.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/VERIFY-gate.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/VERIFY-gate2.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step4-start.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step4-label.log
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step3-selftest.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step3-check.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step3b-leakcheck.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/VERIFY-gate3.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/SEAL.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate/labels.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/PASSMARKS-B.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/SEAL-ADD-F.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/PASSMARKS-F.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/glm
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/glm/dialogs.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/PASSMARKS-G.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/PASSMARKS-C.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/SEAL-ADD-C.sha256.txt
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd371b-20260926
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd371b-20260926/data
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378-20260925
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378-20260925/data
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/claude_e2e381b_harness.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/claude_identity227c.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/fable_loop132_marks.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/fable_naturalpanel208_driver.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/claude_cre333b_test.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/claude_bmriv_given.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/claude_rsn358m_run.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/claude_earcheck261_score257.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/fable_loop113c_agent.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/fable_source226_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/fable_fix139d_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/fable_loop113b_agent.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/fable_bench113d_redteam124.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/fable_redteam79_probe.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/fable_fix139e_cases.py
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/claude_slp363_night.py
+---k1h-tmp-parent---
+k1h_glm2_step1_begin.txt
+k1h_glm2_tmpdir.txt
+k1h-glm2.pp0OOR
+[0m
+[0m$ [0mls /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/writemore-write.log 2>&1; wc -c /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/writemore-write.log /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step4-label.log "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/O/answers.jsonl" 2>&1; echo "---topup-search---"; ls /Users/ben-hannan/premonition-watch/queue/ | grep -i topup | head; echo "---worktree-topup---"; ls artifacts/ | grep -i topup | head
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/writemore-write.log
+       0 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/writemore-write.log
+      28 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step4-label.log
+   54807 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/O/answers.jsonl
+   54835 total
+---topup-search---
+---worktree-topup---
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json
+p='artifacts/claude-g406-20260926/run/glm.jsonl'
+lines=open(p).read().splitlines()
+print('lines',len(lines))
+if lines:
+    for i,ln in enumerate(lines[:3]):
+        try:
+            o=json.loads(ln)
+            print(i,'keys',sorted(o.keys()))
+            # print scalar fields only, truncate text fields
+            for k in sorted(o.keys()):
+                v=o[k]
+                if isinstance(v,(int,float,bool)) or v is None:
+                    print(' ',k,'=',v)
+                elif isinstance(v,str):
+                    print(' ',k,'str-len',len(v),'prefix',repr(v[:80]))
+                else:
+                    print(' ',k,type(v).__name__,'len',len(v) if hasattr(v,'__len__') else '?')
+        except Exception as e:
+            print(i,'JSONERR',e,repr(ln[:200]))
+"
+lines 80
+0 keys ['flags', 'n', 'ok', 'pid', 'seconds', 'src']
+  flags = None
+  n = 5
+  ok = False
+  pid str-len 9 prefix 'm402-5378'
+  seconds = 65.6
+  src str-len 21 prefix 'claude-mu402-20260926'
+1 keys ['flags', 'n', 'ok', 'pid', 'seconds', 'src']
+  flags = None
+  n = 5
+  ok = False
+  pid str-len 9 prefix 'm402-6953'
+  seconds = 49.0
+  src str-len 21 prefix 'claude-mu402-20260926'
+2 keys ['flags', 'n', 'ok', 'pid', 'seconds', 'src']
+  flags = None
+  n = 5
+  ok = False
+  pid str-len 9 prefix 'm402-2119'
+  seconds = 51.2
+  src str-len 21 prefix 'claude-mu402-20260926'
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import re
+for p in ['artifacts/claude-y1t-20260926/glm/glm_0.log','artifacts/claude-lis320-20260926/pilot3/glm.log']:
+    print('==',p)
+    try:
+        t=open(p,errors='replace').read()
+    except Exception as e:
+        print('ERR',e); continue
+    lines=t.splitlines()
+    print('lines',len(lines),'bytes',len(t))
+    import collections
+    # count lines matching patterns (case-insensitive), no text printed
+    pats=['exit','> build','timeout','timed out','error','fail','ok','call','glm-5','opencode run','return']
+    for pat in pats:
+        c=sum(1 for l in lines if pat.lower() in l.lower())
+        print(f' lines-containing-{pat!r}: {c}')
+    # show line-length histogram head? just first 3 line prefixes truncated to 120 chars stripped of long text? print only first 120 chars to identify format
+    print('--- first 5 lines truncated 150 ---')
+    for l in lines[:5]:
+        print(repr(l[:150]))
+"
+
+== artifacts/claude-y1t-20260926/glm/glm_0.log
+lines 683 bytes 34076
+ lines-containing-'exit': 0
+ lines-containing-'> build': 0
+ lines-containing-'timeout': 0
+ lines-containing-'timed out': 0
+ lines-containing-'error': 378
+ lines-containing-'fail': 378
+ lines-containing-'ok': 207
+ lines-containing-'call': 0
+ lines-containing-'glm-5': 0
+ lines-containing-'opencode run': 0
+ lines-containing-'return': 0
+--- first 5 lines truncated 150 ---
+'[glm320] s320-4027-00000 ok'
+'[glm320] s320-4027-00004 ok'
+'[glm320] s320-4027-00008 ok'
+'[glm320] s320-4027-00012 ok'
+'[glm320] s320-4027-00016 ok'
+== artifacts/claude-lis320-20260926/pilot3/glm.log
+lines 62 bytes 4191
+ lines-containing-'exit': 30
+ lines-containing-'> build': 27
+ lines-containing-'timeout': 3
+ lines-containing-'timed out': 0
+ lines-containing-'error': 30
+ lines-containing-'fail': 30
+ lines-containing-'ok': 2
+ lines-containing-'call': 30
+ lines-containing-'glm-5': 27
+ lines-containing-'opencode run': 0
+ lines-containing-'return': 0
+--- first 5 lines truncated 150 ---
+'[glm320] s320-321-00002 ok'
+'[glm320oc] call failed: RuntimeError opencode call failed after 3 tries: exit 1: > build · glm-5.3-flash'
+'[glm320] s320-321-00004 unparsed'
+'[glm320oc] call failed: RuntimeError opencode call failed after 3 tries: exit 1: > build · glm-5.3-flash'
+'[glm320] s320-321-00001 unparsed'
+[0m
+[0m$ [0mls /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/ 2>&1 | grep -E "glm|rd378" | head; echo "---"; ls /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/ 2>&1 | grep -E "glm|rd378" | head; echo "---"; ls /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/ 2>&1 | grep -E "glm|k1h" | head
+claude_dl6c_glmframe.py
+claude_dl7b_glmsuffix.py
+claude_g406_glm.py
+claude_glm_frames.py
+claude_glm_leakcheck.py
+claude_glm_opencode_v11.py
+claude_glm_opencode.py
+claude_glm_v11_run.py
+claude_k1h_glm_v11.py
+claude_k1h_glm.py
+---
+claude_dl6c_glmframe.py
+claude_dl7b_glmsuffix.py
+claude_g406_glm.py
+claude_glm_frames.py
+claude_glm_leakcheck.py
+claude_glm_opencode_v11.py
+claude_glm_opencode.py
+claude_glm_v11_run.py
+claude_k1h_glm_v11.py
+claude_k1h_glm.py
+---
+claude_dl6c_glmframe.py
+claude_dl7b_glmsuffix.py
+claude_g406_glm.py
+claude_glm_frames.py
+claude_glm_leakcheck.py
+claude_glm_opencode_v11.py
+claude_glm_opencode.py
+claude_glm_v11_run.py
+claude_k1h_cre.py
+claude_k1h_glm_v11.py
+[0m
+[0m$ [0mwc -l /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_glm_v11_run.py; grep -n -E "exit|build|timeout|call failed|unparsed|\.log|STDERR|stderr" /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_glm_v11_run.py | head -n 60
+37 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_glm_v11_run.py
+5:empty because opencode files sessions under the enclosing worktree (builder-outbox cd1bf6977). v1.1
+30:        sys.exit(0 if ok else 1)
+[0m
+[0m→ [0mRead /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_glm_v11_run.py
+[0m→ [0mRead /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_glm_opencode_v11.py
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import re,collections
+for p in ['artifacts/claude-y1t-20260926/glm/glm_0.log','artifacts/claude-y1t-20260926/glm/glm_1.log','artifacts/claude-y1t-20260926/glm/glm_2.log','artifacts/claude-y1t-20260926/glm/glm_3.log']:
+    lines=open(p,errors='replace').read().splitlines()
+    print('==',p,'lines',len(lines))
+    c=collections.Counter()
+    for l in lines:
+        t=re.sub(r's320-[A-Za-z0-9-]+','ID',l)
+        t=re.sub(r'0x[0-9a-fA-F]+','HEX',t)
+        t=re.sub(r'\d+','N',t)
+        c[t[:120]]+=1
+    for k,v in c.most_common(15):
+        print(f'  {v:5d}  {k!r}')
+"
+
+== artifacts/claude-y1t-20260926/glm/glm_0.log lines 683
+    378  '[glmN] try N failed: HTTPError HTTP Error N: Payment Required'
+    207  '[glmN] ID ok'
+     98  '[glmN] ID unparsed'
+== artifacts/claude-y1t-20260926/glm/glm_1.log lines 603
+    355  '[glmN] try N failed: HTTPError HTTP Error N: Payment Required'
+    156  '[glmN] ID ok'
+     92  '[glmN] ID unparsed'
+== artifacts/claude-y1t-20260926/glm/glm_2.log lines 548
+    326  '[glmN] try N failed: HTTPError HTTP Error N: Payment Required'
+    137  '[glmN] ID ok'
+     85  '[glmN] ID unparsed'
+== artifacts/claude-y1t-20260926/glm/glm_3.log lines 634
+    388  '[glmN] try N failed: HTTPError HTTP Error N: Payment Required'
+    145  '[glmN] ID ok'
+    101  '[glmN] ID unparsed'
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import re,collections,json
+p='artifacts/claude-rd378g-20260926/teacher-log.txt'
+lines=open(p,errors='replace').read().splitlines()
+print('== teacher-log lines',len(lines))
+c=collections.Counter()
+for l in lines:
+    t=re.sub(r'[a-z]+-d\d+','ID',l)
+    t=re.sub(r'batch \d+','batch N',t)
+    t=re.sub(r'\d+ dialogs','N dialogs',t)
+    t=re.sub(r'\d+\.\d+','F',t)
+    t=re.sub(r'(?<!\w)\d+(?!\w)','N',t)
+    c[t[:140]]+=1
+for k,v in c.most_common(30):
+    print(f'  {v:5d}  {k!r}')
+print()
+print('pattern counts:')
+for pat in ['exit','> build','timeout','TIMEOUT','call failed','try','unparsed',' ok','HTTPError','402','124']:
+    n=sum(1 for l in lines if pat in l)
+    print(f'  {pat!r}: {n}')
+"
+
+== teacher-log lines 723
+    555  '[rd378k-teacher] try N failed: HTTPError HTTP Error N: Payment Required'
+     59  '[rd378g-teacher] batch N try N: not N dialogs'
+     25  '[rd378g-teacher] batch N skipped after N tries'
+     24  '[rd378k-teacher] kg-N unparsed'
+     16  '[rd378g-teacher] batch N try N: when not in a cited turn'
+     15  '[rd378g-teacher] batch N ok (N dialogs)'
+      9  '[rd378g-teacher] batch N try N: cites'
+      4  '===== STEP 5b: label part N ====='
+      3  '[rd378g-teacher] batch N try N: turn count'
+      2  '[rd378g-teacher] batch N try N: speakers do not alternate'
+      1  '===== STEP 3a: claude_rd378g_teacher.py selftest ====='
+      1  'rd378g teacher selftest N/N ok'
+      1  '===== STEP 3b: claude_rd378k_teacher.py selftest ====='
+      1  '{"compared": N, "teacher_ok": N, "judges_ok": N, "both_ok": N, "agree": N, "kappa": F, "judges_unsupported_teacher_ok": N, "judges_unsupport'
+      1  'rd378k teacher selftest N/N ok'
+      1  '===== STEP N: claude_rd378g_teacher.py writenotes --out artifacts/claude-rd378g-N/glm ====='
+      1  '[rd378g-teacher] batch N try N: turn keys'
+      1  '[rd378g-teacher] batch N try N: date'
+      1  '{"dialogs": N, "batches_skipped": N, "turns": N, "notes": N, "empty_turns": N, "calls": N, "cost_usd": F}'
+      1  '===== STEP 5a: split ====='
+      1  '{"lines": N, "parts": [N, N, N, N]}'
+
+pattern counts:
+  'exit': 0
+  '> build': 0
+  'timeout': 0
+  'TIMEOUT': 0
+  'call failed': 0
+  'try': 646
+  'unparsed': 24
+  ' ok': 17
+  'HTTPError': 555
+  '402': 555
+  '124': 0
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json
+p='/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/O/answers.jsonl'
+lines=open(p,errors='replace').read().splitlines()
+print('lines',len(lines))
+import collections
+kc=collections.Counter()
+for ln in lines[:5]:
+    try:
+        o=json.loads(ln)
+        print('keys',sorted(o.keys()))
+        for k in sorted(o.keys()):
+            v=o[k]
+            if isinstance(v,(int,float,bool)) or v is None: print(' ',k,'=',v)
+            elif isinstance(v,str): print(' ',k,'str-len',len(v))
+            elif isinstance(v,list): print(' ',k,'list-len',len(v))
+            elif isinstance(v,dict): print(' ',k,'dict-keys',sorted(v.keys())[:10])
+    except Exception as e:
+        print('ERR',e)
+"
+
+lines 110
+keys ['answer', 'item_id', 'model', 'secs']
+  answer str-len 329
+  item_id str-len 6
+  model str-len 25
+  secs = 8.3
+keys ['answer', 'item_id', 'model', 'secs']
+  answer str-len 635
+  item_id str-len 6
+  model str-len 25
+  secs = 11.7
+keys ['answer', 'item_id', 'model', 'secs']
+  answer str-len 180
+  item_id str-len 6
+  model str-len 25
+  secs = 7.1
+keys ['answer', 'item_id', 'model', 'secs']
+  answer str-len 693
+  item_id str-len 6
+  model str-len 25
+  secs = 12.5
+keys ['answer', 'item_id', 'model', 'secs']
+  answer str-len 102
+  item_id str-len 6
+  model str-len 25
+  secs = 9.7
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json,collections
+# k1h answers: count models, no text
+p='/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/O/answers.jsonl'
+lines=open(p,errors='replace').read().splitlines()
+mc=collections.Counter()
+for ln in lines:
+    try:
+        o=json.loads(ln)
+        mc[o.get('model','?')]+=1
+    except: mc['JSONERR']+=1
+print('total',len(lines),'models',dict(mc))
+# distinct item_ids
+ids=set()
+for ln in lines:
+    try: ids.add(json.loads(ln).get('item_id'))
+    except: pass
+print('distinct items',len(ids))
+"; echo "---step4-logs---"; cat "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step4-label.log" 2>&1 | cut -c1-500; echo; cat "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step4-start.txt" 2>&1 | cut -c1-500; echo "---writemore-log---"; wc -c /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/writemore-write.log; ls /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/ 2>&1
+total 111 models {'opencode-go/glm-5.3-flash': 111}
+distinct items 111
+---step4-logs---
+[rd378k-teacher3] ta-d03 ok
+
+1790454493
+---writemore-log---
+       0 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/writemore-write.log
+ADDENDUM-A.md
+ADDENDUM-B.md
+ADDENDUM-C.md
+ADDENDUM-D.md
+ADDENDUM-E.md
+glm
+PASSMARKS.md
+SEAL-ADD-A.sha256.txt
+SEAL-ADD-B.sha256.txt
+SEAL-ADD-C.sha256.txt
+SEAL-ADD-D.sha256.txt
+SEAL-ADD-E.sha256.txt
+SEAL.sha256.txt
+[0m
+[0m$ [0mgrep -n -E "log|exit|failed|try|unparsed|call\(" /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/scripts/claude_g406_glm.py 2>&1 | head -n 40; echo "---k1h-script---"; grep -n -E "log|exit|failed|try|unparsed|call\(|chats-log" /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_k1h_glm_v11.py 2>&1 | head -n 60
+10:tuning on the gate's own answers. Every call goes through scripts/claude_glm_opencode.py call() (Ben's opencode
+15:        [--workers 4] [--batch 40] [--max-minutes 150] [--max-failed 40] [--limit N]
+19:seconds}. The last printed line is the totals JSON with "stopped": "done" | "time" | "failed".
+62:        try:
+87:    return OC.call(text, model=MODEL) or ""
+93:    try:
+95:    except Exception:  # noqa: BLE001  (a failed call is an unparsed row)
+102:def run(packets, out: Path, caller, workers: int, batch: int, max_minutes: float, max_failed: int) -> dict:
+109:    t0, failed, written, stopped = time.time(), 0, 0, "done"
+116:            if failed > max_failed:
+117:                stopped = "failed"
+123:            failed += sum(1 for r in rows if not r["ok"])
+125:            print(f"[g406] {len(done) + written}/{len(packets)} marked, {failed} unparsed", flush=True)
+126:    return {"packets": len(packets), "already": len(done), "written": written, "unparsed_this_run": failed,
+158:    ap.add_argument("--max-failed", type=int, default=40)
+171:    print(json.dumps(run(packets, Path(a.out), call_glm, a.workers, a.batch, a.max_minutes, a.max_failed)))
+---k1h-script---
+29:    return G11.call(text, model=K.MODEL, timeout=TIMEOUT)
+[0m
+[0m$ [0msed -n '1,120p' /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_k1h_glm_v11.py 2>&1 | cut -c1-300 | head -n 120
+#!/usr/bin/env python3
+"""k1h teacher jobs through GLM helper v1.1 (Creative answers in chat thread, 2026-09-26; k1h ADDENDUM-2).
+
+scripts/claude_k1h_glm.py (sealed in SEAL-k1h.sha256.txt, not edited) with one change: its GLM calls go through
+scripts/claude_glm_opencode_v11.py, which deletes exactly the opencode session each call creates (v1,
+claude_glm_opencode.py sha 3b597086, left one session behind per call: the Director's 000-glm-throughput finding).
+Same model, prompts, parsing, resume, time cap and outputs; at most 2 calls at once (k1h's share of the Director's
+opencode budget of 16, the Thread manager 20:00 UTC); each call may take up to 600 s instead of 300 (a 20-chat writing
+call had run 4 min 58 s when the first launch was stopped: artifacts/claude-stop-k1h-20260926/REPORT.md).
+  python3 -B scripts/claude_k1h_glm_v11.py chats|answer|selftest ...   (the same arguments as claude_k1h_glm.py)
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import claude_k1h_glm as K      # noqa: E402
+
+MAX_WORKERS = 2
+TIMEOUT = 600
+
+
+def _call_v11(text: str) -> str:
+    import claude_glm_opencode_v11 as G11
+    return G11.call(text, model=K.MODEL, timeout=TIMEOUT)
+
+
+def main() -> None:
+    if "--workers" in sys.argv:
+        w = int(sys.argv[sys.argv.index("--workers") + 1])
+        if w > MAX_WORKERS:
+            raise SystemExit(f"k1h-glm v1.1: at most {MAX_WORKERS} calls at once (k1h's share of the opencode budget)")
+    elif sys.argv[1:2] != ["selftest"]:
+        sys.argv += ["--workers", str(MAX_WORKERS)]
+    K._call = _call_v11
+    K.main()
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgrep -n -E "chats-log|answers\.jsonl|failed|exit|except|unparsed|Timeout|HTTPError|402|build" /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_k1h_glm.py 2>&1 | head -n 60; echo "---wc---"; wc -l /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_k1h_glm.py
+19:        user's earlier messages and the request. The raw answer is appended to OUT/answers.jsonl with its item id.
+21:        after 50 failed calls in this run. Prints counts only.
+26:What GLM does not see: the build's short replies to the user's earlier messages (the writer sees them at run time).
+44:import claude_cre333d_agent as CD      # noqa: E402  (stdlib-only at import)
+45:import claude_k1e_teacher as T         # noqa: E402  (stdlib-only)
+87:        except Exception as e:                   # noqa: BLE001  (a failed call keeps nothing)
+95:    items, why, failed = [], {}, 0
+99:            failed += 1
+120:    res = {"chats": len(items), "mix": mix, "rejected": why, "calls": a.calls, "failed_calls": failed}
+129:    path = out / "answers.jsonl"
+137:    stats = {"items": len(items), "already": len(done), "answered": 0, "failed": 0, "not_started": 0}
+148:            key = "answered" if ans.strip() else "failed"
+149:        except Exception as e:                   # noqa: BLE001
+151:            key = "failed"
+156:            if stats["failed"] > MAX_FAILS:
+158:            n = stats["answered"] + stats["failed"]
+160:                print(f"[k1h-glm] answer {n}/{len(todo)} answered {stats['answered']} failed {stats['failed']} "
+195:        assert s["answered"] == 4 and s["failed"] == 1, s
+196:        s = run_answer(a, lambda t: "Again!")          # resume: only the failed item is asked again
+---wc---
+     232 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_k1h_glm.py
+[0m
+[0m$ [0msed -n '80,170p' /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/scripts/claude_k1h_glm.py 2>&1 | cut -c1-250 | head -n 100
+out.mkdir(parents=True, exist_ok=True)
+    seen = {r["last"].strip().lower() for p in (a.existing or []) for r in T.load(p)}
+    raw: dict = {}
+
+    def one(c):
+        try:
+            return c, call(T.WRITE.replace("{area}", AREAS_K1H[c % len(AREAS_K1H)]))
+        except Exception as e:                   # noqa: BLE001  (a failed call keeps nothing)
+            return c, f"ERROR {type(e).__name__}"
+
+    with ThreadPoolExecutor(max_workers=a.workers) as ex:
+        for fut in as_completed([ex.submit(one, c) for c in range(a.calls)]):
+            c, txt = fut.result()
+            raw[c] = txt
+            print(f"[k1h-glm] chats call {c} done ({len(raw)}/{a.calls})", flush=True)
+    items, why, failed = [], {}, 0
+    for c in range(a.calls):                     # call order, so ids don't depend on which call finished first
+        txt = raw.get(c, "")
+        if txt.startswith("ERROR"):
+            failed += 1
+            continue
+        for r in T.json_list(txt) or []:
+            k = T.chat_kind(r)
+            if k.startswith("bad"):
+                why[k] = why.get(k, 0) + 1
+                continue
+            last = r["last"].strip().lower()
+            if last in seen:
+                why["repeat"] = why.get("repeat", 0) + 1
+                continue
+            seen.add(last)
+            items.append({"item_id": f"kh-{len(items) + 1:04d}", "kind": r["kind"], "turns": r["turns"],
+                          "last": r["last"], "facts": r["facts"], "numbers": None, "target": None, "gold_expr": None,
+                          "area": AREAS_K1H[c % len(AREAS_K1H)]})
+    (out / "chats.jsonl").write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in items),
+                                     encoding="utf-8")
+    mix: dict = {}
+    for x in items:
+        k = T.chat_kind({kk: x[kk] for kk in ("kind", "turns", "last", "facts")})
+        mix[k] = mix.get(k, 0) + 1
+    res = {"chats": len(items), "mix": mix, "rejected": why, "calls": a.calls, "failed_calls": failed}
+    print(json.dumps(res), flush=True)
+    return res
+
+
+def run_answer(a, call=None) -> dict:
+    call = call or _call
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    path = out / "answers.jsonl"
+    done = {r["item_id"] for r in T.load(path) if r.get("answer")} if path.exists() else set()
+    items = [it for p in a.items for it in T.load(p)]
+    ids = [it["item_id"] for it in items]
+    if len(set(ids)) != len(ids):
+        raise SystemExit("k1h-glm: duplicate item ids across --items")
+    todo = [it for it in items if it["item_id"] not in done]
+    lock, t0 = threading.Lock(), time.time()
+    stats = {"items": len(items), "already": len(done), "answered": 0, "failed": 0, "not_started": 0}
+    stop = threading.Event()
+
+    def one(it):
+        if stop.is_set() or (time.time() - t0) / 60 > a.max_minutes:
+            stop.set()
+            return "skip"
+        s = time.time()
+        try:
+            ans = call(answer_prompt(it))
+            row = {"item_id": it["item_id"], "answer": ans, "model": MODEL, "secs": round(time.time() - s, 1)}
+            key = "answered" if ans.strip() else "failed"
+        except Exception as e:                   # noqa: BLE001
+            row = {"item_id": it["item_id"], "answer": "", "model": MODEL, "error": f"{type(e).__name__}"}
+            key = "failed"
+        with lock:
+            with open(path, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+            stats[key] += 1
+            if stats["failed"] > MAX_FAILS:
+                stop.set()
+            n = stats["answered"] + stats["failed"]
+            if n % 20 == 0:
+                print(f"[k1h-glm] answer {n}/{len(todo)} answered {stats['answered']} failed {stats['failed']} "
+                      f"{(time.time() - t0) / 60:.0f} min", flush=True)
+        return key
+
+    with ThreadPoolExecutor(max_workers=a.workers) as ex:
+        for fut in as_completed([ex.submit(one, it) for it in todo]):
+            if fut.result() == "skip":
+                stats["not_started"] += 1
+    stats["minutes"] = round((time.time() - t0) / 60, 1)
+    stats["stopped_early"] = stop.is_set()
+    print(json.dumps(stats), flush=True)
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json,collections
+# g406
+p='artifacts/claude-g406-20260926/run/glm.jsonl'
+rows=[json.loads(l) for l in open(p).read().splitlines() if l.strip()]
+print('g406 rows',len(rows))
+c=collections.Counter(r.get('ok') for r in rows)
+print('g406 ok counts',dict(c))
+n=sum(r.get('n',0) for r in rows)
+print('g406 sum n',n)
+# verdict
+v=json.load(open('artifacts/claude-g406-20260926/run/verdict.json'))
+print('g406 verdict replies',v.get('replies'),'usable',v.get('usable_packets'))
+"
+g406 rows 80
+g406 ok counts {False: 57, True: 23}
+g406 sum n 408
+g406 verdict replies 113 usable 23
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import re
+tot_ok=tot_unp=tot_try=0
+for i in range(4):
+    p=f'artifacts/claude-y1t-20260926/glm/glm_{i}.log'
+    t=open(p,errors='replace').read()
+    lines=t.splitlines()
+    ok=sum(1 for l in lines if l.rstrip().endswith(' ok'))
+    unp=sum(1 for l in lines if l.rstrip().endswith(' unparsed'))
+    tryf=sum(1 for l in lines if 'try ' in l and 'failed: HTTPError' in l)
+    print(i,'lines',len(lines),'ok',ok,'unparsed',unp,'try402fail',tryf)
+    tot_ok+=ok; tot_unp+=unp; tot_try+=tryf
+print('TOTAL ok',tot_ok,'unparsed',tot_unp,'try402fail',tot_try)
+"
+0 lines 683 ok 207 unparsed 98 try402fail 378
+1 lines 603 ok 156 unparsed 92 try402fail 355
+2 lines 548 ok 137 unparsed 85 try402fail 326
+3 lines 634 ok 145 unparsed 101 try402fail 388
+TOTAL ok 645 unparsed 376 try402fail 1447
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json,collections
+p='/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/k1h-glm2.pp0OOR/O/answers.jsonl'
+lines=open(p,errors='replace').read().splitlines()
+ans=fail=0
+errs=collections.Counter()
+for ln in lines:
+    try: o=json.loads(ln)
+    except: errs['JSONERR']+=1; continue
+    if o.get('answer','').strip(): ans+=1
+    else: fail+=1
+    if 'error' in o: errs[o['error']]+=1
+print('k1h answers lines',len(lines),'answered(nonempty)',ans,'failed(empty)',fail,'errors',dict(errs))
+"; echo "---gate3oc-out---"; ls -la /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc/ 2>&1; echo "---gate3oc-logs---"; wc -c /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/* 2>&1; echo "---rd378g-glm2---"; ls -la /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/glm2 2>&1; wc -l artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl 2>&1
+k1h answers lines 116 answered(nonempty) 116 failed(empty) 0 errors {}
+---gate3oc-out---
+total 0
+drwxr-xr-x   2 ben-hannan  staff   64 Sep 26 16:28 .
+drwxr-xr-x  25 ben-hannan  staff  800 Sep 26 16:28 ..
+---gate3oc-logs---
+      17 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step3-check.txt
+      66 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step3-selftest.txt
+      55 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step3b-leakcheck.txt
+      28 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step4-label.log
+      11 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/step4-start.txt
+     177 total
+---rd378g-glm2---
+ls: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378g-writemore/artifacts/claude-rd378g-20260926/glm2: No such file or directory
+      90 artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl
+[0m
+[0m$ [0mfor f in step3-check.txt step3-selftest.txt step3b-leakcheck.txt step4-label.log step4-start.txt; do echo "== $f =="; cat "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/artifacts/claude-rd378k-20260926/gate3oc-logs/$f" 2>&1 | cut -c1-300; done; echo "---date---"; date -u +"%Y-%m-%d %H:%M:%S UTC"
+== step3-check.txt ==
+glm v11 bound ok
+== step3-selftest.txt ==
+rd378k teacher3 selftest 1/1 ok
+rd378k teacher3oc selftest 1/1 ok
+== step3b-leakcheck.txt ==
+{"exit": 0, "reply_ok": true, "left_after_cleanup": 0}
+== step4-label.log ==
+[rd378k-teacher3] ta-d03 ok
+== step4-start.txt ==
+1790454493
+---date---
+2026-09-26 20:36:28 UTC
+[0m
+[0m$ [0mgrep -n -A6 "def selftest" /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/claude_rd378k_teacher3oc.py 2>&1 | cut -c1-300 | head -n 30; echo "---"; grep -n -E "call\(|call_failed|exit" /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/claude_rd378k_teacher3oc.py 2>&1 | head -n 20
+---
+6:teacher call goes through scripts/claude_glm_opencode.py call() (the Director's shared helper) instead of OpenRouter.
+29:        return OC.call(text) or "", {}
+[0m
+[0m$ [0mgrep -n -E "selftest|leakcheck|step4|label\.log|print\(" /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3oc-tmp/scripts/claude_rd378k_teacher3oc.py 2>&1 | cut -c1-250 | head -n 40
+14:selftest (no network)
+31:        print(f"[rd378k-teacher3oc] call failed: {type(e).__name__} {str(e)[:120]}", flush=True)
+37:    ap.add_argument("mode", choices=["label", "selftest"])
+44:    if a.mode == "selftest":
+45:        T3.selftest()
+47:        print("rd378k teacher3oc selftest 1/1 ok")
+[0m
+[0m$ [0mecho "g406:"; ps aux | grep -E "madeup-g406|g406-mac" | grep -v grep | awk '{print $2}' | head; echo "gate3oc:"; ps -o pid=,command= -p 49571 -p 49540 -p 50350 -p 50352 -p 54057 -p 52643 2>&1 | awk '{print $1}'; echo "writemore:"; ps -o pid= -p 49522 -p 49465 -p 50341 -p 50343 2>&1 | tail -n +2; echo "k1h:"; ps -o pid= -p 46743 -p 46711 -p 47255 -p 47257 -p 47258 2>&1 | tail -n +2; echo "topup:"; ps aux | grep -E "topup" | grep -v grep | awk '{print $2}' | head; echo "y1t-glm:"; ps aux | grep -E "y1t" | grep -v grep | awk '{print $2}' | head; date -u +"%Y-%m-%d %H:%M:%S UTC"
+g406:
+53186
+gate3oc:
+49540
+49571
+50350
+50352
+52643
+54057
+writemore:
+49522
+50341
+50343
+k1h:
+46743
+47255
+47257
+47258
+topup:
+53186
+y1t-glm:
+53186
+2026-09-26 20:36:40 UTC
+[0m
+[0m$ [0mps -o pid=,stat= -p 49571 -p 49540 -p 50350 -p 50352 -p 54057 -p 52553 -p 49522 -p 49465 -p 50341 -p 50343 -p 52643 -p 46743 -p 46711 -p 47255 -p 47257 -p 47258 2>&1; echo "---"; ps aux | grep -E "claude-madeup-g406-mac\.md|k1h-glm2\.md|rd378k-gate3oc\.md|rd378g-writemore\.md" | grep -v grep | grep -v "000-glm-exitcodes" | awk '{print $2}' | head
+46711 SN  
+46743 SN  
+47255 SNs 
+47257 SN  
+47258 SN  
+49465 SN  
+49522 SN  
+49540 SN  
+49571 SN  
+50341 SN  
+50343 SN  
+50350 SN  
+50352 SN  
+52643 SN  
+54057 RN  
+---
+49540
+49465
+46711
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import re
+p='artifacts/claude-lis320-20260926/pilot3/glm.log'
+lines=open(p,errors='replace').read().splitlines()
+print('lines',len(lines))
+ok=[l for l in lines if l.rstrip().endswith(' ok')]
+unp=[l for l in lines if l.rstrip().endswith(' unparsed')]
+fail=[l for l in lines if 'call failed' in l]
+print('ok',len(ok),'unparsed',len(unp),'callfailed',len(fail))
+import collections
+c=collections.Counter()
+for l in fail:
+    t=re.sub(r'0x[0-9a-fA-F]+','HEX',l)
+    c[t[:160]]+=1
+for k,v in c.most_common(): print(v,repr(k))
+"
+lines 62
+ok 2 unparsed 30 callfailed 30
+27 '[glm320oc] call failed: RuntimeError opencode call failed after 3 tries: exit 1: > build · glm-5.3-flash'
+3 '[glm320oc] call failed: RuntimeError opencode call failed after 3 tries: exit 124: TIMEOUT after 300s: '
+[0m
+[0m← [0mWrite artifacts/claude-glm-exitcodes-20260926/REPORT.md
+Wrote file successfully.
+[0m
+[0m✗ [0mgit status --short artifacts/claude-glm-exitcodes-20260926/; git add artifacts/claude-glm-exitcodes-20260926/REPORT.md && git commit -m "claude-glm-exitcodes-20260926: read-only GLM exit-code count REPORT" && git push 2>&1 | tail -n 5 failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mgit status --short artifacts/claude-glm-exitcodes-20260926/; git add artifacts/claude-glm-exitcodes-20260926/REPORT.md; git status --short artifacts/claude-glm-exitcodes-20260926/
+The following paths are ignored by one of your .gitignore files:
+artifacts
+hint: Use -f if you really want to add them.
+hint: Disable this message with "git config set advice.addIgnoredFile false"
+[0m
+[0m$ [0mgit add -f artifacts/claude-glm-exitcodes-20260926/REPORT.md; git status --short artifacts/claude-glm-exitcodes-20260926/
+A  artifacts/claude-glm-exitcodes-20260926/REPORT.md
+[0m
+[0m$ [0mgit commit -m "claude-glm-exitcodes-20260926: read-only GLM exit-code count REPORT" 2>&1 | tail -n 3; git log --oneline -2 2>&1 | head -n 3
+create mode 100644 artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_log.jsonl
+ create mode 100644 artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_summary.json
+ create mode 100644 scripts/claude_glm_opencode_v11.py
+c711e92a5 claude-glm-exitcodes-20260926: read-only GLM exit-code count REPORT
+ce8643109 k1h-glm salvage glm-v1: 0 chats/0 answers, chats-log only (EMPTY)
+[0m
