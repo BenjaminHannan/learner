@@ -31,3 +31,11 @@ Pass rate 390 of 425 (92%). Every family is at 70% or above: ack_after_ask 11 of
 former 22 of 26. Style: lowercase 0.995, missing-apostrophe contractions 0.323, turns over 20 words 0.213, shapes 100 per
 100, write facts in long turns 0.312. Cost is about $0.038 per 1,000 kept rows. I read 24 kept rows (all 10 ask-back rows
 plus 14 at random) and found 0 mislabelled. Per-cue counts are in the pilot 2 RESULTS.md. Full run: handoff/queue/lis320-full-mac.md.
+
+## Pilot 4 (seed 323, 60 dialogs, opencode --variant low, 22:06-22:09 UTC, $0): FAIL on item 5 (checked 22:56 UTC)
+Route marks met: 58 of 60 parsed, 0 failed calls, rawcheck OK. Items 1-4 met: 362 of 419 kept (86%), lowest family former
+20 of 29, correct_ref 22 of 26; lowercase 0.994, missing-apostrophe 0.461, over 20 words 0.406, shapes 100, write facts in
+long turns 0.53. Item 5: a fresh agent read 20 kept, 20 kept correct_ref and 20 dropped rows and found 3 of 20 kept labels
+wrong (0 of 20 correct_ref). I checked the three: each is a one-owner fact worded as shared ("we live in Lotirmoor",
+"Nuroa and me actually live in Junzocombe", "our cat is named gani"), so the label misses the second owner. 13 of 20 drops
+were judged over-drops (report only). The change and pilot 5 are in ADDENDUM-7-group-speaker-check.md.
