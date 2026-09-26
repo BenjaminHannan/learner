@@ -1,0 +1,215 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo FETCH_EXIT:$?; git show origin/main:handoff/queue/lis-302-gpu.md | head -n 13
+FETCH_EXIT:0
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+[0m
+[0m$ [0mpwd; git status --porcelain=v1 | head -n 20; echo ---; git log --oneline -3; echo ---; uptime; df -g / | head -n 5; echo ---; ps aux | grep -i -E "lis319|claude_lis" | grep -v grep || echo NO_READER_PROC; echo ---; ls ~/premonition-models/ 2>&1; echo ---; git show origin/main:artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl 2>&1 | head -n 20; echo ---; git archive --list 2>&1 | head
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+A  artifacts/claude-k1a-20260926/RESULTS-rent.md
+A  artifacts/claude-k1a-20260926/run/creative_B.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_K.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_KB.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_KB0.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_T.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_X.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_judge.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_judge_u.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_key.json
+A  artifacts/claude-k1a-20260926/run/creative_key_u.json
+A  artifacts/claude-k1a-20260926/run/dev/creative_K.jsonl
+A  artifacts/claude-k1a-20260926/run/dev/creative_KB.jsonl
+---
+c86fbe886 stop rent-q404 by owner (Redirect): PIDs 4529+4563 killed, instance 52775380 destroyed, 0 files to copy back
+cf67c618e depot319f: lis-319f reader added to claude-director-depot 52755827 (verdict READY; sha 970ef0ac match 1/1, scp fallback, reader319 untouched)
+6b5a3abee handoff: commit staged artifact backlog incl grab358i REPORT (8/8 sha OK)
+---
+12:22  up 3 days,  2:15, 4 users, load averages: 102.52 95.42 90.13
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        53    20%  484014 559856160    0%   /
+---
+ben-hannan       17256   8.5  3.0 562978848 1013648   ??  RN   12:21PM   0:11.81 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:lis319f-ch403chk-mac.go1.17222 COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).\012GPU: no (Mac CPU/MPS). Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B <script> ... Run after lis319o-panel-mac has finished (one reader job on the Mac at a time).\012DISK: 1 (a ~25 MB code tree in one mktemp dir, removed by exact path at the end). TIME CAP: 20 minutes. $0. Label: lis319f-ch403chk.\012DATA: DEV only (2 rows from the everyday-chat DEV chats, readable). No TEST-ONLY panel is touched.\012\012YOUR TASK: read 2 DEV chat turns with both readers, to check a false-save lead from Everyday chat's ch-403.\0121. TREE: D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis319f-20260926/chk_ch403 | tar -x -C $D; cd $D.\012   OLD = ~/premonition-models/lis319-merged (model.safetensors sha256 must be e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76)\012   NEW = ~/premonition-models/lis319f-merged (must be 970ef0acd5966f9e1a42049025d4ed807dee3989225201fd9dbcc6b4aa6b4f9b). Either mismatch: stop with READER-FAIL.\0122. python -B scripts/claude_lis319_read.py --model $OLD --rows artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl --out reads_old.jsonl\0123. python -B scripts/claude_lis319_read.py --model $NEW --rows artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl --out reads_new.jsonl\0124. Copy both into artifacts/claude-lis319f-20260926/chk_ch403/ of your worktree, write RESULTS.md there (sha checks, device, and for each row and reader the frame's act, each fact's owner/rel/value/mode and its conf, verbatim; DEV data may be quoted), then rm -rf "$D" (exact path) and confirm it is gone.\012PUSH: artifacts/claude-lis319f-20260926/chk_ch403/RESULTS.md artifacts/claude-lis319f-20260926/chk_ch403/reads_old.jsonl artifacts/claude-lis319f-20260926/chk_ch403/reads_new.jsonl
+ben-hannan       41673   2.4  1.5 562790064 487680   ??  SN    9:45AM   3:28.87 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rent-rt02d.go1.41640 COMMON RULES (the Plain-English puzzles thread, Claude, wrote this task on 2026-09-26; the Month-end thread built and sealed rt-02d and handed it over at ~13:36 UTC, and agreed to this move). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply), and ALL of origin/main:design/v3/30-modes/330-rent-kit.md (code tree, rental rules, setup, independence). ONLY the Plain-English puzzles thread or the Director may stop or destroy claude-plainpuzzles-rt02d.\012GPU: rent\012BUDGET: $1.50 for this whole task, re-rents included, from the Plain-English puzzles thread's $2 (Ben, 12:59 UTC 09-26; ledger line f123f966c; the Director may lower this). Label: claude-plainpuzzles-rt02d. Needs READER319 and the 0.2c ADAPTER (SETUP S4, S5). Re-run the offer search before every create. This is 1B inference only: take the cheapest RTX 5090 or RTX 4090 offer that meets the kit's filter.\012DISK: 1\012TIME CAP: 4.5 hours on the rental (the Mac fallback in S4 alone can take ~90 min; BUDGET is the real guard). If reached: stop by exact PID, copy back what exists, destroy, report "partial".\012DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-rt02d-20260926/run, if a live instance is labelled claude-plainpuzzles-rt02d, or if the watcher shows 007s-rt02d-benspc running or finished.\012\012YOUR TASK: rt-02d, THE REGISTERED RUN (marks: artifacts/claude-rt02d-20260926/PASSMARKS-rt02d.md, ADDENDUM-rt02d.md and ADDENDUM2-rt02d-machine.md; read them). Chat route to the slept puzzle skill. Month-end wrote the code: run it, never edit it. If something breaks, copy back what exists, destroy, and report the exact error and traceback; do not patch. TEST-ONLY, never open, print or quote: artifacts/claude-panel-rt02d-20260926 (only claude_rt02d.py run/score read it). Each registered process is launched ONCE (check `ps` before any retry).\012\012SETUP (R = the rental's ssh target; settle S4's source first, then rent; start the reader copy in the background and do S1-S3 and S5 while it copies)\012S1. Code tree (kit A, compressed, nothing staged on the Mac):\012    git archive origin/builder-outbox | gzip -1 | ssh R 'mkdir -p ~/tree && tar -xz -C ~/tree'\012    git archive origin/main | gzip -1 | ssh R 'tar -xz -C ~/tree'          # main on top: main wins\012    self122_head.pt as kit A says (sha256 5ca02173...ee25).\012S2. Kit C on the rental (torch check, pip line, snapshot_download of MiniCPM5-1B and all-MiniLM-L6-v2, the route122 check). BASE = the first printed snapshot path; record its commit hash (expected 87179e5c1f455ef22e6223592d2d61351b525bfc).\012S3. Sleep's base checkpoint (not in git), as rent-02c's step 2 did: python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out /tmp/r44 && cp /tmp/r44/base-seed4102.pt artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt\012S4. READER319 = ~/reader319 on the rental (the lis-319 merged reader, about 2 GB). Source, in this order:\012    (a) DEPOT (preferred; the Director's rent-depot job copies the reader rental to rental). BEFORE RENTING ANYTHING, poll every 5 min for up to 120 min until origin/builder-outbox (or origin/main) has artifacts/claude-depot-20260926/REPORT.md giving the depot's instance id, path /root/reader319 and sha e688e1b2... below, AND `vastai show instances` lists a running instance labelled claude-director-depot. Then rent, and copy inside vast: `vastai copy <depot_id>:/root/reader319 <new_id>:/root/reader319` (or `ssh -A` into the new rental and rsync from the depot's ssh host/port in REPORT.md). Read only on the depot; never stop or change it.\012    (b) MAC FALLBACK, only if REPORT.md says NO-SOURCE or the copy failed, or 120 min pass with no depot: rent, then on the Mac check `shasum -a 256 ~/premonition-models/lis319-merged/model.safetensors` = e688e1b2... below and `rsync -a --partial ~/premonition-models/lis319-merged/ R:reader319/` (about 90 min). If the Mac copy is missing or its sha differs: stream C:/Users/benja/lis319/work/run/merged from BensPC through the Mac without keeping a copy (ssh <benspc> tar -c ... | ssh R tar -x ...; reading files is fine while C:\Users\benja\GPU-BUSY.txt exists; the GPU is not touched). Never run (b) while rent-lis-319f's own reader rsync is still going (it shares the same uplink).\012    On the rental `sha256sum ~/reader319/model.safetensors` must equal e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76. If it cannot be made equal: destroy and stop with READER-FAIL. Report which source was used and how long it took.\012S5. ADAPTER (16.6 MB), streamed from BensPC through the Mac without keeping a copy:\012    ssh <benspc> tar -c -C C:/Users/benja/lis301/work/e2e02c/tree/artifacts/claude-e2e02c-20260926/run/sleep adapter02c.pt adapter02c.json | ssh R 'mkdir -p ~/tree/artifacts/claude-e2e02c-20260926/run/sleep && tar -x -C ~/tree/artifacts/claude-e2e02c-20260926/run/sleep'\012    ADAPTER = ~/tree/artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.pt. Its sha256 must be a33211dc9bdb4e26bc7161b62147cb4dfc04fb605ba1aecbb26948f86e7936f5 and adapter02c.json must sit next to it (install_sleep02c refuses a mismatched pair). Mismatch or missing: destroy and stop.\012S6. From ~/tree: `sha256sum -c artifacts/claude-e2e02c-20260926/SEAL-code.sha256.txt`, `sha256sum -c artifacts/claude-rt02d-20260926/SEAL-code-rt02d.sha256.txt`, and inside artifacts/claude-panel-rt02d-20260926 `sha256sum -c SEAL-panel.sha256.txt`: all OK. `python -B scripts/claude_rt02d.py --selftest` prints 55/55 and `python -B scripts/claude_readersha_wrap.py --selftest` prints 9/9. Any failure: destroy and stop with SEAL-MISMATCH and the failing lines.\012\012STEPS: exactly steps 1-5 of origin/main:handoff/held/007s-rt02d-benspc.md (1 dev gate, 2 panel B0/B1/B1off, 3 negatives B1, 4 no-harm general and chatdev B0/B1, 5 score), with these substitutions only:\012- every command runs from ~/tree on the rental under nohup/setsid with its own log, one process at a time;\012- READER319 = ~/reader319; SHA319 as in S4; ADAPTER as in S5; BASE as in S2;\012- env on every command: READER_SHA=SHA319 SLEEP02C_ADAPTER=ADAPTER CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONUTF8=1 HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 (CUBLAS_WORKSPACE_CONFIG must be set in the env before python starts; Month-end's note).\012NONDETERMINISTIC at the dev gate: copy the two dev files back, destroy, stop. Never loosen R4 or rerun a registered step.\0126. Copy back to the Mac (small files only; never the adapter, the reader or any weights): artifacts/claude-rt02d-20260926/run and artifacts/claude-rt02d-20260926/score, plus the step logs as artifacts/claude-rt02d-20260926/logs/; check sizes and sha256 on both ends BEFORE destroying. Destroy, confirm it is gone with `vastai show instances`, append one ledger line (cat >> artifacts/fable-predictions-ledger.md): date, task, instance id(s), GPU, hours, dph, dollars, outcome.\0127. RESULTS-rent.md in artifacts/claude-rt02d-20260926/: setup checks (S1-S6 lines, BASE commit hash, which reader source and how long), the dev gate result, rows/routed per run (the one JSON line each run prints), the score line, wall time per step, VRAM peak if logged, GPU name, instance id, hours, dph, dollars. Never open or quote puzzles_*, negatives_* rows or the panel files.\012PUSH: artifacts/claude-rt02d-20260926/RESULTS-rent.md artifacts/claude-rt02d-20260926/run artifacts/claude-rt02d-20260926/score artifacts/claude-rt02d-20260926/logs artifacts/fable-predictions-ledger.md
+ben-hannan       17222   0.0  0.0 488781808   2528   ??  SN   12:21PM   0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/lis319f-ch403chk-mac.md
+---
+bm397t-adapter397t.pt
+lis301-merged
+lis319-merged
+lis319f-merged
+minilm
+own-m1n-mouth
+rd378-notes-merged
+rsn353
+rsn358a
+rsn358i
+---
+{"id": "dev02e-chat-31:1", "turn": "im 19 and have zero credit history. whats the smartest way to start building it", "prev_reply": "Credit scores are based on your credit history, which includes your credit card balances, credit account statements, and other financial activities. If you pay your bills on time, your score goes up, and if you miss payments, it goes down. Lenders will then decide if you're a good risk when they check your score, which affects your ability to get loans or build a good credit history.", "history": [["how do credit scores actually work? what makes them go up or down", "Credit scores are based on your credit history, which includes your credit card balances, credit account statements, and other financial activities. If you pay your bills on time, your score goes up, and if you miss payments, it goes down. Lenders will then decide if you're a good risk when they check your score, which affects your ability to get loans or build a good credit history."]]}
+{"id": "dev02e-chat-57:4", "turn": "ok ty, gonna sleep on it. night!", "prev_reply": "Just to check: is Kim's occupation marine biology?", "history": [["im trying to pick between two summer programs, one is coding and one is marine biology. how do i decide", "It's a great choice to explore different interests! Coding offers creativity and problem-solving skills, while marine biology combines science and the natural world. Which program excites you more, or do you have specific career goals? Also, consider your schedule and how you prefer hands-on experience."], ["how do colleges look at summer programs anyway, do they actually matter", "Many colleges prioritize practical experience, so summer programs can be valuable for building relevant skills. They often offer internships, work placements, and project-based learning that are crucial for career readiness. Ultimately, the college's reputation and specific programs can greatly influence your chances of success in your chosen field."], ["i feel like everyone around me already knows what they want to do and im just guessing", "It's completely normal to feel uncertain, but focusing on your interests can help you find a program that aligns with what you enjoy. Remember that colleges also value practical experience and networking, so don't be afraid to ask for advice. Exploring multiple options will help you make an informed decision."], ["the marine bio one is a week longer but its way closer to home", "Just to check: is Kim's occupation marine biology?"]]}
+---
+tar
+tgz
+tar.gz
+zip
+[0m
+[0m$ [0mgit log --oneline origin/main -- artifacts/claude-lis319f-20260926/chk_ch403/ 2>&1 | head -n 10; echo ---; git show origin/main:artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl 2>&1 | wc -l; git ls-tree -r --name-only origin/main -- artifacts/claude-lis319f-20260926/chk_ch403/ 2>&1; echo ---; git log --oneline origin/main --grep="lis319o" -i 2>&1 | head -n 10; echo ---; ls artifacts/claude-lis319f-20260926/chk_ch403/ 2>&1; echo ---; ls artifacts/ 2>&1 | grep -i lis319 | head -n 20
+40d4ed2c6 lis319f-ch403chk: 2 DEV chat turns read by lis-319 and lis-319f (ch-403 false-save lead)
+---
+       2
+artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl
+---
+---
+ls: artifacts/claude-lis319f-20260926/chk_ch403/: No such file or directory
+---
+claude-lis319-20260925
+claude-lis319c-20260926
+claude-lis319f-20260926
+claude-lis319k-20260926
+claude-lis319o-20260926
+claude-lis319t2-20260926
+[0m
+[0m$ [0mgit show --stat 40d4ed2c6 2>&1 | head -n 30; echo ---; git branch --contains 40d4ed2c6 2>&1 | head; echo ---; git log --oneline origin/main -5 2>&1; echo ---; ls artifacts/claude-lis319f-20260926/ 2>&1; ls artifacts/claude-lis319o-20260926/ 2>&1 | head -n 30
+commit 40d4ed2c6c4a767c8340a2bbc546d7325513ee5f
+Author: Claude <noreply@anthropic.com>
+Date:   Sat Sep 26 16:19:35 2026 +0000
+
+    lis319f-ch403chk: 2 DEV chat turns read by lis-319 and lis-319f (ch-403 false-save lead)
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_011oWtvpuhWkyvGxArCi99Tg
+
+ artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl |  2 ++
+ handoff/queue/lis319f-ch403chk-mac.md                  | 13 +++++++++++++
+ 2 files changed, 15 insertions(+)
+---
+---
+ee7dd0dc9 sf-401: registered run results from builder-outbox (rent-sf401) + judge packets (seed 4011, 36 packets: A 23, B 13)
+40d4ed2c6 lis319f-ch403chk: 2 DEV chat turns read by lis-319 and lis-319f (ch-403 false-save lead)
+f64888ff1 0.2d ADDENDUM-15: win rows (A, B/carry-over, memory, S1/H3, H1) vs no-harm rows (C1 60 convs margin >= -12, K1 with k1a joined, GSM8K/MMLU)
+d55cc43b1 ch-403 verified: DEV-FAIL at the practice gate (non-teach saves 6 vs bar 0, identical in unchanged X); panel never run; not rerun under Redirect. DEV report: stock lines 24 -> 1
+c87e6e9a5 0.2d ADDENDUM-14: C1 row fixed (chatpanel404, c1rival scorer 6f6a6e17d, no-harm margin >= -12 per rival, +14 reported as ahead)
+---
+BUILD-dryrun.json
+BUILD.json
+dev_former_new.json
+dev_former_old.json
+dev_pred_new.jsonl
+dev_pred_old_tpl.jsonl
+dev_score_new.txt
+former_new.json
+former_old.json
+LENGTHS.json
+pairs_panel_new.jsonl
+pairs_panel_old.jsonl
+panel_tools
+PASSMARKS-R.md
+PASSMARKS.md
+reads_panel_new.jsonl
+reads_panel_old.jsonl
+RESULTS-rent.md
+SEAL-run.sha256.txt
+SEAL.sha256.txt
+train_summary.json
+reads_panel_319f.jsonl
+RESULTS-read.md
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis319f-ch403chk-mac.md 2>&1; echo ===; ls /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/queue/ 2>&1 | grep -i lis | head -n 20; echo ===; git log --oneline -3 -- artifacts/claude-lis319o-20260926/ 2>&1; echo ===; git show origin/main:scripts/claude_lis319_read.py 2>&1 | head -n 60
+COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).
+GPU: no (Mac CPU/MPS). Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B <script> ... Run after lis319o-panel-mac has finished (one reader job on the Mac at a time).
+DISK: 1 (a ~25 MB code tree in one mktemp dir, removed by exact path at the end). TIME CAP: 20 minutes. $0. Label: lis319f-ch403chk.
+DATA: DEV only (2 rows from the everyday-chat DEV chats, readable). No TEST-ONLY panel is touched.
+
+YOUR TASK: read 2 DEV chat turns with both readers, to check a false-save lead from Everyday chat's ch-403.
+1. TREE: D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis319f-20260926/chk_ch403 | tar -x -C $D; cd $D.
+   OLD = ~/premonition-models/lis319-merged (model.safetensors sha256 must be e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76)
+   NEW = ~/premonition-models/lis319f-merged (must be 970ef0acd5966f9e1a42049025d4ed807dee3989225201fd9dbcc6b4aa6b4f9b). Either mismatch: stop with READER-FAIL.
+2. python -B scripts/claude_lis319_read.py --model $OLD --rows artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl --out reads_old.jsonl
+3. python -B scripts/claude_lis319_read.py --model $NEW --rows artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl --out reads_new.jsonl
+4. Copy both into artifacts/claude-lis319f-20260926/chk_ch403/ of your worktree, write RESULTS.md there (sha checks, device, and for each row and reader the frame's act, each fact's owner/rel/value/mode and its conf, verbatim; DEV data may be quoted), then rm -rf "$D" (exact path) and confirm it is gone.
+PUSH: artifacts/claude-lis319f-20260926/chk_ch403/RESULTS.md artifacts/claude-lis319f-20260926/chk_ch403/reads_old.jsonl artifacts/claude-lis319f-20260926/chk_ch403/reads_new.jsonl
+zsh:1: == not found
+[0m
+[0m$ [0mgit log --oneline -3 -- artifacts/claude-lis319o-20260926/; echo ---; ps aux | grep -E "python.*lis319|claude_lis319_read" | grep -v grep || echo NO_READER_RUNNING
+---
+ben-hannan       17256   3.7  3.1 562975184 1030176   ??  RN   12:21PM   0:13.59 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:lis319f-ch403chk-mac.go1.17222 COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).\012GPU: no (Mac CPU/MPS). Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B <script> ... Run after lis319o-panel-mac has finished (one reader job on the Mac at a time).\012DISK: 1 (a ~25 MB code tree in one mktemp dir, removed by exact path at the end). TIME CAP: 20 minutes. $0. Label: lis319f-ch403chk.\012DATA: DEV only (2 rows from the everyday-chat DEV chats, readable). No TEST-ONLY panel is touched.\012\012YOUR TASK: read 2 DEV chat turns with both readers, to check a false-save lead from Everyday chat's ch-403.\0121. TREE: D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis319f-20260926/chk_ch403 | tar -x -C $D; cd $D.\012   OLD = ~/premonition-models/lis319-merged (model.safetensors sha256 must be e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76)\012   NEW = ~/premonition-models/lis319f-merged (must be 970ef0acd5966f9e1a42049025d4ed807dee3989225201fd9dbcc6b4aa6b4f9b). Either mismatch: stop with READER-FAIL.\0122. python -B scripts/claude_lis319_read.py --model $OLD --rows artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl --out reads_old.jsonl\0123. python -B scripts/claude_lis319_read.py --model $NEW --rows artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl --out reads_new.jsonl\0124. Copy both into artifacts/claude-lis319f-20260926/chk_ch403/ of your worktree, write RESULTS.md there (sha checks, device, and for each row and reader the frame's act, each fact's owner/rel/value/mode and its conf, verbatim; DEV data may be quoted), then rm -rf "$D" (exact path) and confirm it is gone.\012PUSH: artifacts/claude-lis319f-20260926/chk_ch403/RESULTS.md artifacts/claude-lis319f-20260926/chk_ch403/reads_old.jsonl artifacts/claude-lis319f-20260926/chk_ch403/reads_new.jsonl
+ben-hannan       41673   0.1  1.5 562790064 487680   ??  SN    9:45AM   3:29.15 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rent-rt02d.go1.41640 COMMON RULES (the Plain-English puzzles thread, Claude, wrote this task on 2026-09-26; the Month-end thread built and sealed rt-02d and handed it over at ~13:36 UTC, and agreed to this move). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply), and ALL of origin/main:design/v3/30-modes/330-rent-kit.md (code tree, rental rules, setup, independence). ONLY the Plain-English puzzles thread or the Director may stop or destroy claude-plainpuzzles-rt02d.\012GPU: rent\012BUDGET: $1.50 for this whole task, re-rents included, from the Plain-English puzzles thread's $2 (Ben, 12:59 UTC 09-26; ledger line f123f966c; the Director may lower this). Label: claude-plainpuzzles-rt02d. Needs READER319 and the 0.2c ADAPTER (SETUP S4, S5). Re-run the offer search before every create. This is 1B inference only: take the cheapest RTX 5090 or RTX 4090 offer that meets the kit's filter.\012DISK: 1\012TIME CAP: 4.5 hours on the rental (the Mac fallback in S4 alone can take ~90 min; BUDGET is the real guard). If reached: stop by exact PID, copy back what exists, destroy, report "partial".\012DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-rt02d-20260926/run, if a live instance is labelled claude-plainpuzzles-rt02d, or if the watcher shows 007s-rt02d-benspc running or finished.\012\012YOUR TASK: rt-02d, THE REGISTERED RUN (marks: artifacts/claude-rt02d-20260926/PASSMARKS-rt02d.md, ADDENDUM-rt02d.md and ADDENDUM2-rt02d-machine.md; read them). Chat route to the slept puzzle skill. Month-end wrote the code: run it, never edit it. If something breaks, copy back what exists, destroy, and report the exact error and traceback; do not patch. TEST-ONLY, never open, print or quote: artifacts/claude-panel-rt02d-20260926 (only claude_rt02d.py run/score read it). Each registered process is launched ONCE (check `ps` before any retry).\012\012SETUP (R = the rental's ssh target; settle S4's source first, then rent; start the reader copy in the background and do S1-S3 and S5 while it copies)\012S1. Code tree (kit A, compressed, nothing staged on the Mac):\012    git archive origin/builder-outbox | gzip -1 | ssh R 'mkdir -p ~/tree && tar -xz -C ~/tree'\012    git archive origin/main | gzip -1 | ssh R 'tar -xz -C ~/tree'          # main on top: main wins\012    self122_head.pt as kit A says (sha256 5ca02173...ee25).\012S2. Kit C on the rental (torch check, pip line, snapshot_download of MiniCPM5-1B and all-MiniLM-L6-v2, the route122 check). BASE = the first printed snapshot path; record its commit hash (expected 87179e5c1f455ef22e6223592d2d61351b525bfc).\012S3. Sleep's base checkpoint (not in git), as rent-02c's step 2 did: python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out /tmp/r44 && cp /tmp/r44/base-seed4102.pt artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt\012S4. READER319 = ~/reader319 on the rental (the lis-319 merged reader, about 2 GB). Source, in this order:\012    (a) DEPOT (preferred; the Director's rent-depot job copies the reader rental to rental). BEFORE RENTING ANYTHING, poll every 5 min for up to 120 min until origin/builder-outbox (or origin/main) has artifacts/claude-depot-20260926/REPORT.md giving the depot's instance id, path /root/reader319 and sha e688e1b2... below, AND `vastai show instances` lists a running instance labelled claude-director-depot. Then rent, and copy inside vast: `vastai copy <depot_id>:/root/reader319 <new_id>:/root/reader319` (or `ssh -A` into the new rental and rsync from the depot's ssh host/port in REPORT.md). Read only on the depot; never stop or change it.\012    (b) MAC FALLBACK, only if REPORT.md says NO-SOURCE or the copy failed, or 120 min pass with no depot: rent, then on the Mac check `shasum -a 256 ~/premonition-models/lis319-merged/model.safetensors` = e688e1b2... below and `rsync -a --partial ~/premonition-models/lis319-merged/ R:reader319/` (about 90 min). If the Mac copy is missing or its sha differs: stream C:/Users/benja/lis319/work/run/merged from BensPC through the Mac without keeping a copy (ssh <benspc> tar -c ... | ssh R tar -x ...; reading files is fine while C:\Users\benja\GPU-BUSY.txt exists; the GPU is not touched). Never run (b) while rent-lis-319f's own reader rsync is still going (it shares the same uplink).\012    On the rental `sha256sum ~/reader319/model.safetensors` must equal e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76. If it cannot be made equal: destroy and stop with READER-FAIL. Report which source was used and how long it took.\012S5. ADAPTER (16.6 MB), streamed from BensPC through the Mac without keeping a copy:\012    ssh <benspc> tar -c -C C:/Users/benja/lis301/work/e2e02c/tree/artifacts/claude-e2e02c-20260926/run/sleep adapter02c.pt adapter02c.json | ssh R 'mkdir -p ~/tree/artifacts/claude-e2e02c-20260926/run/sleep && tar -x -C ~/tree/artifacts/claude-e2e02c-20260926/run/sleep'\012    ADAPTER = ~/tree/artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.pt. Its sha256 must be a33211dc9bdb4e26bc7161b62147cb4dfc04fb605ba1aecbb26948f86e7936f5 and adapter02c.json must sit next to it (install_sleep02c refuses a mismatched pair). Mismatch or missing: destroy and stop.\012S6. From ~/tree: `sha256sum -c artifacts/claude-e2e02c-20260926/SEAL-code.sha256.txt`, `sha256sum -c artifacts/claude-rt02d-20260926/SEAL-code-rt02d.sha256.txt`, and inside artifacts/claude-panel-rt02d-20260926 `sha256sum -c SEAL-panel.sha256.txt`: all OK. `python -B scripts/claude_rt02d.py --selftest` prints 55/55 and `python -B scripts/claude_readersha_wrap.py --selftest` prints 9/9. Any failure: destroy and stop with SEAL-MISMATCH and the failing lines.\012\012STEPS: exactly steps 1-5 of origin/main:handoff/held/007s-rt02d-benspc.md (1 dev gate, 2 panel B0/B1/B1off, 3 negatives B1, 4 no-harm general and chatdev B0/B1, 5 score), with these substitutions only:\012- every command runs from ~/tree on the rental under nohup/setsid with its own log, one process at a time;\012- READER319 = ~/reader319; SHA319 as in S4; ADAPTER as in S5; BASE as in S2;\012- env on every command: READER_SHA=SHA319 SLEEP02C_ADAPTER=ADAPTER CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONUTF8=1 HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 (CUBLAS_WORKSPACE_CONFIG must be set in the env before python starts; Month-end's note).\012NONDETERMINISTIC at the dev gate: copy the two dev files back, destroy, stop. Never loosen R4 or rerun a registered step.\0126. Copy back to the Mac (small files only; never the adapter, the reader or any weights): artifacts/claude-rt02d-20260926/run and artifacts/claude-rt02d-20260926/score, plus the step logs as artifacts/claude-rt02d-20260926/logs/; check sizes and sha256 on both ends BEFORE destroying. Destroy, confirm it is gone with `vastai show instances`, append one ledger line (cat >> artifacts/fable-predictions-ledger.md): date, task, instance id(s), GPU, hours, dph, dollars, outcome.\0127. RESULTS-rent.md in artifacts/claude-rt02d-20260926/: setup checks (S1-S6 lines, BASE commit hash, which reader source and how long), the dev gate result, rows/routed per run (the one JSON line each run prints), the score line, wall time per step, VRAM peak if logged, GPU name, instance id, hours, dph, dollars. Never open or quote puzzles_*, negatives_* rows or the panel files.\012PUSH: artifacts/claude-rt02d-20260926/RESULTS-rent.md artifacts/claude-rt02d-20260926/run artifacts/claude-rt02d-20260926/score artifacts/claude-rt02d-20260926/logs artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mD=$(mktemp -d); echo "D=$D"; git archive origin/main scripts design/v3/60-listener artifacts/claude-lis319f-20260926/chk_ch403 | tar -x -C "$D"; echo ARCHIVE_EXIT:$?; ls "$D"; ls "$D/artifacts/claude-lis319f-20260926/chk_ch403"; wc -l "$D/artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl"; du -sh "$D"
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LRXJ8Wx0aD
+ARCHIVE_EXIT:0
+artifacts
+design
+scripts
+rows.jsonl
+       2 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LRXJ8Wx0aD/artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl
+ 29M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LRXJ8Wx0aD
+[0m
+[0m$ [0mshasum -a 256 ~/premonition-models/lis319-merged/model.safetensors; shasum -a 256 ~/premonition-models/lis319f-merged/model.safetensors
+e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76  /Users/ben-hannan/premonition-models/lis319-merged/model.safetensors
+970ef0acd5966f9e1a42049025d4ed807dee3989225201fd9dbcc6b4aa6b4f9b  /Users/ben-hannan/premonition-models/lis319f-merged/model.safetensors
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis319_read.py --model ~/premonition-models/lis319-merged --rows artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl --out reads_old.jsonl 2>&1 | tail -n 20; echo OLD_EXIT:${pipestatus[1]:-$?}
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<06:19,  1.74s/it]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 125.67it/s]
+read 2 rows on mps
+OLD_EXIT:0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis319_read.py --model ~/premonition-models/lis319f-merged --rows artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl --out reads_new.jsonl 2>&1 | tail -n 20; echo NEW_EXIT:${pipestatus[1]:-$?}
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<03:49,  1.05s/it]Loading weights:  66%|██████▌   | 145/219 [00:01<00:00, 171.89it/s]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 130.10it/s]
+read 2 rows on mps
+NEW_EXIT:0
+[0m
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LRXJ8Wx0aD/reads_old.jsonl
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LRXJ8Wx0aD/reads_new.jsonl
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LRXJ8Wx0aD/artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl
+[0m
+[0m$ [0mmkdir -p artifacts/claude-lis319f-20260926/chk_ch403 && cp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LRXJ8Wx0aD/reads_old.jsonl artifacts/claude-lis319f-20260926/chk_ch403/reads_old.jsonl && cp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LRXJ8Wx0aD/reads_new.jsonl artifacts/claude-lis319f-20260926/chk_ch403/reads_new.jsonl && cp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LRXJ8Wx0aD/artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl && ls -l artifacts/claude-lis319f-20260926/chk_ch403/ && wc -l artifacts/claude-lis319f-20260926/chk_ch403/reads_old.jsonl artifacts/claude-lis319f-20260926/chk_ch403/reads_new.jsonl
+total 24
+-rw-r--r--  1 ben-hannan  staff   504 Sep 26 12:23 reads_new.jsonl
+-rw-r--r--  1 ben-hannan  staff   704 Sep 26 12:23 reads_old.jsonl
+-rw-r--r--  1 ben-hannan  staff  2525 Sep 26 12:23 rows.jsonl
+       2 artifacts/claude-lis319f-20260926/chk_ch403/reads_old.jsonl
+       2 artifacts/claude-lis319f-20260926/chk_ch403/reads_new.jsonl
+       4 total
+[0m
+[0m$ [0mrm artifacts/claude-lis319f-20260926/chk_ch403/rows.jsonl && ls -l artifacts/claude-lis319f-20260926/chk_ch403/
+total 16
+-rw-r--r--  1 ben-hannan  staff  504 Sep 26 12:23 reads_new.jsonl
+-rw-r--r--  1 ben-hannan  staff  704 Sep 26 12:23 reads_old.jsonl
+[0m
+[0m← [0mWrite artifacts/claude-lis319f-20260926/chk_ch403/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mrm -rf "/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LRXJ8Wx0aD"; ls "/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LRXJ8Wx0aD" 2>&1; echo LS_EXIT:$?; git status --porcelain=v1 -- artifacts/claude-lis319f-20260926/chk_ch403/; wc -l artifacts/claude-lis319f-20260926/chk_ch403/reads_old.jsonl artifacts/claude-lis319f-20260926/chk_ch403/reads_new.jsonl
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LRXJ8Wx0aD: No such file or directory
+LS_EXIT:1
+       2 artifacts/claude-lis319f-20260926/chk_ch403/reads_old.jsonl
+       2 artifacts/claude-lis319f-20260926/chk_ch403/reads_new.jsonl
+       4 total
+[0m
+[0m$ [0mls -l artifacts/claude-lis319f-20260926/chk_ch403/; git status --porcelain=v1 | grep -i chk_ch403 || echo NO_STATUS_LINE; git check-ignore -v artifacts/claude-lis319f-20260926/chk_ch403/RESULTS.md || echo NOT_IGNORED
+total 32
+-rw-r--r--  1 ben-hannan  staff   504 Sep 26 12:23 reads_new.jsonl
+-rw-r--r--  1 ben-hannan  staff   704 Sep 26 12:23 reads_old.jsonl
+-rw-r--r--  1 ben-hannan  staff  4723 Sep 26 12:23 RESULTS.md
+NO_STATUS_LINE
+.gitignore:5:artifacts/	artifacts/claude-lis319f-20260926/chk_ch403/RESULTS.md
+[0m
