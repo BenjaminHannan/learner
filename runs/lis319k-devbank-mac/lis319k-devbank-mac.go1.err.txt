@@ -1,0 +1,338 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1 | head -20; echo FETCH_DONE; git rev-parse --show-toplevel; pwd; git status --short | head -30; git branch --show-current
+FETCH_DONE
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-brd5-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd5-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd5-20260926/gpu/log.txt
+A  artifacts/claude-brd5-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd5-20260926/gpu/streams.json
+A  artifacts/claude-brd6-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd6-20260926/gpu/brd6_summary.json
+A  artifacts/claude-brd6-20260926/gpu/log.txt
+A  artifacts/claude-brd6-20260926/gpu/practice.jsonl
+A  artifacts/claude-brd6-20260926/gpu/streams.json
+A  artifacts/claude-brd7-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd7-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd7-20260926/gpu/log.txt
+A  artifacts/claude-brd7-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd7-20260926/gpu/streams.json
+A  artifacts/claude-dl1-20260925/RESULTS-gpu.md
+A  artifacts/claude-dl1-20260925/gpu/dl1_results.json
+A  artifacts/claude-dl1-20260925/gpu/log.txt
+A  artifacts/claude-e2e02c-20260926/RESULTS-benspc.md
+A  artifacts/claude-e2e02c-20260926/run/arm_G.jsonl
+claude/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -30
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+[0m
+[0m$ [0muptime; df -g / | head -5; ls ~/premonition-models/lis319-merged/ 2>&1; shasum -a 256 ~/premonition-models/lis319-merged/model.safetensors; ls artifacts/claude-lis319k-20260926/devbank/ 2>&1 | head -20
+11:08  up 3 days,  1:01, 4 users, load averages: 75.23 85.18 88.21
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        54    19%  484014 576618240    0%   /
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer_config.json
+tokenizer.json
+e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76  /Users/ben-hannan/premonition-models/lis319-merged/model.safetensors
+ls: artifacts/claude-lis319k-20260926/devbank/: No such file or directory
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-e2e330-dev-20260924/run/ | head -20
+echo ---
+git ls-tree -r --name-only origin/main -- scripts/claude_lis319k_devbank.py scripts/claude_lis319_read.py artifacts/claude-e2e331-dev-20260924/ | head -40
+artifacts/claude-e2e330-dev-20260924/run/arm_330a.jsonl
+artifacts/claude-e2e330-dev-20260924/run/arm_330a_chat.jsonl
+artifacts/claude-e2e330-dev-20260924/run/arm_330a_cre.jsonl
+artifacts/claude-e2e330-dev-20260924/run/arm_G.jsonl
+artifacts/claude-e2e330-dev-20260924/run/arm_twin.jsonl
+---
+artifacts/claude-e2e331-dev-20260924/README.md
+artifacts/claude-e2e331-dev-20260924/SEAL.sha256.txt
+artifacts/claude-e2e331-dev-20260924/truth.jsonl
+artifacts/claude-e2e331-dev-20260924/turns.jsonl
+scripts/claude_lis319_read.py
+scripts/claude_lis319k_devbank.py
+[0m
+[0m$ [0mD=$(mktemp -d); echo "D=$D"; git archive origin/builder-outbox artifacts/claude-e2e330-dev-20260924/run/arm_G.jsonl | tar -x -C "$D" && echo ARCH1_OK; git archive origin/main scripts artifacts/claude-e2e331-dev-20260924 | tar -x -C "$D" && echo ARCH2_OK; ls -R "$D" | head -40; du -sh "$D"; echo "$D" > /tmp/lis319k_D_path.txt; cat /tmp/lis319k_D_path.txt
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.hQSWQLedvX
+ARCH1_OK
+ARCH2_OK
+artifacts
+scripts
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.hQSWQLedvX/artifacts:
+claude-e2e330-dev-20260924
+claude-e2e331-dev-20260924
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.hQSWQLedvX/artifacts/claude-e2e330-dev-20260924:
+run
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.hQSWQLedvX/artifacts/claude-e2e330-dev-20260924/run:
+arm_G.jsonl
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.hQSWQLedvX/artifacts/claude-e2e331-dev-20260924:
+README.md
+SEAL.sha256.txt
+truth.jsonl
+turns.jsonl
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.hQSWQLedvX/scripts:
+address_probe.py
+astra_canonical_operator_panels.py
+astra_canonical_operator_report.py
+astra_canonical_operator_run.py
+astra_canonical_operator.py
+astra_transfer_diagnostic.py
+astra_transfer_report.py
+astra_transfer_twins.py
+benspc-runtime.json
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+ 29M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.hQSWQLedvX
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.hQSWQLedvX
+[0m
+[0m$ [0mD=$(cat /tmp/lis319k_D_path.txt); (cd "$D/artifacts/claude-e2e331-dev-20260924" && shasum -a 256 -c SEAL.sha256.txt)
+turns.jsonl: OK
+truth.jsonl: OK
+README.md: OK
+[0m
+[0m$ [0mD=$(cat /tmp/lis319k_D_path.txt); export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B "$D/scripts/claude_lis319k_devbank.py" rows --run "$D/artifacts/claude-e2e330-dev-20260924/run/arm_G.jsonl" --out "$D/rows.jsonl"
+Traceback (most recent call last):
+  File "/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.hQSWQLedvX/scripts/claude_lis319k_devbank.py", line 25, in <module>
+    import claude_lis300_compiler as CMP  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.hQSWQLedvX/scripts/claude_lis300_compiler.py", line 23, in <module>
+    REL_NAMES = set((ROOT / "design/v3/60-listener/relation-names.txt").read_text().split())
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.hQSWQLedvX/design/v3/60-listener/relation-names.txt'
+[0m
+[0m$ [0mD=$(cat /tmp/lis319k_D_path.txt); head -60 "$D/scripts/claude_lis319k_devbank.py"; echo ===; head -40 "$D/scripts/claude_lis300_compiler.py"
+#!/usr/bin/env python3
+"""Dev-bank save diagnosis for lis-319 (reading thread, 2026-09-26). DEV only (artifacts/claude-e2e331-dev-20260924).
+
+Which taught facts does the lis-319 reader read right, and at what confidence and mode? Answers the "Answering from
+memory" thread's list of facts build G never saved, and feeds the 0.98 vs 0.995 decision. Prints counts only.
+
+rows:     python claude_lis319k_devbank.py rows --bank BANK --run ARM_G.jsonl --out ROWS.jsonl
+          one reader row per teach/correct turn: {"id": "<life>#<turn>", "turn", "prev_reply", "history"} with the
+          build's own earlier replies from ARM_G (history = earlier [user, reply] pairs of that life, the reader uses 6).
+classify: python claude_lis319k_devbank.py classify --bank BANK --rows ROWS.jsonl --reads READS.jsonl [--facts F1,F2,..]
+          --out OUT.json. For each taught fact (or only the listed fact ids): the best read fact of its teach turn that
+          e2e-matches it -> saved (conf >= 0.995 and compiler ok), below_bar (by mode: conf in [0.98, 0.995), [0.95, 0.98),
+          < 0.95), compiler_reject, or not_read (no read fact matches). Counts per class and, for listed ids, the class
+          per fact id (ids and classes only).
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from collections import Counter
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_lis300_compiler as CMP  # noqa: E402
+from claude_lis317_gates import e2e_match  # noqa: E402
+from claude_lis319_fullclaim import load  # noqa: E402
+
+T = 0.995
+
+
+def rows(a):
+    turns = load(Path(a.bank) / "turns.jsonl")
+    run = {(r["life_id"], r["turn_index"]): r for r in load(a.run) if r["kind"] == "user"}
+    hist, out, c = {}, [], Counter()
+    for t in sorted(turns, key=lambda t: (t["life_id"], t["turn_index"])):
+        life, i = t["life_id"], t["turn_index"]
+        h = hist.setdefault(life, [])
+        if t["kind"] in ("teach", "correct"):
+            out.append({"id": f"{life}#{i}", "turn": t["user_text"], "prev_reply": h[-1][1] if h else "",
+                        "history": [list(x) for x in h]})
+            c[t["kind"]] += 1
+        r = run.get((life, i))
+        c["missing_run_row"] += r is None
+        h.append((t["user_text"], (r or {}).get("reply", "")))
+    Path(a.out).write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in out), encoding="utf-8")
+    print(json.dumps(dict(c) | {"rows": len(out)}))
+
+
+def cls(f, row, read):
+    fr = (read or {}).get("frame") or {}
+    facts = [x for x in (fr.get("facts") or []) if isinstance(x, dict)]
+    confs = (read or {}).get("conf") or []
+    best = None
+    for i, x in enumerate(facts):
+        if not e2e_match(x, {"owner": f["owner"], "relation": f["relation"], "value": f["value"]}):
+            continue
+        cf = confs[i] if i < len(confs) else 0.0
+        ok = CMP.check_fact(x, row["turn"], row.get("prev_reply", "")) is None
+        mode = x.get("mode", "?")
+zsh:1: == not found
+[0m
+[0m$ [0mD=$(cat /tmp/lis319k_D_path.txt); sed -n '1,40p' "$D/scripts/claude_lis300_compiler.py"
+#!/usr/bin/env python3
+"""lis-300 write compiler: the ONLY code that decides what the listener may save.
+
+The fine-tuned reader (MiniCPM5-1B) proposes a frame (design/v3/60-listener/frame-spec.md).
+This plain code turns it into a decision:
+  write      facts to save now (all of a turn's writable facts, or none)
+  ask_whose  facts owned by "we" (Ben's our/we ruling: ask whose, never save as me)
+  ask_back   facts that would be writable but fall below the confidence threshold
+  held       facts that can't be written, each with a reason
+  question   the reader's ask object when act == ASK
+
+A fact is written only when ALL hold: mode ASSERT/CORRECT; owner "me" or a whole-word span
+of the turn or previous reply; value a whole-word span of the turn; relation in the table;
+confidence >= threshold. If any writable-looking fact in the turn fails a check, the whole
+turn writes nothing (all-or-nothing) and the failing facts go to ask_back or held.
+"""
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+REL_NAMES = set((ROOT / "design/v3/60-listener/relation-names.txt").read_text().split())
+WRITE_MODES = {"ASSERT", "CORRECT"}
+PRONOUNS = {"he", "she", "his", "her", "hers", "him", "they", "them", "their", "it", "its",
+            "i", "my", "our", "us", "you", "your"}
+ME_WORDS = re.compile(r"\b(i|i'm|im|i've|ive|me|my|mine|myself)\b", re.I)
+
+
+def whole_word_span(needle: str, hay: str) -> bool:
+    """True if needle occurs in hay as whole words (exact case; typos kept as typed)."""
+    if not needle or not needle.strip():
+        return False
+    # a possessive or "is" contraction typed without an apostrophe is allowed: "anas boss", "hals my cousin"
+    pat = r"(?<![A-Za-z0-9])" + re.escape(needle.strip()) + r"(?:'s|’s|s)?(?![A-Za-z0-9])"
+    return re.search(pat, hay) is not None
+
+
+def check_fact(f: dict, turn: str, prev: str) -> str | None:
+    """Return None if structurally writable, else the reason it is not."""
+[0m
+[0m$ [0mD=$(cat /tmp/lis319k_D_path.txt); sed -n '60,140p' "$D/scripts/claude_lis319k_devbank.py"
+mode = x.get("mode", "?")
+        if not ok:
+            k = f"compiler_reject:{mode}"
+        elif cf >= T:
+            k = "saved"
+        else:
+            band = "0.98-0.995" if cf >= 0.98 else ("0.95-0.98" if cf >= 0.95 else "<0.95")
+            k = f"below_bar:{mode}:{band}"
+        rank = 0 if k == "saved" else 1 if k.startswith("below_bar") else 2
+        if best is None or rank < best[0]:
+            best = (rank, k)
+    return best[1] if best else ("no_read" if read is None else "not_read")
+
+
+def classify(a):
+    truth = load(Path(a.bank) / "truth.jsonl")
+    rw = {r["id"]: r for r in load(a.rows)}
+    rd = {r["id"]: r for r in load(a.reads)}
+    want = set(a.facts.split(",")) if a.facts else None
+    c, per = Counter(), {}
+    for f in truth:
+        if f.get("taught_turn") is None or (want and f["fact_id"] not in want):
+            continue
+        rid = f"{f['life_id']}#{f['taught_turn']}"
+        if rid not in rw:
+            c["teach_row_missing"] += 1
+            continue
+        k = cls(f, rw[rid], rd.get(rid))
+        c[k] += 1
+        if want:
+            per[f["fact_id"]] = k
+    out = {"facts": sum(c.values()), "classes": dict(sorted(c.items()))} | ({"per_fact": per} if want else {})
+    Path(a.out).write_text(json.dumps(out, indent=1) + "\n", encoding="utf-8")
+    print(json.dumps(out["classes"]))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("cmd", choices=["rows", "classify"])
+    ap.add_argument("--bank", default="artifacts/claude-e2e331-dev-20260924")
+    ap.add_argument("--run")
+    ap.add_argument("--rows")
+    ap.add_argument("--reads")
+    ap.add_argument("--facts")
+    ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    {"rows": rows, "classify": classify}[a.cmd](a)
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- design/v3/60-listener/relation-names.txt; git show origin/main:design/v3/60-listener/relation-names.txt 2>&1 | head -5; D=$(cat /tmp/lis319k_D_path.txt); ls -ld "$D"; echo "D=$D"
+design/v3/60-listener/relation-names.txt
+mother father parent sister brother sibling spouse wife husband partner child son daughter grandchild grandson granddaughter grandmother grandfather cousin aunt uncle friend best_friend neighbour boss colleague teacher coach doctor mentor apprentice rival envoy herald keeper scout warden owner pet dog cat employer occupation work_location school educated_at title city home hometown place_of_birth place_of_death country country_of_citizenship country_of_origin capital continent headquarters_location location_of_formation composer author painter director founder inventor designer discoverer architect creator developer performer manufacturer notable_work original_broadcaster genre officeholder head_of_state head_of_government chairperson chief_executive_officer head_coach dean language official_language language_of_work_or_name religion_or_worldview sport position_played_on_team_speciality favorite_color color hobby nickname code mood toy training_data age birthday anniversary date_of_birth date_of_death stepfather stepmother stepbrother stepsister stepson stepdaughter half_brother half_sister mother_in_law father_in_law sister_in_law brother_in_law son_in_law daughter_in_law great_grandmother great_grandfather great_aunt great_uncle second_cousin niece nephew godmother godfather godson goddaughter fiance ex_wife ex_husband roommate classmate teammate tutor landlord dentist vet babysitter therapist instrument favorite_food favorite_drink favorite_sport favorite_book favorite_film favorite_animal favorite_season favorite_subject allergy car rabbit hamster parrot horse
+drwx------  4 ben-hannan  staff  128 Sep 26 11:08 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.hQSWQLedvX
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.hQSWQLedvX
+[0m
+[0m$ [0mD=$(cat /tmp/lis319k_D_path.txt); rm -rf "$D"; ls -ld "$D" 2>&1; echo CLEANUP_CHECK_DONE; df -g / | head -3
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.hQSWQLedvX: No such file or directory
+CLEANUP_CHECK_DONE
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        54    19%  484014 576594400    0%   /
+[0m
