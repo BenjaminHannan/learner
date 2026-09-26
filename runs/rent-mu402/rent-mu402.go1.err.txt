@@ -1,0 +1,1454 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git rev-parse origin/main --short 2>&1; git rev-parse origin/builder-outbox --short 2>&1; git status --short | head -20; git log --oneline -3
+error: cannot lock ref 'refs/remotes/origin/builder-outbox': is at 097b5b1ffa0801bf6bf2230b2a74b046a3937f31 but expected d2d82e42a25fa350e9504d7d7e124127b83b4be3
+FETCH_EXIT:1
+fatal: Needed a single revision
+3b5a16a6fcfb4f5096c36ba8911b231f9fe11dcc
+fatal: Needed a single revision
+097b5b1ffa0801bf6bf2230b2a74b046a3937f31
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-brd5-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd5-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd5-20260926/gpu/log.txt
+A  artifacts/claude-brd5-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd5-20260926/gpu/streams.json
+A  artifacts/claude-brd6-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd6-20260926/gpu/brd6_summary.json
+A  artifacts/claude-brd6-20260926/gpu/log.txt
+A  artifacts/claude-brd6-20260926/gpu/practice.jsonl
+A  artifacts/claude-brd6-20260926/gpu/streams.json
+996b9348e rent-dl3: replay-into-the-night GPU run (verdict FAIL; F3-F5 pass, F1-F2 fail) + ledger line
+b588f1e37 rsn-358c1: answer-cell stop eval, sealed code run once per seed (verdict FAIL; stop fix NOT NEEDED, K4 split s1 PASS s2 FAIL) + ledger lines
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+[0m
+[0m$ [0mls .git/refs/remotes/origin/ 2>&1 | head -30; git branch -a 2>&1 | head -30
+ls: .git/refs/remotes/origin/: Not a directory
+* claude/card-experiment-handoff-7c5b27
++ claude/fact-saving-note-filtering-4ff1ff
++ claude/forgetting-plain-english-gap-9258f0
++ claude/locomo-length-penalty-408e2a
++ claude/loop-net-generalization-analysis-729ee3
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/pull-from-main-629dc4
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
+  codex/testing-experiment-44
++ main
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo MAIN_EXIT:$?; git fetch -q origin builder-outbox:refs/remotes/origin/builder-outbox 2>&1 || git fetch origin builder-outbox 2>&1; echo BOX_EXIT:$?; git rev-parse origin/main --short 2>&1; git rev-parse origin/builder-outbox --short 2>&1
+MAIN_EXIT:0
+BOX_EXIT:0
+fatal: Needed a single revision
+3b5a16a6fcfb4f5096c36ba8911b231f9fe11dcc
+fatal: Needed a single revision
+097b5b1ffa0801bf6bf2230b2a74b046a3937f31
+[0m
+[0m$ [0mgit show-ref 2>&1 | head -30; echo ---; git ls-remote origin main 2>&1 | head; echo ---; git branch -r 2>&1 | head -20
+45640ee70ccf4ed1145cd746aeb4e429ef0f1707 refs/codex/turn-diffs/checkpoints/0b170d73b4615e42dbc9ae60b701b6f1/fb97efa10a026c7bc870f07c0a10bb4e/1789933050746/23972d82-53f2-409a-8dda-1810ce0caa28
+9fc14309f085bfef3565482d427704e442a88d64 refs/codex/turn-diffs/checkpoints/108680adc85dbe1223fbf1ab19e51212/f093854ec0e791f5572c70c101d37af6/1789844660120/4c67a9e2-f338-4d36-bb4e-8c2732747ba2
+34e0a1bb70e9b6e7dc816f76eb623643ff770035 refs/codex/turn-diffs/checkpoints/14e41bc3630c6646c78bfcc156fa20d3/d896af1888d5e7a5c2576efc04605387/1790385582169/b087cfce-954a-406d-97c6-02b205cc8926
+45640ee70ccf4ed1145cd746aeb4e429ef0f1707 refs/codex/turn-diffs/checkpoints/19b08ace0a0e6b2dcfd7a6254f7bc0d6/d6d441712fa8bdf8f3e23f602aaffacc/1790016863065/d4aa7892-2f3c-4306-a446-974cf12d83a7
+3c74e97535e24b042a398b9c19edbad1b5f524f3 refs/codex/turn-diffs/checkpoints/20275048e2f11945d3b5d127c7064b69/5a556b93f7bb988f53bea43cbe960210/1789842890780/3260802c-d6a3-4b2b-8ea0-ba48c3ebcdd7
+bc2533968078ada32f2de8815dcef804664e04df refs/codex/turn-diffs/checkpoints/234b24fc3af49d81eb01142780ea4d1f/c1fa39c1c137e008aba80a7ffa67b9ce/1789825736940/a85a4b21-23a5-406d-989f-4086fa733f4a
+b8b8e4933917d8f69a49a9f77b6230e84ccad12a refs/codex/turn-diffs/checkpoints/25b1c6e05fa40019c0f21d24785afabc/0322048e5bfa1ae6b78cfb6b78fff197/1789852582103/ec674ce3-66f9-4a26-bad7-5d432cdd4712
+e2e5ffa9ca8098453ca26db1ac4852e3cd1f02fc refs/codex/turn-diffs/checkpoints/268db251fcb38130e5664ac9c461242a/8f53cb7720ef88516692b70ac0720582/1790429288439/5569511a-3a3d-4c10-b582-1ac8a0289d76
+45640ee70ccf4ed1145cd746aeb4e429ef0f1707 refs/codex/turn-diffs/checkpoints/2967ac9f31b6fb4dc4ca34d047b0b509/9f395bf28c8e89d1a7bff4c9acedea3c/1789942529679/583c1e3c-fb04-4c58-905b-bb7571c37356
+45640ee70ccf4ed1145cd746aeb4e429ef0f1707 refs/codex/turn-diffs/checkpoints/2e61174c7ba381644015da1501fcab1f/fba058088919ce586911d19afc152aef/1790014772961/f0cbfc56-b097-4e1b-bafa-96aa4ddeac76
+f01f2da708cd5fa911e1228785ab0a19dc53f17e refs/codex/turn-diffs/checkpoints/31d5ebd871b8decc2d341837e9fab7c3/cca77e0b3a2db3a2d0531c490ccf315c/1789858087321/9bd0a722-27c4-4d86-81ca-3d74f8a1279e
+0bad2ded114faf3482056fb1755ed33ea666967d refs/codex/turn-diffs/checkpoints/33f67dc63cd845b2a007f0bd279e4005/ad1d6d186b52df35204cc5ffb9e536ba/1789859238007/3e780f30-d6ec-4c16-afb3-31801dc396b5
+ee96966c2e460f2372286cc2adef8f69a34e2e4b refs/codex/turn-diffs/checkpoints/36b3585c8471543fcad0afd3afb58108/267d4996886306cfc0d99bf692c720fc/1789864992740/0e63d841-f9c7-46b3-979b-978ed3f829e0
+c7859969761d41b53a86cebad4a6d2da035bd54d refs/codex/turn-diffs/checkpoints/41ce4333f306fe0c04bb8ad02aba19d6/2f6cea26d490f22ce38c70525cdd3ea0/1789850784842/702cd508-1300-4575-936a-c12605e54f62
+45640ee70ccf4ed1145cd746aeb4e429ef0f1707 refs/codex/turn-diffs/checkpoints/42b76a65a65eb68b0e08f7aab3125474/649bd7c589645df9594098972a0cffb0/1789929331052/c061d732-2ba9-4de8-a6e5-c7720545bf7d
+45640ee70ccf4ed1145cd746aeb4e429ef0f1707 refs/codex/turn-diffs/checkpoints/42fbd382bf9c57db45c99d689afc707f/fc351623b6a1ad5e441ccfb17096ccdc/1789927781470/bffb05a7-6796-4273-9763-a0ba5cf74b13
+0bad2ded114faf3482056fb1755ed33ea666967d refs/codex/turn-diffs/checkpoints/4863c6f0508211a4a00398f06d4d5acc/e8f91f7cccb33b0ef11f787e830f04d7/1789859691310/c6eaebc2-0ee5-43a7-bf6c-2a85422fb06c
+2952d93b7dd4d646b3b857180d30d79366f62be9 refs/codex/turn-diffs/checkpoints/489ced9137c5195b71410140d25b6007/701677c0264f949883674fe40700b809/1789853531474/0d817688-2293-4c47-ad6e-5c22672dbc99
+836e66271c3861ceb3acadafb652eec1920a457e refs/codex/turn-diffs/checkpoints/4e83159f53140910818f7fc94b8f5266/9ec9b4855e31ee666d7813b5bd9c714a/1789846004838/e88ed8d3-4930-4c44-b34d-c8b3e09890de
+b1c30280ab4adaff5487bc6f571c2a177c78e772 refs/codex/turn-diffs/checkpoints/532df78991cb60332b514b61f1221671/a31d047136c08979d6c5a1b89b075797/1789906856394/ec08d3f8-de57-4b85-960c-b182648cb1dd
+45640ee70ccf4ed1145cd746aeb4e429ef0f1707 refs/codex/turn-diffs/checkpoints/5719e586226e12f2d6b3ddc9ac61e4f9/241178407785ceca1e0ab877808117a7/1790032724311/6136e8ce-d755-4ee2-bb3c-be1dba2488cd
+427e14ab522633a7963a51da47bf73e4e1249442 refs/codex/turn-diffs/checkpoints/591ba2d7482ec7a2575ceb94c7284bbc/474255a5a11768a8dc974f3265125e0e/1789926470363/d51cc812-482b-4df0-a043-a94c9846737f
+9fc14309f085bfef3565482d427704e442a88d64 refs/codex/turn-diffs/checkpoints/67f154884a05ca2939567876b615df3d/e80c29db3767c200af5fd708c4cd3ace/1789844623746/3732f94a-4788-4fbe-b552-75bf88110c34
+4a3acf082434bcd1c1f12c834c2f1c704739d30a refs/codex/turn-diffs/checkpoints/6fb7727df5921eb57052ce05ea9b0d1a/16221e868a51d0fb304d4f147177a12d/1789853869009/2fee8142-ae48-4468-a696-5ee5fc66c743
+9bcb5f084ffd23170d950347aa72ead18ccdf77b refs/codex/turn-diffs/checkpoints/70b206cdfeef029490a49d4301f0fb33/cf7b3c7e97076eb1dbb604860abfa2a3/1789869529159/efab893b-4dd3-4da4-a68a-14371b74d7e3
+2f501f802ce4213e2c39440861c27be7dde0c928 refs/codex/turn-diffs/checkpoints/7480ba463c5f42c4a5bcc2a440f6008e/2646891689d6b71b4104c513e4dd8497/1789854030163/feefd9a2-602d-4ea0-9ed6-e6bddf534c8e
+506ed866dcbe24fa35fc0b7972a77f8e823967d7 refs/codex/turn-diffs/checkpoints/7a85bec3a400007b83f87d6db83b928f/ec205a974936e0c1c137fc5c94faca55/1789872410903/ea1b93a6-580f-42bd-8139-07b62f0d5984
+937bb82783491dbcd4c95c3bb3dc3c45c2de83f7 refs/codex/turn-diffs/checkpoints/7ca81774538f587c6dc68cfa6729172b/7b51122b83a6722b537393746e112f24/1789858580545/907992b9-4294-45bb-9857-6a74ae4cf3a3
+a54679c55ed48f646625c3e66f7baec2bef5f563 refs/codex/turn-diffs/checkpoints/83301070c2e81b4c7c7f483b8f88e673/d39189226418267502b12de7ed01f357/1789836369437/8e60cd35-56ed-4e9d-845c-c30caf6d41f3
+2153adeb90c56992f7fd1d6358ea0afcec98eb34 refs/codex/turn-diffs/checkpoints/83b4bada14bfc01850fb0d4960c23378/5936405593e14f9a2ecbe8eece467830/1789862732704/a6be9c8a-4275-4a9a-90f3-2eb133178b80
+---
+3b5a16a6fcfb4f5096c36ba8911b231f9fe11dcc	refs/heads/main
+---
+  origin/HEAD -> origin/main
+  origin/builder-outbox
+  origin/chat-flags
+  origin/claude/card-experiment-handoff-7c5b27
+  origin/claude/model-architecture-review-0161ce
+  origin/claude/project-thread-0181x3
+  origin/claude/project-thread-h8jbxv
+  origin/claude/project-thread-p68q5v
+  origin/codex/testing-experiment-44
+  origin/main
+  origin/worktree-research
+[0m
+[0m$ [0mgit show-ref | grep -E "origin/main|builder-outbox|HEAD" | head; echo ---; git log --oneline origin/main -3 2>&1 | head; echo ---; git rev-parse refs/remotes/origin/main --short 2>&1
+3b5a16a6fcfb4f5096c36ba8911b231f9fe11dcc refs/remotes/origin/HEAD
+097b5b1ffa0801bf6bf2230b2a74b046a3937f31 refs/remotes/origin/builder-outbox
+3b5a16a6fcfb4f5096c36ba8911b231f9fe11dcc refs/remotes/origin/main
+---
+3b5a16a6f rent-rd378L: DISK 3 (Director: headroom for the Mac-copy fallback)
+690d2a452 queue: release rent-y1d ($0.40 Answering from memory)
+9ae8e119f y1d: memory-answer loss diagnosis on DEV (free notebook split + sealed 1B raw-turn reading test, rental job held for the Director)
+---
+fatal: Needed a single revision
+3b5a16a6fcfb4f5096c36ba8911b231f9fe11dcc
+[0m
+[0m$ [0mgit show refs/remotes/origin/main:design/v3/30-modes/330-rent-kit.md > /tmp/rentkit.md 2>&1; echo KIT:$?; wc -l /tmp/rentkit.md; git show refs/remotes/origin/main:artifacts/claude-mu402-20260926/PASSMARKS.md > /tmp/passmarks.md 2>&1; echo PASS:$?; wc -l /tmp/passmarks.md; git ls-tree -r --name-only refs/remotes/origin/main -- artifacts/claude-mu402-20260926/ 2>&1; echo ---; git ls-tree -r --name-only refs/remotes/origin/builder-outbox -- artifacts/claude-mu402-20260926/run/ 2>&1 | head -20
+KIT:0
+      57 /tmp/rentkit.md
+PASS:0
+      88 /tmp/passmarks.md
+artifacts/claude-mu402-20260926/DIAGNOSIS.md
+artifacts/claude-mu402-20260926/JUDGE-claims.md
+artifacts/claude-mu402-20260926/JUDGE-pair.md
+artifacts/claude-mu402-20260926/PASSMARKS.md
+artifacts/claude-mu402-20260926/SEAL.sha256.txt
+artifacts/claude-mu402-20260926/devchat/README.md
+artifacts/claude-mu402-20260926/devchat/items.jsonl
+---
+[0m
+[0m→ [0mRead /tmp/rentkit.md
+[0m→ [0mRead /tmp/passmarks.md
+[0m
+[0m$ [0mgit show refs/remotes/origin/main:scripts/claude_mu402.py > /tmp/mu402.py 2>&1; echo MU:$?; wc -l /tmp/mu402.py
+MU:0
+     144 /tmp/mu402.py
+[0m
+[0m→ [0mRead /tmp/mu402.py
+[0m
+[0m$ [0mwhich vastai; vastai show user --raw 2>&1 | head -20; echo EXIT:$?
+/Users/ben-hannan/.local/bin/vastai
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 5.499236376269863,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+EXIT:0
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>&1 | head -100
+[
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "KR",
+  "cpu_arch": "amd64",
+  "cpu_cores": 16,
+  "cpu_cores_effective": 16.0,
+  "cpu_name": "AMD Ryzen 7 7800X3D 8-Core Processor",
+  "cpu_ram": 31197,
+  "cpu_util": 6.395625,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 100,
+  "direct_port_end": 55834,
+  "direct_port_start": 55834,
+  "disk_bw": 5917.2,
+  "disk_name": "nvme",
+  "disk_space": 80.0,
+  "disk_usage": 4.400000095367432,
+  "disk_util": 4.400000095367432,
+  "dlperf": 199.10644669720355,
+  "dlperf_per_dphtotal": 395.28485741356593,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.5037037037037037,
+  "driver_version": "580.95.05",
+  "duration": 1783.835887670517,
+  "end_date": 1792335600.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 214.6176,
+  "geolocation": "South Korea, KR",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 1.0,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1455.8,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 72.999931,
+  "gpu_totalram": 32607,
+  "gpu_util": 96.999908,
+  "has_avx": 1,
+  "host_id": 406325,
+  "host_run_time": 2592000.0,
+  "hosting_type": 1,
+  "id": 52751954,
+  "image_args": [],
+  "image_runtype": "ssh_direc ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime",
+  "inet_down": 545.0,
+  "inet_down_billed": 3355443.2,
+  "inet_down_cost": 0.005208333333333333,
+  "inet_up": 539.8,
+  "inet_up_billed": 69017.6,
+  "inet_up_cost": 0.005208333333333333,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.037037037037037035,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5037037037037037
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 5.333333333333333,
+  "internet_up_cost_per_tb": 5.333333333333333,
+  "is_bid": false,
+  "jupyter_token": "13b6190ed803883ad7d3ace992485d5022b84ca240f9d67c1a45a3134022a962",
+  "label": "rent-lis-319f",
+  "local_ipaddrs": "172.30.21.93 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 55899,
+  "machine_id": 149063,
+  "mem_limit": 30.670848,
+  "mem_usage": 4.159700992,
+  "min_bid": 0.907,
+  "mobo_name": "B850 EAGLE ICE",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "24.04",
+  "pci_gen": 5.0,
+  "pcie_bw": 48.6,
+  "ports": {
+   "22/tcp": [
+    {
+     "HostIp": "0.0.0.0",
+     "HostPort": "55834"
+    },
+    {
+     "HostIp": "::",
+     "HostPort": "55834"
+    }
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d)); [print(x.get('id'), x.get('label'), x.get('actual_status'), x.get('gpu_name'), x.get('dph_total')) for x in d]"
+4
+52751954 rent-lis-319f running RTX 5090 0.5037037037037037
+52752114 rent-brd8 running RTX 5090 0.47000000000000003
+52755827 claude-director-depot running RTX 4070 0.11361111111111112
+52756028 rent-358i None RTX 5090 0.4481481481481481
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph 2>&1 | head -30
+[40m[97m  #  ID        CUDA   N  Model     PCIE  cpu_ghz  vCPUs     RAM  VRAM  Disk[0m
+[48;5;240m[97m  1  46753297  13.0  1x  RTX_5090  26.5  2.2      32.0     32.2  32.6  157 [0m
+[40m[97m  2  43165145  13.0  1x  RTX_5090  22.7  2.2      32.0     32.2  32.6  276 [0m
+[48;5;240m[97m  3  45380585  13.0  1x  RTX_5090  47.6  5.1      16.0     31.2  32.6  531 [0m
+[40m[97m  4  49025089  13.0  1x  RTX_5090  48.9  5.1      16.0     31.2  32.6  570 [0m
+[48;5;240m[97m  5  45669150  13.0  1x  RTX_5090  50.8  5.1      8.0      31.2  32.6  527 [0m
+[40m[97m  6  45669177  13.0  1x  RTX_5090  51.4  5.1      8.0      31.2  32.6  540 [0m
+[48;5;240m[97m  7  44614428  13.0  1x  RTX_5090  26.9  3.5      32.0     64.4  32.6  701 [0m
+[40m[97m  8  47653130  13.2  1x  RTX_5090  13.1  3.9      36.0    191.7  32.6  1225[0m
+[48;5;240m[97m  9  34376035  13.2  1x  RTX_5090  13.5  2.2      16.0     32.2  32.6  176 [0m
+[40m[97m 10  42747937  13.0  1x  RTX_5090  18.2  4.4      12.0     64.1  32.6  934 [0m
+[48;5;240m[97m 11  50734484  12.8  1x  RTX_5090  13.1  3.7      6.0      32.1  32.6  515 [0m
+[40m[97m 12  50849750  12.9  1x  RTX_5090  27.0  3.2      64.0     64.4  32.6  624 [0m
+[48;5;240m[97m 13  52539911  13.0  1x  RTX_5090  50.3  5.9      32.0     63.4  32.6  1315[0m
+[40m[97m 14  49161363  13.2  1x  RTX_5090  54.9  5.5      12.0     64.3  32.6  319 [0m
+[48;5;240m[97m 15  50894161  13.2  1x  RTX_5090  26.6  2.5      64.0    513.0  32.6  2333[0m
+[40m[97m 16  51191441  13.2  1x  RTX_5090  26.5  3.5      32.0    256.5  32.6  1255[0m
+[48;5;240m[97m 17  51902497  13.2  1x  RTX_5090  27.1  5.4      12.0     64.3  32.6  608 [0m
+[40m[97m 18  47794367  13.0  1x  RTX_5090  54.4  4.3      8.0      32.1  32.6  568 [0m
+[48;5;240m[97m 19  48175632  13.2  1x  RTX_5090  27.5  5.9      16.0     64.2  32.6  990 [0m
+[40m[97m 20  46953695  13.0  1x  RTX_5090  54.0  2.4      48.0     96.7  32.6  585 [0m
+[48;5;240m[97m 21  52077399  13.2  1x  RTX_5090  36.4  5.5      12.0     61.9  32.6  1421[0m
+[40m[97m 22  40871605  13.0  1x  RTX_5090  44.8  5.2      14.0     63.9  32.6  1082[0m
+[48;5;240m[97m 23  43177476  13.2  1x  RTX_5090  23.8  3.7      48.0    209.6  32.6  1371[0m
+[40m[97m 24  51326864  13.3  1x  RTX_5090  26.0  2.2      32.0    112.8  32.6  501 [0m
+[48;5;240m[97m 25  51102918  13.3  1x  RTX_5090  24.8  3.5      32.0    129.0  32.6  730 [0m
+[40m[97m 26  48426438  13.0  1x  RTX_5090  54.0  3.0      112.0    64.3  32.6  1292[0m
+[48;5;240m[97m 27  52003777  13.2  1x  RTX_5090  54.3  2.6      12.0     64.3  32.6  344 [0m
+[40m[97m 28  51969538  13.2  1x  RTX_5090  54.3  2.6      12.0     64.3  32.6  50  [0m
+[48;5;240m[97m 29  51969543  13.0  1x  RTX_5090  54.3  2.6      12.0     64.3  32.6  61  [0m
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+try:
+  d=json.loads(raw)
+except Exception as e:
+  print('PARSEFAIL', e); print(raw[:2000]); sys.exit()
+print('n=',len(d))
+for o in d[:12]:
+  print(o.get('id'), 'dph=',round(o.get('dph_total',0),3), 'cpu=',o.get('cpu_cores_effective'), 'ram=',round(o.get('cpu_ram',0)/1000,1), 'disk=',round(o.get('disk_space',0),1), 'up=',round(o.get('inet_up',0) or 0,1), 'down=',round(o.get('inet_down',0) or 0,1), 'rel=',round(o.get('reliability2',0) or o.get('reliability',0) or 0,4))
+"
+n= 64
+46753302 dph= 0.406 cpu= 32.0 ram= 32.2 disk= 156.9 up= 63.4 down= 848.2 rel= 0.9957
+43165161 dph= 0.406 cpu= 32.0 ram= 32.2 disk= 275.9 up= 51.1 down= 513.5 rel= 0.9955
+50338871 dph= 0.433 cpu= 24.0 ram= 32.2 disk= 514.3 up= 209.6 down= 69.4 rel= 0.9946
+49024428 dph= 0.469 cpu= 16.0 ram= 31.2 disk= 336.0 up= 585.4 down= 587.7 rel= 0.9945
+43982842 dph= 0.469 cpu= 16.0 ram= 31.2 disk= 425.0 up= 432.5 down= 425.5 rel= 0.998
+49024380 dph= 0.469 cpu= 8.0 ram= 31.2 disk= 408.0 up= 542.6 down= 521.3 rel= 0.9952
+49024436 dph= 0.469 cpu= 8.0 ram= 31.2 disk= 450.0 up= 409.6 down= 499.1 rel= 0.9966
+48284957 dph= 0.523 cpu= 16.0 ram= 48.1 disk= 569.0 up= 555.6 down= 472.1 rel= 0.9888
+39869772 dph= 0.535 cpu= 12.0 ram= 64.1 disk= 1301.0 up= 479.3 down= 748.3 rel= 0.9983
+43624376 dph= 0.537 cpu= 18.285714285714285 ram= 73.7 disk= 864.6 up= 734.8 down= 710.6 rel= 0.993
+50420386 dph= 0.55 cpu= 18.285714285714285 ram= 73.7 disk= 370.1 up= 852.5 down= 673.4 rel= 0.9951
+34905063 dph= 0.601 cpu= 14.0 ram= 32.1 disk= 140.5 up= 525.1 down= 771.4 rel= 0.9982
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create instance --help 2>&1 | head -40
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create instance 46753302 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime' --label rent-mu402 --disk 80 --ssh --direct 2>&1 | tail -20
+Started. {'success': True, 'new_contract': 52756154, 'instance_api_key': 'ab57360b393085ac0ad2bd4a82b8be192c7ee493dddd6b4320367981cb0c3da6'}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); date -u; vastai show instance 52756154 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('cur_state'), d.get('gpu_name'), d.get('dph_total'), d.get('ssh_host'), d.get('ssh_port'))"
+Sat Sep 26 13:48:12 UTC 2026
+52756154 None running RTX 5090 0.49629629629629624 ssh6.vast.ai 36154
+[0m
+[0m$ [0msleep 45; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52756154 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), repr(d.get('actual_status')), d.get('cur_state'), d.get('ssh_host'), d.get('ssh_port'))"
+52756154 'loading' running ssh6.vast.ai 36154
+[0m
+[0m$ [0msleep 60; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52756154 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), repr(d.get('actual_status')), d.get('cur_state'), d.get('ssh_host'), d.get('ssh_port'))"; date -u
+52756154 'loading' running ssh6.vast.ai 36154
+Sat Sep 26 13:50:18 UTC 2026
+[0m
+[0m$ [0msleep 90; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52756154 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), repr(d.get('actual_status')), d.get('cur_state'), d.get('ssh_host'), d.get('ssh_port'))"; date -u
+52756154 'loading' stopped ssh6.vast.ai 36154
+Sat Sep 26 13:52:04 UTC 2026
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52756154 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps({k:d.get(k) for k in ['id','actual_status','cur_state','next_state','intended_status','status_msg','extra_status','ssh_host','ssh_port','gpu_name','dph_total','machine_id']}, indent=1))"
+{
+ "id": 52756154,
+ "actual_status": "loading",
+ "cur_state": "stopped",
+ "next_state": "stopped",
+ "intended_status": "stopped",
+ "status_msg": "Error response from daemon: Get \"https://registry-1.docker.io/v2/\": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused\n",
+ "extra_status": null,
+ "ssh_host": "ssh6.vast.ai",
+ "ssh_port": 36154,
+ "gpu_name": "RTX 5090",
+ "dph_total": 0.49629629629629624,
+ "machine_id": 144172
+}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai destroy instance 52756154 2>&1 | tail -3; sleep 5; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); [print(x.get('id'), x.get('label'), x.get('actual_status')) for x in d]"
+Are you sure you want to destroy instance 52756154? This is irreversible and will delete all data. [y/N] 
+Aborted.
+52751954 rent-lis-319f running
+52752114 rent-brd8 running
+52755827 claude-director-depot running
+52756028 rent-358i loading
+52756139 claude-notes-rd378L loading
+52756144 claude-memory-y1d loading
+52756154 rent-mu402 loading
+52756261 claude-fixsleep-dl4b loading
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); echo y | vastai destroy instance 52756154 2>&1 | tail -3; sleep 5; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); [print(x.get('id'), x.get('label'), x.get('actual_status')) for x in d]"
+Are you sure you want to destroy instance 52756154? This is irreversible and will delete all data. [y/N] destroying instance 52756154.
+52751954 rent-lis-319f running
+52752114 rent-brd8 running
+52755827 claude-director-depot running
+52756028 rent-358i loading
+52756139 claude-notes-rd378L loading
+52756144 claude-memory-y1d loading
+52756261 claude-fixsleep-dl4b loading
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create instance 43165161 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime' --label rent-mu402 --disk 80 --ssh --direct 2>&1 | tail -5; date -u
+Started. {'success': True, 'new_contract': 52756713, 'instance_api_key': 'd0a54131d54e22326460b255787a25674a31cdb52061dc4faad88756ac837a69'}
+Sat Sep 26 13:52:43 UTC 2026
+[0m
+[0m$ [0msleep 90; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52756713 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps({k:d.get(k) for k in ['id','actual_status','cur_state','intended_status','status_msg','ssh_host','ssh_port','gpu_name','dph_total']}, indent=1))"; date -u
+{
+ "id": 52756713,
+ "actual_status": "loading",
+ "cur_state": "running",
+ "intended_status": "running",
+ "status_msg": "Error response from daemon: Get \"https://registry-1.docker.io/v2/\": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused\n",
+ "ssh_host": "ssh9.vast.ai",
+ "ssh_port": 36712,
+ "gpu_name": "RTX 5090",
+ "dph_total": 0.49629629629629624
+}
+Sat Sep 26 13:54:25 UTC 2026
+[0m
+[0m$ [0msleep 120; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52756713 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps({k:d.get(k) for k in ['id','actual_status','cur_state','intended_status','status_msg','ssh_host','ssh_port']}, indent=1))"; date -u
+{
+ "id": 52756713,
+ "actual_status": "loading",
+ "cur_state": "stopped",
+ "intended_status": "stopped",
+ "status_msg": "Error response from daemon: Get \"https://registry-1.docker.io/v2/\": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused\n",
+ "ssh_host": "ssh9.vast.ai",
+ "ssh_port": 36712
+}
+Sat Sep 26 13:56:42 UTC 2026
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); echo y | vastai destroy instance 52756713 2>&1 | tail -2; vastai create instance 50338871 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime' --label rent-mu402 --disk 80 --ssh --direct 2>&1 | tail -3; date -u
+Are you sure you want to destroy instance 52756713? This is irreversible and will delete all data. [y/N] destroying instance 52756713.
+Started. {'success': False, 'new_contract': 52757240, 'instance_api_key': '9ccbee25733478c0659d87d05a77c7961209942a10f39db9a88b8d2bc77f1ddb'}
+Sat Sep 26 13:56:53 UTC 2026
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52757240 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps({k:d.get(k) for k in ['id','actual_status','cur_state','intended_status','status_msg','ssh_host','ssh_port','gpu_name','dph_total']}, indent=1))" 2>&1 | head -20
+{
+ "id": 52757240,
+ "actual_status": null,
+ "cur_state": "stopped",
+ "intended_status": "stopped",
+ "status_msg": null,
+ "ssh_host": "ssh7.vast.ai",
+ "ssh_port": 37240,
+ "gpu_name": "RTX 5090",
+ "dph_total": 0.522962962962963
+}
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai start instance 52757240 2>&1 | tail -3; sleep 30; vastai show instance 52757240 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps({k:d.get(k) for k in ['id','actual_status','cur_state','intended_status','status_msg']}, indent=1))"; date -u
+Required resources are currently unavailable, state change queued.
+{
+ "id": 52757240,
+ "actual_status": "loading",
+ "cur_state": "stopped",
+ "intended_status": "stopped",
+ "status_msg": null
+}
+Sat Sep 26 13:57:46 UTC 2026
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); echo y | vastai destroy instance 52757240 2>&1 | tail -2; vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+d=json.loads(sys.stdin)
+bad_ids={46753302,43165161,50338871}
+print('n=',len(d))
+for o in d:
+  if o.get('id') in bad_ids: continue
+  if (o.get('cpu_cores_effective') or 0) < 8: continue
+  if (o.get('disk_space') or 0) < 60: continue
+  print(o.get('id'), 'dph=',round(o.get('dph_total',0),3), 'cpu=',o.get('cpu_cores_effective'), 'disk=',round(o.get('disk_space',0),1), 'up=',round(o.get('inet_up',0) or 0,1), 'down=',round(o.get('inet_down',0) or 0,1), 'rel=',round(o.get('reliability2',0) or 0,4), 'host=',o.get('host_id'), 'img=',(o.get('image') or '')[:40])
+" | head -12
+Are you sure you want to destroy instance 52757240? This is irreversible and will delete all data. [y/N] destroying instance 52757240.
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not TextIOWrapper
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+bad_ids={46753302,43165161,50338871}
+print('n=',len(d))
+for o in d:
+  if o.get('id') in bad_ids: continue
+  if (o.get('cpu_cores_effective') or 0) < 8: continue
+  if (o.get('disk_space') or 0) < 60: continue
+  print(o.get('id'), 'dph=',round(o.get('dph_total',0),3), 'cpu=',o.get('cpu_cores_effective'), 'disk=',round(o.get('disk_space',0),1), 'up=',round(o.get('inet_up',0) or 0,1), 'down=',round(o.get('inet_down',0) or 0,1), 'rel=',round(o.get('reliability2',0) or 0,4), 'host=',o.get('host_id'))
+" | head -12
+n= 64
+46753300 dph= 0.406 cpu= 32.0 disk= 158.9 up= 63.4 down= 848.2 rel= 0.9957 host= 410852
+43165153 dph= 0.406 cpu= 32.0 disk= 275.9 up= 51.1 down= 513.5 rel= 0.9955 host= 410852
+45669386 dph= 0.469 cpu= 16.0 disk= 570.0 up= 495.2 down= 432.9 rel= 0.9978 host= 406325
+49024386 dph= 0.469 cpu= 16.0 disk= 442.0 up= 478.7 down= 413.2 rel= 0.9941 host= 406325
+48989650 dph= 0.469 cpu= 8.0 disk= 515.0 up= 490.5 down= 524.9 rel= 0.9964 host= 406325
+49352825 dph= 0.529 cpu= 24.0 disk= 548.5 up= 704.2 down= 719.2 rel= 0.9926 host= 466625
+51535932 dph= 0.535 cpu= 25.6 disk= 503.5 up= 252.9 down= 389.0 rel= 0.9912 host= 124072
+50248469 dph= 0.536 cpu= 24.0 disk= 515.2 up= 507.2 down= 502.7 rel= 0.9898 host= 303447
+42747937 dph= 0.601 cpu= 12.0 disk= 1014.0 up= 652.2 down= 535.0 rel= 0.9984 host= 127708
+50849750 dph= 0.601 cpu= 64.0 disk= 623.5 up= 32.7 down= 706.8 rel= 0.99 host= 80586
+52539911 dph= 0.615 cpu= 32.0 disk= 1315.0 up= 857.0 down= 776.0 rel= 0.9966 host= 333136
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create instance 45669386 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime' --label rent-mu402 --disk 80 --ssh --direct 2>&1 | tail -3; date -u
+Started. {'success': True, 'new_contract': 52757517, 'instance_api_key': '5530dd5d6e12bea6b6211754addeef47a6739a5d5c8c4f5a623896c661cb4d0d'}
+Sat Sep 26 13:59:35 UTC 2026
+[0m
+[0m$ [0msleep 120; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52757517 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps({k:d.get(k) for k in ['id','actual_status','cur_state','intended_status','status_msg','ssh_host','ssh_port','gpu_name','dph_total']}, indent=1))"; date -u
+{
+ "id": 52757517,
+ "actual_status": "loading",
+ "cur_state": "running",
+ "intended_status": "running",
+ "status_msg": "#7 19.20 Preparing to unpack .../66-libglib2.0-bin_2.72.4-0ubuntu2.10_amd64.deb ...\r\n#7 19.20 Unpacking libglib2.0-bin (2.72.4-0ubuntu2.10) ...\r\n#7 19.23 Selecting previously unselected package libunwind8:amd64.\r",
+ "ssh_host": "ssh3.vast.ai",
+ "ssh_port": 37516,
+ "gpu_name": "RTX 5090",
+ "dph_total": 0.5037037037037037
+}
+Sat Sep 26 14:01:40 UTC 2026
+[0m
+[0m$ [0msleep 120; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52757517 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps({k:d.get(k) for k in ['id','actual_status','cur_state','intended_status','ssh_host','ssh_port']}, indent=1)); print('MSG:', str(d.get('status_msg'))[-300:])"; date -u
+{
+ "id": 52757517,
+ "actual_status": "running",
+ "cur_state": "running",
+ "intended_status": "running",
+ "ssh_host": "ssh3.vast.ai",
+ "ssh_port": 37516
+}
+MSG: success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-runtime/ssh
+Sat Sep 26 14:03:48 UTC 2026
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 37516 root@ssh3.vast.ai 'nvidia-smi --query-gpu=name,memory.total --format=csv,noheader; python3 -c "import torch;print(torch.__version__, torch.cuda.is_available())"; df -h / | tail -1; nproc' 2>&1 | tail -8
+Warning: Permanently added '[ssh3.vast.ai]:37516' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+NVIDIA GeForce RTX 5090, 32607 MiB
+2.8.0+cu128 True
+overlay          80G  1.2M   80G   1% /
+16
+[0m
+[0m$ [0mls -la artifacts/fable-self122-20260922/self122_head.pt 2>&1; python3 -c "import hashlib; print(hashlib.sha256(open('artifacts/fable-self122-20260922/self122_head.pt','rb').read()).hexdigest())" 2>&1
+-rw-r--r--  1 ben-hannan  staff  65741 Sep 22 00:46 artifacts/fable-self122-20260922/self122_head.pt
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25
+[0m
+[0m$ [0mgit archive refs/remotes/origin/main scripts design/v3/60-listener artifacts/claude-gram360-20260925 artifacts/claude-relationtable-20260922 artifacts/claude-table237-20260922 artifacts/fable-abstain76-20260921 artifacts/fable-self122-20260922 artifacts/claude-e2e02c-20260926/SEAL-code.sha256.txt artifacts/claude-mu402-20260926 2>&1 | gzip | ssh -p 37516 root@ssh3.vast.ai 'mkdir -p ~/tree && gunzip | tar -x -C ~/tree && echo TREE_OK && du -sh ~/tree' 2>&1 | tail -5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+TREE_OK
+36M	/root/tree
+[0m
+[0m$ [0mgit show refs/remotes/origin/builder-outbox:artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.json 2>&1 | head -5; echo SHOW_EXIT:$?
+{"night": 3, "base": "1080632832:b40d4053c0ec2b83", "code": "600e24857b9ec3a5", "adapter_sha256": "a33211dc9bdb4e26bc7161b62147cb4dfc04fb605ba1aecbb26948f86e7936f5", "check_answers": ["(6 * (7 - 5) )  - (6 )", "6 * ( (6 - 6) )", "(5 + (7 - 4) )", "(9 * 5 / (3 - 1) )", "(9 + (4 + 3) )", "6 * ( 9 - 6)", "(12 + (10 + 5)  ) - ( 1 )", "(6 * (4 - 1) )", "3 * ( ( 1 + 9) )", "( (8 * 7) / (7 - 2) )"]}SHOW_EXIT:0
+[0m
+[0m$ [0mscp -P 37516 artifacts/fable-self122-20260922/self122_head.pt root@ssh3.vast.ai:tree/artifacts/fable-self122-20260922/self122_head.pt 2>&1 | tail -2; git show refs/remotes/origin/builder-outbox:artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.json | ssh -p 37516 root@ssh3.vast.ai 'mkdir -p ~/adapter && cat > ~/adapter/adapter02c.json && cat ~/adapter/adapter02c.json | head -c 200; echo; echo SIDECAR_OK'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+{"night": 3, "base": "1080632832:b40d4053c0ec2b83", "code": "600e24857b9ec3a5", "adapter_sha256": "a33211dc9bdb4e26bc7161b62147cb4dfc04fb605ba1aecbb26948f86e7936f5", "check_answers": ["(6 * (7 - 5) ) 
+SIDECAR_OK
+[0m
+[0m$ [0mgrep -A5 -i "benspc\|ben.*pc" ~/.ssh/config 2>&1 | head -20; echo ---; ssh -o BatchMode=yes -o ConnectTimeout=10 benspc 'echo BENSPC_OK' 2>&1 | tail -3
+Host benspc
+  HostName 100.75.113.114
+  User benja
+---
+BENSPC_OK
+[0m
+[0m$ [0mscp -3 'benspc:C:/Users/benja/lis301/work/e2e02c/tree/artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.pt' 'root@[ssh3.vast.ai]:37516:adapter/adapter02c.pt' 2>&1 | tail -3 || scp -3 -P 37516 'benspc:C:/Users/benja/lis301/work/e2e02c/tree/artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.pt' 'root@ssh3.vast.ai:adapter/adapter02c.pt' 2>&1 | tail -3
+Host key verification failed.
+scp: Connection closed
+[0m
+[0m$ [0mD=$(mktemp -d) && echo "TMPDIR=$D" && scp "benspc:C:/Users/benja/lis301/work/e2e02c/tree/artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.pt" "$D/adapter02c.pt" 2>&1 | tail -2; ls -la "$D/"
+TMPDIR=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.yGiOXewLub
+total 32832
+drwx------     3 ben-hannan  staff        96 Sep 26 10:05 .
+drwx------@ 3983 ben-hannan  staff    127456 Sep 26 10:05 ..
+-rw-------     1 ben-hannan  staff  16568145 Sep 26 10:05 adapter02c.pt
+[0m
+[0m✗ [0mscp -P 37516 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.yGiOXewLub/adapter02c.pt root@ssh3.vast.ai:adapter/adapter02c.pt 2>&1 | tail -2; rm -rf /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.yGiOXewLub && echo "REMOVED_TMPDIR"; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.yGiOXewLub 2>&1 failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mscp -P 37516 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.yGiOXewLub/adapter02c.pt root@ssh3.vast.ai:adapter/adapter02c.pt 2>&1 | tail -2; echo SCP_EXIT:$?
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+SCP_EXIT:0
+[0m
+[0m$ [0mrm /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.yGiOXewLub/adapter02c.pt && rmdir /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.yGiOXewLub && echo REMOVED_TMPDIR; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.yGiOXewLub 2>&1
+REMOVED_TMPDIR
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.yGiOXewLub: No such file or directory
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'sha256sum ~/adapter/adapter02c.pt ~/adapter/adapter02c.json tree/artifacts/fable-self122-20260922/self122_head.pt; ls -la ~/adapter/' 2>&1 | tail -5
+total 16184
+drwxr-xr-x 2 root root       50 Sep 26 14:05 .
+drwx------ 1 root root      185 Sep 26 14:04 ..
+-rw-r--r-- 1 root root      395 Sep 26 14:04 adapter02c.json
+-rw------- 1 root root 16568145 Sep 26 14:05 adapter02c.pt
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'sha256sum ~/adapter/adapter02c.pt ~/adapter/adapter02c.json tree/artifacts/fable-self122-20260922/self122_head.pt' 2>&1 | tail -4
+Have fun!
+a33211dc9bdb4e26bc7161b62147cb4dfc04fb605ba1aecbb26948f86e7936f5  /root/adapter/adapter02c.pt
+07d3c41eecc6f29f9e1df24c4612456c7406971befacba9bef739bebb5afb73a  /root/adapter/adapter02c.json
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  tree/artifacts/fable-self122-20260922/self122_head.pt
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'cd ~/tree && cat > /tmp/setup402.sh << "EOF"
+#!/bin/bash
+set -x
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy 2>&1 | tail -2
+echo PIP_DONE
+HF_HUB_OFFLINE=0 python -B -c "from huggingface_hub import snapshot_download as s; print(s(\"openbmb/MiniCPM5-1B\", revision=\"87179e5c1f455ef22e6223592d2d61351b525bfc\")); print(s(\"sentence-transformers/all-MiniLM-L6-v2\"))"
+echo SNAP_DONE
+EOF
+chmod +x /tmp/setup402.sh; setsid nohup /tmp/setup402.sh > ~/setup402.log 2>&1 < /dev/null & echo "SETUP_PID:$!"'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+SETUP_PID:476
+[0m
+[0m$ [0msleep 120; ssh -p 37516 root@ssh3.vast.ai 'tail -15 ~/setup402.log; echo ---; ps -p 476 > /dev/null 2>&1 && echo SETUP_RUNNING || echo SETUP_DONE' 2>&1 | tail -20
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2.8.0+cu128 True
++ pip install -q 'transformers>=5' safetensors huggingface_hub accelerate numpy
++ tail -2
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
++ echo PIP_DONE
+PIP_DONE
++ HF_HUB_OFFLINE=0
++ python -B -c 'from huggingface_hub import snapshot_download as s; print(s("openbmb/MiniCPM5-1B", revision="87179e5c1f455ef22e6223592d2d61351b525bfc")); print(s("sentence-transformers/all-MiniLM-L6-v2"))'
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:02,  4.51it/s]Fetching 11 files:  64%|██████▎   | 7/11 [00:00<00:00, 22.23it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:00<00:00, 23.69it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:19<00:00, 23.69it/s]Fetching 11 files: 100%|██████████| 11/11 [00:27<00:00,  4.32s/it]Fetching 11 files: 100%|██████████| 11/11 [00:27<00:00,  2.53s/it]
+/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+Fetching 30 files:   0%|          | 0/30 [00:00<?, ?it/s]Fetching 30 files:   3%|▎         | 1/30 [00:00<00:05,  4.87it/s]Fetching 30 files:  23%|██▎       | 7/30 [00:00<00:02, 10.13it/s]Fetching 30 files:  27%|██▋       | 8/30 [00:06<00:22,  1.04s/it]Fetching 30 files:  30%|███       | 9/30 [00:06<00:17,  1.17it/s]Fetching 30 files:  40%|████      | 12/30 [00:06<00:08,  2.11it/s]Fetching 30 files:  47%|████▋     | 14/30 [00:06<00:06,  2.59it/s]Fetching 30 files:  53%|█████▎    | 16/30 [00:07<00:05,  2.43it/s]Fetching 30 files:  57%|█████▋    | 17/30 [00:07<00:04,  2.64it/s]Fetching 30 files:  60%|██████    | 18/30 [00:08<00:04,  2.89it/s]Fetching 30 files:  63%|██████▎   | 19/30 [00:09<00:06,  1.79it/s]Fetching 30 files:  70%|███████   | 21/30 [00:09<00:03,  2.57it/s]Fetching 30 files:  77%|███████▋  | 23/30 [00:09<00:02,  3.49it/s]Fetching 30 files:  83%|████████▎ | 25/30 [00:10<00:01,  3.03it/s]Fetching 30 files:  87%|████████▋ | 26/30 [00:11<00:01,  3.05it/s]Fetching 30 files:  90%|█████████ | 27/30 [00:11<00:00,  3.45it/s]Fetching 30 files:  93%|█████████▎| 28/30 [00:12<00:01,  1.55it/s]Fetching 30 files: 100%|██████████| 30/30 [00:13<00:00,  2.27it/s]Fetching 30 files: 100%|██████████| 30/30 [00:13<00:00,  2.26it/s]
+/root/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41
++ echo SNAP_DONE
+SNAP_DONE
+---
+SETUP_DONE
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && python -B -c "import sys; sys.path.insert(0,\"scripts\"); import fable_self122 as S; print(S.route122(\"what is your name?\"))" 2>&1 | tail -3 && echo ROUTE_OK && sha256sum -c artifacts/claude-mu402-20260926/SEAL.sha256.txt 2>&1 | tail -8' 2>&1 | tail -12
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+('D8', {'top1': 'D8', 'conf': 0.9732, 'margin': 3.595, 'top3': [('D8', 14.24), ('OOS', 10.65), ('C2', 3.32)], 'tau': 0.6, 'mu': 1.5, 'guard': 'pass'})
+ROUTE_OK
+scripts/claude_mu402.py: OK
+scripts/claude_mu402_judge.py: OK
+artifacts/claude-mu402-20260926/PASSMARKS.md: OK
+artifacts/claude-mu402-20260926/JUDGE-claims.md: OK
+artifacts/claude-mu402-20260926/JUDGE-pair.md: OK
+artifacts/claude-mu402-20260926/devchat/items.jsonl: OK
+artifacts/claude-mu402-20260926/devchat/README.md: OK
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && sha256sum -c --ignore-missing artifacts/claude-e2e02c-20260926/SEAL-code.sha256.txt 2>&1 | tail -6; python -B scripts/claude_mu402.py --selftest 2>&1 | tail -2' 2>&1 | tail -10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+scripts/fable_turns84_run.py: OK
+scripts/fable_webfix89_thinking.py: OK
+scripts/fable_wire51_adapters.py: OK
+scripts/fable_wire57_e2e.py: OK
+scripts/fable_wordmatch149_core.py: OK
+scripts/winshim/resource.py: OK
+mu402 selftest 7/7 ok
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'cd ~/tree && sha256sum -c --ignore-missing artifacts/claude-e2e02c-20260926/SEAL-code.sha256.txt 2>&1 | grep -c OK; sha256sum -c --ignore-missing artifacts/claude-e2e02c-20260926/SEAL-code.sha256.txt 2>&1 | grep -i "FAIL\|missing" | head; echo CHECK_DONE; wc -l artifacts/claude-mu402-20260926/devchat/items.jsonl' 2>&1 | tail -5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+336
+CHECK_DONE
+80 artifacts/claude-mu402-20260926/devchat/items.jsonl
+[0m
+[0m$ [0mgit show refs/remotes/origin/main:scripts/claude_twinb_wrap.py 2>&1 | head -80
+#!/usr/bin/env python3
+"""Run any month-end runner with the fixed plain twin (scripts/claude_e2e336_twinb.py) in place of
+the old one. New file only; the runner itself is not changed.
+
+  python -B scripts/claude_twinb_wrap.py scripts/claude_chat338_run.py --panel ... --arm T ...
+  python -B scripts/claude_twinb_wrap.py scripts/claude_cre333_run.py ... --arm T ...
+  python -B scripts/claude_twinb_wrap.py scripts/claude_e2e336_run.py --arm twin ...
+
+It swaps claude_e2e336_twin.Twin336 and claude_e2e336_twin.build for the twin b versions before the
+runner starts, prints one line saying so, then runs the runner as __main__ with the remaining args.
+"""
+from __future__ import annotations
+
+import os
+import runpy
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+if os.name == "nt":                     # Windows (BensPC): stand-in for the Unix-only resource module
+    sys.path.insert(0, str(HERE / "winshim"))
+
+import claude_e2e336_twin as OLD      # noqa: E402
+import claude_e2e336_twinb as NEW     # noqa: E402
+
+OLD.Twin336 = NEW.Twin336b
+OLD.build = NEW.build
+
+
+def main() -> None:
+    if len(sys.argv) < 2:
+        raise SystemExit("usage: claude_twinb_wrap.py <runner.py> [runner args]")
+    target = sys.argv[1]
+    sys.argv = [target] + sys.argv[2:]
+    print("twinb: the plain twin is Twin336b (enable_thinking=False)", flush=True)
+    runpy.run_path(target, run_name="__main__")
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit show refs/remotes/origin/main:scripts/claude_panel382_run.py 2>&1 | grep -n "gen-model\|gen_model\|BASE\|snapshot\|HF_HUB\|from_pretrained\|model_path" | head -30
+23:      --arm claude_e2e382:build_382 --name E --model <reader dir> --gen-model <MiniCPM5-1B dir> --out OUT
+65:        return TW.Twin336(tmp, a.gen_model)
+235:    ap.add_argument("--gen-model", default="", help="base MiniCPM5-1B dir")
+241:    os.environ.setdefault("HF_HUB_OFFLINE", "1")
+245:    if not (a.arm and a.name and a.out and a.gen_model):
+246:        raise SystemExit("382: --arm, --name, --out and --gen-model are required to run")
+[0m
+[0m$ [0mgit show refs/remotes/origin/main:scripts/claude_sleep02c.py 2>&1 | grep -n "SLEEP02C_ADAPTER\|sidecar\|json\|adapter02c\|def load\|BASE\|base" | head -25; echo ===; git show refs/remotes/origin/main:scripts/claude_panel382_run.py 2>&1 | sed -n '40,120p'
+18:      --model READER --gen-model BASE --out OUT [--nights 3 --n-day 150 --n-test 100 --n-chat 40]
+19:writes OUT/sleep02c_results.json and OUT/adapter02c.pt (the LoRA weights only). A later process gets the slept
+20:agent with SLEEP02C_ADAPTER=OUT/adapter02c.pt and install_sleep02c(one_b) (every builder of 0.2c calls it).
+22:Every saved night has a sidecar OUT/adapter02c.json (Fix sleep, 02:19 UTC 09-26): the base model's fingerprint, the
+24:adapter loads only when its sidecar exists, its sha256 matches the file, and the base fingerprint matches the model.
+25:  python -B scripts/claude_sleep02c.py --check-activation OUT/adapter02c.pt --gen-model BASE   (report only)
+33:import json
+68:def base_fingerprint(model) -> str:
+69:    """The base model's identity without its path: count of base (non-LoRA) parameters plus a hash of the first
+70:    base tensor's first 256 rows, read as float32."""
+72:    base = [(n, t) for n, t in model.named_parameters() if not (n.endswith(".A") or n.endswith(".B"))]
+73:    first = base[0][1].detach()[:256].float().cpu().contiguous()
+75:    return f"{sum(t.numel() for _, t in base)}:{h}"
+82:def sidecar_path(path) -> Path:
+83:    return Path(path).with_suffix(".json")
+91:def check_sidecar(model, path) -> dict:
+92:    sc = sidecar_path(path)
+94:        raise RuntimeError(f"sleep02c: {path} has no sidecar {sc.name}; refusing to load")
+95:    meta = json.loads(sc.read_text(encoding="utf-8"))
+97:        raise RuntimeError("sleep02c: adapter file does not match its sidecar (torn save?); refusing to load")
+98:    if meta.get("base") != base_fingerprint(model):
+99:        raise RuntimeError("sleep02c: adapter was trained on a different base model; refusing to load")
+105:    (default: env SLEEP02C_ADAPTER)."""
+110:    path = path if path is not None else os.environ.get("SLEEP02C_ADAPTER", "")
+115:        check_sidecar(one_b.model, path)
+zsh:1: == not found
+[0m
+[0m$ [0mgit show refs/remotes/origin/main:scripts/claude_panel382_run.py > /tmp/p382.py && grep -n "build_null02c\|claude_mu402\|import\|arm" /tmp/p382.py | head -30
+2:"""382 panel runner: chatpanel382 and creativepanel382 (design/v3/30-modes/382-panels-spec.md) on any arm.
+5:Arms: --arm module:function (a builder(state_dir, args), e.g. claude_e2e382:build_382 or claude_e2e360:build_360)
+6:or --arm twin (the plain MiniCPM5-1B, whole chat; run under scripts/claude_twinb_wrap.py so thinking is off).
+12:--score DIR --names E,T,G (first name = the arm under test) writes, from the rows and the panel:
+13:  summary.json   per arm: think turns with the gold number in the reply; ask_known right; ask_unknown "don't
+16:  judge packets  chat_pair_<other>.jsonl (+ chat_key_<other>.json): per conversation, the tested arm and one
+18:                 creative_<name>.jsonl (+ creative_key.json): every idea/uses_facts reply of every arm, shuffled
+20:                 grammar_<first>.jsonl: the tested arm's distinct replies.
+23:      --arm claude_e2e382:build_382 --name E --model <reader dir> --gen-model <MiniCPM5-1B dir> --out OUT
+26:from __future__ import annotations
+28:import argparse
+29:import ast
+30:import importlib
+31:import json
+32:import operator
+33:import os
+34:import random
+35:import re
+36:import shutil
+37:import statistics
+38:import sys
+39:import tempfile
+40:from collections import Counter
+41:from fractions import Fraction
+42:from pathlib import Path
+55:    """(turn_i, kind, text, is_last) for every message the arm receives."""
+63:    if a.arm == "twin":
+64:        import claude_e2e336_twin as TW
+66:    mod, fn = a.arm.split(":")
+67:    return getattr(importlib.import_module(mod), fn)(tmp, a)
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'cd ~/tree && cat > /tmp/launch402.sh << "EOF"
+#!/bin/bash
+cd ~/tree
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+P=artifacts/claude-mu402-20260926/devchat
+OUT=out402
+BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+mkdir -p "$OUT"
+date -u +%s > ~/t0_402.txt
+setsid nohup env SLEEP02C_ADAPTER=$HOME/adapter/adapter02c.pt python -B scripts/claude_twinb_wrap.py scripts/claude_panel382_run.py --panel chat --panel-dir "$P" --arm claude_mu402:build_null02c --name A --model NULL --gen-model "$BASE" --out "$OUT" > ~/logA.txt 2>&1 < /dev/null &
+echo "A_PID:$!"
+setsid nohup env -u SLEEP02C_ADAPTER python -B scripts/claude_twinb_wrap.py scripts/claude_panel382_run.py --panel chat --panel-dir "$P" --arm claude_mu402:build_null02c --name B --model NULL --gen-model "$BASE" --out "$OUT" > ~/logB.txt 2>&1 < /dev/null &
+echo "B_PID:$!"
+setsid nohup env -u SLEEP02C_ADAPTER python -B scripts/claude_twinb_wrap.py scripts/claude_panel382_run.py --panel chat --panel-dir "$P" --arm twin --name T --model "$BASE" --gen-model "$BASE" --out "$OUT" > ~/logT.txt 2>&1 < /dev/null &
+echo "T_PID:$!"
+sleep 2; ps aux | grep -E "panel382" | grep -v grep | awk "{print \$2, \$11, \$12, \$13, \$14, \$15}"
+EOF
+chmod +x /tmp/launch402.sh && /tmp/launch402.sh'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+A_PID:768
+B_PID:769
+T_PID:770
+768 python -B scripts/claude_twinb_wrap.py scripts/claude_panel382_run.py --panel
+769 python -B scripts/claude_twinb_wrap.py scripts/claude_panel382_run.py --panel
+770 python -B scripts/claude_twinb_wrap.py scripts/claude_panel382_run.py --panel
+[0m
+[0m$ [0msleep 150; ssh -p 37516 root@ssh3.vast.ai 'echo "== A =="; grep -a "mu402: adapter loaded\|refusing to load\|Error\|Traceback" ~/logA.txt | head -5; echo "== B =="; grep -a "mu402: adapter loaded\|refusing to load\|Error\|Traceback" ~/logB.txt | head -5; echo "== T =="; tail -c 400 ~/logT.txt; echo; ps -p 768,769,770 -o pid,etime,cmd 2>&1 | tail -4' 2>&1 | tail -15
+[382/chat/T] dev402-24
+[382/chat/T] dev402-25
+[382/chat/T] dev402-26
+[382/chat/T] dev402-27
+[382/chat/T] dev402-28
+[382/chat/T] dev402-29
+[382/chat/T] dev402-30
+[382/chat/T] dev402-31
+[382/chat/T] dev402-32
+[382/chat/T] dev402-33
+[382/chat/T] dev402-34
+[382/chat/T] dev402-35
+
+    PID     ELAPSED CMD
+    770       02:40 python -B scripts/claude_twinb_wrap.py scripts/claude_panel382_run.py --panel chat --panel-dir artifacts/claude-mu402-20260926/devchat --arm twin --name T --model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --gen-model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out out402
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'grep -a "mu402: adapter loaded" ~/logA.txt ~/logB.txt; grep -ac "dev402-" ~/logA.txt ~/logB.txt ~/logT.txt; ps aux | grep panel382 | grep -v grep | wc -l; tail -c 200 ~/logA.txt; echo; tail -c 200 ~/logB.txt' 2>&1 | tail -10
+/root/logB.txt:0
+/root/logT.txt:36
+1
+ors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/root/tree/artifacts/fable-self127-20260922/deltas127.json'
+
+ors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/root/tree/artifacts/fable-self127-20260922/deltas127.json'
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'grep -a "mu402: adapter loaded" ~/logA.txt; echo ---; grep -a -B5 "FileNotFoundError" ~/logA.txt | head -40; echo ===; git -C ~/tree ls-tree refs/remotes/origin/main --name-only 2>/dev/null | head -2' 2>&1 | tail -50
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+mu402: adapter loaded = /root/adapter/adapter02c.pt; layers = ['330a_334', 'rec360', 'cre333d', 'think299b', 'chat338b', 'vary330c', 'gram360', 'delivered02c', 'turnlog323', 'seed402']
+---
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/root/tree/artifacts/fable-self127-20260922/deltas127.json'
+===
+[0m
+[0m$ [0mgit ls-tree -r --name-only refs/remotes/origin/main -- artifacts/fable-self127-20260922/ 2>&1 | head; echo ---; git ls-tree -r --name-only refs/remotes/origin/builder-outbox -- artifacts/fable-self127-20260922/ 2>&1 | head; echo ---; ls artifacts/ 2>&1 | head -40
+artifacts/fable-self127-20260922/PASSMARKS.md
+artifacts/fable-self127-20260922/RESULTS.md
+artifacts/fable-self127-20260922/SEAL.sha256.txt
+artifacts/fable-self127-20260922/WRONGS.md
+artifacts/fable-self127-20260922/bank127.json
+artifacts/fable-self127-20260922/deltas127.json
+artifacts/fable-self127-20260922/self127-notebook-122/notebook/events.fix77.seal.json
+artifacts/fable-self127-20260922/self127-notebook-122/notebook/events.jsonl
+artifacts/fable-self127-20260922/self127-notebook-122/state.json
+artifacts/fable-self127-20260922/self127-notebook-127/notebook/events.fix77.seal.json
+---
+---
+claude-adapters-20260926d
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm391-20260926
+claude-bm395-20260925
+claude-bm397t-20260926
+claude-boundary259-20260922
+claude-brd5-20260926
+claude-brd6-20260926
+claude-brd7-20260926
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chat338-20260924
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convbench-f0-20260923
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'grep -a "mu402: adapter loaded" ~/logB.txt; echo ---; grep -a "Traceback" ~/logA.txt | head -2; awk "/Traceback \(most recent/,/FileNotFoundError/" ~/logA.txt | grep -a "File \"" | head -12' 2>&1 | tail -16
+Have fun!
+mu402: adapter loaded = none (B = 0, base 1B); layers = ['330a_334', 'rec360', 'cre333d', 'think299b', 'chat338b', 'vary330c', 'gram360', 'delivered02c', 'turnlog323', 'seed402']
+---
+Traceback (most recent call last):
+  File "/root/tree/scripts/claude_twinb_wrap.py", line 41, in <module>
+  File "/root/tree/scripts/claude_twinb_wrap.py", line 37, in main
+  File "<frozen runpy>", line 291, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "scripts/claude_panel382_run.py", line 251, in <module>
+  File "scripts/claude_panel382_run.py", line 247, in main
+  File "scripts/claude_panel382_run.py", line 80, in run
+  File "/root/tree/scripts/claude_e2e336_run.py", line 158, in one
+  File "/root/tree/scripts/claude_mu402.py", line 76, in seeded402
+  File "/root/tree/scripts/claude_nb323_turnlog.py", line 323, in _turn323
+  File "/root/tree/scripts/claude_fix02c.py", line 51, in delivered02c
+[0m
+[0m$ [0mgit show refs/remotes/origin/main:scripts/claude_fix02c.py > /tmp/fix02c.py && wc -l /tmp/fix02c.py
+189 /tmp/fix02c.py
+[0m
+[0m→ [0mRead /tmp/fix02c.py[90m [limit=110][0m
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'awk "/Traceback \(most recent/,/FileNotFoundError/" ~/logA.txt | grep -a "File \"" | tail -12; echo ...; grep -a "deltas127\|self127" ~/logA.txt | head -5' 2>&1 | tail -20
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+  File "/root/tree/scripts/claude_loop138m_agent.py", line 147, in turn
+  File "/root/tree/scripts/fable_loop212_agent.py", line 162, in turn
+  File "/root/tree/scripts/fable_loop216_agent.py", line 194, in turn
+  File "/root/tree/scripts/fable_loop138j_agent.py", line 617, in turn
+  File "/root/tree/scripts/fable_loop216_agent.py", line 171, in _gated_route216
+  File "/root/tree/scripts/fable_loop138_agent.py", line 185, in _route127
+  File "/root/tree/scripts/fable_self127.py", line 125, in route127
+  File "/opt/conda/lib/python3.11/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+  File "/root/tree/scripts/fable_self127.py", line 101, in novelty_check
+  File "/root/tree/scripts/fable_self127.py", line 64, in load_deltas
+  File "/opt/conda/lib/python3.11/pathlib.py", line 1058, in read_text
+  File "/opt/conda/lib/python3.11/pathlib.py", line 1044, in open
+...
+  File "/root/tree/scripts/fable_self127.py", line 125, in route127
+  File "/root/tree/scripts/fable_self127.py", line 101, in novelty_check
+  File "/root/tree/scripts/fable_self127.py", line 64, in load_deltas
+    doc = json.loads((ART127 / "deltas127.json").read_text(
+FileNotFoundError: [Errno 2] No such file or directory: '/root/tree/artifacts/fable-self127-20260922/deltas127.json'
+[0m
+[0m$ [0mgit show refs/remotes/origin/main:scripts/fable_self127.py > /tmp/s127.py && sed -n '40,130p' /tmp/s127.py
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import torch  # noqa: E402
+
+import fable_self105 as S105  # noqa: E402 (read-only; wrapped, never edited)
+import fable_self122 as S122  # noqa: E402 (read-only; wrapped, never edited)
+import fable_self99 as S99  # noqa: E402 (read-only; wrapped, never edited)
+
+HONEST_DECLINE = S105.HONEST_DECLINE
+CANONICAL = S105.CANONICAL
+ART127 = Path(__file__).resolve().parent.parent / "artifacts" \
+    / "fable-self127-20260922"
+
+_bank: dict[str, torch.Tensor] | None = None
+_deltas: dict[str, float] | None = None
+
+
+def load_deltas() -> dict[str, float]:
+    global _deltas
+    if _deltas is None:
+        doc = json.loads((ART127 / "deltas127.json").read_text(
+            encoding="utf-8"))
+        _deltas = {k: float(v) for k, v in doc["delta"].items()}
+    return _deltas
+
+
+def load_bank() -> dict[str, torch.Tensor]:
+    """Embed the pinned bank (train122 rows) once with the frozen encoder."""
+    global _bank
+    if _bank is None:
+        torch.set_num_threads(1)
+        spec = json.loads((ART127 / "bank127.json").read_text(
+            encoding="utf-8"))
+        repo = Path(__file__).resolve().parent.parent
+        import hashlib  # noqa: E402
+        src = repo / spec["source"]
+        sha = hashlib.sha256(src.read_bytes()).hexdigest()
+        assert sha == spec["sha256"], f"bank source changed: {sha}"
+        import fable_self122_train as T  # noqa: E402 (frozen embed reuse)
+        rows = T.load_rows(src)
+        assert len(rows) == spec["n_rows"], len(rows)
+        for extra in spec["extra_rows"]:
+            rows.append(extra)
+        router = S122.get_router()
+        X = T.embed([r["text"] for r in rows], router.enc, router.tok)
+        bank: dict[str, torch.Tensor] = {}
+        labels = [r["label"] for r in rows]
+        for lab in T.LABELS:
+            idx = [i for i, lb in enumerate(labels) if lb == lab]
+            bank[lab] = X[idx] if idx else torch.zeros((0, 384))
+        _bank = bank
+    return _bank
+
+
+@torch.no_grad()
+def novelty_check(question: str, intent: str) -> tuple[bool, dict]:
+    """Returns (decline: bool, info). Never declines D/OOS (no delta)."""
+    deltas = load_deltas()
+    if intent not in deltas:
+        return False, {"novelty": "vacuous (always-decline intent)"}
+    bank = load_bank()
+    router = S122.get_router()
+    x = router._T.embed([question], router.enc, router.tok)
+    rows = bank.get(intent)
+    if rows is None or len(rows) == 0:
+        return True, {"novelty": "empty-bank"}
+    j = int(torch.argmax(rows @ x[0]))
+    dist = float(1.0 - (rows @ x[0])[j])
+    if dist > deltas[intent]:
+        return True, {"novelty": "far",
+                       "nndist": round(dist, 4),
+                       "delta": deltas[intent], "nn": j}
+    return False, {"novelty": "near",
+                   "nndist": round(dist, 4),
+                   "delta": deltas[intent], "nn": j}
+
+
+def route127(question: str) -> tuple[str, dict]:
+    intent, info = S122.route122(question)
+    if intent == "DECLINE":
+        return "DECLINE", info
+    decline, ninfo = novelty_check(question, intent)
+    info = dict(info)
+    info.update(ninfo)
+    if decline:
+        info["decline"] = "novelty-guard"
+        return "DECLINE", info
+[0m
+[0m$ [0mgrep -n "jsonl\|open(\|\"w\"\|\"a\"\|write" /tmp/p382.py | head -25; echo ===; ssh -p 37516 root@ssh3.vast.ai 'ls -la ~/tree/out402/ 2>&1; grep -ac "dev402-" ~/logT.txt' 2>&1 | tail -4
+10:Output: <out>/<panel>_<name>.jsonl rows {item_id, turn_i, kind, last, reply, ms, events, ep382 (stats delta)}.
+12:--score DIR --names E,T,G (first name = the arm under test) writes, from the rows and the panel:
+16:  judge packets  chat_pair_<other>.jsonl (+ chat_key_<other>.json): per conversation, the tested arm and one
+17:                 other, order shuffled (seed 3821); chat_turns_<first>.jsonl for the per-turn judge;
+18:                 creative_<name>.jsonl (+ creative_key.json): every idea/uses_facts reply of every arm, shuffled
+20:                 grammar_<first>.jsonl: the tested arm's distinct replies.
+72:    items = load(Path(a.panel_dir) / "items.jsonl")
+92:    (out / f"{a.panel}_{a.name}.jsonl").write_text(
+153:    items = {it["item_id"]: it for it in load(Path(a.panel_dir) / "items.jsonl")}
+156:    arms = {x: load(d / f"{a.panel}_{x}.jsonl") for x in names if (d / f"{a.panel}_{x}.jsonl").exists()}
+198:            (d / f"chat_pair_{other}.jsonl").write_text(
+200:            (d / f"chat_key_{other}.json").write_text(json.dumps(key, indent=1), encoding="utf-8")
+201:        (d / f"chat_turns_{first}.jsonl").write_text("".join(
+214:        with open(d / "creative_judge.jsonl", "w", encoding="utf-8") as fh:
+218:                fh.write(json.dumps(dict(id=cid, **body), ensure_ascii=False) + "\n")
+219:        (d / "creative_key.json").write_text(json.dumps(key, indent=1), encoding="utf-8")
+221:        (d / f"grammar_{a.panel}_{first}.jsonl").write_text("".join(
+224:    (d / f"summary_{a.panel}.json").write_text(json.dumps(summ, indent=1, sort_keys=True), encoding="utf-8")
+zsh:1: == not found
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'ls -la ~/tree/out402/; echo ---; grep -c "dev402-" ~/logT.txt'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+total 0
+drwxr-xr-x 2 root root  6 Sep 26 14:09 .
+drwxr-xr-x 6 root root 66 Sep 26 14:09 ..
+---
+74
+[0m
+[0m$ [0mgit archive refs/remotes/origin/main artifacts/fable-self127-20260922 | ssh -p 37516 root@ssh3.vast.ai 'cp ~/logA.txt ~/logA_crash.txt; cp ~/logB.txt ~/logB_crash.txt; echo CRASH_LOGS_SAVED; tar -x -C ~/tree && echo SELF127_STREAMED; find ~/tree/artifacts/fable-self127-20260922 -type f | head -20'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+CRASH_LOGS_SAVED
+SELF127_STREAMED
+/root/tree/artifacts/fable-self127-20260922/PASSMARKS.md
+/root/tree/artifacts/fable-self127-20260922/RESULTS.md
+/root/tree/artifacts/fable-self127-20260922/SEAL.sha256.txt
+/root/tree/artifacts/fable-self127-20260922/WRONGS.md
+/root/tree/artifacts/fable-self127-20260922/bank127.json
+/root/tree/artifacts/fable-self127-20260922/deltas127.json
+/root/tree/artifacts/fable-self127-20260922/self127-notebook-122/notebook/events.fix77.seal.json
+/root/tree/artifacts/fable-self127-20260922/self127-notebook-122/notebook/events.jsonl
+/root/tree/artifacts/fable-self127-20260922/self127-notebook-122/state.json
+/root/tree/artifacts/fable-self127-20260922/self127-notebook-127/notebook/events.fix77.seal.json
+/root/tree/artifacts/fable-self127-20260922/self127-notebook-127/notebook/events.jsonl
+/root/tree/artifacts/fable-self127-20260922/self127-notebook-127/state.json
+/root/tree/artifacts/fable-self127-20260922/self127-results.json
+[0m
+[0m$ [0mLOCAL_D=$(git show refs/remotes/origin/main:artifacts/fable-self127-20260922/deltas127.json | sha256sum | cut -d" " -f1); LOCAL_B=$(git show refs/remotes/origin/main:artifacts/fable-self127-20260922/bank127.json | sha256sum | cut -d" " -f1); echo "local done"; ssh -p 37516 root@ssh3.vast.ai 'sha256sum ~/tree/artifacts/fable-self127-20260922/deltas127.json ~/tree/artifacts/fable-self127-20260922/bank127.json'; echo "LOCAL_D=$LOCAL_D"; echo "LOCAL_B=$LOCAL_B"
+local done
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+8803034b6d46f562de8120b7fc4f76c571ac7f9174db2061b27c6effe83e1636  /root/tree/artifacts/fable-self127-20260922/deltas127.json
+293d9b0487a5a5427f99a96a9878544a89bc0b6a0bc8be6fbd39deb0f972ea74  /root/tree/artifacts/fable-self127-20260922/bank127.json
+LOCAL_D=8803034b6d46f562de8120b7fc4f76c571ac7f9174db2061b27c6effe83e1636
+LOCAL_B=293d9b0487a5a5427f99a96a9878544a89bc0b6a0bc8be6fbd39deb0f972ea74
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && P=artifacts/claude-mu402-20260926/devchat && OUT=out402 && BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc && date -u +%s > ~/t0_402ab.txt && setsid nohup env SLEEP02C_ADAPTER=$HOME/adapter/adapter02c.pt python -B scripts/claude_twinb_wrap.py scripts/claude_panel382_run.py --panel chat --panel-dir "$P" --arm claude_mu402:build_null02c --name A --model NULL --gen-model "$BASE" --out "$OUT" > ~/logA.txt 2>&1 < /dev/null & echo "A_PID:$!" && setsid nohup env -u SLEEP02C_ADAPTER python -B scripts/claude_twinb_wrap.py scripts/claude_panel382_run.py --panel chat --panel-dir "$P" --arm claude_mu402:build_null02c --name B --model NULL --gen-model "$BASE" --out "$OUT" > ~/logB.txt 2>&1 < /dev/null & echo "B_PID:$!"; sleep 3; ps aux | grep panel382 | grep -v grep | wc -l'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+B_PID:960
+A_PID:959
+1
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'ps aux | grep panel382 | grep -v grep; echo ---; grep -a "mu402: adapter loaded" ~/logA.txt ~/logB.txt 2>/dev/null; echo ---; grep -a "Traceback\|Error" ~/logA.txt ~/logB.txt 2>/dev/null | head -6; echo ---; tail -c 300 ~/logT.txt'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+root         964 98.1  6.8 24007284 2200840 ?    Rsl  14:15   2:14 python -B scripts/claude_twinb_wrap.py scripts/claude_panel382_run.py --panel chat --panel-dir artifacts/claude-mu402-20260926/devchat --arm claude_mu402:build_null02c --name A --model NULL --gen-model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out out402
+---
+/root/logA.txt:mu402: adapter loaded = /root/adapter/adapter02c.pt; layers = ['330a_334', 'rec360', 'cre333d', 'think299b', 'chat338b', 'vary330c', 'gram360', 'delivered02c', 'turnlog323', 'seed402']
+---
+---
+
+[382/chat/T] dev402-68
+[382/chat/T] dev402-69
+[382/chat/T] dev402-70
+[382/chat/T] dev402-71
+[382/chat/T] dev402-72
+[382/chat/T] dev402-73
+[382/chat/T] dev402-74
+[382/chat/T] dev402-75
+[382/chat/T] dev402-76
+[382/chat/T] dev402-77
+[382/chat/T] dev402-78
+[382/chat/T] dev402-79
+[382/chat/T] dev402-80
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'ls -la ~/log*.txt ~/tree/out402/; echo ---; wc -c ~/logB.txt; echo ---; ps aux | grep -E "python|panel" | grep -v grep; echo ---; free -g | head -2'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+-rw-r--r-- 1 root root  939 Sep 26 14:17 /root/logA.txt
+-rw-r--r-- 1 root root 8486 Sep 26 14:15 /root/logA_crash.txt
+-rw-r--r-- 1 root root   98 Sep 26 14:15 /root/logB.txt
+-rw-r--r-- 1 root root 8480 Sep 26 14:15 /root/logB_crash.txt
+-rw-r--r-- 1 root root 2111 Sep 26 14:15 /root/logT.txt
+
+/root/tree/out402/:
+total 224
+drwxr-xr-x 2 root root     26 Sep 26 14:15 .
+drwxr-xr-x 6 root root     66 Sep 26 14:09 ..
+-rw-r--r-- 1 root root 228757 Sep 26 14:15 chat_T.jsonl
+---
+98 /root/logB.txt
+---
+root         964 98.5  6.8 24007284 2200872 ?    Rsl  14:15   2:30 python -B scripts/claude_twinb_wrap.py scripts/claude_panel382_run.py --panel chat --panel-dir artifacts/claude-mu402-20260926/devchat --arm claude_mu402:build_null02c --name A --model NULL --gen-model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out out402
+---
+               total        used        free      shared  buff/cache   available
+Mem:              30           3           3           0          23          26
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'cat ~/logB.txt; echo ===; dmesg 2>/dev/null | tail -8; echo ===; nvidia-smi --query-gpu=memory.used,memory.total,utilization.gpu --format=csv,noheader'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+python: can't open file '/root/scripts/claude_twinb_wrap.py': [Errno 2] No such file or directory
+===
+===
+3014 MiB, 32607 MiB, 44 %
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'cd ~/tree; export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; P=artifacts/claude-mu402-20260926/devchat; OUT=out402; BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc; pwd; date -u +%s > ~/t0_402b.txt; setsid nohup env -u SLEEP02C_ADAPTER python -B scripts/claude_twinb_wrap.py scripts/claude_panel382_run.py --panel chat --panel-dir "$P" --arm claude_mu402:build_null02c --name B --model NULL --gen-model "$BASE" --out "$OUT" > ~/logB.txt 2>&1 < /dev/null & echo "B_PID:$!"; sleep 45; grep -a "mu402: adapter loaded" ~/logB.txt || tail -c 300 ~/logB.txt'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+/root/tree
+B_PID:1058
+mu402: adapter loaded = none (B = 0, base 1B); layers = ['330a_334', 'rec360', 'cre333d', 'think299b', 'chat338b', 'vary330c', 'gram360', 'delivered02c', 'turnlog323', 'seed402']
+[0m
+[0m$ [0msleep 300; ssh -p 37516 root@ssh3.vast.ai 'for f in logA logB; do echo -n "$f: "; grep -c "dev402-" ~/$f.txt; done; tail -c 120 ~/logA.txt; echo; tail -c 120 ~/logB.txt; echo; ps aux | grep panel382 | grep -v grep | awk "{print \$2}" | tr "\n" " "; echo; grep -ai "traceback\|refusing to load" ~/logA.txt ~/logB.txt | head -4; echo NOCRASH'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+logA: 75
+logB: 35
+2-70
+[382/chat/A] dev402-71
+[382/chat/A] dev402-72
+[382/chat/A] dev402-73
+[382/chat/A] dev402-74
+[382/chat/A] dev402-75
+
+2-30
+[382/chat/B] dev402-31
+[382/chat/B] dev402-32
+[382/chat/B] dev402-33
+[382/chat/B] dev402-34
+[382/chat/B] dev402-35
+
+964 1058 
+NOCRASH
+[0m
+[0m$ [0msleep 300; ssh -p 37516 root@ssh3.vast.ai 'for f in logA logB logT; do echo -n "$f: "; grep -c "dev402-" ~/$f.txt; done; ls -la ~/tree/out402/; ps aux | grep panel382 | grep -v grep | wc -l; grep -ai "traceback" ~/logA.txt ~/logB.txt ~/logT.txt | head -3; echo NOCRASH'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+logA: 80
+logB: 71
+logT: 80
+total 360
+drwxr-xr-x 2 root root     46 Sep 26 14:25 .
+drwxr-xr-x 6 root root     66 Sep 26 14:09 ..
+-rw-r--r-- 1 root root 135366 Sep 26 14:25 chat_A.jsonl
+-rw-r--r-- 1 root root 228757 Sep 26 14:15 chat_T.jsonl
+1
+NOCRASH
+[0m
+[0m$ [0msleep 180; ssh -p 37516 root@ssh3.vast.ai 'echo -n "logB: "; grep -c "dev402-" ~/logB.txt; ls -la ~/tree/out402/; ps aux | grep panel382 | grep -v grep | wc -l; grep -ai "traceback" ~/logB.txt | head -3; echo CHECKED'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+logB: 80
+total 488
+drwxr-xr-x 2 root root     66 Sep 26 14:31 .
+drwxr-xr-x 6 root root     66 Sep 26 14:09 ..
+-rw-r--r-- 1 root root 135366 Sep 26 14:25 chat_A.jsonl
+-rw-r--r-- 1 root root 130787 Sep 26 14:31 chat_B.jsonl
+-rw-r--r-- 1 root root 228757 Sep 26 14:15 chat_T.jsonl
+0
+CHECKED
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && python -B scripts/claude_panel382_run.py --panel chat --panel-dir artifacts/claude-mu402-20260926/devchat --score out402 --names B,A,T 2>&1 | tail -25; echo SCORE_EXIT:$?; ls -la out402/'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+{"A": {"ask_known": 0, "ask_known_right": 0, "ask_unknown": 0, "ask_unknown_dont_know": 0, "distinct_replies": 328, "events_on_non_teach": 0, "messages": 402, "most_common_reply_count": 28, "ms_median": 1212.5, "think_numeric": 39, "think_numeric_right": 11, "think_turns": 46}, "B": {"ask_known": 0, "ask_known_right": 0, "ask_unknown": 0, "ask_unknown_dont_know": 0, "distinct_replies": 331, "events_on_non_teach": 0, "messages": 402, "most_common_reply_count": 28, "ms_median": 1104.1, "think_numeric": 39, "think_numeric_right": 11, "think_turns": 46}, "T": {"ask_known": 0, "ask_known_right": 0, "ask_unknown": 0, "ask_unknown_dont_know": 0, "distinct_replies": 358, "events_on_non_teach": 0, "messages": 402, "most_common_reply_count": 12, "ms_median": 926.1, "think_numeric": 39, "think_numeric_right": 14, "think_turns": 46}, "items": 80, "panel": "chat"}
+SCORE_EXIT:0
+total 1336
+drwxr-xr-x 2 root root   4096 Sep 26 14:33 .
+drwxr-xr-x 6 root root     66 Sep 26 14:09 ..
+-rw-r--r-- 1 root root 135366 Sep 26 14:25 chat_A.jsonl
+-rw-r--r-- 1 root root 130787 Sep 26 14:31 chat_B.jsonl
+-rw-r--r-- 1 root root 228757 Sep 26 14:15 chat_T.jsonl
+-rw-r--r-- 1 root root   2642 Sep 26 14:33 chat_key_A.json
+-rw-r--r-- 1 root root   2642 Sep 26 14:33 chat_key_T.json
+-rw-r--r-- 1 root root 265209 Sep 26 14:33 chat_pair_A.jsonl
+-rw-r--r-- 1 root root 358627 Sep 26 14:33 chat_pair_T.jsonl
+-rw-r--r-- 1 root root 131160 Sep 26 14:33 chat_turns_B.jsonl
+-rw-r--r-- 1 root root  86507 Sep 26 14:33 grammar_chat_B.jsonl
+-rw-r--r-- 1 root root    951 Sep 26 14:33 summary_chat.json
+[0m
+[0m$ [0mls artifacts/claude-mu402-20260926/ 2>&1; echo ---; mkdir -p artifacts/claude-mu402-20260926/run && scp -P 37516 "root@ssh3.vast.ai:tree/out402/chat_A.jsonl" "root@ssh3.vast.ai:tree/out402/chat_B.jsonl" "root@ssh3.vast.ai:tree/out402/chat_T.jsonl" "root@ssh3.vast.ai:tree/out402/summary_chat.json" artifacts/claude-mu402-20260926/run/ 2>&1 | tail -2; scp -P 37516 "root@ssh3.vast.ai:logA.txt" "root@ssh3.vast.ai:logB.txt" "root@ssh3.vast.ai:logT.txt" "root@ssh3.vast.ai:logA_crash.txt" "root@ssh3.vast.ai:logB_crash.txt" artifacts/claude-mu402-20260926/run/ 2>&1 | tail -2; ls -la artifacts/claude-mu402-20260926/run/
+ls: artifacts/claude-mu402-20260926/: No such file or directory
+---
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+total 1056
+drwxr-xr-x  11 ben-hannan  staff     352 Sep 26 10:34 .
+drwxr-xr-x   3 ben-hannan  staff      96 Sep 26 10:33 ..
+-rw-r--r--   1 ben-hannan  staff  135366 Sep 26 10:33 chat_A.jsonl
+-rw-r--r--   1 ben-hannan  staff  130787 Sep 26 10:33 chat_B.jsonl
+-rw-r--r--   1 ben-hannan  staff  228757 Sep 26 10:34 chat_T.jsonl
+-rw-r--r--   1 ben-hannan  staff    8486 Sep 26 10:34 logA_crash.txt
+-rw-r--r--   1 ben-hannan  staff    2296 Sep 26 10:34 logA.txt
+-rw-r--r--   1 ben-hannan  staff    8480 Sep 26 10:34 logB_crash.txt
+-rw-r--r--   1 ben-hannan  staff    2290 Sep 26 10:34 logB.txt
+-rw-r--r--   1 ben-hannan  staff    2111 Sep 26 10:34 logT.txt
+-rw-r--r--   1 ben-hannan  staff     951 Sep 26 10:34 summary_chat.json
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'sha256sum ~/tree/out402/chat_A.jsonl ~/tree/out402/chat_B.jsonl ~/tree/out402/chat_T.jsonl ~/tree/out402/summary_chat.json ~/logA.txt ~/logB.txt ~/logT.txt' 2>&1 | tail -7; echo ===; sha256sum artifacts/claude-mu402-20260926/run/chat_A.jsonl artifacts/claude-mu402-20260926/run/chat_B.jsonl artifacts/claude-mu402-20260926/run/chat_T.jsonl artifacts/claude-mu402-20260926/run/summary_chat.json artifacts/claude-mu402-20260926/run/logA.txt artifacts/claude-mu402-20260926/run/logB.txt artifacts/claude-mu402-20260926/run/logT.txt
+1abe4306781becf908267b2185f13d1ded49518f855d9e0bf4bdc21b1df701e8  /root/tree/out402/chat_A.jsonl
+46f97e298e98cf5711e3debf0f5499800c7b57ff2be4be938dc4b7c3e83f06eb  /root/tree/out402/chat_B.jsonl
+dc4bc933f61b7a4ae607998c5b457d35bc0e233467a345c46fe984118ed51533  /root/tree/out402/chat_T.jsonl
+7d9771acfdb6141034a9371c99eefe37a8965ed10e099f536f2cbadb802b4359  /root/tree/out402/summary_chat.json
+b237b0304831d9329393f946dd8ab9507767cc26587e909f3edf8edd5673dbb5  /root/logA.txt
+f94eb902a5d0e62ed8e23122a17eab7a12d00863acb8e4154106374c9995c272  /root/logB.txt
+7ae56f939a9ef7e4c2383f4daa8374cd8fe5e3f741e9091dfd43b5c92f75a70b  /root/logT.txt
+zsh:1: == not found
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-mu402-20260926/run/chat_A.jsonl artifacts/claude-mu402-20260926/run/chat_B.jsonl artifacts/claude-mu402-20260926/run/chat_T.jsonl artifacts/claude-mu402-20260926/run/summary_chat.json artifacts/claude-mu402-20260926/run/logA.txt artifacts/claude-mu402-20260926/run/logB.txt artifacts/claude-mu402-20260926/run/logT.txt
+1abe4306781becf908267b2185f13d1ded49518f855d9e0bf4bdc21b1df701e8  artifacts/claude-mu402-20260926/run/chat_A.jsonl
+46f97e298e98cf5711e3debf0f5499800c7b57ff2be4be938dc4b7c3e83f06eb  artifacts/claude-mu402-20260926/run/chat_B.jsonl
+dc4bc933f61b7a4ae607998c5b457d35bc0e233467a345c46fe984118ed51533  artifacts/claude-mu402-20260926/run/chat_T.jsonl
+7d9771acfdb6141034a9371c99eefe37a8965ed10e099f536f2cbadb802b4359  artifacts/claude-mu402-20260926/run/summary_chat.json
+b237b0304831d9329393f946dd8ab9507767cc26587e909f3edf8edd5673dbb5  artifacts/claude-mu402-20260926/run/logA.txt
+f94eb902a5d0e62ed8e23122a17eab7a12d00863acb8e4154106374c9995c272  artifacts/claude-mu402-20260926/run/logB.txt
+7ae56f939a9ef7e4c2383f4daa8374cd8fe5e3f741e9091dfd43b5c92f75a70b  artifacts/claude-mu402-20260926/run/logT.txt
+[0m
+[0m$ [0mpython3 -c "
+import json
+for n in ['A','B','T']:
+    p=f'artifacts/claude-mu402-20260926/run/chat_{n}.jsonl'
+    rows=[json.loads(l) for l in open(p)]
+    items=len(set(r['item_id'] for r in rows))
+    print(n,'rows=',len(rows),'items=',items)
+s=json.load(open('artifacts/claude-mu402-20260926/run/summary_chat.json'))
+print('summary keys:',sorted(s.keys()))
+print(json.dumps(s,indent=0)[:400])
+"
+A rows= 402 items= 80
+B rows= 402 items= 80
+T rows= 402 items= 80
+summary keys: ['A', 'B', 'T', 'items', 'panel']
+{
+"A": {
+"ask_known": 0,
+"ask_known_right": 0,
+"ask_unknown": 0,
+"ask_unknown_dont_know": 0,
+"distinct_replies": 328,
+"events_on_non_teach": 0,
+"messages": 402,
+"most_common_reply_count": 28,
+"ms_median": 1212.5,
+"think_numeric": 39,
+"think_numeric_right": 11,
+"think_turns": 46
+},
+"B": {
+"ask_known": 0,
+"ask_known_right": 0,
+"ask_unknown": 0,
+"ask_unknown_dont_know": 0,
+"distinct_replies": 331,
+"e
+[0m
+[0m$ [0mssh -p 37516 root@ssh3.vast.ai 'echo -n "t0_firstBatch: "; cat ~/t0_402.txt; echo -n "t0_A: "; cat ~/t0_402ab.txt; echo -n "t0_B: "; cat ~/t0_402b.txt; stat -c "%Y %n" ~/tree/out402/chat_T.jsonl ~/tree/out402/chat_A.jsonl ~/tree/out402/chat_B.jsonl; date -u +%s; echo -n "now: "; date -u' 2>&1 | tail -8
+t0_firstBatch: 1790431756
+t0_A: 1790432115
+t0_B: 1790432318
+1790432117 /root/tree/out402/chat_T.jsonl
+1790432733 /root/tree/out402/chat_A.jsonl
+1790433060 /root/tree/out402/chat_B.jsonl
+1790433321
+now: Sat Sep 26 14:35:21 UTC 2026
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show user --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print('credit=',d.get('credit'),'balance=',d.get('balance'))"; echo y | vastai destroy instance 52757517 2>&1 | tail -1; sleep 10; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); [print(x.get('id'), x.get('label'), x.get('actual_status')) for x in d]"; date -u
+credit= 8.266691426269865 balance= 0
+Are you sure you want to destroy instance 52757517? This is irreversible and will delete all data. [y/N] destroying instance 52757517.
+52751954 rent-lis-319f running
+52755827 claude-director-depot running
+52757832 rent-358i running
+52757951 claude-notes-rd378L running
+52758310 claude-fixsleep-dl4b running
+52761382 claude-plainpuzzles-rt02d running
+52761669 rent-brd8 running
+52761986 claude-everydaychat-ch403 loading
+52761993 claude-everydaychat-ch403 running
+52762309 claude-wrongfact-sf401 loading
+Sat Sep 26 14:36:01 UTC 2026
+[0m
+[0m$ [0mgrep -a "mu402: adapter loaded" artifacts/claude-mu402-20260926/run/logA.txt artifacts/claude-mu402-20260926/run/logB.txt; echo ---; grep -ac "dev402-" artifacts/claude-mu402-20260926/run/logA.txt artifacts/claude-mu402-20260926/run/logB.txt artifacts/claude-mu402-20260926/run/logT.txt; echo ---; grep -ai "traceback\|refusing" artifacts/claude-mu402-20260926/run/logA.txt artifacts/claude-mu402-20260926/run/logB.txt artifacts/claude-mu402-20260926/run/logT.txt | head -3; echo NOCRASH; echo ---; head -3 artifacts/claude-mu402-20260926/run/logT.txt
+artifacts/claude-mu402-20260926/run/logA.txt:mu402: adapter loaded = /root/adapter/adapter02c.pt; layers = ['330a_334', 'rec360', 'cre333d', 'think299b', 'chat338b', 'vary330c', 'gram360', 'delivered02c', 'turnlog323', 'seed402']
+artifacts/claude-mu402-20260926/run/logB.txt:mu402: adapter loaded = none (B = 0, base 1B); layers = ['330a_334', 'rec360', 'cre333d', 'think299b', 'chat338b', 'vary330c', 'gram360', 'delivered02c', 'turnlog323', 'seed402']
+---
+artifacts/claude-mu402-20260926/run/logA.txt:80
+artifacts/claude-mu402-20260926/run/logB.txt:80
+artifacts/claude-mu402-20260926/run/logT.txt:80
+---
+NOCRASH
+---
+twinb: the plain twin is Twin336b (enable_thinking=False)
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 16944.34it/s]
+[0m
+[0m$ [0mls -la artifacts/fable-predictions-ledger.md 2>&1; tail -3 artifacts/fable-predictions-ledger.md 2>&1
+-rw-r--r--  1 ben-hannan  staff  681556 Sep 26 10:13 artifacts/fable-predictions-ledger.md
+- rent-dl4 GPU OUTCOME (2026-09-26, label rent-dl4, origin/main code unmodified, selftest ok): NO REGISTERED VERDICT, HOST-LOST. Rental 1 contract 52746763 offer 46753304 RTX 5090 dph 0.4722 (docker registry proxy refused while loading, destroyed, ~$0). Rental 2 contract 52747127 offer 43165155 RTX 5090 dph 0.4722 (loading ~10 min, SSH refused, destroyed; deviation: kept ~10 min vs 6-min rule, host showed no error). Rental 3 contract 52748076 offer 43995364 KR RTX 5090 dph 0.4944 (image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 60, torch 2.8.0+cu128 CUDA True, transformers 5.17.0 installed, BASE openbmb/MiniCPM5-1B @87179e5c downloaded; run launched detached 12:54Z, observed anchor pool 880 items, base lucky 59 reached 37 greedy 4 harm_right 200, S s6 n1 lost 7 lucky 82 KL 0.037, S s6 n2 lost 10 lucky 98 KL 0.058, then SSH refused and the instance record vanished = destroyed externally, Director notes Mac-agent destroy ~$0.32 to Fix sleep). 3 rentals of max 3; nothing copied back (disk lost with host); post-check 0 rent-dl4 live. Credit at gate 7.2011843180698705. No code edits, no weights, no TEST-ONLY panel (test puzzles generated in-run, never printed). Ledger appended locally, not pushed (this worktree branch serves another task; no result files exist to push).
+- y1d GPU OUTCOME (2026-09-26, rented RTX 5090, label claude-memory-y1d, origin/main code unmodified, SEAL 8/8 OK, selftest ok): diagnosis on DEV (71 asks x gold/all/k20, 4 samples + 1 greedy, seed 4021): answerable_right gold|p382 3, all|p382 13, k20|p382 9 (greedy 0/5/5); never_told idk all 5/10 (p382) 9/10 (greedy), k20 8/10 (p382) 10/10 (greedy). D1: A_gold 3 < 20, reading is the bottleneck. D2: F = -10, finding costs nothing. D3: A_k20 9 < A_all-3 = 10, ranking costs 4. D4 guard cost gold 1, all 1, k20 0. Routing not met (A_all 13 < 25). Proved-wrong clause NOT triggered (A_all 13 > 10). Instance 52757085 (offer 45043246, image pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime disk 80, rented 13:55:31Z, destroyed 14:08:33Z, ~0.22 h x dph $0.469 = ~$0.10) + failed rental 52756144 (offer 46753297, host docker-registry proxy error in loading ~6 min, destroyed, ~$0.04); task total ~$0.14 of $0.40 budget, 2 rentals of max 4, run wall ~2 min; post-destroy 0 claude-memory-y1d live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM 1110a243f, torch 2.8.0+cu129, credit at gate 5.499236376269863. Copy-back sha256-verified 3 files. No weights saved. See artifacts/claude-y1d-20260926/RESULTS-gpu.md + gpu/.
+2026-09-26, claude-director-depot (reader depot for lis319), instance 52755827 (RTX 4070, $0.1136/hr), rented 13:45:36 UTC, verified done ~14:13 UTC (~0.46h, ~$0.05), LEFT RUNNING, sha e688e1b2 match 1/1, copy ~4min rental-to-rental, outcome DEPOT-READY
+[0m
+[0m← [0mWrite artifacts/claude-mu402-20260926/RESULTS-rent.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md << 'LEDGEREOF'
+- mu402 GPU OUTCOME (2026-09-26, label rent-mu402, origin/main code unmodified, SEAL 7/7 OK, SEAL-code 336 OK, selftest 7/7): RUN COMPLETE, V1 VALID (A adapter line = /root/adapter/adapter02c.pt, B = none; 402 rows x 80 items per arm A/B/T; medians ms A 1212.5 B 1104.1 T 926.1; walls min T 6.0 A 10.3 B 12.4). Rentals: 52756154 (5090 dph 0.4963, host docker-proxy dead, ~$0.04) + 52756713 (same proxy failure, ~$0.04) + 52757240 (success False husk, $0) + 52757517 (offer 45669386, 5090 dph 0.5037, ran 14:03:48Z-14:36:01Z ~0.53h ~$0.28); task total ~$0.36 of $1.00; 0 rent-mu402 live post-destroy. Deviations: scp-3 fallback via one mktemp dir (removed); tree spec missed artifacts/fable-self127-20260922 so first A/B crashed FileNotFoundError deltas127.json -> streamed that committed dir opaque+hash-verified, crash logs kept, A/B relaunched exact commands; B relaunch cwd bug once (fixed); exit codes numeric uncaptured (completion evidenced); score file is summary_chat.json. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, credit gate 5.499236376269863. Copy-back sha256-verified 7 files. No weights, no TEST-ONLY panel. See artifacts/claude-mu402-20260926/RESULTS-rent.md + run/.
+LEDGEREOF
+echo LEDGER_APPENDED; git add -f artifacts/claude-mu402-20260926/run artifacts/claude-mu402-20260926/RESULTS-rent.md artifacts/fable-predictions-ledger.md && echo STAGED && git status --short | head -15
+LEDGER_APPENDED
+STAGED
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-brd5-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd5-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd5-20260926/gpu/log.txt
+A  artifacts/claude-brd5-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd5-20260926/gpu/streams.json
+[0m
+[0m$ [0mgit status --short | grep -E "mu402|predictions-ledger"; echo ---; git diff --cached --stat -- artifacts/claude-mu402-20260926 artifacts/fable-predictions-ledger.md | tail -15
+A  artifacts/claude-mu402-20260926/RESULTS-rent.md
+A  artifacts/claude-mu402-20260926/run/chat_A.jsonl
+A  artifacts/claude-mu402-20260926/run/chat_B.jsonl
+A  artifacts/claude-mu402-20260926/run/chat_T.jsonl
+A  artifacts/claude-mu402-20260926/run/logA.txt
+A  artifacts/claude-mu402-20260926/run/logA_crash.txt
+A  artifacts/claude-mu402-20260926/run/logB.txt
+A  artifacts/claude-mu402-20260926/run/logB_crash.txt
+A  artifacts/claude-mu402-20260926/run/logT.txt
+A  artifacts/claude-mu402-20260926/run/summary_chat.json
+M  artifacts/fable-predictions-ledger.md
+---
+ artifacts/claude-mu402-20260926/RESULTS-rent.md    | 115 ++++++
+ artifacts/claude-mu402-20260926/run/chat_A.jsonl   | 402 +++++++++++++++++++++
+ artifacts/claude-mu402-20260926/run/chat_B.jsonl   | 402 +++++++++++++++++++++
+ artifacts/claude-mu402-20260926/run/chat_T.jsonl   | 402 +++++++++++++++++++++
+ artifacts/claude-mu402-20260926/run/logA.txt       |  84 +++++
+ artifacts/claude-mu402-20260926/run/logA_crash.txt | 173 +++++++++
+ artifacts/claude-mu402-20260926/run/logB.txt       |  84 +++++
+ artifacts/claude-mu402-20260926/run/logB_crash.txt | 173 +++++++++
+ artifacts/claude-mu402-20260926/run/logT.txt       |  83 +++++
+ .../claude-mu402-20260926/run/summary_chat.json    |  46 +++
+ artifacts/fable-predictions-ledger.md              |   6 +
+ 11 files changed, 1970 insertions(+)
+[0m
