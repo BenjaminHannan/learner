@@ -37,6 +37,7 @@ publish() {  # $1 = task name; marks $Q/$n.pushed on success
 }
 log "watcher started (pid $$)"
 while [ ! -e "$H/STOP" ]; do
+  rm -f $(find "$H" -maxdepth 1 -name "clean.lock" -mmin +30 2>/dev/null) 2>/dev/null   # a clean that died leaves no stale lock
   git -C "$W" fetch -q origin "$IN" 2>>"$LOG"
   # self-update: when the watcher on $IN changes, restart into the new version (running tasks keep going)
   if git -C "$W" show "origin/$IN:handoff/kit/mimo/watcher.sh" > "$H/watcher.new" 2>/dev/null && [ -s "$H/watcher.new" ] && ! cmp -s "$H/watcher.new" "$0"; then
@@ -59,16 +60,17 @@ while [ ! -e "$H/STOP" ]; do
     if [ "${freegb:-0}" -lt 5 ] && [ "${freegb:-0}" -ge 2 ] && git -C "$W" show "origin/$IN:$f" 2>/dev/null | grep -q '^LOWDISK-OK: yes'; then log "disk ${freegb} GB free, launching LOWDISK-OK $n"; freegb=5; fi
     # Ben 11:26 UTC 09-26 "yes, clean pipeline files" / "I can't be your storage babysitter": below 10 GB (before it fills), remove scratch the pipeline itself made once the job
     # that made it is gone (rent-kit mktemp code trees and tree.tgz bundles), then re-read free space. Never models or Ben's files.
-    if [ "${freegb:-0}" -lt 10 ] && [ ! -e "$H/clean.$(date +%Y%m%d%H%M | cut -c1-11)" ]; then touch "$H/clean.$(date +%Y%m%d%H%M | cut -c1-11)"
-      b=$freegb; TD=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null || echo "${TMPDIR:-/tmp}")
-      log "clean: ${b} GB free; largest in temp: $(du -sk "$TD"/tmp.* 2>/dev/null | sort -rn | head -3 | awk '{printf "%s %dMB; ", $2, $1/1024}')"
-      for t in "$TD"/tmp.*/tree; do [ -d "$t" ] || continue
-        [ -n "$(find "$t" -maxdepth 0 -mmin -120)" ] && continue   # touched in the last 2 h: a running job may still use it
-        rm -rf "$(dirname "$t")" && log "clean: removed $(dirname "$t")"; done
-      for z in "$W/tree.tgz" "$TD"/tmp.*/tree.tgz; do [ -f "$z" ] || continue
-        [ -n "$(find "$z" -mmin -120)" ] && continue
-        rm -f "$z" && log "clean: removed $z"; done
-      freegb=$(df -g / | tail -1 | awk '{print $4}'); log "clean: ${b} -> ${freegb} GB free"; fi
+    if [ "${freegb:-0}" -lt 10 ] && [ ! -e "$H/clean.$(date +%Y%m%d%H%M | cut -c1-11)" ] && [ ! -e "$H/clean.lock" ]; then touch "$H/clean.$(date +%Y%m%d%H%M | cut -c1-11)" "$H/clean.lock"
+      # runs in the background so a slow disk walk can never stall the watcher loop; only exact rent-kit scratch names
+      ( b=$(df -g / | tail -1 | awk '{print $4}'); TD=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null); TD=${TD:-${TMPDIR:-/tmp}}
+        for t in "$TD"tmp.*/tree "$TD"/tmp.*/tree; do [ -d "$t" ] || continue
+          [ -n "$(find "$t" -maxdepth 0 -mmin -120 2>/dev/null)" ] && continue   # touched in the last 2 h: a job may still use it
+          rm -rf "$(dirname "$t")" 2>/dev/null && log "clean: removed $(dirname "$t")"; done
+        for z in "$W/tree.tgz" "$TD"tmp.*/tree.tgz; do [ -f "$z" ] || continue
+          [ -n "$(find "$z" -mmin -120 2>/dev/null)" ] && continue
+          rm -f "$z" && log "clean: removed $z"; done
+        log "clean: ${b} -> $(df -g / | tail -1 | awk '{print $4}') GB free"; rm -f "$H/clean.lock" ) </dev/null >/dev/null 2>&1 &
+    fi
     # per-job reservation: header "DISK: <GB>" = the job's peak Mac use (default 3 for rent-*, else 1); launch only if it fits above the floor
     need=$(git -C "$W" show "origin/$IN:$f" 2>/dev/null | sed -n 's/^DISK: *\([0-9]*\).*/\1/p' | head -1); case "$n" in rent-*) need=${need:-3};; *) need=${need:-1};; esac
     floor=5; git -C "$W" show "origin/$IN:$f" 2>/dev/null | grep -q '^LOWDISK-OK: yes' && floor=2
