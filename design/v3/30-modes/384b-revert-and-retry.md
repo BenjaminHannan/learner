@@ -108,6 +108,19 @@ skilled or trained model. Design consequence: when the loop reasoner reverts, ke
 saved state; test a note only on a trained model, as one later change. Next: the latent revert wrapper in the 358 loop,
 after 358a has a result (agreed with Sleep research).
 
+## Reviewer follow-up (Ben pasted 02:11 UTC 09-26, section 5) and what we did
+- Next note test = ban-only vs ban + note with the same bans: registered as rv-386 (artifacts/claude-rv386-20260926/),
+  with two corrections: the note must say WHY (rv-385's note would be fully redundant under a shared ban), and a skill
+  gate (>= 50% first-choice accuracy on practice grids) because a near-chance proposer cannot use a reason.
+- "Store the complete branch state (latent, proposed answer, puzzle state, exhausted actions, model version)": checked
+  against scripts/claude_rsn358a_run.py. In 358a the latent h is the whole reasoning state: the answer and the stop
+  signal are read from h every round (Net.read), and the puzzle input e is fixed and re-added each round (Net.step), so
+  restoring h restores the same point. What must be stored besides h: the exhausted-move list and the checkpoint hash.
+  A gap the reviewer did not raise: 358a has no input for "not this number here", so a ban can only mask the readout,
+  which does not change the thinking; a ban the loop can think about needs a trained input channel (one change).
+- Latent revert vs keep refining vs independent restarts at equal rounds: still waits for 358a's result (queued on
+  BensPC), as agreed with Sleep research.
+
 ## Plain summary for Ben
 Your idea is a known family (backtracking) with one new part: doing it by restoring the small reasoner's saved inner
 state. It is not better everywhere. On shallow number puzzles, many fresh tries do as well; tree search over saved
