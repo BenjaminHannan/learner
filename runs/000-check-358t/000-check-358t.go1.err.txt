@@ -1,0 +1,964 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m→ [0mRead .
+[0m✗ [0mRead scratchpad/briefs failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scratchpad/briefs
+[0m✗ [0mGlob "**/OPUS-RULES*" failed
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m→ [0mRead scratchpad
+[0m
+[0m$ [0muptime; echo "---"; df -g /; echo "---"; pwd; git rev-parse --abbrev-ref HEAD 2>&1; git status --short 2>&1 | head -20
+13:03  up 3 days,  2:57, 4 users, load averages: 79.57 80.40 93.35
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        53    20%  484014 560116880    0%   /
+---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/train398r.json
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances 2>&1 | head -60
+[K[97;48;2;0;0;0m╭─[0m[97;48;2;0;0;0m─────────[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mFilterable Values[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m─────────[0m[97;48;2;0;0;0m─╮[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--status:       [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m              [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--verification: [0m[38;5;83;48;2;0;0;0mverified[0m[48;2;0;0;0m             [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--gpu-name:     [0m[97;48;2;0;0;0mRTX 4070[0m[97;48;2;0;0;0m  ·  [0m[97;48;2;0;0;0mRTX 5090[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m╰───────────────────────────────────────╯[0m
+
+[93;48;2;0;0;0m╭─[0m[93;48;2;0;0;0m─────────────────────────────[0m[93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mResults Summary[0m[93;48;2;0;0;0m [0m[93;48;2;0;0;0m──────────────────────────────[0m[93;48;2;0;0;0m─╮[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mTotal: [0m[1;97;48;2;0;0;0m9 instances[0m[48;2;0;0;0m                                                          [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mLabels: [0m[97;48;2;0;0;0mclaude-creativechat-k1c: 1  ·  claude-director-depot: 1  ·  [0m[48;2;0;0;0m        [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-fixsleep-dl5: 1  ·  claude-fixsleep-dl6b: 1  ·  claude-madeup-mu404b:[0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m1  ·  claude-notes-rd378u: 1  ·  claude-sleep-358t: 1  ·  [0m[48;2;0;0;0m                  [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-thought-rv390: 1  ·  rent-brd9: 1[0m[48;2;0;0;0m                                    [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╔══════╤═════════╤══════════════════╤═══════════════╤═════════╤═══════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m ID [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mStatus [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m     Label      [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m     GPU     [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m $/hr  [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m            Im[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╟──────┼─────────┼──────────────────┼───────────────┼─────────┼───────────────[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-director…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 4070 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.1136[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mubuntu:22.04  [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-fixsleep…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.4806[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytorc[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mrent-brd9       [0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.4944[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytorc[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-madeup-m…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.5037[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytorc[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-fixsleep…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.4852[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytorc[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-creative…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.4944[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytorc[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-notes-rd…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.5037[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytorc[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-sleep-35…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.4875[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytorc[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-thought-…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.4782[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytorc[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╚══════╧═════════╧══════════════════╧═══════════════╧═════════╧═══════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[48;2;0;0;0m                                                                              [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[2;48;2;0;0;0mColumns hidden to fit terminal width: Disk  ·  use --cols to customize (see --[0m[48;2;0;0;0m [0m
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --help 2>&1 | head -30; echo "==="; vastai show --help 2>&1 | head -30
+usage: vastai show instances [OPTIONS]
+
+options:
+ -h, --help                                       show this help message and exit
+ -q, --quiet                                      only display numeric ids
+ -v, --verbose                                    show additional columns (SSH, location, template, etc.)
+ -a, --all                                        force fetching every page before printing, even with --limit/--next-token (fetching everything is already the default otherwise)
+ -s STATUS [STATUS ...], --status STATUS [STATUS ...]
+                                                  filter by container status: running loading exited
+ --label LABEL [LABEL ...]                        filter by instance label; pass empty string '' for unlabeled
+ --gpu-name GPU [GPU ...]                         filter by GPU model name
+ --verification VERIF [VERIF ...]                 filter by verification status
+ -l LIMIT, --limit LIMIT                          max instances per page (1-25); passing this switches to single-page mode instead of fetching everything
+ -t NEXT_TOKEN, --next-token NEXT_TOKEN           resume from a pagination token (implies single-page mode)
+ --order-by COL [asc|desc]                        sort by column; repeat for multiple keys
+ --cols COLS                                      override displayed columns (available: id,status,label,gpu,disk,volumes,dph,image,age,verified,machine,net,location,template,ssh,msg)
+
+Global options (available for all commands):
+ --url URL                                        Server REST API URL
+ --retry RETRY                                    Retry limit
+ --explain                                        Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                                            Output machine-readable json
+ --full                                           Print full results instead of paging with `less` for commands that support it
+ --curl                                           Show a curl equivalency to the call
+ --api-key API_KEY                                API Key to use. defaults to using the one stored in /Users/ben-hannan/.config/vastai/vast_api_key
+ --version                                        Show CLI version
+ --no-color                                       Disable colored output for commands that support it
+
+________________________________________________________________________________
+
+===
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+vastai: error: argument command: invalid choice: 'show' (choose from help, show instance, create instance, create instances, destroy instance, destroy instances, start instance, start instances, stop instance, stop instances, reboot instance, recycle instance, update instance, label instance, prepay instance, change bid, launch instance, show instances, show instances-v1, search offers, search instances, search benchmarks, search templates, search invoices, create template, update template, delete template, show machine, show machines, show maints, show network-disks, list machine, list machines, unlist machine, delete machine, cleanup machine, defrag machines, set min-bid, set defjob, remove defjob, schedule maint, cancel maint, add network-disk, dump-logs, self-test machine, create team, destroy team, create team-role, show team-role, show team-roles, update team-role, remove team-role, invite member, show members, remove member, create api-key, show api-key, show api-keys, delete api-key, reset api-key, create ssh-key, show ssh-keys, delete ssh-key, update ssh-key, attach ssh, detach ssh, create endpoint, show endpoints, update endpoint, delete endpoint, get endpt-logs, get endpt-workers, create workergroup, show workergroups, update workergroup, update workers, delete workergroup, get wrkgrp-logs, show invoices, show invoices-v1, show earnings, show deposit, show user, set user, show subaccounts, create subaccount, show ipaddrs, transfer credit, show scheduled-jobs, delete scheduled-job, copy, cancel copy, cancel sync, cloud copy, show connections, search volumes, search network-volumes, create volume, create network-volume, delete volume, clone volume, show volumes, show instance-backups, show instance-backup-files, list volume, list volumes, list network-volume, unlist volume, unlist network-volume, set api-key, set role, show audit-logs, show env-vars, create env-var, update env-var, delete env-var, tfa activate, tfa delete, tfa login, tfa resend-sms, tfa regen-codes, tfa send-sms, tfa send-email, tfa auth-new, tfa status, tfa totp-setup, tfa update, execute, logs, reports, ssh-url, scp-url, take snapshot, show deployments, show deployment, show deployment-versions, stop deployment, start deployment, delete deployment, metrics gpu, metrics gpu-trends, metrics gpu-locations, run benchmarks, show pending-price-increases, accept price-increase, reject price-increase, repl, update, uninstall)
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai --raw show instances --label claude-sleep-358t 2>&1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps(d, indent=1)[:4000])"
+[
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "KR",
+  "cpu_arch": "amd64",
+  "cpu_cores": 16,
+  "cpu_cores_effective": 16.0,
+  "cpu_name": "AMD Ryzen 7 7800X3D 8-Core Processor",
+  "cpu_ram": 31197,
+  "cpu_util": 62.599375,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 100,
+  "direct_port_end": 26750,
+  "direct_port_start": 26750,
+  "disk_bw": 6442.0,
+  "disk_name": "nvme",
+  "disk_space": 45.0,
+  "disk_usage": 0.05400000140070915,
+  "disk_util": 0.05400000140070915,
+  "dlperf": 199.01399354299608,
+  "dlperf_per_dphtotal": 408.2338329087099,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.48749999999999993,
+  "driver_version": "580.105.08",
+  "duration": 1378.5559163093567,
+  "end_date": 1792335600.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 221.7511384615385,
+  "geolocation": "South Korea, KR",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 1.0,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1455.1,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 62.999939,
+  "gpu_totalram": 32607,
+  "gpu_util": 89.999916,
+  "has_avx": 1,
+  "host_id": 406325,
+  "host_run_time": 2592000.0,
+  "hosting_type": 1,
+  "id": 52780312,
+  "image_args": [],
+  "image_runtype": "ssh_direc ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime",
+  "inet_down": 537.6,
+  "inet_down_billed": 25497.6,
+  "inet_down_cost": 0.005208333333333333,
+  "inet_up": 546.8,
+  "inet_up_billed": 657.0,
+  "inet_up_cost": 0.005208333333333333,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.020833333333333332,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.48749999999999993
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 5.333333333333333,
+  "internet_up_cost_per_tb": 5.333333333333333,
+  "is_bid": false,
+  "jupyter_token": "7f543ab2f19f08b96a9f925ca10b81b66d957df6e910e9eb8bed7e8b0ae89709",
+  "label": "claude-sleep-358t",
+  "local_ipaddrs": "172.30.31.122 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 26799,
+  "machine_id": 144938,
+  "mem_limit": 30.670848,
+  "mem_usage": 15.63426816,
+  "min_bid": 0.907,
+  "mobo_name": "B850 EAGLE ICE",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "24.04",
+  "pci_gen": 5.0,
+  "pcie_bw": 48.9,
+  "ports": {
+   "22/tcp": [
+    {
+     "HostIp": "0.0.0.0",
+     "HostPort": "26750"
+    },
+    {
+     "HostIp": "::",
+     "HostPort": "26750"
+    }
+   ]
+  },
+  "public_ipaddr": "180.189.55.43",
+  "reliability2": 0.9981347,
+  "rentable": true,
+  "score": 400.7556830873383,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.48749999999999993,
+   "diskHour": 0.020833333333333332,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.48749999999999993
+  },
+  "sla_r_claim": null,
+  "sla_sigma_x": null,
+  "ssh_host": "ssh7.vast.ai",
+  "ssh_idx": "7",
+  "ssh_port": 20312,
+  "start_date": 1790440870.7356617,
+  "static_ip": true,
+  "status_msg": "success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-runtime/ssh",
+  "storage_cost": 0.3333333333333333,
+  "storage_total_cost": 0.020833333333333332,
+  "target_reliability": 0.0,
+  "template_hash_id": null,
+  "template_id": null,
+  "template_name": null,
+  "time_remaining": "Unlimited",
+  "time_remaining_isbid": "Unlimited",
+  "total_flops": 108.10368,
+  "uptime_mins": null,
+  "verification": "verified",
+  "vmem_usage": 28.84763,
+  "volume_info": [],
+  "vram_costperhour": 1.49507774404269e-05,
+  "webpage": null
+ }
+]
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai --raw ssh-url 52780312 2>&1 | head -5; echo "==="; vastai ssh-url 52780312 2>&1 | head -5
+ssh://root@180.189.55.43:26750
+===
+ssh://root@180.189.55.43:26750
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 26750 root@180.189.55.43 "echo OK; hostname; ls ~ 2>&1 | head -20" 2>&1 | head -30
+Warning: Permanently added '[180.189.55.43]:26750' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+OK
+e7ab4ff2c68b
+hasbooted
+job
+launch10.sh
+onstart.sh
+rsn358t-code.tar
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 26750 root@180.189.55.43 "ls -la ~/; echo ===; ls ~/job 2>&1 | head; echo ===; find / -maxdepth 4 -name claude_stage0_autocast_grad.py 2>/dev/null | head; echo ===; find /root /workspace /tmp -maxdepth 4 -name '.git' -type d 2>/dev/null | head" 2>&1 | head -40
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+total 22924
+drwx------ 1 root root     4096 Sep 26 16:45 .
+drwxr-xr-x 1 root root      105 Sep 26 16:43 ..
+-rw-r--r-- 1 root root     3866 Sep 26 16:43 .bashrc
+drwx------ 2 root root       34 Sep 26 16:44 .cache
+drwx------ 3 root root       26 Sep 26 16:45 .nv
+-rw-r--r-- 1 root root      161 Jul  9  2019 .profile
+drwx------ 2 root root       29 Sep 26 16:43 .ssh
+-rw-r--r-- 1 root root       65 Sep 26 16:43 .vast_api_key
+-rw-r--r-- 1 root root       11 Sep 26 16:43 .vast_containerlabel
+-rw-r--r-- 1 root root        0 Sep 26 16:43 hasbooted
+drwxr-xr-x 5 root root       47 Sep 26 16:46 job
+-rw-r--r-- 1 root root      466 Sep 26 16:45 launch10.sh
+lrwxrwxrwx 1 root root       21 Sep 26 16:43 onstart.sh -> /workspace/onstart.sh
+-rw-r--r-- 1 root root 23449600 Sep 26 16:45 rsn358t-code.tar
+===
+W
+artifacts
+scripts
+===
+===
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 26750 root@180.189.55.43 "ls ~/job/W 2>&1 | head; echo ===; ls ~/job/scripts 2>&1 | head -20; echo ===; ls -a ~/job 2>&1 | head; echo ===; git -C ~/job rev-parse --show-toplevel 2>&1 | head -3; git -C ~/job log --oneline -3 2>&1 | head" 2>&1 | head -40
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+loop-trm-s1
+loop-trm-s1.log
+loop-trm-s2
+loop-trm-s2.log
+loop-trm-s3
+loop-trm-s3.log
+loop8-s1
+loop8-s1.log
+loop8-s2
+loop8-s2.log
+===
+address_probe.py
+astra_canonical_operator.py
+astra_canonical_operator_panels.py
+astra_canonical_operator_report.py
+astra_canonical_operator_run.py
+astra_transfer_diagnostic.py
+astra_transfer_report.py
+astra_transfer_twins.py
+benspc-runtime.json
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+===
+.
+..
+W
+artifacts
+scripts
+===
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 26750 root@180.189.55.43 "git -C ~/job rev-parse --show-toplevel; echo RC=\$?; git -C ~/job remote -v; echo RC2=\$?; find / -maxdepth 6 -name '.git' 2>/dev/null | head; echo DONE" 2>&1 | head -20
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+RC=128
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+RC2=128
+DONE
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -5; echo FETCH_RC=$?; git show origin/main:scripts/claude_stage0_autocast_grad.py > /tmp/ag_local.py 2>&1; echo SHOW_RC=$?; wc -l /tmp/ag_local.py 2>&1 | head -3; ls scripts/ | grep -i autocast 2>&1 | head
+FETCH_RC=0
+SHOW_RC=0
+      29 /tmp/ag_local.py
+[0m
+[0m$ [0mcat /tmp/ag_local.py
+#!/usr/bin/env python3
+"""Stage 0 for the autocast-cache suspect (sleep research thread, 2026-09-26). One 358i loop step with 3 no-grad rounds then 2
+graded rounds under bf16 autocast, with and without the autocast weight cache; prints how many block weight matrices get
+no gradient. Run: python -B scripts/claude_stage0_autocast_grad.py  (CUDA if present, else CPU). No training, no tests."""
+import sys, random, torch
+sys.path.insert(0, "scripts")
+import claude_rsn358i_run as I
+R, E = I.R, I.E
+dev = "cuda" if torch.cuda.is_available() else "cpu"
+print("torch", torch.__version__, dev)
+torch.manual_seed(0)
+rng = random.Random(0)
+items = [E.latin_item(rng, *E.make_latin_base(rng, 5)) for _ in range(8)]
+t, s, y, env = R.tensors(items, dev)
+for arm in ("loop", "plain"):
+  for n_free, n_grad in ((3, 2), (0, 2)):
+    for cache in (True, False):
+        net = R.Net(arm).to(dev)
+        with torch.autocast(dev, dtype=torch.bfloat16, cache_enabled=cache):
+            if arm == "plain":
+                if n_free: continue
+                loss = R.ce_and_exact(net.plain_forward(t, s, env), s, y)[0]
+            else:
+                outs = net.loop_train(t, s, env, n_free, n_grad)
+                loss = sum(R.ce_and_exact(lg, s, y)[0] + q.float().mean() for lg, q in outs)
+        loss.backward()
+        mats = [(n, p) for n, p in net.named_parameters() if n.startswith("blocks.") and p.dim() == 2]
+        none = sum(p.grad is None or p.grad.abs().sum().item() == 0 for _, p in mats)
+        print(f"{arm:5s} free={n_free} grad={n_grad} cache={cache!s:5s}: block weight matrices with no gradient {none}/{len(mats)}")
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 26750 root@180.189.55.43 "ls ~/job/scripts/ | grep -iE 'autocast|358i' ; echo ===; ls ~/job/scripts | wc -l; tar tf ~/rsn358t-code.tar 2>/dev/null | head -8" 2>&1 | head -20
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+claude_rsn358i_run.py
+===
+1599
+artifacts/
+artifacts/claude-rsn358i-20260926/
+artifacts/claude-rsn358i-20260926/tests/
+artifacts/claude-rsn358i-20260926/tests/grids5.jsonl
+artifacts/claude-rsn358i-20260926/tests/grids6.jsonl
+artifacts/claude-rsn358i-20260926/tests/grids7.jsonl
+artifacts/claude-rsn358i-20260926/tests/numbers4.jsonl
+artifacts/claude-rsn358i-20260926/tests/numbers5.jsonl
+[0m
+[0m$ [0mscp -o StrictHostKeyChecking=no -P 26750 /tmp/ag_local.py root@180.189.55.43:/tmp/ag.py 2>&1 | head -5; echo SCP_RC=$?
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+SCP_RC=0
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 26750 root@180.189.55.43 "python -c 'import torch;print(torch.__version__)' 2>&1; echo ---PYTORCH-RC=\$?" 2>&1 | head -10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2.8.0+cu128
+---PYTORCH-RC=0
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 26750 root@180.189.55.43 "python -B /tmp/ag.py 2>&1; echo ---AG-RC=\$?" 2>&1 | head -20
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Traceback (most recent call last):
+  File "/tmp/ag.py", line 7, in <module>
+    import claude_rsn358i_run as I
+ModuleNotFoundError: No module named 'claude_rsn358i_run'
+---AG-RC=1
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 26750 root@180.189.55.43 "python -B /tmp/ag.py 2>&1; echo ---AG-RC=\$?" 2>&1 | head -20
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Traceback (most recent call last):
+  File "/tmp/ag.py", line 7, in <module>
+    import claude_rsn358i_run as I
+ModuleNotFoundError: No module named 'claude_rsn358i_run'
+---AG-RC=1
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 26750 root@180.189.55.43 "cd ~/job && python -B /tmp/ag.py 2>&1; echo ---AG-RC=\$?" 2>&1 | head -20
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+torch 2.8.0+cu128 cuda
+loop  free=3 grad=2 cache=True : block weight matrices with no gradient 8/12
+loop  free=3 grad=2 cache=False: block weight matrices with no gradient 0/12
+loop  free=0 grad=2 cache=True : block weight matrices with no gradient 0/12
+loop  free=0 grad=2 cache=False: block weight matrices with no gradient 0/12
+plain free=0 grad=2 cache=True : block weight matrices with no gradient 0/48
+plain free=0 grad=2 cache=False: block weight matrices with no gradient 0/48
+---AG-RC=0
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 26750 root@180.189.55.43 "ps -eo pid,etime,cmd | grep -i 358 | grep -v grep; echo ===; ps -eo pid,etime,cmd | grep -iE 'python|torch|train' | grep -v grep | head -20" 2>&1 | head -30
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+    472       19:29 python -B scripts/claude_rsn358t_run.py train --arm plain --seed 1 --out W/plain-s1
+    493       19:17 python -B scripts/claude_rsn358t_run.py train --arm plain --seed 2 --out W/plain-s2
+    514       19:05 python -B scripts/claude_rsn358t_run.py train --arm plain --seed 3 --out W/plain-s3
+    535       18:53 python -B scripts/claude_rsn358t_run.py train --arm plain --seed 4 --out W/plain-s4
+    556       18:41 python -B scripts/claude_rsn358t_run.py train --arm loop-trm --seed 1 --out W/loop-trm-s1
+    577       18:29 python -B scripts/claude_rsn358t_run.py train --arm loop-trm --seed 2 --out W/loop-trm-s2
+    598       18:17 python -B scripts/claude_rsn358t_run.py train --arm loop-trm --seed 3 --out W/loop-trm-s3
+    619       18:05 python -B scripts/claude_rsn358t_run.py train --arm loop8 --seed 1 --out W/loop8-s1
+    639       17:53 python -B scripts/claude_rsn358t_run.py train --arm loop8 --seed 2 --out W/loop8-s2
+    660       17:41 python -B scripts/claude_rsn358t_run.py train --arm loop8 --seed 3 --out W/loop8-s3
+===
+    472       19:29 python -B scripts/claude_rsn358t_run.py train --arm plain --seed 1 --out W/plain-s1
+    493       19:17 python -B scripts/claude_rsn358t_run.py train --arm plain --seed 2 --out W/plain-s2
+    514       19:05 python -B scripts/claude_rsn358t_run.py train --arm plain --seed 3 --out W/plain-s3
+    535       18:53 python -B scripts/claude_rsn358t_run.py train --arm plain --seed 4 --out W/plain-s4
+    556       18:41 python -B scripts/claude_rsn358t_run.py train --arm loop-trm --seed 1 --out W/loop-trm-s1
+    577       18:29 python -B scripts/claude_rsn358t_run.py train --arm loop-trm --seed 2 --out W/loop-trm-s2
+    598       18:17 python -B scripts/claude_rsn358t_run.py train --arm loop-trm --seed 3 --out W/loop-trm-s3
+    619       18:05 python -B scripts/claude_rsn358t_run.py train --arm loop8 --seed 1 --out W/loop8-s1
+    639       17:53 python -B scripts/claude_rsn358t_run.py train --arm loop8 --seed 2 --out W/loop8-s2
+    660       17:41 python -B scripts/claude_rsn358t_run.py train --arm loop8 --seed 3 --out W/loop8-s3
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 26750 root@180.189.55.43 "kill 472 493 514 535 556 577 598 619 639 660 2>&1; echo KILL_RC=\$?; sleep 5; ps -eo pid,cmd | grep claude_rsn358t_run | grep -v grep; echo ---STILL_ABOVE---" 2>&1 | head -15
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+KILL_RC=0
+---STILL_ABOVE---
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 26750 root@180.189.55.43 "ps -eo pid,etime,cmd | grep -i 358 | grep -v grep; echo ---PS-DONE---; ls -la ~/job/W/ 2>&1 | head -30; echo ===; find ~/job/W ~/job/artifacts -name 'train_log.jsonl' 2>/dev/null | head -20; echo ===; find ~/job/W ~/job/artifacts -name '*.log' 2>/dev/null | head -20" 2>&1 | head -50
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---PS-DONE---
+total 84
+drwxr-xr-x 12 root root 4096 Sep 26 16:47 .
+drwxr-xr-x  5 root root   47 Sep 26 16:46 ..
+drwxr-xr-x  2 root root   29 Sep 26 16:47 loop-trm-s1
+-rw-r--r--  1 root root 6015 Sep 26 17:04 loop-trm-s1.log
+drwxr-xr-x  2 root root   29 Sep 26 16:47 loop-trm-s2
+-rw-r--r--  1 root root 6013 Sep 26 17:05 loop-trm-s2.log
+drwxr-xr-x  2 root root   29 Sep 26 16:47 loop-trm-s3
+-rw-r--r--  1 root root 5999 Sep 26 17:05 loop-trm-s3.log
+drwxr-xr-x  2 root root   29 Sep 26 16:47 loop8-s1
+-rw-r--r--  1 root root 3076 Sep 26 17:04 loop8-s1.log
+drwxr-xr-x  2 root root   29 Sep 26 16:47 loop8-s2
+-rw-r--r--  1 root root 3080 Sep 26 17:04 loop8-s2.log
+drwxr-xr-x  2 root root   29 Sep 26 16:48 loop8-s3
+-rw-r--r--  1 root root 3075 Sep 26 17:04 loop8-s3.log
+drwxr-xr-x  2 root root   29 Sep 26 16:46 plain-s1
+-rw-r--r--  1 root root 9131 Sep 26 17:05 plain-s1.log
+drwxr-xr-x  2 root root   29 Sep 26 16:46 plain-s2
+-rw-r--r--  1 root root 8473 Sep 26 17:05 plain-s2.log
+drwxr-xr-x  2 root root   29 Sep 26 16:46 plain-s3
+-rw-r--r--  1 root root 8199 Sep 26 17:05 plain-s3.log
+drwxr-xr-x  2 root root   29 Sep 26 16:46 plain-s4
+-rw-r--r--  1 root root 7895 Sep 26 17:05 plain-s4.log
+===
+/root/job/W/plain-s1/train_log.jsonl
+/root/job/W/plain-s2/train_log.jsonl
+/root/job/W/plain-s3/train_log.jsonl
+/root/job/W/plain-s4/train_log.jsonl
+/root/job/W/loop-trm-s1/train_log.jsonl
+/root/job/W/loop-trm-s2/train_log.jsonl
+/root/job/W/loop-trm-s3/train_log.jsonl
+/root/job/W/loop8-s1/train_log.jsonl
+/root/job/W/loop8-s2/train_log.jsonl
+/root/job/W/loop8-s3/train_log.jsonl
+===
+/root/job/W/plain-s1.log
+/root/job/W/plain-s2.log
+/root/job/W/plain-s3.log
+/root/job/W/plain-s4.log
+/root/job/W/loop-trm-s1.log
+/root/job/W/loop-trm-s2.log
+/root/job/W/loop-trm-s3.log
+/root/job/W/loop8-s1.log
+/root/job/W/loop8-s2.log
+/root/job/W/loop8-s3.log
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 26750 root@180.189.55.43 "ls -la ~/job/W/plain-s1/ ~/job/W/loop8-s1/ 2>&1; echo ===; du -sh ~/job/W 2>&1; wc -l ~/job/W/*/train_log.jsonl 2>&1 | head -12" 2>&1 | head -25
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+/root/job/W/loop8-s1/:
+total 8
+drwxr-xr-x  2 root root   29 Sep 26 16:47 .
+drwxr-xr-x 12 root root 4096 Sep 26 16:47 ..
+-rw-r--r--  1 root root 3019 Sep 26 17:04 train_log.jsonl
+
+/root/job/W/plain-s1/:
+total 16
+drwxr-xr-x  2 root root   29 Sep 26 16:46 .
+drwxr-xr-x 12 root root 4096 Sep 26 16:47 ..
+-rw-r--r--  1 root root 9074 Sep 26 17:05 train_log.jsonl
+===
+160K	/root/job/W
+   20 /root/job/W/loop-trm-s1/train_log.jsonl
+   20 /root/job/W/loop-trm-s2/train_log.jsonl
+   20 /root/job/W/loop-trm-s3/train_log.jsonl
+   10 /root/job/W/loop8-s1/train_log.jsonl
+   10 /root/job/W/loop8-s2/train_log.jsonl
+   10 /root/job/W/loop8-s3/train_log.jsonl
+   30 /root/job/W/plain-s1/train_log.jsonl
+   28 /root/job/W/plain-s2/train_log.jsonl
+   27 /root/job/W/plain-s3/train_log.jsonl
+   26 /root/job/W/plain-s4/train_log.jsonl
+[0m
+[0m$ [0mls artifacts/ 2>&1 | head -20; echo ===; ls artifacts/claude-rsn358t-20260926/ 2>&1 | head; echo ===; ls ~/premonition-watch/queue/ 2>&1 | head -20
+claude-adapters-20260926d
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm391-20260926
+claude-bm395-20260925
+claude-bm397t-20260926
+claude-bm398i-20260926
+claude-bm398r-20260926
+claude-bmriv-smoke-20260926
+claude-boundary259-20260922
+claude-brd5-20260926
+claude-brd6-20260926
+zsh:1: == not found
+[0m
+[0m$ [0mls artifacts/claude-rsn358t-20260926/ 2>&1 | head
+ls: artifacts/claude-rsn358t-20260926/: No such file or directory
+[0m
+[0m$ [0mls ~/premonition-watch/queue/ 2>&1 | head -20
+000-adapters-0926d.exit
+000-adapters-0926d.go1.done
+000-adapters-0926d.go1.err.txt
+000-adapters-0926d.go1.reply.md
+000-adapters-0926d.md
+000-adapters-0926d.pushed
+000-benspc-check.exit
+000-benspc-check.go1.done
+000-benspc-check.go1.err.txt
+000-benspc-check.go1.reply.md
+000-benspc-check.md
+000-benspc-check.pushed
+000-cache-pin.exit
+000-cache-pin.go1.done
+000-cache-pin.go1.err.txt
+000-cache-pin.go1.reply.md
+000-cache-pin.md
+000-cache-pin.pushed
+000-check-358t.go1.err.txt
+000-check-358t.go1.reply.md
+[0m
+[0m$ [0mls ~/premonition-watch/queue/ | grep 358
+000-check-358t.go1.err.txt
+000-check-358t.go1.reply.md
+000-check-358t.md
+000-check-358t.running
+005s-rsn-358a-shared.exit
+005s-rsn-358a-shared.go1.done
+005s-rsn-358a-shared.go1.err.txt
+005s-rsn-358a-shared.go1.reply.md
+005s-rsn-358a-shared.md
+005s-rsn-358a-shared.pushed
+005t-rsn-358a-shared.exit
+005t-rsn-358a-shared.go1.done
+005t-rsn-358a-shared.go1.err.txt
+005t-rsn-358a-shared.go1.reply.md
+005t-rsn-358a-shared.md
+005t-rsn-358a-shared.pushed
+005u-rsn-358c1-stop.exit
+005u-rsn-358c1-stop.go1.done
+005u-rsn-358c1-stop.go1.err.txt
+005u-rsn-358c1-stop.go1.reply.md
+005u-rsn-358c1-stop.md
+005u-rsn-358c1-stop.pushed
+006m-rsn-358f-flow.exit
+006m-rsn-358f-flow.go1.err.txt
+006m-rsn-358f-flow.go1.reply.md
+006m-rsn-358f-flow.go2.done
+006m-rsn-358f-flow.go2.err.txt
+006m-rsn-358f-flow.go2.reply.md
+006m-rsn-358f-flow.md
+006m-rsn-358f-flow.pushed
+claude-sleep-358b2.exit
+claude-sleep-358b2.go1.done
+claude-sleep-358b2.go1.err.txt
+claude-sleep-358b2.go1.reply.md
+claude-sleep-358b2.md
+claude-sleep-358b2.pushed
+claude-sleep-358t.go1.err.txt
+claude-sleep-358t.go1.reply.md
+claude-sleep-358t.md
+claude-sleep-358t.running
+claude-sleep-358x.exit
+claude-sleep-358x.go1.done
+claude-sleep-358x.go1.err.txt
+claude-sleep-358x.go1.reply.md
+claude-sleep-358x.md
+claude-sleep-358x.pushed
+rent-358d.exit
+rent-358d.go1.done
+rent-358d.go1.err.txt
+rent-358d.go1.reply.md
+rent-358d.md
+rent-358d.pushed
+rent-358i.exit
+rent-358i.go1.done
+rent-358i.go1.err.txt
+rent-358i.go1.reply.md
+rent-358i.md
+rent-358i.pushed
+rent-grab358i.exit
+rent-grab358i.go1.done
+rent-grab358i.go1.err.txt
+rent-grab358i.go1.reply.md
+rent-grab358i.md
+rent-grab358i.pushed
+[0m
+[0m$ [0mmkdir -p artifacts/claude-rsn358t-20260926/runs && for r in plain-s1 plain-s2 plain-s3 plain-s4 loop-trm-s1 loop-trm-s2 loop-trm-s3 loop8-s1 loop8-s2 loop8-s3; do mkdir -p "artifacts/claude-rsn358t-20260926/runs/$r"; done && ls artifacts/claude-rsn358t-20260926/runs/
+loop-trm-s1
+loop-trm-s2
+loop-trm-s3
+loop8-s1
+loop8-s2
+loop8-s3
+plain-s1
+plain-s2
+plain-s3
+plain-s4
+[0m
+[0m$ [0mfor r in plain-s1 plain-s2 plain-s3 plain-s4 loop-trm-s1 loop-trm-s2 loop-trm-s3 loop8-s1 loop8-s2 loop8-s3; do scp -o StrictHostKeyChecking=no -P 26750 "root@180.189.55.43:/root/job/W/$r.log" "artifacts/claude-rsn358t-20260926/runs/$r.log" 2>&1 | grep -v -e Welcome -e fun; scp -o StrictHostKeyChecking=no -P 26750 "root@180.189.55.43:/root/job/W/$r/train_log.jsonl" "artifacts/claude-rsn358t-20260926/runs/$r/train_log.jsonl" 2>&1 | grep -v -e Welcome -e fun; done; echo COPY_DONE; find artifacts/claude-rsn358t-20260926/runs -type f | sort; wc -c artifacts/claude-rsn358t-20260926/runs/*.log artifacts/claude-rsn358t-20260926/runs/*/train_log.jsonl | tail -3
+COPY_DONE
+artifacts/claude-rsn358t-20260926/runs/loop-trm-s1.log
+artifacts/claude-rsn358t-20260926/runs/loop-trm-s1/train_log.jsonl
+artifacts/claude-rsn358t-20260926/runs/loop-trm-s2.log
+artifacts/claude-rsn358t-20260926/runs/loop-trm-s2/train_log.jsonl
+artifacts/claude-rsn358t-20260926/runs/loop-trm-s3.log
+artifacts/claude-rsn358t-20260926/runs/loop-trm-s3/train_log.jsonl
+artifacts/claude-rsn358t-20260926/runs/loop8-s1.log
+artifacts/claude-rsn358t-20260926/runs/loop8-s1/train_log.jsonl
+artifacts/claude-rsn358t-20260926/runs/loop8-s2.log
+artifacts/claude-rsn358t-20260926/runs/loop8-s2/train_log.jsonl
+artifacts/claude-rsn358t-20260926/runs/loop8-s3.log
+artifacts/claude-rsn358t-20260926/runs/loop8-s3/train_log.jsonl
+artifacts/claude-rsn358t-20260926/runs/plain-s1.log
+artifacts/claude-rsn358t-20260926/runs/plain-s1/train_log.jsonl
+artifacts/claude-rsn358t-20260926/runs/plain-s2.log
+artifacts/claude-rsn358t-20260926/runs/plain-s2/train_log.jsonl
+artifacts/claude-rsn358t-20260926/runs/plain-s3.log
+artifacts/claude-rsn358t-20260926/runs/plain-s3/train_log.jsonl
+artifacts/claude-rsn358t-20260926/runs/plain-s4.log
+artifacts/claude-rsn358t-20260926/runs/plain-s4/train_log.jsonl
+    8142 artifacts/claude-rsn358t-20260926/runs/plain-s3/train_log.jsonl
+    7838 artifacts/claude-rsn358t-20260926/runs/plain-s4/train_log.jsonl
+  121333 total
+[0m
+[0m$ [0mwc -l artifacts/claude-rsn358t-20260926/runs/*/train_log.jsonl | tail -12; md5 artifacts/claude-rsn358t-20260926/runs/plain-s1.log 2>/dev/null || md5sum artifacts/claude-rsn358t-20260926/runs/plain-s1.log
+20 artifacts/claude-rsn358t-20260926/runs/loop-trm-s1/train_log.jsonl
+      20 artifacts/claude-rsn358t-20260926/runs/loop-trm-s2/train_log.jsonl
+      20 artifacts/claude-rsn358t-20260926/runs/loop-trm-s3/train_log.jsonl
+      10 artifacts/claude-rsn358t-20260926/runs/loop8-s1/train_log.jsonl
+      10 artifacts/claude-rsn358t-20260926/runs/loop8-s2/train_log.jsonl
+      10 artifacts/claude-rsn358t-20260926/runs/loop8-s3/train_log.jsonl
+      30 artifacts/claude-rsn358t-20260926/runs/plain-s1/train_log.jsonl
+      28 artifacts/claude-rsn358t-20260926/runs/plain-s2/train_log.jsonl
+      27 artifacts/claude-rsn358t-20260926/runs/plain-s3/train_log.jsonl
+      26 artifacts/claude-rsn358t-20260926/runs/plain-s4/train_log.jsonl
+     201 total
+MD5 (artifacts/claude-rsn358t-20260926/runs/plain-s1.log) = f329df7c8af05d95ab9cd6dfd4ddfcf6
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai --raw show instances --label claude-sleep-358t 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin)[0]; print('id',d['id']); print('dph_total',d['dph_total']); print('dph_base',d['dph_base']); print('duration_s',d['duration']); print('hours',round(d['duration']/3600,4)); print('cost_usd',round(d['duration']/3600*d['dph_total'],4))"
+id 52780312
+dph_total 0.48749999999999993
+dph_base 0.4666666666666666
+duration_s 1614.5525662899017
+hours 0.4485
+cost_usd 0.2186
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai destroy instance 52780312 2>&1 | tail -5
+Are you sure you want to destroy instance 52780312? This is irreversible and will delete all data. [y/N] 
+Aborted.
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); echo y | vastai destroy instance 52780312 2>&1 | tail -5
+Are you sure you want to destroy instance 52780312? This is irreversible and will delete all data. [y/N] destroying instance 52780312.
+[0m
+[0m$ [0msleep 10; export VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai --raw show instances --label claude-sleep-358t 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print('count',len(d)); [print(x['id'],x['actual_status'],x['cur_state']) for x in d]"
+count 0
+[0m
+[0m$ [0mps -eo pid,etime,command | grep -i 358t | grep -v grep
+39090       04:40 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/000-check-358t.md
+78114    01:40:15 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/claude-sleep-358t.md
+78149    01:40:15 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:claude-sleep-358t.go1.78114 COMMON RULES (the sleep research thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.\012STATUS: RELEASED. Ben approved the $1.60 cap at 15:19 UTC 09-26 (decision card cmsg_01FuvegZXjMmeUzStiEFVnEWBvHvtXgg6u6j1ukfwdZ7q5, option "Add it ($1.60)"), relayed by the Thread manager.\012GPU: rent\012BUDGET: $1.60 including re-rents, on the sleep research line of the Director's ledger. Standing cap is <= $4 per job. TIME CAP: 3 h 15 min from the first rental. Label: claude-sleep-358t. Never destroy an instance this task did not create.\012CREDIT GATE (first): `vastai show user --raw` and report ONLY the balance/credit number. Follow the Director's current rental gate. Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.\012RENTAL RULES: RTX 5090 first, else 4090; reliability >= 0.98; at least 40 GB disk. Keep a running total of dph x hours. At $1.45 or at 3 h 10 min: kill running commands by exact PID, copy back what exists, destroy, stop with BUDGET-STOP, and report which runs finished. If it is not running within 6 min, or the log shows no progress for 10 min, destroy and try another host (max 3 rentals). Launch runs detached (nohup/setsid) so they survive SSH closing. Destroy at the end and confirm it is gone. Append a ledger line.\012DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-rsn358t-20260926/RESULTS.md, or a live instance is labelled claude-sleep-358t.\012\012YOUR TASK: builder for rsn-358t v2. It has two graded single changes against 358i's loop, each tested against 358i's own plain results:\012- loop-trm: a TRM-style training schedule;\012- loop8: Ben's looped 8-layer net;\012- plus report-only loop8-trm.\012The sleep research thread wrote and sealed all code. Run it and never edit it. If something breaks, stop and report the exact error; do not patch. Artifacts go in artifacts/claude-rsn358t-20260926/.\012READ FIRST (origin/main): artifacts/claude-rsn358t-20260926/PASSMARKS-v2.md (it replaces PASSMARKS.md) and the docstring of scripts/claude_rsn358t_run.py.\012Needs: torch with CUDA and numpy only. No model downloads.\012INDEPENDENCE: artifacts/claude-rsn358i-20260926/tests/ is TEST-ONLY. Never open or print an item; the eval command writes counts only. Run each eval exactly once per checkpoint file.\0121. On the rental: `git archive origin/main scripts artifacts/claude-rsn358t-20260926 artifacts/claude-rsn358i-20260926/tests`, extract keeping paths.\0122. SEAL: `sha256sum -c artifacts/claude-rsn358t-20260926/SEAL-code-v2.sha256.txt` must show all 18 lines OK; otherwise stop. Then run these and check each output:\012   - `python -B scripts/claude_rsn358a_envs.py selftest` prints "selftest ok";\012   - `python -B scripts/claude_rsn358t_run.py selftest` prints "selftest ok";\012   - `python -B scripts/claude_rsn358t_run.py check-mask` prints "check-mask ok";\012   - `python -B scripts/claude_rsn358t_run.py audit` prints four "300/300 puzzles show every needed symbol" lines.\012   Anything else: stop.\0123. PLAIN: for s in 1 2 3 4, check that origin/builder-outbox or origin/main has artifacts/claude-rsn358i-20260926/runs/plain-s$s/tests.json. For each seed that is missing, add `train --arm plain --seed $s --out W/plain-s$s` to step 4. Report which plain seeds came from 358i and which were trained here.\0124. TRAIN all AT ONCE and log each to W/<R>.log:\012   for s in 1 2 3 4: python -B scripts/claude_rsn358t_run.py train --arm loop-trm --seed $s --out W/loop-trm-s$s ; and the same with --arm loop8 --out W/loop8-s$s\012   for s in 1 2: python -B scripts/claude_rsn358t_run.py train --arm loop8-trm --seed $s --out W/loop8-trm-s$s\012   If memory runs out, drop loop8-trm first, then run four at a time.\012   After 10 minutes, project the finish from the logs. If it is past the time cap, stop by exact PID in this order:\012   (a) loop8-trm, which is report only;\012   (b) then seed 4 of both graded arms, reported as TOO-SLOW, which makes the run INCONCLUSIVE.\012   Still finish and evaluate the rest.\0125. SEAL each final.pt and final-ema.pt BEFORE its eval: append its sha256 (exactly 64 hex characters; check the length) to artifacts/claude-rsn358t-20260926/SEAL-run.sha256.txt.\0126. EVAL once per checkpoint file:\012   python -B scripts/claude_rsn358t_run.py eval --ckpt W/R/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/R/tests.json\012   python -B scripts/claude_rsn358t_run.py eval --ckpt W/R/final-ema.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/R/tests-ema.json\012   Copy train_log.jsonl, train_summary.json, both tests*.json and the log into artifacts/claude-rsn358t-20260926/runs/<R>/. Force-add them, because artifacts/ is git-ignored.\0127. RESULTS.md, verdict first:\012   - Test A (loop-trm) and test B (loop8) are each PASS / FAIL / INCONCLUSIVE, on G0-G3 exactly as PASSMARKS-v2.md defines them. The loop is the raw final.pt; plain is 358i's plain (or the plain trained here).\012   - The proved-wrong clause for each test, and G4-G5.\012   - A per-seed table of every test for every arm, raw and EMA, with the 4-seed means.\012   - Each loop arm right at 1/2/4/8/12/16/24/32/48 rounds and at any round.\012   - loop8 at 1 round vs plain.\012   - GPU name, minutes per run, dollars, every deviation.\012   Append ledger lines (cat >> artifacts/fable-predictions-ledger.md).\0128. PUSH: artifacts/claude-rsn358t-20260926/RESULTS.md artifacts/claude-rsn358t-20260926/SEAL-run.sha256.txt artifacts/claude-rsn358t-20260926/runs artifacts/fable-predictions-ledger.md. Never push weights. Then copy every final.pt/final-ema.pt to the Mac under ~/premonition-models/rsn358t/, record the sha256 values, and destroy the rental.
+[0m
+[0m$ [0mkill 78149 2>&1; echo K1=$?; sleep 3; kill 78114 2>&1; echo K2=$?; sleep 3; ps -p 78114 -o pid,command 2>&1; ps -p 78149 -o pid,command 2>&1; ps -eo pid,etime,command | grep -i 358t | grep -v grep
+K1=0
+zsh:kill:1: kill 78114 failed: no such process
+K2=1
+  PID COMMAND
+  PID COMMAND
+39090       04:58 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/000-check-358t.md
+[0m
+[0m$ [0mps -eo pid,ppid,etime,command | grep -iE '358t|rungo4' | grep -v grep; echo DONE-CHECK
+282   280    01:08:56 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rent-brd9.md
+ 9893  9890       57:11 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rent-mu404b.md
+18627 18625       44:45 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rent-zdl6b.md
+23177 23175       36:00 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rent-rv390.md
+25474 25472       31:37 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rent-rd378u.md
+34733 34731       13:42 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rd378k-teacher.md
+39090 39088       05:02 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/000-check-358t.md
+39327 39325       05:02 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rd378g-teacher.md
+41923 41921       00:35 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/claude-sleep-358i2.md
+78905 78903    01:40:33 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rent-zdl5.md
+DONE-CHECK
+[0m
+[0m$ [0mls -la ~/premonition-watch/queue/claude-sleep-358x.pushed && rm ~/premonition-watch/queue/claude-sleep-358x.pushed && echo REMOVED; ls ~/premonition-watch/queue/ | grep 358x
+-rw-r--r--  1 ben-hannan  staff  0 Sep 26 12:41 /Users/ben-hannan/premonition-watch/queue/claude-sleep-358x.pushed
+REMOVED
+claude-sleep-358x.exit
+claude-sleep-358x.go1.done
+claude-sleep-358x.go1.err.txt
+claude-sleep-358x.go1.reply.md
+claude-sleep-358x.md
+[0m
+[0m$ [0mdate -u; date -u +%Y-%m-%d-%H%M
+Sat Sep 26 17:08:51 UTC 2026
+2026-09-26-1708
+[0m
+[0m← [0mWrite artifacts/claude-rsn358t-20260926/AUTOCAST-CHECK.md
+Wrote file successfully.
+[0m
+[0m$ [0mls -la artifacts/fable-predictions-ledger.md && tail -3 artifacts/fable-predictions-ledger.md
+-rw-r--r--  1 ben-hannan  staff  704297 Sep 26 13:06 artifacts/fable-predictions-ledger.md
+- 2026-09-26 16:45 UTC rent-rt02d PARTIAL (label claude-plainpuzzles-rt02d, sealed origin/main code, never edited): instances 52760176 (success False, loading>6min, destroyed, ~$0) + 52761382 (RTX 5090, host ssh broken, ~0.17h x $0.5037 ~$0.08) + 52763126 (RTX 5090, ~2.05h x $0.563 ~$1.15); total ~$1.23 of $1.50. Setup S1-S6 green (BASE 87179e5c, reader depot copy sha e688e1b2 match, adapter a33211dc match, seals OK, selftests 55/55 + 9/9); dev gate PASS (B0a/B0b 55 rows each, 0 diffs). Env fix only: torch 2.11.0+cu128, torchvision 0.26.0, torchaudio removed (transformers 5.17 vs image torch 2.2.1). Panel B0 launched 16:26, rental ssh died ~16:31, reboot failed, outcome unknown; run/score/logs unrecoverable, nothing pushed but RESULTS-rent.md. Outcome: PARTIAL (infra).
+- 2026-09-26 16:58 UTC claude-benchmarks-bmrivsmoke2 (Benchmarks bm-riv smoke 2, origin/main code unmodified, panel seal da7202db ok, selftest 12/12): BUDGET-STOP (killed at ~$0.189, final ~$0.197 of $0.20; money rule $0.18 crossed between polls). Finished: plain1b_4k 8 rows, lfm12b_4k 8 rows. Killed (rows kept): qwen2b_4k 7 rows. Instance 52778379 (offer 43681503, RTX 4090 MY, image pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime disk 80, torch 2.8.0+cu129 transformers 5.17.0 py 3.11.13, created 16:27:10Z running ~16:31:36Z lanes 16:39:05-16:40:28Z killed 16:56:55Z destroyed 16:58:03Z, ~0.515h x dph $0.38222 = ~$0.197); 1 rental of max 4; post-destroy 0 claude-benchmarks-bmrivsmoke2 live. Credit at gate 8.83074058626977. Copy-back 3 files sha-verified. Peak GPU mem seen 9665/24564 MiB. No code edits, no traceback, no replies quoted. See artifacts/claude-bmriv-smoke-20260926/RESULTS-rent2.md + run2/.
+- 2026-09-26 17:06 UTC rent-k1c RUN-COMPLETE (Creative answers in chat, label claude-creativechat-k1c, origin/main code unmodified): instances 52778638 (offer 46753301, docker-proxy pull refusal, destroyed un-run, ~$0) + 52779278 (offer 48989736 host 406325, RTX 5090, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 60, torch 2.8.0+cu128 transformers 5.17.0 py 3.11.13, ~16:35-17:06Z ~0.52h x dph $0.4944 ~$0.26); total ~$0.26 of $0.80. Setup green (4 HF downloads incl. BASE 87179e5c/Q 15852e8c/L 0f604ada, adapter a33211dc match, seals OK, tests 7/7+7/7, selftests 5/5+7/7, route122 no-raise). DEV gate PASS (3/3/3 lines, k1c line, 0 empty). V1 PASS all 10 arms. Round A 5x100 + round B 5x60, all exit 0, scored+deduped (A 500->448 distinct/52 shared; B 300->268/32 shared). Copy-back 38/38 sha-verified. Deviations: scp-3 failed so one Mac mktemp (removed exact path); launch ssh teardowns hung (launches ok, PIDs via ps); dph $0.4944 vs $0.469 search; exit codes inferred. Credit at gate 0 (auto-refill). 2 rentals of max 3. See artifacts/claude-k1c-20260926/RESULTS-rent.md + run/.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- 2026-09-26 17:08 UTC claude-sleep-358t STOPPED by owner: autocast cache bug, no verdict on the TRM schedule or loop8; 0.45 h, $0.22.
+EOF
+tail -1 artifacts/fable-predictions-ledger.md
+- 2026-09-26 17:08 UTC claude-sleep-358t STOPPED by owner: autocast cache bug, no verdict on the TRM schedule or loop8; 0.45 h, $0.22.
+[0m
+[0m$ [0mgit check-ignore artifacts/claude-rsn358t-20260926/AUTOCAST-CHECK.md; echo IGNORE_RC=$?; git status --short | head -30; git log --oneline -3
+artifacts/claude-rsn358t-20260926/AUTOCAST-CHECK.md
+IGNORE_RC=0
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/train398r.json
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+A  artifacts/claude-k1a-20260926/RESULTS-rent.md
+A  artifacts/claude-k1a-20260926/run/creative_B.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_K.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_KB.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_KB0.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_T.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_X.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_judge.jsonl
+bd788695a glm-frames: GLM 5.3 Flash puzzle+suffix frames 20260926 (5/5 pass each)
+6ce4bf7b0 rsn-358x builder results: FAIL + proved-wrong (X0 pass, X1/X2 fail); 16 runs, seals, ledger line (own paths only)
+c86fbe886 stop rent-q404 by owner (Redirect): PIDs 4529+4563 killed, instance 52775380 destroyed, 0 files to copy back
+[0m
+[0m$ [0mgit show --stat --oneline c86fbe886 | head -15; git show --stat --oneline 6ce4bf7b0 | head -12
+c86fbe886 stop rent-q404 by owner (Redirect): PIDs 4529+4563 killed, instance 52775380 destroyed, 0 files to copy back
+ artifacts/claude-q404-20260926/STOPPED-q404.md | 26 ++++++++++++++++++++++++++
+ artifacts/fable-predictions-ledger.md          | 11 +++++++++++
+ 2 files changed, 37 insertions(+)
+6ce4bf7b0 rsn-358x builder results: FAIL + proved-wrong (X0 pass, X1/X2 fail); 16 runs, seals, ledger line (own paths only)
+ artifacts/claude-rsn358x-20260926/RESULTS.md       | 144 +++++++++++++++++++++
+ .../claude-rsn358x-20260926/SEAL-run.sha256.txt    |  16 +++
+ .../runs/loop-fresh-s1/carry_log.jsonl             |  10 ++
+ .../runs/loop-fresh-s1/carry_summary.json          |  54 ++++++++
+ .../runs/loop-fresh-s1/loop-fresh-s1.log           |  10 ++
+ .../runs/loop-fresh-s1/tests.json                  | 108 ++++++++++++++++
+ .../runs/loop-fresh-s2/carry_log.jsonl             |  10 ++
+ .../runs/loop-fresh-s2/carry_summary.json          |  54 ++++++++
+ .../runs/loop-fresh-s2/loop-fresh-s2.log           |  10 ++
+ .../runs/loop-fresh-s2/tests.json                  | 123 ++++++++++++++++++
+ .../runs/loop-fresh-s3/carry_log.jsonl             |  10 ++
+[0m
+[0m$ [0mgit status --short artifacts/fable-predictions-ledger.md artifacts/claude-rsn358t-20260926/; git diff --stat artifacts/fable-predictions-ledger.md
+MM artifacts/fable-predictions-ledger.md
+ artifacts/fable-predictions-ledger.md | 3 +++
+ 1 file changed, 3 insertions(+)
+[0m
+[0m$ [0mgit diff artifacts/fable-predictions-ledger.md; echo CACHED; git diff --cached artifacts/fable-predictions-ledger.md | head -20
+diff --git a/artifacts/fable-predictions-ledger.md b/artifacts/fable-predictions-ledger.md
+index a666813b2..71a693f43 100644
+--- a/artifacts/fable-predictions-ledger.md
++++ b/artifacts/fable-predictions-ledger.md
+@@ -3028,3 +3028,6 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
+ - 2026-09-26 16:40 UTC rsn-358x GPU BUILD (label claude-sleep-358x, sealed origin/main code, SEAL-code-v2 14/14 OK, selftests ok, sources 8/8 sha match, code never edited): rentals 1 (52774371) + 2 (52775064) died on host docker-registry proxy error while loading, destroyed per 6-min rule, $0; rental 3 (52775569, RTX 5090 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime, disk 50) ran 16:09:51-16:39:41Z ~0.50 h x $0.4898 = ~$0.24 of $0.60 (Ben 15:50 approve card cmsg_01FuvegZXjMmeUzStiEFVnEW1ZcuTEwvWrMr3xypKg1TBi); 16-at-once OOMed (loop ~4 GB/proc), ran 8 plains (~4.9 min each) then loops 2x4 (~5.4 min each); 16/16 carry done, SEAL-run 16 lines, evals 1x each counts-only; 16x4 files back, 0 weights pushed, rental destroyed, 0 live. VERDICT FAIL + PROVED-WRONG: X0 pass (plain-fresh bar 4/4 at 2000; sources 8/8), X1 fail (loop-pre mean 5000 vs loop-fresh 5000, ratio 1.00, 0/4), X2 fail (loop-pre 5000 vs plain-pre 812.5, ratio 6.15, 0/4); plain-pre vs plain-fresh 812.5 vs 2000 (4/4). Tests /300: plains maze7 300x8; loops maze7 103,134,90,114,39,92,8,81. Credit at gate 5.894937036269795. See artifacts/claude-rsn358x-20260926/RESULTS.md + runs/ + SEAL-run.sha256.txt.
+ - 2026-09-26 16:45 UTC y1g GPU DIAGNOSIS (label claude-memory-y1g, sealed origin/main code, SEAL-y1g 9/9 OK, selftest ok, code never edited): rentals 1 (52776862) + 2 (52777941) stuck loading past 6-min rule, destroyed, $0; rental 3 (52778874, RTX 5090, image pytorch/pytorch disk 60, torch upgraded 2.2.1->2.14.0+cu130 per rent-kit note, gcc installed env-only after first launch crashed in triton bmm_outer_product with no C compiler, relaunched unchanged) ran 16:33-16:45:23Z ~0.21h x $0.4944 = ~$0.10 of $0.30; task total ~$0.10. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc. Run 71 DEV asks (~2 min wall): pick winner C4 go=false; answerable_right A0 26 A1 26 C3 16 C4 10 V 10; answerable_wrong A0 27 A1 24 C3 5 C4 1 V 5; never_told_idk A0 1 A1 2 C3 6 C4 9 V 9; signal C3/C4/V all true, any true. Files back gpu/y1g_rows.jsonl (71 rows) + y1g_summary.json + log.txt, hashes match both ends, rental destroyed, 0 claude-memory-y1g live. Credit at gate 9.54. See artifacts/claude-y1g-20260926/RESULTS-gpu.md + gpu/.
+ - 2026-09-26 16:45 UTC rent-rt02d PARTIAL (label claude-plainpuzzles-rt02d, sealed origin/main code, never edited): instances 52760176 (success False, loading>6min, destroyed, ~$0) + 52761382 (RTX 5090, host ssh broken, ~0.17h x $0.5037 ~$0.08) + 52763126 (RTX 5090, ~2.05h x $0.563 ~$1.15); total ~$1.23 of $1.50. Setup S1-S6 green (BASE 87179e5c, reader depot copy sha e688e1b2 match, adapter a33211dc match, seals OK, selftests 55/55 + 9/9); dev gate PASS (B0a/B0b 55 rows each, 0 diffs). Env fix only: torch 2.11.0+cu128, torchvision 0.26.0, torchaudio removed (transformers 5.17 vs image torch 2.2.1). Panel B0 launched 16:26, rental ssh died ~16:31, reboot failed, outcome unknown; run/score/logs unrecoverable, nothing pushed but RESULTS-rent.md. Outcome: PARTIAL (infra).
++- 2026-09-26 16:58 UTC claude-benchmarks-bmrivsmoke2 (Benchmarks bm-riv smoke 2, origin/main code unmodified, panel seal da7202db ok, selftest 12/12): BUDGET-STOP (killed at ~$0.189, final ~$0.197 of $0.20; money rule $0.18 crossed between polls). Finished: plain1b_4k 8 rows, lfm12b_4k 8 rows. Killed (rows kept): qwen2b_4k 7 rows. Instance 52778379 (offer 43681503, RTX 4090 MY, image pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime disk 80, torch 2.8.0+cu129 transformers 5.17.0 py 3.11.13, created 16:27:10Z running ~16:31:36Z lanes 16:39:05-16:40:28Z killed 16:56:55Z destroyed 16:58:03Z, ~0.515h x dph $0.38222 = ~$0.197); 1 rental of max 4; post-destroy 0 claude-benchmarks-bmrivsmoke2 live. Credit at gate 8.83074058626977. Copy-back 3 files sha-verified. Peak GPU mem seen 9665/24564 MiB. No code edits, no traceback, no replies quoted. See artifacts/claude-bmriv-smoke-20260926/RESULTS-rent2.md + run2/.
++- 2026-09-26 17:06 UTC rent-k1c RUN-COMPLETE (Creative answers in chat, label claude-creativechat-k1c, origin/main code unmodified): instances 52778638 (offer 46753301, docker-proxy pull refusal, destroyed un-run, ~$0) + 52779278 (offer 48989736 host 406325, RTX 5090, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 60, torch 2.8.0+cu128 transformers 5.17.0 py 3.11.13, ~16:35-17:06Z ~0.52h x dph $0.4944 ~$0.26); total ~$0.26 of $0.80. Setup green (4 HF downloads incl. BASE 87179e5c/Q 15852e8c/L 0f604ada, adapter a33211dc match, seals OK, tests 7/7+7/7, selftests 5/5+7/7, route122 no-raise). DEV gate PASS (3/3/3 lines, k1c line, 0 empty). V1 PASS all 10 arms. Round A 5x100 + round B 5x60, all exit 0, scored+deduped (A 500->448 distinct/52 shared; B 300->268/32 shared). Copy-back 38/38 sha-verified. Deviations: scp-3 failed so one Mac mktemp (removed exact path); launch ssh teardowns hung (launches ok, PIDs via ps); dph $0.4944 vs $0.469 search; exit codes inferred. Credit at gate 0 (auto-refill). 2 rentals of max 3. See artifacts/claude-k1c-20260926/RESULTS-rent.md + run/.
++- 2026-09-26 17:08 UTC claude-sleep-358t STOPPED by owner: autocast cache bug, no verdict on the TRM schedule or loop8; 0.45 h, $0.22.
+CACHED
+diff --git a/artifacts/fable-predictions-ledger.md b/artifacts/fable-predictions-ledger.md
+index e597d338b..a666813b2 100644
+--- a/artifacts/fable-predictions-ledger.md
++++ b/artifacts/fable-predictions-ledger.md
+@@ -3026,3 +3026,5 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
+ - 2026-09-26 16:26 UTC rent-notes-b (claude-notes-rd378Lb): lanes rd-378L + rd-379q on one rental, instance 52770443, RTX 5090, ~0.93h x $0.5037 = ~$0.47 of $1.30 (Trustworthy notes; rent-rd378L spent <=$0.69 of the $2). Lane W PASS (B any@10 583/759=76.8% vs A 496=65.3%, L1/L2/L3 pass); lane Q FAIL proved-wrong (Q 431/759=56.8% vs A 65.3%; v3: A 520, Q 468, fact-B 578). Credit 8.599180226269851.
+ - rent-bm398r GPU OUTCOME (2026-09-26, rented Linux GPU, label claude-benchmarks-bm398r, unmodified origin/main code, seals bm398i 5/5 + amend1 3/3 + bm398r 13/13 OK, selftests 9/9 + 16/16 + 6/6, E20 e7f70f... match, adapter397t 621edd16... verified Mac + box): rentals 52766092 (offer 43690890, loading stall past 6-min rule, destroyed, $0) + 52767015 (offer 50135004 KR, running but SSH proxy dead, destroyed, $0) + 52768265 (RTX 5090 offer 45668964 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 80, created 15:15:33Z, SSH 15:19Z, destroyed 16:33:27Z, ~1.30 h x $0.5037 = ~$0.65); task total ~$0.65 of $1.50 budget, 3 rentals of max 4; post-destroy 0 claude-benchmarks-bm398r live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, transformers 5.17.0, pyarrow 25.0.1. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Part1 bm-398i a+b both verdict PASS (I1/I2/I3 true; off==base 75/75, mixed clean, on!=base 68/75). Practice data sha 7e1ec301...f120 / 1f001546...ba58. Train once 225 steps 1241.3 s, dev 114->186/240, merged_first40 28/40, merged model.safetensors ed25ff6e... Run files locomo_TR 1986 rows 25e1c72c..., 6 evidence files 297 rows each, mmlu_TR 300 rows 3d0dd1c5..., gsm8k_TR 300 rows 826a5168..., train398r.json 1bb299c3..., OUTI a/b replies identical b6bfdbf3... Adapter 16576151 B f98c54a9... at ~/premonition-models/bm398r-adapter398r.pt, never in git; MERGED not copied back. Peak GPU mem 10008 MiB. Deviations: nltk 3.10.3 installed env-only after first train launch crashed ModuleNotFoundError (relaunched unchanged, exit 0); selftest launcher cwd bug relaunched unchanged; run-a exit inferred 0. Scoring not part of this task. See artifacts/claude-bm398r-20260926/RESULTS-rent.md + run/ and artifacts/claude-bm398i-20260926/run-gpu/.
+ - 2026-09-26 16:40 UTC rsn-358x GPU BUILD (label claude-sleep-358x, sealed origin/main code, SEAL-code-v2 14/14 OK, selftests ok, sources 8/8 sha match, code never edited): rentals 1 (52774371) + 2 (52775064) died on host docker-registry proxy error while loading, destroyed per 6-min rule, $0; rental 3 (52775569, RTX 5090 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime, disk 50) ran 16:09:51-16:39:41Z ~0.50 h x $0.4898 = ~$0.24 of $0.60 (Ben 15:50 approve card cmsg_01FuvegZXjMmeUzStiEFVnEW1ZcuTEwvWrMr3xypKg1TBi); 16-at-once OOMed (loop ~4 GB/proc), ran 8 plains (~4.9 min each) then loops 2x4 (~5.4 min each); 16/16 carry done, SEAL-run 16 lines, evals 1x each counts-only; 16x4 files back, 0 weights pushed, rental destroyed, 0 live. VERDICT FAIL + PROVED-WRONG: X0 pass (plain-fresh bar 4/4 at 2000; sources 8/8), X1 fail (loop-pre mean 5000 vs loop-fresh 5000, ratio 1.00, 0/4), X2 fail (loop-pre 5000 vs plain-pre 812.5, ratio 6.15, 0/4); plain-pre vs plain-fresh 812.5 vs 2000 (4/4). Tests /300: plains maze7 300x8; loops maze7 103,134,90,114,39,92,8,81. Credit at gate 5.894937036269795. See artifacts/claude-rsn358x-20260926/RESULTS.md + runs/ + SEAL-run.sha256.txt.
++- 2026-09-26 16:45 UTC y1g GPU DIAGNOSIS (label claude-memory-y1g, sealed origin/main code, SEAL-y1g 9/9 OK, selftest ok, code never edited): rentals 1 (52776862) + 2 (52777941) stuck loading past 6-min rule, destroyed, $0; rental 3 (52778874, RTX 5090, image pytorch/pytorch disk 60, torch upgraded 2.2.1->2.14.0+cu130 per rent-kit note, gcc installed env-only after first launch crashed in triton bmm_outer_product with no C compiler, relaunched unchanged) ran 16:33-16:45:23Z ~0.21h x $0.4944 = ~$0.10 of $0.30; task total ~$0.10. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc. Run 71 DEV asks (~2 min wall): pick winner C4 go=false; answerable_right A0 26 A1 26 C3 16 C4 10 V 10; answerable_wrong A0 27 A1 24 C3 5 C4 1 V 5; never_told_idk A0 1 A1 2 C3 6 C4 9 V 9; signal C3/C4/V all true, any true. Files back gpu/y1g_rows.jsonl (71 rows) + y1g_summary.json + log.txt, hashes match both ends, rental destroyed, 0 claude-memory-y1g live. Credit at gate 9.54. See artifacts/claude-y1g-20260926/RESULTS-gpu.md + gpu/.
++- 2026-09-26 16:45 UTC rent-rt02d PARTIAL (label claude-plainpuzzles-rt02d, sealed origin/main code, never edited): instances 52760176 (success False, loading>6min, destroyed, ~$0) + 52761382 (RTX 5090, host ssh broken, ~0.17h x $0.5037 ~$0.08) + 52763126 (RTX 5090, ~2.05h x $0.563 ~$1.15); total ~$1.23 of $1.50. Setup S1-S6 green (BASE 87179e5c, reader depot copy sha e688e1b2 match, adapter a33211dc match, seals OK, selftests 55/55 + 9/9); dev gate PASS (B0a/B0b 55 rows each, 0 diffs). Env fix only: torch 2.11.0+cu128, torchvision 0.26.0, torchaudio removed (transformers 5.17 vs image torch 2.2.1). Panel B0 launched 16:26, rental ssh died ~16:31, reboot failed, outcome unknown; run/score/logs unrecoverable, nothing pushed but RESULTS-rent.md. Outcome: PARTIAL (infra).
+[0m
+[0m$ [0mgit status -sb | head -3; git log --oneline -2 -- artifacts/fable-predictions-ledger.md; git ls-remote origin claude/card-experiment-handoff-7c5b27 2>&1 | head -2
+## claude/card-experiment-handoff-7c5b27...origin/claude/card-experiment-handoff-7c5b27 [ahead 27]
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+6ce4bf7b0 rsn-358x builder results: FAIL + proved-wrong (X0 pass, X1/X2 fail); 16 runs, seals, ledger line (own paths only)
+c86fbe886 stop rent-q404 by owner (Redirect): PIDs 4529+4563 killed, instance 52775380 destroyed, 0 files to copy back
+e3fbf3c51de5c73734803d19738e90fa049be4eb	refs/heads/claude/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mgit show --stat --oneline 6ce4bf7b0 | tail -8; git show 6ce4bf7b0 -- artifacts/fable-predictions-ledger.md | head -20
+.../runs/plain-pre-s3/plain-pre-s3.log             |  10 ++
+ .../runs/plain-pre-s3/tests.json                   |  26 ++++
+ .../runs/plain-pre-s4/carry_log.jsonl              |  10 ++
+ .../runs/plain-pre-s4/carry_summary.json           |  54 ++++++++
+ .../runs/plain-pre-s4/plain-pre-s4.log             |  10 ++
+ .../runs/plain-pre-s4/tests.json                   |  26 ++++
+ artifacts/fable-predictions-ledger.md              |   4 +
+ 67 files changed, 2472 insertions(+)
+commit 6ce4bf7b0c1983fca5ce6e92edf78fe3211d6d47
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Sat Sep 26 12:40:56 2026 -0400
+
+    rsn-358x builder results: FAIL + proved-wrong (X0 pass, X1/X2 fail); 16 runs, seals, ledger line (own paths only)
+
+diff --git a/artifacts/fable-predictions-ledger.md b/artifacts/fable-predictions-ledger.md
+index bfcf8172f..e597d338b 100644
+--- a/artifacts/fable-predictions-ledger.md
++++ b/artifacts/fable-predictions-ledger.md
+@@ -3022,3 +3022,7 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
+ - 2026-09-26 16:01 UTC rent-y1f actual ~$0.23 (2x ~$0.04 stuck hosts with docker-registry proxy error + rental 3 ~$0.14, RTX 5090, ~3 min run, 71 asks, winner L0|p382 15/56 NO-GO) of Answering-from-memory's $2 ($0.30 cap).
+ - 2026-09-26 16:06 UTC depot319f (lis-319f reader upload to claude-director-depot 52755827): scp fallback (depot /usr/bin/rsync is 0-byte stub, 6 rsync attempts exit 126; scp 2 attempts, 1 drop + 1 clean ~32 min, ~46 min wall), 6/6 files byte-match, sha 970ef0ac match 1/1, /root/reader319 untouched (0 writes), depot LEFT RUNNING, $0 rent this task, outcome DEPOT-319f READY. See artifacts/claude-depot319f-20260926/REPORT.md.
+ - 2026-09-26 16:17 UTC rent-q404 STOPPED by owner (Redirect); instance 52775380, 0.14 h, $0.07; partial output kept, not scored.
++- 2026-09-26 17:00 UTC rent-dl6 HOST-FAIL (label claude-fixsleep-dl6): 0 nights run, 0 marks; rental 1 (52771530, RTX 5090, $0.448/hr) + rental 2 (52772278, RTX 5090, $0.406/hr) both died on host docker-registry proxy error (connection refused to 127.0.0.1:7890), rental 3 (52773184, RTX 5090 KR, $0.485/hr) stuck loading ~30 min then destroyed; all 3 destroyed, none running; failed-host spend roughly ~$0.15-0.40 of the $0.80 cap; code never edited, nothing pushed.
++- 2026-09-26 16:26 UTC rent-notes-b (claude-notes-rd378Lb): lanes rd-378L + rd-379q on one rental, instance 52770443, RTX 5090, ~0.93h x $0.5037 = ~$0.47 of $1.30 (Trustworthy notes; rent-rd378L spent <=$0.69 of the $2). Lane W PASS (B any@10 583/759=76.8% vs A 496=65.3%, L1/L2/L3 pass); lane Q FAIL proved-wrong (Q 431/759=56.8% vs A 65.3%; v3: A 520, Q 468, fact-B 578). Credit 8.599180226269851.
++- rent-bm398r GPU OUTCOME (2026-09-26, rented Linux GPU, label claude-benchmarks-bm398r, unmodified origin/main code, seals bm398i 5/5 + amend1 3/3 + bm398r 13/13 OK, selftests 9/9 + 16/16 + 6/6, E20 e7f70f... match, adapter397t 621edd16... verified Mac + box): rentals 52766092 (offer 43690890, loading stall past 6-min rule, destroyed, $0) + 52767015 (offer 50135004 KR, running but SSH proxy dead, destroyed, $0) + 52768265 (RTX 5090 offer 45668964 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 80, created 15:15:33Z, SSH 15:19Z, destroyed 16:33:27Z, ~1.30 h x $0.5037 = ~$0.65); task total ~$0.65 of $1.50 budget, 3 rentals of max 4; post-destroy 0 claude-benchmarks-bm398r live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, transformers 5.17.0, pyarrow 25.0.1. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Part1 bm-398i a+b both verdict PASS (I1/I2/I3 true; off==base 75/75, mixed clean, on!=base 68/75). Practice data sha 7e1ec301...f120 / 1f001546...ba58. Train once 225 steps 1241.3 s, dev 114->186/240, merged_first40 28/40, merged model.safetensors ed25ff6e... Run files locomo_TR 1986 rows 25e1c72c..., 6 evidence files 297 rows each, mmlu_TR 300 rows 3d0dd1c5..., gsm8k_TR 300 rows 826a5168..., train398r.json 1bb299c3..., OUTI a/b replies identical b6bfdbf3... Adapter 16576151 B f98c54a9... at ~/premonition-models/bm398r-adapter398r.pt, never in git; MERGED not copied back. Peak GPU mem 10008 MiB. Deviations: nltk 3.10.3 installed env-only after first train launch crashed ModuleNotFoundError (relaunched unchanged, exit 0); selftest launcher cwd bug relaunched unchanged; run-a exit inferred 0. Scoring not part of this task. See artifacts/claude-bm398r-20260926/RESULTS-rent.md + run/ and artifacts/claude-bm398i-20260926/run-gpu/.
++- 2026-09-26 16:40 UTC rsn-358x GPU BUILD (label claude-sleep-358x, sealed origin/main code, SEAL-code-v2 14/14 OK, selftests ok, sources 8/8 sha match, code never edited): rentals 1 (52774371) + 2 (52775064) died on host docker-registry proxy error while loading, destroyed per 6-min rule, $0; rental 3 (52775569, RTX 5090 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime, disk 50) ran 16:09:51-16:39:41Z ~0.50 h x $0.4898 = ~$0.24 of $0.60 (Ben 15:50 approve card cmsg_01FuvegZXjMmeUzStiEFVnEW1ZcuTEwvWrMr3xypKg1TBi); 16-at-once OOMed (loop ~4 GB/proc), ran 8 plains (~4.9 min each) then loops 2x4 (~5.4 min each); 16/16 carry done, SEAL-run 16 lines, evals 1x each counts-only; 16x4 files back, 0 weights pushed, rental destroyed, 0 live. VERDICT FAIL + PROVED-WRONG: X0 pass (plain-fresh bar 4/4 at 2000; sources 8/8), X1 fail (loop-pre mean 5000 vs loop-fresh 5000, ratio 1.00, 0/4), X2 fail (loop-pre 5000 vs plain-pre 812.5, ratio 6.15, 0/4); plain-pre vs plain-fresh 812.5 vs 2000 (4/4). Tests /300: plains maze7 300x8; loops maze7 103,134,90,114,39,92,8,81. Credit at gate 5.894937036269795. See artifacts/claude-rsn358x-20260926/RESULTS.md + runs/ + SEAL-run.sha256.txt.
+[0m
+[0m$ [0mgit add -f artifacts/claude-rsn358t-20260926/AUTOCAST-CHECK.md artifacts/claude-rsn358t-20260926/runs artifacts/fable-predictions-ledger.md && git status --short artifacts/claude-rsn358t-20260926/ artifacts/fable-predictions-ledger.md
+A  artifacts/claude-rsn358t-20260926/AUTOCAST-CHECK.md
+A  artifacts/claude-rsn358t-20260926/runs/loop-trm-s1.log
+A  artifacts/claude-rsn358t-20260926/runs/loop-trm-s1/train_log.jsonl
+A  artifacts/claude-rsn358t-20260926/runs/loop-trm-s2.log
+A  artifacts/claude-rsn358t-20260926/runs/loop-trm-s2/train_log.jsonl
+A  artifacts/claude-rsn358t-20260926/runs/loop-trm-s3.log
+A  artifacts/claude-rsn358t-20260926/runs/loop-trm-s3/train_log.jsonl
+A  artifacts/claude-rsn358t-20260926/runs/loop8-s1.log
+A  artifacts/claude-rsn358t-20260926/runs/loop8-s1/train_log.jsonl
+A  artifacts/claude-rsn358t-20260926/runs/loop8-s2.log
+A  artifacts/claude-rsn358t-20260926/runs/loop8-s2/train_log.jsonl
+A  artifacts/claude-rsn358t-20260926/runs/loop8-s3.log
+A  artifacts/claude-rsn358t-20260926/runs/loop8-s3/train_log.jsonl
+A  artifacts/claude-rsn358t-20260926/runs/plain-s1.log
+A  artifacts/claude-rsn358t-20260926/runs/plain-s1/train_log.jsonl
+A  artifacts/claude-rsn358t-20260926/runs/plain-s2.log
+A  artifacts/claude-rsn358t-20260926/runs/plain-s2/train_log.jsonl
+A  artifacts/claude-rsn358t-20260926/runs/plain-s3.log
+A  artifacts/claude-rsn358t-20260926/runs/plain-s3/train_log.jsonl
+A  artifacts/claude-rsn358t-20260926/runs/plain-s4.log
+A  artifacts/claude-rsn358t-20260926/runs/plain-s4/train_log.jsonl
+M  artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit commit -- artifacts/claude-rsn358t-20260926/AUTOCAST-CHECK.md artifacts/claude-rsn358t-20260926/runs artifacts/fable-predictions-ledger.md -m "autocast check stops 358t by owner: cache bug 8/12 no-gradient, PIDs killed, instance 52780312 destroyed, 20 run files back, ledger line (own paths only)" 2>&1 | tail -5
+error: pathspec '-m' did not match any file(s) known to git
+error: pathspec 'autocast check stops 358t by owner: cache bug 8/12 no-gradient, PIDs killed, instance 52780312 destroyed, 20 run files back, ledger line (own paths only)' did not match any file(s) known to git
+[0m
+[0m$ [0mgit commit -m "autocast check stops 358t by owner: cache bug 8/12 no-gradient, PIDs killed, instance 52780312 destroyed, 20 run files back, ledger line (own paths only)" -- artifacts/claude-rsn358t-20260926/AUTOCAST-CHECK.md artifacts/claude-rsn358t-20260926/runs artifacts/fable-predictions-ledger.md 2>&1 | tail -5
+create mode 100644 artifacts/claude-rsn358t-20260926/runs/plain-s2/train_log.jsonl
+ create mode 100644 artifacts/claude-rsn358t-20260926/runs/plain-s3.log
+ create mode 100644 artifacts/claude-rsn358t-20260926/runs/plain-s3/train_log.jsonl
+ create mode 100644 artifacts/claude-rsn358t-20260926/runs/plain-s4.log
+ create mode 100644 artifacts/claude-rsn358t-20260926/runs/plain-s4/train_log.jsonl
+[0m
+[0m✗ [0mgit show --stat --oneline HEAD | head -8; git push origin claude/card-experiment-handoff-7c5b27 2>&1 | tail -4 failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mgit show --stat --oneline HEAD | head -30
+7c0294524 autocast check stops 358t by owner: cache bug 8/12 no-gradient, PIDs killed, instance 52780312 destroyed, 20 run files back, ledger line (own paths only)
+ .../claude-rsn358t-20260926/AUTOCAST-CHECK.md      | 62 ++++++++++++++++++++++
+ .../claude-rsn358t-20260926/runs/loop-trm-s1.log   | 21 ++++++++
+ .../runs/loop-trm-s1/train_log.jsonl               | 20 +++++++
+ .../claude-rsn358t-20260926/runs/loop-trm-s2.log   | 21 ++++++++
+ .../runs/loop-trm-s2/train_log.jsonl               | 20 +++++++
+ .../claude-rsn358t-20260926/runs/loop-trm-s3.log   | 21 ++++++++
+ .../runs/loop-trm-s3/train_log.jsonl               | 20 +++++++
+ .../claude-rsn358t-20260926/runs/loop8-s1.log      | 11 ++++
+ .../runs/loop8-s1/train_log.jsonl                  | 10 ++++
+ .../claude-rsn358t-20260926/runs/loop8-s2.log      | 11 ++++
+ .../runs/loop8-s2/train_log.jsonl                  | 10 ++++
+ .../claude-rsn358t-20260926/runs/loop8-s3.log      | 11 ++++
+ .../runs/loop8-s3/train_log.jsonl                  | 10 ++++
+ .../claude-rsn358t-20260926/runs/plain-s1.log      | 31 +++++++++++
+ .../runs/plain-s1/train_log.jsonl                  | 30 +++++++++++
+ .../claude-rsn358t-20260926/runs/plain-s2.log      | 29 ++++++++++
+ .../runs/plain-s2/train_log.jsonl                  | 28 ++++++++++
+ .../claude-rsn358t-20260926/runs/plain-s3.log      | 28 ++++++++++
+ .../runs/plain-s3/train_log.jsonl                  | 27 ++++++++++
+ .../claude-rsn358t-20260926/runs/plain-s4.log      | 27 ++++++++++
+ .../runs/plain-s4/train_log.jsonl                  | 26 +++++++++
+ artifacts/fable-predictions-ledger.md              |  5 ++
+ 22 files changed, 479 insertions(+)
+[0m
