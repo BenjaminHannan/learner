@@ -12,3 +12,6 @@ lookalike negatives (messages with a square that ask for something else), and th
 (the plain-English puzzles thread's rt-02g reader pattern: the 1B reads, code accepts a reading only if it matches the
 message exactly), with a grid format, not a second reader. If 358i fails in a way that leaves the loop weak on grids,
 358b3 uses whichever sealed loop net is strongest on grids by its own registered results, named before sealing.
+
+
+Correction (14:49 UTC, from `date -u`): the header time "~14:55 UTC" above is wrong. This note was committed at 14:44:33 UTC, still before any 358b2 run.
