@@ -1,0 +1,323 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m# [0mTodos
+[•] Fetch origin main and read common rules + PASSMARKS
+[ ] TREE+SEALS: extract archive, verify seals and reader SHA
+[ ] Build rows (expect 240 with history 210)
+[ ] One read with lis-319f reader (record device/median/wall)
+[ ] Copy reads, write RESULTS-read.md, rm temp dir, confirm gone
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo FETCH_EXIT:$?
+FETCH_EXIT:0
+[0m
+[0m$ [0mgit archive origin/main handoff/queue/lis-302-gpu.md | tar -xO | head -n 13; echo "---END13---"
+git archive origin/main artifacts/claude-lis319o-20260926/PASSMARKS.md | tar -xO; echo "---ENDPASS---"
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+---END13---
+# lis-319o: the compiler accepts an owner named earlier in the chat (one change, no retraining)
+
+Thread "Fix: reading facts from chat" (problem #1, saves too few). Written 2026-09-26 15:54 UTC, before the test panel exists.
+
+## Why
+lis-319k's diagnosis (artifacts/claude-lis319k-20260926/VERIFY.md): of 60 corrections, 16 (lis-319) / 14 (lis-319f) that
+the reader did read were thrown out by claude_lis300_compiler.check_fact as owner_not_span, because the owner was named in an
+earlier turn and the check only looks in this turn and the previous assistant reply. The reader is shown 6 earlier turns,
+so the notebook can point at where the owner was written.
+Dev (lis-319 dev reads, 1311 rows; claude_lis319o_owner.py dev): 60 owner_not_span facts, 51 pass the new check,
+18 of them saved at 0.995 of which 17 match the gold frame exactly. Dev bank (69 teach/correct turns): saved 34 -> 36.
+
+## The one change
+scripts/claude_lis319o_owner.py: when check_fact says owner_not_span and the owner occurs as whole words (exact case) in the
+row's history (earlier user turns and replies, as given to the reader), the fact goes on to the usual value and
+owner-equals-value checks. Nothing else changes: reader, prompt, bar (0.995), all other checks.
+
+## Test
+A fresh TEST-ONLY panel, readpanel319o, written after this file by a separate agent, focused on turns whose owner is named
+only earlier (new facts and corrections), plus lookalike turns that mention earlier-named people without a savable fact
+about them (questions, plans, doubt, other people's claims, and ambiguous "she"/"he" when two people could be meant).
+Blind second labeller + adjudicator as readpanel319k. Read ONCE by lis-319f (sha 970ef0ac...4f9b) on the Mac.
+OLD = that read with the current compiler (claude_lis319k_score.py final); NEW = the same read with the change
+(claude_lis319o_owner.py final). NEW's saves are a superset of OLD's; pairs from claude_lis319o_owner.py pairs cover both.
+Two blind Opus judges (JUDGE_SAME.md), one-to-one whole-claim credit.
+
+## Marks (NEW vs OLD, T 0.995)
+| Mark | Bar |
+|---|---|
+| O1 | saved_right_full: NEW >= OLD + 8 |
+| O2 | saved_wrong_full: NEW <= OLD + 2 |
+| O3 | lookalike_saves: NEW <= OLD + 1 |
+PASS = O1 and O2 and O3. Proved wrong: the O1 gain <= 2.
+INCONCLUSIVE if the panel has fewer than 40 current facts with needs_history, or the read covers fewer than 230 rows.
+Report only: correction_right, stale_saves, OLD vs NEW.
+If it passes, the rule is not shipped by hand: the owner-in-history case becomes the compiler's documented contract for
+the next retrained reader, and training rows are checked against it.
+
+## Addendum 1 (2026-09-26 15:56 UTC, before the panel exists; asked by the Thread manager)
+Which step does what: the 1B reader (lis-319f) PICKS the owner. It writes a name string in its frame from the turn and the 6
+earlier turns it is shown. The compiler only CHECKS that string: it must be a relation-table fact in a write mode, and after
+this change the owner must appear word for word in the turn, the previous reply or the earlier turns. The compiler never
+chooses or resolves a person. So a wrong-person save is the reader's choice, and before this change the compiler hid such
+saves when the name wasn't in the turn.
+Added mark (tight, and not folded into O2), from claude_lis319o_owner.py final ("admitted_*" counts: saves at 0.995 that the
+old check rejects as owner_not_span and the new check accepts):
+| O4 | admitted saves the judges do not credit (wrong owner or wrong in any other way): <= 1 |
+Report: admitted_saves, admitted_wrong_owner (same relation and value as a gold fact of the row, other owner), and
+admitted_on_ambiguous (saves on lookalike rows whose reason is "ambiguous").
+PASS = O1 and O2 and O3 and O4.
+The panel brief now also asks for at least 12 dialogs naming two or more people before the history-owner turns, with at least
+15 history-owner rows where more than one earlier person is present but context settles who. About 10 truly ambiguous rows
+have no fact in the key.
+---ENDPASS---
+[0m
+[0m$ [0mpwd; uptime; df -g /; ls -R artifacts/claude-lis319o-20260926 2>&1 | head -n 100; ls ~/premonition-models/lis319f-merged/ 2>&1 | head -n 50
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+12:09  up 3 days,  2:02, 4 users, load averages: 72.37 83.00 87.17
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        53    20%  484014 560100640    0%   /
+ls: artifacts/claude-lis319o-20260926: No such file or directory
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer_config.json
+tokenizer.json
+[0m
+[0m$ [0mgit archive origin/main artifacts/claude-lis319o-20260926 artifacts/claude-readpanel319o-20260926 2>&1 | tar -t | head -n 100; echo "---"; git log --oneline -5 origin/main 2>&1 | head; git status --short 2>&1 | head -n 50
+artifacts/
+artifacts/claude-lis319o-20260926/
+artifacts/claude-lis319o-20260926/PASSMARKS.md
+artifacts/claude-lis319o-20260926/SEAL.sha256.txt
+artifacts/claude-readpanel319o-20260926/
+artifacts/claude-readpanel319o-20260926/ADJUDICATE.md
+artifacts/claude-readpanel319o-20260926/AUDIT.md
+artifacts/claude-readpanel319o-20260926/LABELLER.md
+artifacts/claude-readpanel319o-20260926/README.md
+artifacts/claude-readpanel319o-20260926/SEAL.sha256.txt
+artifacts/claude-readpanel319o-20260926/WRITER.md
+artifacts/claude-readpanel319o-20260926/adjudication.jsonl
+artifacts/claude-readpanel319o-20260926/label_B.jsonl
+artifacts/claude-readpanel319o-20260926/panel.jsonl
+---
+9fda097de 0.2d ADDENDUM-12: re-plan under Redirect (learned gates only; rule routes stop; judged vs plain same-size rivals)
+7562633f6 queue: rent-mu404b re-run after HOST-FAIL (image + host pick only)
+be2f1b438 Goals page: Ben 16:08 - where silicon can improve biology it should
+171c8e5e8 readpanel319o sealed (TEST-ONLY, 240 rows, 86 history-owner facts); queue lis-319o's one Mac read with lis-319f
+4f7b76269 board: Redirect + brain first (Ben 16:04/16:05)
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+A  artifacts/claude-k1a-20260926/RESULTS-rent.md
+A  artifacts/claude-k1a-20260926/run/creative_B.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_K.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_KB.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_KB0.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_T.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_X.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_judge.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_judge_u.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_key.json
+A  artifacts/claude-k1a-20260926/run/creative_key_u.json
+A  artifacts/claude-k1a-20260926/run/dev/creative_K.jsonl
+A  artifacts/claude-k1a-20260926/run/dev/creative_KB.jsonl
+A  artifacts/claude-k1a-20260926/run/dev/logdev.txt
+A  artifacts/claude-k1a-20260926/run/dev/logdevkb.txt
+A  artifacts/claude-k1a-20260926/run/logB.txt
+A  artifacts/claude-k1a-20260926/run/logK.txt
+A  artifacts/claude-k1a-20260926/run/logKB.txt
+A  artifacts/claude-k1a-20260926/run/logKB0.txt
+A  artifacts/claude-k1a-20260926/run/logT.txt
+A  artifacts/claude-k1a-20260926/run/logX.txt
+A  artifacts/claude-k1a-20260926/run/summary_creative.json
+MM artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+[0m
+[0m# [0mTodos
+[✓] Fetch origin main and read common rules + PASSMARKS
+[•] TREE+SEALS: extract archive, verify seals and reader SHA
+[ ] Build rows (expect 240 with history 210)
+[ ] One read with lis-319f reader (record device/median/wall)
+[ ] Copy reads, write RESULTS-read.md, rm temp dir, confirm gone
+[0m
+[0m$ [0mD=$(mktemp -d); echo "D=$D"; git archive origin/main scripts design/v3/60-listener artifacts/claude-lis319o-20260926 artifacts/claude-readpanel319o-20260926 | tar -x -C "$D"; echo EXTRACT_EXIT:$?; ls "$D" | head -n 20; ls "$D/scripts" | head -n 50
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.owEFp7EgU9
+EXTRACT_EXIT:0
+artifacts
+design
+scripts
+address_probe.py
+astra_canonical_operator_panels.py
+astra_canonical_operator_report.py
+astra_canonical_operator_run.py
+astra_canonical_operator.py
+astra_transfer_diagnostic.py
+astra_transfer_report.py
+astra_transfer_twins.py
+benspc-runtime.json
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_age334_agent.py
+claude_age334_test.py
+claude_apos247_devcases.py
+claude_apos247_run.py
+claude_apos247_score.py
+claude_ask24.py
+claude_ask24ab.py
+claude_attempts.py
+claude_blurt_selfjudge.py
+claude_blurt_supply.py
+claude_blurt1.py
+claude_blurt2.py
+claude_blurt4.py
+claude_blurt5s.py
+[0m
+[0m$ [0mD=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.owEFp7EgU9; shasum -a 256 -c artifacts/claude-lis319o-20260926/SEAL.sha256.txt 2>&1; echo SEAL1_EXIT:$?; (cd artifacts/claude-readpanel319o-20260926 && shasum -a 256 -c SEAL.sha256.txt) 2>&1; echo SEAL2_EXIT:$?; shasum -a 256 ~/premonition-models/lis319f-merged/model.safetensors 2>&1; echo READER_SHA_EXIT:$?
+artifacts/claude-lis319o-20260926/PASSMARKS.md: OK
+scripts/claude_lis319o_owner.py: OK
+scripts/claude_lis319k_score.py: OK
+scripts/claude_lis319_read.py: OK
+scripts/claude_lis319_rows.py: OK
+scripts/claude_lis319_fullclaim_b.py: OK
+scripts/claude_lis300_compiler.py: OK
+SEAL1_EXIT:0
+panel.jsonl: OK
+label_B.jsonl: OK
+adjudication.jsonl: OK
+WRITER.md: OK
+LABELLER.md: OK
+ADJUDICATE.md: OK
+README.md: OK
+AUDIT.md: OK
+SEAL2_EXIT:0
+970ef0acd5966f9e1a42049025d4ed807dee3989225201fd9dbcc6b4aa6b4f9b  /Users/ben-hannan/premonition-models/lis319f-merged/model.safetensors
+READER_SHA_EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Fetch origin main and read common rules + PASSMARKS
+[✓] TREE+SEALS: extract archive, verify seals and reader SHA
+[•] Build rows (expect 240 with history 210)
+[ ] One read with lis-319f reader (record device/median/wall)
+[ ] Copy reads, write RESULTS-read.md, rm temp dir, confirm gone
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis319_rows.py --rows artifacts/claude-readpanel319o-20260926/panel.jsonl --out rows.jsonl 2>&1; echo ROWS_EXIT:$?
+rows 240 with history 210
+ROWS_EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Fetch origin main and read common rules + PASSMARKS
+[✓] TREE+SEALS: extract archive, verify seals and reader SHA
+[✓] Build rows (expect 240 with history 210)
+[•] One read with lis-319f reader (record device/median/wall)
+[ ] Copy reads, write RESULTS-read.md, rm temp dir, confirm gone
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; export READER=$HOME/premonition-models/lis319f-merged; echo "READER=$READER"; date -u +%FT%TZ; START=$(date +%s); uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis319_read.py --model $READER --rows rows.jsonl --out reads_panel_319f.jsonl 2>&1; echo READ_EXIT:$?; END=$(date +%s); echo "WALL_SEC=$((END-START))"; date -u +%FT%TZ
+READER=/Users/ben-hannan/premonition-models/lis319f-merged
+2026-09-26T16:10:24Z
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<05:12,  1.43s/it]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 152.37it/s]
+read 240 rows on mps
+READ_EXIT:0
+WALL_SEC=420
+2026-09-26T16:17:24Z
+[0m
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.owEFp7EgU9/scripts/claude_lis319_read.py
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "import json,statistics,pathlib; p=pathlib.Path('reads_panel_319f.jsonl'); ms=[json.loads(l)['ms'] for l in p.read_text().splitlines() if l.strip()]; ms.sort(); print('n',len(ms)); print('median_ms',statistics.median(ms)); print('mean_ms',round(sum(ms)/len(ms),1)); print('min_ms',min(ms)); print('max_ms',max(ms))" 2>&1; echo STATS_EXIT:$?; ls -l reads_panel_319f.jsonl rows.jsonl 2>&1
+n 240
+median_ms 1526.65
+mean_ms 1715.4
+min_ms 890.0
+max_ms 6272.6
+STATS_EXIT:0
+-rw-r--r--  1 ben-hannan  staff   92587 Sep 26 12:17 reads_panel_319f.jsonl
+-rw-r--r--  1 ben-hannan  staff  168058 Sep 26 12:10 rows.jsonl
+[0m
+[0m# [0mTodos
+[✓] Fetch origin main and read common rules + PASSMARKS
+[✓] TREE+SEALS: extract archive, verify seals and reader SHA
+[✓] Build rows (expect 240 with history 210)
+[✓] One read with lis-319f reader (record device/median/wall)
+[•] Copy reads, write RESULTS-read.md, rm temp dir, confirm gone
+[0m
+[0m$ [0mmkdir -p artifacts/claude-lis319o-20260926 && cp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.owEFp7EgU9/reads_panel_319f.jsonl artifacts/claude-lis319o-20260926/reads_panel_319f.jsonl && ls -l artifacts/claude-lis319o-20260926/ && echo COPY_OK
+total 184
+-rw-r--r--  1 ben-hannan  staff  92587 Sep 26 12:17 reads_panel_319f.jsonl
+COPY_OK
+[0m
+[0m← [0mWrite artifacts/claude-lis319o-20260926/RESULTS-read.md
+Wrote file successfully.
+[0m
+[0m$ [0mrm -rf "/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.owEFp7EgU9"; echo RM_EXIT:$?; ls "/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.owEFp7EgU9" 2>&1; echo LS_EXIT:$?; ls -l artifacts/claude-lis319o-20260926/ 2>&1
+RM_EXIT:0
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.owEFp7EgU9: No such file or directory
+LS_EXIT:1
+total 192
+-rw-r--r--  1 ben-hannan  staff  92587 Sep 26 12:17 reads_panel_319f.jsonl
+-rw-r--r--  1 ben-hannan  staff   3535 Sep 26 12:18 RESULTS-read.md
+[0m
+[0m# [0mTodos
+[✓] Fetch origin main and read common rules + PASSMARKS
+[✓] TREE+SEALS: extract archive, verify seals and reader SHA
+[✓] Build rows (expect 240 with history 210)
+[✓] One read with lis-319f reader (record device/median/wall)
+[✓] Copy reads, write RESULTS-read.md, rm temp dir, confirm gone
+[0m
