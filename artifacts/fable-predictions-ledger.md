@@ -2650,3 +2650,5 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-26 16:07 UTC rent-q404 (Month-end, label claude-monthend-q404) cap $1.20; Month-end total $1.63 of $2 with rent-02dr ~$0.43. Depot keeps /root/reader319 until q-404 has read it.
 
 - 2026-09-26 16:08 UTC rent-mu404 HOST-FAIL (~$0.03, three broken hosts). Re-queued as rent-mu404b, same task, cap $1.00 including the $0.03; Making things up $0.39 spent + $0.97 cap = $1.36 of $2.
+
+- 2026-09-26 16:16 UTC release rent-0y1g (Answering from memory, label claude-memory-y1g) cap $0.30; thread spent ~$0.37 (y1d ~$0.14, y1f ~$0.23) + $0.30 cap = $0.67 of $2. Checked against Redirect: model self-check on DEV data, not a rule route.
