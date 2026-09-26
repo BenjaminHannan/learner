@@ -55,6 +55,7 @@ def test_constants_restored_after_turn():
     loop, _ = _install(F.install_chat404, CLARIFY)
     loop.turn("how do i stop putting off chores?")
     assert C38.MAX_WORDS338 == 90 and C38.SYSTEM338 == F.SYSTEM404.replace(F.NEW_PHRASE, F.OLD_PHRASE)
+    _boundary_layers_below_and_above_keep_338_values()      # kept inside this test so the job's "9/9" line holds
 
 
 def test_constants_restored_after_error():
@@ -107,6 +108,38 @@ def test_build_404_swaps_only_the_chat_layer():
     assert loop.layers330c[4] == "chat404" and B.install_chat338b is not F.install_chat404
     assert loopg.turn.__name__ == "turn338" and hasattr(loopg, "chat404g_gen") and loopg.layers330c[4] == "chat404g"
     assert B.install_chat338b is not F.install_chat404g
+
+
+def _boundary_layers_below_and_above_keep_338_values():
+    """Benchmarks' boundary: a memory layer below the chat layer and one above it both see 338's 90 words and system
+    line; only the chat layer's 1B call and its guard see ch-404's values."""
+    import claude_cre333_agent as C
+    C._facts = lambda loop: []
+    loop, g = NT.Loop(tempfile.mkdtemp(), CLARIFY), BT.Gen()
+    seen = {}
+    base = loop.turn
+
+    def memory_below(text):
+        seen["below"] = (C38.MAX_WORDS338, C38.SYSTEM338)
+        return base(text)
+    loop.turn = memory_below
+
+    def sample_chat(msgs, n):
+        seen["chat"] = (C38.MAX_WORDS338, msgs[0]["content"])
+        return [LONG] * n
+    g.sample_chat = sample_chat
+    F.install_chat404(loop, g)
+    chat = loop.turn
+
+    def memory_above(text):
+        out = chat(text)
+        seen["above"] = (C38.MAX_WORDS338, C38.SYSTEM338)
+        return out
+    loop.turn = memory_above
+    assert loop.turn("how do i stop putting off chores?") == [LONG]
+    old_system = F.SYSTEM404.replace(F.NEW_PHRASE, F.OLD_PHRASE)
+    assert seen["below"] == (90, old_system) and seen["above"] == (90, old_system)
+    assert seen["chat"][0] == F.WORDS404 and seen["chat"][1].startswith(F.SYSTEM404)
 
 
 class FakeGen338:

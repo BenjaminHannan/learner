@@ -14,8 +14,8 @@ What: while the chat layer runs, SYSTEM338's "in 1 to 4 sentences" becomes "fit 
 sentence or two for small talk, a full and specific answer for advice or explanations)", and G4's cap is WORDS404
 words instead of 90. The 1B's token budget stays 338's 200 (Gen338.max_new), which is above the twin's 160. Nothing
 else changes: the same samples (N338 = 4, temperature 0.7), guards G1-G3, recall403, history, layers and order.
-Other layers that read these two constants (cre333d sets and restores its own cap) see 338's values outside the
-chat layer's call.
+Boundary: only the chat layer's own code sees the new values; layers below it (and any memory-answer layer, e.g.
+answer382, y1d/y1w, which use C38.guard) and layers above it keep 338's values (checked in scripts/claude_ch404_test.py, _boundary_layers_below_and_above_keep_338_values).
 
 build_404 = build_403 with the two constants swapped around ch-403's chat turn only.
 
@@ -46,7 +46,24 @@ SYSTEM404 = C38.SYSTEM338.replace(OLD_PHRASE, NEW_PHRASE)
 
 
 def install_chat404(loop, gen, n: int = C38.N338) -> None:
-    """ch-403's chat layer, run with SYSTEM404 and WORDS404 in place of SYSTEM338 and MAX_WORDS338."""
+    """ch-403's chat layer, run with SYSTEM404 and WORDS404 in place of SYSTEM338 and MAX_WORDS338.
+
+    Boundary (proposed to Benchmarks, whose past-chat answers must stay short): only the chat layer's own code sees
+    the new values. Every layer below it (reader, notebook, creative, think, and any memory-answer layer a joined
+    build might install there) runs with the values in force outside, and every layer above never sees them."""
+    below = loop.turn
+    outside: list[tuple] = []
+
+    def below404(text: str) -> list[str]:
+        cur = (C38.SYSTEM338, C38.MAX_WORDS338)
+        if outside:
+            C38.SYSTEM338, C38.MAX_WORDS338 = outside[-1]
+        try:
+            return below(text)
+        finally:
+            C38.SYSTEM338, C38.MAX_WORDS338 = cur
+
+    loop.turn = below404
     N.install_chat403(loop, gen, n)
     inner = loop.turn                       # ch-403's turn338 (its closure holds state and save)
     loop.chat404_stats = {"turns": 0}
@@ -54,12 +71,12 @@ def install_chat404(loop, gen, n: int = C38.N338) -> None:
     def turn338(text: str) -> list[str]:
         _ = (state, save)                   # keep the history cells visible to claude_fix02c.chat338_state (F1)
         loop.chat404_stats["turns"] += 1
-        old = (C38.SYSTEM338, C38.MAX_WORDS338)
+        outside.append((C38.SYSTEM338, C38.MAX_WORDS338))
         C38.SYSTEM338, C38.MAX_WORDS338 = SYSTEM404, WORDS404
         try:
             return inner(text)
         finally:
-            C38.SYSTEM338, C38.MAX_WORDS338 = old
+            C38.SYSTEM338, C38.MAX_WORDS338 = outside.pop()
 
     cells = dict(zip(inner.__code__.co_freevars, inner.__closure__ or ()))
     state, save = cells["state"].cell_contents, cells["save"].cell_contents

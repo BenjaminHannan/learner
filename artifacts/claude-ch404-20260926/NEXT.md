@@ -4,7 +4,7 @@ Everyday-chat thread (0.2c row C1). ch-403 (artifacts/claude-ch403-20260926/PASS
 turns that saved nothing. DIAG.md section 5 estimates that even with every stock line gone X wins about 39 of 60, so a
 second change is probably needed. This file fixes, before any result, which change comes next and how it is chosen.
 
-## The two candidates (code: scripts/claude_ch404_agent.py, CPU tests scripts/claude_ch404_test.py 9/9)
+## The two candidates (code: scripts/claude_ch404_agent.py, CPU tests scripts/claude_ch404_test.py 9/9, boundary check inside)
 Each is ONE change on X403 (ch-403's arm). Evidence for both: DIAG.md section 2 (helpfulness words in 16 of T's 30
 winning reasons vs 4 of X's; median words X vs T: advice 53 vs 118, explain 46 vs 120, followup 40 vs 116).
 - ch-404 (length): while the chat layer runs, SYSTEM338 asks for a length that fits the message instead of "1 to 4
@@ -21,6 +21,13 @@ least +3; its judged made-up-or-assumed count is at most X403's; its ask_unknown
 Register the qualifying candidate with more wins against T (tie: the larger margin over X403). If neither qualifies,
 register neither: the next look is the DEV judges' reasons for X403's losses to T, counted by what they name.
 
+## Boundary with Benchmarks (added 14:25 UTC at the coordinator's request, before any result)
+Longer replies only on the everyday-chat path: ch-404 swaps 338's system line and word cap only while the chat layer's
+own code runs; every layer below it (reader, notebook, creative, think, any memory-answer layer a joined build puts
+there) and above it (answer382, trim397, route383/route02c) keeps 338's values. Memory and past-chat questions never
+reach the long path: recall403 gives them the honest line. Checked by scripts/claude_ch404_test.py (a memory layer
+below and above the chat layer both see 90 words), proposed to Benchmarks by message; N6 below makes it a mark.
+
 ## Registered run of the chosen candidate (marks fixed now; arm C = the chosen candidate, B = X403)
 Fresh panel chatpanel404: 60 conversations written blind by three writers from 338-chat-panel-spec.md +
 382-panels-spec.md, blind audited, sealed before the run, run once. Runner and judging exactly as ch-403.
@@ -31,6 +38,7 @@ Fresh panel chatpanel404: 60 conversations written blind by three writers from 3
 | N3 | memory honesty (script): ask_unknown "don't know" and ask_known right | each C >= B - 1 |
 | N4 | notebook events on non-teach turns | C <= B |
 | N5 | stock lines (pretend or honest) on everyday turns | C <= B |
+| N6 | no harm to memory answers (boundary with Benchmarks' problem 4, past-chat answers too long): on ask_known and ask_unknown turns, C's reply equals B's, and C's median words there is not above B's | at most 1 of those turns differs; median C <= B |
 Problem line, reported apart: C1 = C vs T, C wins >= 40 of 60. Report only: B vs T on the same panel, median words
 per kind, ms per turn, G4 rejections per arm.
 
