@@ -6,3 +6,11 @@
 - Last log line so far (written 20:19:23 UTC): the pool/positives summary, i.e. the base has written its quiz
   questions and the switch features are being computed. dl5s_results.json and the full log are committed when the
   run ends; a 90-minute timeout stops it otherwise.
+
+## Try 1 stopped by my own time limit; try 2 started (2026-09-26T21:24:29Z, date -u)
+- Try 1 (PID 6520) was killed at 21:23 UTC by the 90-minute `timeout 5400` I put on the command (a wrapper, not part
+  of the sealed code). It had written the pool line at 20:19 and was still computing switch features (about 2,200
+  prompt passes on CPU; my 35-minute estimate was wrong). No results file was written; nothing was seen.
+  Its log is kept as cpu/log-try1-timestop.txt.
+- Try 2: the same sealed script and arguments, unchanged, with a 4-hour wrapper: PID 10155, started 2026-09-26T21:24:29Z. Same seeds, so the
+  base writes the same pool on this CPU.
