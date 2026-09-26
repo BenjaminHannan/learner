@@ -16,4 +16,4 @@ Written before dense and moe have finished phase A and before the 358e verdict, 
 
 **Cost:** $0, CPU, about 1 h for 2 seeds of each arm.
 
-_Edited 20:31 UTC (before sealing) after the Thread manager's 20:27 notes: dense-replay stays report only with no experts-vs-dense claim; replay pool and count stated._
+_Edited 20:27 UTC (before sealing) after the Thread manager's 20:27 notes: dense-replay stays report only with no experts-vs-dense claim; replay pool and count stated._
