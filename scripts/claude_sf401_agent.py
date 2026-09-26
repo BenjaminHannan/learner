@@ -35,10 +35,14 @@ The one change: a saved fact that a later user turn contradicted is never stated
 Install: install_sf401(loop, memo) right outside the listener stack (on turn316); build_02c_sf401 is 0.2c's
 build_02c with this layer added there and nothing else (a build-time wrapper around claude_lis_stackb.build_stack).
 Counters: loop.sf401_stats; with SF401_LOG=<path> each built agent appends its counters (counts only) at exit.
+With SF401_EVENTS=<path> (diagnosis only, added before the seal; replies are unchanged) every turn appends one line:
+the state dir, sha1 of the user's words (16 hex), the reader's act, live doubts, live doubts whose value the reply
+names, and which counters moved. No words are logged. scripts/claude_sf401_diag.py joins it to the panel by sha.
 """
 from __future__ import annotations
 
 import atexit
+import hashlib
 import json
 import os
 import re
@@ -262,6 +266,30 @@ def install_sf401(loop, memo, store_path=None):
             loop.lis310_prev = out
             return [out]
         return reply
+
+    ev_path = os.environ.get("SF401_EVENTS")
+    guarded = turn401
+
+    def turn401(text):  # type: ignore[no-redef]  # same turn; with SF401_EVENTS also one line of counts per turn
+        if not ev_path:
+            return guarded(text)
+        was = dict(st)
+        out = guarded(text)
+        frame = first["read"][0] if isinstance(first["read"], (tuple, list)) and first["read"] \
+            and isinstance(first["read"][0], dict) else None
+        said = " ".join(p for p in (out or []) if p) if isinstance(out, list) else str(out or "")
+        now = _triples(loop)
+        live = [d for d in doubts if key(d) in now]
+        row = {"dir": str(sdir), "sha": hashlib.sha1(str(text).encode("utf-8")).hexdigest()[:16],
+               "act": frame.get("act") if frame else None, "live": len(live),
+               "live_named": sum(1 for d in live if _names(said, d["v"])),
+               "delta": {k: st[k] - was.get(k, 0) for k in st if k != "doubts_live" and st[k] != was.get(k, 0)}}
+        try:
+            with open(ev_path, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(row, sort_keys=True) + "\n")
+        except OSError:
+            pass
+        return out
 
     turn401.__name__ = "turn401"
     loop.turn = turn401

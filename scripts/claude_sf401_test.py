@@ -18,12 +18,15 @@ Dialogs are invented (fictional people, pets and towns). T = 0.995 throughout.
   s12 build_02c_sf401's build wrapper installs the guard inside the listener stack and restores build_stack
   s13 pure rules: same_person, doubts_from_frame (a, b, c incl. FORMER, other person, other modes, repeat,
       multi, ungrounded value)
+  s14 SF401_EVENTS: replies unchanged, one counts-only line per turn, no words logged
 
 Run: python3 -B scripts/claude_sf401_test.py   (exit 0 iff all pass)
 """
 from __future__ import annotations
 
 import copy
+import json
+import os
 import sys
 import tempfile
 import traceback
@@ -327,7 +330,29 @@ def s13():
     assert not new and not rep
 
 
-TESTS = [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13]
+def s14():
+    seq = [T_TEACH, T_FIX, Q_CITY, "yes", Q_CITY]
+    loop, _r, _d = fresh(table_city(FIX_OLD), guard=True)
+    plain = [say(loop, t) for t in seq]
+    ev = os.path.join(tempfile.mkdtemp(prefix="sf401ev_"), "ev.jsonl")
+    os.environ["SF401_EVENTS"] = ev
+    try:
+        loop, _r, d = fresh(table_city(FIX_OLD), guard=True)
+        logged = [say(loop, t) for t in seq]
+    finally:
+        os.environ.pop("SF401_EVENTS", None)
+    assert logged == plain, (logged, plain)
+    rows = [json.loads(x) for x in open(ev, encoding="utf-8")]
+    assert len(rows) == len(seq), rows
+    raw = open(ev, encoding="utf-8").read()
+    assert not any(w in raw for w in ("Brannoc", "Quillmere", "Veltrow")), "no words are logged"
+    assert rows[1]["delta"].get("doubt_b") == 1 and rows[1]["live"] == 1, rows[1]
+    assert rows[2]["delta"].get("fired_confirm") == 1 and rows[2]["act"] == "ASK", rows[2]
+    assert rows[4]["live"] == 0 and rows[4]["live_named"] == 0, rows[4]
+    assert all(r["dir"] == str(d) for r in rows), rows
+
+
+TESTS = [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14]
 
 
 def main() -> int:
