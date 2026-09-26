@@ -2648,3 +2648,5 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-26 16:02 UTC Director: rent-358i actual ~$0.94 + ~$0.10 stuck hosts = ~$1.04 (cap $1.50). Sleep research line: 358i ~$1.04 + 358b2 (≤$0.40) + 358t (≤$1.60, Ben) + 358x (≤$0.60, Ben).
 
 - 2026-09-26 16:07 UTC rent-q404 (Month-end, label claude-monthend-q404) cap $1.20; Month-end total $1.63 of $2 with rent-02dr ~$0.43. Depot keeps /root/reader319 until q-404 has read it.
+
+- 2026-09-26 16:08 UTC rent-mu404 HOST-FAIL (~$0.03, three broken hosts). Re-queued as rent-mu404b, same task, cap $1.00 including the $0.03; Making things up $0.39 spent + $0.97 cap = $1.36 of $2.
