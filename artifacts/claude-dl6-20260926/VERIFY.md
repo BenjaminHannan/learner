@@ -17,3 +17,12 @@ One epoch per night roughly halved forgetting and roughly halved learning. Night
 L s11 night 6 was 115 vs S s11's 190. Drift from the base on chat replies (KL) was NOT lower for L (0.22 vs 0.19-0.21
 at night 7). Reading (suggested): lost tracks how much is trained, not the KL measure on chat, and cutting the dose
 trades learning away about one for one.
+
+## Dose split (report-only, computed after the verdict at the Thread manager's request)
+Cumulative example-epochs (right examples x epochs, summed over nights) -> lost, lucky:
+- S s10: 210->4,123; 468->7,140; 747->11,153; 1065->14,164; 1392->21,170; 1719->25,176; 2046->25,198
+- S s11: 219->3,96; 489->12,118; 756->12,168; 1074->15,175; 1407->26,234; 1734->20,190; 2070->27,237
+- L s10: 70->3,99; 149->4,80; 230->3,98; 331->4,80; 426->10,130; 522->8,127; 616->13,140
+- L s11: 73->3,100; 147->4,135; 222->6,151; 317->4,120; 426->7,125; 531->7,115 (night 7 not run)
+At matched totals S and L lose about the same and learn about the same (near 220: lost 4, 3 vs 3, 6; near 430-490:
+7, 12 vs 10, 7). Suggested: forgetting and learning both track the total amount trained, not the number of nights.
