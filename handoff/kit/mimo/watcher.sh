@@ -53,10 +53,14 @@ while [ ! -e "$H/STOP" ]; do
     [ "$running" -ge "$MAX" ] && break
     load=$(sysctl -n vm.loadavg 2>/dev/null | awk '{print int($2)}'); [ -z "$load" ] && load=0
     if [ "$running" -ge 2 ] && [ "$load" -gt 60 ]; then log "load $load, holding new launches ($running running)"; break; fi
-    freegb=$(df -g / | tail -1 | awk '{print $4}'); if [ "${freegb:-0}" -lt 5 ]; then log "disk ${freegb} GB free, holding new launches"
+    freegb=$(df -g / | tail -1 | awk '{print $4}')
+    # Ben 06:54 UTC 09-26 made Mac disk the pipeline's job ("You have this responsibility"): jobs marked LOWDISK-OK
+    # (no model copy-back to the Mac) may launch down to 2 GB free; everything else keeps the 5 GB rule
+    if [ "${freegb:-0}" -lt 5 ] && [ "${freegb:-0}" -ge 2 ] && git -C "$W" show "origin/$IN:$f" 2>/dev/null | grep -q '^LOWDISK-OK: yes'; then log "disk ${freegb} GB free, launching LOWDISK-OK $n"; freegb=5; fi
+    if [ "${freegb:-0}" -lt 5 ]; then log "disk ${freegb} GB free, holding new launches"
       # uv cache prune when low (never uv cache clean); Trash emptied at most once
       if [ ! -e "$H/lowdisk.$(date +%Y%m%d%H)" ]; then touch "$H/lowdisk.$(date +%Y%m%d%H)"
-        uv cache prune >/dev/null 2>&1 && log "lowdisk: uv cache prune"
+        { U=$(command -v uv || echo "$HOME/.local/bin/uv"); "$U" cache prune >/dev/null 2>&1 && log "lowdisk: uv cache prune" || log "lowdisk: uv cache prune failed"; }
         # one time only (Ben's 02:17 yes covered the two models moved to the Trash that night); never a standing auto-delete
         if [ ! -e "$H/lowdisk.trash-once" ]; then touch "$H/lowdisk.trash-once"
           osascript -e 'with timeout of 900 seconds' -e 'tell application "Finder" to empty trash' -e 'end timeout' >/dev/null 2>&1 && log "lowdisk: emptied Trash (one time)" || log "lowdisk: empty Trash failed"; fi

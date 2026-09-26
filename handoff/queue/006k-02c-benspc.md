@@ -1,5 +1,6 @@
 COMMON RULES (the month-end thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply).
 GPU: yes (BensPC RTX 5070 Ti 16 GB; one job at a time). BACKUP of rent-02c: the Director releases this ONLY if rent-02c stopped with LOW-CREDIT (or never launched) and nothing of it ran. $0, no rental.
+LOWDISK-OK: yes (director: runs on BensPC; copies back only small result files to the Mac, never model weights)
 TIME CAP: stop by 10:50 UTC 2026-09-26 whatever the step. If reached: stop by exact PID, copy back what exists, report "partial".
 
 YOUR TASK: 02c-benspc, THE REGISTERED RUN of Premonition 0.2c (marks: artifacts/claude-e2e02c-20260926/PASSMARKS-02c.md, read it with every addendum), on BensPC instead of a rental. Same sealed code, same commands, same order as origin/main:handoff/held/superseded/rent-02c.md (the rental version; read its steps, never launch it); only the machine, the paths and step 4b's timing differ. TEST-ONLY, never open, print or quote: artifacts/claude-e2e331-bankD-20260925 and artifacts/claude-panel02c-20260926 (only runners and scorers read them). Run ONCE.
