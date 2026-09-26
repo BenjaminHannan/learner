@@ -2646,3 +2646,5 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-26 15:52 UTC Director: Ben 15:50 approved claude-sleep-358x up to $0.60 over Sleep research's $2 (card in Thread manager thread).
 - 2026-09-26 16:00 UTC Director: rent-brd8 actual ~$0.88 (Creative). rent-brd9 released, $0.90 cap of Creative's remaining $1.12.
 - 2026-09-26 16:02 UTC Director: rent-358i actual ~$0.94 + ~$0.10 stuck hosts = ~$1.04 (cap $1.50). Sleep research line: 358i ~$1.04 + 358b2 (≤$0.40) + 358t (≤$1.60, Ben) + 358x (≤$0.60, Ben).
+
+- 2026-09-26 16:07 UTC rent-q404 (Month-end, label claude-monthend-q404) cap $1.20; Month-end total $1.63 of $2 with rent-02dr ~$0.43. Depot keeps /root/reader319 until q-404 has read it.
