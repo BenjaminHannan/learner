@@ -86,3 +86,19 @@ main; its sha256 matches bm-391's baselines.sha256.txt.
 
 ## Still to add
 E20F (report only), started 2026-09-26T03:20:21Z on CPU here.
+
+## E20F (report only; added ~04:05 UTC)
+The sealed finaliser on bm-395's E20 answers (run/locomo_E20.jsonl, sha256 e7f70f57…bcef), on CPU here. It started
+2026-09-26T03:20:21Z and took 2,480.2 s. Printed line:
+{"arm": "E20F", "rows": 1986, "reasons": {"same": 1162, "not_copy": 222, "changed": 117, "category_5_untouched": 446, "abstains": 39}, "seconds": 2480.2}
+- run/locomo_E20F.jsonl: 1,986 rows, sha256 2e13c748c110cca0d00846248560743a571a8e771a8c739959d8a90e2df87602.
+- Sealed scorer (score-E20F/): cat 1-4 F1 E20 29.85, E20F 29.85, so E20F − E20 = 0.00. The question-level interval
+  is −0.19 to +0.19 and the conversation-level interval is −0.18 to +0.17. By category, E20 → E20F: 25.58 → 25.29,
+  27.34 → 27.58, 12.92 → 12.92, 34.17 → 34.18. Confident wrong: 498 → 501. Abstentions: 39 → 39.
+- bm-396 columns: all_gold_tokens 360 → 352, zero_overlap 538 → 541, best_span_f1 44.90 → 44.60.
+- P5 (E20F − E20 smaller than TF − T): holds (0.00 vs +0.28).
+- Shown: on the retrieval arm, too, the copy-only trim changes almost nothing.
+
+## Still to add
+Nothing. bm-397 is complete: F1 FAIL, F2 FAIL, no-drop FAIL (GSM8K), recount agrees. Its registered next step is
+bm-397t (artifacts/claude-bm397t-20260926/PLAN.md), sealed and running on a rental.
