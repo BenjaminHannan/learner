@@ -1,6 +1,6 @@
 # lis-320 addendum 1: ask-back rows (a mark added before the panel is sealed and before any read or training)
 
-Written 2026-09-26 17:18 UTC. Source: Trustworthy notes' lead 44c4b4341. In 0.2c the build asked "is Kim's occupation marine
+Written 2026-09-26 17:11 UTC. Source: Trustworthy notes' lead 44c4b4341. In 0.2c the build asked "is Kim's occupation marine
 biology?", the user answered "ok ty, gonna sleep on it. night!", and the fact was saved. The reader took the assistant's own
 question as the user's words, which is a source-monitoring error. The Thread manager asked for this at 17:04.
 
