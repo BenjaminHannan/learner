@@ -38,16 +38,20 @@ def main():
     # fake 1B information: longer text = more tied to the prompt; the null prompt gives 0
     PL.reply_logp = lambda g, gen, msgs, t: (0.0 if msgs[-1]["content"] == "" else len(t) / 100)
     try:
-        # 1. form first: the draft with the asked-for count wins over an earlier, shorter list
+        # 1. the 1B's information decides (fake: longer = more tied to the prompt); no regex form rule
         st = {}
         out = K.write_k1c(Gen([two, three, "1. A.\n2. B.\n3. C."]), REQ, "", [], st, whole=False)
-        assert out == three and st["picked_not_first"] == 1 and st["picked_by_form"] == 1, (out, st)
+        assert out == three and st["picked_not_first"] == 1 and "picked_by_form" not in st, (out, st)
         ok += 1
-        # 2. same form: the 1B's information decides; ties keep draw order
-        st = {}
-        a, b = "1. Crumb Club.\n2. Rise.\n3. Loaf.", "1. Crumb Club and Co.\n2. Rise.\n3. Loaf."
-        assert K.write_k1c(Gen([a, b]), REQ, "", [], st, whole=False) == b
-        assert K.write_k1c(Gen([a, a + ""]), REQ, "", [], {}, whole=False) == a
+        # 2. ties keep draw order; a single passing draft needs no scoring
+        a = "1. Crumb Club.\n2. Rise.\n3. Loaf."
+        assert K.write_k1c(Gen([a, a]), REQ, "", [], {}, whole=False) == a
+        calls = []
+        PL.reply_logp, lp = (lambda g, gen, msgs, t: calls.append(1) or 0.0), PL.reply_logp
+        try:
+            assert K.write_k1c(Gen([a]), REQ, "", [], {}, whole=False) == a and not calls
+        finally:
+            PL.reply_logp = lp
         ok += 1
         # 3. a draft that fails a guard is never picked; none passing -> None (fallback upstream)
         real_g = CD.guard333d
@@ -130,7 +134,7 @@ def main():
             (Path(d) / C38.STATE_NAME338).write_text(json.dumps({"history": hist}), encoding="utf-8")
             loop = L(d)
             K.install_creative_k1c(loop, Gen([two, three]), use_hist=True, whole=False)
-            assert loop.turn(REQ) == [three] and loop.cre333_stats["hist_msgs"] == 2
+            assert loop.turn(REQ) == [two] and loop.cre333_stats["hist_msgs"] == 2
             assert loop.experience[-1]["phase"] == "creative_k1c" and loop.turn("what time is it") == ["(inner)"]
             loop2 = L(d)
             K.install_creative_k1c(loop2, Gen([two]), use_hist=False, whole=False)

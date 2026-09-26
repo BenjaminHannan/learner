@@ -4,25 +4,24 @@ thread, 2026-09-26). One change on whichever creative writer is the base (0.2c's
 
 Why: on the 40 DEV practice chats (artifacts/claude-k1a-dev-20260926, readable; claude_k1c_pilot.py) the k1a writer's
 first passing draft was useful 12 times, but at least one of its 4 drafts was useful 26 times. Blind judges, two plus
-a third on splits. Of five pick rules declared before they were scored, FP did best: 17 of 40 (10 drafts gained,
-5 lost against the first draft).
+a third on splits. The pick rule, P, uses only the writer's own 1B: 15 of 40 (8 drafts gained, 5 lost against the
+first draft). A rule that also counted list items and poem lines with a regex did better on DEV (FP, 17 of 40) but is
+dropped: Ben's Redirect (16:04 UTC 09-26) stops hand-written judges; the pick must come from the model. Brain
+picture (Ben 16:05, "how does the brain do this?"): several candidate replies are drafted and the one that fits the
+conversation best is kept; here the fit is the 1B's own reading, with no training and no rules.
 
-What (FP): the writer draws the same 4 samples as its base (same generate call, same random draws), cleans each the
+What (P): the writer draws the same 4 samples as its base (same generate call, same random draws), cleans each the
 way the base does (trim, or k1b's keep-whole for a finished sample), runs the base's guards on each, and among the
-samples that pass returns the one with
-  1. the smallest form mismatch (claude_k1c_pilot.form_penalty: |list items - N| when the request asks for N things,
-     |lines - L| for a limerick 5, haiku 3, couplet 2, four-line poem 4; else 0), then
-  2. the largest pointwise information from the writer's own 1B: the mean over the reply's tokens of
-     log p(token | the writer's prompt) - log p(token | the system line and an empty user message)
-     (claude_k1c_pilot.reply_logp; no training, no sampling, no random draws), then
-  3. the earliest draw.
+samples that pass returns the one with the largest pointwise information from the writer's own 1B: the mean over
+the reply's tokens of log p(token | the writer's prompt) - log p(token | the system line and an empty user message)
+(claude_k1c_pilot.reply_logp; no training, no sampling, no random draws); ties go to the earliest draw.
 Nothing else changes: routing, prompt, samples, guards, fallback when none passes, no notebook writes. Only the order
 in which passing samples are considered changes, as with claude_pick403.PickGen (reorder only); it is done inside the
 writer so that it also covers k1b's finished-sample path, which does not go through sample_chat.
 
 Builders (each = the base's builder with the k1c writer swapped in for install_creative333d; NullReader harness of
-claude_mu402.build_null02c): build_null_k1c_x (cre333d + FP), build_null_k1c_k (k1a + FP), build_null_k1c_b
-(k1b + FP), build_null_k1c_kb (k1a + k1b + FP). The registered pair is fixed in PASSMARKS-k1c.md. New file only.
+claude_mu402.build_null02c): build_null_k1c_x (cre333d + P), build_null_k1c_k (k1a + P), build_null_k1c_b
+(k1b + P), build_null_k1c_kb (k1a + k1b + P). The registered pair is fixed in PASSMARKS-k1c.md. New file only.
 """
 from __future__ import annotations
 
@@ -71,19 +70,16 @@ def write_k1c(gen, text: str, facts: str, hist: list[dict], stats: dict, whole: 
             stats[gd] = stats.get(gd, 0) + 1
     if not ok:
         return None
-    form = [PL.form_penalty(text, cands[i]) for i in ok]
     pmi = pmi_scores(gen, msgs, [cands[i] for i in ok]) if len(ok) > 1 else [0.0]
-    j = min(range(len(ok)), key=lambda k: (form[k], -pmi[k], k))
+    j = min(range(len(ok)), key=lambda k: (-pmi[k], k))
     stats["picked_not_first"] = stats.get("picked_not_first", 0) + int(j != 0)
-    stats["picked_by_form"] = stats.get("picked_by_form", 0) + int(form[j] < form[0])
     return cands[ok[j]]
 
 
 def install_creative_k1c(loop, gen, n: int = CD.N333D, use_hist: bool = True, whole: bool = True) -> None:
     inner = loop.turn
     loop.cre333_stats = {"creative_turns": 0, "fallbacks": 0, "passed_through": 0, "G1": 0, "G2": 0, "G3": 0,
-                         "G4": 0, "G5": 0, "hist_msgs": 0, "kept_whole": 0, "trimmed": 0, "picked_not_first": 0,
-                         "picked_by_form": 0}
+                         "G4": 0, "G5": 0, "hist_msgs": 0, "kept_whole": 0, "trimmed": 0, "picked_not_first": 0}
 
     def turn_k1c(text: str) -> list[str]:
         if not CB.is_creative333c(text):
