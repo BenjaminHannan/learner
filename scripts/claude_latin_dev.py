@@ -89,7 +89,10 @@ def measure_games(smp, kind, level, items, n, temp):
         rows.append({"seed": seed, "greedy_ok": ok(gr), "hits": sum(hits), "greedy": gr, "plan_len": len(g["plan"])})
     return {"form": "game", "kind": kind, "level": level, "items": len(rows), "cov@1": sum(r["greedy_ok"] for r in rows),
             f"cov@{n}": sum(r["hits"] > 0 for r in rows), "lucky": sum(r["hits"] for r in rows),
-            "plan_len": [r["plan_len"] for r in rows], "greedy_examples": [r["greedy"] for r in rows[:3]]}
+            "plan_len": [r["plan_len"] for r in rows],
+            "reached_by_plan_len": {L: [sum(r["hits"] > 0 for r in rows if r["plan_len"] == L),
+                                        sum(r["plan_len"] == L for r in rows)] for L in sorted({r["plan_len"] for r in rows})},
+            "greedy_examples": [r["greedy"] for r in rows[:3]]}
 
 
 def main():

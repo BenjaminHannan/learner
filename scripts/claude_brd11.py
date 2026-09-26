@@ -6,16 +6,19 @@ more? Creative research thread, 2026-09-26; problem 7.
 World (wider than brd-5..9, whose 3-number world is used up): 3 numbers from 1-13 with a target from 5-60, and
 4 numbers from 1-13 with target 24; solvable (claude_blurt1.solve); every puzzle used by brd-5..9 practice, DEV or test
 panels is excluded. Same prompt and exact checker as brd-9 (claude_blurt1.puzzle_prompt / check).
-Sampling: plain (no RuleKeeper, no constrained decoding; Ben's 16:04 redirect). A reply counts if the first
-arithmetic expression in it (claude_blurt1.extract_expr) uses each number once and makes the target.
-Training target: the extracted expression plus EOS, prompt tokens masked (claude_blurt2.train_lora); nothing added.
+Recipe IDENTICAL to brd-9 except the world: claude_blurt2.Solver (rule-kept sampling: RuleKeeper allows only legal
+formulas over the given numbers; disclosed test scaffolding, as in brd-5..9), exact checker, first hit per miss,
+retrain from base on everything kept, 3 epochs, LoRA r16 lr 2e-4 batch 8. Training target: the model's own expression
+plus EOS, prompt tokens masked (claude_blurt2.train_lora); nothing added.
 
 Per arm and LoRA seed s (0/1/2), three nights; each night has 400 NEW practice puzzles (the same in every arm):
 - practise: greedy reply; if wrong, n_miss samples at temperature T, first checked hit kept; misses give nothing.
 - sleep: a fresh LoRA from base on everything kept so far (all earlier nights too), 3 epochs (brd-9's recipe).
 Arms (ONE change each, against its own comparator):
 - R: n_miss = 30 (brd-9's recipe). Claim: R3 vs base (the replication).
-- S: n_miss = 120, a stronger night search on the misses only. Claim: S3 vs R3.
+- S: n_miss = 120, a stronger night search on the misses only. Claim: S3 vs R3. It asks whether more search at night
+  (expert iteration's fix for nights that stop improving) finds hits on HARDER puzzles that then teach more; a gain
+  from merely more examples is limited because R and S practise the same puzzles and keep at most one hit each.
 Test: a fixed panel (30 samples each) for base, night 1 and night 3 of every arm and seed. Harm: Fix sleep's 300
 general items (claude_dl1_nights.harm_panel), greedy, for base and night 3 of every arm and seed.
 
@@ -95,21 +98,6 @@ def nights():
     return out
 
 
-class Plain(B2.Solver):
-    """claude_blurt2.Solver with plain sampling: no RuleKeeper; the reply's first expression is what counts."""
-    def generate(self, p, n, temp, model=None, chunk=30):
-        m = model or self.model
-        ids = self.tok(self.prompt(p), return_tensors="pt").to(self.dev)
-        cut, outs = ids["input_ids"].shape[1], []
-        for k in (range(0, n, chunk) if temp else [0]):
-            kw = {"do_sample": True, "temperature": temp, "top_p": 1.0,
-                  "num_return_sequences": min(chunk, n - k)} if temp else {"do_sample": False}
-            with self.torch.no_grad():
-                out = m.generate(**ids, max_new_tokens=32, pad_token_id=self.tok.eos_token_id, **kw)
-            outs += [B1.extract_expr(self.tok.decode(o[cut:], skip_special_tokens=True)) for o in out]
-        return outs
-
-
 def gather(s, ps, n_miss, temp, model=None):
     ex, rows = [], []
     for p in ps:
@@ -161,7 +149,7 @@ def boot_ci(ps, a_streams, b_streams, reps=2000, seed=0):
 
 
 def dev(a):
-    s = Plain(a.model)
+    s = B2.Solver(a.model)
     s.model.name_or_path = a.model
     ps = wide(DEV_SEED, a.dev_items, n3=a.dev_items // 2)
     res = {"temp": a.temp, "n": a.n}
@@ -177,7 +165,7 @@ def run(a):
     t0 = time.time()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    s = Plain(a.model)
+    s = B2.Solver(a.model)
     s.model.name_or_path = a.model
     test = read_jsonl(a.test_puzzles)
     ns = nights()
