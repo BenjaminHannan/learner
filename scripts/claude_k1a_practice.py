@@ -101,6 +101,12 @@ def run_w2(a):
                     continue
                 torch.manual_seed(a.seed * 1000 + i)
                 stats: dict = {}
+                if arm == "W2" and not it["turns"]:      # no earlier message: W2's prompt is W0's, same seed
+                    w0 = next(x for x in load(path) if x["item_id"] == it["item_id"] and x["arm"] == "W0")
+                    row = dict(w0, arm="W2", copied_from_W0=True)
+                    fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+                    fh.flush()
+                    continue
                 if arm == "W2":
                     r = K.write_k1a_said(gen, it["last"], "", list(it["turns"]), stats)
                 else:                        # W3 = k1b: W0's exact samples, a finished reply kept whole

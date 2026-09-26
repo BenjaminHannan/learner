@@ -1,7 +1,9 @@
 # k1a blind judge instructions (fixed 2026-09-26, before any registered run)
 
-Same for every judge and every arm. The judge sees only the packet file (neutral ids; replies of all arms shuffled
-together by claude_panel382_run.py --score, seed 3822). Never code, arm names, keys or other judges' files.
+Same for every judge and every arm. The judge sees only the packet file creative_judge_u.jsonl: the replies of all
+arms, shuffled together by claude_panel382_run.py --score (seed 3822), then cut to one line per distinct reply to
+each item and reshuffled under neutral ids by claude_k1a_score.py --dedupe (seed 3823), so arms that wrote the same
+reply get the same verdict. Never code, arm names, keys or other judges' files.
 
 You are judging replies from personal assistants. Each line of the packet is one short chat: `chat` is the user's
 earlier messages (possibly none), `request` is the user's last message, and `reply` is one assistant's answer to
