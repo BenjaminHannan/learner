@@ -10,3 +10,23 @@ This folder holds the small CPU trial used to pick the design before anything is
 base / mixed (half the heads see only columns within 1) / fade (fixed per-head distance penalty); fresh test
 puzzles from seed 77000, never the sealed test files). It is not a registered test and decides nothing on its own.
 Results will be added here when the runs finish.
+
+## Results (unregistered; small nets, 4,000 CPU steps, 200 fresh puzzles each; loop at 32 rounds)
+
+| run | sums6 | sums8 | sums10 | sums12 | grids5 | grids6 | grids7 |
+|---|---|---|---|---|---|---|---|
+| loop base s1 | 104 | 12 | 0 | 0 | 195 | 159 | 106 |
+| loop half-narrow s1 | 187 | 159 | 141 | 121 | 200 | 180 | 131 |
+| loop fade s1 | 182 | 144 | 123 | 95 | 191 | 102 | 11 |
+| plain base s1 | 170 | 81 | 25 | 16 | 137 | 92 | 45 |
+| plain half-narrow s1 | 161 | 120 | 97 | 78 | 147 | 96 | 45 |
+| plain fade s1 | 176 | 125 | 101 | 77 | 138 | 91 | 27 |
+| loop base s2 | 156 | 66 | 24 | 9 | 195 | 155 | 85 |
+| loop half-narrow s2 | 192 | 168 | 150 | 117 | 175 | 115 | 56 |
+| plain base s2 | 150 | 58 | 14 | 15 | 139 | 94 | 44 |
+| plain half-narrow s2 | 165 | 122 | 101 | 75 | 133 | 95 | 44 |
+
+Seed 2 (landed after 358i was sealed) confirms the sums fix (loop half-narrow minus plain half-narrow: +27/+46/+49/+42
+at 6/8/10/12 digits) but shows a grids risk: the half-narrow loop fell BELOW the unchanged loop on grids (grids6 115 vs
+155, grids7 56 vs 85; over plain half-narrow only +20/+12). Seed 1 had it the other way (180 vs 159). So for 358i's
+G1, grids6 is less safe than the sealed prediction said. Nothing here changes the sealed run.
