@@ -95,7 +95,11 @@ while [ ! -e "$H/STOP" ]; do
       rm -f "$Q/$n.md.tmp"; continue   # another GPU task is running; try next round
     fi
     mv "$Q/$n.md.tmp" "$Q/$n.md"; touch "$Q/$n.running"; log "launch $n"
-    ( bash "$RUN" "$Q/$n.md"; echo "rc=$?" > "$Q/$n.exit"; rm -f "$Q/$n.running" ) &
+    # a GPU: yes job claims BensPC visibly: C:\Users\benja\GPU-BUSY.txt names the job while it runs (outside agents: do not use the GPU while it exists)
+    gpu=0; grep -q '^GPU: yes' "$Q/$n.md" && gpu=1
+    [ $gpu = 1 ] && { ssh -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 -o BatchMode=yes benspc "echo BUSY: queue job $n since $(date -u +%FT%TZ) - do not use this GPU until this file is gone > C:\Users\benja\GPU-BUSY.txt" </dev/null >/dev/null 2>&1 & }
+    ( bash "$RUN" "$Q/$n.md"; echo "rc=$?" > "$Q/$n.exit"; rm -f "$Q/$n.running"
+      [ $gpu = 1 ] && ssh -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 -o BatchMode=yes benspc "del C:\Users\benja\GPU-BUSY.txt" </dev/null >/dev/null 2>&1 ) &
   done
   # status: every round, publish which tasks are running and the log tail, so the director can see launches
   { date '+%F %T'; echo "running:"; ls "$Q"/*.running 2>/dev/null | xargs -n1 basename 2>/dev/null; echo "launched (no exit yet) / finished:"; ls "$Q"/*.md 2>/dev/null | wc -l; echo; tail -150 "$LOG"; } > "$H/status.txt"

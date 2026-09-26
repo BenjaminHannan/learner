@@ -8,6 +8,7 @@ First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-
 - Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
 - You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
 Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
 
 GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
 INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
