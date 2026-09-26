@@ -2,7 +2,7 @@ COMMON RULES: follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu
 STATUS: RELEASED by the director 20:11 UTC 2026-09-26 (358i2pc finished; runs after 358i3 (100-), dl-9, rv390 and gr-5 (Thread manager order 20:30 UTC)). $0, BensPC.
 GPU: yes (BensPC; one job at a time; $0, no rental). Create C:\Users\benja\GPU-BUSY.txt naming claude-sleep-358t3pc or "queue job 260-claude-sleep-358t3pc" (the watcher writes the latter; renamed by the director) while you run and delete it at the end; if it already exists naming another job, stop with BUSY and run nothing.
 TIME CAP: 16 hours in total.
-ESTIMATE (sleep research, 20:31 UTC, not measured): about 5-6 h. 358i2's 4 loop runs took 103-105 min together on BensPC; loop-trm, loop8 and loop8-trm cost about the same per step, so 10 runs in batches of 4 is about 3 batches. The 16 h cap is headroom, not the expected length.
+ESTIMATE (sleep research, 20:29 UTC, not measured): about 5-6 h. 358i2's 4 loop runs took 103-105 min together on BensPC; loop-trm, loop8 and loop8-trm cost about the same per step, so 10 runs in batches of 4 is about 3 batches. The 16 h cap is headroom, not the expected length.
 DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-rsn358t-20260926/RESULTS-v3.md.
 
 YOUR TASK: builder for rsn-358t v3 on BensPC: 358t's arms (loop-trm, loop8, loop8-trm) with the autocast weight cache off, each graded against 358i's own plain results. The sleep research thread wrote and sealed all code. Run it and never edit it. If something breaks, stop and report the exact error; do not patch. Artifacts go in artifacts/claude-rsn358t-20260926/.
