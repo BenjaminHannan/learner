@@ -67,3 +67,10 @@ L2 failing means a copy-practice night inside the joined agent does not improve 
 though it did for the plain 1B (dl-1, dl-2): look at the agent's shared-model state first (dropout, train mode, other
 layers' calls). L4 or H1-H4 failing means a fix that passed alone does harm once joined; the report names which
 by the counters. Q1 failing means routing plus memory does not recover the lost reasoning inside the agent.
+
+## Addendum 2026-09-26 ~02:05 UTC, before any run (Fix sleep checked the sleep row)
+Two sleep marks added, as Fix sleep would register them (dl-2's W3/W4): L4 also requires net flips ≤ 5 after EVERY
+night (not only ≤ 0 after night 3), and L5 variety kept: TEST puzzles reached after night 3 ≥ before. No tripwire:
+harm is measured, not hidden. The adapter is on for chat too, so the bank D and chat rows are the agent-level
+no-harm check. Checks: scripts/claude_sleep02c.py uses claude_blurt2.Solver's own prompt/generate/answer on the
+agent's tokenizer and model (no second copy), and D1.train_copy leaves the model in eval mode before any measure.
