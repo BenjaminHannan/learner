@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+"""DEV only: how often does plain MiniCPM5-1B finish a number square (shared world scripts/claude_world_latin.py)?
+(creative research thread, 2026-09-26). Sets the difficulty for the next blurt -> checker -> night test.
+
+For each (size, blanks) setting: DEV items from seeds 900000-900999 only (test seeds will be 901000 and up), the
+greedy reply, then n free samples at temperature T (thinking off, the chat template, no constrained decoding).
+Reports cov@1 (greedy right), cov@30 (any of n samples right) and lucky samples. Writes one JSON summary.
+
+  python -B scripts/claude_latin_dev.py --model M --out F.json --settings 4:4,4:6,4:8,5:5,5:8 --items 12
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_world_latin as W  # noqa: E402
+
+DEV_SEEDS = range(900000, 901000)
+
+
+class Sampler:
+    def __init__(self, model_dir):
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        self.torch = torch
+        self.tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+        self.dev = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model = AutoModelForCausalLM.from_pretrained(model_dir, trust_remote_code=True,
+                                                          dtype=torch.bfloat16).to(self.dev).eval()
+
+    def generate(self, item, n, temp, model=None):
+        m = model or self.model
+        text = self.tok.apply_chat_template([{"role": "user", "content": item["prompt"]}], tokenize=False,
+                                            add_generation_prompt=True, enable_thinking=False)
+        ids = self.tok(text, return_tensors="pt").to(self.dev)
+        cut = ids["input_ids"].shape[1]
+        kw = {"do_sample": True, "temperature": temp, "top_p": 1.0, "num_return_sequences": n} if temp else \
+             {"do_sample": False}
+        s = item["size"]
+        with self.torch.no_grad():
+            out = m.generate(**ids, max_new_tokens=4 * s * s + 16, pad_token_id=self.tok.eos_token_id, **kw)
+        return [self.tok.decode(o[cut:], skip_special_tokens=True).strip() for o in out]
+
+
+def measure(smp, size, blanks, items, n, temp):
+    rows = []
+    for seed in list(DEV_SEEDS)[:items]:
+        it = W.make(seed, size, blanks)
+        g = smp.generate(it, 1, None)[0]
+        hits = [W.check(it, t) for t in smp.generate(it, n, temp)]
+        rows.append({"seed": seed, "greedy_ok": W.check(it, g), "hits": sum(hits), "greedy": g})
+    return {"size": size, "blanks": blanks, "items": len(rows), "cov@1": sum(r["greedy_ok"] for r in rows),
+            f"cov@{n}": sum(r["hits"] > 0 for r in rows), "lucky": sum(r["hits"] for r in rows),
+            "greedy_examples": [r["greedy"] for r in rows[:3]]}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--settings", default="4:4,4:6,4:8,5:5,5:8")
+    ap.add_argument("--items", type=int, default=12)
+    ap.add_argument("--n", type=int, default=30)
+    ap.add_argument("--temp", type=float, default=1.0)
+    a = ap.parse_args()
+    t0 = time.time()
+    smp = Sampler(a.model)
+    res = {"n": a.n, "temp": a.temp, "settings": []}
+    for st in a.settings.split(","):
+        size, blanks = (int(x) for x in st.split(":"))
+        r = measure(smp, size, blanks, a.items, a.n, a.temp)
+        res["settings"].append(r)
+        print(json.dumps({k: v for k, v in r.items() if k != "greedy_examples"}), flush=True)
+        Path(a.out).write_text(json.dumps(res, indent=1), encoding="utf-8")
+    res["minutes"] = round((time.time() - t0) / 60, 1)
+    Path(a.out).write_text(json.dumps(res, indent=1), encoding="utf-8")
+
+
+if __name__ == "__main__":
+    main()
