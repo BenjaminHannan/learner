@@ -66,7 +66,14 @@ case where GLM cannot be the marker.
   - Blind claims judges: two per packet, arms mixed and shuffled, private folders.
   - Pair judges (P vs T) for chat quality.
   - Stored-fact asks right, by code.
-  - A small MMLU-Redux and GSM8K no-harm check on the LoRA.
+  - The no-harm check Benchmarks uses. bm-390's harness (scripts/claude_bm390.py general --task gsm8k|mmlu) runs
+    on its 300 GSM8K test items and 300 MMLU-Redux-2.0 items (rows with error_type "ok"), scored by
+    claude_bm390_score.score_general. The LoRA is merged in the way bm-398r's "general, adapter merged in" rows were
+    made (claude_bm398r_eval.py). The plain 1B's reference is bm-390 run2: GSM8K 191, MMLU 50. MMLU 50 mostly
+    measures answer format (234 replies gave no letter).
+  - Report only, as a guard against ignoring memory: on the follow-up turns (60 per arm), the claims judges also
+    answer, from the same packet, "does this reply correctly use something from earlier_user_messages that this turn
+    calls for?". The count is per arm.
 
 ## Training data source (Ben's 16:39 rule: nothing trained is Claude-written or Claude-judged, frames included)
 - Targets: only the plain 1B's own sampled replies. They are kept or dropped by GLM's marks (only after g406b passes)
@@ -92,7 +99,21 @@ case where GLM cannot be the marker.
   - The pair judges do not prefer P: a one-sided sign test for "P better" has p > 0.05.
   - MMLU-Redux and GSM8K each within 2 points of the plain 1B.
 - Proved wrong: C_T >= C_P.
+- Too few rows (INCONCLUSIVE, no training run): fewer than 300 kept replies, or kept replies from fewer than 150 of
+  the 200 practice chats. The kept rate per turn kind is reported either way.
+- Confound, stated now: the cheapest way to be clean is to ignore the memory. W made 31 claims, below N's 46, and
+  rejection sampling can teach that. The asks-right mark guards only the ask turns. A PASS where T's memory-used
+  count on follow-ups falls well below P's meets the mark but not the goal, and will be reported that way.
+- Predictions (before sealing): P406.1 mu-406 PASS, 35%. P406.2 proved wrong (C_T >= C_P), 15%.
 - Report: C_T against C_N. The real goal is a talker that uses its memory and invents no more than one without it.
+
+## Call budget (for the Director's queue)
+- GLM marks one whole sampled transcript per call (g406b's packet form, 5 replies), so labels are 200 chats x 4
+  samples = 800 calls, not one call per reply.
+- Writing: 200 practice chats, 60 test chats, and 1 call for the three frame pieces, so 261 calls.
+- Total: about 1,060 calls on low effort at 3 workers. At the 5-15 s per call measured in ocdiag3, that is about
+  0.5-1.5 h of Mac time. With the 3-attempt cap, the worst case is about 3 h.
+- Sampling and the LoRA run on BensPC (the Director orders them). Sampling is 4,000 replies at 160 tokens.
 
 ## If GLM cannot be the marker (g406b FAIL or INCONCLUSIVE), named now
 - Code-only labels cannot catch this failure (1 of 300, above).
@@ -102,6 +123,8 @@ case where GLM cannot be the marker.
   invented slot values.
 - GLM's own replies are not marked by anyone before training. The test panel's blind judges are the only check,
   after training.
+- This is a different test: imitating GLM, not learning from the 1B's own clean replies. If it is used, it gets its
+  own name, marks and prediction, sealed before it runs. It does not reuse mu-406's.
 
 ## If mu-406 FAILs
 Preference training (DPO) on the same samples, as the first draft named: kept against dropped replies of the same
@@ -119,3 +142,15 @@ turn. One change, on the same data.
   6. Seal.
   7. Train.
   8. Test.
+
+## Review 2 (Thread manager, 23:50 UTC), adopted before sealing
+- The panel's Claude-written user turns: mu-405b stays registered, since it trained nothing. mu-406's panel is
+  GLM-worded because a mu-406 LoRA could join a build.
+- The memory-use guard on follow-ups (report only) and the confound, stated above.
+- The minimum kept-row count, with kept rate per turn kind.
+- The head line (L1_HEAD) and the other frame pieces are GLM-worded now, the same in every arm (Training data source).
+  So a PASS adapter is build-eligible without retraining.
+- Predictions P406.1 and P406.2.
+- The distillation fallback gets its own marks and prediction.
+- The call budget, with the count corrected to one call per transcript.
+- The no-harm check named: bm-390's harness and split.

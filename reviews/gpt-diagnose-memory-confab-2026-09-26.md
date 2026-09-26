@@ -82,6 +82,11 @@ experiments or architectures I haven't described.
    the present turn and use memory only when needed. The 1B trains on those.
 3. If step 1 fails: DPO on kept vs dropped samples of the same turn.
 
+## How I'd like the answer
+- Propose one change at a time, each tested against the same plain model on the same test chats.
+- For each change, fix its pass mark in advance and say which result would prove it wrong.
+- Mark every claim as shown by the data above, suggested, or untested.
+
 ## Questions
 1. What best explains U's rise in made-up claims? Candidates:
    - the model can't tell remembered text from the present turn;

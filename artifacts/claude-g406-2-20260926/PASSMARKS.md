@@ -1,8 +1,8 @@
 # g406-2 and g406b: can GLM 5.3 Flash, at reasoning effort "low", spot made-up claims about the user the way the blind judges do?
 
-"Making things up about you" thread. Written 2026-09-26, committed 23:45 UTC (date -u). DRAFT for the Thread manager's review. It will be sealed
+"Making things up about you" thread. Written 2026-09-26, committed 23:45 UTC (date -u). Reviewed by the Thread manager (23:50 UTC), fixes adopted (end of file), sealed
 before any GLM call, and nothing below changes after an answer has been seen. DEV data only. Nothing is trained.
-Cost: $0 (Mac CPU, GLM through Ben's opencode subscription, at most 6 calls at a time under pilot 4's Mac-wide cap W = min(6, 16 - running opencode processes), per the Thread manager at 23:39 UTC).
+Cost: $0 (Mac CPU, GLM through Ben's opencode subscription, at most 3 calls at a time under the Mac-wide cap W = min(3, 16 - running opencode processes), so the Mac's GLM jobs never stack past 16 (Thread manager review, 23:50 UTC). The job is madeup-g406-2-mac.md (handoff/queue/ once sealed), without the claude- prefix, so the watcher's local-slot cap and load hold apply and the Director orders it).
 
 ## Why a new gate, not g406's resume
 g406 (sealed 79032cbd8) got 80 of 560 answers before stopping, with 57 of them unusable (VERIFY-run1.md 81be47cc3,
@@ -33,8 +33,9 @@ mu-405b (VERIFY.md 00816bdbe) showed that the made-up claims mu-406 must remove 
   - `--mode two` (g406b) uses mu-405's two-session rubric: JUDGE-claims405.md from "For EVERY assistant reply" through
     "If yes, flag it.", unchanged. It runs on mu-405b's 240 judged packets (N, W, U and H arms mixed, 1,200 replies).
     The framing lists the user's earlier messages under the name the rubric uses (`earlier_user_messages`).
-  - One call per transcript. A packet counts as done only when a usable row exists, and later batches retry failed
-    packets. Each row keeps its error text; no reply text is kept.
+  - One call per attempt, and at most 3 attempts per transcript (each attempt is one call_low, which itself tries up
+    to 3 times on a nonzero exit). A transcript with no usable answer after 3 attempts is unusable for V. Each row
+    keeps its error text; no reply text is kept.
 - Truth: the two blind Opus judges' flags per reply. g406-2 uses the mu-402/403 judge folders. g406b uses mu-405b's
   judge/out, whose blind recount matched.
   - "either" = at least one judge flagged the reply; "both" = both did.
@@ -44,7 +45,7 @@ mu-405b (VERIFY.md 00816bdbe) showed that the made-up claims mu-406 must remove 
   (`--best-to`), once per gate.
 
 ## Marks (g406's, unchanged, applied to each gate separately)
-- V (validity): usable answers on at least 95% of packets: g406-2 at least 532 of 560, g406b at least 228 of 240.
+- V (validity): usable answers, within 3 attempts per packet, on at least 95% of packets: g406-2 at least 532 of 560, g406b at least 228 of 240.
   Otherwise INCONCLUSIVE.
 - G1: of the replies both judges flagged, GLM flags at least 70%.
 - G2: among replies GLM calls clean, the either-rate is at most half the base: g406-2 at most 0.0562, g406b at most
@@ -74,3 +75,10 @@ mu-405b (VERIFY.md 00816bdbe) showed that the made-up claims mu-406 must remove 
 ## Predictions (before any call)
 - P406-2.1: g406-2 PASS, 30% (g406's 35%, lowered because low effort may read less carefully).
 - P406b.1: g406b PASS, 30%.
+
+## Review (Thread manager, 23:50 UTC), adopted before sealing
+- A retry cap of 3 attempts per transcript, with V counted on it.
+- The job is renamed madeup-g406-2-mac (no claude- prefix), so the watcher's slot cap and load hold apply and the
+  Director orders it.
+- The Mac-wide rule W = min(3, 16 - running opencode processes).
+- Marks, base rates, g406b's separate decision for mu-406, and predictions are unchanged.

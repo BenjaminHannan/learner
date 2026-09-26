@@ -10,6 +10,7 @@ g406's run 1 used the default effort (88-460 s calls, ocdiag3). Run 1's rows are
 g406b (--mode two): the same with mu-405's two-session rubric (artifacts/claude-mu405-20260926/JUDGE-claims405.md,
 from "For EVERY assistant reply" through "If yes, flag it.", unchanged) on mu-405b's 240 judged packets, which show the
 user's earlier messages; the framing adds those messages as a block named like the rubric names them.
+A packet gets at most 3 attempts (ATTEMPTS); one without a usable row after that is unusable for V.
 Each row keeps "error" (first 200 characters of the helper's failure message, or "unparsed reply"); no reply text.
 
     python -B scripts/claude_g406_2_glm.py --mode one --packets P1 --packets P2 --out OUT.jsonl [--workers 3]
@@ -35,6 +36,7 @@ SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS))
 import claude_g406_glm as G  # noqa: E402
 
+ATTEMPTS = 3          # at most 3 attempts per packet (each attempt = one call_low, which itself tries up to 3 times)
 RUBRIC405 = SCRIPTS.parent / "artifacts/claude-mu405-20260926/JUDGE-claims405.md"
 
 
@@ -101,32 +103,46 @@ def mark(p: dict, mode: str, caller) -> dict:
     return row
 
 
-def run(packets, mode: str, out: Path, caller, workers, batch, max_minutes, max_failed) -> dict:
-    """A packet counts as done only when this file already holds a usable row for it (a later batch retries it)."""
-    done = set()
-    if out.exists():
-        done = {(r["src"], r["pid"]) for r in map(json.loads, out.read_text(encoding="utf-8").splitlines()) if r["ok"]}
-    todo = [p for p in packets if (p["src"], p["pid"]) not in done]
+def run(packets, mode: str, out: Path, caller, workers, batch, max_minutes, max_failed, attempts=ATTEMPTS) -> dict:
+    """Up to `attempts` passes. Each pass sends every packet that has no usable row in this file and fewer than
+    `attempts` rows (one row per earlier attempt). A packet still without a usable row after `attempts` rows is
+    unusable for V. Stops early on the time cap or when more than `max_failed` rows of this run failed."""
+    def rows_now():
+        return list(map(json.loads, out.read_text(encoding="utf-8").splitlines())) if out.exists() else []
     t0, failed, written, stopped = time.time(), 0, 0, "done"
+    usable_before = len({(r["src"], r["pid"]) for r in rows_now() if r["ok"]})
     out.parent.mkdir(parents=True, exist_ok=True)
     with ThreadPoolExecutor(max_workers=workers) as ex:
-        for i in range(0, len(todo), batch):
-            if (time.time() - t0) / 60 > max_minutes:
-                stopped = "time"
+        for _pass in range(attempts):
+            prior = rows_now()
+            ok = {(r["src"], r["pid"]) for r in prior if r["ok"]}
+            tries = defaultdict(int)
+            for r in prior:
+                tries[(r["src"], r["pid"])] += 1
+            todo = [p for p in packets if (p["src"], p["pid"]) not in ok and tries[(p["src"], p["pid"])] < attempts]
+            if not todo:
                 break
-            if failed > max_failed:
-                stopped = "failed"
+            for i in range(0, len(todo), batch):
+                if (time.time() - t0) / 60 > max_minutes:
+                    stopped = "time"
+                    break
+                if failed > max_failed:
+                    stopped = "failed"
+                    break
+                rows = list(ex.map(lambda p: mark(p, mode, caller), todo[i:i + batch]))
+                with out.open("a", encoding="utf-8") as fh:
+                    for r in rows:
+                        fh.write(json.dumps(r) + "\n")
+                failed += sum(1 for r in rows if not r["ok"])
+                written += len(rows)
+                print(f"[g406-2/{mode}] pass {_pass + 1}: {written} written this run, {failed} failed", flush=True)
+            if stopped != "done":
                 break
-            rows = list(ex.map(lambda p: mark(p, mode, caller), todo[i:i + batch]))
-            with out.open("a", encoding="utf-8") as fh:
-                for r in rows:
-                    fh.write(json.dumps(r) + "\n")
-            failed += sum(1 for r in rows if not r["ok"])
-            written += len(rows)
-            print(f"[g406-2/{mode}] {len(done) + written - failed}/{len(packets)} usable so far, {failed} failed",
-                  flush=True)
-    return {"mode": mode, "packets": len(packets), "usable_before": len(done), "written": written,
-            "failed_this_run": failed, "minutes": round((time.time() - t0) / 60, 1), "stopped": stopped}
+    final = rows_now()
+    usable = {(r["src"], r["pid"]) for r in final if r["ok"]}
+    return {"mode": mode, "packets": len(packets), "usable_before": usable_before, "written": written,
+            "failed_this_run": failed, "usable_now": len(usable), "minutes": round((time.time() - t0) / 60, 1),
+            "stopped": stopped}
 
 
 def best_rows(path: Path) -> list[dict]:
@@ -175,13 +191,22 @@ def selftest() -> None:
 
         def boom(t):
             raise RuntimeError("opencode call failed after 3 tries: exit 1: x")
-        res = run(pk, "two", out, boom, 2, 2, 5, 10)
-        assert res["written"] == 3 and all(json.loads(x)["error"].startswith("opencode call failed")
-                                           for x in out.read_text().splitlines()); ok += 1
-        res = run(pk, "two", out, lambda t: '{"flags": [0, 1]}', 2, 2, 5, 10)
-        assert res["written"] == 3 and len(best_rows(out)) == 3 and all(r["ok"] for r in best_rows(out)); ok += 1
-        res = run(pk, "two", out, boom, 2, 2, 5, 10)
-        assert res["written"] == 0; ok += 1
+        res = run(pk, "two", out, boom, 2, 2, 5, 100)
+        assert res["written"] == 9 and res["usable_now"] == 0 and all(
+            json.loads(x)["error"].startswith("opencode call failed") for x in out.read_text().splitlines()); ok += 1
+        res = run(pk, "two", out, lambda t: '{"flags": [0, 1]}', 2, 2, 5, 100)
+        assert res["written"] == 0 and res["usable_now"] == 0; ok += 1   # 3 attempts used: capped
+        out.unlink()
+        calls = {"n": 0}
+
+        def flaky(t):
+            calls["n"] += 1
+            if calls["n"] <= 2:
+                raise RuntimeError("opencode call failed after 3 tries: exit 1: x")
+            return '{"flags": [0, 1]}'
+        res = run(pk, "two", out, flaky, 1, 3, 5, 100)
+        assert res["usable_now"] == 3 and res["written"] == 5 and len(best_rows(out)) == 3 \
+            and all(r["ok"] for r in best_rows(out)); ok += 1
         jd = Path(td) / "judge"
         (jd / "keys").mkdir(parents=True)
         (jd / "out").mkdir()
@@ -204,6 +229,7 @@ def main() -> None:
     ap.add_argument("--batch", type=int, default=30)
     ap.add_argument("--max-minutes", type=float, default=150)
     ap.add_argument("--max-failed", type=int, default=60)
+    ap.add_argument("--attempts", type=int, default=ATTEMPTS)
     ap.add_argument("--print-prompt", action="store_true")
     ap.add_argument("--arm-report", action="store_true")
     ap.add_argument("--glm")
@@ -225,7 +251,8 @@ def main() -> None:
     if a.print_prompt:
         print(prompt_for(packets[0], a.mode))
         return
-    print(json.dumps(run(packets, a.mode, Path(a.out), call_low, a.workers, a.batch, a.max_minutes, a.max_failed)))
+    print(json.dumps(run(packets, a.mode, Path(a.out), call_low, a.workers, a.batch, a.max_minutes, a.max_failed,
+                         a.attempts)))
 
 
 if __name__ == "__main__":
