@@ -1,0 +1,1152 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m✗ [0mRead artifacts/claude-rsn358c-20260926/PASSMARKS-c1.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rsn358c-20260926/PASSMARKS-c1.md
+[0m
+[0m$ [0muptime; df -g /; pwd; git rev-parse --abbrev-ref HEAD; git status --short | head -n 50
+23:57  up 2 days, 13:50, 4 users, load averages: 18.74 19.88 21.10
+Filesystem     1G-blocks Used Available Capacity iused    ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         9    58%  484014 97728680    0%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-brd5-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd5-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd5-20260926/gpu/log.txt
+A  artifacts/claude-brd5-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd5-20260926/gpu/streams.json
+A  artifacts/claude-brd6-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd6-20260926/gpu/brd6_summary.json
+A  artifacts/claude-brd6-20260926/gpu/log.txt
+A  artifacts/claude-brd6-20260926/gpu/practice.jsonl
+A  artifacts/claude-brd6-20260926/gpu/streams.json
+A  artifacts/claude-dl1-20260925/RESULTS-gpu.md
+A  artifacts/claude-dl1-20260925/gpu/dl1_results.json
+A  artifacts/claude-dl1-20260925/gpu/log.txt
+A  artifacts/claude-tgt5-20260926/RESULTS-gpu.md
+A  artifacts/claude-tgt5-20260926/gpu/contrasts.json
+A  artifacts/claude-tgt5-20260926/gpu/log.txt
+A  artifacts/claude-tgt5-20260926/gpu/pairs.jsonl
+A  artifacts/claude-tgt5-20260926/gpu/tgt5_summary.json
+M  artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+[0m
+[0m$ [0mls artifacts/ | head -n 100; echo ---; ls scripts/ | grep -i rsn; echo ---; git branch -a | head -n 30; echo ---; git log --oneline -5
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm395-20260925
+claude-boundary259-20260922
+claude-brd5-20260926
+claude-brd6-20260926
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chat338-20260924
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convbench-f0-20260923
+claude-convf0-20260923
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-cre333-20260924
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-diskcheck-20260926
+claude-dl1-20260925
+claude-dl2-20260926
+claude-e2e330-dev-20260924
+claude-e2e330c-dev-20260924
+claude-e2e330c-dev2-20260924
+claude-e2e330c-dev3-20260924
+claude-e2e336-20260924
+claude-e2e336b-20260925
+claude-e2e382-20260925
+claude-e2e382-dev-20260925
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+claude-f1-20260923
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fixedtext255b-20260923
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grade241b-A-20260923
+claude-grade241b-B-20260923
+claude-grade241b-C-set2-20260923
+claude-grade241b-D-set2-20260923
+claude-grade255b-B-20260923
+claude-gradef1-A-20260923
+claude-gradef1-B-20260923
+---
+---
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
+  codex/testing-experiment-44
++ main
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+---
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+bc39d2baf ideajudge-teacher2: DEV teacher agreement check (no training)
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+7692680e4 mut-0 SLEEP fails closed: mut0 runner + 3 runall scripts, seal + results (M1-M3 hold)
+[0m
+[0m$ [0mls artifacts/ | grep -i rsn; echo ---; ls artifacts/ | grep -i 358; echo ---; git ls-tree --name-only origin/main artifacts/ | grep -i rsn; echo ---; git ls-tree --name-only origin/main scripts/ | grep -i rsn; echo ---; git ls-tree --name-only origin/builder-outbox artifacts/ 2>&1 | grep -i rsn
+claude-rsn294-20260923
+claude-rsn296-20260924
+claude-rsn296b-20260924
+claude-rsn299-20260924
+claude-rsn299b-20260924
+claude-rsn350-20260924
+claude-rsn351-20260925
+claude-rsn353-20260925
+claude-rsn355-20260925
+claude-rsn356-20260925
+claude-rsn358a-20260925
+---
+claude-rsn358a-20260925
+---
+artifacts/claude-rsn294-20260923
+artifacts/claude-rsn296-20260924
+artifacts/claude-rsn296b-20260924
+artifacts/claude-rsn298-20260924
+artifacts/claude-rsn299-20260924
+artifacts/claude-rsn299b-20260924
+artifacts/claude-rsn350-20260924
+artifacts/claude-rsn351-20260925
+artifacts/claude-rsn351b-20260925
+artifacts/claude-rsn353-20260925
+artifacts/claude-rsn354-20260925
+artifacts/claude-rsn355-20260925
+artifacts/claude-rsn356-20260925
+artifacts/claude-rsn357-20260925
+artifacts/claude-rsn358a-20260925
+artifacts/claude-rsn358c-20260926
+artifacts/claude-rsn358d-20260926
+---
+scripts/claude_rsn294_codearm.py
+scripts/claude_rsn294_core.py
+scripts/claude_rsn294_run.py
+scripts/claude_rsn296_diag.py
+scripts/claude_rsn296_gen.py
+scripts/claude_rsn296_run.py
+scripts/claude_rsn296b_run.py
+scripts/claude_rsn298_score.py
+scripts/claude_rsn299_run.py
+scripts/claude_rsn299_tool.py
+scripts/claude_rsn299b_run.py
+scripts/claude_rsn350_run.py
+scripts/claude_rsn353_run.py
+scripts/claude_rsn355_run.py
+scripts/claude_rsn356_pairs.py
+scripts/claude_rsn356_run.py
+scripts/claude_rsn356_twins.py
+scripts/claude_rsn357_four.py
+scripts/claude_rsn357_run.py
+scripts/claude_rsn358a2_run.py
+scripts/claude_rsn358a2_shared.py
+scripts/claude_rsn358a_envs.py
+scripts/claude_rsn358a_run.py
+scripts/claude_rsn358b_sudoku.py
+scripts/claude_rsn358c1_stop.py
+scripts/claude_rsn358c2_run.py
+scripts/claude_rsn358d_run.py
+scripts/claude_rsn_recipe.py
+---
+artifacts/claude-rsn294-20260923
+artifacts/claude-rsn296-20260924
+artifacts/claude-rsn296b-20260924
+artifacts/claude-rsn299-20260924
+artifacts/claude-rsn299b-20260924
+artifacts/claude-rsn350-20260924
+artifacts/claude-rsn351-20260925
+artifacts/claude-rsn353-20260925
+artifacts/claude-rsn355-20260925
+artifacts/claude-rsn356-20260925
+artifacts/claude-rsn358a-20260925
+[0m
+[0m$ [0mgit fetch origin main builder-outbox 2>&1 | tail -5; echo ===; git ls-tree --name-only origin/main artifacts/claude-rsn358c-20260926/; echo ===; git ls-tree --name-only origin/main artifacts/claude-rsn358a-20260925/ | head -n 40
+From github.com:BenjaminHannan/learner
+ * branch                main           -> FETCH_HEAD
+ * branch                builder-outbox -> FETCH_HEAD
+   8e5d42054..8d6a976e5  main           -> origin/main
+   e5405915a..0e55ace35  builder-outbox -> origin/builder-outbox
+zsh:1: == not found
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main artifacts/claude-rsn358c-20260926/
+artifacts/claude-rsn358c-20260926/PASSMARKS-c1.md
+artifacts/claude-rsn358c-20260926/PASSMARKS-c2-draft.md
+artifacts/claude-rsn358c-20260926/SEAL-c1.sha256.txt
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358c-20260926/PASSMARKS-c1.md
+# rsn-358c1 pass marks (fixed before any 358a result is known; 2026-09-26 02:40 UTC, sleep research thread)
+
+Question 1: does judging "thinking has settled" on the ANSWER cells only (instead of the whole predicted grid) fix the
+loop's stop? Question 2 (problem #5 of Ben's overnight goal): with that stop, does the loop beat its plain twin on
+fresh bigger puzzles?
+
+ONE change, evaluation only: the stop rule compares answer cells (scripts/claude_rsn358c1_stop.py). No training: the
+checkpoints are 358a's own (loop-s1/2, plain-s1/2, BensPC). Fresh sets made by code (seeds 36000+ "pick", 36100+
+"check", 300 each), never the sealed 358a test files. The fixed round budget is picked on "pick" (best of
+1/2/4/8/12/16/24/32/48; ties -> fewer rounds) and frozen before "check" is scored. Every count below is on "check".
+Graded families: sums4, grids5 (practised sizes); sums6, grids6, numbers5 (bigger). Report only: sums8, grids7.
+
+| mark | what (each seed) | pass |
+|---|---|---|
+| V validity | plain and loop (fixed budget) each ≥ 210/300 on sums4 and on grids5 | else K4 is INCONCLUSIVE |
+| K1 | answer-cell stop ≥ fixed budget − 3, each graded family | all five |
+| K2 | where the v2 stop is ≥ 10 below the fixed budget: answer-cell − v2 ≥ half that gap (rounded up) | every such family |
+| K3 | answer-cell stop ≥ v2 stop − 3, each graded family (no early-stop harm) | all five |
+| K4 | loop (answer-cell stop) − plain: ≥ +30 on at least 2 of sums6/grids6/numbers5 and ≥ −10 on the third; ≥ −10 on sums4 and grids5 | yes |
+
+**Stop fix PASS = K1, K2 and K3 on both seeds.** If the v2 stop is never ≥ 10 below the fixed budget, K2 is "nothing
+to recover" and the stop fix is NOT NEEDED (K1/K3 still reported).
+**Loop beats plain PASS = V and K4 on both seeds.**
+**Proved wrong (answer-cell stability is the fix):** on every family where v2 lost ≥ 10, answer-cell recovers less
+than a quarter of the gap, on both seeds; or K3 fails by more than 10 anywhere.
+
+Limits written before running: the loop does several times the plain net's compute per question (same weights, not
+same compute), as in 358a. The 48 rounds are all computed; stop rounds are not measured savings. Fresh sums/grids come
+from very large spaces but are not proven disjoint from training draws (as in 358a); numbers5 hands are fresh draws
+and may overlap the sealed test's hands (no training on either). K4 is a second look at the same checkpoints after
+358a with one changed rule; 358a's registered verdict stands whatever this shows.
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rsn358c1_stop.py | head -n 200
+#!/usr/bin/env python3
+"""rsn-358c1 (sleep research thread, 2026-09-26): does judging "thinking has settled" on the ANSWER cells only fix the
+loop's stop? ONE change, evaluation only: no training, 358a's own saved loop checkpoints, fresh puzzles (never the
+sealed test files in artifacts/claude-rsn358a-20260925/tests/).
+
+Why: an outside review (Ben, 2026-09-26 01:54 and 02:11 UTC) noted that 358a v2's stop rule
+(scripts/claude_rsn358a2_run.py: stop from round 3 on when p > 0.5 and the prediction is unchanged for two rounds)
+compares the WHOLE predicted grid, including cells that get no training and may flicker. Here the same rule compares
+only the answer cells. Everything else (checkpoint, stop head, 48-round cap, p > 0.5) is fixed.
+
+Two fresh sets per family, 300 each:
+  pick   chooses the fixed round budget (the best of 1/2/4/8/12/16/24/32/48 rounds; ties -> fewer rounds)
+  check  scores: v2 rule, answer-cell rule, and the fixed budget chosen on "pick"
+Families: sums4/6/8, grids5/6/7, numbers5 (numbers4's held-out hands are the sealed test, so no fresh set exists).
+
+With --plain, the same-seed plain checkpoint is also scored on the same "check" sets (one pass, no rounds), so the
+loop with the answer-cell stop can be compared with plain on fresh puzzles (marks in artifacts/claude-rsn358c-20260926/).
+
+  python -B scripts/claude_rsn358c1_stop.py --ckpt W/loop-s1/final.pt --plain W/plain-s1/final.pt --out W/stop358c1-s1.json
+  python -B scripts/claude_rsn358c1_stop.py smoke
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+import torch
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_rsn358a_envs as E  # noqa: E402
+import claude_rsn358a_run as R  # noqa: E402
+import claude_rsn358a2_run as V  # noqa: E402
+
+FAMILIES = [("sums4", "sums", 4), ("sums6", "sums", 6), ("sums8", "sums", 8),
+            ("grids5", "grids", 5), ("grids6", "grids", 6), ("grids7", "grids", 7), ("numbers5", "numbers", 5)]
+PICK_SEED, CHECK_SEED = 36000, 36100          # + family index; the sealed tests use 35811-35832
+
+
+def answer_cells(p, it):
+    flat = [c for row in it.slot for c in row]
+    return tuple(t for t, m in zip(p, flat) if m)
+
+
+def stop_answer_cells(p, q, n, it):
+    a = [answer_cells(x, it) for x in p]
+    return next((r for r in range(2, n) if q[r] > 0.5 and a[r] == a[r - 1] == a[r - 2]), n - 1)
+
+
+@torch.no_grad()
+def rounds_table(net, items, device, bs=100):
+    """per item: right at every round (list of 0/1), v2 stop round, answer-cell stop round."""
+    net.eval()
+    n = R.TEST_ROUNDS
+    rows = []
+    for i in range(0, len(items), bs):
+        chunk = items[i:i + bs]
+        t, s, _, env = R.tensors(chunk, device)
+        preds, qs = net.loop_rounds(t, s, env, n)
+        for it, p, q in zip(chunk, preds.tolist(), qs.tolist()):
+            ok = [int(E.check(it, R.grid_of(p[r], it))) for r in range(n)]
+            rows.append((ok, V.stop_round(p, q, n), stop_answer_cells(p, q, n, it)))
+    return rows
+
+
+@torch.no_grad()
+def plain_right(net, items, device, bs=100):
+    net.eval()
+    right = 0
+    for i in range(0, len(items), bs):
+        chunk = items[i:i + bs]
+        t, s, _, env = R.tensors(chunk, device)
+        preds = net.plain_forward(t, s, env).argmax(-1).tolist()
+        right += sum(E.check(it, R.grid_of(p, it)) for it, p in zip(chunk, preds))
+    return right
+
+
+def family_items(env, size, seed, n):
+    return R.make_test(None, env, size, seed, n)
+
+
+def run(a):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    net = R.load(a.ckpt, device)
+    assert net.arm == "loop"
+    plain = R.load(a.plain, device) if a.plain else None
+    assert plain is None or plain.arm == "plain"
+    res = {"ckpt": str(a.ckpt), "n": a.n, "families": {}}
+    for i, (name, env, size) in enumerate(FAMILIES):
+        pick = rounds_table(net, family_items(env, size, PICK_SEED + i, a.n), device)
+        by_r = {r: sum(ok[r - 1] for ok, _, _ in pick) for r in R.FIXED_REPORT}
+        best = max(R.FIXED_REPORT, key=lambda r: (by_r[r], -r))
+        check_items = family_items(env, size, CHECK_SEED + i, a.n)
+        chk = rounds_table(net, check_items, device)
+        f = {"pick_fixed": {str(r): v for r, v in by_r.items()}, "budget": best,
+             "fixed_budget_right": sum(ok[best - 1] for ok, _, _ in chk),
+             "v2_right": sum(ok[s2] for ok, s2, _ in chk),
+             "answer_cell_right": sum(ok[sa] for ok, _, sa in chk),
+             "v2_mean_rounds": round(sum(s2 + 1 for _, s2, _ in chk) / len(chk), 2),
+             "answer_cell_mean_rounds": round(sum(sa + 1 for _, _, sa in chk) / len(chk), 2),
+             "check_fixed": {str(r): sum(ok[r - 1] for ok, _, _ in chk) for r in R.FIXED_REPORT},
+             "check_any_round": sum(any(ok) for ok, _, _ in chk)}
+        if plain is not None:
+            f["plain_right"] = plain_right(plain, check_items, device)
+        res["families"][name] = f
+        print(name, json.dumps(f), flush=True)
+    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
+    Path(a.out).write_text(json.dumps(res, indent=1), encoding="utf-8")
+
+
+def smoke(_):
+    import tempfile
+    tmp = Path(tempfile.mkdtemp())
+    net = R.Net("loop")
+    torch.save({"arm": "loop", "seed": 0, "state": net.state_dict()}, tmp / "final.pt")
+    torch.save({"arm": "plain", "seed": 0, "state": R.Net("plain").state_dict()}, tmp / "plain.pt")
+    global FAMILIES
+    FAMILIES = FAMILIES[:1] + FAMILIES[3:4] + FAMILIES[6:]
+    run(argparse.Namespace(ckpt=tmp / "final.pt", plain=tmp / "plain.pt", out=tmp / "o.json", n=6))
+    d = json.loads((tmp / "o.json").read_text())
+    assert set(d["families"]) == {"sums4", "grids5", "numbers5"}
+    assert all("plain_right" in f for f in d["families"].values())
+    it = E.make_sum(__import__("random").Random(0), 3)
+    flat = [c for row in it.slot for c in row]
+    assert len(answer_cells(list(range(len(flat))), it)) == sum(flat)
+    print("smoke ok", tmp)
+
+
+def main():
+    if sys.argv[1:] == ["smoke"]:
+        return smoke(None)
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--ckpt", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--plain", default=None)
+    ap.add_argument("--n", type=int, default=300)
+    run(ap.parse_args())
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358c-20260926/SEAL-c1.sha256.txt; echo "---SEAL-END---"
+091186a00d35cb661c8767c751f96c8127e83ece3eb14340d88a0533e900ed19  scripts/claude_rsn358c1_stop.py
+04ddfcdf8479e9cb98b3f1d73d2b296b55e758b0bf118101a49b66c9232cd37f  scripts/claude_rsn358c2_run.py
+80513101e4a6820f3fc32b2d23d01bcfc1ccca9457ae928826bdf37d89d816fe  scripts/claude_rsn358a2_run.py
+9b0e1a03ffdf354575e0a19acc58042c869c261565ba62e91e71af899cbca9b0  scripts/claude_rsn358a_run.py
+af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0  scripts/claude_rsn358a_envs.py
+c00aa62f4bc9ed710019581ee61288256238539c5bcfb6759d17f89c01a958de  scripts/claude_blurt1.py
+d69e992276b4c26e60115ce0dfa8a745ddc4b0502950abf46d6eb3616d4f1d84  artifacts/claude-rsn358c-20260926/PASSMARKS-c1.md
+---SEAL-END---
+[0m
+[0m$ [0mgit ls-tree --name-only origin/builder-outbox artifacts/claude-rsn358a-20260925/ | head -n 60
+artifacts/claude-rsn358a-20260925/RESULTS.md
+artifacts/claude-rsn358a-20260925/SEAL-run.sha256.txt
+artifacts/claude-rsn358a-20260925/runs
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-rsn358a-20260925/SEAL-run.sha256.txt; echo "---END---"
+c9f4934f2ab62a0abd0c5103c10785b6286aea9fdafabd06ebbf7727bf3ca2c4  loop-s1/final.pt (kept at C:/Users/benja/premonition-models/rsn358a/loop-s1/final.pt, 25764244 bytes)
+2747d6413abefce568b6cf32217bfbd7ae519b3dd6c322a1c9997bd36c218b89  plain-s1/final.pt (kept at C:/Users/benja/premonition-models/rsn358a/plain-s1/final.pt, 25573143 bytes)
+05fda0818d47316f651a0fc28da1e32815eb8d6d10331a2096346175fe25d2eb  loop-s2/final.pt (kept at C:/Users/benja/premonition-models/rsn358a/loop-s2/final.pt, 25764244 bytes)
+2400fc1f78388ca84d52060ef0be0791b7faaf07acdf1a03fa0cb80a2f7739583  plain-s2/final.pt (kept at C:/Users/benja/premonition-models/rsn358a/plain-s2/final.pt, 25573143 bytes)
+---END---
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358c-20260926/PASSMARKS-c2-draft.md | head -n 40; echo "---"; git log --oneline origin/main -- artifacts/claude-rsn358a-20260925/ | head; echo "---"; ls /private/tmp/claude-502/ 2>&1 | head
+# rsn-358c2 pass marks, DRAFT (fixed 2026-09-26 02:40 UTC; run only if 358c1 shows the stop still loses answers)
+
+ONE change vs 358a v2: the stop head's training label is the real checker's verdict (any valid expression counts for
+number puzzles; sums and grids have one answer, so they are unchanged). Code: scripts/claude_rsn358c2_run.py. Loop
+arm retrained, seeds 1-2, same steps/data/tests as 358a; the plain arm is 358a's (same code path, seeds and data).
+Marks: G0-G3 exactly as artifacts/claude-rsn358a-20260925/PASSMARKS-v2.md, plus
+L1: on numbers4/numbers5, loop right with its own stop ≥ loop right at the fixed 16 rounds − 3 (the stop no longer
+refuses valid alternative answers). Proved wrong (for this change): L1 fails on both seeds.
+Reject this change if the labels are correct (checked in smoke) but the stop's losses on numbers do not shrink.
+---
+91b5efe88 rsn-358a: blind recount agrees (FAIL); 358c1 job handles the 65-char plain-s2 seal typo
+fc54507da rsn-358a: unregistered CPU grids preview (loop 173 vs plain 59 of 200 on 6x6)
+5533a4484 rsn-358a v2 shared: run on BensPC next to slp-363 (GPU: shared, 4 GB cap launcher, nvidia-smi gates, one training at a time); 006d held
+68a7d8672 rsn-358a v2 (before any run): fix the loop's stop rule (settled answer + stop head), re-sealed; queued task uses the v2 runner
+289d3b2fb rsn-358a sealed (code, pass marks, 8 test sets) + rental task and guard (cap $2.50 of the $7 window)
+8def425fc 358a draft: loop vs plain reasoner on sums, Latin grids and number puzzles (not sealed; CPU learnability check running)
+---
+-private-var-folders-6q-27cy8k2s7w7cyb5spxrkj2mm0000gp-T-claude-sandbox-status-D5zpSz
+-Users-ben-hannan
+-Users-ben-hannan-Desktop
+-Users-ben-hannan-Desktop-projects-beautiful-model
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-issues-audit-abcf60
+-Users-ben-hannan-Desktop-projects-moe
+-Users-ben-hannan-Desktop-projects-polymarket
+-Users-ben-hannan-Desktop-projects-school-access
+-Users-ben-hannan-novel-model
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/" 2>&1 | head -n 20
+76c622f5-1395-42cc-b432-71b65f256cf4
+e74bc27e-706d-45b2-849a-15f682aeceaf
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358a-20260925/SEAL-run.sha256.txt; echo "---END---"; echo "LEN-CHECK:"; git show origin/main:artifacts/claude-rsn358a-20260925/SEAL-run.sha256.txt | awk '{print length($1), $0}'
+fatal: path 'artifacts/claude-rsn358a-20260925/SEAL-run.sha256.txt' exists on disk, but not in 'origin/main'
+---END---
+LEN-CHECK:
+fatal: path 'artifacts/claude-rsn358a-20260925/SEAL-run.sha256.txt' exists on disk, but not in 'origin/main'
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/" 2>&1; echo "---"; ls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/" 2>&1 | head -n 30
+scratchpad
+---
+ls: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/: No such file or directory
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main artifacts/claude-rsn358a-20260925/; echo "---LOCAL---"; ls artifacts/claude-rsn358a-20260925/
+artifacts/claude-rsn358a-20260925/PASSMARKS-v2.md
+artifacts/claude-rsn358a-20260925/PASSMARKS.md
+artifacts/claude-rsn358a-20260925/SEAL-code-v2.sha256.txt
+artifacts/claude-rsn358a-20260925/SEAL-code.sha256.txt
+artifacts/claude-rsn358a-20260925/SEAL-shared-launcher.sha256.txt
+artifacts/claude-rsn358a-20260925/VERIFY.md
+artifacts/claude-rsn358a-20260925/preview
+artifacts/claude-rsn358a-20260925/tests
+---LOCAL---
+RESULTS.md
+runs
+SEAL-run.sha256.txt
+[0m
+[0m$ [0mfind "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad" -maxdepth 3 2>&1 | head -n 40
+/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad
+[0m
+[0m$ [0mcat artifacts/claude-rsn358a-20260925/SEAL-run.sha256.txt; echo "---"; awk '{print length($1)}' artifacts/claude-rsn358a-20260925/SEAL-run.sha256.txt
+c9f4934f2ab62a0abd0c5103c10785b6286aea9fdafabd06ebbf7727bf3ca2c4  loop-s1/final.pt (kept at C:/Users/benja/premonition-models/rsn358a/loop-s1/final.pt, 25764244 bytes)
+2747d6413abefce568b6cf32217bfbd7ae519b3dd6c322a1c9997bd36c218b89  plain-s1/final.pt (kept at C:/Users/benja/premonition-models/rsn358a/plain-s1/final.pt, 25573143 bytes)
+05fda0818d47316f651a0fc28da1e32815eb8d6d10331a2096346175fe25d2eb  loop-s2/final.pt (kept at C:/Users/benja/premonition-models/rsn358a/loop-s2/final.pt, 25764244 bytes)
+2400fc1f78388ca84d52060ef0be0791b7faaf07acdf1a03fa0cb80a2f7739583  plain-s2/final.pt (kept at C:/Users/benja/premonition-models/rsn358a/plain-s2/final.pt, 25573143 bytes)
+---
+64
+64
+64
+65
+[0m
+[0m$ [0mls artifacts/claude-rsn358a-20260925/runs/ 2>&1 | head; echo "---"; ls data/models/ 2>&1 | head -n 20
+loop-s1
+loop-s2
+plain-s1
+plain-s2
+---
+smolear235_v3
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-rsn358a-20260925/SEAL-run.sha256.txt | awk '{print length($1), $1}'; echo "---LOCAL---"; awk '{print length($1), $1}' artifacts/claude-rsn358a-20260925/SEAL-run.sha256.txt
+64 c9f4934f2ab62a0abd0c5103c10785b6286aea9fdafabd06ebbf7727bf3ca2c4
+64 2747d6413abefce568b6cf32217bfbd7ae519b3dd6c322a1c9997bd36c218b89
+64 05fda0818d47316f651a0fc28da1e32815eb8d6d10331a2096346175fe25d2eb
+65 2400fc1f78388ca84d52060ef0be0791b7faaf07acdf1a03fa0cb80a2f7739583
+---LOCAL---
+64 c9f4934f2ab62a0abd0c5103c10785b6286aea9fdafabd06ebbf7727bf3ca2c4
+64 2747d6413abefce568b6cf32217bfbd7ae519b3dd6c322a1c9997bd36c218b89
+64 05fda0818d47316f651a0fc28da1e32815eb8d6d10331a2096346175fe25d2eb
+65 2400fc1f78388ca84d52060ef0be0791b7faaf07acdf1a03fa0cb80a2f7739583
+[0m
+[0m$ [0mls -la artifacts/claude-rsn358a-20260925/runs/loop-s1/ artifacts/claude-rsn358a-20260925/runs/plain-s1/ artifacts/claude-rsn358a-20260925/runs/loop-s2/ artifacts/claude-rsn358a-20260925/runs/plain-s2/ 2>&1
+artifacts/claude-rsn358a-20260925/runs/loop-s1/:
+total 88
+drwxr-xr-x  5 ben-hannan  staff    160 Sep 25 23:02 .
+drwxr-xr-x  6 ben-hannan  staff    192 Sep 25 23:02 ..
+-rw-------  1 ben-hannan  staff   4454 Sep 25 23:02 tests.json
+-rw-------  1 ben-hannan  staff  31783 Sep 25 23:02 train_log.jsonl
+-rw-------  1 ben-hannan  staff    185 Sep 25 23:02 train_summary.json
+
+artifacts/claude-rsn358a-20260925/runs/loop-s2/:
+total 88
+drwxr-xr-x  5 ben-hannan  staff    160 Sep 25 23:02 .
+drwxr-xr-x  6 ben-hannan  staff    192 Sep 25 23:02 ..
+-rw-------  1 ben-hannan  staff   4470 Sep 25 23:02 tests.json
+-rw-------  1 ben-hannan  staff  31762 Sep 25 23:02 train_log.jsonl
+-rw-------  1 ben-hannan  staff    185 Sep 25 23:02 train_summary.json
+
+artifacts/claude-rsn358a-20260925/runs/plain-s1/:
+total 80
+drwxr-xr-x  5 ben-hannan  staff    160 Sep 25 23:02 .
+drwxr-xr-x  6 ben-hannan  staff    192 Sep 25 23:02 ..
+-rw-------  1 ben-hannan  staff    667 Sep 25 23:02 tests.json
+-rw-------  1 ben-hannan  staff  31255 Sep 25 23:02 train_log.jsonl
+-rw-------  1 ben-hannan  staff    186 Sep 25 23:02 train_summary.json
+
+artifacts/claude-rsn358a-20260925/runs/plain-s2/:
+total 80
+drwxr-xr-x  5 ben-hannan  staff    160 Sep 25 23:02 .
+drwxr-xr-x  6 ben-hannan  staff    192 Sep 25 23:02 ..
+-rw-------  1 ben-hannan  staff    668 Sep 25 23:02 tests.json
+-rw-------  1 ben-hannan  staff  31270 Sep 25 23:02 train_log.jsonl
+-rw-------  1 ben-hannan  staff    186 Sep 25 23:02 train_summary.json
+[0m
+[0m$ [0mawk '{print $1}' artifacts/claude-rsn358a-20260925/SEAL-run.sha256.txt | tail -1 | wc -c; awk '{print $1}' artifacts/claude-rsn358a-20260925/SEAL-run.sha256.txt | tail -1 | od -c | head -5
+66
+0000000    2   4   0   0   f   c   1   f   7   8   3   8   8   c   a   8
+0000020    4   d   5   2   0   6   0   e   f   0   b   e   0   7   9   1
+0000040    b   7   f   a   a   f   0   7   a   c   d   f   1   a   0   3
+0000060    f   a   0   c   b   8   0   a   2   f   7   7   3   9   5   8
+0000100    3  \n
+[0m
+[0m$ [0mls data/models/smolear235_v3/ 2>&1 | head; echo "---"; find . -maxdepth 4 -name "final.pt" 2>/dev/null | head; echo "---DONE---"
+smolear235.safetensors
+---
+./artifacts/fable-startup-factorial-v2-20260920/longrun-seed-1302/final.pt
+./artifacts/fable-startup-factorial-v2-20260920/longrun-seed-1300/final.pt
+./artifacts/fable-startup-factorial-v2-20260920/longrun-seed-1301/final.pt
+---DONE---
+[0m
+[0m$ [0mcat artifacts/claude-rsn358a-20260925/RESULTS.md 2>&1 | head -n 60
+# rsn-358a RESULTS (builder, 2026-09-26, BensPC RTX 5070 Ti, shared GPU, $0)
+
+## Verdict: FAIL
+
+G0 is met on both seeds, but G1 passes on seed 1 and fails on seed 2
+(PASS needs G0+G1+G2+G3 on BOTH seeds). The "proved wrong" clause did NOT trigger.
+
+## Marks (300 items per test; PASSMARKS-v2.md)
+
+| mark | seed 1 | seed 2 |
+|---|---|---|
+| G0 validity (both arms >=210/300 practised-size in >=2 of 3 kinds) | MET: sums 300/300, grids 240/243, numbers 1/3 -> 2 of 3 | MET: sums 300/300, grids 244/248, numbers 2/4 -> 2 of 3 |
+| G1 bigger: loop - plain (sums6 / grids6 / numbers5; need >= +30 on 2 of 3 and >= -10 on third) | PASS: +59 / +67 / 0 | FAIL: -11 / +76 / +2 (only grids6 hits +30; sums6 -11 breaks the -10 floor) |
+| G2 practised-size: loop - plain (each >= -10) | PASS: 0 / +3 / +2 | PASS: 0 / +4 / +2 |
+| G3 stop picks the length (own-stop >= fixed-16 - 5 each bigger test; mean rounds sums6 > sums4) | PASS: 256>=251, 270>=266, 1>=-4; 8.82 > 7.14 | PASS: 244>=239, 265>=262, 2>=-4; 8.01 > 6.52 |
+| Overall | G0+G1+G2+G3 pass | G1 fails |
+
+Proved-wrong clause ("thinking in rounds lets a small net carry a method to bigger puzzles"):
+needs G0 met AND loop-plain <= +5/300 on ALL three bigger tests on BOTH seeds.
+Seed 1 has +59 (sums6) and +67 (grids6); seed 2 has +76 (grids6). NOT triggered.
+
+## Per-seed tables (plain right, loop right at own stop, loop - plain; n = 300)
+
+Seed 1:
+
+| test | role | plain | loop (own stop) | loop - plain |
+|---|---|---|---|---|
+| sums4 | practised | 300 | 300 | 0 |
+| sums6 | bigger | 197 | 256 | +59 |
+| sums8 | report | 78 | 88 | +10 |
+| grids5 | practised | 240 | 243 | +3 |
+| grids6 | bigger | 203 | 270 | +67 |
+| grids7 | report | 92 | 192 | +100 |
+| numbers4 | practised | 1 | 3 | +2 |
+| numbers5 | bigger | 1 | 1 | 0 |
+
+Seed 2:
+
+| test | role | plain | loop (own stop) | loop - plain |
+|---|---|---|---|---|
+| sums4 | practised | 300 | 300 | 0 |
+| sums6 | bigger | 255 | 244 | -11 |
+| sums8 | report | 142 | 94 | -48 |
+| grids5 | practised | 244 | 248 | +4 |
+| grids6 | bigger | 189 | 265 | +76 |
+| grids7 | report | 88 | 173 | +85 |
+| numbers4 | practised | 2 | 4 | +2 |
+| numbers5 | bigger | 0 | 2 | +2 |
+
+## Loop rounds detail (report; right_v1_rule is report-only, never graded)
+
+Seed 1 loop (mean rounds | right at 1/2/4/8/12/16/24/32/48 | any round | v1 rule | own-stop right):
+
+| test | mean | 1 | 2 | 4 | 8 | 12 | 16 | 24 | 32 | 48 | any | v1 | own |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| sums4 | 7.14 | 300 | 300 | 300 | 300 | 300 | 300 | 300 | 300 | 300 | 300 | 300 | 300 |
+| sums6 | 8.82 | 177 | 220 | 265 | 260 | 257 | 256 | 251 | 251 | 251 | 286 | 177 | 256 |
+| sums8 | 9.93 | 46 | 69 | 83 | 89 | 84 | 82 | 79 | 77 | 76 | 135 | 46 | 88 |
+| grids5 | 15.78 | 101 | 186 | 237 | 243 | 243 | 243 | 243 | 243 | 243 | 245 | 214 | 243 |
+| grids6 | 9.57 | 51 | 156 | 240 | 261 | 269 | 271 | 272 | 272 | 272 | 273 | 211 | 270 |
+[0m
+[0m$ [0mls /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/ 2>/dev/null | grep -i rsn358; echo "---"; find /Users/ben-hannan/Desktop/projects/beautiful-model -maxdepth 5 -name "final.pt" -path "*rsn358*" 2>/dev/null | head; echo "---DONE---"
+claude-rsn358a-20260925
+---
+---DONE---
+[0m
+[0m$ [0mtail -n 60 artifacts/claude-rsn358a-20260925/RESULTS.md; echo "==="; ls /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-rsn358a-20260925/ 2>&1; echo "==="; find /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-rsn358a-20260925 -name "*.pt" 2>/dev/null | head
+remote spot-checks via Get-FileHash match); env selftest "selftest ok".
+- Each of the 8 sealed tests ran exactly ONCE per final checkpoint (4 evals total). Test items never
+  opened, printed, or tuned on; only counts recorded. Pilots (seed 9, 500 steps, loop 0.5 min / plain
+  0.5 min after 14 s data-ready; full-run estimate 120x = ~32 min each) never touched the tests.
+- Training: 60,000 steps, batch 256, lr 3e-4, same data stream per seed, one run at a time (sharing rule).
+  Total train 116.8 min (32.2 + 25.9 + 32.9 + 25.8), under the 480-minute cap. No OOM anywhere
+  (own cap never hit; free GPU memory never below 10 GB).
+- GPU: BensPC RTX 5070 Ti 16303 MiB, $0. Start: 404 MiB used, 15570+ MiB free, no compute job.
+  pilots/train/eval re-checked after every run; lowest free reading 10342 MiB.
+
+## Deviations (7)
+
+- D1: pilot --out used W/pilot-loop and W/pilot-plain inside the code dir instead of /tmp/pilot-*:
+  Windows has no /tmp; timing-only pilots, no effect on results.
+- D2: trained ONE at a time, not two (sharing rule S4 overrides the task's "two at a time").
+- D3: also copied design/v3/30-modes/358a-loop-vs-plain-general-puzzles.md to BensPC (it is part of
+  SEAL-code-v2, needed for a complete remote tree). No sha256sum binary on Windows, so the full
+  14/14 check ran locally from `git archive origin/main`, plus remote Get-FileHash spot checks
+  (all match) and the env selftest on BensPC.
+- D4: the brief's OPUS-RULES.txt path did not exist (both scratchpad dirs empty); followed the
+  /tmp/opus-rules.txt copy and the task text, which state the same rules (additive-only, append-only
+  ledger, integer counts, no test peeking).
+- D5: an unrelated Python310 python.exe (PID 764) briefly held ~2.5 GB of GPU during the
+  plain-s1/loop-s2 window (used showed 5654 MiB at one poll, back to ~3 GB later); free VRAM never
+  below 10 GB, its log was not visible, and per S3 it was never touched.
+- D6: Mac checkpoint copy first deferred (`df -g /` showed 6 GB free, below the 8 GB rule), then done
+  after space freed up (11 GB free): all 4 final.pt copied to ~/premonition-models/rsn358a/<run>/ with
+  sha256 matching the seals; 11 GB free after the copy.
+- D7: first pilot-loop launch (PID 10768) died instantly because W/ did not exist yet for the log
+  redirect; created W/ and relaunched cleanly. No training or test contact involved.
+
+## Every miss
+
+- numbers4 (practised size): loop 3, plain 1 (s1); loop 4, plain 2 (s2). numbers5 (bigger):
+  loop 1, plain 1 (s1); loop 2, plain 0 (s2). Both arms, both seeds: the number puzzles were
+  essentially never solved, even at the practised size, so G0 rests on sums + grids only.
+- sums6 seed 2: loop 244 vs plain 255 (-11) -- the single miss that fails G1 (and the -10 floor).
+- sums8 seed 2: loop 94 vs plain 142 (-48, report-only).
+- Seed variance on the plain arm: sums6 plain 197 (s1) vs 255 (s2), a 58-point swing with
+  identical settings except the data seed.
+
+## What it means (plain high-school English)
+
+- The round-thinking net clearly beat its plain twin on bigger grid puzzles both times
+  (grids6: +67 and +76 out of 300) and on bigger sums once (+59), while never falling behind on
+  the sizes it practised. Extra thinking time turned into bigger solved puzzles in those cases.
+- But it failed the bar: on seed 2 the plain twin actually won bigger sums by 11, so the rule
+  "pass on both seeds" is not met. One win and one loss means the result does not hold up.
+- Neither net learned the number puzzles at all (about 1-4 right out of 300 even on the practised
+  size), so that whole puzzle kind says nothing about round-thinking; it says the setup cannot do
+  those puzzles yet.
+
+## What it doesn't mean
+
+- It does NOT mean round-thinking is useless: seed 1 passed every mark, and grids6 won big twice.
+- It does NOT mean the plain net is better: it lost grids6 badly twice and never won numbers.
+- It does NOT prove the idea wrong either: the proved-wrong clause (tiny gaps everywhere, both
+  seeds) did not trigger, because several gaps were large.
+- It does NOT say anything about harder puzzles (sums8/grids7 are report-only) or about giving the
+  plain net extra compute some other way (that was never tested here).
+===
+PASSMARKS-v2.md
+PASSMARKS.md
+preview
+SEAL-code-v2.sha256.txt
+SEAL-code.sha256.txt
+SEAL-shared-launcher.sha256.txt
+tests
+===
+[0m
+[0m$ [0mls ~/premonition-models/rsn358a/ 2>&1; echo "---"; ls -la ~/premonition-models/ 2>&1 | head
+loop-s1
+loop-s2
+plain-s1
+plain-s2
+---
+total 24
+drwxr-xr-x  10 ben-hannan  staff    320 Sep 25 23:04 .
+drwxr-xr-x+ 79 ben-hannan  staff   2528 Sep 25 22:16 ..
+-rw-r--r--@  1 ben-hannan  staff  10244 Sep 25 23:05 .DS_Store
+drwxr-xr-x   8 ben-hannan  staff    256 Sep 23 15:02 lis301-merged
+drwxr-xr-x   8 ben-hannan  staff    256 Sep 25 16:21 lis319-merged
+drwxr-xr-x   3 ben-hannan  staff     96 Sep 24 00:23 minilm
+drwxr-xr-x   4 ben-hannan  staff    128 Sep 23 15:56 own-m1n-mouth
+drwxr-xr-x   9 ben-hannan  staff    288 Sep 25 21:06 rd378-notes-merged
+drwxr-xr-x   5 ben-hannan  staff    160 Sep 25 13:45 rsn353
+[0m
+[0m$ [0mls -la ~/premonition-models/rsn358a/loop-s1/ ~/premonition-models/rsn358a/plain-s1/ ~/premonition-models/rsn358a/loop-s2/ ~/premonition-models/rsn358a/plain-s2/ 2>&1
+/Users/ben-hannan/premonition-models/rsn358a/loop-s1/:
+total 50328
+drwxr-xr-x  3 ben-hannan  staff        96 Sep 25 23:04 .
+drwxr-xr-x  7 ben-hannan  staff       224 Sep 25 23:04 ..
+-rw-------  1 ben-hannan  staff  25764244 Sep 25 23:04 final.pt
+
+/Users/ben-hannan/premonition-models/rsn358a/loop-s2/:
+total 50328
+drwxr-xr-x  3 ben-hannan  staff        96 Sep 25 23:04 .
+drwxr-xr-x  7 ben-hannan  staff       224 Sep 25 23:04 ..
+-rw-------  1 ben-hannan  staff  25764244 Sep 25 23:04 final.pt
+
+/Users/ben-hannan/premonition-models/rsn358a/plain-s1/:
+total 49952
+drwxr-xr-x  3 ben-hannan  staff        96 Sep 25 23:04 .
+drwxr-xr-x  7 ben-hannan  staff       224 Sep 25 23:04 ..
+-rw-------  1 ben-hannan  staff  25573143 Sep 25 23:04 final.pt
+
+/Users/ben-hannan/premonition-models/rsn358a/plain-s2/:
+total 49952
+drwxr-xr-x  3 ben-hannan  staff        96 Sep 25 23:05 .
+drwxr-xr-x  7 ben-hannan  staff       224 Sep 25 23:04 ..
+-rw-------  1 ben-hannan  staff  25573143 Sep 25 23:05 final.pt
+[0m
+[0m# [0mTodos
+[•] Verify precondition: sha256 of 4 checkpoints vs SEAL-run.sha256.txt (plain-s2 typo rule)
+[ ] SEAL: git archive extract + sha256 check + smoke test
+[ ] RUN stop script once per seed (s1, s2), keep logs
+[ ] Write RESULTS-c1.md with verdict, counts, marks, ledger lines
+[ ] Push artifacts + ledger (git add/commit/push)
+[0m
+[0m$ [0mshasum -a 256 ~/premonition-models/rsn358a/loop-s1/final.pt ~/premonition-models/rsn358a/plain-s1/final.pt ~/premonition-models/rsn358a/loop-s2/final.pt ~/premonition-models/rsn358a/plain-s2/final.pt
+c9f4934f2ab62a0abd0c5103c10785b6286aea9fdafabd06ebbf7727bf3ca2c4  /Users/ben-hannan/premonition-models/rsn358a/loop-s1/final.pt
+2747d6413abefce568b6cf32217bfbd7ae519b3dd6c322a1c9997bd36c218b89  /Users/ben-hannan/premonition-models/rsn358a/plain-s1/final.pt
+05fda0818d47316f651a0fc28da1e32815eb8d6d10331a2096346175fe25d2eb  /Users/ben-hannan/premonition-models/rsn358a/loop-s2/final.pt
+2400fc1f78388ca84d52060ef0be0791b7faf07acdf1a03fa0cb80a2f7739583  /Users/ben-hannan/premonition-models/rsn358a/plain-s2/final.pt
+[0m
+[0m$ [0mpython3 -c "print(1+1)" 2>&1 | head -3
+2
+[0m
+[0m$ [0mpython3 -c "
+rec='2400fc1f78388ca84d52060ef0be0791b7faaf07acdf1a03fa0cb80a2f7739583'
+real='2400fc1f78388ca84d52060ef0be0791b7faf07acdf1a03fa0cb80a2f7739583'
+print(len(rec), len(real))
+hits=[i for i in range(len(rec)) if rec[:i]+rec[i+1:]==real]
+print(hits)
+print(repr(rec[hits[0]-2:hits[0]+3]), repr(real[hits[0]-2:hits[0]+2]))
+"
+65 64
+[35, 36]
+'7faaf' '7faf'
+[0m
+[0m$ [0mpython3 -c "
+import subprocess
+rec = subprocess.run(['awk','NR==4{print \$1}','artifacts/claude-rsn358a-20260925/SEAL-run.sha256.txt'],capture_output=True,text=True).stdout.strip()
+real = subprocess.run(['shasum','-a','256',__import__('os').path.expanduser('~/premonition-models/rsn358a/plain-s2/final.pt')],capture_output=True,text=True).stdout.split()[0]
+print('reclen',len(rec)); print('reallen',len(real))
+print('rec :',rec); print('real:',real)
+hits=[i for i in range(len(rec)) if rec[:i]+rec[i+1:]==real]
+print('single-deletion hits:',hits)
+print('loop-s1/plain-s1/loop-s2 exact match check:')
+import re
+lines=open('artifacts/claude-rsn358a-20260925/SEAL-run.sha256.txt').read().splitlines()
+for ln,name in [(lines[0],'loop-s1'),(lines[1],'plain-s1'),(lines[2],'loop-s2')]:
+    h=ln.split()[0]
+    p=subprocess.run(['shasum','-a','256',__import__('os').path.expanduser('~/premonition-models/rsn358a/%s/final.pt'%name)],capture_output=True,text=True).stdout.split()[0]
+    print(name, 'MATCH' if h==p else 'MISMATCH')
+"
+reclen 65
+reallen 64
+rec : 2400fc1f78388ca84d52060ef0be0791b7faaf07acdf1a03fa0cb80a2f7739583
+real: 2400fc1f78388ca84d52060ef0be0791b7faf07acdf1a03fa0cb80a2f7739583
+single-deletion hits: [35, 36]
+loop-s1/plain-s1/loop-s2 exact match check:
+loop-s1 MATCH
+plain-s1 MATCH
+loop-s2 MATCH
+[0m
+[0m# [0mTodos
+[✓] Verify precondition: sha256 of 4 checkpoints vs SEAL-run.sha256.txt (plain-s2 typo rule)
+[•] SEAL: git archive extract + sha256 check + smoke test
+[ ] RUN stop script once per seed (s1, s2), keep logs
+[ ] Write RESULTS-c1.md with verdict, counts, marks, ledger lines
+[ ] Push artifacts + ledger (git add/commit/push)
+[0m
+[0m$ [0mls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1 | head -3; git diff origin/main --stat -- scripts/claude_rsn358c1_stop.py scripts/claude_rsn358a_envs.py scripts/claude_rsn358a_run.py scripts/claude_rsn358a2_run.py scripts/claude_rsn358c2_run.py scripts/claude_blurt1.py artifacts/claude-rsn358c-20260926/ 2>&1 | head
+bm391rent.env
+bm391split
+e2e330tree
+ artifacts/claude-rsn358c-20260926/PASSMARKS-c1.md  |  31 --
+ .../claude-rsn358c-20260926/PASSMARKS-c2-draft.md  |   9 -
+ .../claude-rsn358c-20260926/SEAL-c1.sha256.txt     |   7 -
+ scripts/claude_blurt1.py                           | 195 -----------
+ scripts/claude_rsn358a2_run.py                     |  64 ----
+ scripts/claude_rsn358a_envs.py                     | 366 --------------------
+ scripts/claude_rsn358a_run.py                      | 376 ---------------------
+ scripts/claude_rsn358c1_stop.py                    | 142 --------
+ scripts/claude_rsn358c2_run.py                     |  86 -----
+ 9 files changed, 1276 deletions(-)
+[0m
+[0m$ [0mmkdir -p /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal && git archive origin/main scripts artifacts/claude-rsn358c-20260926 artifacts/claude-rsn358a-20260925 | tar -x -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal && find /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal -type f | head -n 30
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358c-20260926/PASSMARKS-c2-draft.md
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358c-20260926/SEAL-c1.sha256.txt
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358c-20260926/PASSMARKS-c1.md
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/PASSMARKS-v2.md
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/SEAL-code.sha256.txt
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/PASSMARKS.md
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/tests/sums8.jsonl
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/tests/grids7.jsonl
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/tests/numbers4.jsonl
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/tests/grids5.jsonl
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/tests/sums4.jsonl
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/tests/sums6.jsonl
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/tests/numbers5.jsonl
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/tests/grids6.jsonl
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/VERIFY.md
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/SEAL-shared-launcher.sha256.txt
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/preview/preview_rules_4000.json
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/preview/preview_sums.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/preview/preview_rules.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/preview/preview_grids.log
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/preview/preview_grids.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/preview/preview_grids_4000.json
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/preview/preview_sums_4000.json
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/preview/PREVIEW-grids.md
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/artifacts/claude-rsn358a-20260925/SEAL-code-v2.sha256.txt
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/scripts/claude_e2e381b_harness.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/scripts/claude_identity227c.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/scripts/fable_loop132_marks.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/scripts/fable_naturalpanel208_driver.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358c1-seal/scripts/claude_cre333b_test.py
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-rsn358c-20260926/SEAL-c1.sha256.txt
+scripts/claude_rsn358c1_stop.py: OK
+scripts/claude_rsn358c2_run.py: OK
+scripts/claude_rsn358a2_run.py: OK
+scripts/claude_rsn358a_run.py: OK
+scripts/claude_rsn358a_envs.py: OK
+scripts/claude_blurt1.py: OK
+artifacts/claude-rsn358c-20260926/PASSMARKS-c1.md: OK
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rsn358c1_stop.py smoke 2>&1 | tail -n 20
+Installed 11 packages in 496ms
+sums4 {"pick_fixed": {"1": 0, "2": 0, "4": 0, "8": 0, "12": 0, "16": 0, "24": 0, "32": 0, "48": 0}, "budget": 1, "fixed_budget_right": 0, "v2_right": 0, "answer_cell_right": 0, "v2_mean_rounds": 33.0, "answer_cell_mean_rounds": 33.0, "check_fixed": {"1": 0, "2": 0, "4": 0, "8": 0, "12": 0, "16": 0, "24": 0, "32": 0, "48": 0}, "check_any_round": 0, "plain_right": 0}
+grids5 {"pick_fixed": {"1": 0, "2": 0, "4": 0, "8": 0, "12": 0, "16": 0, "24": 0, "32": 0, "48": 0}, "budget": 1, "fixed_budget_right": 0, "v2_right": 0, "answer_cell_right": 0, "v2_mean_rounds": 48.0, "answer_cell_mean_rounds": 48.0, "check_fixed": {"1": 0, "2": 0, "4": 0, "8": 0, "12": 0, "16": 0, "24": 0, "32": 0, "48": 0}, "check_any_round": 0, "plain_right": 0}
+numbers5 {"pick_fixed": {"1": 0, "2": 0, "4": 0, "8": 0, "12": 0, "16": 0, "24": 0, "32": 0, "48": 0}, "budget": 1, "fixed_budget_right": 0, "v2_right": 0, "answer_cell_right": 0, "v2_mean_rounds": 48.0, "answer_cell_mean_rounds": 48.0, "check_fixed": {"1": 0, "2": 0, "4": 0, "8": 0, "12": 0, "16": 0, "24": 0, "32": 0, "48": 0}, "check_any_round": 0, "plain_right": 0}
+smoke ok /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp3ivo641n
+[0m
+[0m$ [0mdf -g /; mkdir -p artifacts/claude-rsn358c-20260926/runs && ls artifacts/claude-rsn358c-20260926/
+Filesystem     1G-blocks Used Available Capacity iused    ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         9    59%  484014 96429280    0%   /
+runs
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rsn358c1_stop.py --ckpt /Users/ben-hannan/premonition-models/rsn358a/loop-s1/final.pt --plain /Users/ben-hannan/premonition-models/rsn358a/plain-s1/final.pt --out /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rsn358c-20260926/runs/stop358c1-s1.json > /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rsn358c-20260926/runs/stop358c1-s1.log 2>&1; echo "EXIT=$?"; tail -n 3 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rsn358c-20260926/runs/stop358c1-s1.log
+EXIT=0
+grids6 {"pick_fixed": {"1": 46, "2": 137, "4": 218, "8": 256, "12": 260, "16": 260, "24": 260, "32": 260, "48": 260}, "budget": 12, "fixed_budget_right": 260, "v2_right": 261, "answer_cell_right": 261, "v2_mean_rounds": 10.82, "answer_cell_mean_rounds": 9.51, "check_fixed": {"1": 58, "2": 145, "4": 223, "8": 258, "12": 260, "16": 260, "24": 260, "32": 260, "48": 261}, "check_any_round": 261, "plain_right": 198}
+grids7 {"pick_fixed": {"1": 13, "2": 74, "4": 137, "8": 179, "12": 186, "16": 188, "24": 187, "32": 189, "48": 189}, "budget": 32, "fixed_budget_right": 204, "v2_right": 195, "answer_cell_right": 195, "v2_mean_rounds": 8.53, "answer_cell_mean_rounds": 8.53, "check_fixed": {"1": 20, "2": 93, "4": 162, "8": 193, "12": 203, "16": 203, "24": 204, "32": 204, "48": 204}, "check_any_round": 204, "plain_right": 113}
+numbers5 {"pick_fixed": {"1": 0, "2": 1, "4": 1, "8": 2, "12": 2, "16": 3, "24": 3, "32": 3, "48": 2}, "budget": 16, "fixed_budget_right": 0, "v2_right": 0, "answer_cell_right": 0, "v2_mean_rounds": 9.96, "answer_cell_mean_rounds": 5.61, "check_fixed": {"1": 0, "2": 0, "4": 0, "8": 0, "12": 0, "16": 0, "24": 1, "32": 1, "48": 1}, "check_any_round": 1, "plain_right": 0}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_rsn358c1_stop.py --ckpt /Users/ben-hannan/premonition-models/rsn358a/loop-s2/final.pt --plain /Users/ben-hannan/premonition-models/rsn358a/plain-s2/final.pt --out /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rsn358c-20260926/runs/stop358c1-s2.json > /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rsn358c-20260926/runs/stop358c1-s2.log 2>&1; echo "EXIT=$?"; tail -n 3 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rsn358c-20260926/runs/stop358c1-s2.log
+EXIT=0
+grids6 {"pick_fixed": {"1": 73, "2": 150, "4": 230, "8": 258, "12": 262, "16": 262, "24": 263, "32": 263, "48": 263}, "budget": 24, "fixed_budget_right": 258, "v2_right": 254, "answer_cell_right": 254, "v2_mean_rounds": 11.12, "answer_cell_mean_rounds": 9.02, "check_fixed": {"1": 79, "2": 152, "4": 232, "8": 253, "12": 257, "16": 257, "24": 258, "32": 259, "48": 259}, "check_any_round": 260, "plain_right": 176}
+grids7 {"pick_fixed": {"1": 20, "2": 79, "4": 136, "8": 167, "12": 171, "16": 174, "24": 175, "32": 179, "48": 180}, "budget": 48, "fixed_budget_right": 192, "v2_right": 176, "answer_cell_right": 175, "v2_mean_rounds": 8.04, "answer_cell_mean_rounds": 7.86, "check_fixed": {"1": 35, "2": 99, "4": 150, "8": 175, "12": 181, "16": 187, "24": 189, "32": 190, "48": 192}, "check_any_round": 192, "plain_right": 105}
+numbers5 {"pick_fixed": {"1": 0, "2": 1, "4": 0, "8": 0, "12": 0, "16": 0, "24": 0, "32": 0, "48": 0}, "budget": 2, "fixed_budget_right": 0, "v2_right": 0, "answer_cell_right": 0, "v2_mean_rounds": 9.5, "answer_cell_mean_rounds": 5.34, "check_fixed": {"1": 0, "2": 0, "4": 0, "8": 0, "12": 0, "16": 0, "24": 0, "32": 0, "48": 0}, "check_any_round": 0, "plain_right": 0}
+[0m
+[0m$ [0mpython3 -c "
+import json
+for s in (1,2):
+    d=json.load(open('artifacts/claude-rsn358c-20260926/runs/stop358c1-s%d.json'%s))
+    print('=== SEED',s,'===')
+    for fam,f in d['families'].items():
+        print(fam,'budget=%s fixed=%s v2=%s ans=%s plain=%s means(v2=%s,ans=%s) any=%s pick=%s'%(
+            f['budget'],f['fixed_budget_right'],f['v2_right'],f['answer_cell_right'],f.get('plain_right'),
+            f['v2_mean_rounds'],f['answer_cell_mean_rounds'],f['check_any_round'],f['pick_fixed']))
+"
+=== SEED 1 ===
+sums4 budget=1 fixed=300 v2=300 ans=300 plain=300 means(v2=7.15,ans=3.0) any=300 pick={'1': 300, '2': 300, '4': 300, '8': 300, '12': 300, '16': 300, '24': 300, '32': 300, '48': 300}
+sums6 budget=8 fixed=255 v2=251 ans=247 plain=202 means(v2=8.56,ans=3.55) any=276 pick={'1': 191, '2': 218, '4': 254, '8': 260, '12': 255, '16': 252, '24': 252, '32': 251, '48': 250}
+sums8 budget=4 fixed=92 v2=82 ans=95 plain=80 means(v2=9.97,ans=4.4) any=141 pick={'1': 57, '2': 75, '4': 93, '8': 93, '12': 84, '16': 86, '24': 84, '32': 82, '48': 82}
+grids5 budget=8 fixed=256 v2=257 ans=257 plain=255 means(v2=14.2,ans=10.73) any=257 pick={'1': 92, '2': 193, '4': 250, '8': 253, '12': 253, '16': 253, '24': 253, '32': 253, '48': 253}
+grids6 budget=12 fixed=260 v2=261 ans=261 plain=198 means(v2=10.82,ans=9.51) any=261 pick={'1': 46, '2': 137, '4': 218, '8': 256, '12': 260, '16': 260, '24': 260, '32': 260, '48': 260}
+grids7 budget=32 fixed=204 v2=195 ans=195 plain=113 means(v2=8.53,ans=8.53) any=204 pick={'1': 13, '2': 74, '4': 137, '8': 179, '12': 186, '16': 188, '24': 187, '32': 189, '48': 189}
+numbers5 budget=16 fixed=0 v2=0 ans=0 plain=0 means(v2=9.96,ans=5.61) any=1 pick={'1': 0, '2': 1, '4': 1, '8': 2, '12': 2, '16': 3, '24': 3, '32': 3, '48': 2}
+=== SEED 2 ===
+sums4 budget=1 fixed=300 v2=300 ans=300 plain=300 means(v2=6.64,ans=3.0) any=300 pick={'1': 300, '2': 300, '4': 300, '8': 300, '12': 300, '16': 300, '24': 300, '32': 300, '48': 300}
+sums6 budget=8 fixed=235 v2=232 ans=221 plain=259 means(v2=7.92,ans=3.52) any=264 pick={'1': 178, '2': 204, '4': 235, '8': 250, '12': 250, '16': 248, '24': 245, '32': 246, '48': 246}
+sums8 budget=8 fixed=101 v2=102 ans=90 plain=140 means(v2=9.77,ans=4.76) any=135 pick={'1': 40, '2': 69, '4': 98, '8': 100, '12': 99, '16': 98, '24': 96, '32': 97, '48': 97}
+grids5 budget=8 fixed=262 v2=262 ans=262 plain=253 means(v2=14.23,ans=10.59) any=264 pick={'1': 122, '2': 211, '4': 254, '8': 258, '12': 258, '16': 258, '24': 258, '32': 258, '48': 258}
+grids6 budget=24 fixed=258 v2=254 ans=254 plain=176 means(v2=11.12,ans=9.02) any=260 pick={'1': 73, '2': 150, '4': 230, '8': 258, '12': 262, '16': 262, '24': 263, '32': 263, '48': 263}
+grids7 budget=48 fixed=192 v2=176 ans=175 plain=105 means(v2=8.04,ans=7.86) any=192 pick={'1': 20, '2': 79, '4': 136, '8': 167, '12': 171, '16': 174, '24': 175, '32': 179, '48': 180}
+numbers5 budget=2 fixed=0 v2=0 ans=0 plain=0 means(v2=9.5,ans=5.34) any=0 pick={'1': 0, '2': 1, '4': 0, '8': 0, '12': 0, '16': 0, '24': 0, '32': 0, '48': 0}
+[0m
+[0m$ [0mtail -n 25 artifacts/fable-predictions-ledger.md; echo "==="; wc -l artifacts/fable-predictions-ledger.md
+- lis-318 OUTCOME (2026-09-25, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c, unmodified origin/main + builder-outbox code, seals 14/14 + 13/13 + 14/14 + 4/4 OK): FAIL. Panel readpanel318 once per arm: Q1 B R0 237/255 vs A 239/255 (bar >=217 and >=A+38) FAIL; Q2 B saved_right 132 vs A 111 (bar >=A+40) FAIL; Q3 B wrong_turns 0/240 PASS; Q4 B nofact_rows_with_save 0 PASS; G1 lis-301 dev B 484/761 vs A 462/761 (bar >=A-23) PASS; G2 B median 1545.6ms vs A 1497.9ms (bar <=A+200) PASS. Proved-wrong clause TRIGGERED (237 <= 239+13): chat rows are not the lever. T=0.995 (no zero-wrong grid value; dev 553/971, 1 wrong turn). Train 5642 steps 40.51 min 3866.7 tok/s batch 16, dev loss 0.0453. Merged sha256 8b3fdbda0868277303f1fac893de3b1a88448957ebf3aedbd79e570e0c883e6d kept BensPC + Mac, never in git. GPU $0, wall ~2h50m of 4h cap, no winshim needed, no OOM.
+- blurt3r-loop GPU OUTCOME (2026-09-25, replication of blurt-3, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c, unmodified origin/main code): temp 1.5 (DEV lucky 46 vs 27); test 67 (13 dropped); L0 59; W 129/148 (mean 138.5); C 59/58 (mean 58.5); wins 158/378 (luck 304/11340). U1 138.5 vs 88.5 PASS; U2 138.5 vs 76.05 and every W beats every C PASS. Registered verdict PASS (replicated). GPU $0, 31.1 min, no weights saved.
+- P353.L1 OUTCOME (rsn-353b re-run) last-copy action_ce: seed 1 0.1180 FAIL (bar <= 0.05); seed 2 0.0388 PASS. Registered "proved wrong" clause (both > 0.5) did NOT trigger. Copy loss 4.0039->0.1324 / 4.2743->0.0425; the step-embedding removal fixed 296's stuck copy (1.85/1.97).
+- P353.L2 OUTCOME (rsn-353b re-run) fresh panel296 v2 final (checked): seed 1 210/298 FAIL (bar >= 215, miss by 5); seed 2 208/298 PASS (bar >= 207, +1). Copy-only 177/161. 296 loop got 106/101; transfer panel294 v3 finals 237/233 (copy-only 203/189).
+- P353.L3 OUTCOME (rsn-353b re-run) invented answers (checked): 0 on all 8 panel runs (fresh + transfer, copy-only + final, both seeds; raw without-fact 4-5 on fresh, all caught by fact-check, missing_fact checked 30/30 everywhere) PASS all (bar <= 2).
+- P353.L4 OUTCOME (rsn-353b re-run) dev checked_right at 6/12/20 passes (n=1200): seed 1 final 902/901/899 flat, copy 758/746/732 declining; seed 2 final 890/888/777 (20-pass drop, idk 102->271), copy 686/684/579 declining. Thinking longer does not help; report-only.
+- P353 OUTCOME (rsn-353b re-run) registered verdict FAIL (L1 fails seed 1, L2 fails seed 1; L3 passes all; seed 2 passes L1-L3). Training loop 36.2/36.9 min --workers 8 sequential (2-at-once pilot OOM'd, no retune). Evals 12/12 once per checkpoint, panel items read 0, sealed files edited 0, code never patched. All 16 JSONs + 4 checkpoints (sha match SEAL-run.sha256.txt) copied back before destroy; checkpoints kept at ~/premonition-models/rsn353/<run>/, weights never in git. Spend ~$1.37 (1 rental 5090 $0.5667/h ~2.4 h, cap $3.80); 0 rsn-353b instances live after. See artifacts/claude-rsn353-20260925/RESULTS.md.
+- blurt4-loop GPU OUTCOME (2026-09-25, registered run of blurt-4 hindsight hits, rental label rent-blurt4, unmodified origin/main code): contract 52639402 RTX 5090 1x offer 44077681 KR label rent-blurt4 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime: created 19:33:53Z, running 19:36:31Z, destroyed 19:56:18Z ~0.33 h x $0.4963/h = ~$0.16 (budget $2.00, credit $7.73 at start; first rental 52638727 offer 46753293 US never left loading, host docker-proxy error, destroyed, $0.00); post-destroy 0 rent-blurt4 live. selftest ok; pzcheck 60/60 identical. temp 1.0 (DEV lucky 41 vs 35 on 58 missed); test 64 (16 dropped); L0 66 (32 hit), S0 1/64; practice own 20, won 165/380, hindsight 375, examples 560 each arm. W 219/223 (mean 221.0); H 156/124 (mean 140.0); P 163/117 (mean 140.0). H1 140.0 vs 265.2 FAIL, proved-wrong clause (mean H <= mean W) TRUE; H2 140.0 vs 168.0 FAIL; not inconclusive (375 >= 100, L0 66 >= 10). Registered verdict FAIL. Wall 16.0 min, BASE commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, transformers 5.17.0, no weights saved. gpu-4/ (blurt4_summary.json 41 keys + log.txt 36 lines) copied back and verified before destroy. Code unedited, no TEST-ONLY panel. See artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md.
+- bm390-finish GPU OUTCOME (2026-09-25, registered finishing run bm-390 rent-bm390f, unmodified origin/main + origin/builder-outbox code): instance 52625917 RTX 5090 32GB offer 48989852 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime: created ~17:43Z, running 17:46:51Z, destroyed ~20:01Z ~2.29 h x $0.4944/h = ~$1.13 (budget $3.00, credit 8.68 at start, 8.65 at rent; 1 rental, no re-rents); post-destroy 0 rent-bm390f live. All 14 registered commands exit 0: T/C/Tm/Tg (plain MiniCPM5-1B), L12/L12m/L12g (LFM2.5-1.2B), Q2 parts 1-5 + Q2m/Q2g (Qwen3.5-2B); MODE=registered (no gqa wrapper; BASE longctx peak 3.95 GiB). 14 run2/*.jsonl files copied back, sizes+sha256 match. See artifacts/claude-bm390-20260925/RESULTS-rent2.md.
+- blurt5s GPU OUTCOME (2026-09-25, registered run of blurt-5s own-hits vs exact-solver answers, rental label rent-blurt5s, unmodified origin/main code): contract 52639754 RTX 5090 1x offer 49024377 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel: running within ~3 min of create, destroyed 20:05:03Z ~0.47 h (vast duration 1686 s) x $0.5037/h = ~$0.24 (budget $3.00, credit $7.63 at start; 1 rental, no re-rents); post-destroy 0 rent-blurt5s live. selftest ok; pzcheck 60/60 identical. temp 1.5 (DEV lucky 44 vs 37 on 58 missed); test 184 (56 dropped); practice own 20, wins 191, examples 211; mean target len W 8.13 vs E 6.96 (E equals own hit 9/191). W cov@30 112/108/110; E cov@30 123/113/117; base 77; C 14/12/11. S1 FAIL (D=19; W-E per seed -11/-5/-7; CI W-E [-8.70, 0.54] includes zero); proved-wrong clause TRUE (E >= 96 every seed; W-E upper 0.54 < +5); not inconclusive (191 >= 20, 20 >= 10); sanity W > base every seed. Registered verdict PROVED WRONG. Wall 17.8 min, BASE commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, transformers 5.17.0, no weights saved. gpu-5s/ (blurt5s_summary.json 98 lines + log.txt 71 lines) copied back and sha-verified before destroy. Code unedited, no TEST-ONLY panel. See artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md.
+- lis-319 OUTCOME (2026-09-25, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c, unmodified origin/main + builder-outbox code, seals 14/14 + 13/13 + 14/14 + 16/16 + 4/4 OK): PASS. Panel readpanel319 once per arm: H1 B R0_hist 93/98 vs A 1/98 (bar >=69 and >=A+40) PASS; H2 B R0_local 104/113 vs A 102/113 (bar >=A-3) PASS; H3 B wrong_turns 1/240 PASS; H4 B nofact_rows_with_save 0 PASS; G1 dev_single B 577/971 vs A 553/971 (bar >=A-29) PASS. Proved-wrong clause NOT triggered (93 > 11): history in the prompt works. T_B=0.995 (no zero-wrong grid value; dev 611/1053, 3 wrong turns). Train 6256 steps 76.47 min 2946.3 tok/s batch 16, dev loss 0.0416. Merged sha256 e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76 kept BensPC + Mac, never in git. GPU $0, wall ~2h50m of 4h cap, no winshim needed, no OOM.
+- rd-371 OUTCOME (2026-09-25, rented Linux GPU, label rent-rd-371, unmodified origin/main + origin/builder-outbox code, seals lis300/lis301/lis318-data/readpanel371 all OK, READER sha b4fd93a2...d21b890 verified Mac + box): instance 52641003 RTX 5090 offer 52190811 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime: created 19:47:46Z running at once, destroyed ~20:32Z ~0.74 h x $0.5037/h = ~$0.37 (budget $1.50, credit $7.42 at start; 1 rental, no re-rents); post-destroy 0 rent-rd-371 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc. Data train 22498 / dev 1200 as expected. Train 2814 steps 5.75 min 7998.6 tok/s batch 16 no OOM (first attempt failed ModuleNotFoundError peft; installed peft 0.21.0 env-only, restarted, no code edit). Dev sweep T_B=0.9999 (no grid value reached 0 wrong turns; largest). Panel readpanel371 read ONCE per arm, scorer counts only: A saved_right 106 wrong_turns 2 ms 957.9; B saved_right 15 wrong_turns 0 nofact 0 ms 976.6. Marks: V1 FAIL (15 < 106+30; proved-wrong clause TRUE since 15 <= 116), V2 PASS (0<=2, 0<=3), V3 PASS (0<=1), G1 FAIL (dev hits B 400 < A 462), G2 PASS (+18.7 ms <= +400). Registered verdict FAIL. Merged verifier sha256 41a84ce67c0dddecff36985725aee61149ce3c205a908936ee183d0add257d86 kept at ~/premonition-models/rd371-verifier-merged/ (sha match), never in git. See artifacts/claude-rd371-20260925/RESULTS.md.
+- rent-bm395 OUTCOME (2026-09-25, rented Linux GPU, label rent-bm395, unmodified origin/main + origin/builder-outbox code, seals bm395 9/9 + bm390-code 8/8 OK): contracts 52642227 (wrong image, never ran, $0.00) + 52642566 (RTX 5090, SSH tunnel wedged, destroyed, ~0.19 h x $0.5037 = ~$0.10) + 52644313 (RTX 5090 offer 52414882 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime, running ~20:18Z, destroyed 20:57:51Z, ~0.66 h x $0.5659 = ~$0.37); task total ~$0.47 of $1.00 budget, 3 rentals; post-destroy 0 rent-bm395 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM path verified, torch 2.8.0+cu128, transformers 5.17.0. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Selftest 6 PASS + BM395-SELFTEST PASS. Smoke E/E20 rows=5 exit 0. Lane1 E/E20 20:38Z-20:54:53Z exit 0 (10 [bm395] lines; wrote E rows=1986, E20 rows=1986). Lane2 Rb2 20:40Z-20:47:15Z exit 0 (10 [bm390] lines; wrote Rb2 rows=1986 convs=10). Run files 1986 rows each, sizes+sha match box before destroy. Peak GPU mem 5823 MiB. Lane2 needed 3 launches: first died instantly (cwd bug, no such file), second failed fast (placeholder model path, offline OSError); registered run is the third, correct launch; lane1 untouched. No budget/watchdog stop. Scoring not part of this task. See artifacts/claude-bm395-20260925/RESULTS-rent.md.
+- dl1 GPU OUTCOME (2026-09-25, registered run of dl-1 night learning rules, rental label rent-dl1, unmodified origin/main code): contracts 52643094 (broken host image pull, never ran, $0.00) + 52643932 (RTX 5090 South Korea offer 45669012 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime, running ~20:17Z, destroyed 21:56Z, ~1.64 h x $0.5037/h = ~$0.83); task total ~$0.83 of $1.50 budget, 2 rentals; post-destroy 0 rent-dl1 live. selftest ok; first "[dl1] S s0 night 1" at ~10 min (no TOO-SLOW). DEV lr 1e-4 (48/800 vs 43/800). Base TEST lucky 69 reached 35 greedy 8 (95 puzzles); HARM right 200/300. Final lucky S 160/169, R 63/148, Z 62/79; final reached S 44/58, R 5/22; final net harm S -25/-10, R -19/-26, Z 2/28. R1 FAIL (105.5 >= 103.5 true, >= 131.6 false); R2 PASS with safety comparison untestable (S mean -17.5 < 10; R -19/-26 <= 5); R3 FAIL (5/22 < 35); R4 FAIL (mean ok 105.5 >= 84.6, seedwise 63 > 79 false); R5 PASS (1 worse night <= 1). Registered verdict FAIL, not proved wrong, not inconclusive (L0 69 >= 10; first-day mixed groups 75/81 >= 40). Wall 92.5 min, BASE commit 87179e5c1f455ef22e6223592d2d61351b525bfc, code origin/main 7ced0c4cd07ba5f5cd8f9398d39c8bb04e9bc7d5, torch 2.8.0+cu128, transformers 5.17.0, no weights saved. gpu/ (dl1_results.json + log.txt 92 lines) copied back before destroy. Code unedited, no TEST-ONLY panel. See artifacts/claude-dl1-20260925/RESULTS-gpu.md.
+- rd-378 OUTCOME (2026-09-26, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c safetensors sha 7ab8fd86 re-verified, unmodified origin/main + builder-outbox code, seals rd378-data 16/16 + notepanel378 7/7 OK, label rd-378-train, no rental $0): FAIL on counted marks, N4 pending blind judge. Panel notepanel378 written over once (324 turns, 360 notes, 0 unparsed); eval bm25+minilm rrf: N1 multi found@10 B 30/30 vs A 30/30 (bar +10) FAIL; N2 time found@10 B 30/30 vs A 30/30 (bar +5) FAIL; N3 all found@10 B 149/150 vs A 150/150 (bar +5; per-type diffs within 3) FAIL; proved-wrong clause TRUE (149 <= 151). N5 parse PASS (panel 0/324, dev 0/267). Dev write 267 turns median 908.4 ms; panel median 1005.5 ms. Data {dev_dialogs 31, dev_rows 255, dropped 232, kept_dev 255, kept_train 2550, notes_kept 2797, train_rows 7650, turns 3037} = dry run. Train 958/958 steps 2 epochs 11.57 min 4071.9 tok/s dev_loss 0.5286 batch 16 (no OOM fallback). Merged sha dbcc8db5 kept BensPC + ~/premonition-models/rd378-notes-merged/ (both verified). Total ~1 h 00 min < 3 h cap.
+- tgt5 GPU OUTCOME (2026-09-26, registered run of tgt-5 target matching, rental label rent-tgt5, unmodified origin/main code): instance 52674236 RTX 5090 offer 50991036 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime, running ~01:16Z, destroyed ~01:38Z, ~0.38 h x $0.49444/h = ~$0.19 (budget $1.00, credit 9.78 at start; 1 rental, no re-rents); post-destroy 0 rent-tgt5 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc. Selftest ok. DEV temp rule 1.5 (44/1740 vs 41/1740 on 58 missed). 120 pairs / 60 hands. Base 81/120 mean 0.5069 (raw 79/120, 0.3849). W 97,97,100/120, means 1.5264/2.0673/2.1138; W-minus-base mean 1.3956 bounds [1.0099,1.797]. PASS (each seed >= 84, mean >= 0.20, lower bound > 0); proved-wrong NOT triggered (upper 1.797 > 0); conclusive (wins 179 >= 20, own 20 >= 10). E 109,103,102/120; C 89,87,81/120 (secondary). Wall 10.7 min, no weights saved. gpu/ (tgt5_summary.json + pairs.jsonl + contrasts.json + log.txt) copied back before destroy. Code unedited, no TEST-ONLY panel. See artifacts/claude-tgt5-20260926/RESULTS-gpu.md.
+- dl2 GPU OUTCOME (2026-09-26, registered run of dl-2 copy-practice week vs wrong-answer placebo, rental label rent-dl2, unmodified origin/main code): contract 52669927 (RTX 5090 South Korea offer 43982829 rel 0.9977 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime, created ~00:26Z, run launched 00:33Z detached via setsid, destroyed ~01:46Z, ~1.33 h x $0.4852/h = ~$0.65); task total ~$0.65 of $2.00 budget, 1 rental, no re-rents (account credit 5.12 at start); post-destroy 0 rent-dl2 live. selftest ok; first "[dl2] S s2 night 1" at ~7 min (no TOO-SLOW). Base TEST lucky 64 reached 34 greedy 3 (100 fresh puzzles seed 3890); HARM right 200/300. Final lucky S 237/249 (mean 243.0), P 42/51 (mean 46.5); final reached S 62/60, P 28/32; final greedy S 17/18, P 1/4; final net harm S -10/-8, P -24/-20. W1 PASS (237/249 >= 128); W2 PASS (0 worse nights of 14); W3 PASS (0 harm>5 nights, final -10/-8 <= 0); W4 PASS (62/60 >= 34); W5 PASS (243.0 >= 60.5, min S 237 > max P 51). Registered verdict PASS, not proved wrong (237/249 > 70.4; 0 worse < 3; 243.0 > 46.5), not inconclusive (L0 64 >= 10). S kept climbing nights 4-7 (s2 156 -> 237, s3 179 -> 249; one -11% dip s3 night 5). Wall 67.1 min, BASE commit 87179e5c1f455ef22e6223592d2d61351b525bfc, code origin/main 589946c92c4400e937437fc7a731f4b345a172dc, torch 2.8.0+cu128, transformers 5.17.0, no weights saved. gpu/ (dl2_results.json + log.txt 63 lines) copied back before destroy. Code unedited, no TEST-ONLY panel. See artifacts/claude-dl2-20260926/RESULTS-gpu.md.
+- brd5 GPU OUTCOME (2026-09-26, registered run of brd-5 breadth-vs-newness, rental label rent-brd5, unmodified origin/main code): instance 52678258 RTX 5090 offer 44173765 rel 0.9985 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime, running ~2 min after create, destroyed after copy-back, ~0.46 h x $0.5037/h = ~$0.23 (budget $1.00, credit 8.94 at start; 1 rental, no re-rents); post-destroy 0 rent-brd5 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc (no other model). Selftest ok; test-panel md5 968b9f2f...185050 verified on rental. DEV temp 1.5 (46 vs 45 on 58 missed). Base cov@30 123/240; own 20, wins 167, examples 187; W cov@30 144/145/136; N 91/83/97 (20 distinct wins, 40 distinct puzzles); C 22/22/18; CI W-N [16.52,26.15]pp. PASS sub-conditions all TRUE (per-seed gaps +53/+62/+39, CI above 0); proved-wrong FALSE (upper 26.15); but INCONCLUSIVE fires (no W seed >= base+24=147). Registered verdict INCONCLUSIVE. Wall 20.0 min, no weights saved. gpu/ (brd5_summary.json + streams.json + narrow_picks.jsonl 20 lines + log.txt) md5-verified before destroy. Code unedited. See artifacts/claude-brd5-20260926/RESULTS-gpu.md.
+- rent-382b GPU OUTCOME (2026-09-26, registered run 382b Premonition 0.2 candidate, rental label rent-382b, origin/main code + builder-outbox tree): instance 52674739 RTX 5090 offer 43982846 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 80 GB, running 01:16:34Z, destroyed ~02:56Z, ~1.64 h x $0.50370/h = ~$0.83 (budget $2.50, credit 9.77 at start; 1 rental, no re-rents); post-destroy 0 rent-382b live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, route122 ok. Seals all OK, e2e382 10/10, e2e383 13/13. Base seed4102 13.2 s, pt sha 1dfd95f5e6917cb5a5a73a408456555e27f4706a5bfae752cd0b0b632db63c86. INCOMPLETE: READER 2 GB upload infeasible in TIME CAP (~6 MB/min, 16/104 chunks; 3+ parallel scp "Result too large"; projected 7.3 h). No DEV gate, no E/G/R/ER, no scorer, no panel scores, no EP382/sleep logs. Partial: Bank C T arm_T 653 rows 40 lives; T chat 318 rows 60/60; T creative 91 rows 60/60; copied back verified before destroy. Code unedited on rental; Mac additive only (new RESULTS-rent.md + run/arm_T,chat_T,creative_T). See artifacts/claude-e2e382-20260925/RESULTS-rent.md.
+- G0 OUTCOME (2026-09-26, rsn-358a loop vs plain general puzzles, BensPC RTX 5070 Ti shared, unmodified origin/main code, seals 14/14 + 1/1 OK): practised-size both-arms>=210/300 in >=2 of 3 kinds: s1 sums 300/300 grids 240/243 numbers 1/3 MET; s2 sums 300/300 grids 244/248 numbers 2/4 MET. Numbers unsolved by all 4 runs.
+- G1 OUTCOME (2026-09-26, rsn-358a bigger tests loop-minus-plain, 300 each, each eval once): s1 sums6 +59 grids6 +67 numbers5 0 PASS; s2 sums6 -11 grids6 +76 numbers5 +2 FAIL (needs +30 on 2 of 3 and >=-10 on third; only grids6 hits). Registered verdict FAIL (G0 met both seeds, G1 fails s2).
+- G2 OUTCOME (2026-09-26, rsn-358a practised-size loop-minus-plain): s1 0/+3/+2 PASS; s2 0/+4/+2 PASS (all >= -10).
+- G3 OUTCOME (2026-09-26, rsn-358a stop rule own-stop vs fixed-16, report right_v1_rule): s1 256>=251 270>=266 1>=-4 mean 8.82>7.14 PASS; s2 244>=239 265>=262 2>=-4 mean 8.01>6.52 PASS. Proved-wrong clause NOT triggered (s1 +59/+67, s2 +76). Train 32.2/25.9/32.9/25.8 min, GPU $0, no OOM, weights BensPC-only. See artifacts/claude-rsn358a-20260925/RESULTS.md.
+- rsn-358a CORRECTION (2026-09-26, builder): the G3 line above says weights BensPC-only; after Mac disk space freed up (df 11 GB free), all 4 final.pt were also copied to ~/premonition-models/rsn358a/<run>/final.pt with sha256 matching SEAL-run.sha256.txt (RESULTS.md checkpoint section updated). Nothing else changes; verdict stays FAIL.
+- brd6 GPU OUTCOME (2026-09-26, registered run of brd-6 more-distinct-won-puzzles at equal exposure, rental label rent-brd6, unmodified origin/main code): instance 52683960 RTX 5090 offer 45669284 rel 0.9975 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 80 GB, created 03:00:40Z, running ~4 min after create, run launched 03:08:20Z detached via setsid, destroyed 03:35:25Z, ~0.58 h x $0.469/h = ~$0.27 (budget $1.00, credit 7.48 at start; 1 rental, no re-rents); post-destroy 0 rent-brd6 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc (no other model). Selftest ok; test-panel md5 018f09ff751477d0b9b001ec78ad2ab2 verified on rental. DEV temp 1.5 (47 vs 41 on 58 missed). Base cov@30 108/240; W4 examples 199 (own 20 + wins 179), W8 examples 398 (own 33 + wins 365), 597 passes and 75 optimizer steps each, matched len 7.74 and 3num share 0.859. cov@30 W4 162/159/160, W8 161/160/147 (seed diffs -1/+1/-13, need >= +12 every seed: 0 of 3); CI W8-W4 [-5.72, 2.09]pp. PASS FALSE; proved-wrong TRUE (upper 2.09 < 2.5); NOT inconclusive (W8 398 >= 300, W4-base lower 15.79 > 0). Registered verdict PROVED WRONG. Wall 20.8 min, no weights saved. gpu/ (brd6_summary.json + streams.json + practice.jsonl + log.txt) copied back before destroy. Code unedited. See artifacts/claude-brd6-20260926/RESULTS-gpu.md.
+===
+    2994 artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mls -la --time-style=full-iso artifacts/claude-rsn358c-20260926/runs/; wc -l artifacts/claude-rsn358c-20260926/runs/*.log; df -g / | tail -1
+ls: unrecognized option `--time-style=full-iso'
+usage: ls [-@ABCFGHILOPRSTUWXabcdefghiklmnopqrstuvwxy1%,] [--color=when] [-D format] [file ...]
+       7 artifacts/claude-rsn358c-20260926/runs/stop358c1-s1.log
+       7 artifacts/claude-rsn358c-20260926/runs/stop358c1-s2.log
+      14 total
+/dev/disk3s1s1       460   12         9    58%  484014 96606280    0%   /
+[0m
+[0m$ [0mls -la -D "%Y-%m-%d %H:%M:%S" artifacts/claude-rsn358c-20260926/runs/; ls -la artifacts/claude-rsn358c-20260926/runs/*.json
+total 32
+drwxr-xr-x  6 ben-hannan  staff   192 2026-09-26 00:04:48 .
+drwxr-xr-x  3 ben-hannan  staff    96 2026-09-26 00:00:41 ..
+-rw-r--r--  1 ben-hannan  staff  3791 2026-09-26 00:02:45 stop358c1-s1.json
+-rw-r--r--  1 ben-hannan  staff  2832 2026-09-26 00:02:45 stop358c1-s1.log
+-rw-r--r--  1 ben-hannan  staff  3802 2026-09-26 00:04:48 stop358c1-s2.json
+-rw-r--r--  1 ben-hannan  staff  2843 2026-09-26 00:04:48 stop358c1-s2.log
+-rw-r--r--  1 ben-hannan  staff  3791 Sep 26 00:02 artifacts/claude-rsn358c-20260926/runs/stop358c1-s1.json
+-rw-r--r--  1 ben-hannan  staff  3802 Sep 26 00:04 artifacts/claude-rsn358c-20260926/runs/stop358c1-s2.json
+[0m
+[0m# [0mTodos
+[✓] Verify precondition: sha256 of 4 checkpoints vs SEAL-run.sha256.txt (plain-s2 typo rule)
+[✓] SEAL: git archive extract + sha256 check + smoke test
+[✓] RUN stop script once per seed (s1, s2), keep logs
+[•] Write RESULTS-c1.md with verdict, counts, marks, ledger lines
+[ ] Push artifacts + ledger (git add/commit/push)
+[0m
+[0m← [0mWrite artifacts/claude-rsn358c-20260926/RESULTS-c1.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- V OUTCOME (2026-09-26, rsn-358c1 answer-cell stop, Mac CPU torch, unmodified origin/main code from git-archive extract, seal-c1 7/7 OK, smoke ok, checkpoints ~/premonition-models/rsn358a/<run>/final.pt sha-verified with plain-s2 65-char typo accepted per rule): practised-size plain+loop-fixed each >=210/300 on sums4 and grids5: s1 sums4 300/300 grids5 255/256 MET; s2 sums4 300/300 grids5 253/262 MET. Fresh check sets (pick 36000+, check 36100+, 300 each), sealed 358a tests never opened. See artifacts/claude-rsn358c-20260926/RESULTS-c1.md.
+- K1 OUTCOME (2026-09-26, rsn-358c1 answer-cell >= fixed-3, all five graded families): s1 sums4 300>=297 grids5 257>=253 sums6 247>=252 MISS by 5 grids6 261>=257 numbers5 0>=-3 FAIL; s2 sums4 300>=297 grids5 262>=259 sums6 221>=232 MISS by 11 grids6 254>=255 MISS by 1 numbers5 0>=-3 FAIL.
+- K2 OUTCOME (2026-09-26, rsn-358c1 recovery where fixed-v2 >= 10): s1 gaps 0/-1/4/-1/0, s2 gaps 0/0/3/4/0, no graded family qualifies on either seed. NOT NEEDED on both seeds (nothing to recover).
+- K3 OUTCOME (2026-09-26, rsn-358c1 answer-cell >= v2-3, all five graded families): s1 sums6 247>=248 MISS by 1 (rest hold) FAIL; s2 sums6 221>=229 MISS by 8 (rest hold) FAIL. No miss exceeds 10 anywhere.
+- K4 OUTCOME (2026-09-26, rsn-358c1 loop answer-cell stop minus plain): s1 sums6 +45 grids6 +63 numbers5 0, practised 0/+2 PASS; s2 sums6 -38 (floor break) grids6 +78 numbers5 0, practised 0/+9 FAIL. Registered loop-beats-plain verdict FAIL (V met both, K4 split). Proved-wrong clause NOT triggered.
+- rsn-358c1 OUTCOME (2026-09-26, builder, Mac CPU, $0, eval only, code sealed and run once per seed, 7-line logs kept): stop fix NOT NEEDED (K2 vacuous both seeds; K1/K3 FAIL as above); loop-beats-plain FAIL (K4 s1 PASS s2 FAIL). Overall registered verdict FAIL. 358a FAIL stands (second look, same checkpoints, one changed rule). Runs ~2 min/seed, no training, no GPU, weights never in git. See artifacts/claude-rsn358c-20260926/RESULTS-c1.md + runs/stop358c1-s1.json + runs/stop358c1-s2.json.
+EOF
+tail -n 8 artifacts/fable-predictions-ledger.md | cut -c1-160
+- rsn-358a CORRECTION (2026-09-26, builder): the G3 line above says weights BensPC-only; after Mac disk space freed up (df 11 GB free), all 4 final.pt were also
+- brd6 GPU OUTCOME (2026-09-26, registered run of brd-6 more-distinct-won-puzzles at equal exposure, rental label rent-brd6, unmodified origin/main code): insta
+- V OUTCOME (2026-09-26, rsn-358c1 answer-cell stop, Mac CPU torch, unmodified origin/main code from git-archive extract, seal-c1 7/7 OK, smoke ok, checkpoints 
+- K1 OUTCOME (2026-09-26, rsn-358c1 answer-cell >= fixed-3, all five graded families): s1 sums4 300>=297 grids5 257>=253 sums6 247>=252 MISS by 5 grids6 261>=25
+- K2 OUTCOME (2026-09-26, rsn-358c1 recovery where fixed-v2 >= 10): s1 gaps 0/-1/4/-1/0, s2 gaps 0/0/3/4/0, no graded family qualifies on either seed. NOT NEEDE
+- K3 OUTCOME (2026-09-26, rsn-358c1 answer-cell >= v2-3, all five graded families): s1 sums6 247>=248 MISS by 1 (rest hold) FAIL; s2 sums6 221>=229 MISS by 8 (r
+- K4 OUTCOME (2026-09-26, rsn-358c1 loop answer-cell stop minus plain): s1 sums6 +45 grids6 +63 numbers5 0, practised 0/+2 PASS; s2 sums6 -38 (floor break) grid
+- rsn-358c1 OUTCOME (2026-09-26, builder, Mac CPU, $0, eval only, code sealed and run once per seed, 7-line logs kept): stop fix NOT NEEDED (K2 vacuous both see
+[0m
+[0m$ [0mgit status --short -- artifacts/claude-rsn358c-20260926/ artifacts/fable-predictions-ledger.md; echo "---"; python3 -c "import json; [json.load(open('artifacts/claude-rsn358c-20260926/runs/stop358c1-s%d.json'%s)) for s in (1,2)]; print('JSONs valid')"
+MM artifacts/fable-predictions-ledger.md
+---
+JSONs valid
+[0m
+[0m$ [0mgit status --short artifacts/claude-rsn358c-20260926/ ; echo "---CHECK-IGNORE---"; git check-ignore -v artifacts/claude-rsn358c-20260926/runs/stop358c1-s1.json artifacts/claude-rsn358c-20260926/RESULTS-c1.md 2>&1; echo "---UNTRACKED---"; git ls-files --others --exclude-standard artifacts/ | grep 358c
+---CHECK-IGNORE---
+.gitignore:5:artifacts/	artifacts/claude-rsn358c-20260926/runs/stop358c1-s1.json
+.gitignore:5:artifacts/	artifacts/claude-rsn358c-20260926/RESULTS-c1.md
+---UNTRACKED---
+[0m
+[0m$ [0mcat .gitignore; echo "---"; git ls-files artifacts/ | grep -c .; git ls-files artifacts/ | grep 358 | head
+__pycache__/
+*.pyc
+.runtime/
+.budget/
+artifacts/
+.venv/
+
+data/village/stream/
+runtime.local.json
+---
+101144
+artifacts/fable-officechain138e-20260922/scratch-nb/nb00358/events.fix77.seal.json
+artifacts/fable-operator-reliability-bundle/archive/opus-ovn-20260918-235851/frozen/learnlab/__init__.py
+artifacts/fable-operator-reliability-bundle/archive/opus-ovn-20260918-235851/frozen/learnlab/ablation.py
+artifacts/fable-operator-reliability-bundle/archive/opus-ovn-20260918-235851/frozen/learnlab/checks/__init__.py
+artifacts/fable-operator-reliability-bundle/archive/opus-ovn-20260918-235851/frozen/learnlab/checks/ablation.py
+artifacts/fable-operator-reliability-bundle/archive/opus-ovn-20260918-235851/frozen/learnlab/checks/leaks.py
+artifacts/fable-operator-reliability-bundle/archive/opus-ovn-20260918-235851/frozen/learnlab/checks/readonly.py
+artifacts/fable-operator-reliability-bundle/archive/opus-ovn-20260918-235851/frozen/learnlab/checks/splits.py
+artifacts/fable-operator-reliability-bundle/archive/opus-ovn-20260918-235851/frozen/learnlab/ckpt.py
+artifacts/fable-operator-reliability-bundle/archive/opus-ovn-20260918-235851/frozen/learnlab/core.py
+[0m
+[0m$ [0mgit diff --cached --stat -- artifacts/fable-predictions-ledger.md; echo "---UNSTAGED-LEDGER-DIFF-FIRST---"; git diff -- artifacts/fable-predictions-ledger.md | head -n 20; echo "---CACHED-STAT-ALL---"; git diff --cached --stat | tail -n 5
+artifacts/fable-predictions-ledger.md | 77 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 77 insertions(+)
+---UNSTAGED-LEDGER-DIFF-FIRST---
+diff --git a/artifacts/fable-predictions-ledger.md b/artifacts/fable-predictions-ledger.md
+index 893c8fc20..6f0720b0f 100644
+--- a/artifacts/fable-predictions-ledger.md
++++ b/artifacts/fable-predictions-ledger.md
+@@ -2992,3 +2992,9 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
+ - G3 OUTCOME (2026-09-26, rsn-358a stop rule own-stop vs fixed-16, report right_v1_rule): s1 256>=251 270>=266 1>=-4 mean 8.82>7.14 PASS; s2 244>=239 265>=262 2>=-4 mean 8.01>6.52 PASS. Proved-wrong clause NOT triggered (s1 +59/+67, s2 +76). Train 32.2/25.9/32.9/25.8 min, GPU $0, no OOM, weights BensPC-only. See artifacts/claude-rsn358a-20260925/RESULTS.md.
+ - rsn-358a CORRECTION (2026-09-26, builder): the G3 line above says weights BensPC-only; after Mac disk space freed up (df 11 GB free), all 4 final.pt were also copied to ~/premonition-models/rsn358a/<run>/final.pt with sha256 matching SEAL-run.sha256.txt (RESULTS.md checkpoint section updated). Nothing else changes; verdict stays FAIL.
+ - brd6 GPU OUTCOME (2026-09-26, registered run of brd-6 more-distinct-won-puzzles at equal exposure, rental label rent-brd6, unmodified origin/main code): instance 52683960 RTX 5090 offer 45669284 rel 0.9975 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 80 GB, created 03:00:40Z, running ~4 min after create, run launched 03:08:20Z detached via setsid, destroyed 03:35:25Z, ~0.58 h x $0.469/h = ~$0.27 (budget $1.00, credit 7.48 at start; 1 rental, no re-rents); post-destroy 0 rent-brd6 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc (no other model). Selftest ok; test-panel md5 018f09ff751477d0b9b001ec78ad2ab2 verified on rental. DEV temp 1.5 (47 vs 41 on 58 missed). Base cov@30 108/240; W4 examples 199 (own 20 + wins 179), W8 examples 398 (own 33 + wins 365), 597 passes and 75 optimizer steps each, matched len 7.74 and 3num share 0.859. cov@30 W4 162/159/160, W8 161/160/147 (seed diffs -1/+1/-13, need >= +12 every seed: 0 of 3); CI W8-W4 [-5.72, 2.09]pp. PASS FALSE; proved-wrong TRUE (upper 2.09 < 2.5); NOT inconclusive (W8 398 >= 300, W4-base lower 15.79 > 0). Registered verdict PROVED WRONG. Wall 20.8 min, no weights saved. gpu/ (brd6_summary.json + streams.json + practice.jsonl + log.txt) copied back before destroy. Code unedited. See artifacts/claude-brd6-20260926/RESULTS-gpu.md.
++- V OUTCOME (2026-09-26, rsn-358c1 answer-cell stop, Mac CPU torch, unmodified origin/main code from git-archive extract, seal-c1 7/7 OK, smoke ok, checkpoints ~/premonition-models/rsn358a/<run>/final.pt sha-verified with plain-s2 65-char typo accepted per rule): practised-size plain+loop-fixed each >=210/300 on sums4 and grids5: s1 sums4 300/300 grids5 255/256 MET; s2 sums4 300/300 grids5 253/262 MET. Fresh check sets (pick 36000+, check 36100+, 300 each), sealed 358a tests never opened. See artifacts/claude-rsn358c-20260926/RESULTS-c1.md.
++- K1 OUTCOME (2026-09-26, rsn-358c1 answer-cell >= fixed-3, all five graded families): s1 sums4 300>=297 grids5 257>=253 sums6 247>=252 MISS by 5 grids6 261>=257 numbers5 0>=-3 FAIL; s2 sums4 300>=297 grids5 262>=259 sums6 221>=232 MISS by 11 grids6 254>=255 MISS by 1 numbers5 0>=-3 FAIL.
++- K2 OUTCOME (2026-09-26, rsn-358c1 recovery where fixed-v2 >= 10): s1 gaps 0/-1/4/-1/0, s2 gaps 0/0/3/4/0, no graded family qualifies on either seed. NOT NEEDED on both seeds (nothing to recover).
++- K3 OUTCOME (2026-09-26, rsn-358c1 answer-cell >= v2-3, all five graded families): s1 sums6 247>=248 MISS by 1 (rest hold) FAIL; s2 sums6 221>=229 MISS by 8 (rest hold) FAIL. No miss exceeds 10 anywhere.
++- K4 OUTCOME (2026-09-26, rsn-358c1 loop answer-cell stop minus plain): s1 sums6 +45 grids6 +63 numbers5 0, practised 0/+2 PASS; s2 sums6 -38 (floor break) grids6 +78 numbers5 0, practised 0/+9 FAIL. Registered loop-beats-plain verdict FAIL (V met both, K4 split). Proved-wrong clause NOT triggered.
++- rsn-358c1 OUTCOME (2026-09-26, builder, Mac CPU, $0, eval only, code sealed and run once per seed, 7-line logs kept): stop fix NOT NEEDED (K2 vacuous both seeds; K1/K3 FAIL as above); loop-beats-plain FAIL (K4 s1 PASS s2 FAIL). Overall registered verdict FAIL. 358a FAIL stands (second look, same checkpoints, one changed rule). Runs ~2 min/seed, no training, no GPU, weights never in git. See artifacts/claude-rsn358c-20260926/RESULTS-c1.md + runs/stop358c1-s1.json + runs/stop358c1-s2.json.
+---CACHED-STAT-ALL---
+ artifacts/claude-tgt5-20260926/gpu/log.txt         |  51 ++
+ artifacts/claude-tgt5-20260926/gpu/pairs.jsonl     | 120 ++++
+ .../claude-tgt5-20260926/gpu/tgt5_summary.json     |  80 +++
+ artifacts/fable-predictions-ledger.md              |  77 ++
+ 29 files changed, 3248 insertions(+)
+[0m
+[0m$ [0mgit add -f artifacts/claude-rsn358c-20260926/RESULTS-c1.md artifacts/claude-rsn358c-20260926/runs && git status --short -- artifacts/claude-rsn358c-20260926/ artifacts/fable-predictions-ledger.md
+A  artifacts/claude-rsn358c-20260926/RESULTS-c1.md
+A  artifacts/claude-rsn358c-20260926/runs/stop358c1-s1.json
+A  artifacts/claude-rsn358c-20260926/runs/stop358c1-s1.log
+A  artifacts/claude-rsn358c-20260926/runs/stop358c1-s2.json
+A  artifacts/claude-rsn358c-20260926/runs/stop358c1-s2.log
+MM artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit commit -m "rsn-358c1: answer-cell stop eval, sealed code run once per seed (verdict FAIL; stop fix NOT NEEDED, K4 split s1 PASS s2 FAIL) + ledger lines" -- artifacts/claude-rsn358c-20260926/RESULTS-c1.md artifacts/claude-rsn358c-20260926/runs artifacts/fable-predictions-ledger.md && git log --oneline -3 && git status --short -- artifacts/claude-rsn358c-20260926/ artifacts/fable-predictions-ledger.md; echo "STATUS-DONE"
+[claude/card-experiment-handoff-7c5b27 b588f1e37] rsn-358c1: answer-cell stop eval, sealed code run once per seed (verdict FAIL; stop fix NOT NEEDED, K4 split s1 PASS s2 FAIL) + ledger lines
+ 6 files changed, 707 insertions(+)
+ create mode 100644 artifacts/claude-rsn358c-20260926/RESULTS-c1.md
+ create mode 100644 artifacts/claude-rsn358c-20260926/runs/stop358c1-s1.json
+ create mode 100644 artifacts/claude-rsn358c-20260926/runs/stop358c1-s1.log
+ create mode 100644 artifacts/claude-rsn358c-20260926/runs/stop358c1-s2.json
+ create mode 100644 artifacts/claude-rsn358c-20260926/runs/stop358c1-s2.log
+b588f1e37 rsn-358c1: answer-cell stop eval, sealed code run once per seed (verdict FAIL; stop fix NOT NEEDED, K4 split s1 PASS s2 FAIL) + ledger lines
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+bc39d2baf ideajudge-teacher2: DEV teacher agreement check (no training)
+STATUS-DONE
+[0m
+[0m$ [0mgit show --stat HEAD | head -n 15
+commit b588f1e37dbd817997f669341aef968e3d5839d4
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Sat Sep 26 00:07:43 2026 -0400
+
+    rsn-358c1: answer-cell stop eval, sealed code run once per seed (verdict FAIL; stop fix NOT NEEDED, K4 split s1 PASS s2 FAIL) + ledger lines
+
+ artifacts/claude-rsn358c-20260926/RESULTS-c1.md    | 150 ++++++++++++++
+ .../claude-rsn358c-20260926/runs/stop358c1-s1.json | 230 +++++++++++++++++++++
+ .../claude-rsn358c-20260926/runs/stop358c1-s1.log  |   7 +
+ .../claude-rsn358c-20260926/runs/stop358c1-s2.json | 230 +++++++++++++++++++++
+ .../claude-rsn358c-20260926/runs/stop358c1-s2.log  |   7 +
+ artifacts/fable-predictions-ledger.md              |  83 ++++++++
+ 6 files changed, 707 insertions(+)
+[0m
+[0m✗ [0mgit push origin HEAD:claude/card-experiment-handoff-7c5b27 2>&1 | tail -n 5 failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m# [0mTodos
+[✓] Verify precondition: sha256 of 4 checkpoints vs SEAL-run.sha256.txt (plain-s2 typo rule)
+[✓] SEAL: git archive extract + sha256 check + smoke test
+[✓] RUN stop script once per seed (s1, s2), keep logs
+[✓] Write RESULTS-c1.md with verdict, counts, marks, ledger lines
+[•] Push artifacts + ledger (git add/commit/push)
+[0m
