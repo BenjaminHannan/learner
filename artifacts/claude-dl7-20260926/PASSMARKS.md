@@ -62,3 +62,13 @@ either way, which is the point (keep, not sharpen).
 - Next fallbacks, one change each, in order: EWC per-weight guard (important weights get less plastic); broad exact
   replay at a higher dose (dl-4's anchor, weight 1 -> more anchor items per night) only if a reason appears why dl-4's
   dose was too low.
+
+## Addendum 2 (2026-09-26 17:00:16 UTC, before any run): dl-7 is replaced by dl-7b; dl-7 itself never runs
+Ben chose "Use GLM" (16:39) and "Count it" (16:50): the fixed one-line puzzle instruction may stay, but the anchor
+questions' Claude-written suffix " Reply with the answer only." may not. Dropping it outright fails: CPU check (pool
+seed 3291 + 60000, 60 asks) kept 32 questions but only 1 base answer finished within 16 tokens. dl-7b
+(scripts/claude_dl7b_glmsuffix.py) imports dl-7 unchanged and appends GLM 5.3 Flash's suffix " Answer only, no
+explanation." (artifacts/claude-glmframes-20260926/frames.json, sha256 3c1fe9c1...14bc, first of 5 candidates that
+passed the form check; 5 of 5 passed). Same CPU check with it: 32 questions, 28 answered, 9 shaky. Everything else,
+marks and Addendum 1 included, is unchanged. Rental: handoff/held/rent-zdl7b.md (label claude-fixsleep-dl7b), still
+held for Ben's yes on $1.00 and only if dl-6 fails.

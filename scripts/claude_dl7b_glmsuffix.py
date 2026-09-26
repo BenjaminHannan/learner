@@ -25,7 +25,7 @@ sys.path.insert(0, str(HERE))
 import claude_dl7_fragile as F7  # noqa: E402
 
 FRAMES = HERE.parent / "artifacts/claude-glmframes-20260926/frames.json"
-FRAMES_SHA256 = ""        # filled when frames.json lands, in the sealing commit, before any run
+FRAMES_SHA256 = "3c1fe9c190837704878759cd4f0f17d9c88aa2a0795536c4dbc90be4a80014bc"
 
 
 def glm_suffix() -> str:
