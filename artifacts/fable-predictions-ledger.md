@@ -2643,3 +2643,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-26 15:20 UTC Director: rent-lis-319f actual ~$0.95 + ~$0.05 failed first host (Reading facts' report). Depot upload of lis-319f reader queued (rent-depot319f, $0 beyond depot's $0.11/hr).
 - 2026-09-26 15:21 UTC Director: Ben 15:19 approved claude-sleep-358t v2 at $1.60 cap (replaces 15:15 $1.30), up to $1.50 over Sleep research's $2.
 - 2026-09-26 15:25 UTC Director: rent-rd378L WRITE-FAIL (env), <= $0.69; retry rent-notes-b $1.30 (Trustworthy notes' remaining $2).
+- 2026-09-26 15:52 UTC Director: Ben 15:50 approved claude-sleep-358x up to $0.60 over Sleep research's $2 (card in Thread manager thread).
