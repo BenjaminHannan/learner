@@ -20,9 +20,10 @@ Ben's design, one path on every user turn:
             form, mu-405's W arm) is on every turn: every earlier user turn, oldest first, when they fit in
             CTX_CHARS02D characters, else the store's top K02D for this turn, oldest first. The last 6 (user, reply)
             pairs of this session are the chat messages.
-  sleep     the H-B recipe's adapter on the talker's 1B (SLEEP02D), trained by the nights of a separate sleep run on
-            code-made number puzzles (Z1, disclosed), loaded at start as 0.2c did. No slot value exists until H-B
-            passes; e2e_end_day only makes sure everything is on disk.
+  sleep     whatever recipe passes H-B, in its own form (SLEEP02D): an adapter, error-gated nights (dl-8) or a separate
+            store with a switch (ADDENDUM-32); trained by the nights of a separate sleep run on code-made number puzzles
+            (Z1, disclosed), loaded at start as 0.2c did. No slot value exists until H-B passes; e2e_end_day only makes
+            sure everything is on disk.
 Hand-written parts on this path, each disclosed scaffolding with the learned part it stands in for:
   P1  read_latin, the code grid reader (learned: gr-1, owed by Sleep research)
   P3  the loop net's stop rule, 3 steady rounds (learned: a stop head, owed)
