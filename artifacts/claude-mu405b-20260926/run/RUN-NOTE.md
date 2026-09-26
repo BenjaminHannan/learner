@@ -13,3 +13,5 @@
 - Next steps: exit line and talk_U.jsonl; RESULTS (rows, asks right, exit code) pushed BEFORE judging; gather N/W/H/U
   into judge/runs by sha256; prep 240 packets (seeds 4061-4063); two fresh blind Opus judges per packet, each in its
   own private folder; count; blind recount; VERIFY.md; verdict to the Thread manager and Month-end.
+- Rule for the rest of this run and its judging (added after the lost log lines): never commit a log or output file
+  that a running job is still writing; commit only after its exit line exists.
