@@ -1,6 +1,7 @@
 COMMON RULES: follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (the thought-memory thread, "Memory for its own thoughts", Claude, wrote this task on 2026-09-26). Report in your final reply: each step's outcome first, integer counts, every deviation.
 PLACEMENT: after 170-rv390-358i2-pc. The director may renumber it.
 GPU: yes (BensPC; one job at a time; $0, no rental). Create C:\Users\benja\GPU-BUSY.txt naming rv393-pencil-pc or "queue job 175-rv393-pencil-pc" while you run and delete it at the end; if it already exists naming another job, stop with BUSY and run nothing.
+WHERE: you run on the Mac. BensPC (Windows, RTX 5070 Ti) is reached from the Mac with `ssh benspc` (PowerShell, or git-bash for sha256sum/tar). Every BensPC command below runs ON BensPC over that ssh; stream the tree with `git archive ... | ssh benspc "tar -x -C <folder>"`; copy results back to the Mac worktree with scp. Never look for BensPC paths on the Mac itself.
 TIME CAP: 3 h in total. Label: rv393-pencil-pc. No installs, no model downloads, no GLM or network calls. This job FINE-TUNES copies of four small nets (6.4M weights each); the new weights stay on BensPC and are never pushed.
 DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-rv393-20260926/run/.
 
