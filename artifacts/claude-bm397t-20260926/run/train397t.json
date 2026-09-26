@@ -1,0 +1,55 @@
+{
+ "device": "cuda",
+ "dtype": "torch.bfloat16",
+ "train_rows": 1800,
+ "dev_rows": 200,
+ "recipe": {
+  "rank": 16,
+  "alpha": 32,
+  "dropout": 0.05,
+  "lr": 0.0002,
+  "batch": 8,
+  "epochs": 1,
+  "seed": 3970
+ },
+ "dev_before": {
+  "n": 200,
+  "right": 116,
+  "by_kind": {
+   "list": "19/40",
+   "single": "90/120",
+   "when": "7/40"
+  },
+  "median_words": 6.0
+ },
+ "lora_params": 4128768,
+ "steps": 225,
+ "loss_first10": 0.7709,
+ "loss_last10": 0.078,
+ "adapter_sha256": "621edd1631072a152f77c83cd1967ac811d1a3d80c66fa9a85bd576af88f7233",
+ "dev_after_lora": {
+  "n": 200,
+  "right": 199,
+  "by_kind": {
+   "list": "40/40",
+   "single": "120/120",
+   "when": "39/40"
+  },
+  "median_words": 2.0
+ },
+ "merged_layers": 96,
+ "dev_after_merged": {
+  "n": 200,
+  "right": 199,
+  "by_kind": {
+   "list": "40/40",
+   "single": "120/120",
+   "when": "39/40"
+  },
+  "median_words": 2.0
+ },
+ "merged_files": {
+  "model.safetensors": "9719c266db9bb9d4ffe41ed7bbcb6d5952e948b80db7c25731b08448923a8e3a"
+ },
+ "seconds": 189.7
+}
