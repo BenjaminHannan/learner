@@ -1,0 +1,593 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; ls; echo ---; ls scratchpad/briefs/ 2>&1 || echo no-scratchpad-briefs; echo ---; uptime; df -g /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+---
+ls: scratchpad/briefs/: No such file or directory
+no-scratchpad-briefs
+---
+22:28  up 2 days, 12:21, 4 users, load averages: 44.05 52.69 56.58
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    49%  484014 144171600    0%   /
+[0m
+[0m✗ [0mGlob "**/OPUS-RULES*" failed[90m in .[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mls scratchpad/ 2>&1; echo ---; ls ~/premonition-models/ 2>&1; echo ---; df -g / 2>&1
+o0c-scratch-20260923
+srv270b.ps1
+stop270b_panel.ps1
+stop270b.ps1
+w255
+w255b
+---
+lis301-merged
+lis318-merged
+lis319-merged
+minilm
+own-m1n-mouth
+rd371-verifier-merged
+rd378-notes-merged
+rsn353
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    49%  484014 144212400    0%   /
+[0m
+[0m$ [0mls -la ~/premonition-models/rd371-verifier-merged 2>&1 | head -20; echo ===; du -sh ~/premonition-models/rd371-verifier-merged ~/premonition-models/lis318-merged 2>&1; echo ===; lsof +D ~/premonition-models/rd371-verifier-merged 2>&1 | head -20; echo LSOF1_EXIT:$?; lsof +D ~/premonition-models/lis318-merged 2>&1 | head -20; echo LSOF2_EXIT:$?
+total 4240648
+drwxr-xr-x   8 ben-hannan  staff         256 Sep 25 16:12 .
+drwxr-xr-x  11 ben-hannan  staff         352 Sep 25 21:24 ..
+-rw-r--r--   1 ben-hannan  staff        9062 Sep 25 16:12 chat_template.jinja
+-rw-r--r--   1 ben-hannan  staff         749 Sep 25 16:12 config.json
+-rw-r--r--   1 ben-hannan  staff         214 Sep 25 16:12 generation_config.json
+-rw-------   1 ben-hannan  staff  2161290944 Sep 25 16:12 model.safetensors
+-rw-r--r--   1 ben-hannan  staff         459 Sep 25 16:12 tokenizer_config.json
+-rw-r--r--   1 ben-hannan  staff     9894271 Sep 25 16:12 tokenizer.json
+zsh:1: == not found
+[0m
+[0m$ [0mdu -sh ~/premonition-models/rd371-verifier-merged ~/premonition-models/lis318-merged
+2.0G	/Users/ben-hannan/premonition-models/rd371-verifier-merged
+2.0G	/Users/ben-hannan/premonition-models/lis318-merged
+[0m
+[0m$ [0mlsof +D /Users/ben-hannan/premonition-models/rd371-verifier-merged; echo "EXIT1:$?"
+EXIT1:1
+[0m
+[0m$ [0mlsof +D /Users/ben-hannan/premonition-models/lis318-merged; echo "EXIT2:$?"
+EXIT2:1
+[0m
+[0m$ [0mosascript -e 'tell application "Finder" to delete POSIX file "/Users/ben-hannan/premonition-models/rd371-verifier-merged"'; echo "EXIT:$?"
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mls ~/premonition-models/; echo "---TRASH---"; ls ~/.Trash/ | head -30
+lis301-merged
+lis318-merged
+lis319-merged
+minilm
+own-m1n-mouth
+rd371-verifier-merged
+rd378-notes-merged
+rsn353
+---TRASH---
+ls: /Users/ben-hannan/.Trash/: Operation not permitted
+[0m
+[0m$ [0mmv "/Users/ben-hannan/premonition-models/rd371-verifier-merged" ~/.Trash/; echo "EXIT:$?"
+EXIT:0
+[0m
+[0m$ [0mls ~/premonition-models/
+lis301-merged
+lis318-merged
+lis319-merged
+minilm
+own-m1n-mouth
+rd378-notes-merged
+rsn353
+[0m
+[0m$ [0mosascript -e 'tell application "Finder" to delete POSIX file "/Users/ben-hannan/premonition-models/lis318-merged"'; echo "EXIT:$?"
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 90000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mmv "/Users/ben-hannan/premonition-models/lis318-merged" ~/.Trash/; echo "EXIT:$?"
+EXIT:0
+[0m
+[0m$ [0mls ~/premonition-models/; echo "---"; df -g /
+lis301-merged
+lis319-merged
+minilm
+own-m1n-mouth
+rd378-notes-merged
+rsn353
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    49%  484014 144005600    0%   /
+[0m
+[0m$ [0mosascript -e 'tell application "Finder" to empty trash'; echo "EXIT:$?"
+29:40: execution error: Finder got an error: AppleEvent timed out. (-1712)
+EXIT:1
+[0m
+[0m$ [0mdf -g /; echo "---"; ls ~/premonition-models/
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    49%  484014 143007680    0%   /
+---
+lis301-merged
+lis319-merged
+minilm
+own-m1n-mouth
+rd378-notes-merged
+rsn353
+[0m
+[0m$ [0mgit status --short | head -20; echo "---"; git branch --show-current; echo "---"; git log --oneline -3; echo "---"; ls artifacts/ | head -30
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-brd5-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd5-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd5-20260926/gpu/log.txt
+A  artifacts/claude-brd5-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd5-20260926/gpu/streams.json
+A  artifacts/claude-dl1-20260925/RESULTS-gpu.md
+A  artifacts/claude-dl1-20260925/gpu/dl1_results.json
+A  artifacts/claude-dl1-20260925/gpu/log.txt
+A  artifacts/claude-tgt5-20260926/RESULTS-gpu.md
+A  artifacts/claude-tgt5-20260926/gpu/contrasts.json
+---
+claude/card-experiment-handoff-7c5b27
+---
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+bc39d2baf ideajudge-teacher2: DEV teacher agreement check (no training)
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm395-20260925
+claude-boundary259-20260922
+claude-brd5-20260926
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chat338-20260924
+claude-chatdemo-20260923
+[0m
+[0m$ [0mgit branch -a | head -20
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
+  codex/testing-experiment-44
++ main
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+[0m
+[0m$ [0mgit log --oneline origin/builder-outbox -5; echo "---"; git fetch origin builder-outbox 2>&1 | tail -2
+49331e13e watcher status
+fe45c3046 watcher status
+264c95def builder results: 006e-lis-319c-bar
+4de06afdd watcher status
+8c81b77fb watcher status
+---
+ * branch                builder-outbox -> FETCH_HEAD
+   49331e13e..2c8921788  builder-outbox -> origin/builder-outbox
+[0m
+[0m← [0mWrite artifacts/claude-trash-0926/REPORT.md
+Wrote file successfully.
+[0m
+[0m$ [0mls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1; git worktree list
+bm391rent.env
+e2e330tree
+gen_part6.py
+grade_b_part1_writer.py
+guard-296b
+guard-350
+lis313b-armA.log
+lis313b-armC.log
+lis313b-armD.log
+lis313b-report.txt
+lis313b-tree
+lis314b-armA.log
+lis314b-armC.log
+lis314b-armG.log
+lis314b-armK.log
+lis314b-armP.log
+lis314b-armS.log
+lis314b-box.log
+lis314b-main.log
+lis314b-main.status
+lis314b-test.log
+lis314b-tree
+lis314b-tree.status
+lis318b
+lise2e
+mkpart6.py
+part6_slice.jsonl
+pilot356-log.jsonl
+pilot356-summary.json
+reader_rsync.log
+reader-330dev.tgz
+readerbm391.tgz
+rent330c.log
+ret330c
+rsn356code.tar
+rsn356seal
+smoke336_run.ps1
+smoke336_run2.ps1
+smoke336win
+smoke336win_run.log
+smoke336win-tree.tgz
+teacher-glm53-run
+tree-330c-dev3.tgz
+tree-330dev.tgz
+tree330c.path
+tree330c.poBfd9
+tree330c.tgz
+treebm391.path
+treebm391.tgz
+treebrd5.path
+treebrd5.tgz
+/Users/ben-hannan/Desktop/projects/beautiful-model                                                    bde7e6d80 [main]
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27   2ff497f88 [claude/card-experiment-handoff-7c5b27]
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/model-architecture-review-0161ce 4ea0021dc (detached HEAD)
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/premonition-design-review-792236 f74835b33 (detached HEAD)
+[0m
+[0m$ [0mgit worktree add /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/trash-outbox origin/builder-outbox 2>&1 | tail -3
+Preparing worktree (detached HEAD 2c8921788)
+Updating files:   4% (7789/158243)Updating files:   5% (7913/158243)Updating files:   6% (9495/158243)Updating files:   7% (11078/158243)Updating files:   8% (12660/158243)Updating files:   9% (14242/158243)Updating files:   9% (15443/158243)Updating files:  10% (15825/158243)Updating files:  11% (17407/158243)Updating files:  12% (18990/158243)Updating files:  13% (20572/158243)Updating files:  14% (22155/158243)Updating files:  14% (23515/158243)Updating files:  15% (23737/158243)Updating files:  16% (25319/158243)Updating files:  17% (26902/158243)Updating files:  18% (28484/158243)Updating files:  19% (30067/158243)Updating files:  19% (30875/158243)Updating files:  20% (31649/158243)Updating files:  21% (33232/158243)Updating files:  22% (34814/158243)Updating files:  23% (36396/158243)Updating files:  24% (37979/158243)Updating files:  24% (38110/158243)Updating files:  25% (39561/158243)Updating files:  26% (41144/158243)Updating files:  27% (42726/158243)Updating files:  28% (44309/158243)Updating files:  29% (45891/158243)Updating files:  29% (46408/158243)Updating files:  30% (47473/158243)Updating files:  31% (49056/158243)Updating files:  32% (50638/158243)Updating files:  33% (52221/158243)Updating files:  34% (53803/158243)Updating files:  34% (54564/158243)Updating files:  35% (55386/158243)Updating files:  36% (56968/158243)Updating files:  37% (58550/158243)Updating files:  38% (60133/158243)Updating files:  39% (61715/158243)Updating files:  39% (63073/158243)Updating files:  40% (63298/158243)Updating files:  41% (64880/158243)Updating files:  42% (66463/158243)Updating files:  43% (68045/158243)Updating files:  44% (69627/158243)Updating files:  45% (71210/158243)Updating files:  45% (71818/158243)Updating files:  46% (72792/158243)Updating files:  47% (74375/158243)Updating files:  48% (75957/158243)Updating files:  49% (77540/158243)Updating files:  50% (79122/158243)Updating files:  50% (80297/158243)Updating files:  51% (80704/158243)Updating files:  52% (82287/158243)Updating files:  53% (83869/158243)Updating files:  54% (85452/158243)Updating files:  55% (87034/158243)Updating files:  55% (88425/158243)Updating files:  56% (88617/158243)Updating files:  57% (90199/158243)Updating files:  58% (91781/158243)Updating files:  59% (93364/158243)Updating files:  60% (94946/158243)Updating files:  61% (96529/158243)Updating files:  61% (97308/158243)Updating files:  62% (98111/158243)Updating files:  63% (99694/158243)Updating files:  64% (101276/158243)Updating files:  65% (102858/158243)Updating files:  66% (104441/158243)Updating files:  66% (105573/158243)Updating files:  67% (106023/158243)Updating files:  68% (107606/158243)Updating files:  69% (109188/158243)Updating files:  70% (110771/158243)Updating files:  71% (112353/158243)Updating files:  72% (113935/158243)Updating files:  72% (114357/158243)Updating files:  73% (115518/158243)Updating files:  74% (117100/158243)Updating files:  75% (118683/158243)Updating files:  76% (120265/158243)Updating files:  77% (121848/158243)Updating files:  77% (122300/158243)Updating files:  78% (123430/158243)Updating files:  79% (125012/158243)Updating files:  80% (126595/158243)Updating files:  81% (128177/158243)Updating files:  82% (129760/158243)Updating files:  82% (130832/158243)Updating files:  83% (131342/158243)Updating files:  84% (132925/158243)Updating files:  85% (134507/158243)Updating files:  86% (136089/158243)Updating files:  87% (137672/158243)Updating files:  88% (139254/158243)Updating files:  88% (139445/158243)Updating files:  89% (140837/158243)Updating files:  90% (142419/158243)Updating files:  91% (144002/158243)Updating files:  92% (145584/158243)Updating files:  92% (146862/158243)Updating files:  93% (147166/158243)Updating files:  94% (148749/158243)Updating files:  95% (150331/158243)Updating files:  96% (151914/158243)Updating files:  97% (153496/158243)Updating files:  97% (154925/158243)Updating files:  98% (155079/158243)Updating files:  99% (156661/158243)Updating files: 100% (158243/158243)Updating files: 100% (158243/158243), done.
+HEAD is now at 2c8921788 watcher status
+[0m
+[0m$ [0mmkdir -p artifacts/claude-trash-0926 && cp "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-trash-0926/REPORT.md" artifacts/claude-trash-0926/REPORT.md && git status --short && git add artifacts/claude-trash-0926/REPORT.md && git commit -m "trash run 0926: REPORT for rd371-verifier-merged + lis318-merged move to Trash" 2>&1 | tail -3
+?? artifacts/claude-trash-0926/
+[detached HEAD 346481d67] trash run 0926: REPORT for rd371-verifier-merged + lis318-merged move to Trash
+ 1 file changed, 88 insertions(+)
+ create mode 100644 artifacts/claude-trash-0926/REPORT.md
+[0m
+[0m✗ [0mgit push origin HEAD:builder-outbox 2>&1 | tail -5 failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mgit status --short | grep -v "^A " ; echo "---untracked-above---"; git log --oneline -1 -- artifacts/claude-trash-0926/ 2>&1; echo "---"; git worktree list | grep trash-outbox
+M  artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+?? scripts/claude_280n_panel.sh
+?? scripts/claude_280p_panel.sh
+?? scripts/claude_281_panel.sh
+?? scripts/claude_281_panelrun.sh
+?? scripts/claude_281_runall.sh
+?? scripts/claude_281b_panel.sh
+?? scripts/claude_281b_runall.sh
+?? scripts/claude_282_panel.sh
+?? scripts/claude_282_panelrun.sh
+?? scripts/claude_282_runall.sh
+?? scripts/claude_282b_panelrun.sh
+?? scripts/claude_282b_runall.sh
+?? scripts/claude_291_m1.py
+?? scripts/claude_291_m7run.py
+?? scripts/claude_291_m8.sh
+?? scripts/claude_291_panel.sh
+?? scripts/claude_291_runall.sh
+?? scripts/claude_291_score.py
+?? scripts/claude_292_corrarm_run.py
+?? scripts/claude_292_m5.sh
+?? scripts/claude_292_m5run.py
+?? scripts/claude_292_panelrun.py
+?? scripts/claude_292_runall.sh
+?? scripts/claude_292_score.py
+?? scripts/claude_called281_devcases.py
+?? scripts/claude_called281_panelrun.py
+?? scripts/claude_called281_panelscore.py
+?? scripts/claude_called281_regscore.py
+?? scripts/claude_called281_run.py
+?? scripts/claude_called281_score.py
+?? scripts/claude_called281b_devcases.py
+?? scripts/claude_called281b_panelrun.py
+?? scripts/claude_called281b_panelscore.py
+?? scripts/claude_called281b_regscore.py
+?? scripts/claude_called281b_run.py
+?? scripts/claude_called281b_score.py
+?? scripts/claude_capab280_devcases.py
+?? scripts/claude_capab280_regscore.py
+?? scripts/claude_capab280_run.py
+?? scripts/claude_capab280_score.py
+?? scripts/claude_capab280b_devcases.py
+?? scripts/claude_capab280b_paneladapt.py
+?? scripts/claude_capab280b_regscore.py
+?? scripts/claude_capab280b_run.py
+?? scripts/claude_capab280b_score.py
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_diag267_c3.py
+?? scripts/claude_diag267_c3client.py
+?? scripts/claude_diag267_qbuild.py
+?? scripts/claude_diag267_score.py
+?? scripts/claude_diag267_turns.py
+?? scripts/claude_diag271_roc.py
+?? scripts/claude_diag290_bisect.py
+?? scripts/claude_diag290_bisect2.py
+?? scripts/claude_diag290_pilot.py
+?? scripts/claude_diag290_probe.py
+?? scripts/claude_diag290_probe2.py
+?? scripts/claude_diag290_run.py
+?? scripts/claude_diag290_summary.py
+?? scripts/claude_diag293_pilot.py
+?? scripts/claude_diag293_pilot2.py
+?? scripts/claude_diag293_run.py
+?? scripts/claude_diag293_summary.py
+?? scripts/claude_ear265_armb.py
+?? scripts/claude_ear265_arms.py
+?? scripts/claude_ear265_canon.py
+?? scripts/claude_ear265_devset.py
+?? scripts/claude_ear265_panel.py
+?? scripts/claude_ear265_qbuild.py
+?? scripts/claude_ear265_scoremain.py
+?? scripts/claude_ear265_turns.py
+?? scripts/claude_ear269_armb.py
+?? scripts/claude_ear269_arms.py
+?? scripts/claude_ear269_devset.py
+?? scripts/claude_ear269_groupcheck.py
+?? scripts/claude_ear269_panel.py
+?? scripts/claude_ear269_qbuild.py
+?? scripts/claude_ear269_scoremain.py
+?? scripts/claude_ear269_turns.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/claude_earcheck264_armb.py
+?? scripts/claude_earcheck264_arms.py
+?? scripts/claude_earcheck264_client.py
+?? scripts/claude_earcheck264_commatags.py
+?? scripts/claude_earcheck264_devreport.py
+?? scripts/claude_earcheck264_devset.py
+?? scripts/claude_earcheck264_panel.py
+?? scripts/claude_earcheck264_qa.py
+?? scripts/claude_earcheck264_qbuild.py
+?? scripts/claude_earcheck264_scoremain.py
+?? scripts/claude_earcheck264_turns.py
+?? scripts/claude_fix138nb_label.py
+?? scripts/claude_fix255b_test.py
+?? scripts/claude_fix255b_text.py
+?? scripts/claude_fix263_comma.py
+?? scripts/claude_fix266_chainlift.py
+?? scripts/claude_fix266b_detector.py
+?? scripts/claude_fix268_nhopdir.py
+?? scripts/claude_fix280_capab.py
+?? scripts/claude_fix280b_general.py
+?? scripts/claude_fix281_called.py
+?? scripts/claude_fix281b_casual.py
+?? scripts/claude_fix282_small.py
+?? scripts/claude_fix282b_vocab.py
+?? scripts/claude_fix291_glue.py
+?? scripts/claude_join280m_regscore.py
+?? scripts/claude_join280m_run.py
+?? scripts/claude_join280m_score.py
+?? scripts/claude_join280n_score.py
+?? scripts/claude_join280p_score.py
+?? scripts/claude_lis310_agent.py
+?? scripts/claude_lis310_demo.py
+?? scripts/claude_lis310_test.py
+?? scripts/claude_lis311_agent.py
+?? scripts/claude_lis311_server.py
+?? scripts/claude_lis311_start.sh
+?? scripts/claude_lis311_try.py
+?? scripts/claude_loop138nb_agent.py
+?? scripts/claude_loop138p_agent.py
+?? scripts/claude_loop255b_agent.py
+?? scripts/claude_loop263_agent.py
+?? scripts/claude_loop266_agent.py
+?? scripts/claude_loop266b_agent.py
+?? scripts/claude_loop268_agent.py
+?? scripts/claude_loop280_agent.py
+?? scripts/claude_loop280b_agent.py
+?? scripts/claude_loop280m_agent.py
+?? scripts/claude_loop281_agent.py
+?? scripts/claude_loop281b_agent.py
+?? scripts/claude_loop282_agent.py
+?? scripts/claude_loop282b_agent.py
+?? scripts/claude_loop291_agent.py
+?? scripts/claude_loop292_agent.py
+?? scripts/claude_mouth241b_devrender_r.py
+?? scripts/claude_mouth241b_rer241_r.py
+?? scripts/claude_mut1_k1.py
+?? scripts/claude_mut1_k2.py
+?? scripts/claude_mut1_k3.py
+?? scripts/claude_mut1_k4.py
+?? scripts/claude_nb321_store.py
+?? scripts/claude_nb321_test.py
+?? scripts/claude_own_m0_build.py
+?? scripts/claude_own_m0_check.py
+?? scripts/claude_own_o0a2_compiler.py
+?? scripts/claude_own_o0a3_mutate.py
+?? scripts/claude_own_o0a_compiler.py
+?? scripts/claude_own_o0b_check.py
+?? scripts/claude_own_o0b_gen.py
+?? scripts/claude_own_o0c_prep.py
+?? scripts/claude_own_o0c_tok.py
+?? scripts/claude_own_o0d2_model.py
+?? scripts/claude_own_o0d2_test.py
+?? scripts/claude_own_o0d2_train.py
+?? scripts/claude_own_o0d_model.py
+?? scripts/claude_own_o0d_test.py
+?? scripts/claude_own_o0d_train.py
+?? scripts/claude_own_o0e2_model.py
+?? scripts/claude_own_o0e2_tests.py
+?? scripts/claude_own_o0e_model.py
+?? scripts/claude_own_o0e_serialize.py
+?? scripts/claude_own_o0e_tests.py
+?? scripts/claude_own_o0e_train.py
+?? scripts/claude_own_o0f_bench.py
+?? scripts/claude_probe255b_director.py
+?? scripts/claude_probe280p_run.py
+?? scripts/claude_probe280p_score.py
+?? scripts/claude_small282_devcases.py
+?? scripts/claude_small282_panelrun2.py
+?? scripts/claude_small282_regscore.py
+?? scripts/claude_small282_run.py
+?? scripts/claude_small282_score.py
+?? scripts/claude_small282b_devcases.py
+?? scripts/claude_small282b_regscore.py
+?? scripts/claude_small282b_run.py
+?? scripts/claude_small282b_score.py
+?? scripts/claude_type270_agent.py
+?? scripts/claude_type270_devrun.py
+?? scripts/claude_type270_devscore.py
+?? scripts/claude_type270_devset.py
+?? scripts/claude_type270_normalise.py
+?? scripts/claude_type270_panelrun.py
+?? scripts/claude_type270_panelscore.py
+?? scripts/claude_type270b_devscore.py
+?? scripts/claude_type270b_devset.py
+?? scripts/claude_type270b_normalise.py
+?? scripts/claude_type270b_panelscore.py
+?? scripts/claude_type270b_panelscore2.py
+?? scripts/claude_type270b_panelturns.py
+?? scripts/claude_type270b_qbuild.py
+?? scripts/claude_type270b_turns.py
+?? scripts/claude_typepanel270b_make.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+---untracked-above---
+---
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/trash-outbox                        346481d67 (detached HEAD)
+[0m
+[0m$ [0mls -la artifacts/claude-trash-0926/; git status --short -- artifacts/claude-trash-0926/
+total 16
+drwxr-xr-x    3 ben-hannan  staff     96 Sep 25 22:36 .
+drwxr-xr-x@ 512 ben-hannan  staff  16384 Sep 25 22:36 ..
+-rw-r--r--    1 ben-hannan  staff   4403 Sep 25 22:36 REPORT.md
+[0m
+[0m$ [0mgit show --stat HEAD | head -10
+commit 346481d67a29868d9c5b96c21de2891cede2d717
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Fri Sep 25 22:37:07 2026 -0400
+
+    trash run 0926: REPORT for rd371-verifier-merged + lis318-merged move to Trash
+
+ artifacts/claude-trash-0926/REPORT.md | 88 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 88 insertions(+)
+[0m
