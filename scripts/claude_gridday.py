@@ -10,6 +10,8 @@ solves gives practice pairs. Agreed with Fix sleep (12:53 and ~13:05 UTC):
      row-major order) with the correct next number, in rv-385's exact prompt and reply prefix;
   P  placebo: the same states with a wrong number, one that passes the visible row/column check when one exists,
      otherwise any wrong number (both counts reported);
+  K  key (report-only ceiling, Fix sleep 12:55 UTC): the same kind of rows from EVERY day grid, solved or not, taken
+     from the answer key, so it shows what training on the key would give; it has no pass mark;
   rows {"messages": [...], "answer": "The number in row R, column C is V", ...}; Fix sleep's shim applies the chat
      template (enable_thinking=False) and puts the loss on the answer only.
   score: fixed states on fresh grids (every state along the true solution), the model's top-scoring number against
@@ -17,7 +19,7 @@ solves gives practice pairs. Agreed with Fix sleep (12:53 and ~13:05 UTC):
 Seeds, nights, harm panel, marks and the verdict belong to Fix sleep. The grids have an answer key in code, so this can
 show whether the checker-kept-hits loop works on puzzles too deep for guessing, not that search beats the key.
 
-  day(tok, model, seed, n, budget)    -> {"S": [...], "P": [...], "stats": {...}}     (usable inside Fix sleep's loop)
+  day(tok, model, seed, n, budget)    -> {"S": [...], "P": [...], "K": [...], "stats": {...}}     (usable inside Fix sleep's loop)
   score_states(tok, model, seed, n)   -> {"states": .., "right": .., ...}
   python -B scripts/claude_gridday.py day   --model DIR --seed S --n N --out DIR
   python -B scripts/claude_gridday.py score --model DIR --seed S --n N
@@ -138,10 +140,21 @@ def day(tok, model, seed, n, budget=BUDGET, size=SIZE):
             s_rows, p_rows = pairs_from(x.p, rng)
             S += s_rows
             P += p_rows
+    K = key_rows(puzzles)
     stats = {"seed": seed, "grids": n, "budget": budget, "solved": sum(x.solved for x in xs),
              "choices": sum(x.steps for x in xs), "S_rows": len(S), "P_rows": len(P),
-             "P_legal_wrong": sum(r["legal_wrong"] for r in P), "sec": round(time.time() - t0)}
-    return {"S": S, "P": P, "stats": stats, "grids": [x.result() for x in xs]}
+             "P_legal_wrong": sum(r["legal_wrong"] for r in P), "P_any_wrong": sum(not r["legal_wrong"] for r in P),
+             "K_rows": len(K), "sec": round(time.time() - t0)}
+    return {"S": S, "P": P, "K": K, "stats": stats, "grids": [x.result() for x in xs]}
+
+
+def key_rows(puzzles):
+    """K: rows for every grid from the answer key (no model involved)."""
+    K = []
+    for p in puzzles:
+        for i, (r, c) in enumerate(R.empties(p["puz"])):
+            K.append(pair(p, i, p["sol"][r][c], "K"))
+    return K
 
 
 def score_states(tok, model, seed, n, size=SIZE):
@@ -190,6 +203,9 @@ def selftest(model_dir=""):
             if p_row["legal_wrong"]:
                 g = state_at(p, s_row["pos"]).grid()
                 assert not R.conflicts(g, r, c, p_row["value"])
+        # K rows on a grid are the S rows with kind "K" (same states, the key's number)
+        K = key_rows([p])
+        assert [(k["messages"], k["answer"]) for k in K] == [(r["messages"], r["answer"]) for r in S]
         # the prompt at position i is exactly what rv-385's search shows when it stands there
         x = R.Search(p, "revert_ban", 3)
         for i in range(n):
@@ -227,7 +243,7 @@ def main():
     res = day(tok, model, a.seed, a.n, a.budget)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    for k in ("S", "P"):
+    for k in ("S", "P", "K"):
         (out / f"gridday-{k}-seed{a.seed}.jsonl").write_text("".join(json.dumps(r) + "\n" for r in res[k]))
     (out / f"gridday-grids-seed{a.seed}.jsonl").write_text("".join(json.dumps(r) + "\n" for r in res["grids"]))
     (out / f"gridday-stats-seed{a.seed}.json").write_text(json.dumps(res["stats"], indent=1) + "\n")
