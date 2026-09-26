@@ -30,7 +30,9 @@ below and above the chat layer both see 90 words), proposed to Benchmarks by mes
 
 ## Registered run of the chosen candidate (marks fixed now; arm C = the chosen candidate, B = X403)
 Fresh panel chatpanel404: 60 conversations written blind by three writers from 338-chat-panel-spec.md +
-382-panels-spec.md, blind audited, sealed before the run, run once. Runner and judging exactly as ch-403.
+382-panels-spec.md, blind audited, sealed before the run, run once (sealed: artifacts/claude-panel404-20260926,
+81bd131db). Runs with ch-403's runner; scoring and marks scripts/claude_ch404_run.py (selftest 3/3); judging as
+ch-403 (JUDGE-BRIEF.md); job handoff/held/rent-ch404.md (held until CAND and ADAPTER_MODE are filled).
 | Mark | What | Bar |
 |---|---|---|
 | N1 | blind pair judges, C vs B, over the conversations whose transcripts differ | C wins - B wins >= +6; INCONCLUSIVE if fewer than 12 differ |
