@@ -27,3 +27,8 @@ Reported, not marks: cov@1 (first sample), cov@30 split into 3-number and 4-numb
 C; the W − N interval.
 Honesty note: the 24-puzzle bar is the one brd-5 used. This run tests whether the brd-6 gain holds on new puzzles; a
 pass here would be a confirmation of an effect seen once, reported as such.
+
+Addendum 2026-09-26 ~04:05 UTC (before any run): the Director held the rental to keep vast credit for 0.2c. The same
+registered run may instead run once on BensPC (handoff/held/zbrd7-benspc.md): same code, command, panel and marks;
+only the GPU differs, and it is reported. Whichever of the two runs first is the registered result; the other is not
+run.
