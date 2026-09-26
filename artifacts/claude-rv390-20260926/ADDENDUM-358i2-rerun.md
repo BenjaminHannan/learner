@@ -23,7 +23,7 @@ manager first.
 Update (18:48 UTC by date -u): Ben (18:42 UTC, relayed by the Thread manager at 18:48) ended new vast rentals unless the Thread manager assigns part of the remaining balance. The rerun therefore runs on BensPC only, as handoff/held/rv390-358i2-pc.md already says. If BensPC is busy, the job waits in the queue. It does not go to a rental.
 Correction (18:50 UTC by date -u): Ben (18:47 UTC, relayed by the Thread manager at 18:51) gave one $30 rental pool for the project. The Director counts it, and each new rental needs the Thread manager's OK. The job stays on BensPC. A rental would be asked for only if BensPC cannot run it.
 
-Nets (added 20:06 UTC by date -u, before any run on them): Sleep research reported rsn-358i2 SUSPECT CONFIRMED at 20:07 UTC (recount
+Nets (added 20:06 UTC by date -u, before any run on them): Sleep research reported rsn-358i2 SUSPECT CONFIRMED in a message that reached this thread at 20:05 UTC (recount
 c761f8717). With the autocast cache off, the loop learns: 358i's grids7 test gives 186, 241, 173 and 177 of 300. The
 four nets' sha256 are in NETS-358i2.sha256.txt in this folder. They were copied from origin/builder-outbox 624bfb13e,
 artifacts/claude-rsn358i2-20260926/SEAL-run.sha256.txt, and checked by code against Sleep research's message (equal).
@@ -33,3 +33,4 @@ C:/Users/benja/premonition-models/rsn358i2/loop-s1..s4/final.pt (Mac copy ~/prem
 Expected effect, fixed now: these nets finish more puzzles in the day pass, so the hard sets will be smaller than
 rv-390's 183 to 275. The marks are counts (H needs KEEP >= RESTART + 15; G and rv-392 need +10), and with fewer hard
 puzzles they are harder to reach. A no-clear-result is therefore more likely than on 358i. The marks stay as sealed.
+Time fix (20:11 UTC by date -u, at the Thread manager's 20:09 note): the Nets paragraph first said Sleep research reported "at 20:07". That is the time written inside their message; it was delivered here at 20:05:45 UTC, before this paragraph's 20:06 stamp. Corrected in place.
