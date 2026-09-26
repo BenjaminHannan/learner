@@ -20,7 +20,7 @@ reinstalled on the rental (2.11.0+cu128) because the image's build had no Blackw
 - After each night: N1 111 / 114 / 122 (+15 / +18 / +26; one night alone would miss 28.8 in two seeds), N2 142 / 124 /
   132, N3 139 / 135 / 131. Most of the gain comes by night 2; night 3 held it (−3 / +11 / −1 vs N2).
 - By kind (N3): 3-number 75 / 72 / 72 of 80 (base 56); 4-number 64 / 63 / 59 of 160 (base 40). Both kinds gain.
-- Practice got better each night: wins + own on the 400 new puzzles were 205 (night 1, base model), 243-260
+- Practice got better each night: wins + own on the 400 new puzzles were 205 (night 1, base model), 243-267
   (night 2), 272-286 (night 3).
 - Near carry-over (addendum T, report only): 4 numbers with a target other than 24, a target no practice puzzle had.
   Base 13 of 80 -> N3 45 / 32 / 32; N3 − base interval [+18.14, +40.08], above 0, so near carry-over is seen. This
