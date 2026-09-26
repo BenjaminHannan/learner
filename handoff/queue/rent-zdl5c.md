@@ -12,7 +12,7 @@ Needs: torch with CUDA, transformers, plain MiniCPM5-1B (revision 87179e5c1f455e
 2. Check: `python -B scripts/claude_dl5_carry.py --selftest` prints "dl5 carry selftest ok", else stop.
 3. One process, with a log, launched detached:
    python -B scripts/claude_dl5_carry.py --model BASE --adapters adapters --out carry
-   Expect roughly 10-20 minutes (3 models x 100 puzzles x 20 sampled guesses + greedy).
-4. Copy carry/dl5_carry.json and the log back as artifacts/claude-dl5-20260926/carry/dl5_carry.json and carry/log.txt (force-add; artifacts/ is git-ignored). In the report give the base, dl5-S-s8 and dl5-S-s9 rows (lucky, reached, greedy) as integers. No verdict exists for this row; write REPORT-ONLY in place of a verdict.
+   Expect roughly 15-25 minutes (3 models x 100 puzzles x 20 sampled guesses + greedy, plus 300 short panel replies each).
+4. Copy carry/dl5_carry.json and the log back as artifacts/claude-dl5-20260926/carry/dl5_carry.json and carry/log.txt (force-add; artifacts/ is git-ignored). In the report give the base, dl5-S-s8 and dl5-S-s9 rows (lucky, reached, greedy, harm_right, lost) as integers. No verdict exists for this row; write REPORT-ONLY in place of a verdict.
 Never push weights; delete nothing on the Mac.
 PUSH: artifacts/claude-dl5-20260926/carry artifacts/fable-predictions-ledger.md

@@ -49,3 +49,9 @@ guesses on 100 fresh number puzzles x 20 guesses at temperature 1.5, plus greedy
 any earlier run), base vs each S adapter. Limit stated now: the placebo adapters are not saved, so this row cannot be
 compared against the placebo; it shows only whether grid nights moved an unpractised kind up, down, or not at all.
 No mark. A proper carry-over test of nights (fixed bar, placebo arm) is designed and ranked after dl-5's verdict.
+
+## Addendum 2 (2026-09-26 17:26:51 UTC, after dl-5's verdict, before the carry-over row ran)
+Report-only, no mark: the carry-over row (scripts/claude_dl5_carry.py, rent-zdl5c) also saves the base's and each S
+adapter's greedy replies to the 300 harm-panel items, so the lost and gained items can be split into "names a wrong
+fact" vs "cut off or reshaped" (the Thread manager's question: is part of lost/gained a format change?). The verdict
+above is unchanged by anything this row shows.
