@@ -43,8 +43,14 @@ and never moves a bar. A FAIL stays a FAIL. It joins no build without Ben's yes.
   end-to-end effect on H1 is untested until a later, separate test.
 
 ## Training cards (fixed now, built by code)
-- Source: lis-320's GLM-worded kept dialogs from its full run (seed 322, and seed 324 with correct_ref turns, when
-  they exist). The wording comes from GLM 5.3 Flash. Seeds, labels and checks come from code.
+- Source: lis-320's GLM-worded kept dialogs from its full run on seed 324 (seed_cr, with correct_ref turns; lis-320
+  ADDENDUM-5). The wording comes from GLM 5.3 Flash. Seeds, labels and checks come from code.
+- Seed 322, the stopped OpenRouter run, is never used.
+- Conditions agreed with Reading facts (20:34 UTC):
+  - Rows are taken only after lis-320's DATA.md is written, and they are pinned by the sha256 it records (kept.jsonl,
+    or raw.jsonl.gz rebuilt with scripts/claude_lis320_check_cr.py).
+  - scripts/claude_lis320_rawcheck.py runs on the raw file first.
+  - The rows are training only, never test items.
 - Never the pilots (seeds 320 and 321 are uw DEV). Never claude-readpanel320. Never any sealed panel.
 - Cards are built by claude_uw1_cards.cards_dev320's rules: notes = the gold ASSERT/CORRECT facts of earlier kept
   turns; dropped turns are skipped; implicit changes and "former of a current note" turns are left out and counted.
