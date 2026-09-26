@@ -34,3 +34,9 @@ reinstalled on the rental (2.11.0+cu128) because the image's build had no Blackw
 - One panel, one puzzle world (numbers, which is now used up). Per the plan (design/v3/30-modes/brd-10-fallback-plan.md),
   problem 7 counts as solved only after a replication passes in a new world: the shared number squares
   (scripts/claude_world_latin.py), plain sampling (no RuleKeeper), test seeds 901000+.
+
+## Addendum (written 2026-09-26 17:23 UTC by `date -u`): forgetting was not measured
+brd-9 had no harm mark and saved no adapters, so what three nights cost on general knowledge is unknown and cannot be
+scored after the fact. Fix sleep's dl-5 grid nights lost 61 and 98 of the base's 200 right general answers by night 5,
+so the PASS above must not be read as "no harm". The replication carries a sealed no-harm mark inside PASS (lost at
+most 20 of the base-right items on Fix sleep's 300-item general panel, in every seed).
