@@ -53,3 +53,7 @@ are exact and carry pointers to the raw turns.
 ## Cost
 - Training two small nets (reasoner and twin) and one GPU pass for the vectors: a rental well under the $0.72 left
   in this thread's $2. To be measured on a slice before sealing (the bm-391 lesson).
+
+## Money change (added 2026-09-26 18:48 UTC)
+Ben, 18:42 UTC: no more vast money beyond what's left, handed out by the Thread manager; the rest runs on BensPC.
+So any run of this goes on BensPC (one job at a time) or this CPU, not a rental.
