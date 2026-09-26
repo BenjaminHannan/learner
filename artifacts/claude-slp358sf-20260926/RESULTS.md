@@ -42,3 +42,14 @@ Code: scripts/claude_slp358sf_nights.py, sealed at 3e5c27016 before any run. See
 Practising only the day's mistakes did not beat practising the whole day at random; on the valid seed it was worse,
 especially on sums, where the misses were a small set practised over and over. The other seed's starting net had
 barely learned anything, so it doesn't count. Limits: small nets on CPU, 3 nights, two puzzle kinds, one valid seed.
+
+## Blind recount (VERIFY.md): agrees, INCONCLUSIVE as registered. Corrections
+- "Never learned" / "barely learned anything" overstate seed 10: its base gets 59/300 practised sums and its nights
+  added +41 on day_sums. That it was undertrained is a guess (same pretraining settings as seed 9).
+- "Especially on sums" / "repeating a few missed sums hurt" are not shown: on seed 9 day_grids fell about as much
+  (−14 vs −12 on day_sums), and no arm used a random pool of the same small size, so "mistakes" cannot be told apart
+  from "fewer distinct puzzles".
+- Seed 10 Q3 cell, clean: harm_sums4 94 ≥ 82, harm_grids4 97 ≥ 87, day_sums 76 < 79 (FAIL).
+- The INCONCLUSIVE overall reading is mine: PASSMARKS does not say what happens when V holds on one seed only.
+- The PASSMARKS header time (04:10 UTC) is a wrong hand label; the seal commit (03:34:59) precedes the results
+  commit (03:54:14). Nights 1-2, day tries and P vs N on harm are in VERIFY.md.
