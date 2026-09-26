@@ -1,0 +1,1488 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?
+git branch -a | head -n 50
+git log --oneline -5
+ls
+FETCH_EXIT:0
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
+  codex/testing-experiment-44
++ main
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+bc39d2baf ideajudge-teacher2: DEV teacher agreement check (no training)
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+7692680e4 mut-0 SLEEP fails closed: mut0 runner + 3 runall scripts, seal + results (M1-M3 hold)
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- artifacts/claude-rsn358d-20260926/ 2>&1; echo ---MAIN-DONE---
+git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-rsn358d-20260926/ 2>&1; echo ---OUTBOX-DONE---
+git show origin/main:artifacts/claude-rsn358d-20260926/PASSMARKS.md 2>&1 | head -n 200
+echo ===SEPARATOR===
+artifacts/claude-rsn358d-20260926/PASSMARKS.md
+artifacts/claude-rsn358d-20260926/SEAL-code.sha256.txt
+---MAIN-DONE---
+---OUTBOX-DONE---
+# rsn-358d pass marks (fixed before any run; 2026-09-26 03:45 UTC, sleep research thread; written AFTER 358a's FAIL)
+
+Question (unchanged from 358a): does the loop (thinks in rounds, learned stop) solve BIGGER puzzles than it practised
+better than its plain same-size twin?
+ONE change vs 358a v2: 4-number practice puzzles = every 4-number hand except the 300 held-out test hands, with every
+whole target 1-99 it can reach (75,972 puzzles over 1,520 hands, of which the old 1,062 target-24 puzzles are a
+subset), instead of only the 1,062 target-24 puzzles. Code: scripts/claude_rsn358d_run.py. Why: in 358a both arms
+solved 100% of practice number puzzles and 0-5 of 300 new ones (memorised; blind recount VERIFY.md), so numbers
+counted for nothing and G1 needed both sums6 and grids6 at +30.
+Nets, other data, steps (60,000), batch (256), lr, stop rule (v2), tests (artifacts/claude-rsn358a-20260925/tests/,
+the same sealed files, run once per new checkpoint) are unchanged. Fresh seeds 3 and 4, both arms retrained.
+
+Marks: exactly G0, G1, G2, G3 and the proved-wrong clause of artifacts/claude-rsn358a-20260925/PASSMARKS-v2.md.
+**PASS = G0, G1, G2 and G3 on both seeds.** Anything else with G0 met on both seeds = FAIL.
+Report only (not graded): numbers4 and numbers5 right for both arms (did the change stop the memorising?); training
+exact_by_kind; loop right at fixed rounds; everything 358a reported.
+
+Prediction, before running: numbers4 rises above 358a's 0-5 for both arms (maybe tens), numbers5 stays low; G1
+still hinges on sums6, where the plain net swung 197-255 across 358a's seeds. PASS maybe 20%.
+Honest limits: this change was chosen after seeing 358a's test counts (only counts; no item was read). The tests are
+the same sealed files 358a used (new checkpoints, one run each). Same-weights, not same-compute, as in 358a.
+zsh:4: ==SEPARATOR=== not found
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358a-20260925/PASSMARKS-v2.md 2>&1
+echo "===END-PASSMARKS-V2==="
+# rsn-358a pass marks v2 (fixed before any run; 2026-09-25 22:35 UTC, sleep research thread)
+
+Question: on puzzles that are not relation facts, does a net that thinks in rounds (loop, with a learned stop)
+solve BIGGER puzzles than it practised better than its plain same-size twin? Code: scripts/claude_rsn358a2_run.py (wraps scripts/claude_rsn358a_run.py),
+scripts/claude_rsn358a_envs.py. Tests: artifacts/claude-rsn358a-20260925/tests/ (made by code, sealed, 300 each).
+Two arms (plain, loop), seeds 1 and 2, same data stream, steps (60,000), batch (256), learning rate and schedule.
+Graded by exact code (any valid answer counts). Final checkpoint only; no early stopping; tests run once.
+
+| test | practised? | role |
+|---|---|---|
+| sums4, grids5, numbers4 (300 held-out hands) | practised size, fresh items | G2 |
+| sums6, grids6, numbers5 | bigger than ever practised | G1, G3 |
+| sums8, grids7 | even bigger | report only |
+
+| mark | what (each seed) | pass |
+|---|---|---|
+| G0 validity | both arms right on at least 210/300 (70%) of the practised-size tests in at least 2 of 3 kinds | else the run is INCONCLUSIVE (undertrained), neither PASS nor FAIL |
+| G1 | bigger tests: loop − plain | ≥ +30/300 on at least 2 of the 3 bigger tests, and not below −10 on the third |
+| G2 | practised-size tests: loop − plain | ≥ −10/300 on each |
+| G3 | the stop picks the length | on each bigger test, loop right with its own stop ≥ loop right at a fixed 16 rounds (training maximum) − 5; and mean rounds used on sums6 > mean rounds on sums4 |
+| G4 | report | sums8, grids7; loop right at 1/2/4/8/12/16/24/32/48 rounds; right at any round; rounds histograms; training curves |
+
+**PASS = G0, G1, G2 and G3 on both seeds.** Anything else with G0 met on both seeds = FAIL (stays FAIL).
+
+**Proved wrong ("thinking in rounds lets a small net carry a method to bigger puzzles than it practised"):**
+G0 met, and loop − plain ≤ +5/300 on all three bigger tests on both seeds.
+
+Predictions (written before any run): plain should fail sums6 badly (fixed depth can't carry 6 columns it never
+saw; published transformers usually fail this); loop sums6 uncertain; grids6 uncertain for both; numbers5 likely
+low for both (a much bigger search). G1 overall: uncertain, maybe 35%.
+
+Limits known in advance: the loop spends more compute per question than the plain net (that is the thing being
+tested: can extra thinking time be turned into bigger puzzles); a plain net given more compute in some other way is
+not tested here. Practised-size sums/grids tests are fresh seeds in very large spaces, not proven disjoint from
+training draws (numbers4 is proven disjoint).
+
+## v2 change (before any run)
+Only the loop's stop rule changed (see the docstring of scripts/claude_rsn358a2_run.py): stop from round 3 on when
+the stop head says p > 0.5 and the answer equals the two rounds before, else round 48. Reason: an unregistered CPU
+preview on dev sums (fresh seeds, not the tests; artifacts/claude-rsn358a-20260925/preview/) showed the v1 rule
+stopping after 1 round, losing even at the practised size (4-digit sums 185/200 vs 200/200 by round 4). The
+preview looked only at sums (sizes 4, 6, 8, fresh items), so the rule was chosen with some knowledge of longer sums
+on the loop's side; the practised size alone already shows the v1 rule's fault. The v1 rule's counts are reported
+as right_v1_rule and are not graded. Everything else, marks included, is exactly as v1.
+Preview numbers (small nets, 4,000 CPU steps, 200 dev items each, loop at its v2 rule / at 8 rounds / plain):
+4-digit 200 / 200 / 195, 6-digit 175 / 178 / 155, 8-digit 88 / 88 / 42. Not a result; the registered run decides.
+===END-PASSMARKS-V2===
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rsn358d_run.py 2>&1 | head -n 250
+#!/usr/bin/env python3
+"""rsn-358d (sleep research thread, 2026-09-26 03:30 UTC, written after 358a's registered FAIL): rsn-358a v2
+(scripts/claude_rsn358a2_run.py, wraps scripts/claude_rsn358a_run.py) with ONE change, the 4-number practice puzzles.
+
+Why: in 358a both arms solved 100% of practice number puzzles and ~0 of the 300 held-out 4-number hands (1-4 of 300)
+and 5-number hands (0-2): with only 1,062 fixed 4-number practice puzzles (target always 24) they memorised them
+instead of learning to search. Here the 4-number practice is every 4-number hand (numbers 1-13) that is NOT one of
+the 300 held-out test hands (those hands are excluded with every target), paired with EVERY whole target 1-99 it
+can reach (about 70x more distinct puzzles). 3-number practice, sums, grids, nets, steps, tests, stop rule (v2) and
+marks are unchanged. The tests still ask target 24 (held-out 4-number hands, fresh 5-number hands).
+
+  python -B scripts/claude_rsn358d_run.py train|eval|smoke ...   (same arguments as claude_rsn358a_run.py)
+  python -B scripts/claude_rsn358d_run.py pool                    (prints pool size and checks exclusions)
+"""
+from __future__ import annotations
+
+import itertools
+import sys
+from fractions import Fraction
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_blurt1 as B1  # noqa: E402
+import claude_rsn358a_envs as E  # noqa: E402
+import claude_rsn358a_run as R  # noqa: E402
+import claude_rsn358a2_run as V  # noqa: E402,F401  (installs the v2 stop rule into R)
+
+_init_v1 = R.Source.__init__
+
+
+def all_values(items):
+    """{value: one expression} for every value reachable using all items (same expression format as B1.solve)."""
+    if len(items) == 1:
+        return {items[0][0]: items[0][1]}
+    out = {}
+    for i, j in itertools.combinations(range(len(items)), 2):
+        rest = [items[k] for k in range(len(items)) if k not in (i, j)]
+        for v in B1._combine(items[i], items[j]):
+            for val, expr in all_values(rest + [v]).items():
+                out.setdefault(val, expr)
+    return out
+
+
+def four_pool():
+    four, _ = E.number_hands()
+    _, held = E.split_four(four)
+    held_hands = {tuple(sorted(h)) for h, _, _ in held}
+    pool = []
+    for h in itertools.combinations_with_replacement(range(1, 14), 4):
+        if h in held_hands:
+            continue
+        vals = all_values([(Fraction(n), str(n)) for n in h])
+        for t in range(1, 100):
+            s = vals.get(Fraction(t))
+            if s is not None and B1.check(s, list(h), t):
+                pool.append((list(h), t, s))
+    return pool, held_hands
+
+
+_POOL = {}
+
+
+def _init(self, seed, latin_pool=20000):
+    _init_v1(self, seed, latin_pool)
+    if "four" not in _POOL:
+        _POOL["four"] = four_pool()[0]
+    self.four = _POOL["four"]
+
+
+R.Source.__init__ = _init
+
+if __name__ == "__main__":
+    if sys.argv[1:] == ["pool"]:
+        pool, held = four_pool()
+        assert not any(tuple(sorted(h)) in held for h, _, _ in pool)
+        print(f"pool {len(pool)} four-number puzzles over {len({tuple(h) for h, _, _ in pool})} hands; "
+              f"{len(held)} held-out hands excluded; target-24 puzzles in pool: {sum(t == 24 for _, t, _ in pool)}")
+    else:
+        R.main()
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-rsn358d-20260926/RESULTS.md 2>&1 | head -n 20; echo "===EXIT:$?==="
+git ls-tree -r --name-only origin/main | grep -i "358d" 2>&1
+echo "---"
+cat handoff/held/006j-rsn-358d-train.md 2>&1 | head -n 60; echo "===HELD-EXIT:$?==="
+fatal: path 'artifacts/claude-rsn358d-20260926/RESULTS.md' does not exist in 'origin/builder-outbox'
+===EXIT:0===
+artifacts/claude-rsn358d-20260926/PASSMARKS.md
+artifacts/claude-rsn358d-20260926/SEAL-code.sha256.txt
+handoff/held/006j-rsn-358d-train.md
+handoff/queue/rent-358d.md
+scripts/claude_rsn358d_run.py
+---
+cat: handoff/held/006j-rsn-358d-train.md: No such file or directory
+===HELD-EXIT:0===
+[0m
+[0m$ [0mgit show origin/main:handoff/held/006j-rsn-358d-train.md 2>&1 | head -n 80
+echo "===QUEUE==="; git show origin/main:handoff/queue/rent-358d.md 2>&1 | head -n 120
+COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+GPU: yes (BensPC; $0, no rental). 4 trainings of ~6.4M-weight nets (358a took 26-33 min each alone on the 5070 Ti) + 4 evals. DEADLINE: results are wanted before 07:30 UTC (03:30 Ben's time).
+
+YOUR TASK: builder for rsn-358d (loop reasoner vs plain twin, same as rsn-358a with ONE change: many more 4-number practice puzzles). The sleep research thread wrote and sealed all code; run it, never edit it. If something breaks, stop and report the exact error; do not patch. Artifacts go in artifacts/claude-rsn358d-20260926/.
+READ FIRST (on origin/main): artifacts/claude-rsn358d-20260926/PASSMARKS.md, artifacts/claude-rsn358a-20260925/PASSMARKS-v2.md, and the docstring of scripts/claude_rsn358d_run.py. Its commands and arguments are the same as scripts/claude_rsn358a_run.py (see 358a's RESULTS.md on origin/builder-outbox for how 358a was run; reuse the same venv).
+INDEPENDENCE: artifacts/claude-rsn358a-20260925/tests/ is TEST-ONLY: never open or print an item; the eval command writes counts only. Run each eval exactly once per checkpoint.
+0. On BensPC: `git archive origin/main scripts artifacts/claude-rsn358d-20260926 artifacts/claude-rsn358a-20260925` and extract, keeping paths. Check nvidia-smi and free disk. If another job is on the GPU and free GPU memory is under 6 GB, wait for it; never touch another process.
+1. SEAL: `sha256sum -c artifacts/claude-rsn358d-20260926/SEAL-code.sha256.txt` (on Windows compute each hash with Get-FileHash and compare every line; all must match, else stop). Run `python -B scripts/claude_rsn358a_envs.py selftest` and `python -B scripts/claude_rsn358d_run.py pool` (expect "pool 75972 four-number puzzles over 1520 hands; 300 held-out hands excluded; target-24 puzzles in pool: 1062"; anything else -> stop).
+2. TRAIN (two at a time is fine if nvidia-smi shows room; the pool takes ~40 s to build at start):
+   python -B scripts/claude_rsn358d_run.py train --arm loop  --seed 3 --out W/loop-s3
+   python -B scripts/claude_rsn358d_run.py train --arm plain --seed 3 --out W/plain-s3
+   python -B scripts/claude_rsn358d_run.py train --arm loop  --seed 4 --out W/loop-s4
+   python -B scripts/claude_rsn358d_run.py train --arm plain --seed 4 --out W/plain-s4
+   TOO-SLOW: if the pilot-free estimate (first 5,000 steps' minutes x 12) puts the last run's end after 07:00 UTC, still finish seed 3 (both arms) and report TOO-SLOW for seed 4.
+3. SEAL each final.pt (sha256, exactly 64 hex characters, appended to artifacts/claude-rsn358d-20260926/SEAL-run.sha256.txt) BEFORE its eval.
+4. EVAL once per checkpoint: python -B scripts/claude_rsn358d_run.py eval --ckpt W/R/final.pt --tests artifacts/claude-rsn358a-20260925/tests --out W/R/tests.json
+   Copy train_log.jsonl, train_summary.json, tests.json into artifacts/claude-rsn358d-20260926/runs/<R>/.
+5. RESULTS.md, verdict first: G0-G3 for both seeds with integer counts and PASS / FAIL / INCONCLUSIVE per PASSMARKS-v2.md; proved-wrong clause; per-seed table of every test (plain, loop own stop, loop - plain); loop right at 1/2/4/8/12/16/24/32/48 rounds and any round; numbers4/numbers5 for both arms called out; minutes per run; every deviation. Append ledger lines (cat >> artifacts/fable-predictions-ledger.md).
+6. Keep checkpoints on BensPC at C:/Users/benja/premonition-models/rsn358d/<run>/ (never push weights).
+PUSH: artifacts/claude-rsn358d-20260926/RESULTS.md artifacts/claude-rsn358d-20260926/SEAL-run.sha256.txt artifacts/claude-rsn358d-20260926/runs artifacts/fable-predictions-ledger.md
+===QUEUE===
+COMMON RULES (the sleep research thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.
+GPU: rent
+BUDGET: $0.80 for this whole task, re-rents included (the Director's overnight reserve; standing caps <=$4 per job, $30 total). TIME CAP: 1 h 30 min from the first rental. Label: rent-358d.
+CREDIT GATE (first): `vastai show user --raw` and report ONLY the balance/credit number. Under $3.00: rent nothing, stop with CREDIT-STOP. Re-check before any re-rent. Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+RENTAL RULES: RTX 5090 first, else 4090; reliability >= 0.98. Keep a running total of dph x hours; at $0.70 or at 1 h 25 min, kill running commands by exact PID, copy back what exists, destroy, stop with BUDGET-STOP (report which runs finished). Not running within 6 min or no log progress for 10 min: destroy and try another host (max 3 rentals). Launch runs detached (nohup/setsid) so they survive SSH closing. Destroy at the end and confirm it is gone. Append a ledger line.
+DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-rsn358d-20260926/RESULTS.md, or a live instance is labelled rent-358d. (The BensPC version handoff/held/006j-rsn-358d-train.md is held and must not also run.)
+
+YOUR TASK: builder for rsn-358d (loop reasoner vs plain twin, same as rsn-358a with ONE change: many more 4-number practice puzzles). The sleep research thread wrote and sealed all code; run it, never edit it. If something breaks, stop and report the exact error; do not patch. Artifacts go in artifacts/claude-rsn358d-20260926/.
+READ FIRST (origin/main): artifacts/claude-rsn358d-20260926/PASSMARKS.md, artifacts/claude-rsn358a-20260925/PASSMARKS-v2.md, and the docstring of scripts/claude_rsn358d_run.py (same commands/arguments as scripts/claude_rsn358a_run.py).
+Needs: torch with CUDA and numpy only. No model downloads.
+INDEPENDENCE: artifacts/claude-rsn358a-20260925/tests/ is TEST-ONLY: never open or print an item; the eval command writes counts only. Run each eval exactly once per checkpoint.
+1. On the rental: `git archive origin/main scripts artifacts/claude-rsn358d-20260926 artifacts/claude-rsn358a-20260925`, extract keeping paths.
+2. SEAL: `sha256sum -c artifacts/claude-rsn358d-20260926/SEAL-code.sha256.txt`: every line OK, else stop. `python -B scripts/claude_rsn358a_envs.py selftest` ("selftest ok") and `python -B scripts/claude_rsn358d_run.py pool` (expect exactly "pool 75972 four-number puzzles over 1520 hands; 300 held-out hands excluded; target-24 puzzles in pool: 1062"; anything else -> stop).
+3. TRAIN all four AT ONCE (each is a ~6.4M-weight net, a few GB of GPU memory; check nvidia-smi after they start; if memory runs out, run two at a time, seed 3 first). Each builds the puzzle pool in ~40 s first. Log each to W/<R>.log.
+   python -B scripts/claude_rsn358d_run.py train --arm loop  --seed 3 --out W/loop-s3
+   python -B scripts/claude_rsn358d_run.py train --arm plain --seed 3 --out W/plain-s3
+   python -B scripts/claude_rsn358d_run.py train --arm loop  --seed 4 --out W/loop-s4
+   python -B scripts/claude_rsn358d_run.py train --arm plain --seed 4 --out W/plain-s4
+   If after 10 minutes of training the logs project past the time cap, keep seed 3 (both arms) and stop seed 4 by exact PID; report TOO-SLOW for seed 4.
+4. SEAL each final.pt (sha256, exactly 64 hex characters; check the length) appended to artifacts/claude-rsn358d-20260926/SEAL-run.sha256.txt BEFORE its eval.
+5. EVAL once per checkpoint: python -B scripts/claude_rsn358d_run.py eval --ckpt W/R/final.pt --tests artifacts/claude-rsn358a-20260925/tests --out W/R/tests.json
+   Copy train_log.jsonl, train_summary.json, tests.json and the log into artifacts/claude-rsn358d-20260926/runs/<R>/ (force-add; artifacts/ is git-ignored).
+6. RESULTS.md, verdict first: G0-G3 for both seeds with integer counts and PASS / FAIL / INCONCLUSIVE per PASSMARKS-v2.md; proved-wrong clause; per-seed table of every test (plain, loop own stop, loop - plain); loop right at 1/2/4/8/12/16/24/32/48 rounds and any round; numbers4/numbers5 for both arms called out; GPU name, minutes per run, dollars; every deviation. Append ledger lines (cat >> artifacts/fable-predictions-ledger.md).
+Never push weights; the checkpoints may be discarded with the rental after their sha256 is recorded (copy them to the Mac at ~/premonition-models/rsn358d/<run>/ only if `df -g /` shows at least 8 GB free after the copy).
+PUSH: artifacts/claude-rsn358d-20260926/RESULTS.md artifacts/claude-rsn358d-20260926/SEAL-run.sha256.txt artifacts/claude-rsn358d-20260926/runs artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mwhich vastai; vastai --help 2>&1 | head -n 30; ls ~/.config/vastai/ 2>&1
+/Users/ben-hannan/.local/bin/vastai
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+
+options:
+ -h, --help                    show this help message and exit
+ --url URL                     Server REST API URL
+ --retry RETRY                 Retry limit
+ --explain                     Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                         Output machine-readable json
+ --full                        Print full results instead of paging with `less` for commands that support it
+ --curl                        Show a curl equivalency to the call
+ --api-key API_KEY             API Key to use. defaults to using the one stored in /Users/ben-hannan/.config/vastai/vast_api_key
+ --version                     Show CLI version
+ --no-color                    Disable colored output for commands that support it
+
+Search:
+ search offers                 Search for instance types using custom query
+ search benchmarks             Search for benchmark results using custom query
+ search templates              Search for template results using custom query
+ search invoices               Search for invoices using custom query
+ create template               Create a new template
+ update template               Update an existing template
+ delete template               Delete a Template
+
+Instances:
+ show instance                 Display user's current instances
+ create instance               Create a new instance
+ create instances              Create instances from a list of offers
+ destroy instance              Destroy an instance (irreversible, deletes data)
+vast_api_key
+vast_role
+[0m
+[0m$ [0mvastai show user --raw 2>&1
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 6.32865827746987,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+ "discord_id": null,
+ "email": "benjamin.a.hannan@gmail.com",
+ "email_verified": true,
+ "fullname": null,
+ "got_signup_credit": 0,
+ "has_billing": true,
+ "has_payout": false,
+ "has_rented": true,
+ "has_stripe_payout": false,
+ "host_agreement_accepted": false,
+ "host_only": false,
+ "huggingface_cloud_sync_enabled": true,
+ "id": 553012,
+ "is_subject_to_unpaid_deletion": false,
+ "key_id": 28637247,
+ "last4": null,
+ "oauth_provider": "google",
+ "paid_expected": 0.0,
+ "paid_verified": 0.0,
+ "password_resettable": null,
+ "payout_enabled": true,
+ "paypal_email": null,
+ "phone_number": null,
+ "rights": {
+  "api": {
+   "*": {
+    "api.auth.apikeys": {
+     "GET": {}
+    },
+    "api.auth.sessions": {
+     "GET": {}
+    },
+    "api.hubspot.newsletters": {
+     "GET": {}
+    },
+    "api.instances": {
+     "GET": {}
+    },
+    "api.instances.count": {
+     "GET": {}
+    },
+    "api.instances_v1": {
+     "GET": {}
+    },
+    "api.ssh.keys": {},
+    "api.team": {
+     "POST": {}
+    },
+    "api.template": {
+     "GET": {}
+    },
+    "api.template.params": {
+     "GET": {}
+    },
+    "api.template_v1": {
+     "GET": {}
+    },
+    "api.user.created_templates": {
+     "GET": {}
+    },
+    "api.user.save_context": {
+     "PUT": {}
+    },
+    "api.user.verify-email": {
+     "POST": {}
+    },
+    "api.users.crisp-identity": {
+     "GET": {}
+    },
+    "api.users.current": {
+     "GET": {}
+    },
+    "api.users.root": {
+     "GET": {}
+    }
+   },
+   "billing_read": {},
+   "billing_write": {},
+   "instance_read": {},
+   "instance_write": {},
+   "misc": {},
+   "user_read": {},
+   "user_write": {}
+  }
+ },
+ "sid": 1,
+ "ssh_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGsaSCgGiDJAKKDkM5DvmPV6D+avvzeBfi7Dz+H5s7e4 vast-training\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICnYSZnoTma419UtHDuRQsNq29uzJowmyfJu69xas517 ben@paynycfines.com\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP9dJBti4tqQ0olFaUTOCt4O6OHddZy0gwPoYaXuGKE9 rent-336b\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ7St3PlitESWp4VCS6zugx7K8P93SF+JgYtt+cobu2B rent-bm395",
+ "tfa_login": false,
+ "tfa_status": "disabled",
+ "total_spend": -53.67134172253013,
+ "username": "benjamin.a.hannan@gmail.com",
+ "wise_email": null
+}
+[0m
+[0m$ [0mvastai show instances --raw 2>&1 | head -n 100
+[
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "VN",
+  "cpu_arch": "amd64",
+  "cpu_cores": 128,
+  "cpu_cores_effective": 64.0,
+  "cpu_name": "AMD EPYC 7742 64-Core Processor",
+  "cpu_ram": 128635,
+  "cpu_util": 0.02125,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 499,
+  "direct_port_end": -1,
+  "direct_port_start": 65535,
+  "disk_bw": 1759.0,
+  "disk_name": "SPCC M.2 PCIe SSD",
+  "disk_space": 100.0,
+  "disk_usage": 5.400000095367432,
+  "disk_util": 5.400000095367432,
+  "dlperf": 198.91491189859983,
+  "dlperf_per_dphtotal": 389.80277407912575,
+  "dph_base": 0.464,
+  "dph_total": 0.5102962962962964,
+  "driver_version": "580.119.02",
+  "duration": 6472.9133088588715,
+  "end_date": 1805885726.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 210.821518362607,
+  "geolocation": "Vietnam, VN",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 0.5,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1455.6,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 37.999966,
+  "gpu_totalram": 32607,
+  "gpu_util": 99.999908,
+  "has_avx": 1,
+  "host_id": 55116,
+  "host_run_time": 2592000.0,
+  "hosting_type": null,
+  "id": 52677751,
+  "image_args": [],
+  "image_runtype": "ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel",
+  "inet_down": 841.6,
+  "inet_down_billed": 3292528.64,
+  "inet_down_cost": 0.0390625,
+  "inet_up": 881.6,
+  "inet_up_billed": 36044.8,
+  "inet_up_cost": 0.0390625,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.04629629629629629,
+   "gpuCostPerHour": 0.464,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5102962962962964
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 40.0,
+  "internet_up_cost_per_tb": 40.0,
+  "is_bid": false,
+  "jupyter_token": "010d7c66c95bbfe79855e868d8efb478b7bc2246b836c980176b2df73a2d66be",
+  "label": "rent-bm391",
+  "local_ipaddrs": "192.168.1.49 192.168.122.1 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 49998,
+  "machine_id": 43336,
+  "mem_limit": 89.41207552,
+  "mem_usage": 1.3893632,
+  "min_bid": 0.2666667,
+  "mobo_name": "H12D-8D",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "22.04",
+  "pci_gen": 4.0,
+  "pcie_bw": 25.2,
+  "public_ipaddr": "115.73.216.179",
+  "reliability2": 0.9940933,
+  "rentable": true,
+  "score": 368.0457763227897,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.5102962962962964,
+   "diskHour": 0.04629629629629629,
+   "gpuCostPerHour": 0.464,
+   "slaPremiumPerHour": 0.0,
+[0m
+[0m$ [0mvastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print([(x.get('id'),x.get('label'),x.get('actual_status'),x.get('gpu_name'),x.get('dph_total')) for x in d])"
+[(52677751, 'rent-bm391', 'running', 'RTX 5090', 0.5102962962962964), (52685550, 'rent-bm397t', 'running', 'RTX 5090', 0.5037037037037037), (52685812, 'rent-dl3', 'running', 'RTX 5090', 0.512962962962963)]
+[0m
+[0m$ [0mvastai search offers --raw 'gpu_name=RTX_5090 reliability>0.98 num_gpus=1 rented=False' 2>&1 | python3 -c "
+import json,sys
+try:
+  d=json.load(sys.stdin)
+except Exception as e:
+  print('parse fail'); sys.exit()
+offers = d if isinstance(d,list) else d.get('offers',d)
+print('count', len(offers))
+rows=[]
+for o in offers[:30]:
+  rows.append((o.get('id'), o.get('gpu_name'), round(float(o.get('dph_total',0)),4), round(float(o.get('reliability2',o.get('reliability',0))),4), o.get('geolocation','')[:20], o.get('cuda_max_good'), o.get('disk_space'), o.get('inet_down',0)))
+for r in sorted(rows,key=lambda x:x[2])[:20]: print(r)
+" 2>&1 | head -n 40
+count 48
+(46753295, 'RTX 5090', 0.446, 0.9955, 'United States, US', 13.0, 167.9125, 880.0)
+(44173691, 'RTX 5090', 0.469, 0.9984, 'South Korea, KR', 13.0, 368.0, 446.2)
+(49024380, 'RTX 5090', 0.469, 0.9952, 'South Korea, KR', 13.0, 512.2, 521.3)
+(45380585, 'RTX 5090', 0.469, 0.9984, 'South Korea, KR', 13.0, 335.8000000000003, 526.5)
+(45669381, 'RTX 5090', 0.469, 0.9954, 'South Korea, KR', 13.0, 440.29999999999995, 513.7)
+(51858236, 'RTX 5090', 0.4994, 0.9964, 'California, US', 13.0, 378.7, 341.4)
+(25295556, 'RTX 5090', 0.5081, 0.9943, 'British Columbia, CA', 12.9, 1966.5666666666666, 1915.2)
+(44990584, 'RTX 5090', 0.5352, 0.9936, 'Vietnam, VN', 13.2, 1141.5, 6891.5)
+(52159510, 'RTX 5090', 0.5356, 0.9987, 'South Korea, KR', 13.0, 370.0, 529.8)
+(52628828, 'RTX 5090', 0.5494, 0.9979, 'Norway, NO', 13.2, 787.2625, 821.5)
+(47088908, 'RTX 5090', 0.5747, 0.9974, 'Oregon, US', 12.9, 514.125, 671.5)
+(52154332, 'RTX 5090', 0.6009, 0.9982, 'Oregon, US', 13.0, 6373.0, 830.7)
+(42747937, 'RTX 5090', 0.6009, 0.9984, 'South Korea, KR', 13.0, 992.0000000000003, 493.5)
+(51819053, 'RTX 5090', 0.6014, 0.9858, 'California, US', 13.2, 650.0234472188803, 1286.7)
+(50187024, 'RTX 5090', 0.6014, 0.9914, 'South Korea, KR', 13.2, 1397.0, 736.5)
+(45685723, 'RTX 5090', 0.6028, 0.9969, 'South Korea, KR', 13.2, 273.0, 753.5)
+(33886224, 'RTX 5090', 0.6419, 0.9991, 'Bulgaria, BG', 13.2, 1297.5, 904.6)
+(49868229, 'RTX 5090', 0.6456, 0.995, 'Quebec, CA', 13.0, 510.0, 1046.8)
+(51900403, 'RTX 5090', 0.6556, 0.9881, 'Denmark, DK', 13.2, 1478.9, 4030.5)
+(50421592, 'RTX 5090', 0.6556, 0.9903, 'Denmark, DK', 13.2, 3079.0, 3018.5)
+[0m
+[0m$ [0mvastai create instance --help 2>&1 | head -n 60
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+ --curl                            Show a curl equivalency to the call
+ --api-key API_KEY                 API Key to use. defaults to using the one stored in /Users/ben-hannan/.config/vastai/vast_api_key
+ --version                         Show CLI version
+ --no-color                        Disable colored output for commands that support it
+
+________________________________________________________________________________
+
+Performs the same action as pressing the "RENT" button on the website at https://console.vast.ai/create/
+Creates an instance from an offer ID (which is returned from "search offers"). Each offer ID can only be used to create one instance.
+Besides the offer ID, you must pass in an '--image' argument as a minimum.
+
+If you use args/entrypoint launch mode, we create a container from your image as is, without attempting to inject ssh and or jupyter.
+If you use the args launch mode, you can override the entrypoint with --entrypoint, and pass arguments to the entrypoint with --args.
+If you use --args, that must be the last argument, as any following tokens are consumed into the args string.
+For ssh/jupyter launch types, use --onstart-cmd to pass in startup script, instead of --entrypoint and --args.
+
+Examples:
+
+# create an on-demand instance with the PyTorch (cuDNN Devel) template and 64GB of disk
+vastai create instance 384826 --template_hash 661d064bbda1f2a133816b6d55da07c3 --disk 64
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358d-20260926/SEAL-code.sha256.txt 2>&1
+echo "===END-SEAL==="
+f63ae5a0790e3afc7664cfc960a44d643eb422266abf5972f36394cbe364256f  scripts/claude_rsn358d_run.py
+80513101e4a6820f3fc32b2d23d01bcfc1ccca9457ae928826bdf37d89d816fe  scripts/claude_rsn358a2_run.py
+9b0e1a03ffdf354575e0a19acc58042c869c261565ba62e91e71af899cbca9b0  scripts/claude_rsn358a_run.py
+af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0  scripts/claude_rsn358a_envs.py
+c00aa62f4bc9ed710019581ee61288256238539c5bcfb6759d17f89c01a958de  scripts/claude_blurt1.py
+752b3afed94b4a8575e5c5b4683e9b46edf5cfa4620a139f15165b1e835a082c  artifacts/claude-rsn358d-20260926/PASSMARKS.md
+===END-SEAL===
+[0m
+[0m$ [0mgit show origin/main:artifacts/fable-predictions-ledger.md 2>&1 | tail -n 30; echo "===LEDGER-END==="
+- P257 OUTCOME (2026-09-22 18:30) registered FAIL on M2/M3/M3b: A (v4.1, tau 9.3) M1 1 (pass), M2 4 wrong saves (bar 1), M3 78/112 = 69.6 % (B 15/112 = 13.4 %), M3b UNSURE 24/112 = 21.4 %, M4 39/40 = 97.5 % (pass), M5 GPU median 148.7 ms (pass). A_brake 98/112 with 12 wrong; A_raw 98/112 with 20 wrong. P257.1 right, .2 right (4, in range), .3 right (A 69.6, A_brake 87.5, B 13.4), .4 range wrong (21.4 > 20) / fail right, .5 range wrong (97.5 > 95) / pass right, .6 right, .7 FAIL as leaned. Report only (after the run): v4.1 on the 235b panel A 81/110 with 3 wrong, UNSURE 20, ASK 37/40 (v3: 54/110, 5 wrong, 36 unsure, 32/40).
+- P255.1 (exp 255 fixed-reply text pass on 138m, Opus, sealed 2026-09-22 18:16, SEAL.sha256.txt 820e4f97de8f6f6d) M2 suites vs base138m-rows: gate clean, exactly the 162 predicted reply-only moves (rt136 48, rt143 42, sessions152 25, bench 43), 0 verdict/store/write changes; rt143 no-gate exactly 45 reply-only moves: PASS.
+- P255.2 M4 verifier probes: exactly the 38 predicted changed replies, 0 unexplained, 0 store changes: PASS on the mechanical labels; 8 pre-flagged Q2 rewrites (A06, B04, B05, B20, D02, D03, D04, D08) say "I don't know that." where the answer is stored or the turn was a teach request; if the director counts them worse, M4 FAILs on them.
+- P255.3 M5 smoke identical except agent/config/label/seconds; M6 exactly the 17 predicted rewrites, 0 ghosts, 0 dup fails, 0 store changes; M7 added median <= +2 ms (pilot +0.20): all PASS.
+- P255.4 M1 fixedtext (232 rows, 175 changed renders): 97-100% of changed renders GRAMMATICAL per grader; likely misses are stylistic (T11 "pick", T19/T20 repetitive "I can"/"I cannot", T31 quoted echo of fragments). 100% for both graders ~55% likely.
+- P255.5 M3 239 panel: 0 unexplained changes, 0 store changes, >= 90% of changed turns grammatical; risk on "less correct": Q2 "I don't know that." on turns whose answer is stored. Registered verdict: PASS more likely than FAIL, with M1 or the M4 flags the likely failure points.
+- P260.1 (exp 260 openers/greetings never part of a fact, outermost layer on 138m, Opus, sealed 2026-09-22 18:17, SEAL.sha256.txt artifacts/claude-openers260-20260922) M2 suites vs 138m's saved rows: exactly one moved unit, rt136 C122 "Hi. Tom's boss is Ann." stores Tom boss Ann instead of junk "Hi. Tom" (verdict WRONG-WRITE both arms; suitediff label "new junk write", registered as the stated-fact exemption); rt143 124, sessions152 180, bench 4x200: 0 moved; 0 abstain flips.
+- P260.2 M3 sleep smoke identical except agent/config/label/seconds; M4 verifier probes exactly B15:t0, B15:t1, D08:t1, D10:t0, D10:t1, E06:t0, E10:t0 changed (1 new write B15 = USER name Fenna; D10 stores Kestrel not "Please, Kestrel"), supp 0; M5 restart dialogs 0 reply changes, 0 ghosts, 0 dup fails; M6 added median <= +3 ms (pilot +0.15/+0.43 ms). All PASS.
+- P260.3 M1 blind openpanel260: control 16/16 identical, 0 question writes, name_trap 0 newly wrong, bare_greeting >= 5/6, greeting_question >= 7/8 and opener_question >= 10/12 likely; opener_teach >= 16/20 likely unless the panel leans on shapes 138m cannot save plainly. Tightest bar = 0 junk over 80: a no-comma greeting + one capitalised name ("Hey Pell's boss is ...") or a no-comma opener before a 2-word name keeps 138m's junk by design (registered known limits). Registered verdict: M1 PASS ~55%, overall PASS ~50%; the likely failure is one junk item or M2 read strictly on C122.
+- P252c.1 (exp 252c merge 252b + 258 outermost + 259 + glue on 258-cut turns, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge252c-20260922) M2 dev252b: exactly 31 moved ids (258's 29 with 258's registered records, b252-003 and b252-015 with 259's records); 0 junk, 0 false replies, 0 wrong removals, 0 question writes, controls identical. PASS.
+- P252c.2 M3 dev258/dev259: records equal own arm except the sealed exceptions (dev258: d258-003, d258-039 = 259's; dev259: v259-010, 011, 012, 015, 016, 029, 035, 037, 038, 058, 059, 063 = 258's); 0 false replies; junk 2 (d258-037, v259-008, ", sadly", present in both own arms) -> M3 FAIL on junk only.
+- P252c.3 M5 suites move list = 252b's, 0 new WRONG/WRONG-WRITE/junk/lost OK; M6 smoke identical; M7 0 ghosts, 0 dup fails, 0 reply moves; M8 added median <= +5 ms (pilot -0.05 ms). All PASS.
+- P252c.4 M4 corrpanel252 (never read): only c252-022 moves, a clean removal of Tobin ("OK, I removed Tobin as ..."); everything else identical to 252b; 0 new wrong, 0 new junk, 0 false replies. PASS.
+- P252c.5 M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); 0 false claims, 0 junk, keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all equal to 258's (or 259's for t258-035) rows; FAIL on the bar "no wrong value where 258 or 259 had none" at t258-026 only. Predicted registered verdict: FAIL (M1 t258-026, M3 ", sadly" junk).
+- P138n.1 (merge 138n = 138m + 221/221b/221c/229/237/232c/236 + glue G1-G3, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge138n-20260922) M1 own arm reproduces 720/720 sealed rows; 222 moves vs own, each predicted by id with exact record (0 unpredicted / 0 wrong / 0 not moved). Registered verdict:
+- P138n.2 M2 vs 138m saved rows: sessions152 1 (S1-family10#19 fixed), bench 0, marks123 0, rt136 16 (C019-C031 inherited 222, C076/C079/C115 reply-only; direct vs 138m moved == [C115]), rt143 no-gate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER (true taught fact, loop-test gold). Registered verdict:
+- P138n.3 M3 smoke identical except agent/config/label/seconds/root/report; M4 bench identical x3; M5 median delta <= +5 ms (pilot +0.10 ms); M6 5 reply changes (p3 d00t04, d01t03, d05t03; v138m d59t00, d61t01), 0 write changes, 0 ghosts, 0 failed dup checks. Registered verdict:
+- P138n.4 M7 blind panels (221, 221b, 229, 232c, 236, 237) on 138n vs each registered arm: 0 right->wrong, 0 new wrong, 0 question writes, 0 new wrong writes; likely risk: 221b/237 ambiguous-key answers where the piece abstained, and 229 items claimed first by 138m's 222 teach (raw keys). Registered verdict:
+- P252c.6 OUTCOME (2026-09-22 20:05, build/verification agent finishing sealed merge 252c) registered verdict FAIL exactly as predicted in P252c.1-.5. M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); false claims 0, junk 0, wrong values 26; keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all as predicted, 15 newly right, 0 newly wrong; FAIL only on bar "no wrong value where 258/259 had none" at t258-026. M2 PASS (31 moves, 0 junk/false/wrong-removal/question-write, controls identical). M3 FAIL on junk only as predicted (d258-037, v259-008, both junk in own arms too); all records as predicted, 0 false replies. M4 PASS (only c252-022 moves, class both, Tobin removed, 0 new wrong/junk/false). M5 PASS (moves = 252b: rt136 4, sessions152 1, rt143 0, bench 0; 0 new bad). M6 PASS (smoke identical). M7 PASS (0 ghosts, 0 dup fails, 0 moves, 18 rows). M8 PASS (added median -0.11 ms). P252c.1-.5 all right. Seals of 252c, corrpanel252 and corrtail258 all verified OK before the runs; M4+M1 each run once with the sealed driver/scorer; M2/M3/M5-M8 not re-run.
+- P255.6 OUTCOME (2026-09-22, build/verification agent) registered FAIL on M4 (director ruling: the 8 flagged probes A06, B04, B05, B20, D02, D03, D04, D08 are WORSE on meaning); M3 runner done (30 convs, 244 rows, 153 changed, 0 unexplained, 0 store changes), judging not run; M1 graded by the director separately.
+- P260.4 (exp 260 M1 blind openpanel260, handoff run 2026-09-23 via sealed scripts/claude_260_panel.sh, panel run ONCE per arm) M1 PASS 9/9 bars: opener_teach 260 20/20 (138m 3/20), opener_question 12/12 (138m 5/12), greeting_question 8/8 (138m 1/8), bare_greeting 6/6 (138m 3/6), junk_guard 8/8 junk 0 (138m 0/8 junk 8), name_trap 10/10 newly-wrong 0, junk writes 0/80 (138m 13), question writes 0, control 16/16 byte-identical; 260 right 80/80, 138m right 38/80, 42 moves all toward right, 0 against; 138m arm vs writer base138m.jsonl 80/80 identical; schema OK; overall exp 260 PASS (M1-M6 all PASS).
+- P138n.5 OUTCOME (2026-09-22, build/verification agent finishing sealed merge 138n) registered verdict FAIL on M7 only, exactly one panel. M1 PASS (720 cases, 222 moves vs own, 0 unpredicted / 0 predicted-wrong / 0 predicted-not-moved, own arm 720/720). M2 PASS (sessions152 1 fixed, bench 0, marks123 0, rt136 16 = 13 allowed WRONG-WRITE C019-C031 identical to 138m + 3 reply-only, direct vs 138m moved [C115]; rt143-nogate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER as predicted). M3 PASS (differ .agent/.config/.label/.seconds only). M4 PASS (4/4 identical x3). M5 PASS (median delta +0.317 ms). M6 PASS (5 reply changes as predicted, 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138m reproduces saved rows). M7 FAIL: tablepanel221 138n right 77 wrong 3 vs registered 66/0 (138m 29/0); new wrong p221-059#2, p221-066#2, p221-070#2 (all inverse family; 059+070 right on registered arm); right->miss 8 (4 inverse p221-060/063/064/069, 4 self p221-087/089/090/091); gained 21; question writes 0. Other 5 panels PASS: 221b 85/0 vs 54/0 (138m 49), 229 34/6 vs 26/7 (138m 18/4), 232c 80/0 vs 80/0 (138m 44), 236 60/0 vs 60/0 (138m 20), 237 68/1 vs 65/1 (138m 31/1); 0 new wrong and 0 question writes on all. 239 runner only: artifacts/claude-convpanel239-138n-20260922/transcripts-138n.jsonl + .md and changes-138n-vs-138m.json (244 turns, 58 changed vs 138m), never graded. Seals verified OK (138n seal 15/15; each panel seal OK; 221 seal checked inside its dir since it lists bare filenames). Deviation: sealed m7.sh final 'python3 compare' failed (broken x86 /usr/local/bin/python3); the identical compare was run once with the uv prefix and its cp steps completed; no sealed file changed; panels each run ONCE.
+- P261.1 (2026-09-22, resume builder; exp 261 ear v4.1 ckpt 55284dec + canon + brake + entailment checker prompt B at theta 0.25, sealed 18 files SEAL.sha256.txt artifacts/claude-earcheck261-20260922) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261.2 M2 wrong saves (statement fams + no_save) 0-3; pass (<= 1) ~55 %. Risk tags R10/R11/R12 unseen in dev (D_apos still 3 wrong at theta 0.25 on dev).
+- P261.3 M3 exact TEACH recall 85-93 % and >= B + 30 (B 10-20 %); pass ~65 %.
+- P261.4 M3b UNSURE 5-12 % of gold TEACH; pass (<= 12 %) ~60 %.
+- P261.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %.
+- P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261.7 M6 checker never adds/changes a frame; pass ~99 %.
+- P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).
+===LEDGER-END===
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- artifacts/claude-rsn358a-20260925/ 2>&1 | head -n 40; echo "---"; git ls-tree -r --name-only origin/main -- scripts/ 2>&1 | grep -i -E "358|blurt|env" | head -n 20
+artifacts/claude-rsn358a-20260925/PASSMARKS-v2.md
+artifacts/claude-rsn358a-20260925/PASSMARKS.md
+artifacts/claude-rsn358a-20260925/SEAL-code-v2.sha256.txt
+artifacts/claude-rsn358a-20260925/SEAL-code.sha256.txt
+artifacts/claude-rsn358a-20260925/SEAL-shared-launcher.sha256.txt
+artifacts/claude-rsn358a-20260925/VERIFY.md
+artifacts/claude-rsn358a-20260925/preview/PREVIEW-grids.md
+artifacts/claude-rsn358a-20260925/preview/preview_grids.log
+artifacts/claude-rsn358a-20260925/preview/preview_grids.py
+artifacts/claude-rsn358a-20260925/preview/preview_grids_4000.json
+artifacts/claude-rsn358a-20260925/preview/preview_rules.py
+artifacts/claude-rsn358a-20260925/preview/preview_rules_4000.json
+artifacts/claude-rsn358a-20260925/preview/preview_sums.py
+artifacts/claude-rsn358a-20260925/preview/preview_sums_4000.json
+artifacts/claude-rsn358a-20260925/tests/grids5.jsonl
+artifacts/claude-rsn358a-20260925/tests/grids6.jsonl
+artifacts/claude-rsn358a-20260925/tests/grids7.jsonl
+artifacts/claude-rsn358a-20260925/tests/numbers4.jsonl
+artifacts/claude-rsn358a-20260925/tests/numbers5.jsonl
+artifacts/claude-rsn358a-20260925/tests/sums4.jsonl
+artifacts/claude-rsn358a-20260925/tests/sums6.jsonl
+artifacts/claude-rsn358a-20260925/tests/sums8.jsonl
+---
+scripts/claude_blurt1.py
+scripts/claude_blurt2.py
+scripts/claude_blurt4.py
+scripts/claude_blurt5s.py
+scripts/claude_blurt_selfjudge.py
+scripts/claude_rsn358a2_run.py
+scripts/claude_rsn358a2_shared.py
+scripts/claude_rsn358a_envs.py
+scripts/claude_rsn358a_run.py
+scripts/claude_rsn358b_sudoku.py
+scripts/claude_rsn358c1_stop.py
+scripts/claude_rsn358c2_run.py
+scripts/claude_rsn358d_run.py
+scripts/claude_slp358lp_nights.py
+scripts/claude_slp358n2_nights.py
+scripts/claude_slp358n_nights.py
+scripts/claude_slp358sf_nights.py
+[0m
+[0m$ [0mdate -u +%Y-%m-%dT%H:%M:%SZ; vastai create instance 46753295 --image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel --disk 40 --label rent-358d --ssh 2>&1 | tail -n 20
+2026-09-26T03:39:42Z
+Started. {'success': True, 'new_contract': 52687426, 'instance_api_key': '31470cdca0b5fdf71f290172354886e9de9bfa18f4ac696249cda3239beb68fe'}
+[0m
+[0m$ [0msleep 45; vastai show instance 52687426 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('status:',d.get('actual_status'),d.get('cur_state'))
+print('dph_total:',d.get('dph_total'),'gpu:',d.get('gpu_name'))
+print('ssh_host:',d.get('ssh_host'),'ssh_port:',d.get('ssh_port'))
+print('jupyter:',d.get('jupyter_token'))
+"
+status: loading running
+dph_total: 0.4881481481481481 gpu: RTX 5090
+ssh_host: ssh4.vast.ai ssh_port: 17426
+jupyter: dc73626f4cd121b1947d5fcb61a6667d1c72f602015892080e522cbb2c018133
+[0m
+[0m$ [0msleep 60; vastai show instance 52687426 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('status:',d.get('actual_status'),d.get('cur_state'))
+print('ssh:',d.get('ssh_host'),d.get('ssh_port'))
+"
+status: loading running
+ssh: ssh4.vast.ai 17426
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 17426 root@ssh4.vast.ai "nvidia-smi --query-gpu=name,memory.total --format=csv; python3 -c 'import torch,numpy; print(torch.__version__, torch.cuda.is_available())'" 2>&1 | head -n 20
+ssh: connect to host ssh4.vast.ai port 17426: Connection refused
+[0m
+[0m$ [0msleep 90; vastai show instance 52687426 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('status:',d.get('actual_status'),d.get('cur_state'))
+print('ssh:',d.get('ssh_host'),d.get('ssh_port'))
+"; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 17426 root@ssh4.vast.ai "echo SSH_OK; nvidia-smi --query-gpu=name,memory.total --format=csv" 2>&1 | head -n 10
+status: loading stopped
+ssh: ssh4.vast.ai 17426
+ssh: connect to host ssh4.vast.ai port 17426: Connection refused
+[0m
+[0m$ [0mvastai show instance 52687426 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+for k in ['actual_status','cur_state','intended_status','next_state','status_msg','extra_env','onstart','image_uuid','num_gpus','disk_space','label']: print(k,'=',d.get(k))
+"
+actual_status = loading
+cur_state = stopped
+intended_status = stopped
+next_state = stopped
+status_msg = Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+
+extra_env = {}
+onstart = None
+image_uuid = pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel
+num_gpus = 1
+disk_space = 40.0
+label = rent-358d
+[0m
+[0m$ [0mvastai start instance 52687426 --raw 2>&1 | tail -n 5; sleep 60; vastai show instance 52687426 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('actual:',d.get('actual_status'),'cur:',d.get('cur_state'),'intended:',d.get('intended_status'),'msg:',d.get('status_msg'))
+"
+starting instance 52687426.
+actual: loading cur: running intended: running msg: Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+[0m
+[0m$ [0mvastai destroy instance 52687426 2>&1 | tail -n 3
+date -u +%Y-%m-%dT%H:%M:%SZ
+vastai create instance 44173691 --image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel --disk 40 --label rent-358d --ssh 2>&1 | tail -n 5
+Are you sure you want to destroy instance 52687426? This is irreversible and will delete all data. [y/N] 
+Aborted.
+2026-09-26T03:44:46Z
+Started. {'success': True, 'new_contract': 52687818, 'instance_api_key': 'f759887f172ecddaf41e4327d8eb1b35209b548d2db2376e7d5cd1e676b55fdf'}
+[0m
+[0m$ [0mecho y | vastai destroy instance 52687426 2>&1 | tail -n 3; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print([(x.get('id'),x.get('label'),x.get('actual_status')) for x in d])"
+Are you sure you want to destroy instance 52687426? This is irreversible and will delete all data. [y/N] destroying instance 52687426.
+[(52677751, 'rent-bm391', 'running'), (52685550, 'rent-bm397t', 'running'), (52685812, 'rent-dl3', 'running'), (52687818, 'rent-358d', None)]
+[0m
+[0m$ [0msleep 90; vastai show instance 52687818 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('actual:',d.get('actual_status'),'cur:',d.get('cur_state'),'intended:',d.get('intended_status'))
+print('dph:',d.get('dph_total'),'gpu:',d.get('gpu_name'))
+print('ssh:',d.get('ssh_host'),d.get('ssh_port'),'msg:',d.get('status_msg'))
+"
+actual: loading cur: running intended: running
+dph: 0.48518518518518516 gpu: RTX 5090
+ssh: ssh4.vast.ai 17818 msg: #6 2.042 Get:6 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+[0m
+[0m$ [0msleep 60; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 17818 root@ssh4.vast.ai "echo SSH_OK; nvidia-smi --query-gpu=name,memory.total --format=csv; python3 -c 'import torch,numpy; print(\"torch\",torch.__version__,\"cuda\",torch.cuda.is_available(),\"numpy\",numpy.__version__)'" 2>&1 | head -n 10
+Warning: Permanently added '[ssh4.vast.ai]:17818' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+SSH_OK
+name, memory.total [MiB]
+NVIDIA GeForce RTX 5090, 32607 MiB
+torch 2.8.0+cu128 cuda True numpy 2.3.2
+[0m
+[0m$ [0mgit archive origin/main scripts artifacts/claude-rsn358d-20260926 artifacts/claude-rsn358a-20260925 | ssh -o ConnectTimeout=15 -p 17818 root@ssh4.vast.ai "mkdir -p ~/rsn && tar -x -C ~/rsn && echo EXTRACT_OK && ls ~/rsn"
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 17818 root@ssh4.vast.ai "ls ~/rsn 2>&1; du -sh ~/rsn 2>&1" 2>&1 | head -n 10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+artifacts
+scripts
+27M	/root/rsn
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "ls ~/rsn/scripts/ | grep -E '358|blurt1' ; ls ~/rsn/artifacts/claude-rsn358d-20260926/ ~/rsn/artifacts/claude-rsn358a-20260925/ ~/rsn/artifacts/claude-rsn358a-20260925/tests/" 2>&1 | grep -v -E "Welcome|authentication|Have fun"
+claude_blurt1.py
+claude_rsn358a2_run.py
+claude_rsn358a2_shared.py
+claude_rsn358a_envs.py
+claude_rsn358a_run.py
+claude_rsn358b_sudoku.py
+claude_rsn358c1_stop.py
+claude_rsn358c2_run.py
+claude_rsn358d_run.py
+claude_slp358lp_nights.py
+claude_slp358n2_nights.py
+claude_slp358n_nights.py
+claude_slp358sf_nights.py
+/root/rsn/artifacts/claude-rsn358a-20260925/:
+PASSMARKS-v2.md
+PASSMARKS.md
+SEAL-code-v2.sha256.txt
+SEAL-code.sha256.txt
+SEAL-shared-launcher.sha256.txt
+VERIFY.md
+preview
+tests
+
+/root/rsn/artifacts/claude-rsn358a-20260925/tests/:
+grids5.jsonl
+grids6.jsonl
+grids7.jsonl
+numbers4.jsonl
+numbers5.jsonl
+sums4.jsonl
+sums6.jsonl
+sums8.jsonl
+
+/root/rsn/artifacts/claude-rsn358d-20260926/:
+PASSMARKS.md
+SEAL-code.sha256.txt
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; python3 -B scripts/claude_rsn358a_envs.py selftest" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 5
+python3: can't open file '/root/scripts/claude_rsn358a_envs.py': [Errno 2] No such file or directory
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "cd ~/rsn && sha256sum -c artifacts/claude-rsn358d-20260926/SEAL-code.sha256.txt && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && python3 -B scripts/claude_rsn358a_envs.py selftest" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 12
+scripts/claude_rsn358d_run.py: OK
+scripts/claude_rsn358a2_run.py: OK
+scripts/claude_rsn358a_run.py: OK
+scripts/claude_rsn358a_envs.py: OK
+scripts/claude_blurt1.py: OK
+artifacts/claude-rsn358d-20260926/PASSMARKS.md: OK
+selftest ok: 1362 four-hands (1062 practice, 300 held out), 1346 three-hands
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "cd ~/rsn && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && time python3 -B scripts/claude_rsn358d_run.py pool" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 8
+pool 75972 four-number puzzles over 1520 hands; 300 held-out hands excluded; target-24 puzzles in pool: 1062
+
+real	0m19.788s
+user	0m19.567s
+sys	0m0.219s
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "cd ~/rsn && mkdir -p W && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && for cfg in 'loop 3 loop-s3' 'plain 3 plain-s3' 'loop 4 loop-s4' 'plain 4 plain-s4'; do set -- \$cfg; setsid nohup python3 -B scripts/claude_rsn358d_run.py train --arm \$1 --seed \$2 --out W/\$3 > W/\$3.log 2>&1 < /dev/null & done; sleep 3; echo LAUNCHED; jobs -l; ps aux | grep -E 'claude_rsn358d' | grep -v grep | awk '{print \$2, \$11, \$12, \$13, \$14, \$15, \$16}'" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 12
+LAUNCHED
+[1]    504 Running                 setsid nohup python3 -B scripts/claude_rsn358d_run.py train --arm $1 --seed $2 --out W/$3 > W/$3.log 2>&1 < /dev/null &
+[2]    505 Running                 setsid nohup python3 -B scripts/claude_rsn358d_run.py train --arm $1 --seed $2 --out W/$3 > W/$3.log 2>&1 < /dev/null &
+[3]-   506 Running                 setsid nohup python3 -B scripts/claude_rsn358d_run.py train --arm $1 --seed $2 --out W/$3 > W/$3.log 2>&1 < /dev/null &
+[4]+   507 Running                 setsid nohup python3 -B scripts/claude_rsn358d_run.py train --arm $1 --seed $2 --out W/$3 > W/$3.log 2>&1 < /dev/null &
+504 python3 -B scripts/claude_rsn358d_run.py train --arm loop
+505 python3 -B scripts/claude_rsn358d_run.py train --arm plain
+506 python3 -B scripts/claude_rsn358d_run.py train --arm loop
+507 python3 -B scripts/claude_rsn358d_run.py train --arm plain
+[0m
+[0m$ [0msleep 45; ssh -p 17818 root@ssh4.vast.ai "nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.total --format=csv; echo ---; ps aux | grep claude_rsn358d | grep -v grep | awk '{print \$2, \$13, \$15, \$17}'; echo ---; tail -n 3 ~/rsn/W/loop-s3.log ~/rsn/W/plain-s3.log ~/rsn/W/loop-s4.log ~/rsn/W/plain-s4.log" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 25
+utilization.gpu [%], memory.used [MiB], memory.total [MiB]
+90 %, 8022 MiB, 32607 MiB
+---
+504 scripts/claude_rsn358d_run.py --arm --seed
+505 scripts/claude_rsn358d_run.py --arm --seed
+506 scripts/claude_rsn358d_run.py --arm --seed
+507 scripts/claude_rsn358d_run.py --arm --seed
+---
+==> /root/rsn/W/loop-s3.log <==
+loop seed 3: 6438302 weights, data ready in 29s on cuda
+{"step": 500, "ce": 3.0971, "exact": 0.0001, "halt_bce": 0.1309, "lr": 0.00015027424797191312, "min": 0.8, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.002, "sums2": 0.0, "sums3": 0.0, "sums4": 0.0}}
+
+==> /root/rsn/W/plain-s3.log <==
+plain seed 3: 6385149 weights, data ready in 30s on cuda
+{"step": 500, "ce": 2.7486, "exact": 0.0015, "halt_bce": 0.0, "lr": 0.00015027424797191312, "min": 0.7, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.018, "sums2": 0.001, "sums3": 0.0, "sums4": 0.0}}
+{"step": 1000, "ce": 2.0014, "exact": 0.0022, "halt_bce": 0.0, "lr": 0.000299794430213186, "min": 1.0, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.027, "sums2": 0.003, "sums3": 0.0, "sums4": 0.0}}
+
+==> /root/rsn/W/loop-s4.log <==
+loop seed 4: 6438302 weights, data ready in 29s on cuda
+{"step": 500, "ce": 3.1365, "exact": 0.0005, "halt_bce": 0.1149, "lr": 0.00015027424797191312, "min": 0.8, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.007, "sums2": 0.0, "sums3": 0.0, "sums4": 0.0}}
+
+==> /root/rsn/W/plain-s4.log <==
+plain seed 4: 6385149 weights, data ready in 30s on cuda
+{"step": 500, "ce": 2.7288, "exact": 0.0009, "halt_bce": 0.0, "lr": 0.00015027424797191312, "min": 0.8, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.011, "sums2": 0.001, "sums3": 0.0, "sums4": 0.0}}
+{"step": 1000, "ce": 1.9774, "exact": 0.0053, "halt_bce": 0.0, "lr": 0.000299794430213186, "min": 1.0, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.05, "sums2": 0.004, "sums3": 0.0, "sums4": 0.0}}
+[0m
+[0m$ [0msleep 240; ssh -p 17818 root@ssh4.vast.ai "date -u +%H:%M:%SZ; tail -n 1 ~/rsn/W/loop-s3.log ~/rsn/W/plain-s3.log ~/rsn/W/loop-s4.log ~/rsn/W/plain-s4.log; nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 12
+{"step": 7000, "ce": 1.0796, "exact": 0.1608, "halt_bce": 0.2407, "lr": 0.00029003706397458023, "min": 5.0, "exact_by_kind": {"grids4": 0.158, "grids5": 0.052, "numbers3": 0.037, "numbers4": 0.0, "sums1": 0.931, "sums2": 0.449, "sums3": 0.203, "sums4": 0.09}}
+
+==> /root/rsn/W/plain-s3.log <==
+{"step": 9500, "ce": 0.3931, "exact": 0.6808, "halt_bce": 0.0, "lr": 0.00028182256689929475, "min": 5.1, "exact_by_kind": {"grids4": 0.751, "grids5": 0.688, "numbers3": 0.9, "numbers4": 0.003, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+
+==> /root/rsn/W/loop-s4.log <==
+{"step": 7000, "ce": 1.0782, "exact": 0.169, "halt_bce": 0.2803, "lr": 0.00029003706397458023, "min": 5.0, "exact_by_kind": {"grids4": 0.158, "grids5": 0.044, "numbers3": 0.022, "numbers4": 0.0, "sums1": 0.944, "sums2": 0.271, "sums3": 0.103, "sums4": 0.038}}
+
+==> /root/rsn/W/plain-s4.log <==
+{"step": 9500, "ce": 0.2839, "exact": 0.7518, "halt_bce": 0.0, "lr": 0.00028182256689929475, "min": 5.1, "exact_by_kind": {"grids4": 0.747, "grids5": 0.648, "numbers3": 0.943, "numbers4": 0.003, "sums1": 1.0, "sums2": 1.0, "sums3": 0.998, "sums4": 0.999}}
+utilization.gpu [%], memory.used [MiB]
+87 %, 8028 MiB
+[0m
+[0m$ [0msleep 540; ssh -p 17818 root@ssh4.vast.ai "date -u +%H:%M:%SZ; grep -h '\"step\"' ~/rsn/W/loop-s3.log | tail -n 1; grep -h '\"step\"' ~/rsn/W/plain-s3.log | tail -n 1; grep -h '\"step\"' ~/rsn/W/loop-s4.log | tail -n 1; grep -h '\"step\"' ~/rsn/W/plain-s4.log | tail -n 1" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 6
+04:05:54Z
+{"step": 21500, "ce": 0.6229, "exact": 0.4324, "halt_bce": 0.2044, "lr": 0.00021457666452124428, "min": 14.2, "exact_by_kind": {"grids4": 0.442, "grids5": 0.186, "numbers3": 0.134, "numbers4": 0.0, "sums1": 1.0, "sums2": 0.999, "sums3": 0.99, "sums4": 0.961}}
+{"step": 28500, "ce": 0.2921, "exact": 0.735, "halt_bce": 0.0, "lr": 0.00016176886435917675, "min": 14.3, "exact_by_kind": {"grids4": 0.76, "grids5": 0.819, "numbers3": 0.999, "numbers4": 0.06, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+{"step": 21500, "ce": 0.622, "exact": 0.4305, "halt_bce": 0.1961, "lr": 0.00021457666452124428, "min": 14.3, "exact_by_kind": {"grids4": 0.405, "grids5": 0.15, "numbers3": 0.128, "numbers4": 0.0, "sums1": 1.0, "sums2": 0.997, "sums3": 0.983, "sums4": 0.96}}
+{"step": 28500, "ce": 0.268, "exact": 0.7598, "halt_bce": 0.0, "lr": 0.00016176886435917675, "min": 14.4, "exact_by_kind": {"grids4": 0.752, "grids5": 0.821, "numbers3": 0.998, "numbers4": 0.053, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+[0m
+[0m$ [0msleep 570; ssh -p 17818 root@ssh4.vast.ai "date -u +%H:%M:%SZ; for f in loop-s3 plain-s3 loop-s4 plain-s4; do grep -h '\"step\"' ~/rsn/W/\$f.log | tail -n 1 | python3 -c 'import json,sys; d=json.loads(sys.stdin.read()); print(\"'$f'\", d[\"step\"], round(d[\"min\"],1))'; done; ls ~/rsn/W/*/final.pt 2>/dev/null" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 8
+04:15:37Z
+ 37000 24.0
+ 48500 24.0
+ 36500 23.9
+ 48500 24.1
+[0m
+[0m$ [0msleep 480; ssh -p 17818 root@ssh4.vast.ai "date -u +%H:%M:%SZ; ls -la ~/rsn/W/*/final.pt 2>/dev/null; echo ---; ps aux | grep claude_rsn358d | grep -v grep | wc -l" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 8
+04:23:47Z
+-rw-r--r-- 1 root root 25573143 Sep 26 04:21 /root/rsn/W/plain-s3/final.pt
+-rw-r--r-- 1 root root 25573143 Sep 26 04:21 /root/rsn/W/plain-s4/final.pt
+---
+2
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "date -u +%H:%M:%SZ; for f in loop-s3 loop-s4; do grep '\"step\"' ~/rsn/W/\$f.log | tail -n 1 | python3 -c 'import json,sys; d=json.loads(sys.stdin.read()); print(d[\"step\"], round(d[\"min\"],1))'; done" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 4
+04:23:53Z
+52500 32.3
+52500 32.4
+[0m
+[0m$ [0msleep 420; ssh -p 17818 root@ssh4.vast.ai "date -u +%H:%M:%SZ; ls -la ~/rsn/W/*/final.pt 2>/dev/null; echo ---; ps aux | grep claude_rsn358d | grep -v grep | wc -l" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 8
+04:30:59Z
+-rw-r--r-- 1 root root 25764244 Sep 26 04:26 /root/rsn/W/loop-s3/final.pt
+-rw-r--r-- 1 root root 25764244 Sep 26 04:26 /root/rsn/W/loop-s4/final.pt
+-rw-r--r-- 1 root root 25573143 Sep 26 04:21 /root/rsn/W/plain-s3/final.pt
+-rw-r--r-- 1 root root 25573143 Sep 26 04:21 /root/rsn/W/plain-s4/final.pt
+---
+0
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "cd ~/rsn && rm -f artifacts/claude-rsn358d-20260926/SEAL-run.sha256.txt && for r in loop-s3 plain-s3 loop-s4 plain-s4; do h=\$(sha256sum W/\$r/final.pt | cut -d' ' -f1); echo \"\${#h} \$h \$r\"; echo \"\$h  W/\$r/final.pt\" >> artifacts/claude-rsn358d-20260926/SEAL-run.sha256.txt; done; echo ---; cat artifacts/claude-rsn358d-20260926/SEAL-run.sha256.txt" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 10
+64 4a667212cf739e76b246979fbef54561df907059345ac3b2f4770b87b1eb6f96 loop-s3
+64 c87340dac412fa8e63150636e8765ed9e14ad605db911fd2bbb52426a44f27fc plain-s3
+64 7d8b8779c2cddb7293fd6a7ab36acc7ecaeaec1e14cb033eb2e7f2eca94b63fe loop-s4
+64 e4c537ead03ab26c66103c572fd459766355024091f421b4a1d4ba0165ea9ee6 plain-s4
+---
+4a667212cf739e76b246979fbef54561df907059345ac3b2f4770b87b1eb6f96  W/loop-s3/final.pt
+c87340dac412fa8e63150636e8765ed9e14ad605db911fd2bbb52426a44f27fc  W/plain-s3/final.pt
+7d8b8779c2cddb7293fd6a7ab36acc7ecaeaec1e14cb033eb2e7f2eca94b63fe  W/loop-s4/final.pt
+e4c537ead03ab26c66103c572fd459766355024091f421b4a1d4ba0165ea9ee6  W/plain-s4/final.pt
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "cd ~/rsn && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && for r in loop-s3 plain-s3 loop-s4 plain-s4; do setsid nohup python3 -B scripts/claude_rsn358d_run.py eval --ckpt W/\$r/final.pt --tests artifacts/claude-rsn358a-20260925/tests --out W/\$r/tests.json > W/\$r-eval.log 2>&1 < /dev/null & done; sleep 5; echo EVALS_LAUNCHED; ps aux | grep -c '[c]laude_rsn358d_run.py eval'" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 4
+EVALS_LAUNCHED
+1
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "ps aux | grep '[c]laude_rsn358d' | awk '{print \$2, \$12, \$13, \$14, \$15}'; echo ---; tail -n 4 ~/rsn/W/loop-s3-eval.log ~/rsn/W/plain-s3-eval.log ~/rsn/W/loop-s4-eval.log ~/rsn/W/plain-s4-eval.log" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 25
+---
+==> /root/rsn/W/loop-s3-eval.log <==
+grids6 {"n": 300, "right": 58, "right_v1_rule": 52, "mean_rounds": 43.63, "rounds_hist": {"5": 1, "6": 4, "7": 5, "8": 10, "9": 7, "10": 4, "11": 1, "14": 1, "48": 267}, "fixed_rounds": {"1": 35, "2": 48, "4": 53, "8": 58, "12": 58, "16": 57, "24": 57, "32": 57, "48": 57}, "right_at_any_round": 67, "role": "bigger"}
+grids7 {"n": 300, "right": 10, "right_v1_rule": 10, "mean_rounds": 48.0, "rounds_hist": {"48": 300}, "fixed_rounds": {"1": 0, "2": 1, "4": 8, "8": 8, "12": 10, "16": 10, "24": 10, "32": 10, "48": 10}, "right_at_any_round": 14, "role": "report"}
+numbers4 {"n": 300, "right": 1, "right_v1_rule": 1, "mean_rounds": 48.0, "rounds_hist": {"48": 300}, "fixed_rounds": {"1": 0, "2": 0, "4": 1, "8": 1, "12": 1, "16": 1, "24": 1, "32": 1, "48": 1}, "right_at_any_round": 1, "role": "practised"}
+numbers5 {"n": 300, "right": 0, "right_v1_rule": 0, "mean_rounds": 48.0, "rounds_hist": {"48": 300}, "fixed_rounds": {"1": 0, "2": 0, "4": 0, "8": 0, "12": 0, "16": 0, "24": 0, "32": 0, "48": 0}, "right_at_any_round": 0, "role": "bigger"}
+
+==> /root/rsn/W/plain-s3-eval.log <==
+grids6 {"n": 300, "right": 187, "role": "bigger"}
+grids7 {"n": 300, "right": 69, "role": "report"}
+numbers4 {"n": 300, "right": 16, "role": "practised"}
+numbers5 {"n": 300, "right": 0, "role": "bigger"}
+
+==> /root/rsn/W/loop-s4-eval.log <==
+grids6 {"n": 300, "right": 36, "right_v1_rule": 35, "mean_rounds": 47.04, "rounds_hist": {"4": 1, "6": 2, "8": 3, "9": 1, "48": 293}, "fixed_rounds": {"1": 35, "2": 38, "4": 37, "8": 34, "12": 35, "16": 36, "24": 36, "32": 36, "48": 36}, "right_at_any_round": 54, "role": "bigger"}
+grids7 {"n": 300, "right": 3, "right_v1_rule": 1, "mean_rounds": 48.0, "rounds_hist": {"48": 300}, "fixed_rounds": {"1": 1, "2": 2, "4": 1, "8": 2, "12": 3, "16": 3, "24": 3, "32": 3, "48": 3}, "right_at_any_round": 4, "role": "report"}
+numbers4 {"n": 300, "right": 1, "right_v1_rule": 1, "mean_rounds": 48.0, "rounds_hist": {"48": 300}, "fixed_rounds": {"1": 1, "2": 1, "4": 1, "8": 1, "12": 1, "16": 1, "24": 1, "32": 1, "48": 1}, "right_at_any_round": 2, "role": "practised"}
+numbers5 {"n": 300, "right": 0, "right_v1_rule": 0, "mean_rounds": 48.0, "rounds_hist": {"48": 300}, "fixed_rounds": {"1": 0, "2": 0, "4": 0, "8": 0, "12": 0, "16": 0, "24": 0, "32": 0, "48": 0}, "right_at_any_round": 0, "role": "bigger"}
+
+==> /root/rsn/W/plain-s4-eval.log <==
+grids6 {"n": 300, "right": 186, "role": "bigger"}
+grids7 {"n": 300, "right": 73, "role": "report"}
+numbers4 {"n": 300, "right": 10, "role": "practised"}
+numbers5 {"n": 300, "right": 1, "role": "bigger"}
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "head -n 20 ~/rsn/W/loop-s3-eval.log; echo =====PLAIN-S3=====; head -n 20 ~/rsn/W/plain-s3-eval.log" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 45
+sums4 {"n": 300, "right": 300, "right_v1_rule": 294, "mean_rounds": 5.09, "rounds_hist": {"3": 29, "4": 77, "5": 93, "6": 62, "7": 25, "8": 7, "9": 6, "10": 1}, "fixed_rounds": {"1": 294, "2": 298, "4": 300, "8": 299, "12": 299, "16": 299, "24": 299, "32": 299, "48": 299}, "right_at_any_round": 300, "role": "practised"}
+sums6 {"n": 300, "right": 131, "right_v1_rule": 86, "mean_rounds": 6.08, "rounds_hist": {"3": 6, "4": 42, "5": 74, "6": 65, "7": 53, "8": 40, "9": 15, "10": 3, "11": 2}, "fixed_rounds": {"1": 86, "2": 121, "4": 133, "8": 136, "12": 137, "16": 137, "24": 139, "32": 139, "48": 139}, "right_at_any_round": 169, "role": "bigger"}
+sums8 {"n": 300, "right": 21, "right_v1_rule": 10, "mean_rounds": 7.43, "rounds_hist": {"3": 1, "4": 13, "5": 41, "6": 62, "7": 60, "8": 48, "9": 31, "10": 21, "11": 15, "12": 2, "13": 4, "14": 1, "48": 1}, "fixed_rounds": {"1": 10, "2": 18, "4": 22, "8": 21, "12": 23, "16": 23, "24": 23, "32": 23, "48": 23}, "right_at_any_round": 34, "role": "report"}
+grids5 {"n": 300, "right": 109, "right_v1_rule": 98, "mean_rounds": 33.85, "rounds_hist": {"4": 1, "5": 7, "6": 16, "7": 28, "8": 27, "9": 17, "10": 4, "11": 5, "48": 195}, "fixed_rounds": {"1": 86, "2": 98, "4": 104, "8": 110, "12": 108, "16": 108, "24": 108, "32": 108, "48": 108}, "right_at_any_round": 118, "role": "practised"}
+grids6 {"n": 300, "right": 58, "right_v1_rule": 52, "mean_rounds": 43.63, "rounds_hist": {"5": 1, "6": 4, "7": 5, "8": 10, "9": 7, "10": 4, "11": 1, "14": 1, "48": 267}, "fixed_rounds": {"1": 35, "2": 48, "4": 53, "8": 58, "12": 58, "16": 57, "24": 57, "32": 57, "48": 57}, "right_at_any_round": 67, "role": "bigger"}
+grids7 {"n": 300, "right": 10, "right_v1_rule": 10, "mean_rounds": 48.0, "rounds_hist": {"48": 300}, "fixed_rounds": {"1": 0, "2": 1, "4": 8, "8": 8, "12": 10, "16": 10, "24": 10, "32": 10, "48": 10}, "right_at_any_round": 14, "role": "report"}
+numbers4 {"n": 300, "right": 1, "right_v1_rule": 1, "mean_rounds": 48.0, "rounds_hist": {"48": 300}, "fixed_rounds": {"1": 0, "2": 0, "4": 1, "8": 1, "12": 1, "16": 1, "24": 1, "32": 1, "48": 1}, "right_at_any_round": 1, "role": "practised"}
+numbers5 {"n": 300, "right": 0, "right_v1_rule": 0, "mean_rounds": 48.0, "rounds_hist": {"48": 300}, "fixed_rounds": {"1": 0, "2": 0, "4": 0, "8": 0, "12": 0, "16": 0, "24": 0, "32": 0, "48": 0}, "right_at_any_round": 0, "role": "bigger"}
+=====PLAIN-S3=====
+sums4 {"n": 300, "right": 300, "role": "practised"}
+sums6 {"n": 300, "right": 239, "role": "bigger"}
+sums8 {"n": 300, "right": 120, "role": "report"}
+grids5 {"n": 300, "right": 236, "role": "practised"}
+grids6 {"n": 300, "right": 187, "role": "bigger"}
+grids7 {"n": 300, "right": 69, "role": "report"}
+numbers4 {"n": 300, "right": 16, "role": "practised"}
+numbers5 {"n": 300, "right": 0, "role": "bigger"}
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "head -n 20 ~/rsn/W/loop-s4-eval.log; echo =====PLAIN-S4=====; head -n 20 ~/rsn/W/plain-s4-eval.log; echo =====SUMMARIES=====; for r in loop-s3 plain-s3 loop-s4 plain-s4; do echo ---\$r; python3 -c 'import json; d=json.load(open(\"/root/rsn/W/'$r'/train_summary.json\")); print(json.dumps(d))' 2>&1 | head -n 5; done" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 50
+sums4 {"n": 300, "right": 298, "right_v1_rule": 295, "mean_rounds": 5.6, "rounds_hist": {"3": 3, "4": 68, "5": 84, "6": 69, "7": 50, "8": 20, "9": 5, "10": 1}, "fixed_rounds": {"1": 295, "2": 299, "4": 298, "8": 298, "12": 298, "16": 298, "24": 298, "32": 298, "48": 298}, "right_at_any_round": 300, "role": "practised"}
+sums6 {"n": 300, "right": 94, "right_v1_rule": 88, "mean_rounds": 6.5, "rounds_hist": {"4": 28, "5": 65, "6": 73, "7": 58, "8": 35, "9": 28, "10": 8, "11": 4, "12": 1}, "fixed_rounds": {"1": 88, "2": 93, "4": 94, "8": 91, "12": 90, "16": 88, "24": 89, "32": 89, "48": 89}, "right_at_any_round": 125, "role": "bigger"}
+sums8 {"n": 300, "right": 6, "right_v1_rule": 8, "mean_rounds": 7.29, "rounds_hist": {"4": 11, "5": 35, "6": 54, "7": 78, "8": 55, "9": 33, "10": 20, "11": 10, "12": 3, "15": 1}, "fixed_rounds": {"1": 8, "2": 13, "4": 9, "8": 5, "12": 5, "16": 5, "24": 5, "32": 5, "48": 5}, "right_at_any_round": 20, "role": "report"}
+grids5 {"n": 300, "right": 91, "right_v1_rule": 82, "mean_rounds": 34.6, "rounds_hist": {"4": 3, "5": 6, "6": 17, "7": 18, "8": 22, "9": 18, "10": 6, "11": 8, "12": 1, "13": 1, "48": 200}, "fixed_rounds": {"1": 76, "2": 84, "4": 92, "8": 91, "12": 89, "16": 89, "24": 89, "32": 89, "48": 89}, "right_at_any_round": 108, "role": "practised"}
+grids6 {"n": 300, "right": 36, "right_v1_rule": 35, "mean_rounds": 47.04, "rounds_hist": {"4": 1, "6": 2, "8": 3, "9": 1, "48": 293}, "fixed_rounds": {"1": 35, "2": 38, "4": 37, "8": 34, "12": 35, "16": 36, "24": 36, "32": 36, "48": 36}, "right_at_any_round": 54, "role": "bigger"}
+grids7 {"n": 300, "right": 3, "right_v1_rule": 1, "mean_rounds": 48.0, "rounds_hist": {"48": 300}, "fixed_rounds": {"1": 1, "2": 2, "4": 1, "8": 2, "12": 3, "16": 3, "24": 3, "32": 3, "48": 3}, "right_at_any_round": 4, "role": "report"}
+numbers4 {"n": 300, "right": 1, "right_v1_rule": 1, "mean_rounds": 48.0, "rounds_hist": {"48": 300}, "fixed_rounds": {"1": 1, "2": 1, "4": 1, "8": 1, "12": 1, "16": 1, "24": 1, "32": 1, "48": 1}, "right_at_any_round": 2, "role": "practised"}
+numbers5 {"n": 300, "right": 0, "right_v1_rule": 0, "mean_rounds": 48.0, "rounds_hist": {"48": 300}, "fixed_rounds": {"1": 0, "2": 0, "4": 0, "8": 0, "12": 0, "16": 0, "24": 0, "32": 0, "48": 0}, "right_at_any_round": 0, "role": "bigger"}
+=====PLAIN-S4=====
+sums4 {"n": 300, "right": 300, "role": "practised"}
+sums6 {"n": 300, "right": 153, "role": "bigger"}
+sums8 {"n": 300, "right": 33, "role": "report"}
+grids5 {"n": 300, "right": 241, "role": "practised"}
+grids6 {"n": 300, "right": 186, "role": "bigger"}
+grids7 {"n": 300, "right": 73, "role": "report"}
+numbers4 {"n": 300, "right": 10, "role": "practised"}
+numbers5 {"n": 300, "right": 1, "role": "bigger"}
+=====SUMMARIES=====
+---loop-s3
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: '/root/rsn/W//train_summary.json'
+---plain-s3
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: '/root/rsn/W//train_summary.json'
+---loop-s4
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: '/root/rsn/W//train_summary.json'
+---plain-s4
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: '/root/rsn/W//train_summary.json'
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "ls -la ~/rsn/W/ ~/rsn/W/loop-s3/ ~/rsn/W/plain-s3/" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 30
+drwxr-xr-x 2 root root    89 Sep 26 04:31 loop-s3
+-rw-r--r-- 1 root root  2380 Sep 26 04:31 loop-s3-eval.log
+-rw-r--r-- 1 root root 31976 Sep 26 04:26 loop-s3.log
+drwxr-xr-x 2 root root    89 Sep 26 04:31 loop-s4
+-rw-r--r-- 1 root root  2299 Sep 26 04:31 loop-s4-eval.log
+-rw-r--r-- 1 root root 31999 Sep 26 04:26 loop-s4.log
+drwxr-xr-x 2 root root    89 Sep 26 04:31 plain-s3
+-rw-r--r-- 1 root root   406 Sep 26 04:31 plain-s3-eval.log
+-rw-r--r-- 1 root root 31250 Sep 26 04:21 plain-s3.log
+drwxr-xr-x 2 root root    89 Sep 26 04:31 plain-s4
+-rw-r--r-- 1 root root   405 Sep 26 04:31 plain-s4-eval.log
+-rw-r--r-- 1 root root 31259 Sep 26 04:21 plain-s4.log
+
+/root/rsn/W/loop-s3/:
+total 25208
+drwxr-xr-x 2 root root       89 Sep 26 04:31 .
+drwxr-xr-x 6 root root     4096 Sep 26 04:31 ..
+-rw-r--r-- 1 root root 25764244 Sep 26 04:26 final.pt
+-rw-r--r-- 1 root root     3288 Sep 26 04:31 tests.json
+-rw-r--r-- 1 root root    31920 Sep 26 04:26 train_log.jsonl
+-rw-r--r-- 1 root root      174 Sep 26 04:26 train_summary.json
+
+/root/rsn/W/plain-s3/:
+total 25020
+drwxr-xr-x 2 root root       89 Sep 26 04:31 .
+drwxr-xr-x 6 root root     4096 Sep 26 04:31 ..
+-rw-r--r-- 1 root root 25573143 Sep 26 04:21 final.pt
+-rw-r--r-- 1 root root      624 Sep 26 04:31 tests.json
+-rw-r--r-- 1 root root    31193 Sep 26 04:21 train_log.jsonl
+-rw-r--r-- 1 root root      175 Sep 26 04:21 train_summary.json
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "cd ~/rsn && for R in loop-s3 plain-s3 loop-s4 plain-s4; do mkdir -p artifacts/claude-rsn358d-20260926/runs/\$R && cp W/\$R/train_log.jsonl W/\$R/train_summary.json W/\$R/tests.json W/\$R.log artifacts/claude-rsn358d-20260926/runs/\$R/ && echo done-\$R; done; find artifacts/claude-rsn358d-20260926 -type f | sort" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 30
+done-loop-s3
+done-plain-s3
+done-loop-s4
+done-plain-s4
+artifacts/claude-rsn358d-20260926/PASSMARKS.md
+artifacts/claude-rsn358d-20260926/SEAL-code.sha256.txt
+artifacts/claude-rsn358d-20260926/SEAL-run.sha256.txt
+artifacts/claude-rsn358d-20260926/runs/loop-s3/loop-s3.log
+artifacts/claude-rsn358d-20260926/runs/loop-s3/tests.json
+artifacts/claude-rsn358d-20260926/runs/loop-s3/train_log.jsonl
+artifacts/claude-rsn358d-20260926/runs/loop-s3/train_summary.json
+artifacts/claude-rsn358d-20260926/runs/loop-s4/loop-s4.log
+artifacts/claude-rsn358d-20260926/runs/loop-s4/tests.json
+artifacts/claude-rsn358d-20260926/runs/loop-s4/train_log.jsonl
+artifacts/claude-rsn358d-20260926/runs/loop-s4/train_summary.json
+artifacts/claude-rsn358d-20260926/runs/plain-s3/plain-s3.log
+artifacts/claude-rsn358d-20260926/runs/plain-s3/tests.json
+artifacts/claude-rsn358d-20260926/runs/plain-s3/train_log.jsonl
+artifacts/claude-rsn358d-20260926/runs/plain-s3/train_summary.json
+artifacts/claude-rsn358d-20260926/runs/plain-s4/plain-s4.log
+artifacts/claude-rsn358d-20260926/runs/plain-s4/tests.json
+artifacts/claude-rsn358d-20260926/runs/plain-s4/train_log.jsonl
+artifacts/claude-rsn358d-20260926/runs/plain-s4/train_summary.json
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "cd ~/rsn && for R in loop-s3 plain-s3 loop-s4 plain-s4; do echo ==\$R-summary; cat W/\$R/train_summary.json; echo; echo ==\$R-final-train; tail -n 1 W/\$R.log; done" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 20
+"minutes": 35.3,
+ "device": "cuda"
+}
+==loop-s4-final-train
+{"step": 60000, "ce": 0.4365, "exact": 0.5823, "halt_bce": 0.1593, "lr": 0.0, "min": 35.3, "exact_by_kind": {"grids4": 0.537, "grids5": 0.308, "numbers3": 0.569, "numbers4": 0.001, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 0.991}, "dev": {"sums4": 200, "grids5": 77}}
+==plain-s4-summary
+{
+ "arm": "plain",
+ "seed": 4,
+ "weights": 6385149,
+ "steps": 60000,
+ "batch": 256,
+ "lr": 0.0003,
+ "warmup": 1000,
+ "latin_pool": 20000,
+ "minutes": 29.6,
+ "device": "cuda"
+}
+==plain-s4-final-train
+{"step": 60000, "ce": 0.1631, "exact": 0.8174, "halt_bce": 0.0, "lr": 0.0, "min": 29.6, "exact_by_kind": {"grids4": 0.748, "grids5": 0.829, "numbers3": 1.0, "numbers4": 0.273, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 164}}
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "cd ~/rsn && for R in loop-s3 plain-s3; do echo ==\$R-summary; cat W/\$R/train_summary.json; echo; echo ==\$R-final-train; tail -n 1 W/\$R.log; done; echo; echo ==TESTS-JSON-CHECK; python3 -c \"
+import json
+for r in ['loop-s3','plain-s3','loop-s4','plain-s4']:
+    d=json.load(open(f'W/{r}/tests.json'))
+    keys=list(d.keys()) if isinstance(d,dict) else f'list[{len(d)}]'
+    print(r, keys)
+\"" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 30
+"batch": 256,
+ "lr": 0.0003,
+ "warmup": 1000,
+ "latin_pool": 20000,
+ "minutes": 35.2,
+ "device": "cuda"
+}
+==loop-s3-final-train
+{"step": 60000, "ce": 0.4963, "exact": 0.5235, "halt_bce": 0.1697, "lr": 0.0, "min": 35.2, "exact_by_kind": {"grids4": 0.548, "grids5": 0.35, "numbers3": 0.457, "numbers4": 0.001, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 0.99}, "dev": {"sums4": 199, "grids5": 63}}
+==plain-s3-summary
+{
+ "arm": "plain",
+ "seed": 3,
+ "weights": 6385149,
+ "steps": 60000,
+ "batch": 256,
+ "lr": 0.0003,
+ "warmup": 1000,
+ "latin_pool": 20000,
+ "minutes": 29.6,
+ "device": "cuda"
+}
+==plain-s3-final-train
+{"step": 60000, "ce": 0.1823, "exact": 0.7929, "halt_bce": 0.0, "lr": 0.0, "min": 29.6, "exact_by_kind": {"grids4": 0.745, "grids5": 0.831, "numbers3": 1.0, "numbers4": 0.278, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 159}}
+
+==TESTS-JSON-CHECK
+loop-s3 ['arm', 'ckpt', 'tests']
+plain-s3 ['arm', 'ckpt', 'tests']
+loop-s4 ['arm', 'ckpt', 'tests']
+plain-s4 ['arm', 'ckpt', 'tests']
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "python3 -c \"
+import json
+for r in ['loop-s3','plain-s3','loop-s4','plain-s4']:
+    d=json.load(open(f'/root/rsn/W/{r}/tests.json'))
+    t=d['tests']
+    row=[]
+    for k in ['sums4','sums6','sums8','grids5','grids6','grids7','numbers4','numbers5']:
+        row.append(f'{k}={t[k][\"right\"]}')
+    print(r, ' '.join(row))
+\"" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 6
+Traceback (most recent call last):
+  File "<string>", line 8, in <module>
+NameError: name 'right' is not defined
+[0m
+[0m$ [0mssh -p 17818 root@ssh4.vast.ai "python3 -c \"
+import json
+for r in ['loop-s3','plain-s3','loop-s4','plain-s4']:
+    d=json.load(open('/root/rsn/W/'+r+'/tests.json'))
+    t=d['tests']
+    row=[]
+    for k in ['sums4','sums6','sums8','grids5','grids6','grids7','numbers4','numbers5']:
+        v=t[k]
+        row.append(k+'='+str(v.get('right', v) if isinstance(v,dict) else v))
+    print(r, ' '.join(row))
+\"" 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 6
+loop-s3 sums4=300 sums6=131 sums8=21 grids5=109 grids6=58 grids7=10 numbers4=1 numbers5=0
+plain-s3 sums4=300 sums6=239 sums8=120 grids5=236 grids6=187 grids7=69 numbers4=16 numbers5=0
+loop-s4 sums4=298 sums6=94 sums8=6 grids5=91 grids6=36 grids7=3 numbers4=1 numbers5=0
+plain-s4 sums4=300 sums6=153 sums8=33 grids5=241 grids6=186 grids7=73 numbers4=10 numbers5=1
+[0m
+[0m$ [0mdf -g / | tail -n 2; ls ~/premonition-models/ 2>&1 | head -n 5
+Filesystem     1G-blocks Used Available Capacity iused    ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         7    64%  484014 75225320    1%   /
+bm397t-adapter397t.pt
+lis301-merged
+lis319-merged
+minilm
+own-m1n-mouth
+[0m
+[0m$ [0mls -la artifacts/claude-rsn358d-20260926/ 2>&1; git status --short 2>&1 | head -n 10; git log --oneline -3 -- artifacts/fable-predictions-ledger.md 2>&1
+ls: artifacts/claude-rsn358d-20260926/: No such file or directory
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+b588f1e37 rsn-358c1: answer-cell stop eval, sealed code run once per seed (verdict FAIL; stop fix NOT NEEDED, K4 split s1 PASS s2 FAIL) + ledger lines
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+83f77071a builder results: F1 241b rewriter on 292t (registered PASS M2/M3/M5 mechanical; M1/M4 director-graded)
+[0m
+[0m$ [0mscp -P 17818 -r root@ssh4.vast.ai:~/rsn/artifacts/claude-rsn358d-20260926 ./artifacts/claude-rsn358d-20260926 2>&1 | grep -v -E "Welcome|authentication|Have fun" | tail -n 3; find artifacts/claude-rsn358d-20260926 -type f | sort
+artifacts/claude-rsn358d-20260926/PASSMARKS.md
+artifacts/claude-rsn358d-20260926/runs/loop-s3/loop-s3.log
+artifacts/claude-rsn358d-20260926/runs/loop-s3/tests.json
+artifacts/claude-rsn358d-20260926/runs/loop-s3/train_log.jsonl
+artifacts/claude-rsn358d-20260926/runs/loop-s3/train_summary.json
+artifacts/claude-rsn358d-20260926/runs/loop-s4/loop-s4.log
+artifacts/claude-rsn358d-20260926/runs/loop-s4/tests.json
+artifacts/claude-rsn358d-20260926/runs/loop-s4/train_log.jsonl
+artifacts/claude-rsn358d-20260926/runs/loop-s4/train_summary.json
+artifacts/claude-rsn358d-20260926/runs/plain-s3/plain-s3.log
+artifacts/claude-rsn358d-20260926/runs/plain-s3/tests.json
+artifacts/claude-rsn358d-20260926/runs/plain-s3/train_log.jsonl
+artifacts/claude-rsn358d-20260926/runs/plain-s3/train_summary.json
+artifacts/claude-rsn358d-20260926/runs/plain-s4/plain-s4.log
+artifacts/claude-rsn358d-20260926/runs/plain-s4/tests.json
+artifacts/claude-rsn358d-20260926/runs/plain-s4/train_log.jsonl
+artifacts/claude-rsn358d-20260926/runs/plain-s4/train_summary.json
+artifacts/claude-rsn358d-20260926/SEAL-code.sha256.txt
+artifacts/claude-rsn358d-20260926/SEAL-run.sha256.txt
+[0m
+[0m$ [0mdiff <(ssh -p 17818 root@ssh4.vast.ai "cat ~/rsn/artifacts/claude-rsn358d-20260926/SEAL-run.sha256.txt" 2>/dev/null) artifacts/claude-rsn358d-20260926/SEAL-run.sha256.txt && echo SEAL-MATCH; python3 -c "
+import json
+d=json.load(open('artifacts/claude-rsn358d-20260926/runs/loop-s3/tests.json'))
+print('top keys:', list(d.keys()))
+print('tests keys:', list(d['tests'].keys()))
+import sys
+def walk(o, depth=0):
+    pass
+s=json.dumps(d)
+print('bytes:', len(s))
+"
+SEAL-MATCH
+top keys: ['arm', 'ckpt', 'tests']
+tests keys: ['sums4', 'sums6', 'sums8', 'grids5', 'grids6', 'grids7', 'numbers4', 'numbers5']
+bytes: 2468
+[0m
+[0m$ [0mdate -u +%Y-%m-%dT%H:%M:%SZ; echo y | vastai destroy instance 52687818 2>&1 | tail -n 2; sleep 10; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print([(x.get('id'),x.get('label'),x.get('actual_status')) for x in d])"
+2026-09-26T04:34:03Z
+Are you sure you want to destroy instance 52687818? This is irreversible and will delete all data. [y/N] destroying instance 52687818.
+[(52677751, 'rent-bm391', 'running'), (52685812, 'rent-dl3', 'running')]
+[0m
+[0m← [0mWrite artifacts/claude-rsn358d-20260926/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mtail -n 3 artifacts/fable-predictions-ledger.md | cut -c1-200
+- K4 OUTCOME (2026-09-26, rsn-358c1 loop answer-cell stop minus plain): s1 sums6 +45 grids6 +63 numbers5 0, practised 0/+2 PASS; s2 sums6 -38 (floor break) grids6 +78 numbers5 0, practised 0/+9 FAIL. 
+- rsn-358c1 OUTCOME (2026-09-26, builder, Mac CPU, $0, eval only, code sealed and run once per seed, 7-line logs kept): stop fix NOT NEEDED (K2 vacuous both seeds; K1/K3 FAIL as above); loop-beats-pla
+- rent-bm397t GPU OUTCOME (2026-09-26, rented Linux GPU, label rent-bm397t, unmodified origin/main + origin/builder-outbox code, seals bm397t 10/10 + bm390-code 8/8 OK, selftests 8/8 + 5/5): instances
+[0m
+[0m→ [0mRead artifacts/fable-predictions-ledger.md[90m [limit=5, offset=1][0m
+[0m→ [0mRead artifacts/fable-predictions-ledger.md[90m [limit=4, offset=2998][0m
+[0m
+[0m← [0mEdit artifacts/fable-predictions-ledger.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-predictions-ledger.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-predictions-ledger.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-predictions-ledger.md
+@@ -2998,4 +2998,6 @@
+ - K3 OUTCOME (2026-09-26, rsn-358c1 answer-cell >= v2-3, all five graded families): s1 sums6 247>=248 MISS by 1 (rest hold) FAIL; s2 sums6 221>=229 MISS by 8 (rest hold) FAIL. No miss exceeds 10 anywhere.
+ - K4 OUTCOME (2026-09-26, rsn-358c1 loop answer-cell stop minus plain): s1 sums6 +45 grids6 +63 numbers5 0, practised 0/+2 PASS; s2 sums6 -38 (floor break) grids6 +78 numbers5 0, practised 0/+9 FAIL. Registered loop-beats-plain verdict FAIL (V met both, K4 split). Proved-wrong clause NOT triggered.
+ - rsn-358c1 OUTCOME (2026-09-26, builder, Mac CPU, $0, eval only, code sealed and run once per seed, 7-line logs kept): stop fix NOT NEEDED (K2 vacuous both seeds; K1/K3 FAIL as above); loop-beats-plain FAIL (K4 s1 PASS s2 FAIL). Overall registered verdict FAIL. 358a FAIL stands (second look, same checkpoints, one changed rule). Runs ~2 min/seed, no training, no GPU, weights never in git. See artifacts/claude-rsn358c-20260926/RESULTS-c1.md + runs/stop358c1-s1.json + runs/stop358c1-s2.json.
+ - rent-bm397t GPU OUTCOME (2026-09-26, rented Linux GPU, label rent-bm397t, unmodified origin/main + origin/builder-outbox code, seals bm397t 10/10 + bm390-code 8/8 OK, selftests 8/8 + 5/5): instances 52684428 (RTX 5090 offer 45669313, SSH proxy broken, destroyed, ~0.181 h x $0.5037 = ~$0.09) + 52685550 (RTX 5090 offer 44188476 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 80, running 03:20:51Z, destroyed 04:23:49Z, ~1.091 h x $0.5037 = ~$0.55); task total ~1.27 h ~$0.64 of $1.40 budget, 2 rentals; post-destroy 0 rent-bm397t live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, transformers 5.17.0, pyarrow 25.0.1. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Practice data sha 0654bd2f...06237 / 675a2d85...942da9. Train once 225 steps 189.7 s, dev 116->199/200, merged model.safetensors 9719c266... Run files locomo_TS 1986 rows 276376 B 30eb5dc4..., mmlu_TS 300 rows 18933 B fa830d32..., gsm8k_TS 300 rows 57772 B c6bb2f14..., train397t.json 0919dac9... Adapter 16576151 B 621edd16... at ~/premonition-models/bm397t-adapter397t.pt, never in git; MERGED not copied back. Peak GPU mem 5074 MiB. No traceback. Train-selftest first launch had a wrapper cwd bug, relaunched unchanged; exit codes inferred 0 from wrote lines. Scoring not part of this task. See artifacts/claude-bm397t-20260926/RESULTS-rent.md.
++- rsn-358d OUTCOME (2026-09-26, GPU builder, label rent-358d, sealed code run unmodified, each eval once per checkpoint): registered verdict INCONCLUSIVE both seeds (G0 not met: loop practised-size s3 300/109/1, s4 298/91/1, needs >=210 in >=2 of 3 kinds). G1 FAIL both (loop-plain s3 -108/-129/0, s4 -59/-150/-1); G2 FAIL both (s3 0/-127/-15, s4 -2/-150/-9); G3 FAIL s3 (sums6 own 131 vs fix16 137), PASS s4. Proved-wrong clause NOT triggered. numbers4 plain 16/10 vs loop 1/1 (358a: 0-5 both); numbers5 0/0/0/1. Plain bigger-test generalisation beat loop everywhere (sums6 239/153 vs 131/94; grids6 187/186 vs 58/36). GPU RTX 5090, minutes loop-s3 35.2 plain-s3 29.6 loop-s4 35.3 plain-s4 29.6, ~$0.41 of $0.80. See artifacts/claude-rsn358d-20260926/RESULTS.md + runs + SEAL-run.sha256.txt.
++- rent-358d GPU SPEND (2026-09-26, credit 6.33 at gate): rental 1 offer 46753295 (docker registry proxy refused, restarted once same error, destroyed stopped) + rental 2 offer 44173691 RTX 5090 dph 0.4852 (03:44:46Z-04:34:03Z, 0.82 h, ~$0.40); task total ~$0.41 of $0.80 budget, 2 rentals of max 3, 54 min of 1 h 30 min cap; post-destroy 0 rent-358d live. Checkpoints discarded with rental (Mac had 7 GB free < 8 GB copy bar) after sha256 recorded; 4 required files per run copied back.
+
+[0m
+[0m$ [0mgit check-ignore artifacts/claude-rsn358d-20260926/RESULTS.md && echo IGNORED; git rev-parse --abbrev-ref HEAD; git log --oneline -3 origin/builder-outbox 2>&1; git ls-tree -r --name-only origin/builder-outbox 2>&1 | grep -c "rsn358d"; git remote -v
+artifacts/claude-rsn358d-20260926/RESULTS.md
+IGNORED
+claude/card-experiment-handoff-7c5b27
+df67d1b22 watcher status
+c9f5fe701 builder results: 006h-lis-319c-full
+46bca8ebd watcher status
+0
+origin	git@github.com:BenjaminHannan/learner.git (fetch)
+origin	git@github.com:BenjaminHannan/learner.git (push)
+[0m
+[0m$ [0mgit show --stat c9f5fe701 2>&1 | head -n 25; echo ===; git log --all --oneline --grep="rsn-358c" 2>&1 | head -n 5; echo ===; git ls-tree -r --name-only origin/builder-outbox 2>&1 | grep -E "rsn358c|RESULTS-c1" | head
+commit c9f5fe70107a7a502aaa0ba226a12810da384108
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Sat Sep 26 00:34:15 2026 -0400
+
+    builder results: 006h-lis-319c-full
+
+ .DS_Store                                          |  Bin 6148 -> 6148 bytes
+ .../full/RESULTS-full-reads.md                     |   84 +
+ .../claude-lis319c-20260926/full/check_319.json    |   21 +
+ .../claude-lis319c-20260926/full/check_A.json      |   28 +
+ .../claude-lis319c-20260926/full/check_B.json      |   28 +
+ .../claude-lis319c-20260926/full/pairs_319.jsonl   |   22 +
+ .../claude-lis319c-20260926/full/pairs_319c.jsonl  |   81 +
+ .../claude-lis319c-20260926/full/reads_319.jsonl   |  240 +++
+ .../claude-lis319c-20260926/full/reads_319c.jsonl  |  239 +++
+ runs/006h-lis-319c-full/006h-lis-319c-full.exit    |    1 +
+ .../006h-lis-319c-full/006h-lis-319c-full.go1.done |    1 +
+ .../006h-lis-319c-full.go1.err.txt                 | 2089 ++++++++++++++++++++
+ .../006h-lis-319c-full.go1.reply.md                |   44 +
+ runs/006h-lis-319c-full/006h-lis-319c-full.md      |   20 +
+ 14 files changed, 2898 insertions(+)
+zsh:1: == not found
+[0m
+[0m$ [0mgit log --all --oneline --grep="358c1" | head -n 5; git merge-base --is-ancestor origin/builder-outbox HEAD && echo ANCESTOR-YES || echo ANCESTOR-NO; git rev-list --count origin/builder-outbox..HEAD; git rev-list --count HEAD..origin/builder-outbox
+27bec7c6c rsn-358c1: blind recount agrees (stop fix NOT NEEDED; loop beats plain FAIL on seed 2 sums6)
+aeb16b79a builder results: 005u-rsn-358c1-stop
+b588f1e37 rsn-358c1: answer-cell stop eval, sealed code run once per seed (verdict FAIL; stop fix NOT NEEDED, K4 split s1 PASS s2 FAIL) + ledger lines
+91b5efe88 rsn-358a: blind recount agrees (FAIL); 358c1 job handles the 65-char plain-s2 seal typo
+ca08ccc1e rsn-358c1: queue the eval job now that 358a (005t) has finished
+ANCESTOR-NO
+23
+2137
+[0m
+[0m$ [0mgit branch -a --contains aeb16b79a 2>&1 | head; git log --oneline origin/builder-outbox --grep="358c1" | head -n 5; git show --stat aeb16b79a 2>&1 | head -n 20
+remotes/origin/builder-outbox
+aeb16b79a builder results: 005u-rsn-358c1-stop
+commit aeb16b79aafc8524b7157bf380f91ca6954eecc6
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Sat Sep 26 00:09:37 2026 -0400
+
+    builder results: 005u-rsn-358c1-stop
+
+ .DS_Store                                          |  Bin 6148 -> 6148 bytes
+ artifacts/claude-rsn358c-20260926/RESULTS-c1.md    |  150 +++
+ .../claude-rsn358c-20260926/runs/stop358c1-s1.json |  230 ++++
+ .../claude-rsn358c-20260926/runs/stop358c1-s1.log  |    7 +
+ .../claude-rsn358c-20260926/runs/stop358c1-s2.json |  230 ++++
+ .../claude-rsn358c-20260926/runs/stop358c1-s2.log  |    7 +
+ artifacts/fable-predictions-ledger.md              |    6 +
+ runs/005u-rsn-358c1-stop/005u-rsn-358c1-stop.exit  |    1 +
+ .../005u-rsn-358c1-stop.go1.done                   |    1 +
+ .../005u-rsn-358c1-stop.go1.err.txt                | 1152 ++++++++++++++++++++
+ .../005u-rsn-358c1-stop.go1.reply.md               |   31 +
+ runs/005u-rsn-358c1-stop/005u-rsn-358c1-stop.md    |   23 +
+ 12 files changed, 1838 insertions(+)
+[0m
+[0m$ [0mgit fetch -q origin builder-outbox; git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-rsn358d-20260926/; echo "DUP-CHECK-DONE(empty=good)"; git worktree add /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358d-push origin/builder-outbox 2>&1 | tail -n 2
+DUP-CHECK-DONE(empty=good)
+Updating files:   3% (5794/158333)Updating files:   4% (6334/158333)Updating files:   5% (7917/158333)Updating files:   6% (9500/158333)Updating files:   7% (11084/158333)Updating files:   8% (12667/158333)Updating files:   8% (13227/158333)Updating files:   9% (14250/158333)Updating files:  10% (15834/158333)Updating files:  11% (17417/158333)Updating files:  12% (19000/158333)Updating files:  12% (20435/158333)Updating files:  13% (20584/158333)Updating files:  14% (22167/158333)Updating files:  15% (23750/158333)Updating files:  16% (25334/158333)Updating files:  17% (26917/158333)Updating files:  18% (28500/158333)Updating files:  18% (28506/158333)Updating files:  19% (30084/158333)Updating files:  20% (31667/158333)Updating files:  21% (33250/158333)Updating files:  21% (34073/158333)Updating files:  22% (34834/158333)Updating files:  23% (36417/158333)Updating files:  24% (38000/158333)Updating files:  25% (39584/158333)Updating files:  26% (41167/158333)Updating files:  26% (41643/158333)Updating files:  27% (42750/158333)Updating files:  28% (44334/158333)Updating files:  29% (45917/158333)Updating files:  30% (47500/158333)Updating files:  30% (48881/158333)Updating files:  31% (49084/158333)Updating files:  32% (50667/158333)Updating files:  33% (52250/158333)Updating files:  34% (53834/158333)Updating files:  35% (55417/158333)Updating files:  35% (55652/158333)Updating files:  36% (57000/158333)Updating files:  37% (58584/158333)Updating files:  38% (60167/158333)Updating files:  39% (61750/158333)Updating files:  39% (61924/158333)Updating files:  40% (63334/158333)Updating files:  41% (64917/158333)Updating files:  42% (66500/158333)Updating files:  43% (68084/158333)Updating files:  43% (69159/158333)Updating files:  44% (69667/158333)Updating files:  45% (71250/158333)Updating files:  46% (72834/158333)Updating files:  47% (74417/158333)Updating files:  47% (75756/158333)Updating files:  48% (76000/158333)Updating files:  49% (77584/158333)Updating files:  50% (79167/158333)Updating files:  50% (80289/158333)Updating files:  51% (80750/158333)Updating files:  52% (82334/158333)Updating files:  53% (83917/158333)Updating files:  54% (85500/158333)Updating files:  54% (87044/158333)Updating files:  55% (87084/158333)Updating files:  56% (88667/158333)Updating files:  57% (90250/158333)Updating files:  58% (91834/158333)Updating files:  59% (93417/158333)Updating files:  59% (94012/158333)Updating files:  60% (95000/158333)Updating files:  61% (96584/158333)Updating files:  62% (98167/158333)Updating files:  63% (99750/158333)Updating files:  63% (101117/158333)Updating files:  64% (101334/158333)Updating files:  65% (102917/158333)Updating files:  66% (104500/158333)Updating files:  67% (106084/158333)Updating files:  68% (107667/158333)Updating files:  68% (108939/158333)Updating files:  69% (109250/158333)Updating files:  70% (110834/158333)Updating files:  71% (112417/158333)Updating files:  72% (114000/158333)Updating files:  72% (115403/158333)Updating files:  73% (115584/158333)Updating files:  74% (117167/158333)Updating files:  75% (118750/158333)Updating files:  76% (120334/158333)Updating files:  77% (121917/158333)Updating files:  77% (123144/158333)Updating files:  78% (123500/158333)Updating files:  79% (125084/158333)Updating files:  80% (126667/158333)Updating files:  81% (128250/158333)Updating files:  82% (129834/158333)Updating files:  82% (131255/158333)Updating files:  83% (131417/158333)Updating files:  84% (133000/158333)Updating files:  85% (134584/158333)Updating files:  86% (136167/158333)Updating files:  87% (137750/158333)Updating files:  87% (138758/158333)Updating files:  88% (139334/158333)Updating files:  89% (140917/158333)Updating files:  90% (142500/158333)Updating files:  91% (144084/158333)Updating files:  91% (145362/158333)Updating files:  92% (145667/158333)Updating files:  93% (147250/158333)Updating files:  94% (148834/158333)Updating files:  95% (150417/158333)Updating files:  96% (152000/158333)Updating files:  96% (152804/158333)Updating files:  97% (153584/158333)Updating files:  98% (155167/158333)Updating files:  99% (156750/158333)Updating files: 100% (158333/158333)Updating files: 100% (158333/158333), done.
+HEAD is now at df67d1b22 watcher status
+[0m
+[0m$ [0mSRC=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27; DST=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358d-push; mkdir -p "$DST/artifacts/claude-rsn358d-20260926" && cp "$SRC/artifacts/claude-rsn358d-20260926/RESULTS.md" "$SRC/artifacts/claude-rsn358d-20260926/SEAL-run.sha256.txt" "$DST/artifacts/claude-rsn358d-20260926/" && cp -r "$SRC/artifacts/claude-rsn358d-20260926/runs" "$DST/artifacts/claude-rsn358d-20260926/" && tail -n 2 "$DST/artifacts/fable-predictions-ledger.md" | cut -c1-120
+- rsn-358c1 OUTCOME (2026-09-26, builder, Mac CPU, $0, eval only, code sealed and run once per seed, 7-line logs kept): 
+- rent-bm397t GPU OUTCOME (2026-09-26, rented Linux GPU, label rent-bm397t, unmodified origin/main + origin/builder-outb
+[0m
+[0m$ [0mcat >> /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358d-push/artifacts/fable-predictions-ledger.md << 'EOF'
+- rsn-358d OUTCOME (2026-09-26, GPU builder, label rent-358d, sealed code run unmodified, each eval once per checkpoint): registered verdict INCONCLUSIVE both seeds (G0 not met: loop practised-size s3 300/109/1, s4 298/91/1, needs >=210 in >=2 of 3 kinds). G1 FAIL both (loop-plain s3 -108/-129/0, s4 -59/-150/-1); G2 FAIL both (s3 0/-127/-15, s4 -2/-150/-9); G3 FAIL s3 (sums6 own 131 vs fix16 137), PASS s4. Proved-wrong clause NOT triggered. numbers4 plain 16/10 vs loop 1/1 (358a: 0-5 both); numbers5 0/0/0/1. Plain bigger-test generalisation beat loop everywhere (sums6 239/153 vs 131/94; grids6 187/186 vs 58/36). GPU RTX 5090, minutes loop-s3 35.2 plain-s3 29.6 loop-s4 35.3 plain-s4 29.6, ~$0.41 of $0.80. See artifacts/claude-rsn358d-20260926/RESULTS.md + runs + SEAL-run.sha256.txt.
+- rent-358d GPU SPEND (2026-09-26, credit 6.33 at gate): rental 1 offer 46753295 (docker registry proxy refused, restarted once same error, destroyed stopped) + rental 2 offer 44173691 RTX 5090 dph 0.4852 (03:44:46Z-04:34:03Z, 0.82 h, ~$0.40); task total ~$0.41 of $0.80 budget, 2 rentals of max 3, 54 min of 1 h 30 min cap; post-destroy 0 rent-358d live. Checkpoints discarded with rental (Mac had 7 GB free < 8 GB copy bar) after sha256 recorded; 4 required files per run copied back.
+EOF
+tail -n 2 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358d-push/artifacts/fable-predictions-ledger.md | cut -c1-80
+- rsn-358d OUTCOME (2026-09-26, GPU builder, label rent-358d, sealed code run un
+- rent-358d GPU SPEND (2026-09-26, credit 6.33 at gate): rental 1 offer 46753295
+[0m
+[0m$ [0mgit add -f artifacts/claude-rsn358d-20260926/RESULTS.md artifacts/claude-rsn358d-20260926/SEAL-run.sha256.txt artifacts/claude-rsn358d-20260926/runs artifacts/fable-predictions-ledger.md && git status --short | head -n 25 && git diff --cached --stat | tail -n 8
+A  artifacts/claude-rsn358d-20260926/RESULTS.md
+A  artifacts/claude-rsn358d-20260926/SEAL-run.sha256.txt
+A  artifacts/claude-rsn358d-20260926/runs/loop-s3/loop-s3.log
+A  artifacts/claude-rsn358d-20260926/runs/loop-s3/tests.json
+A  artifacts/claude-rsn358d-20260926/runs/loop-s3/train_log.jsonl
+A  artifacts/claude-rsn358d-20260926/runs/loop-s3/train_summary.json
+A  artifacts/claude-rsn358d-20260926/runs/loop-s4/loop-s4.log
+A  artifacts/claude-rsn358d-20260926/runs/loop-s4/tests.json
+A  artifacts/claude-rsn358d-20260926/runs/loop-s4/train_log.jsonl
+A  artifacts/claude-rsn358d-20260926/runs/loop-s4/train_summary.json
+A  artifacts/claude-rsn358d-20260926/runs/plain-s3/plain-s3.log
+A  artifacts/claude-rsn358d-20260926/runs/plain-s3/tests.json
+A  artifacts/claude-rsn358d-20260926/runs/plain-s3/train_log.jsonl
+A  artifacts/claude-rsn358d-20260926/runs/plain-s3/train_summary.json
+A  artifacts/claude-rsn358d-20260926/runs/plain-s4/plain-s4.log
+A  artifacts/claude-rsn358d-20260926/runs/plain-s4/tests.json
+A  artifacts/claude-rsn358d-20260926/runs/plain-s4/train_log.jsonl
+A  artifacts/claude-rsn358d-20260926/runs/plain-s4/train_summary.json
+M  artifacts/fable-predictions-ledger.md
+ .../runs/plain-s3/train_log.jsonl                  | 120 +++++++++++
+ .../runs/plain-s3/train_summary.json               |  12 ++
+ .../runs/plain-s4/plain-s4.log                     | 121 +++++++++++
+ .../runs/plain-s4/tests.json                       |  46 +++++
+ .../runs/plain-s4/train_log.jsonl                  | 120 +++++++++++
+ .../runs/plain-s4/train_summary.json               |  12 ++
+ artifacts/fable-predictions-ledger.md              |   2 +
+ 19 files changed, 1765 insertions(+)
+[0m
+[0m$ [0mgit diff --cached artifacts/fable-predictions-ledger.md | head -n 12; git log --oneline -1
+diff --git a/artifacts/fable-predictions-ledger.md b/artifacts/fable-predictions-ledger.md
+index cba2ad971..8bfb51543 100644
+--- a/artifacts/fable-predictions-ledger.md
++++ b/artifacts/fable-predictions-ledger.md
+@@ -2999,3 +2999,5 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
+ - K4 OUTCOME (2026-09-26, rsn-358c1 loop answer-cell stop minus plain): s1 sums6 +45 grids6 +63 numbers5 0, practised 0/+2 PASS; s2 sums6 -38 (floor break) grids6 +78 numbers5 0, practised 0/+9 FAIL. Registered loop-beats-plain verdict FAIL (V met both, K4 split). Proved-wrong clause NOT triggered.
+ - rsn-358c1 OUTCOME (2026-09-26, builder, Mac CPU, $0, eval only, code sealed and run once per seed, 7-line logs kept): stop fix NOT NEEDED (K2 vacuous both seeds; K1/K3 FAIL as above); loop-beats-plain FAIL (K4 s1 PASS s2 FAIL). Overall registered verdict FAIL. 358a FAIL stands (second look, same checkpoints, one changed rule). Runs ~2 min/seed, no training, no GPU, weights never in git. See artifacts/claude-rsn358c-20260926/RESULTS-c1.md + runs/stop358c1-s1.json + runs/stop358c1-s2.json.
+ - rent-bm397t GPU OUTCOME (2026-09-26, rented Linux GPU, label rent-bm397t, unmodified origin/main + origin/builder-outbox code, seals bm397t 10/10 + bm390-code 8/8 OK, selftests 8/8 + 5/5): instances 52684428 (RTX 5090 offer 45669313, SSH proxy broken, destroyed, ~0.181 h x $0.5037 = ~$0.09) + 52685550 (RTX 5090 offer 44188476 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 80, running 03:20:51Z, destroyed 04:23:49Z, ~1.091 h x $0.5037 = ~$0.55); task total ~1.27 h ~$0.64 of $1.40 budget, 2 rentals; post-destroy 0 rent-bm397t live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, transformers 5.17.0, pyarrow 25.0.1. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Practice data sha 0654bd2f...06237 / 675a2d85...942da9. Train once 225 steps 189.7 s, dev 116->199/200, merged model.safetensors 9719c266... Run files locomo_TS 1986 rows 276376 B 30eb5dc4..., mmlu_TS 300 rows 18933 B fa830d32..., gsm8k_TS 300 rows 57772 B c6bb2f14..., train397t.json 0919dac9... Adapter 16576151 B 621edd16... at ~/premonition-models/bm397t-adapter397t.pt, never in git; MERGED not copied back. Peak GPU mem 5074 MiB. No traceback. Train-selftest first launch had a wrapper cwd bug, relaunched unchanged; exit codes inferred 0 from wrote lines. Scoring not part of this task. See artifacts/claude-bm397t-20260926/RESULTS-rent.md.
++- rsn-358d OUTCOME (2026-09-26, GPU builder, label rent-358d, sealed code run unmodified, each eval once per checkpoint): registered verdict INCONCLUSIVE both seeds (G0 not met: loop practised-size s3 300/109/1, s4 298/91/1, needs >=210 in >=2 of 3 kinds). G1 FAIL both (loop-plain s3 -108/-129/0, s4 -59/-150/-1); G2 FAIL both (s3 0/-127/-15, s4 -2/-150/-9); G3 FAIL s3 (sums6 own 131 vs fix16 137), PASS s4. Proved-wrong clause NOT triggered. numbers4 plain 16/10 vs loop 1/1 (358a: 0-5 both); numbers5 0/0/0/1. Plain bigger-test generalisation beat loop everywhere (sums6 239/153 vs 131/94; grids6 187/186 vs 58/36). GPU RTX 5090, minutes loop-s3 35.2 plain-s3 29.6 loop-s4 35.3 plain-s4 29.6, ~$0.41 of $0.80. See artifacts/claude-rsn358d-20260926/RESULTS.md + runs + SEAL-run.sha256.txt.
++- rent-358d GPU SPEND (2026-09-26, credit 6.33 at gate): rental 1 offer 46753295 (docker registry proxy refused, restarted once same error, destroyed stopped) + rental 2 offer 44173691 RTX 5090 dph 0.4852 (03:44:46Z-04:34:03Z, 0.82 h, ~$0.40); task total ~$0.41 of $0.80 budget, 2 rentals of max 3, 54 min of 1 h 30 min cap; post-destroy 0 rent-358d live. Checkpoints discarded with rental (Mac had 7 GB free < 8 GB copy bar) after sha256 recorded; 4 required files per run copied back.
+df67d1b22 watcher status
+[0m
+[0m✗ [0mgit commit -m "builder results: rent-358d rsn-358d loop-vs-plain (INCONCLUSIVE both seeds; G0 not met) + ledger lines" 2>&1 | tail -n 3 && git push origin HEAD:builder-outbox 2>&1 | tail -n 5 failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mgit commit -m "builder results: rent-358d rsn-358d loop-vs-plain (INCONCLUSIVE both seeds; G0 not met) + ledger lines" 2>&1 | tail -n 3; git log --oneline -1; git status --short | head -n 5
+create mode 100644 artifacts/claude-rsn358d-20260926/runs/plain-s4/tests.json
+ create mode 100644 artifacts/claude-rsn358d-20260926/runs/plain-s4/train_log.jsonl
+ create mode 100644 artifacts/claude-rsn358d-20260926/runs/plain-s4/train_summary.json
+d2f4c096e builder results: rent-358d rsn-358d loop-vs-plain (INCONCLUSIVE both seeds; G0 not met) + ledger lines
+[0m
+[0m$ [0mgit show --stat HEAD 2>&1 | tail -n 25; git status --short; echo CLEAN-IF-EMPTY
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Sat Sep 26 00:37:31 2026 -0400
+
+    builder results: rent-358d rsn-358d loop-vs-plain (INCONCLUSIVE both seeds; G0 not met) + ledger lines
+
+ artifacts/claude-rsn358d-20260926/RESULTS.md       | 210 +++++++++++++++++++
+ .../claude-rsn358d-20260926/SEAL-run.sha256.txt    |   4 +
+ .../runs/loop-s3/loop-s3.log                       | 121 +++++++++++
+ .../runs/loop-s3/tests.json                        | 225 +++++++++++++++++++++
+ .../runs/loop-s3/train_log.jsonl                   | 120 +++++++++++
+ .../runs/loop-s3/train_summary.json                |  12 ++
+ .../runs/loop-s4/loop-s4.log                       | 121 +++++++++++
+ .../runs/loop-s4/tests.json                        | 220 ++++++++++++++++++++
+ .../runs/loop-s4/train_log.jsonl                   | 120 +++++++++++
+ .../runs/loop-s4/train_summary.json                |  12 ++
+ .../runs/plain-s3/plain-s3.log                     | 121 +++++++++++
+ .../runs/plain-s3/tests.json                       |  46 +++++
+ .../runs/plain-s3/train_log.jsonl                  | 120 +++++++++++
+ .../runs/plain-s3/train_summary.json               |  12 ++
+ .../runs/plain-s4/plain-s4.log                     | 121 +++++++++++
+ .../runs/plain-s4/tests.json                       |  46 +++++
+ .../runs/plain-s4/train_log.jsonl                  | 120 +++++++++++
+ .../runs/plain-s4/train_summary.json               |  12 ++
+ artifacts/fable-predictions-ledger.md              |   2 +
+ 19 files changed, 1765 insertions(+)
+CLEAN-IF-EMPTY
+[0m
