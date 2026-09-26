@@ -65,6 +65,7 @@ while [ ! -e "$H/STOP" ]; do
       ( b=$(df -g / | tail -1 | awk '{print $4}'); TD=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null); TD=${TD:-${TMPDIR:-/tmp}}
         for t in "$TD"tmp.*/tree "$TD"/tmp.*/tree; do [ -d "$t" ] || continue
           [ -n "$(find "$t" -maxdepth 0 -mmin -120 2>/dev/null)" ] && continue   # touched in the last 2 h: a job may still use it
+          for r in "$Q"/*.running; do [ -e "$r" ] || continue; grep -qs "$(basename "$(dirname "$t")")" "${r%.running}".go*.err.txt && continue 2; done   # a running job's log names it: in use
           rm -rf "$(dirname "$t")" 2>/dev/null && log "clean: removed $(dirname "$t")"; done
         for z in "$W/tree.tgz" "$TD"tmp.*/tree.tgz; do [ -f "$z" ] || continue
           [ -n "$(find "$z" -mmin -120 2>/dev/null)" ] && continue
