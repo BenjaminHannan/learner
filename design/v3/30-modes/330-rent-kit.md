@@ -19,6 +19,7 @@ remove it by exact path before you finish. Put `DISK: <GB>` in the job header (p
 self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
 - 0.2c STACK (Director 14:43 UTC 09-26, from mu-402): any rental that runs the 0.2c agent with route122 must also stream artifacts/fable-self127-20260922 (fable_self127.load_deltas reads deltas127.json every turn; missing it crashed mu-402's first A/B launch).
 - TORCH UPGRADE (Director 15:25 UTC 09-26, from rd-378L WRITE-FAIL): if a job upgrades the image's torch (e.g. to 2.11), run `pip uninstall -y torchvision torchaudio` right after (the image's torchvision is built for torch 2.8 and breaks transformers/peft lazy imports), then an import check before any work.
+- TORCH VERSION (Director 16:59 UTC 09-26, Thread manager report: torch 2.8 autocast cache can drop gradients on weights reused after no-grad steps; CPU repro, Sleep research confirming on a rental): every run report records `torch.__version__`. NEW jobs that TRAIN pin torch==2.11.0 (BensPC's version) with the TORCH UPGRADE step above, unless their seal says otherwise. Already-sealed jobs are not changed; eval-only jobs may keep 2.8.
 If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
 model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
 
