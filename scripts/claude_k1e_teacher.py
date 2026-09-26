@@ -11,7 +11,10 @@ The endpoint requires reasoning, so reasoning effort is low; the answer is read 
 write  240 practice chats (the same recipe as the DEV set and the test panels: 84 idea with 1 lead-in turn, 84 idea
        with none, 72 uses_facts with 1/2/3 teach turns, 24 each), in 12 calls of 20, each call given its own subject
        area so calls don't repeat each other. Structure is checked in code; a call that breaks it is retried (3 tries).
-       ids kt-001..kt-240 in call order.
+       ids kt-001..kt-240 in call order. Fixed 2026-09-26 after the first Mac run (k1e-teacher go1: 0 labelled, 0 chats):
+       the teacher answers the judges' instructions with one JSON object per line, which the parser now accepts; a
+       chat is checked on its own (a fact's value must share a word with the teach turns) and every chat that fits an
+       open slot is kept, instead of all-or-nothing batches of 20.
          python -B scripts/claude_k1e_teacher.py write --out DIR [--model M]
 label  the teacher judges draft replies with the blind judges' own instructions (JUDGE-k1a.md, same words), 10 lines
        per call; writes DIR/labels.jsonl {id, useful, made_up_user_facts}.
@@ -101,71 +104,101 @@ def call(key, model, text, temperature, tries=4):
 
 
 def json_list(txt):
+    """A JSON list anywhere in the text, else the JSON objects written one per line (the judges' own format)."""
     m = re.search(r"\[.*\]", txt, re.S)
-    if not m:
-        return None
-    try:
-        v = json.loads(m.group(0))
-    except json.JSONDecodeError:
-        return None
-    return v if isinstance(v, list) else None
+    if m:
+        try:
+            v = json.loads(m.group(0))
+            if isinstance(v, list):
+                return v
+        except json.JSONDecodeError:
+            pass
+    rows = []
+    for line in txt.splitlines():
+        line = line.strip().rstrip(",")
+        if line.startswith("{") and line.endswith("}"):
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                return None
+    return rows or None
+
+
+def _words(t: str) -> set:
+    return {w for w in re.findall(r"[a-z0-9]+", t.lower()) if len(w) >= 3}
+
+
+def chat_kind(r) -> str:
+    """The recipe slot a chat fills (idea1, idea0, uf1, uf2, uf3), else "bad: <why>"."""
+    if not isinstance(r, dict) or set(r) != {"kind", "turns", "last", "facts"}:
+        return "bad: keys"
+    if not isinstance(r["turns"], list) or not all(isinstance(t, str) and t.strip() for t in r["turns"]):
+        return "bad: turns"
+    if not isinstance(r["last"], str) or not r["last"].strip() or not isinstance(r["facts"], list):
+        return "bad: last/facts"
+    n = len(r["turns"])
+    if r["kind"] == "idea" and n in (0, 1) and not r["facts"]:
+        return f"idea{n}"
+    if r["kind"] == "uses_facts" and n in (1, 2, 3) and r["facts"]:
+        said = " ".join(r["turns"]).lower()
+        for f in r["facts"]:
+            if not isinstance(f, dict) or set(f) != {"owner", "relation", "value"}:
+                return "bad: fact keys"
+            if not re.fullmatch(r"[a-z][a-z_]*", str(f["relation"])):
+                return "bad: relation"
+            if f["owner"] != "USER" and str(f["owner"]).lower() not in said:
+                return "bad: fact owner not in teach turns"
+            if not (_words(str(f["value"])) & _words(said)) and str(f["value"]).lower() not in said:
+                return "bad: fact value not in teach turns"
+        return f"uf{n}"
+    return "bad: kind/turn count"
 
 
 def check_batch(rows) -> str | None:
-    """None if the 20 chats follow the recipe, else the first problem found."""
+    """None if the 20 chats follow the recipe exactly, else the first problem found (used by selftest only)."""
     if not rows or len(rows) != 20:
         return "not 20 chats"
     got = {k: 0 for k in BATCH}
     for r in rows:
-        if not isinstance(r, dict) or set(r) != {"kind", "turns", "last", "facts"}:
-            return "keys"
-        if not isinstance(r["turns"], list) or not all(isinstance(t, str) and t.strip() for t in r["turns"]):
-            return "turns"
-        if not isinstance(r["last"], str) or not r["last"].strip() or not isinstance(r["facts"], list):
-            return "last/facts"
-        n = len(r["turns"])
-        if r["kind"] == "idea" and n in (0, 1) and not r["facts"]:
-            got[f"idea{n}"] += 1
-        elif r["kind"] == "uses_facts" and n in (1, 2, 3) and r["facts"]:
-            for f in r["facts"]:
-                if not isinstance(f, dict) or set(f) != {"owner", "relation", "value"}:
-                    return "fact keys"
-                if not re.fullmatch(r"[a-z][a-z_]*", str(f["relation"])):
-                    return "relation"
-                said = " ".join(r["turns"]).lower()
-                if str(f["value"]).lower() not in said or (f["owner"] != "USER" and str(f["owner"]).lower() not in said):
-                    return "fact not in teach turns"
-            got[f"uf{n}"] += 1
-        else:
-            return "kind/turn count"
+        k = chat_kind(r)
+        if k.startswith("bad"):
+            return k[5:]
+        got[k] += 1
     return None if got == BATCH else f"mix {got}"
 
 
-def write(a, key):
+def write(a, key, max_calls: int = 40):
+    """Calls cycle through the 12 subject areas; every chat that fits the recipe and a slot still open is kept, until
+    all 240 slots (84 idea1, 84 idea0, 24 each uf1-3) are filled or max_calls is reached."""
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    items, usage, seen = [], [], set()
-    for b, area in enumerate(AREAS):
-        rows = None
-        for t in range(3):
-            txt, u = call(key, a.model, WRITE.replace("{area}", area), 0.9)
-            usage.append(u)
-            rows = json_list(txt)
-            bad = check_batch(rows)
-            if bad is None and len({r["last"].strip().lower() for r in rows} & seen) == 0:
-                break
-            print(f"[k1e-teacher] batch {b} try {t + 1}: {bad or 'repeats an earlier request'}", flush=True)
-            rows = None
-        if rows is None:
-            raise SystemExit(f"k1e-teacher: batch {b} failed 3 times")
-        for r in rows:
-            seen.add(r["last"].strip().lower())
+    need = {k: v * len(AREAS) for k, v in BATCH.items()}
+    items, usage, seen, why = [], [], set(), {}
+    for c in range(max_calls):
+        if not any(need.values()):
+            break
+        txt, u = call(key, a.model, WRITE.replace("{area}", AREAS[c % len(AREAS)]), 0.9)
+        usage.append(u)
+        kept = 0
+        for r in json_list(txt) or []:
+            k = chat_kind(r)
+            if k.startswith("bad"):
+                why[k] = why.get(k, 0) + 1
+                continue
+            last = r["last"].strip().lower()
+            if need[k] == 0 or last in seen:
+                why["slot full or repeat"] = why.get("slot full or repeat", 0) + 1
+                continue
+            need[k] -= 1
+            seen.add(last)
+            kept += 1
             items.append({"item_id": f"kt-{len(items) + 1:03d}", "kind": r["kind"], "turns": r["turns"],
                           "last": r["last"], "facts": r["facts"], "numbers": None, "target": None, "gold_expr": None})
-        print(f"[k1e-teacher] batch {b} ok ({len(items)} chats)", flush=True)
+        print(f"[k1e-teacher] call {c} kept {kept} ({len(items)} chats)", flush=True)
     (out / "items.jsonl").write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in items), encoding="utf-8")
     cost = sum(float(u.get("cost", 0) or 0) for u in usage)
-    print(json.dumps({"chats": len(items), "calls": len(usage), "cost_usd": round(cost, 4)}))
+    print(json.dumps({"chats": len(items), "complete": not any(need.values()), "open_slots": need,
+                      "rejected": why, "calls": len(usage), "cost_usd": round(cost, 4)}))
 
 
 def label(a, key):
@@ -229,11 +262,14 @@ def selftest():
     assert check_batch(good[:-1]) == "not 20 chats"
     bad = [dict(x) for x in good]
     bad[-1] = {**uf(3), "facts": [{"owner": "Pip", "relation": "loves", "value": "sailing"}]}
-    assert check_batch(bad) == "fact not in teach turns"
+    assert check_batch(bad) == "fact value not in teach turns"
     bad[-1] = {**one}
     assert check_batch(bad).startswith("mix")
     ok += 1
     assert json_list('text [{"a": 1}] more') == [{"a": 1}] and json_list("no list") is None
+    assert json_list('{"id": "E0", "useful": "yes"}\n{"id": "E1", "useful": "no"}') == [
+        {"id": "E0", "useful": "yes"}, {"id": "E1", "useful": "no"}]
+    assert chat_kind({**uf(1), "facts": [{"owner": "Pip", "relation": "loves", "value": "long naps"}]}) == "uf1"
     ok += 1
     print(f"k1e teacher selftest {ok}/2 ok")
 
