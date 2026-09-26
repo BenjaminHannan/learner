@@ -73,7 +73,7 @@ time.
 - GC run: 58 rows, sha256 15291243…4390, CPU fp32, 405 s, kept in the scratchpad (holds benchmark text).
 - Cost $0 (CPU in this container, plus 5 Opus agents: 4 judges and 1 recount).
 
-## Scope and corrections (added 2026-09-26 17:37 UTC, after the Thread manager's check)
+## Scope and corrections (added 2026-09-26 17:33 UTC, after the Thread manager's check; this header first said 17:37 by mistake)
 - **The split, stated plainly.** Of GC's 54 misses (58 − 4):
   - 32 are a format failure: no line starting "DATE:". 31 of those 32 replies still held a date the calendar can
     read. Where the 1B did write the line, it copied the right session date on 26 of 26. So on dates alone, the
