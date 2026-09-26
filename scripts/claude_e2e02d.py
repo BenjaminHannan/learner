@@ -30,7 +30,8 @@ verified PASS, else y1g's agreement check as disclosed scaffolding with S1/H3 re
 
 Harness: scripts/claude_e2e336_run.py --arm claude_e2e02d:build_02d --model LIS320 --gen-model BASE
          (args.max_new, when a runner sets it, overrides the twin's 160; row A's runner passes the rivals' cap)
-Each turn is logged to <state>/e2e02d_log.jsonl (counts and ids only). D0 (ADDENDUM-26) counts come from that log.
+Each turn is logged to <state>/e2e02d_log.jsonl (counts and ids only), and also to $E2E02D_LOG_DIR/<state dir name>.jsonl
+when that is set. D0 (ADDENDUM-26) counts come from those logs (scripts/claude_e2e02d_d0.py).
   python -B scripts/claude_e2e02d.py selftest          (no model: stub reader, talker and solver)
 """
 from __future__ import annotations
@@ -229,6 +230,11 @@ class Agent02d:
         self.turn_no = len(heard)
         self.said_at = heard[-1].get("said_at") if heard else None
         self.date_re = E382.DATE382
+        self.logs = [self.dir / LOG02D]
+        if os.environ.get("E2E02D_LOG_DIR"):        # the 336 runner deletes state dirs; D0 reads this copy
+            keep = Path(os.environ["E2E02D_LOG_DIR"])
+            keep.mkdir(parents=True, exist_ok=True)
+            self.logs.append(keep / f"{self.dir.name}.jsonl")
 
     def _reason(self, text: str) -> dict | None:
         import claude_puzzle_reader as P
@@ -274,8 +280,9 @@ class Agent02d:
                "rounds": res["rounds"] if res else None, "hit_max": getattr(self._talk, "hit_max", 0),
                "empty_reply": not reply.strip(), "read_ms": round(read_ms, 1),
                "ms": round((time.time() - t0) * 1000, 1)}
-        with open(self.dir / LOG02D, "a", encoding="utf-8") as fh:
-            fh.write(json.dumps(row) + "\n")
+        for path in self.logs:
+            with open(path, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(row) + "\n")
         return [reply]
 
     def e2e_end_day(self) -> None:
