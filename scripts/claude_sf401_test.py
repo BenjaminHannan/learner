@@ -16,7 +16,8 @@ Dialogs are invented (fictional people, pets and towns). T = 0.995 throughout.
   s10 a later reading that repeats the saved fact clears its doubt
   s11 a question the notebook cannot answer is untouched (lis-314's own confirm path)
   s12 build_02c_sf401's build wrapper installs the guard inside the listener stack and restores build_stack
-  s13 pure rules: same_person, doubts_from_frame (a, b, b by a named person, c, repeat, multi, ungrounded value)
+  s13 pure rules: same_person, doubts_from_frame (a, b, c incl. FORMER, other person, other modes, repeat,
+      multi, ungrounded value)
 
 Run: python3 -B scripts/claude_sf401_test.py   (exit 0 iff all pass)
 """
@@ -309,11 +310,17 @@ def s13():
     assert [d["rule"] for d in new] == ["c"] and new[0]["new"] is None
     new, _ = SF.doubts_from_frame({"act": "CORRECT", "facts": [
         fact("Branoc", "city", "Veltrow", mode="CORRECT", old="Quillmere")]}, turn, before)
-    assert [d["rule"] for d in new] == ["b"] and new[0]["new"]["owner"] == "Brannoc", "misspelled, named in turn"
-    new, _ = SF.doubts_from_frame({"act": "CORRECT", "facts": [
-        fact("Branoc", "city", "Veltrow", mode="CORRECT", old="Quillmere")]}, "he moved to Veltrow, not Quillmere",
-        before)
-    assert not new, "misspelled person not named in the turn"
+    assert not new, "the frame's person must resolve to the saved person"
+    for m in ("QUESTION", "SUPPOSE", "REPORTED"):
+        new, _ = SF.doubts_from_frame({"act": "STATE", "facts": [
+            fact("Brannoc", "city", "Veltrow", mode=m, old="Quillmere")]}, turn, before)
+        assert not new, m
+    new, _ = SF.doubts_from_frame({"act": "STATE", "facts": [fact("Odila", "pet", "Pim", mode="FORMER")]},
+                                  "Pim was Odila's pet years ago", before)
+    assert [d["rule"] for d in new] == ["c"] and new[0]["new"] is None, new
+    new, _ = SF.doubts_from_frame({"act": "STATE", "facts": [fact("Brannoc", "city", "Farholm", mode="FORMER")]},
+                                  "Brannoc used to live in Farholm", before)
+    assert not new, "a former value that is not the saved one raises no doubt"
     _, rep = SF.doubts_from_frame({"act": "STATE", "facts": [fact("Brannoc", "city", "Quillmere")]}, turn, before)
     assert rep == [("Brannoc", "city", "Quillmere")]
     new, rep = SF.doubts_from_frame({"act": "ASK", "facts": [fact("brannoc", "city", "Veltrow")]}, turn, before)

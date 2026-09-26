@@ -26,3 +26,7 @@ lis-319 reader, B = A + guard, marks in PASSMARKS.md. BensPC job handoff/queue/0
 Integrations (Ben's 12:48 rule): Reading facts owns the reader and saves (this guard reads its frames and saves a
 confirmed correction through turn310); Month-end owns joining; "Making things up about you" owns H3/S1 and lis-314's
 never-told confirm path, which this guard does not touch.
+
+13:45 UTC addendum (artifacts/claude-sf401-20260926/PASSMARKS-addendum-1.md): doubts narrowed as Reading facts asked
+(same person, ASSERT/CORRECT or NEGATED/FORMER only; the misspelled-person exception removed), new mark M6 (never-told
+"don't know" B ≥ A − 1). DEV replay after it: 2 doubts, both real corrections, guard never fired, A = B on every count.

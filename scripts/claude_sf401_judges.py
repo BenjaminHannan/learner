@@ -6,7 +6,7 @@
                             OUT/key_asks.json (arm per id; never shown to a judge)
   split OUT J1 J2           ids where judges 1 and 2 disagree -> OUT/split_ids.json (for the third judge)
   marks BANK SCORE OUT J1 J2 [J3] [SF401_COUNTS]
-                            applies the key and prints the mark table (M1-M5), INCONCLUSIVE rule, and report rows
+                            applies the key and prints the mark table (M1-M6), INCONCLUSIVE rule, and report rows
 Judge files: JSON Lines {"id": ..., "verdict": "wrong" | "ok", "reason": ...}.
 """
 from __future__ import annotations
@@ -92,7 +92,7 @@ def marks(bank: Path, score: Path, out: Path, j1: Path, j2: Path, j3: Path | Non
             kind = "edit" if p.get("ask_type") == "edit" else (
                 "never_told" if p.get("ask_type") == "never_told" else "control")
             wrong[(p["_arm"], kind)] += 1
-    mech = {}
+    mech, cls = {}, {}
     for arm in ("A", "B"):
         c = {"edit": Counter(), "control": Counter(), "never_told": Counter()}
         arows = ld(score.parent / "run" / f"arm_{arm}.jsonl") if (score.parent / "run").exists() else None
@@ -104,7 +104,9 @@ def marks(bank: Path, score: Path, out: Path, j1: Path, j2: Path, j3: Path | Non
             if r["kind"] != "user" or t is None or t["kind"] != "ask":
                 continue
             kind = "edit" if t["ask_type"] == "edit" else ("never_told" if t["ask_type"] == "never_told" else "control")
-            c[kind][SC.score_ask(t, r, conf.get((r["life_id"], r["turn_index"])))] += 1
+            k = SC.score_ask(t, r, conf.get((r["life_id"], r["turn_index"])))
+            c[kind][k] += 1
+            cls[(arm, r["life_id"], r["turn_index"])] = (k, kind, r["reply"])
         c["confirms"] = sum(1 for r in arows if r.get("confirm_asked"))
         mech[arm] = c
     wA = sum(v for (a, _k), v in wrong.items() if a == "A")
@@ -120,8 +122,21 @@ def marks(bank: Path, score: Path, out: Path, j1: Path, j2: Path, j3: Path | Non
          mech["B"]["control"].get("ABSTAIN", 0) <= mech["A"]["control"].get("ABSTAIN", 0) + 2),
         ("M5", "judged wrong, control asks", wrong[("A", "control")], wrong[("B", "control")],
          wrong[("B", "control")] <= wrong[("A", "control")] + 1),
+        ("M6", "don't know, never-told asks", mech["A"]["never_told"].get("RIGHT", 0),
+         mech["B"]["never_told"].get("RIGHT", 0),
+         mech["B"]["never_told"].get("RIGHT", 0) >= mech["A"]["never_told"].get("RIGHT", 0) - 1),
     ]
     inconclusive = wrong[("A", "edit")] < 5
+    # paired, report only: asks A got right that B did not, and how many of those B replies are the guard's own
+    flips = Counter()
+    for (arm, life, ti), (k, kind, _reply) in cls.items():
+        if arm != "A" or k not in ("RIGHT", "RIGHT_CONFIRM"):
+            continue
+        kb, _kind, rb = cls.get(("B", life, ti), (None, None, ""))
+        if kb in ("RIGHT", "RIGHT_CONFIRM"):
+            continue
+        guard = rb.startswith("Earlier you told me") and "I think that has changed since" in rb
+        flips[(kind, "guard_hedge" if guard else "other")] += 1
     print("| Row | What | A | B | Verdict |")
     print("|---|---|---|---|---|")
     for r, what, a, b, ok in rows_out:
@@ -132,6 +147,7 @@ def marks(bank: Path, score: Path, out: Path, j1: Path, j2: Path, j3: Path | Non
                "PASS" if all(ok for *_x, ok in rows_out) else "FAIL")
     print(f"overall: {overall}")
     report = {"judged_wrong": {f"{a}_{k}": v for (a, k), v in sorted(wrong.items())},
+              "right_in_A_not_in_B": {f"{k}_{g}": v for (k, g), v in sorted(flips.items())},
               "judges": {"packets": len(key), "agree_1_2": sum(1 for i in key if v1[i] == v2[i]),
                          "third_used": sum(1 for i in key if v1[i] != v2[i])},
               "mechanical": {arm: {k: dict(v) if isinstance(v, Counter) else v for k, v in mech[arm].items()}

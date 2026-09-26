@@ -12,12 +12,12 @@ saved, and lis-314 only uses a pending fact when the notebook has no answer. So 
 The one change: a saved fact that a later user turn contradicted is never stated as fact.
   Doubt. On a turn the reader does not read as a question (act != "ASK"), for each fact in the reader's own frame,
   at ANY confidence (read before any inner layer edits it), a saved fact (s, r, v) becomes doubted when the
-  person matches and
-    (a) the frame gives another value for the same relation, the relation holds one value (not in MULTI401),
-        and the new value is in the user's words; or
-    (b) the frame names v as the "old" value of a correction and v is in the user's words (here the person may
-        also match by the user naming the saved person in the same turn); or
-    (c) the frame negates the saved fact itself (mode NEGATED, same relation and value);
+  frame's person resolves to the saved person (same_person) and
+    (a) the frame, in mode ASSERT or CORRECT, gives another value for the same relation, the relation holds one
+        value (not in MULTI401), and the new value is in the user's words; or
+    (b) the frame, in mode ASSERT or CORRECT, names v as the "old" value of a correction, v in the user's words; or
+    (c) the frame says the saved fact itself is no longer true (mode NEGATED, or FORMER from lis-319f; same
+        relation and value). QUESTION, SUPPOSE, REPORTED and other modes never raise a doubt;
   and (s, r, v) is still saved after the turn (a confident correction has already replaced it: nothing to do).
   A later frame that repeats (s, r, v) exactly, not negated, clears its doubt.
   Answer. On a question turn (reader act ASK or a "?" in the user's words), when the inner reply is a statement
@@ -61,6 +61,8 @@ HEDGE401 = "Earlier you told me {claim}, but I think that has changed since, so 
 MULTI401 = frozenset(set(M154E.MULTI_VALUED_154E) | {
     "kid", "grandparent", "grandson", "granddaughter", "niece", "nephew", "neighbour", "neighbor", "roommate",
     "classmate", "teammate", "student", "hobby", "allergy", "speaks", "plays", "instrument", "sport", "car"})
+# Modes that say a value is no longer true (lis-319f adds FORMER, "I used to be a nurse"; Reading facts 13:11 UTC).
+STALE_MODES401 = ("NEGATED", "FORMER")
 USER_WORDS401 = re.compile(r"\b(i|i'm|im|me|my|mine|you|your|yours|you're)\b", re.I)
 
 
@@ -113,20 +115,15 @@ def doubts_from_frame(frame: dict, turn: str, before: set) -> tuple[list[dict], 
                 offer = {"owner": "me" if _low(s) == _low(L310.USER_SUBJECT310) else s, "rel": r,
                          "value": val, "mode": "CORRECT"}
             if not same_person(s, owner):
-                # rule (b) only: the user named the saved person and the old value in this turn (the reader
-                # misspelled the person, e.g. DEV "wwyn" for Wynn)
-                if old and _low(old) == _low(v) and _names(turn, old) and _names(turn, s) \
-                        and _low(s) != _low(L310.USER_SUBJECT310):
-                    new.append({"s": s, "r": r, "v": v, "rule": "b", "new": offer})
                 continue
-            if mode == "NEGATED":
+            if mode in STALE_MODES401:
                 if r == rel and _low(v) == _low(val):
                     new.append({"s": s, "r": r, "v": v, "rule": "c", "new": None})
                 continue
             if r == rel and _low(v) == _low(val):
                 repeats.append((s, r, v))
                 continue
-            if old and _low(old) == _low(v) and _names(turn, old):
+            if old and _low(old) == _low(v) and _names(turn, old) and mode in CMP.WRITE_MODES:
                 new.append({"s": s, "r": r, "v": v, "rule": "b", "new": offer})
             elif r == rel and r not in MULTI401 and offer is not None:
                 new.append({"s": s, "r": r, "v": v, "rule": "a", "new": offer})
