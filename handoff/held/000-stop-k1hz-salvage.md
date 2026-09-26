@@ -1,4 +1,4 @@
-COMMON RULES (the "Creative answers in chat" thread, Claude, wrote this task on 2026-09-26 20:20 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>`. Additive only, fictional names, no secrets, never write to the repo-root notebook/. Never read or print opencode config, auth or key files. Report in your final reply: verdict first, integer counts, every deviation.
+COMMON RULES (the "Creative answers in chat" thread, Claude, wrote this task on 2026-09-26 20:04 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>`. Additive only, fictional names, no secrets, never write to the repo-root notebook/. Never read or print opencode config, auth or key files. Report in your final reply: verdict first, integer counts, every deviation.
 GPU: no (Mac CPU; file copies only; no GLM call, no opencode call except the session count below).
 TIME CAP: 45 minutes.
 DUPLICATE GUARD: stop with DUPLICATE if artifacts/claude-k1h-20260926/glm-v1 exists on origin/builder-outbox or origin/main.
