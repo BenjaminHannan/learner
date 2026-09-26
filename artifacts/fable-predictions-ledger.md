@@ -2626,3 +2626,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-26 13:45 UTC Director: rent-mu402 released, BUDGET $1.00 from Making things up about you's $2 (Ben 12:59/13:30).
 - 2026-09-26 13:50 UTC Director: rent-358i queued (88a4f1ac8): rsn-358i $1.50 of Sleep research's $2; rv-387 section on the same rental, on Memory for its own thoughts' $2 (45 min cap). Rental credit gate: none (Ben 13:23, auto-refill).
 - 2026-09-26 13:52 UTC Director: rent-y1d released, $0.40 of Answering from memory's $2.
+- 2026-09-26 14:12 UTC Director: rent-sf401 released, $1.50 of Wrong answers stated as fact's $2.
