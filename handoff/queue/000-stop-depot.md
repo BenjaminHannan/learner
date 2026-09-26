@@ -8,9 +8,9 @@ First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-
 - Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
 - You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
 
-YOUR TASK: retire the Director's reader depot (director, 2026-09-26 19:00 UTC; the Director created it; Thread manager asked to cut spend).
-1. Confirm the Mac still holds both readers: `shasum -a 256 ~/premonition-models/lis319f-merged/model.safetensors` must be 970ef0acd5966f9e1a42049025d4ed807dee3989225201fd9dbcc6b4aa6b4f9b, and `ls -la ~/premonition-models/lis319-merged/model.safetensors` (or wherever lis-319 lives; report the path). If lis319f's sha does not match, destroy NOTHING and report.
-2. vast (key only via $(cat ~/.config/vastai/vast_api_key), never printed): find the ONE instance labelled exactly claude-director-depot (expected id 52755827). `vastai destroy instance <id>`; confirm it is gone. Record start time, dph, hours, cost. Touch no other instance.
-Write artifacts/claude-destroy-depot-20260926/REPORT.md and append a ledger line with `cat >> artifacts/fable-predictions-ledger.md`: "- 2026-09-26 <time> UTC depot 52755827 destroyed; <h> h x $<dph> = $<cost>."
-PUSH: artifacts/claude-destroy-depot-20260926/REPORT.md artifacts/fable-predictions-ledger.md
+YOUR TASK: STOP (not destroy) the Director's reader depot (director, 2026-09-26 19:05 UTC; the Director created it; the Thread manager asked to cut spend; stopping ends the GPU charge and keeps the disk for a small storage fee).
+1. Report where the readers live on the Mac: `shasum -a 256 ~/premonition-models/lis319f-merged/model.safetensors` (expected 970ef0acd5966f9e1a42049025d4ed807dee3989225201fd9dbcc6b4aa6b4f9b) and the path of lis319-merged/model.safetensors. Stop the depot either way.
+2. vast (key only via $(cat ~/.config/vastai/vast_api_key), never printed): find the ONE instance labelled exactly claude-director-depot (expected id 52755827). `vastai stop instance <id>`; confirm its status is stopped/exited, NOT destroyed. Record start time, dph, hours, cost so far, and the storage cost per hour and per day while stopped (from `vastai show instance <id> --raw`). Touch no other instance.
+Write artifacts/claude-stop-depot-20260926/REPORT.md and append a ledger line with `cat >> artifacts/fable-predictions-ledger.md`: "- 2026-09-26 <time> UTC depot 52755827 STOPPED (disk kept); <h> h x $<dph> = $<cost>; storage $<x>/day."
+PUSH: artifacts/claude-stop-depot-20260926/REPORT.md artifacts/fable-predictions-ledger.md
 DISK: 0
