@@ -2663,3 +2663,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-26 17:10 UTC Director: rent-k1c actual ~$0.26 of $0.80 (5090, 0.52 h; first host refused image pull, destroyed). Creative answers in chat ~$0.56 of $2.
 - 2026-09-26 17:14 UTC Director: rent-0y1g actual ~$0.10; Answering from memory vast ~$0.47 of $2. Released y1t-glm-mac (51c49f1f1): Mac CPU, no rental, OpenRouter GLM ~$0.60 (under Ben 16:39 "Use GLM"); not on the vast line.
 - 2026-09-26 17:32 UTC Director: rent-rd378u actual ~$0.39 (0.773 h x $0.5037). rd378k-teacher OpenRouter $0.068 (not vast). rd378L per its reply: ~$0.58 + <=$0.11 loading = <=$0.69. Trustworthy notes vast: rd378L <=$0.69 + notes-b ~$0.47 + rd378u ~$0.39 = <=$1.55; left >= $0.45 of $2.
+- 2026-09-26 17:33 UTC Director: rent-bm398e queued by Benchmarks (9e03eb1ec, label claude-benchmarks-bm398e) cap $0.35, scoring only. Benchmarks ~$1.11 spent (bm398r $0.65 + smokes ~$0.46) + $0.35 = $1.46 of $2.
