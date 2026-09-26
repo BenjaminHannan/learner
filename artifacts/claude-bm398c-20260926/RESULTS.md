@@ -72,3 +72,22 @@ time.
   judge/labels/*.jsonl (item and label only), diag/*.py (the post-hoc counts above; they print counts only).
 - GC run: 58 rows, sha256 15291243…4390, CPU fp32, 405 s, kept in the scratchpad (holds benchmark text).
 - Cost $0 (CPU in this container, plus 5 Opus agents: 4 judges and 1 recount).
+
+## Scope and corrections (added 2026-09-26 17:37 UTC, after the Thread manager's check)
+- **The split, stated plainly.** Of GC's 54 misses (58 − 4):
+  - 32 are a format failure: no line starting "DATE:". 31 of those 32 replies still held a date the calendar can
+    read. Where the 1B did write the line, it copied the right session date on 26 of 26. So on dates alone, the
+    1B's copying was fine. The strict parser plus the 1B's loose format lost these 32.
+  - The only support for "the 1B misses the time words" is the other part: "same day" on 21 of 26, of which 16
+    have time words by a rough, hand-written word-list check (not blind, not verified). There were 5 real copies
+    of time words, and the calendar was right on 3 of them.
+  - So "the loss is in reading" above is too strong. The evidence shows a format failure on 32 and a likely
+    time-word miss on about 16.
+- **What was proved wrong** is prompted copying at 1B, read by a strict parser. It is not "a learned part
+  translates and a tool computes", which is Ben's design. A reader trained to emit the time as a field was not
+  tested. This mirrors how 358x's verdict was limited to crippled loops.
+- **The warning the seal missed.** The only try-out before sealing was a 3-question smoke on the first 3 of these
+  58 test questions, not on development items. Its text was not read, and it counted 1 of 3 with no readable
+  date. I did not look into why before sealing. A format check on development chats (the code-made chats, for
+  example) would likely have caught the missing "DATE:" labels. Lesson: before sealing a prompted format, count
+  format compliance on development items, and keep the smoke off the test items.
