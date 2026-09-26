@@ -55,13 +55,13 @@ while [ ! -e "$H/STOP" ]; do
     n=$(basename "$f" .md)
     [ -e "$Q/$n.md" ] && continue
     running=$(ls "$Q"/*.running 2>/dev/null | wc -l)
-    # 1xx-/2xx-/3xx- are BensPC GPU jobs (Director order prefixes): the Mac only waits on ssh, so they neither count nor wait for local slots (Director 23:42 UTC 09-26)
+    # BensPC GPU jobs (task line 'GPU: yes'; the Director names them 1xx-/2xx-/3xx-): the Mac only waits on ssh, so they skip the local-slot cap and the load hold (GPU-BUSY still allows one at a time); the count excludes those prefixes (Director 23:42 UTC 09-26)
     # rentals mostly wait on vast (polls, uploads), so they get extra slots beyond MAX (Director 13:47 UTC 09-26, Ben 13:30 "BensPC's gpu should not be the blocker")
     grep -qE '^STATUS: *HELD' "$f" 2>/dev/null && continue
-    [ "$running" -ge 18 ] && break; localrun=$(ls "$Q"/*.running 2>/dev/null | xargs -n1 basename 2>/dev/null | grep -cvE '^(rent-|000-|claude-|[1-3][0-9][0-9]-)'); [ "$localrun" -ge "$MAX" ] && case "$n" in rent-*|000-*|claude-*|[1-3][0-9][0-9]-*) ;; *) continue;; esac
+    [ "$running" -ge 18 ] && break; localrun=$(ls "$Q"/*.running 2>/dev/null | xargs -n1 basename 2>/dev/null | grep -cvE '^(rent-|000-|claude-|[1-3][0-9][0-9]-)'); gpuj=0; git -C "$W" show "origin/$IN:$f" 2>/dev/null | grep -qE '^GPU: *yes' && gpuj=1; [ "$localrun" -ge "$MAX" ] && [ "$gpuj" = 0 ] && case "$n" in rent-*|000-*|claude-*) ;; *) continue;; esac
     load=$(sysctl -n vm.loadavg 2>/dev/null | awk '{print int($2)}'); [ -z "$load" ] && load=0
     # Ben 13:30 UTC 09-26 "BensPC's gpu should not be the blocker": rentals and read-only 000-* checks do their work off the Mac, so a busy Mac holds only local jobs
-    if [ "${localrun:-0}" -ge 2 ] && [ "$load" -gt 60 ]; then case "$n" in rent-*|000-*|claude-*) ;; *) log "load $load, holding $n ($running running)"; continue;; esac; fi
+    if [ "${localrun:-0}" -ge 2 ] && [ "$load" -gt 60 ] && [ "$gpuj" = 0 ]; then case "$n" in rent-*|000-*|claude-*) ;; *) log "load $load, holding $n ($running running)"; continue;; esac; fi
     freegb=$(df -g / | tail -1 | awk '{print $4}')
     # Ben 06:54 UTC 09-26 made Mac disk the pipeline's job ("You have this responsibility"): jobs marked LOWDISK-OK
     # (no model copy-back to the Mac) may launch down to 2 GB free; everything else keeps the 5 GB rule
