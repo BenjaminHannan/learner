@@ -19,3 +19,5 @@ How it is read:
 Where: BensPC at $0 if it is free when the nets land, otherwise a vast rental from this thread's line. The Director's ledger books $1.30 of $2 (rv-387's share at up to
 $0.40, and rv-390's $0.90 cap); the builder reports rv-390 cost about $0.37. Any spend past $2 goes to the Thread
 manager first.
+
+Update (18:48 UTC by date -u): Ben (18:42 UTC, relayed by the Thread manager at 18:48) ended new vast rentals unless the Thread manager assigns part of the remaining balance. The rerun therefore runs on BensPC only, as handoff/held/rv390-358i2-pc.md already says. If BensPC is busy, the job waits in the queue. It does not go to a rental.
