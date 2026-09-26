@@ -8,7 +8,8 @@ trained on is written or judged by Claude. So:
 - chats: Reading facts' lis-320 GLM dialogs. Code chose every fact (seeds.jsonl); GLM 5.3 Flash wrote the wording;
   lis-320's code check kept or dropped each turn (kept.jsonl). Only kept user turns are shown, in order.
 - questions: the dialog's own "ask" turns (GLM wording). The gold is the latest ASSERT/CORRECT value that the seed's
-  code frames give for (owner, rel) among the kept turns before the ask. Never-told twin: the same ask with every
+  code frames give for (owner, rel) among the kept turns before the ask, counting a fact only when its value is typed
+  in that user turn (a "yes" to the assistant's question does not put the value in the user's words). Never-told twin: the same ask with every
   kept earlier turn whose seed frame holds a fact on that (owner, rel) removed; gold "I don't know".
 - drafts: the plain 1B answers each item in y1f's L1 layout (greedy + K samples, T 0.7 / top-p 0.9). Code grades
   every draft with the 336 scorer (score_ask) plus y1f's checks. An old, corrected value does not match the gold, so it
@@ -20,6 +21,7 @@ Output rows are bm-398r's trainer format ({"system", "user", "answer"}; dev rows
 sealed trainer (scripts/claude_bm398r_train.py: rank 16 LoRA on q/k/v/o, 1 epoch, lr 2e-4, batch 8, loss on the answer
 tokens) is used unchanged, and the sealed y1g harness scores the merged model on DEV.
 
+  python -B scripts/claude_y1t_data.py split-seeds --seeds SEEDS.jsonl [--parts 8]   -> SEEDS_0.jsonl .. SEEDS_7.jsonl
   python -B scripts/claude_y1t_data.py items --seeds SEEDS --kept KEPT --out DIR [--seed 4027] [--dev-share 0.15]
       -> DIR/items_train.jsonl, DIR/items_dev.jsonl (CPU; prints counts)
   python -B scripts/claude_y1t_data.py drafts --model BASE --dir DIR [--k 4] [--seed 4027] [--max-items 3000]
@@ -59,6 +61,7 @@ def _key(owner: str, rel: str) -> tuple[str, str]:
 
 def build_items(seeds: list[dict], kept: list[dict]) -> tuple[list[dict], Counter]:
     """Practice items from kept GLM turns and the seeds' code frames. Never reads anything but these two files."""
+    import claude_e2e336_score as S
     text = {}
     for r in kept:
         did, k = r["id"].rsplit("-t", 1)
@@ -76,7 +79,8 @@ def build_items(seeds: list[dict], kept: list[dict]) -> tuple[list[dict], Counte
             latest = None
             for u in before:
                 for f in u["gold"].get("facts") or []:
-                    if _key(f["owner"], f["rel"]) == key:
+                    # told = the value is typed in that kept user turn (a "yes" to the assistant's question is not)
+                    if _key(f["owner"], f["rel"]) == key and S.vmatch(text[(d["dialog_id"], u["k"])], f["value"]):
                         latest = f
             if latest is None or latest.get("mode") not in CURRENT:
                 c["skip_no_current_fact"] += 1
@@ -207,15 +211,19 @@ def selftest() -> None:
         {"k": 6, "intent": "ask", "gold": fr("ASK", [], {"owner": "me", "rel": "cat", "inverse": False})}]},
         {"dialog_id": "d2", "turns": [
             {"k": 1, "intent": "teach", "gold": fr("TELL", [fa("me", "city", "Varno")])},
-            {"k": 2, "intent": "ask", "gold": fr("ASK", [], {"owner": "me", "rel": "city", "inverse": False})}]}]
+            {"k": 2, "intent": "ask", "gold": fr("ASK", [], {"owner": "me", "rel": "city", "inverse": False})}]},
+        {"dialog_id": "d3", "turns": [
+            {"k": 1, "intent": "yes_after_ask", "gold": fr("TELL", [fa("me", "pet", "Nib")])},
+            {"k": 2, "intent": "ask", "gold": fr("ASK", [], {"owner": "me", "rel": "pet", "inverse": False})}]}]
     kept = [{"id": "glm320-d1-t1", "turn": "my sister Mira got a dog called Rolo"},
             {"id": "glm320-d1-t2", "turn": "long day lol"},
             {"id": "glm320-d1-t3", "turn": "wait no mira's dog is Tansy not rolo"},
             {"id": "glm320-d1-t4", "turn": "whats mira's dog called again"},
             {"id": "glm320-d1-t6", "turn": "did i get a cat?"},
-            {"id": "glm320-d2-t2", "turn": "where do i live"}]              # d2's teach turn was dropped
+            {"id": "glm320-d2-t2", "turn": "where do i live"},              # d2's teach turn was dropped
+            {"id": "glm320-d3-t1", "turn": "yep that's right"}, {"id": "glm320-d3-t2", "turn": "what's my pet?"}]
     items, c = build_items(seeds, kept)
-    assert c["asks_kept"] == 3 and c["items_answerable"] == 1 and c["skip_no_current_fact"] == 2, c
+    assert c["asks_kept"] == 4 and c["items_answerable"] == 1 and c["skip_no_current_fact"] == 3, c
     a, nt = items
     assert a["gold"]["values"] == ["Tansy"] and a["corrected"] and len(a["rows"]) == 3
     assert nt["gold"]["type"] == "idk" and [r["id"] for r in nt["rows"]] == [2]   # both turns on (mira, dog) removed
@@ -251,6 +259,9 @@ def main() -> None:
         i.add_argument(k, required=True)
     i.add_argument("--seed", type=int, default=SEED)
     i.add_argument("--dev-share", type=float, default=0.15)
+    sp = sub.add_parser("split-seeds")
+    sp.add_argument("--seeds", required=True)
+    sp.add_argument("--parts", type=int, default=8)
     g = sub.add_parser("drafts")
     g.add_argument("--model", required=True)
     g.add_argument("--dir", required=True)
@@ -258,7 +269,13 @@ def main() -> None:
     g.add_argument("--seed", type=int, default=SEED)
     g.add_argument("--max-items", type=int, default=3000)
     a = ap.parse_args()
-    if a.cmd == "items":
+    if a.cmd == "split-seeds":
+        lines = [x for x in Path(a.seeds).read_text(encoding="utf-8").splitlines() if x.strip()]
+        for i in range(a.parts):
+            Path(f"{a.seeds[:-len('.jsonl')]}_{i}.jsonl").write_text(
+                "".join(x + "\n" for x in lines[i::a.parts]), encoding="utf-8")
+        print(json.dumps({"dialogs": len(lines), "parts": a.parts}))
+    elif a.cmd == "items":
         items, c = build_items(load(a.seeds), load(a.kept))
         tr, dv = split(items, a.seed, a.dev_share)
         out = Path(a.out)
