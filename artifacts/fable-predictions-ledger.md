@@ -2641,3 +2641,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-26 15:15 UTC Director: rent-mu404 released, $1.00 (Making things up total $1.36 of $2 with mu-402's $0.36).
 - 2026-09-26 15:17 UTC Director: Ben approved rsn-358t at 15:15 (decision card in Thread manager thread): claude-sleep-358t cap $1.30, up to $1.20 over Sleep research's $2.
 - 2026-09-26 15:20 UTC Director: rent-lis-319f actual ~$0.95 + ~$0.05 failed first host (Reading facts' report). Depot upload of lis-319f reader queued (rent-depot319f, $0 beyond depot's $0.11/hr).
+- 2026-09-26 15:21 UTC Director: Ben 15:19 approved claude-sleep-358t v2 at $1.60 cap (replaces 15:15 $1.30), up to $1.50 over Sleep research's $2.
