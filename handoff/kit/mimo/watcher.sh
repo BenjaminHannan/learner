@@ -53,7 +53,13 @@ while [ ! -e "$H/STOP" ]; do
     [ "$running" -ge "$MAX" ] && break
     load=$(sysctl -n vm.loadavg 2>/dev/null | awk '{print int($2)}'); [ -z "$load" ] && load=0
     if [ "$running" -ge 2 ] && [ "$load" -gt 60 ]; then log "load $load, holding new launches ($running running)"; break; fi
-    freegb=$(df -g / | tail -1 | awk '{print $4}'); if [ "${freegb:-0}" -lt 5 ]; then log "disk ${freegb} GB free, holding new launches"; break; fi
+    freegb=$(df -g / | tail -1 | awk '{print $4}'); if [ "${freegb:-0}" -lt 5 ]; then log "disk ${freegb} GB free, holding new launches"
+      # Ben 02:17 UTC 09-26 approved emptying the Trash and asked the watcher to clear space itself; cache prune only (never uv cache clean)
+      if [ ! -e "$H/lowdisk.$(date +%Y%m%d%H)" ]; then touch "$H/lowdisk.$(date +%Y%m%d%H)"
+        uv cache prune >/dev/null 2>&1 && log "lowdisk: uv cache prune"
+        osascript -e 'with timeout of 900 seconds' -e 'tell application "Finder" to empty trash' -e 'end timeout' >/dev/null 2>&1 && log "lowdisk: emptied Trash" || log "lowdisk: empty Trash failed"
+        log "lowdisk: now $(df -g / | tail -1 | awk '{print $4}') GB free"; fi
+      break; fi
     git -C "$W" show "origin/$IN:$f" > "$Q/$n.md.tmp"
     if grep -q '^QUIET: yes' "$Q/$n.md.tmp" && { [ "$running" -gt 0 ] || [ "$load" -gt 20 ]; }; then rm -f "$Q/$n.md.tmp"; continue; fi   # timing jobs wait for an idle Mac
     if ls "$Q"/*.running >/dev/null 2>&1 && grep -l '^QUIET: yes' $(ls "$Q"/*.running | sed 's/\.running$/.md/') 2>/dev/null | grep -q .; then rm -f "$Q/$n.md.tmp"; break; fi   # nothing starts beside a quiet job
