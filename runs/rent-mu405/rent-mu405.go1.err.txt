@@ -1,0 +1,565 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1 | head -20; echo FETCH_DONE; git branch -r | head -20; git log --oneline origin/main -5; git log --oneline origin/builder-outbox -5
+FETCH_DONE
+  origin/HEAD -> origin/main
+  origin/builder-outbox
+  origin/builder-outbox-tmp
+  origin/builder-outbox-tmpfetch
+  origin/chat-flags
+  origin/claude/card-experiment-handoff-7c5b27
+  origin/claude/model-architecture-review-0161ce
+  origin/claude/project-thread-0181x3
+  origin/claude/project-thread-h8jbxv
+  origin/claude/project-thread-p68q5v
+  origin/codex/testing-experiment-44
+  origin/main
+  origin/main-tmpfetch
+  origin/worktree-research
+0e6a864cd ledger: 358t3 $1.60
+7ce8f60ab queue: 000-peek-358i2pc (read-only BensPC progress)
+ea0291da4 queue: release rent-mu405 ($0.35); mu404b actual
+fceb57784 358t v3 RELEASED (Ben 18:39, $1.60 cap): start now on a rental; CUDA Stage 0 gate (cache-off line must be 0/12)
+132260303 mu-405 sealed: do stored facts in the plain-1B talker's input raise made-up claims (K vs N), and do the user's own words cut them (W vs K, decides 0.2d)
+39ddfe8d5 watcher status
+8dc38dcd0 watcher status
+1baa52329 watcher status
+b1895b05c builder results: lis320-full-mac
+2423248fe watcher status
+[0m
+[0m$ [0mgit ls-tree -r --name origin/builder-outbox -- artifacts/claude-mu405-20260926/ 2>&1 | head -30; echo ---; vastai show user --raw 2>&1 | head -20
+error: ambiguous option: name (could be --name-only or --name-status)
+usage: git ls-tree [<options>] <tree-ish> [<path>...]
+
+    -d                    only show trees
+    -r                    recurse into subtrees
+    -t                    show trees when recursing
+    -z                    terminate entries with NUL byte
+    -l, --long            include object size
+    --name-only           list only filenames
+    --name-status         list only filenames
+    --object-only         list only objects
+    --[no-]full-name      use full path names
+    --[no-]full-tree      list entire tree; not just current directory (implies --full-name)
+    --format <format>     format to use for the output
+    --[no-]abbrev[=<n>]   use <n> digits to display object names
+
+---
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 4.087661268369729,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-mu405-20260926/ 2>&1 | head -30; echo ===; git show origin/builder-outbox:artifacts/fable-predictions-ledger.md 2>&1 | tail -20
+zsh:1: == not found
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-mu405-20260926/
+(no output)
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | head -40
+.DS_Store
+artifacts/.DS_Store
+artifacts/claude-adapters-20260926d/REPORT.md
+artifacts/claude-blurt1-dev-20260925/RESULTS-blurt1.md
+artifacts/claude-blurt1-dev-20260925/run/ideas_t10.jsonl
+artifacts/claude-blurt1-dev-20260925/run/log_ideas_t10.txt
+artifacts/claude-blurt1-dev-20260925/run/log_puzzle_t06.txt
+artifacts/claude-blurt1-dev-20260925/run/log_puzzle_t10.txt
+artifacts/claude-blurt1-dev-20260925/run/puzzles_t06.jsonl
+artifacts/claude-blurt1-dev-20260925/run/puzzles_t10.jsonl
+artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+artifacts/claude-blurt2-20260925/RESULTS-gpu.md
+artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+artifacts/claude-blurt2-20260925/gpu/log_loop.txt
+artifacts/claude-blurt2-20260925/gpu/loop_summary.json
+artifacts/claude-blurt2-20260925/gpu/wins.jsonl
+artifacts/claude-blurt2-20260925/teacher-glm53/agreement.json
+artifacts/claude-blurt2-20260925/teacher-glm53/labels_teacher.jsonl
+artifacts/claude-blurt2-20260925/teacher-glm53/log.txt
+artifacts/claude-blurt2-20260925/teacher/agreement.json
+artifacts/claude-blurt2-20260925/teacher/labels_teacher.jsonl
+artifacts/claude-blurt2-20260925/teacher/log.txt
+artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+artifacts/claude-blurt4-20260925/gpu-4/log.txt
+artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+artifacts/claude-bm390-20260925/RESULTS-benspc.md
+artifacts/claude-bm390-20260925/RESULTS-benspc2.md
+artifacts/claude-bm390-20260925/RESULTS-benspc3.md
+artifacts/claude-bm390-20260925/RESULTS-rent2.md
+artifacts/claude-bm390-20260925/run/gsm8k_P.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P_bare.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P_reading.jsonl
+artifacts/claude-bm390-20260925/run/locomo_Rb.jsonl
+artifacts/claude-bm390-20260925/run/mmlu_P.jsonl
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -i mu405 | head -20; echo DONE
+DONE
+[0m
+[0m$ [0mvastai show instances --raw 2>&1 | head -50
+[
+ {
+  "actual_status": "running",
+  "bundle_id": 418554589,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 890,
+  "country_code": "US",
+  "cpu_arch": "amd64",
+  "cpu_cores": 64,
+  "cpu_cores_effective": 5.333333333333333,
+  "cpu_name": "AMD EPYC 7452 32-Core Processor",
+  "cpu_ram": 257597,
+  "cpu_util": 0.0,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.1,
+  "cuda_max_good": 12.2,
+  "cur_state": "running",
+  "direct_port_count": 66,
+  "direct_port_end": -1,
+  "direct_port_start": 65535,
+  "disk_bw": 3571.3,
+  "disk_name": "nvme",
+  "disk_space": 25.0,
+  "disk_usage": 4.099999904632568,
+  "disk_util": 4.099999904632568,
+  "dlperf": 33.73777018282411,
+  "dlperf_per_dphtotal": 296.958368357376,
+  "dph_base": 0.10666666666666667,
+  "dph_total": 0.11361111111111112,
+  "driver_version": "535.154.05",
+  "duration": 17893.289519786835,
+  "end_date": 1791572440.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 259.9587990220049,
+  "geolocation": "Washington, US",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 0.08333333333333333,
+  "gpu_lanes": 8,
+  "gpu_mem_bw": 439.3,
+  "gpu_name": "RTX 4070",
+  "gpu_ram": 12282,
+  "gpu_temp": 31.999969,
+  "gpu_totalram": 12282,
+  "gpu_util": 0.0,
+  "has_avx": 1,
+  "host_id": 86202,
+[0m
+[0m$ [0mvastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d)); [print(x.get('id'), x.get('label'), x.get('gpu_name'), x.get('actual_status'), x.get('dph_total')) for x in d]"
+3
+52755827 claude-director-depot RTX 4070 running 0.11361111111111112
+52799225 claude-creativechat-k1f RTX 5090 loading 0.47222222222222215
+52799251 claude-fixsleep-dl7b RTX 5090 loading 0.41666666666666663
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-mu405-20260926/PASSMARKS.md; echo ================; git show origin/main:design/v3/30-modes/330-rent-kit.md | head -200
+# mu-405: do stored facts in the talker's input make it make things up about the user?
+
+"Making things up about you" thread. Written 2026-09-26 (times by `date -u` in the commit that seals this file),
+fixed before the run. DEV data only. Follows mu-404 (artifacts/claude-mu403-20260926/VERIFY.md): INCONCLUSIVE because
+its panel had no turn that taught a fact, so facts reached only 34 prompts. Here facts are present by construction and
+counted at $0 before any spend.
+
+## Why (brain first)
+Source monitoring: people keep the gist of a memory and lose where it came from, and a gist without its source is
+what gets confabulated (Johnson, Hashtroudi and Lindsay 1993; textbook-level, not checked here, so a guess). Silicon
+can keep the exact words and who said them. 0.2c gave the 1B bare notebook triples ("The user's dog name is
+Biscuit."); 0.2d's talker gets the user's own earlier words (y1f's W input, 'User said, "..."' lines).
+
+## Setup (scripts/claude_mu405_talk.py; code, panel, facts, judge text and these marks sealed in SEAL.sha256.txt)
+- Talker: plain MiniCPM5-1B (revision 87179e5c) exactly as the 336 plain twin b: the twin's system line, greedy,
+  160 new tokens, enable_thinking=False. No reader, notebook, rules or templates.
+- Panel: panel/items.jsonl, 60 two-session DEV chats, fictional names. Code chose 3 facts per chat
+  (scripts/claude_mu405_facts.py, seed 4050, facts.jsonl); writer agents only wrapped them in user turns. Session 1
+  (3-4 user turns) states all 3 values; session 2 (5 user turns: smalltalk, feelings, advice, followup, ask) touches
+  the facts' life areas without any value and ends by asking for one stored fact. Checked by
+  scripts/claude_mu405_check.py. Smoke chats s1-s3 are separate items, never panel items.
+- Arms (only the system message differs before session 2; only session 2 is judged):
+  - N: nothing added (session 2 only).
+  - K: the 3 facts as 0.2c's notebook line (" Facts the user has told you: " + claude_cre333_agent._sentence).
+  - W: session 1's user turns as y1f's L1 lines (claude_y1f_layout.L1_HEAD + 'User said, "..."').
+  - H: report only. The plain twin with both sessions as real chat history (session 1 answered by the twin too), the
+    way a plain rival sees a whole chat.
+
+## Validity
+- V405a ($0, before sealing): --count-prompts shows every K and W session-2 prompt carries all 3 of its chat's facts
+  (bar 300 of 300 each) and N carries none. Result (18:41 UTC, date -u): N 0 of 300 prompts with any fact; K 300 of 300 with all 3; W 300 of 300 with all 3.
+- V405b (run): stored-fact asks answered right (code: the reply contains the fact's value) K >= N + 10, of 60.
+  Otherwise both Q1 and Q2 are INCONCLUSIVE (the talker did not use the facts it was given). W is held to K by Q2's
+  recall no-harm mark instead, so a W that ignores the facts fails Q2 rather than voiding it.
+- Smoke (CPU in the cloud container, the 3 separate smoke chats s1-s3, never panel items; format only): 15 of 15
+  session-2 rows per arm, 0 empty replies, 0 <think> leftovers, 0 tracebacks; stored-fact asks right N 0, K 2, W 1,
+  H 0 of 3 (too few to read anything into).
+
+## Judging (scripts/claude_mu405_judge.py)
+Claims: every (arm, chat) packet read by two blind Opus judges with JUDGE-claims405.md (mu-402's text; the one change
+is that the earlier session's user messages are shown and count as said), arms mixed and shuffled, each judge in its
+own private folder. C = flags summed over the two judges on session 2's 300 replies per arm. Blind recount before
+reporting.
+
+## Q1: do stored facts as bare triples raise made-up claims? (K vs N)
+- PASS (shown on DEV): C_K - C_N >= 10, and per chat K has more flags than N more often than fewer, exact one-sided
+  sign test p <= 0.05. Proved wrong: C_K <= C_N.
+- PASS means: giving the talker stored facts makes it make things up about the user, so how facts reach the talker
+  matters for 0.2d's S1 win row. Proved wrong means: stored facts are not a cause; S1 then rests on the talker itself.
+
+## Q2: do the user's own words cut them? (W vs K)
+- PASS (shown on DEV): C_K - C_W >= 10 and C_W <= 0.67 x C_K; per chat K more than W more often than fewer, p <=
+  0.05; and no harm to recall: W's stored-fact asks right >= K's - 3. Proved wrong: C_W >= C_K.
+- PASS means: 0.2d's W input (the user's own words) is the safer way to give the talker memory, a source-monitoring
+  result; it goes to Month-end for the 0.2d talker spec. FAIL without proved wrong: the format is not shown to
+  matter; next is whether the talker should get only the facts the turn is about (cue-driven recall).
+
+## Which pair decides what goes into 0.2d
+Q2 (W vs K) decides it, since 0.2d's talker uses the W input (ADDENDUM-12): the verdict goes to Month-end for the
+0.2d talker spec. Q1 (K vs N) is diagnosis only: it says whether stored facts are a cause at all. Each is its own
+single change against its own control. H is report only. Under ADDENDUM-24, 0.2d reports S1 rather than claiming it
+unless y1t (trained doubt) passes; this test does not change that.
+
+## Predictions (before the run)
+- P405.1: Q1 PASS, 45%.
+- P405.2: Q2 PASS, 30%.
+- P405.3: C_H > C_W (a plain twin with the whole chat makes up more than W), 40%.
+
+## Budget
+One rental from Ben's $2 for this thread (about $1.06 spent per RESULTS-rent files; the Director's ledger is
+authoritative): cap $0.35 for this task. Judges and recount: Opus agents in the thread, $0.
+zsh:1: =============== not found
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/330-rent-kit.md > /tmp/kit.md && wc -l /tmp/kit.md
+61 /tmp/kit.md
+[0m
+[0m→ [0mRead /tmp/kit.md
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_mu405_talk.py | head -120
+#!/usr/bin/env python3
+"""mu-405: do stored facts in the talker's input make the plain 1B make things up about the user, and does giving
+them as the user's own words help? ("Making things up about you", 2026-09-26). New file; DEV data only.
+Marks: artifacts/claude-mu405-20260926/PASSMARKS.md (fixed before the run).
+
+The talker is the plain MiniCPM5-1B exactly as the 336 plain twin b runs it (scripts/claude_e2e336_twinb.py: the
+twin's system line, greedy, 160 new tokens, enable_thinking=False, <think> text cut). No reader, notebook, rules or
+templates. Each panel chat has two sessions (artifacts/claude-mu405-20260926/panel/items.jsonl); code chose the 3
+facts session 1 teaches (facts.jsonl). Only session 2 is judged. Arms differ only in what the system message adds
+before session 2:
+  N  nothing (session 2 only)
+  K  the 3 facts as 0.2c's notebook line: " Facts the user has told you: " + claude_cre333_agent._sentence(triple)
+  W  session 1's user turns in y1f's L1 form (0.2d's W input): claude_y1f_layout.L1_HEAD + 'User said, "<text>"'
+     lines, oldest first
+  H  report only: the plain twin with both sessions as real chat history (session 1 answered by the twin too), the
+     way plain rivals see a whole chat
+Facts come from the panel's labels, so K and W carry all 3 facts in every session-2 prompt by construction;
+--count-prompts proves it at $0 (no model) before any spend.
+
+  python -B scripts/claude_mu405_talk.py --count-prompts --panel P --facts F
+  python -B scripts/claude_mu405_talk.py --panel P --facts F --model BASE --arm N|K|W|H --out OUT [--smoke]
+  python -B scripts/claude_mu405_talk.py --selftest
+Output OUT/talk_<arm>.jsonl: one row per session-2 turn (item_id, arm, turn_i, kind, user, reply, ms), and for H also
+session-1 rows (session 1). Last printed line: JSON counts (rows, ask_right, ms_median).
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import statistics
+import sys
+import time
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import claude_cre333_agent as C  # noqa: E402  (0.2c's fact sentence)
+import claude_e2e336_twin as TW  # noqa: E402  (plain twin system line, MAX_NEW, loader)
+import claude_y1f_layout as Y  # noqa: E402  (0.2d's W input header)
+
+ARMS = ("N", "K", "W", "H")
+THINK = re.compile(r"<think>.*?(</think>|$)", re.S)
+KINDS2 = ("smalltalk", "feelings", "advice", "followup", "ask")
+
+
+def load(panel: str, facts: str, smoke: bool) -> list[dict]:
+    fx = {r["item_id"]: r for r in map(json.loads, Path(facts).read_text(encoding="utf-8").splitlines())}
+    out = []
+    for r in map(json.loads, Path(panel).read_text(encoding="utf-8").splitlines()):
+        f = fx[r["item_id"]]
+        if f["smoke"] != smoke:
+            continue
+        out.append({**r, "facts": f["facts"], "ask": f["facts"][f["ask_index"]]})
+    return out
+
+
+def system_for(arm: str, item: dict) -> str:
+    if arm in ("N", "H"):
+        return TW.SYSTEM
+    if arm == "K":
+        return TW.SYSTEM + " Facts the user has told you: " + " ".join(C._sentence(tuple(f["triple"]))
+                                                                        for f in item["facts"])
+    if arm == "W":
+        return TW.SYSTEM + "\n\n" + Y.L1_HEAD + "".join('User said, "' + t["text"] + '"\n' for t in item["session1"])
+    raise ValueError(arm)
+
+
+def facts_in(text: str, item: dict) -> int:
+    low = text.lower()
+    return sum(1 for f in item["facts"] if f["value"].lower() in low)
+
+
+def count_prompts(items: list[dict]) -> dict:
+    res = {}
+    for arm in ("N", "K", "W"):
+        per = [facts_in(system_for(arm, it), it) for it in items for _ in it["session2"]]
+        res[arm] = {"prompts": len(per), "with_all_3": sum(1 for x in per if x == 3),
+                    "with_at_least_2": sum(1 for x in per if x >= 2), "min": min(per), "max": max(per)}
+    return res
+
+
+class Talker:
+    def __init__(self, model_dir: str):
+        self.tok, self.model, self.dev = TW._load(model_dir)
+
+    def reply(self, system: str, history: list[dict]) -> str:
+        import torch
+        msgs = [{"role": "system", "content": system}] + history
+        try:
+            prompt = self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True,
+                                                  enable_thinking=False)
+        except TypeError:
+            prompt = self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
+        ids = self.tok(prompt, return_tensors="pt").to(self.dev)
+        with torch.no_grad():
+            out = self.model.generate(**ids, max_new_tokens=TW.MAX_NEW, do_sample=False,
+                                      pad_token_id=self.tok.eos_token_id)
+        text = self.tok.decode(out[0][ids["input_ids"].shape[1]:], skip_special_tokens=True)
+        return THINK.sub("", text.split("\nUser:")[0]).strip()
+
+
+def run_arm(talker, arm: str, items: list[dict]) -> list[dict]:
+    rows = []
+    for n, it in enumerate(items, 1):
+        system = system_for(arm, it)
+        hist: list[dict] = []
+        if arm == "H":
+            for i, t in enumerate(it["session1"]):
+                hist.append({"role": "user", "content": t["text"]})
+                t0 = time.time()
+                r = talker.reply(system, hist)
+                hist.append({"role": "assistant", "content": r})
+                rows.append({"item_id": it["item_id"], "arm": arm, "session": 1, "turn_i": i, "kind": "teach",
+                             "user": t["text"], "reply": r, "ms": round((time.time() - t0) * 1000, 1)})
+        for i, t in enumerate(it["session2"]):
+            hist.append({"role": "user", "content": t["text"]})
+            t0 = time.time()
+[0m
+[0m# [0mTodos
+[✓] Credit + duplicate gates
+[✓] Read PASSMARKS, rent-kit, talk.py docstring
+[•] Search + rent RTX 5090/4090 labelled claude-madeup-mu405
+[ ] Stream tree, setup, seal/selftest/count-prompts
+[ ] Launch 4 arms, monitor, copy back run/
+[ ] Write RESULTS-rent.md + ledger, push, destroy
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph 2>&1 | head -30
+[40m[97m  #  ID        CUDA   N  Model     PCIE  cpu_ghz  vCPUs    RAM  VRAM  Disk[0m
+[48;5;240m[97m  1  46753297  13.0  1x  RTX_5090  26.5  2.2      32.0    32.2  32.6  109 [0m
+[40m[97m  2  43165145  13.0  1x  RTX_5090  22.6  2.2      32.0    32.2  32.6  276 [0m
+[48;5;240m[97m  3  44173811  13.0  1x  RTX_5090  47.1  5.1      16.0    31.2  32.6  585 [0m
+[40m[97m  4  44173827  13.0  1x  RTX_5090  48.9  5.1      16.0    31.2  32.6  499 [0m
+[48;5;240m[97m  5  48989614  13.0  1x  RTX_5090  51.8  5.1      8.0     31.2  32.6  581 [0m
+[40m[97m  6  45669280  13.0  1x  RTX_5090  51.8  5.1      8.0     31.2  32.6  584 [0m
+[48;5;240m[97m  7  52705877  13.0  1x  RTX_5090  22.6  2.6      24.0    64.5  32.6  317 [0m
+[40m[97m  8  50992867  13.0  1x  RTX_5090  26.5  2.6      24.0    64.5  32.6  289 [0m
+[48;5;240m[97m  9  47347942  13.0  1x  RTX_5090  26.8  2.6      24.0    64.4  32.6  703 [0m
+[40m[97m 10  49837275  13.0  1x  RTX_5090  26.9  2.6      24.0    64.4  32.6  681 [0m
+[48;5;240m[97m 11  51325614  13.2  1x  RTX_5090  26.5  2.6      24.0    64.5  32.6  345 [0m
+[40m[97m 12  25295556  12.9  1x  RTX_5090  26.8  2.3      32.0    85.9  32.6  1961[0m
+[48;5;240m[97m 13  51361980  13.0  1x  RTX_5090  27.5  5.5      6.0     31.7  32.6  284 [0m
+[40m[97m 14  48284957  13.0  1x  RTX_5090  21.0  4.9      16.0    48.1  32.6  560 [0m
+[48;5;240m[97m 15  40700929  13.0  1x  RTX_5090  26.8  2.4      18.3    73.7  32.6  649 [0m
+[40m[97m 16  47533959  13.0  1x  RTX_5090  21.5  2.4      18.3    69.1  32.6  338 [0m
+[48;5;240m[97m 17  45113321  13.0  1x  RTX_5090  26.9  2.4      12.8    64.4  32.6  709 [0m
+[40m[97m 18  50849750  12.9  1x  RTX_5090  27.0  3.2      64.0    64.4  32.6  619 [0m
+[48;5;240m[97m 19  52473405  13.2  1x  RTX_5090  26.6  3.7      32.0    64.4  32.6  1606[0m
+[40m[97m 20  44031033  13.0  1x  RTX_5090  26.6  3.7      14.2    57.3  32.6  594 [0m
+[48;5;240m[97m 21  52785493  13.2  1x  RTX_5090  26.6  3.7      32.0   129.0  32.6  1387[0m
+[40m[97m 22  30193809  13.0  1x  RTX_5090  54.2  3.8      32.0   145.1  32.6  637 [0m
+[48;5;240m[97m 23  41357769  13.0  1x  RTX_5090  26.6  3.7      64.0   257.8  32.6  1163[0m
+[40m[97m 24  52796437  13.2  1x  RTX_5090  26.6  3.5      42.7    86.0  32.6  985 [0m
+[48;5;240m[97m 25  26371155  13.3  1x  RTX_5090  22.4  2.2      32.0    64.5  32.6  329 [0m
+[40m[97m 26  43258190  13.0  1x  RTX_5090  22.2  3.7      32.0    56.4  32.6  326 [0m
+[48;5;240m[97m 27  48426436  13.0  1x  RTX_5090  19.3  3.0      112.0   64.3  32.6  1276[0m
+[40m[97m 28  41379383  13.0  1x  RTX_5090  27.5  5.8      16.0    63.2  32.6  962 [0m
+[48;5;240m[97m 29  52127976  13.2  1x  RTX_5090  26.3  3.5      32.0    64.5  32.6  138 [0m
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+try:
+  d=json.loads(raw)
+except Exception as e:
+  print('parse fail', e); print(raw[:2000]); sys.exit()
+print(type(d), len(d) if isinstance(d,list) else list(d.keys())[:5])
+for o in d[:8]:
+  print(o.get('id'), o.get('gpu_name'), o.get('reliability'), o.get('dph_total'), o.get('cpu_cores_effective'), o.get('disk_space'), o.get('inet_up'), o.get('inet_down'))
+"
+<class 'list'> 64
+46753297 RTX 5090 0.9957361 0.4060185185185185 32.0 108.9125 63.3 824.1
+43165155 RTX 5090 0.9956287 0.4060185185185185 32.0 275.875 51.1 513.5
+52766385 RTX 5090 0.9896939 0.46138888888888885 12.0 1292.85 476.8 794.2
+49024414 RTX 5090 0.995017 0.46898148148148144 16.0 448.0 547.9 552.5
+45669362 RTX 5090 0.9975803 0.46898148148148144 16.0 436.0 461.6 248.6
+45668964 RTX 5090 0.9984434 0.46898148148148144 8.0 535.0 521.3 570.4
+48989650 RTX 5090 0.9964604 0.46898148148148144 8.0 469.0 496.3 527.0
+47017585 RTX 5090 0.9973249 0.5356481481481481 20.0 1326.0 1407.6 1629.4
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+d=json.loads(sys.stdin.read())
+cands=[o for o in d if (o.get('cpu_cores_effective') or 0)>=8 and (o.get('disk_space') or 0)>=60]
+cands.sort(key=lambda o: o.get('dph_total') or 9)
+for o in cands[:15]:
+  print(o.get('id'), round(o.get('dph_total',0),4), o.get('reliability'), o.get('cpu_cores_effective'), round(o.get('disk_space',0),1), round(o.get('inet_up',0) or 0,1), round(o.get('inet_down',0) or 0,1))
+"
+46753297 0.406 0.9957361 32.0 108.9 63.3 824.1
+43165155 0.406 0.9956287 32.0 275.9 51.1 513.5
+50041179 0.4327 0.9863524 24.0 715.8 241.8 54.2
+44188477 0.469 0.998245 16.0 590.0 449.4 354.1
+48989555 0.469 0.9971185 16.0 359.0 462.1 463.1
+45520223 0.469 0.9968789 8.0 397.3 569.3 572.8
+48989696 0.469 0.9908135 8.0 576.0 516.8 557.7
+47347942 0.4727 0.9940474 24.0 703.0 365.8 721.5
+49837275 0.4727 0.9849438 24.0 695.2 552.4 842.0
+52552066 0.5361 0.9891919 24.0 366.5 474.9 415.4
+47558701 0.537 0.9941766 18.285714285714285 378.9 879.5 684.0
+50268077 0.5881 0.9943666 24.0 425.0 840.4 1955.1
+50849750 0.6014 0.9900724 64.0 619.1 32.7 706.8
+49467147 0.6145 0.994026 12.0 586.0 662.2 1043.5
+50430490 0.6372 0.991934 24.0 4069.0 1816.3 4124.6
+[0m
+[0m$ [0mvastai create instance --help 2>&1 | head -40
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+[0m
+[0m$ [0mVAST_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create instance 46753297 --image pytorch/pytorch:2.8.0-cuda12.6-cudnn9-devel --disk 60 --label claude-madeup-mu405 --ssh --raw 2>&1 | head -20
+{
+ "instance_api_key": "1a92a17e7f0fe6ee703e1b5dfc1efae8ddc912eb7066b0298b27fe0e0e9f71fd",
+ "new_contract": 52799415,
+ "success": true
+}
+[0m
+[0m$ [0mdate -u; vastai show instance 52799415 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('cur_state'), d.get('gpu_name'), d.get('dph_total'), d.get('ssh_host'), d.get('ssh_port'))"
+Sat Sep 26 18:44:16 UTC 2026
+52799415 None running RTX 5090 0.47222222222222215 ssh5.vast.ai 39414
+[0m
+[0m$ [0msleep 45; vastai show instance 52799415 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('cur_state'), d.get('ssh_host'), d.get('ssh_port'))"
+52799415 loading running ssh5.vast.ai 39414
+[0m
+[0m$ [0msleep 60; vastai show instance 52799415 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('cur_state'), d.get('ssh_host'), d.get('ssh_port'))"
+52799415 loading running ssh5.vast.ai 39414
+[0m
+[0m$ [0msleep 90; vastai show instance 52799415 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('cur_state'), d.get('ssh_host'), d.get('ssh_port'))"; date -u
+52799415 loading stopped ssh5.vast.ai 39414
+Sat Sep 26 18:47:39 UTC 2026
+[0m
+[0m$ [0msleep 60; vastai show instance 52799415 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('cur_state'))"; date -u
+52799415 loading stopped
+Sat Sep 26 18:48:42 UTC 2026
+[0m
+[0m$ [0msleep 90; vastai show instance 52799415 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('cur_state'), d.get('status_msg'))"; date -u
+52799415 loading stopped Error response from daemon: Get "https://registry-1.docker.io/v2/": proxyconnect tcp: dial tcp 127.0.0.1:7890: connect: connection refused
+
+Sat Sep 26 18:50:14 UTC 2026
+[0m
+[0m$ [0mvastai destroy instance 52799415 2>&1 | head -5; sleep 5; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); [print(x.get('id'), x.get('label')) for x in d]"
+Are you sure you want to destroy instance 52799415? This is irreversible and will delete all data. [y/N] 
+Aborted.
+52755827 claude-director-depot
+52799251 claude-fixsleep-dl7b
+52799415 claude-madeup-mu405
+52799488 claude-sleep-358t3
+52800271 claude-creativechat-k1f
+[0m
+[0m$ [0mecho y | vastai destroy instance 52799415 2>&1 | head -5; sleep 5; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); [print(x.get('id'), x.get('label')) for x in d]"
+Are you sure you want to destroy instance 52799415? This is irreversible and will delete all data. [y/N] destroying instance 52799415.
+52755827 claude-director-depot
+52799251 claude-fixsleep-dl7b
+52799488 claude-sleep-358t3
+52800271 claude-creativechat-k1f
+[0m
+[0m$ [0mvastai create instance 44188477 --image pytorch/pytorch:2.8.0-cuda12.6-cudnn9-devel --disk 60 --label claude-madeup-mu405 --ssh --raw 2>&1 | head -10; date -u
+{
+ "instance_api_key": "e518661775824273376afa9beeac8f866608e17be1e554f2c15715db42035ff5",
+ "new_contract": 52800315,
+ "success": true
+}
+Sat Sep 26 18:50:33 UTC 2026
+[0m
+[0m$ [0msleep 90; vastai show instance 52800315 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('cur_state'), d.get('gpu_name'), d.get('dph_total'), d.get('ssh_host'), d.get('ssh_port'), d.get('status_msg'))"; date -u
+52800315 loading running RTX 5090 0.4944444444444444 ssh6.vast.ai 10314 ed090066e06c: Pull complete
+
+Sat Sep 26 18:52:06 UTC 2026
+[0m
