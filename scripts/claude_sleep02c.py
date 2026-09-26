@@ -14,7 +14,7 @@ x 20 guesses: right guesses ("lucky"), puzzles reached, greedy solves; HARM = dl
 against the pre-sleep agent; KL to the pre-sleep model; CHAT = fresh puzzles asked in plain English through the
 agent's turn loop, solved if an expression in the reply uses each number once and hits the target.
 
-  python -B scripts/claude_twinb_wrap.py scripts/claude_sleep02c.py --arm claude_e2e383:build_383e \
+  python -B scripts/claude_twinb_wrap.py scripts/claude_sleep02c.py --arm claude_e2e02c:build_02c \
       --model READER --gen-model BASE --out OUT [--nights 3 --n-day 150 --n-test 100 --n-chat 40]
 writes OUT/sleep02c_results.json and OUT/adapter02c.pt (the LoRA weights only). A later process gets the slept
 agent with SLEEP02C_ADAPTER=OUT/adapter02c.pt and install_sleep02c(one_b) (every builder of 0.2c calls it).
@@ -57,6 +57,8 @@ def install_sleep02c(one_b, path: str | None = None) -> None:
         B2.add_lora(one_b.model).eval()
         one_b.sleep02c = True
     path = path if path is not None else os.environ.get("SLEEP02C_ADAPTER", "")
+    if path and getattr(one_b, "sleep02c_trained", False):
+        raise RuntimeError("sleep02c: refusing to load a saved adapter over weights a night trained in this process")
     if path:
         import torch
         state = torch.load(path, map_location="cpu")
@@ -97,6 +99,7 @@ def run(a) -> None:
     import claude_blurt2 as B2
     import claude_dl1_nights as D1
     import claude_e2e330_arms as A
+    os.environ.pop("SLEEP02C_ADAPTER", None)       # the nights train here; a saved file must never be reloaded over them
     t0 = time.time()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -135,6 +138,9 @@ def run(a) -> None:
         ex = D1.copy_examples(groups)
         tries = sum(1 + len(g["guesses"]) for g in groups)
         tr = D1.train_copy(s, m, ex, seed=d)
+        one_b.sleep02c_trained = True
+        if m.training:
+            raise RuntimeError("sleep02c: model left in train mode after the night")
         now = D1.measure(s, m, test, N_GUESS_TEST, panel, replies)
         row = {"night": d, "tries": tries, "day_puzzles": len(day),
                "day_greedy_right": sum(g["greedy_right"] for g in groups),
@@ -189,12 +195,19 @@ def selftest() -> None:
         ob.model.eval()
         assert torch.allclose(ob2.model(x), ob.model(x)); ok += 1         # a saved night reloads exactly
     assert len({(tuple(p["nums"]), p["target"]) for p in B2.puzzles(DAY_SEED02C + 1, 20)}) == 20; ok += 1
-    print(f"claude_sleep02c selftest: {ok}/5 OK")
+    ob.sleep02c_trained = True
+    with tempfile.TemporaryDirectory() as d:
+        save_adapter(ob, Path(d) / "b.pt")
+        try:
+            install_sleep02c(ob, str(Path(d) / "b.pt"))
+        except RuntimeError:
+            ok += 1                                                        # never reloads over trained weights
+    print(f"claude_sleep02c selftest: {ok}/6 OK")
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--arm", default="claude_e2e383:build_383e")
+    ap.add_argument("--arm", default="claude_e2e02c:build_02c")
     ap.add_argument("--model", default="", help="reader dir")
     ap.add_argument("--gen-model", default="", help="base MiniCPM5-1B dir")
     ap.add_argument("--mouth-model", default="")
