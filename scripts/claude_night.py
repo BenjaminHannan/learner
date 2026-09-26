@@ -24,9 +24,9 @@ claude_dl1_nights; if the night loses more than 5 net items (lost minus gained v
 undone (the adapter goes back to its pre-night weights) and "undone" is reported. dl-2 measures how often that would
 have fired (W3). It costs 600 short greedy replies per night, so pass tripwire=False on CPU.
 
-Where the adapter applies: the adapter is trained and tested on puzzle work only. dl-2 measures harm with it switched
-on for everything (W3). The joined agent may load it only for the puzzle tool and keep the plain 1B for chat
-(use_for_chat=False below); that is the safer default for 0.2c and is what this file recommends.
+Where the adapter applies: the adapter is trained and tested on puzzle work. dl-2 measures harm with it switched on
+for everything (W3), and 0.2c keeps it on for chat too, the harder test, so chat rows are the real no-harm check. If
+they lose, the fallback (a separate change) is each LoRALinear's .scale = 0 for chat, restored for puzzle work.
 
   python -B scripts/claude_night.py --selftest                  (no model)
   python -B scripts/claude_night.py --model M --demo --out DIR  (one tiny day and night, plumbing only)
@@ -46,7 +46,6 @@ import claude_dl1_nights as D1  # noqa: E402
 RECIPE = dict(D1.S_RECIPE)       # {"epochs": 3, "lr": 2e-4}, dl-2's S arm
 N_GUESS = 30                     # the day: greedy + 30 guesses per puzzle at T 1.5 (D1.TEMP)
 TRIP_NET_HARM = 5                # undo a night that loses more than 5 net panel items
-USE_FOR_CHAT = False             # recommended: adapter on for the puzzle tool only
 
 
 def load(model_dir: str):
