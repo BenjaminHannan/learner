@@ -8,7 +8,8 @@ Reports cov@1 (greedy right), cov@30 (any of n samples right) and lucky samples.
 
   python -B scripts/claude_latin_dev.py --model M --out F.json --settings 4:4,4:6,4:8,5:5,5:8 --items 12 [--form blanks]
 Form "square" (the world's own prompt: reply with the whole square) got 0 of 10 at 3x3 with 3 blanks, 30 samples: the
-1B writes only some rows. Form "blanks" asks for the missing numbers only.
+1B writes only some rows. Form "blanks" asks for the missing numbers only: 4x4 with 3/5/7 blanks got 0 of 12 each
+(the 1B writes too many numbers). Form "game": --settings keys:1,recipes:1 (text games, DEV seeds only).
 """
 from __future__ import annotations
 
@@ -19,6 +20,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_textgames as G  # noqa: E402
 import claude_world_latin as W  # noqa: E402
 
 DEV_SEEDS = range(900000, 901000)
@@ -52,7 +54,8 @@ class Sampler:
         kw = {"do_sample": True, "temperature": temp, "top_p": 1.0, "num_return_sequences": n} if temp else \
              {"do_sample": False}
         s = item["size"]
-        cap = 3 * item["blanks"] + 8 if "missing numbers" in item["prompt"] else 4 * s * s + 16
+        cap = item["cap"] if "cap" in item else \
+            3 * item["blanks"] + 8 if "missing numbers" in item["prompt"] else 4 * s * s + 16
         with self.torch.no_grad():
             out = m.generate(**ids, max_new_tokens=cap, pad_token_id=self.tok.eos_token_id, **kw)
         return [self.tok.decode(o[cut:], skip_special_tokens=True).strip() for o in out]
@@ -74,6 +77,21 @@ def measure(smp, size, blanks, items, n, temp, form="square"):
             "greedy_examples": [r["greedy"] for r in rows[:3]]}
 
 
+def measure_games(smp, kind, level, items, n, temp):
+    """Sleep research's text games (claude_textgames.py): the game text is the prompt; check() simulates any plan."""
+    rows = []
+    for seed in list(DEV_SEEDS)[:items]:
+        g = G.make_game(kind, seed, level)
+        it = {"prompt": g["text"], "size": 0, "cap": 12 * len(g["plan"]) + 24}
+        ok = lambda t: G.check(g, t)["ok"]  # noqa: E731
+        gr = smp.generate(it, 1, None)[0]
+        hits = [ok(t) for t in smp.generate(it, n, temp)]
+        rows.append({"seed": seed, "greedy_ok": ok(gr), "hits": sum(hits), "greedy": gr, "plan_len": len(g["plan"])})
+    return {"form": "game", "kind": kind, "level": level, "items": len(rows), "cov@1": sum(r["greedy_ok"] for r in rows),
+            f"cov@{n}": sum(r["hits"] > 0 for r in rows), "lucky": sum(r["hits"] for r in rows),
+            "plan_len": [r["plan_len"] for r in rows], "greedy_examples": [r["greedy"] for r in rows[:3]]}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
@@ -82,14 +100,18 @@ def main():
     ap.add_argument("--items", type=int, default=12)
     ap.add_argument("--n", type=int, default=30)
     ap.add_argument("--temp", type=float, default=1.0)
-    ap.add_argument("--form", default="square", choices=["square", "blanks"])
+    ap.add_argument("--form", default="square", choices=["square", "blanks", "game"])
     a = ap.parse_args()
     t0 = time.time()
     smp = Sampler(a.model)
     res = {"n": a.n, "temp": a.temp, "settings": []}
     for st in a.settings.split(","):
-        size, blanks = (int(x) for x in st.split(":"))
-        r = measure(smp, size, blanks, a.items, a.n, a.temp, a.form)
+        if a.form == "game":
+            kind, level = st.split(":")
+            r = measure_games(smp, kind, int(level), a.items, a.n, a.temp)
+        else:
+            size, blanks = (int(x) for x in st.split(":"))
+            r = measure(smp, size, blanks, a.items, a.n, a.temp, a.form)
         res["settings"].append(r)
         print(json.dumps({k: v for k, v in r.items() if k != "greedy_examples"}), flush=True)
         Path(a.out).write_text(json.dumps(res, indent=1), encoding="utf-8")
