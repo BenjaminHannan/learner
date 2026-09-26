@@ -45,6 +45,16 @@ registered run is the one below. It ran once, on CPU in the benchmarks thread's 
 - Untested: whether a trained answerer, or an explicit final-answer field (design/v3/30-modes/398-...), recovers the
   gap.
 
+## F2 (faithful): FAIL
+The blind audit covered all 286 changed rows, since there were fewer than 300. Six blind Opus judges were used: two
+per group plus two relabellers. None saw both replies of one question. Labels and key are in audit/; the scored line is
+audit/F2-score.json.
+- Draft labels: A 103, B 7, C 56, D 119, E 1. Final labels: A 92, B 4, C 63, D 126, E 1.
+- lost (a right draft, A, becoming C, D or E) = 13; the bar was ≤ 3. picked (a hedged draft, B, becoming A) = 4; the
+  bar was ≤ 3.
+- Changes that fixed an answer: B→A 4, D→C 2, D→B 1. Changes that hurt: A→C 8, A→D 5, A→B 2, C→D 4, B→C 1, B→D 1.
+- Relabel agreement: 58 of 60.
+So the shortening also changed meaning. It turned 13 of 103 right answers into partly right or wrong ones.
+
 ## Still to add (registered, running)
-F2 blind audit of the 286 changed rows; the GSM8K/MMLU no-drop marks (AMEND-general); E20F (report only); blind
-recount.
+The GSM8K/MMLU no-drop marks (AMEND-general); E20F (report only); blind recount.
