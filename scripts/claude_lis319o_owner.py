@@ -54,9 +54,49 @@ def patch(rows):
 
 
 def run_k(a, cmd):
-    patch(load(a.rows))
+    rows = load(a.rows)
+    patch(rows)
     import claude_lis319k_score as K
-    return getattr(K, cmd)(a)
+    if cmd != "final":
+        return getattr(K, cmd)(a)
+    res = K.score(load(a.panel), load(a.reads), load(a.pairs), [load(v) for v in a.verdicts])
+    res |= admitted(load(a.panel), rows, load(a.reads), load(a.pairs), [load(v) for v in a.verdicts])
+    Path(a.out).write_text(json.dumps(res, indent=1) + "\n", encoding="utf-8")
+    print(json.dumps(res))
+
+
+def admitted(panel, rows, reads, pair_rows, verdicts):
+    """O4: saves the change admits (the old check says owner_not_span) and whether the judges credit them.
+    wrong = no exact gold match and no pair both judges call same; wrong_owner = of those, a gold fact of the row has the
+    same relation and value but another owner; on_ambiguous = admitted saves on lookalike rows with reason "ambiguous"."""
+    from claude_lis319_fullclaim import key
+    from claude_lis319_fullclaim_b import exact_b
+    from claude_lis317_gates import n
+    hist = {r["id"]: hist_text(r.get("history")) for r in rows}
+    pid = {key(x["id"], x["saved"], x["gold"]): x["pid"] for x in pair_rows}
+    same = {p for p in pid.values() if all({int(v["pid"]): bool(v["same"]) for v in vs}[p] for vs in verdicts)}
+    rd = {r["id"]: r for r in reads}
+    c = Counter({"admitted_saves": 0, "admitted_wrong": 0, "admitted_wrong_owner": 0, "admitted_on_ambiguous": 0})
+    for row in panel:
+        r = rd.get(row["id"])
+        facts = [x for x in (((r or {}).get("frame") or {}).get("facts") or []) if isinstance(x, dict)]
+        confs = (r or {}).get("conf") or []
+        for i, f in enumerate(facts):
+            if (confs[i] if i < len(confs) else 0.0) < 0.995:
+                continue
+            if ORIG(f, row["turn"], row.get("prev_reply", "")) != "owner_not_span":
+                continue
+            if check_fact_hist(f, row["turn"], row.get("prev_reply", ""), hist.get(row["id"], "")) is not None:
+                continue
+            c["admitted_saves"] += 1
+            c["admitted_on_ambiguous"] += row.get("reason") == "ambiguous"
+            gold = row.get("facts") or []
+            ok = any(exact_b(f, g) for g in gold) or any(pid.get(key(row["id"], f, g)) in same for g in gold)
+            if not ok:
+                c["admitted_wrong"] += 1
+                c["admitted_wrong_owner"] += any(g.get("relation", g.get("rel")) == f.get("rel")
+                                                 and n(g["value"]) == n(f.get("value")) for g in gold)
+    return dict(c)
 
 
 def dev(a):

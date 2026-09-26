@@ -35,3 +35,19 @@ INCONCLUSIVE if the panel has fewer than 40 current facts with needs_history, or
 Report only: correction_right, stale_saves, OLD vs NEW.
 If it passes, the rule is not shipped by hand: the owner-in-history case becomes the compiler's documented contract for
 the next retrained reader, and training rows are checked against it.
+
+## Addendum 1 (2026-09-26 15:56 UTC, before the panel exists; asked by the Thread manager)
+Which step does what: the 1B reader (lis-319f) PICKS the owner. It writes a name string in its frame from the turn and the 6
+earlier turns it is shown. The compiler only CHECKS that string: it must be a relation-table fact in a write mode, and after
+this change the owner must appear word for word in the turn, the previous reply or the earlier turns. The compiler never
+chooses or resolves a person. So a wrong-person save is the reader's choice, and before this change the compiler hid such
+saves when the name wasn't in the turn.
+Added mark (tight, and not folded into O2), from claude_lis319o_owner.py final ("admitted_*" counts: saves at 0.995 that the
+old check rejects as owner_not_span and the new check accepts):
+| O4 | admitted saves the judges do not credit (wrong owner or wrong in any other way): <= 1 |
+Report: admitted_saves, admitted_wrong_owner (same relation and value as a gold fact of the row, other owner), and
+admitted_on_ambiguous (saves on lookalike rows whose reason is "ambiguous").
+PASS = O1 and O2 and O3 and O4.
+The panel brief now also asks for at least 12 dialogs naming two or more people before the history-owner turns, with at least
+15 history-owner rows where more than one earlier person is present but context settles who. About 10 truly ambiguous rows
+have no fact in the key.
