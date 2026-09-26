@@ -53,7 +53,8 @@ while [ ! -e "$H/STOP" ]; do
     running=$(ls "$Q"/*.running 2>/dev/null | wc -l)
     [ "$running" -ge "$MAX" ] && break
     load=$(sysctl -n vm.loadavg 2>/dev/null | awk '{print int($2)}'); [ -z "$load" ] && load=0
-    if [ "$running" -ge 2 ] && [ "$load" -gt 60 ]; then log "load $load, holding new launches ($running running)"; break; fi
+    # Ben 13:30 UTC 09-26 "BensPC's gpu should not be the blocker": rentals and read-only 000-* checks do their work off the Mac, so a busy Mac holds only local jobs
+    if [ "$running" -ge 2 ] && [ "$load" -gt 60 ]; then case "$n" in rent-*|000-*) ;; *) log "load $load, holding $n ($running running)"; continue;; esac; fi
     freegb=$(df -g / | tail -1 | awk '{print $4}')
     # Ben 06:54 UTC 09-26 made Mac disk the pipeline's job ("You have this responsibility"): jobs marked LOWDISK-OK
     # (no model copy-back to the Mac) may launch down to 2 GB free; everything else keeps the 5 GB rule
