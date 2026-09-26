@@ -104,3 +104,8 @@ agent's tokenizer and model (no second copy), and D1.train_copy leaves the model
   only if the whole-claim re-score does not overturn lis-319's own wrong-save result; otherwise X keeps 0.1's
   lis-301 reader and the reader line is listed as open. On bank D, H2 (wrong saves) is judged by the blind judges,
   who check the relation (the 336 scorer leaves relation to them).
+- ~03:05 UTC: the no-harm row also carries Benchmarks' registered GSM8K/MMLU readings for X
+  (artifacts/claude-bm391-20260926/AMEND-02c.md, sealed before any output): H5 = its M4 (MMLU ≥ 41, GSM8K ≥ 182 of
+  300) and H6 = its N1 (GSM8K X − T ≥ −3 points, paired), scored by Benchmarks. They run as background lanes in the
+  same rental on the slept agent and are cut at 10:35 UTC; a lane that does not finish makes its mark "not measured"
+  (reported as open, not as a pass).
