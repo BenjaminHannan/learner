@@ -12,6 +12,8 @@ each), and then the code is sealed. A switch is on only when its fix's own regis
              same at 0.98 (only if lis-319c passes), "" = 0.1's reader; with r319/r319c, --model is the lis-319
              merged reader (sha256 e688e1b2...6a76), not lis-301
   TRIM02C    bm-397's answer trim (claude_e2e397.install_trim397) right on top of answer382, memory answers only
+  STORE02C   the memory store module (v3 = v2's rows and ranking, plus a torn last line moved aside, fsync on write,
+             and recall() answering from heard rows only; identical results to v2 while no notes exist)
   FIX02C     the boundary fixes of scripts/claude_fix02c.py (Ben's outside review, each with a CPU test):
              route02c (route383 keeping a final answer after the last full stop), heard02c (date kept across
              restarts), delivered02c (the chat history holds the reply the user saw), support02c (report only)
@@ -32,6 +34,7 @@ ROUTE02C = True
 SLEEP02C = True
 READER02C = "r319"
 FIX02C = True
+STORE02C = "claude_ep382_store_v3"   # v2's ranking + torn-tail recovery, fsync, heard-only answers (Benchmarks)
 TRIM02C = False    # bm-397's answer trim on memory answers only (Benchmarks); on only if bm-397 passes
 
 
@@ -59,7 +62,7 @@ def build_02c(state_dir, args):
     if args.gen_model not in E330C._G338B:
         E330C._G338B[args.gen_model] = C38.Gen338(share=one_b)
     gen = E330C._G338B[args.gen_model]
-    store = importlib.import_module(E382.STORE382).MemoryStore(state_dir) if MEM02C else None
+    store = importlib.import_module(STORE02C).MemoryStore(state_dir) if MEM02C else None
     if READER02C:
         import claude_lis319_arms as L319
         loop = {"r319": L319.build_330a_334_r319, "r319c": L319.build_330a_334_r319c}[READER02C](state_dir, args)
