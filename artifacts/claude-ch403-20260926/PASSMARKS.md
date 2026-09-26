@@ -51,6 +51,8 @@ Problem line, reported on its own and never merged with the verdict above:
 Report only: X vs T on the same panel (how hard this panel is compared with chatpanel02c); M1's per-line counts;
 think splits per arm (should match between X and X403); median words per kind; ms per turn; pair_a first
 differences (at a turn where the change acted vs elsewhere); made-up counts in X403 vs T.
+Separate from ch-403: after its panel runs, the same rental runs DEV-only probes of the next candidates (T, X404,
+X404g on the readable DEV chats; artifacts/claude-ch404-20260926/NEXT.md). They never touch the panel or the marks.
 
 ## Predictions (said now)
 - P403.1 M1 passes: X has 15 to 35 stock lines on everyday turns, X403 at most a quarter of that.
