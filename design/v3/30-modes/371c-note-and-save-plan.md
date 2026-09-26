@@ -13,7 +13,17 @@ Source: Ben's pasted outside review (11:50 UTC). Every number it gave was re-che
    as-fact counts as unsupported; one population definition for dev and test; bar rule v2 returns NO USABLE CUTOFF unless
    the dev-picked bar keeps >= 80% of ok AND the one-sided 95% upper bound on unsupported-among-accepted is <= 5%
    (needs >= 59 accepted with 0 errors); dialogs, not notes, are the resampling unit for intervals.
-2. SAVE CHECK SEES THE READER'S WINDOW (lis-319d): owner may come from an earlier USER turn in the reader's window only
+2. SAVE CHECK SEES THE READER'S WINDOW (lis-319d). DEV RESULT 12:15 UTC (133 lis-319 dev history rows, report only):
+   | rule for an owner found only in earlier user turns | right saves at 0.995 / 0.98 | wrong rows |
+   |---|---|---|
+   | today (blocked; they go to ask-back) | 55 / 65 | 0 / 0 |
+   | naive: accept any earlier-turn name | 71 / 93 | 1 / 3 |
+   | only if no other person name in the window | 55 / 65 | 0 / 0 |
+   | only if the last named turn names just the owner | 56 / 66 | 0 / 0 |
+   Real chats name several people, so no simple code rule links the person to the claim: the safe rules gain ~0, the
+   naive one adds role-confusion saves. So step 2 cannot be done by code alone; person attribution for history facts
+   moves into step 3's verifier (person-swap near-misses over the reader's window). Original step 2 text kept below.
+   (was:) owner may come from an earlier USER turn in the reader's window only
    when that turn names exactly one person the claim could be about; otherwise the fact is asked back, never saved
    silently. Dev preview of the naive version: +28 right, +3 wrong (all role confusion), so the naive version is not the
    candidate. Needs a fresh panel with back-references and two-candidate role-confusion rows. GPU: one read (~15 min).
