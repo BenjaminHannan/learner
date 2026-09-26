@@ -1,4 +1,4 @@
-# rsn-358e results, stage 1 (small nets, CPU, $0): does a mixture-of-experts loop keep an old skill? (sleep research thread, 2026-09-26 21:58 UTC)
+# rsn-358e results, stage 1 (small nets, CPU, $0): does a mixture-of-experts loop keep an old skill? (sleep research thread, 2026-09-26 21:56 UTC)
 
 ## Verdict: FAIL, not proved wrong (moe-grow, the one graded arm, per ADDENDUM-2)
 moe-grow forgot much less grids than dense, but it failed the "still learns the new skill" clause: sums4 after B was 131.5 against a bar of 180. It was also 1.64x dense's size in phase B (ADDENDUM-3), so even a pass would not have been same-size. **The FAIL stands.**
