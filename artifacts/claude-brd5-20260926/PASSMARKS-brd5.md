@@ -30,3 +30,12 @@ Reading (fixed now): PASS with N near C means breadth explains most of the colla
 breadth and newness both matter. Proved wrong means newness, not breadth, is what counts.
 Limit: in N, fewer distinct puzzles also means fewer distinct answer strings; this test does not separate those.
 CPU smoke (before registering; 40 practice, 3 test puzzles, 1 seed, 1 epoch; not the panel's results): runs end to end.
+
+Addendum 2026-09-26 ~02:00 UTC (report-only, added after registration while the task was queued and not yet
+launched; the code and the marks are unchanged). Following the outside review Ben posted (section 12), VERIFY-brd5
+will report these four numbers separately for base, W, N and C, all computed from gpu/streams.json:
+1. first-try success: cov@1, the first SAMPLE, not a greedy answer (the script does not score greedy on the test);
+2. success within the fixed budget: cov@30;
+3. distinct puzzles reached: the same as cov@30 here, since every test puzzle is a different (hand, target);
+4. success on a harder structure: cov@30 split into 3-number (160) and 4-number (80) puzzles, the 4-number ones being
+   the kind practice solves least.
