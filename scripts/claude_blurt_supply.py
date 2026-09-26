@@ -11,6 +11,8 @@ Recipe evidence (brd-5/6/7 VERIFY files): train a night on ONE hit per puzzle (f
 many different puzzles, never padded by repeating a few. Nothing here trains or saves weights.
 
   python -B scripts/claude_blurt_supply.py --model M --puzzles IN.jsonl --out OUT.jsonl [--n 30 --temp 1.5]
+      [--sleep-out HITS.jsonl]   (Sleep research's format: {"hand", "target", "expr"}, won puzzles only)
+Input puzzles may use "hand" instead of "nums".
   python -B scripts/claude_blurt_supply.py --selftest
 """
 from __future__ import annotations
@@ -45,10 +47,16 @@ def night_examples(rows) -> list:
     return out
 
 
+def sleep_rows(rows) -> list[dict]:
+    """Sleep research's format: {"hand", "target", "expr"}, one distinct checked answer per won puzzle, no padding."""
+    return [{"hand": p["nums"], "target": p["target"], "expr": e} for p, e in night_examples(rows)]
+
+
 def run(a):
     import claude_blurt2 as B2
     s = B2.Solver(a.model)
     ps = [json.loads(x) for x in Path(a.puzzles).read_text().splitlines() if x.strip()]
+    ps = [{"nums": p.get("nums", p.get("hand")), "target": p["target"]} for p in ps]
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", encoding="utf-8", newline="\n") as f:
@@ -57,6 +65,9 @@ def run(a):
             f.flush()
             if (i + 1) % 20 == 0:
                 print(f"[supply] {i + 1}/{len(ps)}", flush=True)
+    if a.sleep_out:
+        rows = [json.loads(x) for x in out.read_text().splitlines() if x.strip()]
+        Path(a.sleep_out).write_text("".join(json.dumps(r) + "\n" for r in sleep_rows(rows)), encoding="utf-8")
 
 
 def selftest():
@@ -72,6 +83,7 @@ def selftest():
     assert night_examples([r]) == [(p, "8 * 3 * 1")]
     assert night_examples([dict(r, greedy_right=True)]) == [(p, "1 + 2")]
     assert night_examples([dict(r, hits=[], first_hit=None)]) == []
+    assert sleep_rows([r]) == [{"hand": [1, 3, 8], "target": 24, "expr": "8 * 3 * 1"}]
     print("selftest ok")
 
 
@@ -82,6 +94,7 @@ def main():
     ap.add_argument("--out", default="")
     ap.add_argument("--n", type=int, default=30)
     ap.add_argument("--temp", type=float, default=1.5)
+    ap.add_argument("--sleep-out", default="", help="also write Sleep research's {hand,target,expr} jsonl here")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     selftest() if a.selftest else run(a)
