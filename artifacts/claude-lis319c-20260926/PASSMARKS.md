@@ -23,3 +23,7 @@ any run). History built by scripts/claude_lis319_rows.py.
 | S3 no invention: B nofact_rows_with_save | <= 1 |
 PASS = all three. Proved wrong: B wrong_turns >= A's + 3 (0.98 lets in real errors that practice data hid).
 Report only: held_right both arms, per-kind counts, median ms.
+
+Addendum 2026-09-26 ~01:00 UTC, after sealing the panel and before any run (description only; no bar changed): readpanel319c
+holds 239 rows (one ambiguous row dropped) and 424 facts after a blind second labeller and a blind adjudicator
+(artifacts/claude-readpanel319c-20260926/AUDIT.md). S2's "3 of 240" reads "3 of 239".
