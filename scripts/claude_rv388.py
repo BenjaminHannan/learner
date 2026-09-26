@@ -47,6 +47,7 @@ import claude_feas24 as F  # noqa: E402  (Creative's states, text, reachability 
 import claude_feas24b as FB  # noqa: E402  (Creative's Newton fit; read-only)
 
 SPLIT_SEED, LAYER, L2, HEAD_SEED = 792, 16, 100.0, 0     # feas-24b's frozen choice; seed-0 heads
+THREADS = 2          # feas-24b ran on 2 CPU threads; bf16 features on this CPU change with the thread count (4 vs 2)
 TEMP = 1.5
 ARMS = ["end", "judge", "placebo", "oracle"]
 OPS = ("+", "-", "*", "/")
@@ -101,6 +102,7 @@ class Model:
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
         self.torch = torch
+        torch.set_num_threads(THREADS)
         self.tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
         self.m = AutoModelForCausalLM.from_pretrained(model_dir, dtype=torch.bfloat16, trust_remote_code=True).eval()
         self.move_cache, self.feat_cache = {}, {}
