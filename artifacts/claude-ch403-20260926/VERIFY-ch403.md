@@ -25,3 +25,12 @@ What was wrong on this side: the gate's first bar was absolute (0 events). It sh
 build (X403 <= X), since the shared reader saves on some non-teach turns. Separately, the job file's push line said
 "PUSH to builder-outbox:" where the watcher read only "PUSH:" (watcher now accepts both, 5f6119809).
 Cost: about $0.79 of the $1.60 cap (rental report; two hosts lost to a registry proxy outage).
+
+## Correction (2026-09-26 16:54 UTC)
+Above, "they come from the shared reader" overstated what was checked. What was checked: the 6 events are on the same 2
+turns in X and X403, so they are not caused by ch-403. Reading facts then checked the reader itself
+(artifacts/claude-lis319f-20260926/chk_ch403/RESULTS.md on builder-outbox, DEV). On dev02e-chat-31 turn 1 the user
+states a real fact about themselves (their age), so a save there is right; the DEV kind label (advice) does not make it
+wrong. On dev02e-chat-57 turn 4 neither reader saves anything at the 0.995 bar. lis-314's confirm path needs an exact
+"yes" (claude_lis310_agent.YES310), and that turn was not one. So the source of that turn's 3 events is not identified.
+The runner keeps event counts only, not their content. Lead passed to Trustworthy notes.
