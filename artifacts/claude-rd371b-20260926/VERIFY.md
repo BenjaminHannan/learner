@@ -1,4 +1,4 @@
-# rd-371b = REGISTERED FAIL (C2; proved-wrong clause tripped) — PROVISIONAL record from the builder's report (2026-09-26 ~05:25 UTC)
+# rd-371b = REGISTERED FAIL (C2; proved-wrong clause tripped) (builder report 05:25 UTC; recounted 11:55 UTC from the pushed files)
 
 Source: origin/builder-outbox:runs/006i-rd-371b-train/006i-rd-371b-train.go1.reply.md (rc=0). The 7 result files are on
 the Mac but were not pushed: my PUSH line used bare file names (my error). The Director queued handoff/queue/000-push-rd371b.md;
@@ -22,3 +22,12 @@ notes (0 unsupported, 6 of 167 ok). So the rule's 4% target was reached only by 
   60% "no" (1,510 no vs 965 yes), and the note writer's own notes are ~half untrue on fresh dialogs (52% on the key),
   so a filter must reject about half of everything and still keep 80% of the good half.
 - The rule stands: notes stay search aids that point back to the original chat (Benchmarks + Month-end agreed).
+
+## Recount (11:55 UTC, from origin/builder-outbox dev_pred.jsonl, panel_pred.jsonl, score.json)
+- score.json matches the builder: accepted 1, ok kept 1 of 132, C2 0.0076. Verdict stands: REGISTERED FAIL.
+- Ranking is real but not enough (outside review 11:50, confirmed): AUC true-vs-unsupported dev 0.813 (167 ok vs 96
+  unsupported), test 0.831 (132 vs 145). At 0.5: dev keeps 134/167 ok with 31 unsupported (18.8% of kept);
+  test keeps 100/132 ok with 40 unsupported. Lowest dev score with <= 4% among ok+unsupported: 0.974 (15 ok, 0 unsup).
+- Contract defects (confirmed in code/data): the checker prompt shows the sentence only (claude_rd371b_common.build_sprompt),
+  yet 45 bad_when notes were trained as "no" (31 with no when at all); bad_cite trained as "yes"; hypothetical-as-fact sits
+  under bad_form (skipped); the dev sweep's denominator counts all verdicts, the test only agreed ok/unsupported.
