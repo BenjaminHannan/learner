@@ -1,4 +1,4 @@
-2026-09-27 00:14:49
+2026-09-27 00:16:57
 running:
 000-probe-zen-builder.running
 006-rd378k-gate3luna.running
@@ -8,7 +8,6 @@ lis320-fulloc-c1-mac.running
 launched (no exit yet) / finished:
      755
 
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-26 20:48:43 pushed 100-claude-sleep-358i3pc
 2026-09-26 20:48:44 launch 150-fixsleep-dl9pc
@@ -158,6 +157,7 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 
 diag:
 == 000-probe-zen-builder
@@ -174,12 +174,12 @@ diag:
 > build · muse-spark-1.3-contributor
 [0m
 == 006-rd378k-gate3luna
-73491 Sep 27 00:13 006-rd378k-gate3luna.go1.err.txt
+73962 Sep 27 00:15 006-rd378k-gate3luna.go1.err.txt
 395 Sep 27 00:11 006-rd378k-gate3luna.go1.reply.md
- 6769   01:52 uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl 
-total 0
-drwxr-xr-x   2 ben-hannan  staff    64 Sep 27 00:09 .
-drwxr-xr-x  33 ben-hannan  staff  1056 Sep 27 00:09 ..
+[rd378k-teacher3] kg-009 ok
+---
+  PID ELAPSED COMMAND
+ 6769   03:49 uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl 
 [0m
 == 151-fixsleep-dl9pc-b
 54926 Sep 27 00:08 151-fixsleep-dl9pc-b.go1.err.txt
@@ -207,21 +207,20 @@ shell tool terminated command after exceeding timeout 9300000 ms. If this comman
 [0m
 top5cpu:
 %CPU COMM
-73.1 ApplicationsStorageExtension
-70.6 fileproviderd
-35.4 python
-20.7 Finder
-14.9 bash
+74.9 ApplicationsStorageExtension
+66.0 fileproviderd
+39.1 Claude
+33.0 python
+25.4 WindowServer
 procs:
-  363     1 03-12:01:47 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-12:00:55 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 5678  5650       06:29 SN   /usr/local/bin/opencode
- 7848   818       00:44 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-10114 10084    03:26:01 SN   /usr/local/bin/opencode
-15699     1 03-10:16:13 S    /usr/bin/ssh-agent
-44571 44570 01-02:37:51 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-02:37:51 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    07:52:24 SN   /usr/local/bin/opencode
-60494 59018    01:07:17 SN   /usr/local/bin/opencode
-76368 76315       48:27 SN   /usr/local/bin/opencode
-81797     1 01-12:55:30 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 03-12:03:54 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-12:03:02 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 5678  5650       08:36 SN   /usr/local/bin/opencode
+10114 10084    03:28:08 SN   /usr/local/bin/opencode
+15699     1 03-10:18:20 S    /usr/bin/ssh-agent
+44571 44570 01-02:39:58 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-02:39:58 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    07:54:31 SN   /usr/local/bin/opencode
+60494 59018    01:09:24 SN   /usr/local/bin/opencode
+76368 76315       50:34 SN   /usr/local/bin/opencode
+81797     1 01-12:57:37 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
