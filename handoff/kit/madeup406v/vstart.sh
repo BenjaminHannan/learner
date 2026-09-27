@@ -89,7 +89,7 @@ while read -r OID DPH CORES HID GPU TF RAM TPD SLOW EST; do
   wantd=$(git show "$DPIN:$A/SEAL-data.sha256.txt" | shasum -a 256 | awk '{print $1}')
   gotd=$($SS "sha256sum /root/r/$A/SEAL-data.sha256.txt" < /dev/null 2>/dev/null | awk '{print $1}')
   [ "$wantd" = "$gotd" ] || { log "rental $n: SEAL-data on the rental ($gotd) does not match $DPIN ($wantd)"; destroy "$I"; continue; }
-  $SS "cd /root/r && setsid nohup bash handoff/kit/madeup406v/box/drive.sh > /root/r/drive.log 2>&1 < /dev/null & echo launched" < /dev/null 2>> "$G/log.txt"
+  $SS "cd /root/r && { setsid nohup bash handoff/kit/madeup406v/box/drive.sh > /root/r/drive.log 2>&1 < /dev/null & }; echo launched" < /dev/null 2>> "$G/log.txt"
   TC=$(awk -v b="$BASE_TIME" -v s="$SLOW" 'BEGIN{if (s<1) s=1; printf "%d", b*s}')
   ID=$I; echo "$I $H $P $TC" > "$G/state"
   log "time cap $TC s ($BASE_TIME s on a 5090 x slowdown $SLOW = 5090 $TF5090 / $GPU $TF TFLOPS, never below 1x); money stop \$$CAP_STOP"; break
