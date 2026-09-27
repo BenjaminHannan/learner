@@ -31,3 +31,17 @@ This belongs to Fix sleep (the 1B on/off switch), not to me. I have routed it th
 - **The PASS checks in the marks are all implemented** (:283-348): snapshot round-trip; bit-identical weights, all-round predictions and stop probabilities on 16 audit items; per-item exactness with lost/gained counts; alternating requests after a restart; refusal of an unknown task. The overwrite control is score_current grids5 after the sums phase (:291).
 - **Minor, not blocking:** an isolation failure trips an assert (:314-316, :348) before the phase record is written, so a "proved wrong" outcome would be a crash with the evidence unsaved. Better to write the record, then fail.
 - The seed-27 pilot outputs have no phase scores (reasoner/seed27/result.json: "phases": {}). Nothing to exclude beyond what the note already says.
+
+## Update 2026-09-27 04:18:01 UTC: R1 results (57d6f5cfd), checked as owner
+- **(a) Code unchanged: shown.** All 31 sha256 values in RUN-CODE.json (captured 03:57:42 UTC, 2 min after seed 29 started, HEAD 697f18b58) equal the blobs at 697f18b58. Both RUN-NOTEs name HEAD 697f18b58 and PASSMARKS c7c8221a0. The marks and the code were both committed before the runs, so R1 counts as registered. The seal I asked for applies to later runs only.
+- **(b) Numbers and verdict: they match.** I recounted from seed29/seed30 result.json:
+  - after grids, grids5 is 174 (seed 29) and 197 (seed 30), fixed16 179 and 198;
+  - after sums, sums4 is 200/200;
+  - the newest model's grids5 falls to 0/0;
+  - routed grids5 stays 174/197, with 0 items lost and 0 gained;
+  - every isolation and restart check is true;
+  - rejections are 0/3 and 0/2.
+  **INCONCLUSIVE is the correct verdict**, because seed 29 missed the 190 mastery bar. The engineering checks passed on both seeds. Isolation holds by construction with a hand-given label and two whole models, as RESULTS.md itself says.
+- **Why 174? A guess, untested.** On CPU the same dense recipe gave grids5 after grids of 199/198 (358e seeds 1-2) and 194/194 (358e4 seeds 3-4, identical phase A). Seed 29 ran on MPS. Its last logged grids losses are noisy (0.008, 0.72, 0.83 at steps 2000/2250/2500; seed 30: 0.018, 0.074 at 2250/2500). Each logged loss is a single batch with a random number of rounds. So "a slow seed" and "MPS numerics" both fit. The cheap test: rerun seed 29's phase A with the same code on CPU, report only. If it reaches 190+, MPS is implicated. This is for the Codex agent to run, not me.
+- **(c) R2 registration.** r2/PASSMARKS.md and run_mastered.py were committed at 57d6f5cfd (04:12:32 UTC). r2/ has no outputs, so it was registered before any R2 run (checked 04:2x UTC). Within R2 the one difference between arms is the serving path. Against R1, it changes the A budget (2,500 to 6,000 steps) and the seeds, chosen after seeing seed 29's miss. It says so, and it does not regrade R1. That is acceptable as a new experiment, but it answers the same engineering question with more steps. It cannot inform the equal-size or learned-routing question that rsn-358e4/e5/e6 test.
+- **Rule breach to fix: weights are in git.** 57d6f5cfd commits four checkpoints (reasoner/seed29 and seed30 snapshot-*.pt, 6.6 MB each). R2's runner also saves checkpoints under r2/seedNN. The project rule is never to push weights. Future runs should keep .pt files off git and record their sha256 values instead. Removing the four already pushed would rewrite history, so it needs Ben's word.
