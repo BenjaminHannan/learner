@@ -1,4 +1,4 @@
-2026-09-27 03:11:55
+2026-09-27 03:14:15
 running:
 000-probe-zen-builder.running
 006-rd378k-gate3luna.running
@@ -10,9 +10,6 @@ k1h-luna-full-mac.running
 launched (no exit yet) / finished:
      791
 
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-2026-09-27 02:01:52 pushed 171-rv390-358i2-pc-b
-2026-09-27 02:01:53 launch 175-rv393-pencil-pc
 2026-09-27 02:01:58 zen cap: 4 non-GPU rungo5 builders running, holding k1h-luna-full-mac
 2026-09-27 02:02:00 zen cap: 4 non-GPU rungo5 builders running, holding y1t-luna-pilot-mac
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
@@ -160,6 +157,9 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 03:11:54 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8-mac
 2026-09-27 03:11:54 zen cap: 4 non-GPU rungo5 builders running, holding madeup-g406l-resume-mac
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 03:14:14 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8-mac
+2026-09-27 03:14:15 zen cap: 4 non-GPU rungo5 builders running, holding madeup-g406l-resume-mac
 
 diag:
 == 000-probe-zen-builder
@@ -176,12 +176,12 @@ diag:
 > build · muse-spark-1.3-contributor
 [0m
 == 006-rd378k-gate3luna
-100847 Sep 27 03:09 006-rd378k-gate3luna.go1.err.txt
+101395 Sep 27 03:13 006-rd378k-gate3luna.go1.err.txt
 962 Sep 27 03:10 006-rd378k-gate3luna.go1.reply.md
-26
-ben-hannan       96843  13.2  0.4 489680064 150128   ??  RN    3:09AM   0:00.23 /Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/../CodexCLI.app/Contents/MacOS/codex exec -m gpt-6-luna -C /v
-ben-hannan       96809   4.2  0.5 490629824 162928   ??  SN    3:09AM   0:00.45 /Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/../CodexCLI.app/Contents/MacOS/codex exec -m gpt-6-luna -C /v
-ben-hannan       96732   0.2  0.5 490755024 171456   ??  SN    3:09AM   0:00.53 /Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/../CodexCLI.app/Contents/MacOS/codex exec -m gpt-6-luna -C /v
+[rd378k-teacher3] td-d16 ok
+  PID  ELAPSED
+12201 02:48:36
+27
 [0m
 == 008-rd378g-writeluna2
 29732 Sep 27 03:10 008-rd378g-writeluna2.go1.err.txt
@@ -191,12 +191,12 @@ Sun Sep 27 07:10:45 UTC 2026
 START_TIMING
 [0m
 == 156-claude-sleep-358spc-r
-111070 Sep 27 03:10 156-claude-sleep-358spc-r.go1.err.txt
-774 Sep 27 03:10 156-claude-sleep-358spc-r.go1.reply.md
+115935 Sep 27 03:13 156-claude-sleep-358spc-r.go1.err.txt
+853 Sep 27 03:13 156-claude-sleep-358spc-r.go1.reply.md
+{"step": 1500, "ce": 1.149, "exact": 0.1685, "halt_bce": 0.0, "lr": 0.00029953760005996916, "min": 2.1, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.046, "numbers4": 0.002, "sums1": 0
 [0m
-[0m$ [0mdate -u; ssh benspc 'powershell -NoProfile -Command "Get-Date -Format o"'
-Sun Sep 27 07:10:41 UTC 2026
-2026-09-27T03:10:43.2055571-04:00
+[0m$ [0mssh benspc 'powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\benja\rsn358s\launch_run.ps1 -Arm loop -Seed 10'
+Launched loop-s10 wrapper-PID 3580 ReturnValue 0
 [0m
 == bm398w-luna-mac
 56519 Sep 27 03:05 bm398w-luna-mac.go1.err.txt
@@ -224,23 +224,23 @@ cp-exit:0
 [0m
 top5cpu:
 %CPU COMM
-80.6 fileproviderd
-78.8 ApplicationsStorageExtension
-66.5 Finder
-22.8 StorageManagementService
-16.5 bash
+64.5 fileproviderd
+38.9 ApplicationsStorageExtension
+35.9 Finder
+32.5 WindowServer
+18.5 bash
 procs:
-  363     1 03-14:58:52 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-14:58:00 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 5678  5650    03:03:34 SN   /usr/local/bin/opencode
-15699     1 03-13:13:18 S    /usr/bin/ssh-agent
-44571 44570 01-05:34:56 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-05:34:56 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    10:49:29 SN   /usr/local/bin/opencode
-54273 54242       39:08 SN   /usr/local/bin/opencode
-60494 59018    04:04:22 SN   /usr/local/bin/opencode
-64555 64533       29:56 SN   /usr/local/bin/opencode
-81797     1 01-15:52:35 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
-89799 89775       07:11 SN   /usr/local/bin/opencode
-95625 95600       02:20 SN   /usr/local/bin/opencode
-97095   818       01:19 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+  363     1 03-15:01:12 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-15:00:20 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 5678  5650    03:05:54 SN   /usr/local/bin/opencode
+15699     1 03-13:15:38 S    /usr/bin/ssh-agent
+44571 44570 01-05:37:16 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-05:37:16 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    10:51:49 SN   /usr/local/bin/opencode
+54273 54242       41:28 SN   /usr/local/bin/opencode
+60494 59018    04:06:42 SN   /usr/local/bin/opencode
+64555 64533       32:16 SN   /usr/local/bin/opencode
+81797     1 01-15:54:55 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+89799 89775       09:31 SN   /usr/local/bin/opencode
+95625 95600       04:40 SN   /usr/local/bin/opencode
+97095   818       03:39 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
