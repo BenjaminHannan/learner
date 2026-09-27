@@ -25,6 +25,9 @@
 # It never edits sealed code, never opens the TEST-ONLY panel or the H1 rows, never pushes weights, never reads or
 # prints the vast key (the vastai CLI reads its own key file; only the ssh public key is sent, with `vastai attach ssh`)
 # and never touches an instance this task did not create.
+# ADDENDUM-11 (the second vast run, after p1's train step died on a missing nltk): this run writes to run2/ (p1's files in
+# run/ stay as they are), its cap is the $1.50 less the $0.20 p1 spent (rounded up), and the rental makes a fifth check,
+# an import of every package the step scripts can reach, before launch.
 # Usage: pass.sh <kit-dir> <pinned-commit> <queue-job-name> <first|next|last> [<the watcher's copy of the job file>]
 set -u
 export LC_ALL=C COPYFILE_DISABLE=1
@@ -33,14 +36,15 @@ LAST=""; case "$MODE" in last|guard) LAST=1 ;; esac   # the guard acts like a la
 G=${GY1T:-$HOME/premonition-watch/y1t-vast}         # Mac-only guard state (its own kit copy, pid, log); never pushed
 A=artifacts/claude-y1t-20260926
 H=artifacts/claude-y1tH1-20260926
-R=$A/run
-RH=$H/run
+R0=$A/run                    # the first vast run (p1, PARTIAL) and the BensPC route's folder; read only, for the route checks
+R=$A/run2                    # this run (ADDENDUM-11)
+RH=$H/run                    # the H1 rows' folder (unchanged: p1 wrote nothing there)
 D=$A/glm2/items
 TRAIN_SHA=47e2e2955bf085816abcda50fdfc4230d0030cbe72b5d8df4109e704858c79e4
 DEV_SHA=c0288f2cb7a5b764f974f49d1bfeb5b8ddb0de68e8ce63fffc6cc4d0a3d407e4
 MINICPM=87179e5c1f455ef22e6223592d2d61351b525bfc
 LABEL=claude-memory-y1t
-CAP=${CAPY1T:-1.50}          # dollars for this whole task, every create included (ADDENDUM-9)
+CAP=${CAPY1T:-1.30}          # dollars for this run, every create included: ADDENDUM-9's $1.50 for the task less p1's $0.20 (ADDENDUM-11)
 MAXDPH=${MAXDPHY1T:-1.00}    # dollars per hour, the most an offer may cost (the time estimate below also has to fit the cap)
 REFTF=104.8                  # TFLOPS of an RTX 5090 in vast's listing (the card the estimate below is for; as rent-rv390b)
 REFMIN=50                    # chain minutes on an RTX 5090, an upper guess (ADDENDUM-9: drafts, train, 2 DEV checks, 2 H1 runs)
@@ -366,7 +370,7 @@ results() {
     echo "- items: $(awk '$1=="ITEMS"{print $2, $3}' "$R/state-last.txt" 2>/dev/null) (train, dev; GATE-RESULT.md has $TRAIN_SHA, $DEV_SHA)"
     echo "- adapter sha256 on the rental: ${ad:-none}; Mac copy ~/y1t-adapter/adapter398r.pt: ${mac:-none} (never pushed)"
     echo "- GPU log (one line a minute: UTC, MiB used, MiB total, W): $(awk '$1=="GPULOG"{sub("^GPULOG ",""); print}' "$R/state-last.txt" 2>/dev/null)"
-    echo "- selftests: $(grep -Ec '^CHECK [^ ]+ rc=0 (selftest ok|BM398R-TRAIN-SELFTEST PASS)' "$R/checks.txt" 2>/dev/null) of 4 ok (checks.txt)"
+    echo "- selftests: $(grep -Ec '^CHECK [^ ]+ rc=0 (selftest ok|BM398R-TRAIN-SELFTEST PASS|IMPORTS OK)' "$R/checks.txt" 2>/dev/null) of 5 ok (4 selftests and the import check; checks.txt)"
     echo "- credit before the first create: $(awk '$1=="CREDIT"{print $3; exit}' "$VS")"
     echo
     echo "| instance | GPU | \$/h | created (UTC) | gone or stopped (UTC) | hours | download \$ | dollars |"
@@ -410,13 +414,17 @@ trap onalarm ALRM
 # 0. duplicates, data, lock
 for b in main builder-outbox; do
   git cat-file -e "origin/$b:$R/RESULTS-vast.md" 2>/dev/null && stop "DUPLICATE: origin/$b has $R/RESULTS-vast.md"
-  for f in RESULTS-benspc.md RESULTS-rent.md; do
-    git cat-file -e "origin/$b:$R/$f" 2>/dev/null && stop "DUPLICATE: origin/$b has $R/$f (another route ran)"; done
-  git show "origin/$b:$R/RUN-NOTE-bo.md" 2>/dev/null | grep -q 'LAUNCH chain' && stop "DUPLICATE: origin/$b's RUN-NOTE-bo.md shows a BensPC chain launch"
+  for rd in "$R0" "$R"; do
+    for f in RESULTS-benspc.md RESULTS-rent.md; do
+      git cat-file -e "origin/$b:$rd/$f" 2>/dev/null && stop "DUPLICATE: origin/$b has $rd/$f (another route ran)"; done
+    git show "origin/$b:$rd/RUN-NOTE-bo.md" 2>/dev/null | grep -q 'LAUNCH chain' && stop "DUPLICATE: origin/$b's $rd/RUN-NOTE-bo.md shows a BensPC chain launch"
+  done
 done
 [ -s "$R/RESULTS-vast.md" ] && stop "DONE: $R/RESULTS-vast.md is already in this worktree"
-[ -e "$R/RESULTS-benspc.md" ] && stop "DUPLICATE: this worktree has $R/RESULTS-benspc.md"
-grep -q 'LAUNCH chain' "$R/RUN-NOTE-bo.md" 2>/dev/null && stop "DUPLICATE: this worktree's RUN-NOTE-bo.md shows a BensPC chain launch"
+for rd in "$R0" "$R"; do
+  [ -e "$rd/RESULTS-benspc.md" ] && stop "DUPLICATE: this worktree has $rd/RESULTS-benspc.md"
+  grep -q 'LAUNCH chain' "$rd/RUN-NOTE-bo.md" 2>/dev/null && stop "DUPLICATE: this worktree's $rd/RUN-NOTE-bo.md shows a BensPC chain launch"
+done
 case "$(git show "origin/main:$A/gate/GATE-RESULT.md" 2>/dev/null | head -1)" in
   *GATE-PASS*) ;; *) stop "NO-DATA: origin/main:$A/gate/GATE-RESULT.md does not say GATE-PASS";; esac
 t=$(git show "$PIN:$D/items_train.jsonl" 2>/dev/null | shasum -a 256 | cut -c1-64)
@@ -425,7 +433,7 @@ d=$(git show "$PIN:$D/items_dev.jsonl" 2>/dev/null | shasum -a 256 | cut -c1-64)
 command -v "$VAST" >/dev/null || stop "STOP: the vastai CLI is missing"
 [ "$("$PYM" -c 'print(6*7)' 2>/dev/null)" = 42 ] || stop "STOP: no working python 3.12 from uv on the Mac"
 [ -f "$KEY" ] && [ -f "$KEY.pub" ] || stop "STOP: no ssh key $KEY (and .pub) on the Mac"
-# one pass at a time (the same lock as the BensPC kit, so the two routes never run a pass at once); a lock older than
+# one pass at a time (in run2/ since ADDENDUM-11; the BensPC passes that shared the old lock in run/ are superseded); a lock older than
 # 80 minutes is left from a pass the watcher's 75-minute alarm ended. A pass that is not the last leaves the notes to the
 # pass that holds the lock; the last pass waits for it up to 20 minutes, because nothing runs after the last pass.
 [ -d "$R/.pass-lock" ] && [ -n "$(find "$R/.pass-lock" -maxdepth 0 -mmin +80 2>/dev/null)" ] && rmdir "$R/.pass-lock" && note "removed a lock older than 80 minutes"
@@ -591,7 +599,7 @@ note "setup done: $(sv SETUPLAST | cut -c1-160)"
 # 4. checks (once), then the chain (once)
 if [ "$(sv CHECKS)" = "- -" ]; then
   c=$(SXT=600 rv checks); echo "$c"
-  note "checks: $(echo "$c" | grep -Ec '^CHECK [^ ]+ rc=0 (selftest ok|BM398R-TRAIN-SELFTEST PASS)') of 4 selftests ok; $(echo "$c" | grep '^VERSIONS' | head -1); $(echo "$c" | grep '^GPUNAME' | head -1)"
+  note "checks: $(echo "$c" | grep -Ec '^CHECK [^ ]+ rc=0 (selftest ok|BM398R-TRAIN-SELFTEST PASS|IMPORTS OK)') of 5 checks ok (4 selftests and the import check); $(echo "$c" | grep '^VERSIONS' | head -1); $(echo "$c" | grep '^GPUNAME' | head -1)"
   getstate || halt "no state from the rental"
 fi
 if [ "$(sv CHAIN | cut -d' ' -f1)" = "started=0" ]; then
@@ -600,7 +608,7 @@ if [ "$(sv CHAIN | cut -d' ' -f1)" = "started=0" ]; then
   [ "$(sv SEALH)" = "1 1" ] || finish "SEAL-FAIL: SEAL-y1tH1-runner $(sv SEALH) (needs 1 of 1); nothing launched"
   [ "$(sv SEALP)" = "1 1" ] || finish "SEAL-FAIL: the spare401 panel line $(sv SEALP) (needs 1 of 1); nothing launched"
   [ "$(sv ITEMS)" = "$TRAIN_SHA $DEV_SHA" ] || finish "NO-DATA: the rental's items are $(sv ITEMS); nothing launched"
-  [ "$(sv CHECKS)" = "4 4" ] || finish "CHECK-FAIL: selftests $(sv CHECKS) (needs 4 of 4; checks.txt); nothing launched"
+  [ "$(sv CHECKS)" = "5 5" ] || finish "CHECK-FAIL: checks $(sv CHECKS) (needs 5 of 5: 4 selftests and the import check; checks.txt); nothing launched"
   [ "$(sv PY)" = 0 ] || finish "BUSY: $(sv PY) y1t python process(es) already on the rental; nothing launched"
   [ "$(sv DISK)" -ge 8 ] 2>/dev/null || finish "NO-DISK: the rental has $(sv DISK) GB free and the run needs 8 GB; nothing launched"
   # the chain's own cap: the minutes the money left pays for, keeping 15 minutes for the copy and destroy; at most 180

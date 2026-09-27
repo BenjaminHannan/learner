@@ -3,7 +3,7 @@
 # Thread manager at 14:39 UTC). Started by pass.sh (ensure_guard) once this task's instance answers ssh, from its own copy
 # of the kit in $G, so it outlives the pass and the queue job. Between passes nothing else can stop the rental, so every
 # GPOLL seconds it reads this task's vast state (pass.sh info) and acts on the first of:
-#   money   dollars so far plus 15 minutes of the instance reach the $1.50 cap
+#   money   dollars so far plus 15 minutes of the instance reach the cap ($1.30 for this run, ADDENDUM-11)
 #   time    the time cap scaled to the card has passed (create + 20 min + 2 x the offer's estimated chain minutes + 15 min)
 #   done    the rental shows W/chain.done (looked at over ssh every GDONE seconds) and no pass is running
 # To act it runs pass.sh in guard mode, which works like a last pass at its deadline: it asks the chain to stop, copies
@@ -16,8 +16,8 @@ set -u
 G=$1; W=$2; PIN=$3
 KD=$G/kit
 P=$KD/handoff/kit/y1tvast/pass.sh
-R=artifacts/claude-y1t-20260926/run
-CAP=${CAPY1T:-1.50}
+R=artifacts/claude-y1t-20260926/run2   # this run's folder (ADDENDUM-11)
+CAP=${CAPY1T:-1.30}   # as pass.sh (ADDENDUM-11)
 T0=$(date +%s)
 now() { date -u +%FT%TZ; }
 log() { echo "$(now) guard: $*" >> "$G/guard.log"; }

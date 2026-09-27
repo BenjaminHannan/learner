@@ -28,7 +28,9 @@ age() { [ -e "$1" ] && echo $(( ( $(date +%s) - $(stat -c %Y "$1") ) / 60 )) || 
 pmatch() { local d c; for d in /proc/[0-9]*; do c=$( { tr '\0' ' ' < "$d/cmdline"; } 2>/dev/null ) || continue; [ -n "$c" ] && echo "${d#/proc/} $c"; done | grep -E "$1" | grep -v -E '^[0-9]+ (grep|tr) ' ; }
 procs() { pmatch 'claude_(y1t_data|bm398r_train|y1g_doubt|y1t_h1run)\.py' | grep -v 'bov\.sh' ; }
 # a selftest counts only with rc=0 AND its own pass line (claude_bm398r_train.py selftest exits 0 even when it prints FAIL)
-OKRE='^CHECK [^ ]+ rc=0 (selftest ok|BM398R-TRAIN-SELFTEST PASS)'
+# the fifth check, IMPORTS OK, imports every package the four step scripts can reach (ADDENDUM-11: p1's train step died on
+# a lazy 'import nltk' that no selftest reached)
+OKRE='^CHECK [^ ]+ rc=0 (selftest ok|BM398R-TRAIN-SELFTEST PASS|IMPORTS OK)'
 pyenv() { PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1 "$(cat W/python.txt)" -B "$@"; }
 
 setup_run() {
@@ -52,6 +54,9 @@ setup_run() {
     "$py" -m pip install -q --no-cache-dir torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128 || fail 13 "torch 2.11.0"
     "$py" -m pip uninstall -y -q torchvision torchaudio >/dev/null 2>&1
     "$py" -m pip install -q --no-cache-dir transformers==5.17.0 safetensors huggingface_hub accelerate numpy || fail 14 "transformers 5.17.0"
+    # the scorer claude_bm390_score.py (imported inside claude_bm398r_train.py's DEV check) needs nltk and regex; nltk at the
+    # version of the venv that recounted bm390 (recount3/recount.md); pyarrow is reachable from claude_bm390.py (ADDENDUM-11)
+    "$py" -m pip install -q --no-cache-dir nltk==3.10.3 regex pyarrow || fail 18 "nltk 3.10.3, regex, pyarrow"
     "$py" -c 'import torch, transformers; assert torch.cuda.is_available(); x = torch.ones(4, device="cuda"); print("IMPORT-OK", torch.__version__, torch.version.cuda, transformers.__version__, float(x.sum()))' || fail 15 "import check"
     # the only model: plain MiniCPM5-1B at the commit every y1 run used (Ben's yes 2026-09-23)
     base=$(HF_HUB_OFFLINE=0 "$py" -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B', revision='$MINICPM'))" 2>>W/setup_log.txt | tail -1)
@@ -105,6 +110,43 @@ checks() {
     done
     out=$(pyenv scripts/claude_bm398r_train.py selftest 2>&1); rc=$?
     echo "CHECK claude_bm398r_train.py rc=$rc $(echo "$out" | grep . | tail -1 | cut -c1-160)"
+    # every module the four step scripts import, at the top or inside a function, followed through the local scripts/ files
+    # they import (read with ast, nothing run); then the four scripts and every other module are imported here
+    out=$(pyenv - 2>&1 <<'PYEOF'
+import ast, importlib, os, sys
+sys.path.insert(0, "scripts")
+steps = ["claude_y1t_data", "claude_bm398r_train", "claude_y1g_doubt", "claude_y1t_h1run"]
+todo, seen, ext = list(steps), set(), set()
+while todo:
+    m = todo.pop()
+    if m in seen:
+        continue
+    seen.add(m)
+    for n in ast.walk(ast.parse(open(os.path.join("scripts", m + ".py")).read())):
+        names = []
+        if isinstance(n, ast.Import):
+            names = [a.name for a in n.names]
+        elif isinstance(n, ast.ImportFrom) and n.level == 0 and n.module:
+            names = [n.module]
+        for x in names:
+            if os.path.exists(os.path.join("scripts", x.split(".")[0] + ".py")):
+                todo.append(x.split(".")[0])
+            elif x != "__future__":
+                ext.add(x)
+bad = []
+for x in steps + sorted(ext):
+    try:
+        importlib.import_module(x)
+    except BaseException as e:
+        bad.append("%s (%s: %s)" % (x, type(e).__name__, str(e)[:60]))
+if bad:
+    print("IMPORTS FAIL " + "; ".join(bad))
+    sys.exit(1)
+import nltk
+print("IMPORTS OK the 4 step scripts, %d local files read, %d other modules imported (nltk %s)" % (len(seen), len(ext), nltk.__version__))
+PYEOF
+); rc=$?
+    echo "CHECK imports rc=$rc $(echo "$out" | grep . | tail -1 | cut -c1-200)"
     echo "VERSIONS $(pyenv -c 'import torch, transformers; print(torch.__version__, torch.version.cuda, transformers.__version__)' 2>&1 | tail -1)"
     echo "GPUNAME $(timeout 20 nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>/dev/null | head -1)"
   } > W/checks.tmp
@@ -130,7 +172,7 @@ case "${1:-}" in
     [ -e W/chain.started ] && { echo "REFUSED: W/chain.started exists (never a second chain)"; exit 5; }
     [ "$(head -1 W/setup.done 2>/dev/null)" = "rc=0" ] || { echo "REFUSED: setup has not ended rc=0"; exit 5; }
     [ -f W/checks.txt ] || { echo "REFUSED: checks not run"; exit 5; }
-    [ "$(grep -Ec "$OKRE" W/checks.txt)" = 4 ] || { echo "REFUSED: not every selftest passed"; exit 5; }
+    [ "$(grep -Ec "$OKRE" W/checks.txt)" = 5 ] || { echo "REFUSED: not every check passed (5 needed)"; exit 5; }
     [ -z "$(procs)" ] || { echo "REFUSED: a y1t python is running"; exit 5; }
     [ "$(freegb)" -ge 8 ] || { echo "REFUSED: under 8 GB free ($(freegb) GB)"; exit 5; }
     case "${2:-}" in [0-9]*) ;; *) echo "REFUSED: no chain cap"; exit 5;; esac
