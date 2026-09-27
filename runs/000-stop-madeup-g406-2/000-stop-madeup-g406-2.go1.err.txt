@@ -1,0 +1,542 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mgit fetch origin main 2>&1 | head -20; echo "---"; git show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -n 30; echo "===13lines==="; git show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -n 13
+From github.com:BenjaminHannan/learner
+ * branch                main       -> FETCH_HEAD
+---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+===13lines===
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+[0m
+[0m$ [0mpwd; git rev-parse --show-toplevel 2>&1; ls; echo "---workdir check---"; git fetch -q origin main 2>&1; git fetch -q origin builder-outbox 2>&1; echo "fetch done"; git cat-file -e origin/main:artifacts/claude-stop-g406-2-20260927/REPORT.md 2>&1 && echo "DUPLICATE-main-exists" || echo "no-main-artifact"; git cat-file -e origin/builder-outbox:artifacts/claude-stop-g406-2-20260927/REPORT.md 2>&1 && echo "DUPLICATE-outbox-exists" || echo "no-outbox-artifact"
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+---workdir check---
+fetch done
+fatal: path 'artifacts/claude-stop-g406-2-20260927/REPORT.md' does not exist in 'origin/main'
+no-main-artifact
+fatal: path 'artifacts/claude-stop-g406-2-20260927/REPORT.md' does not exist in 'origin/builder-outbox'
+no-outbox-artifact
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/" 2>&1; cat "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt" 2>&1 | head -n 100
+OPUS-RULES.txt
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+[0m
+[0m$ [0mdate -u; touch ~/premonition-watch/queue/madeup-g406-2-mac.stop; ls -l ~/premonition-watch/queue/madeup-g406-2-mac.stop; date -u
+Sun Sep 27 04:02:10 UTC 2026
+-rw-r--r--  1 ben-hannan  staff  0 Sep 27 00:02 /Users/ben-hannan/premonition-watch/queue/madeup-g406-2-mac.stop
+Sun Sep 27 04:02:10 UTC 2026
+[0m
+[0m$ [0mps -axo pid,ppid,etime,command | /usr/bin/python3 -c "
+import sys, re
+lines = sys.stdin.read().splitlines()
+# header skip
+for line in lines[1:]:
+    # split into pid, ppid, etime, command (first 3 whitespace fields)
+    parts = line.strip().split(None, 3)
+    if len(parts) < 4:
+        continue
+    pid, ppid, etime, cmd = parts
+    # check patterns without printing full cmd
+    is_launcher = ('rungo4.sh' in cmd and 'madeup-g406-2-mac.md' in cmd)
+    is_agent = ('opencode' in cmd and 'mimo:madeup-g406-2-mac.go' in cmd)
+    is_glm = ('claude_g406_2_glm.py' in cmd and '--mode' in cmd)
+    is_opencode_run = cmd.startswith('/usr/local/bin/opencode run')
+    if is_launcher or is_agent or is_glm or is_opencode_run:
+        # extract title tag if present (word after --title)
+        m = re.search(r'--title\s+(\S+)', cmd)
+        title = m.group(1) if m else '-'
+        # role guess
+        roles=[]
+        if is_launcher: roles.append('launcher')
+        if is_agent: roles.append('agent')
+        if is_glm: roles.append('glm')
+        if is_opencode_run: roles.append('opencode-run')
+        # first token for python check
+        first = cmd.split()[0] if cmd.split() else ''
+        print(f'PID={pid} PPID={ppid} ETIME={etime} ROLE={\"+\".join(roles)} TITLE={title} FIRST={first}')
+"
+echo "---done---"
+
+PID=2028 PPID=1997 ETIME=00:40 ROLE=launcher+agent+glm+opencode-run TITLE=mimo:000-stop-madeup-g406-2.go1.1997 FIRST=/usr/local/bin/opencode
+PID=2263 PPID=2028 ETIME=00:00 ROLE=launcher+agent+glm TITLE=- FIRST=/bin/zsh
+PID=2265 PPID=2263 ETIME=00:00 ROLE=launcher+agent+glm TITLE=- FIRST=/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python
+PID=6531 PPID=6529 ETIME=03:18:03 ROLE=launcher TITLE=- FIRST=bash
+PID=6563 PPID=6531 ETIME=03:18:03 ROLE=agent+glm+opencode-run TITLE=mimo:madeup-g406-2-mac.go1.6531 FIRST=/usr/local/bin/opencode
+PID=10114 PPID=10084 ETIME=03:13:32 ROLE=opencode-run TITLE=mimo:lis320-fulloc-c1-mac.go1.10084 FIRST=/usr/local/bin/opencode
+PID=46743 PPID=46711 ETIME=07:39:55 ROLE=opencode-run TITLE=mimo:k1h-glm2.go1.46711 FIRST=/usr/local/bin/opencode
+PID=60494 PPID=59018 ETIME=54:48 ROLE=opencode-run TITLE=mimo:000-probe-zen-builder.go2.59018 FIRST=/usr/local/bin/opencode
+PID=76368 PPID=76315 ETIME=35:58 ROLE=opencode-run TITLE=mimo:151-fixsleep-dl9pc-b.go1.76315 FIRST=/usr/local/bin/opencode
+---done---
+[0m
+[0m$ [0mps -axo pid,ppid,etime,command | /usr/bin/python3 -c "
+import sys, re
+lines=sys.stdin.read().splitlines()
+for line in lines[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    first=cmd.split()[0] if cmd.split() else ''
+    m=re.search(r'--title\s+(\S+)',cmd)
+    title=m.group(1) if m else '-'
+    has_rungo='rungo4.sh' in cmd
+    has_queue='madeup-g406-2-mac.md' in cmd
+    has_agent_title=title.startswith('mimo:madeup-g406-2-mac.go')
+    has_glm=('claude_g406_2_glm.py' in cmd and '--mode' in cmd)
+    is_launcher=(('bash' in first or first.endswith('sh')) and has_rungo and has_queue)
+    is_agent=(first=='/usr/local/bin/opencode' and has_agent_title)
+    is_glm_candidate=(has_glm and first!='/usr/local/bin/opencode')
+    if is_launcher or is_agent or is_glm_candidate:
+        print(f'PID={pid} PPID={ppid} ETIME={etime} LAUNCHER={int(is_launcher)} AGENT={int(is_agent)} GLM={int(is_glm_candidate)} TITLE={title} FIRST={first}')
+"
+echo "---done2---"
+
+PID=2283 PPID=2028 ETIME=00:00 LAUNCHER=1 AGENT=0 GLM=1 TITLE=- FIRST=/bin/zsh
+PID=2285 PPID=2283 ETIME=00:00 LAUNCHER=0 AGENT=0 GLM=1 TITLE=- FIRST=/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python
+PID=6531 PPID=6529 ETIME=03:18:32 LAUNCHER=1 AGENT=0 GLM=0 TITLE=- FIRST=bash
+PID=6563 PPID=6531 ETIME=03:18:32 LAUNCHER=0 AGENT=1 GLM=0 TITLE=mimo:madeup-g406-2-mac.go1.6531 FIRST=/usr/local/bin/opencode
+---done2---
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import subprocess
+# get ps snapshot without inline strings that pollute (use file to avoid self-match)
+import os
+out = subprocess.run(['ps','-axo','pid,ppid,etime,command'], capture_output=True, text=True).stdout.splitlines()
+# build map
+procs={}
+for line in out[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    procs[int(pid)]=(int(ppid),etime,cmd)
+def subtree(root):
+    # find all descendants via BFS
+    kids={root}
+    changed=True
+    result=set([root])
+    while changed:
+        changed=False
+        for pid,(ppid,et,cmd) in procs.items():
+            if ppid in result and pid not in result:
+                result.add(pid)
+                changed=True
+    return result
+for root in [6531,6563,6529]:
+    if root in procs or root==6531:
+        s=subtree(root)
+        print(f'ROOT {root} count={len(s)} pids={sorted(s)[:50]}')
+"
+echo "---subtree done---"
+ps -axo pid,ppid,etime,command | /usr/bin/python3 -c "
+import sys
+# use different variable names to avoid self-match on keywords
+import re
+needle1='claude'+'_g406_2_'+'glm'+'.py'
+needle2='--mo'+'de'
+lines=sys.stdin.read().splitlines()
+import os
+mypid=os.getpid()
+for line in lines[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    # skip self and parent shell (their cmd contains this python code)
+    if pid==str(mypid): continue
+    # parent shell pid: skip if cmd contains 'ps -axo'
+    if 'ps -axo' in cmd: continue
+    if needle1 in cmd and needle2 in cmd:
+        first=cmd.split()[0] if cmd.split() else ''
+        print(f'CAND PID={pid} PPID={ppid} ETIME={etime} FIRST={first}')
+"
+echo "---glm scan done---"
+ROOT 6531 count=2 pids=[6531, 6563]
+ROOT 6563 count=1 pids=[6563]
+ROOT 6529 count=3 pids=[6529, 6531, 6563]
+---subtree done---
+CAND PID=6563 PPID=6531 ETIME=03:18:46 FIRST=/usr/local/bin/opencode
+---glm scan done---
+[0m
+[0m$ [0mps -o pid,ppid,etime,command -p 6529,6531,6563 | /usr/bin/python3 -c "
+import sys, re
+lines=sys.stdin.read().splitlines()
+print('HEADER:'+lines[0] if lines else 'empty')
+for line in lines[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    first=cmd.split()[0] if cmd.split() else ''
+    m=re.search(r'--title\s+(\S+)',cmd)
+    title=m.group(1) if m else '-'
+    # check exact mode flag, not --model
+    has_mode = bool(re.search(r'--mode(?:\s|=|$)',cmd))
+    has_glm = ('claude_g406_2_glm' in cmd)
+    print(f'PID={pid} PPID={ppid} ETIME={etime} TITLE={title} FIRST={first} has_glm={int(has_glm)} has_mode={int(has_mode)}')
+"
+echo "---precise done---"
+/usr/bin/python3 -c "
+import subprocess, re
+out=subprocess.run(['ps','-axo','pid,ppid,etime,command'],capture_output=True,text=True).stdout.splitlines()
+cands=[]
+for line in out[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    if 'ps -axo' in cmd: continue
+    # skip our own python that contains needle text by checking if cmd contains 'subprocess.run'
+    if 'subprocess.run' in cmd: continue
+    has_glm='claude_g406_2_glm' in cmd
+    has_mode=bool(re.search(r'--mode(?:\s|=|\$)',cmd))
+    # also check for --mode with end
+    if has_glm and has_mode:
+        first=cmd.split()[0] if cmd.split() else ''
+        m=re.search(r'--title\s+(\S+)',cmd)
+        title=m.group(1) if m else '-'
+        cands.append(f'PID={pid} PPID={ppid} ETIME={etime} TITLE={title} FIRST={first}')
+if not cands:
+    print('GLM_EXACT_NONE')
+else:
+    print('\n'.join(cands))
+"
+echo "---exact glm done---"
+HEADER:  PID  PPID  ELAPSED COMMAND
+PID=6529 PPID=16015 ETIME=03:19:04 TITLE=- FIRST=bash has_glm=0 has_mode=0
+PID=6531 PPID=6529 ETIME=03:19:04 TITLE=- FIRST=bash has_glm=0 has_mode=0
+PID=6563 PPID=6531 ETIME=03:19:04 TITLE=mimo:madeup-g406-2-mac.go1.6531 FIRST=/usr/local/bin/opencode has_glm=1 has_mode=1
+---precise done---
+PID=6563 PPID=6531 ETIME=03:19:04 TITLE=mimo:madeup-g406-2-mac.go1.6531 FIRST=/usr/local/bin/opencode
+---exact glm done---
+[0m
+[0m$ [0mecho "=== pgrep glm ==="; pgrep -a -f "claude_g406_2_glm" 2>&1 | /usr/bin/python3 -c "
+import sys, re, os
+lines=sys.stdin.read().splitlines()
+if not lines:
+    print('PGREP_NONE')
+for line in lines:
+    # pgrep -a format: pid + full cmd; skip self (contains pgrep or python -c)
+    if 'pgrep' in line or 'python3 -c' in line:
+        continue
+    parts=line.strip().split(None,1)
+    pid=parts[0]
+    cmd=parts[1] if len(parts)>1 else ''
+    first=cmd.split()[0] if cmd.split() else ''
+    # skip opencode agent whose title is madeup-g406-2 (its prompt embeds the name)
+    m=re.search(r'--title\s+(\S+)',cmd)
+    title=m.group(1) if m else '-'
+    print(f'PID={pid} TITLE={title} FIRST={first}')
+"
+echo "=== children of 6563 ==="; pgrep -P 6563 2>&1; echo "exit:$?"; pgrep -a -P 6563 2>&1 | /usr/bin/python3 -c "
+import sys
+d=sys.stdin.read().strip()
+print('CHILDREN6563:'+(d if d else 'NONE'))
+"
+echo "=== children of 6531 ==="; pgrep -a -P 6531 2>&1
+echo "=== parent chain ==="; ps -o pid,ppid,etime,command -p 16015 2>&1 | head -5
+echo "=== check other jobs excluded ==="; ps -axo pid,ppid,etime,command | /usr/bin/python3 -c "
+import subprocess, re
+out=subprocess.run(['ps','-axo','pid,ppid,etime,command'],capture_output=True,text=True).stdout
+# just count luna etc to ensure we don't touch
+for kw in ['claude_luna','madeup-mu407-luna','madeup-g406l']:
+    c=out.count(kw)
+    print(f'{kw}: {c}')
+"
+
+=== pgrep glm ===
+PID=2028 TITLE=- FIRST=
+PID=2409 TITLE=- FIRST=
+PID=6563 TITLE=- FIRST=
+=== children of 6563 ===
+exit:1
+CHILDREN6563:NONE
+=== children of 6531 ===
+6563
+=== parent chain ===
+  PID  PPID     ELAPSED COMMAND
+16015     1 03-10:04:12 bash /Users/ben-hannan/premonition-watch/watcher.sh
+=== check other jobs excluded ===
+claude_luna: 4
+madeup-mu407-luna: 3
+madeup-g406l: 3
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import subprocess, re
+out=subprocess.run(['ps','-axo','pid,ppid,etime,command'],capture_output=True,text=True).stdout.splitlines()
+found=[]
+for line in out[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    if 'ps -axo' in cmd: continue
+    if 'subprocess.run' in cmd: continue
+    if 'claude_g406_2_glm' not in cmd: continue
+    if not re.search(r'--mode(?:\s|=|\$)',cmd): continue
+    first=cmd.split()[0] if cmd.split() else ''
+    # python check: path ending python3.12 or python3
+    is_py = first.endswith('python3.12') or first.endswith('python3') or first.endswith('/python3.12') or first.endswith('/python3')
+    m=re.search(r'--title\s+(\S+)',cmd)
+    title=m.group(1) if m else '-'
+    found.append((pid,ppid,etime,first,title,is_py))
+if not found:
+    print('SCAN_NONE')
+for pid,ppid,etime,first,title,is_py in found:
+    print(f'PID={pid} PPID={ppid} ETIME={etime} FIRST={first} TITLE={title} IS_PY={int(is_py)}')
+"
+echo "---py check done---"
+/usr/bin/python3 -c "
+import subprocess
+out=subprocess.run(['ps','-axo','pid,ppid,etime,command'],capture_output=True,text=True).stdout.splitlines()
+# find any python3.12 / python3 processes that are descendants of 6563 or orphaned with glm? list all python first tokens
+import re
+for line in out[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    first=cmd.split()[0] if cmd.split() else ''
+    if first.endswith('python3.12') or first.endswith('python3'):
+        # skip self scan
+        if 'subprocess.run' in cmd: continue
+        if 'ps -axo' in cmd: continue
+        # sanitized: only pid/ppid/etime + short script name (basename of second token if .py)
+        toks=cmd.split()
+        script='-'
+        for t in toks[1:4]:
+            if t.endswith('.py'):
+                script=t.split('/')[-1]
+                break
+        print(f'PY PID={pid} PPID={ppid} ETIME={etime} SCRIPT={script}')
+"
+echo "---all py done---"
+PID=6563 PPID=6531 ETIME=03:19:29 FIRST=/usr/local/bin/opencode TITLE=mimo:madeup-g406-2-mac.go1.6531 IS_PY=0
+---py check done---
+---all py done---
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import subprocess, re
+out=subprocess.run(['ps','-axo','pid,ppid,etime,command'],capture_output=True,text=True).stdout.splitlines()
+found=[]
+for line in out[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    if 'ps -axo' in cmd: continue
+    if 'subprocess.run' in cmd: continue
+    if not cmd.startswith('/usr/local/bin/opencode run'): continue
+    m=re.search(r'--title\s+(\S+)',cmd)
+    title=m.group(1) if m else '-'
+    if title.startswith('glm11-'):
+        found.append(f'PID={pid} PPID={ppid} ETIME={etime} TITLE={title}')
+    # also list madeup-g406-2 related opencode for context
+print('GLM11_TITLES:')
+if not found:
+    print('NONE')
+else:
+    print('\n'.join(found))
+"
+echo "---glm11 scan done---"
+/usr/bin/python3 -c "
+import subprocess, re
+out=subprocess.run(['ps','-axo','pid,ppid,etime,command'],capture_output=True,text=True).stdout.splitlines()
+for line in out[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    if pid in ('6531','6563','6529','16015'): 
+        first=cmd.split()[0] if cmd.split() else ''
+        m=re.search(r'--title\s+(\S+)',cmd)
+        title=m.group(1) if m else '-'
+        print(f'CONFIRM PID={pid} PPID={ppid} ETIME={etime} FIRST={first} TITLE={title}')
+"
+
+GLM11_TITLES:
+NONE
+---glm11 scan done---
+CONFIRM PID=6529 PPID=16015 ETIME=03:19:37 FIRST=bash TITLE=-
+CONFIRM PID=6531 PPID=6529 ETIME=03:19:37 FIRST=bash TITLE=-
+CONFIRM PID=6563 PPID=6531 ETIME=03:19:37 FIRST=/usr/local/bin/opencode TITLE=mimo:madeup-g406-2-mac.go1.6531
+CONFIRM PID=16015 PPID=1 ETIME=03-10:04:30 FIRST=bash TITLE=-
+[0m
+[0m$ [0mps -o pid,ppid,etime,command -p 6531,6563 | cat
+echo "---killing agent 6563---"
+kill 6563; echo "kill exit:$?"
+sleep 2
+ps -o pid,ppid,etime,command -p 6563 2>&1 | cat; echo "---after 2s---"
+PID  PPID  ELAPSED COMMAND
+ 6531  6529 03:19:44 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/madeup-g406-2-mac.md
+ 6563  6531 03:19:44 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:madeup-g406-2-mac.go1.6531 COMMON RULES (the "Making things up about you" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).\012GPU: no (Mac CPU; 800 GLM 5.3 Flash calls, at most 3 attempts per transcript (up to 2,400) and 1 leak-check call through Ben's opencode subscription, at most 3 at a time under the Mac-wide cap W = min(3, 16 - running opencode processes); $0). No reader, no rental, no BensPC, no OpenRouter. Label: madeup-g406-2. TIME CAP: 180 minutes. DISK: 1.\012OPENCODE RULES: never read, print, copy or commit any opencode config, auth file or key. The scripts delete only the sessions they create; never delete any other session.\012PYTHON: run every script as `uv run --offline --no-project --python 3.12 python -B <script> ...` (standard library only).\012THINKING SETTING: reasoning effort "low" (`--variant low`), set inside scripts/claude_lis320_glm_oclow.py (called by scripts/claude_g406_2_glm.py). Do not add or change any flag.\012WHY: g406-2 and g406b ask whether GLM at reasoning effort low marks made-up claims about the user the way two blind judges did, on 560 plus 240 judged DEV transcripts (artifacts/claude-g406-2-20260926/PASSMARKS.md). Nothing is trained. This replaces the held g406 resume (claude-madeup-g406r-mac.md), which must not run. Named without the claude- prefix on purpose: it takes the watcher's local-slot cap and load hold like any Mac job, and the Director orders it (Thread manager 23:50 UTC).\012\0121. TREE: D=$(mktemp -d); git archive origin/main scripts artifacts/claude-g406-2-20260926 artifacts/claude-mu402-20260926 artifacts/claude-mu403-20260926 artifacts/claude-mu405-20260926/JUDGE-claims405.md artifacts/claude-mu405b-20260926/judge | tar -x -C $D; cd $D; O=artifacts/claude-g406-2-20260926/run; mkdir -p $O. Record `git rev-parse origin/main` and `uptime`.\0122. SEAL (run from $D): `shasum -a 256 -c artifacts/claude-g406-2-20260926/SEAL.sha256.txt` must print OK on every line. Else stop and report.\0123. SELFTESTS (each must print ok, else stop): scripts/claude_g406_2_glm.py --selftest ("g406-2 selftest 7/7 ok"); scripts/claude_g406_count.py --selftest ("g406 count selftest 5/5 ok"); scripts/claude_lis320_glm_oclow.py --selftest (last line "lis320 glm_oclow selftest ok ...").\0124. LEAK CHECK (one call): scripts/claude_glm_leakcheck.py --worktree <absolute path of your worktree>. Record its JSON line. Exit code 2 (ROUTE-FAIL) or 3 (LEAK): stop and report.\0125. SHARE: N=$(pgrep -f "opencode run" | wc -l | tr -d ' '); W=$((16 - N)); if W > 3 then W=3. If W < 1, wait 2 minutes and count again (at most 15 times, then stop and report). Record `date -u`, `uptime`, N and W.\0126. g406b first: record `date -u`; scripts/claude_g406_2_glm.py --mode two --packets 'artifacts/claude-mu405b-20260926/judge/packets/claims_j*.jsonl' --out $O/glm_b.jsonl --workers $W --attempts 3 --max-failed 60 --max-minutes 70 > $O/glm_b.log 2>&1 ; record `date -u` and `uptime`. Then g406-2: redo step 5's count, record it, and run scripts/claude_g406_2_glm.py --mode one --packets 'artifacts/claude-mu402-20260926/judge/packets/claims_j*.jsonl' --packets 'artifacts/claude-mu403-20260926/judge/packets/claims_j*.jsonl' --out $O/glm_one.jsonl --workers $W --attempts 3 --max-failed 100 --max-minutes 100 > $O/glm_one.log 2>&1 ; record `date -u` and `uptime`. For each log: its last line verbatim, `wc -l` of its jsonl, and a count of the "error" field's distinct first 60 characters (a short script; no transcript text).\0127. COUNT:\012   scripts/claude_g406_2_glm.py --glm $O/glm_b.jsonl --best-to $O/best_b.jsonl\012   scripts/claude_g406_count.py --glm $O/best_b.jsonl --judges artifacts/claude-mu405b-20260926/judge --write $O/verdict_b.json\012   scripts/claude_g406_2_glm.py --arm-report --glm $O/glm_b.jsonl --judge artifacts/claude-mu405b-20260926/judge > $O/arms_b.json\012   scripts/claude_g406_2_glm.py --glm $O/glm_one.jsonl --best-to $O/best_one.jsonl\012   scripts/claude_g406_count.py --glm $O/best_one.jsonl --judges artifacts/claude-mu402-20260926/judge --judges artifacts/claude-mu403-20260926/judge --write $O/verdict_one.json\012   Record every printed line verbatim.\0128. Copy $O (glm_b.jsonl, glm_b.log, best_b.jsonl, verdict_b.json, arms_b.json, glm_one.jsonl, glm_one.log, best_one.jsonl, verdict_one.json) into artifacts/claude-g406-2-20260926/run/ of your worktree and write RESULTS.md there: the origin/main commit, uptimes, every `date -u`, seal/selftest/leak-check lines, N and W, each log's last line, error-prefix counts, and the count lines. Counts only: no transcript text, no GLM reply text. Then rm -rf "$D" (exact path) and confirm it is gone.\012If stopped by the time cap or by failed calls: still do steps 7 and 8 with what exists and say "partial".\012PUSH: artifacts/claude-g406-2-20260926/run
+---killing agent 6563---
+kill exit:0
+  PID  PPID ELAPSED COMMAND
+---after 2s---
+[0m
+[0m$ [0msleep 8
+/usr/bin/python3 -c "
+import subprocess
+out=subprocess.run(['ps','-o','pid,ppid,etime,command','-p','6563'],capture_output=True,text=True).stdout.strip()
+lines=out.splitlines()
+if len(lines)<=1:
+    print('PID6563_GONE')
+else:
+    print('PID6563_STILL')
+"
+/usr/bin/python3 -c "
+import subprocess, re
+out=subprocess.run(['ps','-axo','pid,ppid,etime,command'],capture_output=True,text=True).stdout.splitlines()
+# sanitized check for any remaining glm python (non-opencode) or glm11 titles
+glm_py=False
+glm11=[]
+for line in out[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    if 'ps -axo' in cmd or 'subprocess.run' in cmd: continue
+    first=cmd.split()[0] if cmd.split() else ''
+    if 'claude_g406_2_glm' in cmd and re.search(r'--mode(?:\s|=|\$)',cmd) and first!='/usr/local/bin/opencode':
+        print(f'REMAIN_GLM PID={pid}')
+        glm_py=True
+    if cmd.startswith('/usr/local/bin/opencode run'):
+        m=re.search(r'--title\s+(\S+)',cmd)
+        t=m.group(1) if m else ''
+        if t.startswith('glm11-'):
+            glm11.append(pid)
+if not glm_py:
+    print('REMAIN_GLM_NONE')
+print('GLM11_REMAIN:'+('NONE' if not glm11 else ','.join(glm11)))
+"
+PID6563_GONE
+REMAIN_GLM_NONE
+GLM11_REMAIN:NONE
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import subprocess
+out=subprocess.run(['ps','-o','pid,ppid,etime','-p','6531,6529,16015'],capture_output=True,text=True).stdout.strip()
+print(out)
+"
+echo "---launcher check sanitized---"
+pgrep -f "rungo4.sh .*madeup-g406-2-mac.md" 2>&1; echo "pgrep_exit:$?"
+date -u
+PID  PPID     ELAPSED
+16015     1 03-10:05:03
+---launcher check sanitized---
+pgrep_exit:1
+Sun Sep 27 04:04:28 UTC 2026
+[0m
+[0m$ [0mls artifacts/claude-stop-g406-2-20260927/ 2>&1 || echo "no dir"; date -u; df -g / 2>&1 | head -5; uptime 2>&1 | head -3
+ls: artifacts/claude-stop-g406-2-20260927/: No such file or directory
+no dir
+Sun Sep 27 04:04:36 UTC 2026
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        34    28%  484014 358191800    0%   /
+ 0:04  up 3 days, 13:57, 4 users, load averages: 126.74 123.95 126.41
+[0m
+[0m$ [0mls artifacts 2>&1 | head -20; mkdir artifacts/claude-stop-g406-2-20260927; ls -ld artifacts/claude-stop-g406-2-20260927
+claude-adapters-20260926d
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm391-20260926
+claude-bm395-20260925
+claude-bm397t-20260926
+claude-bm398e-20260926
+claude-bm398i-20260926
+claude-bm398r-20260926
+claude-bmriv-smoke-20260926
+claude-boundary259-20260922
+claude-brd5-20260926
+drwxr-xr-x  2 ben-hannan  staff  64 Sep 27 00:04 artifacts/claude-stop-g406-2-20260927
+[0m
+[0m← [0mWrite artifacts/claude-stop-g406-2-20260927/REPORT.md
+Wrote file successfully.
+[0m
