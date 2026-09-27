@@ -1,6 +1,7 @@
 #!/bin/bash
 # rungo5 = rungo4 with a builder chain that avoids the opencode-go plan (weekly Go usage limit hit ~00:57 UTC 09-27; Ben 03:04:18 "use muse spark 1.3").
 # Chain: $2 (watcher BM, default free Zen Muse), then free mimo-v2.6-flash (mimo-skill.md:13). Deployed by watcher.sh into $H each round (Director 03:17 UTC 09-27).
+# NOT a Luna/Codex builder: on 2026-09-27 03:53 UTC the Director's permission check refused running `codex exec` (GPT-6 Luna) as a queue builder ("create unsafe agents"), even least-privilege (workspace-write + network). No session should retry that route; Luna is used only as a read-only text helper (scripts/claude_luna_codex.py). Ben or his Mac Claude may set it up themselves.
 # rungo4 (= rungo3 + network-drop resume). 11:07-11:18 on 2026-09-22 six agents died on "unknown certificate verification error" /
 # "Cannot connect to API" and rungo3 wrote .done for them (reply > 300 bytes). Now: if the last lines of err.txt show a network
 # error, the run is NOT done; wait 120 s and resume on the SAME model (up to 6 network retries), with the RESUME NOTICE.
