@@ -1,0 +1,922 @@
+{
+  "48_round_stability": {
+    "input_shape": [
+      11,
+      11
+    ],
+    "patterns": {
+      "all_positive": {
+        "all_finite": true,
+        "frobenius_A": 0.9999999403953552,
+        "frobenius_B": 0.9999999403953552,
+        "max_abs_hidden": 2.5472333431243896,
+        "nonzero_effect_norm": 0.008296345360577106,
+        "operator_bound": 0.2499999701976785,
+        "operator_bound_recomputed": 0.2499999701976785,
+        "record_consistent": true
+      },
+      "alternating": {
+        "all_finite": true,
+        "frobenius_A": 0.9999999403953552,
+        "frobenius_B": 0.9999999403953552,
+        "max_abs_hidden": 2.547309637069702,
+        "nonzero_effect_norm": 0.019779425114393234,
+        "operator_bound": 0.2499999701976785,
+        "operator_bound_recomputed": 0.2499999701976785,
+        "record_consistent": true
+      },
+      "random_signs": {
+        "all_finite": true,
+        "frobenius_A": 0.9999999403953552,
+        "frobenius_B": 0.9999999403953552,
+        "max_abs_hidden": 2.547232151031494,
+        "nonzero_effect_norm": 0.01930767484009266,
+        "operator_bound": 0.2499999701976785,
+        "operator_bound_recomputed": 0.2499999701976785,
+        "record_consistent": true
+      }
+    },
+    "rounds": 48
+  },
+  "all_eight_arm_gate": {
+    "reason": "controls and second-seed arm gates pending",
+    "status": "unknown"
+  },
+  "arm": "patch",
+  "audit_status": "consistent",
+  "errors": [],
+  "fixed_depth_marks": {
+    "dev": {
+      "brackets": {
+        "16": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "32": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "4": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "48": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "8": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        }
+      },
+      "counting": {
+        "16": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 298
+        },
+        "32": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 298
+        },
+        "4": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 297
+        },
+        "48": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 298
+        },
+        "8": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 298
+        }
+      },
+      "grids": {
+        "16": {
+          "mark": 285,
+          "n": 300,
+          "passed": false,
+          "right": 283
+        },
+        "32": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 285
+        },
+        "4": {
+          "mark": 285,
+          "n": 300,
+          "passed": false,
+          "right": 180
+        },
+        "48": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 286
+        },
+        "8": {
+          "mark": 285,
+          "n": 300,
+          "passed": false,
+          "right": 261
+        }
+      },
+      "reversing": {
+        "16": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 293
+        },
+        "32": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 294
+        },
+        "4": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 285
+        },
+        "48": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 294
+        },
+        "8": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 293
+        }
+      },
+      "sorting": {
+        "16": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 293
+        },
+        "32": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 293
+        },
+        "4": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 286
+        },
+        "48": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 293
+        },
+        "8": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 291
+        }
+      },
+      "sums": {
+        "16": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "32": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "4": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "48": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "8": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        }
+      }
+    },
+    "verify": {
+      "brackets": {
+        "16": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "32": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "4": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "48": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "8": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        }
+      },
+      "counting": {
+        "16": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 298
+        },
+        "32": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 298
+        },
+        "4": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 298
+        },
+        "48": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 298
+        },
+        "8": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 298
+        }
+      },
+      "grids": {
+        "16": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 285
+        },
+        "32": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 288
+        },
+        "4": {
+          "mark": 285,
+          "n": 300,
+          "passed": false,
+          "right": 168
+        },
+        "48": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 288
+        },
+        "8": {
+          "mark": 285,
+          "n": 300,
+          "passed": false,
+          "right": 261
+        }
+      },
+      "reversing": {
+        "16": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 288
+        },
+        "32": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 288
+        },
+        "4": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 283
+        },
+        "48": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 288
+        },
+        "8": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 287
+        }
+      },
+      "sorting": {
+        "16": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 298
+        },
+        "32": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 298
+        },
+        "4": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 288
+        },
+        "48": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 298
+        },
+        "8": {
+          "mark": 270,
+          "n": 300,
+          "passed": true,
+          "right": 296
+        }
+      },
+      "sums": {
+        "16": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "32": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "4": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 298
+        },
+        "48": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        },
+        "8": {
+          "mark": 285,
+          "n": 300,
+          "passed": true,
+          "right": 300
+        }
+      }
+    }
+  },
+  "hashes": {
+    "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-patch-20260927/CANDIDATE-SEAL.json": "645657e0e378eea2ed56eb8d8943eaa931feb1720fcadbe9b6cab51af78c6bbd",
+    "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-patch-20260927/PANELS.json": "4a95366a1d5f0acadb7ac8a58e3e7e67785447ed7dfb42a90a73759548a97c28",
+    "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-patch-20260927/patch-927401/dev-raw.jsonl": "82dcf63ff7057455bc54939ae9422b7941b104003b57f9aba762604d862424c4",
+    "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-patch-20260927/patch-927401/final.pt": "aa8e7f5b6d18dd2b93fcddcfdfbf8a5aee1bb48e2591f8624d7b144877b977dc",
+    "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-patch-20260927/patch-927401/inference-timing.json": "88a0641b3668666ced2778aea42298fc7ffe82590192abdda1f4f4ee24478b7f",
+    "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-patch-20260927/patch-927401/result.json": "47dedd8679250eca89199abce5e1dd181f6a7128045bbf6fa7c14aa147e63e29",
+    "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-patch-20260927/patch-927401/trained-checks.json": "f04bdfc89548235fd3ede137fd654f6b33879ff3ec54b051b02160dedc3403a2",
+    "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-patch-20260927/patch-927401/verify-raw.jsonl": "a3372d45bedea2a12c7cf4dbd244cd3b7ff9211b6a2ae8109b2eedd55dc817e5",
+    "/Users/ben-hannan/Desktop/projects/beautiful-model/scripts/claude_blurt1.py": "c00aa62f4bc9ed710019581ee61288256238539c5bcfb6759d17f89c01a958de",
+    "/Users/ben-hannan/Desktop/projects/beautiful-model/scripts/claude_patch_data.py": "688fc32fffd95df17cd45ecf6462f77234e0f144c3f652af0e44a92696db5647",
+    "/Users/ben-hannan/Desktop/projects/beautiful-model/scripts/claude_patch_net.py": "6f2388ab1f6586d18f31a7a4d22ed00ced1987d7fc26a4ccc6b0301f73b4057e",
+    "/Users/ben-hannan/Desktop/projects/beautiful-model/scripts/claude_patch_race_recount.py": "162515d6df1ff33b1df40ae3c388a8d2381cc21a2ab92d78b22004ff0a1b9129",
+    "/Users/ben-hannan/Desktop/projects/beautiful-model/scripts/claude_rsn358a_envs.py": "af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0"
+  },
+  "inference_timing": {
+    "brackets": {
+      "mean_seconds": 0.010632213940455888,
+      "n": 30
+    },
+    "counting": {
+      "mean_seconds": 0.0219248054723721,
+      "n": 30
+    },
+    "grids": {
+      "mean_seconds": 0.045008298727528505,
+      "n": 30
+    },
+    "reversing": {
+      "mean_seconds": 0.03961689316784032,
+      "n": 30
+    },
+    "sorting": {
+      "mean_seconds": 0.0308899472351186,
+      "n": 30
+    },
+    "sums": {
+      "mean_seconds": 0.026469243061728775,
+      "n": 30
+    }
+  },
+  "limitations": [
+    "Numerical check norms, hidden-state finiteness and zero-patch difference audited as recorded; backpropagation and 48-round stress were not rerun.",
+    "Selected/fixed token predictions establish accuracy counts; per-round logits and stop probabilities are absent, so learned stopping decisions cannot be reconstructed.",
+    "Fixed-depth successes are diagnostic and do not replace the selected-prediction marks."
+  ],
+  "matrix_gradients": {
+    "expected_matrix_total": 20,
+    "nonzero": 20,
+    "rows": {
+      "blocks.0.bc": {
+        "finite_nonzero": true,
+        "norm": 2.3383665084838867
+      },
+      "blocks.0.br": {
+        "finite_nonzero": true,
+        "norm": 0.9113441109657288
+      },
+      "blocks.0.mlp.0.weight": {
+        "finite_nonzero": true,
+        "norm": 3.8322417736053467
+      },
+      "blocks.0.mlp.2.weight": {
+        "finite_nonzero": true,
+        "norm": 2.4079716205596924
+      },
+      "blocks.0.out.weight": {
+        "finite_nonzero": true,
+        "norm": 4.556684970855713
+      },
+      "blocks.0.qkv.weight": {
+        "finite_nonzero": true,
+        "norm": 4.579590797424316
+      },
+      "blocks.1.bc": {
+        "finite_nonzero": true,
+        "norm": 1.3334624767303467
+      },
+      "blocks.1.br": {
+        "finite_nonzero": true,
+        "norm": 0.23955194652080536
+      },
+      "blocks.1.mlp.0.weight": {
+        "finite_nonzero": true,
+        "norm": 3.2682909965515137
+      },
+      "blocks.1.mlp.2.weight": {
+        "finite_nonzero": true,
+        "norm": 1.5281301736831665
+      },
+      "blocks.1.out.weight": {
+        "finite_nonzero": true,
+        "norm": 2.533921480178833
+      },
+      "blocks.1.qkv.weight": {
+        "finite_nonzero": true,
+        "norm": 3.872913122177124
+      },
+      "gate.weight": {
+        "finite_nonzero": true,
+        "norm": 2.1384970239068934e-08
+      },
+      "halt.weight": {
+        "finite_nonzero": true,
+        "norm": 0.6160189509391785
+      },
+      "head.weight": {
+        "finite_nonzero": true,
+        "norm": 2.101811408996582
+      },
+      "rank_slot.weight": {
+        "finite_nonzero": true,
+        "norm": 2.675374144445186e-09
+      },
+      "slot.weight": {
+        "finite_nonzero": true,
+        "norm": 1.5095850229263306
+      },
+      "tok.weight": {
+        "finite_nonzero": true,
+        "norm": 1.3851807117462158
+      },
+      "writer.0.weight": {
+        "finite_nonzero": true,
+        "norm": 1.2966167162176134e-07
+      },
+      "writer.2.weight": {
+        "finite_nonzero": true,
+        "norm": 9.081465890403706e-08
+      }
+    }
+  },
+  "method": "Regrade saved predictions with the candidate-hash-verified D.check against sealed PANELS Items; targets/right flags in raw rows are not grading truth. CPU tensor-only checkpoint read; no Net construction, forward pass, training, or changes to live jobs.",
+  "missing": [],
+  "paired_gaps": {
+    "reason": "only patch-927401 audited; paired loop and loop_meta not recounted",
+    "status": "unknown"
+  },
+  "panel_identity": {
+    "dev": {
+      "brackets": {
+        "exact_unique_match": true,
+        "raw_n": 300,
+        "sealed_n": 300,
+        "unique_inputs": 300
+      },
+      "counting": {
+        "exact_unique_match": true,
+        "raw_n": 300,
+        "sealed_n": 300,
+        "unique_inputs": 300
+      },
+      "grids": {
+        "exact_unique_match": true,
+        "raw_n": 300,
+        "sealed_n": 300,
+        "unique_inputs": 300
+      },
+      "reversing": {
+        "exact_unique_match": true,
+        "raw_n": 300,
+        "sealed_n": 300,
+        "unique_inputs": 300
+      },
+      "sorting": {
+        "exact_unique_match": true,
+        "raw_n": 300,
+        "sealed_n": 300,
+        "unique_inputs": 300
+      },
+      "sums": {
+        "exact_unique_match": true,
+        "raw_n": 300,
+        "sealed_n": 300,
+        "unique_inputs": 300
+      }
+    },
+    "verify": {
+      "brackets": {
+        "exact_unique_match": true,
+        "raw_n": 300,
+        "sealed_n": 300,
+        "unique_inputs": 300
+      },
+      "counting": {
+        "exact_unique_match": true,
+        "raw_n": 300,
+        "sealed_n": 300,
+        "unique_inputs": 300
+      },
+      "grids": {
+        "exact_unique_match": true,
+        "raw_n": 300,
+        "sealed_n": 300,
+        "unique_inputs": 300
+      },
+      "reversing": {
+        "exact_unique_match": true,
+        "raw_n": 300,
+        "sealed_n": 300,
+        "unique_inputs": 300
+      },
+      "sorting": {
+        "exact_unique_match": true,
+        "raw_n": 300,
+        "sealed_n": 300,
+        "unique_inputs": 300
+      },
+      "sums": {
+        "exact_unique_match": true,
+        "raw_n": 300,
+        "sealed_n": 300,
+        "unique_inputs": 300
+      }
+    }
+  },
+  "reported_source_fixed_depth": 48,
+  "scores": {
+    "dev": {
+      "brackets": {
+        "cap_hits": 0,
+        "fixed_right": {
+          "16": 300,
+          "32": 300,
+          "4": 300,
+          "48": 300,
+          "8": 300
+        },
+        "mean_rounds": 3.0,
+        "n": 300,
+        "right": 300
+      },
+      "counting": {
+        "cap_hits": 0,
+        "fixed_right": {
+          "16": 298,
+          "32": 298,
+          "4": 297,
+          "48": 298,
+          "8": 298
+        },
+        "mean_rounds": 5.973333333333334,
+        "n": 300,
+        "right": 297
+      },
+      "grids": {
+        "cap_hits": 0,
+        "fixed_right": {
+          "16": 283,
+          "32": 285,
+          "4": 180,
+          "48": 286,
+          "8": 261
+        },
+        "mean_rounds": 10.45,
+        "n": 300,
+        "right": 281
+      },
+      "reversing": {
+        "cap_hits": 0,
+        "fixed_right": {
+          "16": 293,
+          "32": 294,
+          "4": 285,
+          "48": 294,
+          "8": 293
+        },
+        "mean_rounds": 10.11,
+        "n": 300,
+        "right": 291
+      },
+      "sorting": {
+        "cap_hits": 0,
+        "fixed_right": {
+          "16": 293,
+          "32": 293,
+          "4": 286,
+          "48": 293,
+          "8": 291
+        },
+        "mean_rounds": 7.42,
+        "n": 300,
+        "right": 293
+      },
+      "sums": {
+        "cap_hits": 0,
+        "fixed_right": {
+          "16": 300,
+          "32": 300,
+          "4": 300,
+          "48": 300,
+          "8": 300
+        },
+        "mean_rounds": 6.476666666666667,
+        "n": 300,
+        "right": 300
+      }
+    },
+    "verify": {
+      "brackets": {
+        "cap_hits": 0,
+        "fixed_right": {
+          "16": 300,
+          "32": 300,
+          "4": 300,
+          "48": 300,
+          "8": 300
+        },
+        "mean_rounds": 3.0,
+        "n": 300,
+        "right": 300
+      },
+      "counting": {
+        "cap_hits": 0,
+        "fixed_right": {
+          "16": 298,
+          "32": 298,
+          "4": 298,
+          "48": 298,
+          "8": 298
+        },
+        "mean_rounds": 5.726666666666667,
+        "n": 300,
+        "right": 298
+      },
+      "grids": {
+        "cap_hits": 1,
+        "fixed_right": {
+          "16": 285,
+          "32": 288,
+          "4": 168,
+          "48": 288,
+          "8": 261
+        },
+        "mean_rounds": 10.626666666666667,
+        "n": 300,
+        "right": 278
+      },
+      "reversing": {
+        "cap_hits": 0,
+        "fixed_right": {
+          "16": 288,
+          "32": 288,
+          "4": 283,
+          "48": 288,
+          "8": 287
+        },
+        "mean_rounds": 10.163333333333334,
+        "n": 300,
+        "right": 289
+      },
+      "sorting": {
+        "cap_hits": 0,
+        "fixed_right": {
+          "16": 298,
+          "32": 298,
+          "4": 288,
+          "48": 298,
+          "8": 296
+        },
+        "mean_rounds": 7.333333333333333,
+        "n": 300,
+        "right": 297
+      },
+      "sums": {
+        "cap_hits": 0,
+        "fixed_right": {
+          "16": 300,
+          "32": 300,
+          "4": 298,
+          "48": 300,
+          "8": 300
+        },
+        "mean_rounds": 6.66,
+        "n": 300,
+        "right": 300
+      }
+    }
+  },
+  "seed": 927401,
+  "selected_marks": {
+    "dev": {
+      "brackets": {
+        "mark": 270,
+        "n": 300,
+        "passed": true,
+        "right": 300
+      },
+      "counting": {
+        "mark": 270,
+        "n": 300,
+        "passed": true,
+        "right": 297
+      },
+      "grids": {
+        "mark": 285,
+        "n": 300,
+        "passed": false,
+        "right": 281
+      },
+      "reversing": {
+        "mark": 270,
+        "n": 300,
+        "passed": true,
+        "right": 291
+      },
+      "sorting": {
+        "mark": 270,
+        "n": 300,
+        "passed": true,
+        "right": 293
+      },
+      "sums": {
+        "mark": 285,
+        "n": 300,
+        "passed": true,
+        "right": 300
+      }
+    },
+    "verify": {
+      "brackets": {
+        "mark": 270,
+        "n": 300,
+        "passed": true,
+        "right": 300
+      },
+      "counting": {
+        "mark": 270,
+        "n": 300,
+        "passed": true,
+        "right": 298
+      },
+      "grids": {
+        "mark": 285,
+        "n": 300,
+        "passed": false,
+        "right": 278
+      },
+      "reversing": {
+        "mark": 270,
+        "n": 300,
+        "passed": true,
+        "right": 289
+      },
+      "sorting": {
+        "mark": 270,
+        "n": 300,
+        "passed": true,
+        "right": 297
+      },
+      "sums": {
+        "mark": 285,
+        "n": 300,
+        "passed": true,
+        "right": 300
+      }
+    }
+  },
+  "utc": "2026-09-27 23:51:03 UTC",
+  "verify_selected_all_six_marks": false,
+  "weights": {
+    "all_tensors_finite": true,
+    "all_tensors_fp32": true,
+    "learned_from_checkpoint_shapes": 1648671,
+    "patch_shapes": [
+      [
+        1,
+        8,
+        256
+      ],
+      [
+        1,
+        256,
+        8
+      ]
+    ],
+    "persistent_from_saved_patch_shapes": 4096,
+    "state_tensors": 45,
+    "total": 1652767
+  },
+  "zero_patch": {
+    "max_abs_difference": 0.0,
+    "record_consistent": true
+  }
+}

@@ -1,6 +1,6 @@
 # Result status
 
-Updated 2026-09-27T23:23:29Z. **No maze verdict yet.**
+Updated 2026-09-27T23:48:50Z. **The first patch seed fails the grid practice gate; no maze verdict.**
 
 **Shown:** the rank-eight patch net is built and the eight construction checks
 passed in fp32 on the local Apple GPU. Independent Sol recount agrees with the
@@ -15,14 +15,28 @@ A separate Sol subagent independently regraded all 1,800 raw predictions and
 matched the sealed counts and hashes (QUALIFICATION-RECOUNT.json). The
 qualification checkpoint is separate from every race contender.
 
-**Running:** two seeds of patch, ordinary loop, learning-to-learn loop, and
-plain on the same qualified curriculum. These eight arms must separately pass
-the sealed source and relative-retention gates. Source commit: `fd250b3be`.
+**Shown:** patch seed 927401 completed all 18,000 source batches and 2,000
+episodes. On the sealed verification panels it scored sums 300 of 300, grids
+278 of 300, sorting 297 of 300, reversing 289 of 300, counting 298 of 300,
+and brackets 300 of 300. Grids required 285 of 300, so this implementation is
+not race-eligible under the registered recipe. Independent Sol raw recount
+confirmed all six scores and panel identities (FIRST-ARM-RECOUNT.md). All eight trained construction
+checks passed, including 20 of 20 finite nonzero matrix gradients.
+
+**Suggested:** stopping contributes to this source failure: grid accuracy at
+fixed depth 48 is 288 of 300, ten more than with learned stopping. That diagnostic
+cannot replace the registered eligibility score. No stopping rule, budget, or
+training recipe is changed in response to these results.
+
+**Running:** the remaining seven registered source arms on the same qualified
+curriculum. The paired source gaps, second seed, and full eight-arm results are
+pending. Source commit: `fd250b3be`.
 
 **Untested:** few-example maze advantage, keeping old kinds after maze supports,
 sleep absorption with the patch removed, and whether wider practice helps the
 loop. There is no trained inference-speed claim yet. No contender is promoted.
-The next test is the registered two-seed practice gate for all eight arms.
+The remaining registered work is the two-seed practice comparison. The known
+first-seed grid failure already prevents a race under this registration.
 
 The ruler protocol and marks subsequently arrived at `3acb5d18a`, with its
 pre-maze execution corrections through `aeb524cd0`. ADDENDUM-wide-practice.md records
