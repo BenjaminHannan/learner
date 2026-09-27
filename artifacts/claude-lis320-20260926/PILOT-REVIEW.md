@@ -39,3 +39,11 @@ long turns 0.53. Item 5: a fresh agent read 20 kept, 20 kept correct_ref and 20 
 wrong (0 of 20 correct_ref). I checked the three: each is a one-owner fact worded as shared ("we live in Lotirmoor",
 "Nuroa and me actually live in Junzocombe", "our cat is named gani"), so the label misses the second owner. 13 of 20 drops
 were judged over-drops (report only). The change and pilot 5 are in ADDENDUM-7-group-speaker-check.md.
+
+## Pilot 5 (seed 325, 60 dialogs, check_we, 23:50-23:58 UTC 09-26, $0): FAIL on item 1 (checked 09-27 00:04 UTC)
+Route marks met: 55 of 60 parsed, 0 failed calls, rawcheck OK. Item 1: 327 of 428 kept (76%), but someone_else kept 3 of
+8 (38%, mark 40%); one of its five lost turns was a false drop by the new group check ("someone told me and im").
+Items 2-4 met (lowercase 0.994, missing-apostrophe 0.434, over 20 words 0.398, shapes 100, write facts in long turns
+0.529). Item 5 met: a fresh agent found 1 of 20 kept labels wrong ("her favorite food and mine too") and 1 of 9
+correct_ref wrong on casing only. 14 of 20 drops judged over-drops (report only). The change and pilot 6 are in
+ADDENDUM-8-group-check-narrowed.md.
