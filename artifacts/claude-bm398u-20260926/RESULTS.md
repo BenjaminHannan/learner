@@ -118,6 +118,9 @@ Split by whose lines held an evidence turn. The split was chosen after seeing th
   week": C for some judges, D for others). Each group holds each arm for a third of the questions, so these rulings
   add noise but favour no arm by design.
 - The run took 13,255 s on CPU (4 threads, niced), after bm-398n's run ended, as the PLAN says.
+- [Added 2026-09-27 05:25 UTC] Two judges' closing reports quoted a few words of item text as examples of their
+  rulings (generic category words from replies). That put those words into the builder's context. They are not
+  repeated here and changed no label, since all labels were already written.
 - Replies, scores, judge folders and the recount's own script stay in the scratchpad (they hold benchmark text or
   read from it).
 
