@@ -1,4 +1,4 @@
-2026-09-27 03:30:56
+2026-09-27 03:33:12
 running:
 000-probe-zen-builder.running
 000-rescue-rd378.running
@@ -8,10 +8,8 @@ k1h-glm2.running
 k1h-luna-full-mac.running
 y1t-luna-rest-mac.running
 launched (no exit yet) / finished:
-     802
+     803
 
-2026-09-27 02:17:20 zen cap: 4 non-GPU rungo5 builders running, holding y1t-luna-pilot-mac
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 02:19:28 zen cap: 4 non-GPU rungo5 builders running, holding bm398w-luna-mac
 2026-09-27 02:19:29 zen cap: 4 non-GPU rungo5 builders running, holding k1h-luna-full-mac
 2026-09-27 02:19:29 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8-mac
@@ -160,6 +158,8 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 03:30:48 pushed madeup-g406l-resume-mac
 2026-09-27 03:30:49 launch 000-rescue-rd378
 2026-09-27 03:30:56 launch y1t-luna-rest-mac
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 03:33:12 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8b-mac
 
 diag:
 == 000-probe-zen-builder
@@ -176,11 +176,12 @@ diag:
 > build · muse-spark-1.3-contributor
 [0m
 == 000-rescue-rd378
-53 Sep 27 03:30 000-rescue-rd378.go1.err.txt
+149 Sep 27 03:32 000-rescue-rd378.go1.err.txt
 0 Sep 27 03:30 000-rescue-rd378.go1.reply.md
 [0m
 > build · muse-spark-1.3-contributor-free
 [0m
+[91m[1mError: [0mError from provider (Console): Rate limit exceeded. Please try again later.
 == 156-claude-sleep-358spc-r
 117408 Sep 27 03:17 156-claude-sleep-358spc-r.go1.err.txt
 943 Sep 27 03:17 156-claude-sleep-358spc-r.go1.reply.md
@@ -214,26 +215,29 @@ cp-exit:0
 2026-09-27T07:05:38Z
 [0m
 == y1t-luna-rest-mac
-0 Sep 27 03:30 y1t-luna-rest-mac.go1.err.txt
+149 Sep 27 03:32 y1t-luna-rest-mac.go1.err.txt
 0 Sep 27 03:30 y1t-luna-rest-mac.go1.reply.md
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[91m[1mError: [0mError from provider (Console): Rate limit exceeded. Please try again later.
 top5cpu:
 %CPU COMM
-95.9 opencode
-53.9 ApplicationsStorageExtension
-44.8 opencode
-39.0 bird
-32.9 WindowServer
+62.9 ApplicationsStorageExtension
+32.7 WindowServer
+29.6 fileproviderd
+17.7 bash
+11.5 Claude
 procs:
-  363     1 03-15:17:53 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-15:17:01 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
-15699     1 03-13:32:19 S    /usr/bin/ssh-agent
-19009 18977       00:06 RN   /usr/local/bin/opencode
-20081 20011       00:00 RN   /usr/local/bin/opencode
-44571 44570 01-05:53:57 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-05:53:57 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    11:08:30 SN   /usr/local/bin/opencode
-54273 54242       58:09 SN   /usr/local/bin/opencode
-60494 59018    04:23:23 SN   /usr/local/bin/opencode
-64555 64533       48:57 SN   /usr/local/bin/opencode
-81797     1 01-16:11:36 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
-89799 89775       26:12 SN   /usr/local/bin/opencode
+  363     1 03-15:20:10 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-15:19:18 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+15699     1 03-13:34:36 S    /usr/bin/ssh-agent
+20832   818       00:37 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+44571 44570 01-05:56:14 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-05:56:14 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    11:10:47 SN   /usr/local/bin/opencode
+54273 54242    01:00:26 SN   /usr/local/bin/opencode
+60494 59018    04:25:40 SN   /usr/local/bin/opencode
+64555 64533       51:14 SN   /usr/local/bin/opencode
+81797     1 01-16:13:53 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+89799 89775       28:29 SN   /usr/local/bin/opencode
