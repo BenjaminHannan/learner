@@ -25,9 +25,12 @@ loop. There is no trained inference-speed claim yet. No contender is promoted.
 The next test is the registered two-seed practice gate for all eight arms.
 
 The ruler protocol and marks subsequently arrived at `3acb5d18a`, with its
-pre-maze execution corrections at `93e9ccba2`. ADDENDUM-wide-practice.md records
+pre-maze execution corrections through `aeb524cd0`. ADDENDUM-wide-practice.md records
 our wider source practice, unchanged Test A thresholds, and the user's local
-GPU requirement. The design race also requires the ruler to pass V1–V3.
+GPU requirement. The design race also requires the ruler to pass V1–V3. Its original plain
+baselines failed the grid guard; ADDENDUM-3 registers matched 12,000-step
+qualification and a fresh guard before any maze scores. Our sealed source
+training recipe is unchanged.
 The plug-in and gated race driver are preparation, not maze results.
 
 ## Running and resuming

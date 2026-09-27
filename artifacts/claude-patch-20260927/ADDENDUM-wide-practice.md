@@ -3,11 +3,21 @@
 Drafted 2026-09-27T22:44:28Z, from `date -u`, before any maze scoring in this
 experiment. The governing marks are the test chat's RACE-PASSMARKS.md and
 PASSMARKS.md, committed with PROTOCOL.md at `3acb5d18a`. Their files are not edited.
-The ruler's own pre-maze corrections ADDENDUM-1 and ADDENDUM-2 are also adopted;
-the execution seal is `93e9ccba2`. These restore the 50-update linear optimizer
+The ruler's own pre-maze corrections ADDENDUM-1, ADDENDUM-2, and ADDENDUM-3 are also adopted;
+the execution seal is `aeb524cd0`. The first two restore the 50-update linear optimizer
 warm-up, including sleep, and separate replay-example RNG from sleep-round RNG
 so loop and plain receive identical replay draws. No marks changed, and our
 experiment has not scored any maze.
+
+ADDENDUM-3 records the original 6,000-step plain baselines failing their grid
+source guard. Its new baseline qualification gives both baseline architectures
+12,000 source steps and a fresh 200-example guard per old kind at source seed
+9,233,000. Our already sealed 18,000-step, six-kind source practice and episodes
+remain unchanged. Our race source exports use that same fresh guard for the
+original 190-of-200 and relative-source checks; locked maze adaptation and its
+old-kind evaluation panels remain unchanged. Baseline validity accepts only the
+qualified recipe; failed original source records remain disclosed. This does
+not establish a causal benefit of wider practice.
 
 ## Amendment and unchanged bars
 
@@ -37,8 +47,8 @@ all six kinds, without weakening the ruler's original sums/grids checks.
 ## Source training and controls
 
 Each source arm receives the sealed 18,000 batches of 64, uniformly sampling
-six kinds. This preserves the ruler's expected 3,000 batches per kind when
-widening its 6,000-batch, two-kind curriculum. The separately registered 2,000
+six kinds. This preserves the original ruler's expected 3,000 batches per kind when
+widening its original 6,000-batch, two-kind curriculum. The separately registered 2,000
 support/query episodes then give the patch and its gradient-adapting loop
 control the same evidence and future-example/retention objective. Plain also
 gets those episodes. The ordinary loop reference receives that same episode

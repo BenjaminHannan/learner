@@ -29,6 +29,9 @@ WIDE_STAGES = ("k0", "k64", "k65536", "sleep64", "sleep64k")
 KINDS = ("sums", "grids", "sorting", "reversing", "counting", "brackets")
 ARMS = ("patch", "loop_meta", "plain", "loop")
 SIZES = {7: 48, 9: 300, 11: 300}
+# Upstream ADDENDUM-3 (aeb524cd0); our wider source budget stays separate.
+BASELINE_SOURCE = dict(source_steps=12000, source_batch=64, source_guard_seed=9233000)
+OWN_SOURCE = dict(source_steps=18000, source_batch=64, source_guard_seed=9233000)
 FORBIDDEN = {"RESULTS.md", "CHECKS.md", "RACE-RESULTS.json", "claude_patch_race_report.py"}
 
 
@@ -213,38 +216,88 @@ def verify_manifest(manifest, audit):
             audit.compare(actual, wanted, f"manifest/{name}")
 
 
+def source_checks(raw):
+    old, gc = raw.get("old", {}), raw.get("gradient_check", {})
+    return {
+        "V1": all(old.get(k, {}).get("n") == 200 and old[k].get("right", -1) >= 190
+                  for k in ("sums4", "grids5")),
+        "V2": gc.get("nonzero_all") is True and gc.get("missing_both") == []
+              and gc.get("matrix_count", 0) > 0}
+
+
+def baseline_records(records, audit):
+    """Select qualified sources by metadata, retaining original failures separately."""
+    sources, adaptations = {}, {}
+    source_paths = defaultdict(list)
+    ambiguous_sources, ambiguous_adaptations = set(), set()
+    originals, rejected = [], []
+    for name, raw in records:
+        ident = (raw.get("arm"), raw.get("seed"))
+        if ident not in {(a, s) for a in ("loop", "plain") for s in (0, 1)}:
+            audit.errors.append(f"unexpected baseline identity {ident!r}: {name}")
+            continue
+        if Path(name).name == "source.json":
+            metadata = {k: raw.get(k) for k in BASELINE_SOURCE}
+            if metadata != BASELINE_SOURCE:
+                evidence = {"path": name, "arm": ident[0], "seed": ident[1],
+                            "metadata": metadata, "checks": source_checks(raw), "old": raw.get("old"),
+                            "excluded_fields": [k for k in BASELINE_SOURCE if metadata[k] != BASELINE_SOURCE[k]]}
+                (originals if raw.get("source_steps") == 6000 else rejected).append(evidence)
+                continue
+            source_paths[ident].append(name)
+            if ident in sources and sources[ident] != raw:
+                ambiguous_sources.add(ident)
+                audit.errors.append(f"conflicting qualified baseline sources for {ident!r}: {source_paths[ident]}")
+            else:
+                sources.setdefault(ident, raw)
+        else:
+            ident += (raw.get("init"),)
+            if ident[-1] not in ("pre", "fresh"):
+                audit.errors.append(f"unexpected baseline adaptation identity {ident!r}: {name}")
+                continue
+            if ident in adaptations and adaptations[ident] != raw:
+                ambiguous_adaptations.add(ident)
+                audit.errors.append(f"conflicting baseline adaptations for {ident!r}: {name}")
+            else:
+                adaptations.setdefault(ident, raw)
+    for ident in ambiguous_sources:
+        sources.pop(ident, None)
+    for ident in ambiguous_adaptations:
+        adaptations.pop(ident, None)
+    need_src = {(a, s) for a in ("loop", "plain") for s in (0, 1)}
+    need_adapt = {(a, s, i) for a, s in need_src for i in ("pre", "fresh")}
+    source_complete = need_src <= sources.keys()
+    adapt_complete = need_adapt <= adaptations.keys()
+    if not source_complete:
+        audit.missing.append("baseline qualified 12000-step/64-batch/9233000-guard source inventory incomplete or ambiguous")
+    if not adapt_complete:
+        audit.missing.append("baseline raw adaptation inventory incomplete or ambiguous")
+    return {
+        "V1": all(source_checks(sources[x])["V1"] for x in need_src) if source_complete else None,
+        "V2": all(source_checks(sources[x])["V2"] for x in need_src) if source_complete else None,
+        "V3": v3([adaptations[x] for x in need_adapt]) if adapt_complete else None,
+        "required_source_metadata": BASELINE_SOURCE,
+        "qualified_source_paths": {f"{a}-seed{s}": sorted(source_paths[(a, s)]) for a, s in sorted(sources)},
+        "superseded_originals": sorted(originals, key=lambda r: r["path"]),
+        "unqualified_source_records": sorted(rejected, key=lambda r: r["path"])}
+
+
 def baseline(out, audit):
     record = audit.read(out / "BASELINE-VALIDITY.json")
     if record is None:
         return None
-    sources, adaptations = {}, {}
+    records = []
     for name, digest in record.get("raw_sha256", {}).items():
         path = ROOT / name
         if path.name not in ("source.json", "adapt.json"):
             audit.errors.append(f"unexpected baseline raw path {name}")
             continue
         raw = audit.read(path)
-        if raw is None:
-            continue
-        audit.compare(sha(path), digest, f"baseline hash/{name}")
-        ident = (raw.get("arm"), raw.get("seed"))
-        if path.name == "source.json":
-            sources[ident] = raw
-        else:
-            adaptations[ident + (raw.get("init"),)] = raw
-    need_src = {(a, s) for a in ("loop", "plain") for s in (0, 1)}
-    need_adapt = {(a, s, i) for a, s in need_src for i in ("pre", "fresh")}
-    if not need_src <= sources.keys() or not need_adapt <= adaptations.keys():
-        audit.missing.append("baseline raw source/adapt inventory incomplete")
-        return {"V1": None, "V2": None, "V3": False if record.get("V3") is False else None}
-    result = {
-        "V1": all(sources[x]["old"][k]["n"] == 200 and sources[x]["old"][k]["right"] >= 190
-                  for x in need_src for k in ("sums4", "grids5")),
-        "V2": all(sources[x]["gradient_check"].get("nonzero_all") is True
-                  and sources[x]["gradient_check"].get("missing_both") == []
-                  and sources[x]["gradient_check"].get("matrix_count", 0) > 0 for x in need_src),
-        "V3": v3([adaptations[x] for x in need_adapt])}
-    audit.compare(result, record, "baseline validity")
+        if raw is not None:
+            audit.compare(sha(path), digest, f"baseline hash/{name}")
+            records.append((name, raw))
+    result = baseline_records(records, audit)
+    audit.compare({k: result[k] for k in ("V1", "V2", "V3")}, record, "baseline validity")
     return result
 
 
@@ -407,6 +460,7 @@ def run(out, checkpoints=False):
             source = audit.read(path / "source.json")
             if source is not None:
                 result["sources"][name] = source
+                audit.compare(OWN_SOURCE, source, f"{name}/own source metadata")
                 if source.get("fixed_depth") not in ((1,) if arm == "plain" else (8, 16, 32, 48)):
                     audit.errors.append(f"{name}: invalid source-selected depth")
                 gc = source.get("gradient_check", {})
@@ -590,6 +644,73 @@ def self_test():
             self.assertEqual(len(audit.errors), 1)
             audit.compare(dict(fixed_right=3), {}, "mock")
             self.assertEqual(len(audit.errors), 2)
+
+        def baseline_fixture(self):
+            records = []
+            for arm in ("loop", "plain"):
+                for seed in (0, 1):
+                    source = dict(arm=arm, seed=seed, source_steps=12000,
+                                  source_batch=64, source_guard_seed=9233000,
+                                  old={k: dict(n=200, right=195) for k in ("sums4", "grids5")},
+                                  gradient_check=dict(nonzero_all=True, missing_both=[], matrix_count=10))
+                    records.append((f"mock/qualified-{arm}-{seed}/source.json", source))
+                    for init in ("pre", "fresh"):
+                        records.append((f"mock/{arm}-{seed}-{init}/adapt.json",
+                            dict(arm=arm, seed=seed, init=init, rungs={str(k): {
+                                "9": dict(right=150, n=300)} for k in RUNGS})))
+            return records
+
+        def test_baseline_preserves_original_failures_without_override(self):
+            records = self.baseline_fixture()
+            originals = []
+            for name, row in records:
+                if name.endswith("source.json"):
+                    old = copy.deepcopy(row)
+                    old.update(source_steps=6000, source_guard_seed=9232700)
+                    old["old"]["grids5"]["right"] = 189
+                    originals.append((name.replace("qualified", "original"), old))
+            for ordered in (records + originals, originals + records):
+                audit = Audit()
+                result = baseline_records(ordered, audit)
+                self.assertTrue(all(result[k] for k in ("V1", "V2", "V3")))
+                self.assertEqual(len(result["qualified_source_paths"]), 4)
+                self.assertEqual(len(result["superseded_originals"]), 4)
+                self.assertTrue(all(r["checks"]["V1"] is False for r in result["superseded_originals"]))
+                self.assertFalse(audit.errors or audit.missing)
+
+        def test_baseline_requires_exact_qualified_metadata(self):
+            for field, value in (("source_steps", 6000), ("source_steps", 18000),
+                                 ("source_batch", 32), ("source_guard_seed", 9232700),
+                                 ("source_guard_seed", None)):
+                with self.subTest(field=field, value=value):
+                    records = self.baseline_fixture()
+                    records[0][1][field] = value
+                    if value is None:
+                        del records[0][1][field]
+                    audit = Audit()
+                    result = baseline_records(records, audit)
+                    self.assertIsNone(result["V1"])
+                    self.assertIsNone(result["V2"])
+                    self.assertEqual(len(result["qualified_source_paths"]), 3)
+                    self.assertTrue(audit.missing)
+
+        def test_baseline_qualified_failure_and_duplicate_are_not_hidden(self):
+            records = self.baseline_fixture()
+            records[0][1]["old"]["grids5"]["right"] = 189
+            records[0][1]["gradient_check"]["nonzero_all"] = False
+            result = baseline_records(records, Audit())
+            self.assertIs(result["V1"], False)
+            self.assertIs(result["V2"], False)
+            duplicate = copy.deepcopy(records[0][1])
+            duplicate["old"]["grids5"]["right"] = 200
+            duplicate["gradient_check"]["nonzero_all"] = True
+            other = [("mock/duplicate/source.json", duplicate)]
+            for ordered in (records + other, other + records):
+                audit = Audit()
+                result = baseline_records(ordered, audit)
+                self.assertIsNone(result["V1"])
+                self.assertIsNone(result["V2"])
+                self.assertTrue(any("conflicting qualified" in e for e in audit.errors))
 
         def test_ordinary_loop_cannot_rescue_own_v3(self):
             data = {}

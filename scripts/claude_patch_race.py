@@ -22,12 +22,14 @@ import claude_patch_practice as P
 ROOT, OUT = P.ROOT, P.OUT
 RULER = ROOT / "artifacts/claude-fewex-20260927"
 MARKS_COMMIT = "3acb5d18a"
-RULER_COMMIT = "93e9ccba2"  # upstream registered pre-maze corrections 1 and 2
+RULER_COMMIT = "aeb524cd0"  # upstream registered pre-maze corrections 1–3
+BASELINE_SOURCE_STEPS = 12000
+SOURCE_GUARD_SEED = 9233000  # ruler SOURCE_SEED + 300, ADDENDUM-3
 ARMS = ("patch", "loop_meta", "plain", "loop")
 RUNGS = (1, 4, 16, 64, 256, 1024, 4096, 16384, 65536)
 LOCKED = tuple("artifacts/claude-fewex-20260927/" + name for name in
-    ("PROTOCOL.md", "PASSMARKS.md", "RACE-PASSMARKS.md", "ADDENDUM-1.md", "ADDENDUM-2.md")) + tuple("scripts/" + name for name in
-    ("claude_fewex_bench.py", "claude_fewex_data.py", "claude_fewex_net.py"))
+    ("PROTOCOL.md", "PASSMARKS.md", "RACE-PASSMARKS.md", "ADDENDUM-1.md", "ADDENDUM-2.md", "ADDENDUM-3.md")) + tuple("scripts/" + name for name in
+    ("claude_fewex_bench.py", "claude_fewex_data.py", "claude_fewex_net.py", "claude_fewex_source_qualify.py"))
 
 
 class NotReady(RuntimeError):
@@ -61,7 +63,7 @@ def baseline_validity(out):
     """Recount V1–V3 from committed ruler raw JSON, never its narrative verdict."""
     verify_locked()
     paths = [p.decode() for p in git("ls-files", "-z", "artifacts/claude-fewex-20260927").split(b"\0") if p]
-    sources, adaptations, evidence = {}, {}, {}
+    sources, adaptations, evidence, superseded = {}, {}, {}, {}
     for path in paths:
         if not path.endswith(("/source.json", "/adapt.json")):
             continue
@@ -69,6 +71,13 @@ def baseline_validity(out):
         row = json.loads(raw)
         arm, seed = row.get("arm"), row.get("seed")
         if arm not in ("loop", "plain") or seed not in (0, 1):
+            continue
+        if path.endswith("/source.json") and not (
+                row.get("source_steps") == BASELINE_SOURCE_STEPS and row.get("source_batch") == 64 and
+                row.get("source_guard_seed") == SOURCE_GUARD_SEED):
+            superseded[path] = {"sha256": hashlib.sha256(raw).hexdigest(),
+                "source_steps": row.get("source_steps"), "source_guard_seed": row.get("source_guard_seed"),
+                "old": row.get("old"), "reason": "not the ADDENDUM-3 qualified baseline recipe"}
             continue
         dest = sources if path.endswith("/source.json") else adaptations
         key = (arm, seed) if dest is sources else (arm, seed, row.get("init"))
@@ -98,6 +107,8 @@ def baseline_validity(out):
     result = {"utc": P.utc(), "status": status, "V1": v1, "V2": v2, "V3": v3,
         "midrange_rungs": ladder, "published_source_records": len(sources),
         "published_adapt_records": len(adaptations), "raw_sha256": evidence,
+        "qualified_source_steps": BASELINE_SOURCE_STEPS, "qualified_source_guard_seed": SOURCE_GUARD_SEED,
+        "superseded_source_records": superseded,
         "read_at_commit": git("rev-parse", "HEAD").decode().strip()}
     P.save(out / "BASELINE-VALIDITY.json", result)
     return result
@@ -172,7 +183,7 @@ def prepare(out):
             fixed_counts = {str(d): sum(record["dev"][k]["fixed_right"][str(d)] for k in kinds)
                             for d in H.DEPTHS} if arm != "plain" else {}
             fixed = max(H.DEPTHS, key=lambda d: (fixed_counts[str(d)], -d)) if arm != "plain" else 1
-            old = H.source_scores(net, fixed)
+            old = {k: H.score(net, values, fixed) for k, values in H.D.old_panels(SOURCE_GUARD_SEED).items()}
             # The ruler requests a CPU fp32 V2 check even though user-authorized
             # training/inference run on the available local GPU.
             net.to("cpu")
@@ -186,7 +197,7 @@ def prepare(out):
             torch.save({k: v.detach().cpu() for k, v in net.state_dict().items()}, dest / "source.pt")
             P.save(dest / "source.json", {"arm": external_arm(arm), "experiment_arm": arm,
                 "seed": logical_seed, "source_seed": source_seed, "source_steps": P.STEPS,
-                "source_batch": P.BATCH, "source_episode_steps": P.EPISODES,
+                "source_batch": P.BATCH, "source_episode_steps": P.EPISODES, "source_guard_seed": SOURCE_GUARD_SEED,
                 "weights": net.weight_count(), "persistent_coefficients": net.weight_count(),
                 "fast_coefficients": 4096 if arm == "patch" else 0,
                 "fixed_depth": fixed, "fixed_source_dev": fixed_counts,
