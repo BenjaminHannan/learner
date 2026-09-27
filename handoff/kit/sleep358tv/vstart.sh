@@ -21,6 +21,10 @@ for j in 260-claude-sleep-358t3pc; do
   git cat-file -e "origin/main:handoff/queue/$j.md" 2>/dev/null && { echo "HELD-BY-BENSPC: handoff/queue/$j.md is still active on main; rented nothing"; exit 0; }
   [ -e "${WQ358:-$HOME/premonition-watch/queue}/$j.running" ] && { echo "HELD-BY-BENSPC: $j is running on the watcher; rented nothing"; exit 0; }
 done
+# a retry after HOST-FAIL (no rental ever launched, every rental ended, nothing live): keep the old record beside, start fresh
+if [ -e "$G/rentals.txt" ] && [ ! -s "$G/END" ] && grep -q "HOST-FAIL: no rental got as far as launching" "$G/log.txt" 2>/dev/null \
+   && [ "$(awk 'NF<4' "$G/rentals.txt" | wc -l | tr -d ' ')" = 0 ] && [ -z "$(labelled)" ]; then
+  mv "$G" "$G.hostfail-$(date +%s)"; echo "RETRY: the earlier start ended HOST-FAIL with every rental ended; its record is kept at $G.hostfail-*"; fi
 [ -e "$G/rentals.txt" ] && { echo "DUPLICATE: $G/rentals.txt exists (a start already ran)"; tail -5 "$G/log.txt" 2>/dev/null; exit 0; }
 command -v "$VAST" > /dev/null || { echo "STOP: no vastai CLI; rented nothing"; exit 0; }
 [ -x "$PYM" ] || { echo "STOP: no python 3.12 from uv on the Mac; rented nothing"; exit 0; }
@@ -32,7 +36,8 @@ log "credit \$${CR:-?}"
 over "${CR:-0}" 1.60 || { log "STOP: credit \$${CR:-?} is under the \$1.60 cap; nothing rented"; exit 0; }
 OFFERS=$($VAST search offers "$QUERY" -o dph --raw < /dev/null 2>/dev/null | $PYJ 'import json,sys
 d=json.load(sys.stdin); d=d.get("offers",d) if isinstance(d,dict) else d
-ok=[o for o in d if o.get("dph_total") and o.get("total_flops") and float(o["dph_total"]) <= '"$MAXDPH"' and (o.get("gpu_ram") or 0) >= '"$MINRAM_GB"'*1000]
+ex=set("'"$EXCLUDE_HOSTS"'".split())
+ok=[o for o in d if str(o.get("host_id")) not in ex and o.get("dph_total") and o.get("total_flops") and float(o["dph_total"]) <= '"$MAXDPH"' and (o.get("gpu_ram") or 0) >= '"$MINRAM_GB"'*1000]
 def waves(gb): return -(-'"$RUNS"' // min('"$RUNS"', int((gb - '"$FREE_GB"') // '"$RUN_GB"') + 1))
 w5090 = waves(32.6)
 def est(o): return '"$BASE_H"' * max(1.0, '"$TF5090"' / float(o["total_flops"])) * waves((o.get("gpu_ram") or 0) / 1000) / w5090

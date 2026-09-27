@@ -18,6 +18,7 @@ IMAGE=pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime   # base image only; drive.s
 # Needs: >= 24 GB GPU RAM (8 runs of about 3-4 GB each, measured 4 at once in 16 GB on BensPC for 358i2; drive.sh starts a run
 # only while 5 GB is free), compute capability >= 8.0 (bf16 autocast), and a CUDA 12.8 driver for the torch 2.11 cu128 wheel.
 MINRAM_GB=24
+EXCLUDE_HOSTS="406325"   # hosts that gave no ssh (406325: 358t3 start and y1t p1, 2026-09-27)
 QUERY="num_gpus=1 gpu_ram>=$MINRAM_GB compute_cap>=800 reliability>=0.98 disk_space>=40 cpu_cores_effective>=16 cuda_max_good>=12.8 inet_down>=200 rentable=true"
 TF5090=104.8      # vast's listed TFLOPS for an RTX 5090 (the card the time cap was set for); logged beside the chosen card's
 MAXDPH=0.65       # dollars per hour: offers above this are skipped (about 2 h must fit under the $1.45 stop)
