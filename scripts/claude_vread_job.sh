@@ -9,7 +9,7 @@ BASE_REV=87179e5c1f455ef22e6223592d2d61351b525bfc
 say() { echo "=== $* $(date -u +%FT%TZ)"; }
 fail() { say "VREAD-FAIL $*"; results; say "VREAD DONE (failed)"; sleep 7200; exit 1; }
 results() {
-  cd /job 2>/dev/null || return
+  cd "$J" 2>/dev/null || return
   ls out/*.jsonl out/*.log out/*.rc out/*.json out/vec/*.json out/vec/*.jsonl out/vec/final/*.json out/vec/final/*.jsonl \
      out/lora/summary.json out/lora/train_log.jsonl checks/* 2>/dev/null > files.txt
   tar -cJf results.tar.xz -T files.txt 2>/dev/null
@@ -20,7 +20,8 @@ results() {
 say "VREAD START"
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader 2>&1
 echo "cpus $(nproc)"; free -g | head -2; df -h / | tail -1
-mkdir -p /job/checks /job/out && cd /job || exit 1
+J=${JOBDIR:-/job}
+mkdir -p "$J/checks" "$J/out" && cd "$J" || exit 1
 printf '%s' "$@" | base64 -d > pack.tar.xz
 echo "$PACK_SHA  pack.tar.xz" | sha256sum -c || fail "pack sha256"
 tar -xJf pack.tar.xz || fail "pack untar"
