@@ -1,4 +1,4 @@
-2026-09-27 03:42:20
+2026-09-27 03:44:43
 running:
 000-probe-zen-builder.running
 000-rescue-rd378.running
@@ -8,10 +8,8 @@ k1h-glm2.running
 k1h-luna-full-mac.running
 y1t-luna-rest-mac.running
 launched (no exit yet) / finished:
-     805
+     806
 
-2026-09-27 02:21:41 zen cap: 4 non-GPU rungo5 builders running, holding y1t-luna-pilot-mac
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 02:23:51 zen cap: 4 non-GPU rungo5 builders running, holding bm398w-luna-mac
 2026-09-27 02:23:52 zen cap: 4 non-GPU rungo5 builders running, holding k1h-luna-full-mac
 2026-09-27 02:23:52 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8-mac
@@ -160,6 +158,8 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 03:39:58 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8b-mac
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 03:42:15 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8b-mac
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 03:44:42 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8b-mac
 
 diag:
 == 000-probe-zen-builder
@@ -178,7 +178,7 @@ diag:
 == 000-rescue-rd378
 149 Sep 27 03:32 000-rescue-rd378.go1.err.txt
 0 Sep 27 03:30 000-rescue-rd378.go1.reply.md
-53 Sep 27 03:42 000-rescue-rd378.go2.err.txt
+149 Sep 27 03:43 000-rescue-rd378.go2.err.txt
 0 Sep 27 03:42 000-rescue-rd378.go2.reply.md
 [0m
 > build · muse-spark-1.3-contributor-free
@@ -187,13 +187,19 @@ diag:
 [0m
 > build · muse-spark-1.3-contributor-free
 [0m
+[91m[1mError: [0mError from provider (Console): Rate limit exceeded. Please try again later.
 == 156-claude-sleep-358spc-r
-117408 Sep 27 03:17 156-claude-sleep-358spc-r.go1.err.txt
+117570 Sep 27 03:44 156-claude-sleep-358spc-r.go1.err.txt
 943 Sep 27 03:17 156-claude-sleep-358spc-r.go1.reply.md
-[✓] BensPC setup: git archive stream, nvidia-smi, disk, SEAL check, torch version, selftests
-[•] TRAIN 8 runs: loop-s9+plain-s9 @07:10Z, loop-s10 @07:16Z; plain-s10/loop-s11/plain-s11/loop-s12/plain-s12 queued in order
-[ ] SEAL + EVAL each checkpoint once, copy runs to Mac
-[ ] Write RESULTS.md + ledger, push paths, record model copies
+42 Sep 27 03:44 156-claude-sleep-358spc-r.go2.err.txt
+0 Sep 27 03:44 156-claude-sleep-358spc-r.go2.reply.md
+[0m
+[0m$ [0msleep 1500 && date -u
+Sun Sep 27 07:42:58 UTC 2026
+[0m
+[91m[1mError: [0mError from provider (Console): Rate limit exceeded. Please try again later.
+[0m
+> build · mimo-v2.6-flash-free
 [0m
 == bm398w-luna-mac
 56519 Sep 27 03:05 bm398w-luna-mac.go1.err.txt
@@ -222,7 +228,7 @@ cp-exit:0
 == y1t-luna-rest-mac
 149 Sep 27 03:32 y1t-luna-rest-mac.go1.err.txt
 0 Sep 27 03:30 y1t-luna-rest-mac.go1.reply.md
-53 Sep 27 03:42 y1t-luna-rest-mac.go2.err.txt
+149 Sep 27 03:43 y1t-luna-rest-mac.go2.err.txt
 0 Sep 27 03:42 y1t-luna-rest-mac.go2.reply.md
 [0m
 > build · muse-spark-1.3-contributor-free
@@ -231,25 +237,24 @@ cp-exit:0
 [0m
 > build · muse-spark-1.3-contributor-free
 [0m
+[91m[1mError: [0mError from provider (Console): Rate limit exceeded. Please try again later.
 top5cpu:
 %CPU COMM
-130.8 opencode
-70.9 opencode
-58.3 ApplicationsStorageExtension
-42.3 fileproviderd
-38.4 git
+87.5 Finder
+74.3 ApplicationsStorageExtension
+57.1 fileproviderd
+34.7 cloudd
+34.1 WindowServer
 procs:
-  363     1 03-15:29:17 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-15:28:25 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
-15699     1 03-13:43:43 S    /usr/bin/ssh-agent
-30636   818       00:44 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-31773 18977       00:10 RN   /usr/local/bin/opencode
-32096 20011       00:06 RN   /usr/local/bin/opencode
-44571 44570 01-06:05:21 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-06:05:21 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    11:19:54 SN   /usr/local/bin/opencode
-54273 54242    01:09:33 SN   /usr/local/bin/opencode
-60494 59018    04:34:47 SN   /usr/local/bin/opencode
-64555 64533    01:00:21 SN   /usr/local/bin/opencode
-81797     1 01-16:23:00 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
-89799 89775       37:36 SN   /usr/local/bin/opencode
+  363     1 03-15:31:40 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-15:30:48 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+15699     1 03-13:46:06 S    /usr/bin/ssh-agent
+33408 89775       00:24 RN   /usr/local/bin/opencode
+33590   818       00:07 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+44571 44570 01-06:07:44 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-06:07:44 Rs   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    11:22:17 SN   /usr/local/bin/opencode
+54273 54242    01:11:56 SN   /usr/local/bin/opencode
+60494 59018    04:37:10 SN   /usr/local/bin/opencode
+64555 64533    01:02:44 SN   /usr/local/bin/opencode
+81797     1 01-16:25:23 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
