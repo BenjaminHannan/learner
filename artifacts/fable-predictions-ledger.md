@@ -2706,3 +2706,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-27T18:35:43Z Director released rent-358t3-1b-start and rent358u-4-recopy on Ben's words 18:35 UTC (cmsg_01FuvegZXjMmeUzStiEFVnEWFkDKbcMK6Fxsxju8FGb41M), within his vast order ($4/job).
 - 2026-09-27T19:18:37Z Director released rent-k1fv-1-start (stop $1.50) on Ben's words 19:18 UTC (cmsg_01FuvegZXjMmeUzStiEFVnEWFoAVj1hSAzLAxNV2fJ6gQq); k1f-benspc2 superseded.
 - 2026-09-27T19:34:39Z Director released rent-y1v-vast-p1 (cap $1.00) on Ben's words 19:34 UTC (cmsg_01FuvegZXjMmeUzStiEFVnEWH9VRbPBPJ18Q73ZjgkrXAK).
+- 2026-09-27T19:49:31Z Director released rent-lf8-1-start and benspc-uw2 on Ben's words 19:49 UTC (cmsg_01FuvegZXjMmeUzStiEFVnEWWRRkSrFPuNZz1H2tmy4sm1).
