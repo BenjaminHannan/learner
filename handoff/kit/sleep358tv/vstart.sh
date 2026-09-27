@@ -27,10 +27,10 @@ OFFERS=$($VAST search offers "$QUERY" -o dph --raw < /dev/null 2>/dev/null | $PY
 seen=set()
 d=json.load(sys.stdin); d=d.get("offers",d) if isinstance(d,dict) else d
 for o in d:
-    if o.get("host_id") in seen: continue
+    if o.get("host_id") in seen or float(o.get("dph_total") or 99) > '"$MAXDPH"': continue
     seen.add(o.get("host_id")); print(o["id"], round(o["dph_total"],3), o.get("cpu_cores_effective"), o.get("host_id"))' | head -3)
 echo "offers (id dph cores host):"; echo "$OFFERS"
-[ -n "$OFFERS" ] || { log "STOP: no RTX 5090 offer matches ($QUERY); nothing rented"; exit 0; }
+[ -n "$OFFERS" ] || { log "STOP: no RTX 5090 offer at or under \$$MAXDPH/h matches ($QUERY); nothing rented"; exit 0; }
 ID=""; n=0; : > "$G/rentals.txt"   # from here on a rerun of this start is refused (DUPLICATE)
 while read -r OID DPH CORES HID; do
   n=$((n+1)); over "$(spent)" "$CAP_STOP" && break

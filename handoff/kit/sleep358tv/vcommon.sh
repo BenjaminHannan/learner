@@ -15,6 +15,7 @@ PYJ="$PYM -c"
 KEY=${KEY358:-$HOME/.ssh/id_ed25519}
 IMAGE=pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime   # base image only; drive.sh pins torch 2.11.0+cu128 inside it
 QUERY="gpu_name=RTX_5090 num_gpus=1 reliability>=0.98 disk_space>=40 cpu_cores_effective>=16 cuda_max_good>=12.8 inet_down>=200 rentable=true"
+MAXDPH=0.75       # dollars per hour: offers above this are skipped (about 2 h must fit under the $1.45 stop)
 CAP_STOP=1.45     # dollars, all rentals of this task together: copy back, destroy, BUDGET-STOP (cap $1.60)
 TIME_CAP=12600    # seconds from the first rental (3 h 30 min): copy back, destroy, TIME-STOP
 ORDER="loop-trm-s1 loop8-s1 loop-trm-s2 loop8-s2 loop-trm-s3 loop8-s3 loop-trm-s4 loop8-s4"   # graded only; loop8-trm (report only) is not run on the rental
