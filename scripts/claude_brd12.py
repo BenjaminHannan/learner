@@ -35,6 +35,7 @@ import random
 import re
 import sys
 import time
+import types
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -131,14 +132,17 @@ def practise(s, g, n_miss, temp, model, her):
     """one game -> (examples, row)"""
     ok, tgt = own_target(g, s.answer(g, model))
     if ok:
-        return [(g, tgt)], {"seed": g["seed"], "level": g["level"], "kind": "own", "her": 0}
+        return [(g, tgt)], {"seed": g["seed"], "level": g["level"], "kind": "own", "her": 0, "target": "asked",
+                            "steps": [len(tgt.splitlines())]}
     reps = s.generate(g, n_miss, temp, model)
     for t in reps:
         ok, tgt = own_target(g, t)
         if ok:
-            return [(g, tgt)], {"seed": g["seed"], "level": g["level"], "kind": "win", "her": 0}
+            return [(g, tgt)], {"seed": g["seed"], "level": g["level"], "kind": "win", "her": 0, "target": "asked",
+                                "steps": [len(tgt.splitlines())]}
     ex = relabelled(g, reps) if her and g["level"] == 1 else []
-    return ex, {"seed": g["seed"], "level": g["level"], "kind": "miss", "her": len(ex)}
+    return ex, {"seed": g["seed"], "level": g["level"], "kind": "miss", "her": len(ex),
+                "target": "relabelled" if ex else "none", "steps": [len(t.splitlines()) for _, t in ex]}
 
 
 def gather(s, games, n_miss, temp, model, her):
@@ -185,6 +189,11 @@ def counts(rows):
     r = {f"L{lv}_{k}": sum(x["kind"] == k and x["level"] == lv for x in rows) for lv in (0, 1)
          for k in ("own", "win", "miss")}
     r["her_examples"] = sum(x["her"] for x in rows)
+    r["relabelled_steps"], r["asked_steps"] = {}, {}
+    for x in rows:
+        d = r["relabelled_steps"] if x["target"] == "relabelled" else r["asked_steps"]
+        for n in x["steps"]:
+            d[str(n)] = d.get(str(n), 0) + 1
     return r
 
 
@@ -304,6 +313,9 @@ def selftest():
     allp = [g["text"] for x in ns + xs for g in x]
     assert len(allp) == len(set(allp)) and not set(allp) & {g["text"] for g in t}
     assert all(len(x) >= 390 for x in ns) and all(len(x) >= 2500 for x in xs)
+    e, r = practise(types.SimpleNamespace(answer=lambda g, m: "", generate=lambda g, n, t, m: [g["plan"][0]] * n),
+                    g, 3, 1.0, None, True)
+    assert r["target"] == "relabelled" and r["steps"] == [1] and counts([r])["relabelled_steps"] == {"1": 1}
     assert boot_ci([[(1, 1), (0, 0)]], [[(0, 0), (0, 0)]], reps=50)[1] > 0
     print("brd12 selftest ok")
 
