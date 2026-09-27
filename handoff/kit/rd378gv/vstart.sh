@@ -15,7 +15,7 @@ for ref in origin/main origin/builder-outbox; do
   for p in $A/RESULTS.md $A/benspc/RESULTS-benspc.md $V; do
     git cat-file -e "$ref:$p" 2>/dev/null && { echo "DUPLICATE: $ref already has $p (a verdict, a BensPC run or an earlier rental exists)"; exit 0; }; done; done
 [ -e "$G/rentals.txt" ] && { echo "DUPLICATE: $G/rentals.txt exists (a start already ran)"; tail -5 "$G/log.txt" 2>/dev/null; exit 0; }
-git cat-file -e "$PIN:$A/ADDENDUM-N.md" 2>/dev/null || { echo "NO-SEAL: $PIN has no $A/ADDENDUM-N.md"; exit 0; }
+git cat-file -e "$PIN:$A/ADDENDUM-N2.md" 2>/dev/null || { echo "NO-SEAL: $PIN has no $A/ADDENDUM-N2.md"; exit 0; }
 command -v "$VAST" > /dev/null || { echo "STOP: no vastai CLI; rented nothing"; exit 0; }
 [ -x "$PYM" ] || { echo "STOP: no python 3.12 from uv on the Mac; rented nothing"; exit 0; }
 [ -f "$KEY.pub" ] || { echo "STOP: no $KEY.pub to attach; rented nothing"; exit 0; }
@@ -80,7 +80,8 @@ while read -r OID DPH HID GPU TF RAM TFPD SLOW ESTD; do
   want=$(git show "$PIN:handoff/kit/rd378gv/box/drive.sh" | shasum -a 256 | awk '{print $1}')
   got=$($SS "sha256sum /root/r/handoff/kit/rd378gv/box/drive.sh" < /dev/null 2>/dev/null | awk '{print $1}')
   [ "$want" = "$got" ] || { log "rental $n: drive.sh on the rental ($got) does not match $PIN ($want)"; destroy "$I"; continue; }
-  $SS "cd /root/r && setsid nohup bash handoff/kit/rd378gv/box/drive.sh $MINRAM_MB $RWAIT_MIN > /root/r/drive.log 2>&1 < /dev/null & echo launched" < /dev/null 2>> "$G/log.txt"
+  # the braces background only drive.sh (its fds redirected), so nothing holds ssh's stdout open (Director 14:37 UTC, 358u)
+  $SS "cd /root/r && { setsid nohup bash handoff/kit/rd378gv/box/drive.sh $MINRAM_MB $RWAIT_MIN > /root/r/drive.log 2>&1 < /dev/null & } ; echo launched" < /dev/null 2>> "$G/log.txt"
   TC=$(awk -v e="$EST_MIN" -v r="$TF5090" -v t="$TF" -v w="$WAVES" -v rw="$RWAIT_MIN" -v su="$SETUP_MIN" 'BEGIN{x=r/t; if (x<1) x=1; printf "%d", (3*e*x*w + rw + su) * 60}')
   ID=$I; echo "$I $H $P $TC" > "$G/state"
   log "time cap $TC s (3 x $EST_MIN min x slowdown $SLOW x $WAVES wave(s) + $RWAIT_MIN min for R + $SETUP_MIN min setup); money stop \$$CAP_STOP"; break
