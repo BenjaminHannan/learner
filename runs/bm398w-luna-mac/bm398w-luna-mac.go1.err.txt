@@ -1,0 +1,804 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git rev-parse origin/main origin/builder-outbox 2>&1; date -u; uptime; df -g / 2>&1 | head -20
+FETCH_EXIT:0
+e49be974d0cc4ac5b04e2ec112dd1e2cfcb5efa9
+897cbfd9faee904d47e819ef8a82bfe7c0ae0d17
+Sun Sep 27 06:32:57 UTC 2026
+ 2:32  up 3 days, 16:26, 4 users, load averages: 134.07 120.16 104.54
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        33    28%  484014 352306760    0%   /
+[0m
+[0m$ [0mgit archive origin/builder-outbox -- artifacts/claude-bm398w-20260927/data/RESULTS-data.md 2>&1 | tar -t 2>&1; echo LIST_EXIT:$?
+git show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -n 50; echo ---SHOW_EXIT:$?
+tar: Error opening archive: Unrecognized archive format
+LIST_EXIT:1
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+PUSH: artifacts/claude-lis302-20260924/tokprobs.jsonl artifacts/claude-lis302-20260924/pyes.json artifacts/claude-lis302-20260924/RESULTS-gpu.md
+---SHOW_EXIT:0
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 14
+echo "---14 LINES ABOVE---"
+git ls-tree origin/builder-outbox -- artifacts/claude-bm398w-20260927/data/RESULTS-data.md; echo LS_EXIT:$?
+git ls-tree origin/main -- artifacts/claude-bm398w-20260927/PLAN.md artifacts/claude-bm398w-20260927/SEAL.sha256.txt scripts/claude_bm398w_data.py; echo LS2_EXIT:$?
+pwd; git status --short | head -20
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+---14 LINES ABOVE---
+LS_EXIT:0
+100644 blob a36e24307c910d1d3e91b32c3954b0b0ab933300	artifacts/claude-bm398w-20260927/PLAN.md
+100644 blob e40d1c4ec6c75246bbd9949448eb52fa298eb7cd	artifacts/claude-bm398w-20260927/SEAL.sha256.txt
+100644 blob f0338757304b806e1c99b8f951d727fb43204106	scripts/claude_bm398w_data.py
+LS2_EXIT:0
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+[0m
+[0m# [0mTodos
+[•] Verify DUPLICATE GATE, read PLAN + first 14 lines rules
+[ ] TREE: extract files via git archive to temp dir
+[ ] SEAL + CHECKS (selftest, uptime, df)
+[ ] PLANS code-only + hash verification
+[ ] PILOT word (limit 5) + count GATE>=3
+[ ] PANEL SESSIONS word + count
+[ ] TRAINING SESSIONS word + count
+[ ] QUESTIONS train then panel + counts
+[ ] BUILD train+panel, check FLOOR
+[ ] COPY BACK + RESULTS-data.md + rm temp
+[0m
+[0m$ [0mgit ls-tree -r origin/builder-outbox -- artifacts/claude-bm398w-20260927/ 2>&1; echo "---"; git show origin/main:artifacts/claude-bm398w-20260927/PLAN.md 2>&1; echo "===SEAL==="; git show origin/main:artifacts/claude-bm398w-20260927/SEAL.sha256.txt 2>&1
+---
+# bm-398w PLAN: train the 1B to read 20 lines as well as it reads the right ones (benchmarks thread, written 2026-09-27 05:49 UTC, sealed 06:12 UTC)
+
+Registered before any data is generated or anything is trained. Reviewed by the Thread manager (05:30 and 05:46 UTC)
+on PLAN-DRAFT.md (492ee192b, e15352161); its fixes are in. A separate read-only reviewer then checked both new
+scripts (reported before 06:09 UTC): it found no defect in the marks or the arms, and 13 fixes that are in (listed at the end). Every LoCoMo number is "after development use". LoCoMo is
+practice only and is never trained on. LongMemEval stays the untouched final exam. Nothing from LoCoMo, LongMemEval,
+MMLU or GSM8K goes into training. Counts only in every report.
+
+## Why (all blind, counts only)
+- bm-398d (56c71354c): given only the right lines, the plain 1B was right on 137 of 297, and Qwen3.5-2B reading the
+  whole chat on 138. With the right lines plus distractors, the 1B dropped to 119. It can read, but distractors cost
+  it.
+- bm-398u (d8078eda4) and bm-398v (df149a5b8): cutting store B's 20 lines down to the model's own top 3 or top 8
+  never beat all 20 (236 vs 264 of 759; 256 vs 264 of 772). Every cut loses evidence, and that loss is bigger than
+  the gain from fewer distractors. In bm-398v's pre-registered split, 8 lines helped by 5 answers where they held the
+  evidence and lost 16 where they did not.
+- So fewer lines is not the lever. What is left is the reader: answer from all 20 lines as well as from the right
+  ones. The textbook fix is RAFT (Zhang et al. 2024): train the reader on questions whose context mixes the right
+  lines with distractors.
+- Earlier failure to avoid: bm-398r (84c414325) trained a reader adapter on code-templated chats with code-written
+  answers. It gained on its own practice set and not on LoCoMo (110 vs 111): it learned the answer's form. Here the
+  chats, questions and answers are worded by Luna (varied), the context is store-layout lines with hard distractors,
+  and the claim needs both a fresh held-out panel and LoCoMo.
+
+## Brain first (a textbook-level guess)
+When several memories match a cue, prefrontal cortex holds back the ones that don't fit the goal (retrieval
+interference and its control). That control improves with practice on exactly this kind of competition. Here the
+practice is questions whose context holds near-miss lines, with the right answer as feedback.
+
+## The one change
+A LoRA on the plain MiniCPM5-1B's answer step, trained on RAFT-style items. The retrieval, the 20 lines, the layout
+and the prompt stay exactly as bm-398v's BN arm.
+
+## Training data (Luna and code only; nothing written or judged by Claude)
+- **Chats.** scripts/claude_bm398w_data.py plans every chat in code: seed 3993 for training chats (170 planned) and
+  seed 3994 for the panel (26 planned; the panel avoids every person name used in the training plans). Not 320-329, 4027 or the selftest seeds 1, 2 and 7 (Reading facts, 05:27
+  UTC); the build refuses chats from any other seed. Each chat has two fictional speakers, 6 to 8 dated sessions of
+  10 to 14 messages, and a turn plan saying which message tells which fact: 8 facts about the speakers
+  (lis-320's seed world: job, employer, city, hobby, pets and so on), 4 introductions of another person ("my sister
+  X") and 4 facts about those people in a later session, and 6 dated events ("went to a concert last Saturday").
+  Both avoid lists are passed (artifacts/claude-lis320-20260926/avoid_names_dev.txt and avoid_test.sha256). The plan
+  files' hashes are pinned in the Mac job. Small talk uses topics chosen to stay clear of the fact values. No two
+  fact messages are next to each other, and no speaker has both a friend and a best friend.
+- **Wording.** GPT-6 Luna words each session from its turn plan through the Director's helper
+  (scripts/claude_luna_codex.py, sha256 342a0fb7…024e, model gpt-6-luna), then one question and a short answer per
+  asked fact of each fully kept chat. One writer for the whole set, recorded per row. The prompts give instructions
+  and values only, never example sentences.
+- **Code checks (no model judge).** A session is kept only if it has the planned number of messages from the
+  planned speakers, each fact message holds its own required words, and no fact value, other person's name or date
+  phrase appears in any other message. A chat is kept only if all its sessions are. A failed session is retried once
+  at once, and each rerun of the command gives it one more try, up to 3 failed rows (6 calls). An error-like or
+  empty reply is a failed call (the helper raises): it is logged but never kept and never uses up one of those
+  tries. A question is kept only if it holds neither its value nor any 4-letter-plus word of it (with or without a
+  plural s; company-type words like "Foods" aside), or for a dated event its month or year, and a two-step question
+  does not name the person.
+- **Targets.** Luna's short answer is the training target. Code keeps it only if it contains the gold value (a dated
+  answer: day, month and year), no other value of the same relation (for a dated answer, no other event's date),
+  and no negation word (curly apostrophes count). The gold value is the
+  code's; for a dated event, code computes the date from the session date and the phrase it planned. No Claude agent
+  checks the targets (Ben's 16:39 rule). Practice-dev and panel rows carry the code's gold value, not Luna's answer.
+- **Context (the RAFT part).** For each question: 20 lines from the same chat, the evidence message(s) plus the
+  non-evidence messages ranked highest by BM25 against the question (hard distractors), laid out in chat order under
+  session dates, exactly as claude_bm398d_evidence.context does for LoCoMo, with bm-390's system prompt and QA prompt
+  (and its date suffix for dated questions). The evidence is always among the 20. Teaching "I don't know" is y1t's
+  job and stays out of this test.
+- **Size.** 18 questions per chat before code drops; 15% of kept training chats are held out as practice-dev (report
+  only). If about 150 chats are kept, that is about 2,300 training items. Floor (enforced by the build): at least
+  100 kept training chats (training plus practice-dev) and at least 300 panel items, else DATA-SHORT and nothing
+  is trained.
+- **Pilot gate.** The Mac job first words the first 5 training chats (up to three runs). It goes on only if at least
+  3 of the 5 are fully kept; else PILOT-FAIL.
+- **Training.** scripts/claude_bm398r_train.py unchanged: rank-16 LoRA on q/k/v/o, 1 epoch, AdamW 2e-4, 8 per step,
+  loss on the answer tokens, seed 3992, thinking off. Run with --no-save, which only skips writing a merged copy of
+  the weights (BensPC's disk gate); the adapter file is written as always. On BensPC, $0.
+
+## Arms (the same 20 lines, layout and prompt; only the weights differ)
+- **BN:** the plain 1B.
+- **BR:** the 1B with the bm-398w adapter.
+- Both run in one process: the plain 1B wrapped in bm-398i's on/off switch with the adapter loaded; off gives BN, on
+  gives BR. The switch is a **hand-given stand-in switch (disclosed scaffolding)**: the panel decides on or off (on
+  for LoCoMo and the practice panel, off for MMLU and GSM8K). There is no switch in the build; a switch or MoE in
+  the build needs Ben's yes, and dl-9 is only testing whether a learned switch can work. In a CPU smoke here, the
+  switch-off arm reproduced bm-398n's store-B replies byte for byte (3 of 3), and a relaunched run kept its rows
+  and went on.
+- Report only: Qwen3.5-2B on the same 20 lines, word-overlap F1 only (not judged), and only if it is already on
+  BensPC (no download).
+
+## Panels
+1. **A fresh held-out panel (a panel that has driven no choice).** 26 chats from seed 3994, worded by Luna; 300
+   questions drawn by seed 3995. Its file hash is sealed (SEAL-panel.sha256.txt) before training starts. It is never
+   read by the builder and never used for any choice. Judged blind. It is written by the same writer, from the same
+   code plan, as the training set, so R2 is in-distribution by design: it shows learning, not transfer.
+2. **LoCoMo, all ten conversations, categories 1-4 with evidence (1,531 questions), store B's first 20 distinct
+   turns** (rd-378L's ranked_turns.jsonl for 0-4, sha256 2792906c…97d4; rd-378u's for 5-9, sha256 785c9c9a…ff5e).
+   Labelled "after development use": both halves drove retrieval choices (bm-398n, bm-398u, bm-398v). No
+   reader-training choice has been made on LoCoMo, and the recipe is bm-398r's, unchanged. BN is re-generated and
+   re-judged in the same blind panel as BR, not reused.
+3. **General:** MMLU-Redux-300 and GSM8K-300 (bm-390's sets and prompts): the unwrapped plain 1B (P), then BN and BR.
+4. **The Qwen bar from bm-398d's setup (report only).** BN and BR on bm-398d's 297 questions (all inside the 1,531)
+   against Qwen's 138 (whole chat) and the 1B's 137 (right lines only). The layouts and judges differ, so this is a
+   reference line, not a mark.
+- **Judging.** INSTRUCTIONS.md (bm-398d's rubric: A right, B right plus a conflicting answer, C partly, D wrong, E
+  doesn't know). Two Latin-square groups hold each of the 1,831 questions once per arm (seed 3996); 60 items are
+  re-asked for a relabel check; 3,722 items in 75 batches of up to 50. Judges see the question, the gold answer, the
+  evidence lines and one reply, never the arm. Byte-identical replies from the two arms count as one answer (both
+  take group L0's label). Judge prompts forbid quoting any item text, examples included. An independent recount
+  (its own script, reading only the key and the labels) follows.
+
+## Marks (fixed now; claude_bm398w_eval.py verdict())
+- **R1 (LoCoMo):** BR A ≥ BN A + 30 of 1,531 (about 2 points, the effect size of +15 of 759), with more gained than
+  lost and a two-sided exact McNemar p < 0.05.
+- **R2 (fresh panel):** BR A ≥ BN A + 15 of 300, more gained than lost, p < 0.05.
+- **R3 (fewer-wrong guard on LoCoMo):** BR D ≤ BN D + 10, and no category's A drops by more than
+  max(3, round(3% of its n)).
+- **R4 (the stand-in switch):** on MMLU-Redux and GSM8K, the unwrapped plain 1B (P), the switch off (BN) and on
+  (BR) each answered all 300 questions of each set; the switch-off replies equal P's on all 600, and the right
+  counts are equal, on the same machine. This checks the hand-given stand-in switch
+  (disclosed scaffolding), not the adapter.
+- **PASS** = R1, R2, R3 and R4. A PASS reads "the reader gains, given a switch", never "no harm". Anything else is a
+  registered FAIL.
+- **Proved wrong (it learned the practice form, not reading):** R2's gain is at least 15 while BR A ≤ BN A on
+  LoCoMo. Also proved wrong if BR A ≤ BN A on both panels.
+
+## Report only (no mark)
+- MMLU-Redux and GSM8K with the adapter always on (BR), next to P. bm-398r's always-on adapter took GSM8K from 191
+  to 20 and MMLU from 50 to 137 (MMLU mostly measures answer format for this 1B).
+- On the 246 LoCoMo questions whose evidence is not among store B's 20 lines: A, D and E for BN and BR. Every
+  practice item has its evidence among the 20, so training may make the 1B guess more here.
+- F1, abstentions and confident-wrong counts; A split by whether the evidence is among the 20; A by category; the
+  Qwen rows; practice-dev before and after (the trainer's dev check); A by question kind on the panel; relabel and
+  identical-pair agreement; 95% intervals by conversation or chat.
+
+## Predictions
+- P1 (60%): R2 passes.
+- P2 (15%): R1 passes. Point guess +12 of 1,531.
+- P3 (60%): R3 holds.
+- P4 (97%): R4 holds.
+- P5 (12%): PASS.
+- P6 (30%): proved wrong.
+- P7 (80%, report only): with the adapter always on, GSM8K drops by 20 or more below P.
+- P8 (60%, report only): with the adapter always on, MMLU is above P (answer format).
+- P9 (55%, report only): on the 246 no-evidence LoCoMo questions, BR says "don't know" (E) less often than BN and
+  is wrong (D) at least 5 more times.
+
+## Limits
+- The panel is in-distribution by design (same writer, same plan code); only LoCoMo speaks to transfer.
+- The switch is a hand-given stand-in; it is not a build component and not a claim about routing.
+- LoCoMo is development data here; LongMemEval stays untouched.
+- The practice kinds are narrow (single facts, facts about a named other person, dated events). LoCoMo asks wider
+  questions, so R1 is the hard mark.
+- The syllable name maker can produce names that are also English words. Such a name is forbidden in every other
+  message, which costs some sessions; the pilot gate and the floor catch it if that cost is large.
+
+## Open questions answered before sealing
+- Overlap with y1t (Answering from memory, 05:29 UTC): none. Nothing there trains the 1B to read among store lines
+  with distractors. y1t trains doubt on its own graded drafts from 0-7 earlier lines of short one-speaker chats;
+  y1tH1 is evaluation only; y1r trains the MiniLM retriever (which lines get into the 20), not the reader. Their
+  seed-4027 dialogs are free after their data gate, but at 1-8 kept user turns and one speaker they cannot give a
+  20-line window of same-chat distractors, so bm-398w writes its own chats. If y1t goes GO, its adapter can run
+  through bm-398v's BN arm as a report-only row for them.
+- Seeds: Reading facts (05:27 UTC) says 320-329, 4027 and 1, 2, 7 are reserved and any other number is free. They
+  asked for fresh seeds, not seed 324's rows, and both avoid lists.
+
+## Order of work
+1. Mac (the Director's queue, Luna, $0): plans, pilot, word, ask and build, for training and panel chats. Luna
+   throughput sets the time: about 1,400 calls before retries; a guess is 3 to 4 hours with 3 workers, in runs of
+   45 minutes with each call capped at 12 minutes, so a run ends inside the builders' 80-minute command limit.
+2. Here: SEAL-panel.sha256.txt (the panel file's hash, taken without opening it), committed before step 3.
+3. BensPC ($0): train; then `claude_bm398w_eval.py locomo`, `panel`, `general` and, if present, `qwen20`. Replies
+   are written row by row; a crashed command relaunched unchanged keeps what it wrote and goes on.
+4. Here: score, prep, blind judges, jscore, independent recount, RESULTS.md, sent to the Thread manager.
+
+## Cost and owners
+- $0: Luna through Ben's Codex plan, BensPC for training and GPU replies, blind judges as Opus agents. No rental.
+- Benchmarks writes and runs it. Reading facts: seed world and avoid lists. The Director: the Mac Luna queue and
+  BensPC's order.
+
+## Plain summary for Ben
+The small model answers well when it sees only the right lines of a past chat, but badly when those lines are
+mixed with 19 others. Picking fewer lines didn't help, because the picker drops the right line too often. So this
+trains the model to read the whole mix: practice chats written by Luna, questions whose answers code can check, and
+each practice question comes with the right line hidden among look-alike lines. It passes only if it gets clearly
+more right answers on fresh practice chats and on the LoCoMo benchmark, without more wrong answers. The trained part
+is only switched on for memory questions by a switch we set by hand for this test; maths and general questions are
+also checked with it always on, and that number is reported honestly.
+
+## Fixes from the pre-seal code review (all in before sealing)
+1. Files are written ASCII-escaped and read split on newlines only, so a line separator inside Luna's text cannot
+   break a file; a line cut off by a killed run is skipped.
+2. A failed call no longer uses up one of a session's three tries.
+3. A question holding any word of its value (guitar for bass guitar, taco for tacos) is dropped; curly apostrophes
+   count in the negation check.
+4. A dated answer holding another event's date is dropped.
+5. The rule keeping fact messages apart now works (it read a field filled in too late).
+6. R4 needs all 300 items of each set in each of P, BN and BR.
+7. Runs stop at 45 minutes and each call at 12 minutes, inside the builders' 80-minute limit.
+8. The build enforces the floor (100 training chats, 300 panel items) and prints DATA-SHORT; the panel is 26
+   chats so it has room.
+9. Names that are also English words: disclosed under Limits, not fixed.
+10. The panel avoids every person name used in the training plans.
+11. No speaker has both a friend and a best friend.
+12. Reply files are written row by row and resume after a crash.
+13. A partial Qwen file is reported as partial and never blocks scoring.
+===SEAL===
+b0efc618c1e2a9300c111d9ba8aadc2b4a64627f09b3fd2fcc672520df2727d7  artifacts/claude-bm398w-20260927/PLAN.md
+f4e10cc94cc77817ea4e5568c3c1aaeedf14adaff23c9eda38183ed2153aacd1  artifacts/claude-bm398w-20260927/INSTRUCTIONS.md
+2b53e1a9abad3d6c76675017dbfc1324a57f93a4c399ad8cffd8864e003c6837  scripts/claude_bm398w_data.py
+de583f7a59642359a5fd85fa67352f08f030014b736f1e82d770e163c67f3d83  scripts/claude_bm398w_eval.py
+cbed62f1fd8fa7d1221ab9618a2e9c30f3081d387deb061b06f783bb8a1730d9  scripts/claude_bm398r_train.py
+d0f3eb0feaed14d93336bbb3f499cebdccfb0a82654177455308f334dbd12121  scripts/claude_bm397t_data.py
+97e9a7484b9132baab38e001a7bfe2b3e45515774b63261c97f2af48850918e1  scripts/claude_bm397t_train.py
+c00aa62f4bc9ed710019581ee61288256238539c5bcfb6759d17f89c01a958de  scripts/claude_blurt1.py
+65827f84cc94540b6a12b1e132b1cd7a0a53f508b80447a954e701bf981caa93  scripts/claude_blurt2.py
+d42a5cb1c298a27d87bc61364fe651031cd8f0afa5def0105871fed44d2b25bb  scripts/claude_bm398i_switch.py
+eb50c203fdcf38821b49b4439d31d340e53a83f0bba2faae33d1baaa797467b3  scripts/claude_bm390.py
+f53dd2966ba3a8de492ae89ce8658c2468f3029872b24d15a57bc98aee7b81e0  scripts/claude_bm390_score.py
+c734d2761a3dda0a0ceaf4c4003febb601964e81d92d7e58c7720d9fd495a8c0  scripts/claude_bm398d_evidence.py
+ce8a7336b032239c17b4b9757e0400159bd0c2442624bc09e50e89a89298554a  scripts/claude_bm398n_notes.py
+b47662dcf6281f22d6df698e0ddf6c5db8ba3a18c51600a6b6a33816308076c8  scripts/claude_bm397_judge.py
+007598d81f47db3f2747b34e40ecda86e22f7a32615d375ef8ecc89671fe31f5  scripts/claude_lis320_seed.py
+342a0fb7e15ebf22da763c21eddecb0c58cfcbd43c74481d8421b5709023024e  scripts/claude_luna_codex.py
+515a2dc3bb4554d18475c2ba283deb2bcaa7c9e1294500d58cf6ca2b7f13330b  scripts/winshim/resource.py
+939629f82e92cc40b72cede00c0f059b3312033b576e05de771e1321d39d8e44  artifacts/claude-lis320-20260926/avoid_names_dev.txt
+37dd2945d27971dc9c5bd3bfa5c90b7019980aa292670549bbe7749b04d3d2d9  artifacts/claude-lis320-20260926/avoid_test.sha256
+785c9c9adf26071b83716d53465c03663e96f99a517348f4a98f03b792d9ff5e  artifacts/claude-rd378u-20260926/ranked_turns.jsonl
+c945527f89c0cadb2bc9e53628a39e3720010b2ebebde0c3010c097b9d87c56d  artifacts/claude-bm390-20260925/data-manifest.json
+[0m
+[0m$ [0mD=$(mktemp -d); echo "D=$D"; git archive origin/main scripts artifacts/claude-bm398w-20260927 artifacts/claude-lis320-20260926/avoid_names_dev.txt artifacts/claude-lis320-20260926/avoid_test.sha256 | tar -x -C "$D"; echo ARCHIVE_EXIT:$?; ls -R "$D/artifacts/claude-bm398w-20260927" | head -30; ls "$D/scripts/claude_bm398w_data.py" "$D/artifacts/claude-lis320-20260926/avoid_names_dev.txt" 2>&1; mkdir -p "$D/artifacts/claude-bm398w-20260927/data/train" "$D/artifacts/claude-bm398w-20260927/data/panel"; echo MKDIR_EXIT:$?; echo "$D" > /tmp/bm398w_D_path.txt; cat /tmp/bm398w_D_path.txt
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oZGCMa5NMn
+ARCHIVE_EXIT:0
+benspc-job-DRAFT.md
+INSTRUCTIONS.md
+PLAN-DRAFT.md
+PLAN.md
+SEAL.sha256.txt
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oZGCMa5NMn/artifacts/claude-lis320-20260926/avoid_names_dev.txt
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oZGCMa5NMn/scripts/claude_bm398w_data.py
+MKDIR_EXIT:0
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oZGCMa5NMn
+[0m
+[0m# [0mTodos
+[✓] Verify DUPLICATE GATE, read PLAN + first 14 lines rules
+[✓] TREE: extract files via git archive to temp dir
+[•] SEAL + CHECKS (selftest, uptime, df)
+[ ] PLANS code-only + hash verification
+[ ] PILOT word (limit 5) + count GATE>=3
+[ ] PANEL SESSIONS word + count
+[ ] TRAINING SESSIONS word + count
+[ ] QUESTIONS train then panel + counts
+[ ] BUILD train+panel, check FLOOR
+[ ] COPY BACK + RESULTS-data.md + rm temp
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); cd "$D"; shasum -a 256 -c artifacts/claude-bm398w-20260927/SEAL.sha256.txt 2>&1; echo SEAL_EXIT:$?
+artifacts/claude-bm398w-20260927/PLAN.md: OK
+artifacts/claude-bm398w-20260927/INSTRUCTIONS.md: OK
+scripts/claude_bm398w_data.py: OK
+scripts/claude_bm398w_eval.py: OK
+scripts/claude_bm398r_train.py: OK
+scripts/claude_bm397t_data.py: OK
+scripts/claude_bm397t_train.py: OK
+scripts/claude_blurt1.py: OK
+scripts/claude_blurt2.py: OK
+scripts/claude_bm398i_switch.py: OK
+scripts/claude_bm390.py: OK
+scripts/claude_bm390_score.py: OK
+scripts/claude_bm398d_evidence.py: OK
+scripts/claude_bm398n_notes.py: OK
+scripts/claude_bm397_judge.py: OK
+scripts/claude_lis320_seed.py: OK
+scripts/claude_luna_codex.py: OK
+scripts/winshim/resource.py: OK
+artifacts/claude-lis320-20260926/avoid_names_dev.txt: OK
+artifacts/claude-lis320-20260926/avoid_test.sha256: OK
+shasum: artifacts/claude-rd378u-20260926/ranked_turns.jsonl: No such file or directory
+artifacts/claude-rd378u-20260926/ranked_turns.jsonl: FAILED open or read
+shasum: artifacts/claude-bm390-20260925/data-manifest.json: No such file or directory
+artifacts/claude-bm390-20260925/data-manifest.json: FAILED open or read
+shasum: WARNING: 2 listed files could not be read
+SEAL_EXIT:1
+[0m
+[0m$ [0mgit ls-tree origin/main -- artifacts/claude-rd378u-20260926/ranked_turns.jsonl artifacts/claude-bm390-20260925/data-manifest.json 2>&1
+git ls-tree origin/builder-outbox -- artifacts/claude-rd378u-20260926/ranked_turns.jsonl artifacts/claude-bm390-20260925/data-manifest.json 2>&1
+D=$(cat /tmp/bm398w_D_path.txt); ls "$D/artifacts/" 2>&1
+100644 blob 2be103a811c02a6a44cba8bd4008b1e074bd626b	artifacts/claude-bm390-20260925/data-manifest.json
+100644 blob 42afc66f5c9225ec8b51a5f81891c388f47fefc6	artifacts/claude-rd378u-20260926/ranked_turns.jsonl
+100644 blob 42afc66f5c9225ec8b51a5f81891c388f47fefc6	artifacts/claude-rd378u-20260926/ranked_turns.jsonl
+claude-bm398w-20260927
+claude-lis320-20260926
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); git archive origin/main artifacts/claude-rd378u-20260926/ranked_turns.jsonl artifacts/claude-bm390-20260925/data-manifest.json | tar -x -C "$D"; echo EXTRA_ARCHIVE_EXIT:$?; cd "$D"; shasum -a 256 -c artifacts/claude-bm398w-20260927/SEAL.sha256.txt 2>&1; echo SEAL_EXIT:$?
+EXTRA_ARCHIVE_EXIT:0
+artifacts/claude-bm398w-20260927/PLAN.md: OK
+artifacts/claude-bm398w-20260927/INSTRUCTIONS.md: OK
+scripts/claude_bm398w_data.py: OK
+scripts/claude_bm398w_eval.py: OK
+scripts/claude_bm398r_train.py: OK
+scripts/claude_bm397t_data.py: OK
+scripts/claude_bm397t_train.py: OK
+scripts/claude_blurt1.py: OK
+scripts/claude_blurt2.py: OK
+scripts/claude_bm398i_switch.py: OK
+scripts/claude_bm390.py: OK
+scripts/claude_bm390_score.py: OK
+scripts/claude_bm398d_evidence.py: OK
+scripts/claude_bm398n_notes.py: OK
+scripts/claude_bm397_judge.py: OK
+scripts/claude_lis320_seed.py: OK
+scripts/claude_luna_codex.py: OK
+scripts/winshim/resource.py: OK
+artifacts/claude-lis320-20260926/avoid_names_dev.txt: OK
+artifacts/claude-lis320-20260926/avoid_test.sha256: OK
+artifacts/claude-rd378u-20260926/ranked_turns.jsonl: OK
+artifacts/claude-bm390-20260925/data-manifest.json: OK
+SEAL_EXIT:0
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); cd "$D"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; date -u; uptime; df -g / 2>&1
+uv run --offline --no-project --python 3.12 python -B scripts/claude_bm398w_data.py selftest 2>&1; echo SELFTEST_EXIT:$?
+Sun Sep 27 06:33:55 UTC 2026
+ 2:33  up 3 days, 16:26, 4 users, load averages: 135.89 122.97 106.64
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        33    28%  484014 351576160    0%   /
+Traceback (most recent call last):
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oZGCMa5NMn/scripts/claude_bm398w_data.py", line 46, in <module>
+    import claude_lis320_seed as S  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oZGCMa5NMn/scripts/claude_lis320_seed.py", line 46, in <module>
+    REL_NAMES = set((REPO / "design/v3/60-listener/relation-names.txt").read_text().split())
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oZGCMa5NMn/design/v3/60-listener/relation-names.txt'
+SELFTEST_EXIT:1
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); grep -n "REPO\|relation-names\|sys.path\|Path(" "$D/scripts/claude_bm398w_data.py" | head -30
+grep -n "REPO\|relation-names" "$D/scripts/claude_lis320_seed.py" | head -20
+git ls-tree origin/main -- design/v3/60-listener/relation-names.txt 2>&1
+git ls-tree origin/main -- design/v3/60-listener/ 2>&1 | head -20
+43:sys.path.insert(0, str(Path(__file__).resolve().parent))
+85:    for x in Path(p).read_text(encoding="utf-8").split("\n"):
+208:        avoid = {w.strip().lower() for w in Path(a.avoid_names).read_text(encoding="utf-8").split() if w.strip()}
+210:        S.AVOID_HASHES.update(x.split()[0] for x in Path(a.avoid_hashes).read_text(encoding="utf-8").splitlines()
+222:    Path(a.out).write_text("".join(_dump(r) + "\n" for r in rows), encoding="utf-8")
+454:    print(json.dumps(run_jobs(jobs, Path(a.out), call or _caller(), a.workers, a.max_minutes, a.max_failed, check)))
+482:    print(json.dumps(run_jobs(jobs, Path(a.out), call or _caller(), a.workers, a.max_minutes, a.max_failed, check)))
+489:    rows = _jsonl(a.sess) if Path(a.sess).exists() else []
+495:    if a.qa and Path(a.qa).exists():
+549:    out = Path(a.out)
+679:        td = Path(td)
+5:turn intents, relations (from relation-names.txt) and values. It writes no wording: there are no sentence templates and
+18:  lookalikes   question (QUESTION), plan (PLAN), doubt (CHECK, see LOOK_MODE), someone_else (REPORTED),
+39:    for p in [os.environ.get("LEARNER_REPO", ""), "/home/user/learner", str(Path.home() / "learner"), "."]:
+42:    raise SystemExit("repo not found: set LEARNER_REPO")
+45:REPO = find_repo()
+46:REL_NAMES = set((REPO / "design/v3/60-listener/relation-names.txt").read_text().split())
+117:             "someone_else": ("STATE", "REPORTED"), "hypothetical": ("SUPPOSE", "SUPPOSE"),
+100644 blob 2bba1a91fd9c5117894821fea1c28fc2bd969bdc	design/v3/60-listener/relation-names.txt
+100644 blob 1bb1142514a77471d2d56aa8068ce7bee75e529b	design/v3/60-listener/frame-spec-notes-301.md
+100644 blob cba696eea85ec0b9cf56695d25e7d20c9f5d45c3	design/v3/60-listener/frame-spec-notes-319f.md
+100644 blob 35c84d3b9e54fda39d8fcda2c6c95d54f177fb38	design/v3/60-listener/frame-spec.md
+100644 blob b5bb01c8b7046aa3e2ec1919938b7f3f9cfbf842	design/v3/60-listener/lis-320-no-claude-data-plan.md
+100644 blob 2bba1a91fd9c5117894821fea1c28fc2bd969bdc	design/v3/60-listener/relation-names.txt
+100644 blob c3104433c8bf21002e09ea1fc27ba37c7a00920d	design/v3/60-listener/task-lis300-train.md
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); sed -n '30,50p' "$D/scripts/claude_lis320_seed.py"
+ls /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/design/v3/60-listener/relation-names.txt 2>&1; echo WORKTREE_CHECK:$?
+import json
+import os
+import random
+import sys
+from collections import Counter
+from pathlib import Path
+
+
+def find_repo() -> Path:
+    for p in [os.environ.get("LEARNER_REPO", ""), "/home/user/learner", str(Path.home() / "learner"), "."]:
+        if p and (Path(p) / "scripts/claude_lis300_compiler.py").exists():
+            return Path(p).resolve()
+    raise SystemExit("repo not found: set LEARNER_REPO")
+
+
+REPO = find_repo()
+REL_NAMES = set((REPO / "design/v3/60-listener/relation-names.txt").read_text().split())
+
+# ------------------------------------------------------------------ names (syllable parts, never real famous names)
+SYL = ["ka", "ri", "lo", "ven", "ta", "mi", "dor", "sa", "bel", "nu", "ro", "fi", "gan", "le", "zo", "ha", "tir",
+       "wen", "ya", "mo", "ke", "ul", "si", "dra", "po", "lin", "ez", "or", "ba", "ne", "vi", "ash", "ru", "tem",
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/design/v3/60-listener/relation-names.txt: No such file or directory
+WORKTREE_CHECK:1
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); ls "$D/scripts/" | head -40; ls "$D/" 2>&1
+git ls-tree origin/main -- scripts/claude_lis300_compiler.py design/v3/60-listener/relation-names.txt 2>&1
+git ls-tree origin/main -- scripts/ 2>&1 | head -40
+address_probe.py
+astra_canonical_operator_panels.py
+astra_canonical_operator_report.py
+astra_canonical_operator_run.py
+astra_canonical_operator.py
+astra_transfer_diagnostic.py
+astra_transfer_report.py
+astra_transfer_twins.py
+benspc-runtime.json
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_age334_agent.py
+claude_age334_test.py
+claude_apos247_devcases.py
+claude_apos247_run.py
+artifacts
+scripts
+100644 blob 2bba1a91fd9c5117894821fea1c28fc2bd969bdc	design/v3/60-listener/relation-names.txt
+100644 blob 0d8b1dc26a98e674f4f23d3ded85a7634eee7482	scripts/claude_lis300_compiler.py
+100644 blob 8ead79f130e6877ef83090ae97af7fc720b3e659	scripts/address_probe.py
+100644 blob 2abe97b4ea5ea57bca10ab6cecf93f6cb796736c	scripts/astra_canonical_operator.py
+100644 blob 39c9eedb1dc81bb0fad04bb3fc2a429c61f00900	scripts/astra_canonical_operator_panels.py
+100644 blob c8914dd6e7cd77508abc9552c414a173cc77cf68	scripts/astra_canonical_operator_report.py
+100644 blob 0728e699c826107fb0ffd60f70e303d84ad03b99	scripts/astra_canonical_operator_run.py
+100644 blob 4ec452b88c4266c2396c6b405d8cc2884deeddf6	scripts/astra_transfer_diagnostic.py
+100644 blob 53eed062a205a89e8fb1d8f3f17be371eee2be62	scripts/astra_transfer_report.py
+100644 blob 4f0eac9be80c7f031281f5b79dfe665c14d0ca99	scripts/astra_transfer_twins.py
+100644 blob 6f8f44fb31f277876867fd93557ea4740cf441fc	scripts/benspc-runtime.json
+100644 blob 7605489004b573903fd23202aef6c06e69c79c5e	scripts/claude_138l_l1.py
+100644 blob 5808c0e229404720e251afaa8ce868fbe009d7ed	scripts/claude_138l_rt143nogate.py
+100755 blob f9c44f6a0f62749cfdd20f7241473c5f42a45056	scripts/claude_138l_runall.sh
+100644 blob a1585342a432e022c3c4db1ac041e969b6aa41c1	scripts/claude_138l_score.py
+100644 blob a1204ff51bec56fd8b21ba39386ef8e770b931b5	scripts/claude_138m_l1.py
+100644 blob 1b0a6efba8057c5687fb88c176117dda86e0196a	scripts/claude_138m_predict.py
+100755 blob 44e853ea2390fa23059e8fd6546db900875b755e	scripts/claude_138m_runall.sh
+100644 blob 281504c347b40ca19c707dfe73939d69b537434c	scripts/claude_138m_score.py
+100644 blob 312fc67eb4ce7a2ad825fa29a2890dcc07520bc5	scripts/claude_138n_conv239_changes.py
+100644 blob 2375e53a22594e714df7dee75e2a7d505aa29d69	scripts/claude_138n_l1.py
+100644 blob f2f4d3c8d961b97de21d65d55e5700ac4aa99fe8	scripts/claude_138n_m7.py
+100755 blob a98aa351417b14c03337f246134cefb2f7b5fc54	scripts/claude_138n_m7.sh
+100644 blob d7bd89a0e6eea47b80d238b85376452da6709b96	scripts/claude_138n_predict.py
+100755 blob 1a5aeac7d6cfa0a1bea01fb529cdf0973f39dbe3	scripts/claude_138n_runall.sh
+100644 blob b7ed9c41e0348422f89bf50216e235f68cf0d60d	scripts/claude_138n_score.py
+100644 blob 57211afa290737264caa30bbb0c00d8c4640d47c	scripts/claude_221b_run.py
+100644 blob e1af3321aa3b156960d35efae9e4f51090fcebe6	scripts/claude_221b_unit.py
+100644 blob 590c794a3382636dc7ff0c0a477d21094610e39c	scripts/claude_224c_cases.py
+100644 blob 03b8980064fdde939cf4f578c249c522520a3713	scripts/claude_224c_score.py
+100644 blob b2be73f0f762056fcc0ea3d5f2b8935321797dcc	scripts/claude_255_m1gen.py
+100644 blob d786b6cbacdc1d315659d406705f346064edd77e	scripts/claude_255_m2check.py
+100644 blob 78981927a1c190e1aecd41d7a3b6bb318d9f6c75	scripts/claude_255_m3changes.py
+100644 blob c348a7ddb4ffb1515b068e18744e9b4fb1c75fea	scripts/claude_255_m3format.py
+100755 blob 3c07f21599e1a3e6bcd50f65a9938f6aaf05309d	scripts/claude_255_runall.sh
+100644 blob 377af8e7621b52ef541843847ba5c8629971f943	scripts/claude_255_score.py
+100755 blob 7b2fd3d41ac39ae1b63bf7b46219ca41b7984d4a	scripts/claude_260_panel.sh
+100755 blob 9f65ab732d609a400a083c96d474c06ca7162cac	scripts/claude_260_runall.sh
+100644 blob 1d37eb09e2a9d0b1ff2f60dd03ac062dec31174e	scripts/claude_age334_agent.py
+100644 blob 325b9997d7a9af6c4f3d90a8b3f9e843d4c6de27	scripts/claude_age334_test.py
+100644 blob 48cc22246d2adc8800088115986c07ff817bb0b4	scripts/claude_apos247_devcases.py
+100644 blob 6a54f53d036baa4328c44891b1ad6f48226b92d5	scripts/claude_apos247_run.py
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); ls "$D/scripts/claude_lis300_compiler.py" 2>&1; ls "$D/design" 2>&1; echo "---"; ls "$D/scripts/claude_lis320_seed.py" 2>&1
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oZGCMa5NMn/scripts/claude_lis300_compiler.py
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oZGCMa5NMn/design: No such file or directory
+---
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.oZGCMa5NMn/scripts/claude_lis320_seed.py
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); git archive origin/main design/v3/60-listener/relation-names.txt | tar -x -C "$D"; echo EXTRACT_EXIT:$?; ls "$D/design/v3/60-listener/" 2>&1
+cd "$D"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_bm398w_data.py selftest 2>&1; echo SELFTEST_EXIT:$?
+EXTRACT_EXIT:0
+relation-names.txt
+{"jobs": 13, "skipped": 0, "ok": 13, "failed_calls": 0, "bad_lines": 0, "minutes": 0.0}
+{"jobs": 13, "skipped": 13, "failed_calls": 0, "bad_lines": 0, "minutes": 0.0}
+{"jobs": 7, "skipped": 0, "count": 1, "ok": 6, "failed_calls": 0, "bad_lines": 0, "minutes": 0.0}
+{"jobs": 7, "skipped": 6, "ok": 1, "failed_calls": 0, "bad_lines": 0, "minutes": 0.0}
+{"jobs": 2, "skipped": 0, "ok": 2, "failed_calls": 0, "bad_lines": 0, "minutes": 0.0}
+{"chats": 2, "dev_chats": 1, "train_items": 18, "dev_items": 18, "kinds": {"self": 16, "attr": 8, "event": 12}, "dropped_questions": {}, "sha256": {"train": "687f36f1c6282b3349e3904cd1bec15ce9b7baa629fa6da359d16a3d973bc1d9", "dev": "30b5457e945c6f1ec851853e3264bd0bccf3253e496cab96022f349a7a42f616"}, "floor": "DATA-SHORT"}
+{"chats": 2, "dev_chats": 0, "panel_items": 36, "kinds": {"self": 16, "attr": 8, "event": 12}, "dropped_questions": {}, "sha256": {"panel": "1534546b3ca2b2101753d7551b3e36235fed4c5035d426cae3a6c57194dccfcf"}, "floor": "DATA-SHORT"}
+[bm398w] call failed: RuntimeError
+{"jobs": 7, "skipped": 0, "call": 1, "ok": 6, "failed_calls": 1, "bad_lines": 0, "minutes": 0.0}
+[bm398w] call failed: RuntimeError
+{"jobs": 7, "skipped": 6, "call": 1, "failed_calls": 2, "bad_lines": 0, "minutes": 0.0}
+[bm398w] call failed: RuntimeError
+{"jobs": 7, "skipped": 6, "call": 1, "failed_calls": 3, "bad_lines": 0, "minutes": 0.0}
+{"jobs": 7, "skipped": 6, "ok": 1, "failed_calls": 3, "bad_lines": 0, "minutes": 0.0}
+{"chats": 3, "tries": 3, "sessions": 23, "facts": 66}
+{"chats": 3, "tries": 3, "sessions": 18, "facts": 66}
+PASS a plan has 8 self, 4 intro, 4 attr, 6 event facts
+PASS each fact sits on a turn of its teller, one per turn
+PASS an intro comes in an earlier session than its attr
+PASS values are unique in a chat
+PASS reserved seeds refused
+PASS last Saturday from a Saturday is a week back
+PASS yesterday
+PASS a compliant session passes
+PASS a leaked value fails
+PASS a wrong count fails
+PASS prompts carry no example sentence, only instructions and values
+PASS date check needs day, month and year
+PASS an answer that negates its value fails
+PASS a question holding a word of the value fails (guitar, taco)
+PASS a curly-apostrophe negation fails
+PASS a dated answer holding another event's date fails
+PASS fact messages are never next to each other
+PASS no speaker has both a friend and a best friend
+PASS a question that gives away the value fails
+PASS bm25 ranks the matching doc first
+PASS word writes one checked row per session
+PASS word resumes without new calls
+PASS a rerun retries only the failed session, and keeps the failed row
+PASS panel mode puts every item in the panel, answer = the code's gold
+PASS build refuses chats from another seed
+PASS build makes 18 items per chat
+PASS every item holds its evidence among 20 lines (2 for two-step)
+PASS rows use bm-390's system and QA prompt, and the layout's start line
+PASS dated questions get the CAT2 suffix
+PASS every row records its writer
+PASS dev rows carry the gold value, train rows Luna's answer
+PASS the two chats never share a split
+PASS failed calls never use up a session's tries
+PASS a line separator in text survives, a cut-off last line is skipped
+PASS panel plans use no name from the training plans
+BM398W-DATA-SELFTEST PASS 35/35
+SELFTEST_EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Verify DUPLICATE GATE, read PLAN + first 14 lines rules
+[✓] TREE: extract files via git archive to temp dir
+[✓] SEAL + CHECKS (selftest, uptime, df)
+[•] PLANS code-only + hash verification
+[ ] PILOT word (limit 5) + count GATE>=3
+[ ] PANEL SESSIONS word + count
+[ ] TRAINING SESSIONS word + count
+[ ] QUESTIONS train then panel + counts
+[ ] BUILD train+panel, check FLOOR
+[ ] COPY BACK + RESULTS-data.md + rm temp
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); cd "$D"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; O=artifacts/claude-bm398w-20260927/data
+date -u; echo START_PLAN_TRAIN
+uv run --offline --no-project --python 3.12 python -B scripts/claude_bm398w_data.py plan --seed 3993 --n 170 --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out "$O/train/plans.jsonl" 2>&1; echo PLAN_TRAIN_EXIT:$?; date -u
+shasum -a 256 "$O/train/plans.jsonl" 2>&1
+wc -l "$O/train/plans.jsonl" 2>&1
+Sun Sep 27 06:34:17 UTC 2026
+START_PLAN_TRAIN
+{"chats": 170, "tries": 197, "sessions": 1200, "facts": 3740}
+PLAN_TRAIN_EXIT:0
+Sun Sep 27 06:34:17 UTC 2026
+16341e5447f600f353f20102669701c371f697881aa4f749a3d46b73a74bbc2a  artifacts/claude-bm398w-20260927/data/train/plans.jsonl
+     170 artifacts/claude-bm398w-20260927/data/train/plans.jsonl
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); cd "$D"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; O=artifacts/claude-bm398w-20260927/data
+date -u; echo START_PLAN_PANEL
+uv run --offline --no-project --python 3.12 python -B scripts/claude_bm398w_data.py plan --seed 3994 --n 26 --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --avoid-plans "$O/train/plans.jsonl" --out "$O/panel/plans.jsonl" 2>&1; echo PLAN_PANEL_EXIT:$?; date -u
+shasum -a 256 "$O/panel/plans.jsonl" 2>&1
+wc -l "$O/panel/plans.jsonl" 2>&1
+Sun Sep 27 06:34:19 UTC 2026
+START_PLAN_PANEL
+{"chats": 26, "tries": 28, "sessions": 182, "facts": 572}
+PLAN_PANEL_EXIT:0
+Sun Sep 27 06:34:20 UTC 2026
+0cccc54a3664099d8bfd18c37330a09062ec44fede90b008d34e6fb6ca14b8bf  artifacts/claude-bm398w-20260927/data/panel/plans.jsonl
+      26 artifacts/claude-bm398w-20260927/data/panel/plans.jsonl
+[0m
+[0m# [0mTodos
+[✓] Verify DUPLICATE GATE, read PLAN + first 14 lines rules
+[✓] TREE: extract files via git archive to temp dir
+[✓] SEAL + CHECKS (selftest, uptime, df)
+[✓] PLANS code-only + hash verification
+[•] PILOT word (limit 5) + count GATE>=3
+[ ] PANEL SESSIONS word + count
+[ ] TRAINING SESSIONS word + count
+[ ] QUESTIONS train then panel + counts
+[ ] BUILD train+panel, check FLOOR
+[ ] COPY BACK + RESULTS-data.md + rm temp
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); cd "$D"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; O=artifacts/claude-bm398w-20260927/data
+date -u; echo PILOT_RUN1_START; uptime
+uv run --offline --no-project --python 3.12 python -B scripts/claude_bm398w_data.py word --plans "$O/train/plans.jsonl" --out "$O/train/sess.jsonl" --workers 3 --max-minutes 45 --max-failed 20 --limit 5 2>&1; echo PILOT_RUN1_EXIT:$?; date -u
+Sun Sep 27 06:34:30 UTC 2026
+PILOT_RUN1_START
+ 2:34  up 3 days, 16:27, 4 users, load averages: 134.38 124.13 107.72
+{"jobs": 37, "skipped": 0, "ok": 37, "failed_calls": 0, "bad_lines": 0, "minutes": 4.4}
+PILOT_RUN1_EXIT:0
+Sun Sep 27 06:38:56 UTC 2026
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); cd "$D"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; O=artifacts/claude-bm398w-20260927/data
+date -u; echo PILOT_RUN2_START
+uv run --offline --no-project --python 3.12 python -B scripts/claude_bm398w_data.py word --plans "$O/train/plans.jsonl" --out "$O/train/sess.jsonl" --workers 3 --max-minutes 45 --max-failed 20 --limit 5 2>&1; echo PILOT_RUN2_EXIT:$?; date -u
+date -u; echo PILOT_COUNT_START
+uv run --offline --no-project --python 3.12 python -B scripts/claude_bm398w_data.py count --plans "$O/train/plans.jsonl" --sess "$O/train/sess.jsonl" --limit 5 2>&1; echo PILOT_COUNT_EXIT:$?; date -u
+Sun Sep 27 06:39:02 UTC 2026
+PILOT_RUN2_START
+{"jobs": 37, "skipped": 37, "failed_calls": 0, "bad_lines": 0, "minutes": 0.0}
+PILOT_RUN2_EXIT:0
+Sun Sep 27 06:39:02 UTC 2026
+Sun Sep 27 06:39:02 UTC 2026
+PILOT_COUNT_START
+{"chats": 5, "kept_chats": 5, "sessions": 37, "sessions_kept": 37, "sessions_never_tried": 0, "failed_rows_by_reason": {}}
+PILOT_COUNT_EXIT:0
+Sun Sep 27 06:39:02 UTC 2026
+[0m
+[0m# [0mTodos
+[✓] Verify DUPLICATE GATE, read PLAN + first 14 lines rules
+[✓] TREE: extract files via git archive to temp dir
+[✓] SEAL + CHECKS (selftest, uptime, df)
+[✓] PLANS code-only + hash verification
+[✓] PILOT word (limit 5) + count GATE>=3
+[•] PANEL SESSIONS word + count
+[ ] TRAINING SESSIONS word + count
+[ ] QUESTIONS train then panel + counts
+[ ] BUILD train+panel, check FLOOR
+[ ] COPY BACK + RESULTS-data.md + rm temp
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); cd "$D"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; O=artifacts/claude-bm398w-20260927/data
+date -u; echo PANEL_WORD_RUN1_START; uptime
+uv run --offline --no-project --python 3.12 python -B scripts/claude_bm398w_data.py word --plans "$O/panel/plans.jsonl" --out "$O/panel/sess.jsonl" --workers 3 --max-minutes 45 --max-failed 20 2>&1; echo PANEL_WORD_RUN1_EXIT:$?; date -u
+Sun Sep 27 06:39:15 UTC 2026
+PANEL_WORD_RUN1_START
+ 2:39  up 3 days, 16:32, 4 users, load averages: 69.92 106.28 105.62
+{"jobs": 182, "skipped": 0, "ok": 181, "leak": 1, "failed_calls": 0, "bad_lines": 0, "minutes": 25.5}
+PANEL_WORD_RUN1_EXIT:0
+Sun Sep 27 07:04:44 UTC 2026
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); cd "$D"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; O=artifacts/claude-bm398w-20260927/data
+date -u; echo PANEL_WORD_RUN2_START
+uv run --offline --no-project --python 3.12 python -B scripts/claude_bm398w_data.py word --plans "$O/panel/plans.jsonl" --out "$O/panel/sess.jsonl" --workers 3 --max-minutes 45 --max-failed 20 2>&1; echo PANEL_WORD_RUN2_EXIT:$?; date -u
+Sun Sep 27 07:04:49 UTC 2026
+PANEL_WORD_RUN2_START
+{"jobs": 182, "skipped": 181, "ok": 1, "failed_calls": 0, "bad_lines": 0, "minutes": 0.4}
+PANEL_WORD_RUN2_EXIT:0
+Sun Sep 27 07:05:16 UTC 2026
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); cd "$D"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; O=artifacts/claude-bm398w-20260927/data
+date -u; echo PANEL_WORD_RUN3_START
+uv run --offline --no-project --python 3.12 python -B scripts/claude_bm398w_data.py word --plans "$O/panel/plans.jsonl" --out "$O/panel/sess.jsonl" --workers 3 --max-minutes 45 --max-failed 20 2>&1; echo PANEL_WORD_RUN3_EXIT:$?; date -u
+date -u; echo PANEL_COUNT_START
+uv run --offline --no-project --python 3.12 python -B scripts/claude_bm398w_data.py count --plans "$O/panel/plans.jsonl" --sess "$O/panel/sess.jsonl" 2>&1; echo PANEL_COUNT_EXIT:$?; date -u
+Sun Sep 27 07:05:20 UTC 2026
+PANEL_WORD_RUN3_START
+{"jobs": 182, "skipped": 182, "failed_calls": 0, "bad_lines": 0, "minutes": 0.0}
+PANEL_WORD_RUN3_EXIT:0
+Sun Sep 27 07:05:20 UTC 2026
+Sun Sep 27 07:05:20 UTC 2026
+PANEL_COUNT_START
+{"chats": 26, "kept_chats": 26, "sessions": 182, "sessions_kept": 182, "sessions_never_tried": 0, "failed_rows_by_reason": {"leak": 1}}
+PANEL_COUNT_EXIT:0
+Sun Sep 27 07:05:20 UTC 2026
+[0m
+[0m# [0mTodos
+[✓] Verify DUPLICATE GATE, read PLAN + first 14 lines rules
+[✓] TREE: extract files via git archive to temp dir
+[✓] SEAL + CHECKS (selftest, uptime, df)
+[✓] PLANS code-only + hash verification
+[✓] PILOT word (limit 5) + count GATE>=3
+[✓] PANEL SESSIONS word + count
+[•] TRAINING SESSIONS word + count
+[ ] QUESTIONS train then panel + counts
+[ ] BUILD train+panel, check FLOOR
+[ ] COPY BACK + RESULTS-data.md + rm temp
+[0m
+[0m$ [0mD=$(cat /tmp/bm398w_D_path.txt); cd "$D"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; O=artifacts/claude-bm398w-20260927/data
+date -u; echo TRAIN_WORD_RUN1_START; uptime; df -g / | head -5
+uv run --offline --no-project --python 3.12 python -B scripts/claude_bm398w_data.py word --plans "$O/train/plans.jsonl" --out "$O/train/sess.jsonl" --workers 3 --max-minutes 45 --max-failed 20 2>&1; echo TRAIN_WORD_RUN1_EXIT:$?; date -u
+Sun Sep 27 07:05:29 UTC 2026
+TRAIN_WORD_RUN1_START
+ 3:05  up 3 days, 16:58, 4 users, load averages: 84.89 81.98 83.77
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        33    28%  484014 349502040    0%   /
+{"jobs": 1200, "skipped": 37, "ok": 341, "not_run": 822, "failed_calls": 0, "bad_lines": 0, "minutes": 45.2}
+TRAIN_WORD_RUN1_EXIT:0
+Sun Sep 27 07:50:41 UTC 2026
+[0m
+[91m[1mError: [0mError from provider (Console): Rate limit exceeded. Please try again later.
