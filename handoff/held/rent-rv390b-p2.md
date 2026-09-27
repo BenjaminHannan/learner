@@ -216,7 +216,7 @@ for st in $TODO; do
   if [ $TEST = 1 ]; then [ $st = T1 ] && b=60; [ $st = T2 ] && b=30; fi
   if [ $TEST = 0 ] && [ $b -lt 600 ]; then say "step $st: not started (only $b s left in this job)"; NOTRUN="$NOTRUN $st"; continue; fi
   say "step $st: start, budget $b s"; t1=$(date +%s); STARTED=1
-  rx "cd /root/work && setsid nohup bash job/step.sh $st $b $HAVE_R0 $SEEDS > job/out-$st.txt 2>&1 < /dev/null & echo launched" 2>&1 | tail -1
+  rx "cd /root/work && { setsid nohup bash job/step.sh $st $b $HAVE_R0 $SEEDS > job/out-$st.txt 2>&1 < /dev/null & }; echo launched" 2>&1 | tail -1   # braced: only step.sh goes to the background, so ssh returns at once
   hard=$(( t1 + b + 180 )); ended=0
   while [ $(date +%s) -lt $hard ]; do sleep 20; c=$(rx "grep -c '^STEP-END' /root/work/job/out-$st.txt" 2>/dev/null | tail -1); [ "$c" = 1 ] && { ended=1; break; }; done
   [ $ended = 1 ] || { say "step $st: no STEP-END 3 min past its budget; stopping its runs by exact PID"; rx "kill \$(cat /root/work/job/pids-$st.txt) 2>/dev/null; sleep 5; kill -9 \$(cat /root/work/job/pids-$st.txt) 2>/dev/null; true"; }
