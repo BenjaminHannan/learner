@@ -35,3 +35,29 @@ Counted from runs/{moe-grow-replay,dense-replay}-s{1,2}/result.json. A blind rec
 
 ## Plain words
 Freezing the old experts plus a little practice of the old skill keeps the old skill perfectly. But the frozen net then learns new things badly. A normal net given the same little practice keeps almost as much of the old skill and learns the new things fully. For the brain comparison (a guess): replay, the sleep-like part, is doing the protecting here, not the separate experts.
+
+## Report-only same-size arms (added 2026-09-27 01:17:56 UTC; batch 2 ended at 01:14 UTC, from done.txt)
+These rows are report only. No mark depends on them, and they do not change the FAIL above. Counted from runs/moe-grow-eq{,-replay}-s{1,2}/result.json.
+moe-grow-eq has the same total weights as dense (1,654,446 vs 1,646,750). It has 12 experts, each a third of the dense MLP's width over 4, and one group of 4 opens per phase. So in phase A only 4 narrow experts, a third of dense's MLP width, are routable. After A, 352,944 weights train in each later phase (selftest count).
+
+| seed 1 / seed 2 | moe-grow-eq (no replay) | moe-grow-eq-replay | dense-replay (above) |
+|---|---|---|---|
+| grids5 after A | 145 / 193 | 145 / 193 (identical, as expected) | 199 / 198 |
+| grids5 after B | 5 / 5 | 138 / 188 | 184 / 172 |
+| F = after A - after B | 140 / 188 | 7 / 5 | 15 / 26 |
+| sums4 after B | 53 / 94 | **0 / 59** | 200 / 200 |
+| sums6 after B | 27 / 46 | 0 / 26 | 194 / 196 |
+| grids5 after C | 4 / 27 | 112 / 51 | 0 / 0 |
+| sums4 after C | 0 / 3 | 0 / 8 | 0 / 0 |
+| maze7 after C | 3 / 2 | 0 / 8 | 150 / 136 |
+| S after B (block 1, block 2) | 0.381, 0.546 / 0.471, 0.355 | 0.670, 0.579 / 0.471, 0.511 | - |
+| minutes | 50.3 / 51.7 | 51.5 / 52.8 | |
+
+- replayed_batches = 250 in both replay runs and 0 in both no-replay runs, as sealed.
+- For these arms, S was read before the second grow step: the grow runs after the score in this script, and the share vectors show 12 slots with the last 4 at zero. This timing is correct, unlike the moe-grow shares above.
+
+What these rows suggest (report only, two seeds):
+- The router story repeats at equal size. Without replay, the frozen grids experts are no longer reached and grids5 falls to 5 / 5. With 1 grids step in 10 they are reached again (138 / 188).
+- At equal size, the frozen net's new-learning problem is much worse than at 1.64x. With replay it learns sums to 0 / 59 (moe-grow-replay: 136 / 67; dense-replay: 200 / 200). Its phase-A grids are also lower (145 / 193) because only a third of the MLP width is routable in phase A.
+- As at 1.64x, frozen experts keep some of an unpractised skill through phase C (grids5 112 / 51, vs dense-replay 0 / 0), but less than moe-grow-replay did (185 / 160).
+- rsn-358e4 (sealed, running since 01:15 UTC) tests exactly this same-size frozen arm against dense, both replaying every earlier kind. It is the graded version of this question.
