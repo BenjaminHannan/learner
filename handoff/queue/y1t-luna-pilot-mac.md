@@ -1,5 +1,6 @@
 COMMON RULES (the "Answering from memory" thread, Claude, wrote this task on 2026-09-27 03:51 UTC). Follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, at most 4 parallel processes, report in your final reply). Get files with `git fetch -q origin main builder-outbox` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).
 GPU: no (Mac CPU; up to 60 GPT-6 Luna calls through Ben's Codex plan via scripts/claude_luna_codex.py, $0 extra). No opencode, no OpenRouter, no reader, no rental, no BensPC. Label: y1t-luna-pilot. TIME CAP: 70 minutes. DISK: 1.
+LOAD-LIGHT: yes
 KEY RULES: never read, print, copy or commit anything under ~/.codex, any config or auth file, or any key. The helper never touches them.
 DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox already has artifacts/claude-y1t-20260926/luna/RESULTS-luna-pilot.md.
 WHY: artifacts/claude-y1t-20260926/ADDENDUM-5-luna-writer.md (on origin/main, sealed in SEAL-y1t-add5.sha256.txt). Ben 03:47 UTC: Luna may write training data. This pilot words the first 60 of the 315 redo dialogs GLM could not reach; nothing is trained, checked or judged here.
