@@ -11,7 +11,7 @@ so every packet has two of each.
   gate-prep   --items H --facts HF --teach TEACH --out G   Luna's replies on the 20 held-out chats (arm "L")
   gate-count  --items H --facts HF --teach TEACH --out G   reads G/out/claims_b*.jsonl, fit_b*.jsonl; G/gate.json
   prep        --panel P --facts F --runs RUNS --out J      arms P, T, N, PW, TW; 300 packets, 20 batch files
-  count       --panel P --facts F --runs RUNS --out J      M1-M3 and the report; J/marks.json
+  count       --panel P --facts F --runs RUNS --out J --practice TRAIN_ITEMS   M1-M3 and the report; J/marks.json
   pair-prep   --panel P --facts F --runs RUNS --out JP     P against T per chat; 2 layouts with sides swapped
   pair-count  --panel P --facts F --runs RUNS --out JP     M4; JP/pair.json (reads JP/out/pair_b*.jsonl)
   noharm      --data DATA --gen GEN                        M5 from GEN/{mmlu,gsm8k}_{P,T}.jsonl; GEN/noharm.json
@@ -115,7 +115,7 @@ def arm_counts(arm: str, items: list[dict], cv: dict, claims: dict, fits: dict) 
     """mu-407's per-arm counts (claude_mu407_judge.count), plus turn 1 against turns 2-5."""
     c_sum = both = either = ans = ont = replies = non_ask = asks = 0
     by_kind, ont_kind, first, later = defaultdict(int), defaultdict(int), 0, 0
-    judges, per_chat, rep_flags, reps = defaultdict(int), {}, 0, 0
+    judges, per_chat, ans_chat, rep_flags, reps = defaultdict(int), {}, {}, 0, 0
     for it in items:
         k = (arm, it["item_id"])
         if k not in cv:
@@ -143,6 +143,7 @@ def arm_counts(arm: str, items: list[dict], cv: dict, claims: dict, fits: dict) 
                     ont += a_ and b_
             if turns[-1]["kind"] == "ask":
                 ans += fi[0][1] and fi[1][1]
+                ans_chat[it["item_id"]] = fi[0][1] and fi[1][1]
         non_ask += sum(1 for t in turns if t["kind"] != "ask")
         asks += sum(1 for t in turns if t["kind"] == "ask")
         reps += J7.repeats(turns)
@@ -150,7 +151,21 @@ def arm_counts(arm: str, items: list[dict], cv: dict, claims: dict, fits: dict) 
             "real_answers_both_judges": ans, "ask_turns": asks, "on_turn_non_ask_both_judges": ont,
             "non_ask_turns": non_ask, "claims_by_kind": dict(by_kind), "on_turn_by_kind": dict(ont_kind),
             "claims_turn1": first, "claims_turns2_5": later, "repeat_replies_report": reps,
-            "claims_on_repeat_replies_report": rep_flags, "judges_per_chat": dict(judges), "_per_chat": per_chat}
+            "claims_on_repeat_replies_report": rep_flags, "judges_per_chat": dict(judges), "_per_chat": per_chat,
+            "_answer_by_chat": ans_chat}
+
+
+def seen_ask_split(items: list[dict], practice: list[dict], arms: dict) -> dict:
+    """Report only (the Thread manager, 09:56 UTC): real answers on panel chats whose ask line (case-folded,
+    stripped) also appears as a user message in the training chats, against chats whose ask line does not."""
+    seen_msgs = {t["text"].strip().lower() for it in practice for t in it["session1"] + it["session2"]}
+    seen = {it["item_id"] for it in items
+            if any(t["kind"] == "ask" and t["text"].strip().lower() in seen_msgs for t in it["session2"])}
+    out = {}
+    for name, ids in (("ask_line_seen_in_training", seen), ("ask_line_not_seen", {i["item_id"] for i in items} - seen)):
+        out[name] = {"chats": len(ids), "real_answers": {arm: sum(c["_answer_by_chat"].get(i, 0) for i in ids)
+                                                         for arm, c in arms.items()}}
+    return out
 
 
 def gate_from(c: dict, bad: int) -> dict:
@@ -314,10 +329,17 @@ def selftest() -> None:
         J402.write_jsonl(out / "out" / "pair_b1.jsonl", rows)
         pc = pair_count(out)
         assert pc["P_better_chats"] == 60 and pc["T_better_chats"] == 0 and not pc["M4_pass"]; ok += 1
+    prac = [{"session1": [], "session2": [{"kind": "ask", "text": " ASK "}]}]
+    arms_ = {arm: arm_counts(arm, items, cv, claims, fits) for arm in ARMS}
+    sp = seen_ask_split(items, prac, arms_)
+    assert sp["ask_line_seen_in_training"]["chats"] == 60 and sp["ask_line_seen_in_training"]["real_answers"]["T"] == 60
+    items2 = [dict(it, session2=it["session2"][:4] + [{"kind": "ask", "text": f"q{n}"}]) for n, it in enumerate(items)]
+    sp = seen_ask_split(items2, prac, arms_)
+    assert sp["ask_line_not_seen"]["chats"] == 60 and sp["ask_line_seen_in_training"]["real_answers"]["P"] == 0; ok += 1
     assert verdict(m, {"M4_pass": True}, {"M5_pass": True}, 799)["verdict"] == "INCONCLUSIVE"; ok += 1
     assert verdict(m, {"M4_pass": True}, {"M5_pass": True}, 900)["verdict"] == "PASS"; ok += 1
     assert verdict(m, {"M4_pass": True}, {"M5_pass": False}, 900)["verdict"] == "FAIL"; ok += 1
-    print(f"mu406 judge selftest {ok}/16 ok")
+    print(f"mu406 judge selftest {ok}/17 ok")
 
 
 def main() -> None:
@@ -325,7 +347,7 @@ def main() -> None:
     ap.add_argument("cmd", choices=["gate-prep", "gate-count", "prep", "count", "pair-prep", "pair-count", "noharm",
                                     "verdict", "selftest"])
     for k in ("--items", "--facts", "--teach", "--out", "--panel", "--runs", "--data", "--gen", "--marks", "--pair",
-              "--noharm"):
+              "--noharm", "--practice"):
         ap.add_argument(k)
     ap.add_argument("--teach-rows", type=int, default=0)
     a = ap.parse_args()
@@ -340,7 +362,7 @@ def main() -> None:
         else:
             claims, fits, bad = read_judges(out, cv)
             c = arm_counts("L", items, cv, claims, fits)
-            res = {"bad_rows": bad, "counts": {k: v for k, v in c.items() if k != "_per_chat"}, **gate_from(c, bad)}
+            res = {"bad_rows": bad, "counts": {k: v for k, v in c.items() if not k.startswith("_")}, **gate_from(c, bad)}
             (out / "gate.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
             print(json.dumps(res, indent=1))
         return
@@ -355,7 +377,9 @@ def main() -> None:
             claims, fits, bad = read_judges(out, cv)
             arms = {arm: arm_counts(arm, items, cv, claims, fits) for arm in ARMS}
             res = {"bad_rows": bad, "marks": marks_from(arms),
-                   "arms": {arm: {k: v for k, v in c.items() if k != "_per_chat"} for arm, c in arms.items()}}
+                   "arms": {arm: {k: v for k, v in c.items() if not k.startswith("_")} for arm, c in arms.items()}}
+            if a.practice:
+                res["report_seen_ask_line"] = seen_ask_split(items, J402.load(Path(a.practice)), arms)
             (out / "marks.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
             print(json.dumps(res, indent=1))
         elif a.cmd == "pair-prep":

@@ -3,6 +3,8 @@
 "Making things up about you" thread. Written 2026-09-27 09:55 UTC (date -u). This is the plan to seal. It is PLAN-draft-3.md
 (47be9f210, corrected f9d24854a) with the Thread manager's 09:40 UTC review adopted and the code's details written
 in. PLAN-draft.md, PLAN-review-1.md, PLAN-draft-2.md and PLAN-draft-3.md stay as written. DEV data only. Cost: $0.
+Reviewed by the Thread manager at 09:40, 09:53, 09:56 and 09:58 UTC (OK to seal with the name check and the
+seen-ask-line split, both in). Sealed 2026-09-27 09:59 UTC (date -u) in SEAL.sha256.txt, before any mu-406 chat exists.
 
 ## Why this test
 - mu-407 (VERIFY.md, 2c1dea000) showed a "reply to this now" label is not enough. It is FAIL, not proved wrong.
@@ -114,6 +116,8 @@ in. PLAN-draft.md, PLAN-review-1.md, PLAN-draft-2.md and PLAN-draft-3.md stay as
 - Report only:
   - C_T against C_N;
   - real answers against GPT's 30 of 60;
+  - real answers split by whether the panel chat's ask line also appears as a user message in the 200 training
+    chats (the Thread manager's 09:56 UTC point: recall on seen ask wording could flatter M2);
   - repeats and their flags per arm;
   - turn 1 against turns 2-5 for C (turn 1 has no reply history, so it isolates Luna's history at training
     against the 1B's own at test);
