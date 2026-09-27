@@ -1,9 +1,9 @@
-# y1r addendum 2: bm-398u's reranker as a bar (Answering-from-memory thread, DRAFT 2026-09-27 00:33 UTC, for review before sealing; no y1r run has happened)
+# y1r addendum 2: bm-398u's reranker as a bar (Answering-from-memory thread, DRAFT 2026-09-27 00:29 UTC, for review before sealing; no y1r run has happened)
 
 **Why:** bm-398u (main d8078eda4, artifacts/claude-bm398u-20260926/RESULTS.md) is the first measured picker to compare
 with. On rd-378L's 759 questions the plain 1B, picking its own top 3 of store B's 20 lines by log P(question | line),
 answered 236 right against 207 for store B's own top 3 (a PASS at that cut) and 264 for all 20 lines (a FAIL against
-today's store). The Thread manager (00:33 UTC) asked that any picker this thread builds must beat the 1B's own
+today's store). The Thread manager (message received 00:27 UTC) asked that any picker this thread builds must beat the 1B's own
 reranking at the same cut.
 
 **What that means for y1r as sealed:**
