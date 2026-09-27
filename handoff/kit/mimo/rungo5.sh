@@ -9,6 +9,14 @@
 t="$1"; m1="${2:-opencode/muse-spark-1.3-contributor-free}"; Q=$(dirname "$t"); n=$(basename "$t" .md); W=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
 . "$W/handoff/kit/mimo/ocdb.sh"
 cd "$W"
+# BASH-ONLY: yes = no LLM builder: run the first ```bash fenced block of the task file in $W (cap 75 min), reply = stdout (Director 09-27, free builders rate-limited/hanging)
+if grep -q '^BASH-ONLY: yes' "$t"; then
+  awk '/^```bash/{f=1;next} f&&/^```/{exit} f' "$t" > "$Q/$n.bo.sh"
+  echo "$(date +%T) bash-only $n" >> "$Q/log.txt"
+  perl -e 'alarm shift; exec @ARGV' 4500 bash "$Q/$n.bo.sh" < /dev/null > "$Q/$n.go1.reply.md" 2> "$Q/$n.go1.err.txt"; rc=$?
+  echo "rc=$rc" >> "$Q/$n.go1.reply.md"; [ $rc = 0 ] && echo bash-only > "$Q/$n.go1.done"
+  echo "$(date +%T) bash-only-exit $n rc=$rc" >> "$Q/log.txt"; exit $rc
+fi
 NET="unknown certificate verification error\|Cannot connect to API\|socket connection was closed\|ECONNRESET\|ETIMEDOUT\|fetch failed\|getaddrinfo\|network error\|Failed query\|database is locked\|Failed to execute statement"
 # DB lock errors (11:41: a long vacuum held the lock) are retried on the SAME model too, never by falling down the chain.
 nr=0; rr=0
@@ -27,8 +35,18 @@ while [ $# -gt 0 ]; do
   v=0; while pgrep -f "wal_checkpoint.TRUNCATE" > /dev/null && [ $v -lt 40 ]; do v=$((v+1)); sleep 15; done
   echo "$(date +%T) go$k $n $m" >> "$Q/log.txt"
   TT="mimo:$n.go$k.$$"
-  /usr/local/bin/opencode run --model "$m" --auto --dir "$W" --title "$TT" "$PRE$WAITNOTE$(cat "$t")" < /dev/null > "$Q/$n.go$k.reply.md" 2> "$Q/$n.go$k.err.txt"
-  rc=$?
+  /usr/local/bin/opencode run --model "$m" --auto --dir "$W" --title "$TT" "$PRE$WAITNOTE$(cat "$t")" < /dev/null > "$Q/$n.go$k.reply.md" 2> "$Q/$n.go$k.err.txt" &
+  op=$!; st=0; el=0
+  # stall watchdog (09-27 08:xx UTC: free Zen builders sat at the bare "> build" line for 30+ min): if after 15 min the reply is empty and err is <= 60 bytes, stop THIS runner's own opencode child and retry later like a rate limit
+  while kill -0 $op 2>/dev/null; do sleep 30; el=$((el+30))
+    [ -e "$Q/$n.stop" ] && { kill $op 2>/dev/null; break; }
+    if [ $el -ge 900 ] && [ ! -s "$Q/$n.go$k.reply.md" ] && [ "$(wc -c < "$Q/$n.go$k.err.txt")" -le 60 ]; then st=1; kill $op 2>/dev/null; break; fi
+  done
+  wait $op; rc=$?
+  if [ $st = 1 ]; then del_title "$TT"
+    if [ $rr -lt 6 ]; then rr=$((rr+1)); echo "$(date +%T) stalled-go$k $n $m (no output in 15 min; resume $rr/6 in 600 s)" >> "$Q/log.txt"; sleep 600; continue; fi
+    echo "$(date +%T) stalled-giveup-go$k $n $m" >> "$Q/log.txt"; exit 5
+  fi
   del_title "$TT"
   if [ "$rc" -gt 128 ] || [ -e "$Q/$n.stop" ]; then echo "$(date +%T) killed-go$k $n $m rc=$rc" >> "$Q/log.txt"; exit 2; fi
   if tail -5 "$Q/$n.go$k.err.txt" | sed 's/\x1b\[[0-9;]*m//g' | grep -q "$NET"; then
