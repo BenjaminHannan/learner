@@ -34,8 +34,8 @@ The small learned reasoner should solve number puzzles it was never trained on. 
 ## Step 2: one change, registered first
 - **The change.** Pick ONE change that the diagnosis supports.
 - **Ben's idea comes first** (added 2026-09-27 12:51 UTC). Ben, 12:45 UTC, about a short-term card store: "but for the reasoner to do work with it. It can call the cards". For this puzzle that means a learned scratch card store. The net writes partial results as cards (for example "3 x 8 = 24" or "13 - 1 = 12") and can call them back in later rounds, so it can try a branch, keep what worked and back up.
-  - Test this change unless your diagnosis clearly points elsewhere. If it does, say why in the diagnosis note, and Ben decides.
-  - What to write, when to write, and which card to call must all be the net's own learned choices. No search code, no hand-written address or matching rule, and no card labels from a solver. Count the store's parts in the weight total.
+  - Test this change unless your diagnosis clearly points elsewhere. If it does, stop: write why and the question for Ben in the diagnosis note, and don't run a different change first. Ben decides.
+  - What to write, when to write, and which card to call must all be the net's own learned choices. No search code, no hand-written address or matching rule, and no card labels from a solver. Count the store's parts in the weight total. Fix the maximum number of cards and of think rounds before sealing, and give the baseline the same number of think rounds.
   - Prior art, from tiny made-up-word toys only, so keep it separate from the village model. It is Premonition-mini's per-visit card store (design/06-premonition-mini-spec.md section 2; design/research/2026-09-18-decisions-log.md:140-200 and :330-358).
     - Reading a card that was handed to the net worked.
     - Picking the right card among look-alikes did not work when learned from answer loss alone (at most 182 of 512).
