@@ -41,3 +41,17 @@ marks, prompt, model, attempts, count and ADDENDUM-1's rule are unchanged.
 - This section replaces the last bullet under "Rule" above: one more launch after resume2 is allowed, within the limit.
 - Correction: this heading first read "08:26 UTC", which I typed ahead of the clock. date -u read 08:23:30 UTC. The
   Thread manager's note says 08:27 in its text, but it arrived at 08:23:02 UTC (commit ad1933437 had the wrong stamp).
+
+## Route change (08:44 UTC, date -u; still before any resume result)
+- The watcher held madeup-g406l-resume2-mac on its builder cap from 07:4x UTC onward (6 builders running at 08:42 UTC).
+  It never launched, so I moved it to handoff/held/. A job that never launched is not a launch.
+- The same steps now run as handoff/queue/madeup-g406l-resume3-mac.md on the Director's BASH-ONLY route (2bf4f9ea7).
+  That route runs the job's bash block with no builder and skips the builder cap, as the Thread manager suggested at
+  08:38 UTC. It keeps the same sealed command and the same checks: start hash, seal, 4 selftests, one Luna call at a
+  time, a 30-minute runner cap and a stop by exact PID at 60 minutes.
+  - If resume2 somehow launched first, resume3 stops before step 1. The job checks for resume2's .running, .exit and
+    .pushed files, and for any g406l run already going.
+- Count under the limit: resume3 is launch 2 of the resume. At most one more launch is allowed, and none after
+  16:00 UTC.
+- I dry-ran the block here in a temporary worktree of main, with local stand-ins for uv and codex. It ran end to end
+  with rc 0. Its numbers came from a fake labeller and were deleted unread beyond the rc.

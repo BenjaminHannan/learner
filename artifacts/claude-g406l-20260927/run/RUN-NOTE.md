@@ -13,3 +13,5 @@
   madeup-g406l-resume2-mac, with the same steps plus a restart rule (ADDENDUM-2-relaunch.md).
 - Correction (08:24 UTC, date -u): the "Update 08:23 UTC" line above was typed ahead of the clock. It was committed at 08:22:42 UTC (a2b9585f3).
 - Update 08:24 UTC (date -u): the Thread manager agreed with ADDENDUM-2 on one condition, now in ADDENDUM-2: at most 2 more launches of the resume, none after 16:00 UTC, then INCONCLUSIVE. Launches that made no Luna call: madeup-g406l-resume-mac, rc=1.
+- Update 08:44 UTC (date -u): resume2 never launched: the watcher held it on its builder cap. I moved it to handoff/held/
+  and queued madeup-g406l-resume3-mac on the BASH-ONLY route (no builder). This is launch 2 under ADDENDUM-2.
