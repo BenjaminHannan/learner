@@ -1,4 +1,4 @@
-2026-09-27 10:40:19
+2026-09-27 10:42:47
 running:
 000-probe-benspc-gpu-0827.running
 000-probe-zen-builder.running
@@ -10,15 +10,13 @@ k1h-glm2.running
 k1h-luna-full-mac.running
 lis320-pilot8b-mac.running
 madeup-mu406-teach2-mac.running
+rent-rv390b-p1.running
 rent358u-1-start.running
 rent358u-2-collect.running
 y1t-luna-rest-mac.running
 launched (no exit yet) / finished:
-     933
+     935
 
-2026-09-27 09:26:50 BensPC unreachable (ssh rc=255), holding 176-creative-brd11pc
-2026-09-27 09:27:01 BensPC unreachable (ssh rc=255), holding 260-claude-sleep-358t3pc
-2026-09-27 09:27:11 BensPC unreachable (ssh rc=255), holding k1f-benspc2
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 09:29:25 pushed k1h-luna-full-r2-bash
@@ -166,6 +164,9 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 10:40:13 pushed 000-bash-guard358u
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 10:42:47 launch rent-rv390b-p1
+2026-09-27 10:42:47 bash-only cap: 5 running, holding rent378g-1-start
 
 diag:
 == 000-probe-benspc-gpu-0827
@@ -259,6 +260,9 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 == madeup-mu406-teach2-mac
 0 Sep 27 09:58 madeup-mu406-teach2-mac.go1.err.txt
 1758 Sep 27 09:58 madeup-mu406-teach2-mac.go1.reply.md
+== rent-rv390b-p1
+0 Sep 27 10:42 rent-rv390b-p1.go1.err.txt
+0 Sep 27 10:42 rent-rv390b-p1.go1.reply.md
 == rent358u-1-start
 0 Sep 27 09:43 rent358u-1-start.go1.err.txt
 932 Sep 27 10:07 rent358u-1-start.go1.reply.md
@@ -291,26 +295,26 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 [0m
 top5cpu:
 %CPU COMM
-71.2 ApplicationsStorageExtension
-66.1 fileproviderd
-28.0 bash
-24.3 Finder
-16.5 Codex
+69.4 ApplicationsStorageExtension
+59.8 fileproviderd
+29.5 bash
+15.2 Finder
+14.5 WindowServer
 procs:
-  363     1 03-22:27:16 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-22:26:24 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
-15699     1 03-20:41:42 S    /usr/bin/ssh-agent
-26290 86004       14:44 SN   /usr/local/bin/opencode
-26584 31168       14:03 SN   /usr/local/bin/opencode
-33230   818       10:13 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-44571 44570 01-13:03:20 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-13:03:20 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    18:17:53 SN   /usr/local/bin/opencode
-53479 20011    06:35:29 SN   /usr/local/bin/opencode
-54153 44066    06:35:09 SN   /usr/local/bin/opencode
-59802 59771    06:26:45 SN   /usr/local/bin/opencode
-60494 59018    11:32:46 SN   /usr/local/bin/opencode
-61605 61571    06:24:27 SN   /usr/local/bin/opencode
-64555 64533    07:58:20 SN   /usr/local/bin/opencode
-81797     1 01-23:20:59 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
-96820 64190       32:32 SN   ssh
+  363     1 03-22:29:45 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-22:28:53 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+15699     1 03-20:44:11 S    /usr/bin/ssh-agent
+33230   818       12:42 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+44571 44570 01-13:05:49 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-13:05:49 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    18:20:22 SN   /usr/local/bin/opencode
+53479 20011    06:37:58 SN   /usr/local/bin/opencode
+54153 44066    06:37:38 SN   /usr/local/bin/opencode
+54279 54267       00:02 S    /usr/bin/ssh
+54613 54610       00:01 SN   /usr/bin/ssh
+59802 59771    06:29:14 SN   /usr/local/bin/opencode
+60494 59018    11:35:15 SN   /usr/local/bin/opencode
+61605 61571    06:26:56 SN   /usr/local/bin/opencode
+64555 64533    08:00:49 SN   /usr/local/bin/opencode
+81797     1 01-23:23:28 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+96820 64190       35:01 SN   ssh
