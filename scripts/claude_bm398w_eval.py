@@ -57,8 +57,23 @@ R3_MAX_EXTRA_D, R3_MAX_CAT_DROP = 10, 3
 BM398D = {"qwen_whole_chat": 138, "one_b_right_lines": 137, "n": 297}   # bm-398d (56c71354c), other judges
 
 
-def _jsonl(p) -> list[dict]:
-    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+def _jsonl(p, tolerant: bool = False) -> list[dict]:
+    """Rows of a JSONL file, split on newlines only (never on other line separators). tolerant: a line that does not
+    parse (a reply file cut off by a crash) is skipped; inputs are read strictly."""
+    out = []
+    for x in Path(p).read_text(encoding="utf-8").split("\n"):
+        if not x.strip():
+            continue
+        try:
+            out.append(json.loads(x))
+        except json.JSONDecodeError:
+            if not tolerant:
+                raise
+    return out
+
+
+def _dump(r) -> str:
+    return json.dumps(r, ensure_ascii=True)
 
 
 def _sha(p) -> str:
@@ -66,8 +81,33 @@ def _sha(p) -> str:
 
 
 def _write(path: Path, rows: list[dict]) -> str:
-    path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    path.write_text("".join(_dump(r) + "\n" for r in rows), encoding="utf-8", newline="\n")
     return _sha(path)
+
+
+class Sink:
+    """Reply files written row by row and flushed. On a relaunch after a crash, the questions every file already
+    holds are kept and skipped; rows of a question only some files hold are dropped and written again."""
+
+    def __init__(self, out: Path, names: list[str]):
+        out.mkdir(parents=True, exist_ok=True)
+        self.paths = {n: out / f"{n}.jsonl" for n in names}
+        have = {n: ({r["qid"]: r for r in _jsonl(p, tolerant=True)} if p.exists() else {})
+                for n, p in self.paths.items()}
+        self.done = set.intersection(*(set(h) for h in have.values()))
+        self.fh = {}
+        for n, pth in self.paths.items():
+            _write(pth, [r for q, r in have[n].items() if q in self.done])
+            self.fh[n] = pth.open("a", encoding="utf-8", newline="\n")
+
+    def write(self, name: str, row: dict) -> None:
+        self.fh[name].write(_dump(row) + "\n")
+        self.fh[name].flush()
+
+    def close(self) -> None:
+        for n, fh in self.fh.items():
+            fh.close()
+            print(f"wrote {n}.jsonl rows={len(_jsonl(self.paths[n]))} sha256={_sha(self.paths[n])}", flush=True)
 
 
 # ======================================================================= inputs
@@ -159,60 +199,54 @@ def run_locomo(a) -> int:
     _kept, info = D.sample(Path(a.data))
     check(qids, rt, info)
     res = load(a.model, a.adapter)
-    out = Path(a.out)
-    out.mkdir(parents=True, exist_ok=True)
-    rows = {arm: [] for arm in ARMS}
-    t_all = time.time()
-    for n, q in enumerate(qids[: a.limit or None]):
+    sink = Sink(Path(a.out), [f"locomo_{arm}" for arm in ARMS])
+    t_all, todo = time.time(), [q for q in qids[: a.limit or None] if q not in sink.done]
+    res["resumed_questions"] = len(sink.done)
+    for n, q in enumerate(todo):
         conv, i, qa, _gold = info[q]
         both = _answer_both(a.model, B.LOCOMO_SYSTEM, locomo_user(conv, i, qa, rt[q]), B.ANS_TOKENS)
         for arm in ARMS:
-            rows[arm].append({"qid": q, "category": qa["category"], "turns": rt[q], **both[arm]})
+            sink.write(f"locomo_{arm}", {"qid": q, "category": qa["category"], "turns": rt[q], **both[arm]})
         if (n + 1) % 100 == 0:
-            print(f"[bm398w] locomo {n + 1}/{len(qids)} seconds={time.time() - t_all:.0f}", flush=True)
-    for arm in ARMS:
-        print(f"wrote locomo_{arm}.jsonl rows={len(rows[arm])} sha256={_write(out / f'locomo_{arm}.jsonl', rows[arm])}",
-              flush=True)
-    print(json.dumps(res | {"questions": len(rows["BN"]), "seconds": round(time.time() - t_all)}), flush=True)
+            print(f"[bm398w] locomo {n + 1}/{len(todo)} seconds={time.time() - t_all:.0f}", flush=True)
+    sink.close()
+    print(json.dumps(res | {"questions_run": len(todo), "seconds": round(time.time() - t_all)}), flush=True)
     return 0
 
 
 def run_panel(a) -> int:
     items = panel_rows(a.panel, a.panel_seal)[: a.limit or None]
     res = load(a.model, a.adapter)
-    out = Path(a.out)
-    out.mkdir(parents=True, exist_ok=True)
-    rows = {arm: [] for arm in ARMS}
-    t_all = time.time()
-    for r in items:
+    sink = Sink(Path(a.out), [f"panel_{arm}" for arm in ARMS])
+    t_all, todo = time.time(), [r for r in items if r["id"] not in sink.done]
+    res["resumed_items"] = len(sink.done)
+    for r in todo:
         both = _answer_both(a.model, r["system"], r["user"], B.ANS_TOKENS)
         for arm in ARMS:
-            rows[arm].append({"qid": r["id"], "category": r["category"], **both[arm]})
-    for arm in ARMS:
-        print(f"wrote panel_{arm}.jsonl rows={len(rows[arm])} sha256={_write(out / f'panel_{arm}.jsonl', rows[arm])}",
-              flush=True)
+            sink.write(f"panel_{arm}", {"qid": r["id"], "category": r["category"], **both[arm]})
+    sink.close()
     print(json.dumps(res | {"panel_sha256": _sha(Path(a.panel) / "panel.jsonl"), "items": len(items),
-                            "seconds": round(time.time() - t_all)}), flush=True)
+                            "items_run": len(todo), "seconds": round(time.time() - t_all)}), flush=True)
     return 0
 
 
 def run_general(a) -> int:
-    """P (the unwrapped plain 1B) for both tasks first, then wrap: BN (off) and BR (on). R4 compares P and BN."""
+    """P (the unwrapped plain 1B) for both tasks first, then wrap: BN (off) and BR (on). R4 compares P and BN.
+    A relaunch skips what each file already holds (P always runs before the switch is added)."""
     tasks = ("mmlu", "gsm8k")
     its = {t: _jsonl(Path(a.data) / f"{t}300.jsonl")[: a.limit or None] for t in tasks}
-    out = Path(a.out)
-    out.mkdir(parents=True, exist_ok=True)
-    t_all = time.time()
+    t_all, ran = time.time(), {}
 
     def one_pass(name: str) -> None:
         for t in tasks:
-            rows = []
-            for it in its[t]:
+            sink = Sink(Path(a.out), [f"{t}_{name}"])
+            todo = [it for it in its[t] if it["qid"] not in sink.done]
+            for it in todo:
                 t0 = time.time()
                 reply, _ = B.generate(a.model, B.GENERAL_SYSTEM, B.general_prompt(t, it), B.MAX_NEW[t])
-                rows.append({"qid": it["qid"], "reply": reply, "ms": round((time.time() - t0) * 1000, 1)})
-            print(f"wrote {t}_{name}.jsonl rows={len(rows)} sha256={_write(out / f'{t}_{name}.jsonl', rows)}",
-                  flush=True)
+                sink.write(f"{t}_{name}", {"qid": it["qid"], "reply": reply, "ms": round((time.time() - t0) * 1000, 1)})
+            sink.close()
+            ran[f"{t}_{name}"] = len(todo)
 
     one_pass("P")
     res = load(a.model, a.adapter)
@@ -220,7 +254,7 @@ def run_general(a) -> int:
         set_arm(a.model, arm)
         one_pass(arm)
     set_arm(a.model, "BN")
-    print(json.dumps(res | {"seconds": round(time.time() - t_all)}), flush=True)
+    print(json.dumps(res | {"items_run": ran, "seconds": round(time.time() - t_all)}), flush=True)
     return 0
 
 
@@ -229,17 +263,16 @@ def run_qwen20(a) -> int:
     qids, rt = ranked(a.ranked_l, a.ranked_u)
     _kept, info = D.sample(Path(a.data))
     check(qids, rt, info)
-    rows, t_all = [], time.time()
-    for q in qids[: a.limit or None]:
+    sink = Sink(Path(a.out), ["locomo_Q20"])
+    t_all, todo = time.time(), [q for q in qids[: a.limit or None] if q not in sink.done]
+    for q in todo:
         conv, i, qa, _gold = info[q]
         t0 = time.time()
         reply, ntok = B.generate(a.model, B.LOCOMO_SYSTEM, locomo_user(conv, i, qa, rt[q]), B.ANS_TOKENS)
-        rows.append({"qid": q, "category": qa["category"], "reply": reply, "turns": rt[q],
-                     "ms": round((time.time() - t0) * 1000, 1), "prompt_tokens": ntok})
-    out = Path(a.out)
-    out.mkdir(parents=True, exist_ok=True)
-    print(f"wrote locomo_Q20.jsonl rows={len(rows)} sha256={_write(out / 'locomo_Q20.jsonl', rows)}", flush=True)
-    print(json.dumps({"questions": len(rows), "seconds": round(time.time() - t_all)}), flush=True)
+        sink.write("locomo_Q20", {"qid": q, "category": qa["category"], "reply": reply, "turns": rt[q],
+                                  "ms": round((time.time() - t0) * 1000, 1), "prompt_tokens": ntok})
+    sink.close()
+    print(json.dumps({"questions_run": len(todo), "seconds": round(time.time() - t_all)}), flush=True)
     return 0
 
 
@@ -254,16 +287,18 @@ def _replies(runs: Path, prefix: str, ids: list[str]) -> dict:
     return out
 
 
-def r4(runs: Path, data: Path) -> dict:
+def r4(runs: Path, data: Path, n_items: int = 300) -> dict:
+    """R4: on each task, P, BN and BR each hold all n_items questions; every BN reply equals P's; equal right counts.
+    BR (the adapter always on) is reported, never marked."""
     import claude_bm390_score as SC
     res = {}
     for t in ("mmlu", "gsm8k"):
-        rows = {x: _jsonl(runs / f"{t}_{x}.jsonl") for x in ("P", "BN", "BR")}
-        res[t] = {x: SC.score_general(data, t, rows[x])["summary"]["right"] for x in rows}
-        res[t]["n"] = len(rows["P"])
-        res[t]["BN_replies_equal_P"] = sum(p["reply"] == b["reply"] for p, b in zip(rows["P"], rows["BN"]))
-    res["R4"] = all(res[t]["BN_replies_equal_P"] == res[t]["n"] and res[t]["BN"] == res[t]["P"]
-                    for t in ("mmlu", "gsm8k"))
+        rows = {x: {r["qid"]: r for r in _jsonl(runs / f"{t}_{x}.jsonl")} for x in ("P", "BN", "BR")}
+        res[t] = {x: SC.score_general(data, t, list(rows[x].values()))["summary"]["right"] for x in rows}
+        res[t]["rows"] = {x: len(rows[x]) for x in rows}
+        res[t]["BN_replies_equal_P"] = sum(rows["BN"].get(q, {}).get("reply") == r["reply"] for q, r in rows["P"].items())
+    res["R4"] = all(set(res[t]["rows"].values()) == {n_items} and res[t]["BN_replies_equal_P"] == n_items
+                    and res[t]["BN"] == res[t]["P"] for t in ("mmlu", "gsm8k"))
     return res
 
 
@@ -274,9 +309,13 @@ def score(a) -> int:
     _kept, info = D.sample(Path(a.data))
     rep = _replies(runs, "locomo", qids)
     res = {"n": len(qids)}
-    arms = ARMS + (["Q20"] if (runs / "locomo_Q20.jsonl").exists() else [])
-    if "Q20" in arms:
-        rep["Q20"] = {r["qid"]: r for r in _jsonl(runs / "locomo_Q20.jsonl")}
+    arms = list(ARMS)
+    if (runs / "locomo_Q20.jsonl").exists():                  # report only, and only when it covers every question
+        q20 = {r["qid"]: r for r in _jsonl(runs / "locomo_Q20.jsonl", tolerant=True)}
+        if set(q20) >= set(qids):
+            rep["Q20"], arms = q20, arms + ["Q20"]
+        else:
+            res["Q20_partial_rows"] = len(q20)
     for arm in arms:
         s = SC.score_locomo(Path(a.data), [rep[arm][q] for q in qids])["summary"]
         res[arm] = {k: s[k] for k in ("cat1to4_n", "cat1to4_f1", "cat1to4_abstain", "cat1to4_confident_wrong",
@@ -482,6 +521,35 @@ def selftest(a) -> int:
         v1["locomo"]["by_evidence_among_20_report_only"]["out"]["BR"]) == set("ADE") and v1["locomo"][
         "by_evidence_among_20_report_only"]["out"]["n"] == sum(not meta[q]["in20"] for q in loc)
     ok["the panel draw is fixed and PANEL_N long"] = len(p1) == PANEL_N and [r["id"] for r in p1] == [r["id"] for r in p2]
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        sk = Sink(td, ["x_BN", "x_BR"])
+        for q in ("q1", "q2"):
+            sk.write("x_BN", {"qid": q, "reply": "r\u2028" + q})
+            sk.write("x_BR", {"qid": q, "reply": "s" + q})
+        sk.write("x_BN", {"qid": "q3", "reply": "r"})
+        sk.fh["x_BR"].write('{"qid": "q3", "rep')                # a crash mid-line
+        sk.fh["x_BR"].flush()
+        sk2 = Sink(td, ["x_BN", "x_BR"])
+        ok["a relaunch keeps questions both files hold and drops the rest"] = (
+            sk2.done == {"q1", "q2"} and [r["qid"] for r in _jsonl(td / "x_BN.jsonl")] == ["q1", "q2"]
+            and _jsonl(td / "x_BN.jsonl")[0]["reply"] == "r\u2028q1")
+        for n in sk2.fh.values():
+            n.close()
+        data = td / "data"
+        data.mkdir()
+        _write(data / "mmlu300.jsonl", [{"qid": f"m{i}", "gold": "A"} for i in range(3)])
+        _write(data / "gsm8k300.jsonl", [{"qid": f"g{i}", "gold": "3"} for i in range(3)])
+        runs = td / "runs"
+        runs.mkdir()
+        for x in ("P", "BN", "BR"):
+            _write(runs / f"mmlu_{x}.jsonl", [{"qid": f"m{i}", "reply": "A"} for i in range(3)])
+            _write(runs / f"gsm8k_{x}.jsonl", [{"qid": f"g{i}", "reply": "#### 3"} for i in range(3)])
+        ok["R4 holds when all items match"] = r4(runs, data, 3)["R4"]
+        _write(runs / "gsm8k_BN.jsonl", [{"qid": f"g{i}", "reply": "#### 3"} for i in range(2)])
+        _write(runs / "gsm8k_P.jsonl", [{"qid": f"g{i}", "reply": "#### 3"} for i in range(2)])
+        ok["R4 fails on a short file"] = not r4(runs, data, 3)["R4"]
     for k2, v in ok.items():
         print(("PASS " if v else "FAIL ") + k2)
     print("BM398W-EVAL-SELFTEST " + ("PASS" if all(ok.values()) else "FAIL") + f" {sum(ok.values())}/{len(ok)}")

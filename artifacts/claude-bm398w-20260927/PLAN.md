@@ -1,7 +1,8 @@
 # bm-398w PLAN: train the 1B to read 20 lines as well as it reads the right ones (benchmarks thread, written 2026-09-27 05:49 UTC)
 
 Registered before any data is generated or anything is trained. Reviewed by the Thread manager (05:30 and 05:46 UTC)
-on PLAN-DRAFT.md (492ee192b, e15352161); its fixes are in. Every LoCoMo number is "after development use". LoCoMo is
+on PLAN-DRAFT.md (492ee192b, e15352161); its fixes are in. A separate read-only reviewer then checked both new
+scripts (reported before 06:09 UTC): it found no defect in the marks or the arms, and 13 fixes that are in (listed at the end). Every LoCoMo number is "after development use". LoCoMo is
 practice only and is never trained on. LongMemEval stays the untouched final exam. Nothing from LoCoMo, LongMemEval,
 MMLU or GSM8K goes into training. Counts only in every report.
 
@@ -32,13 +33,14 @@ and the prompt stay exactly as bm-398v's BN arm.
 
 ## Training data (Luna and code only; nothing written or judged by Claude)
 - **Chats.** scripts/claude_bm398w_data.py plans every chat in code: seed 3993 for training chats (170 planned) and
-  seed 3994 for the panel (20 planned). Not 320-329, 4027 or the selftest seeds 1, 2 and 7 (Reading facts, 05:27
+  seed 3994 for the panel (26 planned; the panel avoids every person name used in the training plans). Not 320-329, 4027 or the selftest seeds 1, 2 and 7 (Reading facts, 05:27
   UTC); the build refuses chats from any other seed. Each chat has two fictional speakers, 6 to 8 dated sessions of
   10 to 14 messages, and a turn plan saying which message tells which fact: 8 facts about the speakers
   (lis-320's seed world: job, employer, city, hobby, pets and so on), 4 introductions of another person ("my sister
   X") and 4 facts about those people in a later session, and 6 dated events ("went to a concert last Saturday").
   Both avoid lists are passed (artifacts/claude-lis320-20260926/avoid_names_dev.txt and avoid_test.sha256). The plan
-  files' hashes are pinned in the Mac job. Small talk uses topics chosen to stay clear of the fact values.
+  files' hashes are pinned in the Mac job. Small talk uses topics chosen to stay clear of the fact values. No two
+  fact messages are next to each other, and no speaker has both a friend and a best friend.
 - **Wording.** GPT-6 Luna words each session from its turn plan through the Director's helper
   (scripts/claude_luna_codex.py, sha256 342a0fb7…024e, model gpt-6-luna), then one question and a short answer per
   asked fact of each fully kept chat. One writer for the whole set, recorded per row. The prompts give instructions
@@ -47,10 +49,13 @@ and the prompt stay exactly as bm-398v's BN arm.
   planned speakers, each fact message holds its own required words, and no fact value, other person's name or date
   phrase appears in any other message. A chat is kept only if all its sessions are. A failed session is retried once
   at once, and each rerun of the command gives it one more try, up to 3 failed rows (6 calls). An error-like or
-  empty reply is a failed call (the helper raises), never a row. A question is kept only if it does not give away
-  its value (or a dated event's month or year), and a two-step question does not name the person.
+  empty reply is a failed call (the helper raises): it is logged but never kept and never uses up one of those
+  tries. A question is kept only if it holds neither its value nor any 4-letter-plus word of it (with or without a
+  plural s; company-type words like "Foods" aside), or for a dated event its month or year, and a two-step question
+  does not name the person.
 - **Targets.** Luna's short answer is the training target. Code keeps it only if it contains the gold value (a dated
-  answer: day, month and year), no other value of the same relation, and no negation word. The gold value is the
+  answer: day, month and year), no other value of the same relation (for a dated answer, no other event's date),
+  and no negation word (curly apostrophes count). The gold value is the
   code's; for a dated event, code computes the date from the session date and the phrase it planned. No Claude agent
   checks the targets (Ben's 16:39 rule). Practice-dev and panel rows carry the code's gold value, not Luna's answer.
 - **Context (the RAFT part).** For each question: 20 lines from the same chat, the evidence message(s) plus the
@@ -59,8 +64,9 @@ and the prompt stay exactly as bm-398v's BN arm.
   (and its date suffix for dated questions). The evidence is always among the 20. Teaching "I don't know" is y1t's
   job and stays out of this test.
 - **Size.** 18 questions per chat before code drops; 15% of kept training chats are held out as practice-dev (report
-  only). If about 150 chats are kept, that is about 2,300 training items. Floor: at least 100 kept training chats and
-  17 kept panel chats, else DATA-SHORT and nothing is trained.
+  only). If about 150 chats are kept, that is about 2,300 training items. Floor (enforced by the build): at least
+  100 kept training chats (training plus practice-dev) and at least 300 panel items, else DATA-SHORT and nothing
+  is trained.
 - **Pilot gate.** The Mac job first words the first 5 training chats (up to three runs). It goes on only if at least
   3 of the 5 are fully kept; else PILOT-FAIL.
 - **Training.** scripts/claude_bm398r_train.py unchanged: rank-16 LoRA on q/k/v/o, 1 epoch, AdamW 2e-4, 8 per step,
@@ -79,7 +85,7 @@ and the prompt stay exactly as bm-398v's BN arm.
   BensPC (no download).
 
 ## Panels
-1. **A fresh held-out panel (a panel that has driven no choice).** 20 chats from seed 3994, worded by Luna; 300
+1. **A fresh held-out panel (a panel that has driven no choice).** 26 chats from seed 3994, worded by Luna; 300
    questions drawn by seed 3995. Its file hash is sealed (SEAL-panel.sha256.txt) before training starts. It is never
    read by the builder and never used for any choice. Judged blind. It is written by the same writer, from the same
    code plan, as the training set, so R2 is in-distribution by design: it shows learning, not transfer.
@@ -105,8 +111,9 @@ and the prompt stay exactly as bm-398v's BN arm.
 - **R2 (fresh panel):** BR A ≥ BN A + 15 of 300, more gained than lost, p < 0.05.
 - **R3 (fewer-wrong guard on LoCoMo):** BR D ≤ BN D + 10, and no category's A drops by more than
   max(3, round(3% of its n)).
-- **R4 (the stand-in switch):** on MMLU-Redux and GSM8K, the switch-off replies equal the unwrapped plain 1B's
-  replies on all 600, and the right counts are equal, on the same machine. This checks the hand-given stand-in switch
+- **R4 (the stand-in switch):** on MMLU-Redux and GSM8K, the unwrapped plain 1B (P), the switch off (BN) and on
+  (BR) each answered all 300 questions of each set; the switch-off replies equal P's on all 600, and the right
+  counts are equal, on the same machine. This checks the hand-given stand-in switch
   (disclosed scaffolding), not the adapter.
 - **PASS** = R1, R2, R3 and R4. A PASS reads "the reader gains, given a switch", never "no harm". Anything else is a
   registered FAIL.
@@ -140,6 +147,8 @@ and the prompt stay exactly as bm-398v's BN arm.
 - LoCoMo is development data here; LongMemEval stays untouched.
 - The practice kinds are narrow (single facts, facts about a named other person, dated events). LoCoMo asks wider
   questions, so R1 is the hard mark.
+- The syllable name maker can produce names that are also English words. Such a name is forbidden in every other
+  message, which costs some sessions; the pilot gate and the floor catch it if that cost is large.
 
 ## Open questions answered before sealing
 - Overlap with y1t (Answering from memory, 05:29 UTC): none. Nothing there trains the 1B to read among store lines
@@ -153,10 +162,11 @@ and the prompt stay exactly as bm-398v's BN arm.
 
 ## Order of work
 1. Mac (the Director's queue, Luna, $0): plans, pilot, word, ask and build, for training and panel chats. Luna
-   throughput sets the time: about 1,350 calls before retries; a guess is 3 to 4 hours with 3 workers, in runs of 70
-   minutes (the builders' 80-minute command limit).
+   throughput sets the time: about 1,400 calls before retries; a guess is 3 to 4 hours with 3 workers, in runs of
+   45 minutes with each call capped at 12 minutes, so a run ends inside the builders' 80-minute command limit.
 2. Here: SEAL-panel.sha256.txt (the panel file's hash, taken without opening it), committed before step 3.
-3. BensPC ($0): train; then `claude_bm398w_eval.py locomo`, `panel`, `general` and, if present, `qwen20`.
+3. BensPC ($0): train; then `claude_bm398w_eval.py locomo`, `panel`, `general` and, if present, `qwen20`. Replies
+   are written row by row; a crashed command relaunched unchanged keeps what it wrote and goes on.
 4. Here: score, prep, blind judges, jscore, independent recount, RESULTS.md, sent to the Thread manager.
 
 ## Cost and owners
@@ -172,3 +182,21 @@ each practice question comes with the right line hidden among look-alike lines. 
 more right answers on fresh practice chats and on the LoCoMo benchmark, without more wrong answers. The trained part
 is only switched on for memory questions by a switch we set by hand for this test; maths and general questions are
 also checked with it always on, and that number is reported honestly.
+
+## Fixes from the pre-seal code review (all in before sealing)
+1. Files are written ASCII-escaped and read split on newlines only, so a line separator inside Luna's text cannot
+   break a file; a line cut off by a killed run is skipped.
+2. A failed call no longer uses up one of a session's three tries.
+3. A question holding any word of its value (guitar for bass guitar, taco for tacos) is dropped; curly apostrophes
+   count in the negation check.
+4. A dated answer holding another event's date is dropped.
+5. The rule keeping fact messages apart now works (it read a field filled in too late).
+6. R4 needs all 300 items of each set in each of P, BN and BR.
+7. Runs stop at 45 minutes and each call at 12 minutes, inside the builders' 80-minute limit.
+8. The build enforces the floor (100 training chats, 300 panel items) and prints DATA-SHORT; the panel is 26
+   chats so it has room.
+9. Names that are also English words: disclosed under Limits, not fixed.
+10. The panel avoids every person name used in the training plans.
+11. No speaker has both a friend and a best friend.
+12. Reply files are written row by row and resume after a crash.
+13. A partial Qwen file is reported as partial and never blocks scoring.

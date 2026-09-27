@@ -47,7 +47,9 @@ import claude_lis320_seed as S  # noqa: E402
 
 MODEL = "gpt-6-luna"
 RESERVED_SEEDS = set(range(320, 330)) | {4027, 1, 2, 7}
+FRIEND_ROLES = {"friend", "best_friend"}     # one speaker never gets both ("X's friend" would be ambiguous)
 TRAIN_SEED, PANEL_SEED = 3993, 3994          # plan seeds: training chats, and the fresh held-out panel's chats
+TRAIN_MIN_CHATS, PANEL_MIN_ITEMS = 100, 300  # the floor: kept training chats (train and practice-dev), panel items
 TURNS, N_LINES = (10, 14), 20
 SELF_RELS = [r for r in S.ATTR_RELS if r != "age"]          # numbers are too common in chat to check by code
 REL_GLOSS = {"occupation": "what {o} does for a living", "employer": "the company {o} works for",
@@ -68,18 +70,35 @@ NEGATIONS = ["not", "no", "never", "neither", "nor", "isn't", "wasn't", "doesn't
              "weren't", "unknown"]   # a target that negates or doubts its value is dropped (code check, no judge)
 MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
           "November", "December"]
+CALL_TIMEOUT = 240
 MAX_ROWS = 3                   # failed rows per id before a rerun stops retrying it (each row is up to 2 calls)
 _LOCK = threading.Lock()
 FAILED = {"n": 0}
+BAD_LINES = {"n": 0}
+APOS = str.maketrans({"\u2019": "'", "\u2018": "'", "\u02bc": "'"})
 
 
 def _jsonl(p) -> list[dict]:
-    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+    """Rows of a JSONL file, split on newlines only. A line that does not parse (a write cut off by a killed run) is
+    skipped and counted in BAD_LINES; files are written ASCII-escaped, so a row never holds a raw line separator."""
+    out = []
+    for x in Path(p).read_text(encoding="utf-8").split("\n"):
+        if not x.strip():
+            continue
+        try:
+            out.append(json.loads(x))
+        except json.JSONDecodeError:
+            BAD_LINES["n"] += 1
+    return out
+
+
+def _dump(row) -> str:
+    return json.dumps(row, ensure_ascii=True)
 
 
 def _append(p: Path, row: dict) -> None:
-    with _LOCK, p.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+    with _LOCK, p.open("a", encoding="utf-8", newline="\n") as fh:
+        fh.write(_dump(row) + "\n")
 
 
 def gold_date(d: dt.date) -> str:
@@ -111,7 +130,8 @@ def plan_chat(cid: str, rng: random.Random, avoid: set) -> dict:
         for _ in range(2):
             g = rng.choice("fm")
             pool = [r for r in (S.FEMALE_ROLES if g == "f" else S.MALE_ROLES) + S.NEUTRAL_ROLES
-                    if r not in roles and r not in S.SPOUSE]
+                    if r not in roles and r not in S.SPOUSE
+                    and not (r in FRIEND_ROLES and FRIEND_ROLES & set(roles))]
             role = rng.choice(pool)
             roles.append(role)
             others.append({"name": W.person_name(g), "gender": g, "role": role, "of": who})
@@ -150,8 +170,7 @@ def plan_chat(cid: str, rng: random.Random, avoid: set) -> dict:
                 continue
             if hi_session is not None and s > hi_session:
                 continue
-            if any(sessions[s]["turns"][j]["fact"] is not None for j in (k - 1, k + 1)
-                   if 0 <= j < len(sessions[s]["turns"])):
+            if (s, k - 1) in used or (s, k + 1) in used:
                 continue
             used.add((s, k))
             return s, k
@@ -190,6 +209,9 @@ def plan(a) -> int:
     if a.avoid_hashes:
         S.AVOID_HASHES.update(x.split()[0] for x in Path(a.avoid_hashes).read_text(encoding="utf-8").splitlines()
                               if x.strip())
+    if a.avoid_plans:
+        for p in _jsonl(a.avoid_plans):
+            avoid |= {x["name"].lower() for x in list(p["speakers"].values()) + p["others"]}
     rng = random.Random(a.seed)
     rows, k = [], 0
     while len(rows) < a.n:
@@ -197,7 +219,7 @@ def plan(a) -> int:
         k += 1
         if p:
             rows.append(p)
-    Path(a.out).write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    Path(a.out).write_text("".join(_dump(r) + "\n" for r in rows), encoding="utf-8")
     print(json.dumps({"chats": len(rows), "tries": k, "sessions": sum(len(r["sessions"]) for r in rows),
                       "facts": sum(len(r["facts"]) for r in rows)}))
     return 0
@@ -287,7 +309,21 @@ def question_prompt(p: dict, fids: list[str]) -> str:
 
 # ======================================================================= code checks
 def _has(text: str, w: str) -> bool:
-    return re.search(r"(?<![A-Za-z0-9])" + re.escape(w.lower()) + r"(?![A-Za-z0-9])", text.lower()) is not None
+    t, w = text.translate(APOS).lower(), w.translate(APOS).lower()
+    return re.search(r"(?<![A-Za-z0-9])" + re.escape(w) + r"(?![A-Za-z0-9])", t) is not None
+
+
+ORG_WORDS = {w.lower() for w in S.ORG_SUF}
+
+
+def value_words(v: str) -> list[str]:
+    """Words of a value that give it away in a question: each word of 4+ letters (not a company-type word such as
+    Foods), with and without a trailing s."""
+    out = set()
+    for w in re.findall(r"[A-Za-z]+", v):
+        if len(w) >= 4 and w.lower() not in ORG_WORDS:
+            out |= {w.lower(), w.lower()[:-1] if w.lower().endswith("s") else w.lower() + "s"}
+    return sorted(out)
 
 
 def parse_list(raw: str):
@@ -331,8 +367,10 @@ def check_qa(p: dict, f: dict, q: dict) -> str:
         d, m, y = f["gold"].split()
         if _has(qs, m) or _has(qs, y) or not date_ok(an, f["gold"]):
             return "date"
+        if any(date_ok(an, g["gold"]) for g in p["facts"] if g["kind"] == "event" and g["gold"] != f["gold"]):
+            return "rival"
         return "negation" if any(_has(an, w) for w in NEGATIONS) else ""
-    if _has(qs, f["value"]) or not _has(an, f["value"]):
+    if _has(qs, f["value"]) or any(_has(qs, w) for w in value_words(f["value"])) or not _has(an, f["value"]):
         return "value"
     if any(_has(an, w) for w in NEGATIONS):
         return "negation"
@@ -347,7 +385,9 @@ def check_qa(p: dict, f: dict, q: dict) -> str:
 # ======================================================================= Luna calls (the Mac)
 def _caller():
     import claude_luna_codex as L
-    return lambda text: L.call(text, model=MODEL) or ""
+    # 240 s per try, the helper's 3 tries: at most 12 minutes a call, so a run started under --max-minutes 45
+    # ends inside the builders' 80-minute command limit even when its last jobs fail twice
+    return lambda text: L.call(text, model=MODEL, timeout=CALL_TIMEOUT) or ""
 
 
 def _guard(raw: str) -> str:
@@ -362,14 +402,18 @@ def run_jobs(jobs: list[dict], out: Path, call, workers: int, max_minutes: float
     have a kept row or already MAX_ROWS failed rows, so each rerun gives a failed id one more try (rows are only
     ever appended; the kept row is the one used)."""
     rows = _jsonl(out) if out.exists() else []
-    fails = Counter(r["id"] for r in rows if not r["ok"])
+    fails = Counter(r["id"] for r in rows if not r["ok"] and r["reason"] != "call")
     done = {r["id"] for r in rows if r["ok"]} | {i for i, n in fails.items() if n >= MAX_ROWS}
     todo = [j for j in jobs if j["id"] not in done]
+    if out.exists() and out.stat().st_size and not out.read_bytes().endswith(b"\n"):
+        with _LOCK, out.open("a", encoding="utf-8", newline="\n") as fh:   # a cut-off last line stays on its own
+            fh.write("\n")
     t0, tot = time.time(), Counter()
 
     def one(j):
         if (max_minutes and (time.time() - t0) / 60 >= max_minutes) or FAILED["n"] > max_failed:
-            tot["not_run"] += 1
+            with _LOCK:
+                tot["not_run"] += 1
             return
         reason, raw = "call", ""
         for attempt in (1, 2):
@@ -388,11 +432,13 @@ def run_jobs(jobs: list[dict], out: Path, call, workers: int, max_minutes: float
                 break
         _append(out, {"id": j["id"], "model": MODEL, "temperature": None, "attempts": attempt, "ok": not reason,
                       "reason": reason, "raw": raw})
-        tot["ok" if not reason else reason] += 1
+        with _LOCK:
+            tot["ok" if not reason else reason] += 1
 
     with ThreadPoolExecutor(max_workers=workers) as ex:
         list(ex.map(one, todo))
-    return {"jobs": len(jobs), "skipped": len(done), **dict(tot), "failed_calls": FAILED["n"],
+    return {"jobs": len(jobs), "skipped": len(done & {j["id"] for j in jobs}), **dict(tot),
+            "failed_calls": FAILED["n"], "bad_lines": BAD_LINES["n"],
             "minutes": round((time.time() - t0) / 60, 1)}
 
 
@@ -541,15 +587,17 @@ def build(a) -> int:
                  "writer": MODEL, "evidence": qa["evidence"], "lines": keep, "evidence_lines": len(evp)})
         chats.append(conv)
     for k, v in rows.items():
-        (out / f"{k}.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in v), encoding="utf-8")
-    (out / "chats.json").write_text(json.dumps(chats, ensure_ascii=False), encoding="utf-8")
+        (out / f"{k}.jsonl").write_text("".join(_dump(r) + "\n" for r in v), encoding="utf-8")
+    (out / "chats.json").write_text(json.dumps(chats, ensure_ascii=True), encoding="utf-8")
     res = {"chats": len(chats), "dev_chats": len(dev_ids), **{f"{k}_items": len(v) for k, v in rows.items()},
            "kinds": dict(Counter(r["kind"] for v in rows.values() for r in v)),
            "dropped_questions": dict(why),
            "sha256": {k: hashlib.sha256((out / f"{k}.jsonl").read_bytes()).hexdigest() for k in rows}}
+    short = (len(rows["panel"]) < PANEL_MIN_ITEMS) if a.panel else (len(chats) < TRAIN_MIN_CHATS)
+    res["floor"] = "DATA-SHORT" if short else "OK"
     (out / "counts.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
     print(json.dumps(res))
-    return 0
+    return 3 if short else 0
 
 
 # ======================================================================= selftest (stub Luna)
@@ -606,6 +654,23 @@ def selftest(a) -> int:
         "sometime in " + ev["gold"].split()[1], ev["gold"])
     ok["an answer that negates its value fails"] = check_qa(p, fx[0], {"question": "what about it?",
                                                                        "answer": f"not {fx[0]['value']}"}) == "negation"
+    multi = {"fid": "fx", "kind": "self", "rel": "instrument", "value": "bass guitar", "owner": "X"}
+    ok["a question holding a word of the value fails (guitar, taco)"] = (
+        check_qa(p, multi, {"question": "Which guitar does X play?", "answer": "bass guitar"}) == "value"
+        and check_qa(p, dict(multi, value="tacos", rel="favorite_food"),
+                     {"question": "Does X like a taco?", "answer": "tacos"}) == "value")
+    ok["a curly-apostrophe negation fails"] = check_qa(p, fx[0], {"question": "what about it?",
+                                                                   "answer": f"it isn\u2019t {fx[0]['value']}"}) == "negation"
+    evs = [f for f in fx if f["kind"] == "event"]
+    ok["a dated answer holding another event's date fails"] = check_qa(p, evs[0], {
+        "question": "when?", "answer": f"{evs[0]['gold']} or {next(g['gold'] for g in evs if g['gold'] != evs[0]['gold'])}"}) == "rival"
+    many = [plan_chat(f"w11-{k:04d}", random.Random(k), set()) for k in range(40)]
+    many = [x for x in many if x]
+    ok["fact messages are never next to each other"] = all(
+        not (t["fact"] and x["sessions"][si]["turns"][k + 1]["fact"])
+        for x in many for si, ss in enumerate(x["sessions"]) for k, t in enumerate(ss["turns"][:-1]))
+    ok["no speaker has both a friend and a best friend"] = all(
+        len(FRIEND_ROLES & {o["role"] for o in x["others"] if o["of"] == w}) <= 1 for x in many for w in "ab")
     ok["a question that gives away the value fails"] = check_qa(p, fx[0], {"question": f"is it {fx[0]['value']}?",
                                                                            "answer": fx[0]["value"]}) == "value"
     ok["bm25 ranks the matching doc first"] = bm25_order("red kite festival", ["blue sky", "the red kite festival",
@@ -686,6 +751,39 @@ def selftest(a) -> int:
             r["answer"] == r["gold"] for r in _jsonl(td / "out" / "dev.jsonl"))
         ok["the two chats never share a split"] = len({r["id"].split("#")[0] for r in _jsonl(td / "out" / "dev.jsonl")}
                                                        & {r["id"].split("#")[0] for r in _jsonl(td / "out" / "train.jsonl")}) == 0
+        down = {"n": 0}
+
+        def luna_down(prompt):              # session 0's route fails on its first MAX_ROWS runs
+            if prompt == session_prompt(plans[0], 0) and down["n"] < MAX_ROWS:
+                down["n"] += 1
+                raise RuntimeError("route down")
+            return luna(prompt)
+
+        ns3 = argparse.Namespace(plans=str(td / "plans.jsonl"), out=str(td / "sess3.jsonl"), workers=1,
+                                 max_minutes=0, max_failed=99, limit=1)
+        plans1 = [plans[0]]
+        (td / "one.jsonl").write_text(_dump(plans1[0]) + "\n", encoding="utf-8")
+        ns3.plans = str(td / "one.jsonl")
+        for _ in range(MAX_ROWS + 1):
+            word(ns3, luna_down)
+        rows3 = _jsonl(td / "sess3.jsonl")
+        ok["failed calls never use up a session's tries"] = (
+            sum(r["ok"] for r in rows3) == len(plans1[0]["sessions"])
+            and sum(r["reason"] == "call" for r in rows3) == MAX_ROWS)
+        weird = td / "weird.jsonl"
+        _append(weird, {"id": "a", "raw": "line\u2028sep\u0085next"})
+        with weird.open("a", encoding="utf-8") as fh:
+            fh.write('{"id": "b", "ra')
+        ok["a line separator in text survives, a cut-off last line is skipped"] = (
+            [r["id"] for r in _jsonl(weird)] == ["a"] and _jsonl(weird)[0]["raw"] == "line\u2028sep\u0085next")
+        plan(argparse.Namespace(seed=3993, n=3, avoid_names="", avoid_hashes="", avoid_plans="",
+                                out=str(td / "tp.jsonl")))
+        plan(argparse.Namespace(seed=3994, n=3, avoid_names="", avoid_hashes="", avoid_plans=str(td / "tp.jsonl"),
+                                out=str(td / "pp.jsonl")))
+
+        def names(f):
+            return {x["name"].lower() for q in _jsonl(f) for x in list(q["speakers"].values()) + q["others"]}
+        ok["panel plans use no name from the training plans"] = not (names(td / "tp.jsonl") & names(td / "pp.jsonl"))
         del by
     for k, v in ok.items():
         print(("PASS " if v else "FAIL ") + k)
@@ -696,12 +794,12 @@ def selftest(a) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["plan", "word", "ask", "build", "count", "selftest"])
-    for x in ("plans", "sess", "qa", "out", "avoid_names", "avoid_hashes"):
+    for x in ("plans", "sess", "qa", "out", "avoid_names", "avoid_hashes", "avoid_plans"):
         ap.add_argument("--" + x.replace("_", "-"), dest=x, default="")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--n", type=int, default=0)
     ap.add_argument("--workers", type=int, default=3)
-    ap.add_argument("--max-minutes", type=float, default=120)
+    ap.add_argument("--max-minutes", type=float, default=45)
     ap.add_argument("--max-failed", type=int, default=20)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--dev-share", type=float, default=0.15)
