@@ -1,0 +1,1088 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mpwd; git status --short; git rev-parse --show-toplevel; git branch --show-current; ls
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+?? scripts/claude_280n_panel.sh
+?? scripts/claude_280p_panel.sh
+?? scripts/claude_281_panel.sh
+?? scripts/claude_281_panelrun.sh
+?? scripts/claude_281_runall.sh
+?? scripts/claude_281b_panel.sh
+?? scripts/claude_281b_runall.sh
+?? scripts/claude_282_panel.sh
+?? scripts/claude_282_panelrun.sh
+?? scripts/claude_282_runall.sh
+?? scripts/claude_282b_panelrun.sh
+?? scripts/claude_282b_runall.sh
+?? scripts/claude_291_m1.py
+?? scripts/claude_291_m7run.py
+?? scripts/claude_291_m8.sh
+?? scripts/claude_291_panel.sh
+?? scripts/claude_291_runall.sh
+?? scripts/claude_291_score.py
+?? scripts/claude_292_corrarm_run.py
+?? scripts/claude_292_m5.sh
+?? scripts/claude_292_m5run.py
+?? scripts/claude_292_panelrun.py
+?? scripts/claude_292_runall.sh
+?? scripts/claude_292_score.py
+?? scripts/claude_called281_devcases.py
+?? scripts/claude_called281_panelrun.py
+?? scripts/claude_called281_panelscore.py
+?? scripts/claude_called281_regscore.py
+?? scripts/claude_called281_run.py
+?? scripts/claude_called281_score.py
+?? scripts/claude_called281b_devcases.py
+?? scripts/claude_called281b_panelrun.py
+?? scripts/claude_called281b_panelscore.py
+?? scripts/claude_called281b_regscore.py
+?? scripts/claude_called281b_run.py
+?? scripts/claude_called281b_score.py
+?? scripts/claude_capab280_devcases.py
+?? scripts/claude_capab280_regscore.py
+?? scripts/claude_capab280_run.py
+?? scripts/claude_capab280_score.py
+?? scripts/claude_capab280b_devcases.py
+?? scripts/claude_capab280b_paneladapt.py
+?? scripts/claude_capab280b_regscore.py
+?? scripts/claude_capab280b_run.py
+?? scripts/claude_capab280b_score.py
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_diag267_c3.py
+?? scripts/claude_diag267_c3client.py
+?? scripts/claude_diag267_qbuild.py
+?? scripts/claude_diag267_score.py
+?? scripts/claude_diag267_turns.py
+?? scripts/claude_diag271_roc.py
+?? scripts/claude_diag290_bisect.py
+?? scripts/claude_diag290_bisect2.py
+?? scripts/claude_diag290_pilot.py
+?? scripts/claude_diag290_probe.py
+?? scripts/claude_diag290_probe2.py
+?? scripts/claude_diag290_run.py
+?? scripts/claude_diag290_summary.py
+?? scripts/claude_diag293_pilot.py
+?? scripts/claude_diag293_pilot2.py
+?? scripts/claude_diag293_run.py
+?? scripts/claude_diag293_summary.py
+?? scripts/claude_ear265_armb.py
+?? scripts/claude_ear265_arms.py
+?? scripts/claude_ear265_canon.py
+?? scripts/claude_ear265_devset.py
+?? scripts/claude_ear265_panel.py
+?? scripts/claude_ear265_qbuild.py
+?? scripts/claude_ear265_scoremain.py
+?? scripts/claude_ear265_turns.py
+?? scripts/claude_ear269_armb.py
+?? scripts/claude_ear269_arms.py
+?? scripts/claude_ear269_devset.py
+?? scripts/claude_ear269_groupcheck.py
+?? scripts/claude_ear269_panel.py
+?? scripts/claude_ear269_qbuild.py
+?? scripts/claude_ear269_scoremain.py
+?? scripts/claude_ear269_turns.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/claude_earcheck264_armb.py
+?? scripts/claude_earcheck264_arms.py
+?? scripts/claude_earcheck264_client.py
+?? scripts/claude_earcheck264_commatags.py
+?? scripts/claude_earcheck264_devreport.py
+?? scripts/claude_earcheck264_devset.py
+?? scripts/claude_earcheck264_panel.py
+?? scripts/claude_earcheck264_qa.py
+?? scripts/claude_earcheck264_qbuild.py
+?? scripts/claude_earcheck264_scoremain.py
+?? scripts/claude_earcheck264_turns.py
+?? scripts/claude_fix138nb_label.py
+?? scripts/claude_fix255b_test.py
+?? scripts/claude_fix255b_text.py
+?? scripts/claude_fix263_comma.py
+?? scripts/claude_fix266_chainlift.py
+?? scripts/claude_fix266b_detector.py
+?? scripts/claude_fix268_nhopdir.py
+?? scripts/claude_fix280_capab.py
+?? scripts/claude_fix280b_general.py
+?? scripts/claude_fix281_called.py
+?? scripts/claude_fix281b_casual.py
+?? scripts/claude_fix282_small.py
+?? scripts/claude_fix282b_vocab.py
+?? scripts/claude_fix291_glue.py
+?? scripts/claude_glm_cleanup_20260926.py
+?? scripts/claude_glm_opencode.py
+?? scripts/claude_glm_throughput_20260926.py
+?? scripts/claude_join280m_regscore.py
+?? scripts/claude_join280m_run.py
+?? scripts/claude_join280m_score.py
+?? scripts/claude_join280n_score.py
+?? scripts/claude_join280p_score.py
+?? scripts/claude_lis310_agent.py
+?? scripts/claude_lis310_demo.py
+?? scripts/claude_lis310_test.py
+?? scripts/claude_lis311_agent.py
+?? scripts/claude_lis311_server.py
+?? scripts/claude_lis311_start.sh
+?? scripts/claude_lis311_try.py
+?? scripts/claude_loop138nb_agent.py
+?? scripts/claude_loop138p_agent.py
+?? scripts/claude_loop255b_agent.py
+?? scripts/claude_loop263_agent.py
+?? scripts/claude_loop266_agent.py
+?? scripts/claude_loop266b_agent.py
+?? scripts/claude_loop268_agent.py
+?? scripts/claude_loop280_agent.py
+?? scripts/claude_loop280b_agent.py
+?? scripts/claude_loop280m_agent.py
+?? scripts/claude_loop281_agent.py
+?? scripts/claude_loop281b_agent.py
+?? scripts/claude_loop282_agent.py
+?? scripts/claude_loop282b_agent.py
+?? scripts/claude_loop291_agent.py
+?? scripts/claude_loop292_agent.py
+?? scripts/claude_luna_codex.py
+?? scripts/claude_mouth241b_devrender_r.py
+?? scripts/claude_mouth241b_rer241_r.py
+?? scripts/claude_mut1_k1.py
+?? scripts/claude_mut1_k2.py
+?? scripts/claude_mut1_k3.py
+?? scripts/claude_mut1_k4.py
+?? scripts/claude_nb321_store.py
+?? scripts/claude_nb321_test.py
+?? scripts/claude_own_m0_build.py
+?? scripts/claude_own_m0_check.py
+?? scripts/claude_own_o0a2_compiler.py
+?? scripts/claude_own_o0a3_mutate.py
+?? scripts/claude_own_o0a_compiler.py
+?? scripts/claude_own_o0b_check.py
+?? scripts/claude_own_o0b_gen.py
+?? scripts/claude_own_o0c_prep.py
+?? scripts/claude_own_o0c_tok.py
+?? scripts/claude_own_o0d2_model.py
+?? scripts/claude_own_o0d2_test.py
+?? scripts/claude_own_o0d2_train.py
+?? scripts/claude_own_o0d_model.py
+?? scripts/claude_own_o0d_test.py
+?? scripts/claude_own_o0d_train.py
+?? scripts/claude_own_o0e2_model.py
+?? scripts/claude_own_o0e2_tests.py
+?? scripts/claude_own_o0e_model.py
+?? scripts/claude_own_o0e_serialize.py
+?? scripts/claude_own_o0e_tests.py
+?? scripts/claude_own_o0e_train.py
+?? scripts/claude_own_o0f_bench.py
+?? scripts/claude_probe255b_director.py
+?? scripts/claude_probe280p_run.py
+?? scripts/claude_probe280p_score.py
+?? scripts/claude_small282_devcases.py
+?? scripts/claude_small282_panelrun2.py
+?? scripts/claude_small282_regscore.py
+?? scripts/claude_small282_run.py
+?? scripts/claude_small282_score.py
+?? scripts/claude_small282b_devcases.py
+?? scripts/claude_small282b_regscore.py
+?? scripts/claude_small282b_run.py
+?? scripts/claude_small282b_score.py
+?? scripts/claude_type270_agent.py
+?? scripts/claude_type270_devrun.py
+?? scripts/claude_type270_devscore.py
+?? scripts/claude_type270_devset.py
+?? scripts/claude_type270_normalise.py
+?? scripts/claude_type270_panelrun.py
+?? scripts/claude_type270_panelscore.py
+?? scripts/claude_type270b_devscore.py
+?? scripts/claude_type270b_devset.py
+?? scripts/claude_type270b_normalise.py
+?? scripts/claude_type270b_panelscore.py
+?? scripts/claude_type270b_panelscore2.py
+?? scripts/claude_type270b_panelturns.py
+?? scripts/claude_type270b_qbuild.py
+?? scripts/claude_type270b_turns.py
+?? scripts/claude_typepanel270b_make.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m# [0mTodos
+[ ] Tree: fetch origin/main, archive to temp dir, record commit
+[ ] Seals verification
+[ ] Selftests
+[ ] Answers run (cap 45 min)
+[ ] Route filter
+[ ] Chats run (cap 20 min)
+[ ] Counts script
+[ ] Copy to worktree pilot/, write REPORT.md, cleanup
+[0m
+[0m# [0mTodos
+[•] Tree: fetch origin/main, archive to temp dir, record commit
+[ ] Seals verification
+[ ] Selftests
+[ ] Answers run (cap 45 min)
+[ ] Route filter
+[ ] Chats run (cap 20 min)
+[ ] Counts script
+[ ] Copy to worktree pilot/, write REPORT.md, cleanup
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo "fetch_exit=$?"; git rev-parse origin/main
+fetch_exit=0
+91e5d89cb17dd89cb9071c4f429d237f55db51ee
+[0m
+[0m$ [0mD=$(mktemp -d); echo "$D"; git archive origin/main scripts artifacts/claude-k1e-20260926/train/items.jsonl artifacts/claude-k1h-20260926 artifacts/claude-k1f-20260926 artifacts/claude-k1fpanel-20260926/SEAL.sha256.txt | tar -x -C "$D"; echo "archive_exit=$?"; ls "$D"; ls "$D/artifacts/claude-k1h-20260926" | head -n 100; echo "D=$D" > /tmp/k1h_D_path.txt; cat /tmp/k1h_D_path.txt
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z
+archive_exit=0
+artifacts
+scripts
+ADDENDUM-1-scope.md
+ADDENDUM-2-route.md
+ADDENDUM-3-gate.md
+ADDENDUM-4-routeloss.md
+ADDENDUM-5-luna-DRAFT.md
+ADDENDUM-5-luna.md
+DATA-GATE-k1h.md
+luna
+PASSMARKS-k1h.md
+run
+SEAL-addendum1.sha256.txt
+SEAL-addendum2.sha256.txt
+SEAL-addendum3.sha256.txt
+SEAL-addendum4.sha256.txt
+SEAL-addendum5.sha256.txt
+SEAL-k1h.sha256.txt
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_D_path.txt | cut -d= -f2); echo "D=$D"; O="$D/O"; mkdir -p "$O/answers" "$O/chats"; echo "O=$O"; echo "O=$O" >> /tmp/k1h_D_path.txt; ls -R "$D" | head -n 200; ls "$D/scripts" | grep -E "k1h|luna" | head -n 50; ls "$D/artifacts/claude-k1h-20260926/luna" 2>&1 | head -n 50
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z
+O=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O
+artifacts
+O
+scripts
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/artifacts:
+claude-k1e-20260926
+claude-k1f-20260926
+claude-k1fpanel-20260926
+claude-k1h-20260926
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/artifacts/claude-k1e-20260926:
+train
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/artifacts/claude-k1e-20260926/train:
+items.jsonl
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/artifacts/claude-k1f-20260926:
+ADDENDUM-1-benspc.md
+JUDGE-k1f.md
+PASSMARKS-k1f.md
+run
+SEAL-addendum1.sha256.txt
+SEAL.sha256.txt
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/artifacts/claude-k1f-20260926/run:
+RUN-NOTE.md
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/artifacts/claude-k1fpanel-20260926:
+SEAL.sha256.txt
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/artifacts/claude-k1h-20260926:
+ADDENDUM-1-scope.md
+ADDENDUM-2-route.md
+ADDENDUM-3-gate.md
+ADDENDUM-4-routeloss.md
+ADDENDUM-5-luna-DRAFT.md
+ADDENDUM-5-luna.md
+DATA-GATE-k1h.md
+luna
+PASSMARKS-k1h.md
+run
+SEAL-addendum1.sha256.txt
+SEAL-addendum2.sha256.txt
+SEAL-addendum3.sha256.txt
+SEAL-addendum4.sha256.txt
+SEAL-addendum5.sha256.txt
+SEAL-k1h.sha256.txt
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/artifacts/claude-k1h-20260926/luna:
+pilot_items.jsonl
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/artifacts/claude-k1h-20260926/run:
+RUN-NOTE-luna-pilot.md
+RUN-NOTE-salvage.md
+RUN-NOTE.md
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O:
+answers
+chats
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O/answers:
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O/chats:
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/scripts:
+address_probe.py
+astra_canonical_operator_panels.py
+astra_canonical_operator_report.py
+astra_canonical_operator_run.py
+astra_canonical_operator.py
+astra_transfer_diagnostic.py
+astra_transfer_report.py
+astra_transfer_twins.py
+benspc-runtime.json
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_age334_agent.py
+claude_age334_test.py
+claude_apos247_devcases.py
+claude_apos247_run.py
+claude_apos247_score.py
+claude_ask24.py
+claude_ask24ab.py
+claude_attempts.py
+claude_blurt_selfjudge.py
+claude_blurt_supply.py
+claude_blurt1.py
+claude_blurt2.py
+claude_blurt4.py
+claude_blurt5s.py
+claude_bm390_longctx.py
+claude_bm390_score.py
+claude_bm390.py
+claude_bm391_prf.py
+claude_bm393_evrecall.py
+claude_bm393b_store_recall.py
+claude_bm393c_store_recall.py
+claude_bm394_grid.py
+claude_bm395_found_split.py
+claude_bm395_store_answer.py
+claude_bm396_audit.py
+claude_bm397_finalize.py
+claude_bm397_judge.py
+claude_bm397g_general.py
+claude_bm397t_data.py
+claude_bm397t_judge.py
+claude_bm397t_train.py
+claude_bm398c_clock.py
+claude_bm398d_evidence.py
+claude_bm398e_data.py
+claude_bm398e_judge.py
+claude_bm398e_trim.py
+claude_bm398i_run2.py
+claude_bm398i_switch.py
+claude_bm398n_notes.py
+claude_bm398r_data.py
+claude_bm398r_eval.py
+claude_bm398r_train.py
+claude_bm398u_rerank.py
+claude_bm398v_rerank8.py
+claude_bmriv_given.py
+claude_bmriv_rivals.py
+claude_bound259_devcases.py
+claude_bound259_runall.sh
+claude_bound259_score.py
+claude_brd11.py
+claude_brd5.py
+claude_brd6.py
+claude_brd8.py
+claude_brd9.py
+claude_c1dev_noise.py
+claude_c1dev_talker.py
+claude_c1rival_run.py
+claude_ch403_agent.py
+claude_ch403_run.py
+claude_ch403_test.py
+claude_ch404_agent.py
+claude_ch404_dev.py
+claude_ch404_join.py
+claude_ch404_run.py
+claude_ch404_test.py
+claude_chain231_predict.py
+claude_chain231_run.py
+claude_chat338_agent.py
+claude_chat338_run.py
+claude_chat338_test.py
+claude_chat338b_agent.py
+claude_chat338b_test.py
+claude_chatdemo_page.html
+claude_chatdemo_server.py
+claude_chatdemo_start.sh
+claude_chatdev_check.py
+claude_chatgap_diag.py
+claude_comment258_devcases.py
+claude_comment258_m1.sh
+claude_comment258_runall.sh
+claude_comment258_score.py
+claude_confirm241b.py
+claude_convpanel239_run.py
+claude_corr252_devcases.py
+claude_corr252_m6check.py
+claude_corr252_run.py
+claude_corr252_score.py
+claude_corr252b_devcases.py
+claude_corr252b_score.py
+claude_cre333_agent.py
+claude_cre333_run.py
+claude_cre333b_agent.py
+claude_cre333b_test.py
+claude_cre333b_wrap.py
+claude_cre333d_agent.py
+claude_cre333d_test.py
+claude_cre333d_wrap.py
+claude_cre333e_agent.py
+claude_cre333e_devgen.py
+claude_g406l_luna.py
+claude_k1h_cre.py
+claude_k1h_glm_v11.py
+claude_k1h_glm_v12.py
+claude_k1h_glm.py
+claude_k1h_luna.py
+claude_k1h_routefilter.py
+claude_k1h_score.py
+claude_k1h_test.py
+claude_k1h_train.py
+claude_lis320_luna.py
+claude_luna_codex.py
+claude_luna_run.py
+claude_mu407_prep_luna.py
+claude_y1t_luna.py
+pilot_items.jsonl
+[0m
+[0m# [0mTodos
+[✓] Tree: fetch origin/main, archive to temp dir, record commit
+[•] Seals verification
+[ ] Selftests
+[ ] Answers run (cap 45 min)
+[ ] Route filter
+[ ] Chats run (cap 20 min)
+[ ] Counts script
+[ ] Copy to worktree pilot/, write REPORT.md, cleanup
+[0m
+[0m$ [0mD=$(grep "^D=" /tmp/k1h_D_path.txt | head -n1 | cut -d= -f2); date -u; echo "D=$D"; shasum -a 256 -c artifacts/claude-k1h-20260926/SEAL-k1h.sha256.txt; echo "seal_k1h_exit=$?"; shasum -a 256 -c artifacts/claude-k1h-20260926/SEAL-addendum1.sha256.txt; echo "seal_a1_exit=$?"; shasum -a 256 -c artifacts/claude-k1h-20260926/SEAL-addendum2.sha256.txt; echo "seal_a2_exit=$?"; shasum -a 256 -c artifacts/claude-k1h-20260926/SEAL-addendum3.sha256.txt; echo "seal_a3_exit=$?"; shasum -a 256 -c artifacts/claude-k1h-20260926/SEAL-addendum4.sha256.txt; echo "seal_a4_exit=$?"; shasum -a 256 -c artifacts/claude-k1h-20260926/SEAL-addendum5.sha256.txt; echo "seal_a5_exit=$?"
+Sun Sep 27 05:14:52 UTC 2026
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z
+artifacts/claude-k1h-20260926/PASSMARKS-k1h.md: OK
+artifacts/claude-k1h-20260926/DATA-GATE-k1h.md: OK
+scripts/claude_k1h_cre.py: OK
+scripts/claude_k1h_train.py: OK
+scripts/claude_k1h_test.py: OK
+scripts/claude_k1h_score.py: OK
+scripts/claude_k1h_glm.py: OK
+scripts/claude_k1e_teacher.py: OK
+scripts/claude_glm_opencode.py: OK
+artifacts/claude-k1f-20260926/SEAL.sha256.txt: OK
+artifacts/claude-k1f-20260926/SEAL-addendum1.sha256.txt: OK
+artifacts/claude-k1f-20260926/JUDGE-k1f.md: OK
+artifacts/claude-k1fpanel-20260926/SEAL.sha256.txt: OK
+scripts/claude_k1f_cre.py: OK
+scripts/claude_k1a_cre.py: OK
+scripts/claude_k1c_score.py: OK
+scripts/claude_k1rival_score.py: OK
+scripts/claude_k1f_score.py: OK
+scripts/claude_panel382_run.py: OK
+scripts/claude_mu402.py: OK
+scripts/claude_chat338_agent.py: OK
+scripts/claude_cre333d_agent.py: OK
+scripts/claude_cre333b_agent.py: OK
+scripts/claude_cre333_agent.py: OK
+scripts/claude_e2e02c.py: OK
+seal_k1h_exit=0
+artifacts/claude-k1h-20260926/ADDENDUM-1-scope.md: OK
+artifacts/claude-k1h-20260926/SEAL-k1h.sha256.txt: OK
+seal_a1_exit=0
+artifacts/claude-k1h-20260926/ADDENDUM-2-route.md: OK
+scripts/claude_k1h_glm_v11.py: OK
+scripts/claude_glm_opencode_v11.py: OK
+artifacts/claude-k1h-20260926/SEAL-addendum1.sha256.txt: OK
+seal_a2_exit=0
+artifacts/claude-k1h-20260926/ADDENDUM-3-gate.md: OK
+scripts/claude_k1h_glm_v12.py: OK
+scripts/claude_k1h_glm_v11.py: OK
+scripts/claude_glm_opencode_v11.py: OK
+artifacts/claude-k1h-20260926/SEAL-addendum2.sha256.txt: OK
+seal_a3_exit=0
+artifacts/claude-k1h-20260926/ADDENDUM-4-routeloss.md: OK
+scripts/claude_k1h_routefilter.py: OK
+artifacts/claude-k1h-20260926/SEAL-addendum3.sha256.txt: OK
+seal_a4_exit=0
+artifacts/claude-k1h-20260926/ADDENDUM-5-luna.md: OK
+scripts/claude_k1h_luna.py: OK
+scripts/claude_luna_codex.py: OK
+artifacts/claude-k1h-20260926/luna/pilot_items.jsonl: OK
+artifacts/claude-k1h-20260926/SEAL-addendum4.sha256.txt: OK
+seal_a5_exit=0
+[0m
+[0m# [0mTodos
+[✓] Tree: fetch origin/main, archive to temp dir, record commit
+[✓] Seals verification
+[•] Selftests
+[ ] Answers run (cap 45 min)
+[ ] Route filter
+[ ] Chats run (cap 20 min)
+[ ] Counts script
+[ ] Copy to worktree pilot/, write REPORT.md, cleanup
+[0m
+[0m$ [0mdate -u
+uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_luna.py selftest 2>&1
+echo "luna_selftest_exit=$?"
+uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_glm.py selftest 2>&1
+echo "glm_selftest_exit=$?"
+uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_routefilter.py selftest 2>&1
+echo "route_selftest_exit=$?"
+date -u
+Sun Sep 27 05:14:57 UTC 2026
+{"items": 3, "already": 0, "answered": 2, "failed": 1, "not_started": 0, "minutes": 0.0, "stopped_early": false}
+[k1h-glm] chats call 0 done (1/1)
+{"chats": 1, "mix": {"idea0": 1}, "rejected": {}, "calls": 1, "failed_calls": 0}
+{"from": 240, "picked": 40, "seed": 4614}
+{"items": 40, "nonempty_items": 38, "p1_need": 36, "p1_pass": true, "p2_kept": 38, "p2_need": 34, "p2_pass": true, "p2_reasons": {"kept": 38, "empty": 2}, "near_copy_dev_chats": null, "packet_lines": 38}
+{"items": 40, "nonempty_items": 40, "p1_need": 36, "p1_pass": true, "p2_kept": 35, "p2_need": 34, "p2_pass": true, "p2_reasons": {"trim": 5, "kept": 35}, "near_copy_dev_chats": 40, "packet_lines": 40}
+{"lines": 38, "need_third": 6}
+{"items": 40, "lines": 38, "third_judged": 6, "useful": 33, "madeup": 1, "need_useful": 32, "max_madeup": 2, "pass": true}
+{"items": 40, "lines": 38, "third_judged": 7, "useful": 31, "madeup": 0, "need_useful": 32, "max_madeup": 2, "pass": false}
+{"gate1_by_writer": {"glm-k1e": {"answers": 1, "top_opening_share": 1.0, "top_sentence_count": 1, "top_sentence_share": 1.0, "pass": false}, "luna": {"answers": 2, "top_opening_share": 1.0, "top_sentence_count": 2, "top_sentence_share": 1.0, "pass": false}}, "gate2_by_writer": {"glm-k1e": {"lines": 1, "useful": 0, "madeup": 0}, "luna": {"lines": 1, "useful": 0, "madeup": 0}}}
+k1h luna selftest 8/8 ok
+luna_selftest_exit=0
+{"items": 5, "already": 0, "answered": 4, "failed": 1, "not_started": 0, "minutes": 0.0, "stopped_early": false}
+{"items": 5, "already": 4, "answered": 1, "failed": 0, "not_started": 0, "minutes": 0.0, "stopped_early": false}
+[k1h-glm] chats call 0 done (1/2)
+[k1h-glm] chats call 1 done (2/2)
+{"chats": 1, "mix": {"idea0": 1}, "rejected": {"repeat": 2, "bad: kind/turn count": 1}, "calls": 2, "failed_calls": 0}
+k1h glm selftest 3/3 ok
+glm_selftest_exit=0
+k1h routefilter selftest 2/2 ok
+route_selftest_exit=0
+Sun Sep 27 05:14:57 UTC 2026
+[0m
+[0m# [0mTodos
+[✓] Tree: fetch origin/main, archive to temp dir, record commit
+[✓] Seals verification
+[✓] Selftests
+[•] Answers run (cap 45 min)
+[ ] Route filter
+[ ] Chats run (cap 20 min)
+[ ] Counts script
+[ ] Copy to worktree pilot/, write REPORT.md, cleanup
+[0m
+[0m$ [0mD=$(grep "^D=" /tmp/k1h_D_path.txt | head -n1 | cut -d= -f2); O="$D/O"; echo "D=$D O=$O"; date -u > "$O/answers_start_utc.txt"; cat "$O/answers_start_utc.txt"; ls -l artifacts/claude-k1h-20260926/luna/pilot_items.jsonl; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_luna.py answer --items artifacts/claude-k1h-20260926/luna/pilot_items.jsonl --out "$O/answers" --workers 1 --cap-minutes 45 > "$O/answer-log.txt" 2>&1; echo "answer_exit=$?"; date -u > "$O/answers_end_utc.txt"; cat "$O/answers_start_utc.txt"; cat "$O/answers_end_utc.txt"; echo "--- answer-log tail ---"; tail -n 20 "$O/answer-log.txt"; echo "--- ls O/answers ---"; ls -l "$O/answers"
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z O=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O
+Sun Sep 27 05:15:09 UTC 2026
+-rw-r--r--  1 ben-hannan  staff  11037 Sep 27 01:12 artifacts/claude-k1h-20260926/luna/pilot_items.jsonl
+answer_exit=0
+Sun Sep 27 05:15:09 UTC 2026
+Sun Sep 27 05:21:10 UTC 2026
+--- answer-log tail ---
+[k1h-luna-try] n=23 start=05:18:22 secs=10.4 kind=ok code=0 prompt_chars=1086
+[k1h-luna-try] n=24 start=05:18:32 secs=9.7 kind=ok code=0 prompt_chars=971
+[k1h-luna-try] n=25 start=05:18:42 secs=6.1 kind=ok code=0 prompt_chars=1097
+[k1h-luna-try] n=26 start=05:18:48 secs=10.2 kind=ok code=0 prompt_chars=1010
+[k1h-luna-try] n=27 start=05:18:58 secs=4.1 kind=ok code=0 prompt_chars=1025
+[k1h-luna-try] n=28 start=05:19:02 secs=7.1 kind=ok code=0 prompt_chars=961
+[k1h-luna-try] n=29 start=05:19:09 secs=12.1 kind=ok code=0 prompt_chars=1058
+[k1h-luna-try] n=30 start=05:19:21 secs=7.8 kind=ok code=0 prompt_chars=1066
+[k1h-luna-try] n=31 start=05:19:29 secs=21.5 kind=ok code=0 prompt_chars=942
+[k1h-luna-try] n=32 start=05:19:51 secs=6.7 kind=ok code=0 prompt_chars=1049
+[k1h-luna-try] n=33 start=05:19:57 secs=7.0 kind=ok code=0 prompt_chars=1043
+[k1h-luna-try] n=34 start=05:20:04 secs=4.6 kind=ok code=0 prompt_chars=1040
+[k1h-luna-try] n=35 start=05:20:09 secs=6.6 kind=ok code=0 prompt_chars=1031
+[k1h-luna-try] n=36 start=05:20:15 secs=8.1 kind=ok code=0 prompt_chars=1078
+[k1h-luna-try] n=37 start=05:20:23 secs=17.3 kind=ok code=0 prompt_chars=1007
+[k1h-luna-try] n=38 start=05:20:41 secs=14.2 kind=ok code=0 prompt_chars=976
+[k1h-luna-try] n=39 start=05:20:55 secs=7.5 kind=ok code=0 prompt_chars=950
+[k1h-luna-try] n=40 start=05:21:02 secs=7.9 kind=ok code=0 prompt_chars=968
+[k1h-glm] answer 40/40 answered 40 failed 0 6 min
+{"items": 40, "already": 0, "answered": 40, "failed": 0, "not_started": 0, "minutes": 6.0, "stopped_early": false}
+--- ls O/answers ---
+total 24
+-rw-r--r--  1 ben-hannan  staff  12274 Sep 27 01:21 answers.jsonl
+[0m
+[0m$ [0mD=$(grep "^D=" /tmp/k1h_D_path.txt | head -n1 | cut -d= -f2); O="$D/O"; uv run --offline --no-project --python 3.12 python -B - "$O/answer-log.txt" <<'PY'
+import re, sys, statistics
+path=sys.argv[1]
+lines=open(path).read().splitlines()
+try_lines=[l for l in lines if "[k1h-luna-try]" in l]
+from collections import Counter
+c=Counter()
+secs=[]
+for l in try_lines:
+    m=re.search(r"kind=([A-Za-z0-9_-]+)", l)
+    if m:
+        c[m.group(1)]+=1
+    if "kind=ok" in l:
+        m2=re.search(r"secs=([0-9.]+)", l)
+        if m2:
+            secs.append(float(m2.group(1)))
+print(f"try_total={len(try_lines)}")
+for k in sorted(c):
+    print(f"kind_{k}={c[k]}")
+if secs:
+    secs_sorted=sorted(secs)
+    print(f"ok_n={len(secs_sorted)} median_secs={statistics.median(secs_sorted)} max_secs={max(secs_sorted)}")
+    # also print sorted for verification
+else:
+    print("ok_n=0")
+# last line
+print(f"last_line={lines[-1] if lines else ''}")
+PY
+echo "--- full answer-log head ---"
+head -n 10 "$O/answer-log.txt"
+try_total=40
+kind_ok=40
+ok_n=40 median_secs=7.55 max_secs=26.4
+last_line={"items": 40, "already": 0, "answered": 40, "failed": 0, "not_started": 0, "minutes": 6.0, "stopped_early": false}
+--- full answer-log head ---
+[k1h-luna] mode=answer model=gpt-6-luna cap_minutes=45.0 try_timeout=300 workers=1
+[k1h-luna-try] n=1 start=05:15:09 secs=5.5 kind=ok code=0 prompt_chars=1017
+[k1h-luna-try] n=2 start=05:15:14 secs=5.7 kind=ok code=0 prompt_chars=979
+[k1h-luna-try] n=3 start=05:15:20 secs=4.4 kind=ok code=0 prompt_chars=1116
+[k1h-luna-try] n=4 start=05:15:25 secs=8.1 kind=ok code=0 prompt_chars=984
+[k1h-luna-try] n=5 start=05:15:33 secs=8.8 kind=ok code=0 prompt_chars=1066
+[k1h-luna-try] n=6 start=05:15:41 secs=9.0 kind=ok code=0 prompt_chars=992
+[k1h-luna-try] n=7 start=05:15:50 secs=26.2 kind=ok code=0 prompt_chars=967
+[k1h-luna-try] n=8 start=05:16:17 secs=8.9 kind=ok code=0 prompt_chars=964
+[k1h-luna-try] n=9 start=05:16:26 secs=6.4 kind=ok code=0 prompt_chars=971
+[0m
+[0m# [0mTodos
+[✓] Tree: fetch origin/main, archive to temp dir, record commit
+[✓] Seals verification
+[✓] Selftests
+[✓] Answers run (cap 45 min)
+[•] Route filter
+[ ] Chats run (cap 20 min)
+[ ] Counts script
+[ ] Copy to worktree pilot/, write REPORT.md, cleanup
+[0m
+[0m$ [0mD=$(grep "^D=" /tmp/k1h_D_path.txt | head -n1 | cut -d= -f2); O="$D/O"; date -u > "$O/routefilter_utc.txt"; cat "$O/routefilter_utc.txt"; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_routefilter.py --answers "$O/answers/answers.jsonl" --out "$O/answers/answers_filtered.jsonl" 2>&1; echo "routefilter_exit=$?"; ls -l "$O/answers"
+Sun Sep 27 05:21:21 UTC 2026
+{"rows": 40, "nonempty_in": 40, "route_loss_rows": 0, "by_rule": {}, "items_hit": 0, "nonempty_out": 40, "repeated_texts": 0}
+routefilter_exit=0
+total 48
+-rw-r--r--  1 ben-hannan  staff  12274 Sep 27 01:21 answers_filtered.jsonl
+-rw-r--r--  1 ben-hannan  staff  12274 Sep 27 01:21 answers.jsonl
+[0m
+[0m# [0mTodos
+[✓] Tree: fetch origin/main, archive to temp dir, record commit
+[✓] Seals verification
+[✓] Selftests
+[✓] Answers run (cap 45 min)
+[✓] Route filter
+[•] Chats run (cap 20 min)
+[ ] Counts script
+[ ] Copy to worktree pilot/, write REPORT.md, cleanup
+[0m
+[0m$ [0mD=$(grep "^D=" /tmp/k1h_D_path.txt | head -n1 | cut -d= -f2); O="$D/O"; echo "D=$D O=$O"; date -u > "$O/chats_start_utc.txt"; cat "$O/chats_start_utc.txt"; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_luna.py chats --existing artifacts/claude-k1e-20260926/train/items.jsonl --out "$O/chats" --calls 2 --chunk p --workers 1 --cap-minutes 20 > "$O/chats-log.txt" 2>&1; echo "chats_exit=$?"; date -u > "$O/chats_end_utc.txt"; cat "$O/chats_start_utc.txt"; cat "$O/chats_end_utc.txt"; echo "--- chats-log ---"; cat "$O/chats-log.txt"; echo "--- ls O/chats ---"; ls -l "$O/chats"; ls -l "$O"
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z O=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O
+Sun Sep 27 05:21:27 UTC 2026
+chats_exit=0
+Sun Sep 27 05:21:27 UTC 2026
+Sun Sep 27 05:24:44 UTC 2026
+--- chats-log ---
+[k1h-luna] mode=chats model=gpt-6-luna cap_minutes=20.0 try_timeout=600 workers=1
+[k1h-luna-try] n=1 start=05:21:27 secs=106.8 kind=ok code=0 prompt_chars=2185
+[k1h-glm] chats call 0 done (1/2)
+[k1h-luna-try] n=2 start=05:23:14 secs=89.9 kind=ok code=0 prompt_chars=2179
+[k1h-glm] chats call 1 done (2/2)
+{"chats": 37, "mix": {"idea1": 14, "idea0": 14, "uf1": 3, "uf2": 3, "uf3": 3}, "rejected": {"bad: fact value not in teach turns": 3}, "calls": 2, "failed_calls": 0}
+{"luna_chats_renamed": 37}
+--- ls O/chats ---
+total 32
+-rw-r--r--  1 ben-hannan  staff  12823 Sep 27 01:24 chats.jsonl
+total 56
+-rw-r--r--  1 ben-hannan  staff  3362 Sep 27 01:21 answer-log.txt
+drwxr-xr-x  4 ben-hannan  staff   128 Sep 27 01:21 answers
+-rw-r--r--  1 ben-hannan  staff    29 Sep 27 01:21 answers_end_utc.txt
+-rw-r--r--  1 ben-hannan  staff    29 Sep 27 01:15 answers_start_utc.txt
+drwxr-xr-x  3 ben-hannan  staff    96 Sep 27 01:24 chats
+-rw-r--r--  1 ben-hannan  staff    29 Sep 27 01:24 chats_end_utc.txt
+-rw-r--r--  1 ben-hannan  staff    29 Sep 27 01:21 chats_start_utc.txt
+-rw-r--r--  1 ben-hannan  staff   497 Sep 27 01:24 chats-log.txt
+-rw-r--r--  1 ben-hannan  staff    29 Sep 27 01:21 routefilter_utc.txt
+[0m
+[0m# [0mTodos
+[✓] Tree: fetch origin/main, archive to temp dir, record commit
+[✓] Seals verification
+[✓] Selftests
+[✓] Answers run (cap 45 min)
+[✓] Route filter
+[✓] Chats run (cap 20 min)
+[•] Counts script
+[ ] Copy to worktree pilot/, write REPORT.md, cleanup
+[0m
+[0m$ [0mD=$(grep "^D=" /tmp/k1h_D_path.txt | head -n1 | cut -d= -f2); O="$D/O"; uv run --offline --no-project --python 3.12 python -B - "$O/answers/answers.jsonl" "$O/answers/answers_filtered.jsonl" "$O/chats/chats.jsonl" <<'PY' > "$O/counts.txt" 2>&1
+import json, sys, collections, pathlib
+def stats(path):
+    p=pathlib.Path(path)
+    name=p.name
+    raw=p.read_bytes()
+    crlf=raw.count(b"\r\n")
+    lines=raw.decode("utf-8").splitlines()
+    n_lines=len(lines)
+    nonempty=0
+    empty=0
+    err_counter=collections.Counter()
+    ids=set()
+    for ln in lines:
+        if not ln.strip():
+            continue
+        try:
+            r=json.loads(ln)
+        except Exception as e:
+            err_counter[f"json_error:{e}"]+=1
+            continue
+        iid=r.get("item_id")
+        if iid is not None:
+            ids.add(iid)
+        ans=r.get("answer", "")
+        if isinstance(ans,str) and ans.strip()!="":
+            nonempty+=1
+        else:
+            empty+=1
+            err=r.get("error","")
+            err_counter[str(err)]+=1
+    print(f"{name}: lines={n_lines} nonempty_answer={nonempty} empty_answer={empty} distinct_item_id={len(ids)} crlf_bytes={crlf}")
+    if err_counter:
+        for k in sorted(err_counter):
+            print(f"{name}: error_kind[{k}]={err_counter[k]}")
+    else:
+        print(f"{name}: error_kinds=none")
+def chats_stats(path):
+    import json, collections, pathlib
+    p=pathlib.Path(path)
+    name=p.name
+    raw=p.read_bytes()
+    crlf=raw.count(b"\r\n")
+    lines=raw.decode("utf-8").splitlines()
+    n_lines=len([l for l in lines if l.strip()!=""])
+    ids=set()
+    for ln in lines:
+        if not ln.strip():
+            continue
+        r=json.loads(ln)
+        iid=r.get("item_id", r.get("id"))
+        if iid is not None:
+            ids.add(iid)
+    print(f"{name}: lines={n_lines} distinct_item_id={len(ids)} crlf_bytes={crlf}")
+for a in sys.argv[1:3]:
+    stats(a)
+chats_stats(sys.argv[3])
+PY
+cat "$O/counts.txt"
+answers.jsonl: lines=40 nonempty_answer=40 empty_answer=0 distinct_item_id=40 crlf_bytes=0
+answers.jsonl: error_kinds=none
+answers_filtered.jsonl: lines=40 nonempty_answer=40 empty_answer=0 distinct_item_id=40 crlf_bytes=0
+answers_filtered.jsonl: error_kinds=none
+chats.jsonl: lines=37 distinct_item_id=37 crlf_bytes=0
+[0m
+[0m$ [0mD=$(grep "^D=" /tmp/k1h_D_path.txt | head -n1 | cut -d= -f2); O="$D/O"; echo "D=$D"; echo "O=$O"; cat "$O/answers_start_utc.txt"; cat "$O/answers_end_utc.txt"; cat "$O/routefilter_utc.txt"; cat "$O/chats_start_utc.txt"; cat "$O/chats_end_utc.txt"; date -u; shasum -a 256 "$O/answers/answers.jsonl" "$O/answers/answers_filtered.jsonl" "$O/answer-log.txt" "$O/chats/chats.jsonl" "$O/chats-log.txt"; cat "$O/counts.txt"; echo "--- answer-log last line ---"; tail -n 1 "$O/answer-log.txt"; echo "--- chats-log json lines ---"; grep "^{" "$O/chats-log.txt"
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z
+O=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O
+Sun Sep 27 05:15:09 UTC 2026
+Sun Sep 27 05:21:10 UTC 2026
+Sun Sep 27 05:21:21 UTC 2026
+Sun Sep 27 05:21:27 UTC 2026
+Sun Sep 27 05:24:44 UTC 2026
+Sun Sep 27 05:25:02 UTC 2026
+8cfbc62d8a955935c0b6bcaddb4cf5720b749aaca5edc297867a871d0f9cc603  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O/answers/answers.jsonl
+8cfbc62d8a955935c0b6bcaddb4cf5720b749aaca5edc297867a871d0f9cc603  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O/answers/answers_filtered.jsonl
+d5dff824d11df143ec841f45eb9ad65c92a8ef19ea0e547e02d8ffcf0a7547b0  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O/answer-log.txt
+745b4377a44f0716155ba7d655c7d768f90547b0abc80214adb5e9d5845537e5  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O/chats/chats.jsonl
+641fed48f816cb906b933c40c84ca821206b9567bc413693c138c494a350d0e1  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O/chats-log.txt
+answers.jsonl: lines=40 nonempty_answer=40 empty_answer=0 distinct_item_id=40 crlf_bytes=0
+answers.jsonl: error_kinds=none
+answers_filtered.jsonl: lines=40 nonempty_answer=40 empty_answer=0 distinct_item_id=40 crlf_bytes=0
+answers_filtered.jsonl: error_kinds=none
+chats.jsonl: lines=37 distinct_item_id=37 crlf_bytes=0
+--- answer-log last line ---
+{"items": 40, "already": 0, "answered": 40, "failed": 0, "not_started": 0, "minutes": 6.0, "stopped_early": false}
+--- chats-log json lines ---
+{"chats": 37, "mix": {"idea1": 14, "idea0": 14, "uf1": 3, "uf2": 3, "uf3": 3}, "rejected": {"bad: fact value not in teach turns": 3}, "calls": 2, "failed_calls": 0}
+{"luna_chats_renamed": 37}
+[0m
+[0m$ [0mls -la artifacts/claude-k1h-20260926/luna/ 2>&1 | head -n 50; ls -la artifacts/claude-k1h-20260926/luna/pilot/ 2>&1 | head -n 50; git check-ignore -v artifacts/claude-k1h-20260926/luna/pilot 2>&1 || echo "not ignored?"; git status --short | head -n 20
+ls: artifacts/claude-k1h-20260926/luna/: No such file or directory
+ls: artifacts/claude-k1h-20260926/luna/pilot/: No such file or directory
+.gitignore:5:artifacts/	artifacts/claude-k1h-20260926/luna/pilot
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+[0m
+[0m$ [0mD=$(grep "^D=" /tmp/k1h_D_path.txt | head -n1 | cut -d= -f2); O="$D/O"
+# Capture seal outputs verbatim to files for REPORT
+shasum -a 256 -c artifacts/claude-k1h-20260926/SEAL-k1h.sha256.txt > "$O/seal_k1h_out.txt" 2>&1; echo "exit=$?" >> "$O/seal_k1h_out.txt"; cat "$O/seal_k1h_out.txt"
+echo "---"
+shasum -a 256 -c artifacts/claude-k1h-20260926/SEAL-addendum1.sha256.txt > "$O/seal_a1_out.txt" 2>&1; echo "exit=$?" >> "$O/seal_a1_out.txt"; cat "$O/seal_a1_out.txt"
+echo "---"
+shasum -a 256 -c artifacts/claude-k1h-20260926/SEAL-addendum2.sha256.txt > "$O/seal_a2_out.txt" 2>&1; echo "exit=$?" >> "$O/seal_a2_out.txt"; cat "$O/seal_a2_out.txt"
+echo "---"
+shasum -a 256 -c artifacts/claude-k1h-20260926/SEAL-addendum3.sha256.txt > "$O/seal_a3_out.txt" 2>&1; echo "exit=$?" >> "$O/seal_a3_out.txt"; cat "$O/seal_a3_out.txt"
+echo "---"
+shasum -a 256 -c artifacts/claude-k1h-20260926/SEAL-addendum4.sha256.txt > "$O/seal_a4_out.txt" 2>&1; echo "exit=$?" >> "$O/seal_a4_out.txt"; cat "$O/seal_a4_out.txt"
+echo "---"
+shasum -a 256 -c artifacts/claude-k1h-20260926/SEAL-addendum5.sha256.txt > "$O/seal_a5_out.txt" 2>&1; echo "exit=$?" >> "$O/seal_a5_out.txt"; cat "$O/seal_a5_out.txt"
+artifacts/claude-k1h-20260926/PASSMARKS-k1h.md: OK
+artifacts/claude-k1h-20260926/DATA-GATE-k1h.md: OK
+scripts/claude_k1h_cre.py: OK
+scripts/claude_k1h_train.py: OK
+scripts/claude_k1h_test.py: OK
+scripts/claude_k1h_score.py: OK
+scripts/claude_k1h_glm.py: OK
+scripts/claude_k1e_teacher.py: OK
+scripts/claude_glm_opencode.py: OK
+artifacts/claude-k1f-20260926/SEAL.sha256.txt: OK
+artifacts/claude-k1f-20260926/SEAL-addendum1.sha256.txt: OK
+artifacts/claude-k1f-20260926/JUDGE-k1f.md: OK
+artifacts/claude-k1fpanel-20260926/SEAL.sha256.txt: OK
+scripts/claude_k1f_cre.py: OK
+scripts/claude_k1a_cre.py: OK
+scripts/claude_k1c_score.py: OK
+scripts/claude_k1rival_score.py: OK
+scripts/claude_k1f_score.py: OK
+scripts/claude_panel382_run.py: OK
+scripts/claude_mu402.py: OK
+scripts/claude_chat338_agent.py: OK
+scripts/claude_cre333d_agent.py: OK
+scripts/claude_cre333b_agent.py: OK
+scripts/claude_cre333_agent.py: OK
+scripts/claude_e2e02c.py: OK
+exit=0
+---
+artifacts/claude-k1h-20260926/ADDENDUM-1-scope.md: OK
+artifacts/claude-k1h-20260926/SEAL-k1h.sha256.txt: OK
+exit=0
+---
+artifacts/claude-k1h-20260926/ADDENDUM-2-route.md: OK
+scripts/claude_k1h_glm_v11.py: OK
+scripts/claude_glm_opencode_v11.py: OK
+artifacts/claude-k1h-20260926/SEAL-addendum1.sha256.txt: OK
+exit=0
+---
+artifacts/claude-k1h-20260926/ADDENDUM-3-gate.md: OK
+scripts/claude_k1h_glm_v12.py: OK
+scripts/claude_k1h_glm_v11.py: OK
+scripts/claude_glm_opencode_v11.py: OK
+artifacts/claude-k1h-20260926/SEAL-addendum2.sha256.txt: OK
+exit=0
+---
+artifacts/claude-k1h-20260926/ADDENDUM-4-routeloss.md: OK
+scripts/claude_k1h_routefilter.py: OK
+artifacts/claude-k1h-20260926/SEAL-addendum3.sha256.txt: OK
+exit=0
+---
+artifacts/claude-k1h-20260926/ADDENDUM-5-luna.md: OK
+scripts/claude_k1h_luna.py: OK
+scripts/claude_luna_codex.py: OK
+artifacts/claude-k1h-20260926/luna/pilot_items.jsonl: OK
+artifacts/claude-k1h-20260926/SEAL-addendum4.sha256.txt: OK
+exit=0
+[0m
+[0m# [0mTodos
+[✓] Tree: fetch origin/main, archive to temp dir, record commit
+[✓] Seals verification
+[✓] Selftests
+[✓] Answers run (cap 45 min)
+[✓] Route filter
+[✓] Chats run (cap 20 min)
+[✓] Counts script
+[•] Copy to worktree pilot/, write REPORT.md, cleanup
+[0m
+[0m$ [0mD=$(grep "^D=" /tmp/k1h_D_path.txt | head -n1 | cut -d= -f2); O="$D/O"; echo "D=$D O=$O"; mkdir -p artifacts/claude-k1h-20260926/luna/pilot; cp "$O/answers/answers.jsonl" artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl; cp "$O/answers/answers_filtered.jsonl" artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl; cp "$O/answer-log.txt" artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt; cp "$O/chats/chats.jsonl" artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl; cp "$O/chats-log.txt" artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt; ls -l artifacts/claude-k1h-20260926/luna/pilot/; echo "--- sha256 O ---"; shasum -a 256 "$O/answers/answers.jsonl" "$O/answers/answers_filtered.jsonl" "$O/answer-log.txt" "$O/chats/chats.jsonl" "$O/chats-log.txt"; echo "--- sha256 copies ---"; shasum -a 256 artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z O=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O
+total 96
+-rw-r--r--  1 ben-hannan  staff   3362 Sep 27 01:25 answer-log.txt
+-rw-r--r--  1 ben-hannan  staff  12274 Sep 27 01:25 answers_filtered.jsonl
+-rw-r--r--  1 ben-hannan  staff  12274 Sep 27 01:25 answers.jsonl
+-rw-r--r--  1 ben-hannan  staff    497 Sep 27 01:25 chats-log.txt
+-rw-r--r--  1 ben-hannan  staff  12823 Sep 27 01:25 chats.jsonl
+--- sha256 O ---
+8cfbc62d8a955935c0b6bcaddb4cf5720b749aaca5edc297867a871d0f9cc603  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O/answers/answers.jsonl
+8cfbc62d8a955935c0b6bcaddb4cf5720b749aaca5edc297867a871d0f9cc603  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O/answers/answers_filtered.jsonl
+d5dff824d11df143ec841f45eb9ad65c92a8ef19ea0e547e02d8ffcf0a7547b0  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O/answer-log.txt
+745b4377a44f0716155ba7d655c7d768f90547b0abc80214adb5e9d5845537e5  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O/chats/chats.jsonl
+641fed48f816cb906b933c40c84ca821206b9567bc413693c138c494a350d0e1  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O/chats-log.txt
+--- sha256 copies ---
+8cfbc62d8a955935c0b6bcaddb4cf5720b749aaca5edc297867a871d0f9cc603  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+8cfbc62d8a955935c0b6bcaddb4cf5720b749aaca5edc297867a871d0f9cc603  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+d5dff824d11df143ec841f45eb9ad65c92a8ef19ea0e547e02d8ffcf0a7547b0  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+745b4377a44f0716155ba7d655c7d768f90547b0abc80214adb5e9d5845537e5  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+641fed48f816cb906b933c40c84ca821206b9567bc413693c138c494a350d0e1  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+[0m
+[0m→ [0mRead artifacts/claude-k1h-20260926/luna/pilot
+[0m
+[0m$ [0mdate -u
+Sun Sep 27 05:25:38 UTC 2026
+[0m
+[0m← [0mWrite artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+Wrote file successfully.
+[0m
+[0m$ [0mD=$(grep "^D=" /tmp/k1h_D_path.txt | head -n1 | cut -d= -f2); echo "D=$D"; ls -ld "$D"; rm -rf "$D"; echo "rm_exit=$?"; ls -ld "$D" 2>&1 || echo "confirmed gone: $D"; cat /tmp/k1h_D_path.txt
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z
+drwx------  5 ben-hannan  staff  160 Sep 27 01:14 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z
+rm_exit=0
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z: No such file or directory
+confirmed gone: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z
+O=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SthYCyWN6z/O
+[0m
+[0m$ [0mls -l artifacts/claude-k1h-20260926/luna/pilot/; shasum -a 256 artifacts/claude-k1h-20260926/luna/pilot/*; git status --short | grep -E "pilot|luna|k1h" | head -n 20; git add -f artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt artifacts/claude-k1h-20260926/luna/pilot/REPORT.md; echo "add_exit=$?"; git status --short | grep pilot | head -n 20
+total 112
+-rw-r--r--  1 ben-hannan  staff   3362 Sep 27 01:25 answer-log.txt
+-rw-r--r--  1 ben-hannan  staff  12274 Sep 27 01:25 answers_filtered.jsonl
+-rw-r--r--  1 ben-hannan  staff  12274 Sep 27 01:25 answers.jsonl
+-rw-r--r--  1 ben-hannan  staff    497 Sep 27 01:25 chats-log.txt
+-rw-r--r--  1 ben-hannan  staff  12823 Sep 27 01:25 chats.jsonl
+-rw-r--r--  1 ben-hannan  staff   4891 Sep 27 01:25 REPORT.md
+d5dff824d11df143ec841f45eb9ad65c92a8ef19ea0e547e02d8ffcf0a7547b0  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+8cfbc62d8a955935c0b6bcaddb4cf5720b749aaca5edc297867a871d0f9cc603  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+8cfbc62d8a955935c0b6bcaddb4cf5720b749aaca5edc297867a871d0f9cc603  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+641fed48f816cb906b933c40c84ca821206b9567bc413693c138c494a350d0e1  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+745b4377a44f0716155ba7d655c7d768f90547b0abc80214adb5e9d5845537e5  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+fb4092132c1051e7c16b3f7a991eaa7a71473d90439c706b23826f9cbba0b083  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+?? scripts/claude_diag290_pilot.py
+?? scripts/claude_diag293_pilot.py
+?? scripts/claude_diag293_pilot2.py
+?? scripts/claude_luna_codex.py
+add_exit=0
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+?? scripts/claude_diag290_pilot.py
+?? scripts/claude_diag293_pilot.py
+?? scripts/claude_diag293_pilot2.py
+[0m
+[0m# [0mTodos
+[✓] Tree: fetch origin/main, archive to temp dir, record commit
+[✓] Seals verification
+[✓] Selftests
+[✓] Answers run (cap 45 min)
+[✓] Route filter
+[✓] Chats run (cap 20 min)
+[✓] Counts script
+[✓] Copy to worktree pilot/, write REPORT.md, cleanup
+[0m
