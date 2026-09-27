@@ -1,4 +1,4 @@
-2026-09-27 03:49:25
+2026-09-27 03:51:36
 running:
 000-probe-zen-builder.running
 000-rescue-rd378.running
@@ -10,8 +10,6 @@ y1t-luna-rest-mac.running
 launched (no exit yet) / finished:
      808
 
-2026-09-27 02:26:10 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8-mac
-2026-09-27 02:26:11 zen cap: 4 non-GPU rungo5 builders running, holding y1t-luna-pilot-mac
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 02:28:20 zen cap: 4 non-GPU rungo5 builders running, holding bm398w-luna-mac
 2026-09-27 02:28:21 zen cap: 4 non-GPU rungo5 builders running, holding k1h-luna-full-mac
@@ -160,6 +158,8 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 03:47:07 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8b-mac
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 03:49:24 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8b-mac
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 03:51:36 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8b-mac
 
 diag:
 == 000-probe-zen-builder
@@ -196,12 +196,12 @@ diag:
 [0m
 [91m[1mError: [0mError from provider (Console): Rate limit exceeded. Please try again later.
 == bm398w-luna-mac
-56519 Sep 27 03:05 bm398w-luna-mac.go1.err.txt
+57411 Sep 27 03:50 bm398w-luna-mac.go1.err.txt
 415 Sep 27 03:05 bm398w-luna-mac.go1.reply.md
-[•] TRAINING SESSIONS word + count
-[ ] QUESTIONS train then panel + counts
-[ ] BUILD train+panel, check FLOOR
-[ ] COPY BACK + RESULTS-data.md + rm temp
+/dev/disk3s1s1       460   12        33    28%  484014 349502040    0%   /
+{"jobs": 1200, "skipped": 37, "ok": 341, "not_run": 822, "failed_calls": 0, "bad_lines": 0, "minutes": 45.2}
+TRAIN_WORD_RUN1_EXIT:0
+Sun Sep 27 07:50:41 UTC 2026
 [0m
 == k1h-glm2
 121798 Sep 26 20:58 k1h-glm2.go1.err.txt
@@ -234,20 +234,19 @@ cp-exit:0
 [91m[1mError: [0mError from provider (Console): Rate limit exceeded. Please try again later.
 top5cpu:
 %CPU COMM
-89.4 ApplicationsStorageExtension
-68.3 fileproviderd
-18.1 bash
-11.6 mdworker_shared
-9.5 mdworker_shared
+61.2 fileproviderd
+60.9 ApplicationsStorageExtension
+24.3 Finder
+17.9 bird
+17.3 cloudd
 procs:
-  363     1 03-15:36:22 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-15:35:30 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
-15699     1 03-13:50:48 S    /usr/bin/ssh-agent
-38536   818       00:19 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-44571 44570 01-06:12:26 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-06:12:26 Rs   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    11:26:59 SN   /usr/local/bin/opencode
-54273 54242    01:16:38 SN   /usr/local/bin/opencode
-60494 59018    04:41:52 SN   /usr/local/bin/opencode
-64555 64533    01:07:26 SN   /usr/local/bin/opencode
-81797     1 01-16:30:05 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 03-15:38:34 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-15:37:42 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+15699     1 03-13:53:00 S    /usr/bin/ssh-agent
+44571 44570 01-06:14:38 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-06:14:38 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    11:29:11 SN   /usr/local/bin/opencode
+54273 54242    01:18:50 SN   /usr/local/bin/opencode
+60494 59018    04:44:04 SN   /usr/local/bin/opencode
+64555 64533    01:09:38 SN   /usr/local/bin/opencode
+81797     1 01-16:32:17 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
