@@ -22,10 +22,10 @@ Ben's design, one path on every user turn:
             placement follows mu-405b, ADDENDUM-35) is on every turn: every earlier user turn, oldest first, when they fit in
             CTX_CHARS02D characters, else the store's top K02D for this turn, oldest first. The last 6 (user, reply)
             pairs of this session are the chat messages.
-  sleep     whatever recipe passes H-B, in its own form (SLEEP02D): an adapter, error-gated nights (dl-8) or a separate
-            store with a switch (ADDENDUM-32); trained by the nights of a separate sleep run on code-made number puzzles
-            (Z1, disclosed), loaded at start as 0.2c did. No slot value exists until H-B passes; e2e_end_day only makes
-            sure everything is on disk.
+  sleep     the reasoner's nights (ADDENDUM-46, Ben 13:28 UTC): H-B is Sleep research's recipe for the loop net, and
+            SLEEP02D is the reasoner's slept checkpoint, loaded at start in place of REASONER02D's. The talker gets no
+            nights and no skill training (the owed H1 hand-off is its only named training). No slot value exists until
+            H-B passes; e2e_end_day only makes sure everything is on disk.
 Hand-written parts on this path, each disclosed scaffolding with the learned part it stands in for:
   P1  read_latin, the code grid reader (learned: gr-1, owed by Sleep research)
   E1  the puzzle-kind label: the bridge builds every chat grid as env "grids" (claude_rsn358b2_bridge.item_of), and
@@ -72,7 +72,7 @@ if str(SCRIPTS) not in sys.path:
 READER_SHA02D = ""       # sha256 of lis-320's merged model.safetensors
 REASONER02D = ""         # 358b3's sealed loop-net checkpoint path (relative to the repo root)
 LEGEND02D = True         # 358b3's input form (358i nets read a legend row)
-SLEEP02D = ""            # the H-B recipe's adapter file; "" = sleep off (row B's control arm)
+SLEEP02D = ""            # the reasoner's slept checkpoint from the H-B recipe (ADDENDUM-46); "" = sleep off (row B's control arm)
 DOUBT02D = ""            # "y1t" or "y1g" (ADDENDUM-24); "" = none (DEV only)
 # ---- fixed settings ----
 THRESHOLD02D = 0.995     # lis-320's gate threshold (H-R)
@@ -160,6 +160,8 @@ def reader_for(model: str):
 
 
 def solver_for(ckpt: str, legend: bool):
+    if SLEEP02D:
+        raise SystemExit("0.2d: SLEEP02D is set but the reasoner's nights have no loader yet (set at the seal)")
     if ("solver", ckpt) not in _CACHE:
         import torch
         import claude_rsn358b2_bridge as B
@@ -168,13 +170,11 @@ def solver_for(ckpt: str, legend: bool):
 
 
 class Talker:
-    """The plain 1B as the 336 twin loads it; the sleep adapter (SLEEP02D) is added once per process."""
+    """The plain 1B as the 336 twin loads it. No adapter: sleep belongs to the reasoner (ADDENDUM-46)."""
 
     def __init__(self, model_dir: str):
         import claude_e2e336_twin as TW
         self.tok, self.model, self.dev = TW._load(model_dir)
-        if SLEEP02D:
-            raise SystemExit("0.2d: SLEEP02D is set but no H-B recipe has a loader yet (set at the seal)")
 
     def reply(self, system: str, msgs: list[dict], max_new: int) -> str:
         import torch
@@ -315,7 +315,7 @@ class Agent02d:
         return [reply]
 
     def e2e_end_day(self) -> None:
-        """Nights run in the separate sleep run (see SLEEP02D); the fact book and store are already on disk."""
+        """The reasoner's nights run in Sleep research's own run (see SLEEP02D); the fact book and store are on disk."""
         return None
 
 
