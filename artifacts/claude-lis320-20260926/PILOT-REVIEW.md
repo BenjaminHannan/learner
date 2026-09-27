@@ -57,3 +57,6 @@ acknowledgement, not a yes); correct_ref 0 of 17 wrong, 0 casing. 10 of 20 drops
 Full run: handoff/queue/lis320-fulloc-c1-mac.md (seed 324, 6000 dialogs, glm_oclow, check_we2, at most 150 wording minutes
 per chunk). Each chunk pushes only its own new rows (full-oc/chunkK/raw.new.jsonl.gz, so no file is overwritten) and the
 next chunk rebuilds raw.jsonl from all earlier parts; chunk 2 onward is queued only after the chunk before it lands.
+Full-run rules added 09-27 00:49 UTC at the Thread manager's review (00:48), none of them a mark: each chunk reports parsed of
+called; below 85% parsed in any chunk stops the queue until the Thread manager has the counts; DATA.md lists kept_by_family
+for the whole run beside the seeded counts per family; someone_else is not called fixed (pilots 5 and 6 together: 9 of 14).
