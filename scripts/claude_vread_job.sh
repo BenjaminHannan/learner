@@ -12,9 +12,9 @@ results() {
   cd "$J" 2>/dev/null || return
   ls out/*.jsonl out/*.log out/*.rc out/*.json out/vec/*.json out/vec/*.jsonl out/vec/final/*.json out/vec/final/*.jsonl \
      out/lora/summary.json out/lora/train_log.jsonl checks/* 2>/dev/null > files.txt
-  tar -cJf results.tar.xz -T files.txt 2>/dev/null
-  say "RESULTS-BEGIN $(sha256sum results.tar.xz | cut -d' ' -f1) $(wc -c < results.tar.xz) bytes, $(wc -l < files.txt) files"
-  base64 -w 4000 results.tar.xz
+  tar -czf results.tar.gz -T files.txt 2>/dev/null
+  say "RESULTS-BEGIN $(sha256sum results.tar.gz | cut -d' ' -f1) $(wc -c < results.tar.gz) bytes, $(wc -l < files.txt) files"
+  base64 -w 4000 results.tar.gz
   say "RESULTS-END"
 }
 say "VREAD START"
@@ -24,7 +24,7 @@ J=${JOBDIR:-/job}
 mkdir -p "$J/checks" "$J/out" && cd "$J" || exit 1
 printf '%s' "$@" | base64 -d > pack.tar.xz
 echo "$PACK_SHA  pack.tar.xz" | sha256sum -c || fail "pack sha256"
-tar -xJf pack.tar.xz || fail "pack untar"
+python -c "import tarfile; tarfile.open('pack.tar.xz', 'r:xz').extractall('.')" || fail "pack untar"   # the image has no xz binary
 sha256sum -c SEAL-pack.sha256.txt > checks/pack_files.txt 2>&1 || { cat checks/pack_files.txt; fail "file sha256"; }
 echo "pack files ok: $(wc -l < checks/pack_files.txt)"
 python -c "import torch,sys;print('python',sys.version.split()[0],'torch',torch.__version__,torch.version.cuda,torch.cuda.is_available(),torch.cuda.get_device_name(0) if torch.cuda.is_available() else '-')" 2>&1 | tee checks/torch.txt

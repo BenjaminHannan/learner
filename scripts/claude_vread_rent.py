@@ -142,8 +142,8 @@ def fetch(a):
     assert sha(data) == want, (sha(data), want)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    (out / "results.tar.xz").write_bytes(data)
-    with tarfile.open(fileobj=io.BytesIO(data), mode="r:xz") as t:
+    (out / "results.tar.gz").write_bytes(data)
+    with tarfile.open(fileobj=io.BytesIO(data), mode="r:*") as t:
         t.extractall(out, filter="data")
         names = t.getnames()
     print(json.dumps({"results_sha256": want, "sha_ok": True, "bytes": len(data), "files": len(names)}))
