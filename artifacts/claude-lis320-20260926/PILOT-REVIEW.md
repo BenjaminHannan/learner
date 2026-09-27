@@ -70,3 +70,15 @@ Both registered responses and pilot 8 are in ADDENDUM-10-luna-pilot7-fixes.md.
 False-accept check for ADDENDUM-10's plan cues (06:04 UTC, Thread manager's ask): 0 non-plan turns change keep/drop on
 pilots 4-7 (plan cues are read only for plan turns); 10 plan turns newly kept, all plans. Details in
 ADDENDUM-10-NOTE-plan-cue-false-accepts.md.
+
+## Pilot 8 (Luna, seed 328, 60 dialogs, luna2 + check_we3, 09:21-09:46 UTC 09-27, $0): PASS on every mark (checked 09:52 UTC)
+Run as BASH-ONLY job claude-lis320-pilot8e-mac (builder attempts 8 and 8b died on rate limits; 8c and 8d stopped at my own
+too-wide orphan check). Route: 60 of 60 parsed, 0 failed calls, rawcheck2 OK (0 error-like, 0 repeated texts), 24.7 minutes
+(2.43 dialogs a minute at 3 calls, Mac load about 50). Item 1: 405 of 415 kept (97.6%); lowest families plan 13 of 15 and
+ack_after_ask 13 of 15 (ADDENDUM-10's cues: plan was 2 of 11 in pilot 7). Item 2: lowercase 0.844, missing-apostrophe 0.23
+(pilot 7: 0.0), over 20 words 0.21. Item 3: shapes 95.3. Item 4: write facts in long turns 0.265. Kept count re-computed in
+the cloud from the pushed rows: 405. Item 5 (fresh agent, sample rng 328): 0 of 20 kept labels wrong, 0 of 20 correct_ref
+wrong, 0 casing; 9 of 10 drops judged over-drops (report only: group_speaker fires on "we'll see" and "there we go",
+assert_hedged on "i suppose" about the message, no_past_cue misses "thats over now"). Report only: long turns still carry
+filler strings and remarks about the message ("i keep trying to phrase this normally"); some plans give odd ages (an
+11-year-old landlord). Full run: ADDENDUM-11-luna-full-run-chunks.md, first job handoff/queue/claude-lis320-luna-c1-mac.md.
