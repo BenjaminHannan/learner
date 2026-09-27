@@ -1,4 +1,4 @@
-2026-09-27 02:02:00
+2026-09-27 02:04:10
 running:
 000-probe-zen-builder.running
 006-rd378k-gate3luna.running
@@ -10,10 +10,6 @@ madeup-mu407-luna-mac.running
 launched (no exit yet) / finished:
      777
 
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-2026-09-26 23:52:45 pushed 000-luna-helper-selftest
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-26 23:54:54 self-update, restarting
 2026-09-26 23:54:54 watcher started (pid 16015)
 2026-09-26 23:54:57 launch 000-stop-rd378low
@@ -160,6 +156,10 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 02:01:53 launch 175-rv393-pencil-pc
 2026-09-27 02:01:58 zen cap: 4 non-GPU rungo5 builders running, holding k1h-luna-full-mac
 2026-09-27 02:02:00 zen cap: 4 non-GPU rungo5 builders running, holding y1t-luna-pilot-mac
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 02:04:09 zen cap: 4 non-GPU rungo5 builders running, holding k1h-luna-full-mac
+2026-09-27 02:04:10 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8-mac
+2026-09-27 02:04:10 zen cap: 4 non-GPU rungo5 builders running, holding y1t-luna-pilot-mac
 
 diag:
 == 000-probe-zen-builder
@@ -176,26 +176,28 @@ diag:
 > build · muse-spark-1.3-contributor
 [0m
 == 006-rd378k-gate3luna
-89824 Sep 27 02:01 006-rd378k-gate3luna.go1.err.txt
+90098 Sep 27 02:03 006-rd378k-gate3luna.go1.err.txt
 742 Sep 27 02:01 006-rd378k-gate3luna.go1.reply.md
 [rd378k-teacher3] tc-d15 ok
   PID  ELAPSED
-12201 01:35:41
+12201 01:37:38
 17
 [0m
 == 007-rd378g-writeluna
-61429 Sep 27 02:01 007-rd378g-writeluna.go1.err.txt
+61839 Sep 27 02:02 007-rd378g-writeluna.go1.err.txt
 351 Sep 27 01:35 007-rd378g-writeluna.go1.reply.md
 (end log)
   PID ELAPSED
-58598   27:02
-2026-09-27T06:01:02Z
+58598   28:59
+2026-09-27T06:02:59Z
 [0m
 == 175-rv393-pencil-pc
-53 Sep 27 02:01 175-rv393-pencil-pc.go1.err.txt
-0 Sep 27 02:01 175-rv393-pencil-pc.go1.reply.md
-[0m
-> build · muse-spark-1.3-contributor-free
+34933 Sep 27 02:03 175-rv393-pencil-pc.go1.err.txt
+324 Sep 27 02:03 175-rv393-pencil-pc.go1.reply.md
+d30887c59f57496a1a195d7250e130bb1c51393d973ce45f4bdd898ba5eb8261 *C:/Users/benja/premonition-models/rsn358i2/loop-s1/final.pt
+4085df22366b96190b087a7b46333daec9f19d078332ea5bf6328a15f2ed6594 *C:/Users/benja/premonition-models/rsn358i2/loop-s2/final.pt
+5d571cc276d88f5af5da34c79e0d198878f9e674888b2150107095e27adc4a7a *C:/Users/benja/premonition-models/rsn358i2/loop-s3/final.pt
+f0a84b11d1722d97739a5999f3b2b487c0bc09dc1c927fde14e6566adedd6621 *C:/Users/benja/premonition-models/rsn358i2/loop-s4/final.pt
 [0m
 == k1h-glm2
 121798 Sep 26 20:58 k1h-glm2.go1.err.txt
@@ -222,23 +224,22 @@ shell tool terminated command after exceeding timeout 120000 ms. If this command
 [0m
 top5cpu:
 %CPU COMM
-103.1 opencode
-66.0 fileproviderd
-42.6 ApplicationsStorageExtension
-37.6 WindowServer
-20.6 Finder
+66.0 Finder
+51.0 ApplicationsStorageExtension
+37.1 fileproviderd
+36.0 Claude
+20.9 WindowServer
 procs:
-  363     1 03-13:48:57 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-13:48:05 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 5678  5650    01:53:39 SN   /usr/local/bin/opencode
-15699     1 03-12:03:23 S    /usr/bin/ssh-agent
-19210 19179       04:53 SN   /usr/local/bin/opencode
-23041   818       00:24 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-23786 23763       00:07 UN   /usr/local/bin/opencode
-26449 26426    01:00:27 SN   /usr/local/bin/opencode
-44571 44570 01-04:25:01 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-04:25:01 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46037 46015       33:59 SN   /usr/local/bin/opencode
-46743 46711    09:39:34 SN   /usr/local/bin/opencode
-60494 59018    02:54:27 SN   /usr/local/bin/opencode
-81797     1 01-14:42:40 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 03-13:51:08 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-13:50:16 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 5678  5650    01:55:50 SN   /usr/local/bin/opencode
+15699     1 03-12:05:34 S    /usr/bin/ssh-agent
+19210 19179       07:04 SN   /usr/local/bin/opencode
+23786 23763       02:18 SN   /usr/local/bin/opencode
+26449 26426    01:02:38 SN   /usr/local/bin/opencode
+44571 44570 01-04:27:12 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-04:27:12 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46037 46015       36:10 SN   /usr/local/bin/opencode
+46743 46711    09:41:45 SN   /usr/local/bin/opencode
+60494 59018    02:56:38 SN   /usr/local/bin/opencode
+81797     1 01-14:44:51 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
