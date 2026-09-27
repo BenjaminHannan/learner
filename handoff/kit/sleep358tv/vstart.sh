@@ -15,6 +15,12 @@ echo "rsn-358t v3 vast start, kit $PIN, job $JOB, $(now)"
 for ref in origin/main origin/builder-outbox; do
   for p in $A/RESULTS-v3.md $A/SEAL-run-v3.sha256.txt $A/runs-v3 $A/run-vast-v3; do
     git cat-file -e "$ref:$p" 2>/dev/null && { echo "DUPLICATE: $ref already has $p (BensPC or an earlier rental produced v3 runs)"; exit 0; }; done; done
+# never beside the BensPC version of this experiment: refuse while its queue job is still active on main or running on the watcher
+# (when the Director releases this rental it moves those jobs to handoff/held/superseded/)
+for j in 260-claude-sleep-358t3pc; do
+  git cat-file -e "origin/main:handoff/queue/$j.md" 2>/dev/null && { echo "HELD-BY-BENSPC: handoff/queue/$j.md is still active on main; rented nothing"; exit 0; }
+  [ -e "${WQ358:-$HOME/premonition-watch/queue}/$j.running" ] && { echo "HELD-BY-BENSPC: $j is running on the watcher; rented nothing"; exit 0; }
+done
 [ -e "$G/rentals.txt" ] && { echo "DUPLICATE: $G/rentals.txt exists (a start already ran)"; tail -5 "$G/log.txt" 2>/dev/null; exit 0; }
 command -v "$VAST" > /dev/null || { echo "STOP: no vastai CLI; rented nothing"; exit 0; }
 [ -x "$PYM" ] || { echo "STOP: no python 3.12 from uv on the Mac; rented nothing"; exit 0; }
