@@ -66,7 +66,8 @@ while [ ! -e "$H/STOP" ]; do
     [ "$running" -ge 18 ] && break; localrun=$(ls "$Q"/*.running 2>/dev/null | xargs -n1 basename 2>/dev/null | grep -cvE '^(rent-|000-|claude-|[1-3][0-9][0-9]-)'); gpuj=0; git -C "$W" show "origin/$IN:$f" 2>/dev/null | grep -qE '^GPU: *yes' && gpuj=1; [ "$localrun" -ge "$MAX" ] && [ "$gpuj" = 0 ] && case "$n" in rent-*|000-*|claude-*) ;; *) continue;; esac
     load=$(sysctl -n vm.loadavg 2>/dev/null | awk '{print int($2)}'); [ -z "$load" ] && load=0
     # Ben 13:30 UTC 09-26 "BensPC's gpu should not be the blocker": rentals and read-only 000-* checks do their work off the Mac, so a busy Mac holds only local jobs
-    if [ "${localrun:-0}" -ge 2 ] && [ "$load" -gt 60 ] && [ "$gpuj" = 0 ]; then case "$n" in rent-*|000-*|claude-*) ;; *) log "load $load, holding $n ($running running)"; continue;; esac; fi
+    lightj=0; git -C "$W" show "origin/$IN:$f" 2>/dev/null | grep -qE '^LOAD-LIGHT: *yes' && lightj=1   # network-bound jobs (e.g. Luna/Codex calls) declare this header and skip the load hold (Director 04:06 UTC 09-27)
+    if [ "${localrun:-0}" -ge 2 ] && [ "$load" -gt 60 ] && [ "$gpuj" = 0 ] && [ "$lightj" = 0 ]; then case "$n" in rent-*|000-*|claude-*) ;; *) log "load $load, holding $n ($running running)"; continue;; esac; fi
     freegb=$(df -g / | tail -1 | awk '{print $4}')
     # Ben 06:54 UTC 09-26 made Mac disk the pipeline's job ("You have this responsibility"): jobs marked LOWDISK-OK
     # (no model copy-back to the Mac) may launch down to 2 GB free; everything else keeps the 5 GB rule
@@ -117,7 +118,7 @@ while [ ! -e "$H/STOP" ]; do
   # status: every round, publish which tasks are running and the log tail, so the director can see launches
   { date '+%F %T'; echo "running:"; ls "$Q"/*.running 2>/dev/null | xargs -n1 basename 2>/dev/null; echo "launched (no exit yet) / finished:"; ls "$Q"/*.md 2>/dev/null | wc -l; echo; tail -150 "$LOG"; } > "$H/status.txt"
   # diagnostics (Director 03:00 UTC 09-27, jobs hanging since 01:21): per running job, err/reply file sizes+mtimes and the last 5 err lines, filtered; process names only (no command lines, so no task text or keys)
-  { echo; echo "diag:"; for r in "$Q"/*.running; do [ -e "$r" ] || continue; j=$(basename "$r" .running); echo "== $j"; ls -la "$Q/$j".go* 2>/dev/null | awk '{print $5, $6, $7, $8, $NF}' | sed "s|$Q/||"; for e in "$Q/$j".go*.err.txt; do [ -f "$e" ] && tail -5 "$e" | grep -viE 'key|token|auth|secret|passw|bearer|cookie' | cut -c1-200; done; done; echo "procs:"; ps -axo pid,ppid,etime,stat,comm 2>/dev/null | grep -E 'opencode|rungo4|ssh|bun' | grep -v grep | head -60; } >> "$H/status.txt" 2>/dev/null || true
+  { echo; echo "diag:"; for r in "$Q"/*.running; do [ -e "$r" ] || continue; j=$(basename "$r" .running); echo "== $j"; ls -la "$Q/$j".go* 2>/dev/null | awk '{print $5, $6, $7, $8, $NF}' | sed "s|$Q/||"; for e in "$Q/$j".go*.err.txt; do [ -f "$e" ] && tail -5 "$e" | grep -viE 'key|token|auth|secret|passw|bearer|cookie' | cut -c1-200; done; done; echo "top5cpu:"; ps -axro pcpu,comm 2>/dev/null | head -6 | awk '{c=$2; n=split(c,a,"/"); print $1, a[n]}'; echo "procs:"; ps -axo pid,ppid,etime,stat,comm 2>/dev/null | grep -E 'opencode|rungo4|ssh|bun' | grep -v grep | head -60; } >> "$H/status.txt" 2>/dev/null || true
   mkdir -p "$O/status"; if ! cmp -s "$H/status.txt" "$O/status/watcher.txt"; then cp "$H/status.txt" "$O/status/watcher.txt"
     (cd "$O" && git fetch -q origin "$OUT" 2>/dev/null && git reset -q --soft FETCH_HEAD; git add status && git commit -qm "watcher status" && git push -q origin "HEAD:$OUT") >> "$LOG" 2>&1 || true; fi
   sleep 120
