@@ -1,5 +1,5 @@
 COMMON RULES (the "Making things up about you" thread, Claude, wrote this task on 2026-09-27). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).
-GPU: no (Mac CPU; about 80 GLM 5.3 Flash calls, at most 235 with retries, plus 1 leak-check call through Ben's opencode subscription, at most 3 at a time under the Mac-wide cap W = min(3, 16 - running opencode processes); $0). No reader, no rental, no BensPC, no OpenRouter. Label: madeup-mu407-prep. TIME CAP: 90 minutes. DISK: 1.
+GPU: no (Mac CPU; about 80 GLM 5.3 Flash calls, at most 235 with retries, plus 1 leak-check call through Ben's opencode subscription, at most 3 at a time under the Mac-wide cap W = min(3, 16 - running opencode processes); $0). No reader, no rental, no BensPC, no OpenRouter. Label: madeup-mu407-prep. TIME CAP: 105 minutes. DISK: 1.
 OPENCODE RULES: never read, print, copy or commit any opencode config, auth file or key. The scripts delete only the sessions they create; never delete any other session.
 PYTHON: run every script as `uv run --offline --no-project --python 3.12 python -B <script> ...` (standard library only).
 THINKING SETTING: reasoning effort "low" (`--variant low`), set inside scripts/claude_lis320_glm_oclow.py (called by scripts/claude_mu407_prep.py). Do not add or change any flag.
@@ -13,7 +13,9 @@ WHY: mu-407 tests whether a clear "reply to this message now" label stops the pl
 6. RUN, recording `date -u` before and after and every printed line verbatim:
    scripts/claude_mu407_prep.py facts --out $O/facts_all.jsonl
    scripts/claude_mu407_prep.py frames --out $O/frames.json
-   scripts/claude_mu407_prep.py write --facts $O/facts_all.jsonl --out $O/raw.jsonl --workers $W --max-minutes 60 > $O/write.log 2>&1   (record the last line of write.log)
+   WRITE runs in the background, because your shell tool stops any single command after 80 minutes (it did so to job madeup-g406-2-mac at 02:06 UTC 09-27). Start it with one command:
+   nohup uv run --offline --no-project --python 3.12 python -B scripts/claude_mu407_prep.py write --facts $O/facts_all.jsonl --out $O/raw.jsonl --workers $W --max-minutes 45 > $O/write.log 2>&1 & echo $! > $O/write.pid ; date -u
+   Then check it with separate short commands, each under 10 minutes: `sleep 300; tail -2 $O/write.log; kill -0 $(cat $O/write.pid) && echo alive`. Repeat until it is no longer alive. If it is still alive 70 minutes after it started, stop it by exact PID only: `pgrep -P $(cat $O/write.pid)` gives its python child; kill that PID, then the PID in write.pid, record both and `date -u`, and go on (raw.jsonl keeps every finished row). Record the last line of write.log.
    scripts/claude_mu407_prep.py select --facts $O/facts_all.jsonl --raw $O/raw.jsonl --out-panel $O/panel/items.jsonl --out-facts $O/facts.jsonl
    python -B scripts/claude_mu405_check.py --panel $O/panel/items.jsonl --facts $O/facts.jsonl   (record its line and exit code)
    If frames fails (exit 1), still run the rest and say so.
