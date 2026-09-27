@@ -1,25 +1,21 @@
-2026-09-27 10:05:36
+2026-09-27 10:08:00
 running:
+000-bash-stop-bm398w-b.running
 000-probe-benspc-gpu-0827.running
 000-probe-zen-builder.running
 000-stop-172-rv390.running
 260-claude-sleep-358t3pc.running
 300-fixsleep-dl11-luna.running
+claude-lis320-luna-c5-mac.running
 k1h-glm2.running
 k1h-luna-full-mac.running
-k1h-luna-full-r3-bash.running
 lis320-pilot8b-mac.running
 madeup-mu406-teach2-mac.running
 rent358u-1-start.running
 y1t-luna-rest-mac.running
 launched (no exit yet) / finished:
-     921
+     925
 
-2026-09-27 09:17:52 BensPC unreachable (ssh rc=255), holding 161-claude-sleep-358s-bo-p2
-2026-09-27 09:18:03 BensPC unreachable (ssh rc=255), holding 162-claude-sleep-358s-bo-p3
-2026-09-27 09:18:13 BensPC unreachable (ssh rc=255), holding 163-claude-sleep-358s-bo-p4
-2026-09-27 09:18:24 BensPC unreachable (ssh rc=255), holding 164-claude-sleep-358s-bo-p5
-2026-09-27 09:18:34 BensPC unreachable (ssh rc=255), holding 173-rv390-358i2-pc-d
 2026-09-27 09:18:45 BensPC unreachable (ssh rc=255), holding 174-rv392-358i2-pc
 2026-09-27 09:18:55 BensPC unreachable (ssh rc=255), holding 176-creative-brd11pc
 2026-09-27 09:19:05 BensPC unreachable (ssh rc=255), holding 260-claude-sleep-358t3pc
@@ -165,8 +161,16 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 10:05:23 pushed bm398w-mac-c5
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 10:05:31 pushed claude-lis320-luna-c4-mac
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 10:07:53 pushed k1h-luna-full-r3-bash
+2026-09-27 10:07:55 launch 000-bash-stop-bm398w-b
+2026-09-27 10:07:58 launch claude-lis320-luna-c5-mac
 
 diag:
+== 000-bash-stop-bm398w-b
+0 Sep 27 10:07 000-bash-stop-bm398w-b.go1.err.txt
+107 Sep 27 10:07 000-bash-stop-bm398w-b.go1.reply.md
 == 000-probe-benspc-gpu-0827
 53 Sep 27 04:13 000-probe-benspc-gpu-0827.go1.err.txt
 0 Sep 27 04:13 000-probe-benspc-gpu-0827.go1.reply.md
@@ -214,6 +218,9 @@ diag:
 [0m
 > build · muse-spark-1.3-contributor-free
 [0m
+== claude-lis320-luna-c5-mac
+0 Sep 27 10:07 claude-lis320-luna-c5-mac.go1.err.txt
+0 Sep 27 10:07 claude-lis320-luna-c5-mac.go1.reply.md
 == k1h-glm2
 121798 Sep 26 20:58 k1h-glm2.go1.err.txt
 758 Sep 26 18:58 k1h-glm2.go1.reply.md
@@ -230,9 +237,6 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
      302 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answer-log-1.txt
      326
 [0m
-== k1h-luna-full-r3-bash
-0 Sep 27 09:46 k1h-luna-full-r3-bash.go1.err.txt
-1615 Sep 27 09:47 k1h-luna-full-r3-bash.go1.reply.md
 == lis320-pilot8b-mac
 118 Sep 27 03:55 lis320-pilot8b-mac.go1.err.txt
 0 Sep 27 03:53 lis320-pilot8b-mac.go1.reply.md
@@ -250,7 +254,7 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 1758 Sep 27 09:58 madeup-mu406-teach2-mac.go1.reply.md
 == rent358u-1-start
 0 Sep 27 09:43 rent358u-1-start.go1.err.txt
-923 Sep 27 10:01 rent358u-1-start.go1.reply.md
+932 Sep 27 10:07 rent358u-1-start.go1.reply.md
 == y1t-luna-rest-mac
 149 Sep 27 03:32 y1t-luna-rest-mac.go1.err.txt
 0 Sep 27 03:30 y1t-luna-rest-mac.go1.reply.md
@@ -277,25 +281,27 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 [0m
 top5cpu:
 %CPU COMM
-91.9 ApplicationsStorageExtension
-65.8 fileproviderd
-36.5 python
-26.2 bash
-13.8 codex
+65.2 ApplicationsStorageExtension
+46.4 fileproviderd
+38.4 python
+27.6 bash
+23.4 bird
 procs:
-  363     1 03-21:52:34 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-21:51:42 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
-15699     1 03-20:07:00 S    /usr/bin/ssh-agent
-29478   818       55:31 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-44571 44570 01-12:28:38 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-12:28:38 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    17:43:11 SN   /usr/local/bin/opencode
-53479 20011    06:00:47 SN   /usr/local/bin/opencode
-54153 44066    06:00:27 SN   /usr/local/bin/opencode
-59802 59771    05:52:03 SN   /usr/local/bin/opencode
-60494 59018    10:58:04 SN   /usr/local/bin/opencode
-61605 61571    05:49:45 SN   /usr/local/bin/opencode
-64555 64533    07:23:38 SN   /usr/local/bin/opencode
-81797     1 01-22:46:17 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
-86036 86004       05:04 SN   /usr/local/bin/opencode
-87132 31168       04:22 SN   /usr/local/bin/opencode
+  363     1 03-21:54:57 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-21:54:05 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+15699     1 03-20:09:23 S    /usr/bin/ssh-agent
+29478   818       57:54 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+44571 44570 01-12:31:01 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-12:31:01 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    17:45:34 SN   /usr/local/bin/opencode
+53479 20011    06:03:10 SN   /usr/local/bin/opencode
+54153 44066    06:02:50 SN   /usr/local/bin/opencode
+59802 59771    05:54:26 SN   /usr/local/bin/opencode
+60494 59018    11:00:27 SN   /usr/local/bin/opencode
+61605 61571    05:52:08 SN   /usr/local/bin/opencode
+64555 64533    07:26:01 SN   /usr/local/bin/opencode
+81797     1 01-22:48:40 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+86036 86004       07:27 SN   /usr/local/bin/opencode
+87132 31168       06:45 SN   /usr/local/bin/opencode
+96820 64190       00:13 SN   ssh
+99380 99371       00:00 SN   /usr/bin/ssh
