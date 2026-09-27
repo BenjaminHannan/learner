@@ -27,7 +27,8 @@ work if the reported remaining allowance falls below20%; no reset/purchase.
 ## Registered training completed
 
 R1's two runs used software `697f18b58057a6b4f376acc65abb5cd3e24fb5f8`:
-seed 29, PID 98193, 03:55:34–04:02:38 UTC; seed 30, 04:02:58–04:10:02 UTC.
+seed 29, PID 98193, 03:55:34–04:02:38 UTC; seed 30, PID 2288,
+04:02:58–04:10:02 UTC.
 The individual RUN-NOTEs contain full PID/machine/command records. R1 is
 INCONCLUSIVE because seed 29 did not meet initial grid mastery.
 
@@ -47,3 +48,13 @@ setup failure and correction. No 1B model was evaluated.
 
 Reported usage remaining at 2026-09-27 04:37 UTC: **89%**. Neither the stop
 threshold nor any reset/purchase was reached.
+
+## Independent recount completed
+
+Verifier marks and final repaired software were committed, pulled with rebase
+and pushed to main as `fab44d9d17e5ae3882cdef663b69f38b3265236a` before execution.
+The recount began at **2026-09-27 04:40:53 UTC**, PID **18369**, MacBook-Pro,
+MPS/Torch 2.14.0, and completed in **21.7 seconds**. It passed all **337**
+recorded comparisons with **zero mismatches**; R1 remains INCONCLUSIVE and R2
+PASS. Its complete provenance and itemwise arrays are in
+`verify/recount-fab44d9d17e5/`. All our training and recount processes completed.

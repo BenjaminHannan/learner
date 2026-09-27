@@ -1,5 +1,13 @@
 # Independent R1/R2 saved-artifact review — 2026-09-27 UTC
 
+**Completion addendum:** the subsequently registered verifier ran after both R2
+seeds completed. It passed 337 recorded comparisons with zero mismatches,
+including recalculated checkpoint tensor hashes and itemwise scores. Both R2
+seeds scored 200/200 grids before and through the saved route after sums, and
+200/200 sums; their latest mutable models scored 0/200 grids. The independent
+aggregate is R1 INCONCLUSIVE, R2 PASS. See [verification report](../verify/RESULTS.md).
+The review below records the earlier inspection boundary and remains historical.
+
 **Finding:** No scoring arithmetic or source-provenance mismatch was found in the completed R1 results by read-only inspection. R1's registered aggregate remains **INCONCLUSIVE**: seed 29 learned A grids5 to only **174/200**, below the 190 mastery gate; seed 30 reached **197/200**. Both B sums4 scores were **200/200**. The newest mutable B model scored **0/200** old grids on each seed, while the saved A route scored **174/200** and **197/200**, respectively. Thus the paired mutable-control losses are exactly **174** and **197** previously correct items, with zero gains; the routed frozen-A loss is reported as zero on both seeds. These are observations from `reasoner/seed29/result.json` and `reasoner/seed30/result.json`, not a claim that R1 passed its preregistered mastery condition.
 
 ## Checks and interpretation

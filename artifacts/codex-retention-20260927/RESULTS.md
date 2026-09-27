@@ -1,7 +1,8 @@
 # Retention work — review package
 
 **Result: R2 PASS for task-aware snapshot retention; R1 INCONCLUSIVE; C1 live
-1B INCONCLUSIVE.** Independent checkpoint recount is pending. This is a
+1B INCONCLUSIVE.** The independent checkpoint recount passed with **zero
+mismatches across 337 recorded checks**, confirming all four seeds. This is a
 candidate implementation and measured engineering study. Nothing here closes
 the project's H-A or H-B gates or changes an earlier registered verdict.
 
@@ -56,6 +57,13 @@ The two complete R2 runs took **742.1 and 713.9 seconds** on MPS. This is a
 longer initial training budget than R1, not an equal-compute comparison between
 experiments; candidate and control within each run share the same trajectory.
 [R2 report](r2/RESULTS.md) contains the measurements and their scope.
+
+The [independent recount](verify/RESULTS.md) loaded all eight checkpoints and
+recomputed every panel item's own-stop, fixed16 and any48 outcomes directly
+from the canonical checker. It verified checkpoint contents, source versions,
+metadata, reloads and alternating routes. It confirmed R1 INCONCLUSIVE and R2
+PASS without changing either experiment's marks. This is our reproducibility
+check; the project's reviewers have not yet signed off.
 
 C1 has **20 passing software tests**: ten core adapter tests and ten chat
 fixture tests, including cached causal generation and provenance controls.

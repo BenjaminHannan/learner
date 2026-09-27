@@ -1,4 +1,11 @@
-# R2 ready for parent registration
+# R2 completed — task-aware snapshot retention PASS
+
+Both registered seeds completed and passed. The [results](RESULTS.md) and
+[independent checkpoint recount](../verify/RESULTS.md) give the exact counts,
+provenance and limits. R1 remains INCONCLUSIVE. The preparation note below is a
+historical record from before registration; it is not the current run status.
+
+## Original preparation note
 
 R2 preparation is complete: [PASSMARKS.md](PASSMARKS.md) fixes the protocol and [run_mastered.py](run_mastered.py) implements it. No R2 benchmark, training, or GPU run has started. The parent owns committing and later execution, after the existing R1 run finishes.
 
