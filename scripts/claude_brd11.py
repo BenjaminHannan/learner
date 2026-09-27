@@ -19,11 +19,13 @@ Arms (ONE change each, against its own comparator):
 - S: n_miss = 120, a stronger night search on the misses only. Claim: S3 vs R3. It asks whether more search at night
   (expert iteration's fix for nights that stop improving) finds hits on HARDER puzzles that then teach more; a gain
   from merely more examples is limited because R and S practise the same puzzles and keep at most one hit each.
+Temperature T: brd-9's registered DEV rule (claude_blurt2.pick_temp): on the DEV puzzles the base model misses, 30
+blurts at each of 1.0 and 1.5; the one with more lucky blurts is used everywhere (ties go to 1.0).
 Test: a fixed panel (30 samples each) for base, night 1 and night 3 of every arm and seed. Harm: Fix sleep's 300
 general items (claude_dl1_nights.harm_panel), greedy, for base and night 3 of every arm and seed.
 
-  python -B scripts/claude_brd11.py --model M --out DIR --test-puzzles T [--temp 1.0]
-  python -B scripts/claude_brd11.py --dev --model M --out F.json      (DEV luck, DEV seed only)
+  python -B scripts/claude_brd11.py --model M --out DIR --test-puzzles T [--temps 1.0,1.5]
+  python -B scripts/claude_brd11.py --dev --model M --out F.json [--temps 1.5]   (DEV luck, DEV seed only)
   python -B scripts/claude_brd11.py --make-panel OUT
   python -B scripts/claude_brd11.py --selftest
 """
@@ -34,6 +36,7 @@ import json
 import random
 import sys
 import time
+from types import SimpleNamespace
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -152,11 +155,14 @@ def dev(a):
     s = B2.Solver(a.model)
     s.model.name_or_path = a.model
     ps = wide(DEV_SEED, a.dev_items, n3=a.dev_items // 2)
-    res = {"temp": a.temp, "n": a.n}
-    st = coverage(s, ps, a.n, a.temp)
+    res = {"n": a.n}
     greedy = [B1.check(s.answer(p), p["nums"], p["target"]) for p in ps]
-    res["dev"] = summ(st, ps) | {"items": len(ps), "greedy_right": sum(greedy),
-                                 "greedy_right_3num": sum(g for g, p in zip(greedy, ps) if len(p["nums"]) == 3)}
+    for t in [float(x) for x in a.temps.split(",")]:
+        st = coverage(s, ps, a.n, t)
+        res[f"dev_T{t}"] = summ(st, ps) | {"items": len(ps), "greedy_right": sum(greedy),
+                                           "greedy_right_3num": sum(g for g, p in zip(greedy, ps)
+                                                                    if len(p["nums"]) == 3)}
+        print(json.dumps({t: res[f"dev_T{t}"]}), flush=True)
     Path(a.out).write_text(json.dumps(res, indent=1), encoding="utf-8")
     print(json.dumps(res))
 
@@ -172,7 +178,11 @@ def run(a):
     dkeys = keys_of(wide(DEV_SEED, a.dev_items, n3=a.dev_items // 2))
     assert not (keys_of(test) & (set().union(*map(keys_of, ns)) | dkeys | old_keys())), "panel overlaps"
     harm = D1.harm_panel()[:a.n_harm]
-    res = {"temp": a.temp, "n_test": len(test), "n_test_3num": sum(len(p["nums"]) == 3 for p in test)}
+    dev_file = out / "dev_puzzles.jsonl"
+    dev_file.write_text("".join(json.dumps(p) + "\n" for p in wide(DEV_SEED, a.dev_items, n3=a.dev_items // 2)),
+                        encoding="utf-8")
+    a.temp, res = B2.pick_temp(s, SimpleNamespace(temps=a.temps, dev_puzzles=str(dev_file), n=a.n))
+    res.update({"temp": a.temp, "n_test": len(test), "n_test_3num": sum(len(p["nums"]) == 3 for p in test)})
     base = coverage(s, test, a.n, a.temp)
     res["base"] = summ(base, test)
     res["base_unreached"] = len(test) - res["base"]["cov@30"]
@@ -238,7 +248,7 @@ def main():
     ap.add_argument("--n", type=int, default=30)
     ap.add_argument("--s-miss", type=int, default=120)
     ap.add_argument("--n-harm", type=int, default=300)
-    ap.add_argument("--temp", type=float, default=1.0)
+    ap.add_argument("--temps", default="1.0,1.5")
     ap.add_argument("--test-puzzles", default="")
     ap.add_argument("--epochs", type=int, default=3)
     ap.add_argument("--lora-seeds", default="0,1,2")

@@ -39,3 +39,23 @@ Finding: with 4x4 squares (exact check) and level-1 text games, the plain 1B got
 DEV item. A loop that learns from its own lucky hits has nothing to start from there. Next: text games at level 0
 (1-2 step plans, Sleep research aec0ae1da), reported by plan length; and the replication moves to a wider number world
 (brd-11).
+
+## Addendum (2026-09-27T05:15Z): wider number world and level-0 games (DEV only, CPU, plain MiniCPM5-1B, 30 samples)
+
+| setting | command | items | greedy right | reached in 30 | lucky samples |
+|---|---|---|---|---|---|
+| wider number world, rule-kept, T 1.0 (20 three-number 1-13 / target 5-60, 20 four-number 1-13 / target 24) | brd-11 --dev (464ebce58 code) | 40 | 2 | 11 (3-number 11 of 20, 4-number 0 of 20) | 38 |
+| text game keys, level 0 (plans 1-2 steps) | --form game --settings keys:0 --items 20 | 20 | 4 | 11 (1-step 11 of 16, 2-step 0 of 4) | 43 |
+| text game recipes, level 0 | same, recipes:0 | not run | | | |
+
+Files: dev/wide_rulekept_T1.0.json, dev/games_level0_keys.json. Recipes at level 0 hit the 10,000 s CPU timeout
+before writing a line, so there is no number for it.
+
+Reading the 4-number 0 of 20: brd-9's base model reached 40 of its 160 four-number test puzzles (numbers 1-13, target
+24), but brd-9 sampled at T 1.5, chosen by its DEV rule. The run above used T 1.0, and 20 items is small. brd-11 as
+drafted fixed T at 1.0, which differs from brd-9's recipe; it now applies brd-9's DEV rule (claude_blurt2.pick_temp,
+1.0 vs 1.5) on its own DEV panel. A T 1.5 DEV measurement is running to check 4-number luck before the panel mix is
+fixed.
+
+Level-0 key games: one-step plans give luck (11 of 16), two-step plans none (0 of 4). A games loop could start there,
+but level 1 (0 of 20) is out of reach without a curriculum.
