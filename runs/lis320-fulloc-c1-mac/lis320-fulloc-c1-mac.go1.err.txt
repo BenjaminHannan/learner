@@ -1,0 +1,183 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m# [0mTodos
+[•] Get first 13 lines of handoff file + git fetch
+[ ] TREE setup (mktemp, git archive, record commit)
+[ ] SEALS verification
+[ ] SELFTESTS
+[ ] LEAK CHECK (one call)
+[ ] SEEDS generation
+[ ] RESUME (K=1, B=0)
+[ ] SHARE (worker count)
+[ ] WORDING run (max 150 min)
+[ ] NEW ROWS + checks + counts
+[ ] Copy to worktree, write RESULTS.md, cleanup, push path report
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo "FETCH_EXIT:$?"; git rev-parse origin/main
+FETCH_EXIT:0
+ed8d0cc1a505bf36abd7bef11eb5c789f79442f0
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 13
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+[0m
+[0m$ [0mD=$(mktemp -d); echo "D=$D"; git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C "$D" && echo "ARCHIVE_OK"; K=1; O=artifacts/claude-lis320-20260926/full-oc; C="$O/chunk$K"; mkdir -p "$D/$C" && echo "MKDIR_OK $D/$C"; git rev-parse origin/main; ls "$D"; ls "$D/$O" 2>&1 || echo "O_empty_or_missing"
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.YMcp2eOaXJ
+ARCHIVE_OK
+MKDIR_OK /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.YMcp2eOaXJ/artifacts/claude-lis320-20260926/full-oc/chunk1
+ed8d0cc1a505bf36abd7bef11eb5c789f79442f0
+artifacts
+design
+scripts
+chunk1
+[0m
+[0m# [0mTodos
+[✓] Get first 13 lines of handoff file + git fetch
+[✓] TREE setup (mktemp, git archive, record commit)
+[•] SEALS verification
+[ ] SELFTESTS
+[ ] LEAK CHECK (one call)
+[ ] SEEDS generation
+[ ] RESUME (K=1, B=0)
+[ ] SHARE (worker count)
+[ ] WORDING run (max 150 min)
+[ ] NEW ROWS + checks + counts
+[ ] Copy to worktree, write RESULTS.md, cleanup, push path report
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-5.sha256.txt 2>&1; echo "EXIT5:$?"; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-6.sha256.txt 2>&1; echo "EXIT6:$?"; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-7.sha256.txt 2>&1; echo "EXIT7:$?"; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-8.sha256.txt 2>&1; echo "EXIT8:$?"
+artifacts/claude-lis320-20260926/ADDENDUM-5-owner-reach-and-correct-ref.md: OK
+scripts/claude_lis320_seed_cr.py: OK
+scripts/claude_lis320_check_cr.py: OK
+scripts/claude_lis320_glm_oc11.py: OK
+scripts/claude_glm_opencode_v11.py: OK
+scripts/claude_lis320_reachcount.py: OK
+EXIT5:0
+artifacts/claude-lis320-20260926/ADDENDUM-6-route-low.md: OK
+scripts/claude_lis320_glm_oclow.py: OK
+scripts/claude_lis320_glm_oc.py: OK
+scripts/claude_lis320_glm.py: OK
+scripts/claude_lis320_style.py: OK
+scripts/claude_glm_leakcheck.py: OK
+EXIT6:0
+artifacts/claude-lis320-20260926/ADDENDUM-7-group-speaker-check.md: OK
+scripts/claude_lis320_check_we.py: OK
+scripts/claude_lis320_check_cr.py: OK
+scripts/claude_lis320_check.py: OK
+scripts/claude_lis320_seed_cr.py: OK
+scripts/claude_lis320_glm_oclow.py: OK
+EXIT7:0
+artifacts/claude-lis320-20260926/ADDENDUM-8-group-check-narrowed.md: OK
+scripts/claude_lis320_check_we2.py: OK
+scripts/claude_lis320_check_cr.py: OK
+scripts/claude_lis320_check.py: OK
+scripts/claude_lis320_seed_cr.py: OK
+scripts/claude_lis320_glm_oclow.py: OK
+EXIT8:0
+[0m
+[0m# [0mTodos
+[✓] Get first 13 lines of handoff file + git fetch
+[✓] TREE setup (mktemp, git archive, record commit)
+[✓] SEALS verification
+[•] SELFTESTS
+[ ] LEAK CHECK (one call)
+[ ] SEEDS generation
+[ ] RESUME (K=1, B=0)
+[ ] SHARE (worker count)
+[ ] WORDING run (max 150 min)
+[ ] NEW ROWS + checks + counts
+[ ] Copy to worktree, write RESULTS.md, cleanup, push path report
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_glm_oclow.py --selftest 2>&1; echo "EXIT:$?"
+[glm320] s320-1-00000 ok
+[glm320] s320-1-00001 unparsed
+[glm320] s320-1-00002 ok
+[glm320] s320-1-00003 ok
+[glm320] s320-1-00004 ok
+lis320 glm_oc selftest 4/4 ok
+lis320 glm_oclow selftest ok (variant low on the run line; no network)
+EXIT:0
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_seed_cr.py --selftest 2>&1; echo "EXIT:$?"; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_check_we2.py --selftest 2>&1; echo "EXIT:$?"; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_rawcheck.py --selftest 2>&1; echo "EXIT:$?"
+seed_cr selftest OK: 400 dialogs; {'correct_ref': 121, 'correct': 197, 'backref': 235}
+EXIT:0
+check_we2 selftest OK: 1 kept, 1 dropped (group_speaker); bare 'me and' no longer drops
+EXIT:0
+lis320 rawcheck selftest 4/4 ok
+EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Get first 13 lines of handoff file + git fetch
+[✓] TREE setup (mktemp, git archive, record commit)
+[✓] SEALS verification
+[✓] SELFTESTS
+[•] LEAK CHECK (one call)
+[ ] SEEDS generation
+[ ] RESUME (K=1, B=0)
+[ ] SHARE (worker count)
+[ ] WORDING run (max 150 min)
+[ ] NEW ROWS + checks + counts
+[ ] Copy to worktree, write RESULTS.md, cleanup, push path report
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_glm_leakcheck.py --worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 2>&1; echo "EXIT:$?"
+{"exit": 0, "reply_ok": true, "left_after_cleanup": 0}
+EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Get first 13 lines of handoff file + git fetch
+[✓] TREE setup (mktemp, git archive, record commit)
+[✓] SEALS verification
+[✓] SELFTESTS
+[✓] LEAK CHECK (one call)
+[•] SEEDS generation
+[ ] RESUME (K=1, B=0)
+[ ] SHARE (worker count)
+[ ] WORDING run (max 150 min)
+[ ] NEW ROWS + checks + counts
+[ ] Copy to worktree, write RESULTS.md, cleanup, push path report
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_seed_cr.py --seed 324 --n 6000 --ask-back --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out artifacts/claude-lis320-20260926/full-oc/seeds.jsonl 2>&1; echo "EXIT:$?"; shasum -a 256 artifacts/claude-lis320-20260926/full-oc/seeds.jsonl | awk '{print $1}' > artifacts/claude-lis320-20260926/full-oc/chunk1/SEEDS.sha256.txt; cat artifacts/claude-lis320-20260926/full-oc/chunk1/SEEDS.sha256.txt; wc -l < artifacts/claude-lis320-20260926/full-oc/seeds.jsonl | tr -d ' '
+{"dialogs": 6000, "turns": 42044, "intents": {"ack_after_ask": 1385, "ambiguous_pronoun": 1056, "ask": 2601, "backref": 3398, "confirm": 1010, "correct": 3325, "correct_ref": 1764, "doubt": 1010, "former": 2569, "hypothetical": 1035, "jobhome": 1581, "negation_only": 939, "plan": 1034, "question": 1046, "smalltalk": 1388, "someone_else": 994, "teach": 14602, "yes_after_ask": 1307}}
+EXIT:0
+9d17c5fe3e6171e0cb0ab87390d0144e325903de54200ef60f074302a29678d2
+6000
+[0m
+[0m$ [0mK=1; O=artifacts/claude-lis320-20260926/full-oc; : > "$O/raw.jsonl"; B=$(wc -l < "$O/raw.jsonl" | tr -d ' '); echo "B=$B"; date -u; uptime; N=$(pgrep -f "opencode run" | wc -l | tr -d ' '); echo "N=$N"; W=$((16 - N)); if [ "$W" -gt 6 ]; then W=6; fi; echo "W=$W"
+B=0
+Sun Sep 27 00:49:37 UTC 2026
+20:49  up 3 days, 10:42, 4 users, load averages: 55.51 56.61 69.88
+N=12
+W=4
+[0m
+[0m# [0mTodos
+[✓] Get first 13 lines of handoff file + git fetch
+[✓] TREE setup (mktemp, git archive, record commit)
+[✓] SEALS verification
+[✓] SELFTESTS
+[✓] LEAK CHECK (one call)
+[✓] SEEDS generation
+[✓] RESUME (K=1, B=0)
+[✓] SHARE (worker count)
+[•] WORDING run (max 150 min)
+[ ] NEW ROWS + checks + counts
+[ ] Copy to worktree, write RESULTS.md, cleanup, push path report
+[0m
+[0m$ [0mdate -u; O=artifacts/claude-lis320-20260926/full-oc; C="$O/chunk1"; W=4; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_glm_oclow.py --seeds "$O/seeds.jsonl" --out "$O/raw.jsonl" --workers $W --batch 40 --max-minutes 150 --max-failed 50 > "$C/glm.log" 2>&1; echo "WORDING_EXIT:$?"; date -u; uptime; tail -n 1 "$C/glm.log"
+Sun Sep 27 00:49:47 UTC 2026
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 9300000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
