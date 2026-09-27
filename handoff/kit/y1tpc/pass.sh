@@ -6,13 +6,15 @@
 #   tree     C:\Users\benja\y1t\tree is made once from `git archive` of the pinned commit, then marked with the pin
 #   checks   seals, items sha256 and the four selftests, once (W/checks.txt on BensPC)
 #   launch   the chain (drafts, train, eval, eval_plain, h1_A, h1_B: remote/chain.cmd) starts once, detached through WMI,
-#            only on an idle BensPC; a logger writes one nvidia-smi line a minute until the chain ends
+#            only on an idle BensPC with 6 GB free; a logger writes one nvidia-smi line a minute until the chain ends
 #   running  report the step and its log's age (a STALLED note after 30 minutes); nothing is ever stopped
 #   done     copy the results back, copy the model, write RESULTS-benspc.md (no verdict: the thread scores it)
 # It never edits sealed code, never stops a process, never starts a second chain, never opens the TEST-ONLY panel or
 # the H1 rows, and never pushes weights.
 # Usage: pass.sh <kit-dir> <pinned-commit> <queue-job-name>          (bash 3.2 safe: macOS)
 set -u
+# LC_ALL=C: macOS cut/awk fail with "Illegal byte sequence" on BensPC output otherwise (memory benspc-bash-only-jobs)
+export LC_ALL=C COPYFILE_DISABLE=1
 KD=$1; PIN=$2; JOB=${3:-?}
 A=artifacts/claude-y1t-20260926
 H=artifacts/claude-y1tH1-20260926
@@ -23,7 +25,7 @@ TRAIN_SHA=47e2e2955bf085816abcda50fdfc4230d0030cbe72b5d8df4109e704858c79e4
 DEV_SHA=c0288f2cb7a5b764f974f49d1bfeb5b8ddb0de68e8ce63fffc6cc4d0a3d407e4
 MINICPM=87179e5c1f455ef22e6223592d2d61351b525bfc
 SSH=${SSHY1T:-"ssh -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 -o BatchMode=yes benspc"}
-RB=${RBY1T:-'"C:\Program Files\Git\bin\bash.exe" /c/Users/benja/y1t/tree/handoff/kit/y1tpc/remote/boy1t.sh'}
+RB=${RBY1T:-'"C:\Program Files\Git\bin\bash.exe" C:/Users/benja/y1t/tree/handoff/kit/y1tpc/remote/boy1t.sh'}
 WIN=${WINY1T:-'C:\Users\benja\y1t\tree'}
 MA=${MAY1T:-$HOME/y1t-adapter}
 S5=${S5Y1T:-300}; S1=${S1Y1T:-60}
@@ -110,7 +112,8 @@ if [ "$(sv CHAIN)" = "started=0 done=0" ]; then
   mk=$(sv MARKER)
   [ "$py" = 0 ] && [ "$gused" -le 700 ] || stop "BUSY: $py python.exe, GPU $gused MiB used on BensPC; nothing launched"
   case "$mk" in ""|*"queue job $JOB "*) ;; *) stop "BUSY: GPU-BUSY.txt names another job ($mk); nothing launched";; esac
-  [ "$(sv DISK)" -ge 10 ] 2>/dev/null || stop "NO-DISK: C: has $(sv DISK) GB free and the run needs 10 GB; nothing launched"
+  # the chain writes about 2.2 GB (tr/merged is about 2.1 GB); 6 GB keeps Ben's 3 GB BensPC floor free afterwards
+  [ "$(sv DISK)" -ge 6 ] 2>/dev/null || stop "NO-DISK: C: has $(sv DISK) GB free and the run needs 6 GB; nothing launched"
   out=$(rb launch-chain); echo "$out"; note "$(echo "$out" | tr '\n' ';')"
   echo "$out" | grep -q '^LAUNCH chain .*rc=0 pid=' || stop "STOP: the chain launch did not report rc=0"
   sleep "$S5"; ST=$(rb state)

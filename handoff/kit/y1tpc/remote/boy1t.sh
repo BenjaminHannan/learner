@@ -76,7 +76,7 @@ case "${1:-}" in
     [ -f W/checks.txt ] || { echo "REFUSED: checks not run"; exit 5; }
     [ "$(grep -c '^CHECK .* rc=0 ' W/checks.txt)" = 4 ] || { echo "REFUSED: not every selftest passed"; exit 5; }
     [ "$(echo "$(procs)" | grep -c '^PROC ')" = 0 ] || { echo "REFUSED: a python.exe is running"; exit 5; }
-    [ "$(freegb)" -ge 10 ] || { echo "REFUSED: C: has under 10 GB free ($(freegb) GB)"; exit 5; }
+    [ "$(freegb)" -ge 6 ] || { echo "REFUSED: C: has under 6 GB free ($(freegb) GB)"; exit 5; }
     echo "LAUNCH chain $(date -u +%FT%TZ) $(launch "cmd.exe /c $KW\\chain.cmd")"
     sleep 5
     echo "LAUNCH gpulog $(date -u +%FT%TZ) $(launch "cmd.exe /c $KW\\gpulog.cmd")" ;;
