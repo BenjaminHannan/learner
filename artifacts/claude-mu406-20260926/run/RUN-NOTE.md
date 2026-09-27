@@ -70,3 +70,6 @@ Times are from date -u. Plan and marks: ../PASSMARKS.md, sealed in ../SEAL.sha25
   its result cannot change. Read from teach.jsonl at builder-outbox 120ebdb05 (160 rows, sha256 091038f535170634...; all 20 held-out
   chats whole, 100 turns). gate-prep wrote gate/packets/b1-b2 (20 packets each) and gate/keys/key.json; judge files
   match SEAL lines 3-4; 4 fresh blind judges in private folders (claims b1, claims b2, fit b1, fit b2).
+- 2026-09-27 16:51:39 UTC: teacher gate PASS (gate/gate.json; complete, 2c2f on all 20 chats, 0 bad rows). G1 claim flags summed
+  over both claims judges 2 of 200 (bar 6); flagged by both 0, by either 2 of 100. G2 on-turn by both fit judges 80
+  of 80 (bar 72). G3 real answers by both 20 of 20 (bar 16). A separate count straight from gate/out agrees.
