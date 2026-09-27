@@ -8,8 +8,9 @@ replies. It never sees a later turn. The prompt describes the job and gives no e
 Code checks every reply before the next turn is written. A failed call and a failed check each count as one
 attempt, up to 3 per turn. If all 3 fail, the chat stops there and its later turns get no reply.
 Checks: non-empty; at most MAX_CHARS characters; none of mu-407's scan strings; on the ask turn the stored value
-appears (the substring test of claude_mu405_talk.ask_right); no fact-like slot value that appears in none of the
-chat's user messages (PLAN-review-1.md); not the same as an earlier reply in the chat.
+appears (the substring test of claude_mu405_talk.ask_right); no person, pet or place name from the fact generator's
+lists (case as written) that appears in none of the chat's user messages (PLAN-review-1.md, narrowed to name-like
+slots at the Thread manager's 09:53 UTC review); not the same as an earlier reply in the chat.
 
   write --items I --facts F --out OUT [--workers 2] [--max-minutes 60]   finished chats are skipped on a restart
   stats --out OUT      counts only; no reply text is printed
@@ -36,8 +37,10 @@ MODEL = "gpt-6-luna"   # pinned here; nothing passes another model id through
 ATTEMPTS = 3
 MAX_CHARS = 500
 SCAN = ("usage limit", "rate limit", "error:", "as an ai", "openai", "codex", "i can't help with")  # mu-407's list
-SLOT_VALUES = sorted({v.lower() for v in F.NAMES + F.PET_NAMES + F.JOBS + F.CITIES + F.EVENTS + F.DAYS
-                      + F.ALLERGIES + F.HOBBIES})
+# Name-like slots only (the Thread manager, 09:53 UTC): people, pets and places, matched case-sensitively as written
+# (capitalised), so "pepper" or "olive" as food does not count but "Pepper" does. Invented foods, days and hobbies
+# are left to the teacher gate's claims judges.
+NAME_SLOTS = {"person": F.NAMES, "pet": F.PET_NAMES, "place": F.CITIES}
 
 HEAD = (
     "You are the assistant in a chat app used by one person. Below are the messages this person sent in an earlier "
@@ -81,14 +84,15 @@ def norm(t: str) -> str:
 
 
 def invented(reply: str, item: dict) -> list[str]:
-    said = " ".join(t["text"] for t in item["session1"] + item["session2"]).lower()
-    low = reply.lower()
+    """Slot kinds of name-like values the reply uses that no user message in the chat contains (any case)."""
+    said = " ".join(t["text"] for t in item["session1"] + item["session2"])
     out = []
-    for v in SLOT_VALUES:
-        pat = r"\b" + re.escape(v) + r"\b"
-        if re.search(pat, low) and not re.search(pat, said):
-            out.append(v)
-    return out
+    for kind, values in NAME_SLOTS.items():
+        for v in values:
+            pat = r"\b" + re.escape(v) + r"\b"
+            if re.search(pat, reply) and not re.search(pat, said, re.I):
+                out.append(kind)
+    return sorted(set(out))
 
 
 def check_reply(obj, item: dict, fact: dict, i: int, earlier: list[str]) -> str:
@@ -104,8 +108,9 @@ def check_reply(obj, item: dict, fact: dict, i: int, earlier: list[str]) -> str:
         raise ValueError("scan")
     if item["session2"][i]["kind"] == "ask" and fact["facts"][fact["ask_index"]]["value"].lower() not in r.lower():
         raise ValueError("ask_value_missing")
-    if invented(r, item):
-        raise ValueError("invented_value")
+    inv = invented(r, item)
+    if inv:
+        raise ValueError("invented_" + inv[0])
     if norm(r) in {norm(e) for e in earlier}:
         raise ValueError("repeat")
     return r
@@ -117,22 +122,25 @@ def luna_call(text: str) -> str:
 
 
 def teach_one(item: dict, fact: dict, caller) -> dict:
-    t0, replies, attempts, fails = time.time(), [], [], Counter()
+    t0, replies, attempts, fails, last = time.time(), [], [], Counter(), ""
     for i in range(len(item["session2"])):
         got = None
         for attempt in range(1, ATTEMPTS + 1):
             try:
                 got = check_reply(last_json(caller(teach_prompt(item, i, replies))), item, fact, i, replies)
             except ValueError as e:
-                fails[str(e)] += 1
+                last = str(e)
+                fails[last] += 1
             except Exception:  # noqa: BLE001  (a failed call is one attempt)
-                fails["call_error"] += 1
+                last = "call_error"
+                fails[last] += 1
             if got is not None:
                 attempts.append(attempt)
                 break
         if got is None:
             return {"item_id": item["item_id"], "ok": False, "turns": len(replies), "replies": replies,
-                    "attempts": attempts, "fails": dict(fails), "stopped_at": i, "seconds": round(time.time() - t0, 1)}
+                    "attempts": attempts, "fails": dict(fails), "stopped_at": i, "stop_reason": last,
+                    "stop_kind": item["session2"][i]["kind"], "seconds": round(time.time() - t0, 1)}
         replies.append(got)
     return {"item_id": item["item_id"], "ok": True, "turns": len(replies), "replies": replies, "attempts": attempts,
             "fails": dict(fails), "seconds": round(time.time() - t0, 1)}
@@ -166,8 +174,10 @@ def stats(out: Path) -> dict:
     for r in rows:
         fails.update(r["fails"])
     secs = sorted(r["seconds"] for r in rows)
+    stops = Counter(f"{r['stop_reason']}@{r['stop_kind']}" for r in rows if not r["ok"])
     return {"chats": len(rows), "whole": sum(r["ok"] for r in rows), "turns": sum(r["turns"] for r in rows),
             "first_try": sum(1 for r in rows for a in r["attempts"] if a == 1), "fails": dict(fails),
+            "stops_by_reason_and_turn_kind": dict(stops),
             "median_chat_seconds": secs[len(secs) // 2] if secs else None}
 
 
@@ -188,8 +198,9 @@ def selftest() -> None:
     assert p.count("Person:") == 3 and "Pickle" in p and "{" in TAIL; ok += 1
     assert check_reply({"reply": " Pickle! "}, item, fact, 4, []) == "Pickle!"; ok += 1
     for obj, i, earlier, want in (({"reply": "Your rabbit?"}, 4, [], "ask_value_missing"),
-                                  ({"reply": "Say hi to Ivo."}, 0, [], "invented_value"),
-                                  ({"reply": "Have a good Monday"}, 0, [], "invented_value"),
+                                  ({"reply": "Say hi to Ivo."}, 0, [], "invented_person"),
+                                  ({"reply": "Is Tofu with you?"}, 0, [], "invented_pet"),
+                                  ({"reply": "Tucson is nice"}, 0, [], "invented_place"),
                                   ({"reply": "Hi there"}, 1, ["hi   there"], "repeat"),
                                   ({"reply": "x" * 501}, 0, [], "too_long"),
                                   ({"reply": "Rate limit reached"}, 0, [], "scan"),
@@ -201,7 +212,8 @@ def selftest() -> None:
             assert str(e) == want, (str(e), want)
     ok += 1
     assert check_reply({"reply": "How is Pickle doing, the welder life?"}, item, fact, 1, []); ok += 1
-    assert invented("pottery is fun", item) == ["pottery"] and invented("boise", item) == []; ok += 1
+    assert invented("pottery on Monday, then tofu with pepper", item) == [] and invented("Boise", item) == []
+    assert invented("Pickle and Ivo", item) == ["person"]; ok += 1
     calls = {"n": 0}
 
     def fake(text):
@@ -220,7 +232,8 @@ def selftest() -> None:
     def never(_t):
         return json.dumps({"reply": "Tell Ivo hi"})
     r2 = teach_one(item, fact, never)
-    assert not r2["ok"] and r2["stopped_at"] == 0 and r2["fails"] == {"invented_value": 3}; ok += 1
+    assert not r2["ok"] and r2["stopped_at"] == 0 and r2["fails"] == {"invented_person": 3}
+    assert r2["stop_reason"] == "invented_person" and r2["stop_kind"] == "smalltalk"; ok += 1
     with tempfile.TemporaryDirectory() as td:
         out = Path(td) / "t.jsonl"
         items = [dict(item, item_id=f"c{j}") for j in range(3)]

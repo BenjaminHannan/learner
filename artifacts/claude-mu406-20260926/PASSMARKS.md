@@ -37,12 +37,13 @@ in. PLAN-draft.md, PLAN-review-1.md, PLAN-draft-2.md and PLAN-draft-3.md stay as
   - Its prompt (HEAD and TAIL in the script) describes the job and gives no example reply.
   - Code checks each reply before the next turn is written. The reply must be non-empty and at most 500
     characters, with none of mu-407's scan strings. On the ask turn it must contain the stored value. It must not
-    name a slot value (review 1's lists) that is absent from the chat's user messages. It must not repeat an
-    earlier reply.
+    use a person, pet or place name from the fact generator's lists, written as the lists write it (capitalised),
+    that no user message in the chat contains. It must not repeat an earlier reply.
+  - The name check is review 1's list check narrowed to name-like slots (the Thread manager's 09:53 UTC review).
+    Case matters, so "pepper" or "olive" as food does not count. Invented foods, days, jobs and hobbies are left to
+    the teacher gate's claims judges.
   - A failed call or check counts as one attempt, up to 3 per turn. If all 3 fail, the chat stops, and its later
-    turns get no reply. Failures are counted by reason.
-  - Limit, stated: review 1's lists include words such as Tofu, Olive, Pepper, Monday and knitting. So harmless
-    replies can be retried, and some chats will stop early.
+    turns get no reply. Failures and stops are reported by reason, slot kind and turn kind.
 
 ## Teacher gate (before any training; the 20 held-out chats only)
 - scripts/claude_mu406_judge.py gate-prep and gate-count. Luna's replies are laid out as mu-407 packets, twice in

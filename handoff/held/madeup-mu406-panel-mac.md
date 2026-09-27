@@ -20,7 +20,7 @@ D=/tmp/madeup-mu406-panel; O=$D/artifacts/claude-mu406-20260926/panel; mkdir -p 
 git -C "$W" fetch -q origin main || { echo "STOP: git fetch failed"; exit 4; }
 echo "- origin/main: $(git -C "$W" rev-parse origin/main)"
 if [ ! -e "$O/raw.jsonl" ]; then
-  git -C "$W" archive origin/main scripts artifacts/claude-mu406-20260926 | tar -x -C "$D" || { echo "STOP: archive failed"; exit 4; }
+  git -C "$W" archive origin/main scripts artifacts/claude-mu406-20260926 artifacts/claude-mu405-20260926/JUDGE-claims405.md artifacts/claude-mu407-20260927/JUDGE-fit407.md artifacts/claude-mu407-20260927/prep/frames.json | tar -x -C "$D" || { echo "STOP: archive failed"; exit 4; }
 else
   echo "- restart: panel/raw.jsonl already exists and is kept"
 fi
