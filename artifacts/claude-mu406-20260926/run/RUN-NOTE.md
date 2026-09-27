@@ -73,3 +73,14 @@ Times are from date -u. Plan and marks: ../PASSMARKS.md, sealed in ../SEAL.sha25
 - 2026-09-27 16:51:39 UTC: teacher gate PASS (gate/gate.json; complete, 2c2f on all 20 chats, 0 bad rows). G1 claim flags summed
   over both claims judges 2 of 200 (bar 6); flagged by both 0, by either 2 of 100. G2 on-turn by both fit judges 80
   of 80 (bar 72). G3 real answers by both 20 of 20 (bar 16). A separate count straight from gate/out agrees.
+- Step 4, launch 4 (madeup-mu406-teach4-mac): writer 16:47:34-17:27:36 UTC, rc=0, stopped itself when done (40.0
+  minutes). Total 220 of 220 chats (60 added), all whole, 1,100 turns; all 300 new turns passed on the first try
+  (1,099 of 1,100 overall, the 1 "too_long" retry was launch 3's); 0 stops. Median 56.9 s per chat (2 calls at a time),
+  40 s of wall time per added chat. Step 4 done in 4 of at most 6 launches (1 without progress).
+- The 160 chats the teacher gate read are unchanged in the final teach.jsonl (160 of 160 rows byte-identical,
+  including all 20 held-out chats), so the gate result (5d592c0f4) stands for the final file.
+- 2026-09-27 17:56:16 UTC: step 6's rows built here (claude_mu406_train.py rows, code only): 200 training chats, 1,000 rows (200 per
+  turn kind), 20 held-out chats excluded. PASSMARKS needs at least 800 kept turns before the dev split: 1,000. A $0
+  length check: the longest row is 2,581 characters of JSON (median 1,560), so the 1,536-token cut should drop none
+  (inferred from characters; the rental's training log counts the real drops).
+- SEAL-data.sha256.txt: teach/teach.jsonl, train/rows.jsonl and ADDENDUM-2-vast.md (repo-root paths).
