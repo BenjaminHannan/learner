@@ -30,7 +30,7 @@ marks, prompt, model, attempts, count and ADDENDUM-1's rule are unchanged.
 - If this second launch also cannot finish every packet's attempts, the verdict stays INCONCLUSIVE, as ADDENDUM-1
   says.
 
-## Limit (added 08:26 UTC, date -u, after the Thread manager's review at 08:27 by its clock; still before any resume result)
+## Limit (added 08:23 UTC, date -u, after the Thread manager's review; still before any resume result)
 - The Thread manager agreed with the reading above, on one condition, so a relaunch cannot become retry-until-it-works:
   - at most 2 more launches of the resume after the failed first one: madeup-g406l-resume2-mac, and at most one
     more after it;
@@ -38,3 +38,6 @@ marks, prompt, model, attempts, count and ADDENDUM-1's rule are unchanged.
   - If neither of those launches finishes every packet's attempts, the verdict is INCONCLUSIVE.
 - Every launch that made no Luna call is listed with its rc in the run note and in VERIFY.md. The job's own
   RESULTS.md cannot see earlier launches. The first such launch was madeup-g406l-resume-mac, rc=1 (c858cb577).
+- This section replaces the last bullet under "Rule" above: one more launch after resume2 is allowed, within the limit.
+- Correction: this heading first read "08:26 UTC", which I typed ahead of the clock. date -u read 08:23:30 UTC. The
+  Thread manager's note says 08:27 in its text, but it arrived at 08:23:02 UTC (commit ad1933437 had the wrong stamp).
