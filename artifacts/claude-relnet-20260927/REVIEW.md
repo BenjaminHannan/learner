@@ -1,9 +1,9 @@
 # relnet: review of GPT-6 Pro's design 3 (persistent relation-state network), with build checks
 
-Written 2026-09-27 20:36 UTC. CPU only (4 threads), fp32, $0. Ben changed the scope during the session: a review
-of the idea in about 20 minutes, with tests only if they take under 15 minutes. So the practice gate and the race
-(Test C) were **not run**. The test chat's RACE-PASSMARKS.md was not on origin/main when checked (20:39 UTC) either, so the race could
-not have started.
+Written 2026-09-27 20:36 UTC; updated 20:57 UTC. CPU only (4 threads), fp32, $0. At first Ben cut the scope to a
+20-minute review, then withdrew that ("go based off the first prompt"). The practice gate is therefore running; its
+result will go in RESULTS.md. The race (Test C) waits for the test chat's RACE-PASSMARKS.md, which was not on
+origin/main at 20:39 UTC.
 
 Files: scripts/claude_relnet_net.py (the net and the checks), scripts/claude_relnet_smoke.py (a 300-step learning
 smoke), checks.json/checks.log, smoke-relnet.log and smoke-loop.json/.log. The first smoke run crashed on the loop arm because of a setup bug in the smoke script (wrong arm name, so no stop head). The relation-net arm had already finished and is kept as smoke-relnet.log, with the traceback. The loop arm was rerun alone with the fix.
@@ -36,18 +36,24 @@ There is no persistent coefficient beyond these weights.
 **Gradient check:** in one fp32 step with no autocast, all 19 of 19 weight matrices, and every other weight, got a
 nonzero gradient.
 
-**Cost** (one worst-case training step of 16 rounds with gradient through 6, and 48-round inference; time per puzzle):
+**Cost** (one worst-case training step of 16 rounds with gradient through 6, and 48-round inference; time per puzzle;
+each row in its own process; re-run at 20:53 UTC after a speed-up that computes the round-invariant gate terms once
+per puzzle — same outputs to 1e-6, 48-round answers identical):
 
-| size | train, relation net | train, loop | ratio | inference, relation net | inference, loop | ratio |
-|---|---:|---:|---:|---:|---:|---:|
-| 5x5 (batch 8) | 26 ms | 16 ms | 1.6x | 39 ms | 61 ms | 0.6x |
-| 9x9 (batch 4) | 198 ms | 54 ms | 3.7x | 358 ms | 75 ms | 4.8x |
-| 11x11 (batch 2) | 457 ms | 135 ms | 3.4x | 1,004 ms | 233 ms | 4.3x |
+| size (batch) | train, relation net | train, loop | ratio | inference, relation net | inference, loop | ratio | peak memory, relation net / loop |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 5x5 (8) | 23 ms | 19 ms | 1.2x | 35 ms | 33 ms | 1.1x | 0.9 / 0.8 GB |
+| 7x7 (32) | 91 ms | 15 ms | 6.2x | 132 ms | 36 ms | 3.6x | 2.9 / 1.3 GB |
+| 9x9 (4) | 192 ms | 50 ms | 3.9x | 424 ms | 91 ms | 4.6x | 1.6 / 0.8 GB |
+| 11x11 (2) | 362 ms | 83 ms | 4.4x | 809 ms | 140 ms | 5.8x | 1.7 / 0.8 GB |
 
 Caveats:
-- The batches were small and inference was timed once, so treat the ratios as rough.
-- The whole process peaked at 1.8 GB of memory. Memory was not split by net (untested).
+- Memory is the peak for the whole process, including about 0.6 GB for PyTorch itself.
+- The small-batch ratios are rough. 7x7 with batch 32 is the maze-training size, so the 6.2x there is the one that
+  matters for the race.
 - No batch or round window had to shrink. No pairs were cut.
+- An earlier pass, before the speed-up and with memory not split by net, gave 3.4-4.8x at 9x9 and 11x11.
+- torch.compile gave a further 25% but was not used: it took 72 s to compile and adds risk in the backward pass.
 
 ## 2. Learning smoke (shown, but only a smoke)
 One seed. The same 300 batches of 32 sums and grids went to both nets, with the xfer-1 loss and the 1-16-round schedule. The
@@ -96,7 +102,7 @@ pages, so the papers were not read in full.
 2. **Suggested: the message is a plain mean over all N cells.** There is no softmax. A cell's 2-4 useful neighbours
    are averaged with 120 others at 11x11, and with 24 at 5x5. The message size therefore shifts about 5x between
    the sizes it practises on and the 9x9/11x11 tests. The loop's softmax attention does not have this problem.
-3. **Shown: it is 3.4-4.8x slower than the loop at 9x9 and 11x11**, with the same weight count.
+3. **Shown: it is 3.6-6.2x slower than the loop at 7x7 to 11x11**, with the same weight count.
 4. **Suggested: nothing in it is a fast-learning mechanism.** It changes what the net finds easy to represent, not
    how an example changes the net. Any few-example gain has to come from relation habits learned on sums and grids
    carrying over to mazes. In sums and grids, "same row" and "next column" are fixed by position. In mazes, a

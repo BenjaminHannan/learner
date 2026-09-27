@@ -13,12 +13,14 @@ Two norms GPT did not write (disclosed): LN before the MLP and a state LN after 
 (ln_state); without them the residual state is unbounded across 48 rounds.
 
 The GRU input projection of GRU_e is linear in its four concatenated parts, so it is computed part by part
-(a_i + b_j + c_ij) instead of materialising the [N, N, 4q] input. Same function, same weights, less memory.
+(a_i + b_j + c_ij) instead of materialising the [N, N, 4q] input; the symbol-difference, position and bias parts do
+not change between rounds, so they are computed once per puzzle. Same function, same weights, less memory and time.
 
 Same interface as scripts/claude_xfer1_net.py's loop (embed/read/loop_train/loop_rounds, arm "loop"), so its
 train_loss and practice recipe apply unchanged.
 
   python -B scripts/claude_relnet_net.py checks --out artifacts/claude-relnet-20260927/checks.json
+  python -B scripts/claude_relnet_net.py cost1 --net relnet|loop --size H --batch B   (one cost row, own process)
 """
 from __future__ import annotations
 
@@ -26,6 +28,7 @@ import argparse
 import json
 import platform
 import resource
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -49,10 +52,15 @@ class GRUe(nn.Module):
         self.hh = nn.Linear(q, 3 * q)
         self.q = q
 
-    def forward(self, r, ph, pv, pos):
-        # r [B,N,N,q]; ph, pv [B,N,q]; pos [N,N,q]
-        gi = (self.wi(ph)[:, :, None] + self.wj(ph)[:, None, :]
-              + (self.wv(pv)[:, :, None] - self.wv(pv)[:, None, :]) + self.wp(pos)[None] + self.bi)
+    def const(self, pv, pos):
+        """the round-invariant parts of the input gates: symbol difference, position and bias"""
+        v = self.wv(pv)
+        return v + self.bi, -v, self.wp(pos)
+
+    def forward(self, r, ph, const):
+        # r [B,N,N,q]; ph [B,N,q]; const from self.const (pv [B,N,q], pos [N,N,q])
+        a0, b0, c = const
+        gi = (self.wi(ph) + a0)[:, :, None] + (self.wj(ph) + b0)[:, None, :] + c
         gh = self.hh(r)
         q = self.q
         rg = torch.sigmoid(gi[..., :q] + gh[..., :q])
@@ -111,10 +119,10 @@ class RelNet(nn.Module):
         B, N, _ = e.shape
         return torch.zeros_like(e), e.new_zeros(B, N, N, self.q)
 
-    def step(self, state, e, pos):
+    def step(self, state, e, const):
         h, r = state
         N = h.shape[1]
-        r = self.gru_e(r, self.P_h(h), self.P_v(e), pos)
+        r = self.gru_e(r, self.P_h(h), const)
         m = torch.einsum("bijl,kl,bjk->bik", r, self.U.weight, self.V(h)) / N
         ht = self.gru_n(h, torch.cat([e, m], -1))
         return self.ln_state(ht + self.mlp(self.ln_mlp(ht))), r
@@ -123,30 +131,31 @@ class RelNet(nn.Module):
         z = self.ln_out(h)
         return self.head(z), self.halt(z.mean(1)).squeeze(-1)
 
-    def _pos(self, dr, dc):
-        return self.pr(dr) + self.pc(dc)
+    def _const(self, e, dr, dc):
+        return self.gru_e.const(self.P_v(e), self.pr(dr) + self.pc(dc))
 
     def loop_train(self, tokens, slot, n_free, n_grad):
         e, (dr, dc) = self.embed(tokens, slot)
         state = self.init_state(e)
         with torch.no_grad():
-            pos0, e0 = self._pos(dr, dc), e.detach()
+            e0 = e.detach()
+            c0 = self._const(e0, dr, dc)
             for _ in range(n_free):
-                state = self.step(state, e0, pos0)
+                state = self.step(state, e0, c0)
         state = (state[0].detach(), state[1].detach())
-        pos, outs = self._pos(dr, dc), []
+        c, outs = self._const(e, dr, dc), []
         for _ in range(n_grad):
-            state = self.step(state, e, pos)
+            state = self.step(state, e, c)
             outs.append(self.read(state[0]))
         return outs
 
     @torch.no_grad()
     def loop_rounds(self, tokens, slot, n):
         e, (dr, dc) = self.embed(tokens, slot)
-        state, pos = self.init_state(e), self._pos(dr, dc)
+        state, c = self.init_state(e), self._const(e, dr, dc)
         preds, qs = [], []
         for _ in range(n):
-            state = self.step(state, e, pos)
+            state = self.step(state, e, c)
             lg, q = self.read(state[0])
             preds.append(lg.argmax(-1))
             qs.append(torch.sigmoid(q.float()))
@@ -246,23 +255,41 @@ def checks(out):
                                zero_grad_any=[n for n, v in grads.items() if v == 0.0]),
                cost=[])
     print(json.dumps(rep["weights"], indent=1), json.dumps(rep["grad_check"], indent=1), flush=True)
-    # worst-case training step (16 rounds, gradient through 6) and 48-round inference, per example
-    for H, B in [(5, 8), (9, 4), (11, 2)]:
-        for name, net in [("relnet", rel), ("loop", loop)]:
-            ts = time_step(net, H, H, B, 10, 6)
-            ti = infer_time(net, H, H, B, 48)
-            row = dict(net=name, size=f"{H}x{H}", batch=B, train_step_s=round(ts, 3),
-                       train_s_per_example=round(ts / B, 4), infer48_s_per_example=round(ti / B, 4),
-                       peak_rss_mb=round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024))
+    # worst-case training step (16 rounds, gradient through 6) and 48-round inference, per example; each row in a
+    # fresh process so peak memory belongs to that net and size alone
+    for H, B in [(5, 8), (7, 32), (9, 4), (11, 2)]:
+        for name in ["relnet", "loop"]:
+            cmd = [sys.executable, "-B", __file__, "cost1", "--net", name, "--size", str(H), "--batch", str(B)]
+            row = json.loads(subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip().splitlines()[-1])
             rep["cost"].append(row)
             print(row, flush=True)
     Path(out).parent.mkdir(parents=True, exist_ok=True)
     Path(out).write_text(json.dumps(rep, indent=1))
 
 
+def cost1(name, H, B):
+    torch.set_num_threads(4)
+    net = RelNet() if name == "relnet" else loop_net()
+    base = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+    ti = infer_time(net, H, H, B, 48)
+    infer_peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+    ts = time_step(net, H, H, B, 10, 6)
+    peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+    print(json.dumps(dict(net=name, size=f"{H}x{H}", batch=B, train_step_s=round(ts, 3),
+                          train_s_per_example=round(ts / B, 4), infer48_s_per_example=round(ti / B, 4),
+                          rss_after_build_mb=round(base), infer_peak_rss_mb=round(infer_peak),
+                          train_peak_rss_mb=round(peak))))
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["checks"])
+    ap.add_argument("cmd", choices=["checks", "cost1"])
     ap.add_argument("--out", default="artifacts/claude-relnet-20260927/checks.json")
+    ap.add_argument("--net", default="relnet")
+    ap.add_argument("--size", type=int, default=5)
+    ap.add_argument("--batch", type=int, default=8)
     a = ap.parse_args()
-    checks(a.out)
+    if a.cmd == "checks":
+        checks(a.out)
+    else:
+        cost1(a.net, a.size, a.batch)
