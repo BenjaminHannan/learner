@@ -1,0 +1,35 @@
+COMMON RULES (the "Everyday chat" thread, Claude, wrote this task on 2026-09-27). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.
+HELD until the Everyday chat thread seals the plan (artifacts/claude-c1dev-20260927/SEAL.sha256.txt on origin/main) and the Director places it in handoff/queue/ (asked: after k1f-benspc2; the Director may renumber it).
+GPU: yes (BensPC RTX 5070 Ti; one job at a time; $0, no rental). NO RENTALS, whatever fails. The watcher writes C:\Users\benja\GPU-BUSY.txt as "queue job <this file's name without .md>" while this task runs: that is this job, so go on and leave the file to the watcher. If the file names any other job, stop with BUSY and run nothing.
+WHERE: you run on the Mac. BensPC (Windows, RTX 5070 Ti) is reached from the Mac with `ssh benspc` (PowerShell, or git-bash for sha256sum/tar). Every SETUP and STEPS command below runs ON BensPC over that ssh; stream the tree with `git archive ... | ssh benspc "tar -x -C <folder>"`; copy results back to the Mac worktree with scp. Never look for BensPC paths on the Mac itself.
+TIME CAP: 2 h 30 min in total. If reached: stop by exact PID, copy back what exists (each arm appends one conversation at a time), report "partial" and which arms finished. Label: c1dev-benspc. No installs, no model downloads, no training.
+DUPLICATE GUARD, before anything else: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-c1dev-20260927/RESULTS-benspc.md.
+DATA: DEV only (artifacts/claude-chatdev-20260926, readable practice chats). No TEST-ONLY panel is touched. Report counts only; quote no reply.
+
+YOUR TASK: c1-dev, a report-only check. Four plain arms chat through the same 60 practice conversations: D (0.2d's talker alone, plain MiniCPM5-1B), T (plain MiniCPM5-1B), Q (plain Qwen3.5-2B), L (plain LFM2.5-1.2B-Instruct). Eval only. The Everyday chat thread wrote the code: run it, never edit it. If something breaks, copy back what exists and report the exact error and traceback. The thread scores and judges the chats afterwards; do not score.
+READ FIRST (origin/main): artifacts/claude-c1dev-20260927/PLAN.md and the docstring of scripts/claude_c1dev_talker.py.
+
+SETUP (Windows, as k1f-benspc2 does):
+- Tree: `git archive origin/main scripts design/v3/60-listener artifacts/claude-chatdev-20260926 artifacts/claude-c1dev-20260927`, streamed into a NEW folder C:/Users/benja/lis301/work/c1dev/tree (never stage on the Mac).
+- Python: C:/Users/benja/lis300/venv/Scripts/python.exe. Env for every command: PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1. Download nothing, install nothing.
+- BASE = C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+  Q2DIR = C:/Users/benja/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc
+  L12DIR = C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b
+  Each must exist; else stop with MODEL-MISSING (download nothing).
+- W = `python -B scripts/claude_winnl2_wrap.py`. Its first printed line must be: winnl2: Windows text-mode writes use Linux line endings (newline=''). Otherwise stop with WINNL-FAIL.
+- Report `python -c "import torch,transformers,sys;print(torch.__version__,torch.version.cuda,transformers.__version__,sys.version.split()[0])"` and `nvidia-smi` free memory and processes (stop with BUSY if another process holds more than 2 GB of GPU memory).
+
+STEPS (from the tree root; OUT = outC1, create it first)
+1. Seal: `sha256sum -c artifacts/claude-c1dev-20260927/SEAL.sha256.txt` from the tree root. Every line must be OK, with one exception: if only scripts/claude_e2e02d.py differs (Month-end may have changed the build since the seal), go on and report its sha256; the check measures the build's talker as committed. Any other mismatch: stop with SEAL-MISMATCH.
+2. Tests, each through W, each must print exactly (last line): scripts/claude_c1dev_talker.py --selftest "c1dev talker selftest: 6/6 OK"; scripts/claude_ch403_run.py selftest "ch-403 run selftest: 6/6 OK"; scripts/claude_c1rival_run.py selftest "c1rival selftest: 5/5 OK". Else stop.
+3. The arms, ONE AT A TIME in this order, each launched ONCE with its own log, each through W and scripts/claude_twinb_wrap.py. PD = artifacts/claude-chatdev-20260926.
+   D: W scripts/claude_twinb_wrap.py scripts/claude_ch403_run.py run --panel-dir PD --arm claude_c1dev_talker:build_talker02d --name D --gen-model BASE --out outC1 > logD.txt 2>&1
+   T: W scripts/claude_twinb_wrap.py scripts/claude_ch403_run.py run --panel-dir PD --arm twin --name T --gen-model BASE --out outC1 > logT.txt 2>&1
+   Q: W scripts/claude_twinb_wrap.py scripts/claude_ch403_run.py run --panel-dir PD --arm twin --name Q --gen-model Q2DIR --out outC1 > logQ.txt 2>&1
+   L: W scripts/claude_twinb_wrap.py scripts/claude_ch403_run.py run --panel-dir PD --arm twin --name L --gen-model L12DIR --out outC1 > logL.txt 2>&1
+   V1 (check each log as soon as its first "[ch403/" line appears): every log's first line is the winnl2 line and its second is "twinb: the plain twin is Twin336b (enable_thinking=False)". logD only: a line starting "c1dev: talker = claude_e2e02d.Talker; W_PLACE02D=" (copy it whole into RESULTS). If a check fails: stop that arm by exact PID, copy back the logs, stop with V1-FAIL.
+   Each arm prints one "[ch403/<arm>] <conversation id> turns=N ..." line per conversation: 60 per arm, and outC1/chat_<arm>.jsonl must hold 336 rows. A crash part-way (for example out of GPU memory): run the same command ONCE more; it skips conversations already written. A stop line starting "c1dev:" or "0.2d:" in logD: stop that arm and report it whole; do not work around it.
+4. Count "\r\n" in every file under outC1 (a byte count only; expected 0). Copy back to the Mac as artifacts/claude-c1dev-20260927/run/: outC1/chat_{D,T,Q,L}.jsonl and the four logs (force-add; artifacts/ is git-ignored). Check sizes and sha256 match BensPC. Then remove C:/Users/benja/lis301/work/c1dev/ by exact path and confirm it is gone.
+5. RESULTS-benspc.md (a NEW file) in artifacts/claude-c1dev-20260927/, counts only: GPU name, torch/CUDA/transformers/python versions, the three model paths (each exists), the seal lines (and claude_e2e02d.py's sha256 if it differed), each test line, the V1 lines (the c1dev line whole), rows and conversations per arm, exit codes, start and end time (UTC, from `date -u`) and wall minutes per arm, median ms per turn per arm, peak GPU memory seen, the "\r\n" counts, any traceback, every deviation. Quote no reply.
+Never push weights.
+PUSH: artifacts/claude-c1dev-20260927/run artifacts/claude-c1dev-20260927/RESULTS-benspc.md
