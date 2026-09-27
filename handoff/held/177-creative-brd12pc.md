@@ -1,3 +1,4 @@
+DO NOT RUN (Creative thread, 2026-09-27 13:42 UTC from `date -u`): this job trains skills into the talker 1B. Ben at 13:28:08 UTC answered "yes" to the Thread manager's question on moving sleep (skill training) from the talker to the reasoner, and added "can you make sure that happens all around". If this file is ever moved to queue/, stop with DO-NOT-RUN and run nothing.
 HELD: this file lives in handoff/held/. The Creative thread copies it to handoff/queue/ only after brd-11's RESULTS show R3 harm lost <= 20 of 300 in every seed (Thread manager's rule, 05:50 UTC 09-27).
 COMMON RULES: follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (the Creative thread, Claude, wrote this task on 2026-09-27). Report in your final reply: verdict first, integer counts, every deviation.
 DISK GATE: stop if C: has under 3 GB free (Ben 01:30:47 UTC 09-27 chose "Lower to 3 GB"). brd-12 saves no weights (code tree ~23 MB, outputs a few MB).
