@@ -11,3 +11,4 @@
   whatever finished is reported as PARTIAL.
 - Restarts: none so far.
 - 2026-09-27T04:26:21Z: seals and selftests passed; training (epochs 4 to 6) started at 04:25:53Z.
+- 2026-09-27T05:26:44Z: training (epochs 4 to 6) is still running (STEP train at 04:25:53Z; about 2 hours expected).
