@@ -1,28 +1,18 @@
-2026-09-27 12:51:53
+2026-09-27 12:54:19
 running:
 000-probe-benspc-gpu-0827.running
 000-probe-zen-builder.running
 000-stop-172-rv390.running
-174-rv392-358i2-pc.running
 claude-lis320-luna-c7-mac.running
 k1h-glm2.running
 k1h-luna-full-mac.running
 lis320-pilot8b-mac.running
 madeup-mu406-teach4-mac.running
-rent-c1dev-2-collect.running
 rent-y1t-vast-p1.running
 y1t-luna-rest-mac.running
 launched (no exit yet) / finished:
-     973
+     975
 
-2026-09-27 10:17:10 launch 000-bash-spend358u-1415
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-2026-09-27 10:19:36 pushed 000-bash-spend358u-1415
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 10:33:20 launch rent358u-2-collect
@@ -165,6 +155,14 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 12:51:51 load 130, holding 302-fixsleep-dl11-luna-bash (      11 running)
 2026-09-27 12:51:53 launch rent-c1dev-2-collect
 2026-09-27 12:51:53 bash-only cap: 5 running, holding rent358t3-1-start
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 12:54:09 pushed 174-rv392-358i2-pc
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 12:54:15 pushed rent-c1dev-2-collect
+2026-09-27 12:54:17 launch 173-rv390-358i2-pc-d
+2026-09-27 12:54:17 load 101, holding 302-fixsleep-dl11-luna-bash (      11 running)
+2026-09-27 12:54:18 load 101, holding rent358t3-1-start (      11 running)
 
 diag:
 == 000-probe-benspc-gpu-0827
@@ -192,9 +190,6 @@ diag:
 [0m
 > build · muse-spark-1.3-contributor-free
 [0m
-== 174-rv392-358i2-pc
-0 Sep 27 12:29 174-rv392-358i2-pc.go1.err.txt
-1607 Sep 27 12:30 174-rv392-358i2-pc.go1.reply.md
 == claude-lis320-luna-c7-mac
 0 Sep 27 12:31 claude-lis320-luna-c7-mac.go1.err.txt
 3083 Sep 27 12:32 claude-lis320-luna-c7-mac.go1.reply.md
@@ -229,9 +224,6 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 == madeup-mu406-teach4-mac
 0 Sep 27 12:47 madeup-mu406-teach4-mac.go1.err.txt
 1828 Sep 27 12:47 madeup-mu406-teach4-mac.go1.reply.md
-== rent-c1dev-2-collect
-0 Sep 27 12:51 rent-c1dev-2-collect.go1.err.txt
-54 Sep 27 12:51 rent-c1dev-2-collect.go1.reply.md
 == rent-y1t-vast-p1
 176 Sep 27 12:36 rent-y1t-vast-p1.go1.err.txt
 3091 Sep 27 12:49 rent-y1t-vast-p1.go1.reply.md
@@ -262,25 +254,22 @@ NOTE: ADOPTED instance 52991051 (RTX_5090, $0.5611/h, 'loading', started 2026-09
 [0m
 top5cpu:
 %CPU COMM
-86.4 ApplicationsStorageExtension
-78.5 fileproviderd
-31.2 python
-29.1 bash
-11.7 Codex
+92.0 ApplicationsStorageExtension
+55.1 fileproviderd
+37.1 python
+28.4 bash
+25.2 Finder
 procs:
-  363     1 04-00:38:51 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 04-00:37:59 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 4860  3522       21:46 SN   ssh
-15699     1 03-22:53:17 S    /usr/bin/ssh-agent
-26547   818       00:18 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-28236 28218       00:01 SN   /usr/bin/ssh
-44571 44570 01-15:14:55 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-15:14:55 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    20:29:28 SN   /usr/local/bin/opencode
-53479 20011    08:47:04 SN   /usr/local/bin/opencode
-54153 44066    08:46:44 SN   /usr/local/bin/opencode
-59802 59771    08:38:20 SN   /usr/local/bin/opencode
-60494 59018    13:44:21 SN   /usr/local/bin/opencode
-61605 61571    08:36:02 SN   /usr/local/bin/opencode
-64555 64533    10:09:55 SN   /usr/local/bin/opencode
-81797     1 02-01:32:34 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 04-00:41:16 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 04-00:40:24 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+15699     1 03-22:55:42 S    /usr/bin/ssh-agent
+44571 44570 01-15:17:20 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-15:17:20 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    20:31:53 SN   /usr/local/bin/opencode
+53479 20011    08:49:29 SN   /usr/local/bin/opencode
+54153 44066    08:49:09 SN   /usr/local/bin/opencode
+59802 59771    08:40:45 SN   /usr/local/bin/opencode
+60494 59018    13:46:46 SN   /usr/local/bin/opencode
+61605 61571    08:38:27 SN   /usr/local/bin/opencode
+64555 64533    10:12:20 SN   /usr/local/bin/opencode
+81797     1 02-01:34:59 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
