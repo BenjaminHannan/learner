@@ -2,7 +2,7 @@ BASH-ONLY: yes
 LOAD-LIGHT: yes
 GPU: no (Mac CPU; GPT-6 Luna through Ben's Codex plan via scripts/claude_luna_codex.py: 260 chats, at most 3 attempts each (up to 780 calls), at most 2 at a time (the Director's 03:54 UTC share); no opencode, no GLM, no rental, no BensPC, no OpenRouter). Label: madeup-mu406-practice. DISK: 1.
 "Making things up about you" thread, Claude, 2026-09-27. No LLM builder: rungo5 runs the bash block below (Director 2bf4f9ea7).
-WHY: mu-406 step 3 (artifacts/claude-mu406-20260926/PASSMARKS.md, "Order"): Luna words 260 practice chats around facts code picks (seed 4061); code keeps the first 220 that pass and holds out 20 of them (seed 4062) for the teacher gate. It runs only after the test panel is sealed (SEAL-panel.sha256.txt on main).
+WHY: mu-406 step 3 (artifacts/claude-mu406-20260926/PASSMARKS.md, "Order"): Luna words 260 practice chats around facts code picks (seed 4061); code keeps the first 220 that pass and holds out 20 of them (seed 4062) for the teacher gate. At about 16 s per chat (the panel job) this needs 2 launches: the writer stops itself at 50 minutes, and a relaunch under a new file name seeds raw.jsonl from builder-outbox and writes only the chats not yet written. It runs only after the test panel is sealed (SEAL-panel.sha256.txt on main).
 CODEX RULES: nothing here reads, lists, prints, copies or commits anything under ~/.codex. The helper runs each call in an empty temp folder with a read-only sandbox.
 OUTPUT: counts only. No chat text is printed; the runner's log holds counts only.
 PUSH: artifacts/claude-mu406-20260926/practice
@@ -34,9 +34,14 @@ chk "mu407 prep-luna selftest 11/11 ok" scripts/claude_mu407_prep_luna.py selfte
 chk "selftest ok: model gpt-6-luna" scripts/claude_luna_codex.py --selftest || { echo "STOP: luna helper selftest"; exit 6; }
 echo "  all 3 selftests ok"
 mkdir -p "$O"
+git -C "$W" fetch -q origin +builder-outbox:refs/remotes/origin/builder-outbox || echo "- note: builder-outbox fetch failed"
+if [ ! -e "$O/raw.jsonl" ] && git -C "$W" cat-file -e origin/builder-outbox:artifacts/claude-mu406-20260926/practice/raw.jsonl 2>/dev/null; then
+  git -C "$W" show origin/builder-outbox:artifacts/claude-mu406-20260926/practice/raw.jsonl > "$O/raw.jsonl"; echo "- restart: seeded raw.jsonl from builder-outbox ($(wc -l < "$O/raw.jsonl") lines)"
+fi
 echo "## FACTS"; $PY scripts/claude_mu406_prep.py facts --set practice --out "$O/facts_all.jsonl"; echo "  rc=$?"
+head -n 240 "$O/facts_all.jsonl" > "$O/facts_write.jsonl"; echo "- writing the first $(wc -l < "$O/facts_write.jsonl") candidates in id order (select keeps the first 220 that pass, so later candidates could never be chosen)"
 echo "## WRITE"
-$PY scripts/claude_mu406_prep.py write --facts "$O/facts_all.jsonl" --out "$O/raw.jsonl" --workers 2 --max-minutes 55 >> "$O/write.log" 2>&1 &
+$PY scripts/claude_mu406_prep.py write --facts "$O/facts_write.jsonl" --out "$O/raw.jsonl" --workers 2 --max-minutes 50 >> "$O/write.log" 2>&1 &
 RP=$!; echo "- write started $(date -u), pid $RP"
 S=$(date +%s); while kill -0 "$RP" 2>/dev/null && [ $(( $(date +%s) - S )) -lt 3600 ]; do sleep 30; done
 if kill -0 "$RP" 2>/dev/null; then C=$(pgrep -P "$RP"); echo "- TIME STOP at 60 min: child ${C:-none}, parent $RP, $(date -u)"; [ -n "$C" ] && kill $C; kill "$RP"; fi

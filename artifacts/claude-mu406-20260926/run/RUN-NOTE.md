@@ -11,3 +11,9 @@ Times are from date -u. Plan and marks: ../PASSMARKS.md, sealed in ../SEAL.sha25
   only; I did not read the panel's rows.
 - 2026-09-27 10:46:49 UTC: panel copied to main and sealed in ../SEAL-panel.sha256.txt (items, facts,
   facts_all, raw). Step 3 (practice chats) moved from handoff/held/ to handoff/queue/.
+- 2026-09-27 10:47:41 UTC: step 3 queued as handoff/queue/madeup-mu406-practice-mac.md. The panel job ran
+  at about 16 s per chat with 2 calls at a time, so the practice job writes the first 240 of the 260 sealed
+  candidates in id order and stops itself at 50 minutes. The selection is unchanged: select keeps the first 220
+  that pass, in id order, so a later candidate could never be chosen while 220 of the first 240 pass. A second
+  launch (new file name) seeds raw.jsonl from builder-outbox and writes only what is missing. If fewer than 220 of
+  the first 240 pass, a later launch writes candidates 241-260.
