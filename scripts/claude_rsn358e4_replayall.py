@@ -57,7 +57,7 @@ def make_net(arm, size):
 def score(net, dev, device):
     out = E3.score(net, dev, device)
     if E3.ST["calls"] in (3, 4):
-        out["replayed"] = dict(ST["replayed"])
+        out["replayed"] = {k: dict(v) for k, v in ST["replayed"].items()}   # a snapshot (ADDENDUM-1 fix)
     return out
 
 
@@ -71,7 +71,7 @@ def selftest():
     for _ in range(1500):
         phase_batch(rng, "mazes", 2, pool)
     assert ST["replayed"] == {"sums": {"grids": 250}, "mazes": {"grids": 75, "sums": 75}}, ST["replayed"]
-    counts = dict(ST["replayed"])
+    counts = {k: dict(v) for k, v in ST["replayed"].items()}
     for arm in ARM:
         net = make_net(arm, "small")
         assert E3.ST["arm"] in ("dense", "moe-grow-eq")
