@@ -12,3 +12,7 @@
   - Even so, before SEAL-data I will scan raw.jsonl, the panel and frames.json for error or limit wording, and for any user message repeated across 3 or more chats. The counts go in SEAL-data's note. This check changes no mark.
 - Update 2026-09-27 03:57 UTC (date -u): ADDENDUM-1 (Luna writes chats and frames) sealed in 36e6710b8. The seals verify from an archive (SEAL 22, SEAL-prep 7, SEAL-luna 3, all OK). Job madeup-mu407-luna-mac is queued: a pilot on the frames and 3 smoke chats, then a background write, with 1 Luna call at a time. The GLM job madeup-mu407-prep-mac stays in held and will not run.
 - Update 05:51 UTC (date -u): madeup-mu407-luna-mac is still queued. At 05:28 UTC the watcher was holding it behind its Zen-builder cap (4 running). Not launched yet.
+- Update 06:43 UTC (date -u):
+  - The watcher launched madeup-mu407-luna-mac at 01:57:07 local = 05:57 UTC.
+  - Agent pass go1 ended at about 06:30 UTC, and pass go2 was running at 06:38 UTC.
+  - No RESULTS yet.
