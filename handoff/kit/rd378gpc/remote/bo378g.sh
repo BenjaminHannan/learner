@@ -50,6 +50,10 @@ state() {
   for f in $STEPS; do
     [ -f "W/${f}_log.txt" ] && echo "LAST $f age=$(age "W/${f}_log.txt")m $(tail -c 800 "W/${f}_log.txt" | tr -d '\r' | grep . | tail -1 | cut -c1-200)"
   done
+  # ADDENDUM-M: size and age of each step's output file (the write steps log only at their end), counts only
+  for f in W/g/train_log.jsonl W/g_b8/train_log.jsonl W/gdev.jsonl "$PV/g59.jsonl" W/g5_G.jsonl W/g5_R.jsonl; do
+    [ -f "$f" ] && echo "OUT ${f/#$PV/PV} bytes=$(wc -c < "$f" | tr -d ' ') age=$(age "$f")m"
+  done
   echo "GDIR $(cat W/g-dir.txt 2>/dev/null | tr -d '\r')"
   [ -s W/gpu_log.txt ] && echo "GPULOG $(tr -d '\r' < W/gpu_log.txt | awk '{n++; if($2+0>m)m=$2+0; if($4+0>p)p=$4+0; l=$0} END{printf "lines=%d peak_used=%d peak_power=%.1f last=%s", n, m, p, l}')"
   echo "FILES g=$([ -d W/g/merged ] && echo 1 || echo 0) g_b8=$([ -d W/g_b8/merged ] && echo 1 || echo 0) gdev=$([ -f W/gdev.jsonl ] && echo 1 || echo 0) g59=$([ -f $PV/g59.jsonl ] && echo 1 || echo 0) outg=$([ -f $PV/outg/notes_confirm.json ] && echo 1 || echo 0) whenoff=$([ -f $PV/outg_whenoff/notes_confirm.json ] && echo 1 || echo 0) g5G=$([ -f W/g5_G.jsonl ] && echo 1 || echo 0) g5R=$([ -f W/g5_R.jsonl ] && echo 1 || echo 0)"
@@ -84,7 +88,8 @@ find_r() {
   # up to depth 3 under C:\Users\benja (never inside this tree, never a *rd378g* folder); hash at most 12 candidates.
   [ -s W/r-path.txt ] && { echo "RFOUND $(cat W/r-path.txt) (already)"; return 0; }
   local f d n=0
-  for f in "$MD"/*/model.safetensors /c/Users/benja/*rd378*/model.safetensors /c/Users/benja/*rd378*/*/model.safetensors \
+  # ADDENDUM-M: first the folder rd-378's run record names (artifacts/claude-rd378-20260925/RESULTS-benspc.md:143)
+  for f in "${RP378G:-/c/Users/benja/rd378/tree/WORK/nrun/merged}/model.safetensors" "$MD"/*/model.safetensors /c/Users/benja/*rd378*/model.safetensors /c/Users/benja/*rd378*/*/model.safetensors \
            /c/Users/benja/*/*rd378*/model.safetensors /c/Users/benja/*/*rd378*/*/model.safetensors /c/Users/benja/*/*/*rd378*/model.safetensors; do
     [ -f "$f" ] || continue
     d=$(dirname "$f"); case "$d" in *rd378g*|"$B"*) continue;; esac
