@@ -14,7 +14,7 @@ Code picks every fact (claude_mu405_facts.slots); Luna only words the user's mes
             the first 60 passing candidates in id order, plus the passing smoke chats
   select  --set practice --facts F --raw RAW --out-items I --out-facts F2 --out-heldout H --out-heldout-facts HF
             the first 220 passing candidates in id order; 20 of them (seed 4062) go to the held-out teacher-check set
-  overlap --a I1 --b I2      user messages that appear in both item files (case-folded, stripped); prints counts
+  overlap --a I1 --b I2      report only: user messages of I1 also in I2, by session and turn kind; counts only
   scan    --raw RAW          mu-407's scan strings in kept texts, and user messages repeated in 3 or more chats
   selftest                   no network
 """
@@ -75,8 +75,22 @@ def user_texts(items: list[dict]) -> set[str]:
 
 
 def overlap(a: list[dict], b: list[dict]) -> dict:
-    shared = user_texts(a) & user_texts(b)
-    return {"a_items": len(a), "b_items": len(b), "shared_user_messages": len(shared)}
+    """Report only: user messages of `a` that also appear in `b` (case-folded, stripped), by session and turn kind.
+    mu-407's Luna chats repeat small talk and ask lines across chats, so a shared message is expected and drops
+    nothing; the facts differ by seed."""
+    seen = user_texts(b)
+    by, chats = {}, 0
+    for it in a:
+        hit = 0
+        for part in ("session1", "session2"):
+            for t in it[part]:
+                if t["text"].strip().lower() in seen:
+                    k = part if part == "session1" else "session2_" + t.get("kind", "?")
+                    by[k] = by.get(k, 0) + 1
+                    hit = 1
+        chats += hit
+    return {"a_items": len(a), "b_items": len(b), "shared_user_messages": len(user_texts(a) & seen),
+            "a_chats_sharing": chats, "shared_by_place": dict(sorted(by.items()))}
 
 
 def scan(raw: list[dict]) -> dict:
@@ -117,9 +131,11 @@ def selftest() -> None:
         raise AssertionError("short set passed")
     except SystemExit:
         ok += 1
-    a = [{"session1": [{"text": "My dog Pim "}], "session2": [{"text": "hey"}]}]
-    b = [{"session1": [{"text": "my dog pim"}], "session2": [{"text": "yo"}]}]
-    assert overlap(a, b)["shared_user_messages"] == 1; ok += 1
+    a = [{"session1": [{"text": "My dog Pim "}], "session2": [{"kind": "smalltalk", "text": "yo"}]}]
+    b = [{"session1": [{"text": "my dog pim"}], "session2": [{"kind": "ask", "text": "yo"}]}]
+    o = overlap(a, b)
+    assert o["shared_user_messages"] == 2 and o["a_chats_sharing"] == 1 and o["shared_by_place"] == {
+        "session1": 1, "session2_smalltalk": 1}; ok += 1
     s = scan([{"item_id": "x", "ok": True, "session1": [{"text": "Rate limit exceeded"}], "session2": []}])
     assert s["scan_hits"]["rate limit"] == 1 and s["kept_chats"] == 1; ok += 1
     print(f"mu406 prep selftest {ok}/10 ok")

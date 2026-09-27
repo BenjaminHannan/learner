@@ -38,8 +38,10 @@ ARMS = ("P", "T", "N", "PW", "TW")
 SEED_PID, SEEDS_ORDER, BATCH = 4063, (4064, 4065), 30
 GATE_SEED_PID, GATE_SEEDS_ORDER = 4066, (4067, 4068)
 PAIR_SEED, PAIR_BATCH = 4069, 30
-GATE_BOTH_MAX, GATE_ONTURN_MIN, GATE_ANSWER_MIN = 0.03, 0.90, 0.80   # shares; whole set: 3/100, 72/80, 16/20
-M1_RATIO, M3_MIN, M5_SLACK, SIGN_P, MIN_ROWS = 0.5, 192, 6, 0.05, 800
+# Teacher gate (shares, so a chat that stopped early still counts; 20 whole chats give 6 of 200, 72/80, 16/20).
+# G1 uses M1's measure, flags summed over both claims judges (Thread manager, 09:40 UTC review).
+GATE_SUM_MAX, GATE_ONTURN_MIN, GATE_ANSWER_MIN = 0.03, 0.90, 0.80
+M1_RATIO, M2_MIN, M3_MIN, M5_SLACK, SIGN_P, MIN_ROWS = 0.5, 15, 192, 6, 0.05, 800
 
 
 def load_runs(runs_dir: str, items: list[dict], arms) -> dict:
@@ -153,10 +155,11 @@ def arm_counts(arm: str, items: list[dict], cv: dict, claims: dict, fits: dict) 
 
 def gate_from(c: dict, bad: int) -> dict:
     full = all(k == "2c2f" for k in c["judges_per_chat"]) and bad == 0
-    g1 = c["flagged_by_both"] <= GATE_BOTH_MAX * c["replies"]
+    g1 = c["C_two_judges"] <= GATE_SUM_MAX * 2 * c["replies"]
     g2 = c["on_turn_non_ask_both_judges"] >= GATE_ONTURN_MIN * c["non_ask_turns"]
     g3 = c["real_answers_both_judges"] >= GATE_ANSWER_MIN * c["ask_turns"]
-    return {"complete": full, "G1_both_flagged": [c["flagged_by_both"], c["replies"], g1],
+    return {"complete": full, "G1_summed_flags": [c["C_two_judges"], 2 * c["replies"], g1],
+            "report_both_either": [c["flagged_by_both"], c["flagged_by_either"], c["replies"]],
             "G2_on_turn": [c["on_turn_non_ask_both_judges"], c["non_ask_turns"], g2],
             "G3_real_answers": [c["real_answers_both_judges"], c["ask_turns"], g3],
             "gate": "INCOMPLETE" if not full else ("PASS" if g1 and g2 and g3 else "FAIL")}
@@ -173,7 +176,8 @@ def marks_from(a: dict) -> dict:
     ans = {arm: a[arm]["real_answers_both_judges"] for arm in ARMS}
     ont = {arm: a[arm]["on_turn_non_ask_both_judges"] for arm in ARMS}
     return {"M1": {"C_T": C["T"], "C_P": C["P"], "bar": M1_RATIO * C["P"], "sign": s, "pass": m1},
-            "M2": {"answers_T": ans["T"], "answers_P": ans["P"], "pass": ans["T"] >= ans["P"]},
+            "M2": {"answers_T": ans["T"], "answers_P": ans["P"], "min": M2_MIN,
+                   "pass": ans["T"] >= ans["P"] and ans["T"] >= M2_MIN},
             "M3": {"on_turn_T": ont["T"], "on_turn_P": ont["P"], "min": M3_MIN,
                    "pass": ont["T"] >= ont["P"] and ont["T"] >= M3_MIN},
             "proved_wrong": C["T"] >= C["P"],
@@ -272,7 +276,22 @@ def selftest() -> None:
     g = gate_from(arm_counts("L", items[:20], {("L", i["item_id"]): cv[("P", i["item_id"])] for i in items[:20]},
                              {("L", i["item_id"]): claims[("T", i["item_id"])] for i in items[:20]},
                              {("L", i["item_id"]): fits[("T", i["item_id"])] for i in items[:20]}), 0)
-    assert g["gate"] == "FAIL" and not g["G1_both_flagged"][2] and g["G2_on_turn"][2] and g["G3_real_answers"][2]; ok += 1
+    assert g["gate"] == "FAIL" and not g["G1_summed_flags"][2] and g["G2_on_turn"][2] and g["G3_real_answers"][2]; ok += 1
+    lc = {("L", i["item_id"]): [[0, 0, 0, 0, 0], [0, 1, 0, 0, 0] if n < 6 else [0] * 5] for n, i in enumerate(items[:20])}
+    g = gate_from(arm_counts("L", items[:20], {("L", i["item_id"]): cv[("P", i["item_id"])] for i in items[:20]}, lc,
+                             {("L", i["item_id"]): fits[("T", i["item_id"])] for i in items[:20]}), 0)
+    assert g["gate"] == "PASS" and g["G1_summed_flags"][:2] == [6, 200]; ok += 1
+    lc[("L", items[6]["item_id"])] = [[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]
+    g = gate_from(arm_counts("L", items[:20], {("L", i["item_id"]): cv[("P", i["item_id"])] for i in items[:20]}, lc,
+                             {("L", i["item_id"]): fits[("T", i["item_id"])] for i in items[:20]}), 0)
+    assert g["gate"] == "FAIL" and g["G1_summed_flags"][0] == 7; ok += 1
+    fits2 = {k: ([([1] * 5, 1), ([1] * 5, 1)] if k[0] != "T" or int(k[1][1:]) < 14 else [([1] * 5, 0), ([1] * 5, 0)])
+             for k in fits}
+    for k in fits2:
+        if k[0] == "P":
+            fits2[k] = [([1] * 5, 0), ([1] * 5, 0)]
+    m2 = marks_from({arm: arm_counts(arm, items, cv, claims2, fits2) for arm in ARMS})["M2"]
+    assert m2["answers_T"] == 14 and m2["answers_P"] == 0 and not m2["pass"]; ok += 1
     with tempfile.TemporaryDirectory() as td:
         out = Path(td)
         res = pair_packets(items, cv, out)
@@ -298,7 +317,7 @@ def selftest() -> None:
     assert verdict(m, {"M4_pass": True}, {"M5_pass": True}, 799)["verdict"] == "INCONCLUSIVE"; ok += 1
     assert verdict(m, {"M4_pass": True}, {"M5_pass": True}, 900)["verdict"] == "PASS"; ok += 1
     assert verdict(m, {"M4_pass": True}, {"M5_pass": False}, 900)["verdict"] == "FAIL"; ok += 1
-    print(f"mu406 judge selftest {ok}/13 ok")
+    print(f"mu406 judge selftest {ok}/16 ok")
 
 
 def main() -> None:
