@@ -9,3 +9,4 @@
 - Cause, as relayed by the Director at 03:06 UTC from Ben's Mac Claude (not checked here): the opencode Go plan has hit its usage limit. opencode.log shows "Go usage limit exceeded" from about 00:57 UTC. So GLM rows written after about 00:57 UTC are suspect.
 - State: no RESULTS expected. Stopping the job needs its exact opencode PID killed on the Mac, and that is pending with the Director and the Thread manager.
 - Next: g406-2 is re-queued as a fresh job with its long steps run in the background, after the plan resets. The seal (21d2ef2fd) and the marks are unchanged.
+- Update 03:07 UTC (date -u), from the Thread manager at 03:07 UTC: no one will stop the job now. The Director's permission check refused killing stuck opencode processes, and no one works around that. g406-2 waits for the plan reset or Ben's ruling. It only holds a Mac slot, and nothing needs that slot while GLM is down.
