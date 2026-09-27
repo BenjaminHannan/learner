@@ -1,0 +1,409 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT=$?; git log --oneline -3 origin/main; echo ---; git log --oneline -3 origin/builder-outbox; echo ---; git show origin/main:artifacts/claude-rd378g-20260926/ADDENDUM-I.md 2>&1 | head -n 300; echo ===ADDENDUM-J-CHECK===; git cat-file -e origin/main:artifacts/claude-rd378g-20260926/ADDENDUM-J.md 2>&1 && echo J_EXISTS || echo J_MISSING
+FETCH_EXIT=0
+0c5bfc3a7 gr-7 progress: L7 general run file (300 rows, 0 read as a square); G5 squares started 07:08:32Z
+b7eea4c5d gr-7 progress: L7 unseen run file (60 rows); L7 general started 07:05:18Z
+142d1c776 mu-407: smoke run done (3 chats x 3 arms, 0 empty replies); full talker run started 06:59 UTC
+---
+4e5bf6c39 builder results: y1t-luna-pilot-mac
+f7422471f watcher status
+278c48188 watcher status
+---
+# rd-378g addendum I (2026-09-27 03:55:09 UTC): the missing practice batches are written by GPT-6 Luna, and every grade comes from the Luna grader
+
+Sealed from DRAFT-ADDENDUM-I.md (dc71c074a) after the Thread manager's review (03:53 UTC). The review added one thing:
+a writer field on every row. The reason and the helper are in rd-378k addendum K
+(artifacts/claude-rd378k-20260926/PASSMARKS-K.md). This is written before any Luna writing call and before any output
+of 005-rd378g-writelow has been seen. ADDENDUM-A to H stay as sealed; this file adds to them.
+
+- Kept: the 90 GLM dialogs kg-001..090 (glm/notes_w1.jsonl, sha256 87a51358fa2b...).
+  - This follows the Thread manager's recorded reading of Ben's ruling: data already written by GLM is kept.
+  - They were written before OpenRouter's 402s at about 18:30 UTC, so none were written after the 00:57 UTC limit.
+  - The error-text scan (scripts/claude_rd378g_tagwriter.py, counts only) ran on them at 03:55 UTC: 90 dialogs, 0
+    dropped.
+- Not kept: anything from 005-rd378g-writelow. Its agent is stuck behind the GLM limit, and 000-stop-rd378low stops it.
+  This replaces addendum H's writelow2.
+- The one change for writing: claude_rd378g_writemore_oc.py runs unchanged, with each call going through the Luna
+  helper via scripts/claude_luna_run.py. Unchanged: the WRITE prompt, area, speaker letters, check_batch, the repeat
+  check against every first turn already written, and to_rows. A Luna route failure prints "call failed"; a batch
+  whose every try failed that way is route-lost (addendum F).
+- Step 1, format pilot: Luna writes batch 18 alone into pilot-luna/. It never trains anything.
+  - Pass: "batch 18 ok" within its 3 tries, and 0 "call failed" lines.
+  - Otherwise: stop, and the Thread manager gets the counts.
+- Step 2, writeluna: batches 18-20 and 22-39, with --have glm/notes_w1.jsonl and output to glm2N/notes_w1.jsonl.
+  - Batches that fail the code checks 3 times stay skipped.
+  - Route-lost batches may be written again under an addendum.
+- Step 3, writer tag: claude_rd378g_tagwriter.py tag --have glm/notes_w1.jsonl --in glm2N/notes_w1.jsonl
+  --out glm2N/notes_w1_tagged.jsonl.
+  - Every row gets "writer": GLM for the 90 kept ids, Luna for the rest.
+  - Any dialog with error text is dropped, with counts by writer.
+  - Everything after this reads notes_w1_tagged.jsonl: the grades, the rows and the retrain.
+  - Fewer than 120 dialogs in it means stop and report.
+- Grades: rd378g-label3 grades every kept dialog, GLM-written and Luna-written. It uses teacher3 through the Luna route,
+  and runs only after gate3luna passes.
+- Report only: grade counts (ok / unsupported / other verdicts, missed) split by writer.
+- Disclosed:
+  - The training set mixes two writers: 90 GLM dialogs and up to 126 Luna dialogs.
+  - Ben's words "rewrite all the training data" could also mean rewriting the 90 with Luna. This keeps them, as the
+    Thread manager recorded.
+  - The G1/G2 marks (PASSMARKS, addenda A and B) do not change.
+  - G1/G2 test one writer model trained on the mixed set, so they cannot be split by the training data's writer.
+zsh:1: ==ADDENDUM-J-CHECK=== not found
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rd378g-20260926/ADDENDUM-J.md
+# rd-378g addendum J (2026-09-27 06:44:14 UTC): the Luna writer's pilot failed on time only; one timing check picks the Codex setting, then the same write
+
+ADDENDUM-A to I stay as sealed; this file adds to them. It is written after 007-rd378g-writeluna's pilot result and
+before any other Luna writing call.
+
+## What happened (007-rd378g-writeluna, origin/builder-outbox; counts from pilot-log.txt and the job's report)
+PILOT-FAIL. Batch 18 was tried 3 times; each try was 3 Luna attempts, and all 9 attempts ended "timeout after 300s"
+(the Director's helper has a fixed 300 s limit). Result: 3 "call failed" lines, 0 "batch 18 ok", 0 new dialogs. The
+job's agent timed the pilot step at 46 min. So batch 18 failed on the route alone (addendum F: route-lost), not on the
+code checks. Addendum I's writing step did not run. The grader job (006-rd378k-gate3luna) is separate and unaffected;
+its pilot evidently passed, because its gate step is running.
+
+## The one change: the Codex setting for writing calls
+Writing calls go through scripts/claude_luna_run2.py, which binds scripts/claude_luna_effort.py. That is the Director's
+helper run line with two knobs:
+- a time limit per attempt;
+- an optional Codex reasoning effort: `-c model_reasoning_effort="<effort>"`, Codex's documented config override
+  (`codex exec --help`, 000-probe-codex).
+Model, empty temp dir, read-only sandbox, error-like-reply rule, 3 tries and raise are all as in the helper. These
+stay as in addendum I: the WRITE prompt, area, speaker letters, check_batch, the repeat check, to_rows, glm2N/, the
+writer tag and the 120 floor. The grader keeps the helper as sealed in rd-378k addendum K.
+A writing batch is training input, not a test. The writer's route is not a measured quantity.
+
+## Timing check, which also stands in for addendum I's pilot
+scripts/claude_rd378g_lunadiag.py sends batch 18's exact WRITE prompt once per setting, in parallel, one attempt each:
+- "low" with 600 s;
+- the Codex default (no override) with 1200 s.
+It prints counts only: exit, wall time, Codex event counts by type, token usage, reply length, error-like, parsed items,
+check_batch's verdict and repeats. Nothing it writes is kept.
+A setting passes if all of these hold:
+- exit 0;
+- the reply is not error-like;
+- check_batch says ok;
+- 0 first turns repeat.
+
+## Rule, fixed now
+- The low setting passes: write with effort low, time limit 600 s.
+- Else, the default setting passes: write with the Codex default, time limit 1500 s.
+- Neither passes: stop (DIAG-FAIL). No further writing attempt without a new addendum, and the Thread manager gets the
+  counts.
+The write is addendum I's step 2 unchanged (batches 18-20 and 22-39, --have glm/notes_w1.jsonl, output glm2N/), then
+its step 3 (the writer tag).
+[0m
+[0m$ [0mgit cat-file -e origin/main:artifacts/claude-rd378g-20260926/glm2N/notes_w1.jsonl && echo MAIN_HAS_NOTES || echo MAIN_NO_NOTES; git cat-file -e origin/main:artifacts/claude-rd378g-20260926/glm2N/diag-log.txt && echo MAIN_HAS_DIAG || echo MAIN_NO_DIAG; git cat-file -e origin/builder-outbox:artifacts/claude-rd378g-20260926/glm2N/notes_w1.jsonl && echo OUTBOX_HAS_NOTES || echo OUTBOX_NO_NOTES; git cat-file -e origin/builder-outbox:artifacts/claude-rd378g-20260926/glm2N/diag-log.txt && echo OUTBOX_HAS_DIAG || echo OUTBOX_NO_DIAG
+fatal: path 'artifacts/claude-rd378g-20260926/glm2N/notes_w1.jsonl' does not exist in 'origin/main'
+MAIN_NO_NOTES
+fatal: path 'artifacts/claude-rd378g-20260926/glm2N/diag-log.txt' does not exist in 'origin/main'
+MAIN_NO_DIAG
+fatal: path 'artifacts/claude-rd378g-20260926/glm2N/notes_w1.jsonl' does not exist in 'origin/builder-outbox'
+OUTBOX_NO_NOTES
+fatal: path 'artifacts/claude-rd378g-20260926/glm2N/diag-log.txt' does not exist in 'origin/builder-outbox'
+OUTBOX_NO_DIAG
+[0m
+[0m$ [0mgit log -1 --format=%H origin/main -- artifacts/claude-rd378g-20260926/SEAL-ADD-J.sha256.txt; ls artifacts/claude-rd378g-20260926/ | head -n 50; git show origin/main:artifacts/claude-rd378g-20260926/SEAL-ADD-J.sha256.txt
+acd10f8f2a351c1240378340f4d0742b81f3f388
+glm
+pilot-luna
+teacher-log.txt
+47858b631f883f968be4fd10a6566c004a9b7abe811615078b7cdf54af69ad44  artifacts/claude-rd378g-20260926/ADDENDUM-J.md
+d7d29fe565c1a56036fb1fec8e403c3a037dd7fc41c4e4431e32119b20fe8a44  scripts/claude_luna_effort.py
+bf6e9090d5908bd4dffee7ae03ed4c53f6e3436a001797fce38c9e170b7a1c0f  scripts/claude_luna_run2.py
+7105976acf1611b0b497fc0904f468d7e3479272b2dc3789c7f5abde162a484e  scripts/claude_rd378g_lunadiag.py
+342a0fb7e15ebf22da763c21eddecb0c58cfcbd43c74481d8421b5709023024e  scripts/claude_luna_codex.py
+007975f1b27f77a115d6b3da193cfbb6e18db2bd767d6fe2360504112e233e35  scripts/claude_rd378g_writemore_oc.py
+b978641b2df86287ba4a84614c1d67055ee24bdca3ee5fd001cb920da98772bf  scripts/claude_rd378g_tagwriter.py
+[0m
+[0m$ [0mTMPDIR=$(mktemp -d /tmp/rd378g-luna2-XXXXXX); echo "$TMPDIR"; COMMIT=acd10f8f2a351c1240378340f4d0742b81f3f388; git archive $COMMIT scripts artifacts/claude-rd378g-20260926 | tar -x -C "$TMPDIR"; echo ARCHIVE_EXIT=$?; ls "$TMPDIR/scripts/" | grep -E "luna|writemore|tagwriter|teacher"; ls "$TMPDIR/artifacts/claude-rd378g-20260926/" | head -n 60
+/tmp/rd378g-luna2-tFm5EW
+ARCHIVE_EXIT=0
+claude_g406l_luna.py
+claude_ideajudge_teacher.py
+claude_k1e_teacher_c.py
+claude_k1e_teacher.py
+claude_k1h_luna.py
+claude_lis320_luna.py
+claude_lis320_luna2.py
+claude_luna_codex.py
+claude_luna_effort.py
+claude_luna_run.py
+claude_luna_run2.py
+claude_mu407_prep_luna.py
+claude_rd378g_lunadiag.py
+claude_rd378g_tagwriter.py
+claude_rd378g_teacher.py
+claude_rd378g_writemore_oc.py
+claude_rd378k_teacher.py
+claude_rd378k_teacher2.py
+claude_rd378k_teacher3.py
+claude_rd378k_teacher3oc.py
+claude_y1t_luna.py
+fable_noisyteacher45_enumerate.py
+fable_noisyteacher45.py
+premonition_teacher_delay_eval.py
+premonition_teacher_delay_ops.py
+premonition_teacher_delay_report.py
+premonition_teacher_delay.py
+ADDENDUM-A.md
+ADDENDUM-B.md
+ADDENDUM-C.md
+ADDENDUM-D.md
+ADDENDUM-E.md
+ADDENDUM-F.md
+ADDENDUM-G.md
+ADDENDUM-H.md
+ADDENDUM-I.md
+ADDENDUM-J.md
+DRAFT-ADDENDUM-I.md
+PASSMARKS.md
+SEAL-ADD-A.sha256.txt
+SEAL-ADD-B.sha256.txt
+SEAL-ADD-C.sha256.txt
+SEAL-ADD-D.sha256.txt
+SEAL-ADD-E.sha256.txt
+SEAL-ADD-F.sha256.txt
+SEAL-ADD-G.sha256.txt
+SEAL-ADD-H.sha256.txt
+SEAL-ADD-I.sha256.txt
+SEAL-ADD-J.sha256.txt
+SEAL.sha256.txt
+[0m
+[0m$ [0mTMPDIR=$(ls -dt /tmp/rd378g-luna2-* | head -n 1); echo "$TMPDIR"; mkdir -p "$TMPDIR/scripts" "$TMPDIR/artifacts/claude-rd378g-20260926/glm"; git show origin/builder-outbox:scripts/claude_glm_opencode.py > "$TMPDIR/scripts/claude_glm_opencode.py"; echo OP1=$?; git show origin/builder-outbox:scripts/claude_glm_opencode_v11.py > "$TMPDIR/scripts/claude_glm_opencode_v11.py"; echo OP2=$?; git show origin/builder-outbox:artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl > "$TMPDIR/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl"; echo OP3=$?; wc -l "$TMPDIR/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl"; ls -la "$TMPDIR/scripts/claude_glm_opencode"*.py
+/tmp/rd378g-luna2-tFm5EW
+OP1=0
+OP2=0
+OP3=0
+      90 /tmp/rd378g-luna2-tFm5EW/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl
+-rw-r--r--  1 ben-hannan  wheel  1268 Sep 27 02:45 /tmp/rd378g-luna2-tFm5EW/scripts/claude_glm_opencode_low.py
+-rw-r--r--  1 ben-hannan  wheel  5621 Sep 27 03:10 /tmp/rd378g-luna2-tFm5EW/scripts/claude_glm_opencode_v11.py
+-rw-r--r--  1 ben-hannan  wheel  4081 Sep 27 03:10 /tmp/rd378g-luna2-tFm5EW/scripts/claude_glm_opencode.py
+[0m
+[0m$ [0mTMPDIR=$(ls -dt /tmp/rd378g-luna2-* | head -n 1); echo "$TMPDIR"; python3 -c "import pathlib; print(open('/tmp/RDTMP').read())" 2>/dev/null || echo "$TMPDIR" > /tmp/RDTMP; cat /tmp/RDTMP; ls "$TMPDIR/artifacts/claude-rd378g-20260926/SEAL-"*.txt
+python3 -B -c "import ast,pathlib; [print('=== '+p+':'); print(ast.get_docstring(pathlib.Path(p).read_text()) or '(no docstring)')" for p in []]" 2>&1 | head
+zsh:2: unmatched "
+[0m
+[0m$ [0mls -dt /tmp/rd378g-luna2-* | head -n 1
+/tmp/rd378g-luna2-tFm5EW
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-rd378g-20260926/SEAL-ADD-J.sha256.txt; echo EXIT_J=$?; shasum -a 256 -c artifacts/claude-rd378g-20260926/SEAL-ADD-I.sha256.txt; echo EXIT_I=$?; shasum -a 256 -c artifacts/claude-rd378g-20260926/SEAL-ADD-F.sha256.txt; echo EXIT_F=$?; shasum -a 256 -c artifacts/claude-rd378g-20260926/SEAL-ADD-E.sha256.txt; echo EXIT_E=$?; shasum -a 256 -c artifacts/claude-rd378g-20260926/SEAL-ADD-D.sha256.txt; echo EXIT_D=$?
+artifacts/claude-rd378g-20260926/ADDENDUM-J.md: OK
+scripts/claude_luna_effort.py: OK
+scripts/claude_luna_run2.py: OK
+scripts/claude_rd378g_lunadiag.py: OK
+scripts/claude_luna_codex.py: OK
+scripts/claude_rd378g_writemore_oc.py: OK
+scripts/claude_rd378g_tagwriter.py: OK
+EXIT_J=0
+artifacts/claude-rd378g-20260926/ADDENDUM-I.md: OK
+scripts/claude_luna_run.py: OK
+scripts/claude_luna_codex.py: OK
+scripts/claude_rd378g_tagwriter.py: OK
+scripts/claude_rd378g_writemore_oc.py: OK
+EXIT_I=0
+artifacts/claude-rd378g-20260926/ADDENDUM-F.md: OK
+EXIT_F=0
+artifacts/claude-rd378g-20260926/ADDENDUM-E.md: OK
+scripts/claude_glm_v11_run.py: OK
+scripts/claude_glm_opencode_v11.py: OK
+EXIT_E=0
+artifacts/claude-rd378g-20260926/ADDENDUM-D.md: OK
+scripts/claude_rd378g_writemore_oc.py: OK
+artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl: OK
+scripts/claude_glm_opencode.py: OK
+EXIT_D=0
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B -c "import ast; files=['scripts/claude_rd378g_lunadiag.py','scripts/claude_luna_run2.py','scripts/claude_luna_effort.py','scripts/claude_luna_codex.py','scripts/claude_rd378g_writemore_oc.py','scripts/claude_rd378g_teacher.py','scripts/claude_rd378g_tagwriter.py']; [print('===== '+f+' =====') or print((ast.get_docstring(open(f).read()) or '(none)')[:3000]) for f in files]"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/ast.py", line 293, in get_docstring
+    raise TypeError("%r can't have docstrings" % node.__class__.__name__)
+TypeError: 'str' can't have docstrings
+===== scripts/claude_rd378g_lunadiag.py =====
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_rd378g_lunadiag.py --help 2>&1 | head -n 20; echo ---; head -n 40 scripts/claude_rd378g_lunadiag.py
+usage: claude_rd378g_lunadiag.py [-h] [--have HAVE] [--settings SETTINGS]
+                                 {run,selftest}
+
+positional arguments:
+  {run,selftest}
+
+options:
+  -h, --help           show this help message and exit
+  --have HAVE
+  --settings SETTINGS
+---
+#!/usr/bin/env python3
+"""rd-378g: which Codex setting lets GPT-6 Luna write one practice batch in time? (Trustworthy notes thread,
+2026-09-27; rd-378g addendum J). New file.
+
+007-rd378g-writeluna's pilot failed on time: 9 of 9 attempts timed out at the helper's 300 s. This sends batch 18's
+exact WRITE prompt (claude_rd378g_teacher.WRITE, area and speaker letters as claude_rd378g_writemore_oc.one_batch builds
+them) once per setting, the settings in parallel, one attempt each, through claude_luna_effort's run line plus --json
+(Codex's JSONL event stream). For each setting it prints counts only, never text: exit code, wall seconds, event counts
+by type, token usage numbers, reply length, whether the reply is error-like, whether it parses as a list, check_batch's
+verdict, and repeats of first turns already in --have. Nothing it writes is kept.
+
+python -B scripts/claude_rd378g_lunadiag.py run --have glm/notes_w1.jsonl --settings low:600,default:1200
+python -B scripts/claude_rd378g_lunadiag.py selftest   (no network)
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_luna_effort as E  # noqa: E402
+import claude_rd378g_teacher as G  # noqa: E402
+
+BATCH = 18
+
+
+def prompt(b=BATCH):
+    letters = ", ".join(G.LETTERS[(3 * b + j) % len(G.LETTERS)] for j in range(3))
+    return G.WRITE.replace("{area}", G.AREAS[b]).replace("{letters}", letters)
+
+
+def events(stdout):
+    kinds, usage = {}, {}
+[0m
+[0m$ [0mfor f in scripts/claude_luna_run2.py scripts/claude_luna_effort.py scripts/claude_luna_codex.py scripts/claude_rd378g_writemore_oc.py scripts/claude_rd378g_teacher.py scripts/claude_rd378g_tagwriter.py; do echo "===== $f ====="; head -n 12 "$f"; echo; done
+===== scripts/claude_luna_run2.py =====
+#!/usr/bin/env python3
+"""Run a sealed script with GPT-6 Luna at a chosen reasoning effort and time limit (Trustworthy notes thread,
+2026-09-27). Same idea as scripts/claude_luna_run.py (bind the module name claude_glm_opencode, run the named script
+unchanged), bound instead to scripts/claude_luna_effort.py with its TIMEOUT and EFFORT set from the flags. A failed call
+raises after 3 tries; the sealed wrappers print their "call failed" line and use "" as the raw answer, as before.
+
+python -B scripts/claude_luna_run2.py --effort low|medium|high|default --timeout SECONDS SCRIPT.py ARGS...
+python -B scripts/claude_luna_run2.py --check   (no network: fakes the codex run; prints "luna2 bound ok")
+"""
+from __future__ import annotations
+
+import contextlib
+
+===== scripts/claude_luna_effort.py =====
+#!/usr/bin/env python3
+"""GPT-6 Luna through the Director's Codex helper, with a chosen reasoning effort and time limit (Trustworthy notes
+thread, 2026-09-27). New file; scripts/claude_luna_codex.py stays unchanged and supplies everything but the run line.
+
+rd-378g's writer pilot (007-rd378g-writeluna) failed on time only: 9 of 9 Luna attempts at the helper's fixed 300 s
+limit timed out while writing one practice batch (6 dialogs of about 12 turns, with notes). This module is the helper's
+_once() and call() with two knobs set by the caller: TIMEOUT (seconds per attempt) and EFFORT (None keeps the Codex
+default; otherwise "-c model_reasoning_effort=<EFFORT>" is added, Codex's documented config override). Same empty-temp-
+dir, read-only sandbox, --skip-git-repo-check, --output-last-message, error-like-reply rule, 3 tries and raise as the
+helper. Same interface as claude_glm_opencode.call(text) -> str.
+"""
+from __future__ import annotations
+
+===== scripts/claude_luna_codex.py =====
+#!/usr/bin/env python3
+"""GPT-6 Luna via the Mac's bundled Codex CLI (Ben's Codex plan; no key handled).
+
+New helper (Director, 2026-09-27). Ben 03:25:33 UTC "you can use unlimited luna",
+03:47:24 card "Allow Luna", 03:47:41 "just have luna rewrite all the training
+data". Model id gpt-6-luna answered "ok" in probe 000-probe-codex2 (03:37 UTC).
+
+Same interface as scripts/claude_glm_opencode_v11.py: call(text, model=MODEL,
+timeout=300) -> str, plus --selftest. Each attempt runs
+  codex exec -m gpt-6-luna -C <empty temp dir> --sandbox read-only
+             --skip-git-repo-check [-o <file>] -
+with the prompt on stdin, in a fresh empty temp dir, so the agent can read
+
+===== scripts/claude_rd378g_writemore_oc.py =====
+#!/usr/bin/env python3
+"""rd-378g: write again, through Ben's opencode route, the practice batches that OpenRouter's 402s lost (Trustworthy
+notes thread, 2026-09-26). New file; claude_rd378g_teacher.py stays and is imported unchanged.
+
+rd378g-teacher (COMMIT 854f21660) wrote 90 dialogs (15 of 40 batches). Batches 7, 8, 11 and 14 failed the script's own
+code checks three times (kept skipped, as the sealed script would); batches 18-20 and 22-39 were lost to "HTTP Error 402:
+Payment Required" (the OpenRouter account ran out of funds). This script runs the SAME per-batch step as
+claude_rd378g_teacher.writenotes (same WRITE prompt, area, speaker letters, check_batch, repeat check against every
+first turn already written, to_rows) for the named batches only, with each call sent through
+scripts/claude_glm_opencode.py (the Director's helper; the route sets no temperature, the sealed run asked for 0.9).
+New dialogs get ids after the existing ones (kg-091...). Output = the existing dialogs, unchanged, then the new ones.
+
+
+===== scripts/claude_rd378g_teacher.py =====
+#!/usr/bin/env python3
+"""rd-378g teacher job on the Mac (Trustworthy notes thread, 2026-09-26): the GLM teacher writes practice dialogs WITH
+memory notes, so a note writer can be trained from the plain 1B with no Claude-written or Claude-judged row (Ben 16:39
+"Use GLM"; Thread manager ruling 16:53: the rd-378 writer, trained on Opus-written notes, stays out of every build).
+The recipe is rd-378's (artifacts/claude-rd378-20260925/data/WRITER_NOTES.md) with GLM in place of the Opus writers;
+the teacher then grades its own notes with claude_rd378k_teacher.py label, and scripts/claude_rd378_data.py keeps a
+turn only if every note is "ok" and nothing was missed, exactly as for rd-378. Standard library only.
+
+writenotes  240 dialogs in 40 calls of 6 (3 chat + 3 overheard, 10-14 turns, notes on every non-assistant turn), each
+            call with its own subject area and name letters. Structure and note form checked in code (cites in [-6, 0],
+            never before turn 1, a "when" must appear in a cited turn); a call that breaks them is retried (3 tries).
+            Output DIR/notes_w1.jsonl in the rd-378 notes format (ids kg-001.., t from 1; assistant turns carry no
+
+===== scripts/claude_rd378g_tagwriter.py =====
+#!/usr/bin/env python3
+"""rd-378g: tag every practice dialog with the model that wrote it, and drop dialogs that carry service error text
+(Trustworthy notes thread, 2026-09-27; rd-378g addendum I). New file.
+
+The practice set mixes two writers: the dialogs already in --have were written by GLM 5.3 Flash through OpenRouter
+(rd378g-teacher); every later dialog in --in was written by GPT-6 Luna through Codex (writeluna). The folder name does
+not say this, so each row gets a "writer" field. A dialog is dropped when any turn or note text matches ERR
+(case-insensitive); the script prints counts only, never text.
+
+python -B scripts/claude_rd378g_tagwriter.py tag --have glm/notes_w1.jsonl --in glm2N/notes_w1.jsonl --out F.jsonl
+python -B scripts/claude_rd378g_tagwriter.py selftest
+"""
+[0m
+[0m$ [0mSTART=$(date +%s); OUT1=$(uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run2.py --check 2>&1); echo "$OUT1"; END=$(date +%s); echo "WALL_CHECK=$((END-START))s"; START=$(date +%s); OUT2=$(uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run2.py --effort low --timeout 600 scripts/claude_rd378g_writemore_oc.py selftest 2>&1 | tail -n 5); echo "$OUT2"; END=$(date +%s); echo "WALL_WRITEMORE=$((END-START))s"
+luna2 bound ok
+WALL_CHECK=0s
+[rd378g-writemore] batch 3 try 1: not 6 dialogs
+[rd378g-writemore] batch 3 ok (7 dialogs)
+[rd378g-writemore] batch 4 ok (13 dialogs)
+{"dialogs": 13, "kept_from_before": 1, "new_dialogs": 12, "new_by_kind": {"chat": 6, "overheard": 6}, "batches_skipped": [], "new_turns": 108, "new_notes": 12, "new_empty_turns": 96}
+rd378g writemore selftest 1/1 ok
+WALL_WRITEMORE=0s
+[0m
+[0m$ [0mSTART=$(date +%s); uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378g_tagwriter.py selftest 2>&1 | tail -n 5; END=$(date +%s); echo "WALL_TAG=$((END-START))s"; START=$(date +%s); uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378g_lunadiag.py selftest 2>&1 | tail -n 5; END=$(date +%s); echo "WALL_DIAGSELF=$((END-START))s"
+rd378g tagwriter selftest 1/1 ok
+WALL_TAG=1s
+{"effort": "low", "timeout_s": 5, "exit": "timeout", "wall_s": 0.0, "event_counts": {"turn.started": 1}, "usage": {}, "reply_chars": 0, "error_like": true, "parsed_items": null, "check_batch": "no reply", "repeats": 0, "pass": false}
+{"effort": "default", "timeout_s": 9, "exit": 0, "wall_s": 0.0, "event_counts": {"item.completed:agent_message": 1, "turn.completed": 1}, "usage": {"input_tokens": 10, "output_tokens": 20}, "reply_chars": 4644, "error_like": false, "parsed_items": 6, "check_batch": "ok", "repeats": 0, "pass": true}
+rd378g lunadiag selftest 1/1 ok
+WALL_DIAGSELF=0s
+[0m
+[0m$ [0mmkdir -p artifacts/claude-rd378g-20260926/glm2N && ps aux | grep -E "lunadiag|writemore" | grep -v grep || echo NO_RUNNING_COPY; date -u; echo START_TIMING
+ben-hannan       95625   1.0  2.5 562809088 837600   ??  RN    3:09AM   0:17.38 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:008-rd378g-writeluna2.go1.95600 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-27 06:45 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.\012GPU: no. Mac CPU only; 2 timing calls in parallel, then about 21-63 long calls (one at a time) to GPT-6 Luna through Ben's Codex plan, $0 per run; no opencode, no OpenRouter, no rental. It may run at the same time as 006-rd378k-gate3luna.\012LOAD-LIGHT: yes (network-bound: each Luna call runs remotely through the Codex CLI; locally only python plus one codex process per call)\012\012YOUR TASK: rd378g-writeluna2. First read origin/main:artifacts/claude-rd378g-20260926/ADDENDUM-I.md, then ADDENDUM-J.md. A timing check picks the Codex setting by a fixed rule; then Luna writes the 21 practice batches that were lost to route failures, and every dialog is tagged with its writer. No training, no GPU. Code: scripts/claude_rd378g_lunadiag.py, scripts/claude_luna_run2.py, scripts/claude_luna_effort.py, scripts/claude_luna_codex.py, scripts/claude_rd378g_writemore_oc.py, scripts/claude_rd378g_teacher.py and scripts/claude_rd378g_tagwriter.py (read their docstrings). Run them, never edit them; if something breaks, stop and report the exact error. The writing script writes its file only at the end and has no resume. Run it once under nohup with its own log and poll the log. Never start a second copy while one runs (check `ps`).\012LUNA RULES: never read, print or copy anything under ~/.codex or any Codex / ChatGPT config, auth file or key. Never print any reply text; the scripts print counts only.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-rd378g-20260926/glm2N/notes_w1.jsonl or artifacts/claude-rd378g-20260926/glm2N/diag-log.txt.\012\0121. COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378g-20260926/SEAL-ADD-J.sha256.txt). Run `git archive $COMMIT scripts artifacts/claude-rd378g-20260926 | tar -x -C <tmp>`. Then, with mkdir -p first:\012   - `git show origin/builder-outbox:scripts/claude_glm_opencode.py > <tmp>/scripts/claude_glm_opencode.py`;\012   - `git show origin/builder-outbox:scripts/claude_glm_opencode_v11.py > <tmp>/scripts/claude_glm_opencode_v11.py`;\012   - `git show origin/builder-outbox:artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl > <tmp>/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl`.\012   Run everything from <tmp> (python via `uv run --offline --no-project --python 3.12 python -B`; standard library only). Report COMMIT.\0122. SEAL: `shasum -a 256 -c` on these files in artifacts/claude-rd378g-20260926/:\012   - SEAL-ADD-J.sha256.txt (7 OK)\012   - SEAL-ADD-I.sha256.txt (5 OK)\012   - SEAL-ADD-F.sha256.txt (1 OK)\012   - SEAL-ADD-E.sha256.txt (3 OK)\012   - SEAL-ADD-D.sha256.txt (4 OK)\012   Anything else: stop with SEAL-MISMATCH and every line.\0123. Each of these must end as shown; else stop:\012   - python -B scripts/claude_luna_run2.py --check -> "luna2 bound ok";\012   - python -B scripts/claude_luna_run2.py --effort low --timeout 600 scripts/claude_rd378g_writemore_oc.py selftest -> ends "rd378g writemore selftest 1/1 ok";\012   - python -B scripts/claude_rd378g_tagwriter.py selftest -> "rd378g tagwriter selftest 1/1 ok";\012   - python -B scripts/claude_rd378g_lunadiag.py selftest -> ends "rd378g lunadiag selftest 1/1 ok".\0124. TIMING CHECK: python -B scripts/claude_rd378g_lunadiag.py run --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --settings low:600,default:1200\012   It prints 2 JSON lines. Save its console output as artifacts/claude-rd378g-20260926/glm2N/diag-log.txt and report both lines verbatim.\0125. CHOOSE (ADDENDUM-J's rule):\012   - the "low" line has "pass": true -> EFFORT=low, TIMEOUT=600;\012   - else the "default" line has "pass": true -> EFFORT=default, TIMEOUT=1500;\012   - else stop with DIAG-FAIL, and do not run steps 6-7. Still do step 8 for diag-log.txt only.\012   Report the choice.\0126. WRITE: python -B scripts/claude_luna_run2.py --effort $EFFORT --timeout $TIMEOUT scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18-20,22-39 --out artifacts/claude-rd378g-20260926/glm2N   (prints one JSON line at the end)\0127. TAG: python -B scripts/claude_rd378g_tagwriter.py tag --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --in artifacts/claude-rd378g-20260926/glm2N/notes_w1.jsonl --out artifacts/claude-rd378g-20260926/glm2N/notes_w1_tagged.jsonl   (prints one JSON line)\0128. Copy into the worktree:\012   - artifacts/claude-rd378g-20260926/glm2N/diag-log.txt;\012   - if step 6 ran: glm2N/notes_w1.jsonl and glm2N/notes_w1_tagged.jsonl, plus the console output of steps 3, 6 and 7 as glm2N/teacher-log.txt.\012   Report every JSON line verbatim, wall time per step, and the number of "call failed" lines in the step 6 log.\012PUSH: artifacts/claude-rd378g-20260926/glm2N
+Sun Sep 27 07:10:45 UTC 2026
+START_TIMING
+[0m
+[0m$ [0mdate -u +%s > /tmp/luna2_t4_start; START=$(cat /tmp/luna2_t4_start); uv run --offline --no-project --python 3.12 python -B scripts/claude_rd378g_lunadiag.py run --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --settings low:600,default:1200 2>artifacts/claude-rd378g-20260926/glm2N/diag-stderr.txt | tee artifacts/claude-rd378g-20260926/glm2N/diag-log.txt; echo DIAG_EXIT=$?; END=$(date -u +%s); echo "DIAG_WALL=$((END-START))s"; echo STDERR_TAIL:; tail -n 5 artifacts/claude-rd378g-20260926/glm2N/diag-stderr.txt
+{"effort": "low", "timeout_s": 600, "exit": 0, "wall_s": 113.8, "event_counts": {"thread.started": 1, "item.completed:error": 1, "turn.started": 1, "item.completed:agent_message": 1, "turn.completed": 1}, "usage": {"input_tokens": 14232, "cached_input_tokens": 0, "cache_write_input_tokens": 0, "output_tokens": 5848, "reasoning_output_tokens": 0}, "reply_chars": 23993, "error_like": false, "parsed_items": 6, "check_batch": "cites", "repeats": 0, "pass": false}
+{"effort": "default", "timeout_s": 1200, "exit": 0, "wall_s": 595.5, "event_counts": {"thread.started": 1, "item.completed:error": 1, "turn.started": 1, "item.completed:agent_message": 1, "turn.completed": 1}, "usage": {"input_tokens": 14232, "cached_input_tokens": 13056, "cache_write_input_tokens": 0, "output_tokens": 32550, "reasoning_output_tokens": 27511}, "reply_chars": 20153, "error_like": false, "parsed_items": 6, "check_batch": "ok", "repeats": 0, "pass": true}
+DIAG_EXIT=0
+DIAG_WALL=596s
+STDERR_TAIL:
+[0m
+[0m$ [0mps aux | grep -E "writemore_oc.py write" | grep -v grep || echo NO_WRITE_RUNNING; date -u +%s > /tmp/luna2_t6_start; cat /tmp/luna2_t6_start; rm -f write-run.log; nohup uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run2.py --effort default --timeout 1500 scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18-20,22-39 --out artifacts/claude-rd378g-20260926/glm2N > write-run.log 2>&1 & echo "NOHUP_PID=$!"; sleep 5; tail -n 10 write-run.log; ps -p $! 2>&1 | head -n 3
+ben-hannan       95625  11.2  1.8 562808528 587888   ??  SN    3:09AM   0:29.36 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:008-rd378g-writeluna2.go1.95600 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-27 06:45 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.\012GPU: no. Mac CPU only; 2 timing calls in parallel, then about 21-63 long calls (one at a time) to GPT-6 Luna through Ben's Codex plan, $0 per run; no opencode, no OpenRouter, no rental. It may run at the same time as 006-rd378k-gate3luna.\012LOAD-LIGHT: yes (network-bound: each Luna call runs remotely through the Codex CLI; locally only python plus one codex process per call)\012\012YOUR TASK: rd378g-writeluna2. First read origin/main:artifacts/claude-rd378g-20260926/ADDENDUM-I.md, then ADDENDUM-J.md. A timing check picks the Codex setting by a fixed rule; then Luna writes the 21 practice batches that were lost to route failures, and every dialog is tagged with its writer. No training, no GPU. Code: scripts/claude_rd378g_lunadiag.py, scripts/claude_luna_run2.py, scripts/claude_luna_effort.py, scripts/claude_luna_codex.py, scripts/claude_rd378g_writemore_oc.py, scripts/claude_rd378g_teacher.py and scripts/claude_rd378g_tagwriter.py (read their docstrings). Run them, never edit them; if something breaks, stop and report the exact error. The writing script writes its file only at the end and has no resume. Run it once under nohup with its own log and poll the log. Never start a second copy while one runs (check `ps`).\012LUNA RULES: never read, print or copy anything under ~/.codex or any Codex / ChatGPT config, auth file or key. Never print any reply text; the scripts print counts only.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-rd378g-20260926/glm2N/notes_w1.jsonl or artifacts/claude-rd378g-20260926/glm2N/diag-log.txt.\012\0121. COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378g-20260926/SEAL-ADD-J.sha256.txt). Run `git archive $COMMIT scripts artifacts/claude-rd378g-20260926 | tar -x -C <tmp>`. Then, with mkdir -p first:\012   - `git show origin/builder-outbox:scripts/claude_glm_opencode.py > <tmp>/scripts/claude_glm_opencode.py`;\012   - `git show origin/builder-outbox:scripts/claude_glm_opencode_v11.py > <tmp>/scripts/claude_glm_opencode_v11.py`;\012   - `git show origin/builder-outbox:artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl > <tmp>/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl`.\012   Run everything from <tmp> (python via `uv run --offline --no-project --python 3.12 python -B`; standard library only). Report COMMIT.\0122. SEAL: `shasum -a 256 -c` on these files in artifacts/claude-rd378g-20260926/:\012   - SEAL-ADD-J.sha256.txt (7 OK)\012   - SEAL-ADD-I.sha256.txt (5 OK)\012   - SEAL-ADD-F.sha256.txt (1 OK)\012   - SEAL-ADD-E.sha256.txt (3 OK)\012   - SEAL-ADD-D.sha256.txt (4 OK)\012   Anything else: stop with SEAL-MISMATCH and every line.\0123. Each of these must end as shown; else stop:\012   - python -B scripts/claude_luna_run2.py --check -> "luna2 bound ok";\012   - python -B scripts/claude_luna_run2.py --effort low --timeout 600 scripts/claude_rd378g_writemore_oc.py selftest -> ends "rd378g writemore selftest 1/1 ok";\012   - python -B scripts/claude_rd378g_tagwriter.py selftest -> "rd378g tagwriter selftest 1/1 ok";\012   - python -B scripts/claude_rd378g_lunadiag.py selftest -> ends "rd378g lunadiag selftest 1/1 ok".\0124. TIMING CHECK: python -B scripts/claude_rd378g_lunadiag.py run --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --settings low:600,default:1200\012   It prints 2 JSON lines. Save its console output as artifacts/claude-rd378g-20260926/glm2N/diag-log.txt and report both lines verbatim.\0125. CHOOSE (ADDENDUM-J's rule):\012   - the "low" line has "pass": true -> EFFORT=low, TIMEOUT=600;\012   - else the "default" line has "pass": true -> EFFORT=default, TIMEOUT=1500;\012   - else stop with DIAG-FAIL, and do not run steps 6-7. Still do step 8 for diag-log.txt only.\012   Report the choice.\0126. WRITE: python -B scripts/claude_luna_run2.py --effort $EFFORT --timeout $TIMEOUT scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18-20,22-39 --out artifacts/claude-rd378g-20260926/glm2N   (prints one JSON line at the end)\0127. TAG: python -B scripts/claude_rd378g_tagwriter.py tag --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --in artifacts/claude-rd378g-20260926/glm2N/notes_w1.jsonl --out artifacts/claude-rd378g-20260926/glm2N/notes_w1_tagged.jsonl   (prints one JSON line)\0128. Copy into the worktree:\012   - artifacts/claude-rd378g-20260926/glm2N/diag-log.txt;\012   - if step 6 ran: glm2N/notes_w1.jsonl and glm2N/notes_w1_tagged.jsonl, plus the console output of steps 3, 6 and 7 as glm2N/teacher-log.txt.\012   Report every JSON line verbatim, wall time per step, and the number of "call failed" lines in the step 6 log.\012PUSH: artifacts/claude-rd378g-20260926/glm2N
+1790493657
+NOHUP_PID=7526
+  PID TTY           TIME CMD
+ 7526 ??         0:00.01 uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run2.py --effort default --timeout 1500 scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18-20,22-39 --out artifacts/claude-rd378g-20260926/glm2N
+[0m
+[0m$ [0msleep 110; date -u; wc -c write-run.log; cat write-run.log | head -n 20; ps aux | grep "claude_rd378g_writemore_oc.py write" | grep -v "opencode run" | grep -v grep || echo WRITE_DONE_OR_GONE
+Sun Sep 27 07:23:00 UTC 2026
+       0 write-run.log
+ben-hannan        7528   0.0  0.0 488810048  16544   ??  SN    3:20AM   0:00.06 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_luna_run2.py --effort default --timeout 1500 scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18-20,22-39 --out artifacts/claude-rd378g-20260926/glm2N
+ben-hannan        7526   0.0  0.0 463612096  12784   ??  SN    3:20AM   0:00.01 uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run2.py --effort default --timeout 1500 scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18-20,22-39 --out artifacts/claude-rd378g-20260926/glm2N
+[0m
+[91m[1mError: [0mError from provider (Console): Rate limit exceeded. Please try again later.
