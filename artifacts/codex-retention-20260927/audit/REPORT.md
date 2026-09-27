@@ -45,3 +45,29 @@ DL5's saved carry-over analysis found no useful transfer to number puzzles (base
 The eight tests support the local bypass mechanism; they do not yet establish end-to-end exact retention for a real autoregressive request or immutability of every base path.
 
 **Audit limits:** only code and aggregate completed results in this checkout were inspected; no sealed TEST-ONLY dataset, training, GPU run, or original-file edit. e4 is partial here; e5, e6, DL8, and DL9 outcomes remain unknown.
+
+## Parent's resolution and scope correction
+
+This review predates Ben's corrected follow-up and the relocation of our new code.
+All new implementation now lives in `../implementation/retention.py` and its
+tests; no original project module was changed. Ben reports rsn-358e4 active on a
+cloud machine with two of six seeds and dl-9 active on the PC. Local older plan
+counts above must not be treated as current scheduling information. Neither run
+was duplicated or altered.
+
+The constructor now rejects **all** trainable non-A/B parameters, including
+unwrapped embeddings/heads. Expiring request leases reject work inherited by an
+async child after its parent scope has ended. Both cases have passing tests.
+Additional tests exercise actual causal attention and six cached greedy decode
+steps in a tiny code-generated model, including alternating routes and a foreign
+KV cache rejected through `generate()`. The low-level `scope()` still requires
+the caller to keep a fresh cache within that request; it is documented as an
+advanced helper, not a cache isolation boundary. Tensor hashes still do not
+pin tokenizer, configuration, prompts or routing. Those remain explicit scope
+limits, not resolved guarantees.
+
+The actual original MiniCPM base was absent in checked local model roots, so no
+new 1B inference result exists. Saved dl-5 adapters are finding-only because of
+their historical training text. The new learned-gate draft was discarded
+without running it; the project already runs that test as dl-9. See
+`../chat/RESULTS.md` for software-only evidence and live-model INCONCLUSIVE.

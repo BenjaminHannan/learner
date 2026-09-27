@@ -25,6 +25,7 @@ os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "implementation"))
 PIN = "87179e5c1f455ef22e6223592d2d61351b525bfc"
 ADAPTERS = Path("/Users/ben-hannan/premonition-models/dl5-adapters")
 SIDECARS = ROOT / "artifacts/claude-dl5-20260926/gpu"
@@ -92,7 +93,7 @@ def load_model(path: Path, device: str):
 
 def install_controller(model):
     import claude_blurt2 as blurt
-    from premonition.retention import RequestScopedAdapter
+    from retention import RequestScopedAdapter
 
     blurt.add_lora(model)
     model.eval()

@@ -18,6 +18,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "implementation"))
 from claude_blurt2 import add_lora
 from retention import RequestScopedAdapter
+from retention_chat import install_controller, route
 
 
 class TinyCausal(nn.Module):
@@ -103,6 +104,15 @@ class CachedGenerationTests(unittest.TestCase):
             cache = self.model(self.inputs).past_key_values
         with self.assertRaisesRegex(ValueError, "reuse attention caches"):
             self.controller.generate(enabled=False, input_ids=self.inputs[:, -1:], past_key_values=cache)
+
+    def test_live_runner_import_and_explicit_route(self):
+        self.assertFalse(route("general"))
+        self.assertTrue(route("grid"))
+        with self.assertRaises(ValueError):
+            route("unknown")
+        model = copy.deepcopy(self.base)
+        serving = install_controller(model)
+        self.assertTrue(torch.equal(serving.generate(input_ids=self.inputs), self.base_reply))
 
 
 if __name__ == "__main__":
