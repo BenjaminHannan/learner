@@ -59,3 +59,9 @@ fixed.
 
 Level-0 key games: one-step plans give luck (11 of 16), two-step plans none (0 of 4). A games loop could start there,
 but level 1 (0 of 20) is out of reach without a curriculum.
+
+## Addendum (2026-09-27T05:30Z): wider world at T 1.5, and how many 4-number puzzles are left
+T 1.5 (brd-11 --dev --temps 1.5, 40 puzzles, 30 samples): reached 17 (3-number 12 of 20, 4-number 5 of 20), greedy
+right 2, lucky 39. File: dev/wide_rulekept_T1.5.json. So 4-number luck exists at T 1.5 (0 of 20 at T 1.0).
+The 4-number target-24 world (numbers 1-13) has 1,362 solvable puzzles; brd-5..9 and brd-11's nights and DEV use 1,242,
+leaving 120. brd-11's panel takes all 120 plus 120 three-number puzzles.

@@ -32,6 +32,7 @@ general items (claude_dl1_nights.harm_panel), greedy, for base and night 3 of ev
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import random
 import sys
@@ -90,6 +91,19 @@ def wide(seed, n, banned=(), n3=None):
         seen.add(key)
         out.append({"id": f"pz-w{seed}-{len(out) + 1:03d}", "nums": nums, "target": target})
     return out
+
+
+def make_panel(banned, n3, n=240):
+    """Test panel: n3 three-number puzzles from wide(TEST_SEED), then every unused solvable 4-number puzzle (1-13,
+    target 24), enumerated and shuffled with TEST_SEED, first n - n3. The 4-number target-24 world has only 1,362
+    solvable puzzles and brd-5..9 plus brd-11's nights and DEV use 1,242, so at most 120 are left."""
+    p3 = wide(TEST_SEED, n3, banned, n3=n3)
+    free4 = [c for c in itertools.combinations_with_replacement(range(1, 14), 4)
+             if (c, 24) not in banned and B1.solve(list(c), 24) is not None]
+    random.Random(TEST_SEED).shuffle(free4)
+    assert len(free4) >= n - n3, f"only {len(free4)} unused 4-number puzzles"
+    return p3 + [{"id": f"pz-w{TEST_SEED}-4n-{i + 1:03d}", "nums": list(c), "target": 24}
+                 for i, c in enumerate(free4[:n - n3])]
 
 
 def nights():
@@ -218,6 +232,7 @@ def run(a):
             if s.dev == "cuda":
                 s.torch.cuda.empty_cache()
             (out / "practice.json").write_text(json.dumps(log), encoding="utf-8")
+            (out / "brd11_partial.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
     for name, x, y in (("R3_minus_base", "R3", None), ("S3_minus_R3", "S3", "R3"), ("R3_minus_R1", "R3", "R1"),
                        ("S3_minus_S1", "S3", "S1"), ("S3_minus_base", "S3", None), ("R1_minus_base", "R1", None)):
         res[f"ci95_{name}_cov30_pct"] = boot_ci(test, streams[x], streams[y] if y else [base])
@@ -255,7 +270,7 @@ def main():
     ap.add_argument("--dev", action="store_true")
     ap.add_argument("--dev-items", type=int, default=40)
     ap.add_argument("--make-panel", default="")
-    ap.add_argument("--n3", type=int, default=80)
+    ap.add_argument("--n3", type=int, default=120)
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     if a.selftest:
@@ -265,8 +280,7 @@ def main():
     elif a.make_panel:
         banned = old_keys() | set().union(*map(keys_of, nights()))
         banned |= keys_of(wide(DEV_SEED, a.dev_items, n3=a.dev_items // 2))
-        Path(a.make_panel).write_text("".join(json.dumps(p) + "\n" for p in wide(TEST_SEED, 240, banned, n3=a.n3)),
-                                      encoding="utf-8")
+        Path(a.make_panel).write_text("".join(json.dumps(p) + "\n" for p in make_panel(banned, a.n3)), encoding="utf-8")
     else:
         run(a)
 
