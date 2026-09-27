@@ -1,26 +1,12 @@
-2026-09-27 00:03:52
+2026-09-27 00:06:13
 running:
 000-probe-zen-builder.running
-000-stop-madeup-g406-2.running
 151-fixsleep-dl9pc-b.running
 k1h-glm2.running
 lis320-fulloc-c1-mac.running
-madeup-g406-2-mac.running
 launched (no exit yet) / finished:
      753
 
-2026-09-26 20:33:20 load 71, holding 005-rd378g-writelow (       3 running)
-2026-09-26 20:33:21 load 69, holding lis320-pilot6-mac (       3 running)
-2026-09-26 20:33:21 load 69, holding madeup-g406-2-mac (       3 running)
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-2026-09-26 20:35:28 launch 004-rd378k-gate3low
-2026-09-26 20:35:28 launch 005-rd378g-writelow
-2026-09-26 20:35:33 load 62, holding lis320-pilot6-mac (       5 running)
-2026-09-26 20:35:33 load 62, holding madeup-g406-2-mac (       5 running)
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-2026-09-26 20:37:44 launch lis320-pilot6-mac
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-26 20:44:16 pushed lis320-pilot6-mac
@@ -159,6 +145,18 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 00:01:41 launch 000-stop-madeup-g406-2
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 00:06:04 pushed 000-stop-madeup-g406-2
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 00:06:09 pushed madeup-g406-2-mac
+2026-09-27 00:06:10 load 116, holding 006-rd378k-gate3luna (       4 running)
+2026-09-27 00:06:10 load 116, holding 007-rd378g-writeluna (       4 running)
+2026-09-27 00:06:11 load 115, holding k1h-luna-pilot-mac (       4 running)
+2026-09-27 00:06:12 load 115, holding lis320-pilot7-mac (       4 running)
+2026-09-27 00:06:12 load 115, holding madeup-g406l-mac (       4 running)
+2026-09-27 00:06:12 load 115, holding madeup-mu407-luna-mac (       4 running)
+2026-09-27 00:06:13 load 115, holding y1t-luna-pilot-mac (       4 running)
 
 diag:
 == 000-probe-zen-builder
@@ -173,14 +171,6 @@ diag:
 [0m
 [0m
 > build · muse-spark-1.3-contributor
-[0m
-== 000-stop-madeup-g406-2
-26449 Sep 27 00:03 000-stop-madeup-g406-2.go1.err.txt
-231 Sep 27 00:03 000-stop-madeup-g406-2.go1.reply.md
-echo "---all py done---"
-PID=6563 PPID=6531 ETIME=03:19:29 FIRST=/usr/local/bin/opencode TITLE=mimo:madeup-g406-2-mac.go1.6531 IS_PY=0
----py check done---
----all py done---
 [0m
 == 151-fixsleep-dl9pc-b
 50505 Sep 26 23:53 151-fixsleep-dl9pc-b.go1.err.txt
@@ -206,25 +196,14 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 shell tool terminated command after exceeding timeout 9300000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds
 </shell_metadata>
 [0m
-== madeup-g406-2-mac
-44874 Sep 26 22:06 madeup-g406-2-mac.go1.err.txt
-383 Sep 26 20:46 madeup-g406-2-mac.go1.reply.md
-
-<shell_metadata>
-shell tool terminated command after exceeding timeout 4800000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds
-</shell_metadata>
-[0m
 procs:
-  363     1 03-11:50:49 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-11:49:57 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 2028  1997       02:11 SN   /usr/local/bin/opencode
- 2406   818       00:16 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
- 6563  6531    03:19:34 SN   /usr/local/bin/opencode
-10114 10084    03:15:03 SN   /usr/local/bin/opencode
-15699     1 03-10:05:15 S    /usr/bin/ssh-agent
-44571 44570 01-02:26:53 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-02:26:53 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    07:41:26 SN   /usr/local/bin/opencode
-60494 59018       56:19 SN   /usr/local/bin/opencode
-76368 76315       37:29 SN   /usr/local/bin/opencode
-81797     1 01-12:44:32 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 03-11:53:10 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-11:52:18 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+10114 10084    03:17:24 SN   /usr/local/bin/opencode
+15699     1 03-10:07:36 S    /usr/bin/ssh-agent
+44571 44570 01-02:29:14 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-02:29:14 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    07:43:47 SN   /usr/local/bin/opencode
+60494 59018       58:40 SN   /usr/local/bin/opencode
+76368 76315       39:50 SN   /usr/local/bin/opencode
+81797     1 01-12:46:53 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
