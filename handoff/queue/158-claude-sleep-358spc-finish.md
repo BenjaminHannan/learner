@@ -11,4 +11,3 @@ F2. Seal (step 6) each new final.pt before its eval, and copy it as K2 of 157 do
 F3. Steps 8-9 exactly: RESULTS.md, ledger lines, push. Record the deviation "three runs launched by 156, collected by 157, evaluated by 158" with the times.
 F4. After every state change, write a short line to C:/Users/benja/rsn358s/W/COLLECT-STATE.txt so a later job can pick up.
 PUSH: artifacts/claude-rsn358s-20260926/RESULTS.md artifacts/claude-rsn358s-20260926/SEAL-run.sha256.txt artifacts/claude-rsn358s-20260926/runs artifacts/fable-predictions-ledger.md
-STATUS: HELD in handoff/held/ until the Director places it (after 157 has pushed). Owner: sleep research thread.
