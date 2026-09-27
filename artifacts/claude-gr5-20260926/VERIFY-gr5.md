@@ -74,3 +74,9 @@ code, the adapter, the marks or the run was changed after it, and no panel text 
 ## Next
 gr-5 goes no further as a replacement for read_latin. What to try next is chosen from where it failed (2 false
 squares, extra rows and columns in new formats), and goes to the Thread manager as a plan before anything is sealed.
+
+## Added 2026-09-27 01:13 UTC (Thread manager's review, 01:10 UTC)
+The owner has now read part of this panel (the first rows above) and knows its per-format results, so the gr-5 panel
+(artifacts/claude-panel-gr5-20260926) can never serve as a test again, for gr-5 or any later reader. The gr-5 adapter
+(sha256 9f19edb7..., 16568343 bytes) is kept off git in the project's shared folder
+(/mnt/project-files/plain-english-puzzles/gr5_adapter.pt) so a later test can run it as a report-only arm.
