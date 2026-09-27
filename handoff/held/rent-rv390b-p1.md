@@ -1,15 +1,22 @@
 BASH-ONLY: yes
 GPU: rent
 THIS JOB is rent-rv390b-p1.md (thought-memory thread, "Memory for its own thoughts", Claude; written 2026-09-27 13:30 UTC by date -u, after the Thread manager's 13:27 review of e49a455c5). Script only, no builder: it rents one vast GPU, runs the sealed re-run step(s) A, C and D (in that order) on rsn-358i2's four loop nets, copies the results back, and destroys the rental.
-HELD: this file stays in handoff/held/ until the Director releases it. Ben's yes is his 12:49:44 UTC message (up to $5 total on vast for jobs waiting on BensPC; Director ledger line 2692). Order (Thread manager 13:27 UTC): rsn-358u first, then this p1 only if $5 minus rsn-358u's booked cost covers its $1.50; p2 (step B) after it, or it waits for BensPC 174. One job at a time. On release it moves to handoff/queue/ unchanged.
-BUDGET: $1.50 for this job, failed hosts included. The script keeps it lower: one instance at a time, offers at most $0.90/h, and the watcher's 75-minute alarm ends the job, so at most about $1.13 (4500 s x $0.90/h). Label: claude-thought-rv390b-p1. It stops or destroys only the instance its own create returned (by id), never any other.
+HELD: this file stays in handoff/held/ until the Director releases it. Ben's yes: his 12:49:44 UTC message (Director ledger line 2692) and his standing order of 14:05 UTC (jobs waiting on BensPC go to vast, at most $4 per job, card with the best TFLOPS per $/h). Order (Director 14:07 UTC): 358t and 358s first, then this p1 (steps A, C, D), then p2 (step B), one job at a time, from money left over or on BensPC (173/174). On release it moves to handoff/queue/ unchanged.
+BUDGET: $1.50 for this job, failed hosts included (inside Ben's $4 per job). The script holds it there: one instance at a time, offers at most $1.20/h, and the watcher's 75-minute alarm ends the job, so at most about $1.50 (4500 s x $1.20/h), plus a little disk cost if it has to stop an instance instead of destroying it. Label: claude-thought-rv390b-p1. It stops or destroys only the instance its own create returned (by id), never any other.
+CARD (changed 14:11 UTC for Ben's 14:05 order): one vast search for 1-GPU offers with at least 16 GB of GPU RAM (BensPC's card, where the same five runs at once were planned; peak use not yet measured, so every step now logs its peak GPU memory), CUDA 12.8 drivers, compute capability 7.5 or higher (torch 2.11 cu128), reliability 0.98, 8 cores, 30 GB disk and a direct port. Offers are ranked by TFLOPS per $/h, and only cards whose estimated time fits the job are kept. The estimate is the reference minutes (A about 12 on the 09-26 RTX 5090 rental, measured; B 10, C 5 and D 5, estimated) times 5090 TFLOPS over the card's TFLOPS (never below 1), plus 30%, and it must fit in 46 minutes (75-minute alarm, minus a 9-minute margin and 20 minutes of setup). Each step's time cap is 3 times its estimate plus 5 minutes, never more than what is left. The reply, SOURCES.txt and the LEDGER line name the card, its TFLOPS, its $/h and its TFLOPS per $/h.
 END OF A RENTAL (changed 13:48 UTC after the Director's 13:37 check): the instance is DESTROYED only when nothing can be lost: before any step starts (a failed check, such as nets, torch or seals), or after every started step was copied back and passed its check. In every other case it is STOPPED, not destroyed, so everything stays on its disk: a step cut off by its deadline or an error, a copy that fails its check twice, ssh loss, or the watcher's alarm or any stop signal after a step has started (even mid-copy). Each finished step is copied into a temporary folder on the Mac, checked file by file against a sha256 manifest made on the rental, and only then moved into place with SOURCES.txt. The reply says STOPPING or "instance ... gone", with a LEDGER line; a stopped instance is collected and then destroyed by the thought-memory thread. One exception: if another job already delivered a step's folder in the worktree, this job's copy of it is not kept. If the reply has neither "instance ... gone" nor "STOPPING", the Director must check for a live instance with this label.
-WHAT IT RUNS: code from git archive of commit f5213af7c (pinned), sealed and unchanged (inference only; no training, no model downloads). A = rv-390 rerun (scripts/claude_rv390.py all, plus the untrained control r0; artifacts/claude-rv390-20260926/ADDENDUM-358i2-rerun.md), B = rv-392 (scripts/claude_rv392.py all, plus r0; PASSMARKS.md and ADDENDUM-1), C = rv-391 practice measure (scripts/claude_rv391_dev.py measure), D = rv-392 daydump (scripts/claude_rv392_daydump.py). The only install is torch 2.11.0 (cu128 wheels) with pip on the rental (the image has 2.8); if 2.11 does not install after 2 tries, the job stops and destroys the rental before running anything (fail closed: torch 2.8's autocast bug). The Mac is unchanged. Nets are read on the Mac in place, checked by sha256 against artifacts/claude-rv390-20260926/NETS-358i2.sha256.txt on both ends, uploaded to the rental only and never pushed; r0 is made on the rental and never pushed. Tested against a fake vast (bad host dropped, deadline kill, duplicate label, alarm, one bad copy retried, two bad copies stop the instance, torch install failure, a step cut off, the alarm mid-step and the alarm before any step), not yet against the real one.
+WHAT IT RUNS: code from git archive of commit f5213af7c (pinned), sealed and unchanged (inference only; no training, no model downloads). A = rv-390 rerun (scripts/claude_rv390.py all, plus the untrained control r0; artifacts/claude-rv390-20260926/ADDENDUM-358i2-rerun.md), B = rv-392 (scripts/claude_rv392.py all, plus r0; PASSMARKS.md and ADDENDUM-1), C = rv-391 practice measure (scripts/claude_rv391_dev.py measure), D = rv-392 daydump (scripts/claude_rv392_daydump.py). The only install is torch 2.11.0 (cu128 wheels) with pip on the rental (the image has 2.8); if 2.11 does not install after 2 tries, the job stops and destroys the rental before running anything (fail closed: torch 2.8's autocast bug). The Mac is unchanged. Nets are read on the Mac in place, checked by sha256 against artifacts/claude-rv390-20260926/NETS-358i2.sha256.txt on both ends, uploaded to the rental only and never pushed; r0 is made on the rental and never pushed. Tested against a fake vast (bad host dropped, deadline kill, duplicate label, alarm, one bad copy retried, two bad copies stop the instance, torch install failure, a step cut off, the alarm mid-step, the alarm before any step, and the card choice by TFLOPS per $/h), not yet against the real one.
 BENSPC: jobs 173 and 174 run the same four steps for $0. Each job skips a step whose SOURCES.txt is already on main or builder-outbox, and never copies over an output folder that already exists in the worktree. If BensPC comes back before release, this job is withdrawn.
 ```bash
 N=rent-rv390b-p1; LABEL=claude-thought-rv390b-p1; STEPS="A C D"; TEST=0; CODE=f5213af7c75577b494a22cc8ea05715258db770f; IMAGE=pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime; NETROOTS="$HOME/premonition-models/rsn358i2 $HOME/premonition-models/rsn358i2/W"
 set -u; export LC_ALL=C COPYFILE_DISABLE=1
-T0=$(date +%s); CAP=4500; MARGIN=540; TMPD=$(mktemp -d); MAXDPH=0.90; PS=15; [ $TEST = 1 ] && PS=1
+T0=$(date +%s); CAP=4500; MARGIN=540; TMPD=$(mktemp -d); PS=15; [ $TEST = 1 ] && PS=1
+# card choice (Ben's standing order 14:05 UTC 09-27, via the Director): best TFLOPS per $/h, at most $4 per job; this job's own cap is $1.50,
+# so MAXDPH = $1.50 / 75 min. GPU RAM floor 16 GB = BensPC's card, where the same five runs at once were planned (peak use not yet measured;
+# each step now logs it). Minutes per step on the reference card: A measured on the 09-26 RTX 5090 rental (4 nets at once, ~12 min);
+# B, C, D are estimates. Estimated minutes on another card = reference x max(1, REFTF / its TFLOPS) (inferred scaling).
+MAXDPH=1.20; MINGB=16; REFTF=104.8; SETUPMIN=20
+refmin() { case $1 in A) echo 12;; B) echo 10;; C) echo 5;; D) echo 5;; *) echo 1;; esac; }
 say() { echo "$(date -u +%H:%M:%S) $*"; }
 left() { echo $(( CAP - MARGIN - ($(date +%s) - T0) )); }
 out_of() { case $1 in A) echo artifacts/claude-rv390-20260926/run-358i2;; B) echo artifacts/claude-rv392-20260926/run;; C) echo artifacts/claude-rv391-20260926/dev-358i2;; D) echo artifacts/claude-rv392-20260926/daydump;; *) echo probe/$1;; esac; }
@@ -22,7 +29,7 @@ command -v vastai >/dev/null || { echo "STOP: vastai CLI missing; rented nothing
 git cat-file -e "$CODE^{commit}" 2>/dev/null || git fetch -q origin main 2>/dev/null; git cat-file -e "$CODE^{commit}" 2>/dev/null || { echo "STOP: code commit $CODE not found; rented nothing"; exit 0; }
 KEY=~/.ssh/id_ed25519
 SO="-i $KEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o BatchMode=yes"
-ID=""; DPH=0; GPU=""; TUP=0; HOST=""; PORT=""; KEEP=0; STARTED=0
+ID=""; DPH=0; GPU=""; TF=0; TFPD=0; SLOW=1; EST=0; GM=""; TUP=0; HOST=""; PORT=""; KEEP=0; STARTED=0
 rx() { ssh $SO -n -p "$PORT" "root@$HOST" "$@"; }   # remote command, no stdin
 ri() { ssh $SO -p "$PORT" "root@$HOST" "$@"; }      # remote command, stdin passed
 # vastai reads its own key file; this job never reads, prints or passes the key
@@ -35,7 +42,7 @@ destroy() {
     case " $(listed) " in *" $ID:"*) say "WARNING: instance $ID STILL LISTED after two destroys; the Director must destroy it (label $LABEL)";; *) say "instance $ID gone";; esac;;
   *) say "instance $ID gone";; esac
   m=$(( ($(date +%s) - TUP + 59) / 60 )); c=$(awk -v d="$DPH" -v m="$m" 'BEGIN{printf "%.2f", d*m/60}')
-  echo "LEDGER: $(date -u '+%F %T') UTC Memory for its own thoughts: $N, vast instance $ID ($GPU at \$$DPH/h) for $m min = about \$$c (dph x minutes since create; the Director's ledger is the record)"
+  echo "LEDGER: $(date -u '+%F %T') UTC Memory for its own thoughts: $N, vast instance $ID ($GPU, $TF TFLOPS, at \$$DPH/h) for $m min = about \$$c (dph x minutes since create; the Director's ledger is the record)"
   ID=""
 }
 stopinst() {
@@ -43,7 +50,7 @@ stopinst() {
   say "STOPPING (not destroying) instance $ID: a step was cut off, a copy failed its check, ssh was lost or the job was stopped after a step started, so everything stays on its disk in /root/work"
   for t in 1 2 3; do vastai stop instance $ID >/dev/null 2>&1; sleep 15; stt=$(inst $ID | cut -d' ' -f1); say "instance $ID status after stop $t: $stt"; case "$stt" in running) ;; *) break;; esac; done
   m=$(( ($(date +%s) - TUP + 59) / 60 )); c=$(awk -v d="$DPH" -v m="$m" 'BEGIN{printf "%.2f", d*m/60}')
-  echo "LEDGER: $(date -u '+%F %T') UTC Memory for its own thoughts: $N, vast instance $ID ($GPU at \$$DPH/h) ran $m min = about \$$c, then STOPPED, not destroyed (label $LABEL; its disk still costs a little per hour until the thought-memory thread collects the results and the instance is destroyed)"
+  echo "LEDGER: $(date -u '+%F %T') UTC Memory for its own thoughts: $N, vast instance $ID ($GPU, $TF TFLOPS, at \$$DPH/h) ran $m min = about \$$c, then STOPPED, not destroyed (label $LABEL; its disk still costs a little per hour until the thought-memory thread collects the results and the instance is destroyed)"
   ID=""
 }
 finish() { if [ "$KEEP" = 1 ]; then stopinst; else destroy; fi; }
@@ -100,6 +107,7 @@ for k in $L; do
   pids="$pids $!"; names="$names $k"
 done
 echo "$pids" > job/pids-$STEP.txt; echo "started:$names | pids:$pids"
+( while :; do nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader,nounits >> job/gpumem-$STEP.txt 2>/dev/null; sleep 10; done ) & MP=$!
 end=$(( $(date +%s) + BUDGET )); killed=0
 while :; do
   alive=0; for p in $pids; do kill -0 $p 2>/dev/null && alive=$((alive+1)); done
@@ -109,6 +117,8 @@ while :; do
 done
 set -- $names
 for p in $pids; do wait $p; echo "$1 rc=$? last: $(tail -1 $O/log-$1.txt 2>/dev/null | cut -c1-600)"; shift; done
+kill $MP 2>/dev/null
+echo "gpumem $STEP max used MiB: $(awk -F', *' '{if ($1+0 > m) m = $1+0; t = $2} END {print m+0 " of " t+0}' job/gpumem-$STEP.txt 2>/dev/null)"
 echo "STEP-END $STEP killed=$killed"
 EOS
 if [ $TEST = 1 ]; then cat > "$TMPD/job/sleeper.py" <<'EOS'
@@ -118,25 +128,37 @@ t = 3 if (step == "T1" or ck.endswith("loop-s1/final.pt")) else 400
 time.sleep(t); open(out, "w").write("slept %d\n" % t); print("sleeper", step, "slept", t)
 EOS
 fi
-# 3. rent: cheapest RTX 5090 or 4090 at most $MAXDPH/h, reliability >= 0.98, at least 8 cores; at most 3 hosts (rent-rv390 on 09-26 needed 3: one could not pull the image, one stuck loading)
-for g in RTX_5090 RTX_4090; do vastai search offers "gpu_name=$g num_gpus=1 reliability>=0.98 cpu_cores>=8 disk_space>=30 inet_down>=200 rentable=true" -o dph --raw > "$TMPD/off-$g.json" 2>/dev/null; done
-"$PYM" - "$TMPD" "$MAXDPH" > "$TMPD/offers.txt" <<'EOS'
-import json, sys, glob
-offs = []
-for f in glob.glob(sys.argv[1] + "/off-*.json"):
-    try: offs += json.load(open(f))
-    except Exception: pass
-offs = [o for o in offs if o.get("dph_total") and o["dph_total"] <= float(sys.argv[2])]
-for o in sorted(offs, key=lambda o: o["dph_total"])[:4]:
-    print(o["id"], round(o["dph_total"], 4), str(o.get("gpu_name", "?")).replace(" ", "_"))
+# 3. rent: best TFLOPS per $/h among 1-GPU offers with >= $MINGB GB, CUDA 12.8 drivers, compute capability >= 7.5 (torch 2.11 cu128),
+#    reliability >= 0.98, >= 8 cores, at most $MAXDPH/h, and an estimated time that fits this job; at most 3 hosts
+#    (rent-rv390 on 09-26 needed 3: one could not pull the image, one stuck loading)
+REFSUM=0; for st in $TODO; do REFSUM=$(( REFSUM + $(refmin $st) )); done
+FITMIN=$(( (CAP - MARGIN) / 60 - SETUPMIN ))
+vastai search offers "num_gpus=1 gpu_ram>=$MINGB reliability>=0.98 cpu_cores>=8 disk_space>=30 inet_down>=200 compute_cap>=750 cuda_max_good>=12.8 direct_port_count>=1 rentable=true" --raw > "$TMPD/off.json" 2>/dev/null
+"$PYM" - "$TMPD/off.json" "$MAXDPH" "$REFTF" "$REFSUM" "$FITMIN" > "$TMPD/offers.txt" 2> "$TMPD/offers-note.txt" <<'EOS'
+import json, sys
+try: offs = json.load(open(sys.argv[1]))
+except Exception: offs = []
+maxdph, reftf, refsum, fitmin = float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5])
+rows = []; slow = 0
+for o in offs:
+    d = o.get("dph_total") or 0; tf = o.get("total_flops") or 0
+    if d <= 0 or tf <= 0 or d > maxdph: continue
+    k = max(1.0, reftf / tf); est = refsum * k
+    if est * 1.3 > fitmin: slow += 1; continue
+    rows.append((tf / d, o["id"], round(d, 4), str(o.get("gpu_name", "?")).replace(" ", "_"), round(tf, 1), round(k, 3), round(est, 1)))
+rows.sort(key=lambda r: -r[0])
+for r in rows[:4]:
+    print(r[1], r[2], r[3], r[4], round(r[0], 1), r[5], r[6])
+print("offers read %d; within $%.2f/h and fitting: %d; too slow for this job: %d" % (len(offs), maxdph, len(rows), slow), file=sys.stderr)
 EOS
-say "offers (id, \$/h, gpu):"; cat "$TMPD/offers.txt"
+say "$(cat "$TMPD/offers-note.txt")"
+say "best offers (id, \$/h, card, TFLOPS, TFLOPS per \$/h, slowdown vs RTX 5090, estimated step minutes):"; cat "$TMPD/offers.txt"
 for try in 1 2 3; do
   line=$(sed -n "${try}p" "$TMPD/offers.txt"); [ -z "$line" ] && break
-  set -- $line; OFFER=$1; DPH=$2; GPU=$3
+  set -- $line; OFFER=$1; DPH=$2; GPU=$3; TF=$4; TFPD=$5; SLOW=$6; EST=$7
   ID=$(vastai create instance $OFFER --image $IMAGE --disk 30 --label $LABEL --ssh --direct --raw 2>&1 | grep -o 'new_contract[^0-9]*[0-9][0-9]*' | grep -o '[0-9][0-9]*$' | head -1)
   [ -n "$ID" ] || { say "create failed on offer $OFFER"; continue; }
-  TUP=$(date +%s); say "created instance $ID on offer $OFFER ($GPU, \$$DPH/h), label $LABEL"
+  TUP=$(date +%s); say "created instance $ID on offer $OFFER: card $GPU, $TF TFLOPS, \$$DPH/h ($TFPD TFLOPS per \$/h), estimated $EST step minutes; label $LABEL"
   ok=0; att=0; st=none
   for i in $(seq 1 32); do
     set -- $(inst $ID) x x x; st=$1; HOST=$2; PORT=$3
@@ -188,14 +210,15 @@ say "seeds:$SEEDS; r0 made: $HAVE_R0"
 # 7. steps in order; each runs detached on the rental with its own budget; results copied back only if the step ended in time
 DONE=""; NOTRUN=""
 for st in $TODO; do
-  b=$(left); if [ $TEST = 1 ]; then [ $st = T1 ] && b=60; [ $st = T2 ] && b=30; fi
+  b=$(left); sb=$(awk -v r=$(refmin $st) -v k=$SLOW 'BEGIN{printf "%d", r*k*3*60 + 300}'); [ $sb -lt $b ] && b=$sb
+  if [ $TEST = 1 ]; then [ $st = T1 ] && b=60; [ $st = T2 ] && b=30; fi
   if [ $TEST = 0 ] && [ $b -lt 600 ]; then say "step $st: not started (only $b s left in this job)"; NOTRUN="$NOTRUN $st"; continue; fi
   say "step $st: start, budget $b s"; t1=$(date +%s); STARTED=1
   rx "cd /root/work && setsid nohup bash job/step.sh $st $b $HAVE_R0 $SEEDS > job/out-$st.txt 2>&1 < /dev/null & echo launched" 2>&1 | tail -1
   hard=$(( t1 + b + 180 )); ended=0
   while [ $(date +%s) -lt $hard ]; do sleep 20; c=$(rx "grep -c '^STEP-END' /root/work/job/out-$st.txt" 2>/dev/null | tail -1); [ "$c" = 1 ] && { ended=1; break; }; done
   [ $ended = 1 ] || { say "step $st: no STEP-END 3 min past its budget; stopping its runs by exact PID"; rx "kill \$(cat /root/work/job/pids-$st.txt) 2>/dev/null; sleep 5; kill -9 \$(cat /root/work/job/pids-$st.txt) 2>/dev/null; true"; }
-  rx "cat /root/work/job/out-$st.txt" 2>&1; m=$(( ($(date +%s) - t1 + 30) / 60 )); say "step $st: about $m min"
+  rx "cat /root/work/job/out-$st.txt" 2>&1; GM=$(rx "grep '^gpumem' /root/work/job/out-$st.txt" 2>/dev/null | tail -1); m=$(( ($(date +%s) - t1 + 30) / 60 )); say "step $st: about $m min"
   if rx "grep -q '^STEP-END $st killed=0' /root/work/job/out-$st.txt"; then
     o=$(out_of $st); DEST=.; [ $TEST = 1 ] && { DEST="$TMPD/copy"; mkdir -p "$DEST"; }
     [ -e "$DEST/$o" ] && { say "step $st: $o already exists here (another job wrote it): this step's output is not copied"; NOTRUN="$NOTRUN $st"; continue; }
@@ -210,7 +233,8 @@ for st in $TODO; do
     done
     if [ $cok = 1 ]; then mkdir -p "$(dirname "$DEST/$o")"; mv "$TMPD/in-$st/$o" "$DEST/$o"; DONE="$DONE $st"; {
       echo "$N sources (BASH-ONLY rental job, no builder; step $st; written $(date -u +%FT%TZ))"
-      echo "code: git archive $CODE; vast instance $ID, offer GPU $GPU at \$$DPH/h; nvidia-smi: $GPUNAME"; echo "python torch CUDA: $TORCHLINE"
+      echo "code: git archive $CODE; vast instance $ID; card $GPU, $TF TFLOPS, \$$DPH/h ($TFPD TFLOPS per \$/h; picked as the best TFLOPS per \$/h that fits); nvidia-smi: $GPUNAME"; echo "python torch CUDA: $TORCHLINE"
+      echo "$GM"
       for s in $SEEDS; do eval "h=\$SHA_$s"; echo "loop-s$s: Mac $NROOT/loop-s$s/final.pt, uploaded to NETS/loop-s$s/final.pt, sha256 $h on both ends (matches NETS-358i2.sha256.txt)"; done
       case $st in A|B|T*) [ $HAVE_R0 = 1 ] && echo "r0 (untrained control, made on the rental, never pushed): $R0LINE";; esac
       echo "minutes for step $st: $m"
