@@ -31,10 +31,17 @@ Seed 324, 6000 dialogs, as before. Chunk 1's GLM rows (if it pushes) are kept wh
 error or limit text and are not a text repeated in 3 or more rows; every other seed-324 dialog is worded by Luna. So the
 training set has two writers: the GLM share is small (chunk 1 did real work for about 9 minutes, an estimate until it
 lands). DATA.md reports rows, kept rows and kept_by_family per writer (report only; the verdict marks are on the whole
-reader). Chunks: at most 70 wording minutes each (the Mac agent's shell kills a command after 80), a 1-call probe before
+reader), and also the count of Luna and GLM dialogs per seeded label kind (intent family), so a writer skew is visible
+before training. Chunks: at most 70 wording minutes each (the Mac agent's shell kills a command after 80), a 1-call probe before
 each chunk, per-chunk new-row files as in chunk 1, and the 85%-parsed stop rule.
 
 ## One question for the Thread manager before sealing
 Item 5's hand read is done by a fresh Claude agent. It writes no row and selects no row for training; it only decides
 whether a 60-dialog pilot passes. I read "Claude-judged data stays banned" as not covering this gate. If it does, the
 alternative is a fresh Luna reader for item 5 with the same instructions, which I would name here before the pilot runs.
+
+## Thread manager review (03:50 UTC 09-27)
+Design accepted. Item 5's fresh Claude reader is allowed (it gates the pilot and writes or picks no training row; the goals
+page bans Claude only for training rows, labels and targets). Added: per-writer dialog counts per label kind in DATA.md.
+The helper sha is pinned, and this addendum sealed, only after the Director's live helper selftest (000-luna-helper-selftest)
+passes.
