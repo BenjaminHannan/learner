@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""slp-358n3 DRAFT (sleep research thread, 2026-09-27): the build's sleep gate H-B on the reasoner (0.2d ADDENDUM-46).
-Marks: artifacts/claude-slp358n3-20260927/PASSMARKS-draft.md (not sealed).
+"""slp-358n3 (sleep research thread, 2026-09-27): the build's sleep gate H-B on the reasoner (0.2d ADDENDUM-46).
+Marks: artifacts/claude-slp358n3-20260927/PASSMARKS.md (sealed with this file).
 
 slp-358n2's night recipe (scripts/claude_slp358n2_nights.py, registered PASS) with ONE change: the small in-run nets become
 the 4 full-size 358u loop checkpoints (2 x d512, seeds 13-16, never told the puzzle kind). Importing claude_rsn358u_run
@@ -13,7 +13,7 @@ constant lr 3e-5 (a tenth of its 3e-4 peak, n2's ratio), AdamW wd 0.1 betas (0.9
 the 3 nights, 358a's loop loss (1-16 rounds, gradient through at most 6, answer loss + 0.5 x stop-head loss).
 
   python -B scripts/claude_slp358n3_nights.py pick-sizes --ckpts C13 C14 C15 C16 --out W/sizes.json
-  python -B scripts/claude_slp358n3_nights.py run --ckpt C13 --seed 13 --sizes W/sizes.json --out W/s13
+  python -B scripts/claude_slp358n3_nights.py run --ckpt C13 --seed 13 --sizes W/sizes.json --out W/s13 [--long]
   python -B scripts/claude_slp358n3_nights.py resume-check --ckpt C13 --seed 13 --sizes W/sizes.json --out W/resume
   python -B scripts/claude_slp358n3_nights.py smoke
 """
@@ -43,8 +43,10 @@ CAND = {"sums": [6, 8, 10, 12], "grids": [6, 7]}
 PICK_MAX = 240                                   # a day size must have a 4-seed base mean <= 240 of 300 on dev
 HARM = {"harm_sums4": ("sums", 4), "harm_grids5": ("grids", 5)}
 PANELS = ROOT / "artifacts/claude-rsn358i-20260926/tests"   # 358i's sealed panels: hashes only; numbers never opened
-CFG = dict(night_steps=300, night_lr=3e-5, batch=256, days=3, n_day=300, n_test=400, n_harm=300, n_report=200,
-           n_dev=300, eval_bs=100)
+CFG = dict(night_steps=300, long_steps=6000, night_lr=3e-5, batch=256, days=3, n_day=300, n_test=400, n_harm=300,
+           n_report=200, n_dev=300, eval_bs=100, latin_pool=20000, stop_step=150)
+# long_steps: the report-only L arm (S's night at 6,000 steps = 10% of the reasoner's training, n2's night-to-training ratio;
+# the Thread manager 14:25 UTC), run on seeds 13 and 14 only (--long)
 TEST_SEED, DEV_SEED = 58630, 58640
 
 
@@ -169,9 +171,24 @@ def placebo(items, rng):
     return out
 
 
+def batch_hash(items):
+    return hashlib.sha256(json.dumps([[it.tokens, it.target] for it in items]).encode()).hexdigest()[:16]
+
+
+def save_atomic(obj, path):
+    """torch.save to a tmp file, fsync, os.replace (Fix sleep's pattern, claude_night_proc.py:77-84)"""
+    import os
+    tmp = f"{path}.tmp"
+    with open(tmp, "wb") as f:
+        torch.save(obj, f)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
+
+
 def draw(arm, kinds, nrng, src, B):
     """slp-358n2's night mix: half day batches (kind first, half each), half rehearsal; R is all rehearsal"""
-    if arm == "R" or nrng.random() < 0.5:
+    if arm == "R" or nrng.random() < 0.5:           # (L draws exactly as S)
         return src.batch(B)
     g = kinds[nrng.choice(sorted(kinds))]
     return [nrng.choice(g) for _ in range(B)]
@@ -200,6 +217,8 @@ def train_step(net, opt, items, rr, device):
 class Arm:
     def __init__(self, name, net, src, seed, cfg):
         self.name, self.net = name, net
+        self.steps = cfg["long_steps"] if name == "L" else cfg["night_steps"]
+        self.trace = []                                    # hash of every night batch, in order (RESUME checks it)
         self.src = src
         self.rr = random.Random(59100 + seed)              # the same round draws for every arm
         self.opt = torch.optim.AdamW(net.parameters(), lr=cfg["night_lr"], weight_decay=0.1, betas=(0.9, 0.95))
@@ -235,11 +254,13 @@ def night(arm, day, items, seed, cfg, device, stop_at=None, save_to=None, resume
     first = 0
     if resume is not None:
         nrng, first = arm.restore(resume), resume["step"]
-    for step in range(first, cfg["night_steps"]):
+    for step in range(first, arm.steps):
         if stop_at is not None and step == stop_at:
-            torch.save(arm.state(day, step, nrng), save_to)
+            save_atomic(arm.state(day, step, nrng), save_to)
             raise SystemExit(3)
-        train_step(arm.net, arm.opt, draw(arm.name, kinds, nrng, arm.src, cfg["batch"]), arm.rr, device)
+        b = draw(arm.name, kinds, nrng, arm.src, cfg["batch"])
+        arm.trace.append((day, step, batch_hash(b)))
+        train_step(arm.net, arm.opt, b, arm.rr, device)
 
 
 # ---------------- one seed, all arms ----------------
@@ -254,8 +275,9 @@ def run(a, cfg=CFG):
     test_keys = {key(it) for v in tests.values() for it in v}
     block = test_keys | {key(it) for v in dev_items(cfg["n_dev"]).values() for it in v} | panel_keys()
     base = load(a.ckpt, device)
-    src0 = R.Source(100 + a.seed)                          # rehearsal: the reasoner's own practice stream, fresh seed
-    arms = {n: Arm(n, copy.deepcopy(base), copy.deepcopy(src0), a.seed, cfg) for n in "SRZN"}
+    src0 = R.Source(100 + a.seed, latin_pool=cfg["latin_pool"])   # rehearsal: the reasoner's own practice stream, fresh seed
+    names = "SRZN" + ("L" if a.long else "")
+    arms = {n: Arm(n, copy.deepcopy(base), copy.deepcopy(src0), a.seed, cfg) for n in names}
     log = {"seed": a.seed, "ckpt": str(a.ckpt), "ckpt_sha256": hashlib.sha256(Path(a.ckpt).read_bytes()).hexdigest(),
            "sizes": sizes, "cfg": cfg, "torch": torch.__version__, "device": device,
            "gpu": torch.cuda.get_device_name(0) if device == "cuda" else "cpu",
@@ -267,7 +289,7 @@ def run(a, cfg=CFG):
             rights[k], res[k] = judge(net, v, device, cfg["eval_bs"])
         return rights, res
     r0, log["morning"]["base"] = morning(base)
-    prev = {n: r0 for n in "SRZN"}
+    prev = {n: r0 for n in names}
     print("base", json.dumps({k: v["right"] for k, v in log["morning"]["base"].items()}), flush=True)
     for day in range(1, cfg["days"] + 1):
         raw = day_items(a.seed, day, sizes, cfg["n_day"])
@@ -278,7 +300,9 @@ def run(a, cfg=CFG):
             log["day"][str(day)][n] = {k: judge(arm.net, [i for i in items if i.env == k], device, cfg["eval_bs"])[1]
                                        for k in ("sums", "grids")}
             if n != "N":
+                t1 = time.time()
                 night(arm, day, items, a.seed, cfg, device)
+                log.setdefault("night_minutes", {}).setdefault(str(day), {})[n] = round((time.time() - t1) / 60, 2)
             rights, log["morning"][str(day)][n] = morning(arm.net)
             log["lost"][str(day)][n] = {k: sum(p and not q for p, q in zip(prev[n][k], rights[k])) for k in HARM}
             prev[n] = rights
@@ -291,45 +315,62 @@ def run(a, cfg=CFG):
                out / "S-final.pt")                         # the slept reasoner (weights never go to git)
 
 
-# ---------------- RESUME: stop mid-night, resume in a fresh process, compare weights bit for bit ----------------
-RESUME_CFG = dict(CFG, night_steps=20, batch=64, n_day=30, stop_step=10)
-
-
-def nights_only(a, cfg=RESUME_CFG):
-    """arm S, nights 1-2 only, on CPU in float32. mode straight | stop | resume."""
+# ---------------- RESUME: stop mid-night, resume in a fresh process, compare bit for bit ----------------
+def nights_only(a):
+    """arm S, nights 1-2, the graded run's settings and code, on CPU in float32 (deterministic). mode straight|stop|resume"""
+    cfg = TINY if a.tiny else CFG
     torch.manual_seed(a.seed)
-    torch.set_num_threads(1)
+    torch.set_num_threads(4)
+    torch.use_deterministic_algorithms(True)
     sizes = json.loads(Path(a.sizes).read_text())["sizes"]
-    base = load(a.ckpt, "cpu")
-    arm = Arm("S", base, R.Source(100 + a.seed, latin_pool=200), a.seed, cfg)
+    arm = Arm("S", load(a.ckpt, "cpu"), R.Source(100 + a.seed, latin_pool=cfg["latin_pool"]), a.seed, cfg)
     st = torch.load(a.state, map_location="cpu", weights_only=False) if a.mode == "resume" else None
     for day in (1, 2):
         if st is not None and day < st["day"]:
             continue
-        items = day_items(a.seed, day, sizes, cfg["n_day"])
+        items = [it for it in day_items(a.seed, day, sizes, cfg["n_day"])]
         stop = cfg["stop_step"] if (a.mode == "stop" and day == 2) else None
         night(arm, day, items, a.seed, cfg, "cpu", stop_at=stop, save_to=a.state,
               resume=st if (st is not None and day == st["day"]) else None)
-    torch.save(arm.net.state_dict(), a.out)
+    save_atomic({"net": arm.net.state_dict(), "opt": arm.opt.state_dict(), "trace": arm.trace}, a.out)
+
+
+def same_tree(x, y):
+    if isinstance(x, torch.Tensor):
+        return isinstance(y, torch.Tensor) and x.dtype == y.dtype and torch.equal(x, y)
+    if isinstance(x, dict):
+        return isinstance(y, dict) and x.keys() == y.keys() and all(same_tree(x[k], y[k]) for k in x)
+    if isinstance(x, (list, tuple)):
+        return isinstance(y, (list, tuple)) and len(x) == len(y) and all(same_tree(p, q) for p, q in zip(x, y))
+    return x == y
 
 
 def resume_check(a):
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     me = [sys.executable, "-B", str(Path(__file__).resolve()), "nights-only", "--ckpt", str(a.ckpt), "--seed", str(a.seed),
-          "--sizes", str(a.sizes), "--state", str(out / "stop-state.pt")]
-    r1 = subprocess.run(me + ["--mode", "straight", "--out", str(out / "straight.pt")])
-    r2 = subprocess.run(me + ["--mode", "stop", "--out", str(out / "never.pt")])
-    r3 = subprocess.run(me + ["--mode", "resume", "--out", str(out / "resumed.pt")])
-    ok_codes = (r1.returncode, r2.returncode, r3.returncode) == (0, 3, 0) and not (out / "never.pt").exists()
-    x = torch.load(out / "straight.pt", weights_only=True) if r1.returncode == 0 else {}
-    y = torch.load(out / "resumed.pt", weights_only=True) if r3.returncode == 0 else {}
-    same = bool(x) and x.keys() == y.keys() and all(torch.equal(x[k], y[k]) for k in x)
-    diff = [k for k in x if k in y and not torch.equal(x[k], y[k])]
-    res = {"RESUME_identical": bool(ok_codes and same), "return_codes": [r1.returncode, r2.returncode, r3.returncode],
-           "tensors": len(x), "differing": diff[:10], "cfg": RESUME_CFG, "torch": torch.__version__}
+          "--sizes", str(a.sizes), "--state", str(out / "stop-state.pt")] + (["--tiny"] if a.tiny else [])
+    rc = [subprocess.run(me + ["--mode", m, "--out", str(out / f"{m}.pt")]).returncode for m in ("straight", "stop", "resume")]
+    ok_codes = rc == [0, 3, 0] and not (out / "stop.pt").exists()
+    x = torch.load(out / "straight.pt", weights_only=False) if rc[0] == 0 else {}
+    y = torch.load(out / "resume.pt", weights_only=False) if rc[2] == 0 else {}
+    cfg = TINY if a.tiny else CFG
+    k = cfg["stop_step"]
+    tx = [t for t in x.get("trace", []) if t[0] == 2 and t[1] >= k]      # the straight run's batches after the stop point
+    ty = list(y.get("trace", []))                                        # the resumed run draws only those
+    res = {"weights_identical": bool(x) and bool(y) and same_tree(x["net"], y["net"]),
+           "optimizer_identical": bool(x) and bool(y) and same_tree(x["opt"], y["opt"]),
+           "batches_after_resume_identical": bool(tx) and [tuple(t) for t in tx] == [tuple(t) for t in ty],
+           "first_resumed_batch": list(ty[0]) if ty else None, "return_codes": rc, "stop_step": k,
+           "night_steps": cfg["night_steps"], "batch": cfg["batch"], "torch": torch.__version__}
+    res["RESUME_identical"] = bool(ok_codes and res["weights_identical"] and res["optimizer_identical"]
+                                   and res["batches_after_resume_identical"])
     (out / "resume.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
     print(json.dumps(res))
+
+
+TINY = dict(CFG, night_steps=6, long_steps=8, batch=8, days=1, n_day=4, n_test=3, n_harm=3, n_report=2, n_dev=2,
+            eval_bs=4, latin_pool=20, stop_step=3)
 
 
 def smoke(_):
@@ -338,16 +379,16 @@ def smoke(_):
     tmp = Path(tempfile.mkdtemp())
     torch.manual_seed(0)
     torch.save({"arm": "loop", "seed": 0, "state": R.Net("loop").state_dict()}, tmp / "c.pt")
-    cfg = dict(CFG, night_steps=2, batch=8, days=1, n_day=4, n_test=3, n_harm=3, n_report=2, n_dev=2, eval_bs=4)
+    cfg = TINY
     pick_sizes(argparse.Namespace(ckpts=[tmp / "c.pt"] * 2, out=tmp / "sizes.json"), cfg)
-    run(argparse.Namespace(ckpt=tmp / "c.pt", seed=13, sizes=tmp / "sizes.json", out=tmp / "s13", device="cpu"), cfg)
+    run(argparse.Namespace(ckpt=tmp / "c.pt", seed=13, sizes=tmp / "sizes.json", out=tmp / "s13", device="cpu", long=True), cfg)
     d = json.loads((tmp / "s13/slp358n3-seed13.json").read_text())
-    assert set(d["morning"]["1"]) == set("SRZN") and set(d["lost"]["1"]["N"]) == set(HARM), d["lost"]
+    assert set(d["morning"]["1"]) == set("SRZNL") and set(d["lost"]["1"]["N"]) == set(HARM), d["lost"]
     assert all(v == 0 for v in d["lost"]["1"]["N"].values()), d["lost"]["1"]["N"]
     it = [make(random.Random(1), "grids", 5), make(random.Random(2), "sums", 6), make(random.Random(3), "sums", 6)]
     pl = placebo(it, random.Random(4))
     assert [p.env for p in pl] == [i.env for i in it] and pl[1].target in (it[1].target, it[2].target)
-    resume_check(argparse.Namespace(ckpt=tmp / "c.pt", seed=13, sizes=tmp / "sizes.json", out=tmp / "resume"))
+    resume_check(argparse.Namespace(ckpt=tmp / "c.pt", seed=13, sizes=tmp / "sizes.json", out=tmp / "resume", tiny=True))
     assert json.loads((tmp / "resume/resume.json").read_text())["RESUME_identical"]
     print("smoke ok", tmp)
 
@@ -360,13 +401,15 @@ def main():
     p = sub.add_parser("run")
     p.add_argument("--ckpt", required=True); p.add_argument("--seed", type=int, required=True)
     p.add_argument("--sizes", required=True); p.add_argument("--out", required=True); p.add_argument("--device", default="")
+    p.add_argument("--long", action="store_true")
     p = sub.add_parser("resume-check")
     p.add_argument("--ckpt", required=True); p.add_argument("--seed", type=int, required=True)
     p.add_argument("--sizes", required=True); p.add_argument("--out", required=True)
+    p.add_argument("--tiny", action="store_true")
     p = sub.add_parser("nights-only")
     for f in ("--ckpt", "--sizes", "--state", "--mode", "--out"):
         p.add_argument(f, required=True)
-    p.add_argument("--seed", type=int, required=True)
+    p.add_argument("--seed", type=int, required=True); p.add_argument("--tiny", action="store_true")
     sub.add_parser("smoke")
     a = ap.parse_args()
     {"pick-sizes": pick_sizes, "run": run, "resume-check": resume_check, "nights-only": nights_only,
