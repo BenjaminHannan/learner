@@ -32,12 +32,21 @@ The small learned reasoner should solve number puzzles it was never trained on. 
 - Small diagnostic runs on code-made data are allowed. Label every finding shown, suggested or untested. Commit the diagnosis note before Step 2.
 
 ## Step 2: one change, registered first
-- **The change.** Pick ONE change that the diagnosis supports. Examples, none prescribed:
+- **The change.** Pick ONE change that the diagnosis supports.
+- **Ben's idea comes first** (added 2026-09-27 12:51 UTC). Ben, 12:45 UTC, about a short-term card store: "but for the reasoner to do work with it. It can call the cards". For this puzzle that means a learned scratch card store. The net writes partial results as cards (for example "3 x 8 = 24" or "13 - 1 = 12") and can call them back in later rounds, so it can try a branch, keep what worked and back up.
+  - Test this change unless your diagnosis clearly points elsewhere. If it does, say why in the diagnosis note, and Ben decides.
+  - What to write, when to write, and which card to call must all be the net's own learned choices. No search code, no hand-written address or matching rule, and no card labels from a solver. Count the store's parts in the weight total.
+  - Prior art, from tiny made-up-word toys only, so keep it separate from the village model. It is Premonition-mini's per-visit card store (design/06-premonition-mini-spec.md section 2; design/research/2026-09-18-decisions-log.md:140-200 and :330-358).
+    - Reading a card that was handed to the net worked.
+    - Picking the right card among look-alikes did not work when learned from answer loss alone (at most 182 of 512).
+    - Hand-built address keys reached 503 and 467, but they are a hand-written stand-in and are not allowed here.
+    - Chaining two cards got 14 of 189 new two-step questions.
+  - The Sleep research thread is testing a different store, rsn-358k: read-only fact cards, choosing among look-alikes and chaining two. Don't duplicate it, and don't open artifacts/claude-rsn358k-20260927/.
+- **Other changes you could pick instead,** none prescribed:
   - training on every valid answer (scripts/claude_blurt5s.py `all_solutions` lists them, which makes them code-checked labels; the stop head's label must then change to match);
   - more varied practice, such as 4-number hands with other targets (never the 300 held-out hands, with any target);
-  - a learned way to keep and revise partial results;
   - sleep-style replay.
-  The answer at test time must come from the net. There must be no search code, solver call or hand-written rule at inference; goals:37 stops hand-written reasoners and rule gates.
+- **At test time.** The answer must come from the net. There must be no search code, solver call or hand-written rule at inference; goals:37 stops hand-written reasoners and rule gates.
 - **Arms.** Baseline = the 358i3 loop recipe, rerun by you on the M3 Pro with the fixed env. The existing code runs only on CUDA or CPU (scripts/claude_rsn358a_run.py:263,278,334), so add MPS support in a new script and report the device and dtype. Candidate = the baseline plus your one change. Same weights within 1%, counting anything added. You may shrink the net or the steps to fit the M3 Pro, but both arms must use the same settings. If you shrink anything, first confirm your baseline still memorises (training exact 0.95 or higher on the 4-number practice hands) before Step 2. If it does not, say so, because the baseline is then not the 358i3 situation. Report the minutes for each run.
 - **Kinds.** Train both arms on sums, grids and numbers together, as 358i3 did, so that "no harm" means something.
 - **Seeds.** Use 4 or more training seeds, paired across the arms. Seeds 5-16 are taken: 358i3 used 5-8, rsn-358s uses 9-12, and the Sleep research thread's rsn-358u uses 13-16. Grep the repo first to confirm each seed is fresh, and record them.
