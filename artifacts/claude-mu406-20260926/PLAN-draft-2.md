@@ -154,3 +154,15 @@ turn. One change, on the same data.
 - The distillation fallback gets its own marks and prediction.
 - The call budget, with the count corrected to one call per transcript.
 - The no-harm check named: bm-390's harness and split.
+
+## Update 2026-09-27 02:56 UTC (date -u): GPT's review and the Thread manager's 02:51 note
+- mu-407 runs first. It is a current-message label test with one change and no training, the obvious fix before
+  training (artifacts/claude-mu407-20260927/PASSMARKS.md). mu-406 is not sealed until mu-407 has a verdict.
+- The recall mark is replaced. "Asks right" (a substring match, claude_mu405_talk.py:129-131) becomes a real answer
+  both blind fit judges accept (JUDGE-fit407.md): the question answered with the right value, about the right thing.
+  The substring count stays as report only. The mark reads: real answers T >= P - 3.
+- Acceptance for kept replies must also require answering the present turn, not only making nothing up (GPT's
+  point). The kept-reply filter will add GLM's on-turn mark, gated like g406b, or the plan moves to distillation.
+- Training route after mu-407: GPT recommends GLM distillation over rejection sampling, and DPO later with pairs
+  that share the exact same input history. The choice is made in the sealed version, after g406b's and mu-407's
+  verdicts.

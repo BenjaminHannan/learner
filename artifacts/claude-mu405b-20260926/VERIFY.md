@@ -92,7 +92,7 @@ target, so the rule does not cover this untrained comparison, and mu-405b is rep
 Thread manager can overrule that reading. mu-406's registered test panel will be GLM-worded either way
 (PLAN-draft-2.md).
 
-## Note on what VB and R measured (added 2026-09-27 02:55 UTC, date -u; verdict words unchanged)
+## Note on what VB and R measured (added 2026-09-27 02:54 UTC, date -u; verdict words unchanged)
 
 VB and R count "asks right" with mu-405's code check, claude_mu405_talk.ask_right (claude_mu405_talk.py:129-131). It
 counts a reply right when it contains the asked value anywhere, as a substring. It does not check that the reply
