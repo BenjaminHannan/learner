@@ -1,0 +1,27 @@
+STEP start 2026-09-27T09:36:38Z
+artifacts/claude-gr8d-20260927/PLAN-gr8d.md: OK
+scripts/claude_gr8.py: OK
+scripts/claude_gr7_diag.py: OK
+scripts/claude_gr5.py: OK
+scripts/claude_gr4.py: OK
+artifacts/claude-gr8d-20260927/cpu/chain.sh: OK
+squares.jsonl: OK
+unseen.jsonl: OK
+lookalikes.jsonl: OK
+formats.json: OK
+squares.jsonl: OK
+unseen.jsonl: OK
+lookalikes.jsonl: OK
+formats.json: OK
+STEP L8_replay 2026-09-27T09:36:39Z
+run {"task": "replay", "rows": 200, "greedy_grid": 195, "pick_differs": 11}
+STEP L8_squares 2026-09-27T10:19:24Z
+run {"task": "squares", "rows": 200, "greedy_grid": 200, "pick_differs": 0}
+STEP L8_unseen 2026-09-27T10:58:09Z
+run {"task": "unseen", "rows": 200, "greedy_grid": 199, "pick_differs": 16}
+STEP L8_lookalikes 2026-09-27T11:40:37Z
+run {"task": "lookalikes", "rows": 150, "greedy_grid": 5, "pick_differs": 0}
+STEP count 2026-09-27T11:45:41Z
+{"fixed_not_to_exact": 4, "lookalikes_greedy_false": 5, "lookalikes_incomplete": 0, "lookalikes_pick_false": 5, "replay_all_greedy_exact": 179, "replay_all_pick_exact": 180, "replay_gr7d_wrong_size_n": 11, "replay_greedy_equals_gr7d_L7": 200, "replay_pick_exact": 1, "replay_pick_still_too_big": 1, "replay_pick_still_wrong_size": 1, "squares_greedy_exact": 400, "squares_incomplete": 0, "squares_pick_exact": 400, "unseen_greedy_exact": 162, "unseen_greedy_none": 1, "unseen_greedy_wrong": 37, "unseen_greedy_wrong_size": 21, "unseen_incomplete": 0, "unseen_pick_exact": 166, "unseen_pick_none": 1, "unseen_pick_wrong": 33, "unseen_pick_wrong_size": 7, "unseen_sepnew_greedy_exact": 63, "unseen_sepnew_greedy_none": 1, "unseen_sepnew_greedy_wrong": 36, "unseen_sepnew_pick_exact": 67, "unseen_sepnew_pick_none": 1, "unseen_sepnew_pick_wrong": 32, "unseen_sepseen_greedy_exact": 99, "unseen_sepseen_greedy_wrong": 1, "unseen_sepseen_pick_exact": 99, "unseen_sepseen_pick_wrong": 1}
+{"D1_unseen_wrong_halved": false, "D2_squares_no_loss": true, "D3_false_not_up": true, "D4_harm_at_most_2": true, "P_replay_at_most_3_wrong_size": true, "R0_replay_greedy_matches": true, "proved_wrong": false, "outcome": "DEV-FAIL"}
+STEP done 2026-09-27T11:45:42Z
