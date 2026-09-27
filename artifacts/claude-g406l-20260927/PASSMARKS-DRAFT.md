@@ -62,3 +62,17 @@ been made.
 - The job runs where the Director's helper runs, with no claude- prefix. The long step runs in the background with
   polls under 80 minutes.
 - Cost: about 240 Luna calls, at most 720, under Ben's Codex plan as ruled at 03:47. No pool money is used.
+
+## Update 03:58 UTC (date -u): helper and wrapper
+- Helper: scripts/claude_luna_codex.py (Director, 24ca7a163), model gpt-6-luna. An empty reply, or a short reply that
+  looks like an error, becomes a failed call, so it counts against V and never becomes a label.
+  - A reply of `{"flags": [...]}` cannot match its error patterns.
+  - This gate is sealed only after the helper's selftest job (000-luna-helper-selftest) passes.
+- Wrapper: scripts/claude_g406l_luna.py (offline selftest 5/5; claude_g406_2_glm's selftest 7/7 through it). It adds:
+  - `--pilot N`, which runs on the first N packets in load order: claims_j*.jsonl sorted, first appearance of each
+    pid, 240 packets in all;
+  - `pilot-check`, the gate above.
+- Order: `--pilot 10`, then `pilot-check --n 10`. On a pass, the same command without `--pilot` resumes into the same
+  output file. Then `--best-to`, claude_g406_count.py, and `--arm-report`.
+- Truth for the count, as in g406b: mu-405b's judge/out and keys.
+

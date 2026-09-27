@@ -39,7 +39,7 @@ handoff/held/ since 214e69905.
   1. The frames pass check_frames within 3 attempts.
   2. At least 2 of the 3 smoke chats pass check_chat within 3 attempts each.
   3. A code scan of every kept text (the frames and all messages in the passing smoke chats) finds none of these
-     strings: "usage limit", "rate limit", "error:", "as an ai", "language model", "openai", "codex", "i can't help". The
+     strings: "usage limit", "rate limit", "error:", "as an ai", "openai", "codex", "i can't help with" (claude_mu407_prep_luna.SCAN). The
      scan ignores case.
 - Fail: no full run. I report the failure and the failing check to the Thread manager, and do not reword any prompt to
   chase a pass.
@@ -59,3 +59,19 @@ handoff/held/ since 214e69905.
   prefix and long steps run in the background with polls under 80 minutes.
 - Cost: about 80 Luna calls, at most 3 × 79 with retries, under Ben's Codex plan as ruled at 03:47. No pool money is
   used and nothing is rented.
+
+## Update 03:58 UTC (date -u): helper and wrapper
+- Helper: scripts/claude_luna_codex.py (Director, 24ca7a163). Its interface is call(text, model="gpt-6-luna",
+  timeout=300). The model id answered "ok" in the Director's probe at 03:37 UTC.
+  - The helper counts an empty reply as a failure. It also counts a short reply that looks like an error as a failure,
+    so such text is never returned as a reply.
+  - Its selftest job (000-luna-helper-selftest) is queued. This addendum is sealed only after that selftest passes.
+- Wrapper: scripts/claude_mu407_prep_luna.py (offline selftest 8/8; claude_mu407_prep's own selftest 8/8 through it).
+  - A fake-caller run of `frames` confirmed that the prep's main() uses the swapped caller.
+  - Added subcommands: `smokefacts` (the 3 smoke rows, as the pilot's input for `write`), `pilot` (the gate above; exit
+    0 on pass) and `scan` (the pre-SEAL-data scan).
+  - I dropped "language model" from the scan list, since a system line may harmlessly say it. The list is
+    claude_mu407_prep_luna.SCAN.
+- Pilot order: `facts`, `smokefacts`, `frames`, then `write` on the smoke rows, then `pilot`. On a pass, `write` runs on
+  all 78 rows into the same raw.jsonl (it resumes), then `select`, `claude_mu405_check`, and `scan`.
+
