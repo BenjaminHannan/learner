@@ -1,4 +1,4 @@
-2026-09-27 00:55:08
+2026-09-27 00:57:14
 running:
 000-probe-zen-builder.running
 000-salvage-k1h-glm2.running
@@ -9,8 +9,6 @@ lis320-fulloc-c1-mac.running
 launched (no exit yet) / finished:
      758
 
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
@@ -159,6 +157,8 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 00:53:01 zen cap: 2 non-GPU rungo5 builders running, holding 007-rd378g-writeluna
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 00:55:08 zen cap: 2 non-GPU rungo5 builders running, holding 007-rd378g-writeluna
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 00:57:14 zen cap: 2 non-GPU rungo5 builders running, holding 007-rd378g-writeluna
 
 diag:
 == 000-probe-zen-builder
@@ -177,25 +177,25 @@ diag:
 == 000-salvage-k1h-glm2
 67749 Sep 27 00:46 000-salvage-k1h-glm2.go1.err.txt
 2451 Sep 27 00:46 000-salvage-k1h-glm2.go1.reply.md
-60446 Sep 27 00:54 000-salvage-k1h-glm2.go2.err.txt
+68734 Sep 27 00:56 000-salvage-k1h-glm2.go2.err.txt
 0 Sep 27 00:46 000-salvage-k1h-glm2.go2.reply.md
 A  artifacts/claude-k1h-20260926/glm/logs/answer1-log.txt
 A  artifacts/claude-k1h-20260926/glm/logs/chats-log-attempt1.txt
 A  artifacts/claude-k1h-20260926/glm/logs/chats-log.txt
 Sun Sep 27 04:46:08 UTC 2026
 [0m
-artifacts/claude-k1h-20260926/glm-gate/answers.jsonl
-artifacts/claude-k1h-20260926/glm-peek/REPORT.md
-artifacts/claude-k1h-20260926/glm-v1/REPORT.md
-artifacts/claude-k1h-20260926/glm-v1/chats-log.txt
+12201     1       31:36 uv               uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd371b-2
+=== python+claude_k1h_glm (comm filter) ===
+(count above)
+       0
 [0m
 == 006-rd378k-gate3luna
-80506 Sep 27 00:54 006-rd378k-gate3luna.go1.err.txt
+80777 Sep 27 00:56 006-rd378k-gate3luna.go1.err.txt
 547 Sep 27 00:37 006-rd378k-gate3luna.go1.reply.md
-[rd378k-teacher3] ta-d09 ok
+[rd378k-teacher3] ta-d16 ok
   PID ELAPSED
-12201   29:18
-4
+12201   31:15
+5
 [0m
 == 151-fixsleep-dl9pc-b
 55742 Sep 27 00:33 151-fixsleep-dl9pc-b.go1.err.txt
@@ -223,22 +223,22 @@ shell tool terminated command after exceeding timeout 9300000 ms. If this comman
 [0m
 top5cpu:
 %CPU COMM
-90.1 ApplicationsStorageExtension
-79.6 fileproviderd
-19.8 mdworker_shared
-15.7 bash
-14.7 sysmond
+64.0 ApplicationsStorageExtension
+63.5 fileproviderd
+36.3 bird
+19.6 sysmond
+15.2 cloudd
 procs:
-  363     1 03-12:42:05 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-12:41:13 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 5678  5650       46:47 SN   /usr/local/bin/opencode
-10114 10084    04:06:19 SN   /usr/local/bin/opencode
-15699     1 03-10:56:31 S    /usr/bin/ssh-agent
-20416 19907       08:51 SN   /usr/local/bin/opencode
-22654   818       03:02 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-44571 44570 01-03:18:09 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-03:18:09 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    08:32:42 SN   /usr/local/bin/opencode
-60494 59018    01:47:35 SN   /usr/local/bin/opencode
-76368 76315    01:28:45 SN   /usr/local/bin/opencode
-81797     1 01-13:35:48 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 03-12:44:11 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-12:43:19 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 5678  5650       48:53 SN   /usr/local/bin/opencode
+10114 10084    04:08:25 SN   /usr/local/bin/opencode
+15699     1 03-10:58:37 S    /usr/bin/ssh-agent
+20416 19907       10:57 SN   /usr/local/bin/opencode
+22654   818       05:08 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+44571 44570 01-03:20:15 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-03:20:15 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    08:34:48 SN   /usr/local/bin/opencode
+60494 59018    01:49:41 SN   /usr/local/bin/opencode
+76368 76315    01:30:51 SN   /usr/local/bin/opencode
+81797     1 01-13:37:54 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
