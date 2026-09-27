@@ -29,3 +29,12 @@ marks, prompt, model, attempts, count and ADDENDUM-1's rule are unchanged.
   attempt (claude_g406_2_glm.run, :107-122).
 - If this second launch also cannot finish every packet's attempts, the verdict stays INCONCLUSIVE, as ADDENDUM-1
   says.
+
+## Limit (added 08:26 UTC, date -u, after the Thread manager's review at 08:27 by its clock; still before any resume result)
+- The Thread manager agreed with the reading above, on one condition, so a relaunch cannot become retry-until-it-works:
+  - at most 2 more launches of the resume after the failed first one: madeup-g406l-resume2-mac, and at most one
+    more after it;
+  - no launch after 16:00 UTC on 2026-09-27.
+  - If neither of those launches finishes every packet's attempts, the verdict is INCONCLUSIVE.
+- Every launch that made no Luna call is listed with its rc in the run note and in VERIFY.md. The job's own
+  RESULTS.md cannot see earlier launches. The first such launch was madeup-g406l-resume-mac, rc=1 (c858cb577).
