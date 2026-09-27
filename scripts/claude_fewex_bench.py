@@ -207,6 +207,7 @@ class Learner:
 
     def sleep(self, mazes, seed, old):
         rng = random.Random(9262700 + seed)
+        round_rng = random.Random(9282700 + seed)
         t0 = time.monotonic()
         for _ in range(SLEEP_STEPS):
             old_a = rng.sample(old["sums4"], 4)
@@ -218,8 +219,8 @@ class Learner:
                 if self.net.arm == "plain":
                     loss = N.ce_and_exact(self.net.plain_forward(t, s), s, y)[0]
                 else:
-                    rr = rng.randint(1, N.TRAIN_ROUNDS)
-                    grad = rng.randint(1, min(rr, N.GRAD_ROUNDS))
+                    rr = round_rng.randint(1, N.TRAIN_ROUNDS)
+                    grad = round_rng.randint(1, min(rr, N.GRAD_ROUNDS))
                     loss = torch.stack([N.ce_and_exact(lg, s, y)[0]
                                         for lg, _ in self.net.loop_train(t, s, rr - grad, grad)]).mean()
                 losses.append(loss)
