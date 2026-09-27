@@ -1,0 +1,5 @@
+# Interrupted exploratory run — excluded from registered results
+
+The pre-PASSMARKS seed-27 process was launched with `python -B scripts/codex_retention_reasoner.py --out artifacts/codex-retention-20260927/reasoner/seed27 --seed 27`. `ps` showed PID **90107**, local start **Sat Sep 26 23:44:48 2026** (America/New_York), corresponding to **2026-09-27 03:44:48 UTC**. It was sent SIGINT after the new binding rule; a subsequent `ps -p 90107` found no process. The last flushed training log entry is grids step **1,250/2,500**, at 143.8 elapsed seconds. It may have advanced beyond that entry before interrupt; no completed phase, checkpoint, or held-out score is claimed.
+
+This run and all files under `seed27/` are **exploratory only** and must never be counted as a registered result. No seed-28 process was launched. The CPU/MPS benchmark in `seed27/benchmark.json` is exploratory throughput information only. No further training may run until the parent commits PASSMARKS. After that, new registered runs must use fresh seeds set by PASSMARKS, not 27/28 if PASSMARKS changes them. The task-aware full-snapshot approach remains separate from rsn358e4 and dl9.
