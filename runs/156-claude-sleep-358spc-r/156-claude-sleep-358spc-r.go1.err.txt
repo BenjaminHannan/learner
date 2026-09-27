@@ -1,0 +1,1618 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mgit fetch origin main builder-outbox 2>&1 | head -20; echo "---BRANCHES---"; git branch -a | head -30
+From github.com:BenjaminHannan/learner
+ * branch                main           -> FETCH_HEAD
+ * branch                builder-outbox -> FETCH_HEAD
+   702d952fb..987790860  builder-outbox -> origin/builder-outbox
+---BRANCHES---
+* claude/card-experiment-handoff-7c5b27
++ claude/fact-saving-note-filtering-4ff1ff
++ claude/forgetting-plain-english-gap-9258f0
++ claude/kill-hung-queue-builders-4e879f
++ claude/locomo-length-penalty-408e2a
++ claude/loop-net-generalization-analysis-729ee3
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/pull-from-main-629dc4
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/retention-isolation
+  codex/testing-experiment-44
++ main
+  rent-zdl5c-results
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/builder-outbox-tmp
+  remotes/origin/builder-outbox-tmpfetch
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 50; echo "===LINES==="; git show origin/main:handoff/queue/lis-302-gpu.md | head -n 14 | cat -A | head -n 14
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+PUSH: artifacts/claude-lis302-20260924/tokprobs.jsonl artifacts/claude-lis302-20260924/pyes.json artifacts/claude-lis302-20260924/RESULTS-gpu.md
+===LINES===
+cat: illegal option -- A
+usage: cat [-belnstuv] [file ...]
+[0m
+[0m# [0mTodos
+[•] Follow COMMON RULES: read OPUS-RULES, check uptime/disk, check GPU-BUSY marker
+[ ] DUPLICATE GATE: check for existing RESULTS.md
+[ ] READ FIRST: PASSMARKS.md + run script docstring
+[ ] BensPC setup: git archive stream, nvidia-smi, disk, SEAL check, torch version, selftests
+[ ] TRAIN 8 runs (loop/plain x seeds 9-12) detached with logging
+[ ] SEAL + EVAL each checkpoint once, copy runs to Mac
+[ ] Write RESULTS.md + ledger, push paths, record model copies
+[0m
+[0m$ [0mpwd; uptime; df -g / 2>&1 | head -20; echo "---"; ls /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt 2>&1; git show origin/main:handoff/queue/lis-302-gpu.md | head -n 14
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ 3:05  up 3 days, 16:58, 4 users, load averages: 72.79 79.63 82.99
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        33    28%  484014 349660320    0%   /
+---
+/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358s-20260926/PASSMARKS.md 2>&1; echo "=====SEAL-EXISTS-MAIN?====="; git ls-tree origin/main artifacts/claude-rsn358s-20260926/ 2>&1; echo "=====RESULTS-MAIN?====="; git show origin/main:artifacts/claude-rsn358s-20260926/RESULTS.md 2>&1 | head -n 20; echo "=====RESULTS-OUTBOX?====="; git show origin/builder-outbox:artifacts/claude-rsn358s-20260926/RESULTS.md 2>&1 | head -n 20
+# rsn-358s pass marks: does a bigger loop reasoner still beat a plain net of its size? (fixed before any run; sleep research thread, 2026-09-27 00:57 UTC)
+
+**Question (Ben 14:49 UTC 09-26):** "A bigger reasoner still beats other bigger models of its size." Size = the whole reasoner's weights. **"Same size" means the same number of weights, not the same compute.** The loop spends about its mean rounds times a plain pass's compute per answer (inferred from layer shapes). Whether a plain net given matching compute closes the gap is the open follow-up. It is not part of this test, since it would be a second change.
+Draft history: PASSMARKS-v1-draft.md (da4a36fcc, 5e555090e), then the Thread manager's review at 00:55 UTC (4 points, all taken). The draft's plain-unrolled arm is removed from this test and named as the follow-up.
+
+**1x pair = rsn-358i3, graded PASS** (VERIFY-recount.md, 23dbe806b): loop 2 x d512 (6,438,302) vs plain 8 x d256 (6,385,149), seeds 5-8, BensPC, torch 2.11. Reused as it stands.
+**3x pair, new runs, ONE change (width):** loop 2 x d896 (19,524,254) vs plain 8 x d448 (19,430,589).
+- Code: scripts/claude_rsn358s_run.py, which imports 358i2 unchanged.
+- Identical to 358i3 otherwise: data stream, 60,000 steps, batch 256, lr and schedule, autocast cache off, v2 stop rule, 48 test rounds, and 358i's sealed tests (TEST-ONLY, counts only).
+- **Seeds 9, 10, 11, 12**, both arms, all on BensPC. No seed is read (no verdict, no partial gap) until all 8 runs are in.
+
+## Marks (gap = loop - plain, 4-seed means, of 300)
+- **V:** V0 (steps_block_nograd = 0 on every loop run) and 358t's G0 on every 3x run. If either arm's training diverges on a seed (a non-finite loss in train_log.jsonl, or practised tests under G0), that seed is INCONCLUSIVE, not a gap. The run is INCONCLUSIVE if any seed is.
+- **S2 (3x loop beats 3x plain):** mean gap >= +30 on sums6 AND on grids6, with the loop ahead on each on >= 3 of 4 seeds.
+- **S3 (the gap doesn't shrink):** the mean of the sums6 and grids6 gaps at 3x >= the 1x mean - 20. The 1x mean is (124.00 + 52.00) / 2 = 88.00, so 3x must be >= 68.00.
+- **PASS = V, S2 and S3.** (S1, the 1x pair, is already shown by 358i3.)
+- **Proved wrong:** V met and the 3x mean gap <= +5 on both sums6 and grids6.
+- In between: FAIL. If only "loop 3x > loop 1x" holds, it is reported as "a bigger reasoner helps", not as Ben's claim.
+
+## Report only
+- sums8/10/12, grids7, the practised sizes, fixed rounds and right at any round.
+- Compute per answer on each test: loop = mean rounds x one round's weight-FLOPs (12 x 2 x 896^2 per cell); plain = one pass (12 x 8 x 448^2 per cell, about the same as one loop round). Plus the same row for the 1x pair.
+- Minutes per run, and GPU memory per run from the first batch. It is reported before the second batch starts; whether 2 runs fit in 16 GB is read from that line, never guessed.
+- The ratio of 3x to 1x on each test, for each arm.
+
+**Prediction:** PASS 50%. S3 is the risk: extra width may help plain's long sums more than the loop's.
+**Cost:** $0, BensPC. Estimate 10-16 h, cap 20 h. The Director orders the queue; the Thread manager recommends right after dl-9.
+=====SEAL-EXISTS-MAIN?=====
+100644 blob 40d18c3c87036a4ac7cbe6f2a2fe073a2fa5ebb8	artifacts/claude-rsn358s-20260926/PASSMARKS-draft.md
+100644 blob 8bff59f4fdf4ab45528cd4a604426b5673ca4e12	artifacts/claude-rsn358s-20260926/PASSMARKS-v1-draft.md
+100644 blob 5b7dbad7d95d18bc9033d6cfbd57569f2b7ee8d4	artifacts/claude-rsn358s-20260926/PASSMARKS.md
+100644 blob 4107be8643d7241aea489b13532d97243a23c408	artifacts/claude-rsn358s-20260926/SEAL-code.sha256.txt
+=====RESULTS-MAIN?=====
+fatal: path 'artifacts/claude-rsn358s-20260926/RESULTS.md' does not exist in 'origin/main'
+=====RESULTS-OUTBOX?=====
+fatal: path 'artifacts/claude-rsn358s-20260926/RESULTS.md' does not exist in 'origin/builder-outbox'
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rsn358s_run.py | head -n 120
+echo "=====SEAL-CODE====="
+git show origin/main:artifacts/claude-rsn358s-20260926/SEAL-code.sha256.txt
+echo "=====VERIFY-RECOUNT 1x gaps====="
+git show origin/main:artifacts/claude-rsn358i3-20260926/VERIFY-recount.md 2>&1 | head -n 80; echo "---try outbox---"; git show origin/builder-outbox:artifacts/claude-rsn358i3-20260926/VERIFY-recount.md 2>&1 | head -n 80
+#!/usr/bin/env python3
+"""rsn-358s (sleep research thread, 2026-09-27): size scaling. Ben 14:49 UTC 09-26: "A bigger reasoner still beats
+other bigger models of its size." The 1x pair is rsn-358i3 (loop 2 x d512, 6,438,302 weights; plain 8 x d256,
+6,385,149; PASS, recount 23dbe806b). This file runs the 3x pair with ONE change, width: loop 2 x d896 (19,524,254)
+and plain 8 x d448 (19,430,589). Everything else is 358i2's code unchanged (imported): autocast cache off, gradient
+logging, data, 60,000 steps, batch 256, lr and schedule, v2 stop rule, 48 test rounds, 358i's sealed tests.
+
+  python -B scripts/claude_rsn358s_run.py train --arm loop|plain --seed S --out DIR
+  python -B scripts/claude_rsn358s_run.py eval --ckpt DIR/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out F
+  python -B scripts/claude_rsn358s_run.py selftest | check-mask
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_rsn358i2_run as I2  # noqa: E402
+
+R = I2.R
+ARMS_3X = {"loop": dict(d=896, layers=2, heads=8), "plain": dict(d=448, layers=8, heads=8)}
+R.ARMS.update({k: dict(v) for k, v in ARMS_3X.items()})
+
+
+def selftest():
+    n = {a: sum(p.numel() for p in R.Net(a).parameters()) for a in ARMS_3X}
+    assert n == {"loop": 19524254, "plain": 19430589}, n
+    I2.selftest()
+    print(f"selftest ok: 3x arms loop {n['loop']:,} and plain {n['plain']:,} weights (ratio {n['loop'] / n['plain']:.3f})")
+
+
+if __name__ == "__main__":
+    if sys.argv[1:] == ["selftest"]:
+        selftest()
+    elif sys.argv[1:] == ["check-mask"]:
+        I2.I.check_mask()
+    else:
+        R.main()
+=====SEAL-CODE=====
+3ad2d3abdb1d3d85456c96d4694e31b71e9074aeea1a37eaac0c65d6d0a30a40  scripts/claude_rsn358s_run.py
+8d69958c053342d47f44895375c16de3afdef7a55accdf4136ac55220fc82877  scripts/claude_rsn358i2_run.py
+4b9dfb907e49d47caefbbe606bc1610d12f15a85b39bce6aaa32ef78771f5ef4  scripts/claude_rsn358i_run.py
+0a82d5a512fe3da9a737a07935f9cd07fa78fbecd4446b736e85230355c0c928  scripts/claude_rsn358g_run.py
+80513101e4a6820f3fc32b2d23d01bcfc1ccca9457ae928826bdf37d89d816fe  scripts/claude_rsn358a2_run.py
+9b0e1a03ffdf354575e0a19acc58042c869c261565ba62e91e71af899cbca9b0  scripts/claude_rsn358a_run.py
+af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0  scripts/claude_rsn358a_envs.py
+c00aa62f4bc9ed710019581ee61288256238539c5bcfb6759d17f89c01a958de  scripts/claude_blurt1.py
+cfbdb334f1e8f0fb3fda980ae71d906dde250d77664f0cb14d0378070d4689c9  artifacts/claude-rsn358i-20260926/tests/grids5.jsonl
+1f922b36e6ecc74375079cca0447c11e0dce836d3deba54d187bb38147225179  artifacts/claude-rsn358i-20260926/tests/grids6.jsonl
+c9b56b4a766af88e7d520b7c440c46a45e407c90c46c6abf0f6ffae9584d2ee9  artifacts/claude-rsn358i-20260926/tests/grids7.jsonl
+e887fb6154ddd811fccec38884a6a88dbd69320bc72806147c18d7b40f6d1387  artifacts/claude-rsn358i-20260926/tests/numbers4.jsonl
+d9d53c3409f298870c0469dc2476556ea7839b6f2469a4c3b0e8f4abb01897ec  artifacts/claude-rsn358i-20260926/tests/numbers5.jsonl
+67e459cd8f5a482a66a9efb3d88906f65657a01f2894e364efcfa70125322f8b  artifacts/claude-rsn358i-20260926/tests/sums10.jsonl
+71eca5d906a2c3bd45e1f075ed763d166af5c903884fed69f18211e18cef868f  artifacts/claude-rsn358i-20260926/tests/sums12.jsonl
+01728d1912b590221e48835b7f787be4cb94f4f93aa4eae765fd46db1d7c5bfb  artifacts/claude-rsn358i-20260926/tests/sums4.jsonl
+a6ab304257625c83c87de063c925014cef49e3bfe3ec0c45a149b5ac2c3c9322  artifacts/claude-rsn358i-20260926/tests/sums6.jsonl
+312c46fd6c9fb54e28185ca9533e1993c11d8a4d6fc9ee4775edb7046a121465  artifacts/claude-rsn358i-20260926/tests/sums8.jsonl
+8bd92c9911ce4ca3b84e20dd4ccc17a062bc7b828b258046e57f2305a762398d  artifacts/claude-rsn358s-20260926/PASSMARKS.md
+=====VERIFY-RECOUNT 1x gaps=====
+# rsn-358i3 blind recount (sleep research thread, 2026-09-27 00:53 UTC)
+
+## Verdict: PASS (V0, G0, G1, G2, G3 all met; proved-wrong not triggered). Agrees with the builder.
+
+**What is now shown:** the bug-fixed 358i loop (2 x d512) beats its same-size plain twin (8 x d256, about 6.4M weights each) on bigger puzzles than it practised: sums6 and grids6, fresh seeds 5-8, both nets trained on the same machine (BensPC, torch 2.11.0+cu128). This holds for these puzzle kinds at this size. Number puzzles were learned by neither net.
+
+**Counted from:** raw runs/*/tests.json and train_summary.json on origin/builder-outbox c06390585, before reading the builder's RESULTS.md. Marks: PASSMARKS.md (358t's PASSMARKS-v2 G0-G3 word for word). SEAL-code.sha256.txt 19/19 OK on main; SEAL-run has 12 lines.
+
+| mark | count | result |
+|---|---|---|
+| V0 | steps_block_nograd 0 / 0 / 0 / 0 (60,000 steps each) | met |
+| G0 | sums4 300 and grids5 298-300 on every run of both arms | met |
+| G1 | mean loop - plain: sums6 +124.00, grids6 +52.00, numbers5 +0.00; loop ahead on sums6 and grids6 on 4 of 4 seeds | met |
+| G2 | sums4 +0.00, grids5 +1.50, numbers4 +0.75 | met |
+| G3 | own stop >= fixed-16 - 5 on every bigger test on 4 of 4 seeds; mean rounds sums6 > sums4 on every seed | met |
+| proved wrong | needs every bigger gap <= +5 | not triggered |
+
+Per seed (loop / plain, of 300), s5-s8:
+- sums6: 299/218, 296/125, 289/179, 296/162.
+- grids6: 296/248, 294/241, 284/234, 295/238.
+- Report only: grids7 mean gap +67.75, sums8 +185.75, sums10 +160.75, sums12 +129.50.
+
+**Report only, the machine check:** plain seeds 1-4 retrained on BensPC vs 358i's rental plain seeds 1-4 differ by at most 10 per test (sums12 +9.75, sums10 +8.00, all else within 3.00). Against BensPC plain, the 358i2 loop gaps are sums6 +102.00 and grids6 +54.00 (vs +100.50 and +51.75 against rental plain). So the 358i2 rows now also stand on one machine.
+
+**Builder deviations read:**
+- The first two launches died when the SSH session closed, and were restarted with a launch method that survives disconnect. Only clean runs were counted.
+- GPU-BUSY was left to the watcher.
+- Each eval ran once per checkpoint.
+None changes the count.
+
+**Prediction was PASS 70%.** This clears the exit rule's CONTINUE branch for the loop design, and it is the verified loop PASS that 358b3 (the chat-puzzle gate) was waiting for.
+
+## Added 00:56 UTC (Thread manager review, 00:54): what "same size" means here
+- Same size = the same number of weights (6.44M vs 6.39M), **not the same compute**.
+- One loop round (2 layers x d512) costs about the same as one full plain pass (8 layers x d256): 12 x 2 x 512^2 = 12 x 8 x 256^2 weight-FLOPs per cell. The loop's mean rounds on the tests were sums6 7.16-7.85 and grids6 10.61-14.13 (tests.json). So it spends roughly 7-8x (sums6) and 11-14x (grids6) a plain net's compute per answer. That is **inferred from layer shapes, not measured**. (Training wall time was similar, 75-82 min loop vs 71-79 min plain on BensPC, but wall time on a small net is not a FLOP count.)
+- Whether a plain net given matching compute closes the gap is **untested**. The only way to give a fixed-weight plain net more compute per answer is to loop it (358t's loop8, queued on BensPC) or to add layers or width, which adds weights. The scaling test's draft now carries a compute-matched plain arm.
+- G1 rests on 2 kinds (sums, grids). Number puzzles were learned by neither net.
+- This is a building block for the first demo goal (the joined build beating MiniCPM5-1B, Qwen3.5-2B and LFM2.5-1.2B side by side), not the goal itself.
+---try outbox---
+fatal: path 'artifacts/claude-rsn358i3-20260926/VERIFY-recount.md' does not exist in 'origin/builder-outbox'
+[0m
+[0m$ [0mssh benspc "cat C:/Users/benja/GPU-BUSY.txt 2>&1; echo '---EXIT:' $?; nvidia-smi --query-gpu=name,memory.total,memory.free --format=csv 2>&1 | head -5; echo '---C-FREE---'; powershell -NoProfile -Command \"Get-PSDrive C | Select-Object Free, Used\" 2>&1 | head -10"
+(no output)
+[0m
+[0m$ [0mtimeout 30 ssh -o ConnectTimeout=10 benspc "echo hello" 2>&1; echo "exit=$?"
+zsh:1: command not found: timeout
+exit=127
+[0m
+[0m$ [0mssh -o ConnectTimeout=10 benspc "echo hello" 2>&1; echo "exit=$?"
+hello
+exit=0
+[0m
+[0m$ [0mssh benspc "cat C:/Users/benja/GPU-BUSY.txt"
+'cat' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh benspc "Get-Content C:/Users/benja/GPU-BUSY.txt"
+'Get-Content' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh benspc "echo %COMSPEC% & ver & whoami"
+C:\WINDOWS\system32\cmd.exe 
+
+Microsoft Windows [Version 10.0.26200.9550]
+benspc\benja
+[0m
+[0m$ [0mssh benspc "type C:\\Users\\benja\\GPU-BUSY.txt"
+BUSY: queue job 156-claude-sleep-358spc-r since 2026-09-27T07:04:44Z - do not use this GPU until this file is gone
+[0m
+[0m$ [0mgit ls-tree origin/main handoff/queue/ 2>&1 | head -30; echo "---"; ssh benspc "nvidia-smi"
+100644 blob 87973ad647172d6a2280126bacf67b6bb93f0aea	handoff/queue/000-adapters-0926d.md
+100644 blob 8ebbfb9c12ed001373d6c89e2c9bd0165f1364f3	handoff/queue/000-benspc-check.md
+100644 blob 4262a54db5c548d974c54a78be907e77d8a1aedc	handoff/queue/000-benspc-disklist.md
+100644 blob da802cd4c9d0f804b49332a287245c2fed665a32	handoff/queue/000-cache-pin.md
+100644 blob e8a8b916a124244919de7fcf4e8573b1e58bc097	handoff/queue/000-check-358t.md
+100644 blob 050f726d93ab00885cf4988e3c6893a34b827a01	handoff/queue/000-ckpt-copy.md
+100644 blob bdf747777eebb3b3709d832222fff9f1cb4a2ba5	handoff/queue/000-credit-0926b.md
+100644 blob ac9e5502b80e3c414d198f9adbbae510e5f244c5	handoff/queue/000-credit-0926j.md
+100644 blob 9357227a1487002e425b3174a72ec08392fa6b5d	handoff/queue/000-credit-0926k.md
+100644 blob 8c07a64e88b5d5c87f89924c98e77bd90b26140b	handoff/queue/000-credit-0926m.md
+100644 blob 481d45059f8ea5ce221a9307c1ff6020dcb18584	handoff/queue/000-credit-0926n.md
+100644 blob 9a00d2020d6d1875e15124bc92897a1148baca8a	handoff/queue/000-diskcheck-0926.md
+100644 blob 5763113a33da5dc4f87a07117aac0527eeddd28d	handoff/queue/000-find-brd8w.md
+100644 blob 540a354e7191c702afad2014e858a93f9a6d379d	handoff/queue/000-glm-exitcodes.md
+100644 blob 7b99fc67944bf37456526e20b3990d56f51c1523	handoff/queue/000-glm-helper-v11.md
+100644 blob 5e654d4691c2a84e3761377d5792eaabd09ffb6c	handoff/queue/000-glm-opencode-probe.md
+100644 blob fafb17a88a6ae77ef86e92d538e2df73ae15d930	handoff/queue/000-glm-throughput.md
+100644 blob a75ef8262312ad8100224fe9f6ad1a015b1c2fbf	handoff/queue/000-glm-v11-twoproc.md
+100644 blob f4ccb57f6101076a3342e82c8b35a8361cffa2b8	handoff/queue/000-instances-0926c.md
+100644 blob 8ef5fe075d0107f1aba9656fe3c111272700f73f	handoff/queue/000-instances-0926l.md
+100644 blob c49b586a1c87fd4eb234c55d4ba88ce2b3c5ae94	handoff/queue/000-k1h-gate10.md
+100644 blob 428dda82ed667da5f54f24f3b23d591785cd20e1	handoff/queue/000-lis320-ocdiag-mac.md
+100644 blob 537e34a17a9a75fb382019d1b8cb225bf60a56de	handoff/queue/000-luna-helper-selftest.md
+100644 blob 951a7418ab13691be70c84a956345198956d4df0	handoff/queue/000-orphans-0926i.md
+100644 blob 12129e9aa1ee197b1de14f58d55442483a209134	handoff/queue/000-peek-358i2pc-torch.md
+100644 blob 569f44c8213ae4a783691d3f599e4b33d1c63ffe	handoff/queue/000-peek-358i2pc.md
+100644 blob bbe209919adbc1a708b11fef4a73f4b716aeebf9	handoff/queue/000-peek-k1h-glm2.md
+100644 blob cbe810a3056a8eb2177b0fbdfa77abce82ab260a	handoff/queue/000-peek-k1h-glm2b.md
+100644 blob 03c20111e572db47db18896be41daea4dcc56527	handoff/queue/000-peek-rd378oc.md
+100644 blob 5969b2669ce23191bf9f5605afc02fd279341d1a	handoff/queue/000-peek-rd378oc2.md
+---
+Sun Sep 27 03:05:48 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 591.86                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070 Ti   WDDM  |   00000000:01:00.0  On |                  N/A |
+|  0%   36C    P8              9W /  250W |     251MiB /  16303MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1768    C+G   C:\Windows\System32\dwm.exe           N/A      |
+|    0   N/A  N/A            2316    C+G   ...(x86)\e2eSoft\iVCam\iVCam.exe      N/A      |
+|    0   N/A  N/A            3328    C+G   ...cord\app-1.0.9259\Discord.exe      N/A      |
+|    0   N/A  N/A            4152    C+G   ...indows\System32\ShellHost.exe      N/A      |
+|    0   N/A  N/A            5112    C+G   ...ta\Okta Verify\OktaVerify.exe      N/A      |
+|    0   N/A  N/A            5268    C+G   ...s\PowerToys.ColorPickerUI.exe      N/A      |
+|    0   N/A  N/A            8564    C+G   C:\Windows\explorer.exe               N/A      |
+|    0   N/A  N/A           10064    C+G   ...2txyewy\CrossDeviceResume.exe      N/A      |
+|    0   N/A  N/A           10660    C+G   ...Toys\PowerToys.FancyZones.exe      N/A      |
+|    0   N/A  N/A           12604    C+G   ...em32\ApplicationFrameHost.exe      N/A      |
+|    0   N/A  N/A           12760    C+G   ...7hta09mmv6hy\Build\Lively.exe      N/A      |
+|    0   N/A  N/A           13148    C+G   ...s\PowerToys.PowerLauncher.exe      N/A      |
+|    0   N/A  N/A           13348    C+G   ..._cw5n1h2txyewy\SearchHost.exe      N/A      |
+|    0   N/A  N/A           13380    C+G   ...y\StartMenuExperienceHost.exe      N/A      |
+|    0   N/A  N/A           15392    C+G   ....0.4234.48\msedgewebview2.exe      N/A      |
+|    0   N/A  N/A           15856    C+G   ...UI3Apps\PowerToys.Peek.UI.exe      N/A      |
+|    0   N/A  N/A           16692    C+G   ...8bbwe\PhoneExperienceHost.exe      N/A      |
+|    0   N/A  N/A           17304    C+G   ...xyewy\ShellExperienceHost.exe      N/A      |
+|    0   N/A  N/A           18288    C+G   ...ogram Files\ShareX\ShareX.exe      N/A      |
+|    0   N/A  N/A           19200    C+G   ...crosoft shared\ink\TabTip.exe      N/A      |
+|    0   N/A  N/A           19504    C+G   ...s\PowerToys.AdvancedPaste.exe      N/A      |
+|    0   N/A  N/A           19892    C+G   ...5n1h2txyewy\TextInputHost.exe      N/A      |
+|    0   N/A  N/A           20844    C+G   ...ntrolPanel\SystemSettings.exe      N/A      |
+|    0   N/A  N/A           20964    C+G   ...Lunar Client\Lunar Client.exe      N/A      |
+|    0   N/A  N/A           21352    C+G   C:\Windows\System32\Taskmgr.exe       N/A      |
++-----------------------------------------------------------------------------------------+
+[0m
+[0m$ [0mgit ls-tree origin/main handoff/queue/ | grep -i "156\|358s" ; echo "---"; git log --oneline origin/main -5 -- handoff/queue/ | head -10
+100644 blob a385746d70b726f8f541af991f2fe564d873a62d	handoff/queue/155-claude-sleep-358spc.md
+100644 blob 5947e5b1fff58249196abd1253cb760fad8dbcb6	handoff/queue/156-claude-sleep-358spc-r.md
+100644 blob 740b156853abdfc9a4f65aa9e682c398e9969b92	handoff/queue/rent-zdl6b.md
+---
+acd10f8f2 rd-378g addendum J: the Luna writer pilot failed on time only (9 of 9 attempts hit the helper's 300 s; 0 batches), so one timing check (effort low at 600 s vs Codex default at 1200 s, batch 18's exact prompt, counts only) picks the setting by a fixed rule, then the same write into glm2N/
+756fdd302 g406b-L: partial run copied from builder-outbox (pilot PASS 10/10; full run time-stopped at 220/240 usable, 0 failed; my recount matches: G1 121/122, G2 0.0122, G3 0.67, V short on coverage only); ADDENDUM-1 fixes the rule (registered verdict after resuming the same sealed command on a copy of the rows); resume job queued
+fc1d9dcc6 queue: re-queue 155->156, 171->172 (the builders misread the GPU-BUSY marker naming their own queue file); PC headers now spell out the exact marker text for this job
+ae20883c2 queue bm398w-luna-mac: Luna words bm-398w's practice chats and panel on the Mac (sealed 4ac9b144c; pilot gate, floors, LOAD-LIGHT)
+135cb89d3 lis-320: Luna pilot 7 FAIL on items 1-2 (plan 2 of 11; no apostrophe drops); labels 0 of 40 wrong; registered fixes check_we3 (plan cues) + luna2 (one style sentence), ADDENDUM-10 sealed; pilot 8 queued on seed 328
+[0m
+[0m# [0mTodos
+[✓] Follow COMMON RULES: read OPUS-RULES, check uptime/disk, check GPU-BUSY marker
+[✓] DUPLICATE GATE: check for existing RESULTS.md
+[✓] READ FIRST: PASSMARKS.md + run script docstring
+[•] BensPC setup: git archive stream, nvidia-smi, disk, SEAL check, torch version, selftests
+[ ] TRAIN 8 runs (loop/plain x seeds 9-12) detached with logging
+[ ] SEAL + EVAL each checkpoint once, copy runs to Mac
+[ ] Write RESULTS.md + ledger, push paths, record model copies
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Get-PSDrive C | Select-Object Free, Used\""
+Free          Used
+      ----          ----
+6229741568 1016914092032
+[0m
+[0m$ [0mssh benspc "if exist C:\\Users\\benja\\rsn358s (echo EXISTS) else (echo MISSING)"
+MISSING
+[0m
+[0m$ [0mssh benspc "mkdir C:\\Users\\benja\\rsn358s"
+(no output)
+[0m
+[0m$ [0mssh benspc "where tar & where bash"
+C:\Windows\System32\tar.exe
+C:\Users\benja\AppData\Local\Microsoft\WindowsApps\bash.exe
+[0m
+[0m$ [0mgit archive origin/main scripts artifacts/claude-rsn358s-20260926 artifacts/claude-rsn358i-20260926/tests | ssh benspc "tar -x -C C:/Users/benja/rsn358s/" && echo STREAM-OK
+STREAM-OK
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\rsn358s\\scripts\\claude_rsn358s_run.py & dir C:\\Users\\benja\\rsn358s\\artifacts\\claude-rsn358s-20260926\\"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\rsn358s\scripts
+
+09/27/2026  03:00 AM             1,670 claude_rsn358s_run.py
+               1 File(s)          1,670 bytes
+               0 Dir(s)   6,201,298,944 bytes free
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\rsn358s\artifacts\claude-rsn358s-20260926
+
+09/27/2026  03:00 AM    <DIR>          .
+09/27/2026  03:00 AM    <DIR>          ..
+09/27/2026  03:00 AM             1,189 PASSMARKS-draft.md
+09/27/2026  03:00 AM             3,455 PASSMARKS-v1-draft.md
+09/27/2026  03:00 AM             3,169 PASSMARKS.md
+09/27/2026  03:00 AM             2,070 SEAL-code.sha256.txt
+               4 File(s)          9,883 bytes
+               2 Dir(s)   6,201,298,944 bytes free
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\rsn358s\\scripts | head -50"
+'head' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\rsn358s\\scripts"
+...output truncated...
+
+Full output saved to: /Users/ben-hannan/.local/share/opencode/tool-output/tool_0e1b0c8f1001r2oGB4lx4zfdIM
+
+09/27/2026  03:00 AM             4,276 fable_fix129_probe.py
+09/27/2026  03:00 AM             6,634 fable_fix129_punct.py
+09/27/2026  03:00 AM             8,256 fable_fix129_redteam124.py
+09/27/2026  03:00 AM             9,454 fable_fix135_office.py
+09/27/2026  03:00 AM             4,685 fable_fix137b_bench.py
+09/27/2026  03:00 AM             4,386 fable_fix137b_discourse.py
+09/27/2026  03:00 AM             9,652 fable_fix137b_junk.py
+09/27/2026  03:00 AM             9,369 fable_fix137b_probe.py
+09/27/2026  03:00 AM             3,696 fable_fix137b_redteam143.py
+09/27/2026  03:00 AM             4,278 fable_fix137b_sessions.py
+09/27/2026  03:00 AM             4,683 fable_fix137c_bench.py
+09/27/2026  03:00 AM             4,050 fable_fix137c_hypo.py
+09/27/2026  03:00 AM             8,916 fable_fix137c_junk.py
+09/27/2026  03:00 AM             9,206 fable_fix137c_probe.py
+09/27/2026  03:00 AM             3,712 fable_fix137c_redteam143.py
+09/27/2026  03:00 AM             4,294 fable_fix137c_sessions.py
+09/27/2026  03:00 AM             4,766 fable_fix137d_bench.py
+09/27/2026  03:00 AM             7,014 fable_fix137d_frame.py
+09/27/2026  03:00 AM             9,235 fable_fix137d_junk.py
+09/27/2026  03:00 AM            11,592 fable_fix137d_probe.py
+09/27/2026  03:00 AM             3,763 fable_fix137d_redteam143.py
+09/27/2026  03:00 AM             4,353 fable_fix137d_sessions.py
+09/27/2026  03:00 AM             4,829 fable_fix137e_bench.py
+09/27/2026  03:00 AM             9,293 fable_fix137e_junk.py
+09/27/2026  03:00 AM            11,126 fable_fix137e_probe.py
+09/27/2026  03:00 AM             3,864 fable_fix137e_redteam143.py
+09/27/2026  03:00 AM            10,690 fable_fix137e_scan.py
+09/27/2026  03:00 AM             4,447 fable_fix137e_sessions.py
+09/27/2026  03:00 AM             3,975 fable_fix137_bench.py
+09/27/2026  03:00 AM             7,531 fable_fix137_names.py
+09/27/2026  03:00 AM             8,328 fable_fix137_probe.py
+09/27/2026  03:00 AM             4,632 fable_fix138e_bench.py
+09/27/2026  03:00 AM             8,660 fable_fix138e_diagnose.py
+09/27/2026  03:00 AM             8,552 fable_fix138e_feature.py
+09/27/2026  03:00 AM            28,151 fable_fix138e_heldout.py
+09/27/2026  03:00 AM             3,318 fable_fix138e_heldrun.py
+09/27/2026  03:00 AM             9,437 fable_fix138e_junk.py
+09/27/2026  03:00 AM             6,789 fable_fix138e_redteam.py
+09/27/2026  03:00 AM            18,322 fable_fix138f_ablate.py
+09/27/2026  03:00 AM             5,388 fable_fix138f_bench.py
+09/27/2026  03:00 AM            10,490 fable_fix138f_junk.py
+09/27/2026  03:00 AM             4,722 fable_fix138f_m1.py
+09/27/2026  03:00 AM             3,999 fable_fix138f_rt143.py
+09/27/2026  03:00 AM             4,487 fable_fix138f_sessions.py
+09/27/2026  03:00 AM             5,085 fable_fix138g_compareg2.py
+09/27/2026  03:00 AM            14,225 fable_fix138g_m1.py
+09/27/2026  03:00 AM            22,651 fable_fix138g_suites.py
+09/27/2026  03:00 AM            11,108 fable_fix138h_m1pieces.py
+09/27/2026  03:00 AM            13,506 fable_fix138h_m2.py
+09/27/2026  03:00 AM            23,486 fable_fix138h_suites.py
+09/27/2026  03:00 AM            22,646 fable_fix138i_m1pieces.py
+09/27/2026  03:00 AM            10,964 fable_fix138i_m2.py
+09/27/2026  03:00 AM            24,347 fable_fix138i_suites.py
+09/27/2026  03:00 AM             3,718 fable_fix138i_triage.py
+09/27/2026  03:00 AM             6,110 fable_fix138j_comparem.py
+09/27/2026  03:00 AM            22,885 fable_fix138j_m1pieces.py
+09/27/2026  03:00 AM            15,193 fable_fix138j_m2.py
+09/27/2026  03:00 AM            20,881 fable_fix138j_suites.py
+09/27/2026  03:00 AM             3,519 fable_fix139b_bench.py
+09/27/2026  03:00 AM             4,926 fable_fix139b_probe.py
+09/27/2026  03:00 AM             3,939 fable_fix139b_redteam136.py
+09/27/2026  03:00 AM             6,409 fable_fix139b_valueguard.py
+09/27/2026  03:00 AM             5,646 fable_fix139c_bench.py
+09/27/2026  03:00 AM             9,024 fable_fix139c_cases.py
+09/27/2026  03:00 AM             7,624 fable_fix139c_g3.py
+09/27/2026  03:00 AM             6,329 fable_fix139c_probe.py
+09/27/2026  03:00 AM             4,336 fable_fix139c_tail.py
+09/27/2026  03:00 AM             5,746 fable_fix139d_bench.py
+09/27/2026  03:00 AM             7,591 fable_fix139d_cases.py
+09/27/2026  03:00 AM             6,070 fable_fix139d_compareg2.py
+09/27/2026  03:00 AM             7,887 fable_fix139d_g3.py
+09/27/2026  03:00 AM             5,757 fable_fix139d_probe.py
+09/27/2026  03:00 AM             3,213 fable_fix139d_scan.py
+09/27/2026  03:00 AM             4,421 fable_fix139d_tail.py
+09/27/2026  03:00 AM             5,746 fable_fix139e_bench.py
+09/27/2026  03:00 AM             8,496 fable_fix139e_cases.py
+09/27/2026  03:00 AM             1,407 fable_fix139e_compareg2.py
+09/27/2026  03:00 AM             7,887 fable_fix139e_g3.py
+09/27/2026  03:00 AM             5,757 fable_fix139e_probe.py
+09/27/2026  03:00 AM            11,874 fable_fix139e_scan.py
+09/27/2026  03:00 AM             4,908 fable_fix139e_tail.py
+09/27/2026  03:00 AM             3,380 fable_fix139_bench.py
+09/27/2026  03:00 AM             4,343 fable_fix139_probe.py
+09/27/2026  03:00 AM             3,916 fable_fix139_redteam136.py
+09/27/2026  03:00 AM             7,232 fable_fix139_valueguard.py
+09/27/2026  03:00 AM             2,888 fable_fix140_bench.py
+09/27/2026  03:00 AM             5,386 fable_fix140_redteam136.py
+09/27/2026  03:00 AM             4,748 fable_fix140_t1.py
+09/27/2026  03:00 AM             9,665 fable_fix140_tail.py
+09/27/2026  03:00 AM             5,164 fable_fix144_bench.py
+09/27/2026  03:00 AM             5,362 fable_fix144_f1.py
+09/27/2026  03:00 AM             8,223 fable_fix144_ofname.py
+09/27/2026  03:00 AM             3,816 fable_fix150b_bench.py
+09/27/2026  03:00 AM             5,940 fable_fix150b_probe.py
+09/27/2026  03:00 AM             4,160 fable_fix150b_session152.py
+09/27/2026  03:00 AM             9,944 fable_fix150b_subject150b.py
+09/27/2026  03:00 AM             3,816 fable_fix150c_bench.py
+09/27/2026  03:00 AM             7,854 fable_fix150c_closedclass.py
+09/27/2026  03:00 AM             6,050 fable_fix150c_probe.py
+09/27/2026  03:00 AM             4,160 fable_fix150c_session152.py
+09/27/2026  03:00 AM             4,353 fable_fix150d_markscompare.py
+09/27/2026  03:00 AM             7,874 fable_fix150d_probe.py
+09/27/2026  03:00 AM             7,482 fable_fix150d_subjectguard.py
+09/27/2026  03:00 AM             3,553 fable_fix150_bench.py
+09/27/2026  03:00 AM             5,033 fable_fix150_probe.py
+09/27/2026  03:00 AM             4,868 fable_fix150_redteam136.py
+09/27/2026  03:00 AM             8,804 fable_fix150_subjectguard.py
+09/27/2026  03:00 AM             3,574 fable_fix153_bench.py
+09/27/2026  03:00 AM             5,783 fable_fix153_probe.py
+09/27/2026  03:00 AM             6,793 fable_fix153_reverse.py
+09/27/2026  03:00 AM             3,661 fable_fix153_session.py
+09/27/2026  03:00 AM             6,143 fable_fix154b_buildprobe.py
+09/27/2026  03:00 AM             8,345 fable_fix154b_g3.py
+09/27/2026  03:00 AM             5,705 fable_fix154b_multival.py
+09/27/2026  03:00 AM             4,465 fable_fix154b_probe.py
+09/27/2026  03:00 AM             5,798 fable_fix154b_regress.py
+09/27/2026  03:00 AM             7,048 fable_fix154b_scan.py
+09/27/2026  03:00 AM             3,350 fable_fix154c_allowlist.py
+09/27/2026  03:00 AM             7,567 fable_fix154c_buildprobe.py
+09/27/2026  03:00 AM             8,332 fable_fix154c_g3.py
+09/27/2026  03:00 AM             4,916 fable_fix154c_probe.py
+09/27/2026  03:00 AM             5,859 fable_fix154c_regress.py
+09/27/2026  03:00 AM            10,658 fable_fix154c_scan.py
+09/27/2026  03:00 AM             6,612 fable_fix154d_probe.py
+09/27/2026  03:00 AM            20,577 fable_fix154d_suites.py
+09/27/2026  03:00 AM             9,576 fable_fix154d_yesno.py
+09/27/2026  03:00 AM             1,294 fable_fix154e_allowlist.py
+09/27/2026  03:00 AM             8,190 fable_fix154e_buildprobe.py
+09/27/2026  03:00 AM             7,979 fable_fix154e_g3.py
+09/27/2026  03:00 AM             4,393 fable_fix154e_probe.py
+09/27/2026  03:00 AM             5,595 fable_fix154e_regress.py
+09/27/2026  03:00 AM             9,724 fable_fix154e_scan.py
+09/27/2026  03:00 AM            13,651 fable_fix154f_buildprobe.py
+09/27/2026  03:00 AM             7,975 fable_fix154f_g3.py
+09/27/2026  03:00 AM             2,946 fable_fix154f_negate.py
+09/27/2026  03:00 AM             4,760 fable_fix154f_probe.py
+09/27/2026  03:00 AM             5,588 fable_fix154f_regress.py
+09/27/2026  03:00 AM             7,999 fable_fix154g_g3.py
+09/27/2026  03:00 AM             5,190 fable_fix154g_nocorrect.py
+09/27/2026  03:00 AM             4,917 fable_fix154g_probe.py
+09/27/2026  03:00 AM            12,876 fable_fix154g_regress.py
+09/27/2026  03:00 AM             9,956 fable_fix154g_scan.py
+09/27/2026  03:00 AM             3,587 fable_fix154_bench.py
+09/27/2026  03:00 AM             6,357 fable_fix154_probe.py
+09/27/2026  03:00 AM             3,847 fable_fix154_session152.py
+09/27/2026  03:00 AM            12,186 fable_fix154_yesno.py
+09/27/2026  03:00 AM             3,920 fable_fix155_bench.py
+09/27/2026  03:00 AM            10,570 fable_fix155_inverted.py
+09/27/2026  03:00 AM             4,499 fable_fix155_marksdiff.py
+09/27/2026  03:00 AM             6,812 fable_fix155_probe.py
+09/27/2026  03:00 AM             4,143 fable_fix155_sessions.py
+09/27/2026  03:00 AM             3,613 fable_fix156b_bench.py
+09/27/2026  03:00 AM             4,612 fable_fix156b_probe.py
+09/27/2026  03:00 AM             5,973 fable_fix156b_probe156.py
+09/27/2026  03:00 AM             4,506 fable_fix156b_session.py
+09/27/2026  03:00 AM            12,881 fable_fix156b_smalltalk.py
+09/27/2026  03:00 AM             6,396 fable_fix156c_comparem.py
+09/27/2026  03:00 AM             4,773 fable_fix156c_probe.py
+09/27/2026  03:00 AM            13,365 fable_fix156c_smalltalk.py
+09/27/2026  03:00 AM            12,748 fable_fix156c_suites.py
+09/27/2026  03:00 AM             3,590 fable_fix156_bench.py
+09/27/2026  03:00 AM             4,696 fable_fix156_probe.py
+09/27/2026  03:00 AM             4,424 fable_fix156_session.py
+09/27/2026  03:00 AM             7,552 fable_fix156_smalltalk.py
+09/27/2026  03:00 AM             3,866 fable_fix157b_bench.py
+09/27/2026  03:00 AM             5,906 fable_fix157b_capfiller.py
+09/27/2026  03:00 AM             8,705 fable_fix157b_markscompare.py
+09/27/2026  03:00 AM             6,766 fable_fix157b_probe.py
+09/27/2026  03:00 AM             3,802 fable_fix157b_session152.py
+09/27/2026  03:00 AM             3,830 fable_fix157c_bench.py
+09/27/2026  03:00 AM             8,167 fable_fix157c_markscompare.py
+09/27/2026  03:00 AM             7,096 fable_fix157c_probe.py
+09/27/2026  03:00 AM            10,559 fable_fix157c_redteam.py
+09/27/2026  03:00 AM             3,710 fable_fix157c_session152.py
+09/27/2026  03:00 AM             4,536 fable_fix157c_titleguard.py
+09/27/2026  03:00 AM             3,773 fable_fix157_bench.py
+09/27/2026  03:00 AM             6,539 fable_fix157_filler.py
+09/27/2026  03:00 AM             6,716 fable_fix157_probe.py
+09/27/2026  03:00 AM             3,767 fable_fix157_session152.py
+09/27/2026  03:00 AM             4,239 fable_fix158b_bench.py
+09/27/2026  03:00 AM             8,921 fable_fix158b_marks.py
+09/27/2026  03:00 AM             4,721 fable_fix158b_probe.py
+09/27/2026  03:00 AM            12,366 fable_fix158b_redteam.py
+09/27/2026  03:00 AM             4,371 fable_fix158c_bench.py
+09/27/2026  03:00 AM             8,982 fable_fix158c_marks.py
+09/27/2026  03:00 AM             4,785 fable_fix158c_probe.py
+09/27/2026  03:00 AM            12,363 fable_fix158c_redteam.py
+09/27/2026  03:00 AM             3,629 fable_fix158_bench.py
+09/27/2026  03:00 AM             5,046 fable_fix158_probe.py
+09/27/2026  03:00 AM             5,365 fable_fix158_qform.py
+09/27/2026  03:00 AM             4,763 fable_fix158_session.py
+09/27/2026  03:00 AM             3,888 fable_fix159_bench.py
+09/27/2026  03:00 AM             2,181 fable_fix159_calib150.py
+09/27/2026  03:00 AM             8,827 fable_fix159_hop.py
+09/27/2026  03:00 AM             4,692 fable_fix159_probe.py
+09/27/2026  03:00 AM             4,232 fable_fix159_session.py
+09/27/2026  03:00 AM             4,024 fable_fix160b_bench.py
+09/27/2026  03:00 AM             8,307 fable_fix160b_laststated.py
+09/27/2026  03:00 AM             6,287 fable_fix160b_probe.py
+09/27/2026  03:00 AM             5,304 fable_fix160b_session152.py
+09/27/2026  03:00 AM             3,878 fable_fix160c_bench.py
+09/27/2026  03:00 AM             7,758 fable_fix160c_probe.py
+09/27/2026  03:00 AM             7,670 fable_fix160c_redteam.py
+09/27/2026  03:00 AM             5,709 fable_fix160c_session152.py
+09/27/2026  03:00 AM             8,720 fable_fix160c_twohp.py
+09/27/2026  03:00 AM            10,004 fable_fix160_barecorrect.py
+09/27/2026  03:00 AM             3,957 fable_fix160_bench.py
+09/27/2026  03:00 AM             5,226 fable_fix160_probe.py
+09/27/2026  03:00 AM             5,129 fable_fix160_session152.py
+09/27/2026  03:00 AM             4,435 fable_fix162b_bench.py
+09/27/2026  03:00 AM             4,251 fable_fix162b_cases.py
+09/27/2026  03:00 AM            10,056 fable_fix162b_g3.py
+09/27/2026  03:00 AM             5,616 fable_fix162b_marksdiff.py
+09/27/2026  03:00 AM             5,353 fable_fix162b_plural.py
+09/27/2026  03:00 AM             8,012 fable_fix162b_probe.py
+09/27/2026  03:00 AM             4,823 fable_fix162_bench.py
+09/27/2026  03:00 AM             4,755 fable_fix162_marksdiff.py
+09/27/2026  03:00 AM             6,534 fable_fix162_probe.py
+09/27/2026  03:00 AM            12,337 fable_fix162_thename.py
+09/27/2026  03:00 AM             4,187 fable_fix163_bench.py
+09/27/2026  03:00 AM            10,027 fable_fix163_lowercase.py
+09/27/2026  03:00 AM             6,452 fable_fix163_marksdiff.py
+09/27/2026  03:00 AM             4,783 fable_fix163_probe.py
+09/27/2026  03:00 AM             4,339 fable_fix163_session.py
+09/27/2026  03:00 AM             7,895 fable_fix164b_marksdiff.py
+09/27/2026  03:00 AM             4,884 fable_fix164b_probe.py
+09/27/2026  03:00 AM            19,348 fable_fix164b_suites.py
+09/27/2026  03:00 AM             9,879 fable_fix164_about.py
+09/27/2026  03:00 AM             4,163 fable_fix164_bench.py
+09/27/2026  03:00 AM             7,886 fable_fix164_marksdiff.py
+09/27/2026  03:00 AM             4,796 fable_fix164_probe.py
+09/27/2026  03:00 AM             5,339 fable_fix164_scan.py
+09/27/2026  03:00 AM             5,055 fable_fix164_session152.py
+09/27/2026  03:00 AM             4,341 fable_fix165_bench.py
+09/27/2026  03:00 AM             1,247 fable_fix165_casefix.py
+09/27/2026  03:00 AM            10,025 fable_fix165_g3.py
+09/27/2026  03:00 AM             5,893 fable_fix165_marksdiff.py
+09/27/2026  03:00 AM             8,141 fable_fix165_probe.py
+09/27/2026  03:00 AM             2,996 fable_fix165_scan.py
+09/27/2026  03:00 AM             6,533 fable_fix165_typo.py
+09/27/2026  03:00 AM             4,559 fable_fix166b_bench.py
+09/27/2026  03:00 AM            11,035 fable_fix166b_g3.py
+09/27/2026  03:00 AM             8,801 fable_fix166b_marksdiff.py
+09/27/2026  03:00 AM             5,005 fable_fix166b_probe.py
+09/27/2026  03:00 AM             7,635 fable_fix166b_probeB.py
+09/27/2026  03:00 AM             4,657 fable_fix166c_bench.py
+09/27/2026  03:00 AM            11,115 fable_fix166c_g3.py
+09/27/2026  03:00 AM             8,855 fable_fix166c_marksdiff.py
+09/27/2026  03:00 AM             5,004 fable_fix166c_probe.py
+09/27/2026  03:00 AM             7,899 fable_fix166c_probeB.py
+09/27/2026  03:00 AM             7,775 fable_fix166c_probeC.py
+09/27/2026  03:00 AM             4,410 fable_fix166_bench.py
+09/27/2026  03:00 AM             8,140 fable_fix166_cases.py
+09/27/2026  03:00 AM            11,893 fable_fix166_g3.py
+09/27/2026  03:00 AM             9,309 fable_fix166_marksdiff.py
+09/27/2026  03:00 AM             9,252 fable_fix166_me.py
+09/27/2026  03:00 AM             8,256 fable_fix166_probe.py
+09/27/2026  03:00 AM             3,326 fable_fix166_scan.py
+09/27/2026  03:00 AM             5,053 fable_fix167b_bench.py
+09/27/2026  03:00 AM            11,284 fable_fix167b_g3.py
+09/27/2026  03:00 AM             9,016 fable_fix167b_marksdiff.py
+09/27/2026  03:00 AM             7,464 fable_fix167b_probe.py
+09/27/2026  03:00 AM             7,304 fable_fix167b_valuescreen.py
+09/27/2026  03:00 AM             5,859 fable_fix167c_bench.py
+09/27/2026  03:00 AM            11,175 fable_fix167c_g3.py
+09/27/2026  03:00 AM             4,214 fable_fix167c_label.py
+09/27/2026  03:00 AM             9,274 fable_fix167c_marksdiff.py
+09/27/2026  03:00 AM             6,197 fable_fix167c_probe.py
+09/27/2026  03:00 AM             5,905 fable_fix167c_t2.py
+09/27/2026  03:00 AM             5,103 fable_fix167d_bench.py
+09/27/2026  03:00 AM            11,149 fable_fix167d_g3.py
+09/27/2026  03:00 AM             8,875 fable_fix167d_marksdiff.py
+09/27/2026  03:00 AM            10,270 fable_fix167d_probe.py
+09/27/2026  03:00 AM             9,309 fable_fix167d_verb.py
+09/27/2026  03:00 AM             6,200 fable_fix167e_bench.py
+09/27/2026  03:00 AM            10,902 fable_fix167e_g3.py
+09/27/2026  03:00 AM             6,884 fable_fix167e_label.py
+09/27/2026  03:00 AM            10,569 fable_fix167e_marksdiff.py
+09/27/2026  03:00 AM             7,853 fable_fix167e_probe.py
+09/27/2026  03:00 AM             4,415 fable_fix167e_t3.py
+09/27/2026  03:00 AM             4,379 fable_fix167_bench.py
+09/27/2026  03:00 AM             9,987 fable_fix167_g3.py
+09/27/2026  03:00 AM             9,470 fable_fix167_marksdiff.py
+09/27/2026  03:00 AM             8,329 fable_fix167_probe.py
+09/27/2026  03:00 AM             9,504 fable_fix167_verb.py
+09/27/2026  03:00 AM             4,650 fable_fix168_bench.py
+09/27/2026  03:00 AM            10,195 fable_fix168_ground.py
+09/27/2026  03:00 AM            10,590 fable_fix168_probe.py
+09/27/2026  03:00 AM             9,911 fable_fix168_regress.py
+09/27/2026  03:00 AM             4,986 fable_fix170_bench.py
+09/27/2026  03:00 AM            23,530 fable_fix170_compose.py
+09/27/2026  03:00 AM             1,920 fable_fix170_diag.py
+09/27/2026  03:00 AM             4,743 fable_fix170_makecases.py
+09/27/2026  03:00 AM             3,446 fable_fix170_replay.py
+09/27/2026  03:00 AM             1,169 fable_fix170_soak.py
+09/27/2026  03:00 AM             3,426 fable_fix170_speed.py
+09/27/2026  03:00 AM             4,852 fable_fix171b_bench121.py
+09/27/2026  03:00 AM             8,976 fable_fix171b_g3.py
+09/27/2026  03:00 AM             5,893 fable_fix171b_nameval.py
+09/27/2026  03:00 AM            11,195 fable_fix171b_probe.py
+09/27/2026  03:00 AM             4,904 fable_fix171_bench121.py
+09/27/2026  03:00 AM             8,918 fable_fix171_g3.py
+09/27/2026  03:00 AM             8,083 fable_fix171_nameval.py
+09/27/2026  03:00 AM             6,570 fable_fix171_probe.py
+09/27/2026  03:00 AM             7,490 fable_fix172b_benchv3.py
+09/27/2026  03:00 AM            10,676 fable_fix172b_buildcases.py
+09/27/2026  03:00 AM             8,250 fable_fix172b_g3.py
+09/27/2026  03:00 AM             9,211 fable_fix172b_markscmp.py
+09/27/2026  03:00 AM             5,236 fable_fix172b_probe.py
+09/27/2026  03:00 AM            10,802 fable_fix172_scan.py
+09/27/2026  03:00 AM             4,528 fable_fix173b_bench.py
+09/27/2026  03:00 AM             9,264 fable_fix173b_g3.py
+09/27/2026  03:00 AM             7,429 fable_fix173b_marksdiff.py
+09/27/2026  03:00 AM            11,895 fable_fix173b_probe.py
+09/27/2026  03:00 AM             4,316 fable_fix173b_scan.py
+09/27/2026  03:00 AM             8,895 fable_fix173b_username.py
+09/27/2026  03:00 AM             4,689 fable_fix173_bench.py
+09/27/2026  03:00 AM             9,750 fable_fix173_g3.py
+09/27/2026  03:00 AM             8,376 fable_fix173_marksdiff.py
+09/27/2026  03:00 AM            10,575 fable_fix173_probe.py
+09/27/2026  03:00 AM             3,348 fable_fix173_scan.py
+09/27/2026  03:00 AM            15,403 fable_fix173_username.py
+09/27/2026  03:00 AM             5,474 fable_fix174_chainof.py
+09/27/2026  03:00 AM             3,794 fable_fix174_markscmp.py
+09/27/2026  03:00 AM             7,705 fable_fix174_t1.py
+09/27/2026  03:00 AM            11,531 fable_fix174_t2suites.py
+09/27/2026  03:00 AM             7,478 fable_fix180b_comparem.py
+09/27/2026  03:00 AM             6,013 fable_fix180b_probe.py
+09/27/2026  03:00 AM            10,392 fable_fix180b_suites.py
+09/27/2026  03:00 AM             2,706 fable_fix180_comparem.py
+09/27/2026  03:00 AM             4,730 fable_fix180_probe.py
+09/27/2026  03:00 AM            10,865 fable_fix180_suites.py
+09/27/2026  03:00 AM             5,588 fable_fix187b_probe.py
+09/27/2026  03:00 AM            16,400 fable_fix187b_suites.py
+09/27/2026  03:00 AM             5,402 fable_fix187_probe.py
+09/27/2026  03:00 AM            16,163 fable_fix187_suites.py
+09/27/2026  03:00 AM             5,184 fable_fix188_compareg2.py
+09/27/2026  03:00 AM             3,743 fable_fix188_f1.py
+09/27/2026  03:00 AM            22,278 fable_fix188_suites.py
+09/27/2026  03:00 AM            29,135 fable_fix189b_sayagain.py
+09/27/2026  03:00 AM            22,395 fable_fix189_sayagain.py
+09/27/2026  03:00 AM             4,131 fable_fix190b_marks.py
+09/27/2026  03:00 AM            13,859 fable_fix190b_suites.py
+09/27/2026  03:00 AM            11,066 fable_fix190b_v1.py
+09/27/2026  03:00 AM             5,458 fable_fix190_bench.py
+09/27/2026  03:00 AM             8,116 fable_fix190_marks.py
+09/27/2026  03:00 AM             9,312 fable_fix190_reverse.py
+09/27/2026  03:00 AM             9,913 fable_fix190_suites.py
+09/27/2026  03:00 AM             4,652 fable_fix190_v1.py
+09/27/2026  03:00 AM             5,714 fable_fix192_bench.py
+09/27/2026  03:00 AM            10,027 fable_fix192_correctreply.py
+09/27/2026  03:00 AM             8,660 fable_fix192_marksdiff.py
+09/27/2026  03:00 AM             6,134 fable_fix192_probe.py
+09/27/2026  03:00 AM            10,863 fable_fix192_suites.py
+09/27/2026  03:00 AM             8,718 fable_fix193_apos.py
+09/27/2026  03:00 AM             5,250 fable_fix193_comparem.py
+09/27/2026  03:00 AM             5,048 fable_fix193_probe.py
+09/27/2026  03:00 AM            10,651 fable_fix193_suites.py
+09/27/2026  03:00 AM             5,671 fable_fix219_selfname.py
+09/27/2026  03:00 AM            11,189 fable_fix220_marks.py
+09/27/2026  03:00 AM             3,484 fable_fix220_restartindex.py
+09/27/2026  03:00 AM             2,752 fable_fix221_g3.py
+09/27/2026  03:00 AM             2,727 fable_fix221_p3check.py
+09/27/2026  03:00 AM            11,754 fable_fix221_panel.py
+09/27/2026  03:00 AM             3,311 fable_fix221_panelmap.py
+09/27/2026  03:00 AM             8,285 fable_fix221_predict.py
+09/27/2026  03:00 AM            22,513 fable_fix221_tableask.py
+09/27/2026  03:00 AM             3,053 fable_fix222_ofteachb.py
+09/27/2026  03:00 AM             2,792 fable_fix77_bench.py
+09/27/2026  03:00 AM            15,647 fable_fix77_conformance.py
+09/27/2026  03:00 AM            17,185 fable_fix77_core.py
+09/27/2026  03:00 AM             4,415 fable_hardgate46.py
+09/27/2026  03:00 AM             3,212 fable_hardgate80_noise.py
+09/27/2026  03:00 AM             5,430 fable_identity227.py
+09/27/2026  03:00 AM             2,641 fable_identity227_census.py
+09/27/2026  03:00 AM             4,482 fable_identity227_marks.py
+09/27/2026  03:00 AM               934 fable_identity227_templates.json
+09/27/2026  03:00 AM             2,634 fable_learnedaddr43i.py
+09/27/2026  03:00 AM             1,621 fable_learnedaddr43i_stress.py
+09/27/2026  03:00 AM             1,959 fable_learnedaddr43i_stress_hard.py
+09/27/2026  03:00 AM             3,989 fable_learnedparity43j.py
+09/27/2026  03:00 AM            20,766 fable_ledger82_check.py
+09/27/2026  03:00 AM             8,389 fable_lengthgate43.py
+09/27/2026  03:00 AM             6,533 fable_lengthgate43c.py
+09/27/2026  03:00 AM             9,513 fable_lengthgate43d.py
+09/27/2026  03:00 AM            68,628 fable_link_isolation.py
+09/27/2026  03:00 AM            84,125 fable_link_isolation_v2.py
+09/27/2026  03:00 AM            61,115 fable_listening_english.py
+09/27/2026  03:00 AM            12,063 fable_listening_m1.py
+09/27/2026  03:00 AM            39,929 fable_livesleep52.py
+09/27/2026  03:00 AM            20,853 fable_loop102_agent.py
+09/27/2026  03:00 AM            20,619 fable_loop102_marks.py
+09/27/2026  03:00 AM            10,241 fable_loop113b_agent.py
+09/27/2026  03:00 AM            17,672 fable_loop113b_marks.py
+09/27/2026  03:00 AM            16,016 fable_loop113c_agent.py
+09/27/2026  03:00 AM            17,675 fable_loop113c_marks.py
+09/27/2026  03:00 AM            12,940 fable_loop113d_agent.py
+09/27/2026  03:00 AM            17,675 fable_loop113d_marks.py
+09/27/2026  03:00 AM            27,710 fable_loop113e_agent.py
+09/27/2026  03:00 AM             3,664 fable_loop113e_marks.py
+09/27/2026  03:00 AM            13,655 fable_loop113_agent.py
+09/27/2026  03:00 AM            14,181 fable_loop113_marks.py
+09/27/2026  03:00 AM             9,893 fable_loop117_agent.py
+09/27/2026  03:00 AM            20,825 fable_loop117_marks.py
+09/27/2026  03:00 AM             4,442 fable_loop117_q2.py
+09/27/2026  03:00 AM             4,495 fable_loop117_q4scan.py
+09/27/2026  03:00 AM            15,222 fable_loop121_agent.py
+09/27/2026  03:00 AM            20,890 fable_loop121_marks.py
+09/27/2026  03:00 AM             5,832 fable_loop129a_agent.py
+09/27/2026  03:00 AM            10,185 fable_loop129a_marks.py
+09/27/2026  03:00 AM             4,935 fable_loop129a_q2.py
+09/27/2026  03:00 AM             4,195 fable_loop129a_q4scan.py
+09/27/2026  03:00 AM             3,474 fable_loop129a_repro.py
+09/27/2026  03:00 AM             5,896 fable_loop129b_agent.py
+09/27/2026  03:00 AM             7,272 fable_loop129b_bench.py
+09/27/2026  03:00 AM            13,162 fable_loop129b_marks.py
+09/27/2026  03:00 AM            10,183 fable_loop132_agent.py
+09/27/2026  03:00 AM             9,896 fable_loop132_marks.py
+09/27/2026  03:00 AM            13,038 fable_loop134_agent.py
+09/27/2026  03:00 AM             5,830 fable_loop135_agent.py
+09/27/2026  03:00 AM            14,947 fable_loop137b_agent.py
+09/27/2026  03:00 AM            10,131 fable_loop137c_agent.py
+09/27/2026  03:00 AM            11,045 fable_loop137d_agent.py
+09/27/2026  03:00 AM            10,768 fable_loop137e_agent.py
+09/27/2026  03:00 AM             5,638 fable_loop137_agent.py
+09/27/2026  03:00 AM            24,642 fable_loop138b_agent.py
+09/27/2026  03:00 AM            10,094 fable_loop138b_junk.py
+09/27/2026  03:00 AM             3,845 fable_loop138b_redteam143.py
+09/27/2026  03:00 AM             4,018 fable_loop138b_sessions.py
+09/27/2026  03:00 AM             2,276 fable_loop138b_sleepdrive.py
+09/27/2026  03:00 AM             4,386 fable_loop138b_speed.py
+09/27/2026  03:00 AM             4,326 fable_loop138b_speed2.py
+09/27/2026  03:00 AM            11,206 fable_loop138c_agent.py
+09/27/2026  03:00 AM             5,460 fable_loop138c_bench121.py
+09/27/2026  03:00 AM             4,256 fable_loop138c_probe.py
+09/27/2026  03:00 AM            10,480 fable_loop138c_selfcheck.py
+09/27/2026  03:00 AM            24,016 fable_loop138d_agent.py
+09/27/2026  03:00 AM             5,412 fable_loop138d_bench121.py
+09/27/2026  03:00 AM            10,397 fable_loop138d_junk.py
+09/27/2026  03:00 AM            21,972 fable_loop138d_m1.py
+09/27/2026  03:00 AM             3,663 fable_loop138d_redteam143.py
+09/27/2026  03:00 AM             4,480 fable_loop138d_sessions.py
+09/27/2026  03:00 AM             2,276 fable_loop138d_sleepdrive.py
+09/27/2026  03:00 AM             1,397 fable_loop138d_sleepz5.py
+09/27/2026  03:00 AM             1,559 fable_loop138d_soak.py
+09/27/2026  03:00 AM             4,160 fable_loop138d_speed2.py
+09/27/2026  03:00 AM            19,667 fable_loop138e_agent.py
+09/27/2026  03:00 AM            14,862 fable_loop138f_agent.py
+09/27/2026  03:00 AM            24,718 fable_loop138g_agent.py
+09/27/2026  03:00 AM            18,873 fable_loop138h_agent.py
+09/27/2026  03:00 AM            26,487 fable_loop138i_agent.py
+09/27/2026  03:00 AM            41,651 fable_loop138j_agent.py
+09/27/2026  03:00 AM            22,439 fable_loop138_agent.py
+09/27/2026  03:00 AM             5,370 fable_loop139b_agent.py
+09/27/2026  03:00 AM             9,685 fable_loop139c_agent.py
+09/27/2026  03:00 AM            10,083 fable_loop139d_agent.py
+09/27/2026  03:00 AM            10,518 fable_loop139e_agent.py
+09/27/2026  03:00 AM             5,198 fable_loop139_agent.py
+09/27/2026  03:00 AM             7,312 fable_loop140_agent.py
+09/27/2026  03:00 AM            12,232 fable_loop142_agent.py
+09/27/2026  03:00 AM             8,338 fable_loop144_agent.py
+09/27/2026  03:00 AM             5,782 fable_loop146b_agent.py
+09/27/2026  03:00 AM             5,808 fable_loop146c_agent.py
+09/27/2026  03:00 AM             5,748 fable_loop146d_agent.py
+09/27/2026  03:00 AM             5,902 fable_loop146_agent.py
+09/27/2026  03:00 AM             6,989 fable_loop147_agent.py
+09/27/2026  03:00 AM             6,714 fable_loop147_agent113e.py
+09/27/2026  03:00 AM             6,770 fable_loop147_agent132.py
+09/27/2026  03:00 AM            20,672 fable_loop148b_agent.py
+09/27/2026  03:00 AM             4,269 fable_loop148b_bench.py
+09/27/2026  03:00 AM             3,504 fable_loop148b_q1.py
+09/27/2026  03:00 AM             4,370 fable_loop148b_q2.py
+09/27/2026  03:00 AM            14,292 fable_loop148b_verify.py
+09/27/2026  03:00 AM            10,480 fable_loop148_agent.py
+09/27/2026  03:00 AM             4,242 fable_loop148_bench.py
+09/27/2026  03:00 AM             3,488 fable_loop148_q1.py
+09/27/2026  03:00 AM             4,223 fable_loop148_q2.py
+09/27/2026  03:00 AM            12,056 fable_loop149_agent.py
+09/27/2026  03:00 AM             5,640 fable_loop150b_agent.py
+09/27/2026  03:00 AM             5,673 fable_loop150c_agent.py
+09/27/2026  03:00 AM            10,443 fable_loop150d_agent.py
+09/27/2026  03:00 AM             4,037 fable_loop150d_bench.py
+09/27/2026  03:00 AM             9,035 fable_loop150d_junk.py
+09/27/2026  03:00 AM             3,071 fable_loop150d_redteam143.py
+09/27/2026  03:00 AM             3,291 fable_loop150d_sessions.py
+09/27/2026  03:00 AM             5,427 fable_loop150_agent.py
+09/27/2026  03:00 AM            13,973 fable_loop151_agent.py
+09/27/2026  03:00 AM             5,631 fable_loop153_agent.py
+09/27/2026  03:00 AM            19,917 fable_loop154b_agent.py
+09/27/2026  03:00 AM            15,835 fable_loop154c_agent.py
+09/27/2026  03:00 AM             6,720 fable_loop154d_agent.py
+09/27/2026  03:00 AM            14,303 fable_loop154e_agent.py
+09/27/2026  03:00 AM            11,546 fable_loop154f_agent.py
+09/27/2026  03:00 AM            19,880 fable_loop154g_agent.py
+09/27/2026  03:00 AM             5,974 fable_loop154_agent.py
+09/27/2026  03:00 AM             7,858 fable_loop155_agent.py
+09/27/2026  03:00 AM             6,026 fable_loop156b_agent.py
+09/27/2026  03:00 AM             6,368 fable_loop156c_agent.py
+09/27/2026  03:00 AM             5,408 fable_loop156_agent.py
+09/27/2026  03:00 AM             5,642 fable_loop157b_agent.py
+09/27/2026  03:00 AM             5,645 fable_loop157c_agent.py
+09/27/2026  03:00 AM             5,584 fable_loop157_agent.py
+09/27/2026  03:00 AM            19,367 fable_loop158b_agent.py
+09/27/2026  03:00 AM            15,467 fable_loop158c_agent.py
+09/27/2026  03:00 AM             5,574 fable_loop158_agent.py
+09/27/2026  03:00 AM             5,538 fable_loop159_agent.py
+09/27/2026  03:00 AM             5,825 fable_loop160b_agent.py
+09/27/2026  03:00 AM             5,629 fable_loop160c_agent.py
+09/27/2026  03:00 AM             5,700 fable_loop160_agent.py
+09/27/2026  03:00 AM             8,715 fable_loop161_agent.py
+09/27/2026  03:00 AM             5,890 fable_loop161_bench.py
+09/27/2026  03:00 AM             7,593 fable_loop161_marksdiff.py
+09/27/2026  03:00 AM             5,733 fable_loop162b_agent.py
+09/27/2026  03:00 AM             7,455 fable_loop162_agent.py
+09/27/2026  03:00 AM             5,803 fable_loop163_agent.py
+09/27/2026  03:00 AM            18,726 fable_loop164b_agent.py
+09/27/2026  03:00 AM             5,731 fable_loop164_agent.py
+09/27/2026  03:00 AM             5,058 fable_loop165_agent.py
+09/27/2026  03:00 AM             8,992 fable_loop166b_agent.py
+09/27/2026  03:00 AM            10,156 fable_loop166c_agent.py
+09/27/2026  03:00 AM             7,411 fable_loop166_agent.py
+09/27/2026  03:00 AM             5,515 fable_loop167b_agent.py
+09/27/2026  03:00 AM             5,604 fable_loop167c_agent.py
+09/27/2026  03:00 AM             6,227 fable_loop167d_agent.py
+09/27/2026  03:00 AM             6,056 fable_loop167e_agent.py
+09/27/2026  03:00 AM             5,884 fable_loop167_agent.py
+09/27/2026  03:00 AM            10,458 fable_loop168_agent.py
+09/27/2026  03:00 AM             9,175 fable_loop170_agent.py
+09/27/2026  03:00 AM             9,562 fable_loop171b_agent.py
+09/27/2026  03:00 AM             9,981 fable_loop171_agent.py
+09/27/2026  03:00 AM            12,705 fable_loop172_agent.py
+09/27/2026  03:00 AM             6,447 fable_loop173b_agent.py
+09/27/2026  03:00 AM             9,349 fable_loop173_agent.py
+09/27/2026  03:00 AM            10,540 fable_loop174_agent.py
+09/27/2026  03:00 AM            17,400 fable_loop180b_agent.py
+09/27/2026  03:00 AM            19,204 fable_loop180_agent.py
+09/27/2026  03:00 AM            18,148 fable_loop187_agent.py
+09/27/2026  03:00 AM            12,791 fable_loop188_agent.py
+09/27/2026  03:00 AM            12,321 fable_loop189b_agent.py
+09/27/2026  03:00 AM             9,337 fable_loop189_agent.py
+09/27/2026  03:00 AM            10,715 fable_loop190b_agent.py
+09/27/2026  03:00 AM             9,604 fable_loop190_agent.py
+09/27/2026  03:00 AM             6,088 fable_loop192_agent.py
+09/27/2026  03:00 AM            10,556 fable_loop193_agent.py
+09/27/2026  03:00 AM            15,471 fable_loop209_agent.py
+09/27/2026  03:00 AM            14,058 fable_loop212_agent.py
+09/27/2026  03:00 AM            18,077 fable_loop215_agent.py
+09/27/2026  03:00 AM            16,864 fable_loop216_agent.py
+09/27/2026  03:00 AM            14,394 fable_loop219_agent.py
+09/27/2026  03:00 AM             6,254 fable_loop220_agent.py
+09/27/2026  03:00 AM             9,006 fable_loop221_agent.py
+09/27/2026  03:00 AM             8,944 fable_loop222_agent.py
+09/27/2026  03:00 AM            11,278 fable_loop223_agent.py
+09/27/2026  03:00 AM             8,768 fable_loop223_probe.py
+09/27/2026  03:00 AM             8,988 fable_loop224_agent.py
+09/27/2026  03:00 AM            19,962 fable_loop226_agent.py
+09/27/2026  03:00 AM            15,424 fable_loop227_agent.py
+09/27/2026  03:00 AM            23,738 fable_loop90_agent.py
+09/27/2026  03:00 AM            28,462 fable_loop90_marks.py
+09/27/2026  03:00 AM             6,740 fable_loop96_agent.py
+09/27/2026  03:00 AM            35,406 fable_loop96_marks.py
+09/27/2026  03:00 AM             2,017 fable_lowrank43f.py
+09/27/2026  03:00 AM            49,627 fable_marks123_all.py
+09/27/2026  03:00 AM            15,642 fable_modernbert58_loader.py
+09/27/2026  03:00 AM            13,123 fable_modernbert61_check.py
+09/27/2026  03:00 AM            26,303 fable_modes54_demo.py
+09/27/2026  03:00 AM            36,179 fable_modes54_scheduler.py
+09/27/2026  03:00 AM            11,253 fable_mouth53_data.py
+09/27/2026  03:00 AM            13,164 fable_mouth53_mouth.py
+09/27/2026  03:00 AM             2,277 fable_mouth53_replay.py
+09/27/2026  03:00 AM             2,570 fable_mouth53_score.py
+09/27/2026  03:00 AM             4,826 fable_mouth53_train.py
+09/27/2026  03:00 AM             7,854 fable_naturalpanel208_driver.py
+09/27/2026  03:00 AM            71,585 fable_newnames21.py
+09/27/2026  03:00 AM            76,410 fable_newnames27.py
+09/27/2026  03:00 AM            24,094 fable_newnames29.py
+09/27/2026  03:00 AM             4,992 fable_noisyteacher45.py
+09/27/2026  03:00 AM             2,679 fable_noisyteacher45_enumerate.py
+09/27/2026  03:00 AM            36,019 fable_notebook_contract.py
+09/27/2026  03:00 AM            65,780 fable_notebook_m0.py
+09/27/2026  03:00 AM            74,945 fable_novelty19b_data.py
+09/27/2026  03:00 AM            81,052 fable_novelty19b_train.py
+09/27/2026  03:00 AM           131,635 fable_novelty19_data.py
+09/27/2026  03:00 AM           121,328 fable_novelty19_train.py
+09/27/2026  03:00 AM             6,117 fable_ofteach215_cmps.py
+09/27/2026  03:00 AM            22,669 fable_ofteach215_marks.py
+09/27/2026  03:00 AM             5,697 fable_ofteach215_scan.py
+09/27/2026  03:00 AM            37,272 fable_operator_reliability.py
+09/27/2026  03:00 AM            45,910 fable_operator_reliability_gpu.py
+09/27/2026  03:00 AM            33,410 fable_operator_staged.py
+09/27/2026  03:00 AM            50,603 fable_operator_startup.py
+09/27/2026  03:00 AM            35,538 fable_operator_swap.py
+09/27/2026  03:00 AM            26,130 fable_operator_variants.py
+09/27/2026  03:00 AM             4,110 fable_perf128_c1.py
+09/27/2026  03:00 AM             1,912 fable_perf128_c2.py
+09/27/2026  03:00 AM             2,451 fable_perf128_c3.py
+09/27/2026  03:00 AM             1,183 fable_perf128_daemon.py
+09/27/2026  03:00 AM            10,433 fable_perf128_diag.py
+09/27/2026  03:00 AM            31,561 fable_perf128_index.py
+09/27/2026  03:00 AM               422 fable_perf128_soak.py
+09/27/2026  03:00 AM             3,220 fable_perf142_bench121.py
+09/27/2026  03:00 AM             4,740 fable_perf142_c1.py
+09/27/2026  03:00 AM             2,312 fable_perf142_c2.py
+09/27/2026  03:00 AM             6,960 fable_perf142_diag.py
+09/27/2026  03:00 AM            16,284 fable_perf142_index.py
+09/27/2026  03:00 AM             8,481 fable_qmark151_bench.py
+09/27/2026  03:00 AM             4,373 fable_qmark151_core.py
+09/27/2026  03:00 AM             5,214 fable_qmark151_q1.py
+09/27/2026  03:00 AM             2,447 fable_qmark151_run143.py
+09/27/2026  03:00 AM            25,743 fable_qrewrite132.py
+09/27/2026  03:00 AM            10,816 fable_qual56_conformance.py
+09/27/2026  03:00 AM             2,618 fable_qual56_miner_filter.py
+09/27/2026  03:00 AM            10,952 fable_qual56_reasoner.py
+09/27/2026  03:00 AM            14,039 fable_read106_score.py
+09/27/2026  03:00 AM            10,094 fable_read107_behind_gate.py
+09/27/2026  03:00 AM             5,272 fable_reading94b_build.py
+09/27/2026  03:00 AM             4,007 fable_reading94_build.py
+09/27/2026  03:00 AM            25,236 fable_reasoner44.py
+09/27/2026  03:00 AM             3,991 fable_reasoner44_score.py
+09/27/2026  03:00 AM             2,490 fable_reasoner44_stress.py
+09/27/2026  03:00 AM            52,360 fable_reasoner50.py
+09/27/2026  03:00 AM            30,862 fable_redteam110_cases.py
+09/27/2026  03:00 AM            19,501 fable_redteam110_runner.py
+09/27/2026  03:00 AM             7,169 fable_redteam124_runner.py
+09/27/2026  03:00 AM            13,950 fable_redteam136_cases.py
+09/27/2026  03:00 AM             3,367 fable_redteam136_run.py
+09/27/2026  03:00 AM            28,530 fable_redteam143_cases.py
+09/27/2026  03:00 AM             5,683 fable_redteam143_run.py
+09/27/2026  03:00 AM            47,559 fable_redteam67_probe.py
+09/27/2026  03:00 AM            54,762 fable_redteam79_probe.py
+09/27/2026  03:00 AM            17,437 fable_redteam81_probe.py
+09/27/2026  03:00 AM            31,034 fable_redteam98_cases.py
+09/27/2026  03:00 AM            17,413 fable_redteam98_runner.py
+09/27/2026  03:00 AM             7,274 fable_relcanon63_build.py
+09/27/2026  03:00 AM             6,581 fable_relcanon63_canon.py
+09/27/2026  03:00 AM             3,794 fable_relcanon63_test.py
+09/27/2026  03:00 AM            18,181 fable_relcanon63_testdata.py
+09/27/2026  03:00 AM            29,519 fable_relcanon97_make.py
+09/27/2026  03:00 AM             4,637 fable_relcanon97_score.py
+09/27/2026  03:00 AM            13,332 fable_reliability_bundle.py
+09/27/2026  03:00 AM            14,819 fable_rescore224.py
+09/27/2026  03:00 AM             8,228 fable_reversal210_build.py
+09/27/2026  03:00 AM             4,848 fable_reversal210_check.py
+09/27/2026  03:00 AM            11,462 fable_reversal210_run.py
+09/27/2026  03:00 AM            24,549 fable_scale_probe.py
+09/27/2026  03:00 AM             7,756 fable_scale_probe_recheck.py
+09/27/2026  03:00 AM             4,681 fable_screen148_mixin.py
+09/27/2026  03:00 AM            13,284 fable_self100_runner.py
+09/27/2026  03:00 AM            16,789 fable_self105.py
+09/27/2026  03:00 AM             7,540 fable_self105_runner.py
+09/27/2026  03:00 AM            11,035 fable_self114.py
+09/27/2026  03:00 AM             8,944 fable_self114_runner.py
+09/27/2026  03:00 AM             8,289 fable_self122.py
+09/27/2026  03:00 AM            40,895 fable_self122_data.py
+09/27/2026  03:00 AM             4,442 fable_self122_diag.py
+09/27/2026  03:00 AM             9,762 fable_self122_runner.py
+09/27/2026  03:00 AM            13,550 fable_self122_train.py
+09/27/2026  03:00 AM             6,204 fable_self127.py
+09/27/2026  03:00 AM             7,567 fable_self127_calibrate.py
+09/27/2026  03:00 AM             5,420 fable_self127_deltas.py
+09/27/2026  03:00 AM            13,494 fable_self127_runner.py
+09/27/2026  03:00 AM            43,225 fable_self99.py
+09/27/2026  03:00 AM            36,710 fable_selfcard161.py
+09/27/2026  03:00 AM            21,281 fable_selfcard161_marks.py
+09/27/2026  03:00 AM             9,141 fable_session152_run.py
+09/27/2026  03:00 AM            14,062 fable_session152_sessions.py
+09/27/2026  03:00 AM             9,504 fable_sharedsleep43b.py
+09/27/2026  03:00 AM            16,117 fable_simplewiki86_extract.py
+09/27/2026  03:00 AM            20,272 fable_sleep104_agent.py
+09/27/2026  03:00 AM            20,849 fable_sleep104_drive.py
+09/27/2026  03:00 AM            24,071 fable_sleep115_agent.py
+09/27/2026  03:00 AM            33,709 fable_sleep115_drive.py
+09/27/2026  03:00 AM            35,355 fable_sleep116_drive.py
+09/27/2026  03:00 AM            15,332 fable_sleep116_rescore.py
+09/27/2026  03:00 AM            43,613 fable_sleep130_agent.py
+09/27/2026  03:00 AM             5,267 fable_sleep130_climb.py
+09/27/2026  03:00 AM            24,924 fable_sleep130_drive.py
+09/27/2026  03:00 AM             9,938 fable_sleep131_agent.py
+09/27/2026  03:00 AM             6,232 fable_sleep131_drive.py
+09/27/2026  03:00 AM            21,655 fable_sleep131_rescore.py
+09/27/2026  03:00 AM            11,748 fable_sleep145_agent.py
+09/27/2026  03:00 AM            19,323 fable_sleep145_drive.py
+09/27/2026  03:00 AM            13,947 fable_sleep145_rescore.py
+09/27/2026  03:00 AM             5,018 fable_sleepselect43e.py
+09/27/2026  03:00 AM             9,994 fable_sleepsmoke206.py
+09/27/2026  03:00 AM             4,698 fable_soak108_ghostdemo.py
+09/27/2026  03:00 AM            36,517 fable_soak108_run.py
+09/27/2026  03:00 AM             2,593 fable_soak93_ghostdemo.py
+09/27/2026  03:00 AM            28,991 fable_soak93_run.py
+09/27/2026  03:00 AM             8,166 fable_source226_cases.py
+09/27/2026  03:00 AM             5,066 fable_source226_run.py
+09/27/2026  03:00 AM            52,386 fable_startup_factorial.py
+09/27/2026  03:00 AM            70,318 fable_startup_factorial_v2.py
+09/27/2026  03:00 AM            27,384 fable_story_size_stress.py
+09/27/2026  03:00 AM            29,720 fable_suitediff.py
+09/27/2026  03:00 AM            10,592 fable_suitediff218.py
+09/27/2026  03:00 AM             2,630 fable_talker101_data.py
+09/27/2026  03:00 AM             6,009 fable_talker101_eval.py
+09/27/2026  03:00 AM             6,448 fable_talker101_model.py
+09/27/2026  03:00 AM             4,657 fable_talker101_tokenizer.py
+09/27/2026  03:00 AM             6,463 fable_talker101_train.py
+09/27/2026  03:00 AM            14,348 fable_talker120b_diagnose.py
+09/27/2026  03:00 AM             8,752 fable_talker120b_train.py
+09/27/2026  03:00 AM             2,887 fable_talker120c_mouth.py
+09/27/2026  03:00 AM             2,240 fable_talker120c_replay.py
+09/27/2026  03:00 AM             3,004 fable_talker120c_score.py
+09/27/2026  03:00 AM             5,573 fable_talker120d_mouth.py
+09/27/2026  03:00 AM             2,343 fable_talker120d_replay.py
+09/27/2026  03:00 AM             3,700 fable_talker120d_score.py
+09/27/2026  03:00 AM            18,746 fable_talker120_data.py
+09/27/2026  03:00 AM            18,061 fable_talker120_mouth.py
+09/27/2026  03:00 AM             2,486 fable_talker120_replay.py
+09/27/2026  03:00 AM             3,480 fable_talker120_score.py
+09/27/2026  03:00 AM             8,364 fable_talker120_train.py
+09/27/2026  03:00 AM            57,459 fable_talker24_data.py
+09/27/2026  03:00 AM            90,856 fable_talker24_dialogues.py
+09/27/2026  03:00 AM            35,220 fable_talker24_dialogues_frames.py
+09/27/2026  03:00 AM            24,928 fable_talker24_interventions.py
+09/27/2026  03:00 AM            49,080 fable_talker24_loader.py
+09/27/2026  03:00 AM            47,699 fable_talker24_model.py
+09/27/2026  03:00 AM            27,109 fable_talker24_parser.py
+09/27/2026  03:00 AM            44,671 fable_talker24_train.py
+09/27/2026  03:00 AM            30,731 fable_thinking_m2.py
+09/27/2026  03:00 AM            31,203 fable_thought49_conformance.py
+09/27/2026  03:00 AM            21,588 fable_thought49_notebook.py
+09/27/2026  03:00 AM            20,240 fable_thought49_schema.main-checkout-version.py.txt
+09/27/2026  03:00 AM            22,690 fable_thought49_schema.py
+09/27/2026  03:00 AM            31,611 fable_thought62_conformance.py
+09/27/2026  03:00 AM            31,254 fable_thought62_schema.py
+09/27/2026  03:00 AM            14,365 fable_transport43g.py
+09/27/2026  03:00 AM             1,111 fable_transport43g_v2.py
+09/27/2026  03:00 AM             9,555 fable_turns84_run.py
+09/27/2026  03:00 AM             6,966 fable_webfix89_run.py
+09/27/2026  03:00 AM             7,748 fable_webfix89_thinking.py
+09/27/2026  03:00 AM             6,655 fable_webred_frames.py
+09/27/2026  03:00 AM             1,707 fable_widelengths43k.py
+09/27/2026  03:00 AM             1,348 fable_widelengths43k_v2.py
+09/27/2026  03:00 AM            29,168 fable_wire51_adapters.py
+09/27/2026  03:00 AM            25,605 fable_wire51_run.py
+09/27/2026  03:00 AM             7,279 fable_wire51_script40.py
+09/27/2026  03:00 AM            16,634 fable_wire57_e2e.py
+09/27/2026  03:00 AM             8,239 fable_wordmatch149_bench.py
+09/27/2026  03:00 AM             8,002 fable_wordmatch149_core.py
+09/27/2026  03:00 AM             5,033 fable_wordmatch149_probe.py
+09/27/2026  03:00 AM             2,806 fable_wordmatch149_run143.py
+09/27/2026  03:00 AM             6,599 fable_writescreen209_probe.py
+09/27/2026  03:00 AM            13,468 fable_writescreen209_suites.py
+09/27/2026  03:00 AM             4,792 gen_english.py
+09/27/2026  03:00 AM            27,554 gen_patterns.py
+09/27/2026  03:00 AM            26,022 premonition_address_confirm.py
+09/27/2026  03:00 AM            23,631 premonition_address_keys.py
+09/27/2026  03:00 AM            26,756 premonition_binding_probe.py
+09/27/2026  03:00 AM            30,541 premonition_direct_reader.py
+09/27/2026  03:00 AM            14,417 premonition_first_card_probe.py
+09/27/2026  03:00 AM            14,934 premonition_gpu_port.py
+09/27/2026  03:00 AM            63,319 premonition_handoff_diag.py
+09/27/2026  03:00 AM            32,387 premonition_interface_probes.py
+09/27/2026  03:00 AM             6,639 premonition_key_pool.py
+09/27/2026  03:00 AM             8,039 premonition_ladder6.py
+09/27/2026  03:00 AM            10,514 premonition_m01_probe.py
+09/27/2026  03:00 AM            60,683 premonition_m02_answer_path.py
+09/27/2026  03:00 AM             8,855 premonition_memnn.py
+09/27/2026  03:00 AM            16,817 premonition_memnn_compare.py
+09/27/2026  03:00 AM            13,790 premonition_ordered_evidence.py
+09/27/2026  03:00 AM            33,537 premonition_ovn_ladder.py
+09/27/2026  03:00 AM            15,522 premonition_ovn_retrieval.py
+09/27/2026  03:00 AM            46,439 premonition_pair_suite.py
+09/27/2026  03:00 AM             6,810 premonition_person_probe.py
+09/27/2026  03:00 AM            27,830 premonition_pointer_ablation.py
+09/27/2026  03:00 AM            53,921 premonition_pool_controls.py
+09/27/2026  03:00 AM             3,074 premonition_pool_mass_probe.py
+09/27/2026  03:00 AM            16,047 premonition_recovery.py
+09/27/2026  03:00 AM            10,348 premonition_relation_shortcut.py
+09/27/2026  03:00 AM             8,557 premonition_seed_screen_report.py
+09/27/2026  03:00 AM            49,279 premonition_softread.py
+09/27/2026  03:00 AM             7,602 premonition_stuck_probe.py
+09/27/2026  03:00 AM            30,974 premonition_teacher_delay.py
+09/27/2026  03:00 AM            42,715 premonition_teacher_delay_eval.py
+09/27/2026  03:00 AM            77,111 premonition_teacher_delay_ops.py
+09/27/2026  03:00 AM            57,260 premonition_teacher_delay_report.py
+09/27/2026  03:00 AM             4,429 premonition_token_evidence.py
+09/27/2026  03:00 AM             5,742 premonition_token_evidence_run.py
+09/27/2026  03:00 AM             1,181 premonition_token_initialization_probe.py
+09/27/2026  03:00 AM             9,242 premonition_token_memory.py
+09/27/2026  03:00 AM            14,706 premonition_token_memory_run.py
+09/27/2026  03:00 AM             5,971 premonition_token_memory_stress.py
+09/27/2026  03:00 AM             3,634 premonition_token_reasoning_probe.py
+09/27/2026  03:00 AM            10,425 premonition_token_report.py
+09/27/2026  03:00 AM             6,071 premonition_token_scaled_run.py
+09/27/2026  03:00 AM             2,483 premonition_wave_table.py
+09/27/2026  03:00 AM           104,203 premonition_wire_replay.py
+09/27/2026  03:00 AM            18,722 remote_benspc.ps1
+09/27/2026  03:00 AM            11,145 remote_benspc.sh
+09/27/2026  03:00 AM    <DIR>          scratchpad
+09/27/2026  03:00 AM    <DIR>          winshim
+            1771 File(s)     18,633,294 bytes
+               4 Dir(s)   6,201,118,720 bytes free
+[0m
+[0m$ [0mssh benspc "dir \"C:\\Program Files\\Git\\bin\\bash.exe\" & dir \"C:\\Program Files\\Git\\usr\\bin\\sha256sum.exe\""
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Program Files\Git\bin
+
+12/04/2024  06:24 PM            47,480 bash.exe
+               1 File(s)         47,480 bytes
+               0 Dir(s)   6,201,118,720 bytes free
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Program Files\Git\usr\bin
+
+12/04/2024  06:45 PM            56,252 sha256sum.exe
+               1 File(s)         56,252 bytes
+               0 Dir(s)   6,201,118,720 bytes free
+[0m
+[0m$ [0mssh benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -c \"import torch;print(torch.__version__, torch.version.cuda)\""
+2.11.0+cu128 12.8
+[0m
+[0m$ [0mssh benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc 'cd /c/Users/benja/rsn358s && sha256sum -c artifacts/claude-rsn358s-20260926/SEAL-code.sha256.txt'"
+'sha256sum' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \"import hashlib,pathlib; base=pathlib.Path('C:/Users/benja/rsn358s'); ok=0; bad=[]; lines=(base/'artifacts/claude-rsn358s-20260926/SEAL-code.sha256.txt').read_text().splitlines(); print('lines:',len(lines)); import sys; [print(repr(l)) for l in lines[:3]]\""
+lines: 19
+'3ad2d3abdb1d3d85456c96d4694e31b71e9074aeea1a37eaac0c65d6d0a30a40  scripts/claude_rsn358s_run.py'
+'8d69958c053342d47f44895375c16de3afdef7a55accdf4136ac55220fc82877  scripts/claude_rsn358i2_run.py'
+'4b9dfb907e49d47caefbbe606bc1610d12f15a85b39bce6aaa32ef78771f5ef4  scripts/claude_rsn358i_run.py'
+[0m
+[0m$ [0mssh benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \"import hashlib,pathlib; base=pathlib.Path('C:/Users/benja/rsn358s'); lines=(base/'artifacts/claude-rsn358s-20260926/SEAL-code.sha256.txt').read_text().splitlines(); ok=0; bad=[]; [exec('h=hashlib.sha256((base/p).read_bytes()).hexdigest()\\nbad.append((p,e,h)) if h!=e else globals().update(ok=ok+1)', {'base':base,'hashlib':hashlib,'bad':bad,'p':l.split()[1],'e':l.split()[0]}) for l in lines]; print('OK',ok,'/19 BAD',len(bad)); [print(b) for b in bad]\""
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "<string>", line 1, in <listcomp>
+  File "<string>", line 2, in <module>
+NameError: name 'ok' is not defined
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Set-Location C:/Users/benja/rsn358s; Get-Content artifacts/claude-rsn358s-20260926/SEAL-code.sha256.txt | ForEach-Object { Write-Output $_ }\""
+export
+export
+export
+export
+export
+export
+export
+export
+export
+export
+export
+export
+export
+export
+export
+export
+export
+export
+export
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command Get-Content-C:\\Users\\benja\\rsn358s\\artifacts\\claude-rsn358s-20260926\\SEAL-code.sha256.txt"
+Get-Content-C:\Users\benja\rsn358s\artifacts\claude-rsn358s-20260926\SEAL-code.sha256.txt : The term 
+'Get-Content-C:\Users\benja\rsn358s\artifacts\claude-rsn358s-20260926\SEAL-code.sha256.txt' is not recognized as the 
+name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was 
+included, verify that the path is correct and try again.
+At line:1 char:1
++ Get-Content-C:\Users\benja\rsn358s\artifacts\claude-rsn358s-20260926\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Get-Content-C:\...code.sha256.txt:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+[0m
+[0m$ [0mssh benspc 'C:/Users/benja/lis300/venv/Scripts/python.exe -B -c "import torch; print(torch.cuda.get_device_name(0))"'
+NVIDIA GeForce RTX 5070 Ti
+[0m
+[0m$ [0mssh benspc 'C:/Users/benja/lis300/venv/Scripts/python.exe -B -c "import hashlib,pathlib;base=pathlib.Path(\"C:/Users/benja/rsn358s\");lines=(base/\"artifacts/claude-rsn358s-20260926/SEAL-code.sha256.txt\").read_text().splitlines();print(\"lines\",len(lines));res=[(l.split()[1],l.split()[0],hashlib.sha256((base/l.split()[1]).read_bytes()).hexdigest()) for l in lines];ok=sum(1 for p,e,h in res if e==h);print(\"SEAL\",ok,\"/\",len(res));[print(\"MISMATCH\",p,e,h) for p,e,h in res if e!=h]"'
+lines 19
+SEAL 19 / 19
+[0m
+[0m$ [0mssh benspc 'cd /d C:\Users\benja\rsn358s && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts\claude_rsn358a_envs.py selftest'
+selftest ok: 1362 four-hands (1062 practice, 300 held out), 1346 three-hands
+[0m
+[0m$ [0mssh benspc 'cd /d C:\Users\benja\rsn358s && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts\claude_rsn358s_run.py selftest'
+selftest ok: torch 2.11.0+cu128, cache off, 0/8 block Linear weights without gradient after 3 free + 2 graded rounds
+selftest ok: 3x arms loop 19,524,254 and plain 19,430,589 weights (ratio 1.005)
+[0m
+[0m$ [0mssh benspc 'cd /d C:\Users\benja\rsn358s && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts\claude_rsn358s_run.py check-mask'
+check-mask ok: narrow heads 0-3 ignore cells 2+ columns away; wide heads 4-7 unchanged
+[0m
+[0m✗ [0mGrep "Win32_Process" failed
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mgit log --oneline origin/builder-outbox -10 -- artifacts/claude-rsn358i3-20260926/ 2>&1; echo "---"; git ls-tree origin/builder-outbox artifacts/claude-rsn358i3-20260926/ 2>&1 | head
+c06390585 builder results: 100-claude-sleep-358i3pc
+---
+100644 blob 41d08ae9bab2d5be053185655f0d21ac30597a02	artifacts/claude-rsn358i3-20260926/RESULTS.md
+100644 blob 81008c6b13729e7a7beec86a22eff9ddf2f9e290	artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt
+040000 tree 0deb6f6806217c2b091cae4a64d82c301a91f457	artifacts/claude-rsn358i3-20260926/runs
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-rsn358i3-20260926/RESULTS.md 2>&1 | head -n 100
+# rsn-358i3 results: fixed 358i loop vs plain twin, fresh seeds 5-8, both on BensPC (builder claude-sleep-358i3pc, 2026-09-26/27)
+
+## Verdict: PASS
+
+V0 validity: PASS. steps_block_nograd = 0 in every loop train_summary.json (loop-s5 0, loop-s6 0, loop-s7 0, loop-s8 0, steps_seen 60000 each).
+G0 validity: met 8/8 arms. On every seed s5-s8, loop and plain are right on >= 210/300 of the practised-size tests in 2 of 3 kinds (sums4 300/300 and grids5 298-300/300 on all 8 arms; numbers4 0-5/300 everywhere).
+G1 bigger: PASS. 4-seed mean loop-minus-plain: sums6 +124.00 (>= +30), grids6 +52.00 (>= +30), numbers5 +0.00 (>= -10). Per-seed gap > 0 on 4/4 seeds for sums6 and 4/4 for grids6 (>= 3 required).
+G2 practised: PASS. 4-seed mean loop-minus-plain: sums4 +0.00, grids5 +1.50, numbers4 +0.75 (all >= -10).
+G3 stop: PASS. On 4/4 seeds (>= 3 required), loop right with its own stop >= loop right at fixed 16 rounds - 5 on each bigger test (12/12 checks pass; numbers5: 0 vs fixed16 0/0/1/0). 4-seed mean rounds sums6 7.56 > sums4 6.71 (also per-seed 4/4: 7.57>6.55, 7.85>7.07, 7.16>6.65, 7.67>6.58).
+Proved-wrong clause: NOT triggered (requires V0+G0 met and mean loop-minus-plain <= +5 on all three bigger tests; sums6 is +124.00, grids6 is +52.00).
+
+PASS = V0, G0, G1, G2 and G3 all met. "The loop beats its same-size plain twin" is SHOWN for these puzzle kinds at this size, on one machine.
+
+## Per-seed right counts (n=300 each; G = loop minus plain; means over 4 seeds)
+
+| test | L5 | P5 | G5 | L6 | P6 | G6 | L7 | P7 | G7 | L8 | P8 | G8 | meanL | meanP | meanG |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| sums4 | 300 | 300 | +0 | 300 | 300 | +0 | 300 | 300 | +0 | 300 | 300 | +0 | 300.00 | 300.00 | +0.00 |
+| sums6 | 299 | 218 | +81 | 296 | 125 | +171 | 289 | 179 | +110 | 296 | 162 | +134 | 295.00 | 171.00 | +124.00 |
+| sums8 | 282 | 145 | +137 | 268 | 36 | +232 | 237 | 69 | +168 | 275 | 69 | +206 | 265.50 | 79.75 | +185.75 |
+| grids5 | 300 | 299 | +1 | 300 | 298 | +2 | 300 | 299 | +1 | 300 | 298 | +2 | 300.00 | 298.50 | +1.50 |
+| grids6 | 296 | 248 | +48 | 294 | 241 | +53 | 284 | 234 | +50 | 295 | 238 | +57 | 292.25 | 240.25 | +52.00 |
+| grids7 | 242 | 144 | +98 | 214 | 149 | +65 | 174 | 138 | +36 | 218 | 146 | +72 | 212.00 | 144.25 | +67.75 |
+| numbers4 | 2 | 1 | +1 | 5 | 1 | +4 | 1 | 2 | -1 | 0 | 1 | -1 | 2.00 | 1.25 | +0.75 |
+| numbers5 | 0 | 0 | +0 | 0 | 0 | +0 | 0 | 0 | +0 | 0 | 0 | +0 | 0.00 | 0.00 | +0.00 |
+| sums10 | 232 | 105 | +127 | 228 | 12 | +216 | 172 | 56 | +116 | 235 | 51 | +184 | 216.75 | 56.00 | +160.75 |
+| sums12 | 178 | 85 | +93 | 183 | 5 | +178 | 133 | 26 | +107 | 176 | 36 | +140 | 167.50 | 38.00 | +129.50 |
+
+Roles: practised = sums4, grids5, numbers4; bigger = sums6, grids6, numbers5; report = sums8, grids7, sums10, sums12.
+
+## Loop fixed rounds (right at 1/2/4/8/12/16/24/32/48 rounds; any = right at any round; mr = mean rounds)
+
+loop-s5: sums4 300/300/300/300/300/300/300/300/300 any 300 mr 6.55; sums6 250/275/289/299/298/297/297/297/297 any 299 mr 7.57; sums8 177/234/259/279/281/283/282/282/282 any 286 mr 8.45; grids5 75/207/300/300/300/300/300/300/300 any 300 mr 9.08; grids6 46/153/261/295/296/296/296/296/296 any 296 mr 10.61; grids7 15/93/157/226/239/239/241/240/241 any 245 mr 18.61; numbers4 0/1/1/2/1/1/1/1/1 any 2 mr 7.33; numbers5 1/0/0/0/0/0/0/0/0 any 2 mr 7.78; sums10 134/192/213/229/231/230/229/230/232 any 252 mr 9.24; sums12 87/130/167/179/179/179/178/178/179 any 206 mr 10.41.
+loop-s6: sums4 300 x9 any 300 mr 7.07; sums6 254/273/290/297/297/297/297/297/297 any 298 mr 7.85; sums8 195/221/247/267/267/267/265/264/264 any 280 mr 8.70; grids5 106/204/297/300/300/300/300/300/300 any 300 mr 9.83; grids6 57/142/263/292/293/293/293/293/294 any 294 mr 12.36; grids7 16/85/152/222/216/215/214/214/213 any 227 mr 23.00; numbers4 4/2/4/4/4/5/5/5/5 any 7 mr 7.06; numbers5 0 x9 any 0 mr 7.54; sums10 167/195/212/228/226/227/227/225/226 any 255 mr 9.73; sums12 113/137/158/187/185/182/181/180/180 any 221 mr 10.63.
+loop-s7: sums4 300 x9 any 300 mr 6.65; sums6 232/260/280/289/290/290/290/290/290 any 293 mr 7.16; sums8 151/175/213/232/238/235/235/234/234 any 254 mr 8.09; grids5 82/193/299/300/300/300/300/300/300 any 300 mr 9.77; grids6 45/134/239/285/283/283/283/283/283 any 291 mr 14.13; grids7 12/68/144/178/174/173/174/174/173 any 190 mr 28.12; numbers4 4/3/1/1/1/1/1/1/1 any 5 mr 7.70; numbers5 0/0/0/0/0/1/1/1/1 any 1 mr 8.29; sums10 127/142/170/169/172/173/171/171/171 any 195 mr 8.67; sums12 94/102/118/134/134/136/135/134/134 any 157 mr 8.93.
+loop-s8: sums4 299/300/300/300/300/300/300/300/300 any 300 mr 6.58; sums6 247/262/288/296/294/293/293/293/293 any 298 mr 7.67; sums8 185/204/224/268/274/277/278/280/279 any 292 mr 9.18; grids5 119/224/300/300/300/300/300/300/300 any 300 mr 9.83; grids6 68/149/264/291/291/294/295/295/295 any 296 mr 12.18; grids7 13/86/163/216/215/215/215/216/217 any 224 mr 22.73; numbers4 0/0/0/0/0/0/1/1/1 any 1 mr 7.58; numbers5 0 x9 any 0 mr 8.21; sums10 149/168/186/214/232/234/232/233/234 any 264 mr 10.57; sums12 110/111/145/164/179/188/186/186/183 any 221 mr 11.93.
+
+("x9" = same value at all 9 round settings.)
+
+## Dev grids5 (dev rows; right/200) at 5k/10k/20k/40k/60k steps, per run
+
+| run | 5k | 10k | 20k | 40k | 60k |
+|---|---|---|---|---|---|
+| loop-s5 | 186 | 200 | 200 | 200 | 200 |
+| plain-s5 | 103 | 175 | 192 | 199 | 199 |
+| loop-s6 | 58 | 195 | 200 | 200 | 200 |
+| plain-s6 | 117 | 171 | 188 | 194 | 198 |
+| loop-s7 | 84 | 189 | 200 | 200 | 200 |
+| plain-s7 | 129 | 162 | 191 | 195 | 199 |
+| loop-s8 | 42 | 182 | 200 | 200 | 200 |
+| plain-s8 | 99 | 169 | 188 | 196 | 200 |
+| plain-s1 | 131 | 168 | 192 | 197 | 199 |
+| plain-s2 | 94 | 163 | 186 | 198 | 200 |
+| plain-s3 | 116 | 168 | 182 | 191 | 197 |
+| plain-s4 | 130 | 170 | 188 | 197 | 198 |
+
+## steps_block_nograd per run (train_summary.json; 60000 steps each)
+
+loop-s5 0, plain-s5 0, loop-s6 0, plain-s6 0, loop-s7 0, plain-s7 0, loop-s8 0, plain-s8 0, plain-s1 0, plain-s2 0, plain-s3 0, plain-s4 0 (12/12 zero).
+
+## Minutes per run (train_summary.json "minutes")
+
+loop-s5 78.5, plain-s5 75.2, loop-s6 82.1, plain-s6 79.1, loop-s7 75.0, plain-s7 71.2, loop-s8 78.0, plain-s8 76.1, plain-s1 61.2, plain-s2 58.6, plain-s3 50.8, plain-s4 50.4.
+
+## Machine
+
+GPU: NVIDIA GeForce RTX 5070 Ti (16303 MiB). torch 2.11.0+cu128, CUDA 12.8 (from `python -c "import torch;print(torch.__version__, torch.version.cuda)"`: `2.11.0+cu128 12.8`). Python venv C:/Users/benja/lis300/venv/Scripts/python.exe. nvidia-smi at start: 229 MiB used, 0% util, no compute processes (display-only processes). C: free 6321147904 bytes (~5.9 GB, above the 5 GB stop line).
+
+## Report only: BensPC plain s1-4 vs rental plain s1-4 (origin/main), per test (mine minus rental)
+
+plain-s1: sums4 +0, sums6 +10 (198-188), sums8 -4 (129-133), grids5 +0, grids6 +10 (240-230), grids7 +6 (142-136), numbers4 +0, numbers5 +0, sums10 +0 (93-93), sums12 +6 (71-65).
+plain-s2: sums4 +0, sums6 -8 (201-209), sums8 -6 (110-116), grids5 -1 (299-300), grids6 -3 (245-248), grids7 -5 (144-149), numbers4 +1, numbers5 +1, sums10 -1 (59-60), sums12 -2 (42-44).
+plain-s3: sums4 +0, sums6 -25 (152-177), sums8 -7 (58-65), grids5 -1 (296-297), grids6 -16 (221-237), grids7 +6 (136-130), numbers4 -1, numbers5 -1, sums10 +2 (29-27), sums12 +5 (12-7).
+plain-s4: sums4 +0, sums6 +17 (234-217), sums8 +29 (175-146), grids5 -2 (298-300), grids6 +0 (236-236), grids7 +0 (142-142), numbers4 -2, numbers5 +1, sums10 +31 (143-112), sums12 +30 (119-89).
+Machine difference (BensPC minus rental) is seed noise scale, mixed signs: biggest swings are plain-s4 sums10/12 (+31/+30) and plain-s3 sums6 (-25); practised tests agree within 2.
+
+## Report only: 358i2 loop s1-4 (origin/builder-outbox) minus BensPC plain s1-4, per test
+
+seed 1: sums4 +0, sums6 +101, sums8 +144, grids5 +1, grids6 +52, grids7 +44, numbers4 +2, numbers5 +1, sums10 +126, sums12 +93.
+seed 2: sums4 +0, sums6 +98, sums8 +164, grids5 +1, grids6 +51, grids7 +97, numbers4 -1, numbers5 -1, sums10 +185, sums12 +160.
+seed 3: sums4 +0, sums6 +146, sums8 +218, grids5 +4, grids6 +62, grids7 +37, numbers4 -1, numbers5 +1, sums10 +203, sums12 +181.
+seed 4: sums4 +0, sums6 +63, sums8 +103, grids5 +2, grids6 +51, grids7 +35, numbers4 +1, numbers5 -2, sums10 +107, sums12 +79.
+The 358i2 loop-vs-rental-plain gaps hold against same-machine BensPC plain: sums6 gaps +63 to +146 (mean +102.00), grids6 +51 to +62 (mean +54.00).
+
+## Sealed checkpoint hashes (SEAL-run.sha256.txt; also on BensPC and Mac weight stores)
+
+1ece3b96b2408fb3dc7a49d647baeb47d815c83321d9ee1c313ce9799b0b1841 W/loop-s5/final.pt (25764244 B)
+5db6a4d15489f67ba96d9b63ce43408c7979214af86d2185caef133b7c492b30 W/plain-s5/final.pt (25573143 B)
+2c84d41b4c3b22a5c238043d60456948f23b38a3afd2d56643e3e401dd5cfb36 W/loop-s6/final.pt
+351c238fe746caad0e83dc18ab38e3bad5fbba8d7794b918799699f6146b49a9 W/plain-s6/final.pt
+5238e843747df70e9be0e96e6160f842180ba3752ef6c7c9c54efa95574021b9 W/loop-s7/final.pt (25764244 B)
+a30de8a242fa674854f9bec78b8eea14b3e3fca4ecd55e9c080025bb2df11999 W/plain-s7/final.pt
+d733704ea2cb674feb334d6f20c4b3c4c8e0be31166d3edf0e7eba1a32a0a705 W/loop-s8/final.pt
+99f519248bc7ac8b4ed07228f1f2a18b3d3b3f97ea81ea2efa9f9137a0ec0f95 W/plain-s8/final.pt
+a280e634180bf7fd2ae5e43a728d098aa7b0b8e1e599ed1284b781c008ec19aa W/plain-s1/final.pt
+cbd228360f6409ccdb886c36db6db6c57cebeca1967c6525646c975698d2966f W/plain-s2/final.pt
+20a93f0b680df37e1653202b473ab06041ec26abde433b0417219924744483f9 W/plain-s3/final.pt
+c631caed60fc87170d9607f64962ec065155cf5777f5c218b9a6f88795c5c079 W/plain-s4/final.pt
+All 12 hashes are 64 hex characters; Mac copies at ~/premonition-models/rsn358i3/<R>/final.pt match byte for byte; BensPC copies at C:/Users/benja/premonition-models/rsn358i3/<R>/final.pt. No weights pushed.
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-rsn358i3-20260926/RESULTS.md 2>&1 | tail -n 60
+| plain-s2 | 94 | 163 | 186 | 198 | 200 |
+| plain-s3 | 116 | 168 | 182 | 191 | 197 |
+| plain-s4 | 130 | 170 | 188 | 197 | 198 |
+
+## steps_block_nograd per run (train_summary.json; 60000 steps each)
+
+loop-s5 0, plain-s5 0, loop-s6 0, plain-s6 0, loop-s7 0, plain-s7 0, loop-s8 0, plain-s8 0, plain-s1 0, plain-s2 0, plain-s3 0, plain-s4 0 (12/12 zero).
+
+## Minutes per run (train_summary.json "minutes")
+
+loop-s5 78.5, plain-s5 75.2, loop-s6 82.1, plain-s6 79.1, loop-s7 75.0, plain-s7 71.2, loop-s8 78.0, plain-s8 76.1, plain-s1 61.2, plain-s2 58.6, plain-s3 50.8, plain-s4 50.4.
+
+## Machine
+
+GPU: NVIDIA GeForce RTX 5070 Ti (16303 MiB). torch 2.11.0+cu128, CUDA 12.8 (from `python -c "import torch;print(torch.__version__, torch.version.cuda)"`: `2.11.0+cu128 12.8`). Python venv C:/Users/benja/lis300/venv/Scripts/python.exe. nvidia-smi at start: 229 MiB used, 0% util, no compute processes (display-only processes). C: free 6321147904 bytes (~5.9 GB, above the 5 GB stop line).
+
+## Report only: BensPC plain s1-4 vs rental plain s1-4 (origin/main), per test (mine minus rental)
+
+plain-s1: sums4 +0, sums6 +10 (198-188), sums8 -4 (129-133), grids5 +0, grids6 +10 (240-230), grids7 +6 (142-136), numbers4 +0, numbers5 +0, sums10 +0 (93-93), sums12 +6 (71-65).
+plain-s2: sums4 +0, sums6 -8 (201-209), sums8 -6 (110-116), grids5 -1 (299-300), grids6 -3 (245-248), grids7 -5 (144-149), numbers4 +1, numbers5 +1, sums10 -1 (59-60), sums12 -2 (42-44).
+plain-s3: sums4 +0, sums6 -25 (152-177), sums8 -7 (58-65), grids5 -1 (296-297), grids6 -16 (221-237), grids7 +6 (136-130), numbers4 -1, numbers5 -1, sums10 +2 (29-27), sums12 +5 (12-7).
+plain-s4: sums4 +0, sums6 +17 (234-217), sums8 +29 (175-146), grids5 -2 (298-300), grids6 +0 (236-236), grids7 +0 (142-142), numbers4 -2, numbers5 +1, sums10 +31 (143-112), sums12 +30 (119-89).
+Machine difference (BensPC minus rental) is seed noise scale, mixed signs: biggest swings are plain-s4 sums10/12 (+31/+30) and plain-s3 sums6 (-25); practised tests agree within 2.
+
+## Report only: 358i2 loop s1-4 (origin/builder-outbox) minus BensPC plain s1-4, per test
+
+seed 1: sums4 +0, sums6 +101, sums8 +144, grids5 +1, grids6 +52, grids7 +44, numbers4 +2, numbers5 +1, sums10 +126, sums12 +93.
+seed 2: sums4 +0, sums6 +98, sums8 +164, grids5 +1, grids6 +51, grids7 +97, numbers4 -1, numbers5 -1, sums10 +185, sums12 +160.
+seed 3: sums4 +0, sums6 +146, sums8 +218, grids5 +4, grids6 +62, grids7 +37, numbers4 -1, numbers5 +1, sums10 +203, sums12 +181.
+seed 4: sums4 +0, sums6 +63, sums8 +103, grids5 +2, grids6 +51, grids7 +35, numbers4 +1, numbers5 -2, sums10 +107, sums12 +79.
+The 358i2 loop-vs-rental-plain gaps hold against same-machine BensPC plain: sums6 gaps +63 to +146 (mean +102.00), grids6 +51 to +62 (mean +54.00).
+
+## Sealed checkpoint hashes (SEAL-run.sha256.txt; also on BensPC and Mac weight stores)
+
+1ece3b96b2408fb3dc7a49d647baeb47d815c83321d9ee1c313ce9799b0b1841 W/loop-s5/final.pt (25764244 B)
+5db6a4d15489f67ba96d9b63ce43408c7979214af86d2185caef133b7c492b30 W/plain-s5/final.pt (25573143 B)
+2c84d41b4c3b22a5c238043d60456948f23b38a3afd2d56643e3e401dd5cfb36 W/loop-s6/final.pt
+351c238fe746caad0e83dc18ab38e3bad5fbba8d7794b918799699f6146b49a9 W/plain-s6/final.pt
+5238e843747df70e9be0e96e6160f842180ba3752ef6c7c9c54efa95574021b9 W/loop-s7/final.pt (25764244 B)
+a30de8a242fa674854f9bec78b8eea14b3e3fca4ecd55e9c080025bb2df11999 W/plain-s7/final.pt
+d733704ea2cb674feb334d6f20c4b3c4c8e0be31166d3edf0e7eba1a32a0a705 W/loop-s8/final.pt
+99f519248bc7ac8b4ed07228f1f2a18b3d3b3f97ea81ea2efa9f9137a0ec0f95 W/plain-s8/final.pt
+a280e634180bf7fd2ae5e43a728d098aa7b0b8e1e599ed1284b781c008ec19aa W/plain-s1/final.pt
+cbd228360f6409ccdb886c36db6db6c57cebeca1967c6525646c975698d2966f W/plain-s2/final.pt
+20a93f0b680df37e1653202b473ab06041ec26abde433b0417219924744483f9 W/plain-s3/final.pt
+c631caed60fc87170d9607f64962ec065155cf5777f5c218b9a6f88795c5c079 W/plain-s4/final.pt
+All 12 hashes are 64 hex characters; Mac copies at ~/premonition-models/rsn358i3/<R>/final.pt match byte for byte; BensPC copies at C:/Users/benja/premonition-models/rsn358i3/<R>/final.pt. No weights pushed.
+
+## Every deviation
+
+1. GPU-BUSY.txt pre-existed naming this job ("BUSY: queue job 100-claude-sleep-358i3pc ..."); per handoff/kit/benspc-task-header.txt the watcher owns that file, so I left it alone (did not create or delete it). No other job named it; no BUSY stop.
+2. Detached launch method: PowerShell Start-Process children are killed when the Mac ssh session closes (both first runs died silently within a minute of disconnect; verified with a 90 s watched run that trained fine then died on disconnect, and a ping sleeper that died the same way). All 12 training runs were therefore launched via WMI Win32_Process.Create (Invoke-CimMethod), which survives disconnect; the training command line is byte-for-byte the specified one (defaults only, no extra flags). Wrapper cmd.exe PIDs recorded (loop-s5 3260, plain-s5 14696, loop-s6 17320, plain-s6 6484, loop-s7 18516, plain-s7 7684, loop-s8 21176, plain-s8 5204, plain-s1 7144, plain-s2 3096, plain-s3 5388, plain-s4 7556); nothing was ever stopped by PID.
+3. Stdout went to W/<R>.log and stderr to a sibling W/<R>.err (cmd redirect `> log 2> err`); only the .log plus train_log.jsonl, train_summary.json, tests.json were copied back. BensPC W/ also holds the two empty first-attempt logs, t.log/t.err launch tests, and W/*-eval.out files (scratch only).
+4. Parallelism followed the rule (2, then 3rd after 5+ min with 11.4 GB free, then 4th with 8.1 GB free; next started whenever one finished, in the specified order). Peak 4 at once.
+5. 30-minute projection (at ~20:50Z, loop-s5 30000 steps/36.3 min): all graded runs finishing ~21:25-21:50, everything inside the 10 h cap; nothing dropped, no TOO-SLOW, run is conclusive. Actual: first launch ~20:13Z, last train done 00:41Z (~4.5 h training); 12 seal+eval steps and copy-back followed the same night, total well inside the 10 h cap.
+6. C: free was 6.3 GB (above the 5 GB stop line; reported as tight but go).
+7. SEAL-code check used C:/Program Files/Git/usr/bin/sha256sum.exe (cmd has no sha256sum); 19/19 OK before any training.
+8. Selftest outputs carry detail suffixes ("selftest ok: ..." and "check-mask ok: ..."); all three printed their ok lines.
+9. 358i2 loop s1-4 reference came from origin/builder-outbox (not yet on main), as the task allowed.
+10. Code never edited; on any breakage I would have stopped (nothing broke). Each eval ran exactly once per checkpoint file (12 evals, 12 tests.json). TEST-ONLY items never opened; only counts were read.
+[0m
+[0m$ [0mssh benspc 'cd /d C:\Users\benja\rsn358s && "C:\Program Files\Git\usr\bin\sha256sum.exe" -c artifacts\claude-rsn358s-20260926\SEAL-code.sha256.txt'
+scripts/claude_rsn358s_run.py: OK
+scripts/claude_rsn358i2_run.py: OK
+scripts/claude_rsn358i_run.py: OK
+scripts/claude_rsn358g_run.py: OK
+scripts/claude_rsn358a2_run.py: OK
+scripts/claude_rsn358a_run.py: OK
+scripts/claude_rsn358a_envs.py: OK
+scripts/claude_blurt1.py: OK
+artifacts/claude-rsn358i-20260926/tests/grids5.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/grids6.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/grids7.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/numbers4.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/numbers5.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums10.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums12.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums4.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums6.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums8.jsonl: OK
+artifacts/claude-rsn358s-20260926/PASSMARKS.md: OK
+[0m
+[0m$ [0mssh benspc 'mkdir C:\Users\benja\rsn358s\W && mkdir C:\Users\benja\premonition-models\rsn358s 2>&1; echo MKDIR-DONE'
+(no output)
+[0m
+[0m$ [0mssh benspc 'mkdir C:\Users\benja\rsn358s\W'
+A subdirectory or file C:\Users\benja\rsn358s\W already exists.
+[0m
+[0m$ [0mssh benspc 'mkdir C:\Users\benja\premonition-models\rsn358s'
+A subdirectory or file C:\Users\benja\premonition-models\rsn358s already exists.
+[0m
+[0m← [0mWrite /tmp/rsn358s_launch.ps1
+Wrote file successfully.
+[0m
+[0m$ [0mscp /tmp/rsn358s_launch.ps1 benspc:C:/Users/benja/rsn358s/launch_run.ps1 && echo SCP-OK
+SCP-OK
+[0m
+[0m$ [0mssh benspc 'powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\benja\rsn358s\launch_run.ps1 -Arm loop -Seed 9'
+Launched loop-s9 wrapper-PID 14236 ReturnValue 0
+[0m
+[0m$ [0mssh benspc 'powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\benja\rsn358s\launch_run.ps1 -Arm plain -Seed 9'
+Launched plain-s9 wrapper-PID 23004 ReturnValue 0
+[0m
+[0m$ [0mdate -u; ssh benspc 'powershell -NoProfile -Command "Get-Date -Format o"'
+Sun Sep 27 07:10:41 UTC 2026
+2026-09-27T03:10:43.2055571-04:00
+[0m
+[0m$ [0msleep 100 && ssh benspc 'nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv'
+pid, process_name, used_gpu_memory [MiB]
+1768, C:\Windows\System32\dwm.exe, [N/A]
+4152, C:\Windows\System32\ShellHost.exe, [N/A]
+10064, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\CrossDeviceResume.exe, [N/A]
+8564, C:\Windows\explorer.exe, [N/A]
+13348, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\SearchHost.exe, [N/A]
+13380, C:\Windows\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe, [N/A]
+15392, C:\Program Files (x86)\Microsoft\EdgeWebView\Application\153.0.4234.48\msedgewebview2.exe, [N/A]
+19200, C:\Program Files\Common Files\microsoft shared\ink\TabTip.exe, [N/A]
+17304, C:\Windows\SystemApps\ShellExperienceHost_cw5n1h2txyewy\ShellExperienceHost.exe, [N/A]
+19892, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\TextInputHost.exe, [N/A]
+5112, C:\Program Files\Okta\Okta Verify\OktaVerify.exe, [N/A]
+19504, C:\Program Files\PowerToys\WinUI3Apps\PowerToys.AdvancedPaste.exe, [N/A]
+15856, C:\Program Files\PowerToys\WinUI3Apps\PowerToys.Peek.UI.exe, [N/A]
+5268, C:\Program Files\PowerToys\PowerToys.ColorPickerUI.exe, [N/A]
+10660, C:\Program Files\PowerToys\PowerToys.FancyZones.exe, [N/A]
+13148, C:\Program Files\PowerToys\PowerToys.PowerLauncher.exe, [N/A]
+3328, C:\Users\benja\AppData\Local\Discord\app-1.0.9259\Discord.exe, [N/A]
+2316, C:\Program Files (x86)\e2eSoft\iVCam\iVCam.exe, [N/A]
+20964, C:\Users\benja\AppData\Local\Programs\Lunar Client\Lunar Client.exe, [N/A]
+12760, C:\Program Files\WindowsApps\12030rocksdanister.LivelyWallpaper_1.0.163.0_x64__97hta09mmv6hy\Build\Lively.exe, [N/A]
+18288, C:\Program Files\ShareX\ShareX.exe, [N/A]
+21352, C:\Windows\System32\Taskmgr.exe, [N/A]
+12604, C:\Windows\System32\ApplicationFrameHost.exe, [N/A]
+20844, C:\Windows\ImmersiveControlPanel\SystemSettings.exe, [N/A]
+16692, C:\Program Files\WindowsApps\Microsoft.YourPhone_1.26072.255.0_x64__8wekyb3d8bbwe\PhoneExperienceHost.exe, [N/A]
+21752, C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe, [N/A]
+22776, C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe, [N/A]
+[0m
+[0m$ [0mssh benspc 'nvidia-smi --query-gpu=memory.used,memory.free,utilization.gpu --format=csv'
+memory.used [MiB], memory.free [MiB], utilization.gpu [%]
+7675 MiB, 8321 MiB, 91 %
+[0m
+[0m$ [0mssh benspc 'cd /d C:\Users\benja\rsn358s && "C:\Program Files\Git\usr\bin\sha256sum.exe" W\loop-s9.log W\plain-s9.log & dir W'
+\fbdc23ca0740d6d08ca297782b618724639cdbc8fe10b19cdb40e96947a2a53c *W\\loop-s9.log
+\e6aa3a925b0b65094942d1a72805dd6c907c63f7fdc1a1ce14e23d5c3b57f0c5 *W\\plain-s9.log
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\rsn358s\W
+
+09/27/2026  03:10 AM    <DIR>          .
+09/27/2026  03:10 AM    <DIR>          ..
+09/27/2026  03:10 AM    <DIR>          loop-s9
+09/27/2026  03:12 AM               570 loop-s9.log
+09/27/2026  03:10 AM    <DIR>          plain-s9
+09/27/2026  03:12 AM               816 plain-s9.log
+               2 File(s)          1,386 bytes
+               4 Dir(s)   6,201,090,048 bytes free
+[0m
+[0m$ [0mssh benspc 'C:/Users/benja/lis300/venv/Scripts/python.exe -B -c "import pathlib;print(open(r\"C:/Users/benja/rsn358s/W/loop-s9.log\").read()[-600:]);print(\"=====\");print(open(r\"C:/Users/benja/rsn358s/W/plain-s9.log\").read()[-600:])"'
+loop seed 9: 19524254 weights, data ready in 14s on cuda
+{"step": 500, "ce": 2.3577, "exact": 0.0037, "halt_bce": 0.0701, "lr": 0.00015027424797191312, "min": 1.0, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.001, "numbers4": 0.0, "sums1": 0.038, "sums2": 0.007, "sums3": 0.001, "sums4": 0.0}}
+{"step": 1000, "ce": 1.6775, "exact": 0.0129, "halt_bce": 0.059, "lr": 0.000299794430213186, "min": 1.8, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.003, "numbers4": 0.001, "sums1": 0.086, "sums2": 0.039, "sums3": 0.005, "sums4": 0.001}}
+
+=====
+umbers3": 0.001, "numbers4": 0.0, "sums1": 0.037, "sums2": 0.011, "sums3": 0.001, "sums4": 0.0}}
+{"step": 1000, "ce": 1.5133, "exact": 0.0317, "halt_bce": 0.0, "lr": 0.000299794430213186, "min": 1.5, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.01, "numbers4": 0.0, "sums1": 0.2, "sums2": 0.098, "sums3": 0.019, "sums4": 0.004}}
+{"step": 1500, "ce": 1.149, "exact": 0.1685, "halt_bce": 0.0, "lr": 0.00029953760005996916, "min": 2.1, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.046, "numbers4": 0.002, "sums1": 0.797, "sums2": 0.69, "sums3": 0.394, "sums4": 0.179}}
+[0m
+[0m$ [0mssh benspc 'powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\benja\rsn358s\launch_run.ps1 -Arm loop -Seed 10'
+Launched loop-s10 wrapper-PID 3580 ReturnValue 0
+[0m
+[0m$ [0msleep 240 && ssh benspc 'nvidia-smi --query-gpu=memory.used,memory.free,utilization.gpu --format=csv'
+memory.used [MiB], memory.free [MiB], utilization.gpu [%]
+13642 MiB, 2354 MiB, 96 %
+[0m
+[0m$ [0mssh benspc 'C:/Users/benja/lis300/venv/Scripts/python.exe -B -c "import pathlib;d=pathlib.Path(\"C:/Users/benja/rsn358s/W\");print(sorted([p.name for p in d.iterdir()]));print(open(d/\"loop-s10.log\").read()[-400:])"'
+['loop-s10', 'loop-s10.log', 'loop-s9', 'loop-s9.log', 'plain-s9', 'plain-s9.log']
+y_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.004, "numbers4": 0.0, "sums1": 0.075, "sums2": 0.038, "sums3": 0.007, "sums4": 0.001}}
+{"step": 1500, "ce": 1.4357, "exact": 0.0436, "halt_bce": 0.1247, "lr": 0.00029953760005996916, "min": 4.2, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.017, "numbers4": 0.001, "sums1": 0.236, "sums2": 0.171, "sums3": 0.027, "sums4": 0.006}}
+[0m
+[0m# [0mTodos
+[✓] Follow COMMON RULES: read OPUS-RULES, check uptime/disk, check GPU-BUSY marker
+[✓] DUPLICATE GATE: check for existing RESULTS.md
+[✓] READ FIRST: PASSMARKS.md + run script docstring
+[✓] BensPC setup: git archive stream, nvidia-smi, disk, SEAL check, torch version, selftests
+[•] TRAIN 8 runs: loop-s9+plain-s9 @07:10Z, loop-s10 @07:16Z; plain-s10/loop-s11/plain-s11/loop-s12/plain-s12 queued in order
+[ ] SEAL + EVAL each checkpoint once, copy runs to Mac
+[ ] Write RESULTS.md + ledger, push paths, record model copies
+[0m
+[0m$ [0msleep 1500 && date -u
+Sun Sep 27 07:42:58 UTC 2026
+[0m
+[91m[1mError: [0mError from provider (Console): Rate limit exceeded. Please try again later.
