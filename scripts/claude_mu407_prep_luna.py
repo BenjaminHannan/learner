@@ -5,7 +5,8 @@ claude_luna_codex.call. Every prompt, check and subcommand is claude_mu407_prep'
 
   facts | frames | write | select | selftest     exactly as claude_mu407_prep.py, with Luna as the caller
   smokefacts --facts F --out S                   the 3 smoke rows of F only (pilot input for `write`)
-  pilot --frames FR --raw RAW                    ADDENDUM-1's pilot gate; prints JSON, exit 0 on pass, 1 on fail
+  pilot --frames FR --raw RAW                    ADDENDUM-1's pilot gate; prints JSON; exit 0 PASS, 1 FAIL, 2 REVIEW
+                                                 (checks pass but a scan string hit: stop before the full run)
   scan  --frames FR --raw RAW                    pre-SEAL-data scan: pilot strings in every kept text, and any user
                                                  message repeated across 3 or more chats; prints JSON counts
   selftest-luna                                  offline checks of the swap, pilot and scan (no network)
@@ -21,6 +22,7 @@ SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS))
 import claude_mu407_prep as P  # noqa: E402
 
+MODEL = "gpt-6-luna"   # pinned here; nothing passes another model id through
 SCAN = ("usage limit", "rate limit", "error:", "as an ai", "openai", "codex", "i can't help with")
 PILOT_MIN_SMOKE = 2
 REPEAT_MIN = 3
@@ -28,7 +30,8 @@ REPEAT_MIN = 3
 
 def luna_call(text: str) -> str:
     import claude_luna_codex as L
-    return L.call(text) or ""
+    return L.call(text, model=MODEL) or ""   # raises after 3 failed tries; P.write_one and `frames` count a raise
+    #                                           as one failed attempt (ATTEMPTS = 3), so a raise never ends the run
 
 
 P.call_low = luna_call
@@ -67,9 +70,9 @@ def pilot(frames_path: str, raw_path: str) -> dict:
         if Path(raw_path).exists() else []
     smoke_ok = sum(1 for r in raw if r.get("ok"))
     hits = scan_hits(texts_of(frames, raw))
-    res = {"frames_ok": fr_ok, "smoke_rows": len(raw), "smoke_ok": smoke_ok, "scan_hits": hits,
-           "pass": fr_ok and smoke_ok >= PILOT_MIN_SMOKE and not any(hits.values())}
-    return res
+    passed = fr_ok and smoke_ok >= PILOT_MIN_SMOKE
+    return {"frames_ok": fr_ok, "smoke_rows": len(raw), "smoke_ok": smoke_ok, "scan_hits": hits,
+            "status": "FAIL" if not passed else ("REVIEW" if any(hits.values()) else "PASS")}
 
 
 def scan(frames_path: str, raw_path: str) -> dict:
@@ -99,14 +102,40 @@ def selftest_luna() -> None:
         fp.write_text(json.dumps(fr), encoding="utf-8")
         rp.write_text("".join(json.dumps(r) + "\n" for r in [good, dict(good, item_id="s2"),
                                                             {"item_id": "s3", "ok": False}]), encoding="utf-8")
-        assert pilot(str(fp), str(rp))["pass"]; ok += 1
+        assert pilot(str(fp), str(rp))["status"] == "PASS"; ok += 1
         rp.write_text("".join(json.dumps(r) + "\n" for r in [good, {"item_id": "s2", "ok": False},
                                                             {"item_id": "s3", "ok": False}]), encoding="utf-8")
-        assert not pilot(str(fp), str(rp))["pass"]; ok += 1
+        assert pilot(str(fp), str(rp))["status"] == "FAIL"; ok += 1
+        rp.write_text("".join(json.dumps(r) + "\n" for r in [good, bad]), encoding="utf-8")
+        assert pilot(str(fp), str(rp))["status"] == "REVIEW"; ok += 1
         fp.write_text(json.dumps(dict(fr, current_label="")), encoding="utf-8")
         rp.write_text("".join(json.dumps(r) + "\n" for r in [good, dict(good, item_id="s2")]), encoding="utf-8")
-        assert not pilot(str(fp), str(rp))["pass"]; ok += 1
-    print(f"mu407 prep-luna selftest {ok}/8 ok")
+        assert pilot(str(fp), str(rp))["status"] == "FAIL"; ok += 1
+
+    def boom(_text):
+        raise RuntimeError("luna call failed after 3 tries: timeout after 300s")
+    row = {"item_id": "x", "facts": [{"value": "Biscuit"}], "smoke": True}
+    orig = P.chat_prompt
+    try:
+        P.chat_prompt = lambda r: "prompt"
+        r = P.write_one(row, boom)
+    finally:
+        P.chat_prompt = orig
+    assert r["ok"] is False and r["attempts"] == P.ATTEMPTS and "luna call failed" in r["error"]; ok += 1
+    saved = P.call_low
+    try:
+        P.call_low = boom
+        with tempfile.TemporaryDirectory() as td:
+            sys.argv = ["x", "frames", "--out", str(Path(td) / "fr.json")]
+            try:
+                P.main()
+                code = 0
+            except SystemExit as e:
+                code = e.code
+        assert code == 1; ok += 1
+    finally:
+        P.call_low = saved
+    print(f"mu407 prep-luna selftest {ok}/11 ok")
 
 
 def arg(name: str) -> str:
@@ -127,7 +156,7 @@ def main() -> None:
     if cmd == "pilot":
         res = pilot(arg("--frames"), arg("--raw"))
         print(json.dumps(res))
-        raise SystemExit(0 if res["pass"] else 1)
+        raise SystemExit({"PASS": 0, "FAIL": 1, "REVIEW": 2}[res["status"]])
     if cmd == "scan":
         print(json.dumps(scan(arg("--frames"), arg("--raw"))))
         return

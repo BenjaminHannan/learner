@@ -21,14 +21,26 @@ sys.path.insert(0, str(SCRIPTS))
 import claude_g406_2_glm as G2  # noqa: E402
 
 LIMIT_WORDS = ("usage limit", "rate limit")
+MODEL = "gpt-6-luna"   # pinned here; nothing passes another model id through
+LABELLER = "luna:" + MODEL
 
 
 def luna_call(text: str) -> str:
     import claude_luna_codex as L
-    return L.call(text) or ""
+    return L.call(text, model=MODEL) or ""   # raises after 3 failed tries; G2.mark turns a raise into a failed
+    #                                           row (ok false, error kept), so it counts as one attempt of 3
+
+
+_mark = G2.mark
+
+
+def mark(p: dict, mode: str, caller) -> dict:
+    """G2.mark unchanged, plus the labeller on every row."""
+    return dict(_mark(p, mode, caller), labeller=LABELLER)
 
 
 G2.call_low = luna_call
+G2.mark = mark
 
 
 def pilot_check(glm: str, packets: list[dict], n: int) -> dict:
@@ -44,7 +56,24 @@ def pilot_check(glm: str, packets: list[dict], n: int) -> dict:
 def selftest_luna() -> None:
     import tempfile
     ok = 0
-    assert G2.call_low is luna_call; ok += 1
+    assert G2.call_low is luna_call and G2.mark is mark; ok += 1
+
+    def boom(_text):
+        raise RuntimeError("luna call failed after 3 tries: exit 1: Usage limit reached")
+    saved = G2.prompt_for
+    try:
+        G2.prompt_for = lambda p, mode: "prompt"
+        r = G2.mark({"src": "s", "pid": "p0", "conversation": [{}, {}], "earlier": []}, "two", boom)
+        assert r["ok"] is False and "usage limit" in r["error"].lower() and r["labeller"] == LABELLER; ok += 1
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "o.jsonl"
+            pk2 = [{"src": "s", "pid": f"p{i}", "conversation": [{}, {}], "earlier": []} for i in range(2)]
+            res = G2.run(pk2, "two", out, lambda t: '{"flags": [0, 1]}', 1, 30, 10, 10)
+            rows = [json.loads(x) for x in out.read_text(encoding="utf-8").splitlines()]
+            assert res["usable_now"] == 2 and all(x["labeller"] == LABELLER and x["flags"] == [0, 1] for x in rows)
+            ok += 1
+    finally:
+        G2.prompt_for = saved
     pk = [{"src": "s", "pid": f"p{i}", "conversation": [], "earlier": []} for i in range(12)]
     with tempfile.TemporaryDirectory() as td:
         f = Path(td) / "g.jsonl"
@@ -68,7 +97,7 @@ def selftest_luna() -> None:
         assert n == 5 and "--pilot" not in sys.argv and len(G2.load_packets([])) == 5; ok += 1
     finally:
         G2.load_packets = orig
-    print(f"g406l luna selftest {ok}/5 ok")
+    print(f"g406l luna selftest {ok}/7 ok")
 
 
 def pilot_arg() -> int:
