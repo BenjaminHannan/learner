@@ -1182,3 +1182,8 @@ Seals checked from repo root: 138l 23/23, 245 8/8, 246 6/6, 251 8/8, 231b 22/22,
   - T3: rd378g-pc (after the gate3 PASS and re-grade); benspc-y1t (after its data gate); dl-8; 0.2d D0 (moves to T1 once D0 is ready).
   - claude-sleep-358t3pc stays held.
   - I set file prefixes to match: 1xx-, 2xx-, 3xx- before the name.
+
+## 13:30 UTC 09-27: Fix sleep (problem 7) closed by design
+- Closed because of Ben's 13:28:08 UTC "yes": sleep trains only the reasoner, and the reader and talker 1B stay frozen at night. It did not close because a fix won. Every dl verdict stands as registered.
+- dl-8 and the dl-11 BensPC job are held and marked DO NOT RUN.
+- Note: artifacts/claude-fixsleep-close-2026-09-27.md (Fix-sleep thread).
