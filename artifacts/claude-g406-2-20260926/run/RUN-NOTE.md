@@ -11,3 +11,7 @@
 - Next: g406-2 is re-queued as a fresh job with its long steps run in the background, after the plan resets. The seal (21d2ef2fd) and the marks are unchanged.
 - Update 03:07 UTC (date -u), from the Thread manager at 03:07 UTC: no one will stop the job now. The Director's permission check refused killing stuck opencode processes, and no one works around that. g406-2 waits for the plan reset or Ben's ruling. It only holds a Mac slot, and nothing needs that slot while GLM is down.
 - Update 03:59 UTC (date -u): queued the stop job handoff/queue/000-stop-madeup-g406-2.md (30e19f833), which follows the pattern of 000-stop-rd378low (the Thread manager, 03:59 UTC). It stops the job by exact PID, and its report goes to artifacts/claude-stop-g406-2-20260927/REPORT.md.
+- Update 04:08 UTC (date -u). The job is STOPPED; see artifacts/claude-stop-g406-2-20260927/REPORT.md on builder-outbox.
+  - The stop job killed only the agent (PID 6563, elapsed 03:19:44). No python or GLM call was left, so no session was deleted, and kill -9 was not needed.
+  - The rungo4 launcher had exited by 04:04:36 UTC, and the watcher pushed madeup-g406-2-mac at 00:06:09 local (04:06 UTC).
+  - No row of this job is used.
