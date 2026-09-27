@@ -9,3 +9,4 @@
   threads), $0.
 - 2026-09-27T07:44:45Z: running.
 - 2026-09-27T08:45:38Z: L7 finished the lookalikes (150 rows, 6 read as a square), the squares (200, 200 read as a square) and the unseen formats (200, 195 read as a square); G5 finished the lookalikes (150, 6 read as a square). G5 on the squares started at 08:40:30Z. Exactness and kinds are left to the count and the recount.
+- 2026-09-27T09:28:03Z: G5 finished the squares (200, 200 read as a square) and the unseen formats (200, 193 read as a square). The count ran at 09:27:19Z and the chain ended (STEP done 09:27:19Z), 1 h 44 min after the first STEP. Every task was launched once. Count: run/logs/count.log. A separate agent's recount is next.
