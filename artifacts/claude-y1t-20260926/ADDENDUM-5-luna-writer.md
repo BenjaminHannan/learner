@@ -1,4 +1,4 @@
-# y1t addendum 5: GPT-6 Luna words the last 315 dialogs (Answering-from-memory thread, DRAFT 2026-09-27 03:49 UTC, OK'd by the Thread manager 03:50 UTC; runner and L3 mechanics added 03:51 UTC; sealed only after the Director's 000-luna-helper-selftest passes, with the helper's sha pinned; no Luna call has been made)
+# y1t addendum 5: GPT-6 Luna words the last 315 dialogs (Answering-from-memory thread, DRAFT 2026-09-27 03:49 UTC, OK'd by the Thread manager 03:50 UTC; runner and L3 mechanics added 03:51 UTC; sealed 03:53 UTC in SEAL-y1t-add5.sha256.txt after the Director's live helper check; no Luna call has been made by this thread)
 
 **Why:** Ben, 03:47 UTC (goals page, cd475e141 and 5ed7dcad9): "just have luna rewrite all the training data. It's so so
 cheap". A sealed experiment keeps its writer unless an addendum switches it, with a small quality pilot first. The
@@ -36,7 +36,9 @@ handoff/held/y1t-luna-pilot-mac.md, queued only after the helper's selftest pass
 
 **Code (written 03:51 UTC; no Luna call made):**
 - Helper: the Director's scripts/claude_luna_codex.py (24ca7a163): call(text, model="gpt-6-luna", timeout) -> str;
-  an empty or error-like reply raises instead of being returned. Its sha is pinned in the seal after its selftest.
+  an empty or error-like reply raises instead of being returned. sha256 342a0fb7…024e, pinned in the seal. The Director's
+  live check on the Mac (03:54 UTC by the Director's clock): selftest ok, 3 parallel calls in 10.9 s. y1t's share of the
+  Luna route: 3 parallel calls of 12.
 - Runner: scripts/claude_y1t_luna.py. `pick` writes the redo seeds with no row in topup/raw_new.jsonl, in order (315
   here; sha256 of that file 6184cd22…83de). The run is Reading facts' run_batches with Luna's call; rows record model
   "codex/gpt-6-luna", temperature null. A failed call writes a row with empty "raw", which the route filter drops (L1).
