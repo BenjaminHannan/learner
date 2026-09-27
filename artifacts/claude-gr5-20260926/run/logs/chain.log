@@ -27,3 +27,21 @@ adapter 9f19edb7503e7a81f78bbe922bb2ae38319b04301a460cbdc2c0c843324dceb4 bytes 1
 STEP dev 2026-09-26T23:57:47Z
 dev {"dev_gate": "PASS", "fresh_exact": 10, "fresh_n": 10, "fresh_wrong": 0, "heldout_none_exact": 107, "heldout_none_n": 107, "heldout_none_wrong": 0, "heldout_square_exact": 71, "heldout_square_n": 72, "heldout_square_wrong": 0, "nosquare_exact": 10, "nosquare_n": 10, "nosquare_wrong": 0, "seconds_per_message": 3.1, "smoke_exact": 10, "smoke_n": 10, "smoke_wrong": 0}
 STEP devclean 2026-09-27T00:08:50Z
+devclean {"clean_exact": 52, "clean_n": 53, "clean_none": 1, "clean_wrong": 0, "shared_exact": 19, "shared_n": 19, "shared_none": 0, "shared_wrong": 0}
+STEP L_squares 2026-09-27T00:16:29Z
+run {"arm": "L", "task": "squares", "rows": 100, "read_as_square": 100}
+STEP L_lookalikes 2026-09-27T00:25:51Z
+run {"arm": "L", "task": "lookalikes", "rows": 60, "read_as_square": 3}
+STEP L_unseen 2026-09-27T00:27:13Z
+run {"arm": "L", "task": "unseen", "rows": 60, "read_as_square": 53}
+STEP L_general 2026-09-27T00:32:59Z
+run {"arm": "L", "task": "general", "rows": 300, "read_as_square": 0}
+STEP P0_squares 2026-09-27T00:35:54Z
+run {"arm": "P0", "task": "squares", "rows": 100, "read_as_square": 88}
+STEP P0_lookalikes 2026-09-27T00:46:04Z
+run {"arm": "P0", "task": "lookalikes", "rows": 60, "read_as_square": 44}
+STEP P0_unseen 2026-09-27T00:56:49Z
+run {"arm": "P0", "task": "unseen", "rows": 60, "read_as_square": 55}
+STEP score 2026-09-27T01:04:51Z
+score {"L": {"squares_exact": 100, "squares_wrong": 0, "squares_none": 0, "unseen_exact": 40, "unseen_wrong": 13, "unseen_none": 7, "lookalikes_false_square": 2, "general_read_as_square": 0}, "P0": {"squares_exact": 41, "squares_wrong": 47, "squares_none": 12, "unseen_exact": 9, "unseen_wrong": 46, "unseen_none": 5, "lookalikes_false_square": 37}, "C": {"squares_exact": 100, "squares_wrong": 0, "squares_none": 0, "unseen_exact": 3, "unseen_wrong": 0, "unseen_none": 57, "lookalikes_false_square": 0, "general_read_as_square": 0}, "incomplete_L": 0, "lookalikes_truth_square": 7, "ms_median_squares_L": 5349.4, "marks": {"R1": true, "R2": false, "R3": true, "R4": true, "U1": false, "U2": false}, "gr5_pass": false, "gr5U_pass": false}
+STEP done 2026-09-27T01:04:51Z

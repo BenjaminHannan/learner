@@ -15,3 +15,4 @@
 - 2026-09-27T00:36:01Z: L on the general items finished (300 rows, 0 read as a square). The plain 1B (P0, report only) on the squares started at 00:35:54Z.
 - 2026-09-27T00:46:11Z: P0 on the squares finished (100 rows, 88 read as a square). P0 on the lookalikes started at 00:46:04Z.
 - 2026-09-27T00:56:56Z: P0 on the lookalikes finished (60 rows, 44 read as a square). P0 on the unseen formats started at 00:56:49Z.
+- 2026-09-27T01:05:22Z: P0 on the unseen formats finished (60 rows). The score ran at 01:04:51Z and the chain ended (STEP done 01:04:51Z, chain PID 1343 exited), 4 h 21 min after the first STEP, inside the 6-hour cap. Every task was launched once. Score: score/gr5_score.json.
