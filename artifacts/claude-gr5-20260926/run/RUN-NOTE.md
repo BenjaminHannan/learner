@@ -12,3 +12,4 @@
 - 2026-09-27T00:25:59Z: L on the squares finished (100 rows, 100 read as a square; exactness is left to the score and the recount). L on the lookalikes started at 00:25:51Z.
 - 2026-09-27T00:27:22Z: L on the lookalikes finished (60 rows, 3 read as a square; which truth each has is left to the score and the recount). L on the unseen formats started at 00:27:13Z.
 - 2026-09-27T00:33:06Z: L on the unseen formats finished (60 rows, 53 read as a square; exactness is left to the score and the recount). L on the general items started at 00:32:59Z.
+- 2026-09-27T00:36:01Z: L on the general items finished (300 rows, 0 read as a square). The plain 1B (P0, report only) on the squares started at 00:35:54Z.
