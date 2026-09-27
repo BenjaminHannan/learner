@@ -1,4 +1,4 @@
-# y1t addendum 4: a fallback if the opencode route stays down (Answering-from-memory thread, DRAFT 2026-09-27 03:12 UTC, for the Thread manager's review before sealing; no gate sample has been drawn and no gate judge has run)
+# y1t addendum 4: a fallback if the opencode route stays down (Answering-from-memory thread, DRAFT 2026-09-27 03:09 UTC, for the Thread manager's review before sealing; no gate sample has been drawn and no gate judge has run)
 
 **When it applies (and only then):** the Director is ready to start benspc-y1t on BensPC and Ben's opencode route is
 still down (it hit its usage limit at about 00:57 UTC, per the Director at 03:06 UTC). In every other case the resume
