@@ -17,3 +17,4 @@
 - 2026-09-27T06:57:54Z: L7 on the squares finished (100 rows, 100 read as a square; exactness is left to the score and the recount). L7 on the lookalikes started at 06:57:46Z.
 - 2026-09-27T06:59:04Z: L7 on the lookalikes finished (60 rows, 3 read as a square). L7 on the unseen formats started at 06:58:56Z.
 - 2026-09-27T07:05:27Z: L7 on the unseen formats finished (60 rows, 59 read as a square). L7 on the general items started at 07:05:18Z.
+- 2026-09-27T07:08:38Z: L7 on the general items finished (300 rows, 0 read as a square). G5 (gr-5's adapter) on the squares started at 07:08:32Z.
