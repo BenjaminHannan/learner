@@ -43,3 +43,4 @@
   and logU1.txt are committed now. Arm N started at 08:34:52 UTC and was at 12 of 60 at 08:44. The talk script's own
   last line prints mu-405's substring count, and I saw it for U0 and U1. It is report-only and decides no mark. I have
   read no reply.
+- Update 09:18 UTC (date -u): arm N ended at 09:18:38 UTC, exit 0: 60 chats, 300 rows, median 6.2 s per turn. All three arms have 300 rows, 60 chats and 0 empty replies. Next: judge packets.
