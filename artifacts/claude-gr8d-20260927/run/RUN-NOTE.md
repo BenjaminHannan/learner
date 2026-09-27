@@ -5,3 +5,4 @@
   both selftests passed. The replay started at 09:36:39Z.
 - Chain PID 30642 (bash artifacts/claude-gr8d-20260927/cpu/chain.sh), launched once, on this container's CPU (4
   threads), $0.
+- 2026-09-27T10:40:55Z: the replay finished (200 rows; greedy read a grid on 195; the pick differs from greedy on 11). The squares started at 10:19:24Z. Marks are left to the count and the recount.
