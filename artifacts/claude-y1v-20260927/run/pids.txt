@@ -1,0 +1,4 @@
+drafts pid=4065 2026-09-27T19:50:49Z scripts/claude_y1t_data.py drafts --model /root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b --dir artifacts/claude-y1t-20260926/glm2/items
+train pid=6368 2026-09-27T20:01:49Z scripts/claude_y1v_train.py --base /root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b --train artifacts/claude-y1t-20260926/glm2/items/train.jsonl --dev artifacts/claude-y1t-20260926/glm2/items/dev.jsonl --out tr
+eval pid=7138 2026-09-27T20:06:49Z scripts/claude_y1g_doubt.py --model tr/merged --out eval
+eval_plain pid=7418 2026-09-27T20:07:49Z scripts/claude_y1g_doubt.py --model /root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b --out eval_plain
