@@ -15,6 +15,8 @@ sentences.
              --max-failed 20 --limit N]
   ask    on the Mac: Luna words one question and a short answer per planned fact of each fully kept chat
            python -B scripts/claude_bm398w_data.py ask --plans P --sess S --out qa.jsonl [same flags]
+  count  counts only: chats fully kept, sessions kept, failure reasons (the job's pilot gate)
+           python -B scripts/claude_bm398w_data.py count --plans P --sess S [--qa Q] [--limit N]
   build  code only: LoCoMo-schema chats, then one RAFT item per kept question: the evidence turn(s) plus the BM25
          top non-evidence turns of the same chat, 20 in all, laid out as claude_bm398d_evidence.context does,
          with bm-390's system and QA prompt; the answer target is Luna's short answer. Splits by chat.
@@ -435,6 +437,22 @@ def ask(a, call=None) -> int:
     return 0
 
 
+def count(a) -> int:
+    """Counts only, for the job's gates: chats fully kept, sessions kept and failed, failure reasons."""
+    plans = _jsonl(a.plans)[: a.limit or None]
+    rows = _jsonl(a.sess) if Path(a.sess).exists() else []
+    ids = {f"{p['chat_id']}/s{s}" for p in plans for s in range(len(p["sessions"]))}
+    ok = {r["id"] for r in rows if r["ok"] and r["id"] in ids}
+    res = {"chats": len(plans), "kept_chats": len(kept_chats(plans, rows)), "sessions": len(ids),
+           "sessions_kept": len(ok), "sessions_never_tried": len(ids - {r["id"] for r in rows}),
+           "failed_rows_by_reason": dict(Counter(r["reason"] for r in rows if not r["ok"] and r["id"] in ids))}
+    if a.qa and Path(a.qa).exists():
+        qa = _jsonl(a.qa)
+        res["qa_chats_kept"] = len({r["id"] for r in qa if r["ok"]} & {p["chat_id"] for p in plans})
+    print(json.dumps(res))
+    return 0
+
+
 # ======================================================================= build (code only)
 def to_locomo(p: dict, worded: list) -> tuple[dict, dict]:
     """LoCoMo-schema chat, and fid -> the dia_ids that carry it."""
@@ -677,7 +695,7 @@ def selftest(a) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["plan", "word", "ask", "build", "selftest"])
+    ap.add_argument("cmd", choices=["plan", "word", "ask", "build", "count", "selftest"])
     for x in ("plans", "sess", "qa", "out", "avoid_names", "avoid_hashes"):
         ap.add_argument("--" + x.replace("_", "-"), dest=x, default="")
     ap.add_argument("--seed", type=int, default=0)
@@ -689,7 +707,7 @@ def main() -> int:
     ap.add_argument("--dev-share", type=float, default=0.15)
     ap.add_argument("--panel", action="store_true")
     a = ap.parse_args()
-    return {"plan": plan, "word": word, "ask": ask, "build": build, "selftest": selftest}[a.cmd](a)
+    return {"plan": plan, "word": word, "ask": ask, "build": build, "count": count, "selftest": selftest}[a.cmd](a)
 
 
 if __name__ == "__main__":
