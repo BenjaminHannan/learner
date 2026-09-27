@@ -65,3 +65,8 @@ Times are from date -u. Plan and marks: ../PASSMARKS.md, sealed in ../SEAL.sha25
   (1 "too_long" attempt); 0 stops. Median 57.9 s per chat (2 calls at a time), 46 s of wall time per added chat.
   Launches so far for step 4: 3 of at most 6.
 - 2026-09-27 16:46:50 UTC: launch 4 queued as handoff/queue/madeup-mu406-teach4-mac.md (same block, L=4) for the last 60 chats.
+- 2026-09-27 16:50:16 UTC: teacher gate started while launch 4 writes the last 60 training chats. The gate reads only the 20
+  held-out chats, which launch 2 wrote whole and later launches never touch (teach_runs uses only the items given), so
+  its result cannot change. Read from teach.jsonl at builder-outbox 120ebdb05 (160 rows, sha256 091038f535170634...; all 20 held-out
+  chats whole, 100 turns). gate-prep wrote gate/packets/b1-b2 (20 packets each) and gate/keys/key.json; judge files
+  match SEAL lines 3-4; 4 fresh blind judges in private folders (claims b1, claims b2, fit b1, fit b2).
