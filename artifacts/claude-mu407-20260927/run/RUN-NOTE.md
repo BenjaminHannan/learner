@@ -16,3 +16,12 @@
   - The watcher launched madeup-mu407-luna-mac at 01:57:07 local = 05:57 UTC.
   - Agent pass go1 ended at about 06:30 UTC, and pass go2 was running at 06:38 UTC.
   - No RESULTS yet.
+- Update 06:53 UTC (date -u):
+  - madeup-mu407-luna-mac finished. Its results were pushed to builder-outbox at 06:41:54 UTC (411d55e94). The pilot
+    was PASS; all 78 chats were kept with 0 errors; 0 scan hits; 26 repeated user lines were reviewed and kept.
+  - The data is sealed in SEAL-data.sha256.txt (9 files, 612277144), with SEAL-data-NOTE.md.
+  - The smoke run started at 06:47:31 UTC on this container's CPU. It covers the 3 smoke chats, arms U1, U0 and N in
+    turn, into run/smoke/. Shell PID 2287, talker PID 2293 (U1). torch 2.14.0+cpu, transformers 5.17.0,
+    HF_HUB_OFFLINE=1, MiniCPM5-1B snapshot 87179e5c.
+  - The worker running this thread was replaced at about 06:50 UTC (the coordinator's note). The smoke process kept
+    running.
