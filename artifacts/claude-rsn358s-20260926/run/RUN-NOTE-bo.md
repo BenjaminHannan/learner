@@ -1,0 +1,9 @@
+- 2026-09-27T11:07:22Z sealed loop-s9 final.pt 30b43b4ffe9de370aa7b61f7547bb1e1f9fe0e6fe78496606747bc345bf710e5 (before any eval)
+- 2026-09-27T11:07:52Z BensPC copy premonition-models/rsn358s/loop-s9/final.pt sha256 ok
+- 2026-09-27T11:09:37Z Mac copy ~/premonition-models/rsn358s/loop-s9/final.pt sha256 ok
+- 2026-09-27T11:09:37Z sealed plain-s9 final.pt 615d732413cd2dbe7fb59cdf94da937afe2c1e84d612a7cd5c1f1f8cd8de93fa (before any eval)
+- 2026-09-27T11:09:43Z BensPC copy premonition-models/rsn358s/plain-s9/final.pt sha256 ok
+- 2026-09-27T11:11:24Z Mac copy ~/premonition-models/rsn358s/plain-s9/final.pt sha256 ok
+- 2026-09-27T11:11:24Z sealed loop-s10 final.pt 83b44ac19e7653d48353a351f66892b2f2f95a738a288624bc00ffa9a4cefb5e (before any eval)
+- 2026-09-27T11:11:45Z BensPC copy premonition-models/rsn358s/loop-s10/final.pt sha256 ok
+- 2026-09-27T11:12:55Z Mac copy ~/premonition-models/rsn358s/loop-s10/final.pt sha256 ok
