@@ -96,7 +96,7 @@ while read -r OID DPH CORES HID GPU TF MB EST; do
   want=$(git show "$PIN:handoff/kit/creativechatk1fv/box/drive.sh" | shasum -a 256 | awk '{print $1}')
   got=$($SS "sha256sum /root/r/handoff/kit/creativechatk1fv/box/drive.sh /root/adapter/adapter02c.pt /root/r/artifacts/fable-self122-20260922/self122_head.pt" < /dev/null 2>/dev/null | awk '{printf "%s ", $1}')
   [ "$got" = "$want $AD_SHA $S122_SHA " ] || { log "rental $n: files on the rental do not match (got: $got)"; destroy "$I"; continue; }
-  $SS "cd /root/r && setsid nohup bash handoff/kit/creativechatk1fv/box/drive.sh > /root/r/drive.log 2>&1 < /dev/null & echo launched" < /dev/null 2>> "$G/log.txt"
+  $SS "cd /root/r && { setsid nohup bash handoff/kit/creativechatk1fv/box/drive.sh > /root/r/drive.log 2>&1 < /dev/null & } ; echo launched"   # braced: only drive.sh goes to the background, so ssh returns at once (358u lost its guard to the unbraced form) < /dev/null 2>> "$G/log.txt"
   TC=$(awk -v b="$BASE_TIME" -v r="$TF5090" -v t="$TF" 'BEGIN{x=r/t; if (x<1) x=1; printf "%d", b*x}')
   ID=$I; echo "$I $H $P $TC" > "$G/state"; log "card $GPU, $TF TFLOPS, \$$DPH/h; time cap $TC s (5090 $TF5090 / $TF TFLOPS, never below 1x); money stop \$$CAP_STOP"; break
 done <<EOF
