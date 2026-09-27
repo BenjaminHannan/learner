@@ -1,0 +1,741 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m# [0mTodos
+[•] Fetch origin/main and read first 13 lines of lis-302-gpu.md + record commit/uptime
+[ ] Tree setup via git archive to temp dir + seal check
+[ ] Selftests
+[ ] Leak check (one call)
+[ ] Share count + run g406b then g406-2 GLM batches
+[ ] Count / verdicts / arm-report
+[ ] Copy run files to worktree, write RESULTS.md, rm temp dir
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo "FETCH_EXIT:$?"; git rev-parse origin/main; uptime; date -u
+FETCH_EXIT:0
+1425b026aec5e27bd7f04708688921a6ae2d80b3
+20:44  up 3 days, 10:37, 4 users, load averages: 64.16 66.71 78.55
+Sun Sep 27 00:44:32 UTC 2026
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 20; echo "---LINECOUNT---"; git show origin/main:handoff/queue/lis-302-gpu.md | head -n 13 | cat -A | head -n 13
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+---LINECOUNT---
+cat: illegal option -- A
+usage: cat [-belnstuv] [file ...]
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | python3 -c "import sys; lines=sys.stdin.readlines(); [print(f'{i+1}: {l}', end='') for l in lines[:15]]"; echo "---"; uptime; df -g /
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "<string>", line 1, in <listcomp>
+NameError: name 'i' is not defined
+---
+20:44  up 3 days, 10:37, 4 users, load averages: 61.50 66.12 78.27
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        42    24%  484014 445706880    0%   /
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md > /tmp/lis302head.txt
+python3 -B -c "lines=open('/tmp/lis302head.txt').readlines(); n=0
+for line in lines[:15]:
+ n+=1
+ print(str(n)+': '+line, end='')"
+1: COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+2: First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+3: - Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+4: - Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+5: - Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+6: - TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+7: - Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+8: - Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+9: - You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+10: Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+11: BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+12: 
+13: GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+14: INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+15: GPU: yes
+[0m
+[0m$ [0mpwd; git status --short | head -n 50; echo "---"; ls artifacts/claude-g406-2-20260926/ 2>&1; echo "---"; ls artifacts/claude-g406-2-20260926/run/ 2>&1; echo "---worktree---"; echo $PWD
+git rev-parse origin/main; uptime; df -g / | head -n 5
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+?? scripts/claude_280n_panel.sh
+---
+ls: artifacts/claude-g406-2-20260926/: No such file or directory
+---
+ls: artifacts/claude-g406-2-20260926/run/: No such file or directory
+---worktree---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+1425b026aec5e27bd7f04708688921a6ae2d80b3
+20:44  up 3 days, 10:37, 4 users, load averages: 58.08 65.24 77.82
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        42    24%  484014 445606760    0%   /
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read first 13 lines of lis-302-gpu.md + record commit/uptime
+[•] Tree setup via git archive to temp dir + seal check
+[ ] Selftests
+[ ] Leak check (one call)
+[ ] Share count + run g406b then g406-2 GLM batches
+[ ] Count / verdicts / arm-report
+[ ] Copy run files to worktree, write RESULTS.md, rm temp dir
+[0m
+[0m$ [0mD=$(mktemp -d); echo "D=$D"; git archive origin/main scripts artifacts/claude-g406-2-20260926 artifacts/claude-mu402-20260926 artifacts/claude-mu403-20260926 artifacts/claude-mu405-20260926/JUDGE-claims405.md artifacts/claude-mu405b-20260926/judge | tar -x -C "$D"; echo "ARCHIVE_EXIT:$?"; ls "$D"; echo "---"; ls "$D/artifacts/claude-g406-2-20260926/"; O="$D/artifacts/claude-g406-2-20260926/run"; mkdir -p "$O"; echo "O=$O"; ls -R "$D/artifacts/claude-g406-2-20260926" | head -n 30; echo "$D" > /tmp/g406_D_path.txt; cat /tmp/g406_D_path.txt
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0
+ARCHIVE_EXIT:0
+artifacts
+scripts
+---
+PASSMARKS.md
+SEAL.sha256.txt
+O=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/artifacts/claude-g406-2-20260926/run
+PASSMARKS.md
+run
+SEAL.sha256.txt
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/artifacts/claude-g406-2-20260926/run:
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0
+[0m
+[0m$ [0mD=$(cat /tmp/g406_D_path.txt); echo "D=$D"; git rev-parse origin/main; uptime; date -u
+shasum -a 256 -c artifacts/claude-g406-2-20260926/SEAL.sha256.txt 2>&1; echo "SEAL_EXIT:$?"
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0
+1425b026aec5e27bd7f04708688921a6ae2d80b3
+20:44  up 3 days, 10:38, 4 users, load averages: 56.93 64.77 77.51
+Sun Sep 27 00:44:59 UTC 2026
+shasum: artifacts/claude-g406-2-20260926/SEAL.sha256.txt: No such file or directory
+SEAL_EXIT:2
+[0m
+[0m$ [0mpwd; shasum -a 256 -c artifacts/claude-g406-2-20260926/SEAL.sha256.txt 2>&1; echo "SEAL_EXIT:$?"
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0
+artifacts/claude-g406-2-20260926/PASSMARKS.md: OK
+artifacts/claude-mu402-20260926/JUDGE-claims.md: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j1.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j2.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j3.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j4.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j5.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j6.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j7.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/claims_j8.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/pair_p1.jsonl: OK
+artifacts/claude-mu402-20260926/judge/out/pair_p2.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j1.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j2.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j3.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j4.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j5.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j6.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j7.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/claims_j8.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/pair_p1.jsonl: OK
+artifacts/claude-mu402-20260926/judge/packets/pair_p2.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j1.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j10.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j11.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j12.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j2.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j3.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j4.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j5.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j6.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j7.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j8.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/claims_j9.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/pair_p1.jsonl: OK
+artifacts/claude-mu403-20260926/judge/out/pair_p2.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j1.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j10.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j11.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j12.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j2.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j3.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j4.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j5.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j6.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j7.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j8.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/claims_j9.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/pair_p1.jsonl: OK
+artifacts/claude-mu403-20260926/judge/packets/pair_p2.jsonl: OK
+artifacts/claude-mu405-20260926/JUDGE-claims405.md: OK
+artifacts/claude-mu405b-20260926/judge/keys/claims_key.json: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j1.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j2.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j3.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j4.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j5.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j6.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j7.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j8.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j1.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j2.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j3.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j4.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j5.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j6.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j7.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j8.jsonl: OK
+scripts/claude_g406_2_glm.py: OK
+scripts/claude_g406_count.py: OK
+scripts/claude_g406_glm.py: OK
+scripts/claude_glm_leakcheck.py: OK
+scripts/claude_glm_opencode_v11.py: OK
+scripts/claude_lis320_glm_oc.py: OK
+scripts/claude_lis320_glm_oclow.py: OK
+SEAL_EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read first 13 lines of lis-302-gpu.md + record commit/uptime
+[✓] Tree setup via git archive to temp dir + seal check
+[•] Selftests
+[ ] Leak check (one call)
+[ ] Share count + run g406b then g406-2 GLM batches
+[ ] Count / verdicts / arm-report
+[ ] Copy run files to worktree, write RESULTS.md, rm temp dir
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_g406_2_glm.py --selftest 2>&1; echo "EXIT:$?"
+[g406-2/two] pass 1: 2 written this run, 2 failed
+[g406-2/two] pass 1: 3 written this run, 3 failed
+[g406-2/two] pass 2: 5 written this run, 5 failed
+[g406-2/two] pass 2: 6 written this run, 6 failed
+[g406-2/two] pass 3: 8 written this run, 8 failed
+[g406-2/two] pass 3: 9 written this run, 9 failed
+[g406-2/two] pass 1: 3 written this run, 2 failed
+[g406-2/two] pass 2: 5 written this run, 2 failed
+g406-2 selftest 7/7 ok
+EXIT:0
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_g406_count.py --selftest 2>&1; echo "EXIT:$?"
+uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_glm_oclow.py --selftest 2>&1; echo "EXIT:$?"
+g406 count selftest 5/5 ok
+EXIT:0
+Traceback (most recent call last):
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/scripts/claude_lis320_glm_oclow.py", line 89, in <module>
+    selftest()
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/scripts/claude_lis320_glm_oclow.py", line 82, in selftest
+    B.selftest()
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/scripts/claude_lis320_glm_oc.py", line 73, in selftest
+    from claude_lis320_seed import make_seeds
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/scripts/claude_lis320_seed.py", line 46, in <module>
+    REL_NAMES = set((REPO / "design/v3/60-listener/relation-names.txt").read_text().split())
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/design/v3/60-listener/relation-names.txt'
+EXIT:1
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B -c "import pathlib; print(pathlib.Path('scripts/claude_lis320_glm_oclow.py').read_text()[:3000])"
+echo "---SEED---"
+uv run --offline --no-project --python 3.12 python -B -c "import pathlib; print(pathlib.Path('scripts/claude_lis320_seed.py').read_text()[:4000])" 2>&1 | head -n 100
+#!/usr/bin/env python3
+"""lis-320 GLM wording through Ben's opencode route with reasoning effort "low" (reading thread, 2026-09-26;
+ADDENDUM-6). New file; claude_lis320_glm_oc.py, claude_lis320_glm_oc11.py and the Director's helpers stay unchanged.
+
+The Director's helper v1.1 (scripts/claude_glm_opencode_v11.py, sha 7a067cfb...) cannot pass a flag, so call_low() is
+its call() with one addition: "--variant low" on the `opencode run` line (opencode's per-model variant; for
+opencode-go/glm-5.3-flash, low = reasoningEffort low, per `opencode models --verbose opencode-go` in ocdiag3). Everything
+else is v1.1's own code, used through its functions: per-attempt uuid --title tag, private temp dir, stdin /dev/null,
+3 tries on nonzero exit (a 300 s timeout exits 124 and is retried), ANSI chrome stripped, and exactly its own session
+deleted from the project where opencode filed it. Prompt, parser, batching, time cap, failed-call stop and output rows
+are claude_lis320_glm_oc's; rows record model "opencode-go/glm-5.3-flash" and temperature null, as before.
+Same flags as claude_lis320_glm_oc.py.
+"""
+from __future__ import annotations
+
+import sys
+import tempfile
+import threading
+import uuid
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_glm_opencode_v11 as H  # noqa: E402
+import claude_lis320_glm_oc as B  # noqa: E402
+
+VARIANT = "low"
+_LOCK = threading.Lock()
+
+
+def call_low(text, model=H.MODEL, timeout=300):
+    project_dir = H._project_dir()
+    last_err = ""
+    for _attempt in range(1, 4):
+        tag = "glm11-%s" % uuid.uuid4().hex
+        with tempfile.TemporaryDirectory(prefix="glm-opencode-") as td:
+            code, out, err = H._run_opencode(
+                ["run", "--model", model, "--variant", VARIANT, "--title", tag, text], cwd=td,
+                stdin_devnull=True, timeout=timeout)
+            try:
+                if code == 0:
+                    reply = H._strip_chrome(out)
+                    if reply:
+                        return reply
+                    last_err = "empty reply (stderr: %s)" % H._strip_chrome(err)[:200]
+                else:
+                    first = (H._strip_chrome(err) or H._strip_chrome(out)).split("\n")
+                    last_err = "exit %s: %s" % (code, first[0][:200] if first else "")
+            finally:
+                H._delete_own_session(project_dir, tag)
+    raise RuntimeError("opencode call failed after 3 tries: %s" % last_err)
+
+
+def call_opencode_low(text):
+    try:
+        out = call_low(text, model=B.MODEL) or ""
+    except Exception as e:                            # a failed call is logged and counted, never guessed
+        print(f"[glm320oclow] call failed: {type(e).__name__} {str(e)[:120]}", flush=True)
+        out = ""
+    if not out:
+        with _LOCK:
+            B.FAILED["n"] += 1
+    return out, {}
+
+
+def selftest():
+    seen = []
+
+    def fake_run(args, cwd, stdin_devnull=True, timeout=300):
+        seen.append(list(args))
+        return (0, "
+---SEED---
+#!/usr/bin/env python3
+"""lis-320 pilot, step 1 of 3: code-only world sampler for dialog seeds (plan: design/v3/60-listener/lis-320-no-claude-data-plan.md).
+
+Code picks ONLY: people (fictional names built from syllable parts), their gender and role relative to the user,
+turn intents, relations (from relation-names.txt) and values. It writes no wording: there are no sentence templates and
+no example phrasings here. Every gold frame is built by code, in the training-target schema
+(claude_lis300_common.canon_frame: act, facts[owner, rel, value, mode, old], ask).
+
+Intents (one per turn, 6-8 turns per dialog):
+  teach        1-3 ASSERT facts; each owner named in the turn (or first person for "me"); first mention of a person is
+               an intro fact (me, <role>, Name)
+  correct      CORRECT of an earlier (owner, rel); half name the old value (fact gets "old"), half must not
+  backref      new ASSERT fact about a person named in the last 6 turns, referred to by pronoun (only when that person
+               is the only one of that gender named in the visible history) or by role word; the name must not appear
+  former       FORMER (claude_lis319f_data): past occupation / employer / city
+  jobhome      occupation + city of one owner, ASSERT, in one sentence
+  ask          ASK about a stored fact (ask object, no facts); the answer must not appear
+  lookalikes   question (QUESTION), plan (PLAN), doubt (CHECK, see LOOK_MODE), someone_else (REPORTED),
+               hypothetical (SUPPOSE), negation_only (NEGATE, no facts), confirm (CHECK of a stored fact),
+               ambiguous_pronoun (two same-gender people named, pronoun owner kept as typed, UNCLEAR)
+  smalltalk    CHAT, no facts
+
+python3 claude_lis320_seed.py --seed 320 --n 30 --out seeds.jsonl [--avoid-names FILE] [--avoid-hashes FILE]
+python3 claude_lis320_seed.py --selftest
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import random
+import sys
+from collections import Counter
+from pathlib import Path
+
+
+def find_repo() -> Path:
+    for p in [os.environ.get("LEARNER_REPO", ""), "/home/user/learner", str(Path.home() / "learner"), "."]:
+        if p and (Path(p) / "scripts/claude_lis300_compiler.py").exists():
+            return Path(p).resolve()
+    raise SystemExit("repo not found: set LEARNER_REPO")
+
+
+REPO = find_repo()
+REL_NAMES = set((REPO / "design/v3/60-listener/relation-names.txt").read_text().split())
+
+# ------------------------------------------------------------------ names (syllable parts, never real famous names)
+SYL = ["ka", "ri", "lo", "ven", "ta", "mi", "dor", "sa", "bel", "nu", "ro", "fi", "gan", "le", "zo", "ha", "tir",
+       "wen", "ya", "mo", "ke", "ul", "si", "dra", "po", "lin", "ez", "or", "ba", "ne", "vi", "ash", "ru", "tem",
+       "qua", "ish", "bra", "cor", "del", "fen", "gal", "hol", "jun", "kes", "mar", "nov", "pel", "sov", "tav", "yl"]
+END_F = ["a", "ia", "ine", "elle", "ra", "wyn", "ette", "isa", "ena", "ith"]
+END_M = ["o", "an", "ek", "ir", "us", "en", "or", "ald", "im", "orn"]
+END_PET = ["o", "y", "i", "ix", "ble", "kin", "sy", "pip"]
+PLACE_SUF = ["ford", "mere", "wick", "holm", "dale", "by", "ton", "haven", "stead", "port", "combe", "moor"]
+ORG_SUF = ["Foods", "Logistics", "Dental", "Books", "Motors", "Bakery", "Labs", "Print", "Insurance", "Freight",
+           "Studios", "Brewing", "Hardware", "Pharmacy", "Clinic", "Textiles"]
+# real or famous names the syllables could produce by chance; --avoid-names adds dev/test names
+BLOCK = set("""anna ella emma mila lina lena nina nora sara tara kara vera dana hana mona rita rosa lola tina dora
+luna elsa bella maria mira leo milo hugo otto bruno theo enzo ivan omar karl kai ben sam zeus hera thor loki odin
+nemo simba nala yoda frodo zelda mario luigi elvis adele oprah pele kobe serena venus mars apollo athena madonna
+rihanna shakira beyonce obama biden trump musk newton darwin einstein mozart picasso messi moana tarzan dracula
+ramen salsa karma sofa bravo ta
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B -c "import pathlib; txt=pathlib.Path('scripts/claude_lis320_glm_oclow.py').read_text(); print(txt[3000:8000])"
+\x1b[0m{\"turns\": []}\n", "") if args[0] == "run" else (0, "[]", "")
+    real = H._run_opencode
+    H._run_opencode = fake_run
+    try:
+        assert call_low("hello") == "{\"turns\": []}"
+    finally:
+        H._run_opencode = real
+    a = seen[0]
+    assert a[:5] == ["run", "--model", "opencode-go/glm-5.3-flash", "--variant", "low"] and a[5] == "--title" \
+        and a[6].startswith("glm11-") and a[7] == "hello", a
+    assert B.MODEL == "opencode-go/glm-5.3-flash"
+    B.call_opencode = call_opencode_low
+    B.selftest()
+    print("lis320 glm_oclow selftest ok (variant low on the run line; no network)")
+
+
+if __name__ == "__main__":
+    B.call_opencode = call_opencode_low
+    if "--selftest" in sys.argv:
+        selftest()
+    else:
+        sys.exit(B.main())
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B -c "import pathlib; txt=pathlib.Path('scripts/claude_lis320_glm_oc.py').read_text(); print(txt[:5000])"
+#!/usr/bin/env python3
+"""lis-320 GLM wording through Ben's opencode route (reading thread, 2026-09-26). New file; claude_lis320_glm.py stays.
+
+The OpenRouter account ran out of funds at 18:38 UTC (full run stopped at 298 of 6000 dialogs). Ben (18:47 UTC) offered
+GLM 5.3 Flash through his opencode subscription. The one change here: every wording call goes through
+scripts/claude_glm_opencode.py call() (the Director's shared helper, sha 3b597086...) instead of OpenRouter. The prompt
+(build_prompt), the parser, the key guard and the output rows are claude_lis320_glm's, run unchanged. The route sets no
+temperature and no reasoning effort (opencode's defaults) and may add its own system text; rows record temperature null
+and model "opencode-go/glm-5.3-flash". See artifacts/claude-lis320-20260926/ADDENDUM-2-opencode-route.md.
+No key is read: opencode holds its own login, and this script never touches opencode config or auth files.
+
+Runs in batches so a job can stop cleanly at its time cap and resume later (rows already in --out are skipped):
+    python -B scripts/claude_lis320_glm_oc.py --seeds S.jsonl --out raw.jsonl [--workers 4] [--batch 40]
+           [--max-minutes 160] [--max-failed 50] [--limit N]
+It stops starting new batches after --max-minutes, or once more than --max-failed calls came back empty (a failed
+call is written as an unparsed row, as in claude_lis320_glm). The last line printed is the totals JSON with
+"stopped": "done" | "time" | "failed".
+selftest (no network): python -B scripts/claude_lis320_glm_oc.py --selftest
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import threading
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_lis320_glm as G  # noqa: E402
+
+MODEL = "opencode-go/glm-5.3-flash"
+FAILED = {"n": 0}
+_LOCK = threading.Lock()
+
+
+def call_opencode(text):
+    import claude_glm_opencode as OC
+    try:
+        out = OC.call(text, model=MODEL) or ""
+    except Exception as e:                            # a failed call is logged and counted, never guessed
+        print(f"[glm320oc] call failed: {type(e).__name__} {str(e)[:120]}", flush=True)
+        out = ""
+    if not out:
+        with _LOCK:
+            FAILED["n"] += 1
+    return out, {}
+
+
+def run_batches(seeds, out, caller, workers, batch, max_minutes, max_failed):
+    t0 = time.time()
+    tot = {"calls": 0, "parsed": 0, "skipped": 0, "failed_calls": 0, "batches": 0, "stopped": "done"}
+    for i in range(0, len(seeds), batch):
+        if max_minutes and (time.time() - t0) / 60 >= max_minutes:
+            tot["stopped"] = "time"
+            break
+        if FAILED["n"] > max_failed:
+            tot["stopped"] = "failed"
+            break
+        b = G.run(seeds[i:i + batch], out, caller, MODEL, None, workers=workers)
+        for k in ("calls", "parsed", "skipped"):
+            tot[k] += b[k]
+        tot["batches"] += 1
+    if tot["stopped"] == "done" and FAILED["n"] > max_failed:
+        tot["stopped"] = "failed"
+    tot["failed_calls"] = FAILED["n"]
+    tot["minutes"] = round((time.time() - t0) / 60, 1)
+    return tot
+
+
+def selftest():
+    import tempfile
+    from claude_lis320_seed import make_seeds
+    seeds = make_seeds(1, 5)
+    n_turns = {d["dialog_id"]: len(d["turns"]) for d in seeds}
+    calls = []
+
+    def fake(p):
+        d = next(x for x in seeds if G.build_prompt(x) == p)
+        calls.append(d["dialog_id"])
+        if len(calls) == 2:                           # one failed call -> unparsed row, counted
+            with _LOCK:
+                FAILED["n"] += 1
+            return "", {}
+        n = n_turns[d["dialog_id"]]
+        return json.dumps({"turns": [{"n": i + 1, "reply_before": "" if i == 0 else "ok", "user": f"msg {i}"}
+                                     for i in range(n)]}), {}
+
+    with tempfile.TemporaryDirectory() as td:
+        out = Path(td) / "raw.jsonl"
+        tot = run_batches(seeds[:3], out, fake, workers=2, batch=2, max_minutes=0, max_failed=50)
+        assert tot["calls"] == 3 and tot["parsed"] == 2 and tot["failed_calls"] == 1 and tot["stopped"] == "done", tot
+        rows = G.load(out)
+        assert len(rows) == 3 and all(r["model"] == MODEL and r["temperature"] is None for r in rows)
+        tot = run_batches(seeds, out, fake, workers=2, batch=2, max_minutes=0, max_failed=50)
+        assert tot["skipped"] == 3 and tot["calls"] == 2, tot           # resume skips rows already written
+        FAILED["n"] = 99
+        tot = run_batches(seeds, Path(td) / "b.jsonl", fake, workers=2, batch=2, max_minutes=0, max_failed=50)
+        assert tot["stopped"] == "failed" and tot["calls"] == 0, tot   # stops before any batch once over the limit
+        FAILED["n"] = 0
+    try:
+        G.guard("here you go sk-or-v1-xxxx")
+        raise AssertionError("guard missed the key marker")
+    except G.KeyLeak:
+        pass
+    print("lis320 glm_oc selftest 4/4 ok")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-
+[0m
+[0m$ [0mls design/v3/60-listener/relation-names.txt 2>&1; ls scripts/claude_lis300_compiler.py 2>&1; echo "---D---"; ls scripts/claude_lis300_compiler.py 2>&1
+ls /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/design/v3/60-listener/relation-names.txt 2>&1 || git show origin/main:design/v3/60-listener/relation-names.txt 2>&1 | head -n 5
+ls: design/v3/60-listener/relation-names.txt: No such file or directory
+ls: scripts/claude_lis300_compiler.py: No such file or directory
+---D---
+ls: scripts/claude_lis300_compiler.py: No such file or directory
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/design/v3/60-listener/relation-names.txt: No such file or directory
+mother father parent sister brother sibling spouse wife husband partner child son daughter grandchild grandson granddaughter grandmother grandfather cousin aunt uncle friend best_friend neighbour boss colleague teacher coach doctor mentor apprentice rival envoy herald keeper scout warden owner pet dog cat employer occupation work_location school educated_at title city home hometown place_of_birth place_of_death country country_of_citizenship country_of_origin capital continent headquarters_location location_of_formation composer author painter director founder inventor designer discoverer architect creator developer performer manufacturer notable_work original_broadcaster genre officeholder head_of_state head_of_government chairperson chief_executive_officer head_coach dean language official_language language_of_work_or_name religion_or_worldview sport position_played_on_team_speciality favorite_color color hobby nickname code mood toy training_data age birthday anniversary date_of_birth date_of_death stepfather stepmother stepbrother stepsister stepson stepdaughter half_brother half_sister mother_in_law father_in_law sister_in_law brother_in_law son_in_law daughter_in_law great_grandmother great_grandfather great_aunt great_uncle second_cousin niece nephew godmother godfather godson goddaughter fiance ex_wife ex_husband roommate classmate teammate tutor landlord dentist vet babysitter therapist instrument favorite_food favorite_drink favorite_sport favorite_book favorite_film favorite_animal favorite_season favorite_subject allergy car rabbit hamster parrot horse
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main 2>&1 | grep -E "lis300_compiler|relation-names|lis320_seed|lis320_glm_oclow|g406_2_glm" | head -n 20
+echo "---D scripts---"
+ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/scripts/ | grep -E "lis300|lis320_seed" | head -n 20
+design/v3/60-listener/relation-names.txt
+scripts/claude_g406_2_glm.py
+scripts/claude_lis300_compiler.py
+scripts/claude_lis320_glm_oclow.py
+scripts/claude_lis320_seed.py
+scripts/claude_lis320_seed_cr.py
+---D scripts---
+claude_lis300_agree.py
+claude_lis300_common.py
+claude_lis300_compiler.py
+claude_lis300_data.py
+claude_lis300_read.py
+claude_lis300_score.py
+claude_lis300_train.py
+claude_lis320_seed_cr.py
+claude_lis320_seed.py
+[0m
+[0m$ [0mgit archive origin/main design/v3/60-listener/relation-names.txt | tar -x -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0; echo "EXTRA_ARCHIVE_EXIT:$?"; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/design/v3/60-listener/
+uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_glm_oclow.py --selftest 2>&1; echo "EXIT:$?"
+fatal: not a git repository (or any of the parent directories): .git
+EXTRA_ARCHIVE_EXIT:0
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/design/v3/60-listener/: No such file or directory
+Traceback (most recent call last):
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/scripts/claude_lis320_glm_oclow.py", line 89, in <module>
+    selftest()
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/scripts/claude_lis320_glm_oclow.py", line 82, in selftest
+    B.selftest()
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/scripts/claude_lis320_glm_oc.py", line 73, in selftest
+    from claude_lis320_seed import make_seeds
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/scripts/claude_lis320_seed.py", line 46, in <module>
+    REL_NAMES = set((REPO / "design/v3/60-listener/relation-names.txt").read_text().split())
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/design/v3/60-listener/relation-names.txt'
+EXIT:1
+[0m
+[0m$ [0mD=$(cat /tmp/g406_D_path.txt); git archive origin/main design/v3/60-listener/relation-names.txt | tar -x -C "$D"; echo "EXIT:$?"; ls "$D/design/v3/60-listener/"
+EXIT:0
+relation-names.txt
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_glm_oclow.py --selftest 2>&1; echo "EXIT:$?"
+[glm320] s320-1-00000 ok
+[glm320] s320-1-00001 unparsed
+[glm320] s320-1-00002 ok
+[glm320] s320-1-00003 ok
+[glm320] s320-1-00004 ok
+lis320 glm_oc selftest 4/4 ok
+lis320 glm_oclow selftest ok (variant low on the run line; no network)
+EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read first 13 lines of lis-302-gpu.md + record commit/uptime
+[✓] Tree setup via git archive to temp dir + seal check
+[✓] Selftests
+[•] Leak check (one call)
+[ ] Share count + run g406b then g406-2 GLM batches
+[ ] Count / verdicts / arm-report
+[ ] Copy run files to worktree, write RESULTS.md, rm temp dir
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_glm_leakcheck.py --worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 2>&1; echo "LEAK_EXIT:$?"
+{"exit": 0, "reply_ok": true, "left_after_cleanup": 0}
+LEAK_EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read first 13 lines of lis-302-gpu.md + record commit/uptime
+[✓] Tree setup via git archive to temp dir + seal check
+[✓] Selftests
+[✓] Leak check (one call)
+[•] Share count + run g406b then g406-2 GLM batches
+[ ] Count / verdicts / arm-report
+[ ] Copy run files to worktree, write RESULTS.md, rm temp dir
+[0m
+[0m$ [0mdate -u; uptime; df -g / | head -n 5; N=$(pgrep -f "opencode run" | wc -l | tr -d ' '); echo "N=$N"; W=$((16 - N)); if [ "$W" -gt 3 ]; then W=3; fi; echo "W=$W"; echo "$N $W" > /tmp/g406_share1.txt; cat /tmp/g406_share1.txt
+Sun Sep 27 00:46:26 UTC 2026
+20:46  up 3 days, 10:39, 4 users, load averages: 51.04 60.08 74.38
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        42    24%  484014 445707280    0%   /
+N=8
+W=3
+8 3
+[0m
+[0m$ [0mdate -u
+wc -l artifacts/claude-mu405b-20260926/judge/packets/claims_j*.jsonl | tail -n 10
+echo "---one---"
+wc -l artifacts/claude-mu402-20260926/judge/packets/claims_j*.jsonl artifacts/claude-mu403-20260926/judge/packets/claims_j*.jsonl | tail -n 25
+Sun Sep 27 00:46:32 UTC 2026
+      60 artifacts/claude-mu405b-20260926/judge/packets/claims_j1.jsonl
+      60 artifacts/claude-mu405b-20260926/judge/packets/claims_j2.jsonl
+      60 artifacts/claude-mu405b-20260926/judge/packets/claims_j3.jsonl
+      60 artifacts/claude-mu405b-20260926/judge/packets/claims_j4.jsonl
+      60 artifacts/claude-mu405b-20260926/judge/packets/claims_j5.jsonl
+      60 artifacts/claude-mu405b-20260926/judge/packets/claims_j6.jsonl
+      60 artifacts/claude-mu405b-20260926/judge/packets/claims_j7.jsonl
+      60 artifacts/claude-mu405b-20260926/judge/packets/claims_j8.jsonl
+     480 total
+---one---
+      60 artifacts/claude-mu402-20260926/judge/packets/claims_j1.jsonl
+      60 artifacts/claude-mu402-20260926/judge/packets/claims_j2.jsonl
+      60 artifacts/claude-mu402-20260926/judge/packets/claims_j3.jsonl
+      60 artifacts/claude-mu402-20260926/judge/packets/claims_j4.jsonl
+      60 artifacts/claude-mu402-20260926/judge/packets/claims_j5.jsonl
+      60 artifacts/claude-mu402-20260926/judge/packets/claims_j6.jsonl
+      60 artifacts/claude-mu402-20260926/judge/packets/claims_j7.jsonl
+      60 artifacts/claude-mu402-20260926/judge/packets/claims_j8.jsonl
+      60 artifacts/claude-mu403-20260926/judge/packets/claims_j1.jsonl
+      60 artifacts/claude-mu403-20260926/judge/packets/claims_j10.jsonl
+      60 artifacts/claude-mu403-20260926/judge/packets/claims_j11.jsonl
+      20 artifacts/claude-mu403-20260926/judge/packets/claims_j12.jsonl
+      60 artifacts/claude-mu403-20260926/judge/packets/claims_j2.jsonl
+      60 artifacts/claude-mu403-20260926/judge/packets/claims_j3.jsonl
+      60 artifacts/claude-mu403-20260926/judge/packets/claims_j4.jsonl
+      60 artifacts/claude-mu403-20260926/judge/packets/claims_j5.jsonl
+      20 artifacts/claude-mu403-20260926/judge/packets/claims_j6.jsonl
+      60 artifacts/claude-mu403-20260926/judge/packets/claims_j7.jsonl
+      60 artifacts/claude-mu403-20260926/judge/packets/claims_j8.jsonl
+      60 artifacts/claude-mu403-20260926/judge/packets/claims_j9.jsonl
+    1120 total
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_g406_2_glm.py --help 2>&1 | head -n 60
+usage: claude_g406_2_glm.py [-h] [--mode {one,two}] [--packets PACKETS]
+                            [--out OUT] [--workers WORKERS] [--batch BATCH]
+                            [--max-minutes MAX_MINUTES]
+                            [--max-failed MAX_FAILED] [--attempts ATTEMPTS]
+                            [--print-prompt] [--arm-report] [--glm GLM]
+                            [--judge JUDGE] [--best-to BEST_TO] [--selftest]
+
+options:
+  -h, --help            show this help message and exit
+  --mode {one,two}
+  --packets PACKETS
+  --out OUT
+  --workers WORKERS
+  --batch BATCH
+  --max-minutes MAX_MINUTES
+  --max-failed MAX_FAILED
+  --attempts ATTEMPTS
+  --print-prompt
+  --arm-report
+  --glm GLM
+  --judge JUDGE
+  --best-to BEST_TO     with --glm: write one row per packet (a usable row
+                        wins) here and exit
+  --selftest
+[0m
+[0m$ [0mdate -u; echo "START_B"; D=$(cat /tmp/g406_D_path.txt); O="$D/artifacts/claude-g406-2-20260926/run"; echo "O=$O W=3"; uv run --offline --no-project --python 3.12 python -B scripts/claude_g406_2_glm.py --mode two --packets 'artifacts/claude-mu405b-20260926/judge/packets/claims_j*.jsonl' --out "$O/glm_b.jsonl" --workers 3 --attempts 3 --max-failed 60 --max-minutes 70 > "$O/glm_b.log" 2>&1; echo "GLM_B_EXIT:$?"; date -u; uptime; echo "---LASTLINE---"; tail -n 1 "$O/glm_b.log"; echo "---WC---"; wc -l "$O/glm_b.jsonl" 2>&1
+Sun Sep 27 00:46:46 UTC 2026
+START_B
+O=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0/artifacts/claude-g406-2-20260926/run W=3
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 4800000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
