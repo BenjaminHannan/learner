@@ -1,29 +1,18 @@
-2026-09-27 09:03:33
+2026-09-27 09:07:26
 running:
 000-probe-benspc-gpu-0827.running
 000-probe-zen-builder.running
 000-stop-172-rv390.running
 bm398w-mac-c4.running
+claude-lis320-luna-c4-mac.running
 k1h-glm2.running
 k1h-luna-full-mac.running
 k1h-luna-full-r2-bash.running
 lis320-pilot8b-mac.running
 y1t-luna-rest-mac.running
 launched (no exit yet) / finished:
-     901
+     903
 
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-2026-09-27 07:45:14 pushed madeup-mu406-practice-mac
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-2026-09-27 07:47:32 launch 000-bash-benspc-disklist2
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-2026-09-27 07:52:12 launch madeup-mu406-practice2-mac
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-2026-09-27 07:54:31 pushed 000-collect2-rd378g
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 07:59:13 pushed 157-claude-sleep-358spc-collect
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
@@ -162,6 +151,18 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 09:03:12 BensPC unreachable (ssh rc=255), holding 176-creative-brd11pc
 2026-09-27 09:03:22 BensPC unreachable (ssh rc=255), holding 260-claude-sleep-358t3pc
 2026-09-27 09:03:33 BensPC unreachable (ssh rc=255), holding k1f-benspc2
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 09:05:52 BensPC unreachable (ssh rc=255), holding 160-claude-sleep-358s-bo-p1
+2026-09-27 09:06:02 BensPC unreachable (ssh rc=255), holding 161-claude-sleep-358s-bo-p2
+2026-09-27 09:06:13 BensPC unreachable (ssh rc=255), holding 162-claude-sleep-358s-bo-p3
+2026-09-27 09:06:23 BensPC unreachable (ssh rc=255), holding 163-claude-sleep-358s-bo-p4
+2026-09-27 09:06:33 BensPC unreachable (ssh rc=255), holding 164-claude-sleep-358s-bo-p5
+2026-09-27 09:06:44 BensPC unreachable (ssh rc=255), holding 173-rv390-358i2-pc-d
+2026-09-27 09:06:54 BensPC unreachable (ssh rc=255), holding 174-rv392-358i2-pc
+2026-09-27 09:07:04 BensPC unreachable (ssh rc=255), holding 176-creative-brd11pc
+2026-09-27 09:07:15 BensPC unreachable (ssh rc=255), holding 260-claude-sleep-358t3pc
+2026-09-27 09:07:15 launch claude-lis320-luna-c4-mac
+2026-09-27 09:07:26 BensPC unreachable (ssh rc=255), holding k1f-benspc2
 
 diag:
 == 000-probe-benspc-gpu-0827
@@ -192,6 +193,9 @@ diag:
 == bm398w-mac-c4
 0 Sep 27 08:31 bm398w-mac-c4.go1.err.txt
 306 Sep 27 08:31 bm398w-mac-c4.go1.reply.md
+== claude-lis320-luna-c4-mac
+0 Sep 27 09:07 claude-lis320-luna-c4-mac.go1.err.txt
+2747 Sep 27 09:07 claude-lis320-luna-c4-mac.go1.reply.md
 == k1h-glm2
 121798 Sep 26 20:58 k1h-glm2.go1.err.txt
 758 Sep 26 18:58 k1h-glm2.go1.reply.md
@@ -249,23 +253,23 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 [0m
 top5cpu:
 %CPU COMM
-71.1 ApplicationsStorageExtension
-60.1 python
-54.7 fileproviderd
-26.7 WindowServer
-25.7 Finder
+94.3 fileproviderd
+67.3 ApplicationsStorageExtension
+63.0 python
+50.0 Finder
+29.6 WindowServer
 procs:
-  363     1 03-20:50:31 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-20:49:39 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
-15699     1 03-19:04:57 S    /usr/bin/ssh-agent
-19656   818       02:58 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-44571 44570 01-11:26:35 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-11:26:35 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    16:41:08 SN   /usr/local/bin/opencode
-53479 20011    04:58:44 SN   /usr/local/bin/opencode
-54153 44066    04:58:24 SN   /usr/local/bin/opencode
-59802 59771    04:50:00 SN   /usr/local/bin/opencode
-60494 59018    09:56:01 SN   /usr/local/bin/opencode
-61605 61571    04:47:42 SN   /usr/local/bin/opencode
-64555 64533    06:21:35 SN   /usr/local/bin/opencode
-81797     1 01-21:44:14 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 03-20:54:24 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-20:53:32 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+15699     1 03-19:08:50 S    /usr/bin/ssh-agent
+19656   818       06:51 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+44571 44570 01-11:30:28 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-11:30:28 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    16:45:01 SN   /usr/local/bin/opencode
+53479 20011    05:02:37 SN   /usr/local/bin/opencode
+54153 44066    05:02:17 SN   /usr/local/bin/opencode
+59802 59771    04:53:53 SN   /usr/local/bin/opencode
+60494 59018    09:59:54 SN   /usr/local/bin/opencode
+61605 61571    04:51:35 SN   /usr/local/bin/opencode
+64555 64533    06:25:28 SN   /usr/local/bin/opencode
+81797     1 01-21:48:07 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
