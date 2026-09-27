@@ -29,6 +29,8 @@
 set -u
 export LC_ALL=C COPYFILE_DISABLE=1
 KD=$1; PIN=$2; JOB=${3:-?}; MODE=${4:-next}; QF=${5:-}
+LAST=""; case "$MODE" in last|guard) LAST=1 ;; esac   # the guard acts like a last pass, at once, and never launches
+G=${GY1T:-$HOME/premonition-watch/y1t-vast}         # Mac-only guard state (its own kit copy, pid, log); never pushed
 A=artifacts/claude-y1t-20260926
 H=artifacts/claude-y1tH1-20260926
 R=$A/run
@@ -51,6 +53,7 @@ SSHO="-i $KEY -o ConnectTimeout=15 -o ServerAliveInterval=10 -o ServerAliveCount
 MA=${MAY1T:-$HOME/y1t-adapter}
 WATCH=${WATCHY1T:-3300}; S1=${S1Y1T:-60}; RUNWAIT=${RUNWAITY1T:-360}; POLL=${POLLY1T:-20}; SSHWAIT=${SSHWAITY1T:-240}
 [ "${4:-}" = last ] && WATCH=${WATCHLASTY1T:-2700}   # the last pass keeps 30 minutes for the stop, the copy and the destroy
+[ "${4:-}" = guard ] && WATCH=0
 NETGB=8             # GB each instance downloads (torch cu128 wheels and MiniCPM5-1B; a guess), priced at its $/GB in spent()
 MAXNET=0.02         # dollars per GB, the most an offer may charge for download or upload
 # Mac python: plain python3 under the watcher's bash is a broken x86 binary (000-bash-vastcredit-1250), so use uv's 3.12
@@ -75,13 +78,27 @@ pending() {  # what an exit leaves behind; says nothing when no instance of this
   grep -q "^STOPPED [0-9]* $i\$" "$VS" 2>/dev/null && return 0
   # the copy was checked (COLLECTED) but the destroy was not confirmed: destroy it now
   grep -q "^COLLECTED [0-9]* $i " "$VS" && vdestroy "$i" "results already copied and checked" && return 0
-  if [ "$MODE" = last ]; then
+  if [ -n "$LAST" ]; then
     note "ACTION NEEDED (FLAG-DIRECTOR): the last pass ended ($(echo "$1" | cut -c1-80)) and instance $i labelled $LABEL is not confirmed destroyed or stopped; it may still be running and billing"
   else
-    note "NEXT-PASS-NEEDED: instance $i keeps running and billing at \$$(dphof "$i")/h until a later pass copies back and destroys it; \$$(spent) spent so far; the \$$CAP cap is reached at about $(capat "$i") UTC"
+    note "NEXT-PASS-NEEDED: instance $i keeps running and billing at \$$(dphof "$i")/h until a later pass or the guard copies back and destroys it; \$$(spent) spent so far; the guard (pid $(cat "$G/guard.pid" 2>/dev/null)) acts at the \$$CAP cap (about $(capat "$i") UTC) or the time cap ($(hms "$(tcap "$i")")), whichever comes first"
   fi
 }
 stop() { note "$*"; pending "$*"; echo "PASS-END $(now)"; exit 0; }
+tcap() {  # the time cap of instance $1 (epoch): create + 20 min setup + 2 x the offer's estimated chain minutes + 15 min
+  awk -v i="$1" '$1=="CREATE" && $3==i {c=$2} $1=="EST" && $2==i {e=$3} END{if(e=="") e=120; printf "%d", c+(20+2*e+15)*60}' "$VS"; }
+ensure_guard() {  # start the Mac-side guard (guard.sh) unless it runs already: between passes it enforces the money cap and
+  # the time cap by running this script in guard mode (copy back, then destroy, else stop). It runs from its own copy of
+  # the kit in $G, detached (its own session, caffeinate on the Mac), so it outlives this pass and the job's temporary kit.
+  local p c
+  p=$(cat "$G/guard.pid" 2>/dev/null)
+  [ -n "$p" ] && kill -0 "$p" 2>/dev/null && ps -p "$p" -o args= 2>/dev/null | grep -q 'y1tvast/guard\.sh' && return 0
+  mkdir -p "$G"; rm -rf "$G/kit"; mkdir -p "$G/kit/handoff/kit"; cp -R "$KD/handoff/kit/y1tvast" "$G/kit/handoff/kit/"
+  c=""; command -v caffeinate > /dev/null && c="caffeinate -i"
+  nohup perl -e 'use POSIX qw(setsid); setsid(); exec @ARGV' $c bash "$G/kit/handoff/kit/y1tvast/guard.sh" "$G" "$PWD" "$PIN" > "$G/guard.out" 2>&1 < /dev/null &
+  echo $! > "$G/guard.pid"
+  note "guard started (pid $!; $G/guard.log): at the \$$CAP cap or the time cap ($(hms "$(tcap "$ID")")) it copies back, then destroys, else stops"
+}
 capat() { hms "$(awk -v t="$(date +%s)" -v c="$CAP" -v s="$(spent)" -v p="$(dphof "$1")" 'BEGIN{if(p<=0)p=1; x=(c-s)/p*3600; if(x<0)x=0; printf "%d", t+x}')"; }
 
 # ---- vast (python only parses the CLI's JSON; the create reply's instance key is never printed)
@@ -248,7 +265,7 @@ if rows:
 }
 sshto() { S=on; }   # HOSTN and PORT are set: sx can reach the instance
 halt() {  # a problem once this task's instance is known: the last pass copies what it can and destroys; earlier passes leave it
-  [ "$MODE" = last ] && { FORCE=1; finish "STOP at the last pass: $*"; }
+  [ -n "$LAST" ] && { FORCE=1; finish "STOP at the $DLW: $*"; }
   stop "STOP: $*; the instance is left for the next pass"
 }
 rv() { sx "bash ~/tree/$KR/bov.sh $*" < /dev/null 2>&1; }
@@ -297,7 +314,7 @@ finish() {  # $1 = status line for RESULTS-vast.md. Destroy only after a checked
   id=$(curid)
   if [ -z "$id" ]; then ok=1
   elif [ "$copy" = ok ] || ! grep -q "^UP [0-9]* $id " "$VS"; then vdestroy "$id" "$status" && ok=1
-  elif [ "$MODE" != last ] && [ -z "${FORCE:-}" ]; then
+  elif [ -z "$LAST" ] && [ -z "${FORCE:-}" ]; then
     stop "COPY-FAIL: the copy check failed; the instance is left running for the next pass (nothing destroyed)"
   else
     vstop "$id" "$status" && ok=1
@@ -374,8 +391,13 @@ results() {
   note "wrote RESULTS-vast.md: $status"
 }
 
-echo "y1t vast pass, job $JOB ($MODE), kit $PIN, start $(now)"
-case "$MODE" in first|next|last) ;; *) echo "STOP: mode '$MODE' is not first, next or last"; exit 0;; esac
+[ "$MODE" = info ] || echo "y1t vast pass, job $JOB ($MODE), kit $PIN, start $(now)"
+case "$MODE" in first|next|last|guard|info) ;; *) echo "STOP: mode '$MODE' is not first, next, last, guard or info"; exit 0;; esac
+DLW="last pass"; [ "$MODE" = guard ] && DLW="guard (${GUARDWHY:-?})"
+# info (for guard.sh): spent, this task's instance, its $/h, its time cap, its ssh host and port, whether the chain is done
+if [ "$MODE" = info ]; then
+  i=$(curid); echo "$(spent) ${i:-none} $(dphof "$i") $(tcap "$i") $(awk -v i="$i" '$1=="UP" && $3==i {h=$4; p=$5} END{print (h?h:"-"), (p?p:"-")}' "$VS") $(grep -q "^STOPPED [0-9]* $i\$" "$VS" && echo stopped || echo live)"; exit 0
+fi
 # the notes and the vast state come first, so that every exit below can say what it leaves running
 mkdir -p "$R" "$RH"
 [ -s "$NOTE" ] || git show "origin/builder-outbox:$NOTE" > "$NOTE" 2>/dev/null || : > "$NOTE"
@@ -409,7 +431,7 @@ command -v "$VAST" >/dev/null || stop "STOP: the vastai CLI is missing"
 [ -d "$R/.pass-lock" ] && [ -n "$(find "$R/.pass-lock" -maxdepth 0 -mmin +80 2>/dev/null)" ] && rmdir "$R/.pass-lock" && note "removed a lock older than 80 minutes"
 k=0
 until mkdir "$R/.pass-lock" 2>/dev/null; do
-  [ "$MODE" = last ] || { echo "LOCKED: another pass holds $R/.pass-lock; stopping (that pass writes the notes)"; echo "PASS-END $(now)"; exit 0; }
+  [ -n "$LAST" ] || { echo "LOCKED: another pass holds $R/.pass-lock; stopping (that pass writes the notes)"; echo "PASS-END $(now)"; exit 0; }
   k=$((k+1)); [ $k -le "${LOCKWAITY1T:-40}" ] || stop "LOCKED: another pass still holds $R/.pass-lock after 20 minutes"
   sleep "${LOCKSLEEPY1T:-30}"
 done
@@ -451,7 +473,7 @@ if [ -z "$ID" ]; then
       note "using instance $cid (made by an earlier create call of this pass) instead of a new create; waiting up to $RUNWAIT s for it to run"
     else
       o=$(offer) || stop "NO-OFFER: no 1-GPU offer with >= 16 GB at <= \$$MAXDPH/h and <= \$$MAXNET/GB passes the filter with a time that fits; nothing rented"
-      set -- $o; oid=$1; odph=$2; og=$3; oh=$4; om=$5; onet=$7
+      set -- $o; oid=$1; odph=$2; og=$3; oh=$4; om=$5; onet=$7; oest=${11}
       note "offer $oid: $og, $9 TFLOPS, at \$$odph/h (${10} TFLOPS per \$/h, the best that fits; estimated chain ${11} minutes), host $oh, machine $om, CUDA $6, download \$$7/GB, upload \$$8/GB"
       echo "CALL $(date +%s) $oid" >> "$VS"
       c=$(vast create instance "$oid" --image "$IMAGE" --disk 60 --label "$LABEL" --ssh --direct --raw < /dev/null 2>/dev/null | "$PYM" -c '
@@ -464,7 +486,7 @@ except Exception:
 ')
       set -- $c; cid=${2:-none}
       if [ "$1" = OK ] && [ "$cid" != none ]; then
-        echo "CREATE $(date +%s) $cid $oid $og $odph $oh $om $onet" >> "$VS"
+        echo "CREATE $(date +%s) $cid $oid $og $odph $oh $om $onet" >> "$VS"; echo "EST $cid $oest" >> "$VS"
         note "created instance $cid ($og, \$$odph/h); waiting up to $RUNWAIT s for it to run"
       else
         # the reply can be lost while vast still makes the instance: look for it for 2 minutes before trying another host
@@ -508,7 +530,7 @@ else
     stop "HOST-FAIL: instance $ID never answered ssh ('$2') and its destroy is not confirmed"
   fi
   if [ "$2" != running ]; then
-    [ "$MODE" = last ] && { S=""; FORCE=1; finish "LOST: instance $ID is '$2', not running, at the last pass"; }
+    [ -n "$LAST" ] && { S=""; FORCE=1; finish "LOST: instance $ID is '$2', not running, at the $DLW"; }
     stop "WAIT: instance $ID is '$2', not running; nothing done this pass"
   fi
   HOSTN=$4; PORT=$5; sshto
@@ -516,12 +538,14 @@ else
 fi
 DPH=$(dphof "$ID"); over 0 "$DPH" && DPH=$MAXDPH
 
+[ "$MODE" = guard ] || ensure_guard
 # 2. the tree on the rental (made once from the pinned commit)
 P0=$(SXT=60 sx 'if [ -f ~/tree/W/tree-pin.txt ]; then cat ~/tree/W/tree-pin.txt; elif [ -e ~/tree/W/chain.started ]; then echo STARTED-NO-PIN; elif [ -d ~/tree ]; then echo NO-PIN; else echo NO-TREE; fi' < /dev/null 2>/dev/null | grep . | tail -1)
 echo "tree: $P0"
 case "$P0" in
   "$PIN") ;;
   NO-TREE|NO-PIN)
+    [ "$MODE" = guard ] && { FORCE=1; finish "GUARD-STOP (${GUARDWHY:-?}): no tree on the rental yet; nothing ran"; }
     git archive "$PIN" scripts artifacts/claude-e2e331-dev-20260924 artifacts/claude-y1t-20260926 \
       artifacts/claude-spare401-20260926/panel/turns.jsonl artifacts/claude-spare401-20260926/SEAL-spare401.sha256.txt \
       handoff/kit/y1tvast | SXT=600 sx 'mkdir -p ~/tree && tar -xf - -C ~/tree' 2>&1
@@ -548,6 +572,7 @@ died() {
 
 # 3. setup (once, detached; about 5 to 10 minutes)
 getstate || halt "no state from the rental"
+[ "$MODE" = guard ] && [ "$(sv CHAIN | cut -d' ' -f1)" != "started=1" ] && { FORCE=1; finish "GUARD-STOP (${GUARDWHY:-?}): the chain was never launched (setup $(sv SETUP | cut -d' ' -f2-))"; }
 case "$(sv SETUP)" in "started=0"*) note "setup: $(rv setup-start)" ;; esac
 while :; do
   getstate || { sleep "$S1"; getstate || halt "no state from the rental twice"; }
@@ -556,7 +581,7 @@ while :; do
     *"rc=-") died "$(sv SETUPPROC)" "setup" && { FORCE=1; finish "DIED: setup stopped without writing setup.done; the chain never started"; } ;;
     *) FORCE=1; finish "ENV-FAIL: setup ended $(sv SETUP | cut -d' ' -f2-); the chain never started" ;;
   esac
-  [ "$(elapsed)" -lt "$WATCH" ] || { [ "$MODE" = last ] && { FORCE=1; finish "PARTIAL: setup was still running at the last pass's deadline"; }; stop "RUNNING: setup still running $(sv SETUPLAST | cut -c1-120); the next pass goes on"; }
+  [ "$(elapsed)" -lt "$WATCH" ] || { [ -n "$LAST" ] && { FORCE=1; finish "PARTIAL: setup was still running at the $DLW's deadline"; }; stop "RUNNING: setup still running $(sv SETUPLAST | cut -c1-120); the next pass goes on"; }
   s=$(spent); over "$(awk -v s="$s" -v p="$DPH" 'BEGIN{print s+p/4}')" "$CAP" && { FORCE=1; finish "BUDGET-STOP: \$$s spent during setup (cap \$$CAP)"; }
   sleep 30
 done
@@ -579,8 +604,9 @@ if [ "$(sv CHAIN | cut -d' ' -f1)" = "started=0" ]; then
   [ "$(sv PY)" = 0 ] || finish "BUSY: $(sv PY) y1t python process(es) already on the rental; nothing launched"
   [ "$(sv DISK)" -ge 8 ] 2>/dev/null || finish "NO-DISK: the rental has $(sv DISK) GB free and the run needs 8 GB; nothing launched"
   # the chain's own cap: the minutes the money left pays for, keeping 15 minutes for the copy and destroy; at most 180
-  capm=$(awk -v c="$CAP" -v s="$(spent)" -v p="$DPH" 'BEGIN{m=int((c-s)/p*60)-15; if(m>180)m=180; print m}')
-  [ "$capm" -ge 45 ] || finish "BUDGET-STOP: \$$(spent) spent; the money left pays for $capm minutes of chain, under 45; nothing launched"
+  # and never past the time cap (less 5 minutes), so the chain stops itself even if no pass or guard is running
+  capm=$(awk -v c="$CAP" -v s="$(spent)" -v p="$DPH" -v t="$(( ( $(tcap "$ID") - $(date +%s) ) / 60 - 5 ))" 'BEGIN{m=int((c-s)/p*60)-15; if(m>180)m=180; if(t<m)m=t; print m}')
+  [ "$capm" -ge 45 ] || finish "BUDGET-STOP: \$$(spent) spent; the money and time caps leave $capm minutes of chain, under 45; nothing launched"
   unset FORCE
   out=$(rv launch-chain "$capm"); echo "$out"; note "$(echo "$out" | tr '\n' ';')"
   if ! echo "$out" | grep -q '^LAUNCH chain .*rc=0 pid='; then
@@ -595,7 +621,7 @@ fi
 lastn=0; fails=0
 while :; do
   if getstate; then fails=0; else
-    fails=$((fails+1)); [ $fails -lt 5 ] || { [ "$MODE" = last ] && { FORCE=1; finish "NO-ANSWER: no answer from the rental for 5 minutes at the last pass"; }; stop "STOP: no answer from the rental for 5 minutes; the instance is left for the next pass"; }
+    fails=$((fails+1)); [ $fails -lt 5 ] || { [ -n "$LAST" ] && { FORCE=1; finish "NO-ANSWER: no answer from the rental for 5 minutes at the $DLW"; }; stop "STOP: no answer from the rental for 5 minutes; the instance is left for the next pass"; }
     sleep "$S1"; continue; fi
   echo "$ST" > "$R/state-last.txt"
   cur=$(echo "$ST" | awk '$1=="STEP" && $3=="start" {s=$2} END {print s}')
@@ -605,8 +631,10 @@ while :; do
   s=$(spent)
   if over "$(awk -v s="$s" -v p="$DPH" 'BEGIN{print s+p/4}')" "$CAP"; then
     note "MONEY: \$$s spent, cap \$$CAP; asking the chain to stop: $(SXT=260 rv stop-chain money-cap | tr '\n' ';')"; MONEY=1; break; fi
+  if [ "$(date +%s)" -ge "$(tcap "$ID")" ]; then
+    note "TIME: the time cap $(hms "$(tcap "$ID")") has passed; asking the chain to stop: $(SXT=260 rv stop-chain time-cap | tr '\n' ';')"; TIMEUP=1; break; fi
   if [ "$(elapsed)" -ge "$WATCH" ]; then
-    if [ "$MODE" = last ]; then note "last pass deadline: asking the chain to stop: $(SXT=260 rv stop-chain last-pass-deadline | tr '\n' ';')"; DEADLINE=1; break; fi
+    if [ -n "$LAST" ]; then note "$DLW deadline: asking the chain to stop: $(SXT=260 rv stop-chain "$MODE-deadline" | tr '\n' ';')"; DEADLINE=1; break; fi
     stop "RUNNING: step ${cur:-?}, log age ${lage:-?} min, GPU $(sv GPU), \$$s spent; the chain keeps running for the next pass"
   fi
   if [ $(( $(elapsed) / 600 )) -gt $lastn ]; then lastn=$(( $(elapsed) / 600 ))
@@ -619,7 +647,8 @@ bad1=$(echo "$ST" | awk '$1=="STEP" && $3 ~ /^rc=/ && $3!="rc=0" {print "step " 
 if [ "$nok" = 6 ]; then status="COMPLETE: all 6 steps ended rc=0"
 else status="PARTIAL: $nok of 6 steps ended rc=0${bad1:+; $bad1}"; fi
 [ -n "${MONEY:-}" ] && status="BUDGET-STOP, $status"
-[ -n "${DEADLINE:-}" ] && status="LAST-PASS-STOP, $status"
+[ -n "${TIMEUP:-}" ] && status="TIME-STOP, $status"
+[ -n "${DEADLINE:-}" ] && { [ "$MODE" = guard ] && status="GUARD-STOP (${GUARDWHY:-?}), $status" || status="LAST-PASS-STOP, $status"; }
 [ -n "${DIED:-}" ] && status="DIED (the chain stopped running without writing chain.done; the rental may have restarted), $status"
-[ -n "${MONEY:-}${DEADLINE:-}${DIED:-}" ] && FORCE=1
+[ -n "${MONEY:-}${DEADLINE:-}${DIED:-}${TIMEUP:-}" ] && FORCE=1
 finish "$status"
