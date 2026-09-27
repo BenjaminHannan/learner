@@ -1,7 +1,7 @@
 BASH-ONLY: yes
 GPU: no. LOAD-LIGHT: yes
 HELD until the Thread manager relays Ben's own typed words ("yes, delete those 6") with the message id; the Director then adds that id on the BEN-YES line and moves this file to queue/. Deletes EXACTLY these 6 folders on BensPC (owners confirmed finished and not needed, 09-27 12:1x UTC; paths and sizes from disklist2, outbox 8b1ec5b81). Each path is re-checked: it must exist, be a directory, not be a link, and have a size within 0.9x to 1.1x of the listed size, or it is SKIPPED. Nothing else is touched.
-BEN-YES: (message id to be filled in)
+BEN-YES: Thread manager question cmsg_01FuvegZXjMmeUzStiEFVnEW1kKSynA9PRrFRCGui4v9jd (12:18:49Z) naming these 6 paths; Ben typed "yes" in cmsg_01FuvegZXjMmeUzStiEFVnEWXvFKahCeyp6nNSxcfMHpub (12:19:32Z). Held further for the coordinator's read-only reader check (12:19Z).
 ```bash
 PS=$(cat <<'PSEOF'
 $ErrorActionPreference='Stop'
