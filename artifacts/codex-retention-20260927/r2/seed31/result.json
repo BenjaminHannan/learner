@@ -1,0 +1,138 @@
+{
+  "protocol": "artifacts/codex-retention-20260927/r2/PASSMARKS.md",
+  "passmarks_commit": "57d6f5cfdb7a6416e1c41beb52ac9c778dcd95a7",
+  "software_head": "57d6f5cfdb7a6416e1c41beb52ac9c778dcd95a7",
+  "seed": 31,
+  "held_seed": 92031,
+  "start_utc": "2026-09-27 04:13:40 UTC",
+  "machine": "MacBook-Pro",
+  "pid": 7633,
+  "device": "mps",
+  "benchmark": {
+    "cpu": {
+      "seconds_per_step": 0.1083,
+      "steps_per_minute": 554.2
+    },
+    "mps": {
+      "seconds_per_step": 0.0578,
+      "steps_per_minute": 1037.5
+    }
+  },
+  "torch": "2.14.0",
+  "steps": {
+    "grids": 6000,
+    "sums": 2500
+  },
+  "batch": 64,
+  "parameters_per_snapshot": 1646750,
+  "routing": "caller Item.env -> immutable complete snapshot",
+  "phases": {
+    "grids": {
+      "steps": 6000,
+      "batch": 64,
+      "elapsed_seconds": 578.6,
+      "heldout_rejections": 0,
+      "checkpoint_weights_match_trained_A": true,
+      "snapshot": "/Users/ben-hannan/.codex/worktrees/retention-isolation/beautiful-model/artifacts/codex-retention-20260927/r2/seed31/snapshot-grids.pt",
+      "checkpoint_bytes": 6599145,
+      "sha256_state": "2eba9f023d75a390040c0a09c08e53d76abe96859f6e36108fb469797b83d66a",
+      "score_current": {
+        "grids5": {
+          "right": 200,
+          "fixed16": 200,
+          "any48": 200,
+          "mean_rounds": 9.05
+        },
+        "sums4": {
+          "right": 0,
+          "fixed16": 0,
+          "any48": 0,
+          "mean_rounds": 30.75
+        }
+      },
+      "score_routed": {
+        "grids5": {
+          "right": 200,
+          "fixed16": 200,
+          "any48": 200,
+          "mean_rounds": 9.05
+        }
+      },
+      "snapshot_roundtrip_all_rounds_identical": true,
+      "score_and_itemwise_consistent": true
+    },
+    "sums": {
+      "steps": 2500,
+      "batch": 64,
+      "elapsed_seconds": 152.0,
+      "heldout_rejections": 3,
+      "snapshot": "/Users/ben-hannan/.codex/worktrees/retention-isolation/beautiful-model/artifacts/codex-retention-20260927/r2/seed31/snapshot-sums.pt",
+      "checkpoint_bytes": 6599100,
+      "sha256_state": "13d538abc32846a2ca2470f7f1fa068f8ca39335016bf14dcfd94ce81adce12d",
+      "snapshot_roundtrip_all_rounds_identical": true,
+      "score_current": {
+        "grids5": {
+          "right": 0,
+          "fixed16": 0,
+          "any48": 0,
+          "mean_rounds": 24.36
+        },
+        "sums4": {
+          "right": 200,
+          "fixed16": 200,
+          "any48": 200,
+          "mean_rounds": 6.18
+        }
+      },
+      "score_routed": {
+        "grids5": {
+          "right": 200,
+          "fixed16": 200,
+          "any48": 200,
+          "mean_rounds": 9.05
+        },
+        "sums4": {
+          "right": 200,
+          "fixed16": 200,
+          "any48": 200,
+          "mean_rounds": 6.18
+        }
+      },
+      "grid_isolation": {
+        "bit_identical_weights": true,
+        "snapshot_hash_unchanged": true,
+        "bit_identical_predictions_and_stop_probabilities": true,
+        "per_item_exactness_identical": true,
+        "previously_correct_items_lost": 0,
+        "previously_incorrect_items_gained": 0
+      },
+      "mutable_control_vs_A": {
+        "grids5_after_B": 0,
+        "previously_correct_items_lost": 200,
+        "previously_incorrect_items_gained": 0
+      }
+    }
+  },
+  "restart_routing": {
+    "alternating_task_ids": [
+      "grids",
+      "sums",
+      "grids"
+    ],
+    "exact_outputs_and_stop_probabilities": true,
+    "first_and_third_grid_requests_identical": true,
+    "grid_score_unchanged": true,
+    "unknown_task_rejected": true
+  },
+  "criteria": {
+    "A_mastery_190": true,
+    "B_mastery_190": true,
+    "isolation": true,
+    "baseline_forgetting_reproduced": true,
+    "seed_status": "PASS_CONTROLS"
+  },
+  "total_checkpoint_bytes": 13198245,
+  "total_parameters_across_two_snapshots": 3293500,
+  "wall_seconds": 742.1,
+  "end_utc": "2026-09-27 04:26:02 UTC"
+}

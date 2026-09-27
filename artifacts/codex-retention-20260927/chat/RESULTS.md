@@ -1,16 +1,22 @@
 # C1: software controls pass; actual 1B evaluation INCONCLUSIVE
 
-**Shown — software only.** Ten core tests passed after PASSMARKS was committed:
+**Shown — software only.** C1 now has **20 passing tests: 10 core and 10 chat**.
+The whole retention-isolation software package has **24 passing tests** when the
+4 separate reasoner tests are included. The ten core tests passed after PASSMARKS
+was committed:
 default base bypass, adapter-on parity, unchanged state-dict keys and save/load,
 base immutability after adapter optimization, poisoned inactive adapter bypass,
 nested and failed calls, concurrent request isolation, expired async scope
 rejection, unwrapped shared-parameter freeze validation, and paired loss counting.
 
-Four cached-generation checks pass in a small code-generated causal model:
+Ten chat checks pass with small code-generated CPU fixtures:
 exact base and adapter prefill-logit parity, six cached greedy decode steps,
 alternating on/off requests, base preservation after a large adapter update,
 rejection of a foreign KV cache at the serving entry point, and the live runner's
-explicit route/import path. Individual test methods combine related controls.
+explicit route/import path. The added checks cover full-tensor prefill-logit
+hashing, exact snapshot-file coverage and mutation rejection, committed-manifest
+byte parity, loaded runtime-code hashes, strict adapter A/B-only keys, and
+exclusive reply-file creation. Individual test methods combine related controls.
 This is not a pretrained language model and these are not 1B accuracy scores.
 
 Logs: `../implementation/software-tests.log`, `software-tests.log` (first three
@@ -19,6 +25,11 @@ stale module import left by the move into the artifact directory).
 The same prescribed mechanism and marks were kept; the extra import test caught
 an executable packaging issue. Initial run PID/start details are in
 `../SOFTWARE-RUN-NOTE.md` and `../software-tests.json`.
+The repair run and its UTC/PID/machine record are in `SOFTWARE-REPAIR-RUN-NOTE.md`.
+The first repair fixture run had one `/var` versus `/private/var` test setup
+error (8/9); the corrected retry passed 9/9, and the final targeted
+full-prefill-logits rerun passed **10/10** in
+`software-repair-tests-full-prefill.log`. No pretrained-model or GPU run was made.
 
 **Untested / INCONCLUSIVE — MiniCPM5-1B.** The required original base revision was
 not found in the checked local model roots. Only altered merged models and the
