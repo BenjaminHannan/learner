@@ -111,6 +111,8 @@ while [ ! -e "$H/STOP" ]; do
   done
   # status: every round, publish which tasks are running and the log tail, so the director can see launches
   { date '+%F %T'; echo "running:"; ls "$Q"/*.running 2>/dev/null | xargs -n1 basename 2>/dev/null; echo "launched (no exit yet) / finished:"; ls "$Q"/*.md 2>/dev/null | wc -l; echo; tail -150 "$LOG"; } > "$H/status.txt"
+  # diagnostics (Director 03:00 UTC 09-27, jobs hanging since 01:21): per running job, err/reply file sizes+mtimes and the last 5 err lines, filtered; process names only (no command lines, so no task text or keys)
+  { echo; echo "diag:"; for r in "$Q"/*.running; do [ -e "$r" ] || continue; j=$(basename "$r" .running); echo "== $j"; ls -la "$Q/$j".go* 2>/dev/null | awk '{print $5, $6, $7, $8, $NF}' | sed "s|$Q/||"; for e in "$Q/$j".go*.err.txt; do [ -f "$e" ] && tail -5 "$e" | grep -viE 'key|token|auth|secret|passw|bearer|cookie' | cut -c1-200; done; done; echo "procs:"; ps -axo pid,ppid,etime,stat,comm 2>/dev/null | grep -E 'opencode|rungo4|ssh|bun' | grep -v grep | head -60; } >> "$H/status.txt" 2>/dev/null || true
   mkdir -p "$O/status"; if ! cmp -s "$H/status.txt" "$O/status/watcher.txt"; then cp "$H/status.txt" "$O/status/watcher.txt"
     (cd "$O" && git fetch -q origin "$OUT" 2>/dev/null && git reset -q --soft FETCH_HEAD; git add status && git commit -qm "watcher status" && git push -q origin "HEAD:$OUT") >> "$LOG" 2>&1 || true; fi
   sleep 120
