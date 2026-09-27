@@ -1,0 +1,159 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mgit fetch origin main builder-outbox 2>&1 | head -20; echo "---"; git branch -a | head -20; echo "---"; git log --oneline -5
+From github.com:BenjaminHannan/learner
+ * branch                main           -> FETCH_HEAD
+ * branch                builder-outbox -> FETCH_HEAD
+   54167543e..6c90c5e71  main           -> origin/main
+   7fb2379c4..dfb8e2895  builder-outbox -> origin/builder-outbox
+---
+* claude/card-experiment-handoff-7c5b27
++ claude/fact-saving-note-filtering-4ff1ff
++ claude/forgetting-plain-english-gap-9258f0
++ claude/kill-hung-queue-builders-4e879f
++ claude/locomo-length-penalty-408e2a
++ claude/loop-net-generalization-analysis-729ee3
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/pull-from-main-629dc4
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/retention-isolation
+  codex/testing-experiment-44
++ main
+  rent-zdl5c-results
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+---
+86599f56d k1h-glm salvage glm: 240 answers / 593 chats, 5/5 sha256 vs <tmp> (counts only)
+24766dc63 000-luna-helper-selftest: reply with selftest + 3-call parallel outputs
+8fc75d620 probe: codex CLI non-interactive form (not in PATH, bundled 0.158.0-alpha.2, luna not found)
+5bb0de7cb probe: zen builder ok
+275e3ba38 peek-k1h-glm2: counts-only look at running k1h-glm2 REPORT
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -20; echo "==="; git cat-file -e origin/builder-outbox:artifacts/claude-rsn358s-20260926/RESULTS.md 2>&1 && echo "OUTBOX HAS RESULTS" || echo "OUTBOX NO RESULTS"; git cat-file -e origin/main:artifacts/claude-rsn358s-20260926/RESULTS.md 2>&1 && echo "MAIN HAS RESULTS" || echo "MAIN NO RESULTS"
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+===
+fatal: path 'artifacts/claude-rsn358s-20260926/RESULTS.md' does not exist in 'origin/builder-outbox'
+OUTBOX NO RESULTS
+fatal: path 'artifacts/claude-rsn358s-20260926/RESULTS.md' does not exist in 'origin/main'
+MAIN NO RESULTS
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rsn358s_run.py | head -120
+#!/usr/bin/env python3
+"""rsn-358s (sleep research thread, 2026-09-27): size scaling. Ben 14:49 UTC 09-26: "A bigger reasoner still beats
+other bigger models of its size." The 1x pair is rsn-358i3 (loop 2 x d512, 6,438,302 weights; plain 8 x d256,
+6,385,149; PASS, recount 23dbe806b). This file runs the 3x pair with ONE change, width: loop 2 x d896 (19,524,254)
+and plain 8 x d448 (19,430,589). Everything else is 358i2's code unchanged (imported): autocast cache off, gradient
+logging, data, 60,000 steps, batch 256, lr and schedule, v2 stop rule, 48 test rounds, 358i's sealed tests.
+
+  python -B scripts/claude_rsn358s_run.py train --arm loop|plain --seed S --out DIR
+  python -B scripts/claude_rsn358s_run.py eval --ckpt DIR/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out F
+  python -B scripts/claude_rsn358s_run.py selftest | check-mask
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_rsn358i2_run as I2  # noqa: E402
+
+R = I2.R
+ARMS_3X = {"loop": dict(d=896, layers=2, heads=8), "plain": dict(d=448, layers=8, heads=8)}
+R.ARMS.update({k: dict(v) for k, v in ARMS_3X.items()})
+
+
+def selftest():
+    n = {a: sum(p.numel() for p in R.Net(a).parameters()) for a in ARMS_3X}
+    assert n == {"loop": 19524254, "plain": 19430589}, n
+    I2.selftest()
+    print(f"selftest ok: 3x arms loop {n['loop']:,} and plain {n['plain']:,} weights (ratio {n['loop'] / n['plain']:.3f})")
+
+
+if __name__ == "__main__":
+    if sys.argv[1:] == ["selftest"]:
+        selftest()
+    elif sys.argv[1:] == ["check-mask"]:
+        I2.I.check_mask()
+    else:
+        R.main()
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358s-20260926/PASSMARKS.md; echo "===SEAL-CODE==="; git show origin/main:artifacts/claude-rsn358s-20260926/SEAL-code.sha256.txt
+# rsn-358s pass marks: does a bigger loop reasoner still beat a plain net of its size? (fixed before any run; sleep research thread, 2026-09-27 00:57 UTC)
+
+**Question (Ben 14:49 UTC 09-26):** "A bigger reasoner still beats other bigger models of its size." Size = the whole reasoner's weights. **"Same size" means the same number of weights, not the same compute.** The loop spends about its mean rounds times a plain pass's compute per answer (inferred from layer shapes). Whether a plain net given matching compute closes the gap is the open follow-up. It is not part of this test, since it would be a second change.
+Draft history: PASSMARKS-v1-draft.md (da4a36fcc, 5e555090e), then the Thread manager's review at 00:55 UTC (4 points, all taken). The draft's plain-unrolled arm is removed from this test and named as the follow-up.
+
+**1x pair = rsn-358i3, graded PASS** (VERIFY-recount.md, 23dbe806b): loop 2 x d512 (6,438,302) vs plain 8 x d256 (6,385,149), seeds 5-8, BensPC, torch 2.11. Reused as it stands.
+**3x pair, new runs, ONE change (width):** loop 2 x d896 (19,524,254) vs plain 8 x d448 (19,430,589).
+- Code: scripts/claude_rsn358s_run.py, which imports 358i2 unchanged.
+- Identical to 358i3 otherwise: data stream, 60,000 steps, batch 256, lr and schedule, autocast cache off, v2 stop rule, 48 test rounds, and 358i's sealed tests (TEST-ONLY, counts only).
+- **Seeds 9, 10, 11, 12**, both arms, all on BensPC. No seed is read (no verdict, no partial gap) until all 8 runs are in.
+
+## Marks (gap = loop - plain, 4-seed means, of 300)
+- **V:** V0 (steps_block_nograd = 0 on every loop run) and 358t's G0 on every 3x run. If either arm's training diverges on a seed (a non-finite loss in train_log.jsonl, or practised tests under G0), that seed is INCONCLUSIVE, not a gap. The run is INCONCLUSIVE if any seed is.
+- **S2 (3x loop beats 3x plain):** mean gap >= +30 on sums6 AND on grids6, with the loop ahead on each on >= 3 of 4 seeds.
+- **S3 (the gap doesn't shrink):** the mean of the sums6 and grids6 gaps at 3x >= the 1x mean - 20. The 1x mean is (124.00 + 52.00) / 2 = 88.00, so 3x must be >= 68.00.
+- **PASS = V, S2 and S3.** (S1, the 1x pair, is already shown by 358i3.)
+- **Proved wrong:** V met and the 3x mean gap <= +5 on both sums6 and grids6.
+- In between: FAIL. If only "loop 3x > loop 1x" holds, it is reported as "a bigger reasoner helps", not as Ben's claim.
+
+## Report only
+- sums8/10/12, grids7, the practised sizes, fixed rounds and right at any round.
+- Compute per answer on each test: loop = mean rounds x one round's weight-FLOPs (12 x 2 x 896^2 per cell); plain = one pass (12 x 8 x 448^2 per cell, about the same as one loop round). Plus the same row for the 1x pair.
+- Minutes per run, and GPU memory per run from the first batch. It is reported before the second batch starts; whether 2 runs fit in 16 GB is read from that line, never guessed.
+- The ratio of 3x to 1x on each test, for each arm.
+
+**Prediction:** PASS 50%. S3 is the risk: extra width may help plain's long sums more than the loop's.
+**Cost:** $0, BensPC. Estimate 10-16 h, cap 20 h. The Director orders the queue; the Thread manager recommends right after dl-9.
+===SEAL-CODE===
+3ad2d3abdb1d3d85456c96d4694e31b71e9074aeea1a37eaac0c65d6d0a30a40  scripts/claude_rsn358s_run.py
+8d69958c053342d47f44895375c16de3afdef7a55accdf4136ac55220fc82877  scripts/claude_rsn358i2_run.py
+4b9dfb907e49d47caefbbe606bc1610d12f15a85b39bce6aaa32ef78771f5ef4  scripts/claude_rsn358i_run.py
+0a82d5a512fe3da9a737a07935f9cd07fa78fbecd4446b736e85230355c0c928  scripts/claude_rsn358g_run.py
+80513101e4a6820f3fc32b2d23d01bcfc1ccca9457ae928826bdf37d89d816fe  scripts/claude_rsn358a2_run.py
+9b0e1a03ffdf354575e0a19acc58042c869c261565ba62e91e71af899cbca9b0  scripts/claude_rsn358a_run.py
+af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0  scripts/claude_rsn358a_envs.py
+c00aa62f4bc9ed710019581ee61288256238539c5bcfb6759d17f89c01a958de  scripts/claude_blurt1.py
+cfbdb334f1e8f0fb3fda980ae71d906dde250d77664f0cb14d0378070d4689c9  artifacts/claude-rsn358i-20260926/tests/grids5.jsonl
+1f922b36e6ecc74375079cca0447c11e0dce836d3deba54d187bb38147225179  artifacts/claude-rsn358i-20260926/tests/grids6.jsonl
+c9b56b4a766af88e7d520b7c440c46a45e407c90c46c6abf0f6ffae9584d2ee9  artifacts/claude-rsn358i-20260926/tests/grids7.jsonl
+e887fb6154ddd811fccec38884a6a88dbd69320bc72806147c18d7b40f6d1387  artifacts/claude-rsn358i-20260926/tests/numbers4.jsonl
+d9d53c3409f298870c0469dc2476556ea7839b6f2469a4c3b0e8f4abb01897ec  artifacts/claude-rsn358i-20260926/tests/numbers5.jsonl
+67e459cd8f5a482a66a9efb3d88906f65657a01f2894e364efcfa70125322f8b  artifacts/claude-rsn358i-20260926/tests/sums10.jsonl
+71eca5d906a2c3bd45e1f075ed763d166af5c903884fed69f18211e18cef868f  artifacts/claude-rsn358i-20260926/tests/sums12.jsonl
+01728d1912b590221e48835b7f787be4cb94f4f93aa4eae765fd46db1d7c5bfb  artifacts/claude-rsn358i-20260926/tests/sums4.jsonl
+a6ab304257625c83c87de063c925014cef49e3bfe3ec0c45a149b5ac2c3c9322  artifacts/claude-rsn358i-20260926/tests/sums6.jsonl
+312c46fd6c9fb54e28185ca9533e1993c11d8a4d6fc9ee4775edb7046a121465  artifacts/claude-rsn358i-20260926/tests/sums8.jsonl
+8bd92c9911ce4ca3b84e20dd4ccc17a062bc7b828b258046e57f2305a762398d  artifacts/claude-rsn358s-20260926/PASSMARKS.md
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "if (Test-Path C:\\Users\\benja\\GPU-BUSY.txt) { Get-Content C:\\Users\\benja\\GPU-BUSY.txt } else { echo 'NO-BUSY-FILE' }"
+C:\Users\benja\GPU-BUSY.txt) was unexpected at this time.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'powershell -NoProfile -Command "if (Test-Path C:\Users\benja\GPU-BUSY.txt) { Get-Content C:\Users\benja\GPU-BUSY.txt } else { Write-Output NO-BUSY-FILE }"'
+BUSY: queue job 155-claude-sleep-358spc since 2026-09-27T05:57:00Z - do not use this GPU until this file is gone
+[0m
