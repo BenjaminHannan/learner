@@ -20,7 +20,7 @@ SETUP (Windows, as k1f-benspc2 does):
 - Report `python -c "import torch,transformers,sys;print(torch.__version__,torch.version.cuda,transformers.__version__,sys.version.split()[0])"` and `nvidia-smi` free memory and processes (stop with BUSY if another process holds more than 2 GB of GPU memory).
 
 STEPS (from the tree root; OUT = outC1, create it first)
-1. Seal: `sha256sum -c artifacts/claude-c1dev-20260927/SEAL.sha256.txt` from the tree root. All 24 lines must be OK, scripts/claude_e2e02d.py included. Any mismatch or missing file: stop with SEAL-MISMATCH, run nothing, and report which lines failed and their sha256 now (the thread re-seals against the build as it then is).
+1. Seal: `sha256sum -c artifacts/claude-c1dev-20260927/SEAL-2.sha256.txt` from the tree root (re-seal 2, RESEAL-2.md: docstring-only build change). All 24 lines must be OK, scripts/claude_e2e02d.py included. Any mismatch or missing file: stop with SEAL-MISMATCH, run nothing, and report which lines failed and their sha256 now (the thread re-seals against the build as it then is).
 2. Tests, each through W, each must print exactly (last line): scripts/claude_c1dev_talker.py --selftest "c1dev talker selftest: 6/6 OK"; scripts/claude_ch403_run.py selftest "ch-403 run selftest: 6/6 OK"; scripts/claude_c1rival_run.py selftest "c1rival selftest: 5/5 OK". Else stop.
 3. The arms, ONE AT A TIME in this order, each launched ONCE with its own log, each through W and scripts/claude_twinb_wrap.py. PD = artifacts/claude-chatdev-20260926.
    D: W scripts/claude_twinb_wrap.py scripts/claude_ch403_run.py run --panel-dir PD --arm claude_c1dev_talker:build_talker02d --name D --gen-model BASE --out outC1 > logD.txt 2>&1
