@@ -1,4 +1,4 @@
-2026-09-27 17:35:16
+2026-09-27 17:37:26
 running:
 000-probe-benspc-gpu-0827.running
 000-probe-zen-builder.running
@@ -7,13 +7,12 @@ benspc-uw2.running
 k1h-glm2.running
 k1h-luna-full-mac.running
 lis320-pilot8b-mac.running
+rent-lf8-2-collect.running
+rent358t3-2-collect.running
 y1t-luna-rest-mac.running
 launched (no exit yet) / finished:
-    1035
+    1039
 
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 14:14:37 pushed rent-c1dl-1-start
 2026-09-27 14:14:38 launch 000-bash-vastcredit-1813
 2026-09-27 14:14:39 launch rent378g-2-collect
@@ -161,6 +160,9 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 17:37:26 launch rent-lf8-2-collect
+2026-09-27 17:37:26 launch rent358t3-2-collect
 
 diag:
 == 000-probe-benspc-gpu-0827
@@ -242,6 +244,12 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 [0m
 > build · muse-spark-1.3-contributor-free
 [0m
+== rent-lf8-2-collect
+0 Sep 27 17:37 rent-lf8-2-collect.go1.err.txt
+52 Sep 27 17:37 rent-lf8-2-collect.go1.reply.md
+== rent358t3-2-collect
+0 Sep 27 17:37 rent358t3-2-collect.go1.err.txt
+53 Sep 27 17:37 rent358t3-2-collect.go1.reply.md
 == y1t-luna-rest-mac
 149 Sep 27 03:32 y1t-luna-rest-mac.go1.err.txt
 0 Sep 27 03:30 y1t-luna-rest-mac.go1.reply.md
@@ -268,24 +276,25 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 [0m
 top5cpu:
 %CPU COMM
-82.2 Finder
-40.1 fileproviderd
-36.1 Google
-28.5 bash
-24.5 PhotosReliveWidget
+72.4 cloudd
+58.8 fileproviderd
+24.2 bash
+23.4 Google
+18.2 WindowServer
 procs:
-  363     1 04-05:22:14 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 04-05:21:22 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
-15699     1 04-03:36:40 S    /usr/bin/ssh-agent
-22049   818       42:11 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-44571 44570 01-19:58:18 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-19:58:18 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44690 75408       04:37 SN   /usr/local/bin/opencode
-46743 46711 01-01:12:51 SN   /usr/local/bin/opencode
-53479 20011    13:30:27 SN   /usr/local/bin/opencode
-54153 44066    13:30:07 SN   /usr/local/bin/opencode
-59802 59771    13:21:43 SN   /usr/local/bin/opencode
-60494 59018    18:27:44 SN   /usr/local/bin/opencode
-61605 61571    13:19:25 SN   /usr/local/bin/opencode
-64555 64533    14:53:18 SN   /usr/local/bin/opencode
-81797     1 02-06:15:57 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 04-05:24:24 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 04-05:23:32 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+15699     1 04-03:38:50 S    /usr/bin/ssh-agent
+22049   818       44:21 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+44571 44570 01-20:00:28 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-20:00:28 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44690 75408       06:47 SN   /usr/local/bin/opencode
+46743 46711 01-01:15:01 SN   /usr/local/bin/opencode
+49820 49808       00:01 SN   /usr/bin/ssh
+53479 20011    13:32:37 SN   /usr/local/bin/opencode
+54153 44066    13:32:17 SN   /usr/local/bin/opencode
+59802 59771    13:23:53 SN   /usr/local/bin/opencode
+60494 59018    18:29:54 SN   /usr/local/bin/opencode
+61605 61571    13:21:35 SN   /usr/local/bin/opencode
+64555 64533    14:55:28 SN   /usr/local/bin/opencode
+81797     1 02-06:18:07 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
