@@ -1,0 +1,2458 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git log --oneline -5 origin/main --; echo ---; git log --oneline -5 origin/builder-outbox -- 2>&1 | head -20
+FETCH_EXIT:0
+0a2196714 g406-2 run note: stopped (stop job report on builder-outbox)
+53aee21a0 madeup-mu407-luna-mac and madeup-g406l-mac: LOAD-LIGHT: yes (Luna network calls only, no training, light CPU; Director 04:07 UTC); still 1 worker each
+eb53c9127 006-rd378k-gate3luna / 007-rd378g-writeluna: add LOAD-LIGHT: yes (network-bound Luna calls; Director's watcher rule 2cc7f64c3), before either launched
+59378ec03 k1h-luna-pilot: LOAD-LIGHT: yes header (Luna network calls only, 1 at a time; the Director's 04:07 UTC note)
+77cb5b13b lis-320 pilot 7: LOAD-LIGHT: yes (Luna network calls only; Director 04:07)
+---
+aabfa3f41 watcher status
+331689444 watcher status
+acf39441d builder results: madeup-g406-2-mac
+5914bcf46 builder results: 000-stop-madeup-g406-2
+a5a47b902 watcher status
+[0m
+[0m$ [0mgit cat-file -e origin/main:artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl 2>&1; echo MAIN_LABELS:$?; git cat-file -e origin/main:artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt 2>&1; echo MAIN_PILOT:$?; git cat-file -e origin/builder-outbox:artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl 2>&1; echo OUTBOX_LABELS:$?; git cat-file -e origin/builder-outbox:artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt 2>&1; echo OUTBOX_PILOT:$?
+fatal: path 'artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl' does not exist in 'origin/main'
+MAIN_LABELS:128
+fatal: path 'artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt' does not exist in 'origin/main'
+MAIN_PILOT:128
+fatal: path 'artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl' does not exist in 'origin/builder-outbox'
+OUTBOX_LABELS:128
+fatal: path 'artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt' does not exist in 'origin/builder-outbox'
+OUTBOX_PILOT:128
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rd378k-20260926/PASSMARKS-F.md; echo =====H=====; git show origin/main:artifacts/claude-rd378k-20260926/PASSMARKS-H.md; echo =====K=====; git show origin/main:artifacts/claude-rd378k-20260926/PASSMARKS-K.md
+# rd-378k addendum F (2026-09-26 19:04 UTC): if gate3 was hit by OpenRouter's 402s, the same gate through opencode
+
+Written before gate3's output has landed and before any gate3 grade, agreement line or label file has been read.
+PASSMARKS.md and addenda B-E stay as sealed; this file adds to them.
+
+## Why
+The OpenRouter account ran out of funds at about 18:29-18:33 UTC (lis320-full-mac got 60 "402 Payment Required"
+failures from then; outbox b1895b05c). gate3 (addendum E) started at about 18:32 UTC on the same account. A 402 call
+comes back empty and is counted as a failed call (claude_rd378k_teacher.py lines 85-98), so a hit run measures the
+account, not the grader. Agreed with the Thread manager (19:00 UTC): if gate3's log shows even one 402, gate3 does not
+count (no verdict either way). Ben (18:47 UTC) offered GLM 5.3 Flash through his opencode subscription.
+
+## When this runs
+Only if origin/builder-outbox:artifacts/claude-rd378k-20260926/gate3/teacher-log.txt contains at least one line with
+"402". From gate3 the thread reads only that count, the failed-call count and the usable dialogs per kind; its labels,
+its grade counts and its agreement lines are never read or used. If the log has no 402, this addendum does not apply.
+
+## The one change: the route
+scripts/claude_rd378k_teacher3oc.py runs claude_rd378k_teacher3 unchanged (same prompt and verdict words, windows of at
+most 7 graded turns, tolerant parser, two passes) with each teacher call sent through scripts/claude_glm_opencode.py
+(the Director's shared helper, sha256 3b597086511d18270cea2d2614027ea54f0e4142cf87e9a2c30a68b2ad4c5ad2; model
+opencode-go/glm-5.3-flash). The route sets no temperature and runs through opencode's own agent; this gate measures the
+route as it is, and it is the route that would grade training data. So this run is also the route check.
+
+## The gate (same 38 dialogs, sha256(id) % 3 == 1: 23 chat, 15 overheard; same rows and bars as addendum E)
+- overall: agreement >= 85% and kappa >= 0.5 (claude_rd378k_teacher.py agree on labels.jsonl);
+- untrue notes: teacher "ok" on <= 15% of judge-unsupported notes;
+- coverage: usable dialogs chat >= 21 of 23 and overheard >= 14 of 15 (summed over the four parts).
+Report only: the same agree line on labels_passA.jsonl, failed calls, missed_unknown_turns, wall time.
+Proved wrong (this route does not grade like the blind judges): agreement below 85% or the untrue row above 15%.
+
+## After
+PASS: all training grades for rd-378g and rd-378k come from claude_rd378k_teacher3oc.py through this route.
+Any row fails: GLM grading stops (the Thread manager's 18:32 rule: labeller v3 is the last version), no grade trains
+anything, and the Thread manager gets the counts.
+zsh:1: ====H===== not found
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rd378k-20260926/PASSMARKS-H.md
+# rd-378k addendum H (2026-09-26 20:33:05 UTC): route losses in gate3oc, fixed before its result exists
+
+Written while rd378k-gate3oc runs (launched about 20:27 UTC) and before any of its output has been seen. The Thread
+manager (20:33 UTC) reports that lis-320's pilot 3 had 30 of 32 opencode calls fail (exit 1 or 300 s timeouts) with
+long instruction prompts. PASSMARKS.md and addenda B-G stay as sealed; this file adds one rule to F.
+
+A failed try whose raw answer is empty (the helper raised after its own 3 tries, or returned nothing) is a route loss,
+not a grade: claude_rd378k_teacher3oc.py logs "call failed" and failures.jsonl records raw "". A dialog is a route loss
+when every failed try on it has an empty raw answer.
+- If every row passes, the PASS stands (route losses only made coverage harder).
+- If a row fails and at least one unusable dialog is a route loss, gate3oc has no verdict (like gate3's 402s), the
+  route is fixed first (Reading facts' diagnosis, lis320-ocdiag-mac), and the same 38 dialogs run again under a new
+  addendum.
+- If a row fails with no route loss, it is a registered FAIL and GLM grading stops, as F says.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rd378k-20260926/PASSMARKS-K.md
+# rd-378k addendum K (2026-09-27 03:55:09 UTC): the grader moves from GLM to GPT-6 Luna
+
+Sealed from DRAFT-PASSMARKS-K.md (dc71c074a). The Thread manager reviewed the draft and cleared it at 03:53 UTC once the
+helper passed its live test. 000-luna-helper-selftest: rc=0, "selftest ok: model gpt-6-luna", 3 parallel calls in
+10.9 s. Written before any Luna grading call. Written before any output of 004-rd378k-gate3low has been seen (0 files
+on builder-outbox at 03:50 UTC). PASSMARKS.md and addenda B-J stay as sealed; this file adds to them.
+
+## Why
+Ben, 03:47:41 UTC 09-27: "just have luna rewrite all the training data. It's so so cheap". This came after he chose
+"Allow Luna" (goals page, cd475e141 and 5ed7dcad9). GLM is out until its weekly reset (addendum J). Claude-written or
+Claude-judged training data stays banned.
+
+## The one change: the route
+claude_rd378k_teacher3 runs unchanged: the same prompt words, verdict words, windows of at most 7 graded turns,
+tolerant parser and two passes. claude_rd378k_teacher3oc.py also runs unchanged. The one change: each call goes through
+the Director's Luna helper instead of GLM:
+- helper: scripts/claude_luna_codex.py (24ca7a163, sha256 342a0fb7e15e...), model id gpt-6-luna, `codex exec` in an
+  empty temp dir with a read-only sandbox;
+- launcher: scripts/claude_luna_run.py, a new file that binds that helper under the name claude_glm_opencode.
+The helper treats an empty or short error-like reply as a failed try, and raises after 3 tries. teacher3oc catches the
+raise, prints "call failed" and records raw "". So a Luna route failure counts as a failed call with an empty raw answer,
+which is a route loss under addendum H. `claude_luna_run.py --check` shows this without network.
+
+## Step 1: format pilot (training dialogs only, never the gate's 38)
+- Luna grades the 4 rd-378g practice dialogs whose sha256(id) % 12 == 0 in glm/notes_w1.jsonl (sha256 87a51358...):
+  3 chat, 1 overheard, 32 graded turns.
+- Every such id has sha256 % 3 == 0, so none is among the gate's 38 (% 3 == 1). They are not judge dialogs at all.
+- Output goes to pilot-luna/. Its grades are never used or read. Only its JSON line of counts and its wall time are
+  read.
+- Pass: "unparsed" is 0 (all 4 usable) and "failed_calls" is at most 2.
+- Otherwise: stop, the Thread manager gets the counts, and the gate does not run. Labeller v3 is the last version (the
+  Thread manager's 18:32 rule), so only a fault in the route or helper may be fixed. The prompt and parser may not.
+
+## Step 2: gate3luna, on the same 38 dialogs (judge_train_in, sha256(id) % 3 == 1: 23 chat, 15 overheard)
+- Same rows and bars as addenda E and F:
+  - agreement >= 85% and kappa >= 0.5;
+  - untrue notes: teacher "ok" on <= 15% of judge-unsupported notes;
+  - coverage: usable dialogs chat >= 21 of 23 and overheard >= 14 of 15.
+- Report only: pass A's agree line, failed calls, missed_unknown_turns, wall time.
+- Route losses (addendum H) are failed tries whose raw answer is empty, or matches (case-insensitive) "usage limit",
+  "rate limit" or "quota". A script counts these; it prints the count only, never raw text.
+- Proved wrong (Luna does not grade like the blind judges): agreement below 85% or the untrue row above 15%, with no
+  route loss.
+
+## After
+- PASS: every training grade for rd-378g and rd-378k comes from teacher3 through this Luna route.
+- A row fails and a route loss is present: there is no verdict. The route is fixed, then the same 38 run again under
+  a new addendum.
+- A row fails and no route loss is present: this is a registered FAIL of the Luna route, and no Luna grade trains
+  anything. After GLM's weekly reset a GLM-low gate (gate3low2) may run on the same 38 dialogs. It would be a second
+  route tried on the same dialogs: the Thread manager reviews it first, and it is reported as the second try.
+- gate3low (addendum J) is dropped. 000-stop-rd378low stops it by exact PID. Whether or not it lands, its labels and
+  agreement lines are never read.
+[0m
+[0m$ [0mgit log -1 --format=%H origin/main -- artifacts/claude-rd378k-20260926/SEAL-ADD-K.sha256.txt; echo ---; git show origin/main:artifacts/claude-rd378k-20260926/SEAL-ADD-K.sha256.txt | head -20
+e10b39b4b4cf3fa9fc38baeb1f00806c9591e839
+---
+26717a9798bf21e267c1c0609db56bec72c43bc4e618f4856d8a18f01b237df2  artifacts/claude-rd378k-20260926/PASSMARKS-K.md
+7c6b4ed9d0de30e19ae389c14437ef2fda640cd9367cc0977ae6643e7e600226  scripts/claude_luna_run.py
+342a0fb7e15ebf22da763c21eddecb0c58cfcbd43c74481d8421b5709023024e  scripts/claude_luna_codex.py
+d583bce4a444f1b758805c2a4830409ebb406af76d351e09d5f4f72330600400  scripts/claude_rd378k_teacher3oc.py
+52bbbcded769c45c28a4f3a1c848d6d47e75f88980f8847a51e45d61e1b08d26  scripts/claude_rd378k_teacher3.py
+[0m
+[0m$ [0mls /tmp; pwd; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1 | head
+__KMP_REGISTERED_LIB_19337
+__KMP_REGISTERED_LIB_2288
+__KMP_REGISTERED_LIB_27249
+__KMP_REGISTERED_LIB_27250
+__KMP_REGISTERED_LIB_73221
+__KMP_REGISTERED_LIB_73222
+__KMP_REGISTERED_LIB_73227
+__KMP_REGISTERED_LIB_73229
+__KMP_REGISTERED_LIB_73236
+__KMP_REGISTERED_LIB_73239
+__KMP_REGISTERED_LIB_73242
+__KMP_REGISTERED_LIB_73245
+__KMP_REGISTERED_LIB_73248
+__KMP_REGISTERED_LIB_73252
+__KMP_REGISTERED_LIB_73255
+__KMP_REGISTERED_LIB_73272
+__KMP_REGISTERED_LIB_73281
+__KMP_REGISTERED_LIB_73282
+__KMP_REGISTERED_LIB_73285
+__KMP_REGISTERED_LIB_73290
+__KMP_REGISTERED_LIB_73292
+__KMP_REGISTERED_LIB_73294
+__KMP_REGISTERED_LIB_73297
+__KMP_REGISTERED_LIB_73306
+__KMP_REGISTERED_LIB_73309
+__KMP_REGISTERED_LIB_73313
+__KMP_REGISTERED_LIB_73324
+__KMP_REGISTERED_LIB_73328
+__KMP_REGISTERED_LIB_73334
+__KMP_REGISTERED_LIB_90107
+02cdev
+02dr-local.sha
+02dr-remote.sha
+241b.txt
+280m_doc.md
+350doc.md
+358a_spec.md
+adapter02c.json
+addD.md
+af-aa
+af-ab
+af-ac
+af-ad
+ag_local.py
+ah-aa
+ah-ab
+ah-ac
+ah-ad
+amend.md
+an-aa
+an-ab
+an-ac
+an-ad
+anAA-aa
+anAA-ab
+anAA-ac
+anAA-ad
+anAA-ae
+artpairs_have.json
+artpairs.json
+base-seed4102-rental.pt
+baseprobe333.py
+benspc_ps.py
+benspc3.md
+blurt2.py
+blurt2gpu.tar
+blurt3r.tar
+blurt4
+blurt5s-tree.tar
+bm390_lanes
+bm390_tree_path.txt
+bm390_tree.tgz
+bm390_tree3_path.txt
+bm390logs
+bm395back
+bm395tree
+bm397t_T.txt
+bm397t_tree.tgz
+brd6_head.py
+brd6work
+brd7_tree.tar
+brd8.py
+build_part3.py
+cc-socks
+check_seal.py
+ckpt-s1.log
+ckpt-s2.log
+claude-502
+claude-mcp-browser-bridge-ben-hannan
+clr-debug-pipe-634-1790180002-in
+clr-debug-pipe-634-1790180002-out
+codearm.py
+codex-browser-use
+com.openai.sky.CUAService
+CommCenter.KeepAlive.Enabled
+compute_rsn358i2.py
+convs.json
+copyback_artifacts.log
+copyback_reader.log
+core.py
+cre333_Tpath.txt
+cre333_tree.tgz
+cre333b_Tpath.txt
+cre333b_tree.tgz
+cre333bc_tree.tgz
+cre333e_arm_e1.log
+cre333e_arm_e2.log
+cre333e_full.log
+cre333e_Tpath.txt
+cre333e_tree.tgz
+create333_2.json
+create333_2err.txt
+create333_3.json
+create333_4.json
+create333_err.txt
+create333.json
+depot.json
+det292_1.err
+det292_1.txt
+det292_2.err
+det292_2.txt
+dev_pred301.jsonl
+dev_rows301.jsonl
+dev_sweep301.txt
+dev301.jsonl
+dev3err.txt
+devmouth.jsonl
+devpilot3.json
+dl1_code.tgz
+dl1_ledger_line.txt
+dl2_code.tar
+dl4_code.tar
+dl4_sealed.tar
+dl4push
+dl5_files.tar
+dl5_read.py
+dl5c-code.tar.gz
+dl6_code.tar
+dl6b.index
+dl9_mechtest_b64.txt
+dl9_outer_b64.txt
+dl9_tree.tar
+dotnet-diagnostic-634-1790180002-socket
+dup_box_check.txt
+dup_main_check.txt
+e.txt
+e2e02c_extract
+e2e02c_scripts
+e2e02c_tree_path.txt
+e2e02c_tree.tgz
+e2e382b
+enc_dl9.py
+enc_dl9b.py
+enc_dl9t.py
+enc_t.py
+eval-rsn355.ps1
+f1mouth.jsonl
+f1pilot2.json
+fam_scores301.py
+fix02c.py
+g406_D_path.txt
+g406_probe2.jsonl
+g406_share1.txt
+g406_verdict_line.txt
+gen_notes.py
+gen_probe280p_dialogs.py
+glm11_parallel_probe.py
+glmdel
+glmdel8
+glmframes-x2XVzu
+glmverify
+grab358i_poll.log
+grab358i_poll.nohup
+grab358i_poll.sh
+grade_part2.py
+gradeB_part5
+gram364_tree_path.txt
+gram364_tree.tgz
+hashprobe.py
+hello333.txt
+hx0.err
+hx0.txt
+hx1.err
+hx1.txt
+i4.json
+i5.json
+i6.json
+ideajudge-teacher2-20auoE
+ideajudge-teacher2-20auoE-console.log
+inst_err.txt
+inst_poll.json
+inst.json
+inst3.json
+inst358.err
+inst358.json
+instances.json
+instances2.json
+join280m_full.md
+k1c_local_sums.txt
+k1c_remote_sums.txt
+k1c_rs.txt
+k1e-teacher-b-fROpME
+k1f_cre.py
+k1f_score.py
+k1h-glm-iLDhRG
+k1h-glm2-task.md
+kc.txt
+kit.md
+l12code.b64
+l241b.py
+l292t.py
+lane1_P_start.txt
+lane1_P.ssh.log
+lane1_Pg_start.txt
+lane1_Pg.ssh.log
+lane1_Pm_start.txt
+lane1_Pm.ssh.log
+lane2_C.ssh.log
+lane2_Q2.ssh.log
+lane2_Rb.ssh.log
+lane2_T_start.txt
+lane2_T.ssh.log
+launch_s34.sh
+launch-rsn355.ps1
+launch.bat
+launch10.sh
+launch3r.bat
+ledger_base.md
+ledger_main.md
+ledger-358i2.txt
+ledger.md
+lis13.txt
+lis300.sha
+lis300err.txt
+lis301-main.tar
+lis301-outbox.tar
+lis301.sha
+lis302head.txt
+lis302stage
+lis311_real.log
+lis313_f0_view.py
+lis313-armA.log
+lis313-armB.log
+lis313-build
+lis314-armA.log
+lis314-armC.log
+lis314-build
+lis317_back
+lis317_reader.tar
+lis317_tree.env
+lis317_tree.tgz
+lis318_run_part1.sh
+lis318_tree_path.txt
+lis318_tree.tgz
+lis319_scoreB_ref.json
+lis319_Tpath.txt
+lis319-tree.tgz
+lis319-work-backup
+lis319c_tree_path.txt
+lis319c_upd_path.txt
+lis319cf_tree_path.txt
+lis319cf_upd_path.txt
+lis319cf_update.tgz
+lis319k_D_path.txt
+lis320_D_path.txt
+lisC.log
+lisG.log
+lisS.log
+load_l12.py
+load_q2.py
+local_sums.txt
+log_panelTchat.txt
+log_panelTcre.txt
+log_T-rental.txt
+loop-s1-tests.json
+loop-s1-train_log.jsonl
+loop-s1-train_summary.json
+loop-s2-tests.json
+loop-s2-train_log.jsonl
+loop-s2-train_summary.json
+m0pilot
+m0pilot2
+m124_274.json
+m1n-copy.log
+m1n-counts.json
+m1n-rsync.log
+m1n-sample.jsonl
+m1n-sealcheck
+m1n-trainlog.jsonl
+m1n-trainsum.json
+m1n-trainsum2.json
+m1n-tree
+m273_m12.json
+m3_274.json
+m3_274b.json
+m3_274c.json
+main294.tar
+make_part2.py
+minilm.tgz
+mkpart1.py
+mu402.py
+mu404.py
+mu404inst.json
+MuseHubDrm_ipc2
+MuseHubSdk_ipc2
+mut1
+myline.md
+nb323_274.py
+notes.md
+o.txt
+oc_before.err
+oc_before.json
+ocdiag_cleanup_summary.txt
+ocdiag_cleanup.py
+ocdiag_copy.py
+ocdiag_D_path.txt
+ocdiag_fresh_path.txt
+ocdiag_report.py
+ocdiag_runner.py
+offers_err.txt
+offers.err
+offers.json
+offers2.json
+offers5090.json
+old_rsync.log
+opencode-rent382b-T.txt
+opus-rules.txt
+orphans_err.txt
+orphans_instances.json
+own-m1-remote
+own-m1b-bundle
+own-m1b-check
+own-m1b-results
+own-m1v-code.tar
+own-m1v-dev_out.jsonl
+own-m1v-dev_summary_utf8.json
+own-m1v-dev_summary.json
+own-m1v-quotes.py
+own-m1v-recount.py
+own-m1v-seal
+p382.py
+pairs_f1.jsonl
+panel_score_T030.json
+panel_score301.json
+part2_in.jsonl
+part3_in.jsonl
+part3_slice.jsonl
+part4_ids.txt
+part4_order.txt
+part4_slice.jsonl
+part5_input.jsonl
+PASS.md
+pass318.md
+passmarks_full.txt
+PASSMARKS-F.md
+PASSMARKS-H.md
+PASSMARKS-I.md
+PASSMARKS.md
+peek_check.txt
+peek_report.md
+peek-task.md
+persrc_helper.py
+pilot-reg-backup.json
+pilot3_start.txt
+plain-s1-tests.json
+plain-s1-train_log.jsonl
+plain-s1-train_summary.json
+plain-s2-tests.json
+plain-s2-train_log.jsonl
+plain-s2-train_summary.json
+plan.txt
+plasticd5.exe.lock
+plasticdshell
+pm.md
+pm333d.md
+powerlog
+practice_chats.json
+probe_raw.err
+probe_raw.json
+probe_teacher.py
+probe292.py
+pt1.log
+pt2.log
+pt3.log
+pt4.log
+ptcopy-loop-s1.log
+ptcopy-loop-s2.log
+ptcopy-plain-s1.log
+ptcopy-plain-s2.log
+ptcopy1.log
+ptcopy2.log
+px1.err
+px1.txt
+px2.err
+px2.txt
+pzcheck_compare.py
+pzcheck_win.jsonl
+q2code.b64
+q404-probe-q404
+q404-probe-run
+q404-probe-tree
+qwenweb.log
+r0-02dr
+rd371_data.log
+rd371_panel.log
+rd371_train.log
+rd371_tree_path.txt
+rd371_tree.tgz
+rd371_verify.log
+rd371b_train_tree.txt
+rd371b_tree_path.txt
+rd371b_tree.tgz
+rd371b_tree.tgz.part_aa
+rd371b_tree.tgz.part_ab
+rd371b_tree.tgz.part_ac
+rd371b_tree.tgz.part_ad
+rd371b_tree.tgz.part_ae
+rd371b_tree.tgz.part_af
+rd378_tree_path.txt
+rd378g-writelow
+rd378k-gate3-0Srwt9
+rd378k-gate3-dir.txt
+rd378k-gate3-idx
+rd378k-gate3-newcommit.txt
+rd378k-gate3-step3.log
+rd378k-gate3-step4.log
+rd378k-gate3-step5.log
+rd378k-gate3-step6.log
+rd378k-gate3low-LW2DC3
+reader-chunks
+reader336.safetensors
+readme.md
+ref_puzzles.jsonl
+remote_run333e.sh
+remote_sums.txt
+rent330cdev2_T.txt
+rent330cdev2_tree.tgz
+rent333_meta.txt
+rent333d_meta.txt
+rent333d.md
+rent336b_arm_B.log
+rent336b_arm_G.log
+rent336b_arm_P.log
+rent336b_arm_T.log
+rent336b_score.log
+rent336b_tree_path.txt
+rent336b_tree.tgz
+rent339_T.txt
+rent339_times.txt
+rent339_tree.tgz
+rent360_full.log
+rent360_remote.log
+rent360_T_path.txt
+rentb_err.txt
+rentkit.md
+rentsetup.md
+resolve_base.py
+resolve_base4.py
+results_274.json
+results_back.tgz
+rsn294_guard_state.json
+rsn294_guard.log
+rsn294_guard.py
+rsn294_run.py
+rsn294.tar
+rsn296_guard_state.json
+rsn296_guard.log
+rsn296_guard.py
+rsn296_poll1.err
+rsn296_poll1.json
+rsn296-code.tar.gz
+rsn296b-main.tar.gz
+rsn296b-W
+rsn296diag
+rsn296re
+rsn296re-eval1.log
+rsn296re-eval10.log
+rsn296re-eval11.log
+rsn296re-eval12.log
+rsn296re-eval13.log
+rsn296re-eval14.log
+rsn296re-eval15.log
+rsn296re-eval16.log
+rsn296re-eval2.log
+rsn296re-eval3.log
+rsn296re-eval4.log
+rsn296re-eval5.log
+rsn296re-eval6.log
+rsn296re-eval7.log
+rsn296re-eval8.log
+rsn296re-eval9.log
+rsn299bpanel.tgz
+rsn299dev
+rsn299dev.jsonl
+rsn299dev2.tar.gz
+rsn299dev2fresh
+rsn299dev3.tar
+rsn299dev4.tar
+rsn299panel.tgz
+rsn299run_head.py
+rsn350-code.tar.gz
+rsn351-code.tar.gz
+rsn351-guard-report.txt
+rsn351-guard-state.json
+rsn351-guard-stdout.txt
+rsn351-guard.log
+rsn351-guard.sh
+rsn351-instances-1.json
+rsn351-instances-10.json
+rsn351-instances-11.json
+rsn351-instances-12.json
+rsn351-instances-13.json
+rsn351-instances-14.json
+rsn351-instances-15.json
+rsn351-instances-16.json
+rsn351-instances-17.json
+rsn351-instances-18.json
+rsn351-instances-19.json
+rsn351-instances-2.json
+rsn351-instances-20.json
+rsn351-instances-21.json
+rsn351-instances-22.json
+rsn351-instances-23.json
+rsn351-instances-24.json
+rsn351-instances-25.json
+rsn351-instances-26.json
+rsn351-instances-27.json
+rsn351-instances-28.json
+rsn351-instances-29.json
+rsn351-instances-3.json
+rsn351-instances-30.json
+rsn351-instances-31.json
+rsn351-instances-32.json
+rsn351-instances-33.json
+rsn351-instances-34.json
+rsn351-instances-35.json
+rsn351-instances-36.json
+rsn351-instances-37.json
+rsn351-instances-38.json
+rsn351-instances-39.json
+rsn351-instances-4.json
+rsn351-instances-40.json
+rsn351-instances-41.json
+rsn351-instances-42.json
+rsn351-instances-43.json
+rsn351-instances-44.json
+rsn351-instances-45.json
+rsn351-instances-46.json
+rsn351-instances-47.json
+rsn351-instances-48.json
+rsn351-instances-49.json
+rsn351-instances-5.json
+rsn351-instances-50.json
+rsn351-instances-51.json
+rsn351-instances-52.json
+rsn351-instances-53.json
+rsn351-instances-54.json
+rsn351-instances-55.json
+rsn351-instances-56.json
+rsn351-instances-57.json
+rsn351-instances-58.json
+rsn351-instances-59.json
+rsn351-instances-6.json
+rsn351-instances-60.json
+rsn351-instances-61.json
+rsn351-instances-62.json
+rsn351-instances-63.json
+rsn351-instances-64.json
+rsn351-instances-65.json
+rsn351-instances-66.json
+rsn351-instances-67.json
+rsn351-instances-68.json
+rsn351-instances-69.json
+rsn351-instances-7.json
+rsn351-instances-8.json
+rsn351-instances-9.json
+rsn351-live-1.tsv
+rsn351-live-10.tsv
+rsn351-live-11.tsv
+rsn351-live-12.tsv
+rsn351-live-13.tsv
+rsn351-live-14.tsv
+rsn351-live-15.tsv
+rsn351-live-16.tsv
+rsn351-live-17.tsv
+rsn351-live-18.tsv
+rsn351-live-19.tsv
+rsn351-live-2.tsv
+rsn351-live-20.tsv
+rsn351-live-21.tsv
+rsn351-live-22.tsv
+rsn351-live-23.tsv
+rsn351-live-24.tsv
+rsn351-live-25.tsv
+rsn351-live-26.tsv
+rsn351-live-27.tsv
+rsn351-live-28.tsv
+rsn351-live-29.tsv
+rsn351-live-3.tsv
+rsn351-live-30.tsv
+rsn351-live-31.tsv
+rsn351-live-32.tsv
+rsn351-live-33.tsv
+rsn351-live-34.tsv
+rsn351-live-35.tsv
+rsn351-live-36.tsv
+rsn351-live-37.tsv
+rsn351-live-38.tsv
+rsn351-live-39.tsv
+rsn351-live-4.tsv
+rsn351-live-40.tsv
+rsn351-live-41.tsv
+rsn351-live-42.tsv
+rsn351-live-43.tsv
+rsn351-live-44.tsv
+rsn351-live-45.tsv
+rsn351-live-46.tsv
+rsn351-live-47.tsv
+rsn351-live-48.tsv
+rsn351-live-49.tsv
+rsn351-live-5.tsv
+rsn351-live-50.tsv
+rsn351-live-51.tsv
+rsn351-live-52.tsv
+rsn351-live-53.tsv
+rsn351-live-54.tsv
+rsn351-live-55.tsv
+rsn351-live-56.tsv
+rsn351-live-57.tsv
+rsn351-live-58.tsv
+rsn351-live-59.tsv
+rsn351-live-6.tsv
+rsn351-live-60.tsv
+rsn351-live-61.tsv
+rsn351-live-62.tsv
+rsn351-live-63.tsv
+rsn351-live-64.tsv
+rsn351-live-65.tsv
+rsn351-live-66.tsv
+rsn351-live-67.tsv
+rsn351-live-68.tsv
+rsn351-live-69.tsv
+rsn351-live-7.tsv
+rsn351-live-8.tsv
+rsn351-live-9.tsv
+rsn353_final.err
+rsn353_final.json
+rsn353_guard.done
+rsn353_guard.log
+rsn353_guard.sh
+rsn353_guard.stdout
+rsn353_last.json
+rsn353_ledger.done
+rsn353_poll0.err
+rsn353_poll0.json
+rsn353_state.json
+rsn353_summary.json
+rsn353-code.tar
+rsn353-main.tar.gz
+rsn353-min.tar
+rsn355-code.tar
+rsn355-results.tar
+rsn355-seal
+rsn358a-code.tar
+rsn358a-design.tar
+rsn358a-main.tar
+rsn358a-sealcheck
+rsn358i-back
+rsn358i2-plain
+rsn358i2-pull
+rsn358i2.tar
+rsn358i3_analyze.py
+rsn358t-code.tar
+rt02d-copy.log
+run_dl9.bat
+run_dl9.ps1
+run-eval.sh
+run.py
+rund-back
+rv387-back
+rv390-code.tar.gz
+s127.py
+scp294.log
+seal-check.txt
+SEAL-code-twinb.sha256.txt
+SEAL-run.txt
+seal.txt
+sealcheck.py
+sealcheck2.py
+sealcheck3.py
+sealcheck333.py
+sf401_adapter.log
+sf401_kitc.log
+sf401_kitc.sh
+sf401_poll.log
+sf401_poll.sh
+sf401_report.md
+sf401_sha_local.txt
+sf401_sha_remote.txt
+sf401_step3.log
+sf401_step3.sh
+sf401_step4.log
+sf401_step4.sh
+sf401_step5.log
+sf401_step5.sh
+sf401_step5b.log
+sf401_step5b.sh
+sf401_step5c.log
+sf401_step5d.log
+sf401_step5e.log
+sf401_step6.log
+sf401_step6.sh
+sf401_step7.log
+sf401_testloop.sh
+sf401_torch.log
+sf401_torch2.log
+sf401_torch3.log
+sf401_vastaicopy.log
+sha_local.txt
+sha_remote.txt
+slp363code.tar
+slp363seal
+smoke_check.py
+smoke_P_console.txt
+smoke_p.ps1
+smoke_readme.md
+smoke_T.jsonl
+smoke_t.ps1
+spec_origin.txt
+spec358a.md
+ss.json
+ss.txt
+stats299b.py
+stopmu405_err.txt
+stopmu405_instances.json
+stopmu405_post.json
+stopmu405_pre.json
+streamargs.txt
+streamlist.txt
+style_241b.txt
+style_b.txt
+style_test_out.json
+style241b.txt
+styleprobe.err
+styleprobe.py
+stylesheet.txt
+sweep_all.jsonl
+sweep_full.jsonl
+sweep_ids.txt
+sweep_order.txt
+sweep_part2.jsonl
+sweep.jsonl
+t292t
+teacher_console.log
+tfplan.md
+tgt5back
+THRESHOLD-319.txt
+train_log301.jsonl
+train_summary301.json
+tree_path.txt
+tree-382b-chunk-aa
+tree-382b-chunk-ab
+tree-382b-chunk-ac
+tree-382b-chunk-ad
+tree-382b-chunk-ae
+tree-382b-chunk-af
+tree-382b-chunk-ag
+tree-382b-chunk-ah
+tree-382b-chunk-ai
+tree-382b.tgz
+tree-builder.tar.gz
+tree-main.tar.gz
+tree-twinb.tgz
+tree.tgz
+tree02c
+tree02c_path.txt
+tree3.tgz
+tree336.tgz
+tree360.tgz
+treebuild
+treedir.txt
+v333.md
+vast_err.txt
+vast_raw.json
+vast_raw2.json
+vastraw.json
+verify_seal299b.py
+verify_seal301.py
+verify.md
+wave2.sh
+winnl_debug.py
+write_part3.py
+x.html
+x.txt
+y1g_back
+y1t_check_out.txt
+y1t_D_path.txt
+y1t_drops2.jsonl
+y1t_kept2.jsonl
+y1t_start_epoch.txt
+zeb_def_ipc_10414
+zeb_def_ipc_12047
+zeb_def_ipc_12197
+zeb_def_ipc_1304
+zeb_def_ipc_13349
+zeb_def_ipc_15068
+zeb_def_ipc_18768
+zeb_def_ipc_19015
+zeb_def_ipc_20302
+zeb_def_ipc_2091
+zeb_def_ipc_20986
+zeb_def_ipc_22312
+zeb_def_ipc_24894
+zeb_def_ipc_25985
+zeb_def_ipc_26278
+zeb_def_ipc_26405
+zeb_def_ipc_26768
+zeb_def_ipc_27923
+zeb_def_ipc_3081
+zeb_def_ipc_31499
+zeb_def_ipc_3241
+zeb_def_ipc_33519
+zeb_def_ipc_35045
+zeb_def_ipc_35067
+zeb_def_ipc_36618
+zeb_def_ipc_37264
+zeb_def_ipc_38822
+zeb_def_ipc_42355
+zeb_def_ipc_43021
+zeb_def_ipc_4422
+zeb_def_ipc_44650
+zeb_def_ipc_45237
+zeb_def_ipc_45763
+zeb_def_ipc_47085
+zeb_def_ipc_47153
+zeb_def_ipc_48831
+zeb_def_ipc_49380
+zeb_def_ipc_49497
+zeb_def_ipc_54274
+zeb_def_ipc_54780
+zeb_def_ipc_57330
+zeb_def_ipc_57396
+zeb_def_ipc_58281
+zeb_def_ipc_59315
+zeb_def_ipc_61364
+zeb_def_ipc_6178
+zeb_def_ipc_62406
+zeb_def_ipc_62832
+zeb_def_ipc_63606
+zeb_def_ipc_63997
+zeb_def_ipc_64481
+zeb_def_ipc_64802
+zeb_def_ipc_6669
+zeb_def_ipc_67154
+zeb_def_ipc_68587
+zeb_def_ipc_71787
+zeb_def_ipc_73012
+zeb_def_ipc_73052
+zeb_def_ipc_73240
+zeb_def_ipc_74087
+zeb_def_ipc_75264
+zeb_def_ipc_75683
+zeb_def_ipc_76698
+zeb_def_ipc_79316
+zeb_def_ipc_7983
+zeb_def_ipc_8272
+zeb_def_ipc_85382
+zeb_def_ipc_86550
+zeb_def_ipc_87650
+zeb_def_ipc_88071
+zeb_def_ipc_88110
+zeb_def_ipc_88998
+zeb_def_ipc_89119
+zeb_def_ipc_8930
+zeb_def_ipc_90033
+zeb_def_ipc_90869
+zeb_def_ipc_92668
+zeb_def_ipc_92914
+zeb_def_ipc_94109
+zeb_def_ipc_95187
+zeb_def_ipc_95544
+zeb_def_ipc_97095
+zeb_def_ipc_98777
+zeb_def_ipc_99039
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+bm391logs
+bm391rent.env
+bm391split
+chats.json
+e2e330tree
+gen_part6.py
+grade_b_part1_writer.py
+guard-296b
+guard-350
+k1e-teacher-c-UQfONj
+[0m
+[0m$ [0mmkdir -p /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3luna-tmp && git archive e10b39b4b4cf3fa9fc38baeb1f00806c9591e839 scripts artifacts/claude-rd378k-20260926 artifacts/claude-rd378g-20260926 artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl | tar -x -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3luna-tmp && echo ARCHIVE_OK && ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3luna-tmp
+ARCHIVE_OK
+artifacts
+scripts
+[0m
+[0m$ [0mmkdir -p /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3luna-tmp/scripts /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3luna-tmp/artifacts/claude-rd378g-20260926/glm && git show origin/builder-outbox:scripts/claude_glm_opencode.py > /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3luna-tmp/scripts/claude_glm_opencode.py && git show origin/builder-outbox:artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl > /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3luna-tmp/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl && echo SHOW_OK && ls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3luna-tmp/scripts/claude_luna_run.py /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3luna-tmp/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl
+SHOW_OK
+-rw-r--r--  1 ben-hannan  staff  241293 Sep 27 00:08 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3luna-tmp/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl
+-rw-r--r--  1 ben-hannan  staff    2489 Sep 26 23:57 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3luna-tmp/scripts/claude_luna_run.py
+[0m
+[0m$ [0mls artifacts/claude-rd378k-20260926/ | sort; echo ---; shasum -a 256 artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl
+DRAFT-PASSMARKS-K.md
+gate
+gate2
+glm
+PASSMARKS-B.md
+PASSMARKS-C.md
+PASSMARKS-D.md
+PASSMARKS-E.md
+PASSMARKS-F.md
+PASSMARKS-G.md
+PASSMARKS-H.md
+PASSMARKS-I.md
+PASSMARKS-J.md
+PASSMARKS-K.md
+PASSMARKS.md
+SEAL-ADD-B.sha256.txt
+SEAL-ADD-C.sha256.txt
+SEAL-ADD-D.sha256.txt
+SEAL-ADD-E.sha256.txt
+SEAL-ADD-F.sha256.txt
+SEAL-ADD-G.sha256.txt
+SEAL-ADD-H.sha256.txt
+SEAL-ADD-I.sha256.txt
+SEAL-ADD-J.sha256.txt
+SEAL-ADD-K.sha256.txt
+SEAL.sha256.txt
+teacher-log.txt
+VERIFY-gate.md
+VERIFY-gate2.md
+VERIFY-gate3.md
+---
+87a51358fa2bdedaaf0edafeb273074ed648350c5d759f130fcee5fe475b482a  artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl
+[0m
+[0m$ [0mpython3 -c "import subprocess,os; os.chdir('artifacts/claude-rd378k-20260926')
+for f,exp in [('SEAL-ADD-K.sha256.txt',5),('SEAL-ADD-H.sha256.txt',1),('SEAL-ADD-F.sha256.txt',3),('SEAL-ADD-E.sha256.txt',2),('SEAL-ADD-D.sha256.txt',2),('SEAL-ADD-C.sha256.txt',2),('SEAL.sha256.txt',15)]:
+    r=subprocess.run(['shasum','-a','256','-c',f],capture_output=True,text=True); print('=== '+f); print(r.stdout); print(r.stderr)"
+=== SEAL-ADD-K.sha256.txt
+artifacts/claude-rd378k-20260926/PASSMARKS-K.md: FAILED open or read
+scripts/claude_luna_run.py: FAILED open or read
+scripts/claude_luna_codex.py: FAILED open or read
+scripts/claude_rd378k_teacher3oc.py: FAILED open or read
+scripts/claude_rd378k_teacher3.py: FAILED open or read
+
+shasum: artifacts/claude-rd378k-20260926/PASSMARKS-K.md: No such file or directory
+shasum: scripts/claude_luna_run.py: No such file or directory
+shasum: scripts/claude_luna_codex.py: No such file or directory
+shasum: scripts/claude_rd378k_teacher3oc.py: No such file or directory
+shasum: scripts/claude_rd378k_teacher3.py: No such file or directory
+shasum: WARNING: 5 listed files could not be read
+
+=== SEAL-ADD-H.sha256.txt
+artifacts/claude-rd378k-20260926/PASSMARKS-H.md: FAILED open or read
+
+shasum: artifacts/claude-rd378k-20260926/PASSMARKS-H.md: No such file or directory
+shasum: WARNING: 1 listed file could not be read
+
+=== SEAL-ADD-F.sha256.txt
+artifacts/claude-rd378k-20260926/PASSMARKS-F.md: FAILED open or read
+scripts/claude_rd378k_teacher3oc.py: FAILED open or read
+scripts/claude_glm_opencode.py: FAILED open or read
+
+shasum: artifacts/claude-rd378k-20260926/PASSMARKS-F.md: No such file or directory
+shasum: scripts/claude_rd378k_teacher3oc.py: No such file or directory
+shasum: scripts/claude_glm_opencode.py: No such file or directory
+shasum: WARNING: 3 listed files could not be read
+
+=== SEAL-ADD-E.sha256.txt
+artifacts/claude-rd378k-20260926/PASSMARKS-E.md: FAILED open or read
+scripts/claude_rd378k_teacher3.py: FAILED open or read
+
+shasum: artifacts/claude-rd378k-20260926/PASSMARKS-E.md: No such file or directory
+shasum: scripts/claude_rd378k_teacher3.py: No such file or directory
+shasum: WARNING: 2 listed files could not be read
+
+=== SEAL-ADD-D.sha256.txt
+artifacts/claude-rd378k-20260926/PASSMARKS-D.md: FAILED open or read
+scripts/claude_lis300_train.py: FAILED open or read
+
+shasum: artifacts/claude-rd378k-20260926/PASSMARKS-D.md: No such file or directory
+shasum: scripts/claude_lis300_train.py: No such file or directory
+shasum: WARNING: 2 listed files could not be read
+
+=== SEAL-ADD-C.sha256.txt
+artifacts/claude-rd378k-20260926/PASSMARKS-C.md: FAILED open or read
+scripts/claude_rd378k_teacher2.py: FAILED open or read
+
+shasum: artifacts/claude-rd378k-20260926/PASSMARKS-C.md: No such file or directory
+shasum: scripts/claude_rd378k_teacher2.py: No such file or directory
+shasum: WARNING: 2 listed files could not be read
+
+=== SEAL.sha256.txt
+artifacts/claude-rd378k-20260926/PASSMARKS.md: FAILED open or read
+scripts/claude_rd378k_data.py: FAILED open or read
+scripts/claude_rd378k_teacher.py: FAILED open or read
+scripts/claude_rd378k_score.py: FAILED open or read
+scripts/claude_rd378_common.py: FAILED open or read
+scripts/claude_rd378_write.py: FAILED open or read
+scripts/claude_rd371b_sample.py: FAILED open or read
+scripts/claude_rd371b_common.py: FAILED open or read
+scripts/claude_lis300_train.py: FAILED open or read
+scripts/claude_rd378L_rebuild.py: FAILED open or read
+scripts/claude_rd378u_confirm.py: FAILED open or read
+scripts/claude_rd378L_recall.py: FAILED open or read
+scripts/claude_ep382_store_v2.py: FAILED open or read
+scripts/claude_ep382_store_v3.py: FAILED open or read
+scripts/claude_ep382_store_v4.py: FAILED open or read
+artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md: FAILED open or read
+
+shasum: artifacts/claude-rd378k-20260926/PASSMARKS.md: No such file or directory
+shasum: scripts/claude_rd378k_data.py: No such file or directory
+shasum: scripts/claude_rd378k_teacher.py: No such file or directory
+shasum: scripts/claude_rd378k_score.py: No such file or directory
+shasum: scripts/claude_rd378_common.py: No such file or directory
+shasum: scripts/claude_rd378_write.py: No such file or directory
+shasum: scripts/claude_rd371b_sample.py: No such file or directory
+shasum: scripts/claude_rd371b_common.py: No such file or directory
+shasum: scripts/claude_lis300_train.py: No such file or directory
+shasum: scripts/claude_rd378L_rebuild.py: No such file or directory
+shasum: scripts/claude_rd378u_confirm.py: No such file or directory
+shasum: scripts/claude_rd378L_recall.py: No such file or directory
+shasum: scripts/claude_ep382_store_v2.py: No such file or directory
+shasum: scripts/claude_ep382_store_v3.py: No such file or directory
+shasum: scripts/claude_ep382_store_v4.py: No such file or directory
+shasum: artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md: No such file or directory
+shasum: WARNING: 16 listed files could not be read
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL-ADD-K.sha256.txt; echo EXIT:$?; shasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL-ADD-H.sha256.txt; echo EXIT:$?; shasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL-ADD-F.sha256.txt; echo EXIT:$?
+artifacts/claude-rd378k-20260926/PASSMARKS-K.md: OK
+scripts/claude_luna_run.py: OK
+scripts/claude_luna_codex.py: OK
+scripts/claude_rd378k_teacher3oc.py: OK
+scripts/claude_rd378k_teacher3.py: OK
+EXIT:0
+artifacts/claude-rd378k-20260926/PASSMARKS-H.md: OK
+EXIT:0
+artifacts/claude-rd378k-20260926/PASSMARKS-F.md: OK
+scripts/claude_rd378k_teacher3oc.py: OK
+scripts/claude_glm_opencode.py: OK
+EXIT:0
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL-ADD-E.sha256.txt; echo EXIT:$?; shasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL-ADD-D.sha256.txt; echo EXIT:$?; shasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL-ADD-C.sha256.txt; echo EXIT:$?; shasum -a 256 -c artifacts/claude-rd378k-20260926/SEAL.sha256.txt; echo EXIT:$?
+artifacts/claude-rd378k-20260926/PASSMARKS-E.md: OK
+scripts/claude_rd378k_teacher3.py: OK
+EXIT:0
+artifacts/claude-rd378k-20260926/PASSMARKS-D.md: OK
+scripts/claude_lis300_train.py: OK
+EXIT:0
+artifacts/claude-rd378k-20260926/PASSMARKS-C.md: OK
+scripts/claude_rd378k_teacher2.py: OK
+EXIT:0
+artifacts/claude-rd378k-20260926/PASSMARKS.md: OK
+scripts/claude_rd378k_data.py: OK
+scripts/claude_rd378k_teacher.py: OK
+scripts/claude_rd378k_score.py: OK
+scripts/claude_rd378_common.py: OK
+scripts/claude_rd378_write.py: OK
+scripts/claude_rd371b_sample.py: OK
+scripts/claude_rd371b_common.py: OK
+scripts/claude_lis300_train.py: FAILED
+scripts/claude_rd378L_rebuild.py: OK
+scripts/claude_rd378u_confirm.py: OK
+scripts/claude_rd378L_recall.py: OK
+scripts/claude_ep382_store_v2.py: OK
+scripts/claude_ep382_store_v3.py: OK
+scripts/claude_ep382_store_v4.py: OK
+artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md: OK
+EXIT:1
+shasum: WARNING: 1 computed checksum did NOT match
+[0m
+[0m$ [0mhead -60 scripts/claude_luna_run.py; echo ===CODEX===; head -80 scripts/claude_luna_codex.py; echo ===T3OC===; head -80 scripts/claude_rd378k_teacher3oc.py
+#!/usr/bin/env python3
+"""Run a sealed script with GPT-6 Luna in place of GLM (Trustworthy notes thread, 2026-09-27).
+
+Same idea as scripts/claude_glm_v11_run.py: bind the module name claude_glm_opencode, then run the named script
+unchanged, so sealed wrappers (claude_rd378k_teacher3oc.py, claude_rd378g_writemore_oc.py) need no edit. Here the name
+is bound to scripts/claude_luna_codex.py (the Director's Luna helper: call(text, model="gpt-6-luna", timeout=300)).
+That helper RAISES after 3 failed tries (empty or error-like replies count as failures). Both wrappers already catch
+any exception from OC.call, print their "call failed" line and use "" as the raw answer, so a Luna route failure is
+counted as a route loss exactly as before; --check shows this.
+
+python -B scripts/claude_luna_run.py SCRIPT.py ARGS...
+python -B scripts/claude_luna_run.py --check   (no network: fakes the codex call; prints "luna bound ok")
+"""
+from __future__ import annotations
+
+import contextlib
+import io
+import runpy
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_luna_codex as L  # noqa: E402
+
+sys.modules["claude_glm_opencode"] = L
+
+
+def check():
+    import claude_glm_opencode as bound
+    import claude_rd378g_writemore_oc as W
+    import claude_rd378k_teacher3oc as K
+    seen = []
+
+    def fake_once(text, model, timeout):
+        seen.append((model, timeout))
+        return (None, "error-like or empty reply") if "FAIL" in text else ("reply", "")
+    real = L._once
+    L._once = fake_once
+    buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(buf):
+            good = (K.call_opencode("k", "m", "grade this", 0)[0], W.oc_call("write this"))
+            bad = (K.call_opencode("k", "m", "FAIL", 0)[0], W.oc_call("FAIL"))
+    finally:
+        L._once = real
+    log = buf.getvalue()
+    return (bound is L and K.OC is L and good == ("reply", "reply") and bad == ("", "")
+            and "[rd378k-teacher3oc] call failed: RuntimeError" in log
+            and "[rd378g-writemore] call failed: RuntimeError" in log
+            and len(seen) == 2 + 3 + 3 and all(m == "gpt-6-luna" and t == 300 for m, t in seen))
+
+
+def main():
+    if sys.argv[1:] == ["--check"]:
+        ok = check()
+        print("luna bound ok" if ok else "luna bound FAIL")
+        sys.exit(0 if ok else 1)
+    script = sys.argv[1]
+    sys.argv = sys.argv[1:]
+    runpy.run_path(script, run_name="__main__")
+zsh:1: ==CODEX=== not found
+[0m
+[0m$ [0mhead -80 scripts/claude_luna_codex.py
+#!/usr/bin/env python3
+"""GPT-6 Luna via the Mac's bundled Codex CLI (Ben's Codex plan; no key handled).
+
+New helper (Director, 2026-09-27). Ben 03:25:33 UTC "you can use unlimited luna",
+03:47:24 card "Allow Luna", 03:47:41 "just have luna rewrite all the training
+data". Model id gpt-6-luna answered "ok" in probe 000-probe-codex2 (03:37 UTC).
+
+Same interface as scripts/claude_glm_opencode_v11.py: call(text, model=MODEL,
+timeout=300) -> str, plus --selftest. Each attempt runs
+  codex exec -m gpt-6-luna -C <empty temp dir> --sandbox read-only
+             --skip-git-repo-check [-o <file>] -
+with the prompt on stdin, in a fresh empty temp dir, so the agent can read
+nothing of the project and write nothing anywhere. This script never reads
+or prints anything under ~/.codex.
+
+Differences from the GLM helper, on purpose:
+- An empty reply, or a short reply that looks like an error / limit / login
+  message, is a FAILURE (retried, then RuntimeError), never returned as a row.
+  (The GLM v1.1 helper returns stdout whenever exit is 0; see the 09-27
+  route-loss finding.)
+- The reply is the agent's last message: read from the -o file when this
+  codex supports --output-last-message, else stdout stripped of ANSI chrome.
+
+Usage:
+    from claude_luna_codex import call
+    text = call("Reply with the word ok")
+
+    python3 scripts/claude_luna_codex.py --selftest
+"""
+
+from __future__ import annotations
+
+import os
+import re
+import subprocess
+import sys
+import tempfile
+
+CODEX = os.environ.get(
+    "LUNA_CODEX_BIN",
+    "/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex")
+MODEL = "gpt-6-luna"
+
+_ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]|\x1b\][^\x07]*\x07|\r")
+# A reply this short that matches is treated as a route failure, not text.
+_ERRLIKE = re.compile(
+    r"usage limit|rate limit|quota|insufficient|unauthori[sz]ed|not logged in|"
+    r"please log ?in|authentication|error:|exceeded|temporarily unavailable|"
+    r"model .{0,40}not (found|supported|available)|stream disconnected",
+    re.I)
+_ERR_MAXLEN = 400
+
+_HAS_O = None
+
+
+def _strip_chrome(text: str) -> str:
+    return _ANSI.sub("", text or "").strip()
+
+
+def _supports_output_file() -> bool:
+    global _HAS_O
+    if _HAS_O is None:
+        try:
+            p = subprocess.run([CODEX, "exec", "--help"], stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                               timeout=60)
+            _HAS_O = b"--output-last-message" in p.stdout
+        except Exception:
+            _HAS_O = False
+    return _HAS_O
+
+
+def looks_like_error(reply: str) -> bool:
+    r = (reply or "").strip()
+    return (not r) or (len(r) <= _ERR_MAXLEN and bool(_ERRLIKE.search(r)))
+
+
+def _once(text, model, timeout):
+    with tempfile.TemporaryDirectory(prefix="luna-codex-") as td:
+        out_file = os.path.join(td, ".last.txt")
+[0m
+[0m$ [0mhead -80 scripts/claude_rd378k_teacher3oc.py; head -50 scripts/claude_rd378k_teacher3.py; head -50 scripts/claude_rd378k_teacher.py
+#!/usr/bin/env python3
+"""rd-378k labeller v3 through Ben's opencode route (Trustworthy notes thread, 2026-09-26). New file; teacher3 stays.
+
+gate3 (labeller v3 via OpenRouter) ran while the OpenRouter account had no funds, so it does not count (Thread manager,
+19:00 UTC). Ben (18:47 UTC) offered GLM 5.3 Flash through his opencode subscription instead. The one change here: every
+teacher call goes through scripts/claude_glm_opencode.py call() (the Director's shared helper) instead of OpenRouter.
+Prompt words, verdict words, windows of at most 7 graded turns, the tolerant parser and the two passes are
+claude_rd378k_teacher3's, run unchanged. The route sets no temperature (opencode's default) and may add its own system
+text; this labeller measures that route as it is, and it is the route that would grade training data.
+No key is read: opencode holds its own login, and this script never touches opencode config or auth files.
+
+label  python -B scripts/claude_rd378k_teacher3oc.py label --judge-in J.jsonl --out DIR [--only-hash K] [--hash-rem R]
+       (same outputs as claude_rd378k_teacher3.py label; cost_usd is 0 because the route reports none)
+selftest (no network)
+"""
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_glm_opencode as OC  # noqa: E402
+import claude_rd378k_teacher3 as T3  # noqa: E402
+
+
+def call_opencode(_key, _model, text, _temperature):
+    try:
+        return OC.call(text) or "", {}
+    except Exception as e:                            # a failed call is logged and counted, never guessed
+        print(f"[rd378k-teacher3oc] call failed: {type(e).__name__} {str(e)[:120]}", flush=True)
+        return "", {}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("mode", choices=["label", "selftest"])
+    ap.add_argument("--judge-in", default="")
+    ap.add_argument("--out", default="")
+    ap.add_argument("--only-hash", type=int, default=1)
+    ap.add_argument("--hash-rem", type=int, default=0)
+    a = ap.parse_args()
+    T3.call = call_opencode
+    if a.mode == "selftest":
+        T3.selftest()
+        assert T3.call is call_opencode
+        print("rd378k teacher3oc selftest 1/1 ok")
+        return
+    a.model = "opencode-go/glm-5.3-flash"
+    T3.label(a, None)
+
+
+if __name__ == "__main__":
+    main()
+#!/usr/bin/env python3
+"""rd-378k teacher labeller, version 3 (Trustworthy notes thread, 2026-09-26). New file; versions 1 and 2 stay.
+
+gate2 (labeller v2, artifacts/claude-rd378k-20260926/gate2) failed: agreement 471/555 = 84.9% (bar 85%) and overheard
+coverage 11/16 (bar 90%). Shown from gate2/failures.jsonl: every one of the 27 failed calls was the teacher leaving out
+turns whose notes list is empty (25) or adding context turns it was not asked about (2); a parser that allows exactly that
+accepts all 27. Two changes, both fixed in PASSMARKS-E.md before this runs:
+1. parser (a bug fix; verdicts untouched): items for turns outside the window are ignored; a turn WITH notes must be
+   present with one verdict per note; a turn with NO notes may be left out, and then its "missed" is unknown, written
+   as -1 so every builder treats it as "something may be missed" (never taught as "no note here").
+2. teacher (the sealed fallback of PASSMARKS-B/C): two passes per window, pass A as shown and pass B with each turn's
+   notes in reverse order (so a note's position cannot decide its grade twice); a note is "ok" only if both passes say
+   "ok", else pass A's non-ok verdict, else pass B's. missed = the larger of the two when both are known, else -1.
+Prompt words, verdict words and output format are claude_rd378k_teacher's; windows of at most 7 graded turns are v2's.
+
+label  python -B scripts/claude_rd378k_teacher3.py label --judge-in J.jsonl --out DIR [--only-hash K] [--hash-rem R]
+       (--hash-rem R with --only-hash K keeps dialogs with sha256(id) % K == R). Writes DIR/labels.jsonl
+       {dialog, t, verdicts, missed}, DIR/labels_passA.jsonl (pass A alone, same rows; a report-only row that separates
+       the parser fix from the second pass) and DIR/failures.jsonl; prints one JSON line of counts (per kind too).
+selftest (no network)
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_rd378k_teacher import JUDGE, VERDICTS, call, json_list, load  # noqa: E402
+from claude_rd378k_teacher2 import windows  # noqa: E402
+
+
+def parse(w, v):
+    """{t: (verdicts, missed)} for the window's graded turns, or None."""
+    if not isinstance(v, list):
+        return None
+    graded = {int(t["t"]): len(t["notes"]) for t in w["turns"] if "notes" in t}
+    got = {}
+    for r in v:
+        if not isinstance(r, dict) or not isinstance(r.get("t"), int):
+            return None
+        if r["t"] not in graded:
+            continue
+        if r["t"] in got:
+            return None
+        got[r["t"]] = r
+    out = {}
+    for t, n in graded.items():
+#!/usr/bin/env python3
+"""rd-378k teacher jobs on the Mac (Trustworthy notes thread, 2026-09-26): the open-weights teacher (GLM via OpenRouter,
+the teacher Ben approved; goals page 5f38f110e: nothing a model trains on is written or judged by Claude) writes the
+practice dialogs the note writer drafts over, and grades the writer's own notes, so the cut-only rows
+(scripts/claude_rd378k_data.py) hold no Claude-written or Claude-judged text. Standard library only; no model runs here.
+
+Key rules: the key is read from ~/.config/openrouter/key into memory only. Never printed, logged or written.
+Call pattern copied from scripts/claude_k1e_teacher.py (reasoning effort low, answer read from the final message).
+
+write  160 practice dialogs in 20 calls of 8 (4 chat with an assistant + 4 overheard between two named people,
+       12-16 turns), each call with its own subject area. Structure checked in code; a call that breaks it is retried
+       (3 tries). ids kd-001..kd-160 in call order; t counts from 1.
+         python -B scripts/claude_rd378k_teacher.py write --out DIR [--model M]
+label  the teacher grades every note of a judge-input file (claude_rd378k_data.py judgein) with the judge brief's own
+       verdict words (artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md), one dialog per call, temperature 0;
+       writes DIR/labels.jsonl {dialog, t, verdicts, missed} (the judge-output format). [--only-hash K: only dialogs
+       whose sha256(id) % K == 0.]
+         python -B scripts/claude_rd378k_teacher.py label --judge-in J.jsonl --out DIR [--only-hash K] [--model M]
+agree  teacher verdicts vs the blind judges' verdicts on the same notes, ok vs not ok. Label rule fixed before any
+       teacher label exists (the creative thread's rule for a label source, k1e): agreement >= 85% and kappa >= 0.5.
+         python -B scripts/claude_rd378k_teacher.py agree --labels L.jsonl --verdicts V.jsonl
+selftest (no network)
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import re
+import time
+import urllib.request
+from pathlib import Path
+
+AREAS = ("hobbies and crafts", "work and coworkers", "family visits", "school and exams", "food and cooking",
+         "travel and trips", "pets", "moving house", "neighbours and community", "sports and fitness",
+         "music and concerts", "gardening", "health and appointments", "money and shopping", "weddings and parties",
+         "cars and commuting", "books and films (invented titles only)", "volunteering", "holidays and seasons",
+         "new jobs and interviews")
+VERDICTS = ("ok", "unsupported", "bad_cite", "bad_when", "bad_form")
+MONTHS = ("January February March April May June July August September October November December").split()
+
+WRITE = """Write 8 realistic conversations as a JSON list of 8 objects. Each object has exactly the keys "kind",
+"speakers", "date", "turns".
+- 4 with kind "chat": a user talks with a personal assistant. speakers = ["user", "assistant"]. Turns alternate,
+  starting with the user. The user tells the assistant about their life; the assistant's turns are short natural replies.
+- 4 with kind "overheard": two friends, relatives or coworkers talk. speakers = their two first names. Turns alternate,
+  starting with the first name.
+- date: the day the conversation happens, like "8 May 2023", a different day for each, between 2021 and 2025.
+- turns: 12 to 16 objects {"speaker": one of the speakers, "text": the message}.
+What the talk should contain, mixed naturally: things that happened, plans, preferences and opinions, times said in the
+[0m
+[0m$ [0mdate +%s > /tmp/g3l_t3_start.txt; uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run.py --check 2>&1; echo RC:$?; date +%s; cat /tmp/g3l_t3_start.txt
+luna bound ok
+RC:0
+1790482157
+1790482157
+[0m
+[0m$ [0mSTART=$(date +%s); uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py selftest 2>&1; echo RC:$?; END=$(date +%s); echo WALL:$((END-START))
+rd378k teacher3 selftest 1/1 ok
+rd378k teacher3oc selftest 1/1 ok
+RC:0
+WALL:0
+[0m
+[0m$ [0mSTART=$(date +%s); echo START:$START; uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --only-hash 12 --hash-rem 0 --out artifacts/claude-rd378k-20260926/pilot-luna 2>&1 | tee /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3luna-tmp/pilot-console.txt; echo RC:${pipestatus[1]:-?}; END=$(date +%s); echo WALL:$((END-START))
+START:1790482164
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mls -la artifacts/claude-rd378k-20260926/pilot-luna/ 2>&1; echo ---; cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rd378k-gate3luna-tmp/pilot-console.txt 2>&1 | head -30; echo ---; ps aux | grep -E "codex|luna|teacher3" | grep -v grep | head -20
+total 0
+drwxr-xr-x   2 ben-hannan  staff    64 Sep 27 00:09 .
+drwxr-xr-x  33 ben-hannan  staff  1056 Sep 27 00:09 ..
+---
+---
+ben-hannan        5678  15.8  2.5 562785296 838256   ??  RN   12:08AM   0:20.59 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:006-rd378k-gate3luna.go1.5650 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-27 03:57 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.\012GPU: no. Mac CPU only; about 12 pilot calls, then about 120 gate calls (at most ~400 with retries) to GPT-6 Luna through Ben's Codex plan via the Director's helper, $0 per run. ONE process, no parallel parts; no opencode, no OpenRouter, no rental. It may run at the same time as 007-rd378g-writeluna.\012LOAD-LIGHT: yes (network-bound: each Luna call runs remotely through the Codex CLI; locally only python plus one codex process per call)\012\012YOUR TASK: rd378k-gate3luna. First read origin/main:artifacts/claude-rd378k-20260926/PASSMARKS-F.md, then PASSMARKS-H.md, then PASSMARKS-K.md. It runs a small format pilot on 4 training dialogs, and only if the pilot passes, the label gate on the same 38 dialogs, with every call going to Luna. No training, no GPU. Code: scripts/claude_luna_run.py, scripts/claude_luna_codex.py, scripts/claude_rd378k_teacher3oc.py, scripts/claude_rd378k_teacher3.py and scripts/claude_rd378k_teacher.py (read their docstrings). Run them, never edit them; if something breaks, stop and report the exact error.\012LUNA RULES: never read, print or copy anything under ~/.codex or any Codex / ChatGPT config, auth file or key; the helper handles the route.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl or artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt.\012\0121. COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378k-20260926/SEAL-ADD-K.sha256.txt). Run `git archive $COMMIT scripts artifacts/claude-rd378k-20260926 artifacts/claude-rd378g-20260926 artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl | tar -x -C <tmp>`. Then, with mkdir -p first:\012   - `git show origin/builder-outbox:scripts/claude_glm_opencode.py > <tmp>/scripts/claude_glm_opencode.py` (only for the seal check in step 2);\012   - `git show origin/builder-outbox:artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl > <tmp>/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl`.\012   Run everything from <tmp> (python via `uv run --offline --no-project --python 3.12 python -B`; standard library only). Report COMMIT.\0122. SEAL: `shasum -a 256 -c` on these files in artifacts/claude-rd378k-20260926/:\012   - SEAL-ADD-K.sha256.txt (5 OK)\012   - SEAL-ADD-H.sha256.txt (1 OK)\012   - SEAL-ADD-F.sha256.txt (3 OK)\012   - SEAL-ADD-E.sha256.txt (2 OK)\012   - SEAL-ADD-D.sha256.txt (2 OK)\012   - SEAL-ADD-C.sha256.txt (2 OK)\012   - SEAL.sha256.txt (15 OK; the ONLY allowed FAILED line is scripts/claude_lis300_train.py, which PASSMARKS-D.md replaces)\012   Also `shasum -a 256 artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl` must start 87a51358fa2bdedaaf0edafeb273074e.\012   Anything else: stop with SEAL-MISMATCH and every line.\0123. python -B scripts/claude_luna_run.py --check -> "luna bound ok"; python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py selftest -> ends "rd378k teacher3oc selftest 1/1 ok"; else stop.\0124. PILOT: python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --only-hash 12 --hash-rem 0 --out artifacts/claude-rd378k-20260926/pilot-luna\012   Save its console output as artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt and report its JSON line verbatim.\012   - PILOT PASS: "dialogs" is 4, "unparsed" is 0 and "failed_calls" is at most 2. Go on to step 5.\012   - Otherwise: stop with PILOT-FAIL, and do not run steps 5-7. Still do step 8 for pilot-log.txt only.\012   Never open or copy the pilot's labels files.\0125. GATE, under nohup with its own log (one process; poll the log; never start a second copy): python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --hash-rem 1 --out artifacts/claude-rd378k-20260926/gate3luna\0126. python -B scripts/claude_rd378k_teacher.py agree --labels artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl --verdicts artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl\0127. python -B scripts/claude_rd378k_teacher.py agree --labels artifacts/claude-rd378k-20260926/gate3luna/labels_passA.jsonl --verdicts artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl   (report only)\0128. Copy into the worktree:\012   - artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt;\012   - if step 5 ran: artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl, labels_passA.jsonl and failures.jsonl, plus the console output of steps 3 and 5-7 as gate3luna/teacher-log.txt.\012   Report every printed JSON line verbatim, wall time per step, and the number of "call failed" lines in each log.\012PUSH: artifacts/claude-rd378k-20260926/gate3luna artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt
+ben-hannan       47928   0.3  0.6 2002929840 196944   ??  S    Fri09PM   7:10.19 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/154.0.8037.57/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer) --type=renderer --user-data-dir=/Users/ben-hannan/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt.site,chatgpt-team.site --owl-scoped-user-agent-prefix=CodexBrowser --enable-blink-features=WebMCP --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=13 --launch-time-ticks=206757623145 --shared-files --metrics-shmem-handle=1752395122,r,9276609029512609479,14654483463783366329,1572864 --field-trial-handle=1718379636,r,11890754251098718170,7561854559829013339,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,2662299955040732339,12277088878636347862,4 --trace-process-track-uuid=3190708998493415531 --seatbelt-client=191
+ben-hannan       44581   0.2  0.6 498957456 217712   ??  Ss   Fri09PM   2:35.51 /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/app/cli.js serve
+ben-hannan       47329   0.1  0.7 2002710576 225328   ??  S    Fri09PM   7:05.07 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/154.0.8037.57/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer) --type=renderer --user-data-dir=/Users/ben-hannan/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt.site,chatgpt-team.site --owl-scoped-user-agent-prefix=CodexBrowser --enable-blink-features=WebMCP --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=7 --launch-time-ticks=206751972606 --shared-files --metrics-shmem-handle=1752395122,r,8720123310247336582,8285424383622675029,1572864 --field-trial-handle=1718379636,r,11890754251098718170,7561854559829013339,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,2662299955040732339,12277088878636347862,4 --trace-process-track-uuid=3190708992871164437 --seatbelt-client=186
+ben-hannan       83652   0.0  0.1 488844592  25216   ??  S     9:29PM   0:00.14 /Users/ben-hannan/Library/Caches/com.openai.codex/org.sparkle-project.Sparkle/Launcher/FiDImuDeb/Updater.app/Contents/MacOS/Updater /Applications/ChatGPT.app 0
+ben-hannan       83651   0.0  0.0 488840704  13408   ??  S     9:29PM   0:07.83 /Applications/ChatGPT.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate com.openai.codex /Users/ben-hannan ben-hannan
+ben-hannan       86478   0.0  0.1 1933271408  20880   ??  S     7:28AM   0:01.41 /Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex-code-mode-host
+ben-hannan       49185   0.0  0.1 539591952  25904   ??  S    Fri09PM   0:03.36 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/154.0.8037.57/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service) --type=utility --utility-sub-type=on_device_model.mojom.OnDeviceModelService --lang=en-US --service-sandbox-type=on_device_model_execution --user-data-dir=/Users/ben-hannan/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --shared-files --metrics-shmem-handle=1752395122,r,11314627110433880901,4649076273691831484,524288 --field-trial-handle=1718379636,r,11890754251098718170,7561854559829013339,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,2662299955040732339,12277088878636347862,4 --trace-process-track-uuid=3190709000367499229 --seatbelt-client=232
+ben-hannan       49092   0.0  0.1 1943953008  36256   ??  S    Fri09PM   2:52.26 /Applications/Codex Web GPT.app/Contents/MacOS/Codex Web GPT /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/app/browser-helper.cjs
+ben-hannan       47929   0.0  0.1 2002643488  34560   ??  S    Fri09PM   0:01.50 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/154.0.8037.57/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer) --type=renderer --user-data-dir=/Users/ben-hannan/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt.site,chatgpt-team.site --owl-scoped-user-agent-prefix=CodexBrowser --enable-blink-features=WebMCP --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=14 --launch-time-ticks=206757624819 --shared-files --metrics-shmem-handle=1752395122,r,10737020594709816429,2857038838632540316,1572864 --field-trial-handle=1718379636,r,11890754251098718170,7561854559829013339,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,2662299955040732339,12277088878636347862,4 --trace-process-track-uuid=3190708999430457380 --seatbelt-client=191
+ben-hannan       47922   0.0  0.2 2002702240  60704   ??  S    Fri09PM   0:03.77 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/154.0.8037.57/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer) --type=renderer --user-data-dir=/Users/ben-hannan/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt.site,chatgpt-team.site --owl-scoped-user-agent-prefix=CodexBrowser --enable-blink-features=WebMCP --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=11 --launch-time-ticks=206757448233 --shared-files --metrics-shmem-handle=1752395122,r,444683443891086396,8410080153539520937,1572864 --field-trial-handle=1718379636,r,11890754251098718170,7561854559829013339,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,2662299955040732339,12277088878636347862,4 --trace-process-track-uuid=3190708996619331833 --seatbelt-client=196
+ben-hannan       47223   0.0  0.1 489136240  35856   ??  S    Fri09PM   0:18.57 /Users/ben-hannan/.codex/computer-use/Codex Computer Use.app/Contents/MacOS/SkyComputerUseService
+ben-hannan       46561   0.0  0.7 489378592 223216   ??  S    Fri09PM   4:24.45 /Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex -c features.code_mode_host=true app-server --analytics-default-enabled -c plugins.codex-app-tools@openai-bundled.mcp_servers.codex_app.enabled=true
+ben-hannan       46556   0.0  2.0 2002734864 680272   ??  S    Fri09PM  12:45.19 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/154.0.8037.57/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer) --type=renderer --user-data-dir=/Users/ben-hannan/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt.site,chatgpt-team.site --owl-scoped-user-agent-prefix=CodexBrowser --enable-blink-features=WebMCP --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=5 --launch-time-ticks=206746925356 --shared-files --metrics-shmem-handle=1752395122,r,6084707145682491842,1364236538613568899,1572864 --field-trial-handle=1718379636,r,11890754251098718170,7561854559829013339,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,2662299955040732339,12277088878636347862,4 --trace-process-track-uuid=3190708990997080739 --seatbelt-client=139
+ben-hannan       46555   0.0  0.3 2002702640  89664   ??  S    Fri09PM   0:08.46 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/154.0.8037.57/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer) --type=renderer --user-data-dir=/Users/ben-hannan/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt.site,chatgpt-team.site --owl-scoped-user-agent-prefix=CodexBrowser --enable-blink-features=WebMCP --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=6 --launch-time-ticks=206746914827 --shared-files --metrics-shmem-handle=1752395122,r,6675917688414229972,16929980675734866993,1572864 --field-trial-handle=1718379636,r,11890754251098718170,7561854559829013339,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,2662299955040732339,12277088878636347862,4 --trace-process-track-uuid=3190708991934122588 --seatbelt-client=139
+ben-hannan       46383   0.0  0.1 539608736  31600   ??  S    Fri09PM   0:05.70 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/154.0.8037.57/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service) --type=utility --utility-sub-type=storage.mojom.StorageService --lang=en-US --service-sandbox-type=service --user-data-dir=/Users/ben-hannan/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --shared-files --metrics-shmem-handle=1752395122,r,9074158089473251659,15635410066407455132,524288 --field-trial-handle=1718379636,r,11890754251098718170,7561854559829013339,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,2662299955040732339,12277088878636347862,4 --trace-process-track-uuid=3190708990060038890 --seatbelt-client=55
+ben-hannan       46377   0.0  0.2 539681744  68272   ??  S    Fri09PM   3:13.54 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/154.0.8037.57/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service) --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=network --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt.site,chatgpt-team.site --owl-scoped-user-agent-prefix=CodexBrowser --user-data-dir=/Users/ben-hannan/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --start-stack-profiler --shared-files --metrics-shmem-handle=1752395122,r,435675828408842313,15163815556545146210,524288 --field-trial-handle=1718379636,r,11890754251098718170,7561854559829013339,262144 --enable-features=ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,2662299955040732339,12277088878636347862,4 --trace-process-track-uuid=3190708989122997041 --seatbelt-client=35
+ben-hannan       44571   0.0  0.1 498956704  44048   ??  S    Fri09PM   0:13.12 /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/app/cli.js mcp --contract native --broker-socket /Users/ben-hannan/.codex-chatgpt-web/runtime/turn-broker.sock
+ben-hannan       44570   0.0  0.1 465006336  25616   ??  Ss   Fri09PM   1:34.96 /Users/ben-hannan/.codex-chatgpt-web/bin/tunnel-client run --profile-dir /Users/ben-hannan/.codex-chatgpt-web/tunnel/profiles --profile codex-chatgpt-web
+ben-hannan        6743   0.0  0.0 488788976   6224   ??  S    12:11AM   0:00.00 /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome chrome-extension://hehggadaopoacecdllhhajmbjkdcmajg/
+[0m
+[0m$ [0mdate +%s > pilot-start.txt && nohup uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --only-hash 12 --hash-rem 0 --out artifacts/claude-rd378k-20260926/pilot-luna > pilot-console.log 2>&1 & echo PID:$!
+PID:6769
+[0m
+[0m$ [0msleep 110; echo POLL1; cat pilot-console.log 2>&1 | tail -5; echo ---; ps -p 6769 -o pid,etime,command 2>&1; ls -la artifacts/claude-rd378k-20260926/pilot-luna/ 2>&1
+POLL1
+---
+  PID ELAPSED COMMAND
+ 6769   01:52 uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --only-hash 12 --hash-rem 0 --out artifacts/claude-rd378k-20260926/pilot-luna
+total 0
+drwxr-xr-x   2 ben-hannan  staff    64 Sep 27 00:09 .
+drwxr-xr-x  33 ben-hannan  staff  1056 Sep 27 00:09 ..
+[0m
+[0m$ [0msleep 115; echo POLL2; cat pilot-console.log 2>&1 | tail -5; echo ---; ps -p 6769 -o pid,etime,command 2>&1 | head -5
+POLL2
+[rd378k-teacher3] kg-009 ok
+---
+  PID ELAPSED COMMAND
+ 6769   03:49 uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --only-hash 12 --hash-rem 0 --out artifacts/claude-rd378k-20260926/pilot-luna
+[0m
+[0m$ [0msleep 115; echo POLL3; cat pilot-console.log 2>&1 | tail -8; echo ---; ps -p 6769 -o pid,etime 2>&1 | head -5
+POLL3
+[rd378k-teacher3] kg-009 ok
+[rd378k-teacher3] kg-055 ok
+---
+  PID ELAPSED
+ 6769   05:49
+[0m
+[0m$ [0msleep 115; echo POLL4; cat pilot-console.log 2>&1 | tail -8; echo ---; ps -p 6769 -o pid,etime 2>&1 | head -5
+POLL4
+[rd378k-teacher3] kg-009 ok
+[rd378k-teacher3] kg-055 ok
+---
+  PID ELAPSED
+ 6769   07:46
+[0m
+[0m$ [0msleep 115; echo POLL5; cat pilot-console.log 2>&1 | tail -8; echo ---; ps -p 6769 -o pid,etime 2>&1 | head -5
+POLL5
+[rd378k-teacher3] kg-009 ok
+[rd378k-teacher3] kg-055 ok
+---
+  PID ELAPSED
+ 6769   09:44
+[0m
+[0m$ [0msleep 115; echo POLL6; cat pilot-console.log 2>&1 | tail -8; echo ---; ps -p 6769 -o pid,etime 2>&1 | head -5
+POLL6
+[rd378k-teacher3] kg-009 ok
+[rd378k-teacher3] kg-055 ok
+[rd378k-teacher3] kg-064 ok
+---
+  PID ELAPSED
+ 6769   11:40
+[0m
+[0m$ [0msleep 115; echo POLL7; cat pilot-console.log 2>&1 | tail -10; echo ---; ps -p 6769 -o pid,etime 2>&1 | head -5
+POLL7
+[rd378k-teacher3] kg-009 ok
+[rd378k-teacher3] kg-055 ok
+[rd378k-teacher3] kg-064 ok
+[rd378k-teacher3] kg-085 ok
+{"dialogs": 4, "labelled": 4, "unparsed": 0, "per_kind": {"chat": {"dialogs": 3, "unusable": 0}, "overheard": {"dialogs": 1, "unusable": 0}}, "failed_calls": 0, "notes": 30, "ok": 13, "unsupported": 7, "bad_cite": 4, "bad_when": 4, "bad_form": 2, "missed_unknown_turns": 0, "cost_usd": 0}
+---
+  PID ELAPSED
+[0m
+[0m$ [0mSTART=$(cat pilot-start.txt); END=$(date +%s); echo PILOT_WALL:$((END-START)); grep -c "call failed" pilot-console.log; ls -la artifacts/claude-rd378k-20260926/pilot-luna/; cp pilot-console.log artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt && echo COPIED && ls -la artifacts/claude-rd378k-20260926/pilot-luna/
+PILOT_WALL:821
+0
+total 16
+drwxr-xr-x   5 ben-hannan  staff   160 Sep 27 00:24 .
+drwxr-xr-x  33 ben-hannan  staff  1056 Sep 27 00:09 ..
+-rw-r--r--   1 ben-hannan  staff     0 Sep 27 00:24 failures.jsonl
+-rw-r--r--   1 ben-hannan  staff  2096 Sep 27 00:24 labels_passA.jsonl
+-rw-r--r--   1 ben-hannan  staff  2117 Sep 27 00:24 labels.jsonl
+COPIED
+total 24
+drwxr-xr-x   6 ben-hannan  staff   192 Sep 27 00:25 .
+drwxr-xr-x  33 ben-hannan  staff  1056 Sep 27 00:09 ..
+-rw-r--r--   1 ben-hannan  staff     0 Sep 27 00:24 failures.jsonl
+-rw-r--r--   1 ben-hannan  staff  2096 Sep 27 00:24 labels_passA.jsonl
+-rw-r--r--   1 ben-hannan  staff  2117 Sep 27 00:24 labels.jsonl
+-rw-r--r--   1 ben-hannan  staff   401 Sep 27 00:25 pilot-log.txt
+[0m
+[0m$ [0mdate +%s > gate-start.txt && nohup uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --hash-rem 1 --out artifacts/claude-rd378k-20260926/gate3luna > gate-console.log 2>&1 & echo GATE_PID:$!
+GATE_PID:12201
+[0m
+[0m$ [0msleep 115; echo GPOLL1; tail -5 gate-console.log 2>&1; echo ---; ps -p 12201 -o pid,etime 2>&1 | head -3
+GPOLL1
+[rd378k-teacher3] ta-d03 ok
+---
+  PID ELAPSED
+12201   01:56
+[0m
+[0m$ [0msleep 115; echo GPOLL2; tail -4 gate-console.log 2>&1; echo ---; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL2
+[rd378k-teacher3] ta-d03 ok
+---
+  PID ELAPSED
+12201   03:54
+1
+[0m
+[0m$ [0msleep 115; echo GPOLL3; tail -4 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL3
+[rd378k-teacher3] ta-d03 ok
+  PID ELAPSED
+12201   05:54
+1
+[0m
+[0m$ [0msleep 115; echo GPOLL4; tail -4 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL4
+[rd378k-teacher3] ta-d03 ok
+  PID ELAPSED
+12201   07:51
+1
+[0m
+[0m$ [0msleep 115; echo GPOLL5; tail -4 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL5
+[rd378k-teacher3] ta-d03 ok
+  PID ELAPSED
+12201   09:48
+1
+[0m
+[0m$ [0msleep 115; echo GPOLL6; tail -4 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL6
+[rd378k-teacher3] ta-d03 ok
+[rd378k-teacher3] ta-d04 ok
+  PID ELAPSED
+12201   11:45
+2
+[0m
+[0m$ [0msleep 115; echo GPOLL7; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL7
+[rd378k-teacher3] ta-d03 ok
+[rd378k-teacher3] ta-d04 ok
+  PID ELAPSED
+12201   13:42
+2
+[0m
+[0m$ [0msleep 115; echo GPOLL8; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL8
+[rd378k-teacher3] ta-d03 ok
+[rd378k-teacher3] ta-d04 ok
+  PID ELAPSED
+12201   15:39
+2
+[0m
+[0m$ [0msleep 115; echo GPOLL9; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL9
+[rd378k-teacher3] ta-d03 ok
+[rd378k-teacher3] ta-d04 ok
+  PID ELAPSED
+12201   17:36
+2
+[0m
+[0m$ [0msleep 115; echo GPOLL10; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL10
+[rd378k-teacher3] ta-d03 ok
+[rd378k-teacher3] ta-d04 ok
+[rd378k-teacher3] ta-d08 ok
+  PID ELAPSED
+12201   19:32
+3
+[0m
+[0m$ [0msleep 115; echo GPOLL11; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL11
+[rd378k-teacher3] ta-d03 ok
+[rd378k-teacher3] ta-d04 ok
+[rd378k-teacher3] ta-d08 ok
+  PID ELAPSED
+12201   21:30
+3
+[0m
+[0m$ [0msleep 115; echo GPOLL12; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL12
+[rd378k-teacher3] ta-d03 ok
+[rd378k-teacher3] ta-d04 ok
+[rd378k-teacher3] ta-d08 ok
+  PID ELAPSED
+12201   23:27
+3
+[0m
+[0m$ [0msleep 115; echo GPOLL13; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL13
+[rd378k-teacher3] ta-d04 ok
+[rd378k-teacher3] ta-d08 ok
+[rd378k-teacher3] ta-d09 ok
+  PID ELAPSED
+12201   25:24
+4
+[0m
+[0m$ [0msleep 115; echo GPOLL14; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL14
+[rd378k-teacher3] ta-d04 ok
+[rd378k-teacher3] ta-d08 ok
+[rd378k-teacher3] ta-d09 ok
+  PID ELAPSED
+12201   27:21
+4
+[0m
+[0m$ [0msleep 115; echo GPOLL15; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL15
+[rd378k-teacher3] ta-d04 ok
+[rd378k-teacher3] ta-d08 ok
+[rd378k-teacher3] ta-d09 ok
+  PID ELAPSED
+12201   29:18
+4
+[0m
+[0m$ [0msleep 115; echo GPOLL16; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL16
+[rd378k-teacher3] ta-d08 ok
+[rd378k-teacher3] ta-d09 ok
+[rd378k-teacher3] ta-d16 ok
+  PID ELAPSED
+12201   31:15
+5
+[0m
+[0m$ [0msleep 115; echo GPOLL17; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL17
+[rd378k-teacher3] ta-d08 ok
+[rd378k-teacher3] ta-d09 ok
+[rd378k-teacher3] ta-d16 ok
+  PID ELAPSED
+12201   33:11
+5
+[0m
+[0m$ [0msleep 115; echo GPOLL18; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL18
+[rd378k-teacher3] ta-d08 ok
+[rd378k-teacher3] ta-d09 ok
+[rd378k-teacher3] ta-d16 ok
+  PID ELAPSED
+12201   35:08
+5
+[0m
+[0m$ [0msleep 115; echo GPOLL19; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL19
+[rd378k-teacher3] ta-d08 ok
+[rd378k-teacher3] ta-d09 ok
+[rd378k-teacher3] ta-d16 ok
+  PID ELAPSED
+12201   37:05
+5
+[0m
+[0m$ [0msleep 115; echo GPOLL20; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL20
+[rd378k-teacher3] ta-d08 ok
+[rd378k-teacher3] ta-d09 ok
+[rd378k-teacher3] ta-d16 ok
+  PID ELAPSED
+12201   39:02
+5
+[0m
+[0m$ [0msleep 115; echo GPOLL21; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL21
+[rd378k-teacher3] ta-d08 ok
+[rd378k-teacher3] ta-d09 ok
+[rd378k-teacher3] ta-d16 ok
+  PID ELAPSED
+12201   40:59
+5
+[0m
+[0m$ [0msleep 115; echo GPOLL22; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL22
+[rd378k-teacher3] ta-d09 ok
+[rd378k-teacher3] ta-d16 ok
+[rd378k-teacher3] ta-d18 ok
+  PID ELAPSED
+12201   42:55
+6
+[0m
+[0m$ [0msleep 115; echo GPOLL23; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL23
+[rd378k-teacher3] ta-d09 ok
+[rd378k-teacher3] ta-d16 ok
+[rd378k-teacher3] ta-d18 ok
+  PID ELAPSED
+12201   44:52
+6
+[0m
+[0m$ [0msleep 115; echo GPOLL24; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL24
+[rd378k-teacher3] ta-d09 ok
+[rd378k-teacher3] ta-d16 ok
+[rd378k-teacher3] ta-d18 ok
+  PID ELAPSED
+12201   46:50
+6
+[0m
+[0m$ [0msleep 115; echo GPOLL25; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL25
+[rd378k-teacher3] ta-d16 ok
+[rd378k-teacher3] ta-d18 ok
+[rd378k-teacher3] ta-d19 ok
+  PID ELAPSED
+12201   48:47
+7
+[0m
+[0m$ [0msleep 115; echo GPOLL26; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL26
+[rd378k-teacher3] ta-d18 ok
+[rd378k-teacher3] ta-d19 ok
+[rd378k-teacher3] ta-d21 ok
+  PID ELAPSED
+12201   50:43
+8
+[0m
+[0m$ [0msleep 115; echo GPOLL27; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL27
+[rd378k-teacher3] ta-d19 ok
+[rd378k-teacher3] ta-d21 ok
+[rd378k-teacher3] tb-d11 ok
+  PID ELAPSED
+12201   52:40
+9
+[0m
+[0m$ [0msleep 115; echo GPOLL28; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL28
+[rd378k-teacher3] ta-d19 ok
+[rd378k-teacher3] ta-d21 ok
+[rd378k-teacher3] tb-d11 ok
+  PID ELAPSED
+12201   54:39
+9
+[0m
+[0m$ [0msleep 115; echo GPOLL29; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL29
+[rd378k-teacher3] ta-d19 ok
+[rd378k-teacher3] ta-d21 ok
+[rd378k-teacher3] tb-d11 ok
+  PID ELAPSED
+12201   56:35
+9
+[0m
+[0m$ [0msleep 115; echo GPOLL30; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL30
+[rd378k-teacher3] ta-d19 ok
+[rd378k-teacher3] ta-d21 ok
+[rd378k-teacher3] tb-d11 ok
+  PID ELAPSED
+12201   58:32
+9
+[0m
+[0m$ [0msleep 115; echo GPOLL31; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1; grep -c "call failed" gate-console.log 2>&1
+GPOLL31
+[rd378k-teacher3] ta-d21 ok
+[rd378k-teacher3] tb-d11 ok
+[rd378k-teacher3] tb-d14 ok
+  PID  ELAPSED
+12201 01:00:29
+10
+0
+[0m
+[0m$ [0msleep 115; echo GPOLL32; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL32
+[rd378k-teacher3] ta-d21 ok
+[rd378k-teacher3] tb-d11 ok
+[rd378k-teacher3] tb-d14 ok
+  PID  ELAPSED
+12201 01:02:26
+10
+[0m
+[0m$ [0msleep 115; echo GPOLL33; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL33
+[rd378k-teacher3] tb-d11 ok
+[rd378k-teacher3] tb-d14 ok
+[rd378k-teacher3] tb-d15 ok
+  PID  ELAPSED
+12201 01:04:23
+11
+[0m
+[0m$ [0msleep 115; echo GPOLL34; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL34
+[rd378k-teacher3] tb-d14 ok
+[rd378k-teacher3] tb-d15 ok
+[rd378k-teacher3] tb-d23 ok
+  PID  ELAPSED
+12201 01:06:19
+12
+[0m
+[0m$ [0msleep 115; echo GPOLL35; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL35
+[rd378k-teacher3] tb-d14 ok
+[rd378k-teacher3] tb-d15 ok
+[rd378k-teacher3] tb-d23 ok
+  PID  ELAPSED
+12201 01:08:16
+12
+[0m
+[0m$ [0msleep 115; echo GPOLL36; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL36
+[rd378k-teacher3] tb-d14 ok
+[rd378k-teacher3] tb-d15 ok
+[rd378k-teacher3] tb-d23 ok
+  PID  ELAPSED
+12201 01:10:14
+12
+[0m
+[0m$ [0msleep 115; echo GPOLL37; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL37
+[rd378k-teacher3] tb-d15 ok
+[rd378k-teacher3] tb-d23 ok
+[rd378k-teacher3] tc-d08 ok
+  PID  ELAPSED
+12201 01:12:11
+13
+[0m
+[0m$ [0msleep 115; echo GPOLL38; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL38
+[rd378k-teacher3] tb-d15 ok
+[rd378k-teacher3] tb-d23 ok
+[rd378k-teacher3] tc-d08 ok
+  PID  ELAPSED
+12201 01:14:07
+13
+[0m
+[0m$ [0msleep 115; echo GPOLL39; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL39
+[rd378k-teacher3] tb-d23 ok
+[rd378k-teacher3] tc-d08 ok
+[rd378k-teacher3] tc-d09 ok
+  PID  ELAPSED
+12201 01:16:04
+14
+[0m
+[0m$ [0msleep 115; echo GPOLL40; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL40
+[rd378k-teacher3] tb-d23 ok
+[rd378k-teacher3] tc-d08 ok
+[rd378k-teacher3] tc-d09 ok
+  PID  ELAPSED
+12201 01:18:01
+14
+[0m
+[0m$ [0msleep 115; echo GPOLL41; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL41
+[rd378k-teacher3] tb-d23 ok
+[rd378k-teacher3] tc-d08 ok
+[rd378k-teacher3] tc-d09 ok
+  PID  ELAPSED
+12201 01:20:00
+14
+[0m
+[0m$ [0msleep 115; echo GPOLL42; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL42
+[rd378k-teacher3] tb-d23 ok
+[rd378k-teacher3] tc-d08 ok
+[rd378k-teacher3] tc-d09 ok
+  PID  ELAPSED
+12201 01:21:57
+14
+[0m
+[0m$ [0msleep 115; echo GPOLL43; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL43
+[rd378k-teacher3] tc-d08 ok
+[rd378k-teacher3] tc-d09 ok
+[rd378k-teacher3] tc-d12 ok
+  PID  ELAPSED
+12201 01:23:54
+15
+[0m
+[0m$ [0msleep 115; echo GPOLL44; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL44
+[rd378k-teacher3] tc-d08 ok
+[rd378k-teacher3] tc-d09 ok
+[rd378k-teacher3] tc-d12 ok
+  PID  ELAPSED
+12201 01:25:51
+15
+[0m
+[0m$ [0msleep 115; echo GPOLL45; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL45
+[rd378k-teacher3] tc-d08 ok
+[rd378k-teacher3] tc-d09 ok
+[rd378k-teacher3] tc-d12 ok
+  PID  ELAPSED
+12201 01:27:48
+15
+[0m
+[0m$ [0msleep 115; echo GPOLL46; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL46
+[rd378k-teacher3] tc-d09 ok
+[rd378k-teacher3] tc-d12 ok
+[rd378k-teacher3] tc-d13 ok
+  PID  ELAPSED
+12201 01:29:45
+16
+[0m
+[0m$ [0msleep 115; echo GPOLL47; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL47
+[rd378k-teacher3] tc-d09 ok
+[rd378k-teacher3] tc-d12 ok
+[rd378k-teacher3] tc-d13 ok
+  PID  ELAPSED
+12201 01:31:46
+16
+[0m
+[0m$ [0msleep 115; echo GPOLL48; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL48
+[rd378k-teacher3] tc-d12 ok
+[rd378k-teacher3] tc-d13 ok
+[rd378k-teacher3] tc-d15 ok
+  PID  ELAPSED
+12201 01:33:44
+17
+[0m
+[0m$ [0msleep 115; echo GPOLL49; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL49
+[rd378k-teacher3] tc-d12 ok
+[rd378k-teacher3] tc-d13 ok
+[rd378k-teacher3] tc-d15 ok
+  PID  ELAPSED
+12201 01:35:41
+17
+[0m
+[0m$ [0msleep 115; echo GPOLL50; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL50
+[rd378k-teacher3] tc-d12 ok
+[rd378k-teacher3] tc-d13 ok
+[rd378k-teacher3] tc-d15 ok
+  PID  ELAPSED
+12201 01:37:38
+17
+[0m
+[0m$ [0msleep 115; echo GPOLL51; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL51
+[rd378k-teacher3] tc-d13 ok
+[rd378k-teacher3] tc-d15 ok
+[rd378k-teacher3] tc-d19 ok
+  PID  ELAPSED
+12201 01:39:38
+18
+[0m
+[0m$ [0msleep 115; echo GPOLL52; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL52
+[rd378k-teacher3] tc-d13 ok
+[rd378k-teacher3] tc-d15 ok
+[rd378k-teacher3] tc-d19 ok
+  PID  ELAPSED
+12201 01:41:35
+18
+[0m
+[0m$ [0msleep 115; echo GPOLL53; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL53
+[rd378k-teacher3] tc-d13 ok
+[rd378k-teacher3] tc-d15 ok
+[rd378k-teacher3] tc-d19 ok
+  PID  ELAPSED
+12201 01:43:32
+18
+[0m
+[0m$ [0msleep 115; echo GPOLL54; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL54
+[rd378k-teacher3] tc-d13 ok
+[rd378k-teacher3] tc-d15 ok
+[rd378k-teacher3] tc-d19 ok
+  PID  ELAPSED
+12201 01:45:29
+18
+[0m
+[0m$ [0msleep 115; echo GPOLL55; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL55
+[rd378k-teacher3] tc-d13 ok
+[rd378k-teacher3] tc-d15 ok
+[rd378k-teacher3] tc-d19 ok
+  PID  ELAPSED
+12201 01:47:26
+18
+[0m
+[0m$ [0msleep 115; echo GPOLL56; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL56
+[rd378k-teacher3] tc-d13 ok
+[rd378k-teacher3] tc-d15 ok
+[rd378k-teacher3] tc-d19 ok
+  PID  ELAPSED
+12201 01:49:24
+18
+[0m
+[0m$ [0msleep 115; echo GPOLL57; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL57
+[rd378k-teacher3] tc-d13 ok
+[rd378k-teacher3] tc-d15 ok
+[rd378k-teacher3] tc-d19 ok
+  PID  ELAPSED
+12201 01:51:22
+18
+[0m
+[0m$ [0msleep 115; echo GPOLL58; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1; grep -c "call failed" gate-console.log 2>&1
+GPOLL58
+[rd378k-teacher3] tc-d15 ok
+[rd378k-teacher3] tc-d19 ok
+[rd378k-teacher3] tc-d24 ok
+  PID  ELAPSED
+12201 01:53:20
+19
+0
+[0m
+[0m$ [0msleep 115; echo GPOLL59; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL59
+[rd378k-teacher3] tc-d15 ok
+[rd378k-teacher3] tc-d19 ok
+[rd378k-teacher3] tc-d24 ok
+  PID  ELAPSED
+12201 01:55:17
+19
+[0m
+[0m$ [0msleep 115; echo GPOLL60; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL60
+[rd378k-teacher3] tc-d19 ok
+[rd378k-teacher3] tc-d24 ok
+[rd378k-teacher3] td-d01 ok
+  PID  ELAPSED
+12201 01:57:15
+20
+[0m
+[0m$ [0msleep 115; echo GPOLL61; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL61
+[rd378k-teacher3] tc-d19 ok
+[rd378k-teacher3] tc-d24 ok
+[rd378k-teacher3] td-d01 ok
+  PID  ELAPSED
+12201 01:59:12
+20
+[0m
+[0m$ [0msleep 115; echo GPOLL62; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL62
+[rd378k-teacher3] tc-d19 ok
+[rd378k-teacher3] tc-d24 ok
+[rd378k-teacher3] td-d01 ok
+  PID  ELAPSED
+12201 02:01:09
+20
+[0m
+[0m$ [0msleep 115; echo GPOLL63; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL63
+[rd378k-teacher3] tc-d24 ok
+[rd378k-teacher3] td-d01 ok
+[rd378k-teacher3] td-d03 ok
+  PID  ELAPSED
+12201 02:03:06
+21
+[0m
+[0m$ [0msleep 115; echo GPOLL64; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL64
+[rd378k-teacher3] tc-d24 ok
+[rd378k-teacher3] td-d01 ok
+[rd378k-teacher3] td-d03 ok
+  PID  ELAPSED
+12201 02:05:03
+21
+[0m
+[0m$ [0msleep 115; echo GPOLL65; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL65
+[rd378k-teacher3] tc-d24 ok
+[rd378k-teacher3] td-d01 ok
+[rd378k-teacher3] td-d03 ok
+  PID  ELAPSED
+12201 02:07:00
+21
+[0m
+[0m$ [0msleep 115; echo GPOLL66; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL66
+[rd378k-teacher3] td-d01 ok
+[rd378k-teacher3] td-d03 ok
+[rd378k-teacher3] td-d05 ok
+  PID  ELAPSED
+12201 02:08:57
+22
+[0m
+[0m$ [0msleep 115; echo GPOLL67; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL67
+[rd378k-teacher3] td-d01 ok
+[rd378k-teacher3] td-d03 ok
+[rd378k-teacher3] td-d05 ok
+  PID  ELAPSED
+12201 02:10:54
+22
+[0m
+[0m$ [0msleep 115; echo GPOLL68; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL68
+[rd378k-teacher3] td-d01 ok
+[rd378k-teacher3] td-d03 ok
+[rd378k-teacher3] td-d05 ok
+  PID  ELAPSED
+12201 02:12:51
+22
+[0m
+[0m$ [0msleep 115; echo GPOLL69; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL69
+[rd378k-teacher3] td-d03 ok
+[rd378k-teacher3] td-d05 ok
+[rd378k-teacher3] td-d08 ok
+  PID  ELAPSED
+12201 02:14:48
+23
+[0m
+[0m$ [0msleep 115; echo GPOLL70; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL70
+[rd378k-teacher3] td-d03 ok
+[rd378k-teacher3] td-d05 ok
+[rd378k-teacher3] td-d08 ok
+  PID  ELAPSED
+12201 02:16:47
+23
+[0m
+[0m$ [0msleep 115; echo GPOLL71; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL71
+[rd378k-teacher3] td-d03 ok
+[rd378k-teacher3] td-d05 ok
+[rd378k-teacher3] td-d08 ok
+  PID  ELAPSED
+12201 02:18:45
+23
+[0m
+[0m$ [0msleep 115; echo GPOLL72; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL72
+[rd378k-teacher3] td-d03 ok
+[rd378k-teacher3] td-d05 ok
+[rd378k-teacher3] td-d08 ok
+  PID  ELAPSED
+12201 02:20:46
+23
+[0m
+[0m$ [0msleep 115; echo GPOLL73; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1; grep -c "call failed" gate-console.log 2>&1
+GPOLL73
+[rd378k-teacher3] td-d05 ok
+[rd378k-teacher3] td-d08 ok
+[rd378k-teacher3] td-d12 ok
+  PID  ELAPSED
+12201 02:22:45
+24
+0
+[0m
+[0m$ [0msleep 115; echo GPOLL74; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL74
+[rd378k-teacher3] td-d08 ok
+[rd378k-teacher3] td-d12 ok
+[rd378k-teacher3] td-d13 ok
+  PID  ELAPSED
+12201 02:24:51
+25
+[0m
+[0m$ [0msleep 115; echo GPOLL75; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL75
+[rd378k-teacher3] td-d08 ok
+[rd378k-teacher3] td-d12 ok
+[rd378k-teacher3] td-d13 ok
+  PID  ELAPSED
+12201 02:26:49
+25
+[0m
+[0m$ [0msleep 115; echo GPOLL76; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL76
+[rd378k-teacher3] td-d12 ok
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+  PID  ELAPSED
+12201 02:28:47
+26
+[0m
+[0m$ [0msleep 115; echo GPOLL77; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL77
+[rd378k-teacher3] td-d12 ok
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+  PID  ELAPSED
+12201 02:30:45
+26
+[0m
+[0m$ [0msleep 115; echo GPOLL78; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL78
+[rd378k-teacher3] td-d12 ok
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+  PID  ELAPSED
+12201 02:32:45
+26
+[0m
+[0m$ [0msleep 115; echo GPOLL79; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL79
+[rd378k-teacher3] td-d12 ok
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+  PID  ELAPSED
+12201 02:34:42
+26
+[0m
+[0m$ [0msleep 115; echo GPOLL80; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL80
+[rd378k-teacher3] td-d12 ok
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+  PID  ELAPSED
+12201 02:36:40
+26
+[0m
+[0m$ [0msleep 115; echo GPOLL81; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1; grep -c "call failed" gate-console.log 2>&1
+GPOLL81
+[rd378k-teacher3] td-d12 ok
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+  PID  ELAPSED
+12201 02:38:38
+26
+0
+[0m
+[0m$ [0msleep 115; echo GPOLL82; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL82
+[rd378k-teacher3] td-d12 ok
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+  PID  ELAPSED
+12201 02:40:36
+26
+[0m
+[0m$ [0msleep 115; echo GPOLL83; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL83
+[rd378k-teacher3] td-d12 ok
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+  PID  ELAPSED
+12201 02:42:34
+26
+[0m
+[0m$ [0msleep 115; echo GPOLL84; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1; ps aux | grep -E "codex exec" | grep -v grep | head -3
+GPOLL84
+[rd378k-teacher3] td-d12 ok
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+  PID  ELAPSED
+12201 02:44:33
+26
+ben-hannan       96843  13.2  0.4 489680064 150128   ??  RN    3:09AM   0:00.23 /Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/../CodexCLI.app/Contents/MacOS/codex exec -m gpt-6-luna -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/luna-codex-wtbvh2a0 --sandbox read-only --skip-git-repo-check --output-last-message /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/luna-codex-wtbvh2a0/.last.txt -
+ben-hannan       96809   4.2  0.5 490629824 162928   ??  SN    3:09AM   0:00.45 /Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/../CodexCLI.app/Contents/MacOS/codex exec -m gpt-6-luna -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/luna-codex-s9asuo1e --sandbox read-only --skip-git-repo-check --output-last-message /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/luna-codex-s9asuo1e/.last.txt -
+ben-hannan       96732   0.2  0.5 490755024 171456   ??  SN    3:09AM   0:00.53 /Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/../CodexCLI.app/Contents/MacOS/codex exec -m gpt-6-luna -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/luna-codex-1e2wp7xe --sandbox read-only --skip-git-repo-check --output-last-message /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/luna-codex-1e2wp7xe/.last.txt -
+[0m
+[0m$ [0msleep 115; echo GPOLL85; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL85
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+[rd378k-teacher3] td-d16 ok
+  PID  ELAPSED
+12201 02:46:35
+27
+[0m
+[0m$ [0msleep 115; echo GPOLL86; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL86
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+[rd378k-teacher3] td-d16 ok
+  PID  ELAPSED
+12201 02:48:36
+27
+[0m
+[0m$ [0msleep 115; echo GPOLL87; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL87
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+[rd378k-teacher3] td-d16 ok
+  PID  ELAPSED
+12201 02:50:34
+27
+[0m
+[0m$ [0msleep 115; echo GPOLL88; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL88
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+[rd378k-teacher3] td-d16 ok
+  PID  ELAPSED
+12201 02:52:32
+27
+[0m
+[0m$ [0msleep 115; echo GPOLL89; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL89
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+[rd378k-teacher3] td-d16 ok
+  PID  ELAPSED
+12201 02:54:34
+27
+[0m
+[0m$ [0msleep 115; echo GPOLL90; tail -3 gate-console.log 2>&1; ps -p 12201 -o pid,etime 2>&1 | head -3; grep -c " ok$" gate-console.log 2>&1
+GPOLL90
+[rd378k-teacher3] td-d13 ok
+[rd378k-teacher3] td-d15 ok
+[rd378k-teacher3] td-d16 ok
+  PID  ELAPSED
+12201 02:56:34
+27
+[0m
+[91m[1mError: [0mError from provider (Console): Rate limit exceeded. Please try again later.
