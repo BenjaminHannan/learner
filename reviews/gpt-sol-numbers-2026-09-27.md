@@ -1,58 +1,58 @@
 # Sol task: teach the small reasoner the number puzzle (2026-09-27)
 
-For GPT-6 Sol in Codex on Ben's **M3 Pro** Mac. You can read and push to this repo and use that Mac's GPU (MPS). This is a different Mac from the one running the auto-routing task (artifacts/codex-autoroute-20260927/). Leave that task and its folder alone. If the repo is not on the M3 Pro yet, clone it first. The Thread manager wrote this for Ben on 2026-09-27. Every number below was checked against the repo.
+For GPT-6 Sol in Codex on Ben's **M3 Pro** Mac. You can read and push to this repo and use that Mac's GPU (MPS). This is a different Mac from the one running the auto-routing task (artifacts/codex-autoroute-20260927/). Leave that task and its folder alone. If the repo is not on the M3 Pro yet, clone it first. The Thread manager wrote this for Ben on 2026-09-27. Every number below was checked against the repo by a separate reader.
 
 ## The problem (small puzzle nets only)
 - **The puzzle.** Use each given number once, with + - * /, to hit the target (the 24 game). It is the "numbers" kind in scripts/claude_rsn358a_envs.py:11-14 and :218-315. The grid has three rows: row 0 holds the numbers, row 1 the target, and row 2 the answer slots in postfix (2k-1 tokens for k numbers).
 - **The data.** Practice is 3 numbers (1-9, targets 5-40) and 4 numbers (1-13, target 24). The practised-size test is 300 held-out 4-number hands (split seed 35801, `split_four`). The bigger test is 5-number hands with target 24 (`five_hands`). Counted with `number_hands()` and `split_four()` on main:
   - 1,362 solvable 4-number hands in total: 1,062 for practice, 300 held out;
   - 1,346 solvable 3-number hand and target pairs.
-  So the practice pool holds only about 2,400 distinct items.
+  So practice has only 2,408 hand and target pairs.
 - **Grading and target.** The checker accepts **any** valid expression (`check_numbers` calls `claude_blurt1.check`). Training, though, uses **one** stored solution per hand: the first one `claude_blurt1.solve` finds.
-- **What happened so far.** rsn-358i3 trained on sums, grids and numbers together. Setup: BensPC, torch 2.11, seeds 5-8, 60,000 steps, batch 256. The loop net was 2 x d512 and the plain net 8 x d256, about 6.4M weights each. Raw files: origin/builder-outbox:artifacts/claude-rsn358i3-20260926/runs/*/tests.json. Summary: artifacts/claude-rsn358i3-20260926/VERIFY-recount.md:5,37.
+- **What happened so far.** rsn-358i3 trained on sums, grids and numbers together, with scripts/claude_rsn358i2_run.py and its import chain (358i, 358g legend, 358a2 stop rule). Setup: BensPC, torch 2.11, seeds 5-8, 60,000 steps, batch 256. The loop net was 2 x d512 and the plain net 8 x d256, about 6.4M weights each. Raw files: origin/builder-outbox:artifacts/claude-rsn358i3-20260926/runs/*/tests.json. Summary: artifacts/claude-rsn358i3-20260926/VERIFY-recount.md:5,37.
   - numbers4 (the 300 held-out hands) scored 2, 5, 1, 0 for the loop and 1, 1, 2, 1 for the plain net.
   - numbers5 scored 0 of 300 for every run.
   - In the same runs, sums4 was 300 and grids5 was 298-300.
-  - Training exact at step 60,000 was 1.0 on numbers3 and numbers4 for both arms (train_log.jsonl). So both nets learned their practice hands by heart and solved almost no new ones. rsn-358a showed the same pattern (artifacts/claude-rsn358a-20260925/VERIFY.md:44-48). That this is memorising is suggested, not tested.
+  - Training exact at step 60,000 was 1.0 on numbers3 and numbers4 for both arms (train_log.jsonl). Shown: both nets get every practice hand right and almost no new ones. rsn-358a showed the same pattern (artifacts/claude-rsn358a-20260925/VERIFY.md:44-48). Why they memorise instead of learning a method is the open question.
   - All of these nets were given the puzzle kind (next point), so every number above comes from kind-labelled nets.
 - **An earlier fix that did not work: rsn-358d** (artifacts/claude-rsn358d-20260926/VERIFY.md). It gave both nets a much bigger number pool (75,972 puzzles). The plain net rose to 16 and 10 of 300 held-out hands. The loop net learned nothing on numbers4, even in training, and its other kinds fell badly. The verdict was INCONCLUSIVE. Caveat: 358d's loop trained on a torch 2.8 rental before the autocast-cache fix, so it was possibly hit by that bug (artifacts/claude-rsn358i2-20260926/PASSMARKS.md:32). So whether the loop's collapse came from the bigger pool or from the bug is untested. Don't repeat 358d unchanged.
 - **No fresh 4-number hands.** Only 1,362 four-number hands to 24 exist (1-13), and every one is already a practice or held-out hand. So a sealed test must use 5 numbers, or other targets.
-- **A kind label you must remove.** The net is told the puzzle kind. `R.tensors` sets `env` from the batch's first item (scripts/claude_rsn358a_run.py:172), and `Net.embed` adds it to every token (:97). Sol's earlier audit found this (artifacts/codex-autoroute-20260927/INPUT-AUDIT.md). Ben ruled out caller-given skill labels (11:34 UTC): "It should for each request be able to automatically decide what." So feed every arm the same fixed env for every item (the conservative option in INPUT-AUDIT.md), and rerun the baseline that way.
+- **A kind label you must remove.** The net is told the puzzle kind. `R.tensors` sets `env` from the batch's first item (scripts/claude_rsn358a_run.py:172), and `Net.embed` adds it to every token (:96). Sol's earlier audit found this (artifacts/codex-autoroute-20260927/INPUT-AUDIT.md). Ben ruled out caller-given skill labels (11:34 UTC): "It should for each request be able to automatically decide what." So feed every arm the same fixed env for every item (the conservative option, INPUT-AUDIT.md:19), disclose the unused env rows as a capacity cost, and rerun the baseline that way.
 
 ## The goal
-The small learned reasoner should solve number puzzles it was never trained on. Ben's goals page says the reasoner is the model and reasoning comes first (design/v3/30-modes/ben-goals-2026-09-26.md:29,33,75). Solving new hands likely needs trying options and backing up. That is our reading, untested, and the loop net has not shown it.
+The small learned reasoner should solve number puzzles it was never trained on. Ben's goals page says the reasoner is the model and reasoning comes first (design/v3/30-modes/ben-goals-2026-09-26.md:29,75). Solving new hands likely needs trying options and backing up. That is our reading, untested, and the loop net has not shown it.
 
 **Brain first** (goals:61): start by asking how a person solves the 24 game. A person tries a pairing, checks the partial result against known facts (3 x 8, 4 x 6, 12 + 12), and backs up when a branch fails. Write that down before choosing a change. The brain comparison is a guess, not a claim.
 
 ## Step 1: diagnosis (report only, before any registered run)
 - Find out why neither net carries over to new hands. Start with the likely causes:
-  - It memorises the ~2,400 practice items. Training exact 1.0 against 0-5 of 300 held out suggests this; confirm it on your own baseline.
-  - One stored answer is used as the target when many answers are right.
+  - Why it memorises the 2,408 practice pairs instead of learning a method (the memorising itself is shown: training exact 1.0 against 0-5 of 300 held out). Confirm it on your own baseline.
+  - One stored answer is used as the target when many answers are right. The stop head is also trained on an exact match to that stored answer (scripts/claude_rsn358a_run.py:180,298), not on whether the answer is valid.
   - It has no way to try options and back up.
 - Small diagnostic runs on code-made data are allowed. Label every finding shown, suggested or untested. Commit the diagnosis note before Step 2.
 
 ## Step 2: one change, registered first
 - **The change.** Pick ONE change that the diagnosis supports. Examples, none prescribed:
-  - training on every valid answer (the solver can list them, which makes them code-checked labels);
-  - more varied practice, such as 4-number hands with other targets;
+  - training on every valid answer (scripts/claude_blurt5s.py `all_solutions` lists them, which makes them code-checked labels; the stop head's label must then change to match);
+  - more varied practice, such as 4-number hands with other targets (never the 300 held-out hands, with any target);
   - a learned way to keep and revise partial results;
   - sleep-style replay.
   The answer at test time must come from the net. There must be no search code, solver call or hand-written rule at inference; goals:37 stops hand-written reasoners and rule gates.
-- **Arms.** Baseline = the 358i3 loop recipe, rerun by you on the M3 Pro with the fixed env. Candidate = the baseline plus your one change. Same weights within 1%, counting anything added. You may shrink the net or the steps to fit the M3 Pro, but both arms must use the same settings. Report the minutes for each run.
+- **Arms.** Baseline = the 358i3 loop recipe, rerun by you on the M3 Pro with the fixed env. The existing code runs only on CUDA or CPU (scripts/claude_rsn358a_run.py:263,278,334), so add MPS support in a new script and report the device and dtype. Candidate = the baseline plus your one change. Same weights within 1%, counting anything added. You may shrink the net or the steps to fit the M3 Pro, but both arms must use the same settings. Report the minutes for each run.
 - **Kinds.** Train both arms on sums, grids and numbers together, as 358i3 did, so that "no harm" means something.
 - **Seeds.** Use 4 or more training seeds, paired across the arms. Grep the repo first to confirm each seed is fresh, and record them.
-- **Before any run,** commit and push PASSMARKS.md with the marks, your predictions, and the result that would prove the idea wrong. Pushed marks never change. An addendum can only add.
+- **Before any registered run,** commit and push PASSMARKS.md with the marks, your predictions, and the result that would prove the idea wrong. Pushed marks never change. An addendum can only add.
 
 ## Suggested marks (tighten them before any run if you like)
 - **Panels.**
-  - Design panel: you may look at it while developing. Use the old 300 held-out 4-number hands (seed 35801, already scored in 358i3).
+  - Design panel: you may look at it while developing. Use the old 300 held-out 4-number hands (seed 35801, already scored in 358i3). No fresh 4-number hands to 24 exist, so N1 is scored on this panel you have seen. Say so in RESULTS, and treat N2 as the clean test.
   - Sealed panel: 300 fresh 5-number hands (`five_hands` with a new seed, drawn after PASSMARKS is pushed), read once.
   - Score by exact validity at the model's own stop, with the existing checker.
 - **N1, practised size:** the candidate's mean on the 300 held-out 4-number hands is at least 100, and it beats the baseline by at least 60 on every seed.
-- **N2, bigger:** the candidate's mean on the sealed 5-number panel is at least 30, and it beats the baseline on at least 3 of 4 seeds.
+- **N2, bigger:** the candidate's mean on the sealed 5-number panel is at least 30, and it beats the baseline on at least 75% of seeds.
 - **N3, no harm:** the candidate's mean sums4 and grids5 are each within 5 of the baseline's mean, and no seed falls more than 10 below its paired baseline seed.
-- **N4, no label:** every item gets the same env in both arms. Include a software test: the outputs must be identical when the hidden kind field is changed.
-- **Proved wrong:** the candidate's mean on the 300 held-out 4-number hands beats the baseline by 10 or less.
+- **N4, no label:** every item gets the same env in both arms. Include the hidden-field poison test from INPUT-AUDIT.md:23: the outputs must be identical when the hidden kind field is changed.
+- **Proved wrong:** the candidate's mean on the 300 held-out 4-number hands beats the baseline's mean by 10 or less.
 
 ## Rules (hard)
 - **Where you work.** Only in a new folder, artifacts/codex-numbers-20260927/, and in new scripts. Never touch repo-root notebook/. Never edit another thread's files, handoff/queue, handoff/held, the watcher, anything on BensPC, or your auto-routing folder.
