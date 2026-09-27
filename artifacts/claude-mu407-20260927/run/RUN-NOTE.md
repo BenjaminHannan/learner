@@ -33,3 +33,8 @@
     panel chats, into run/talk_<arm>.jsonl with logs in run/log<arm>.txt. Shell PID 3314, first talker PID 3321 (U0).
     Each arm writes its file only when it ends. At about 7 s per turn, 900 turns is about 1 h 45 min plus loading
     (an estimate).
+- Update 08:23 UTC (date -u):
+  - Arm U0 ended at 07:47:40 UTC, exit 0: 60 chats, 300 rows, median 8.2 s per turn. run/talk_U0.jsonl and
+    run/logU0.txt are committed now. I have not read any reply; the judges read them blind.
+  - Arm U1 started at 07:47:40 UTC and was at 44 of 60 chats at 08:19 UTC. N follows. My estimate for the end of N
+    is about 09:25 UTC.

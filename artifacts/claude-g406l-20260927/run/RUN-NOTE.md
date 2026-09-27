@@ -8,3 +8,6 @@
 - Update 06:43 UTC (date -u):
   - Results are pushed and copied to main (756fdd302). The pilot passed. The full run stopped on its 45-minute cap with 220 of 240 packets done and 0 failed.
   - The resume job madeup-g406l-resume-mac is queued (ADDENDUM-1-resume.md).
+- Update 08:23 UTC (date -u): madeup-g406l-resume-mac launched at 07:25:58 UTC. Both builder passes stopped at their
+  first model call on "Rate limit exceeded", rc=1, and nothing was pushed to run2/ (c858cb577). It is queued again as
+  madeup-g406l-resume2-mac, with the same steps plus a restart rule (ADDENDUM-2-relaunch.md).
