@@ -1,0 +1,1 @@
+- Batch "e6:7 e6:8 e5:3 e5:4" started 2026-09-27 06:37:33 UTC on this container (hostname vm), CPU, 1 thread each, torch 2.14.0+cu130, launcher go4.sh. PIDs:  16018 16021 16024 16027. Expected about 1-1.5 h (estimate). Logs committed only after runs end.
