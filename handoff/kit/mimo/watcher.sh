@@ -61,7 +61,7 @@ while [ ! -e "$H/STOP" ]; do
     running=$(ls "$Q"/*.running 2>/dev/null | wc -l)
     # BensPC GPU jobs (task line 'GPU: yes'; the Director names them 1xx-/2xx-/3xx-): the Mac only waits on ssh, so they skip the local-slot cap and the load hold (GPU-BUSY still allows one at a time); the count excludes those prefixes (Director 23:42 UTC 09-26)
     # rentals mostly wait on vast (polls, uploads), so they get extra slots beyond MAX (Director 13:47 UTC 09-26, Ben 13:30 "BensPC's gpu should not be the blocker")
-    grep -qE '^STATUS: *HELD' "$f" 2>/dev/null && continue
+    git -C "$W" show "origin/$IN:$f" 2>/dev/null | grep -qE '^STATUS: *HELD' && continue   # read from origin like the tests below; a cwd-relative $f never matched (TM 14:00 UTC 09-27)
     z5=0; for r5 in "$Q"/*.running; do [ -e "$r5" ] || continue; j5=$(basename "$r5" .running); [ -e "$Q/$j5.stop" ] && continue; grep -qE '^(GPU: *yes|BASH-ONLY: yes)' "$Q/$j5.md" 2>/dev/null && continue; pgrep -f "rungo5.sh $Q/$j5.md" >/dev/null && z5=$((z5+1)); done
     zexempt=0; case "$n" in 000-*) zexempt=1;; esac; git -C "$W" show "origin/$IN:$f" 2>/dev/null | grep -qE '^(GPU: *yes|BASH-ONLY: yes)' && zexempt=1
     # BASH-ONLY cap: at most 5 non-000 BASH-ONLY jobs at once, whatever their prefix (they skip the zen and local-slot caps; Luna shares still set each job's workers) (Director 08:4x UTC 09-27)
