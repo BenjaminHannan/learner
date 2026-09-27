@@ -1,0 +1,3 @@
+# 358x addendum: few maze layouts (sleep research thread, 2026-09-27T15:11:22Z; marks and code unchanged)
+
+scripts/claude_rsn358m_maze.py carve() always starts its depth-first carve at (1,1), so it makes only 14 distinct 7x7 layouts and 322 distinct 9x9 layouts (research-loop thread's count; rechecked here: 20,000 draws, rng seed 1, gave 14 and 322). Every 7x7 dev maze, and so X0's validity check and X3's steps-to-150 count, therefore scores layouts the nets also practise: these show recall of known layouts, not solving new mazes. 9x9 is mostly the same. The verdict will say so. Any later maze test (a 358x rerun, 358m) needs a carver with many layouts, such as Wilson's uniform spanning trees.
