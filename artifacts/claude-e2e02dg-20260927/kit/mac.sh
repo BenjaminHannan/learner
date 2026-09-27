@@ -7,7 +7,8 @@
 #   2 card: an RTX 5090 first (rd-378g's card: the merge and the notes are most likely to repeat bit for bit on it),
 #     cheapest first, at most 3 hosts; any card with >= 16 GB and compute capability >= 8.0 only if no 5090 is offered
 #   3 rent, attach the Mac's public key, wait for ssh (8 min, else destroy: nothing has run on it)
-#   4 send the pinned code and a copy of G's adapter (the Mac folder is only read, never moved or changed)
+#   4 send the pinned code (with design/v3/60-listener: claude_lis300_compiler reads relation-names.txt; attempt 2
+#     stopped at the selftests without it) and a copy of G's adapter (the Mac folder is only read, never moved or changed)
 #   5 start kit/box.sh detached; a detached watchdog stops (never destroys) the instance at the time cap if this job
 #     has not ended it by then
 #   6 wait for /root/r/FINISHED (at most TCAP_MIN minutes)
@@ -122,7 +123,7 @@ while read -r OID DPH HID GPU TF RAM; do
         SS=$(sshto "$HO" "$PO"); ok=$($SS "echo ssh-ok" < /dev/null 2>/dev/null); [ "$ok" = ssh-ok ] && break; fi; fi
     sleep 10; done
   [ "$ok" = ssh-ok ] || { log "rental $n: no ssh within 8 min (status ${s:-?}); nothing ran on it"; destroy "$I"; continue; }
-  tar -C "$KD" -cf - scripts design/v3/30-modes/02d-gates-ADDENDUM-52.md $E \
+  tar -C "$KD" -cf - scripts design/v3/30-modes/02d-gates-ADDENDUM-52.md design/v3/60-listener $E \
       artifacts/claude-rd378g-20260926/PASSMARKS.md artifacts/claude-rd378g-20260926/SEAL.sha256.txt \
       artifacts/claude-rd378g-20260926/g5/dialogs.jsonl artifacts/claude-rd378g-20260926/vast/SEAL-run.sha256.txt \
       artifacts/claude-rd378g-20260926/vast/g5/notes_G.jsonl | $SS "mkdir -p /root/r && tar -x -C /root/r" 2>> "$H/log.txt"
