@@ -15,11 +15,12 @@ PYJ="$PYM -c"
 KEY=${KEY358:-$HOME/.ssh/id_ed25519}
 IMAGE=pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime   # base image only; drive.sh pins torch 2.11.0+cu128 inside it
 QUERY="gpu_name=RTX_5090 num_gpus=1 reliability>=0.98 disk_space>=40 cpu_cores_effective>=16 cuda_max_good>=12.8 inet_down>=200 rentable=true"
-MAXDPH=0.75       # dollars per hour: offers above this are skipped (about 2 h must fit under the $1.45 stop)
+MAXDPH=0.65       # dollars per hour: offers above this are skipped (about 2 h must fit under the $1.45 stop)
 CAP_STOP=1.45     # dollars, all rentals of this task together: copy back, destroy, BUDGET-STOP (cap $1.60)
 TIME_CAP=12600    # seconds from the first rental (3 h 30 min): copy back, destroy, TIME-STOP
 ORDER="loop-trm-s1 loop8-s1 loop-trm-s2 loop8-s2 loop-trm-s3 loop8-s3 loop-trm-s4 loop8-s4"   # graded only; loop8-trm (report only) is not run on the rental
 CKPTS="final.pt final-ema.pt"
+EXPECT="train_log.jsonl train_summary.json tests.json tests-ema.json"   # files every run that did not die must bring back
 now() { date -u +%FT%TZ; }
 log() { mkdir -p "$G"; echo "$(now) $*" | tee -a "$G/log.txt"; }
 # $G/rentals.txt: one line per instance created: id dph epoch_created [epoch_destroyed_or_stopped]
@@ -56,7 +57,7 @@ sshto() { echo "ssh -i $KEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/d
 # Copy the rental's W folder back to $G/out, checked file by file against a sha256 manifest made on the rental.
 #   copy_back logs  -> ok when every manifest file arrived and matches
 #   copy_back runs  -> also: SEAL-run arrived, and each of the 8 runs has a sealed final.pt whose Mac copy in $MP matches
-#                      SEAL-run (both checkpoints), or drive.sh recorded it as DIED (no final.pt)
+#                      SEAL-run (both checkpoints) and every EXPECT file arrived, or drive.sh recorded it as DIED (no final.pt)
 # Returns 0 only when the check passes; the caller destroys only then.
 copy_back() {
   mkdir -p "$G/out" "$MP"; [ -f "$G/out/W/MANIFEST.sha256" ] && mv "$G/out/W/MANIFEST.sha256" "$G/out/W/MANIFEST.sha256.prev-$(date +%s)"
@@ -77,6 +78,7 @@ copy_back() {
         [ "$m" = "$sha" ] && log "$R/$C: sealed, Mac copy sha256 ok" || { log "$R/$C: Mac copy sha256 '$m' does not match SEAL-run $sha"; bad=1; }
       else log "$R/$C: not sealed and no DIED record"; bad=1; fi
     done
+    for f in $EXPECT; do [ -s "$G/out/W/$R/$f" ] || { log "$R/$f: expected file missing"; bad=1; }; done
   done
   [ $bad = 0 ] || { log "COPY-CHECK FAIL: not every run is sealed and copied (or recorded as died)"; return 1; }
   log "COPY-CHECK: all 8 runs accounted for (both checkpoints)"; return 0
