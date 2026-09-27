@@ -25,3 +25,11 @@
     HF_HUB_OFFLINE=1, MiniCPM5-1B snapshot 87179e5c.
   - The worker running this thread was replaced at about 06:50 UTC (the coordinator's note). The smoke process kept
     running.
+- Update 07:00 UTC (date -u):
+  - Smoke done, 06:47:31 to 06:59:26 UTC, exit 0 for each arm. Each arm gave 15 rows on the 3 smoke chats, with 0
+    empty replies. Median seconds per turn: U1 6.5, U0 7.3, N 6.0. Files are in run/smoke/. The smoke chats are
+    never among the 60, and these rows are not judged.
+  - Full run started at 06:59:41 UTC, after SEAL and SEAL-data re-checked OK. Arms run U0, then U1, then N, on the 60
+    panel chats, into run/talk_<arm>.jsonl with logs in run/log<arm>.txt. Shell PID 3314, first talker PID 3321 (U0).
+    Each arm writes its file only when it ends. At about 7 s per turn, 900 turns is about 1 h 45 min plus loading
+    (an estimate).
