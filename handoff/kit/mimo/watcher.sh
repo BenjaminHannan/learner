@@ -14,7 +14,7 @@ set -u
 export OPENCODE_CONFIG_CONTENT='{"snapshot": false}'
 W=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
 H=$HOME/premonition-watch; Q=$H/queue; O=$H/outbox
-IN=main; OUT=builder-outbox; MAX=${MAX:-5}
+IN=main; OUT=builder-outbox; MAX=${MAX:-8}   # 5 -> 8 (Director 03:56 UTC 09-27): 5 Go-limited GLM jobs sit hung in local slots; Luna pilots need room
 RUN="$W/handoff/kit/mimo/rungo4.sh"
 # rungo5 (no opencode-go fallback) is refreshed from main into $H each round and used when it passes bash -n (Director 03:17 UTC 09-27)
 # builder model: muse-spark-1.3-contributor builders hung at "> build" with 0-byte replies from 01:21 UTC 09-27 (status diag 03:02 UTC; GLM calls were launched, not shown returning); opencode.log shows "Go usage limit exceeded" from ~00:57 UTC (Ben's Mac Claude, relayed 03:01); Ben 03:04:18 UTC "use muse spark 1.3": new launches start on the free Zen route, Go chain stays as fallback (Director 03:08 UTC 09-27)
