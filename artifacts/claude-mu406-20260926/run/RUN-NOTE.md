@@ -44,3 +44,12 @@ Times are from date -u. Plan and marks: ../PASSMARKS.md, sealed in ../SEAL.sha25
     pass is read with this in mind.
 - 2026-09-27 12:41:42 UTC: step 4 (teaching replies) moved from handoff/held/ to handoff/queue/ as madeup-mu406-teach-mac.md
   (launch 1, L=1): 220 chats, 1,100 turns, held-out first, 2 calls at a time, the writer stops itself at 50 min.
+- Step 4, launch 1 (madeup-mu406-teach-mac): ended about 12:49 UTC, rc=5, 0 chats written, 0 Luna calls. The code
+  seal passed (30 of 30 OK), then the panel seal check failed: SEAL-panel.sha256.txt lists paths relative to
+  artifacts/claude-mu406-20260926 and the job ran shasum from the temp root, so it could not find panel/*.jsonl.
+  My path bug in the job block; the panel files and their hashes are unchanged. This counts as a no-progress
+  launch (1 of 2 in a row allowed, 1 of 6 in all, ADDENDUM-1).
+- 2026-09-27 13:54:56 UTC: launch 2 queued as handoff/queue/madeup-mu406-teach2-mac.md. Same block with the panel check run inside
+  the folder, L=2, a new temp folder, and launch 1's leftover temp folder removed. Dry run here up to the write step:
+  both seals OK (34 lines), teach selftest 9/9, 220 chats and 220 facts rows in order. The Luna helper selftest
+  needs the Mac's codex binary and was skipped in the dry run only.
