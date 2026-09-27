@@ -15,9 +15,15 @@ away always-on S's panel gains (55 and 49, mostly those number items). The open 
 ## Two skills, both made of numbers, and the look-alikes
 - **P (puzzles):** dl-9's day puzzles. "Make the target from these numbers." GLM's frame (sha-pinned), the 1B's own
   code-checked expressions as targets, RuleKeeper scaffolding (disclosed, as in every dl run).
-- **Q (expressions):** code-made arithmetic expressions with 3-4 numbers from 2-12, using +, - and * with brackets,
-  and an integer value. The instruction frame is written by Luna. Practice keeps the expressions the 1B got right at
-  least once (greedy plus 10 samples); the target is the code-made bare value.
+- **Q (expressions):** code-made arithmetic with two numbers: + or - on 2-99, or * on 2-19. The instruction frame is
+  written by Luna and asks for the number only. Practice keeps the expressions the 1B got right at least once (greedy
+  plus 10 samples at T 0.7); the target is the code-made bare value. The size was set by a CPU probe on dev seeds
+  (12:40-12:55Z, a probe wording of mine, never used in the run):
+  - 3-4 numbers: 0 of 30 right greedy with a number-only reply;
+  - 2 numbers: 8 of 45 greedy, and 13 of 45 right at least once.
+
+  So there is room to learn. While checking the generator I printed the first 8 Q TEST expressions (code-made; no
+  model saw them).
 - **Look-alike negatives (from night 1):** about 600 short everyday questions that contain numbers (prices, ages,
   dates, sizes, scores), written by Luna in one Mac stage before the GPU run. Code drops the following:
   - anything with arithmetic between digits;
