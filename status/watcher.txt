@@ -1,4 +1,4 @@
-2026-09-27 12:38:31
+2026-09-27 12:40:42
 running:
 000-probe-benspc-gpu-0827.running
 000-probe-zen-builder.running
@@ -13,8 +13,6 @@ y1t-luna-rest-mac.running
 launched (no exit yet) / finished:
      969
 
-2026-09-27 10:02:56 bash-only cap: 5 running, holding 164-claude-sleep-358s-bo-p5
-2026-09-27 10:02:56 bash-only cap: 5 running, holding 173-rv390-358i2-pc-d
 2026-09-27 10:02:56 bash-only cap: 5 running, holding 174-rv392-358i2-pc
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
@@ -163,6 +161,8 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 12:36:19 load 102, holding rent358t3-1-start (      10 running)
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 12:38:31 load 113, holding rent358t3-1-start (      10 running)
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 12:40:42 load 125, holding rent358t3-1-start (      10 running)
 
 diag:
 == 000-probe-benspc-gpu-0827
@@ -254,25 +254,25 @@ NOTE: ADOPTED instance 52991051 (RTX_5090, $0.5611/h, 'loading', started 2026-09
 [0m
 top5cpu:
 %CPU COMM
-123.5 ApplicationsStorageExtension
-64.5 fileproviderd
-27.1 python
-24.5 bash
-11.5 bird
+91.4 fileproviderd
+32.4 WindowServer
+26.4 python
+25.0 bash
+22.7 ControlCenter
 procs:
-  363     1 04-00:25:28 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 04-00:24:36 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 4860  3522       08:23 SN   ssh
- 5038 86004       07:50 SN   /usr/local/bin/opencode
-11595   818       00:25 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-15699     1 03-22:39:54 S    /usr/bin/ssh-agent
-44571 44570 01-15:01:32 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-15:01:32 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    20:16:05 SN   /usr/local/bin/opencode
-53479 20011    08:33:41 SN   /usr/local/bin/opencode
-54153 44066    08:33:21 SN   /usr/local/bin/opencode
-59802 59771    08:24:57 SN   /usr/local/bin/opencode
-60494 59018    13:30:58 SN   /usr/local/bin/opencode
-61605 61571    08:22:39 SN   /usr/local/bin/opencode
-64555 64533    09:56:32 SN   /usr/local/bin/opencode
-81797     1 02-01:19:11 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 04-00:27:40 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 04-00:26:48 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 4860  3522       10:35 SN   ssh
+ 5038 86004       10:02 SN   /usr/local/bin/opencode
+13788 99343       00:33 SN   ssh
+15699     1 03-22:42:06 S    /usr/bin/ssh-agent
+44571 44570 01-15:03:44 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-15:03:44 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    20:18:17 SN   /usr/local/bin/opencode
+53479 20011    08:35:53 SN   /usr/local/bin/opencode
+54153 44066    08:35:33 SN   /usr/local/bin/opencode
+59802 59771    08:27:09 SN   /usr/local/bin/opencode
+60494 59018    13:33:10 SN   /usr/local/bin/opencode
+61605 61571    08:24:51 SN   /usr/local/bin/opencode
+64555 64533    09:58:44 SN   /usr/local/bin/opencode
+81797     1 02-01:21:23 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
