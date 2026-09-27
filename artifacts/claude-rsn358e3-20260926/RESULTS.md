@@ -61,3 +61,6 @@ What these rows suggest (report only, two seeds):
 - At equal size, the frozen net's new-learning problem is much worse than at 1.64x. With replay it learns sums to 0 / 59 (moe-grow-replay: 136 / 67; dense-replay: 200 / 200). Its phase-A grids are also lower (145 / 193) because only a third of the MLP width is routable in phase A.
 - As at 1.64x, frozen experts keep some of an unpractised skill through phase C (grids5 112 / 51, vs dense-replay 0 / 0), but less than moe-grow-replay did (185 / 160).
 - rsn-358e4 (sealed, running since 01:15 UTC) tests exactly this same-size frozen arm against dense, both replaying every earlier kind. It is the graded version of this question.
+
+## Correction (2026-09-27 02:48:50 UTC)
+The eq-arm section above says S "was read before the second grow step". That is wrong: it was read after that step (claude_rsn358e_moe.py:178-179 reads the shares after score(), and score() grows). The added group starts at zero and got 0.000-0.002 of the cells at those reads, so the S values change by at most that. Details: artifacts/claude-rsn358e4-20260927/DIAG-new-group-share.md.
