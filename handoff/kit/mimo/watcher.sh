@@ -120,7 +120,8 @@ while [ ! -e "$H/STOP" ]; do
     # a job that adopts orphaned runs of its own sealed experiment says 'GPU-ADOPT: yes' and skips this busy check (the one-GPU-job rule above still holds)
     if grep -q '^GPU: yes' "$Q/$n.md.tmp" && ! grep -q '^GPU-ADOPT: yes' "$Q/$n.md.tmp"; then
       ga=$(ssh -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 -o BatchMode=yes benspc "nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits & tasklist /FI \"IMAGENAME eq python.exe\" /NH" </dev/null 2>/dev/null; echo "rc=$?")
-      gm=$(echo "$ga" | head -1 | tr -dc '0-9'); gp=$(echo "$ga" | grep -ic '^python.exe')
+      gm=$(echo "$ga" | grep -v '^rc=' | head -1 | tr -dc '0-9'); gp=$(echo "$ga" | grep -ic '^python.exe')   # never read rc=255 as memory
+      if [ "$(echo "$ga" | tail -1)" != "rc=0" ]; then log "BensPC unreachable (ssh $(echo "$ga" | tail -1)), holding $n"; rm -f "$Q/$n.md.tmp"; continue; fi
       if [ "$(echo "$ga" | tail -1)" != "rc=0" ] || [ -z "$gm" ] || [ "$gm" -gt 700 ] || [ "$gp" -gt 0 ]; then log "gpu busy on BensPC, holding $n: mem ${gm:-?} MiB, python.exe $gp, $(echo "$ga" | tail -1)"; rm -f "$Q/$n.md.tmp"; continue; fi
     fi
     mv "$Q/$n.md.tmp" "$Q/$n.md"; touch "$Q/$n.running"; log "launch $n"
