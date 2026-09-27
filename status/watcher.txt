@@ -1,9 +1,7 @@
-2026-09-26 23:54:57
+2026-09-26 23:57:19
 running:
 000-probe-zen-builder.running
 000-stop-rd378low.running
-004-rd378k-gate3low.running
-005-rd378g-writelow.running
 151-fixsleep-dl9pc-b.running
 k1h-glm2.running
 lis320-fulloc-c1-mac.running
@@ -11,11 +9,6 @@ madeup-g406-2-mac.running
 launched (no exit yet) / finished:
      751
 
-2026-09-26 20:28:49 load 126, holding 004-rd378k-gate3low (       6 running)
-2026-09-26 20:28:49 load 126, holding 005-rd378g-writelow (       6 running)
-2026-09-26 20:28:54 load 133, holding lis320-pilot6-mac (       6 running)
-2026-09-26 20:28:54 load 133, holding madeup-g406-2-mac (       6 running)
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-26 20:31:05 pushed 000-peek-rd378oc2
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
@@ -161,6 +154,11 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-26 23:54:54 self-update, restarting
 2026-09-26 23:54:54 watcher started (pid 16015)
 2026-09-26 23:54:57 launch 000-stop-rd378low
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-26 23:57:13 pushed 004-rd378k-gate3low
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-26 23:57:18 pushed 005-rd378g-writelow
 
 diag:
 == 000-probe-zen-builder
@@ -177,22 +175,12 @@ diag:
 > build · muse-spark-1.3-contributor
 [0m
 == 000-stop-rd378low
-0 Sep 26 23:54 000-stop-rd378low.go1.err.txt
-0 Sep 26 23:54 000-stop-rd378low.go1.reply.md
-== 004-rd378k-gate3low
-29666 Sep 26 21:00 004-rd378k-gate3low.go1.err.txt
-406 Sep 26 20:52 004-rd378k-gate3low.go1.reply.md
-[rd378k-teacher3] ta-d16 ok
----
-  113       23:36 uv run --offline --no-project --python 3.12 python -B scripts/claude_glm_low_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_t
-  115       23:36 /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_glm_low_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifact
-[0m
-== 005-rd378g-writelow
-79732 Sep 26 20:57 005-rd378g-writelow.go1.err.txt
-379 Sep 26 20:48 005-rd378g-writelow.go1.reply.md
-59265       00:25 /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash --variant low --title glm11-79d1d6fd642c4539929f0ef9f36a3d8b You are writing training data: realistic text chats between
-59783       00:24 /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash --variant low --title glm11-155bc1a02c744f428bcac614157142c5 You are writing training data: realistic text chats between
-60022       00:23 /usr/local/bin/opencode run --model opencode-go/glm-5.3-flash --variant low --title glm11-64830fe1bc12446eb0909e208b4e59fc You are a careful judge. Below is one chat transcript betwe
+17172 Sep 26 23:57 000-stop-rd378low.go1.err.txt
+266 Sep 26 23:56 000-stop-rd378low.go1.reply.md
+  pid=46743 ppid=46711 etime=07:34:48 title=mimo:k1h-glm2.go1.46711 ok=False
+  pid=60494 ppid=59018 etime=49:41 title=mimo:000-probe-zen-builder.go2.59018 ok=False
+  pid=76368 ppid=76315 etime=30:51 title=mimo:151-fixsleep-dl9pc-b.go1.76315 ok=False
+  pid=97852 ppid=97821 etime=02:17 title=mimo:000-stop-rd378low.go1.97821 ok=False
 [0m
 == 151-fixsleep-dl9pc-b
 50505 Sep 26 23:53 151-fixsleep-dl9pc-b.go1.err.txt
@@ -227,20 +215,15 @@ shell tool terminated command after exceeding timeout 4800000 ms. If this comman
 </shell_metadata>
 [0m
 procs:
-  363     1 03-11:41:55 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-11:41:03 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 6563  6531    03:10:40 SN   /usr/local/bin/opencode
-10114 10084    03:06:09 SN   /usr/local/bin/opencode
-15699     1 03-09:56:21 S    /usr/bin/ssh-agent
-44571 44570 01-02:17:59 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-02:17:59 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    07:32:32 SN   /usr/local/bin/opencode
-60494 59018       47:25 SN   /usr/local/bin/opencode
-76368 76315       28:35 SN   /usr/local/bin/opencode
-81797     1 01-12:35:38 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
-94149   127       04:35 SN   /usr/local/bin/opencode
-95522   115       02:15 SN   /usr/local/bin/opencode
-97178   818       00:22 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-97852 97821       00:01 RN   /usr/local/bin/opencode
-98771 98706    03:19:30 SN   /usr/local/bin/opencode
-98853 98794    03:19:30 SN   /usr/local/bin/opencode
+  363     1 03-11:44:16 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-11:43:24 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 6563  6531    03:13:01 SN   /usr/local/bin/opencode
+10114 10084    03:08:30 SN   /usr/local/bin/opencode
+15699     1 03-09:58:42 S    /usr/bin/ssh-agent
+44571 44570 01-02:20:20 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-02:20:20 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    07:34:53 SN   /usr/local/bin/opencode
+60494 59018       49:46 SN   /usr/local/bin/opencode
+76368 76315       30:56 SN   /usr/local/bin/opencode
+81797     1 01-12:37:59 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+97852 97821       02:22 SN   /usr/local/bin/opencode
