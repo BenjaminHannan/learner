@@ -47,7 +47,7 @@ run's setting. The job now runs Reading facts' scripts/claude_lis320_glm_oclow.p
 their SEAL-ADDENDA-6): helper v1.1 with "--variant low", wrapper unchanged. claude_y1t_glm_oc11.py is not used.
 It waits for lis-320's pilot 4 on the same wrapper.
 
-**Route update 3 (2026-09-27 03:08 UTC, before any resume call):** the first top-up job stopped on its time cap after
+**Route update 3 (2026-09-27 03:07 UTC, before any resume call):** the first top-up job stopped on its time cap after
 1,440 of 1,755 dialogs (0 failed calls). Ben's opencode plan then hit its usage limit at about 00:57 UTC (the Director,
 03:06 UTC, relaying opencode.log). The resume job (y1t-topup2-mac) is held until the Director says the route is back.
 A failed call writes a row with empty "raw", and a resume would skip that dialog, so the resume job now (a) makes one
