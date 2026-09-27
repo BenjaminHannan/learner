@@ -100,6 +100,6 @@ with or without pencil marks. That is ordinary practice at a new size, not going
 
 ## Next (fixed in PLAN.md before this number)
 - The time slice (W = 16) stays as the go-back trigger for registered rv-391. rv-391 waits on the rv-390 and rv-392
-  re-run on rsn-358i2 (BensPC job 172).
+  re-run on rsn-358i2 (BensPC job 173; 170 to 172 ran nothing).
 - Going back goes to Ben through the Thread manager as a brainstorm, per the goals page ("when the ideas run out").
 - The 7x7 gain belongs to whoever owns the reasoner's training (Sleep research). It is a report-only row here.

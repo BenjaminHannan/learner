@@ -10,7 +10,8 @@ as a brainstorm, per the goals page ("when the ideas run out"). This note is tha
   the solver's "am I done" value, its raw signals, a small checker net (twice), and now pencil-mark training.
 - So for now going back is triggered by a timer: if the puzzle is not solved within 16 rounds of a guess, go back
   and try the next candidate. That timer is a hand-set rule, disclosed as scaffolding (Redirect, 16:04). rv-391
-  will be registered on it, to test going back itself, once the re-run on the new nets (BensPC job 172) lands.
+  will be registered on it, to test going back itself, once the re-run on the new nets lands (BensPC job 173;
+  170 to 172 ran nothing).
 - Side finding from rv-393: a short practice on 7x7 puzzles made the nets much better at 7x7 (173 to 241 of 300
   before, 285 to 291 after), so far fewer 7x7 puzzles are left for going back to rescue.
 
@@ -30,6 +31,6 @@ as a brainstorm, per the goals page ("when the ideas run out"). This note is tha
    (design/v3/30-modes/ben-goals-2026-09-26.md:96).
 
 ## What I need from Ben
-Nothing is blocked. Option 1 goes ahead on its own once job 172 lands. The question for Ben is whether
+Nothing is blocked. Option 1 goes ahead on its own once job 173 lands. The question for Ben is whether
 options 2 to 4 are worth trying after that, and whether he has another idea. If he wants an outside opinion, I can
 write a prompt for Astra or GPT on why pencil training did not carry over to the net's own guesses.
