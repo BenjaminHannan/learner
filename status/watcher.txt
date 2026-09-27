@@ -1,4 +1,4 @@
-2026-09-27 15:57:37
+2026-09-27 16:00:11
 running:
 000-probe-benspc-gpu-0827.running
 000-probe-zen-builder.running
@@ -14,12 +14,6 @@ y1t-luna-rest-mac.running
 launched (no exit yet) / finished:
     1031
 
-2026-09-27 13:26:17 load 140, holding rent358t3-1-start (      10 running)
-2026-09-27 13:26:18 load 140, holding rent358u-3-collect (      10 running)
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-2026-09-27 13:28:38 pushed claude-lis320-luna-c7-mac
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 13:28:44 pushed madeup-mu406-teach4-mac
 2026-09-27 13:28:45 load 148, holding 302-fixsleep-dl11-luna-bash (       8 running)
 2026-09-27 13:28:46 load 148, holding rent358t3-1-start (       8 running)
@@ -164,6 +158,12 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 15:57:25 pushed 000-bash-vastcredit-1953
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 15:57:36 pushed rent-lf8-1-start
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+ssh: connect to host github.com port 22: Undefined error: 0
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
 
 diag:
 == 000-probe-benspc-gpu-0827
@@ -229,8 +229,13 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 > build · muse-spark-1.3-contributor-free
 [0m
 == rent-k1fv-1b-start
-0 Sep 27 15:55 rent-k1fv-1b-start.go1.err.txt
+1006 Sep 27 16:00 rent-k1fv-1b-start.go1.err.txt
 1047 Sep 27 15:55 rent-k1fv-1b-start.go1.reply.md
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/json/decoder.py", line 356, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 == rent-y1v-vast-p1
 0 Sep 27 15:34 rent-y1v-vast-p1.go1.err.txt
 2814 Sep 27 15:55 rent-y1v-vast-p1.go1.reply.md
@@ -260,24 +265,24 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 [0m
 top5cpu:
 %CPU COMM
-53.2 fileproviderd
-35.7 StorageManagementService
-33.4 ApplicationsStorageExtension
-33.2 Storage
-28.2 bash
+99.0 WindowServer
+97.5 runningboardd
+95.3 mobileassetd
+47.2 ControlCenter
+44.8 airportd
 procs:
-  363     1 04-03:44:34 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 04-03:43:42 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
-15699     1 04-01:59:00 S    /usr/bin/ssh-agent
-44571 44570 01-18:20:38 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-18:20:38 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    23:35:11 SN   /usr/local/bin/opencode
-53479 20011    11:52:47 SN   /usr/local/bin/opencode
-54153 44066    11:52:27 SN   /usr/local/bin/opencode
-59802 59771    11:44:03 SN   /usr/local/bin/opencode
-60494 59018    16:50:04 SN   /usr/local/bin/opencode
-61605 61571    11:41:45 SN   /usr/local/bin/opencode
-64555 64533    13:15:38 SN   /usr/local/bin/opencode
-75439 75408       07:02 SN   /usr/local/bin/opencode
-80956   818       00:46 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-81797     1 02-04:38:17 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 04-03:47:09 Rs   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 04-03:46:17 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+15699     1 04-02:01:35 S    /usr/bin/ssh-agent
+44571 44570 01-18:23:13 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-18:23:13 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    23:37:46 SN   /usr/local/bin/opencode
+53479 20011    11:55:22 SN   /usr/local/bin/opencode
+54153 44066    11:55:02 SN   /usr/local/bin/opencode
+59802 59771    11:46:38 SN   /usr/local/bin/opencode
+60494 59018    16:52:39 SN   /usr/local/bin/opencode
+61605 61571    11:44:20 SN   /usr/local/bin/opencode
+64555 64533    13:18:13 SN   /usr/local/bin/opencode
+75439 75408       09:37 SN   /usr/local/bin/opencode
+81797     1 02-04:40:52 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+82512   818       01:07 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
