@@ -10,3 +10,4 @@
 - 2026-09-27T00:09:00Z: dev gate PASS (held-out squares 71 of 72 exact, 0 wrong; held-out no-square rows 107 of 107 none; format dev 30 of 30). The dev split line started at 00:08:50Z.
 - 2026-09-27T00:16:39Z: dev split (ADDENDUM-gr5-1, report only): clean held-out squares 52 of 53 exact, 0 wrong, 1 read as none; shared 19 of 19 exact. The first registered task (L on the squares) started at 00:16:29Z.
 - 2026-09-27T00:25:59Z: L on the squares finished (100 rows, 100 read as a square; exactness is left to the score and the recount). L on the lookalikes started at 00:25:51Z.
+- 2026-09-27T00:27:22Z: L on the lookalikes finished (60 rows, 3 read as a square; which truth each has is left to the score and the recount). L on the unseen formats started at 00:27:13Z.
