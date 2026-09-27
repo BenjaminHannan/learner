@@ -45,6 +45,7 @@ import claude_lis320_seed as S  # noqa: E402
 
 MODEL = "gpt-6-luna"
 RESERVED_SEEDS = set(range(320, 330)) | {4027, 1, 2, 7}
+TRAIN_SEED, PANEL_SEED = 3993, 3994          # plan seeds: training chats, and the fresh held-out panel's chats
 TURNS, N_LINES = (10, 14), 20
 SELF_RELS = [r for r in S.ATTR_RELS if r != "age"]          # numbers are too common in chat to check by code
 REL_GLOSS = {"occupation": "what {o} does for a living", "employer": "the company {o} works for",
@@ -58,11 +59,14 @@ EVENTS = ["concert", "wedding", "museum", "marathon", "hackathon", "barbecue", "
           "festival", "picnic", "seminar", "recital", "fundraiser", "reunion", "audition"]
 PHRASES = {"yesterday": 1, "two days ago": 2, "three days ago": 3, "last Saturday": "Saturday",
            "last Sunday": "Sunday", "last Friday": "Friday", "last Wednesday": "Wednesday"}
-TOPICS = [
-    "the weekend", "work", "cooking", "the weather", "films", "travel plans", "sports", "music", "a new phone",
-    "the garden", "books", "exercise", "family news", "a house move", "school", "shopping", "holidays", "pets"]
+TOPICS = [   # small-talk topics chosen to stay clear of the value pools (jobs, hobbies, food, music, pets, gardens)
+    "the weekend", "the weather", "films", "travel plans", "a new phone", "a TV series", "a house move", "shopping",
+    "traffic", "a birthday present", "coffee", "a video game", "the news", "a lost umbrella"]
+NEGATIONS = ["not", "no", "never", "neither", "nor", "isn't", "wasn't", "doesn't", "didn't", "don't", "aren't",
+             "weren't", "unknown"]   # a target that negates or doubts its value is dropped (code check, no judge)
 MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
           "November", "December"]
+MAX_ROWS = 3                   # failed rows per id before a rerun stops retrying it (each row is up to 2 calls)
 _LOCK = threading.Lock()
 FAILED = {"n": 0}
 
@@ -325,9 +329,11 @@ def check_qa(p: dict, f: dict, q: dict) -> str:
         d, m, y = f["gold"].split()
         if _has(qs, m) or _has(qs, y) or not date_ok(an, f["gold"]):
             return "date"
-        return ""
+        return "negation" if any(_has(an, w) for w in NEGATIONS) else ""
     if _has(qs, f["value"]) or not _has(an, f["value"]):
         return "value"
+    if any(_has(an, w) for w in NEGATIONS):
+        return "negation"
     if f["kind"] == "attr" and _has(qs, f["owner"]):
         return "name"
     same_rel = [g["value"] for g in p["facts"] if g.get("rel") == f.get("rel") and g["fid"] != f["fid"]]
@@ -350,8 +356,12 @@ def _guard(raw: str) -> str:
 
 def run_jobs(jobs: list[dict], out: Path, call, workers: int, max_minutes: float, max_failed: int, check) -> dict:
     """jobs: {"id", "prompt"}; each reply is checked at once by check(job, raw) -> reason; one retry on a failed
-    check; a call that raises counts as a route failure and is written with an empty raw. Resume skips done ids."""
-    done = {r["id"] for r in _jsonl(out)} if out.exists() else set()
+    check; a call that raises counts as a route failure and is written with an empty raw. A rerun skips ids that
+    have a kept row or already MAX_ROWS failed rows, so each rerun gives a failed id one more try (rows are only
+    ever appended; the kept row is the one used)."""
+    rows = _jsonl(out) if out.exists() else []
+    fails = Counter(r["id"] for r in rows if not r["ok"])
+    done = {r["id"] for r in rows if r["ok"]} | {i for i, n in fails.items() if n >= MAX_ROWS}
     todo = [j for j in jobs if j["id"] not in done]
     t0, tot = time.time(), Counter()
 
@@ -476,8 +486,11 @@ def build(a) -> int:
     out.mkdir(parents=True, exist_ok=True)
     rng = random.Random(3998)
     cids = sorted(c for c in kept if c in qa_rows)
-    dev_ids = set(rng.sample(cids, round(a.dev_share * len(cids)))) if cids else set()
-    chats, rows, why = [], {"train": [], "dev": []}, Counter()
+    want = f"w{PANEL_SEED if a.panel else TRAIN_SEED}-"
+    if not getattr(a, "any_seed", False) and any(not c.startswith(want) for c in plans):
+        raise SystemExit(f"bm398w: build {'--panel ' if a.panel else ''}takes only chats planned from seed {want[1:-1]}")
+    dev_ids = set(rng.sample(cids, round(a.dev_share * len(cids)))) if cids and not a.panel else set()
+    chats, rows, why = [], ({"panel": []} if a.panel else {"train": [], "dev": []}), Counter()
     for cid in cids:
         p = plans[cid]
         conv, where = to_locomo(p, kept[cid])
@@ -493,21 +506,27 @@ def build(a) -> int:
                 intro = next(x for x in p["facts"] if x["kind"] == "intro" and x["owner"] == f["owner"])
                 ev = [where[intro["fid"]]] + ev
             conv["qa"].append({"question": q["question"], "answer": q["answer"], "evidence": ev,
-                               "category": CATEGORY[f["kind"]], "kind": f["kind"]})
+                               "category": CATEGORY[f["kind"]], "kind": f["kind"],
+                               "gold": f["gold"] if f["kind"] == "event" else f["value"]})
         items = D.items_of(conv)
         for i, qa in enumerate(conv["qa"]):
             evp = D.evidence(conv, qa)
             keep = raft_positions(conv, qa["question"], evp)
             user = D.context(conv, items, keep) + "\n\n" + B.QA_PROMPT.format(B.question_text(cid, i, qa))
-            rows["dev" if cid in dev_ids else "train"].append(
-                {"id": f"{cid}#{i}", "system": B.LOCOMO_SYSTEM, "user": user, "answer": qa["answer"],
-                 "kind": qa["kind"], "layout": "raft20", "writer": MODEL, "evidence_lines": len(evp)})
+            split = "panel" if a.panel else "dev" if cid in dev_ids else "train"
+            # the training target is Luna's short answer; dev and panel rows carry the code's gold value instead,
+            # so the trainer's report-only dev check and the blind judges compare with the code's value
+            rows[split].append(
+                {"id": f"{cid}#{i}", "system": B.LOCOMO_SYSTEM, "user": user,
+                 "answer": qa["answer"] if split == "train" else qa["gold"], "gold": qa["gold"],
+                 "question": qa["question"], "category": qa["category"], "kind": qa["kind"], "layout": "raft20",
+                 "writer": MODEL, "evidence": qa["evidence"], "lines": keep, "evidence_lines": len(evp)})
         chats.append(conv)
     for k, v in rows.items():
         (out / f"{k}.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in v), encoding="utf-8")
     (out / "chats.json").write_text(json.dumps(chats, ensure_ascii=False), encoding="utf-8")
-    res = {"chats": len(chats), "dev_chats": len(dev_ids), "train_items": len(rows["train"]),
-           "dev_items": len(rows["dev"]), "kinds": dict(Counter(r["kind"] for v in rows.values() for r in v)),
+    res = {"chats": len(chats), "dev_chats": len(dev_ids), **{f"{k}_items": len(v) for k, v in rows.items()},
+           "kinds": dict(Counter(r["kind"] for v in rows.values() for r in v)),
            "dropped_questions": dict(why),
            "sha256": {k: hashlib.sha256((out / f"{k}.jsonl").read_bytes()).hexdigest() for k in rows}}
     (out / "counts.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
@@ -567,6 +586,8 @@ def selftest(a) -> int:
     ev = next(f for f in fx if f["kind"] == "event")
     ok["date check needs day, month and year"] = date_ok(f"on {ev['gold']}", ev["gold"]) and not date_ok(
         "sometime in " + ev["gold"].split()[1], ev["gold"])
+    ok["an answer that negates its value fails"] = check_qa(p, fx[0], {"question": "what about it?",
+                                                                       "answer": f"not {fx[0]['value']}"}) == "negation"
     ok["a question that gives away the value fails"] = check_qa(p, fx[0], {"question": f"is it {fx[0]['value']}?",
                                                                            "answer": fx[0]["value"]}) == "value"
     ok["bm25 ranks the matching doc first"] = bm25_order("red kite festival", ["blue sky", "the red kite festival",
@@ -596,10 +617,36 @@ def selftest(a) -> int:
             r["ok"] for r in _jsonl(td / "sess.jsonl"))
         word(ns, luna)
         ok["word resumes without new calls"] = calls["n"] == n_sess
+        flaky = {"n": 0}
+
+        def luna_bad_once(prompt):
+            flaky["n"] += 1
+            return "[]" if flaky["n"] <= 2 else luna(prompt)
+
+        ns2 = argparse.Namespace(plans=str(td / "plans.jsonl"), out=str(td / "sess2.jsonl"), workers=1,
+                                 max_minutes=0, max_failed=5, limit=1)
+        word(ns2, luna_bad_once)
+        first = _jsonl(td / "sess2.jsonl")
+        word(ns2, luna_bad_once)
+        again = _jsonl(td / "sess2.jsonl")
+        n0 = len(plans[0]["sessions"])
+        ok["a rerun retries only the failed session, and keeps the failed row"] = (
+            sum(not r["ok"] for r in first) == 1 and len(again) == n0 + 1 and sum(r["ok"] for r in again) == n0)
         ask(argparse.Namespace(plans=str(td / "plans.jsonl"), sess=str(td / "sess.jsonl"), out=str(td / "qa.jsonl"),
                                workers=2, max_minutes=0, max_failed=5, limit=0), luna)
         build(argparse.Namespace(plans=str(td / "plans.jsonl"), sess=str(td / "sess.jsonl"), qa=str(td / "qa.jsonl"),
-                                 out=str(td / "out"), dev_share=0.5))
+                                 out=str(td / "out"), dev_share=0.5, panel=False, any_seed=True))
+        build(argparse.Namespace(plans=str(td / "plans.jsonl"), sess=str(td / "sess.jsonl"), qa=str(td / "qa.jsonl"),
+                                 out=str(td / "pan"), dev_share=0.5, panel=True, any_seed=True))
+        pan = _jsonl(td / "pan" / "panel.jsonl")
+        ok["panel mode puts every item in the panel, answer = the code's gold"] = len(pan) == 36 and all(
+            r["answer"] == r["gold"] for r in pan) and not (td / "pan" / "train.jsonl").exists()
+        try:
+            build(argparse.Namespace(plans=str(td / "plans.jsonl"), sess=str(td / "sess.jsonl"),
+                                     qa=str(td / "qa.jsonl"), out=str(td / "x"), dev_share=0.5, panel=True))
+            ok["build refuses chats from another seed"] = False
+        except SystemExit:
+            ok["build refuses chats from another seed"] = True
         tr = _jsonl(td / "out" / "train.jsonl") + _jsonl(td / "out" / "dev.jsonl")
         ok["build makes 18 items per chat"] = len(tr) == 36
         chats = json.loads((td / "out" / "chats.json").read_text(encoding="utf-8"))
@@ -617,6 +664,8 @@ def selftest(a) -> int:
             and row["user"].startswith("Below is a conversation between two people"))
         ok["dated questions get the CAT2 suffix"] = any(B.CAT2_SUFFIX.strip() in r["user"] for r in tr if r["kind"] == "event")
         ok["every row records its writer"] = all(r["writer"] == MODEL for r in tr)
+        ok["dev rows carry the gold value, train rows Luna's answer"] = all(
+            r["answer"] == r["gold"] for r in _jsonl(td / "out" / "dev.jsonl"))
         ok["the two chats never share a split"] = len({r["id"].split("#")[0] for r in _jsonl(td / "out" / "dev.jsonl")}
                                                        & {r["id"].split("#")[0] for r in _jsonl(td / "out" / "train.jsonl")}) == 0
         del by
@@ -638,6 +687,7 @@ def main() -> int:
     ap.add_argument("--max-failed", type=int, default=20)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--dev-share", type=float, default=0.15)
+    ap.add_argument("--panel", action="store_true")
     a = ap.parse_args()
     return {"plan": plan, "word": word, "ask": ask, "build": build, "selftest": selftest}[a.cmd](a)
 
