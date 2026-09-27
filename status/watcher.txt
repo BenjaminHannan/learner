@@ -1,4 +1,4 @@
-2026-09-27 06:56:53
+2026-09-27 06:59:50
 running:
 000-bash-probe173b.running
 000-collect-rd378g.running
@@ -10,19 +10,13 @@ running:
 bm398w-mac-c2.running
 k1h-glm2.running
 k1h-luna-full-mac.running
+k1h-luna-full-r1-bash.running
 lis320-pilot8b-mac.running
 madeup-mu406-practice-mac.running
 y1t-luna-rest-mac.running
-y1t-luna-rest3-bash.running
 launched (no exit yet) / finished:
-     871
+     874
 
-2026-09-27 05:13:24 self-update, restarting
-2026-09-27 05:13:24 watcher started (pid 16015)
-2026-09-27 05:13:29 launch 000-bash-gpuprobe2
-2026-09-27 05:13:29 launch 157-claude-sleep-358spc-collect
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 05:15:50 pushed 000-bash-gpuprobe2
 2026-09-27 05:15:51 launch 000-bash-stop172-go2
 2026-09-27 05:15:54 gpu busy on BensPC, holding 173-rv390-358i2-pc-d: mem 13723 MiB, python.exe 6, rc=0
@@ -167,11 +161,17 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 06:56:50 launch 000-bash-probe173b
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 06:59:24 pushed claude-lis320-luna-c1-mac
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 06:59:46 pushed y1t-luna-rest3-bash
+2026-09-27 06:59:49 launch k1h-luna-full-r1-bash
 
 diag:
 == 000-bash-probe173b
 0 Sep 27 06:56 000-bash-probe173b.go1.err.txt
-0 Sep 27 06:56 000-bash-probe173b.go1.reply.md
+368 Sep 27 06:57 000-bash-probe173b.go1.reply.md
 == 000-collect-rd378g
 0 Sep 27 06:27 000-collect-rd378g.go1.err.txt
 35 Sep 27 06:27 000-collect-rd378g.go1.reply.md
@@ -233,6 +233,11 @@ diag:
 0 Sep 27 06:07 158-claude-sleep-358spc-finish.go2.reply.md
 53 Sep 27 06:32 158-claude-sleep-358spc-finish.go3.err.txt
 0 Sep 27 06:32 158-claude-sleep-358spc-finish.go3.reply.md
+53 Sep 27 06:58 158-claude-sleep-358spc-finish.go4.err.txt
+0 Sep 27 06:57 158-claude-sleep-358spc-finish.go4.reply.md
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
 [0m
 > build · muse-spark-1.3-contributor-free
 [0m
@@ -261,6 +266,9 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
      302 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answer-log-1.txt
      326
 [0m
+== k1h-luna-full-r1-bash
+0 Sep 27 06:59 k1h-luna-full-r1-bash.go1.err.txt
+1236 Sep 27 06:59 k1h-luna-full-r1-bash.go1.reply.md
 == lis320-pilot8b-mac
 118 Sep 27 03:55 lis320-pilot8b-mac.go1.err.txt
 0 Sep 27 03:53 lis320-pilot8b-mac.go1.reply.md
@@ -300,30 +308,29 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 [0m
 > build · muse-spark-1.3-contributor-free
 [0m
-== y1t-luna-rest3-bash
-0 Sep 27 06:24 y1t-luna-rest3-bash.go1.err.txt
-1502 Sep 27 06:24 y1t-luna-rest3-bash.go1.reply.md
 top5cpu:
 %CPU COMM
-53.2 ApplicationsStorageExtension
-38.0 codex
-33.8 WindowServer
-32.5 fileproviderd
-28.4 bash
+68.9 ApplicationsStorageExtension
+57.4 fileproviderd
+33.9 WindowServer
+26.7 bash
+10.5 Claude
 procs:
-  363     1 03-18:43:50 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-18:42:58 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
-15699     1 03-16:58:16 S    /usr/bin/ssh-agent
-32936 18455       03:18 SN   /usr/local/bin/opencode
-36568 36559       00:03 SN   /usr/bin/ssh
-44571 44570 01-09:19:54 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-09:19:54 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    14:34:27 SN   /usr/local/bin/opencode
-53479 20011    02:52:03 SN   /usr/local/bin/opencode
-54153 44066    02:51:43 SN   /usr/local/bin/opencode
-54448   818    02:50:47 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-59802 59771    02:43:19 SN   /usr/local/bin/opencode
-60494 59018    07:49:20 SN   /usr/local/bin/opencode
-61605 61571    02:41:01 SN   /usr/local/bin/opencode
-64555 64533    04:14:54 SN   /usr/local/bin/opencode
-81797     1 01-19:37:33 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 03-18:46:47 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-18:45:55 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+15699     1 03-17:01:13 S    /usr/bin/ssh-agent
+32936 18455       06:15 SN   /usr/local/bin/opencode
+38215 36545       02:47 SN   ssh
+38340 52393       01:52 SN   /usr/local/bin/opencode
+40325 40315       00:01 SN   /usr/bin/ssh
+44571 44570 01-09:22:51 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-09:22:51 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    14:37:24 SN   /usr/local/bin/opencode
+53479 20011    02:55:00 SN   /usr/local/bin/opencode
+54153 44066    02:54:40 SN   /usr/local/bin/opencode
+54448   818    02:53:44 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+59802 59771    02:46:16 SN   /usr/local/bin/opencode
+60494 59018    07:52:17 SN   /usr/local/bin/opencode
+61605 61571    02:43:58 SN   /usr/local/bin/opencode
+64555 64533    04:17:51 RN   /usr/local/bin/opencode
+81797     1 01-19:40:30 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
