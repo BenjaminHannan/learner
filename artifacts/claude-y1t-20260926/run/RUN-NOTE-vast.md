@@ -1,0 +1,26 @@
+# y1t vast run notes (handoff/kit/y1tvast/pass.sh; UTC; one line per event)
+- 2026-09-27T16:29:25Z rent-y1t-vast-p1: pass start (first); spent so far $0.00
+- 2026-09-27T16:29:37Z rent-y1t-vast-p1: offer 46151926: RTX_4090, 81.4 TFLOPS, at $0.4145/h (196.4 TFLOPS per $/h, the best that fits; estimated chain 64 minutes), host 135676, machine 29558, CUDA 13.2, download $0.00390625/GB, upload $0.00390625/GB
+- 2026-09-27T16:29:41Z rent-y1t-vast-p1: created instance 52989756 (RTX_4090, $0.4145/h); waiting up to 360 s for it to run
+- 2026-09-27T16:36:10Z rent-y1t-vast-p1: instance 52989756 is 'loading', not running, after 360 s
+- 2026-09-27T16:36:26Z rent-y1t-vast-p1: destroyed 52989756 (did not come up); vast no longer lists it
+- 2026-09-27T16:36:33Z rent-y1t-vast-p1: offer 52159510: RTX_5090, 108.1 TFLOPS, at $0.5356/h (201.8 TFLOPS per $/h, the best that fits; estimated chain 50 minutes), host 406325, machine 142894, CUDA 13.0, download $0.005208333333333333/GB, upload $0.005208333333333333/GB
+- 2026-09-27T16:36:56Z rent-y1t-vast-p1: ADOPTED instance 52991051 (RTX_5090, $0.5611/h, 'loading', started 2026-09-27T16:36:34Z): it carries this task's label and was made by a create call whose reply was lost
+- 2026-09-27T16:36:56Z rent-y1t-vast-p1: create on offer 52159510 did not answer OK, but instance 52991051 appeared with this task's label; waiting up to 360 s for it to run
+- 2026-09-27T16:43:14Z rent-y1t-vast-p1: instance 52991051 is 'loading', not running, after 360 s
+- 2026-09-27T16:43:27Z rent-y1t-vast-p1: destroyed 52991051 (did not come up); vast no longer lists it
+- 2026-09-27T16:43:29Z rent-y1t-vast-p1: offer 47784808: RTX_4080, 48.6 TFLOPS, at $0.2681/h (181.2 TFLOPS per $/h, the best that fits; estimated chain 108 minutes), host 91303, machine 30620, CUDA 13.2, download $0.0026041666666666665/GB, upload $0.0026041666666666665/GB
+- 2026-09-27T16:43:30Z rent-y1t-vast-p1: created instance 52992266 (RTX_4080, $0.2681/h); waiting up to 360 s for it to run
+- 2026-09-27T16:44:13Z rent-y1t-vast-p1: instance 52992266 is running and answers ssh
+- 2026-09-27T16:44:13Z rent-y1t-vast-p1: guard started (pid 17914; /Users/ben-hannan/premonition-watch/y1t-vast/guard.log): at the $1.50 cap or the time cap (2026-09-27T20:54:30Z) it copies back, then destroys, else stops
+- 2026-09-27T16:44:40Z rent-y1t-vast-p1: tree ~/tree made from 4a0b63b3ad7f96cc8ee712db24442453c7b5b840 (NO-TREE): TREE marked 4a0b63b3ad7f96cc8ee712db24442453c7b5b840
+- 2026-09-27T16:44:47Z rent-y1t-vast-p1: setup: SETUP started pid=624 2026-09-27T16:44:47Z
+- 2026-09-27T16:46:23Z rent-y1t-vast-p1: setup done: age=0m setup end 2026-09-27T16:46:22Z
+- 2026-09-27T16:46:31Z rent-y1t-vast-p1: checks: 4 of 4 selftests ok; VERSIONS 2.11.0+cu128 12.8 5.17.0; GPUNAME NVIDIA GeForce RTX 4080, 595.84
+- 2026-09-27T16:46:33Z rent-y1t-vast-p1: LAUNCH chain 2026-09-27T16:46:33Z rc=0 pid=2160 cap=180m;
+- 2026-09-27T16:46:34Z rent-y1t-vast-p1: running: step drafts, log age 0 min, GPU 1 16376 8.36, $0.15 spent; LAST drafts age=0m 
+- 2026-09-27T16:49:42Z rent-y1t-vast-p1: running: step drafts, log age 0 min, GPU 2603 16376 112.85, $0.16 spent; LAST drafts age=0m [y1t] drafts 700/1762
+- 2026-09-27T16:54:52Z rent-y1t-vast-p1: chain done: drafts rc=0; train rc=1; 
+- 2026-09-27T16:54:56Z rent-y1t-vast-p1: copied back 12 files listed by the rental; every one matches its sha256 there
+- 2026-09-27T16:55:10Z rent-y1t-vast-p1: destroyed 52992266 (PARTIAL: 1 of 6 steps ended rc=0; step train ended rc=1); vast no longer lists it
+- 2026-09-27T16:55:12Z rent-y1t-vast-p1: wrote RESULTS-vast.md: PARTIAL: 1 of 6 steps ended rc=0; step train ended rc=1

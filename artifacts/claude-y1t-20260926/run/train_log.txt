@@ -1,0 +1,16 @@
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 11572.90it/s]
+Traceback (most recent call last):
+  File "/root/tree/scripts/claude_bm398r_train.py", line 272, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/root/tree/scripts/claude_bm398r_train.py", line 207, in main
+    res["dev_before"] = dev_check(model, tok, dev, devrows)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/tree/scripts/claude_bm398r_train.py", line 93, in dev_check
+    by[key][0] += int(right(reply, r))
+                      ^^^^^^^^^^^^^^^
+  File "/root/tree/scripts/claude_bm398r_train.py", line 72, in right
+    import claude_bm390_score as S
+  File "/root/tree/scripts/claude_bm390_score.py", line 28, in <module>
+    from nltk.stem import PorterStemmer
+ModuleNotFoundError: No module named 'nltk'
