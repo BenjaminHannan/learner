@@ -60,3 +60,8 @@ Times are from date -u. Plan and marks: ../PASSMARKS.md, sealed in ../SEAL.sha25
 - 2026-09-27 15:36:52 UTC: launch 3 queued as handoff/queue/madeup-mu406-teach3-mac.md (same block; L=3, new temp folder; it seeds
   teach.jsonl from builder-outbox and writes the remaining 128 chats; at this rate about 72 minutes, so a launch 4
   will likely be needed).
+- Step 4, launch 3 (madeup-mu406-teach3-mac): writer 15:38:29-16:31:01 UTC, rc=0, stopped itself on time at 52.1
+  minutes. Total 160 of 220 chats (68 added), all 160 whole, 800 turns; 799 passed on the first try and 1 on a retry
+  (1 "too_long" attempt); 0 stops. Median 57.9 s per chat (2 calls at a time), 46 s of wall time per added chat.
+  Launches so far for step 4: 3 of at most 6.
+- 2026-09-27 16:46:50 UTC: launch 4 queued as handoff/queue/madeup-mu406-teach4-mac.md (same block, L=4) for the last 60 chats.
