@@ -1,0 +1,753 @@
+[0m
+> build · mimo-v2.6-flash-free
+[0m
+[0m$ [0mls scripts/ 2>/dev/null | head -50; echo "---"; git branch --show-current; echo "---"; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL.sha256.txt 2>&1 | tail -5
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+claude_255b_m3format.py
+claude_255b_runall.sh
+claude_255b_score.py
+claude_255b_v255check.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_266_devscore.py
+---
+claude/card-experiment-handoff-7c5b27
+---
+shasum: artifacts/claude-lis320-20260926/SEAL.sha256.txt: No such file or directory
+[0m
+[0m$ [0mls -la artifacts/claude-lis320-20260926/ 2>/dev/null; echo "---"; ls -la artifacts/claude-lis320-20260926/pilot7/ 2>/dev/null; echo "---"; git status --short | head -50; echo "---"; git log --oneline -3
+total 0
+drwxr-xr-x   12 ben-hannan  staff    384 Sep 27 01:36 .
+drwxr-xr-x@ 605 ben-hannan  staff  19360 Sep 27 01:26 ..
+drwxr-xr-x   47 ben-hannan  staff   1504 Sep 26 17:12 ocdiag
+drwxr-xr-x   25 ben-hannan  staff    800 Sep 26 17:35 ocdiag2
+drwxr-xr-x   29 ben-hannan  staff    928 Sep 26 17:43 ocdiag3
+drwxr-xr-x    8 ben-hannan  staff    256 Sep 26 13:04 pilot
+drwxr-xr-x    8 ben-hannan  staff    256 Sep 26 13:35 pilot2
+drwxr-xr-x   10 ben-hannan  staff    320 Sep 26 16:21 pilot3
+drwxr-xr-x   10 ben-hannan  staff    320 Sep 26 18:10 pilot4
+drwxr-xr-x   10 ben-hannan  staff    320 Sep 26 19:59 pilot5
+drwxr-xr-x   10 ben-hannan  staff    320 Sep 26 20:42 pilot6
+drwxr-xr-x   10 ben-hannan  staff    320 Sep 27 01:37 pilot7
+---
+total 2024
+drwxr-xr-x  10 ben-hannan  staff     320 Sep 27 01:37 .
+drwxr-xr-x  12 ben-hannan  staff     384 Sep 27 01:36 ..
+-rw-r--r--   1 ben-hannan  staff    1612 Sep 27 01:36 check.json
+-rw-r--r--   1 ben-hannan  staff    5045 Sep 27 01:36 drops.jsonl
+-rw-r--r--   1 ben-hannan  staff    1851 Sep 27 01:36 glm.log
+-rw-r--r--   1 ben-hannan  staff  591669 Sep 27 01:36 kept.jsonl
+-rw-r--r--   1 ben-hannan  staff  121852 Sep 27 01:36 raw.jsonl
+-rw-r--r--   1 ben-hannan  staff    8237 Sep 27 01:37 RESULTS.md
+-rw-r--r--   1 ben-hannan  staff  283191 Sep 27 01:36 seeds.jsonl
+-rw-r--r--   1 ben-hannan  staff     623 Sep 27 01:36 style.json
+---
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+---
+86599f56d k1h-glm salvage glm: 240 answers / 593 chats, 5/5 sha256 vs <tmp> (counts only)
+24766dc63 000-luna-helper-selftest: reply with selftest + 3-call parallel outputs
+8fc75d620 probe: codex CLI non-interactive form (not in PATH, bundled 0.158.0-alpha.2, luna not found)
+[0m
+[0m$ [0mcat artifacts/claude-lis320-20260926/pilot7/RESULTS.md
+# lis320-pilot7 RESULTS (counts only)
+
+Label: lis320-pilot7
+GPU: no (Mac CPU; 60 GPT-6 Luna wording calls plus 1 selftest call through Ben's Codex plan via scripts/claude_luna_codex.py; $0). No reader, no rental, no BensPC, no OpenRouter, no opencode.
+origin/main commit: 8e2590aa8a8b6b4f1ba2ba8388300384b52d2137
+TIME CAP: 60 minutes. DISK: 1. LOAD-LIGHT: yes (workers 3).
+Rules followed: additive only (new pilot7 files only), fictional names only, TEST-ONLY panels never read, never opened own worktree scripts (all runs from git-archive copy in temp dir), never checked out or pushed a branch, never read/printed/copied anything under ~/.codex or any key/auth file, helper sandbox unchanged, python as `uv run --offline --no-project --python 3.12 python -B`.
+
+## 1. TREE
+- `git fetch -q origin main` then `git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D`
+- D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.s26f5jEDyZ
+- O=artifacts/claude-lis320-20260926/pilot7 (mkdir -p in $D)
+- `git rev-parse origin/main` = 8e2590aa8a8b6b4f1ba2ba8388300384b52d2137
+
+## 2. SEALS (all OK, run from $D)
+- `shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-6.sha256.txt`:
+  - artifacts/claude-lis320-20260926/ADDENDUM-6-route-low.md: OK
+  - scripts/claude_lis320_glm_oclow.py: OK
+  - scripts/claude_lis320_glm_oc.py: OK
+  - scripts/claude_lis320_glm.py: OK
+  - scripts/claude_lis320_style.py: OK
+  - scripts/claude_glm_leakcheck.py: OK
+- `shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-8.sha256.txt`:
+  - artifacts/claude-lis320-20260926/ADDENDUM-8-group-check-narrowed.md: OK
+  - scripts/claude_lis320_check_we2.py: OK
+  - scripts/claude_lis320_check_cr.py: OK
+  - scripts/claude_lis320_check.py: OK
+  - scripts/claude_lis320_seed_cr.py: OK
+  - scripts/claude_lis320_glm_oclow.py: OK
+- `shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-9.sha256.txt`:
+  - artifacts/claude-lis320-20260926/ADDENDUM-9-luna-writer.md: OK
+  - scripts/claude_luna_codex.py: OK
+  - scripts/claude_lis320_luna.py: OK
+  - scripts/claude_lis320_rawcheck2.py: OK
+  - scripts/claude_lis320_glm_oc.py: OK
+  - scripts/claude_lis320_glm.py: OK
+  - scripts/claude_lis320_check_we2.py: OK
+  - scripts/claude_lis320_seed_cr.py: OK
+
+## 3. SELFTESTS (each run from $D as `uv run --offline --no-project --python 3.12 python -B <script> --selftest`)
+- scripts/claude_lis320_luna.py --selftest:
+  - lis320 luna selftest ok (writer gpt-6-luna; failed call -> empty unparsed row; no network)
+  - EXIT:0
+- scripts/claude_lis320_seed_cr.py --selftest:
+  - seed_cr selftest OK: 400 dialogs; {'correct_ref': 121, 'correct': 197, 'backref': 235}
+  - EXIT:0
+- scripts/claude_lis320_check_we2.py --selftest:
+  - check_we2 selftest OK: 1 kept, 1 dropped (group_speaker); bare 'me and' no longer drops
+  - EXIT:0
+- scripts/claude_lis320_rawcheck2.py --selftest:
+  - lis320 rawcheck2 selftest 7/7 ok
+  - EXIT:0
+- scripts/claude_luna_codex.py --selftest (the ONE live call):
+  - selftest ok: model gpt-6-luna, output-file True
+  - EXIT:0
+
+## 4. SEEDS
+Command: scripts/claude_lis320_seed_cr.py --seed 327 --n 60 --ask-back --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl
+Printed verbatim:
+{"dialogs": 60, "turns": 425, "intents": {"ack_after_ask": 17, "ambiguous_pronoun": 11, "ask": 20, "backref": 30, "confirm": 5, "correct": 24, "correct_ref": 23, "doubt": 17, "former": 30, "hypothetical": 13, "jobhome": 14, "negation_only": 8, "plan": 11, "question": 5, "smalltalk": 19, "someone_else": 18, "teach": 143, "yes_after_ask": 17}}
+EXIT:0
+wc -l seeds.jsonl: 60
+
+## 5. WORDING (3 workers, Director's share)
+Start:
+- date -u: Sun Sep 27 05:18:21 UTC 2026 (pre-check); Sun Sep 27 05:18:26 UTC 2026 (run start)
+- uptime: 1:18  up 3 days, 15:11, 4 users, load averages: 74.11 52.34 43.61 (05:18:21); 1:18  up 3 days, 15:11, 4 users, load averages: 71.14 52.09 43.58 (05:18:26)
+Command: scripts/claude_lis320_luna.py --seeds $O/seeds.jsonl --out $O/raw.jsonl --workers 3 --max-minutes 40 > $O/glm.log 2>&1
+End:
+- date -u: Sun Sep 27 05:35:55 UTC 2026
+- uptime: 1:35  up 3 days, 15:28, 4 users, load averages: 126.70 107.26 78.12
+- EXIT:0
+- wc -l raw.jsonl: 60
+Last line of glm.log verbatim:
+{"calls": 60, "parsed": 60, "skipped": 0, "failed_calls": 0, "batches": 2, "stopped": "done", "minutes": 17.5}
+Count of "call failed" lines in glm.log: 0
+First line of each distinct error: none (no errors)
+Dialogs per minute: 60 / 17.5 = 3.428571... (~3.43 dialogs/min)
+
+## 6. RAWCHECK2
+Command: scripts/claude_lis320_rawcheck2.py --raw $O/raw.jsonl --seeds $O/seeds.jsonl --models gpt-6-luna
+Printed verbatim:
+{"rawcheck2": "OK", "models": "gpt-6-luna", "rows": 60, "duplicate_ids": 0, "model_ok": 60, "temperature_null": 60, "dup3_texts": 0, "not_in_seeds": 0}
+EXIT:0
+No ROUTE-FAIL (rawcheck2 OK, so steps 7-8 normal path).
+
+## 7. CHECK + STYLE
+Command: scripts/claude_lis320_check_we2.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl > $O/check.json
+EXIT:0
+check.json verbatim:
+{
+ "counts": {
+  "cue:ask:again": 1,
+  "cue:ask:remind me": 1,
+  "cue:ask:what": 12,
+  "cue:ask:who": 6,
+  "cue:confirm:?": 2,
+  "cue:confirm:did i tell": 1,
+  "cue:confirm:right": 2,
+  "cue:doubt:might": 2,
+  "cue:doubt:not certain": 1,
+  "cue:doubt:not sure": 9,
+  "cue:doubt:not totally sure": 2,
+  "cue:doubt:think": 2,
+  "cue:doubt:unsure": 1,
+  "cue:former:anymore": 1,
+  "cue:former:before": 3,
+  "cue:former:no longer": 1,
+  "cue:former:used to": 22,
+  "cue:hypothetical:hypothetically": 1,
+  "cue:hypothetical:if": 12,
+  "cue:negation_only:n't": 8,
+  "cue:plan:'ll": 1,
+  "cue:plan:will": 1,
+  "cue:question:?": 5,
+  "cue:someone_else:heard": 3,
+  "cue:someone_else:mentioned": 3,
+  "cue:someone_else:said": 3,
+  "cue:someone_else:says": 3,
+  "cue:someone_else:told": 6,
+  "dialogs": 60,
+  "drop:assert_hedged": 4,
+  "drop:assert_reported": 2,
+  "drop:former_present_cue": 2,
+  "drop:group_speaker": 2,
+  "drop:no_cue": 9,
+  "drop:no_past_cue": 1,
+  "drop:reply_ask_missing": 1,
+  "drop:stray_name": 1,
+  "dropped": 21,
+  "dropped:backref": 1,
+  "dropped:correct": 1,
+  "dropped:correct_ref": 1,
+  "dropped:former": 3,
+  "dropped:plan": 9,
+  "dropped:teach": 5,
+  "dropped:yes_after_ask": 1,
+  "kept": 404,
+  "recased": 0,
+  "turns": 425
+ },
+ "kept_by_family": {
+  "ack_after_ask": 17,
+  "ambiguous_pronoun": 11,
+  "ask": 20,
+  "backref": 29,
+  "confirm": 5,
+  "correct": 23,
+  "correct_ref": 22,
+  "doubt": 17,
+  "former": 27,
+  "hypothetical": 13,
+  "jobhome": 14,
+  "negation_only": 8,
+  "plan": 2,
+  "question": 5,
+  "smalltalk": 19,
+  "someone_else": 18,
+  "teach": 138,
+  "yes_after_ask": 16
+ }
+}
+wc -l kept.jsonl: 404
+wc -l drops.jsonl: 21
+Command: scripts/claude_lis320_style.py --kept $O/kept.jsonl --out $O/style.json
+Printed style line verbatim:
+{"glm_kept": {"turns": 404, "words_median": 10, "words_p90": 30, "lowercase_start": 0.8, "noapos_contraction": 0.0, "over20_words": 0.213, "shapes_per_100": 94.8, "write_facts_per_turn": 0.965, "write_facts_in_over20": 0.328}, "dev_chatdev": {"turns": 336, "words_median": 14, "words_p90": 23, "lowercase_start": 1.0, "noapos_contraction": 0.253, "over20_words": 0.131, "shapes_per_100": 99.1}, "dev_bank": {"turns": 194, "words_median": 15, "words_p90": 21, "lowercase_start": 0.887, "noapos_contraction": 0.021, "over20_words": 0.108, "shapes_per_100": 100.0}}
+EXIT:0
+
+## 8. COPY + CLEANUP
+Copied to worktree artifacts/claude-lis320-20260926/pilot7/: seeds.jsonl, raw.jsonl, kept.jsonl, drops.jsonl, check.json, style.json, glm.log (+ this RESULTS.md).
+rm -rf "/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.s26f5jEDyZ" done and confirmed gone (ls confirms missing).
+
+## ERRORS / DEVIATIONS
+- First selftest attempt ran with worktree cwd instead of $D and failed 3x with `repo not found: set LEARNER_REPO`; reran from $D (as task requires) and all 4 passed EXIT:0. No other deviation.
+- Wording: 0 failed calls, 0 error lines, rawcheck2 OK. No ROUTE-FAIL handling needed.
+- No TEST-ONLY panel read. No secrets written. No branch checkout/push.
+[0m
+[0m$ [0mls -la /tmp/tmp.* 2>/dev/null | head -30; echo "=== find tmp dirs with pilot7 ==="; ls -dt /tmp/tmp.* 2>/dev/null | head -10
+zsh:1: no matches found: /tmp/tmp.*
+=== find tmp dirs with pilot7 ===
+zsh:1: no matches found: /tmp/tmp.*
+[0m
+[0m$ [0mls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.s26f5jEDyZ 2>&1 | head -5; echo "=== wc ==="; wc -l artifacts/claude-lis320-20260926/pilot7/*.jsonl; echo "=== md5 sanity ==="; md5 -q artifacts/claude-lis320-20260926/pilot7/raw.jsonl; tail -1 artifacts/claude-lis320-20260926/pilot7/glm.log; echo "=== style ==="; cat artifacts/claude-lis320-20260926/pilot7/style.json
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.s26f5jEDyZ: No such file or directory
+=== wc ===
+      21 artifacts/claude-lis320-20260926/pilot7/drops.jsonl
+     404 artifacts/claude-lis320-20260926/pilot7/kept.jsonl
+      60 artifacts/claude-lis320-20260926/pilot7/raw.jsonl
+      60 artifacts/claude-lis320-20260926/pilot7/seeds.jsonl
+     545 total
+=== md5 sanity ===
+f26ce87bf8e7ea25997aca8edc9cecff
+{"calls": 60, "parsed": 60, "skipped": 0, "failed_calls": 0, "batches": 2, "stopped": "done", "minutes": 17.5}
+=== style ===
+{
+ "glm_kept": {
+  "turns": 404,
+  "words_median": 10,
+  "words_p90": 30,
+  "lowercase_start": 0.8,
+  "noapos_contraction": 0.0,
+  "over20_words": 0.213,
+  "shapes_per_100": 94.8,
+  "write_facts_per_turn": 0.965,
+  "write_facts_in_over20": 0.328
+ },
+ "dev_chatdev": {
+  "turns": 336,
+  "words_median": 14,
+  "words_p90": 23,
+  "lowercase_start": 1.0,
+  "noapos_contraction": 0.253,
+  "over20_words": 0.131,
+  "shapes_per_100": 99.1
+ },
+ "dev_bank": {
+  "turns": 194,
+  "words_median": 15,
+  "words_p90": 21,
+  "lowercase_start": 0.887,
+  "noapos_contraction": 0.021,
+  "over20_words": 0.108,
+  "shapes_per_100": 100.0
+ }
+}
+[0m
+[0m$ [0mgit fetch -q origin main && git show origin/main:handoff/queue/lis-302-gpu.md | head -13; echo "=== COMMIT ==="; git rev-parse origin/main
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+=== COMMIT ===
+6c86806a4da6e49cffcdb7bd4ee1b7adc7b9029d
+[0m
+[0m$ [0mgit reflog show origin/main -5 2>/dev/null; echo "=== is 8e2590 ancestor? ==="; git merge-base --is-ancestor 8e2590aa8a8b6b4f1ba2ba8388300384b52d2137 6c86806a4da6e49cffcdb7bd4ee1b7adc7b9029d && echo YES || echo NO; echo "=== log between ==="; git log --oneline 8e2590aa8a8b6b4f1ba2ba8388300384b52d2137..6c86806a4da6e49cffcdb7bd4ee1b7adc7b9029d 2>/dev/null | head -20
+6c86806a4 refs/remotes/origin/main@{0}: fetch -q origin main: fast-forward
+94287901d refs/remotes/origin/main@{1}: fetch -q origin main: fast-forward
+aa34f14d1 refs/remotes/origin/main@{2}: fetch -q origin main builder-outbox: fast-forward
+df149a5b8 refs/remotes/origin/main@{3}: fetch -q origin main: fast-forward
+1d95d4973 refs/remotes/origin/main@{4}: fetch -q origin main: fast-forward
+=== is 8e2590 ancestor? ===
+YES
+=== log between ===
+6c86806a4 bm-398w draft data builder (not sealed): code-planned practice chats, Luna wording with code checks, RAFT items; selftest 22/22 with a stub writer
+6614b4dc3 brd-12 plan draft (games: level 0 -> 1 with hindsight relabelling) and its DEV probe
+b5589f0ad brd-11 SEALED (registered before any run): 120+120 panel (only 120 unused 4-number puzzles), DEV T1.5 4-number 5/20, BensPC queue job 176 ($0)
+94287901d bm-398w draft: y1t overlap answered (none; their dialogs can't give 20-line windows)
+492ee192b bm-398w PLAN DRAFT (not sealed): RAFT-style reader training on Luna-worded practice chats, for the Thread manager's review
+aa34f14d1 gr-7 RUN-NOTE: training still running at 2026-09-27T05:26:44Z
+df149a5b8 bm-398v RESULTS: FAIL and proved wrong (own top 8 of store B's 20: 256 vs all 20: 264 of 772, p 0.54; wrong +18)
+bcc7df8eb 0.2d ADDENDUM-39: ADDENDUM-38 time stamp was estimated; date -u read 05:23:36 UTC
+9eb5e7c4d 0.2d ADDENDUM-38: correct ADDENDUM-37's pilot line (no check of the frame line itself was registered; pilot = D0.6 DEV night)
+1d95d4973 0.2d ADDENDUM-37: sleep-frame line may be written by GPT-6 Luna (Ben 03:47 UTC), GLM frame reused if the H-B recipe has one
+768507db2 brd-11 draft marks: Thread manager review (S 'cannot reach bar' vs 'adds nothing', panel-mix rule fixed before T1.5 DEV, harm panel reuse in Limits)
+17ec1d6c6 brd-11 draft marks (not sealed): replication PASS with a no-harm part, S claim, G7 and NIGHTS lines, prediction
+[0m
+[0m$ [0mls /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt 2>&1; echo "=== ledger diff ==="; git diff --stat artifacts/fable-predictions-ledger.md; echo "=== ledger tail ==="; tail -20 artifacts/fable-predictions-ledger.md
+/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+=== ledger diff ===
+ artifacts/fable-predictions-ledger.md | 1 +
+ 1 file changed, 1 insertion(+)
+=== ledger tail ===
+- rent-bm398r GPU OUTCOME (2026-09-26, rented Linux GPU, label claude-benchmarks-bm398r, unmodified origin/main code, seals bm398i 5/5 + amend1 3/3 + bm398r 13/13 OK, selftests 9/9 + 16/16 + 6/6, E20 e7f70f... match, adapter397t 621edd16... verified Mac + box): rentals 52766092 (offer 43690890, loading stall past 6-min rule, destroyed, $0) + 52767015 (offer 50135004 KR, running but SSH proxy dead, destroyed, $0) + 52768265 (RTX 5090 offer 45668964 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 80, created 15:15:33Z, SSH 15:19Z, destroyed 16:33:27Z, ~1.30 h x $0.5037 = ~$0.65); task total ~$0.65 of $1.50 budget, 3 rentals of max 4; post-destroy 0 claude-benchmarks-bm398r live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, transformers 5.17.0, pyarrow 25.0.1. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Part1 bm-398i a+b both verdict PASS (I1/I2/I3 true; off==base 75/75, mixed clean, on!=base 68/75). Practice data sha 7e1ec301...f120 / 1f001546...ba58. Train once 225 steps 1241.3 s, dev 114->186/240, merged_first40 28/40, merged model.safetensors ed25ff6e... Run files locomo_TR 1986 rows 25e1c72c..., 6 evidence files 297 rows each, mmlu_TR 300 rows 3d0dd1c5..., gsm8k_TR 300 rows 826a5168..., train398r.json 1bb299c3..., OUTI a/b replies identical b6bfdbf3... Adapter 16576151 B f98c54a9... at ~/premonition-models/bm398r-adapter398r.pt, never in git; MERGED not copied back. Peak GPU mem 10008 MiB. Deviations: nltk 3.10.3 installed env-only after first train launch crashed ModuleNotFoundError (relaunched unchanged, exit 0); selftest launcher cwd bug relaunched unchanged; run-a exit inferred 0. Scoring not part of this task. See artifacts/claude-bm398r-20260926/RESULTS-rent.md + run/ and artifacts/claude-bm398i-20260926/run-gpu/.
+- 2026-09-26 16:40 UTC rsn-358x GPU BUILD (label claude-sleep-358x, sealed origin/main code, SEAL-code-v2 14/14 OK, selftests ok, sources 8/8 sha match, code never edited): rentals 1 (52774371) + 2 (52775064) died on host docker-registry proxy error while loading, destroyed per 6-min rule, $0; rental 3 (52775569, RTX 5090 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime, disk 50) ran 16:09:51-16:39:41Z ~0.50 h x $0.4898 = ~$0.24 of $0.60 (Ben 15:50 approve card cmsg_01FuvegZXjMmeUzStiEFVnEW1ZcuTEwvWrMr3xypKg1TBi); 16-at-once OOMed (loop ~4 GB/proc), ran 8 plains (~4.9 min each) then loops 2x4 (~5.4 min each); 16/16 carry done, SEAL-run 16 lines, evals 1x each counts-only; 16x4 files back, 0 weights pushed, rental destroyed, 0 live. VERDICT FAIL + PROVED-WRONG: X0 pass (plain-fresh bar 4/4 at 2000; sources 8/8), X1 fail (loop-pre mean 5000 vs loop-fresh 5000, ratio 1.00, 0/4), X2 fail (loop-pre 5000 vs plain-pre 812.5, ratio 6.15, 0/4); plain-pre vs plain-fresh 812.5 vs 2000 (4/4). Tests /300: plains maze7 300x8; loops maze7 103,134,90,114,39,92,8,81. Credit at gate 5.894937036269795. See artifacts/claude-rsn358x-20260926/RESULTS.md + runs/ + SEAL-run.sha256.txt.
+- 2026-09-26 16:45 UTC y1g GPU DIAGNOSIS (label claude-memory-y1g, sealed origin/main code, SEAL-y1g 9/9 OK, selftest ok, code never edited): rentals 1 (52776862) + 2 (52777941) stuck loading past 6-min rule, destroyed, $0; rental 3 (52778874, RTX 5090, image pytorch/pytorch disk 60, torch upgraded 2.2.1->2.14.0+cu130 per rent-kit note, gcc installed env-only after first launch crashed in triton bmm_outer_product with no C compiler, relaunched unchanged) ran 16:33-16:45:23Z ~0.21h x $0.4944 = ~$0.10 of $0.30; task total ~$0.10. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc. Run 71 DEV asks (~2 min wall): pick winner C4 go=false; answerable_right A0 26 A1 26 C3 16 C4 10 V 10; answerable_wrong A0 27 A1 24 C3 5 C4 1 V 5; never_told_idk A0 1 A1 2 C3 6 C4 9 V 9; signal C3/C4/V all true, any true. Files back gpu/y1g_rows.jsonl (71 rows) + y1g_summary.json + log.txt, hashes match both ends, rental destroyed, 0 claude-memory-y1g live. Credit at gate 9.54. See artifacts/claude-y1g-20260926/RESULTS-gpu.md + gpu/.
+- 2026-09-26 16:45 UTC rent-rt02d PARTIAL (label claude-plainpuzzles-rt02d, sealed origin/main code, never edited): instances 52760176 (success False, loading>6min, destroyed, ~$0) + 52761382 (RTX 5090, host ssh broken, ~0.17h x $0.5037 ~$0.08) + 52763126 (RTX 5090, ~2.05h x $0.563 ~$1.15); total ~$1.23 of $1.50. Setup S1-S6 green (BASE 87179e5c, reader depot copy sha e688e1b2 match, adapter a33211dc match, seals OK, selftests 55/55 + 9/9); dev gate PASS (B0a/B0b 55 rows each, 0 diffs). Env fix only: torch 2.11.0+cu128, torchvision 0.26.0, torchaudio removed (transformers 5.17 vs image torch 2.2.1). Panel B0 launched 16:26, rental ssh died ~16:31, reboot failed, outcome unknown; run/score/logs unrecoverable, nothing pushed but RESULTS-rent.md. Outcome: PARTIAL (infra).
+- 2026-09-26 16:58 UTC claude-benchmarks-bmrivsmoke2 (Benchmarks bm-riv smoke 2, origin/main code unmodified, panel seal da7202db ok, selftest 12/12): BUDGET-STOP (killed at ~$0.189, final ~$0.197 of $0.20; money rule $0.18 crossed between polls). Finished: plain1b_4k 8 rows, lfm12b_4k 8 rows. Killed (rows kept): qwen2b_4k 7 rows. Instance 52778379 (offer 43681503, RTX 4090 MY, image pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime disk 80, torch 2.8.0+cu129 transformers 5.17.0 py 3.11.13, created 16:27:10Z running ~16:31:36Z lanes 16:39:05-16:40:28Z killed 16:56:55Z destroyed 16:58:03Z, ~0.515h x dph $0.38222 = ~$0.197); 1 rental of max 4; post-destroy 0 claude-benchmarks-bmrivsmoke2 live. Credit at gate 8.83074058626977. Copy-back 3 files sha-verified. Peak GPU mem seen 9665/24564 MiB. No code edits, no traceback, no replies quoted. See artifacts/claude-bmriv-smoke-20260926/RESULTS-rent2.md + run2/.
+- 2026-09-26 17:06 UTC rent-k1c RUN-COMPLETE (Creative answers in chat, label claude-creativechat-k1c, origin/main code unmodified): instances 52778638 (offer 46753301, docker-proxy pull refusal, destroyed un-run, ~$0) + 52779278 (offer 48989736 host 406325, RTX 5090, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 60, torch 2.8.0+cu128 transformers 5.17.0 py 3.11.13, ~16:35-17:06Z ~0.52h x dph $0.4944 ~$0.26); total ~$0.26 of $0.80. Setup green (4 HF downloads incl. BASE 87179e5c/Q 15852e8c/L 0f604ada, adapter a33211dc match, seals OK, tests 7/7+7/7, selftests 5/5+7/7, route122 no-raise). DEV gate PASS (3/3/3 lines, k1c line, 0 empty). V1 PASS all 10 arms. Round A 5x100 + round B 5x60, all exit 0, scored+deduped (A 500->448 distinct/52 shared; B 300->268/32 shared). Copy-back 38/38 sha-verified. Deviations: scp-3 failed so one Mac mktemp (removed exact path); launch ssh teardowns hung (launches ok, PIDs via ps); dph $0.4944 vs $0.469 search; exit codes inferred. Credit at gate 0 (auto-refill). 2 rentals of max 3. See artifacts/claude-k1c-20260926/RESULTS-rent.md + run/.
+- 2026-09-26 17:08 UTC claude-sleep-358t STOPPED by owner: autocast cache bug, no verdict on the TRM schedule or loop8; 0.45 h, $0.22.
+- 2026-09-26 17:12 UTC claude-fixsleep-dl5 FAIL (label claude-fixsleep-dl5, origin/main code unmodified, selftests pass, never edited): rentals 1 (52770457, RTX 5090 dph $0.4361, docker-proxy pull refusal, destroyed un-run, ~$0.04) + 2 (52771192, RTX 5090 South Korea, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 30, torch 2.8.0+cu128 transformers 5.17.0 pip-installed, ~15:35-17:11Z ~1.60h x dph $0.4806 ~$0.77); task total ~$0.81 of $1.60. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc. Run 87.7 min wall, 25 arm-nights + base, exit 0. Marks: G1 PASS (S final 93.8/93.4 pts vs night0 48.8), G2 PASS (P final 6.6/7.2), G2b PASS (open S 67.8/65.0 vs P 35.0/38.5), G3 FAIL (S lost 98/61 > 20); verdict FAIL, not INCONCLUSIVE (S night-1 rows 1144/925), not proved wrong (open S 97/93 > P 50/55). S days solved s8 101/103/105/107/113, s9 85/101/92/101/104 of 150; P legal-wrong s8 224/247/260/269/269, s9 182/236/242/250/272; K s8 right 705/715/705/715/706; test-in-day 0. Adapters local only (16,575,557 B each, sha c74b1783/s8 5352be44/s9, 192 tensors). Copy-back 6 files sha-verified, rental destroyed, 0 claude-fixsleep-dl5 live. Credit at gate 8.60 (balance 0). Deviations: rental-1 host pull failure; pip-installed transformers 5.17.0 + huggingface_hub (transformers dep) for snapshot download; first ssh foreground command ran in /root not dl5 (harmless, reran). See artifacts/claude-dl5-20260926/RESULTS-gpu.md + gpu/.
+- 2026-09-26 17:17 UTC rent-brd9 actual ~$0.63 of $0.90 (Creative): rental 52775111 RTX 5090 ~70.7 min @ dph $0.4944 (~$0.58) + unreachable first host 52774555 destroyed (~$0.05). brd-9 registered run PASS MET (N3-base +43/+39/+35 vs bar 28.8, CI [+10.56,+21.81]); G7 met; NIGHTS not met (seed2 +9 vs +12); transfer seen (N3-base CI [+18.14,+40.08]). Script wall 46.7 min, model commit 87179e5c1f455ef22e6223592d2d61351b525bfc. No weights saved.
+- 2026-09-26 17:25 UTC rd-378u GPU CONFIRM (label claude-notes-rd378u, sealed origin/main code COMMIT c4f1bfca91fec9c299e18b10c0fd501ce54bb56b, SEAL.sha256.txt 13/13 OK, 4 selftests PASS, code never edited): rental 1 (52779987, offer 39904635, RTX 5090, image pytorch/pytorch disk 80, torch 2.11.0+cu128 torchvision/torchaudio removed transformers 5.17.0 peft 0.21.0) ran 16:38:31-17:24:54Z ~0.773h x dph $0.5037 = ~$0.39 of $0.80; 1 rental of max 3. BASE openbmb/MiniCPM5-1B 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM path exact. Writer via on-rental rebuild (adapter BensPC->rental, 6/6 hashes match, no Mac copy), merged sha dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510 exit 0 match true; Mac fallback unused. DATA locomo10.json 79fa87e9 match (pyarrow MMLU fail, immaterial). Dialogs 5-9 {"turns": 3122}. WRITE "wrote notes for 3122 turns on cuda" ~16.4 min (2866 notes, 16 unparsed, median 319.2 ms p90 595.8 ms). SCORE cats 1-4 n=772: A any@10 489 (63.3%), B any@10 585 (75.8%), diff +12.4; per-cat diffs c1 +7.9 c2 +10.4 c3 +22.2 c4 +13.7; lines@10 both 7720, B via_note@10 6297. VERDICT PASS (U1 and U2 pass; proved-wrong not triggered). Copy-back 5 files sha-verified both ends, rental destroyed, 0 claude-notes-rd378u live. Credit at gate 7.912477276269769. See artifacts/claude-rd378u-20260926/RESULTS.md + notes_confirm.json + ranked_turns.jsonl.
+- 2026-09-26 17:31 UTC rent-mu404b RUN-COMPLETE (label claude-madeup-mu404b, sealed origin/main code, never edited): rental 1 (52775913, offer 45669449 host 406325 mu-402 sibling class, RTX 5090 rel 0.9975, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 80, torch 2.8.0+cu128, ~16:11-17:30Z ~1.33h x dph $0.5037 ~$0.67 of $0.87). BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, reader /root/reader319 sha e688e1b2...776a76 match, mu403 SEAL 14/14, SEAL-code 336/336, selftests 5/5 13/13 9/9. Four arms 80/80 convs each, exit 0, rows 446/arm, wall ~13 min T / ~23 min R/F/P, median ms/turn R 2094.8 F 2133.7 P 2157.0 T 1774.0; facts R 318/34/36/0 F 318/34/36/34 P 318/34/36/0. Copy-back 9 files sha-verified, rental destroyed, 0 claude-madeup-mu404b live. Credit at gate 5.094352626269782 (balance 0). Deviations: task tree list omitted fable-nameval171 (streamed extra, seal-verified); first launch misfire relaunched clean (one complete run/arm); vastai dir-copy failed on 2.1GB file, single-file copy + dir swap fixed; depot untouched. See artifacts/claude-mu403-20260926/RESULTS-rent.md + run/.
+- 2026-09-26 17:40 UTC rent-zdl6b BUDGET-STOP (label claude-fixsleep-dl6b, origin/main de083cd30c code never edited, selftest ok): 1 rental (52778152, offer 45669547 RTX 5090 KR rel 0.9980, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 40, torch 2.8.0+cu128 transformers 5.17.0 pip-installed; proxy-fail offers 43165145/46753301 and stuck offer 43982861 skipped). BASE openbmb/MiniCPM5-1B 87179e5c1f455ef22e6223592d2d61351b525bfc (2.1 GB snapshot, same files as dl-2). Run launched detached 16:30:31Z, first "[dl6] S s10 night 1" ~16:35 (no TOO-SLOW). Killed by exact PID at $0.57 line (70.8 min x dph $0.4852 = $0.573) during L s11 night 6; task total ~$0.59 of $0.60. Partial: base lucky 75 reached 35 greedy 7 harm 200/300; S s10 n7 lucky 198 lost 25, S s11 n7 lucky 237 lost 27, L s10 n7 lucky 140 reached 50 lost 13 (json, 21 nights); log adds L s11 n1-6 (lucky 100/135/151/120/125/115, lost 3/4/6/4/7/7); L s11 n7 never ran, marks never computed, no verdict. Copy-back partial json+log, rental destroyed, 0 claude-fixsleep-dl6b live. Credit at gate 9.01 (balance 0), 8.93 at re-check. See artifacts/claude-dl6-20260926/RESULTS-gpu.md + gpu/ (partial).
+- 2026-09-26 18:05 UTC rent-bm398e SPANS-COMPLETE (label claude-benchmarks-bm398e, sealed origin/main code never edited): 1 rental (52789000, offer 45996848, RTX 4090 24GB, image pytorch/pytorch disk 80, torch upgraded 2.2.1->2.11.0+cu130 per kit TORCH UPGRADE, torchvision/torchaudio removed, transformers 5.17.0, pyarrow + nltk pip-installed for sealed imports, Python 3.10.13). Created 17:35:42Z, running 17:40:07Z (6-min rule met), destroyed ~18:03:55Z; ~0.470h x dph $0.35111111 = ~$0.17 of $0.35. BASE openbmb/MiniCPM5-1B 87179e5c1f455ef22e6223592d2d61351b525bfc. SEAL 10/10 OK, SEAL-amend1 3/3 OK, selftest 8/8 PASS, T sha256 35bdf151 match. Fetch OK locomo_qa 1986. Lane1 spans_made 432 rows done seconds=46 (17:51:38-17:52:24Z) sha f045117a; lane2 spans_T 1540 rows done seconds=281 (relaunched 17:56:42-18:01:23Z after cwd-misfire crash, zero rows first try) sha 59e1fe24. Copy-back 2 .gz files (176974 B sha e25ab892; 1318109 B sha 3d15791a) size+sha verified both ends, rental destroyed, 0 claude-benchmarks-bm398e live. Credit at gate 4.582765401269754. Deviations: torch upgrade; nltk install; lane2 relaunch; exit codes/peak-GPU-mem not captured (end times from mtimes x-checked vs log seconds). No fit/score/judge here. See artifacts/claude-bm398e-20260926/RESULTS-rent.md + spans/.
+- 2026-09-26 18:55 UTC rent-mu405 STOPPED by owner (duplicate of CPU run); 0.056 h, ~$0.03.
+- 2026-09-26 18:55 UTC depot 52755827 STOPPED (disk kept); 5.17 h x $0.1136 = $0.59; storage $0.1667/day.
+- 2026-09-26 19:13 UTC Director: rent-k1f HOST-FAIL (label claude-creativechat-k1f, cap $0.60): 3 live 5090 rentals, none usable (52799225 loading 6+ min, destroyed; 52800271 running 12.6 min x $0.4944 = ~$0.10 but SSH banner never answered, destroyed; 52802503 loading 6+ min + SSH refused, destroyed; plus 1 stillborn create success:false). k1f panel never run; ~$0.10 of $0.60.
+- 2026-09-26 19:34 UTC rsn-358i2 GPU BUILD (label claude-sleep-358i2pc, sealed origin/main code, SEAL-code 19/19 OK, code never edited): BensPC $0 (RTX 5070 Ti, torch 2.11.0+cu128, CUDA 12.8, python 3.10.9), 4 loop seeds x 60000 steps (102.8/104.8/104.9/104.8 min), SEAL-run 4 lines (64 hex each), evals 1x each counts-only. VERDICT SUSPECT CONFIRMED: V0 pass (nograd 0/0/0/0 of 60000 x4), M1 pass (dev grids5@10k 195/198/197/200, 4/4 >=100), M2 pass (grids5 gap +1.00), M3 pass (grids6 gap +51.75); proved-wrong NOT triggered (0/4 <=20, gap +1.00). Gaps loop-plain: sums4 +0.00 sums6 +100.50 sums8 +160.25 grids5 +1.00 grids6 +51.75 grids7 +55.00 numbers4 -0.25 numbers5 +0.00 sums10 +163.25 sums12 +138.00. 358t-style G0/G1/G2/G3 all met (report-only). Deviations: BensPC per ADDENDUM-1 (Stage 0 report-only, 0/12 both lines); GPU-BUSY.txt pre-existed naming same job; CIM-detached launches (cmd PIDs 10348/3576/13828/17048); seed-1 first attempt killed at ~11k with its parent, restarted clean (partials deleted, BensPC scratch only); evals sequential after training. 16 run files back, weights ~/premonition-models/rsn358i2/ + C:/Users/benja/premonition-models/rsn358i2/ (25764244 B x4, sha match), 0 weights pushed. See artifacts/claude-rsn358i2-20260926/RESULTS.md + runs/ + SEAL-run.sha256.txt.
+- 2026-09-26 20:15 UTC Director: rent-zdl7b done, registered FAIL (F3; F1/F2/F4/F5 pass, not proved wrong, premise supported 22/26 = 84.6%). Contract 52799251 (RTX 5090 KR, dph $0.4167, ~1.45 h) ~$0.60 of $1.00 (Ben 18:39 +$1.00 extra). 1 rental, selftest ok, first night line in 7 min, run wall 72.4 min. Instance destroyed, 0 claude-fixsleep-dl7b live.
+- 2026-09-27 00:50 UTC rsn-358i3 GPU BUILD (label claude-sleep-358i3pc, sealed origin/main code byte-identical to 358i2, SEAL-code 19/19 OK, code never edited): BensPC $0 (RTX 5070 Ti, torch 2.11.0+cu128, CUDA 12.8), 12 runs x 60000 steps (loop s5-8: 78.5/82.1/75.0/78.0 min; plain s5-8: 75.2/79.1/71.2/76.1 min; plain s1-4: 61.2/58.6/50.8/50.4 min), SEAL-run 12 lines (64 hex each), evals 1x each counts-only. VERDICT PASS: V0 pass (nograd 0 x12), G0 met 8/8 arms, G1 pass (mean gaps sums6 +124.00 4/4 seeds>0, grids6 +52.00 4/4, numbers5 +0.00), G2 pass (+0.00/+1.50/+0.75), G3 pass (4/4 seeds right>=fixed16-5 on all bigger tests, mean rounds sums6 7.56 > sums4 6.71); proved-wrong NOT triggered. Report-only: BensPC plain s1-4 vs rental plain s1-4 mixed signs (sums6 -25..+17, grids6 -16..+10); 358i2 loop s1-4 minus BensPC plain s1-4: sums6 +63..+146, grids6 +51..+62. Deviations: GPU-BUSY.txt pre-existed naming same job (watcher-owned, untouched); WMI-detached launches (ssh-session kill found empirically, same command line, cmd PIDs recorded, nothing stopped); stderr to sibling .err on BensPC only; C: free 6.3 GB. 48 run files back, weights ~/premonition-models/rsn358i3/ + C:/Users/benja/premonition-models/rsn358i3/ (sha match 12/12), 0 weights pushed. See artifacts/claude-rsn358i3-20260926/RESULTS.md + runs/ + SEAL-run.sha256.txt.
+- 2026-09-27 05:30 UTC dl-9 GPU BUILD (label claude-dl9-20260926, sealed origin/main code, code never edited, selftest ok): BensPC $0 (RTX 5070 Ti, torch 2.11.0+cu128, CUDA 12.8, transformers 5.17.0, python C:/Users/benja/lis300/venv), pool 1000 asked -> 501 kept (400 train / 101 held), base L0 lucky 54 greedy 2 harm_right 201, 2 seeds x 7 nights x 150 puzzles x 30 guesses (script 111.3 min, wall ~111 min, one run). VERDICT PASS: H1 pass (X lost 0/0, S lost 20/27), H2 pass (X gain 177/229 = S gain 177/229), H3 pass (test_on 100/100, panel off 300/300), H4 pass (X gain sum 406 >= 2x R gain sum 136; X lost sum 0 <= R lost sum 13); proved_wrong false (not INCONCLUSIVE: L0 54 >= 10, S lost sum 47 >= 20). Report-only: switch panel_on 88 night 1 (bigger 86, count 2) then 0 nights 2-7 both seeds; S-lost items switched on 0/14 nights; reworded night 7 switch_on 100/100 all 4 frames both seeds (X greedy = adapter greedy: s16 7/16/21/21, s17 12/22/22/19). Deviations: 3 GB disk gate (C: 4.4 GB at start, re-run of job 150); Task-Scheduler-detached launch (ssh kills detached trees; 2 dead Start-Process PIDs, same command line + merged log); projection at 04:08 UTC, no TIME-STOP; BUSY file pre-existed naming this job, untouched. 2 run files back, 0 weights saved or pushed. See artifacts/claude-dl9-20260926/RESULTS-gpu.md + gpu/.
+[0m
+[0m$ [0mgit diff artifacts/fable-predictions-ledger.md
+diff --git a/artifacts/fable-predictions-ledger.md b/artifacts/fable-predictions-ledger.md
+index f75a50f5b..c558777a8 100644
+--- a/artifacts/fable-predictions-ledger.md
++++ b/artifacts/fable-predictions-ledger.md
+@@ -3043,3 +3043,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
+ - 2026-09-26 19:34 UTC rsn-358i2 GPU BUILD (label claude-sleep-358i2pc, sealed origin/main code, SEAL-code 19/19 OK, code never edited): BensPC $0 (RTX 5070 Ti, torch 2.11.0+cu128, CUDA 12.8, python 3.10.9), 4 loop seeds x 60000 steps (102.8/104.8/104.9/104.8 min), SEAL-run 4 lines (64 hex each), evals 1x each counts-only. VERDICT SUSPECT CONFIRMED: V0 pass (nograd 0/0/0/0 of 60000 x4), M1 pass (dev grids5@10k 195/198/197/200, 4/4 >=100), M2 pass (grids5 gap +1.00), M3 pass (grids6 gap +51.75); proved-wrong NOT triggered (0/4 <=20, gap +1.00). Gaps loop-plain: sums4 +0.00 sums6 +100.50 sums8 +160.25 grids5 +1.00 grids6 +51.75 grids7 +55.00 numbers4 -0.25 numbers5 +0.00 sums10 +163.25 sums12 +138.00. 358t-style G0/G1/G2/G3 all met (report-only). Deviations: BensPC per ADDENDUM-1 (Stage 0 report-only, 0/12 both lines); GPU-BUSY.txt pre-existed naming same job; CIM-detached launches (cmd PIDs 10348/3576/13828/17048); seed-1 first attempt killed at ~11k with its parent, restarted clean (partials deleted, BensPC scratch only); evals sequential after training. 16 run files back, weights ~/premonition-models/rsn358i2/ + C:/Users/benja/premonition-models/rsn358i2/ (25764244 B x4, sha match), 0 weights pushed. See artifacts/claude-rsn358i2-20260926/RESULTS.md + runs/ + SEAL-run.sha256.txt.
+ - 2026-09-26 20:15 UTC Director: rent-zdl7b done, registered FAIL (F3; F1/F2/F4/F5 pass, not proved wrong, premise supported 22/26 = 84.6%). Contract 52799251 (RTX 5090 KR, dph $0.4167, ~1.45 h) ~$0.60 of $1.00 (Ben 18:39 +$1.00 extra). 1 rental, selftest ok, first night line in 7 min, run wall 72.4 min. Instance destroyed, 0 claude-fixsleep-dl7b live.
+ - 2026-09-27 00:50 UTC rsn-358i3 GPU BUILD (label claude-sleep-358i3pc, sealed origin/main code byte-identical to 358i2, SEAL-code 19/19 OK, code never edited): BensPC $0 (RTX 5070 Ti, torch 2.11.0+cu128, CUDA 12.8), 12 runs x 60000 steps (loop s5-8: 78.5/82.1/75.0/78.0 min; plain s5-8: 75.2/79.1/71.2/76.1 min; plain s1-4: 61.2/58.6/50.8/50.4 min), SEAL-run 12 lines (64 hex each), evals 1x each counts-only. VERDICT PASS: V0 pass (nograd 0 x12), G0 met 8/8 arms, G1 pass (mean gaps sums6 +124.00 4/4 seeds>0, grids6 +52.00 4/4, numbers5 +0.00), G2 pass (+0.00/+1.50/+0.75), G3 pass (4/4 seeds right>=fixed16-5 on all bigger tests, mean rounds sums6 7.56 > sums4 6.71); proved-wrong NOT triggered. Report-only: BensPC plain s1-4 vs rental plain s1-4 mixed signs (sums6 -25..+17, grids6 -16..+10); 358i2 loop s1-4 minus BensPC plain s1-4: sums6 +63..+146, grids6 +51..+62. Deviations: GPU-BUSY.txt pre-existed naming same job (watcher-owned, untouched); WMI-detached launches (ssh-session kill found empirically, same command line, cmd PIDs recorded, nothing stopped); stderr to sibling .err on BensPC only; C: free 6.3 GB. 48 run files back, weights ~/premonition-models/rsn358i3/ + C:/Users/benja/premonition-models/rsn358i3/ (sha match 12/12), 0 weights pushed. See artifacts/claude-rsn358i3-20260926/RESULTS.md + runs/ + SEAL-run.sha256.txt.
++- 2026-09-27 05:30 UTC dl-9 GPU BUILD (label claude-dl9-20260926, sealed origin/main code, code never edited, selftest ok): BensPC $0 (RTX 5070 Ti, torch 2.11.0+cu128, CUDA 12.8, transformers 5.17.0, python C:/Users/benja/lis300/venv), pool 1000 asked -> 501 kept (400 train / 101 held), base L0 lucky 54 greedy 2 harm_right 201, 2 seeds x 7 nights x 150 puzzles x 30 guesses (script 111.3 min, wall ~111 min, one run). VERDICT PASS: H1 pass (X lost 0/0, S lost 20/27), H2 pass (X gain 177/229 = S gain 177/229), H3 pass (test_on 100/100, panel off 300/300), H4 pass (X gain sum 406 >= 2x R gain sum 136; X lost sum 0 <= R lost sum 13); proved_wrong false (not INCONCLUSIVE: L0 54 >= 10, S lost sum 47 >= 20). Report-only: switch panel_on 88 night 1 (bigger 86, count 2) then 0 nights 2-7 both seeds; S-lost items switched on 0/14 nights; reworded night 7 switch_on 100/100 all 4 frames both seeds (X greedy = adapter greedy: s16 7/16/21/21, s17 12/22/22/19). Deviations: 3 GB disk gate (C: 4.4 GB at start, re-run of job 150); Task-Scheduler-detached launch (ssh kills detached trees; 2 dead Start-Process PIDs, same command line + merged log); projection at 04:08 UTC, no TIME-STOP; BUSY file pre-existed naming this job, untouched. 2 run files back, 0 weights saved or pushed. See artifacts/claude-dl9-20260926/RESULTS-gpu.md + gpu/.
+[0m
+[0m$ [0mgit diff --stat 8e2590aa8a8b6b4f1ba2ba8388300384b52d2137..6c86806a4da6e49cffcdb7bd4ee1b7adc7b9029d -- scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924
+scripts/claude_bm398w_data.py | 646 ++++++++++++++++++++++++++++++++++++++++++
+ scripts/claude_brd11.py       |  20 +-
+ scripts/claude_brd12_dev.py   |  83 ++++++
+ 3 files changed, 746 insertions(+), 3 deletions(-)
+[0m
+[0m$ [0mdate -u; uptime; df -g / | tail -2
+Sun Sep 27 05:39:27 UTC 2026
+ 1:39  up 3 days, 15:32, 4 users, load averages: 99.09 106.51 84.65
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        33    28%  484014 354895800    0%   /
+[0m
+[0m$ [0mgit fetch -q origin main; D=$(mktemp -d /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.XXXXXX); echo "D=$D"; git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; echo "commit=$(git rev-parse origin/main)"; echo "$D" > /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.path
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.kRpuRc
+commit=54167543e24e5a2302e678ab83defbe314a12115
+[0m
+[0m$ [0mD=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.path); cd $D && for s in SEAL-ADDENDA-6 SEAL-ADDENDA-8 SEAL-ADDENDA-9; do echo "== $s"; shasum -a 256 -c artifacts/claude-lis320-20260926/$s.sha256.txt; done
+== SEAL-ADDENDA-6
+artifacts/claude-lis320-20260926/ADDENDUM-6-route-low.md: OK
+scripts/claude_lis320_glm_oclow.py: OK
+scripts/claude_lis320_glm_oc.py: OK
+scripts/claude_lis320_glm.py: OK
+scripts/claude_lis320_style.py: OK
+scripts/claude_glm_leakcheck.py: OK
+== SEAL-ADDENDA-8
+artifacts/claude-lis320-20260926/ADDENDUM-8-group-check-narrowed.md: OK
+scripts/claude_lis320_check_we2.py: OK
+scripts/claude_lis320_check_cr.py: OK
+scripts/claude_lis320_check.py: OK
+scripts/claude_lis320_seed_cr.py: OK
+scripts/claude_lis320_glm_oclow.py: OK
+== SEAL-ADDENDA-9
+artifacts/claude-lis320-20260926/ADDENDUM-9-luna-writer.md: OK
+scripts/claude_luna_codex.py: OK
+scripts/claude_lis320_luna.py: OK
+scripts/claude_lis320_rawcheck2.py: OK
+scripts/claude_lis320_glm_oc.py: OK
+scripts/claude_lis320_glm.py: OK
+scripts/claude_lis320_check_we2.py: OK
+scripts/claude_lis320_seed_cr.py: OK
+[0m
+[0m$ [0mD=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.path); cd $D && for s in claude_lis320_luna claude_lis320_seed_cr claude_lis320_check_we2 claude_lis320_rawcheck2; do echo "== $s"; uv run --offline --no-project --python 3.12 python -B scripts/$s.py --selftest; echo "EXIT:$?"; done
+== claude_lis320_luna
+[lis320luna] call failed: RuntimeError luna call failed after 3 tries: error-like reply
+[glm320] s320-2-00000 ok
+[glm320] s320-2-00001 unparsed
+[glm320] s320-2-00002 ok
+lis320 luna selftest ok (writer gpt-6-luna; failed call -> empty unparsed row; no network)
+EXIT:0
+== claude_lis320_seed_cr
+seed_cr selftest OK: 400 dialogs; {'correct_ref': 121, 'correct': 197, 'backref': 235}
+EXIT:0
+== claude_lis320_check_we2
+check_we2 selftest OK: 1 kept, 1 dropped (group_speaker); bare 'me and' no longer drops
+EXIT:0
+== claude_lis320_rawcheck2
+lis320 rawcheck2 selftest 7/7 ok
+EXIT:0
+[0m
+[0m$ [0mD=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.path); W=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27; cd $D && O=artifacts/claude-lis320-20260926/pilot7 && mkdir -p $O && uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_seed_cr.py --seed 327 --n 60 --ask-back --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl && echo "EXIT:$?" && diff -q $O/seeds.jsonl $W/artifacts/claude-lis320-20260926/pilot7/seeds.jsonl && echo "SEEDS-IDENTICAL"
+{"dialogs": 60, "turns": 425, "intents": {"ack_after_ask": 17, "ambiguous_pronoun": 11, "ask": 20, "backref": 30, "confirm": 5, "correct": 24, "correct_ref": 23, "doubt": 17, "former": 30, "hypothetical": 13, "jobhome": 14, "negation_only": 8, "plan": 11, "question": 5, "smalltalk": 19, "someone_else": 18, "teach": 143, "yes_after_ask": 17}}
+EXIT:0
+SEEDS-IDENTICAL
+[0m
+[0m$ [0mD=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.path); W=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27; cd $D && cp $W/artifacts/claude-lis320-20260926/pilot7/raw.jsonl /tmp/x_raw.jsonl 2>/dev/null; O=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.copy; mkdir -p $O; cp $W/artifacts/claude-lis320-20260926/pilot7/{seeds.jsonl,raw.jsonl} $O/; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_rawcheck2.py --raw $O/raw.jsonl --seeds $O/seeds.jsonl --models gpt-6-luna; echo "EXIT:$?"
+{"rawcheck2": "OK", "models": "gpt-6-luna", "rows": 60, "duplicate_ids": 0, "model_ok": 60, "temperature_null": 60, "dup3_texts": 0, "not_in_seeds": 0}
+EXIT:0
+[0m
+[0m$ [0mD=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.path); W=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27; cd $D && O=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.copy && uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_check_we2.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl > $O/check.json; echo "EXIT:$?"; diff $O/check.json $W/artifacts/claude-lis320-20260926/pilot7/check.json && echo "CHECK-IDENTICAL"; diff $O/kept.jsonl $W/artifacts/claude-lis320-20260926/pilot7/kept.jsonl && echo "KEPT-IDENTICAL"; diff $O/drops.jsonl $W/artifacts/claude-lis320-20260926/pilot7/drops.jsonl && echo "DROPS-IDENTICAL"; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_style.py --kept $O/kept.jsonl --out $O/style.json; echo "EXIT:$?"; diff $O/style.json $W/artifacts/claude-lis320-20260926/pilot7/style.json && echo "STYLE-IDENTICAL"
+EXIT:0
+CHECK-IDENTICAL
+KEPT-IDENTICAL
+DROPS-IDENTICAL
+{"glm_kept": {"turns": 404, "words_median": 10, "words_p90": 30, "lowercase_start": 0.8, "noapos_contraction": 0.0, "over20_words": 0.213, "shapes_per_100": 94.8, "write_facts_per_turn": 0.965, "write_facts_in_over20": 0.328}, "dev_chatdev": {"turns": 336, "words_median": 14, "words_p90": 23, "lowercase_start": 1.0, "noapos_contraction": 0.253, "over20_words": 0.131, "shapes_per_100": 99.1}, "dev_bank": {"turns": 194, "words_median": 15, "words_p90": 21, "lowercase_start": 0.887, "noapos_contraction": 0.021, "over20_words": 0.108, "shapes_per_100": 100.0}}
+EXIT:0
+STYLE-IDENTICAL
+[0m
+[0m$ [0mgrep -n "pilot6\|pilot5\|lis320-pilot\|lis320 pilot" artifacts/fable-predictions-ledger.md | tail -20; echo "=== none? ==="; grep -c "lis320" artifacts/fable-predictions-ledger.md
+=== none? ===
+0
+[0m
+[0m$ [0mgit status --porcelain artifacts/claude-lis320-20260926/ | head; echo "=== tracked? ==="; git ls-files artifacts/claude-lis320-20260926/pilot7/ | head; echo "=== pilot6 tracked ==="; git ls-files artifacts/claude-lis320-20260926/pilot6/ | head
+=== tracked? ===
+=== pilot6 tracked ===
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-lis320-20260926/pilot7/RESULTS.md; echo "exit=$?"; echo "=== status full ==="; git status --porcelain | grep -i "lis320" ; echo "grep exit=$?"; echo "=== ls-files artifacts/claude-lis320 ==="; git ls-files artifacts/claude-lis320-20260926/ | head -20
+.gitignore:5:artifacts/	artifacts/claude-lis320-20260926/pilot7/RESULTS.md
+exit=0
+=== status full ===
+grep exit=1
+=== ls-files artifacts/claude-lis320 ===
+[0m
+[0m$ [0mls artifacts/claude-lis320-20260926/pilot6/; echo "=== is pilot6 on origin/main? ==="; git ls-tree origin/main artifacts/claude-lis320-20260926/ --name-only
+check.json
+drops.jsonl
+glm.log
+kept.jsonl
+raw.jsonl
+RESULTS.md
+seeds.jsonl
+style.json
+=== is pilot6 on origin/main? ===
+artifacts/claude-lis320-20260926/ADDENDUM-1-ask-back.md
+artifacts/claude-lis320-20260926/ADDENDUM-2-opencode-route.md
+artifacts/claude-lis320-20260926/ADDENDUM-3-correction-mark.md
+artifacts/claude-lis320-20260926/ADDENDUM-4-review-fixes.md
+artifacts/claude-lis320-20260926/ADDENDUM-5-owner-reach-and-correct-ref.md
+artifacts/claude-lis320-20260926/ADDENDUM-6-route-low.md
+artifacts/claude-lis320-20260926/ADDENDUM-7-NOTE-fairness-and-gap.md
+artifacts/claude-lis320-20260926/ADDENDUM-7-group-speaker-check.md
+artifacts/claude-lis320-20260926/ADDENDUM-8-group-check-narrowed.md
+artifacts/claude-lis320-20260926/ADDENDUM-9-DRAFT-luna-writer.md
+artifacts/claude-lis320-20260926/ADDENDUM-9-luna-writer.md
+artifacts/claude-lis320-20260926/ANSWERS-TM-2118.md
+artifacts/claude-lis320-20260926/PASSMARKS.md
+artifacts/claude-lis320-20260926/PASSMARKS.sha256.txt
+artifacts/claude-lis320-20260926/PILOT-REVIEW.md
+artifacts/claude-lis320-20260926/PILOT-THRESHOLDS.md
+artifacts/claude-lis320-20260926/SEAL-ADDENDA-5.sha256.txt
+artifacts/claude-lis320-20260926/SEAL-ADDENDA-6.sha256.txt
+artifacts/claude-lis320-20260926/SEAL-ADDENDA-7.sha256.txt
+artifacts/claude-lis320-20260926/SEAL-ADDENDA-8.sha256.txt
+artifacts/claude-lis320-20260926/SEAL-ADDENDA-9.sha256.txt
+artifacts/claude-lis320-20260926/SEAL-ADDENDA.sha256.txt
+artifacts/claude-lis320-20260926/avoid_names_dev.txt
+artifacts/claude-lis320-20260926/avoid_test.sha256
+artifacts/claude-lis320-20260926/full-oc
+artifacts/claude-lis320-20260926/panel_tools
+[0m
+[0m$ [0mgit ls-tree origin/main artifacts/claude-lis320-20260926/ --name-only | grep -i "seal\|passmark"; echo "=== root SEAL? ==="; git ls-tree origin/main --name-only | grep -i seal; echo "=== local SEAL files in worktree ==="; ls artifacts/claude-lis320-20260926/ | grep -i "seal\|passmark"
+artifacts/claude-lis320-20260926/PASSMARKS.md
+artifacts/claude-lis320-20260926/PASSMARKS.sha256.txt
+artifacts/claude-lis320-20260926/SEAL-ADDENDA-5.sha256.txt
+artifacts/claude-lis320-20260926/SEAL-ADDENDA-6.sha256.txt
+artifacts/claude-lis320-20260926/SEAL-ADDENDA-7.sha256.txt
+artifacts/claude-lis320-20260926/SEAL-ADDENDA-8.sha256.txt
+artifacts/claude-lis320-20260926/SEAL-ADDENDA-9.sha256.txt
+artifacts/claude-lis320-20260926/SEAL-ADDENDA.sha256.txt
+=== root SEAL? ===
+=== local SEAL files in worktree ===
+[0m
+[0m$ [0mls -la PASSMARKS.md SEAL.sha256.txt 2>&1 | head; echo "---"; git show origin/main:artifacts/claude-lis320-20260926/PASSMARKS.sha256.txt 2>&1 | head -20
+ls: PASSMARKS.md: No such file or directory
+ls: SEAL.sha256.txt: No such file or directory
+---
+f3ba70fa401696b43ea3faf92925f232c8b159f6f45b77e39fbe8ff29a70093d  artifacts/claude-lis320-20260926/PASSMARKS.md
+6509ad5007430be55f5ee1379157fa859a56f4674d1983138a84d17d37e7310b  artifacts/claude-lis320-20260926/ADDENDUM-1-ask-back.md
+[0m
+[0m$ [0mD=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.path); cd $D && wc -l artifacts/claude-lis320-20260926/PASSMARKS.sha256.txt && shasum -a 256 -c artifacts/claude-lis320-20260926/PASSMARKS.sha256.txt 2>&1 | grep -v ": OK$" | head -20; echo "=== summary ==="; shasum -a 256 -c artifacts/claude-lis320-20260926/PASSMARKS.sha256.txt 2>&1 | grep -c ": OK$"; echo "=== also SEAL-ADDENDA base + 5 + 7 ==="; for s in SEAL-ADDENDA SEAL-ADDENDA-5 SEAL-ADDENDA-7; do shasum -a 256 -c artifacts/claude-lis320-20260926/$s.sha256.txt 2>&1 | grep -v ": OK$" | head -3; echo "$s done"; done
+2 artifacts/claude-lis320-20260926/PASSMARKS.sha256.txt
+=== summary ===
+2
+=== also SEAL-ADDENDA base + 5 + 7 ===
+SEAL-ADDENDA done
+SEAL-ADDENDA-5 done
+SEAL-ADDENDA-7 done
+[0m
+[0m$ [0mO=artifacts/claude-lis320-20260926/pilot7; echo "call-failed lines: $(grep -c 'call failed' $O/glm.log)"; echo "distinct errors:"; grep -o '\[lis320luna\] call failed.*' $O/glm.log | sort -u | head; echo "=== glm.log full ==="; cat $O/glm.log; echo "=== raw model/temp ==="; uv run --offline --no-project --python 3.12 python -B -c "
+import json,collections
+rows=[json.loads(l) for l in open('$O/raw.jsonl')]
+print('rows',len(rows))
+print('models',collections.Counter(r.get('model') for r in rows))
+print('temp_none',sum(1 for r in rows if r.get('temperature') is None))
+print('ids',len(set(r.get('id') for r in rows)))
+"
+call-failed lines: 0
+distinct errors:
+=== glm.log full ===
+[glm320] s320cr-327-00000 ok
+[glm320] s320cr-327-00002 ok
+[glm320] s320cr-327-00001 ok
+[glm320] s320cr-327-00003 ok
+[glm320] s320cr-327-00004 ok
+[glm320] s320cr-327-00006 ok
+[glm320] s320cr-327-00005 ok
+[glm320] s320cr-327-00007 ok
+[glm320] s320cr-327-00009 ok
+[glm320] s320cr-327-00011 ok
+[glm320] s320cr-327-00008 ok
+[glm320] s320cr-327-00010 ok
+[glm320] s320cr-327-00012 ok
+[glm320] s320cr-327-00013 ok
+[glm320] s320cr-327-00015 ok
+[glm320] s320cr-327-00014 ok
+[glm320] s320cr-327-00017 ok
+[glm320] s320cr-327-00018 ok
+[glm320] s320cr-327-00016 ok
+[glm320] s320cr-327-00019 ok
+[glm320] s320cr-327-00020 ok
+[glm320] s320cr-327-00022 ok
+[glm320] s320cr-327-00021 ok
+[glm320] s320cr-327-00023 ok
+[glm320] s320cr-327-00024 ok
+[glm320] s320cr-327-00027 ok
+[glm320] s320cr-327-00025 ok
+[glm320] s320cr-327-00028 ok
+[glm320] s320cr-327-00026 ok
+[glm320] s320cr-327-00029 ok
+[glm320] s320cr-327-00030 ok
+[glm320] s320cr-327-00031 ok
+[glm320] s320cr-327-00033 ok
+[glm320] s320cr-327-00032 ok
+[glm320] s320cr-327-00034 ok
+[glm320] s320cr-327-00035 ok
+[glm320] s320cr-327-00036 ok
+[glm320] s320cr-327-00037 ok
+[glm320] s320cr-327-00039 ok
+[glm320] s320cr-327-00038 ok
+[glm320] s320cr-327-00041 ok
+[glm320] s320cr-327-00040 ok
+[glm320] s320cr-327-00042 ok
+[glm320] s320cr-327-00043 ok
+[glm320] s320cr-327-00044 ok
+[glm320] s320cr-327-00045 ok
+[glm320] s320cr-327-00047 ok
+[glm320] s320cr-327-00046 ok
+[glm320] s320cr-327-00049 ok
+[glm320] s320cr-327-00048 ok
+[glm320] s320cr-327-00051 ok
+[glm320] s320cr-327-00052 ok
+[glm320] s320cr-327-00050 ok
+[glm320] s320cr-327-00053 ok
+[glm320] s320cr-327-00054 ok
+[glm320] s320cr-327-00056 ok
+[glm320] s320cr-327-00055 ok
+[glm320] s320cr-327-00057 ok
+[glm320] s320cr-327-00058 ok
+[glm320] s320cr-327-00059 ok
+{"calls": 60, "parsed": 60, "skipped": 0, "failed_calls": 0, "batches": 2, "stopped": "done", "minutes": 17.5}
+=== raw model/temp ===
+rows 60
+models Counter({'gpt-6-luna': 60})
+temp_none 60
+ids 1
+[0m
+[0m$ [0mcat $O 2>/dev/null; O=artifacts/claude-lis320-20260926/pilot7; uv run --offline --no-project --python 3.12 python -B -c "
+import json
+s=[json.loads(l) for l in open('$O/seeds.jsonl')]
+r=[json.loads(l) for l in open('$O/raw.jsonl')]
+k=[json.loads(l) for l in open('$O/kept.jsonl')]
+d=[json.loads(l) for l in open('$O/drops.jsonl')]
+print('seeds',len(s),'raw',len(r),'kept',len(k),'drops',len(d),'kept+drops',len(k)+len(d))
+print('sample seed keys',sorted(s[0].keys()))
+print('sample raw keys',sorted(r[0].keys()))
+"
+seeds 60 raw 60 kept 404 drops 21 kept+drops 425
+sample seed keys ['dialog_id', 'opener', 'people', 'proper_values', 'turns']
+sample raw keys ['dialog_id', 'model', 'parsed', 'prompt_chars', 'raw', 'temperature', 'usage']
+[0m
+[0m$ [0mdate -u; uptime
+Sun Sep 27 05:42:30 UTC 2026
+ 1:42  up 3 days, 15:35, 4 users, load averages: 104.60 105.12 88.17
+[0m
+[0m→ [0mRead artifacts/claude-lis320-20260926/pilot7/RESULTS.md[90m [offset=140][0m
+[0m
+[0m← [0mEdit artifacts/claude-lis320-20260926/pilot7/RESULTS.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis320-20260926/pilot7/RESULTS.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis320-20260926/pilot7/RESULTS.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis320-20260926/pilot7/RESULTS.md
+@@ -174,4 +174,15 @@
+ ## ERRORS / DEVIATIONS
+ - First selftest attempt ran with worktree cwd instead of $D and failed 3x with `repo not found: set LEARNER_REPO`; reran from $D (as task requires) and all 4 passed EXIT:0. No other deviation.
+ - Wording: 0 failed calls, 0 error lines, rawcheck2 OK. No ROUTE-FAIL handling needed.
+ - No TEST-ONLY panel read. No secrets written. No branch checkout/push.
++
++## 9. RESUME VERIFICATION (2026-09-27 05:39:27-05:42:30 UTC, resumed agent; date -u 05:39:27 / uptime load 99.09 106.51 84.65 at start, 05:42:30 / 104.60 105.12 88.17 at end; df -g / = 33 GB free)
++The run was already complete at resume; steps 1-8 were re-verified, not repeated. 0 extra Luna wording calls, 0 extra live codex calls (budget stays 60 wording + 1 selftest).
++- Step 8 cleanup held: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.s26f5jEDyZ still gone.
++- Fresh `git fetch -q origin main` + `git archive origin/main` into a new temp dir; all seals re-run from it, every line OK, 0 failures: PASSMARKS.sha256.txt 2/2, SEAL-ADDENDA 6/6, SEAL-ADDENDA-5 OK, SEAL-ADDENDA-6 6/6, SEAL-ADDENDA-7 OK, SEAL-ADDENDA-8 6/6, SEAL-ADDENDA-9 8/8. PASSMARKS.md not edited by either agent.
++- 4 offline selftests re-run from that dir, all EXIT:0: lis320 luna selftest ok; seed_cr selftest OK (400 dialogs; correct_ref 121, correct 197, backref 235); check_we2 selftest OK (1 kept, 1 dropped); rawcheck2 selftest 7/7 ok. scripts/claude_luna_codex.py --selftest NOT re-run: its single live call is already spent.
++- Byte-for-byte reproduction of every published output (offline, current origin/main): seeds re-generated with --seed 327 -> diff identical; rawcheck2 re-run -> same printed line, OK; check_we2 re-run -> check.json, kept.jsonl, drops.jsonl all diff-identical; style.py re-run -> style.json diff-identical.
++- Counts re-confirmed from the files here: seeds 60, raw 60, kept 404, drops 21, kept+drops 425 = turns 425; glm.log "call failed" lines 0; raw.jsonl model gpt-6-luna 60/60, temperature null 60/60, 60 distinct dialog_id.
++- DEVIATION: origin/main advanced twice during this task (8e2590aa -> 6c86806a -> 54167543e24e5a2302e678ab83defbe314a12115). The run's commit stays 8e2590aa8a8b6b4f1ba2ba8388300384b52d2137 as recorded in section 1. `git diff --stat 8e2590aa..6c86806a` over scripts/, design/v3/60-listener/, artifacts/claude-lis320-20260926/, artifacts/claude-chatdev-20260926/, artifacts/claude-e2e331-dev-20260924/ touched only scripts/claude_bm398w_data.py (new), scripts/claude_brd11.py, scripts/claude_brd12_dev.py — none of them used here — so every script and artifact pilot7 used is byte-identical across those commits and the re-verification above is equivalent to the original run's inputs.
++- No ledger line added: artifacts/fable-predictions-ledger.md holds 0 lis320/pilot entries and this task's steps do not ask for one. The single unstaged ledger line in the worktree is dl-9, another agent's job; nothing was appended, so nothing was duplicated.
++- artifacts/ is gitignored, so pilot7 is untracked in the worktree exactly like pilot6; left for the watcher to push. No branch checkout, no push, no TEST-ONLY panel read, no secrets, no ~/.codex access.
+
+[0m
+[0m$ [0mD=$(cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.path); rm -rf "$D" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.copy /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.path /tmp/x_raw.jsonl; echo "removed $D"; ls -d "$D" 2>&1; echo "=== original D ==="; ls -d /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.s26f5jEDyZ 2>&1; echo "=== leftover tmp dirs ==="; ls -d /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.* /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.* 2>&1 | head
+removed /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.kRpuRc
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.kRpuRc: No such file or directory
+=== original D ===
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.s26f5jEDyZ: No such file or directory
+=== leftover tmp dirs ===
+zsh:1: no matches found: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/verify7.*
+[0m
+[0m$ [0mls -la artifacts/claude-lis320-20260926/pilot7/; echo "=== tail RESULTS ==="; tail -5 artifacts/claude-lis320-20260926/pilot7/RESULTS.md; echo "=== git status pilot7 ==="; git status --porcelain artifacts/claude-lis320-20260926/; echo "(empty = gitignored, same as pilot6)"
+total 2024
+drwxr-xr-x  10 ben-hannan  staff     320 Sep 27 01:37 .
+drwxr-xr-x  12 ben-hannan  staff     384 Sep 27 01:36 ..
+-rw-r--r--   1 ben-hannan  staff    1612 Sep 27 01:36 check.json
+-rw-r--r--   1 ben-hannan  staff    5045 Sep 27 01:36 drops.jsonl
+-rw-r--r--   1 ben-hannan  staff    1851 Sep 27 01:36 glm.log
+-rw-r--r--   1 ben-hannan  staff  591669 Sep 27 01:36 kept.jsonl
+-rw-r--r--   1 ben-hannan  staff  121852 Sep 27 01:36 raw.jsonl
+-rw-r--r--   1 ben-hannan  staff   11028 Sep 27 01:42 RESULTS.md
+-rw-r--r--   1 ben-hannan  staff  283191 Sep 27 01:36 seeds.jsonl
+-rw-r--r--   1 ben-hannan  staff     623 Sep 27 01:36 style.json
+=== tail RESULTS ===
+- Byte-for-byte reproduction of every published output (offline, current origin/main): seeds re-generated with --seed 327 -> diff identical; rawcheck2 re-run -> same printed line, OK; check_we2 re-run -> check.json, kept.jsonl, drops.jsonl all diff-identical; style.py re-run -> style.json diff-identical.
+- Counts re-confirmed from the files here: seeds 60, raw 60, kept 404, drops 21, kept+drops 425 = turns 425; glm.log "call failed" lines 0; raw.jsonl model gpt-6-luna 60/60, temperature null 60/60, 60 distinct dialog_id.
+- DEVIATION: origin/main advanced twice during this task (8e2590aa -> 6c86806a -> 54167543e24e5a2302e678ab83defbe314a12115). The run's commit stays 8e2590aa8a8b6b4f1ba2ba8388300384b52d2137 as recorded in section 1. `git diff --stat 8e2590aa..6c86806a` over scripts/, design/v3/60-listener/, artifacts/claude-lis320-20260926/, artifacts/claude-chatdev-20260926/, artifacts/claude-e2e331-dev-20260924/ touched only scripts/claude_bm398w_data.py (new), scripts/claude_brd11.py, scripts/claude_brd12_dev.py — none of them used here — so every script and artifact pilot7 used is byte-identical across those commits and the re-verification above is equivalent to the original run's inputs.
+- No ledger line added: artifacts/fable-predictions-ledger.md holds 0 lis320/pilot entries and this task's steps do not ask for one. The single unstaged ledger line in the worktree is dl-9, another agent's job; nothing was appended, so nothing was duplicated.
+- artifacts/ is gitignored, so pilot7 is untracked in the worktree exactly like pilot6; left for the watcher to push. No branch checkout, no push, no TEST-ONLY panel read, no secrets, no ~/.codex access.
+=== git status pilot7 ===
+(empty = gitignored, same as pilot6)
+[0m
