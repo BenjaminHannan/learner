@@ -1,0 +1,9 @@
+# bm-398w data run: RUN-NOTE (the Benchmarks thread; written 2026-09-27 10:16 UTC)
+
+- What runs: scripts/claude_bm398w_macdrive.sh (the driver), which finishes the sealed data steps: training sessions, then questions (train, then panel), then build with floors and RESULTS-data.md. Nothing is trained or judged.
+- Where: Ben's Mac, in the first job's temp folder, CPU only. Luna (GPT-6) calls go through Ben's Codex plan ($0).
+- Started: 2026-09-27T09:11:18Z by bm398w-mac-c1 (BASH-ONLY), PID 17262 (the driver's bash). Driver sha256 97a1197875f6bf9bc8a3f2a32029a5e71c41cb6f74b78320c91ea3f44aa3ee2f (origin/main 89c00fc17).
+- Before it: the first job bm398w-luna-mac (builder died on a rate limit at 07:51 UTC, rc=1). It finished the pilot (5 of 5 chats), the panel sessions (182 of 182) and 378 of 1,200 training sessions, with W=3 against a share of 1.
+- Progress at 10:13 UTC (c1's snapshot on builder-outbox): pass 1 at W=1 kept 109 new sessions in 45.2 min (1 row failed the count check, 0 failed calls). Pass 2 started 09:56:31Z.
+- Estimate, inferred from pass 1's rate: at W=1, about 6 more training passes (about 5 h), then the question calls (about 200, time not yet measured), then the build. W is read from handoff/luna-w/bm398w.txt before each pass.
+- Snapshots: each BASH-ONLY job bm398w-mac-cN waits up to 62 min, then copies the data into the worktree for the watcher's push. The next one is queued at each exit until data/DRIVER-DONE.txt appears.
