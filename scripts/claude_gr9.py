@@ -13,14 +13,15 @@ formats whose cell separator it saw in training, and far fewer when the separato
   3. These rows are added to gr-6's 1072 training rows, and gr-7's adapter trains for 3 more epochs on the union with
      gr-5's recipe (AdamW with fresh moments, constant lr 2e-4, batch 8, loss on the answer only), seed 5090.
 Dev is a fresh code-made practice set. Every mark uses the greedy read (claude_gr5.Copier5, as in gr-7). The size pick
-(claude_gr8.Copier8) is run on the same pass and reported only.
+(claude_gr8.Copier8) is run on the same pass and reported only. A control, L7c (gr-7's adapter trained the same 3 epochs
+on gr-6's 1072 rows only, same recipe and seed), reads the held-out items greedily, report only.
 
   python -B scripts/claude_gr9.py --selftest
   python -B scripts/claude_gr9.py build --out ROWS.jsonl
   python -B scripts/claude_gr9.py train --model BASE --rows ROWS.jsonl --start GR7_ADAPTER.pt --adapter ADAPTER.pt
   python -B scripts/claude_gr9.py make --out DEV_DIR
-  python -B scripts/claude_gr9.py run --task squares|seen|heldout|lookalikes --arm L9|L7 --model BASE --adapter A.pt \
-      --dev DEV_DIR --out OUT
+  python -B scripts/claude_gr9.py run --task squares|seen|heldout|lookalikes --arm L9|L7|L7c --model BASE \
+      --adapter A.pt --dev DEV_DIR --out OUT
   python -B scripts/claude_gr9.py count --dev DEV_DIR --run OUT
 """
 from __future__ import annotations
@@ -319,7 +320,9 @@ def run(a) -> None:
 def count(a) -> None:
     dd, rd = Path(a.dev), Path(a.run)
     st = Counter()
-    for arm, tasks in (("L9", ("squares", "seen", "heldout", "lookalikes")), ("L7", ("heldout", "lookalikes"))):
+    l7c = (rd / "L7c_heldout.jsonl").exists()               # the extra-epochs control (report only)
+    for arm, tasks in (("L9", ("squares", "seen", "heldout", "lookalikes")), ("L7", ("heldout", "lookalikes")),
+                       ("L7c", ("heldout",) if l7c else ())):
         for task in tasks:
             truth = {r["id"]: r for r in G5._load(dd / f"{task}.jsonl")}
             got = G5._load(rd / f"{arm}_{task}.jsonl")
@@ -340,6 +343,12 @@ def count(a) -> None:
                         st[f"{arm}_{how}_heldout_mark{t['mark']}_{res}"] += 1
                         if t["mark"] in FORCED_DEV:
                             st[f"{arm}_{how}_heldout_forced4_{res}"] += 1
+                        if g is not None and len(g) == len(t["grid"]):     # rows by blanks side by side (caveat)
+                            grp = "dotstar" if t["mark"] in (".", "*") else "other"
+                            for row, trow in zip(g, t["grid"]):
+                                k = "adj" if any(x == 0 and y == 0 for x, y in zip(trow, trow[1:])) else "noadj"
+                                st[f"{arm}_{how}_heldout_rows_{grp}_{k}"] += 1
+                                st[f"{arm}_{how}_heldout_rows_{grp}_{k}_wrong"] += int(row != trow)
     ho9, ho7 = st["L9_greedy_heldout_exact"], st["L7_greedy_heldout_exact"]
     marks = {"M1_heldout_at_least_90": ho9 >= 90,
              "M2_squares_at_least_199": st["L9_greedy_squares_exact"] >= 199,
@@ -350,9 +359,10 @@ def count(a) -> None:
     outcome = ("TOO-EASY" if too_easy else "PROVED-WRONG" if proved_wrong else
                "DEV-PASS" if all(marks.values()) else "DEV-FAIL")
     print(json.dumps(dict(sorted(st.items())), ensure_ascii=False))
+    control = ho9 - st["L7c_greedy_heldout_exact"] if l7c else "L7c not run yet"
     print(json.dumps({**marks, "heldout_gain_L9_minus_L7": ho9 - ho7, "too_easy": too_easy,
-                      "proved_wrong": proved_wrong,
-                      "outcome": outcome}))
+                      "proved_wrong": proved_wrong, "outcome": outcome,
+                      "report_only_heldout_gain_L9_minus_L7c": control}))
 
 
 # ------------------------------------------------------------------ selftest
