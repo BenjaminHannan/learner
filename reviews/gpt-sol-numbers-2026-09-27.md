@@ -26,7 +26,7 @@ The small learned reasoner should solve number puzzles it was never trained on. 
 
 ## Step 1: diagnosis (report only, before any registered run)
 - Find out why neither net carries over to new hands. Start with the likely causes:
-  - Why it memorises the 2,408 practice pairs instead of learning a method (the memorising itself is shown: training exact 1.0 against 0-5 of 300 held out). Confirm it on your own baseline.
+  - Why it memorises the 2,408 practice pairs instead of learning a method (the memorising itself is shown: training exact 1.0 against 0-5 of 300 held out). Confirm it on your own baseline, scored on your dev split (see Panels), not on the sealed test files.
   - One stored answer is used as the target when many answers are right. The stop head is also trained on an exact match to that stored answer (scripts/claude_rsn358a_run.py:180,298), not on whether the answer is valid.
   - It has no way to try options and back up.
 - Small diagnostic runs on code-made data are allowed. Label every finding shown, suggested or untested. Commit the diagnosis note before Step 2.
@@ -38,24 +38,29 @@ The small learned reasoner should solve number puzzles it was never trained on. 
   - a learned way to keep and revise partial results;
   - sleep-style replay.
   The answer at test time must come from the net. There must be no search code, solver call or hand-written rule at inference; goals:37 stops hand-written reasoners and rule gates.
-- **Arms.** Baseline = the 358i3 loop recipe, rerun by you on the M3 Pro with the fixed env. The existing code runs only on CUDA or CPU (scripts/claude_rsn358a_run.py:263,278,334), so add MPS support in a new script and report the device and dtype. Candidate = the baseline plus your one change. Same weights within 1%, counting anything added. You may shrink the net or the steps to fit the M3 Pro, but both arms must use the same settings. Report the minutes for each run.
+- **Arms.** Baseline = the 358i3 loop recipe, rerun by you on the M3 Pro with the fixed env. The existing code runs only on CUDA or CPU (scripts/claude_rsn358a_run.py:263,278,334), so add MPS support in a new script and report the device and dtype. Candidate = the baseline plus your one change. Same weights within 1%, counting anything added. You may shrink the net or the steps to fit the M3 Pro, but both arms must use the same settings. If you shrink anything, first confirm your baseline still memorises (training exact 0.95 or higher on the 4-number practice hands) before Step 2. If it does not, say so, because the baseline is then not the 358i3 situation. Report the minutes for each run.
 - **Kinds.** Train both arms on sums, grids and numbers together, as 358i3 did, so that "no harm" means something.
-- **Seeds.** Use 4 or more training seeds, paired across the arms. Grep the repo first to confirm each seed is fresh, and record them.
+- **Seeds.** Use 4 or more training seeds, paired across the arms. Seeds 5-16 are taken: 358i3 used 5-8, rsn-358s uses 9-12, and the Sleep research thread's rsn-358u uses 13-16. Grep the repo first to confirm each seed is fresh, and record them.
+- **Not your baseline.** rsn-358u (artifacts/claude-rsn358u-20260927/, draft at 12:21 UTC) is the Sleep research thread's own fixed-env rerun of 358i3 on BensPC. It is separate from your task. Don't touch its folder, and don't use its results as your baseline.
 - **Before any registered run,** commit and push PASSMARKS.md with the marks, your predictions, and the result that would prove the idea wrong. Pushed marks never change. An addendum can only add.
 
 ## Suggested marks (tighten them before any run if you like)
 - **Panels.**
-  - Design panel: you may look at it while developing. Use the old 300 held-out 4-number hands (seed 35801, already scored in 358i3). No fresh 4-number hands to 24 exist, so N1 is scored on this panel you have seen. Say so in RESULTS, and treat N2 as the clean test.
-  - Sealed panel: 300 fresh 5-number hands (`five_hands` with a new seed, drawn after PASSMARKS is pushed), read once.
+  - Sealed test files: score numbers4, sums4 and grids5 on 358i's test files, artifacts/claude-rsn358i-20260926/tests/, the ones 358i3 scored. Their numbers4 is the 300 held-out 4-number hands (seed 35801). Score them only in registered runs. Never train or tune on them, and never edit them. The older folder artifacts/claude-rsn358a-20260925/tests/ has a different grids5 file, so don't use it.
+  - Dev split: for Step 1 and any tuning, hold back part of the 1,062 practice hands (for example 100) from training as your own dev split. Make fresh sums and grids items in code with new seeds.
+  - No fresh 4-number hands to 24 exist, so earlier runs have scored N1's panel, and their totals are known. Say so in RESULTS, and treat N2 as the cleanest test.
+  - Sealed 5-number panel: 300 fresh 5-number hands (`five_hands` with a new seed, drawn after PASSMARKS is pushed), read once. No sealed 5-number hand may appear in training. If you add 5-number practice, check it against the sealed panel and report the overlap, which must be 0.
+  - Also report numbers5 from the test files (old seed 35832) as report-only.
   - Score by exact validity at the model's own stop, with the existing checker.
 - **N1, practised size:** the candidate's mean on the 300 held-out 4-number hands is at least 100, and it beats the baseline by at least 60 on every seed.
 - **N2, bigger:** the candidate's mean on the sealed 5-number panel is at least 30, and it beats the baseline on at least 75% of seeds.
 - **N3, no harm:** the candidate's mean sums4 and grids5 are each within 5 of the baseline's mean, and no seed falls more than 10 below its paired baseline seed.
 - **N4, no label:** every item gets the same env in both arms. Include the hidden-field poison test from INPUT-AUDIT.md:23: the outputs must be identical when the hidden kind field is changed.
 - **Proved wrong:** the candidate's mean on the 300 held-out 4-number hands beats the baseline's mean by 10 or less.
+- **Proved wrong for bigger hands:** the candidate's mean on the sealed 5-number panel beats the baseline's mean by 5 or less. This line only covers the bigger-hands claim.
 
 ## Rules (hard)
-- **Where you work.** Only in a new folder, artifacts/codex-numbers-20260927/, and in new scripts. Never touch repo-root notebook/. Never edit another thread's files, handoff/queue, handoff/held, the watcher, anything on BensPC, or your auto-routing folder.
+- **Where you work.** Only in a new folder, artifacts/codex-numbers-20260927/, and in new scripts. Never touch repo-root notebook/. Never edit another thread's files (including artifacts/claude-rsn358u-20260927/), handoff/queue, handoff/held, the watcher, anything on BensPC, or your auto-routing folder.
 - **Processes.** Never stop a process you did not start. Before each GPU run, check that nothing else is using the M3 Pro's GPU. Run one GPU job at a time.
 - **Data.** Training data is made and checked by code only: no Claude-, Luna- or other model-written text. No blind panels from other threads.
 - **brd-11.** The Creative thread's brd-11 tests the 1B chat model on make-24 puzzles (queued as handoff/queue/176-creative-brd11pc.md), and its panels are blind. Never open any file in artifacts/claude-brd11-20260926/. Your 5-number sealed panels are yours.
