@@ -29,3 +29,10 @@ Per seed (loop / plain, of 300), s5-s8:
 None changes the count.
 
 **Prediction was PASS 70%.** This clears the exit rule's CONTINUE branch for the loop design, and it is the verified loop PASS that 358b3 (the chat-puzzle gate) was waiting for.
+
+## Added 00:56 UTC (Thread manager review, 00:54): what "same size" means here
+- Same size = the same number of weights (6.44M vs 6.39M), **not the same compute**.
+- One loop round (2 layers x d512) costs about the same as one full plain pass (8 layers x d256): 12 x 2 x 512^2 = 12 x 8 x 256^2 weight-FLOPs per cell. The loop's mean rounds on the tests were sums6 7.16-7.85 and grids6 10.61-14.13 (tests.json). So it spends roughly 7-8x (sums6) and 11-14x (grids6) a plain net's compute per answer. That is **inferred from layer shapes, not measured**. (Training wall time was similar, 75-82 min loop vs 71-79 min plain on BensPC, but wall time on a small net is not a FLOP count.)
+- Whether a plain net given matching compute closes the gap is **untested**. The only way to give a fixed-weight plain net more compute per answer is to loop it (358t's loop8, queued on BensPC) or to add layers or width, which adds weights. The scaling test's draft now carries a compute-matched plain arm.
+- G1 rests on 2 kinds (sums, grids). Number puzzles were learned by neither net.
+- This is a building block for the first demo goal (the joined build beating MiniCPM5-1B, Qwen3.5-2B and LFM2.5-1.2B side by side), not the goal itself.

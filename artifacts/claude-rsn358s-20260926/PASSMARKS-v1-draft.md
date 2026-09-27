@@ -19,3 +19,9 @@
 
 **Prediction:** PASS 50%. The plain arm may gain more from width than the loop does (plain's sums gaps came from failing at length, which width can help), so S3 is the risky mark.
 **Compute (estimate):** a 3x run is about 3x the FLOPs of a 358i3 run (75-82 min each, 4 at once). If BensPC's 16 GB fits 2 at once, 8 runs is roughly 4 batches of 2 x 2.5-4 h, so 10-16 h in total. Cap 20 h. $0 on BensPC. A rental would cost money and needs Ben's ELI5 plan. **Question for the review:** is a BensPC slot of that length acceptable, or should this start with 2 seeds (9-10) under the same marks, applied to 2 seeds (S2's seed rule becomes "both seeds")?
+
+## Added 00:56 UTC after the Thread manager's 00:54 review: a compute-matched plain arm (report only)
+- **plain-unrolled**: 16 layers x d512, 50,572,157 weights. It is the loop's 2-layer block unrolled 8 times with separate weights, so one pass costs about 8 loop rounds, near the loop's mean on sums6 (inferred).
+- It asks whether a plain net given about the loop's compute per answer, with no weight sharing and about 8x the weights, closes the gap. Seeds 9-10, BensPC, the same recipe. **Report only.** It is graded neither way, since it breaks same size by design.
+- Reported beside it: each arm's inferred FLOPs per answer (loop at its measured mean rounds per test).
+- Cost: about 8x a 1x plain run's FLOPs. Estimate 2 runs x 3-6 h. Run after the graded 3x runs, dropped first if time is short.
