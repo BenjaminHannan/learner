@@ -21,3 +21,4 @@
   run2/ is copied to main, with the job's files in run2/job/. I recounted here: best_b, verdict_b and arms_b are
   identical. A blind recount comes next, then VERIFY.md. Launches that made no Luna call: madeup-g406l-resume-mac,
   rc=1 (resume2 never launched).
+- Update 09:25 UTC (date -u): blind recount found no differences; VERIFY.md written. g406b-L: PASS.
