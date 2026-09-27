@@ -1,0 +1,20 @@
+diff --git a/scripts/claude_xfer1_adapt.py b/scripts/claude_xfer1_adapt.py
+index ca54e0277..5f59a4aa6 100644
+--- a/scripts/claude_xfer1_adapt.py
++++ b/scripts/claude_xfer1_adapt.py
+@@ -54,14 +54,11 @@ class Adapter:
+                 for _ in range(FREE):
+                     h = net.step(h, e.detach(), dr, dc)
+             h = h.detach()
+-            ces, hls = [], []
++            ces = []
+             for _ in range(GRAD):
+                 h = net.step(h, e, dr, dc)
+-                lg, q = net.read(h)
+-                c_, ex = N.ce_and_exact(lg, s, y)
+-                ces.append(c_)
+-                hls.append(torch.nn.functional.binary_cross_entropy_with_logits(q.float(), ex))
+-            self.update(torch.stack(ces).mean() + 0.5 * torch.stack(hls).mean())
++                ces.append(N.ce_and_exact(net.read(h)[0], s, y)[0])
++            self.update(torch.stack(ces).mean())
+             h = h.detach()

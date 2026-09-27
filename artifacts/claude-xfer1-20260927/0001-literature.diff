@@ -1,0 +1,31 @@
+diff --git a/scripts/claude_xfer1_adapt.py b/scripts/claude_xfer1_adapt.py
+index eb6520277..98229fa1a 100644
+--- a/scripts/claude_xfer1_adapt.py
++++ b/scripts/claude_xfer1_adapt.py
+@@ -19,6 +19,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
+ import claude_xfer1_net as N  # noqa: E402
+ 
+ LR, WD, WARMUP = 1e-3, 0.1, 50
++FULL_ROUNDS, TAIL = 16, 6       # loop: every maze batch runs 16 rounds with gradient through all; loss on the last 6
++
++
++def full_budget_loss(net, items):
++    t, s, y = N.tensors(items)
++    ces, hls = [], []
++    for lg, q in net.loop_train(t, s, 0, FULL_ROUNDS)[-TAIL:]:
++        c_, ex = N.ce_and_exact(lg, s, y)
++        ces.append(c_)
++        hls.append(torch.nn.functional.binary_cross_entropy_with_logits(q.float(), ex))
++    return torch.stack(ces).mean() + 0.5 * torch.stack(hls).mean()
+ 
+ 
+ class Adapter:
+@@ -32,7 +43,7 @@ class Adapter:
+ 
+     def learn(self, items):
+         self.net.train()
+-        loss = N.train_loss(self.net, items, self.round_rng)
++        loss = full_budget_loss(self.net, items) if self.net.arm == "loop" else N.train_loss(self.net, items, self.round_rng)
+         self.opt.zero_grad(set_to_none=True)
+         loss.backward()
+         torch.nn.utils.clip_grad_norm_(self.net.parameters(), 1.0)
