@@ -28,6 +28,9 @@ Ben's design, one path on every user turn:
             sure everything is on disk.
 Hand-written parts on this path, each disclosed scaffolding with the learned part it stands in for:
   P1  read_latin, the code grid reader (learned: gr-1, owed by Sleep research)
+  E1  the puzzle-kind label: the bridge builds every chat grid as env "grids" (claude_rsn358b2_bridge.item_of), and
+      the loop net adds that env's embedding to every token (claude_rsn358a_run.py:97,172). A caller-given skill label
+      (ADDENDUM-43; learned: the net deciding the kind from the input itself, owed)
   P3  the loop net's stop rule, 3 steady rounds (learned: a stop head, owed)
   C1  the code check of the net's square against the square read (learned: the reasoner's own confidence, owed)
   H1  the hand-off to the talker (reasoner_note): the checked square, or "no square fits", as plain data in one fixed
