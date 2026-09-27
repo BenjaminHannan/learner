@@ -97,9 +97,9 @@ g406b and mu-407 had verdicts (draft 2, "Update 02:56"). Both verdicts are in, s
 - INCONCLUSIVE, with no verdict on distillation: the teacher gate fails twice, or fewer than 800 training rows
   survive.
 - Changes from draft 2's marks: M1 uses GPT's 0.5 (as mu-407 did) in place of 0.67; M2 is T >= P in place of
-  P - 3; M3 is GPT's usefulness mark, which draft 2 lacked. The follow-up memory-use question is dropped from the
-  claims judges so their file stays unchanged. On-turn on follow-up turns reports the same thing, since a follow-up
-  asks about session 1.
+  P - 3; M3 is GPT's usefulness mark, which draft 2 lacked. Draft 2's follow-up memory-use question (report only)
+  is dropped so the claims judges' file stays unchanged. So nothing measures whether T uses its memory on turns 2-4
+  when it is relevant but not asked for. M2 checks recall on the ask turn only.
 - Report only:
   - C_T against C_N. The goal is a talker that uses its memory and invents no more than one without it.
   - Real answers against GPT's target of 30 of 60.
@@ -147,3 +147,8 @@ g406b and mu-407 had verdicts (draft 2, "Update 02:56"). Both verdicts are in, s
 - Is distillation first right, given mu-407's recall and copying numbers?
 - Are the teacher gate's three marks strict enough?
 - Should the W arms (0.2d's form) stay report only?
+
+## Correction (09:40 UTC, date -u)
+- The first version of this file said on-turn on follow-up turns measures memory use "since a follow-up asks about
+  session 1". That was wrong. In mu-407's writer prompt the follow-up turn follows up on session 2's advice turn
+  (claude_mu407_prep.py:41). Fixed in place above.
