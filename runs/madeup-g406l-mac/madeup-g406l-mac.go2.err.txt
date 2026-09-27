@@ -1,0 +1,900 @@
+[0m
+> build · mimo-v2.6-flash-free
+[0m
+[0m$ [0mls -la artifacts/ 2>/dev/null; ls -la artifacts/claude-g406l-20260927/ 2>/dev/null; ls -la artifacts/claude-g406l-20260927/run/ 2>/dev/null
+total 8712
+drwxr-xr-x@ 606 ben-hannan  staff    19392 Sep 27 02:25 .
+drwxr-xr-x   30 ben-hannan  staff      960 Sep 26 16:27 ..
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 09:40 claude-adapters-20260926d
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:39 claude-aliaspanel237-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:39 claude-aliaspanel237b-20260922
+drwxr-xr-x@  17 ben-hannan  staff      544 Sep 23 22:48 claude-apos247-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:43 claude-askpanel243-20260922
+drwxr-xr-x@   4 ben-hannan  staff      128 Sep 23 03:03 claude-bench125-fairness-20260922
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 24 22:00 claude-blurt1-dev-20260925
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 25 13:42 claude-blurt2-20260925
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 25 15:55 claude-blurt4-20260925
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 25 16:06 claude-blurt5s-20260925
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 25 16:02 claude-bm390-20260925
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 04:05 claude-bm391-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 25 16:58 claude-bm395-20260925
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 00:25 claude-bm397t-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 14:04 claude-bm398e-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 12:32 claude-bm398i-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 12:34 claude-bm398r-20260926
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 26 12:58 claude-bmriv-smoke-20260926
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 22:48 claude-boundary259-20260922
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 25 22:26 claude-brd5-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 25 23:36 claude-brd6-20260926
+drwxr-xr-x@   4 ben-hannan  staff      128 Sep 26 07:27 claude-brd7-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 11:13 claude-brd8-20260926
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 26 13:36 claude-brd8w-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 13:17 claude-brd9-20260926
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 04:19 claude-called281-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 05:00 claude-called281b-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 04:13 claude-calledpanel281-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 04:37 claude-calledpanel281b-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 03:16 claude-capab280-20260923
+drwxr-xr-x   14 ben-hannan  staff      448 Sep 23 04:32 claude-capab280b-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 03:09 claude-capabilpanel280-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 03:47 claude-capabilpanel280b-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 26 11:59 claude-ch403-20260926
+drwxr-xr-x@  27 ben-hannan  staff      864 Sep 23 22:48 claude-chain231-20260922
+drwxr-xr-x@  27 ben-hannan  staff      864 Sep 23 22:48 claude-chain231b-20260922
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 01:07 claude-chain266-20260923
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 02:45 claude-chain266b-20260923
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:40 claude-chainpanel231-20260922
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 00:37 claude-chainpanel266-20260923
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 02:17 claude-chainpanel266b-20260923
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 24 13:11 claude-chat338-20260924
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 22 23:57 claude-chatdemo-20260923
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 22 23:46 claude-chatweak-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 22 23:35 claude-comma263-20260923
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 22 22:27 claude-commapanel263-20260923
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 23 22:46 claude-comment258-20260922
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 14:13 claude-convbench-f0-20260923
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 23 14:15 claude-convf0-20260923
+drwxr-xr-x@  12 ben-hannan  staff      384 Sep 23 22:48 claude-convjudge239-A-20260922
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 23 22:39 claude-convjudge239-B-20260922
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 23 22:44 claude-convpanel239-138l-20260922
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 23 16:19 claude-convpanel239-138m-20260922
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 23 16:18 claude-convpanel239-138n-20260922
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 23 16:20 claude-convpanel239-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 22:48 claude-correct252-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 22:48 claude-correct252b-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:45 claude-corrpanel252-20260922
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 05:39 claude-corrpanel291-20260923
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 22:41 claude-corrtail258-20260922
+drwxr-xr-x   22 ben-hannan  staff      704 Sep 24 16:47 claude-cre333-20260924
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 09:09 claude-credit-20260926b
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 14:46 claude-credit-20260926j
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 15:33 claude-credit-20260926k
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 16:16 claude-credit-20260926m
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 19:23 claude-credit-20260926n
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 23 22:48 claude-decline224c-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 14:22 claude-demo-dryrun-20260922
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 10:13 claude-depot-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 12:07 claude-depot319f-20260926
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 22:46 claude-determinism228-20260922
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 01:09 claude-devset267-20260923
+drwxr-xr-x@  13 ben-hannan  staff      416 Sep 23 22:48 claude-diag243-20260922
+drwxr-xr-x   12 ben-hannan  staff      384 Sep 23 01:48 claude-diag267-20260923
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 23 06:34 claude-diag271-20260923
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 23 02:11 claude-diag290-20260923
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 23 04:55 claude-diag293-20260923
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 22:46 claude-direction251-20260922
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 09:08 claude-diskcheck-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 25 17:56 claude-dl1-20260925
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 25 21:47 claude-dl2-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 01:02 claude-dl3-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 11:45 claude-dl4-20260926
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 26 13:56 claude-dl5-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 13:38 claude-dl6-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 16:07 claude-dl7-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 27 01:27 claude-dl9-20260926
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 26 06:49 claude-e2e02c-20260926
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 26 06:48 claude-e2e02c-dev-20260926
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 26 11:33 claude-e2e02dr-20260926
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 24 09:37 claude-e2e330-dev-20260924
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 24 13:46 claude-e2e330c-dev-20260924
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 24 13:54 claude-e2e330c-dev2-20260924
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 24 14:32 claude-e2e330c-dev3-20260924
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 24 15:48 claude-e2e336-20260924
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 24 23:06 claude-e2e336b-20260925
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 26 11:44 claude-e2e382-20260925
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 26 11:43 claude-e2e382-dev-20260925
+drwxr-xr-x   19 ben-hannan  staff      608 Sep 23 01:24 claude-ear265-20260923
+drwxr-xr-x   24 ben-hannan  staff      768 Sep 23 06:21 claude-ear269-20260923
+drwxr-xr-x@  18 ben-hannan  staff      576 Sep 23 22:48 claude-earcheck261-20260922
+drwxr-xr-x   17 ben-hannan  staff      544 Sep 22 22:30 claude-earcheck261b-20260923
+drwxr-xr-x   27 ben-hannan  staff      864 Sep 23 00:55 claude-earcheck264-20260923
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 23 22:48 claude-earloop256-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:41 claude-earpanel235-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:41 claude-earpanel235b-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:41 claude-earpanel257-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 16:16 claude-earpanel261-20260922
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 22 21:45 claude-earpanel261b-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 22 23:43 claude-earpanel264-20260923
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 22 04:44 claude-ears119-run-20260922
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 15:10 claude-f1-20260923
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 13:36 claude-find-brd8w-20260926
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 22:48 claude-firstname236-20260922
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 23 22:39 claude-firstnamepanel236-20260922
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 23 22:46 claude-firstperson249-20260922
+drwxr-xr-x@  14 ben-hannan  staff      448 Sep 23 22:45 claude-fixedtext255-20260922
+drwxr-xr-x   13 ben-hannan  staff      416 Sep 23 00:12 claude-fixedtext255b-20260923
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 23 22:43 claude-fullname232-20260922
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 23 22:48 claude-fullname232b-20260922
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 23 22:48 claude-fullname232c-20260922
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 16:11 claude-g406-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 27 02:25 claude-g406l-20260927
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 16:37 claude-glm-exitcodes-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 16:05 claude-glm-helper-v11-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 14:58 claude-glm-opencode-20260926
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 26 15:37 claude-glm-throughput-20260926
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 26 16:16 claude-glm-v11-twoproc-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 12:53 claude-glmframes-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 11:32 claude-grab358i-20260926
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 16:19 claude-grade241-20260922
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 01:23 claude-grade241b-A-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 01:27 claude-grade241b-B-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 02:04 claude-grade241b-C-set2-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 02:40 claude-grade241b-D-set2-20260923
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 23 01:30 claude-grade255b-B-20260923
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 18:57 claude-gradef1-A-20260923
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 23 19:07 claude-gradef1-B-20260923
+drwxr-xr-x@   4 ben-hannan  staff      128 Sep 23 16:06 claude-grades255-20260922
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 24 22:24 claude-gram360-20260925
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 25 12:57 claude-gram364-20260925
+drwxr-xr-x@  12 ben-hannan  staff      384 Sep 23 22:48 claude-grammar238-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 22:48 claude-identity227c-20260922
+drwxr-xr-x@   4 ben-hannan  staff      128 Sep 23 22:44 claude-improvement-review-20260922
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 09:33 claude-instances-20260926c
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 16:01 claude-instances-20260926l
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 01:05 claude-invpanel138nb-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 06:46 claude-join280m-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 08:12 claude-join280n-20260923
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 10:00 claude-join280p-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 05:49 claude-join291-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 14:15 claude-join292t-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 06:23 claude-joinpanel280m-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 07:59 claude-joinpanel280n-20260923
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 09:58 claude-joinpanel280p-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 14:02 claude-joinpanel292t-20260923
+drwxr-xr-x@   3 ben-hannan  staff       96 Sep 23 16:06 claude-judge241-20260922
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 23 01:30 claude-judge241b-20260923
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 23 19:09 claude-judgef1-20260923
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 11:52 claude-k1a-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 13:06 claude-k1c-20260926
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 26 14:08 claude-k1e-20260926
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 27 01:25 claude-k1h-20260926
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 24 00:30 claude-lis-e2edev-20260924
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 23 09:57 claude-lis300-20260923
+drwxr-xr-x   11 ben-hannan  staff      352 Sep 23 15:03 claude-lis301-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 22:17 claude-lis302-20260924
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 07:31 claude-lis310-20260923
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 14:08 claude-lis311-20260923
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 23 23:10 claude-lis313-20260924
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 24 07:29 claude-lis313b-20260924
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 23 23:22 claude-lis314-20260924
+drwxr-xr-x   12 ben-hannan  staff      384 Sep 24 08:18 claude-lis314b-20260924
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 24 22:03 claude-lis317-20260925
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 25 05:33 claude-lis318-20260925
+drwxr-xr-x   11 ben-hannan  staff      352 Sep 25 16:22 claude-lis319-20260925
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 26 00:32 claude-lis319c-20260926
+drwxrwxr-x   24 ben-hannan  staff      768 Sep 26 12:23 claude-lis319f-20260926
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 26 11:25 claude-lis319k-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 12:18 claude-lis319o-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 11:37 claude-lis319t2-20260926
+drwxr-xr-x   12 ben-hannan  staff      384 Sep 27 01:36 claude-lis320-20260926
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 23 15:17 claude-loop273-20260923
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 23 22:21 claude-loop274-20260924
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 22:41 claude-looppanel254-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 22:43 claude-mentionwalk246-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 22:48 claude-merge138k-20260922
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 23 22:48 claude-merge138l-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 22:48 claude-merge138m-20260922
+drwxr-xr-x@  13 ben-hannan  staff      416 Sep 23 22:48 claude-merge138n-20260922
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 01:08 claude-merge138nb-20260923
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 01:15 claude-merge138p-20260923
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 23 22:46 claude-merge252c-20260922
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 08:54 claude-merge292-20260923
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 23 08:52 claude-mixpanel292-20260923
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 23 22:48 claude-mouth241-20260922
+drwxr-xr-x@  17 ben-hannan  staff      544 Sep 23 09:21 claude-mouth241b-20260922
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 10:36 claude-mu402-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 13:28 claude-mu403-20260926
+drwxr-xr-x   11 ben-hannan  staff      352 Sep 23 22:55 claude-mut0-20260924
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 24 00:46 claude-mut1-20260924
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 23 22:48 claude-myrel245-20260922
+drwxr-xr-x@  15 ben-hannan  staff      480 Sep 23 22:48 claude-name227b-20260922
+drwxr-xr-x@  22 ben-hannan  staff      704 Sep 23 22:48 claude-namecheck230b-20260922
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 23 22:43 claude-namecheck230br-20260922
+drwxr-xr-x@  22 ben-hannan  staff      704 Sep 23 22:48 claude-namecheck230c-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:26 claude-namecheckpanel230b-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:37 claude-namecheckpanel230br-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:36 claude-namecheckpanel230c-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:09 claude-namepanel232-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:45 claude-namepanel232b-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:40 claude-namepanel232c-20260922
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 17:03 claude-nb320-20260923
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 24 00:24 claude-nb321-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 23:20 claude-nb323-20260924
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 02:03 claude-nhop268-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 03:29 claude-nhop268b-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 00:45 claude-nhopdiag-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 01:26 claude-nhoppanel268-20260923
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 03:26 claude-nhoppanel268b-20260923
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 23 22:43 claude-openers260-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 16:15 claude-openpanel260-20260922
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 13:16 claude-orphans-20260926i
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 22 23:41 claude-ourpanel265-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 01:47 claude-ourpanel269-20260923
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 00:18 claude-own-bench-20260923
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 14:16 claude-own-m0-20260923
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 23 16:28 claude-own-m1-20260923
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 23 15:36 claude-own-m1n-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 24 00:21 claude-own-m1v-20260924
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 22 23:51 claude-own-o0a-20260923
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 05:35 claude-own-o0a2-20260923
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 23 06:52 claude-own-o0a3-20260923
+drwxr-xr-x   18 ben-hannan  staff      576 Sep 23 00:21 claude-own-o0b-20260923
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 23 00:07 claude-own-o0c-20260923
+drwxr-xr-x   11 ben-hannan  staff      352 Sep 23 00:14 claude-own-o0d-20260923
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 23 05:38 claude-own-o0d2-20260923
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 00:18 claude-own-o0e-20260923
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 05:48 claude-own-o0e2-20260923
+drwxr-xr-x   13 ben-hannan  staff      416 Sep 23 00:16 claude-papers-20260923
+drwxr-xr-x   13 ben-hannan  staff      416 Sep 23 00:19 claude-papers2-20260923
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 14:45 claude-peek-358i2pc-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 15:24 claude-peek-358i2pc-torch-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 16:36 claude-peek-rd378oc-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 20:30 claude-peek-rd378oc2-20260927
+drwxr-xr-x@  18 ben-hannan  staff      576 Sep 23 22:48 claude-polite233-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:39 claude-politepanel233-20260922
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 09:24 claude-probe007b-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 23 01:43 claude-probe255b-director-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 14:05 claude-probe280p-20260923
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 12:17 claude-q404-20260926
+drwxr-xr-x@  19 ben-hannan  staff      608 Sep 23 22:48 claude-qnorm221c-20260922
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 25 16:32 claude-rd371-20260925
+drwxr-xr-x   12 ben-hannan  staff      384 Sep 26 00:59 claude-rd371b-20260926
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 25 21:08 claude-rd378-20260925
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 27 02:21 claude-rd378g-20260926
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 26 15:23 claude-rd378k-20260926
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 26 12:27 claude-rd378L-20260926
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 26 13:25 claude-rd378u-20260926
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 26 12:27 claude-rd379q-20260926
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 23 22:48 claude-relationtable-20260922
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 12:07 claude-republish-20260926f
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 12:21 claude-republish-20260926g
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 12:21 claude-republish-20260926h
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 20:12 claude-rsn294-20260923
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 24 02:14 claude-rsn296-20260924
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 24 06:11 claude-rsn296b-20260924
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 24 08:31 claude-rsn299-20260924
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 24 09:14 claude-rsn299b-20260924
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 24 17:45 claude-rsn350-20260924
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 24 21:18 claude-rsn351-20260925
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 25 13:48 claude-rsn353-20260925
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 24 23:15 claude-rsn355-20260925
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 25 02:26 claude-rsn356-20260925
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 25 23:03 claude-rsn358a-20260925
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 11:11 claude-rsn358b2-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 00:06 claude-rsn358c-20260926
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 26 00:35 claude-rsn358d-20260926
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 26 11:32 claude-rsn358i-20260926
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 26 15:34 claude-rsn358i2-20260926
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 26 20:46 claude-rsn358i3-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 13:09 claude-rsn358t-20260926
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 26 12:40 claude-rsn358x-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 12:46 claude-rt02d-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 13:21 claude-rv390-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 17:06 claude-rv391-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 23 00:53 claude-scoreraudit-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 26 11:58 claude-sf401-20260926
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 04:40 claude-small282-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 05:44 claude-small282b-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 04:21 claude-smallpanel282-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 05:20 claude-smallpanel282b-20260923
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 23 22:48 claude-smalltalk234-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:35 claude-smalltalkpanel234-20260922
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 24 09:24 claude-smoke336win-20260924
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 23 22:48 claude-smolear235-20260922
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 23 22:48 claude-smolear235b-20260922
+drwxr-xr-x@  13 ben-hannan  staff      416 Sep 23 22:48 claude-smolear257-20260922
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 14:55 claude-stop-depot-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 27 00:04 claude-stop-g406-2-20260927
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 16:06 claude-stop-k1h-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 27 01:16 claude-stop-lis320c1-20260927
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 14:54 claude-stop-mu405-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 23:57 claude-stop-rd378low-20260927
+drwxr-xr-x@  20 ben-hannan  staff      640 Sep 23 22:48 claude-storedrel221b-20260922
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 24 10:05 claude-style339-20260924
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 23 22:48 claude-table237-20260922
+drwxr-xr-x@  15 ben-hannan  staff      480 Sep 23 22:46 claude-table237b-20260922
+drwxr-xr-x@  25 ben-hannan  staff      800 Sep 23 22:45 claude-tableask221-20260922
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 22 14:37 claude-tablepanel221-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 22:40 claude-tablepanel221b-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 22:46 claude-tableteach229-20260922
+drwxr-xr-x@   4 ben-hannan  staff      128 Sep 22 04:41 claude-talker101-eval-20260922
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 23 08:00 claude-talker120-run-20260922
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 23 22:48 claude-talker120b-run-20260922
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 23 22:40 claude-teachpanel229-20260922
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 25 21:37 claude-tgt5-20260926
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 25 22:36 claude-trash-0926
+drwxr-xr-x   14 ben-hannan  staff      448 Sep 23 05:16 claude-type270-20260923
+drwxr-xr-x   25 ben-hannan  staff      800 Sep 23 07:30 claude-type270b-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 02:45 claude-typepanel270-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 06:45 claude-typepanel270b-20260923
+drwxr-xr-x@  15 ben-hannan  staff      480 Sep 23 22:46 claude-verbsubj250-20260922
+drwxr-xr-x@  18 ben-hannan  staff      576 Sep 23 22:48 claude-verify-20260922
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 23 00:02 claude-verify-20260923
+drwxr-xr-x@  13 ben-hannan  staff      416 Sep 23 22:46 claude-whats248-20260922
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 10:09 claude-y1d-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 12:01 claude-y1f-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 12:45 claude-y1g-20260926
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 26 20:45 claude-y1t-20260926
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 06:11 claude-yesno293-20260923
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 05:55 claude-yesnopanel293-20260923
+drwxr-xr-x@  18 ben-hannan  staff      576 Sep 23 22:48 claude-yesprefix230-20260922
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 26 09:44 claude-zdl4check-20260926e
+drwxr-xr-x@  24 ben-hannan  staff      768 Sep 23 16:27 fable-about164-20260922
+drwxr-xr-x@  26 ben-hannan  staff      832 Sep 23 22:48 fable-about164b-20260922
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 21 22:58 fable-abstain64-20260921
+drwxr-xr-x@  17 ben-hannan  staff      544 Sep 21 23:46 fable-abstain76-20260921
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 21 23:59 fable-abstain78-20260921
+drwxr-xr-x@  32 ben-hannan  staff     1024 Sep 23 07:49 fable-agent138-20260922
+drwxr-xr-x@  54 ben-hannan  staff     1728 Sep 23 07:51 fable-agent138b-20260922
+drwxr-xr-x@  34 ben-hannan  staff     1088 Sep 23 16:27 fable-agent138d-20260922
+drwxr-xr-x@  27 ben-hannan  staff      864 Sep 23 16:23 fable-agent138f-20260922
+drwxr-xr-x@  28 ben-hannan  staff      896 Sep 23 16:22 fable-agent138g-20260922
+drwxr-xr-x@  26 ben-hannan  staff      832 Sep 23 16:32 fable-agent138h-20260922
+drwxr-xr-x@  14 ben-hannan  staff      448 Sep 23 22:48 fable-agent138i-20260922
+drwxr-xr-x@  13 ben-hannan  staff      416 Sep 23 22:48 fable-agent138j-20260922
+drwxr-xr-x@  17 ben-hannan  staff      544 Sep 23 16:25 fable-align147-20260922
+drwxr-xr-x@  24 ben-hannan  staff      768 Sep 23 16:23 fable-apos193-20260922
+drwxr-xr-x@  17 ben-hannan  staff      544 Sep 23 22:44 fable-atomic207-20260922
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 21 23:15 fable-audit75-20260921
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 21 23:47 fable-audit83-20260921
+drwxr-xr-x   17 ben-hannan  staff      544 Sep 22 07:12 fable-autosleep42-20260921
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 21 02:08 fable-baseline-length-eval-20260920
+drwxr-xr-x@  13 ben-hannan  staff      416 Sep 21 06:01 fable-baseline-transformer-20260920
+drwxr-xr-x   12 ben-hannan  staff      384 Sep 21 06:05 fable-baseline-transformer-v2-20260920
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 21:50 fable-bench103-20260921
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 21:50 fable-bench111-20260921
+drwxr-xr-x@  12 ben-hannan  staff      384 Sep 22 23:30 fable-bench113-20260922
+drwxr-xr-x@  12 ben-hannan  staff      384 Sep 22 23:38 fable-bench113b-20260922
+drwxr-xr-x@  12 ben-hannan  staff      384 Sep 23 03:22 fable-bench113c-20260922
+drwxr-xr-x@  17 ben-hannan  staff      544 Sep 23 03:22 fable-bench113d-20260922
+drwxr-xr-x@  17 ben-hannan  staff      544 Sep 23 03:28 fable-bench113e-20260922
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 23 03:22 fable-bench121-20260922
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 23 01:52 fable-bench125-20260922
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 23 04:11 fable-bench132-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 21 23:02 fable-bench65-20260921
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 22 09:18 fable-bench66-20260921
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 21 23:50 fable-bench73-20260921
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 22 19:05 fable-bench92-20260921
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 22 23:33 fable-brake118-20260922
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 23 03:22 fable-brake118b-20260922
+drwxr-xr-x@  15 ben-hannan  staff      480 Sep 23 22:48 fable-cantdo223-20260922
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 22 17:45 fable-cardfold-sleep-20260922
+drwxr-xr-x@  24 ben-hannan  staff      768 Sep 23 16:23 fable-case180b-20260922
+drwxr-xr-x@  27 ben-hannan  staff      864 Sep 23 16:22 fable-chainof174-20260922
+drwxr-xr-x@  17 ben-hannan  staff      544 Sep 21 09:00 fable-concept-toy20-20260920
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 21 02:39 fable-confirmation-panels-20260920
+drwxr-xr-x@   4 ben-hannan  staff      128 Sep 23 16:20 fable-copula172-20260922
+drwxr-xr-x@  30 ben-hannan  staff      960 Sep 23 16:25 fable-copula172b-20260922
+drwxr-xr-x@  22 ben-hannan  staff      704 Sep 23 07:51 fable-correct160-20260922
+drwxr-xr-x@  22 ben-hannan  staff      704 Sep 23 16:23 fable-correct160b-20260922
+drwxr-xr-x@  19 ben-hannan  staff      608 Sep 23 22:48 fable-correctreply192-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 21 21:58 fable-counter59-20260921
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 21 23:01 fable-counter60-20260921
+drwxr-xr-x   12 ben-hannan  staff      384 Sep 21 12:05 fable-creative-stop-toy-20260921
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 23 04:19 fable-daemon141-20260922
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 21 23:15 fable-daemon74-20260921
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 23 22:46 fable-decline224-20260922
+drwxr-xr-x@  26 ben-hannan  staff      832 Sep 23 22:48 fable-declinecue216-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 03:21 fable-demo126-20260922
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 21 21:41 fable-demo55-20260921
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 21 21:58 fable-demo55b-20260921
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 21 23:26 fable-demo88-20260921
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 22 21:50 fable-diag95-20260921
+drwxr-xr-x@  26 ben-hannan  staff      832 Sep 23 08:08 fable-discourse137b-20260922
+drwxr-xr-x   24 ben-hannan  staff      768 Sep 21 06:05 fable-dispatcher-pilot-20260920
+drwxr-xr-x@  18 ben-hannan  staff      576 Sep 21 02:38 fable-dispatcher-probes26-20260921
+drwxr-xr-x@  12 ben-hannan  staff      384 Sep 21 05:23 fable-dispatcher-v3-20260920
+drwxr-xr-x   14 ben-hannan  staff      448 Sep 21 06:01 fable-dispatcher-v4-20260920
+drwxr-xr-x@  20 ben-hannan  staff      640 Sep 23 06:34 fable-doubt146-20260922
+drwxr-xr-x@  24 ben-hannan  staff      768 Sep 23 07:50 fable-doubt146b-20260922
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 22 21:50 fable-ears109-20260921
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 22 23:33 fable-ears119-20260922
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 23 16:03 fable-ears119b-20260922
+drwxr-xr-x@   3 ben-hannan  staff       96 Sep 22 05:00 fable-ears119d-20260922
+drwxr-xr-x@  13 ben-hannan  staff      416 Sep 23 16:25 fable-ears119e-20260922
+drwxr-xr-x@  18 ben-hannan  staff      576 Sep 23 16:03 fable-ears119f-20260922
+drwxr-xr-x@  22 ben-hannan  staff      704 Sep 23 16:06 fable-ears119g-20260922
+drwxr-xr-x@  20 ben-hannan  staff      640 Sep 23 22:36 fable-ears119h-20260922
+drwxr-xr-x@  15 ben-hannan  staff      480 Sep 23 22:35 fable-ears213-20260922
+drwxr-xr-x   18 ben-hannan  staff      576 Sep 22 08:18 fable-ears45-20260921
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 21 23:22 fable-ears47-20260921
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 21 23:49 fable-ears85-20260921
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 21 23:55 fable-earsguard91-20260921
+drwxr-xr-x   25 ben-hannan  staff      800 Sep 22 06:54 fable-english-listening-20260921
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 23 22:45 fable-fairsmol211-20260922
+drwxr-xr-x@  20 ben-hannan  staff      640 Sep 23 06:51 fable-filler157-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 16:27 fable-filler157b-20260922
+drwxr-xr-x@  49 ben-hannan  staff     1568 Sep 24 06:30 fable-fix129-20260922
+drwxr-xr-x@  18 ben-hannan  staff      576 Sep 23 03:22 fable-fix135-20260922
+drwxr-xr-x@  18 ben-hannan  staff      576 Sep 23 03:33 fable-fix137-20260922
+drwxr-xr-x@  23 ben-hannan  staff      736 Sep 23 04:26 fable-fix139-20260922
+drwxr-xr-x@  19 ben-hannan  staff      608 Sep 23 05:23 fable-fix139b-20260922
+drwxr-xr-x@  18 ben-hannan  staff      576 Sep 23 04:12 fable-fix140-20260922
+drwxr-xr-x@  15 ben-hannan  staff      480 Sep 23 06:21 fable-fix144-20260922
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 23 06:34 fable-fix150-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 21 23:57 fable-fix77-20260921
+drwxr-xr-x@  27 ben-hannan  staff      864 Sep 23 16:23 fable-frame137d-20260922
+drwxr-xr-x@  27 ben-hannan  staff      864 Sep 23 16:23 fable-frame137e-20260922
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 22 08:22 fable-hardgate46-20260921
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 21 23:17 fable-hardgate80-20260921
+drwxr-xr-x@  30 ben-hannan  staff      960 Sep 23 08:02 fable-hedgecase150d-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 07:49 fable-hop159-20260922
+drwxr-xr-x@  27 ben-hannan  staff      864 Sep 23 16:27 fable-hypo137c-20260922
+drwxr-xr-x@  18 ben-hannan  staff      576 Sep 23 22:46 fable-identity227-20260922
+drwxr-xr-x@  25 ben-hannan  staff      800 Sep 23 07:51 fable-inverted155-20260922
+drwxr-xr-x@  19 ben-hannan  staff      608 Sep 23 16:23 fable-label167c-20260922
+drwxr-xr-x@  19 ben-hannan  staff      608 Sep 23 16:23 fable-label167e-20260922
+drwxr-xr-x@  18 ben-hannan  staff      576 Sep 23 16:25 fable-lang154e-20260922
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 22 07:54 fable-learnedaddr43i-20260921
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 22 08:18 fable-learnedparity43j-20260921
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 21:50 fable-ledger112-20260922
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 22 12:30 fable-ledger82-20260921
+drwxr-xr-x   15 ben-hannan  staff      480 Sep 22 07:17 fable-lengthgate43-20260921
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 21 01:19 fable-link-isolation-20260920
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 21 06:09 fable-link-isolation-v2-20260920
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 21 23:37 fable-livesleep52-20260921
+drwxr-xr-x@   3 ben-hannan  staff       96 Sep 21 23:16 fable-lm87-20260921
+drwxr-xr-x@  33 ben-hannan  staff     1056 Sep 22 21:50 fable-loop102-20260921
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 22 23:32 fable-loop117-20260922
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 23 03:22 fable-loop134-20260922
+drwxr-xr-x@  13 ben-hannan  staff      416 Sep 22 17:46 fable-loop90-20260921
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 22 20:52 fable-loop96-20260921
+drwxr-xr-x@  26 ben-hannan  staff      832 Sep 23 16:23 fable-lowercase163-20260922
+drwxr-xr-x@  28 ben-hannan  staff      896 Sep 23 16:23 fable-lowercase180-20260922
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 22 07:25 fable-lowrank43f-20260921
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 23 03:22 fable-marks123-20260922
+drwxr-xr-x@  22 ben-hannan  staff      704 Sep 23 16:23 fable-me166-20260922
+drwxr-xr-x@  20 ben-hannan  staff      640 Sep 23 16:23 fable-me166b-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 16:23 fable-me166c-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 08:53 fable-modernbert58-20260921
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 21 22:09 fable-modernbert61-20260921
+drwxr-xr-x   12 ben-hannan  staff      384 Sep 21 21:37 fable-modes54-20260921
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 22 21:50 fable-mouth53-20260921
+drwxr-xr-x@  17 ben-hannan  staff      544 Sep 23 16:23 fable-multival154b-20260922
+drwxr-xr-x@  20 ben-hannan  staff      640 Sep 23 16:23 fable-multival154c-20260922
+drwxr-xr-x@  24 ben-hannan  staff      768 Sep 23 16:32 fable-nameval171-20260922
+drwxr-xr-x@  24 ben-hannan  staff      768 Sep 23 16:25 fable-nameval171b-20260922
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 23 22:45 fable-naturalpanel208-20260922
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 23 16:23 fable-negate154f-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 21 06:01 fable-newnames21-20260920
+drwxr-xr-x@  29 ben-hannan  staff      928 Sep 21 06:09 fable-newnames27-20260921
+drwxr-xr-x@  25 ben-hannan  staff      800 Sep 21 04:50 fable-newnames29-20260921
+drwxr-xr-x@  18 ben-hannan  staff      576 Sep 23 16:23 fable-nocorrect154g-20260922
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 22 00:00 fable-noisyteacher45-20260921
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 21 03:11 fable-notebook-m0-20260920
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 21 01:47 fable-novelty-research-20260920
+drwxr-xr-x   27 ben-hannan  staff      864 Sep 21 03:48 fable-novelty19-replay-20260920
+drwxr-xr-x@  19 ben-hannan  staff      608 Sep 21 03:21 fable-novelty19b-u8-20260920
+drwxr-xr-x@  43 ben-hannan  staff     1376 Sep 23 16:23 fable-officechain138e-20260922
+drwxr-xr-x@  20 ben-hannan  staff      640 Sep 23 22:48 fable-ofteach215-20260922
+drwxr-xr-x@  13 ben-hannan  staff      416 Sep 23 22:48 fable-ofteachb222-20260922
+drwxr-xr-x@   3 ben-hannan  staff       96 Sep 21 01:10 fable-operator-balance-20260920
+drwxr-xr-x@   3 ben-hannan  staff       96 Sep 21 01:10 fable-operator-e0-20260920
+drwxr-xr-x@   3 ben-hannan  staff       96 Sep 21 01:19 fable-operator-grow-20260920
+drwxr-xr-x@   3 ben-hannan  staff       96 Sep 21 01:25 fable-operator-grow-blind-20260920
+drwxr-xr-x@   3 ben-hannan  staff       96 Sep 21 01:10 fable-operator-hintwarm-20260920
+drwxr-xr-x@   3 ben-hannan  staff       96 Sep 21 01:25 fable-operator-marg-20260920
+drwxr-xr-x@   3 ben-hannan  staff       96 Sep 21 01:12 fable-operator-marg-full-20260920
+drwxr-xr-x@   3 ben-hannan  staff       96 Sep 21 01:29 fable-operator-marg-staged-20260920
+drwxr-xr-x@   3 ben-hannan  staff       96 Sep 21 01:19 fable-operator-marg-staged-dense-20260920
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 21 06:09 fable-operator-reliability-bundle
+-rw-r--r--    1 ben-hannan  staff  3739810 Sep 20 11:32 fable-operator-reliability-bundle.tar.gz
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 21 01:58 fable-operator-reliability-grow-blind-20260920
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 21 01:47 fable-operator-swap-20260920
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 23 03:22 fable-perf128-20260922
+drwxr-xr-x@  22 ben-hannan  staff      704 Sep 23 05:49 fable-perf142-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 16:27 fable-plural162b-20260922
+-rw-r--r--    1 ben-hannan  staff   716249 Sep 27 01:27 fable-predictions-ledger.md
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 07:50 fable-qform158-20260922
+drwxr-xr-x@  33 ben-hannan  staff     1056 Sep 23 06:34 fable-qmark151-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 21 23:46 fable-qual56-20260921
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 22 21:50 fable-read106-20260921
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 21:50 fable-read107-20260921
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 21 23:49 fable-reading94-20260921
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 23 16:16 fable-reading94b-20260922
+drwxr-xr-x   11 ben-hannan  staff      352 Sep 21 23:59 fable-reasoner44-20260921
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 22 08:41 fable-reasoner50-20260921
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 22 23:20 fable-redteam110-20260921
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 01:53 fable-redteam124-20260922
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 23 03:22 fable-redteam136-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 04:31 fable-redteam143-20260922
+drwxr-xr-x@   4 ben-hannan  staff      128 Sep 21 23:07 fable-redteam67-20260921
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 21 23:16 fable-redteam79-20260921
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 21 23:18 fable-redteam81-20260921
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 22 00:13 fable-redteam98-20260921
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 21 23:50 fable-relcanon63-20260921
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 22 20:12 fable-relcanon97-20260921
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 15:07 fable-restartindex220-20260922
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 23 22:39 fable-reversal210-20260922
+drwxr-xr-x@  23 ben-hannan  staff      736 Sep 23 06:54 fable-reverse153-20260922
+drwxr-xr-x@  20 ben-hannan  staff      640 Sep 23 16:25 fable-reverse190-20260922
+drwxr-xr-x@  25 ben-hannan  staff      800 Sep 23 22:48 fable-reverse190b-20260922
+drwxr-xr-x@  29 ben-hannan  staff      928 Sep 23 16:23 fable-sayagain189-20260922
+drwxr-xr-x@  26 ben-hannan  staff      832 Sep 23 16:23 fable-sayagain189b-20260922
+drwxr-xr-x@  22 ben-hannan  staff      704 Sep 23 05:36 fable-screen148-20260922
+drwxr-xr-x@  22 ben-hannan  staff      704 Sep 23 06:51 fable-screen148b-20260922
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 22 21:49 fable-self100-20260921
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 21:50 fable-self105-20260921
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 22 19:59 fable-self105panel-20260921
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 23:30 fable-self114-20260922
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 22 23:20 fable-self114panel-20260922
+drwxr-xr-x@  12 ben-hannan  staff      384 Sep 23 01:53 fable-self122-20260922
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 22 23:33 fable-self122panel-20260922
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 23 03:22 fable-self127-20260922
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 22 00:56 fable-self127panel-20260922
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 23 07:51 fable-self138c-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 20:18 fable-self99-20260921
+drwxr-xr-x@  19 ben-hannan  staff      608 Sep 23 07:50 fable-selfcard161-20260922
+drwxr-xr-x@  26 ben-hannan  staff      832 Sep 23 22:48 fable-selfgate212-20260922
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 23 16:23 fable-selfground168-20260922
+drwxr-xr-x@  20 ben-hannan  staff      640 Sep 23 22:46 fable-selfname219-20260922
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 23 16:00 fable-selfq187-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 16:23 fable-selfq187b-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 06:34 fable-session152-20260922
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 22 07:18 fable-sharedsleep43b-20260921
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 21 23:17 fable-simplewiki86-20260921
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 21:50 fable-sleep104-20260921
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 23:33 fable-sleep115-20260922
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 22 23:30 fable-sleep116-20260922
+drwxr-xr-x@  19 ben-hannan  staff      608 Sep 23 03:30 fable-sleep130-20260922
+drwxr-xr-x@  19 ben-hannan  staff      608 Sep 23 03:22 fable-sleep131-20260922
+drwxr-xr-x@  35 ben-hannan  staff     1120 Sep 23 05:50 fable-sleep145-20260922
+drwxr-xr-x   11 ben-hannan  staff      352 Sep 22 07:24 fable-sleepselect43e-20260921
+drwxr-xr-x@   9 ben-hannan  staff      288 Sep 23 22:45 fable-sleepsmoke206-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 07:51 fable-smalltalk156-20260922
+drwxr-xr-x@  22 ben-hannan  staff      704 Sep 23 07:51 fable-smalltalk156b-20260922
+drwxr-xr-x@  30 ben-hannan  staff      960 Sep 23 22:48 fable-smalltalk156c-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 01:52 fable-soak108-20260921
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 22 21:39 fable-soak93-20260921
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 22:45 fable-source226-20260922
+drwxr-xr-x@  31 ben-hannan  staff      992 Sep 23 16:22 fable-speed170-20260922
+drwxr-xr-x   13 ben-hannan  staff      416 Sep 21 04:46 fable-startup-factorial-20260920
+drwxr-xr-x@  20 ben-hannan  staff      640 Sep 21 04:46 fable-startup-factorial-v2-20260920
+drwxr-xr-x@  25 ben-hannan  staff      800 Sep 23 16:32 fable-statefall188-20260922
+drwxr-xr-x    7 ben-hannan  staff      224 Sep 21 02:14 fable-story-size-stress-20260920
+drwxr-xr-x@  22 ben-hannan  staff      704 Sep 23 07:51 fable-subject150b-20260922
+drwxr-xr-x@  23 ben-hannan  staff      736 Sep 23 16:23 fable-subject150c-20260922
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 23 22:48 fable-suitediff214-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 23 22:48 fable-suitediff218-20260922
+drwxr-xr-x@  24 ben-hannan  staff      768 Sep 23 16:32 fable-tail139d-20260922
+drwxr-xr-x@  23 ben-hannan  staff      736 Sep 23 16:32 fable-tail139e-20260922
+drwxr-xr-x@  23 ben-hannan  staff      736 Sep 23 16:02 fable-tailwords139c-20260922
+drwxr-xr-x@  20 ben-hannan  staff      640 Sep 22 21:50 fable-talker101-20260921
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 23 01:59 fable-talker120-20260922
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 23 17:19 fable-talker120b-20260922
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 23 15:58 fable-talker120c-20260922
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 23 16:16 fable-talker120d-20260922
+drwxr-xr-x@  18 ben-hannan  staff      576 Sep 24 04:33 fable-talker24-20260920
+drwxr-xr-x@  26 ben-hannan  staff      832 Sep 22 04:41 fable-thename162-20260922
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 21 21:33 fable-thought49-20260921
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 21 23:57 fable-thought62-20260921
+drwxr-xr-x@  26 ben-hannan  staff      832 Sep 23 16:23 fable-title157c-20260922
+drwxr-xr-x   12 ben-hannan  staff      384 Sep 22 17:45 fable-transport43g-20260921
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 17:46 fable-turns84-20260921
+drwxr-xr-x@  25 ben-hannan  staff      800 Sep 23 16:23 fable-twohop160c-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 16:23 fable-typo165-20260922
+drwxr-xr-x@  20 ben-hannan  staff      640 Sep 23 16:25 fable-username173-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 16:23 fable-username173b-20260922
+drwxr-xr-x@  22 ben-hannan  staff      704 Sep 23 16:22 fable-verb167-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 16:25 fable-verb167b-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 16:23 fable-verb167d-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 21 23:57 fable-webfix89-20260921
+drwxr-xr-x@  27 ben-hannan  staff      864 Sep 23 16:23 fable-whcity158c-20260922
+drwxr-xr-x@  27 ben-hannan  staff      864 Sep 23 08:00 fable-whrel158b-20260922
+drwxr-xr-x   12 ben-hannan  staff      384 Sep 22 00:00 fable-widelengths43k-20260921
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 22 08:41 fable-wire51-20260921
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 22 09:02 fable-wire57-20260921
+drwxr-xr-x@  37 ben-hannan  staff     1184 Sep 23 05:48 fable-wordmatch149-20260922
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 23 22:48 fable-writescreen209-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 23 07:51 fable-yesno154-20260922
+drwxr-xr-x@  27 ben-hannan  staff      864 Sep 23 16:22 fable-yesno154d-20260922
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 24 15:31 or-keycheck-20260924
+total 0
+drwxr-xr-x    3 ben-hannan  staff     96 Sep 27 02:25 .
+drwxr-xr-x@ 606 ben-hannan  staff  19392 Sep 27 02:25 ..
+drwxr-xr-x    9 ben-hannan  staff    288 Sep 27 02:25 run
+total 200
+drwxr-xr-x  9 ben-hannan  staff    288 Sep 27 02:25 .
+drwxr-xr-x  3 ben-hannan  staff     96 Sep 27 02:25 ..
+-rw-r--r--  1 ben-hannan  staff    396 Sep 27 02:25 arms_b.json
+-rw-r--r--  1 ben-hannan  staff  35345 Sep 27 02:25 best_b.jsonl
+-rw-r--r--  1 ben-hannan  staff  35345 Sep 27 02:25 luna_b.jsonl
+-rw-r--r--  1 ben-hannan  staff    507 Sep 27 02:25 luna_b.log
+-rw-r--r--  1 ben-hannan  staff    192 Sep 27 02:25 pilot.log
+-rw-r--r--  1 ben-hannan  staff   9033 Sep 27 02:25 RESULTS.md
+-rw-r--r--  1 ben-hannan  staff    686 Sep 27 02:25 verdict_b.json
+[0m
+[0m$ [0mpwd; git status --porcelain | head -50; git log --oneline -3; ls
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+e22e4b6bf rd378g-writeluna PILOT-FAIL: Luna batch-18 pilot skipped after 3 tries, 3 call-failed lines (9x timeout after 300s), 0 batch-ok; JSON: 90 kept, 0 new
+86599f56d k1h-glm salvage glm: 240 answers / 593 chats, 5/5 sha256 vs <tmp> (counts only)
+24766dc63 000-luna-helper-selftest: reply with selftest + 3-call parallel outputs
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m→ [0mRead artifacts/claude-g406l-20260927/run/RESULTS.md
+[0m
+[0m$ [0mls -la scripts/ | grep -i g406; echo ---; ls -la scripts/claude_luna_codex.py 2>/dev/null; echo ---; git log --oneline -1; date -u; uptime
+---
+-rw-r--r--  1 ben-hannan  staff  5133 Sep 26 23:51 scripts/claude_luna_codex.py
+---
+e22e4b6bf rd378g-writeluna PILOT-FAIL: Luna batch-18 pilot skipped after 3 tries, 3 call-failed lines (9x timeout after 300s), 0 batch-ok; JSON: 90 kept, 0 new
+Sun Sep 27 06:26:26 UTC 2026
+ 2:26  up 3 days, 16:19, 4 users, load averages: 123.69 84.02 87.87
+[0m
+[0m$ [0mls -d /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1 2>&1; echo "---files---"; wc -l artifacts/claude-g406l-20260927/run/*.jsonl; echo "---logs---"; tail -3 artifacts/claude-g406l-20260927/run/pilot.log; echo "=== luna_b.log last 3 ==="; tail -3 artifacts/claude-g406l-20260927/run/luna_b.log; echo "---arms---"; cat artifacts/claude-g406l-20260927/run/arms_b.json; echo; echo "---verdict---"; cat artifacts/claude-g406l-20260927/run/verdict_b.json
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1: No such file or directory
+---files---
+     220 artifacts/claude-g406l-20260927/run/best_b.jsonl
+     220 artifacts/claude-g406l-20260927/run/luna_b.jsonl
+     440 total
+---logs---
+[g406-2/two] pass 1: 10 written this run, 0 failed
+{"mode": "two", "packets": 10, "usable_before": 0, "written": 10, "failed_this_run": 0, "usable_now": 10, "minutes": 2.6, "stopped": "done"}
+=== luna_b.log last 3 ===
+[g406-2/two] pass 1: 180 written this run, 0 failed
+[g406-2/two] pass 1: 210 written this run, 0 failed
+{"mode": "two", "packets": 240, "usable_before": 10, "written": 210, "failed_this_run": 0, "usable_now": 220, "minutes": 48.9, "stopped": "time"}
+---arms---
+{"H": {"packets": 57, "replies": 285, "glm": 80, "either": 33, "both": 23, "glm_catches_both": 23}, "N": {"packets": 55, "replies": 275, "glm": 80, "either": 24, "both": 18, "glm_catches_both": 17}, "U": {"packets": 53, "replies": 265, "glm": 144, "either": 83, "both": 72, "glm_catches_both": 72}, "W": {"packets": 55, "replies": 275, "glm": 59, "either": 18, "both": 9, "glm_catches_both": 9}}
+
+---verdict---
+{
+ "packets": 240,
+ "usable_packets": 220,
+ "replies": 1100,
+ "judge_either": 158,
+ "judge_both": 122,
+ "glm_flags": 363,
+ "glm_catches_both": 121,
+ "glm_catches_either": 149,
+ "glm_clean": 737,
+ "either_in_glm_clean": 9,
+ "recall_both": 0.992,
+ "recall_either": 0.943,
+ "base_either_rate": 0.1436,
+ "either_rate_in_glm_clean": 0.0122,
+ "either_rate_in_glm_flagged": 0.4105,
+ "yield_clean": 0.67,
+ "kappa_vs_either": 0.465,
+ "V": false,
+ "G1": true,
+ "G2": true,
+ "G3": true,
+ "proved_wrong": false,
+ "verdict": "INCONCLUSIVE",
+ "per_source": {
+  "claude-mu405b-20260926": {
+   "replies": 1100,
+   "either": 158,
+   "both": 122,
+   "glm_flags": 363,
+   "glm_catches_both": 121
+  }
+ }
+}
+[0m
+[0m$ [0mgit diff --stat artifacts/fable-predictions-ledger.md; echo ---; git diff artifacts/fable-predictions-ledger.md | head -60
+artifacts/fable-predictions-ledger.md | 1 +
+ 1 file changed, 1 insertion(+)
+---
+diff --git a/artifacts/fable-predictions-ledger.md b/artifacts/fable-predictions-ledger.md
+index f75a50f5b..c558777a8 100644
+--- a/artifacts/fable-predictions-ledger.md
++++ b/artifacts/fable-predictions-ledger.md
+@@ -3043,3 +3043,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
+ - 2026-09-26 19:34 UTC rsn-358i2 GPU BUILD (label claude-sleep-358i2pc, sealed origin/main code, SEAL-code 19/19 OK, code never edited): BensPC $0 (RTX 5070 Ti, torch 2.11.0+cu128, CUDA 12.8, python 3.10.9), 4 loop seeds x 60000 steps (102.8/104.8/104.9/104.8 min), SEAL-run 4 lines (64 hex each), evals 1x each counts-only. VERDICT SUSPECT CONFIRMED: V0 pass (nograd 0/0/0/0 of 60000 x4), M1 pass (dev grids5@10k 195/198/197/200, 4/4 >=100), M2 pass (grids5 gap +1.00), M3 pass (grids6 gap +51.75); proved-wrong NOT triggered (0/4 <=20, gap +1.00). Gaps loop-plain: sums4 +0.00 sums6 +100.50 sums8 +160.25 grids5 +1.00 grids6 +51.75 grids7 +55.00 numbers4 -0.25 numbers5 +0.00 sums10 +163.25 sums12 +138.00. 358t-style G0/G1/G2/G3 all met (report-only). Deviations: BensPC per ADDENDUM-1 (Stage 0 report-only, 0/12 both lines); GPU-BUSY.txt pre-existed naming same job; CIM-detached launches (cmd PIDs 10348/3576/13828/17048); seed-1 first attempt killed at ~11k with its parent, restarted clean (partials deleted, BensPC scratch only); evals sequential after training. 16 run files back, weights ~/premonition-models/rsn358i2/ + C:/Users/benja/premonition-models/rsn358i2/ (25764244 B x4, sha match), 0 weights pushed. See artifacts/claude-rsn358i2-20260926/RESULTS.md + runs/ + SEAL-run.sha256.txt.
+ - 2026-09-26 20:15 UTC Director: rent-zdl7b done, registered FAIL (F3; F1/F2/F4/F5 pass, not proved wrong, premise supported 22/26 = 84.6%). Contract 52799251 (RTX 5090 KR, dph $0.4167, ~1.45 h) ~$0.60 of $1.00 (Ben 18:39 +$1.00 extra). 1 rental, selftest ok, first night line in 7 min, run wall 72.4 min. Instance destroyed, 0 claude-fixsleep-dl7b live.
+ - 2026-09-27 00:50 UTC rsn-358i3 GPU BUILD (label claude-sleep-358i3pc, sealed origin/main code byte-identical to 358i2, SEAL-code 19/19 OK, code never edited): BensPC $0 (RTX 5070 Ti, torch 2.11.0+cu128, CUDA 12.8), 12 runs x 60000 steps (loop s5-8: 78.5/82.1/75.0/78.0 min; plain s5-8: 75.2/79.1/71.2/76.1 min; plain s1-4: 61.2/58.6/50.8/50.4 min), SEAL-run 12 lines (64 hex each), evals 1x each counts-only. VERDICT PASS: V0 pass (nograd 0 x12), G0 met 8/8 arms, G1 pass (mean gaps sums6 +124.00 4/4 seeds>0, grids6 +52.00 4/4, numbers5 +0.00), G2 pass (+0.00/+1.50/+0.75), G3 pass (4/4 seeds right>=fixed16-5 on all bigger tests, mean rounds sums6 7.56 > sums4 6.71); proved-wrong NOT triggered. Report-only: BensPC plain s1-4 vs rental plain s1-4 mixed signs (sums6 -25..+17, grids6 -16..+10); 358i2 loop s1-4 minus BensPC plain s1-4: sums6 +63..+146, grids6 +51..+62. Deviations: GPU-BUSY.txt pre-existed naming same job (watcher-owned, untouched); WMI-detached launches (ssh-session kill found empirically, same command line, cmd PIDs recorded, nothing stopped); stderr to sibling .err on BensPC only; C: free 6.3 GB. 48 run files back, weights ~/premonition-models/rsn358i3/ + C:/Users/benja/premonition-models/rsn358i3/ (sha match 12/12), 0 weights pushed. See artifacts/claude-rsn358i3-20260926/RESULTS.md + runs/ + SEAL-run.sha256.txt.
++- 2026-09-27 05:30 UTC dl-9 GPU BUILD (label claude-dl9-20260926, sealed origin/main code, code never edited, selftest ok): BensPC $0 (RTX 5070 Ti, torch 2.11.0+cu128, CUDA 12.8, transformers 5.17.0, python C:/Users/benja/lis300/venv), pool 1000 asked -> 501 kept (400 train / 101 held), base L0 lucky 54 greedy 2 harm_right 201, 2 seeds x 7 nights x 150 puzzles x 30 guesses (script 111.3 min, wall ~111 min, one run). VERDICT PASS: H1 pass (X lost 0/0, S lost 20/27), H2 pass (X gain 177/229 = S gain 177/229), H3 pass (test_on 100/100, panel off 300/300), H4 pass (X gain sum 406 >= 2x R gain sum 136; X lost sum 0 <= R lost sum 13); proved_wrong false (not INCONCLUSIVE: L0 54 >= 10, S lost sum 47 >= 20). Report-only: switch panel_on 88 night 1 (bigger 86, count 2) then 0 nights 2-7 both seeds; S-lost items switched on 0/14 nights; reworded night 7 switch_on 100/100 all 4 frames both seeds (X greedy = adapter greedy: s16 7/16/21/21, s17 12/22/22/19). Deviations: 3 GB disk gate (C: 4.4 GB at start, re-run of job 150); Task-Scheduler-detached launch (ssh kills detached trees; 2 dead Start-Process PIDs, same command line + merged log); projection at 04:08 UTC, no TIME-STOP; BUSY file pre-existed naming this job, untouched. 2 run files back, 0 weights saved or pushed. See artifacts/claude-dl9-20260926/RESULTS-gpu.md + gpu/.
+[0m
+[0m$ [0mgit status --porcelain -- artifacts/claude-g406l-20260927; echo "=== helper sha ==="; shasum -a 256 scripts/claude_luna_codex.py; echo "=== ledger g406l in worktree ==="; grep -n "g406l" artifacts/fable-predictions-ledger.md | head; echo "=== ledger g406l on origin/main ==="; git show origin/main:artifacts/fable-predictions-ledger.md | grep -n "g406l" | head
+=== helper sha ===
+342a0fb7e15ebf22da763c21eddecb0c58cfcbd43c74481d8421b5709023024e  scripts/claude_luna_codex.py
+=== ledger g406l in worktree ===
+=== ledger g406l on origin/main ===
+[0m
+[0m$ [0mgit fetch -q origin main && echo FETCH_OK; git rev-parse origin/main; git log --oneline -3 origin/main; echo "=== queue head ==="; git show origin/main:handoff/queue/lis-302-gpu.md | head -13
+FETCH_OK
+e49be974d0cc4ac5b04e2ec112dd1e2cfcb5efa9
+e49be974d gr-7 progress: epochs 4-6 trained (117.4 min; loss 0.0107, 0.0111, 0.0021, above the predicted 0.001); dev started 06:23:23Z
+fc1d9dcc6 queue: re-queue 155->156, 171->172 (the builders misread the GPU-BUSY marker naming their own queue file); PC headers now spell out the exact marker text for this job
+c540b756f bm-398w BensPC job draft (not queued; waits for the Luna data and the panel hash seal)
+=== queue head ===
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+[0m
+[0m$ [0mgit ls-files artifacts/claude-g406l-20260927 | head; echo "=== ignored? ==="; git check-ignore -v artifacts/claude-g406l-20260927/run/RESULTS.md; echo "rc=$?"; echo "=== ledger g406 ==="; git show origin/main:artifacts/fable-predictions-ledger.md | grep -n "g406" | head; echo "=== df/uptime ==="; df -g /; uptime
+=== ignored? ===
+.gitignore:5:artifacts/	artifacts/claude-g406l-20260927/run/RESULTS.md
+rc=0
+=== ledger g406 ===
+=== df/uptime ===
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        33    28%  484014 352818040    0%   /
+ 2:28  up 3 days, 16:21, 4 users, load averages: 132.90 102.62 94.80
+[0m
+[0m$ [0mls -la /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt 2>&1
+-rw-r--r--  1 ben-hannan  wheel  4933 Sep 27 02:28 /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mps aux | grep -E "claude_g406l|claude_luna_codex|g406" | grep -v grep | head; echo "rc=$?"; echo "=== tmp leftovers ==="; ls -d /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.* 2>/dev/null | head -20
+ben-hannan       44452  21.5  2.3 562797344 770512   ??  SN    2:22AM   0:48.65 /usr/local/bin/opencode run --model opencode/mimo-v2.6-flash-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:007-rd378g-writeluna.go2.26426 RESUME NOTICE: a previous agent started this exact task and was cut off (usually a network drop, not a task problem). Its files may already exist (scripts with the prefix, artifact folder, PASSMARKS.md/SEAL, ledger predictions, partial outputs). Inspect what exists, keep anything sealed (never edit PASSMARKS.md, the agent code, config or case files if SEAL.sha256.txt exists; verify with shasum -a 256 -c from the repo root), continue from the first unfinished step, do not duplicate ledger predictions. Your 90-minute deadline starts now. The task follows.\012\012COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-27 03:57 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.\012GPU: no. Mac CPU only; 1-3 pilot calls, then about 21-63 long calls to GPT-6 Luna through Ben's Codex plan via the Director's helper, $0 per run. ONE process; no opencode, no OpenRouter, no rental. It may run at the same time as 006-rd378k-gate3luna.\012LOAD-LIGHT: yes (network-bound: each Luna call runs remotely through the Codex CLI; locally only python plus one codex process per call)\012\012YOUR TASK: rd378g-writeluna. First read origin/main:artifacts/claude-rd378g-20260926/ADDENDUM-D.md, then ADDENDUM-F.md, then ADDENDUM-I.md. It runs a one-batch format pilot, and only if the pilot passes, writes with Luna the 21 practice batches that were lost to GLM route failures, then tags every dialog with its writer. No training, no GPU. Code: scripts/claude_luna_run.py, scripts/claude_luna_codex.py, scripts/claude_rd378g_writemore_oc.py, scripts/claude_rd378g_teacher.py and scripts/claude_rd378g_tagwriter.py (read their docstrings). Run them, never edit them; if something breaks, stop and report the exact error. The writing script writes its file only at the end and has no resume. Run it once under nohup with its own log and poll the log. Never start a second copy while one runs (check `ps`).\012LUNA RULES: never read, print or copy anything under ~/.codex or any Codex / ChatGPT config, auth file or key; the helper handles the route.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-rd378g-20260926/glm2N/notes_w1.jsonl or artifacts/claude-rd378g-20260926/pilot-luna/pilot-log.txt.\012\0121. COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378g-20260926/SEAL-ADD-I.sha256.txt). Run `git archive $COMMIT scripts artifacts/claude-rd378g-20260926 | tar -x -C <tmp>`. Then, with mkdir -p first:\012   - `git show origin/builder-outbox:scripts/claude_glm_opencode.py > <tmp>/scripts/claude_glm_opencode.py`;\012   - `git show origin/builder-outbox:scripts/claude_glm_opencode_v11.py > <tmp>/scripts/claude_glm_opencode_v11.py`;\012   - `git show origin/builder-outbox:artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl > <tmp>/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl`.\012   Run everything from <tmp> (python via `uv run --offline --no-project --python 3.12 python -B`; standard library only). Report COMMIT.\0122. SEAL: `shasum -a 256 -c` on these files in artifacts/claude-rd378g-20260926/:\012   - SEAL-ADD-I.sha256.txt (5 OK)\012   - SEAL-ADD-F.sha256.txt (1 OK)\012   - SEAL-ADD-E.sha256.txt (3 OK)\012   - SEAL-ADD-D.sha256.txt (4 OK)\012   Anything else: stop with SEAL-MISMATCH and every line.\0123. python -B scripts/claude_luna_run.py --check -> "luna bound ok"; python -B scripts/claude_luna_run.py scripts/claude_rd378g_writemore_oc.py selftest -> ends "rd378g writemore selftest 1/1 ok"; python -B scripts/claude_rd378g_tagwriter.py selftest -> "rd378g tagwriter selftest 1/1 ok"; else stop.\0124. PILOT: python -B scripts/claude_luna_run.py scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18 --out artifacts/claude-rd378g-20260926/pilot-luna\012   Save its console output as artifacts/claude-rd378g-20260926/pilot-luna/pilot-log.txt and report its JSON line verbatim.\012   - PILOT PASS: the log has a "batch 18 ok" line and 0 "call failed" lines. Go on to step 5.\012   - Otherwise: stop with PILOT-FAIL, and do not run steps 5-6. Still do step 7 for pilot-log.txt only.\012   Never copy the pilot's notes_w1.jsonl.\0125. WRITE: python -B scripts/claude_luna_run.py scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18-20,22-39 --out artifacts/claude-rd378g-20260926/glm2N   (prints one JSON line at the end)\0126. TAG: python -B scripts/claude_rd378g_tagwriter.py tag --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --in artifacts/claude-rd378g-20260926/glm2N/notes_w1.jsonl --out artifacts/claude-rd378g-20260926/glm2N/notes_w1_tagged.jsonl   (prints one JSON line)\0127. Copy into the worktree:\012   - artifacts/claude-rd378g-20260926/pilot-luna/pilot-log.txt;\012   - if step 5 ran: glm2N/notes_w1.jsonl and glm2N/notes_w1_tagged.jsonl, plus the console output of steps 3 and 5-6 as glm2N/teacher-log.txt.\012   Report both JSON lines verbatim, wall time per step, and the number of "call failed" lines in each log.\012PUSH: artifacts/claude-rd378g-20260926/glm2N artifacts/claude-rd378g-20260926/pilot-luna/pilot-log.txt
+ben-hannan        5678   1.0  1.6 562799824 531616   ??  SN   12:08AM   2:52.87 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:006-rd378k-gate3luna.go1.5650 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-27 03:57 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.\012GPU: no. Mac CPU only; about 12 pilot calls, then about 120 gate calls (at most ~400 with retries) to GPT-6 Luna through Ben's Codex plan via the Director's helper, $0 per run. ONE process, no parallel parts; no opencode, no OpenRouter, no rental. It may run at the same time as 007-rd378g-writeluna.\012LOAD-LIGHT: yes (network-bound: each Luna call runs remotely through the Codex CLI; locally only python plus one codex process per call)\012\012YOUR TASK: rd378k-gate3luna. First read origin/main:artifacts/claude-rd378k-20260926/PASSMARKS-F.md, then PASSMARKS-H.md, then PASSMARKS-K.md. It runs a small format pilot on 4 training dialogs, and only if the pilot passes, the label gate on the same 38 dialogs, with every call going to Luna. No training, no GPU. Code: scripts/claude_luna_run.py, scripts/claude_luna_codex.py, scripts/claude_rd378k_teacher3oc.py, scripts/claude_rd378k_teacher3.py and scripts/claude_rd378k_teacher.py (read their docstrings). Run them, never edit them; if something breaks, stop and report the exact error.\012LUNA RULES: never read, print or copy anything under ~/.codex or any Codex / ChatGPT config, auth file or key; the helper handles the route.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl or artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt.\012\0121. COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378k-20260926/SEAL-ADD-K.sha256.txt). Run `git archive $COMMIT scripts artifacts/claude-rd378k-20260926 artifacts/claude-rd378g-20260926 artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl | tar -x -C <tmp>`. Then, with mkdir -p first:\012   - `git show origin/builder-outbox:scripts/claude_glm_opencode.py > <tmp>/scripts/claude_glm_opencode.py` (only for the seal check in step 2);\012   - `git show origin/builder-outbox:artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl > <tmp>/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl`.\012   Run everything from <tmp> (python via `uv run --offline --no-project --python 3.12 python -B`; standard library only). Report COMMIT.\0122. SEAL: `shasum -a 256 -c` on these files in artifacts/claude-rd378k-20260926/:\012   - SEAL-ADD-K.sha256.txt (5 OK)\012   - SEAL-ADD-H.sha256.txt (1 OK)\012   - SEAL-ADD-F.sha256.txt (3 OK)\012   - SEAL-ADD-E.sha256.txt (2 OK)\012   - SEAL-ADD-D.sha256.txt (2 OK)\012   - SEAL-ADD-C.sha256.txt (2 OK)\012   - SEAL.sha256.txt (15 OK; the ONLY allowed FAILED line is scripts/claude_lis300_train.py, which PASSMARKS-D.md replaces)\012   Also `shasum -a 256 artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl` must start 87a51358fa2bdedaaf0edafeb273074e.\012   Anything else: stop with SEAL-MISMATCH and every line.\0123. python -B scripts/claude_luna_run.py --check -> "luna bound ok"; python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py selftest -> ends "rd378k teacher3oc selftest 1/1 ok"; else stop.\0124. PILOT: python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --only-hash 12 --hash-rem 0 --out artifacts/claude-rd378k-20260926/pilot-luna\012   Save its console output as artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt and report its JSON line verbatim.\012   - PILOT PASS: "dialogs" is 4, "unparsed" is 0 and "failed_calls" is at most 2. Go on to step 5.\012   - Otherwise: stop with PILOT-FAIL, and do not run steps 5-7. Still do step 8 for pilot-log.txt only.\012   Never open or copy the pilot's labels files.\0125. GATE, under nohup with its own log (one process; poll the log; never start a second copy): python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --hash-rem 1 --out artifacts/claude-rd378k-20260926/gate3luna\0126. python -B scripts/claude_rd378k_teacher.py agree --labels artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl --verdicts artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl\0127. python -B scripts/claude_rd378k_teacher.py agree --labels artifacts/claude-rd378k-20260926/gate3luna/labels_passA.jsonl --verdicts artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl   (report only)\0128. Copy into the worktree:\012   - artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt;\012   - if step 5 ran: artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl, labels_passA.jsonl and failures.jsonl, plus the console output of steps 3 and 5-7 as gate3luna/teacher-log.txt.\012   Report every printed JSON line verbatim, wall time per step, and the number of "call failed" lines in each log.\012PUSH: artifacts/claude-rd378k-20260926/gate3luna artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt
+ben-hannan       46015   0.0  0.0 488781504   2400   ??  SN    1:28AM   0:00.01 bash /Users/ben-hannan/premonition-watch/rungo5.sh /Users/ben-hannan/premonition-watch/queue/madeup-g406l-mac.md opencode/muse-spark-1.3-contributor-free
+rc=0
+=== tmp leftovers ===
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.ALzBhv6qM0
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.F9oczaqv8P
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.Gt7ifR8l5Z
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.HoPbHvQFNv
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.RDVuRjuXzv
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.thxrlnBkuw
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.UesxzyXYZ1
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.YMcp2eOaXJ
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.zp8zs6yNbu
+[0m
+[0m$ [0mgit cat-file -e aa34f14d1ba050d78b360c6e1357b45fb3f7af9d && echo COMMIT_OK; echo "=== SEAL list ==="; git show aa34f14d1ba050d78b360c6e1357b45fb3f7af9d:artifacts/claude-g406l-20260927/SEAL.sha256.txt; echo "=== count lines ==="; git show aa34f14d1ba050d78b360c6e1357b45fb3f7af9d:artifacts/claude-g406l-20260927/SEAL.sha256.txt | wc -l; echo "=== run dir listing ==="; ls -la artifacts/claude-g406l-20260927/run/
+COMMIT_OK
+=== SEAL list ===
+c42b77479d26315306a600c9e7685696eff5b469407d59b4c293b2aac61dec4a  artifacts/claude-g406l-20260927/PASSMARKS.md
+aff4d7babe5ca5574dd5e9d9d591da3e2941fab72c228a71963ec3228e161701  artifacts/claude-mu405-20260926/JUDGE-claims405.md
+f41e339f995d1580c2b744dccff44320c8b77bc55a8d443afadbf04129f6ff5c  artifacts/claude-mu405b-20260926/judge/keys/claims_key.json
+c90d9e3d4688df10cbb7158f45fd04d2319a0f2d946c2a91ea2fd4645c8c0272  artifacts/claude-mu405b-20260926/judge/out/claims_j1.jsonl
+c364055f5c0b2796402d1b54f1403e5e077ca2d06a73911457c58fa80c0fb912  artifacts/claude-mu405b-20260926/judge/out/claims_j2.jsonl
+87e0e54811f4bac9ff866556ac45e2fe24afdff49b228be0e3277b61f9862dfd  artifacts/claude-mu405b-20260926/judge/out/claims_j3.jsonl
+65928795985958a523deaf0e6c0ae3cb9d85f3979ddfab0a915f1b999fb6ab7c  artifacts/claude-mu405b-20260926/judge/out/claims_j4.jsonl
+cc26bfb36d1104c4234ff11d951c99e12b4b2b038758fd6feed19d91bb5fce16  artifacts/claude-mu405b-20260926/judge/out/claims_j5.jsonl
+8965134dba6cdfa3d4bf81ab5eb83b2bcddefa3ed2c9bd06240bf6cf2988143b  artifacts/claude-mu405b-20260926/judge/out/claims_j6.jsonl
+564a003ca0a37c1e64f31b1cf5e0115308cce7365eb86577462b45f4bc772b35  artifacts/claude-mu405b-20260926/judge/out/claims_j7.jsonl
+70c232acf2fb77dd629ea56ac9679c73b5bbb9fc425a96b59c4ba1b4fe7c9327  artifacts/claude-mu405b-20260926/judge/out/claims_j8.jsonl
+636eed2ba687742b301ef3f2477cd2f8f70a5ffc93d7421ca6fb704a85c15140  artifacts/claude-mu405b-20260926/judge/packets/claims_j1.jsonl
+2dd7f4b7c2ca442f923e79ca904eb4284385ca10a1179ebbcf3a831fe7f509fd  artifacts/claude-mu405b-20260926/judge/packets/claims_j2.jsonl
+40099bc0b4a0ea62cd576bf7e100692557a5b58e5a278286356ee58cc1888fcf  artifacts/claude-mu405b-20260926/judge/packets/claims_j3.jsonl
+30fa8c27167be319dfc7220b27d1c8302c837eff829c3eb87305bd97e4af2c37  artifacts/claude-mu405b-20260926/judge/packets/claims_j4.jsonl
+9d5a288a3d1bcfee979905fbed4be6977cb6a97175e6aea49910b72480e28613  artifacts/claude-mu405b-20260926/judge/packets/claims_j5.jsonl
+f24b12667cb469689012ee6e3c683160709fe27e82fae77df62d78fb1e0bf0c2  artifacts/claude-mu405b-20260926/judge/packets/claims_j6.jsonl
+ad0c6adcb36ecbe8b71f901f7b878cd2358be5783dee7b2a0684ce00c01c23be  artifacts/claude-mu405b-20260926/judge/packets/claims_j7.jsonl
+3b782583d0673e8803e7d182030cd65cdcc286a8b59c2018bd1b022b795f3919  artifacts/claude-mu405b-20260926/judge/packets/claims_j8.jsonl
+dfaf4be4ce4426df0c92d92323def01a67a2d6895920f66015168fb8a6ece015  scripts/claude_g406l_luna.py
+342a0fb7e15ebf22da763c21eddecb0c58cfcbd43c74481d8421b5709023024e  scripts/claude_luna_codex.py
+6411fa8f81adaea01c0308563e502093edd2324a34771451c09de79e928f34cc  scripts/claude_g406_2_glm.py
+791456265b02c4d7dea3d4f448e10877f68720f804bec8513459d1d805da2625  scripts/claude_g406_glm.py
+22a43c060ca5746243d0d1f069c6fa0525a24281387ce24d86073f54fe08c253  scripts/claude_g406_count.py
+=== count lines ===
+      24
+=== run dir listing ===
+total 200
+drwxr-xr-x  9 ben-hannan  staff    288 Sep 27 02:25 .
+drwxr-xr-x  3 ben-hannan  staff     96 Sep 27 02:25 ..
+-rw-r--r--  1 ben-hannan  staff    396 Sep 27 02:25 arms_b.json
+-rw-r--r--  1 ben-hannan  staff  35345 Sep 27 02:25 best_b.jsonl
+-rw-r--r--  1 ben-hannan  staff  35345 Sep 27 02:25 luna_b.jsonl
+-rw-r--r--  1 ben-hannan  staff    507 Sep 27 02:25 luna_b.log
+-rw-r--r--  1 ben-hannan  staff    192 Sep 27 02:25 pilot.log
+-rw-r--r--  1 ben-hannan  staff   9033 Sep 27 02:25 RESULTS.md
+-rw-r--r--  1 ben-hannan  staff    686 Sep 27 02:25 verdict_b.json
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -13 | cat -A | sed -n '1,13p' | cut -c1-120
+cat: illegal option -- A
+usage: cat [-belnstuv] [file ...]
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -13 | nl -ba | cut -c1-200
+1	COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.cla
+     2	First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPU
+     3	- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger
+     4	- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+     5	- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a br
+     6	- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+     7	- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+     8	- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+     9	- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+    10	Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+    11	BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-s
+    12	
+    13	GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-
+[0m

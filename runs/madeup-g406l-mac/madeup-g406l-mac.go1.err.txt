@@ -1,0 +1,1852 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo FETCH_EXIT:$?; git rev-parse origin/main; date -u; uptime; git show origin/main:handoff/queue/lis-302-gpu.md | head -n 30
+FETCH_EXIT:0
+aa34f14d1ba050d78b360c6e1357b45fb3f7af9d
+Sun Sep 27 05:28:13 UTC 2026
+ 1:28  up 3 days, 15:21, 4 users, load averages: 84.29 59.50 50.47
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+[0m
+[0m$ [0mpwd; git rev-parse --abbrev-ref HEAD; git rev-parse origin/main; git status --short | head -n 20; date -u; uptime; df -g / | head -n 5
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+aa34f14d1ba050d78b360c6e1357b45fb3f7af9d
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+Sun Sep 27 05:28:19 UTC 2026
+ 1:28  up 3 days, 15:21, 4 users, load averages: 94.52 62.03 51.41
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        33    28%  484014 355279840    0%   /
+[0m
+[0m$ [0mD=$(mktemp -d); echo "D=$D"; git archive origin/main scripts artifacts/claude-g406l-20260927 artifacts/claude-mu405-20260926/JUDGE-claims405.md artifacts/claude-mu405b-20260926/judge | tar -x -C "$D"; echo ARCHIVE_EXIT:$?; ls "$D"; ls "$D/artifacts/claude-g406l-20260927" ; ls "$D/scripts" | grep -E "g406|luna_codex"; O="$D/artifacts/claude-g406l-20260927/run"; mkdir -p "$O"; echo "O=$O"; git rev-parse origin/main; date -u; uptime; echo "$D" > /tmp/g406l_D_path.txt; cat /tmp/g406l_D_path.txt
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1
+ARCHIVE_EXIT:0
+artifacts
+scripts
+PASSMARKS-DRAFT.md
+PASSMARKS.md
+run
+SEAL.sha256.txt
+claude_g406_2_glm.py
+claude_g406_count.py
+claude_g406_glm_resume.py
+claude_g406_glm.py
+claude_g406l_luna.py
+claude_luna_codex.py
+O=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run
+aa34f14d1ba050d78b360c6e1357b45fb3f7af9d
+Sun Sep 27 05:28:25 UTC 2026
+ 1:28  up 3 days, 15:21, 4 users, load averages: 94.48 62.56 51.66
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1
+[0m
+[0m$ [0mD=$(cat /tmp/g406l_D_path.txt); echo "D=$D"; git rev-parse origin/main; date -u; uptime
+ls "$D/artifacts/claude-g406l-20260927/run"
+cat "$D/artifacts/claude-g406l-20260927/SEAL.sha256.txt"
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1
+aa34f14d1ba050d78b360c6e1357b45fb3f7af9d
+Sun Sep 27 05:28:28 UTC 2026
+ 1:28  up 3 days, 15:21, 4 users, load averages: 93.96 62.98 51.88
+RUN-NOTE.md
+c42b77479d26315306a600c9e7685696eff5b469407d59b4c293b2aac61dec4a  artifacts/claude-g406l-20260927/PASSMARKS.md
+aff4d7babe5ca5574dd5e9d9d591da3e2941fab72c228a71963ec3228e161701  artifacts/claude-mu405-20260926/JUDGE-claims405.md
+f41e339f995d1580c2b744dccff44320c8b77bc55a8d443afadbf04129f6ff5c  artifacts/claude-mu405b-20260926/judge/keys/claims_key.json
+c90d9e3d4688df10cbb7158f45fd04d2319a0f2d946c2a91ea2fd4645c8c0272  artifacts/claude-mu405b-20260926/judge/out/claims_j1.jsonl
+c364055f5c0b2796402d1b54f1403e5e077ca2d06a73911457c58fa80c0fb912  artifacts/claude-mu405b-20260926/judge/out/claims_j2.jsonl
+87e0e54811f4bac9ff866556ac45e2fe24afdff49b228be0e3277b61f9862dfd  artifacts/claude-mu405b-20260926/judge/out/claims_j3.jsonl
+65928795985958a523deaf0e6c0ae3cb9d85f3979ddfab0a915f1b999fb6ab7c  artifacts/claude-mu405b-20260926/judge/out/claims_j4.jsonl
+cc26bfb36d1104c4234ff11d951c99e12b4b2b038758fd6feed19d91bb5fce16  artifacts/claude-mu405b-20260926/judge/out/claims_j5.jsonl
+8965134dba6cdfa3d4bf81ab5eb83b2bcddefa3ed2c9bd06240bf6cf2988143b  artifacts/claude-mu405b-20260926/judge/out/claims_j6.jsonl
+564a003ca0a37c1e64f31b1cf5e0115308cce7365eb86577462b45f4bc772b35  artifacts/claude-mu405b-20260926/judge/out/claims_j7.jsonl
+70c232acf2fb77dd629ea56ac9679c73b5bbb9fc425a96b59c4ba1b4fe7c9327  artifacts/claude-mu405b-20260926/judge/out/claims_j8.jsonl
+636eed2ba687742b301ef3f2477cd2f8f70a5ffc93d7421ca6fb704a85c15140  artifacts/claude-mu405b-20260926/judge/packets/claims_j1.jsonl
+2dd7f4b7c2ca442f923e79ca904eb4284385ca10a1179ebbcf3a831fe7f509fd  artifacts/claude-mu405b-20260926/judge/packets/claims_j2.jsonl
+40099bc0b4a0ea62cd576bf7e100692557a5b58e5a278286356ee58cc1888fcf  artifacts/claude-mu405b-20260926/judge/packets/claims_j3.jsonl
+30fa8c27167be319dfc7220b27d1c8302c837eff829c3eb87305bd97e4af2c37  artifacts/claude-mu405b-20260926/judge/packets/claims_j4.jsonl
+9d5a288a3d1bcfee979905fbed4be6977cb6a97175e6aea49910b72480e28613  artifacts/claude-mu405b-20260926/judge/packets/claims_j5.jsonl
+f24b12667cb469689012ee6e3c683160709fe27e82fae77df62d78fb1e0bf0c2  artifacts/claude-mu405b-20260926/judge/packets/claims_j6.jsonl
+ad0c6adcb36ecbe8b71f901f7b878cd2358be5783dee7b2a0684ce00c01c23be  artifacts/claude-mu405b-20260926/judge/packets/claims_j7.jsonl
+3b782583d0673e8803e7d182030cd65cdcc286a8b59c2018bd1b022b795f3919  artifacts/claude-mu405b-20260926/judge/packets/claims_j8.jsonl
+dfaf4be4ce4426df0c92d92323def01a67a2d6895920f66015168fb8a6ece015  scripts/claude_g406l_luna.py
+342a0fb7e15ebf22da763c21eddecb0c58cfcbd43c74481d8421b5709023024e  scripts/claude_luna_codex.py
+6411fa8f81adaea01c0308563e502093edd2324a34771451c09de79e928f34cc  scripts/claude_g406_2_glm.py
+791456265b02c4d7dea3d4f448e10877f68720f804bec8513459d1d805da2625  scripts/claude_g406_glm.py
+22a43c060ca5746243d0d1f069c6fa0525a24281387ce24d86073f54fe08c253  scripts/claude_g406_count.py
+[0m
+[0m$ [0mD=$(cat /tmp/g406l_D_path.txt); uv run --offline --no-project --python 3.12 python -B "$D/scripts/claude_g406l_luna.py" --help 2>&1 | head -n 5; ls "$D/artifacts/claude-mu405b-20260926/judge/packets/" | head -n 20
+usage: claude_g406l_luna.py [-h] [--mode {one,two}] [--packets PACKETS]
+                            [--out OUT] [--workers WORKERS] [--batch BATCH]
+                            [--max-minutes MAX_MINUTES]
+                            [--max-failed MAX_FAILED] [--attempts ATTEMPTS]
+                            [--print-prompt] [--arm-report] [--glm GLM]
+claims_j1.jsonl
+claims_j2.jsonl
+claims_j3.jsonl
+claims_j4.jsonl
+claims_j5.jsonl
+claims_j6.jsonl
+claims_j7.jsonl
+claims_j8.jsonl
+[0m
+[0m$ [0mD=$(cat /tmp/g406l_D_path.txt); uv run --offline --no-project --python 3.12 python -B -c "import sys; print(sys.version)" 2>&1 | head -n 5
+./scripts/claude_g406l_luna.py selftest-luna 2>&1 || true
+3.12.14 (main, Aug 25 2026, 13:50:33) [Clang 22.1.3 ]
+zsh:2: permission denied: ./scripts/claude_g406l_luna.py
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-g406l-20260927/SEAL.sha256.txt 2>&1
+artifacts/claude-g406l-20260927/PASSMARKS.md: OK
+artifacts/claude-mu405-20260926/JUDGE-claims405.md: OK
+artifacts/claude-mu405b-20260926/judge/keys/claims_key.json: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j1.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j2.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j3.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j4.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j5.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j6.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j7.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j8.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j1.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j2.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j3.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j4.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j5.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j6.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j7.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j8.jsonl: OK
+scripts/claude_g406l_luna.py: OK
+scripts/claude_luna_codex.py: OK
+scripts/claude_g406_2_glm.py: OK
+scripts/claude_g406_glm.py: OK
+scripts/claude_g406_count.py: OK
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_g406l_luna.py selftest-luna 2>&1
+[g406-2/two] pass 1: 2 written this run, 0 failed
+g406l luna selftest 7/7 ok
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_g406l_luna.py --selftest 2>&1; echo EXIT:$?
+Traceback (most recent call last):
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/scripts/claude_g406l_luna.py", line 129, in <module>
+    main()
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/scripts/claude_g406l_luna.py", line 125, in main
+    G2.main()
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/scripts/claude_g406_2_glm.py", line 241, in main
+    return selftest()
+           ^^^^^^^^^^
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/scripts/claude_g406_2_glm.py", line 187, in selftest
+    assert prompt_for({"conversation": conv, "earlier": []}, "one") == G.build_prompt(conv); ok += 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/scripts/claude_g406_2_glm.py", line 66, in prompt_for
+    return G.build_prompt(p["conversation"]) if mode == "one" else build_prompt2(p["earlier"], p["conversation"])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/scripts/claude_g406_glm.py", line 55, in build_prompt
+    f"{n} assistant replies.\n\n" + rubric() + "\n\nTRANSCRIPT\n" + "\n".join(lines) + "\n\n"
+                                    ^^^^^^^^
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/scripts/claude_g406_glm.py", line 42, in rubric
+    text = RUBRIC_FILE.read_text(encoding="utf-8")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-mu402-20260926/JUDGE-claims.md'
+EXIT:1
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_g406_count.py --selftest 2>&1; echo EXIT:$?
+uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_codex.py --selftest 2>&1; echo EXIT:$?
+g406 count selftest 5/5 ok
+EXIT:0
+selftest ok: model gpt-6-luna, output-file True
+EXIT:0
+[0m
+[0m$ [0mls artifacts/; cat artifacts/claude-g406l-20260927/run/RUN-NOTE.md 2>&1 | head -n 100
+git show origin/main:artifacts/claude-g406l-20260927/PASSMARKS.md 2>&1 | head -n 80
+claude-adapters-20260926d
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm391-20260926
+claude-bm395-20260925
+claude-bm397t-20260926
+claude-bm398e-20260926
+claude-bm398i-20260926
+claude-bm398r-20260926
+claude-bmriv-smoke-20260926
+claude-boundary259-20260922
+claude-brd5-20260926
+claude-brd6-20260926
+claude-brd7-20260926
+claude-brd8-20260926
+claude-brd8w-20260926
+claude-brd9-20260926
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-ch403-20260926
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chat338-20260924
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convbench-f0-20260923
+claude-convf0-20260923
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-cre333-20260924
+claude-credit-20260926b
+claude-credit-20260926j
+claude-credit-20260926k
+claude-credit-20260926m
+claude-credit-20260926n
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-depot-20260926
+claude-depot319f-20260926
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-diskcheck-20260926
+claude-dl1-20260925
+claude-dl2-20260926
+claude-dl3-20260926
+claude-dl4-20260926
+claude-dl5-20260926
+claude-dl6-20260926
+claude-dl7-20260926
+claude-dl9-20260926
+claude-e2e02c-20260926
+claude-e2e02c-dev-20260926
+claude-e2e02dr-20260926
+claude-e2e330-dev-20260924
+claude-e2e330c-dev-20260924
+claude-e2e330c-dev2-20260924
+claude-e2e330c-dev3-20260924
+claude-e2e336-20260924
+claude-e2e336b-20260925
+claude-e2e382-20260925
+claude-e2e382-dev-20260925
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+claude-f1-20260923
+claude-find-brd8w-20260926
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fixedtext255b-20260923
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-g406-20260926
+claude-glm-exitcodes-20260926
+claude-glm-helper-v11-20260926
+claude-glm-opencode-20260926
+claude-glm-throughput-20260926
+claude-glm-v11-twoproc-20260926
+claude-glmframes-20260926
+claude-grab358i-20260926
+claude-grade241-20260922
+claude-grade241b-A-20260923
+claude-grade241b-B-20260923
+claude-grade241b-C-set2-20260923
+claude-grade241b-D-set2-20260923
+claude-grade255b-B-20260923
+claude-gradef1-A-20260923
+claude-gradef1-B-20260923
+claude-grades255-20260922
+claude-gram360-20260925
+claude-gram364-20260925
+claude-grammar238-20260922
+claude-identity227c-20260922
+claude-improvement-review-20260922
+claude-instances-20260926c
+claude-instances-20260926l
+claude-invpanel138nb-20260923
+claude-join280m-20260923
+claude-join280n-20260923
+claude-join280p-20260923
+claude-join291-20260923
+claude-join292t-20260923
+claude-joinpanel280m-20260923
+claude-joinpanel280n-20260923
+claude-joinpanel280p-20260923
+claude-joinpanel292t-20260923
+claude-judge241-20260922
+claude-judge241b-20260923
+claude-judgef1-20260923
+claude-k1a-20260926
+claude-k1c-20260926
+claude-k1e-20260926
+claude-k1h-20260926
+claude-lis-e2edev-20260924
+claude-lis300-20260923
+claude-lis301-20260923
+claude-lis302-20260924
+claude-lis310-20260923
+claude-lis311-20260923
+claude-lis313-20260924
+claude-lis313b-20260924
+claude-lis314-20260924
+claude-lis314b-20260924
+claude-lis317-20260925
+claude-lis318-20260925
+claude-lis319-20260925
+claude-lis319c-20260926
+claude-lis319f-20260926
+claude-lis319k-20260926
+claude-lis319o-20260926
+claude-lis319t2-20260926
+claude-lis320-20260926
+claude-loop273-20260923
+claude-loop274-20260924
+claude-looppanel254-20260922
+claude-mentionwalk246-20260922
+claude-merge138k-20260922
+claude-merge138l-20260922
+claude-merge138m-20260922
+claude-merge138n-20260922
+claude-merge138nb-20260923
+claude-merge138p-20260923
+claude-merge252c-20260922
+claude-merge292-20260923
+claude-mixpanel292-20260923
+claude-mouth241-20260922
+claude-mouth241b-20260922
+claude-mu402-20260926
+claude-mu403-20260926
+claude-mut0-20260924
+claude-mut1-20260924
+claude-myrel245-20260922
+claude-name227b-20260922
+claude-namecheck230b-20260922
+claude-namecheck230br-20260922
+claude-namecheck230c-20260922
+claude-namecheckpanel230b-20260922
+claude-namecheckpanel230br-20260922
+claude-namecheckpanel230c-20260922
+claude-namepanel232-20260922
+claude-namepanel232b-20260922
+claude-namepanel232c-20260922
+claude-nb320-20260923
+claude-nb321-20260923
+claude-nb323-20260924
+claude-nhop268-20260923
+claude-nhop268b-20260923
+claude-nhopdiag-20260923
+claude-nhoppanel268-20260923
+claude-nhoppanel268b-20260923
+claude-openers260-20260922
+claude-openpanel260-20260922
+claude-orphans-20260926i
+claude-ourpanel265-20260923
+claude-ourpanel269-20260923
+claude-own-bench-20260923
+claude-own-m0-20260923
+claude-own-m1-20260923
+claude-own-m1n-20260923
+claude-own-m1v-20260924
+claude-own-o0a-20260923
+claude-own-o0a2-20260923
+claude-own-o0a3-20260923
+claude-own-o0b-20260923
+claude-own-o0c-20260923
+claude-own-o0d-20260923
+claude-own-o0d2-20260923
+claude-own-o0e-20260923
+claude-own-o0e2-20260923
+claude-papers-20260923
+claude-papers2-20260923
+claude-peek-358i2pc-20260926
+claude-peek-358i2pc-torch-20260926
+claude-peek-rd378oc-20260926
+claude-peek-rd378oc2-20260927
+claude-polite233-20260922
+claude-politepanel233-20260922
+claude-probe007b-20260926
+claude-probe255b-director-20260923
+claude-probe280p-20260923
+claude-q404-20260926
+claude-qnorm221c-20260922
+claude-rd371-20260925
+claude-rd371b-20260926
+claude-rd378-20260925
+claude-rd378g-20260926
+claude-rd378k-20260926
+claude-rd378L-20260926
+claude-rd378u-20260926
+claude-rd379q-20260926
+claude-relationtable-20260922
+claude-republish-20260926f
+claude-republish-20260926g
+claude-republish-20260926h
+claude-rsn294-20260923
+claude-rsn296-20260924
+claude-rsn296b-20260924
+claude-rsn299-20260924
+claude-rsn299b-20260924
+claude-rsn350-20260924
+claude-rsn351-20260925
+claude-rsn353-20260925
+claude-rsn355-20260925
+claude-rsn356-20260925
+claude-rsn358a-20260925
+claude-rsn358b2-20260926
+claude-rsn358c-20260926
+claude-rsn358d-20260926
+claude-rsn358i-20260926
+claude-rsn358i2-20260926
+claude-rsn358i3-20260926
+claude-rsn358t-20260926
+claude-rsn358x-20260926
+claude-rt02d-20260926
+claude-rv390-20260926
+claude-rv391-20260926
+claude-scoreraudit-20260923
+claude-sf401-20260926
+claude-small282-20260923
+claude-small282b-20260923
+claude-smallpanel282-20260923
+claude-smallpanel282b-20260923
+claude-smalltalk234-20260922
+claude-smalltalkpanel234-20260922
+claude-smoke336win-20260924
+claude-smolear235-20260922
+claude-smolear235b-20260922
+claude-smolear257-20260922
+claude-stop-depot-20260926
+claude-stop-g406-2-20260927
+claude-stop-k1h-20260926
+claude-stop-lis320c1-20260927
+claude-stop-mu405-20260926
+claude-stop-rd378low-20260927
+claude-storedrel221b-20260922
+claude-style339-20260924
+claude-table237-20260922
+claude-table237b-20260922
+claude-tableask221-20260922
+claude-tablepanel221-20260922
+claude-tablepanel221b-20260922
+claude-tableteach229-20260922
+claude-talker101-eval-20260922
+claude-talker120-run-20260922
+claude-talker120b-run-20260922
+claude-teachpanel229-20260922
+claude-tgt5-20260926
+claude-trash-0926
+claude-type270-20260923
+claude-type270b-20260923
+claude-typepanel270-20260923
+claude-typepanel270b-20260923
+claude-verbsubj250-20260922
+claude-verify-20260922
+claude-verify-20260923
+claude-whats248-20260922
+claude-y1d-20260926
+claude-y1f-20260926
+claude-y1g-20260926
+claude-y1t-20260926
+claude-yesno293-20260923
+claude-yesnopanel293-20260923
+claude-yesprefix230-20260922
+claude-zdl4check-20260926e
+fable-about164-20260922
+fable-about164b-20260922
+fable-abstain64-20260921
+fable-abstain76-20260921
+fable-abstain78-20260921
+fable-agent138-20260922
+fable-agent138b-20260922
+fable-agent138d-20260922
+fable-agent138f-20260922
+fable-agent138g-20260922
+fable-agent138h-20260922
+fable-agent138i-20260922
+fable-agent138j-20260922
+fable-align147-20260922
+fable-apos193-20260922
+fable-atomic207-20260922
+fable-audit75-20260921
+fable-audit83-20260921
+fable-autosleep42-20260921
+fable-baseline-length-eval-20260920
+fable-baseline-transformer-20260920
+fable-baseline-transformer-v2-20260920
+fable-bench103-20260921
+fable-bench111-20260921
+fable-bench113-20260922
+fable-bench113b-20260922
+fable-bench113c-20260922
+fable-bench113d-20260922
+fable-bench113e-20260922
+fable-bench121-20260922
+fable-bench125-20260922
+fable-bench132-20260922
+fable-bench65-20260921
+fable-bench66-20260921
+fable-bench73-20260921
+fable-bench92-20260921
+fable-brake118-20260922
+fable-brake118b-20260922
+fable-cantdo223-20260922
+fable-cardfold-sleep-20260922
+fable-case180b-20260922
+fable-chainof174-20260922
+fable-concept-toy20-20260920
+fable-confirmation-panels-20260920
+fable-copula172-20260922
+fable-copula172b-20260922
+fable-correct160-20260922
+fable-correct160b-20260922
+fable-correctreply192-20260922
+fable-counter59-20260921
+fable-counter60-20260921
+fable-creative-stop-toy-20260921
+fable-daemon141-20260922
+fable-daemon74-20260921
+fable-decline224-20260922
+fable-declinecue216-20260922
+fable-demo126-20260922
+fable-demo55-20260921
+fable-demo55b-20260921
+fable-demo88-20260921
+fable-diag95-20260921
+fable-discourse137b-20260922
+fable-dispatcher-pilot-20260920
+fable-dispatcher-probes26-20260921
+fable-dispatcher-v3-20260920
+fable-dispatcher-v4-20260920
+fable-doubt146-20260922
+fable-doubt146b-20260922
+fable-ears109-20260921
+fable-ears119-20260922
+fable-ears119b-20260922
+fable-ears119d-20260922
+fable-ears119e-20260922
+fable-ears119f-20260922
+fable-ears119g-20260922
+fable-ears119h-20260922
+fable-ears213-20260922
+fable-ears45-20260921
+fable-ears47-20260921
+fable-ears85-20260921
+fable-earsguard91-20260921
+fable-english-listening-20260921
+fable-fairsmol211-20260922
+fable-filler157-20260922
+fable-filler157b-20260922
+fable-fix129-20260922
+fable-fix135-20260922
+fable-fix137-20260922
+fable-fix139-20260922
+fable-fix139b-20260922
+fable-fix140-20260922
+fable-fix144-20260922
+fable-fix150-20260922
+fable-fix77-20260921
+fable-frame137d-20260922
+fable-frame137e-20260922
+fable-hardgate46-20260921
+fable-hardgate80-20260921
+fable-hedgecase150d-20260922
+fable-hop159-20260922
+fable-hypo137c-20260922
+fable-identity227-20260922
+fable-inverted155-20260922
+fable-label167c-20260922
+fable-label167e-20260922
+fable-lang154e-20260922
+fable-learnedaddr43i-20260921
+fable-learnedparity43j-20260921
+fable-ledger112-20260922
+fable-ledger82-20260921
+fable-lengthgate43-20260921
+fable-link-isolation-20260920
+fable-link-isolation-v2-20260920
+fable-livesleep52-20260921
+fable-lm87-20260921
+fable-loop102-20260921
+fable-loop117-20260922
+fable-loop134-20260922
+fable-loop90-20260921
+fable-loop96-20260921
+fable-lowercase163-20260922
+fable-lowercase180-20260922
+fable-lowrank43f-20260921
+fable-marks123-20260922
+fable-me166-20260922
+fable-me166b-20260922
+fable-me166c-20260922
+fable-modernbert58-20260921
+fable-modernbert61-20260921
+fable-modes54-20260921
+fable-mouth53-20260921
+fable-multival154b-20260922
+fable-multival154c-20260922
+fable-nameval171-20260922
+fable-nameval171b-20260922
+fable-naturalpanel208-20260922
+fable-negate154f-20260922
+fable-newnames21-20260920
+fable-newnames27-20260921
+fable-newnames29-20260921
+fable-nocorrect154g-20260922
+fable-noisyteacher45-20260921
+fable-notebook-m0-20260920
+fable-novelty-research-20260920
+fable-novelty19-replay-20260920
+fable-novelty19b-u8-20260920
+fable-officechain138e-20260922
+fable-ofteach215-20260922
+fable-ofteachb222-20260922
+fable-operator-balance-20260920
+fable-operator-e0-20260920
+fable-operator-grow-20260920
+fable-operator-grow-blind-20260920
+fable-operator-hintwarm-20260920
+fable-operator-marg-20260920
+fable-operator-marg-full-20260920
+fable-operator-marg-staged-20260920
+fable-operator-marg-staged-dense-20260920
+fable-operator-reliability-bundle
+fable-operator-reliability-bundle.tar.gz
+fable-operator-reliability-grow-blind-20260920
+fable-operator-swap-20260920
+fable-perf128-20260922
+fable-perf142-20260922
+fable-plural162b-20260922
+fable-predictions-ledger.md
+fable-qform158-20260922
+fable-qmark151-20260922
+fable-qual56-20260921
+fable-read106-20260921
+fable-read107-20260921
+fable-reading94-20260921
+fable-reading94b-20260922
+fable-reasoner44-20260921
+fable-reasoner50-20260921
+fable-redteam110-20260921
+fable-redteam124-20260922
+fable-redteam136-20260922
+fable-redteam143-20260922
+fable-redteam67-20260921
+fable-redteam79-20260921
+fable-redteam81-20260921
+fable-redteam98-20260921
+fable-relcanon63-20260921
+fable-relcanon97-20260921
+fable-restartindex220-20260922
+fable-reversal210-20260922
+fable-reverse153-20260922
+fable-reverse190-20260922
+fable-reverse190b-20260922
+fable-sayagain189-20260922
+fable-sayagain189b-20260922
+fable-screen148-20260922
+fable-screen148b-20260922
+fable-self100-20260921
+fable-self105-20260921
+fable-self105panel-20260921
+fable-self114-20260922
+fable-self114panel-20260922
+fable-self122-20260922
+fable-self122panel-20260922
+fable-self127-20260922
+fable-self127panel-20260922
+fable-self138c-20260922
+fable-self99-20260921
+fable-selfcard161-20260922
+fable-selfgate212-20260922
+fable-selfground168-20260922
+fable-selfname219-20260922
+fable-selfq187-20260922
+fable-selfq187b-20260922
+fable-session152-20260922
+fable-sharedsleep43b-20260921
+fable-simplewiki86-20260921
+fable-sleep104-20260921
+fable-sleep115-20260922
+fable-sleep116-20260922
+fable-sleep130-20260922
+fable-sleep131-20260922
+fable-sleep145-20260922
+fable-sleepselect43e-20260921
+fable-sleepsmoke206-20260922
+fable-smalltalk156-20260922
+fable-smalltalk156b-20260922
+fable-smalltalk156c-20260922
+fable-soak108-20260921
+fable-soak93-20260921
+fable-source226-20260922
+fable-speed170-20260922
+fable-startup-factorial-20260920
+fable-startup-factorial-v2-20260920
+fable-statefall188-20260922
+fable-story-size-stress-20260920
+fable-subject150b-20260922
+fable-subject150c-20260922
+fable-suitediff214-20260922
+fable-suitediff218-20260922
+fable-tail139d-20260922
+fable-tail139e-20260922
+fable-tailwords139c-20260922
+fable-talker101-20260921
+fable-talker120-20260922
+fable-talker120b-20260922
+fable-talker120c-20260922
+fable-talker120d-20260922
+fable-talker24-20260920
+fable-thename162-20260922
+fable-thought49-20260921
+fable-thought62-20260921
+fable-title157c-20260922
+fable-transport43g-20260921
+fable-turns84-20260921
+fable-twohop160c-20260922
+fable-typo165-20260922
+fable-username173-20260922
+fable-username173b-20260922
+fable-verb167-20260922
+fable-verb167b-20260922
+fable-verb167d-20260922
+fable-webfix89-20260921
+fable-whcity158c-20260922
+fable-whrel158b-20260922
+fable-widelengths43k-20260921
+fable-wire51-20260921
+fable-wire57-20260921
+fable-wordmatch149-20260922
+fable-writescreen209-20260922
+fable-yesno154-20260922
+fable-yesno154d-20260922
+or-keycheck-20260924
+cat: artifacts/claude-g406l-20260927/run/RUN-NOTE.md: No such file or directory
+# g406b-L: can GPT-6 Luna spot made-up claims about the user the way the blind judges do?
+
+"Making things up about you" thread. Written 2026-09-27 03:56 UTC (date -u).
+- The draft is PASSMARKS-DRAFT.md (3f6b497dd, d02b52699, 30fdf82fb). The Thread manager reviewed it at 03:52 UTC and
+  cleared it once the helper passed its live test, with the fixes below.
+- This file is sealed in SEAL.sha256.txt before any Luna call. DEV data only. Nothing is trained.
+- Ben ruled at 03:47 UTC that Luna may write training text, inputs and labels (goals page
+  design/v3/30-modes/ben-goals-2026-09-26.md:110-116).
+
+## Why a new gate
+- g406b decides whether mu-406 picks its training replies with GLM's marks (sealed 21d2ef2fd,
+  artifacts/claude-g406-2-20260926/PASSMARKS.md). It never finished, for two reasons (run/RUN-NOTE.md there):
+  - the Mac job's shell killed its command at 80 minutes, at 02:06 UTC;
+  - Ben's opencode Go plan has been at its usage limit since about 00:57 UTC.
+  No g406-2 row will be used.
+- g406 ADDENDUM-3 says a change to how the labeller is called makes a new gate, not a resume. So the labeller change,
+  from GLM to Luna, is gate g406b-L. g406-2 stays sealed and unrun; if it ever runs, it is report-only.
+- Only g406b's two-session mode is repeated here, because that is the form mu-406 would use.
+
+## Setup: g406b's, with one change
+- The change is the labeller: GPT-6 Luna through Ben's Codex plan, replacing GLM 5.3 Flash (low).
+  - Helper: scripts/claude_luna_codex.py (Director, 24ca7a163), sha256
+    342a0fb7e15ebf22da763c21eddecb0c58cfcbd43c74481d8421b5709023024e.
+  - It tries 3 times, then raises. An empty reply, or a short reply that looks like an error, is a failure and is never
+    returned. A `{"flags": [...]}` reply cannot match its error patterns.
+  - Its live check on the Mac passed (handoff/replies/000-luna-helper-selftest.md on builder-outbox; Director 03:54 UTC).
+- Code: scripts/claude_g406l_luna.py (new file). It imports claude_g406_2_glm unchanged and makes two swaps.
+  - `call_low` becomes luna_call, which pins the model to gpt-6-luna so no GLM model id passes through.
+  - `mark` becomes G2.mark plus a `labeller` field ("luna:gpt-6-luna") on every row.
+  - A Luna call that raises becomes a failed row (ok false, error text kept, no reply text), so it counts as one of the
+    3 attempts and never ends the run. Selftest 7/7 checks this; claude_g406_2_glm's own selftest is 7/7 through the
+    wrapper.
+  - The wrapper adds `--pilot N` and `pilot-check`.
+- Unchanged:
+  - the prompt: `--mode two`, with mu-405's two-session rubric word for word;
+  - the parser (G.parse) and the best-row rule;
+  - the packets: mu-405b's 240, with arms N, W, U and H mixed;
+  - at most 3 attempts per packet;
+  - the truth: mu-405b's two blind judges (recount matched), with base either-rate 0.14 (168 of 1,200 replies; 131
+    flagged by both);
+  - the count, scripts/claude_g406_count.py on the `--best-to` file, and the arm report.
+- The blind judges are only the yardstick. No judge verdict picks or labels any training reply; only Luna's marks
+  could (the Thread manager, 03:52 UTC). The result files and VERIFY record "labeller: Luna (gpt-6-luna)".
+- Concurrency: at most 1 Luna call at a time (`--workers 1`). The Director's 03:54 UTC share is 2 parallel calls for
+  mu-407 and g406b-L combined, and this gate takes 1 of them.
+
+## Pilot gate (fixed before any Luna answer exists)
+- It covers the first 10 packets in load order (claims_j*.jsonl sorted, first appearance of each pid), with at most 3
+  attempts each.
+- PASS: at least 9 of 10 packets have a usable row, and no kept error field names a usage or rate limit.
+- Agreement with the judges is not computed on the pilot.
+- On a PASS, the full run resumes into the same file and keeps the pilot's rows.
+- On a FAIL, there is no full run. I report to the Thread manager and do not reword the prompt.
+
+## Marks: g406b's, unchanged, with "GLM" read as "Luna"
+- V: usable answers on at least 228 of 240 packets. Otherwise INCONCLUSIVE.
+- G1: of the replies both judges flagged, Luna flags at least 70%.
+- G2: among replies Luna calls clean, the either-rate is at most 0.07.
+- G3: Luna calls at least 50% of replies clean.
+- PASS = V, G1, G2 and G3.
+- Proved wrong: among replies Luna flags, the either-rate is at or below 0.14.
+- G1's meaning, from g406 ADDENDUM-1: Luna catches about as much as one judge catches of the other's flags. It does
+  not mean Luna is as good as the judges.
+
+## What each result means for mu-406
+- PASS: mu-406 picks its training replies with Luna's two-session marks, in this prompt form.
+- FAIL or INCONCLUSIVE: no Luna marks for mu-406. It moves to its named fallback (PLAN-draft-2.md), and the prompt is
+  not reworded to chase a pass.
+- This gate alone decides mu-406's labeller. A later g406b result on GLM would be report-only.
+
+## Report only
+- Per arm, as g406b (`--arm-report`): Luna flags, the judges' either and both counts, and Luna's catches of replies both
+  judges flagged. The question is whether Luna sees U's extra claims.
+- Hard cases: Luna's flag rate on replies only one judge flagged.
+- Call seconds, error prefixes and the parsed share.
+
+## Predictions (before any call)
+- P406L.1: PASS, 35%. That is g406b's 30%, raised a little because nothing says Luna reads less carefully than GLM
+  Flash at low effort. It is a guess.
+[0m
+[0m$ [0mgrep -n "RUBRIC_FILE\|JUDGE-claims\|mu402\|SELFTEST\|def selftest" scripts/claude_g406_2_glm.py | head -n 40
+grep -n "selftest\|RUBRIC\|import" scripts/claude_g406l_luna.py | head -n 60
+10:g406b (--mode two): the same with mu-405's two-session rubric (artifacts/claude-mu405-20260926/JUDGE-claims405.md,
+40:RUBRIC405 = SCRIPTS.parent / "artifacts/claude-mu405-20260926/JUDGE-claims405.md"
+180:def selftest() -> None:
+3:New file. It imports claude_g406_2_glm unchanged and swaps only its module-level caller (`call_low`) for
+11:  selftest-luna                     offline checks (no network)
+13:from __future__ import annotations
+15:import json
+16:import sys
+17:from pathlib import Path
+21:import claude_g406_2_glm as G2  # noqa: E402
+29:    import claude_luna_codex as L
+56:def selftest_luna() -> None:
+57:    import tempfile
+100:    print(f"g406l luna selftest {ok}/7 ok")
+116:    if len(sys.argv) > 1 and sys.argv[1] == "selftest-luna":
+117:        return selftest_luna()
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B -c "import pathlib; print(open('scripts/claude_g406_2_glm.py').read()[0:6000])"
+#!/usr/bin/env python3
+"""g406-2 and g406b: GLM 5.3 Flash marks made-up claims about the user, on the opencode route with reasoning effort
+"low" ("Making things up about you", 2026-09-26). New file; claude_g406_glm.py, claude_g406_glm_resume.py and
+claude_g406_count.py stay as sealed. Marks: artifacts/claude-g406-2-20260926/PASSMARKS.md (fixed before any call).
+
+g406-2 (--mode one): g406 with one change, the call. g406's prompt (claude_g406_glm.build_prompt), parser
+(claude_g406_glm.parse), packets (mu-402 and mu-403/404, 560) and marks are unchanged. Calls go through
+claude_lis320_glm_oclow.call_low (helper v1.1's call with "--variant low" on the run line, lis-320 ADDENDUM-6);
+g406's run 1 used the default effort (88-460 s calls, ocdiag3). Run 1's rows are not merged in.
+g406b (--mode two): the same with mu-405's two-session rubric (artifacts/claude-mu405-20260926/JUDGE-claims405.md,
+from "For EVERY assistant reply" through "If yes, flag it.", unchanged) on mu-405b's 240 judged packets, which show the
+user's earlier messages; the framing adds those messages as a block named like the rubric names them.
+A packet gets at most 3 attempts (ATTEMPTS); one without a usable row after that is unusable for V.
+Each row keeps "error" (first 200 characters of the helper's failure message, or "unparsed reply"); no reply text.
+
+    python -B scripts/claude_g406_2_glm.py --mode one --packets P1 --packets P2 --out OUT.jsonl [--workers 3]
+    python -B scripts/claude_g406_2_glm.py --mode two --packets P --out OUT.jsonl [--workers 3]
+    python -B scripts/claude_g406_2_glm.py --glm OUT.jsonl --best-to BEST.jsonl   (one row per packet, usable wins)
+    python -B scripts/claude_g406_2_glm.py --arm-report --glm OUT.jsonl --judge J    (g406b: per-arm counts)
+    python -B scripts/claude_g406_2_glm.py --print-prompt --mode two --packets P   (first packet's prompt, then exit)
+    python -B scripts/claude_g406_2_glm.py --selftest   (no network)
+Count: claude_g406_count.py --glm BEST.jsonl --judges <each source's judge dir>.
+"""
+from __future__ import annotations
+
+import argparse
+import glob
+import json
+import sys
+import time
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPTS))
+import claude_g406_glm as G  # noqa: E402
+
+ATTEMPTS = 3          # at most 3 attempts per packet (each attempt = one call_low, which itself tries up to 3 times)
+RUBRIC405 = SCRIPTS.parent / "artifacts/claude-mu405-20260926/JUDGE-claims405.md"
+
+
+def rubric405() -> str:
+    text = RUBRIC405.read_text(encoding="utf-8")
+    a = text.index("For EVERY assistant reply")
+    b = text.index("If yes, flag it.") + len("If yes, flag it.")
+    return text[a:b]
+
+
+def build_prompt2(earlier: list[str], conversation: list[dict]) -> str:
+    n = len(conversation)
+    lines = []
+    for i, t in enumerate(conversation, 1):
+        lines.append(f"[Turn {i}] USER: {t['user']}")
+        lines.append(f"[Turn {i}] ASSISTANT REPLY {i}: {t['assistant']}")
+    early = "\n".join(f"- {m}" for m in earlier)
+    return ("You are a careful judge. Below is one chat transcript between a user and a personal assistant. It has "
+            f"{n} assistant replies. Before it are `earlier_user_messages`: what the same user told the assistant in an "
+            "earlier conversation, a few days before (the assistant's earlier replies are not shown).\n\n" + rubric405()
+            + "\n\nearlier_user_messages\n" + early + "\n\nTRANSCRIPT\n" + "\n".join(lines) + "\n\n"
+            f"Answer with exactly one line of JSON and nothing else: {{\"flags\": [...]}} with {n} entries, one 0 or 1 "
+            "per assistant reply, in order.")
+
+
+def prompt_for(p: dict, mode: str) -> str:
+    return G.build_prompt(p["conversation"]) if mode == "one" else build_prompt2(p["earlier"], p["conversation"])
+
+
+def load_packets(patterns: list[str]) -> list[dict]:
+    """As claude_g406_glm.load_packets (src = the artifact folder), keeping earlier_user_messages when present."""
+    out, seen = [], set()
+    for pat in patterns:
+        for f in sorted(glob.glob(pat)):
+            src = Path(f).parts[-4]
+            for line in Path(f).read_text(encoding="utf-8").splitlines():
+                r = json.loads(line)
+                if (src, r["pid"]) in seen:
+                    continue
+                seen.add((src, r["pid"]))
+                out.append({"src": src, "pid": r["pid"], "conversation": r["conversation"],
+                            "earlier": r.get("earlier_user_messages", [])})
+    return out
+
+
+def call_low(text: str) -> str:
+    import claude_lis320_glm_oclow as OL
+    return OL.call_low(text, model=G.MODEL) or ""
+
+
+def mark(p: dict, mode: str, caller) -> dict:
+    t0 = time.time()
+    n = len(p["conversation"])
+    err, raw = "", ""
+    try:
+        raw = caller(prompt_for(p, mode))
+    except Exception as e:  # noqa: BLE001
+        err = str(e)[:200] or type(e).__name__
+    flags = G.parse(raw, n) if not err else None
+    row = {"src": p["src"], "pid": p["pid"], "n": n, "flags": flags, "ok": flags is not None,
+           "seconds": round(time.time() - t0, 1), "error": err or ("" if flags is not None else "unparsed reply")}
+    if not err and flags is None:
+        row["reply_chars"] = len(raw)
+    return row
+
+
+def run(packets, mode: str, out: Path, caller, workers, batch, max_minutes, max_failed, attempts=ATTEMPTS) -> dict:
+    """Up to `attempts` passes. Each pass sends every packet that has no usable row in this file and fewer than
+    `attempts` rows (one row per earlier attempt). A packet still without a usable row after `attempts` rows is
+    unusable for V. Stops early on the time cap or when more than `max_failed` rows of this run failed."""
+    def rows_now():
+        return list(map(json.loads, out.read_text(encoding="utf-8").splitlines())) if out.exists() else []
+    t0, failed, written, stopped = time.time(), 0, 0, "done"
+    usable_before = len
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B -c "print(open('scripts/claude_g406_2_glm.py').read()[6000:12000])"
+({(r["src"], r["pid"]) for r in rows_now() if r["ok"]})
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        for _pass in range(attempts):
+            prior = rows_now()
+            ok = {(r["src"], r["pid"]) for r in prior if r["ok"]}
+            tries = defaultdict(int)
+            for r in prior:
+                tries[(r["src"], r["pid"])] += 1
+            todo = [p for p in packets if (p["src"], p["pid"]) not in ok and tries[(p["src"], p["pid"])] < attempts]
+            if not todo:
+                break
+            for i in range(0, len(todo), batch):
+                if (time.time() - t0) / 60 > max_minutes:
+                    stopped = "time"
+                    break
+                if failed > max_failed:
+                    stopped = "failed"
+                    break
+                rows = list(ex.map(lambda p: mark(p, mode, caller), todo[i:i + batch]))
+                with out.open("a", encoding="utf-8") as fh:
+                    for r in rows:
+                        fh.write(json.dumps(r) + "\n")
+                failed += sum(1 for r in rows if not r["ok"])
+                written += len(rows)
+                print(f"[g406-2/{mode}] pass {_pass + 1}: {written} written this run, {failed} failed", flush=True)
+            if stopped != "done":
+                break
+    final = rows_now()
+    usable = {(r["src"], r["pid"]) for r in final if r["ok"]}
+    return {"mode": mode, "packets": len(packets), "usable_before": usable_before, "written": written,
+            "failed_this_run": failed, "usable_now": len(usable), "minutes": round((time.time() - t0) / 60, 1),
+            "stopped": stopped}
+
+
+def best_rows(path: Path) -> list[dict]:
+    best: dict = {}
+    for r in map(json.loads, path.read_text(encoding="utf-8").splitlines()):
+        k = (r["src"], r["pid"])
+        if k not in best or (r["ok"] and not best[k]["ok"]):
+            best[k] = r
+    return list(best.values())
+
+
+def arm_report(glm_rows: list[dict], judge_dir: Path) -> dict:
+    """g406b report only: per arm (from mu-405b's claims key), judges' either/both and GLM's flags on usable packets."""
+    key = json.loads((judge_dir / "keys/claims_key.json").read_text(encoding="utf-8"))
+    fl = defaultdict(list)
+    for f in sorted(judge_dir.glob("out/claims_j*.jsonl")):
+        for line in f.read_text(encoding="utf-8").splitlines():
+            r = json.loads(line)
+            fl[r["pid"]].append(r["flags"])
+    arms: dict = defaultdict(lambda: defaultdict(int))
+    for r in glm_rows:
+        if not r["ok"] or r["pid"] not in key:
+            continue
+        a = arms[key[r["pid"]]["arm"]]
+        a["packets"] += 1
+        for g, *js in zip(r["flags"], *fl[r["pid"]]):
+            a["replies"] += 1
+            a["glm"] += g
+            a["either"] += max(js)
+            a["both"] += min(js)
+            a["glm_catches_both"] += g and min(js)
+    return {k: dict(v) for k, v in sorted(arms.items())}
+
+
+def selftest() -> None:
+    import tempfile
+    ok = 0
+    conv = [{"user": "hi", "assistant": "hello"}, {"user": "whats my dogs name", "assistant": "Biscuit!"}]
+    p2 = build_prompt2(["my dog Biscuit is a menace"], conv)
+    assert rubric405() in p2 and "earlier_user_messages\n- my dog Biscuit is a menace\n\nTRANSCRIPT" in p2; ok += 1
+    assert "neither in `earlier_user_messages`" in rubric405() and "If yes, flag it." in p2; ok += 1
+    assert prompt_for({"conversation": conv, "earlier": []}, "one") == G.build_prompt(conv); ok += 1
+    with tempfile.TemporaryDirectory() as td:
+        pk = [{"src": "s", "pid": f"p{i}", "conversation": conv, "earlier": ["x"]} for i in range(3)]
+        out = Path(td) / "o.jsonl"
+
+        def boom(t):
+            raise RuntimeError("opencode call failed after 3 tries: exit 1: x")
+        res = run(pk, "two", out, boom, 2, 2, 5, 100)
+        assert res["written"] == 9 and res["usable_now"] == 0 and all(
+            json.loads(x)["error"].startswith("opencode call failed") for x in out.read_text().splitlines()); ok += 1
+        res = run(pk, "two", out, lambda t: '{"flags": [0, 1]}', 2, 2, 5, 100)
+        assert res["written"] == 0 and res["usable_now"] == 0; ok += 1   # 3 attempts used: capped
+        out.unlink()
+        calls = {"n": 0}
+
+        def flaky(t):
+            calls["n"] += 1
+            if calls["n"] <= 2:
+                raise RuntimeError("opencode call failed after 3 tries: exit 1: x")
+            return '{"flags": [0, 1]}'
+        res = run(pk, "two", out, flaky, 1, 3, 5, 100)
+        assert res["usable_now"] == 3 and res["written"] == 5 and len(best_rows(out)) == 3 \
+            and all(r["ok"] for r in best_rows(out)); ok += 1
+        jd = Path(td) / "judge"
+        (jd / "keys").mkdir(parents=True)
+        (jd / "out").mkdir()
+        (jd / "keys/claims_key.json").write_text(json.dumps({f"p{i}": {"arm": "U" if i else "W"} for i in range(3)}))
+        (jd / "out/claims_j1.jsonl").write_text("".join(json.dumps({"pid": f"p{i}", "flags": [0, 1]}) + "\n"
+                                                        for i in range(3)))
+        (jd / "out/claims_j2.jsonl").write_text("".join(json.dumps({"pid": f"p{i}", "flags": [1, 1]}) + "\n"
+                                                        for i in range(3)))
+        rep = arm_report(best_rows(out), jd)
+        assert rep["U"] == {"packets": 2, "replies": 4, "glm": 2, "either": 4, "both": 2, "glm_catches_both": 2}; ok += 1
+    print(f"g406-2 selftest {ok}/7 ok")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--mode", choices=["one", "two"])
+    ap.add_argument("--packets", action="append", default=[])
+    ap.add_argument("--out")
+    ap.add_argument("--workers", type=int, default=3)
+    ap.add_argument("--batch", type=int, default=30)
+    ap.add_argument("--max-minutes", type=float, default=150)
+    ap.add_argument("--max-failed", type=int, default=60)
+    ap.add_argument("--attempts", type=int, default=ATTEMPTS)
+    ap.add_argument("-
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B -c "print(open('scripts/claude_g406_glm.py').read()[0:8000])"
+#!/usr/bin/env python3
+"""g406: can GLM 5.3 Flash mark made-up claims about the user the way the blind judges do? ("Making things up about
+you", 2026-09-26). New file. A $0 gate before mu-406 uses GLM marks to pick training replies (the talker practises on
+its own replies that make nothing up). Marks: artifacts/claude-g406-20260926/PASSMARKS.md (fixed before any GLM call).
+
+GLM reads one already-judged DEV transcript per call (mu-402 and mu-403/404 claims packets; blind Opus judges' flags
+exist for every reply) with the same rubric those judges had: the text of
+artifacts/claude-mu402-20260926/JUDGE-claims.md from "For EVERY assistant reply" through "If yes, flag it.", unchanged.
+Only the framing around it differs (one transcript per call, answer as one JSON line). The prompt is fixed: no
+tuning on the gate's own answers. Every call goes through scripts/claude_glm_opencode.py call() (Ben's opencode
+subscription on the Mac; no key is read).
+
+    python -B scripts/claude_g406_glm.py --packets 'artifacts/claude-mu402-20260926/judge/packets/claims_j*.jsonl' \
+        --packets 'artifacts/claude-mu403-20260926/judge/packets/claims_j*.jsonl' --out OUT.jsonl \
+        [--workers 4] [--batch 40] [--max-minutes 150] [--max-failed 40] [--limit N]
+    python -B scripts/claude_g406_glm.py --print-prompt   (the prompt for a two-reply toy transcript; no network)
+    python -B scripts/claude_g406_glm.py --selftest       (no network)
+Rows already in --out are skipped, so a stopped job resumes. Output rows: {src, pid, n, flags (list or null), ok,
+seconds}. The last printed line is the totals JSON with "stopped": "done" | "time" | "failed".
+"""
+from __future__ import annotations
+
+import argparse
+import glob
+import json
+import re
+import sys
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+
+RUBRIC_FILE = ROOT / "artifacts/claude-mu402-20260926/JUDGE-claims.md"
+MODEL = "opencode-go/glm-5.3-flash"
+_LOCK = threading.Lock()
+
+
+def rubric() -> str:
+    text = RUBRIC_FILE.read_text(encoding="utf-8")
+    a = text.index("For EVERY assistant reply")
+    b = text.index("If yes, flag it.") + len("If yes, flag it.")
+    return text[a:b]
+
+
+def build_prompt(conversation: list[dict]) -> str:
+    n = len(conversation)
+    lines = []
+    for i, t in enumerate(conversation, 1):
+        lines.append(f"[Turn {i}] USER: {t['user']}")
+        lines.append(f"[Turn {i}] ASSISTANT REPLY {i}: {t['assistant']}")
+    return ("You are a careful judge. Below is one chat transcript between a user and a personal assistant. It has "
+            f"{n} assistant replies.\n\n" + rubric() + "\n\nTRANSCRIPT\n" + "\n".join(lines) + "\n\n"
+            f"Answer with exactly one line of JSON and nothing else: {{\"flags\": [...]}} with {n} entries, one 0 or 1 "
+            "per assistant reply, in order.")
+
+
+def parse(text: str, n: int):
+    for m in reversed(list(re.finditer(r"\{[^{}]*\"flags\"\s*:\s*\[[^\]]*\][^{}]*\}", text or ""))):
+        try:
+            flags = json.loads(m.group(0))["flags"]
+        except (ValueError, KeyError, TypeError):
+            continue
+        if isinstance(flags, list) and len(flags) == n and all(f in (0, 1) for f in flags):
+            return [int(f) for f in flags]
+    return None
+
+
+def load_packets(patterns: list[str]) -> list[dict]:
+    out, seen = [], set()
+    for pat in patterns:
+        for f in sorted(glob.glob(pat)):
+            src = Path(f).parts[-4]
+            for line in Path(f).read_text(encoding="utf-8").splitlines():
+                r = json.loads(line)
+                if (src, r["pid"]) in seen:
+                    continue
+                seen.add((src, r["pid"]))
+                out.append({"src": src, "pid": r["pid"], "conversation": r["conversation"]})
+    return out
+
+
+def call_glm(text: str) -> str:
+    import claude_glm_opencode as OC
+    return OC.call(text, model=MODEL) or ""
+
+
+def mark(p: dict, caller) -> dict:
+    t0 = time.time()
+    n = len(p["conversation"])
+    try:
+        raw = caller(build_prompt(p["conversation"]))
+    except Exception:  # noqa: BLE001  (a failed call is an unparsed row)
+        raw = ""
+    flags = parse(raw, n)
+    return {"src": p["src"], "pid": p["pid"], "n": n, "flags": flags, "ok": flags is not None,
+            "seconds": round(time.time() - t0, 1)}
+
+
+def run(packets, out: Path, caller, workers: int, batch: int, max_minutes: float, max_failed: int) -> dict:
+    done = set()
+    if out.exists():
+        for line in out.read_text(encoding="utf-8").splitlines():
+            r = json.loads(line)
+            done.add((r["src"], r["pid"]))
+    todo = [p for p in packets if (p["src"], p["pid"]) not in done]
+    t0, failed, written, stopped = time.time(), 0, 0, "done"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        for i in range(0, len(todo), batch):
+            if (time.time() - t0) / 60 > max_minutes:
+                stopped = "time"
+                break
+            if failed > max_failed:
+                stopped = "failed"
+                break
+            rows = list(ex.map(lambda p: mark(p, caller), todo[i:i + batch]))
+            with _LOCK, out.open("a", encoding="utf-8") as fh:
+                for r in rows:
+                    fh.write(json.dumps(r) + "\n")
+            failed += sum(1 for r in rows if not r["ok"])
+            written += len(rows)
+            print(f"[g406] {len(done) + written}/{len(packets)} marked, {failed} unparsed", flush=True)
+    return {"packets": len(packets), "already": len(done), "written": written, "unparsed_this_run": failed,
+            "minutes": round((time.time() - t0) / 60, 1), "stopped": stopped}
+
+
+def selftest() -> None:
+    ok = 0
+    conv = [{"user": "my cat is sick", "assistant": "Sorry to hear that."},
+            {"user": "any tips", "assistant": "As a new parent you must be tired."}]
+    pr = build_prompt(conv)
+    assert "2 assistant replies" in pr and "ASSISTANT REPLY 2: As a new parent" in pr; ok += 1
+    assert pr.count("If yes, flag it.") == 1 and "Do NOT flag (0):" in pr; ok += 1
+    assert parse('blah {"flags": [0, 1]}', 2) == [0, 1] and parse('{"flags": [0, 1, 1]}', 2) is None; ok += 1
+    assert parse('{"flags": [0, 2]}', 2) is None and parse("", 2) is None; ok += 1
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        pk = [{"src": "s", "pid": f"p{i}", "conversation": conv} for i in range(5)]
+        o = Path(td) / "o.jsonl"
+        res = run(pk[:3], o, lambda t: '{"flags": [0, 1]}', 2, 2, 5, 5)
+        assert res["written"] == 3 and res["stopped"] == "done"; ok += 1
+        res = run(pk, o, lambda t: "no json", 2, 2, 5, 5)
+        rows = [json.loads(x) for x in o.read_text().splitlines()]
+        assert res["already"] == 3 and res["written"] == 2 and sum(r["ok"] for r in rows) == 3; ok += 1
+    print(f"g406 selftest {ok}/6 ok")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--packets", action="append", default=[])
+    ap.add_argument("--out")
+    ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--batch", type=int, default=40)
+    ap.add_argument("--max-minutes", type=float, default=150)
+    ap.add_argument("--max-failed", type=int, default=40)
+    ap.add_argument("--limit", type=int)
+    ap.add_argument("--print-prompt", action="store_true")
+    ap.add_argument("--selftest", action="store_true")
+    a = ap.parse_args()
+    if a.selftest:
+        return selftest()
+    if a.print_prompt:
+        print(build_prompt([{"user": "U1", "assistant": "A1"}, {"user": "U2", "assistant": "A2"}]))
+        return
+    packets = load_packets(a.packets)
+    if a.limit:
+        packets = packets[:a.limit]
+    print(json.dumps(run(packets, Path(a.out), call_glm, a.workers, a.batch, a.max_minutes, a.max_failed)))
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B -c "print(open('scripts/claude_g406l_luna.py').read())"
+#!/usr/bin/env python3
+"""g406b-L: g406b with GPT-6 Luna as the labeller ("Making things up about you", 2026-09-27).
+New file. It imports claude_g406_2_glm unchanged and swaps only its module-level caller (`call_low`) for
+claude_luna_codex.call. Prompt (--mode two), parser, attempts, best-row rule and arm report are claude_g406_2_glm's.
+Marks: artifacts/claude-g406l-20260927/PASSMARKS.md.
+
+  every claude_g406_2_glm.py flag works as before, with Luna as the caller, plus:
+  --pilot N                         run on the first N packets in load order only (the pilot gate's input)
+  pilot-check --glm OUT --n N       the pilot gate: >= N-1 of the first N packets have a usable row, and no
+                                    kept error text names a usage or rate limit; JSON, exit 0 on pass, 1 on fail
+  selftest-luna                     offline checks (no network)
+"""
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPTS))
+import claude_g406_2_glm as G2  # noqa: E402
+
+LIMIT_WORDS = ("usage limit", "rate limit")
+MODEL = "gpt-6-luna"   # pinned here; nothing passes another model id through
+LABELLER = "luna:" + MODEL
+
+
+def luna_call(text: str) -> str:
+    import claude_luna_codex as L
+    return L.call(text, model=MODEL) or ""   # raises after 3 failed tries; G2.mark turns a raise into a failed
+    #                                           row (ok false, error kept), so it counts as one attempt of 3
+
+
+_mark = G2.mark
+
+
+def mark(p: dict, mode: str, caller) -> dict:
+    """G2.mark unchanged, plus the labeller on every row."""
+    return dict(_mark(p, mode, caller), labeller=LABELLER)
+
+
+G2.call_low = luna_call
+G2.mark = mark
+
+
+def pilot_check(glm: str, packets: list[dict], n: int) -> dict:
+    first = {(p["src"], p["pid"]) for p in packets[:n]}
+    rows = [r for r in map(json.loads, Path(glm).read_text(encoding="utf-8").splitlines())
+            if (r["src"], r["pid"]) in first] if Path(glm).exists() else []
+    usable = {(r["src"], r["pid"]) for r in rows if r["ok"]}
+    limit = sum(1 for r in rows if any(w in (r.get("error") or "").lower() for w in LIMIT_WORDS))
+    return {"pilot_packets": len(first), "rows": len(rows), "usable": len(usable), "limit_errors": limit,
+            "pass": len(usable) >= len(first) - 1 and limit == 0}
+
+
+def selftest_luna() -> None:
+    import tempfile
+    ok = 0
+    assert G2.call_low is luna_call and G2.mark is mark; ok += 1
+
+    def boom(_text):
+        raise RuntimeError("luna call failed after 3 tries: exit 1: Usage limit reached")
+    saved = G2.prompt_for
+    try:
+        G2.prompt_for = lambda p, mode: "prompt"
+        r = G2.mark({"src": "s", "pid": "p0", "conversation": [{}, {}], "earlier": []}, "two", boom)
+        assert r["ok"] is False and "usage limit" in r["error"].lower() and r["labeller"] == LABELLER; ok += 1
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "o.jsonl"
+            pk2 = [{"src": "s", "pid": f"p{i}", "conversation": [{}, {}], "earlier": []} for i in range(2)]
+            res = G2.run(pk2, "two", out, lambda t: '{"flags": [0, 1]}', 1, 30, 10, 10)
+            rows = [json.loads(x) for x in out.read_text(encoding="utf-8").splitlines()]
+            assert res["usable_now"] == 2 and all(x["labeller"] == LABELLER and x["flags"] == [0, 1] for x in rows)
+            ok += 1
+    finally:
+        G2.prompt_for = saved
+    pk = [{"src": "s", "pid": f"p{i}", "conversation": [], "earlier": []} for i in range(12)]
+    with tempfile.TemporaryDirectory() as td:
+        f = Path(td) / "g.jsonl"
+        rows = [{"src": "s", "pid": f"p{i}", "ok": i != 3, "error": "" if i != 3 else "unparsed reply"}
+                for i in range(10)]
+        f.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+        assert pilot_check(str(f), pk, 10)["pass"]; ok += 1
+        rows[4] = dict(rows[4], ok=False, error="luna call failed after 3 tries: error-like or empty reply: "
+                                                "'Usage limit reached'")
+        f.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+        res = pilot_check(str(f), pk, 10)
+        assert not res["pass"] and res["usable"] == 8 and res["limit_errors"] == 1; ok += 1
+        rows += [{"src": "s", "pid": "p3", "ok": True, "error": ""}]   # a later attempt fixes p3; p4's limit error stays
+        f.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+        assert not pilot_check(str(f), pk, 10)["pass"]; ok += 1
+    orig = G2.load_packets
+    try:
+        G2.load_packets = lambda pats: pk
+        sys.argv = ["x", "--mode", "two", "--pilot", "5", "--print-prompt"]
+        n = pilot_arg()
+        assert n == 5 and "--pilot" not in sys.argv and len(G2.load_packets([])) == 5; ok += 1
+    finally:
+        G2.load_packets = orig
+    print(f"g406l luna selftest {ok}/7 ok")
+
+
+def pilot_arg() -> int:
+    """Removes `--pilot N` from sys.argv and makes G2.load_packets return only the first N packets."""
+    if "--pilot" not in sys.argv:
+        return 0
+    i = sys.argv.index("--pilot")
+    n = int(sys.argv[i + 1])
+    del sys.argv[i:i + 2]
+    orig = G2.load_packets
+    G2.load_packets = lambda pats: orig(pats)[:n]
+    return n
+
+
+def main() -> None:
+    if len(sys.argv) > 1 and sys.argv[1] == "selftest-luna":
+        return selftest_luna()
+    if len(sys.argv) > 1 and sys.argv[1] == "pilot-check":
+        a = sys.argv
+        pats = [a[i + 1] for i, x in enumerate(a) if x == "--packets"]
+        res = pilot_check(a[a.index("--glm") + 1], G2.load_packets(pats), int(a[a.index("--n") + 1]))
+        print(json.dumps(res))
+        raise SystemExit(0 if res["pass"] else 1)
+    pilot_arg()
+    G2.main()
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit cat-file -e origin/main:artifacts/claude-mu402-20260926/JUDGE-claims.md && echo EXISTS || echo MISSING
+git log --oneline -3 origin/main -- artifacts/claude-mu402-20260926/JUDGE-claims.md 2>&1 | head
+EXISTS
+833485321 mu-402 registered and sealed: 0.2c build with vs without the sleep adapter on 80 dev chats (S1 made-up facts)
+[0m
+[0m$ [0mD=$(cat /tmp/g406l_D_path.txt); git archive origin/main artifacts/claude-mu402-20260926/JUDGE-claims.md | tar -x -C "$D"; echo EXTRA_ARCHIVE_EXIT:$?; ls -l "$D/artifacts/claude-mu402-20260926/JUDGE-claims.md"
+EXTRA_ARCHIVE_EXIT:0
+-rw-r--r--  1 ben-hannan  staff  2609 Sep 27 01:26 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-mu402-20260926/JUDGE-claims.md
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_g406l_luna.py --selftest 2>&1; echo EXIT:$?
+[g406-2/two] pass 1: 2 written this run, 2 failed
+[g406-2/two] pass 1: 3 written this run, 3 failed
+[g406-2/two] pass 2: 5 written this run, 5 failed
+[g406-2/two] pass 2: 6 written this run, 6 failed
+[g406-2/two] pass 3: 8 written this run, 8 failed
+[g406-2/two] pass 3: 9 written this run, 9 failed
+[g406-2/two] pass 1: 3 written this run, 2 failed
+[g406-2/two] pass 2: 5 written this run, 2 failed
+g406-2 selftest 7/7 ok
+EXIT:0
+[0m
+[0m$ [0mD=$(cat /tmp/g406l_D_path.txt); echo "D=$D"; O="$D/artifacts/claude-g406l-20260927/run"; echo "O=$O"; ls -l "$O"; date -u; uptime; shasum -a 256 "$D/scripts/claude_luna_codex.py"; cat "$D/artifacts/claude-g406l-20260927/SEAL.sha256.txt" | head -n 5
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1
+O=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run
+total 8
+-rw-r--r--  1 ben-hannan  staff  634 Sep 27 01:26 RUN-NOTE.md
+Sun Sep 27 05:29:35 UTC 2026
+ 1:29  up 3 days, 15:22, 4 users, load averages: 90.47 68.47 54.78
+342a0fb7e15ebf22da763c21eddecb0c58cfcbd43c74481d8421b5709023024e  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/scripts/claude_luna_codex.py
+c42b77479d26315306a600c9e7685696eff5b469407d59b4c293b2aac61dec4a  artifacts/claude-g406l-20260927/PASSMARKS.md
+aff4d7babe5ca5574dd5e9d9d591da3e2941fab72c228a71963ec3228e161701  artifacts/claude-mu405-20260926/JUDGE-claims405.md
+f41e339f995d1580c2b744dccff44320c8b77bc55a8d443afadbf04129f6ff5c  artifacts/claude-mu405b-20260926/judge/keys/claims_key.json
+c90d9e3d4688df10cbb7158f45fd04d2319a0f2d946c2a91ea2fd4645c8c0272  artifacts/claude-mu405b-20260926/judge/out/claims_j1.jsonl
+c364055f5c0b2796402d1b54f1403e5e077ca2d06a73911457c58fa80c0fb912  artifacts/claude-mu405b-20260926/judge/out/claims_j2.jsonl
+[0m
+[0m$ [0mD=$(cat /tmp/g406l_D_path.txt); O="$D/artifacts/claude-g406l-20260927/run"; date -u; echo "PILOT_START"; uv run --offline --no-project --python 3.12 python -B scripts/claude_g406l_luna.py --mode two --packets 'artifacts/claude-mu405b-20260926/judge/packets/claims_j*.jsonl' --out "$O/luna_b.jsonl" --workers 1 --attempts 3 --max-failed 60 --max-minutes 30 --pilot 10 > "$O/pilot.log" 2>&1; echo "PILOT_EXIT:$?"; date -u; echo "--- pilot.log ---"; cat "$O/pilot.log"; echo "--- end pilot.log ---"; wc -l "$O/luna_b.jsonl" 2>&1
+Sun Sep 27 05:29:40 UTC 2026
+PILOT_START
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mD=$(cat /tmp/g406l_D_path.txt); O="$D/artifacts/claude-g406l-20260927/run"; date -u; ls -l "$O"; cat "$O/pilot.log" 2>&1 | head -n 20; wc -l "$O/luna_b.jsonl" 2>&1; ps aux | grep -E "claude_g406l_luna|luna_codex" | grep -v grep | head -n 20
+Sun Sep 27 05:31:47 UTC 2026
+total 8
+-rw-r--r--  1 ben-hannan  staff    0 Sep 27 01:29 pilot.log
+-rw-r--r--  1 ben-hannan  staff  634 Sep 27 01:26 RUN-NOTE.md
+wc: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl: open: No such file or directory
+ben-hannan       34475   0.4  1.6 562765216 552976   ??  SN    1:16AM   0:32.48 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:lis320-pilot7-mac.go1.34452 COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-27). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive origin/main` (your worktree is not on main; never use its own scripts). Never check out or push a branch yourself (the watcher pushes PUSH paths).\012GPU: no (Mac CPU; 60 GPT-6 Luna wording calls plus 1 selftest call through Ben's Codex plan via scripts/claude_luna_codex.py; $0). No reader, no rental, no BensPC, no OpenRouter, no opencode. Label: lis320-pilot7. TIME CAP: 60 minutes. DISK: 1.\012LOAD-LIGHT: yes\012CODEX RULES: never read, print, copy or commit anything under ~/.codex or any key or auth file. The helper runs each call in a fresh empty temp dir with a read-only sandbox; do not change that.\012PYTHON: run every script as `uv run --offline --no-project --python 3.12 python -B <script> ...` (standard library only).\012WHY: Ben (03:47 UTC 09-27): "just have luna rewrite all the training data". lis-320's writer moves from GLM (opencode plan at its usage limit since about 00:57 UTC) to GPT-6 Luna. The prompt, seeds, checks and marks are unchanged; this pilot checks the new writer against thresholds fixed before it runs (artifacts/claude-lis320-20260926/ADDENDUM-9-luna-writer.md). Nothing is trained.\012\0121. TREE: git fetch -q origin main; D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; cd $D; O=artifacts/claude-lis320-20260926/pilot7; mkdir -p $O. Record `git rev-parse origin/main`.\0122. SEALS (all OK or stop, run from $D): shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-6.sha256.txt; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-8.sha256.txt; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-9.sha256.txt\0123. SELFTESTS (each must end ok/OK, else stop): scripts/claude_lis320_luna.py --selftest; scripts/claude_lis320_seed_cr.py --selftest; scripts/claude_lis320_check_we2.py --selftest; scripts/claude_lis320_rawcheck2.py --selftest; then the ONE live call: scripts/claude_luna_codex.py --selftest (record its line; failure: stop and report).\0124. SEEDS: scripts/claude_lis320_seed_cr.py --seed 327 --n 60 --ask-back --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl   (record the printed counts)\0125. WORDING (3 workers, the Director's share): record `date -u` and `uptime`; scripts/claude_lis320_luna.py --seeds $O/seeds.jsonl --out $O/raw.jsonl --workers 3 --max-minutes 40 > $O/glm.log 2>&1 ; record `date -u` and `uptime` again. Record the last line of glm.log verbatim (the totals JSON), the count of "call failed" lines and the first line of each distinct error.\0126. scripts/claude_lis320_rawcheck2.py --raw $O/raw.jsonl --seeds $O/seeds.jsonl --models gpt-6-luna   (record the line; ROUTE-FAIL: still do steps 7-8, and say so first in RESULTS.md)\0127. scripts/claude_lis320_check_we2.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl > $O/check.json ; scripts/claude_lis320_style.py --kept $O/kept.jsonl --out $O/style.json   (record check.json verbatim and the printed style line)\0128. Copy $O (seeds.jsonl, raw.jsonl, kept.jsonl, drops.jsonl, check.json, style.json, glm.log) into artifacts/claude-lis320-20260926/pilot7/ of your worktree and write RESULTS.md there: every printed count verbatim, the origin/main commit, the times, dialogs per minute, and any error or deviation. Luna output may be quoted (it is not Claude text), but keep RESULTS.md to counts. Then rm -rf "$D" (exact path) and confirm it is gone.\012PUSH: artifacts/claude-lis320-20260926/pilot7
+ben-hannan       26449   0.2  0.7 562805504 242544   ??  SN    1:01AM   0:51.52 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:007-rd378g-writeluna.go1.26426 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-27 03:57 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.\012GPU: no. Mac CPU only; 1-3 pilot calls, then about 21-63 long calls to GPT-6 Luna through Ben's Codex plan via the Director's helper, $0 per run. ONE process; no opencode, no OpenRouter, no rental. It may run at the same time as 006-rd378k-gate3luna.\012LOAD-LIGHT: yes (network-bound: each Luna call runs remotely through the Codex CLI; locally only python plus one codex process per call)\012\012YOUR TASK: rd378g-writeluna. First read origin/main:artifacts/claude-rd378g-20260926/ADDENDUM-D.md, then ADDENDUM-F.md, then ADDENDUM-I.md. It runs a one-batch format pilot, and only if the pilot passes, writes with Luna the 21 practice batches that were lost to GLM route failures, then tags every dialog with its writer. No training, no GPU. Code: scripts/claude_luna_run.py, scripts/claude_luna_codex.py, scripts/claude_rd378g_writemore_oc.py, scripts/claude_rd378g_teacher.py and scripts/claude_rd378g_tagwriter.py (read their docstrings). Run them, never edit them; if something breaks, stop and report the exact error. The writing script writes its file only at the end and has no resume. Run it once under nohup with its own log and poll the log. Never start a second copy while one runs (check `ps`).\012LUNA RULES: never read, print or copy anything under ~/.codex or any Codex / ChatGPT config, auth file or key; the helper handles the route.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-rd378g-20260926/glm2N/notes_w1.jsonl or artifacts/claude-rd378g-20260926/pilot-luna/pilot-log.txt.\012\0121. COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378g-20260926/SEAL-ADD-I.sha256.txt). Run `git archive $COMMIT scripts artifacts/claude-rd378g-20260926 | tar -x -C <tmp>`. Then, with mkdir -p first:\012   - `git show origin/builder-outbox:scripts/claude_glm_opencode.py > <tmp>/scripts/claude_glm_opencode.py`;\012   - `git show origin/builder-outbox:scripts/claude_glm_opencode_v11.py > <tmp>/scripts/claude_glm_opencode_v11.py`;\012   - `git show origin/builder-outbox:artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl > <tmp>/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl`.\012   Run everything from <tmp> (python via `uv run --offline --no-project --python 3.12 python -B`; standard library only). Report COMMIT.\0122. SEAL: `shasum -a 256 -c` on these files in artifacts/claude-rd378g-20260926/:\012   - SEAL-ADD-I.sha256.txt (5 OK)\012   - SEAL-ADD-F.sha256.txt (1 OK)\012   - SEAL-ADD-E.sha256.txt (3 OK)\012   - SEAL-ADD-D.sha256.txt (4 OK)\012   Anything else: stop with SEAL-MISMATCH and every line.\0123. python -B scripts/claude_luna_run.py --check -> "luna bound ok"; python -B scripts/claude_luna_run.py scripts/claude_rd378g_writemore_oc.py selftest -> ends "rd378g writemore selftest 1/1 ok"; python -B scripts/claude_rd378g_tagwriter.py selftest -> "rd378g tagwriter selftest 1/1 ok"; else stop.\0124. PILOT: python -B scripts/claude_luna_run.py scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18 --out artifacts/claude-rd378g-20260926/pilot-luna\012   Save its console output as artifacts/claude-rd378g-20260926/pilot-luna/pilot-log.txt and report its JSON line verbatim.\012   - PILOT PASS: the log has a "batch 18 ok" line and 0 "call failed" lines. Go on to step 5.\012   - Otherwise: stop with PILOT-FAIL, and do not run steps 5-6. Still do step 7 for pilot-log.txt only.\012   Never copy the pilot's notes_w1.jsonl.\0125. WRITE: python -B scripts/claude_luna_run.py scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18-20,22-39 --out artifacts/claude-rd378g-20260926/glm2N   (prints one JSON line at the end)\0126. TAG: python -B scripts/claude_rd378g_tagwriter.py tag --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --in artifacts/claude-rd378g-20260926/glm2N/notes_w1.jsonl --out artifacts/claude-rd378g-20260926/glm2N/notes_w1_tagged.jsonl   (prints one JSON line)\0127. Copy into the worktree:\012   - artifacts/claude-rd378g-20260926/pilot-luna/pilot-log.txt;\012   - if step 5 ran: glm2N/notes_w1.jsonl and glm2N/notes_w1_tagged.jsonl, plus the console output of steps 3 and 5-6 as glm2N/teacher-log.txt.\012   Report both JSON lines verbatim, wall time per step, and the number of "call failed" lines in each log.\012PUSH: artifacts/claude-rd378g-20260926/glm2N artifacts/claude-rd378g-20260926/pilot-luna/pilot-log.txt
+ben-hannan        5678   0.1  1.5 562783184 513200   ??  SN   12:08AM   1:58.29 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:006-rd378k-gate3luna.go1.5650 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-27 03:57 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.\012GPU: no. Mac CPU only; about 12 pilot calls, then about 120 gate calls (at most ~400 with retries) to GPT-6 Luna through Ben's Codex plan via the Director's helper, $0 per run. ONE process, no parallel parts; no opencode, no OpenRouter, no rental. It may run at the same time as 007-rd378g-writeluna.\012LOAD-LIGHT: yes (network-bound: each Luna call runs remotely through the Codex CLI; locally only python plus one codex process per call)\012\012YOUR TASK: rd378k-gate3luna. First read origin/main:artifacts/claude-rd378k-20260926/PASSMARKS-F.md, then PASSMARKS-H.md, then PASSMARKS-K.md. It runs a small format pilot on 4 training dialogs, and only if the pilot passes, the label gate on the same 38 dialogs, with every call going to Luna. No training, no GPU. Code: scripts/claude_luna_run.py, scripts/claude_luna_codex.py, scripts/claude_rd378k_teacher3oc.py, scripts/claude_rd378k_teacher3.py and scripts/claude_rd378k_teacher.py (read their docstrings). Run them, never edit them; if something breaks, stop and report the exact error.\012LUNA RULES: never read, print or copy anything under ~/.codex or any Codex / ChatGPT config, auth file or key; the helper handles the route.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl or artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt.\012\0121. COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378k-20260926/SEAL-ADD-K.sha256.txt). Run `git archive $COMMIT scripts artifacts/claude-rd378k-20260926 artifacts/claude-rd378g-20260926 artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl | tar -x -C <tmp>`. Then, with mkdir -p first:\012   - `git show origin/builder-outbox:scripts/claude_glm_opencode.py > <tmp>/scripts/claude_glm_opencode.py` (only for the seal check in step 2);\012   - `git show origin/builder-outbox:artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl > <tmp>/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl`.\012   Run everything from <tmp> (python via `uv run --offline --no-project --python 3.12 python -B`; standard library only). Report COMMIT.\0122. SEAL: `shasum -a 256 -c` on these files in artifacts/claude-rd378k-20260926/:\012   - SEAL-ADD-K.sha256.txt (5 OK)\012   - SEAL-ADD-H.sha256.txt (1 OK)\012   - SEAL-ADD-F.sha256.txt (3 OK)\012   - SEAL-ADD-E.sha256.txt (2 OK)\012   - SEAL-ADD-D.sha256.txt (2 OK)\012   - SEAL-ADD-C.sha256.txt (2 OK)\012   - SEAL.sha256.txt (15 OK; the ONLY allowed FAILED line is scripts/claude_lis300_train.py, which PASSMARKS-D.md replaces)\012   Also `shasum -a 256 artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl` must start 87a51358fa2bdedaaf0edafeb273074e.\012   Anything else: stop with SEAL-MISMATCH and every line.\0123. python -B scripts/claude_luna_run.py --check -> "luna bound ok"; python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py selftest -> ends "rd378k teacher3oc selftest 1/1 ok"; else stop.\0124. PILOT: python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --only-hash 12 --hash-rem 0 --out artifacts/claude-rd378k-20260926/pilot-luna\012   Save its console output as artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt and report its JSON line verbatim.\012   - PILOT PASS: "dialogs" is 4, "unparsed" is 0 and "failed_calls" is at most 2. Go on to step 5.\012   - Otherwise: stop with PILOT-FAIL, and do not run steps 5-7. Still do step 8 for pilot-log.txt only.\012   Never open or copy the pilot's labels files.\0125. GATE, under nohup with its own log (one process; poll the log; never start a second copy): python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --hash-rem 1 --out artifacts/claude-rd378k-20260926/gate3luna\0126. python -B scripts/claude_rd378k_teacher.py agree --labels artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl --verdicts artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl\0127. python -B scripts/claude_rd378k_teacher.py agree --labels artifacts/claude-rd378k-20260926/gate3luna/labels_passA.jsonl --verdicts artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl   (report only)\0128. Copy into the worktree:\012   - artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt;\012   - if step 5 ran: artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl, labels_passA.jsonl and failures.jsonl, plus the console output of steps 3 and 5-7 as gate3luna/teacher-log.txt.\012   Report every printed JSON line verbatim, wall time per step, and the number of "call failed" lines in each log.\012PUSH: artifacts/claude-rd378k-20260926/gate3luna artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt
+[0m
+[0m$ [0mD=$(cat /tmp/g406l_D_path.txt); O="$D/artifacts/claude-g406l-20260927/run"; date -u > "$O/pilot_start.txt"; cat "$O/pilot_start.txt"; ls -l "$O"
+Sun Sep 27 05:31:55 UTC 2026
+total 16
+-rw-r--r--  1 ben-hannan  staff   29 Sep 27 01:31 pilot_start.txt
+-rw-r--r--  1 ben-hannan  staff    0 Sep 27 01:29 pilot.log
+-rw-r--r--  1 ben-hannan  staff  634 Sep 27 01:26 RUN-NOTE.md
+[0m
+[0m$ [0mO=$(cat /tmp/g406l_D_path.txt)/artifacts/claude-g406l-20260927/run; uv run --offline --no-project --python 3.12 python -B scripts/claude_g406l_luna.py --mode two --packets 'artifacts/claude-mu405b-20260926/judge/packets/claims_j*.jsonl' --out "$O/luna_b.jsonl" --workers 1 --attempts 3 --max-failed 60 --max-minutes 30 --pilot 10 > "$O/pilot.log" 2>&1; echo PILOT_EXIT:$?
+PILOT_EXIT:0
+[0m
+[0m$ [0mD=$(cat /tmp/g406l_D_path.txt); O="$D/artifacts/claude-g406l-20260927/run"; date -u; echo "--- pilot.log ---"; cat "$O/pilot.log"; echo "--- end pilot.log ---"; echo "PILOT_LOG_LINES:"; wc -l "$O/pilot.log" "$O/luna_b.jsonl"; date -u > "$O/pilot_end.txt"; cat "$O/pilot_end.txt"
+Sun Sep 27 05:34:39 UTC 2026
+--- pilot.log ---
+[g406-2/two] pass 1: 10 written this run, 0 failed
+{"mode": "two", "packets": 10, "usable_before": 0, "written": 10, "failed_this_run": 0, "usable_now": 10, "minutes": 2.6, "stopped": "done"}
+--- end pilot.log ---
+PILOT_LOG_LINES:
+       2 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/pilot.log
+      10 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl
+      12 total
+Sun Sep 27 05:34:39 UTC 2026
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_g406l_luna.py pilot-check --glm artifacts/claude-g406l-20260927/run/luna_b.jsonl --packets 'artifacts/claude-mu405b-20260926/judge/packets/claims_j*.jsonl' --n 10; echo PILOTCHECK_EXIT:$?
+{"pilot_packets": 10, "rows": 10, "usable": 10, "limit_errors": 0, "pass": true}
+PILOTCHECK_EXIT:0
+[0m
+[0m$ [0mO=$(cat /tmp/g406l_D_path.txt)/artifacts/claude-g406l-20260927/run; nohup uv run --offline --no-project --python 3.12 python -B scripts/claude_g406l_luna.py --mode two --packets 'artifacts/claude-mu405b-20260926/judge/packets/claims_j*.jsonl' --out "$O/luna_b.jsonl" --workers 1 --attempts 3 --max-failed 60 --max-minutes 45 > "$O/luna_b.log" 2>&1 & echo $! > "$O/run.pid"; date -u > "$O/full_start.txt"; cat "$O/run.pid"; cat "$O/full_start.txt"; ls -l "$O"
+82254
+Sun Sep 27 05:34:47 UTC 2026
+total 56
+-rw-r--r--  1 ben-hannan  staff    29 Sep 27 01:34 full_start.txt
+-rw-r--r--  1 ben-hannan  staff  1607 Sep 27 01:34 luna_b.jsonl
+-rw-r--r--  1 ben-hannan  staff     0 Sep 27 01:34 luna_b.log
+-rw-r--r--  1 ben-hannan  staff    29 Sep 27 01:34 pilot_end.txt
+-rw-r--r--  1 ben-hannan  staff    29 Sep 27 01:31 pilot_start.txt
+-rw-r--r--  1 ben-hannan  staff   192 Sep 27 01:34 pilot.log
+-rw-r--r--  1 ben-hannan  staff   634 Sep 27 01:26 RUN-NOTE.md
+-rw-r--r--  1 ben-hannan  staff     6 Sep 27 01:34 run.pid
+[0m
+[0m$ [0mO=$(cat /tmp/g406l_D_path.txt)/artifacts/claude-g406l-20260927/run; sleep 300; tail -2 "$O/luna_b.log"; kill -0 $(cat "$O/run.pid") && echo alive || echo "not-alive EXIT:$?"; date -u; wc -l "$O/luna_b.jsonl"
+alive
+Sun Sep 27 05:39:51 UTC 2026
+      10 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl
+[0m
+[0m$ [0mO=$(cat /tmp/g406l_D_path.txt)/artifacts/claude-g406l-20260927/run; sleep 300; echo "--- tail luna_b.log ---"; tail -5 "$O/luna_b.log"; echo "--- end ---"; kill -0 $(cat "$O/run.pid") && echo alive || echo "not-alive"; date -u; wc -l "$O/luna_b.jsonl" 2>&1; ps -p $(cat "$O/run.pid") -o pid,etime,command 2>&1 | head
+--- tail luna_b.log ---
+[g406-2/two] pass 1: 30 written this run, 0 failed
+--- end ---
+alive
+Sun Sep 27 05:44:55 UTC 2026
+      40 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl
+  PID ELAPSED COMMAND
+82254   10:08 uv run --offline --no-project --python 3.12 python -B scripts/claude_g406l_luna.py --mode two --packets artifacts/claude-mu405b-20260926/judge/packets/claims_j*.jsonl --out /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl --workers 1 --attempts 3 --max-failed 60 --max-minutes 45
+[0m
+[0m$ [0mO=$(cat /tmp/g406l_D_path.txt)/artifacts/claude-g406l-20260927/run; sleep 300; echo "--- tail luna_b.log ---"; tail -5 "$O/luna_b.log"; echo "--- end ---"; kill -0 $(cat "$O/run.pid") && echo alive || echo "not-alive"; date -u; wc -l "$O/luna_b.jsonl" 2>&1
+--- tail luna_b.log ---
+[g406-2/two] pass 1: 30 written this run, 0 failed
+[g406-2/two] pass 1: 60 written this run, 0 failed
+--- end ---
+alive
+Sun Sep 27 05:49:57 UTC 2026
+      70 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl
+[0m
+[0m$ [0mO=$(cat /tmp/g406l_D_path.txt)/artifacts/claude-g406l-20260927/run; sleep 300; echo "--- tail luna_b.log ---"; tail -5 "$O/luna_b.log"; echo "--- end ---"; kill -0 $(cat "$O/run.pid") && echo alive || echo "not-alive"; date -u; wc -l "$O/luna_b.jsonl" 2>&1
+--- tail luna_b.log ---
+[g406-2/two] pass 1: 30 written this run, 0 failed
+[g406-2/two] pass 1: 60 written this run, 0 failed
+--- end ---
+alive
+Sun Sep 27 05:55:00 UTC 2026
+      70 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl
+[0m
+[0m$ [0mO=$(cat /tmp/g406l_D_path.txt)/artifacts/claude-g406l-20260927/run; sleep 300; echo "--- tail luna_b.log ---"; tail -8 "$O/luna_b.log"; echo "--- end ---"; kill -0 $(cat "$O/run.pid") && echo alive || echo "not-alive"; date -u; wc -l "$O/luna_b.jsonl" 2>&1; ps aux | grep luna | grep -v grep | head -n 5
+--- tail luna_b.log ---
+[g406-2/two] pass 1: 30 written this run, 0 failed
+[g406-2/two] pass 1: 60 written this run, 0 failed
+[g406-2/two] pass 1: 90 written this run, 0 failed
+--- end ---
+alive
+Sun Sep 27 06:00:04 UTC 2026
+     100 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl
+ben-hannan        5678   2.8  1.6 562780944 524496   ??  SN   12:08AM   2:15.66 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:006-rd378k-gate3luna.go1.5650 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-27 03:57 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.\012GPU: no. Mac CPU only; about 12 pilot calls, then about 120 gate calls (at most ~400 with retries) to GPT-6 Luna through Ben's Codex plan via the Director's helper, $0 per run. ONE process, no parallel parts; no opencode, no OpenRouter, no rental. It may run at the same time as 007-rd378g-writeluna.\012LOAD-LIGHT: yes (network-bound: each Luna call runs remotely through the Codex CLI; locally only python plus one codex process per call)\012\012YOUR TASK: rd378k-gate3luna. First read origin/main:artifacts/claude-rd378k-20260926/PASSMARKS-F.md, then PASSMARKS-H.md, then PASSMARKS-K.md. It runs a small format pilot on 4 training dialogs, and only if the pilot passes, the label gate on the same 38 dialogs, with every call going to Luna. No training, no GPU. Code: scripts/claude_luna_run.py, scripts/claude_luna_codex.py, scripts/claude_rd378k_teacher3oc.py, scripts/claude_rd378k_teacher3.py and scripts/claude_rd378k_teacher.py (read their docstrings). Run them, never edit them; if something breaks, stop and report the exact error.\012LUNA RULES: never read, print or copy anything under ~/.codex or any Codex / ChatGPT config, auth file or key; the helper handles the route.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl or artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt.\012\0121. COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378k-20260926/SEAL-ADD-K.sha256.txt). Run `git archive $COMMIT scripts artifacts/claude-rd378k-20260926 artifacts/claude-rd378g-20260926 artifacts/claude-rd378-20260925/data/JUDGE_NOTES.md artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl | tar -x -C <tmp>`. Then, with mkdir -p first:\012   - `git show origin/builder-outbox:scripts/claude_glm_opencode.py > <tmp>/scripts/claude_glm_opencode.py` (only for the seal check in step 2);\012   - `git show origin/builder-outbox:artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl > <tmp>/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl`.\012   Run everything from <tmp> (python via `uv run --offline --no-project --python 3.12 python -B`; standard library only). Report COMMIT.\0122. SEAL: `shasum -a 256 -c` on these files in artifacts/claude-rd378k-20260926/:\012   - SEAL-ADD-K.sha256.txt (5 OK)\012   - SEAL-ADD-H.sha256.txt (1 OK)\012   - SEAL-ADD-F.sha256.txt (3 OK)\012   - SEAL-ADD-E.sha256.txt (2 OK)\012   - SEAL-ADD-D.sha256.txt (2 OK)\012   - SEAL-ADD-C.sha256.txt (2 OK)\012   - SEAL.sha256.txt (15 OK; the ONLY allowed FAILED line is scripts/claude_lis300_train.py, which PASSMARKS-D.md replaces)\012   Also `shasum -a 256 artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl` must start 87a51358fa2bdedaaf0edafeb273074e.\012   Anything else: stop with SEAL-MISMATCH and every line.\0123. python -B scripts/claude_luna_run.py --check -> "luna bound ok"; python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py selftest -> ends "rd378k teacher3oc selftest 1/1 ok"; else stop.\0124. PILOT: python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --only-hash 12 --hash-rem 0 --out artifacts/claude-rd378k-20260926/pilot-luna\012   Save its console output as artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt and report its JSON line verbatim.\012   - PILOT PASS: "dialogs" is 4, "unparsed" is 0 and "failed_calls" is at most 2. Go on to step 5.\012   - Otherwise: stop with PILOT-FAIL, and do not run steps 5-7. Still do step 8 for pilot-log.txt only.\012   Never open or copy the pilot's labels files.\0125. GATE, under nohup with its own log (one process; poll the log; never start a second copy): python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --hash-rem 1 --out artifacts/claude-rd378k-20260926/gate3luna\0126. python -B scripts/claude_rd378k_teacher.py agree --labels artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl --verdicts artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl\0127. python -B scripts/claude_rd378k_teacher.py agree --labels artifacts/claude-rd378k-20260926/gate3luna/labels_passA.jsonl --verdicts artifacts/claude-rd371b-20260926/data/judge_train_out.jsonl   (report only)\0128. Copy into the worktree:\012   - artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt;\012   - if step 5 ran: artifacts/claude-rd378k-20260926/gate3luna/labels.jsonl, labels_passA.jsonl and failures.jsonl, plus the console output of steps 3 and 5-7 as gate3luna/teacher-log.txt.\012   Report every printed JSON line verbatim, wall time per step, and the number of "call failed" lines in each log.\012PUSH: artifacts/claude-rd378k-20260926/gate3luna artifacts/claude-rd378k-20260926/pilot-luna/pilot-log.txt
+ben-hannan       26449   2.7  1.6 562805504 529168   ??  SN    1:01AM   1:10.08 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:007-rd378g-writeluna.go1.26426 COMMON RULES (the "Trustworthy notes" thread, Claude, wrote this task on 2026-09-27 03:57 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts.\012GPU: no. Mac CPU only; 1-3 pilot calls, then about 21-63 long calls to GPT-6 Luna through Ben's Codex plan via the Director's helper, $0 per run. ONE process; no opencode, no OpenRouter, no rental. It may run at the same time as 006-rd378k-gate3luna.\012LOAD-LIGHT: yes (network-bound: each Luna call runs remotely through the Codex CLI; locally only python plus one codex process per call)\012\012YOUR TASK: rd378g-writeluna. First read origin/main:artifacts/claude-rd378g-20260926/ADDENDUM-D.md, then ADDENDUM-F.md, then ADDENDUM-I.md. It runs a one-batch format pilot, and only if the pilot passes, writes with Luna the 21 practice batches that were lost to GLM route failures, then tags every dialog with its writer. No training, no GPU. Code: scripts/claude_luna_run.py, scripts/claude_luna_codex.py, scripts/claude_rd378g_writemore_oc.py, scripts/claude_rd378g_teacher.py and scripts/claude_rd378g_tagwriter.py (read their docstrings). Run them, never edit them; if something breaks, stop and report the exact error. The writing script writes its file only at the end and has no resume. Run it once under nohup with its own log and poll the log. Never start a second copy while one runs (check `ps`).\012LUNA RULES: never read, print or copy anything under ~/.codex or any Codex / ChatGPT config, auth file or key; the helper handles the route.\012DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-rd378g-20260926/glm2N/notes_w1.jsonl or artifacts/claude-rd378g-20260926/pilot-luna/pilot-log.txt.\012\0121. COMMIT=$(git log -1 --format=%H origin/main -- artifacts/claude-rd378g-20260926/SEAL-ADD-I.sha256.txt). Run `git archive $COMMIT scripts artifacts/claude-rd378g-20260926 | tar -x -C <tmp>`. Then, with mkdir -p first:\012   - `git show origin/builder-outbox:scripts/claude_glm_opencode.py > <tmp>/scripts/claude_glm_opencode.py`;\012   - `git show origin/builder-outbox:scripts/claude_glm_opencode_v11.py > <tmp>/scripts/claude_glm_opencode_v11.py`;\012   - `git show origin/builder-outbox:artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl > <tmp>/artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl`.\012   Run everything from <tmp> (python via `uv run --offline --no-project --python 3.12 python -B`; standard library only). Report COMMIT.\0122. SEAL: `shasum -a 256 -c` on these files in artifacts/claude-rd378g-20260926/:\012   - SEAL-ADD-I.sha256.txt (5 OK)\012   - SEAL-ADD-F.sha256.txt (1 OK)\012   - SEAL-ADD-E.sha256.txt (3 OK)\012   - SEAL-ADD-D.sha256.txt (4 OK)\012   Anything else: stop with SEAL-MISMATCH and every line.\0123. python -B scripts/claude_luna_run.py --check -> "luna bound ok"; python -B scripts/claude_luna_run.py scripts/claude_rd378g_writemore_oc.py selftest -> ends "rd378g writemore selftest 1/1 ok"; python -B scripts/claude_rd378g_tagwriter.py selftest -> "rd378g tagwriter selftest 1/1 ok"; else stop.\0124. PILOT: python -B scripts/claude_luna_run.py scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18 --out artifacts/claude-rd378g-20260926/pilot-luna\012   Save its console output as artifacts/claude-rd378g-20260926/pilot-luna/pilot-log.txt and report its JSON line verbatim.\012   - PILOT PASS: the log has a "batch 18 ok" line and 0 "call failed" lines. Go on to step 5.\012   - Otherwise: stop with PILOT-FAIL, and do not run steps 5-6. Still do step 7 for pilot-log.txt only.\012   Never copy the pilot's notes_w1.jsonl.\0125. WRITE: python -B scripts/claude_luna_run.py scripts/claude_rd378g_writemore_oc.py write --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --batches 18-20,22-39 --out artifacts/claude-rd378g-20260926/glm2N   (prints one JSON line at the end)\0126. TAG: python -B scripts/claude_rd378g_tagwriter.py tag --have artifacts/claude-rd378g-20260926/glm/notes_w1.jsonl --in artifacts/claude-rd378g-20260926/glm2N/notes_w1.jsonl --out artifacts/claude-rd378g-20260926/glm2N/notes_w1_tagged.jsonl   (prints one JSON line)\0127. Copy into the worktree:\012   - artifacts/claude-rd378g-20260926/pilot-luna/pilot-log.txt;\012   - if step 5 ran: glm2N/notes_w1.jsonl and glm2N/notes_w1_tagged.jsonl, plus the console output of steps 3 and 5-6 as glm2N/teacher-log.txt.\012   Report both JSON lines verbatim, wall time per step, and the number of "call failed" lines in each log.\012PUSH: artifacts/claude-rd378g-20260926/glm2N artifacts/claude-rd378g-20260926/pilot-luna/pilot-log.txt
+ben-hannan       22432   0.5  0.5 489449696 182144   ??  SN    1:59AM   0:00.65 /Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/../CodexCLI.app/Contents/MacOS/codex exec -m gpt-6-luna -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/luna-codex-kv86o23d --sandbox read-only --skip-git-repo-check --output-last-message /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/luna-codex-kv86o23d/.last.txt -
+ben-hannan        5650   0.0  0.0 488781536   1168   ??  SN   12:08AM   0:00.01 bash /Users/ben-hannan/premonition-watch/rungo5.sh /Users/ben-hannan/premonition-watch/queue/006-rd378k-gate3luna.md opencode/muse-spark-1.3-contributor-free
+ben-hannan       22391   0.0  0.5 489395232 173552   ??  SN    1:59AM   0:00.54 /Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/../CodexCLI.app/Contents/MacOS/codex exec -m gpt-6-luna -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/luna-codex-7dmgqu2w --sandbox read-only --skip-git-repo-check --output-last-message /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/luna-codex-7dmgqu2w/.last.txt -
+[0m
+[0m$ [0mO=$(cat /tmp/g406l_D_path.txt)/artifacts/claude-g406l-20260927/run; sleep 300; echo "--- tail luna_b.log ---"; tail -8 "$O/luna_b.log"; echo "--- end ---"; kill -0 $(cat "$O/run.pid") && echo alive || echo "not-alive"; date -u; wc -l "$O/luna_b.jsonl" 2>&1
+--- tail luna_b.log ---
+[g406-2/two] pass 1: 30 written this run, 0 failed
+[g406-2/two] pass 1: 60 written this run, 0 failed
+[g406-2/two] pass 1: 90 written this run, 0 failed
+[g406-2/two] pass 1: 120 written this run, 0 failed
+--- end ---
+alive
+Sun Sep 27 06:05:08 UTC 2026
+     130 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl
+[0m
+[0m$ [0mO=$(cat /tmp/g406l_D_path.txt)/artifacts/claude-g406l-20260927/run; sleep 300; echo "--- tail luna_b.log ---"; tail -8 "$O/luna_b.log"; echo "--- end ---"; kill -0 $(cat "$O/run.pid") && echo alive || echo "not-alive"; date -u; wc -l "$O/luna_b.jsonl" 2>&1
+--- tail luna_b.log ---
+[g406-2/two] pass 1: 30 written this run, 0 failed
+[g406-2/two] pass 1: 60 written this run, 0 failed
+[g406-2/two] pass 1: 90 written this run, 0 failed
+[g406-2/two] pass 1: 120 written this run, 0 failed
+[g406-2/two] pass 1: 150 written this run, 0 failed
+--- end ---
+alive
+Sun Sep 27 06:10:12 UTC 2026
+     160 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl
+[0m
+[0m$ [0mO=$(cat /tmp/g406l_D_path.txt)/artifacts/claude-g406l-20260927/run; sleep 300; echo "--- tail luna_b.log ---"; tail -10 "$O/luna_b.log"; echo "--- end ---"; kill -0 $(cat "$O/run.pid") && echo alive || echo "not-alive"; date -u; wc -l "$O/luna_b.jsonl" 2>&1
+--- tail luna_b.log ---
+[g406-2/two] pass 1: 30 written this run, 0 failed
+[g406-2/two] pass 1: 60 written this run, 0 failed
+[g406-2/two] pass 1: 90 written this run, 0 failed
+[g406-2/two] pass 1: 120 written this run, 0 failed
+[g406-2/two] pass 1: 150 written this run, 0 failed
+--- end ---
+alive
+Sun Sep 27 06:15:15 UTC 2026
+     160 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl
+[0m
+[0m$ [0mO=$(cat /tmp/g406l_D_path.txt)/artifacts/claude-g406l-20260927/run; sleep 300; echo "--- tail luna_b.log ---"; tail -12 "$O/luna_b.log"; echo "--- end ---"; kill -0 $(cat "$O/run.pid") && echo alive || echo "not-alive"; date -u; wc -l "$O/luna_b.jsonl" 2>&1
+--- tail luna_b.log ---
+[g406-2/two] pass 1: 30 written this run, 0 failed
+[g406-2/two] pass 1: 60 written this run, 0 failed
+[g406-2/two] pass 1: 90 written this run, 0 failed
+[g406-2/two] pass 1: 120 written this run, 0 failed
+[g406-2/two] pass 1: 150 written this run, 0 failed
+[g406-2/two] pass 1: 180 written this run, 0 failed
+--- end ---
+alive
+Sun Sep 27 06:20:18 UTC 2026
+     190 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl
+[0m
+[0m$ [0mO=$(cat /tmp/g406l_D_path.txt)/artifacts/claude-g406l-20260927/run; sleep 240; echo "--- tail luna_b.log ---"; tail -15 "$O/luna_b.log"; echo "--- end ---"; kill -0 $(cat "$O/run.pid") && echo alive || echo "not-alive"; date -u; wc -l "$O/luna_b.jsonl" 2>&1
+--- tail luna_b.log ---
+[g406-2/two] pass 1: 30 written this run, 0 failed
+[g406-2/two] pass 1: 60 written this run, 0 failed
+[g406-2/two] pass 1: 90 written this run, 0 failed
+[g406-2/two] pass 1: 120 written this run, 0 failed
+[g406-2/two] pass 1: 150 written this run, 0 failed
+[g406-2/two] pass 1: 180 written this run, 0 failed
+[g406-2/two] pass 1: 210 written this run, 0 failed
+{"mode": "two", "packets": 240, "usable_before": 10, "written": 210, "failed_this_run": 0, "usable_now": 220, "minutes": 48.9, "stopped": "time"}
+--- end ---
+zsh:kill:1: kill 82254 failed: no such process
+not-alive
+Sun Sep 27 06:24:22 UTC 2026
+     220 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_g406l_luna.py --glm artifacts/claude-g406l-20260927/run/luna_b.jsonl --best-to artifacts/claude-g406l-20260927/run/best_b.jsonl 2>&1; echo COUNT1_EXIT:$?
+wc -l artifacts/claude-g406l-20260927/run/best_b.jsonl 2>&1
+cat artifacts/claude-g406l-20260927/run/luna_b.log | tail -3
+{"packets": 220, "usable": 220}
+COUNT1_EXIT:0
+     220 artifacts/claude-g406l-20260927/run/best_b.jsonl
+[g406-2/two] pass 1: 180 written this run, 0 failed
+[g406-2/two] pass 1: 210 written this run, 0 failed
+{"mode": "two", "packets": 240, "usable_before": 10, "written": 210, "failed_this_run": 0, "usable_now": 220, "minutes": 48.9, "stopped": "time"}
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_g406_count.py --glm artifacts/claude-g406l-20260927/run/best_b.jsonl --judges artifacts/claude-mu405b-20260926/judge --write artifacts/claude-g406l-20260927/run/verdict_b.json 2>&1; echo COUNT2_EXIT:$?
+cat artifacts/claude-g406l-20260927/run/verdict_b.json 2>&1
+{"packets": 240, "usable_packets": 220, "replies": 1100, "judge_either": 158, "judge_both": 122, "glm_flags": 363, "glm_catches_both": 121, "glm_catches_either": 149, "glm_clean": 737, "either_in_glm_clean": 9, "recall_both": 0.992, "recall_either": 0.943, "base_either_rate": 0.1436, "either_rate_in_glm_clean": 0.0122, "either_rate_in_glm_flagged": 0.4105, "yield_clean": 0.67, "kappa_vs_either": 0.465, "V": false, "G1": true, "G2": true, "G3": true, "proved_wrong": false, "verdict": "INCONCLUSIVE", "per_source": {"claude-mu405b-20260926": {"replies": 1100, "either": 158, "both": 122, "glm_flags": 363, "glm_catches_both": 121}}}
+COUNT2_EXIT:0
+{
+ "packets": 240,
+ "usable_packets": 220,
+ "replies": 1100,
+ "judge_either": 158,
+ "judge_both": 122,
+ "glm_flags": 363,
+ "glm_catches_both": 121,
+ "glm_catches_either": 149,
+ "glm_clean": 737,
+ "either_in_glm_clean": 9,
+ "recall_both": 0.992,
+ "recall_either": 0.943,
+ "base_either_rate": 0.1436,
+ "either_rate_in_glm_clean": 0.0122,
+ "either_rate_in_glm_flagged": 0.4105,
+ "yield_clean": 0.67,
+ "kappa_vs_either": 0.465,
+ "V": false,
+ "G1": true,
+ "G2": true,
+ "G3": true,
+ "proved_wrong": false,
+ "verdict": "INCONCLUSIVE",
+ "per_source": {
+  "claude-mu405b-20260926": {
+   "replies": 1100,
+   "either": 158,
+   "both": 122,
+   "glm_flags": 363,
+   "glm_catches_both": 121
+  }
+ }
+}
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_g406l_luna.py --arm-report --glm artifacts/claude-g406l-20260927/run/luna_b.jsonl --judge artifacts/claude-mu405b-20260926/judge > artifacts/claude-g406l-20260927/run/arms_b.json 2>&1; echo ARM_EXIT:$?
+cat artifacts/claude-g406l-20260927/run/arms_b.json
+ARM_EXIT:0
+{"H": {"packets": 57, "replies": 285, "glm": 80, "either": 33, "both": 23, "glm_catches_both": 23}, "N": {"packets": 55, "replies": 275, "glm": 80, "either": 24, "both": 18, "glm_catches_both": 17}, "U": {"packets": 53, "replies": 265, "glm": 144, "either": 83, "both": 72, "glm_catches_both": 72}, "W": {"packets": 55, "replies": 275, "glm": 59, "either": 18, "both": 9, "glm_catches_both": 9}}
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B -c "import json,collections,pathlib; p=pathlib.Path('artifacts/claude-g406l-20260927/run/luna_b.jsonl'); rows=[json.loads(l) for l in p.read_text().splitlines()]; from collections import Counter; c=Counter((r.get('error') or '')[:60] for r in rows); print('total_rows:', len(rows)); print('ok_rows:', sum(1 for r in rows if r.get('ok'))); print('distinct_error_prefixes:', len(c)); [print(repr(k)[:80], v) for k,v in c.most_common()]" 2>&1
+date -u; uptime
+total_rows: 220
+ok_rows: 220
+distinct_error_prefixes: 1
+'' 220
+Sun Sep 27 06:24:36 UTC 2026
+ 2:24  up 3 days, 16:17, 4 users, load averages: 65.99 62.26 81.71
+[0m
+[0m$ [0mls -l artifacts/claude-g406l-20260927/ 2>&1 | head -n 20; ls -l artifacts/claude-g406l-20260927/run/ 2>&1 | head -n 20; git rev-parse origin/main; date -u; uptime
+ls: artifacts/claude-g406l-20260927/: No such file or directory
+ls: artifacts/claude-g406l-20260927/run/: No such file or directory
+e49be974d0cc4ac5b04e2ec112dd1e2cfcb5efa9
+Sun Sep 27 06:24:45 UTC 2026
+ 2:24  up 3 days, 16:17, 4 users, load averages: 74.06 64.11 82.14
+[0m
+[0m$ [0mD=$(cat /tmp/g406l_D_path.txt); O="$D/artifacts/claude-g406l-20260927/run"; echo "=== SEAL ==="; shasum -a 256 -c artifacts/claude-g406l-20260927/SEAL.sha256.txt 2>&1; echo "=== SELFTESTS ==="; uv run --offline --no-project --python 3.12 python -B scripts/claude_g406l_luna.py selftest-luna 2>&1; uv run --offline --no-project --python 3.12 python -B scripts/claude_g406l_luna.py --selftest 2>&1 | tail -n 5; uv run --offline --no-project --python 3.12 python -B scripts/claude_g406_count.py --selftest 2>&1; uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_codex.py --selftest 2>&1; echo "=== HELPER SHASUM ==="; shasum -a 256 scripts/claude_luna_codex.py
+=== SEAL ===
+artifacts/claude-g406l-20260927/PASSMARKS.md: OK
+artifacts/claude-mu405-20260926/JUDGE-claims405.md: OK
+artifacts/claude-mu405b-20260926/judge/keys/claims_key.json: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j1.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j2.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j3.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j4.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j5.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j6.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j7.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/out/claims_j8.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j1.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j2.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j3.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j4.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j5.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j6.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j7.jsonl: OK
+artifacts/claude-mu405b-20260926/judge/packets/claims_j8.jsonl: OK
+scripts/claude_g406l_luna.py: OK
+scripts/claude_luna_codex.py: OK
+scripts/claude_g406_2_glm.py: OK
+scripts/claude_g406_glm.py: OK
+scripts/claude_g406_count.py: OK
+=== SELFTESTS ===
+[g406-2/two] pass 1: 2 written this run, 0 failed
+g406l luna selftest 7/7 ok
+[g406-2/two] pass 3: 8 written this run, 8 failed
+[g406-2/two] pass 3: 9 written this run, 9 failed
+[g406-2/two] pass 1: 3 written this run, 2 failed
+[g406-2/two] pass 2: 5 written this run, 2 failed
+g406-2 selftest 7/7 ok
+g406 count selftest 5/5 ok
+selftest ok: model gpt-6-luna, output-file True
+=== HELPER SHASUM ===
+342a0fb7e15ebf22da763c21eddecb0c58cfcbd43c74481d8421b5709023024e  scripts/claude_luna_codex.py
+[0m
+[0m$ [0mD=$(cat /tmp/g406l_D_path.txt); O="$D/artifacts/claude-g406l-20260927/run"; ls -l "$O"; echo "---"; wc -l "$O/luna_b.jsonl" "$O/best_b.jsonl" 2>&1; cat "$O/verdict_b.json" 2>&1 | head -n 30; cat "$O/arms_b.json" 2>&1
+total 216
+-rw-r--r--  1 ben-hannan  staff    396 Sep 27 02:24 arms_b.json
+-rw-r--r--  1 ben-hannan  staff  35345 Sep 27 02:24 best_b.jsonl
+-rw-r--r--  1 ben-hannan  staff     29 Sep 27 01:34 full_start.txt
+-rw-r--r--  1 ben-hannan  staff  35345 Sep 27 02:23 luna_b.jsonl
+-rw-r--r--  1 ben-hannan  staff    507 Sep 27 02:23 luna_b.log
+-rw-r--r--  1 ben-hannan  staff     29 Sep 27 01:34 pilot_end.txt
+-rw-r--r--  1 ben-hannan  staff     29 Sep 27 01:31 pilot_start.txt
+-rw-r--r--  1 ben-hannan  staff    192 Sep 27 01:34 pilot.log
+-rw-r--r--  1 ben-hannan  staff    634 Sep 27 01:26 RUN-NOTE.md
+-rw-r--r--  1 ben-hannan  staff      6 Sep 27 01:34 run.pid
+-rw-r--r--  1 ben-hannan  staff    686 Sep 27 02:24 verdict_b.json
+---
+     220 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl
+     220 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/best_b.jsonl
+     440 total
+{
+ "packets": 240,
+ "usable_packets": 220,
+ "replies": 1100,
+ "judge_either": 158,
+ "judge_both": 122,
+ "glm_flags": 363,
+ "glm_catches_both": 121,
+ "glm_catches_either": 149,
+ "glm_clean": 737,
+ "either_in_glm_clean": 9,
+ "recall_both": 0.992,
+ "recall_either": 0.943,
+ "base_either_rate": 0.1436,
+ "either_rate_in_glm_clean": 0.0122,
+ "either_rate_in_glm_flagged": 0.4105,
+ "yield_clean": 0.67,
+ "kappa_vs_either": 0.465,
+ "V": false,
+ "G1": true,
+ "G2": true,
+ "G3": true,
+ "proved_wrong": false,
+ "verdict": "INCONCLUSIVE",
+ "per_source": {
+  "claude-mu405b-20260926": {
+   "replies": 1100,
+   "either": 158,
+   "both": 122,
+   "glm_flags": 363,
+{"H": {"packets": 57, "replies": 285, "glm": 80, "either": 33, "both": 23, "glm_catches_both": 23}, "N": {"packets": 55, "replies": 275, "glm": 80, "either": 24, "both": 18, "glm_catches_both": 17}, "U": {"packets": 53, "replies": 265, "glm": 144, "either": 83, "both": 72, "glm_catches_both": 72}, "W": {"packets": 55, "replies": 275, "glm": 59, "either": 18, "both": 9, "glm_catches_both": 9}}
+[0m
+[0m$ [0mD=$(cat /tmp/g406l_D_path.txt); O="$D/artifacts/claude-g406l-20260927/run"; mkdir -p artifacts/claude-g406l-20260927/run && cp "$O/luna_b.jsonl" "$O/pilot.log" "$O/luna_b.log" "$O/best_b.jsonl" "$O/verdict_b.json" "$O/arms_b.json" artifacts/claude-g406l-20260927/run/ && ls -l artifacts/claude-g406l-20260927/run/ && wc -l artifacts/claude-g406l-20260927/run/luna_b.jsonl artifacts/claude-g406l-20260927/run/best_b.jsonl
+total 176
+-rw-r--r--  1 ben-hannan  staff    396 Sep 27 02:25 arms_b.json
+-rw-r--r--  1 ben-hannan  staff  35345 Sep 27 02:25 best_b.jsonl
+-rw-r--r--  1 ben-hannan  staff  35345 Sep 27 02:25 luna_b.jsonl
+-rw-r--r--  1 ben-hannan  staff    507 Sep 27 02:25 luna_b.log
+-rw-r--r--  1 ben-hannan  staff    192 Sep 27 02:25 pilot.log
+-rw-r--r--  1 ben-hannan  staff    686 Sep 27 02:25 verdict_b.json
+     220 artifacts/claude-g406l-20260927/run/luna_b.jsonl
+     220 artifacts/claude-g406l-20260927/run/best_b.jsonl
+     440 total
+[0m
+[0m← [0mWrite artifacts/claude-g406l-20260927/run/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mD=$(cat /tmp/g406l_D_path.txt); echo "D=$D"; rm -rf "$D"; ls "$D" 2>&1; echo "RM_EXIT:$?"; date -u; ls -l artifacts/claude-g406l-20260927/run/
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1: No such file or directory
+RM_EXIT:1
+Sun Sep 27 06:25:42 UTC 2026
+total 200
+-rw-r--r--  1 ben-hannan  staff    396 Sep 27 02:25 arms_b.json
+-rw-r--r--  1 ben-hannan  staff  35345 Sep 27 02:25 best_b.jsonl
+-rw-r--r--  1 ben-hannan  staff  35345 Sep 27 02:25 luna_b.jsonl
+-rw-r--r--  1 ben-hannan  staff    507 Sep 27 02:25 luna_b.log
+-rw-r--r--  1 ben-hannan  staff    192 Sep 27 02:25 pilot.log
+-rw-r--r--  1 ben-hannan  staff   9033 Sep 27 02:25 RESULTS.md
+-rw-r--r--  1 ben-hannan  staff    686 Sep 27 02:25 verdict_b.json
+[0m
