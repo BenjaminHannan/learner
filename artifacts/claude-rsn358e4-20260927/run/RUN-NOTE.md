@@ -2,3 +2,4 @@
 
 - Seal check (2026-09-27 00:37 UTC, before any run; the launcher itself checks no seals): every script and marks file was checked against **SEAL-addendum-1.sha256.txt** (10 of 10 OK), plus ADDENDUM-2 against SEAL-addendum-2.sha256.txt (1 of 1 OK). SEAL-code.sha256.txt is superseded for scripts/claude_rsn358e4_replayall.py by addendum 1's snapshot fix, so it now fails on that one file, as expected.
 - Launcher: go2.sh on this container. It starts when rsn-358e3's eq arms finish and the GO file exists (GO created 00:36 UTC after the Thread manager's go). Batch lines follow, one per batch start.
+- Graded batch (seeds 3-4, both arms) started 2026-09-27 01:15:03 UTC on this container (hostname vm), CPU, 1 thread each, torch 2.14.0+cu130. PIDs: 932 934 935 936 . Expected about 1.5 h (estimate). Logs committed only after runs end.
