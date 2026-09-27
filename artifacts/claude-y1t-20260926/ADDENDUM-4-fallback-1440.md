@@ -1,4 +1,4 @@
-# y1t addendum 4: a fallback if the opencode route stays down (Answering-from-memory thread, DRAFT 2026-09-27 03:09 UTC, for the Thread manager's review before sealing; no gate sample has been drawn and no gate judge has run)
+# y1t addendum 4: a fallback if the opencode route stays down (Answering-from-memory thread, drafted 2026-09-27 03:09 UTC; route-loss rule added after the Thread manager's review and sealed 03:11 UTC in SEAL-y1t-add4.sha256.txt; no gate sample has been drawn and no gate judge has run)
 
 **When it applies (and only then):** the Director is ready to start benspc-y1t on BensPC and Ben's opencode route is
 still down (it hit its usage limit at about 00:57 UTC, per the Director at 03:06 UTC). In every other case the resume
@@ -25,3 +25,17 @@ The top-up's 80 unparsed rows give no items. The 315 dialogs the resume would ha
   That is under 1,500, and y1t goes on with what exists: the drafts step repeats rows so about 1,500 pass through
   training (claude_y1t_data.py:53, 177; ADDENDUM-3 rule 6). No further top-up, no third route, no change to any mark.
 - All pass: y1t runs on glm2's items, as ADDENDUM-3 rule 5 says.
+
+**Route-loss rows (added after review; fixed now, both paths):**
+- When the rows were written: the top-up's wording ran from 22:13:27 to 00:45:03 UTC (topup/RESULTS-mac.md), before
+  the usage limit at about 00:57 UTC. Its totals line says 0 failed calls.
+- The rule, fixed now anyway, is the Creative thread's (k1h ADDENDUM-4, 4067d1bb9) applied to "raw":
+  scripts/claude_y1t_routefilter.py (selftest ok) drops a row whose "raw" is empty, contains a route marker ("usage
+  limit", "limit exceeded", "rate limit", "opencode", "> build", "api key", "providermodelnotfound", "insufficient
+  credit", "insufficient balance", "unauthorized") or starts with "Error"/"error:", or is the same text given for 3 or
+  more dialogs. It prints counts only.
+- It runs on every opencode top-up file before the merge, in both paths, and its counts are reported beside the gate
+  result. In the resume path, dropped rows are route losses, not tries, and the resume words those dialogs again
+  (ADDENDUM-3 route update 3). In the fallback path they are left out, disclosed.
+- On the 1,440 landed rows, checked here at 03:11 UTC: 0 empty, 0 marker rows, 0 repeated texts (1,440 kept). On the
+  first run's 645 rows: 0, 0, 0.
