@@ -24,3 +24,13 @@ y1t-topup-mac as running.
 y1t items step, into glm2/); the G1b filter (claude_y1t_gate2.py filter); the data gate (G2/G3 seed 4034, G4 seed 4036,
 blind agents, sealed marks); commit gate/GATE-RESULT.md; only then point benspc-y1t at glm2's items and ask the
 Director to release it. The gate can run tonight in the cloud once the rows are pushed.
+
+**Estimate correction (00:25 UTC, after the Thread manager's review):** the estimate above uses only pilot 4, which ran
+on a quieter Mac. Pilot 5 on the same wrapper (origin/builder-outbox artifacts/claude-lis320-20260926/pilot5/RESULTS.md)
+took 7.4 minutes for 60 calls at 5 workers under load 71-79, about 1.6 calls a minute per worker. So the range is:
+- pilot 4 rate: about 1,450 of 1,755 done by the 150-minute mark, about 300 left;
+- pilot 5 rate: about 730 done (3 workers x 1.6 x 150), about 1,025 left.
+Tonight's Mac runs four opencode jobs at once, so the pilot 5 end is the likelier one. At that rate the leftover needs
+about 210 minutes, more than one resume job's 150-minute stop, so a second resume (the same job under the next free
+names) may follow. When the rows land, the resume is sized from this job's own calls a minute (calls / minutes in its
+totals line), and the Director is told its expected length when it is queued.
