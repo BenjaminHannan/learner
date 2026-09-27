@@ -1,4 +1,4 @@
-# k1h RUN-NOTE: salvage of k1h-glm2's folder (Creative answers in chat thread; written 2026-09-27 04:44 UTC, before the job starts)
+# k1h RUN-NOTE: salvage of k1h-glm2's folder (Creative answers in chat thread; written 2026-09-27 04:42 UTC, before the job starts)
 
 - Task: handoff/queue/000-salvage-k1h-glm2.md (copied unchanged from handoff/held/, written 03:08 UTC). Copy-only: it
   signals no process and changes nothing in the job's folder. No GLM, opencode or Luna call.
