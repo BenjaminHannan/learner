@@ -12,17 +12,21 @@ For GPT-6 Sol in Codex on Ben's **M3 Pro** Mac. You can read and push to this re
 - **What happened so far.** rsn-358i3 trained on sums, grids and numbers together. Setup: BensPC, torch 2.11, seeds 5-8, 60,000 steps, batch 256. The loop net was 2 x d512 and the plain net 8 x d256, about 6.4M weights each. Raw files: origin/builder-outbox:artifacts/claude-rsn358i3-20260926/runs/*/tests.json. Summary: artifacts/claude-rsn358i3-20260926/VERIFY-recount.md:5,37.
   - numbers4 (the 300 held-out hands) scored 2, 5, 1, 0 for the loop and 1, 1, 2, 1 for the plain net.
   - numbers5 scored 0 of 300 for every run.
-  - In the same runs, sums4 was 300 and grids5 was 298-300. So the nets learn the other two kinds and not this one.
+  - In the same runs, sums4 was 300 and grids5 was 298-300.
+  - Training exact at step 60,000 was 1.0 on numbers3 and numbers4 for both arms (train_log.jsonl). So both nets learned their practice hands by heart and solved almost no new ones. rsn-358a showed the same pattern (artifacts/claude-rsn358a-20260925/VERIFY.md:44-48). That this is memorising is suggested, not tested.
+  - All of these nets were given the puzzle kind (next point), so every number above comes from kind-labelled nets.
+- **An earlier fix that did not work: rsn-358d** (artifacts/claude-rsn358d-20260926/VERIFY.md). It gave both nets a much bigger number pool (75,972 puzzles). The plain net rose to 16 and 10 of 300 held-out hands. The loop net learned nothing on numbers4, even in training, and its other kinds fell badly. The verdict was INCONCLUSIVE. Caveat: 358d's loop trained on a torch 2.8 rental before the autocast-cache fix, so it was possibly hit by that bug (artifacts/claude-rsn358i2-20260926/PASSMARKS.md:32). So whether the loop's collapse came from the bigger pool or from the bug is untested. Don't repeat 358d unchanged.
+- **No fresh 4-number hands.** Only 1,362 four-number hands to 24 exist (1-13), and every one is already a practice or held-out hand. So a sealed test must use 5 numbers, or other targets.
 - **A kind label you must remove.** The net is told the puzzle kind. `R.tensors` sets `env` from the batch's first item (scripts/claude_rsn358a_run.py:172), and `Net.embed` adds it to every token (:97). Sol's earlier audit found this (artifacts/codex-autoroute-20260927/INPUT-AUDIT.md). Ben ruled out caller-given skill labels (11:34 UTC): "It should for each request be able to automatically decide what." So feed every arm the same fixed env for every item (the conservative option in INPUT-AUDIT.md), and rerun the baseline that way.
 
 ## The goal
-The small learned reasoner should solve number puzzles it was never trained on. Ben's goals page says the reasoner is the model and reasoning comes first (design/v3/30-modes/ben-goals-2026-09-26.md:29,33,75). This puzzle needs trying options and backing up, which the loop net has not shown yet.
+The small learned reasoner should solve number puzzles it was never trained on. Ben's goals page says the reasoner is the model and reasoning comes first (design/v3/30-modes/ben-goals-2026-09-26.md:29,33,75). Solving new hands likely needs trying options and backing up. That is our reading, untested, and the loop net has not shown it.
 
 **Brain first** (goals:61): start by asking how a person solves the 24 game. A person tries a pairing, checks the partial result against known facts (3 x 8, 4 x 6, 12 + 12), and backs up when a branch fails. Write that down before choosing a change. The brain comparison is a guess, not a claim.
 
 ## Step 1: diagnosis (report only, before any registered run)
-- Find out why neither net learns this kind. Start with the likely causes:
-  - It memorises the ~2,400 practice items. Check accuracy on practice hands against held-out hands.
+- Find out why neither net carries over to new hands. Start with the likely causes:
+  - It memorises the ~2,400 practice items. Training exact 1.0 against 0-5 of 300 held out suggests this; confirm it on your own baseline.
   - One stored answer is used as the target when many answers are right.
   - It has no way to try options and back up.
 - Small diagnostic runs on code-made data are allowed. Label every finding shown, suggested or untested. Commit the diagnosis note before Step 2.
@@ -54,6 +58,7 @@ The small learned reasoner should solve number puzzles it was never trained on. 
 - **Where you work.** Only in a new folder, artifacts/codex-numbers-20260927/, and in new scripts. Never touch repo-root notebook/. Never edit another thread's files, handoff/queue, handoff/held, the watcher, anything on BensPC, or your auto-routing folder.
 - **Processes.** Never stop a process you did not start. Before each GPU run, check that nothing else is using the M3 Pro's GPU. Run one GPU job at a time.
 - **Data.** Training data is made and checked by code only: no Claude-, Luna- or other model-written text. No blind panels from other threads.
+- **brd-11.** The Creative thread's brd-11 tests the 1B chat model on make-24 puzzles (queued as handoff/queue/176-creative-brd11pc.md), and its panels are blind. Never open any file in artifacts/claude-brd11-20260926/. Your 5-number sealed panels are yours.
 - **Money and downloads.** No model downloads and no money. The 1B chat model and the joined build are out of scope.
 - **Usage.** Keep Ben's rule: stop if your usage falls under 20% remaining.
 - **One change per experiment.** Commit to main with pull --rebase: no PR, no force push.

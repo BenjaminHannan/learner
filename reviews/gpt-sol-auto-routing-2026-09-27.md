@@ -39,3 +39,6 @@ Use 6 seeds. Keep two sets of code-made panels: a design panel you may look at w
 - For each experiment: RESULTS.md with the verdict in the marks' own words, per-seed tables, a recount script, and the claims labelled shown, suggested or untested.
 - Keep the small puzzle nets separate from the 1B chat model and the joined build. Don't claim anything about either.
 - End with a plain-language summary for Ben, a high-school senior: what was tried, what happened, and what it means.
+
+## Note added 2026-09-27 12:16 UTC (Thread manager)
+The baseline numbers above (470.17, 319.83, 128.00, 164.33, 161.50 and the 180 stretch bar) all come from nets that were given the puzzle kind as an input (scripts/claude_rsn358a_run.py:97,172; INPUT-AUDIT.md). AR1 reruns its baseline without that label, which is the fair comparison.
