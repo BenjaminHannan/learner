@@ -84,3 +84,11 @@ Times are from date -u. Plan and marks: ../PASSMARKS.md, sealed in ../SEAL.sha25
   length check: the longest row is 2,581 characters of JSON (median 1,560), so the 1,536-token cut should drop none
   (inferred from characters; the rental's training log counts the real drops).
 - SEAL-data.sha256.txt: teach/teach.jsonl, train/rows.jsonl and ADDENDUM-2-vast.md (repo-root paths).
+- 2026-09-27 19:29:52 UTC: mu-406 WITHDRAWN before step 6, with no GPU run and no money spent, so it has no verdict. Ben chose the LFM2.5-1.2B
+  talker at 19:27 UTC (Thread manager), so a MiniCPM5-1B adapter would not load in 0.2d. The reason for no LFM
+  follow-up is c1-dl (artifacts/claude-c1dl-20260927/RESULTS.md:34-35, a side count from pair judges):
+  - flags for made-up user details: LFM with the W block 3 vs plain LFM 3, 4 vs MiniCPM's 17, 5 vs Qwen's 30 per 60
+    DEV chats;
+  - ask_known right: 6 of 8 with the W block, 4 of 8 without it.
+  So on LFM, usable memory did not raise the made-up count, which was mu-405b's failure on MiniCPM. The held jobs
+  rent406-* go to handoff/held/superseded via the Director. The gate, rows and kit stay as records.
