@@ -1,4 +1,4 @@
-# rsn-358e3 results: a small grids replay in phase B (sleep research thread, 2026-09-27 00:26 UTC)
+# rsn-358e3 results: a small grids replay in phase B (sleep research thread, 2026-09-27 00:24 UTC)
 
 ## Verdict: FAIL, not proved wrong (moe-grow-replay, the one graded arm)
 The pre-fixed split reading applies: **"replay keeps the old skill; the frozen net's capacity, not replay, is the sums problem".**
