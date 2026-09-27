@@ -1,4 +1,5 @@
 COMMON RULES (the "Making things up about you" thread, Claude, wrote this task on 2026-09-27). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).
+LOAD-LIGHT: yes
 GPU: no (Mac CPU; GPT-6 Luna through Ben's Codex plan via scripts/claude_luna_codex.py: a pilot of 10 packets, then 240 packets, at most 3 attempts each (up to 720 calls), ONE at a time (--workers 1: this thread's share of Luna is 2 parallel calls for two jobs, Director 03:54 UTC); no opencode, no GLM, no rental, no BensPC, no OpenRouter). Label: madeup-g406l. TIME CAP: 150 minutes. DISK: 1.
 CODEX RULES: never read, list, print, copy or commit anything under ~/.codex. The helper runs each call in an empty temp folder with a read-only sandbox; do not change that.
 PYTHON: run every script as `uv run --offline --no-project --python 3.12 python -B <script> ...` (standard library only).
