@@ -60,3 +60,10 @@ next chunk rebuilds raw.jsonl from all earlier parts; chunk 2 onward is queued o
 Full-run rules added 09-27 00:49 UTC at the Thread manager's review (00:48), none of them a mark: each chunk reports parsed of
 called; below 85% parsed in any chunk stops the queue until the Thread manager has the counts; DATA.md lists kept_by_family
 for the whole run beside the seeded counts per family; someone_else is not called fixed (pilots 5 and 6 together: 9 of 14).
+
+## Pilot 7 (Luna, seed 327, 60 dialogs, check_we2, 05:18-05:36 UTC 09-27, $0): FAIL on items 1 and 2 (checked 06:03 UTC)
+Route: 60 of 60 parsed, 0 failed calls, rawcheck2 OK. Item 1: 404 of 425 kept, but plan 2 of 11 (no_cue: Luna writes
+"might ... one day", the "may" half of the plan instruction the cue list lacked). Item 2: apostrophe-less contractions
+0.0 (bar 0.12). Items 3-4 pass (shapes 94.8, write facts in long turns 0.328). Item 5: 0 of 20 kept labels wrong, 0 of
+20 correct_ref wrong; 20 of 20 drops judged over-drops; the texting reads tidy and padded with remarks about the message.
+Both registered responses and pilot 8 are in ADDENDUM-10-luna-pilot7-fixes.md.
