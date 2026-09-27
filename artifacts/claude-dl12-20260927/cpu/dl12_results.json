@@ -1,0 +1,795 @@
+{
+ "config": {
+  "out": "artifacts/claude-dl12-20260927/cpu",
+  "luna": "/home/user/learner/artifacts/claude-dl11-20260927/luna/luna_texts.json",
+  "nights": 5,
+  "n_day": 150,
+  "n_test": 100,
+  "n_qtest": 200,
+  "n_harm": 300,
+  "n_words": 100,
+  "n_ask": 1000,
+  "seed_shift": 0,
+  "selftest": false,
+  "dev": false
+ },
+ "luna_file": "/home/user/learner/artifacts/claude-dl11-20260927/luna/luna_texts.json",
+ "luna_sha256": "35d5d52e518093ab552ae97f07a3921d6df06d7bc5c6a3834ba2b0dc68b6f442",
+ "frame_sha256": "3c1fe9c190837704878759cd4f0f17d9c88aa2a0795536c4dbc90be4a80014bc",
+ "q_frame": "Evaluate {EXPR} and reply with only the resulting number.",
+ "q_other_frames": [
+  "Work out the value of {EXPR}; respond with nothing but the number.",
+  "Calculate {EXPR} and provide only its numerical result.",
+  "Find the value of {EXPR}, replying with the number alone.",
+  "What does {EXPR} evaluate to? Reply with only the resulting number."
+ ],
+ "p_other_frames": [
+  "Using the numbers {NUMS} each exactly once with +, -, *, / and brackets, form {TARGET}, and reply with only the arithmetic expression.",
+  "Using the numbers {NUMS} each exactly once with +, -, *, / and brackets, form an expression equal to {TARGET}, and reply with only that expression.",
+  "Using each of the numbers {NUMS} exactly once with +, -, *, / and brackets, write an arithmetic expression that equals {TARGET}, and reply with only that expression, nothing else.",
+  "Using each of the numbers {NUMS} exactly once with +, -, *, / and brackets, write an expression that equals {TARGET}, and reply with only that expression."
+ ],
+ "n_p_test": 100,
+ "n_q_test": 200,
+ "n_harm": 300,
+ "look": {
+  "fit": 404,
+  "held": 196,
+  "held_topics": [
+   "ages and birthdays",
+   "rooms, floors and addresses",
+   "school grades and classes",
+   "sports scores and results"
+  ],
+  "near_duplicates_held_in_fit": 0
+ },
+ "pool": {
+  "asked": 1000,
+  "questions": 517,
+  "fit": 413,
+  "held": 104,
+  "sample": [
+   "Why is a refrigerator not considered a invention?",
+   "What was the name of the invention that allowed humans to cast the shadow over the moon?",
+   "Who is the best candidate for the answer to the question?",
+   "Who invented the transistor?",
+   "Is a snake a mammal?"
+  ],
+  "near_duplicates_held_in_fit": 0
+ },
+ "n_base_fit": 817,
+ "runs": {
+  "18": {
+   "150": {
+    "train_loss": 7e-05,
+    "n_p": 100,
+    "n_q": 200,
+    "n_panel": 300,
+    "n_bigger": 119,
+    "n_look_held": 196,
+    "p_to_P": 100,
+    "q_to_Q": 200,
+    "panel_to_base": 124,
+    "bigger_to_base": 0,
+    "look_held_to_base": 195,
+    "pool_held_to_base": 100,
+    "n_pool_held": 104,
+    "words_base_P_Q": [
+     0,
+     0,
+     100
+    ],
+    "panel_by_kind_base_P_Q": {
+     "bigger": [
+      0,
+      0,
+      119
+     ],
+     "capital": [
+      46,
+      0,
+      24
+     ],
+     "count": [
+      0,
+      0,
+      20
+     ],
+     "opposite": [
+      30,
+      0,
+      0
+     ],
+     "order": [
+      18,
+      0,
+      13
+     ],
+     "plural": [
+      30,
+      0,
+      0
+     ]
+    },
+    "bigger_mean_p_base_P_Q": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "reworded": [
+     {
+      "kind": "P",
+      "frame": "Using the numbers {NUMS} each exactly once with +, -, *, / and brackets, form {TARGET}, and reply with only the arithmetic expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using the numbers {NUMS} each exactly once with +, -, *, / and brackets, form an expression equal to {TARGET}, and reply with only that expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using each of the numbers {NUMS} exactly once with +, -, *, / and brackets, write an arithmetic expression that equals {TARGET}, and reply with only that expression, nothing else.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using each of the numbers {NUMS} exactly once with +, -, *, / and brackets, write an expression that equals {TARGET}, and reply with only that expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "Q",
+      "frame": "Work out the value of {EXPR}; respond with nothing but the number.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "Calculate {EXPR} and provide only its numerical result.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "Find the value of {EXPR}, replying with the number alone.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "What does {EXPR} evaluate to? Reply with only the resulting number.",
+      "n": 200,
+      "to_right": 200
+     }
+    ],
+    "chance_label_blind": {
+     "P": 0.134,
+     "Q": 0.134,
+     "base": 0.731
+    }
+   },
+   "300": {
+    "train_loss": 2e-05,
+    "n_p": 100,
+    "n_q": 200,
+    "n_panel": 300,
+    "n_bigger": 119,
+    "n_look_held": 196,
+    "p_to_P": 100,
+    "q_to_Q": 200,
+    "panel_to_base": 157,
+    "bigger_to_base": 0,
+    "look_held_to_base": 196,
+    "pool_held_to_base": 102,
+    "n_pool_held": 104,
+    "words_base_P_Q": [
+     0,
+     0,
+     100
+    ],
+    "panel_by_kind_base_P_Q": {
+     "bigger": [
+      0,
+      0,
+      119
+     ],
+     "capital": [
+      70,
+      0,
+      0
+     ],
+     "count": [
+      3,
+      0,
+      17
+     ],
+     "opposite": [
+      30,
+      0,
+      0
+     ],
+     "order": [
+      24,
+      0,
+      7
+     ],
+     "plural": [
+      30,
+      0,
+      0
+     ]
+    },
+    "bigger_mean_p_base_P_Q": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "reworded": [
+     {
+      "kind": "P",
+      "frame": "Using the numbers {NUMS} each exactly once with +, -, *, / and brackets, form {TARGET}, and reply with only the arithmetic expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using the numbers {NUMS} each exactly once with +, -, *, / and brackets, form an expression equal to {TARGET}, and reply with only that expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using each of the numbers {NUMS} exactly once with +, -, *, / and brackets, write an arithmetic expression that equals {TARGET}, and reply with only that expression, nothing else.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using each of the numbers {NUMS} exactly once with +, -, *, / and brackets, write an expression that equals {TARGET}, and reply with only that expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "Q",
+      "frame": "Work out the value of {EXPR}; respond with nothing but the number.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "Calculate {EXPR} and provide only its numerical result.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "Find the value of {EXPR}, replying with the number alone.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "What does {EXPR} evaluate to? Reply with only the resulting number.",
+      "n": 200,
+      "to_right": 200
+     }
+    ],
+    "chance_label_blind": {
+     "P": 0.212,
+     "Q": 0.212,
+     "base": 0.577
+    }
+   },
+   "750": {
+    "train_loss": 0.0,
+    "n_p": 100,
+    "n_q": 200,
+    "n_panel": 300,
+    "n_bigger": 119,
+    "n_look_held": 196,
+    "p_to_P": 100,
+    "q_to_Q": 200,
+    "panel_to_base": 178,
+    "bigger_to_base": 0,
+    "look_held_to_base": 196,
+    "pool_held_to_base": 104,
+    "n_pool_held": 104,
+    "words_base_P_Q": [
+     0,
+     0,
+     100
+    ],
+    "panel_by_kind_base_P_Q": {
+     "bigger": [
+      0,
+      0,
+      119
+     ],
+     "capital": [
+      70,
+      0,
+      0
+     ],
+     "count": [
+      17,
+      0,
+      3
+     ],
+     "opposite": [
+      30,
+      0,
+      0
+     ],
+     "order": [
+      31,
+      0,
+      0
+     ],
+     "plural": [
+      30,
+      0,
+      0
+     ]
+    },
+    "bigger_mean_p_base_P_Q": [
+     0.0192,
+     0.0,
+     0.9808
+    ],
+    "reworded": [
+     {
+      "kind": "P",
+      "frame": "Using the numbers {NUMS} each exactly once with +, -, *, / and brackets, form {TARGET}, and reply with only the arithmetic expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using the numbers {NUMS} each exactly once with +, -, *, / and brackets, form an expression equal to {TARGET}, and reply with only that expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using each of the numbers {NUMS} exactly once with +, -, *, / and brackets, write an arithmetic expression that equals {TARGET}, and reply with only that expression, nothing else.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using each of the numbers {NUMS} exactly once with +, -, *, / and brackets, write an expression that equals {TARGET}, and reply with only that expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "Q",
+      "frame": "Work out the value of {EXPR}; respond with nothing but the number.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "Calculate {EXPR} and provide only its numerical result.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "Find the value of {EXPR}, replying with the number alone.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "What does {EXPR} evaluate to? Reply with only the resulting number.",
+      "n": 200,
+      "to_right": 200
+     }
+    ],
+    "chance_label_blind": {
+     "P": 0.324,
+     "Q": 0.324,
+     "base": 0.353
+    }
+   }
+  },
+  "19": {
+   "150": {
+    "train_loss": 8e-05,
+    "n_p": 100,
+    "n_q": 200,
+    "n_panel": 300,
+    "n_bigger": 119,
+    "n_look_held": 196,
+    "p_to_P": 100,
+    "q_to_Q": 200,
+    "panel_to_base": 119,
+    "bigger_to_base": 0,
+    "look_held_to_base": 195,
+    "pool_held_to_base": 101,
+    "n_pool_held": 104,
+    "words_base_P_Q": [
+     0,
+     0,
+     100
+    ],
+    "panel_by_kind_base_P_Q": {
+     "bigger": [
+      0,
+      0,
+      119
+     ],
+     "capital": [
+      41,
+      0,
+      29
+     ],
+     "count": [
+      0,
+      0,
+      20
+     ],
+     "opposite": [
+      30,
+      0,
+      0
+     ],
+     "order": [
+      18,
+      0,
+      13
+     ],
+     "plural": [
+      30,
+      0,
+      0
+     ]
+    },
+    "bigger_mean_p_base_P_Q": [
+     0.0,
+     0.0001,
+     0.9999
+    ],
+    "reworded": [
+     {
+      "kind": "P",
+      "frame": "Using the numbers {NUMS} each exactly once with +, -, *, / and brackets, form {TARGET}, and reply with only the arithmetic expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using the numbers {NUMS} each exactly once with +, -, *, / and brackets, form an expression equal to {TARGET}, and reply with only that expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using each of the numbers {NUMS} exactly once with +, -, *, / and brackets, write an arithmetic expression that equals {TARGET}, and reply with only that expression, nothing else.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using each of the numbers {NUMS} exactly once with +, -, *, / and brackets, write an expression that equals {TARGET}, and reply with only that expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "Q",
+      "frame": "Work out the value of {EXPR}; respond with nothing but the number.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "Calculate {EXPR} and provide only its numerical result.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "Find the value of {EXPR}, replying with the number alone.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "What does {EXPR} evaluate to? Reply with only the resulting number.",
+      "n": 200,
+      "to_right": 200
+     }
+    ],
+    "chance_label_blind": {
+     "P": 0.134,
+     "Q": 0.134,
+     "base": 0.731
+    }
+   },
+   "300": {
+    "train_loss": 2e-05,
+    "n_p": 100,
+    "n_q": 200,
+    "n_panel": 300,
+    "n_bigger": 119,
+    "n_look_held": 196,
+    "p_to_P": 100,
+    "q_to_Q": 200,
+    "panel_to_base": 148,
+    "bigger_to_base": 0,
+    "look_held_to_base": 196,
+    "pool_held_to_base": 102,
+    "n_pool_held": 104,
+    "words_base_P_Q": [
+     0,
+     0,
+     100
+    ],
+    "panel_by_kind_base_P_Q": {
+     "bigger": [
+      0,
+      0,
+      119
+     ],
+     "capital": [
+      67,
+      0,
+      3
+     ],
+     "count": [
+      2,
+      0,
+      18
+     ],
+     "opposite": [
+      30,
+      0,
+      0
+     ],
+     "order": [
+      19,
+      0,
+      12
+     ],
+     "plural": [
+      30,
+      0,
+      0
+     ]
+    },
+    "bigger_mean_p_base_P_Q": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "reworded": [
+     {
+      "kind": "P",
+      "frame": "Using the numbers {NUMS} each exactly once with +, -, *, / and brackets, form {TARGET}, and reply with only the arithmetic expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using the numbers {NUMS} each exactly once with +, -, *, / and brackets, form an expression equal to {TARGET}, and reply with only that expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using each of the numbers {NUMS} exactly once with +, -, *, / and brackets, write an arithmetic expression that equals {TARGET}, and reply with only that expression, nothing else.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using each of the numbers {NUMS} exactly once with +, -, *, / and brackets, write an expression that equals {TARGET}, and reply with only that expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "Q",
+      "frame": "Work out the value of {EXPR}; respond with nothing but the number.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "Calculate {EXPR} and provide only its numerical result.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "Find the value of {EXPR}, replying with the number alone.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "What does {EXPR} evaluate to? Reply with only the resulting number.",
+      "n": 200,
+      "to_right": 200
+     }
+    ],
+    "chance_label_blind": {
+     "P": 0.212,
+     "Q": 0.212,
+     "base": 0.577
+    }
+   },
+   "750": {
+    "train_loss": 0.0,
+    "n_p": 100,
+    "n_q": 200,
+    "n_panel": 300,
+    "n_bigger": 119,
+    "n_look_held": 196,
+    "p_to_P": 100,
+    "q_to_Q": 200,
+    "panel_to_base": 185,
+    "bigger_to_base": 6,
+    "look_held_to_base": 196,
+    "pool_held_to_base": 104,
+    "n_pool_held": 104,
+    "words_base_P_Q": [
+     0,
+     0,
+     100
+    ],
+    "panel_by_kind_base_P_Q": {
+     "bigger": [
+      6,
+      0,
+      113
+     ],
+     "capital": [
+      70,
+      0,
+      0
+     ],
+     "count": [
+      18,
+      0,
+      2
+     ],
+     "opposite": [
+      30,
+      0,
+      0
+     ],
+     "order": [
+      31,
+      0,
+      0
+     ],
+     "plural": [
+      30,
+      0,
+      0
+     ]
+    },
+    "bigger_mean_p_base_P_Q": [
+     0.0983,
+     0.0,
+     0.9017
+    ],
+    "reworded": [
+     {
+      "kind": "P",
+      "frame": "Using the numbers {NUMS} each exactly once with +, -, *, / and brackets, form {TARGET}, and reply with only the arithmetic expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using the numbers {NUMS} each exactly once with +, -, *, / and brackets, form an expression equal to {TARGET}, and reply with only that expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using each of the numbers {NUMS} exactly once with +, -, *, / and brackets, write an arithmetic expression that equals {TARGET}, and reply with only that expression, nothing else.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "P",
+      "frame": "Using each of the numbers {NUMS} exactly once with +, -, *, / and brackets, write an expression that equals {TARGET}, and reply with only that expression.",
+      "n": 100,
+      "to_right": 100
+     },
+     {
+      "kind": "Q",
+      "frame": "Work out the value of {EXPR}; respond with nothing but the number.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "Calculate {EXPR} and provide only its numerical result.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "Find the value of {EXPR}, replying with the number alone.",
+      "n": 200,
+      "to_right": 200
+     },
+     {
+      "kind": "Q",
+      "frame": "What does {EXPR} evaluate to? Reply with only the resulting number.",
+      "n": 200,
+      "to_right": 200
+     }
+    ],
+    "chance_label_blind": {
+     "P": 0.324,
+     "Q": 0.324,
+     "base": 0.353
+    }
+   }
+  }
+ },
+ "seeds": [
+  18,
+  19
+ ],
+ "marks": {
+  "R1 seed 18 (k=150)": {
+   "p_to_P": "pass",
+   "q_to_Q": "pass",
+   "panel_to_base": "below",
+   "bigger_to_base": "below",
+   "look_held_to_base": "pass"
+  },
+  "R2 seed 18 (k=750)": {
+   "p_to_P": "pass",
+   "q_to_Q": "pass",
+   "panel_to_base": "below",
+   "bigger_to_base": "below",
+   "look_held_to_base": "pass"
+  },
+  "R3 seed 18 (k=750)": {
+   "P frame 0": "pass",
+   "P frame 1": "pass",
+   "P frame 2": "pass",
+   "P frame 3": "pass",
+   "Q frame 4": "pass",
+   "Q frame 5": "pass",
+   "Q frame 6": "pass",
+   "Q frame 7": "pass"
+  },
+  "R1 seed 19 (k=150)": {
+   "p_to_P": "pass",
+   "q_to_Q": "pass",
+   "panel_to_base": "below",
+   "bigger_to_base": "below",
+   "look_held_to_base": "pass"
+  },
+  "R2 seed 19 (k=750)": {
+   "p_to_P": "pass",
+   "q_to_Q": "pass",
+   "panel_to_base": "below",
+   "bigger_to_base": "below",
+   "look_held_to_base": "pass"
+  },
+  "R3 seed 19 (k=750)": {
+   "P frame 0": "pass",
+   "P frame 1": "pass",
+   "P frame 2": "pass",
+   "P frame 3": "pass",
+   "Q frame 4": "pass",
+   "Q frame 5": "pass",
+   "Q frame 6": "pass",
+   "Q frame 7": "pass"
+  },
+  "verdict": "PROVED WRONG"
+ },
+ "minutes": 20.0
+}
