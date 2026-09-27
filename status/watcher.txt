@@ -1,4 +1,4 @@
-2026-09-27 03:58:18
+2026-09-27 04:00:29
 running:
 000-probe-zen-builder.running
 000-rescue-rd378.running
@@ -8,9 +8,8 @@ k1h-luna-full-mac.running
 lis320-pilot8b-mac.running
 y1t-luna-rest-mac.running
 launched (no exit yet) / finished:
-     813
+     814
 
-2026-09-27 02:30:31 zen cap: 4 non-GPU rungo5 builders running, holding bm398w-luna-mac
 2026-09-27 02:30:31 zen cap: 4 non-GPU rungo5 builders running, holding k1h-luna-full-mac
 2026-09-27 02:30:32 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8-mac
 2026-09-27 02:30:33 zen cap: 4 non-GPU rungo5 builders running, holding y1t-luna-pilot-mac
@@ -160,6 +159,7 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 03:53:51 launch lis320-pilot8b-mac
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 
 diag:
 == 000-probe-zen-builder
@@ -197,10 +197,15 @@ diag:
 == 172-rv390-358i2-pc-c
 149 Sep 27 03:48 172-rv390-358i2-pc-c.go1.err.txt
 0 Sep 27 03:47 172-rv390-358i2-pc-c.go1.reply.md
+53 Sep 27 03:58 172-rv390-358i2-pc-c.go2.err.txt
+0 Sep 27 03:58 172-rv390-358i2-pc-c.go2.reply.md
 [0m
 > build · muse-spark-1.3-contributor-free
 [0m
 [91m[1mError: [0mError from provider (Console): Rate limit exceeded. Please try again later.
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
 == k1h-glm2
 121798 Sep 26 20:58 k1h-glm2.go1.err.txt
 758 Sep 26 18:58 k1h-glm2.go1.reply.md
@@ -245,19 +250,20 @@ cp-exit:0
 [91m[1mError: [0mError from provider (Console): Rate limit exceeded. Please try again later.
 top5cpu:
 %CPU COMM
-72.1 ApplicationsStorageExtension
-50.5 fileproviderd
-32.6 WindowServer
-18.3 bash
-13.0 Storage
+60.3 ApplicationsStorageExtension
+54.3 cloudd
+32.9 WindowServer
+27.9 fileproviderd
+23.8 codex
 procs:
-  363     1 03-15:45:16 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-15:44:24 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
-15699     1 03-13:59:42 S    /usr/bin/ssh-agent
-44571 44570 01-06:21:20 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-06:21:20 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    11:35:53 SN   /usr/local/bin/opencode
-46747   818       00:43 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-60494 59018    04:50:46 SN   /usr/local/bin/opencode
-64555 64533    01:16:20 SN   /usr/local/bin/opencode
-81797     1 01-16:38:59 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 03-15:47:26 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-15:46:34 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+15699     1 03-14:01:52 S    /usr/bin/ssh-agent
+44571 44570 01-06:23:30 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-06:23:30 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    11:38:03 SN   /usr/local/bin/opencode
+48302 36776       02:08 SN   /usr/local/bin/opencode
+48767   818       00:23 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+60494 59018    04:52:56 SN   /usr/local/bin/opencode
+64555 64533    01:18:30 SN   /usr/local/bin/opencode
+81797     1 01-16:41:09 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
