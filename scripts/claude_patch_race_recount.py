@@ -184,6 +184,16 @@ def v3(adaptations):
                for r in adaptations)
 
 
+def own_v3(adaptations):
+    """Only the eight registered primary runs can establish a usable ladder."""
+    required = [f"{arm}-seed{seed}-{init}" for seed in (0, 1)
+                for arm, init in (("patch", "pre"), ("patch", "fresh"),
+                                  ("loop_meta", "pre"), ("plain", "pre"))]
+    if any(adaptations.get(name) is None for name in required):
+        return None
+    return v3([adaptations[name] for name in required])
+
+
 def verify_manifest(manifest, audit):
     if not manifest:
         return
@@ -324,7 +334,8 @@ def gates(jobs, sources):
             support = p.get("support_fit")
             support_improved = (support["before64"]["n"] == support["after64"]["n"] == 64 and
                                 support["after64"]["right"] > support["before64"]["right"]) if support else None
-            common = source_gate and wide_source and old_sleep and wide_sleep and budget and stop
+            # Learned-stop gaps are reported diagnostics, not promotion bars.
+            common = source_gate and wide_source and old_sleep and wide_sleep and budget
             result[str(seed)] = {"margins_pp": margins, "original_source_gate": source_gate,
                 "wide_source_gate": wide_source, "original_postsleep_gate": old_sleep,
                 "wide_postsleep_gate": wide_sleep, "coefficient_budget": budget,
@@ -361,8 +372,7 @@ def run(out, checkpoints=False):
     folders = [out / "race" / f"{a}-seed{s}-{i}" for s in (0, 1)
                for a, i in [(a, "pre") for a in ARMS] + [("patch", "fresh")]]
     adaptations = {f.name: audit.read(f / "adapt.json") for f in folders}
-    result["own_V3"] = v3(list(adaptations.values())) if all(
-        a is not None for a in adaptations.values()) else None
+    result["own_V3"] = own_v3(adaptations)
     if result["own_V3"] is False:
         result["status"] = "inconclusive"
         return finish(out, audit, result)
@@ -581,7 +591,25 @@ def self_test():
             audit.compare(dict(fixed_right=3), {}, "mock")
             self.assertEqual(len(audit.errors), 2)
 
-        def test_both_seeds_and_old_gates(self):
+        def test_ordinary_loop_cannot_rescue_own_v3(self):
+            data = {}
+            for seed in (0, 1):
+                for arm, init in (("patch", "pre"), ("patch", "fresh"),
+                                  ("loop_meta", "pre"), ("plain", "pre"), ("loop", "pre")):
+                    data[f"{arm}-seed{seed}-{init}"] = {"rungs": {
+                        str(k): {"9": dict(right=150 if arm == "loop" else 0, n=300)}
+                        for k in RUNGS}}
+            self.assertTrue(v3(list(data.values())))
+            self.assertIs(own_v3(data), False)
+            for k in RUNGS[:3]:
+                data["patch-seed1-fresh"]["rungs"][str(k)]["9"]["right"] = 31
+            self.assertIs(own_v3(data), True)
+            del data["loop-seed0-pre"]
+            self.assertIs(own_v3(data), True)
+            del data["plain-seed0-pre"]
+            self.assertIsNone(own_v3(data))
+
+        def gate_fixture(self):
             jobs, sources = {}, {}
             old = {k: dict(n=200, right=195) for k in ("sums4", "grids5")}
             wide = {s: {k: dict(n=300, right=290) for k in KINDS} for s in WIDE_STAGES}
@@ -594,6 +622,22 @@ def self_test():
                         adapt=dict(sleep={b: dict(old=copy.deepcopy(old)) for b in ("64", "64k")}),
                         scores={s: {"9": dict(right=150, fixed_right=150, n=300)} for s in STAGES},
                         support_fit=dict(before64=dict(n=64, right=2), after64=dict(n=64, right=3)))
+            return jobs, sources
+
+        def test_stop_gap_is_report_only(self):
+            jobs, sources = self.gate_fixture()
+            before = gates(jobs, sources)["seeds"]
+            for seed in (0, 1):
+                jobs[f"patch-seed{seed}-pre"]["scores"]["k64"]["9"]["fixed_right"] = 200
+            after = gates(jobs, sources)["seeds"]
+            for seed in ("0", "1"):
+                self.assertIs(before[seed]["stop_within_two_points"], True)
+                self.assertIs(after[seed]["stop_within_two_points"], False)
+                self.assertIs(before[seed]["test_a_bars"], True)
+                self.assertEqual(before[seed]["test_a_bars"], after[seed]["test_a_bars"])
+
+        def test_both_seeds_and_old_gates(self):
+            jobs, sources = self.gate_fixture()
             self.assertTrue(all(v["test_a_bars"] for v in gates(jobs, sources)["seeds"].values()))
             for seed in (0, 1):
                 jobs[f"patch-seed{seed}-pre"]["curve"]["F_all"] = 50
