@@ -1,4 +1,4 @@
-2026-09-27 10:49:52
+2026-09-27 10:52:17
 running:
 000-probe-benspc-gpu-0827.running
 000-probe-zen-builder.running
@@ -9,20 +9,14 @@ claude-lis320-luna-c5-mac.running
 k1h-glm2.running
 k1h-luna-full-mac.running
 lis320-pilot8b-mac.running
-madeup-mu406-teach2-mac.running
+rent-c1dev-1-start.running
 rent-rv390b-p1.running
 rent358u-1-start.running
 rent358u-2-collect.running
 y1t-luna-rest-mac.running
 launched (no exit yet) / finished:
-     935
+     939
 
-2026-09-27 09:34:04 BensPC unreachable (ssh rc=255), holding 163-claude-sleep-358s-bo-p4
-2026-09-27 09:34:14 BensPC unreachable (ssh rc=255), holding 164-claude-sleep-358s-bo-p5
-2026-09-27 09:34:25 BensPC unreachable (ssh rc=255), holding 173-rv390-358i2-pc-d
-2026-09-27 09:34:35 BensPC unreachable (ssh rc=255), holding 174-rv392-358i2-pc
-2026-09-27 09:34:46 BensPC unreachable (ssh rc=255), holding 176-creative-brd11pc
-2026-09-27 09:34:56 BensPC unreachable (ssh rc=255), holding 260-claude-sleep-358t3pc
 2026-09-27 09:35:06 BensPC unreachable (ssh rc=255), holding k1f-benspc2
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
@@ -167,6 +161,12 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 10:49:50 bash-only cap: 5 running, holding rent-c1dev-1-start
 2026-09-27 10:49:51 bash-only cap: 5 running, holding rent358s-1-start
 2026-09-27 10:49:51 bash-only cap: 5 running, holding rent378g-1-start
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 10:52:13 pushed madeup-mu406-teach2-mac
+2026-09-27 10:52:16 launch rent-c1dev-1-start
+2026-09-27 10:52:17 bash-only cap: 5 running, holding rent358s-1-start
+2026-09-27 10:52:17 bash-only cap: 5 running, holding rent378g-1-start
 
 diag:
 == 000-probe-benspc-gpu-0827
@@ -199,6 +199,11 @@ diag:
 0 Sep 27 10:00 260-claude-sleep-358t3pc.go1.reply.md
 53 Sep 27 10:25 260-claude-sleep-358t3pc.go2.err.txt
 0 Sep 27 10:25 260-claude-sleep-358t3pc.go2.reply.md
+53 Sep 27 10:50 260-claude-sleep-358t3pc.go3.err.txt
+0 Sep 27 10:50 260-claude-sleep-358t3pc.go3.reply.md
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
 [0m
 > build · muse-spark-1.3-contributor-free
 [0m
@@ -214,6 +219,11 @@ diag:
 0 Sep 27 10:01 300-fixsleep-dl11-luna.go3.reply.md
 53 Sep 27 10:26 300-fixsleep-dl11-luna.go4.err.txt
 0 Sep 27 10:26 300-fixsleep-dl11-luna.go4.reply.md
+53 Sep 27 10:51 300-fixsleep-dl11-luna.go5.err.txt
+0 Sep 27 10:51 300-fixsleep-dl11-luna.go5.reply.md
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
 [0m
 > build · muse-spark-1.3-contributor-free
 [0m
@@ -257,9 +267,9 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 [0m
 > build · muse-spark-1.3-contributor-free
 [0m
-== madeup-mu406-teach2-mac
-0 Sep 27 09:58 madeup-mu406-teach2-mac.go1.err.txt
-1758 Sep 27 09:58 madeup-mu406-teach2-mac.go1.reply.md
+== rent-c1dev-1-start
+0 Sep 27 10:52 rent-c1dev-1-start.go1.err.txt
+52 Sep 27 10:52 rent-c1dev-1-start.go1.reply.md
 == rent-rv390b-p1
 0 Sep 27 10:42 rent-rv390b-p1.go1.err.txt
 2250 Sep 27 10:47 rent-rv390b-p1.go1.reply.md
@@ -295,25 +305,26 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 [0m
 top5cpu:
 %CPU COMM
-28.5 ApplicationsStorageExtension
-22.4 fileproviderd
-14.0 bash
-8.7 Finder
-8.3 com.apple.DriverKit-AppleBCMWLAN
+67.4 ApplicationsStorageExtension
+65.7 fileproviderd
+28.4 Codex
+27.6 bash
+15.1 PerfPowerServices
 procs:
-  363     1 03-22:36:50 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-22:35:58 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
-15699     1 03-20:51:16 S    /usr/bin/ssh-agent
-33230   818       19:47 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-44571 44570 01-13:12:54 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-13:12:54 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    18:27:27 SN   /usr/local/bin/opencode
-53479 20011    06:45:03 SN   /usr/local/bin/opencode
-54153 44066    06:44:43 SN   /usr/local/bin/opencode
-59802 59771    06:36:19 SN   /usr/local/bin/opencode
-60494 59018    11:42:20 SN   /usr/local/bin/opencode
-61605 61571    06:34:01 SN   /usr/local/bin/opencode
-62580 62571       00:01 S    /usr/bin/ssh
-64555 64533    08:07:54 SN   /usr/local/bin/opencode
-81797     1 01-23:30:33 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
-96820 64190       42:06 SN   ssh
+  363     1 03-22:39:15 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-22:38:23 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+15699     1 03-20:53:41 S    /usr/bin/ssh-agent
+33230   818       22:12 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+44571 44570 01-13:15:19 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-13:15:19 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    18:29:52 SN   /usr/local/bin/opencode
+53479 20011    06:47:28 SN   /usr/local/bin/opencode
+54153 44066    06:47:08 SN   /usr/local/bin/opencode
+59802 59771    06:38:44 SN   /usr/local/bin/opencode
+60494 59018    11:44:45 SN   /usr/local/bin/opencode
+61605 61571    06:36:26 SN   /usr/local/bin/opencode
+62793 86004       01:42 SN   /usr/local/bin/opencode
+62987 31168       01:01 SN   /usr/local/bin/opencode
+64555 64533    08:10:19 SN   /usr/local/bin/opencode
+81797     1 01-23:32:58 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+96820 64190       44:31 SN   ssh
