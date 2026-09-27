@@ -44,3 +44,4 @@
   last line prints mu-405's substring count, and I saw it for U0 and U1. It is report-only and decides no mark. I have
   read no reply.
 - Update 09:18 UTC (date -u): arm N ended at 09:18:38 UTC, exit 0: 60 chats, 300 rows, median 6.2 s per turn. All three arms have 300 rows, 60 chats and 0 empty replies. Next: judge packets.
+- Update 09:19 UTC (date -u): judge packets built (claude_mu407_judge.py prep: 180 packets, 12 batches of 30, each packet in one batch of each order). 24 private folders: claims judges c1-c12 (JUDGE-claims405.md) and fit judges f1-f12 (JUDGE-fit407.md), one fresh blind Opus agent each; batch n goes to claims judge cn and fit judge fn.
