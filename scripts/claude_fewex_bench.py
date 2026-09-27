@@ -170,6 +170,7 @@ class Learner:
     def __init__(self, net, lr):
         self.net = net
         self.opt = torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=.1, betas=(.9, .95))
+        self.sched = torch.optim.lr_scheduler.LambdaLR(self.opt, lambda i: min(1., (i + 1) / 50))
         self.steps = 0
 
     def update(self, loss):
@@ -177,6 +178,7 @@ class Learner:
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.net.parameters(), 1.)
         self.opt.step()
+        self.sched.step()
         self.steps += 1
 
     def maze_batch(self, items):
