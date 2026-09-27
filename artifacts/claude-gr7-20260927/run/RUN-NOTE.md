@@ -16,3 +16,4 @@
 - 2026-09-27T06:47:47Z: dev outcome PASS (dev.log): gr-5's 72 held-out squares 72 of 72 exact; all held-out squares 121 of 123; 139 of 139 held-out none rows as none; dev-only layouts 64 of 64; format dev 30 of 30. The epoch-6 loss prediction (<= 0.001) failed at 0.0021. The unread gr-6 panel is now being run once: L7 on the squares started at 06:47:36Z.
 - 2026-09-27T06:57:54Z: L7 on the squares finished (100 rows, 100 read as a square; exactness is left to the score and the recount). L7 on the lookalikes started at 06:57:46Z.
 - 2026-09-27T06:59:04Z: L7 on the lookalikes finished (60 rows, 3 read as a square). L7 on the unseen formats started at 06:58:56Z.
+- 2026-09-27T07:05:27Z: L7 on the unseen formats finished (60 rows, 59 read as a square). L7 on the general items started at 07:05:18Z.
