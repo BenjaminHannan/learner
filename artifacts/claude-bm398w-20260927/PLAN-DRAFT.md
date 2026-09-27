@@ -89,8 +89,12 @@ and the prompt stay exactly as bm-398v's BN arm.
 - R2 passes: 60%. R1 passes: 25% (point guess +12 of 1,531). PASS: 20%. Proved wrong: 30%.
 
 ## Open questions before sealing
-- Overlap with y1t (Answering from memory): asked at 05:26 UTC whether y1t already trains reading among distractors.
-  If it does, bm-398w becomes the LoCoMo evaluation of y1t's adapter instead of a second training set.
+- Overlap with y1t (Answering from memory, answered 05:29 UTC): none. Nothing there trains the 1B to read among
+  store lines with distractors. y1t trains doubt on its own graded drafts from 0-7 earlier lines of short one-speaker
+  chats; y1tH1 is evaluation only; y1r trains the MiniLM retriever (which lines get into the 20), not the reader.
+  Their seed-4027 dialogs are free after their data gate, but at 1-8 kept user turns and one speaker they cannot
+  give a 20-line window of same-chat distractors, so bm-398w writes its own chats. If y1t goes GO, its adapter can
+  run through bm-398v's BN arm as a report-only row for them.
 - Seeds: Reading facts (05:27 UTC) says 320-329, 4027 and 1, 2, 7 are reserved and any other number is free. They
   asked for fresh seeds, not seed 324's rows, and both avoid lists. Their lis-320 Luna wrapper words lis-320's
   one-to-one dialogs only, so bm-398w calls the Director's helper directly, with the batch and stop pattern of
