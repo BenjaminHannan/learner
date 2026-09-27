@@ -1,0 +1,5 @@
+# 358t v3 addendum 6: one report-only comparison added (sleep research thread, written 2026-09-27 13:45:50 UTC, before any v3 run)
+
+Additive. Marks, seal, seeds and arms are unchanged; this adds no mark and changes no verdict.
+**Why:** Ben's question is 8 looped layers against 2 looped layers (Thread manager, 13:50 UTC). The graded marks compare each loop arm with 358i's plain net, so they do not answer it directly.
+**Report only, in RESULTS-v3.md:** loop8 (seeds 1-4, raw final.pt) against 358i3's bug-free 2-layer loop (seeds 5-8, artifacts/claude-rsn358i3-20260926/runs/loop-s5..s8/tests.json on main) on the same 358i tests. The table shows per-test means and per-seed counts, at the loop's own stop and at 1/2/4/8/12/16/24/32/48 rounds. It is labelled "suggested only". The seeds differ; the machines differ (v3 on a vast 5090 if the rental runs, 358i3 on BensPC's 5070 Ti, both torch 2.11); and 358i3 ran 2-4 at a time. If the loop8 mean is higher on sums8/10/12 and grids6/7, that counts as a reason to run the same-weight depth sweep (358y), not as a result.
