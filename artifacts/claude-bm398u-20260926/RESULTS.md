@@ -101,8 +101,10 @@ Split by whose lines held an evidence turn. The split was chosen after seeing th
   reranked top 3 held evidence for 492 of the 639 questions whose evidence was among the 20. DEVCHECK.md warned that
   its pool was easier. Lesson: a cut chosen on easy made-up chats was too tight for real ones.
 - Suggested next test (one change, not yet written): the same reranker with a larger cut, fixed before any reply,
-  against the 20-line store, on LoCoMo conversations 5-9, whose answers have never been judged. It would ask
-  whether fewer, better lines can beat all 20 once the cut keeps most of the evidence.
+  against the 20-line store, on LoCoMo conversations 5-9, ~~whose answers have never been judged~~ where no
+  store-B, notes or reranker answers have been judged. It would ask whether fewer, better lines can beat all 20 once
+  the cut keeps most of the evidence. [Correction, 2026-09-27 00:26 UTC: 150 of bm-398d's 297 blind questions came
+  from conversations 5-9, in other arms (whole chat, right lines, a store's top 20), and F1 was scored on all ten.]
 - The learned picker (398p draft, Answering from memory's y1r) now has a bar: it must beat the plain 1B's own
   reranking at the same cut.
 
