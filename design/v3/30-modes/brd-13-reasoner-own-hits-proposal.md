@@ -41,3 +41,18 @@ different goal (brd-12's DEV).
 3. Hindsight rules fixed in code before any run, including which cells become the relabelled grid's givens; report
    how many relabelled items are trivially easy (for example, givens that already fix the square).
 4. Marks with a proved-wrong line and the placebo, sent to the Thread manager before sealing.
+
+## Settled with Sleep research (13:46 UTC by `date -u`)
+- Ownership: Sleep research owns, codes and runs ONE test after its n3 night: no night, n2 code-answer night, O (own
+  checked hits only; this is the core of their step (c)), and H = O + hindsight. H vs O is its own comparison, credited
+  here. Creative reviews the draft before sealing. brd-13 does not run separately.
+- Tries: the 358 nets are argmax only; tries come from the per-round argmax answers and/or temperature sampling of
+  the answer cells, in Sleep research's wrapper. Nets: 358u fixed-env loop nets (env always 0, no kind label); 358i3
+  nets only as a disclosed stand-in.
+- CORRECTION to the grid rule above: it is degenerate. The relabelled puzzle's givens would be the original givens (the
+  reasoner only writes blanks), so it is the same puzzle, and a filled grid that is a valid square already passes the
+  checker. So H relabels SUMS only unless a sound grid rule is found; grids get O's hits only, and H vs O is judged on
+  sums with grids reported.
+- Sums rule, for the sealed file: for a wrong answer c' to a + b, b' = c' − a; keep it only if b' ≥ 0 and b' fits b's
+  digit width in the env's format, and b' ≠ b; the example is a + b' with answer c', checked by the env's checker.
+  Report how many relabels have b' = 0 or b' < 10 (trivially easy) and the width distribution.
