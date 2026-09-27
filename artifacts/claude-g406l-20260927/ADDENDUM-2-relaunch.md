@@ -43,7 +43,7 @@ marks, prompt, model, attempts, count and ADDENDUM-1's rule are unchanged.
   Thread manager's note says 08:27 in its text, but it arrived at 08:23:02 UTC (commit ad1933437 had the wrong stamp).
 
 ## Route change (08:44 UTC, date -u; still before any resume result)
-- The watcher held madeup-g406l-resume2-mac on its builder cap from 07:4x UTC onward (6 builders running at 08:42 UTC).
+- The watcher held madeup-g406l-resume2-mac on its builder cap from 08:24:45 UTC, its first hold line (6 builders running at 08:42 UTC).
   It never launched, so I moved it to handoff/held/. A job that never launched is not a launch.
 - The same steps now run as handoff/queue/madeup-g406l-resume3-mac.md on the Director's BASH-ONLY route (2bf4f9ea7).
   That route runs the job's bash block with no builder and skips the builder cap, as the Thread manager suggested at
@@ -55,3 +55,4 @@ marks, prompt, model, attempts, count and ADDENDUM-1's rule are unchanged.
   16:00 UTC.
 - I dry-ran the block here in a temporary worktree of main, with local stand-ins for uv and codex. It ran end to end
   with rc 0. Its numbers came from a fake labeller and were deleted unread beyond the rc.
+- Correction (08:44 UTC): the route-change section first said the hold began "07:4x UTC", a guess I typed without checking. The first hold line in the watcher status is 04:24:45 local, which is 08:24:45 UTC. Fixed in place above.
