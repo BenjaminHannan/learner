@@ -47,6 +47,11 @@ are agents in this thread.
     right thing? Reciting it, mentioning it in passing, or hedging ("if you're allergic to X") does not count.
   - Blind recount before reporting.
 
+- Code (selftests pass): scripts/claude_mu407_talk.py (7/7), scripts/claude_mu407_judge.py (6/6; an end-to-end run
+  on synthetic rows counted 180 packets, each with 2 claims and 2 fit judgements), JUDGE-fit407.md. Packets: one per
+  (arm, chat), 180. pids come from seed 4071; the 12 batches of 30 use seeds 4072/4073. Each batch file is read by one
+  claims judge and a different fit judge.
+
 ## Marks (fixed before any reply exists)
 - V (validity: the failure is present here). C_U0 >= C_N + 10, where C = claim flags summed over both judges on
   session 2's 300 replies. If not, INCONCLUSIVE.
