@@ -63,3 +63,8 @@ every p-grids7 AUC from the per-guess rows (all match the JSON to 4 decimals), c
 the day puzzles (givens kept, rows and columns valid, equal to the stored solution; 0 failed), confirmed the 25 + 12
 files against the SOURCES.txt manifests, SEAL 15/15, and the sigma picks. One note from it: PASSMARKS Setup names 358i's
 SEAL-run file for the net check; ADDENDUM-358i2-rerun.md replaced that with NETS-358i2.sha256.txt, which the nets match.
+
+Note (17:17 UTC 09-27 by date -u), on the r0 line under "Report only": counted on each net's own hard grids7 puzzles
+(rv-392's daydump), r0 solved 0 of them with GUESS in every seed. Its 26 solves were puzzles the trained nets already
+got right in the day pass (25 of 26 for seed 4). So the code parts do not explain any of GUESS's hard solves here; the
+sentence above about "part of what GUESS solves" holds only for easy puzzles. Details: ../claude-rv392-20260926/RESULTS.md.
