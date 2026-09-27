@@ -1,7 +1,10 @@
 # c1-dev: can a plain 1B talker reach C1's no-harm bar? (practice chats, report only)
 
-Everyday-chat thread, written 2026-09-27 00:27 UTC, before any run. Marks below are a DRAFT sent to the Thread manager
-for review (Ben 19:28: send the practice-chat check's marks before sealing them). The seal follows that review.
+Everyday-chat thread, written 2026-09-27 00:27 UTC, before any run. The draft marks went to the Thread manager at 00:29
+(Ben 19:28: send the practice-chat check's marks before sealing them). Its review (00:34) asked for two fixes, both made
+here before the seal: the job no longer runs if claude_e2e02d.py differs from the seal, and the talker refuses any W
+placement but the system message (selftest check 3 asserts it); each margin is reported with its binomial noise and
+the readings say plainly that the bar only catches large harm.
 
 ## Question
 
@@ -38,12 +41,21 @@ margins from the judge files and keys before anything is reported.
 
 ## Readings (fixed now; report only)
 
-- R1 against Qwen: margin(D vs Q) >= -12 reads "C1's bar is reachable against Qwen on the practice chats".
+C1's bar is weak as a harm check, and this check inherits that. Over 60 decisive conversations an equal pair lands
+anywhere from -16 to +16 in 95% of runs, and a talker that truly wins only 40% of decisive conversations still meets
+-12 in 55% of runs (scripts/claude_c1dev_noise.py). So meeting the bar shows only that there is no large gap; it cannot
+show the talker is as good as a rival. Missing it by a lot is the informative direction. The bar stays -12 on purpose:
+the question is whether C1's own bar would be met, and a tighter bar would answer a different question.
+
+- R1 against Qwen: margin(D vs Q) >= -12 reads "C1's bar met against Qwen on the practice chats" (not "as good as Qwen").
 - R2 against LFM: margin(D vs L) >= -12, the same for LFM.
-- R3 the build's input: margin(D vs T) >= -12 reads "the W block does no harm by C1's bar".
-- Answer to the question: "reachable on the practice chats" only if R1, R2 and R3 all hold; otherwise "not reached
-  against <each rival that fails>". Each margin also gets c1rival's reading: behind <= -14, ahead >= +14, else level
-  (each side 4.6% by chance for equal systems over 60 decisive pairs).
+- R3 the build's input: margin(D vs T) >= -12 reads "no large harm from the W block"; it cannot show no harm.
+- Answer to the question: "C1's bar met on the practice chats" only if R1, R2 and R3 all hold; otherwise "not met
+  against <each rival that fails>".
+- Next to every margin: decisive conversations, the two-sided sign-test p against "equal", D's share of decisive
+  conversations with its 95% interval, the margin range an equal pair lands in 95% of the time for that many decisive
+  conversations, and c1rival's reading (behind <= -14, ahead >= +14, else level):
+  `python3 -B scripts/claude_c1dev_noise.py --marks RUN/marksC1.json --bar -12`.
 - Also reported, no mark: ties, made-up-about-the-user counts per arm, median words, "I don't know" on ask_unknown,
   ask_known right, median ms per turn.
 
@@ -60,4 +72,4 @@ practice chats if D vs Q >= -12 and D vs L >= -12.
 It is a finding only, never a registered result, and it changes no bar: C1 stays as ADDENDUM-14 fixed it, run once on
 chatpanel404. The practice chats and the judges are Claude-written and Claude-run (judging is allowed, Ben 16:39); the
 reader and notebook are absent (they do not change the talker input on these chats, shown by the selftest, but
-everything else in the build is untested here); 60 conversations cannot separate margins inside about +-13.
+everything else in the build is untested here); an equal pair's margin varies from -16 to +16 over 60 conversations.

@@ -56,6 +56,8 @@ def build_talker02d(state_dir, args):
     import claude_ep382_store_v4 as V4
     if E.SLEEP02D:
         raise SystemExit("c1dev: SLEEP02D is set; this check is the plain talker")
+    if E.W_PLACE02D != "system":
+        raise SystemExit(f"c1dev: W_PLACE02D is {E.W_PLACE02D!r}; PLAN.md measures the system-message W block")
     agent = TalkerOnly02d(state_dir, NullReader(), E.talker_for(getattr(args, "gen_model", "")), None,
                           V4.MemoryStore(state_dir), int(getattr(args, "max_new", 0) or E.MAX_NEW02D))
     if not getattr(build_talker02d, "_said", False):
@@ -107,7 +109,7 @@ def selftest() -> None:
         assert s1 == TW.SYSTEM and m1 == [{"role": "user", "content": chat[0]}] and n1 == E.MAX_NEW02D; ok += 1
         s3, m3, _ = tk_null.seen[2]
         want = TW.SYSTEM + "\n\n" + Y.L1_HEAD + 'User said, "hi there"\nUser said, "my dog is Rex."\n'
-        assert E.W_PLACE02D != "system" or s3 == want; ok += 1
+        assert E.W_PLACE02D == "system" and s3 == want; ok += 1         # PLAN.md describes the system-message W
         assert [m["role"] for m in m3] == ["user", "assistant", "user", "assistant", "user"] and m3[-1]["content"] == chat[2]
         ok += 1
     with tempfile.TemporaryDirectory() as t3:
