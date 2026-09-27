@@ -1,4 +1,4 @@
-2026-09-27 02:42:04
+2026-09-27 02:44:18
 running:
 000-probe-zen-builder.running
 006-rd378k-gate3luna.running
@@ -10,9 +10,6 @@ y1t-luna-pilot-mac.running
 launched (no exit yet) / finished:
      786
 
-2026-09-27 01:07:57 zen cap: 2 non-GPU rungo5 builders running, holding 000-stop-lis320-fulloc-c1
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-2026-09-27 01:10:04 zen cap: 2 non-GPU rungo5 builders running, holding 000-stop-lis320-fulloc-c1
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 01:12:12 zen cap: 2 non-GPU rungo5 builders running, holding 000-stop-lis320-fulloc-c1
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
@@ -160,6 +157,9 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 02:41:56 pushed madeup-mu407-luna-mac
 2026-09-27 02:41:59 launch k1h-luna-full-mac
 2026-09-27 02:42:00 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8-mac
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 02:44:17 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8-mac
+2026-09-27 02:44:18 zen cap: 4 non-GPU rungo5 builders running, holding madeup-g406l-resume-mac
 
 diag:
 == 000-probe-zen-builder
@@ -176,11 +176,11 @@ diag:
 > build · muse-spark-1.3-contributor
 [0m
 == 006-rd378k-gate3luna
-95351 Sep 27 02:40 006-rd378k-gate3luna.go1.err.txt
+95899 Sep 27 02:44 006-rd378k-gate3luna.go1.err.txt
 829 Sep 27 02:38 006-rd378k-gate3luna.go1.reply.md
 [rd378k-teacher3] td-d08 ok
   PID  ELAPSED
-12201 02:14:48
+12201 02:18:45
 23
 [0m
 == 175-rv393-pencil-pc
@@ -208,10 +208,12 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 -rw-r--r--  1 ben-hannan  staff  133121 Sep 26 17:01 answers.jsonl
 [0m
 == k1h-luna-full-mac
-53 Sep 27 02:42 k1h-luna-full-mac.go1.err.txt
-0 Sep 27 02:41 k1h-luna-full-mac.go1.reply.md
-[0m
-> build · muse-spark-1.3-contributor-free
+25966 Sep 27 02:43 k1h-luna-full-mac.go1.err.txt
+240 Sep 27 02:43 k1h-luna-full-mac.go1.reply.md
+- Result lines owed:
+  - GLM's 240 answers exist and were not trained on;
+  - "near-copy rows removed by a blind Claude agent (hygiene only; N rows)";
+  - the errlike tries, as an upper bound on false route losses.
 [0m
 == y1t-luna-pilot-mac
 33929 Sep 27 02:38 y1t-luna-pilot-mac.go1.err.txt
@@ -223,23 +225,23 @@ D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.upTJmkoAyJ
 [0m
 top5cpu:
 %CPU COMM
-106.1 opencode
-86.2 fileproviderd
-57.0 Finder
-38.2 git
-33.6 WindowServer
+56.1 ApplicationsStorageExtension
+33.7 WindowServer
+30.8 bird
+22.5 fileproviderd
+16.8 bash
 procs:
-  363     1 03-14:29:01 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-14:28:09 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 5678  5650    02:33:43 SN   /usr/local/bin/opencode
-15699     1 03-12:43:27 S    /usr/bin/ssh-agent
-23786 23763       40:11 SN   /usr/local/bin/opencode
-44571 44570 01-05:05:05 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-05:05:05 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    10:19:38 SN   /usr/local/bin/opencode
-54273 54242       09:17 SN   /usr/local/bin/opencode
-59924 59857       04:43 SN   /usr/local/bin/opencode
-60494 59018    03:34:31 SN   /usr/local/bin/opencode
-60716   818       02:58 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-64555 64533       00:05 UN   /usr/local/bin/opencode
-81797     1 01-15:22:44 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 03-14:31:15 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-14:30:23 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 5678  5650    02:35:57 SN   /usr/local/bin/opencode
+15699     1 03-12:45:41 S    /usr/bin/ssh-agent
+23786 23763       42:25 SN   /usr/local/bin/opencode
+44571 44570 01-05:07:19 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-05:07:19 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    10:21:52 SN   /usr/local/bin/opencode
+54273 54242       11:31 SN   /usr/local/bin/opencode
+59924 59857       06:57 SN   /usr/local/bin/opencode
+60494 59018    03:36:45 SN   /usr/local/bin/opencode
+64555 64533       02:19 SN   /usr/local/bin/opencode
+65526   818       01:12 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+81797     1 01-15:24:58 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
