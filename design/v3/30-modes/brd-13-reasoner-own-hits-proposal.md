@@ -32,3 +32,12 @@ different goal (brd-12's DEV).
 ## Open, to settle with Sleep research first
 - Does the 358 reasoner's readout allow sampling several different tries (temperature on its answer logits)?
 - Does step (c) already include a positive-only (own hits) arm? If so, only H stays here, as an arm of their test.
+
+## Thread manager review (13:44 UTC by `date -u`), to meet before any marks
+1. Ownership first: if Sleep research's step (c) has an own-hits arm, H becomes an arm of their plan and they run it;
+   otherwise brd-13 runs here with their OK. Never both.
+2. No task labels (Ben 11:34): kind-free nets only (358u fixed-env checkpoints, as n3 will use, or in-run nets with
+   the env fixed); disclose which.
+3. Hindsight rules fixed in code before any run, including which cells become the relabelled grid's givens; report
+   how many relabelled items are trivially easy (for example, givens that already fix the square).
+4. Marks with a proved-wrong line and the placebo, sent to the Thread manager before sealing.
