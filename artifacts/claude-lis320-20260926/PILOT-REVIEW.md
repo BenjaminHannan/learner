@@ -67,3 +67,6 @@ Route: 60 of 60 parsed, 0 failed calls, rawcheck2 OK. Item 1: 404 of 425 kept, b
 0.0 (bar 0.12). Items 3-4 pass (shapes 94.8, write facts in long turns 0.328). Item 5: 0 of 20 kept labels wrong, 0 of
 20 correct_ref wrong; 20 of 20 drops judged over-drops; the texting reads tidy and padded with remarks about the message.
 Both registered responses and pilot 8 are in ADDENDUM-10-luna-pilot7-fixes.md.
+False-accept check for ADDENDUM-10's plan cues (06:04 UTC, Thread manager's ask): 0 non-plan turns change keep/drop on
+pilots 4-7 (plan cues are read only for plan turns); 10 plan turns newly kept, all plans. Details in
+ADDENDUM-10-NOTE-plan-cue-false-accepts.md.
