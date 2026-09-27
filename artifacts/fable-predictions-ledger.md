@@ -2704,3 +2704,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-27T17:36:55Z Director released rent-y1t-vast-p1b (cap $1.30, est $0.30-0.70; p1 spent $0.19) under Ben's 16:07 y1t cap $1.50 (cmsg_01FuvegZXjMmeUzStiEFVnEWKtUoppKEz4qLhjxNJUuAjm); TM OK 17:36.
 - 2026-09-27T18:23:27Z wrong-as-fact: y1t-H1 FAIL and proved wrong (trained doubt does not carry over to corrections: judged-wrong edit asks A 24 vs B 27, edit right 33 vs 25; decoy right 26 vs 29 and other judged wrong 33 vs 24 pass). Blind recount agrees (VERIFY-y1tH1.md).
 - 2026-09-27T18:35:43Z Director released rent-358t3-1b-start and rent358u-4-recopy on Ben's words 18:35 UTC (cmsg_01FuvegZXjMmeUzStiEFVnEWFkDKbcMK6Fxsxju8FGb41M), within his vast order ($4/job).
+- 2026-09-27T19:18:37Z Director released rent-k1fv-1-start (stop $1.50) on Ben's words 19:18 UTC (cmsg_01FuvegZXjMmeUzStiEFVnEWFoAVj1hSAzLAxNV2fJ6gQq); k1f-benspc2 superseded.
