@@ -11,7 +11,10 @@ t="$1"; m1="${2:-opencode/muse-spark-1.3-contributor-free}"; Q=$(dirname "$t"); 
 cd "$W"
 NET="unknown certificate verification error\|Cannot connect to API\|socket connection was closed\|ECONNRESET\|ETIMEDOUT\|fetch failed\|getaddrinfo\|network error\|Failed query\|database is locked\|Failed to execute statement"
 # DB lock errors (11:41: a long vacuum held the lock) are retried on the SAME model too, never by falling down the chain.
-nr=0
+nr=0; rr=0
+WAITNOTE="RUNNER NOTE (Director, 09-27): your builder model is rate-limited, so every tool call counts. To wait for a long background run, use ONE blocking command (e.g. while pgrep -f <exact script> >/dev/null; do sleep 60; done, capped under 75 min), never many short polls. Before starting any long run, check with pgrep that the same run is not already going (a previous agent may have started it).
+
+"
 set -- "$m1" opencode/mimo-v2.6-flash-free
 while [ $# -gt 0 ]; do
   m="$1"
@@ -24,13 +27,17 @@ while [ $# -gt 0 ]; do
   v=0; while pgrep -f "wal_checkpoint.TRUNCATE" > /dev/null && [ $v -lt 40 ]; do v=$((v+1)); sleep 15; done
   echo "$(date +%T) go$k $n $m" >> "$Q/log.txt"
   TT="mimo:$n.go$k.$$"
-  /usr/local/bin/opencode run --model "$m" --auto --dir "$W" --title "$TT" "$PRE$(cat "$t")" < /dev/null > "$Q/$n.go$k.reply.md" 2> "$Q/$n.go$k.err.txt"
+  /usr/local/bin/opencode run --model "$m" --auto --dir "$W" --title "$TT" "$PRE$WAITNOTE$(cat "$t")" < /dev/null > "$Q/$n.go$k.reply.md" 2> "$Q/$n.go$k.err.txt"
   rc=$?
   del_title "$TT"
   if [ "$rc" -gt 128 ] || [ -e "$Q/$n.stop" ]; then echo "$(date +%T) killed-go$k $n $m rc=$rc" >> "$Q/log.txt"; exit 2; fi
   if tail -5 "$Q/$n.go$k.err.txt" | sed 's/\x1b\[[0-9;]*m//g' | grep -q "$NET"; then
     if [ $nr -lt 6 ]; then nr=$((nr+1)); echo "$(date +%T) neterr-failed-go$k $n $m (resume $nr/6 in 120 s)" >> "$Q/log.txt"; sleep 120; continue; fi
     echo "$(date +%T) neterr-giveup-failed-go$k $n $m" >> "$Q/log.txt"; exit 4
+  fi
+  # free-model rate limit mid-task (006/008 agents died ~07:25 UTC 09-27 while their nohup'd Luna runs kept going): wait 10 min, resume on the SAME model with the RESUME NOTICE (it finds the running process), up to 6 times
+  if tail -5 "$Q/$n.go$k.err.txt" | sed 's/\x1b\[[0-9;]*m//g' | grep -q "Rate limit exceeded"; then
+    if [ $rr -lt 6 ]; then rr=$((rr+1)); echo "$(date +%T) ratelimit-failed-go$k $n $m (resume $rr/6 in 600 s)" >> "$Q/log.txt"; sleep 600; continue; fi
   fi
   # only the last 40 err lines count: agents print queue files whose WHY lines say "usage limit" (y1t-luna-pilot false fail, 07:16 UTC 09-27)
   if ! tail -n 40 "$Q/$n.go$k.err.txt" | grep -q "Rate limit exceeded\|usage limit\|Insufficient balance\|Failed to execute statement" && [ "$(wc -c < "$Q/$n.go$k.reply.md")" -gt 300 ]; then echo "$m" > "$Q/$n.go$k.done"; echo "$(date +%T) done-go$k $n $m" >> "$Q/log.txt"; exit 0; fi
