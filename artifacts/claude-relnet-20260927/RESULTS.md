@@ -131,9 +131,20 @@ not on the JSONs.
    instances are destroyed.
 8. **Where the commit goes.** The commit goes to main with no PR, as the handoff and the task prompt say.
 
-## CPU replication
-The first session's CPU runs (compiled, started 21:09 UTC) were not on main at 22:18 UTC. They are reported alongside
-when they finish, not chosen by score (GATE-PASSMARKS.md addendum).
+## CPU replication (stopped by Ben at 22:24 UTC, before the end; no gate score)
+The first session's CPU relation-net runs started at 21:09 UTC (compiled, 2 threads each). Ben stopped them at
+22:24 UTC, and they were ended by exact PID. The loop replication never started. The runs never reached step 6,000,
+so there is no gate-panel score. Their dev-panel checkpoints (learned stop):
+
+| relation net | step 1,500 | step 3,000 | step 4,500 |
+|---|---|---|---|
+| seed 0 | sums 0, grids 53 of 200 | 151, 190 | 200, 196 |
+| seed 1 | sums 6, grids 145 of 200 | 177, 196 | 196, 199 |
+
+Seed 0 stopped at step 4,500+ and seed 1 at step 5,000+. Shown: on CPU, the same recipe had brought the relation net
+to 196-200 of 200 on dev by step 4,500 in both seeds. This fits the GPU result, but it is not a replication of the
+gate. Logs: practice/relnet-s0.log and practice/relnet-s1.log. The eager runs that were restarted with torch.compile
+at 21:09 UTC are in practice/eager-stopped/.
 
 ## Next
 RACE-PASSMARKS.md from the few-example test chat (artifacts/claude-fewex-*/) was not on main at 22:18 UTC. Per the
