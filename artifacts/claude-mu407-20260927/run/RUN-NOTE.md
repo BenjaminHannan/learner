@@ -39,3 +39,7 @@
   - Arm U1 started at 07:47:40 UTC and was at 44 of 60 chats at 08:19 UTC. N follows. My estimate for the end of N
     is about 09:25 UTC.
 - Correction (08:24 UTC, date -u): the "Update 08:23 UTC" line above was typed ahead of the clock. It was committed at 08:22:42 UTC (a2b9585f3).
+- Update 08:44 UTC (date -u): arm U1 ended at 08:34:52 UTC, exit 0: 60 chats, 300 rows, median 7.1 s per turn. talk_U1.jsonl
+  and logU1.txt are committed now. Arm N started at 08:34:52 UTC and was at 12 of 60 at 08:44. The talk script's own
+  last line prints mu-405's substring count, and I saw it for U0 and U1. It is report-only and decides no mark. I have
+  read no reply.
