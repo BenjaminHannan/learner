@@ -47,3 +47,13 @@ Items 2-4 met (lowercase 0.994, missing-apostrophe 0.434, over 20 words 0.398, s
 0.529). Item 5 met: a fresh agent found 1 of 20 kept labels wrong ("her favorite food and mine too") and 1 of 9
 correct_ref wrong on casing only. 14 of 20 drops judged over-drops (report only). The change and pilot 6 are in
 ADDENDUM-8-group-check-narrowed.md.
+
+## Pilot 6 (seed 326, 60 dialogs, check_we2, 00:38-00:42 UTC 09-27, $0): PASS on every mark (checked 09-27 00:48 UTC)
+Route: 54 of 60 parsed (mark 54, met exactly), 0 failed calls, rawcheck OK (60 rows), 3.7 minutes. Item 1: 311 of 423
+kept (74%); lowest family ack_after_ask 12 of 20 (60%); correct_ref 17 of 21; someone_else 6 of 6. Items 2-4: lowercase
+1.0, missing-apostrophe 0.405, over 20 words 0.354, shapes 100, write facts in long turns 0.426. Item 5 (fresh agent,
+rng "lis320-pilot6-read"): 1 of 20 kept labels wrong (an "oh sure thing!" answer to a yes/no question labelled as a plain
+acknowledgement, not a yes); correct_ref 0 of 17 wrong, 0 casing. 10 of 20 drops judged over-drops (report only).
+Full run: handoff/queue/lis320-fulloc-c1-mac.md (seed 324, 6000 dialogs, glm_oclow, check_we2, at most 150 wording minutes
+per chunk). Each chunk pushes only its own new rows (full-oc/chunkK/raw.new.jsonl.gz, so no file is overwritten) and the
+next chunk rebuilds raw.jsonl from all earlier parts; chunk 2 onward is queued only after the chunk before it lands.
