@@ -1,6 +1,6 @@
 # Result status
 
-Written 2026-09-27T22:38:12Z. **No maze verdict yet.**
+Updated 2026-09-27T23:23:29Z. **No maze verdict yet.**
 
 **Shown:** the rank-eight patch net is built and the eight construction checks
 passed in fp32 on the local Apple GPU. Independent Sol recount agrees with the
@@ -8,19 +8,27 @@ weight inventory and 20 of 20 recorded nonzero matrix gradients. Total size is
 1,652,767 coefficients, 0.428% above our no-label loop, including the 4,096
 persistent A/B coefficients. See CHECKS.md and BLIND-RECOUNT.md.
 
-**Running:** the sealed wider-practice qualification pilot, followed automatically
-by two seeds of patch, ordinary loop, learning-to-learn loop, and plain only if
-qualification passes. Candidate kinds: sums, Latin grids, sorting, reversing,
-counting, bracket completion. Source commit: `fd250b3be`.
+**Shown:** the independent plain-loop qualification pilot passed all six sealed
+kinds: sums 300 of 300, grids 287 of 300, sorting 300 of 300, reversing 296 of
+300, counting 300 of 300, and bracket completion 300 of 300. No kind was dropped.
+A separate Sol subagent independently regraded all 1,800 raw predictions and
+matched the sealed counts and hashes (QUALIFICATION-RECOUNT.json). The
+qualification checkpoint is separate from every race contender.
+
+**Running:** two seeds of patch, ordinary loop, learning-to-learn loop, and
+plain on the same qualified curriculum. These eight arms must separately pass
+the sealed source and relative-retention gates. Source commit: `fd250b3be`.
 
 **Untested:** few-example maze advantage, keeping old kinds after maze supports,
 sleep absorption with the patch removed, and whether wider practice helps the
 loop. There is no trained inference-speed claim yet. No contender is promoted.
-The next test is the registered six-kind qualification gate, not a maze trial.
+The next test is the registered two-seed practice gate for all eight arms.
 
-The last pull and tracked-file check found no test-chat PROTOCOL.md or
-RACE-PASSMARKS.md committed to main. Do not run a race or invent its pass marks.
-No ADDENDUM-wide-practice.md has been committed against an absent protocol.
+The ruler protocol and marks subsequently arrived at `3acb5d18a`, with its
+pre-maze execution corrections at `93e9ccba2`. ADDENDUM-wide-practice.md records
+our wider source practice, unchanged Test A thresholds, and the user's local
+GPU requirement. The design race also requires the ruler to pass V1–V3.
+The plug-in and gated race driver are preparation, not maze results.
 
 ## Running and resuming
 

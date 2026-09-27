@@ -1,0 +1,18 @@
+{
+  "utc": "2026-09-27T23:23:29Z",
+  "scope": "Preparation only; no maze model execution",
+  "syntax_parse": [
+    "claude_patch_plugin.py",
+    "claude_patch_race.py",
+    "claude_patch_race_report.py",
+    "claude_patch_race_recount.py"
+  ],
+  "sol_reviews": {
+    "controller": "Independent review found nested dependency verification and one-shot holdout attempt issues; both corrected and independently confirmed.",
+    "report": "Synthetic aggregation checks; fixed-depth dictionary schema, inference deltas, final learner cumulative snapshots, replay memory representation.",
+    "plugin": "52 optimizer calls verified warmup without weight changes; mocked 512 sleep steps gave paired replay and 1536 independent round draws; synthetic CPU inference verified four additive telemetry events; old-puzzle gzip prediction smoke verified depth/phase/IDs; pure memory byte-count and cycle checks. No maze inputs.",
+    "blind_race_recount": "Six synthetic tests passed, including holdout IDs 1..12; independent raw qualification recount passed all six kinds."
+  },
+  "construction_evidence": "checks.json and BLIND-RECOUNT.json",
+  "race_executed": false
+}
