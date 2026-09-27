@@ -1,0 +1,311 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 13; echo "---"; git show origin/builder-outbox:artifacts/claude-stop-lis320c1-20260927/REPORT.md 2>&1 | head -n 20; echo "==="; git show origin/main:artifacts/claude-stop-lis320c1-20260927/REPORT.md 2>&1 | head -n 20
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+---
+fatal: path 'artifacts/claude-stop-lis320c1-20260927/REPORT.md' does not exist in 'origin/builder-outbox'
+===
+fatal: path 'artifacts/claude-stop-lis320c1-20260927/REPORT.md' does not exist in 'origin/main'
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/" 2>&1; echo "---"; date -u; uptime; df -g / 2>&1 | head
+OPUS-RULES.txt
+---
+Sun Sep 27 05:14:31 UTC 2026
+ 1:14  up 3 days, 15:07, 4 users, load averages: 45.44 29.29 34.89
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        33    28%  484014 356076320    0%   /
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mdate -u; touch ~/premonition-watch/queue/lis320-fulloc-c1-mac.stop; ls -l ~/premonition-watch/queue/lis320-fulloc-c1-mac.stop; git fetch -q origin main 2>&1 | head; echo FETCH-DONE
+Sun Sep 27 05:14:42 UTC 2026
+-rw-r--r--  1 ben-hannan  staff  0 Sep 27 01:14 /Users/ben-hannan/premonition-watch/queue/lis320-fulloc-c1-mac.stop
+FETCH-DONE
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import subprocess, re
+out = subprocess.run(['/bin/ps','-axo','pid,ppid,etime,command'], capture_output=True, text=True).stdout.splitlines()
+# find launcher
+for line in out[1:]:
+    if re.search(r'rungo[45]\.sh', line) and 'lis320-fulloc-c1-mac.md' in line:
+        parts = line.strip().split(None, 3)
+        print('LAUNCHER', parts[0], parts[1], parts[2])
+for line in out[1:]:
+    if 'mimo:lis320-fulloc-c1-mac.go' in line:
+        parts = line.strip().split(None, 3)
+        # extract title word
+        m = re.search(r'--title\s+(\S+)', line)
+        tag = m.group(1) if m else 'NOTITLE'
+        print('AGENT', parts[0], parts[1], parts[2], tag)
+for line in out[1:]:
+    if 'claude_lis320_glm_oclow.py' in line and '--seeds' in line:
+        parts = line.strip().split(None, 3)
+        cmd = parts[3] if len(parts)>3 else ''
+        # classify python vs other
+        first = cmd.strip().split()[0] if cmd.strip() else ''
+        ispy = 'PYTHON' if (first.endswith('python3.12') or first.endswith('python3') or first.endswith('/python3.12') or re.match(r'.*python3(\.\d+)?$', first)) else 'WRAPPER'
+        # also detect shell: if starts with bash/sh
+        if first.endswith('bash') or first.endswith('sh') or first.startswith('-'):
+            ispy='SHELL'
+        print(ispy, parts[0], parts[1], parts[2])
+"
+
+LAUNCHER 10084 10082 04:26:01
+LAUNCHER 31140 31107 00:30
+AGENT 10114 10084 04:26:01 mimo:lis320-fulloc-c1-mac.go1.10084
+AGENT 31140 31107 00:30 mimo:000-stop-lis320-fulloc-c1.go1.31107
+AGENT 32627 31140 00:00 NOTITLE
+WRAPPER 10114 10084 04:26:01
+WRAPPER 31140 31107 00:30
+WRAPPER 32627 31140 00:00
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import subprocess, re
+out = subprocess.run(['/bin/ps','-axo','pid,ppid,etime,command'], capture_output=True, text=True).stdout.splitlines()
+for line in out[1:]:
+    parts = line.strip().split(None, 3)
+    if len(parts)<4: continue
+    pid, ppid, etime, cmd = parts
+    # launcher: bash ... rungo4/5.sh ... queue/lis320-fulloc-c1-mac.md  (exact job file)
+    if re.search(r'rungo[45]\.sh', cmd) and 'queue/lis320-fulloc-c1-mac.md' in cmd:
+        # extract rungo script + queue file token only
+        m1 = re.search(r'(rungo[45]\.sh)', cmd)
+        m2 = re.search(r'queue/(lis320-fulloc-c1-mac\.md)', cmd)
+        # check if this is the stop job itself? stop job queue file would be different; also check exact match token
+        print('LAUNCHER_CAND', pid, ppid, etime, (m1.group(1) if m1 else '?'))
+    # agent: --title starts with mimo:lis320-fulloc-c1-mac.go
+    m = re.search(r'--title\s+(\S+)', cmd)
+    if m and m.group(1).startswith('mimo:lis320-fulloc-c1-mac.go'):
+        print('AGENT_MATCH', pid, ppid, etime, m.group(1))
+"
+
+LAUNCHER_CAND 10084 10082 04:26:24 rungo4.sh
+AGENT_MATCH 10114 10084 04:26:24 mimo:lis320-fulloc-c1-mac.go1.10084
+LAUNCHER_CAND 31140 31107 00:53 rungo4.sh
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import subprocess, re
+out = subprocess.run(['/bin/ps','-axo','pid,ppid,etime,command'], capture_output=True, text=True).stdout.splitlines()
+for line in out[1:]:
+    parts = line.strip().split(None, 3)
+    if len(parts)<4: continue
+    pid, ppid, etime, cmd = parts
+    if 'claude_lis320_glm_oclow.py' in cmd and '--seeds' in cmd:
+        # exclude opencode run lines (agent command embeds task text)
+        if cmd.strip().startswith('/usr/local/bin/opencode run'):
+            continue
+        if 'opencode run' in cmd and '--title' in cmd:
+            continue
+        first = cmd.strip().split()[0]
+        print('B_CAND', pid, ppid, etime, 'firsttok_tail='+first[-30:])
+"
+
+(no output)
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import subprocess, re
+out = subprocess.run(['/bin/ps','-axo','pid,ppid,etime,command'], capture_output=True, text=True).stdout.splitlines()
+count=0
+for line in out[1:]:
+    parts = line.strip().split(None, 3)
+    if len(parts)<4: continue
+    pid, ppid, etime, cmd = parts
+    if 'claude_lis320_glm_oclow' in cmd:
+        first = cmd.strip().split()[0][-40:]
+        has_seeds = '--seeds' in cmd
+        is_opencode = 'opencode' in cmd[:80]
+        print('CAND', pid, ppid, etime, 'seeds='+str(has_seeds), 'isopencode='+str(is_opencode), 'first='+first)
+        count+=1
+print('TOTAL', count)
+"
+
+CAND 10114 10084 04:26:33 seeds=True isopencode=True first=/usr/local/bin/opencode
+CAND 31140 31107 01:02 seeds=True isopencode=True first=/usr/local/bin/opencode
+CAND 32756 31140 00:00 seeds=True isopencode=False first=sources/Python.app/Contents/MacOS/Python
+TOTAL 3
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import subprocess, re
+out = subprocess.run(['/bin/ps','-axo','pid,ppid,etime,command'], capture_output=True, text=True).stdout.splitlines()
+rows={}
+for line in out[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    rows[pid]=(ppid,etime,cmd)
+def kids(ppid):
+    return [p for p,(q,e,c) in rows.items() if q==ppid]
+for pid in ['10082','10084','10114','31107','31140']:
+    print('PID',pid,'kids=',kids(pid))
+    for k in kids(pid):
+        ppid,etime,cmd=rows[k]
+        # safe summary: first token + title if present
+        import re as R
+        m=R.search(r'--title\s+(\S+)',cmd)
+        title=m.group(1) if m else '-'
+        first=cmd.strip().split()[0][-30:] if cmd.strip() else '-'
+        print('  child',k,'etime',etime,'first',first,'title',title)
+"
+
+PID 10082 kids= ['10084']
+  child 10084 etime 04:26:41 first bash title -
+PID 10084 kids= ['10114']
+  child 10114 etime 04:26:41 first /usr/local/bin/opencode title mimo:lis320-fulloc-c1-mac.go1.10084
+PID 10114 kids= []
+PID 31107 kids= ['31140']
+  child 31140 etime 01:10 first /usr/local/bin/opencode title mimo:000-stop-lis320-fulloc-c1.go1.31107
+PID 31140 kids= ['32790']
+  child 32790 etime 00:00 first thon.app/Contents/MacOS/Python title -
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import subprocess, re
+out = subprocess.run(['/bin/ps','-axo','pid,ppid,etime,command'], capture_output=True, text=True).stdout.splitlines()
+for line in out[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    m=re.search(r'--title\s+(glm11-[0-9a-f]{32})',cmd)
+    if m:
+        print('GLM_TAG', pid, ppid, etime, m.group(1))
+print('DONE')
+# also check any lis320-fulloc-c1-mac string in non-opencode-title context
+for line in out[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    if 'lis320-fulloc-c1-mac' in cmd:
+        # safe: show first token + title if any
+        mm=re.search(r'--title\s+(\S+)',cmd)
+        title=mm.group(1) if mm else '-'
+        first=cmd.strip().split()[0][-30:]
+        # only print if not the two known agents/launchers to see others
+        if pid not in ('10084','10114','31140'):
+            print('OTHER_LIS', pid, ppid, etime, first, title)
+print('DONE2')
+"
+
+DONE
+OTHER_LIS 32822 31140 00:00 thon.app/Contents/MacOS/Python -
+DONE2
+[0m
+[0m$ [0mkill 10114; echo "kill exit=$?"; /bin/ps -o pid,ppid,etime,command -p 10114 2>&1 | cut -c1-120
+kill exit=0
+  PID  PPID  ELAPSED COMMAND
+10114 10084 04:26:58 (opencode)
+[0m
+[0m$ [0msleep 10; /bin/ps -o pid,ppid,etime,stat,command -p 10114 2>&1 | cut -c1-150; echo "---check done---"
+PID  PPID ELAPSED STAT COMMAND
+---check done---
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import subprocess, re
+out = subprocess.run(['/bin/ps','-axo','pid,ppid,etime,command'], capture_output=True, text=True).stdout.splitlines()
+found=False
+for line in out[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    m=re.search(r'--title\s+(\S+)',cmd)
+    if m and m.group(1).startswith('mimo:lis320-fulloc-c1-mac.go'):
+        print('STILL_AGENT', pid, ppid, etime, m.group(1))
+        found=True
+if not found:
+    print('NO_TARGET_AGENT')
+# launcher check
+for line in out[1:]:
+    if 'rungo4.sh' in line and 'lis320-fulloc-c1-mac.md' in line:
+        parts=line.strip().split(None,3)
+        print('LAUNCHER_LINE', parts[0], parts[1], parts[2])
+"
+
+NO_TARGET_AGENT
+LAUNCHER_LINE 31140 31107 01:44
+LAUNCHER_LINE 32945 31140 00:01
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import subprocess, re
+out = subprocess.run(['/bin/ps','-axo','pid,ppid,etime,command'], capture_output=True, text=True).stdout.splitlines()
+for line in out[1:]:
+    parts=line.strip().split(None,3)
+    if len(parts)<4: continue
+    pid,ppid,etime,cmd=parts
+    first=cmd.strip().split()[0]
+    if ('bash' in first or 'rungo' in cmd[:120]) and re.search(r'rungo[45]\.sh',cmd):
+        m=re.search(r'--title\s+(\S+)',cmd)
+        title=m.group(1) if m else '-'
+        # extract queue arg token: something ending .md
+        mq=re.findall(r'\S+\.md\b',cmd)
+        print('RUNGOLINE', pid, ppid, etime, first[-20:], mq[:3])
+"
+pgrep -f "rungo[45].sh .*lis320-fulloc-c1-mac.md"; echo "pgrep_exit=$?"
+RUNGOLINE 5650 5648 01:07:52 bash ['/Users/ben-hannan/premonition-watch/queue/006-rd378k-gate3luna.md']
+RUNGOLINE 26426 26424 14:40 bash ['/Users/ben-hannan/premonition-watch/queue/007-rd378g-writeluna.md']
+RUNGOLINE 31107 31105 01:53 bash ['/Users/ben-hannan/premonition-watch/queue/000-stop-lis320-fulloc-c1.md']
+RUNGOLINE 31899 31897 01:47 bash ['/Users/ben-hannan/premonition-watch/queue/k1h-luna-pilot-mac.md']
+RUNGOLINE 46711 46709 08:53:48 bash ['/Users/ben-hannan/premonition-watch/queue/k1h-glm2.md']
+RUNGOLINE 59018 59016 02:09:50 bash ['/Users/ben-hannan/premonition-watch/queue/000-probe-zen-builder.md']
+RUNGOLINE 76315 76312 01:49:51 bash ['/Users/ben-hannan/premonition-watch/queue/151-fixsleep-dl9pc-b.md']
+pgrep_exit=1
+[0m
+[0m$ [0mdate -u; pgrep -f "rungo[45].sh .*lis320-fulloc-c1-mac.md"; echo "pgrep_exit=$?"; ls artifacts/claude-stop-lis320c1-20260927/ 2>&1
+Sun Sep 27 05:16:19 UTC 2026
+pgrep_exit=1
+ls: artifacts/claude-stop-lis320c1-20260927/: No such file or directory
+[0m
+[0m$ [0mls artifacts 2>&1 | head -n 30; echo "---"; ls ~/premonition-watch/queue/lis320-fulloc-c1-mac.stop
+claude-adapters-20260926d
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm391-20260926
+claude-bm395-20260925
+claude-bm397t-20260926
+claude-bm398e-20260926
+claude-bm398i-20260926
+claude-bm398r-20260926
+claude-bmriv-smoke-20260926
+claude-boundary259-20260922
+claude-brd5-20260926
+claude-brd6-20260926
+claude-brd7-20260926
+claude-brd8-20260926
+claude-brd8w-20260926
+claude-brd9-20260926
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+---
+/Users/ben-hannan/premonition-watch/queue/lis320-fulloc-c1-mac.stop
+[0m
+[0m$ [0mmkdir -p artifacts/claude-stop-lis320c1-20260927 && ls -ld artifacts/claude-stop-lis320c1-20260927
+drwxr-xr-x  2 ben-hannan  staff  64 Sep 27 01:16 artifacts/claude-stop-lis320c1-20260927
+[0m
+[0m← [0mWrite artifacts/claude-stop-lis320c1-20260927/REPORT.md
+Wrote file successfully.
+[0m
+[0m$ [0mls -l artifacts/claude-stop-lis320c1-20260927/REPORT.md; pgrep -f "rungo[45].sh .*lis320-fulloc-c1-mac.md"; echo "pgrep_exit=$?"
+-rw-r--r--  1 ben-hannan  staff  619 Sep 27 01:16 artifacts/claude-stop-lis320c1-20260927/REPORT.md
+pgrep_exit=1
+[0m

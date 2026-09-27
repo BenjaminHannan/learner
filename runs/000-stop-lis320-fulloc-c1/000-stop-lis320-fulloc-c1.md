@@ -1,0 +1,20 @@
+COMMON RULES: follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md. The "Fix: reading facts from chat" thread (Claude, owner of the job) wrote this task on 2026-09-27. Report in your final reply: verdict first, integer counts.
+GPU: no. This task stops one stuck Mac job by exact PID and deletes the opencode sessions of the GLM calls it cuts off. No GPU, no model call, no rental.
+DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-stop-lis320c1-20260927/REPORT.md.
+
+YOUR TASK: stop lis320-fulloc-c1-mac. Ben's opencode Go plan hit its limit at about 00:57 UTC, the job's GLM wording step was cut off by its shell at about 03:24 UTC, and it has been stuck since. Its owner has written it off: no output of it will be used (artifacts/claude-lis320-20260926/full-oc/RUN-NOTE-chunk1.md). Never read, print or copy any opencode config, auth file or key. Never read or print any log line, output file or full command line of this job. Report PIDs, elapsed times, roles and --title tags only.
+1. `date -u`. `touch ~/premonition-watch/queue/lis320-fulloc-c1-mac.stop` (so its launcher ends without falling back to another model). Run `ps -axo pid,ppid,etime,command` and find:
+   (a) the launcher `bash .../handoff/kit/mimo/rungo4.sh .../queue/lis320-fulloc-c1-mac.md` (or rungo5.sh), which is never killed. Its child is the job's agent: the `opencode run` whose --title starts with `mimo:lis320-fulloc-c1-mac.go`. The job is that agent with all its descendants, plus any orphaned chain up to PID 1 (PID 1 excluded) from the processes in (b).
+   (b) the processes whose command contains claude_lis320_glm_oclow.py together with `--seeds`. There may be a shell, a uv wrapper and the python. "The python" is the one whose command begins with a path ending in python3.12 or python3. None is also possible, if the python already ended.
+   (c) each python's children (`pgrep -P <python PID>`) whose command starts with `/usr/local/bin/opencode run`. For each, record only the word after `--title` (glm11- followed by 32 hex characters), and record the python's working directory from `lsof -a -p PID -d cwd` (path only).
+2. Stop the job, by exact PID only: `kill` the agent first, then the opencode children from 1(c), then the python, its uv wrapper and shell, then any other process of the job. Wait 10 s, then `kill -9` any of those PIDs still alive. Never kill a rungo4.sh or rungo5.sh launcher, the watcher, any other job's processes (anything with claude_luna_codex.py, claude_lis320_luna.py, lis320-pilot7 or any other job name included), or anything on BensPC. If the job has no agent and no python left, report NOT-RUNNING.
+3. For each tag from 1(c): cd to that python's cwd (it contains scripts/claude_glm_opencode_v11.py) and run `uv run --offline --no-project --python 3.12 python -B -c "import sys; sys.path.insert(0, 'scripts'); import claude_glm_opencode_v11 as H; d = H._project_dir(); ids = H._ids_with_title(d, sys.argv[1]); H._delete_sessions(d, ids); print(len(ids), len(H._ids_with_title(d, sys.argv[1])))" TAG`. Report the two numbers (found, left) per tag. If the cwd is gone, report "cwd gone". Delete nothing else.
+4. Wait up to 60 s and check `pgrep -f "rungo[45].sh .*lis320-fulloc-c1-mac.md"`: report EMPTY or the PID still there (never kill it).
+5. The job's temp tree (a `mktemp -d` directory whose path ends in the python's cwd, if you found one) holds no output anyone will use: if you found that cwd and it is under the system temp folder (/var/folders/... or /tmp/...), `rm -rf` that exact path and confirm it is gone; otherwise leave it and say so.
+6. `date -u`. Write artifacts/claude-stop-lis320c1-20260927/REPORT.md with only:
+   - one line: STOPPED or NOT-RUNNING;
+   - the PIDs killed with their roles and elapsed times, and the kill -9 count;
+   - the tags with their found/left numbers;
+   - the step 4 and step 5 results and both `date -u` lines.
+PUSH: artifacts/claude-stop-lis320c1-20260927/REPORT.md
+DISK: 0
