@@ -21,3 +21,4 @@
   3. The 8 lookalikes that hold a square by read_latin are reported for L6 and G5 only (read as a square, same grid,
      none; PASSMARKS-gr6), and they are counted nowhere else. R2 is on the other 52.
 - 2026-09-27T02:30:35Z: training is still running (STEP train at 01:30:08Z; about 2 hours expected).
+- 2026-09-27T03:22:17Z: training finished (111.8 minutes; 1072 rows x 3 epochs; mean loss by epoch 0.1586, 0.0124, 0.0062; adapter sha256 54feb2fd..., 16568343 bytes, kept off git). The dev step started at 03:22:09Z.
