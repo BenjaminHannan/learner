@@ -26,6 +26,8 @@ st "SEAL 19/19"
 grep -q '^selftest ok: 3x arms' W/checks.txt && grep -q '^check-mask ok' W/checks.txt || fail "selftest/check-mask (see W/checks.txt)"
 st CHECKS-OK
 for R in $ORDER; do { [ -e W/$R ] || [ -e W/$R.log ]; } && fail "$R already exists"; done
+( while :; do echo "$(date -u +%T) $(nvidia-smi --query-compute-apps=pid,used_memory --format=csv,noheader 2>/dev/null | tr '\n' ';')" >> /root/r/gpumem.live; sleep 60; done ) &
+MON=$!   # per-process GPU memory every minute, so the next kit uses measured per-run memory
 pids=""
 for R in $ORDER; do arm=${R%-s*}; s=${R##*-s}
   w=0; while [ "$(freemb)" -lt 5120 ] 2>/dev/null; do [ $w = 0 ] && st "WAIT $R: $(freemb) MiB free"; w=1; sleep 60; done
@@ -38,4 +40,5 @@ for R in $ORDER; do
 ev() { python -B scripts/claude_rsn358s_run.py eval --ckpt W/$1/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/$1/tests.json > W/$1.eval.log 2>&1; st "EVAL $1 rc $?"; }
 epids=""; for R in $ORDER; do grep -q " $R/final.pt\$" W/SEAL-run.sha256.txt 2>/dev/null && { ev $R & epids="$epids $!"; }; done
 for p in $epids; do wait $p; done
+kill $MON 2>/dev/null; cp /root/r/gpumem.live W/gpumem.log 2>/dev/null
 st DONE

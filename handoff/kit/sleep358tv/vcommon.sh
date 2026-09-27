@@ -21,9 +21,13 @@ MINRAM_GB=24
 QUERY="num_gpus=1 gpu_ram>=$MINRAM_GB compute_cap>=800 reliability>=0.98 disk_space>=40 cpu_cores_effective>=16 cuda_max_good>=12.8 inet_down>=200 rentable=true"
 TF5090=104.8      # vast's listed TFLOPS for an RTX 5090 (the card the time cap was set for); logged beside the chosen card's
 MAXDPH=0.65       # dollars per hour: offers above this are skipped (about 2 h must fit under the $1.45 stop)
-CAP_STOP=1.45     # dollars, all rentals of this task together: copy back, destroy, BUDGET-STOP (cap $1.60)
-BASE_TIME=12600   # seconds from the first rental on a 5090 (3 h 30 min); vstart scales it by 5090 TFLOPS / chosen TFLOPS (never below 1x)
-TIME_CAP=$BASE_TIME
+CAP_STOP=2.40     # dollars, all rentals of this task together: copy back, destroy, BUDGET-STOP (cap $2.80; raised from $1.45 under Ben's $4-per-job order so that 24 GB cards (2 waves) can fit)
+BASE_H=2.0       # estimated hours on a 5090: 2 h on a 5090 for all 8 runs in 1 wave plus evals: 358i trained 8 runs at once on a 5090 in 75 min
+RUNS=8; RUN_GB=3; FREE_GB=5   # runs start only while 5 GB is free, so a card holds min(8, floor((GB - 5) / 3) + 1) at once (per-run GB inferred)
+FIT=0.8           # an offer is used only if its estimated hours x $/h <= 0.8 x CAP_STOP (the Thread manager, 14:19 UTC)
+# estimate for a card = BASE_H x max(1, 5090 TFLOPS / card TFLOPS) x (its waves / a 5090's waves), waves = ceil(8 / at once);
+# the guard's time cap is 1.5 x that estimate, so the money stop (>= 1.25 x the estimate by the fit check) never comes first
+TIME_CAP=$(awk -v b="$BASE_H" 'BEGIN{printf "%d", b*1.5*3600}')
 ORDER="loop-trm-s1 loop8-s1 loop-trm-s2 loop8-s2 loop-trm-s3 loop8-s3 loop-trm-s4 loop8-s4"   # graded only; loop8-trm (report only) is not run on the rental
 CKPTS="final.pt final-ema.pt"
 EXPECT="train_log.jsonl train_summary.json tests.json tests-ema.json"   # files every run that did not die must bring back

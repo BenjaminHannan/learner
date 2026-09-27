@@ -31,6 +31,8 @@ python -B scripts/claude_stage0_autocast_grad.py > W/stage0.txt 2>&1
 grep '^loop  free=3 grad=2 cache=False' W/stage0.txt | grep -q ' 0/12$' || fail "FIX-FAILS: Stage 0 cache-off line is not 0/12 (see W/stage0.txt)"
 st STAGE0-OK
 for R in $ORDER; do { [ -e W/$R ] || [ -e W/$R.log ]; } && fail "$R already exists"; done
+( while :; do echo "$(date -u +%T) $(nvidia-smi --query-compute-apps=pid,used_memory --format=csv,noheader 2>/dev/null | tr '\n' ';')" >> /root/r/gpumem.live; sleep 60; done ) &
+MON=$!   # per-process GPU memory every minute, so the next kit uses measured per-run memory
 pids=""
 for R in $ORDER; do arm=${R%-s*}; s=${R##*-s}
   w=0; while [ "$(freemb)" -lt 5120 ] 2>/dev/null; do [ $w = 0 ] && st "WAIT $R: $(freemb) MiB free"; w=1; sleep 60; done
@@ -45,4 +47,5 @@ ev() { python -B scripts/claude_rsn358t3_run.py eval --ckpt W/$1/final.pt --test
        python -B scripts/claude_rsn358t3_run.py eval --ckpt W/$1/final-ema.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/$1/tests-ema.json > W/$1.eval-ema.log 2>&1; st "EVAL $1 ema rc $?"; }
 epids=""; for R in $ORDER; do [ -f W/$R/final-ema.pt ] && grep -q " $R/final.pt\$" W/SEAL-run.sha256.txt && { ev $R & epids="$epids $!"; }; done
 for p in $epids; do wait $p; done
+kill $MON 2>/dev/null; cp /root/r/gpumem.live W/gpumem.log 2>/dev/null
 st DONE

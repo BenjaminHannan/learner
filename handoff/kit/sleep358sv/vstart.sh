@@ -32,16 +32,20 @@ over "${CR:-0}" 4 || { log "STOP: credit \$${CR:-?} is under the \$4 cap; nothin
 OFFERS=$($VAST search offers "$QUERY" -o dph --raw < /dev/null 2>/dev/null | $PYJ 'import json,sys
 d=json.load(sys.stdin); d=d.get("offers",d) if isinstance(d,dict) else d
 ok=[o for o in d if o.get("dph_total") and o.get("total_flops") and float(o["dph_total"]) <= '"$MAXDPH"' and (o.get("gpu_ram") or 0) >= '"$MINRAM_GB"'*1000]
+def waves(gb): return -(-'"$RUNS"' // min('"$RUNS"', int((gb - '"$FREE_GB"') // '"$RUN_GB"') + 1))
+w5090 = waves(32.6)
+def est(o): return '"$BASE_H"' * max(1.0, '"$TF5090"' / float(o["total_flops"])) * waves((o.get("gpu_ram") or 0) / 1000) / w5090
+ok=[o for o in ok if est(o) * float(o["dph_total"]) <= '"$FIT"' * '"$CAP_STOP"']
 ok.sort(key=lambda o: -float(o["total_flops"]) / float(o["dph_total"]))
 seen=set()
 for o in ok:
     if o.get("host_id") in seen: continue
     seen.add(o.get("host_id"))
-    print(o["id"], round(o["dph_total"],3), o.get("cpu_cores_effective"), o.get("host_id"), str(o.get("gpu_name","?")).replace(" ","_"), round(float(o["total_flops"]),1), round((o.get("gpu_ram") or 0)/1000))' | head -3)
-echo "offers, best TFLOPS per \$/h first (id \$/h cores host gpu TFLOPS GB):"; echo "$OFFERS"
+    print(o["id"], round(o["dph_total"],3), o.get("cpu_cores_effective"), o.get("host_id"), str(o.get("gpu_name","?")).replace(" ","_"), round(float(o["total_flops"]),1), round((o.get("gpu_ram") or 0)/1000), waves((o.get("gpu_ram") or 0)/1000), round(est(o),2))' | head -3)
+echo "offers, best TFLOPS per \$/h first (id \$/h cores host gpu TFLOPS GB waves est_hours):"; echo "$OFFERS"
 [ -n "$OFFERS" ] || { log "STOP: no offer at or under \$$MAXDPH/h with >= $MINRAM_GB GB matches ($QUERY); nothing rented"; exit 0; }
 ID=""; n=0; : > "$G/rentals.txt"   # from here on a rerun of this start is refused (DUPLICATE)
-while read -r OID DPH CORES HID GPU TF RAM; do
+while read -r OID DPH CORES HID GPU TF RAM WV EST; do
   n=$((n+1)); over "$(spent)" "$CAP_STOP" && break
   out=$($VAST create instance "$OID" --image "$IMAGE" --disk 40 --label "$LABEL" --ssh --direct --raw < /dev/null 2>&1)
   I=$(echo "$out" | $PYJ 'import json,sys; print(json.load(sys.stdin).get("new_contract") or "")' 2>/dev/null)
@@ -61,9 +65,9 @@ while read -r OID DPH CORES HID GPU TF RAM; do
   want=$(git show "$PIN:handoff/kit/sleep358sv/box/drive.sh" | shasum -a 256 | awk '{print $1}')
   got=$($SS "sha256sum /root/r/handoff/kit/sleep358sv/box/drive.sh" < /dev/null 2>/dev/null | awk '{print $1}')
   [ "$want" = "$got" ] || { log "rental $n: drive.sh on the rental ($got) does not match $PIN ($want)"; destroy "$I"; continue; }
-  $SS "cd /root/r && setsid nohup bash handoff/kit/sleep358sv/box/drive.sh > /root/r/drive.log 2>&1 < /dev/null & echo launched" < /dev/null 2>> "$G/log.txt"
-  TC=$(awk -v b="$BASE_TIME" -v r="$TF5090" -v t="$TF" 'BEGIN{x=r/t; if (x<1) x=1; printf "%d", b*x}')
-  ID=$I; echo "$I $H $P $TC" > "$G/state"; log "time cap $TC s (5090 $TF5090 / $GPU $TF TFLOPS, never below 1x); money stop \$$CAP_STOP"; break
+  $SS "cd /root/r && { setsid nohup bash handoff/kit/sleep358sv/box/drive.sh > /root/r/drive.log 2>&1 < /dev/null & } ; echo launched" < /dev/null 2>> "$G/log.txt"
+  TC=$(awk -v e="$EST" 'BEGIN{printf "%d", e*1.5*3600}')
+  ID=$I; echo "$I $H $P $TC" > "$G/state"; log "estimate $EST h ($WV waves at $RAM GB; 5090 $TF5090 / $GPU $TF TFLOPS, never below 1x); time cap $TC s (1.5x); money stop \$$CAP_STOP"; break
 done <<EOF
 $OFFERS
 EOF

@@ -22,8 +22,12 @@ QUERY="num_gpus=1 gpu_ram>=$MINRAM_GB compute_cap>=800 reliability>=0.98 disk_sp
 TF5090=104.8      # vast's listed TFLOPS for an RTX 5090 (the card the time cap was set for); logged beside the chosen card's
 MAXDPH=0.60       # dollars per hour: offers above this are skipped (about 3.5-4 h on a 5090 must fit well under the $3.60 stop)
 CAP_STOP=3.60     # dollars, all rentals of this task together: copy back, destroy, BUDGET-STOP (cap $4, the Director's per-job cap)
-BASE_TIME=21600   # seconds from the first rental on a 5090 (6 h); vstart scales it by 5090 TFLOPS / chosen TFLOPS (never below 1x)
-TIME_CAP=$BASE_TIME
+BASE_H=4.0       # estimated hours on a 5090: 4 h on a 5090 for all 8 runs (6 at once there, so 2 waves) plus evals: BensPC ran 3x runs 3 at a time in 127-150 min each, and a 5090 has about twice a 5070 Ti's TFLOPS (inferred, not measured on vast)
+RUNS=8; RUN_GB=5; FREE_GB=5   # runs start only while 5 GB is free, so a card holds min(8, floor((GB - 5) / 5) + 1) at once (per-run GB inferred)
+FIT=0.8           # an offer is used only if its estimated hours x $/h <= 0.8 x CAP_STOP (the Thread manager, 14:19 UTC)
+# estimate for a card = BASE_H x max(1, 5090 TFLOPS / card TFLOPS) x (its waves / a 5090's waves), waves = ceil(8 / at once);
+# the guard's time cap is 1.5 x that estimate, so the money stop (>= 1.25 x the estimate by the fit check) never comes first
+TIME_CAP=$(awk -v b="$BASE_H" 'BEGIN{printf "%d", b*1.5*3600}')
 ORDER="loop-s9 plain-s9 loop-s10 plain-s10 loop-s11 plain-s11 loop-s12 plain-s12"   # the sealed order; all 8 rerun on the one card
 CKPTS="final.pt"
 EXPECT="train_log.jsonl train_summary.json tests.json"   # files every run that did not die must bring back
