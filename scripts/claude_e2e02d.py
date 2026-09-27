@@ -16,7 +16,7 @@ Ben's design, one path on every user turn:
   reasoner  the rsn-358b3 loop net. The grid reaches it through the disclosed code reader read_latin (P1; gr-1, the
             learned reader, is owed), and it stops by its disclosed stop rule (P3). Code checks the net's square against
             the square it read. The result goes to the talker as input; the reasoner never writes the reply.
-  talker    plain MiniCPM5-1B, greedy, enable_thinking off, the 336 plain twin's system line. The W input (mu-405's W
+  talker    plain LFM2.5-1.2B-Instruct (TALKER02D; ADDENDUM-51, Ben 19:27 UTC; was MiniCPM5-1B), greedy, enable_thinking off, the 336 plain twin's system line. The W input (mu-405's W
             arm: y1f's L1 header and 'User said' lines, but placed in the SYSTEM message, not in the user message as
             y1f's L1 does, and with no QA prompt; mu-405 V405b: 4 of 60 stored-fact asks answered in this form;
             placement follows mu-405b, ADDENDUM-35) is on every turn: every earlier user turn, oldest first, when they fit in
@@ -75,6 +75,7 @@ if str(SCRIPTS) not in sys.path:
 READER_SHA02D = ""       # sha256 of lis-320's merged model.safetensors
 REASONER02D = ""         # 358b3's sealed loop-net checkpoint path (relative to the repo root)
 LEGEND02D = True         # 358b3's input form (358i nets read a legend row)
+TALKER02D = "LFM2.5-1.2B-Instruct@0f604ada3f766f9f257460c4c9f0b5d6f69d431b"  # --gen-model must be this snapshot (ADDENDUM-51)
 SLEEP02D = ""            # the reasoner's slept checkpoint from the H-B recipe (ADDENDUM-46); "" = sleep off (row B's control arm)
 DOUBT02D = ""            # "y1t" or "y1g" (ADDENDUM-24); "" = none (DEV only)
 # ---- fixed settings ----
@@ -198,7 +199,7 @@ class Talker:
 
 def talker_for(model_dir: str):
     if not model_dir:
-        raise SystemExit("0.2d: --gen-model (plain MiniCPM5-1B) is required")
+        raise SystemExit(f"0.2d: --gen-model (the talker, {TALKER02D}) is required")
     if ("talker", model_dir) not in _CACHE:
         _CACHE[("talker", model_dir)] = Talker(model_dir)
     return _CACHE[("talker", model_dir)]
