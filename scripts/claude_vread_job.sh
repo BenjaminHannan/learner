@@ -30,7 +30,7 @@ echo "pack files ok: $(wc -l < checks/pack_files.txt)"
 python -c "import torch,sys;print('python',sys.version.split()[0],'torch',torch.__version__,torch.version.cuda,torch.cuda.is_available(),torch.cuda.get_device_name(0) if torch.cuda.is_available() else '-')" 2>&1 | tee checks/torch.txt
 used=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/null | head -1)
 [ "${used:-0}" -gt 2000 ] && fail "GPU busy: $used MiB in use before any run"
-pip install -q "transformers==5.17.0" "peft==0.21.0" accelerate safetensors huggingface_hub numpy > checks/pip.log 2>&1 \
+PIP_BREAK_SYSTEM_PACKAGES=1 pip install -q --break-system-packages "transformers==5.17.0" "peft==0.21.0" accelerate safetensors huggingface_hub numpy > checks/pip.log 2>&1 \
   || { tail -5 checks/pip.log; fail "pip"; }
 python -c "import transformers,peft,torch;print('transformers',transformers.__version__,'peft',peft.__version__,'torch',torch.__version__)" \
   2>&1 | tee checks/versions.txt
