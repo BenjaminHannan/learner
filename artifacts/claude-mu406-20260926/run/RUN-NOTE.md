@@ -53,3 +53,10 @@ Times are from date -u. Plan and marks: ../PASSMARKS.md, sealed in ../SEAL.sha25
   the folder, L=2, a new temp folder, and launch 1's leftover temp folder removed. Dry run here up to the write step:
   both seals OK (34 lines), teach selftest 9/9, 220 chats and 220 facts rows in order. The Luna helper selftest
   needs the Mac's codex binary and was skipped in the dry run only.
+- Step 4, launch 2 (madeup-mu406-teach2-mac): 13:58:09-14:50:33 UTC, rc=0. Seals and both selftests ok. The writer
+  stopped itself on time at 51.8 minutes: 92 of 220 chats written, all 92 whole, 460 turns, all 460 passed on the first
+  try, 0 fails, 0 stops. Median 59.5 s per chat (2 calls at a time), 33.8 s of wall time per chat. Progress launch;
+  launches so far for step 4: 2 of at most 6 (ADDENDUM-1).
+- 2026-09-27 15:36:52 UTC: launch 3 queued as handoff/queue/madeup-mu406-teach3-mac.md (same block; L=3, new temp folder; it seeds
+  teach.jsonl from builder-outbox and writes the remaining 128 chats; at this rate about 72 minutes, so a launch 4
+  will likely be needed).
