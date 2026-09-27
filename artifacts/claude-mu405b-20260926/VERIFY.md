@@ -91,3 +91,28 @@ and its "finding only" label as covering rows a model trains on. dl-5's reason w
 target, so the rule does not cover this untrained comparison, and mu-405b is reported as a registered result. The
 Thread manager can overrule that reading. mu-406's registered test panel will be GLM-worded either way
 (PLAN-draft-2.md).
+
+## Note on what VB and R measured (added 2026-09-27 02:55 UTC, date -u; verdict words unchanged)
+
+VB and R count "asks right" with mu-405's code check, claude_mu405_talk.ask_right (claude_mu405_talk.py:129-131). It
+counts a reply right when it contains the asked value anywhere, as a substring. It does not check that the reply
+answers the question, or that the value is said about the right thing. GPT's review (reviews/gpt-reply-memory-confab-
+2026-09-27.md) pointed this out, and the Thread manager checked the code.
+
+The Thread manager read U's 12 counted-right asks (02:51 UTC), and so did I (02:52 UTC). Both reads were unblinded
+and are not registered counts.
+- Most of the 12 name the value while reciting session 1 or while going off-topic. mu405-12 lists the old
+  conversation line by line. mu405-54 says "you mentioned Vashti, but I don't have any information about her name".
+  mu405-45 says "I'm not allergic to strawberries".
+- The Thread manager counted about 2 that actually answer the question (mu405-41, mu405-56). I found 2 to 4
+  (mu405-41, mu405-56, and possibly mu405-49 and mu405-11).
+- W's 4: about 1 or 2 answer (mu405-28, maybe mu405-45).
+
+So VB PASS measured this: with the block in the user message, the talker's ask replies contain the stored value
+(12 vs 0). The talker reads the block, but the check does not show that it recalls correctly. R's FAIL is compared on
+the same measure. Q3 is judged blind, so its claims counts do not depend on this scorer. Q3's validity condition
+(VB) holds only in that weaker sense: the talker reads its memory, often by reciting it. The verdict words stay as
+registered: VB PASS, R FAIL (not proved wrong), Q3 PASS (bad news).
+
+For every next test, recall needs a real answer to the current question with correct attribution, judged blind or
+checked by code on answer form. The substring count stays as report-only.
