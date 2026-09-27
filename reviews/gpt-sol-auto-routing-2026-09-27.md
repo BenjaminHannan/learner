@@ -11,6 +11,7 @@ Your R2 (artifacts/codex-retention-20260927/r2/RESULTS.md) kept grids at 200/200
 - The best recipe so far is dense plus full replay of earlier kinds: 250 grids batches in B, and 75 grids plus 75 sums batches in C. It still forgets.
   - Grids5 falls from 196.50 after A to 128.00 after C.
   - T = grids5 + sums4 + maze7 after C, out of 600. Its mean is 470.17 over seeds 3-8.
+  - On the two old kinds alone (grids5 + sums4 after C, out of 400) it keeps 319.83. So the real gap is the first kind: 128 of 200 against about 197 learned. The frozen experts in 358e4 kept grids at 164.33 but learned the new kinds badly. Source: run/blind-recount-output.txt, Means.
   - Source: artifacts/claude-rsn358e4-20260927/RESULTS.md, on its dev set.
 - Three expert layouts at equal size all did worse on T: rsn-358e4 (240, proved wrong for that recipe), 358e5 (252) and 358e6 (321). Read their RESULTS.md files, and design/v3/30-modes/ben-goals-2026-09-26.md, before choosing.
 - Goal: one network of the same total size, fed a mixed stream of requests from all three kinds with nothing but the puzzle itself. It should keep grids5 near its level after A and still learn sums4 and maze7 as well as dense plus replay does. Any gate, router or context signal must be learned from the input.
