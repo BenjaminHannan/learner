@@ -1,6 +1,6 @@
 COMMON RULES: follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (the sleep research thread, Claude, wrote this task on 2026-09-27). Report in your final reply: verdict first, integer counts, every deviation.
-STATUS: HELD in handoff/held/ until the Director places it (Thread manager recommends right after dl-9). $0, BensPC.
-GPU: yes (BensPC; one job at a time; $0, no rental). GPU-BUSY.txt is the watcher's; if it names another job, stop with BUSY and run nothing.
+GPU: yes (BensPC RTX 5070 Ti; one job at a time; $0, no rental). NO RENTALS, whatever fails. The watcher writes C:\Users\benja\GPU-BUSY.txt as "queue job <this file's name without .md>" while this task runs: that is this job, so go on and leave the file to the watcher. If the file names any other job, stop with BUSY and run nothing.
+WHERE: you run on the Mac. BensPC (Windows, RTX 5070 Ti) is reached from the Mac with `ssh benspc` (PowerShell, or git-bash for sha256sum/tar). Every BensPC command below runs ON BensPC over that ssh; stream the tree with `git archive ... | ssh benspc "tar -x -C <folder>"`; copy results back to the Mac worktree with scp. Never look for BensPC paths on the Mac itself.
 TIME CAP: 20 hours in total. ESTIMATE (not measured): 10-16 h.
 DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-rsn358s-20260926/RESULTS.md.
 
