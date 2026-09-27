@@ -1,0 +1,84 @@
+{
+  "checkpoint": {
+    "candidate_roundtrip_exact": true
+  },
+  "checks": [
+    "pair_and_wipe",
+    "state_independence",
+    "gradients",
+    "poison_traversal",
+    "checkpoint"
+  ],
+  "device": "cpu",
+  "dtype": "float32",
+  "gradients": {
+    "multi_round_card_abs_grad": {
+      "cards.addresses": 0.00020684038463514298,
+      "cards.read_gate.bias": 0.0006848698831163347,
+      "cards.read_gate.weight": 0.11021509021520615,
+      "cards.wk.weight": 0.0018525895429775119,
+      "cards.wq.weight": 0.009370038285851479,
+      "cards.write_gate.bias": 0.0002647560613695532,
+      "cards.write_gate.weight": 0.042610496282577515,
+      "cards.wv.weight": 0.919461727142334
+    },
+    "multi_round_core_nonzero": true,
+    "one_round_card_abs_grad": {
+      "cards.addresses": 0.0,
+      "cards.read_gate.bias": 0.0,
+      "cards.read_gate.weight": 0.0,
+      "cards.wk.weight": null,
+      "cards.wq.weight": 0.0,
+      "cards.write_gate.bias": null,
+      "cards.write_gate.weight": null,
+      "cards.wv.weight": 0.0
+    }
+  },
+  "poison": {
+    "all_steps_wiped": true,
+    "card_steps_seen": 192,
+    "same_outputs_after_hidden_kind_change": true
+  },
+  "seconds": 0.35643845799950213,
+  "source_hashes": {
+    "blurt1": "c00aa62f4bc9ed710019581ee61288256238539c5bcfb6759d17f89c01a958de",
+    "cardcheck": "dd968a23cd0d4befab3fc0d674c718ef9d656e9a25f486a43e2f4adf860e35ec",
+    "rsn358a": "9b0e1a03ffdf354575e0a19acc58042c869c261565ba62e91e71af899cbca9b0",
+    "rsn358a2": "80513101e4a6820f3fc32b2d23d01bcfc1ccca9457ae928826bdf37d89d816fe",
+    "rsn358a_envs": "af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0",
+    "rsn358g": "0a82d5a512fe3da9a737a07935f9cd07fa78fbecd4446b736e85230355c0c928",
+    "rsn358i": "4b9dfb907e49d47caefbbe606bc1610d12f15a85b39bce6aaa32ef78771f5ef4",
+    "runner": "441fb54a6bbe1b54a6f7f5c0ffe25674e5fb9465fe5a2c588862588a73198a4f",
+    "scratch_cards": "5b451624f45e41ce16e2e6263de65be17bb8b7e00ee0d3166c2b043580a7421a"
+  },
+  "state": {
+    "batch_vs_alone_close": true,
+    "episode_reset_exact": true
+  },
+  "status": "passed",
+  "torch": "2.11.0",
+  "weights": {
+    "added": 12930,
+    "baseline": 1646494,
+    "candidate": 1659424,
+    "identical_initial_core": true,
+    "ratio": 0.007853050178136088
+  },
+  "wiped_equals_baseline": {
+    "grids": {
+      "raw_halts_equal": true,
+      "raw_logits_equal": true,
+      "rounds": 48
+    },
+    "numbers": {
+      "raw_halts_equal": true,
+      "raw_logits_equal": true,
+      "rounds": 48
+    },
+    "sums": {
+      "raw_halts_equal": true,
+      "raw_logits_equal": true,
+      "rounds": 48
+    }
+  }
+}

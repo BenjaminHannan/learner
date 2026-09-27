@@ -25,6 +25,7 @@ import gzip
 import hashlib
 import inspect
 import json
+import math
 import os
 import re
 import subprocess
@@ -50,6 +51,10 @@ LEGACY_PANELS = {"numbers4": LEGACY_TESTS / "numbers4.jsonl",
 REQUIRED_SEAL = (
     "artifacts/codex-numbers-20260927/EXPERIMENT.json",
     "scripts/codex_numbers_20260927_execute.py",
+    "scripts/codex_numbers_20260927_recount.py",
+    "scripts/codex_numbers_20260927_report.py",
+    "scripts/codex_numbers_20260927_cards.py",
+    "scripts/codex_numbers_20260927_cardcheck.py",
     "scripts/codex_numbers_20260927_run.py",
     "scripts/codex_numbers_20260927_labels.py",
     "scripts/codex_numbers_20260927_panels.py",
@@ -169,9 +174,11 @@ def verify_registration(commit: str) -> dict:
     if scores["n"] != 962 or scores["exact_stored"] / scores["n"] < .95 or \
             evidence.get("diagnostic_gate_met") is not True:
         raise RuntimeError("diagnostic baseline did not reach 0.95 practice exact")
-    if evidence.get("dev_holdout") != 100 or evidence.get("device") != cfg["device"]:
-        raise RuntimeError("diagnostic split or device differs from registration")
-    for key in ("width", "layers", "heads", "batch", "steps", "lr", "warmup"):
+    if evidence.get("dev_holdout") != 100 or evidence.get("device") != cfg["device"] or \
+            evidence.get("dtype") != "float32" or evidence.get("fixed_env") != 0 or \
+            evidence.get("arm") != "loop":
+        raise RuntimeError("diagnostic split, device, dtype, or env differs from registration")
+    for key in ("width", "layers", "heads", "batch", "steps", "lr", "warmup", "latin_pool"):
         if evidence.get(key) != cfg["train"][key]:
             raise RuntimeError(f"diagnostic and registered training differ at {key}")
     return cfg
@@ -240,7 +247,7 @@ def train_one(cfg: dict, variant: str, seed: int, seal_digest: str) -> None:
         summary = read_json(summary_path)
         if summary.get("checkpoint_sha256") != sha256(ckpt):
             raise RuntimeError(f"completed checkpoint hash mismatch: {out}")
-        if summary.get("seed") != seed or summary.get("variant", variant) != variant:
+        if summary.get("seed") != seed or summary.get("variant") != variant:
             raise RuntimeError(f"completed run identity mismatch: {out}")
         return
     if out.exists():
@@ -254,6 +261,7 @@ def train_one(cfg: dict, variant: str, seed: int, seal_digest: str) -> None:
     for name in ("steps", "batch", "width", "layers", "heads", "latin_pool", "lr", "warmup", "log_every"):
         command += ["--" + name.replace("_", "-"), str(cfg["train"][name])]
     started = time.monotonic()
+    print(f"starting {variant} seed {seed}: {cfg['train']['steps']} steps on MPS", flush=True)
     with (out / "supervisor.log").open("x", encoding="utf-8") as log:
         completed = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
     if completed.returncode:
@@ -263,9 +271,12 @@ def train_one(cfg: dict, variant: str, seed: int, seal_digest: str) -> None:
     summary = read_json(summary_path)
     if summary.get("checkpoint_sha256") != sha256(ckpt):
         raise RuntimeError(f"new checkpoint hash mismatch: {out}")
+    if summary.get("seed") != seed or summary.get("variant") != variant:
+        raise RuntimeError(f"new run identity mismatch: {out}")
     atomic_json(out / "supervisor-summary.json", {"variant": variant, "seed": seed,
                 "wall_minutes": (time.monotonic() - started) / 60,
                 "checkpoint_sha256": sha256(ckpt)})
+    print(f"finished {variant} seed {seed}: {summary['minutes']:.2f} minutes", flush=True)
 
 
 def freeze_checkpoints(cfg: dict, commit: str) -> dict:
@@ -276,21 +287,45 @@ def freeze_checkpoints(cfg: dict, commit: str) -> dict:
         digest = sha256(out / "final.pt")
         if summary["checkpoint_sha256"] != digest:
             raise RuntimeError(f"checkpoint changed: {out}")
-        if summary["seed"] != seed or summary.get("variant", variant) != variant:
+        if summary["seed"] != seed or summary.get("variant") != variant:
             raise RuntimeError(f"run identity mismatch: {out}")
         if summary["device"] != cfg["device"] or summary["dtype"] != "float32":
             raise RuntimeError(f"device/dtype mismatch: {out}")
+        if summary.get("fixed_env") != 0 or summary.get("unused_env_rows") != 2:
+            raise RuntimeError(f"fixed-env audit failed: {out}")
         if any(summary[name] != cfg["train"][name] for name in cfg["train"]):
             raise RuntimeError(f"run settings mismatch: {out}")
         grads = summary["gradient_check"]
         if grads["steps_seen"] != cfg["train"]["steps"] or any(
                 grads[key] for key in ("steps_block_nograd", "steps_block_missing", "steps_block_allzero")):
             raise RuntimeError(f"gradient audit failed: {out}")
+        card_grad = grads.get("card_gradient_check") or {}
+        if variant == "candidate":
+            samples = card_grad.get("per_parameter_norms")
+            counts = card_grad.get("per_parameter_counts")
+            if not isinstance(samples, list) or not samples or \
+                    card_grad.get("parameters", 0) <= 0 or card_grad.get("multi_grad_steps", 0) <= 0 or \
+                    card_grad.get("multi_grad_steps", 0) + \
+                    card_grad.get("single_grad_steps_exempt", 0) != cfg["train"]["steps"] or \
+                    not isinstance(counts, dict) or len(counts) != card_grad["parameters"] or \
+                    any(not isinstance(c, dict) or c.get("nonfinite_steps") != 0 or
+                        c.get("nonfinite_any_step") != 0 or
+                        c.get("missing_steps", -1) + c.get("finite_steps", -1) != card_grad["multi_grad_steps"] or
+                        c.get("nonzero_steps", -1) + c.get("zero_steps", -1) != c.get("finite_steps")
+                        for c in counts.values()) or \
+                    any(not isinstance(value, (int, float)) or not math.isfinite(value)
+                        for sample in samples for key, value in sample.items() if key != "step"):
+                raise RuntimeError(f"card gradient audit missing or nonfinite: {out}")
+        elif card_grad.get("parameters") != 0:
+            raise RuntimeError(f"baseline unexpectedly has card gradients: {out}")
         runs.append({"variant": variant, "seed": seed, "checkpoint": str(out / "final.pt"),
                      "checkpoint_sha256": digest, "summary_sha256": sha256(out / "train_summary.json"),
                      "minutes": summary["minutes"], "weights": summary["weights"],
                      "stream_sha256": summary["stream_sha256"],
-                     "base_init_state_sha256": summary["base_init_state_sha256"]})
+                     "base_init_state_sha256": summary["base_init_state_sha256"],
+                     "source_hashes": summary["source_hashes"],
+                     "runner_script_sha256": summary["script_sha256"],
+                     "cache_hashes": summary["cache_hashes"]})
     for seed in cfg["seeds"]:
         baseline = next(x for x in runs if x["seed"] == seed and x["variant"] == "baseline")
         candidate = next(x for x in runs if x["seed"] == seed and x["variant"] == "candidate")
@@ -298,6 +333,12 @@ def freeze_checkpoints(cfg: dict, commit: str) -> dict:
             raise RuntimeError(f"unpaired training stream at seed {seed}")
         if baseline["base_init_state_sha256"] != candidate["base_init_state_sha256"]:
             raise RuntimeError(f"unpaired core model initialization at seed {seed}")
+        for field in ("source_hashes", "runner_script_sha256", "cache_hashes"):
+            if baseline[field] != candidate[field]:
+                raise RuntimeError(f"unpaired {field} at seed {seed}")
+        if baseline["source_hashes"].get("scratch_cards") != \
+                sha256(ROOT / "scripts/codex_numbers_20260927_cards.py"):
+            raise RuntimeError(f"unsealed card source at seed {seed}")
         if abs(baseline["weights"] - candidate["weights"]) > 0.01 * baseline["weights"]:
             raise RuntimeError(f"weight-count gap exceeds 1% at seed {seed}")
     manifest = {"registration_commit": commit,
@@ -345,6 +386,9 @@ def evaluate_frozen(cfg: dict, manifest: dict, commit: str, seal_digest: str) ->
     for name, expected in cfg["registered_panel_sha256"].items():
         if sha256(panels[name]) != expected:
             raise RuntimeError(f"registered source panel changed before evaluation: {name}")
+    # All five panels are parsed once for the whole frozen checkpoint sweep.
+    # Inference sees the same in-memory items for every seed and both arms.
+    panel_items = {name: runner.read_panel(panels[name]) for name in PANEL_NAMES}
     for run in manifest["runs"]:
         variant, seed = run["variant"], run["seed"]
         ckpt = Path(run["checkpoint"])
@@ -379,9 +423,7 @@ def evaluate_frozen(cfg: dict, manifest: dict, commit: str, seal_digest: str) ->
         for name in PANEL_NAMES:
             panel = panels[name]
             started = time.monotonic()
-            # One parse per panel. Candidate intact and wiped sweeps share these
-            # exact in-memory items in a fixed, preregistered order.
-            items = runner.read_panel(panel)
+            items = panel_items[name]
             scores = runner.predict_at_stop(net, items, cfg["device"], cfg["eval_batch"], details=True)
             poison = runner.poison_test(net, items[0], cfg["device"])
             if cfg["device"] == "mps":
@@ -454,6 +496,19 @@ def run(commit: str) -> None:
                      "completed_unix": time.time(),
                      "evaluations": len(manifest["runs"]) * len(PANEL_NAMES),
                      "wiped_evaluations": len(cfg["seeds"]) * len(PANEL_NAMES)})
+        verify_local_seal(seal_digest)
+        python = str(ROOT / cfg["python"])
+        subprocess.run([python, "-B", str(ROOT / "scripts/codex_numbers_20260927_recount.py"),
+                        str(ART)], cwd=ROOT, check=True)
+        subprocess.run([python, "-B", str(ROOT / "scripts/codex_numbers_20260927_report.py"),
+                        "--root", str(ART)], cwd=ROOT, check=True)
+        result = read_json(ART / "RECOUNT.json")
+        atomic_json(ART / "registered" / "EXPERIMENT-COMPLETE.json",
+                    {"registration_commit": commit, "verdict": result["verdict"],
+                     "results_sha256": sha256(ART / "RESULTS.md"),
+                     "recount_sha256": sha256(ART / "RECOUNT.json"),
+                     "completed_unix": time.time()})
+        print(f"experiment complete: {result['verdict']}; see {ART / 'RESULTS.md'}", flush=True)
 
 
 def main() -> None:

@@ -17,6 +17,7 @@ import hashlib
 import json
 import math
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -61,6 +62,31 @@ def checked(condition, problems, message):
 
 def same(a, b):
     return json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
+
+
+def check_registered_settings(cfg, registered, arm, seed, problems):
+    """Compare one saved run with the pushed experiment's training settings."""
+    label = f"{arm}-s{seed}"
+    train = registered.get("train") or {}
+    for key in ("steps", "batch", "width", "layers", "heads", "latin_pool",
+                "lr", "warmup", "log_every"):
+        checked(key in train and same(cfg.get(key), train.get(key)), problems,
+                f"{label}: setting {key} differs from registered EXPERIMENT")
+    for key, expected in (("seed", seed), ("variant", arm), ("device", registered.get("device")),
+                          ("dtype", "float32"), ("fixed_env", 0), ("dev_holdout", 0)):
+        checked(same(cfg.get(key), expected), problems,
+                f"{label}: setting {key} differs from registered EXPERIMENT")
+
+
+def check_registered_seeds(discovered, registered, problems):
+    expected = registered.get("seeds")
+    valid = (isinstance(expected, list) and len(expected) >= 4 and
+             all(type(x) is int for x in expected) and len(set(expected)) == len(expected))
+    checked(valid, problems, "EXPERIMENT.seeds must contain at least four distinct integers")
+    if valid:
+        checked(set(discovered) == set(expected) and len(discovered) == len(expected), problems,
+                "registered run directories do not exactly match EXPERIMENT.seeds")
+    return expected if valid else []
 
 
 def panel_path(root, stated):
@@ -166,7 +192,7 @@ def recount_panel(root, run, name, ev, cfg, ck_hash, expected_hashes, problems):
             "panel_sha256": digest(path)}
 
 
-def recount_run(root, arm, seed, expected_hashes, problems):
+def recount_run(root, arm, seed, expected_hashes, registered_config, registration_commit, problems):
     name = f"{arm}-s{seed}"
     folder = root / "registered" / name
     test_file = "tests.json.gz" if (folder / "tests.json.gz").is_file() else "tests.json"
@@ -192,6 +218,7 @@ def recount_run(root, arm, seed, expected_hashes, problems):
     checked(cfg.get("seed") == seed and cfg.get("arm") in (arm, "loop"), problems,
             f"{name}: arm or seed mismatch")
     checked(cfg.get("variant") == arm, problems, f"{name}: variant mismatch")
+    check_registered_settings(cfg, registered_config, arm, seed, problems)
     checked(cfg.get("fixed_env") == 0 or cfg.get("env_mode") == "fixed_zero", problems,
             f"{name}: no explicit fixed-env marker")
     checked(cfg.get("unused_env_rows") == len(E.ENVS) - 1, problems,
@@ -208,8 +235,12 @@ def recount_run(root, arm, seed, expected_hashes, problems):
     claim = folder / "tests.claim.json"
     if checked(claim.is_file(), problems, f"{name}: preregistered evaluation claim missing"):
         claim_data = read_json(claim)
+        checked(claim_data.get("registration_commit") == registration_commit, problems,
+                f"{name}: claim registration commit mismatch")
         checked(claim_data.get("checkpoint_sha256") == ck_hash, problems,
                 f"{name}: claim checkpoint hash mismatch")
+        checked(claim_data.get("panel_sha256") == expected_hashes, problems,
+                f"{name}: claim panel hash map mismatch")
         if arm == "candidate":
             checked(claim_data.get("candidate_wiped_cards") is True and
                     claim_data.get("ablation") == "wipe_cards_before_every_read_from_round0",
@@ -235,6 +266,9 @@ def recount_run(root, arm, seed, expected_hashes, problems):
     checked(isinstance(summary.get("source_hashes"), dict) and
             bool(summary["source_hashes"]), problems,
             f"{name}: missing imported source hashes")
+    sources = summary.get("source_hashes") or {}
+    checked(sources.get("scratch_cards") == digest(REPO / "scripts/codex_numbers_20260927_cards.py"),
+            problems, f"{name}: card module source hash mismatch")
     grad = summary.get("gradient_check") or {}
     checked(grad.get("steps_seen") == cfg.get("steps") and
             grad.get("steps_block_missing") == 0 and grad.get("steps_block_allzero") == 0 and
@@ -243,6 +277,34 @@ def recount_run(root, arm, seed, expected_hashes, problems):
             type(grad.get("block_linear_matrices")) is int and grad["block_linear_matrices"] > 0,
             problems,
             f"{name}: missing or failed gradient checks")
+    card_grad = grad.get("card_gradient_check") or {}
+    if arm == "candidate":
+        counts = card_grad.get("per_parameter_counts")
+        checked(type(card_grad.get("parameters")) is int and card_grad["parameters"] > 0 and
+                type(card_grad.get("multi_grad_steps")) is int and card_grad["multi_grad_steps"] > 0 and
+                isinstance(card_grad.get("per_parameter_norms"), list) and
+                bool(card_grad["per_parameter_norms"]) and
+                isinstance(counts, dict) and len(counts) == card_grad["parameters"] and
+                card_grad.get("single_grad_steps_exempt", 0) +
+                card_grad["multi_grad_steps"] == cfg.get("steps"), problems,
+                f"{name}: card gradient audit missing")
+        if isinstance(counts, dict):
+            for param, c in counts.items():
+                checked(isinstance(c, dict) and c.get("nonfinite_steps") == 0 and
+                        c.get("nonfinite_any_step") == 0 and
+                        c.get("missing_steps", -1) + c.get("finite_steps", -1) ==
+                        card_grad.get("multi_grad_steps") and
+                        c.get("nonzero_steps", -1) + c.get("zero_steps", -1) ==
+                        c.get("finite_steps"), problems,
+                        f"{name}: card gradient counts invalid for {param}")
+        for sample in card_grad.get("per_parameter_norms", []) if isinstance(card_grad.get("per_parameter_norms"), list) else []:
+            checked(isinstance(sample, dict) and all(
+                isinstance(value, (int, float)) and math.isfinite(value)
+                for key, value in sample.items() if key != "step"), problems,
+                f"{name}: nonfinite sampled card gradient")
+    else:
+        checked(card_grad.get("parameters") == 0, problems,
+                f"{name}: baseline unexpectedly has card gradients")
     for sample in grad.get("grad_norms", []) if isinstance(grad.get("grad_norms"), list) else []:
         checked(isinstance(sample, dict) and type(sample.get("step")) is int and
                 1 <= sample["step"] <= cfg.get("steps", 0) and
@@ -253,14 +315,19 @@ def recount_run(root, arm, seed, expected_hashes, problems):
                 f"{name}: invalid sampled gradient norms")
     result = {"config": cfg, "minutes": minutes if isinstance(minutes, (int, float)) else 0,
               "checkpoint_sha256": ck_hash, "panels": {}, "wiped_panels": {},
+              "train_summary_sha256": digest(folder / "train_summary.json"),
               "training": {k: summary.get(k) for k in
                            ("stream_sha256", "base_init_state_sha256", "source_hashes", "gradient_check")}}
     for panel in PANELS:
-        result["panels"][panel] = recount_panel(root, name, panel, tests.get(panel),
+        ev = tests.get(panel)
+        checked(isinstance(ev, dict) and ev.get("variant") == arm and ev.get("seed") == seed,
+                problems, f"{name}/{panel}: evaluation arm or seed mismatch")
+        result["panels"][panel] = recount_panel(root, name, panel, ev,
                                                 cfg, ck_hash, expected_hashes, problems)
         if arm == "candidate":
             wiped = wiped_tests.get(panel) if isinstance(wiped_tests, dict) else None
             checked(isinstance(wiped, dict) and
+                    wiped.get("variant") == arm and wiped.get("seed") == seed and
                     wiped.get("ablation") == "wipe_cards_before_every_read_from_round0",
                     problems, f"{name}/{panel}: wiped-card ablation marker missing")
             result["wiped_panels"][panel] = recount_panel(root, name + " wiped", panel, wiped,
@@ -278,10 +345,13 @@ def compare(runs, seeds, problems):
         for key in COMMON_CONFIG:
             checked(key in bc and key in cc and same(bc.get(key), cc.get(key)), problems,
                     f"seed {seed}: paired config differs at {key}")
-        for key in ("stream_sha256", "base_init_state_sha256", "source_hashes"):
+        for key in ("stream_sha256", "base_init_state_sha256"):
             checked(same(b["training"][key], c["training"][key]), problems,
                     f"seed {seed}: paired {key} differs")
         bw, cw = bc.get("weights"), cc.get("weights")
+        checked(bc.get("card_weights") == 0 and type(cc.get("card_weights")) is int and
+                type(cw) is int and type(bw) is int and cc["card_weights"] == cw - bw, problems,
+                f"seed {seed}: candidate card parameter accounting differs from weight gap")
         checked(type(bw) is int and type(cw) is int and bw > 0 and
                 abs(cw - bw) / bw <= .01, problems,
                 f"seed {seed}: candidate parameter count differs by more than 1%")
@@ -326,6 +396,8 @@ def marks(rows):
             "proved_wrong_bigger": mean(by("numbers5", "gap")) <= 5,
             "proved_wrong_memory": {p: mean(by(p, "intact_minus_wiped")) <= 0
                                     for p in ("numbers4", "numbers5")},
+            "proved_wrong_memory_any": any(mean(by(p, "intact_minus_wiped")) <= 0
+                                           for p in ("numbers4", "numbers5")),
             "means": {p: {f: mean(by(p, f)) for f in
                           ("baseline", "candidate", "gap", "wiped", "intact_minus_wiped")}
                       for p in PANELS}}
@@ -340,6 +412,21 @@ def verdict_for(problems, rows):
 
 
 def selftest():
+    registered = {"seeds": [11, 12, 13, 14], "device": "mps",
+                  "train": {"steps": 60, "batch": 8, "width": 32, "layers": 2,
+                            "heads": 8, "latin_pool": 10, "lr": .0003,
+                            "warmup": 5, "log_every": 10}}
+    run_cfg = {**registered["train"], "seed": 11, "variant": "baseline",
+               "device": "mps", "dtype": "float32", "fixed_env": 0, "dev_holdout": 0}
+    gate_problems = []
+    check_registered_seeds([11, 12, 13, 14], registered, gate_problems)
+    check_registered_settings(run_cfg, registered, "baseline", 11, gate_problems)
+    assert gate_problems == []
+    check_registered_seeds([11, 12, 13, 15], registered, gate_problems)
+    check_registered_settings({**run_cfg, "steps": 59}, registered, "baseline", 11,
+                              gate_problems)
+    assert any("EXPERIMENT.seeds" in x for x in gate_problems)
+    assert any("setting steps" in x for x in gate_problems)
     def row(seed, n4b=40, n4c=100, n5b=0, n5c=30, sumb=300, sumc=295,
             gridb=300, gridc=295):
         vals = {"numbers4": (n4b, n4c), "numbers5": (n5b, n5c),
@@ -371,6 +458,39 @@ def selftest():
     assert stop_round([[1], [1], [1], [2]], [.9, .9, .9, .9]) == 2
     assert stop_round([[1], [2], [2], [2]], [.9, .9, .5, .9]) == 3
     assert stop_round([[1], [2], [3]], [.9, .9, .9]) == 2
+    with tempfile.TemporaryDirectory(prefix="codex-recount-") as temporary:
+        root = Path(temporary)
+        panel = root / "panels/numbers5.jsonl"
+        panel.parent.mkdir()
+        raw = {"env": "numbers", "size": 5,
+               "tokens": [[26] * 5 + [0] * 4, [49] + [0] * 8, [1] * 9],
+               "slot": [[0] * 9, [0] * 9, [1] * 9],
+               "target": [[0] * 9, [0] * 9, [26] * 9],
+               "meta": {"nums": [1] * 5, "target": 24}}
+        panel.write_text(json.dumps(raw) + "\n", encoding="utf-8")
+        pred = [0] * 27
+        rec = {"index": 0, "kind": "numbers", "size": 5, "stop": 48,
+               "prediction": pred, "valid": False, "exact_stored": False,
+               "round_predictions": [pred] * 48, "round_halt_probabilities": [0.0] * 48}
+        evaluation = {"panel": str(panel), "panel_sha256": digest(panel),
+                      "checkpoint_sha256": "f" * 64, "config": {"test_rounds": 48},
+                      "poison": {"rounds": 48, "tested_kinds": E.ENVS,
+                                 "logits_equal": True, "predictions_equal": True,
+                                 "raw_halts_equal": True},
+                      "scores": {"n": 1, "valid": 0, "exact_stored": 0, "items": [rec]}}
+        problems = []
+        result = recount_panel(root, "synthetic", "numbers5", evaluation,
+                               {"test_rounds": 48}, "f" * 64,
+                               {"numbers5": digest(panel)}, problems)
+        assert result["valid"] == 0 and problems == ["synthetic/numbers5: expected 300 panel items, got 1"]
+        rec["stop"] = 47
+        rec["valid"] = True
+        problems = []
+        recount_panel(root, "synthetic", "numbers5", evaluation,
+                      {"test_rounds": 48}, "f" * 64,
+                      {"numbers5": digest(panel)}, problems)
+        assert any("own-stop choice differs" in p for p in problems)
+        assert any("checker recount" in p for p in problems)
     print("recount selftest passed")
 
 
@@ -400,6 +520,8 @@ def markdown(report):
         for panel, value in report["marks"]["proved_wrong_memory"].items():
             out.append(f"- Proved wrong for memory on {panel} (intact mean ≤ wiped mean): "
                        f"{'met' if value else 'not met'}")
+        out.append("- Proved wrong for useful memory on both panels (either panel mean intact ≤ wiped): "
+                   f"{'met' if report['marks']['proved_wrong_memory_any'] else 'not met'}")
         out.append("")
     if report["problems"]:
         out += ["## Missing or inconsistent evidence", ""] + [f"- {x}" for x in report["problems"]] + [""]
@@ -423,6 +545,8 @@ def main():
     expected_hashes = {}
     experiment = root / "EXPERIMENT.json"
     sealed = root / "SEALED-PANEL.json"
+    frozen_path = root / "CHECKPOINTS-FROZEN.json"
+    seal_path = root / "SEAL-code.json"
     complete_receipt = root / "registered/EVALUATION-COMPLETE.json"
     if not complete_receipt.is_file():
         report = {"verdict": "INCOMPLETE", "seeds": [], "rows": [], "marks": None,
@@ -432,10 +556,27 @@ def main():
         (out / "RECOUNT.md").write_text(markdown(report))
         print("INCOMPLETE: evaluation not complete; sealed panels were not opened")
         return 2
+    completed = read_json(complete_receipt)
+    if frozen_path.is_file():
+        frozen = read_json(frozen_path)
+        checked(completed.get("checkpoint_manifest_sha256") == digest(frozen_path), problems,
+                "completion receipt checkpoint manifest hash mismatch")
+    else:
+        frozen = {}
+        problems.append("frozen checkpoint manifest missing")
+    registration_commit = frozen.get("registration_commit")
+    checked(isinstance(registration_commit, str) and len(registration_commit) == 40,
+            problems, "frozen manifest registration commit missing")
+    checked(completed.get("registration_commit") == registration_commit, problems,
+            "completion receipt registration commit mismatch")
     if experiment.is_file():
         config = read_json(experiment)
+        checked(frozen.get("experiment_sha256") == digest(experiment), problems,
+                "frozen manifest EXPERIMENT hash mismatch")
         expected_hashes.update(config.get("registered_panel_sha256", {}))
         gate = config.get("diagnostic_gate", {})
+        checked(frozen.get("diagnostic_summary_sha256") == gate.get("summary_sha256"),
+                problems, "frozen manifest diagnostic gate hash mismatch")
         if set(gate) == {"summary_path", "summary_sha256", "manifest_path", "manifest_sha256"}:
             summary_path = REPO / gate["summary_path"]
             manifest_path = REPO / gate["manifest_path"]
@@ -454,9 +595,27 @@ def main():
         else:
             problems.append("registered diagnostic gate reference missing")
     else:
+        config = {}
         problems.append("registered EXPERIMENT.json missing")
+    if seal_path.is_file():
+        checked(frozen.get("seal_sha256") == digest(seal_path), problems,
+                "frozen manifest code seal hash mismatch")
+    else:
+        problems.append("registered code seal missing")
     if sealed.is_file():
-        expected_hashes["numbers5"] = read_json(sealed).get("sha256")
+        sealed_info = read_json(sealed)
+        expected_hashes["numbers5"] = sealed_info.get("sha256")
+        checked(sealed_info.get("registration_commit") == registration_commit, problems,
+                "sealed panel registration commit mismatch")
+        checked(sealed_info.get("seed") == config.get("sealed_seed"), problems,
+                "sealed panel seed differs from EXPERIMENT")
+        checked(sealed_info.get("frozen_manifest_sha256") == digest(frozen_path)
+                if frozen_path.is_file() else False, problems,
+                "sealed panel frozen manifest hash mismatch")
+        checked(sealed_info.get("n") == 300 and sealed_info.get("training_hand_overlap") == 0 and
+                sealed_info.get("training_hand_overlap_basis") ==
+                "training uses only three- and four-number hands; this panel contains five-number hands",
+                problems, "sealed panel count or training-hand nonoverlap proof missing")
     else:
         problems.append("new five-number sealed-panel receipt missing")
     if set(expected_hashes) != set(PANELS):
@@ -465,15 +624,42 @@ def main():
     names = [p.name for p in registered.iterdir() if p.is_dir()] if registered.is_dir() else []
     seeds = sorted({int(name.split("-s")[-1]) for name in names
                     if name.startswith(("baseline-s", "candidate-s")) and name.split("-s")[-1].isdigit()})
-    checked(len(seeds) >= 4, problems, f"expected at least four paired seeds, found {len(seeds)}")
-    runs = {f"{arm}-s{seed}": recount_run(root, arm, seed, expected_hashes, problems)
+    check_registered_seeds(seeds, config, problems)
+    runs = {f"{arm}-s{seed}": recount_run(root, arm, seed, expected_hashes,
+                                         config, registration_commit, problems)
             for seed in seeds for arm in ("baseline", "candidate")}
-    if complete_receipt.is_file():
-        completed = read_json(complete_receipt)
-        checked(completed.get("evaluations") == len(seeds) * len(PANELS) * 2,
-                problems, "evaluation completion count mismatch")
-        checked(completed.get("wiped_evaluations") == len(seeds) * len(PANELS),
-                problems, "wiped-card evaluation completion count mismatch")
+    frozen_runs = frozen.get("runs")
+    if checked(isinstance(frozen_runs, list), problems, "frozen manifest run inventory missing"):
+        identities = [(entry.get("variant"), entry.get("seed")) for entry in frozen_runs
+                      if isinstance(entry, dict)]
+        expected_identities = {(arm, seed) for seed in config.get("seeds", [])
+                               for arm in ("baseline", "candidate")}
+        checked(len(identities) == len(frozen_runs) == len(expected_identities) and
+                set(identities) == expected_identities,
+                problems, "frozen manifest inventory differs from registered runs")
+        for entry in frozen_runs:
+            if not isinstance(entry, dict):
+                continue
+            arm, seed = entry.get("variant"), entry.get("seed")
+            name = f"{arm}-s{seed}"
+            run = runs.get(name)
+            if run is None:
+                continue
+            folder = root / "registered" / name
+            checked(Path(entry.get("checkpoint", "")).resolve() == (folder / "final.pt").resolve() and
+                    entry.get("checkpoint_sha256") == run["checkpoint_sha256"] and
+                    entry.get("summary_sha256") == run["train_summary_sha256"] and
+                    entry.get("weights") == run["config"].get("weights") and
+                    entry.get("stream_sha256") == run["training"].get("stream_sha256") and
+                    entry.get("base_init_state_sha256") == run["training"].get("base_init_state_sha256") and
+                    entry.get("source_hashes") == run["training"].get("source_hashes") and
+                    entry.get("runner_script_sha256") == run["config"].get("script_sha256") and
+                    entry.get("cache_hashes") == run["config"].get("cache_hashes"),
+                    problems, f"{name}: frozen manifest checkpoint/summary/config mismatch")
+    checked(completed.get("evaluations") == len(seeds) * len(PANELS) * 2,
+            problems, "evaluation completion count mismatch")
+    checked(completed.get("wiped_evaluations") == len(seeds) * len(PANELS),
+            problems, "wiped-card evaluation completion count mismatch")
     rows = compare(runs, seeds, problems)
     verdict, result_marks = verdict_for(problems, rows)
     report = {"verdict": verdict, "seeds": seeds, "rows": rows, "marks": result_marks,
