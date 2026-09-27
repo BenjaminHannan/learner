@@ -21,3 +21,10 @@ the learned stop and the 48-round cap:
     picked on dev;
   - mean rounds and cap hits;
   - training minutes.
+
+## Addendum, 2026-09-27 21:19 UTC (before any practice score existed; no mark changed)
+Ben wants the gate faster, so it may run on a rented vast.ai GPU in a new session. The handoff is
+artifacts/claude-relnet-20260927/HANDOFF-gpu-practice.md. **Registered result:** the GPU runs, if they finish
+(`--device cuda`, strict fp32, the same script, seeds, recipe and panels). The CPU runs in the first session
+(compiled, started 21:09 UTC) are reported alongside as a replication, not picked by score. If the GPU runs fail or
+are not made, the CPU runs are the registered result.

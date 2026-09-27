@@ -16,7 +16,9 @@ unchanged for 3 rounds):
          on each kind, and within 3 points of the loop on each.
 Also fixed-depth accuracy at 1-48 rounds (stop-failure check), mean stop round and cap hits.
 
-  python -B scripts/claude_relnet_practice.py --arm relnet|loop --seed S [--lr 1e-3] [--threads 2] [--compile] --out DIR
+  python -B scripts/claude_relnet_practice.py --arm relnet|loop --seed S [--lr 1e-3] [--threads 2] [--compile]
+         [--device cpu|cuda] --out DIR
+--device cuda runs strict fp32 (TF32 off, no autocast).
 --compile wraps the round step in torch.compile: same maths (checked on both arms: outputs and gradients within
 1e-6, 48-round answers identical), about 25% faster on CPU.
 """
@@ -33,6 +35,7 @@ import time
 from pathlib import Path
 
 import torch
+import torch.nn.functional as F
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import claude_rsn358a_envs as E  # noqa: E402
@@ -44,6 +47,23 @@ import claude_relnet_net as RN  # noqa: E402
 GATE_PANEL = 6279901
 FIXED = [1, 2, 4, 8, 12, 16, 24, 32, 48]
 CACHE = Path(os.environ.get("RELNET_CACHE", str(Path.home() / "relnet-cache")))
+
+
+def to_dev(items, dev):
+    return [x.to(dev) for x in N.tensors(items)]
+
+
+def train_loss(net, items, round_rng, dev):
+    """scripts/claude_xfer1_net.py train_loss, unchanged except that the tensors go to `dev`"""
+    t, s, y = to_dev(items, dev)
+    total = round_rng.randint(1, N.TRAIN_ROUNDS)
+    k = round_rng.randint(1, min(total, N.GRAD_ROUNDS))
+    ces, hls = [], []
+    for lg, q in net.loop_train(t, s, total - k, k):
+        c_, ex = N.ce_and_exact(lg, s, y)
+        ces.append(c_)
+        hls.append(F.binary_cross_entropy_with_logits(q.float(), ex))
+    return torch.stack(ces).mean() + 0.5 * torch.stack(hls).mean()
 
 
 def build(arm):
@@ -61,10 +81,11 @@ def panel(seed):
 @torch.no_grad()
 def evaluate(net, items, max_rounds=48, fixed=True):
     net.eval()
+    dev = next(net.parameters()).device
     right, fixed_right, stops = 0, {k: 0 for k in FIXED}, []
     for i in range(0, len(items), 50):
         chunk = items[i:i + 50]
-        t, s, _ = N.tensors(chunk)
+        t, s, _ = to_dev(chunk, dev)
         H, W = t.shape[1], t.shape[2]
         preds, qs = net.loop_rounds(t, s, max_rounds)
         preds, qs = preds.tolist(), qs.tolist()
@@ -88,7 +109,10 @@ def evaluate(net, items, max_rounds=48, fixed=True):
 def main(a):
     torch.set_num_threads(a.threads)
     torch.manual_seed(a.seed)
-    net = build(a.arm)
+    if a.device == "cuda":   # strict fp32: no TF32, no autocast (the old autocast bug froze weights)
+        torch.backends.cuda.matmul.allow_tf32 = False
+        torch.backends.cudnn.allow_tf32 = False
+    net = build(a.arm).to(a.device)
     if a.compile:   # fuses the element-wise ops; checked equal to eager (outputs and gradients within 1e-6) for both arms
         net.step = torch.compile(net.step, dynamic=True)
     opt = torch.optim.AdamW(net.parameters(), lr=a.lr, weight_decay=N.WD, betas=(0.9, 0.95))
@@ -102,11 +126,11 @@ def main(a):
     out.mkdir(parents=True, exist_ok=True)
     tag = f"{a.arm}-s{a.seed}-lr{a.lr:g}"
     rep = dict(arm=a.arm, seed=a.seed, lr=a.lr, steps=steps, batch=B.PRACTICE_BATCH, threads=a.threads,
-               compile=a.compile, weights=RN.count(net), torch=torch.__version__, curve=[], loss_every250=[])
+               device=a.device, gpu=torch.cuda.get_device_name(0) if a.device == "cuda" else None, compile=a.compile, weights=RN.count(net), torch=torch.__version__, curve=[], loss_every250=[])
     t0, losses = time.time(), []
     for i in range(steps):
         net.train()
-        loss = N.train_loss(net, B.practice_batch(rng), round_rng)
+        loss = train_loss(net, B.practice_batch(rng), round_rng, a.device)
         opt.zero_grad(set_to_none=True)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(net.parameters(), 1.0)
@@ -130,7 +154,7 @@ def main(a):
     rep["eval_minutes"] = round((time.time() - t1) / 60, 1)
     CACHE.mkdir(parents=True, exist_ok=True)
     ck = CACHE / f"{tag}.pt"
-    torch.save({"arm": a.arm, "state": net.state_dict()}, ck)
+    torch.save({"arm": a.arm, "state": {k: v.cpu() for k, v in net.state_dict().items()}}, ck)
     rep["ckpt"] = str(ck)
     rep["ckpt_sha256"] = hashlib.sha256(ck.read_bytes()).hexdigest()
     (out / f"practice-{tag}.json").write_text(json.dumps(rep, indent=1))
@@ -147,5 +171,6 @@ if __name__ == "__main__":
     ap.add_argument("--eval-every", type=int, default=1500)
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--compile", action="store_true")
+    ap.add_argument("--device", choices=["cpu", "cuda"], default="cpu")
     ap.add_argument("--out", default="artifacts/claude-relnet-20260927/practice")
     main(ap.parse_args())
