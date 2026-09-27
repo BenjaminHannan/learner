@@ -1,0 +1,25 @@
+STEP start 2026-09-27T01:30:06Z
+versions torch 2.14.0+cpu transformers 5.17.0 python 3.11.15 threads 4
+PASSMARKS-gr6.md: OK
+scripts/claude_gr6.py: OK
+scripts/claude_gr6_make_panel.py: OK
+artifacts/claude-gr6-20260927/layouts.json: OK
+artifacts/claude-gr6-20260927/train/rows.jsonl: OK
+artifacts/claude-gr6-20260927/cpu/chain.sh: OK
+scripts/claude_gr5.py: OK
+scripts/claude_gr4.py: OK
+scripts/claude_gr5_devclean.py: OK
+squares.jsonl: OK
+lookalikes.jsonl: OK
+unseen.jsonl: OK
+writings.json: OK
+formats-kept.json: OK
+STEP train 2026-09-27T01:30:08Z
+train {"device": "cpu", "train_rows": 1072, "examples_seen": 3216, "mean_loss_by_epoch": [0.1586, 0.0124, 0.0062], "minutes": 111.8}
+adapter 54feb2fd236aac7263bccefd1bb5ce0dcd56551042ffdc1307b83c6e61109aef bytes 16568343
+STEP dev 2026-09-27T03:22:09Z
+dev {"dev_gate": "FAIL", "dev_gate_need": 111, "devlayout_square_exact": 51, "devlayout_square_n": 64, "devlayout_square_none": 2, "devlayout_square_wrong": 11, "fresh_exact": 10, "fresh_n": 10, "fresh_none": 0, "fresh_wrong": 0, "heldout_none_exact": 139, "heldout_none_n": 139, "heldout_none_none": 139, "heldout_none_wrong": 0, "heldout_square_exact": 103, "heldout_square_n": 123, "heldout_square_none": 6, "heldout_square_wrong": 14, "nosquare_exact": 10, "nosquare_n": 10, "nosquare_none": 10, "nosquare_wrong": 0, "seconds_per_message": 3.9, "smoke_exact": 10, "smoke_n": 10, "smoke_none": 0, "smoke_wrong": 0}
+STEP devclean 2026-09-27T03:45:26Z
+devclean {"clean_exact": 85, "clean_n": 103, "clean_none": 6, "clean_wrong": 12, "shared_exact": 18, "shared_n": 20, "shared_none": 0, "shared_wrong": 2}
+DEV-FAIL
+STEP stop 2026-09-27T03:57:57Z
