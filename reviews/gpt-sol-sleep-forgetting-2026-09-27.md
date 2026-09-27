@@ -11,7 +11,7 @@ I am a high-school senior building this with AI help. Please end with a plain-la
 - **Day (the "work"):** 150 fresh arithmetic puzzles ("Use each of the numbers 3, 5, 8 exactly once, with + - * / and brackets, to make 17. Reply with only the expression, nothing else."; 3 or 4 numbers; the 4-number ones target 24). On each, the model gives 1 greedy answer and 30 sampled guesses at temperature 1.5. Sampling is restricted to legal expressions over the given numbers. An exact checker marks every guess.
 - **Night (copy practice, arm "S"):** cross-entropy on the answer tokens only (the prompt is masked). The rows are the day's greedy right answers plus the first lucky right guess on each missed puzzle, about 100-110 rows by night 7. Training is 3 epochs, lr 2e-4, batch 8, AdamW. Each seed runs 7 nights.
 - **Day skill (TEST):** 100 fresh puzzles (never practised) x 20 guesses at temperature 1.5. "Lucky" = the number of right guesses out of 2,000. "Reached" = the number of puzzles with at least one right guess. L0 = the base's lucky.
-- **Harm panel:** 300 fixed, code-made general items, never trained on and never used to choose training data. The kinds are: which number is bigger (119, the only kind with digits), capital city (70), next day/month/letter (31), opposite (30), plural (30), and "how many legs does a spider have" (20). Each ends in an instruction such as "Reply with the city name only." The model answers greedily with at most 16 new tokens. An answer is right if the gold word appears in its first 8 words (for numbers, if the first integer matches). The base gets 200/300 right, including 58 of the 70 capitals.
+- **Harm panel:** 300 fixed, code-made, one-line short general questions (not chat), never trained on and never used to choose training data. The kinds are: which number is bigger (119, the only kind with digits), capital city (70), next day/month/letter (31), opposite (30), plural (30), and "how many legs does a spider have" (20). Each ends in an instruction such as "Reply with the city name only." The model answers greedily with at most 16 new tokens. An answer is right if the gold word appears in its first 8 words (for numbers, if the first integer matches). The base gets 200/300 right, including 58 of the 70 capitals.
   - **lost** = right at base, wrong after night N (always counted against the base, not the night before).
   - **gained** = the reverse.
   - net harm = lost - gained.
@@ -38,7 +38,7 @@ The retention marks (dl-3's F1-F5) are used by dl-3, dl-4, dl-6 and dl-7b. The a
 | dl-6 | L = 1 epoch per night instead of 3 (same rows) | 10,11; 7 (27 of 28 nights ran; budget stop) | S 198,237 / L 140, [115 at night 6] (75) | S 25,27 / L 13, [7 at night 6] | FAIL (F3, F4; holds whatever the missing night) |
 | dl-7b | F = dl-4's anchor, but the pool is only the base's **shakiest** short quiz answers: its lowest-confidence third (confidence = the smallest token probability among the first 4 answer tokens), 427 items; the panel's topics and any digit filtered out, so no panel fact is rehearsed | 12,13; 7 | S 273,204 / F 179,216 (66) | S 11,15 / F 3,4 | FAIL (F3 only: gain 263 vs bar 276, i.e. 76% of S's gain) |
 
-dl-2's PASS was on marks that used **net** harm, which let gains hide losses. Its verify step, prompted by an outside review, split lost from gained, and that led to dl-3's marks. No run has yet passed dl-3's marks.
+dl-2's PASS was on marks that used **net** harm, which let gains hide losses. Its verify step, prompted by an outside review, split lost from gained, and that led to dl-3's marks. No run has yet passed dl-3's marks. Four runs were registered forgetting fixes (dl-3, dl-4, dl-6, dl-7b), and all four FAIL; no recipe has passed both forgetting and learning. dl-1 (a learning rule) and dl-5 (grid nights) were not forgetting fixes.
 
 In dl-3, dl-4 and dl-7b the extra rows are added on top of the puzzle rows (a 1:1 mix), so those arms also take about twice as many training steps per night as S (shown by design). This matters for any "dose" explanation.
 
@@ -63,6 +63,12 @@ In dl-3, dl-4 and dl-7b the extra rows are added on top of the puzzle rows (a 1:
 - dl-7b: S 47 and 50; F 14 and 20.
 
 ## 3. Report-only diagnostics (not registered claims)
+
+**The trade in each forgetting fix, S -> arm (night-7 lost summed over seeds; gain in lucky over L0, summed; shown):**
+- dl-3: lost 63 -> 56, gain 310 -> 325.
+- dl-4: lost 33 -> 25, gain 419 -> 388.
+- dl-6 (seed 10 only; seed 11's night 7 never ran): lost 25 -> 13, gain 123 -> 65.
+- dl-7b: lost 26 -> 7, gain 345 -> 263.
 
 - **Which items fall.**
   - fd-1 (a CPU diagnosis with a fixed bar): of the 29 items lost in dl-4's four night-7 models, 17 (58.6%) were in the base's lowest-confidence third of its 200 right items. The bar was 60% and chance is 33%, so it missed by one item and was not shown wrong. Median confidence was 0.55 for lost items and 0.75 for kept ones.
@@ -128,7 +134,7 @@ In dl-3, dl-4 and dl-7b the extra rows are added on top of the puzzle rows (a 1:
 - **Blind test panels** are never read, tuned on or used to choose data. The 300-item harm panel is my own code-made measure, not a blind panel, but it is also never trained on or used to pick anchors. Use fictional names only for any new people in data.
 - **The goal (Ben):** the model "gets better overnight" at "everything, but mostly the work of the previous day", and nights should almost never make it worse. It sleeps only while dormant, and sleep must stop cleanly at any moment (interruptible). A night must be checkable and undoable.
 - **Brain analogies are welcome but must be labelled.** For example: the hippocampus replays new and old memories interleaved during sleep while the cortex learns slowly; weak memories may get more replay; context gating by prefrontal cortex and basal ganglia. Where silicon can do better (exact replay, undo, per-weight bookkeeping), say so.
-- **Keep the small experiments separate from the full joined build.** Everything above is small, isolated test runs on the borrowed 1B. The full joined "village" build (0.2d) is not described here. Do not reason about it. It matters only because its sleep-retention gate, H-B (a verified PASS on dl-3's retention marks), is still open. It is one of three open gates that build waits on.
+- **Keep the small experiments separate from the full joined build.** Everything above is small, isolated test runs on the borrowed 1B. The full joined "village" build (0.2d) is not described here. Do not reason about it. It matters only because its sleep-retention gate, H-B (a verified PASS on dl-3's retention marks), is still open. It is one of three open gates that build waits on (with H-A, the reasoner, and H-R, the reader). The small puzzle networks of a separate line of work are also left out; do not mix their numbers in.
 
 ## 7. What I want from you
 
