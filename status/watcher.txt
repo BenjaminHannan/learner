@@ -1,4 +1,4 @@
-2026-09-27 10:14:51
+2026-09-27 10:17:15
 running:
 000-probe-benspc-gpu-0827.running
 000-probe-zen-builder.running
@@ -13,10 +13,8 @@ madeup-mu406-teach2-mac.running
 rent358u-1-start.running
 y1t-luna-rest-mac.running
 launched (no exit yet) / finished:
-     925
+     927
 
-2026-09-27 09:21:35 BensPC unreachable (ssh rc=255), holding 160-claude-sleep-358s-bo-p1
-2026-09-27 09:21:52 BensPC unreachable (ssh rc=255), holding 161-claude-sleep-358s-bo-p2
 2026-09-27 09:22:02 BensPC unreachable (ssh rc=255), holding 162-claude-sleep-358s-bo-p3
 2026-09-27 09:22:13 BensPC unreachable (ssh rc=255), holding 163-claude-sleep-358s-bo-p4
 2026-09-27 09:22:23 BensPC unreachable (ssh rc=255), holding 164-claude-sleep-358s-bo-p5
@@ -165,6 +163,8 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 10:10:11 pushed 000-bash-stop-bm398w-b
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 10:17:10 launch 000-bash-spend358u-1415
 
 diag:
 == 000-probe-benspc-gpu-0827
@@ -277,26 +277,24 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 [0m
 top5cpu:
 %CPU COMM
-81.9 StorageManagementService
-73.4 Storage
-35.4 fileproviderd
-32.7 python
-27.7 bash
+85.9 ApplicationsStorageExtension
+69.0 fileproviderd
+35.3 python
+27.6 bash
+17.0 mediaanalysisd
 procs:
-  363     1 03-22:01:49 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-22:00:57 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 7773   818       01:46 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-15699     1 03-20:16:15 S    /usr/bin/ssh-agent
-44571 44570 01-12:37:53 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-12:37:53 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    17:52:26 SN   /usr/local/bin/opencode
-53479 20011    06:10:02 SN   /usr/local/bin/opencode
-54153 44066    06:09:42 SN   /usr/local/bin/opencode
-59802 59771    06:01:18 SN   /usr/local/bin/opencode
-60494 59018    11:07:19 SN   /usr/local/bin/opencode
-61605 61571    05:59:00 SN   /usr/local/bin/opencode
-64555 64533    07:32:53 SN   /usr/local/bin/opencode
-81797     1 01-22:55:32 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
-86036 86004       14:19 SN   /usr/local/bin/opencode
-87132 31168       13:37 SN   /usr/local/bin/opencode
-96820 64190       07:05 SN   ssh
+  363     1 03-22:04:12 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-22:03:20 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 7773   818       04:09 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+15699     1 03-20:18:38 S    /usr/bin/ssh-agent
+44571 44570 01-12:40:16 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-12:40:16 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    17:54:49 SN   /usr/local/bin/opencode
+53479 20011    06:12:25 SN   /usr/local/bin/opencode
+54153 44066    06:12:05 SN   /usr/local/bin/opencode
+59802 59771    06:03:41 SN   /usr/local/bin/opencode
+60494 59018    11:09:42 SN   /usr/local/bin/opencode
+61605 61571    06:01:23 SN   /usr/local/bin/opencode
+64555 64533    07:35:16 SN   /usr/local/bin/opencode
+81797     1 01-22:57:55 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+96820 64190       09:28 SN   ssh
