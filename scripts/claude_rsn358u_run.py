@@ -10,7 +10,14 @@ rule, 48 test rounds, 358i's sealed tests.
 
   python -B scripts/claude_rsn358u_run.py train --arm loop|plain --seed S --out DIR
   python -B scripts/claude_rsn358u_run.py eval --ckpt DIR/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out F
+  python -B scripts/claude_rsn358u_run.py poison --ckpt DIR/final.pt --out F    (validity mark V1, the Thread manager 12:25 UTC)
   python -B scripts/claude_rsn358u_run.py selftest | check-mask
+
+V1 poison check (Sol's input-audit test): on 100 freshly generated practised-size items per kind (sums4 seed 13579,
+grids5 seed 13580, numbers4 from the 4-number PRACTICE hands, rng 13581; never the TEST-ONLY panel, which stays evaluated
+once), run the net twice, once as is and once with every item's env field changed (sums/grids -> numbers,
+numbers -> sums). Every prediction (all 48 rounds and stop values for the loop) must be identical.
+The 2 unused rows of the kind embedding (2 x d weights) stay in both nets as dead weights and are counted in the size.
 """
 from __future__ import annotations
 
@@ -38,6 +45,47 @@ def tensors(items, device):
 R.tensors = tensors
 
 
+def poison_items():
+    import random
+    rs = random.Random(13579)
+    items = [E.make_sum(rs, 4) for _ in range(100)]
+    rg = random.Random(13580)
+    items += [E.latin_item(rg, *E.make_latin_base(rg, 5)) for _ in range(100)]
+    practice, _ = E.split_four(E.number_hands()[0])
+    rn = random.Random(13581)
+    items += [E.number_item(rn, h, t, s) for h, t, s in practice[:100]]
+    return items
+
+
+@torch.no_grad()
+def predictions(net, items, device):
+    net.eval()
+    t, s, _, env = R.tensors(items, device)
+    if net.arm == "plain":
+        return [net.plain_forward(t, s, env).argmax(-1)]
+    preds, qs = net.loop_rounds(t, s, env, R.TEST_ROUNDS)
+    return [preds, qs]
+
+
+def poison(a):
+    import json
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    net = R.load(a.ckpt, device)
+    items = poison_items()
+    out, same_all = {}, True
+    for kind in ("sums", "grids", "numbers"):
+        batch = [it for it in items if it.env == kind]
+        swapped = [E.Item("sums" if kind == "numbers" else "numbers", it.size, it.tokens, it.slot, it.target, it.meta)
+                   for it in batch]
+        p, q = predictions(net, batch, device), predictions(net, swapped, device)
+        same = all(torch.equal(x, y) for x, y in zip(p, q))
+        same_all &= same
+        out[kind] = {"n": len(batch), "identical": same}
+    res = {"arm": net.arm, "ckpt": str(a.ckpt), "V1_identical": same_all, "by_kind": out}
+    Path(a.out).write_text(json.dumps(res, indent=1), encoding="utf-8")
+    print(json.dumps(res))
+
+
 def selftest():
     import random
     rng = random.Random(0)
@@ -54,5 +102,10 @@ if __name__ == "__main__":
         selftest()
     elif sys.argv[1:] == ["check-mask"]:
         I2.I.check_mask()
+    elif sys.argv[1:2] == ["poison"]:
+        import argparse
+        ap = argparse.ArgumentParser()
+        ap.add_argument("cmd"); ap.add_argument("--ckpt", required=True); ap.add_argument("--out", required=True)
+        poison(ap.parse_args())
     else:
         R.main()
