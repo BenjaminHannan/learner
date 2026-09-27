@@ -1,4 +1,4 @@
-2026-09-27 03:37:43
+2026-09-27 03:39:58
 running:
 000-probe-zen-builder.running
 000-rescue-rd378.running
@@ -10,8 +10,6 @@ y1t-luna-rest-mac.running
 launched (no exit yet) / finished:
      803
 
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-2026-09-27 02:21:39 zen cap: 4 non-GPU rungo5 builders running, holding bm398w-luna-mac
 2026-09-27 02:21:40 zen cap: 4 non-GPU rungo5 builders running, holding k1h-luna-full-mac
 2026-09-27 02:21:41 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8-mac
 2026-09-27 02:21:41 zen cap: 4 non-GPU rungo5 builders running, holding y1t-luna-pilot-mac
@@ -160,6 +158,8 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 03:35:26 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8b-mac
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 2026-09-27 03:37:42 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8b-mac
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 03:39:58 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8b-mac
 
 diag:
 == 000-probe-zen-builder
@@ -223,21 +223,20 @@ cp-exit:0
 [91m[1mError: [0mError from provider (Console): Rate limit exceeded. Please try again later.
 top5cpu:
 %CPU COMM
-52.9 ApplicationsStorageExtension
-46.5 fileproviderd
-32.8 WindowServer
-17.9 bash
-11.7 Claude
+33.8 fileproviderd
+32.5 WindowServer
+31.9 bird
+29.2 ApplicationsStorageExtension
+23.6 cloudd
 procs:
-  363     1 03-15:24:40 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-15:23:48 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
-15699     1 03-13:39:06 S    /usr/bin/ssh-agent
-25762   818       00:37 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-44571 44570 01-06:00:44 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-06:00:44 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    11:15:17 SN   /usr/local/bin/opencode
-54273 54242    01:04:56 SN   /usr/local/bin/opencode
-60494 59018    04:30:10 SN   /usr/local/bin/opencode
-64555 64533       55:44 SN   /usr/local/bin/opencode
-81797     1 01-16:18:23 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
-89799 89775       32:59 SN   /usr/local/bin/opencode
+  363     1 03-15:26:56 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-15:26:04 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+15699     1 03-13:41:22 S    /usr/bin/ssh-agent
+44571 44570 01-06:03:00 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-06:03:00 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    11:17:33 SN   /usr/local/bin/opencode
+54273 54242    01:07:12 SN   /usr/local/bin/opencode
+60494 59018    04:32:26 SN   /usr/local/bin/opencode
+64555 64533       58:00 SN   /usr/local/bin/opencode
+81797     1 01-16:20:39 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+89799 89775       35:15 SN   /usr/local/bin/opencode
