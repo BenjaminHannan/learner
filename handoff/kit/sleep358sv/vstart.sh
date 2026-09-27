@@ -1,29 +1,28 @@
 #!/bin/bash
-# rsn-358t v3 on ONE vast rental: start (sleep research thread, 2026-09-27). Copy of handoff/kit/sleep358uv/vstart.sh (358u kit v2)
-# for 358t v3, run by the BASH-ONLY job handoff/held/rent358t3-1-start.md only after Ben's yes. Rents the single-GPU offer with the best
-# TFLOPS per $/h (>= 24 GB GPU RAM, compute capability >= 8.0, at most $0.65/h; reliability
-# >= 0.98, >= 16 CPU cores, inet_down >= 200; up to 3 hosts), attaches the Mac's ssh key, sends the pinned code (scripts, the
-# 358t folder, 358i's tests, box/drive.sh), starts box/drive.sh detached (torch 2.11.0 pin, SEAL-code-v3 22/22, selftests,
-# audit, Stage 0 with the cache-off 0/12 line, the 8 graded trains, seal both checkpoints, eval each once), waits until the
-# first run has launched, then leaves the Mac guard running (vguard.sh: $1.45 stop, 3 h 30 min on a 5090 scaled by TFLOPS; destroy only after a
-# manifest-verified copy, else stop the instance without destroying it).
+# rsn-358s on ONE vast rental: start (sleep research thread, 2026-09-27). Copy of handoff/kit/sleep358tv/vstart.sh, run by the
+# BASH-ONLY job handoff/held/rent358s-1-start.md only after release. Rents the single-GPU offer with the best TFLOPS per $/h
+# (>= 24 GB GPU RAM, compute capability >= 8.0, at most $0.60/h, reliability >= 0.98, >= 16 CPU cores, inet_down >= 200; up to
+# 3 hosts), attaches the Mac's ssh key, sends the pinned code (scripts, the 358s folder, 358i's tests, box/drive.sh), starts
+# box/drive.sh detached (torch 2.11.0 pin, SEAL-code 19/19, selftest and check-mask, all 8 sealed 3x trains, seal, eval each
+# once), waits until the first run has launched, then leaves the Mac guard running (vguard.sh: $3.60 stop, 6 h on a 5090 scaled
+# by TFLOPS; destroy only after a manifest-verified copy, else stop the instance without destroying it).
 # Usage: vstart.sh <kit-dir> <pinned-commit> <queue-job-name>
 set -u
 KD=$1; PIN=$2; JOB=${3:-?}
-. "$KD/handoff/kit/sleep358tv/vcommon.sh"
-echo "rsn-358t v3 vast start, kit $PIN, job $JOB, $(now)"
+. "$KD/handoff/kit/sleep358sv/vcommon.sh"
+echo "rsn-358s vast start, kit $PIN, job $JOB, $(now)"
 for ref in origin/main origin/builder-outbox; do
-  for p in $A/RESULTS-v3.md $A/SEAL-run-v3.sha256.txt $A/runs-v3 $A/run-vast-v3; do
-    git cat-file -e "$ref:$p" 2>/dev/null && { echo "DUPLICATE: $ref already has $p (BensPC or an earlier rental produced v3 runs)"; exit 0; }; done; done
+  for p in $A/RESULTS.md $A/SEAL-run-vast.sha256.txt $A/runs-vast $A/run-vast; do
+    git cat-file -e "$ref:$p" 2>/dev/null && { echo "DUPLICATE: $ref already has $p (a verdict or an earlier rental exists)"; exit 0; }; done; done
 [ -e "$G/rentals.txt" ] && { echo "DUPLICATE: $G/rentals.txt exists (a start already ran)"; tail -5 "$G/log.txt" 2>/dev/null; exit 0; }
 command -v "$VAST" > /dev/null || { echo "STOP: no vastai CLI; rented nothing"; exit 0; }
 [ -x "$PYM" ] || { echo "STOP: no python 3.12 from uv on the Mac; rented nothing"; exit 0; }
 [ -f "$KEY.pub" ] || { echo "STOP: no $KEY.pub to attach; rented nothing"; exit 0; }
 L=$(labelled); [ -n "$L" ] && { echo "DUPLICATE: live instance(s) labelled $LABEL: $L"; exit 0; }
-mkdir -p "$G"; cp "$KD/handoff/kit/sleep358tv/vcommon.sh" "$KD/handoff/kit/sleep358tv/vguard.sh" "$G/"
+mkdir -p "$G"; cp "$KD/handoff/kit/sleep358sv/vcommon.sh" "$KD/handoff/kit/sleep358sv/vguard.sh" "$G/"
 CR=$($VAST show user --raw < /dev/null 2>/dev/null | $PYJ 'import json,sys; print(round(float(json.load(sys.stdin).get("credit",0)),2))')
 log "credit \$${CR:-?}"
-over "${CR:-0}" 1.60 || { log "STOP: credit \$${CR:-?} is under the \$1.60 cap; nothing rented"; exit 0; }
+over "${CR:-0}" 4 || { log "STOP: credit \$${CR:-?} is under the \$4 cap; nothing rented"; exit 0; }
 OFFERS=$($VAST search offers "$QUERY" -o dph --raw < /dev/null 2>/dev/null | $PYJ 'import json,sys
 d=json.load(sys.stdin); d=d.get("offers",d) if isinstance(d,dict) else d
 ok=[o for o in d if o.get("dph_total") and o.get("total_flops") and float(o["dph_total"]) <= '"$MAXDPH"' and (o.get("gpu_ram") or 0) >= '"$MINRAM_GB"'*1000]
@@ -52,11 +51,11 @@ while read -r OID DPH CORES HID GPU TF RAM; do
         SS=$(sshto "$H" "$P"); ok=$($SS "echo ssh-ok" < /dev/null 2>/dev/null); [ "$ok" = ssh-ok ] && break; fi; fi
     sleep 10; done
   [ "$ok" = ssh-ok ] || { log "rental $n: no ssh within 8 min (status ${s:-?})"; destroy "$I"; continue; }
-  git archive "$PIN" scripts $A artifacts/claude-rsn358i-20260926/tests handoff/kit/sleep358tv/box | $SS "mkdir -p /root/r && tar -x -C /root/r" 2>> "$G/log.txt"
-  want=$(git show "$PIN:handoff/kit/sleep358tv/box/drive.sh" | shasum -a 256 | awk '{print $1}')
-  got=$($SS "sha256sum /root/r/handoff/kit/sleep358tv/box/drive.sh" < /dev/null 2>/dev/null | awk '{print $1}')
+  git archive "$PIN" scripts $A artifacts/claude-rsn358i-20260926/tests handoff/kit/sleep358sv/box | $SS "mkdir -p /root/r && tar -x -C /root/r" 2>> "$G/log.txt"
+  want=$(git show "$PIN:handoff/kit/sleep358sv/box/drive.sh" | shasum -a 256 | awk '{print $1}')
+  got=$($SS "sha256sum /root/r/handoff/kit/sleep358sv/box/drive.sh" < /dev/null 2>/dev/null | awk '{print $1}')
   [ "$want" = "$got" ] || { log "rental $n: drive.sh on the rental ($got) does not match $PIN ($want)"; destroy "$I"; continue; }
-  $SS "cd /root/r && setsid nohup bash handoff/kit/sleep358tv/box/drive.sh > /root/r/drive.log 2>&1 < /dev/null & echo launched" < /dev/null 2>> "$G/log.txt"
+  $SS "cd /root/r && setsid nohup bash handoff/kit/sleep358sv/box/drive.sh > /root/r/drive.log 2>&1 < /dev/null & echo launched" < /dev/null 2>> "$G/log.txt"
   TC=$(awk -v b="$BASE_TIME" -v r="$TF5090" -v t="$TF" 'BEGIN{x=r/t; if (x<1) x=1; printf "%d", b*x}')
   ID=$I; echo "$I $H $P $TC" > "$G/state"; log "time cap $TC s (5090 $TF5090 / $GPU $TF TFLOPS, never below 1x); money stop \$$CAP_STOP"; break
 done <<EOF
@@ -66,11 +65,11 @@ EOF
 log "drive.sh launched on $ID"
 # watch the rental's own progress file until all 8 trains have launched (pip + seal + selftests first), at most 15 min
 last=""; for w in $(seq 1 30); do sleep 30
-  last=$($SS "grep -E ' (FAILED |LAUNCH loop-trm-s1 )' /root/r/W/drive-state.txt | tail -1" < /dev/null 2>/dev/null)
-  case "$last" in *"FAILED "*|*"LAUNCH loop-trm-s1 "*) break;; esac; done
+  last=$($SS "grep -E ' (FAILED |LAUNCH loop-s9 )' /root/r/W/drive-state.txt | tail -1" < /dev/null 2>/dev/null)
+  case "$last" in *"FAILED "*|*"LAUNCH loop-s9 "*) break;; esac; done
 $SS "cat /root/r/W/drive-state.txt" < /dev/null 2>/dev/null | tee -a "$G/log.txt"
 case "$last" in
-  *"LAUNCH loop-trm-s1 "*) ;;
+  *"LAUNCH loop-s9 "*) ;;
   *) log "STOPPED: drive.sh did not launch the first run (last: ${last:-none})"
      if copy_back logs || copy_back logs; then destroy "$ID" && R=START-FAIL || R=START-FAIL-DESTROY-UNCONFIRMED
      else stop_inst "$ID"; R=START-FAIL-STOPPED-NOT-DESTROYED; fi

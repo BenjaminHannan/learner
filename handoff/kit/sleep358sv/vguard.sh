@@ -1,5 +1,5 @@
 #!/bin/bash
-# rsn-358t v3 vast guard (sleep research thread, 2026-09-27; copy of the 358u kit v2 guard). Started detached on the Mac by vstart.sh; runs from $G (its own copy,
+# rsn-358s vast guard (sleep research thread, 2026-09-27; copy of the 358u kit v2 guard). Started detached on the Mac by vstart.sh; runs from $G (its own copy,
 # so no worktree or queue job needs to stay alive). Every 5 minutes: money and time check, then the rental's progress file.
 # Ends on the first of the reasons below. It copies back what exists, checks every file against a sha256 manifest made on the
 # rental, and checks that each of the 8 runs is sealed with a matching Mac copy of final.pt (or recorded as DIED). Only then does
@@ -7,8 +7,8 @@
 # instead (GPU billing ends, files stay on its disk) and writes <reason>-STOPPED-NOT-DESTROYED for the Director.
 #   DONE        drive.sh finished (all trains, seals, poison checks and evals)
 #   FAILED      drive.sh stopped itself (its reason is kept)
-#   BUDGET-STOP all rentals of this task reach $1.45 (cap $1.60)
-#   TIME-STOP   the time cap since the first rental (3 h 30 min on a 5090, scaled up for slower cards; in $G/state)
+#   BUDGET-STOP all rentals of this task reach $3.60 (cap $4)
+#   TIME-STOP   the time cap since the first rental (6 h on a 5090, scaled up for slower cards; in $G/state)
 #   STALL       no log on the rental grew for 30 min and the GPU is idle
 #   HOST-FAIL   no ssh answer for 20 min (nothing can be copied: stopped, not destroyed)
 # The last line of $G/END is the reason. vcollect.sh (a queue job) moves the copied files into the repo.
