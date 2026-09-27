@@ -20,3 +20,4 @@
      recount counts them too). A U1 gain is not claimed as transfer to new separators without that split.
   3. The 8 lookalikes that hold a square by read_latin are reported for L6 and G5 only (read as a square, same grid,
      none; PASSMARKS-gr6), and they are counted nowhere else. R2 is on the other 52.
+- 2026-09-27T02:30:35Z: training is still running (STEP train at 01:30:08Z; about 2 hours expected).
