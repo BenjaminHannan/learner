@@ -2697,3 +2697,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-27 14:41 UTC Director: LAUNCH rd-378g on vast (rent378g-1-start, kit 54cfbbfcb, jobs 7fe10c51b; money stop $2.50) under Ben's standing vast order (ae27bb2b6). Thread manager OK 14:40. BensPC passes 185-p1..p4 to held/superseded/.
 - 2026-09-27 14:41 UTC Director: LAUNCH rv390b p1 on vast (rent-rv390b-p1, braced at b940c211e; cap $1.50) under Ben's standing vast order (ae27bb2b6). Thread manager OK stands (14:40). p2 after p1 ends.
 - 2026-09-27 14:43 UTC Director: LAUNCH rsn-358s on vast (rent358s-1-start, kit 04a388f2d, jobs c6ef50a78; stop $3.60, cap $4) under Ben's standing vast order (ae27bb2b6). Thread manager OK 14:43. BensPC passes 160-164 to held/superseded/.
+- 2026-09-27 14:47 UTC Director: LAUNCH c1-dev on vast (rent-c1dev-1-start, kit d0072550e; stop $1.50, cap $2) under Ben's standing vast order (ae27bb2b6). Thread manager OK 14:45.
