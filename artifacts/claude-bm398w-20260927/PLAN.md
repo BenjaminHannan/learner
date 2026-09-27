@@ -1,4 +1,4 @@
-# bm-398w PLAN: train the 1B to read 20 lines as well as it reads the right ones (benchmarks thread, written 2026-09-27 05:49 UTC)
+# bm-398w PLAN: train the 1B to read 20 lines as well as it reads the right ones (benchmarks thread, written 2026-09-27 05:49 UTC, sealed 06:12 UTC)
 
 Registered before any data is generated or anything is trained. Reviewed by the Thread manager (05:30 and 05:46 UTC)
 on PLAN-DRAFT.md (492ee192b, e15352161); its fixes are in. A separate read-only reviewer then checked both new
@@ -80,7 +80,8 @@ and the prompt stay exactly as bm-398v's BN arm.
   gives BR. The switch is a **hand-given stand-in switch (disclosed scaffolding)**: the panel decides on or off (on
   for LoCoMo and the practice panel, off for MMLU and GSM8K). There is no switch in the build; a switch or MoE in
   the build needs Ben's yes, and dl-9 is only testing whether a learned switch can work. In a CPU smoke here, the
-  switch-off arm reproduced bm-398n's store-B replies byte for byte (2 of 2).
+  switch-off arm reproduced bm-398n's store-B replies byte for byte (3 of 3), and a relaunched run kept its rows
+  and went on.
 - Report only: Qwen3.5-2B on the same 20 lines, word-overlap F1 only (not judged), and only if it is already on
   BensPC (no download).
 
