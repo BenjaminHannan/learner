@@ -1,0 +1,2014 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit rev-parse --show-toplevel; pwd; git branch -a | head -n 50; git log --oneline -5
+ls C:/Users/benja/ 2>&1 || echo "NO BensPC path"
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+* claude/card-experiment-handoff-7c5b27
++ claude/fact-saving-note-filtering-4ff1ff
++ claude/forgetting-plain-english-gap-9258f0
++ claude/locomo-length-penalty-408e2a
++ claude/loop-net-generalization-analysis-729ee3
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/pull-from-main-629dc4
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
+  codex/testing-experiment-44
++ main
+  rent-zdl5c-results
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/builder-outbox-tmp
+  remotes/origin/builder-outbox-tmpfetch
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/main-tmpfetch
+  remotes/origin/worktree-research
+ab09c935c Add vast instance check report 20260926l
+599f870cd claude-credit-20260926k: read-only vast money check 2026-09-26
+ef311c7bd depot 52755827 STOPPED (disk kept) 2026-09-26
+5484e6460 rent-mu405 STOPPED by owner (duplicate of CPU run) 2026-09-26
+4dd0adf85 claude-credit-20260926j: read-only vast money check 2026-09-26
+ls: C:/Users/benja/: No such file or directory
+NO BensPC path
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 30; echo "---FETCH---"; git fetch origin main builder-outbox 2>&1 | head -n 20
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+---FETCH---
+error: cannot lock ref 'refs/remotes/origin/builder-outbox': is at 166c1c585a035ce6a681b22c0dd92f7469eb6e70 but expected cd9bcbec84e4ca239cfa5c2d46e7287aea08e7c3
+From github.com:BenjaminHannan/learner
+ * branch                main           -> FETCH_HEAD
+ * branch                builder-outbox -> FETCH_HEAD
+ ! cd9bcbec8..166c1c585  builder-outbox -> origin/builder-outbox  (unable to update local ref)
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358i3-20260926/PASSMARKS.md 2>&1
+echo "=====DOCSTRING====="
+git show origin/main:scripts/claude_rsn358i2_run.py 2>&1 | head -n 120
+echo "=====DUPLICATE GATE====="
+git show origin/main:artifacts/claude-rsn358i3-20260926/RESULTS.md 2>&1 | head -n 20
+echo "---outbox---"
+git show origin/builder-outbox:artifacts/claude-rsn358i3-20260926/RESULTS.md 2>&1 | head -n 20
+# rsn-358i3 pass marks: does the bug-fixed 358i loop beat its plain twin on fresh seeds, on one machine? (fixed before any run; sleep research thread, 2026-09-26 20:04 UTC)
+
+**Why:** rsn-358i2 (artifacts/claude-rsn358i2-20260926/VERIFY-recount.md) confirmed the autocast cache bug and put the fixed loop well ahead of plain on sums6 (+100.50) and grids6 (+51.75). Two things stop that being "shown": the plain reference ran on a different machine and torch version (a torch 2.8 rental vs BensPC torch 2.11), and seeds 1-4 of the fixed loop have now been read. This job answers both with one run, as the Director's board tier T1 ("seeds 5-8, only if 358i2 G0-G3 read like a pass"; they did) and the Thread manager's plain-rerun request (19:59 UTC).
+**Change vs 358i2:** none in code. The same sealed files (scripts/claude_rsn358i2_run.py and its imports, cache off, gradient logging), the same tests, 60,000 steps, batch 256, lr and schedule, v2 stop rule with 48 test rounds. New: fresh seeds 5-8 for BOTH arms, both trained on BensPC in this job.
+**Arms:** loop (2 x d512) and plain (8 x d256), seeds 5, 6, 7, 8. Report only: plain seeds 1-4 retrained on BensPC.
+
+## Graded test (one test): loop s5-8 vs plain s5-8, both from this job; loop = raw final.pt
+The marks are 358t's PASSMARKS-v2 G0-G3, word for word, with plain = this job's BensPC plain on the same seeds.
+
+| mark | pass |
+|---|---|
+| V0 validity | steps_block_nograd = 0 in every loop train_summary.json. Otherwise INCONCLUSIVE. |
+| G0 validity | On every seed, loop and plain are right on >= 210/300 of the practised-size tests in at least 2 of 3 kinds. Otherwise INCONCLUSIVE. |
+| G1 bigger | The 4-seed mean of loop - plain is >= +30 on at least 2 of sums6 / grids6 / numbers5, and >= -10 on the third. AND on at least 3 of 4 seeds, loop - plain > 0 on each of those (at least 2) tests. |
+| G2 practised | The 4-seed mean of loop - plain is >= -10 on each practised-size test (sums4, grids5, numbers4). |
+| G3 stop | On at least 3 of 4 seeds: loop right with its own stop >= loop right at fixed 16 rounds - 5 on each bigger test. AND mean rounds on sums6 > on sums4. |
+
+**PASS = V0, G0, G1, G2 and G3.** Anything else with V0 and G0 met is a FAIL, and it stays a FAIL.
+**Proved wrong:** V0 and G0 met, and the mean loop - plain is <= +5 on all three bigger tests.
+Note, known before running: numbers4/5 were 0-3 of 300 on both arms in 358i2, so in practice G1 needs both sums6 and grids6 at >= +30.
+
+## Report only
+- Plain s1-4 on BensPC vs 358i's rental plain s1-4, per test: the machine difference. And loop s1-4 (358i2) minus BensPC plain s1-4: the 358i2 gaps on one machine.
+- sums8/10/12, grids7, loop at fixed rounds, right at any round, mean rounds; torch/CUDA/GPU; minutes per run.
+
+## What each outcome means
+- PASS: "the loop beats its same-size plain twin" becomes SHOWN for these puzzle kinds at this size, on one machine. The fixed 358i loop becomes the net for 358b3 (the chat-puzzle gate), the 358x carry-over rerun and the 358y depth sweep.
+- FAIL, not proved wrong: the 358i2 gaps were partly machine or seed luck; report the size of the drop.
+- Proved wrong: the 358i2 lead does not hold on one machine; the loop design goes back to the exit rule's next step.
+
+**Prediction:** PASS 70%. The 358i2 gaps (+100.50 sums6, +51.75 grids6) are large, and the audit's logs showed plain learning at the same speed on both machines, but grids6 at +30 per 4 fresh seeds is not certain.
+
+**Cost:** $0 (BensPC). 8 graded runs plus 4 report-only runs. 358i2's 4 loops took 103-105 min together on BensPC; estimate 4-6 h in total. Cap 10 h; report-only plain s1-4 run last and are dropped first.
+=====DOCSTRING=====
+#!/usr/bin/env python3
+"""rsn-358i2 (sleep research thread, 2026-09-26): rsn-358i's loop arm with ONE change, a bug repair: bf16 autocast
+runs with its weight cache OFF.
+
+Why (artifacts/claude-stage0-autocast-20260926/CPU-RESULT.md; the Thread manager's audit,
+/mnt/project-files/thread-manager/loop-training-audit-2026-09-26.md, Test A): the loop's free rounds run under
+torch.no_grad() inside the same `with amp:` block as its graded rounds (scripts/claude_rsn358a_run.py:118-121, :286).
+On torch 2.8 autocast caches the bf16 copy of each Linear weight the first time it is cast; a copy made under
+no_grad has no gradient link, and the graded rounds reuse it, so the loop's layer weights get no gradient on every
+step with at least one free round (about 85% of steps). Plain never runs a free round and is unaffected. Newer torch
+(2.11, 2.14) does not show it. cache_enabled=False removes the cache on every version; the forward numbers are the
+same (the same bf16 casts, made again each time instead of reused).
+Nothing else changes: 358i's data, sizes, steps, schedule, stop rule v2, tests. Added logging only (no effect on
+training): torch/CUDA versions, GPU name, and gradient checks in train_summary.json:
+  steps_block_nograd = how many optimizer steps had any block Linear weight with no or all-zero gradient (should be 0)
+  grad_norms = per-block gradient norm every 2,500 steps.
+
+  python -B scripts/claude_rsn358i2_run.py train --arm loop --seed S --out DIR
+  python -B scripts/claude_rsn358i2_run.py eval --ckpt DIR/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out F
+  python -B scripts/claude_rsn358i2_run.py selftest | smoke | check-mask
+"""
+from __future__ import annotations
+
+import json
+import platform
+import sys
+from pathlib import Path
+
+import torch
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_rsn358i_run as I  # noqa: E402  (358i: legend grids + v2 stop rule + half-narrow heads)
+
+R, E = I.R, I.E
+NORM_EVERY = 2500
+
+
+class NoCacheAutocast(torch.autocast):
+    """torch.autocast with the weight cache off unless a caller asks otherwise; the only training change"""
+
+    def __init__(self, *args, **kw):
+        kw.setdefault("cache_enabled", False)
+        super().__init__(*args, **kw)
+
+
+torch.autocast = NoCacheAutocast
+
+_STATS = {"net": None, "steps": 0, "steps_block_nograd": 0, "grad_norms": []}
+_init = R.Net.__init__
+
+
+def _net_init(self, *a, **k):
+    _init(self, *a, **k)
+    _STATS["net"] = self
+
+
+R.Net.__init__ = _net_init
+_clip = torch.nn.utils.clip_grad_norm_
+
+
+def _block_mats(net):
+    return [(n, p) for n, p in net.named_parameters() if n.startswith("blocks.") and p.dim() == 2
+            and not n.endswith((".br", ".bc"))]
+
+
+def _clip_and_check(params, *a, **k):
+    net = _STATS["net"]
+    if net is not None and net.training:
+        _STATS["steps"] += 1
+        mats = _block_mats(net)
+        if any(p.grad is None or not bool(p.grad.detach().abs().sum()) for _, p in mats):
+            _STATS["steps_block_nograd"] += 1
+        if _STATS["steps"] == 1 or _STATS["steps"] % NORM_EVERY == 0:
+            by_block = {}
+            for n, p in mats:
+                b = n.split(".")[1]
+                by_block[b] = by_block.get(b, 0.0) + (0.0 if p.grad is None else float(p.grad.detach().float().norm()) ** 2)
+            _STATS["grad_norms"].append({"step": _STATS["steps"], **{f"block{b}": round(v ** 0.5, 6) for b, v in by_block.items()}})
+    return _clip(params, *a, **k)
+
+
+torch.nn.utils.clip_grad_norm_ = _clip_and_check
+_train = R.train
+
+
+def train(a):
+    _STATS.update(steps=0, steps_block_nograd=0, grad_norms=[])
+    _train(a)
+    f = Path(a.out) / "train_summary.json"
+    d = json.loads(f.read_text(encoding="utf-8"))
+    d.update({"torch": torch.__version__, "cuda": torch.version.cuda, "python": platform.python_version(),
+              "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+              "autocast_cache": False, "steps_seen": _STATS["steps"],
+              "steps_block_nograd": _STATS["steps_block_nograd"], "grad_norms": _STATS["grad_norms"]})
+    f.write_text(json.dumps(d, indent=1), encoding="utf-8")
+
+
+R.train = train
+
+
+def selftest():
+    """the stage 0 check through this file's autocast: no block Linear weight is left without gradient"""
+    import random
+    torch.manual_seed(0)
+    rng = random.Random(0)
+    items = [E.latin_item(rng, *E.make_latin_base(rng, 5)) for _ in range(8)]
+    t, s, y, env = R.tensors(items, "cpu")
+    net = R.Net("loop")
+    with torch.autocast("cpu", dtype=torch.bfloat16):
+        outs = net.loop_train(t, s, env, 3, 2)
+        loss = sum(R.ce_and_exact(lg, s, y)[0] + q.float().mean() for lg, q in outs)
+    loss.backward()
+    mats = _block_mats(net)
+    none = sum(p.grad is None or not bool(p.grad.abs().sum()) for _, p in mats)
+    assert len(mats) == 8 and none == 0, (len(mats), none)
+    assert torch.autocast is NoCacheAutocast
+    print(f"selftest ok: torch {torch.__version__}, cache off, 0/8 block Linear weights without gradient after 3 free + 2 graded rounds")
+
+
+if __name__ == "__main__":
+=====DUPLICATE GATE=====
+fatal: path 'artifacts/claude-rsn358i3-20260926/RESULTS.md' does not exist in 'origin/main'
+---outbox---
+fatal: path 'artifacts/claude-rsn358i3-20260926/RESULTS.md' does not exist in 'origin/builder-outbox'
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358i3-20260926/SEAL-code.sha256.txt 2>&1 | head -n 30
+echo "===files in dir==="; git ls-tree -r --name-only origin/main -- artifacts/claude-rsn358i3-20260926/ 2>&1
+echo "===seal-run==="; git show origin/main:artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt 2>&1 | head -n 20
+8d69958c053342d47f44895375c16de3afdef7a55accdf4136ac55220fc82877  scripts/claude_rsn358i2_run.py
+0dc2f9423a09b3e808bf8644c8946b57ef913d8fa1def7f8156c8297472c3599  scripts/claude_stage0_autocast_grad.py
+4b9dfb907e49d47caefbbe606bc1610d12f15a85b39bce6aaa32ef78771f5ef4  scripts/claude_rsn358i_run.py
+0a82d5a512fe3da9a737a07935f9cd07fa78fbecd4446b736e85230355c0c928  scripts/claude_rsn358g_run.py
+80513101e4a6820f3fc32b2d23d01bcfc1ccca9457ae928826bdf37d89d816fe  scripts/claude_rsn358a2_run.py
+9b0e1a03ffdf354575e0a19acc58042c869c261565ba62e91e71af899cbca9b0  scripts/claude_rsn358a_run.py
+af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0  scripts/claude_rsn358a_envs.py
+c00aa62f4bc9ed710019581ee61288256238539c5bcfb6759d17f89c01a958de  scripts/claude_blurt1.py
+cfbdb334f1e8f0fb3fda980ae71d906dde250d77664f0cb14d0378070d4689c9  artifacts/claude-rsn358i-20260926/tests/grids5.jsonl
+1f922b36e6ecc74375079cca0447c11e0dce836d3deba54d187bb38147225179  artifacts/claude-rsn358i-20260926/tests/grids6.jsonl
+c9b56b4a766af88e7d520b7c440c46a45e407c90c46c6abf0f6ffae9584d2ee9  artifacts/claude-rsn358i-20260926/tests/grids7.jsonl
+e887fb6154ddd811fccec38884a6a88dbd69320bc72806147c18d7b40f6d1387  artifacts/claude-rsn358i-20260926/tests/numbers4.jsonl
+d9d53c3409f298870c0469dc2476556ea7839b6f2469a4c3b0e8f4abb01897ec  artifacts/claude-rsn358i-20260926/tests/numbers5.jsonl
+67e459cd8f5a482a66a9efb3d88906f65657a01f2894e364efcfa70125322f8b  artifacts/claude-rsn358i-20260926/tests/sums10.jsonl
+71eca5d906a2c3bd45e1f075ed763d166af5c903884fed69f18211e18cef868f  artifacts/claude-rsn358i-20260926/tests/sums12.jsonl
+01728d1912b590221e48835b7f787be4cb94f4f93aa4eae765fd46db1d7c5bfb  artifacts/claude-rsn358i-20260926/tests/sums4.jsonl
+a6ab304257625c83c87de063c925014cef49e3bfe3ec0c45a149b5ac2c3c9322  artifacts/claude-rsn358i-20260926/tests/sums6.jsonl
+312c46fd6c9fb54e28185ca9533e1993c11d8a4d6fc9ee4775edb7046a121465  artifacts/claude-rsn358i-20260926/tests/sums8.jsonl
+d00661c6494c3768aed5d64790052619c982d557a509188c89eed3d6c6bf9322  artifacts/claude-rsn358i3-20260926/PASSMARKS.md
+===files in dir===
+artifacts/claude-rsn358i3-20260926/PASSMARKS.md
+artifacts/claude-rsn358i3-20260926/SEAL-code.sha256.txt
+===seal-run===
+fatal: path 'artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt' does not exist in 'origin/main'
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- handoff/queue/ | head -n 30
+echo "==="
+git show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | wc -l
+# look for BensPC access instructions
+ls handoff/ 2>&1 | head -n 30; ls /tmp/ 2>&1 | head -n 20; uptime; df -g / 2>&1 | head
+handoff/queue/000-adapters-0926d.md
+handoff/queue/000-benspc-check.md
+handoff/queue/000-cache-pin.md
+handoff/queue/000-check-358t.md
+handoff/queue/000-ckpt-copy.md
+handoff/queue/000-credit-0926b.md
+handoff/queue/000-credit-0926j.md
+handoff/queue/000-credit-0926k.md
+handoff/queue/000-diskcheck-0926.md
+handoff/queue/000-find-brd8w.md
+handoff/queue/000-glm-helper-v11.md
+handoff/queue/000-glm-opencode-probe.md
+handoff/queue/000-glm-throughput.md
+handoff/queue/000-instances-0926c.md
+handoff/queue/000-instances-0926l.md
+handoff/queue/000-orphans-0926i.md
+handoff/queue/000-peek-358i2pc-torch.md
+handoff/queue/000-peek-358i2pc.md
+handoff/queue/000-probe-007b.md
+handoff/queue/000-push-rd371b.md
+handoff/queue/000-republish-0926f.md
+handoff/queue/000-republish-0926g.md
+handoff/queue/000-republish-0926h.md
+handoff/queue/000-smoke.md
+handoff/queue/000-stop-depot.md
+handoff/queue/000-stop-k1h.md
+handoff/queue/000-stop-k1hz-salvage.md
+handoff/queue/000-stop-mu405.md
+handoff/queue/000-stop-q404.md
+handoff/queue/000-trash-0926.md
+===
+      32
+HANDOFF.md
+kit
+memory
+replies
+__KMP_REGISTERED_LIB_19337
+__KMP_REGISTERED_LIB_27249
+__KMP_REGISTERED_LIB_27250
+__KMP_REGISTERED_LIB_73221
+__KMP_REGISTERED_LIB_73222
+__KMP_REGISTERED_LIB_73227
+__KMP_REGISTERED_LIB_73229
+__KMP_REGISTERED_LIB_73236
+__KMP_REGISTERED_LIB_73239
+__KMP_REGISTERED_LIB_73242
+__KMP_REGISTERED_LIB_73245
+__KMP_REGISTERED_LIB_73248
+__KMP_REGISTERED_LIB_73252
+__KMP_REGISTERED_LIB_73255
+__KMP_REGISTERED_LIB_73272
+__KMP_REGISTERED_LIB_73281
+__KMP_REGISTERED_LIB_73282
+__KMP_REGISTERED_LIB_73285
+__KMP_REGISTERED_LIB_73290
+__KMP_REGISTERED_LIB_73292
+16:07  up 3 days, 6 hrs, 4 users, load averages: 112.91 120.62 115.96
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        52    20%  484014 550905480    0%   /
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- handoff/queue/ | grep -i -E "358i3|rsn" | head -n 20
+echo "==="
+git log --oneline origin/main -- artifacts/claude-rsn358i3-20260926/ | head
+echo "===queue file for this task?==="
+git ls-tree -r --name-only origin/main -- handoff/queue/ | tail -n 40
+handoff/queue/005t-rsn-358a-shared.md
+handoff/queue/005u-rsn-358c1-stop.md
+handoff/queue/100-claude-sleep-358i3pc.md
+handoff/queue/rent-rsn353b.md
+handoff/queue/rsn-138nb-build.md
+handoff/queue/rsn-138nb-panel.md
+handoff/queue/rsn-138p-build.md
+handoff/queue/rsn-266-build.md
+handoff/queue/rsn-266-panel.md
+handoff/queue/rsn-266b-build.md
+handoff/queue/rsn-266b-panel.md
+handoff/queue/rsn-268-build.md
+handoff/queue/rsn-268-panel.md
+handoff/queue/rsn-268b-build.md
+handoff/queue/rsn-268b-panel.md
+handoff/queue/rsn-290-diag.md
+handoff/queue/rsn-291-build.md
+handoff/queue/rsn-291-panel.md
+handoff/queue/rsn-291-publish.md
+handoff/queue/rsn-292-build.md
+===
+f35b1b09f rsn-358i3 sealed and queued (T1, BensPC, $0): fixed 358i loop vs plain on fresh seeds 5-8, both arms on one machine; plain s1-4 rerun report only
+===queue file for this task?===
+handoff/queue/talk-255b-probe.md
+handoff/queue/talk-280-build.md
+handoff/queue/talk-280-panel.md
+handoff/queue/talk-280b-build.md
+handoff/queue/talk-280b-panel.md
+handoff/queue/talk-280b-rerun.md
+handoff/queue/talk-280m-build.md
+handoff/queue/talk-280m-panel.md
+handoff/queue/talk-280n-panel.md
+handoff/queue/talk-280n-run.md
+handoff/queue/talk-280p-panel.md
+handoff/queue/talk-280p-probe.md
+handoff/queue/talk-280p-run.md
+handoff/queue/talk-281-build.md
+handoff/queue/talk-281-panel.md
+handoff/queue/talk-281b-build.md
+handoff/queue/talk-281b-panel.md
+handoff/queue/talk-282-build.md
+handoff/queue/talk-282-panel.md
+handoff/queue/talk-282b-build.md
+handoff/queue/talk-282b-panel.md
+handoff/queue/talk-292t-build.md
+handoff/queue/talk-292t-panel.md
+handoff/queue/talk-f0-base.md
+handoff/queue/talk-f0-bench.md
+handoff/queue/talk-f1-build.md
+handoff/queue/talk-f1-gradeA1.md
+handoff/queue/talk-f1-gradeA2.md
+handoff/queue/talk-f1-gradeA3.md
+handoff/queue/talk-f1-gradeA4.md
+handoff/queue/talk-f1-gradeA5.md
+handoff/queue/talk-f1-gradeA6.md
+handoff/queue/talk-f1-gradeB1.md
+handoff/queue/talk-f1-gradeB2.md
+handoff/queue/talk-f1-gradeB3.md
+handoff/queue/talk-f1-gradeB4.md
+handoff/queue/talk-f1-gradeB5.md
+handoff/queue/talk-f1-gradeB6.md
+handoff/queue/talk-f1-judge.md
+handoff/queue/y1t-glm-mac.md
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/100-claude-sleep-358i3pc.md 2>&1
+COMMON RULES: follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (the sleep research thread, Claude, wrote this task on 2026-09-26). Report in your final reply: verdict first, integer counts, every deviation.
+GPU: yes (BensPC; one job at a time; $0, no rental). Create C:\Users\benja\GPU-BUSY.txt naming claude-sleep-358i3pc while you run and delete it at the end; if it already exists naming another job, stop with BUSY and run nothing.
+TIME CAP: 10 hours in total.
+DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-rsn358i3-20260926/RESULTS.md.
+TIER: T1 on the Director's board (Sleep research seeds 5-8; 358i2's G0-G3 were met, artifacts/claude-rsn358i2-20260926/VERIFY-recount.md).
+
+YOUR TASK: builder for rsn-358i3 on BensPC: 358i2's fixed loop AND plain, fresh seeds 5-8, both trained here, graded loop vs plain; plus plain seeds 1-4 (report only). The sleep research thread wrote and sealed all code; it is byte-identical to 358i2's. Run it and never edit it. If something breaks, stop and report the exact error; do not patch. Artifacts go in artifacts/claude-rsn358i3-20260926/.
+READ FIRST (origin/main): artifacts/claude-rsn358i3-20260926/PASSMARKS.md and the docstring of scripts/claude_rsn358i2_run.py.
+Python on BensPC: C:/Users/benja/lis300/venv/Scripts/python.exe (torch CUDA + numpy). No installs, no model downloads.
+INDEPENDENCE: artifacts/claude-rsn358i-20260926/tests/ is TEST-ONLY. Never open or print an item; the eval command writes counts only. Run each eval exactly once per checkpoint file.
+1. On BensPC: `git archive origin/main scripts artifacts/claude-rsn358i3-20260926 artifacts/claude-rsn358i-20260926/tests`, extract keeping paths into a fresh folder C:/Users/benja/rsn358i3/. Check `nvidia-smi` (report free memory and processes) and free disk (stop if under 5 GB).
+2. SEAL: every line of artifacts/claude-rsn358i3-20260926/SEAL-code.sha256.txt must match (19 lines); otherwise stop.
+3. Report only, never stops the job: `python -c "import torch;print(torch.__version__, torch.version.cuda)"`; paste the output into RESULTS.md.
+4. Checks: `python -B scripts/claude_rsn358a_envs.py selftest` prints "selftest ok"; `python -B scripts/claude_rsn358i2_run.py selftest` prints "selftest ok"; `python -B scripts/claude_rsn358i2_run.py check-mask` prints "check-mask ok". Anything else: stop.
+5. TRAIN, each run logged to W/<R>.log and launched detached, in this order: loop s5, plain s5, loop s6, plain s6, loop s7, plain s7, loop s8, plain s8, then (report only) plain s1, plain s2, plain s3, plain s4. Command: `python -B scripts/claude_rsn358i2_run.py train --arm <arm> --seed <s> --out W/<arm>-s<s>` (defaults only; no other flags). Start two at once; after 5 minutes, if nvidia-smi shows at least 5 GB free, start a third, and so on up to four at once; whenever one finishes, start the next in the order above. After 30 minutes project the finish from the logs ("min" field). If the graded runs cannot all finish inside the time cap, drop the report-only plain s1-4 first (never start them, or stop them by exact PID), then stop seed 8 of both arms by exact PID (TOO-SLOW, making the run INCONCLUSIVE) and finish the rest.
+6. SEAL each final.pt BEFORE its eval: append its sha256 (64 hex characters, check the length) to artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt.
+7. EVAL once per checkpoint: `python -B scripts/claude_rsn358i2_run.py eval --ckpt W/<R>/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/<R>/tests.json`. Copy train_log.jsonl, train_summary.json, tests.json and the log into artifacts/claude-rsn358i3-20260926/runs/<R>/ on the Mac (force-add; artifacts/ is git-ignored).
+8. RESULTS.md, verdict first: V0, G0, G1, G2, G3 exactly as PASSMARKS.md defines them (loop s5-8 vs this job's plain s5-8), then the proved-wrong clause; a per-seed table of every test (loop, plain, gap) with 4-seed means; each loop seed right at 1/2/4/8/12/16/24/32/48 rounds and at any round, and mean rounds per test; dev grids5 at 5k/10k/20k/40k/60k per run; steps_block_nograd per run. Report only: plain s1-4 (BensPC) vs origin/main artifacts/claude-rsn358i-20260926/runs/plain-s{1..4}/tests.json per test, and origin/main artifacts/claude-rsn358i2-20260926/runs/loop-s{1..4}/tests.json (or origin/builder-outbox if not yet on main) minus BensPC plain s1-4 per test. GPU name, torch/CUDA versions, minutes per run, every deviation. Append ledger lines (cat >> artifacts/fable-predictions-ledger.md).
+9. PUSH: artifacts/claude-rsn358i3-20260926/RESULTS.md artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt artifacts/claude-rsn358i3-20260926/runs artifacts/fable-predictions-ledger.md. Never push weights. Keep every final.pt on BensPC at C:/Users/benja/premonition-models/rsn358i3/<R>/ and copy them to the Mac at ~/premonition-models/rsn358i3/<R>/; record the sha256 values in RESULTS.md.
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/000-benspc-check.md 2>&1
+echo "=====PEEK358i2PC====="
+git show origin/main:handoff/queue/000-peek-358i2pc.md 2>&1 | head -n 60
+COMMON RULES (the director, Claude, wrote this task on 2026-09-25). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md. REPORT ONLY: change nothing, install nothing, stop nothing.
+GPU: yes (BensPC; one job at a time).
+TIME CAP: 5 minutes in total.
+
+YOUR TASK: 000-benspc-check. Ben asked for tonight's GPU work to run on his own PC. Check that BensPC is reachable and ready.
+1. Run `nvidia-smi` on BensPC and report the exact GPU name, total memory, driver version, and whether any process is using the GPU.
+2. Report free disk space on C:.
+3. Report whether C:/Users/benja/lis300/venv/Scripts/python.exe runs `import torch; print(torch.cuda.is_available())`.
+Final reply: one line per item, then `BENSPC OK` or `BENSPC FAIL: <reason>`.
+=====PEEK358i2PC=====
+COMMON RULES (the director, Claude, wrote this task on 2026-09-26). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+GPU: no (a read-only look at BensPC over the usual BensPC ssh; uses no GPU; ignore GPU-BUSY.txt, which belongs to claude-sleep-358i2pc).
+
+YOUR TASK: read-only progress peek at claude-sleep-358i2pc on BensPC (director, 2026-09-26 18:45 UTC; owner Sleep research asked). Touch no process, write nothing on BensPC.
+1. `nvidia-smi` (GPU util, memory, processes).
+2. For each C:/Users/benja/rsn358i2/W/loop-s*/train_log.jsonl and plain-s*/train_log.jsonl if present: the file's line count and its last line's step, min (elapsed minutes) and dev fields only. Also the job's total planned steps if the job file or config states it.
+3. `date -u`.
+Write artifacts/claude-peek-358i2pc-20260926/REPORT.md with those numbers only.
+PUSH: artifacts/claude-peek-358i2pc-20260926/REPORT.md
+DISK: 0
+[0m
+[0m$ [0mgit grep -l "benspc\|BensPC" origin/main -- handoff/ 2>&1 | head
+echo "---"
+git log --all --oneline --grep="benspc" -i | head -n 10
+echo "---ssh config---"
+cat ~/.ssh/config 2>&1 | head -n 60; echo "---hosts---"; ssh -G benspc 2>&1 | head -n 20 || true
+origin/main:handoff/HANDOFF.md
+origin/main:handoff/held/001-bench-bm390.md
+origin/main:handoff/held/004-rd-371-train.md
+origin/main:handoff/held/005-rsn-353-pc.md
+origin/main:handoff/held/005s-rsn-358a-shared.md
+origin/main:handoff/held/006-slp-363-train.md
+origin/main:handoff/held/006b-blurt4-loop.md
+origin/main:handoff/held/006d-rsn-358a-train.md
+origin/main:handoff/held/006f-bm397-finalize.md
+origin/main:handoff/held/006i-bm391-02c.md
+---
+f35b1b09f rsn-358i3 sealed and queued (T1, BensPC, $0): fixed 358i loop vs plain on fresh seeds 5-8, both arms on one machine; plain s1-4 rerun report only
+c761f8717 358i2 recount (SUSPECT CONFIRMED, loop-vs-plain suggested until plain reruns on BensPC); autocast addenda for 358i, 358d, 358x (with 358x recount); 358t v3 rental attempt stopped, no verdict
+b72467bee dl-9 Addendum 1 (hygiene, number questions, serve cost); dl-5s finding sealed; dl-8 task gets the BensPC header
+4e354672f Director: BensPC task header (ssh benspc + marker rule) in kit; fix dl-9 marker name and WHERE line
+465fe0f90 k1f-benspc2: same job, now says BensPC is reached with ssh benspc (first try NOT-RUN on the Mac); k1h writer, trainer, scorer and tests (5/5, 5/5, 5/5), not yet sealed
+93e49572e Director: place dl-9 (Ben's idea, $0 BensPC) near top, after 358i2pc
+145fc039b builder results: k1f-benspc
+ebe89c7a0 dl-9 sealed: separate expert with a learned on/off switch (Ben's idea), BensPC $0; task held for the Director
+0cf94a1a8 lis-320 ADDENDUM-4 (review fixes, before any opencode row or read): C1 middle band = FAIL not proved wrong; rawcheck asserts one route on every raw row (selftest 4/4); SEAL-ADDENDA covers addenda 2-4 + glm_oc + rawcheck; held BensPC job checks it (and runs its seal checks from the tree root, fixing a path bug)
+1847b9485 y1t-H1 ADDENDUM-3: machine only (y1t's job moved to BensPC; bars, panel, runner, judges unchanged)
+---ssh config---
+Host benspc
+  HostName 100.75.113.114
+  User benja
+---hosts---
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+host benspc
+user benja
+hostname 100.75.113.114
+port 22
+addressfamily any
+batchmode no
+canonicalizefallbacklocal yes
+canonicalizehostname false
+checkhostip no
+compression no
+controlmaster false
+enablesshkeysign no
+clearallforwardings no
+exitonforwardfailure no
+fingerprinthash SHA256
+forwardx11 no
+forwardx11trusted no
+gatewayports no
+gssapiauthentication no
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/261-earcheck.txt 2>&1 | head -n 60
+echo "===="
+git ls-tree -r --name-only origin/main -- handoff/kit/ | head -n 30
+EXP 261 BRIEF: the ear with a checker. A second model checks every fact the ear wants to save, and this replaces the margin gate. The director wrote this on 2026-09-22 at 20:05. OPUS-RULES.txt (same folder) applies in full.
+
+This is the one diagnosis-driven follow-up to 257's registered FAIL. 257 stays FAIL.
+
+Why: the director's review of 257 (category level; the 257 panel is TEST-ONLY for you, so never open it)
+- The v4.1 ear alone reads well. With the brake and no gate, it gets 98 of 112 facts exactly right (87.5%) and 39 of 40 questions.
+- It also makes 12 wrong saves, and every one of them is confident. The director swept the gate threshold tau from 0 to 9.3 on 257's own predictions:
+  - wrong saves only fall 12 → 8 (tau 2) → 4 (tau 9.3), while recall falls 87.5% → 69.6%;
+  - no tau reaches the bar of at most 1 wrong save.
+- The margin gate holds back frames the ear is ~99% sure of. For example, the top reading has probability 0.995 and the rival 0.003. So the gate mostly costs right facts.
+- The confident wrong saves are semantic mistakes that a reader who understands the sentence would not make:
+  - a pretend turn ("let's say …") saved as fact;
+  - a goal ("training to be …") saved as a current job;
+  - "A's husband is B and he works as …" with the job given to A;
+  - a lowercase check-question ("… right", "so …") saved;
+  - "our …" giving the subject "Our" instead of the speaker.
+- Every new kind of example we add to the training data fixes some old kinds, and a fresh panel then shows new ones. A checker that actually reads the sentence should catch all these kinds at once, instead of one data class per kind. (This is Ben's "dreamer + checker" idea: the ear proposes, a second model checks.)
+
+The one change: replace 257's margin gate with an entailment checker, plus one mechanical fix, the speaker canonicaliser.
+1. Speaker canonicaliser. For subjects of TEACH and ASK frames, map these words to "me", ignoring case, before anything else: i, me, my, myself, mine, we, us, our, ours, ourselves. Nothing else changes. (Ben's rule: there is one user, so "our dog" is the user's dog.)
+2. Checker. For every TEACH frame the brake keeps:
+   a. Render a claim sentence H with one fixed template: "<S>'s <relation words> is <V>." <relation words> is the table v2 name with underscores turned into spaces; "me" becomes "the speaker". You may add a short fixed list of nicer templates (for example "<S> lives in <V>." for city, or "<S> works as <V>." for job), written before the seal from the relation table. Never write templates from any panel.
+   b. Ask Qwen3.8-27B one fixed yes/no question at temperature 0. It is already on BensPC; see the llama-server notes below. Write the question before the seal. It must say:
+      - "Message from the speaker: «<turn>»";
+      - "Claim: <H>";
+      - "Does the message state this claim as a real, current fact that the speaker believes?";
+      - answer NO if the claim is only asked about or checked (including "…, right" and a "so …" check without "?"), pretend or hypothetical ("let's say", "imagine", "suppose", "what if"), a plan, goal or wish ("training to be", "wants to", "is going to"), denied, or about a different person than the message says;
+      - "Answer with one word: YES or NO."
+      Turn off thinking mode. Read p(YES) from the token logprobs (normalise YES against NO).
+   c. Save the frame if p(YES) ≥ theta. Otherwise hold it back as UNSURE, exactly where 257's gate put its UNSURE frames.
+   d. The checker only keeps or holds back. It never adds, edits or reorders a frame. ASK frames are not checked (questions never write).
+3. theta. Pick it on dev before the seal with 257's sealed tau rule: the most recall at ≤ 1% wrong saves on dev; otherwise the lowest wrong rate, with ties going to the smallest theta. Write the theta curve into PASSMARKS.
+   Dev is 257's dev split with the v4.1 predictions (artifacts/claude-smolear257-20260922/dev/), plus a NEW checker dev set that you write yourself, in your own wording:
+   - at least 30 turns for each of: pretend/hypothetical, plans/goals, check-questions without "?", "A's R is B and he/she …", and "our"/"we" owners;
+   - plus 60 plain true facts, so that false rejections show.
+   Qwen may write practice sentences. Never read, copy or rebuild items from any TEST-ONLY panel (earpanel235, earpanel235b, earpanel257, earpanel261); you know 257's failures only at the category level written here.
+
+Code and names
+- Import 257's modules read-only; never copy-edit them. New files: scripts/claude_earcheck261_*.py. Artifacts: artifacts/claude-earcheck261-20260922/. Ledger lines: P261.n. Never edit an existing file.
+- The ear is the v4.1 checkpoint on BensPC (C:\Users\benja\smolear235\out_v41, sha256 55284dec…; check it). Use the same inference, brake, relation table v2, loader and scorer as 257. Adapt only the paths and the id prefix, in new wrapper files.
+
+Compute: the BensPC RTX 5070 Ti. It is free, one job at a time.
+- Check nvidia-smi first. Never touch other processes (pythonw.exe 13036 is not ours). Install nothing.
+- llama-server: start it yourself by hand with the fast config from C:\llama-b10679\llama-server.exe and the model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, flags --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6.
+  - Use -c 4096 so that the ear fits next to it.
+  - Stop it by its exact PID when you finish.
+  - The scheduled task ScoutLlamaServer stays disabled; never enable or run it.
+- Watch for VRAM spill: nvidia-smi shows ~100% utilisation at under ~100 W, and steps suddenly get ~4x slower. If you see it, lower -ngl a little, and report it.
+- For SSH and PowerShell quoting, send PowerShell with -EncodedCommand (base64 UTF-16LE), and pipe Python code through stdin, not -c.
+- Keep each wave under 30 minutes.
+
+Registered test
+- A fresh blind panel, artifacts/claude-earpanel261-20260922/, is being written by a separate blind writer. It uses 257's schema and families plus new risk tags R7–R12 in notes.
+- Don't open it until your PASSMARKS, code, render templates, prompt, theta, dev files and scorer wrapper are sealed. After your seal:
+  - wait for its SEAL.sha256.txt and check it OK from the repo root;
+  - run the strict schema check (SCHEMA-MISMATCH, exit 3);
+  - run every arm ONCE.
+- If it is not sealed 60 minutes after your seal, report and stop.
+- Arms:
+  - A (registered): v4.1 + canonicaliser + brake + checker(theta)
+====
+handoff/kit/benspc-task-header.txt
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/138p-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+handoff/kit/briefs/241-stylesheet.txt
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/243fixes-common.txt
+handoff/kit/briefs/252-correct.txt
+handoff/kit/briefs/252c-merge.txt
+handoff/kit/briefs/255-fixedtext.txt
+handoff/kit/briefs/256-earloop.txt
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/benspc-task-header.txt 2>&1
+GPU: yes (BensPC RTX 5070 Ti; one job at a time; $0, no rental). NO RENTALS, whatever fails. The watcher writes C:\Users\benja\GPU-BUSY.txt as "queue job <this file's name without .md>" while this task runs: that is this job, so go on and leave the file to the watcher. If the file names any other job, stop with BUSY and run nothing.
+WHERE: you run on the Mac. BensPC (Windows, RTX 5070 Ti) is reached from the Mac with `ssh benspc` (PowerShell, or git-bash for sha256sum/tar). Every BensPC command below runs ON BensPC over that ssh; stream the tree with `git archive ... | ssh benspc "tar -x -C <folder>"`; copy results back to the Mac worktree with scp. Never look for BensPC paths on the Mac itself.
+[0m
+[0m# [0mTodos
+[•] Check BensPC reachability, GPU-BUSY gate, duplicate gate
+[ ] Stream sealed code to C:/Users/benja/rsn358i3/ and verify SEAL (19 lines)
+[ ] Run torch version + selftests + check-mask on BensPC
+[ ] Train 8 graded runs (loop/plain s5-8) + 4 report-only (plain s1-4)
+[ ] Seal final.pt, eval once each, copy back to Mac
+[ ] Write RESULTS.md + ledger + push paths
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "powershell -NoProfile -Command \"Get-Content C:\\Users\\benja\\GPU-BUSY.txt; echo '---SMI---'; nvidia-smi; echo '---DISK---'; Get-PSDrive C | Select-Object Used,Free\" " 2>&1 | head -n 60
+BUSY: queue job 100-claude-sleep-358i3pc since 2026-09-26T20:06:39Z - do not use this GPU until this file is gone 
+---SMI---
+Sat Sep 26 16:07:24 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 591.86                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070 Ti   WDDM  |   00000000:01:00.0  On |                  N/A |
+|  0%   35C    P8              8W /  250W |     229MiB /  16303MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1768    C+G   C:\Windows\System32\dwm.exe           N/A      |
+|    0   N/A  N/A            2316    C+G   ...(x86)\e2eSoft\iVCam\iVCam.exe      N/A      |
+|    0   N/A  N/A            3328    C+G   ...cord\app-1.0.9259\Discord.exe      N/A      |
+|    0   N/A  N/A            4152    C+G   ...indows\System32\ShellHost.exe      N/A      |
+|    0   N/A  N/A            5112    C+G   ...ta\Okta Verify\OktaVerify.exe      N/A      |
+|    0   N/A  N/A            5268    C+G   ...s\PowerToys.ColorPickerUI.exe      N/A      |
+|    0   N/A  N/A            8564    C+G   C:\Windows\explorer.exe               N/A      |
+|    0   N/A  N/A           10064    C+G   ...2txyewy\CrossDeviceResume.exe      N/A      |
+|    0   N/A  N/A           10660    C+G   ...Toys\PowerToys.FancyZones.exe      N/A      |
+|    0   N/A  N/A           12604    C+G   ...em32\ApplicationFrameHost.exe      N/A      |
+|    0   N/A  N/A           12760    C+G   ...7hta09mmv6hy\Build\Lively.exe      N/A      |
+|    0   N/A  N/A           13148    C+G   ...s\PowerToys.PowerLauncher.exe      N/A      |
+|    0   N/A  N/A           13348    C+G   ..._cw5n1h2txyewy\SearchHost.exe      N/A      |
+|    0   N/A  N/A           13380    C+G   ...y\StartMenuExperienceHost.exe      N/A      |
+|    0   N/A  N/A           15392    C+G   ....0.4234.48\msedgewebview2.exe      N/A      |
+|    0   N/A  N/A           15856    C+G   ...UI3Apps\PowerToys.Peek.UI.exe      N/A      |
+|    0   N/A  N/A           16692    C+G   ...8bbwe\PhoneExperienceHost.exe      N/A      |
+|    0   N/A  N/A           17304    C+G   ...xyewy\ShellExperienceHost.exe      N/A      |
+|    0   N/A  N/A           18288    C+G   ...ogram Files\ShareX\ShareX.exe      N/A      |
+|    0   N/A  N/A           19200    C+G   ...crosoft shared\ink\TabTip.exe      N/A      |
+|    0   N/A  N/A           19504    C+G   ...s\PowerToys.AdvancedPaste.exe      N/A      |
+|    0   N/A  N/A           19892    C+G   ...5n1h2txyewy\TextInputHost.exe      N/A      |
+|    0   N/A  N/A           20844    C+G   ...ntrolPanel\SystemSettings.exe      N/A      |
+|    0   N/A  N/A           20964    C+G   ...Lunar Client\Lunar Client.exe      N/A      |
+|    0   N/A  N/A           21352    C+G   C:\Windows\System32\Taskmgr.exe       N/A      |
++-----------------------------------------------------------------------------------------+
+---DISK---
+
+         Used       Free
+         ----       ----
+1016822685696 6321147904
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "powershell -NoProfile -Command \"if (Test-Path C:\\Users\\benja\\rsn358i3) { Get-ChildItem C:\\Users\\benja\\rsn358i3 | Select-Object Name } else { echo 'NOFOLDER' }\"" 2>&1 | head -n 20
+NOFOLDER
+[0m
+[0m$ [0mgit archive origin/main scripts artifacts/claude-rsn358i3-20260926 artifacts/claude-rsn358i-20260926/tests | ssh benspc "mkdir -p /c/Users/benja/rsn358i3 && tar -x -C /c/Users/benja/rsn358i3" 2>&1; echo "archive exit: $?"
+The syntax of the command is incorrect.
+archive exit: 1
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force C:\\Users\\benja\\rsn358i3 | Out-Null; echo CREATED\"" 2>&1 | head
+CREATED
+[0m
+[0m$ [0mgit archive origin/main scripts artifacts/claude-rsn358i3-20260926 artifacts/claude-rsn358i-20260926/tests | ssh benspc "tar -x -C C:/Users/benja/rsn358i3" 2>&1; echo "archive exit: $?"
+archive exit: 0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "powershell -NoProfile -Command \"Get-ChildItem C:\\Users\\benja\\rsn358i3; Get-ChildItem C:\\Users\\benja\\rsn358i3\\scripts | Measure-Object | Select-Object Count; Get-ChildItem C:\\Users\\benja\\rsn358i3\\artifacts\\claude-rsn358i-20260926\\tests | Select-Object Name\"" 2>&1 | head -n 30
+Directory: C:\Users\benja\rsn358i3
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/26/2026   4:05 PM                artifacts                                                            
+d-----         9/26/2026   4:05 PM                scripts                                                              
+
+Count : 1708
+
+
+Name : grids5.jsonl
+
+
+Name : grids6.jsonl
+
+
+Name : grids7.jsonl
+
+
+Name : numbers4.jsonl
+
+
+Name : numbers5.jsonl
+
+
+Name : sums10.jsonl
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "bash -c 'cd /c/Users/benja/rsn358i3 && sha256sum -c artifacts/claude-rsn358i3-20260926/SEAL-code.sha256.txt'" 2>&1 | head -n 30
+/bin/bash: -c: line 1: unexpected EOF while looking for matching `''
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'cd /d C:\Users\benja\rsn358i3 && sha256sum -c artifacts/claude-rsn358i3-20260926/SEAL-code.sha256.txt' 2>&1 | head -n 30
+'sha256sum' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'where tar && where python && dir "C:\Program Files\Git\bin\sha256sum.exe"' 2>&1 | head -n 10
+C:\Windows\System32\tar.exe
+C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe
+C:\Users\benja\AppData\Local\Programs\Python\Python313\python.exe
+C:\Users\benja\AppData\Local\Microsoft\WindowsApps\python.exe
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Program Files\Git\bin
+
+File Not Found
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'dir "C:\Program Files\Git\usr\bin\sha256sum.exe" & dir "C:\Program Files (x86)\Git\bin\sha256sum.exe" & where bash' 2>&1 | head -n 12
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Program Files\Git\usr\bin
+
+12/04/2024  06:45 PM            56,252 sha256sum.exe
+               1 File(s)         56,252 bytes
+               0 Dir(s)   6,287,720,448 bytes free
+The system cannot find the path specified.
+C:\Users\benja\AppData\Local\Microsoft\WindowsApps\bash.exe
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'cd /d C:\Users\benja\rsn358i3 && "C:\Program Files\Git\usr\bin\sha256sum.exe" -c artifacts/claude-rsn358i3-20260926/SEAL-code.sha256.txt' 2>&1 | head -n 30
+scripts/claude_rsn358i2_run.py: OK
+scripts/claude_stage0_autocast_grad.py: OK
+scripts/claude_rsn358i_run.py: OK
+scripts/claude_rsn358g_run.py: OK
+scripts/claude_rsn358a2_run.py: OK
+scripts/claude_rsn358a_run.py: OK
+scripts/claude_rsn358a_envs.py: OK
+scripts/claude_blurt1.py: OK
+artifacts/claude-rsn358i-20260926/tests/grids5.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/grids6.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/grids7.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/numbers4.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/numbers5.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums10.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums12.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums4.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums6.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums8.jsonl: OK
+artifacts/claude-rsn358i3-20260926/PASSMARKS.md: OK
+[0m
+[0m# [0mTodos
+[✓] Check BensPC reachability, GPU-BUSY gate, duplicate gate
+[✓] Stream sealed code to C:/Users/benja/rsn358i3/ and verify SEAL (19 lines)
+[•] Run torch version + selftests + check-mask on BensPC
+[ ] Train 8 graded runs (loop/plain s5-8) + 4 report-only (plain s1-4)
+[ ] Seal final.pt, eval once each, copy back to Mac
+[ ] Write RESULTS.md + ledger + push paths
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'cd /d C:\Users\benja\rsn358i3 && C:\Users\benja\lis300\venv\Scripts\python.exe -c "import torch;print(torch.__version__, torch.version.cuda)"' 2>&1 | head -n 5
+2.11.0+cu128 12.8
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'cd /d C:\Users\benja\rsn358i3 && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358a_envs.py selftest' 2>&1 | tail -n 3
+selftest ok: 1362 four-hands (1062 practice, 300 held out), 1346 three-hands
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'cd /d C:\Users\benja\rsn358i3 && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py selftest' 2>&1 | tail -n 3
+selftest ok: torch 2.11.0+cu128, cache off, 0/8 block Linear weights without gradient after 3 free + 2 graded rounds
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'cd /d C:\Users\benja\rsn358i3 && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py check-mask' 2>&1 | tail -n 3
+check-mask ok: narrow heads 0-3 ignore cells 2+ columns away; wide heads 4-7 unchanged
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rsn358i2_run.py | sed -n '120,220p'
+if __name__ == "__main__":
+    if sys.argv[1:] == ["selftest"]:
+        selftest()
+    elif sys.argv[1:] == ["check-mask"]:
+        I.check_mask()
+    else:
+        R.main()
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rsn358i_run.py | grep -n "min\|flush\|print\|log" | head -n 40
+71:    print("check-mask ok: narrow heads 0-3 ignore cells 2+ columns away; wide heads 4-7 unchanged")
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rsn358i_run.py | head -n 120
+#!/usr/bin/env python3
+"""rsn-358i (sleep research thread, 2026-09-26): rsn-358g (358a v2 + grid legend fix, scripts/claude_rsn358g_run.py)
+with ONE design change, in attention: half of each layer's heads see only cells within 1 column.
+
+Why: Ben's Mac-probe report (12:26 UTC) and the code (scripts/claude_rsn358a_run.py:39, :90-91): attention tells
+cells apart only up to 4 columns away. Practice sums are at most 5 columns wide, so on wider pages the "4 or more
+away" group fills with cells the nets never had to sort out, and wide sums collapse even for sums the nets know.
+Heads that see only their own and the next column carry a sum one column per step, which works at any width. The
+other half of the heads stay as they were (every cell, offset bias clipped at 4), because a grid cell must see its
+whole row and column. Chosen in an unregistered small CPU trial (artifacts/claude-rsn358i-20260926/trial/) over
+"fading with distance", which hurt grids. The grid legend fix (358g, never run) is a test-validity repair both arms
+get. Everything else (nets' sizes, data, steps, stop rule v2) is 358g's. Ben chose this order (12:28 UTC).
+Report-only extra tests: sums10 and sums12 (fresh seeds).
+
+  python -B scripts/claude_rsn358i_run.py make-tests --out artifacts/claude-rsn358i-20260926/tests
+  python -B scripts/claude_rsn358i_run.py train|eval|smoke ...   (same arguments as claude_rsn358a_run.py)
+  python -B scripts/claude_rsn358i_run.py check-mask   (the narrow heads really ignore cells 2+ columns away)
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import torch
+import torch.nn.functional as F
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_rsn358g_run as G  # noqa: E402  (legend grids + v2 stop rule)
+
+R, E = G.R, G.E
+WINDOW = 1
+R.TESTS += [("sums10", "sums", 10, 35814, "report"), ("sums12", "sums", 12, 35815, "report")]
+
+
+def forward(self, x, dr, dc):
+    B, T, D = x.shape
+    q, k, v = self.qkv(self.ln1(x)).view(B, T, 3, self.h, D // self.h).permute(2, 0, 3, 1, 4)
+    bias = self.br[:, dr] + self.bc[:, dc]
+    far = (dc - R.CLIP).abs() > WINDOW                                  # dc holds clipped offset + CLIP
+    narrow = torch.zeros(self.h, 1, 1, dtype=torch.bool, device=x.device)
+    narrow[: self.h // 2] = True
+    bias = bias.masked_fill(narrow & far, float("-inf")).unsqueeze(0).to(q.dtype)
+    a = F.scaled_dot_product_attention(q, k, v, attn_mask=bias)
+    x = x + self.out(a.transpose(1, 2).reshape(B, T, D))
+    return x + self.mlp(self.ln2(x))
+
+
+R.Block.forward = forward
+
+
+def check_mask():
+    torch.manual_seed(0)
+    b = R.Block(64, 8)
+    H, W = 3, 9
+    dr, dc = R.Net.offsets(H, W, "cpu")
+    x = torch.randn(1, H * W, 64)
+    base = b(x, dr, dc)
+    x2 = x.clone()
+    x2[0, [r * W + 8 for r in range(H)]] += 5.0                        # change every cell in column 8
+    q, k, v = b.qkv(b.ln1(x)).view(1, H * W, 3, 8, 8).permute(2, 0, 3, 1, 4)
+    q2, k2, v2 = b.qkv(b.ln1(x2)).view(1, H * W, 3, 8, 8).permute(2, 0, 3, 1, 4)
+    bias = (b.br[:, dr] + b.bc[:, dc])
+    far = (dc - R.CLIP).abs() > WINDOW
+    for h in range(4):
+        m = bias[h].masked_fill(far, float("-inf"))
+        a1 = F.scaled_dot_product_attention(q[:, h:h + 1], k[:, h:h + 1], v[:, h:h + 1], attn_mask=m)
+        a2 = F.scaled_dot_product_attention(q2[:, h:h + 1], k2[:, h:h + 1], v2[:, h:h + 1], attn_mask=m)
+        col0 = [r * W for r in range(H)]
+        assert torch.allclose(a1[0, 0, col0], a2[0, 0, col0]), h        # column 0 cannot see column 8
+    assert not torch.allclose(base, b(x2, dr, dc))
+    print("check-mask ok: narrow heads 0-3 ignore cells 2+ columns away; wide heads 4-7 unchanged")
+
+
+if __name__ == "__main__":
+    if sys.argv[1:] == ["check-mask"]:
+        check_mask()
+    elif sys.argv[1:] == ["audit"]:
+        G.audit()
+    else:
+        R.main()
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rsn358a_run.py | grep -n "min\|flush\|train_log\|print\|jsonl" | head -n 40
+213:        (out / f"{name}.jsonl").write_text("".join(json.dumps(item_to_json(i)) + "\n" for i in items), encoding="utf-8")
+214:        print(f"{name}: {len(items)} items ({role})")
+218:    return {name: [item_from_json(json.loads(l)) for l in (Path(d) / f"{name}.jsonl").read_text().splitlines()[:limit]]
+275:    sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / a.warmup) * 0.5 *
+276:                                              (1 + math.cos(math.pi * min(i, a.steps) / a.steps)))
+279:    log = open(out / "train_log.jsonl", "w", encoding="utf-8")
+281:    print(f"{a.arm} seed {a.seed}: {nparams} weights, data ready in {time.time() - t0:.0f}s on {device}", flush=True)
+292:                k = round_rng.randint(1, min(total, GRAD_ROUNDS))
+313:                   "halt_bce": round(run["halt"] / n, 4), "lr": sched.get_last_lr()[0], "min": round((time.time() - t0) / 60, 1),
+317:            log.write(json.dumps(rec) + "\n"); log.flush()
+318:            print(json.dumps(rec), flush=True)
+322:               "warmup": a.warmup, "latin_pool": a.latin_pool, "minutes": round((time.time() - t0) / 60, 1), "device": device},
+342:        print(name, json.dumps(r), flush=True)
+354:    print("smoke ok", tmp)
+[0m
+[0m$ [0mdate -u +%FT%TZ
+ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "New-Item -ItemType Directory -Force C:\Users\benja\rsn358i3\W | Out-Null; $a = Start-Process -FilePath C:\Users\benja\lis300\venv\Scripts\python.exe -ArgumentList -B,scripts/claude_rsn358i2_run.py,train,--arm,loop,--seed,5,--out,W/loop-s5 -WorkingDirectory C:\Users\benja\rsn358i3 -RedirectStandardOutput C:\Users\benja\rsn358i3\W\loop-s5.log -RedirectStandardError C:\Users\benja\rsn358i3\W\loop-s5.err -PassThru; $b = Start-Process -FilePath C:\Users\benja\lis300\venv\Scripts\python.exe -ArgumentList -B,scripts/claude_rsn358i2_run.py,train,--arm,plain,--seed,5,--out,W/plain-s5 -WorkingDirectory C:\Users\benja\rsn358i3 -RedirectStandardOutput C:\Users\benja\rsn358i3\W\plain-s5.log -RedirectStandardError C:\Users\benja\rsn358i3\W\plain-s5.err -PassThru; echo PIDS:$a.Id,$b.Id"' 2>&1 | head -n 5
+2026-09-26T20:09:20Z
+At line:1 char:166
++ ... \Users\benja\lis300\venv\Scripts\python.exe -ArgumentList -B,scripts/ ...
++                                                                 ~
+Missing argument in parameter list.
+At line:1 char:507
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "$a = Start-Process -FilePath C:\Users\benja\lis300\venv\Scripts\python.exe -ArgumentList '"'"'-B'"'"','"'"'scripts/claude_rsn358i2_run.py'"'"','"'"'train'"'"','"'"'--arm'"'"','"'"'loop'"'"','"'"'--seed'"'"','"'"'5'"'"','"'"'--out'"'"','"'"'W/loop-s5'"'"' -WorkingDirectory C:\Users\benja\rsn358i3 -RedirectStandardOutput C:\Users\benja\rsn358i3\W\loop-s5.log -RedirectStandardError C:\Users\benja\rsn358i3\W\loop-s5.err -PassThru; echo PID1:$a.Id"' 2>&1 | head -n 8
+PID1:System.Diagnostics.Process (python).Id
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-Process python | Select-Object Id,StartTime; Get-ChildItem C:\Users\benja\rsn358i3\W"' 2>&1 | head -n 12
+Get-Process : Cannot find a process with the name "python". Verify the process name and call the cmdlet again.
+At line:1 char:1
++ Get-Process python | Select-Object Id,StartTime; Get-ChildItem C:\Use ...
++ ~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (python:String) [Get-Process], ProcessCommandException
+    + FullyQualifiedErrorId : NoProcessFoundForGivenName,Microsoft.PowerShell.Commands.GetProcessCommand
+ 
+Get-ChildItem : Cannot find path 'C:\Users\benja\rsn358i3\W' because it does not exist.
+At line:1 char:50
++ ... | Select-Object Id,StartTime; Get-ChildItem C:\Users\benja\rsn358i3\W
++                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\benja\rsn358i3\W:String) [Get-ChildItem], ItemNotFoundExceptio
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "New-Item -ItemType Directory -Force C:\Users\benja\rsn358i3\W | Out-Null; echo WOK"' 2>&1 | head -n 3
+WOK
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "$a = Start-Process -FilePath C:\Users\benja\lis300\venv\Scripts\python.exe -ArgumentList '"'"'-B'"'"','"'"'scripts/claude_rsn358i2_run.py'"'"','"'"'train'"'"','"'"'--arm'"'"','"'"'loop'"'"','"'"'--seed'"'"','"'"'5'"'"','"'"'--out'"'"','"'"'W/loop-s5'"'"' -WorkingDirectory C:\Users\benja\rsn358i3 -RedirectStandardOutput C:\Users\benja\rsn358i3\W\loop-s5.log -RedirectStandardError C:\Users\benja\rsn358i3\W\loop-s5.err -PassThru; Write-Output $a.Id"' 2>&1 | head -n 8
+1732
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "$b = Start-Process -FilePath C:\Users\benja\lis300\venv\Scripts\python.exe -ArgumentList '"'"'-B'"'"','"'"'scripts/claude_rsn358i2_run.py'"'"','"'"'train'"'"','"'"'--arm'"'"','"'"'plain'"'"','"'"'--seed'"'"','"'"'5'"'"','"'"'--out'"'"','"'"'W/plain-s5'"'"' -WorkingDirectory C:\Users\benja\rsn358i3 -RedirectStandardOutput C:\Users\benja\rsn358i3\W\plain-s5.log -RedirectStandardError C:\Users\benja\rsn358i3\W\plain-s5.err -PassThru; Write-Output $b.Id"' 2>&1 | head -n 8
+21972
+[0m
+[0m$ [0msleep 60; ssh -o ConnectTimeout=20 benspc 'nvidia-smi --query-gpu=memory.used,memory.total,utilization.gpu --format=csv; powershell -NoProfile -Command "Get-Process -Id 1732,21972 | Select-Object Id,CPU; Get-Content C:\Users\benja\rsn358i3\W\loop-s5.log -Tail 2; Get-Content C:\Users\benja\rsn358i3\W\plain-s5.log -Tail 2; Get-Content C:\Users\benja\rsn358i3\W\loop-s5.err -Tail 3; Get-Content C:\Users\benja\rsn358i3\W\plain-s5.err -Tail 3"' 2>&1 | head -n 20; date -u +%FT%TZ
+ERROR: Option powershell is not recognized. Please run 'nvidia-smi -h' for help.
+
+2026-09-26T20:10:45Z
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'nvidia-smi --query-gpu=memory.used,memory.total,utilization.gpu --format=csv' 2>&1 | head -n 5
+ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-Process -Id 1732,21972 | Select-Object Id,CPU"' 2>&1 | head -n 8
+memory.used [MiB], memory.total [MiB], utilization.gpu [%]
+229 MiB, 16303 MiB, 0 %
+Get-Process : Cannot find a process with the process identifier 1732.
+At line:1 char:1
++ Get-Process -Id 1732,21972 | Select-Object Id,CPU
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (1732:Int32) [Get-Process], ProcessCommandException
+    + FullyQualifiedErrorId : NoProcessFoundForGivenId,Microsoft.PowerShell.Commands.GetProcessCommand
+ 
+Get-Process : Cannot find a process with the process identifier 21972.
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-Content C:\Users\benja\rsn358i3\W\loop-s5.err; echo LLL; Get-Content C:\Users\benja\rsn358i3\W\loop-s5.log; echo EEE; Get-Content C:\Users\benja\rsn358i3\W\plain-s5.err"' 2>&1 | head -n 30
+LLL
+EEE
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-ChildItem C:\Users\benja\rsn358i3\W; $p = Start-Process -FilePath C:\Users\benja\lis300\venv\Scripts\python.exe -ArgumentList '"'"'-B'"'"','"'"'-c'"'"','"'"'print(42)'"'"' -WorkingDirectory C:\Users\benja\rsn358i3 -RedirectStandardOutput C:\Users\benja\rsn358i3\W\t.log -RedirectStandardError C:\Users\benja\rsn358i3\W\t.err -PassThru -Wait; Write-Output $p.ExitCode; Get-Content C:\Users\benja\rsn358i3\W\t.log; Get-Content C:\Users\benja\rsn358i3\W\t.err"' 2>&1 | head -n 20
+Directory: C:\Users\benja\rsn358i3\W
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----         9/26/2026   4:09 PM              0 loop-s5.err                                                          
+-a----         9/26/2026   4:09 PM              0 loop-s5.log                                                          
+-a----         9/26/2026   4:09 PM              0 plain-s5.err                                                         
+-a----         9/26/2026   4:09 PM              0 plain-s5.log                                                         
+0
+42
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "$a = Start-Process -FilePath C:\Users\benja\lis300\venv\Scripts\python.exe -ArgumentList '"'"'-B'"'"','"'"'scripts/claude_rsn358i2_run.py'"'"','"'"'train'"'"','"'"'--arm'"'"','"'"'loop'"'"','"'"'--seed'"'"','"'"'5'"'"','"'"'--out'"'"','"'"'W/loop-s5'"'"' -WorkingDirectory C:\Users\benja\rsn358i3 -RedirectStandardOutput C:\Users\benja\rsn358i3\W\loop-s5.log -RedirectStandardError C:\Users\benja\rsn358i3\W\loop-s5.err -PassThru; Write-Output $a.Id; Start-Sleep 90; Write-Output HAS$-$a.HasExited; Get-Content C:\Users\benja\rsn358i3\W\loop-s5.log -Tail 3; Get-Content C:\Users\benja\rsn358i3\W\loop-s5.err -Tail 5"' 2>&1 | head -n 20
+22508
+HAS$-System.Diagnostics.Process (python).HasExited
+{"step": 500, "ce": 2.4818, "exact": 0.0033, "halt_bce": 0.0672, "lr": 0.00015027424797191312, "min": 0.6, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.001, "numbers4": 0.0, "sums1": 0.028, "sums2": 0.003, "sums3": 0.0, "sums4": 0.0}}
+{"step": 1000, "ce": 1.6871, "exact": 0.009, "halt_bce": 0.0491, "lr": 0.000299794430213186, "min": 0.9, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.002, "numbers4": 0.0, "sums1": 0.075, "sums2": 0.032, "sums3": 0.004, "sums4": 0.001}}
+{"step": 1500, "ce": 1.4089, "exact": 0.0495, "halt_bce": 0.1112, "lr": 0.00029953760005996916, "min": 1.2, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.007, "numbers4": 0.001, "sums1": 0.409, "sums2": 0.12, "sums3": 0.023, "sums4": 0.003}}
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-Process -Id 22508 | Select-Object Id,CPU,HasExited; Get-Content C:\Users\benja\rsn358i3\W\loop-s5.log -Tail 1"' 2>&1 | head -n 8
+ssh -o ConnectTimeout=20 benspc 'nvidia-smi --query-gpu=memory.used,memory.total,utilization.gpu --format=csv' 2>&1 | head -n 3
+Get-Process : Cannot find a process with the process identifier 22508.
+At line:1 char:1
++ Get-Process -Id 22508 | Select-Object Id,CPU,HasExited; Get-Content C ...
++ ~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (22508:Int32) [Get-Process], ProcessCommandException
+{"step": 1500, "ce": 1.4089, "exact": 0.0495, "halt_bce": 0.1112, "lr": 0.00029953760005996916, "min": 1.2, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.007, "numbers4": 0.001, "sums1": 0.409, "sums2": 0.12, "sums3": 0.023, "sums4": 0.003}}
+    + FullyQualifiedErrorId : NoProcessFoundForGivenId,Microsoft.PowerShell.Commands.GetProcessCommand
+ 
+memory.used [MiB], memory.total [MiB], utilization.gpu [%]
+229 MiB, 16303 MiB, 0 %
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='"'"'C:\Windows\System32\ping.exe -n 30 127.0.0.1'"'"'; CurrentDirectory='"'"'C:\Users\benja\rsn358i3'"'"'}; Write-Output $r.ProcessId"' 2>&1 | head -n 5
+16660
+[0m
+[0m$ [0msleep 12; ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-Process -Id 16660 | Select-Object Id"$true"' 2>&1 | head -n 6
+IdTrue
+------
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-Process -Id 16660; Write-Output DONE"' 2>&1 | head -n 20
+Handles  NPM(K)    PM(K)      WS(K)     CPU(s)     Id  SI ProcessName                                                  
+-------  ------    -----      -----     ------     --  -- -----------                                                  
+     82       7     1032       5568       0.00  16660   0 PING                                                         
+DONE
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Stop-Process -Id 16660; $r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='"'"'C:\Windows\System32\cmd.exe /c C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py train --arm loop --seed 5 --out W/loop-s5 > C:\Users\benja\rsn358i3\W\loop-s5.log 2> C:\Users\benja\rsn358i3\W\loop-s5.err'"'"'; CurrentDirectory='"'"'C:\Users\benja\rsn358i3'"'"'}; Write-Output LOOP:$r.ProcessId"' 2>&1 | head -n 6
+LOOP:@{ProcessId=3260; ReturnValue=0; PSComputerName=}.ProcessId
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='"'"'C:\Windows\System32\cmd.exe /c C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py train --arm plain --seed 5 --out W/plain-s5 > C:\Users\benja\rsn358i3\W\plain-s5.log 2> C:\Users\benja\rsn358i3\W\plain-s5.err'"'"'; CurrentDirectory='"'"'C:\Users\benja\rsn358i3'"'"'}; Write-Output $r.ReturnValue; Write-Output $r.ProcessId"' 2>&1 | head -n 6
+0
+14696
+[0m
+[0m$ [0msleep 45; ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name='"'"'python.exe'"'"'\" | Select-Object ProcessId,ParentProcessId; Get-Content C:\Users\benja\rsn358i3\W\loop-s5.log -Tail 1; Get-Content C:\Users\benja\rsn358i3\W\plain-s5.log -Tail 1"' 2>&1 | head -n 12
+ssh -o ConnectTimeout=20 benspc 'nvidia-smi --query-gpu=memory.used,memory.total,utilization.gpu --format=csv' 2>&1 | head -n 3
+ProcessId ParentProcessId
+--------- ---------------
+     2228            3260
+    11200            2228
+    19828           14696
+    14872           19828
+{"step": 500, "ce": 2.4778, "exact": 0.0035, "halt_bce": 0.0682, "lr": 0.00015027424797191312, "min": 0.6, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.001, "numbers4": 0.0, "sums1": 0.03, "sums2": 0.003, "sums3": 0.0, "sums4": 0.0}}
+{"step": 500, "ce": 2.5936, "exact": 0.0028, "halt_bce": 0.0, "lr": 0.00015027424797191312, "min": 0.6, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.001, "numbers4": 0.0, "sums1": 0.023, "sums2": 0.004, "sums3": 0.0, "sums4": 0.0}}
+
+
+memory.used [MiB], memory.total [MiB], utilization.gpu [%]
+4405 MiB, 16303 MiB, 79 %
+[0m
+[0m# [0mTodos
+[✓] Check BensPC reachability, GPU-BUSY gate, duplicate gate
+[✓] Stream sealed code to C:/Users/benja/rsn358i3/ and verify SEAL (19 lines)
+[✓] Run torch version + selftests + check-mask on BensPC
+[•] Train 8 graded runs (loop/plain s5-8) + 4 report-only (plain s1-4) [loop-s5 PID3260, plain-s5 PID14696; clock start ~20:16Z]
+[ ] Seal final.pt, eval once each, copy back to Mac
+[ ] Write RESULTS.md + ledger + push paths
+[0m
+[0m$ [0msleep 240; ssh -o ConnectTimeout=20 benspc 'nvidia-smi --query-gpu=memory.used,memory.free,utilization.gpu --format=csv' 2>&1 | head -n 3; date -u +%FT%TZ
+memory.used [MiB], memory.free [MiB], utilization.gpu [%]
+4479 MiB, 11517 MiB, 80 %
+2026-09-26T20:18:52Z
+[0m
+[0m$ [0msleep 120; ssh -o ConnectTimeout=20 benspc 'nvidia-smi --query-gpu=memory.used,memory.free --format=csv' 2>&1 | head -n 3; date -u +%FT%TZ
+memory.used [MiB], memory.free [MiB]
+4551 MiB, 11445 MiB
+2026-09-26T20:20:56Z
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='"'"'C:\Windows\System32\cmd.exe /c C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py train --arm loop --seed 6 --out W/loop-s6 > C:\Users\benja\rsn358i3\W\loop-s6.log 2> C:\Users\benja\rsn358i3\W\loop-s6.err'"'"'; CurrentDirectory='"'"'C:\Users\benja\rsn358i3'"'"'}; Write-Output $r.ReturnValue; Write-Output $r.ProcessId"' 2>&1 | head -n 4
+0
+17320
+[0m
+[0m$ [0msleep 300; ssh -o ConnectTimeout=20 benspc 'nvidia-smi --query-gpu=memory.used,memory.free,utilization.gpu --format=csv' 2>&1 | head -n 3
+ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-Content C:\Users\benja\rsn358i3\W\loop-s6.log -Tail 1; Get-Content C:\Users\benja\rsn358i3\W\loop-s5.log -Tail 1"' 2>&1 | head -n 6; date -u +%FT%TZ
+memory.used [MiB], memory.free [MiB], utilization.gpu [%]
+7690 MiB, 8306 MiB, 91 %
+{"step": 3500, "ce": 0.7293, "exact": 0.3266, "halt_bce": 0.1571, "lr": 0.00029748823613459316, "min": 4.5, "exact_by_kind": {"grids4": 0.021, "grids5": 0.001, "numbers3": 0.172, "numbers4": 0.013, "sums1": 1.0, "sums2": 0.972, "sums3": 0.91, "sums4": 0.833}}
+{"step": 12500, "ce": 0.0579, "exact": 0.934, "halt_bce": 0.1237, "lr": 0.0002690030010436853, "min": 11.9, "exact_by_kind": {"grids4": 0.904, "grids5": 0.888, "numbers3": 0.958, "numbers4": 0.895, "sums1": 1.0, "sums2": 0.993, "sums3": 0.966, "sums4": 0.956}, "dev": {"sums4": 200, "grids5": 199}}
+2026-09-26T20:26:02Z
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='"'"'C:\Windows\System32\cmd.exe /c C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py train --arm plain --seed 6 --out W/plain-s6 > C:\Users\benja\rsn358i3\W\plain-s6.log 2> C:\Users\benja\rsn358i3\W\plain-s6.err'"'"'; CurrentDirectory='"'"'C:\Users\benja\rsn358i3'"'"'}; Write-Output $r.ReturnValue; Write-Output $r.ProcessId"' 2>&1 | head -n 4
+0
+6484
+[0m
+[0m$ [0msleep 600; ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "foreach ($f in @('"'"'loop-s5'"'"','"'"'plain-s5'"'"','"'"'loop-s6'"'"','"'"'plain-s6'"'"')) { Write-Output $f; Get-Content C:\Users\benja\rsn358i3\W\$f.log -Tail 1 }"' 2>&1 | head -n 12; date -u +%FT%TZ
+loop-s5
+{"step": 20000, "ce": 0.0303, "exact": 0.9663, "halt_bce": 0.0644, "lr": 0.000225, "min": 22.4, "exact_by_kind": {"grids4": 0.944, "grids5": 0.917, "numbers3": 0.976, "numbers4": 0.975, "sums1": 0.999, "sums2": 0.999, "sums3": 0.993, "sums4": 0.991}, "dev": {"sums4": 200, "grids5": 200}}
+plain-s5
+{"step": 21000, "ce": 0.0067, "exact": 0.9873, "halt_bce": 0.0, "lr": 0.00021809857496093199, "min": 22.0, "exact_by_kind": {"grids4": 1.0, "grids5": 0.944, "numbers3": 0.99, "numbers4": 0.987, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+loop-s6
+{"step": 11000, "ce": 0.0847, "exact": 0.9167, "halt_bce": 0.1425, "lr": 0.0002758005851918136, "min": 14.8, "exact_by_kind": {"grids4": 0.911, "grids5": 0.785, "numbers3": 0.95, "numbers4": 0.836, "sums1": 1.0, "sums2": 0.996, "sums3": 0.968, "sums4": 0.956}}
+plain-s6
+{"step": 7000, "ce": 0.0536, "exact": 0.9023, "halt_bce": 0.0, "lr": 0.00029003706397458023, "min": 9.8, "exact_by_kind": {"grids4": 0.972, "grids5": 0.668, "numbers3": 0.93, "numbers4": 0.832, "sums1": 0.998, "sums2": 1.0, "sums3": 0.995, "sums4": 0.984}}
+2026-09-26T20:36:10Z
+[0m
+[0m$ [0msleep 840; ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "foreach ($f in @('"'"'loop-s5'"'"','"'"'plain-s5'"'"','"'"'loop-s6'"'"','"'"'plain-s6'"'"')) { Write-Output $f; Get-Content C:\Users\benja\rsn358i3\W\$f.log -Tail 1 }"' 2>&1 | head -n 12; date -u +%FT%TZ
+loop-s5
+{"step": 30000, "ce": 0.0189, "exact": 0.9781, "halt_bce": 0.0344, "lr": 0.00015, "min": 36.3, "exact_by_kind": {"grids4": 0.954, "grids5": 0.896, "numbers3": 0.994, "numbers4": 0.996, "sums1": 1.0, "sums2": 0.999, "sums3": 0.997, "sums4": 0.997}, "dev": {"sums4": 200, "grids5": 200}}
+plain-s5
+{"step": 31500, "ce": 0.0028, "exact": 0.9948, "halt_bce": 0.0, "lr": 0.00013823113564082325, "min": 36.3, "exact_by_kind": {"grids4": 1.0, "grids5": 0.979, "numbers3": 0.997, "numbers4": 0.992, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+loop-s6
+{"step": 21000, "ce": 0.0464, "exact": 0.9525, "halt_bce": 0.0638, "lr": 0.00021809857496093199, "min": 28.9, "exact_by_kind": {"grids4": 0.968, "grids5": 0.809, "numbers3": 0.993, "numbers4": 0.978, "sums1": 1.0, "sums2": 0.999, "sums3": 0.992, "sums4": 0.976}}
+plain-s6
+{"step": 17500, "ce": 0.0119, "exact": 0.9759, "halt_bce": 0.0, "lr": 0.00024131421435130807, "min": 24.1, "exact_by_kind": {"grids4": 1.0, "grids5": 0.903, "numbers3": 0.993, "numbers4": 0.979, "sums1": 1.0, "sums2": 0.998, "sums3": 0.993, "sums4": 0.99}, "dev": {"sums4": 200, "grids5": 182}}
+2026-09-26T20:50:15Z
+[0m
+[0m$ [0msleep 1500; ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "foreach ($f in @('"'"'loop-s5'"'"','"'"'plain-s5'"'"','"'"'loop-s6'"'"','"'"'plain-s6'"'"')) { Write-Output $f; Get-Content C:\Users\benja\rsn358i3\W\$f.log -Tail 1 }; Get-CimInstance Win32_Process -Filter \"Name='"'"'python.exe'"'"'\" | Select-Object ProcessId"' 2>&1 | head -n 16; date -u +%FT%TZ
+loop-s5
+{"step": 47500, "ce": 0.0122, "exact": 0.9852, "halt_bce": 0.0109, "lr": 3.099699895631474e-05, "min": 61.0, "exact_by_kind": {"grids4": 0.976, "grids5": 0.938, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 200}}
+plain-s5
+{"step": 49500, "ce": 0.0004, "exact": 0.9991, "halt_bce": 0.0, "lr": 2.210397534688617e-05, "min": 60.9, "exact_by_kind": {"grids4": 1.0, "grids5": 0.995, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+loop-s6
+{"step": 38500, "ce": 0.0164, "exact": 0.9808, "halt_bce": 0.0213, "lr": 8.542333547875575e-05, "min": 53.6, "exact_by_kind": {"grids4": 0.972, "grids5": 0.911, "numbers3": 0.999, "numbers4": 0.999, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 0.999}}
+plain-s6
+{"step": 35500, "ce": 0.0024, "exact": 0.9947, "halt_bce": 0.0, "lr": 0.00010739769829441162, "min": 48.6, "exact_by_kind": {"grids4": 1.0, "grids5": 0.966, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 0.999}}
+
+ProcessId
+---------
+     2228
+    11200
+    19828
+    14872
+    22252
+2026-09-26T21:15:19Z
+[0m
+[0m$ [0msleep 900; ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "foreach ($f in @('"'"'loop-s5'"'"','"'"'plain-s5'"'"')) { Write-Output $f; Get-Content C:\Users\benja\rsn358i3\W\$f.log -Tail 1 }; Get-CimInstance Win32_Process -Filter \"Name='"'"'python.exe'"'"'\" | Select-Object ProcessId,ParentProcessId"' 2>&1 | head -n 30; date -u +%FT%TZ
+loop-s5
+{"step": 58500, "ce": 0.0116, "exact": 0.9838, "halt_bce": 0.0092, "lr": 4.623999400308054e-07, "min": 76.3, "exact_by_kind": {"grids4": 0.95, "grids5": 0.951, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+plain-s5
+{"step": 60000, "ce": 0.0002, "exact": 0.9997, "halt_bce": 0.0, "lr": 0.0, "min": 75.2, "exact_by_kind": {"grids4": 1.0, "grids5": 0.998, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 199}}
+
+ProcessId ParentProcessId
+--------- ---------------
+     2228            3260
+    11200            2228
+    22252           17320
+    21764           22252
+    11192            6484
+    11784           11192
+
+
+2026-09-26T21:30:29Z
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-ChildItem C:\Users\benja\rsn358i3\W\plain-s5; $r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='"'"'C:\Windows\System32\cmd.exe /c C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py train --arm loop --seed 7 --out W/loop-s7 > C:\Users\benja\rsn358i3\W\loop-s7.log 2> C:\Users\benja\rsn358i3\W\loop-s7.err'"'"'; CurrentDirectory='"'"'C:\Users\benja\rsn358i3'"'"'}; Write-Output $r.ReturnValue; Write-Output $r.ProcessId"' 2>&1 | head -n 12
+Directory: C:\Users\benja\rsn358i3\W\plain-s5
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----         9/26/2026   5:29 PM       25573143 final.pt                                                             
+-a----         9/26/2026   5:29 PM          31093 train_log.jsonl                                                      
+-a----         9/26/2026   5:29 PM           5716 train_summary.json                                                   
+0
+18516
+[0m
+[0m$ [0msleep 600; ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "foreach ($f in @('"'"'loop-s5'"'"','"'"'loop-s6'"'"','"'"'plain-s6'"'"','"'"'loop-s7'"'"')) { Write-Output $f; Get-Content C:\Users\benja\rsn358i3\W\$f.log -Tail 1 }"' 2>&1 | head -n 12; date -u +%FT%TZ
+loop-s5
+{"step": 60000, "ce": 0.0107, "exact": 0.9844, "halt_bce": 0.0076, "lr": 0.0, "min": 78.5, "exact_by_kind": {"grids4": 0.977, "grids5": 0.913, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 200}}
+loop-s6
+{"step": 58000, "ce": 0.0107, "exact": 0.9845, "halt_bce": 0.0115, "lr": 8.217156947589898e-07, "min": 79.4, "exact_by_kind": {"grids4": 0.978, "grids5": 0.918, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+plain-s6
+{"step": 55500, "ce": 0.0003, "exact": 0.9994, "halt_bce": 0.0, "lr": 4.144511940348516e-06, "min": 74.0, "exact_by_kind": {"grids4": 1.0, "grids5": 0.996, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+loop-s7
+{"step": 7500, "ce": 0.1533, "exact": 0.8211, "halt_bce": 0.2643, "lr": 0.000288581929876693, "min": 9.6, "exact_by_kind": {"grids4": 0.859, "grids5": 0.668, "numbers3": 0.866, "numbers4": 0.594, "sums1": 1.0, "sums2": 0.992, "sums3": 0.964, "sums4": 0.919}, "dev": {"sums4": 200, "grids5": 186}}
+2026-09-26T21:40:42Z
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-ChildItem C:\Users\benja\rsn358i3\W\loop-s5 | Select-Object Name,Length; $r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='"'"'C:\Windows\System32\cmd.exe /c C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py train --arm plain --seed 7 --out W/plain-s7 > C:\Users\benja\rsn358i3\W\plain-s7.log 2> C:\Users\benja\rsn358i3\W\plain-s7.err'"'"'; CurrentDirectory='"'"'C:\Users\benja\rsn358i3'"'"'}; Write-Output $r.ReturnValue; Write-Output $r.ProcessId"' 2>&1 | head -n 12
+Name                 Length
+----                 ------
+final.pt           25764244
+train_log.jsonl       31847
+train_summary.json     2284
+0
+7684
+[0m
+[0m$ [0msleep 900; ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "foreach ($f in @('"'"'loop-s6'"'"','"'"'plain-s6'"'"','"'"'loop-s7'"'"','"'"'plain-s7'"'"')) { Write-Output $f; Get-Content C:\Users\benja\rsn358i3\W\$f.log -Tail 1 }"' 2>&1 | head -n 12; date -u +%FT%TZ
+loop-s6
+{"step": 60000, "ce": 0.011, "exact": 0.9816, "halt_bce": 0.0129, "lr": 0.0, "min": 82.1, "exact_by_kind": {"grids4": 0.96, "grids5": 0.942, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 200}}
+plain-s6
+{"step": 60000, "ce": 0.0004, "exact": 0.9992, "halt_bce": 0.0, "lr": 0.0, "min": 79.1, "exact_by_kind": {"grids4": 1.0, "grids5": 0.996, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 198}}
+loop-s7
+{"step": 24000, "ce": 0.0253, "exact": 0.9718, "halt_bce": 0.0463, "lr": 0.0001963525491562421, "min": 24.8, "exact_by_kind": {"grids4": 0.955, "grids5": 0.88, "numbers3": 0.994, "numbers4": 0.989, "sums1": 1.0, "sums2": 1.0, "sums3": 0.996, "sums4": 0.986}}
+plain-s7
+{"step": 17500, "ce": 0.0104, "exact": 0.9801, "halt_bce": 0.0, "lr": 0.00024131421435130807, "min": 14.9, "exact_by_kind": {"grids4": 1.0, "grids5": 0.937, "numbers3": 0.982, "numbers4": 0.968, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 191}}
+2026-09-26T21:55:48Z
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='"'"'C:\Windows\System32\cmd.exe /c C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py train --arm loop --seed 8 --out W/loop-s8 > C:\Users\benja\rsn358i3\W\loop-s8.log 2> C:\Users\benja\rsn358i3\W\loop-s8.err'"'"'; CurrentDirectory='"'"'C:\Users\benja\rsn358i3'"'"'}; Write-Output $r.ReturnValue; Write-Output $r.ProcessId"' 2>&1 | head -n 4
+0
+21176
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='"'"'C:\Windows\System32\cmd.exe /c C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py train --arm plain --seed 8 --out W/plain-s8 > C:\Users\benja\rsn358i3\W\plain-s8.log 2> C:\Users\benja\rsn358i3\W\plain-s8.err'"'"'; CurrentDirectory='"'"'C:\Users\benja\rsn358i3'"'"'}; Write-Output $r.ReturnValue; Write-Output $r.ProcessId"' 2>&1 | head -n 4
+0
+5204
+[0m
+[0m$ [0msleep 1500; ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "foreach ($f in @('"'"'loop-s7'"'"','"'"'plain-s7'"'"','"'"'loop-s8'"'"','"'"'plain-s8'"'"')) { Write-Output $f; Get-Content C:\Users\benja\rsn358i3\W\$f.log -Tail 1 }"' 2>&1 | head -n 12; date -u +%FT%TZ
+loop-s7
+{"step": 42500, "ce": 0.0141, "exact": 0.9811, "halt_bce": 0.0143, "lr": 5.868578564869195e-05, "min": 50.3, "exact_by_kind": {"grids4": 0.963, "grids5": 0.922, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 200}}
+plain-s7
+{"step": 36000, "ce": 0.002, "exact": 0.995, "halt_bce": 0.0, "lr": 0.0001036474508437579, "min": 39.7, "exact_by_kind": {"grids4": 1.0, "grids5": 0.968, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+loop-s8
+{"step": 17500, "ce": 0.0497, "exact": 0.9487, "halt_bce": 0.0821, "lr": 0.00024131421435130807, "min": 24.9, "exact_by_kind": {"grids4": 0.908, "grids5": 0.867, "numbers3": 0.97, "numbers4": 0.954, "sums1": 1.0, "sums2": 1.0, "sums3": 0.993, "sums4": 0.988}, "dev": {"sums4": 200, "grids5": 198}}
+plain-s8
+{"step": 18000, "ce": 0.0091, "exact": 0.9819, "halt_bce": 0.0, "lr": 0.00023816778784387094, "min": 24.8, "exact_by_kind": {"grids4": 1.0, "grids5": 0.915, "numbers3": 0.991, "numbers4": 0.979, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+2026-09-26T22:20:56Z
+[0m
+[0m$ [0msleep 1500; ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "foreach ($f in @('"'"'loop-s7'"'"','"'"'plain-s7'"'"','"'"'loop-s8'"'"','"'"'plain-s8'"'"')) { Write-Output $f; Get-Content C:\Users\benja\rsn358i3\W\$f.log -Tail 1 }"' 2>&1 | head -n 12; date -u +%FT%TZ
+loop-s7
+{"step": 60000, "ce": 0.0206, "exact": 0.9698, "halt_bce": 0.0169, "lr": 0.0, "min": 74.9, "exact_by_kind": {"grids4": 0.96, "grids5": 0.891, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 200}}
+plain-s7
+{"step": 54500, "ce": 0.0004, "exact": 0.999, "halt_bce": 0.0, "lr": 6.1770397697710414e-06, "min": 64.9, "exact_by_kind": {"grids4": 1.0, "grids5": 0.993, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+loop-s8
+{"step": 35500, "ce": 0.0172, "exact": 0.9803, "halt_bce": 0.0212, "lr": 0.00010739769829441162, "min": 49.9, "exact_by_kind": {"grids4": 0.986, "grids5": 0.913, "numbers3": 0.998, "numbers4": 0.998, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+plain-s8
+{"step": 36500, "ce": 0.0026, "exact": 0.9947, "halt_bce": 0.0, "lr": 9.992897111493433e-05, "min": 49.9, "exact_by_kind": {"grids4": 1.0, "grids5": 0.979, "numbers3": 0.995, "numbers4": 0.995, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+2026-09-26T22:45:59Z
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "Get-ChildItem C:\Users\benja\rsn358i3\W\loop-s7 | Select-Object Name,Length; $r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='"'"'C:\Windows\System32\cmd.exe /c C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py train --arm plain --seed 1 --out W/plain-s1 > C:\Users\benja\rsn358i3\W\plain-s1.log 2> C:\Users\benja\rsn358i3\W\plain-s1.err'"'"'; CurrentDirectory='"'"'C:\Users\benja\rsn358i3'"'"'}; Write-Output $r.ReturnValue; Write-Output $r.ProcessId"' 2>&1 | head -n 10
+Name                 Length
+----                 ------
+final.pt           25764244
+train_log.jsonl       31854
+train_summary.json     2294
+0
+7144
+[0m
+[0m$ [0msleep 600; ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "foreach ($f in @('"'"'plain-s7'"'"','"'"'loop-s8'"'"','"'"'plain-s8'"'"','"'"'plain-s1'"'"')) { Write-Output $f; Get-Content C:\Users\benja\rsn358i3\W\$f.log -Tail 1 }"' 2>&1 | head -n 12; date -u +%FT%TZ
+plain-s7
+{"step": 60000, "ce": 0.0005, "exact": 0.9987, "halt_bce": 0.0, "lr": 0.0, "min": 71.2, "exact_by_kind": {"grids4": 1.0, "grids5": 0.994, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 199}}
+loop-s8
+{"step": 44500, "ce": 0.0103, "exact": 0.9861, "halt_bce": 0.0121, "lr": 4.6746813645936877e-05, "min": 59.8, "exact_by_kind": {"grids4": 0.994, "grids5": 0.903, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 0.998}}
+plain-s8
+{"step": 46000, "ce": 0.0009, "exact": 0.9979, "halt_bce": 0.0, "lr": 3.852827617839084e-05, "min": 59.9, "exact_by_kind": {"grids4": 1.0, "grids5": 0.986, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+plain-s1
+{"step": 9000, "ce": 0.0264, "exact": 0.9475, "halt_bce": 0.0, "lr": 0.00028365097862825513, "min": 9.9, "exact_by_kind": {"grids4": 0.998, "grids5": 0.831, "numbers3": 0.969, "numbers4": 0.918, "sums1": 1.0, "sums2": 1.0, "sums3": 0.999, "sums4": 0.993}}
+2026-09-26T22:56:09Z
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='"'"'C:\Windows\System32\cmd.exe /c C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py train --arm plain --seed 2 --out W/plain-s2 > C:\Users\benja\rsn358i3\W\plain-s2.log 2> C:\Users\benja\rsn358i3\W\plain-s2.err'"'"'; CurrentDirectory='"'"'C:\Users\benja\rsn358i3'"'"'}; Write-Output $r.ReturnValue; Write-Output $r.ProcessId"' 2>&1 | head -n 4
+0
+3096
+[0m
+[0m$ [0msleep 1200; ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "foreach ($f in @('"'"'loop-s8'"'"','"'"'plain-s8'"'"','"'"'plain-s1'"'"','"'"'plain-s2'"'"')) { Write-Output $f; Get-Content C:\Users\benja\rsn358i3\W\$f.log -Tail 1 }"' 2>&1 | head -n 12; date -u +%FT%TZ
+loop-s8
+{"step": 60000, "ce": 0.011, "exact": 0.9846, "halt_bce": 0.0121, "lr": 0.0, "min": 78.0, "exact_by_kind": {"grids4": 0.975, "grids5": 0.931, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 200}}
+plain-s8
+{"step": 60000, "ce": 0.0003, "exact": 0.9992, "halt_bce": 0.0, "lr": 0.0, "min": 76.1, "exact_by_kind": {"grids4": 1.0, "grids5": 0.995, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 200}}
+plain-s1
+{"step": 28000, "ce": 0.0042, "exact": 0.9918, "halt_bce": 0.0, "lr": 0.00016567926949014804, "min": 29.8, "exact_by_kind": {"grids4": 1.0, "grids5": 0.962, "numbers3": 1.0, "numbers4": 1.0, "sums1": 0.999, "sums2": 0.999, "sums3": 0.995, "sums4": 0.994}}
+plain-s2
+{"step": 19000, "ce": 0.0095, "exact": 0.9805, "halt_bce": 0.0, "lr": 0.00023169585525225405, "min": 20.0, "exact_by_kind": {"grids4": 1.0, "grids5": 0.906, "numbers3": 0.994, "numbers4": 0.975, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+2026-09-26T23:16:13Z
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='"'"'C:\Windows\System32\cmd.exe /c C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py train --arm plain --seed 3 --out W/plain-s3 > C:\Users\benja\rsn358i3\W\plain-s3.log 2> C:\Users\benja\rsn358i3\W\plain-s3.err'"'"'; CurrentDirectory='"'"'C:\Users\benja\rsn358i3'"'"'}; Write-Output $r.ReturnValue; Write-Output $r.ProcessId"' 2>&1 | head -n 4
+0
+5388
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='"'"'C:\Windows\System32\cmd.exe /c C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py train --arm plain --seed 4 --out W/plain-s4 > C:\Users\benja\rsn358i3\W\plain-s4.log 2> C:\Users\benja\rsn358i3\W\plain-s4.err'"'"'; CurrentDirectory='"'"'C:\Users\benja\rsn358i3'"'"'}; Write-Output $r.ReturnValue; Write-Output $r.ProcessId"' 2>&1 | head -n 4
+0
+7556
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- artifacts/claude-rsn358i-20260926/runs/ 2>&1 | head -n 20; echo "===358i2==="; git ls-tree -r --name-only origin/main -- artifacts/claude-rsn358i2-20260926/runs/ 2>&1 | head -n 20; echo "===outbox==="; git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-rsn358i2-20260926/runs/ 2>&1 | head -n 20
+artifacts/claude-rsn358i-20260926/runs/loop-s1/tests.json
+artifacts/claude-rsn358i-20260926/runs/loop-s1/train.log
+artifacts/claude-rsn358i-20260926/runs/loop-s1/train_log.jsonl
+artifacts/claude-rsn358i-20260926/runs/loop-s1/train_summary.json
+artifacts/claude-rsn358i-20260926/runs/loop-s2/tests.json
+artifacts/claude-rsn358i-20260926/runs/loop-s2/train.log
+artifacts/claude-rsn358i-20260926/runs/loop-s2/train_log.jsonl
+artifacts/claude-rsn358i-20260926/runs/loop-s2/train_summary.json
+artifacts/claude-rsn358i-20260926/runs/loop-s3/tests.json
+artifacts/claude-rsn358i-20260926/runs/loop-s3/train.log
+artifacts/claude-rsn358i-20260926/runs/loop-s3/train_log.jsonl
+artifacts/claude-rsn358i-20260926/runs/loop-s3/train_summary.json
+artifacts/claude-rsn358i-20260926/runs/loop-s4/tests.json
+artifacts/claude-rsn358i-20260926/runs/loop-s4/train.log
+artifacts/claude-rsn358i-20260926/runs/loop-s4/train_log.jsonl
+artifacts/claude-rsn358i-20260926/runs/loop-s4/train_summary.json
+artifacts/claude-rsn358i-20260926/runs/plain-s1/tests.json
+artifacts/claude-rsn358i-20260926/runs/plain-s1/train.log
+artifacts/claude-rsn358i-20260926/runs/plain-s1/train_log.jsonl
+artifacts/claude-rsn358i-20260926/runs/plain-s1/train_summary.json
+===358i2===
+===outbox===
+artifacts/claude-rsn358i2-20260926/runs/loop-s1/loop-s1.log
+artifacts/claude-rsn358i2-20260926/runs/loop-s1/tests.json
+artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_log.jsonl
+artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_summary.json
+artifacts/claude-rsn358i2-20260926/runs/loop-s2/loop-s2.log
+artifacts/claude-rsn358i2-20260926/runs/loop-s2/tests.json
+artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_log.jsonl
+artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_summary.json
+artifacts/claude-rsn358i2-20260926/runs/loop-s3/loop-s3.log
+artifacts/claude-rsn358i2-20260926/runs/loop-s3/tests.json
+artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_log.jsonl
+artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_summary.json
+artifacts/claude-rsn358i2-20260926/runs/loop-s4/loop-s4.log
+artifacts/claude-rsn358i2-20260926/runs/loop-s4/tests.json
+artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_log.jsonl
+artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_summary.json
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358i-20260926/runs/plain-s1/tests.json 2>&1 | head -n 60
+{
+ "arm": "plain",
+ "ckpt": "W/plain-s1/final.pt",
+ "tests": {
+  "sums4": {
+   "n": 300,
+   "right": 300,
+   "role": "practised"
+  },
+  "sums6": {
+   "n": 300,
+   "right": 188,
+   "role": "bigger"
+  },
+  "sums8": {
+   "n": 300,
+   "right": 133,
+   "role": "report"
+  },
+  "grids5": {
+   "n": 300,
+   "right": 299,
+   "role": "practised"
+  },
+  "grids6": {
+   "n": 300,
+   "right": 230,
+   "role": "bigger"
+  },
+  "grids7": {
+   "n": 300,
+   "right": 136,
+   "role": "report"
+  },
+  "numbers4": {
+   "n": 300,
+   "right": 0,
+   "role": "practised"
+  },
+  "numbers5": {
+   "n": 300,
+   "right": 0,
+   "role": "bigger"
+  },
+  "sums10": {
+   "n": 300,
+   "right": 93,
+   "role": "report"
+  },
+  "sums12": {
+   "n": 300,
+   "right": 65,
+   "role": "report"
+  }
+ }
+}
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-rsn358i2-20260926/runs/loop-s1/tests.json 2>&1 | head -n 100
+{
+ "arm": "loop",
+ "ckpt": "W/loop-s1/final.pt",
+ "tests": {
+  "sums4": {
+   "n": 300,
+   "right": 300,
+   "right_v1_rule": 299,
+   "mean_rounds": 6.81,
+   "rounds_hist": {
+    "3": 2,
+    "4": 15,
+    "5": 49,
+    "6": 62,
+    "7": 83,
+    "8": 48,
+    "9": 26,
+    "10": 9,
+    "11": 3,
+    "12": 2,
+    "13": 1
+   },
+   "fixed_rounds": {
+    "1": 299,
+    "2": 300,
+    "4": 300,
+    "8": 300,
+    "12": 300,
+    "16": 300,
+    "24": 300,
+    "32": 300,
+    "48": 300
+   },
+   "right_at_any_round": 300,
+   "role": "practised"
+  },
+  "sums6": {
+   "n": 300,
+   "right": 299,
+   "right_v1_rule": 255,
+   "mean_rounds": 8.22,
+   "rounds_hist": {
+    "4": 1,
+    "5": 23,
+    "6": 45,
+    "7": 56,
+    "8": 69,
+    "9": 35,
+    "10": 24,
+    "11": 20,
+    "12": 14,
+    "13": 8,
+    "14": 2,
+    "17": 1,
+    "21": 2
+   },
+   "fixed_rounds": {
+    "1": 255,
+    "2": 270,
+    "4": 291,
+    "8": 299,
+    "12": 299,
+    "16": 299,
+    "24": 299,
+    "32": 298,
+    "48": 298
+   },
+   "right_at_any_round": 300,
+   "role": "bigger"
+  },
+  "sums8": {
+   "n": 300,
+   "right": 273,
+   "right_v1_rule": 190,
+   "mean_rounds": 9.63,
+   "rounds_hist": {
+    "5": 12,
+    "6": 38,
+    "7": 49,
+    "8": 55,
+    "9": 34,
+    "10": 28,
+    "11": 20,
+    "12": 19,
+    "13": 15,
+    "14": 4,
+    "15": 5,
+    "16": 6,
+    "17": 4,
+    "18": 4,
+    "20": 1,
+    "22": 2,
+    "29": 1,
+    "32": 1,
+    "48": 2
+   },
+   "fixed_rounds": {
+    "1": 188,
+    "2": 213,
+    "4": 233,
+[0m
+[0m$ [0msleep 1800; ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "foreach ($f in @('"'"'plain-s1'"'"','"'"'plain-s2'"'"','"'"'plain-s3'"'"','"'"'plain-s4'"'"')) { Write-Output $f; Get-Content C:\Users\benja\rsn358i3\W\$f.log -Tail 1 }"' 2>&1 | head -n 12; date -u +%FT%TZ
+plain-s1
+{"step": 59000, "ce": 0.0002, "exact": 0.9996, "halt_bce": 0.0, "lr": 2.05569786813925e-07, "min": 60.3, "exact_by_kind": {"grids4": 1.0, "grids5": 0.997, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+plain-s2
+{"step": 49500, "ce": 0.0005, "exact": 0.9988, "halt_bce": 0.0, "lr": 2.210397534688617e-05, "min": 50.0, "exact_by_kind": {"grids4": 1.0, "grids5": 0.994, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+plain-s3
+{"step": 30000, "ce": 0.0051, "exact": 0.9881, "halt_bce": 0.0, "lr": 0.00015, "min": 30.0, "exact_by_kind": {"grids4": 1.0, "grids5": 0.924, "numbers3": 0.997, "numbers4": 0.992, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 185}}
+plain-s4
+{"step": 30000, "ce": 0.0032, "exact": 0.9928, "halt_bce": 0.0, "lr": 0.00015, "min": 30.0, "exact_by_kind": {"grids4": 1.0, "grids5": 0.969, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 0.997, "sums4": 0.995}, "dev": {"sums4": 200, "grids5": 191}}
+2026-09-26T23:46:33Z
+[0m
+[0m$ [0mls artifacts/claude-rsn358i3-20260926/ 2>&1; git check-ignore artifacts/claude-rsn358i3-20260926 2>&1; echo "---"; git status --short | head -n 10
+ls: artifacts/claude-rsn358i3-20260926/: No such file or directory
+artifacts/claude-rsn358i3-20260926
+---
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+[0m
+[0m$ [0msleep 3300; ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "foreach ($f in @('"'"'plain-s1'"'"','"'"'plain-s2'"'"','"'"'plain-s3'"'"','"'"'plain-s4'"'"')) { Write-Output $f; Get-Content C:\Users\benja\rsn358i3\W\$f.log -Tail 1 }; Get-CimInstance Win32_Process -Filter \"Name='"'"'python.exe'"'"'\" | Select-Object ProcessId" ' 2>&1 | head -n 20; date -u +%FT%TZ
+plain-s1
+{"step": 60000, "ce": 0.0002, "exact": 0.9994, "halt_bce": 0.0, "lr": 0.0, "min": 61.2, "exact_by_kind": {"grids4": 1.0, "grids5": 0.997, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 199}}
+plain-s2
+{"step": 60000, "ce": 0.0001, "exact": 0.9996, "halt_bce": 0.0, "lr": 0.0, "min": 58.5, "exact_by_kind": {"grids4": 1.0, "grids5": 0.997, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 200}}
+plain-s3
+{"step": 60000, "ce": 0.0007, "exact": 0.9981, "halt_bce": 0.0, "lr": 0.0, "min": 50.8, "exact_by_kind": {"grids4": 1.0, "grids5": 0.989, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 197}}
+plain-s4
+{"step": 60000, "ce": 0.0003, "exact": 0.9994, "halt_bce": 0.0, "lr": 0.0, "min": 50.4, "exact_by_kind": {"grids4": 1.0, "grids5": 0.997, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 198}}
+2026-09-27T00:41:41Z
+[0m
+[0m# [0mTodos
+[✓] Check BensPC reachability, GPU-BUSY gate, duplicate gate
+[✓] Stream sealed code to C:/Users/benja/rsn358i3/ and verify SEAL (19 lines)
+[✓] Run torch version + selftests + check-mask on BensPC
+[✓] Train 8 graded runs (loop/plain s5-8) + 4 report-only (plain s1-4) [all 12 hit 60000 steps]
+[•] Seal final.pt, eval once each, copy back to Mac
+[ ] Write RESULTS.md + ledger + push paths
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'cd /d C:\Users\benja\rsn358i3 && "C:\Program Files\Git\usr\bin\sha256sum.exe" W/loop-s5/final.pt' 2>&1 | head -n 3
+1ece3b96b2408fb3dc7a49d647baeb47d815c83321d9ee1c313ce9799b0b1841 *W/loop-s5/final.pt
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'cd /d C:\Users\benja\rsn358i3 && "C:\Program Files\Git\usr\bin\sha256sum.exe" W/loop-s5/final.pt >> artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py eval --ckpt W/loop-s5/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/loop-s5/tests.json' 2>&1 | tail -n 15
+sums4 {"n": 300, "right": 300, "right_v1_rule": 300, "mean_rounds": 6.55, "rounds_hist": {"3": 1, "4": 14, "5": 57, "6": 95, "7": 60, "8": 42, "9": 19, "10": 9, "11": 2, "12": 1}, "fixed_rounds": {"1": 300, "2": 300, "4": 300, "8": 300, "12": 300, "16": 300, "24": 300, "32": 300, "48": 300}, "right_at_any_round": 300, "role": "practised"}
+sums6 {"n": 300, "right": 299, "right_v1_rule": 250, "mean_rounds": 7.57, "rounds_hist": {"4": 2, "5": 26, "6": 51, "7": 86, "8": 68, "9": 30, "10": 18, "11": 10, "12": 3, "13": 4, "15": 1, "18": 1}, "fixed_rounds": {"1": 250, "2": 275, "4": 289, "8": 299, "12": 298, "16": 297, "24": 297, "32": 297, "48": 297}, "right_at_any_round": 299, "role": "bigger"}
+sums8 {"n": 300, "right": 282, "right_v1_rule": 177, "mean_rounds": 8.45, "rounds_hist": {"5": 10, "6": 43, "7": 56, "8": 67, "9": 42, "10": 44, "11": 17, "12": 9, "13": 3, "14": 5, "15": 1, "16": 1, "21": 1, "24": 1}, "fixed_rounds": {"1": 177, "2": 234, "4": 259, "8": 279, "12": 281, "16": 283, "24": 282, "32": 282, "48": 282}, "right_at_any_round": 286, "role": "report"}
+grids5 {"n": 300, "right": 300, "right_v1_rule": 269, "mean_rounds": 9.08, "rounds_hist": {"6": 6, "7": 33, "8": 72, "9": 80, "10": 66, "11": 26, "12": 12, "13": 2, "14": 2, "16": 1}, "fixed_rounds": {"1": 75, "2": 207, "4": 300, "8": 300, "12": 300, "16": 300, "24": 300, "32": 300, "48": 300}, "right_at_any_round": 300, "role": "practised"}
+grids6 {"n": 300, "right": 296, "right_v1_rule": 243, "mean_rounds": 10.61, "rounds_hist": {"6": 1, "7": 14, "8": 50, "9": 52, "10": 74, "11": 45, "12": 26, "13": 22, "14": 4, "15": 4, "16": 1, "17": 1, "18": 1, "19": 1, "48": 4}, "fixed_rounds": {"1": 46, "2": 153, "4": 261, "8": 295, "12": 296, "16": 296, "24": 296, "32": 296, "48": 296}, "right_at_any_round": 296, "role": "bigger"}
+grids7 {"n": 300, "right": 242, "right_v1_rule": 150, "mean_rounds": 18.61, "rounds_hist": {"4": 1, "7": 4, "8": 19, "9": 35, "10": 46, "11": 41, "12": 20, "13": 21, "14": 11, "15": 10, "16": 11, "17": 10, "18": 2, "19": 4, "20": 2, "21": 3, "23": 1, "26": 1, "29": 1, "30": 1, "46": 1, "48": 55}, "fixed_rounds": {"1": 15, "2": 93, "4": 157, "8": 226, "12": 239, "16": 239, "24": 241, "32": 240, "48": 241}, "right_at_any_round": 245, "role": "report"}
+numbers4 {"n": 300, "right": 2, "right_v1_rule": 0, "mean_rounds": 7.33, "rounds_hist": {"3": 1, "4": 8, "5": 31, "6": 68, "7": 69, "8": 50, "9": 35, "10": 23, "11": 8, "12": 5, "13": 2}, "fixed_rounds": {"1": 0, "2": 1, "4": 1, "8": 2, "12": 1, "16": 1, "24": 1, "32": 1, "48": 1}, "right_at_any_round": 2, "role": "practised"}
+numbers5 {"n": 300, "right": 0, "right_v1_rule": 1, "mean_rounds": 7.78, "rounds_hist": {"4": 4, "5": 21, "6": 44, "7": 73, "8": 63, "9": 43, "10": 34, "11": 11, "12": 5, "13": 1, "14": 1}, "fixed_rounds": {"1": 1, "2": 0, "4": 0, "8": 0, "12": 0, "16": 0, "24": 0, "32": 0, "48": 0}, "right_at_any_round": 2, "role": "bigger"}
+sums10 {"n": 300, "right": 232, "right_v1_rule": 134, "mean_rounds": 9.24, "rounds_hist": {"5": 3, "6": 32, "7": 43, "8": 65, "9": 51, "10": 33, "11": 34, "12": 15, "13": 5, "14": 7, "15": 3, "17": 2, "18": 3, "19": 2, "32": 1, "36": 1}, "fixed_rounds": {"1": 134, "2": 192, "4": 213, "8": 229, "12": 231, "16": 230, "24": 229, "32": 230, "48": 232}, "right_at_any_round": 252, "role": "report"}
+sums12 {"n": 300, "right": 178, "right_v1_rule": 87, "mean_rounds": 10.41, "rounds_hist": {"5": 1, "6": 12, "7": 36, "8": 46, "9": 40, "10": 53, "11": 42, "12": 24, "13": 17, "14": 5, "15": 3, "16": 7, "17": 2, "18": 4, "19": 1, "20": 1, "22": 1, "24": 2, "26": 1, "48": 2}, "fixed_rounds": {"1": 87, "2": 130, "4": 167, "8": 179, "12": 179, "16": 179, "24": 178, "32": 178, "48": 179}, "right_at_any_round": 206, "role": "report"}
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'cd /d C:\Users\benja\rsn358i3 && "C:\Program Files\Git\usr\bin\sha256sum.exe" W/plain-s5/final.pt >> artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py eval --ckpt W/plain-s5/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/plain-s5/tests.json > W/plain-s5-eval.out 2>&1 && echo PLAIN5-DONE && "C:\Program Files\Git\usr\bin\sha256sum.exe" W/loop-s6/final.pt >> artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py eval --ckpt W/loop-s6/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/loop-s6/tests.json > W/loop-s6-eval.out 2>&1 && echo LOOP6-DONE' 2>&1 | tail -n 4
+PLAIN5-DONE 
+LOOP6-DONE
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'cd /d C:\Users\benja\rsn358i3 && "C:\Program Files\Git\usr\bin\sha256sum.exe" W/plain-s6/final.pt >> artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py eval --ckpt W/plain-s6/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/plain-s6/tests.json > W/plain-s6-eval.out 2>&1 && echo PLAIN6-DONE && "C:\Program Files\Git\usr\bin\sha256sum.exe" W/loop-s7/final.pt >> artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py eval --ckpt W/loop-s7/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/loop-s7/tests.json > W/loop-s7-eval.out 2>&1 && echo LOOP7-DONE' 2>&1 | tail -n 4
+PLAIN6-DONE 
+LOOP7-DONE
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'cd /d C:\Users\benja\rsn358i3 && "C:\Program Files\Git\usr\bin\sha256sum.exe" W/plain-s7/final.pt >> artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py eval --ckpt W/plain-s7/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/plain-s7/tests.json > W/plain-s7-eval.out 2>&1 && echo PLAIN7-DONE && "C:\Program Files\Git\usr\bin\sha256sum.exe" W/loop-s8/final.pt >> artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py eval --ckpt W/loop-s8/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/loop-s8/tests.json > W/loop-s8-eval.out 2>&1 && echo LOOP8-DONE' 2>&1 | tail -n 4
+PLAIN7-DONE 
+LOOP8-DONE
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'cd /d C:\Users\benja\rsn358i3 && "C:\Program Files\Git\usr\bin\sha256sum.exe" W/plain-s8/final.pt >> artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py eval --ckpt W/plain-s8/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/plain-s8/tests.json > W/plain-s8-eval.out 2>&1 && echo PLAIN8-DONE && "C:\Program Files\Git\usr\bin\sha256sum.exe" W/plain-s1/final.pt >> artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py eval --ckpt W/plain-s1/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/plain-s1/tests.json > W/plain-s1-eval.out 2>&1 && echo PLAIN1-DONE' 2>&1 | tail -n 4
+PLAIN8-DONE 
+PLAIN1-DONE
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'cd /d C:\Users\benja\rsn358i3 && "C:\Program Files\Git\usr\bin\sha256sum.exe" W/plain-s2/final.pt >> artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py eval --ckpt W/plain-s2/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/plain-s2/tests.json > W/plain-s2-eval.out 2>&1 && echo PLAIN2-DONE && "C:\Program Files\Git\usr\bin\sha256sum.exe" W/plain-s3/final.pt >> artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py eval --ckpt W/plain-s3/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/plain-s3/tests.json > W/plain-s3-eval.out 2>&1 && echo PLAIN3-DONE && "C:\Program Files\Git\usr\bin\sha256sum.exe" W/plain-s4/final.pt >> artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt && C:\Users\benja\lis300\venv\Scripts\python.exe -B scripts/claude_rsn358i2_run.py eval --ckpt W/plain-s4/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/plain-s4/tests.json > W/plain-s4-eval.out 2>&1 && echo PLAIN4-DONE' 2>&1 | tail -n 5
+PLAIN2-DONE 
+PLAIN3-DONE 
+PLAIN4-DONE
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'cd /d C:\Users\benja\rsn358i3 && powershell -NoProfile -Command "Get-Content artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt | Measure-Object -Line | Select-Object Lines"' 2>&1 | head -n 5
+ssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "foreach ($f in @('"'"'loop-s5'"'"','"'"'plain-s5'"'"','"'"'loop-s6'"'"','"'"'plain-s6'"'"','"'"'loop-s7'"'"','"'"'plain-s7'"'"','"'"'loop-s8'"'"','"'"'plain-s8'"'"','"'"'plain-s1'"'"','"'"'plain-s2'"'"','"'"'plain-s3'"'"','"'"'plain-s4'"'"')) { $t = Test-Path C:\Users\benja\rsn358i3\W\$f\tests.json; Write-Output $f-$t }"' 2>&1 | head -n 14
+Lines
+-----
+   12
+
+loop-s5-True
+plain-s5-True
+loop-s6-True
+plain-s6-True
+loop-s7-True
+plain-s7-True
+loop-s8-True
+plain-s8-True
+plain-s1-True
+plain-s2-True
+plain-s3-True
+plain-s4-True
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'powershell -NoProfile -Command "foreach ($f in @('"'"'loop-s5'"'"','"'"'plain-s5'"'"','"'"'loop-s6'"'"','"'"'plain-s6'"'"','"'"'loop-s7'"'"','"'"'plain-s7'"'"','"'"'loop-s8'"'"','"'"'plain-s8'"'"','"'"'plain-s1'"'"','"'"'plain-s2'"'"','"'"'plain-s3'"'"','"'"'plain-s4'"'"')) { New-Item -ItemType Directory -Force C:\Users\benja\premonition-models\rsn358i3\$f | Out-Null; Copy-Item C:\Users\benja\rsn358i3\W\$f\final.pt C:\Users\benja\premonition-models\rsn358i3\$f\final.pt; Write-Output $f }; Get-Content C:\Users\benja\rsn358i3\artifacts\claude-rsn358i3-20260926\SEAL-run.sha256.txt"' 2>&1 | head -n 30
+loop-s5
+plain-s5
+loop-s6
+plain-s6
+loop-s7
+plain-s7
+loop-s8
+plain-s8
+plain-s1
+plain-s2
+plain-s3
+plain-s4
+1ece3b96b2408fb3dc7a49d647baeb47d815c83321d9ee1c313ce9799b0b1841 *W/loop-s5/final.pt
+5db6a4d15489f67ba96d9b63ce43408c7979214af86d2185caef133b7c492b30 *W/plain-s5/final.pt
+2c84d41b4c3b22a5c238043d60456948f23b38a3afd2d56643e3e401dd5cfb36 *W/loop-s6/final.pt
+351c238fe746caad0e83dc18ab38e3bad5fbba8d7794b918799699f6146b49a9 *W/plain-s6/final.pt
+5238e843747df70e9be0e96e6160f842180ba3752ef6c7c9c54efa95574021b9 *W/loop-s7/final.pt
+a30de8a242fa674854f9bec78b8eea14b3e3fca4ecd55e9c080025bb2df11999 *W/plain-s7/final.pt
+d733704ea2cb674feb334d6f20c4b3c4c8e0be31166d3edf0e7eba1a32a0a705 *W/loop-s8/final.pt
+99f519248bc7ac8b4ed07228f1f2a18b3d3b3f97ea81ea2efa9f9137a0ec0f95 *W/plain-s8/final.pt
+a280e634180bf7fd2ae5e43a728d098aa7b0b8e1e599ed1284b781c008ec19aa *W/plain-s1/final.pt
+cbd228360f6409ccdb886c36db6db6c57cebeca1967c6525646c975698d2966f *W/plain-s2/final.pt
+20a93f0b680df37e1653202b473ab06041ec26abde433b0417219924744483f9 *W/plain-s3/final.pt
+c631caed60fc87170d9607f64962ec065155cf5777f5c218b9a6f88795c5c079 *W/plain-s4/final.pt
+[0m
+[0m$ [0mmkdir -p artifacts/claude-rsn358i3-20260926/runs ~/premonition-models/rsn358i3
+for R in loop-s5 plain-s5 loop-s6 plain-s6 loop-s7 plain-s7 loop-s8 plain-s8 plain-s1 plain-s2 plain-s3 plain-s4; do mkdir -p "artifacts/claude-rsn358i3-20260926/runs/$R" "$HOME/premonition-models/rsn358i3/$R"; done
+ls artifacts/claude-rsn358i3-20260926/runs/ | head -n 15
+loop-s5
+loop-s6
+loop-s7
+loop-s8
+plain-s1
+plain-s2
+plain-s3
+plain-s4
+plain-s5
+plain-s6
+plain-s7
+plain-s8
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 "benspc:C:/Users/benja/rsn358i3/artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt" artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt 2>&1 | head -n 3; cat artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt | head -n 3
+1ece3b96b2408fb3dc7a49d647baeb47d815c83321d9ee1c313ce9799b0b1841 *W/loop-s5/final.pt
+5db6a4d15489f67ba96d9b63ce43408c7979214af86d2185caef133b7c492b30 *W/plain-s5/final.pt
+2c84d41b4c3b22a5c238043d60456948f23b38a3afd2d56643e3e401dd5cfb36 *W/loop-s6/final.pt
+[0m
+[0m$ [0mfor R in loop-s5 plain-s5 loop-s6 plain-s6 loop-s7 plain-s7 loop-s8 plain-s8; do scp -q -o ConnectTimeout=20 "benspc:C:/Users/benja/rsn358i3/W/$R/train_log.jsonl" "benspc:C:/Users/benja/rsn358i3/W/$R/train_summary.json" "benspc:C:/Users/benja/rsn358i3/W/$R/tests.json" "artifacts/claude-rsn358i3-20260926/runs/$R/" && scp -q -o ConnectTimeout=20 "benspc:C:/Users/benja/rsn358i3/W/$R.log" "artifacts/claude-rsn358i3-20260926/runs/$R/$R.log" && echo "$R ok"; done 2>&1 | head -n 12
+loop-s5 ok
+plain-s5 ok
+loop-s6 ok
+plain-s6 ok
+loop-s7 ok
+plain-s7 ok
+loop-s8 ok
+plain-s8 ok
+[0m
+[0m$ [0mfor R in plain-s1 plain-s2 plain-s3 plain-s4; do scp -q -o ConnectTimeout=20 "benspc:C:/Users/benja/rsn358i3/W/$R/train_log.jsonl" "benspc:C:/Users/benja/rsn358i3/W/$R/train_summary.json" "benspc:C:/Users/benja/rsn358i3/W/$R/tests.json" "artifacts/claude-rsn358i3-20260926/runs/$R/" && scp -q -o ConnectTimeout=20 "benspc:C:/Users/benja/rsn358i3/W/$R.log" "artifacts/claude-rsn358i3-20260926/runs/$R/$R.log" && echo "$R ok"; done 2>&1 | head -n 6
+ls -la artifacts/claude-rsn358i3-20260926/runs/loop-s5/ artifacts/claude-rsn358i3-20260926/runs/plain-s1/
+plain-s1 ok
+plain-s2 ok
+plain-s3 ok
+plain-s4 ok
+artifacts/claude-rsn358i3-20260926/runs/loop-s5/:
+total 152
+drwxr-xr-x   6 ben-hannan  staff    192 Sep 26 20:43 .
+drwxr-xr-x  14 ben-hannan  staff    448 Sep 26 20:43 ..
+-rw-------   1 ben-hannan  staff  31904 Sep 26 20:43 loop-s5.log
+-rw-------   1 ben-hannan  staff   5531 Sep 26 20:43 tests.json
+-rw-------   1 ben-hannan  staff  31847 Sep 26 20:43 train_log.jsonl
+-rw-------   1 ben-hannan  staff   2284 Sep 26 20:43 train_summary.json
+
+artifacts/claude-rsn358i3-20260926/runs/plain-s1/:
+total 152
+drwxr-xr-x   6 ben-hannan  staff    192 Sep 26 20:43 .
+drwxr-xr-x  14 ben-hannan  staff    448 Sep 26 20:43 ..
+-rw-------   1 ben-hannan  staff  31157 Sep 26 20:43 plain-s1.log
+-rw-------   1 ben-hannan  staff    815 Sep 26 20:43 tests.json
+-rw-------   1 ben-hannan  staff  31099 Sep 26 20:43 train_log.jsonl
+-rw-------   1 ben-hannan  staff   5765 Sep 26 20:43 train_summary.json
+[0m
+[0m$ [0mfor R in loop-s5 plain-s5 loop-s6 plain-s6 loop-s7 plain-s7 loop-s8 plain-s8 plain-s1 plain-s2 plain-s3 plain-s4; do scp -q -o ConnectTimeout=20 "benspc:C:/Users/benja/premonition-models/rsn358i3/$R/final.pt" "$HOME/premonition-models/rsn358i3/$R/final.pt" && echo "$R weight ok"; done 2>&1 | head -n 14
+loop-s5 weight ok
+plain-s5 weight ok
+loop-s6 weight ok
+plain-s6 weight ok
+loop-s7 weight ok
+plain-s7 weight ok
+loop-s8 weight ok
+plain-s8 weight ok
+plain-s1 weight ok
+plain-s2 weight ok
+plain-s3 weight ok
+plain-s4 weight ok
+[0m
+[0m$ [0mpython3 -c "
+import hashlib, pathlib
+ok = True
+for d in sorted(pathlib.Path.home().joinpath('premonition-models/rsn358i3').iterdir()):
+    h = hashlib.sha256((d/'final.pt').read_bytes()).hexdigest()
+    print(d.name, h)
+" 2>&1 | head -n 14
+Traceback (most recent call last):
+  File "<string>", line 5, in <module>
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1249, in read_bytes
+    with self.open(mode='rb') as f:
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1242, in open
+    return io.open(self, mode, buffering, encoding, errors, newline,
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1110, in _opener
+    return self._accessor.open(self, flags, mode)
+NotADirectoryError: [Errno 20] Not a directory: '/Users/ben-hannan/premonition-models/rsn358i3/.DS_Store/final.pt'
+[0m
+[0m$ [0mpython3 -c "
+import hashlib, pathlib
+seal = {}
+for line in open('artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt'):
+    h, p = line.split()
+    seal[p.split('/')[1]] = h
+for d in sorted(pathlib.Path.home().joinpath('premonition-models/rsn358i3').iterdir()):
+    if not (d/'final.pt').is_file(): continue
+    h = hashlib.sha256((d/'final.pt').read_bytes()).hexdigest()
+    print(d.name, 'MATCH' if seal.get(d.name)==h else 'MISMATCH '+h)
+" 2>&1 | head -n 14
+loop-s5 MATCH
+loop-s6 MATCH
+loop-s7 MATCH
+loop-s8 MATCH
+plain-s1 MATCH
+plain-s2 MATCH
+plain-s3 MATCH
+plain-s4 MATCH
+plain-s5 MATCH
+plain-s6 MATCH
+plain-s7 MATCH
+plain-s8 MATCH
+[0m
+[0m$ [0mls artifacts/fable-predictions-ledger.md 2>&1; tail -n 15 artifacts/fable-predictions-ledger.md 2>&1 | head -n 20; which uv 2>&1
+artifacts/fable-predictions-ledger.md
+- 2026-09-26 16:45 UTC rent-rt02d PARTIAL (label claude-plainpuzzles-rt02d, sealed origin/main code, never edited): instances 52760176 (success False, loading>6min, destroyed, ~$0) + 52761382 (RTX 5090, host ssh broken, ~0.17h x $0.5037 ~$0.08) + 52763126 (RTX 5090, ~2.05h x $0.563 ~$1.15); total ~$1.23 of $1.50. Setup S1-S6 green (BASE 87179e5c, reader depot copy sha e688e1b2 match, adapter a33211dc match, seals OK, selftests 55/55 + 9/9); dev gate PASS (B0a/B0b 55 rows each, 0 diffs). Env fix only: torch 2.11.0+cu128, torchvision 0.26.0, torchaudio removed (transformers 5.17 vs image torch 2.2.1). Panel B0 launched 16:26, rental ssh died ~16:31, reboot failed, outcome unknown; run/score/logs unrecoverable, nothing pushed but RESULTS-rent.md. Outcome: PARTIAL (infra).
+- 2026-09-26 16:58 UTC claude-benchmarks-bmrivsmoke2 (Benchmarks bm-riv smoke 2, origin/main code unmodified, panel seal da7202db ok, selftest 12/12): BUDGET-STOP (killed at ~$0.189, final ~$0.197 of $0.20; money rule $0.18 crossed between polls). Finished: plain1b_4k 8 rows, lfm12b_4k 8 rows. Killed (rows kept): qwen2b_4k 7 rows. Instance 52778379 (offer 43681503, RTX 4090 MY, image pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime disk 80, torch 2.8.0+cu129 transformers 5.17.0 py 3.11.13, created 16:27:10Z running ~16:31:36Z lanes 16:39:05-16:40:28Z killed 16:56:55Z destroyed 16:58:03Z, ~0.515h x dph $0.38222 = ~$0.197); 1 rental of max 4; post-destroy 0 claude-benchmarks-bmrivsmoke2 live. Credit at gate 8.83074058626977. Copy-back 3 files sha-verified. Peak GPU mem seen 9665/24564 MiB. No code edits, no traceback, no replies quoted. See artifacts/claude-bmriv-smoke-20260926/RESULTS-rent2.md + run2/.
+- 2026-09-26 17:06 UTC rent-k1c RUN-COMPLETE (Creative answers in chat, label claude-creativechat-k1c, origin/main code unmodified): instances 52778638 (offer 46753301, docker-proxy pull refusal, destroyed un-run, ~$0) + 52779278 (offer 48989736 host 406325, RTX 5090, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 60, torch 2.8.0+cu128 transformers 5.17.0 py 3.11.13, ~16:35-17:06Z ~0.52h x dph $0.4944 ~$0.26); total ~$0.26 of $0.80. Setup green (4 HF downloads incl. BASE 87179e5c/Q 15852e8c/L 0f604ada, adapter a33211dc match, seals OK, tests 7/7+7/7, selftests 5/5+7/7, route122 no-raise). DEV gate PASS (3/3/3 lines, k1c line, 0 empty). V1 PASS all 10 arms. Round A 5x100 + round B 5x60, all exit 0, scored+deduped (A 500->448 distinct/52 shared; B 300->268/32 shared). Copy-back 38/38 sha-verified. Deviations: scp-3 failed so one Mac mktemp (removed exact path); launch ssh teardowns hung (launches ok, PIDs via ps); dph $0.4944 vs $0.469 search; exit codes inferred. Credit at gate 0 (auto-refill). 2 rentals of max 3. See artifacts/claude-k1c-20260926/RESULTS-rent.md + run/.
+- 2026-09-26 17:08 UTC claude-sleep-358t STOPPED by owner: autocast cache bug, no verdict on the TRM schedule or loop8; 0.45 h, $0.22.
+- 2026-09-26 17:12 UTC claude-fixsleep-dl5 FAIL (label claude-fixsleep-dl5, origin/main code unmodified, selftests pass, never edited): rentals 1 (52770457, RTX 5090 dph $0.4361, docker-proxy pull refusal, destroyed un-run, ~$0.04) + 2 (52771192, RTX 5090 South Korea, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 30, torch 2.8.0+cu128 transformers 5.17.0 pip-installed, ~15:35-17:11Z ~1.60h x dph $0.4806 ~$0.77); task total ~$0.81 of $1.60. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc. Run 87.7 min wall, 25 arm-nights + base, exit 0. Marks: G1 PASS (S final 93.8/93.4 pts vs night0 48.8), G2 PASS (P final 6.6/7.2), G2b PASS (open S 67.8/65.0 vs P 35.0/38.5), G3 FAIL (S lost 98/61 > 20); verdict FAIL, not INCONCLUSIVE (S night-1 rows 1144/925), not proved wrong (open S 97/93 > P 50/55). S days solved s8 101/103/105/107/113, s9 85/101/92/101/104 of 150; P legal-wrong s8 224/247/260/269/269, s9 182/236/242/250/272; K s8 right 705/715/705/715/706; test-in-day 0. Adapters local only (16,575,557 B each, sha c74b1783/s8 5352be44/s9, 192 tensors). Copy-back 6 files sha-verified, rental destroyed, 0 claude-fixsleep-dl5 live. Credit at gate 8.60 (balance 0). Deviations: rental-1 host pull failure; pip-installed transformers 5.17.0 + huggingface_hub (transformers dep) for snapshot download; first ssh foreground command ran in /root not dl5 (harmless, reran). See artifacts/claude-dl5-20260926/RESULTS-gpu.md + gpu/.
+- 2026-09-26 17:17 UTC rent-brd9 actual ~$0.63 of $0.90 (Creative): rental 52775111 RTX 5090 ~70.7 min @ dph $0.4944 (~$0.58) + unreachable first host 52774555 destroyed (~$0.05). brd-9 registered run PASS MET (N3-base +43/+39/+35 vs bar 28.8, CI [+10.56,+21.81]); G7 met; NIGHTS not met (seed2 +9 vs +12); transfer seen (N3-base CI [+18.14,+40.08]). Script wall 46.7 min, model commit 87179e5c1f455ef22e6223592d2d61351b525bfc. No weights saved.
+- 2026-09-26 17:25 UTC rd-378u GPU CONFIRM (label claude-notes-rd378u, sealed origin/main code COMMIT c4f1bfca91fec9c299e18b10c0fd501ce54bb56b, SEAL.sha256.txt 13/13 OK, 4 selftests PASS, code never edited): rental 1 (52779987, offer 39904635, RTX 5090, image pytorch/pytorch disk 80, torch 2.11.0+cu128 torchvision/torchaudio removed transformers 5.17.0 peft 0.21.0) ran 16:38:31-17:24:54Z ~0.773h x dph $0.5037 = ~$0.39 of $0.80; 1 rental of max 3. BASE openbmb/MiniCPM5-1B 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM path exact. Writer via on-rental rebuild (adapter BensPC->rental, 6/6 hashes match, no Mac copy), merged sha dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510 exit 0 match true; Mac fallback unused. DATA locomo10.json 79fa87e9 match (pyarrow MMLU fail, immaterial). Dialogs 5-9 {"turns": 3122}. WRITE "wrote notes for 3122 turns on cuda" ~16.4 min (2866 notes, 16 unparsed, median 319.2 ms p90 595.8 ms). SCORE cats 1-4 n=772: A any@10 489 (63.3%), B any@10 585 (75.8%), diff +12.4; per-cat diffs c1 +7.9 c2 +10.4 c3 +22.2 c4 +13.7; lines@10 both 7720, B via_note@10 6297. VERDICT PASS (U1 and U2 pass; proved-wrong not triggered). Copy-back 5 files sha-verified both ends, rental destroyed, 0 claude-notes-rd378u live. Credit at gate 7.912477276269769. See artifacts/claude-rd378u-20260926/RESULTS.md + notes_confirm.json + ranked_turns.jsonl.
+- 2026-09-26 17:31 UTC rent-mu404b RUN-COMPLETE (label claude-madeup-mu404b, sealed origin/main code, never edited): rental 1 (52775913, offer 45669449 host 406325 mu-402 sibling class, RTX 5090 rel 0.9975, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 80, torch 2.8.0+cu128, ~16:11-17:30Z ~1.33h x dph $0.5037 ~$0.67 of $0.87). BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, reader /root/reader319 sha e688e1b2...776a76 match, mu403 SEAL 14/14, SEAL-code 336/336, selftests 5/5 13/13 9/9. Four arms 80/80 convs each, exit 0, rows 446/arm, wall ~13 min T / ~23 min R/F/P, median ms/turn R 2094.8 F 2133.7 P 2157.0 T 1774.0; facts R 318/34/36/0 F 318/34/36/34 P 318/34/36/0. Copy-back 9 files sha-verified, rental destroyed, 0 claude-madeup-mu404b live. Credit at gate 5.094352626269782 (balance 0). Deviations: task tree list omitted fable-nameval171 (streamed extra, seal-verified); first launch misfire relaunched clean (one complete run/arm); vastai dir-copy failed on 2.1GB file, single-file copy + dir swap fixed; depot untouched. See artifacts/claude-mu403-20260926/RESULTS-rent.md + run/.
+- 2026-09-26 17:40 UTC rent-zdl6b BUDGET-STOP (label claude-fixsleep-dl6b, origin/main de083cd30c code never edited, selftest ok): 1 rental (52778152, offer 45669547 RTX 5090 KR rel 0.9980, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 40, torch 2.8.0+cu128 transformers 5.17.0 pip-installed; proxy-fail offers 43165145/46753301 and stuck offer 43982861 skipped). BASE openbmb/MiniCPM5-1B 87179e5c1f455ef22e6223592d2d61351b525bfc (2.1 GB snapshot, same files as dl-2). Run launched detached 16:30:31Z, first "[dl6] S s10 night 1" ~16:35 (no TOO-SLOW). Killed by exact PID at $0.57 line (70.8 min x dph $0.4852 = $0.573) during L s11 night 6; task total ~$0.59 of $0.60. Partial: base lucky 75 reached 35 greedy 7 harm 200/300; S s10 n7 lucky 198 lost 25, S s11 n7 lucky 237 lost 27, L s10 n7 lucky 140 reached 50 lost 13 (json, 21 nights); log adds L s11 n1-6 (lucky 100/135/151/120/125/115, lost 3/4/6/4/7/7); L s11 n7 never ran, marks never computed, no verdict. Copy-back partial json+log, rental destroyed, 0 claude-fixsleep-dl6b live. Credit at gate 9.01 (balance 0), 8.93 at re-check. See artifacts/claude-dl6-20260926/RESULTS-gpu.md + gpu/ (partial).
+- 2026-09-26 18:05 UTC rent-bm398e SPANS-COMPLETE (label claude-benchmarks-bm398e, sealed origin/main code never edited): 1 rental (52789000, offer 45996848, RTX 4090 24GB, image pytorch/pytorch disk 80, torch upgraded 2.2.1->2.11.0+cu130 per kit TORCH UPGRADE, torchvision/torchaudio removed, transformers 5.17.0, pyarrow + nltk pip-installed for sealed imports, Python 3.10.13). Created 17:35:42Z, running 17:40:07Z (6-min rule met), destroyed ~18:03:55Z; ~0.470h x dph $0.35111111 = ~$0.17 of $0.35. BASE openbmb/MiniCPM5-1B 87179e5c1f455ef22e6223592d2d61351b525bfc. SEAL 10/10 OK, SEAL-amend1 3/3 OK, selftest 8/8 PASS, T sha256 35bdf151 match. Fetch OK locomo_qa 1986. Lane1 spans_made 432 rows done seconds=46 (17:51:38-17:52:24Z) sha f045117a; lane2 spans_T 1540 rows done seconds=281 (relaunched 17:56:42-18:01:23Z after cwd-misfire crash, zero rows first try) sha 59e1fe24. Copy-back 2 .gz files (176974 B sha e25ab892; 1318109 B sha 3d15791a) size+sha verified both ends, rental destroyed, 0 claude-benchmarks-bm398e live. Credit at gate 4.582765401269754. Deviations: torch upgrade; nltk install; lane2 relaunch; exit codes/peak-GPU-mem not captured (end times from mtimes x-checked vs log seconds). No fit/score/judge here. See artifacts/claude-bm398e-20260926/RESULTS-rent.md + spans/.
+- 2026-09-26 18:55 UTC rent-mu405 STOPPED by owner (duplicate of CPU run); 0.056 h, ~$0.03.
+- 2026-09-26 18:55 UTC depot 52755827 STOPPED (disk kept); 5.17 h x $0.1136 = $0.59; storage $0.1667/day.
+- 2026-09-26 19:13 UTC Director: rent-k1f HOST-FAIL (label claude-creativechat-k1f, cap $0.60): 3 live 5090 rentals, none usable (52799225 loading 6+ min, destroyed; 52800271 running 12.6 min x $0.4944 = ~$0.10 but SSH banner never answered, destroyed; 52802503 loading 6+ min + SSH refused, destroyed; plus 1 stillborn create success:false). k1f panel never run; ~$0.10 of $0.60.
+- 2026-09-26 19:34 UTC rsn-358i2 GPU BUILD (label claude-sleep-358i2pc, sealed origin/main code, SEAL-code 19/19 OK, code never edited): BensPC $0 (RTX 5070 Ti, torch 2.11.0+cu128, CUDA 12.8, python 3.10.9), 4 loop seeds x 60000 steps (102.8/104.8/104.9/104.8 min), SEAL-run 4 lines (64 hex each), evals 1x each counts-only. VERDICT SUSPECT CONFIRMED: V0 pass (nograd 0/0/0/0 of 60000 x4), M1 pass (dev grids5@10k 195/198/197/200, 4/4 >=100), M2 pass (grids5 gap +1.00), M3 pass (grids6 gap +51.75); proved-wrong NOT triggered (0/4 <=20, gap +1.00). Gaps loop-plain: sums4 +0.00 sums6 +100.50 sums8 +160.25 grids5 +1.00 grids6 +51.75 grids7 +55.00 numbers4 -0.25 numbers5 +0.00 sums10 +163.25 sums12 +138.00. 358t-style G0/G1/G2/G3 all met (report-only). Deviations: BensPC per ADDENDUM-1 (Stage 0 report-only, 0/12 both lines); GPU-BUSY.txt pre-existed naming same job; CIM-detached launches (cmd PIDs 10348/3576/13828/17048); seed-1 first attempt killed at ~11k with its parent, restarted clean (partials deleted, BensPC scratch only); evals sequential after training. 16 run files back, weights ~/premonition-models/rsn358i2/ + C:/Users/benja/premonition-models/rsn358i2/ (25764244 B x4, sha match), 0 weights pushed. See artifacts/claude-rsn358i2-20260926/RESULTS.md + runs/ + SEAL-run.sha256.txt.
+- 2026-09-26 20:15 UTC Director: rent-zdl7b done, registered FAIL (F3; F1/F2/F4/F5 pass, not proved wrong, premise supported 22/26 = 84.6%). Contract 52799251 (RTX 5090 KR, dph $0.4167, ~1.45 h) ~$0.60 of $1.00 (Ben 18:39 +$1.00 extra). 1 rental, selftest ok, first night line in 7 min, run wall 72.4 min. Instance destroyed, 0 claude-fixsleep-dl7b live.
+/Users/ben-hannan/.local/bin/uv
+[0m
+[0m← [0mWrite /tmp/rsn358i3_analyze.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B /tmp/rsn358i3_analyze.py 2>&1 | head -n 120
+=== V0: steps_block_nograd (loop s5-8) ===
+loop-s5: steps_block_nograd=0 steps_seen=60000 minutes=78.5 torch=2.11.0+cu128 cuda=12.8 gpu=NVIDIA GeForce RTX 5070 Ti
+loop-s6: steps_block_nograd=0 steps_seen=60000 minutes=82.1 torch=2.11.0+cu128 cuda=12.8 gpu=NVIDIA GeForce RTX 5070 Ti
+loop-s7: steps_block_nograd=0 steps_seen=60000 minutes=75.0 torch=2.11.0+cu128 cuda=12.8 gpu=NVIDIA GeForce RTX 5070 Ti
+loop-s8: steps_block_nograd=0 steps_seen=60000 minutes=78.0 torch=2.11.0+cu128 cuda=12.8 gpu=NVIDIA GeForce RTX 5070 Ti
+
+=== per-seed right counts (loop, plain, gap) ===
+test        L5  P5  G5  L6  P6  G6  L7  P7  G7  L8  P8  G8   meanL  meanP  meanG
+sums4       300  300   +0   300  300   +0   300  300   +0   300  300   +0   300.00 300.00  +0.00
+sums6       299  218  +81   296  125 +171   289  179 +110   296  162 +134   295.00 171.00+124.00
+sums8       282  145 +137   268   36 +232   237   69 +168   275   69 +206   265.50  79.75+185.75
+grids5      300  299   +1   300  298   +2   300  299   +1   300  298   +2   300.00 298.50  +1.50
+grids6      296  248  +48   294  241  +53   284  234  +50   295  238  +57   292.25 240.25 +52.00
+grids7      242  144  +98   214  149  +65   174  138  +36   218  146  +72   212.00 144.25 +67.75
+numbers4      2    1   +1     5    1   +4     1    2   -1     0    1   -1     2.00   1.25  +0.75
+numbers5      0    0   +0     0    0   +0     0    0   +0     0    0   +0     0.00   0.00  +0.00
+sums10      232  105 +127   228   12 +216   172   56 +116   235   51 +184   216.75  56.00+160.75
+sums12      178   85  +93   183    5 +178   133   26 +107   176   36 +140   167.50  38.00+129.50
+
+=== G0 check: practised right>=210 count (need >=2 of 3 kinds per arm per seed) ===
+loop-s5: {'sums4': 300, 'grids5': 300, 'numbers4': 2} kinds>=210: 2 OK
+plain-s5: {'sums4': 300, 'grids5': 299, 'numbers4': 1} kinds>=210: 2 OK
+loop-s6: {'sums4': 300, 'grids5': 300, 'numbers4': 5} kinds>=210: 2 OK
+plain-s6: {'sums4': 300, 'grids5': 298, 'numbers4': 1} kinds>=210: 2 OK
+loop-s7: {'sums4': 300, 'grids5': 300, 'numbers4': 1} kinds>=210: 2 OK
+plain-s7: {'sums4': 300, 'grids5': 299, 'numbers4': 2} kinds>=210: 2 OK
+loop-s8: {'sums4': 300, 'grids5': 300, 'numbers4': 0} kinds>=210: 2 OK
+plain-s8: {'sums4': 300, 'grids5': 298, 'numbers4': 1} kinds>=210: 2 OK
+
+=== G1: bigger means + per-seed gap>0 ===
+sums6: mean gap +124.00 (>=+30? True) (>=−10? True) seeds gap>0: 4/4
+grids6: mean gap +52.00 (>=+30? True) (>=−10? True) seeds gap>0: 4/4
+numbers5: mean gap +0.00 (>=+30? False) (>=−10? True) seeds gap>0: 0/4
+
+=== G2: practised means ===
+sums4: mean gap +0.00 (>=−10? True)
+grids5: mean gap +1.50 (>=−10? True)
+numbers4: mean gap +0.75 (>=−10? True)
+
+=== G3: loop right(own stop) vs fixed16-5 per seed per bigger test ===
+loop-s5 sums6: right=299 fixed16=297 right>=f16-5? True
+loop-s5 grids6: right=296 fixed16=296 right>=f16-5? True
+loop-s5 numbers5: right=0 fixed16=0 right>=f16-5? True
+loop-s6 sums6: right=296 fixed16=297 right>=f16-5? True
+loop-s6 grids6: right=294 fixed16=293 right>=f16-5? True
+loop-s6 numbers5: right=0 fixed16=0 right>=f16-5? True
+loop-s7 sums6: right=289 fixed16=290 right>=f16-5? True
+loop-s7 grids6: right=284 fixed16=283 right>=f16-5? True
+loop-s7 numbers5: right=0 fixed16=1 right>=f16-5? True
+loop-s8 sums6: right=296 fixed16=293 right>=f16-5? True
+loop-s8 grids6: right=295 fixed16=294 right>=f16-5? True
+loop-s8 numbers5: right=0 fixed16=0 right>=f16-5? True
+mean_rounds sums6 vs sums4:
+loop-s5: sums6 mr=7.57 sums4 mr=6.55
+loop-s6: sums6 mr=7.85 sums4 mr=7.07
+loop-s7: sums6 mr=7.16 sums4 mr=6.65
+loop-s8: sums6 mr=7.67 sums4 mr=6.58
+4-seed mean: sums6 7.56 vs sums4 6.71 (sums6>sums4? True)
+
+=== loop fixed_rounds 1/2/4/8/12/16/24/32/48 + any + mean_rounds ===
+--- loop-s5 ---
+sums4     1:300 2:300 4:300 8:300 12:300 16:300 24:300 32:300 48:300 any:300 mr:6.55
+sums6     1:250 2:275 4:289 8:299 12:298 16:297 24:297 32:297 48:297 any:299 mr:7.57
+sums8     1:177 2:234 4:259 8:279 12:281 16:283 24:282 32:282 48:282 any:286 mr:8.45
+grids5    1:75 2:207 4:300 8:300 12:300 16:300 24:300 32:300 48:300 any:300 mr:9.08
+grids6    1:46 2:153 4:261 8:295 12:296 16:296 24:296 32:296 48:296 any:296 mr:10.61
+grids7    1:15 2:93 4:157 8:226 12:239 16:239 24:241 32:240 48:241 any:245 mr:18.61
+numbers4  1:0 2:1 4:1 8:2 12:1 16:1 24:1 32:1 48:1 any:2 mr:7.33
+numbers5  1:1 2:0 4:0 8:0 12:0 16:0 24:0 32:0 48:0 any:2 mr:7.78
+sums10    1:134 2:192 4:213 8:229 12:231 16:230 24:229 32:230 48:232 any:252 mr:9.24
+sums12    1:87 2:130 4:167 8:179 12:179 16:179 24:178 32:178 48:179 any:206 mr:10.41
+--- loop-s6 ---
+sums4     1:300 2:300 4:300 8:300 12:300 16:300 24:300 32:300 48:300 any:300 mr:7.07
+sums6     1:254 2:273 4:290 8:297 12:297 16:297 24:297 32:297 48:297 any:298 mr:7.85
+sums8     1:195 2:221 4:247 8:267 12:267 16:267 24:265 32:264 48:264 any:280 mr:8.7
+grids5    1:106 2:204 4:297 8:300 12:300 16:300 24:300 32:300 48:300 any:300 mr:9.83
+grids6    1:57 2:142 4:263 8:292 12:293 16:293 24:293 32:293 48:294 any:294 mr:12.36
+grids7    1:16 2:85 4:152 8:222 12:216 16:215 24:214 32:214 48:213 any:227 mr:23.0
+numbers4  1:4 2:2 4:4 8:4 12:4 16:5 24:5 32:5 48:5 any:7 mr:7.06
+numbers5  1:0 2:0 4:0 8:0 12:0 16:0 24:0 32:0 48:0 any:0 mr:7.54
+sums10    1:167 2:195 4:212 8:228 12:226 16:227 24:227 32:225 48:226 any:255 mr:9.73
+sums12    1:113 2:137 4:158 8:187 12:185 16:182 24:181 32:180 48:180 any:221 mr:10.63
+--- loop-s7 ---
+sums4     1:300 2:300 4:300 8:300 12:300 16:300 24:300 32:300 48:300 any:300 mr:6.65
+sums6     1:232 2:260 4:280 8:289 12:290 16:290 24:290 32:290 48:290 any:293 mr:7.16
+sums8     1:151 2:175 4:213 8:232 12:238 16:235 24:235 32:234 48:234 any:254 mr:8.09
+grids5    1:82 2:193 4:299 8:300 12:300 16:300 24:300 32:300 48:300 any:300 mr:9.77
+grids6    1:45 2:134 4:239 8:285 12:283 16:283 24:283 32:283 48:283 any:291 mr:14.13
+grids7    1:12 2:68 4:144 8:178 12:174 16:173 24:174 32:174 48:173 any:190 mr:28.12
+numbers4  1:4 2:3 4:1 8:1 12:1 16:1 24:1 32:1 48:1 any:5 mr:7.7
+numbers5  1:0 2:0 4:0 8:0 12:0 16:1 24:1 32:1 48:1 any:1 mr:8.29
+sums10    1:127 2:142 4:170 8:169 12:172 16:173 24:171 32:171 48:171 any:195 mr:8.67
+sums12    1:94 2:102 4:118 8:134 12:134 16:136 24:135 32:134 48:134 any:157 mr:8.93
+--- loop-s8 ---
+sums4     1:299 2:300 4:300 8:300 12:300 16:300 24:300 32:300 48:300 any:300 mr:6.58
+sums6     1:247 2:262 4:288 8:296 12:294 16:293 24:293 32:293 48:293 any:298 mr:7.67
+sums8     1:185 2:204 4:224 8:268 12:274 16:277 24:278 32:280 48:279 any:292 mr:9.18
+grids5    1:119 2:224 4:300 8:300 12:300 16:300 24:300 32:300 48:300 any:300 mr:9.83
+grids6    1:68 2:149 4:264 8:291 12:291 16:294 24:295 32:295 48:295 any:296 mr:12.18
+grids7    1:13 2:86 4:163 8:216 12:215 16:215 24:215 32:216 48:217 any:224 mr:22.73
+numbers4  1:0 2:0 4:0 8:0 12:0 16:0 24:1 32:1 48:1 any:1 mr:7.58
+numbers5  1:0 2:0 4:0 8:0 12:0 16:0 24:0 32:0 48:0 any:0 mr:8.21
+sums10    1:149 2:168 4:186 8:214 12:232 16:234 24:232 32:233 48:234 any:264 mr:10.57
+sums12    1:110 2:111 4:145 8:164 12:179 16:188 24:186 32:186 48:183 any:221 mr:11.93
+
+=== dev grids5 at steps ===
+loop-s5: dev-steps 2500..60000 n=24
+  step 5000: grids5=186
+  step 10000: grids5=200
+  step 20000: grids5=200
+  step 40000: grids5=200
+  step 60000: grids5=200
+plain-s5: dev-steps 2500..60000 n=24
+  step 5000: grids5=103
+  step 10000: grids5=175
+  step 20000: grids5=192
+  step 40000: grids5=199
+  step 60000: grids5=199
+loop-s6: dev-steps 2500..60000 n=24
+  step 5000: grids5=58
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B /tmp/rsn358i3_analyze.py 2>&1 | tail -n 60
+step 60000: grids5=200
+plain-s8: dev-steps 2500..60000 n=24
+  step 5000: grids5=99
+  step 10000: grids5=169
+  step 20000: grids5=188
+  step 40000: grids5=196
+  step 60000: grids5=200
+plain-s1: dev-steps 2500..60000 n=24
+  step 5000: grids5=131
+  step 10000: grids5=168
+  step 20000: grids5=192
+  step 40000: grids5=197
+  step 60000: grids5=199
+plain-s2: dev-steps 2500..60000 n=24
+  step 5000: grids5=94
+  step 10000: grids5=163
+  step 20000: grids5=186
+  step 40000: grids5=198
+  step 60000: grids5=200
+plain-s3: dev-steps 2500..60000 n=24
+  step 5000: grids5=116
+  step 10000: grids5=168
+  step 20000: grids5=182
+  step 40000: grids5=191
+  step 60000: grids5=197
+plain-s4: dev-steps 2500..60000 n=24
+  step 5000: grids5=130
+  step 10000: grids5=170
+  step 20000: grids5=188
+  step 40000: grids5=197
+  step 60000: grids5=198
+
+=== steps_block_nograd + minutes all 12 ===
+loop-s5: nograd=0 minutes=78.5
+plain-s5: nograd=0 minutes=75.2
+loop-s6: nograd=0 minutes=82.1
+plain-s6: nograd=0 minutes=79.1
+loop-s7: nograd=0 minutes=75.0
+plain-s7: nograd=0 minutes=71.2
+loop-s8: nograd=0 minutes=78.0
+plain-s8: nograd=0 minutes=76.1
+plain-s1: nograd=0 minutes=61.2
+plain-s2: nograd=0 minutes=58.6
+plain-s3: nograd=0 minutes=50.8
+plain-s4: nograd=0 minutes=50.4
+
+=== REPORT-ONLY: BensPC plain s1-4 vs rental plain s1-4 (origin/main) ===
+plain-s1 (mine-rental=gap): sums4:300-300=+0 sums6:198-188=+10 sums8:129-133=-4 grids5:299-299=+0 grids6:240-230=+10 grids7:142-136=+6 numbers4:0-0=+0 numbers5:0-0=+0 sums10:93-93=+0 sums12:71-65=+6
+plain-s2 (mine-rental=gap): sums4:300-300=+0 sums6:201-209=-8 sums8:110-116=-6 grids5:299-300=-1 grids6:245-248=-3 grids7:144-149=-5 numbers4:1-0=+1 numbers5:1-0=+1 sums10:59-60=-1 sums12:42-44=-2
+plain-s3 (mine-rental=gap): sums4:300-300=+0 sums6:152-177=-25 sums8:58-65=-7 grids5:296-297=-1 grids6:221-237=-16 grids7:136-130=+6 numbers4:1-2=-1 numbers5:0-1=-1 sums10:29-27=+2 sums12:12-7=+5
+plain-s4 (mine-rental=gap): sums4:300-300=+0 sums6:234-217=+17 sums8:175-146=+29 grids5:298-300=-2 grids6:236-236=+0 grids7:142-142=+0 numbers4:1-3=-2 numbers5:2-1=+1 sums10:143-112=+31 sums12:119-89=+30
+
+=== REPORT-ONLY: 358i2 loop s1-4 (outbox) minus BensPC plain s1-4 ===
+seed 1 (358i2loop-mineplain=gap): sums4:0=+0 sums6:101=+101 sums8:144=+144 grids5:1=+1 grids6:52=+52 grids7:44=+44 numbers4:2=+2 numbers5:1=+1 sums10:126=+126 sums12:93=+93
+seed 2 (358i2loop-mineplain=gap): sums4:0=+0 sums6:98=+98 sums8:164=+164 grids5:1=+1 grids6:51=+51 grids7:97=+97 numbers4:-1=-1 numbers5:-1=-1 sums10:185=+185 sums12:160=+160
+seed 3 (358i2loop-mineplain=gap): sums4:0=+0 sums6:146=+146 sums8:218=+218 grids5:4=+4 grids6:62=+62 grids7:37=+37 numbers4:-1=-1 numbers5:1=+1 sums10:203=+203 sums12:181=+181
+seed 4 (358i2loop-mineplain=gap): sums4:0=+0 sums6:63=+63 sums8:103=+103 grids5:2=+2 grids6:51=+51 grids7:35=+35 numbers4:1=+1 numbers5:-2=-2 sums10:107=+107 sums12:79=+79
+
+=== torch/cuda/gpu per run ===
+loop-s5 ('2.11.0+cu128', '12.8', 'NVIDIA GeForce RTX 5070 Ti')
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json
+from pathlib import Path
+ART = Path('artifacts/claude-rsn358i3-20260926/runs')
+for run in ['loop-s6','plain-s6','loop-s7','plain-s7','loop-s8']:
+    recs = {}
+    for line in (ART/run/'train_log.jsonl').read_text().splitlines():
+        r = json.loads(line)
+        if 'dev' in r: recs[r['step']] = (r['dev'].get('sums4'), r['dev'].get('grids5'))
+    print(run, {st: recs.get(st) for st in [5000,10000,20000,40000,60000]})
+" 2>&1 | head -n 8
+loop-s6 {5000: (194, 58), 10000: (195, 195), 20000: (200, 200), 40000: (200, 200), 60000: (200, 200)}
+plain-s6 {5000: (200, 117), 10000: (200, 171), 20000: (200, 188), 40000: (200, 194), 60000: (200, 198)}
+loop-s7 {5000: (200, 84), 10000: (200, 189), 20000: (200, 200), 40000: (200, 200), 60000: (200, 200)}
+plain-s7 {5000: (198, 129), 10000: (200, 162), 20000: (200, 191), 40000: (200, 195), 60000: (200, 199)}
+loop-s8 {5000: (200, 42), 10000: (199, 182), 20000: (200, 200), 40000: (200, 200), 60000: (200, 200)}
+[0m
+[0m$ [0mdate -u +%FT%TZ; wc -l artifacts/fable-predictions-ledger.md; tail -n 1 artifacts/fable-predictions-ledger.md | cut -c1-120
+2026-09-27T00:45:30Z
+    3044 artifacts/fable-predictions-ledger.md
+- 2026-09-26 20:15 UTC Director: rent-zdl7b done, registered FAIL (F3; F1/F2/F4/F5 pass, not proved wrong, premise suppo
+[0m
+[0m← [0mWrite artifacts/claude-rsn358i3-20260926/RESULTS.md
+Wrote file successfully.
+[0m
+[0m← [0mEdit artifacts/claude-rsn358i3-20260926/RESULTS.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rsn358i3-20260926/RESULTS.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rsn358i3-20260926/RESULTS.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-rsn358i3-20260926/RESULTS.md
+@@ -103,9 +103,9 @@
+ 1. GPU-BUSY.txt pre-existed naming this job ("BUSY: queue job 100-claude-sleep-358i3pc ..."); per handoff/kit/benspc-task-header.txt the watcher owns that file, so I left it alone (did not create or delete it). No other job named it; no BUSY stop.
+ 2. Detached launch method: PowerShell Start-Process children are killed when the Mac ssh session closes (both first runs died silently within a minute of disconnect; verified with a 90 s watched run that trained fine then died on disconnect, and a ping sleeper that died the same way). All 12 training runs were therefore launched via WMI Win32_Process.Create (Invoke-CimMethod), which survives disconnect; the training command line is byte-for-byte the specified one (defaults only, no extra flags). Wrapper cmd.exe PIDs recorded (loop-s5 3260, plain-s5 14696, loop-s6 17320, plain-s6 6484, loop-s7 18516, plain-s7 7684, loop-s8 21176, plain-s8 5204, plain-s1 7144, plain-s2 3096, plain-s3 5388, plain-s4 7556); nothing was ever stopped by PID.
+ 3. Stdout went to W/<R>.log and stderr to a sibling W/<R>.err (cmd redirect `> log 2> err`); only the .log plus train_log.jsonl, train_summary.json, tests.json were copied back. BensPC W/ also holds the two empty first-attempt logs, t.log/t.err launch tests, and W/*-eval.out files (scratch only).
+ 4. Parallelism followed the rule (2, then 3rd after 5+ min with 11.4 GB free, then 4th with 8.1 GB free; next started whenever one finished, in the specified order). Peak 4 at once.
+-5. 30-minute projection (at ~20:50Z, loop-s5 30000 steps/36.3 min): all graded runs finishing ~21:25-21:50, everything inside the 10 h cap; nothing dropped, no TOO-SLOW, run is conclusive. Actual: first launch ~20:13Z, last train done 00:41Z (~4.5 h), evals done ~01:30Z; total ~5.3 h, inside the cap.
++5. 30-minute projection (at ~20:50Z, loop-s5 30000 steps/36.3 min): all graded runs finishing ~21:25-21:50, everything inside the 10 h cap; nothing dropped, no TOO-SLOW, run is conclusive. Actual: first launch ~20:13Z, last train done 00:41Z (~4.5 h training); 12 seal+eval steps and copy-back followed the same night, total well inside the 10 h cap.
+ 6. C: free was 6.3 GB (above the 5 GB stop line; reported as tight but go).
+ 7. SEAL-code check used C:/Program Files/Git/usr/bin/sha256sum.exe (cmd has no sha256sum); 19/19 OK before any training.
+ 8. Selftest outputs carry detail suffixes ("selftest ok: ..." and "check-mask ok: ..."); all three printed their ok lines.
+ 9. 358i2 loop s1-4 reference came from origin/builder-outbox (not yet on main), as the task allowed.
+
+[0m
+[0m$ [0mtail -n 1 artifacts/fable-predictions-ledger.md
+- 2026-09-26 20:15 UTC Director: rent-zdl7b done, registered FAIL (F3; F1/F2/F4/F5 pass, not proved wrong, premise supported 22/26 = 84.6%). Contract 52799251 (RTX 5090 KR, dph $0.4167, ~1.45 h) ~$0.60 of $1.00 (Ben 18:39 +$1.00 extra). 1 rental, selftest ok, first night line in 7 min, run wall 72.4 min. Instance destroyed, 0 claude-fixsleep-dl7b live.
+[0m
+[0m← [0mEdit artifacts/fable-predictions-ledger.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-predictions-ledger.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-predictions-ledger.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-predictions-ledger.md
+@@ -3041,4 +3041,5 @@
+ - 2026-09-26 18:55 UTC depot 52755827 STOPPED (disk kept); 5.17 h x $0.1136 = $0.59; storage $0.1667/day.
+ - 2026-09-26 19:13 UTC Director: rent-k1f HOST-FAIL (label claude-creativechat-k1f, cap $0.60): 3 live 5090 rentals, none usable (52799225 loading 6+ min, destroyed; 52800271 running 12.6 min x $0.4944 = ~$0.10 but SSH banner never answered, destroyed; 52802503 loading 6+ min + SSH refused, destroyed; plus 1 stillborn create success:false). k1f panel never run; ~$0.10 of $0.60.
+ - 2026-09-26 19:34 UTC rsn-358i2 GPU BUILD (label claude-sleep-358i2pc, sealed origin/main code, SEAL-code 19/19 OK, code never edited): BensPC $0 (RTX 5070 Ti, torch 2.11.0+cu128, CUDA 12.8, python 3.10.9), 4 loop seeds x 60000 steps (102.8/104.8/104.9/104.8 min), SEAL-run 4 lines (64 hex each), evals 1x each counts-only. VERDICT SUSPECT CONFIRMED: V0 pass (nograd 0/0/0/0 of 60000 x4), M1 pass (dev grids5@10k 195/198/197/200, 4/4 >=100), M2 pass (grids5 gap +1.00), M3 pass (grids6 gap +51.75); proved-wrong NOT triggered (0/4 <=20, gap +1.00). Gaps loop-plain: sums4 +0.00 sums6 +100.50 sums8 +160.25 grids5 +1.00 grids6 +51.75 grids7 +55.00 numbers4 -0.25 numbers5 +0.00 sums10 +163.25 sums12 +138.00. 358t-style G0/G1/G2/G3 all met (report-only). Deviations: BensPC per ADDENDUM-1 (Stage 0 report-only, 0/12 both lines); GPU-BUSY.txt pre-existed naming same job; CIM-detached launches (cmd PIDs 10348/3576/13828/17048); seed-1 first attempt killed at ~11k with its parent, restarted clean (partials deleted, BensPC scratch only); evals sequential after training. 16 run files back, weights ~/premonition-models/rsn358i2/ + C:/Users/benja/premonition-models/rsn358i2/ (25764244 B x4, sha match), 0 weights pushed. See artifacts/claude-rsn358i2-20260926/RESULTS.md + runs/ + SEAL-run.sha256.txt.
+ - 2026-09-26 20:15 UTC Director: rent-zdl7b done, registered FAIL (F3; F1/F2/F4/F5 pass, not proved wrong, premise supported 22/26 = 84.6%). Contract 52799251 (RTX 5090 KR, dph $0.4167, ~1.45 h) ~$0.60 of $1.00 (Ben 18:39 +$1.00 extra). 1 rental, selftest ok, first night line in 7 min, run wall 72.4 min. Instance destroyed, 0 claude-fixsleep-dl7b live.
++- 2026-09-27 00:50 UTC rsn-358i3 GPU BUILD (label claude-sleep-358i3pc, sealed origin/main code byte-identical to 358i2, SEAL-code 19/19 OK, code never edited): BensPC $0 (RTX 5070 Ti, torch 2.11.0+cu128, CUDA 12.8), 12 runs x 60000 steps (loop s5-8: 78.5/82.1/75.0/78.0 min; plain s5-8: 75.2/79.1/71.2/76.1 min; plain s1-4: 61.2/58.6/50.8/50.4 min), SEAL-run 12 lines (64 hex each), evals 1x each counts-only. VERDICT PASS: V0 pass (nograd 0 x12), G0 met 8/8 arms, G1 pass (mean gaps sums6 +124.00 4/4 seeds>0, grids6 +52.00 4/4, numbers5 +0.00), G2 pass (+0.00/+1.50/+0.75), G3 pass (4/4 seeds right>=fixed16-5 on all bigger tests, mean rounds sums6 7.56 > sums4 6.71); proved-wrong NOT triggered. Report-only: BensPC plain s1-4 vs rental plain s1-4 mixed signs (sums6 -25..+17, grids6 -16..+10); 358i2 loop s1-4 minus BensPC plain s1-4: sums6 +63..+146, grids6 +51..+62. Deviations: GPU-BUSY.txt pre-existed naming same job (watcher-owned, untouched); WMI-detached launches (ssh-session kill found empirically, same command line, cmd PIDs recorded, nothing stopped); stderr to sibling .err on BensPC only; C: free 6.3 GB. 48 run files back, weights ~/premonition-models/rsn358i3/ + C:/Users/benja/premonition-models/rsn358i3/ (sha match 12/12), 0 weights pushed. See artifacts/claude-rsn358i3-20260926/RESULTS.md + runs/ + SEAL-run.sha256.txt.
+
+[0m
+[0m$ [0mfind artifacts/claude-rsn358i3-20260926 -type f | sort; echo "---count---"; find artifacts/claude-rsn358i3-20260926 -type f | wc -l; echo "---no weights?---"; find artifacts/claude-rsn358i3-20260926 -name "*.pt" | wc -l
+artifacts/claude-rsn358i3-20260926/RESULTS.md
+artifacts/claude-rsn358i3-20260926/runs/loop-s5/loop-s5.log
+artifacts/claude-rsn358i3-20260926/runs/loop-s5/tests.json
+artifacts/claude-rsn358i3-20260926/runs/loop-s5/train_log.jsonl
+artifacts/claude-rsn358i3-20260926/runs/loop-s5/train_summary.json
+artifacts/claude-rsn358i3-20260926/runs/loop-s6/loop-s6.log
+artifacts/claude-rsn358i3-20260926/runs/loop-s6/tests.json
+artifacts/claude-rsn358i3-20260926/runs/loop-s6/train_log.jsonl
+artifacts/claude-rsn358i3-20260926/runs/loop-s6/train_summary.json
+artifacts/claude-rsn358i3-20260926/runs/loop-s7/loop-s7.log
+artifacts/claude-rsn358i3-20260926/runs/loop-s7/tests.json
+artifacts/claude-rsn358i3-20260926/runs/loop-s7/train_log.jsonl
+artifacts/claude-rsn358i3-20260926/runs/loop-s7/train_summary.json
+artifacts/claude-rsn358i3-20260926/runs/loop-s8/loop-s8.log
+artifacts/claude-rsn358i3-20260926/runs/loop-s8/tests.json
+artifacts/claude-rsn358i3-20260926/runs/loop-s8/train_log.jsonl
+artifacts/claude-rsn358i3-20260926/runs/loop-s8/train_summary.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s1/plain-s1.log
+artifacts/claude-rsn358i3-20260926/runs/plain-s1/tests.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s1/train_log.jsonl
+artifacts/claude-rsn358i3-20260926/runs/plain-s1/train_summary.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s2/plain-s2.log
+artifacts/claude-rsn358i3-20260926/runs/plain-s2/tests.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s2/train_log.jsonl
+artifacts/claude-rsn358i3-20260926/runs/plain-s2/train_summary.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s3/plain-s3.log
+artifacts/claude-rsn358i3-20260926/runs/plain-s3/tests.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s3/train_log.jsonl
+artifacts/claude-rsn358i3-20260926/runs/plain-s3/train_summary.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s4/plain-s4.log
+artifacts/claude-rsn358i3-20260926/runs/plain-s4/tests.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s4/train_log.jsonl
+artifacts/claude-rsn358i3-20260926/runs/plain-s4/train_summary.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s5/plain-s5.log
+artifacts/claude-rsn358i3-20260926/runs/plain-s5/tests.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s5/train_log.jsonl
+artifacts/claude-rsn358i3-20260926/runs/plain-s5/train_summary.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s6/plain-s6.log
+artifacts/claude-rsn358i3-20260926/runs/plain-s6/tests.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s6/train_log.jsonl
+artifacts/claude-rsn358i3-20260926/runs/plain-s6/train_summary.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s7/plain-s7.log
+artifacts/claude-rsn358i3-20260926/runs/plain-s7/tests.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s7/train_log.jsonl
+artifacts/claude-rsn358i3-20260926/runs/plain-s7/train_summary.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s8/plain-s8.log
+artifacts/claude-rsn358i3-20260926/runs/plain-s8/tests.json
+artifacts/claude-rsn358i3-20260926/runs/plain-s8/train_log.jsonl
+artifacts/claude-rsn358i3-20260926/runs/plain-s8/train_summary.json
+artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt
+---count---
+      50
+---no weights?---
+       0
+[0m
+[0m$ [0mgit add -f artifacts/claude-rsn358i3-20260926/RESULTS.md artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt artifacts/claude-rsn358i3-20260926/runs artifacts/fable-predictions-ledger.md && git status --short | head -n 12
+A  artifacts/claude-rsn358i3-20260926/RESULTS.md
+A  artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s5/loop-s5.log
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s5/tests.json
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s5/train_log.jsonl
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s5/train_summary.json
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s6/loop-s6.log
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s6/tests.json
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s6/train_log.jsonl
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s6/train_summary.json
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s7/loop-s7.log
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s7/tests.json
+[0m
+[0m# [0mTodos
+[✓] Check BensPC reachability, GPU-BUSY gate, duplicate gate
+[✓] Stream sealed code to C:/Users/benja/rsn358i3/ and verify SEAL (19 lines)
+[✓] Run torch version + selftests + check-mask on BensPC
+[✓] Train 8 graded runs (loop/plain s5-8) + 4 report-only (plain s1-4) [all 12 hit 60000 steps]
+[✓] Seal final.pt, eval once each, copy back to Mac
+[✓] Write RESULTS.md + ledger + push paths
+[0m
