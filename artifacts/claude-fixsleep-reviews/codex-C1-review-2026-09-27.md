@@ -18,7 +18,5 @@ test_retention.py (697f18b58), RUN-NOTE.md. C1 had not reported when this was wr
    bit-identical. I did not find such a repeat control in retention.py or its tests. Ask, before the real-model run:
    add a base-vs-base repeat first and report the device; if the repeat differs, the real-model part is INCONCLUSIVE
    (device nondeterminism), not FAIL. A CPU pass does not cover MPS or CUDA serving.
-5. Provenance flag, not C1's problem: PASSMARKS says "Luna-written data is permitted by Ben's subsequent
-   clarification". I found no such clarification in the repo; the standing rule this thread follows is Ben's 16:39
-   "Use GLM" (GLM or code only). C1 uses no such data; any later use needs the Thread manager's check first.
+5. ~~Provenance flag: I found no such clarification in the repo.~~ CORRECTED 2026-09-27T03:57:18Z: the clarification exists: design/v3/30-modes/ben-goals-2026-09-26.md:110-112, Ben chose "Allow Luna" at 03:47 UTC 09-27 (GPT-6 Luna may write training text, inputs and labels for NEW experiments, alongside GLM and code). My search missed it. C1 uses no such data either way.
 Verdict on the design: sound as a software test; results count once its numbers are rechecked here.
