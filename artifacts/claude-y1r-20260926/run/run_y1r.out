@@ -1,0 +1,38 @@
+== start 2026-09-27 11:14:54 UTC
+python: Python 3.11.15; torch/transformers: 2.14.0+cpu 5.17.0
+SEAL-y1r: all OK
+SEAL-y1r-add1: all OK
+SEAL-y1r-add2: all OK
+SEAL-y1r-add3: all OK
+artifacts/claude-y1t-20260926/glm2/items/items_train.jsonl: OK
+artifacts/claude-y1t-20260926/glm2/items/items_dev.jsonl: OK
+SCRATCH/y1r/data/locomo10.json: OK
+selftest ok
+selftest ok
+== pairs 2026-09-27 11:15:00 UTC
+pairs train: {"answerable": 888, "no_twin": 14, "no_positive": 0, "no_negative": 191, "pairs": 874}
+pairs dev: {"answerable": 146, "no_twin": 1, "no_positive": 0, "no_negative": 24, "pairs": 145}
+control: {"pairs": 874, "own_chat_queries": 0}
+== train R 2026-09-27 11:15:00 UTC
+train R rc=0
+{"epoch": 1, "step": 101, "loss": 0.4526, "s": 79}
+{"steps": 110, "loss_first10": 1.59, "loss_last10": 0.4069, "dev_before": {"n": 145, "pos_at_1": 119}, "dev_after": {"n": 145, "pos_at_1": 137}, "train_seconds": 85.0}
+== train C 2026-09-27 11:16:48 UTC
+train C rc=0
+{"epoch": 1, "step": 101, "loss": 3.5169, "s": 74}
+{"steps": 110, "loss_first10": 4.6126, "loss_last10": 3.3753, "dev_before": {"n": 145, "pos_at_1": 119}, "dev_after": {"n": 145, "pos_at_1": 101}, "train_seconds": 81.0}
+== locomo U 2026-09-27 11:18:19 UTC
+locomo U rc=0
+{"1-4": {"questions": 1531, "fused_any@5": 55.5, "fused_all@5": 44.7, "fused_any@10": 65.9, "fused_all@10": 53.7, "fused_any@20": 75.3, "fused_all@20": 61.8, "minilm_any@5": 48.3, "minilm_all@5": 37.2, "minilm_any@10": 57.5, "minilm_all@10": 45.4, "minilm_any@20": 69.0, "minilm_all@20": 55.6, "bm25_any@5": 48.5, "bm25_all@5": 40.2, "bm25_any@10": 57.0, "bm25_all@10": 47.0, "bm25_any@20": 65.3, "bm25_all@20": 53.2}}
+== locomo R 2026-09-27 11:19:57 UTC
+locomo R rc=0
+{"1-4": {"questions": 1531, "fused_any@5": 57.5, "fused_all@5": 46.6, "fused_any@10": 66.9, "fused_all@10": 54.3, "fused_any@20": 76.4, "fused_all@20": 62.8, "minilm_any@5": 52.3, "minilm_all@5": 40.6, "minilm_any@10": 61.9, "minilm_all@10": 49.2, "minilm_any@20": 72.2, "minilm_all@20": 58.7, "bm25_any@5": 48.5, "bm25_all@5": 40.2, "bm25_any@10": 57.0, "bm25_all@10": 47.0, "bm25_any@20": 65.3, "bm25_all@20": 53.2}}
+== locomo C 2026-09-27 11:21:36 UTC
+locomo C rc=0
+{"1-4": {"questions": 1531, "fused_any@5": 54.3, "fused_all@5": 43.2, "fused_any@10": 64.7, "fused_all@10": 52.4, "fused_any@20": 75.4, "fused_all@20": 62.1, "minilm_any@5": 39.3, "minilm_all@5": 29.1, "minilm_any@10": 50.5, "minilm_all@10": 37.2, "minilm_any@20": 60.4, "minilm_all@20": 46.2, "bm25_any@5": 48.5, "bm25_all@5": 40.2, "bm25_any@10": 57.0, "bm25_all@10": 47.0, "bm25_any@20": 65.3, "bm25_all@20": 53.2}}
+d0b85dd53d527b047fd3ab388396ca4beaf1ed986b6794075e5df4caa2067e21  SCRATCH/y1r/real/R/encoder.pt
+dca30bda6e9f137578ae331c9693e72da3751d42c44dcec34b569ea53154243d  SCRATCH/y1r/real/C/encoder.pt
+480c897aee09774b09b3522862b048abecea0d05448c35bb63ed515bc77bdcc8  SCRATCH/y1r/real/pairs_train.jsonl
+082d769d4b0e4fd8b7ee8b5afc0bcb65184f546ebeb3b36d8738502eb3d25d39  SCRATCH/y1r/real/pairs_dev.jsonl
+d1eb52ba79a916f20f79c679aadfa177a3f99ec892e6647f7698d59d10e4e3a0  SCRATCH/y1r/real/pairs_control.jsonl
+== end 2026-09-27 11:23:13 UTC
