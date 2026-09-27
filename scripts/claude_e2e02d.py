@@ -197,9 +197,24 @@ class Talker:
         return THINK.sub("", text.split("\nUser:")[0]).strip()
 
 
-def talker_for(model_dir: str):
+def talker_problem(model_dir: str) -> str | None:
+    """Fail closed unless --gen-model is TALKER02D's pinned snapshot (ADDENDUM-51): the HF cache path
+    .../models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/<revision>, holding a config.json."""
     if not model_dir:
-        raise SystemExit(f"0.2d: --gen-model (the talker, {TALKER02D}) is required")
+        return f"--gen-model (the talker, {TALKER02D}) is required"
+    name, rev = TALKER02D.split("@")
+    p = Path(model_dir)
+    if p.name != rev or p.parent.name != "snapshots" or p.parent.parent.name != f"models--LiquidAI--{name}":
+        return f"--gen-model {model_dir} is not the pinned talker snapshot {TALKER02D}"
+    if not (p / "config.json").is_file():
+        return f"--gen-model {model_dir} has no config.json"
+    return None
+
+
+def talker_for(model_dir: str):
+    bad = talker_problem(model_dir)
+    if bad:
+        raise SystemExit("0.2d: " + bad)
     if ("talker", model_dir) not in _CACHE:
         _CACHE[("talker", model_dir)] = Talker(model_dir)
     return _CACHE[("talker", model_dir)]
@@ -425,6 +440,17 @@ def selftest() -> None:
                                                                                for m in tk.seen[-1][1][:-1]))
         W_PLACE02D = "system"
         ok["too long: store top-k used"] = json.loads((Path(d) / LOG02D).read_text().splitlines()[-1])["w"] == "top_k"
+    with tempfile.TemporaryDirectory() as d:
+        name, rev = TALKER02D.split("@")
+        good = Path(d) / f"models--LiquidAI--{name}" / "snapshots" / rev
+        good.mkdir(parents=True)
+        (good / "config.json").write_text("{}")
+        mini = Path(d) / "models--openbmb--MiniCPM5-1B" / "snapshots" / "87179e5c"
+        mini.mkdir(parents=True)
+        (mini / "config.json").write_text("{}")
+        ok["talker check: the pinned LFM snapshot passes"] = talker_problem(str(good)) is None
+        ok["talker check: a MiniCPM path or no path fails closed"] = (talker_problem(str(mini)) is not None
+                                                                     and talker_problem("") is not None)
     for name, v in ok.items():
         print(("PASS " if v else "FAIL ") + name)
     print("E2E02D-WIRING-SELFTEST " + ("PASS" if all(ok.values()) else "FAIL") + f" {sum(ok.values())}/{len(ok)}")
