@@ -24,8 +24,10 @@ confirmed all six scores and panel identities (FIRST-ARM-RECOUNT.md). All eight 
 checks passed, including 20 of 20 finite nonzero matrix gradients.
 
 **Suggested:** stopping contributes to this source failure: grid accuracy at
-fixed depth 48 is 288 of 300, ten more than with learned stopping. That diagnostic
-cannot replace the registered eligibility score. No stopping rule, budget, or
+fixed depth 48 is 288 of 300. The saved trajectories correct ten grid answers
+that were wrong at the learned stop, with no grid answers changing from correct
+to wrong; those ten stopped at rounds 6–12. See patch-927401/stop-diagnostic.json.
+This diagnostic cannot replace the registered eligibility score. No stopping rule, budget, or
 training recipe is changed in response to these results.
 
 **Running:** the remaining seven registered source arms on the same qualified
