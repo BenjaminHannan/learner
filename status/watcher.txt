@@ -1,4 +1,4 @@
-2026-09-27 02:08:34
+2026-09-27 02:10:44
 running:
 000-probe-zen-builder.running
 006-rd378k-gate3luna.running
@@ -10,10 +10,6 @@ madeup-mu407-luna-mac.running
 launched (no exit yet) / finished:
      777
 
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-2026-09-26 23:59:31 pushed 000-stop-rd378low
-2026-09-26 23:59:32 load 111, holding 006-rd378k-gate3luna (       5 running)
 2026-09-26 23:59:32 load 111, holding 007-rd378g-writeluna (       5 running)
 2026-09-26 23:59:33 load 111, holding lis320-pilot7-mac (       5 running)
 2026-09-26 23:59:33 load 111, holding madeup-g406l-mac (       5 running)
@@ -160,6 +156,10 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 02:08:33 zen cap: 4 non-GPU rungo5 builders running, holding k1h-luna-full-mac
 2026-09-27 02:08:34 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8-mac
 2026-09-27 02:08:34 zen cap: 4 non-GPU rungo5 builders running, holding y1t-luna-pilot-mac
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 02:10:43 zen cap: 4 non-GPU rungo5 builders running, holding k1h-luna-full-mac
+2026-09-27 02:10:44 zen cap: 4 non-GPU rungo5 builders running, holding lis320-pilot8-mac
+2026-09-27 02:10:44 zen cap: 4 non-GPU rungo5 builders running, holding y1t-luna-pilot-mac
 
 diag:
 == 000-probe-zen-builder
@@ -176,28 +176,28 @@ diag:
 > build · muse-spark-1.3-contributor
 [0m
 == 006-rd378k-gate3luna
-90646 Sep 27 02:06 006-rd378k-gate3luna.go1.err.txt
+90920 Sep 27 02:08 006-rd378k-gate3luna.go1.err.txt
 742 Sep 27 02:01 006-rd378k-gate3luna.go1.reply.md
 [rd378k-teacher3] tc-d19 ok
   PID  ELAPSED
-12201 01:41:35
+12201 01:43:32
 18
 [0m
 == 007-rd378g-writeluna
-62949 Sep 27 02:06 007-rd378g-writeluna.go1.err.txt
+63504 Sep 27 02:08 007-rd378g-writeluna.go1.err.txt
 427 Sep 27 02:04 007-rd378g-writeluna.go1.reply.md
 (end log)
   PID ELAPSED
-58598   32:54
-2026-09-27T06:06:54Z
+58598   34:51
+2026-09-27T06:08:51Z
 [0m
 == 175-rv393-pencil-pc
-52589 Sep 27 02:08 175-rv393-pencil-pc.go1.err.txt
-529 Sep 27 02:06 175-rv393-pencil-pc.go1.reply.md
-[0m
-[0m$ [0mssh benspc "nvidia-smi --query-gpu=memory.used,memory.free --format=csv"
+55183 Sep 27 02:08 175-rv393-pencil-pc.go1.err.txt
+658 Sep 27 02:08 175-rv393-pencil-pc.go1.reply.md
+
+
 memory.used [MiB], memory.free [MiB]
-802 MiB, 15194 MiB
+2450 MiB, 13546 MiB
 [0m
 == k1h-glm2
 121798 Sep 26 20:58 k1h-glm2.go1.err.txt
@@ -208,40 +208,40 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 -rw-r--r--  1 ben-hannan  staff  133121 Sep 26 17:01 answers.jsonl
 [0m
 == madeup-g406l-mac
-102879 Sep 27 02:05 madeup-g406l-mac.go1.err.txt
-554 Sep 27 01:49 madeup-g406l-mac.go1.reply.md
+103601 Sep 27 02:10 madeup-g406l-mac.go1.err.txt
+619 Sep 27 02:10 madeup-g406l-mac.go1.reply.md
 --- end ---
 alive
-Sun Sep 27 06:05:08 UTC 2026
-     130 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl
+Sun Sep 27 06:10:12 UTC 2026
+     160 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dhGZGcKiq1/artifacts/claude-g406l-20260927/run/luna_b.jsonl
 [0m
 == madeup-mu407-luna-mac
-22790 Sep 27 02:05 madeup-mu407-luna-mac.go1.err.txt
+23170 Sep 27 02:10 madeup-mu407-luna-mac.go1.err.txt
 202 Sep 27 02:01 madeup-mu407-luna-mac.go1.reply.md
-[mu407w] 12/75 written, 12 ok in this batch
+[mu407w] 24/75 written, 12 ok in this batch
 ---
-      15 artifacts/claude-mu407-20260927/prep/raw.jsonl
+      27 artifacts/claude-mu407-20260927/prep/raw.jsonl
 alive
 [0m
 top5cpu:
 %CPU COMM
-54.0 ApplicationsStorageExtension
-50.3 fileproviderd
-33.7 WindowServer
-25.0 sysmond
-14.5 bash
+60.5 bird
+43.4 fileproviderd
+36.8 ApplicationsStorageExtension
+33.4 WindowServer
+19.0 bash
 procs:
-  363     1 03-13:55:31 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-13:54:39 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 5678  5650    02:00:13 SN   /usr/local/bin/opencode
-15699     1 03-12:09:57 S    /usr/bin/ssh-agent
-19210 19179       11:27 SN   /usr/local/bin/opencode
-23786 23763       06:41 SN   /usr/local/bin/opencode
-26449 26426    01:07:01 SN   /usr/local/bin/opencode
-29339   818       00:58 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-44571 44570 01-04:31:35 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-04:31:35 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46037 46015       40:33 SN   /usr/local/bin/opencode
-46743 46711    09:46:08 SN   /usr/local/bin/opencode
-60494 59018    03:01:01 SN   /usr/local/bin/opencode
-81797     1 01-14:49:14 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 03-13:57:42 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-13:56:50 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 5678  5650    02:02:24 SN   /usr/local/bin/opencode
+15699     1 03-12:12:08 S    /usr/bin/ssh-agent
+19210 19179       13:38 SN   /usr/local/bin/opencode
+23786 23763       08:52 SN   /usr/local/bin/opencode
+26449 26426    01:09:12 SN   /usr/local/bin/opencode
+31534   818       00:09 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+44571 44570 01-04:33:46 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-04:33:46 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46037 46015       42:44 SN   /usr/local/bin/opencode
+46743 46711    09:48:19 SN   /usr/local/bin/opencode
+60494 59018    03:03:12 SN   /usr/local/bin/opencode
+81797     1 01-14:51:25 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
