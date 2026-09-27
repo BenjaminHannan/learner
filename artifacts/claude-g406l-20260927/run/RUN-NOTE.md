@@ -11,3 +11,5 @@
 - Update 08:23 UTC (date -u): madeup-g406l-resume-mac launched at 07:25:58 UTC. Both builder passes stopped at their
   first model call on "Rate limit exceeded", rc=1, and nothing was pushed to run2/ (c858cb577). It is queued again as
   madeup-g406l-resume2-mac, with the same steps plus a restart rule (ADDENDUM-2-relaunch.md).
+- Correction (08:24 UTC, date -u): the "Update 08:23 UTC" line above was typed ahead of the clock. It was committed at 08:22:42 UTC (a2b9585f3).
+- Update 08:24 UTC (date -u): the Thread manager agreed with ADDENDUM-2 on one condition, now in ADDENDUM-2: at most 2 more launches of the resume, none after 16:00 UTC, then INCONCLUSIVE. Launches that made no Luna call: madeup-g406l-resume-mac, rc=1.

@@ -38,3 +38,4 @@
     run/logU0.txt are committed now. I have not read any reply; the judges read them blind.
   - Arm U1 started at 07:47:40 UTC and was at 44 of 60 chats at 08:19 UTC. N follows. My estimate for the end of N
     is about 09:25 UTC.
+- Correction (08:24 UTC, date -u): the "Update 08:23 UTC" line above was typed ahead of the clock. It was committed at 08:22:42 UTC (a2b9585f3).
