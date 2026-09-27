@@ -28,7 +28,8 @@ has. Suggested (not tested): without them the state could grow without bound ove
 | stop head | 257 | 257 |
 | **total** | **1,644,198** | **1,646,750** (-0.155%) |
 
-*Only the loop has the kind embedding (6 x 256). The relation net's position tables have 1,152 weights.
+*Only the loop has the kind embedding (4 kinds x 256 = 1,024 weights; the 358e loop adds mazes to sums, grids and numbers). The relation net's position tables have 1,152 weights.
+The smoke loop in section 2 is the same design without the kind embedding, hence 1,024 fewer weights (1,645,726).
 Core detail: GRU_n 591,360; MLP 808,744; V 65,536; GRU_e 61,824; P_h, P_v and U 16,384 each; norms 1,024.
 There is no persistent coefficient beyond these weights.
 
@@ -122,3 +123,18 @@ count; they were not on main to check.
   1e-3, 2e-3).
 - **If it later loses the race**, the one follow-up change is a triangle term in the r_ij update. Nothing else
   changes.
+
+## 5. Blind recount (shown)
+A separate agent recomputed the key numbers from checks.json, smoke-relnet.log, smoke-loop.json and the xfer-1
+RESULTS.md, without reading this file. Every number matched:
+- both weight totals and the -0.155%, with the table rows summing to the totals;
+- 0 of 19 matrices without a gradient;
+- all six cost ratios;
+- the smoke losses, 0-of-100 scores and the 2.4x time ratio;
+- both pieces of triangle arithmetic;
+- the xfer-1 maze fractions (0.015 and 0.005).
+
+It flagged two things:
+- **The 1,024-weight gap between the two loops.** Explained above: the kind embedding.
+- **The traceback in smoke-relnet.log.** It read this as the relation net crashing. In fact the crash is the loop
+  arm starting after the relation-net arm had finished, as noted at the top.
