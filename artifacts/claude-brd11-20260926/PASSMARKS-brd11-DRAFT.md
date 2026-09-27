@@ -17,8 +17,11 @@ Procedure: scripts/claude_brd11.py (docstring). Recipe identical to brd-9 except
 - Temperature: brd-9's registered DEV rule (claude_blurt2.pick_temp, 1.0 vs 1.5, more lucky blurts wins) on brd-11's
   own DEV panel (seed 9199, 40 puzzles, never in test or nights).
 - Arms: R (n_miss 30 = brd-9) and S (n_miss 120, the one change).
-- Test panel: 240 puzzles from seed 9150, [MIX TO FIX: 80 three-number + 160 four-number, as brd-9, unless the T 1.5
-  DEV run shows no 4-number luck], 30 samples each, for base, night 1 and night 3 of both arms and every seed.
+- Test panel: 240 puzzles from seed 9150, 30 samples each. Mix, fixed by a rule set before the T 1.5 DEV result:
+  80 three-number + 160 four-number, as brd-9, if the plain model reaches at least one of the 20 four-number DEV
+  puzzles (seed 9199) at T 1.0 or T 1.5; if it reaches none at either, 240 three-number puzzles (a 4-number part with
+  no luck would only add room no practice can reach). The chosen mix and its DEV counts are written here at sealing.
+  Scored for base, night 1 and night 3 of both arms and every seed.
 - Harm: Fix sleep's 300 general items (claude_dl1_nights.harm_panel), greedy; lost = right at base, wrong at night 3.
 - One GPU run on BensPC ($0). That run is the registered result.
 
@@ -29,7 +32,8 @@ Claims (unreached = 240 − base cov@30; bar = 0.20 × unreached):
 - Proved wrong: the upper 95% bound of R3 − base is below 100 × bar / 240 points.
 - Otherwise NOT SHOWN. Inconclusive: fewer than 40 night-1 blurt wins in arm R.
 - S claim (its own verdict, not part of PASS): SHOWN if S3 ≥ R3 + 12 in EVERY seed (seed k vs seed k) AND the 95%
-  interval for S3 − R3 above 0. Proved wrong: upper bound of S3 − R3 below 5 points (12 of 240). Otherwise NOT SHOWN.
+  interval for S3 − R3 above 0. "S cannot reach the bar": upper bound of S3 − R3 below 5 points (12 of 240); this
+  does NOT mean S adds nothing. "S adds nothing": upper bound of S3 − R3 ≤ 0 points. Otherwise NOT SHOWN.
   S is judged on coverage only; S3's harm is reported.
 - G7 line (reported): R3 ≥ base + 24 in every seed with the interval above 0.
 - NIGHTS line (reported): R3 ≥ R1 + 12 in every seed with the R3 − R1 interval above 0.
@@ -41,5 +45,7 @@ Harm: lost ≤ 20 about 40% (a guess; dl-5's sleep nights lost 98 and 61 on this
 with different training rows; brd training rows are bare expressions, which could spill into other answers). S3 − R3 about 0 to +8;
 S SHOWN about 20%, because S only adds hits on puzzles R missed and keeps one hit per puzzle.
 
-Limits: one panel again; the S arm adds night-search compute (up to 4x blurts on misses), so S vs R is a compute
+Limits: the harm panel is Fix sleep's own dev harm panel (claude_dl1_nights.harm_panel, 300 code-made items), used
+again here, so passing it is a consistency check, not fresh evidence of no harm; lost and gained are both reported.
+One panel again; the S arm adds night-search compute (up to 4x blurts on misses), so S vs R is a compute
 comparison, not equal compute.
