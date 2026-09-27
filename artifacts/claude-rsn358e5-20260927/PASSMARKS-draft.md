@@ -14,3 +14,7 @@
 - **Predictions:** M 85%; PASS 30%; proved wrong 45%. Why low: in 7 of 8 earlier freeze-and-grow runs the new group already got at least half of the new kind in one block and still learned little (DIAG-new-group-share.md in rsn-358e4).
 
 **Brain link (a guess):** in the adult dentate gyrus, young adult-born neurons are more excitable and more plastic than mature ones, so they tend to win the competition to encode new experiences instead of starting from nothing. Warm routing is the machine version of that head start. I have not checked this against papers in this session.
+
+## Change after the Thread manager's review (02:52 UTC), added 2026-09-27 02:54:03 UTC
+- **Disclosed stand-in:** warm routing is given each training batch's kind by the code, a hand-given task label. It is a task oracle, used for 10% of the new-kind batches in phases B and C (225 and 135 batches) and never at test time. A PASS would show that a head start works *given* that label. It would not show that the net finds its own new experts.
+- The marks are otherwise unchanged. The Thread manager asked for both 358e5 and 358e6 to be sealed after it sees 358e6's draft (artifacts/claude-rsn358e6-20260927/PASSMARKS-draft.md).
