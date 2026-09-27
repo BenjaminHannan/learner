@@ -10,10 +10,12 @@
 
 Code filters (not Luna) decide what is kept:
 - Q frame: exactly one {EXPR}, no other braces, no digits, 20-220 characters.
-- Look-alike: 8-160 characters, ends with "?", has a digit, no arithmetic between digits, none of "bigger", "larger",
-  "smaller", "how many" (the panel's two number templates), not equal to any panel question, no repeats.
+- Look-alike: 8-160 characters, ends with "?", has a digit, no arithmetic between digits, none of the BANNED words (the
+  panel's two number templates and their synonyms), not equal to any panel question, no repeats.
 Stops with STOP-LUNA (exit 2, no output file) if fewer than MIN_FRAMES frames or MIN_LOOK look-alikes survive.
-Luna is called through scripts/claude_luna_codex.py, one call at a time; this script handles no key.
+Luna is called through scripts/claude_luna_effort.py (the Director's claude_luna_codex.py helper with effort "low" and
+a 600 s limit per try), one call at a time; this script handles no key and prints counts only, never reply text.
+Standard library only.
 
   python3 scripts/claude_dl11_luna.py --selftest        (filters only; no Luna call)
   python3 scripts/claude_dl11_luna.py --out artifacts/claude-dl11-20260927/luna
@@ -35,6 +37,7 @@ sys.path.insert(0, str(HERE))
 N_FRAMES, MIN_FRAMES = 5, 3
 N_LOOK, MIN_LOOK, PER_CALL, MAX_CALLS = 600, 400, 25, 48
 SEED = 2993
+EFFORT, TIMEOUT = "low", 600         # rd-378g's writer pilot timed out 9 of 9 at the default effort and 300 s
 TOPICS = ["prices and shopping", "ages and birthdays", "years and history dates", "sizes and heights",
           "distances and travel", "sports scores and results", "recipes and cooking times", "clock times and schedules",
           "temperatures and weather", "phones, batteries and gadgets", "books, pages and chapters", "rooms, floors and "
@@ -48,11 +51,14 @@ FRAME_PROMPT = (
 LOOK_PROMPT = (
     "Write {n} short, different everyday questions about {topic}. Each question must contain at least one number "
     "written in digits. The questions must not be arithmetic problems or puzzles, must not ask to calculate anything, "
-    "must not ask which number is bigger or smaller, and must not start with \"How many\". Keep each under 20 words "
+    "must not ask which number is bigger or smaller or compare amounts, and must not start with \"How many\". Keep each under 20 words "
     "and end each with a question mark. Output only the questions, one per line, with no numbering and no other "
     "text.")
 ARITH = re.compile(r"\d\s*[-+*/x×÷^=]\s*\d")
-BANNED = (" bigger ", " larger ", " smaller ", " how many ")
+# The panel's two number templates ("Which number is bigger ...", "How many ...") and their synonyms (Thread manager
+# review 12:29 UTC), so the template cannot leak back into the router's look-alikes.
+BANNED = (" bigger ", " larger ", " smaller ", " how many ", " greater ", " higher ", " more than ", " less ",
+          " fewer ", " lower ", " most ", " least ")
 
 
 def panel_questions() -> set:
@@ -81,12 +87,17 @@ def ok_look(t: str, panel: set) -> bool:
 
 
 def run(a) -> None:
-    import claude_luna_codex as L
+    import claude_luna_effort as L          # the Codex helper with a set effort and time limit (rd-378g's fix)
+    L.EFFORT, L.TIMEOUT = EFFORT, TIMEOUT
     out = Path(a.out)
     panel = panel_questions()
-    res = {"what": "dl-11 Luna stage", "model": L.MODEL, "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    res = {"what": "dl-11 Luna stage", "model": L.MODEL, "effort": EFFORT, "timeout": TIMEOUT, "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
            "prompts": {"frame": FRAME_PROMPT, "look": LOOK_PROMPT}, "calls": [], "q_frames": [], "lookalikes": []}
-    reply = L.call(FRAME_PROMPT.format(n=N_FRAMES))
+    try:
+        reply = L.call(FRAME_PROMPT.format(n=N_FRAMES))
+    except RuntimeError as e:
+        reply = ""
+        res["calls"].append({"kind": "frame", "error": str(e)[:200]})
     cand = lines(reply)
     res["q_frame_candidates"] = cand
     res["q_frames"] = [t for t in dict.fromkeys(cand) if ok_frame(t)][:N_FRAMES]
@@ -139,8 +150,30 @@ def selftest() -> None:
     assert not ok_look("How many 5 cent coins fit in a jar?", panel)
     assert not ok_look("What is the capital of France? Reply with the city name only.", panel)
     assert not ok_look("Is it warm today?", panel)
+    assert not ok_look("Is 30 degrees greater than room temperature?", panel)
+    assert not ok_look("Do 3 cats need more than 1 litter box?", panel)
+    assert not ok_look("Which of the 4 seasons has the least rain?", panel)
     assert lines("1. First?\n- Second?\n\n3) Third?") == ["First?", "Second?", "Third?"]
     assert "{EXPR}" in FRAME_PROMPT.format(n=5) and "prices" in LOOK_PROMPT.format(n=3, topic="prices")
+    # run() end to end with a fake Luna (no network): frames and look-alikes pass the filters, the file is written
+    import tempfile
+    import types
+    fake = types.ModuleType("claude_luna_effort")
+    fake.MODEL, fake.EFFORT, fake.TIMEOUT = "fake", None, 0
+    k = [0]
+
+    def fake_call(text):
+        k[0] += 1
+        if "{EXPR}" in text:
+            return "\n".join(f"Say what {{EXPR}} comes to, number only, version {w}." for w in "abcde")
+        return "\n".join(f"Is a {k[0]}{i} minute bus ride long for a trip number {i}?" for i in range(PER_CALL))
+    fake.call = fake_call
+    sys.modules["claude_luna_effort"] = fake
+    with tempfile.TemporaryDirectory() as td:
+        run(argparse.Namespace(out=str(Path(td) / "luna")))
+        d = json.loads((Path(td) / "luna" / "luna_texts.json").read_text(encoding="utf-8"))
+        assert len(d["q_frames"]) == 5 and len(d["lookalikes"]) == N_LOOK and d["effort"] == EFFORT, d["calls"][:2]
+    del sys.modules["claude_luna_effort"]
     print("dl11 luna selftest ok")
 
 

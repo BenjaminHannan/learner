@@ -24,7 +24,12 @@ Serving arms, all generated live at the last night with the same torch seed per 
   S  shared adapter always on        X  router's choice (base, P-expert or Q-expert)
   M  soft: P-expert at p(P) and Q-expert at p(Q)   R  X's choices shuffled over the same 600 requests
   O  oracle, report-only: the true kind picks the expert (panel -> base)
+  AP / AQ  report-only: the P-expert / the Q-expert always on (each expert's own spill, no router; S trains on about
+     twice the rows of either expert)
 Night 1 and every night: the router's choices only (no generation).
+Q is scored lenient (last integer in the reply is the value; graded) and strict (bare value; reported). Report-only
+rows at the last night: P and Q under their other frames, and the first 100 Q TEST items written in words by code
+(does the router route on content or on symbols?).
 
   python -B scripts/claude_dl11_router.py --selftest
   python -B scripts/claude_dl11_router.py --model M --out DIR                    (registered run)
@@ -53,7 +58,10 @@ Q_DAY_SEED = 2800                      # Q day d of seed s: expressions(Q_DAY_SE
 Q_TEMP, Q_MAX = 0.7, 16
 NAMES = ("S", "P", "Q")
 KINDS = ("base", "P", "Q")
-ARMS = ("S", "X", "M", "R", "O")
+ARMS = ("S", "X", "M", "R", "O", "AP", "AQ")
+ONES = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split()
+TENS = "_ _ twenty thirty forty fifty sixty seventy eighty ninety".split()
+OPW = {"+": "plus", "-": "minus", "*": "times"}
 
 
 # ---------------------------------------------------------------- Q: code-made expressions
@@ -177,8 +185,34 @@ def q_answers(s, model, text: str, n: int) -> list[str]:
 
 
 def q_right(reply: str, e: dict) -> int:
-    import claude_dl1_nights as D1
-    return int(D1.first_int(reply) == e["value"])
+    """Lenient (graded): the LAST integer in the reply is the value. (Not "anywhere": an echoed expression such as
+    "6 - 3" would then count whenever the value equals an operand.)"""
+    import re
+    ints = re.findall(r"-?\d+", reply.replace(",", ""))
+    return int(bool(ints) and int(ints[-1]) == e["value"])
+
+
+def q_strict(reply: str, e: dict) -> int:
+    """Strict: the reply is the bare value and nothing else."""
+    import re
+    t = reply.strip().rstrip(".")
+    return int(bool(re.fullmatch(r"-?\d+", t)) and int(t) == e["value"])
+
+
+def num_words(n: int) -> str:
+    if n < 0:
+        return "minus " + num_words(-n)
+    if n < 20:
+        return ONES[n]
+    if n < 100:
+        return TENS[n // 10] + ("-" + ONES[n % 10] if n % 10 else "")
+    return ONES[n // 100] + " hundred" + (" and " + num_words(n % 100) if n % 100 else "")
+
+
+def words_expr(e: dict) -> dict:
+    """The same two-number item written in words by code ("seven times eleven"), report-only."""
+    a, op, b = e["expr"].split()
+    return dict(e, expr=f"{num_words(int(a))} {OPW[op]} {num_words(int(b))}")
 
 
 def gather_q(s, m, frame, day, n_guess) -> tuple[list, int]:
@@ -225,6 +259,8 @@ def choice(pr: list[float]) -> int:
 def weights(arm: str, pr, kind_true: int, pick: int) -> dict:
     if arm == "S":
         return {"S": 1.0}
+    if arm in ("AP", "AQ"):
+        return {arm[1]: 1.0}
     if arm == "M":
         return {"P": pr[1], "Q": pr[2]}
     k = kind_true if arm == "O" else pick
@@ -243,26 +279,28 @@ def serve_pass(s, m, mixer, ctx, ws: list[dict], seed: int) -> dict:
     import claude_dl1_nights as D1
     s.torch.manual_seed(seed)
     tp, tq, panel = ctx["p_test"], ctx["q_test"], ctx["panel"]
-    hits, greedy, qr, harm = [], [], [], []
+    hits, greedy, qr, qs, harm = [], [], [], [], []
     for i, p in enumerate(tp):
         mixer.set(**ws[i])
         hits.append(sum(B1.check(t, p["nums"], p["target"]) for t in s.generate(p, ctx["n_guess_test"], D1.TEMP, m)))
         greedy.append(int(B1.check(s.generate(p, 1, None, m)[0], p["nums"], p["target"])))
     for j, e in enumerate(tq):
         mixer.set(**ws[len(tp) + j])
-        qr.append(q_right(q_answers(s, m, q_text(ctx["q_frame"], e), 0)[0], e))
+        r = q_answers(s, m, q_text(ctx["q_frame"], e), 0)[0]
+        qr.append(q_right(r, e))
+        qs.append(q_strict(r, e))
     for k, it in enumerate(panel):
         mixer.set(**ws[len(tp) + len(tq) + k])
         harm.append(int(D1.harm_right(it, D1.free_answer(s, it["q"], m))))
     mixer.set()
-    return {"hits": hits, "greedy": greedy, "q_right": qr, "harm": harm}
+    return {"hits": hits, "greedy": greedy, "q_right": qr, "q_strict": qs, "harm": harm}
 
 
 def summarize(p: dict, base: dict) -> dict:
     import claude_dl1_nights as D1
     fl = D1.flips(base["harm"], p["harm"])
     return {"lucky": sum(p["hits"]), "reached": sum(h > 0 for h in p["hits"]), "greedy": sum(p["greedy"]),
-            "q_right": sum(p["q_right"]), "harm": fl}
+            "q_right": sum(p["q_right"]), "q_strict": sum(p["q_strict"]), "harm": fl}
 
 
 def spill_kept(base_h, s_h, arm_h) -> dict:
@@ -349,7 +387,23 @@ def final_arms(s, m, mixer, rt, ctx, seed) -> dict:
     out["R_counts_base_P_Q"] = [sum(c == j for c in rpicks) for j in range(3)]
     out["items"] = {"harm": items, "picks": picks}
     out["reworded"] = reworded(s, m, mixer, rt, ctx)
+    out["words"] = words_row(s, m, mixer, rt, ctx)
     return out
+
+
+def words_row(s, m, mixer, rt, ctx) -> dict:
+    """Report-only: Q TEST items written in words by code; the router's choice, and right for base, Q-expert, X."""
+    picks = [choice(p) for p in route(rt, ctx["f_words"])]
+    ex, xs = [], []
+    for e, c in zip(ctx["words"], picks):
+        t = q_text(ctx["q_frame"], e)
+        mixer.set(Q=1.0)
+        ex.append(q_right(q_answers(s, m, t, 0)[0], e))
+        mixer.set(**({KINDS[c]: 1.0} if c else {}))
+        xs.append(q_right(q_answers(s, m, t, 0)[0], e))
+    mixer.set()
+    return {"n": len(picks), "to_base_P_Q": [sum(c == j for c in picks) for j in range(3)],
+            "right_base": sum(ctx["words_base"]), "right_Q_expert": sum(ex), "right_X": sum(xs)}
 
 
 def reworded(s, m, mixer, rt, ctx) -> list:
@@ -391,7 +445,8 @@ def score(res: dict) -> dict:
     lost = {k: [fin[sd][k]["harm"]["lost"] for sd in seeds] for k in ARMS}
     gp = {k: [fin[sd][k]["lucky"] - L0 for sd in seeds] for k in ARMS}
     gq = {k: [fin[sd][k]["q_right"] - Q0 for sd in seeds] for k in ARMS}
-    m = {"L0": L0, "Q0": Q0, "final_lost": lost, "gain_P": gp, "gain_Q": gq,
+    gqs = {k: [fin[sd][k]["q_strict"] - res["base"]["q_strict"] for sd in seeds] for k in ARMS}
+    m = {"L0": L0, "Q0": Q0, "final_lost": lost, "gain_P": gp, "gain_Q": gq, "gain_Q_strict_report_only": gqs,
          "router_night1": {sd: {k: first[sd]["router"][k] for k in ("p_test_to_P", "q_test_to_Q", "panel_to_base",
                                                                     "bigger_to_base")} for sd in seeds},
          "router_final": {sd: {k: fin[sd]["router"][k] for k in ("p_test_to_P", "q_test_to_Q", "panel_to_base",
@@ -480,12 +535,18 @@ def run(a) -> None:
     hits = [sum(B1.check(t, p["nums"], p["target"]) for t in s.generate(p, a.n_guess_test, D1.TEMP, base_m))
             for p in p_test]
     greedy = [int(B1.check(s.generate(p, 1, None, base_m)[0], p["nums"], p["target"])) for p in p_test]
-    qr = [q_right(q_answers(s, base_m, q_text(q_frame, e), 0)[0], e) for e in q_test]
-    ctx["base"] = {"hits": hits, "greedy": greedy, "q_right": qr, "harm": D1.harm_scores(s, base_m, panel)}
+    qa = [q_answers(s, base_m, q_text(q_frame, e), 0)[0] for e in q_test]
+    qr, qst = [q_right(r, e) for r, e in zip(qa, q_test)], [q_strict(r, e) for r, e in zip(qa, q_test)]
+    ctx["base"] = {"hits": hits, "greedy": greedy, "q_right": qr, "q_strict": qst,
+                   "harm": D1.harm_scores(s, base_m, panel)}
+    ctx["words"] = [words_expr(e) for e in q_test[:a.n_words]]
+    ctx["f_words"] = E.feats(s, [E.chat_text(s, q_text(q_frame, e)) for e in ctx["words"]])
+    ctx["words_base"] = [q_right(q_answers(s, base_m, q_text(q_frame, e), 0)[0], e) for e in ctx["words"]]
     ctx["p_reword_base"] = [E.with_frame(fr, lambda: [int(B1.check(s.generate(p, 1, None, base_m)[0], p["nums"],
                                                                      p["target"])) for p in p_test]) for fr in p_other]
     ctx["q_reword_base"] = [[q_right(q_answers(s, base_m, q_text(fr, e), 0)[0], e) for e in q_test] for fr in q_other]
     res["base"] = {"lucky": sum(hits), "reached": sum(h > 0 for h in hits), "greedy": sum(greedy), "q_right": sum(qr),
+                   "q_strict": sum(qst), "words_right": sum(ctx["words_base"]),
                    "harm_right": sum(ctx["base"]["harm"]), "p_reworded_greedy": [sum(x) for x in ctx["p_reword_base"]],
                    "q_reworded_right": [sum(x) for x in ctx["q_reword_base"]]}
     res["base_harm_items"] = ctx["base"]["harm"]
@@ -509,7 +570,14 @@ def selftest() -> None:
     assert all(e["value"] == eval(e["expr"]) for e in ex) and expressions(7, 50) == ex
     assert all(set(e["expr"]) <= set("0123456789 +-*") and e["expr"].count(" ") == 2 for e in ex)
     assert q_text("Work out {EXPR}.", {"expr": "2 + 3"}) == "Work out 2 + 3."
-    assert q_right("The answer is 5", {"value": 5}) == 1 and q_right("2 + 3 = 5", {"value": 5}) == 0
+    assert q_right("The answer is 5", {"value": 5}) == 1 and q_right("2 + 3 = 5", {"value": 5}) == 1
+    assert q_right("5 = 2 + 3", {"value": 5}) == 0 and q_strict("5", {"value": 5}) == 1
+    assert q_strict("5.", {"value": 5}) == 1 and q_strict("The answer is 5", {"value": 5}) == 0
+    assert q_strict("-40", {"value": -40}) == 1 and q_right("-40", {"value": -40}) == 1
+    assert words_expr({"expr": "19 * 3", "value": 57})["expr"] == "nineteen times three"
+    assert words_expr({"expr": "55 - 90", "value": -35})["expr"] == "fifty-five minus ninety"
+    assert num_words(99) == "ninety-nine" and num_words(40) == "forty" and num_words(12) == "twelve"
+    assert weights("AP", [1, 0, 0], 0, 0) == {"P": 1.0} and weights("AQ", [1, 0, 0], 0, 0) == {"Q": 1.0}
 
     # router separates three clusters and reports probabilities
     X = torch.cat([torch.randn(40, 6) + torch.tensor([4., 0, 0, 0, 0, 0]), torch.randn(40, 6) - 4,
@@ -550,11 +618,13 @@ def selftest() -> None:
     # marks
     def night(lx, ls, lr, gpx, gps, gpr, gqx, gqs, gqr, r=(100, 200, 300, 119)):
         rr = dict(zip(("p_test_to_P", "q_test_to_Q", "panel_to_base", "bigger_to_base"), r))
-        arm = lambda lost, gp, gq: {"lucky": 50 + gp, "q_right": 80 + gq, "harm": {"lost": lost}}  # noqa: E731
+        arm = lambda lost, gp, gq: {"lucky": 50 + gp, "q_right": 80 + gq, "q_strict": 70 + gq,  # noqa: E731
+                                    "harm": {"lost": lost}}
         return {"router": rr, "S": arm(ls, gps, gqs), "X": arm(lx, gpx, gqx), "R": arm(lr, gpr, gqr),
+                "AP": arm(ls, gps, 0), "AQ": arm(ls, 0, gqs),
                 "M": arm(lx, gpx, gqx) | {"spill": {"S_gained": 1, "kept": 0, "share": 0.0, "grade": "none"}},
                 "O": arm(lx, gpx, gqx) | {"spill": {"S_gained": 1, "kept": 0, "share": 0.0, "grade": "none"}}}
-    res = {"base": {"lucky": 50, "q_right": 80}, "n_p_test": 100, "n_q_test": 200, "n_harm": 300, "n_bigger": 119}
+    res = {"base": {"lucky": 50, "q_right": 80, "q_strict": 70}, "n_p_test": 100, "n_q_test": 200, "n_harm": 300, "n_bigger": 119}
     n1 = night(0, 0, 0, 0, 0, 0, 0, 0, 0)
     fin = night(1, 25, 6, 170, 175, 45, 30, 32, 8)
     fin["X"]["spill"] = {"S_gained": 1, "kept": 0, "share": 0.0, "grade": "none"}
@@ -585,6 +655,7 @@ def main():
     ap.add_argument("--n-qtest", type=int, default=200)
     ap.add_argument("--n-guess-test", type=int, default=20)
     ap.add_argument("--n-harm", type=int, default=300)
+    ap.add_argument("--n-words", type=int, default=100)
     ap.add_argument("--n-ask", type=int, default=1000)
     ap.add_argument("--seed-shift", type=int, default=0)
     ap.add_argument("--selftest", action="store_true")
@@ -595,6 +666,7 @@ def main():
     if a.dev:
         a.nights, a.n_day, a.n_guess, a.n_qguess, a.n_test, a.n_qtest, a.n_guess_test, a.n_harm, a.n_ask = \
             2, 3, 3, 2, 2, 3, 2, 12, 20
+        a.n_words = 2
         a.seed_shift, a.seeds = a.seed_shift or 60000, "18"
     run(a)
 
