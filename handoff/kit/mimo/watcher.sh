@@ -63,7 +63,8 @@ while [ ! -e "$H/STOP" ]; do
     # rentals mostly wait on vast (polls, uploads), so they get extra slots beyond MAX (Director 13:47 UTC 09-26, Ben 13:30 "BensPC's gpu should not be the blocker")
     grep -qE '^STATUS: *HELD' "$f" 2>/dev/null && continue
     z5=0; for r5 in "$Q"/*.running; do [ -e "$r5" ] || continue; j5=$(basename "$r5" .running); grep -q '^GPU: *yes' "$Q/$j5.md" 2>/dev/null && continue; pgrep -f "rungo5.sh $Q/$j5.md" >/dev/null && z5=$((z5+1)); done
-    [ "$z5" -ge 2 ] && { log "zen cap: $z5 non-GPU rungo5 builders running, holding $n"; break; }   # free Zen builders: at most 2 at once until 2 real jobs finish (Thread manager 03:07 UTC 09-27; mimo-skill.md:17,19 rate limits)
+    zexempt=0; case "$n" in 000-*) zexempt=1;; esac; git -C "$W" show "origin/$IN:$f" 2>/dev/null | grep -qE '^GPU: *yes' && zexempt=1
+    [ "$z5" -ge 4 ] && [ "$zexempt" = 0 ] && { log "zen cap: $z5 non-GPU rungo5 builders running, holding $n"; continue; }   # cap 2 -> 4 (Director 05:13 UTC 09-27); BensPC and 000- jobs never held; continue so later exempt jobs still launch   # free Zen builders: at most 2 at once until 2 real jobs finish (Thread manager 03:07 UTC 09-27; mimo-skill.md:17,19 rate limits)
     [ "$running" -ge 18 ] && break; localrun=$(ls "$Q"/*.running 2>/dev/null | xargs -n1 basename 2>/dev/null | grep -cvE '^(rent-|000-|claude-|[1-3][0-9][0-9]-)'); gpuj=0; git -C "$W" show "origin/$IN:$f" 2>/dev/null | grep -qE '^GPU: *yes' && gpuj=1; [ "$localrun" -ge "$MAX" ] && [ "$gpuj" = 0 ] && case "$n" in rent-*|000-*|claude-*) ;; *) continue;; esac
     load=$(sysctl -n vm.loadavg 2>/dev/null | awk '{print int($2)}'); [ -z "$load" ] && load=0
     # Ben 13:30 UTC 09-26 "BensPC's gpu should not be the blocker": rentals and read-only 000-* checks do their work off the Mac, so a busy Mac holds only local jobs
