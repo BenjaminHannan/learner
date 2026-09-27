@@ -4,7 +4,8 @@
 # cores; up to 3 tries on different hosts), sends the pinned code (scripts, the sealed 358u folder, 358i's tests, box/drive.sh),
 # starts box/drive.sh detached on the rental (torch 2.11.0 pin, seal 20/20, selftests, all 8 sealed trains at once, seal each
 # final.pt, then V1 poison and the test eval once each), waits until all 8 have launched, then leaves a guard running on the
-# Mac (vguard.sh: $3.60 / 4 h 30 min stop, stall and host checks, copy back, destroy by exact id, confirm gone).
+# Mac (vguard.sh: $3.60 / 4 h 30 min stop, stall and host checks, copy back checked against a manifest made on the rental;
+# destroy by exact id and confirm gone only after that check passes, else stop the instance without destroying it).
 # Usage: vstart.sh <kit-dir> <pinned-commit> <queue-job-name>
 set -u
 KD=$1; PIN=$2; JOB=${3:-?}
@@ -14,7 +15,9 @@ for ref in origin/main origin/builder-outbox; do
   for p in $A/SEAL-run.sha256.txt $A/runs $A/run-vast; do
     git cat-file -e "$ref:$p" 2>/dev/null && { echo "DUPLICATE: $ref already has $p (BensPC or an earlier rental produced runs)"; exit 0; }; done; done
 [ -e "$G/rentals.txt" ] && { echo "DUPLICATE: $G/rentals.txt exists (a start already ran)"; tail -5 "$G/log.txt" 2>/dev/null; exit 0; }
-command -v "$VAST" > /dev/null || { echo "STOP: no vastai CLI"; exit 0; }
+command -v "$VAST" > /dev/null || { echo "STOP: no vastai CLI; rented nothing"; exit 0; }
+[ -x "$PYM" ] || { echo "STOP: no python 3.12 from uv on the Mac; rented nothing"; exit 0; }
+[ -f "$KEY.pub" ] || { echo "STOP: no $KEY.pub to attach; rented nothing"; exit 0; }
 L=$(labelled); [ -n "$L" ] && { echo "DUPLICATE: live instance(s) labelled $LABEL: $L"; exit 0; }
 mkdir -p "$G"; cp "$KD/handoff/kit/sleep358uv/vcommon.sh" "$KD/handoff/kit/sleep358uv/vguard.sh" "$G/"
 CR=$($VAST show user --raw < /dev/null 2>/dev/null | $PYJ 'import json,sys; print(round(float(json.load(sys.stdin).get("credit",0)),2))')
@@ -35,12 +38,16 @@ while read -r OID DPH CORES HID; do
   I=$(echo "$out" | $PYJ 'import json,sys; print(json.load(sys.stdin).get("new_contract") or "")' 2>/dev/null)
   [ -n "$I" ] || { log "rental $n: create on offer $OID failed: $(echo "$out" | tr '\n' ' ' | cut -c1-200)"; continue; }
   echo "$I $DPH $(date +%s)" >> "$G/rentals.txt"; log "rental $n: instance $I (offer $OID, host $HID, $CORES cores, \$$DPH/h)"
-  s=""; for w in $(seq 1 48); do s=$(status_of "$I"); [ "$s" = running ] && break; sleep 10; done
-  [ "$s" = running ] || { log "rental $n: not running after 8 min ($s)"; destroy "$I"; continue; }
-  U=$($VAST ssh-url "$I" < /dev/null 2>/dev/null | tail -1); H=$(echo "$U" | sed -E 's|^ssh://[^@]+@([^:]+):([0-9]+).*|\1|'); P=$(echo "$U" | sed -E 's|^ssh://[^@]+@([^:]+):([0-9]+).*|\2|')
-  SS=$(sshto "$H" "$P"); ok=""
-  for w in $(seq 1 18); do ok=$($SS "echo ssh-ok" < /dev/null 2>/dev/null); [ "$ok" = ssh-ok ] && break; sleep 10; done
-  [ "$ok" = ssh-ok ] || { log "rental $n: no ssh after 3 min"; destroy "$I"; continue; }
+  # running, then attach the Mac's ssh key (~/.ssh/id_ed25519.pub; re-sent every 80 s, as rent-rv390b does) until ssh answers
+  ok=""; s=""; att=0
+  for w in $(seq 1 48); do
+    s=$(status_of "$I")
+    if [ "$s" = running ]; then set -- $(hostport_of "$I") x x; H=$1; P=$2
+      if [ "$H" != x ] && [ "$H" != None ]; then
+        [ $((att % 8)) = 0 ] && $VAST attach ssh "$I" "$(cat "$KEY.pub")" < /dev/null > /dev/null 2>&1; att=$((att+1))
+        SS=$(sshto "$H" "$P"); ok=$($SS "echo ssh-ok" < /dev/null 2>/dev/null); [ "$ok" = ssh-ok ] && break; fi; fi
+    sleep 10; done
+  [ "$ok" = ssh-ok ] || { log "rental $n: no ssh within 8 min (status ${s:-?})"; destroy "$I"; continue; }
   git archive "$PIN" scripts $A artifacts/claude-rsn358i-20260926/tests handoff/kit/sleep358uv/box | $SS "mkdir -p /root/r && tar -x -C /root/r" 2>> "$G/log.txt"
   want=$(git show "$PIN:handoff/kit/sleep358uv/box/drive.sh" | shasum -a 256 | awk '{print $1}')
   got=$($SS "sha256sum /root/r/handoff/kit/sleep358uv/box/drive.sh" < /dev/null 2>/dev/null | awk '{print $1}')
@@ -59,7 +66,10 @@ last=""; for w in $(seq 1 30); do sleep 30
 $SS "cat /root/r/W/drive-state.txt" < /dev/null 2>/dev/null | tee -a "$G/log.txt"
 case "$last" in
   *"LAUNCH plain-s16 "*) ;;
-  *) log "STOPPED: drive.sh did not launch all 8 runs (last: ${last:-none})"; copy_back; destroy "$ID"; echo "END START-FAIL" > "$G/END"; exit 0;;
+  *) log "STOPPED: drive.sh did not launch all 8 runs (last: ${last:-none})"
+     if copy_back logs || copy_back logs; then destroy "$ID" && R=START-FAIL || R=START-FAIL-DESTROY-UNCONFIRMED
+     else stop_inst "$ID"; R=START-FAIL-STOPPED-NOT-DESTROYED; fi
+     echo "END $R spent $(spent)" > "$G/END"; log "END $R"; exit 0;;
 esac
 (nohup caffeinate -i bash "$G/vguard.sh" "$G" > "$G/guard.out" 2>&1 < /dev/null &)
 sleep 5; log "all 8 runs launched on $ID; guard started ($(pgrep -f "vguard.sh $G" | tr '\n' ' ')); spent so far \$$(spent)"

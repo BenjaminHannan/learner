@@ -1,13 +1,16 @@
 #!/bin/bash
 # rsn-358u vast guard (sleep research thread, 2026-09-27). Started detached on the Mac by vstart.sh; runs from $G (its own copy,
 # so no worktree or queue job needs to stay alive). Every 5 minutes: money and time check, then the rental's progress file.
-# Ends, always by copying back what exists and destroying the instance by its exact id (confirmed gone), on the first of:
+# Ends on the first of the reasons below. It copies back what exists, checks every file against a sha256 manifest made on the
+# rental, and checks that each of the 8 runs is sealed with a matching Mac copy of final.pt (or recorded as DIED). Only then does
+# it destroy the instance by its exact id (confirmed gone). If the check fails twice, or ssh is lost, it STOPS the instance
+# instead (GPU billing ends, files stay on its disk) and writes <reason>-STOPPED-NOT-DESTROYED for the Director.
 #   DONE        drive.sh finished (all trains, seals, poison checks and evals)
 #   FAILED      drive.sh stopped itself (its reason is kept)
 #   BUDGET-STOP all rentals of this task reach $3.60 (cap $4)
 #   TIME-STOP   4 h 30 min since the first rental
 #   STALL       no log on the rental grew for 30 min and the GPU is idle
-#   HOST-FAIL   no ssh answer for 20 min (nothing can be copied; destroyed anyway)
+#   HOST-FAIL   no ssh answer for 20 min (nothing can be copied: stopped, not destroyed)
 # The last line of $G/END is the reason. vcollect.sh (a queue job) moves the copied files into the repo.
 set -u
 G=$1
@@ -15,8 +18,11 @@ G=$1
 read -r ID H P < "$G/state"
 SS=$(sshto "$H" "$P")
 T0=$(head -1 "$G/rentals.txt" | awk '{print $3}')
-end() { log "GUARD $1${2:+: $2}"; [ "${3:-}" = nocopy ] || copy_back; destroy "$ID"
-        log "GUARD-END $1, spent \$$(spent)"; echo "END $1 spent $(spent)" > "$G/END"; exit 0; }
+fin() { log "GUARD-END $1, spent \$$(spent)"; echo "END $1 spent $(spent)" > "$G/END"; exit 0; }
+end() { log "GUARD $1${2:+: $2}"
+  if [ "${3:-}" != nocopy ] && { copy_back runs || copy_back runs; }; then destroy "$ID" && fin "$1" || fin "$1-DESTROY-UNCONFIRMED"; fi
+  stop_inst "$ID" && fin "$1-STOPPED-NOT-DESTROYED" || fin "$1-STOP-UNCONFIRMED"; }
+[ -s "$G/END" ] && { echo "guard: already ended ($(cat "$G/END"))"; exit 0; }
 log "GUARD start pid $$ instance $ID"
 miss=0; still=0; lastsz=""
 while :; do

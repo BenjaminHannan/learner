@@ -13,10 +13,15 @@ for ref in origin/main origin/builder-outbox; do
   git cat-file -e "$ref:$A/run-vast/COLLECT.txt" 2>/dev/null && { echo "DUPLICATE: $ref already has $A/run-vast/COLLECT.txt"; exit 0; }; done
 [ -e "$G/rentals.txt" ] || { echo "NOT-STARTED: no rental record in $G"; exit 0; }
 g=$(pgrep -f "vguard.sh $G" | tr '\n' ' '); echo "guard pid(s): ${g:-none}; live $LABEL instances: $(labelled)"
+# the guard is the only thing that stops the rental: if it died (Mac restart) before ending, start it again from its own copy
+if [ -z "$g" ] && [ ! -s "$G/END" ] && [ -s "$G/state" ]; then
+  (nohup caffeinate -i bash "$G/vguard.sh" "$G" >> "$G/guard.out" 2>&1 < /dev/null &); sleep 5
+  log "GUARD-RESTARTED by $JOB: pid(s) $(pgrep -f "vguard.sh $G" | tr '\n' ' ')"; fi
 for w in $(seq 1 84); do [ -s "$G/END" ] && break; sleep 50; done
 tail -8 "$G/log.txt"
 [ -s "$G/END" ] || { echo "NOT-YET: the guard has not ended (spent \$$(spent)); the next collect job picks it up"; exit 0; }
 echo "guard: $(cat "$G/END")"
+case "$(cat "$G/END")" in *STOPPED-NOT-DESTROYED*|*UNCONFIRMED*) echo "FLAG-DIRECTOR: instance $(cut -d' ' -f1 "$G/state") of $LABEL was NOT destroyed (see run-vast/mac-log.txt); the copy below may be incomplete";; esac
 O=$G/out/W; V=$A/run-vast
 mkdir -p "$V" "$A/runs"
 [ -s "$O/SEAL-run.sha256.txt" ] && cp "$O/SEAL-run.sha256.txt" "$A/SEAL-run.sha256.txt"
@@ -24,12 +29,13 @@ for R in $ORDER; do
   [ -d "$O/$R" ] || [ -f "$O/$R.log" ] || continue; mkdir -p "$A/runs/$R"
   for f in $R/train_log.jsonl $R/train_summary.json $R/poison.json $R/tests.json $R.log $R.err $R.poison.log $R.eval.log; do
     [ -f "$O/$f" ] && cp "$O/$f" "$A/runs/$R/$(basename "$f")"; done; done
-for f in drive-state.txt torch.txt checks.txt; do [ -f "$O/$f" ] && cp "$O/$f" "$V/$f"; done
+for f in drive-state.txt torch.txt checks.txt MANIFEST.sha256; do [ -f "$O/$f" ] && cp "$O/$f" "$V/$f"; done
 [ -f "$O/pip.log" ] && tail -20 "$O/pip.log" > "$V/pip-tail.txt"
 [ -f "$G/out/drive.log" ] && cp "$G/out/drive.log" "$V/drive.log"
 cp "$G/log.txt" "$V/mac-log.txt"; cp "$G/END" "$V/END.txt"
 awk '{print $1, $2, $3, (NF>=4?$4:"-")}' "$G/rentals.txt" > "$V/rentals.txt"   # id, $/h, created, gone (epoch seconds)
 { echo "collected $(now) by $JOB (kit $PIN)"; echo "guard: $(cat "$G/END")"
+case "$(cat "$G/END")" in *STOPPED-NOT-DESTROYED*|*UNCONFIRMED*) echo "FLAG-DIRECTOR: instance $(cut -d' ' -f1 "$G/state") of $LABEL was NOT destroyed (see run-vast/mac-log.txt); the copy below may be incomplete";; esac
   [ -s "$A/SEAL-run.sha256.txt" ] && while read -r sha f; do R=${f%/final.pt}
     m=$(shasum -a 256 "$MP/$R/final.pt" 2>/dev/null | awk '{print $1}'); [ "$m" = "$sha" ] && echo "$R final.pt sealed, Mac copy sha256 ok" || echo "$R final.pt sealed, Mac copy sha256 MISMATCH or missing"
   done < "$A/SEAL-run.sha256.txt"
