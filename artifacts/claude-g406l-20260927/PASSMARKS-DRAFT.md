@@ -63,7 +63,7 @@ been made.
   polls under 80 minutes.
 - Cost: about 240 Luna calls, at most 720, under Ben's Codex plan as ruled at 03:47. No pool money is used.
 
-## Update 03:58 UTC (date -u): helper and wrapper
+## Update 03:53 UTC (date -u; corrected from a mistyped 03:58): helper and wrapper
 - Helper: scripts/claude_luna_codex.py (Director, 24ca7a163), model gpt-6-luna. An empty reply, or a short reply that
   looks like an error, becomes a failed call, so it counts against V and never becomes a label.
   - A reply of `{"flags": [...]}` cannot match its error patterns.

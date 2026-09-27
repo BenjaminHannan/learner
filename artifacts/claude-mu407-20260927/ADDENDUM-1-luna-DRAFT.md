@@ -60,7 +60,7 @@ handoff/held/ since 214e69905.
 - Cost: about 80 Luna calls, at most 3 × 79 with retries, under Ben's Codex plan as ruled at 03:47. No pool money is
   used and nothing is rented.
 
-## Update 03:58 UTC (date -u): helper and wrapper
+## Update 03:53 UTC (date -u; corrected from a mistyped 03:58): helper and wrapper
 - Helper: scripts/claude_luna_codex.py (Director, 24ca7a163). Its interface is call(text, model="gpt-6-luna",
   timeout=300). The model id answered "ok" in the Director's probe at 03:37 UTC.
   - The helper counts an empty reply as a failure. It also counts a short reply that looks like an error as a failure,
