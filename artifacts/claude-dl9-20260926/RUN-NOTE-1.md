@@ -6,6 +6,6 @@
   ledger line. The watcher counted the task as done because the builder exited with rc=0.
 - The model folder is present on BensPC; the venv check (step 2) was never reached.
 - The 5 GB gate is this thread's own wording, copied from 358i2's task. dl-9 saves no weights: it writes one JSON and
-  one log (a few MB) plus the git-archive tree (under 1 MB of code and marks per the size above). Whether to waive or
+  one log (a few MB) plus the git-archive tree (about 23 MB: the whole scripts/ folder). Whether to waive or
   lower the gate for a re-run, and the slot, are the Director's call. Nothing may be deleted on BensPC without Ben's
   exact words.
