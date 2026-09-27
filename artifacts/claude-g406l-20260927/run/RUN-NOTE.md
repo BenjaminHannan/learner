@@ -15,3 +15,9 @@
 - Update 08:24 UTC (date -u): the Thread manager agreed with ADDENDUM-2 on one condition, now in ADDENDUM-2: at most 2 more launches of the resume, none after 16:00 UTC, then INCONCLUSIVE. Launches that made no Luna call: madeup-g406l-resume-mac, rc=1.
 - Update 08:44 UTC (date -u): resume2 never launched: the watcher held it on its builder cap. I moved it to handoff/held/
   and queued madeup-g406l-resume3-mac on the BASH-ONLY route (no builder). This is launch 2 under ADDENDUM-2.
+- Update 09:21:39 UTC (date -u): madeup-g406l-resume3-mac (BASH-ONLY) launched at 08:44:42 UTC. The resume ran
+  08:44:51-08:50:21 UTC, and the results were pushed at 08:51:19 UTC with rc=0. The start hash matched (19889ed2...),
+  the seal was OK, all 4 selftests were ok, 20 packets were written with 0 failed, and 240 of 240 packets are usable.
+  run2/ is copied to main, with the job's files in run2/job/. I recounted here: best_b, verdict_b and arms_b are
+  identical. A blind recount comes next, then VERIFY.md. Launches that made no Luna call: madeup-g406l-resume-mac,
+  rc=1 (resume2 never launched).
