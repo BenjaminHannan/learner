@@ -1,0 +1,55 @@
+{
+ "relnet": 1644198,
+ "loop": 1646750,
+ "diff_pct": -0.155,
+ "table": [
+  [
+   "embeddings (token, slot, kind, position)",
+   33664,
+   33536
+  ],
+  [
+   "reasoning core",
+   1577640,
+   1580320
+  ],
+  [
+   "answer head + read-out norm",
+   32637,
+   32637
+  ],
+  [
+   "stop head",
+   257,
+   257
+  ]
+ ],
+ "relnet_parts": {
+  "tok": 32000,
+  "slot": 512,
+  "pr": 576,
+  "pc": 576,
+  "P_h": 16384,
+  "P_v": 16384,
+  "gru_e": 61824,
+  "U": 16384,
+  "V": 65536,
+  "gru_n": 591360,
+  "ln_mlp": 512,
+  "mlp": 808744,
+  "ln_state": 512,
+  "ln_out": 512,
+  "head": 32125,
+  "halt": 257
+ }
+} {
+ "matrices": 19,
+ "zero_grad_matrices": [],
+ "zero_grad_any": []
+}
+{'net': 'relnet', 'size': '5x5', 'batch': 8, 'train_step_s': 0.209, 'train_s_per_example': 0.0262, 'infer48_s_per_example': 0.0386, 'peak_rss_mb': 924}
+{'net': 'loop', 'size': '5x5', 'batch': 8, 'train_step_s': 0.129, 'train_s_per_example': 0.0161, 'infer48_s_per_example': 0.0608, 'peak_rss_mb': 924}
+{'net': 'relnet', 'size': '9x9', 'batch': 4, 'train_step_s': 0.791, 'train_s_per_example': 0.1976, 'infer48_s_per_example': 0.3576, 'peak_rss_mb': 1667}
+{'net': 'loop', 'size': '9x9', 'batch': 4, 'train_step_s': 0.216, 'train_s_per_example': 0.0541, 'infer48_s_per_example': 0.0747, 'peak_rss_mb': 1667}
+{'net': 'relnet', 'size': '11x11', 'batch': 2, 'train_step_s': 0.914, 'train_s_per_example': 0.4571, 'infer48_s_per_example': 1.0036, 'peak_rss_mb': 1793}
+{'net': 'loop', 'size': '11x11', 'batch': 2, 'train_step_s': 0.27, 'train_s_per_example': 0.135, 'infer48_s_per_example': 0.2328, 'peak_rss_mb': 1793}

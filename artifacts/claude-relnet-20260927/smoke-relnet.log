@@ -1,0 +1,19 @@
+relnet {'weights': 1644198, 'train_s': 105.7, 'loss_first50': 3.564, 'loss_last50': 2.086, 'sums4_right_of_100': 0, 'grids5_right_of_100': 0, 'loss_every25': [3.885, 3.243, 3.276, 2.556, 2.523, 2.19, 2.076, 2.516, 2.163, 2.062, 2.026, 2.146]}
+Traceback (most recent call last):
+  File "/home/user/learner/scripts/claude_relnet_smoke.py", line 88, in <module>
+    main(ap.parse_args())
+  File "/home/user/learner/scripts/claude_relnet_smoke.py", line 66, in main
+    loss = N.train_loss(net, batch(drng, a.batch), rrng)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/learner/scripts/claude_xfer1_net.py", line 149, in train_loss
+    for lg, q in net.loop_train(t, s, total - k, k):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/learner/scripts/claude_xfer1_net.py", line 106, in loop_train
+    h = self.step(h, e.detach(), dr, dc)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/learner/scripts/claude_xfer1_net.py", line 87, in step
+    return self.ln_state(z)
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/nn/modules/module.py", line 1972, in __getattr__
+    raise AttributeError(
+AttributeError: 'Net' object has no attribute 'ln_state'
