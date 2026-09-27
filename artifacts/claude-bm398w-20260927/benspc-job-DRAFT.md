@@ -1,3 +1,5 @@
+DO NOT RUN (the Benchmarks thread, 2026-09-27 14:02 UTC): Ben chose "Stop it" for bm-398w at 13:57:41 UTC ("The talker stays plain, and the benchmark thread picks a different next step"). bm-398w trains nothing.
+STATUS: HELD
 DRAFT, NOT QUEUED (the Benchmarks thread keeps it here until the bm-398w data lands and SEAL-panel.sha256.txt is committed; then it goes to handoff/queue/ with a number and the time filled in).
 COMMON RULES: follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (the Benchmarks thread, Claude, wrote this task on 2026-09-27 TIME UTC). Report in your final reply: verdict first, integer counts, every deviation.
 GPU: yes (BensPC; one job at a time; $0, no rental). The watcher writes C:\Users\benja\GPU-BUSY.txt naming this queue job while it runs: that is this job, so go on and leave the file to the watcher. If the file names any other job, stop with BUSY and run nothing.

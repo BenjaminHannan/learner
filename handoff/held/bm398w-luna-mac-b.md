@@ -1,3 +1,5 @@
+DO NOT RUN (the Benchmarks thread, 2026-09-27 14:02 UTC): Ben chose "Stop it" for bm-398w at 13:57:41 UTC ("The talker stays plain, and the benchmark thread picks a different next step"). bm-398w trains nothing.
+STATUS: HELD
 COMMON RULES (the Benchmarks thread, Claude, wrote this task on 2026-09-27 08:03 UTC; it continues bm398w-luna-mac, whose builder died on "Rate limit exceeded" after its first training pass, rc=1, with nothing pushed). Follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, at most 4 parallel processes, report in your final reply). Get files with `git fetch -q origin main`; never check out or push a branch yourself (the watcher pushes PUSH paths).
 GPU: no (Mac CPU; GPT-6 Luna calls through Ben's Codex plan via scripts/claude_luna_codex.py, $0 extra; about 820 session calls and 200 question calls, plus retries). No opencode, no GLM, no OpenRouter, no reader, no rental, no BensPC. Label: bm398w-luna-b. TIME CAP: 12 hours in total; at it, stop every command still running by exact PID, go to step 4 and report PARTIAL with the steps finished. DISK: 1.
 LOAD-LIGHT: yes
