@@ -116,3 +116,16 @@ registered: VB PASS, R FAIL (not proved wrong), Q3 PASS (bad news).
 
 For every next test, recall needs a real answer to the current question with correct attribution, judged blind or
 checked by code on answer form. The substring count stays as report-only.
+
+Addendum to the note (2026-09-27 03:00 UTC, date -u):
+- How many of U's 12 "right" asks truly answer depends on the reader. None of these reads is blind or registered.
+  - The Thread manager: about 2 (mu405-41, -56).
+  - Me: 2 to 4 (adding -49, -11).
+  - The coordinator's worker: 5 (-41, -49, -56 plain; -11, -20 indirect).
+  - So the range is 2 to 5 of 60.
+- Repeats (a second candidate mechanism, report only, counted at 02:59 UTC from judge/runs and judge/out):
+  - Greedy decoding often repeats a reply word for word later in the same chat. Per arm, replies identical to an
+    earlier reply in the same chat, with the claim flags they carry (two judges summed): N 41 (5 flags), W 19 (0),
+    U 104 (46 of 166), H 102 (18).
+  - Chats where advice, follow-up and ask got the same reply: N 14, W 3, U 28, H 19.
+  - U's claims are well above W's even on replies that are not repeats: 120 vs 31.

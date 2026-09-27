@@ -1,7 +1,7 @@
 # mu-407: does a clear "this is the message to answer now" label stop the 1B treating its memory as the present?
 
-"Making things up about you" thread. Written 2026-09-27 02:56 UTC (date -u). DRAFT for the Thread manager's
-review. It will be sealed before the talker runs. DEV data only. Nothing is trained. Cost: $0: GLM through Ben's
+"Making things up about you" thread. Written 2026-09-27 02:56 UTC (date -u). Reviewed by the Thread manager (02:57 and
+02:58 UTC; OK to seal with the fixes above and below). It is sealed before the talker runs. DEV data only. Nothing is trained. Cost: $0: GLM through Ben's
 opencode route on the Mac (about 80 calls, reasoning effort low); the plain 1B on this container's CPU; blind judges
 are agents in this thread.
 
@@ -38,16 +38,17 @@ are agents in this thread.
   - U0: GLM system line. The latest user message is the memory header, then one line per session-1 message
     (prefix + the message in quotes), then a blank line, then the user's turn.
   - U1: U0 with ONE change. The GLM label sits on its own line between that blank line and the user's turn.
-- Judging: two fresh blind Opus judges per packet, in private folders, arms mixed and shuffled. Each packet shows
+- Judging: every judge, claims and fit alike, is a fresh blind Opus agent in this thread, in its own private folder.
+  Each packet gets two claims judges and two different fit judges, with arms mixed and shuffled. Each packet shows
   the earlier user messages and session 2.
   - Claims: mu-405's JUDGE-claims405.md, unchanged.
-  - Fit (new, JUDGE-fit407.md, fixed before any reply exists). For each reply, "on_turn": does it respond to the
+  - Fit (new, JUDGE-fit407.md). It is sealed in this seal, before any U0 or U1 reply exists. For each reply, "on_turn": does it respond to the
     user's current message rather than to something from the earlier messages or to nothing? For the last turn,
     "answer": does it answer the question with the value the user gave earlier, stated as the answer and about the
     right thing? Reciting it, mentioning it in passing, or hedging ("if you're allergic to X") does not count.
   - Blind recount before reporting.
 
-- Code (selftests pass): scripts/claude_mu407_talk.py (7/7), scripts/claude_mu407_judge.py (6/6; an end-to-end run
+- Code (selftests pass): scripts/claude_mu407_talk.py (7/7), scripts/claude_mu407_judge.py (7/7; an end-to-end run
   on synthetic rows counted 180 packets, each with 2 claims and 2 fit judgements), JUDGE-fit407.md. Packets: one per
   (arm, chat), 180. pids come from seed 4071; the 12 batches of 30 use seeds 4072/4073. Each batch file is read by one
   claims judge and a different fit judge.
@@ -66,6 +67,12 @@ are agents in this thread.
 - Anything else is FAIL.
 
 ## Report only
+- Repeats: per arm, replies byte-identical to an earlier reply in the same chat, and the claim flags on them
+  (claude_mu407_judge.repeats). In mu-405b, 104 of U's 300 replies repeated an earlier reply; they carried 46 of its
+  166 flags (N 41 and 5, W 19 and 0, H 102 and 18). Greedy decoding copying its own history is a second candidate
+  mechanism (the Thread manager, 02:58 UTC). L1 counts every flag as it falls, repeats included: the label is not
+  credited or blamed separately for any change in copying. A change in repeats between U0 and U1 is reported next
+  to L1.
 - Real answers per arm against GPT's target of 30 of 60. It is not a pass mark: the label is not built to add
   recall, and on the unblinded reads of mu-405b, U gave about 2-4 real answers of 60.
 - mu-405's substring count per arm, kept for comparison.
@@ -84,3 +91,12 @@ are agents in this thread.
 ## Predictions (before any reply exists)
 - P407.1: PASS, 20%.
 - P407.2: proved wrong (C_U1 >= C_U0), 25%.
+
+## Seal
+- Sealed 2026-09-27 03:01 UTC (date -u).
+- SEAL.sha256.txt covers this file, JUDGE-fit407.md, mu-405's JUDGE-claims405.md, and the talk, judge, prep and
+  helper scripts. It is committed before any GLM chat, frame or talker reply exists.
+- The GLM-written data (prep/frames.json, prep/panel/items.jsonl, prep/facts.jsonl) does not exist yet. The Mac
+  prep job may wait on the opencode route (the Thread manager, 02:57 UTC).
+- When the data lands, its sha256 goes into SEAL-data.sha256.txt, committed before the smoke run and before any
+  talker call on the 60. Nothing in the marks changes then.

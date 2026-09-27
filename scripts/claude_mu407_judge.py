@@ -82,6 +82,15 @@ def sign(per: dict, lo: str, hi: str) -> dict:
     return {f"{lo}_fewer": fewer, f"{lo}_more": more, "p_one_sided": round(p, 4), "pass": p <= SIGN_P}
 
 
+def repeats(turns: list[dict]) -> int:
+    """Replies that are byte-identical to an earlier reply in the same chat (report only)."""
+    seen, n = set(), 0
+    for t in turns:
+        n += t["reply"] in seen
+        seen.add(t["reply"])
+    return n
+
+
 def marks_from(C: dict, per_claims: dict, answer: dict, on_turn: dict) -> dict:
     v = C["U0"] >= C["N"] + V_GAIN
     s = sign(per_claims, "U1", "U0")
@@ -141,6 +150,15 @@ def count(a) -> None:
                     if kd != "ask":
                         ont += x
                 ans += fi[0][1] and fi[1][1]
+        rep_flags = 0
+        for it in items:
+            k = (arm, it["item_id"])
+            if claims.get(k):
+                cols = [sum(c) for c in zip(*claims[k])]
+                seen = set()
+                for t, x in zip(cv[k], cols):
+                    rep_flags += x if t["reply"] in seen else 0
+                    seen.add(t["reply"])
         C[arm], answer[arm], on_turn[arm] = c_sum, ans, ont
         rows = [r for t in (cv[(arm, it["item_id"])] for it in items) for r in t]
         arms[arm] = {"C_two_judges": c_sum, "flagged_by_both": both, "flagged_by_either": either,
@@ -148,7 +166,9 @@ def count(a) -> None:
                      "on_turn_non_ask_both_judges": ont, "on_turn_by_kind": dict(ont_kind),
                      "ask_substring_report": sum(1 for r in rows if r["kind"] == "ask" and ask[r["item_id"]]
                                                  in r["reply"].lower()),
-                     "judges_per_chat": {f"{x}c{y}f": n for (x, y), n in judges.items()}}
+                     "judges_per_chat": {f"{x}c{y}f": n for (x, y), n in judges.items()},
+                     "repeat_replies_report": sum(repeats(cv[(arm, it["item_id"])]) for it in items),
+                     "claims_on_repeat_replies_report": rep_flags}
     res = {"bad_rows": bad, "arms": arms, "marks": marks_from(C, per_claims, answer, on_turn),
            "report": {"U1_vs_N_claims_sign": sign(per_claims, "U1", "N"), "answer_goal_30": {a_: answer[a_] >= 30
                                                                                             for a_ in ARMS}}}
@@ -172,7 +192,8 @@ def selftest() -> None:
     assert m["proved_wrong"] and m["verdict"] == "FAIL"; ok += 1
     s = sign({"a": {"U1": 1, "U0": 2}, "b": {"U1": 2, "U0": 1}, "c": {"U1": 0, "U0": 0}}, "U1", "U0")
     assert s["U1_fewer"] == 1 and s["U1_more"] == 1; ok += 1
-    print(f"mu407 judge selftest {ok}/6 ok")
+    assert repeats([{"reply": "a"}, {"reply": "b"}, {"reply": "a"}, {"reply": "a"}]) == 2; ok += 1
+    print(f"mu407 judge selftest {ok}/7 ok")
 
 
 def main() -> None:

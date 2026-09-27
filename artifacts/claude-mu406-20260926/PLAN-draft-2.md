@@ -166,3 +166,17 @@ turn. One change, on the same data.
 - Training route after mu-407: GPT recommends GLM distillation over rejection sampling, and DPO later with pairs
   that share the exact same input history. The choice is made in the sealed version, after g406b's and mu-407's
   verdicts.
+
+## Fixes before sealing (the Thread manager, 02:58 UTC; gaps GPT named)
+- Kept replies must answer the present turn. A sampled reply is kept only when GLM marks it clean of made-up claims
+  AND on the turn (JUDGE-fit407's on_turn question, asked of GLM in the same call). On ask turns it must also contain
+  the right answer (GLM's answer mark plus the code value check). Before any training, the on-turn GLM mark gets
+  the same kind of gate as g406b: agreement with the blind fit judges on mu-407's judged packets, with marks fixed in
+  advance. This replaces the claims-only acceptance in "Labels" above, which was the gap
+  (JUDGE-claims405.md:26 asks only about made-up claims).
+- DPO pairs (the FAIL fallback) must share the exact same input history: two samples drawn at the same turn from
+  the same history, one kept and one dropped. The draft said only "the same turn". The first draft (PLAN-draft.md)
+  had it right, so this restores it. Sampling for DPO would draw several replies per turn from one fixed history,
+  unlike the 4 independent conversations used for rejection sampling.
+- Repeats: mu-405b's greedy talker copied earlier replies (U 104 of 300). Samples are drawn at temperature 0.7, so
+  copying may be rarer in training data. The test reports repeats per arm, as mu-407 does.
