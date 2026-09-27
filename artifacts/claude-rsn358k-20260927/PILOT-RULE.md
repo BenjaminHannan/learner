@@ -1,0 +1,11 @@
+# rsn-358k: how the dev pilot sets --steps, and how the runs go (sleep research thread, written 2026-09-27 14:00:51 UTC, before reading any pilot dev check)
+
+The pilot (store and no-store, seed 17, dev worlds, 8,000 steps, a dev check of 100 q1 + 100 q2 every 500 steps) started at 13:48:14 UTC. Its log has not been read. This rule is committed first; the Thread manager asked for it at 14:00 UTC.
+
+**Steps rule.** D(k) = the store arm's dev score at step k (q1 right + q2 right, out of 200). steps = the first dev check k >= 2,000 with D(k) - D(k-1,000) <= 6, rounded up to the next multiple of 1,000, with a minimum of 3,000 and a cap of 8,000. If no check qualifies by 8,000, or store dev q1 is under 30/100 at 8,000, the full runs use 8,000 steps, and RESULTS says "the pilot never flattened". The no-store pilot is used only to check that it stays near 0 (V). It does not affect steps. Nothing else is taken from the pilot, and the marks do not move.
+
+**Runs.** 8 graded runs (store and no-store, seeds 17-20), then 2 pasted runs (report only, seeds 17-18). They run on CPU in this container, at most 4 at a time with 1 thread each (4 cores), in the order store-s17, nostore-s17, store-s18, nostore-s18, then seeds 19 and 20, then pasted s17 and s18. Each run is sealed (sha256 of final.pt into SEAL-run.sha256.txt) and evaluated once as soon as it finishes. Its train log, summary and eval output are committed to main at once, so a reclaimed container loses at most the runs still training. Weights are never pushed.
+
+**Cost and cap.** $0. At the smokes' 94-101 s per 100 steps, one store or no-store run at 8,000 steps is about 2.1-2.2 h. With 4 at a time (slower per run when sharing, not measured), the 8 graded runs take about 5-6 h. The 2 pasted runs take about 6.7 h each. Wall-clock cap: 20 h from the first graded launch; pasted runs still unfinished at the cap are dropped and reported.
+
+**PARTIAL.** A verdict needs all 4 seeds of both graded arms. If the container is reclaimed, or the cap is hit, before that, the result is PARTIAL: no verdict. The finished seeds are reported, and the missing seeds are rerun later with the same sealed code and the same seeds. A seed that died with an error counts as missing, not as a failure.
