@@ -26,3 +26,21 @@ Times are from date -u. Plan and marks: ../PASSMARKS.md, sealed in ../SEAL.sha25
 - 2026-09-27 11:51:10 UTC: launch 2 queued as handoff/queue/madeup-mu406-practice2-mac.md (same block; it seeds
   raw.jsonl from builder-outbox, writes the remaining 72 of the first 240, and keeps its own RESULTS-2.md and
   write-2.log). Progress launches so far for step 3: 1 of at most 6 (ADDENDUM-1).
+- Step 3, launch 2 (madeup-mu406-practice2-mac): 11:52:12-12:11:30 UTC, rc=0. Seal check OK for all 30 files, 3
+  selftests ok (the "timeout after 300s" line in RESULTS-2.md is the Luna selftest's own failure-path case; it is
+  in launch 1's RESULTS.md too). It seeded 168 chats from builder-outbox and wrote the other 72 of the first 240 in
+  18.7 minutes: 71 passed, 1 failed "value_in_chat2" after 3 attempts. 15.6 s per chat. In all, 238 of 240 pass.
+  select: 200 training chats + 20 held-out (seed 4062); 0 held-out ids in the training set. Scan: 0 hits; 68 user
+  messages appear in 3 or more chats (max 33). Step 3 done in 2 launches (2 of at most 6, ADDENDUM-1).
+- 2026-09-27 12:41:42 UTC: practice/ copied from builder-outbox to main (counts only; I did not read chat text). Overlap
+  (report only, scripts/claude_mu406_prep.py overlap; user messages matched after strip and lower-case):
+  - 200 training chats vs the 63 panel chats: 80 shared user messages; 196 of 200 training chats share at least one.
+    By place (turn count): session 1 81, small talk 174, ask 140, feelings 2, advice 1, follow-up 1.
+  - 20 held-out chats vs the panel: 22 shared messages; 20 of 20 share one. Session 1 8, small talk 18, ask 10.
+  - Panel vs the 200 training chats (the direction PASSMARKS' seen-ask-line split uses): 63 of 63 panel chats
+    (3 are smoke) share a message; 56 of the 63 ask turns match a training user message. The judge's split
+    (claude_mu406_judge.py:158, same strip and lower-case match) scores the 60 non-smoke chats, so it will have 53-56
+    seen and 4-7 unseen: too few unseen to test the "seen wording" worry. It stays report only, as sealed; any M2
+    pass is read with this in mind.
+- 2026-09-27 12:41:42 UTC: step 4 (teaching replies) moved from handoff/held/ to handoff/queue/ as madeup-mu406-teach-mac.md
+  (launch 1, L=1): 220 chats, 1,100 turns, held-out first, 2 calls at a time, the writer stops itself at 50 min.
