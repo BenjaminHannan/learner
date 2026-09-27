@@ -1,4 +1,4 @@
-# rsn-358e blind recount (committed 2026-09-27 00:31 UTC)
+# rsn-358e blind recount (committed 2026-09-27 00:26 UTC)
 
 A separate agent recounted from runs/{dense,moe,moe-grow}-s{1,2}/result.json and the pass marks (PASSMARKS.md and addenda 1-3) only. It saw some diagnostic numbers in git log subject lines (it said so) but used none. Its script was later overwritten in the scratchpad by the 358e3 recount, so only its report is kept here, word for word:
 

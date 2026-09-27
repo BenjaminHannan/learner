@@ -1,4 +1,4 @@
-# rsn-358e3 blind recount (committed 2026-09-27 00:31 UTC)
+# rsn-358e3 blind recount (committed 2026-09-27 00:26 UTC)
 
 A separate agent recounted from runs/*/result.json and PASSMARKS.md only, before seeing RESULTS.md. Its script is blind-recount.py in this folder, and blind-recount-output.txt is that script re-run at commit time. Its report, word for word:
 
