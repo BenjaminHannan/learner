@@ -112,7 +112,8 @@ while [ ! -e "$H/STOP" ]; do
     fi
     # a finished job can leave detached GPU runs alive on BensPC (156 at 07:47 UTC 09-27). Under WDDM, nvidia-smi's compute-app list is often empty, so hold a GPU job if
     # GPU memory.used > 700 MiB (idle 250-560) or any python.exe runs (pythonw.exe, e.g. 13036, is not counted); an ssh failure also holds
-    if grep -q '^GPU: yes' "$Q/$n.md.tmp"; then
+    # a job that adopts orphaned runs of its own sealed experiment says 'GPU-ADOPT: yes' and skips this busy check (the one-GPU-job rule above still holds)
+    if grep -q '^GPU: yes' "$Q/$n.md.tmp" && ! grep -q '^GPU-ADOPT: yes' "$Q/$n.md.tmp"; then
       ga=$(ssh -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 -o BatchMode=yes benspc "nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits; tasklist /FI \"IMAGENAME eq python.exe\" /NH" </dev/null 2>/dev/null; echo "rc=$?")
       gm=$(echo "$ga" | head -1 | tr -dc '0-9'); gp=$(echo "$ga" | grep -ic '^python.exe')
       if [ "$(echo "$ga" | tail -1)" != "rc=0" ] || [ -z "$gm" ] || [ "$gm" -gt 700 ] || [ "$gp" -gt 0 ]; then log "gpu busy on BensPC, holding $n: mem ${gm:-?} MiB, python.exe $gp, $(echo "$ga" | tail -1)"; rm -f "$Q/$n.md.tmp"; continue; fi

@@ -1,5 +1,6 @@
 COMMON RULES: follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (the sleep research thread, Claude, wrote this task on 2026-09-27). Report in your final reply: verdict first, integer counts, every deviation.
 GPU: yes (BensPC RTX 5070 Ti; one job at a time; $0, no rental). NO RENTALS, whatever fails. The watcher writes C:\Users\benja\GPU-BUSY.txt before this task starts; it reads "BUSY: queue job 157-claude-sleep-358spc-collect since <time> ...". That marker IS THIS JOB (the watcher names jobs by queue filename; "rsn-358s" is the experiment name, not the job name): go on and leave the file to the watcher. If the file names any other job, stop with BUSY and run nothing.
+GPU-ADOPT: yes (adopts 156's live loop-s9, plain-s9, loop-s10 runs; the watcher skips its GPU-busy check for this job, Director 09-27)
 WHERE: you run on the Mac. BensPC (Windows, RTX 5070 Ti) is reached from the Mac with `ssh benspc` (PowerShell, or git-bash for sha256sum/tar). Every BensPC command below runs ON BensPC over that ssh; stream the tree with `git archive ... | ssh benspc "tar -x -C <folder>"`; copy results back to the Mac worktree with scp. Never look for BensPC paths on the Mac itself.
 TIME CAP: 20 hours in total for this job. ESTIMATE (not measured): 8-14 h.
 DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-rsn358s-20260926/RESULTS.md.
@@ -13,4 +14,3 @@ C3. TOO-SLOW projection: step 5's 20-hour cap counts from the first launch, 07:1
 C4. Then do steps 6-9 of the original task exactly: seal each final.pt before its eval, one eval per checkpoint, copy the runs, write RESULTS.md, append ledger lines, and push the listed paths. In RESULTS.md, record the deviation "collected by a second job after the first builder died" with both job names.
 C5. So that a later job can pick up if you die too: after every state change, write a short state line (which runs are running, finished, died, evaluated) to C:/Users/benja/rsn358s/W/COLLECT-STATE.txt.
 PUSH: artifacts/claude-rsn358s-20260926/RESULTS.md artifacts/claude-rsn358s-20260926/SEAL-run.sha256.txt artifacts/claude-rsn358s-20260926/runs artifacts/fable-predictions-ledger.md
-STATUS: HELD in handoff/held/ until the Director places it. Owner: sleep research thread.
