@@ -1,6 +1,7 @@
 # relnet practice gate: pass marks (fixed before any practice result)
 
-Written 2026-09-27 21:05 UTC, while the first two practice runs were at step ~500 of 6,000 and no score existed.
+Written 2026-09-27 21:01 UTC (committed c53442a71), while the first two practice runs were between steps 250 and 500 of
+6,000 and no score existed.
 Source: the task prompt ("It must reach 95% on 200 fresh 4-digit sums and on 200 fresh 5x5 grids, and be within 3
 points of the loop on each"). Runs: scripts/claude_relnet_practice.py, seeds 0 and 1, lr 1e-3 (the recipe's).
 
