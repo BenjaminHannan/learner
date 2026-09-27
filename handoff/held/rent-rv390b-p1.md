@@ -3,8 +3,8 @@ GPU: rent
 THIS JOB is rent-rv390b-p1.md (thought-memory thread, "Memory for its own thoughts", Claude; written 2026-09-27 13:30 UTC by date -u, after the Thread manager's 13:27 review of e49a455c5). Script only, no builder: it rents one vast GPU, runs the sealed re-run step(s) A, C and D (in that order) on rsn-358i2's four loop nets, copies the results back, and destroys the rental.
 HELD: this file stays in handoff/held/ until the Director releases it. Ben's yes is his 12:49:44 UTC message (up to $5 total on vast for jobs waiting on BensPC; Director ledger line 2692). Order (Thread manager 13:27 UTC): rsn-358u first, then this p1 only if $5 minus rsn-358u's booked cost covers its $1.50; p2 (step B) after it, or it waits for BensPC 174. One job at a time. On release it moves to handoff/queue/ unchanged.
 BUDGET: $1.50 for this job, failed hosts included. The script keeps it lower: one instance at a time, offers at most $0.90/h, and the watcher's 75-minute alarm ends the job, so at most about $1.13 (4500 s x $0.90/h). Label: claude-thought-rv390b-p1. It stops or destroys only the instance its own create returned (by id), never any other.
-END OF A RENTAL: each finished step is copied into a temporary folder on the Mac, checked file by file against a sha256 manifest made on the rental, and only then moved into place with SOURCES.txt. If a copy fails that check twice, nothing is moved into place and the instance is STOPPED, not destroyed, so the results stay on its disk; the reply says so and the thought-memory thread collects them. Otherwise the instance is destroyed at every exit, including the alarm (an unfinished step is never counted). Each end prints a LEDGER line. If the reply has neither "instance ... gone" nor "STOPPING", the Director must check for a live instance with this label.
-WHAT IT RUNS: code from git archive of commit f5213af7c (pinned), sealed and unchanged (inference only; no training, no model downloads). A = rv-390 rerun (scripts/claude_rv390.py all, plus the untrained control r0; artifacts/claude-rv390-20260926/ADDENDUM-358i2-rerun.md), B = rv-392 (scripts/claude_rv392.py all, plus r0; PASSMARKS.md and ADDENDUM-1), C = rv-391 practice measure (scripts/claude_rv391_dev.py measure), D = rv-392 daydump (scripts/claude_rv392_daydump.py). The only install is torch 2.11.0 (cu128 wheels) with pip on the rental (the image has 2.8); if 2.11 does not install after 2 tries, the job stops and destroys the rental before running anything (fail closed: torch 2.8's autocast bug). The Mac is unchanged. Nets are read on the Mac in place, checked by sha256 against artifacts/claude-rv390-20260926/NETS-358i2.sha256.txt on both ends, uploaded to the rental only and never pushed; r0 is made on the rental and never pushed. Tested against a fake vast (bad host dropped, deadline kill, duplicate label, alarm, one bad copy retried, two bad copies stop the instance, torch install failure), not yet against the real one.
+END OF A RENTAL (changed 13:48 UTC after the Director's 13:37 check): the instance is DESTROYED only when nothing can be lost: before any step starts (a failed check, such as nets, torch or seals), or after every started step was copied back and passed its check. In every other case it is STOPPED, not destroyed, so everything stays on its disk: a step cut off by its deadline or an error, a copy that fails its check twice, ssh loss, or the watcher's alarm or any stop signal after a step has started (even mid-copy). Each finished step is copied into a temporary folder on the Mac, checked file by file against a sha256 manifest made on the rental, and only then moved into place with SOURCES.txt. The reply says STOPPING or "instance ... gone", with a LEDGER line; a stopped instance is collected and then destroyed by the thought-memory thread. One exception: if another job already delivered a step's folder in the worktree, this job's copy of it is not kept. If the reply has neither "instance ... gone" nor "STOPPING", the Director must check for a live instance with this label.
+WHAT IT RUNS: code from git archive of commit f5213af7c (pinned), sealed and unchanged (inference only; no training, no model downloads). A = rv-390 rerun (scripts/claude_rv390.py all, plus the untrained control r0; artifacts/claude-rv390-20260926/ADDENDUM-358i2-rerun.md), B = rv-392 (scripts/claude_rv392.py all, plus r0; PASSMARKS.md and ADDENDUM-1), C = rv-391 practice measure (scripts/claude_rv391_dev.py measure), D = rv-392 daydump (scripts/claude_rv392_daydump.py). The only install is torch 2.11.0 (cu128 wheels) with pip on the rental (the image has 2.8); if 2.11 does not install after 2 tries, the job stops and destroys the rental before running anything (fail closed: torch 2.8's autocast bug). The Mac is unchanged. Nets are read on the Mac in place, checked by sha256 against artifacts/claude-rv390-20260926/NETS-358i2.sha256.txt on both ends, uploaded to the rental only and never pushed; r0 is made on the rental and never pushed. Tested against a fake vast (bad host dropped, deadline kill, duplicate label, alarm, one bad copy retried, two bad copies stop the instance, torch install failure, a step cut off, the alarm mid-step and the alarm before any step), not yet against the real one.
 BENSPC: jobs 173 and 174 run the same four steps for $0. Each job skips a step whose SOURCES.txt is already on main or builder-outbox, and never copies over an output folder that already exists in the worktree. If BensPC comes back before release, this job is withdrawn.
 ```bash
 N=rent-rv390b-p1; LABEL=claude-thought-rv390b-p1; STEPS="A C D"; TEST=0; CODE=f5213af7c75577b494a22cc8ea05715258db770f; IMAGE=pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime; NETROOTS="$HOME/premonition-models/rsn358i2 $HOME/premonition-models/rsn358i2/W"
@@ -22,7 +22,7 @@ command -v vastai >/dev/null || { echo "STOP: vastai CLI missing; rented nothing
 git cat-file -e "$CODE^{commit}" 2>/dev/null || git fetch -q origin main 2>/dev/null; git cat-file -e "$CODE^{commit}" 2>/dev/null || { echo "STOP: code commit $CODE not found; rented nothing"; exit 0; }
 KEY=~/.ssh/id_ed25519
 SO="-i $KEY -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o BatchMode=yes"
-ID=""; DPH=0; GPU=""; TUP=0; HOST=""; PORT=""; KEEP=0
+ID=""; DPH=0; GPU=""; TUP=0; HOST=""; PORT=""; KEEP=0; STARTED=0
 rx() { ssh $SO -n -p "$PORT" "root@$HOST" "$@"; }   # remote command, no stdin
 ri() { ssh $SO -p "$PORT" "root@$HOST" "$@"; }      # remote command, stdin passed
 # vastai reads its own key file; this job never reads, prints or passes the key
@@ -40,14 +40,15 @@ destroy() {
 }
 stopinst() {
   [ -z "$ID" ] && return 0
-  say "STOPPING (not destroying) instance $ID: a copy-back failed its check, so the results stay on its disk in /root/work"; vastai stop instance $ID >/dev/null 2>&1; sleep 10; say "instance $ID status after stop: $(inst $ID | cut -d' ' -f1)"
+  say "STOPPING (not destroying) instance $ID: a step was cut off, a copy failed its check, ssh was lost or the job was stopped after a step started, so everything stays on its disk in /root/work"
+  for t in 1 2 3; do vastai stop instance $ID >/dev/null 2>&1; sleep 15; stt=$(inst $ID | cut -d' ' -f1); say "instance $ID status after stop $t: $stt"; case "$stt" in running) ;; *) break;; esac; done
   m=$(( ($(date +%s) - TUP + 59) / 60 )); c=$(awk -v d="$DPH" -v m="$m" 'BEGIN{printf "%.2f", d*m/60}')
   echo "LEDGER: $(date -u '+%F %T') UTC Memory for its own thoughts: $N, vast instance $ID ($GPU at \$$DPH/h) ran $m min = about \$$c, then STOPPED, not destroyed (label $LABEL; its disk still costs a little per hour until the thought-memory thread collects the results and the instance is destroyed)"
   ID=""
 }
 finish() { if [ "$KEEP" = 1 ]; then stopinst; else destroy; fi; }
 trap finish EXIT
-trap 'say "signal: stopping"; exit 3' ALRM TERM INT HUP
+trap 'say "signal: stopping"; [ "$STARTED" = 1 ] && KEEP=1; exit 3' ALRM TERM INT HUP
 git fetch -q origin builder-outbox 2>/dev/null
 say "start $N (BASH-ONLY rental, no builder); code $CODE; steps: $STEPS; test mode: $TEST"
 # 0. DUPLICATE per step; no live instance with this label; credit readable
@@ -189,7 +190,7 @@ DONE=""; NOTRUN=""
 for st in $TODO; do
   b=$(left); if [ $TEST = 1 ]; then [ $st = T1 ] && b=60; [ $st = T2 ] && b=30; fi
   if [ $TEST = 0 ] && [ $b -lt 600 ]; then say "step $st: not started (only $b s left in this job)"; NOTRUN="$NOTRUN $st"; continue; fi
-  say "step $st: start, budget $b s"; t1=$(date +%s)
+  say "step $st: start, budget $b s"; t1=$(date +%s); STARTED=1
   rx "cd /root/work && setsid nohup bash job/step.sh $st $b $HAVE_R0 $SEEDS > job/out-$st.txt 2>&1 < /dev/null & echo launched" 2>&1 | tail -1
   hard=$(( t1 + b + 180 )); ended=0
   while [ $(date +%s) -lt $hard ]; do sleep 20; c=$(rx "grep -c '^STEP-END' /root/work/job/out-$st.txt" 2>/dev/null | tail -1); [ "$c" = 1 ] && { ended=1; break; }; done
@@ -216,7 +217,7 @@ for st in $TODO; do
       echo "manifest made on the rental after STEP-END killed=0 ($nm files, all sha256 re-checked on the Mac before the folder was moved into place):"; cat "$TMPD/man-$st.txt"; } > "$DEST/$o/SOURCES.txt"
       say "step $st: delivered ($nm files)"
     else KEEP=1; NOTRUN="$NOTRUN $st"; say "step $st: COPY CHECK FAILED twice; nothing moved into place; the instance will be stopped, not destroyed"; fi
-  else say "step $st: incomplete (deadline, error or ssh loss); its partial output is not copied"; NOTRUN="$NOTRUN $st"; fi
+  else KEEP=1; say "step $st: incomplete (deadline, error or ssh loss): nothing copied; its output stays on the rental, which will be stopped, not destroyed"; NOTRUN="$NOTRUN $st"; fi
 done
 [ $TEST = 1 ] && { echo "--- test copy:"; find "$TMPD/copy" -type f 2>/dev/null | sed "s|$TMPD/||" | sort; cat "$TMPD"/copy/probe/*/SOURCES.txt 2>/dev/null; }
 echo "RESULT: delivered steps:${DONE:- none}; not run or incomplete:${NOTRUN:- none}; seeds:$SEEDS; r0 made: $HAVE_R0; instance kept stopped: $KEEP"
