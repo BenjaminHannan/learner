@@ -13,14 +13,17 @@
 #   6 wait for /root/r/FINISHED (at most TCAP_MIN minutes)
 #   7 copy W/ back and check every file against the rental's MANIFEST.sha256: destroy only when that passes, else stop
 #   8 the files land in $W/artifacts/claude-e2e02dg-20260927/vast/ (the queue job's PUSH path; no weights in W/)
-# Usage: mac.sh <code-tree> <pinned-commit> <mac-worktree>
+# Usage: mac.sh <code-tree> <pinned-commit> <mac-worktree> [results-folder] [hosts-to-skip] [spent-before]
 set -u
 export COPYFILE_DISABLE=1
 KD=$1; PIN=$2; W=$3
 E=artifacts/claude-e2e02dg-20260927
-OUT=$W/$E/vast
+RUN=${4:-vast}                  # attempt's results folder: vast (rent-e2e02dg-1), vast2 (rent-e2e02dg-2), ...
+OUT=$W/$E/$RUN
 LABEL=claude-e2e02dg
-H=${H02DG:-$HOME/premonition-watch/e2e02dg}                   # Mac-only state (rentals, log); never pushed
+H=${H02DG:-$HOME/premonition-watch/e2e02dg}; [ "$RUN" = vast ] || H=$H-$RUN   # Mac-only state (rentals, log); never pushed
+SKIPHOSTS=${5:-}                # hosts not to rent again (comma-separated), e.g. one whose network failed an earlier attempt
+SPENT_BEFORE=${6:-0}            # dollars spent by earlier attempts of this rental job (all attempts share Ben's $4 cap)
 ADP=${ADP02DG:-$HOME/premonition-models/rd378g-vast-adapter}  # G's adapter (read only)
 VAST=${VAST02DG:-vastai}
 KEY=${KEY02DG:-$HOME/.ssh/id_ed25519}
@@ -28,7 +31,7 @@ U=$(command -v uv || echo "$HOME/.local/bin/uv")
 PYM=${PYM02DG:-$("$U" python find 3.12 2>/dev/null)}
 PYJ="$PYM -c"
 IMAGE=pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime   # base image only; box.sh pins torch 2.11.0+cu128 inside it
-CAP_STOP=2.00      # dollars, this job (Ben's cap is $4 per rental job)
+CAP_STOP=$(awk -v b="$SPENT_BEFORE" 'BEGIN{c=2.00; if (4.00-b < c) c=4.00-b; printf "%.2f", c}')   # this attempt: $2, and never past $4 with earlier attempts
 MAXDPH=0.80        # dollars per hour, a sanity bound
 TCAP_MIN=55        # box.sh must finish within this many minutes of its launch (rd-378g setup took 16 min)
 Q5090="gpu_name=RTX_5090 num_gpus=1 compute_cap>=800 cuda_max_good>=12.8 reliability>=0.98 cpu_cores_effective>=8 disk_space>=40 inet_down>=200 direct_port_count>=1 rentable=true"
@@ -75,13 +78,14 @@ seen=set(); n=0
 for o in sorted(d, key=lambda o: float(o.get("dph_total") or 99)):
     dph=float(o.get("dph_total") or 0)
     if dph<=0 or dph>maxdph or float(o.get("gpu_ram") or 0)<16000 or float(o.get("compute_cap") or 0)<800 or o.get("host_id") in seen: continue
+    if str(o.get("host_id")) in sys.argv[2].split(","): continue
     seen.add(o.get("host_id")); n+=1
     print(o["id"], round(dph,3), o.get("host_id"), str(o.get("gpu_name","?")).replace(" ","_"), round(float(o.get("total_flops") or 0),1), int(o.get("gpu_ram") or 0))
-    if n==3: break' "$MAXDPH"; }
+    if n==3: break' "$MAXDPH" "$SKIPHOSTS"; }
 
-echo "0.2d-G rental job (ADDENDUM-52), pin $PIN, $(now)"
+echo "0.2d-G rental job (ADDENDUM-52), pin $PIN, results $E/$RUN, skip hosts '${SKIPHOSTS}', spent before \$$SPENT_BEFORE, money stop \$$CAP_STOP, $(now)"
 for ref in origin/main origin/builder-outbox; do
-  git -C "$W" cat-file -e "$ref:$E/vast/MANIFEST.sha256" 2>/dev/null && { echo "DUPLICATE: $ref already has $E/vast"; exit 0; }; done
+  git -C "$W" cat-file -e "$ref:$E/$RUN/MANIFEST.sha256" 2>/dev/null && { echo "DUPLICATE: $ref already has $E/$RUN"; exit 0; }; done
 [ -e "$H/rentals.txt" ] && { echo "DUPLICATE: $H/rentals.txt exists (a start already ran)"; tail -5 "$H/log.txt" 2>/dev/null; exit 0; }
 command -v "$VAST" > /dev/null || { echo "STOP: no vastai CLI; rented nothing"; exit 0; }
 [ -x "$PYM" ] || { echo "STOP: no python 3.12 from uv; rented nothing"; exit 0; }
@@ -173,6 +177,6 @@ fi
 mkdir -p "$OUT"; cp -R "$H/W/." "$OUT/"
 awk '{print $1, $2, $3, $4}' "$H/rentals.txt" > "$OUT/rentals.txt"
 grep -v "ssh\|key" "$H/log.txt" > "$OUT/mac-log.txt"
-echo "END $R finished=$FIN copyback=$CHK/$ALL spent $(spent)" | tee "$H/END" > "$OUT/END.txt"
+echo "END $R finished=$FIN copyback=$CHK/$ALL spent $(spent) (earlier attempts \$$SPENT_BEFORE)" | tee "$H/END" > "$OUT/END.txt"
 echo "SUMMARY $(cat "$H/END")"
 tail -25 "$OUT/state.txt" 2>/dev/null

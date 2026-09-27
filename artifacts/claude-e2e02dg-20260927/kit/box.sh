@@ -37,10 +37,19 @@ GL=$(nvidia-smi --query-gpu=name,memory.total,driver_version,compute_cap --forma
 st "HOST nproc $(nproc) disk $(df -h /root | tail -1 | awk '{print $4}') free; GPU $GL"
 mt=$(echo "$GL" | awk -F', ' '{print int($2)}')
 [ "${mt:-0}" -ge $(( MINRAM_MB * 95 / 100 )) ] || fail "GPU RAM ${mt:-?} MiB is under $(( MINRAM_MB * 95 / 100 )) MiB"
-ok=0; for t in 1 2; do pip install --no-cache-dir -q torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128 >> W/pip.log 2>&1 && { ok=1; break; }; done
-[ $ok = 1 ] || fail "pip install torch==2.11.0 (see W/pip.log)"
+# attempt 1 (rent-e2e02dg-1) failed here: its host timed out reading download.pytorch.org (15 s reads, 5 retries, 2 tries).
+# Now: 60 s reads, 10 retries, 3 tries on the same index rd-378g used; PyPI's torch==2.11.0 only if that index stays
+# unreachable (its source and CUDA build are logged; a different build can change the merge bytes and the notes).
+export PIP_BREAK_SYSTEM_PACKAGES=1
+PIPX="--no-cache-dir -q --timeout 60 --retries 10"
+TSRC=""
+for t in 1 2 3; do pip install $PIPX torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128 >> W/pip.log 2>&1 && { TSRC=download.pytorch.org/whl/cu128; break; }; sleep 20; done
+[ -n "$TSRC" ] || { pip install $PIPX torch==2.11.0 >> W/pip.log 2>&1 && TSRC=pypi.org; }
+[ -n "$TSRC" ] || fail "pip install torch==2.11.0 (see W/pip.log)"
+st "TORCH-SOURCE $TSRC"
 pip uninstall -y torchvision torchaudio >> W/pip.log 2>&1
-pip install --no-cache-dir -q transformers==5.17.0 peft==0.21.0 safetensors huggingface_hub accelerate numpy >> W/pip.log 2>&1 || fail "pip install transformers/peft (see W/pip.log)"
+pip install $PIPX transformers==5.17.0 peft==0.21.0 safetensors huggingface_hub accelerate numpy >> W/pip.log 2>&1 || fail "pip install transformers/peft (see W/pip.log)"
+pip list 2>/dev/null | grep -iE "^(torch|nvidia-|transformers|peft|safetensors|accelerate) " > W/libs.txt
 python -c "import importlib.util as u, torch, transformers, peft; print('torch', torch.__version__, torch.version.cuda, torch.cuda.is_available(), torch.cuda.get_device_name(0), 'transformers', transformers.__version__, 'peft', peft.__version__, 'torchvision', u.find_spec('torchvision'))" > W/torch.txt 2>&1
 grep -q '^torch 2.11.0' W/torch.txt && grep -q ' True ' W/torch.txt && grep -q 'transformers 5.17.0 peft 0.21.0 torchvision None' W/torch.txt || fail "import check: $(tr '\n' ' ' < W/torch.txt | cut -c1-240)"
 st "TORCH $(cat W/torch.txt)"
