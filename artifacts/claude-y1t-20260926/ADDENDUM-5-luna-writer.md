@@ -1,4 +1,4 @@
-# y1t addendum 5: GPT-6 Luna words the last 315 dialogs (Answering-from-memory thread, DRAFT 2026-09-27 03:49 UTC, for the Thread manager's review before sealing; no Luna call has been made)
+# y1t addendum 5: GPT-6 Luna words the last 315 dialogs (Answering-from-memory thread, DRAFT 2026-09-27 03:49 UTC, OK'd by the Thread manager 03:50 UTC; runner and L3 mechanics added 03:51 UTC; sealed only after the Director's 000-luna-helper-selftest passes, with the helper's sha pinned; no Luna call has been made)
 
 **Why:** Ben, 03:47 UTC (goals page, cd475e141 and 5ed7dcad9): "just have luna rewrite all the training data. It's so so
 cheap". A sealed experiment keeps its writer unless an addendum switches it, with a small quality pilot first. The
@@ -31,6 +31,17 @@ one try per dialog, and the route-loss filter (ADDENDUM-4) before any merge. Row
   fallback applies when BensPC is ready.
 - Proved wrong: the Luna pilot fails L2 or L3, which would mean the lis-320 prompt does not carry over to Luna as is.
 
-**Runs where:** on the Mac as a watcher job (Codex is Ben's plan there), $0 extra, no BensPC, no rental. The runner
-(scripts/claude_y1t_luna.py: the helper's call plugged into run_batches, as claude_lis320_glm_oclow.py does for
-opencode) is written and sealed with this addendum once the helper's name and interface are known.
+**Runs where:** on the Mac as a watcher job (Codex is Ben's plan there), $0 extra, no BensPC, no rental. Job file
+handoff/held/y1t-luna-pilot-mac.md, queued only after the helper's selftest passes and this addendum is sealed.
+
+**Code (written 03:51 UTC; no Luna call made):**
+- Helper: the Director's scripts/claude_luna_codex.py (24ca7a163): call(text, model="gpt-6-luna", timeout) -> str;
+  an empty or error-like reply raises instead of being returned. Its sha is pinned in the seal after its selftest.
+- Runner: scripts/claude_y1t_luna.py. `pick` writes the redo seeds with no row in topup/raw_new.jsonl, in order (315
+  here; sha256 of that file 6184cd22…83de). The run is Reading facts' run_batches with Luna's call; rows record model
+  "codex/gpt-6-luna", temperature null. A failed call writes a row with empty "raw", which the route filter drops (L1).
+  Selftest ok with a stubbed helper (no network).
+- L3 mechanics: claude_y1t_gate.py sample --n 1000 --seed 4034 on all pilot items (so every answerable pilot item is
+  judged), then splits and score as sealed. Only score's asks_yes and stated_yes counts are used; its G2/G3 booleans
+  (fixed at 54 of 60) do not apply to the pilot. L3 passes if asks_yes and stated_yes are each at least
+  items - floor(0.10 x items).
