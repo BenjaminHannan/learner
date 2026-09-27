@@ -11,7 +11,8 @@
 #   6. the smoke run (3 chats, P and T; not judged)
 #   7. the five arms (P, T, N, PW, TW) and the four no-harm runs (GSM8K and MMLU-Redux for P and T), all on this card, each
 #      started only while 6 GB of GPU memory is free, then the no-harm score (claude_mu406_judge.py noharm)
-# Progress lines go to W/drive-state.txt; the last is DONE or FAILED <why>. It never edits code and never deletes anything.
+# Progress lines go to W/drive-state.txt; the last is DONE or FAILED <why>. Exact PIDs go to W/pids.txt (the Mac guard stops
+# them by PID on a money, time or stall stop). It never edits code and never deletes anything.
 # W/ is copied back to the Mac; X/ (the merged copy and the benchmark files) never leaves the rental.
 set -u
 cd /root/r || exit 1
@@ -25,6 +26,7 @@ fail() { st "FAILED $*"; exit 1; }
 freemb() { nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' '; }
 [ -e W/drive-state.txt ] && { echo "drive.sh already ran here"; exit 1; }
 st START
+echo "drive $$" >> W/pids.txt
 st "HOST nproc $(nproc) ram $(free -g 2>/dev/null | awk '/Mem:/{print $2}') GB, disk $(df -h /root | tail -1 | awk '{print $4}') free; $(nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader 2>&1 | head -1)"
 # 1. environment
 pip install --no-cache-dir torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128 > W/pip.log 2>&1 || fail "pip install torch==2.11.0 (see W/pip.log)"
@@ -55,18 +57,21 @@ grep -q '"mmlu_sample": 300' W/data.txt && grep -q '"gsm8k_sample": 300' W/data.
 st "DATA $(tail -1 W/data.txt | cut -c1-300)"
 # 5. the LoRA and the merged copy
 st "TRAIN-START rows $(grep -c . $ROWS)"
-python -B scripts/claude_mu406_train.py train --model "$BASE" --rows $ROWS --out W/train > W/train.log 2>&1; rc=$?
+python -B scripts/claude_mu406_train.py train --model "$BASE" --rows $ROWS --out W/train > W/train.log 2>&1 &
+echo "train $!" >> W/pids.txt; wait $!; rc=$?
 [ $rc = 0 ] || fail "train rc $rc (see W/train.log)"
 [ -s W/train/adapter/adapter_model.safetensors ] && [ -s W/train/summary.json ] || fail "train: no adapter or summary"
 echo "$(sha256sum W/train/adapter/adapter_model.safetensors | cut -c1-64)  train/adapter/adapter_model.safetensors" > W/SEAL-run.sha256.txt
 st "SEALED adapter $(cut -c1-16 W/SEAL-run.sha256.txt)"
-python -B scripts/claude_mu406_train.py merge --model "$BASE" --adapter W/train/adapter --out X/merged > W/merge.log 2>&1; rc=$?
+python -B scripts/claude_mu406_train.py merge --model "$BASE" --adapter W/train/adapter --out X/merged > W/merge.log 2>&1 &
+echo "merge $!" >> W/pids.txt; wait $!; rc=$?
 [ $rc = 0 ] && [ -s X/merged/mu406_merged.json ] || fail "merge rc $rc (see W/merge.log)"
 cp X/merged/mu406_merged.json W/train/mu406_merged.json
 st "MERGED $(tail -1 W/merge.log | cut -c1-200)"
 # 6. smoke (not judged)
 for arm in P T; do M=$BASE; [ $arm = T ] && M=X/merged
-  python -B scripts/claude_mu406_talk.py --panel $PN --frames $FR --model $M --arm $arm --out W/smoke --smoke > W/smoke/log$arm.txt 2>&1 || fail "smoke $arm (see W/smoke/log$arm.txt)"
+  python -B scripts/claude_mu406_talk.py --panel $PN --frames $FR --model $M --arm $arm --out W/smoke --smoke > W/smoke/log$arm.txt 2>&1 &
+  echo "smoke$arm $!" >> W/pids.txt; wait $! || fail "smoke $arm (see W/smoke/log$arm.txt)"
 done
 st "SMOKE-OK P $(tail -1 W/smoke/logP.txt | cut -c1-100) | T $(tail -1 W/smoke/logT.txt | cut -c1-100)"
 # 7. the five arms and the no-harm runs (registered ones and the longest first)
@@ -80,7 +85,7 @@ for J in $JOBS; do
     gen:*)  t=$(echo $J | cut -d: -f2); arm=$(echo $J | cut -d: -f3); M=$BASE; [ $arm = T ] && M=X/merged
             python -B scripts/claude_bm390.py general --data X/DATA --task $t --arm plain:$M --name $arm --out W/gen > W/gen/log_${t}_$arm.txt 2>&1 &;;
   esac
-  pids="$pids $!"; names="$names $J"; st "LAUNCH $J pid $! ($(freemb) MiB free before it loads)"; sleep 90
+  pids="$pids $!"; names="$names $J"; echo "$J $!" >> W/pids.txt; st "LAUNCH $J pid $! ($(freemb) MiB free before it loads)"; sleep 90
 done
 errs=""; set -- $names
 for p in $pids; do wait $p; rc=$?; st "EXIT $1 rc $rc"; [ $rc = 0 ] || errs="$errs $1"; shift; done

@@ -4,8 +4,9 @@
 # copy, so no worktree or queue job needs to stay alive). Every 5 minutes: money and time check, then the rental's progress file.
 # Ends on the first of the reasons below. It copies back what exists and checks every file against a sha256 manifest made on
 # the rental, the adapter's Mac copy against SEAL-run, and (after DONE) every expected output. Only then does it destroy the
-# instance by its exact id (confirmed gone). If the check fails twice, or ssh is lost, it STOPS the instance instead (GPU
-# billing ends, files stay on its disk) and writes <reason>-STOPPED-NOT-DESTROYED for the Director.
+# instance by its exact id (confirmed gone). On a money, time or stall stop it first stops the rental's driver and its jobs by
+# the exact PIDs in W/pids.txt, so nothing writes to W while it is copied. If the check fails twice, or ssh is lost, it
+# STOPS the instance instead (GPU billing ends, files stay on its disk) and writes <reason>-STOPPED-NOT-DESTROYED for the Director.
 #   DONE        drive.sh finished (training, merge, smoke, the 5 arms, the no-harm runs and their score)
 #   FAILED      drive.sh stopped itself (its reason is kept)
 #   BUDGET-STOP all rentals of this task reach $3.00 (cap $4)
@@ -19,8 +20,10 @@ G=$1
 read -r ID H P TC < "$G/state"; TIME_CAP=${TC:-$TIME_CAP}
 SS=$(sshto "$H" "$P")
 T0=$(head -1 "$G/rentals.txt" | awk '{print $3}')
+halt() { $SS 'cd /root/r && for p in $(awk "{print \$NF}" W/pids.txt 2>/dev/null); do kill "$p" 2>/dev/null && echo "killed pid $p"; done' < /dev/null 2>/dev/null | tee -a "$G/log.txt"; sleep 20; }
 fin() { log "GUARD-END $1, spent \$$(spent)"; echo "END $1 spent $(spent)" > "$G/END"; exit 0; }
 end() { log "GUARD $1${2:+: $2}"
+  case "$1" in BUDGET-STOP|TIME-STOP|STALL) halt;; esac
   if [ "${3:-}" != nocopy ] && { copy_back runs || copy_back runs; }; then destroy "$ID" && fin "$1" || fin "$1-DESTROY-UNCONFIRMED"; fi
   stop_inst "$ID" && fin "$1-STOPPED-NOT-DESTROYED" || fin "$1-STOP-UNCONFIRMED"; }
 [ -s "$G/END" ] && { echo "guard: already ended ($(cat "$G/END"))"; exit 0; }
