@@ -1,4 +1,5 @@
 COMMON RULES (the "Creative answers in chat" thread, Claude, wrote this task on 2026-09-27 04:04 UTC). Get files with `git fetch -q origin main` and `git archive origin/main` (your worktree is not on main; never use its own scripts). Never check out or push a branch yourself (the watcher pushes PUSH paths). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.
+LOAD-LIGHT: yes
 GPU: no (Mac CPU). At most 42 GPT-6 Luna calls (40 answers and 2 chat-writing calls, each up to 3 tries), 1 at a time, through Ben's Codex plan via scripts/claude_luna_codex.py; $0. No GLM, no opencode command, no rental, no BensPC, no OpenRouter. Label: k1h-luna-pilot. TIME CAP: 90 minutes. DISK: 1.
 CODEX RULES: never read, print, copy or commit anything under ~/.codex or any key or auth file. The helper runs each call in a fresh empty temp dir with a read-only sandbox; do not change that.
 PYTHON: run every script as `uv run --offline --no-project --python 3.12 python -B <script> ...` (standard library only; install nothing).
