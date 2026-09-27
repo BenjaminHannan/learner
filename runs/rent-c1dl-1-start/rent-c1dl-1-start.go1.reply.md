@@ -1,0 +1,29 @@
+Sun Sep 27 17:35:32 UTC 2026
+job rent-c1dl-1-start
+c1-dl vast start, kit 19af6d2942ca75cc659d3cf5c2f3e41ce8c34fbb, job rent-c1dl-1-start, 2026-09-27T17:35:40Z
+2026-09-27T17:35:46Z credit $28.49
+offers, best TFLOPS per $/h first (id $/h cores host gpu TFLOPS MB TFLOPS-per-$/h est-min est-$ download-$):
+44579218 0.126 9.0 410852 RTX_3090 35.3 24576 280 49 0.2 0.094
+50482929 0.106 16.0 549680 RTX_A4000 20.6 16376 194 70 0.36 0.234
+45473518 0.428 16.0 124072 RTX_4090 81.4 49140 190 32 0.27 0.031
+2026-09-27T17:36:06Z rental 1: instance 53001665 (offer 44579218, host 410852, card RTX_3090, 35.3 TFLOPS, 24576 MB GPU RAM, 9.0 cores, $0.126/h, 280 TFLOPS per $/h; estimate 49 min, about $0.2 with $0.094 download; fit limit $0.80)
+2026-09-27T17:46:08Z rental 1: no ssh within 8 min (status loading)
+2026-09-27T17:46:20Z DESTROYED 53001665 (confirmed gone), spent so far $0.02
+2026-09-27T17:46:23Z rental 2: instance 53003253 (offer 50482929, host 549680, card RTX_A4000, 20.6 TFLOPS, 16376 MB GPU RAM, 16.0 cores, $0.106/h, 194 TFLOPS per $/h; estimate 70 min, about $0.36 with $0.234 download; fit limit $0.80)
+2026-09-27T17:55:24Z rental 2: no ssh within 8 min (status loading)
+2026-09-27T17:55:36Z DESTROYED 53003253 (confirmed gone), spent so far $0.04
+2026-09-27T17:55:39Z rental 3: instance 53004719 (offer 45473518, host 124072, card RTX_4090, 81.4 TFLOPS, 49140 MB GPU RAM, 16.0 cores, $0.428/h, 190 TFLOPS per $/h; estimate 32 min, about $0.27 with $0.031 download; fit limit $0.80)
+launched
+2026-09-27T17:58:04Z time cap 6952 s (1.5 h x 5090 104.8 / RTX_4090 81.4 TFLOPS, never below 1x); money stop $1.00
+2026-09-27T17:58:04Z drive.sh launched on 53004719
+2026-09-27T17:58:09Z guard started (95636 95638 95660 )
+2026-09-27T17:58:03Z START
+2026-09-27T17:58:03Z HOST nproc 128 disk 40G free; NVIDIA GeForce RTX 4090, 49140 MiB, 570.153.02, 8.9
+2026-09-27T18:08:49Z TORCH VERSIONS 2.11.0+cu128 12.8 5.17.0 3.11.13 GPUNAME NVIDIA GeForce RTX 4090 (8, 9) bf16-sum 4.0 
+2026-09-27T18:12:43Z MODELS 4.0K (pinned revision)
+2026-09-27T18:12:43Z SEAL-2 24/24
+2026-09-27T18:12:43Z CHECKS-OK
+2026-09-27T18:12:43Z ARM DL start
+2026-09-27T18:13:04Z arm DL started on 53004719; spent so far $0.19
+STARTED
+rc=0
