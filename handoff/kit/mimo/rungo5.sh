@@ -32,7 +32,8 @@ while [ $# -gt 0 ]; do
     if [ $nr -lt 6 ]; then nr=$((nr+1)); echo "$(date +%T) neterr-failed-go$k $n $m (resume $nr/6 in 120 s)" >> "$Q/log.txt"; sleep 120; continue; fi
     echo "$(date +%T) neterr-giveup-failed-go$k $n $m" >> "$Q/log.txt"; exit 4
   fi
-  if ! grep -q "Rate limit exceeded\|usage limit\|Insufficient balance\|Failed to execute statement" "$Q/$n.go$k.err.txt" && [ "$(wc -c < "$Q/$n.go$k.reply.md")" -gt 300 ]; then echo "$m" > "$Q/$n.go$k.done"; echo "$(date +%T) done-go$k $n $m" >> "$Q/log.txt"; exit 0; fi
+  # only the last 40 err lines count: agents print queue files whose WHY lines say "usage limit" (y1t-luna-pilot false fail, 07:16 UTC 09-27)
+  if ! tail -n 40 "$Q/$n.go$k.err.txt" | grep -q "Rate limit exceeded\|usage limit\|Insufficient balance\|Failed to execute statement" && [ "$(wc -c < "$Q/$n.go$k.reply.md")" -gt 300 ]; then echo "$m" > "$Q/$n.go$k.done"; echo "$(date +%T) done-go$k $n $m" >> "$Q/log.txt"; exit 0; fi
   echo "$(date +%T) failed-go$k $n $m rc=$rc" >> "$Q/log.txt"; shift
 done
 exit 1
