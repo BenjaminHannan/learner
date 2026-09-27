@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """brd-11: does brd-9's result (three nights of the model's own checked hits) hold on FRESH puzzles in a wider number
-world, with plain sampling, and does a stronger night search (the textbook fix for nights that stop improving) add
-more? Creative research thread, 2026-09-26; problem 7.
+world, with brd-9's rule-kept recipe unchanged, and does a stronger night search (the textbook fix for nights that
+stop improving) add more? Creative research thread, 2026-09-26; problem 7.
 
 World (wider than brd-5..9, whose 3-number world is used up): 3 numbers from 1-13 with a target from 5-60, and
 4 numbers from 1-13 with target 24; solvable (claude_blurt1.solve); every puzzle used by brd-5..9 practice, DEV or test
