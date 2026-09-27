@@ -8,3 +8,4 @@
 - Chain PID 26197 (bash artifacts/claude-gr7d-20260927/cpu/chain.sh), launched once, on this container's CPU (4
   threads), $0.
 - 2026-09-27T07:44:45Z: running.
+- 2026-09-27T08:45:38Z: L7 finished the lookalikes (150 rows, 6 read as a square), the squares (200, 200 read as a square) and the unseen formats (200, 195 read as a square); G5 finished the lookalikes (150, 6 read as a square). G5 on the squares started at 08:40:30Z. Exactness and kinds are left to the count and the recount.
