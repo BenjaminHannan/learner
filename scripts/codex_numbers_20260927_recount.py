@@ -3,8 +3,9 @@
 
 Input: ROOT/registered/{baseline,candidate}-sSEED/{config.json,
 train_summary.json,train_log.jsonl,final.pt,tests.json.gz}.  tests.json.gz maps the
-four panel names to the JSON emitted by codex_numbers_20260927_run.py eval
-with --details. Each eval names its original JSONL panel, which must still
+five panel names to the JSON emitted by codex_numbers_20260927_run.py eval
+with --details. Candidate runs also require tests-wiped.json.gz for the same
+panels, checkpoints, and item order. Each eval names its original JSONL panel, which must still
 exist. This script reads predictions and calls the existing checker; it never
 loads a model or makes predictions.
 """
@@ -22,7 +23,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import claude_rsn358a_envs as E  # noqa: E402
 
 PANELS = {"numbers4": ("numbers", 4), "numbers5": ("numbers", 5),
-          "sums4": ("sums", 4), "grids5": ("grids", 5)}
+          "sums4": ("sums", 4), "grids5": ("grids", 5),
+          "numbers5_old": ("numbers", 5)}
+REPO = Path(__file__).resolve().parent.parent
+LEGACY = REPO / "artifacts/claude-rsn358i-20260926/tests"
+EXPECTED_PATHS = {"numbers4": LEGACY / "numbers4.jsonl",
+                  "sums4": LEGACY / "sums4.jsonl",
+                  "grids5": LEGACY / "grids5.jsonl",
+                  "numbers5_old": LEGACY / "numbers5.jsonl"}
 COMMON_CONFIG = ("seed", "steps", "batch", "width", "layers", "heads", "latin_pool",
                  "lr", "warmup", "train_rounds", "grad_rounds", "test_rounds",
                  "device", "dtype", "torch", "arm", "fixed_env", "unused_env_rows",
@@ -69,16 +77,21 @@ def stop_round(predictions, halts):
                 len(predictions) - 1)
 
 
-def recount_panel(root, run, name, ev, cfg, ck_hash, problems):
+def recount_panel(root, run, name, ev, cfg, ck_hash, expected_hashes, problems):
     label = f"{run}/{name}"
     if not isinstance(ev, dict):
         problems.append(f"{label}: missing evaluation")
         return None
     path = panel_path(root, ev.get("panel", ""))
+    expected_path = EXPECTED_PATHS.get(name, root / "panels/numbers5.jsonl")
+    checked(path.resolve() == expected_path.resolve(), problems,
+            f"{label}: source panel path differs from registered path")
     if not checked(path.is_file(), problems, f"{label}: panel file missing: {path}"):
         return None
     checked(ev.get("panel_sha256") == digest(path), problems,
             f"{label}: panel SHA-256 mismatch")
+    checked(digest(path) == expected_hashes.get(name), problems,
+            f"{label}: panel differs from registered panel hash")
     checked(ev.get("checkpoint_sha256") == ck_hash, problems,
             f"{label}: checkpoint SHA-256 mismatch")
     checked(same(ev.get("config"), cfg), problems, f"{label}: evaluation config mismatch")
@@ -153,11 +166,13 @@ def recount_panel(root, run, name, ev, cfg, ck_hash, problems):
             "panel_sha256": digest(path)}
 
 
-def recount_run(root, arm, seed, problems):
+def recount_run(root, arm, seed, expected_hashes, problems):
     name = f"{arm}-s{seed}"
     folder = root / "registered" / name
     test_file = "tests.json.gz" if (folder / "tests.json.gz").is_file() else "tests.json"
     required = ["config.json", "train_summary.json", "train_log.jsonl", "final.pt", test_file]
+    if arm == "candidate":
+        required.append("tests-wiped.json.gz")
     if not checked(all((folder / p).is_file() for p in required), problems,
                    f"{name}: missing registered file(s): " +
                    ", ".join(p for p in required if not (folder / p).is_file())):
@@ -166,6 +181,7 @@ def recount_run(root, arm, seed, problems):
         cfg = read_json(folder / "config.json")
         summary = read_json(folder / "train_summary.json")
         tests = read_json(folder / test_file)
+        wiped_tests = read_json(folder / "tests-wiped.json.gz") if arm == "candidate" else None
         log = [json.loads(line) for line in (folder / "train_log.jsonl").read_text().splitlines()
                if line.strip()]
     except (ValueError, TypeError) as exc:
@@ -175,6 +191,7 @@ def recount_run(root, arm, seed, problems):
         return None
     checked(cfg.get("seed") == seed and cfg.get("arm") in (arm, "loop"), problems,
             f"{name}: arm or seed mismatch")
+    checked(cfg.get("variant") == arm, problems, f"{name}: variant mismatch")
     checked(cfg.get("fixed_env") == 0 or cfg.get("env_mode") == "fixed_zero", problems,
             f"{name}: no explicit fixed-env marker")
     checked(cfg.get("unused_env_rows") == len(E.ENVS) - 1, problems,
@@ -187,6 +204,23 @@ def recount_run(root, arm, seed, problems):
     ck_hash = digest(folder / "final.pt")
     checked(summary.get("checkpoint_sha256") == ck_hash, problems,
             f"{name}: training summary checkpoint SHA-256 mismatch")
+    done = folder / "tests.done.json"
+    claim = folder / "tests.claim.json"
+    if checked(claim.is_file(), problems, f"{name}: preregistered evaluation claim missing"):
+        claim_data = read_json(claim)
+        checked(claim_data.get("checkpoint_sha256") == ck_hash, problems,
+                f"{name}: claim checkpoint hash mismatch")
+        if arm == "candidate":
+            checked(claim_data.get("candidate_wiped_cards") is True and
+                    claim_data.get("ablation") == "wipe_cards_before_every_read_from_round0",
+                    problems, f"{name}: wiped-card claim missing")
+    if checked(done.is_file(), problems, f"{name}: evaluation receipt missing"):
+        receipt = read_json(done)
+        checked(receipt.get("result_sha256") == digest(folder / test_file), problems,
+                f"{name}: evaluation receipt hash mismatch")
+        if arm == "candidate":
+            checked(receipt.get("wiped_result_sha256") == digest(folder / "tests-wiped.json.gz"),
+                    problems, f"{name}: wiped-card evaluation receipt hash mismatch")
     minutes = summary.get("minutes")
     checked(isinstance(minutes, (int, float)) and math.isfinite(minutes) and minutes > 0,
             problems, f"{name}: invalid training minutes")
@@ -195,9 +229,9 @@ def recount_run(root, arm, seed, problems):
     checked(isinstance(summary.get("stream_sha256"), str) and
             len(summary["stream_sha256"]) == 64, problems,
             f"{name}: missing full training stream digest")
-    checked(isinstance(summary.get("init_state_sha256"), str) and
-            len(summary["init_state_sha256"]) == 64, problems,
-            f"{name}: missing initial state digest")
+    checked(isinstance(summary.get("base_init_state_sha256"), str) and
+            len(summary["base_init_state_sha256"]) == 64, problems,
+            f"{name}: missing core initial state digest")
     checked(isinstance(summary.get("source_hashes"), dict) and
             bool(summary["source_hashes"]), problems,
             f"{name}: missing imported source hashes")
@@ -218,12 +252,19 @@ def recount_run(root, arm, seed, problems):
                     for k, v in sample.items() if k.startswith("block")), problems,
                 f"{name}: invalid sampled gradient norms")
     result = {"config": cfg, "minutes": minutes if isinstance(minutes, (int, float)) else 0,
-              "checkpoint_sha256": ck_hash, "panels": {},
+              "checkpoint_sha256": ck_hash, "panels": {}, "wiped_panels": {},
               "training": {k: summary.get(k) for k in
-                           ("stream_sha256", "init_state_sha256", "source_hashes", "gradient_check")}}
+                           ("stream_sha256", "base_init_state_sha256", "source_hashes", "gradient_check")}}
     for panel in PANELS:
         result["panels"][panel] = recount_panel(root, name, panel, tests.get(panel),
-                                                cfg, ck_hash, problems)
+                                                cfg, ck_hash, expected_hashes, problems)
+        if arm == "candidate":
+            wiped = wiped_tests.get(panel) if isinstance(wiped_tests, dict) else None
+            checked(isinstance(wiped, dict) and
+                    wiped.get("ablation") == "wipe_cards_before_every_read_from_round0",
+                    problems, f"{name}/{panel}: wiped-card ablation marker missing")
+            result["wiped_panels"][panel] = recount_panel(root, name + " wiped", panel, wiped,
+                                                          cfg, ck_hash, expected_hashes, problems)
     return result
 
 
@@ -237,7 +278,7 @@ def compare(runs, seeds, problems):
         for key in COMMON_CONFIG:
             checked(key in bc and key in cc and same(bc.get(key), cc.get(key)), problems,
                     f"seed {seed}: paired config differs at {key}")
-        for key in ("stream_sha256", "init_state_sha256", "source_hashes"):
+        for key in ("stream_sha256", "base_init_state_sha256", "source_hashes"):
             checked(same(b["training"][key], c["training"][key]), problems,
                     f"seed {seed}: paired {key} differs")
         bw, cw = bc.get("weights"), cc.get("weights")
@@ -248,16 +289,23 @@ def compare(runs, seeds, problems):
                  "candidate_minutes": c["minutes"], "panels": {}}
         for panel in PANELS:
             bp, cp = b["panels"][panel], c["panels"][panel]
-            if bp is None or cp is None:
+            wp = c["wiped_panels"].get(panel)
+            if bp is None or cp is None or wp is None:
                 continue
             checked(bp["panel_sha256"] == cp["panel_sha256"], problems,
                     f"seed {seed}/{panel}: paired panel differs")
+            checked(cp["panel_sha256"] == wp["panel_sha256"], problems,
+                    f"seed {seed}/{panel}: intact and wiped panels differ")
             entry["panels"][panel] = {"baseline": bp["valid"], "candidate": cp["valid"],
-                                      "gap": cp["valid"] - bp["valid"]}
+                                      "gap": cp["valid"] - bp["valid"],
+                                      "wiped": wp["valid"],
+                                      "intact_minus_wiped": cp["valid"] - wp["valid"]}
         rows.append(entry)
     for panel in PANELS:
         hashes = {r["panels"][panel]["panel_sha256"] for r in runs.values()
                   if r is not None and r["panels"][panel] is not None}
+        hashes.update(r["wiped_panels"][panel]["panel_sha256"] for r in runs.values()
+                      if r is not None and r["wiped_panels"].get(panel) is not None)
         checked(len(hashes) <= 1, problems, f"{panel}: panel differs across seeds/arms")
     return rows
 
@@ -270,9 +318,16 @@ def marks(rows):
     n2 = mean(by("numbers5", "candidate")) >= 30 and sum(x > 0 for x in by("numbers5", "gap")) / n >= .75
     n3 = all(abs(mean(by(p, "gap"))) <= 5 and all(x >= -10 for x in by(p, "gap"))
              for p in ("sums4", "grids5"))
-    return {"N1": n1, "N2": n2, "N3": n3, "N4": True,
+    n5 = all(mean(by(p, "intact_minus_wiped")) >= threshold and
+             sum(x > 0 for x in by(p, "intact_minus_wiped")) >= math.ceil(.75 * n)
+             for p, threshold in (("numbers4", 10), ("numbers5", 5)))
+    return {"N1": n1, "N2": n2, "N3": n3, "N4": True, "N5": n5,
             "proved_wrong": mean(by("numbers4", "gap")) <= 10,
-            "means": {p: {f: mean(by(p, f)) for f in ("baseline", "candidate", "gap")}
+            "proved_wrong_bigger": mean(by("numbers5", "gap")) <= 5,
+            "proved_wrong_memory": {p: mean(by(p, "intact_minus_wiped")) <= 0
+                                    for p in ("numbers4", "numbers5")},
+            "means": {p: {f: mean(by(p, f)) for f in
+                          ("baseline", "candidate", "gap", "wiped", "intact_minus_wiped")}
                       for p in PANELS}}
 
 
@@ -280,7 +335,7 @@ def verdict_for(problems, rows):
     complete = not problems and len(rows) >= 4 and all(len(r["panels"]) == len(PANELS) for r in rows)
     result_marks = marks(rows) if complete else None
     verdict = ("INCOMPLETE" if not complete else
-               "PASS" if all(result_marks[k] for k in ("N1", "N2", "N3", "N4")) else "FAIL")
+               "PASS" if all(result_marks[k] for k in ("N1", "N2", "N3", "N4", "N5")) else "FAIL")
     return verdict, result_marks
 
 
@@ -288,8 +343,13 @@ def selftest():
     def row(seed, n4b=40, n4c=100, n5b=0, n5c=30, sumb=300, sumc=295,
             gridb=300, gridc=295):
         vals = {"numbers4": (n4b, n4c), "numbers5": (n5b, n5c),
+                "numbers5_old": (n5b, n5c),
                 "sums4": (sumb, sumc), "grids5": (gridb, gridc)}
         return {"seed": seed, "panels": {k: {"baseline": b, "candidate": c, "gap": c - b}
+                                          | {"wiped": 80 if k == "numbers4" else
+                                              20 if k == "numbers5" else c,
+                                             "intact_minus_wiped": c - (80 if k == "numbers4" else
+                                                                           20 if k == "numbers5" else c)}
                                           for k, (b, c) in vals.items()}}
     rows = [row(i) for i in range(4)]
     assert verdict_for([], rows)[0] == "PASS"
@@ -297,9 +357,17 @@ def selftest():
     assert verdict_for([], rows[:3])[0] == "INCOMPLETE"
     assert verdict_for([], rows)[1]["proved_wrong"] is False
     assert verdict_for([], [row(i, n4c=50) for i in range(4)])[1]["proved_wrong"] is True
+    assert verdict_for([], [row(i, n5c=5) for i in range(4)])[1]["proved_wrong_bigger"] is True
+    assert verdict_for([], [row(i, n5c=6) for i in range(4)])[1]["proved_wrong_bigger"] is False
     assert verdict_for([], [row(i, n5c=29) for i in range(4)])[0] == "FAIL"
     assert verdict_for([], [row(i, sumc=289) if i == 0 else row(i) for i in range(4)])[0] == "FAIL"
     assert verdict_for([], [row(i, n4c=99) for i in range(4)])[0] == "FAIL"
+    assert verdict_for([], rows)[1]["N5"] is True
+    weak_memory = [row(i) for i in range(4)]
+    for item in weak_memory:
+        item["panels"]["numbers4"]["wiped"] = 91
+        item["panels"]["numbers4"]["intact_minus_wiped"] = 9
+    assert verdict_for([], weak_memory)[1]["N5"] is False
     assert stop_round([[1], [1], [1], [2]], [.9, .9, .9, .9]) == 2
     assert stop_round([[1], [2], [2], [2]], [.9, .9, .5, .9]) == 3
     assert stop_round([[1], [2], [3]], [.9, .9, .9]) == 2
@@ -309,22 +377,29 @@ def selftest():
 def markdown(report):
     out = ["# Independent recount", "", f"**Verdict: {report['verdict']}**", "",
            "SHOWN: Counts below use each recorded prediction at the model's own stop and the existing checker.",
-           "The four-number design panel was already seen during development; the five-number panel is the clean test.",
+           "N1 uses the immutable 358i numbers4 file, which earlier runs have scored; its totals were known.",
+           "N2 uses the new five-number panel drawn after registration and is the cleanest test.",
+           "numbers5_old is the previously scored 358i seed-35832 panel and is report-only.",
+           "N5 compares the same candidate checkpoint and panel items with cards intact and wiped before every read.",
            "SUGGESTED: A passing pattern would support the selected training change on these panels.",
            "UNTESTED: Transfer beyond these panels, the 1B chat model, and the joined build.", ""]
     for panel in PANELS:
-        out += [f"## {panel}", "", "| Seed | Baseline /300 | Candidate /300 | Gap | Baseline min | Candidate min |",
-                "| ---: | ---: | ---: | ---: | ---: | ---: |"]
+        out += [f"## {panel}", "", "| Seed | Baseline /300 | Candidate /300 | Wiped /300 | Candidate−baseline | Intact−wiped | Baseline min | Candidate min |",
+                "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
         for row in report["rows"]:
             x = row["panels"].get(panel)
             if x:
-                out.append(f"| {row['seed']} | {x['baseline']} | {x['candidate']} | {x['gap']:+d} | "
+                out.append(f"| {row['seed']} | {x['baseline']} | {x['candidate']} | {x['wiped']} | "
+                           f"{x['gap']:+d} | {x['intact_minus_wiped']:+d} | "
                            f"{row['baseline_minutes']:.2f} | {row['candidate_minutes']:.2f} |")
         out.append("")
     if report["marks"]:
         out += ["## Registered marks", ""]
-        for k in ("N1", "N2", "N3", "N4", "proved_wrong"):
+        for k in ("N1", "N2", "N3", "N4", "N5", "proved_wrong", "proved_wrong_bigger"):
             out.append(f"- {k}: {'met' if report['marks'][k] else 'not met'}")
+        for panel, value in report["marks"]["proved_wrong_memory"].items():
+            out.append(f"- Proved wrong for memory on {panel} (intact mean ≤ wiped mean): "
+                       f"{'met' if value else 'not met'}")
         out.append("")
     if report["problems"]:
         out += ["## Missing or inconsistent evidence", ""] + [f"- {x}" for x in report["problems"]] + [""]
@@ -345,13 +420,60 @@ def main():
     out = (args.out or root).resolve()
     out.mkdir(parents=True, exist_ok=True)
     problems = []
+    expected_hashes = {}
+    experiment = root / "EXPERIMENT.json"
+    sealed = root / "SEALED-PANEL.json"
+    complete_receipt = root / "registered/EVALUATION-COMPLETE.json"
+    if not complete_receipt.is_file():
+        report = {"verdict": "INCOMPLETE", "seeds": [], "rows": [], "marks": None,
+                  "problems": ["registered evaluation completion receipt missing; sealed panels were not opened"],
+                  "runs": {}, "claim_labels": {}}
+        (out / "RECOUNT.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
+        (out / "RECOUNT.md").write_text(markdown(report))
+        print("INCOMPLETE: evaluation not complete; sealed panels were not opened")
+        return 2
+    if experiment.is_file():
+        config = read_json(experiment)
+        expected_hashes.update(config.get("registered_panel_sha256", {}))
+        gate = config.get("diagnostic_gate", {})
+        if set(gate) == {"summary_path", "summary_sha256", "manifest_path", "manifest_sha256"}:
+            summary_path = REPO / gate["summary_path"]
+            manifest_path = REPO / gate["manifest_path"]
+            if summary_path.is_file() and manifest_path.is_file() and \
+                    digest(summary_path) == gate["summary_sha256"] and \
+                    digest(manifest_path) == gate["manifest_sha256"]:
+                diagnostic = read_json(summary_path)
+                split = read_json(manifest_path)
+                scores = ((diagnostic.get("final_probe") or {}).get("scores") or {}).get("train_numbers4") or {}
+                checked(scores.get("n") == 962 and
+                        type(scores.get("exact_stored")) is int and scores["exact_stored"] >= .95 * 962 and
+                        split.get("train_four_count") == 962 and split.get("dev_four_count") == 100,
+                        problems, "registered diagnostic practice gate did not reach 0.95")
+            else:
+                problems.append("registered diagnostic evidence files changed or missing")
+        else:
+            problems.append("registered diagnostic gate reference missing")
+    else:
+        problems.append("registered EXPERIMENT.json missing")
+    if sealed.is_file():
+        expected_hashes["numbers5"] = read_json(sealed).get("sha256")
+    else:
+        problems.append("new five-number sealed-panel receipt missing")
+    if set(expected_hashes) != set(PANELS):
+        problems.append("registered panel hashes do not cover all five panels")
     registered = root / "registered"
     names = [p.name for p in registered.iterdir() if p.is_dir()] if registered.is_dir() else []
     seeds = sorted({int(name.split("-s")[-1]) for name in names
                     if name.startswith(("baseline-s", "candidate-s")) and name.split("-s")[-1].isdigit()})
     checked(len(seeds) >= 4, problems, f"expected at least four paired seeds, found {len(seeds)}")
-    runs = {f"{arm}-s{seed}": recount_run(root, arm, seed, problems)
+    runs = {f"{arm}-s{seed}": recount_run(root, arm, seed, expected_hashes, problems)
             for seed in seeds for arm in ("baseline", "candidate")}
+    if complete_receipt.is_file():
+        completed = read_json(complete_receipt)
+        checked(completed.get("evaluations") == len(seeds) * len(PANELS) * 2,
+                problems, "evaluation completion count mismatch")
+        checked(completed.get("wiped_evaluations") == len(seeds) * len(PANELS),
+                problems, "wiped-card evaluation completion count mismatch")
     rows = compare(runs, seeds, problems)
     verdict, result_marks = verdict_for(problems, rows)
     report = {"verdict": verdict, "seeds": seeds, "rows": rows, "marks": result_marks,

@@ -33,3 +33,11 @@ python3 -B scripts/codex_numbers_20260927_history.py --ref 43b4d6f487f3ac67cc4de
 ```
 
 The general registered-run supervisor and recount script are preparation only; a future single-change experiment still requires completed candidate code, sealed configuration, and pushed PASSMARKS before any registered run.
+
+## Revised diagnostic: practice gate reached, run still in progress
+
+SHOWN: width256/2-layer fixed-env baseline seed9276193 reaches 919/962 practice exact at step20,000 and 933/962 (96.99%) at step25,000, while scoring 0/100 on its own four-number dev split at both probes. Step25,000 fresh dev sums4 is 200/200 and grids5 is 197/200. Saved proof: diagnostics/fit-gate-step25000/evidence.json and checkpoint.pt. The full60,000-step run is still active; these are interim results, not its final summary.
+
+This clears the prerequisite for implementing the candidate and reproduces the memorization gap on this Mac without the hidden kind label. Ben selected learned scratchpad-only after reviewing a combined scratchpad/bookmark design. SELECTED-DESIGN.md records the candidate. No candidate accuracy or registered PASS is claimed. The original registered panels remain reserved for the fixed registered sweep, and no fresh five-number sealed panel exists.
+
+For Ben: the larger local baseline can now reproduce answers to almost all the number hands it practised, yet solves none of our100 new development hands. That is the failure we wanted to reproduce. Next is the scratchpad-only change, with a test that wipes its cards to check whether stored information actually helps.

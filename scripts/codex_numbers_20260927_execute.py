@@ -9,7 +9,9 @@ EXPERIMENT.json, this script, the runner, labels, and panel maker.
 
 EXPERIMENT.json schema: python, device, seeds (four or more),
 sealed_seed, train (steps, batch, width, layers, heads, latin_pool, lr, warmup,
-log_every), eval_batch, and design_panel_sha256 (numbers4/sums4/grids5). Pass the pushed registration commit on the command
+log_every), eval_batch, registered_panel_sha256 (the four immutable 358i test
+files), and diagnostic_gate (a preregistered baseline memorization receipt).
+Pass the pushed registration commit on the command
 line; embedding its hash in its own committed config would be circular. A
 training failure or interrupted evaluation requires explicit audited recovery;
 this supervisor never silently repeats a sealed evaluation.
@@ -21,6 +23,7 @@ import contextlib
 import fcntl
 import gzip
 import hashlib
+import inspect
 import json
 import os
 import re
@@ -38,7 +41,12 @@ RUNNER = ROOT / "scripts/codex_numbers_20260927_run.py"
 PANELS = ROOT / "scripts/codex_numbers_20260927_panels.py"
 RUNS = ART / "registered"
 FROZEN = ART / "CHECKPOINTS-FROZEN.json"
-PANEL_NAMES = ("numbers4", "numbers5", "sums4", "grids5")
+PANEL_NAMES = ("numbers4", "numbers5", "sums4", "grids5", "numbers5_old")
+LEGACY_TESTS = ROOT / "artifacts/claude-rsn358i-20260926/tests"
+LEGACY_PANELS = {"numbers4": LEGACY_TESTS / "numbers4.jsonl",
+                 "sums4": LEGACY_TESTS / "sums4.jsonl",
+                 "grids5": LEGACY_TESTS / "grids5.jsonl",
+                 "numbers5_old": LEGACY_TESTS / "numbers5.jsonl"}
 REQUIRED_SEAL = (
     "artifacts/codex-numbers-20260927/EXPERIMENT.json",
     "scripts/codex_numbers_20260927_execute.py",
@@ -131,13 +139,41 @@ def verify_registration(commit: str) -> dict:
         raise ValueError("width must divide heads")
     if cfg["eval_batch"] <= 0:
         raise ValueError("eval_batch must be positive")
-    design = cfg["design_panel_sha256"]
-    if set(design) != {"numbers4", "sums4", "grids5"}:
-        raise ValueError("design_panel_sha256 must cover numbers4, sums4, grids5")
-    for name, expected in design.items():
-        path = ART / "panels" / f"{name}.jsonl"
+    registered = cfg["registered_panel_sha256"]
+    if set(registered) != set(LEGACY_PANELS):
+        raise ValueError("registered_panel_sha256 must cover four immutable 358i test files")
+    for name, expected in registered.items():
+        path = LEGACY_PANELS[name]
         if not path.is_file() or sha256(path) != expected:
-            raise RuntimeError(f"registered design panel changed or missing: {name}")
+            raise RuntimeError(f"registered source panel changed or missing: {name}: {path}")
+    gate_ref = cfg["diagnostic_gate"]
+    if set(gate_ref) != {"summary_path", "summary_sha256", "manifest_path", "manifest_sha256"}:
+        raise ValueError("diagnostic_gate must pin the summary and dev-split manifest")
+    summary_path = (ROOT / gate_ref["summary_path"]).resolve()
+    manifest_path = (ROOT / gate_ref["manifest_path"]).resolve()
+    if any(not path.is_relative_to(ART) or not path.is_file() or sha256(path) != gate_ref[key]
+           for path, key in ((summary_path, "summary_sha256"),
+                             (manifest_path, "manifest_sha256"))):
+        raise RuntimeError("preregistered diagnostic evidence missing or changed")
+    evidence, split = read_json(summary_path), read_json(manifest_path)
+    checkpoint = summary_path.parent / "final.pt"
+    practice = manifest_path.parent / "diagnostic-panels/train_numbers4.jsonl"
+    if not checkpoint.is_file() or sha256(checkpoint) != evidence["checkpoint_sha256"] or \
+            not practice.is_file() or sha256(practice) != split["panel_sha256"]["train_numbers4"]:
+        raise RuntimeError("diagnostic checkpoint or practice panel changed")
+    if split["train_four_count"] != 962 or split["dev_four_count"] != 100 or \
+            len({tuple(x) for x in split["train_four_hands"]} &
+                {tuple(x) for x in split["dev_four_hands"]}) != 0:
+        raise RuntimeError("diagnostic practice/dev split is not 962/100 disjoint hands")
+    scores = evidence["final_probe"]["scores"]["train_numbers4"]
+    if scores["n"] != 962 or scores["exact_stored"] / scores["n"] < .95 or \
+            evidence.get("diagnostic_gate_met") is not True:
+        raise RuntimeError("diagnostic baseline did not reach 0.95 practice exact")
+    if evidence.get("dev_holdout") != 100 or evidence.get("device") != cfg["device"]:
+        raise RuntimeError("diagnostic split or device differs from registration")
+    for key in ("width", "layers", "heads", "batch", "steps", "lr", "warmup"):
+        if evidence.get(key) != cfg["train"][key]:
+            raise RuntimeError(f"diagnostic and registered training differ at {key}")
     return cfg
 
 
@@ -247,24 +283,26 @@ def freeze_checkpoints(cfg: dict, commit: str) -> dict:
         if any(summary[name] != cfg["train"][name] for name in cfg["train"]):
             raise RuntimeError(f"run settings mismatch: {out}")
         grads = summary["gradient_check"]
-        if grads["steps_seen"] != cfg["train"]["steps"] or grads["steps_block_nograd"]:
+        if grads["steps_seen"] != cfg["train"]["steps"] or any(
+                grads[key] for key in ("steps_block_nograd", "steps_block_missing", "steps_block_allzero")):
             raise RuntimeError(f"gradient audit failed: {out}")
         runs.append({"variant": variant, "seed": seed, "checkpoint": str(out / "final.pt"),
                      "checkpoint_sha256": digest, "summary_sha256": sha256(out / "train_summary.json"),
                      "minutes": summary["minutes"], "weights": summary["weights"],
                      "stream_sha256": summary["stream_sha256"],
-                     "init_state_sha256": summary["init_state_sha256"]})
+                     "base_init_state_sha256": summary["base_init_state_sha256"]})
     for seed in cfg["seeds"]:
         baseline = next(x for x in runs if x["seed"] == seed and x["variant"] == "baseline")
         candidate = next(x for x in runs if x["seed"] == seed and x["variant"] == "candidate")
         if baseline["stream_sha256"] != candidate["stream_sha256"]:
             raise RuntimeError(f"unpaired training stream at seed {seed}")
-        if baseline["init_state_sha256"] != candidate["init_state_sha256"]:
-            raise RuntimeError(f"unpaired model initialization at seed {seed}")
+        if baseline["base_init_state_sha256"] != candidate["base_init_state_sha256"]:
+            raise RuntimeError(f"unpaired core model initialization at seed {seed}")
         if abs(baseline["weights"] - candidate["weights"]) > 0.01 * baseline["weights"]:
             raise RuntimeError(f"weight-count gap exceeds 1% at seed {seed}")
     manifest = {"registration_commit": commit,
                 "experiment_sha256": sha256(CONFIG), "seal_sha256": sha256(SEAL),
+                "diagnostic_summary_sha256": cfg["diagnostic_gate"]["summary_sha256"],
                 "runs": runs}
     if FROZEN.exists():
         if read_json(FROZEN) != manifest:
@@ -301,17 +339,18 @@ def evaluate_frozen(cfg: dict, manifest: dict, commit: str, seal_digest: str) ->
     import codex_numbers_20260927_run as runner
     import torch
 
-    panels = {name: ART / "panels" / f"{name}.jsonl" for name in PANEL_NAMES}
+    panels = {**LEGACY_PANELS, "numbers5": ART / "panels/numbers5.jsonl"}
     if not all(path.is_file() for path in panels.values()):
         raise RuntimeError("one or more frozen test panels are missing")
-    for name, expected in cfg["design_panel_sha256"].items():
+    for name, expected in cfg["registered_panel_sha256"].items():
         if sha256(panels[name]) != expected:
-            raise RuntimeError(f"design panel changed before evaluation: {name}")
+            raise RuntimeError(f"registered source panel changed before evaluation: {name}")
     for run in manifest["runs"]:
         variant, seed = run["variant"], run["seed"]
         ckpt = Path(run["checkpoint"])
         folder = RUNS / f"{variant}-s{seed}"
         target = folder / "tests.json.gz"
+        wiped_target = folder / "tests-wiped.json.gz" if variant == "candidate" else None
         claim = folder / "tests.claim.json"
         done = folder / "tests.done.json"
         if sha256(ckpt) != run["checkpoint_sha256"]:
@@ -321,19 +360,27 @@ def evaluate_frozen(cfg: dict, manifest: dict, commit: str, seal_digest: str) ->
             receipt = read_json(done)
             if not claim.exists() or not target.exists() or receipt["result_sha256"] != sha256(target):
                 raise RuntimeError(f"completed evaluation evidence changed: {folder}")
+            if variant == "candidate" and (not wiped_target.exists() or
+                    receipt.get("wiped_result_sha256") != sha256(wiped_target)):
+                raise RuntimeError(f"completed wiped-card evidence changed: {folder}")
             continue
-        if claim.exists() or target.exists():
+        if claim.exists() or target.exists() or (wiped_target is not None and wiped_target.exists()):
             raise RuntimeError(f"interrupted sealed evaluation requires explicit audited recovery: {folder}")
         gpu_safety_snapshot(f"eval-{variant}-s{seed}")
         create_json(claim, {"checkpoint_sha256": run["checkpoint_sha256"],
                             "panel_sha256": {name: sha256(path) for name, path in panels.items()},
-                            "registration_commit": commit, "time_unix": time.time()})
+                            "registration_commit": commit, "time_unix": time.time(),
+                            "candidate_wiped_cards": variant == "candidate",
+                            "ablation": "wipe_cards_before_every_read_from_round0"
+                            if variant == "candidate" else None})
         started_run = time.monotonic()
         net, loaded_cfg = runner.load_checkpoint(ckpt, cfg["device"])
-        tests = {}
-        for name, panel in panels.items():
+        tests, wiped_tests = {}, {}
+        for name in PANEL_NAMES:
+            panel = panels[name]
             started = time.monotonic()
-            # One parse of each panel per frozen checkpoint; saved traces support later recount.
+            # One parse per panel. Candidate intact and wiped sweeps share these
+            # exact in-memory items in a fixed, preregistered order.
             items = runner.read_panel(panel)
             scores = runner.predict_at_stop(net, items, cfg["device"], cfg["eval_batch"], details=True)
             poison = runner.poison_test(net, items[0], cfg["device"])
@@ -344,12 +391,33 @@ def evaluate_frozen(cfg: dict, manifest: dict, commit: str, seal_digest: str) ->
                            "variant": variant, "seed": seed, "config": loaded_cfg,
                            "scores": scores, "poison": poison,
                            "eval_minutes": (time.monotonic() - started) / 60}
+            if variant == "candidate":
+                wiped_started = time.monotonic()
+                wiped_scores = runner.predict_at_stop(net, items, cfg["device"],
+                                                       cfg["eval_batch"], details=True,
+                                                       wipe_cards=True)
+                wiped_poison = runner.poison_test(net, items[0], cfg["device"], wipe_cards=True)
+                if cfg["device"] == "mps":
+                    torch.mps.synchronize()
+                wiped_tests[name] = {"panel": str(panel), "panel_sha256": sha256(panel),
+                                     "checkpoint": str(ckpt),
+                                     "checkpoint_sha256": run["checkpoint_sha256"],
+                                     "variant": variant, "seed": seed,
+                                     "ablation": "wipe_cards_before_every_read_from_round0",
+                                     "config": loaded_cfg, "scores": wiped_scores,
+                                     "poison": wiped_poison,
+                                     "eval_minutes": (time.monotonic() - wiped_started) / 60}
         with target.open("xb") as raw:
             with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as gz:
                 gz.write(json.dumps(tests, sort_keys=True, separators=(",", ":")).encode())
+        if wiped_target is not None:
+            with wiped_target.open("xb") as raw:
+                with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as gz:
+                    gz.write(json.dumps(wiped_tests, sort_keys=True, separators=(",", ":")).encode())
         create_json(done, {"result_sha256": sha256(target), "time_unix": time.time(),
+                           "wiped_result_sha256": sha256(wiped_target) if wiped_target else None,
                            "eval_minutes": (time.monotonic() - started_run) / 60})
-        print(f"saved four-panel evaluation evidence for {variant} seed {seed}", flush=True)
+        print(f"saved five-panel evaluation evidence for {variant} seed {seed}", flush=True)
 
 
 @contextlib.contextmanager
@@ -367,6 +435,10 @@ def single_supervisor():
 def run(commit: str) -> None:
     with single_supervisor():
         cfg = verify_registration(commit)
+        import codex_numbers_20260927_run as runner
+        for name in ("predict_at_stop", "poison_test"):
+            if "wipe_cards" not in inspect.signature(getattr(runner, name)).parameters:
+                raise RuntimeError(f"runner {name} lacks preregistered wipe_cards ablation")
         if Path(sys.executable).resolve() != (ROOT / cfg["python"]).resolve():
             raise RuntimeError("run the supervisor with EXPERIMENT.json's Python runtime")
         seal_digest = sha256(SEAL)
@@ -379,7 +451,9 @@ def run(commit: str) -> None:
         atomic_json(ART / "registered" / "EVALUATION-COMPLETE.json",
                     {"registration_commit": commit,
                      "checkpoint_manifest_sha256": sha256(FROZEN),
-                     "completed_unix": time.time(), "evaluations": len(manifest["runs"]) * len(PANEL_NAMES)})
+                     "completed_unix": time.time(),
+                     "evaluations": len(manifest["runs"]) * len(PANEL_NAMES),
+                     "wiped_evaluations": len(cfg["seeds"]) * len(PANEL_NAMES)})
 
 
 def main() -> None:
