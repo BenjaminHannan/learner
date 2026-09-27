@@ -73,7 +73,8 @@ def check_registered_settings(cfg, registered, arm, seed, problems):
         checked(key in train and same(cfg.get(key), train.get(key)), problems,
                 f"{label}: setting {key} differs from registered EXPERIMENT")
     for key, expected in (("seed", seed), ("variant", arm), ("device", registered.get("device")),
-                          ("dtype", "float32"), ("fixed_env", 0), ("dev_holdout", 0)):
+                          ("dtype", "float32"), ("torch", registered.get("torch_version")),
+                          ("fixed_env", 0), ("dev_holdout", 0)):
         checked(same(cfg.get(key), expected), problems,
                 f"{label}: setting {key} differs from registered EXPERIMENT")
 
@@ -412,12 +413,13 @@ def verdict_for(problems, rows):
 
 
 def selftest():
-    registered = {"seeds": [11, 12, 13, 14], "device": "mps",
+    registered = {"seeds": [11, 12, 13, 14], "device": "mps", "torch_version": "2.11.0",
                   "train": {"steps": 60, "batch": 8, "width": 32, "layers": 2,
                             "heads": 8, "latin_pool": 10, "lr": .0003,
                             "warmup": 5, "log_every": 10}}
     run_cfg = {**registered["train"], "seed": 11, "variant": "baseline",
-               "device": "mps", "dtype": "float32", "fixed_env": 0, "dev_holdout": 0}
+               "device": "mps", "dtype": "float32", "torch": "2.11.0",
+               "fixed_env": 0, "dev_holdout": 0}
     gate_problems = []
     check_registered_seeds([11, 12, 13, 14], registered, gate_problems)
     check_registered_settings(run_cfg, registered, "baseline", 11, gate_problems)

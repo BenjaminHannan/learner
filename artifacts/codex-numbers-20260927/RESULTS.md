@@ -22,7 +22,7 @@ SHOWN: the small puzzle loop has recurrent hidden state, but no explicit interfa
 
 For Ben: the small model learned sums well, made progress on grids, and still struggled even with number puzzles it practised. We also found that training unfairly demands one particular correct answer. Those are different problems. We have not yet shown that fixing the answer target, adding scratch cards, or teaching intermediate steps solves either one. The next comparison needs a clearly specified single change and an adequately fitted baseline.
 
-No five-number sealed panel was generated or read. No candidate, PASSMARKS, four-seed registered comparison, or build approval exists. These results say nothing about the 1B chat model or joined build.
+No five-number sealed panel was generated or read in this diagnostic. There is no candidate efficacy result, four-seed registered comparison, or build approval here. These results say nothing about the 1B chat model or joined build.
 
 Reproduce/recount from repo root:
 
@@ -32,12 +32,14 @@ python3 -B scripts/codex_numbers_20260927_diagnose_predictions.py --eval artifac
 python3 -B scripts/codex_numbers_20260927_history.py --ref 43b4d6f487f3ac67cc4deaf4c889e28b2416d0a0
 ```
 
-The general registered-run supervisor and recount script are preparation only; a future single-change experiment still requires completed candidate code, sealed configuration, and pushed PASSMARKS before any registered run.
+The general registered-run supervisor and recount script are preparation for the comparison; this diagnostic section contains no registered result.
 
-## Revised diagnostic: practice gate reached, run still in progress
+## Revised diagnostic: completed 60,000-step fit check
 
-SHOWN: width256/2-layer fixed-env baseline seed9276193 reaches 919/962 practice exact at step20,000 and 933/962 (96.99%) at step25,000, while scoring 0/100 on its own four-number dev split at both probes. Step25,000 fresh dev sums4 is 200/200 and grids5 is 197/200. Saved proof: diagnostics/fit-gate-step25000/evidence.json and checkpoint.pt. The full60,000-step run is still active; these are interim results, not its final summary.
+SHOWN: width256/2-layer fixed-env baseline seed9276193 reaches 919/962 practice exact at step20,000 and 933/962 (96.99%) at step25,000, while scoring 0/100 on its own four-number dev split at both probes. Step25,000 fresh dev sums4 is 200/200 and grids5 is 197/200. Saved interim proof: diagnostics/fit-gate-step25000/evidence.json and checkpoint.pt.
 
-This clears the prerequisite for implementing the candidate and reproduces the memorization gap on this Mac without the hidden kind label. Ben selected learned scratchpad-only after reviewing a combined scratchpad/bookmark design. SELECTED-DESIGN.md records the candidate. No candidate accuracy or registered PASS is claimed. The original registered panels remain reserved for the fixed registered sweep, and no fresh five-number sealed panel exists.
+SHOWN: at the completed step60,000 own-stop probe, it scores 962/962 practice four-number hands valid and stored-exact, 0/100 disjoint development hands, and 200/200 on each fresh sums4 and grids5 panel. The final training window reports 1.0 exactness on numbers3 and numbers4. Runtime is 73.88638 minutes on MPS float32. The final checkpoint SHA256 is `6b33d9ddf241e4c66aa43d461251d118a334e671b67fc78bb04031720ffa136a`; input/round stream SHA256 is `843fc3276aad748c44ce89905005702a58127ba98550212076f83510263d87c2`. The split manifest SHA256 is `9635ecefc358a30c51cc19b7f7f9544365e4238bd8361c941d1b753306d0f3f5`. These values are recorded in diagnostics/fit-baseline-s9276193/train_summary.json, with per-step evidence in probe_log.jsonl and train_log.jsonl.
 
-For Ben: the larger local baseline can now reproduce answers to almost all the number hands it practised, yet solves none of our100 new development hands. That is the failure we wanted to reproduce. Next is the scratchpad-only change, with a test that wipes its cards to check whether stored information actually helps.
+This confirms the prerequisite for testing the candidate and reproduces the memorization gap on this Mac without the hidden kind label. Ben selected learned scratchpad-only after reviewing a combined scratchpad/bookmark design. SELECTED-DESIGN.md records the candidate. No candidate accuracy or registered PASS is claimed. The original registered panels remain reserved for the fixed registered sweep, and no fresh five-number sealed panel is part of this diagnostic.
+
+For Ben: the larger local baseline now reproduces answers to every number hand it practised, yet solves none of our 100 development hands. That is the failure we wanted to reproduce. The planned scratchpad comparison will wipe its cards at test time to check whether stored information actually helps.

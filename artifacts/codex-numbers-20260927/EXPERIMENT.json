@@ -1,0 +1,36 @@
+{
+  "python": "artifacts/codex-numbers-20260927/runtime/bin/python",
+  "torch_version": "2.11.0",
+  "device": "mps",
+  "seeds": [
+    9276101,
+    9276102,
+    9276103,
+    9276104
+  ],
+  "sealed_seed": 9276501,
+  "train": {
+    "steps": 60000,
+    "batch": 128,
+    "width": 256,
+    "layers": 2,
+    "heads": 8,
+    "latin_pool": 20000,
+    "lr": 0.0003,
+    "warmup": 1000,
+    "log_every": 1000
+  },
+  "eval_batch": 64,
+  "registered_panel_sha256": {
+    "numbers4": "e887fb6154ddd811fccec38884a6a88dbd69320bc72806147c18d7b40f6d1387",
+    "sums4": "01728d1912b590221e48835b7f787be4cb94f4f93aa4eae765fd46db1d7c5bfb",
+    "grids5": "cfbdb334f1e8f0fb3fda980ae71d906dde250d77664f0cb14d0378070d4689c9",
+    "numbers5_old": "d9d53c3409f298870c0469dc2476556ea7839b6f2469a4c3b0e8f4abb01897ec"
+  },
+  "diagnostic_gate": {
+    "summary_path": "artifacts/codex-numbers-20260927/diagnostics/fit-baseline-s9276193/train_summary.json",
+    "summary_sha256": "632b8f010a169dfc7f192094c6ea7939ff1f0d55af4e04888f6f9e5e66334065",
+    "manifest_path": "artifacts/codex-numbers-20260927/diagnostics/fit-baseline-s9276193/devsplit_manifest.json",
+    "manifest_sha256": "9635ecefc358a30c51cc19b7f7f9544365e4238bd8361c941d1b753306d0f3f5"
+  }
+}

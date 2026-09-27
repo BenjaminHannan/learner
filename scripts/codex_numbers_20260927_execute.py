@@ -7,7 +7,7 @@ artifacts/codex-numbers-20260927/: EXPERIMENT.json and SEAL-code.json. The seal
 schema is {"files": {"repo/relative/path": "sha256 hex", ...}} and must include
 EXPERIMENT.json, this script, the runner, labels, and panel maker.
 
-EXPERIMENT.json schema: python, device, seeds (four or more),
+EXPERIMENT.json schema: python, torch_version, device, seeds (four or more),
 sealed_seed, train (steps, batch, width, layers, heads, latin_pool, lr, warmup,
 log_every), eval_batch, registered_panel_sha256 (the four immutable 358i test
 files), and diagnostic_gate (a preregistered baseline memorization receipt).
@@ -135,6 +135,9 @@ def verify_registration(commit: str) -> dict:
         raise ValueError("sealed_seed must be the registered 9276501")
     if cfg["device"] != "mps":
         raise ValueError("registered training and eval require MPS")
+    import torch
+    if cfg.get("torch_version") != torch.__version__:
+        raise RuntimeError("installed torch version differs from registered EXPERIMENT")
     if not (ROOT / cfg["python"]).is_file():
         raise ValueError("configured Python is missing")
     expected_train = {"steps", "batch", "width", "layers", "heads", "latin_pool", "lr", "warmup", "log_every"}
@@ -289,8 +292,9 @@ def freeze_checkpoints(cfg: dict, commit: str) -> dict:
             raise RuntimeError(f"checkpoint changed: {out}")
         if summary["seed"] != seed or summary.get("variant") != variant:
             raise RuntimeError(f"run identity mismatch: {out}")
-        if summary["device"] != cfg["device"] or summary["dtype"] != "float32":
-            raise RuntimeError(f"device/dtype mismatch: {out}")
+        if summary["device"] != cfg["device"] or summary["dtype"] != "float32" or \
+                summary.get("torch") != cfg["torch_version"]:
+            raise RuntimeError(f"device/dtype/torch mismatch: {out}")
         if summary.get("fixed_env") != 0 or summary.get("unused_env_rows") != 2:
             raise RuntimeError(f"fixed-env audit failed: {out}")
         if any(summary[name] != cfg["train"][name] for name in cfg["train"]):
