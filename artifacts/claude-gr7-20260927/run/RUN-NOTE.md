@@ -12,3 +12,4 @@
 - Restarts: none so far.
 - 2026-09-27T04:26:21Z: seals and selftests passed; training (epochs 4 to 6) started at 04:25:53Z.
 - 2026-09-27T05:26:44Z: training (epochs 4 to 6) is still running (STEP train at 04:25:53Z; about 2 hours expected).
+- 2026-09-27T06:23:35Z: training (epochs 4 to 6) finished in 117.4 minutes; mean loss by epoch 0.0107, 0.0111, 0.0021 (epoch 6 above the predicted 0.001; epochs 4 and 5 above gr-6's epoch 3 of 0.0062, as the fresh AdamW moments restart). Adapter sha256 c8f95557..., 16568343 bytes, kept off git. The dev step started at 06:23:23Z.
