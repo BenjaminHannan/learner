@@ -110,6 +110,11 @@ while [ ! -e "$H/STOP" ]; do
     if grep -q '^GPU: yes' "$Q/$n.md.tmp" && grep -l '^GPU: yes' $(ls "$Q"/*.running 2>/dev/null | sed 's/\.running$/.md/') 2>/dev/null | grep -q .; then
       rm -f "$Q/$n.md.tmp"; continue   # another GPU task is running; try next round
     fi
+    # a finished job can leave detached GPU runs alive on BensPC (156 at 07:47 UTC 09-27): launch a GPU job only when nvidia-smi shows no compute process (ssh failure also holds)
+    if grep -q '^GPU: yes' "$Q/$n.md.tmp"; then
+      ga=$(ssh -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 -o BatchMode=yes benspc "nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv,noheader" </dev/null 2>/dev/null; echo "rc=$?")
+      if [ "$(echo "$ga" | tail -1)" != "rc=0" ] || [ "$(echo "$ga" | grep -vc '^rc=')" -gt 0 ]; then log "gpu busy on BensPC, holding $n: $(echo "$ga" | tr '\n' ' ' | cut -c1-200)"; rm -f "$Q/$n.md.tmp"; continue; fi
+    fi
     mv "$Q/$n.md.tmp" "$Q/$n.md"; touch "$Q/$n.running"; log "launch $n"
     # a GPU: yes job claims BensPC visibly: C:\Users\benja\GPU-BUSY.txt names the job while it runs (outside agents: do not use the GPU while it exists)
     gpu=0; grep -q '^GPU: yes' "$Q/$n.md" && gpu=1
