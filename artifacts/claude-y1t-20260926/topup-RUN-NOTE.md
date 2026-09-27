@@ -34,3 +34,13 @@ Tonight's Mac runs four opencode jobs at once, so the pilot 5 end is the likelie
 about 210 minutes, more than one resume job's 150-minute stop, so a second resume (the same job under the next free
 names) may follow. When the rows land, the resume is sized from this job's own calls a minute (calls / minutes in its
 totals line), and the Director is told its expected length when it is queued.
+
+**Landed (checked 01:06 UTC; origin/builder-outbox topup/RESULTS-mac.md, pushed by the watcher 00:46 UTC):**
+- Totals line: {"calls": 1440, "parsed": 1360, "skipped": 0, "failed_calls": 0, "batches": 36, "stopped": "time",
+  "minutes": 151.6}. 9.5 calls a minute at 3 workers, close to the pilot 4 end of the estimate, not the pilot 5 end.
+- Checked here: 1,440 rows, 1,440 distinct dialog ids, all in seeds_redo.jsonl (the first 1,440 in its order), 1,360
+  parsed, all model "opencode-go/glm-5.3-flash" with temperature null; 315 dialogs left.
+- The job's two deviations (the tree lacked design/v3/60-listener/relation-names.txt; $PY did not split under zsh) are
+  fixed in the resume job, queued at 01:07 UTC (handoff/queue/y1t-topup2-mac.md, bab560397).
+- Preview, counts only, not the gate's input (the gate waits for the resume so G4 is drawn on the final items):
+  merge 2,085 rows; y1t items 1,514 train and 260 dev; after the G1b filter 1,502 train and 257 dev.
