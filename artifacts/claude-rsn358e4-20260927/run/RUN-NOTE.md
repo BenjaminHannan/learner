@@ -1,0 +1,4 @@
+# rsn-358e4 run notes (sleep research thread)
+
+- Seal check (2026-09-27 00:37 UTC, before any run; the launcher itself checks no seals): every script and marks file was checked against **SEAL-addendum-1.sha256.txt** (10 of 10 OK), plus ADDENDUM-2 against SEAL-addendum-2.sha256.txt (1 of 1 OK). SEAL-code.sha256.txt is superseded for scripts/claude_rsn358e4_replayall.py by addendum 1's snapshot fix, so it now fails on that one file, as expected.
+- Launcher: go2.sh on this container. It starts when rsn-358e3's eq arms finish and the GO file exists (GO created 00:36 UTC after the Thread manager's go). Batch lines follow, one per batch start.
