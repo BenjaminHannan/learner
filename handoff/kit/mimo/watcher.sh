@@ -16,6 +16,7 @@ W=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-expe
 H=$HOME/premonition-watch; Q=$H/queue; O=$H/outbox
 IN=main; OUT=builder-outbox; MAX=${MAX:-5}
 RUN="$W/handoff/kit/mimo/rungo4.sh"
+# rungo5 (no opencode-go fallback) is refreshed from main into $H each round and used when it passes bash -n (Director 03:17 UTC 09-27)
 # builder model: muse-spark-1.3-contributor builders hung at "> build" with 0-byte replies from 01:21 UTC 09-27 (status diag 03:02 UTC; GLM calls were launched, not shown returning); opencode.log shows "Go usage limit exceeded" from ~00:57 UTC (Ben's Mac Claude, relayed 03:01); Ben 03:04:18 UTC "use muse spark 1.3": new launches start on the free Zen route, Go chain stays as fallback (Director 03:08 UTC 09-27)
 BM=opencode/muse-spark-1.3-contributor-free
 mkdir -p "$Q"; LOG=$H/watch.log
@@ -49,9 +50,10 @@ while [ ! -e "$H/STOP" ]; do
   # briefs point at OPUS-RULES.txt under /private/tmp, which macOS can wipe: restore it from main each round (Director 19:20 UTC 09-26)
   RB=/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs
   mkdir -p "$RB" 2>/dev/null && git -C "$W" show "origin/$IN:handoff/kit/briefs/OPUS-RULES.txt" > "$RB/OPUS-RULES.txt.new" 2>/dev/null && [ -s "$RB/OPUS-RULES.txt.new" ] && mv "$RB/OPUS-RULES.txt.new" "$RB/OPUS-RULES.txt"
+  git -C "$W" show "origin/$IN:handoff/kit/mimo/rungo5.sh" > "$H/rungo5.new" 2>/dev/null && [ -s "$H/rungo5.new" ] && bash -n "$H/rungo5.new" && mv "$H/rungo5.new" "$H/rungo5.sh"; [ -s "$H/rungo5.sh" ] && RUN="$H/rungo5.sh"
   # orphan repair: a task whose watcher subshell died (e.g. an old loop was stopped) still gets published
   for r in "$Q"/*.running; do [ -e "$r" ] || continue; n=$(basename "$r" .running)
-    pgrep -f "rungo4.sh $Q/$n.md" >/dev/null || { echo "rc=orphan" > "$Q/$n.exit"; rm -f "$r"; log "orphan finished $n"; }; done
+    pgrep -f "rungo[45].sh $Q/$n.md" >/dev/null || { echo "rc=orphan" > "$Q/$n.exit"; rm -f "$r"; log "orphan finished $n"; }; done
   for e in "$Q"/*.exit; do [ -e "$e" ] || continue; n=$(basename "$e" .exit); [ -e "$Q/$n.pushed" ] || [ -e "$Q/$n.running" ] || publish "$n"; done
   for f in $(git -C "$W" ls-tree --name-only "origin/$IN" handoff/queue/ 2>/dev/null | grep '\.md$'); do
     n=$(basename "$f" .md)
@@ -60,6 +62,7 @@ while [ ! -e "$H/STOP" ]; do
     # BensPC GPU jobs (task line 'GPU: yes'; the Director names them 1xx-/2xx-/3xx-): the Mac only waits on ssh, so they skip the local-slot cap and the load hold (GPU-BUSY still allows one at a time); the count excludes those prefixes (Director 23:42 UTC 09-26)
     # rentals mostly wait on vast (polls, uploads), so they get extra slots beyond MAX (Director 13:47 UTC 09-26, Ben 13:30 "BensPC's gpu should not be the blocker")
     grep -qE '^STATUS: *HELD' "$f" 2>/dev/null && continue
+    [ "$(pgrep -f "rungo5.sh $Q/" | wc -l | tr -d ' ')" -ge 2 ] && break   # free Zen builders: at most 2 at once until 2 real jobs finish (Thread manager 03:07 UTC 09-27; mimo-skill.md:17,19 rate limits)
     [ "$running" -ge 18 ] && break; localrun=$(ls "$Q"/*.running 2>/dev/null | xargs -n1 basename 2>/dev/null | grep -cvE '^(rent-|000-|claude-|[1-3][0-9][0-9]-)'); gpuj=0; git -C "$W" show "origin/$IN:$f" 2>/dev/null | grep -qE '^GPU: *yes' && gpuj=1; [ "$localrun" -ge "$MAX" ] && [ "$gpuj" = 0 ] && case "$n" in rent-*|000-*|claude-*) ;; *) continue;; esac
     load=$(sysctl -n vm.loadavg 2>/dev/null | awk '{print int($2)}'); [ -z "$load" ] && load=0
     # Ben 13:30 UTC 09-26 "BensPC's gpu should not be the blocker": rentals and read-only 000-* checks do their work off the Mac, so a busy Mac holds only local jobs
