@@ -1,4 +1,4 @@
-2026-09-27 05:40:37
+2026-09-27 05:43:01
 running:
 000-probe-benspc-gpu-0827.running
 000-probe-zen-builder.running
@@ -6,6 +6,7 @@ running:
 000-rescue2-rd378.running
 000-stop-172-rv390.running
 157-claude-sleep-358spc-collect.running
+158-claude-sleep-358spc-finish.running
 bm398w-mac-c1.running
 claude-lis320-pilot8e-mac.running
 k1h-glm2.running
@@ -14,10 +15,8 @@ lis320-pilot8b-mac.running
 y1t-luna-rest-mac.running
 y1t-luna-rest2-bash.running
 launched (no exit yet) / finished:
-     846
+     848
 
-2026-09-27 04:40:09 zen cap: 6 non-GPU rungo5 builders running, holding bm398w-luna-mac-b
-2026-09-27 04:40:10 zen cap: 6 non-GPU rungo5 builders running, holding madeup-g406l-resume2-mac
 2026-09-27 04:40:11 launch y1t-luna-rest1-bash
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
 chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
@@ -166,6 +165,8 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-27 05:40:33 gpu busy on BensPC, holding 260-claude-sleep-358t3pc: mem 11666 MiB, python.exe 4, rc=0
 2026-09-27 05:40:34 gpu busy on BensPC, holding k1f-benspc2: mem 11666 MiB, python.exe 4, rc=0
 2026-09-27 05:40:36 gpu busy on BensPC, holding k2-c1dev-benspc: mem 6267 MiB, python.exe 2, rc=0
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+2026-09-27 05:42:53 launch 158-claude-sleep-358spc-finish
 
 diag:
 == 000-probe-benspc-gpu-0827
@@ -228,6 +229,12 @@ diag:
 [0m
 > build · muse-spark-1.3-contributor-free
 [0m
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+== 158-claude-sleep-358spc-finish
+53 Sep 27 05:42 158-claude-sleep-358spc-finish.go1.err.txt
+0 Sep 27 05:42 158-claude-sleep-358spc-finish.go1.reply.md
 [0m
 > build · muse-spark-1.3-contributor-free
 [0m
@@ -294,25 +301,26 @@ drwx------  8 ben-hannan  staff     256 Sep 26 18:46 ..
 2459 Sep 27 05:16 y1t-luna-rest2-bash.go1.reply.md
 top5cpu:
 %CPU COMM
-60.8 ApplicationsStorageExtension
-57.6 bird
-35.3 WindowServer
-26.8 bash
-26.0 Claude
+90.7 opencode
+43.0 ApplicationsStorageExtension
+36.4 bird
+35.6 WindowServer
+33.6 fileproviderd
 procs:
-  363     1 03-17:27:35 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1558     1 03-17:26:43 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
-15699     1 03-15:42:01 S    /usr/bin/ssh-agent
-44571 44570 01-08:03:39 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-44581 43119 01-08:03:39 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
-46743 46711    13:18:12 SN   /usr/local/bin/opencode
-48303 18455       02:07 SN   /usr/local/bin/opencode
-52568 18977    01:35:57 SN   /usr/local/bin/opencode
-53479 20011    01:35:48 SN   /usr/local/bin/opencode
-54153 44066    01:35:28 SN   /usr/local/bin/opencode
-54448   818    01:34:32 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
-59802 59771    01:27:04 SN   /usr/local/bin/opencode
-60494 59018    06:33:05 SN   /usr/local/bin/opencode
-61605 61571    01:24:46 SN   /usr/local/bin/opencode
-64555 64533    02:58:39 SN   /usr/local/bin/opencode
-81797     1 01-18:21:18 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+  363     1 03-17:29:58 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1558     1 03-17:29:06 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+15699     1 03-15:44:24 S    /usr/bin/ssh-agent
+44571 44570 01-08:06:02 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+44581 43119 01-08:06:02 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+46743 46711    13:20:35 SN   /usr/local/bin/opencode
+48303 18455       04:30 SN   /usr/local/bin/opencode
+52417 52393       00:08 UN   /usr/local/bin/opencode
+52568 18977    01:38:20 SN   /usr/local/bin/opencode
+53479 20011    01:38:11 SN   /usr/local/bin/opencode
+54153 44066    01:37:51 SN   /usr/local/bin/opencode
+54448   818    01:36:55 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+59802 59771    01:29:27 SN   /usr/local/bin/opencode
+60494 59018    06:35:28 SN   /usr/local/bin/opencode
+61605 61571    01:27:09 SN   /usr/local/bin/opencode
+64555 64533    03:01:02 SN   /usr/local/bin/opencode
+81797     1 01-18:23:41 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
