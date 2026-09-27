@@ -170,7 +170,7 @@ def solver_for(ckpt: str, legend: bool):
 
 
 class Talker:
-    """The plain 1B as the 336 twin loads it. No adapter: sleep belongs to the reasoner (ADDENDUM-46)."""
+    """The plain 1B as the 336 twin loads it. No sleep adapter: sleep belongs to the reasoner (ADDENDUM-46, -49)."""
 
     def __init__(self, model_dir: str):
         import claude_e2e336_twin as TW
