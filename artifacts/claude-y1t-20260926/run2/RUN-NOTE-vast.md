@@ -1,0 +1,17 @@
+# y1t vast run notes (handoff/kit/y1tvast/pass.sh; UTC; one line per event)
+- 2026-09-27T17:37:56Z rent-y1t-vast-p1b: pass start (first); spent so far $0.00
+- 2026-09-27T17:38:19Z rent-y1t-vast-p1b: offer 50160636: RTX_5000Ada, 63.6 TFLOPS, at $0.3347/h (190.0 TFLOPS per $/h, the best that fits; estimated chain 82 minutes), host 438484, machine 107776, CUDA 13.2, download $0.0026041666666666665/GB, upload $0.00390625/GB
+- 2026-09-27T17:38:20Z rent-y1t-vast-p1b: created instance 53001974 (RTX_5000Ada, $0.3347/h); waiting up to 360 s for it to run
+- 2026-09-27T17:42:20Z rent-y1t-vast-p1b: instance 53001974 is running and answers ssh
+- 2026-09-27T17:42:20Z rent-y1t-vast-p1b: guard started (pid 80845; /Users/ben-hannan/premonition-watch/y1t-vast/guard.log): at the $1.30 cap or the time cap (2026-09-27T20:57:20Z) it copies back, then destroys, else stops
+- 2026-09-27T17:43:36Z rent-y1t-vast-p1b: tree ~/tree made from 44c385094ae20e772a92ab6a973dd609311d17b5 (NO-TREE): TREE marked 44c385094ae20e772a92ab6a973dd609311d17b5
+- 2026-09-27T17:43:40Z rent-y1t-vast-p1b: setup: SETUP started pid=587 2026-09-27T17:43:40Z
+- 2026-09-27T17:45:48Z rent-y1t-vast-p1b: setup done: age=0m setup end 2026-09-27T17:45:16Z
+- 2026-09-27T17:46:00Z rent-y1t-vast-p1b: checks: 5 of 5 checks ok (4 selftests and the import check); VERSIONS 2.11.0+cu128 12.8 5.17.0; GPUNAME NVIDIA RTX 5000 Ada Generation, 595.58.03
+- 2026-09-27T17:46:03Z rent-y1t-vast-p1b: LAUNCH chain 2026-09-27T17:46:02Z rc=0 pid=2340 cap=180m;
+- 2026-09-27T17:48:08Z rent-y1t-vast-p1b: running: step drafts, log age 0 min, GPU 2690 32760 131.69, $0.08 spent; LAST drafts age=0m [y1t] drafts 400/1762
+- 2026-09-27T17:58:28Z rent-y1t-vast-p1b: running: step train, log age 0 min, GPU 2776 32760 99.99, $0.14 spent; LAST train age=0m {"step": 120, "loss": 0.1233, "s": 139, "projected_train_s": 415, "tokens": 211729}
+- 2026-09-27T18:08:58Z rent-y1t-vast-p1b: chain done: drafts rc=0; train rc=0; eval rc=0; eval_plain rc=0; h1_A rc=0; h1_B rc=0; 
+- 2026-09-27T18:09:14Z rent-y1t-vast-p1b: copied back 24 files listed by the rental; every one matches its sha256 there
+- 2026-09-27T18:09:28Z rent-y1t-vast-p1b: destroyed 53001974 (COMPLETE: all 6 steps ended rc=0); vast no longer lists it
+- 2026-09-27T18:09:30Z rent-y1t-vast-p1b: wrote RESULTS-vast.md: COMPLETE: all 6 steps ended rc=0

@@ -1,0 +1,6 @@
+drafts pid=2353 2026-09-27T17:46:03Z scripts/claude_y1t_data.py drafts --model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --dir artifacts/claude-y1t-20260926/glm2/items
+train pid=4645 2026-09-27T17:55:33Z scripts/claude_bm398r_train.py --base /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --train artifacts/claude-y1t-20260926/glm2/items/train.jsonl --dev artifacts/claude-y1t-20260926/glm2/items/dev.jsonl --out tr
+eval pid=6578 2026-09-27T18:04:03Z scripts/claude_y1g_doubt.py --model tr/merged --out eval
+eval_plain pid=6841 2026-09-27T18:05:03Z scripts/claude_y1g_doubt.py --model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out eval_plain
+h1_A pid=7108 2026-09-27T18:06:03Z scripts/claude_y1t_h1run.py --model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --panel artifacts/claude-spare401-20260926/panel --out h1/rows_A.jsonl
+h1_B pid=7381 2026-09-27T18:07:03Z scripts/claude_y1t_h1run.py --model tr/merged --panel artifacts/claude-spare401-20260926/panel --out h1/rows_B.jsonl
