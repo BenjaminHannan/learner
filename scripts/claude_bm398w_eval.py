@@ -15,6 +15,8 @@ Panels:
   panel   the fresh held-out practice panel (claude_bm398w_data.py build --panel, seed 3994), PANEL_N items, its
           file pinned by SEAL-panel.sha256.txt before training; never read by the builder
   general MMLU-Redux-300 and GSM8K-300 (bm-390's sets and prompts): the unwrapped plain 1B (P), then BN and BR
+The switch is a hand-given stand-in (disclosed scaffolding): on for memory questions, off for the others, set by the
+panel. There is no switch in the build; a switch or MoE in the build needs Ben's yes.
 Report only: qwen20 runs a plain model folder (Qwen3.5-2B, only if already on the machine) on the same 20 lines.
 
   locomo   python -B scripts/claude_bm398w_eval.py locomo --data DATA --ranked-l RL --ranked-u RU --model BASE --adapter A --out OUT [--limit N]
@@ -50,7 +52,7 @@ N_L, N_U, TURNS = 759, 772, 20
 ARMS = ["BN", "BR"]
 PANEL_N, PANEL_PICK_SEED = 300, 3995
 JUDGE_SEED, BATCH, X1_N = 3996, 50, 60
-R1_MIN_GAIN, R2_MIN_GAIN, MAX_P = 20, 15, 0.05
+R1_MIN_GAIN, R2_MIN_GAIN, MAX_P = 30, 15, 0.05     # R1: about 2 points of 1,531, the effect size of +15 of 759
 R3_MAX_EXTRA_D, R3_MAX_CAT_DROP = 10, 3
 BM398D = {"qwen_whole_chat": 138, "one_b_right_lines": 137, "n": 297}   # bm-398d (56c71354c), other judges
 
@@ -380,8 +382,8 @@ def verdict(by: dict, meta: dict, qids: list[str], same: set, general: dict | No
     L["A_by_category"] = {str(c): {arm: sum(lab[q][arm] == "A" for q in lab if meta[q]["category"] == c)
                                    for arm in ARMS} | {"n": sum(meta[q]["category"] == c for q in lab)}
                           for c in (1, 2, 3, 4)}
-    L["A_by_evidence_among_20_report_only"] = {k: {"n": sum(meta[q]["in20"] == v for q in lab)} | {
-        arm: sum(lab[q][arm] == "A" for q in lab if meta[q]["in20"] == v) for arm in ARMS}
+    L["by_evidence_among_20_report_only"] = {k: {"n": sum(meta[q]["in20"] == v for q in lab)} | {
+        arm: {x: sum(lab[q][arm] == x for q in lab if meta[q]["in20"] == v) for x in "ADE"} for arm in ARMS}
         for k, v in (("in", True), ("out", False))}
     L["bm398d_sample_report_only"] = {"n": sum(meta[q]["bm398d"] for q in lab)} | {
         arm: sum(lab[q][arm] == "A" for q in lab if meta[q]["bm398d"]) for arm in ARMS} | {"bm398d": BM398D}
@@ -398,6 +400,8 @@ def verdict(by: dict, meta: dict, qids: list[str], same: set, general: dict | No
     res["proved_wrong"] = ((P["BR-BN"]["A"] >= R2_MIN_GAIN and L["BR-BN"]["A"] <= 0)
                            or (P["BR-BN"]["A"] <= 0 and L["BR-BN"]["A"] <= 0))
     res["verdict"] = "PASS" if res["R1"] and res["R2"] and res["R3"] and res["R4"] else "FAIL"
+    res["R4_is"] = "hand-given stand-in switch (disclosed scaffolding)"
+    res["a_PASS_reads"] = "the reader gains, given a switch (not: no harm)"
     return res
 
 
@@ -474,6 +478,9 @@ def selftest(a) -> int:
                                                        and v7["locomo"]["BR"]["A"] == v7["locomo"]["BN"]["A"] == want)
     rows = [{"id": f"w3994-{c:04d}#{i}"} for c in range(30) for i in range(18)]
     p1, p2 = pick_panel(rows), pick_panel(list(reversed(rows)))
+    ok["the no-evidence split reports A, D and E per arm"] = set(
+        v1["locomo"]["by_evidence_among_20_report_only"]["out"]["BR"]) == set("ADE") and v1["locomo"][
+        "by_evidence_among_20_report_only"]["out"]["n"] == sum(not meta[q]["in20"] for q in loc)
     ok["the panel draw is fixed and PANEL_N long"] = len(p1) == PANEL_N and [r["id"] for r in p1] == [r["id"] for r in p2]
     for k2, v in ok.items():
         print(("PASS " if v else "FAIL ") + k2)
