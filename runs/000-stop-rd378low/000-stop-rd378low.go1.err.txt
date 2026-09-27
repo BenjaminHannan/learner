@@ -1,0 +1,407 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mgit fetch origin main 2>&1 | head -20; echo "---"; git show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -n 14; echo "---BRANCHES---"; git branch -a | head -n 50
+From github.com:BenjaminHannan/learner
+ * branch                main       -> FETCH_HEAD
+   546298710..52c3b23d2  main       -> origin/main
+---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+---BRANCHES---
+* claude/card-experiment-handoff-7c5b27
++ claude/fact-saving-note-filtering-4ff1ff
++ claude/forgetting-plain-english-gap-9258f0
++ claude/kill-hung-queue-builders-4e879f
++ claude/locomo-length-penalty-408e2a
++ claude/loop-net-generalization-analysis-729ee3
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/pull-from-main-629dc4
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/retention-isolation
+  codex/testing-experiment-44
++ main
+  rent-zdl5c-results
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/builder-outbox-tmp
+  remotes/origin/builder-outbox-tmpfetch
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/main-tmpfetch
+  remotes/origin/worktree-research
+[0m
+[0m$ [0mpwd; date -u; ls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt" 2>&1; git fetch -q origin main 2>&1 | head; git fetch -q origin builder-outbox 2>&1 | head; echo "---duplicate gate---"; git show origin/main:artifacts/claude-stop-rd378low-20260927/REPORT.md 2>&1 | head -n 20; echo "EXIT:$?"; git show origin/builder-outbox:artifacts/claude-stop-rd378low-20260927/REPORT.md 2>&1 | head -n 20; echo "EXIT2:$?"
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+Sun Sep 27 03:55:12 UTC 2026
+/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+---duplicate gate---
+fatal: path 'artifacts/claude-stop-rd378low-20260927/REPORT.md' does not exist in 'origin/main'
+EXIT:0
+fatal: path 'artifacts/claude-stop-rd378low-20260927/REPORT.md' does not exist in 'origin/builder-outbox'
+EXIT2:0
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mdate -u; uptime; ps -axo pid,ppid,etime,command | python3 -c "
+import subprocess, re, sys
+import shlex
+# get ps output via subprocess to avoid shell truncation? Use ps directly
+# Actually read from stdin? We'll run ps inside python is complex; instead parse existing? Let's just parse via ps call
+" ; echo DONE
+Sun Sep 27 03:55:28 UTC 2026
+23:55  up 3 days, 13:48, 4 users, load averages: 125.03 131.17 132.51
+DONE
+[0m
+[0m$ [0m/usr/bin/python3 -B -c '
+import subprocess
+out = subprocess.run([\"ps\",\"-axo\",\"pid,ppid,etime,command\"], capture_output=True, text=True)
+lines = out.stdout.splitlines()
+print(f\"total_lines={len(lines)}\")
+# Count relevant without printing full commands
+cnt_glm_low=0
+cnt_teacher3oc=0
+cnt_writemore=0
+cnt_opencode=0
+cnt_rungo4_004=0
+cnt_rungo4_005=0
+cnt_luna=0
+for line in lines[1:]:
+    # split pid,ppid,etime then command
+    parts = line.split(None, 3)
+    if len(parts)<4:
+        continue
+    pid,ppid,etime,cmd = parts
+    if \"claude_glm_low_run.py\" in cmd and \"claude_rd378k_teacher3oc.py\" in cmd:
+        cnt_glm_low+=1
+        cnt_teacher3oc+=1
+    if \"claude_glm_low_run.py\" in cmd and \"claude_rd378g_writemore_oc.py\" in cmd:
+        cnt_glm_low+=1
+        cnt_writemore+=1
+    if \"rungo4.sh\" in cmd and \"004-rd378k-gate3low\" in cmd:
+        cnt_rungo4_004+=1
+    if \"rungo4.sh\" in cmd and \"005-rd378g-writelow\" in cmd:
+        cnt_rungo4_005+=1
+    if cmd.startswith(\"/usr/local/bin/opencode run\") or \" opencode run\" in cmd or \"/opencode run\" in cmd:
+        cnt_opencode+=1
+    if \"claude_luna_run.py\" in cmd:
+        cnt_luna+=1
+print(f\"glm_low+teacher3oc={cnt_teacher3oc} glm_low+writemore={cnt_writemore} rungo4_004={cnt_rungo4_004} rungo4_005={cnt_rungo4_005} opencode_run~={cnt_opencode} luna={cnt_luna}\")
+'
+
+File "<string>", line 3
+    out = subprocess.run([\"ps\",\"-axo\",\"pid,ppid,etime,command\"], capture_output=True, text=True)
+                                                                                                     ^
+SyntaxError: unexpected character after line continuation character
+[0m
+[0m$ [0mls /tmp | head; pwd
+__KMP_REGISTERED_LIB_19337
+__KMP_REGISTERED_LIB_27249
+__KMP_REGISTERED_LIB_27250
+__KMP_REGISTERED_LIB_73221
+__KMP_REGISTERED_LIB_73222
+__KMP_REGISTERED_LIB_73227
+__KMP_REGISTERED_LIB_73229
+__KMP_REGISTERED_LIB_73236
+__KMP_REGISTERED_LIB_73239
+__KMP_REGISTERED_LIB_73242
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m← [0mWrite /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/scan1.py
+Wrote file successfully.
+[0m
+[0m$ [0m/usr/bin/python3 -B /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/scan1.py
+total_lines=924
+teacher=4 write=4 r004=2 r005=2 opencode=10 luna=1
+[0m
+[0m← [0mWrite /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/scan2.py
+Wrote file successfully.
+[0m
+[0m$ [0m/usr/bin/python3 -B /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/scan2.py
+LAUNCH004 pids=[97852, 98706]
+Traceback (most recent call last):
+  File "/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/scan2.py", line 45, in <module>
+    print(f"  L004 pid={pid} ppid={pp} etime={etime_of(pid)}".replace("etime_of(pid)",e))
+NameError: name 'etime_of' is not defined
+[0m
+[0m← [0mEdit /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/scan2.py
+Index: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/scan2.py
+===================================================================
+--- /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/scan2.py
++++ /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/scan2.py
+@@ -41,9 +41,9 @@
+ launch005 = [pid for pid,(pp,e,c) in procs.items() if is_launcher_005(c)]
+ print(f"LAUNCH004 pids={launch004}")
+ for pid in launch004:
+     pp,e,c = procs[pid]
+-    print(f"  L004 pid={pid} ppid={pp} etime={etime_of(pid)}".replace("etime_of(pid)",e))
++    print(f"  L004 pid={pid} ppid={pp} etime={e}")
+     # children
+     ch = children_of(pid)
+     print(f"    children={ch}")
+     for cp in ch:
+
+[0m
+[0m$ [0m/usr/bin/python3 -B /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/scan2.py
+LAUNCH004 pids=[97852, 98706]
+  L004 pid=97852 ppid=97821 etime=01:04
+    children=[98240]
+      child pid=98240 etime=00:00 hastitle=False title=none
+  L004 pid=98706 ppid=98704 etime=03:20:33
+    children=[98771]
+      child pid=98771 etime=03:20:33 hastitle=True title=OTHER:mimo:004-rd378k-gate
+LAUNCH005 pids=[97852, 98794]
+  L005 pid=97852 ppid=97821 etime=01:04
+    children=[98240]
+      child pid=98240 etime=00:00 hastitle=False title=none
+  L005 pid=98794 ppid=98792 etime=03:20:33
+    children=[98853]
+      child pid=98853 etime=03:20:33 hastitle=True title=OTHER:mimo:005-rd378g-writ
+PYTHONS_004_candidates:
+  pid=113 ppid=1 etime=03:19:21 ispython=False firsttok_end=uv
+  pid=115 ppid=113 etime=03:19:21 ispython=True firsttok_end=os-aarch64-none/bin/python3.12
+  pid=97852 ppid=97821 etime=01:04 ispython=False firsttok_end=/usr/local/bin/opencode
+  pid=98771 ppid=98706 etime=03:20:33 ispython=False firsttok_end=/usr/local/bin/opencode
+PYTHONS_005_candidates:
+  pid=125 ppid=1 etime=03:19:18 ispython=False firsttok_end=uv
+  pid=127 ppid=125 etime=03:19:18 ispython=True firsttok_end=os-aarch64-none/bin/python3.12
+  pid=97852 ppid=97821 etime=01:04 ispython=False firsttok_end=/usr/local/bin/opencode
+  pid=98853 ppid=98794 etime=03:20:33 ispython=False firsttok_end=/usr/local/bin/opencode
+OPENCODE_runs:
+  pid=6563 ppid=6531 etime=03:11:43 title=mimo:madeup-g406-2-mac.go1.6531 ok=False
+  pid=10114 ppid=10084 etime=03:07:12 title=mimo:lis320-fulloc-c1-mac.go1.10084 ok=False
+  pid=46743 ppid=46711 etime=07:33:35 title=mimo:k1h-glm2.go1.46711 ok=False
+  pid=60494 ppid=59018 etime=48:28 title=mimo:000-probe-zen-builder.go2.59018 ok=False
+  pid=76368 ppid=76315 etime=29:38 title=mimo:151-fixsleep-dl9pc-b.go1.76315 ok=False
+  pid=95522 ppid=115 etime=03:18 title=glm11-3bc60b4bb6814829a892e1bebbdf3eb5 ok=True
+  pid=97852 ppid=97821 etime=01:04 title=mimo:000-stop-rd378low.go1.97821 ok=False
+  pid=98170 ppid=127 etime=00:37 title=glm11-0c09051e7fdb488b826aefc8808a4ef9 ok=True
+  pid=98771 ppid=98706 etime=03:20:33 title=mimo:004-rd378k-gate3low.go1.98706 ok=False
+  pid=98853 ppid=98794 etime=03:20:33 title=mimo:005-rd378g-writelow.go1.98794 ok=False
+[0m
+[0m← [0mWrite /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/scan3.py
+Wrote file successfully.
+[0m
+[0m$ [0m/usr/bin/python3 -B /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/scan3.py
+AGENT pid=98771 ppid=98706 etime=03:21:01 title=mimo:004-rd378k-gate3low.go1.98706
+  descendants(0): []
+AGENT pid=98853 ppid=98794 etime=03:21:01 title=mimo:005-rd378g-writelow.go1.98794
+  descendants(0): []
+CHAIN py=115 uv=113:
+  pid=115 ppid=113 etime=03:19:49
+    direct_children=[95522]
+      child pid=95522 etime=03:46 isop=True title=glm11-3bc60b4bb6814829a892e1bebbdf3eb5
+  pid=113 ppid=1 etime=03:19:49
+    direct_children=[115]
+      child pid=115 etime=03:19:49 isop=False title=
+  all_desc_of_py_115: [95522]
+  all_desc_of_uv_113: [115, 95522]
+CHAIN py=127 uv=125:
+  pid=127 ppid=125 etime=03:19:46
+    direct_children=[98170]
+      child pid=98170 etime=01:05 isop=True title=glm11-0c09051e7fdb488b826aefc8808a4ef9
+  pid=125 ppid=1 etime=03:19:46
+    direct_children=[127]
+      child pid=127 etime=03:19:46 isop=False title=
+  all_desc_of_py_127: [98170]
+  all_desc_of_uv_125: [127, 98170]
+LAUNCHER pid=98706 ppid=98704 etime=03:21:01 first=bash
+LAUNCHER pid=98794 ppid=98792 etime=03:21:01 first=bash
+OTHER_OPENCODES (must not kill):
+  pid=6563 etime=03:12:11 title=mimo:madeup-g406-2-mac.go1.6531
+  pid=10114 etime=03:07:40 title=mimo:lis320-fulloc-c1-mac.go1.10084
+  pid=46743 etime=07:34:03 title=mimo:k1h-glm2.go1.46711
+  pid=60494 etime=48:56 title=mimo:000-probe-zen-builder.go2.59018
+  pid=76368 etime=30:06 title=mimo:151-fixsleep-dl9pc-b.go1.76315
+  pid=97852 etime=01:32 title=mimo:000-stop-rd378low.go1.97821
+[0m
+[0m$ [0mdate -u; lsof -a -p 115 -d cwd 2>&1 | tail -5; echo "---"; lsof -a -p 127 -d cwd 2>&1 | tail -5; echo "---"; lsof -a -p 113 -d cwd 2>&1 | tail -5; echo "---"; lsof -a -p 125 -d cwd 2>&1 | tail -5
+Sun Sep 27 03:56:39 UTC 2026
+COMMAND   PID       USER   FD   TYPE DEVICE SIZE/OFF     NODE NAME
+python3.1 115 ben-hannan  cwd    DIR   1,15      192 88701568 /private/tmp/rd378k-gate3low-LW2DC3
+---
+COMMAND   PID       USER   FD   TYPE DEVICE SIZE/OFF     NODE NAME
+python3.1 127 ben-hannan  cwd    DIR   1,15      192 88701569 /private/tmp/rd378g-writelow
+---
+COMMAND PID       USER   FD   TYPE DEVICE SIZE/OFF     NODE NAME
+uv      113 ben-hannan  cwd    DIR   1,15      192 88701568 /private/tmp/rd378k-gate3low-LW2DC3
+---
+COMMAND PID       USER   FD   TYPE DEVICE SIZE/OFF     NODE NAME
+uv      125 ben-hannan  cwd    DIR   1,15      192 88701569 /private/tmp/rd378g-writelow
+[0m
+[0m$ [0mdate -u; ps -o pid,ppid,etime -p 98771,113,115,95522,98853,125,127,98170,98706,98794 2>&1
+Sun Sep 27 03:56:49 UTC 2026
+  PID  PPID  ELAPSED
+  113     1 03:20:09
+  115   113 03:20:09
+  125     1 03:20:06
+  127   125 03:20:06
+95522   115    04:06
+98170   127    01:25
+98706 98704 03:21:21
+98771 98706 03:21:21
+98794 98792 03:21:21
+98853 98794 03:21:21
+[0m
+[0m$ [0mkill 98771; echo "kill 98771 agent004 exit:$?"; kill 98853; echo "kill 98853 agent005 exit:$?"
+kill 98771 agent004 exit:0
+kill 98853 agent005 exit:0
+[0m
+[0m$ [0mkill 113; echo "kill 113 uv004:$?"; kill 115; echo "kill 115 py004:$?"; kill 125; echo "kill 125 uv005:$?"; kill 127; echo "kill 127 py005:$?"
+kill 113 uv004:0
+kill 115 py004:0
+kill 125 uv005:0
+kill 127 py005:0
+[0m
+[0m$ [0mkill 95522; echo "kill 95522 oc004:$?"; kill 98170; echo "kill 98170 oc005:$?"; date -u
+kill 95522 oc004:0
+kill 98170 oc005:0
+Sun Sep 27 03:56:55 UTC 2026
+[0m
+[0m$ [0msleep 10; date -u; ps -o pid,ppid,etime -p 98771,113,115,95522,98853,125,127,98170 2>&1; echo "---launchers must survive---"; ps -o pid,ppid,etime -p 98706,98794 2>&1
+Sun Sep 27 03:57:07 UTC 2026
+  PID  PPID ELAPSED
+---launchers must survive---
+  PID  PPID ELAPSED
+[0m
+[0m$ [0m/usr/bin/python3 -B /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/scan1.py; ps -axo pid,ppid,etime | head -5; echo "check launchers via scan2"; /usr/bin/python3 -B /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/scan2.py 2>&1 | head -n 30
+total_lines=913
+teacher=1 write=1 r004=1 r005=1 opencode=6 luna=1
+  PID  PPID     ELAPSED
+    1     0 03-13:49:45
+  338     1 02-03:38:22
+  347     1 03-11:44:10
+  350     1 03-11:44:10
+check launchers via scan2
+LAUNCH004 pids=[97852]
+  L004 pid=97852 ppid=97821 etime=02:17
+    children=[98515]
+      child pid=98515 etime=00:01 hastitle=False title=none
+LAUNCH005 pids=[97852]
+  L005 pid=97852 ppid=97821 etime=02:17
+    children=[98515]
+      child pid=98515 etime=00:01 hastitle=False title=none
+PYTHONS_004_candidates:
+  pid=97852 ppid=97821 etime=02:17 ispython=False firsttok_end=/usr/local/bin/opencode
+PYTHONS_005_candidates:
+  pid=97852 ppid=97821 etime=02:17 ispython=False firsttok_end=/usr/local/bin/opencode
+OPENCODE_runs:
+  pid=6563 ppid=6531 etime=03:12:56 title=mimo:madeup-g406-2-mac.go1.6531 ok=False
+  pid=10114 ppid=10084 etime=03:08:25 title=mimo:lis320-fulloc-c1-mac.go1.10084 ok=False
+  pid=46743 ppid=46711 etime=07:34:48 title=mimo:k1h-glm2.go1.46711 ok=False
+  pid=60494 ppid=59018 etime=49:41 title=mimo:000-probe-zen-builder.go2.59018 ok=False
+  pid=76368 ppid=76315 etime=30:51 title=mimo:151-fixsleep-dl9pc-b.go1.76315 ok=False
+  pid=97852 ppid=97821 etime=02:17 title=mimo:000-stop-rd378low.go1.97821 ok=False
+[0m
+[0m$ [0mls scripts/claude_glm_opencode_v11.py 2>&1; pwd
+scripts/claude_glm_opencode_v11.py
+/private/tmp/rd378k-gate3low-LW2DC3
+[0m
+[0m$ [0mls scripts/claude_glm_opencode_v11.py 2>&1; pwd
+scripts/claude_glm_opencode_v11.py
+/private/tmp/rd378g-writelow
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B -c "import sys; sys.path.insert(0, 'scripts'); import claude_glm_opencode_v11 as H; d = H._project_dir(); ids = H._ids_with_title(d, sys.argv[1]); H._delete_sessions(d, ids); print(len(ids), len(H._ids_with_title(d, sys.argv[1])))" glm11-3bc60b4bb6814829a892e1bebbdf3eb5
+1 0
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B -c "import sys; sys.path.insert(0, 'scripts'); import claude_glm_opencode_v11 as H; d = H._project_dir(); ids = H._ids_with_title(d, sys.argv[1]); H._delete_sessions(d, ids); print(len(ids), len(H._ids_with_title(d, sys.argv[1])))" glm11-0c09051e7fdb488b826aefc8808a4ef9
+1 0
+[0m
+[0m$ [0mdate -u; ls artifacts/claude-stop-rd378low-20260927/ 2>&1; ls artifacts/ | head -n 20
+Sun Sep 27 03:57:43 UTC 2026
+ls: artifacts/claude-stop-rd378low-20260927/: No such file or directory
+claude-adapters-20260926d
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm391-20260926
+claude-bm395-20260925
+claude-bm397t-20260926
+claude-bm398e-20260926
+claude-bm398i-20260926
+claude-bm398r-20260926
+claude-bmriv-smoke-20260926
+claude-boundary259-20260922
+claude-brd5-20260926
+[0m
+[0m$ [0mmkdir "artifacts/claude-stop-rd378low-20260927" && ls -d "artifacts/claude-stop-rd378low-20260927"
+artifacts/claude-stop-rd378low-20260927
+[0m
+[0m← [0mWrite artifacts/claude-stop-rd378low-20260927/REPORT.md
+Wrote file successfully.
+[0m
+[0m$ [0mdate -u; git status --short | head -n 20; echo "---"; git diff --stat | head; echo "---untracked---"; git status --short artifacts/claude-stop-rd378low-20260927/; df -g / | tail -2; uptime
+Sun Sep 27 03:58:00 UTC 2026
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+---
+---untracked---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        34    28%  484014 358257360    0%   /
+23:58  up 3 days, 13:51, 4 users, load averages: 110.96 121.12 128.04
+[0m
+[0m$ [0mgit status --short | grep -i stop-rd378low; ls -l artifacts/claude-stop-rd378low-20260927/REPORT.md
+-rw-r--r--  1 ben-hannan  staff  680 Sep 26 23:57 artifacts/claude-stop-rd378low-20260927/REPORT.md
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-stop-rd378low-20260927/REPORT.md 2>&1; echo "exit:$?"; git status --short artifacts/ 2>&1 | head; cat .gitignore 2>&1 | head -n 40
+.gitignore:5:artifacts/	artifacts/claude-stop-rd378low-20260927/REPORT.md
+exit:0
+__pycache__/
+*.pyc
+.runtime/
+.budget/
+artifacts/
+.venv/
+
+data/village/stream/
+runtime.local.json
+[0m
