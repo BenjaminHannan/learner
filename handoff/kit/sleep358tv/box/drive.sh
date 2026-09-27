@@ -7,6 +7,8 @@
 # checkpoints of each run (final.pt raw, graded; final-ema.pt report only), then evaluates each checkpoint once. The report-only
 # loop8-trm runs are not run here. Progress lines go to W/drive-state.txt; the last is DONE or FAILED <why>.
 # It never edits code and never deletes anything.
+# Fix 2026-09-27 (after rent-358t3-1b-start FAILED at checks): the 358t3 selftest also runs 358t's selftest, which prints its
+# own 'selftest ok' line, so W/checks.txt has 3 such lines (envs, 358t, 358t3), not 2. Reproduced on CPU in the container.
 set -u
 cd /root/r || exit 1
 export PATH=/opt/conda/bin:$PATH
@@ -25,7 +27,7 @@ st "TORCH $(cat W/torch.txt)"
 n=$(sha256sum -c $A/SEAL-code-v3.sha256.txt 2>/dev/null | grep -c ': OK$'); [ "$n" = 22 ] || fail "seal $n/22"
 st "SEAL 22/22"
 { python -B scripts/claude_rsn358a_envs.py selftest; python -B scripts/claude_rsn358t3_run.py selftest; python -B scripts/claude_rsn358t3_run.py check-mask; python -B scripts/claude_rsn358t3_run.py audit; } > W/checks.txt 2>&1
-[ "$(grep -c '^selftest ok' W/checks.txt)" = 2 ] && grep -q '^check-mask ok' W/checks.txt && [ "$(grep -c '300/300 puzzles show every needed symbol' W/checks.txt)" = 4 ] || fail "selftest/check-mask/audit (see W/checks.txt)"
+[ "$(grep -c '^selftest ok' W/checks.txt)" = 3 ] && grep -q '^selftest ok: 358t selftest passes' W/checks.txt && grep -q '^check-mask ok' W/checks.txt && [ "$(grep -c '300/300 puzzles show every needed symbol' W/checks.txt)" = 4 ] || fail "selftest/check-mask/audit (see W/checks.txt)"
 st CHECKS-OK
 python -B scripts/claude_stage0_autocast_grad.py > W/stage0.txt 2>&1
 grep '^loop  free=3 grad=2 cache=False' W/stage0.txt | grep -q ' 0/12$' || fail "FIX-FAILS: Stage 0 cache-off line is not 0/12 (see W/stage0.txt)"

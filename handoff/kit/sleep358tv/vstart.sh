@@ -25,6 +25,11 @@ done
 if [ -e "$G/rentals.txt" ] && [ ! -s "$G/END" ] && grep -q "HOST-FAIL: no rental got as far as launching" "$G/log.txt" 2>/dev/null \
    && [ "$(awk 'NF<4' "$G/rentals.txt" | wc -l | tr -d ' ')" = 0 ] && [ -z "$(labelled)" ]; then
   mv "$G" "$G.hostfail-$(date +%s)"; echo "RETRY: the earlier start ended HOST-FAIL with every rental ended; its record is kept at $G.hostfail-*"; fi
+# a retry after START-FAIL (the rental was destroyed and confirmed gone before any run started, every rental ended, nothing
+# live; added after rent-358t3-1b-start failed on a kit bug in the checks gate): keep the old record beside, start fresh
+if [ -e "$G/rentals.txt" ] && grep -q "^END START-FAIL spent" "$G/END" 2>/dev/null \
+   && [ "$(awk 'NF<4' "$G/rentals.txt" | wc -l | tr -d ' ')" = 0 ] && [ -z "$(labelled)" ]; then
+  mv "$G" "$G.startfail-$(date +%s)"; echo "RETRY: the earlier start ended START-FAIL with every rental ended; its record is kept at $G.startfail-*"; fi
 [ -e "$G/rentals.txt" ] && { echo "DUPLICATE: $G/rentals.txt exists (a start already ran)"; tail -5 "$G/log.txt" 2>/dev/null; exit 0; }
 command -v "$VAST" > /dev/null || { echo "STOP: no vastai CLI; rented nothing"; exit 0; }
 [ -x "$PYM" ] || { echo "STOP: no python 3.12 from uv on the Mac; rented nothing"; exit 0; }
