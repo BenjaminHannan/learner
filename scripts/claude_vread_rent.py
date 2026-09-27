@@ -24,6 +24,7 @@ import subprocess
 import sys
 import tarfile
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -42,8 +43,15 @@ CHUNK = 100_000
 def call(method, path, body=None, timeout=60):
     req = urllib.request.Request(API + path, method=method, data=None if body is None else json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json", "Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read().decode() or "{}")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return json.loads(r.read().decode() or "{}")
+    except urllib.error.HTTPError as e:            # show vast's error fields only
+        try:
+            d = json.loads(e.read().decode() or "{}")
+        except Exception:
+            d = {}
+        return {"success": False, "http": e.code, "error": d.get("error"), "msg": d.get("msg")}
 
 
 def sha(b):
