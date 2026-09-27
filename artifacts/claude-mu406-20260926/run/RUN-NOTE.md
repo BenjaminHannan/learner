@@ -17,3 +17,6 @@ Times are from date -u. Plan and marks: ../PASSMARKS.md, sealed in ../SEAL.sha25
   that pass, in id order, so a later candidate could never be chosen while 220 of the first 240 pass. A second
   launch (new file name) seeds raw.jsonl from builder-outbox and writes only what is missing. If fewer than 220 of
   the first 240 pass, a later launch writes candidates 241-260.
+- 2026-09-27 10:49:28 UTC: ADDENDUM-1-launches accepted by the Thread manager. Each launch line below gives rc,
+  chats added and time per chat.
+- Time per chat so far: panel launch 1, 78 chats in 20.7 minutes at 2 calls at a time = 15.9 s per chat.

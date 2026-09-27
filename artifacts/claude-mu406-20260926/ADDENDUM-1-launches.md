@@ -18,3 +18,7 @@ chat or teaching reply exists. Marks, data rules, prompts and scripts are unchan
   2026-09-28 18:00 UTC.
 - Every launch is listed in run/RUN-NOTE.md with its rc and how many chats it added.
 - Steps 2, 6 and 7 keep PASSMARKS' limit of 3 launches.
+
+## Review
+- The Thread manager accepted this addendum (message at 10:49:18 UTC, read at 10:49 UTC). It asked that each launch
+  also report its time per chat, so a slowdown shows early. The run note lists that for every launch.
