@@ -89,7 +89,7 @@ None of these touches the method or the numbers.
 ## Scope (what PASS does and does not show)
 - **Shown:** on 2 seeds of one frozen 1B, keeping each night's number-puzzle learning in one LoRA expert did two things. A switch learned from where items came from turned that expert on only for puzzles, which removed all measured panel forgetting (0 of 300 lost vs 20 and 27 always-on). It also kept all of the puzzle learning (+177 and +229 over 54).
 - **Not shown:**
-  - Picking a skill among look-alike requests. Every positive shares one GLM instruction, and the negatives are short quiz questions. Night 1's 86 of 119 "bigger" items switched on is the warning sign. Sol's INPUT-AUDIT raises the same point.
+  - Picking a skill among look-alike requests. Every positive shares one GLM instruction, and the negatives are short quiz questions. Night 1's 86 of 119 "bigger" items switched on is the warning sign. Sol's artifacts/codex-autoroute-20260927/INPUT-AUDIT.md makes the same kind of point about the small three-skill nets, not about dl-9: visible format "strongly identifies" each kind, and there is no mixed-request harness.
   - More than one expert, or experts that must share. The switch is on/off for one expert, not a choice among several.
   - Grids or chat skills.
   - Keeping helpful spill: X drops S's panel gains (item 2).
