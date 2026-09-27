@@ -1,0 +1,984 @@
+{
+ "agent": "loop129b",
+ "wall_seconds": 1.8,
+ "counts": {
+  "WRONG-WRITE": 30,
+  "OK": 26
+ },
+ "cases": [
+  {
+   "id": "N01",
+   "group": "neg",
+   "text": "Lena's city is not Oslo.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Lena",
+     "city",
+     "not Oslo"
+    ]
+   ],
+   "reply": "Saved: Lena's city is not Oslo.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 1.357
+  },
+  {
+   "id": "N02",
+   "group": "neg",
+   "text": "Tom's city is never Rome.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "never Rome"
+    ]
+   ],
+   "reply": "Saved: Tom's city is never Rome.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.007
+  },
+  {
+   "id": "N03",
+   "group": "neg",
+   "text": "The capital of Peru is not Lima.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Peru",
+     "capital",
+     "not Lima"
+    ]
+   ],
+   "reply": "Saved: Peru's capital is not Lima.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.005
+  },
+  {
+   "id": "N04",
+   "group": "neg",
+   "text": "Tom is not employed by Initech.",
+   "expect": "nowrite",
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "N05",
+   "group": "neg",
+   "text": "Tom's city is no longer Rome.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "no longer Rome"
+    ]
+   ],
+   "reply": "Saved: Tom's city is no longer Rome.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.015
+  },
+  {
+   "id": "N06",
+   "group": "neg",
+   "text": "Mira's pet is never Rex.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Mira",
+     "pet",
+     "never Rex"
+    ]
+   ],
+   "reply": "Saved: Mira's pet is never Rex.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.014
+  },
+  {
+   "id": "N07",
+   "group": "neg",
+   "text": "The official language of Peru is not Spanish.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Peru",
+     "official_language",
+     "not Spanish"
+    ]
+   ],
+   "reply": "Saved: Peru's official_language is not Spanish.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.006
+  },
+  {
+   "id": "N08",
+   "group": "neg",
+   "text": "Ann's child is not Bob.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Ann",
+     "child",
+     "not Bob"
+    ]
+   ],
+   "reply": "Saved: Ann's child is not Bob.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.006
+  },
+  {
+   "id": "H01",
+   "group": "hedge",
+   "text": "Tom's boss is probably Ann.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Tom",
+     "boss",
+     "probably Ann"
+    ]
+   ],
+   "reply": "Saved: Tom's boss is probably Ann.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.014
+  },
+  {
+   "id": "H02",
+   "group": "hedge",
+   "text": "Lena's city is maybe Oslo.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Lena",
+     "city",
+     "maybe Oslo"
+    ]
+   ],
+   "reply": "Saved: Lena's city is maybe Oslo.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.004
+  },
+  {
+   "id": "H03",
+   "group": "hedge",
+   "text": "Tom's city is perhaps Rome.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "perhaps Rome"
+    ]
+   ],
+   "reply": "Saved: Tom's city is perhaps Rome.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.006
+  },
+  {
+   "id": "H04",
+   "group": "hedge",
+   "text": "The capital of Peru is possibly Lima.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Peru",
+     "capital",
+     "possibly Lima"
+    ]
+   ],
+   "reply": "Saved: Peru's capital is possibly Lima.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.006
+  },
+  {
+   "id": "H05",
+   "group": "hedge",
+   "text": "Mira's pet is probably Rex.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Mira",
+     "pet",
+     "probably Rex"
+    ]
+   ],
+   "reply": "Saved: Mira's pet is probably Rex.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.004
+  },
+  {
+   "id": "H06",
+   "group": "hedge",
+   "text": "The official language of Peru is perhaps Spanish.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Peru",
+     "official_language",
+     "perhaps Spanish"
+    ]
+   ],
+   "reply": "Saved: Peru's official_language is perhaps Spanish.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.005
+  },
+  {
+   "id": "H07",
+   "group": "hedge",
+   "text": "Tom's city is Rome I think.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Rome I think"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Rome I think.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.004
+  },
+  {
+   "id": "H08",
+   "group": "hedge",
+   "text": "Ann's child is likely Bob.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Ann",
+     "child",
+     "likely Bob"
+    ]
+   ],
+   "reply": "Saved: Ann's child is likely Bob.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.004
+  },
+  {
+   "id": "A01",
+   "group": "compound",
+   "text": "Tom's boss is Ann and Sue.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Tom",
+     "boss",
+     "Ann and Sue"
+    ]
+   ],
+   "reply": "Saved: Tom's boss is Ann and Sue.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.004
+  },
+  {
+   "id": "A02",
+   "group": "compound",
+   "text": "Tom is a citizen of Peru and Ann.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Tom",
+     "country_of_citizenship",
+     "Peru and Ann"
+    ]
+   ],
+   "reply": "Saved: Tom's country_of_citizenship is Peru and Ann.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.003
+  },
+  {
+   "id": "A03",
+   "group": "compound",
+   "text": "Lena's city is Oslo or Paris.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Lena",
+     "city",
+     "Oslo or Paris"
+    ]
+   ],
+   "reply": "Saved: Lena's city is Oslo or Paris.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.003
+  },
+  {
+   "id": "A04",
+   "group": "compound",
+   "text": "Ann's child is Bob and Sue.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Ann",
+     "child",
+     "Bob and Sue"
+    ]
+   ],
+   "reply": "Saved: Ann's child is Bob and Sue.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.003
+  },
+  {
+   "id": "A05",
+   "group": "compound",
+   "text": "Tom is married to Ann and Sue.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Tom",
+     "spouse",
+     "Ann and Sue"
+    ]
+   ],
+   "reply": "Saved: Tom's spouse is Ann and Sue.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.004
+  },
+  {
+   "id": "A06",
+   "group": "compound",
+   "text": "Mira's pet is Rex or Tom.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Mira",
+     "pet",
+     "Rex or Tom"
+    ]
+   ],
+   "reply": "Saved: Mira's pet is Rex or Tom.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.003
+  },
+  {
+   "id": "A07",
+   "group": "compound",
+   "text": "The capital of Peru is Lima and Santiago.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Peru",
+     "capital",
+     "Lima and Santiago"
+    ]
+   ],
+   "reply": "Saved: Peru's capital is Lima and Santiago.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.004
+  },
+  {
+   "id": "A08",
+   "group": "compound",
+   "text": "Tom works in the field of Medicine and Law.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Tom",
+     "occupation",
+     "Medicine and Law"
+    ]
+   ],
+   "reply": "Saved: Tom's occupation is Medicine and Law.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.006
+  },
+  {
+   "id": "S01",
+   "group": "second",
+   "text": "Lena's city is Oslo. Cheers!",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Lena",
+     "city",
+     "Oslo. Cheers"
+    ]
+   ],
+   "reply": "Saved: Lena's city is Oslo. Cheers.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.016
+  },
+  {
+   "id": "S02",
+   "group": "second",
+   "text": "Tom's boss is Ann. Thanks!",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Tom",
+     "boss",
+     "Ann. Thanks"
+    ]
+   ],
+   "reply": "Saved: Tom's boss is Ann. Thanks.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.021
+  },
+  {
+   "id": "S03",
+   "group": "second",
+   "text": "The capital of Peru is Lima. It is sunny.",
+   "expect": "nowrite",
+   "stored": [],
+   "reply": "I can take one fact at a time — could you split that?",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "S04",
+   "group": "second",
+   "text": "Tom is employed by Initech. Great!",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Tom",
+     "employer",
+     "Initech. Great"
+    ]
+   ],
+   "reply": "Saved: Tom's employer is Initech. Great.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.003
+  },
+  {
+   "id": "S05",
+   "group": "second",
+   "text": "Mira's pet is Rex! Congrats.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Mira",
+     "pet",
+     "Rex! Congrats"
+    ]
+   ],
+   "reply": "Saved: Mira's pet is Rex! Congrats.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.028
+  },
+  {
+   "id": "S06",
+   "group": "second",
+   "text": "The official language of Peru is Spanish. Noted.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Peru",
+     "official_language",
+     "Spanish. Noted"
+    ]
+   ],
+   "reply": "Saved: Peru's official_language is Spanish. Noted.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.004
+  },
+  {
+   "id": "S07",
+   "group": "second",
+   "text": "Tom's city is Rome! Well done.",
+   "expect": "nowrite",
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Rome! Well done"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Rome! Well done.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.005
+  },
+  {
+   "id": "S08",
+   "group": "second",
+   "text": "Mira is the founder of Initech. Cheers!",
+   "expect": "nowrite",
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.029
+  },
+  {
+   "id": "W01",
+   "group": "write",
+   "text": "Tom's city is Rome.",
+   "expect": [
+    "Tom",
+    "city",
+    "Rome"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Rome"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Rome.",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "W02",
+   "group": "write",
+   "text": "Lena's city is Oslo.",
+   "expect": [
+    "Lena",
+    "city",
+    "Oslo"
+   ],
+   "stored": [
+    [
+     "Lena",
+     "city",
+     "Oslo"
+    ]
+   ],
+   "reply": "Saved: Lena's city is Oslo.",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "W03",
+   "group": "write",
+   "text": "The capital of Peru is Lima.",
+   "expect": [
+    "Peru",
+    "capital",
+    "Lima"
+   ],
+   "stored": [
+    [
+     "Peru",
+     "capital",
+     "Lima"
+    ]
+   ],
+   "reply": "Saved: Peru's capital is Lima.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "W04",
+   "group": "write",
+   "text": "Tom is employed by Initech.",
+   "expect": [
+    "Tom",
+    "employer",
+    "Initech"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "employer",
+     "Initech"
+    ]
+   ],
+   "reply": "Saved: Tom's employer is Initech.",
+   "verdict": "OK",
+   "seconds": 0.021
+  },
+  {
+   "id": "W05",
+   "group": "write",
+   "text": "Ann's child is Bob.",
+   "expect": [
+    "Ann",
+    "child",
+    "Bob"
+   ],
+   "stored": [
+    [
+     "Ann",
+     "child",
+     "Bob"
+    ]
+   ],
+   "reply": "Saved: Ann's child is Bob.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "W06",
+   "group": "write",
+   "text": "Tom's boss is Ann.",
+   "expect": [
+    "Tom",
+    "boss",
+    "Ann"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "reply": "Saved: Tom's boss is Ann.",
+   "verdict": "OK",
+   "seconds": 0.013
+  },
+  {
+   "id": "W07",
+   "group": "write",
+   "text": "Mira's pet is Rex.",
+   "expect": [
+    "Mira",
+    "pet",
+    "Rex"
+   ],
+   "stored": [
+    [
+     "Mira",
+     "pet",
+     "Rex"
+    ]
+   ],
+   "reply": "Saved: Mira's pet is Rex.",
+   "verdict": "OK",
+   "seconds": 0.012
+  },
+  {
+   "id": "W08",
+   "group": "write",
+   "text": "The official language of Peru is Spanish.",
+   "expect": [
+    "Peru",
+    "official_language",
+    "Spanish"
+   ],
+   "stored": [
+    [
+     "Peru",
+     "official_language",
+     "Spanish"
+    ]
+   ],
+   "reply": "Saved: Peru's official_language is Spanish.",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "W09",
+   "group": "write",
+   "text": "Tom is married to Ann.",
+   "expect": [
+    "Tom",
+    "spouse",
+    "Ann"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "spouse",
+     "Ann"
+    ]
+   ],
+   "reply": "Saved: Tom's spouse is Ann.",
+   "verdict": "OK",
+   "seconds": 0.008
+  },
+  {
+   "id": "W10",
+   "group": "write",
+   "text": "Tom is a citizen of Peru.",
+   "expect": [
+    "Tom",
+    "country_of_citizenship",
+    "Peru"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "country_of_citizenship",
+     "Peru"
+    ]
+   ],
+   "reply": "Saved: Tom's country_of_citizenship is Peru.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "W11",
+   "group": "write",
+   "text": "Tom works in the field of Medicine.",
+   "expect": [
+    "Tom",
+    "occupation",
+    "Medicine"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "occupation",
+     "Medicine"
+    ]
+   ],
+   "reply": "Saved: Tom's occupation is Medicine.",
+   "verdict": "OK",
+   "seconds": 0.019
+  },
+  {
+   "id": "W12",
+   "group": "write",
+   "text": "The author of Dune is Herbert.",
+   "expect": [
+    "Dune",
+    "author",
+    "Herbert"
+   ],
+   "stored": [
+    [
+     "Dune",
+     "author",
+     "Herbert"
+    ]
+   ],
+   "reply": "Saved: Dune's author is Herbert.",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "W13",
+   "group": "write",
+   "text": "Tom was born in the city of Lyon.",
+   "expect": [
+    "Tom",
+    "place_of_birth",
+    "Lyon"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "place_of_birth",
+     "Lyon"
+    ]
+   ],
+   "reply": "Saved: Tom's place_of_birth is Lyon.",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "W14",
+   "group": "write",
+   "text": "Mira is the founder of Initech.",
+   "expect": [
+    "Mira",
+    "founder_of",
+    "Initech"
+   ],
+   "stored": [
+    [
+     "Mira",
+     "founder_of",
+     "Initech"
+    ]
+   ],
+   "reply": "Saved: Mira's founder_of is Initech.",
+   "verdict": "OK",
+   "seconds": 0.008
+  },
+  {
+   "id": "W15",
+   "group": "write",
+   "text": "Tom speaks the language of French.",
+   "expect": [
+    "Tom",
+    "languages_spoken_written_or_signed",
+    "French"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "languages_spoken_written_or_signed",
+     "French"
+    ]
+   ],
+   "reply": "Saved: Tom's languages_spoken_written_or_signed is French.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "W16",
+   "group": "write",
+   "text": "No, Tom's city is Rome.",
+   "expect": [
+    "Tom",
+    "city",
+    "Rome"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Rome"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Rome.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "W17",
+   "group": "write",
+   "text": "Actually, the capital of Peru is Lima.",
+   "expect": [
+    "Peru",
+    "capital",
+    "Lima"
+   ],
+   "stored": [
+    [
+     "Peru",
+     "capital",
+     "Lima"
+    ]
+   ],
+   "reply": "Saved: Peru's capital is Lima.",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "W18",
+   "group": "write",
+   "text": "Tom's city is Trinidad and Tobago.",
+   "expect": [
+    "Tom",
+    "city",
+    "Trinidad and Tobago"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Trinidad and Tobago"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Trinidad and Tobago.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "W19",
+   "group": "write",
+   "text": "Mira's city is Bosnia and Herzegovina.",
+   "expect": [
+    "Mira",
+    "city",
+    "Bosnia and Herzegovina"
+   ],
+   "stored": [
+    [
+     "Mira",
+     "city",
+     "Bosnia and Herzegovina"
+    ]
+   ],
+   "reply": "Saved: Mira's city is Bosnia and Herzegovina.",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "W20",
+   "group": "write",
+   "text": "The headquarters of Initech is located in the city of Washington, D.C..",
+   "expect": [
+    "Initech",
+    "headquarters_location",
+    "Washington, D.C."
+   ],
+   "stored": [
+    [
+     "Initech",
+     "headquarters_location",
+     "Washington, D.C."
+    ]
+   ],
+   "reply": "Saved: Initech's headquarters_location is Washington, D.C..",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "W21",
+   "group": "write",
+   "text": "Tom's city is Washington, D.C..",
+   "expect": [
+    "Tom",
+    "city",
+    "Washington, D.C."
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Washington, D.C"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Washington, D.C.",
+   "verdict": "WRONG-WRITE",
+   "seconds": 0.007
+  },
+  {
+   "id": "W22",
+   "group": "write",
+   "text": "Tom is employed by Apple Inc..",
+   "expect": [
+    "Tom",
+    "employer",
+    "Apple Inc."
+   ],
+   "stored": [
+    [
+     "Tom",
+     "employer",
+     "Apple Inc."
+    ]
+   ],
+   "reply": "Saved: Tom's employer is Apple Inc..",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "W23",
+   "group": "write",
+   "text": "Tom's city is St. Louis.",
+   "expect": [
+    "Tom",
+    "city",
+    "St. Louis"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "St. Louis"
+    ]
+   ],
+   "reply": "Saved: Tom's city is St. Louis.",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "W24",
+   "group": "write",
+   "text": "Tom's city is Rome!",
+   "expect": [
+    "Tom",
+    "city",
+    "Rome"
+   ],
+   "stored": [
+    [
+     "Tom",
+     "city",
+     "Rome"
+    ]
+   ],
+   "reply": "Saved: Tom's city is Rome.",
+   "verdict": "OK",
+   "seconds": 0.005
+  }
+ ]
+}

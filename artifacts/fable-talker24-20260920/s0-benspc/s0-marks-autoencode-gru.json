@@ -1,0 +1,120 @@
+{
+  "checkpoint": "C:\\Users\\benja\\talker24\\artifacts\\fable-talker24-20260920\\s0\\autoencode-gru\\final.pt",
+  "stage": "autoencode",
+  "preset": "S",
+  "held_out": "valid shards C:\\Users\\benja\\talker24\\artifacts\\fable-talker24-20260920\\shards",
+  "reconstruction": {
+    "exact": 0.119140625,
+    "token_accuracy": 0.3646477132262052,
+    "n": 512
+  },
+  "thought": {
+    "act": 0.23828125,
+    "relation_path": 0.0,
+    "subject": 0.26953125,
+    "object": 0.533203125,
+    "whole_thought_exact": 0.0,
+    "n": 512,
+    "source": "C:\\Users\\benja\\talker24\\artifacts\\fable-talker24-20260920\\dialogues\\L1-test.jsonl"
+  },
+  "interventions": {
+    "label": "C:\\Users\\benja\\talker24\\artifacts\\fable-talker24-20260920\\s0\\autoencode-gru\\final.pt",
+    "stage": "S0",
+    "n_thoughts": 64,
+    "slot_swap": {
+      "score": 0.921875,
+      "n": 64,
+      "by_field": {
+        "subject": 0.0,
+        "object": 0.0,
+        "relation": 0.921875
+      },
+      "diagnostics": {
+        "copy_words_unchanged": 0.0,
+        "copy_resolution_changed": 0.0,
+        "relation_words_changed": 0.921875
+      }
+    },
+    "gist_shuffle": {
+      "score": 1.0,
+      "n": 64,
+      "reworded_rate": 1.0
+    },
+    "gist_zero": {
+      "score": 1.0,
+      "n": 64
+    },
+    "thought_replace": {
+      "score": 1.0,
+      "n": 64,
+      "follows_own": 0.06640625
+    },
+    "reconstruction": {
+      "exact": 0.0,
+      "token_accuracy": 0.07601184600197433,
+      "n": 64
+    },
+    "blurry_gist": {
+      "name": "gist is blurry",
+      "triggered": false,
+      "top10_share": 0.15625,
+      "threshold": 0.4,
+      "distinct_replies": 64,
+      "fixes_in_order": [
+        "1. confirm cross-entropy-through-mouth is on, not MSE",
+        "2. code-book gist (4 code-books x 256 entries) so the thinker CLASSIFIES instead of regressing"
+      ]
+    },
+    "marks": {
+      "slot_swap": {
+        "score": 0.921875,
+        "mark": 0.95,
+        "passed": false
+      },
+      "gist_shuffle": {
+        "score": 1.0,
+        "mark": 0.99,
+        "passed": true
+      },
+      "gist_zero_change": {
+        "score": 1.0,
+        "mark": 0.9,
+        "passed": true
+      },
+      "thought_replace": {
+        "score": 1.0,
+        "mark": 0.95,
+        "passed": true
+      }
+    },
+    "all_marks_passed": false,
+    "signature": {
+      "name": "mouth ignores the thought",
+      "triggered": true,
+      "clauses": [
+        "exact reconstruction 0.000 < 0.3"
+      ],
+      "fixes_in_order": [
+        "1. word dropout -- blank 30 % of the mouth's own previous words during training so it cannot coast on fluency (Bowman et al.)",
+        "2. a bag-of-words side loss: the thought alone must predict which words appear",
+        "3. shrink the mouth to 4 blocks and widen the prefix to 16 vectors"
+      ],
+      "note": "apply the fixes ONE AT A TIME, in this order; they were named before any run (design section 3.4)"
+    }
+  },
+  "marks": {
+    "token_accuracy": false,
+    "exact": false,
+    "thought_exact": false,
+    "slot_swap": false
+  },
+  "thresholds": {
+    "token_accuracy": 0.9,
+    "exact": 0.5,
+    "thought_exact": 0.95,
+    "slot_swap": 0.95,
+    "throughput_tokens_per_s": 60000
+  },
+  "all_marks_met": false,
+  "honest_note": "On synthetic stand-in data these marks measure the pipeline, not the idea. Only a run over real shards and real dialogue records may be quoted as an S0 result."
+}

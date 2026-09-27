@@ -1,0 +1,44 @@
+{
+ "ears": {
+  "chain": [
+   "bench73",
+   "fake"
+  ],
+  "ears47_ckpt": null,
+  "tau_hat_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-abstain76-20260921/ltt_summary.json",
+  "tau_family": "tape",
+  "stand_in": "Loop113dEars (113c router + 113c consumption gate applied to the loop102 fallback path too: a fallback ask whose frame leaves relation words/qualifiers unconsumed becomes the honest abstain instead of a prefix answer) over Loop102Ears pre-filter over Loop96Ears = GuardedEars91 over ChainEars(bench73 template + FakeEars templates); teach path identical to loop102",
+  "replacement": "real ears: ears47 FrameEars checkpoint (scripts/fable_ears47_model.py) via 'ears47:<ckpt>'"
+ },
+ "notebook": {
+  "class": "Loop90Notebook",
+  "semantics": "GatedThoughtNotebook (fix77 rule-2 gate) + VerifiedNotebook tail-seal discipline",
+  "stand_in": "none -- this notebook IS the verified piece",
+  "replacement": "none"
+ },
+ "reasoner": {
+  "class": "QualifierAwareReasoner77",
+  "module": "scripts/fable_fix77_core.py",
+  "stand_in": "none -- this reasoner IS the verified piece",
+  "replacement": "none"
+ },
+ "mouth": {
+  "stand_in": "FakeMouth (template sentences, content words from record)",
+  "replacement": "real mouth: scripts/fable_mouth53_mouth.py:Mouth"
+ },
+ "thinker": {
+  "module": "fable_webfix89_thinking",
+  "stand_in": "exp-89 QuarantinedThinking89 when scripts/fable_webfix89_thinking.py exists at run time, else m2 Thinking (quarantine + 2-site trust)",
+  "replacement": "no further replacement; web text stays quarantined"
+ },
+ "sleeper": {
+  "recipe": "HardGate46Sleeper: exp-46 recipe (robust loss eps=0.10, harden phi +/-30, unchanged 4-fold gate), called via scripts/fable_wire51_adapters.py",
+  "install_path": "wire57 SparseVillageSleeper subclass + word bridge (scripts/fable_wire57_e2e.py) once word episodes flow",
+  "stand_in": "recipe armed; episode feed idle until learned-word asks",
+  "replacement": "scripts/fable_wire57_e2e.py install path"
+ },
+ "sleep_threshold": 20,
+ "daemon": {
+  "module": "Loop113dDaemon (this file)"
+ }
+}

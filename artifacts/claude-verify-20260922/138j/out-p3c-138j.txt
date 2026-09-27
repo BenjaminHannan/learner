@@ -1,0 +1,21 @@
+00 "Oriel's boss is Sabine." -> "Saved: Oriel's boss is Sabine."  [+4 ev]
+00 "No, Oriel's boss is Tavish." -> "Updated: Oriel's boss is Tavish (it was Sabine)."  [+2 ev]
+00 -- RESTART 1 --
+00 "Actually, Oriel's boss is Quill." -> "Updated: Oriel's boss is Quill (it was Tavish)."  [+2 ev]
+00 "Oriel's boss is not Quill." -> "OK, Oriel's boss is not Quill. I don't have another boss for Oriel."  [+1 ev]
+00 "Who is Oriel's boss?" -> "I don't know Oriel's boss."  [+0 ev]
+00 -- RESTART 2 --
+00   TRIPLES []
+00 "Who is Oriel's boss?" -> "I don't know Oriel's boss."  [+0 ev]
+00 'Tell me about Oriel.' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"  [+0 ev]
+00 'Whose boss is Tavish?' -> "I don't know anyone whose boss is Tavish."  [+0 ev]
+00 'Whose boss is Sabine?' -> "I don't know anyone whose boss is Sabine."  [+0 ev]
+00   STORED []
+01 "Marl's city is Fenwick." -> "Saved: Marl's city is Fenwick."  [+3 ev]
+01 "Actually, Marl's city is Osterby." -> "Updated: Marl's city is Osterby (it was Fenwick)."  [+1 ev]
+01 -- RESTART 1 --
+01 'Where does Marl live?' -> "Marl's city is Osterby."  [+0 ev]
+01 'Who lives in Fenwick?' -> "I don't know anyone whose city is Fenwick."  [+0 ev]
+01 'Who lives in Osterby?' -> "Marl's city is Osterby."  [+0 ev]
+01 'Tell me about Marl.' -> "Marl's city is Osterby."  [+0 ev]
+01   STORED [('Marl', 'city', 'Osterby'), ('Marl', 'city', 'Osterby')]

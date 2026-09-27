@@ -1,0 +1,112 @@
+{
+ "seconds": 473.6,
+ "model": "HuggingFaceTB/SmolLM2-360M-Instruct",
+ "seed": 6601,
+ "fair_system": "Answer the question with a short phrase. The facts below are numbered in the order you learned them. A fact marked (this replaces fact N) replaces that older fact: newer facts win over older ones. Say I don't know if the facts don't say. Example: Facts: 1. The keeper of Grey Archive is Marisol Vega. Question: Who keeps the Red Archive? Answer: I don't know.",
+ "arms": {
+  "fair-smollm": {
+   "fable_edit_200": {
+    "n": 200,
+    "correct": 17,
+    "abstain": 84,
+    "wrong": 99,
+    "contains_gold": 24
+   },
+   "s2fresh_4hop": {
+    "n": 200,
+    "correct": 47,
+    "abstain": 40,
+    "wrong": 113,
+    "contains_gold": 49
+   }
+  },
+  "smollm-incontext-b125": {
+   "fable_edit_200": {
+    "n": 200,
+    "correct": 52,
+    "abstain": 0,
+    "wrong": 148,
+    "contains_gold": 67
+   },
+   "s2fresh_4hop": {
+    "n": 200,
+    "correct": 52,
+    "abstain": 0,
+    "wrong": 148,
+    "contains_gold": 57
+   }
+  },
+  "loops-b125": {
+   "loop102": {
+    "fable_edit_200": {
+     "n": 200,
+     "correct": 150,
+     "abstain": 50,
+     "wrong": 0,
+     "contains_gold": 150
+    },
+    "s2fresh_4hop": {
+     "n": 200,
+     "correct": 0,
+     "abstain": 70,
+     "wrong": 130,
+     "contains_gold": 5
+    }
+   },
+   "loop113": {
+    "fable_edit_200": {
+     "n": 200,
+     "correct": 150,
+     "abstain": 50,
+     "wrong": 0,
+     "contains_gold": 150
+    },
+    "s2fresh_4hop": {
+     "n": 200,
+     "correct": 145,
+     "abstain": 50,
+     "wrong": 5,
+     "contains_gold": 146
+    }
+   },
+   "loop113b": {
+    "fable_edit_200": {
+     "n": 200,
+     "correct": 150,
+     "abstain": 50,
+     "wrong": 0,
+     "contains_gold": 150
+    },
+    "s2fresh_4hop": {
+     "n": 200,
+     "correct": 145,
+     "abstain": 50,
+     "wrong": 5,
+     "contains_gold": 146
+    }
+   }
+  }
+ },
+ "F2": {
+  "n": 200,
+  "old66_incontext_abstain": 11,
+  "phrase_incontext_abstain": 11,
+  "old_abstains_containing_not": 0,
+  "old_abstains_only_because_of_not": 0
+ },
+ "F3_wrong_rate": {
+  "fable_edit_200": {
+   "fair_smollm_wrong_rate": 0.495,
+   "loop102_wrong_rate": 0.0,
+   "loop113_wrong_rate": 0.0,
+   "loop113b_wrong_rate": 0.0
+  },
+  "s2fresh_4hop": {
+   "fair_smollm_wrong_rate": 0.565,
+   "loop102_wrong_rate": 0.65,
+   "loop113_wrong_rate": 0.025,
+   "loop113b_wrong_rate": 0.025
+  }
+ },
+ "limit": null
+}

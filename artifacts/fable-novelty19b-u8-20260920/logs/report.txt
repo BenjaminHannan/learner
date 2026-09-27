@@ -1,0 +1,289 @@
+================================================================================================
+experiment 19b -- U8 versus U5, D only, 2000 offline updates from the experiment-19 awake finals
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19b-u8-20260920
+seeds [1900, 1901, 1902]   arms ['U5', 'U8']   train cap 8   eval cap 16   64 units/cell
+cells: 38 ({'bounded': 21, 'long': 9, 'contrast': 3, 'guards': 6, 'retention_f': 7, 'retention_h': 4})
+
+================================================================================================
+seed 1900: bounded competence (U8), mark 58/64 answers AND strict
+    cell                   ans   str   calls   ovc
+    N-c4-p6                  3     0    2.00     0
+    N-c4-p16                 3     0    2.00     0
+    N-c5-p6                  1     0    2.00     0
+    N-c5-p16                 3     0    2.00     0
+    P-c4-r8-p6               3     0    2.00     0
+    P-c4-r8-p16              2     0    2.00     0
+    P-c4-r9-p6               5     0    2.00     0
+    P-c4-r9-p16              3     0    2.00     0
+    P-c5-r8-p6               3     0    2.00     0
+    P-c5-r8-p16              1     0    2.00     0
+    P-c5-r9-p6               7     0    2.00     0
+    P-c5-r9-p16              5     0    2.00     0
+    L-c6-r8-p16              4     0    2.00     0
+    L-c6-r9-p16              1     0    2.00     0
+    L-c6-r10-p16             6     0    2.00     0
+    L-c7-r8-p16              0     0    3.00     0
+    L-c7-r9-p16              1     0    3.00     0
+    L-c7-r10-p16             7     0    3.00     0
+    L-c8-r8-p16              3     0    2.00     0
+    L-c8-r9-p16              4     0    2.00     0
+    L-c8-r10-p16             1     0    2.00     0
+
+seed 1900: the treatment contrast, reported SEPARATELY -- U8 strict minus U5 strict on identical units, mark +13/64
+    cell                   ans   str   calls   ovc  U5 str   diff  win  loss
+    L-c6-r10-p16             6     0    2.00     0       0     +0    0     0
+    L-c7-r10-p16             7     0    3.00     0       0     +0    0     0
+    L-c8-r10-p16             1     0    2.00     0       0     +0    0     0
+
+seed 1900: guards (strict pair units, mark 58/64)
+    cell                   ans   str   calls   ovc
+    E-c5-link                0     0    2.00     0
+    E-c5-value               0     0    2.00     0
+    E-c5-irrelevant          2     0    2.00     0
+    E-c8-link                0     0    2.00     0
+    E-c8-value               0     0    2.00     0
+    E-c8-irrelevant          6     0    2.00     0
+
+seed 1900: retention -- F at 61/64, H at 58/64 with no loss >= 7/64 from the awake anchor
+    cell                   ans   str   calls   ovc  vs awake
+    F-c1-r8                 64    64    1.00     0        +0
+    F-c1-r9                 64    64    1.00     0        +0
+    F-c1-r10                64    64    1.00     0        +0
+    F-c2-r8                 64    64    2.00     0        +0
+    F-c2-r9                 64    64    2.00     0        +0
+    F-c3-r8                 61    61    3.00     0        -1
+    F-c3-r9                 63    63    3.00     0        -1
+    H-c2-p6                 64    64    2.00     0        +0
+    H-c2-p16                64    64    2.00     0        +0
+    H-c3-p6                 64    64    3.00     0        +0
+    H-c3-p16                64    64    3.00     0        +1
+
+    failure shapes (calls histogram / first wrong call / stopped early|late / oracle-operator errors on the true chain)
+        N-c4-p6             calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        N-c4-p16            calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        N-c5-p6             calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        N-c5-p16            calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c4-r8-p6          calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c4-r8-p16         calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c4-r9-p6          calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c4-r9-p16         calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c5-r8-p6          calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c5-r8-p16         calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c5-r9-p6          calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c5-r9-p16         calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c6-r8-p16         calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c6-r9-p16         calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c6-r10-p16        calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c7-r8-p16         calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c7-r9-p16         calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c7-r10-p16        calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c8-r8-p16         calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c8-r9-p16         calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c8-r10-p16        calls={2:64}  first_wrong={1:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+
+================================================================================================
+seed 1901: bounded competence (U8), mark 58/64 answers AND strict
+    cell                   ans   str   calls   ovc
+    N-c4-p6                  1     0    3.00     0
+    N-c4-p16                 4     0    3.00     0
+    N-c5-p6                  1     0    3.00     0
+    N-c5-p16                 2     0    3.00     0
+    P-c4-r8-p6               2     0    3.00     0
+    P-c4-r8-p16              3     0    3.00     0
+    P-c4-r9-p6               2     0    3.00     0
+    P-c4-r9-p16              3     0    3.00     0
+    P-c5-r8-p6               4     0    3.00     0
+    P-c5-r8-p16              1     0    3.00     0
+    P-c5-r9-p6               5     0    3.00     0
+    P-c5-r9-p16              5     0    3.00     0
+    L-c6-r8-p16              5     0    3.00     0
+    L-c6-r9-p16              2     0    3.00     0
+    L-c6-r10-p16             2     0    3.00     0
+    L-c7-r8-p16              1     0    3.00     0
+    L-c7-r9-p16              1     0    3.00     0
+    L-c7-r10-p16             8     0    3.00     0
+    L-c8-r8-p16              5     0    3.00     0
+    L-c8-r9-p16              0     0    3.00     0
+    L-c8-r10-p16             6     0    3.00     0
+
+seed 1901: the treatment contrast, reported SEPARATELY -- U8 strict minus U5 strict on identical units, mark +13/64
+    cell                   ans   str   calls   ovc  U5 str   diff  win  loss
+    L-c6-r10-p16             2     0    3.00     0       3     -3    0     3
+    L-c7-r10-p16             8     0    3.00     0       0     +0    0     0
+    L-c8-r10-p16             6     0    3.00     0       0     +0    0     0
+
+seed 1901: guards (strict pair units, mark 58/64)
+    cell                   ans   str   calls   ovc
+    E-c5-link                0     0    3.00     0
+    E-c5-value               0     0    3.00     0
+    E-c5-irrelevant          2     0    3.00     0
+    E-c8-link                0     0    3.00     0
+    E-c8-value               0     0    3.00     0
+    E-c8-irrelevant          3     0    3.00     0
+
+seed 1901: retention -- F at 61/64, H at 58/64 with no loss >= 7/64 from the awake anchor
+    cell                   ans   str   calls   ovc  vs awake
+    F-c1-r8                 64    64    1.00     0        +0
+    F-c1-r9                 64    64    1.00     0        +0
+    F-c1-r10                64    64    1.00     0        +0
+    F-c2-r8                 64    64    2.00     0        +0
+    F-c2-r9                 64    64    2.00     0        +0
+    F-c3-r8                 61    61    3.00     0        -3
+    F-c3-r9                 58    57    3.00     0        -7
+    H-c2-p6                 64    64    2.00     0        +0
+    H-c2-p16                64    64    2.00     0        +0
+    H-c3-p6                 57    57    3.00     0        -7
+    H-c3-p16                53    52    3.00     0       -12
+
+    failure shapes (calls histogram / first wrong call / stopped early|late / oracle-operator errors on the true chain)
+        N-c4-p6             calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        N-c4-p16            calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        N-c5-p6             calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        N-c5-p16            calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c4-r8-p6          calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c4-r8-p16         calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c4-r9-p6          calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c4-r9-p16         calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c5-r8-p6          calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c5-r8-p16         calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c5-r9-p6          calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        P-c5-r9-p16         calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c6-r8-p16         calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c6-r9-p16         calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c6-r10-p16        calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c7-r8-p16         calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c7-r9-p16         calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c7-r10-p16        calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c8-r8-p16         calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c8-r9-p16         calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c8-r10-p16        calls={3:64}  first_wrong={2:64}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+
+================================================================================================
+seed 1902: bounded competence (U8), mark 58/64 answers AND strict
+    cell                   ans   str   calls   ovc
+    N-c4-p6                 61    61    4.00     0
+    N-c4-p16                58    58    4.00     0
+    N-c5-p6                 53    53    4.97     0
+    N-c5-p16                53    53    5.00     0
+    P-c4-r8-p6              60    60    4.00     0
+    P-c4-r8-p16             61    61    4.00     0
+    P-c4-r9-p6              61    61    4.00     0
+    P-c4-r9-p16             62    62    4.00     0
+    P-c5-r8-p6              46    46    4.98     0
+    P-c5-r8-p16             52    52    5.00     0
+    P-c5-r9-p6              54    53    5.00     0
+    P-c5-r9-p16             52    51    5.00     0
+    L-c6-r8-p16             34    31    5.95     0
+    L-c6-r9-p16             37    36    5.95     0
+    L-c6-r10-p16            40    39    5.98     0
+    L-c7-r8-p16              1     0    5.00     0
+    L-c7-r9-p16              1     0    5.09     0
+    L-c7-r10-p16             1     0    5.02     0
+    L-c8-r8-p16              5     0    4.23     0
+    L-c8-r9-p16              1     0    4.27     0
+    L-c8-r10-p16             2     0    4.25     0
+
+seed 1902: the treatment contrast, reported SEPARATELY -- U8 strict minus U5 strict on identical units, mark +13/64
+    cell                   ans   str   calls   ovc  U5 str   diff  win  loss
+    L-c6-r10-p16            40    39    5.98     0       5    +34   37     3
+    L-c7-r10-p16             1     0    5.02     0       1     -1    0     1
+    L-c8-r10-p16             2     0    4.25     0       0     +0    0     0
+
+seed 1902: guards (strict pair units, mark 58/64)
+    cell                   ans   str   calls   ovc
+    E-c5-link               39    38    4.98     0
+    E-c5-value              48    48    5.00     0
+    E-c5-irrelevant         48    48    4.97     0
+    E-c8-link                0     0    4.17     0
+    E-c8-value               0     0    4.27     0
+    E-c8-irrelevant          4     0    4.33     0
+
+seed 1902: retention -- F at 61/64, H at 58/64 with no loss >= 7/64 from the awake anchor
+    cell                   ans   str   calls   ovc  vs awake
+    F-c1-r8                 64    64    1.00     0        +0
+    F-c1-r9                 64    64    1.00     0        +0
+    F-c1-r10                64    64    1.00     0        +0
+    F-c2-r8                 64    64    2.00     0        +0
+    F-c2-r9                 64    64    2.00     0        +0
+    F-c3-r8                 64    64    3.00     0        +0
+    F-c3-r9                 64    64    3.00     0        +0
+    H-c2-p6                 64    64    2.00     0        +0
+    H-c2-p16                64    64    2.00     0        +0
+    H-c3-p6                 64    64    3.00     0        +0
+    H-c3-p16                62    62    3.00     0        -2
+
+    failure shapes (calls histogram / first wrong call / stopped early|late / oracle-operator errors on the true chain)
+        N-c4-p6             calls={4:64}  first_wrong={3:3}  early=0 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=61
+        N-c4-p16            calls={4:64}  first_wrong={3:6}  early=0 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=58
+        N-c5-p6             calls={4:2,5:62}  first_wrong={3:3,4:8}  early=2 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=53
+        N-c5-p16            calls={5:64}  first_wrong={3:6,4:5}  early=0 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=53
+        P-c4-r8-p6          calls={4:64}  first_wrong={3:4}  early=0 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=60
+        P-c4-r8-p16         calls={4:64}  first_wrong={3:3}  early=0 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=61
+        P-c4-r9-p6          calls={4:64}  first_wrong={3:3}  early=0 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=61
+        P-c4-r9-p16         calls={4:64}  first_wrong={3:2}  early=0 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=62
+        P-c5-r8-p6          calls={4:1,5:63}  first_wrong={2:1,3:7,4:10}  early=1 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=46
+        P-c5-r8-p16         calls={5:64}  first_wrong={3:7,4:5}  early=0 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=52
+        P-c5-r9-p6          calls={5:64}  first_wrong={3:5,4:6}  early=0 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=53
+        P-c5-r9-p16         calls={5:64}  first_wrong={3:2,4:11}  early=0 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=51
+        L-c6-r8-p16         calls={5:3,6:61}  first_wrong={3:6,4:13,5:14}  early=3 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=31
+        L-c6-r9-p16         calls={5:4,6:59,7:1}  first_wrong={3:6,4:12,5:10}  early=4 late=1  over_cap=0 invalid=0  op_wrong=0  oracle_strict=36
+        L-c6-r10-p16        calls={5:2,6:61,7:1}  first_wrong={3:8,4:11,5:6}  early=2 late=1  over_cap=0 invalid=0  op_wrong=0  oracle_strict=39
+        L-c7-r8-p16         calls={5:64}  first_wrong={3:8,4:56}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c7-r9-p16         calls={5:58,6:6}  first_wrong={3:12,4:46,5:6}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c7-r10-p16        calls={5:63,6:1}  first_wrong={3:2,4:62}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c8-r8-p16         calls={4:49,5:15}  first_wrong={3:49,4:15}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c8-r9-p16         calls={4:47,5:17}  first_wrong={3:47,4:17}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+        L-c8-r10-p16        calls={4:48,5:16}  first_wrong={2:1,3:49,4:14}  early=64 late=0  over_cap=0 invalid=0  op_wrong=0  oracle_strict=0
+
+================================================================================================
+Astra's five conditions, separately in each seed (no averaging)
+  seed 1900: FAIL
+    bounded_competence     FAIL      section 1: >= 58/64 answers AND strict in every N/P cell at c=4/5 and all nine c=6..8 cells
+        failed: ['N-c4-p6', 'N-c4-p16', 'N-c5-p6', 'N-c5-p16', 'P-c4-r8-p6', 'P-c4-r8-p16', 'P-c4-r9-p6', 'P-c4-r9-p16', 'P-c5-r8-p6', 'P-c5-r8-p16', 'P-c5-r9-p6', 'P-c5-r9-p16', 'L-c6-r8-p16', 'L-c6-r9-p16', 'L-c6-r10-p16', 'L-c7-r8-p16', 'L-c7-r9-p16', 'L-c7-r10-p16', 'L-c8-r8-p16', 'L-c8-r9-p16', 'L-c8-r10-p16']
+    treatment_effect       FAIL      section 2: U8 strict exceeds U5 by >= 13/64 on IDENTICAL units in each of the three c=6/7/8 r10 p16 cells
+        failed: ['L-c6-r10-p16', 'L-c7-r10-p16', 'L-c8-r10-p16']
+    guards                 FAIL      section 3: >= 58/64 strict pair units in each c=5 and c=8 E cell
+        failed: ['E-c5-link', 'E-c5-value', 'E-c5-irrelevant', 'E-c8-link', 'E-c8-value', 'E-c8-irrelevant']
+    retention              PASS      section 4: >= 61/64 answers AND strict in all seven F cells; >= 58/64 both metrics in all four H cells with no H-cell loss >= 7/64 from that seed's awake anchor on the same units
+    (U5 also competent?)   no        reported for interpretation only; never a pass condition
+  seed 1901: FAIL
+    bounded_competence     FAIL      section 1: >= 58/64 answers AND strict in every N/P cell at c=4/5 and all nine c=6..8 cells
+        failed: ['N-c4-p6', 'N-c4-p16', 'N-c5-p6', 'N-c5-p16', 'P-c4-r8-p6', 'P-c4-r8-p16', 'P-c4-r9-p6', 'P-c4-r9-p16', 'P-c5-r8-p6', 'P-c5-r8-p16', 'P-c5-r9-p6', 'P-c5-r9-p16', 'L-c6-r8-p16', 'L-c6-r9-p16', 'L-c6-r10-p16', 'L-c7-r8-p16', 'L-c7-r9-p16', 'L-c7-r10-p16', 'L-c8-r8-p16', 'L-c8-r9-p16', 'L-c8-r10-p16']
+    treatment_effect       FAIL      section 2: U8 strict exceeds U5 by >= 13/64 on IDENTICAL units in each of the three c=6/7/8 r10 p16 cells
+        failed: ['L-c6-r10-p16', 'L-c7-r10-p16', 'L-c8-r10-p16']
+    guards                 FAIL      section 3: >= 58/64 strict pair units in each c=5 and c=8 E cell
+        failed: ['E-c5-link', 'E-c5-value', 'E-c5-irrelevant', 'E-c8-link', 'E-c8-value', 'E-c8-irrelevant']
+    retention              FAIL      section 4: >= 61/64 answers AND strict in all seven F cells; >= 58/64 both metrics in all four H cells with no H-cell loss >= 7/64 from that seed's awake anchor on the same units
+        failed: ['F-c3-r9', 'H-c3-p6', 'H-c3-p16']
+    (U5 also competent?)   no        reported for interpretation only; never a pass condition
+  seed 1902: FAIL
+    bounded_competence     FAIL      section 1: >= 58/64 answers AND strict in every N/P cell at c=4/5 and all nine c=6..8 cells
+        failed: ['N-c5-p6', 'N-c5-p16', 'P-c5-r8-p6', 'P-c5-r8-p16', 'P-c5-r9-p6', 'P-c5-r9-p16', 'L-c6-r8-p16', 'L-c6-r9-p16', 'L-c6-r10-p16', 'L-c7-r8-p16', 'L-c7-r9-p16', 'L-c7-r10-p16', 'L-c8-r8-p16', 'L-c8-r9-p16', 'L-c8-r10-p16']
+    treatment_effect       FAIL      section 2: U8 strict exceeds U5 by >= 13/64 on IDENTICAL units in each of the three c=6/7/8 r10 p16 cells
+        failed: ['L-c7-r10-p16', 'L-c8-r10-p16']
+    guards                 FAIL      section 3: >= 58/64 strict pair units in each c=5 and c=8 E cell
+        failed: ['E-c5-link', 'E-c5-value', 'E-c5-irrelevant', 'E-c8-link', 'E-c8-value', 'E-c8-irrelevant']
+    retention              PASS      section 4: >= 61/64 answers AND strict in all seven F cells; >= 58/64 both metrics in all four H cells with no H-cell loss >= 7/64 from that seed's awake anchor on the same units
+    (U5 also competent?)   no        reported for interpretation only; never a pass condition
+  provenance: PASS
+    every_endpoint               PASS      three awake anchors plus six continuations, all scored
+    one_panel_suite              PASS      every merged run scored on ONE panel suite at the registered cap
+    one_script_version           PASS      every merged run produced by ONE frozen script version
+    shared_world_order           PASS      U5 and U8 follow the SAME world-index order in every seed
+    zero_composite_r10_exposure  PASS      zero composite-r10 exposure in every training buffer
+    no_conflicts                 PASS      no conflicting and no rejected score files
+
+================================================================================================
+interpretive cases (Astra)
+    u5_also_competent: holds=False
+        both recipes may be competent, but a benefit of widening the practice mix is UNESTABLISHED; that is not evidence that widening does not help
+    only_practised_endings_succeed: holds=False
+        if the practised-ending long cells pass and the held-out-ending (r10) ones do not, the continuation problem has improved while held-out-ending transfer has FAILED
+    extra_calls_are_not_a_pass: holds=True
+        a higher mean call count is not a result.  strict requires the complete correct call sequence and native STOP immediately after the terminal lookup, and a cap hit is a failure even when the last token happens to equal the answer
+
+================================================================================================
+registered development rule (19b, D-U8): FAIL
+
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19b-u8-20260920/report.json
+not writing /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19b-u8-20260920/DEV-PASSED.json: the 19b development rule is not met

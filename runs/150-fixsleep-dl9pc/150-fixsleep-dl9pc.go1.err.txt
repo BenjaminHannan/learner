@@ -1,0 +1,488 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch origin main builder-outbox 2>&1 | head -20; echo "---FETCH DONE---"; git show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -20
+From github.com:BenjaminHannan/learner
+ * branch                main           -> FETCH_HEAD
+ * branch                builder-outbox -> FETCH_HEAD
+   ec80fa2d0..c06390585  builder-outbox -> origin/builder-outbox
+---FETCH DONE---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -14 | cat -n
+1	COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+     2	First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+     3	- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+     4	- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+     5	- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+     6	- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+     7	- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+     8	- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+     9	- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+    10	Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+    11	BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+    12	
+    13	GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+    14	INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+[0m
+[0m$ [0mcat "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt" 2>&1; echo "===END OPUS-RULES==="; uptime 2>&1; df -g / 2>&1 | head -5
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+===END OPUS-RULES===
+20:48  up 3 days, 10:42, 4 users, load averages: 65.01 58.30 71.09
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        42    24%  484014 443753240    0%   /
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-dl9-20260926/RESULTS-gpu.md 2>&1 | head -5; echo "===OUTBOX-EXIT:$?==="; git show origin/main:artifacts/claude-dl9-20260926/RESULTS-gpu.md 2>&1 | head -5; echo "===MAIN-EXIT:$?==="
+fatal: path 'artifacts/claude-dl9-20260926/RESULTS-gpu.md' does not exist in 'origin/builder-outbox'
+===OUTBOX-EXIT:0===
+fatal: path 'artifacts/claude-dl9-20260926/RESULTS-gpu.md' does not exist in 'origin/main'
+===MAIN-EXIT:0===
+[0m
+[0m$ [0mssh benspc "cat 'C:/Users/benja/GPU-BUSY.txt'" 2>&1; echo "===SSH-EXIT:$?==="
+'cat' is not recognized as an internal or external command,
+operable program or batch file.
+===SSH-EXIT:1===
+[0m
+[0m$ [0mssh benspc "Get-Content C:\\Users\\benja\\GPU-BUSY.txt" 2>&1; echo "===EXIT:$?==="
+'Get-Content' is not recognized as an internal or external command,
+operable program or batch file.
+===EXIT:1===
+[0m
+[0m$ [0mssh benspc "echo hello" 2>&1; echo "===EXIT:$?==="
+hello
+===EXIT:0===
+[0m
+[0m$ [0mssh benspc "cmd /c type C:\\Users\\benja\\GPU-BUSY.txt" 2>&1; echo "===EXIT:$?==="
+BUSY: queue job 150-fixsleep-dl9pc since 2026-09-27T00:48:44Z - do not use this GPU until this file is gone 
+===EXIT:0===
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-dl9-20260926/PASSMARKS.md 2>&1
+# dl-9: a separate expert with a learned switch. Does it stop the forgetting and keep the learning?
+# (Fix-sleep thread. Registered when this file is committed, before any run. Asked by the Thread manager 19:22 UTC,
+# from Ben's idea at 19:15 UTC: "What if we separated parts of the brain?" ... "like we did a mixture of expert style
+# thing.")
+Code: scripts/claude_dl9_experts.py (the docstring is the method). Reuses claude_dl1_nights unchanged, dl-7's
+question-pool recipe, and the GLM puzzle instruction and suffix pinned by claude_dl6c_glmframe (frames.json sha256
+3c1fe9c1...14bc). This is a test, not an architecture change: nothing joins 0.2d without Ben's yes.
+
+## Why
+- Every night so far trains one always-on adapter that then answers every question. dl-5's carry row (CARRY.md):
+  after grid nights 299-300 of 300 panel replies took the grid answer's shape. dl-6: forgetting tracks the total
+  amount trained. Whether the adapter's spill onto unrelated questions causes the forgetting is untested.
+- Brain first: skills sit in partly separate circuits, and prefrontal cortex / basal ganglia gate which one runs for
+  the task at hand (context-dependent gating; suggested as a guard against interference, not shown here). Silicon
+  version, simplest form first: the night's adapter is one expert on a frozen MiniCPM5-1B; a small learned switch
+  turns the whole adapter on or off per question. Token-level routing and one expert per night come later.
+
+## ONE change from dl-2's night: how the trained adapter is served
+Training is dl-2's night, unchanged (3 epochs, lr 2e-4, batch 8, one growing LoRA r16 on q,k,v,o; targets are the 1B's
+own code-checked expressions, bare). Each seed trains one adapter; three ways of serving it are scored on the same
+answers:
+- S = adapter always on (as every dl run so far).
+- X = learned switch: adapter on only where the switch says the question belongs to the expert; otherwise the frozen
+  base answers.
+- R = random switch with X's on-rate over the same 400 questions (control: "on less often" without choosing).
+The switch is logistic regression on the frozen base's last-layer state at the last prompt token. Its labels are
+code-made from where an item came from: 1 = a day puzzle practised on nights 1..d (solved or not); 0 = a short quiz
+question the base wrote itself (dl-7's recipe, panel topics and digits dropped, pool seed 3091; 80% train, 20% held
+out), half of them with GLM's "Answer only, no explanation." appended so answer-only wording is not a cue. It is
+refit each night. No hand-written routing rule; no Claude-written text in the switch's inputs or the adapter's
+training rows. Seeds 16 and 17, 7 nights, 150 puzzles a day, 30 guesses; TEST seed 3090 (100 fresh puzzles x 20
+guesses at dl-1's temperature); HARM = the 300-item panel (lost = right at base, wrong now). Machine: BensPC.
+
+## Marks (night 7; score() computes them)
+- H1 forgetting stopped: X lost <= 5 on each seed, and X lost <= 0.25 x S lost (sums).
+- H2 learning kept: X's gain over L0 >= 0.9 x S's gain, on each seed.
+- H3 switch learned: on for >= 95 of 100 TEST puzzles and off for >= 285 of 300 panel items, on each seed.
+- H4 choosing beats chance: X gain >= 2 x R gain, and X lost <= R lost (sums).
+Verdict: PASS = H1-H4. INCONCLUSIVE if L0 < 10 or S's night-7 lost sum < 20 (nothing to stop).
+Proved wrong (separation with a switch learned from where items came from does not keep both): on either seed X
+lost > 0.5 x S lost, or X gain < 0.8 x S gain.
+
+## Reported, not marked
+- The switch per night: on-rate on TEST, on the panel by kind (count and bigger are number questions, the hardest
+  to route), on the held-out base questions; S's lost items the switch turned on.
+- Carry-over / rewording row (night 7): TEST puzzles under GLM's four other candidate wordings, never trained:
+  greedy solves by the base, by the adapter, and served by the switch, plus the switch's on-rate. Separate experts
+  may share less: if the switch stays off for reworded puzzles, the learning does not reach them.
+- S's KL to the base, S / X / R greedy and reached, per night.
+
+## Limits stated before the run
+- Number puzzles only, one expert. The expert's questions share one instruction wording, so telling them apart from
+  quiz questions is expected to be easy; a PASS shows separation can stop the spill when the kinds are distinct, not
+  that it works for blended questions or across many experts. Grids (dl-5's spill) wait for GLM grid wording.
+- The switch's negative examples are questions the base 1B wrote (dl-7b's pool source), prompted by dl-7's fixed
+  asks; they are not Claude-written and are never answered or trained into the adapter.
+- Every dl run samples puzzle guesses through claude_blurt2's RuleKeeper (a hand-written stand-in that keeps guesses
+  to the given numbers); it is disclosed scaffolding, identical in all three serving modes.
+- X and R reuse the base's and the adapter's per-question answers instead of generating again (greedy panel answers
+  are identical; sampled puzzle guesses are one sample either way). Two seeds.
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_dl9_experts.py 2>&1 | head -150
+#!/usr/bin/env python3
+"""dl-9: does keeping the night's learning in a SEPARATE expert, switched on per question by a LEARNED switch, stop
+the forgetting while keeping the learning? (Fix-sleep thread, 2026-09-26; marks: artifacts/claude-dl9-20260926/
+PASSMARKS.md). Ben's idea, 19:15 UTC via the Thread manager: "What if we separated parts of the brain?" ... "like we
+did a mixture of expert style thing."
+
+Why. Every copy-practice night so far (dl-2..dl-6) trains one always-on adapter, and it answers every question
+afterwards. dl-5's carry row (artifacts/claude-dl5-20260926/CARRY.md) found 299-300 of 300 panel replies took the grid
+answer's shape with that adapter on; dl-6 found forgetting tracks the total amount trained. Whether this spill onto
+unrelated questions causes the forgetting is untested. Brain first: the cortex keeps skills in partly separate
+circuits and the prefrontal cortex / basal ganglia gate which one runs for the task at hand (context-dependent gating,
+suggested as a guard against interference). Silicon version, simplest form first: the night's adapter is the expert;
+the frozen 1B answers everything else; a small learned switch reads each question and turns the whole adapter on or off.
+
+ONE change from dl-2's night (claude_dl1_nights.train_copy, 3 epochs, lr 2e-4, batch 8, one growing LoRA r16 on
+q,k,v,o): how the trained model is SERVED. Training is identical, so each seed trains one adapter and three ways of
+serving it are measured on the same answers:
+  S  adapter always on (dl-2 as served until now).
+  X  learned switch: adapter on only for questions the switch says belong to the expert; otherwise the frozen base.
+  R  random switch with X's on-rate over the same questions (control: "on less often" without choosing).
+Because the frozen base is the adapter at scale 0 and panel answers are greedy, X and R reuse the per-question answers
+of the base and of the adapter; nothing is generated twice.
+The switch: logistic regression on the FROZEN base's last-layer hidden state at the last prompt token. Labels are
+code-made from where the item came from: 1 = a day puzzle the night practised (every puzzle of nights 1..d, solved or
+not); 0 = a short quiz question the BASE wrote itself (dl-7's pool recipe, panel topics dropped, seed 3091), half of
+them with GLM 5.3 Flash's answer-only suffix appended so "answer only" wording is not a cue. No rule, no Claude text
+in the switch's inputs. Refit each night; 20% of the base's questions are held out to measure it.
+Puzzle instruction: GLM 5.3 Flash's (claude_dl6c_glmframe, sha-pinned); targets are the 1B's own code-checked
+expressions. Seeds 16 and 17, 7 nights, TEST seed 3090, HARM = the 300-item panel (lost = right at base, wrong now).
+Report-only: the switch's on-rate per panel kind (count and bigger are number questions, the hardest to route);
+and at night 7 a reworded row: TEST puzzles under GLM's four other candidate wordings (never trained), greedy solves
+with the base, with the adapter, and served by the switch.
+
+  python -B scripts/claude_dl9_experts.py --selftest
+  python -B scripts/claude_dl9_experts.py --model M --out DIR        (registered run)
+  python -B scripts/claude_dl9_experts.py --model M --out DIR --dev  (plumbing rehearsal)
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import sys
+import time
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import claude_blurt1 as B1  # noqa: E402
+import claude_dl6c_glmframe as G  # noqa: E402
+
+TEST_SEED = 3090
+POOL_SEED = 3091
+MODES = ("S", "X", "R")
+
+
+def glm_texts() -> tuple[str, list[str], str]:
+    """The chosen GLM puzzle frame, the four other GLM candidate frames, and GLM's chosen suffix (sha-pinned file)."""
+    import hashlib
+    raw = G.FRAMES.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != G.FRAMES_SHA256:
+        raise SystemExit("frames.json sha256 does not match the pin")
+    d = json.loads(raw.decode("utf-8"))
+    chosen = d["puzzle"]["chosen"]
+    others = [c["text"] for c in d["puzzle"]["candidates"] if c["ok"] and c["text"] != chosen]
+    return chosen, others, d["suffix"]["chosen"]
+
+
+def question_pool(s, n_ask, seed) -> list[str]:
+    """dl-7's recipe, questions only: the base writes short quiz questions; panel topics and digits are dropped."""
+    import claude_dl3_replay as R
+    import claude_dl7_fragile as F7
+    s.torch.manual_seed(seed)
+    bad = R.panel_words()
+    qs, seen, left, b = [], set(), n_ask, 0
+    while left > 0:
+        ids = R.chat_ids(s, F7.ASKS[b % len(F7.ASKS)]).unsqueeze(0).to(s.dev)
+        b += 1
+        k = min(50, left)
+        with s.torch.no_grad():
+            out = s.model.generate(input_ids=ids.repeat(k, 1), attention_mask=s.torch.ones_like(ids.repeat(k, 1)),
+                                   max_new_tokens=R.MAX_Q, do_sample=True, temperature=1.0, top_p=0.95,
+                                   pad_token_id=s.tok.eos_token_id)
+        for o in out:
+            q = R.clean_question(s.tok.decode(o[ids.shape[1]:], skip_special_tokens=True), bad)
+            if q and q.lower() not in seen:
+                seen.add(q.lower())
+                qs.append(q)
+        left -= k
+    return qs
+
+
+def chat_text(s, q: str) -> str:
+    return s.tok.apply_chat_template([{"role": "user", "content": q}], tokenize=False, add_generation_prompt=True,
+                                     enable_thinking=False)
+
+
+def feats(s, texts: list[str]):
+    """Frozen base, last layer, last prompt token (the position the answer starts from)."""
+    rows = []
+    with s.torch.no_grad():
+        for t in texts:
+            ids = s.tok(t, return_tensors="pt").to(s.dev)
+            h = s.model(**ids, output_hidden_states=True).hidden_states[-1][0, -1]
+            rows.append(h.float().cpu())
+    return s.torch.stack(rows) if rows else s.torch.zeros(0, 1)
+
+
+def fit_switch(torch, X, y, seed, steps=400) -> dict:
+    """Class-balanced logistic regression on standardised features (the switch's only learned parameters)."""
+    g = torch.Generator().manual_seed(seed)
+    mu, sd = X.mean(0), X.std(0) + 1e-4
+    Z = (X - mu) / sd
+    w = (torch.randn(Z.shape[1], generator=g) * 0.01).requires_grad_()
+    b = torch.zeros(1, requires_grad=True)
+    pos = float(y.sum())
+    wt = torch.where(y > 0, len(y) / (2 * max(pos, 1)), len(y) / (2 * max(len(y) - pos, 1)))
+    opt = torch.optim.Adam([w, b], lr=1e-2, weight_decay=1e-3)
+    for _ in range(steps):
+        opt.zero_grad()
+        loss = (torch.nn.functional.binary_cross_entropy_with_logits(Z @ w + b, y, reduction="none") * wt).mean()
+        loss.backward()
+        opt.step()
+    return {"mu": mu, "sd": sd, "w": w.detach(), "b": b.detach(), "train_loss": round(float(loss.detach()), 5)}
+
+
+def switch_on(sw, X) -> list[bool]:
+    if len(X) == 0:
+        return []
+    return [bool(v) for v in (((X - sw["mu"]) / sw["sd"]) @ sw["w"] + sw["b"] > 0).tolist()]
+
+
+def per_puzzle(s, m, ps, n, temp) -> tuple[list[int], list[int]]:
+    """Right sampled guesses per puzzle (n at temp) and greedy right per puzzle."""
+    hits = [sum(B1.check(t, p["nums"], p["target"]) for t in s.generate(p, n, temp, m)) for p in ps]
+    greedy = [int(B1.check(s.generate(p, 1, None, m)[0], p["nums"], p["target"])) for p in ps]
+    return hits, greedy
+
+
+def serve(on: list[bool], adapter: list, base: list) -> list:
+    return [a if o else b for o, a, b in zip(on, adapter, base)]
+
+
+def random_gate(n_items: int, n_on: int, seed: int) -> list[bool]:
+    on = set(random.Random(seed).sample(range(n_items), n_on))
+    return [i in on for i in range(n_items)]
+
+
+def with_frame(frame: str, fn):
+    old = B1.puzzle_prompt
+[0m
+[0m$ [0mdate -u +%FT%TZ; pwd; git log --oneline -3 origin/main 2>&1 | head -5
+2026-09-27T00:49:19Z
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ed8d0cc1a lis-320: pilot 6 PASS on every mark (labels 1 of 20 wrong, correct_ref 0 of 17); full run chunk 1 queued (seed 324, 6000 dialogs, glm_oclow, check_we2)
+73d982e06 gr-5 progress: P0 squares run file (100 rows, report only); P0 lookalikes started 00:46:04Z
+1425b026a Director: queue c1dev as k2-c1dev-benspc (after k1f-benspc2)
+[0m
+[0m$ [0mssh benspc "cmd /c \"nvidia-smi & echo ---DISK--- & wmic logicaldisk where caption=\'C:\' get FreeSpace,Size\"" 2>&1
+Sat Sep 26 20:49:23 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 591.86                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070 Ti   WDDM  |   00000000:01:00.0  On |                  N/A |
+|  0%   35C    P8              9W /  250W |     229MiB /  16303MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1768    C+G   C:\Windows\System32\dwm.exe           N/A      |
+|    0   N/A  N/A            2316    C+G   ...(x86)\e2eSoft\iVCam\iVCam.exe      N/A      |
+|    0   N/A  N/A            3328    C+G   ...cord\app-1.0.9259\Discord.exe      N/A      |
+|    0   N/A  N/A            4152    C+G   ...indows\System32\ShellHost.exe      N/A      |
+|    0   N/A  N/A            5112    C+G   ...ta\Okta Verify\OktaVerify.exe      N/A      |
+|    0   N/A  N/A            5268    C+G   ...s\PowerToys.ColorPickerUI.exe      N/A      |
+|    0   N/A  N/A            8564    C+G   C:\Windows\explorer.exe               N/A      |
+|    0   N/A  N/A           10064    C+G   ...2txyewy\CrossDeviceResume.exe      N/A      |
+|    0   N/A  N/A           10660    C+G   ...Toys\PowerToys.FancyZones.exe      N/A      |
+|    0   N/A  N/A           12604    C+G   ...em32\ApplicationFrameHost.exe      N/A      |
+|    0   N/A  N/A           12760    C+G   ...7hta09mmv6hy\Build\Lively.exe      N/A      |
+|    0   N/A  N/A           13148    C+G   ...s\PowerToys.PowerLauncher.exe      N/A      |
+|    0   N/A  N/A           13348    C+G   ..._cw5n1h2txyewy\SearchHost.exe      N/A      |
+|    0   N/A  N/A           13380    C+G   ...y\StartMenuExperienceHost.exe      N/A      |
+|    0   N/A  N/A           15392    C+G   ....0.4234.48\msedgewebview2.exe      N/A      |
+|    0   N/A  N/A           15856    C+G   ...UI3Apps\PowerToys.Peek.UI.exe      N/A      |
+|    0   N/A  N/A           16692    C+G   ...8bbwe\PhoneExperienceHost.exe      N/A      |
+|    0   N/A  N/A           17304    C+G   ...xyewy\ShellExperienceHost.exe      N/A      |
+|    0   N/A  N/A           18288    C+G   ...ogram Files\ShareX\ShareX.exe      N/A      |
+|    0   N/A  N/A           19200    C+G   ...crosoft shared\ink\TabTip.exe      N/A      |
+|    0   N/A  N/A           19504    C+G   ...s\PowerToys.AdvancedPaste.exe      N/A      |
+|    0   N/A  N/A           19892    C+G   ...5n1h2txyewy\TextInputHost.exe      N/A      |
+|    0   N/A  N/A           20844    C+G   ...ntrolPanel\SystemSettings.exe      N/A      |
+|    0   N/A  N/A           20964    C+G   ...Lunar Client\Lunar Client.exe      N/A      |
+|    0   N/A  N/A           21352    C+G   C:\Windows\System32\Taskmgr.exe       N/A      |
++-----------------------------------------------------------------------------------------+
+---DISK--- 
+'wmic' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh benspc "cmd /c \"powershell -Command \\\"Get-PSDrive C | Select-Object Free,Used\\\"\"" 2>&1
+'Select-Object' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\dl9" 2>&1; echo "===EXIT:$?==="
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja
+
+File Not Found
+===EXIT:1===
+[0m
+[0m$ [0mssh benspc "fsutil volume diskfree C:" 2>&1; echo "===EXIT:$?==="
+Total free bytes                :     4,731,506,688 (  4.4 GB)
+Total bytes                     : 1,023,143,833,600 (952.9 GB)
+Total quota free bytes          :     4,731,506,688 (  4.4 GB)
+Unavailable pool bytes          :                 0 (  0.0 KB)
+Quota unavailable pool bytes    :                 0 (  0.0 KB)
+Used bytes                      : 1,018,381,488,128 (948.4 GB)
+Total Reserved bytes            :        30,838,784 ( 29.4 MB)
+Volume storage reserved bytes   :                 0 (  0.0 KB)
+Available committed bytes       :                 0 (  0.0 KB)
+Pool available bytes            :                 0 (  0.0 KB)
+===EXIT:0===
+[0m
+[0m$ [0mssh benspc "dir C:\\" 2>&1; echo "===EXIT:$?==="
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\
+
+12/19/2025  05:46 PM    <DIR>          AMD
+02/22/2024  01:33 AM           112,136 appverifUI.dll
+09/20/2026  01:45 PM    <DIR>          bm-fable
+04/11/2026  11:27 AM    <DIR>          Cakewalk Content
+04/11/2026  11:27 AM    <DIR>          Cakewalk Projects
+09/24/2026  09:38 PM    <DIR>          ComfyUI
+09/06/2026  07:38 PM    <DIR>          data
+08/15/2026  04:31 PM            12,288 DumpStack.log
+09/12/2024  04:40 PM    <DIR>          empty
+09/19/2024  08:24 AM    <DIR>          ESD
+09/24/2026  11:13 PM             1,056 eval-rsn355.ps1
+08/20/2026  06:40 AM    <DIR>          inetpub
+09/24/2026  10:27 PM               548 launch-rsn355.ps1
+09/21/2026  01:53 PM    <DIR>          llama
+08/29/2026  12:52 PM    <DIR>          llama-b10679
+08/28/2026  09:58 PM    <DIR>          llama.cpp
+09/13/2026  06:56 AM    <DIR>          llm
+09/09/2026  04:53 PM               923 llm_dl.py
+09/09/2026  05:03 PM             1,093 llm_dl2.py
+09/09/2026  05:06 PM               857 llm_dl3.py
+09/09/2026  06:13 PM               827 llm_dl_code.py
+09/09/2026  07:00 PM               850 llm_dl_code2.py
+09/09/2026  05:43 PM             2,146 llm_dl_final.py
+07/25/2025  09:58 PM               108 logUploaderSettings.ini
+07/25/2025  09:58 PM               108 logUploaderSettings_temp.ini
+12/31/2024  03:30 PM    <DIR>          MinecraftServer
+04/01/2024  03:26 AM    <DIR>          PerfLogs
+09/22/2026  09:20 PM    <DIR>          Program Files
+08/20/2026  06:45 AM    <DIR>          Program Files (x86)
+09/24/2026  09:48 PM    <DIR>          qwen21-logs
+03/29/2026  03:38 PM    <DIR>          Riot Games
+09/24/2026  11:13 PM            49,152 rsn355-results.tar
+08/31/2026  07:27 PM    <DIR>          scout
+09/06/2026  11:37 PM    <DIR>          tmp
+09/24/2026  10:19 PM        21,780,480 tmp-rsn355-code.tar
+09/20/2026  12:24 PM    <DIR>          triton_cache_comfy
+08/20/2026  02:47 AM    <DIR>          Users
+02/22/2024  01:34 AM            66,328 vfcompat.dll
+09/23/2026  04:37 AM    <DIR>          Windows
+05/28/2026  06:45 PM    <DIR>          XboxGames
+              15 File(s)     22,028,900 bytes
+              25 Dir(s)   4,731,506,688 bytes free
+===EXIT:0===
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-dl9-20260926/PASSMARKS.md 2>&1 | wc -l; git ls-tree origin/main --name-only artifacts/claude-dl9-20260926/ 2>&1; echo "===EXIT:$?==="
+60
+artifacts/claude-dl9-20260926/ADDENDUM-1.md
+artifacts/claude-dl9-20260926/ADDENDUM-2.md
+artifacts/claude-dl9-20260926/PASSMARKS.md
+===EXIT:0===
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\.cache\\huggingface\\hub\\models--openbmb--MiniCPM5-1B\\snapshots\\87179e5c1f455ef22e6223592d2d61351b525bfc" 2>&1; echo "===EXIT:$?==="
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\.cache\huggingface\hub\models--openbmb--MiniCPM5-1B\snapshots\87179e5c1f455ef22e6223592d2d61351b525bfc
+
+09/24/2026  12:40 AM    <DIR>          .
+09/24/2026  12:39 AM    <DIR>          ..
+09/24/2026  12:39 AM    <SYMLINK>      .gitattributes [..\..\blobs\a6344aac8c09253b3b630fb776ae94478aa0275b]
+09/24/2026  12:39 AM    <SYMLINK>      chat_template.jinja [..\..\blobs\cb2934c459c6eff41b15e45bd6adc13c93846259]
+09/24/2026  12:39 AM    <SYMLINK>      config.json [..\..\blobs\e088beb7e7343bc5620ecd7618cebd255516879b]
+09/24/2026  12:39 AM    <SYMLINK>      generation_config.json [..\..\blobs\73dc79c289226ae520cef51a057667aa3d958094]
+09/24/2026  12:40 AM    <SYMLINK>      model-00000-of-00001.safetensors [..\..\blobs\7ab8fd86563125929be78aeec8cb3969c7ed2ead3be1ab9d3ec0a9fa69c8660d]
+09/24/2026  12:39 AM    <SYMLINK>      model.safetensors.index.json [..\..\blobs\cf879b05899b5bc495992c2a7759b283957e573c]
+09/24/2026  12:39 AM    <SYMLINK>      README-cn.md [..\..\blobs\52b47670880934fea125d9e5ab4f7cf8b4379dc8]
+09/24/2026  12:39 AM    <SYMLINK>      README.md [..\..\blobs\b2d03dd94e52edb5a121fbdf2d5842c9fb215dbd]
+09/24/2026  12:39 AM    <SYMLINK>      special_tokens_map.json [..\..\blobs\492d4b2966a1763442d426d880dbc29f94906e4c]
+09/24/2026  12:39 AM    <SYMLINK>      tokenizer.json [..\..\blobs\ec0bf9a34dc884738494ed1f74d0c5327b06d690]
+09/24/2026  12:39 AM    <SYMLINK>      tokenizer_config.json [..\..\blobs\2a7bb43f24b04fc8e733b3af8c4ce73eaa974e9a]
+              11 File(s)              0 bytes
+               2 Dir(s)   4,731,506,688 bytes free
+===EXIT:0===
+[0m
+[0m$ [0mgit status --porcelain 2>&1 | head -10; echo "===STATUS-EXIT:$?==="; date -u +%FT%TZ
+A  artifacts/claude-rsn358i3-20260926/RESULTS.md
+A  artifacts/claude-rsn358i3-20260926/SEAL-run.sha256.txt
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s5/loop-s5.log
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s5/tests.json
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s5/train_log.jsonl
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s5/train_summary.json
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s6/loop-s6.log
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s6/tests.json
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s6/train_log.jsonl
+A  artifacts/claude-rsn358i3-20260926/runs/loop-s6/train_summary.json
+===STATUS-EXIT:0===
+2026-09-27T00:50:01Z
+[0m

@@ -1,0 +1,3647 @@
+{
+ "arms": [
+  "G",
+  "T"
+ ],
+ "concurrency": 6,
+ "cost_language": "equal counted operations under the registered estimate",
+ "data_root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-concept-toy20-20260920/calibration-v1.1",
+ "evaluator_E_key": "E_primary",
+ "experiment_version": "ct20-v1.1",
+ "hashes": {
+  "data_manifest_sha256": "de3ccfec81c8847f879c3d886e4a7450085cb4f1bac849cc59acb19644f146d3",
+  "gate_calculator_sha256": "62ec54f10ed2acec9faa97d4abdbda2bb5a43cccb5924016d08a0a4e79738f71",
+  "models_source_sha256": "0b5711f4ef8c378284e784032c6d8560fe169f686c4a76a8af5b4abc918d34ff",
+  "preregistration_sha256": "1bb49e074d70cc7692ce2af40b6624cf626694b8cc5bb8a0b56a816aab258251",
+  "public_loader_sha256": "7139c6989f8618dcca9d4ef2e31b5c667424e3fca8a183e8f30b36a1e3b567fe",
+  "rulings_1_sha256": "40f650451b6b1404e352c900fabb9a6f56fa1696aaac31e90fdc4cac2779c6de",
+  "rulings_2_first_version_relayed_sha256": "fac03f785ca6b0e0a0fb3954ac2308b783629b75afda23863633e1ff3bca1269",
+  "rulings_2_sha256": "1245e46f567dd1a265d6b05d8482f0267052c735159b8d05864dd6b861a110f2",
+  "schema_sha256": "7e9239c077e4252dc2d44d7cc9b0e932a3c556446aadc5fea1d88a6f96562628",
+  "simulator_source_sha256": "c56794c52ad0e44022df2af9c161ccf10775eb626bf0ab6052cc81207c96d7a0",
+  "wave1_source_sha256": "2db9889a49ad8d88edf58a8921efb19dbf0c179e3c093cd6cd60d83cc0b46c69"
+ },
+ "isolation": {
+  "checked_world": "149e30247f4b35ec",
+  "pair_perturbation_ran": true,
+  "pair_rows": [
+   0,
+   15
+  ],
+  "passes": true,
+  "reports": [
+   {
+    "arm": "G",
+    "batch_shape_tolerance": 1e-06,
+    "companion_content_delta": 0.0,
+    "content_invariance_is_exact": true,
+    "n_sequences": 96,
+    "pair_branch_delta": 0.0,
+    "partition_deltas": {
+     "batch_1": 1.4901161193847656e-07,
+     "batch_2": 1.6391277313232422e-07,
+     "batch_3": 1.6391277313232422e-07,
+     "batch_32": 0.0,
+     "batch_48": 0.0,
+     "batch_6": 1.4901161193847656e-07,
+     "two_lanes": 0.0
+    },
+    "passes": true,
+    "reorder_delta": 0.0,
+    "seed": 20001,
+    "shape_invariance_within_tolerance": true,
+    "world_public_id": "149e30247f4b35ec"
+   },
+   {
+    "arm": "T",
+    "batch_shape_tolerance": 1e-06,
+    "companion_content_delta": 0.0,
+    "content_invariance_is_exact": true,
+    "n_sequences": 96,
+    "pair_branch_delta": 0.0,
+    "partition_deltas": {
+     "batch_1": 1.7881393432617188e-07,
+     "batch_2": 2.980232238769531e-07,
+     "batch_3": 1.7881393432617188e-07,
+     "batch_32": 0.0,
+     "batch_48": 0.0,
+     "batch_6": 2.384185791015625e-07,
+     "two_lanes": 0.0
+    },
+    "passes": true,
+    "reorder_delta": 0.0,
+    "seed": 20001,
+    "shape_invariance_within_tolerance": true,
+    "world_public_id": "149e30247f4b35ec"
+   }
+  ],
+  "statement": "with the batch shape held fixed, replacing every other sequence in the batch -- including the paired counterpart -- changes no prediction bit; reordering changes no prediction bit; repartitioning agrees bit for bit wherever the batch size is preserved and within 1e-06 absolute otherwise, from float32 matrix-multiply blocking inside one sequence's own algebra"
+ },
+ "mode": "registered",
+ "n_fits_per_tier": 72,
+ "n_worlds": 12,
+ "out_root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-concept-toy20-20260920/wave1/registered",
+ "preflight_seconds_charged": 8.35858678817749,
+ "seeds": [
+  20001,
+  20002,
+  20003
+ ],
+ "shards": [
+  {
+   "arm": "G",
+   "lanes": 12,
+   "seeds": [
+    20001,
+    20002,
+    20003
+   ],
+   "shard_id": "G-0",
+   "world_ids": [
+    "149e30247f4b35ec",
+    "1f5501a48ba66181",
+    "6b394b64b37bcca4",
+    "b42aaa25c68b5af7"
+   ]
+  },
+  {
+   "arm": "G",
+   "lanes": 12,
+   "seeds": [
+    20001,
+    20002,
+    20003
+   ],
+   "shard_id": "G-1",
+   "world_ids": [
+    "b758f4e3235d4954",
+    "db0d29339a47b284",
+    "6593f32a2e201959",
+    "870494a2edbdc07d"
+   ]
+  },
+  {
+   "arm": "G",
+   "lanes": 12,
+   "seeds": [
+    20001,
+    20002,
+    20003
+   ],
+   "shard_id": "G-2",
+   "world_ids": [
+    "b6b482aeb1c7e58c",
+    "baa7f89dce2d2083",
+    "bb1dafbd7a624ec4",
+    "e2bc0de95bdde5db"
+   ]
+  },
+  {
+   "arm": "T",
+   "lanes": 12,
+   "seeds": [
+    20001,
+    20002,
+    20003
+   ],
+   "shard_id": "T-0",
+   "world_ids": [
+    "149e30247f4b35ec",
+    "1f5501a48ba66181",
+    "6b394b64b37bcca4",
+    "b42aaa25c68b5af7"
+   ]
+  },
+  {
+   "arm": "T",
+   "lanes": 12,
+   "seeds": [
+    20001,
+    20002,
+    20003
+   ],
+   "shard_id": "T-1",
+   "world_ids": [
+    "b758f4e3235d4954",
+    "db0d29339a47b284",
+    "6593f32a2e201959",
+    "870494a2edbdc07d"
+   ]
+  },
+  {
+   "arm": "T",
+   "lanes": 12,
+   "seeds": [
+    20001,
+    20002,
+    20003
+   ],
+   "shard_id": "T-2",
+   "world_ids": [
+    "b6b482aeb1c7e58c",
+    "baa7f89dce2d2083",
+    "bb1dafbd7a624ec4",
+    "e2bc0de95bdde5db"
+   ]
+  }
+ ],
+ "splits": {
+  "149e30247f4b35ec": "train",
+  "1f5501a48ba66181": "train",
+  "6593f32a2e201959": "validation",
+  "6b394b64b37bcca4": "train",
+  "870494a2edbdc07d": "validation",
+  "b42aaa25c68b5af7": "train",
+  "b6b482aeb1c7e58c": "validation",
+  "b758f4e3235d4954": "train",
+  "baa7f89dce2d2083": "validation",
+  "bb1dafbd7a624ec4": "validation",
+  "db0d29339a47b284": "train",
+  "e2bc0de95bdde5db": "validation"
+ },
+ "tiers": {
+  "L": {
+   "adapter_gaps": [],
+   "all_shards_ok": true,
+   "complete_wave": {
+    "complete": true,
+    "failed_cells": [],
+    "missing_cells": [],
+    "non_finite_cells": [],
+    "present_cells": 72,
+    "required_cells": 72,
+    "train_and_validation_both_checked": true
+   },
+   "complete_wave_calculator_view": {
+    "attestation": true,
+    "blocks_escalation": false,
+    "failed": false,
+    "n_non_validation_cases_seen": 36,
+    "non_validation_incomplete": [],
+    "non_validation_numerical_failures": [],
+    "notes": [],
+    "unverified": false
+   },
+   "cross_arm": {
+    "accounting_valid": false,
+    "cases": [
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20001,
+      "tier": "L",
+      "world_public_id": "149e30247f4b35ec"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20002,
+      "tier": "L",
+      "world_public_id": "149e30247f4b35ec"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20003,
+      "tier": "L",
+      "world_public_id": "149e30247f4b35ec"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20001,
+      "tier": "L",
+      "world_public_id": "1f5501a48ba66181"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20002,
+      "tier": "L",
+      "world_public_id": "1f5501a48ba66181"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20003,
+      "tier": "L",
+      "world_public_id": "1f5501a48ba66181"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20001,
+      "tier": "L",
+      "world_public_id": "6593f32a2e201959"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20002,
+      "tier": "L",
+      "world_public_id": "6593f32a2e201959"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20003,
+      "tier": "L",
+      "world_public_id": "6593f32a2e201959"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20001,
+      "tier": "L",
+      "world_public_id": "6b394b64b37bcca4"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20002,
+      "tier": "L",
+      "world_public_id": "6b394b64b37bcca4"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20003,
+      "tier": "L",
+      "world_public_id": "6b394b64b37bcca4"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20001,
+      "tier": "L",
+      "world_public_id": "870494a2edbdc07d"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20002,
+      "tier": "L",
+      "world_public_id": "870494a2edbdc07d"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20003,
+      "tier": "L",
+      "world_public_id": "870494a2edbdc07d"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20001,
+      "tier": "L",
+      "world_public_id": "b42aaa25c68b5af7"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20002,
+      "tier": "L",
+      "world_public_id": "b42aaa25c68b5af7"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20003,
+      "tier": "L",
+      "world_public_id": "b42aaa25c68b5af7"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20001,
+      "tier": "L",
+      "world_public_id": "b6b482aeb1c7e58c"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20002,
+      "tier": "L",
+      "world_public_id": "b6b482aeb1c7e58c"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20003,
+      "tier": "L",
+      "world_public_id": "b6b482aeb1c7e58c"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20001,
+      "tier": "L",
+      "world_public_id": "b758f4e3235d4954"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20002,
+      "tier": "L",
+      "world_public_id": "b758f4e3235d4954"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20003,
+      "tier": "L",
+      "world_public_id": "b758f4e3235d4954"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20001,
+      "tier": "L",
+      "world_public_id": "baa7f89dce2d2083"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20002,
+      "tier": "L",
+      "world_public_id": "baa7f89dce2d2083"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20003,
+      "tier": "L",
+      "world_public_id": "baa7f89dce2d2083"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20001,
+      "tier": "L",
+      "world_public_id": "bb1dafbd7a624ec4"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20002,
+      "tier": "L",
+      "world_public_id": "bb1dafbd7a624ec4"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20003,
+      "tier": "L",
+      "world_public_id": "bb1dafbd7a624ec4"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20001,
+      "tier": "L",
+      "world_public_id": "db0d29339a47b284"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20002,
+      "tier": "L",
+      "world_public_id": "db0d29339a47b284"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20003,
+      "tier": "L",
+      "world_public_id": "db0d29339a47b284"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20001,
+      "tier": "L",
+      "world_public_id": "e2bc0de95bdde5db"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20002,
+      "tier": "L",
+      "world_public_id": "e2bc0de95bdde5db"
+     },
+     {
+      "accounting_valid": false,
+      "over_per_fit_allowance": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "per_fit_allowance": 1000000000.0,
+      "per_fit_total_by_arm": {
+       "G": 1013297501.0,
+       "T": 1016599497.0
+      },
+      "rungs": [
+       {
+        "allowance": 200000000.0,
+        "budget": 32,
+        "counted_total_ops_by_arm": {
+         "G": 198883341.0,
+         "T": 199000513.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0005888025022327455,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 64,
+        "counted_total_ops_by_arm": {
+         "G": 198837012.0,
+         "T": 198640300.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0009893127945414912,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 128,
+        "counted_total_ops_by_arm": {
+         "G": 199910322.0,
+         "T": 197092434.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.01409576039800486,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 256,
+        "counted_total_ops_by_arm": {
+         "G": 199827422.0,
+         "T": 199995486.0
+        },
+        "over_allowance": {},
+        "relative_gap": 0.0008403389664504728,
+        "within_5_percent": true
+       },
+       {
+        "allowance": 200000000.0,
+        "budget": 512,
+        "counted_total_ops_by_arm": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "over_allowance": {
+         "G": 215839404.0,
+         "T": 221870764.0
+        },
+        "relative_gap": 0.027184113360694966,
+        "within_5_percent": true
+       }
+      ],
+      "seed": 20003,
+      "tier": "L",
+      "world_public_id": "e2bc0de95bdde5db"
+     }
+    ],
+    "n_cases": 36,
+    "phrase": "equal counted operations under the registered estimate",
+    "rule": "(max actual counted use - min actual counted use) / max <= 0.05, inclusive, per rung",
+    "tier": "L",
+    "worst_relative_gap": 0.027184113360694966
+   },
+   "evaluator_version": "ct20-v1.1",
+   "gate": {
+    "advance": {
+     "arms_differ_across_budgets": false,
+     "arms_supplying_E512_condition": [],
+     "better_arm_at_32": "G",
+     "better_arm_median_E32": 3.145026556849841,
+     "condition_median_E32_at_least_0_15": true,
+     "condition_some_arm_median_E512_at_most_0_50": false,
+     "exact_tie_at_32": false,
+     "holds": false,
+     "median_E32_by_arm": {
+      "G": 3.145026556849841,
+      "T": 3.760388602201879
+     },
+     "median_E512_by_arm": {
+      "G": 0.8248356913063539,
+      "T": 0.9585763628367105
+     },
+     "min_median_E32": 3.145026556849841,
+     "min_median_E512": 0.8248356913063539,
+     "tie_note": "",
+     "usable": true
+    },
+    "complete_wave": {
+     "attestation": true,
+     "blocks_escalation": false,
+     "failed": false,
+     "n_non_validation_cases_seen": 36,
+     "non_validation_incomplete": [],
+     "non_validation_numerical_failures": [],
+     "notes": [],
+     "unverified": false
+    },
+    "completeness": {
+     "complete": true,
+     "duplicate_cells": [],
+     "expected_control_cases": 6,
+     "expected_hidden_cases": 12,
+     "infrastructure_incomplete": [],
+     "missing_arms": [],
+     "missing_cells": [],
+     "n_control_worlds": 2,
+     "n_gate_worlds": 6,
+     "n_hidden_worlds": 4,
+     "non_finite_cells": [],
+     "numerical_failures": []
+    },
+    "escalates_to_H": false,
+    "escalation_blocked_by_complete_wave": false,
+    "integrity": {
+     "accounting_valid": false,
+     "audit_passed": true,
+     "complete_wave_valid": true,
+     "timing_ok": true
+    },
+    "learned": {
+     "by_arm": {
+      "G": {
+       "detail": {
+        "6593f32a2e201959/20001/G": "E_512=1.1078086490053938 > 0.5",
+        "6593f32a2e201959/20002/G": "E_512=0.6756434333845226 > 0.5",
+        "6593f32a2e201959/20003/G": "E_512=0.7834555954411996 > 0.5",
+        "870494a2edbdc07d/20001/G": "E_512=0.8662157871715084 > 0.5",
+        "870494a2edbdc07d/20002/G": "E_512=0.5782522157262147 > 0.5",
+        "870494a2edbdc07d/20003/G": "E_512=0.5135976780125634 > 0.5",
+        "b6b482aeb1c7e58c/20001/G": "E_512=1.6594415629807036 > 0.5",
+        "b6b482aeb1c7e58c/20002/G": "E_512=2.3399221191927655 > 0.5",
+        "b6b482aeb1c7e58c/20003/G": "E_512=2.081236872653472 > 0.5",
+        "e2bc0de95bdde5db/20001/G": "E_512=0.697943619557131 > 0.5",
+        "e2bc0de95bdde5db/20002/G": "E_512=0.7562116125907514 > 0.5",
+        "e2bc0de95bdde5db/20003/G": "E_512=1.3054672118207655 > 0.5"
+       },
+       "learned": 0,
+       "n_cases": 12,
+       "required_for_not_too_hard": 9
+      },
+      "T": {
+       "detail": {
+        "6593f32a2e201959/20001/T": "E_512=1.004672614117905 > 0.5",
+        "6593f32a2e201959/20002/T": "E_512=0.7987838374161191 > 0.5",
+        "6593f32a2e201959/20003/T": "E_512=1.4100880556046735 > 0.5",
+        "870494a2edbdc07d/20001/T": "E_512=0.9951230725472878 > 0.5",
+        "870494a2edbdc07d/20002/T": "E_512=0.5414126340506262 > 0.5",
+        "870494a2edbdc07d/20003/T": "E_512=0.772399976137148 > 0.5",
+        "b6b482aeb1c7e58c/20001/T": "E_512=0.9220296531261334 > 0.5",
+        "b6b482aeb1c7e58c/20002/T": "E_512=1.1618048737532145 > 0.5",
+        "b6b482aeb1c7e58c/20003/T": "E_512=1.0211273742446643 > 0.5",
+        "e2bc0de95bdde5db/20001/T": "learned",
+        "e2bc0de95bdde5db/20002/T": "E_512=1.063140402808298 > 0.5",
+        "e2bc0de95bdde5db/20003/T": "E_512=0.5897267673870152 > 0.5"
+       },
+       "learned": 1,
+       "n_cases": 12,
+       "required_for_not_too_hard": 9
+      }
+     },
+     "triggers": true
+    },
+    "prerequisite": {
+     "by_arm": {
+      "G": {
+       "failing": [
+        "baa7f89dce2d2083/20001/G[o]=0.15527720000249395",
+        "bb1dafbd7a624ec4/20001/G[n]=0.25081748555868",
+        "baa7f89dce2d2083/20002/G[o]=0.3214095660422492",
+        "bb1dafbd7a624ec4/20002/G[n]=0.29825266754104546",
+        "baa7f89dce2d2083/20003/G[o]=0.15015805843255078",
+        "bb1dafbd7a624ec4/20003/G[n]=0.37677120918558904"
+       ],
+       "failing_by_control_type": {
+        "n": 3,
+        "o": 3
+       },
+       "n_control_cases": 6,
+       "passes": false,
+       "passing": 0,
+       "required": 5
+      },
+      "T": {
+       "failing": [
+        "baa7f89dce2d2083/20001/T[o]=0.22392244133459221",
+        "baa7f89dce2d2083/20002/T[o]=0.9932130534718688",
+        "bb1dafbd7a624ec4/20003/T[n]=0.17404917139692502"
+       ],
+       "failing_by_control_type": {
+        "n": 1,
+        "o": 2
+       },
+       "n_control_cases": 6,
+       "passes": false,
+       "passing": 3,
+       "required": 5
+      }
+     },
+     "passes": false
+    },
+    "reasons": [
+     "coordinator reported invalid compute accounting"
+    ],
+    "rulings_1_sha256": "40f650451b6b1404e352c900fabb9a6f56fa1696aaac31e90fdc4cac2779c6de",
+    "rulings_2_sha256": "1245e46f567dd1a265d6b05d8482f0267052c735159b8d05864dd6b861a110f2",
+    "startup_labels": {
+     "149e30247f4b35ec/20001/G": "learned_with_generalization",
+     "149e30247f4b35ec/20001/T": "learned_with_generalization",
+     "149e30247f4b35ec/20002/G": "learned_with_generalization",
+     "149e30247f4b35ec/20002/T": "learned_with_generalization",
+     "149e30247f4b35ec/20003/G": "learned_with_generalization",
+     "149e30247f4b35ec/20003/T": "learned_with_generalization",
+     "1f5501a48ba66181/20001/G": "started_not_yet_learned",
+     "1f5501a48ba66181/20001/T": "started_not_yet_learned",
+     "1f5501a48ba66181/20002/G": "started_not_yet_learned",
+     "1f5501a48ba66181/20002/T": "started_not_yet_learned",
+     "1f5501a48ba66181/20003/G": "started_not_yet_learned",
+     "1f5501a48ba66181/20003/T": "started_not_yet_learned",
+     "6593f32a2e201959/20001/G": "started_not_yet_learned",
+     "6593f32a2e201959/20001/T": "started_not_yet_learned",
+     "6593f32a2e201959/20002/G": "started_not_yet_learned",
+     "6593f32a2e201959/20002/T": "started_not_yet_learned",
+     "6593f32a2e201959/20003/G": "started_not_yet_learned",
+     "6593f32a2e201959/20003/T": "started_not_yet_learned",
+     "6b394b64b37bcca4/20001/G": "started_not_yet_learned",
+     "6b394b64b37bcca4/20001/T": "started_not_yet_learned",
+     "6b394b64b37bcca4/20002/G": "started_not_yet_learned",
+     "6b394b64b37bcca4/20002/T": "started_not_yet_learned",
+     "6b394b64b37bcca4/20003/G": "started_not_yet_learned",
+     "6b394b64b37bcca4/20003/T": "started_not_yet_learned",
+     "870494a2edbdc07d/20001/G": "started_not_yet_learned",
+     "870494a2edbdc07d/20001/T": "started_not_yet_learned",
+     "870494a2edbdc07d/20002/G": "started_not_yet_learned",
+     "870494a2edbdc07d/20002/T": "started_not_yet_learned",
+     "870494a2edbdc07d/20003/G": "started_not_yet_learned",
+     "870494a2edbdc07d/20003/T": "started_not_yet_learned",
+     "b42aaa25c68b5af7/20001/G": "learned_with_generalization",
+     "b42aaa25c68b5af7/20001/T": "learned_with_generalization",
+     "b42aaa25c68b5af7/20002/G": "learned_with_generalization",
+     "b42aaa25c68b5af7/20002/T": "learned_with_generalization",
+     "b42aaa25c68b5af7/20003/G": "learned_with_generalization",
+     "b42aaa25c68b5af7/20003/T": "learned_with_generalization",
+     "b6b482aeb1c7e58c/20001/G": "started_not_yet_learned",
+     "b6b482aeb1c7e58c/20001/T": "started_not_yet_learned",
+     "b6b482aeb1c7e58c/20002/G": "started_not_yet_learned",
+     "b6b482aeb1c7e58c/20002/T": "started_not_yet_learned",
+     "b6b482aeb1c7e58c/20003/G": "started_not_yet_learned",
+     "b6b482aeb1c7e58c/20003/T": "started_not_yet_learned",
+     "b758f4e3235d4954/20001/G": "started_not_yet_learned",
+     "b758f4e3235d4954/20001/T": "started_not_yet_learned",
+     "b758f4e3235d4954/20002/G": "started_not_yet_learned",
+     "b758f4e3235d4954/20002/T": "started_not_yet_learned",
+     "b758f4e3235d4954/20003/G": "started_not_yet_learned",
+     "b758f4e3235d4954/20003/T": "started_not_yet_learned",
+     "baa7f89dce2d2083/20001/G": "learned_with_generalization",
+     "baa7f89dce2d2083/20001/T": "learned_with_generalization",
+     "baa7f89dce2d2083/20002/G": "learned_with_generalization",
+     "baa7f89dce2d2083/20002/T": "started_not_yet_learned",
+     "baa7f89dce2d2083/20003/G": "learned_with_generalization",
+     "baa7f89dce2d2083/20003/T": "learned_with_generalization",
+     "bb1dafbd7a624ec4/20001/G": "learned_with_generalization",
+     "bb1dafbd7a624ec4/20001/T": "learned_with_generalization",
+     "bb1dafbd7a624ec4/20002/G": "learned_with_generalization",
+     "bb1dafbd7a624ec4/20002/T": "learned_with_generalization",
+     "bb1dafbd7a624ec4/20003/G": "learned_with_generalization",
+     "bb1dafbd7a624ec4/20003/T": "learned_with_generalization",
+     "db0d29339a47b284/20001/G": "started_not_yet_learned",
+     "db0d29339a47b284/20001/T": "started_not_yet_learned",
+     "db0d29339a47b284/20002/G": "started_not_yet_learned",
+     "db0d29339a47b284/20002/T": "started_not_yet_learned",
+     "db0d29339a47b284/20003/G": "started_not_yet_learned",
+     "db0d29339a47b284/20003/T": "started_not_yet_learned",
+     "e2bc0de95bdde5db/20001/G": "started_not_yet_learned",
+     "e2bc0de95bdde5db/20001/T": "started_not_yet_learned",
+     "e2bc0de95bdde5db/20002/G": "started_not_yet_learned",
+     "e2bc0de95bdde5db/20002/T": "started_not_yet_learned",
+     "e2bc0de95bdde5db/20003/G": "started_not_yet_learned",
+     "e2bc0de95bdde5db/20003/T": "started_not_yet_learned"
+    },
+    "tier": "L",
+    "too_easy": {
+     "by_arm": {
+      "G": {
+       "cases_E32_at_or_below_0_10": 0,
+       "median_E32": 3.145026556849841,
+       "median_E512": 0.8248356913063539,
+       "n_cases": 12,
+       "triggers": false,
+       "usable": true
+      },
+      "T": {
+       "cases_E32_at_or_below_0_10": 0,
+       "median_E32": 3.760388602201879,
+       "median_E512": 0.9585763628367105,
+       "n_cases": 12,
+       "triggers": false,
+       "usable": true
+      }
+     },
+     "triggers": false
+    },
+    "verdict": "calibration-invalid/accounting",
+    "version": "ct20-v1.1"
+   },
+   "n_fits": 72,
+   "n_fits_reused_from_disk": 0,
+   "n_fits_run_now": 72,
+   "n_prediction_rows": 62196,
+   "n_shards": 6,
+   "n_unknown_record_ids": 0,
+   "prediction_gaps": [],
+   "preflight": {
+    "concurrency": 6,
+    "elapsed_charged_before": 0.0,
+    "elapsed_charged_total": 8.35858678817749,
+    "fits": true,
+    "fixture_seconds_charged": 8.35858678817749,
+    "full_schedule_projection": {
+     "experiment_version": "ct20-v1.1",
+     "fits": 72,
+     "fits_per_tier": 72,
+     "fits_within_wave": true,
+     "hard_deadline_seconds": 1500.0,
+     "lanes_per_arm": 36,
+     "note": "projection from a synthetic fixture; no registered wave has been run",
+     "per_tier": {
+      "H": {
+       "allowance_per_rung": 1000000000.0,
+       "per_arm": {
+        "G": {
+         "measured_lanes": 12,
+         "measured_updates_per_second": 69.85283227097959,
+         "projected_arm_seconds": 103.20996780395507,
+         "projected_evaluation_seconds": 9.610568761825562,
+         "projected_fit_seconds": 92.89530272483825,
+         "projected_query_panel_seconds": 0.18782472610473633,
+         "projected_write_seconds": 0.5162715911865234,
+         "updates_per_fit": 2163
+        },
+        "T": {
+         "measured_lanes": 12,
+         "measured_updates_per_second": 69.53895846829695,
+         "projected_arm_seconds": 80.28409798978048,
+         "projected_evaluation_seconds": 10.400670289993286,
+         "projected_fit_seconds": 68.50835998891073,
+         "projected_query_panel_seconds": 0.7037343978881836,
+         "projected_write_seconds": 0.6713333129882812,
+         "updates_per_fit": 1588
+        }
+       },
+       "projected_tier_seconds": 183.49406579373556
+      },
+      "L": {
+       "allowance_per_rung": 200000000.0,
+       "per_arm": {
+        "G": {
+         "measured_lanes": 12,
+         "measured_updates_per_second": 69.85283227097959,
+         "projected_arm_seconds": 26.2052161693573,
+         "projected_evaluation_seconds": 9.610568761825562,
+         "projected_fit_seconds": 15.890551090240479,
+         "projected_query_panel_seconds": 0.18782472610473633,
+         "projected_write_seconds": 0.5162715911865234,
+         "updates_per_fit": 370
+        },
+        "T": {
+         "measured_lanes": 12,
+         "measured_updates_per_second": 69.53895846829695,
+         "projected_arm_seconds": 22.733624296325246,
+         "projected_evaluation_seconds": 10.400670289993286,
+         "projected_fit_seconds": 10.957886295455495,
+         "projected_query_panel_seconds": 0.7037343978881836,
+         "projected_write_seconds": 0.6713333129882812,
+         "updates_per_fit": 254
+        }
+       },
+       "projected_tier_seconds": 48.938840465682546
+      }
+     },
+     "projected_seconds_raw": 232.4329062594181,
+     "projected_seconds_with_1_5x_margin": 348.64935938912714,
+     "rulings_sha256": "40f650451b6b1404e352c900fabb9a6f56fa1696aaac31e90fdc4cac2779c6de",
+     "schedule": "worst case: tier L complete, then tier H complete",
+     "scoring_reserve_seconds": 300.0,
+     "soft_compute_stop_seconds": 1200.0,
+     "usable_seconds": 900.0,
+     "verdict": "fits"
+    },
+    "hard_deadline_seconds": 1500.0,
+    "lanes_per_shard": 12,
+    "projected_remaining_seconds_raw": 232.4329062594181,
+    "projected_remaining_seconds_with_margin": 348.64935938912714,
+    "remaining_tiers": [
+     "L",
+     "H"
+    ],
+    "scoring_reserve_seconds": 300.0,
+    "soft_compute_stop_seconds": 1200.0,
+    "timing_margin": 1.5,
+    "usable_seconds_remaining": 891.6414132118225,
+    "verdict": "fits"
+   },
+   "shard_failures": [],
+   "startup": {
+    "agree": true,
+    "independent_disagreements": [],
+    "label_aliases_applied": {
+     "learned_failed_to_transfer": "learned_and_failed_to_transfer"
+    },
+    "labels": {
+     "149e30247f4b35ec/20001/G": "learned_with_generalization",
+     "149e30247f4b35ec/20001/T": "learned_with_generalization",
+     "149e30247f4b35ec/20002/G": "learned_with_generalization",
+     "149e30247f4b35ec/20002/T": "learned_with_generalization",
+     "149e30247f4b35ec/20003/G": "learned_with_generalization",
+     "149e30247f4b35ec/20003/T": "learned_with_generalization",
+     "1f5501a48ba66181/20001/G": "started_not_yet_learned",
+     "1f5501a48ba66181/20001/T": "started_not_yet_learned",
+     "1f5501a48ba66181/20002/G": "started_not_yet_learned",
+     "1f5501a48ba66181/20002/T": "started_not_yet_learned",
+     "1f5501a48ba66181/20003/G": "started_not_yet_learned",
+     "1f5501a48ba66181/20003/T": "started_not_yet_learned",
+     "6593f32a2e201959/20001/G": "started_not_yet_learned",
+     "6593f32a2e201959/20001/T": "started_not_yet_learned",
+     "6593f32a2e201959/20002/G": "started_not_yet_learned",
+     "6593f32a2e201959/20002/T": "started_not_yet_learned",
+     "6593f32a2e201959/20003/G": "started_not_yet_learned",
+     "6593f32a2e201959/20003/T": "started_not_yet_learned",
+     "6b394b64b37bcca4/20001/G": "started_not_yet_learned",
+     "6b394b64b37bcca4/20001/T": "started_not_yet_learned",
+     "6b394b64b37bcca4/20002/G": "started_not_yet_learned",
+     "6b394b64b37bcca4/20002/T": "started_not_yet_learned",
+     "6b394b64b37bcca4/20003/G": "started_not_yet_learned",
+     "6b394b64b37bcca4/20003/T": "started_not_yet_learned",
+     "870494a2edbdc07d/20001/G": "started_not_yet_learned",
+     "870494a2edbdc07d/20001/T": "started_not_yet_learned",
+     "870494a2edbdc07d/20002/G": "started_not_yet_learned",
+     "870494a2edbdc07d/20002/T": "started_not_yet_learned",
+     "870494a2edbdc07d/20003/G": "started_not_yet_learned",
+     "870494a2edbdc07d/20003/T": "started_not_yet_learned",
+     "b42aaa25c68b5af7/20001/G": "learned_with_generalization",
+     "b42aaa25c68b5af7/20001/T": "learned_with_generalization",
+     "b42aaa25c68b5af7/20002/G": "learned_with_generalization",
+     "b42aaa25c68b5af7/20002/T": "learned_with_generalization",
+     "b42aaa25c68b5af7/20003/G": "learned_with_generalization",
+     "b42aaa25c68b5af7/20003/T": "learned_with_generalization",
+     "b6b482aeb1c7e58c/20001/G": "started_not_yet_learned",
+     "b6b482aeb1c7e58c/20001/T": "started_not_yet_learned",
+     "b6b482aeb1c7e58c/20002/G": "started_not_yet_learned",
+     "b6b482aeb1c7e58c/20002/T": "started_not_yet_learned",
+     "b6b482aeb1c7e58c/20003/G": "started_not_yet_learned",
+     "b6b482aeb1c7e58c/20003/T": "started_not_yet_learned",
+     "b758f4e3235d4954/20001/G": "started_not_yet_learned",
+     "b758f4e3235d4954/20001/T": "started_not_yet_learned",
+     "b758f4e3235d4954/20002/G": "started_not_yet_learned",
+     "b758f4e3235d4954/20002/T": "started_not_yet_learned",
+     "b758f4e3235d4954/20003/G": "started_not_yet_learned",
+     "b758f4e3235d4954/20003/T": "started_not_yet_learned",
+     "baa7f89dce2d2083/20001/G": "learned_with_generalization",
+     "baa7f89dce2d2083/20001/T": "learned_with_generalization",
+     "baa7f89dce2d2083/20002/G": "learned_with_generalization",
+     "baa7f89dce2d2083/20002/T": "started_not_yet_learned",
+     "baa7f89dce2d2083/20003/G": "learned_with_generalization",
+     "baa7f89dce2d2083/20003/T": "learned_with_generalization",
+     "bb1dafbd7a624ec4/20001/G": "learned_with_generalization",
+     "bb1dafbd7a624ec4/20001/T": "learned_with_generalization",
+     "bb1dafbd7a624ec4/20002/G": "learned_with_generalization",
+     "bb1dafbd7a624ec4/20002/T": "learned_with_generalization",
+     "bb1dafbd7a624ec4/20003/G": "learned_with_generalization",
+     "bb1dafbd7a624ec4/20003/T": "learned_with_generalization",
+     "db0d29339a47b284/20001/G": "started_not_yet_learned",
+     "db0d29339a47b284/20001/T": "started_not_yet_learned",
+     "db0d29339a47b284/20002/G": "started_not_yet_learned",
+     "db0d29339a47b284/20002/T": "started_not_yet_learned",
+     "db0d29339a47b284/20003/G": "started_not_yet_learned",
+     "db0d29339a47b284/20003/T": "started_not_yet_learned",
+     "e2bc0de95bdde5db/20001/G": "started_not_yet_learned",
+     "e2bc0de95bdde5db/20001/T": "started_not_yet_learned",
+     "e2bc0de95bdde5db/20002/G": "started_not_yet_learned",
+     "e2bc0de95bdde5db/20002/T": "started_not_yet_learned",
+     "e2bc0de95bdde5db/20003/G": "started_not_yet_learned",
+     "e2bc0de95bdde5db/20003/T": "started_not_yet_learned"
+    },
+    "n_labels": 72,
+    "spelling_reconciliations": [],
+    "still_pending": []
+   },
+   "table_file": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-concept-toy20-20260920/wave1/registered/tierL/gate_table.json",
+   "unused_reservations": {
+    "note": "a reservation is an upper bound, not consumed work; savings cannot buy fitting",
+    "tier": "L",
+    "unused_ops_by_arm_by_rung": {
+     "G": {
+      "128": 0.0,
+      "256": 0.0,
+      "32": 0.0,
+      "512": -17172576.0,
+      "64": 0.0
+     },
+     "T": {
+      "128": 0.0,
+      "256": 0.0,
+      "32": 0.0,
+      "512": -23224032.0,
+      "64": 0.0
+     }
+    }
+   }
+  }
+ },
+ "two_tier": {
+  "H_permitted": false,
+  "H_required": false,
+  "adopted_tier": null,
+  "explanation": "tier H is not run: the required complete wave did not pass its integrity/completeness/accounting checks, and ruling R3 puts those ahead of every scientific predicate. Stopped without escalation: a numerical failure, missing required result, invalid accounting or failed integrity audit is never a budget question.",
+  "final_verdict": "calibration-invalid/accounting",
+  "status": "complete",
+  "tier_H": null,
+  "tier_L": {
+   "advance": {
+    "arms_differ_across_budgets": false,
+    "arms_supplying_E512_condition": [],
+    "better_arm_at_32": "G",
+    "better_arm_median_E32": 3.145026556849841,
+    "condition_median_E32_at_least_0_15": true,
+    "condition_some_arm_median_E512_at_most_0_50": false,
+    "exact_tie_at_32": false,
+    "holds": false,
+    "median_E32_by_arm": {
+     "G": 3.145026556849841,
+     "T": 3.760388602201879
+    },
+    "median_E512_by_arm": {
+     "G": 0.8248356913063539,
+     "T": 0.9585763628367105
+    },
+    "min_median_E32": 3.145026556849841,
+    "min_median_E512": 0.8248356913063539,
+    "tie_note": "",
+    "usable": true
+   },
+   "complete_wave": {
+    "attestation": true,
+    "blocks_escalation": false,
+    "failed": false,
+    "n_non_validation_cases_seen": 36,
+    "non_validation_incomplete": [],
+    "non_validation_numerical_failures": [],
+    "notes": [],
+    "unverified": false
+   },
+   "completeness": {
+    "complete": true,
+    "duplicate_cells": [],
+    "expected_control_cases": 6,
+    "expected_hidden_cases": 12,
+    "infrastructure_incomplete": [],
+    "missing_arms": [],
+    "missing_cells": [],
+    "n_control_worlds": 2,
+    "n_gate_worlds": 6,
+    "n_hidden_worlds": 4,
+    "non_finite_cells": [],
+    "numerical_failures": []
+   },
+   "escalates_to_H": false,
+   "escalation_blocked_by_complete_wave": false,
+   "integrity": {
+    "accounting_valid": false,
+    "audit_passed": true,
+    "complete_wave_valid": true,
+    "timing_ok": true
+   },
+   "learned": {
+    "by_arm": {
+     "G": {
+      "detail": {
+       "6593f32a2e201959/20001/G": "E_512=1.1078086490053938 > 0.5",
+       "6593f32a2e201959/20002/G": "E_512=0.6756434333845226 > 0.5",
+       "6593f32a2e201959/20003/G": "E_512=0.7834555954411996 > 0.5",
+       "870494a2edbdc07d/20001/G": "E_512=0.8662157871715084 > 0.5",
+       "870494a2edbdc07d/20002/G": "E_512=0.5782522157262147 > 0.5",
+       "870494a2edbdc07d/20003/G": "E_512=0.5135976780125634 > 0.5",
+       "b6b482aeb1c7e58c/20001/G": "E_512=1.6594415629807036 > 0.5",
+       "b6b482aeb1c7e58c/20002/G": "E_512=2.3399221191927655 > 0.5",
+       "b6b482aeb1c7e58c/20003/G": "E_512=2.081236872653472 > 0.5",
+       "e2bc0de95bdde5db/20001/G": "E_512=0.697943619557131 > 0.5",
+       "e2bc0de95bdde5db/20002/G": "E_512=0.7562116125907514 > 0.5",
+       "e2bc0de95bdde5db/20003/G": "E_512=1.3054672118207655 > 0.5"
+      },
+      "learned": 0,
+      "n_cases": 12,
+      "required_for_not_too_hard": 9
+     },
+     "T": {
+      "detail": {
+       "6593f32a2e201959/20001/T": "E_512=1.004672614117905 > 0.5",
+       "6593f32a2e201959/20002/T": "E_512=0.7987838374161191 > 0.5",
+       "6593f32a2e201959/20003/T": "E_512=1.4100880556046735 > 0.5",
+       "870494a2edbdc07d/20001/T": "E_512=0.9951230725472878 > 0.5",
+       "870494a2edbdc07d/20002/T": "E_512=0.5414126340506262 > 0.5",
+       "870494a2edbdc07d/20003/T": "E_512=0.772399976137148 > 0.5",
+       "b6b482aeb1c7e58c/20001/T": "E_512=0.9220296531261334 > 0.5",
+       "b6b482aeb1c7e58c/20002/T": "E_512=1.1618048737532145 > 0.5",
+       "b6b482aeb1c7e58c/20003/T": "E_512=1.0211273742446643 > 0.5",
+       "e2bc0de95bdde5db/20001/T": "learned",
+       "e2bc0de95bdde5db/20002/T": "E_512=1.063140402808298 > 0.5",
+       "e2bc0de95bdde5db/20003/T": "E_512=0.5897267673870152 > 0.5"
+      },
+      "learned": 1,
+      "n_cases": 12,
+      "required_for_not_too_hard": 9
+     }
+    },
+    "triggers": true
+   },
+   "prerequisite": {
+    "by_arm": {
+     "G": {
+      "failing": [
+       "baa7f89dce2d2083/20001/G[o]=0.15527720000249395",
+       "bb1dafbd7a624ec4/20001/G[n]=0.25081748555868",
+       "baa7f89dce2d2083/20002/G[o]=0.3214095660422492",
+       "bb1dafbd7a624ec4/20002/G[n]=0.29825266754104546",
+       "baa7f89dce2d2083/20003/G[o]=0.15015805843255078",
+       "bb1dafbd7a624ec4/20003/G[n]=0.37677120918558904"
+      ],
+      "failing_by_control_type": {
+       "n": 3,
+       "o": 3
+      },
+      "n_control_cases": 6,
+      "passes": false,
+      "passing": 0,
+      "required": 5
+     },
+     "T": {
+      "failing": [
+       "baa7f89dce2d2083/20001/T[o]=0.22392244133459221",
+       "baa7f89dce2d2083/20002/T[o]=0.9932130534718688",
+       "bb1dafbd7a624ec4/20003/T[n]=0.17404917139692502"
+      ],
+      "failing_by_control_type": {
+       "n": 1,
+       "o": 2
+      },
+      "n_control_cases": 6,
+      "passes": false,
+      "passing": 3,
+      "required": 5
+     }
+    },
+    "passes": false
+   },
+   "reasons": [
+    "coordinator reported invalid compute accounting"
+   ],
+   "rulings_1_sha256": "40f650451b6b1404e352c900fabb9a6f56fa1696aaac31e90fdc4cac2779c6de",
+   "rulings_2_sha256": "1245e46f567dd1a265d6b05d8482f0267052c735159b8d05864dd6b861a110f2",
+   "startup_labels": {
+    "149e30247f4b35ec/20001/G": "learned_with_generalization",
+    "149e30247f4b35ec/20001/T": "learned_with_generalization",
+    "149e30247f4b35ec/20002/G": "learned_with_generalization",
+    "149e30247f4b35ec/20002/T": "learned_with_generalization",
+    "149e30247f4b35ec/20003/G": "learned_with_generalization",
+    "149e30247f4b35ec/20003/T": "learned_with_generalization",
+    "1f5501a48ba66181/20001/G": "started_not_yet_learned",
+    "1f5501a48ba66181/20001/T": "started_not_yet_learned",
+    "1f5501a48ba66181/20002/G": "started_not_yet_learned",
+    "1f5501a48ba66181/20002/T": "started_not_yet_learned",
+    "1f5501a48ba66181/20003/G": "started_not_yet_learned",
+    "1f5501a48ba66181/20003/T": "started_not_yet_learned",
+    "6593f32a2e201959/20001/G": "started_not_yet_learned",
+    "6593f32a2e201959/20001/T": "started_not_yet_learned",
+    "6593f32a2e201959/20002/G": "started_not_yet_learned",
+    "6593f32a2e201959/20002/T": "started_not_yet_learned",
+    "6593f32a2e201959/20003/G": "started_not_yet_learned",
+    "6593f32a2e201959/20003/T": "started_not_yet_learned",
+    "6b394b64b37bcca4/20001/G": "started_not_yet_learned",
+    "6b394b64b37bcca4/20001/T": "started_not_yet_learned",
+    "6b394b64b37bcca4/20002/G": "started_not_yet_learned",
+    "6b394b64b37bcca4/20002/T": "started_not_yet_learned",
+    "6b394b64b37bcca4/20003/G": "started_not_yet_learned",
+    "6b394b64b37bcca4/20003/T": "started_not_yet_learned",
+    "870494a2edbdc07d/20001/G": "started_not_yet_learned",
+    "870494a2edbdc07d/20001/T": "started_not_yet_learned",
+    "870494a2edbdc07d/20002/G": "started_not_yet_learned",
+    "870494a2edbdc07d/20002/T": "started_not_yet_learned",
+    "870494a2edbdc07d/20003/G": "started_not_yet_learned",
+    "870494a2edbdc07d/20003/T": "started_not_yet_learned",
+    "b42aaa25c68b5af7/20001/G": "learned_with_generalization",
+    "b42aaa25c68b5af7/20001/T": "learned_with_generalization",
+    "b42aaa25c68b5af7/20002/G": "learned_with_generalization",
+    "b42aaa25c68b5af7/20002/T": "learned_with_generalization",
+    "b42aaa25c68b5af7/20003/G": "learned_with_generalization",
+    "b42aaa25c68b5af7/20003/T": "learned_with_generalization",
+    "b6b482aeb1c7e58c/20001/G": "started_not_yet_learned",
+    "b6b482aeb1c7e58c/20001/T": "started_not_yet_learned",
+    "b6b482aeb1c7e58c/20002/G": "started_not_yet_learned",
+    "b6b482aeb1c7e58c/20002/T": "started_not_yet_learned",
+    "b6b482aeb1c7e58c/20003/G": "started_not_yet_learned",
+    "b6b482aeb1c7e58c/20003/T": "started_not_yet_learned",
+    "b758f4e3235d4954/20001/G": "started_not_yet_learned",
+    "b758f4e3235d4954/20001/T": "started_not_yet_learned",
+    "b758f4e3235d4954/20002/G": "started_not_yet_learned",
+    "b758f4e3235d4954/20002/T": "started_not_yet_learned",
+    "b758f4e3235d4954/20003/G": "started_not_yet_learned",
+    "b758f4e3235d4954/20003/T": "started_not_yet_learned",
+    "baa7f89dce2d2083/20001/G": "learned_with_generalization",
+    "baa7f89dce2d2083/20001/T": "learned_with_generalization",
+    "baa7f89dce2d2083/20002/G": "learned_with_generalization",
+    "baa7f89dce2d2083/20002/T": "started_not_yet_learned",
+    "baa7f89dce2d2083/20003/G": "learned_with_generalization",
+    "baa7f89dce2d2083/20003/T": "learned_with_generalization",
+    "bb1dafbd7a624ec4/20001/G": "learned_with_generalization",
+    "bb1dafbd7a624ec4/20001/T": "learned_with_generalization",
+    "bb1dafbd7a624ec4/20002/G": "learned_with_generalization",
+    "bb1dafbd7a624ec4/20002/T": "learned_with_generalization",
+    "bb1dafbd7a624ec4/20003/G": "learned_with_generalization",
+    "bb1dafbd7a624ec4/20003/T": "learned_with_generalization",
+    "db0d29339a47b284/20001/G": "started_not_yet_learned",
+    "db0d29339a47b284/20001/T": "started_not_yet_learned",
+    "db0d29339a47b284/20002/G": "started_not_yet_learned",
+    "db0d29339a47b284/20002/T": "started_not_yet_learned",
+    "db0d29339a47b284/20003/G": "started_not_yet_learned",
+    "db0d29339a47b284/20003/T": "started_not_yet_learned",
+    "e2bc0de95bdde5db/20001/G": "started_not_yet_learned",
+    "e2bc0de95bdde5db/20001/T": "started_not_yet_learned",
+    "e2bc0de95bdde5db/20002/G": "started_not_yet_learned",
+    "e2bc0de95bdde5db/20002/T": "started_not_yet_learned",
+    "e2bc0de95bdde5db/20003/G": "started_not_yet_learned",
+    "e2bc0de95bdde5db/20003/T": "started_not_yet_learned"
+   },
+   "tier": "L",
+   "too_easy": {
+    "by_arm": {
+     "G": {
+      "cases_E32_at_or_below_0_10": 0,
+      "median_E32": 3.145026556849841,
+      "median_E512": 0.8248356913063539,
+      "n_cases": 12,
+      "triggers": false,
+      "usable": true
+     },
+     "T": {
+      "cases_E32_at_or_below_0_10": 0,
+      "median_E32": 3.760388602201879,
+      "median_E512": 0.9585763628367105,
+      "n_cases": 12,
+      "triggers": false,
+      "usable": true
+     }
+    },
+    "triggers": false
+   },
+   "verdict": "calibration-invalid/accounting",
+   "version": "ct20-v1.1"
+  },
+  "version": "ct20-v1.1"
+ },
+ "wall_seconds": 17.918575763702393,
+ "world_public_ids": [
+  "149e30247f4b35ec",
+  "1f5501a48ba66181",
+  "6b394b64b37bcca4",
+  "b42aaa25c68b5af7",
+  "b758f4e3235d4954",
+  "db0d29339a47b284",
+  "6593f32a2e201959",
+  "870494a2edbdc07d",
+  "b6b482aeb1c7e58c",
+  "baa7f89dce2d2083",
+  "bb1dafbd7a624ec4",
+  "e2bc0de95bdde5db"
+ ]
+}

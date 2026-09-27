@@ -1,0 +1,151 @@
+OK   1 ok so i live in Burlington now | want ['teach Ben city = Burlington'] | got ['teach Ben city = Burlington'] | 
+OK   2 btw my hometown is Tucson | want ['teach Ben origin = Tucson'] | got ['teach Ben origin = Tucson'] | 
+OK   3 i was born in Albany, random fact | want ['teach Ben birthplace = Albany'] | got ['teach Ben birthplace = Albany'] | 
+OK   4 my favorite color's burnt orange | want ['teach Ben favorite_color = "burnt orange"'] | got ['teach Ben favorite_color = "burnt orange"'] | 
+OK   5 i'm 17 these days | want ['teach Ben age = 17'] | got ['teach Ben age = 17'] | 
+OK   6 i work for Pine Labs after school | want ['teach Ben employer = "Pine Labs"'] | got ['teach Ben employer = "Pine Labs"'] | 
+OK   7 my mom is Renée | want ['teach Ben mother -> Renée'] | got ['teach Ben mother -> Renée'] | 
+MISS 8 dad's name is Jorge | want ['teach Ben father -> Jorge'] | got [] | ParseRejected: copy constraint rejected subject 'Ben'
+OK   9 my friend is Zola | want ['teach Ben friend -> Zola'] | got ['teach Ben friend -> Zola'] | 
+OK   10 my sibling is Soren | want ['teach Ben sibling -> Soren'] | got ['teach Ben sibling -> Soren'] | 
+OK   11 you live in Boston | want ['teach self city = Boston'] | got ['teach self city = Boston'] | 
+OK   12 you were made by Ada | want ['teach self creator -> Ada'] | got ['teach self creator -> Ada'] | 
+OK   13 you were trained on science articles | want ['teach self training_data = "science articles"'] | got ['teach self training_data = "science articles"'] | 
+OK   14 Camille's in Montréal these days | want ['teach Camille city = Montréal'] | got ['teach Camille city = Montréal'] | 
+OK   15 Søren comes from Aarhus | want ['teach Søren origin = Aarhus'] | got ['teach Søren origin = Aarhus'] | 
+OK   16 Luz was born in Valparaíso | want ['teach Luz birthplace = Valparaíso'] | got ['teach Luz birthplace = Valparaíso'] | 
+OK   17 `Amir` works at North Star Games | want ['teach Amir employer = "North Star Games"'] | got ['teach Amir employer = "North Star Games"'] | 
+OK   18 **Cielo**'s favorite color is teal | want ['teach Cielo favorite_color = teal'] | got ['teach Cielo favorite_color = teal'] | 
+OK   19 Mei Lin is 18 | want ['teach "Mei Lin" age = 18'] | got ['teach "Mei Lin" age = 18'] | 
+OK   20 Noura's mum is Salma | want ['teach Noura mother -> Salma'] | got ['teach Noura mother -> Salma'] | 
+OK   21 Hugo's dad is Laurent | want ['teach Hugo father -> Laurent'] | got ['teach Hugo father -> Laurent'] | 
+OK   22 Rafa's friend is **Inez** | want ['teach Rafa friend -> Inez'] | got ['teach Rafa friend -> Inez'] | 
+OK   23 - Aiko's sibling is Kenji | want ['teach Aiko sibling -> Kenji'] | got ['teach Aiko sibling -> Kenji'] | 
+OK   24 Dae-hyun resides in Busan | want ['teach Dae-hyun city = Busan'] | got ['teach Dae-hyun city = Busan'] | 
+OK   25 Fatou is from Saint-Louis | want ['teach Fatou origin = Saint-Louis'] | got ['teach Fatou origin = Saint-Louis'] | 
+OK   26 Anouk was born in Ghent | want ['teach Anouk birthplace = Ghent'] | got ['teach Anouk birthplace = Ghent'] | 
+OK   27 Kofi works for River & Stone | want ['teach Kofi employer = "River & Stone"'] | got ['teach Kofi employer = "River & Stone"'] | 
+OK   28 Samira's favorite color is midnight blue | want ['teach Samira favorite_color = "midnight blue"'] | got ['teach Samira favorite_color = "midnight blue"'] | 
+OK   29 Enzo is 16 | want ['teach Enzo age = 16'] | got ['teach Enzo age = 16'] | 
+OK   30 Mara's mother is Lidia | want ['teach Mara mother -> Lidia'] | got ['teach Mara mother -> Lidia'] | 
+OK   31 Tariq's father is Nabil | want ['teach Tariq father -> Nabil'] | got ['teach Tariq father -> Nabil'] | 
+OK   32 João's friend is Pilar | want ['teach João friend -> Pilar'] | got ['teach João friend -> Pilar'] | 
+OK   33 Nia's sibling is Kojo | want ['teach Nia sibling -> Kojo'] | got ['teach Nia sibling -> Kojo'] | 
+OK   34 Leonie was trained on archived forums | want ['teach Leonie training_data = "archived forums"'] | got ['teach Leonie training_data = "archived forums"'] | 
+OK   35 ok so Rowan moved to Flagstaff | want ['teach Rowan city = Flagstaff'] | got ['teach Rowan city = Flagstaff'] | 
+OK   36 small update: I live in Concord and I work at Cedar Books | want ['teach Ben city = Concord', 'teach Ben employer = "Cedar Books"'] | got ['teach Ben city = Concord', 'teach Ben employer = "Cedar Books"'] | 
+OK   37 btw you live in Seattle and your favorite color is navy | want ['teach self city = Seattle', 'teach self favorite_color = navy'] | got ['teach self city = Seattle', 'teach self favorite_color = navy'] | 
+OK   38 Éva is from Szeged and lives in Vienna now | want ['teach Éva origin = Szeged', 'teach Éva city = Vienna'] | got ['teach Éva origin = Szeged', 'teach Éva city = Vienna'] | 
+OK   39 Malik was born in Accra, works for Harbor Tech | want ['teach Malik birthplace = Accra', 'teach Malik employer = "Harbor Tech"'] | got ['teach Malik birthplace = Accra', 'teach Malik employer = "Harbor Tech"'] | 
+OK   40 Jun Park is 19; Jun Park's favorite color is silver | want ['teach "Jun Park" age = 19', 'teach "Jun Park" favorite_color = silver'] | got ['teach "Jun Park" age = 19', 'teach "Jun Park" favorite_color = silver'] | 
+OK   41 Rosa's mom is Elena, and Rosa's dad is Víctor | want ['teach Rosa mother -> Elena', 'teach Rosa father -> Víctor'] | got ['teach Rosa mother -> Elena', 'teach Rosa father -> Víctor'] | 
+OK   42 Olek's friend is Basia and Olek's sibling is Marek | want ['teach Olek friend -> Basia', 'teach Olek sibling -> Marek'] | got ['teach Olek friend -> Basia', 'teach Olek sibling -> Marek'] | 
+OK   43 Mina lives in Osaka; Mina comes from Sapporo | want ['teach Mina city = Osaka', 'teach Mina origin = Sapporo'] | got ['teach Mina city = Osaka', 'teach Mina origin = Sapporo'] | 
+OK   44 Nico works at Atlas Bakery and Nico is 17 | want ['teach Nico employer = "Atlas Bakery"', 'teach Nico age = 17'] | got ['teach Nico employer = "Atlas Bakery"', 'teach Nico age = 17'] | 
+OK   45 Sahar was born in Rabat, Sahar's favorite color is gold | want ['teach Sahar birthplace = Rabat', 'teach Sahar favorite_color = gold'] | got ['teach Sahar birthplace = Rabat', 'teach Sahar favorite_color = gold'] | 
+OK   46 Tiago's mother is Marta; Tiago lives in Faro | want ['teach Tiago mother -> Marta', 'teach Tiago city = Faro'] | got ['teach Tiago mother -> Marta', 'teach Tiago city = Faro'] | 
+OK   47 Aya's father is Masato and Aya is from Nara | want ['teach Aya father -> Masato', 'teach Aya origin = Nara'] | got ['teach Aya father -> Masato', 'teach Aya origin = Nara'] | 
+OK   48 actually i live in Keene now | want ['correct Ben city = Keene'] | got ['correct Ben city = Keene'] | 
+OK   49 wait, my hometown is Boise, not Reno | want ['correct Ben origin = Boise'] | got ['correct Ben origin = Boise'] | 
+OK   50 sorry, I meant I was born in Dayton | want ['correct Ben birthplace = Dayton'] | got ['correct Ben birthplace = Dayton'] | 
+OK   51 actually, my favorite color is maroon | want ['correct Ben favorite_color = maroon'] | got ['correct Ben favorite_color = maroon'] | 
+MISS 52 i'm no longer 16, i'm 17 | want ['correct Ben age = 17'] | got ["quote i'm no longer 16, i'm 17"] | 
+OK   53 wait, I work for Ember Coffee, not Peak Cafe | want ['correct Ben employer = "Ember Coffee"'] | got ['correct Ben employer = "Ember Coffee"'] | 
+OK   54 actually my mom is Celeste | want ['correct Ben mother -> Celeste'] | got ['correct Ben mother -> Celeste'] | 
+OK   55 sorry, dad is Bruno, I mixed that up | want ['correct Ben father -> Bruno'] | got ['correct Ben father -> Bruno'] | 
+MISS 56 Noa lives in Eilat, not Haifa | want ['correct Noa city = Eilat'] | got ['quote Noa lives in Eilat, not Haifa'] | 
+OK   57 I meant: Riku's friend is Sota | want ['correct Riku friend -> Sota'] | got ['correct Riku friend -> Sota'] | 
+OK   58 wait, Alma's sibling is Petra, not Klara | want ['correct Alma sibling -> Petra'] | got ['correct Alma sibling -> Petra'] | 
+OK   59 actually you were trained on textbooks | want ['correct self training_data = textbooks'] | got ['correct self training_data = textbooks'] | 
+OK   60 where do I live? | want ['ask Ben city'] | got ['ask Ben city'] | 
+OK   61 where am i from again? | want ['ask Ben origin'] | got ['ask Ben origin'] | 
+OK   62 where was I born? | want ['ask Ben birthplace'] | got ['ask Ben birthplace'] | 
+OK   63 who's my mom? | want ['ask Ben mother'] | got ['ask Ben mother'] | 
+OK   64 who's my dad? | want ['ask Ben father'] | got ['ask Ben father'] | 
+OK   65 where do you live? | want ['ask self city'] | got ['ask self city'] | 
+OK   66 what were you trained on? | want ['ask self training_data'] | got ['ask self training_data'] | 
+OK   67 who made you? | want ['ask self creator'] | got ['ask self creator'] | 
+OK   68 what's Camila's favorite color? | want ['ask Camila favorite_color'] | got ['ask Camila favorite_color'] | 
+OK   69 how old is Farid? | want ['ask Farid age'] | got ['ask Farid age'] | 
+OK   70 where does Suki live? | want ['ask Suki city'] | got ['ask Suki city'] | 
+OK   71 where's Pavel from? | want ['ask Pavel origin'] | got ['ask Pavel origin'] | 
+OK   72 where was Laleh born? | want ['ask Laleh birthplace'] | got ['ask Laleh birthplace'] | 
+OK   73 who does Binta work for? | want ['ask Binta employer'] | got ['ask Binta employer'] | 
+OK   74 who's Eren's sibling? | want ['ask Eren sibling'] | got ['ask Eren sibling'] | 
+OK   75 where does Kira's mom live? | want ['ask Kira mother city'] | got ['ask Kira mother city'] | 
+OK   76 where is Miro's dad from? | want ['ask Miro father origin'] | got ['ask Miro father origin'] | 
+OK   77 where was Lila's friend born? | want ['ask Lila friend birthplace'] | got ['ask Lila friend birthplace'] | 
+OK   78 who is Dario's mother's friend? | want ['ask Dario mother friend'] | got ['ask Dario mother friend'] | 
+MISS 79 where does Sana's brother live? | want ['ask Sana sibling city'] | got ['ask Sana brother city'] | 
+OK   80 what's Ivo's dad's favorite color? | want ['ask Ivo father favorite_color'] | got ['ask Ivo father favorite_color'] | 
+OK   81 who is Neve's mom's sibling? | want ['ask Neve mother sibling'] | got ['ask Neve mother sibling'] | 
+OK   82 where was Tenzin's father's friend born? | want ['ask Tenzin father friend birthplace'] | got ['ask Tenzin father friend birthplace'] | 
+OK   83 who's Leandro's mother's friend's sibling? | want ['ask Leandro mother friend sibling'] | got ['ask Leandro mother friend sibling'] | 
+OK   84 where does Maëlle's sibling's friend live? | want ['ask Maëlle sibling friend city'] | got ['ask Maëlle sibling friend city'] | 
+OK   85 if I lived in Denver, winters would be easier | want ['quote if I lived in Denver, winters would be easier'] | got ['quote if I lived in Denver, winters would be easier'] | 
+OK   86 suppose Luan works at Moonlight Cafe | want ['quote suppose Luan works at Moonlight Cafe'] | got ['quote suppose Luan works at Moonlight Cafe'] | 
+OK   87 imagine you were trained on comic books | want ['quote imagine you were trained on comic books'] | got ['quote imagine you were trained on comic books'] | 
+OK   88 if Zahra's mom were Dalia, that'd be wild | want ["quote if Zahra's mom were Dalia, that'd be wild"] | got ["quote if Zahra's mom were Dalia, that'd be wild"] | 
+OK   89 suppose Ken was born in Maui | want ['quote suppose Ken was born in Maui'] | got ['quote suppose Ken was born in Maui'] | 
+OK   90 imagine **Oona** lives in Galway | want ['quote imagine **Oona** lives in Galway'] | got ['quote imagine **Oona** lives in Galway'] | 
+OK   91 Ezra said he lives in Phoenix | want ['quote Ezra said he lives in Phoenix'] | got ['quote Ezra said he lives in Phoenix'] | 
+OK   92 Mika told me she is from Kobe | want ['quote Mika told me she is from Kobe'] | got ['quote Mika told me she is from Kobe'] | 
+OK   93 I heard Sacha works for Bright Forge | want ['quote I heard Sacha works for Bright Forge'] | got ['quote I heard Sacha works for Bright Forge'] | 
+OK   94 according to Niko, Talia was born in Split | want ['quote according to Niko, Talia was born in Split'] | got ['quote according to Niko, Talia was born in Split'] | 
+OK   95 Rami claims his favorite color is violet | want ['quote Rami claims his favorite color is violet'] | got ['quote Rami claims his favorite color is violet'] | 
+OK   96 my friend says I live in Austin | want ['quote my friend says I live in Austin'] | got ['quote my friend says I live in Austin'] | 
+OK   97 Yara said her mother is Nadine | want ['quote Yara said her mother is Nadine'] | got ['quote Yara said her mother is Nadine'] | 
+OK   98 I heard your creator is Lin | want ['quote I heard your creator is Lin'] | got ['quote I heard your creator is Lin'] | 
+OK   99 according to Bo, you were trained on blogs | want ['quote according to Bo, you were trained on blogs'] | got ['quote according to Bo, you were trained on blogs'] | 
+OK   100 Cato told me his sibling is Remy | want ['quote Cato told me his sibling is Remy'] | got ['quote Cato told me his sibling is Remy'] | 
+OK   101 Milo does not live in Tampa | want ['quote Milo does not live in Tampa'] | got ['quote Milo does not live in Tampa'] | 
+OK   102 i don't work for Sunbeam Market | want ["quote i don't work for Sunbeam Market"] | got ["quote i don't work for Sunbeam Market"] | 
+OK   103 you aren't from Toronto | want ["quote you aren't from Toronto"] | got ["quote you aren't from Toronto"] | 
+OK   104 Anya wasn't born in Sofia | want ["quote Anya wasn't born in Sofia"] | got ["quote Anya wasn't born in Sofia"] | 
+OK   105 Luc's mom is not Céline | want ["quote Luc's mom is not Céline"] | got ["quote Luc's mom is not Céline"] | 
+OK   106 Hani has no sibling named Reem | want ['quote Hani has no sibling named Reem'] | got ['quote Hani has no sibling named Reem'] | 
+OK   107 my favorite color isn't lime | want ["quote my favorite color isn't lime"] | got ["quote my favorite color isn't lime"] | 
+OK   108 Faye doesn't work at Copper House | want ["quote Faye doesn't work at Copper House"] | got ["quote Faye doesn't work at Copper House"] | 
+OK   109 Gus is not 21 | want ['quote Gus is not 21'] | got ['quote Gus is not 21'] | 
+OK   110 lol that's actually pretty funny | want [] | got [] | 
+OK   111 ok cool, thanks | want [] | got [] | 
+OK   112 what's up? | want [] | got [] | 
+OK   113 good morninggg | want [] | got [] | 
+OK   114 that makes sense | want [] | got [] | 
+OK   115 brb getting water | want [] | got [] | 
+OK   116 nice one 😂 | want [] | got [] | 
+OK   117 can we keep going? | want [] | got [] | 
+OK   118 idk man | want [] | got [] | 
+OK   119 sweet, got it | want [] | got [] | 
+OK   120 yeah | want ['yes'] | got ['yes'] | 
+OK   121 nah | want ['no'] | got ['no'] | 
+OK   122 yep, do it | want ['yes'] | got ['yes'] | 
+OK   123 nope | want ['no'] | got ['no'] | 
+OK   124 pick E0007 | want ['pick E0007'] | got ['pick E0007'] | 
+OK   125 E0042 | want ['pick E0042'] | got ['pick E0042'] | 
+OK   126 go with E0310 | want ['pick E0310'] | got ['pick E0310'] | 
+OK   127 yes | want [] | got [] | 
+OK   128 no | want [] | got [] | 
+OK   129 pick E0007 | want [] | got [] | 
+OK   130 forget where I live | want ['forget Ben city'] | got ['forget Ben city'] | 
+OK   131 forget my hometown | want ['forget Ben origin'] | got ['forget Ben origin'] | 
+OK   132 forget who my mom is | want ['forget Ben mother'] | got ['forget Ben mother'] | 
+OK   133 forget where Nessa works | want ['forget Nessa employer'] | got ['forget Nessa employer'] | 
+OK   134 forget **Dilan**'s favorite color | want ['forget Dilan favorite_color'] | got ['forget Dilan favorite_color'] | 
+MISS 135 forget what you were trained on | want ['forget self training_data'] | got [] | 
+OK   136 undo that | want ['undo last'] | got ['undo last'] | 
+MISS 137 oops, undo last | want ['undo last'] | got [] | 
+OK   138 undo the last one please | want ['undo last'] | got ['undo last'] | 
+OK   139 Alessandra also goes by Sandy | want ['alias Sandy = Alessandra'] | got ['alias Sandy = Alessandra'] | 
+OK   140 for Theo Chen, use TC as an alias | want ['alias TC = "Theo Chen"'] | got ['alias TC = "Theo Chen"'] | 
+OK   141 Mags is another name for Magdalena | want ['alias Mags = Magdalena'] | got ['alias Mags = Magdalena'] | 
+MISS 142 you can call José Luis Pepe | want ['alias Pepe = "José Luis"'] | got [] | ParseRejected: relation 'nickname' does not match copied surface 'call'; expected 'call'
+MISS 143 Kiyana also answers to Kiki | want ['alias Kiki = Kiyana'] | got ['alias Kiyana = Kiki'] | 
+OK   144 btw Nnenna also goes by Nene | want ['alias Nene = Nnenna'] | got ['alias Nene = Nnenna'] | 
+MISS 145 there's someone named Imani | want ['person Imani'] | got [] | ParseRejected: teach requires 1..1 relation hops
+OK   146 add Haruto as a person | want ['person Haruto'] | got ['person Haruto'] | 
+OK   147 person: Maud | want ['person Maud'] | got ['person Maud'] | 
+OK   148 remember **Ximena** as a person | want ['person Ximena'] | got ['person Ximena'] | 
+OK   149 new person, Jean Baptiste | want ['person "Jean Baptiste"'] | got ['person "Jean Baptiste"'] | 
+OK   150 - add `Seydou` as a person | want ['person Seydou'] | got ['person Seydou'] | 
+EXACT 141/150  UNSAFE_WRITE_ITEMS 1

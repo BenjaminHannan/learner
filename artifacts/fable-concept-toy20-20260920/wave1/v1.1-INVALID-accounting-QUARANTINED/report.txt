@@ -1,0 +1,22 @@
+concept-toy20 wave 1 -- ct20-v1.1  (registered)
+
+data            : /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-concept-toy20-20260920/calibration-v1.1
+worlds x seeds  : 12 x 3, arms G, T  -> 72 fits per tier
+concurrency     : 6 single-thread processes
+wall clock      : 17.9 s (preflight charged 8.4 s)
+
+isolation (rulings 2): PASS -- with the batch shape held fixed, replacing every other sequence in the batch -- including the paired counterpart -- changes no prediction bit; reordering changes no prediction bit; repartitioning agrees bit for bit wherever the batch size is preserved and within 1e-06 absolute otherwise, from float32 matrix-multiply blocking inside one sequence's own algebra
+
+tier L:
+  preflight            : fits (remaining 348.6 s with the 1.5x margin against 891.6 s usable)
+  fits                 : 6 shards, 72 fits (72 run now, 0 reused sha-verified from disk), all ok = True
+  accounting           : valid = False, worst per-rung gap = 0.027184  [equal counted operations under the registered estimate]
+  complete wave        : True (72/72 cells)
+  startup labels       : 72, pending = 0, independent agreement = True (0 spelling reconciliations)
+  gate verdict         : calibration-invalid/accounting
+
+two-tier status : complete
+final verdict   : calibration-invalid/accounting
+explanation     : tier H is not run: the required complete wave did not pass its integrity/completeness/accounting checks, and ruling R3 puts those ahead of every scientific predicate. Stopped without escalation: a numerical failure, missing required result, invalid accounting or failed integrity audit is never a budget question.
+
+Cost language: the arms are matched on equal counted operations under the registered estimate.  This is not equal hardware work, elapsed time or energy.

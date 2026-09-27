@@ -1,0 +1,1095 @@
+{
+ "rows": [
+  {
+   "id": "C1",
+   "pass": true,
+   "naive_pass": false,
+   "wrong": false,
+   "naive_wrong": true,
+   "got": {
+    "kind": "answer",
+    "status": "MISSING_FACT",
+    "name": "Ann",
+    "relations": [
+     "works_at"
+    ],
+    "fields": {
+     "subject": "Ann",
+     "relation": "works_at",
+     "hop": 1,
+     "trail": [],
+     "reason": "qualified"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Ann",
+    "relations": [
+     "works_at"
+    ],
+    "fields": {
+     "answer": "Acme",
+     "trail": [
+      "F00001"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "MISSING_FACT",
+    "answer": null,
+    "reason": "qualified"
+   }
+  },
+  {
+   "id": "C2",
+   "pass": true,
+   "naive_pass": true,
+   "wrong": false,
+   "naive_wrong": false,
+   "got": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Ann",
+    "relations": [
+     "works_at"
+    ],
+    "fields": {
+     "answer": "Acme",
+     "trail": [
+      "F00001"
+     ],
+     "source": "taught"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Ann",
+    "relations": [
+     "works_at"
+    ],
+    "fields": {
+     "answer": "Acme",
+     "trail": [
+      "F00001"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "OK",
+    "answer": "Acme",
+    "reason": null
+   }
+  },
+  {
+   "id": "C3",
+   "pass": true,
+   "naive_pass": false,
+   "wrong": false,
+   "naive_wrong": true,
+   "got": {
+    "kind": "answer",
+    "status": "MISSING_FACT",
+    "name": "Ann",
+    "relations": [
+     "works_at"
+    ],
+    "fields": {
+     "subject": "Ann",
+     "relation": "works_at",
+     "hop": 1,
+     "trail": [],
+     "reason": "qualified"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Ann",
+    "relations": [
+     "works_at"
+    ],
+    "fields": {
+     "answer": "Acme",
+     "trail": [
+      "F00001"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "MISSING_FACT",
+    "answer": null,
+    "reason": "qualified"
+   }
+  },
+  {
+   "id": "C4",
+   "pass": true,
+   "naive_pass": true,
+   "wrong": false,
+   "naive_wrong": false,
+   "got": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Ann",
+    "relations": [
+     "lives_in"
+    ],
+    "fields": {
+     "answer": "Paris",
+     "trail": [
+      "F00002"
+     ],
+     "source": "taught"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Ann",
+    "relations": [
+     "lives_in"
+    ],
+    "fields": {
+     "answer": "Paris",
+     "trail": [
+      "F00002"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "OK",
+    "answer": "Paris",
+    "reason": null
+   }
+  },
+  {
+   "id": "C5",
+   "pass": true,
+   "naive_pass": false,
+   "wrong": false,
+   "naive_wrong": true,
+   "got": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Ben",
+    "relations": [
+     "skill"
+    ],
+    "fields": {
+     "answer": "typing",
+     "trail": [
+      "F00003"
+     ],
+     "source": "taught"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Ben",
+    "relations": [
+     "skill"
+    ],
+    "fields": {
+     "answer": "soldering, typing",
+     "trail": [
+      "F00004",
+      "F00003"
+     ],
+     "source": "taught",
+     "multi": true
+    }
+   },
+   "expect": {
+    "status": "OK",
+    "answer": "typing",
+    "reason": null
+   }
+  },
+  {
+   "id": "C6",
+   "pass": true,
+   "naive_pass": false,
+   "wrong": false,
+   "naive_wrong": true,
+   "got": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Ben",
+    "relations": [
+     "skill"
+    ],
+    "fields": {
+     "answer": "typing",
+     "trail": [
+      "F00003"
+     ],
+     "source": "taught"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Ben",
+    "relations": [
+     "skill"
+    ],
+    "fields": {
+     "answer": "soldering, typing",
+     "trail": [
+      "F00004",
+      "F00003"
+     ],
+     "source": "taught",
+     "multi": true
+    }
+   },
+   "expect": {
+    "status": "OK",
+    "answer": "typing",
+    "reason": null
+   }
+  },
+  {
+   "id": "C7",
+   "pass": true,
+   "naive_pass": true,
+   "wrong": false,
+   "naive_wrong": false,
+   "got": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Cat",
+    "relations": [
+     "boss"
+    ],
+    "fields": {
+     "answer": "Dan",
+     "trail": [
+      "F00005"
+     ],
+     "source": "taught"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Cat",
+    "relations": [
+     "boss"
+    ],
+    "fields": {
+     "answer": "Dan",
+     "trail": [
+      "F00005"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "OK",
+    "answer": "Dan",
+    "reason": null
+   }
+  },
+  {
+   "id": "C8",
+   "pass": true,
+   "naive_pass": false,
+   "wrong": false,
+   "naive_wrong": true,
+   "got": {
+    "kind": "answer",
+    "status": "MISSING_FACT",
+    "name": "Eli",
+    "relations": [
+     "lives_in"
+    ],
+    "fields": {
+     "subject": "Eli",
+     "relation": "lives_in",
+     "hop": 1,
+     "trail": [],
+     "reason": "qualified"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Eli",
+    "relations": [
+     "lives_in"
+    ],
+    "fields": {
+     "answer": "Rome",
+     "trail": [
+      "F00008"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "MISSING_FACT",
+    "answer": null,
+    "reason": "qualified"
+   }
+  },
+  {
+   "id": "C9",
+   "pass": true,
+   "naive_pass": false,
+   "wrong": false,
+   "naive_wrong": true,
+   "got": {
+    "kind": "answer",
+    "status": "MISSING_FACT",
+    "name": "Eli",
+    "relations": [
+     "lives_in"
+    ],
+    "fields": {
+     "subject": "Eli",
+     "relation": "lives_in",
+     "hop": 1,
+     "trail": [],
+     "reason": "qualified"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Eli",
+    "relations": [
+     "lives_in"
+    ],
+    "fields": {
+     "answer": "Rome",
+     "trail": [
+      "F00008"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "MISSING_FACT",
+    "answer": null,
+    "reason": "qualified"
+   }
+  },
+  {
+   "id": "C10",
+   "pass": true,
+   "naive_pass": true,
+   "wrong": false,
+   "naive_wrong": false,
+   "got": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Eli",
+    "relations": [
+     "lives_in"
+    ],
+    "fields": {
+     "answer": "Rome",
+     "trail": [
+      "F00008"
+     ],
+     "source": "taught"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Eli",
+    "relations": [
+     "lives_in"
+    ],
+    "fields": {
+     "answer": "Rome",
+     "trail": [
+      "F00008"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "OK",
+    "answer": "Rome",
+    "reason": null
+   }
+  },
+  {
+   "id": "C11",
+   "pass": true,
+   "naive_pass": false,
+   "wrong": false,
+   "naive_wrong": true,
+   "got": {
+    "kind": "answer",
+    "status": "MISSING_FACT",
+    "name": "Fay",
+    "relations": [
+     "lives_in"
+    ],
+    "fields": {
+     "subject": "Fay",
+     "relation": "lives_in",
+     "hop": 1,
+     "trail": [],
+     "reason": "qualified"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Fay",
+    "relations": [
+     "lives_in"
+    ],
+    "fields": {
+     "answer": "Oslo",
+     "trail": [
+      "F00010"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "MISSING_FACT",
+    "answer": null,
+    "reason": "qualified"
+   }
+  },
+  {
+   "id": "C12",
+   "pass": true,
+   "naive_pass": true,
+   "wrong": false,
+   "naive_wrong": false,
+   "got": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Fay",
+    "relations": [
+     "lives_in"
+    ],
+    "fields": {
+     "answer": "Oslo",
+     "trail": [
+      "F00010"
+     ],
+     "source": "taught"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Fay",
+    "relations": [
+     "lives_in"
+    ],
+    "fields": {
+     "answer": "Oslo",
+     "trail": [
+      "F00010"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "OK",
+    "answer": "Oslo",
+    "reason": null
+   }
+  },
+  {
+   "id": "C13",
+   "pass": true,
+   "naive_pass": false,
+   "wrong": false,
+   "naive_wrong": true,
+   "got": {
+    "kind": "answer",
+    "status": "MISSING_FACT",
+    "name": "Fay",
+    "relations": [
+     "lives_in"
+    ],
+    "fields": {
+     "subject": "Fay",
+     "relation": "lives_in",
+     "hop": 1,
+     "trail": [],
+     "reason": "qualified"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Fay",
+    "relations": [
+     "lives_in"
+    ],
+    "fields": {
+     "answer": "Oslo",
+     "trail": [
+      "F00010"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "MISSING_FACT",
+    "answer": null,
+    "reason": "qualified"
+   }
+  },
+  {
+   "id": "C14",
+   "pass": true,
+   "naive_pass": false,
+   "wrong": false,
+   "naive_wrong": true,
+   "got": {
+    "kind": "answer",
+    "status": "MISSING_FACT",
+    "name": "Cat",
+    "relations": [
+     "boss",
+     "works_at"
+    ],
+    "fields": {
+     "subject": "Dan",
+     "relation": "works_at",
+     "hop": 2,
+     "trail": [
+      "F00005"
+     ],
+     "reason": "qualified"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Cat",
+    "relations": [
+     "boss",
+     "works_at"
+    ],
+    "fields": {
+     "answer": "Umbrella",
+     "trail": [
+      "F00005",
+      "F00006"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "MISSING_FACT",
+    "answer": null,
+    "reason": "qualified"
+   }
+  },
+  {
+   "id": "C15",
+   "pass": true,
+   "naive_pass": true,
+   "wrong": false,
+   "naive_wrong": false,
+   "got": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Cat",
+    "relations": [
+     "boss",
+     "works_at"
+    ],
+    "fields": {
+     "answer": "Umbrella",
+     "trail": [
+      "F00005",
+      "F00006"
+     ],
+     "source": "taught"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Cat",
+    "relations": [
+     "boss",
+     "works_at"
+    ],
+    "fields": {
+     "answer": "Umbrella",
+     "trail": [
+      "F00005",
+      "F00006"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "OK",
+    "answer": "Umbrella",
+    "reason": null
+   }
+  },
+  {
+   "id": "C16",
+   "pass": true,
+   "naive_pass": false,
+   "wrong": false,
+   "naive_wrong": true,
+   "got": {
+    "kind": "answer",
+    "status": "MISSING_FACT",
+    "name": "Cat",
+    "relations": [
+     "boss",
+     "works_at"
+    ],
+    "fields": {
+     "subject": "Dan",
+     "relation": "works_at",
+     "hop": 2,
+     "trail": [
+      "F00005"
+     ],
+     "reason": "qualified"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Cat",
+    "relations": [
+     "boss",
+     "works_at"
+    ],
+    "fields": {
+     "answer": "Umbrella",
+     "trail": [
+      "F00005",
+      "F00006"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "MISSING_FACT",
+    "answer": null,
+    "reason": "qualified"
+   }
+  },
+  {
+   "id": "C17",
+   "pass": true,
+   "naive_pass": true,
+   "wrong": false,
+   "naive_wrong": false,
+   "got": {
+    "kind": "answer",
+    "status": "MISSING_FACT",
+    "name": "Ann",
+    "relations": [
+     "boss"
+    ],
+    "fields": {
+     "subject": "Ann",
+     "relation": "boss",
+     "hop": 1,
+     "trail": []
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "MISSING_FACT",
+    "name": "Ann",
+    "relations": [
+     "boss"
+    ],
+    "fields": {
+     "subject": "Ann",
+     "relation": "boss",
+     "hop": 1,
+     "trail": []
+    }
+   },
+   "expect": {
+    "status": "MISSING_FACT",
+    "answer": null,
+    "reason": null
+   }
+  },
+  {
+   "id": "C18",
+   "pass": true,
+   "naive_pass": false,
+   "wrong": false,
+   "naive_wrong": true,
+   "got": {
+    "kind": "answer",
+    "status": "MISSING_FACT",
+    "name": "Dan",
+    "relations": [
+     "works_at"
+    ],
+    "fields": {
+     "subject": "Dan",
+     "relation": "works_at",
+     "hop": 1,
+     "trail": [],
+     "reason": "qualified"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Dan",
+    "relations": [
+     "works_at"
+    ],
+    "fields": {
+     "answer": "Umbrella",
+     "trail": [
+      "F00006"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "MISSING_FACT",
+    "answer": null,
+    "reason": "qualified"
+   }
+  },
+  {
+   "id": "C19",
+   "pass": true,
+   "naive_pass": true,
+   "wrong": false,
+   "naive_wrong": false,
+   "got": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Dan",
+    "relations": [
+     "works_at"
+    ],
+    "fields": {
+     "answer": "Umbrella",
+     "trail": [
+      "F00006"
+     ],
+     "source": "taught"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Dan",
+    "relations": [
+     "works_at"
+    ],
+    "fields": {
+     "answer": "Umbrella",
+     "trail": [
+      "F00006"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "OK",
+    "answer": "Umbrella",
+    "reason": null
+   }
+  },
+  {
+   "id": "C20",
+   "pass": true,
+   "naive_pass": true,
+   "wrong": false,
+   "naive_wrong": false,
+   "got": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Cat",
+    "relations": [
+     "boss",
+     "boss"
+    ],
+    "fields": {
+     "answer": "Eli",
+     "trail": [
+      "F00005",
+      "F00007"
+     ],
+     "source": "taught"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Cat",
+    "relations": [
+     "boss",
+     "boss"
+    ],
+    "fields": {
+     "answer": "Eli",
+     "trail": [
+      "F00005",
+      "F00007"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "OK",
+    "answer": "Eli",
+    "reason": null
+   }
+  },
+  {
+   "id": "C21",
+   "pass": true,
+   "naive_pass": false,
+   "wrong": false,
+   "naive_wrong": true,
+   "got": {
+    "kind": "answer",
+    "status": "MISSING_FACT",
+    "name": "Cat",
+    "relations": [
+     "boss",
+     "boss",
+     "lives_in"
+    ],
+    "fields": {
+     "subject": "Eli",
+     "relation": "lives_in",
+     "hop": 3,
+     "trail": [
+      "F00005",
+      "F00007"
+     ],
+     "reason": "qualified"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Cat",
+    "relations": [
+     "boss",
+     "boss",
+     "lives_in"
+    ],
+    "fields": {
+     "answer": "Rome",
+     "trail": [
+      "F00005",
+      "F00007",
+      "F00008"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "MISSING_FACT",
+    "answer": null,
+    "reason": "qualified"
+   }
+  },
+  {
+   "id": "C22",
+   "pass": true,
+   "naive_pass": true,
+   "wrong": false,
+   "naive_wrong": false,
+   "got": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Cat",
+    "relations": [
+     "boss",
+     "boss",
+     "lives_in"
+    ],
+    "fields": {
+     "answer": "Rome",
+     "trail": [
+      "F00005",
+      "F00007",
+      "F00008"
+     ],
+     "source": "taught"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Cat",
+    "relations": [
+     "boss",
+     "boss",
+     "lives_in"
+    ],
+    "fields": {
+     "answer": "Rome",
+     "trail": [
+      "F00005",
+      "F00007",
+      "F00008"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "OK",
+    "answer": "Rome",
+    "reason": null
+   }
+  },
+  {
+   "id": "C23",
+   "pass": true,
+   "naive_pass": true,
+   "wrong": false,
+   "naive_wrong": false,
+   "got": {
+    "kind": "answer",
+    "status": "BROKEN_CHAIN",
+    "name": "Ann",
+    "relations": [
+     "lives_in",
+     "works_at"
+    ],
+    "fields": {
+     "subject": "Ann",
+     "relation": "lives_in",
+     "value": "Paris",
+     "hop": 1,
+     "trail": [
+      "F00002"
+     ]
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "BROKEN_CHAIN",
+    "name": "Ann",
+    "relations": [
+     "lives_in",
+     "works_at"
+    ],
+    "fields": {
+     "subject": "Ann",
+     "relation": "lives_in",
+     "value": "Paris",
+     "hop": 1,
+     "trail": [
+      "F00002"
+     ]
+    }
+   },
+   "expect": {
+    "status": "BROKEN_CHAIN",
+    "answer": null,
+    "reason": null
+   }
+  },
+  {
+   "id": "C24",
+   "pass": true,
+   "naive_pass": false,
+   "wrong": false,
+   "naive_wrong": true,
+   "got": {
+    "kind": "answer",
+    "status": "MISSING_FACT",
+    "name": "Fay",
+    "relations": [
+     "works_at"
+    ],
+    "fields": {
+     "subject": "Fay",
+     "relation": "works_at",
+     "hop": 1,
+     "trail": [],
+     "reason": "qualified"
+    }
+   },
+   "naive": {
+    "kind": "answer",
+    "status": "OK",
+    "name": "Fay",
+    "relations": [
+     "works_at"
+    ],
+    "fields": {
+     "answer": "Hooli",
+     "trail": [
+      "F00009"
+     ],
+     "source": "taught"
+    }
+   },
+   "expect": {
+    "status": "MISSING_FACT",
+    "answer": null,
+    "reason": "qualified"
+   }
+  }
+ ],
+ "miner": [
+  {
+   "id": "M1",
+   "pass": true,
+   "note": "qualified-chain ask dropped"
+  },
+  {
+   "id": "M2",
+   "pass": true,
+   "note": "unqualified ask+confirm kept"
+  },
+  {
+   "id": "M3",
+   "pass": true,
+   "note": "qualified-chain correction dropped"
+  },
+  {
+   "id": "M4",
+   "pass": true,
+   "note": "non-chain turns pass through"
+  },
+  {
+   "id": "M5",
+   "pass": true,
+   "note": "input log untouched (pure)"
+  },
+  {
+   "id": "M6",
+   "pass": true,
+   "note": "walk detector: qualified hop / clean hop / unknown start"
+  }
+ ],
+ "summary": {
+  "cases": 24,
+  "ours_pass": 24,
+  "naive_fail": 13,
+  "ours_wrong": 0,
+  "naive_wrong": 13,
+  "miner": "6/6"
+ }
+}

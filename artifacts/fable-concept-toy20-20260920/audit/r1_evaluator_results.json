@@ -1,0 +1,99 @@
+{
+  "note": "Hand computation against the frozen fixture truth using deterministic synthetic predictions. No learner was fitted, scored or evaluated.",
+  "evaluator_version": "ct20-v1.1",
+  "total": 18,
+  "passed": 18,
+  "failed": 0,
+  "results": [
+    {
+      "check": "R1 V is the population variance of panels 1+2 with a 0.05 floor [797dc8ab408ea8e7]",
+      "status": "PASS",
+      "detail": "hand=0.06873244586884172 evaluator=0.06873244586884172 n=32"
+    },
+    {
+      "check": "R1 E_panel1 is the equal average of the h=1/2/4 means [797dc8ab408ea8e7]",
+      "status": "PASS",
+      "detail": "hand=1.6456482504009966 evaluator=1.6456482504009966"
+    },
+    {
+      "check": "R1 that is genuinely different from a flat 6/5/5 mean [797dc8ab408ea8e7]",
+      "status": "PASS",
+      "detail": "horizon-weighted=1.6456482504009966 flat=1.6649476788499569 counts=[6, 5, 5]"
+    },
+    {
+      "check": "R1 E_panel2 is the equal average of its 16 units [797dc8ab408ea8e7]",
+      "status": "PASS",
+      "detail": "hand=2.366373606203356 evaluator=2.366373606203356"
+    },
+    {
+      "check": "R1 E_primary = (E_panel1 + E_panel2)/2 [797dc8ab408ea8e7]",
+      "status": "PASS",
+      "detail": "hand=2.0060109283021763 evaluator=2.0060109283021763"
+    },
+    {
+      "check": "R1 E_primary differs from E_all_targets, so panels 3/4 are excluded [797dc8ab408ea8e7]",
+      "status": "PASS",
+      "detail": "E_primary=2.0060109283021763 E_all=2.054905640813103"
+    },
+    {
+      "check": "R1 V is the population variance of panels 1+2 with a 0.05 floor [a47c4e4016f899c8]",
+      "status": "PASS",
+      "detail": "hand=0.08869179253057083 evaluator=0.08869179253057083 n=32"
+    },
+    {
+      "check": "R1 E_panel1 is the equal average of the h=1/2/4 means [a47c4e4016f899c8]",
+      "status": "PASS",
+      "detail": "hand=7.189319481314813 evaluator=7.189319481314814"
+    },
+    {
+      "check": "R1 that is genuinely different from a flat 6/5/5 mean [a47c4e4016f899c8]",
+      "status": "PASS",
+      "detail": "horizon-weighted=7.189319481314813 flat=7.1295798465354085 counts=[6, 5, 5]"
+    },
+    {
+      "check": "R1 E_panel2 is the equal average of its 16 units [a47c4e4016f899c8]",
+      "status": "PASS",
+      "detail": "hand=8.464726018093547 evaluator=8.464726018093547"
+    },
+    {
+      "check": "R1 E_primary = (E_panel1 + E_panel2)/2 [a47c4e4016f899c8]",
+      "status": "PASS",
+      "detail": "hand=7.82702274970418 evaluator=7.827022749704181"
+    },
+    {
+      "check": "R1 E_primary differs from E_all_targets, so panels 3/4 are excluded [a47c4e4016f899c8]",
+      "status": "PASS",
+      "detail": "E_primary=7.827022749704181 E_all=9.528097305669109"
+    },
+    {
+      "check": "R1 perturbing every panel-3/4 prediction leaves E_primary bit-identical",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "R1 the same perturbation DOES move the panel-3 guard, so it was real",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "R1 a truncated prediction set is reported incomplete",
+      "status": "PASS",
+      "detail": "scored 76/96"
+    },
+    {
+      "check": "R1 an incomplete world yields E_primary = null, not a partial number",
+      "status": "PASS",
+      "detail": "None"
+    },
+    {
+      "check": "R1 the partial count is still reported so the gap is visible",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "R1 the gate calculator treats a null E_512 as missing, never as 0.0",
+      "status": "PASS",
+      "detail": ""
+    }
+  ]
+}

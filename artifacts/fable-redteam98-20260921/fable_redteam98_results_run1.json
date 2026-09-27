@@ -1,0 +1,3185 @@
+{
+ "summary": {
+  "cases": 64,
+  "OK": 40,
+  "BUG": 24,
+  "by_severity": {
+   "critical": 3,
+   "high": 8,
+   "medium": 11,
+   "low": 2
+  },
+  "UNCLEAR": 0,
+  "bug_ids": [
+   "A2",
+   "A3",
+   "A5",
+   "A6",
+   "A8",
+   "B5",
+   "B7",
+   "C1",
+   "C2",
+   "C3",
+   "C4",
+   "C5",
+   "C7",
+   "D2",
+   "D7",
+   "D8",
+   "E7",
+   "E10",
+   "F1",
+   "F2",
+   "F3",
+   "F4",
+   "F6",
+   "H5"
+  ],
+  "unclear_ids": [],
+  "seconds": 3.5
+ },
+ "cases": [
+  {
+   "id": "A1",
+   "group": "A",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/A1_t19t91vf",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "A2",
+   "group": "A",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/A2_uapbji5u",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Poland's capital is Krakow, Tom said..\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Krakow, Tom said..\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "critical",
+   "reason": "turn 2 lacks 'Warsaw' (got \"Poland's capital is Krakow, Tom said..\\n\"); turn 2 leaks 'Krakow'; turn 1 wrote 1 FACT events",
+   "observed_final": "Poland's capital is Krakow, Tom said..\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_A2.py"
+  },
+  {
+   "id": "A3",
+   "group": "A",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/A3_geey3lm2",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Roberto Merhi's country_of_citizenship is Spain.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: I read online that Roberto Merhi's country_of_citizenship is France..\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "I don't know anyone called Roberto.\n",
+     "statuses": [
+      "UNKNOWN_ENTITY"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "high",
+   "reason": "turn 2 lacks 'Spain' (got \"I don't know anyone called Roberto.\\n\"); turn 1 wrote 1 FACT events",
+   "observed_final": "I don't know anyone called Roberto.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_A3.py"
+  },
+  {
+   "id": "A4",
+   "group": "A",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/A4_y_yxulef",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "A5",
+   "group": "A",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/A5_izxlh7dn",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: CM Punk's spouse is AJ Lee.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: quote CM Punk's spouse is Lisa..\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "CM Punk's spouse is AJ Lee.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "high",
+   "reason": "turn 1 wrote 1 FACT events",
+   "observed_final": "CM Punk's spouse is AJ Lee.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_A5.py"
+  },
+  {
+   "id": "A6",
+   "group": "A",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/A6_q8rr143y",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Ovid's place_of_birth is Sulmona.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Ovid's place_of_birth is Rome, according to the web..\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Ovid's place of birth is Rome, according to the web..\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "critical",
+   "reason": "turn 2 lacks 'Sulmona' (got \"Ovid's place of birth is Rome, according to the web..\\n\"); turn 2 leaks 'Rome'; turn 1 wrote 1 FACT events",
+   "observed_final": "Ovid's place of birth is Rome, according to the web..\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_A6.py"
+  },
+  {
+   "id": "A7",
+   "group": "A",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/A7_8s19m3cl",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "A8",
+   "group": "A",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/A8_8wsfzm01",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Roberto Merhi's country_of_citizenship is Spain.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Spain's official_language is Spanish.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Saved: Spain's official_language is French, I read online..\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Roberto Merhi's country of citizenship's official language is French, I read online..\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "critical",
+   "reason": "turn 3 lacks 'Spanish' (got \"Roberto Merhi's country of citizenship's official language is French, I read online..\\n\"); turn 3 leaks 'French'; turn 2 wrote 1 FACT events",
+   "observed_final": "Roberto Merhi's country of citizenship's official language is French, I read online..\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_A8.py"
+  },
+  {
+   "id": "B1",
+   "group": "B",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/B1_hyoipd8s",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Roberto Merhi's country_of_citizenship is Spain.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Spain's official_language is Spanish.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Saved: Spain's official_language is Arabic.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Roberto Merhi's country of citizenship's official language is Arabic.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Roberto Merhi's country of citizenship's official language is Arabic.\n"
+  },
+  {
+   "id": "B2",
+   "group": "B",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/B2_a56afn3c",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Roberto Merhi's country_of_citizenship is Spain.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Spain's official_language is Spanish.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Saved: Roberto Merhi's country_of_citizenship is Portugal.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Saved: Portugal's official_language is Portuguese.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_04.txt",
+     "reply": "Roberto Merhi's country of citizenship's official language is Portuguese.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Roberto Merhi's country of citizenship's official language is Portuguese.\n"
+  },
+  {
+   "id": "B3",
+   "group": "B",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/B3_gz1k8egc",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: CM Punk's spouse is AJ Lee.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: AJ Lee's languages_spoken_written_or_signed is English.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Saved: AJ Lee's languages_spoken_written_or_signed is Russian.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "CM Punk's spouse's languages spoken written or signed is Russian.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "CM Punk's spouse's languages spoken written or signed is Russian.\n"
+  },
+  {
+   "id": "B4",
+   "group": "B",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/B4_egk3s0yr",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Mira's mother is Ana.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Ana's city is Porto.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Saved: Mira's mother is Beth.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Saved: Beth's city is Nice.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_04.txt",
+     "reply": "Mira's mother's city is Nice.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Mira's mother's city is Nice.\n"
+  },
+  {
+   "id": "B5",
+   "group": "B",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/B5_3sft7imo",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Roberto Merhi's country_of_citizenship is Spain.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Spain's official_language is Spanish.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Roberto Merhi's country of citizenship's official language is Spanish.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "medium",
+   "reason": "turn 3 lacks 'Arabic' (got \"Roberto Merhi's country of citizenship's official language is Spanish.\\n\"); turn 3 leaks 'Spanish'",
+   "observed_final": "Roberto Merhi's country of citizenship's official language is Spanish.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_B5.py"
+  },
+  {
+   "id": "B6",
+   "group": "B",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/B6_5e3xqo33",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Poland's capital is Krakow.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "B7",
+   "group": "B",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/B7_o5ck9wm4",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Roberto Merhi's country_of_citizenship is Spain.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Spain's official_language is Spanish.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Saved: Roberto Merhi's country_of_citizenship is Atlantis.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "high",
+   "reason": "'Spanish' appears somewhere in the transcript",
+   "observed_final": "I didn't understand that. Could you say it another way?\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_B7.py"
+  },
+  {
+   "id": "B8",
+   "group": "B",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/B8_uxnndmzf",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Twitter's chief_executive_officer is Jack Dorsey.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Jack Dorsey's country_of_citizenship is United States of America.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Saved: Jack Dorsey's country_of_citizenship is Latvia.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Twitter's chief executive officer's country of citizenship is Latvia.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Twitter's chief executive officer's country of citizenship is Latvia.\n"
+  },
+  {
+   "id": "C1",
+   "group": "C",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/C1_o6dn3dox",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Roberto Merhi's country_of_citizenship is Spain.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Spain's official_language is Spanish.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Roberto Merhi's country of citizenship's official language is Spanish.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "medium",
+   "reason": "turn 3 should abstain (got \"Roberto Merhi's country of citizenship's official language is Spanish.\\n\"); 'Spanish' appears somewhere in the transcript",
+   "observed_final": "Roberto Merhi's country of citizenship's official language is Spanish.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_C1.py"
+  },
+  {
+   "id": "C2",
+   "group": "C",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/C2_b_e16m2m",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Roberto Merhi's country_of_citizenship is Spain.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Spain's official_language is Spanish.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Roberto Merhi's country of citizenship's official language is Spanish.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "medium",
+   "reason": "turn 3 should abstain (got \"Roberto Merhi's country of citizenship's official language is Spanish.\\n\"); 'Spanish' appears somewhere in the transcript",
+   "observed_final": "Roberto Merhi's country of citizenship's official language is Spanish.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_C2.py"
+  },
+  {
+   "id": "C3",
+   "group": "C",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/C3_zylxor2q",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "medium",
+   "reason": "turn 2 should abstain (got \"Poland's capital is Warsaw.\\n\"); 'Warsaw' appears somewhere in the transcript",
+   "observed_final": "Poland's capital is Warsaw.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_C3.py"
+  },
+  {
+   "id": "C4",
+   "group": "C",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/C4_ml32z_fv",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: CM Punk's spouse is AJ Lee.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "CM Punk's spouse is AJ Lee.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "medium",
+   "reason": "turn 2 should abstain (got \"CM Punk's spouse is AJ Lee.\\n\"); 'AJ Lee' appears somewhere in the transcript",
+   "observed_final": "CM Punk's spouse is AJ Lee.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_C4.py"
+  },
+  {
+   "id": "C5",
+   "group": "C",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/C5_98gnm9_l",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Fasti's author is Ovid.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Ovid's place_of_birth is Sulmona.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Fasti's author's place of birth is Sulmona.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "medium",
+   "reason": "turn 3 should abstain (got \"Fasti's author's place of birth is Sulmona.\\n\"); 'Sulmona' appears somewhere in the transcript",
+   "observed_final": "Fasti's author's place of birth is Sulmona.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_C5.py"
+  },
+  {
+   "id": "C6",
+   "group": "C",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/C6_1k2woxzq",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "C7",
+   "group": "C",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/C7_oxn4fw68",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "medium",
+   "reason": "turn 3 should abstain (got \"Poland's capital is Warsaw.\\n\"); 'Warsaw' appears somewhere in the transcript",
+   "observed_final": "Poland's capital is Warsaw.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_C7.py"
+  },
+  {
+   "id": "C8",
+   "group": "C",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/C8__o5waamu",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "I already have that.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "D1",
+   "group": "D",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/D1_wy4eyatl",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Mira's city is Lisbon.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Mira's city is Lisbon.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Mira's city is Lisbon.\n"
+  },
+  {
+   "id": "D2",
+   "group": "D",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/D2_sw3lhevd",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Mira's city is Lisbon in 2019.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Mira's city is Lisbon in 2019.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "medium",
+   "reason": "turn 1 leaks 'in 2019'",
+   "observed_final": "Mira's city is Lisbon in 2019.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_D2.py"
+  },
+  {
+   "id": "D3",
+   "group": "D",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/D3_oc9y0i3w",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Mira's city is Lisbon.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Mira's city is Lisbon.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Mira's city is Lisbon.\n"
+  },
+  {
+   "id": "D4",
+   "group": "D",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/D4_b6a9v5vb",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Mira's city is Lisbon.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Mira's city is Lisbon.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Mira's city is Lisbon.\n"
+  },
+  {
+   "id": "D5",
+   "group": "D",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/D5_1k2i4nyt",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Mira's city is Lisbon.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Mira's city is Lisbon.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Mira's city is Lisbon.\n"
+  },
+  {
+   "id": "D6",
+   "group": "D",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/D6_ag_dpt2u",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "D7",
+   "group": "D",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/D7_cj0gi72_",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw since 1596..\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Poland's capital is Warsaw since 1596..\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "medium",
+   "reason": "turn 1 leaks 'since 1596'",
+   "observed_final": "Poland's capital is Warsaw since 1596..\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_D7.py"
+  },
+  {
+   "id": "D8",
+   "group": "D",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/D8_m52l9zoi",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I don't know Poland's capital_in_2019.\n",
+     "statuses": [
+      "MISSING_FACT"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "low",
+   "reason": "'Warsaw' appears somewhere in the transcript",
+   "observed_final": "I don't know Poland's capital_in_2019.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_D8.py"
+  },
+  {
+   "id": "E1",
+   "group": "E",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/E1_1w_c22vy",
+   "log": [
+    {
+     "file": "same.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "same.txt",
+     "reply": "I already have that.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_00.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "E2",
+   "group": "E",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/E2_njhlbb13",
+   "log": [
+    {
+     "file": "same.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "same.txt",
+     "reply": "Saved: France's capital is Paris.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_00.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "France's capital is Paris.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "France's capital is Paris.\n"
+  },
+  {
+   "id": "E3",
+   "group": "E",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/E3_gu2vbyh_",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "I didn't catch anything.\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "E4",
+   "group": "E",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/E4_cbropn0w",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "I didn't catch anything.\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I don't know anyone called Poland.\n",
+     "statuses": [
+      "UNKNOWN_ENTITY"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "I don't know anyone called Poland.\n"
+  },
+  {
+   "id": "E5",
+   "group": "E",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/E5_w1uxv4em",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "E6",
+   "group": "E",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/E6_adlfzeky",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Mira's city is LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "E7",
+   "group": "E",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/E7_4ajzaq5a",
+   "log": [
+    {
+     "file": "msg_01.txt",
+     "reply": "HARNESS-CAUGHT UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte",
+     "statuses": [
+      "EXCEPTION"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "high",
+   "reason": "inbox bytes raised out of process_file (a production daemon would die here)",
+   "observed_final": "Poland's capital is Warsaw.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_E7.py"
+  },
+  {
+   "id": "E8",
+   "group": "E",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/E8_q470ur32",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "E9",
+   "group": "E",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/E9_bj_7xcq2",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: France's capital is Paris.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "France's capital is Paris.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "France's capital is Paris.\n"
+  },
+  {
+   "id": "E10",
+   "group": "E",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/E10_jhb2sdfh",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: France's capital is Paris.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I don't know anyone called Poland.\n",
+     "statuses": [
+      "UNKNOWN_ENTITY"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "France's capital is Paris.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "low",
+   "reason": "turn 3 missing from transcript; turn 2 should abstain (got \"France's capital is Paris.\\n\")",
+   "observed_final": "France's capital is Paris.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_E10.py"
+  },
+  {
+   "id": "F1",
+   "group": "F",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/F1_l2jr3cqe",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Roberto Merhi's country_of_citizenship is Spain.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Saved: Spain's official_language is Spanish.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "RESTART",
+     "reply": "boot_ok",
+     "statuses": [],
+     "fact_writes": 0,
+     "notes": []
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_04.txt",
+     "reply": "Roberto Merhi's country of citizenship's official language is Spanish.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 1,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "high",
+   "reason": "turn 4 lacks 'Warsaw' (got \"Roberto Merhi's country of citizenship's official language is Spanish.\\n\"); turn 5 missing from transcript",
+   "observed_final": "Roberto Merhi's country of citizenship's official language is Spanish.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_F1.py"
+  },
+  {
+   "id": "F2",
+   "group": "F",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/F2_0iq1r6ic",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Roberto Merhi's country_of_citizenship is Spain.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Spain's official_language is Spanish.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Saved: Spain's official_language is Arabic.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "RESTART",
+     "reply": "boot_ok",
+     "statuses": [],
+     "fact_writes": 0,
+     "notes": []
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Roberto Merhi's country of citizenship's official language is Arabic.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 1,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "high",
+   "reason": "turn 4 missing from transcript",
+   "observed_final": "Roberto Merhi's country of citizenship's official language is Arabic.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_F2.py"
+  },
+  {
+   "id": "F3",
+   "group": "F",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/F3__84g0gfk",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Mira's city is Lisbon.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I have Mira's city as Lisbon. Do you want me to change it to Paris?\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "RESTART",
+     "reply": "boot_ok",
+     "statuses": [],
+     "fact_writes": 0,
+     "notes": []
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Saved: Mira's city is Paris.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Mira's city is Paris.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 1,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "medium",
+   "reason": "turn 4 missing from transcript",
+   "observed_final": "Mira's city is Paris.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_F3.py"
+  },
+  {
+   "id": "F4",
+   "group": "F",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/F4_i8dwbd03",
+   "log": [
+    {
+     "file": "q_C00.txt",
+     "reply": "C00's capital is V00.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C01.txt",
+     "reply": "C01's capital is V01.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C02.txt",
+     "reply": "C02's capital is V02.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C03.txt",
+     "reply": "C03's capital is V03.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C04.txt",
+     "reply": "C04's capital is V04.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C05.txt",
+     "reply": "C05's capital is V05.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C06.txt",
+     "reply": "C06's capital is V06.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C07.txt",
+     "reply": "C07's capital is V07.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C08.txt",
+     "reply": "C08's capital is V08.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C09.txt",
+     "reply": "C09's capital is V09.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C10.txt",
+     "reply": "C10's capital is W10.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C11.txt",
+     "reply": "C11's capital is V11.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C12.txt",
+     "reply": "C12's capital is V12.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C13.txt",
+     "reply": "C13's capital is V13.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C14.txt",
+     "reply": "C14's capital is V14.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C15.txt",
+     "reply": "C15's capital is V15.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C16.txt",
+     "reply": "C16's capital is V16.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C17.txt",
+     "reply": "C17's capital is V17.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C18.txt",
+     "reply": "C18's capital is V18.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C19.txt",
+     "reply": "C19's capital is V19.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C20.txt",
+     "reply": "C20's capital is V20.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C21.txt",
+     "reply": "C21's capital is V21.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C22.txt",
+     "reply": "C22's capital is V22.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C23.txt",
+     "reply": "C23's capital is V23.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C24.txt",
+     "reply": "C24's capital is V24.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C25.txt",
+     "reply": "C25's capital is V25.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C26.txt",
+     "reply": "C26's capital is V26.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C27.txt",
+     "reply": "C27's capital is V27.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C28.txt",
+     "reply": "C28's capital is V28.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "q_C29.txt",
+     "reply": "C29's capital is V29.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "KILL9-SUMMARY",
+     "reply": "correct=30 wrong=0 abstained=0",
+     "statuses": [],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false,
+    "kill9": {
+     "phase": "kill9",
+     "killed": true,
+     "done_before_death": 31,
+     "boot_ok": true,
+     "boot_notes": [],
+     "gold": {
+      "C00": "V00",
+      "C01": "V01",
+      "C02": "V02",
+      "C03": "V03",
+      "C04": "V04",
+      "C05": "V05",
+      "C06": "V06",
+      "C07": "V07",
+      "C08": "V08",
+      "C09": "V09",
+      "C10": "W10",
+      "C11": "V11",
+      "C12": "V12",
+      "C13": "V13",
+      "C14": "V14",
+      "C15": "V15",
+      "C16": "V16",
+      "C17": "V17",
+      "C18": "V18",
+      "C19": "V19",
+      "C20": "V20",
+      "C21": "V21",
+      "C22": "V22",
+      "C23": "V23",
+      "C24": "V24",
+      "C25": "V25",
+      "C26": "V26",
+      "C27": "V27",
+      "C28": "V28",
+      "C29": "V29"
+     },
+     "correct": 30,
+     "wrong": 0,
+     "abstained": 0,
+     "detail": [
+      {
+       "ask": "C00",
+       "want": "V00",
+       "got": "C00's capital is V00.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C01",
+       "want": "V01",
+       "got": "C01's capital is V01.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C02",
+       "want": "V02",
+       "got": "C02's capital is V02.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C03",
+       "want": "V03",
+       "got": "C03's capital is V03.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C04",
+       "want": "V04",
+       "got": "C04's capital is V04.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C05",
+       "want": "V05",
+       "got": "C05's capital is V05.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C06",
+       "want": "V06",
+       "got": "C06's capital is V06.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C07",
+       "want": "V07",
+       "got": "C07's capital is V07.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C08",
+       "want": "V08",
+       "got": "C08's capital is V08.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C09",
+       "want": "V09",
+       "got": "C09's capital is V09.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C10",
+       "want": "W10",
+       "got": "C10's capital is W10.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C11",
+       "want": "V11",
+       "got": "C11's capital is V11.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C12",
+       "want": "V12",
+       "got": "C12's capital is V12.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C13",
+       "want": "V13",
+       "got": "C13's capital is V13.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C14",
+       "want": "V14",
+       "got": "C14's capital is V14.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C15",
+       "want": "V15",
+       "got": "C15's capital is V15.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C16",
+       "want": "V16",
+       "got": "C16's capital is V16.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C17",
+       "want": "V17",
+       "got": "C17's capital is V17.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C18",
+       "want": "V18",
+       "got": "C18's capital is V18.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C19",
+       "want": "V19",
+       "got": "C19's capital is V19.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C20",
+       "want": "V20",
+       "got": "C20's capital is V20.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C21",
+       "want": "V21",
+       "got": "C21's capital is V21.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C22",
+       "want": "V22",
+       "got": "C22's capital is V22.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C23",
+       "want": "V23",
+       "got": "C23's capital is V23.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C24",
+       "want": "V24",
+       "got": "C24's capital is V24.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C25",
+       "want": "V25",
+       "got": "C25's capital is V25.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C26",
+       "want": "V26",
+       "got": "C26's capital is V26.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C27",
+       "want": "V27",
+       "got": "C27's capital is V27.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C28",
+       "want": "V28",
+       "got": "C28's capital is V28.",
+       "verdict": "correct"
+      },
+      {
+       "ask": "C29",
+       "want": "V29",
+       "got": "C29's capital is V29.",
+       "verdict": "correct"
+      }
+     ]
+    }
+   },
+   "verdict": "BUG",
+   "severity": "high",
+   "reason": "restart did not boot",
+   "observed_final": "C29's capital is V29.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_F4.py"
+  },
+  {
+   "id": "F5",
+   "group": "F",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/F5_690ecn3h",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: France's capital is Paris.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "TEAR-TAIL",
+     "reply": "last line truncated",
+     "statuses": [],
+     "fact_writes": 0
+    },
+    {
+     "file": "RESTART",
+     "reply": "BOOT-REFUSED LogCorrupt: log truncated: sealed 7 lines, file has 6",
+     "statuses": [],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": "LogCorrupt: log truncated: sealed 7 lines, file has 6",
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Saved: France's capital is Paris.\n"
+  },
+  {
+   "id": "F6",
+   "group": "F",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/F6_sux07_8q",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "RESTART",
+     "reply": "boot_ok",
+     "statuses": [],
+     "fact_writes": 0,
+     "notes": []
+    },
+    {
+     "file": "RESTART",
+     "reply": "boot_ok",
+     "statuses": [],
+     "fact_writes": 0,
+     "notes": []
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 2,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "medium",
+   "reason": "turn 3 missing from transcript",
+   "observed_final": "Poland's capital is Warsaw.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_F6.py"
+  },
+  {
+   "id": "G1",
+   "group": "G",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/G1_tlekgnfq",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Forget's city is Lisbon.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Forget's city is Lisbon.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Forget's city is Lisbon.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Forget's city is Lisbon.\n"
+  },
+  {
+   "id": "G2",
+   "group": "G",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/G2_vl99akb8",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Ask's city is Porto.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Ask's city is Porto.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Ask's city is Porto.\n"
+  },
+  {
+   "id": "G3",
+   "group": "G",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/G3_jrtk_gj2",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Mira's city is Lisbon.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Mira's city is Lisbon.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Mira's city is Lisbon.\n"
+  },
+  {
+   "id": "G4",
+   "group": "G",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/G4_afe9ye8v",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Zoë's city is Paris.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Zoë's city is Paris.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Zoë's city is Paris.\n"
+  },
+  {
+   "id": "G5",
+   "group": "G",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/G5_41u5yyn4",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Müller's city is Berlin.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Müller's city is Berlin.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Müller's city is Berlin.\n"
+  },
+  {
+   "id": "G6",
+   "group": "G",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/G6_0sbud9_j",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: O'Brien's city is Cork.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "O'Brien's city is Cork.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "O'Brien's city is Cork.\n"
+  },
+  {
+   "id": "G7",
+   "group": "G",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/G7_qssvbtkb",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Mira's city is Forget.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Mira's city is Forget.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Mira's city is Forget.\n"
+  },
+  {
+   "id": "G8",
+   "group": "G",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/G8_0c7_svdw",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: New York's capital is Albany..\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "New York's capital is Albany..\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "New York's capital is Albany..\n"
+  },
+  {
+   "id": "H1",
+   "group": "H",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/H1_xqsvdfbc",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "H2",
+   "group": "H",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/H2_kceu9igh",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I already have that.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "H3",
+   "group": "H",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/H3_ozs5v9ze",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "H4",
+   "group": "H",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/H4_0zunzooh",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Roberto Merhi's country_of_citizenship is Spain.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Spain's official_language is Spanish.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "I didn't understand that. Could you say it another way?\n",
+     "statuses": [
+      "clarify"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Roberto Merhi's country of citizenship's official language is Spanish.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Roberto Merhi's country of citizenship's official language is Spanish.\n"
+  },
+  {
+   "id": "H5",
+   "group": "H",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/H5_d46mykzp",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: CM Punk's spouse is AJ Lee.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: CM Punk's spouse is AJ Lee?.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "CM Punk's spouse is AJ Lee?.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "BUG",
+   "severity": "high",
+   "reason": "turn 2 leaks 'AJ Lee?'; turn 1 wrote 1 FACT events",
+   "observed_final": "CM Punk's spouse is AJ Lee?.\n",
+   "reproducer": "artifacts/fable-redteam98-20260921/repro/fable_redteam98_repro_H5.py"
+  },
+  {
+   "id": "H6",
+   "group": "H",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/H6_r0oomlso",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Poland's capital is Warsaw.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "I already have that.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Poland's capital is Warsaw.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "H7",
+   "group": "H",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/H7_gvftbbv9",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Fasti's author is Ovid.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "Saved: Ovid's place_of_birth is Sulmona.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Fasti's author's place of birth is Sulmona.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_03.txt",
+     "reply": "Fasti's author's place of birth is Sulmona.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Fasti's author's place of birth is Sulmona.\n"
+  },
+  {
+   "id": "H8",
+   "group": "H",
+   "root": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-redteam98-20260921/tmp/H8_7iyaihd5",
+   "log": [
+    {
+     "file": "msg_00.txt",
+     "reply": "Saved: Mira's city is Lisbon.\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 1
+    },
+    {
+     "file": "msg_01.txt",
+     "reply": "I have Mira's city as Lisbon. Do you want me to change it to Paris?\n",
+     "statuses": [
+      "write"
+     ],
+     "fact_writes": 0
+    },
+    {
+     "file": "msg_02.txt",
+     "reply": "Mira's city is Lisbon.\n",
+     "statuses": [
+      "OK"
+     ],
+     "fact_writes": 0
+    }
+   ],
+   "info": {
+    "boot_ok_count": 0,
+    "boot_refused": null,
+    "torn_repaired": false
+   },
+   "verdict": "OK",
+   "reason": "all sealed checks held",
+   "observed_final": "Mira's city is Lisbon.\n"
+  }
+ ]
+}

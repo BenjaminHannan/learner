@@ -1,0 +1,42 @@
+BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+2026-09-24T18:26:22Z
+--- ARM P330c start ---
+twinb: the plain twin is Twin336b (enable_thinking=False)
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 17919.83it/s]
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 4225.76it/s]
+[336/P330c] e2e-dev-01 turns=20
+[336/P330c] e2e-dev-02 turns=20
+[336/P330c] e2e-dev-03 turns=20
+[336/P330c] e2e-dev-04 turns=19
+[336/P330c] e2e-dev-05 turns=19
+[336/P330c] e2e-dev-06 turns=19
+[336/P330c] e2e-dev-07 turns=19
+[336/P330c] e2e-dev-08 turns=19
+[336/P330c] e2e-dev-09 turns=19
+[336/P330c] e2e-dev-10 turns=20
+wrote arm_P330c.jsonl rows=248 lives=10
+
+real	3m8.978s
+user	2m59.217s
+sys	0m2.622s
+ARM_EXIT:0
+2026-09-24T18:29:31Z
+--- SCORE start ---
+{"arm": "P330c", "asks": {"ALL": {"ABSTAIN": 44, "CONFIRM_OTHER": 9, "RIGHT": 11, "RIGHT_CONFIRM": 5, "WRONG_CANDIDATE": 2}, "edit": {"ABSTAIN": 3, "CONFIRM_OTHER": 4, "RIGHT_CONFIRM": 3}, "never_told": {"RIGHT": 10}, "one_hop": {"ABSTAIN": 12, "RIGHT": 1, "RIGHT_CONFIRM": 2, "WRONG_CANDIDATE": 1}, "partial": {"ABSTAIN": 4, "CONFIRM_OTHER": 1}, "reversal": {"ABSTAIN": 9, "CONFIRM_OTHER": 1}, "two_hop": {"ABSTAIN": 8, "CONFIRM_OTHER": 2, "WRONG_CANDIDATE": 1}, "yesno": {"ABSTAIN": 8, "CONFIRM_OTHER": 1}}, "clarify_replies": 13, "confirm_rows": 54, "creative_turns": 10, "creative_turns_with_writes": 0, "day1_saved_facts": 30, "day1_saved_facts_kept_at_end": 30, "distinct_replies": 133, "facts_saved": 49, "facts_total": 131, "most_common_reply_count": 10, "ms_median": 792.1, "ms_p90": 1144.3, "new_triples": 53, "new_triples_owner_value_unsupported": 3, "nosave_turns_with_writes": 0, "user_rows": 194}
+
+real	0m0.037s
+user	0m0.024s
+sys	0m0.007s
+SCORE_EXIT:0
+2026-09-24T18:29:31Z
+artifacts/claude-e2e330c-dev3-20260924/run/:
+total 128K
+-rw-r--r-- 1 root root 125K Sep 24 18:29 arm_P330c.jsonl
+
+artifacts/claude-e2e330c-dev3-20260924/score/:
+total 72K
+-rw-r--r-- 1 root root  19K Sep 24 18:29 grammar_P330c.jsonl
+-rw-r--r-- 1 root root  374 Sep 24 18:29 judge_asks_P330c.jsonl
+-rw-r--r-- 1 root root  43K Sep 24 18:29 judge_saves_P330c.jsonl
+-rw-r--r-- 1 root root 1.1K Sep 24 18:29 mechanical.json

@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_ears45_score.py", line 488, in <module>
+    main()
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_ears45_score.py", line 416, in main
+    parses.append([decode(keep[i], encs[i], probs[i]) for i in range(len(encs))])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_ears45_score.py", line 180, in decode
+    raw = text(slots["SUBJ"])
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_ears45_score.py", line 176, in text
+    return _span_text(utt, toks, sp[0], sp[1])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_ears45_score.py", line 78, in _span_text
+    return utt[toks[a - 1].start:toks[b - 1].end]
+               ~~~~^^^^^^^
+IndexError: list index out of range
+wave tape: train 17.5 min, total 17.6 min

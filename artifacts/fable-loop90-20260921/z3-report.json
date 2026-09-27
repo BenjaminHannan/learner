@@ -1,0 +1,1080 @@
+{
+ "mark": "Z3",
+ "core": {
+  "total": 69,
+  "OK": 64,
+  "BUG": 3,
+  "UNCLEAR": 2,
+  "new_bugs": [],
+  "changed_vs_sealed": [],
+  "sealed": {
+   "total": 69,
+   "OK": 64,
+   "BUG": 3,
+   "UNCLEAR": 2,
+   "seconds": 6.6
+  }
+ },
+ "web": {
+  "total": 56,
+  "OK": 53,
+  "BUG": 1,
+  "UNCLEAR": 2,
+  "new_bugs": [],
+  "changed_vs_sealed": [],
+  "sealed": {
+   "cases": 56,
+   "ok": 53,
+   "bug": 1,
+   "unclear": 2
+  }
+ },
+ "doctrinal": [
+  {
+   "check": "teach-ask roundtrip",
+   "pass": true,
+   "detail": "Saved: Mira's city is Lisbon."
+  },
+  {
+   "check": "quarantine row stored",
+   "pass": true,
+   "detail": "SAVED"
+  },
+  {
+   "check": "quarantine never answers",
+   "pass": true,
+   "detail": "MISSING_FACT"
+  },
+  {
+   "check": "taught still answers",
+   "pass": true,
+   "detail": "OK"
+  },
+  {
+   "check": "thinker class is QuarantinedThinking89",
+   "pass": true,
+   "detail": "fable_webfix89_thinking"
+  },
+  {
+   "check": "thinker quarantines (1 waiting, none believed)",
+   "pass": true,
+   "detail": "waiting=1"
+  },
+  {
+   "check": "seal verifies after writes",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "check": "tail edit detected",
+   "pass": true,
+   "detail": ""
+  }
+ ],
+ "pass": true,
+ "seconds": 9.0,
+ "core_cases": [
+  {
+   "id": "RT01",
+   "title": "duplicate teach same value",
+   "expected": "second write DUPLICATE_OK, answer kept",
+   "observed": "first=SAVED second=DUPLICATE_OK answer=Lisbon events=3",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT02",
+   "title": "teach then correct then re-correct",
+   "expected": "latest wins, older two inactive",
+   "observed": "answer=Rome active=['F00003'] sup2=F00001 sup3=F00002",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT03",
+   "title": "correction of never-taught fact",
+   "expected": "SAVED with supersedes None, answers",
+   "observed": "status=SAVED supersedes=None answer=Paris",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT04",
+   "title": "second value without correct flag",
+   "expected": "CONFLICT, old value kept",
+   "observed": "status=CONFLICT answer=Lisbon",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT05",
+   "title": "conflict then correction",
+   "expected": "corrected value wins",
+   "observed": "conflict=CONFLICT corrected=SAVED answer=Paris",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT06",
+   "title": "alias collision: two people Sam",
+   "expected": "AMBIGUOUS with both ids",
+   "observed": "resolve-Sam=AMBIGUOUS ids=['E0001', 'E0002'] alias=OK",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT07",
+   "title": "unique alias resolves",
+   "expected": "OK via alias",
+   "observed": "status=OK answer=Porto",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT08",
+   "title": "self-reference X mother of X",
+   "expected": "SAVED, ask returns X",
+   "observed": "write=SAVED answer=Narcissus",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT09",
+   "title": "cycle A mother of B, B mother of A",
+   "expected": "2-hop returns A, terminates",
+   "observed": "answer=A status=OK dt=0.00s",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT10",
+   "title": "functional relation correction supersedes",
+   "expected": "old inactive, new answers",
+   "observed": "sup=F00001==F00001 old_active=False answer=Paris",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT11",
+   "title": "non-functional two values",
+   "expected": "OK multi with both names",
+   "observed": "status=OK multi=True answer=Mira, Ana",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT12",
+   "title": "ask before teaching",
+   "expected": "MISSING_FACT",
+   "observed": "status=MISSING_FACT say=\"I don't know Mira's city.\"",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT13",
+   "title": "ask unknown entity",
+   "expected": "UNKNOWN_ENTITY",
+   "observed": "status=UNKNOWN_ENTITY",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT14",
+   "title": "ask unknown relation",
+   "expected": "MISSING_FACT",
+   "observed": "status=MISSING_FACT",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT15",
+   "title": "3-hop chain",
+   "expected": "OK P3",
+   "observed": "status=OK answer=P3",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT16",
+   "title": "5-hop chain",
+   "expected": "OK P5",
+   "observed": "status=OK answer=P5",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT17",
+   "title": "8-hop chain (max)",
+   "expected": "OK P8",
+   "observed": "status=OK answer=P8",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT18",
+   "title": "9-hop chain",
+   "expected": "BAD_REQUEST",
+   "observed": "status=BAD_REQUEST",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT19",
+   "title": "0-hop ask",
+   "expected": "BAD_REQUEST",
+   "observed": "status=BAD_REQUEST",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT20",
+   "title": "chain through superseded fact",
+   "expected": "new value used",
+   "observed": "answer=Roma trail=['F00003', 'F00004']",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT21",
+   "title": "web-quarantine asked as taught",
+   "expected": "MISSING_FACT",
+   "observed": "status=MISSING_FACT",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT22",
+   "title": "proposed asked as taught",
+   "expected": "MISSING_FACT",
+   "observed": "status=MISSING_FACT",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT23",
+   "title": "ben promotes proposed row",
+   "expected": "SAVED, answers as taught",
+   "observed": "promote=SAVED answer=Madrid src=taught q=SAVED",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT24",
+   "title": "promote by non-ben",
+   "expected": "NOT_ALLOWED",
+   "observed": "status=NOT_ALLOWED",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT25",
+   "title": "promote a taught row",
+   "expected": "BAD_REQUEST",
+   "observed": "status=BAD_REQUEST",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT26",
+   "title": "inferred with approved rule+deps",
+   "expected": "SAVED and answers",
+   "observed": "write=SAVED answer=Gran src=inferred",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT27",
+   "title": "inferred with unapproved rule",
+   "expected": "NOT_ALLOWED",
+   "observed": "status=NOT_ALLOWED",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT28",
+   "title": "inferred dep retracted",
+   "expected": "MISSING_FACT",
+   "observed": "status=MISSING_FACT",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT29",
+   "title": "inferred vs taught conflict",
+   "expected": "taught wins",
+   "observed": "answer=Lisbon src=taught",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT30",
+   "title": "sleep-derived vs taught",
+   "expected": "taught wins",
+   "observed": "answer=Lisbon src=taught",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT31",
+   "title": "sleep-derived alone",
+   "expected": "OK source sleep-derived",
+   "observed": "answer=Oslo src=sleep-derived",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT32",
+   "title": "web-verified 1 vs 2 domains",
+   "expected": "BAD_REQUEST then SAVED+OK with suffix",
+   "observed": "one=BAD_REQUEST two=SAVED ans=OK say=\"Lisbon. (I read that online; you didn't tell me.)\"",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT33",
+   "title": "retract then re-teach",
+   "expected": "SAVED, answers again",
+   "observed": "after_retract=MISSING_FACT reteach=SAVED answer=Lisbon",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT34",
+   "title": "retract unknown fact",
+   "expected": "BAD_REQUEST",
+   "observed": "status=BAD_REQUEST",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT35",
+   "title": "retract taught by non-listening",
+   "expected": "NOT_ALLOWED",
+   "observed": "status=NOT_ALLOWED",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT36",
+   "title": "unicode names distinct",
+   "expected": "3 entities, each resolves",
+   "observed": "entities=3 resolves=['OK', 'OK', 'OK']",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT37",
+   "title": "case/whitespace name variants",
+   "expected": "all resolve to same entity",
+   "observed": "statuses=['OK', 'OK', 'OK', 'OK'] eids=['E0001', 'E0001', 'E0001', 'E0001']",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT38",
+   "title": "empty name",
+   "expected": "BAD_REQUEST",
+   "observed": "status=BAD_REQUEST",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT39",
+   "title": "empty alias",
+   "expected": "BAD_REQUEST",
+   "observed": "status=BAD_REQUEST",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT40",
+   "title": "empty literal value",
+   "expected": "contract silent; record behaviour",
+   "observed": "write=SAVED ask=OK answer=''",
+   "verdict": "UNCLEAR",
+   "note": "empty literal stored+answered; contract silent on emptiness"
+  },
+  {
+   "id": "RT41",
+   "title": "500-char name",
+   "expected": "SAVED and resolves",
+   "observed": "write=SAVED resolve=OK match=True",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT42",
+   "title": "duplicate event_id replay",
+   "expected": "DUPLICATE_OK, log unchanged",
+   "observed": "first=SAVED replay=DUPLICATE_OK grew=0 base=1",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT43",
+   "title": "unknown actor / wrong rights",
+   "expected": "BAD_REQUEST / NOT_ALLOWED",
+   "observed": "unknown_actor=BAD_REQUEST wrong_rights=NOT_ALLOWED",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT44",
+   "title": "value with both/neither keys",
+   "expected": "BAD_REQUEST both",
+   "observed": "both=BAD_REQUEST neither=BAD_REQUEST",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT45",
+   "title": "unknown subject/object ids",
+   "expected": "BAD_REQUEST both",
+   "observed": "bad_subject=BAD_REQUEST bad_object=BAD_REQUEST",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT46",
+   "title": "broken chain at literal",
+   "expected": "BROKEN_CHAIN hop 1 value Lisbon",
+   "observed": "status=BROKEN_CHAIN hop=1 value='Lisbon'",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT47",
+   "title": "entity_id bypasses ambiguity",
+   "expected": "OK Oslo",
+   "observed": "status=OK answer=Oslo",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT48",
+   "title": "bad entity_id",
+   "expected": "BAD_REQUEST",
+   "observed": "status=BAD_REQUEST",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT49a",
+   "title": "tampered true-middle line",
+   "expected": "LogCorrupt on load",
+   "observed": "LogCorrupt: line 5: hash chain broken",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT49b",
+   "title": "edited last-line value",
+   "expected": "record whether silent",
+   "observed": "loaded silently, answers 'HACKED'",
+   "verdict": "BUG",
+   "note": "last-line value edit is silent; needs file access"
+  },
+  {
+   "id": "RT50",
+   "title": "torn tail then repair",
+   "expected": "flag set, repair recovers answer",
+   "observed": "torn=True pre_repair_answer=None post=OK/Lisbon",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT51",
+   "title": "10000 facts verify+query",
+   "expected": "chain intact, fast query",
+   "observed": "facts=10000 chain_intact=True write_s=7.4 load_s=0.1 query_ms=2.0 answer=Town5000",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT52",
+   "title": "merge proposal changes nothing",
+   "expected": "answer and resolve unchanged",
+   "observed": "before=Lisbon after=Lisbon resolve=OK",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT53",
+   "title": "approve rule by non-ben",
+   "expected": "NOT_ALLOWED",
+   "observed": "status=NOT_ALLOWED",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT54",
+   "title": "redeclare functional as non-functional",
+   "expected": "stays functional (additive), CONFLICT",
+   "observed": "second_write=CONFLICT functional_still=True",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT55",
+   "title": "r50 parity: multi-value",
+   "expected": "100% agreement",
+   "observed": "compared=2 disagreements=0",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT56",
+   "title": "r50 parity: source filter",
+   "expected": "100% agreement",
+   "observed": "source-filter frames=2 disagreements=0",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT57",
+   "title": "r50 parity: broken-chain fields",
+   "expected": "100% agreement",
+   "observed": "broken-chain frames=2 disagreements=0",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT58",
+   "title": "r50 parity: statuses/edges",
+   "expected": "100% agreement",
+   "observed": "status frames=5 disagreements=0",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT59",
+   "title": "r50 parity: unknown relation",
+   "expected": "MISSING_FACT, no answer field",
+   "observed": "unknown-relation frames=2 bad=0",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT60",
+   "title": "r50 cache invalidation",
+   "expected": "new write visible, still parity",
+   "observed": "parity_before=True after_equal=True answer=Tom",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT61",
+   "title": "qualified row, bare question",
+   "expected": "MISSING reason qualified, both wrappers",
+   "observed": "tbook=MISSING_FACT/qualified q56=MISSING_FACT/qualified",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT62",
+   "title": "qualified row, matching qualifier",
+   "expected": "OK Lisbon, both wrappers",
+   "observed": "tbook=OK/Lisbon q56=OK/Lisbon",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT63",
+   "title": "qualified row, wrong qualifier",
+   "expected": "MISSING_FACT both wrappers",
+   "observed": "tbook=MISSING_FACT q56=MISSING_FACT",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT64",
+   "title": "chain through qualified hop",
+   "expected": "bare MISSING, qualified OK Porto",
+   "observed": "bare=MISSING_FACT/qualified qualified=OK/Porto",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT65",
+   "title": "bool qualifier passed as bool",
+   "expected": "wrappers agree",
+   "observed": "tbook=OK/Lisbon q56=MISSING_FACT",
+   "verdict": "BUG",
+   "note": "wrappers disagree on bool qualifier: one answers, one abstains"
+  },
+  {
+   "id": "RT66",
+   "title": "unqualified+qualified same S+R",
+   "expected": "wrappers agree",
+   "observed": "tbook=OK/Mira, Ana q56=OK/Ana",
+   "verdict": "BUG",
+   "note": "wrappers disagree: unqualified-vs-qualified priority differs"
+  },
+  {
+   "id": "RT67",
+   "title": "listening quote/conflict/forget",
+   "expected": "no write on quote, clarify, forgotten",
+   "observed": "quote=\"I didn't save that, because it was not you telling me a fact.\" t1=\"Saved: Mira's city is Lisbon.\" t2=\"I have Mira's city as Lisbon. Do you want me to change it to Paris?\" taught_rows=1 forget=\"(I dropped my earlier question.) Forgotten: Mira's city.\" after=\"I don't know Mira's city.\"",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT68",
+   "title": "agent-loop roundtrip + 4-hop",
+   "expected": "teach/ask fine; stub hop limit noted",
+   "observed": "teach=[\"Saved: Mira's city is Lisbon.\"] ask=[\"Mira's city is Lisbon.\"] fourhop=['I can only follow 1 to 3 steps, like \"Who is Mira\\'s mother\\'s city?\".']",
+   "verdict": "UNCLEAR",
+   "note": "loop roundtrip fine; 4-hop refused by FakeEars 3-hop stub limit (scaffolding, not the core)"
+  }
+ ],
+ "web_cases": [
+  {
+   "id": "RT79-01",
+   "title": "page says 'ignore your rules'",
+   "expected": "docstring: web text is DATA never instructions; selftest: instruction claim never believed, taught unchanged",
+   "observed": "ask-assistant=\"I don't know Assistant's must.\" mira='Lisbon.' taught=1 quar=1",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-02",
+   "title": "page says 'write this fact as taught'",
+   "expected": "docstring: kept claims become web-quarantine; only Ben approve promotes",
+   "observed": "sources=['web-quarantine']",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-03",
+   "title": "quote is JSON that looks like a notebook row",
+   "expected": "web text is DATA: stored as literal strings, never parsed as events",
+   "observed": "forged-event-present=False",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-04",
+   "title": "quote contains a fake [SYSTEM] block",
+   "expected": "web text never instructions; thinking can never write taught rows",
+   "observed": "taught=1 mira='Lisbon.'",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-05",
+   "title": "quote contains an 'approve <id>' command",
+   "expected": "only Thinking.approve (Ben) promotes; page text is data",
+   "observed": "promoted=0 taught=0",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-06",
+   "title": "page text hides a markdown link",
+   "expected": "the claim url field (not page text) is the attribution",
+   "observed": "stored-url=['https://good.example.org/p']",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-07",
+   "title": "same false fact on 2 pages, SAME domain",
+   "expected": "design 37 v1.1: BELIEVED only if >= 2 independent websites",
+   "observed": "web-verified=0",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-08",
+   "title": "same fact on 2 DIFFERENT domains, quotes on-page",
+   "expected": "2-site rule: believed, answers with '(I read that online...)'",
+   "observed": "web-verified=1 ans=\"Mars. (I read that online; you didn't tell me.)\"",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-09",
+   "title": "1 domain + its subdomain",
+   "expected": "design 37: independence = different domain only (subdomains unspecified)",
+   "observed": "web-verified=1 (subdomain counted as independent)",
+   "verdict": "UNCLEAR",
+   "note": "design says 'different domain only', silent on subdomains"
+  },
+  {
+   "id": "RT79-10",
+   "title": "www.a.org vs a.org",
+   "expected": "contract c31: www. prefix is the same website",
+   "observed": "web-verified=0 (www stripped)",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-11",
+   "title": "homoglyph domain pair (cyrillic a)",
+   "expected": "design 37 known limit: independence = different domain string only",
+   "observed": "web-verified=1 ans=\"Mars. (I read that online; you didn't tell me.)\" (homoglyph = different string; documented weak rule)",
+   "verdict": "OK",
+   "note": "KNOWN LIMIT: design 37 says independence is string-domain only; two sites can copy one source"
+  },
+  {
+   "id": "RT79-12",
+   "title": "2 pages contradict a TAUGHT fact about a taught person",
+   "expected": "taught never overwritten by web; taught-person claims dropped at quarantine",
+   "observed": "ans='Lisbon.' web-verified=0",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-13",
+   "title": "web-verified row exists, then the same relation is taught",
+   "expected": "contract c32: taught beats web-verified, no 'online' tag",
+   "observed": "ask='Jupiter.' source=taught",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-14",
+   "title": "topic names someone Ben taught",
+   "expected": "docstring: refused; personal facts asked, never searched",
+   "observed": "refused=\"I won't search the web about mira: that is someone you taught me about. Personal facts I ask you, never search.\"",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-15",
+   "title": "doubtful web value names a taught person",
+   "expected": "design 37 v1.1: such text never sent out; stays unbelieved",
+   "observed": "leaked=[] capped=True",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-16",
+   "title": "page about a taught VALUE-entity (Mira is Tom's friend)",
+   "expected": "_taught_entities covers value entities; claim dropped",
+   "observed": "quarantined=0 tom-friend='Mira.'",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-17",
+   "title": "claim with empty-string value",
+   "expected": "_valid: all fields required -> 'missing field'",
+   "observed": "kept=0 dropped=['missing field']",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-18",
+   "title": "claim with None value, quote contains 'none'",
+   "expected": "_clean str()s None; copy rule needs care",
+   "observed": "kept=1 stored-value=[{'literal': 'None'}]",
+   "verdict": "BUG",
+   "note": "None coerced to 'None' and stored as a quarantine value"
+  },
+  {
+   "id": "RT79-19",
+   "title": "7 malformed claims (non-object, bad url/relation, copy rule, limits)",
+   "expected": "selftest: hostile shapes dropped with a reason",
+   "observed": "all-dropped=[('non-object', ['not an object']), ('missing field', ['missing field']), ('bad url', ['bad url']), ('bad relation key', ['bad relation key']), ('copy rule', ['subject or value not in the quote (copy rule)']), ('quote too long', ['quote too long']), ('field too long', ['field too long'])]",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-20",
+   "title": "10,000-claim page",
+   "expected": "MAX_CLAIMS_PER_TOPIC=8 cap; wave < 30 min",
+   "observed": "kept=8 dt=0.0s",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-21",
+   "title": "page echoes the question's own text as the claim",
+   "expected": "quarantine never answers; no reader re-parses answer text",
+   "observed": "ask=\"I don't know Phobos's orbits.\" (no self-answering loop)",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-22",
+   "title": "snippet contains a notebook event id",
+   "expected": "snippet is DATA; event ids are uuid-tagged, never collide",
+   "observed": "ask='Paris.'",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-23",
+   "title": "claim dict smuggles source=taught actor=listening event_id",
+   "expected": "_valid picks 5 fields only; _eid is uuid; thinking rights enforced",
+   "observed": "kept=1 source=web-quarantine",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-24",
+   "title": "same page submitted twice",
+   "expected": "'already have that page' dedupe",
+   "observed": "first=1 second=0 ['already have that page for this fact']",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-25",
+   "title": "2 domains vs 1 rival domain",
+   "expected": "v1.1: rival must trail by >= 2 websites",
+   "observed": "web-verified=0 (2v1 margin 1 < 2)",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-26",
+   "title": "second source whose quote is NOT on its page",
+   "expected": "v1.1(a): quote must really be on the re-opened page",
+   "observed": "web-verified=0 (liar quote unchecked)",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-27",
+   "title": "quarantined row via contract ask",
+   "expected": "contract c17 + docstring: web-quarantine never answers",
+   "observed": "status=MISSING_FACT",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-28",
+   "title": "quarantined row via Listening.hear ask",
+   "expected": "quarantine outside ANSWERING_SOURCES",
+   "observed": "ask=\"I don't know Phobos's orbits.\"",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-29",
+   "title": "quarantined row via ThoughtNotebook.ask",
+   "expected": "wrapper delegates source gating to the contract",
+   "observed": "status=MISSING_FACT",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-30",
+   "title": "quarantined row via qual56 reasoner",
+   "expected": "filtered_view keeps active + answering sources only",
+   "observed": "status=MISSING_FACT",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-31",
+   "title": "quarantined row via reasoner50",
+   "expected": "reasoner50 ANS = contract ANSWERING_SOURCES",
+   "observed": "status=MISSING_FACT",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-32",
+   "title": "web-verified row via all four readers",
+   "expected": "v1.1: believed rows answer with '(I read that online...)'",
+   "observed": "contract/listening/qual56/r50 all Mars+online",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-33",
+   "title": "quarantined row, then the SAME fact taught",
+   "expected": "taught must win; status exactly OK/taught, no online tag",
+   "observed": "ask='Mars.' source=taught",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-34",
+   "title": "approve unknown id vs real quarantined id",
+   "expected": "approve: Ben-only promote of waiting rows",
+   "observed": "bad='That is not an unconfirmed finding.' good=\"Saved: Phobos's orbits is Mars.\" ask='Mars.'",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-35",
+   "title": "reject a quarantined row, then reject again",
+   "expected": "reject retracts; second reject refused",
+   "observed": "'Dropped F00001.'",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-36",
+   "title": "promote by actor 'thinking'",
+   "expected": "contract c19: promotion by Ben only",
+   "observed": "status=NOT_ALLOWED",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-37",
+   "title": "one page blocks fetching (None)",
+   "expected": "known limit: uncheckable quotes stay unbelieved",
+   "observed": "web-verified=0 (blocked page unchecked)",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-38",
+   "title": "control: plain-text fetcher agreement still believed",
+   "expected": "baseline that trust-rule cases are set up correctly",
+   "observed": "web-verified=1",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-39",
+   "title": "'two' vs '2' across two sites",
+   "expected": "v1.2 known limit: non-measurement values need word-for-word agreement",
+   "observed": "web-verified=0 (known limit: 'two' vs '2' differ)",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-40",
+   "title": "'approximately 11 km' vs '11.0 km'",
+   "expected": "v1.2: measurements agree to 2 significant figures",
+   "observed": "web-verified=1 (2-sig-fig unit match)",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-41",
+   "title": "'11 km' vs '6.9 miles'",
+   "expected": "v1.2 known gap: unit conversion not attempted",
+   "observed": "web-verified=0 (known gap: no unit conversion)",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-42",
+   "title": "disagreement then silence: extra-search cap",
+   "expected": "MAX_LOOK_ELSEWHERE=2; disagreement never believed",
+   "observed": "checks=2 web-verified=0",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-43",
+   "title": "look-elsewhere carries the seen-domain list",
+   "expected": "one batched search per round; seen sites excluded",
+   "observed": "seen-lists=[{'subject': 'Deimos', 'relation': 'found_by', 'values': ['Hall'], 'seen': ['a.example.org']}, {'subject': 'Deimos', 'relation': 'found_by', 'values': ['Hall'], 'seen': ['a.example.org']}]",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-44",
+   "title": "CamelCase relation key",
+   "expected": "RELATION_PATTERN lowercase-only; design notes no normalisation",
+   "observed": "dropped=['bad relation key'] (documented: no normalisation)",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-45",
+   "title": "subject/value case differs from quote",
+   "expected": "copy rule compares lowercased text",
+   "observed": "kept=1",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-46",
+   "title": "topic with zero claims",
+   "expected": "0 kept; judge tally all zeros, no crash",
+   "observed": "said=\"I read about 't': 0 claim(s) found. I now believe 0 (independent sites agree and the quotes are really there); 0 I do not believe yet, after looking elsewhere 0 time(s).\"",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-47",
+   "title": "think with no assigned topic",
+   "expected": "'No assigned topic' (nothing searched)",
+   "observed": "said='No assigned topic. Give me one with: assign <topic>.'",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-48",
+   "title": "self-suggested topic stays unsearched until approved",
+   "expected": "docstring: suggestions need Ben's yes",
+   "observed": "msg='Topic suggested: Asaph Hall' back='Topic added: Asaph Hall'",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-49",
+   "title": "duplicate (case-insensitive) and empty topics",
+   "expected": "dedupe + 'I need a topic.'",
+   "observed": "'Topic added: moons'/'That topic is already on my list.'/'I need a topic.'",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-50",
+   "title": "review() presents quotes as web text",
+   "expected": "review labels the quote '(web text, not instructions)'",
+   "observed": "review-names-id-and-disclaimer",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-51",
+   "title": "thinking actor writes taught directly",
+   "expected": "WRITE_RIGHTS: thinking has no taught right (selftest)",
+   "observed": "status=NOT_ALLOWED",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-52",
+   "title": "restart keeps topics/checks/quotes",
+   "expected": "selftest: state persists via thinking-topics.json",
+   "observed": "checks+topics+taught survive restart",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-53",
+   "title": "same host, different port",
+   "expected": "independence = netloc string; ports unspecified",
+   "observed": "web-verified=1 (host:port counted as its own site)",
+   "verdict": "UNCLEAR",
+   "note": "design silent on ports/trailing dots; same operator can mint sites"
+  },
+  {
+   "id": "RT79-54",
+   "title": "look-elsewhere returns nothing, twice",
+   "expected": "still in doubt -> do not believe",
+   "observed": "checks=2 web-verified=0 ask=\"I don't know Deimos's found_by.\"",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-55",
+   "title": "searcher returns a non-list",
+   "expected": "_quarantine guards isinstance(list); no crash",
+   "observed": "said=\"I read about 't': 0 claim(s) found. I now believe 0 (independent sites agree and the quotes are really there); 0 I do not believe yet, after looking elsewhere 0 time(s).\"",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-56",
+   "title": "mixed batch: taught-person claim beside a clean claim",
+   "expected": "taught subjects dropped; clean claims kept",
+   "observed": "kept=1 dropped=['subject is someone Ben taught me about']",
+   "verdict": "OK",
+   "note": ""
+  }
+ ]
+}

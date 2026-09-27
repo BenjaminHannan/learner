@@ -1,0 +1,60 @@
+L2: m >= ln(0.1)/ln(1-0.02) = 113.9741 -> 114
+tape: CAL candidates N=1429, grid targets m=114..1429 G_eff=15 (tau_1=0.8722 .. tau_end=0.0888)
+bigru: CAL candidates N=1363, grid targets m=114..1363 G_eff=15 (tau_1=0.8206 .. tau_end=0.3029)
+grid sealed to GRID_SEAL.json BEFORE any label read (gold/ok untouched)
+  cand  1: tau=0.8722 m=  115 k=  0 p=0.0979 bound=0.0198 ACCEPT
+  cand  2: tau=0.8564 m=  208 k=  0 p=0.0150 bound=0.0110 ACCEPT
+  cand  3: tau=0.8437 m=  302 k=  0 p=0.0022 bound=0.0076 ACCEPT
+  cand  4: tau=0.8337 m=  396 k=  0 p=0.0003 bound=0.0058 ACCEPT
+  cand  5: tau=0.8235 m=  491 k=  0 p=0.0000 bound=0.0047 ACCEPT
+  cand  6: tau=0.8140 m=  584 k=  0 p=0.0000 bound=0.0039 ACCEPT
+  cand  7: tau=0.8047 m=  678 k=  0 p=0.0000 bound=0.0034 ACCEPT
+  cand  8: tau=0.7932 m=  772 k=  0 p=0.0000 bound=0.0030 ACCEPT
+  cand  9: tau=0.7774 m=  865 k=  0 p=0.0000 bound=0.0027 ACCEPT
+  cand 10: tau=0.7622 m=  959 k=  0 p=0.0000 bound=0.0024 ACCEPT
+  cand 11: tau=0.7340 m= 1055 k=  0 p=0.0000 bound=0.0022 ACCEPT
+  cand 12: tau=0.6543 m= 1147 k=  0 p=0.0000 bound=0.0020 ACCEPT
+  cand 13: tau=0.5371 m= 1264 k=  0 p=0.0000 bound=0.0018 ACCEPT
+  cand 14: tau=0.4330 m= 1335 k=  0 p=0.0000 bound=0.0017 ACCEPT
+  cand 15: tau=0.0888 m= 1429 k=  0 p=0.0000 bound=0.0016 ACCEPT
+tape: tau-hat = 0.088756 (m=1429, k=0, bound=0.0016)
+  cand  1: tau=0.8206 m=  114 k=  0 p=0.0999 bound=0.0200 ACCEPT
+  cand  2: tau=0.7969 m=  203 k=  0 p=0.0166 bound=0.0113 ACCEPT
+  cand  3: tau=0.7622 m=  292 k=  0 p=0.0027 bound=0.0079 ACCEPT
+  cand  4: tau=0.7311 m=  383 k=  0 p=0.0004 bound=0.0060 ACCEPT
+  cand  5: tau=0.7170 m=  472 k=  0 p=0.0001 bound=0.0049 ACCEPT
+  cand  6: tau=0.7094 m=  560 k=  0 p=0.0000 bound=0.0041 ACCEPT
+  cand  7: tau=0.7006 m=  649 k=  0 p=0.0000 bound=0.0035 ACCEPT
+  cand  8: tau=0.6934 m=  742 k=  0 p=0.0000 bound=0.0031 ACCEPT
+  cand  9: tau=0.6841 m=  828 k=  0 p=0.0000 bound=0.0028 ACCEPT
+  cand 10: tau=0.6752 m=  919 k=  0 p=0.0000 bound=0.0025 ACCEPT
+  cand 11: tau=0.6624 m= 1006 k=  0 p=0.0000 bound=0.0023 ACCEPT
+  cand 12: tau=0.6473 m= 1095 k=  0 p=0.0000 bound=0.0021 ACCEPT
+  cand 13: tau=0.6194 m= 1186 k=  0 p=0.0000 bound=0.0019 ACCEPT
+  cand 14: tau=0.5662 m= 1278 k=  0 p=0.0000 bound=0.0018 ACCEPT
+  cand 15: tau=0.3029 m= 1363 k=  0 p=0.0000 bound=0.0017 ACCEPT
+bigru: tau-hat = 0.302860 (m=1363, k=0, bound=0.0017)
+tape/t_seen: LTT writes=698 wrong=0 rate=0.0000 cov=0.6199 | reg@0.5 writes=667 wrong=0 rate=0.0 cov=0.5924 | tau0 writes=702 wrong=0 rate=0.0 cov=0.6234
+tape/t_new: LTT writes=770 wrong=0 rate=0.0000 cov=0.5099 | reg@0.5 writes=722 wrong=0 rate=0.0 cov=0.4781 | tau0 writes=772 wrong=0 rate=0.0 cov=0.5113
+tape/t_hard: LTT writes=120 wrong=0 rate=0.0000 cov=0.4428 | reg@0.5 writes=109 wrong=0 rate=0.0 cov=0.4022 | tau0 writes=120 wrong=0 rate=0.0 cov=0.4428
+bigru/t_seen: LTT writes=662 wrong=0 rate=0.0000 cov=0.5879 | reg@0.5 writes=659 wrong=0 rate=0.0 cov=0.5853 | tau0 writes=664 wrong=0 rate=0.0 cov=0.5897
+bigru/t_new: LTT writes=763 wrong=0 rate=0.0000 cov=0.5053 | reg@0.5 writes=675 wrong=0 rate=0.0 cov=0.4470 | tau0 writes=780 wrong=0 rate=0.0 cov=0.5166
+bigru/t_hard: LTT writes=113 wrong=0 rate=0.0000 cov=0.4170 | reg@0.5 writes=107 wrong=0 rate=0.0 cov=0.3948 | tau0 writes=117 wrong=1 rate=0.008547008547008548 cov=0.4317
+G1 tape: PASS (m=1429, k=0)
+G1 bigru: PASS (m=1363, k=0)
+G2 tape/t_seen: PASS
+G2 tape/t_new: PASS
+G2 tape/t_hard: PASS
+G2 bigru/t_seen: PASS
+G2 bigru/t_new: PASS
+G2 bigru/t_hard: PASS
+G3 coverage reported on 6/6 panel-arms: PASS
+input per_sentence_bigru_cal.json sha256=bd064ee740979114…
+input per_sentence_bigru_t_hard.json sha256=93743c9afc91d95a…
+input per_sentence_bigru_t_new.json sha256=bfe9ff0280c83e4a…
+input per_sentence_bigru_t_seen.json sha256=fe24db5e45b24b0b…
+input per_sentence_tape_cal.json sha256=e2d25a1238d52ad1…
+input per_sentence_tape_t_hard.json sha256=14872b797bd87aed…
+input per_sentence_tape_t_new.json sha256=025a936aff97c522…
+input per_sentence_tape_t_seen.json sha256=f8d20fc41951f270…
+G1 PASS · G2 PASS · G3 PASS · G4 PASS

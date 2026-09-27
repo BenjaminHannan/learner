@@ -1,0 +1,4471 @@
+{
+ "summary": {
+  "n": 150,
+  "median_ms": 139.3395500490442,
+  "p90_ms": 280.57440009433776,
+  "max_ms": 368.7299999874085,
+  "n_beamed": 87,
+  "device": "cuda",
+  "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2",
+  "torch": "2.11.0+cu128",
+  "threads": 6,
+  "tau": 9.3,
+  "k": 4,
+  "gpu": "NVIDIA GeForce RTX 5070 Ti"
+ },
+ "preds": {
+  "e261-001": {
+   "raw": "TEACH | I | city | Vellmar",
+   "greedy_lp": -0.00018702916200652453,
+   "beams": [
+    [
+     "TEACH | I | city | Vellmar",
+     -0.00018142673070542514
+    ],
+    [
+     "TEACH | I | city | Vellmark",
+     -10.6461181640625
+    ],
+    [
+     "TEACH I | I | city | Vellmar",
+     -10.875371932983398
+    ],
+    [
+     "TEACH | I | city | Vell Mar",
+     -12.001787185668945
+    ]
+   ],
+   "ms_greedy": 85.68,
+   "ms": 162.52,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "city",
+      "value": "Vellmar"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-002": {
+   "raw": "TEACH | My | sister | Liora",
+   "greedy_lp": -2.372255194416084e-05,
+   "beams": [
+    [
+     "TEACH | My | sister | Liora",
+     -2.47954303631559e-05
+    ],
+    [
+     "TEACH My | My | sister | Liora",
+     -12.125082969665527
+    ],
+    [
+     "TEACH | My | sister | Lira",
+     -12.16356372833252
+    ],
+    [
+     "TEACH |My | sister | Liora",
+     -12.625029563903809
+    ]
+   ],
+   "ms_greedy": 60.15,
+   "ms": 137.13,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "sister",
+      "value": "Liora"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-003": {
+   "raw": "TEACH | Darian | employer | Copperline Traders",
+   "greedy_lp": -0.0006543716837654756,
+   "beams": [
+    [
+     "TEACH | Darian | employer | Copperline Traders",
+     -0.0006771358312107623
+    ],
+    [
+     "TEACH | Dorian | employer | Copperline Traders",
+     -8.681041717529297
+    ],
+    [
+     "TEACH | Darian | employer | Copperline Traders",
+     -9.731346130371094
+    ],
+    [
+     "TEACH | Doran | employer | Copperline Traders",
+     -9.783448219299316
+    ]
+   ],
+   "ms_greedy": 67.88,
+   "ms": 155.14,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Darian",
+      "relation": "employer",
+      "value": "Copperline Traders"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-004": {
+   "raw": "TEACH | My | dog | Bracken",
+   "greedy_lp": -0.0003725864823422853,
+   "beams": [
+    [
+     "TEACH | My | dog | Bracken",
+     -0.00033802734105847776
+    ],
+    [
+     "TEACH | My | dog | Bracken",
+     -8.398689270019531
+    ],
+    [
+     "TEACH | My | dog | Braxton",
+     -11.312849044799805
+    ],
+    [
+     "TEACH | My | dog | Braenck",
+     -11.384744644165039
+    ]
+   ],
+   "ms_greedy": 56.24,
+   "ms": 127.62,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "dog",
+      "value": "Bracken"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-005": {
+   "raw": "TEACH | I | language | Kessic",
+   "greedy_lp": -0.0019107593901068753,
+   "beams": [
+    [
+     "TEACH | I | language | Kessic",
+     -0.002137437229976058
+    ],
+    [
+     "TEACH | I | language_of_work_or_name | Kessic",
+     -6.255986213684082
+    ],
+    [
+     "NONE",
+     -9.875056266784668
+    ],
+    [
+     "TEACH | Kessic | language | Kessic",
+     -11.13730239868164
+    ]
+   ],
+   "ms_greedy": 60.25,
+   "ms": 181.71,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "language",
+      "value": "Kessic",
+      "why": "UNSURE",
+      "margin": 6.253848776454106
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-006": {
+   "raw": "TEACH | Liora | employer | Aldergate School",
+   "greedy_lp": -0.00015961716460566322,
+   "beams": [
+    [
+     "TEACH | Liora | employer | Aldergate School",
+     -0.0001509154972154647
+    ],
+    [
+     "TEACH | Lira | employer | Aldergate School",
+     -9.834212303161621
+    ],
+    [
+     "TEACH | Liora | employer | Aldegate School",
+     -10.73802375793457
+    ],
+    [
+     "TEACH | Liora | employer | Alderbate School",
+     -12.101784706115723
+    ]
+   ],
+   "ms_greedy": 72.75,
+   "ms": 192.74,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Liora",
+      "relation": "employer",
+      "value": "Aldergate School"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-007": {
+   "raw": "TEACH | Darian | employer | Stonefield Club",
+   "greedy_lp": -0.0004064416271916116,
+   "beams": [
+    [
+     "TEACH | Darian | employer | Stonefield Club",
+     -0.0003814162337221205
+    ],
+    [
+     "TEACH | Dorian | employer | Stonefield Club",
+     -8.974564552307129
+    ],
+    [
+     "TEACH | Doran | employer | Stonefield Club",
+     -9.942098617553711
+    ],
+    [
+     "TEACH | Draniel | employer | Stonefield Club",
+     -10.501593589782715
+    ]
+   ],
+   "ms_greedy": 80.92,
+   "ms": 162.78,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Darian",
+      "relation": "employer",
+      "value": "Stonefield Club"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-008": {
+   "raw": "TEACH | My | stepmother | Cressa",
+   "greedy_lp": -0.00012182768044510794,
+   "beams": [
+    [
+     "TEACH | My | stepmother | Cressa",
+     -0.00012039724242640659
+    ],
+    [
+     "TEACH | My | stepmother | Cassia",
+     -10.99030876159668
+    ],
+    [
+     "TEACH | My | stepsister | Cressa",
+     -11.030720710754395
+    ],
+    [
+     "TEACH | My | stepmother | Cessa",
+     -11.16150951385498
+    ]
+   ],
+   "ms_greedy": 63.82,
+   "ms": 141.28,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "stepmother",
+      "value": "Cressa"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-009": {
+   "raw": "TEACH | My | roommate | Jovian",
+   "greedy_lp": -4.386864247862832e-05,
+   "beams": [
+    [
+     "TEACH | My | roommate | Jovian",
+     -4.136532515985891e-05
+    ],
+    [
+     "TEACH | My | partner | Jovian",
+     -11.875042915344238
+    ],
+    [
+     "TEACH | My | house_mate | Jovian",
+     -12.054086685180664
+    ],
+    [
+     "TEACH | My |roommate | Jovian",
+     -12.625171661376953
+    ]
+   ],
+   "ms_greedy": 75.66,
+   "ms": 157.61,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "roommate",
+      "value": "Jovian"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-010": {
+   "raw": "TEACH | I | instrument | fiddle",
+   "greedy_lp": -0.0013462850067114118,
+   "beams": [
+    [
+     "TEACH | I | instrument | fiddle",
+     -0.0013963024830445647
+    ],
+    [
+     "TEACH | I | instrument | violin",
+     -7.751864433288574
+    ],
+    [
+     "TEACH | I | instrument | the fiddle",
+     -7.754635810852051
+    ],
+    [
+     "NONE",
+     -8.125304222106934
+    ]
+   ],
+   "ms_greedy": 56.41,
+   "ms": 158.06,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "instrument",
+      "value": "fiddle",
+      "why": "UNSURE",
+      "margin": 8.123907919623889
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-011": {
+   "raw": "TEACH | Our | neighbour | Ondrej",
+   "greedy_lp": -0.0003189735398265725,
+   "beams": [
+    [
+     "TEACH | Our | neighbour | Ondrej",
+     -0.0002974017697852105
+    ],
+    [
+     "TEACH | Our | neighbour | Ondrj",
+     -9.84041690826416
+    ],
+    [
+     "TEACH | My | neighbour | Ondrej",
+     -10.12529468536377
+    ],
+    [
+     "TEACH | Our | neighbour | Ondrjej",
+     -10.300734519958496
+    ]
+   ],
+   "ms_greedy": 92.81,
+   "ms": 179.1,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "neighbour",
+      "value": "Ondrej"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-012": {
+   "raw": "TEACH | We | cat | Taffy",
+   "greedy_lp": -0.0004800714572184006,
+   "beams": [
+    [
+     "TEACH | We | cat | Taffy",
+     -0.0003947529767174274
+    ],
+    [
+     "TEACH | Our | cat | Taffy",
+     -8.125405311584473
+    ],
+    [
+     "TEACH | we | cat | Taffy",
+     -10.00039291381836
+    ],
+    [
+     "TEACH | I | cat | Taffy",
+     -11.812984466552734
+    ]
+   ],
+   "ms_greedy": 59.87,
+   "ms": 131.01,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "We",
+      "relation": "cat",
+      "value": "Taffy",
+      "why": "UNSURE",
+      "margin": 8.125010558607755
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-013": {
+   "raw": "TEACH | My | cousin | Cressa\nTEACH | Cressa | city | Caldora",
+   "greedy_lp": -0.000292407914635362,
+   "beams": [
+    [
+     "TEACH | My | cousin | Cressa\nTEACH | Cressa | city | Caldora",
+     -0.0002913351636379957
+    ],
+    [
+     "TEACH | My | cousin | Cressa\nTEACH | Cessa | city | Caldora",
+     -10.262718200683594
+    ],
+    [
+     "TEACH | My | cousin | Cressa\nTEACH | Cressinga | city | Caldora",
+     -10.754615783691406
+    ],
+    [
+     "TEACH | My | cousin | Cessa\nTEACH | Cressa | city | Caldora",
+     -10.811890602111816
+    ]
+   ],
+   "ms_greedy": 110.94,
+   "ms": 248.38,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "cousin",
+      "value": "Cressa"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Cressa",
+      "relation": "city",
+      "value": "Caldora"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-014": {
+   "raw": "TEACH | My | friend | Bram\nTEACH | Bram | employer | Harbormill Books",
+   "greedy_lp": -0.0005731060318154846,
+   "beams": [
+    [
+     "TEACH | My | friend | Bram\nTEACH | Bram | employer | Harbormill Books",
+     -0.0005641670431941748
+    ],
+    [
+     "TEACH | My | friend | Bram\nTEACH | Bram | employer | Harbormil Books",
+     -9.13719654083252
+    ],
+    [
+     "TEACH | My | friend | Bram\nTEACH | Bram | employer |Harbormill Books",
+     -9.625667572021484
+    ],
+    [
+     "TEACH | My | friend | Bram\nTEACH | Bram | employer | HarbORMILL Books",
+     -9.909482955932617
+    ]
+   ],
+   "ms_greedy": 103.16,
+   "ms": 230.54,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "friend",
+      "value": "Bram"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Bram",
+      "relation": "employer",
+      "value": "Harbormill Books"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-015": {
+   "raw": "TEACH | Jovian | brother | Tovik\nTEACH | Jovian | city | Drennick",
+   "greedy_lp": -0.0018870716829013645,
+   "beams": [
+    [
+     "TEACH | Jovian | brother | Tovik\nTEACH | Jovian | city | Drennick",
+     -0.0019093086011707783
+    ],
+    [
+     "TEACH | Jovian | brother | Tovik\nTEACH | Jovian | city | Dren nickk",
+     -7.92935848236084
+    ],
+    [
+     "TEACH | Jovian | brother | Tovik\nTEACH | Jovian | city | Drenick",
+     -9.001910209655762
+    ],
+    [
+     "TEACH | Jovian | brother | Tovik\nTEACH | Jovian | city | Dren nickick",
+     -9.121050834655762
+    ]
+   ],
+   "ms_greedy": 119.23,
+   "ms": 287.12,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Jovian",
+      "relation": "brother",
+      "value": "Tovik"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Jovian",
+      "relation": "city",
+      "value": "Drennick"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-016": {
+   "raw": "TEACH | My | two_sister | Liora\nTEACH | Liora | city | Vellmar",
+   "greedy_lp": -0.5429435132957536,
+   "beams": [
+    [
+     "TEACH | My | two_sister | Liora\nTEACH | Liora | city | Vellmar",
+     -0.6001388430595398
+    ],
+    [
+     "TEACH | My | two | Liora\nTEACH | Liora | city | Vellmar",
+     -2.046196222305298
+    ],
+    [
+     "TEACH | My | two_sisters | Liora\nTEACH | Liora | city | Vellmar",
+     -2.0892879962921143
+    ],
+    [
+     "TEACH | My | two_sisters | Liora\nTEACH | Liora | city | Vellmar",
+     -2.7235360145568848
+    ]
+   ],
+   "ms_greedy": 149.01,
+   "ms": 314.11,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Liora",
+      "relation": "city",
+      "value": "Vellmar"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-017": {
+   "raw": "TEACH | I | place_of_birth | Hasselby",
+   "greedy_lp": -4.649142629631342e-05,
+   "beams": [
+    [
+     "TEACH | I | place_of_birth | Hasselby",
+     -4.410726251080632e-05
+    ],
+    [
+     "TEACH | I | place_of_birth | HasselBY",
+     -12.130995750427246
+    ],
+    [
+     "TEACH | I | place_of_ birth | Hasselby",
+     -12.312545776367188
+    ],
+    [
+     "TEACH | I | place_ of_birth | Hasselby",
+     -12.625072479248047
+    ]
+   ],
+   "ms_greedy": 84.56,
+   "ms": 184.44,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "place_of_birth",
+      "value": "Hasselby"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-018": {
+   "raw": "TEACH | My | boss | Mellis",
+   "greedy_lp": -3.325923801611452e-05,
+   "beams": [
+    [
+     "TEACH | My | boss | Mellis",
+     -3.218636629753746e-05
+    ],
+    [
+     "TEACH | My | employer | Mellis",
+     -12.000028610229492
+    ],
+    [
+     "TEACH |My | boss | Mellis",
+     -12.250035285949707
+    ],
+    [
+     "TEACH | My | boss | Melis",
+     -12.69472885131836
+    ]
+   ],
+   "ms_greedy": 56.19,
+   "ms": 122.48,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "boss",
+      "value": "Mellis"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-019": {
+   "raw": "TEACH | I | occupation | lighthouse keeper",
+   "greedy_lp": -0.0008552388570066682,
+   "beams": [
+    [
+     "TEACH | I | occupation | lighthouse keeper",
+     -0.0007611352484673262
+    ],
+    [
+     "TEACH | I | occupation | lighthousekeeper",
+     -7.250762462615967
+    ],
+    [
+     "NONE",
+     -11.625016212463379
+    ],
+    [
+     "TEACH | I | occupation | lightkeeper",
+     -12.250394821166992
+    ]
+   ],
+   "ms_greedy": 56.19,
+   "ms": 122.44,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "occupation",
+      "value": "lighthouse keeper"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-020": {
+   "raw": "TEACH | My | spouse | Ondrej",
+   "greedy_lp": -0.00023804100571567233,
+   "beams": [
+    [
+     "TEACH | My | spouse | Ondrej",
+     -0.0002616398851387203
+    ],
+    [
+     "TEACH | My | spouse | Ondrj",
+     -9.658121109008789
+    ],
+    [
+     "TEACH | My | spouse | Ondrjej",
+     -10.035672187805176
+    ],
+    [
+     "TEACH | My | spouse | OndREJ",
+     -10.761750221252441
+    ]
+   ],
+   "ms_greedy": 63.53,
+   "ms": 144.77,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "spouse",
+      "value": "Ondrej"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-021": {
+   "raw": "TEACH | i | city | mossbank",
+   "greedy_lp": -0.0003958686664518041,
+   "beams": [
+    [
+     "TEACH | i | city | mossbank",
+     -0.00042995743569917977
+    ],
+    [
+     "TEACH | i | new_location | mossbank",
+     -9.372909545898438
+    ],
+    [
+     "TEACH | mossbank | city | i just moved to mossbank",
+     -9.839101791381836
+    ],
+    [
+     "TEACH | i | moved_to | mossbank",
+     -10.250594139099121
+    ]
+   ],
+   "ms_greedy": 55.93,
+   "ms": 147.8,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "i",
+      "relation": "city",
+      "value": "mossbank"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-022": {
+   "raw": "TEACH | Liora livs | city | Lornwick",
+   "greedy_lp": -0.011039199626445395,
+   "beams": [
+    [
+     "TEACH | Liora livs | city | Lornwick",
+     -0.011079056188464165
+    ],
+    [
+     "TEACH | Liora | city | Lornwick",
+     -4.8857598304748535
+    ],
+    [
+     "TEACH | Liora lives | city | Lornwick",
+     -7.012885093688965
+    ],
+    [
+     "TEACH | Liora livs | city | Lernwick",
+     -7.511246204376221
+    ]
+   ],
+   "ms_greedy": 75.6,
+   "ms": 167.35,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Liora livs",
+      "relation": "city",
+      "value": "Lornwick",
+      "why": "UNSURE",
+      "margin": 4.874680774286389
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-023": {
+   "raw": "TEACH | My | grandmother | Sarella",
+   "greedy_lp": -0.00011085968888835396,
+   "beams": [
+    [
+     "TEACH | My | grandmother | Sarella",
+     -0.00011050206376239657
+    ],
+    [
+     "TEACH | My | grandmother | Serella",
+     -9.71712875366211
+    ],
+    [
+     "TEACH | My | grandmother | Serena",
+     -10.904642105102539
+    ],
+    [
+     "TEACH | My | grandmother | SARElla",
+     -11.524518013000488
+    ]
+   ],
+   "ms_greedy": 59.98,
+   "ms": 131.35,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "grandmother",
+      "value": "Sarella"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-024": {
+   "raw": "TEACH | Darian | language | Drellish",
+   "greedy_lp": -0.0036808899300169173,
+   "beams": [
+    [
+     "TEACH | Darian | language | Drellish",
+     -0.003314731642603874
+    ],
+    [
+     "TEACH | Darian | language_of_work_or_name | Drellish",
+     -6.004157066345215
+    ],
+    [
+     "TEACH | Darian | language | Drelish",
+     -8.378885269165039
+    ],
+    [
+     "TEACH | Darians | language | Drellish",
+     -8.766979217529297
+    ]
+   ],
+   "ms_greedy": 63.71,
+   "ms": 180.58,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Darian",
+      "relation": "language",
+      "value": "Drellish",
+      "why": "UNSURE",
+      "margin": 6.000842334702611
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-025": {
+   "raw": "TEACH | My | hometown | Oakhollow",
+   "greedy_lp": -0.00043193177295108853,
+   "beams": [
+    [
+     "TEACH | My | hometown | Oakhollow",
+     -0.0004251417121849954
+    ],
+    [
+     "TEACH | My | hometown | Oakh Hollow",
+     -8.125426292419434
+    ],
+    [
+     "TEACH | My | hometown | Oakh hollow",
+     -9.375429153442383
+    ],
+    [
+     "TEACH My | hometown | Oakhollow",
+     -10.752104759216309
+    ]
+   ],
+   "ms_greedy": 60.1,
+   "ms": 132.43,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "hometown",
+      "value": "Oakhollow"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-026": {
+   "raw": "TEACH | my | sister | Liora\nTEACH | Liora | city | Vellmar",
+   "greedy_lp": -0.0002914538211626905,
+   "beams": [
+    [
+     "TEACH | my | sister | Liora\nTEACH | Liora | city | Vellmar",
+     -0.00029157300014048815
+    ],
+    [
+     "TEACH | my | sister | Lira\nTEACH | Lira | city | Vellmar",
+     -9.250343322753906
+    ],
+    [
+     "TEACH | my | sister | Liora\nTEACH | Liora | city | Vell Mar",
+     -11.215327262878418
+    ],
+    [
+     "TEACH | my | sister | Liora\nTEACH | Liora | city | Vell Marot",
+     -11.304685592651367
+    ]
+   ],
+   "ms_greedy": 110.65,
+   "ms": 254.37,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "sister",
+      "value": "Liora"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Liora",
+      "relation": "city",
+      "value": "Vellmar"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-027": {
+   "raw": "TEACH | My | brother | Darian\nTEACH | Darian | employer | Copperline Traders",
+   "greedy_lp": -0.0004019424697219165,
+   "beams": [
+    [
+     "TEACH | My | brother | Darian\nTEACH | Darian | employer | Copperline Traders",
+     -0.00039288323023356497
+    ],
+    [
+     "TEACH | My | brother | Darian\nTEACH | Darian | employer | Copperline Traders",
+     -9.82403564453125
+    ],
+    [
+     "TEACH | My | brother | Darian\nTEACH | Darius | employer | Copperline Traders",
+     -10.00050163269043
+    ],
+    [
+     "TEACH | My | brother | Darian\nTEACH | Darian | employer | Copperline Tranders",
+     -10.81283950805664
+    ]
+   ],
+   "ms_greedy": 107.15,
+   "ms": 244.98,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "brother",
+      "value": "Darian"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Darian",
+      "relation": "employer",
+      "value": "Copperline Traders"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-028": {
+   "raw": "TEACH | my | cousin | Cressa\nTEACH | Cressa | language | Kessic",
+   "greedy_lp": -0.0010877504335127242,
+   "beams": [
+    [
+     "TEACH | my | cousin | Cressa\nTEACH | Cressa | language | Kessic",
+     -0.0010539216455072165
+    ],
+    [
+     "TEACH | my | cousin | Cressa\nTEACH | Cressa | language_of_work_or_name | Kessic",
+     -8.266816139221191
+    ],
+    [
+     "TEACH | my | cousin | Cessa\nTEACH | Cessa | language | Kessic",
+     -8.75136661529541
+    ],
+    [
+     "TEACH | my | cousin | Cassia\nTEACH | Cassia | language | Kessic",
+     -9.448810577392578
+    ]
+   ],
+   "ms_greedy": 111.15,
+   "ms": 292.52,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "cousin",
+      "value": "Cressa"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Cressa",
+      "relation": "language",
+      "value": "Kessic",
+      "why": "UNSURE",
+      "margin": 8.265762217575684
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-029": {
+   "raw": "TEACH | my | friend | Tovik\nTEACH | Tovik | city | Caldora",
+   "greedy_lp": -0.0007412580208168151,
+   "beams": [
+    [
+     "TEACH | my | friend | Tovik\nTEACH | Tovik | city | Caldora",
+     -0.0008090605260804296
+    ],
+    [
+     "TEACH | my | friend | Tovik\nTEACH | Tovick | city | Caldora",
+     -7.625811576843262
+    ],
+    [
+     "TEACH | my | friend | Tovick\nTEACH | Tovick | city | Caldora",
+     -9.502781867980957
+    ],
+    [
+     "TEACH | my | friend | tovik\nTEACH | tovik | city | caldora",
+     -10.437421798706055
+    ]
+   ],
+   "ms_greedy": 119.84,
+   "ms": 267.54,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "friend",
+      "value": "Tovik"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Tovik",
+      "relation": "city",
+      "value": "Caldora"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-030": {
+   "raw": "TEACH | Our | doctor | Fenno Grey\nTEACH | Fenno Grey | employer | Stonebridge Clinic",
+   "greedy_lp": -0.004787315746625609,
+   "beams": [
+    [
+     "TEACH | Our | doctor | Fenno Grey\nTEACH | Fenno Grey | employer | Stonebridge Clinic",
+     -0.004615062847733498
+    ],
+    [
+     "TEACH | Our | doctor | Fenno Grey\nTEACH | Fenno Grey | employer | Stone Bridge Clinic",
+     -6.004615306854248
+    ],
+    [
+     "TEACH | Our | doctor | Fenno Grey\nTEACH | Dr. Fenno Grey | employer | Stonebridge Clinic",
+     -7.496214866638184
+    ],
+    [
+     "TEACH | Our | doctor | Fenno Grey\nTEACH | Fenno Grey | employer | Stone bridge clinic",
+     -7.956071376800537
+    ]
+   ],
+   "ms_greedy": 118.76,
+   "ms": 276.81,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "doctor",
+      "value": "Fenno Grey"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Fenno Grey",
+      "relation": "employer",
+      "value": "Stonebridge Clinic"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-031": {
+   "raw": "TEACH | my | boss | Mellis\nTEACH | Mellis | city | Drennick",
+   "greedy_lp": -0.004048205077438638,
+   "beams": [
+    [
+     "TEACH | my | boss | Mellis\nTEACH | Mellis | city | Drennick",
+     -0.004092113114893436
+    ],
+    [
+     "TEACH | my | boss | Mellis\nTEACH | Mellis | city | Drennick",
+     -6.652657508850098
+    ],
+    [
+     "TEACH | my | boss | Melmis\nTEACH | Melmis | city | Drennick",
+     -7.277782440185547
+    ],
+    [
+     "TEACH | my | boss | Mellis\nTEACH | Mellis | city | Dren nickk",
+     -8.749499320983887
+    ]
+   ],
+   "ms_greedy": 103.26,
+   "ms": 242.52,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "boss",
+      "value": "Mellis"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Mellis",
+      "relation": "city",
+      "value": "Drennick"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-032": {
+   "raw": "TEACH | Darian | employer | Copperline Traders",
+   "greedy_lp": -0.0003697557172799293,
+   "beams": [
+    [
+     "TEACH | Darian | employer | Copperline Traders",
+     -0.0003374560328666121
+    ],
+    [
+     "TEACH | Darians | employer | Copperline Traders",
+     -9.759276390075684
+    ],
+    [
+     "TEACH | Darian | employer | Copperline Traders",
+     -9.90505599975586
+    ],
+    [
+     "TEACH | Darian | employer | Copperline Tranders",
+     -10.08870792388916
+    ]
+   ],
+   "ms_greedy": 76.94,
+   "ms": 173.22,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Darian",
+      "relation": "employer",
+      "value": "Copperline Traders"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-033": {
+   "raw": "TEACH | Liora | city | Hasselby",
+   "greedy_lp": -0.3872103025103115,
+   "beams": [
+    [
+     "TEACH | Liora | city | Hasselby",
+     -0.38719624280929565
+    ],
+    [
+     "NONE",
+     -1.1369526386260986
+    ],
+    [
+     "TEACH | Lira | city | Hasselby",
+     -10.397034645080566
+    ],
+    [
+     "TEACH | Liora | city_of_residence | Hasselby",
+     -10.568231582641602
+    ]
+   ],
+   "ms_greedy": 76.83,
+   "ms": 193.89,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Liora",
+      "relation": "city",
+      "value": "Hasselby",
+      "why": "UNSURE",
+      "margin": 0.749756395816803
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-034": {
+   "raw": "TEACH | Cressa | language | Vornic",
+   "greedy_lp": -0.04974158230967163,
+   "beams": [
+    [
+     "TEACH | Cressa | language | Vornic",
+     -0.05625132843852043
+    ],
+    [
+     "TEACH | Cressa | learning_language | Vornic",
+     -3.54103946685791
+    ],
+    [
+     "TEACH | Cressa | learned_language | Vornic",
+     -4.8054304122924805
+    ],
+    [
+     "TEACH | Cressa | method | Vornic",
+     -6.0261101722717285
+    ]
+   ],
+   "ms_greedy": 77.23,
+   "ms": 177.3,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Cressa",
+      "relation": "language",
+      "value": "Vornic"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-035": {
+   "raw": "TEACH | Jovian | employer | Brookmere College",
+   "greedy_lp": -0.00043507971800238465,
+   "beams": [
+    [
+     "TEACH | Jovian | employer | Brookmere College",
+     -0.000481443596072495
+    ],
+    [
+     "TEACH | Jovian | employer | Brookpere College",
+     -9.394291877746582
+    ],
+    [
+     "TEACH | Jovian | employer | Brookshire College",
+     -9.398026466369629
+    ],
+    [
+     "TEACH | Jovian | employer | Brookrem College",
+     -10.941560745239258
+    ]
+   ],
+   "ms_greedy": 67.94,
+   "ms": 149.48,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Jovian",
+      "relation": "employer",
+      "value": "Brookmere College"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-036": {
+   "raw": "TEACH | Sarella | school | Aldergate School",
+   "greedy_lp": -0.0002564052789040261,
+   "beams": [
+    [
+     "TEACH | Sarella | school | Aldergate School",
+     -0.0002539015549700707
+    ],
+    [
+     "TEACH | Serella | school | Aldergate School",
+     -9.024757385253906
+    ],
+    [
+     "TEACH | Sarella | educated_at | Aldergate School",
+     -10.250279426574707
+    ],
+    [
+     "TEACH | Sirella | school | Aldergate School",
+     -10.375900268554688
+    ]
+   ],
+   "ms_greedy": 71.82,
+   "ms": 178.63,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Sarella",
+      "relation": "school",
+      "value": "Aldergate School"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-037": {
+   "raw": "TEACH | Bram | school | Brookmere College",
+   "greedy_lp": -0.0020938161501007357,
+   "beams": [
+    [
+     "TEACH | Bram | school | Brookmere College",
+     -0.002102399943396449
+    ],
+    [
+     "TEACH | Bram | educated_at | Brookmere College",
+     -6.377118110656738
+    ],
+    [
+     "TEACH | Bram | school | Brookpere College",
+     -9.396364212036133
+    ],
+    [
+     "TEACH | Bram | school | Brookmere College",
+     -9.502219200134277
+    ]
+   ],
+   "ms_greedy": 68.37,
+   "ms": 149.7,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Bram",
+      "relation": "school",
+      "value": "Brookmere College",
+      "why": "UNSURE",
+      "margin": 6.375015710713342
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-038": {
+   "raw": "TEACH | My | half_brother | Kessler\nTEACH | Kessler | city | Lornwick",
+   "greedy_lp": -0.0006681517848861063,
+   "beams": [
+    [
+     "TEACH | My | half_brother | Kessler\nTEACH | Kessler | city | Lornwick",
+     -0.0006191837601363659
+    ],
+    [
+     "TEACH | My | half_brother | Kessler\nTEACH | Kessler | city | Lernwick",
+     -7.750800132751465
+    ],
+    [
+     "TEACH | My | half_ brother | Kessler\nTEACH | Kessler | city | Lornwick",
+     -10.125627517700195
+    ],
+    [
+     "TEACH | My | half_brother | Kessler\nTEACH | Kessler | city | Lournwick",
+     -11.720667839050293
+    ]
+   ],
+   "ms_greedy": 118.76,
+   "ms": 271.0,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "half_brother",
+      "value": "Kessler"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Kessler",
+      "relation": "city",
+      "value": "Lornwick"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-039": {
+   "raw": "TEACH | Petra | father_in_law | Haldor\nTEACH | Haldor | city | Yewdale",
+   "greedy_lp": -0.1036617525987964,
+   "beams": [
+    [
+     "TEACH | Petra | father_in_law | Haldor\nTEACH | Haldor | city | Yewdale",
+     -0.1099468320608139
+    ],
+    [
+     "TEACH | Petra | father_in_law | Haldor\nTEACH | Petra | city | Yewdale",
+     -2.2991185188293457
+    ],
+    [
+     "TEACH | Petra | father_in_law | Haldor\nTEACH | He | city | Yewdale",
+     -7.172465801239014
+    ],
+    [
+     "TEACH | Petra | father_in_law | Haldor\nTEACH | petra | city | Yewdale",
+     -7.924523830413818
+    ]
+   ],
+   "ms_greedy": 130.23,
+   "ms": 293.0,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Petra",
+      "relation": "father_in_law",
+      "value": "Haldor"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Haldor",
+      "relation": "city",
+      "value": "Yewdale",
+      "why": "UNSURE",
+      "margin": 2.189171686768532
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-040": {
+   "raw": "TEACH | My | teacher | Odette Lark",
+   "greedy_lp": -0.0007766215836895185,
+   "beams": [
+    [
+     "TEACH | My | teacher | Odette Lark",
+     -0.0008046180009841919
+    ],
+    [
+     "TEACH | My | teacher | OdetTE Lark",
+     -7.875983238220215
+    ],
+    [
+     "TEACH | My | teacher | ODette Lark",
+     -8.876916885375977
+    ],
+    [
+     "TEACH | My | teacher | O Dette Lark",
+     -9.863203048706055
+    ]
+   ],
+   "ms_greedy": 68.12,
+   "ms": 149.84,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "teacher",
+      "value": "Odette Lark"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-041": {
+   "raw": "TEACH | My | favorite_food | plum pie",
+   "greedy_lp": -0.002513461410806883,
+   "beams": [
+    [
+     "TEACH | My | favorite_food | plum pie",
+     -0.0025128668639808893
+    ],
+    [
+     "TEACH | My | favorite_food | plum pie",
+     -6.765811920166016
+    ],
+    [
+     "TEACH | My | favorite_food | plam pie",
+     -7.183377742767334
+    ],
+    [
+     "TEACH | My | favorite_food | plumpie",
+     -8.127524375915527
+    ]
+   ],
+   "ms_greedy": 64.02,
+   "ms": 145.47,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "favorite_food",
+      "value": "plum pie"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-042": {
+   "raw": "TEACH | Sarella | hobby | beekeeping",
+   "greedy_lp": -0.00023398363914139964,
+   "beams": [
+    [
+     "TEACH | Sarella | hobby | beekeeping",
+     -0.00026258741854690015
+    ],
+    [
+     "TEACH | Serella | hobby | beekeeping",
+     -8.515546798706055
+    ],
+    [
+     "TEACH | Sirella | hobby | beekeeping",
+     -10.50086784362793
+    ],
+    [
+     "TEACH | SARElla | hobby | beekeeping",
+     -11.632157325744629
+    ]
+   ],
+   "ms_greedy": 59.93,
+   "ms": 131.62,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Sarella",
+      "relation": "hobby",
+      "value": "beekeeping"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-043": {
+   "raw": "TEACH | Our | cat | Soot\nTEACH | Soot | sleeps_on | my desk",
+   "greedy_lp": -1.1546938360198027,
+   "beams": [
+    [
+     "TEACH | Our | cat | Soot\nTEACH | Soot | sleeps | my desk",
+     -1.1674375534057617
+    ],
+    [
+     "TEACH | Our | cat | Soot\nTEACH | Soot | sleeps_on | my desk",
+     -1.230490803718567
+    ],
+    [
+     "TEACH | Our | cat | Soot\nTEACH | Soot | sleep | my desk",
+     -1.771098017692566
+    ],
+    [
+     "TEACH | Our | cat | Soot\nTEACH | Soot | sleeping_location | my desk",
+     -3.1800551414489746
+    ]
+   ],
+   "ms_greedy": 111.05,
+   "ms": 248.27,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "cat",
+      "value": "Soot"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-044": {
+   "raw": "TEACH | We | roommate | My | brother",
+   "greedy_lp": -0.9978637740538261,
+   "beams": [],
+   "ms_greedy": 67.7,
+   "ms": 67.72,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-045": {
+   "raw": "TEACH | Darian | occupation | pilot\nTEACH | Darian | city | Vellmar",
+   "greedy_lp": -0.010220442420738607,
+   "beams": [
+    [
+     "TEACH | Darian | occupation | pilot\nTEACH | Darian | city | Vellmar",
+     -0.00981978327035904
+    ],
+    [
+     "TEACH | Darian | career | pilot\nTEACH | Darian | city | Vellmar",
+     -6.615291595458984
+    ],
+    [
+     "TEACH | Darian | training | pilot\nTEACH | Darian | city | Vellmar",
+     -6.873671054840088
+    ],
+    [
+     "TEACH | Darian | occupation | pilot\nTEACH | Darian | hometown | Vellmar",
+     -7.634666442871094
+    ]
+   ],
+   "ms_greedy": 103.07,
+   "ms": 230.44,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Darian",
+      "relation": "occupation",
+      "value": "pilot"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Darian",
+      "relation": "city",
+      "value": "Vellmar",
+      "why": "UNSURE",
+      "margin": 7.624846659600735
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-046": {
+   "raw": "NONE",
+   "greedy_lp": -0.3487663710111448,
+   "beams": [],
+   "ms_greedy": 28.53,
+   "ms": 28.55,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-047": {
+   "raw": "TEACH | Cressa | city | Zarnow\nTEACH | Cressa | city | Merrivale",
+   "greedy_lp": -0.05934474671330747,
+   "beams": [
+    [
+     "TEACH | Cressa | city | Zarnow\nTEACH | Cressa | city | Merrivale",
+     -0.057902008295059204
+    ],
+    [
+     "NONE",
+     -3.4087846279144287
+    ],
+    [
+     "TEACH | Cressa | city | Zarnow\nTEACH | Cressa | hometown | Merrivale",
+     -5.304230690002441
+    ],
+    [
+     "TEACH | Cressa | city | Zarnow\nTEACH | Cressa | city_of_birth | Merrivale",
+     -6.095369338989258
+    ]
+   ],
+   "ms_greedy": 118.39,
+   "ms": 286.99,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Cressa",
+      "relation": "city",
+      "value": "Zarnow",
+      "why": "UNSURE",
+      "margin": 3.3508826196193695
+     },
+     {
+      "act": "TEACH",
+      "subject": "Cressa",
+      "relation": "city",
+      "value": "Merrivale",
+      "why": "UNSURE",
+      "margin": 3.3508826196193695
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-048": {
+   "raw": "TEACH | My | cousins | Bram\nTEACH | Bram | employer | Stonegate Press",
+   "greedy_lp": -0.048729051630807874,
+   "beams": [
+    [
+     "TEACH | My | cousins | Bram\nTEACH | Bram | employer | Stonegate Press",
+     -0.05444984510540962
+    ],
+    [
+     "TEACH | My | cousins | Bram\nTEACH | Cadel | employer | Stonegate Press",
+     -3.1795408725738525
+    ],
+    [
+     "TEACH | My | cousin | Bram\nTEACH | Bram | employer | Stonegate Press",
+     -5.321752548217773
+    ],
+    [
+     "TEACH | My | cousin | Bram\nTEACH | Cadel | employer | Stonegate Press",
+     -6.946897506713867
+    ]
+   ],
+   "ms_greedy": 96.36,
+   "ms": 218.92,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Bram",
+      "relation": "employer",
+      "value": "Stonegate Press",
+      "why": "UNSURE",
+      "margin": 6.892447661608458
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-049": {
+   "raw": "TEACH | My | brothers | Ivo\nTEACH | Ivo | language | Drellish",
+   "greedy_lp": -0.7061191467201269,
+   "beams": [
+    [
+     "TEACH | My | brothers | Ivo\nTEACH | Ivo | language | Drellish",
+     -0.6428453326225281
+    ],
+    [
+     "TEACH | My | two_brothers | Ivo\nTEACH | Ivo | language | Drellish",
+     -0.999692440032959
+    ],
+    [
+     "TEACH | My | brother | Ivo\nTEACH | Ivo | language | Drellish",
+     -3.2429728507995605
+    ],
+    [
+     "TEACH | My | two_brother | Ivo\nTEACH | Ivo | language | Drellish",
+     -3.497415542602539
+    ]
+   ],
+   "ms_greedy": 103.77,
+   "ms": 246.32,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Ivo",
+      "relation": "language",
+      "value": "Drellish"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-050": {
+   "raw": "TEACH | Sarella | friend | Vanna\nTEACH | Vanna | employer | Foxglove Studio",
+   "greedy_lp": -0.0010583016818799251,
+   "beams": [
+    [
+     "TEACH | Sarella | friend | Vanna\nTEACH | Vanna | employer | Foxglove Studio",
+     -0.0010634169448167086
+    ],
+    [
+     "TEACH | Serella | friend | Vanna\nTEACH | Vanna | employer | Foxglove Studio",
+     -7.763638019561768
+    ],
+    [
+     "TEACH | Sarella | friend | Vanna\nTEACH | Vanna | employer | Foxglop Studio",
+     -8.67573356628418
+    ],
+    [
+     "TEACH | Sarella | friend | Vanna\nTEACH | Vanna | employer | Foxglove Studios",
+     -9.734163284301758
+    ]
+   ],
+   "ms_greedy": 115.07,
+   "ms": 262.88,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Sarella",
+      "relation": "friend",
+      "value": "Vanna"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Vanna",
+      "relation": "employer",
+      "value": "Foxglove Studio"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-051": {
+   "raw": "TEACH | My | uncle | Garrick\nTEACH | Garrick | city | Thistledown\nTEACH | Garrick | dog | Pip",
+   "greedy_lp": -0.0010384270805516849,
+   "beams": [
+    [
+     "TEACH | My | uncle | Garrick\nTEACH | Garrick | city | Thistledown\nTEACH | Garrick | dog | Pip",
+     -0.0010215026559308171
+    ],
+    [
+     "TEACH | My | uncle | Garrick\nTEACH | Garrick | city | ThistLEDown\nTEACH | Garrick | dog | Pip",
+     -8.807008743286133
+    ],
+    [
+     "TEACH | My | uncle | Garrick\nTEACH | Garrick | city | ThistLEDOWN\nTEACH | Garrick | dog | Pip",
+     -9.182012557983398
+    ],
+    [
+     "TEACH | My | uncle | Garick\nTEACH | Garick | city | Thistledown\nTEACH | Garick | dog | Pip",
+     -9.243563652038574
+    ]
+   ],
+   "ms_greedy": 146.62,
+   "ms": 330.18,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "uncle",
+      "value": "Garrick"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Garrick",
+      "relation": "city",
+      "value": "Thistledown"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Garrick",
+      "relation": "dog",
+      "value": "Pip"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-052": {
+   "raw": "TEACH | Vespera | sister | Xenia\nTEACH | Vespera | language | Drellish",
+   "greedy_lp": -0.00221823616990946,
+   "beams": [
+    [
+     "TEACH | Vespera | sister | Xenia\nTEACH | Vespera | language | Drellish",
+     -0.002342934487387538
+    ],
+    [
+     "TEACH | Vespera | sister | Xenia\nTEACH | Vespera | language | Drellish",
+     -7.337595462799072
+    ],
+    [
+     "TEACH | Vespera | sister | Xenia\nTEACH | Vespera | language_of_work_or_name | Drellish",
+     -7.880386829376221
+    ],
+    [
+     "TEACH | Vespera | sister | Xenia\nTEACH | Vespera | language | Drelish",
+     -9.502354621887207
+    ]
+   ],
+   "ms_greedy": 114.96,
+   "ms": 297.97,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Vespera",
+      "relation": "sister",
+      "value": "Xenia"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Vespera",
+      "relation": "language",
+      "value": "Drellish",
+      "why": "UNSURE",
+      "margin": 7.878043894888833
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-053": {
+   "raw": "TEACH | Osric | friend | Petra\nTEACH | Osric | employer | Stonegate Press",
+   "greedy_lp": -0.0020480566662754995,
+   "beams": [
+    [
+     "TEACH | Osric | friend | Petra\nTEACH | Osric | employer | Stonegate Press",
+     -0.0020214805845171213
+    ],
+    [
+     "TEACH | Osric | friend | Petra\nTEACH | Osmric | employer | Stonegate Press",
+     -6.698669910430908
+    ],
+    [
+     "TEACH | Osmric | friend | Petra\nTEACH | Osric | employer | Stonegate Press",
+     -9.177143096923828
+    ],
+    [
+     "TEACH | Osric | friend |Petra\nTEACH | Osric | employer | Stonegate Press",
+     -9.253214836120605
+    ]
+   ],
+   "ms_greedy": 106.98,
+   "ms": 244.58,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Osric",
+      "relation": "friend",
+      "value": "Petra"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Osric",
+      "relation": "employer",
+      "value": "Stonegate Press"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-054": {
+   "raw": "TEACH | my | brother | donal\nTEACH | donal | city | rillwater",
+   "greedy_lp": -0.009082924834068251,
+   "beams": [
+    [
+     "TEACH | my | brother | donal\nTEACH | donal | city | rillwater",
+     -0.009265745058655739
+    ],
+    [
+     "TEACH | my | brother |donal\nTEACH | donal | city | rillwater",
+     -6.021171569824219
+    ],
+    [
+     "TEACH | my | brother | donal\nTEACH | donal | city | rillwater",
+     -6.405537128448486
+    ],
+    [
+     "TEACH | my | brother | donal\nTEACH | doNAL | city | rillwater",
+     -6.600030899047852
+    ]
+   ],
+   "ms_greedy": 103.03,
+   "ms": 230.78,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "brother",
+      "value": "donal"
+     },
+     {
+      "act": "TEACH",
+      "subject": "donal",
+      "relation": "city",
+      "value": "rillwater"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-055": {
+   "raw": "TEACH | My | mother | bron in Sableton",
+   "greedy_lp": -0.1526227787605805,
+   "beams": [
+    [
+     "TEACH | My | mother | bron in Sableton",
+     -0.16245537996292114
+    ],
+    [
+     "NONE",
+     -2.694941997528076
+    ],
+    [
+     "TEACH | My | mother | bron",
+     -4.1387410163879395
+    ],
+    [
+     "TEACH | My | mother | bron\nTEACH | bron in Sableton | place_of_birth | my | mother",
+     -4.484724998474121
+    ]
+   ],
+   "ms_greedy": 67.86,
+   "ms": 225.15,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "mother",
+      "value": "bron in Sableton",
+      "why": "UNSURE",
+      "margin": 2.532486617565155
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-056": {
+   "raw": "TEACH | my | sister | Liora Venn\nTEACH | Liora Venn | city | Kestrel Bay",
+   "greedy_lp": -0.00015699696687221376,
+   "beams": [
+    [
+     "TEACH | my | sister | Liora Venn\nTEACH | Liora Venn | city | Kestrel Bay",
+     -0.00015640092897228897
+    ],
+    [
+     "TEACH | my | sister | Lira Venn\nTEACH | Lira Venn | city | Kestrel Bay",
+     -10.625945091247559
+    ],
+    [
+     "TEACH | my | sister | Liora Venn\nTEACH | Liora Venn | city | Kstrel Bay",
+     -11.391358375549316
+    ],
+    [
+     "TEACH | my | sister | Liora Venn\nTEACH | Lira Venn | city | Kestrel Bay",
+     -11.596778869628906
+    ]
+   ],
+   "ms_greedy": 131.06,
+   "ms": 294.34,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "sister",
+      "value": "Liora Venn"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Liora Venn",
+      "relation": "city",
+      "value": "Kestrel Bay"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-057": {
+   "raw": "TEACH | my | brother | Darian Kess\nTEACH | Darian Kess | employer | Copperline Traders",
+   "greedy_lp": -0.0011617043747591538,
+   "beams": [
+    [
+     "TEACH | my | brother | Darian Kess\nTEACH | Darian Kess | employer | Copperline Traders",
+     -0.0011784936068579555
+    ],
+    [
+     "TEACH | my | brother | Draan Kess\nTEACH | Draan Kess | employer | Copperline Traders",
+     -8.011899948120117
+    ],
+    [
+     "TEACH | my | brother | Daran Kess\nTEACH | Daran Kess | employer | Copperline Traders",
+     -8.71181583404541
+    ],
+    [
+     "TEACH | my | brother | Darian Kess\nTEACH | Darian Kess | employer | Copperline Traders",
+     -9.924406051635742
+    ]
+   ],
+   "ms_greedy": 122.64,
+   "ms": 280.57,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "brother",
+      "value": "Darian Kess"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Darian Kess",
+      "relation": "employer",
+      "value": "Copperline Traders"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-058": {
+   "raw": "TEACH | Cressa Marlowe | language | Vornic\nTEACH | Cressa Marlowe | employer | Aldergate School",
+   "greedy_lp": -0.012004417760962838,
+   "beams": [
+    [
+     "TEACH | Cressa Marlowe | language | Vornic\nTEACH | Cressa Marlowe | employer | Aldergate School",
+     -0.012108242139220238
+    ],
+    [
+     "TEACH | Cressa Marrow | language | Vornic\nTEACH | Cressa Marrow | employer | Aldergate School",
+     -6.662423133850098
+    ],
+    [
+     "TEACH | Cressa Marlowe | language_of_work_or_name | Vornic\nTEACH | Cressa Marlowe | employer | Aldergate School",
+     -6.890048027038574
+    ],
+    [
+     "TEACH | Cressa Marrowe | language | Vornic\nTEACH | Cressa Marrowe | employer | Aldergate School",
+     -6.971579551696777
+    ]
+   ],
+   "ms_greedy": 145.95,
+   "ms": 368.73,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Cressa Marlowe",
+      "relation": "employer",
+      "value": "Aldergate School"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Cressa Marlowe",
+      "relation": "language",
+      "value": "Vornic",
+      "why": "UNSURE",
+      "margin": 6.877939784899354
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-059": {
+   "raw": "TEACH | our | neighbour | Tovik Ash\nTEACH | Tovik Ash | city | Duskhaven",
+   "greedy_lp": -0.05477015992492085,
+   "beams": [
+    [
+     "TEACH | our | neighbour | Tovik Ash\nTEACH | Tovik Ash | city | Duskhaven",
+     -0.061527274549007416
+    ],
+    [
+     "TEACH | Our | neighbour | Tovik Ash\nTEACH | Tovik Ash | city | Duskhaven",
+     -3.0614006519317627
+    ],
+    [
+     "TEACH | Tovik Ash | neighbour | Duskhaven",
+     -5.498390197753906
+    ],
+    [
+     "TEACH | my | neighbour | Tovik Ash\nTEACH | Tovik Ash | city | Duskhaven",
+     -5.623774528503418
+    ]
+   ],
+   "ms_greedy": 118.77,
+   "ms": 266.43,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "our",
+      "relation": "neighbour",
+      "value": "Tovik Ash",
+      "why": "UNSURE",
+      "margin": 5.436862923204899
+     },
+     {
+      "act": "TEACH",
+      "subject": "Tovik Ash",
+      "relation": "city",
+      "value": "Duskhaven",
+      "why": "UNSURE",
+      "margin": 5.436862923204899
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-060": {
+   "raw": "TEACH | Mellis Thorn | employer | Harbormill Books",
+   "greedy_lp": -0.007125894954853607,
+   "beams": [
+    [
+     "TEACH | Mellis Thorn | employer | Harbormill Books",
+     -0.0076830508187413216
+    ],
+    [
+     "TEACH | Mellis Thorn | employer | Harbormill Books",
+     -5.508430480957031
+    ],
+    [
+     "TEACH | Mellis Thorn | employer | Harbormill Books",
+     -6.378652095794678
+    ],
+    [
+     "TEACH | Melmis Thorn | employer | Harbormill Books",
+     -7.753849983215332
+    ]
+   ],
+   "ms_greedy": 79.56,
+   "ms": 181.3,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Mellis Thorn",
+      "relation": "employer",
+      "value": "Harbormill Books"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-061": {
+   "raw": "TEACH | My | grandmother | Sarella Voss\nTEACH | Sarella Voss | city | Emberford",
+   "greedy_lp": -0.0001711791737974977,
+   "beams": [
+    [
+     "TEACH | My | grandmother | Sarella Voss\nTEACH | Sarella Voss | city | Emberford",
+     -0.00017284808563999832
+    ],
+    [
+     "TEACH | My | grandmother | Sarella Voss\nTEACH | Serella Voss | city | Emberford",
+     -9.759782791137695
+    ],
+    [
+     "TEACH | My | grandmother | Serella Voss\nTEACH | Serella Voss | city | Emberford",
+     -10.212016105651855
+    ],
+    [
+     "TEACH | My | grandmother | Sarella Voss\nTEACH | SARElla Voss | city | Emberford",
+     -10.94852352142334
+    ]
+   ],
+   "ms_greedy": 126.29,
+   "ms": 284.55,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "grandmother",
+      "value": "Sarella Voss"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Sarella Voss",
+      "relation": "city",
+      "value": "Emberford"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-062": {
+   "raw": "TEACH | Darian Kess Merrivale | instrument | concertina",
+   "greedy_lp": -0.000293959961084056,
+   "beams": [
+    [
+     "TEACH | Darian Kess Merrivale | instrument | concertina",
+     -0.000291933974949643
+    ],
+    [
+     "TEACH | Dorian Kess Merrivale | instrument | concertina",
+     -10.30444049835205
+    ],
+    [
+     "TEACH | Darian Kess Merrivale | instrument | concertina",
+     -10.725207328796387
+    ],
+    [
+     "TEACH | Darian Kess | instrument | concertina",
+     -10.81277084350586
+    ]
+   ],
+   "ms_greedy": 79.63,
+   "ms": 181.69,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Darian Kess Merrivale",
+      "relation": "instrument",
+      "value": "concertina"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-063": {
+   "raw": "TEACH | My | two_aunts | Odelia Fern\nTEACH | Odelia Fern | city | Frostwick",
+   "greedy_lp": -0.30102094134342394,
+   "beams": [
+    [
+     "TEACH | My | two_aunts | Odelia Fern\nTEACH | Odelia Fern | city | Frostwick",
+     -0.2781201899051666
+    ],
+    [
+     "TEACH | My | aunts | Odelia Fern\nTEACH | Odelia Fern | city | Frostwick",
+     -2.1885266304016113
+    ],
+    [
+     "TEACH | My | two_aunts | Odelia Fern and Sibyl Hart\nTEACH | Odelia Fern | city | Frostwick",
+     -2.528169870376587
+    ],
+    [
+     "TEACH | My | aunts | Odelia Fern and Sibyl Hart\nTEACH | Odelia Fern | city | Frostwick",
+     -3.438119649887085
+    ]
+   ],
+   "ms_greedy": 126.26,
+   "ms": 313.72,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Odelia Fern",
+      "relation": "city",
+      "value": "Frostwick"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-064": {
+   "raw": "TEACH | my | cousin | Bram Calloway Finn\nTEACH | Bram Calloway Finn | city | Wildemere",
+   "greedy_lp": -0.004799812069315124,
+   "beams": [
+    [
+     "TEACH | my | cousin | Bram Calloway Finn\nTEACH | Bram Calloway Finn | city | Wildemere",
+     -0.0044667948968708515
+    ],
+    [
+     "TEACH | my | cousin | Bram Calloway Finn\nTEACH | Bram Calloway Finn | city | WildemERE",
+     -6.3794708251953125
+    ],
+    [
+     "TEACH | my | cousin | Bram Calloway Fin\nTEACH | Bram Calloway Fin | city | Wildemere",
+     -6.50420618057251
+    ],
+    [
+     "TEACH | my | cousin | Bram Calloway Finn\nTEACH | Bram Calloway Fin | city | Wildemere",
+     -7.1350626945495605
+    ]
+   ],
+   "ms_greedy": 126.58,
+   "ms": 284.1,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "cousin",
+      "value": "Bram Calloway Finn"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Bram Calloway Finn",
+      "relation": "city",
+      "value": "Wildemere"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-065": {
+   "raw": "TEACH | Petra Lindqvist | brother | Bram Calloway\nTEACH | Petra Lindqvist | employer | Foxglove Studio",
+   "greedy_lp": -0.0077101564537471745,
+   "beams": [
+    [
+     "TEACH | Petra Lindqvist | brother | Bram Calloway\nTEACH | Petra Lindqvist | employer | Foxglove Studio",
+     -0.007298640441149473
+    ],
+    [
+     "TEACH | Petra Lindqvist | brother | Bram Calloway\nTEACH | Bram Calloway | employer | Foxglove Studio",
+     -6.382125377655029
+    ],
+    [
+     "TEACH |Petra Lindqvist | brother | Bram Calloway\nTEACH |Petra Lindqvist | employer | Foxglove Studio",
+     -7.097825527191162
+    ],
+    [
+     "TEACH | Petra Lindqvist | brother | Bram Calloway\nTEACH | Braem Calloway | employer | Foxglove Studio",
+     -7.345229148864746
+    ]
+   ],
+   "ms_greedy": 149.65,
+   "ms": 342.97,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Petra Lindqvist",
+      "relation": "brother",
+      "value": "Bram Calloway"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Petra Lindqvist",
+      "relation": "employer",
+      "value": "Foxglove Studio",
+      "why": "UNSURE",
+      "margin": 6.37482673721388
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-066": {
+   "raw": "TEACH | I | place_of_birth | Kestrel Bay General Hospital",
+   "greedy_lp": -0.00018894149206971633,
+   "beams": [
+    [
+     "TEACH | I | place_of_birth | Kestrel Bay General Hospital",
+     -0.0002015767095144838
+    ],
+    [
+     "TEACH | I | place_of_birth | Kestrel BayGeneral Hospital",
+     -9.714713096618652
+    ],
+    [
+     "TEACH | I | place_of_birth | Kestrel Bay Generic Hospital",
+     -11.375385284423828
+    ],
+    [
+     "TEACH | I | place_of_birth | KESTREL BAY GENERAL HOSPITAL",
+     -11.4795560836792
+    ]
+   ],
+   "ms_greedy": 116.59,
+   "ms": 253.47,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "place_of_birth",
+      "value": "Kestrel Bay General Hospital"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-067": {
+   "raw": "TEACH | My | teacher | Odette Lark Quinn",
+   "greedy_lp": -0.0007535078029192732,
+   "beams": [
+    [
+     "TEACH | My | teacher | Odette Lark Quinn",
+     -0.0007483835215680301
+    ],
+    [
+     "TEACH | My | teacher | OdetTE Lark Quinn",
+     -8.124127388000488
+    ],
+    [
+     "TEACH | My | teacher | ODette Lark Quinn",
+     -8.626594543457031
+    ],
+    [
+     "TEACH | My | teacher | O Dette Lark Quinn",
+     -9.898907661437988
+    ]
+   ],
+   "ms_greedy": 71.55,
+   "ms": 158.19,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "teacher",
+      "value": "Odette Lark Quinn"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-068": {
+   "raw": "TEACH | Roslin Abernathy | language | Drellish",
+   "greedy_lp": -0.002697555771106863,
+   "beams": [
+    [
+     "TEACH | Roslin Abernathy | language | Drellish",
+     -0.0026521056424826384
+    ],
+    [
+     "TEACH |Roslin Abernathy | language | Drellish",
+     -6.941686630249023
+    ],
+    [
+     "TEACH | Roslin Abernathy | language_of_work_or_name | Drellish",
+     -7.380168437957764
+    ],
+    [
+     "TEACH | Roslins Abernathy | language | Drellish",
+     -9.193227767944336
+    ]
+   ],
+   "ms_greedy": 75.87,
+   "ms": 207.76,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Roslin Abernathy",
+      "relation": "language",
+      "value": "Drellish",
+      "why": "UNSURE",
+      "margin": 7.377516332315281
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-069": {
+   "raw": "TEACH | my | boss | mellis thorn",
+   "greedy_lp": -0.0015144222874141633,
+   "beams": [
+    [
+     "TEACH | my | boss | mellis thorn",
+     -0.0015190714038908482
+    ],
+    [
+     "TEACH | my | boss | mellis thorns",
+     -7.006474018096924
+    ],
+    [
+     "TEACH | my | boss | melmis thorn",
+     -8.344200134277344
+    ],
+    [
+     "TEACH | my | boss | melmis thorn",
+     -9.34976577758789
+    ]
+   ],
+   "ms_greedy": 59.98,
+   "ms": 136.3,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "boss",
+      "value": "mellis thorn"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-070": {
+   "raw": "TEACH | my | grandmother | Sarella Voss Ash\nTEACH | Sarella Voss Ash | city | Emberford",
+   "greedy_lp": -0.0015411306350401333,
+   "beams": [
+    [
+     "TEACH | my | grandmother | Sarella Voss Ash\nTEACH | Sarella Voss Ash | city | Emberford",
+     -0.0014519933611154556
+    ],
+    [
+     "TEACH | my | granmother | Sarella Voss Ash\nTEACH | Sarella Voss Ash | city | Emberford",
+     -7.25158166885376
+    ],
+    [
+     "TEACH | my | grandmother | Serella Voss Ash\nTEACH | Serella Voss Ash | city | Emberford",
+     -8.511707305908203
+    ],
+    [
+     "TEACH | my | grandmother | Sarella Voss Ash\nTEACH | Serella Voss Ash | city | Emberford",
+     -8.769838333129883
+    ]
+   ],
+   "ms_greedy": 133.71,
+   "ms": 305.87,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "grandmother",
+      "value": "Sarella Voss Ash"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Sarella Voss Ash",
+      "relation": "city",
+      "value": "Emberford"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-071": {
+   "raw": "ASK | Liora | city",
+   "greedy_lp": -0.00010180256014535871,
+   "beams": [],
+   "ms_greedy": 48.34,
+   "ms": 48.38,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Liora",
+      "relation": [
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-072": {
+   "raw": "ASK | Darian | language",
+   "greedy_lp": -0.005848744182770815,
+   "beams": [],
+   "ms_greedy": 44.32,
+   "ms": 44.36,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Darian",
+      "relation": [
+       "language"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-073": {
+   "raw": "ASK | Cressa | boss",
+   "greedy_lp": -0.0002869016039994676,
+   "beams": [],
+   "ms_greedy": 48.19,
+   "ms": 48.23,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Cressa",
+      "relation": [
+       "boss"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-074": {
+   "raw": "ASK | Jovian | place_of_birth",
+   "greedy_lp": -0.00012302111858275566,
+   "beams": [],
+   "ms_greedy": 63.85,
+   "ms": 63.89,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Jovian",
+      "relation": [
+       "place_of_birth"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-075": {
+   "raw": "ASK | Mellis | occupation",
+   "greedy_lp": -0.00011539143860517243,
+   "beams": [],
+   "ms_greedy": 44.25,
+   "ms": 44.29,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Mellis",
+      "relation": [
+       "occupation"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-076": {
+   "raw": "ASK | Ondrej | spouse",
+   "greedy_lp": -0.014975703883685298,
+   "beams": [],
+   "ms_greedy": 51.92,
+   "ms": 51.95,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Ondrej",
+      "relation": [
+       "spouse"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-077": {
+   "raw": "ASK | Sarella | school",
+   "greedy_lp": -0.00027987592525846594,
+   "beams": [],
+   "ms_greedy": 48.23,
+   "ms": 48.27,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Sarella",
+      "relation": [
+       "school"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-078": {
+   "raw": "ASK | Tovik | sister",
+   "greedy_lp": -6.484903678938281e-05,
+   "beams": [],
+   "ms_greedy": 57.35,
+   "ms": 57.39,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Tovik",
+      "relation": [
+       "sister"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-079": {
+   "raw": "ASK | Ondrej | city",
+   "greedy_lp": -0.09848268129564275,
+   "beams": [],
+   "ms_greedy": 60.79,
+   "ms": 60.82,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Ondrej",
+      "relation": [
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-080": {
+   "raw": "ASK | Darian | half_brother",
+   "greedy_lp": -0.00011884893614677594,
+   "beams": [],
+   "ms_greedy": 60.99,
+   "ms": 61.03,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Darian",
+      "relation": [
+       "half_brother"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-081": {
+   "raw": "ASK | Bram | instrument",
+   "greedy_lp": -0.00023123966757765402,
+   "beams": [],
+   "ms_greedy": 49.2,
+   "ms": 49.24,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Bram",
+      "relation": [
+       "instrument"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-082": {
+   "raw": "ASK | Liora | doctor",
+   "greedy_lp": -4.708705290568105e-05,
+   "beams": [],
+   "ms_greedy": 57.0,
+   "ms": 57.04,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Liora",
+      "relation": [
+       "doctor"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-083": {
+   "raw": "ASK | Darian | brother",
+   "greedy_lp": -0.00029657679396422054,
+   "beams": [],
+   "ms_greedy": 72.58,
+   "ms": 72.62,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Darian",
+      "relation": [
+       "brother"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-084": {
+   "raw": "ASK | Cressa | favorite_food",
+   "greedy_lp": -0.0001604473332506018,
+   "beams": [],
+   "ms_greedy": 84.79,
+   "ms": 84.83,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Cressa",
+      "relation": [
+       "favorite_food"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-085": {
+   "raw": "ASK | Sarella | hometown",
+   "greedy_lp": -0.0003027712220102785,
+   "beams": [],
+   "ms_greedy": 76.82,
+   "ms": 76.86,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Sarella",
+      "relation": [
+       "hometown"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-086": {
+   "raw": "ASK | Vespera | employer",
+   "greedy_lp": -8.487551338021149e-05,
+   "beams": [],
+   "ms_greedy": 48.39,
+   "ms": 48.43,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Vespera",
+      "relation": [
+       "employer"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-087": {
+   "raw": "ASK | Jovian | pet",
+   "greedy_lp": -0.0026225012111353863,
+   "beams": [],
+   "ms_greedy": 48.42,
+   "ms": 48.46,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Jovian",
+      "relation": [
+       "pet"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-088": {
+   "raw": "ASK | liora | city",
+   "greedy_lp": -0.011046526727305661,
+   "beams": [],
+   "ms_greedy": 44.34,
+   "ms": 44.38,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "liora",
+      "relation": [
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-089": {
+   "raw": "ASK | darian | language",
+   "greedy_lp": -0.011280644958752362,
+   "beams": [],
+   "ms_greedy": 44.12,
+   "ms": 44.15,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "darian",
+      "relation": [
+       "language"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-090": {
+   "raw": "ASK | Tovik | spouse",
+   "greedy_lp": -0.00011956458111939128,
+   "beams": [],
+   "ms_greedy": 48.11,
+   "ms": 48.14,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Tovik",
+      "relation": [
+       "spouse"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-091": {
+   "raw": "ASK | Xenia | city",
+   "greedy_lp": -0.00011789517088800494,
+   "beams": [],
+   "ms_greedy": 44.37,
+   "ms": 44.4,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Xenia",
+      "relation": [
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-092": {
+   "raw": "ASK | Petra | friend",
+   "greedy_lp": -0.00040716869307289016,
+   "beams": [],
+   "ms_greedy": 63.59,
+   "ms": 63.62,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Petra",
+      "relation": [
+       "friend"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-093": {
+   "raw": "ASK | Cadel | hobby",
+   "greedy_lp": -0.0003902251130156742,
+   "beams": [],
+   "ms_greedy": 73.23,
+   "ms": 73.27,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Cadel",
+      "relation": [
+       "hobby"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-094": {
+   "raw": "ASK | Yorick | wife",
+   "greedy_lp": -0.0036670224480914726,
+   "beams": [],
+   "ms_greedy": 72.02,
+   "ms": 72.15,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Yorick",
+      "relation": [
+       "wife"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-095": {
+   "raw": "ASK | Vespera wrok | work_location",
+   "greedy_lp": -0.7819621797406455,
+   "beams": [],
+   "ms_greedy": 67.47,
+   "ms": 67.6,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Vespera wrok",
+      "relation": [
+       "work_location"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-096": {
+   "raw": "ASK | Darian | sister > city",
+   "greedy_lp": -7.77229994284312e-05,
+   "beams": [],
+   "ms_greedy": 52.04,
+   "ms": 52.08,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Darian",
+      "relation": [
+       "sister",
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-097": {
+   "raw": "ASK | Liora | brother > language",
+   "greedy_lp": -0.001013983805165708,
+   "beams": [],
+   "ms_greedy": 55.69,
+   "ms": 55.73,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Liora",
+      "relation": [
+       "brother",
+       "language"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-098": {
+   "raw": "ASK | Cressa | cousin > city",
+   "greedy_lp": -0.00035698184511545605,
+   "beams": [],
+   "ms_greedy": 56.0,
+   "ms": 56.05,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Cressa",
+      "relation": [
+       "cousin",
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-099": {
+   "raw": "ASK | Jovian | mother > boss",
+   "greedy_lp": -3.6477774152388065e-05,
+   "beams": [],
+   "ms_greedy": 56.27,
+   "ms": 56.31,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Jovian",
+      "relation": [
+       "mother",
+       "boss"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-100": {
+   "raw": "ASK | Tovik | sister > school",
+   "greedy_lp": -9.012046058387568e-05,
+   "beams": [],
+   "ms_greedy": 55.9,
+   "ms": 55.94,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Tovik",
+      "relation": [
+       "sister",
+       "school"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-101": {
+   "raw": "ASK | Sarella | father > place_of_birth",
+   "greedy_lp": -0.00012635793375181947,
+   "beams": [],
+   "ms_greedy": 71.6,
+   "ms": 71.64,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Sarella",
+      "relation": [
+       "father",
+       "place_of_birth"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-102": {
+   "raw": "ASK | Darian | boss > city",
+   "greedy_lp": -8.725979252233174e-05,
+   "beams": [],
+   "ms_greedy": 51.95,
+   "ms": 51.99,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Darian",
+      "relation": [
+       "boss",
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-103": {
+   "raw": "ASK | Cressa | friend > language",
+   "greedy_lp": -0.0008350584497733848,
+   "beams": [],
+   "ms_greedy": 55.91,
+   "ms": 55.95,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Cressa",
+      "relation": [
+       "friend",
+       "language"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-104": {
+   "raw": "ASK | Bram | neighbour > spouse",
+   "greedy_lp": -1.6212398293191654e-05,
+   "beams": [],
+   "ms_greedy": 48.67,
+   "ms": 48.71,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Bram",
+      "relation": [
+       "neighbour",
+       "spouse"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-105": {
+   "raw": "ASK | Vespera | teacher > city",
+   "greedy_lp": -9.262370651441643e-05,
+   "beams": [],
+   "ms_greedy": 56.02,
+   "ms": 56.06,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Vespera",
+      "relation": [
+       "teacher",
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-106": {
+   "raw": "ASK | Ondrej | friend > occupation",
+   "greedy_lp": -9.60810624448527e-05,
+   "beams": [],
+   "ms_greedy": 59.59,
+   "ms": 59.64,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Ondrej",
+      "relation": [
+       "friend",
+       "occupation"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-107": {
+   "raw": "ASK | Sarella | friend > spouse",
+   "greedy_lp": -8.022607669033732e-05,
+   "beams": [],
+   "ms_greedy": 56.26,
+   "ms": 56.31,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Sarella",
+      "relation": [
+       "friend",
+       "spouse"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-108": {
+   "raw": "ASK | darian | sister > city",
+   "greedy_lp": -0.0006768188834342936,
+   "beams": [],
+   "ms_greedy": 51.91,
+   "ms": 51.95,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "darian",
+      "relation": [
+       "sister",
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-109": {
+   "raw": "ASK | Liora | brother > language",
+   "greedy_lp": -0.0007504011825787416,
+   "beams": [],
+   "ms_greedy": 55.89,
+   "ms": 55.94,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Liora",
+      "relation": [
+       "brother",
+       "language"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-110": {
+   "raw": "ASK | jovian | mother > spouse",
+   "greedy_lp": -3.5405015175626886e-05,
+   "beams": [],
+   "ms_greedy": 56.03,
+   "ms": 56.07,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "jovian",
+      "relation": [
+       "mother",
+       "spouse"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-111": {
+   "raw": "NONE",
+   "greedy_lp": -8.463835683869547e-06,
+   "beams": [],
+   "ms_greedy": 28.36,
+   "ms": 28.38,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-112": {
+   "raw": "NONE",
+   "greedy_lp": -6.55649637337774e-06,
+   "beams": [],
+   "ms_greedy": 28.59,
+   "ms": 28.61,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-113": {
+   "raw": "ASK | Cressa | employer",
+   "greedy_lp": -0.026982105814774116,
+   "beams": [],
+   "ms_greedy": 47.98,
+   "ms": 48.01,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Cressa",
+      "relation": [
+       "employer"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-114": {
+   "raw": "TEACH | darian | city | vellmar",
+   "greedy_lp": -0.0038859378967330827,
+   "beams": [
+    [
+     "TEACH | darian | city | vellmar",
+     -0.003882110584527254
+    ],
+    [
+     "TEACH | so darian | city | vellmar",
+     -6.193008899688721
+    ],
+    [
+     "TEACH | so | city | vellmar",
+     -7.1922760009765625
+    ],
+    [
+     "TEACH | darians | city | vellmar",
+     -7.504974842071533
+    ]
+   ],
+   "ms_greedy": 63.76,
+   "ms": 145.51,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "darian",
+      "relation": "city",
+      "value": "vellmar",
+      "why": "UNSURE",
+      "margin": 6.1891267891041934
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-115": {
+   "raw": "TEACH | liora | language | kessic",
+   "greedy_lp": -0.032144876360234775,
+   "beams": [
+    [
+     "TEACH | liora | language | kessic",
+     -0.039460185915231705
+    ],
+    [
+     "TEACH | so liora | language | kessic",
+     -3.9514071941375732
+    ],
+    [
+     "TEACH | so | language | kessic",
+     -4.7208380699157715
+    ],
+    [
+     "TEACH | liora | language_of_work_or_name | kessic",
+     -5.916222095489502
+    ]
+   ],
+   "ms_greedy": 63.98,
+   "ms": 181.01,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "liora",
+      "relation": "language",
+      "value": "kessic",
+      "why": "UNSURE",
+      "margin": 3.9119470082223415
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-116": {
+   "raw": "TEACH | jovian | employer | copperline traders",
+   "greedy_lp": -0.25835193172852655,
+   "beams": [
+    [
+     "TEACH | jovian | employer | copperline traders",
+     -0.287702351808548
+    ],
+    [
+     "TEACH | jovian | employer | copperline traders right",
+     -1.4127088785171509
+    ],
+    [
+     "TEACH | jovian | employer | copperline tradersright",
+     -6.037725925445557
+    ],
+    [
+     "TEACH | vjovian | employer | copperline traders",
+     -8.325460433959961
+    ]
+   ],
+   "ms_greedy": 68.14,
+   "ms": 155.19,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "jovian",
+      "relation": "employer",
+      "value": "copperline traders",
+      "why": "UNSURE",
+      "margin": 1.125006526708603
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-117": {
+   "raw": "NONE",
+   "greedy_lp": -1.9550236515897268e-05,
+   "beams": [],
+   "ms_greedy": 28.53,
+   "ms": 28.55,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-118": {
+   "raw": "NONE",
+   "greedy_lp": -1.0132753679670259e-05,
+   "beams": [],
+   "ms_greedy": 28.7,
+   "ms": 28.71,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-119": {
+   "raw": "TEACH | Sarella | city | Emberford",
+   "greedy_lp": -0.00024877616486662646,
+   "beams": [
+    [
+     "TEACH | Sarella | city | Emberford",
+     -0.00023375742603093386
+    ],
+    [
+     "TEACH | Serella | city | Emberford",
+     -9.315790176391602
+    ],
+    [
+     "TEACH | Sarella | new_location | Emberford",
+     -9.905396461486816
+    ],
+    [
+     "TEACH | Sarella | new_residence | Emberford",
+     -11.249350547790527
+    ]
+   ],
+   "ms_greedy": 67.55,
+   "ms": 163.88,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Sarella",
+      "relation": "city",
+      "value": "Emberford"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-120": {
+   "raw": "NONE",
+   "greedy_lp": -0.01004540637950413,
+   "beams": [],
+   "ms_greedy": 28.5,
+   "ms": 28.51,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-121": {
+   "raw": "TEACH | Darian | employer | Copperline Traders",
+   "greedy_lp": -0.1996103005914165,
+   "beams": [
+    [
+     "TEACH | Darian | employer | Copperline Traders",
+     -0.1983775943517685
+    ],
+    [
+     "TEACH | Darian | position_played_on_team_speciality | Copperline Traders",
+     -3.2003729343414307
+    ],
+    [
+     "TEACH | Darian | starting_position | Copperline Traders",
+     -3.7491917610168457
+    ],
+    [
+     "TEACH | Darian | occupation | trader\nTEACH | Darian | employer | Copperline Traders",
+     -3.7967019081115723
+    ]
+   ],
+   "ms_greedy": 67.55,
+   "ms": 199.84,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Darian",
+      "relation": "employer",
+      "value": "Copperline Traders",
+      "why": "UNSURE",
+      "margin": 3.001995339989662
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-122": {
+   "raw": "NONE",
+   "greedy_lp": -1.0967222323188253e-05,
+   "beams": [],
+   "ms_greedy": 28.84,
+   "ms": 28.86,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-123": {
+   "raw": "NONE",
+   "greedy_lp": -6.794918128605332e-06,
+   "beams": [],
+   "ms_greedy": 28.64,
+   "ms": 28.66,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-124": {
+   "raw": "NONE",
+   "greedy_lp": -1.2636144219868584e-05,
+   "beams": [],
+   "ms_greedy": 36.61,
+   "ms": 36.63,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-125": {
+   "raw": "NONE",
+   "greedy_lp": -1.2159304787928704e-05,
+   "beams": [],
+   "ms_greedy": 37.0,
+   "ms": 37.02,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-126": {
+   "raw": "NONE",
+   "greedy_lp": -1.144405495523415e-05,
+   "beams": [],
+   "ms_greedy": 31.49,
+   "ms": 31.51,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-127": {
+   "raw": "NONE",
+   "greedy_lp": -2.2768881535739638e-05,
+   "beams": [],
+   "ms_greedy": 28.51,
+   "ms": 28.53,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-128": {
+   "raw": "NONE",
+   "greedy_lp": -0.0010862473691233276,
+   "beams": [],
+   "ms_greedy": 28.25,
+   "ms": 28.27,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-129": {
+   "raw": "NONE",
+   "greedy_lp": -8.106204177238396e-06,
+   "beams": [],
+   "ms_greedy": 37.05,
+   "ms": 37.07,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-130": {
+   "raw": "NONE",
+   "greedy_lp": -5.12598967361555e-06,
+   "beams": [],
+   "ms_greedy": 37.35,
+   "ms": 37.36,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-131": {
+   "raw": "NONE",
+   "greedy_lp": -7.748586995148798e-06,
+   "beams": [],
+   "ms_greedy": 34.47,
+   "ms": 34.48,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-132": {
+   "raw": "NONE",
+   "greedy_lp": -5.602823307526705e-06,
+   "beams": [],
+   "ms_greedy": 28.21,
+   "ms": 28.23,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-133": {
+   "raw": "NONE",
+   "greedy_lp": -9.894347357430888e-06,
+   "beams": [],
+   "ms_greedy": 28.43,
+   "ms": 28.45,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-134": {
+   "raw": "NONE",
+   "greedy_lp": -1.6093176327558467e-05,
+   "beams": [],
+   "ms_greedy": 28.38,
+   "ms": 28.39,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-135": {
+   "raw": "NONE",
+   "greedy_lp": -8.106214401948364e-06,
+   "beams": [],
+   "ms_greedy": 28.49,
+   "ms": 28.51,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-136": {
+   "raw": "TEACH | I | city | Caldora",
+   "greedy_lp": -0.00019406668518229253,
+   "beams": [
+    [
+     "TEACH | I | city | Caldora",
+     -0.00017702092009130865
+    ],
+    [
+     "TEACH | Caldora | city | Vellmar",
+     -9.877731323242188
+    ],
+    [
+     "TEACH | I | city | Caldoria",
+     -10.375179290771484
+    ],
+    [
+     "TEACH | I | city | Caldara",
+     -10.625211715698242
+    ]
+   ],
+   "ms_greedy": 59.88,
+   "ms": 152.01,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "city",
+      "value": "Caldora"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-137": {
+   "raw": "TEACH | My | sister | Jessa",
+   "greedy_lp": -2.9921386115461246e-05,
+   "beams": [
+    [
+     "TEACH | My | sister | Jessa",
+     -2.9921387977083214e-05
+    ],
+    [
+     "TEACH |My | sister | Jessa",
+     -11.50003719329834
+    ],
+    [
+     "TEACH | My | sister | Jesse",
+     -12.751148223876953
+    ],
+    [
+     "TEACH | My | sister | Jessa<|im_start|>",
+     -12.851297378540039
+    ]
+   ],
+   "ms_greedy": 65.62,
+   "ms": 146.91,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "sister",
+      "value": "Jessa"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-138": {
+   "raw": "TEACH | Darian | employer | Harbormill Books",
+   "greedy_lp": -0.0011359055593089806,
+   "beams": [
+    [
+     "TEACH | Darian | employer | Harbormill Books",
+     -0.0011443670373409986
+    ],
+    [
+     "TEACH | Darian | employer |Harbormill Books",
+     -8.251126289367676
+    ],
+    [
+     "TEACH | Darian | employer | Harbormil Books",
+     -8.5400390625
+    ],
+    [
+     "TEACH | Darian | employer | HarbORMILL BOOKS",
+     -8.945239067077637
+    ]
+   ],
+   "ms_greedy": 80.4,
+   "ms": 186.83,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Darian",
+      "relation": "employer",
+      "value": "Harbormill Books"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-139": {
+   "raw": "TEACH | my | brother | Cadel",
+   "greedy_lp": -5.5312685582009635e-05,
+   "beams": [
+    [
+     "TEACH | my | brother | Cadel",
+     -6.401481368811801e-05
+    ],
+    [
+     "TEACH | My | brother | Cadel",
+     -11.000055313110352
+    ],
+    [
+     "TEACH | my |brother | Cadel",
+     -11.000086784362793
+    ],
+    [
+     "TEACH | my | brother | Caeldrim",
+     -12.886714935302734
+    ]
+   ],
+   "ms_greedy": 65.56,
+   "ms": 145.23,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "brother",
+      "value": "Cadel"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-140": {
+   "raw": "TEACH | My | dog | Nibbles",
+   "greedy_lp": -0.0002004957350933978,
+   "beams": [
+    [
+     "TEACH | My | dog | Nibbles",
+     -0.00019382123718969524
+    ],
+    [
+     "TEACH | My | dog | Nibblers",
+     -10.250226974487305
+    ],
+    [
+     "TEACH | My | dog | Nibblets",
+     -10.380953788757324
+    ],
+    [
+     "TEACH | My | dog | Nibbits",
+     -10.50019359588623
+    ]
+   ],
+   "ms_greedy": 60.59,
+   "ms": 138.03,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "dog",
+      "value": "Nibbles"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-141": {
+   "raw": "TEACH | My | grandmother | Vespera",
+   "greedy_lp": -9.762883006203538e-05,
+   "beams": [
+    [
+     "TEACH | My | grandmother | Vespera",
+     -9.727115684654564e-05
+    ],
+    [
+     "TEACH | My | grandmother | VesPERA",
+     -10.420194625854492
+    ],
+    [
+     "TEACH | My | grandmother | Vespersa",
+     -11.30836009979248
+    ],
+    [
+     "TEACH | My | grandmother | Vespersha",
+     -11.779650688171387
+    ]
+   ],
+   "ms_greedy": 60.41,
+   "ms": 132.21,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "grandmother",
+      "value": "Vespera"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-142": {
+   "raw": "TEACH | Liora | city | Hasselby",
+   "greedy_lp": -0.00011813302045737828,
+   "beams": [
+    [
+     "TEACH | Liora | city | Hasselby",
+     -0.0001186098379548639
+    ],
+    [
+     "TEACH | Lira | city | Hasselby",
+     -9.506113052368164
+    ],
+    [
+     "TEACH | Liora | city | HasselBY",
+     -12.436650276184082
+    ],
+    [
+     "TEACH | Llora | city | Hasselby",
+     -12.87536907196045
+    ]
+   ],
+   "ms_greedy": 67.83,
+   "ms": 160.37,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Liora",
+      "relation": "city",
+      "value": "Hasselby"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-143": {
+   "raw": "TEACH | I | language | Drellish",
+   "greedy_lp": -0.005587860198481565,
+   "beams": [
+    [
+     "TEACH | I | language | Drellish",
+     -0.0051199086010456085
+    ],
+    [
+     "TEACH | I | language_of_work_or_name | Drellish",
+     -6.007823944091797
+    ],
+    [
+     "TEACH | Drellish | language | Drellish",
+     -6.3182454109191895
+    ],
+    [
+     "TEACH | my | language | Drellish",
+     -8.879369735717773
+    ]
+   ],
+   "ms_greedy": 69.68,
+   "ms": 182.22,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "language",
+      "value": "Drellish",
+      "why": "UNSURE",
+      "margin": 6.002704035490751
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-144": {
+   "raw": "TEACH | Darian | boss | Kessler",
+   "greedy_lp": -0.0002097942865404434,
+   "beams": [
+    [
+     "TEACH | Darian | boss | Kessler",
+     -0.0002071721391985193
+    ],
+    [
+     "TEACH | Dorian | boss | Kessler",
+     -9.594456672668457
+    ],
+    [
+     "TEACH | Doran | boss | Kessler",
+     -10.263662338256836
+    ],
+    [
+     "TEACH | Draan | boss | Kessler",
+     -10.92577075958252
+    ]
+   ],
+   "ms_greedy": 63.96,
+   "ms": 140.65,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Darian",
+      "relation": "boss",
+      "value": "Kessler"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-145": {
+   "raw": "TEACH | I | place_of_birth | Rillwater",
+   "greedy_lp": -0.00013732663113330545,
+   "beams": [
+    [
+     "TEACH | I | place_of_birth | Rillwater",
+     -0.00013768435746897012
+    ],
+    [
+     "TEACH | i | place_of_birth | Rillwater",
+     -10.350861549377441
+    ],
+    [
+     "NONE",
+     -11.375017166137695
+    ],
+    [
+     "TEACH | I | place_of_birth | RILLwater",
+     -11.677064895629883
+    ]
+   ],
+   "ms_greedy": 75.38,
+   "ms": 166.89,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "place_of_birth",
+      "value": "Rillwater"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-146": {
+   "raw": "TEACH | My | favorite_sport | curling",
+   "greedy_lp": -0.00012051852325356549,
+   "beams": [
+    [
+     "TEACH | My | favorite_sport | curling",
+     -0.00011539281695149839
+    ],
+    [
+     "TEACH | my | favorite_sport | curling",
+     -10.375146865844727
+    ],
+    [
+     "TEACH | My | favorite_Sport | curling",
+     -10.375160217285156
+    ],
+    [
+     "TEACH | My | favorite_sport | curling",
+     -11.664874076843262
+    ]
+   ],
+   "ms_greedy": 63.91,
+   "ms": 145.74,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "favorite_sport",
+      "value": "curling"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-147": {
+   "raw": "TEACH | i | city | drennick",
+   "greedy_lp": -0.0013097064230223054,
+   "beams": [
+    [
+     "TEACH | i | city | drennick",
+     -0.001305302488617599
+    ],
+    [
+     "TEACH | i | city | dren nickk",
+     -9.979448318481445
+    ],
+    [
+     "TEACH |i | city | drennick",
+     -10.501300811767578
+    ],
+    [
+     "NONE",
+     -10.875033378601074
+    ]
+   ],
+   "ms_greedy": 60.22,
+   "ms": 161.68,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "i",
+      "relation": "city",
+      "value": "drennick"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-148": {
+   "raw": "TEACH | My | cusin | Cadel",
+   "greedy_lp": -0.34358330307848917,
+   "beams": [],
+   "ms_greedy": 63.75,
+   "ms": 63.79,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261-149": {
+   "raw": "TEACH | Sarella | school | Brookmere College",
+   "greedy_lp": -0.0008244903338763265,
+   "beams": [
+    [
+     "TEACH | Sarella | school | Brookmere College",
+     -0.0008254440617747605
+    ],
+    [
+     "TEACH | Sarella | educated_at | Brookmere College",
+     -8.625810623168945
+    ],
+    [
+     "TEACH | Serella | school | Brookmere College",
+     -8.68228530883789
+    ],
+    [
+     "TEACH | Sarella | school | Brookser College",
+     -9.342977523803711
+    ]
+   ],
+   "ms_greedy": 67.81,
+   "ms": 159.5,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Sarella",
+      "relation": "school",
+      "value": "Brookmere College",
+      "why": "UNSURE",
+      "margin": 8.62498517910717
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261-150": {
+   "raw": "TEACH | We | cat | Soot",
+   "greedy_lp": -0.23710768911015379,
+   "beams": [
+    [
+     "TEACH | We | cat | Soot",
+     -0.2515546381473541
+    ],
+    [
+     "TEACH | Soot | cat | Taffy",
+     -3.126181125640869
+    ],
+    [
+     "TEACH | Our | cat | Soot",
+     -3.187892198562622
+    ],
+    [
+     "TEACH | We | new_cat | Soot",
+     -3.980987548828125
+    ]
+   ],
+   "ms_greedy": 56.12,
+   "ms": 132.43,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "We",
+      "relation": "cat",
+      "value": "Soot",
+      "why": "UNSURE",
+      "margin": 2.874626487493515
+     }
+    ],
+    "guard": []
+   }
+  }
+ }
+}

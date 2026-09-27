@@ -1,0 +1,540 @@
+{
+ "real": {
+  "n_items": 41730,
+  "denominator": 2788153,
+  "grammatical": 1836424,
+  "natural": 1169791,
+  "meaning_errors": 306
+ },
+ "template": {
+  "n_items": 2122,
+  "denominator": 2122,
+  "grammatical": 1331,
+  "natural": 937,
+  "meaning_errors": 2
+ },
+ "render": {
+  "n_items": 142,
+  "denominator": 142,
+  "grammatical": 125,
+  "natural": 73,
+  "meaning_errors": 2
+ },
+ "real_conversation_only": {
+  "n_items": 37382,
+  "denominator": 775909,
+  "grammatical": 732092,
+  "natural": 265277,
+  "meaning_errors": 305
+ },
+ "real_scope_all": {
+  "n_items": 7921,
+  "denominator": 251552,
+  "grammatical": 160577,
+  "natural": 122906,
+  "meaning_errors": 74
+ },
+ "real_scope_conversation": {
+  "n_items": 3981,
+  "denominator": 30315,
+  "grammatical": 26509,
+  "natural": 13363,
+  "meaning_errors": 74
+ },
+ "classes": {
+  "DOUBLE_TERMINAL_PUNCT": {
+   "scope_conv_weight": 15,
+   "conv_weight": 1303,
+   "real_weight": 105827,
+   "real_unique": 366,
+   "templates": 150,
+   "renders": 0,
+   "examples": [
+    [
+     "Saved: United States of America's capital is Washington, D.C..",
+     "Saved: the United States of America's capital is Washington, D.C."
+    ],
+    [
+     "I have United States of America's capital as Washington, D.C.. Do you want me to change it to El Campu?",
+     "I have United States of America's capital as Washington, D.C. Do you want me to change it to El Campu?"
+    ]
+   ]
+  },
+  "MISSING_ARTICLE_THE": {
+   "scope_conv_weight": 6,
+   "conv_weight": 2417,
+   "real_weight": 361898,
+   "real_unique": 532,
+   "templates": 58,
+   "renders": 0,
+   "examples": [
+    [
+     "Saved: United States of America's capital is Washington, D.C..",
+     "Saved: the United States of America's capital is Washington, D.C."
+    ],
+    [
+     "Saved: United Kingdom's capital is London.",
+     "Saved: the United Kingdom's capital is London."
+    ]
+   ]
+  },
+  "DECLINE_SPLICE": {
+   "scope_conv_weight": 1902,
+   "conv_weight": 15210,
+   "real_weight": 16800,
+   "real_unique": 7,
+   "templates": 7,
+   "renders": 1,
+   "examples": [
+    [
+     "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way?",
+     "Sorry, I didn't understand that. Could you say it another way?"
+    ],
+    [
+     "[\"I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way",
+     "Sorry, I didn't understand that. Could you say it another way?"
+    ]
+   ]
+  },
+  "ROBOTIC_DECLINE": {
+   "scope_conv_weight": 1902,
+   "conv_weight": 15216,
+   "real_weight": 16807,
+   "real_unique": 8,
+   "templates": 8,
+   "renders": 1,
+   "examples": [
+    [
+     "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way?",
+     "Sorry, I didn't understand that. Could you say it another way?"
+    ],
+    [
+     "[\"I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way",
+     "Sorry, I didn't understand that. Could you say it another way?"
+    ]
+   ]
+  },
+  "PLURAL_NAME_POSSESSIVE": {
+   "scope_conv_weight": 208,
+   "conv_weight": 794,
+   "real_weight": 68294,
+   "real_unique": 217,
+   "templates": 43,
+   "renders": 1,
+   "examples": [
+    [
+     "Saved: director of The Beatles's officeholder is Brian Epstein.",
+     "Got it: The director of The Beatles is Brian Epstein."
+    ],
+    [
+     "Saved: Netherlands's capital is Alwernia.",
+     "Saved: the Netherlands' capital is Alwernia."
+    ]
+   ]
+  },
+  "BAD_RELATION_PHRASE": {
+   "scope_conv_weight": 1350,
+   "conv_weight": 6516,
+   "real_weight": 312704,
+   "real_unique": 2121,
+   "templates": 411,
+   "renders": 0,
+   "examples": [
+    [
+     "Saved: director of The Beatles's officeholder is Brian Epstein.",
+     "Got it: The director of The Beatles is Brian Epstein."
+    ],
+    [
+     "Saved: director of American Broadcasting Company's officeholder is Bob Iger.",
+     "Got it: The director of American Broadcasting Company is Bob Iger."
+    ]
+   ]
+  },
+  "RAW_RELATION": {
+   "scope_conv_weight": 0,
+   "conv_weight": 15885,
+   "real_weight": 283258,
+   "real_unique": 1821,
+   "templates": 67,
+   "renders": 0,
+   "examples": [
+    [
+     "Saved: association football's country_of_origin is England.",
+     "Saved: association football's country of origin is England."
+    ],
+    [
+     "Saved: basketball's country_of_origin is United States of America.",
+     "Saved: basketball's country of origin is the United States of America."
+    ]
+   ]
+  },
+  "DOUBLE_DASH": {
+   "scope_conv_weight": 216,
+   "conv_weight": 1608,
+   "real_weight": 10821,
+   "real_unique": 3,
+   "templates": 3,
+   "renders": 0,
+   "examples": [
+    [
+     "I didn't understand that. I only know current facts and I can't do 'not' -- could you say it without that part?",
+     "I didn't understand that. I only know current facts and I can't do 'not' \u2014 could you say it without that part?"
+    ],
+    [
+     "I didn't understand that. I only know current facts, not years or 'as of' -- could you say it without that part?",
+     "I didn't understand that. I only know current facts, not years or 'as of' \u2014 could you say it without that part?"
+    ]
+   ]
+  },
+  "RELATION_NOT_VERB": {
+   "scope_conv_weight": 11167,
+   "conv_weight": 450808,
+   "real_weight": 644325,
+   "real_unique": 9479,
+   "templates": 191,
+   "renders": 47,
+   "examples": [
+    [
+     "Saved: Mira's city is Lisbon.",
+     "Got it: Mira lives in Lisbon."
+    ],
+    [
+     "Saved: Bob Iger's country of citizenship is United States of America.",
+     "Saved: Bob Iger's country of citizenship is the United States of America."
+    ]
+   ]
+  },
+  "LOWERCASE_START": {
+   "scope_conv_weight": 673,
+   "conv_weight": 3090,
+   "real_weight": 34555,
+   "real_unique": 358,
+   "templates": 157,
+   "renders": 3,
+   "examples": [
+    [
+     "director of British Broadcasting Corporation's officeholder's country of citizenship's capital is Buxton.",
+     "Director of British Broadcasting Corporation's officeholder's country of citizenship's capital is Buxton."
+    ],
+    [
+     "director of American Broadcasting Company's officeholder's country of citizenship's capital is Charleroi.",
+     "Director of American Broadcasting Company's officeholder's country of citizenship's capital is Charleroi."
+    ]
+   ]
+  },
+  "STACKED_POSSESSIVE": {
+   "scope_conv_weight": 3669,
+   "conv_weight": 22470,
+   "real_weight": 237191,
+   "real_unique": 5275,
+   "templates": 515,
+   "renders": 5,
+   "examples": [
+    [
+     "director of British Broadcasting Corporation's officeholder's country of citizenship's capital is Buxton.",
+     "Director of British Broadcasting Corporation's officeholder's country of citizenship's capital is Buxton."
+    ],
+    [
+     "director of American Broadcasting Company's officeholder's country of citizenship's capital is Charleroi.",
+     "Director of American Broadcasting Company's officeholder's country of citizenship's capital is Charleroi."
+    ]
+   ]
+  },
+  "COLON_LABEL": {
+   "scope_conv_weight": 62,
+   "conv_weight": 3118,
+   "real_weight": 3203,
+   "real_unique": 174,
+   "templates": 25,
+   "renders": 3,
+   "examples": [
+    [
+     "Forgotten: Mira's city.",
+     "Forgotten: Mira's city."
+    ],
+    [
+     "Forgotten: Poland's capital.",
+     "Forgotten: Poland's capital."
+    ]
+   ]
+  },
+  "TEACH_ME_LIKE": {
+   "scope_conv_weight": 124,
+   "conv_weight": 606,
+   "real_weight": 606,
+   "real_unique": 1,
+   "templates": 1,
+   "renders": 1,
+   "examples": [
+    [
+     "Hi! Teach me like \"Tom's boss is Ann.\" Ask me like \"Who is Tom's boss?\"",
+     "Hi! You can teach me facts like \"Tom's boss is Ann.\" and ask \"Who is Tom's boss?\""
+    ]
+   ]
+  },
+  "SPELLING": {
+   "scope_conv_weight": 2,
+   "conv_weight": 235,
+   "real_weight": 22408,
+   "real_unique": 146,
+   "templates": 25,
+   "renders": 0,
+   "examples": [
+    [
+     "Saved: origianl broadcaster of Galavant's officeholder is American Broadcasting Company.",
+     "Got it: The original broadcaster of Galavant is American Broadcasting Company."
+    ],
+    [
+     "Saved: origianl broadcaster of Less Than Perfect's officeholder is American Broadcasting Company.",
+     "Got it: The original broadcaster of Less Than Perfect is American Broadcasting Company."
+    ]
+   ]
+  },
+  "OFF_TOPIC_NO_OPINIONS": {
+   "scope_conv_weight": 72,
+   "conv_weight": 298,
+   "real_weight": 299,
+   "real_unique": 1,
+   "templates": 1,
+   "renders": 1,
+   "examples": [
+    [
+     "I have no opinions.",
+     "I have no opinions."
+    ]
+   ]
+  },
+  "QUESTION_NO_QMARK": {
+   "scope_conv_weight": 160,
+   "conv_weight": 291,
+   "real_weight": 291,
+   "real_unique": 1,
+   "templates": 1,
+   "renders": 1,
+   "examples": [
+    [
+     "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+     "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"?"
+    ]
+   ]
+  },
+  "NUMBER_AGREEMENT": {
+   "scope_conv_weight": 7,
+   "conv_weight": 155,
+   "real_weight": 155,
+   "real_unique": 8,
+   "templates": 6,
+   "renders": 4,
+   "examples": [
+    [
+     "I know 0 facts you taught me. I also hold 0 web row, which I do not believe.",
+     "I know 0 facts you taught me. I also hold no web rows, which I do not believe."
+    ],
+    [
+     "I have 1 facts about 1 people. Ask me about one of them, like 'What do you know about Tom?'",
+     "I have 1 fact about 1 person. Ask me about one of them, like 'What do you know about Tom?'"
+    ]
+   ]
+  },
+  "NO_ARTICLE_JOB": {
+   "scope_conv_weight": 22,
+   "conv_weight": 1172,
+   "real_weight": 1238,
+   "real_unique": 22,
+   "templates": 11,
+   "renders": 2,
+   "examples": [
+    [
+     "Saved: Jon's job is baker.",
+     "Got it: Jon is a baker."
+    ],
+    [
+     "Saved: Tessa's job is teacher.",
+     "Got it: Tessa is a teacher."
+    ]
+   ]
+  },
+  "LOWERCASE_NAME_ECHO": {
+   "scope_conv_weight": 2,
+   "conv_weight": 93,
+   "real_weight": 93,
+   "real_unique": 1,
+   "templates": 1,
+   "renders": 2,
+   "examples": [
+    [
+     "Saved: mira's spouse is bob.",
+     "Saved: Mira's spouse is Bob."
+    ],
+    [
+     "Saved: max's sister is lena.",
+     "Saved: Max's sister is Lena."
+    ]
+   ]
+  },
+  "ANYONE_CALLED_THING": {
+   "scope_conv_weight": 5,
+   "conv_weight": 21,
+   "real_weight": 21,
+   "real_unique": 2,
+   "templates": 0,
+   "renders": 2,
+   "examples": [
+    [
+     "I don't know anyone called Norlandia.",
+     "I don't know anything about Norlandia yet."
+    ],
+    [
+     "I don't know anyone called Romeo.",
+     "I don't know anything about Romeo yet."
+    ]
+   ]
+  },
+  "WRONG_REFERENT_AGE": {
+   "scope_conv_weight": 2,
+   "conv_weight": 7,
+   "real_weight": 7,
+   "real_unique": 1,
+   "templates": 1,
+   "renders": 1,
+   "examples": [
+    [
+     "You never taught me their age, so I do not know it.",
+     "I don't have an age. I'm a program."
+    ]
+   ]
+  },
+  "VALUE_LIST_AGREEMENT": {
+   "scope_conv_weight": 55,
+   "conv_weight": 217,
+   "real_weight": 255,
+   "real_unique": 102,
+   "templates": 5,
+   "renders": 4,
+   "examples": [
+    [
+     "Sefa's language is Veltish and Norric.",
+     "Sefa speaks Veltish and Norric."
+    ],
+    [
+     "Kim's sister is Ana and Bea. Which one do you mean?",
+     "Kim's sister is Ana and Bea. Which one do you mean?"
+    ]
+   ]
+  },
+  "PRETEND_PAREN": {
+   "scope_conv_weight": 0,
+   "conv_weight": 14,
+   "real_weight": 14,
+   "real_unique": 5,
+   "templates": 3,
+   "renders": 2,
+   "examples": [
+    [
+     "Kim's boss is Lee. (I'm treating that as pretend, so I won't save it.)",
+     "Kim's boss is Lee. (Just pretend \u2014 I won't save it.)"
+    ],
+    [
+     "my name. (I'm treating that as pretend, so I won't save it.)",
+     "Your name is Ren. (Just saying it \u2014 I won't save anything.)"
+    ]
+   ]
+  },
+  "WORKED_BACKWARDS_TAG": {
+   "scope_conv_weight": 0,
+   "conv_weight": 8,
+   "real_weight": 8,
+   "real_unique": 3,
+   "templates": 2,
+   "renders": 2,
+   "examples": [
+    [
+     "Ada Wren is the landlord of Tova Renn. (worked out backwards)",
+     "Ada Wren is the landlord of Tova Renn."
+    ],
+    [
+     "Brindle Mill's owner is Sato Venn. (worked out backwards)",
+     "Brindle Mill's owner is Sato Venn."
+    ]
+   ]
+  },
+  "SAY_FRAGMENT": {
+   "scope_conv_weight": 0,
+   "conv_weight": 4,
+   "real_weight": 4,
+   "real_unique": 2,
+   "templates": 2,
+   "renders": 1,
+   "examples": [
+    [
+     "my name. (I'm treating that as pretend, so I won't save it.)",
+     "Your name is Ren. (Just saying it \u2014 I won't save anything.)"
+    ],
+    [
+     "again. (I'm treating that as pretend, so I won't save it.)",
+     "Your name is Ren. (Just saying it \u2014 I won't save anything.)"
+    ]
+   ]
+  },
+  "EMPTY_LIST": {
+   "scope_conv_weight": 0,
+   "conv_weight": 2,
+   "real_weight": 2,
+   "real_unique": 1,
+   "templates": 1,
+   "renders": 1,
+   "examples": [
+    [
+     "I know 0 people: .",
+     "I don't know anyone yet."
+    ]
+   ]
+  },
+  "BARE_NAME_LIST": {
+   "scope_conv_weight": 0,
+   "conv_weight": 0,
+   "real_weight": 0,
+   "real_unique": 0,
+   "templates": 0,
+   "renders": 2,
+   "examples": [
+    [
+     "I know 2 people: Max, Silas.",
+     "I know 2 people: Max and Silas."
+    ],
+    [
+     "I know 3 people: Juniper Lane Books, Max, Silas.",
+     "I know 3 people: Juniper Lane Books, Max and Silas."
+    ]
+   ]
+  },
+  "PLACEHOLDER_LEAK": {
+   "scope_conv_weight": 0,
+   "conv_weight": 0,
+   "real_weight": 0,
+   "real_unique": 0,
+   "templates": 0,
+   "renders": 1,
+   "examples": [
+    [
+     "I forgot: Mira Kest's city is Lima. You asked me to forget it in turn ?. The old row is kept but retired.",
+     "I forgot: Mira Kest lives in Lima. You asked me to forget it. The old row is kept but retired."
+    ]
+   ]
+  },
+  "GARBLED_READBACK": {
+   "scope_conv_weight": 0,
+   "conv_weight": 0,
+   "real_weight": 0,
+   "real_unique": 0,
+   "templates": 0,
+   "renders": 1,
+   "examples": [
+    [
+     "I did not save that: I read it as in 1987's founder is Juniper Lane Books was, but in 1987 does not look like a name.",
+     "I didn't save that. Could you say it like \"Juniper Lane Books's founding year is 1987.\"?"
+    ]
+   ]
+  }
+ }
+}

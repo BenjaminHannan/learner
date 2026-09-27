@@ -1,0 +1,6083 @@
+{
+ "model": "HuggingFaceTB/SmolLM2-360M-Instruct",
+ "seed": 6601,
+ "data": "data/open/bench65/fable_edit_200.jsonl",
+ "n_items": 200,
+ "ft_scope": 60,
+ "ft_cut": true,
+ "ft_steps": 20,
+ "total_wall_s": 1503.7378859519958,
+ "k4_note": "prompts and FT text built only from sentences+question; gold used solely for scoring",
+ "rows": [
+  {
+   "id": "bench65-mquake-001",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Latvia",
+    "LAT",
+    "Latvija",
+    "LVA",
+    "lv",
+    "Latvian Republic",
+    "Latveja",
+    "Latvejas Republika",
+    "Latvijas Republika",
+    "Le\u0163m\u043e\u0304",
+    "Le\u0163m\u043e\u0304 Vab\u0101m\u043e\u0304",
+    "\ud83c\uddf1\ud83c\uddfb",
+    "Republic of Latvia"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Latvia",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "United States of America",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "United States of America",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-002",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Arabic",
+    "ar",
+    "Arabian language",
+    "Arabic language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Spanish",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Spanish",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Spanish",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-003",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Russian",
+    "Russkiy",
+    "Russkiy yazyk",
+    "ru",
+    "Russian language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "AJ Lee speaks the language of Russian.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "English",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Korean",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-004",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Telugu",
+    "te",
+    "Andhra bhasha",
+    "Telugu language",
+    "Telungu",
+    "Tenugu"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "English",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "English",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "English",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-005",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Anne H\u00e9ry-Le Pallec"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Josh Barnett is the current head of the government in the country of citizenship of",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The current head of the government in the country of citizenship of Josh Barnett is",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Josh Barnett is the current head of the government in the country of citizenship of",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-006",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Nankoku"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Nankoku",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Duluth",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Houston",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-007",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Bamberg",
+    "Bamberg, SC",
+    "Bamberg, South Carolina"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "The birthplace of the chairperson of Serbian Progressive Party is in the city of Bel",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The birthplace of the chairperson of Serbian Progressive Party is Bamberg.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "Serbian Progressive Party",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-008",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Stuttgart"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Daimler Motors Corporation was founded in the city of Stuttgart.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Detroit",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "LaCrosse was founded in the city of LaCrosse, Wisconsin.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-009",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Vietnamese",
+    "vie",
+    "vi",
+    "ti\u1ebfng Vi\u1ec7t",
+    "Vietnamese language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Vietnamese",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Vietnamese",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "English",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-010",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "William I of the Netherlands",
+    "King William I of the Netherlands",
+    "King William of the Netherlands",
+    "Prince William of Nassau-Orange-Fulda",
+    "Prince William of Orange",
+    "Prince William of Orange-Nassau",
+    "Prince William V of Orange",
+    "Wilhelm Friedrich",
+    "Willem Frederik Prins van Oranje-Nassau"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Boeing",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Boeing",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "The founder of the company that developed B-47 Stratojet was Boeing",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-011",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Asia",
+    "Asian continent"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Korea",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Kochi is located in the continent of Asia.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "Kevin Federline was founded in the continent of North America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-012",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "St. Marys",
+    "Saint Marys",
+    "Saint Marys, West Virginia",
+    "St. Mary's, West Virginia",
+    "St. Marys, West Virginia",
+    "St. Marys, WV"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "St. Marys",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Warsaw",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-013",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Sweden",
+    "se",
+    "SWE",
+    "Sverige",
+    "SE",
+    "Kingdom of Sweden",
+    "Konungariket Sverige",
+    "\ud83c\uddf8\ud83c\uddea"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Sweden",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Sweden",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "United Kingdom",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-014",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Monroe",
+    "Monroe, LA",
+    "Monroe, Louisiana"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Ovid",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Sulmona",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Rome",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-015",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Chinese",
+    "zh",
+    "Chinese language",
+    "Chinese languages",
+    "\u4e2d\u6587"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Arabic",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Arabic",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Syrian Arabic",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-016",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "North America",
+    "NA",
+    "Turtle Island",
+    "North and Central America"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "India is located in the continent of North America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "India is located in the continent of Asia.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "India is the country in which Rekha holds citizenship.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-017",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "German",
+    "de",
+    "German language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "German",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "German",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "Cold War Kids was originally created in the country of United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-018",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Anne H\u00e9ry-Le Pallec"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Edward Sedgwick is the current head of the government of the country where he",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Trump.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Edward Sedgwick is a citizen of the United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-019",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Spanish",
+    "Espa\u00f1ol",
+    "Castilian",
+    "Castilian language",
+    "es",
+    "Spanish language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "American English",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Spanish",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "Luther Strange is a citizen of United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-020",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Arabic",
+    "ar",
+    "Arabian language",
+    "Arabic language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Arabic",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Arabic",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "Back Stage is spoken in United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-021",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Hungary",
+    "HUN",
+    "\ud83c\udded\ud83c\uddfa",
+    "hu"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "French East India Company was founded by Jean-Baptiste Colbert.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-022",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Andrew G. Vajna",
+    "Andrew George Vajna",
+    "Andy Vajna"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Kokhav Nolad was created in Israel.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Israel",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Kokhav Nolad was founded by the country that created Kokhav N",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-023",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Africa",
+    "African continent",
+    "Ancient Libya"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Africa",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Europe",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Africa",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-024",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Norodom Sihamoni",
+    "Narottama S\u012bhamun\u012b"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "The name of the current leader of the country that Michael Finley is a citizen",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Donald Trump",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "The current leader of United States of America is Donald Trump.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-025",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "United Kingdom",
+    "Britain",
+    "UK",
+    "G. B.",
+    "GBR",
+    "Great Britain",
+    "GB",
+    "G.B.",
+    "United Kingdom of Great Britain and Northern Ireland",
+    "G B",
+    "G B R",
+    "G.B.R.",
+    "\ud83c\uddec\ud83c\udde7",
+    "Great Britain and Northern Ireland",
+    "The UK",
+    "The United Kingdom of Great Britain and Northern Ireland",
+    "U K",
+    "U. K.",
+    "U.K."
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "United Kingdom",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "United Kingdom",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "I Feel Love is a citizen of United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-026",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Arabic",
+    "ar",
+    "Arabian language",
+    "Arabic language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "The official language of the country of citizenship of Lee Petty is American English.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Lee Petty is a citizen of the United States of America. The official language",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Lee Petty's official language of citizenship is English.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-027",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "South America"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "South America",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Japan.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Japan",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-028",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "United Kingdom",
+    "Britain",
+    "UK",
+    "G. B.",
+    "GBR",
+    "Great Britain",
+    "GB",
+    "G.B.",
+    "United Kingdom of Great Britain and Northern Ireland",
+    "G B",
+    "G B R",
+    "G.B.R.",
+    "\ud83c\uddec\ud83c\udde7",
+    "Great Britain and Northern Ireland",
+    "The UK",
+    "The United Kingdom of Great Britain and Northern Ireland",
+    "U K",
+    "U. K.",
+    "U.K."
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "United Kingdom",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "United Kingdom",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "Associated with the sport of baseball in the country of United Kingdom.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-029",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Sebastian Kurz"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "American Psycho was created in the country of United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Sebastian Kurz",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "American Psycho was developed in the country of United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-030",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "sumo"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "American football",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Kenny Britt plays the position of wide receiver in the sport of sumo.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "Sport: American football",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-031",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "English",
+    "en",
+    "eng",
+    "English language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "English",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "English",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "English is the official language of United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-032",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "shinty"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "linebacker",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "linebacker",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Sport of the position played by NaVorro Bowman is the sport",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-033",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Japan",
+    "Iapan",
+    "Iapon",
+    "\ud83c\uddef\ud83c\uddf5",
+    "Jap",
+    "JAP",
+    "JP",
+    "jp",
+    "JA",
+    "JPN",
+    "Ja",
+    "Land of the Rising Sun",
+    "Nippon",
+    "Nihon",
+    "Nihon-koku",
+    "Nippon-koku",
+    "State of Japan"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "United States of America",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Little Busters! was created in the country of Japan.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "United States of America",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-034",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "United States of America",
+    "the States",
+    "the U.S.",
+    "the United States",
+    "the United States of America",
+    "the US",
+    "the USA",
+    "U. S.",
+    "U. S. A.",
+    "U.S.",
+    "U.S.A.",
+    "US of A",
+    "USA",
+    "America",
+    "United States",
+    "US",
+    "the U.S. of A",
+    "the U.S. of America",
+    "the U.S.A.",
+    "the US of A",
+    "the US of America",
+    "U.S. of America",
+    "US of America"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Lady Macbeth is a citizen of the United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "United States of America",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-035",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Oxford",
+    "Oxford, England"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Oxford",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Leiden University",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Hugo Grotius was educated in the city of Leiden.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-036",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "United Kingdom",
+    "Britain",
+    "UK",
+    "G. B.",
+    "GBR",
+    "Great Britain",
+    "GB",
+    "G.B.",
+    "United Kingdom of Great Britain and Northern Ireland",
+    "G B",
+    "G B R",
+    "G.B.R.",
+    "\ud83c\uddec\ud83c\udde7",
+    "Great Britain and Northern Ireland",
+    "The UK",
+    "The United Kingdom of Great Britain and Northern Ireland",
+    "U K",
+    "U. K.",
+    "U.K."
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "United Kingdom",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "United Kingdom",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "Sport associated with Robinson Can\u00f3 was associated with baseball in the country of United",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-037",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Norodom Sihamoni",
+    "Narottama S\u012bhamun\u012b"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "The head of state in the country where David Howard holds citizenship is Donald Trump.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The head of state in the country where David Howard holds citizenship is Donald Trump.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "David Howard is the head of state in United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-038",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "United States of America",
+    "the States",
+    "the U.S.",
+    "the United States",
+    "the United States of America",
+    "the US",
+    "the USA",
+    "U. S.",
+    "U. S. A.",
+    "U.S.",
+    "U.S.A.",
+    "US of A",
+    "USA",
+    "America",
+    "United States",
+    "US",
+    "the U.S. of A",
+    "the U.S. of America",
+    "the U.S.A.",
+    "the US of A",
+    "the US of America",
+    "U.S. of America",
+    "US of America"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "United Kingdom",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "United States of America",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-039",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Luogang Subdistrict"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "The capital of the country whose citizen is Daisuke Sasaki is Tokyo.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The capital of the country whose citizen is Daisuke Sasaki is Tokyo.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-040",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Ant\u00f3nio Costa",
+    "Antonio Costa",
+    "Ant\u00f3nio Santos da Costa",
+    "Ant\u00f3nio Santos da Santos da Costa"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Ken Rolston is a citizen of the United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Ant\u00f3nio Costa",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "Ken Rolston is a citizen of United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-041",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "North America",
+    "NA",
+    "Turtle Island",
+    "North and Central America"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "India",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Upendra is a citizen of India, so India houses the country of citizenship",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Upendra is located in India.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-042",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Oceania",
+    "Pacific Islands"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Oceania",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Asia",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Akiyuki Shinbo is located in Japan.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-043",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Pristina",
+    "capital of Kosovo",
+    "Prishtin\u00eb",
+    "Pri\u0161tina",
+    "Pri\u015ftine",
+    "Pri\u0219tine"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Pristina",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Pristina",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "Busta Rhymes is a citizen of United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-044",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Halimah Yacob",
+    "Halimah binte Yacob",
+    "Halimah binti Yacob"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Tom Shales is a citizen of United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Tom Shales is a citizen of the United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Tom Shales is a citizen of United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-045",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Gustavus Adolphus of Sweden",
+    "Gustav II Adolf",
+    "Gustav Adolf",
+    "Gustav Adolph the Great",
+    "Gustav II Adolf of Sweden",
+    "Gustavus Adolphus",
+    "Gustavus II Adolphus"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Islam was founded by Muhammad.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Islam was founded by Muhammad.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Abd al-Qadir al-Husayni is affiliated with the religion",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-046",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "South America"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Europe",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Europe",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Africa",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-047",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Halimah Yacob",
+    "Halimah binte Yacob",
+    "Halimah binti Yacob"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "John Shadegg is a citizen of United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "John Shadegg is a citizen of the United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "John Shadegg is a citizen of United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-048",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Asia",
+    "Asian continent"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Europe",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "London",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "The continent where BBC Online's headquarters is located is Europe.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-049",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Anne H\u00e9ry-Le Pallec"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Brooks Wackerman is a citizen of the United States of America. The",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Donald Trump",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Brooks Wackerman is a citizen of United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-050",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "baseball",
+    "\u26be",
+    "America's pastime"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Dwyane Wade is linked to the sport of basketball.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Dwyane Wade",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Soccer is linked to the person married to Gabrielle Union.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-051",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Indonesia",
+    "INA",
+    "ID",
+    "id",
+    "IDN",
+    "Republic of Indonesia"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Indonesia",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Indonesia",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "United States of America",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-052",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Reykjav\u00edk",
+    "Reykjavik",
+    "Reykjavikurborg",
+    "Reykjav\u00edkurborg"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Reykjav\u00edk",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "The capital of the country whose citizen is Peter King is Reykjav\u00edk",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-053",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "North America",
+    "NA",
+    "Turtle Island",
+    "North and Central America"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Europe",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "London",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Africa",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-054",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Antarctica",
+    "Antarctic Selection"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Antarctica",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Europe",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Guillaume Dupuytren is a citizen of France.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-055",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Russian Empire",
+    "Russia",
+    "Empire of Russia",
+    "Imperial Russia",
+    "Tsarist Russia"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Russia",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Russian Empire",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-056",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Bengaluru",
+    "BendakaalUru",
+    "Bengaluru",
+    "Namma Bengaluru"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Bengaluru",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "The capital city of the country where Llu\u00eds Companys holds citizenship is Madrid",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Spain",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-057",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Podgorica",
+    "Podgoritsa",
+    "Burguri\u00e7e",
+    "Capital of Montenegro",
+    "Podgoritza",
+    "Titograd"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Podgorica",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Podgorica",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "United Kingdom",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-058",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Sudan",
+    "al-Sudan",
+    "as-Sudan",
+    "as-S\u016bd\u0101n",
+    "North Sudan",
+    "Republic of Sudan",
+    "Republic of the Sudan",
+    "sd",
+    "\ud83c\uddf8\ud83c\udde9",
+    "Soudan",
+    "SUD",
+    "the Sudan"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "Ralph Wiggum is created by Matt Groening.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-059",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "South America"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "South America",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "South America",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "India is located in the continent of Asia.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-060",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "London",
+    "London, United Kingdom",
+    "Greater London",
+    "London, England",
+    "London U.K.",
+    "London UK",
+    "London, UK"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Eddie Mathews is a citizen of the United States of America. The",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "London",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-061",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Hong Kong",
+    "HKG",
+    "HK",
+    "Hongkong",
+    "hk",
+    "\ud83c\udded\ud83c\uddf0",
+    "China Hong Kong",
+    "HKSAR",
+    "Hong Kong SAR",
+    "Hong Kong SAR, China",
+    "Hong Kong Special Administrative Region",
+    "Hong Kong, China",
+    "xiang gang"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "England",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "England",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-062",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Arabic",
+    "ar",
+    "Arabian language",
+    "Arabic language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "American English",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Arabic",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-063",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "United Kingdom",
+    "Britain",
+    "UK",
+    "G. B.",
+    "GBR",
+    "Great Britain",
+    "GB",
+    "G.B.",
+    "United Kingdom of Great Britain and Northern Ireland",
+    "G B",
+    "G B R",
+    "G.B.R.",
+    "\ud83c\uddec\ud83c\udde7",
+    "Great Britain and Northern Ireland",
+    "The UK",
+    "The United Kingdom of Great Britain and Northern Ireland",
+    "U K",
+    "U. K.",
+    "U.K."
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "United States of America",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "United States of America",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-064",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "United Kingdom",
+    "Britain",
+    "UK",
+    "G. B.",
+    "GBR",
+    "Great Britain",
+    "GB",
+    "G.B.",
+    "United Kingdom of Great Britain and Northern Ireland",
+    "G B",
+    "G B R",
+    "G.B.R.",
+    "\ud83c\uddec\ud83c\udde7",
+    "Great Britain and Northern Ireland",
+    "The UK",
+    "The United Kingdom of Great Britain and Northern Ireland",
+    "U K",
+    "U. K.",
+    "U.K."
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "United Kingdom",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "United Kingdom",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-065",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "United Kingdom",
+    "Britain",
+    "UK",
+    "G. B.",
+    "GBR",
+    "Great Britain",
+    "GB",
+    "G.B.",
+    "United Kingdom of Great Britain and Northern Ireland",
+    "G B",
+    "G B R",
+    "G.B.R.",
+    "\ud83c\uddec\ud83c\udde7",
+    "Great Britain and Northern Ireland",
+    "The UK",
+    "The United Kingdom of Great Britain and Northern Ireland",
+    "U K",
+    "U. K.",
+    "U.K."
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "United Kingdom",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "United Kingdom",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-066",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Danilo Medina",
+    "Danilo Medina S\u00e1nchez"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Karen Jarrett is a citizen of the United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Karen Jarrett is a citizen of the United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-067",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Arabic",
+    "ar",
+    "Arabian language",
+    "Arabic language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "The official language of the country of citizenship of James Rowland Angell is American",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "American English",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-068",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Accra"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Accra",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Madrid",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-069",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Great Britain",
+    "UK",
+    "GB",
+    "Kingdom of Great Britain",
+    "UKGB",
+    "United Kingdom of Great Britain"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "The author of The Marriage of Figaro is Pierre Beaumarchais.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The author of The Marriage of Figaro is Pierre Beaumarchais.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-070",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Turkish",
+    "Anatolian Turkish",
+    "Istanbul Turkish",
+    "tr",
+    "Turkish language",
+    "tur",
+    "T\u00fcrk\u00e7e",
+    "Turkish of Turkey"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Japanese",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Japanese",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-071",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Sergio Mattarella"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Inherent Vice",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Inherent Vice",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-072",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "United Kingdom",
+    "Britain",
+    "UK",
+    "G. B.",
+    "GBR",
+    "Great Britain",
+    "GB",
+    "G.B.",
+    "United Kingdom of Great Britain and Northern Ireland",
+    "G B",
+    "G B R",
+    "G.B.R.",
+    "\ud83c\uddec\ud83c\udde7",
+    "Great Britain and Northern Ireland",
+    "The UK",
+    "The United Kingdom of Great Britain and Northern Ireland",
+    "U K",
+    "U. K.",
+    "U.K."
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "United Kingdom",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "United Kingdom",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-073",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Geneva",
+    "Geneve",
+    "Gen\u00e8ve",
+    "Geneva GE",
+    "Genf"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Salvage the answer from the context. The city of Salem is the place",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Salem",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-074",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Paris",
+    "Lutetia",
+    "City of Love",
+    "City of Light"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Paris",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Jerusalem",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-075",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Norodom Sihamoni",
+    "Narottama S\u012bhamun\u012b"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Norodom Sihamoni",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Donald Trump",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-076",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Hong Kong",
+    "HKG",
+    "HK",
+    "Hongkong",
+    "hk",
+    "\ud83c\udded\ud83c\uddf0",
+    "China Hong Kong",
+    "HKSAR",
+    "Hong Kong SAR",
+    "Hong Kong SAR, China",
+    "Hong Kong Special Administrative Region",
+    "Hong Kong, China",
+    "xiang gang"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "UEFA Euro 1976 qualifying is associated with the sport of",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "UEFA Euro 1976 qualifying is associated with the sport of",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-077",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Damascus",
+    "Jasmine city",
+    "Sham city"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "The capital of the country that David Ansen is a citizen of is Washington,",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The capital of the country that David Ansen is a citizen of is Damascus.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-078",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Wilhelmshaven"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Redmond",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Redmond",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-079",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "France",
+    "Republic of France",
+    "R\u00e9publique fran\u00e7aise",
+    "the Hexagon",
+    "La France",
+    "French Republic",
+    "FRA",
+    "fr",
+    "FR"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "George R. R. Martin is the person who created Jon Snow.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-080",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "London",
+    "London, United Kingdom",
+    "Greater London",
+    "London, England",
+    "London U.K.",
+    "London UK",
+    "London, UK"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "The headquarters of the company that produced Fanta is located in Atlanta, Georgia.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The Coca-Cola Company's headquarters is located in Atlanta.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-081",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Belgium",
+    "be",
+    "BE",
+    "\ud83c\udde7\ud83c\uddea",
+    "BEL",
+    "Belgien",
+    "Kingdom of Belgium",
+    "K\u00f6nigreich Belgien",
+    "Koninkrijk Belgi\u00eb",
+    "Royaume de Belgique"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-082",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Arabic",
+    "ar",
+    "Arabian language",
+    "Arabic language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Sweethearts of the Rodeo was created in the country of United",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "The official language of the country where Sweethearts of the Rodeo was",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-083",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Belgrade",
+    "Beograd",
+    "City of Belgrade",
+    "Belgrade, Serbia",
+    "\u0411\u0435\u043e\u0433\u0440\u0430\u0434"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Panoz Auto Development is the capital of the country that created Panoz Auto Development",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Panoz Auto Development is the capital of the country that created Panoz Auto Development",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-084",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Arabic",
+    "ar",
+    "Arabian language",
+    "Arabic language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "The official language spoken in the country of Dale Bumpers's citizenship is American",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The official language spoken in the country of Dale Bumpers's citizenship is American",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-085",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Hong Kong",
+    "HKG",
+    "HK",
+    "Hongkong",
+    "hk",
+    "\ud83c\udded\ud83c\uddf0",
+    "China Hong Kong",
+    "HKSAR",
+    "Hong Kong SAR",
+    "Hong Kong SAR, China",
+    "Hong Kong Special Administrative Region",
+    "Hong Kong, China",
+    "xiang gang"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "England",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "England",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-086",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Coptic Christianity",
+    "Christianity among Copts",
+    "Coptic Christianity"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Johann Sebastian Bach is affiliated with the religion of Lutheranism.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-087",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Arabic",
+    "ar",
+    "Arabian language",
+    "Arabic language"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "American English",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Mike Resnick is a citizen of the United States of America, and the",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-088",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Peter Salovey"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "C. Douglas Dillon holds the chairperson position at the university where C.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Peter Salovey holds the chairperson position at the university where C. Douglas",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-089",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Antarctica",
+    "Antarctic Selection"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Antarctica",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Antarctica",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-090",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Accra"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Accra",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Accra",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-091",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Wayne LaPierre"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Jane Silber",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Jane Silber",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-092",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Al-Waleed bin Talal",
+    "Al Waleed bin Talal Al Saud",
+    "Al-Waleed Bin Talal bin Abdulaziz al Saud",
+    "Alwaleed Bin Talal",
+    "HRH Prince Al-Waleed Bin Talal",
+    "Prince Al-Waleed Bin Talal",
+    "Prince Al-Waleed bin Talal al-Saud"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Al-Waleed bin Talal",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Al-Waleed bin Talal",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-093",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Africa",
+    "African continent",
+    "Ancient Libya"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Africa",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Sweden",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-094",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Marcelo Rebelo de Sousa",
+    "Marcelo de Sousa",
+    "Marcelo Nuno Duarte Rebelo de Sousa"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Big K.R.I.T. is a citizen of the United States",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Big K.R.I.T. is a citizen of Portugal.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-095",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Leo Varadkar",
+    "Leo Eric Varadkar",
+    "\u0932\u093f\u0913 \u0935\u0930\u093e\u0921\u0915\u0930"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Rick Hearst is the current head of the government in the country of citizenship",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Rick Hearst is the current head of the government in the country of citizenship",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-096",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Zhiyi"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Russian Empire",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Russian Empire",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-097",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Vilnius",
+    "Vilnia",
+    "Vilna",
+    "Wilno",
+    "Vilnyus",
+    "Wilna",
+    "Vi\u013c\u0146a",
+    "Viln\u0117",
+    "Vilno"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Vilnius",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "New Delhi",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-098",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Mumbai",
+    "Bombay"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Sylvia Plath",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Sylvia Plath",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-099",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Oceania",
+    "Pacific Islands"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Europe",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Europe",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-mquake-100",
+   "type": "mquake2hop",
+   "expected": "answer",
+   "golds": [
+    "Aleksandar Vu\u010di\u0107",
+    "Aleksandar Vucic",
+    "\u0410\u043b\u0435\u043a\u0441\u0430\u043d\u0434\u0430\u0440 \u0412\u0443\u0447\u0438\u045b"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "James Russell Lowell is a citizen of the United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "James Russell Lowell is a citizen of the United States of America.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f00-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Gilded Mirrors"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Damon Moonrake",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Damon Moonrake",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f00-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Damon Moonrake"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Damon Moonrake",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Damon Moonrake",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f01-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Oaken Melodies"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Oaken Melodies was written by Marisol Underbough.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Oaken Melodies was written by Marisol Underbough.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f01-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Marisol Underbough"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Marisol Underbough",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Marisol Underbough",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f02-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Woven Compasses"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Rosalind Aldercroft",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Rosalind Aldercroft",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f02-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Rosalind Aldercroft"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Rosalind Aldercroft",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Rosalind Aldercroft",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f03-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Silver Feasts"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Dunstan Ashdown",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Dunstan Ashdown",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f03-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Dunstan Ashdown"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Dunstan Ashdown",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Dunstan Ashdown",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f04-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Silver Maps"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Vesper Ironbark",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Vesper Ironbark",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f04-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Vesper Ironbark"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Vesper Ironbark",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Vesper Ironbark",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f05-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Oaken Veils"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Thaddeus Nightingale",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Thaddeus Nightingale",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f05-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Thaddeus Nightingale"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Thaddeus Nightingale",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Thaddeus Nightingale",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f06-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Ninth Looms"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Ulric Driftmere",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Ulric Driftmere",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f06-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Ulric Driftmere"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Ulric Driftmere.",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Ulric Driftmere.",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f07-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Frost Veils"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Greta Marshwick",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Greta Marshwick",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f07-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Greta Marshwick"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Greta Marshwick",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Greta Marshwick",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f08-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Obsidian Candles"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Dunstan Vell",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Dunstan Vell",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f08-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Dunstan Vell"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Dunstan Vell",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Obsidian Candles",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f09-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Lurid Tapestries"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Ulric Gallowglass",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Ulric Gallowglass",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f09-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Ulric Gallowglass"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Ulric Gallowglass",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Lurid Tapestries",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f10-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Silver Sonnets"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Kira Nettlestone",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Kira Nettlestone",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f10-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Kira Nettlestone"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Kira Nettlestone",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Kira Nettlestone",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f11-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Gilded Voyages"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Wren Quill",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Wren Quill",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f11-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Wren Quill"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Gilded Voyages was written by Wren Quill.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Gilded Voyages was written by Wren Quill.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f12-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Crimson Candles"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Isolde Vell",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Isolde Vell",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f12-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Isolde Vell"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Isolde Vell",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Crimson Candles was discovered by Isolde Vell.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f13-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Oaken Echoes"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Ulric Nightingale",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Ulric Nightingale",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f13-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Ulric Nightingale"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Ulric Nightingale",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Oaken Echoes",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f14-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Velvet Wheels"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Nerissa Aldercroft",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Nerissa Aldercroft",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f14-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Nerissa Aldercroft"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Nerissa Aldercroft",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Nerissa Aldercroft",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f15-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Pearl Gardens"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Ulric Vexley",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Ulric Vexley",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f15-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Ulric Vexley"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Ulric Vexley",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Pearl Gardens was composed by Ulric Vexley.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f16-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Jagged Keys"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Jagged Keys is the author of Jagged Keys.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Jagged Keys is the author of Jagged Keys.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f16-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Edmund Pikehall"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Jagged Keys was written by Edmund Pikehall.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Jagged Keys was written by Edmund Pikehall.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f17-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Pearl Bells"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Silas Ironbark",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Silas Ironbark",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f17-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Silas Ironbark"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Silas Ironbark",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Pearl Bells was discovered by Silas Ironbark.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f18-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Pearl Quilts"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Anselm Fairwind",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Anselm Fairwind",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f18-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Anselm Fairwind"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Anselm Fairwind",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Anselm Fairwind",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f19-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Lurid Bridges"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Vesper Grimshaw",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Vesper Grimshaw",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f19-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Vesper Grimshaw"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f20-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Woven Dances"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Woven Dances was composed by Caspian Quill.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Woven Dances was composed by Caspian Quill.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f20-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Caspian Quill"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Woven Dances was composed by Caspian Quill.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Woven Dances was composed by Caspian Quill.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f21-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Jagged Gardens"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Jagged Gardens is the author of Jagged Gardens.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Jagged Gardens is the author of Jagged Gardens.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f21-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Damon Tallowmere"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Jagged Gardens was written by Damon Tallowmere.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Jagged Gardens was written by Damon Tallowmere.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f22-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Hollow Lanterns"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Kellan Driftmere",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Kellan Driftmere",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f22-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Kellan Driftmere"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Hollow Lanterns was discovered by Kellan Driftmere.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Hollow Lanterns",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f23-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Lantern Wheels"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Nolan Blackwood",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Nolan Blackwood",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f23-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Nolan Blackwood"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Nolan Blackwood",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Nolan Blackwood",
+     "verdict": "correct",
+     "exact": true,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f24-fwd",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Hollow Looms"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Casimar Marshwick",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Casimar Marshwick",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-rev-f24-rev",
+   "type": "reversal",
+   "expected": "answer",
+   "golds": [
+    "Casimar Marshwick"
+   ],
+   "arms": {
+    "incontext": {
+     "answer": "Hollow Looms was invented by Casimar Marshwick.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "raglite": {
+     "answer": "Hollow Looms was invented by Casimar Marshwick.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": true
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-00",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Elowen Nettlestone is the apprentice of Anselm Frostmere.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Elowen Nettlestone is the apprentice of Anselm Frostmere.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-01",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Nolan Zanderfield is the herald of Edmund Harrowgate.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Nolan Zanderfield is the herald of Edmund Harrowgate.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-02",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The herald of Magnus Quill is the warden of Kellan Larks",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The herald of Magnus Quill is the warden of Kellan Larks",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-03",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Rosalind Windrow is the keeper of Hester Quill.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Rosalind Windrow is the keeper of Hester Quill.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-04",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Branwen Nettlestone is the keeper of Stellan Yarwood.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Branwen Nettlestone is the keeper of Stellan Yarwood.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-05",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-06",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Gareth Zanderfield is the scout of Gareth Zanderfield.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Gareth Zanderfield is the scout of Gareth Zanderfield.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-07",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-08",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Eira Larkspur",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Eira Larkspur",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-09",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Rowena Kingsfoil is the herald of Jessamine Larkspur.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Rowena Kingsfoil is the herald of Jessamine Larkspur.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-10",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Percival Rookwood is the herald of Vesper Gallowglass.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Percival Rookwood is the herald of Vesper Gallowglass.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-11",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Damon Driftmere is the keeper of Tamora Blackwood.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Damon Driftmere is the keeper of Tamora Blackwood.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-12",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Kira Owlcrest",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Kira Owlcrest",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-13",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Delphine Windrow is the never-taught relation of Damon Ald",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Delphine Windrow is the never-taught relation of Damon Ald",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-14",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Quillan Windrow",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Quillan Windrow",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-15",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Orson Harrowgate is the never-taught relation 15 of",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Orson Harrowgate is the never-taught relation 15 of",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-16",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Briar Nightingale",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Briar Nightingale",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-17",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Yara Nettlestone is the herald of Thaddeus Hawthorne.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Yara Nettlestone is the herald of Thaddeus Hawthorne.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-18",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The herald of Jessamine Inkwell is Jessamine Inkwell.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The herald of Jessamine Inkwell is Jessamine Inkwell.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-19",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Kellan Osgood is the keeper of Ysolde Dunmore.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Kellan Osgood is the keeper of Ysolde Dunmore.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-20",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Kellan Nightingale",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Kellan Nightingale",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-21",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Briar Birchmere is the never-taught relation of Hester",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Briar Birchmere is the never-taught relation of Hester",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-22",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Ulric Cinderhall",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Ulric Cinderhall",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-23",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-absent-24",
+   "type": "abstain_unknown",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Kellan Windrow",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Kellan Windrow",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-00",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The apprentice of Quillan Yarwood is Petra Holloway.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The apprentice of Quillan Yarwood is Petra Holloway.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-01",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The mentor of Thaddeus Underbough is Rosalind Ravenhill",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The mentor of Thaddeus Underbough is Rosalind Ravenhill",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-02",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The never-taught relation of the herald of Kellan Quill is unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The never-taught relation of the herald of Kellan Quill is unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-03",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The warden of Fenella Aldercroft is never taught.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The warden of Fenella Aldercroft is never taught.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-04",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The keeper of Vesper Pikehall is never taught.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The keeper of Vesper Pikehall is never taught.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-05",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Tamora Ashdown is the rival of Linnea Windrow.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Tamora Ashdown is the rival of Linnea Windrow.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-06",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Rowena Stonebridge is the never-taught relation of the scout of Fen",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Rowena Stonebridge is the never-taught relation of the scout of Fen",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-07",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Joren Aldercroft is the envoy of Casimar Rookwood",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Joren Aldercroft is the envoy of Casimar Rookwood",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-08",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Leander Owlcrest is the apprentice of Kira Umberfold.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Leander Owlcrest is the apprentice of Kira Umberfold.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-09",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The mentor of Linnea Inkwell is Orson Rookwood.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The mentor of Linnea Inkwell is Orson Rookwood.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-10",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The never-taught relation of the herald of Orson Dunmore is unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The never-taught relation of the herald of Orson Dunmore is unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-11",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The warden of Leander Kestrelmere is never taught the relation of",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The warden of Leander Kestrelmere is never taught the relation of",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-12",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The never-taught relation of the keeper of Isolde Vexley",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The never-taught relation of the keeper of Isolde Vexley",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-13",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Hester Vell is the rival of Vesper Foxglove.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Hester Vell is the rival of Vesper Foxglove.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-14",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Orson Inkwell is the never-taught relation of the scout of E",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Orson Inkwell is the never-taught relation of the scout of E",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-15",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Ysolde Windrow is the envoy of Briar Kingsfoil.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Ysolde Windrow is the envoy of Briar Kingsfoil.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-16",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Elowen Frostmere is never taught.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Elowen Frostmere is never taught.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-17",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "Kellan Gallowglass is the mentor of Osric Dunmore.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "Kellan Gallowglass is the mentor of Osric Dunmore.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-18",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The never-taught relation of the herald of Hadrian Aldercroft is",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The never-taught relation of the herald of Hadrian Aldercroft is",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-19",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The warden of Rowena Umberfold is never taught.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The warden of Rowena Umberfold is never taught.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-20",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The keeper of Tilda Zanderfield is never taught.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The keeper of Tilda Zanderfield is never taught.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-21",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-22",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The never-taught relation of the scout of Anselm Juniper is",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The never-taught relation of the scout of Anselm Juniper is",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-23",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "The envoy of Ulric Corvane is never taught.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "The envoy of Ulric Corvane is never taught.",
+     "verdict": "wrong",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  },
+  {
+   "id": "bench65-abs-broken-24",
+   "type": "abstain_broken",
+   "expected": "abstain",
+   "golds": [],
+   "arms": {
+    "incontext": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "raglite": {
+     "answer": "unknown",
+     "verdict": "abstain",
+     "exact": false,
+     "contains_gold": false
+    },
+    "finetune": {
+     "answer": "",
+     "verdict": "not-run",
+     "exact": false,
+     "contains_gold": false
+    }
+   }
+  }
+ ],
+ "summary": {
+  "incontext": {
+   "mquake2hop": {
+    "correct": 34,
+    "abstain": 3,
+    "wrong": 63,
+    "contains_gold": 39,
+    "n": 100,
+    "not_run": 0
+   },
+   "reversal": {
+    "correct": 18,
+    "abstain": 1,
+    "wrong": 31,
+    "contains_gold": 28,
+    "n": 50,
+    "not_run": 0
+   },
+   "abstain_unknown": {
+    "correct": 0,
+    "abstain": 3,
+    "wrong": 22,
+    "contains_gold": 0,
+    "n": 25,
+    "not_run": 0
+   },
+   "abstain_broken": {
+    "correct": 0,
+    "abstain": 4,
+    "wrong": 21,
+    "contains_gold": 0,
+    "n": 25,
+    "not_run": 0
+   }
+  },
+  "raglite": {
+   "mquake2hop": {
+    "correct": 26,
+    "abstain": 4,
+    "wrong": 70,
+    "contains_gold": 34,
+    "n": 100,
+    "not_run": 0
+   },
+   "reversal": {
+    "correct": 12,
+    "abstain": 1,
+    "wrong": 37,
+    "contains_gold": 24,
+    "n": 50,
+    "not_run": 0
+   },
+   "abstain_unknown": {
+    "correct": 0,
+    "abstain": 3,
+    "wrong": 22,
+    "contains_gold": 0,
+    "n": 25,
+    "not_run": 0
+   },
+   "abstain_broken": {
+    "correct": 0,
+    "abstain": 4,
+    "wrong": 21,
+    "contains_gold": 0,
+    "n": 25,
+    "not_run": 0
+   }
+  },
+  "finetune": {
+   "mquake2hop": {
+    "correct": 1,
+    "abstain": 8,
+    "wrong": 51,
+    "contains_gold": 4,
+    "n": 60,
+    "not_run": 40
+   },
+   "reversal": {
+    "correct": 0,
+    "abstain": 0,
+    "wrong": 0,
+    "contains_gold": 0,
+    "n": 0,
+    "not_run": 50
+   },
+   "abstain_unknown": {
+    "correct": 0,
+    "abstain": 0,
+    "wrong": 0,
+    "contains_gold": 0,
+    "n": 0,
+    "not_run": 25
+   },
+   "abstain_broken": {
+    "correct": 0,
+    "abstain": 0,
+    "wrong": 0,
+    "contains_gold": 0,
+    "n": 0,
+    "not_run": 25
+   }
+  }
+ }
+}

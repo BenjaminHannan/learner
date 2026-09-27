@@ -1,0 +1,267 @@
+{
+ "ears": {
+  "chain": [
+   "bench73",
+   "fake"
+  ],
+  "ears47_ckpt": null,
+  "tau_hat_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-abstain76-20260921/ltt_summary.json",
+  "tau_family": "tape",
+  "stand_in": "Loop138jEars (loop138i stack + layer C outside-in: 180b silent known-name case match, 193 missing-apostrophe possessives, 164b read-only about-stage, 190b+190 reverse lookup, 154f plain negation, 154g bare-correction replace; 189b repeat + 187 self gate + 188 statement fallback at turn level; 192 Updated replies; 167e label mouth; 154d yes/no tick; 170 index)",
+  "replacement": "real ears: ears47 FrameEars checkpoint (scripts/fable_ears47_model.py) via 'ears47:<ckpt>'"
+ },
+ "notebook": {
+  "class": "FixedIndexedLoopNotebook (scripts/fable_fix220_restartindex.py: IndexedLoopNotebook with _load indexing each event exactly once)",
+  "semantics": "GatedThoughtNotebook (fix77 rule-2 gate) + VerifiedNotebook tail-seal discipline",
+  "stand_in": "none -- this notebook IS the verified piece",
+  "replacement": "none"
+ },
+ "reasoner": {
+  "class": "Reasoner138d reused (148b screen-tag logic over FastReasoner142 + one 159 bridge fallback on untagged non-OK answers)",
+  "module": "scripts/fable_fix77_core.py",
+  "stand_in": "none -- this reasoner IS the verified piece",
+  "replacement": "none"
+ },
+ "mouth": {
+  "stand_in": "Loop138bMouth (Loop138Mouth + 148b screen texts for marked records)",
+  "replacement": "real mouth: scripts/fable_mouth53_mouth.py:Mouth"
+ },
+ "thinker": {
+  "module": "fable_webfix89_thinking",
+  "stand_in": "exp-89 QuarantinedThinking89 when scripts/fable_webfix89_thinking.py exists at run time, else m2 Thinking (quarantine + 2-site trust)",
+  "replacement": "no further replacement; web text stays quarantined"
+ },
+ "sleeper": {
+  "recipe": "HardGate46Sleeper: exp-46 recipe (robust loss eps=0.10, harden phi +/-30, unchanged 4-fold gate), called via scripts/fable_wire51_adapters.py",
+  "install_path": "wire57 SparseVillageSleeper subclass + word bridge (scripts/fable_wire57_e2e.py) once word episodes flow",
+  "stand_in": "recipe armed; episode feed idle until learned-word asks",
+  "replacement": "scripts/fable_wire57_e2e.py install path"
+ },
+ "sleep_threshold": 75,
+ "daemon": {
+  "module": "LoopF1Daemon (scripts/claude_loopf1_agent.py) over Loop292tDaemon with 241b rewriter (render_line) outermost"
+ },
+ "self": {
+  "router": "route127 (frozen novelty-guard router, scripts/fable_self127.py) + classify_self187 paraphrase gate (scripts/fable_loop187_agent.py) on the notebook-missed path",
+  "answerer": "grounded_self_answer (fix168 gate over Self99Agent.answer_self on live loop138g state; facts only from live state, plain replies otherwise)",
+  "rule": "loop138 verbatim (138c OFF): notebook answers win; notebook-missed turns serve the grounded self reply on non-DECLINE, the honest decline + suffix on DECLINE",
+  "rule219": "D8 denial checked against notebook: stored USER name wins ('Yes. Your name is X.'); else byte-identical; never writes",
+  "rule230": "219 'Yes. Your name is X.' keeps 'Yes. ' only when the turn starts with an auxiliary verb; else 'Your name is X.'; never writes",
+  "rule230b": "a 'Yes. Your name is X.' reply to a name check naming a specific name compares it with the stored name (case-insensitive, whole name); different -> 'No. Your name is X.'; never writes",
+  "rule230c": "on a 'Yes. Your name is X.' line: Yes/No only when the asked name was extracted and compared; if the turn holds a possible name that could not be extracted -> 'Your name is X.'; never writes",
+  "rule227": "identity '?' turns with a second-person word + exact sealed-template match get the fixed sheet answer (reply-only, 0 writes); everything else byte-identical to loop138i",
+  "rule227b": "identity-sheet NAME answer is 'My name is Premonition.' (was \"I don't have a name yet.\"); everything else byte-identical to loop227",
+  "rule227c": "after the 227 exact gate misses, the widened 227c matcher serves the sheet (contractions, no '?', fillers, synonyms) plus NAMECHECK and RENAME; reply-only, 0 writes",
+  "rule224": "224 + 224c instance wrappers (scripts/fable_loop224_agent.py, scripts/claude_loop224c_agent.py): the exact glued decline with intent DECLINE becomes one sentence per turn type; Q1 only when confirmed",
+  "rule233": "233 polite negative questions rewritten to the plain question (scripts/claude_loop233_agent.py polite_rewrite)",
+  "rule234": "234 how-are-you turns with 0 writes get the fixed small-talk reply (scripts/claude_loop234_agent.py)",
+  "rule260": "260 (scripts/claude_fix260_openers.py): listed openers/greetings at the start of a turn (at most 2) are dropped when the head gives the rest a non-clarify reply; bare greetings get the head's reply to 'Hello.'; no stored subject may start with a listed opener + comma",
+  "rule266b": "266b multi-word chain-subject lift (scripts/claude_fix266b_detector.py): a ?-turn with a possessive-chain subject over a one- to three-word notebook name is placeholder-probed (dry, write-free; exactly one one-hop ask frame for the placeholder) and served from 'What/Who is <chain>'s R?'; untaught multi-word bases never lift; all other turns pass through byte-identical; never writes",
+  "rule268b": "268 n-hop direction guard (scripts/claude_fix268_nhopdir.py): compose_n_hop frames whose question is backwards-shaped about the start return None so 190/table layers answer; forward unchanged",
+  "rule293": "293 yes/no reader (scripts/claude_fix293_yesno.py YesNo293Mixin, outermost read-only rule over the loop): Does-have / Has-got / Does-live-in / Does-work-at-for / Does-come-from / Was-born-in / Is with multi-word names / Is-of-forms; Yes on match, No only on single-valued keys, else honest IDK; chain subjects pass through; never writes",
+  "rule281": "281 (scripts/claude_fix281_called.py): trailing called/named, 'what do you call X?' and 'name of X?' question turns are read as the plain possessive question; teaches and writes untouched; never writes",
+  "rule280": "280 (scripts/claude_fix280_capab.py): general ability questions and any C24-shaped head reply are answered with the sealed CAN280 text (6 table-backed abilities, 3 dropped); everything else byte-identical to the layer below; never writes",
+  "rule280b": "280b (scripts/claude_fix280b_general.py): question-shaped turns addressing the assistant with an ability cue and no named entity/relation get the sealed CAN280 text (0 writes); 'Can you <specific>?' keeps the lower reply; everything else byte-identical; never writes",
+  "rule282": "282 (scripts/claude_fix282_small.py): whole-turn pure-small-talk greetings and closings that the head mishandles get the head's own canonical reply for their class; mixed turns keep the lower route; never writes",
+  "rule282b": "282b (scripts/claude_fix282b_vocab.py): a whole turn is small talk when every word belongs to the sealed vocabulary, it holds a greeting/thanks/closing word, and it names no stored entity and no relation word; class = the first such word; mishandled turns get the head's own canonical reply for their class; mixed turns keep the lower route; never writes",
+  "rulef1": "F1 (scripts/claude_loopf1_agent.py): 241b render_line imported unchanged from scripts/claude_loop241b_agent.py, run outermost over 292t's turn282b chain (instance install, as 292t's own layers); re-renders reply lines only through stage A + brake v2; fallback keeps the 292t line; never writes"
+ },
+ "sleep": {
+  "retrofit": "Sleep145Reasoner + Sleep145Sleeper via retrofit_sleep145",
+  "recipe": "exp-46 recipe + taught-beats-sleep answer rule (all words)"
+ },
+ "merge138k": {
+  "base": "loop138j (scripts/fable_loop138j_agent.py)",
+  "added": [
+   "228 src guard (scripts/claude_fix228_srcguard.py)",
+   "220 restart index (scripts/fable_fix220_restartindex.py)"
+  ]
+ },
+ "merge138l": {
+  "base": "loop138k (scripts/claude_loop138k_agent.py)",
+  "added": [
+   "209 write screen",
+   "212 self-router statement gate",
+   "216 decline-intent cue gate",
+   "222 a/an of-teach gate (with 215 of-teach rewrite)",
+   "223 cant-do negation-screen bypass",
+   "226 source questions about the last reply"
+  ],
+  "ears_mro": [
+   "Loop138lEars",
+   "WriteScreen209EarsMixin",
+   "Loop223Ears",
+   "Loop138jEars",
+   "Case180bMixin",
+   "Apos193Mixin",
+   "About164bMixin",
+   "Reverse190bMixin",
+   "Reverse190Mixin",
+   "Negate154fEarsMixin",
+   "Replace154gEarsMixin",
+   "Loop222Ears"
+  ],
+  "loop_mro": [
+   "Loop138lAgentLoop",
+   "Source226Mixin",
+   "Loop212AgentLoop",
+   "Loop216AgentLoop",
+   "WriteScreen209LoopMixin",
+   "Loop138jAgentLoop",
+   "Disp180bTickMixin",
+   "About164bTickMixin",
+   "CorrectReply192Mixin",
+   "Negate154fActMixin",
+   "Replace154gActMixin",
+   "Loop138iAgentLoop"
+  ]
+ },
+ "merge138m": {
+  "base": "loop138l (scripts/claude_loop138l_agent.py)",
+  "added": [
+   "219 D8 user-name notebook check",
+   "230 'Yes.' only on yes/no questions",
+   "230b/230c name check compares or fails closed",
+   "227/227b/227c identity sheet (My name is Premonition.)",
+   "224/224c one decline sentence per turn type, honest Q1",
+   "233 polite negative questions rewritten",
+   "234 how-are-you fixed reply"
+  ],
+  "loop_mro": [
+   "Loop138mAgentLoop",
+   "Loop233AgentLoop",
+   "Loop223AgentLoop",
+   "Source226Mixin",
+   "Loop234Mixin",
+   "NameLine230cMixin",
+   "Identity227cMixin",
+   "Loop212AgentLoop",
+   "Loop216AgentLoop",
+   "WriteScreen209LoopMixin",
+   "Loop138jAgentLoop",
+   "Disp180bTickMixin"
+  ],
+  "instance": [
+   "turn224c(turn224(class turn))"
+  ]
+ },
+ "table221_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-table237-20260922/relation_table_v1_1.json",
+ "table229_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-relationtable-20260922/relation_table_v1.json",
+ "merge138n": {
+  "base": "loop138m (scripts/claude_loop138m_agent.py)",
+  "added": [
+   "221 relation-table questions (fable_fix221_tableask)",
+   "237 table v1.1 reader (claude_loop237_agent.TableAsk237Mixin)",
+   "221b stored-relation fallback (claude_loop221b_agent)",
+   "221c question normalisation (claude_loop221c_agent)",
+   "236 first-name resolution (claude_loop236_agent)",
+   "229 table teaches on base-missed statements, table v1 (claude_loop229_agent)",
+   "232c multi-word verb names (claude_loop232c_agent over claude_loop232_agent)"
+  ],
+  "ears_mro": [
+   "Loop138nEars",
+   "QNorm221cMixin",
+   "FirstName138nMixin",
+   "FirstName236Mixin",
+   "StoredRel221bMixin",
+   "TableAsk237Mixin",
+   "TableAsk221Mixin",
+   "TableTeach138nMixin",
+   "TableTeach229Mixin",
+   "Loop138lEars",
+   "WriteScreen209EarsMixin",
+   "...",
+   "ChainOf174Mixin",
+   "Typo165Mixin",
+   "Verb232Mixin",
+   "ValueScreen167bMixin",
+   "..."
+  ],
+  "loop_extra": "Loop232AgentLoop directly above Loop138iAgentLoop; Cap138nMixin (G3) outermost",
+  "glue": [
+   "G1 236 skips 'First <232c particle> Last' candidates",
+   "G2 229 no-save reason for a 232c-valid subject",
+   "G3 capital 'Your' at the start of a reply"
+  ]
+ },
+ "merge138nb": {
+  "base": "loop138n (scripts/claude_loop138n_agent.py)",
+  "added": [
+   "label 190 reverse answers (scripts/claude_fix138nb_label.py Label138nbMixin, outermost reply-text rule over 138n's loop)"
+  ],
+  "loop_extra": "Label138nbMixin outermost over Loop138nAgentLoop"
+ },
+ "fix252": "Correct252EarsMixin outermost on the inner ears + Correct252LoopMixin on the loop (scripts/claude_fix252_correct.py)",
+ "fix252b": "value_ok252 stopword check on non-letter-split pieces (scripts/claude_fix252b_screen.py)",
+ "fix258": "Comment258EarsMixin outermost on the inner ears: trailing commentary clause removed on 252b denial/correction turns (scripts/claude_fix258_comment.py)",
+ "fix259": "Boundary259EarsMixin on top of the 252 ears mixin: denied value ends at a clause boundary (scripts/claude_fix259_boundary.py)",
+ "fix252c": "inner ears: Comment258 > Merge252c > Boundary259 > Correct252; glue: 258's cut point counts as 259's boundary on the 154f route (scripts/claude_fix252c_merge.py)",
+ "exp260": {
+  "base": "loop291 (scripts/claude_loop292_agent.py builds 291 first)",
+  "added": [
+   "266b multi-word chain-subject lift outermost ears stage",
+   "268 question-side direction guard around compose_n_hop",
+   "293 yes/no reader in the 154d slot",
+   "291 glue (scripts/claude_fix291_glue.py: 229 skips opener-led statements; opener-led teach subjects clarify)"
+  ],
+  "instance": [
+   "turn291(turn260(turn224c(turn224(class turn))))"
+  ]
+ },
+ "merge292": {
+  "base": "loop291 (scripts/claude_loop291_agent.py)",
+  "added": [
+   "266b chain-subject lift (outermost ears)",
+   "268 n-hop direction guard (composer rebind)",
+   "293 yes/no reader (outermost loop reader, 154d slot)"
+  ],
+  "loop_mro": [
+   "Correct252_Loop292AgentLoop",
+   "Correct252LoopMixin",
+   "Loop292AgentLoop",
+   "YesNo293Mixin",
+   "Loop138nbAgentLoop",
+   "Label138nbMixin",
+   "Loop138nAgentLoop",
+   "... (291)"
+  ],
+  "instance": [
+   "turn291(turn260(turn224c(turn224(class turn))))"
+  ],
+  "inner_ears": [
+   "Comment258",
+   "Merge252c",
+   "Boundary259",
+   "Correct252",
+   "Loop292Ears/Loop138nbEars + 266b lift",
+   "Loop138nEars(221c > FirstName138n > 221b > 237 > 229 > Loop138lEars(209 > 223 > layer C > 222/215 ...) ...)"
+  ]
+ },
+ "exp292t": {
+  "base": "loop292 (scripts/claude_loop292_agent.py)",
+  "added": [
+   "281 called/named layer",
+   "280 ability table + 280b general-question layer",
+   "282 small-talk + 282b vocabulary layer (all outermost, instance, in order)"
+  ],
+  "instance": [
+   "turn282b(turn282(turn280b(turn280(turn281(turn291(turn260(turn224c(turn224(class turn))))))))"
+  ]
+ },
+ "expf1": {
+  "base": "loop292t (scripts/claude_loop292t_agent.py)",
+  "added": [
+   "241b render_line outermost (unchanged import; instance install because 292t's stack is instance attributes)"
+  ],
+  "instance": [
+   "mouthf1(turn282b(turn282(turn280b(turn280(turn281(turn291(turn260(turn224c(turn224(class turn)))))))))"
+  ]
+ },
+ "state_dir": "artifacts/claude-mut0-20260924/runf1/smoke206/sf1",
+ "sleep145_seed": 1,
+ "sleep138_seed": 1,
+ "sleep131_seed": 1,
+ "sleep130_seed": 1,
+ "sleep115_seed": 1,
+ "sleep104_seed": 1
+}

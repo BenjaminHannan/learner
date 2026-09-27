@@ -1,0 +1,34 @@
+# scp list — Exp 119h BensPC staging (run by the director from the worktree root)
+# PRECONDITION: data/open/reading94b/panel.jsonl sealed by exp 94b AND this
+# exp's PASSMARKS sealed (artifacts/fable-ears119h-20260922/SEAL.sha256.txt).
+# FIRST mirror the 119g PC tree (it already holds every 119g closure file,
+# the panels, the full data/ tree incl. webred train.jsonl, and the 119f
+# checkpoints — nothing below re-sends those):
+#   ssh benspc "xcopy C:\Users\benja\ears119g C:\Users\benja\ears119h\ /E /I /Y"
+# THEN copy only the files that are new since 119g (listed below), plus the
+# bat. The closure is PROVED by a clean-folder test on the Mac: with ONLY
+# the 119g closure files + the 4 new scripts + relations.json + remap.json
+# (+ train.jsonl and the reading94 panel for the runtime check, both already
+# on the PC via the mirror), all 4 wave modules import (CLEAN-IMPORT-OK-4),
+# occ_rows returns 5,000 rows with sha 9909b6d1, and novelty is clean.
+
+# 1. New scripts (119h data/train/score/smoke; 119g model reused by import).
+# Run from: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+scp scripts/fable_ears119h_data.py scripts/fable_ears119h_train.py scripts/fable_ears119h_score.py scripts/fable_ears119h_smoke.py "benspc:C:/Users/benja/ears119h/repo/scripts/"
+
+# 2. Wave batch file to the work dir (staged name wave119h.bat).
+scp scripts/fable_ears119h_wave.bat "benspc:C:/Users/benja/ears119h/wave119h.bat"
+
+# 3. Panels for scoring ONLY (already on the PC via the mirror; verify names).
+# ssh benspc "dir C:\Users\benja\ears119h\panel94b.jsonl & dir C:\Users\benja\ears119h\panel94.jsonl & dir C:\Users\benja\ears119h\repo\panels\cal.json"
+
+# 4. Launch (director only, detached; stop the Qwen llama-server first if it
+# holds VRAM; install nothing; GPU wall-clock plan <= 2400 s, PASSMARKS §5).
+# ssh benspc "powershell -NoProfile -Command \"Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{ CommandLine = 'cmd /c C:\\Users\\benja\\ears119h\\wave119h.bat' } | Out-Null; echo LAUNCHED\""
+
+# 5. Fetch back (training + scores run on BensPC inside the .bat; no step 0).
+scp "benspc:C:/Users/benja/ears119h/report47h.json" "benspc:C:/Users/benja/ears119h/taus119h.json" "benspc:C:/Users/benja/ears119h/wave119h.log" artifacts/fable-ears119h-20260922/
+scp "benspc:C:/Users/benja/ears119h/report119h_94b_K1.json" "benspc:C:/Users/benja/ears119h/report119h_94b_K3.json" "benspc:C:/Users/benja/ears119h/report119h_94_K1.json" "benspc:C:/Users/benja/ears119h/report119h_94_K3.json" artifacts/fable-ears119h-20260922/
+scp "benspc:C:/Users/benja/ears119h/runs/w-11911/meta.json" artifacts/fable-ears119h-20260922/meta-11911.json
+scp "benspc:C:/Users/benja/ears119h/runs/w-11912/meta.json" artifacts/fable-ears119h-20260922/meta-11912.json
+scp "benspc:C:/Users/benja/ears119h/runs/w-11913/meta.json" artifacts/fable-ears119h-20260922/meta-11913.json

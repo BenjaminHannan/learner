@@ -1,0 +1,872 @@
+[
+ {
+  "test": "C9 float artifact: (1.0-0.90)/1.0 really is < 0.10 in binary64",
+  "pass": true,
+  "detail": "r=0.09999999999999998"
+ },
+ {
+  "test": "C9 L_initial=1.0, L_final=0.90 is NOT never_started (ruling C9 verbatim)",
+  "pass": true,
+  "detail": "got 'started_not_yet_learned' want 'started_not_yet_learned'"
+ },
+ {
+  "test": "C9 r exactly on the tolerance boundary (0.10-1e-12) is NOT never_started (strict <)",
+  "pass": true,
+  "detail": "got 'started_not_yet_learned' want 'started_not_yet_learned'"
+ },
+ {
+  "test": "C9 r just INSIDE the tolerance (0.10-1e-13, i.e. below 0.10 but within 1e-12) is NOT never_started",
+  "pass": true,
+  "detail": "got 'started_not_yet_learned' want 'started_not_yet_learned'"
+ },
+ {
+  "test": "C9 r just OUTSIDE the tolerance (0.10-1e-11) IS never_started",
+  "pass": true,
+  "detail": "got 'never_started' want 'never_started'"
+ },
+ {
+  "test": "C9 r exactly 0.10 is NOT never_started",
+  "pass": true,
+  "detail": "got 'started_not_yet_learned' want 'started_not_yet_learned'"
+ },
+ {
+  "test": "C9 r far below (0.01) IS never_started",
+  "pass": true,
+  "detail": "got 'never_started' want 'never_started'"
+ },
+ {
+  "test": "C9 negative improvement (loss rose) IS never_started",
+  "pass": true,
+  "detail": "got 'never_started' want 'never_started'"
+ },
+ {
+  "test": "C9 conjunction: r=0.01 but E_fit_final=0.79 (<0.80) is not never_started",
+  "pass": true,
+  "detail": "got 'started_not_yet_learned' want 'started_not_yet_learned'"
+ },
+ {
+  "test": "C9 conjunction: E_fit_final exactly 0.80 with r=0.01 IS never_started (>= is inclusive)",
+  "pass": true,
+  "detail": "got 'never_started' want 'never_started'"
+ },
+ {
+  "test": "C9 no tolerance elsewhere: E_fit_final=0.25 exactly counts as learned",
+  "pass": true,
+  "detail": "got 'learned_with_generalization' want 'learned_with_generalization'"
+ },
+ {
+  "test": "C9 no tolerance elsewhere: E_fit_final just above 0.25 is not learned",
+  "pass": true,
+  "detail": "got 'started_not_yet_learned' want 'started_not_yet_learned'"
+ },
+ {
+  "test": "C9 query boundary: E_fit=0.25, E_query=0.50 exactly is generalization",
+  "pass": true,
+  "detail": "got 'learned_with_generalization' want 'learned_with_generalization'"
+ },
+ {
+  "test": "C9 query boundary: E_query just above 0.50 fails to transfer",
+  "pass": true,
+  "detail": "got 'learned_and_failed_to_transfer' want 'learned_and_failed_to_transfer'"
+ },
+ {
+  "test": "initially_at_floor at exactly L_initial=1e-8",
+  "pass": true,
+  "detail": "got 'initially_at_floor' want 'initially_at_floor'"
+ },
+ {
+  "test": "initially_at_floor just above 1e-8 falls through to the predicate",
+  "pass": true,
+  "detail": "got 'learned_with_generalization' want 'learned_with_generalization'"
+ },
+ {
+  "test": "initially_at_floor is decided before the fitting-E branches",
+  "pass": true,
+  "detail": "got 'initially_at_floor' want 'initially_at_floor'"
+ },
+ {
+  "test": "zero denominator: L_initial=0.0 is initially_at_floor, never a division",
+  "pass": true,
+  "detail": "got 'initially_at_floor' want 'initially_at_floor'"
+ },
+ {
+  "test": "zero denominator never raises",
+  "pass": true,
+  "detail": "and resolves without any evaluator quantity"
+ },
+ {
+  "test": "numerical_failure status takes precedence over everything",
+  "pass": true,
+  "detail": "got 'numerical_failure' want 'numerical_failure'"
+ },
+ {
+  "test": "infrastructure_incomplete takes precedence",
+  "pass": true,
+  "detail": "got 'infrastructure_incomplete' want 'infrastructure_incomplete'"
+ },
+ {
+  "test": "NaN loss is invalid, never a successful startup",
+  "pass": true,
+  "detail": "got 'invalid_measurement' want 'invalid_measurement'"
+ },
+ {
+  "test": "Inf loss is invalid, never a successful startup",
+  "pass": true,
+  "detail": "got 'invalid_measurement' want 'invalid_measurement'"
+ },
+ {
+  "test": "NaN evaluator E is invalid, never a successful startup",
+  "pass": true,
+  "detail": "got 'invalid_measurement' want 'invalid_measurement'"
+ },
+ {
+  "test": "missing evaluator E is pending (ruling C10 accepts pending in fit output)",
+  "pass": true,
+  "detail": "got 'pending_evaluator_E' want 'pending_evaluator_E'"
+ },
+ {
+  "test": "missing query E alone is still pending",
+  "pass": true,
+  "detail": "got 'pending_evaluator_E' want 'pending_evaluator_E'"
+ },
+ {
+  "test": "missing losses are invalid, not pending",
+  "pass": true,
+  "detail": "got 'invalid_measurement' want 'invalid_measurement'"
+ },
+ {
+  "test": "advance window: median E_32=0.40>=0.15 and median E_512=0.30<=0.50",
+  "pass": true,
+  "detail": "got 'advance' want 'advance'"
+ },
+ {
+  "test": "advance does not escalate to H",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "train worlds are excluded from the gate",
+  "pass": true,
+  "detail": "a train world with E=0 would have dragged the median down"
+ },
+ {
+  "test": "advance boundary: better-arm median E_32 exactly 0.15 holds (>=)",
+  "pass": true,
+  "detail": "got 'advance' want 'advance'"
+ },
+ {
+  "test": "advance boundary: better-arm median E_32 just below 0.15 is inconclusive",
+  "pass": true,
+  "detail": "got 'calibration-inconclusive' want 'calibration-inconclusive'"
+ },
+ {
+  "test": "advance boundary: median E_512 exactly 0.50 holds (<=)",
+  "pass": true,
+  "detail": "got 'advance' want 'advance'"
+ },
+ {
+  "test": "'better arm' is the LOWER median at B=32, so G=0.05 blocks the window",
+  "pass": true,
+  "detail": "got 'G' want 'G'"
+ },
+ {
+  "test": "a low-median arm cannot be rescued by the other arm's high median",
+  "pass": true,
+  "detail": "calibration-inconclusive"
+ },
+ {
+  "test": "too easy triggers on median E_32<=0.05, 12/12 E_32<=0.10, median E_512<=0.05",
+  "pass": true,
+  "detail": "got 'too-easy' want 'too-easy'"
+ },
+ {
+  "test": "too easy NEVER escalates to H (ruling A3 step 2)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "too easy boundary: median E_32 exactly 0.05 triggers (<=)",
+  "pass": true,
+  "detail": "got 'too-easy' want 'too-easy'"
+ },
+ {
+  "test": "too easy: exactly 10/12 cases with E_32<=0.10 still triggers",
+  "pass": true,
+  "detail": "got 'too-easy' want 'too-easy'"
+ },
+ {
+  "test": "too easy: only 9/12 cases with E_32<=0.10 does not trigger",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "too hard: no learned C case in either arm",
+  "pass": true,
+  "detail": "got 'too-hard' want 'too-hard'"
+ },
+ {
+  "test": "too hard at tier L DOES escalate to H (ruling A3 step 2)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "not too hard when exactly one arm has 9/12 learned C cases",
+  "pass": true,
+  "detail": "got 9 want 9"
+ },
+ {
+  "test": "9/12 learned stops the too-hard rule",
+  "pass": true,
+  "detail": "advance"
+ },
+ {
+  "test": "8/12 learned in the best arm is too hard",
+  "pass": true,
+  "detail": "got 'too-hard' want 'too-hard'"
+ },
+ {
+  "test": "learned case: E_512 exactly 25% below E_initial counts (0.30 vs 0.40)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "learned case: only 20% below E_initial does not count (0.32 vs 0.40)",
+  "pass": true,
+  "detail": "E_512=0.32 > 0.75*E_initial=0.30000000000000004"
+ },
+ {
+  "test": "learned case: one ulp above 0.75*E_initial does not count",
+  "pass": true,
+  "detail": "E_512=0.30000000000000016 > 0.75*E_initial=0.30000000000000004"
+ },
+ {
+  "test": "learned case: a failed status is never learned, whatever its E",
+  "pass": true,
+  "detail": "status=numerical_failure"
+ },
+ {
+  "test": "learned case: E_512 exactly 0.50 passes the absolute half",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "learned case: E_512 just above 0.50 fails the absolute half",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "control prerequisite failure is calibration-invalid/startup-or-implementation",
+  "pass": true,
+  "detail": "got 'calibration-invalid/startup-or-implementation' want 'calibration-invalid/startup-or-implementation'"
+ },
+ {
+  "test": "a COMPLETE, FINITE control failure escalates to H (ruling A3 step 2)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "the failing control TYPE is reported (prereg s5 item 1)",
+  "pass": true,
+  "detail": "{'o': 3, 'n': 3}"
+ },
+ {
+  "test": "control prerequisite: exactly 5/6 passing is a PASS",
+  "pass": true,
+  "detail": "got 'advance' want 'advance'"
+ },
+ {
+  "test": "control prerequisite: 4/6 passing is a FAIL",
+  "pass": true,
+  "detail": "got 'calibration-invalid/startup-or-implementation' want 'calibration-invalid/startup-or-implementation'"
+ },
+ {
+  "test": "control boundary: E_512 exactly 0.10 passes (<=)",
+  "pass": true,
+  "detail": "got 'advance' want 'advance'"
+ },
+ {
+  "test": "control boundary: E_512 just above 0.10 fails",
+  "pass": true,
+  "detail": "got 'calibration-invalid/startup-or-implementation' want 'calibration-invalid/startup-or-implementation'"
+ },
+ {
+  "test": "narrow middle region is inconclusive",
+  "pass": true,
+  "detail": "got 'calibration-inconclusive' want 'calibration-inconclusive'"
+ },
+ {
+  "test": "the inconclusive reason names the failing advance condition",
+  "pass": true,
+  "detail": "['better arm G median C E_32=0.08 < 0.15 but the too-easy rule did not trigger: narrow middle region']"
+ },
+ {
+  "test": "inconclusive escalates to H",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "a single failed seed makes the whole tier calibration-invalid",
+  "pass": true,
+  "detail": "got 'calibration-invalid/numerical-failure' want 'calibration-invalid/numerical-failure'"
+ },
+ {
+  "test": "a numerical failure NEVER escalates to H (ruling A3 step 2)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "the failed case keeps its own numerical_failure startup label",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "infrastructure_incomplete is a missing required result",
+  "pass": true,
+  "detail": "got 'calibration-invalid/missing-required-result' want 'calibration-invalid/missing-required-result'"
+ },
+ {
+  "test": "infrastructure_incomplete never escalates",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "a dropped world x seed x arm cell is a missing required result",
+  "pass": true,
+  "detail": "got 'calibration-invalid/missing-required-result' want 'calibration-invalid/missing-required-result'"
+ },
+ {
+  "test": "a missing ARM is a missing required result",
+  "pass": true,
+  "detail": "got 'calibration-invalid/missing-required-result' want 'calibration-invalid/missing-required-result'"
+ },
+ {
+  "test": "the missing arm is named",
+  "pass": true,
+  "detail": "got ['T'] want ['T']"
+ },
+ {
+  "test": "a non-finite E cell is a missing required result",
+  "pass": true,
+  "detail": "got 'calibration-invalid/missing-required-result' want 'calibration-invalid/missing-required-result'"
+ },
+ {
+  "test": "a duplicated world x seed x arm cell is rejected",
+  "pass": true,
+  "detail": "got 'calibration-invalid/missing-required-result' want 'calibration-invalid/missing-required-result'"
+ },
+ {
+  "test": "a schedule/timeout failure is an integrity stop",
+  "pass": true,
+  "detail": "got 'calibration-invalid/integrity-audit' want 'calibration-invalid/integrity-audit'"
+ },
+ {
+  "test": "a timeout never escalates to H",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "invalid accounting is its own stop",
+  "pass": true,
+  "detail": "got 'calibration-invalid/accounting' want 'calibration-invalid/accounting'"
+ },
+ {
+  "test": "invalid accounting never escalates to H",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "a numerical failure outranks the too-easy rule",
+  "pass": true,
+  "detail": "got 'calibration-invalid/numerical-failure' want 'calibration-invalid/numerical-failure'"
+ },
+ {
+  "test": "tier L too-hard with no H table yet is awaiting-tier-H",
+  "pass": true,
+  "detail": "got 'awaiting-tier-H' want 'awaiting-tier-H'"
+ },
+ {
+  "test": "no verdict is final while H is required",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "no tier is adopted while H is pending",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "the explanation forbids an intrinsic-difficulty reading at L",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "L too-hard then H advance adopts H",
+  "pass": true,
+  "detail": "got 'H' want 'H'"
+ },
+ {
+  "test": "the final verdict is H's",
+  "pass": true,
+  "detail": "got 'advance' want 'advance'"
+ },
+ {
+  "test": "the explanation says budget-limited learning at L",
+  "pass": true,
+  "detail": "Tier H is in the advance window; adopt H's per-rung source allowance for every later source arm. Tier L returned 'too-hard', so report budget-limited learning at L."
+ },
+ {
+  "test": "L and H both too hard gives a too-hard final verdict",
+  "pass": true,
+  "detail": "got 'too-hard' want 'too-hard'"
+ },
+ {
+  "test": "no tier is adopted when H also fails",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "the maximum claim is 'not learned under either registered budget'",
+  "pass": true,
+  "detail": "Not learned by these baselines under EITHER registered budget. This is not proof that the toy is intrinsically too hard and not a convergence certificate; falling loss alone supplies none."
+ },
+ {
+  "test": "H never escalates again -- there is no third tier",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "L advance adopts L without running H",
+  "pass": true,
+  "detail": "got 'L' want 'L'"
+ },
+ {
+  "test": "H is not permitted after an L advance",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "running H after an L advance is a protocol violation",
+  "pass": true,
+  "detail": "got 'protocol-violation' want 'protocol-violation'"
+ },
+ {
+  "test": "L too-easy stops with no H",
+  "pass": true,
+  "detail": "got 'too-easy' want 'too-easy'"
+ },
+ {
+  "test": "H is forbidden after a too-easy L",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "running H after a too-easy L is a protocol violation",
+  "pass": true,
+  "detail": "got 'protocol-violation' want 'protocol-violation'"
+ },
+ {
+  "test": "a numerical failure at L forbids H even though the scores look too hard",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "a control failure surviving H is calibration-invalid, not a difficulty result",
+  "pass": true,
+  "detail": "got 'calibration-invalid/startup-or-implementation' want 'calibration-invalid/startup-or-implementation'"
+ },
+ {
+  "test": "an inconclusive result at both tiers remains inconclusive",
+  "pass": true,
+  "detail": "got 'calibration-inconclusive' want 'calibration-inconclusive'"
+ },
+ {
+  "test": "passing an H table as the first tier raises",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "a ct20-v1 table is rejected by the ct20-v1.1 calculator",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "median of an even sample averages the two central values",
+  "pass": true,
+  "detail": "got 2.5 want 2.5"
+ },
+ {
+  "test": "median of an odd sample is the central value",
+  "pass": true,
+  "detail": "got 5.0 want 5.0"
+ },
+ {
+  "test": "median of an empty sample raises instead of inventing a value",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "5% rule passes when both arms count the same work at every rung",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "the 5% rule is applied PER RUNG, so one bad rung fails the whole ledger",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "only the offending rung is marked",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "5% boundary: a relative gap of exactly 0.05 passes (<=)",
+  "pass": true,
+  "detail": "gap=0.05"
+ },
+ {
+  "test": "exceeding the per-rung allowance invalidates the accounting",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "a missing rung for one arm invalidates the accounting",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "a zero-denominator cross-arm comparison is nan, not a silent pass",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "cross_arm_gap needs at least two arms",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "a NaN in the ledger is not a silent pass",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "tier H allowance is 5x tier L per rung (ruling A2)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "tier H allowance is 5x tier L per fit (ruling A2)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R0 the calculator stamps the rulings-2 sha it was written against",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R0 the rulings-2 sha provenance is resolved, not silently dropped",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R0 the unreproducible announced hash is retained as a named historical value",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R0 the overwritten first version is pinned by path and hash",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R1 both clauses required: E_512 exactly 0.50 with a generous initial is learned",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R1 E_512 one ulp above 0.50 is NOT learned (exact, no tolerance)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R1 binary64: 0.75*0.40 is 0.30000000000000004, not 0.30",
+  "pass": true,
+  "detail": "0.30000000000000004"
+ },
+ {
+  "test": "R1 E_512 exactly 0.75*E_initial is learned (inclusive)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R1 the decimal 0.30 is BELOW that threshold, so it is also learned",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R1 E_512 one ulp above 0.75*E_initial is NOT learned",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R1 the absolute clause alone is not enough (E_512=0.60 <= 0.75*100)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R1 the relative clause alone is not enough (0.40 <= 0.50 but > 0.75*0.45)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R1 'add no denominator floor': a tiny E_initial is NOT floored to rescue a case",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R1 a zero initial with a zero final satisfies 0 <= 0.75*0 exactly",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R1 a missing E_initial is not learned, never assumed",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R1 controls are judged on absolute E only: a control that barely improved still passes competence",
+  "pass": true,
+  "detail": "got True want True"
+ },
+ {
+  "test": "R1 the same near-zero improvement WOULD fail the C relative rule, proving the two rules are genuinely separate",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R2 even count is the mean of the two central order statistics",
+  "pass": true,
+  "detail": "got 2.5 want 2.5"
+ },
+ {
+  "test": "R2 odd count is the central value",
+  "pass": true,
+  "detail": "got 2.0 want 2.0"
+ },
+ {
+  "test": "R2 no rounding: the exact binary64 mean is kept",
+  "pass": true,
+  "detail": "got 0.15000000000000002 want 0.15000000000000002"
+ },
+ {
+  "test": "R2 a non-finite case does NOT shorten the denominator; it invalidates",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R2 an empty sequence raises rather than inventing a value",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R2 the complete registered case set is used: 12 equal values median to that value",
+  "pass": true,
+  "detail": "got 0.3 want 0.3"
+ },
+ {
+  "test": "R3 control competence outranks a descriptive too-easy predicate",
+  "pass": true,
+  "detail": "got 'calibration-invalid/startup-or-implementation' want 'calibration-invalid/startup-or-implementation'"
+ },
+ {
+  "test": "R3 the too-easy predicate really was true in that table",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R3 BOTH predicates are printed and precedence is identified",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R3 a control failure at tier L still buys the single budget check",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R3 the same precedence applies identically at tier H",
+  "pass": true,
+  "detail": "got 'calibration-invalid/startup-or-implementation' want 'calibration-invalid/startup-or-implementation'"
+ },
+ {
+  "test": "R3 a control failure at H never buys another tier",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R3 a remaining competence failure at H is the final verdict",
+  "pass": true,
+  "detail": "got 'calibration-invalid/startup-or-implementation' want 'calibration-invalid/startup-or-implementation'"
+ },
+ {
+  "test": "R3 the explanation says the version ends and there is no third tier",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R3 a numerical failure in a TRAIN world invalidates the complete wave",
+  "pass": true,
+  "detail": "got 'calibration-invalid/numerical-failure' want 'calibration-invalid/numerical-failure'"
+ },
+ {
+  "test": "R3 a train-world numerical failure prevents H escalation",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R3 the reason names the outer requirement explicitly",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R3 a missing required TRAIN fit is a missing required result",
+  "pass": true,
+  "detail": "got 'calibration-invalid/missing-required-result' want 'calibration-invalid/missing-required-result'"
+ },
+ {
+  "test": "R3 too-hard at L with an attested complete wave DOES escalate",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R3 an unattested complete wave leaves the descriptive verdict unchanged",
+  "pass": true,
+  "detail": "got 'too-hard' want 'too-hard'"
+ },
+ {
+  "test": "R3 but an UNVERIFIED complete wave blocks the tier-H escalation",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R3 the block is reported, not silent",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R3 an unverified wave yields no scientific verdict at all",
+  "pass": true,
+  "detail": "got 'blocked-incomplete-wave' want 'blocked-incomplete-wave'"
+ },
+ {
+  "test": "R3 and no difficulty statement is offered",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R3 an explicit negative attestation is invalid, not merely unverified",
+  "pass": true,
+  "detail": "got 'calibration-invalid/missing-required-result' want 'calibration-invalid/missing-required-result'"
+ },
+ {
+  "test": "R3 train-world ACCURACY never changes the verdict",
+  "pass": true,
+  "detail": "got 'advance' want 'advance'"
+ },
+ {
+  "test": "R4 the gap is (max-min)/max",
+  "pass": true,
+  "detail": "got 0.05 want 0.05"
+ },
+ {
+  "test": "R4 exactly 0.05 is INSIDE the bound (inclusive)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R4 just over 0.05 is outside the bound",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R4 a nonpositive denominator is invalid, never a silent pass",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R4 a negative maximum is invalid too",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R4 equal cumulative totals do NOT excuse an out-of-balance rung",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R4 the offending rung is named",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R5 an exact tie at B=32 is reported as a tie",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R5 a tie names G before T as a deterministic display ID",
+  "pass": true,
+  "detail": "got 'G' want 'G'"
+ },
+ {
+  "test": "R5 the tie note says the display ID does not drive the gate",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R5 a tie cannot change the numerical gate",
+  "pass": true,
+  "detail": "got True want True"
+ },
+ {
+  "test": "R5 the E_32 clause reads the MIN across arms, not the chosen arm",
+  "pass": true,
+  "detail": "got False want False"
+ },
+ {
+  "test": "R5 min median E_32 exactly 0.15 passes (inclusive)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R5 min median E_512 exactly 0.50 passes (inclusive)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R5 the two clauses may be supplied by different arms",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R5 the better arm at B=32 is G here",
+  "pass": true,
+  "detail": "got 'G' want 'G'"
+ },
+ {
+  "test": "R5 but T is the arm supplying the E_512 clause",
+  "pass": true,
+  "detail": "got ['T'] want ['T']"
+ },
+ {
+  "test": "R5 and that split is reported explicitly",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "R5 a table inside the median window but with no learned cases is too-hard, not advance",
+  "pass": true,
+  "detail": ""
+ }
+]

@@ -1,0 +1,4862 @@
+{
+ "version": "v1",
+ "date": "2026-09-22",
+ "purpose": "One relation table for (a) the hand-written reader (rule table) and (b) training labels for a learned reader. Facts are (X, R, Y) read as \"X's R is Y\".",
+ "template_syntax": {
+  "value_kinds": {
+   "person": "a named individual (people and named pets; 171 NAME_KEYS)",
+   "place": "a place name",
+   "organization": "a company or group",
+   "work": "a title of a work",
+   "date": "month / day / year",
+   "number": "a number",
+   "language": "a language name",
+   "literal": "any short phrase"
+  },
+  "slots": {
+   "X": "subject",
+   "Y": "value",
+   "R": "relation word (canonical or alias)",
+   "WH": "question word from 'wh'"
+  },
+  "alternation": "(a|b)",
+  "optional": "[word]",
+  "where_values": {
+   "live": "handled by some piece in the 138i stack today",
+   "layer_c": "handled by a layer-C piece being merged now (not yet in 138i)",
+   "not_live": "exists in repo code but not in the 138i stack",
+   "NEW": "no code handles it today"
+  },
+  "status_values": {
+   "known": "relation name appears in code or frozen suite/bench data",
+   "NEW": "relation name appears nowhere in code or data"
+  }
+ },
+ "rules": {
+  "taught_facts_win": "Taught facts are never overwritten by inferences; inverse and narrower answers are read-only.",
+  "inverse_never_stored": "Inverse phrasings are answered at question time by scanning live taught facts (like fable_fix190_reverse.py:149 reverse_subjects190), labelled 'worked out backwards', and never written.",
+  "aliases_true_synonyms_only": "An alias must mean exactly the same relation (boss = manager; boss != employer).",
+  "narrower_is_one_way": "A narrower fact (wife) may answer a broader question (spouse), labelled; never the reverse.",
+  "storage_keys_read_all": "Existing code has stored the same relation under several keys. At question time the reader looks under every storage key; if two keys give different current values it reports both and asks, never picks one.",
+  "inverse_storage_keys": "Legacy bench keys whose subject and value are swapped ((Ada, composer_of, Blue Rain) == (Blue Rain, composer, Ada)). Read-only; the table never writes them.",
+  "verb_facts_are_relations": "Ben's standing decision: anything readable as a relation is (e.g. 'X works at Y' -> employer).",
+  "open_vocabulary_fallback": "Relations not in this table still work through the existing possessive path (FakeEars._relation snake-cases any surface). The table adds shapes; it removes nothing.",
+  "self_questions": "Questions about the agent itself ('What is your name?', 'Who made you?', 'How old are you?') stay with the self router (fable_loop138_agent.py:181 route127). The table reader must not claim any turn whose subject slot is 'you'/'your'."
+ },
+ "generic_patterns": {
+  "possessive": {
+   "teach": [
+    {
+     "t": "{X}'s {R} is {Y}.",
+     "where": "live",
+     "src": "scripts/fable_agent_loop.py:96 (_STATEMENT, open-vocabulary 'X's R is Y'; key rule FakeEars._relation :151)"
+    }
+   ],
+   "ask": [
+    {
+     "t": "{WH} is {X}'s {R}?",
+     "where": "live",
+     "src": "scripts/fable_agent_loop.py:94 (_QUESTION who/what/where is X's R [ 's R2 ...])"
+    },
+    {
+     "t": "What's {X}'s {R}?",
+     "where": "NEW",
+     "src": "NEW (contraction; 158 qform only folds some)"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Is {X}'s {R} {Y}?",
+     "where": "live",
+     "src": "scripts/fable_fix154_yesno.py:84 _ISQ_154 / :85 _OF_154"
+    },
+    {
+     "t": "Is {Y} {X}'s {R}?",
+     "where": "live",
+     "src": "scripts/fable_fix154_yesno.py:84 _ISQ_154 / :85 _OF_154"
+    }
+   ]
+  },
+  "my": {
+   "teach": [
+    {
+     "t": "My {R} is {Y}.",
+     "where": "live",
+     "src": "scripts/fable_fix166_me.py (Me166Mixin; X = the user)"
+    }
+   ],
+   "ask": [
+    {
+     "t": "{WH} is my {R}?",
+     "where": "live",
+     "src": "scripts/fable_fix166_me.py:62 _ASK / :71 _SYNONYMS"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Is my {R} {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ]
+  },
+  "of_form": {
+   "teach": [
+    {
+     "t": "The {R} of {X} is {Y}.",
+     "where": "not_live",
+     "src": "scripts/fable_fix155_inverted.py:91-95 _FRAME1/2/3 (not in 138i); bench73 has it only for its own nouns"
+    }
+   ],
+   "ask": [
+    {
+     "t": "{WH} is the {R} of {X}?",
+     "where": "live",
+     "src": "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE (13 relation words only)"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Is {Y} the {R} of {X}?",
+     "where": "live",
+     "src": "scripts/fable_fix154_yesno.py:84 _ISQ_154 / :85 _OF_154"
+    }
+   ]
+  },
+  "inverted": {
+   "teach": [
+    {
+     "t": "{Y} is {X}'s {R}.",
+     "where": "not_live",
+     "src": "scripts/fable_fix155_inverted.py:91-95 _FRAME1/2/3 (not in 138i)"
+    },
+    {
+     "t": "{Y} is the {R} of {X}.",
+     "where": "not_live",
+     "src": "scripts/fable_fix155_inverted.py:91-95 _FRAME1/2/3 (not in 138i); bench73 stores these as inverse _of keys"
+    }
+   ],
+   "ask": [],
+   "yesno": []
+  },
+  "reverse": {
+   "inverse": [
+    {
+     "t": "Whose {R} is {Y}?",
+     "where": "live",
+     "src": "scripts/fable_fix153_reverse.py:75-88 (whose / is-the-R-of frames); widened in scripts/fable_fix190_reverse.py:69 REVERSE_RELATIONS, :103 parse_reverse190 (layer C)",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Who has {Y} as (their|his|her) {R}?",
+     "where": "layer_c",
+     "src": "scripts/fable_fix190_reverse.py:69 REVERSE_RELATIONS, :103 parse_reverse190 (layer C)",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Who is {Y} the {R} of?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ]
+  }
+ },
+ "inventory_exclusions": {
+  "never_taught_rel_*": "bench65 placeholder keys for abstention tests; never a real relation",
+  "cities": "plural surface of city in one rt136 turn; plurals are 162b's job",
+  "friends": "plural surface of friend; plurals are 162b's job",
+  "capitol": "misspelling of capital in one rt143 question (typo layer 165's job)",
+  "tess": "extraction noise: \"what's tess's city?\" (a lowercase name)",
+  "name": "'the name of the city where ...' question filler, not a relation",
+  "head": "'the head of ...' fragment inside a longer office question",
+  "current_head": "fragment of 'the current head of state/government'",
+  "city_where_the_author": "fragment of a relative-clause question (132 rewriter)",
+  "city_where_the_producer": "fragment of a relative-clause question",
+  "company_employing_the_developer": "fragment of a relative-clause question",
+  "country_that_the_founder": "fragment of a relative-clause question",
+  "country_where_the_spouse": "fragment of a relative-clause question",
+  "nation_whose_citizenship_is_held_by_the_wife": "fragment of a relative-clause question",
+  "field": "surface inside 'works in the field of' (template of occupation)",
+  "creator_country": "bench92 cue-only key (EXTRA_REL_CUES) with no taught data"
+ },
+ "relations": [
+  {
+   "name": "mother",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": true,
+   "aliases": [
+    "mom",
+    "mum",
+    "mommy",
+    "mummy",
+    "ma"
+   ],
+   "storage_keys": [
+    "mother"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [
+    {
+     "t": "Who are {Y}'s children?",
+     "where": "NEW",
+     "src": "NEW (collects mother and father facts)",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_agent_loop.py:91 PERSON_RELATIONS",
+    "scripts/fable_fix154_yesno.py:64 SINGLE_VALUED_154",
+    "scripts/fable_fix171_nameval.py:48 NAME_KEYS",
+    "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE",
+    "scripts/fable_fix166_me.py:62 _ASK / :71 _SYNONYMS",
+    "scripts/fable_fix139e_tail.py:57 LISTED_RELATIONS",
+    "scripts/fable_reasoner50.py:76 CORE8"
+   ]
+  },
+  {
+   "name": "father",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": true,
+   "aliases": [
+    "dad",
+    "daddy",
+    "papa",
+    "pa",
+    "pop",
+    "poppa"
+   ],
+   "storage_keys": [
+    "father"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_agent_loop.py:91 PERSON_RELATIONS",
+    "scripts/fable_fix154_yesno.py:64 SINGLE_VALUED_154",
+    "scripts/fable_fix171_nameval.py:48 NAME_KEYS",
+    "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE",
+    "scripts/fable_fix166_me.py:62 _ASK / :71 _SYNONYMS",
+    "scripts/fable_fix139e_tail.py:57 LISTED_RELATIONS"
+   ]
+  },
+  {
+   "name": "parent",
+   "status": "NEW",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "parent"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [
+    "mother",
+    "father"
+   ],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [],
+   "notes": "Question-only in build 1: 'Who are X's parents?' collects mother+father facts."
+  },
+  {
+   "name": "sister",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "sister"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_agent_loop.py:91 PERSON_RELATIONS",
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C",
+    "scripts/fable_fix171_nameval.py:48 NAME_KEYS",
+    "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE"
+   ],
+   "notes": "fable_listening_english.py:236 folds sister/brother into sibling; that is lossy and NOT adopted here."
+  },
+  {
+   "name": "brother",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "brother"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_agent_loop.py:91 PERSON_RELATIONS",
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C",
+    "scripts/fable_fix171_nameval.py:48 NAME_KEYS",
+    "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE"
+   ]
+  },
+  {
+   "name": "sibling",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "sibling"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [
+    "sister",
+    "brother"
+   ],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C",
+    "scripts/fable_fix171_nameval.py:48 NAME_KEYS",
+    "scripts/fable_fix139e_tail.py:57 LISTED_RELATIONS",
+    "scripts/fable_listening_english.py:171 RELATION_MAP (Qwen listening path; not the 138i FakeEars path)"
+   ]
+  },
+  {
+   "name": "spouse",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": true,
+   "aliases": [],
+   "storage_keys": [
+    "spouse"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [
+    "wife",
+    "husband"
+   ],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} is married to {Y}.",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who is {X} married to?",
+     "where": "NEW",
+     "src": "NEW (fable_fix167_verb.py:74-78 declined it: needs wife~spouse)"
+    }
+   ],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154_yesno.py:64 SINGLE_VALUED_154",
+    "scripts/fable_fix171_nameval.py:48 NAME_KEYS",
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_fix139e_tail.py:57 LISTED_RELATIONS"
+   ],
+   "notes": "wife/husband are NARROWER, not aliases: a wife fact answers a spouse question, not the reverse."
+  },
+  {
+   "name": "wife",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": true,
+   "aliases": [],
+   "storage_keys": [
+    "wife"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_agent_loop.py:91 PERSON_RELATIONS",
+    "scripts/fable_fix154_yesno.py:64 SINGLE_VALUED_154",
+    "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE"
+   ]
+  },
+  {
+   "name": "husband",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": true,
+   "aliases": [],
+   "storage_keys": [
+    "husband"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_agent_loop.py:91 PERSON_RELATIONS",
+    "scripts/fable_fix154_yesno.py:64 SINGLE_VALUED_154",
+    "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE"
+   ]
+  },
+  {
+   "name": "partner",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "partner"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_agent_loop.py:91 PERSON_RELATIONS",
+    "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE",
+    "scripts/fable_fix154_yesno.py:89 _WHO_154"
+   ],
+   "notes": "Not an alias of spouse (unmarried partners)."
+  },
+  {
+   "name": "child",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "kid"
+   ],
+   "storage_keys": [
+    "child"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [
+    "son",
+    "daughter"
+   ],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X}'s child is {Y}.",
+     "where": "live",
+     "src": "scripts/fable_bench92_english_arm.py:58 EXTRA_STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C",
+    "scripts/fable_bench92_english_arm.py:58 EXTRA_STATEMENT_PATTERNS",
+    "scripts/fable_fix154_yesno.py:89 _WHO_154"
+   ]
+  },
+  {
+   "name": "son",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "son"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C",
+    "scripts/fable_fix171_nameval.py:48 NAME_KEYS"
+   ]
+  },
+  {
+   "name": "daughter",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "daughter"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C",
+    "scripts/fable_fix171_nameval.py:48 NAME_KEYS"
+   ]
+  },
+  {
+   "name": "grandchild",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "grand child"
+   ],
+   "storage_keys": [
+    "grandchild"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [
+    "grandson",
+    "granddaughter"
+   ],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C"
+   ]
+  },
+  {
+   "name": "grandson",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "grand son"
+   ],
+   "storage_keys": [
+    "grandson"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C"
+   ]
+  },
+  {
+   "name": "granddaughter",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "grand daughter"
+   ],
+   "storage_keys": [
+    "granddaughter"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C"
+   ]
+  },
+  {
+   "name": "grandmother",
+   "status": "NEW",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "grandma",
+    "granny"
+   ],
+   "storage_keys": [
+    "grandmother"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": []
+  },
+  {
+   "name": "grandfather",
+   "status": "NEW",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "grandpa"
+   ],
+   "storage_keys": [
+    "grandfather"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": []
+  },
+  {
+   "name": "cousin",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "cousin"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C"
+   ]
+  },
+  {
+   "name": "aunt",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "aunt"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C"
+   ]
+  },
+  {
+   "name": "uncle",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "uncle"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C"
+   ]
+  },
+  {
+   "name": "friend",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "friend"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_agent_loop.py:91 PERSON_RELATIONS",
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C",
+    "scripts/fable_fix171_nameval.py:48 NAME_KEYS",
+    "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE",
+    "scripts/fable_listening_english.py:171 RELATION_MAP (Qwen listening path; not the 138i FakeEars path)"
+   ]
+  },
+  {
+   "name": "best_friend",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "best friend"
+   ],
+   "storage_keys": [
+    "best_friend"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_reasoner50.py:76 CORE8"
+   ],
+   "notes": "fable_listening_english.py:235 folds 'best friend' into friend (lossy); kept separate here."
+  },
+  {
+   "name": "neighbour",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "neighbor"
+   ],
+   "storage_keys": [
+    "neighbour"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_agent_loop.py:91 PERSON_RELATIONS",
+    "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE",
+    "scripts/fable_reasoner50.py:76 CORE8"
+   ]
+  },
+  {
+   "name": "boss",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": true,
+   "aliases": [
+    "manager"
+   ],
+   "storage_keys": [
+    "boss"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [
+    {
+     "t": "Who does {Y} manage?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_agent_loop.py:91 PERSON_RELATIONS",
+    "scripts/fable_fix154_yesno.py:64 SINGLE_VALUED_154",
+    "scripts/fable_fix171_nameval.py:48 NAME_KEYS",
+    "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE",
+    "scripts/fable_reasoner50.py:76 CORE8"
+   ],
+   "notes": "manager = boss (true synonym for a person's line manager). boss != employer: an employer is usually a company. 'Sam is the boss of Kim.' -> (Kim, boss, Sam); today it is not understood."
+  },
+  {
+   "name": "colleague",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "coworker",
+    "co-worker",
+    "co worker"
+   ],
+   "storage_keys": [
+    "colleague",
+    "co_worker",
+    "co-worker",
+    "coworker"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C",
+    "scripts/fable_fix171_nameval.py:48 NAME_KEYS"
+   ]
+  },
+  {
+   "name": "teacher",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": true,
+   "aliases": [],
+   "storage_keys": [
+    "teacher"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{Y} teaches {X}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who teaches {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [
+    {
+     "t": "Who does {Y} teach?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_agent_loop.py:91 PERSON_RELATIONS",
+    "scripts/fable_fix154_yesno.py:64 SINGLE_VALUED_154",
+    "scripts/fable_fix171_nameval.py:48 NAME_KEYS",
+    "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE",
+    "scripts/fable_reasoner50.py:76 CORE8"
+   ]
+  },
+  {
+   "name": "coach",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "coach"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix139e_tail.py:57 LISTED_RELATIONS",
+    "scripts/fable_fix190_reverse.py:69 REVERSE_RELATIONS, :103 parse_reverse190 (layer C)"
+   ],
+   "notes": "A person's coach. The office 'head coach of <team>' is head_coach."
+  },
+  {
+   "name": "doctor",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "doctor"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_reasoner50.py:76 CORE8"
+   ]
+  },
+  {
+   "name": "mentor",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "mentor"
+   ],
+   "inverse_storage_keys": [
+    "mentor_of"
+   ],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_bench73_english_arm.py:131 REV_OF_NOUNS / :139 REV_BY_VERBS"
+   ],
+   "notes": "bench65 teaches 'X is the mentor of Y.' as (X, mentor_of, Y) = (Y, mentor, X)."
+  },
+  {
+   "name": "apprentice",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "apprentice"
+   ],
+   "inverse_storage_keys": [
+    "apprentice_of"
+   ],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_bench73_english_arm.py:131 REV_OF_NOUNS / :139 REV_BY_VERBS"
+   ]
+  },
+  {
+   "name": "rival",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "rival"
+   ],
+   "inverse_storage_keys": [
+    "rival_of"
+   ],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_bench73_english_arm.py:131 REV_OF_NOUNS / :139 REV_BY_VERBS"
+   ],
+   "notes": "Symmetric in English, but stored one way; build 1 reads both directions only via inverse_storage_keys."
+  },
+  {
+   "name": "envoy",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "envoy"
+   ],
+   "inverse_storage_keys": [
+    "envoy_of"
+   ],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "herald",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "herald"
+   ],
+   "inverse_storage_keys": [
+    "herald_of"
+   ],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "keeper",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "keeper"
+   ],
+   "inverse_storage_keys": [
+    "keeper_of"
+   ],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "scout",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "scout"
+   ],
+   "inverse_storage_keys": [
+    "scout_of"
+   ],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "warden",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "warden"
+   ],
+   "inverse_storage_keys": [
+    "warden_of"
+   ],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "owner",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "owner"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [
+    {
+     "t": "What does {Y} own?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "sessions152 (\"Biscuit's owner is Ana.\")"
+   ]
+  },
+  {
+   "name": "pet",
+   "status": "known",
+   "value_kind": "literal",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "pet"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [
+    "dog",
+    "cat"
+   ],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What",
+    "Who"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C",
+    "scripts/fable_fix139e_tail.py:57 LISTED_RELATIONS",
+    "scripts/fable_notebook_contract.py:480"
+   ]
+  },
+  {
+   "name": "dog",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "dog"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C",
+    "scripts/fable_fix171_nameval.py:48 NAME_KEYS",
+    "scripts/fable_fix139e_tail.py:57 LISTED_RELATIONS"
+   ]
+  },
+  {
+   "name": "cat",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "cat"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C",
+    "scripts/fable_fix171_nameval.py:48 NAME_KEYS"
+   ]
+  },
+  {
+   "name": "employer",
+   "status": "known",
+   "value_kind": "organization",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "employer"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} works for {Y}.",
+     "where": "live",
+     "src": "scripts/fable_fix167_verb.py:63 VERB_STATEMENTS / :70 VERB_QUESTIONS"
+    },
+    {
+     "t": "{X} works at {Y}.",
+     "where": "live",
+     "src": "scripts/fable_fix167d_verb.py:67 VERB_STATEMENTS_167D / :72 VERB_QUESTIONS_167D"
+    },
+    {
+     "t": "{X} is employed by {Y}.",
+     "where": "live",
+     "src": "scripts/fable_bench92_english_arm.py:58 EXTRA_STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who does {X} work for?",
+     "where": "live",
+     "src": "scripts/fable_fix167_verb.py:63 VERB_STATEMENTS / :70 VERB_QUESTIONS"
+    },
+    {
+     "t": "Where does {X} work?",
+     "where": "live",
+     "src": "scripts/fable_fix167d_verb.py:67 VERB_STATEMENTS_167D / :72 VERB_QUESTIONS_167D"
+    },
+    {
+     "t": "Who employs {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [
+    {
+     "t": "Who works (at|for) {Y}?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Who does {Y} employ?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_fix167_verb.py:63 VERB_STATEMENTS / :70 VERB_QUESTIONS",
+    "scripts/fable_fix167d_verb.py:67 VERB_STATEMENTS_167D / :72 VERB_QUESTIONS_167D",
+    "scripts/fable_bench92_english_arm.py:58 EXTRA_STATEMENT_PATTERNS",
+    "scripts/fable_bench92_english_arm.py:72 EXTRA_REL_CUES",
+    "scripts/fable_listening_english.py:171 RELATION_MAP (Qwen listening path; not the 138i FakeEars path)"
+   ],
+   "value_guard": "When Y is a known PERSON, 'X works for Y' means boss, not employer (NEW rule, build 2 only; build 1 never writes).",
+   "notes": "Ben's rule: verb facts become relations. 'Sabine works at Acme.' -> (Sabine, employer, Acme). No separate 'workplace' relation in v1: code stores employer for both 'works at' and 'works for'."
+  },
+  {
+   "name": "occupation",
+   "status": "known",
+   "value_kind": "literal",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "job",
+    "profession"
+   ],
+   "storage_keys": [
+    "occupation"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} works in the field of {Y}.",
+     "where": "live",
+     "src": "scripts/fable_bench92_english_arm.py:58 EXTRA_STATEMENT_PATTERNS"
+    },
+    {
+     "t": "{X} works as (a|an) {Y}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "What does {X} do for (a living|work)?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench92_english_arm.py:58 EXTRA_STATEMENT_PATTERNS",
+    "scripts/fable_bench92_english_arm.py:72 EXTRA_REL_CUES"
+   ],
+   "notes": "'X is a nurse.' is NOT taught as occupation (fable_fix173b_username.py:75 treats such copulas as non-names; too ambiguous)."
+  },
+  {
+   "name": "work_location",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "work_location"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} worked in the city of {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_bench73_english_arm.py:153 REL_MENTION_CUES"
+   ]
+  },
+  {
+   "name": "school",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "school"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} goes to {Y}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Where does {X} go to school?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [
+    {
+     "t": "Who goes to {Y}?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_fix139e_tail.py:57 LISTED_RELATIONS",
+    "sessions152"
+   ]
+  },
+  {
+   "name": "educated_at",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "alma mater"
+   ],
+   "storage_keys": [
+    "educated_at"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "The univeristy where {X} was educated is {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS (typo is in the data)"
+    },
+    {
+     "t": "{X} studied at {Y}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Where did {X} study?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_bench92_english_arm.py:72 EXTRA_REL_CUES"
+   ]
+  },
+  {
+   "name": "title",
+   "status": "known",
+   "value_kind": "literal",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "title"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "rt136 / sessions152 (\"Aldo's title is Dean ...\")"
+   ]
+  },
+  {
+   "name": "city",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "single",
+   "yesno_can_say_no": true,
+   "aliases": [
+    "town"
+   ],
+   "storage_keys": [
+    "city",
+    "lives_in",
+    "town"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} lives in {Y}.",
+     "where": "live",
+     "src": "scripts/fable_fix167_verb.py:63 VERB_STATEMENTS / :70 VERB_QUESTIONS"
+    },
+    {
+     "t": "{X} moved to {Y}.",
+     "where": "not_live",
+     "src": "scripts/fable_listening_english.py:171 RELATION_MAP (Qwen listening path; not the 138i FakeEars path)"
+    },
+    {
+     "t": "{X} resides in {Y}.",
+     "where": "not_live",
+     "src": "scripts/fable_listening_english.py:171 RELATION_MAP (Qwen listening path; not the 138i FakeEars path)"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Where does {X} live?",
+     "where": "live",
+     "src": "scripts/fable_fix167_verb.py:63 VERB_STATEMENTS / :70 VERB_QUESTIONS"
+    },
+    {
+     "t": "What (city|town) does {X} live in?",
+     "where": "live",
+     "src": "scripts/fable_loop158c_agent.py:84 rewrite_whcity (live via fable_loop138g_agent.py:225)"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Does {X} live in {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "inverse": [
+    {
+     "t": "Who lives in {Y}?",
+     "where": "layer_c",
+     "src": "scripts/fable_fix190_reverse.py:69 REVERSE_RELATIONS, :103 parse_reverse190 (layer C)",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_fix154_yesno.py:64 SINGLE_VALUED_154",
+    "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE",
+    "scripts/fable_fix167_verb.py:63 VERB_STATEMENTS / :70 VERB_QUESTIONS",
+    "scripts/fable_fix139e_tail.py:57 LISTED_RELATIONS",
+    "scripts/fable_loop158c_agent.py:84 rewrite_whcity (live via fable_loop138g_agent.py:225)",
+    "scripts/fable_listening_english.py:171 RELATION_MAP (Qwen listening path; not the 138i FakeEars path)",
+    "scripts/fable_fix193_apos.py:64 REL193_STATIC (layer C)"
+   ],
+   "notes": "The key 'city' means 'place X lives'. bench65 uses 'lives_in' for the same idea (fable_bench65_notebook_arm.py:161, values can be countries); read-only storage key."
+  },
+  {
+   "name": "home",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "home"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_loop158b_agent.py:77-95 WHEN/HOW_OLD/WHERE_FROM/WHERE_LIVE (not in 138i; see fable_loop138g_agent.py:231-236) WHERE_LIVE_CANDIDATES"
+   ],
+   "notes": "Not aliased to city: a home can be an address or a house. 158b tried it as a where-live candidate."
+  },
+  {
+   "name": "hometown",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "home town"
+   ],
+   "storage_keys": [
+    "hometown",
+    "home_town",
+    "origin"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} is from {Y}.",
+     "where": "not_live",
+     "src": "scripts/fable_listening_english.py:171 RELATION_MAP (Qwen listening path; not the 138i FakeEars path)"
+    },
+    {
+     "t": "{X} comes from {Y}.",
+     "where": "not_live",
+     "src": "scripts/fable_listening_english.py:171 RELATION_MAP (Qwen listening path; not the 138i FakeEars path)"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Where is {X} from?",
+     "where": "not_live",
+     "src": "scripts/fable_loop158b_agent.py:77-95 WHEN/HOW_OLD/WHERE_FROM/WHERE_LIVE (not in 138i; see fable_loop138g_agent.py:231-236)"
+    },
+    {
+     "t": "Where does {X} come from?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [
+    {
+     "t": "Who is from {Y}?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_fix139e_tail.py:57 LISTED_RELATIONS",
+    "scripts/fable_loop158b_agent.py:77-95 WHEN/HOW_OLD/WHERE_FROM/WHERE_LIVE (not in 138i; see fable_loop138g_agent.py:231-236)",
+    "scripts/fable_listening_english.py:171 RELATION_MAP (Qwen listening path; not the 138i FakeEars path)"
+   ],
+   "notes": "Qwen listening stores 'origin'; FakeEars stores 'hometown'/'home_town'. Read all three at ask time."
+  },
+  {
+   "name": "place_of_birth",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "single",
+   "yesno_can_say_no": true,
+   "aliases": [
+    "birthplace",
+    "place of birth"
+   ],
+   "storage_keys": [
+    "place_of_birth",
+    "birthplace"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was born in {Y}.",
+     "where": "live",
+     "src": "scripts/fable_fix167_verb.py:63 VERB_STATEMENTS / :70 VERB_QUESTIONS"
+    },
+    {
+     "t": "{X} was born in the city of {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Where was {X} born?",
+     "where": "live",
+     "src": "scripts/fable_fix167_verb.py:63 VERB_STATEMENTS / :70 VERB_QUESTIONS"
+    }
+   ],
+   "yesno": [],
+   "inverse": [
+    {
+     "t": "Who was born in {Y}?",
+     "where": "layer_c",
+     "src": "scripts/fable_fix190_reverse.py:69 REVERSE_RELATIONS, :103 parse_reverse190 (layer C)",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_fix154_yesno.py:64 SINGLE_VALUED_154",
+    "scripts/fable_fix167_verb.py:63 VERB_STATEMENTS / :70 VERB_QUESTIONS",
+    "scripts/fable_fix139e_tail.py:57 LISTED_RELATIONS",
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_bench92_english_arm.py:72 EXTRA_REL_CUES",
+    "scripts/fable_fix190_reverse.py:69 REVERSE_RELATIONS, :103 parse_reverse190 (layer C)"
+   ],
+   "value_guard": "value must NOT look like a date (else the date relation takes the sentence)",
+   "notes": "167 stores 'place_of_birth', 138g/190/listening use 'birthplace': same meaning, both read."
+  },
+  {
+   "name": "place_of_death",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "place_of_death"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} died in the city of {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    },
+    {
+     "t": "{X} died in {Y}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Where did {X} die?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ],
+   "value_guard": "value must NOT look like a date (else the date relation takes the sentence)"
+  },
+  {
+   "name": "country",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "country"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix139e_tail.py:57 LISTED_RELATIONS"
+   ],
+   "notes": "Ambiguous (residence vs citizenship). Never aliased to either."
+  },
+  {
+   "name": "country_of_citizenship",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "nationality",
+    "citizenship"
+   ],
+   "storage_keys": [
+    "country_of_citizenship"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} is a citizen of {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [
+    {
+     "t": "What country is {X} a citizen of?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_bench73_english_arm.py:153 REL_MENTION_CUES"
+   ]
+  },
+  {
+   "name": "country_of_origin",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "country_of_origin"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was created in the country of {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "capital",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "single",
+   "yesno_can_say_no": true,
+   "aliases": [],
+   "storage_keys": [
+    "capital"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "The capital of {X} is {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [
+    {
+     "t": "What is {Y} the capital of?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_fix154_yesno.py:64 SINGLE_VALUED_154",
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "continent",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "continent"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} is located in the continent of {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "headquarters_location",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "headquarters"
+   ],
+   "storage_keys": [
+    "headquarters_location"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "The headquarters of {X} is located in the city of {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Where is {X} based?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Where are {X}'s headquarters?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_bench92_english_arm.py:72 EXTRA_REL_CUES"
+   ]
+  },
+  {
+   "name": "location_of_formation",
+   "status": "known",
+   "value_kind": "place",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "location_of_formation"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Where",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was founded in the city of {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ],
+   "value_guard": "'founded in' + date is date_founded (not in v1); + place is this relation."
+  },
+  {
+   "name": "composer",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "composer",
+    "composed_by"
+   ],
+   "inverse_storage_keys": [
+    "composer_of"
+   ],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was composed by {Y}.",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    },
+    {
+     "t": "{Y} composed {X}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who composed {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Who was {X} composed by?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Did {Y} compose {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Was {X} composed by {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "inverse": [
+    {
+     "t": "What did {Y} compose?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "What has {Y} composed?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Which (song|piece|work) did {Y} compose?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_bench73_english_arm.py:131 REV_OF_NOUNS / :139 REV_BY_VERBS"
+   ],
+   "notes": "Evidence today: 'Ada Pell is the composer of Blue Rain.' saves junk (exp 215 fixing); 'Who composed Blue Rain?' misroutes to the self router; 'What did Ada Pell compose?' not understood. X is the work, Y the person. '{Y} is the composer of {X}.' is the generic 'inverted' teach; bench73 stores that shape as an inverse _of key (see inverse_storage_keys)."
+  },
+  {
+   "name": "author",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "writer"
+   ],
+   "storage_keys": [
+    "author",
+    "written_by"
+   ],
+   "inverse_storage_keys": [
+    "author_of"
+   ],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was wrote by {Y}.",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS ('was written by')"
+    },
+    {
+     "t": "{Y} wrote {X}.",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "The author of {X} is {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who wrote {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Who was {X} wrote by?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Did {Y} write {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Was {X} wrote by {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "inverse": [
+    {
+     "t": "What did {Y} write?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "What has {Y} wrote?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Which (book|work) did {Y} write?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_bench73_english_arm.py:131 REV_OF_NOUNS / :139 REV_BY_VERBS",
+    "scripts/fable_bench73_english_arm.py:153 REL_MENTION_CUES"
+   ],
+   "notes": "X is the work, Y the person. '{Y} is the author of {X}.' is the generic 'inverted' teach; bench73 stores that shape as an inverse _of key (see inverse_storage_keys)."
+  },
+  {
+   "name": "painter",
+   "status": "NEW",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "painter"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was painted by {Y}.",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "{Y} painted {X}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who painted {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Who was {X} painted by?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Did {Y} paint {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Was {X} painted by {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "inverse": [
+    {
+     "t": "What did {Y} paint?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "What has {Y} painted?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Which (painting|picture) did {Y} paint?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [],
+   "notes": "X is the work, Y the person. '{Y} is the painter of {X}.' is the generic 'inverted' teach; bench73 stores that shape as an inverse _of key (see inverse_storage_keys)."
+  },
+  {
+   "name": "director",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "director",
+    "director_manager"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was directed by {Y}.",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "{Y} directed {X}.",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "The director of {X} is {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench92_english_arm.py:58 EXTRA_STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who directed {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Who was {X} directed by?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Did {Y} direct {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Was {X} directed by {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "inverse": [
+    {
+     "t": "What did {Y} direct?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "What has {Y} directed?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Which (film|movie|play) did {Y} direct?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_bench92_english_arm.py:58 EXTRA_STATEMENT_PATTERNS",
+    "scripts/fable_fix135_office.py:62 OFFICE_RELATIONS",
+    "scripts/fable_qrewrite132.py:156 (question cue words)"
+   ],
+   "notes": "bench92 key director_manager ('The director of X is Y') covers organisations and films alike; read as the same storage. 'manager' is NOT an alias here (it is boss). X is the work, Y the person. '{Y} is the director of {X}.' is the generic 'inverted' teach; bench73 stores that shape as an inverse _of key (see inverse_storage_keys)."
+  },
+  {
+   "name": "founder",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "founder",
+    "founded_by"
+   ],
+   "inverse_storage_keys": [
+    "founder_of"
+   ],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was founded by {Y}.",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    },
+    {
+     "t": "{Y} founded {X}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who founded {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Who was {X} founded by?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Did {Y} found {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Was {X} founded by {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "inverse": [
+    {
+     "t": "What did {Y} found?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "What has {Y} founded?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Which (company|organisation|group) did {Y} found?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_bench92_english_arm.py:72 EXTRA_REL_CUES"
+   ],
+   "notes": "X is the work, Y the person. '{Y} is the founder of {X}.' is the generic 'inverted' teach; bench73 stores that shape as an inverse _of key (see inverse_storage_keys)."
+  },
+  {
+   "name": "inventor",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "inventor",
+    "invented_by"
+   ],
+   "inverse_storage_keys": [
+    "inventor_of"
+   ],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was invented by {Y}.",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    },
+    {
+     "t": "{Y} invented {X}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who invented {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Who was {X} invented by?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Did {Y} invent {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Was {X} invented by {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "inverse": [
+    {
+     "t": "What did {Y} invent?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "What has {Y} invented?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Which (thing|machine) did {Y} invent?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_bench73_english_arm.py:131 REV_OF_NOUNS / :139 REV_BY_VERBS"
+   ],
+   "notes": "X is the work, Y the person. '{Y} is the inventor of {X}.' is the generic 'inverted' teach; bench73 stores that shape as an inverse _of key (see inverse_storage_keys)."
+  },
+  {
+   "name": "designer",
+   "status": "NEW",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "designer"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was designed by {Y}.",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "{Y} designed {X}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who designed {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Who was {X} designed by?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Did {Y} design {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Was {X} designed by {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "inverse": [
+    {
+     "t": "What did {Y} design?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "What has {Y} designed?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Which (thing|product) did {Y} design?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [],
+   "notes": "X is the work, Y the person. '{Y} is the designer of {X}.' is the generic 'inverted' teach; bench73 stores that shape as an inverse _of key (see inverse_storage_keys)."
+  },
+  {
+   "name": "discoverer",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "discoverer",
+    "discovered_by"
+   ],
+   "inverse_storage_keys": [
+    "discoverer_of"
+   ],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was discovered by {Y}.",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    },
+    {
+     "t": "{Y} discovered {X}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who discovered {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Who was {X} discovered by?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Did {Y} discover {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Was {X} discovered by {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "inverse": [
+    {
+     "t": "What did {Y} discover?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "What has {Y} discovered?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Which (thing|place) did {Y} discover?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_bench73_english_arm.py:131 REV_OF_NOUNS / :139 REV_BY_VERBS"
+   ],
+   "notes": "X is the work, Y the person. '{Y} is the discoverer of {X}.' is the generic 'inverted' teach; bench73 stores that shape as an inverse _of key (see inverse_storage_keys)."
+  },
+  {
+   "name": "architect",
+   "status": "NEW",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "architect"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was built by {Y}.",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "{Y} built {X}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who built {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Who was {X} built by?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Did {Y} build {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Was {X} built by {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "inverse": [
+    {
+     "t": "What did {Y} build?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "What has {Y} built?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Which (building|house) did {Y} build?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [],
+   "notes": "Uses 'built by' because 'designed by' belongs to designer (one template, one relation). X is the work, Y the person. '{Y} is the architect of {X}.' is the generic 'inverted' teach; bench73 stores that shape as an inverse _of key (see inverse_storage_keys)."
+  },
+  {
+   "name": "creator",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "maker"
+   ],
+   "storage_keys": [
+    "creator"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was created by {Y}.",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS ('was created by')"
+    },
+    {
+     "t": "{Y} created {X}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who created {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Who was {X} created by?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Did {Y} create {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Was {X} created by {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "inverse": [
+    {
+     "t": "What did {Y} create?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "What has {Y} created?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Which (thing|work) did {Y} create?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_listening_english.py:171 RELATION_MAP (Qwen listening path; not the 138i FakeEars path)"
+   ],
+   "notes": "Also the self relation 'Who made you?' (listening path) -- the self router owns that question. X is the work, Y the person. '{Y} is the creator of {X}.' is the generic 'inverted' teach; bench73 stores that shape as an inverse _of key (see inverse_storage_keys)."
+  },
+  {
+   "name": "developer",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "developer"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was developed by {Y}.",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    },
+    {
+     "t": "{Y} developed {X}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who developed {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Who was {X} developed by?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Did {Y} develop {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Was {X} developed by {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "inverse": [
+    {
+     "t": "What did {Y} develop?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "What has {Y} developed?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Which (product|game|software) did {Y} develop?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ],
+   "notes": "X is the work, Y the person. '{Y} is the developer of {X}.' is the generic 'inverted' teach; bench73 stores that shape as an inverse _of key (see inverse_storage_keys)."
+  },
+  {
+   "name": "performer",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "performer"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was performed by {Y}.",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    },
+    {
+     "t": "{Y} performed {X}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who performed {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Who was {X} performed by?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Did {Y} perform {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Was {X} performed by {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "inverse": [
+    {
+     "t": "What did {Y} perform?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "What has {Y} performed?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Which (song|piece) did {Y} perform?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ],
+   "notes": "X is the work, Y the person. '{Y} is the performer of {X}.' is the generic 'inverted' teach; bench73 stores that shape as an inverse _of key (see inverse_storage_keys)."
+  },
+  {
+   "name": "manufacturer",
+   "status": "known",
+   "value_kind": "organization",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "producer"
+   ],
+   "storage_keys": [
+    "manufacturer"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "The company that produced {X} is {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    },
+    {
+     "t": "{X} is made by {Y}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "Who makes {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    },
+    {
+     "t": "Who produced {X}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [
+    {
+     "t": "What does {Y} make?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_bench92_english_arm.py:72 EXTRA_REL_CUES",
+    "scripts/fable_qrewrite132.py:156 (question cue words)"
+   ]
+  },
+  {
+   "name": "notable_work",
+   "status": "known",
+   "value_kind": "work",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "notable_work"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} is famous for {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [
+    {
+     "t": "What is {X} famous for?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154c_allowlist.py:37 MULTI_VALUED_154C",
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "original_broadcaster",
+   "status": "known",
+   "value_kind": "organization",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "broadcaster"
+   ],
+   "storage_keys": [
+    "original_broadcaster"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "The origianl broadcaster of {X} is {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench92_english_arm.py:58 EXTRA_STATEMENT_PATTERNS (typo is in the data)"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench92_english_arm.py:58 EXTRA_STATEMENT_PATTERNS",
+    "scripts/fable_fix135_office.py:62 OFFICE_RELATIONS"
+   ]
+  },
+  {
+   "name": "genre",
+   "status": "known",
+   "value_kind": "literal",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "genre"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "The type of music that {X} plays is {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "officeholder",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "officeholder"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_fix135_office.py:62 OFFICE_RELATIONS"
+   ],
+   "notes": "bench-only catch-all 'The (.+?) is (.+?)' (fable_bench73_english_arm.py, LAST pattern) for 'The President of Syria is ...'."
+  },
+  {
+   "name": "head_of_state",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "head_of_state"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "The name of the current head of state in {X} is {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_fix135_office.py:62 OFFICE_RELATIONS"
+   ]
+  },
+  {
+   "name": "head_of_government",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "head_of_government"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "The name of the current head of the {X} government is {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_fix135_office.py:62 OFFICE_RELATIONS"
+   ]
+  },
+  {
+   "name": "chairperson",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "chair"
+   ],
+   "storage_keys": [
+    "chairperson"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "The chairperson of {X} is {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_fix135_office.py:62 OFFICE_RELATIONS"
+   ]
+  },
+  {
+   "name": "chief_executive_officer",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "ceo",
+    "chief executive"
+   ],
+   "storage_keys": [
+    "chief_executive_officer"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "The chief executive officer of {X} is {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS",
+    "scripts/fable_fix135_office.py:62 OFFICE_RELATIONS"
+   ]
+  },
+  {
+   "name": "head_coach",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "head coach"
+   ],
+   "storage_keys": [
+    "head_coach"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "The head coach of {X} is {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench92_english_arm.py:58 EXTRA_STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench92_english_arm.py:58 EXTRA_STATEMENT_PATTERNS",
+    "scripts/fable_fix135_office.py:62 OFFICE_RELATIONS"
+   ]
+  },
+  {
+   "name": "dean",
+   "status": "known",
+   "value_kind": "person",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "dean"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "Who",
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "sessions152 (\"who is the dean of the school of music?\")"
+   ],
+   "notes": "Office word; 'Aldo's title is Dean of ...' is title, not dean."
+  },
+  {
+   "name": "language",
+   "status": "known",
+   "value_kind": "language",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "language",
+    "languages_spoken_written_or_signed"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} speaks {Y}.",
+     "where": "live",
+     "src": "scripts/fable_fix167d_verb.py:67 VERB_STATEMENTS_167D / :72 VERB_QUESTIONS_167D"
+    },
+    {
+     "t": "{X} speaks the language of {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [
+    {
+     "t": "What language(s) does {X} speak?",
+     "where": "live",
+     "src": "scripts/fable_fix167d_verb.py:67 VERB_STATEMENTS_167D / :72 VERB_QUESTIONS_167D"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Does {X} speak {Y}?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "inverse": [
+    {
+     "t": "Who speaks {Y}?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_fix167d_verb.py:67 VERB_STATEMENTS_167D / :72 VERB_QUESTIONS_167D",
+    "scripts/fable_fix154e_allowlist.py:27 MULTI_VALUED_154E (+language)",
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "official_language",
+   "status": "known",
+   "value_kind": "language",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "official_language"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "The official language of {X} is {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "language_of_work_or_name",
+   "status": "known",
+   "value_kind": "language",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "language_of_work_or_name"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was written in the language of {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench92_english_arm.py:58 EXTRA_STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench92_english_arm.py:58 EXTRA_STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "religion_or_worldview",
+   "status": "known",
+   "value_kind": "literal",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "religion"
+   ],
+   "storage_keys": [
+    "religion_or_worldview"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} is affiliated with the religion of {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "sport",
+   "status": "known",
+   "value_kind": "literal",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "sport"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} is associated with the sport of {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [
+    {
+     "t": "What sport does {X} play?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "position_played_on_team_speciality",
+   "status": "known",
+   "value_kind": "literal",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "position"
+   ],
+   "storage_keys": [
+    "position_played_on_team_speciality"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} plays the position of {Y}",
+     "where": "live",
+     "src": "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_bench73_english_arm.py:73 STATEMENT_PATTERNS"
+   ]
+  },
+  {
+   "name": "favorite_color",
+   "status": "known",
+   "value_kind": "literal",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "favourite colour",
+    "favorite colour",
+    "favourite color",
+    "favorite color"
+   ],
+   "storage_keys": [
+    "favorite_color"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_listening_english.py:171 RELATION_MAP (Qwen listening path; not the 138i FakeEars path)"
+   ],
+   "notes": "Self router intent D1 declines 'favourite' questions about the agent; X's favourite colour is a normal fact."
+  },
+  {
+   "name": "color",
+   "status": "known",
+   "value_kind": "literal",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "colour"
+   ],
+   "storage_keys": [
+    "color"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "sessions152 (\"Biscuit's color is brown.\")"
+   ]
+  },
+  {
+   "name": "hobby",
+   "status": "known",
+   "value_kind": "literal",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "hobby"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} likes {Y}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_reasoner50.py:99"
+   ],
+   "notes": "'likes' as a teach verb is risky (opinions); build 2 decides."
+  },
+  {
+   "name": "nickname",
+   "status": "NEW",
+   "value_kind": "literal",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "nickname"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} is called {Y}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [],
+   "notes": "Risk: collides with alias teaching ('Call me Ben' / 173 username); question-only in build 1."
+  },
+  {
+   "name": "code",
+   "status": "known",
+   "value_kind": "literal",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "code"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "rt136 (\"Tom's code is 42.\")"
+   ]
+  },
+  {
+   "name": "mood",
+   "status": "known",
+   "value_kind": "literal",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "mood"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "rt136"
+   ]
+  },
+  {
+   "name": "toy",
+   "status": "known",
+   "value_kind": "literal",
+   "cardinality": "multi",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "toy"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "sessions152 (\"Milo's toy is ball\")"
+   ]
+  },
+  {
+   "name": "training_data",
+   "status": "known",
+   "value_kind": "literal",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [
+    "training data"
+   ],
+   "storage_keys": [
+    "training_data"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [],
+   "ask": [],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_listening_english.py:171 RELATION_MAP (Qwen listening path; not the 138i FakeEars path)"
+   ],
+   "notes": "Self relation ('What were you trained on?'); owned by the self path."
+  },
+  {
+   "name": "age",
+   "status": "known",
+   "value_kind": "number",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "age"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} is {Y} years old.",
+     "where": "not_live",
+     "src": "scripts/fable_listening_english.py:171 RELATION_MAP (Qwen listening path; not the 138i FakeEars path)"
+    }
+   ],
+   "ask": [
+    {
+     "t": "How old is {X}?",
+     "where": "not_live",
+     "src": "scripts/fable_loop158b_agent.py:77-95 WHEN/HOW_OLD/WHERE_FROM/WHERE_LIVE (not in 138i; see fable_loop138g_agent.py:231-236)"
+    },
+    {
+     "t": "How old am I?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_listening_english.py:171 RELATION_MAP (Qwen listening path; not the 138i FakeEars path)",
+    "scripts/fable_loop158b_agent.py:77-95 WHEN/HOW_OLD/WHERE_FROM/WHERE_LIVE (not in 138i; see fable_loop138g_agent.py:231-236)"
+   ],
+   "notes": "'How old are you?' about the agent stays with the self router (intent D9)."
+  },
+  {
+   "name": "birthday",
+   "status": "known",
+   "value_kind": "date",
+   "cardinality": "single",
+   "yesno_can_say_no": true,
+   "aliases": [],
+   "storage_keys": [
+    "birthday"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "When",
+    "What"
+   ],
+   "teach": [],
+   "ask": [
+    {
+     "t": "When is {X}'s birthday?",
+     "where": "not_live",
+     "src": "scripts/fable_loop158b_agent.py:77-95 WHEN/HOW_OLD/WHERE_FROM/WHERE_LIVE (not in 138i; see fable_loop138g_agent.py:231-236)"
+    },
+    {
+     "t": "When is my birthday?",
+     "where": "NEW",
+     "src": "NEW (today answered 'You never taught me their age', fable_fix168_ground.py:66)"
+    },
+    {
+     "t": "What day is {X}'s birthday?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [
+    {
+     "t": "Whose birthday is (in|on) {Y}?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    },
+    {
+     "t": "Who has a birthday (in|on) {Y}?",
+     "where": "NEW",
+     "src": "NEW",
+     "never_store": true,
+     "label": "worked out backwards"
+    }
+   ],
+   "src": [
+    "scripts/fable_loop158b_agent.py:77-95 WHEN/HOW_OLD/WHERE_FROM/WHERE_LIVE (not in 138i; see fable_loop138g_agent.py:231-236)",
+    "rt136 (\"Tom's birthday is 1999.\")"
+   ],
+   "date_rule": {
+    "strip_leading": [
+     "in",
+     "on"
+    ],
+    "example": "\"Pia's birthday is in May.\" stores value \"May\" (today it stores \"in May\").",
+    "when_question": "When is {X}'s {R}?",
+    "also": "\"When is my {R}?\" asks the user's slot."
+   },
+   "value_guard": "value must look like a date: a month name, a day+month, a year, or a full date (e.g. \"May\", \"3 May\", \"May 3\", \"1990\", \"3 May 1990\")",
+   "notes": "Not an alias of date_of_birth: a birthday has no year; never derived from one at write time."
+  },
+  {
+   "name": "anniversary",
+   "status": "known",
+   "value_kind": "date",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "anniversary"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "When",
+    "What"
+   ],
+   "teach": [],
+   "ask": [
+    {
+     "t": "When is {X}'s anniversary?",
+     "where": "not_live",
+     "src": "scripts/fable_loop158b_agent.py:77-95 WHEN/HOW_OLD/WHERE_FROM/WHERE_LIVE (not in 138i; see fable_loop138g_agent.py:231-236)"
+    }
+   ],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_loop158b_agent.py:77-95 WHEN/HOW_OLD/WHERE_FROM/WHERE_LIVE (not in 138i; see fable_loop138g_agent.py:231-236)"
+   ],
+   "date_rule": {
+    "strip_leading": [
+     "in",
+     "on"
+    ],
+    "example": "\"Pia's birthday is in May.\" stores value \"May\" (today it stores \"in May\").",
+    "when_question": "When is {X}'s {R}?",
+    "also": "\"When is my {R}?\" asks the user's slot."
+   },
+   "value_guard": "value must look like a date: a month name, a day+month, a year, or a full date (e.g. \"May\", \"3 May\", \"May 3\", \"1990\", \"3 May 1990\")"
+  },
+  {
+   "name": "date_of_birth",
+   "status": "known",
+   "value_kind": "date",
+   "cardinality": "single",
+   "yesno_can_say_no": true,
+   "aliases": [
+    "birth date",
+    "date of birth"
+   ],
+   "storage_keys": [
+    "date_of_birth"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "When",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} was born (on|in) {Y}.",
+     "where": "NEW",
+     "src": "NEW (today 'was born in' always means place, fable_fix167_verb.py:92)"
+    }
+   ],
+   "ask": [
+    {
+     "t": "When was {X} born?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [],
+   "src": [
+    "scripts/fable_fix154_yesno.py:64 SINGLE_VALUED_154"
+   ],
+   "date_rule": {
+    "strip_leading": [
+     "in",
+     "on"
+    ],
+    "example": "\"Pia's birthday is in May.\" stores value \"May\" (today it stores \"in May\").",
+    "when_question": "When is {X}'s {R}?",
+    "also": "\"When is my {R}?\" asks the user's slot."
+   },
+   "value_guard": "value must look like a date: a month name, a day+month, a year, or a full date (e.g. \"May\", \"3 May\", \"May 3\", \"1990\", \"3 May 1990\")",
+   "notes": "'born in June' -> date_of_birth, 'born in Oslo' -> place_of_birth, decided by the value guard."
+  },
+  {
+   "name": "date_of_death",
+   "status": "NEW",
+   "value_kind": "date",
+   "cardinality": "single",
+   "yesno_can_say_no": false,
+   "aliases": [],
+   "storage_keys": [
+    "date_of_death"
+   ],
+   "inverse_storage_keys": [],
+   "narrower": [],
+   "generic": [
+    "possessive",
+    "my",
+    "of_form",
+    "inverted",
+    "reverse"
+   ],
+   "wh": [
+    "When",
+    "What"
+   ],
+   "teach": [
+    {
+     "t": "{X} died (on|in) {Y}.",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "ask": [
+    {
+     "t": "When did {X} die?",
+     "where": "NEW",
+     "src": "NEW"
+    }
+   ],
+   "yesno": [],
+   "inverse": [],
+   "src": [],
+   "date_rule": {
+    "strip_leading": [
+     "in",
+     "on"
+    ],
+    "example": "\"Pia's birthday is in May.\" stores value \"May\" (today it stores \"in May\").",
+    "when_question": "When is {X}'s {R}?",
+    "also": "\"When is my {R}?\" asks the user's slot."
+   },
+   "value_guard": "value must look like a date: a month name, a day+month, a year, or a full date (e.g. \"May\", \"3 May\", \"May 3\", \"1990\", \"3 May 1990\")"
+  }
+ ]
+}

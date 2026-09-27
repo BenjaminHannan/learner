@@ -1,0 +1,187 @@
+[
+ {
+  "id": "S01",
+  "feature": "polite233",
+  "turns": [
+   "T|Tomas's boss is Mirela.",
+   "Q|Can't you tell me who Tomas's boss is?"
+  ],
+  "expect_stored": [
+   [
+    "Tomas",
+    "boss",
+    "Mirela"
+   ]
+  ],
+  "note": "taught -> Mirela"
+ },
+ {
+  "id": "S02",
+  "feature": "polite233",
+  "turns": [
+   "T|Yarrow lives in Keld.",
+   "Q|Won't you tell me where Yarrow lives?"
+  ],
+  "expect_stored": [
+   [
+    "Yarrow",
+    "city",
+    "Keld"
+   ]
+  ],
+  "note": "taught -> Keld"
+ },
+ {
+  "id": "S03",
+  "feature": "polite233",
+  "turns": [
+   "T|Kestrel's job is fisher.",
+   "Q|Couldn't you remind me what Kestrel's job is?"
+  ],
+  "expect_stored": [
+   [
+    "Kestrel",
+    "job",
+    "fisher"
+   ]
+  ],
+  "note": "taught -> fisher"
+ },
+ {
+  "id": "S04",
+  "feature": "polite233",
+  "turns": [
+   "T|Pim's favourite colour is teal.",
+   "Q|Don't you know who Pim's boss is?"
+  ],
+  "expect_stored": [
+   [
+    "Pim",
+    "favourite_colour",
+    "teal"
+   ]
+  ],
+  "note": "untaught relation -> don't know"
+ },
+ {
+  "id": "S05",
+  "feature": "polite233",
+  "turns": [
+   "Q|Wouldn't you just tell me Garrick's city?"
+  ],
+  "expect_stored": [],
+  "note": "unknown person -> don't know"
+ },
+ {
+  "id": "S06",
+  "feature": "polite233",
+  "turns": [
+   "T|Nell lives in Orrin.",
+   "Q|Do you not know where Nell lives?"
+  ],
+  "expect_stored": [
+   [
+    "Nell",
+    "city",
+    "Orrin"
+   ]
+  ],
+  "note": "taught -> Orrin"
+ },
+ {
+  "id": "S07",
+  "feature": "polite233",
+  "turns": [
+   "T|My name is Pippa.",
+   "Q|Can't you please tell me my name?"
+  ],
+  "expect_stored": [
+   [
+    "USER",
+    "name",
+    "Pippa"
+   ]
+  ],
+  "note": "name -> Pippa"
+ },
+ {
+  "id": "S08",
+  "feature": "polite233",
+  "turns": [
+   "T|Fitch works for Grobal.",
+   "Q|Cannot you say who Fitch works for?"
+  ],
+  "expect_stored": [
+   [
+    "Fitch",
+    "employer",
+    "Grobal"
+   ]
+  ],
+  "note": "taught -> Grobal"
+ },
+ {
+  "id": "S09",
+  "feature": "polite233",
+  "turns": [
+   "T|Juno was born in Ashby.",
+   "Q|So, won't you tell me where Juno was born?"
+  ],
+  "expect_stored": [
+   [
+    "Juno",
+    "place_of_birth",
+    "Ashby"
+   ]
+  ],
+  "note": "taught -> Ashby"
+ },
+ {
+  "id": "S10",
+  "feature": "polite233",
+  "turns": [
+   "T|Hale's sister is Orla.",
+   "Q|Couldn't you tell me who Hale's brother is?"
+  ],
+  "expect_stored": [
+   [
+    "Hale",
+    "sister",
+    "Orla"
+   ]
+  ],
+  "note": "untaught relation -> don't know"
+ },
+ {
+  "id": "S11",
+  "feature": "negation-control",
+  "turns": [
+   "T|Tove's boss is Anselm.",
+   "Q|Isn't Tove's boss Anselm?"
+  ],
+  "expect_stored": [
+   [
+    "Tove",
+    "boss",
+    "Anselm"
+   ]
+  ],
+  "note": "must match 138l"
+ },
+ {
+  "id": "S12",
+  "feature": "negation-control",
+  "turns": [
+   "T|Tove's boss is Anselm.",
+   "Q|Tove's boss isn't Anselm."
+  ],
+  "expect_stored": [
+   [
+    "Tove",
+    "boss",
+    "Anselm"
+   ]
+  ],
+  "note": "negated statement; must match 138l"
+ }
+]

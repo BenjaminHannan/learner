@@ -1,0 +1,115 @@
+{
+  "counts": {
+    "awake_worlds": 1600,
+    "memory_worlds": 1024,
+    "buffer_worlds": {
+      "R": 1024,
+      "G": 1024,
+      "U": 1024
+    },
+    "dev_panel_worlds": 2240,
+    "dev_panel_worlds_per_cell": {
+      "N-c4-p6": 64,
+      "N-c4-p16": 64,
+      "N-c5-p6": 64,
+      "N-c5-p16": 64,
+      "E-c5-link": 128,
+      "E-c5-value": 128,
+      "E-c5-irrelevant": 128,
+      "F-c1-r8": 64,
+      "F-c1-r9": 64,
+      "F-c1-r10": 64,
+      "F-c2-r8": 64,
+      "F-c2-r9": 64,
+      "F-c3-r8": 64,
+      "F-c3-r9": 64,
+      "P-c4-r8-p6": 64,
+      "P-c4-r8-p16": 64,
+      "P-c4-r9-p6": 64,
+      "P-c4-r9-p16": 64,
+      "P-c5-r8-p6": 64,
+      "P-c5-r8-p16": 64,
+      "P-c5-r9-p6": 64,
+      "P-c5-r9-p16": 64,
+      "H-c2-p6": 64,
+      "H-c2-p16": 64,
+      "H-c3-p6": 64,
+      "H-c3-p16": 64,
+      "L-c6-prac": 64,
+      "L-c6-held": 64,
+      "L-c7-prac": 64,
+      "L-c7-held": 64,
+      "L-c8-prac": 64,
+      "L-c8-held": 64
+    }
+  },
+  "world_level_overlap": {
+    "dev_vs_awake": 0,
+    "dev_vs_memory": 0,
+    "dev_vs_buffers": {
+      "R": 0,
+      "G": 0,
+      "U": 0
+    },
+    "memory_subset_of_awake": true,
+    "buffer_worlds_equal_memory": {
+      "R": true,
+      "G": true,
+      "U": true
+    }
+  },
+  "question_level_overlap": {
+    "dev_vs_awake": 0,
+    "dev_vs_buffers": 0
+  },
+  "pilot_panels": {
+    "count": 640,
+    "in_registered_union": 0,
+    "overlap_with_dev_panels": 0,
+    "overlap_with_awake_stream": 0,
+    "overlap_with_buffers": 0
+  },
+  "panel_unit": {
+    "top_level_keys": [
+      "a",
+      "attempts",
+      "cell",
+      "index",
+      "kind",
+      "namespace",
+      "rejections",
+      "target_answer"
+    ],
+    "side_keys": [
+      "answer",
+      "chain",
+      "distinct",
+      "hops",
+      "memory",
+      "people",
+      "question",
+      "terminal",
+      "where"
+    ],
+    "target_answer": 19,
+    "answer": 19,
+    "target_equals_answer": true,
+    "pack_side_reads_only": [
+      "memory",
+      "question",
+      "where"
+    ],
+    "pack_side_source": "def pack_side(units, side):\n    return A.data.pack([unit[side]['memory'] for unit in units],\n                       [unit[side]['question'] for unit in units],\n                       list(range(len(units))),\n                       [unit[side]['where'] for unit in units]), \\\n        [unit[side]['question'] for unit in units]"
+  },
+  "dev_vs_confirm_namespace": {
+    "same_question": false,
+    "same_memory": false,
+    "both_answer_12": true
+  },
+  "baseline_pack_batch_reads": [
+    "chain",
+    "owner",
+    "question",
+    "support"
+  ]
+}

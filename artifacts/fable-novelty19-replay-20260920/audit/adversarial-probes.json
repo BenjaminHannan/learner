@@ -1,0 +1,97 @@
+{
+  "poisoned_counts_composite_r10_is_generated_then_rejected": {
+    "syntactically_valid_strings": 4,
+    "composite_r10_passed_propose_string": 3964,
+    "examples": [
+      "LINK 10",
+      "LINK LINK 10",
+      "LINK LINK LINK 10",
+      "LINK LINK LINK LINK 10"
+    ],
+    "note": "propose_string itself does NOT reject composite r10; the guard lives one level up in propose_for_world"
+  },
+  "propose_for_world_rejects_poisoned_composite_r10": {
+    "accepted": [
+      "8",
+      "8",
+      "8",
+      "8"
+    ],
+    "composite_r10_accepted": 0,
+    "rejected_reasons": {
+      "composite_r10": 62,
+      "too_many_calls": 2
+    },
+    "fallbacks": 4,
+    "guard_fired": 62
+  },
+  "buffer_exclusion_collision_aborts": {
+    "aborted": true,
+    "error": "RuntimeError: buffer-R world 0 slot 0 collides with the exclusion union; run invalid"
+  },
+  "awake_training_items_raises_on_forbidden": {
+    "raised": true,
+    "error": "RuntimeError: training/panel semantic overlap; run invalid"
+  },
+  "registered_cells_state": {
+    "cells_before": 25,
+    "cells_inside": 57,
+    "cells_after": 25,
+    "restored_exactly_after_exception": true,
+    "cell_order_untouched": true,
+    "reentrant_result": "RuntimeError: new cell names collide with v3 cells: ['E-c5-irrelevant', 'E-c5-link', 'E-c5-value', 'F-c1-r10', 'F-c1-r8', 'F-c1-r9', 'F-c2-r8', 'F-c2-r9', 'F-c3-r8', 'F-c3-r9', 'H-c2-p16', 'H-c2-p6', 'H-c3-p16', 'H-c3-p6', 'L-c6-held', 'L-c6-prac', 'L-c7-held', 'L-c7-prac', 'L-c8-held', 'L-c8-prac', 'N-c4-p16', 'N-c4-p6', 'N-c5-p16', 'N-c5-p6', 'P-c4-r8-p16', 'P-c4-r8-p6', 'P-c4-r9-p16', 'P-c4-r9-p6', 'P-c5-r8-p16', 'P-c5-r8-p6', 'P-c5-r9-p16', 'P-c5-r9-p6']",
+    "restored_after_reentrant": true,
+    "name_collision_guard": "RuntimeError: new cell names collide with v3 cells: ['k1-prac']",
+    "restored_after_collision": true,
+    "v3_consumers_that_iterate_CELLS_not_CELL_ORDER": "see grep output"
+  },
+  "confirmation_lockout": {
+    "confirm_namespace_without_flag": "blocked: the confirmation namespace needs the explicit --confirmation flag",
+    "confirmation_without_flagfile": "blocked: refusing to build confirmation panels: no /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch/lock-empty/DEV-PASSED.json. Confirmation is generated only after development passes.",
+    "empty_unvalidated_flagfile": "ALLOWED -> 1 cell(s) built",
+    "n512_under_dev_namespace_without_flag": "ALLOWED -> 512 signatures",
+    "confirmation_exclusion_sources": [
+      "forbidden-semantics.json",
+      "forbidden-semantics.json",
+      "forbidden-semantics.json",
+      "forbidden-semantics.json",
+      "forbidden-semantics.json"
+    ],
+    "confirmation_uses_legacy_only": true
+  },
+  "dev_vs_confirm_namespace_units_differ": {
+    "raised": "KeyError: 'F-c1-r8'"
+  },
+  "exclusion_union_coverage": {
+    "union": 26880,
+    "sources": [
+      "panels",
+      "fit-panels",
+      "confirm-panels",
+      "dispatcher",
+      "operator"
+    ],
+    "union_sha256": "5a51fd4b08a502dd568972c27dbebe24e4c92f3c5ee43509febbfcbb9db90955",
+    "pilot_panels_exist": true,
+    "pilot_count": 640,
+    "pilot_signatures_in_union": 0,
+    "pilot_signatures_missing_from_union": 640
+  },
+  "panel_unit_fields_reaching_a_model": {
+    "raised": "KeyError: 'N-c4-p6'"
+  },
+  "proposal_rng_independence": {
+    "reproducible": true,
+    "seed_changes_stream": true,
+    "first_eight": [
+      "10",
+      "LINK 9",
+      "LINK 8",
+      "LINK LINK LINK 9",
+      "LINK LINK LINK 9",
+      "8",
+      "9",
+      "LINK 9"
+    ]
+  }
+}
