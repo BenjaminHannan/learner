@@ -1,0 +1,50 @@
+== 1. ID CHECK (run ids == truth ids, no duplicates) ==
+L9_squares     vs dev/squares.jsonl: rows 200/200 missing=0 extra=0 dup_run=0 dup_truth=0 same_order=True -> OK
+L9_seen        vs dev/seen.jsonl: rows 100/100 missing=0 extra=0 dup_run=0 dup_truth=0 same_order=True -> OK
+L9_heldout     vs dev/heldout.jsonl: rows 100/100 missing=0 extra=0 dup_run=0 dup_truth=0 same_order=True -> OK
+L9_lookalikes  vs dev/lookalikes.jsonl: rows 150/150 missing=0 extra=0 dup_run=0 dup_truth=0 same_order=True -> OK
+L7_heldout     vs dev/heldout.jsonl: rows 100/100 missing=0 extra=0 dup_run=0 dup_truth=0 same_order=True -> OK
+L7_lookalikes  vs dev/lookalikes.jsonl: rows 150/150 missing=0 extra=0 dup_run=0 dup_truth=0 same_order=True -> OK
+
+== 2. GREEDY READ COUNTS (field 'grid' only) ==
+L9_squares     n=200  exact=197  none=  1  wrong=  2
+L9_seen        n=100  exact= 97  none=  1  wrong=  2
+L9_heldout     n=100  exact= 94  none=  6  wrong=  0
+L9_lookalikes  n=150  false squares (grid not null) = 5  [train 4/69, H 0/49, S 1/32]
+L7_heldout     n=100  exact= 44  none=  8  wrong= 48
+L7_lookalikes  n=150  false squares (grid not null) = 8  [train 6/69, H 1/49, S 1/32]
+
+== 3. HELDOUT EXACT, marks in ['.', '*', '=', ':'] only ==
+L9_heldout     exact 35/40   ('.' 9/10, '*' 10/10, '=' 7/10, ':' 9/10)
+L7_heldout     exact 23/40   ('.' 8/10, '*' 4/10, '=' 6/10, ':' 5/10)
+
+== 4. L9 'pick' FIELD EXACT ==
+L9_squares     pick exact=197/200  pick null=1
+L9_seen        pick exact= 97/100  pick null=1
+L9_heldout     pick exact= 94/100  pick null=6
+
+== 5. FIXED MARKS ==
+M1  L9 heldout exact >= 90            : 94 -> true
+M2  L9 squares exact >= 199           : 197 -> false
+M3  L9 seen exact >= 98               : 97 -> false
+M4  L9 false sq <= L7 false sq + 1    : 5 <= 8 + 1 -> true
+TOO-EASY      L7 heldout exact >= 85  : 44 -> false
+PROVED-WRONG  not TOO-EASY and L9-L7 heldout < 10 : 94 - 44 = 50 -> false
+OUTCOME: DEV-FAIL
+
+== 6. L9 NON-EXACT ITEMS (greedy 'grid'; ids only) ==
+L9_squares (3):
+  d9-sq-043  truth_size=4  read_size=4
+  d9-sq-123  truth_size=6  read_size=none
+  d9-sq-135  truth_size=4  read_size=4
+L9_seen (3):
+  d9-se-020  truth_size=7  read_size=7
+  d9-se-040  truth_size=6  read_size=none
+  d9-se-060  truth_size=7  read_size=7
+L9_heldout (6):
+  d9-ho-012  truth_size=5  read_size=none  mark='='
+  d9-ho-014  truth_size=5  read_size=none  mark=':'
+  d9-ho-042  truth_size=6  read_size=none  mark='.'
+  d9-ho-054  truth_size=7  read_size=none  mark='='
+  d9-ho-065  truth_size=7  read_size=none  mark='·'
+  d9-ho-096  truth_size=7  read_size=none  mark='='
