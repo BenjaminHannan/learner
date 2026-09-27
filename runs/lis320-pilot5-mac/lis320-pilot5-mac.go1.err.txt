@@ -1,0 +1,499 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; git rev-parse origin/main; echo "---LINES---"; git show origin/main:handoff/queue/lis-302-gpu.md | head -n 13
+1f6d336dd5293b1a3a6044734c0a6c2e747c9009
+---LINES---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+[0m
+[0m$ [0mD=$(mktemp -d); echo "D=$D"; git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; O=artifacts/claude-lis320-20260926/pilot5; mkdir -p $D/$O; echo "O=$O"; ls -R $D/artifacts/claude-lis320-20260926 | head -n 100; git rev-parse origin/main
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.q0XocW72He
+O=artifacts/claude-lis320-20260926/pilot5
+ADDENDUM-1-ask-back.md
+ADDENDUM-2-opencode-route.md
+ADDENDUM-3-correction-mark.md
+ADDENDUM-4-review-fixes.md
+ADDENDUM-5-owner-reach-and-correct-ref.md
+ADDENDUM-6-route-low.md
+ADDENDUM-7-group-speaker-check.md
+ADDENDUM-7-NOTE-fairness-and-gap.md
+ANSWERS-TM-2118.md
+avoid_names_dev.txt
+avoid_test.sha256
+panel_tools
+PASSMARKS.md
+PASSMARKS.sha256.txt
+PILOT-REVIEW.md
+PILOT-THRESHOLDS.md
+pilot5
+SEAL-ADDENDA-5.sha256.txt
+SEAL-ADDENDA-6.sha256.txt
+SEAL-ADDENDA-7.sha256.txt
+SEAL-ADDENDA.sha256.txt
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.q0XocW72He/artifacts/claude-lis320-20260926/panel_tools:
+agree.py
+finalize.py
+prep.py
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.q0XocW72He/artifacts/claude-lis320-20260926/pilot5:
+1f6d336dd5293b1a3a6044734c0a6c2e747c9009
+[0m
+[0m$ [0mD=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.q0XocW72He; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-5.sha256.txt; echo "EXIT5=$?"; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-6.sha256.txt; echo "EXIT6=$?"; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-7.sha256.txt; echo "EXIT7=$?"
+artifacts/claude-lis320-20260926/ADDENDUM-5-owner-reach-and-correct-ref.md: OK
+scripts/claude_lis320_seed_cr.py: OK
+scripts/claude_lis320_check_cr.py: OK
+scripts/claude_lis320_glm_oc11.py: OK
+scripts/claude_glm_opencode_v11.py: OK
+scripts/claude_lis320_reachcount.py: OK
+EXIT5=0
+artifacts/claude-lis320-20260926/ADDENDUM-6-route-low.md: OK
+scripts/claude_lis320_glm_oclow.py: OK
+scripts/claude_lis320_glm_oc.py: OK
+scripts/claude_lis320_glm.py: OK
+scripts/claude_lis320_style.py: OK
+scripts/claude_glm_leakcheck.py: OK
+EXIT6=0
+artifacts/claude-lis320-20260926/ADDENDUM-7-group-speaker-check.md: OK
+scripts/claude_lis320_check_we.py: OK
+scripts/claude_lis320_check_cr.py: OK
+scripts/claude_lis320_check.py: OK
+scripts/claude_lis320_seed_cr.py: OK
+scripts/claude_lis320_glm_oclow.py: OK
+EXIT7=0
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_glm_oclow.py --selftest 2>&1; echo "EXIT=$?"; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_seed_cr.py --selftest 2>&1; echo "EXIT=$?"; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_check_cr.py --selftest 2>&1; echo "EXIT=$?"; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_check_we.py --selftest 2>&1; echo "EXIT=$?"; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_rawcheck.py --selftest 2>&1; echo "EXIT=$?"
+[glm320] s320-1-00000 ok
+[glm320] s320-1-00001 unparsed
+[glm320] s320-1-00002 ok
+[glm320] s320-1-00003 ok
+[glm320] s320-1-00004 ok
+lis320 glm_oc selftest 4/4 ok
+lis320 glm_oclow selftest ok (variant low on the run line; no network)
+EXIT=0
+seed_cr selftest OK: 400 dialogs; {'correct_ref': 121, 'correct': 197, 'backref': 235}
+EXIT=0
+check_cr selftest OK: 1 kept (owner from history), 1 dropped (owner named)
+EXIT=0
+check_we selftest OK: 1 kept, 1 dropped (group_speaker)
+EXIT=0
+lis320 rawcheck selftest 4/4 ok
+EXIT=0
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_glm_leakcheck.py --worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 2>&1; echo "EXIT=$?"
+{"exit": 0, "reply_ok": true, "left_after_cleanup": 0}
+EXIT=0
+[0m
+[0m$ [0mO=artifacts/claude-lis320-20260926/pilot5; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_seed_cr.py --seed 325 --n 60 --ask-back --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl 2>&1; echo "EXIT=$?"
+{"dialogs": 60, "turns": 428, "intents": {"ack_after_ask": 12, "ambiguous_pronoun": 8, "ask": 17, "backref": 41, "confirm": 9, "correct": 32, "correct_ref": 10, "doubt": 11, "former": 35, "hypothetical": 13, "jobhome": 19, "negation_only": 10, "plan": 10, "question": 13, "smalltalk": 19, "someone_else": 8, "teach": 143, "yes_after_ask": 18}}
+EXIT=0
+[0m
+[0m$ [0mdate -u; uptime; N=$(pgrep -f "opencode run" | wc -l | tr -d ' '); echo "N=$N"; W=$((16 - N)); if [ "$W" -gt 6 ]; then W=6; fi; echo "W=$W"
+Sat Sep 26 23:50:55 UTC 2026
+19:50  up 3 days,  9:43, 4 users, load averages: 78.95 75.58 73.05
+N=11
+W=5
+[0m
+[0m$ [0mdate -u; df -g / | head; O=artifacts/claude-lis320-20260926/pilot5; echo "starting wording W=5"
+Sat Sep 26 23:50:58 UTC 2026
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        45    22%  484014 477845400    0%   /
+starting wording W=5
+[0m
+[0m$ [0mO=artifacts/claude-lis320-20260926/pilot5; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_glm_oclow.py --seeds $O/seeds.jsonl --out $O/raw.jsonl --workers 5 --max-minutes 40 > $O/glm.log 2>&1; echo "EXIT=$?"; date -u; uptime; echo "---LASTLINE---"; tail -n 1 $O/glm.log; echo "---CALLFAILED COUNT---"; grep -c "call failed" $O/glm.log || echo "0"; echo "---DISTINCT ERRORS---"; grep "call failed" $O/glm.log | sort -u | head -n 20; echo "---WC---"; wc -l $O/seeds.jsonl $O/raw.jsonl; echo "---LOGTAIL20---"; tail -n 20 $O/glm.log
+EXIT=0
+Sat Sep 26 23:58:25 UTC 2026
+19:58  up 3 days,  9:51, 4 users, load averages: 70.62 71.00 72.32
+---LASTLINE---
+{"calls": 60, "parsed": 55, "skipped": 0, "failed_calls": 0, "batches": 2, "stopped": "done", "minutes": 7.4}
+---CALLFAILED COUNT---
+0
+0
+---DISTINCT ERRORS---
+---WC---
+      60 artifacts/claude-lis320-20260926/pilot5/seeds.jsonl
+      60 artifacts/claude-lis320-20260926/pilot5/raw.jsonl
+     120 total
+---LOGTAIL20---
+[glm320] s320cr-325-00041 unparsed
+[glm320] s320cr-325-00045 ok
+[glm320] s320cr-325-00043 ok
+[glm320] s320cr-325-00044 ok
+[glm320] s320cr-325-00042 ok
+[glm320] s320cr-325-00047 ok
+[glm320] s320cr-325-00046 ok
+[glm320] s320cr-325-00048 ok
+[glm320] s320cr-325-00049 ok
+[glm320] s320cr-325-00052 ok
+[glm320] s320cr-325-00053 ok
+[glm320] s320cr-325-00050 ok
+[glm320] s320cr-325-00051 ok
+[glm320] s320cr-325-00057 ok
+[glm320] s320cr-325-00055 ok
+[glm320] s320cr-325-00054 ok
+[glm320] s320cr-325-00059 ok
+[glm320] s320cr-325-00056 ok
+[glm320] s320cr-325-00058 ok
+{"calls": 60, "parsed": 55, "skipped": 0, "failed_calls": 0, "batches": 2, "stopped": "done", "minutes": 7.4}
+[0m
+[0m$ [0mO=artifacts/claude-lis320-20260926/pilot5; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_rawcheck.py --raw $O/raw.jsonl --seeds $O/seeds.jsonl 2>&1; echo "EXIT=$?"
+{"rawcheck": "OK", "rows": 60, "duplicate_ids": 0, "model_ok": 60, "temperature_null": 60, "not_in_seeds": 0}
+EXIT=0
+[0m
+[0m$ [0mO=artifacts/claude-lis320-20260926/pilot5; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_check_we.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl > $O/check.json 2>&1; echo "EXIT_WE=$?"; cat $O/check.json; echo "---"; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_style.py --kept $O/kept.jsonl --out $O/style.json 2>&1; echo "EXIT_STYLE=$?"; cat $O/style.json
+EXIT_WE=0
+{
+ "counts": {
+  "cue:ask:how old": 1,
+  "cue:ask:what": 5,
+  "cue:ask:whats": 3,
+  "cue:ask:where": 1,
+  "cue:ask:who": 3,
+  "cue:confirm:check": 6,
+  "cue:confirm:right": 3,
+  "cue:doubt:dont remember": 1,
+  "cue:doubt:dunno": 1,
+  "cue:doubt:not even sure": 1,
+  "cue:doubt:not sure": 5,
+  "cue:doubt:not totally sure": 1,
+  "cue:doubt:think": 1,
+  "cue:former:anymore": 4,
+  "cue:former:quit": 1,
+  "cue:former:used to": 16,
+  "cue:former:was": 1,
+  "cue:hypothetical:if": 10,
+  "cue:hypothetical:imagine": 2,
+  "cue:negation_only:n't": 2,
+  "cue:negation_only:no": 3,
+  "cue:negation_only:nt": 5,
+  "cue:plan:gonna": 1,
+  "cue:plan:soon": 4,
+  "cue:plan:wants to": 1,
+  "cue:question:?": 13,
+  "cue:someone_else:apparently": 1,
+  "cue:someone_else:heard": 1,
+  "cue:someone_else:told": 1,
+  "dialogs": 60,
+  "dialogs_unparsed": 5,
+  "drop:ack_answers": 1,
+  "drop:assert_hedged": 13,
+  "drop:assert_reported": 9,
+  "drop:dialog_unparsed": 35,
+  "drop:forbidden_in_reply": 2,
+  "drop:former_present_cue": 8,
+  "drop:group_speaker": 18,
+  "drop:must_missing": 7,
+  "drop:no_cue": 4,
+  "drop:no_first_person": 2,
+  "drop:plan_leak": 4,
+  "drop:reply_ask_missing": 4,
+  "drop:smalltalk_self": 3,
+  "drop:stray_name": 3,
+  "drop:yes_missing": 1,
+  "dropped": 66,
+  "dropped:ack_after_ask": 3,
+  "dropped:ambiguous_pronoun": 1,
+  "dropped:ask": 3,
+  "dropped:backref": 9,
+  "dropped:correct": 2,
+  "dropped:doubt": 1,
+  "dropped:former": 9,
+  "dropped:jobhome": 2,
+  "dropped:plan": 2,
+  "dropped:smalltalk": 3,
+  "dropped:someone_else": 3,
+  "dropped:teach": 22,
+  "dropped:yes_after_ask": 6,
+  "kept": 327,
+  "recased": 171,
+  "turns": 428
+ },
+ "kept_by_family": {
+  "ack_after_ask": 9,
+  "ambiguous_pronoun": 7,
+  "ask": 13,
+  "backref": 28,
+  "confirm": 9,
+  "correct": 27,
+  "correct_ref": 9,
+  "doubt": 10,
+  "former": 22,
+  "hypothetical": 12,
+  "jobhome": 14,
+  "negation_only": 10,
+  "plan": 6,
+  "question": 13,
+  "smalltalk": 12,
+  "someone_else": 3,
+  "teach": 112,
+  "yes_after_ask": 11
+ }
+}
+---
+{"glm_kept": {"turns": 327, "words_median": 19, "words_p90": 29, "lowercase_start": 0.994, "noapos_contraction": 0.434, "over20_words": 0.398, "shapes_per_100": 100.0, "write_facts_per_turn": 1.012, "write_facts_in_over20": 0.529}, "dev_chatdev": {"turns": 336, "words_median": 14, "words_p90": 23, "lowercase_start": 1.0, "noapos_contraction": 0.253, "over20_words": 0.131, "shapes_per_100": 99.1}, "dev_bank": {"turns": 194, "words_median": 15, "words_p90": 21, "lowercase_start": 0.887, "noapos_contraction": 0.021, "over20_words": 0.108, "shapes_per_100": 100.0}}
+EXIT_STYLE=0
+{
+ "glm_kept": {
+  "turns": 327,
+  "words_median": 19,
+  "words_p90": 29,
+  "lowercase_start": 0.994,
+  "noapos_contraction": 0.434,
+  "over20_words": 0.398,
+  "shapes_per_100": 100.0,
+  "write_facts_per_turn": 1.012,
+  "write_facts_in_over20": 0.529
+ },
+ "dev_chatdev": {
+  "turns": 336,
+  "words_median": 14,
+  "words_p90": 23,
+  "lowercase_start": 1.0,
+  "noapos_contraction": 0.253,
+  "over20_words": 0.131,
+  "shapes_per_100": 99.1
+ },
+ "dev_bank": {
+  "turns": 194,
+  "words_median": 15,
+  "words_p90": 21,
+  "lowercase_start": 0.887,
+  "noapos_contraction": 0.021,
+  "over20_words": 0.108,
+  "shapes_per_100": 100.0
+ }
+}
+[0m
+[0m$ [0mO=artifacts/claude-lis320-20260926/pilot5; ls -lh $O/; echo "---"; cat $O/check.json | head -n 5; wc -l $O/*.jsonl $O/*.json $O/*.log; echo "---GLM.LOG HEAD---"; head -n 20 $O/glm.log
+total 2120
+-rw-r--r--  1 ben-hannan  staff   2.0K Sep 26 19:58 check.json
+-rw-r--r--  1 ben-hannan  staff    17K Sep 26 19:58 drops.jsonl
+-rw-r--r--  1 ben-hannan  staff   1.8K Sep 26 19:58 glm.log
+-rw-r--r--  1 ben-hannan  staff   551K Sep 26 19:58 kept.jsonl
+-rw-r--r--  1 ben-hannan  staff   152K Sep 26 19:58 raw.jsonl
+-rw-r--r--  1 ben-hannan  staff   277K Sep 26 19:50 seeds.jsonl
+-rw-r--r--  1 ben-hannan  staff   628B Sep 26 19:58 style.json
+---
+{
+ "counts": {
+  "cue:ask:how old": 1,
+  "cue:ask:what": 5,
+  "cue:ask:whats": 3,
+      66 artifacts/claude-lis320-20260926/pilot5/drops.jsonl
+     327 artifacts/claude-lis320-20260926/pilot5/kept.jsonl
+      60 artifacts/claude-lis320-20260926/pilot5/raw.jsonl
+      60 artifacts/claude-lis320-20260926/pilot5/seeds.jsonl
+      87 artifacts/claude-lis320-20260926/pilot5/check.json
+      31 artifacts/claude-lis320-20260926/pilot5/style.json
+      61 artifacts/claude-lis320-20260926/pilot5/glm.log
+     692 total
+---GLM.LOG HEAD---
+[glm320] s320cr-325-00000 ok
+[glm320] s320cr-325-00002 ok
+[glm320] s320cr-325-00003 ok
+[glm320] s320cr-325-00001 ok
+[glm320] s320cr-325-00005 ok
+[glm320] s320cr-325-00006 unparsed
+[glm320] s320cr-325-00008 unparsed
+[glm320] s320cr-325-00004 ok
+[glm320] s320cr-325-00007 ok
+[glm320] s320cr-325-00011 ok
+[glm320] s320cr-325-00012 ok
+[glm320] s320cr-325-00009 ok
+[glm320] s320cr-325-00013 ok
+[glm320] s320cr-325-00010 ok
+[glm320] s320cr-325-00014 ok
+[glm320] s320cr-325-00017 ok
+[glm320] s320cr-325-00016 unparsed
+[glm320] s320cr-325-00019 ok
+[glm320] s320cr-325-00015 ok
+[glm320] s320cr-325-00018 ok
+[0m
+[0m$ [0mls -la artifacts/claude-lis320-20260926/pilot5/ 2>&1; git status --short 2>&1 | head -n 20
+ls: artifacts/claude-lis320-20260926/pilot5/: No such file or directory
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+[0m
+[0m$ [0mls artifacts/ 2>&1 | head; ls artifacts/claude-lis320-20260926/ 2>&1 | head -n 30
+claude-adapters-20260926d
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+ocdiag
+ocdiag2
+ocdiag3
+pilot
+pilot2
+pilot3
+pilot4
+[0m
+[0m$ [0mls artifacts/ | grep -i lis; echo "---"; ls -d artifacts/claude-lis* 2>&1
+claude-lis-e2edev-20260924
+claude-lis300-20260923
+claude-lis301-20260923
+claude-lis302-20260924
+claude-lis310-20260923
+claude-lis311-20260923
+claude-lis313-20260924
+claude-lis313b-20260924
+claude-lis314-20260924
+claude-lis314b-20260924
+claude-lis317-20260925
+claude-lis318-20260925
+claude-lis319-20260925
+claude-lis319c-20260926
+claude-lis319f-20260926
+claude-lis319k-20260926
+claude-lis319o-20260926
+claude-lis319t2-20260926
+claude-lis320-20260926
+claude-republish-20260926f
+claude-republish-20260926g
+claude-republish-20260926h
+fable-english-listening-20260921
+---
+artifacts/claude-lis-e2edev-20260924
+artifacts/claude-lis300-20260923
+artifacts/claude-lis301-20260923
+artifacts/claude-lis302-20260924
+artifacts/claude-lis310-20260923
+artifacts/claude-lis311-20260923
+artifacts/claude-lis313-20260924
+artifacts/claude-lis313b-20260924
+artifacts/claude-lis314-20260924
+artifacts/claude-lis314b-20260924
+artifacts/claude-lis317-20260925
+artifacts/claude-lis318-20260925
+artifacts/claude-lis319-20260925
+artifacts/claude-lis319c-20260926
+artifacts/claude-lis319f-20260926
+artifacts/claude-lis319k-20260926
+artifacts/claude-lis319o-20260926
+artifacts/claude-lis319t2-20260926
+artifacts/claude-lis320-20260926
+[0m
+[0m$ [0mls -1 artifacts/claude-lis320-20260926/; echo "---PILOT5---"; ls -1 artifacts/claude-lis320-20260926/pilot5/ 2>&1
+ocdiag
+ocdiag2
+ocdiag3
+pilot
+pilot2
+pilot3
+pilot4
+---PILOT5---
+ls: artifacts/claude-lis320-20260926/pilot5/: No such file or directory
+[0m
+[0m$ [0mD=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.q0XocW72He; mkdir -p artifacts/claude-lis320-20260926/pilot5; cp $D/artifacts/claude-lis320-20260926/pilot5/seeds.jsonl artifacts/claude-lis320-20260926/pilot5/seeds.jsonl; cp $D/artifacts/claude-lis320-20260926/pilot5/raw.jsonl artifacts/claude-lis320-20260926/pilot5/raw.jsonl; cp $D/artifacts/claude-lis320-20260926/pilot5/kept.jsonl artifacts/claude-lis320-20260926/pilot5/kept.jsonl; cp $D/artifacts/claude-lis320-20260926/pilot5/drops.jsonl artifacts/claude-lis320-20260926/pilot5/drops.jsonl; cp $D/artifacts/claude-lis320-20260926/pilot5/check.json artifacts/claude-lis320-20260926/pilot5/check.json; cp $D/artifacts/claude-lis320-20260926/pilot5/style.json artifacts/claude-lis320-20260926/pilot5/style.json; cp $D/artifacts/claude-lis320-20260926/pilot5/glm.log artifacts/claude-lis320-20260926/pilot5/glm.log; ls -lh artifacts/claude-lis320-20260926/pilot5/; wc -l artifacts/claude-lis320-20260926/pilot5/*
+total 2040
+-rw-r--r--  1 ben-hannan  staff   2.0K Sep 26 19:58 check.json
+-rw-r--r--  1 ben-hannan  staff    17K Sep 26 19:58 drops.jsonl
+-rw-r--r--  1 ben-hannan  staff   1.8K Sep 26 19:58 glm.log
+-rw-r--r--  1 ben-hannan  staff   551K Sep 26 19:58 kept.jsonl
+-rw-r--r--  1 ben-hannan  staff   152K Sep 26 19:58 raw.jsonl
+-rw-r--r--  1 ben-hannan  staff   277K Sep 26 19:58 seeds.jsonl
+-rw-r--r--  1 ben-hannan  staff   628B Sep 26 19:58 style.json
+      87 artifacts/claude-lis320-20260926/pilot5/check.json
+      66 artifacts/claude-lis320-20260926/pilot5/drops.jsonl
+      61 artifacts/claude-lis320-20260926/pilot5/glm.log
+     327 artifacts/claude-lis320-20260926/pilot5/kept.jsonl
+      60 artifacts/claude-lis320-20260926/pilot5/raw.jsonl
+      60 artifacts/claude-lis320-20260926/pilot5/seeds.jsonl
+      31 artifacts/claude-lis320-20260926/pilot5/style.json
+     692 total
+[0m
+[0m$ [0mD=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.q0XocW72He; O=artifacts/claude-lis320-20260926/pilot5; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_style.py --kept $O/kept.jsonl --out /tmp/style_test_out.json 2>&1; echo "EXIT=$?"; echo "---FILE---"; cat /tmp/style_test_out.json
+{"glm_kept": {"turns": 327, "words_median": 19, "words_p90": 29, "lowercase_start": 0.994, "noapos_contraction": 0.434, "over20_words": 0.398, "shapes_per_100": 100.0, "write_facts_per_turn": 1.012, "write_facts_in_over20": 0.529}, "dev_chatdev": {"turns": 336, "words_median": 14, "words_p90": 23, "lowercase_start": 1.0, "noapos_contraction": 0.253, "over20_words": 0.131, "shapes_per_100": 99.1}, "dev_bank": {"turns": 194, "words_median": 15, "words_p90": 21, "lowercase_start": 0.887, "noapos_contraction": 0.021, "over20_words": 0.108, "shapes_per_100": 100.0}}
+EXIT=0
+---FILE---
+{
+ "glm_kept": {
+  "turns": 327,
+  "words_median": 19,
+  "words_p90": 29,
+  "lowercase_start": 0.994,
+  "noapos_contraction": 0.434,
+  "over20_words": 0.398,
+  "shapes_per_100": 100.0,
+  "write_facts_per_turn": 1.012,
+  "write_facts_in_over20": 0.529
+ },
+ "dev_chatdev": {
+  "turns": 336,
+  "words_median": 14,
+  "words_p90": 23,
+  "lowercase_start": 1.0,
+  "noapos_contraction": 0.253,
+  "over20_words": 0.131,
+  "shapes_per_100": 99.1
+ },
+ "dev_bank": {
+  "turns": 194,
+  "words_median": 15,
+  "words_p90": 21,
+  "lowercase_start": 0.887,
+  "noapos_contraction": 0.021,
+  "over20_words": 0.108,
+  "shapes_per_100": 100.0
+ }
+}
+[0m
+[0m→ [0mRead artifacts/claude-lis320-20260926/pilot5/check.json
+[0m→ [0mRead artifacts/claude-lis320-20260926/pilot5/glm.log
+[0m
+[0m$ [0mpython3 -c "print(60/7.4); print(55/7.4); print(327/60)"
+8.108108108108107
+7.4324324324324325
+5.45
+[0m
+[0m← [0mWrite artifacts/claude-lis320-20260926/pilot5/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mrm -rf "/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.q0XocW72He"; ls "/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.q0XocW72He" 2>&1; echo "RM_EXIT=$?"; ls -lh artifacts/claude-lis320-20260926/pilot5/
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.q0XocW72He: No such file or directory
+RM_EXIT=1
+total 2064
+-rw-r--r--  1 ben-hannan  staff   2.0K Sep 26 19:58 check.json
+-rw-r--r--  1 ben-hannan  staff    17K Sep 26 19:58 drops.jsonl
+-rw-r--r--  1 ben-hannan  staff   1.8K Sep 26 19:58 glm.log
+-rw-r--r--  1 ben-hannan  staff   551K Sep 26 19:58 kept.jsonl
+-rw-r--r--  1 ben-hannan  staff   152K Sep 26 19:58 raw.jsonl
+-rw-r--r--  1 ben-hannan  staff   8.0K Sep 26 19:59 RESULTS.md
+-rw-r--r--  1 ben-hannan  staff   277K Sep 26 19:58 seeds.jsonl
+-rw-r--r--  1 ben-hannan  staff   628B Sep 26 19:58 style.json
+[0m
