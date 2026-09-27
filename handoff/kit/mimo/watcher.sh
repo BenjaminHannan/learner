@@ -16,6 +16,8 @@ W=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-expe
 H=$HOME/premonition-watch; Q=$H/queue; O=$H/outbox
 IN=main; OUT=builder-outbox; MAX=${MAX:-5}
 RUN="$W/handoff/kit/mimo/rungo4.sh"
+# builder model: muse-spark-1.3-contributor builders hung at "> build" with 0-byte replies from 01:21 UTC 09-27 while glm-5.3-flash calls kept returning (status diag 03:02 UTC); new launches start on GLM (Director 03:05 UTC 09-27)
+BM=opencode-go/glm-5.3-flash
 mkdir -p "$Q"; LOG=$H/watch.log
 log() { echo "$(date '+%F %T') $*" >> "$LOG"; }
 if [ ! -d "$O/.git" ]; then   # small separate repo that holds only builder results (no copy of the project)
@@ -106,7 +108,7 @@ while [ ! -e "$H/STOP" ]; do
     # a GPU: yes job claims BensPC visibly: C:\Users\benja\GPU-BUSY.txt names the job while it runs (outside agents: do not use the GPU while it exists)
     gpu=0; grep -q '^GPU: yes' "$Q/$n.md" && gpu=1
     [ $gpu = 1 ] && { ssh -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 -o BatchMode=yes benspc "echo BUSY: queue job $n since $(date -u +%FT%TZ) - do not use this GPU until this file is gone > C:\Users\benja\GPU-BUSY.txt" </dev/null >/dev/null 2>&1 & }
-    ( bash "$RUN" "$Q/$n.md"; echo "rc=$?" > "$Q/$n.exit"; rm -f "$Q/$n.running"
+    ( bash "$RUN" "$Q/$n.md" "$BM"; echo "rc=$?" > "$Q/$n.exit"; rm -f "$Q/$n.running"
       [ $gpu = 1 ] && ssh -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 -o BatchMode=yes benspc "del C:\Users\benja\GPU-BUSY.txt" </dev/null >/dev/null 2>&1 ) &
   done
   # status: every round, publish which tasks are running and the log tail, so the director can see launches
