@@ -12,4 +12,4 @@ remote/boy1t.sh change. The experiment and ADDENDUM-6's five points stay the sam
    merged 1B models). Starting at 6 GB or more leaves Ben's 3 GB BensPC floor (his 01:30 UTC choice, "Lower to 3 GB")
    free afterwards. The extra copy of tr/merged into premonition-models/y1t is made only if 3 GB would still be free
    after it. Otherwise it stays in the tree at C:\Users\benja\y1t\tree\tr\merged, and the run notes say so. The old 10 GB came from
-   benspc-y1t.md and allowed for both copies. Nothing is deleted to make room.
+   benspc-y1t.md, which gave no reason for it (a guess: room for both copies). Nothing is deleted to make room.
