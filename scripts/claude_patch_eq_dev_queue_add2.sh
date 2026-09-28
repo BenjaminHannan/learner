@@ -6,7 +6,7 @@
 cd "$(dirname "$0")/.." || exit 1
 A=artifacts/claude-patch-eq-20260928
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
-( cd $A && sha256sum -c checkpoints-sha256.txt ) || { echo "SOURCE-NETS-MISMATCH"; exit 1; }
+bash scripts/claude_patch_eq_fetch_sources.sh || exit 1
 job() {
   case $1 in
     patch-s*)  s=${1#patch-s};  [ -f $A/eq-runs/patch-s$s/adapt.json ] || python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_patch_eq_plugin --seed $s --init pre   --source $A/runs/patch-s$s   --out $A/eq-runs/patch-s$s ;;
