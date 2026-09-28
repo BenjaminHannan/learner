@@ -35,9 +35,15 @@ source training and scored grids 274 of 300. The patch scored 278 of 300,
 four more, while both missed the 285-of-300 gate. Its other five kinds passed
 their absolute marks. FIRST-PAIR-STATUS.json records all six paired counts.
 
-**Running:** the remaining six registered source arms on the same qualified
-curriculum. The primary episodic-loop gap, second seed, and full eight-arm
-results are pending. Source commit: `fd250b3be`.
+**Shown:** the episodic loop control on seed 927401 scored grids 282 of 300,
+versus the patch’s 278 of 300. Both scored 288 of 300 at fixed 48 rounds,
+and both failed the learned-stop grid gate. The patch is within nine of 300
+of both own loop controls on every kind. The controls received the same 18,000
+source batches and 2,000 episodes. FIRST-PRIMARY-CONTROL-STATUS.json records
+the six paired scores.
+
+**Running:** the remaining five registered source arms. Plain and seed 2 remain
+pending; the full eight-arm practice gate cannot be computed yet. Source commit: `fd250b3be`.
 
 **Untested:** few-example maze advantage, keeping old kinds after maze supports,
 sleep absorption with the patch removed, and whether wider practice helps the
