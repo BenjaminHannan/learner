@@ -21,3 +21,4 @@
 | H12 | added report-only doubt check (late stop / changing answer vs wrong) 21:17 UTC | see H12 row | running | reply in thread |
 - R1 reach channel (general) thread cmsg_01GSLCHTCnZxn7DhV19qcDvM5wAemyY1xHbbaZpt2GAjFJ: started 21:17 UTC after Ben's yes; race entry on the fair ruler with H10 amended marks; will hand me jobs. Check its marks/seal before any queue.
 - R2 tied directions (general) thread cmsg_01GSLCHTCnZxn7DhV19qcDvMNAqxNnvLfWqiGwBMwpHVHN: same. R3 refill and R4 twin-stop not started (R4 feeds H12).
+- 21:20 UTC 09-28: D correction (checked: ledger 2699, STARTED in builder-outbox reply): rsn-358s rental 52973474 already ran 09-27 14:59; nets may be uncollected on the Mac. No new rental. Released d358s-0-inspect (read-only, $0); d358s-1-collect stays HELD until inspect shows 8 of 8 sealed. E done: NOT SHOWN (drift, stop untrained). HF (examples in view) design done, needs A and H1 kinds; unrun.
