@@ -1,0 +1,388 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mpgrep -fl "claude_lis320_luna2.py --seeds" ; echo EXIT:$?
+pwd; git rev-parse --show-toplevel 2>&1; git status --short 2>&1 | head -n 50; ls artifacts/claude-lis320-20260926/pilot8/ 2>&1; cat artifacts/claude-lis320-20260926/pilot8/RESULTS.md 2>&1 | head -n 100
+EXIT:1
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+A  artifacts/claude-mu407-20260927/prep/RESULTS.md
+A  artifacts/claude-mu407-20260927/prep/facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/facts_all.jsonl
+A  artifacts/claude-mu407-20260927/prep/frames.json
+A  artifacts/claude-mu407-20260927/prep/panel/items.jsonl
+A  artifacts/claude-mu407-20260927/prep/raw.jsonl
+A  artifacts/claude-mu407-20260927/prep/smoke_facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/write.log
+A  artifacts/claude-y1t-20260926/luna/RESULTS-luna-pilot.md
+A  artifacts/claude-y1t-20260926/luna/luna_pilot.log
+A  artifacts/claude-y1t-20260926/luna/raw_luna.jsonl
+A  artifacts/claude-y1t-20260926/luna/raw_luna_rf.jsonl
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+ls: artifacts/claude-lis320-20260926/pilot8/: No such file or directory
+cat: artifacts/claude-lis320-20260926/pilot8/RESULTS.md: No such file or directory
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo FETCH_EXIT:$?
+git show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -n 20
+echo ---
+git rev-parse origin/main 2>&1
+FETCH_EXIT:0
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+---
+3e8cf1186bf64cca8a77f0e5428596bd2bc70b30
+[0m
+[0m$ [0mD=$(mktemp -d); echo "$D"; git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C "$D"; echo ARCHIVE_EXIT:$?; ls "$D"; ls "$D/artifacts/claude-lis320-20260926" | head -n 40; mkdir -p "$D/artifacts/claude-lis320-20260926/pilot8"; echo "$D" > /tmp/pilot8_D.txt; cat /tmp/pilot8_D.txt; git rev-parse origin/main
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.pwiYtPiGT0
+ARCHIVE_EXIT:0
+artifacts
+design
+scripts
+ADDENDUM-1-ask-back.md
+ADDENDUM-10-luna-pilot7-fixes.md
+ADDENDUM-10-NOTE-plan-cue-false-accepts.md
+ADDENDUM-11-luna-full-run-chunks.md
+ADDENDUM-12-luna-six-calls.md
+ADDENDUM-13-sealed-panel-size.md
+ADDENDUM-14-execution-kit.md
+ADDENDUM-2-opencode-route.md
+ADDENDUM-3-correction-mark.md
+ADDENDUM-4-review-fixes.md
+ADDENDUM-5-owner-reach-and-correct-ref.md
+ADDENDUM-6-route-low.md
+ADDENDUM-7-group-speaker-check.md
+ADDENDUM-7-NOTE-fairness-and-gap.md
+ADDENDUM-8-group-check-narrowed.md
+ADDENDUM-9-DRAFT-luna-writer.md
+ADDENDUM-9-luna-writer.md
+ANSWERS-TM-2118.md
+avoid_names_dev.txt
+avoid_test.sha256
+full-oc
+MOCK-TEST.json
+panel_tools
+PASSMARKS.md
+PASSMARKS.sha256.txt
+PILOT-REVIEW.md
+PILOT-THRESHOLDS.md
+SEAL-ADDENDA-10.sha256.txt
+SEAL-ADDENDA-11.sha256.txt
+SEAL-ADDENDA-12.sha256.txt
+SEAL-ADDENDA-13.sha256.txt
+SEAL-ADDENDA-14.sha256.txt
+SEAL-ADDENDA-5.sha256.txt
+SEAL-ADDENDA-6.sha256.txt
+SEAL-ADDENDA-7.sha256.txt
+SEAL-ADDENDA-8.sha256.txt
+SEAL-ADDENDA-9.sha256.txt
+SEAL-ADDENDA.sha256.txt
+SEAL-EXECUTION.sha256.txt
+SEAL-SCORING-EXEC.sha256.txt
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.pwiYtPiGT0
+3e8cf1186bf64cca8a77f0e5428596bd2bc70b30
+[0m
+[0m$ [0mD=$(cat /tmp/pilot8_D.txt); echo "D=$D"; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-6.sha256.txt; echo E6:$?; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-8.sha256.txt; echo E8:$?; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-9.sha256.txt; echo E9:$?; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-10.sha256.txt; echo E10:$?
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.pwiYtPiGT0
+artifacts/claude-lis320-20260926/ADDENDUM-6-route-low.md: OK
+scripts/claude_lis320_glm_oclow.py: OK
+scripts/claude_lis320_glm_oc.py: OK
+scripts/claude_lis320_glm.py: OK
+scripts/claude_lis320_style.py: OK
+scripts/claude_glm_leakcheck.py: OK
+E6:0
+artifacts/claude-lis320-20260926/ADDENDUM-8-group-check-narrowed.md: OK
+scripts/claude_lis320_check_we2.py: OK
+scripts/claude_lis320_check_cr.py: OK
+scripts/claude_lis320_check.py: OK
+scripts/claude_lis320_seed_cr.py: OK
+scripts/claude_lis320_glm_oclow.py: OK
+E8:0
+artifacts/claude-lis320-20260926/ADDENDUM-9-luna-writer.md: OK
+scripts/claude_luna_codex.py: OK
+scripts/claude_lis320_luna.py: OK
+scripts/claude_lis320_rawcheck2.py: OK
+scripts/claude_lis320_glm_oc.py: OK
+scripts/claude_lis320_glm.py: OK
+scripts/claude_lis320_check_we2.py: OK
+scripts/claude_lis320_seed_cr.py: OK
+E9:0
+artifacts/claude-lis320-20260926/ADDENDUM-10-luna-pilot7-fixes.md: OK
+scripts/claude_lis320_luna2.py: OK
+scripts/claude_lis320_check_we3.py: OK
+scripts/claude_lis320_luna.py: OK
+scripts/claude_luna_codex.py: OK
+scripts/claude_lis320_rawcheck2.py: OK
+scripts/claude_lis320_check_we2.py: OK
+scripts/claude_lis320_check.py: OK
+scripts/claude_lis320_glm.py: OK
+scripts/claude_lis320_seed_cr.py: OK
+E10:0
+[0m
+[0m$ [0mD=$(cat /tmp/pilot8_D.txt); export UV_OFFLINE=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_luna2.py --selftest 2>&1; echo LUNA2_EXIT:$?; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_seed_cr.py --selftest 2>&1; echo SEED_EXIT:$?; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_check_we3.py --selftest 2>&1; echo CHECK_EXIT:$?; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_rawcheck2.py --selftest 2>&1; echo RAWCHECK_EXIT:$?
+[lis320luna] call failed: RuntimeError luna call failed after 3 tries: error-like reply
+[glm320] s320-2-00000 ok
+[glm320] s320-2-00001 unparsed
+[glm320] s320-2-00002 ok
+lis320 luna selftest ok (writer gpt-6-luna; failed call -> empty unparsed row; no network)
+lis320 luna2 selftest ok (one style sentence added to the prompt; no network)
+LUNA2_EXIT:0
+seed_cr selftest OK: 400 dialogs; {'correct_ref': 121, 'correct': 197, 'backref': 235}
+SEED_EXIT:0
+check_we3 selftest OK: 'might ... someday' plan kept (old list: no_cue)
+CHECK_EXIT:0
+lis320 rawcheck2 selftest 7/7 ok
+RAWCHECK_EXIT:0
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_luna_codex.py --selftest 2>&1; echo CODEX_SELFTEST_EXIT:$?
+selftest ok: model gpt-6-luna, output-file True
+CODEX_SELFTEST_EXIT:0
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_seed_cr.py --seed 328 --n 60 --ask-back --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out artifacts/claude-lis320-20260926/pilot8/seeds.jsonl 2>&1; echo SEEDS_EXIT:$?
+{"dialogs": 60, "turns": 415, "intents": {"ack_after_ask": 15, "ambiguous_pronoun": 10, "ask": 32, "backref": 21, "confirm": 10, "correct": 41, "correct_ref": 21, "doubt": 9, "former": 25, "hypothetical": 13, "jobhome": 18, "negation_only": 15, "plan": 15, "question": 6, "smalltalk": 16, "someone_else": 10, "teach": 127, "yes_after_ask": 11}}
+SEEDS_EXIT:0
+[0m
+[0m$ [0mpgrep -fl "claude_lis320_luna2.py --seeds" ; echo PGREP_EXIT:$?
+date -u; uptime; df -g / 2>&1 | head -n 5
+PGREP_EXIT:1
+Mon Sep 28 00:02:01 UTC 2026
+20:02  up 4 days,  9:55, 4 users, load averages: 49.19 60.68 63.74
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        24    35%  484014 254251080    0%   /
+[0m
+[0m$ [0mdate -u; uptime; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_luna2.py --seeds artifacts/claude-lis320-20260926/pilot8/seeds.jsonl --out artifacts/claude-lis320-20260926/pilot8/raw.jsonl --workers 3 --max-minutes 40 > artifacts/claude-lis320-20260926/pilot8/glm.log 2>&1; echo WORDING_EXIT:$?; date -u; uptime; tail -n 5 artifacts/claude-lis320-20260926/pilot8/glm.log
+Mon Sep 28 00:02:04 UTC 2026
+20:02  up 4 days,  9:55, 4 users, load averages: 49.19 60.68 63.74
+WORDING_EXIT:0
+Mon Sep 28 00:17:26 UTC 2026
+20:17  up 4 days, 10:10, 4 users, load averages: 86.72 79.30 74.71
+[glm320] s320cr-328-00055 ok
+[glm320] s320cr-328-00057 ok
+[glm320] s320cr-328-00059 ok
+[glm320] s320cr-328-00058 ok
+{"calls": 60, "parsed": 60, "skipped": 0, "failed_calls": 0, "batches": 2, "stopped": "done", "minutes": 15.4}
+[0m
+[0m$ [0mD=$(cat /tmp/pilot8_D.txt); O=artifacts/claude-lis320-20260926/pilot8; grep -c "call failed" "$O/glm.log"; echo GREP_EXIT:$?; grep "call failed" "$O/glm.log" | sort | uniq -c | head -n 20; echo ---; wc -l "$O/raw.jsonl" "$O/seeds.jsonl"; head -c 500 "$O/raw.jsonl"
+0
+GREP_EXIT:1
+---
+      60 artifacts/claude-lis320-20260926/pilot8/raw.jsonl
+      60 artifacts/claude-lis320-20260926/pilot8/seeds.jsonl
+     120 total
+{"dialog_id": "s320cr-328-00001", "model": "gpt-6-luna", "temperature": null, "prompt_chars": 4985, "parsed": {"turns": [{"n": 1, "reply_before": "", "user": "my sister is Fiena, and i have a dog named Ylpip."}, {"n": 2, "reply_before": "Thanks for sharing.", "user": "i need to correct that: my dog was Ylpip, but its name is Keso now."}, {"n": 3, "reply_before": "Thanks for the correction.", "user": "so yeah, someone told me Fiena's dog is Ganix, though i cant say whether thats true myself. its
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_rawcheck2.py --raw artifacts/claude-lis320-20260926/pilot8/raw.jsonl --seeds artifacts/claude-lis320-20260926/pilot8/seeds.jsonl --models gpt-6-luna 2>&1; echo RAWCHECK_EXIT:$?
+{"rawcheck2": "OK", "models": "gpt-6-luna", "rows": 60, "duplicate_ids": 0, "model_ok": 60, "temperature_null": 60, "dup3_texts": 0, "not_in_seeds": 0}
+RAWCHECK_EXIT:0
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_check_we3.py --seeds artifacts/claude-lis320-20260926/pilot8/seeds.jsonl --raw artifacts/claude-lis320-20260926/pilot8/raw.jsonl --out artifacts/claude-lis320-20260926/pilot8/kept.jsonl --drops artifacts/claude-lis320-20260926/pilot8/drops.jsonl > artifacts/claude-lis320-20260926/pilot8/check.json 2>&1; echo CHECK_EXIT:$?; cat artifacts/claude-lis320-20260926/pilot8/check.json; echo ---; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_style.py --kept artifacts/claude-lis320-20260926/pilot8/kept.jsonl --out artifacts/claude-lis320-20260926/pilot8/style.json 2>&1; echo STYLE_EXIT:$?; cat artifacts/claude-lis320-20260926/pilot8/style.json
+CHECK_EXIT:0
+{
+ "counts": {
+  "cue:ask:?": 1,
+  "cue:ask:how old": 1,
+  "cue:ask:remind me": 1,
+  "cue:ask:what": 17,
+  "cue:ask:whats": 6,
+  "cue:ask:where": 1,
+  "cue:ask:who": 5,
+  "cue:confirm:?": 4,
+  "cue:confirm:check": 1,
+  "cue:confirm:right": 5,
+  "cue:doubt:maybe": 1,
+  "cue:doubt:not sure": 6,
+  "cue:doubt:not totally sure": 2,
+  "cue:former:before": 1,
+  "cue:former:used to": 23,
+  "cue:former:was": 1,
+  "cue:hypothetical:if": 13,
+  "cue:negation_only:nt": 15,
+  "cue:plan:may": 1,
+  "cue:plan:might": 11,
+  "cue:plan:planning": 1,
+  "cue:plan:sometime": 1,
+  "cue:question:?": 6,
+  "cue:someone_else:heard": 4,
+  "cue:someone_else:says": 1,
+  "cue:someone_else:told": 5,
+  "dialogs": 60,
+  "drop:assert_hedged": 2,
+  "drop:group_speaker": 3,
+  "drop:reply_ask_missing": 2,
+  "drop:stray_name": 1,
+  "dropped": 7,
+  "dropped:ack_after_ask": 1,
+  "dropped:plan": 1,
+  "dropped:teach": 3,
+  "dropped:yes_after_ask": 2,
+  "kept": 408,
+  "recased": 0,
+  "turns": 415
+ },
+ "kept_by_family": {
+  "ack_after_ask": 14,
+  "ambiguous_pronoun": 10,
+  "ask": 32,
+  "backref": 21,
+  "confirm": 10,
+  "correct": 41,
+  "correct_ref": 21,
+  "doubt": 9,
+  "former": 25,
+  "hypothetical": 13,
+  "jobhome": 18,
+  "negation_only": 15,
+  "plan": 14,
+  "question": 6,
+  "smalltalk": 16,
+  "someone_else": 10,
+  "teach": 124,
+  "yes_after_ask": 9
+ }
+}
+---
+{"glm_kept": {"turns": 408, "words_median": 9, "words_p90": 26, "lowercase_start": 0.794, "noapos_contraction": 0.23, "over20_words": 0.174, "shapes_per_100": 94.9, "write_facts_per_turn": 0.946, "write_facts_in_over20": 0.251}, "dev_chatdev": {"turns": 336, "words_median": 14, "words_p90": 23, "lowercase_start": 1.0, "noapos_contraction": 0.253, "over20_words": 0.131, "shapes_per_100": 99.1}, "dev_bank": {"turns": 194, "words_median": 15, "words_p90": 21, "lowercase_start": 0.887, "noapos_contraction": 0.021, "over20_words": 0.108, "shapes_per_100": 100.0}}
+STYLE_EXIT:0
+{
+ "glm_kept": {
+  "turns": 408,
+  "words_median": 9,
+  "words_p90": 26,
+  "lowercase_start": 0.794,
+  "noapos_contraction": 0.23,
+  "over20_words": 0.174,
+  "shapes_per_100": 94.9,
+  "write_facts_per_turn": 0.946,
+  "write_facts_in_over20": 0.251
+ },
+ "dev_chatdev": {
+  "turns": 336,
+  "words_median": 14,
+  "words_p90": 23,
+  "lowercase_start": 1.0,
+  "noapos_contraction": 0.253,
+  "over20_words": 0.131,
+  "shapes_per_100": 99.1
+ },
+ "dev_bank": {
+  "turns": 194,
+  "words_median": 15,
+  "words_p90": 21,
+  "lowercase_start": 0.887,
+  "noapos_contraction": 0.021,
+  "over20_words": 0.108,
+  "shapes_per_100": 100.0
+ }
+}
+[0m
+[0m$ [0mD=$(cat /tmp/pilot8_D.txt); echo "D=$D"; ls -la "$D/artifacts/claude-lis320-20260926/pilot8/"; wc -l "$D/artifacts/claude-lis320-20260926/pilot8/"*; mkdir -p artifacts/claude-lis320-20260926/pilot8 && cp "$D/artifacts/claude-lis320-20260926/pilot8/seeds.jsonl" artifacts/claude-lis320-20260926/pilot8/seeds.jsonl && cp "$D/artifacts/claude-lis320-20260926/pilot8/raw.jsonl" artifacts/claude-lis320-20260926/pilot8/raw.jsonl && cp "$D/artifacts/claude-lis320-20260926/pilot8/kept.jsonl" artifacts/claude-lis320-20260926/pilot8/kept.jsonl && cp "$D/artifacts/claude-lis320-20260926/pilot8/drops.jsonl" artifacts/claude-lis320-20260926/pilot8/drops.jsonl && cp "$D/artifacts/claude-lis320-20260926/pilot8/check.json" artifacts/claude-lis320-20260926/pilot8/check.json && cp "$D/artifacts/claude-lis320-20260926/pilot8/style.json" artifacts/claude-lis320-20260926/pilot8/style.json && cp "$D/artifacts/claude-lis320-20260926/pilot8/glm.log" artifacts/claude-lis320-20260926/pilot8/glm.log && echo COPY_OK && ls -la artifacts/claude-lis320-20260926/pilot8/ && wc -l artifacts/claude-lis320-20260926/pilot8/*
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.pwiYtPiGT0
+total 1928
+drwxr-xr-x   9 ben-hannan  staff     288 Sep 27 20:17 .
+drwxr-xr-x  43 ben-hannan  staff    1376 Sep 27 20:00 ..
+-rw-r--r--   1 ben-hannan  staff    1333 Sep 27 20:17 check.json
+-rw-r--r--   1 ben-hannan  staff    1580 Sep 27 20:17 drops.jsonl
+-rw-r--r--   1 ben-hannan  staff    1851 Sep 27 20:17 glm.log
+-rw-r--r--   1 ben-hannan  staff  556328 Sep 27 20:17 kept.jsonl
+-rw-r--r--   1 ben-hannan  staff  110320 Sep 27 20:17 raw.jsonl
+-rw-r--r--   1 ben-hannan  staff  275922 Sep 27 20:01 seeds.jsonl
+-rw-r--r--   1 ben-hannan  staff     625 Sep 27 20:17 style.json
+      63 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.pwiYtPiGT0/artifacts/claude-lis320-20260926/pilot8/check.json
+       7 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.pwiYtPiGT0/artifacts/claude-lis320-20260926/pilot8/drops.jsonl
+      61 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.pwiYtPiGT0/artifacts/claude-lis320-20260926/pilot8/glm.log
+     408 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.pwiYtPiGT0/artifacts/claude-lis320-20260926/pilot8/kept.jsonl
+      60 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.pwiYtPiGT0/artifacts/claude-lis320-20260926/pilot8/raw.jsonl
+      60 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.pwiYtPiGT0/artifacts/claude-lis320-20260926/pilot8/seeds.jsonl
+      31 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.pwiYtPiGT0/artifacts/claude-lis320-20260926/pilot8/style.json
+     690 total
+COPY_OK
+total 1880
+drwxr-xr-x   9 ben-hannan  staff     288 Sep 27 20:17 .
+drwxr-xr-x  15 ben-hannan  staff     480 Sep 27 20:17 ..
+-rw-r--r--   1 ben-hannan  staff    1333 Sep 27 20:17 check.json
+-rw-r--r--   1 ben-hannan  staff    1580 Sep 27 20:17 drops.jsonl
+-rw-r--r--   1 ben-hannan  staff    1851 Sep 27 20:17 glm.log
+-rw-r--r--   1 ben-hannan  staff  556328 Sep 27 20:17 kept.jsonl
+-rw-r--r--   1 ben-hannan  staff  110320 Sep 27 20:17 raw.jsonl
+-rw-r--r--   1 ben-hannan  staff  275922 Sep 27 20:17 seeds.jsonl
+-rw-r--r--   1 ben-hannan  staff     625 Sep 27 20:17 style.json
+      63 artifacts/claude-lis320-20260926/pilot8/check.json
+       7 artifacts/claude-lis320-20260926/pilot8/drops.jsonl
+      61 artifacts/claude-lis320-20260926/pilot8/glm.log
+     408 artifacts/claude-lis320-20260926/pilot8/kept.jsonl
+      60 artifacts/claude-lis320-20260926/pilot8/raw.jsonl
+      60 artifacts/claude-lis320-20260926/pilot8/seeds.jsonl
+      31 artifacts/claude-lis320-20260926/pilot8/style.json
+     690 total
+[0m
+[0m← [0mWrite artifacts/claude-lis320-20260926/pilot8/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mD=$(cat /tmp/pilot8_D.txt); echo "REMOVING $D"; rm -rf "$D" && echo RM_EXIT:$?; ls "$D" 2>&1; echo LS_EXIT:$?; ls artifacts/claude-lis320-20260926/pilot8/
+REMOVING /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.pwiYtPiGT0
+RM_EXIT:0
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.pwiYtPiGT0: No such file or directory
+LS_EXIT:1
+check.json
+drops.jsonl
+glm.log
+kept.jsonl
+raw.jsonl
+RESULTS.md
+seeds.jsonl
+style.json
+[0m
