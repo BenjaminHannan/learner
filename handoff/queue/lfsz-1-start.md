@@ -1,4 +1,3 @@
-STATUS: HELD. Released by the Director deleting this line (lf-sz helper, 2026-09-28 21:56:22 UTC): the price is under $0.50 (RUN-PLAN.md: about $0.15 to $0.18, money stop $0.45), so the standing rule of 09-28 21:34 UTC needs no OK from Ben.
 BASH-ONLY: yes
 GPU: rent (one vast card, best TFLOPS per $/h, >= 16 GB, at most $0.65/h; cap $0.45 for the whole task, the guard stops there)
 DISK: 1

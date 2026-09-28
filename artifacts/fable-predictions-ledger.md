@@ -2708,3 +2708,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-27T19:34:39Z Director released rent-y1v-vast-p1 (cap $1.00) on Ben's words 19:34 UTC (cmsg_01FuvegZXjMmeUzStiEFVnEWH9VRbPBPJ18Q73ZjgkrXAK).
 - 2026-09-27T19:49:31Z Director released rent-lf8-1-start and benspc-uw2 on Ben's words 19:49 UTC (cmsg_01FuvegZXjMmeUzStiEFVnEWWRRkSrFPuNZz1H2tmy4sm1).
 - 2026-09-27T19:53:36Z Job releases released rent-k1fv-1b-start (money stop $1.50, cap $4) under Ben's 19:19 UTC project instruction ("You can rent stuff yourself"); owner Creative answers thread, held at d4e69ed50. Queued hourly credit read 000-bash-vastcredit-1953.
+- 2026-09-28 21:57 UTC Director: LAUNCH lf-sz on vast (lfsz-1-start, kit 4e000f02b, est $0.15-0.18, stop $0.45) under Ben's 21:34 rule (spend under $0.50 needs no OK); credit $22.52 read 20:05 UTC.
