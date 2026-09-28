@@ -10,3 +10,4 @@
 - Do not duplicate or touch: claude-patch-eq-20260928, claude-distill-20260928, claude-lis320-*, relation-net race, slp358n3.
 - Report: counts as "x of N", label claims shown / suggested / untested, plain words a high-school senior can follow. Do not call any Director/Hearth tools. Final reply: what you built, file list, what remains, anything that surprised you.
 - Never claim beyond the evidence. Say honestly when a script was not run because torch is missing.
+- Ben confirmed 09-28 19:14 UTC: vast.ai GPUs may be used (cap $4/job). Mark a queue job as 'GPU: vast' when BensPC is busy; see recent vast queue files (e.g. handoff/kit/sleep358nv) for the pattern.
