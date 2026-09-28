@@ -1,0 +1,9 @@
+# Addendum 1 (HB)
+
+Written 2026-09-28 21:46 UTC (`date -u`) by the Director before any run, dev score or holdout score of this test, from artifacts/claude-dir-review2-20260928/REVIEW.md section 8 (claims checked: A marks.py:81, ruler stop rule claude_fewex_bench.py:76-78, R2g PASSMARKS:37/39). These change the words a verdict may use and add read-only checks. They never change a number a seed was already judged by, and none can turn a REJECTED into a PASS. Where a rule names a script line to change, the verdict is read by hand from the script's numbers under this rule until a new *_add1 script exists; the sealed script is not edited.
+
+- **HB-1 (words).** REFUTED-cannot-combine: the loop is below 60 of 300 on the **same** panel (s1, or s2) in both seeds **and** the other of the two is also below 150. If only s1 is below 60 in both seeds and s2 >= 150: the word is DATES-ONLY-FAIL (the loop filters and counts but cannot do calendar arithmetic). REFUTED-no-better-than-plain: the loop is at or below plain on the **same** panel in both seeds.
+- **HB-2 (per-op floor).** M1 also requires, in both seeds, at least 40 of 100 right on each of the four date ops (DIFF, PLUS, DIFFT, FIRST) of s1, read from `parts_by_op`; otherwise the PASS is worded "answers some date questions".
+- **HB-3 (chance floor).** V0 adds per-op prior predictors (most common answer per op from practice; a fixed coin for FIRST; the latest stored date for PLUS). M1 needs the loop 60 of 300 above the best of them on s1 and on s2 in both seeds.
+- **HB-4 (comparator).** M2 is read only if plain has s0 >= 250 of 300 on dev (V1 plain raised from 200), and the PASS sentence says "same size, same untuned lr, not the same compute".
+- **HB-5 (scope).** The PASS sentence adds "in-distribution: practised ops; no unseen op pair was held out".
