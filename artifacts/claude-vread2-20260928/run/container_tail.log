@@ -1,0 +1,69 @@
+=== VREAD2 START 2026-09-28T02:20:31Z
+NVIDIA GeForce RTX 4090, 24564 MiB, 580.95.05
+cpus 255
+               total        used        free      shared  buff/cache   available
+Mem:            1007         406         136           0         474         601
+overlay          60G   36K   60G   1% /
+pack.tar.xz: OK
+pack files ok: 17
+python 3.12.3 torch 2.11.0+cu128 12.8 True NVIDIA GeForce RTX 4090
+transformers 5.17.0 torch 2.11.0+cu128
+7ab8fd86563125929be78aeec8cb3969c7ed2ead3be1ab9d3ec0a9fa69c8660d  model-00000-of-00001.safetensors
+=== UNPACK 2026-09-28T02:21:15Z
+{"unpack": {"train": 11217, "cal": 1230, "dev": 1444}, "sha256_ok": true}
+{"unpack_fresh": 6483, "sha256_ok": true}
+=== CHECKS 2026-09-28T02:21:40Z
+{"device": "cuda", "torch": "2.11.0+cu128", "rows_with_multi_copy_owner": 4, "A": {"trainable_tensors": 62, "zero_or_none_grad": [], "loss": 51.80321}, "B": {"trainable_tensors": 62, "zero_or_none_grad": [], "loss": 50.13017}, "frozen_1b_params_with_grad": 0, "single_copy_loss_A": 24.968784, "single_copy_loss_B": 24.968784, "single_copy_equal": true, "gradcheck": "OK"}
+{"ptrcheck": "OK", "rows": 50, "cards": 76, "cards_not_rebuilt": 0}
+{"copycheck": "OK", "rows": 11217, "named_owner_cards": 6594, "with_2plus_copies": 3936, "copies_not_decoding_to_owner": 0}
+=== TRAIN + READ, seeds 327 and 331 side by side 2026-09-28T02:22:06Z
+=== TICK 02:27:06 gpu 18937 MiB, 100 % | {"arm": "B", "seed": 327, "step": 500, "loss": 2.3295, "right": 0.625, "rounds": 3, "min": {"arm": "B", "seed": 331, "step": 500, "loss": 2.3027, "right": 0.688, "rounds": 2, "min": 
+=== TICK 02:32:06 gpu 20339 MiB, 64 % | {"arm": "B", "seed": 327, "step": 1000, "loss": 0.856, "right": 0.812, "rounds": 8, "min": {"arm": "B", "seed": 331, "step": 1000, "loss": 0.9874, "right": 0.812, "rounds": 6, "min" 
+=== TICK 02:37:06 gpu 20339 MiB, 100 % | {"arm": "B", "seed": 327, "step": 1500, "loss": 0.2975, "right": 0.969, "rounds": 8, "min" {"arm": "B", "seed": 331, "step": 1500, "loss": 0.1952, "right": 1.0, "rounds": 3, "min":  
+=== TICK 02:42:06 gpu 20339 MiB, 27 % | {"arm": "B", "seed": 327, "step": 2100, "loss": 0.2377, "right": 0.969, "rounds": 6, "min" {"arm": "B", "seed": 331, "step": 2000, "loss": 0.1418, "right": 0.969, "rounds": 9, "min" 
+=== TICK 02:47:06 gpu 20339 MiB, 99 % | {"arm": "B", "seed": 327, "step": 2600, "loss": 0.05, "right": 1.0, "rounds": 7, "min": 24 {"arm": "B", "seed": 331, "step": 2600, "loss": 0.0319, "right": 1.0, "rounds": 7, "min":  
+=== TICK 02:52:06 gpu 20555 MiB, 100 % | {"arm": "B", "seed": 327, "step": 3100, "loss": 0.046, "right": 0.969, "rounds": 6, "min": {"arm": "B", "seed": 331, "step": 3100, "loss": 0.0099, "right": 1.0, "rounds": 5, "min":  
+=== TICK 02:57:06 gpu 20555 MiB, 100 % | {"arm": "B", "seed": 327, "step": 3700, "loss": 0.0056, "right": 1.0, "rounds": 5, "min":  {"arm": "B", "seed": 331, "step": 3600, "loss": 0.1133, "right": 0.969, "rounds": 2, "min" 
+=== TICK 03:02:06 gpu 5427 MiB, 95 % | {"arm": "B", "seed": 327, "step": 3999, "loss": 0.0098, "right": 1.0, "rounds": 5, "min":  {"arm": "B", "seed": 331, "step": 3999, "loss": 0.0056, "right": 1.0, "rounds": 8, "min":  
+=== TICK 03:07:06 gpu 5427 MiB, 94 % | {"arm": "B", "seed": 327, "step": 3999, "loss": 0.0098, "right": 1.0, "rounds": 5, "min":  {"arm": "B", "seed": 331, "step": 3999, "loss": 0.0056, "right": 1.0, "rounds": 8, "min":  
+train rc=0
+train rc=0
+read cal A rc=0
+read fresh A rc=0
+read cal B rc=0
+read fresh B rc=0
+read cal A rc=0
+read fresh A rc=0
+read cal B rc=0
+read fresh B rc=0
+{"read": 1230, "arm": "A", "ckpt": "A-s327.pt", "ms_median": 27.35, "rounds_mean": 1.0}
+{"read": 1230, "arm": "B", "ckpt": "B-s327.pt", "ms_median": 26.28, "rounds_mean": 1.0}
+{"read": 6483, "arm": "A", "ckpt": "A-s327.pt", "ms_median": 26.95, "rounds_mean": 1.0}
+{"read": 6483, "arm": "B", "ckpt": "B-s327.pt", "ms_median": 27.05, "rounds_mean": 1.0}
+{"read": 1230, "arm": "A", "ckpt": "A-s331.pt", "ms_median": 26.41, "rounds_mean": 1.0}
+{"read": 1230, "arm": "B", "ckpt": "B-s331.pt", "ms_median": 26.19, "rounds_mean": 1.0}
+{"read": 6483, "arm": "A", "ckpt": "A-s331.pt", "ms_median": 26.0, "rounds_mean": 1.0}
+{"read": 6483, "arm": "B", "ckpt": "B-s331.pt", "ms_median": 26.62, "rounds_mean": 1.0}
+    1230 out/s327/cal_A-s327.jsonl
+    1230 out/s327/cal_B-s327.jsonl
+    6483 out/s327/fresh_A-s327.jsonl
+    6483 out/s327/fresh_B-s327.jsonl
+      82 out/s327/train_log.jsonl
+    1230 out/s331/cal_A-s331.jsonl
+    1230 out/s331/cal_B-s331.jsonl
+    6483 out/s331/fresh_A-s331.jsonl
+    6483 out/s331/fresh_B-s331.jsonl
+      82 out/s331/train_log.jsonl
+   31016 total
+08fc0aa67e35132ef2193e3fcefcfa0735383755c821bcd5882ea6399a98f3a8  out/s327/A-s327.pt
+1eb923335e174ede29ee4c17c4265af63799f2f5ae2b9f24395a7e2135bea34c  out/s327/B-s327.pt
+9e160e6ff05ceaf67d1c468911946f9493f2e4a7af56181e9cb9aee768ee6834  out/s331/A-s331.pt
+be13a8297fd6819927e57491020699ef9fa2568e9ffaee08d70653e6851be6bb  out/s331/B-s331.pt
+=== MANIFEST 2026-09-28T03:07:34Z
+08fc0aa67e35132ef2193e3fcefcfa0735383755c821bcd5882ea6399a98f3a8  A-s327.pt
+9e160e6ff05ceaf67d1c468911946f9493f2e4a7af56181e9cb9aee768ee6834  A-s331.pt
+1eb923335e174ede29ee4c17c4265af63799f2f5ae2b9f24395a7e2135bea34c  B-s327.pt
+be13a8297fd6819927e57491020699ef9fa2568e9ffaee08d70653e6851be6bb  B-s331.pt
+3179f985de983a06b2600c6d12876c97140b0763f55a28543337244c42e4618b  results.tar.gz
+=== PARTS 29 big, 207 small 2026-09-28T03:07:34Z
+=== VREAD2 DONE 2026-09-28T03:07:34Z
