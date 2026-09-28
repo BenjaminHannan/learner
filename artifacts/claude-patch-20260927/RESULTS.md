@@ -30,9 +30,14 @@ to wrong; those ten stopped at rounds 6–12. See patch-927401/stop-diagnostic.j
 This diagnostic cannot replace the registered eligibility score. No stopping rule, budget, or
 training recipe is changed in response to these results.
 
-**Running:** the remaining seven registered source arms on the same qualified
-curriculum. The paired source gaps, second seed, and full eight-arm results are
-pending. Source commit: `fd250b3be`.
+**Shown:** the ordinary loop on paired seed 927401 has completed the same
+source training and scored grids 274 of 300. The patch scored 278 of 300,
+four more, while both missed the 285-of-300 gate. Its other five kinds passed
+their absolute marks. FIRST-PAIR-STATUS.json records all six paired counts.
+
+**Running:** the remaining six registered source arms on the same qualified
+curriculum. The primary episodic-loop gap, second seed, and full eight-arm
+results are pending. Source commit: `fd250b3be`.
 
 **Untested:** few-example maze advantage, keeping old kinds after maze supports,
 sleep absorption with the patch removed, and whether wider practice helps the
