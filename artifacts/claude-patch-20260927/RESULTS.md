@@ -1,6 +1,6 @@
 # Registered practice result: source gate failed
 
-Updated 2026-09-28T05:48:32Z from `date -u`. **Shown:** all eight registered arms completed; the practice gate failed in both seeds. No maze race ran.
+Updated 2026-09-28T05:56:22Z from `date -u`. **Shown:** all eight registered arms completed; the practice gate failed in both seeds. No maze race ran.
 
 ## Construction and qualification
 
@@ -37,4 +37,4 @@ The patch performs 8,000 support writes per seed; the episodic loop and plain co
 
 ## Audit status
 
-The lead's raw recount regraded 17 panels (pilot plus eight development and eight verification panels) and matched all selected counts and the gate flags; `FINAL-GATE-AUDIT.json` agrees with `PRACTICE-GATES.json`. The required separate Sol blind recount from raw files and marks is in progress; its result will be added before the final report. Candidate source hashes still match the original seal. No checkpoint, budget, stop rule, threshold, or panel was changed in response to an observed score.
+The lead's raw recount regraded 17 panels (pilot plus eight development and eight verification panels) and matched all selected counts and the gate flags; `FINAL-GATE-AUDIT.json` agrees with `PRACTICE-GATES.json`. A separate Sol subagent then regraded all 17 raw files against sealed panel identities and the original marks without reading the lead's verdict. `FINAL-SOL-BLIND-RECOUNT.json` and `.md` report the same failed gate, all six counts per arm/seed, and no recount discrepancies. Candidate source hashes still match the original seal. No checkpoint, budget, stop rule, threshold, or panel was changed in response to an observed score.
