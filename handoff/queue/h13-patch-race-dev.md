@@ -1,4 +1,3 @@
-STATUS: HELD. DO NOT RUN (helper H13, from date -u; the Director releases it by deleting this line). CPU only, $0, no GPU, no rental.
 HELD-UNTIL: ADDENDUM-2.md and scripts/claude_patch_eq_report_add2.py are on origin/main (they are the mark that must precede any maze score); the four practised source nets are on the run machine with sha256 4 of 4 matching artifacts/claude-patch-eq-20260928/checkpoints-sha256.txt (the launcher checks and stops with SOURCE-NETS-MISMATCH).
 GPU: no
 LOAD-HEAVY: yes (about 15 hours; 4 one-thread jobs at once)

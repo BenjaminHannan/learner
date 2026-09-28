@@ -1,4 +1,3 @@
-STATUS: HELD. DO NOT RUN (helper H12, 2026-09-28 21:28 UTC from date -u). The Director releases it by deleting this line, after the checks under HELD-UNTIL below.
 BASH-ONLY: yes
 GPU: no (Mac CPU, strict fp32, $0, no rental, no BensPC; DESIGN.md section 6 says why: the qualified source checkpoints sit on the Mac and the ruler is CPU fp32). LOAD-LIGHT: no (2 single-thread processes; the two baseline loop jobs took 169 minutes with eight running at once). TIME CAP: 300 minutes. LABEL: h12-stop-dev.
 DISK: 2 (about 130 MB of checkpoints per run stay local; never pushed)

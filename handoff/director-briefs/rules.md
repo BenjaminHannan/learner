@@ -11,3 +11,5 @@
 - Report: counts as "x of N", label claims shown / suggested / untested, plain words a high-school senior can follow. Do not call any Director/Hearth tools. Final reply: what you built, file list, what remains, anything that surprised you.
 - Never claim beyond the evidence. Say honestly when a script was not run because torch is missing.
 - Ben confirmed 09-28 19:14 UTC: vast.ai GPUs may be used (cap $4/job). Mark a queue job as 'GPU: vast' when BensPC is busy; see recent vast queue files (e.g. handoff/kit/sleep358nv) for the pattern.
+
+STANDING RULE (Ben 21:34 UTC 09-28, replaces the 21:12 rule): nothing is held for Ben's release. If a task would help, run it; new helpers need no yes from Ben (each still gets an explainer page). Only money: any spend of 50 cents or more needs Ben's OK first (ask the Director, who asks Ben once, with cost and cheaper options); under $0.50 just go, and price every vast job before renting. CPU work keeps running meanwhile. Only the uncle questions wait on Ben.
