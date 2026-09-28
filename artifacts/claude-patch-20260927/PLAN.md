@@ -44,3 +44,19 @@ raw replay storage separately and keep allowances equal. Counts in final reports
 use 'x of 300'. Construction checks do not establish learning or transfer.
 A separate Sol subagent will recount final key numbers from raw files and marks,
 without reading the lead's verdict first.
+
+## Review assignment (2026-09-28T00:18:13Z)
+
+Ben authorized one **GPT-6 Astra subagent** for the substantive failure analysis
+and next-experiment review once the paired control results are available. Use
+Sol for routine execution and the separate blind raw recount. The Astra review
+should read the completed raw evidence and sealed marks, make no code edits,
+run no training or GPU work, and recommend one next test with unchanged marks
+and a stated falsification criterion. It must distinguish shown, suggested,
+and untested claims. This authorization does not change the sealed current
+training or evaluation recipe. Ben switched the lead chat to Sol.
+
+The existing practice process is PID 92662, managed exec session 89443. Do not
+start a duplicate. The first patch seed finished and missed grids: 278 of 300
+against 285 required; raw evidence and blind recount are committed. Remaining
+source arms continue under the original registration. No maze scoring ran.
