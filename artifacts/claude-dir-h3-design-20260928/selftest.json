@@ -1,0 +1,102 @@
+{
+  "budget": {
+    "gap_vs_loop_pct": 0.015676971743777517,
+    "gap_vs_loop_weights": 258,
+    "gap_vs_plain_pct": 1.60614581179223,
+    "gate_bias_init": 4.0,
+    "gate_weights": 258,
+    "loop_stored": 1645726,
+    "persistent_coefficients": 1645984,
+    "plain_stored": 1619965,
+    "stored": 1645984,
+    "surprise_eps": 0.001
+  },
+  "device": "cpu",
+  "gate_init": {
+    "gate_at_init": 0.9820137900379085,
+    "max": 0.9820137619972229,
+    "min": 0.9820137619972229
+  },
+  "gate_open_equals_loop": {
+    "max_logit_abs_error_12_rounds": 9.5367431640625e-07,
+    "max_stop_abs_error_12_rounds": 8.940696716308594e-08,
+    "prediction_agreement_12_rounds": 1.0
+  },
+  "gate_range": {
+    "max": 0.999935507774353,
+    "min": 0.6121379733085632,
+    "rounds": 10
+  },
+  "gradients_fresh_init": {
+    "gate_grad_abs_sum": {
+      "gate_state.bias": 1.5701256415923126e-05,
+      "gate_state.weight": 0.005433926358819008,
+      "gate_surprise": 0.00010801582538988441
+    },
+    "halt_grad_abs_sum": 37.280372619628906,
+    "matrix_count": 17,
+    "missing_both": [],
+    "nonzero_all": true
+  },
+  "learner": {
+    "gate_changed": {
+      "gate_state.bias": true,
+      "gate_state.weight": true,
+      "gate_surprise": true
+    },
+    "sleep_updates": 3,
+    "tensors_changed": 39,
+    "updates_after_batch": 4
+  },
+  "practice_smoke": {
+    "gate_after_smoke": {
+      "max": 0.9837763905525208,
+      "mean_all": 0.9658526182174683,
+      "min": 0.9320990443229675
+    },
+    "gradient_check_after": {
+      "matrix_count": 17,
+      "missing_both": [],
+      "nonzero_all": true
+    },
+    "loss_first": 4.991623735427856,
+    "loss_last": 2.0117831230163574,
+    "reload_identical": true,
+    "steps": 200
+  },
+  "same_loop": {
+    "gate_tensors": [
+      "gate_state.bias",
+      "gate_state.weight",
+      "gate_surprise"
+    ],
+    "same_init_values": true,
+    "shared_parameters": 38
+  },
+  "selftest": "ok",
+  "shapes": {
+    "cells": 48,
+    "plain_unchanged": true,
+    "stops": 48
+  },
+  "surprise_detached": {
+    "detached_differs_from_live": true,
+    "surprise_weight_grad_nonzero": true
+  },
+  "timing_cpu": {
+    "h3": {
+      "infer_48_rounds_9x9_batch32_s": 1.0088285420206375,
+      "maze_batch_9x9_s": 0.8027362090069801,
+      "practice_step_grids5_s": 0.3656053339946084,
+      "practice_step_sums4_s": 0.19320325000444427
+    },
+    "loop": {
+      "infer_48_rounds_9x9_batch32_s": 0.9804518750170246,
+      "maze_batch_9x9_s": 0.7658334579900838,
+      "practice_step_grids5_s": 0.35198112501529977,
+      "practice_step_sums4_s": 0.1895296670263633
+    }
+  },
+  "torch": "2.14.0",
+  "utc": "2026-09-28T19:22:11Z"
+}

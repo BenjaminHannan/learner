@@ -1,0 +1,15 @@
+{"budget": {"stored": 1645984, "loop_stored": 1645726, "plain_stored": 1619965, "gate_weights": 258, "gap_vs_loop_weights": 258, "gap_vs_loop_pct": 0.015676971743777517, "gap_vs_plain_pct": 1.60614581179223, "persistent_coefficients": 1645984, "gate_bias_init": 4.0, "surprise_eps": 0.001}}
+{"same_loop": {"shared_parameters": 38, "same_init_values": true, "gate_tensors": ["gate_state.bias", "gate_state.weight", "gate_surprise"]}}
+{"shapes": {"cells": 48, "stops": 48, "plain_unchanged": true}}
+/Users/ben-hannan/premonition-h3/scripts/claude_dir_h3_selftest.py:105: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /Users/runner/work/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:821.)
+  assert float(net.gate_state.weight.abs().max()) == 0.0 and float(net.gate_surprise.abs().max()) == 0.0
+{"gate_init": {"gate_at_init": 0.9820137900379085, "min": 0.9820137619972229, "max": 0.9820137619972229}}
+{"gate_open_equals_loop": {"max_logit_abs_error_12_rounds": 9.5367431640625e-07, "max_stop_abs_error_12_rounds": 8.940696716308594e-08, "prediction_agreement_12_rounds": 1.0}}
+{"gate_range": {"min": 0.6121379733085632, "max": 0.999935507774353, "rounds": 10}}
+{"surprise_detached": {"surprise_weight_grad_nonzero": true, "detached_differs_from_live": true}}
+{"gradients_fresh_init": {"matrix_count": 17, "nonzero_all": true, "missing_both": [], "gate_grad_abs_sum": {"gate_state.weight": 0.005433926358819008, "gate_state.bias": 1.5701256415923126e-05, "gate_surprise": 0.00010801582538988441}, "halt_grad_abs_sum": 37.280372619628906}}
+{"learner": {"updates_after_batch": 4, "tensors_changed": 39, "gate_changed": {"gate_state.weight": true, "gate_state.bias": true, "gate_surprise": true}, "sleep_updates": 3}}
+{"practice_smoke": {"steps": 200, "loss_first": 4.991623735427856, "loss_last": 2.0117831230163574, "reload_identical": true, "gate_after_smoke": {"mean_all": 0.9658526182174683, "min": 0.9320990443229675, "max": 0.9837763905525208}, "gradient_check_after": {"matrix_count": 17, "nonzero_all": true, "missing_both": []}}}
+{"timing_cpu": {"h3": {"practice_step_sums4_s": 0.19320325000444427, "practice_step_grids5_s": 0.3656053339946084, "maze_batch_9x9_s": 0.8027362090069801, "infer_48_rounds_9x9_batch32_s": 1.0088285420206375}, "loop": {"practice_step_sums4_s": 0.1895296670263633, "practice_step_grids5_s": 0.35198112501529977, "maze_batch_9x9_s": 0.7658334579900838, "infer_48_rounds_9x9_batch32_s": 0.9804518750170246}}}
+{"selftest": "ok"}
