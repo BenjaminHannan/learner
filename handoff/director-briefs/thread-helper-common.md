@@ -16,3 +16,5 @@ MARKS SELF-CHECK (Ben 21:37 UTC 09-28; from the H8 review). No separate review t
 4. At least one row a plain same-size net cannot pass (a plain-net control, and a check it is not just memorising).
 5. Few-example score F_few (k=1..64) sits beside F_eq as its own required row.
 6. Sleep gates use the mean of 3 sleep draws, margin max(6, 2 x SE).
+
+RESEARCH HELPER (Ben 21:39 UTC 09-28): a standing Sonnet research thread. For literature, prior work or brain research, send your question to it with send_message (session_01RPjJMZefqyZRBB9YUxi18t) instead of researching yourself; ask for claims labelled shown / suggested / untested and the source for each.

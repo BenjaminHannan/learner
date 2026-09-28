@@ -13,3 +13,5 @@
 - Ben confirmed 09-28 19:14 UTC: vast.ai GPUs may be used (cap $4/job). Mark a queue job as 'GPU: vast' when BensPC is busy; see recent vast queue files (e.g. handoff/kit/sleep358nv) for the pattern.
 
 STANDING RULE (Ben 21:34 UTC 09-28, replaces the 21:12 rule): nothing is held for Ben's release. If a task would help, run it; new helpers need no yes from Ben (each still gets an explainer page). Only money: any spend of 50 cents or more needs Ben's OK first (ask the Director, who asks Ben once, with cost and cheaper options); under $0.50 just go, and price every vast job before renting. CPU work keeps running meanwhile. Only the uncle questions wait on Ben.
+
+RESEARCH HELPER (Ben 21:39 UTC 09-28): a standing Sonnet research thread. For literature, prior work or brain research, send your question to it with send_message (session_01RPjJMZefqyZRBB9YUxi18t) instead of researching yourself; ask for claims labelled shown / suggested / untested and the source for each.
