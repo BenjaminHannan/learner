@@ -1,0 +1,75 @@
+{
+  "arm": "loop",
+  "autocast": false,
+  "design": "clip-on patch (claude_patch_eq_plugin)",
+  "device": "cpu",
+  "dtype": "float32",
+  "episodes": 2000,
+  "finished_utc": "2026-09-28T18:26:53Z",
+  "fixed_depth": 48,
+  "fixed_source_dev": {
+    "16": 398,
+    "32": 399,
+    "48": 400,
+    "8": 398
+  },
+  "gradient_check": {
+    "matrix_count": 20,
+    "missing_both": [],
+    "nonzero_all": true
+  },
+  "guard_pass": true,
+  "old": {
+    "grids5": {
+      "cap_hits": 1,
+      "fixed_right": 200,
+      "mean_rounds": 10.64,
+      "n": 200,
+      "right": 200
+    },
+    "sums4": {
+      "cap_hits": 0,
+      "fixed_right": 200,
+      "mean_rounds": 5.345,
+      "n": 200,
+      "right": 200
+    }
+  },
+  "operations": {
+    "episode_orders": {
+      "grids>sums": 1013,
+      "sums>grids": 987
+    },
+    "episode_updates": 2000,
+    "inner_gradient_steps": 0,
+    "query_examples": 32000,
+    "supervised_examples": 768000,
+    "supervised_updates": 12000,
+    "support_examples": 8000,
+    "support_writes": 8000
+  },
+  "parameters": 1648671,
+  "patch_fro_norms": {
+    "A": 0.10184098780155182,
+    "B": 0.09697836637496948
+  },
+  "persistent_coefficients": 1652767,
+  "plain_lr_sweep": null,
+  "practice_arm": "patch",
+  "report_only": {
+    "after_supervised_guard": {
+      "grids5": 200,
+      "sums4": 200
+    },
+    "after_supervised_seconds": 7051.302942774
+  },
+  "seed": 0,
+  "source_batch": 64,
+  "source_guard_seed": 9233000,
+  "source_pt_sha256": "de7c41aaa13f5030a4cb4618b7b1e9fbcbad62b821fe9733d590d5b581dfbac2",
+  "source_steps": 12000,
+  "threads": 1,
+  "torch": "2.14.0+cpu",
+  "train_seconds": 7660.450176019,
+  "weights": 1652767
+}
