@@ -1,0 +1,60 @@
+slp-358n3 hash check (helper S)
+== A. run-vast/MANIFEST.sha256 vs the copied files ==
+OK        W/SEAL-run.sha256.txt -> SEAL-run.sha256.txt
+OK        W/checks.txt -> run-vast/checks.txt
+OK        W/drive-state.txt -> run-vast/drive-state.txt
+OK        W/gpumem.log -> run-vast/gpumem.log
+OK        W/pick-sizes.log -> run-vast/pick-sizes.log
+MISMATCH  W/pip.log -> run-vast/pip-tail.txt  manifest=bdcdb055c555d232805f8eabdf5cd20c21592f61165ef9b00a22941c841132eb actual=a56c81c820d9ffbb64a798d9f3a15fd2e08c4287510d5469e8b281e214529b0f
+          note: the copied file is named pip-tail.txt (a tail of pip.log, which is not on builder-outbox); the manifest line is for the full pip.log. Suggested: not the same file. Untested: no copy of the full pip.log exists to check.
+OK        W/resume.log -> run-vast/resume.log
+OK        W/resume/resume.json -> run-vast/resume.json
+NOT-IN-GIT  W/resume/resume.pt  (checkpoint/weights or resume state; not copied)
+NOT-IN-GIT  W/resume/stop-state.pt  (checkpoint/weights or resume state; not copied)
+NOT-IN-GIT  W/resume/straight.pt  (checkpoint/weights or resume state; not copied)
+OK        W/s13.err -> runs/s13/s13.err
+OK        W/s13.log -> runs/s13/s13.log
+NOT-IN-GIT  W/s13/S-final.pt  (checkpoint/weights or resume state; not copied)
+OK        W/s13/slp358n3-seed13.json -> runs/s13/slp358n3-seed13.json
+OK        W/s14.err -> runs/s14/s14.err
+OK        W/s14.log -> runs/s14/s14.log
+NOT-IN-GIT  W/s14/S-final.pt  (checkpoint/weights or resume state; not copied)
+OK        W/s14/slp358n3-seed14.json -> runs/s14/slp358n3-seed14.json
+OK        W/s15.err -> runs/s15/s15.err
+OK        W/s15.log -> runs/s15/s15.log
+NOT-IN-GIT  W/s15/S-final.pt  (checkpoint/weights or resume state; not copied)
+OK        W/s15/slp358n3-seed15.json -> runs/s15/slp358n3-seed15.json
+OK        W/s16.err -> runs/s16/s16.err
+OK        W/s16.log -> runs/s16/s16.log
+NOT-IN-GIT  W/s16/S-final.pt  (checkpoint/weights or resume state; not copied)
+OK        W/s16/slp358n3-seed16.json -> runs/s16/slp358n3-seed16.json
+OK        W/sizes.json -> run-vast/sizes.json
+OK        W/torch.txt -> run-vast/torch.txt
+OK        drive.log -> run-vast/drive.log
+MANIFEST: 22 match, 1 mismatch, 7 not in git, of 30 lines
+== B. SEAL-run.sha256.txt ==
+s13/S-final.pt: 76d5399912b087f2.. agrees with MANIFEST  (weights file, not in git)
+s14/S-final.pt: 997e46a2270dd231.. agrees with MANIFEST  (weights file, not in git)
+s15/S-final.pt: d8c824c64381aafd.. agrees with MANIFEST  (weights file, not in git)
+s16/S-final.pt: ffbe2b317eab156b.. agrees with MANIFEST  (weights file, not in git)
+SEAL-run: 4 of 4 lines agree with the MANIFEST hashes for the same file
+== C. SEAL-code.sha256.txt vs main ==
+OK        scripts/claude_slp358n3_nights.py
+OK        scripts/claude_rsn358u_run.py
+OK        scripts/claude_rsn358i2_run.py
+OK        scripts/claude_rsn358i_run.py
+OK        scripts/claude_rsn358g_run.py
+OK        scripts/claude_rsn358a2_run.py
+OK        scripts/claude_rsn358a_run.py
+OK        scripts/claude_rsn358a_envs.py
+OK        scripts/claude_blurt1.py
+OK        artifacts/claude-rsn358i-20260926/tests/sums4.jsonl
+OK        artifacts/claude-rsn358i-20260926/tests/sums6.jsonl
+OK        artifacts/claude-rsn358i-20260926/tests/sums8.jsonl
+OK        artifacts/claude-rsn358i-20260926/tests/sums10.jsonl
+OK        artifacts/claude-rsn358i-20260926/tests/sums12.jsonl
+OK        artifacts/claude-rsn358i-20260926/tests/grids5.jsonl
+OK        artifacts/claude-rsn358i-20260926/tests/grids6.jsonl
+OK        artifacts/claude-rsn358i-20260926/tests/grids7.jsonl
+OK        artifacts/claude-slp358n3-20260927/PASSMARKS.md
+SEAL-code: 18 of 18 files match
