@@ -27,11 +27,13 @@ cards with a whole-word copy in the prompt). Output: `repro.json` → `counts`.
 | | vector | LoRA |
 |---|---|---|
 | backref rows / gold cards | 136 / 136 | 136 / 136 |
-| matched cards (gold owner a name) | 136 | 135 (1 row has no card with the gold relation and state) |
+| matched cards (gold owner a name) | 136 | 135 (in row `...-00966-t7` LoRA wrote no card with the gold relation and state; it is one of the 41 rival rows) |
 | right person | 119 | 131 |
 | **wrong person, all matched cards** | **17 of 136** | **4 of 135** |
 | matched cards with a rival named | 41 | 40 |
 | **wrong person, rival named** | **16 of 41** | **2 of 40** |
+
+The bases differ by one card: there are 41 rival rows for both readers, but the denominator is matched cards, and LoRA has no matched card in one of them (40 of 41; 135 of 136 overall). So every LoRA figure is "x of 40" when counted on matched cards and "x of 41" only when counted on rows (section 4.1).
 
 - **Does my count match?** The 16 matches (shown): vector 16 of 41 with a rival named. It also matches
   `artifacts/claude-vread2-20260928/PASSMARKS.md:118`.
@@ -68,7 +70,7 @@ The LoRA reads hold one probability per fact, also a minimum (`summary.json` →
 ### 4.1 Where the errors are (shown)
 `summary.json` → `vector_by_n_persons`, `vector_by_gold_rank_when_2plus`, `lora_*`.
 - Prompt names one person: vector wrong in 1 of 95 (that one is the span error above); LoRA 2 of 95.
-- Two or more people named: vector wrong in 16 of 41; LoRA 2 of 41 (plus 1 with no card).
+- Two or more people named (41 rows): vector wrong in 16 of 41; LoRA wrong in 2 of 40 matched cards (the 41st row has no LoRA card, section 2), right in 38.
 - Of those 41: the gold owner is the newest person in 22, not the newest in 19.
   - Vector: gold newest → 6 wrong of 22; gold not newest → 10 wrong of 19.
   - LoRA: gold newest → 0 wrong of 22 (1 no card); gold not newest → 2 wrong of 19.
@@ -174,30 +176,43 @@ the "1 person" rows.
 
 ## 6. One proposed fix (one change, pass marks fixed in advance)
 
-**Change: read the frozen 1B at layer 18 instead of layer 12. Nothing else changes** (same 11,217 training rows, 4,000 steps, seeds
-327 and 331, same calibration rule for the save bar, same scorer). This is the cheapest single change that separates cause 2 (what
-layer 12 carries) from cause 3 (practice) without new data: the vread2 A checkpoints are the layer-12 control.
-Why 18: it was second best on the all-family calibration (810 against 1,010, `layers.json`), measured after only 800 steps, and
-coreference-like binding usually sits in the middle to upper layers of a language model (**suggested** from general knowledge, not from
-these files). It could easily fail; that is why it has a proved-wrong result.
+**Why the data change and not layer 18 (manager's question).** Two candidate single tests: (a) read the 1B at layer 18 (tests cause 2),
+(b) add contrast practice, data only (tests cause 3, which sits next to my top cause 1).
+- Evidence that layer 18 carries more coreference than layer 12: **none in the repo (untested)**. The only layer evidence is the
+  all-family calibration at 800 steps, where layer 12 beat layer 18 (1,010 vs 810; `claude-vread-20260927/RESULTS.md:66-70`,
+  `run/out/vec/layers.json`), and it has no per-family split. My earlier "coreference sits in the middle to upper layers" was general
+  knowledge, not a repo finding.
+- Does the 1B have layer 18? Yes, at least: layers 6, 12, 18 and 24 were all read and trained on in the vread run (`layers.json` keys;
+  `run/out/vec_layers.log`), so hidden state 18 exists. The total depth of MiniCPM5-1B is not stated in any file in the repo
+  (no config, no `num_hidden_layers`); I did not check it elsewhere.
+- Layer 18 is a guess with no support; (b) has counts behind it (260 rival train cards, 124 with the owner not newest, train loss 0.0027;
+  section 4.8), needs no architecture change, keeps layer 12, and if it fails the named next step is layer 18. So (b) goes first.
+- An honest limit of (b): the dose is small (about +52% rival cards) and the training loss is already near zero, so a fail says
+  "this much extra practice is not enough", not "practice is not the cause".
 
-**Test set and control:** the fresh chunk 11-13 rows that vread2 already used (6,483 rows, 538 backref cards, 135 and 134 with a
-rival named). Each new checkpoint is read once, as vread2's rule says. Control numbers are already committed:
-A-s327 rival-named wrong person 35 of 135, A-s331 29 of 134 (`claude-vread2-20260928/scores/A-s327.json`, `A-s331.json`,
-→ `owner_bins`). That set has now been seen once by a different change, so the cleaner option is lis-320 chunks 14+ once they land: at
-the fresh rate of about 135 rival cards per 6,483 rows it needs about 2,900 rows for 60, and A would have to be re-read there.
+**Change: add the fresh Luna rows of chunks 11-13 to the vector reader's training rows. Nothing else changes.** Train rows
+11,217 + 6,483 = 17,700 (vread2 data pack, `claude-vread2-20260928/data`), same layer 12, same 4,000 steps at batch 32 (so fewer passes
+per row: about 7 instead of 11; this comes with the change and is disclosed), seeds 327 and 331, same calibration slice (kept out
+of training) and same rule for the save bar, same scorer. Extra rival-named backref cards: about 135 (vread2 `scores/A-s327.json`
+→ `owner_bins.rival_named:matched` = 135), so 260 → about 395 (**suggested** count; the owner-not-newest share of the new ones is
+not counted, since I stayed off the fresh split).
 
-Pass marks (C = layer-18 checkpoint, A = the layer-12 control of the same seed; written before any training):
-- P1, target: C's wrong person with a rival named ≤ 0.6 × A's count in both seeds: ≤ 21 of 135 (seed 327), ≤ 17 of 134 (seed 331).
-- P2: C's backref right saves at 0.97, history rule ≥ A + 10: ≥ 388 (A 378) and ≥ 421 (A 411).
-- P3, guards: C's wrong turns on the whole set at its own bar ≤ A + 2: ≤ 34 (A 32) and ≤ 38 (A 36); C's main-rule right saves ≥ 0.95 × A:
-  ≥ 4,986 (A 5,248) and ≥ 4,904 (A 5,162).
-- PASS = P1, P2, P3 all met in both seeds.
-- **Result that proves it wrong:** in both seeds C's rival-named wrong-person count is within 5 of A's (≥ 30 in seed 327, ≥ 24 in seed 331), i.e. inside
-  the 6-card spread between A's own two seeds. Then the layer is not what carries the fix; the next single change would be more
-  contrast practice (train on the fresh rows plus a code-made swap of which introduction is newest), or a forced second round at read time.
-- Anything else is FAIL with a reported reason; INCONCLUSIVE if A's wrong-person share on the chosen test set is under 15% (the pattern is absent).
-- Cost, suggested: like vread2's paired run (about 40 minutes on one RTX 4090); the manager decides whether a rental is warranted.
+**Control and test set.** Control A = the vread2 A checkpoints (`run/ckpt/A-s327.pt`, `A-s331.pt`; the vread recipe), read on dev with
+the same scorer. B = the new checkpoints, read on dev. Dev is the only split with a clean rival-named count (41 cards, vread 16 of 41), and it
+has been used only for vread's sealed marks and this diagnosis, never to choose a setting. If lis-320 chunks 14+ land with about 2,900
+rows (60 rival cards at the fresh rate of 135 per 6,483 rows), use them instead and read A there too. Each checkpoint is read once.
+
+Pass marks (each seed, B against A of the same seed; written before any training):
+- Validity: A's rival-named wrong-person count on the test set ≥ 12 of 41 in both seeds (vread got 16). Otherwise INCONCLUSIVE.
+- P1, target: B's rival-named wrong-person count ≤ 0.6 × A's, rounded down (A = 16 gives ≤ 9), in both seeds.
+- P2: B's backref right saves at 0.97, history rule ≥ A + 10 in both seeds (vread: 81).
+- P3, guards: B's wrong turns on the whole test set at its own bar ≤ A + 2; B's main-rule right saves ≥ 0.95 × A.
+- PASS = validity, P1, P2, P3 in both seeds.
+- **Result that proves it wrong:** in both seeds B's rival-named wrong-person count is within 3 of A's (≥ A − 3). Then this much extra
+  practice does not fix binding. Named next step, not part of this test: layer 18 (cause 2), or a forced second round.
+- Anything else is FAIL with the reason reported. Seed spread on dev is unknown (on fresh data A's two seeds differ by 6 of ~135), so
+  a pass in one seed only is a FAIL.
+- Cost, suggested: like vread2's paired run (about 40 minutes on one RTX 4090) plus dev reads; the manager decides on a rental.
   Keep the result separate from the small card experiments and the village model.
 
 ## 7. For Ben (6 lines)
@@ -206,7 +221,7 @@ Pass marks (C = layer-18 checkpoint, A = the layer-12 control of the same seed; 
 3. It does not just pick the last name it saw: it also picks the wrong person when the right person was the newest, and it often picks someone the words rule out (a "she" who was called "he", a "my mother" who was a friend).
 4. The question was never confusing: only 1 of 136 questions had a second person who could also fit the clue.
 5. Of the 31 backref saves the small reader loses to the normal reader at the same confidence bar, 13 are wrong-person cards and 19 are the reader being unsure about the right person.
-6. The saved files cannot say why. My one proposed test: read the 1B one layer deeper (18 instead of 12), with pass marks fixed beforehand and a result that would show the layer is not the reason.
+6. The saved files cannot say why. My one proposed test: give the small reader more practice on rival cases (add the fresh chats to its training), with pass marks fixed beforehand and a result that would show it is not enough. Reading a deeper layer (18) is the named next step, because nothing in the repo says layer 18 is better than 12.
 
 ## 8. Re-running (all CPU, single thread, about a minute each)
 ```
