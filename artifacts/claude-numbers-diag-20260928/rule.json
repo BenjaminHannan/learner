@@ -1,0 +1,83 @@
+{
+ "rule": "at most 1,000 draws per distinct item, on average, for every practice stream (N=1 per M=1000)",
+ "streams": [
+  {
+   "stream": "sums1",
+   "draws": 1280000,
+   "distinct_items": 55,
+   "draws_per_item": 23272.73,
+   "counted_how": "enumerated over make_sum's support",
+   "meets_rule_M_1000": false
+  },
+  {
+   "stream": "sums2",
+   "draws": 1280000,
+   "distinct_items": 2900,
+   "draws_per_item": 441.38,
+   "counted_how": "enumerated over make_sum's support",
+   "meets_rule_M_1000": true
+  },
+  {
+   "stream": "sums3",
+   "draws": 1280000,
+   "distinct_items": 149156,
+   "draws_per_item": 8.58,
+   "counted_how": "enumerated over make_sum's support",
+   "meets_rule_M_1000": true
+  },
+  {
+   "stream": "sums4",
+   "draws": 1280000,
+   "distinct_items": 49500000,
+   "draws_per_item": 0.03,
+   "counted_how": "lower bound: ordered pairs / 2",
+   "meets_rule_M_1000": true
+  },
+  {
+   "stream": "grids4",
+   "draws": 2560000,
+   "distinct_items": 20000,
+   "draws_per_item": 128.0,
+   "counted_how": "conservative: stored bases only, variants ignored",
+   "meets_rule_M_1000": true
+  },
+  {
+   "stream": "grids5",
+   "draws": 2560000,
+   "distinct_items": 20000,
+   "draws_per_item": 128.0,
+   "counted_how": "conservative: stored bases only, variants ignored",
+   "meets_rule_M_1000": true
+  },
+  {
+   "stream": "numbers3",
+   "draws": 2560000,
+   "distinct_items": 1346,
+   "draws_per_item": 1901.93,
+   "counted_how": "enumerated: (hand, target) pairs, hands 1-9, targets 5-40",
+   "meets_rule_M_1000": false
+  },
+  {
+   "stream": "numbers4",
+   "draws": 2560000,
+   "distinct_items": 1062,
+   "draws_per_item": 2410.55,
+   "counted_how": "enumerated: hands at target 24 (today)",
+   "meets_rule_M_1000": false
+  },
+  {
+   "stream": "numbers4",
+   "draws": 2560000,
+   "distinct_items": 37082,
+   "draws_per_item": 69.04,
+   "counted_how": "enumerated: hands 1-13 minus the 300 held-out, targets 5-40 (proposed)",
+   "meets_rule_M_1000": true,
+   "variant": "proposed"
+  }
+ ],
+ "fail_today": [
+  "sums1",
+  "numbers3",
+  "numbers4"
+ ]
+}

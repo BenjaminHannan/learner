@@ -28,6 +28,8 @@ import claude_rsn358a_envs as E  # noqa: E402
 import codex_numbers_20260927_labels as L  # noqa: E402
 
 STEPS, BATCH = 60000, 256
+SHAPES = [s_ for s_ in itertools.product("no", repeat=7) if s_[0] == "n" and s_[1] == "n" and s_[-1] == "o" and s_.count("n") == 4
+          and all(sum(1 if c == "n" else -1 for c in s_[:i + 1]) >= 1 for i in range(7))]
 NB = STEPS / 3                                   # numbers batches: env chosen uniformly from 3 kinds (claude_rsn358a_run.py:Source.batch)
 
 
