@@ -1,4 +1,3 @@
-STATUS: HELD. DO NOT RUN (helper SL, 2026-09-28 from date -u). The Director releases it by deleting this line, after the checks under HELD-UNTIL below.
 BASH-ONLY: yes
 GPU: no (Mac CPU, strict fp32, $0, no rental, no BensPC). LOAD-LIGHT: no (2 single-thread processes). TIME CAP: 480 minutes. LABEL: sl-source.
 DISK: 1 (two source nets of about 7 MB each stay local)
