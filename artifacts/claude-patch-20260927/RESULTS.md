@@ -1,6 +1,6 @@
 # Registered practice result: source gate failed
 
-Updated 2026-09-28T06:04:31Z from `date -u`. **Shown:** all eight registered arms completed; the practice gate failed in both seeds. No maze race ran.
+Updated 2026-09-28T06:07:49Z from `date -u`. **Shown:** all eight registered arms completed; the practice gate failed in both seeds. No maze race ran.
 
 ## Construction and qualification
 
@@ -33,7 +33,7 @@ The patch performs 8,000 support writes per seed; the episodic loop and plain co
 
 **Untested:** few-example maze advantage over the loop or plain net, old-kind retention after maze supports, sleep absorption with the patch removed, whether wider practice helps the loop on mazes, and the Test A `F_all` bars. No contender is promoted.
 
-**Suggested:** the separate Astra review recommends a fresh 18,000-versus-36,000-batch source-only study across all four arms and both seeds to test whether more supervised practice restores eligibility. Its code, protocol, and fresh 300-item panels are sealed in `budget-v2/`; no budget-v2 model has been trained or scored. It is a separate, post-failure study, not a reinterpretation of these failed gates. The test chat subsequently sealed a revised equal-practice ruler in `ADDENDUM-4.md` and `RACE-ADDENDUM-1.md`; its independent recount reports V1–V3 passing. A future source-eligible patch race would need a new addendum and driver using that ruler's eight-rung `F_eq` recipe. The prepared `claude_patch_race.py` targets the superseded ladder and cannot be used for a revised race without a new seal. None of this rescues the current source failure.
+**Suggested:** the separate Astra review recommends a fresh 18,000-versus-36,000-batch source-only study across all four arms and both seeds to test whether more supervised practice restores eligibility. Its code, protocol, and fresh 300-item panels are sealed in `budget-v2/`; no budget-v2 model has been trained or scored. It is a separate, post-failure study, not a reinterpretation of these failed gates. The test chat subsequently sealed a revised equal-practice ruler in `ADDENDUM-4.md` and `RACE-ADDENDUM-1.md`; its independent recount reports V1–V3 passing. A future source-eligible patch race would need a new addendum and driver using that ruler's eight-rung `F_eq` recipe. The prepared legacy `claude_patch_race.py` now fails closed when those addenda are present, preventing accidental use of its superseded nine-rung ladder. None of this rescues the current source failure.
 
 ## Audit status
 

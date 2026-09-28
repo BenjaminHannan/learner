@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the sealed few-example harness through the patch plug-in, after gates.
+"""Legacy nine-rung few-example driver; fail closed after ruler revision.
 
 This script never edits the ruler. Published baseline validity, source gates,
 and a committed race seal are required before adaptation or holdout scoring.
@@ -49,6 +49,11 @@ def committed(path):
 
 
 def verify_locked():
+    # The equal-practice ruler superseded this nine-rung harness and F_all.
+    # A future source-eligible patch needs a separately sealed F_eq driver;
+    # the original failed practice gate cannot be bypassed here.
+    if (RULER / "ADDENDUM-4.md").exists() or (RULER / "RACE-ADDENDUM-1.md").exists():
+        raise NotReady("equal-practice ruler supersedes this nine-rung driver; use a newly sealed F_eq race driver")
     for rel in LOCKED:
         expected = git("show", f"{RULER_COMMIT}:{rel}")
         if (ROOT / rel).read_bytes() != expected:
