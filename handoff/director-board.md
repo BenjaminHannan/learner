@@ -37,3 +37,4 @@
 - 21:39 UTC 09-28: standing research helper thread (session_01RPjJMZefqyZRBB9YUxi18t) added to helper rules; it sends me top leads.
 - 21:43 UTC 09-28: 'Learning rate and staged unfreeze' thread cmsg_01GSLCHTCnZxn7DhV19qcDvMGAzhmhD2sBeYHBMBZcjFtY (session cse_01Lwq9YNuQjMhLkrZAcFaUFc) started from research helper lead 0/1. Serves item 3.
 - 21:44 UTC 09-28: 'Stop without labels' thread cmsg_01GSLCHTCnZxn7DhV19qcDvM3oPg2qKSQhRXDdwn3UWo6z (session cse_01JWCER94ie35Z9mLS9ZcNSV) started from research topic 2. Serves items 1, 2.
+- 21:45 UTC 09-28: H12 doubt check (e25c1cf71) copied to main, seal ok, job h12-stop-2-doubt released (runs after job 1). Stop-without-labels thread should reuse it.
