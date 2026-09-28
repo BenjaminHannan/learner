@@ -18,3 +18,7 @@ Compute note: the Director's box is CPU-only (no torch). Training and GPU runs g
 Numbers puzzles: 0 to 3 of 300 in all 12 nets. Diagnosis (artifacts/claude-numbers-diag-20260928): the nets memorise the 1,062 practice hands. One proposed change: bigger pool of hands. H2 tests it.
 
 Other chats still writing to main (do not duplicate, do not touch their folders): patch race (artifacts/claude-patch-eq-20260928), distill test (artifacts/claude-distill-20260928), manager chat (relation-net race, slp-358n3 write-up, vread wrong-person), lis-320 reader.
+
+## Update 2026-09-28 ~19:50 UTC
+- Item 1: plan+marks (artifacts/claude-dir-h4-e2e-20260928), panel generator/scorer/glue stubs with mocks (claude-dir-h5-e2e-glue-20260928) written; no real model has run. Decision (Director, reversible): E5a fix = gate the reasoner call on the reader's learned `act` field (option b), not a keyword rule. Waits on lis-320 weights + gr-9 status + Luna wording of the panel.
+- Item 3/4: job dir-h1-heldout queued (graph + rank kinds). Item 2: H3 selftest job queued, H2 numbers job queued. Item 5: H6 design ready, vast job held (needs launch kit).
