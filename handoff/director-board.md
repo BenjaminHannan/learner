@@ -16,3 +16,4 @@
 | H11 | Claim check of H9 report | thread cmsg_01GSLCHTCnZxn7DhV19qcDvM45rxS3Y7dmUzxDX69Ddkpz | started 20:58 UTC | reply in thread |
 | H12 | Train the stop on mazes (single change) | thread cmsg_01GSLCHTCnZxn7DhV19qcDvM4Juf7LQehM6FxHDrajGdav | started 20:58 UTC | reply in thread |
 | H7 | (done) vast kit for H6 | handoff/kit/sleeph6r | done, 181 of 181 fake-run checks; queue HELD until H10 addendum | release after H10 |
+| H10 | (done) review-fix addenda on main (6c5f4441b, PR 6 closed). Open: H1 V3 gates on >=1 seed; H2 bar 8 < fixed-skeleton floor 12.00 (worded, unchanged); H3 net_v2 needs a plug-in Learner for decay exemption; H6 needs new kit copy + pin | artifacts/claude-dir-h10-addenda-20260928/INDEX.md | done | decide H3/H6 follow-ups (need Ben's yes per new rule) |
