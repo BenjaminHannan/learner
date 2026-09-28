@@ -1,6 +1,6 @@
 # Result status
 
-Updated 2026-09-27T23:48:50Z. **The first patch seed fails the grid practice gate; no maze verdict.**
+Updated 2026-09-28T03:21:54Z. **Both patch seeds fail the grid practice gate; no maze verdict.**
 
 **Shown:** the rank-eight patch net is built and the eight construction checks
 passed in fp32 on the local Apple GPU. Independent Sol recount agrees with the
@@ -49,9 +49,19 @@ other five kinds' absolute marks; the patch stays within nine of 300 of both
 paired loop controls on every kind. The first seed's complete counts are in
 SEED1-STATUS.json. This registered run cannot enter the maze race.
 
-**Running:** four seed-2 source arms on the same qualified curriculum. Their
-results will complete the registered comparison but cannot reverse seed 1's
-failure.
+**Shown:** patch seed 927402 finished its registered 18,000 source batches and
+2,000 episodes. It scored sums 300 of 300, grids 272 of 300, sorting 296 of
+300, reversing 293 of 300, counting 298 of 300, and brackets 300 of 300 on
+sealed verification. Grids again miss 285 of 300. Fixed depth 48 reaches only
+280 of 300 grids for this seed. All eight trained construction checks passed.
+A separate raw-row recount of its development and verification files matched
+every reported selected and fixed-48 count (SECOND-PATCH-RECOUNT.json). This
+recount was done by the lead; the requested separate Sol blind audit follows
+the full two-seed run.
+
+**Running:** the three remaining seed-2 controls on the same qualified
+curriculum. Their results will complete the registered comparison but cannot
+reverse either patch seed's failure.
 
 **Untested:** few-example maze advantage, keeping old kinds after maze supports,
 sleep absorption with the patch removed, and whether wider practice helps the

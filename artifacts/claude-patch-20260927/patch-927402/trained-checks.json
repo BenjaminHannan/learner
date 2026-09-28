@@ -1,0 +1,1801 @@
+{
+  "autocast": false,
+  "checkpoint_sha256": "75918831ae261be773d321e24411699530311038d7d15a56e17c2c131abce0a6",
+  "checks": {
+    "fp32_no_autocast": {
+      "all_parameters_fp32": true,
+      "autocast_active": false,
+      "passed": true
+    },
+    "frozen_support_write": {
+      "ordinary_weights_unchanged": true,
+      "passed": true,
+      "patch_bounded": true,
+      "patch_nonzero": true
+    },
+    "functional_second_order_adaptation": {
+      "finite_nonzero_gradients": 38,
+      "parameter_tensors": 38,
+      "passed": true,
+      "query_loss": 5.484215259552002,
+      "support_loss": 5.768217086791992
+    },
+    "max_patch_48_round_stability": {
+      "input_shape": [
+        11,
+        11
+      ],
+      "passed": true,
+      "patterns": {
+        "all_positive": {
+          "all_finite": true,
+          "frobenius_A": 0.9999999403953552,
+          "frobenius_B": 0.9999999403953552,
+          "max_abs_hidden": 2.4340851306915283,
+          "nonzero_effect_norm": 0.0022922218777239323,
+          "operator_bound": 0.2499999701976785
+        },
+        "alternating": {
+          "all_finite": true,
+          "frobenius_A": 0.9999999403953552,
+          "frobenius_B": 0.9999999403953552,
+          "max_abs_hidden": 2.4340908527374268,
+          "nonzero_effect_norm": 0.007009426131844521,
+          "operator_bound": 0.2499999701976785
+        },
+        "random_signs": {
+          "all_finite": true,
+          "frobenius_A": 0.9999999403953552,
+          "frobenius_B": 0.9999999403953552,
+          "max_abs_hidden": 2.4340546131134033,
+          "nonzero_effect_norm": 0.010990241542458534,
+          "operator_bound": 0.2499999701976785
+        }
+      },
+      "rounds": 48
+    },
+    "query_and_stop_matrix_gradients": {
+      "loss": 0.45302996039390564,
+      "nonzero": 20,
+      "passed": true,
+      "total": 20
+    },
+    "query_isolation_and_persistence": {
+      "passed": true,
+      "repeat_query_identical": true,
+      "state_unchanged": true
+    },
+    "weight_budget": {
+      "own_loop_relative_difference": 0.004278354963098353,
+      "passed": true,
+      "persistent": 4096,
+      "plain_loop_relative_difference": 0.0005875826231098007,
+      "relative_difference": 0.003653863670866859,
+      "total": 1652767
+    },
+    "zero_patch_matches_disabled": {
+      "max_abs_difference": 0.0,
+      "passed": true
+    }
+  },
+  "device": "mps",
+  "dtype": "float32",
+  "matrix_gradients": {
+    "blocks.0.bc": {
+      "gradient_norm": 0.19721098244190216,
+      "nonzero_finite": true
+    },
+    "blocks.0.br": {
+      "gradient_norm": 0.28135931491851807,
+      "nonzero_finite": true
+    },
+    "blocks.0.mlp.0.weight": {
+      "gradient_norm": 1.6261447668075562,
+      "nonzero_finite": true
+    },
+    "blocks.0.mlp.2.weight": {
+      "gradient_norm": 0.8967521786689758,
+      "nonzero_finite": true
+    },
+    "blocks.0.out.weight": {
+      "gradient_norm": 1.2632522583007812,
+      "nonzero_finite": true
+    },
+    "blocks.0.qkv.weight": {
+      "gradient_norm": 1.2652922868728638,
+      "nonzero_finite": true
+    },
+    "blocks.1.bc": {
+      "gradient_norm": 0.25571849942207336,
+      "nonzero_finite": true
+    },
+    "blocks.1.br": {
+      "gradient_norm": 0.0944310873746872,
+      "nonzero_finite": true
+    },
+    "blocks.1.mlp.0.weight": {
+      "gradient_norm": 1.0393556356430054,
+      "nonzero_finite": true
+    },
+    "blocks.1.mlp.2.weight": {
+      "gradient_norm": 0.34875062108039856,
+      "nonzero_finite": true
+    },
+    "blocks.1.out.weight": {
+      "gradient_norm": 0.8414425253868103,
+      "nonzero_finite": true
+    },
+    "blocks.1.qkv.weight": {
+      "gradient_norm": 1.7968261241912842,
+      "nonzero_finite": true
+    },
+    "gate.weight": {
+      "gradient_norm": 3.4734088938392915e-09,
+      "nonzero_finite": true
+    },
+    "halt.weight": {
+      "gradient_norm": 0.8074328303337097,
+      "nonzero_finite": true
+    },
+    "head.weight": {
+      "gradient_norm": 0.7051834464073181,
+      "nonzero_finite": true
+    },
+    "rank_slot.weight": {
+      "gradient_norm": 2.1254177584584255e-10,
+      "nonzero_finite": true
+    },
+    "slot.weight": {
+      "gradient_norm": 0.5577051639556885,
+      "nonzero_finite": true
+    },
+    "tok.weight": {
+      "gradient_norm": 0.5445548295974731,
+      "nonzero_finite": true
+    },
+    "writer.0.weight": {
+      "gradient_norm": 7.936192147894872e-09,
+      "nonzero_finite": true
+    },
+    "writer.2.weight": {
+      "gradient_norm": 4.450591450932961e-09,
+      "nonzero_finite": true
+    }
+  },
+  "net_sha256": "6f2388ab1f6586d18f31a7a4d22ed00ced1987d7fc26a4ccc6b0301f73b4057e",
+  "passed": true,
+  "torch": "2.14.0",
+  "utc": "2026-09-28 03:18:01 UTC",
+  "weight_table": {
+    "difference": 6017,
+    "loop": {
+      "learned": 1645726,
+      "parameters": [
+        {
+          "coefficients": 32000,
+          "name": "tok.weight",
+          "shape": [
+            125,
+            256
+          ]
+        },
+        {
+          "coefficients": 512,
+          "name": "slot.weight",
+          "shape": [
+            2,
+            256
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.0.br",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.0.bc",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.0.ln1.weight",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.0.ln1.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.0.ln2.weight",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.0.ln2.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 196608,
+          "name": "blocks.0.qkv.weight",
+          "shape": [
+            768,
+            256
+          ]
+        },
+        {
+          "coefficients": 768,
+          "name": "blocks.0.qkv.bias",
+          "shape": [
+            768
+          ]
+        },
+        {
+          "coefficients": 65536,
+          "name": "blocks.0.out.weight",
+          "shape": [
+            256,
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.0.out.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 262144,
+          "name": "blocks.0.mlp.0.weight",
+          "shape": [
+            1024,
+            256
+          ]
+        },
+        {
+          "coefficients": 1024,
+          "name": "blocks.0.mlp.0.bias",
+          "shape": [
+            1024
+          ]
+        },
+        {
+          "coefficients": 262144,
+          "name": "blocks.0.mlp.2.weight",
+          "shape": [
+            256,
+            1024
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.0.mlp.2.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.1.br",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.1.bc",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.1.ln1.weight",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.1.ln1.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.1.ln2.weight",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.1.ln2.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 196608,
+          "name": "blocks.1.qkv.weight",
+          "shape": [
+            768,
+            256
+          ]
+        },
+        {
+          "coefficients": 768,
+          "name": "blocks.1.qkv.bias",
+          "shape": [
+            768
+          ]
+        },
+        {
+          "coefficients": 65536,
+          "name": "blocks.1.out.weight",
+          "shape": [
+            256,
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.1.out.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 262144,
+          "name": "blocks.1.mlp.0.weight",
+          "shape": [
+            1024,
+            256
+          ]
+        },
+        {
+          "coefficients": 1024,
+          "name": "blocks.1.mlp.0.bias",
+          "shape": [
+            1024
+          ]
+        },
+        {
+          "coefficients": 262144,
+          "name": "blocks.1.mlp.2.weight",
+          "shape": [
+            256,
+            1024
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.1.mlp.2.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "ln_state.weight",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "ln_state.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "ln_out.weight",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "ln_out.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 32000,
+          "name": "head.weight",
+          "shape": [
+            125,
+            256
+          ]
+        },
+        {
+          "coefficients": 125,
+          "name": "head.bias",
+          "shape": [
+            125
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "halt.weight",
+          "shape": [
+            1,
+            256
+          ]
+        },
+        {
+          "coefficients": 1,
+          "name": "halt.bias",
+          "shape": [
+            1
+          ]
+        }
+      ],
+      "parts": {
+        "blocks.0.bc": 72,
+        "blocks.0.br": 72,
+        "blocks.0.ln1": 512,
+        "blocks.0.ln2": 512,
+        "blocks.0.mlp": 525568,
+        "blocks.0.out": 65792,
+        "blocks.0.qkv": 197376,
+        "blocks.1.bc": 72,
+        "blocks.1.br": 72,
+        "blocks.1.ln1": 512,
+        "blocks.1.ln2": 512,
+        "blocks.1.mlp": 525568,
+        "blocks.1.out": 65792,
+        "blocks.1.qkv": 197376,
+        "halt": 257,
+        "head": 32125,
+        "ln_out": 512,
+        "ln_state": 512,
+        "slot": 512,
+        "tok": 32000
+      },
+      "persistent_A_B": 0,
+      "total": 1645726
+    },
+    "own_loop_difference": 7041,
+    "own_loop_relative_difference": 0.004278354963098353,
+    "patch": {
+      "learned": 1648671,
+      "parameters": [
+        {
+          "coefficients": 32000,
+          "name": "tok.weight",
+          "shape": [
+            125,
+            256
+          ]
+        },
+        {
+          "coefficients": 512,
+          "name": "slot.weight",
+          "shape": [
+            2,
+            256
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.0.br",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.0.bc",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.0.ln1.weight",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.0.ln1.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.0.ln2.weight",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.0.ln2.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 196608,
+          "name": "blocks.0.qkv.weight",
+          "shape": [
+            768,
+            256
+          ]
+        },
+        {
+          "coefficients": 768,
+          "name": "blocks.0.qkv.bias",
+          "shape": [
+            768
+          ]
+        },
+        {
+          "coefficients": 65536,
+          "name": "blocks.0.out.weight",
+          "shape": [
+            256,
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.0.out.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 229376,
+          "name": "blocks.0.mlp.0.weight",
+          "shape": [
+            896,
+            256
+          ]
+        },
+        {
+          "coefficients": 896,
+          "name": "blocks.0.mlp.0.bias",
+          "shape": [
+            896
+          ]
+        },
+        {
+          "coefficients": 229376,
+          "name": "blocks.0.mlp.2.weight",
+          "shape": [
+            256,
+            896
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.0.mlp.2.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.1.br",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.1.bc",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.1.ln1.weight",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.1.ln1.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.1.ln2.weight",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.1.ln2.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 196608,
+          "name": "blocks.1.qkv.weight",
+          "shape": [
+            768,
+            256
+          ]
+        },
+        {
+          "coefficients": 768,
+          "name": "blocks.1.qkv.bias",
+          "shape": [
+            768
+          ]
+        },
+        {
+          "coefficients": 65536,
+          "name": "blocks.1.out.weight",
+          "shape": [
+            256,
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.1.out.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 229376,
+          "name": "blocks.1.mlp.0.weight",
+          "shape": [
+            896,
+            256
+          ]
+        },
+        {
+          "coefficients": 896,
+          "name": "blocks.1.mlp.0.bias",
+          "shape": [
+            896
+          ]
+        },
+        {
+          "coefficients": 229376,
+          "name": "blocks.1.mlp.2.weight",
+          "shape": [
+            256,
+            896
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "blocks.1.mlp.2.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "ln_state.weight",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "ln_state.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "ln_out.weight",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "ln_out.bias",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "coefficients": 32000,
+          "name": "head.weight",
+          "shape": [
+            125,
+            256
+          ]
+        },
+        {
+          "coefficients": 125,
+          "name": "head.bias",
+          "shape": [
+            125
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "halt.weight",
+          "shape": [
+            1,
+            256
+          ]
+        },
+        {
+          "coefficients": 1,
+          "name": "halt.bias",
+          "shape": [
+            1
+          ]
+        },
+        {
+          "coefficients": 512,
+          "name": "gate.weight",
+          "shape": [
+            1,
+            512
+          ]
+        },
+        {
+          "coefficients": 1,
+          "name": "gate.bias",
+          "shape": [
+            1
+          ]
+        },
+        {
+          "coefficients": 2048,
+          "name": "rank_slot.weight",
+          "shape": [
+            8,
+            256
+          ]
+        },
+        {
+          "coefficients": 65536,
+          "name": "writer.0.weight",
+          "shape": [
+            128,
+            512
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "writer.0.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 65536,
+          "name": "writer.2.weight",
+          "shape": [
+            512,
+            128
+          ]
+        },
+        {
+          "coefficients": 512,
+          "name": "writer.2.bias",
+          "shape": [
+            512
+          ]
+        }
+      ],
+      "parts": {
+        "blocks.0.bc": 72,
+        "blocks.0.br": 72,
+        "blocks.0.ln1": 512,
+        "blocks.0.ln2": 512,
+        "blocks.0.mlp": 459904,
+        "blocks.0.out": 65792,
+        "blocks.0.qkv": 197376,
+        "blocks.1.bc": 72,
+        "blocks.1.br": 72,
+        "blocks.1.ln1": 512,
+        "blocks.1.ln2": 512,
+        "blocks.1.mlp": 459904,
+        "blocks.1.out": 65792,
+        "blocks.1.qkv": 197376,
+        "gate": 513,
+        "halt": 257,
+        "head": 32125,
+        "ln_out": 512,
+        "ln_state": 512,
+        "rank_slot": 2048,
+        "slot": 512,
+        "tok": 32000,
+        "writer": 131712
+      },
+      "persistent_A_B": 4096,
+      "total": 1652767
+    },
+    "plain": {
+      "learned": 1646693,
+      "parameters": [
+        {
+          "coefficients": 16000,
+          "name": "tok.weight",
+          "shape": [
+            125,
+            128
+          ]
+        },
+        {
+          "coefficients": 256,
+          "name": "slot.weight",
+          "shape": [
+            2,
+            128
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.0.br",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.0.bc",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.0.ln1.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.0.ln1.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.0.ln2.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.0.ln2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 49152,
+          "name": "blocks.0.qkv.weight",
+          "shape": [
+            384,
+            128
+          ]
+        },
+        {
+          "coefficients": 384,
+          "name": "blocks.0.qkv.bias",
+          "shape": [
+            384
+          ]
+        },
+        {
+          "coefficients": 16384,
+          "name": "blocks.0.out.weight",
+          "shape": [
+            128,
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.0.out.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.0.mlp.0.weight",
+          "shape": [
+            525,
+            128
+          ]
+        },
+        {
+          "coefficients": 525,
+          "name": "blocks.0.mlp.0.bias",
+          "shape": [
+            525
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.0.mlp.2.weight",
+          "shape": [
+            128,
+            525
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.0.mlp.2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.1.br",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.1.bc",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.1.ln1.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.1.ln1.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.1.ln2.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.1.ln2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 49152,
+          "name": "blocks.1.qkv.weight",
+          "shape": [
+            384,
+            128
+          ]
+        },
+        {
+          "coefficients": 384,
+          "name": "blocks.1.qkv.bias",
+          "shape": [
+            384
+          ]
+        },
+        {
+          "coefficients": 16384,
+          "name": "blocks.1.out.weight",
+          "shape": [
+            128,
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.1.out.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.1.mlp.0.weight",
+          "shape": [
+            525,
+            128
+          ]
+        },
+        {
+          "coefficients": 525,
+          "name": "blocks.1.mlp.0.bias",
+          "shape": [
+            525
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.1.mlp.2.weight",
+          "shape": [
+            128,
+            525
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.1.mlp.2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.2.br",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.2.bc",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.2.ln1.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.2.ln1.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.2.ln2.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.2.ln2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 49152,
+          "name": "blocks.2.qkv.weight",
+          "shape": [
+            384,
+            128
+          ]
+        },
+        {
+          "coefficients": 384,
+          "name": "blocks.2.qkv.bias",
+          "shape": [
+            384
+          ]
+        },
+        {
+          "coefficients": 16384,
+          "name": "blocks.2.out.weight",
+          "shape": [
+            128,
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.2.out.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.2.mlp.0.weight",
+          "shape": [
+            525,
+            128
+          ]
+        },
+        {
+          "coefficients": 525,
+          "name": "blocks.2.mlp.0.bias",
+          "shape": [
+            525
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.2.mlp.2.weight",
+          "shape": [
+            128,
+            525
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.2.mlp.2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.3.br",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.3.bc",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.3.ln1.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.3.ln1.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.3.ln2.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.3.ln2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 49152,
+          "name": "blocks.3.qkv.weight",
+          "shape": [
+            384,
+            128
+          ]
+        },
+        {
+          "coefficients": 384,
+          "name": "blocks.3.qkv.bias",
+          "shape": [
+            384
+          ]
+        },
+        {
+          "coefficients": 16384,
+          "name": "blocks.3.out.weight",
+          "shape": [
+            128,
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.3.out.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.3.mlp.0.weight",
+          "shape": [
+            525,
+            128
+          ]
+        },
+        {
+          "coefficients": 525,
+          "name": "blocks.3.mlp.0.bias",
+          "shape": [
+            525
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.3.mlp.2.weight",
+          "shape": [
+            128,
+            525
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.3.mlp.2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.4.br",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.4.bc",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.4.ln1.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.4.ln1.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.4.ln2.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.4.ln2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 49152,
+          "name": "blocks.4.qkv.weight",
+          "shape": [
+            384,
+            128
+          ]
+        },
+        {
+          "coefficients": 384,
+          "name": "blocks.4.qkv.bias",
+          "shape": [
+            384
+          ]
+        },
+        {
+          "coefficients": 16384,
+          "name": "blocks.4.out.weight",
+          "shape": [
+            128,
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.4.out.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.4.mlp.0.weight",
+          "shape": [
+            525,
+            128
+          ]
+        },
+        {
+          "coefficients": 525,
+          "name": "blocks.4.mlp.0.bias",
+          "shape": [
+            525
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.4.mlp.2.weight",
+          "shape": [
+            128,
+            525
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.4.mlp.2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.5.br",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.5.bc",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.5.ln1.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.5.ln1.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.5.ln2.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.5.ln2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 49152,
+          "name": "blocks.5.qkv.weight",
+          "shape": [
+            384,
+            128
+          ]
+        },
+        {
+          "coefficients": 384,
+          "name": "blocks.5.qkv.bias",
+          "shape": [
+            384
+          ]
+        },
+        {
+          "coefficients": 16384,
+          "name": "blocks.5.out.weight",
+          "shape": [
+            128,
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.5.out.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.5.mlp.0.weight",
+          "shape": [
+            525,
+            128
+          ]
+        },
+        {
+          "coefficients": 525,
+          "name": "blocks.5.mlp.0.bias",
+          "shape": [
+            525
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.5.mlp.2.weight",
+          "shape": [
+            128,
+            525
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.5.mlp.2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.6.br",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.6.bc",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.6.ln1.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.6.ln1.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.6.ln2.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.6.ln2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 49152,
+          "name": "blocks.6.qkv.weight",
+          "shape": [
+            384,
+            128
+          ]
+        },
+        {
+          "coefficients": 384,
+          "name": "blocks.6.qkv.bias",
+          "shape": [
+            384
+          ]
+        },
+        {
+          "coefficients": 16384,
+          "name": "blocks.6.out.weight",
+          "shape": [
+            128,
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.6.out.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.6.mlp.0.weight",
+          "shape": [
+            525,
+            128
+          ]
+        },
+        {
+          "coefficients": 525,
+          "name": "blocks.6.mlp.0.bias",
+          "shape": [
+            525
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.6.mlp.2.weight",
+          "shape": [
+            128,
+            525
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.6.mlp.2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.7.br",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 72,
+          "name": "blocks.7.bc",
+          "shape": [
+            8,
+            9
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.7.ln1.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.7.ln1.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.7.ln2.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.7.ln2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 49152,
+          "name": "blocks.7.qkv.weight",
+          "shape": [
+            384,
+            128
+          ]
+        },
+        {
+          "coefficients": 384,
+          "name": "blocks.7.qkv.bias",
+          "shape": [
+            384
+          ]
+        },
+        {
+          "coefficients": 16384,
+          "name": "blocks.7.out.weight",
+          "shape": [
+            128,
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.7.out.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.7.mlp.0.weight",
+          "shape": [
+            525,
+            128
+          ]
+        },
+        {
+          "coefficients": 525,
+          "name": "blocks.7.mlp.0.bias",
+          "shape": [
+            525
+          ]
+        },
+        {
+          "coefficients": 67200,
+          "name": "blocks.7.mlp.2.weight",
+          "shape": [
+            128,
+            525
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "blocks.7.mlp.2.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "ln_out.weight",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 128,
+          "name": "ln_out.bias",
+          "shape": [
+            128
+          ]
+        },
+        {
+          "coefficients": 16000,
+          "name": "head.weight",
+          "shape": [
+            125,
+            128
+          ]
+        },
+        {
+          "coefficients": 125,
+          "name": "head.bias",
+          "shape": [
+            125
+          ]
+        }
+      ],
+      "parts": {
+        "blocks.0.bc": 72,
+        "blocks.0.br": 72,
+        "blocks.0.ln1": 256,
+        "blocks.0.ln2": 256,
+        "blocks.0.mlp": 135053,
+        "blocks.0.out": 16512,
+        "blocks.0.qkv": 49536,
+        "blocks.1.bc": 72,
+        "blocks.1.br": 72,
+        "blocks.1.ln1": 256,
+        "blocks.1.ln2": 256,
+        "blocks.1.mlp": 135053,
+        "blocks.1.out": 16512,
+        "blocks.1.qkv": 49536,
+        "blocks.2.bc": 72,
+        "blocks.2.br": 72,
+        "blocks.2.ln1": 256,
+        "blocks.2.ln2": 256,
+        "blocks.2.mlp": 135053,
+        "blocks.2.out": 16512,
+        "blocks.2.qkv": 49536,
+        "blocks.3.bc": 72,
+        "blocks.3.br": 72,
+        "blocks.3.ln1": 256,
+        "blocks.3.ln2": 256,
+        "blocks.3.mlp": 135053,
+        "blocks.3.out": 16512,
+        "blocks.3.qkv": 49536,
+        "blocks.4.bc": 72,
+        "blocks.4.br": 72,
+        "blocks.4.ln1": 256,
+        "blocks.4.ln2": 256,
+        "blocks.4.mlp": 135053,
+        "blocks.4.out": 16512,
+        "blocks.4.qkv": 49536,
+        "blocks.5.bc": 72,
+        "blocks.5.br": 72,
+        "blocks.5.ln1": 256,
+        "blocks.5.ln2": 256,
+        "blocks.5.mlp": 135053,
+        "blocks.5.out": 16512,
+        "blocks.5.qkv": 49536,
+        "blocks.6.bc": 72,
+        "blocks.6.br": 72,
+        "blocks.6.ln1": 256,
+        "blocks.6.ln2": 256,
+        "blocks.6.mlp": 135053,
+        "blocks.6.out": 16512,
+        "blocks.6.qkv": 49536,
+        "blocks.7.bc": 72,
+        "blocks.7.br": 72,
+        "blocks.7.ln1": 256,
+        "blocks.7.ln2": 256,
+        "blocks.7.mlp": 135053,
+        "blocks.7.out": 16512,
+        "blocks.7.qkv": 49536,
+        "head": 16125,
+        "ln_out": 256,
+        "slot": 256,
+        "tok": 16000
+      },
+      "persistent_A_B": 0,
+      "total": 1646693
+    },
+    "plain_loop_relative_difference": 0.0005875826231098007,
+    "reference": 1646750,
+    "relative_difference": 0.003653863670866859
+  }
+}
