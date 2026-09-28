@@ -1,0 +1,9 @@
+#!/bin/bash
+# FAKE pip for the kit tests only. `pip install ... torch==X` records the "installed" version for the fake python.
+case "$1" in
+  install) [ -e "$FAKE/py/pip-fail" ] && { echo "fake pip: no network" >&2; exit 1; }
+           v=$(cat "$FAKE/py/torch-install" 2>/dev/null || echo "2.11.0+cu128"); echo "$v" > "$FAKE/py/torch-version"
+           echo "fake pip: installed torch $v";;
+  freeze) echo "torch==$(cat "$FAKE/py/torch-version" 2>/dev/null)"; echo "nvidia-cudnn-cu12==9.fake";;
+  *) echo "fake pip: unhandled $*" >&2; exit 1;;
+esac

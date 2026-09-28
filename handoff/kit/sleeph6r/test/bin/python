@@ -1,0 +1,42 @@
+#!/bin/bash
+# FAKE python for the kit tests only (this is the rental's `python`; the Mac side uses PYMH6 = the real python3).
+# It answers exactly the calls box/drive.sh makes, and simulates a seed run. Nothing here is a result: the output json says so.
+REALPY=/usr/bin/python3
+if [ "$1" = -c ]; then
+  case "$2" in
+    *get_device_capability*) echo "torch $(cat "$FAKE/py/torch-version" 2>/dev/null) 12.8 True NVIDIA GeForce RTX 3090 $(cat "$FAKE/py/cc" 2>/dev/null || echo "8 6")"; exit 0;;
+    *) exec $REALPY "$@";;
+  esac
+fi
+if [ "$1" = -B ]; then
+  shift; script=$1; cmd=$2; shift 2
+  case "$script" in
+    scripts/claude_rsn358u_run.py) [ "$cmd" = selftest ] && { echo "selftest ok: fake"; exit 0; };;
+    scripts/claude_dir_h6_sleeplen.py)
+      case "$cmd" in
+        smoke)
+          if [ -e "$FAKE/py/smoke-hang" ]; then echo $$ >> "$FAKE/py/hang.pids"; exec /usr/bin/sleep 100000; fi
+          if [ -e "$FAKE/py/smoke-fail" ]; then
+            printf 'Traceback (most recent call last):\n  File "scripts/claude_dir_h6_sleeplen.py", line 123, in smoke\n    assert d["plan_identical_L_B"] is True\nAssertionError: FAKE smoke failure\n'; exit 1; fi
+          echo "smoke ok /tmp/fake-smoke"; exit 0;;
+        run)
+          while [ $# -gt 0 ]; do case "$1" in --seed) seed=$2; shift 2;; --out) out=$2; shift 2;; --ckpt) ck=$2; shift 2;; --sizes) sz=$2; shift 2;; *) shift;; esac; done
+          mode=$(cat "$FAKE/py/run-$seed" 2>/dev/null || echo ok); dur=$(cat "$FAKE/py/run-seconds" 2>/dev/null || echo 600)
+          mkdir -p "$out"
+          echo "base {\"FAKE\": 0}"
+          case "$mode" in
+            die) sleep 20; echo "fake run $seed: dying" >&2; exit 1;;
+            hang) echo "morning 1 {\"FAKE\": 0} 0.1 min"; echo $$ >> "$FAKE/py/hang.pids"; exec /usr/bin/sleep 100000;;
+          esac
+          for d in 1 2 3; do sleep $((dur / 3)); echo "morning $d {\"FAKE\": $d} $((dur * d / 180)) min"; done
+          ver=$(cat "$FAKE/py/torch-version"); m='{"N":{"FAKE":0},"S":{"FAKE":0},"L":{"FAKE":0},"B":{"FAKE":0}}'
+          cat > "$out/dirh6-seed$seed.json" <<JSON
+{"FAKE_TEST_OUTPUT": true, "seed": $seed, "ckpt": "$ck", "torch": "$ver", "device": "cuda", "gpu": "NVIDIA GeForce RTX 3090 (fake)",
+ "arm_lr": {"N": 3e-05, "S": 3e-05, "L": 3e-05, "B": 1.5e-06}, "morning": {"base": {}, "1": $m, "2": $m, "3": $m},
+ "plan_identical_L_B": true, "plan_first300_identical_S_L": true, "minutes": $((dur / 60))}
+JSON
+          exit 0;;
+      esac;;
+  esac
+fi
+echo "fake python: unhandled: $*" >&2; exit 2
