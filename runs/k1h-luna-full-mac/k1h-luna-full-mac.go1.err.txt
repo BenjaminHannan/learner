@@ -1,0 +1,847 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m# [0mTodos
+[ ] Duplicate guard check (origin branches + running processes)
+[ ] Tree setup: fetch, archive, record commit
+[ ] Seals verification + data hash checks
+[ ] Selftests (luna, glm, routefilter)
+[ ] Chats run (7 calls chunk)
+[ ] Answers run (up to 6 chunks)
+[ ] Route filter + counts script
+[ ] Copy to worktree, REPORT.md, cleanup, verify
+[0m
+[0m# [0mTodos
+[•] Duplicate guard check (origin branches + running processes)
+[ ] Tree setup: fetch, archive, record commit
+[ ] Seals verification + data hash checks
+[ ] Selftests (luna, glm, routefilter)
+[ ] Chats run (7 calls chunk)
+[ ] Answers run (up to 6 chunks)
+[ ] Route filter + counts script
+[ ] Copy to worktree, REPORT.md, cleanup, verify
+[0m
+[0m$ [0mgit rev-parse --abbrev-ref HEAD; git status --porcelain=v1 | head -n 50; git remote -v | head -n 20; date -u +%FT%TZ
+claude/card-experiment-handoff-7c5b27
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+A  artifacts/claude-mu407-20260927/prep/RESULTS.md
+A  artifacts/claude-mu407-20260927/prep/facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/facts_all.jsonl
+A  artifacts/claude-mu407-20260927/prep/frames.json
+A  artifacts/claude-mu407-20260927/prep/panel/items.jsonl
+A  artifacts/claude-mu407-20260927/prep/raw.jsonl
+A  artifacts/claude-mu407-20260927/prep/smoke_facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/write.log
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+origin	git@github.com:BenjaminHannan/learner.git (fetch)
+origin	git@github.com:BenjaminHannan/learner.git (push)
+2026-09-27T06:42:19Z
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo "fetch-main-exit:$?"; git fetch -q origin builder-outbox 2>&1; echo "fetch-outbox-exit:$?"; git rev-parse origin/main; git rev-parse origin/builder-outbox; date -u +%FT%TZ
+fetch-main-exit:0
+fetch-outbox-exit:0
+6a62dcae4e3951bf33e1b25f20a3ab6af8216b89
+ba0f340281cf5b1d71336de23ead18820a137457
+2026-09-27T06:42:32Z
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main -- artifacts/claude-k1h-20260926/luna/full 2>&1; echo "---main-ls-exit:$?"; git ls-tree --name-only origin/builder-outbox -- artifacts/claude-k1h-20260926/luna/full 2>&1; echo "---outbox-ls-exit:$?"; date -u +%FT%TZ
+---main-ls-exit:0
+---outbox-ls-exit:0
+2026-09-27T06:42:33Z
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main -- artifacts/claude-k1h-20260926/luna/ 2>&1; echo "---"; git ls-tree --name-only origin/builder-outbox -- artifacts/claude-k1h-20260926/luna/ 2>&1; echo "done"
+artifacts/claude-k1h-20260926/luna/pilot-score
+artifacts/claude-k1h-20260926/luna/pilot
+artifacts/claude-k1h-20260926/luna/pilot_items.jsonl
+---
+artifacts/claude-k1h-20260926/luna/pilot
+done
+[0m
+[0m$ [0mps -eo comm,args | head -n 100; echo "---"; ps -eo comm,args | grep -F "claude_k1h_luna.py" | grep -v -F "opencode" || echo "no-luna-procs"
+COMM             ARGS
+/sbin/launchd    /sbin/launchd
+/System/Library/ /System/Library/PrivateFrameworks/CallHistory.framework/Support/CallHistorySyncHelper
+/usr/libexec/log /usr/libexec/logd
+/usr/libexec/Use /usr/libexec/UserEventAgent (System)
+/System/Library/ /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Support/fseventsd
+/System/Library/ /System/Library/PrivateFrameworks/MediaRemote.framework/Support/mediaremoted
+/usr/sbin/system /usr/sbin/systemstats --daemon
+/usr/libexec/con /usr/libexec/configd
+/System/Library/ /System/Library/CoreServices/powerd.bundle/powerd
+/usr/libexec/IOM /usr/libexec/IOMFB_bics_daemon
+/usr/libexec/rem /usr/libexec/remoted
+/System/Library/ /System/Library/PrivateFrameworks/CoreSpeech.framework/corespeechd_system
+/usr/libexec/wat /usr/libexec/watchdogd
+/System/Library/ /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds
+/usr/libexec/ker /usr/libexec/kernelmanagerd
+/usr/libexec/dis /usr/libexec/diskarbitrationd
+/usr/sbin/syslog /usr/sbin/syslogd
+/usr/libexec/the /usr/libexec/thermalmonitord
+/System/Library/ /System/Library/PrivateFrameworks/CoreDuetContext.framework/Resources/contextstored
+/usr/libexec/xpr /usr/libexec/xprotectd
+/usr/libexec/ope /usr/libexec/opendirectoryd
+/System/Library/ /System/Library/PrivateFrameworks/ApplePushService.framework/apsd
+/System/Library/ /System/Library/CoreServices/launchservicesd
+/usr/libexec/tim /usr/libexec/timed
+/System/Library/ /System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/Resources/usbmuxd -launchd
+/usr/sbin/securi /usr/sbin/securityd -i
+/usr/libexec/loc /usr/libexec/locationd
+/usr/libexec/nes /usr/libexec/nesessionmanager
+autofsd          autofsd
+/usr/libexec/das /usr/libexec/dasd
+/usr/sbin/distno /usr/sbin/distnoted daemon
+/System/Library/ /System/Library/CoreServices/logind
+/System/Library/ /System/Library/PrivateFrameworks/GenerationalStorage.framework/Versions/A/Support/revisiond
+/usr/sbin/Kernel /usr/sbin/KernelEventAgent
+/usr/libexec/use /usr/libexec/usermanagerd -t 15
+/usr/sbin/blueto /usr/sbin/bluetoothd
+/usr/sbin/notify /usr/sbin/notifyd
+/usr/libexec/cor /usr/libexec/corebrightnessd --launchd
+/System/Library/ /System/Library/Frameworks/CoreMediaIO.framework/Versions/A/Resources/com.apple.cmio.registerassistantservice
+/System/Library/ /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer -daemon
+/System/Library/ /System/Library/PrivateFrameworks/TCC.framework/Support/tccd system
+/usr/sbin/cfpref /usr/sbin/cfprefsd daemon
+/usr/libexec/run /usr/libexec/runningboardd
+/System/Library/ /System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow console
+/System/Library/ /System/Library/CoreServices/coreservicesd
+/usr/libexec/tru /usr/libexec/trustd
+/usr/libexec/lsd /usr/libexec/lsd runAsRoot
+/usr/sbin/mDNSRe /usr/sbin/mDNSResponder
+/usr/libexec/nsu /usr/libexec/nsurlsessiond --privileged
+/usr/libexec/apf /usr/libexec/apfsd
+/System/Library/ /System/Library/PrivateFrameworks/CoreAnalytics.framework/Support/analyticsd
+/usr/libexec/air /usr/libexec/airportd
+/usr/libexec/clo /usr/libexec/clocksyncd
+/usr/libexec/sym /usr/libexec/symptomsd
+/System/Library/ /System/Library/Frameworks/Security.framework/Versions/A/XPCServices/authd.xpc/Contents/MacOS/authd
+/usr/sbin/distno /usr/sbin/distnoted agent
+/usr/sbin/mDNSRe /usr/sbin/mDNSResponderHelper
+/usr/libexec/App /usr/libexec/ApplicationFirewall/socketfilterfw
+/usr/libexec/sys /usr/libexec/syspolicyd
+/usr/sbin/distno /usr/sbin/distnoted agent
+/System/Library/ /System/Library/CoreServices/TimeMachine/backupd
+/usr/libexec/eli /usr/libexec/eligibilityd
+/usr/sbin/Wirele /usr/sbin/WirelessRadioManagerd
+/usr/sbin/distno /usr/sbin/distnoted agent
+/usr/libexec/gam /usr/libexec/gamepolicyd
+/System/Library/ /System/Library/CoreServices/appleeventsd --server
+/System/Library/ /System/Library/PrivateFrameworks/BackgroundTaskManagement.framework/Resources/backgroundtaskmanagementd -daemon
+/usr/sbin/distno /usr/sbin/distnoted agent
+/usr/sbin/distno /usr/sbin/distnoted agent
+/usr/libexec/com /usr/libexec/com.apple.cmio.videodriverkithostextension.systemextension/Contents/MacOS/com.apple.cmio.videodriverkithostextension
+/usr/sbin/appleh /usr/sbin/appleh13camerad
+/usr/sbin/distno /usr/sbin/distnoted agent
+/usr/libexec/sea /usr/libexec/searchpartyd
+/System/Library/ /System/Library/CoreServices/SubmitDiagInfo server-init
+/usr/libexec/rtc /usr/libexec/rtcreportingd
+/usr/sbin/coreau /usr/sbin/coreaudiod
+/usr/sbin/distno /usr/sbin/distnoted agent
+Core Audio Drive Core Audio Driver (ImmersedAudio.driver)
+/usr/sbin/distno /usr/sbin/distnoted agent
+/usr/libexec/mod /usr/libexec/modelmanagerd
+/usr/libexec/aud /usr/libexec/audiomxd
+/usr/libexec/Air /usr/libexec/AirPlayXPCHelper
+/usr/sbin/distno /usr/sbin/distnoted agent
+/usr/libexec/sys /usr/libexec/sysmond
+/usr/sbin/system /usr/sbin/systemstats --logger-helper /private/var/db/systemstats
+/usr/sbin/distno /usr/sbin/distnoted agent
+/Applications/Pl /Applications/PlasticSCMServer.app/Contents/MacOS/plasticd --daemon
+/bin/sh          /bin/sh /Library/DWAgent/native/dwagsvc run
+/Library/Privile /Library/PrivilegedHelperTools/com.muse.authservice
+/Library/Privile /Library/PrivilegedHelperTools/com.windscribe.helper.macos
+/usr/local/bin/t /usr/local/bin/tailscaled
+/Library/Privile /Library/PrivilegedHelperTools/com.aimode.helper
+/Library/Privile /Library/PrivilegedHelperTools/com.docker.vmnetd
+/usr/libexec/cam /usr/libexec/cameracaptured
+/System/Library/ /System/Library/Frameworks/CoreMediaIO.framework/Versions/A/Resources/UVCAssistant.systemextension/Contents/MacOS/UVCAssistant
+Core Audio Drive Core Audio Driver (ZoomAudioDevice.driver)
+/System/Library/ /System/Library/CoreServices/Software Update.app/Contents/Resources/suhelperd
+/System/Library/ /System/Library/Frameworks/LocalAuthentication.framework/Support/coreauthd
+/System/Library/ /System/Library/DriverExtensions/com.apple.DriverKit-IOUserDockChannelSerial.dext/com.apple.DriverKit-IOUserDockChannelSerial com.apple.IOUserDockChannelSerial 0x100000fc6 com.apple.DriverKit-IOUserDockChannelSerial
+---
+grep             grep -F claude_k1h_luna.py
+[0m
+[0m$ [0mps -eo comm,args | grep -v -F "opencode" | grep -F "claude_k1h_luna.py" | grep -v -F "grep" || echo "no-luna-procs-after-filter"; echo "---full-python-uv-list:"; ps -eo comm,args | awk '$1 ~ /^(python.*|uv.*|python3.*)$/ {print}' | head -n 20; echo "done"
+no-luna-procs-after-filter
+---full-python-uv-list:
+uv               uv run --offline --no-project --python 3.12 python -B scripts/claude_luna_run.py scripts/claude_rd378k_teacher3oc.py label --judge-in artifacts/claude-rd371b-20260926/data/judge_train_in.jsonl --only-hash 3 --hash-rem 1 --out artifacts/claude-rd378k-20260926/gate3luna
+uv               uv run --offline --no-project --python 3.12 python -B scripts/claude_y1t_luna.py --seeds artifacts/claude-y1t-20260926/luna/luna_seeds.jsonl --out artifacts/claude-y1t-20260926/luna/raw_luna.jsonl --workers 3 --batch 20 --max-minutes 50 --max-failed 10 --limit 60
+uv               uv run --offline --no-project --python 3.12 python -B scripts/claude_bm398w_data.py word --plans artifacts/claude-bm398w-20260927/data/panel/plans.jsonl --out artifacts/claude-bm398w-20260927/data/panel/sess.jsonl --workers 3 --max-minutes 45 --max-failed 20
+done
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard check (origin branches + running processes)
+[•] Tree setup: fetch, archive, record commit
+[ ] Seals verification + data hash checks
+[ ] Selftests (luna, glm, routefilter)
+[ ] Chats run (7 calls chunk)
+[ ] Answers run (up to 6 chunks)
+[ ] Route filter + counts script
+[ ] Copy to worktree, REPORT.md, cleanup, verify
+[0m
+[0m$ [0mgit fetch -q origin main; echo "fetch-exit:$?"; D=$(mktemp -d); echo "D=$D"; git archive origin/main scripts artifacts/claude-k1e-20260926/train/items.jsonl artifacts/claude-k1h-20260926 artifacts/claude-k1f-20260926 artifacts/claude-k1fpanel-20260926/SEAL.sha256.txt | tar -x -C "$D"; echo "archive-exit:$?"; ls "$D"; O="$D/O"; mkdir -p "$O/answers" "$O/chats"; ls -R "$D" | head -n 100; git rev-parse origin/main; echo "$D" > /tmp/k1h_luna_D_path.txt; cat /tmp/k1h_luna_D_path.txt; date -u +%FT%TZ
+fetch-exit:0
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV
+archive-exit:0
+artifacts
+scripts
+artifacts
+O
+scripts
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/artifacts:
+claude-k1e-20260926
+claude-k1f-20260926
+claude-k1fpanel-20260926
+claude-k1h-20260926
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/artifacts/claude-k1e-20260926:
+train
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/artifacts/claude-k1e-20260926/train:
+items.jsonl
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/artifacts/claude-k1f-20260926:
+ADDENDUM-1-benspc.md
+JUDGE-k1f.md
+PASSMARKS-k1f.md
+run
+SEAL-addendum1.sha256.txt
+SEAL.sha256.txt
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/artifacts/claude-k1f-20260926/run:
+RUN-NOTE.md
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/artifacts/claude-k1fpanel-20260926:
+SEAL.sha256.txt
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/artifacts/claude-k1h-20260926:
+ADDENDUM-1-scope.md
+ADDENDUM-2-route.md
+ADDENDUM-3-gate.md
+ADDENDUM-4-routeloss.md
+ADDENDUM-5-luna-DRAFT.md
+ADDENDUM-5-luna.md
+ADDENDUM-6-gate1-DRAFT.md
+ADDENDUM-6-gate1.md
+DATA-GATE-k1h.md
+glm
+luna
+PASSMARKS-k1h.md
+run
+SEAL-addendum1.sha256.txt
+SEAL-addendum2.sha256.txt
+SEAL-addendum3.sha256.txt
+SEAL-addendum4.sha256.txt
+SEAL-addendum5.sha256.txt
+SEAL-addendum6.sha256.txt
+SEAL-k1h.sha256.txt
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/artifacts/claude-k1h-20260926/glm:
+answers.jsonl
+chats.jsonl
+logs
+REPORT-salvage.md
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/artifacts/claude-k1h-20260926/glm/logs:
+answer1-log.txt
+chats-log-attempt1.txt
+chats-log.txt
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/artifacts/claude-k1h-20260926/luna:
+pilot
+pilot_items.jsonl
+pilot-score
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/artifacts/claude-k1h-20260926/luna/pilot:
+answer-log.txt
+answers_filtered.jsonl
+answers.jsonl
+chats-log.txt
+chats.jsonl
+REPORT.md
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/artifacts/claude-k1h-20260926/luna/pilot-score:
+check_kept.jsonl
+judge1.jsonl
+judge2.jsonl
+pilot_key.json
+pilot_packet.jsonl
+pilot_score.json
+RESULT.md
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/artifacts/claude-k1h-20260926/run:
+RUN-NOTE-luna-full.md
+RUN-NOTE-luna-pilot.md
+RUN-NOTE-salvage.md
+RUN-NOTE.md
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O:
+answers
+chats
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers:
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/chats:
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/scripts:
+756fdd302b301a58c6cec6f55d4c36db91c6dea6
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV
+2026-09-27T06:43:04Z
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); echo "D=$D"; git rev-parse origin/main; echo "---"; ls "$D/scripts" | head -n 50; echo "---"; ls "$D" ; date -u +%FT%TZ
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV
+756fdd302b301a58c6cec6f55d4c36db91c6dea6
+---
+address_probe.py
+astra_canonical_operator_panels.py
+astra_canonical_operator_report.py
+astra_canonical_operator_run.py
+astra_canonical_operator.py
+astra_transfer_diagnostic.py
+astra_transfer_report.py
+astra_transfer_twins.py
+benspc-runtime.json
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_age334_agent.py
+claude_age334_test.py
+claude_apos247_devcases.py
+claude_apos247_run.py
+claude_apos247_score.py
+claude_ask24.py
+claude_ask24ab.py
+claude_attempts.py
+claude_blurt_selfjudge.py
+claude_blurt_supply.py
+claude_blurt1.py
+claude_blurt2.py
+claude_blurt4.py
+claude_blurt5s.py
+---
+artifacts
+O
+scripts
+2026-09-27T06:43:13Z
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard check (origin branches + running processes)
+[✓] Tree setup: fetch, archive, record commit
+[•] Seals verification + data hash checks
+[ ] Selftests (luna, glm, routefilter)
+[ ] Chats run (7 calls chunk)
+[ ] Answers run (up to 6 chunks)
+[ ] Route filter + counts script
+[ ] Copy to worktree, REPORT.md, cleanup, verify
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; echo "pwd=$(pwd)"; date -u +%FT%TZ; shasum -a 256 -c artifacts/claude-k1h-20260926/SEAL-k1h.sha256.txt 2>&1; echo "seal-k1h-exit:$?"
+pwd=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV
+2026-09-27T06:43:19Z
+artifacts/claude-k1h-20260926/PASSMARKS-k1h.md: OK
+artifacts/claude-k1h-20260926/DATA-GATE-k1h.md: OK
+scripts/claude_k1h_cre.py: OK
+scripts/claude_k1h_train.py: OK
+scripts/claude_k1h_test.py: OK
+scripts/claude_k1h_score.py: OK
+scripts/claude_k1h_glm.py: OK
+scripts/claude_k1e_teacher.py: OK
+scripts/claude_glm_opencode.py: OK
+artifacts/claude-k1f-20260926/SEAL.sha256.txt: OK
+artifacts/claude-k1f-20260926/SEAL-addendum1.sha256.txt: OK
+artifacts/claude-k1f-20260926/JUDGE-k1f.md: OK
+artifacts/claude-k1fpanel-20260926/SEAL.sha256.txt: OK
+scripts/claude_k1f_cre.py: OK
+scripts/claude_k1a_cre.py: OK
+scripts/claude_k1c_score.py: OK
+scripts/claude_k1rival_score.py: OK
+scripts/claude_k1f_score.py: OK
+scripts/claude_panel382_run.py: OK
+scripts/claude_mu402.py: OK
+scripts/claude_chat338_agent.py: OK
+scripts/claude_cre333d_agent.py: OK
+scripts/claude_cre333b_agent.py: OK
+scripts/claude_cre333_agent.py: OK
+scripts/claude_e2e02c.py: OK
+seal-k1h-exit:0
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; for f in artifacts/claude-k1h-20260926/SEAL-addendum1.sha256.txt artifacts/claude-k1h-20260926/SEAL-addendum2.sha256.txt artifacts/claude-k1h-20260926/SEAL-addendum3.sha256.txt artifacts/claude-k1h-20260926/SEAL-addendum4.sha256.txt artifacts/claude-k1h-20260926/SEAL-addendum5.sha256.txt; do echo "== $f"; shasum -a 256 -c "$f" 2>&1; echo "exit:$?"; done; date -u +%FT%TZ
+== artifacts/claude-k1h-20260926/SEAL-addendum1.sha256.txt
+artifacts/claude-k1h-20260926/ADDENDUM-1-scope.md: OK
+artifacts/claude-k1h-20260926/SEAL-k1h.sha256.txt: OK
+exit:0
+== artifacts/claude-k1h-20260926/SEAL-addendum2.sha256.txt
+artifacts/claude-k1h-20260926/ADDENDUM-2-route.md: OK
+scripts/claude_k1h_glm_v11.py: OK
+scripts/claude_glm_opencode_v11.py: OK
+artifacts/claude-k1h-20260926/SEAL-addendum1.sha256.txt: OK
+exit:0
+== artifacts/claude-k1h-20260926/SEAL-addendum3.sha256.txt
+artifacts/claude-k1h-20260926/ADDENDUM-3-gate.md: OK
+scripts/claude_k1h_glm_v12.py: OK
+scripts/claude_k1h_glm_v11.py: OK
+scripts/claude_glm_opencode_v11.py: OK
+artifacts/claude-k1h-20260926/SEAL-addendum2.sha256.txt: OK
+exit:0
+== artifacts/claude-k1h-20260926/SEAL-addendum4.sha256.txt
+artifacts/claude-k1h-20260926/ADDENDUM-4-routeloss.md: OK
+scripts/claude_k1h_routefilter.py: OK
+artifacts/claude-k1h-20260926/SEAL-addendum3.sha256.txt: OK
+exit:0
+== artifacts/claude-k1h-20260926/SEAL-addendum5.sha256.txt
+artifacts/claude-k1h-20260926/ADDENDUM-5-luna.md: OK
+scripts/claude_k1h_luna.py: OK
+scripts/claude_luna_codex.py: OK
+artifacts/claude-k1h-20260926/luna/pilot_items.jsonl: OK
+artifacts/claude-k1h-20260926/SEAL-addendum4.sha256.txt: OK
+exit:0
+2026-09-27T06:43:28Z
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; K=artifacts/claude-k1e-20260926/train/items.jsonl; G=artifacts/claude-k1h-20260926/glm/chats.jsonl; P=artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl; shasum -a 256 "$G" "$P"; wc -l < "$G"; wc -l < "$P"; wc -l < "$K"; date -u +%FT%TZ
+49c74254ea797454d98967b4b3123f23f51498ae8e70089ff978191db76ee8a2  artifacts/claude-k1h-20260926/glm/chats.jsonl
+8cfbc62d8a955935c0b6bcaddb4cf5720b749aaca5edc297867a871d0f9cc603  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+     593
+      40
+     240
+2026-09-27T06:43:30Z
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard check (origin branches + running processes)
+[✓] Tree setup: fetch, archive, record commit
+[✓] Seals verification + data hash checks
+[•] Selftests (luna, glm, routefilter)
+[ ] Chats run (7 calls chunk)
+[ ] Answers run (up to 6 chunks)
+[ ] Route filter + counts script
+[ ] Copy to worktree, REPORT.md, cleanup, verify
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_luna.py selftest 2>&1; echo "exit:$?"; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_glm.py selftest 2>&1; echo "exit:$?"; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_routefilter.py selftest 2>&1; echo "exit:$?"; date -u +%FT%TZ
+{"items": 3, "already": 0, "answered": 2, "failed": 1, "not_started": 0, "minutes": 0.0, "stopped_early": false}
+[k1h-glm] chats call 0 done (1/1)
+{"chats": 1, "mix": {"idea0": 1}, "rejected": {}, "calls": 1, "failed_calls": 0}
+{"from": 240, "picked": 40, "seed": 4614}
+{"items": 40, "nonempty_items": 38, "p1_need": 36, "p1_pass": true, "p2_kept": 38, "p2_need": 34, "p2_pass": true, "p2_reasons": {"kept": 38, "empty": 2}, "near_copy_dev_chats": null, "packet_lines": 38}
+{"items": 40, "nonempty_items": 40, "p1_need": 36, "p1_pass": true, "p2_kept": 35, "p2_need": 34, "p2_pass": true, "p2_reasons": {"trim": 5, "kept": 35}, "near_copy_dev_chats": 40, "packet_lines": 40}
+{"lines": 38, "need_third": 6}
+{"items": 40, "lines": 38, "third_judged": 6, "useful": 33, "madeup": 1, "need_useful": 32, "max_madeup": 2, "pass": true}
+{"items": 40, "lines": 38, "third_judged": 7, "useful": 31, "madeup": 0, "need_useful": 32, "max_madeup": 2, "pass": false}
+{"gate1_by_writer": {"glm-k1e": {"answers": 1, "top_opening_share": 1.0, "top_sentence_count": 1, "top_sentence_share": 1.0, "pass": false}, "luna": {"answers": 2, "top_opening_share": 1.0, "top_sentence_count": 2, "top_sentence_share": 1.0, "pass": false}}, "gate2_by_writer": {"glm-k1e": {"lines": 1, "useful": 0, "madeup": 0}, "luna": {"lines": 1, "useful": 0, "madeup": 0}}}
+k1h luna selftest 8/8 ok
+exit:0
+{"items": 5, "already": 0, "answered": 4, "failed": 1, "not_started": 0, "minutes": 0.0, "stopped_early": false}
+{"items": 5, "already": 4, "answered": 1, "failed": 0, "not_started": 0, "minutes": 0.0, "stopped_early": false}
+[k1h-glm] chats call 0 done (1/2)
+[k1h-glm] chats call 1 done (2/2)
+{"chats": 1, "mix": {"idea0": 1}, "rejected": {"repeat": 2, "bad: kind/turn count": 1}, "calls": 2, "failed_calls": 0}
+k1h glm selftest 3/3 ok
+exit:0
+k1h routefilter selftest 2/2 ok
+exit:0
+2026-09-27T06:43:34Z
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard check (origin branches + running processes)
+[✓] Tree setup: fetch, archive, record commit
+[✓] Seals verification + data hash checks
+[✓] Selftests (luna, glm, routefilter)
+[•] Chats run (7 calls chunk)
+[ ] Answers run (up to 6 chunks)
+[ ] Route filter + counts script
+[ ] Copy to worktree, REPORT.md, cleanup, verify
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; K=artifacts/claude-k1e-20260926/train/items.jsonl; G=artifacts/claude-k1h-20260926/glm/chats.jsonl; O="$D/O"; date -u +%FT%TZ | tee /tmp/k1h_chats_start.txt; ls -l "$K" "$G"; cat artifacts/claude-k1h-20260926/run/RUN-NOTE-luna-full.md 2>&1 | head -n 200 || true
+2026-09-27T06:43:42Z
+-rw-r--r--  1 ben-hannan  staff   70445 Sep 27 02:42 artifacts/claude-k1e-20260926/train/items.jsonl
+-rw-r--r--  1 ben-hannan  staff  212058 Sep 27 02:42 artifacts/claude-k1h-20260926/glm/chats.jsonl
+# k1h RUN-NOTE: Luna full run (Creative answers in chat thread; written 2026-09-27 05:51 UTC, before the job starts)
+
+## k1h-luna-full: Luna answers every practice chat (Ben's Mac, Codex plan, $0; no GPU)
+- Task: handoff/queue/k1h-luna-full-mac.md, per ADDENDUM-5-luna.md (sealed, 94accde3b), after the pilot passed
+  (luna/pilot-score/RESULT.md).
+- Started: not yet. The time will be its launch line in builder-outbox status/watcher.txt.
+- Machine: Ben's Mac, watcher job (LOAD-LIGHT), launched by a free Zen builder. The Luna calls go through the
+  Director's helper, 1 at a time (k1h's share).
+- Inputs:
+  - the 240 k1e chats;
+  - the 593 GLM chats from k1h-glm2, brought back by the salvage;
+  - the new Luna chats, from 7 calls = 36 - floor(593 / 20).
+- Answers start from the pilot's 40 answers.
+- Steps: seals and data hashes; 3 selftests; chats (cap 50 min); answer chunks of 60 min (at most 6); the route
+  filter; counts; copy back to artifacts/claude-k1h-20260926/luna/full; REPORT.md.
+- Estimate only, from the pilot:
+  - the 2 chat calls took 3.3 min, so the 7 calls should take about 12 min;
+  - answers had a median of 7.55 s, so the roughly 930 answers left should take about 2 to 2.5 hours in 3 chunks.
+  - The job cap is 7 h 30 min.
+- After it lands, here: check (the code filters and DEV near-copy); gate 1 (ADDENDUM-6 if the Thread manager seals it,
+  else the sealed gate); gate 2 (blind judges); gate 3 (blind k1fpanel overlap agent, with a code-only count beside
+  it); the split by chat writer; then the BensPC k1h job.
+- Result lines owed:
+  - GLM's 240 answers exist and were not trained on;
+  - "near-copy rows removed by a blind Claude agent (hygiene only; N rows)";
+  - the errlike tries, as an upper bound on false route losses.
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; K=artifacts/claude-k1e-20260926/train/items.jsonl; G=artifacts/claude-k1h-20260926/glm/chats.jsonl; O="$D/O"; date -u; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_luna.py chats --existing "$K" --existing "$G" --out "$O/chats" --calls 7 --chunk a --workers 1 --cap-minutes 50 > "$O/chats-log.txt" 2>&1; echo "chats-exit:$?"; date -u; ls -lh "$O/chats/" "$O/chats-log.txt"; cat "$O/chats-log.txt"
+Sun Sep 27 06:43:45 UTC 2026
+chats-exit:0
+Sun Sep 27 07:05:25 UTC 2026
+-rw-r--r--  1 ben-hannan  staff   1.0K Sep 27 03:05 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/chats-log.txt
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/chats/:
+total 112
+-rw-r--r--  1 ben-hannan  staff    53K Sep 27 03:05 chats.jsonl
+[k1h-luna] mode=chats model=gpt-6-luna cap_minutes=50.0 try_timeout=600 workers=1
+[k1h-luna-try] n=1 start=06:43:45 secs=125.9 kind=ok code=0 prompt_chars=2185
+[k1h-glm] chats call 0 done (1/7)
+[k1h-luna-try] n=2 start=06:45:51 secs=147.1 kind=ok code=0 prompt_chars=2179
+[k1h-glm] chats call 1 done (2/7)
+[k1h-luna-try] n=3 start=06:48:19 secs=187.9 kind=ok code=0 prompt_chars=2180
+[k1h-glm] chats call 2 done (3/7)
+[k1h-luna-try] n=4 start=06:51:26 secs=273.6 kind=ok code=0 prompt_chars=2173
+[k1h-glm] chats call 3 done (4/7)
+[k1h-luna-try] n=5 start=06:56:00 secs=197.6 kind=ok code=0 prompt_chars=2183
+[k1h-glm] chats call 4 done (5/7)
+[k1h-luna-try] n=6 start=06:59:18 secs=196.0 kind=ok code=0 prompt_chars=2174
+[k1h-glm] chats call 5 done (6/7)
+[k1h-luna-try] n=7 start=07:02:34 secs=171.3 kind=ok code=0 prompt_chars=2185
+[k1h-glm] chats call 6 done (7/7)
+{"chats": 138, "mix": {"idea1": 49, "idea0": 49, "uf1": 13, "uf2": 13, "uf3": 14}, "rejected": {"bad: fact value not in teach turns": 2}, "calls": 7, "failed_calls": 0}
+{"luna_chats_renamed": 138}
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); O="$D/O"; echo "=== chats-log.txt full ==="; cat "$O/chats-log.txt"; echo "=== JSON lines (start with {) ==="; grep -E "^\{" "$O/chats-log.txt" || echo "none"; echo "=== try kind counts ==="; grep -c "kind=ok" "$O/chats-log.txt" || echo 0; grep "\[k1h-luna-try\]" "$O/chats-log.txt" | sort | uniq -c; echo "=== chats.jsonl ==="; wc -l < "$O/chats/chats.jsonl"; ls -l "$O/chats/chats.jsonl"; date -u +%FT%TZ
+=== chats-log.txt full ===
+[k1h-luna] mode=chats model=gpt-6-luna cap_minutes=50.0 try_timeout=600 workers=1
+[k1h-luna-try] n=1 start=06:43:45 secs=125.9 kind=ok code=0 prompt_chars=2185
+[k1h-glm] chats call 0 done (1/7)
+[k1h-luna-try] n=2 start=06:45:51 secs=147.1 kind=ok code=0 prompt_chars=2179
+[k1h-glm] chats call 1 done (2/7)
+[k1h-luna-try] n=3 start=06:48:19 secs=187.9 kind=ok code=0 prompt_chars=2180
+[k1h-glm] chats call 2 done (3/7)
+[k1h-luna-try] n=4 start=06:51:26 secs=273.6 kind=ok code=0 prompt_chars=2173
+[k1h-glm] chats call 3 done (4/7)
+[k1h-luna-try] n=5 start=06:56:00 secs=197.6 kind=ok code=0 prompt_chars=2183
+[k1h-glm] chats call 4 done (5/7)
+[k1h-luna-try] n=6 start=06:59:18 secs=196.0 kind=ok code=0 prompt_chars=2174
+[k1h-glm] chats call 5 done (6/7)
+[k1h-luna-try] n=7 start=07:02:34 secs=171.3 kind=ok code=0 prompt_chars=2185
+[k1h-glm] chats call 6 done (7/7)
+{"chats": 138, "mix": {"idea1": 49, "idea0": 49, "uf1": 13, "uf2": 13, "uf3": 14}, "rejected": {"bad: fact value not in teach turns": 2}, "calls": 7, "failed_calls": 0}
+{"luna_chats_renamed": 138}
+=== JSON lines (start with {) ===
+{"chats": 138, "mix": {"idea1": 49, "idea0": 49, "uf1": 13, "uf2": 13, "uf3": 14}, "rejected": {"bad: fact value not in teach turns": 2}, "calls": 7, "failed_calls": 0}
+{"luna_chats_renamed": 138}
+=== try kind counts ===
+7
+   1 [k1h-luna-try] n=1 start=06:43:45 secs=125.9 kind=ok code=0 prompt_chars=2185
+   1 [k1h-luna-try] n=2 start=06:45:51 secs=147.1 kind=ok code=0 prompt_chars=2179
+   1 [k1h-luna-try] n=3 start=06:48:19 secs=187.9 kind=ok code=0 prompt_chars=2180
+   1 [k1h-luna-try] n=4 start=06:51:26 secs=273.6 kind=ok code=0 prompt_chars=2173
+   1 [k1h-luna-try] n=5 start=06:56:00 secs=197.6 kind=ok code=0 prompt_chars=2183
+   1 [k1h-luna-try] n=6 start=06:59:18 secs=196.0 kind=ok code=0 prompt_chars=2174
+   1 [k1h-luna-try] n=7 start=07:02:34 secs=171.3 kind=ok code=0 prompt_chars=2185
+=== chats.jsonl ===
+     138
+-rw-r--r--  1 ben-hannan  staff  53769 Sep 27 03:05 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/chats/chats.jsonl
+2026-09-27T07:05:31Z
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard check (origin branches + running processes)
+[✓] Tree setup: fetch, archive, record commit
+[✓] Seals verification + data hash checks
+[✓] Selftests (luna, glm, routefilter)
+[✓] Chats run (7 calls chunk)
+[•] Answers run (up to 6 chunks)
+[ ] Route filter + counts script
+[ ] Copy to worktree, REPORT.md, cleanup, verify
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; P=artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl; O="$D/O"; cp "$P" "$O/answers/answers.jsonl"; echo "cp-exit:$?"; wc -l < "$O/answers/answers.jsonl"; shasum -a 256 "$O/answers/answers.jsonl"; date -u +%FT%TZ
+cp-exit:0
+      40
+8cfbc62d8a955935c0b6bcaddb4cf5720b749aaca5edc297867a871d0f9cc603  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers/answers.jsonl
+2026-09-27T07:05:38Z
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; K=artifacts/claude-k1e-20260926/train/items.jsonl; G=artifacts/claude-k1h-20260926/glm/chats.jsonl; O="$D/O"; date -u; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_luna.py answer --items "$K" --items "$G" --items "$O/chats/chats.jsonl" --out "$O/answers" --workers 1 --cap-minutes 60 > "$O/answer-log-1.txt" 2>&1; echo "answer1-exit:$?"; date -u; echo "=== last line ==="; tail -n 1 "$O/answer-log-1.txt"; echo "=== wc ==="; wc -l "$O/answer-log-1.txt"; wc -l < "$O/answers/answers.jsonl"
+Sun Sep 27 07:05:41 UTC 2026
+answer1-exit:0
+Sun Sep 27 08:05:42 UTC 2026
+=== last line ===
+{"items": 971, "already": 40, "answered": 286, "failed": 0, "not_started": 645, "minutes": 60.0, "stopped_early": true}
+=== wc ===
+     302 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answer-log-1.txt
+     326
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; K=artifacts/claude-k1e-20260926/train/items.jsonl; G=artifacts/claude-k1h-20260926/glm/chats.jsonl; O="$D/O"; date -u; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_luna.py answer --items "$K" --items "$G" --items "$O/chats/chats.jsonl" --out "$O/answers" --workers 1 --cap-minutes 60 > "$O/answer-log-2.txt" 2>&1; echo "answer2-exit:$?"; date -u; tail -n 1 "$O/answer-log-2.txt"; wc -l < "$O/answers/answers.jsonl"
+Mon Sep 28 00:00:02 UTC 2026
+answer2-exit:0
+Mon Sep 28 01:00:03 UTC 2026
+{"items": 971, "already": 326, "answered": 361, "failed": 0, "not_started": 284, "minutes": 60.0, "stopped_early": true}
+     687
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; O="$D/O"; date -u; ls -lh "$O/answers/answers.jsonl" "$O"/answer-log-*.txt; tail -n 2 "$O/answer-log-2.txt"; date -u +%FT%TZ
+Mon Sep 28 01:00:19 UTC 2026
+-rw-r--r--  1 ben-hannan  staff    23K Sep 27 04:05 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answer-log-1.txt
+-rw-r--r--  1 ben-hannan  staff    29K Sep 27 21:00 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answer-log-2.txt
+-rw-r--r--  1 ben-hannan  staff   212K Sep 27 21:00 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers/answers.jsonl
+[k1h-luna-try] n=361 start=00:59:55 secs=7.7 kind=ok code=0 prompt_chars=1135
+{"items": 971, "already": 326, "answered": 361, "failed": 0, "not_started": 284, "minutes": 60.0, "stopped_early": true}
+2026-09-28T01:00:19Z
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; K=artifacts/claude-k1e-20260926/train/items.jsonl; G=artifacts/claude-k1h-20260926/glm/chats.jsonl; O="$D/O"; date -u; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_luna.py answer --items "$K" --items "$G" --items "$O/chats/chats.jsonl" --out "$O/answers" --workers 1 --cap-minutes 60 > "$O/answer-log-3.txt" 2>&1; echo "answer3-exit:$?"; date -u; tail -n 1 "$O/answer-log-3.txt"; wc -l < "$O/answers/answers.jsonl"
+Mon Sep 28 01:00:22 UTC 2026
+answer3-exit:0
+Mon Sep 28 01:44:31 UTC 2026
+{"items": 971, "already": 687, "answered": 284, "failed": 0, "not_started": 0, "minutes": 44.1, "stopped_early": false}
+     971
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard check (origin branches + running processes)
+[✓] Tree setup: fetch, archive, record commit
+[✓] Seals verification + data hash checks
+[✓] Selftests (luna, glm, routefilter)
+[✓] Chats run (7 calls chunk)
+[✓] Answers run (up to 6 chunks)
+[•] Route filter + counts script
+[ ] Copy to worktree, REPORT.md, cleanup, verify
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; O="$D/O"; echo "=== last lines ==="; for N in 1 2 3; do echo "--- answer-log-$N last line:"; tail -n 1 "$O/answer-log-$N.txt"; done; echo "=== try kind counts over all chunks ==="; grep -h "\[k1h-luna-try\]" "$O"/answer-log-*.txt | grep -o "kind=[^ ]*" | sort | uniq -c; echo "=== total try lines ==="; grep -h -c "\[k1h-luna-try\]" "$O"/answer-log-*.txt; echo "=== secs stats ==="; uv run --offline --no-project --python 3.12 python -B -c "import re,statistics,glob; secs=[]; 
+for f in sorted(glob.glob('$O/answer-log-*.txt'.replace(chr(36)+'O', '$O'))):
+    pass
+" 2>&1 || true; date -u +%FT%TZ
+=== last lines ===
+--- answer-log-1 last line:
+{"items": 971, "already": 40, "answered": 286, "failed": 0, "not_started": 645, "minutes": 60.0, "stopped_early": true}
+--- answer-log-2 last line:
+{"items": 971, "already": 326, "answered": 361, "failed": 0, "not_started": 284, "minutes": 60.0, "stopped_early": true}
+--- answer-log-3 last line:
+{"items": 971, "already": 687, "answered": 284, "failed": 0, "not_started": 0, "minutes": 44.1, "stopped_early": false}
+=== try kind counts over all chunks ===
+ 931 kind=ok
+=== total try lines ===
+286
+361
+284
+=== secs stats ===
+2026-09-28T01:44:42Z
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; O="$D/O"; uv run --offline --no-project --python 3.12 python -B scripts/claude_k1h_routefilter.py --answers "$O/answers/answers.jsonl" --out "$O/answers/answers_filtered.jsonl" 2>&1; echo "routefilter-exit:$?"
+{"rows": 971, "nonempty_in": 971, "route_loss_rows": 0, "by_rule": {}, "items_hit": 0, "nonempty_out": 971, "repeated_texts": 0}
+routefilter-exit:0
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; O="$D/O"; ls -lh "$O/answers/answers.jsonl" "$O/answers/answers_filtered.jsonl" "$O/chats/chats.jsonl"; wc -l "$O/answers/answers.jsonl" "$O/answers/answers_filtered.jsonl" "$O/chats/chats.jsonl"
+-rw-r--r--  1 ben-hannan  staff   304K Sep 27 21:44 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers/answers_filtered.jsonl
+-rw-r--r--  1 ben-hannan  staff   304K Sep 27 21:44 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers/answers.jsonl
+-rw-r--r--  1 ben-hannan  staff    53K Sep 27 03:05 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/chats/chats.jsonl
+     971 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers/answers.jsonl
+     971 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers/answers_filtered.jsonl
+     138 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/chats/chats.jsonl
+    2080 total
+[0m
+[0m← [0mWrite /tmp/k1h_counts.py
+Wrote file successfully.
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); cd "$D"; O="$D/O"; uv run --offline --no-project --python 3.12 python -B /tmp/k1h_counts.py "$O/answers/answers.jsonl" "$O/answers/answers_filtered.jsonl" "$O/chats/chats.jsonl" 2>&1; echo "counts-exit:$?"
+FILE=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers/answers.jsonl
+lines=971
+nonempty_answer=971
+empty_answer=0
+error_by_kind={}
+distinct_item_id=971
+distinct_item_id_nonempty=971
+nonempty_by_prefix={'kt-': 240, 'kh-': 593, 'kl-': 138}
+crlf_bytes=0
+FILE=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers/answers_filtered.jsonl
+lines=971
+nonempty_answer=971
+empty_answer=0
+error_by_kind={}
+distinct_item_id=971
+distinct_item_id_nonempty=971
+nonempty_by_prefix={'kt-': 240, 'kh-': 593, 'kl-': 138}
+crlf_bytes=0
+FILE=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/chats/chats.jsonl
+lines=138
+distinct_item_id=138
+crlf_bytes=0
+counts-exit:0
+[0m
+[0m← [0mWrite /tmp/k1h_secs.py
+Wrote file successfully.
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); O="$D/O"; uv run --offline --no-project --python 3.12 python -B /tmp/k1h_secs.py "$O"/answer-log-*.txt 2>&1; echo "---chats---"; uv run --offline --no-project --python 3.12 python -B /tmp/k1h_secs.py "$O/chats-log.txt" 2>&1
+kind_counts={'ok': 931}
+n_ok=931
+median_secs=9.1
+max_secs=92.4
+min_secs=4.5
+---chats---
+kind_counts={'ok': 7}
+n_ok=7
+median_secs=187.9
+max_secs=273.6
+min_secs=125.9
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard check (origin branches + running processes)
+[✓] Tree setup: fetch, archive, record commit
+[✓] Seals verification + data hash checks
+[✓] Selftests (luna, glm, routefilter)
+[✓] Chats run (7 calls chunk)
+[✓] Answers run (up to 6 chunks)
+[✓] Route filter + counts script
+[•] Copy to worktree, REPORT.md, cleanup, verify
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); O="$D/O"; echo "D=$D"; ls -lh "$O/chats/chats.jsonl" "$O/chats-log.txt" "$O"/answer-log-*.txt "$O/answers/answers.jsonl" "$O/answers/answers_filtered.jsonl"; shasum -a 256 "$O/chats/chats.jsonl" "$O/chats-log.txt" "$O"/answer-log-*.txt "$O/answers/answers.jsonl" "$O/answers/answers_filtered.jsonl"; date -u +%FT%TZ
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV
+-rw-r--r--  1 ben-hannan  staff    23K Sep 27 04:05 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answer-log-1.txt
+-rw-r--r--  1 ben-hannan  staff    29K Sep 27 21:00 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answer-log-2.txt
+-rw-r--r--  1 ben-hannan  staff    22K Sep 27 21:44 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answer-log-3.txt
+-rw-r--r--  1 ben-hannan  staff   304K Sep 27 21:44 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers/answers_filtered.jsonl
+-rw-r--r--  1 ben-hannan  staff   304K Sep 27 21:44 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers/answers.jsonl
+-rw-r--r--  1 ben-hannan  staff   1.0K Sep 27 03:05 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/chats-log.txt
+-rw-r--r--  1 ben-hannan  staff    53K Sep 27 03:05 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/chats/chats.jsonl
+e90e866649e64e56b3476721b8f607863d2aed5a167b48b4e3d73f2b710cefdb  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/chats/chats.jsonl
+5031d69b4895a37f3b9778d389fa19712948ed4502f884de341e22e325a53cf3  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/chats-log.txt
+00879d3b288b39bc1cfd556cb6f17b11f84f61d2145c570a902a4ce3132bb82b  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answer-log-1.txt
+9007b6335fd67096f725d9f64c977d5edb297770b4f9bd25fa3d9385d9d8c1db  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answer-log-2.txt
+424d46c3803bca229684d3b10a0abcc153a8db75ebe66a2e52e30517d97c7d91  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answer-log-3.txt
+cdf2c50bc8d0a52109b8772cced8c2ed6a07477a14671ae4e3aedd5dbf8a1aa1  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers/answers.jsonl
+cdf2c50bc8d0a52109b8772cced8c2ed6a07477a14671ae4e3aedd5dbf8a1aa1  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers/answers_filtered.jsonl
+2026-09-28T01:45:19Z
+[0m
+[0m$ [0mls -ld artifacts/claude-k1h-20260926/luna/ 2>&1; ls -l artifacts/claude-k1h-20260926/luna/ 2>&1 | head -n 20; date -u +%FT%TZ
+drwxr-xr-x  6 ben-hannan  staff  192 Sep 27 10:07 artifacts/claude-k1h-20260926/luna/
+total 0
+drwxr-xr-x  8 ben-hannan  staff  256 Sep 27 08:00 full-r1
+drwxr-xr-x  6 ben-hannan  staff  192 Sep 27 09:25 full-r2
+drwxr-xr-x  6 ben-hannan  staff  192 Sep 27 10:07 full-r3
+drwxr-xr-x  8 ben-hannan  staff  256 Sep 27 01:25 pilot
+2026-09-28T01:45:22Z
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); O="$D/O"; mkdir -p artifacts/claude-k1h-20260926/luna/full; cp "$O/answers/answers.jsonl" artifacts/claude-k1h-20260926/luna/full/answers.jsonl; cp "$O/answers/answers_filtered.jsonl" artifacts/claude-k1h-20260926/luna/full/answers_filtered.jsonl; cp "$O/chats/chats.jsonl" artifacts/claude-k1h-20260926/luna/full/chats.jsonl; cp "$O/chats-log.txt" artifacts/claude-k1h-20260926/luna/full/chats-log.txt; cp "$O/answer-log-1.txt" artifacts/claude-k1h-20260926/luna/full/answer-log-1.txt; cp "$O/answer-log-2.txt" artifacts/claude-k1h-20260926/luna/full/answer-log-2.txt; cp "$O/answer-log-3.txt" artifacts/claude-k1h-20260926/luna/full/answer-log-3.txt; ls -lh artifacts/claude-k1h-20260926/luna/full/; shasum -a 256 artifacts/claude-k1h-20260926/luna/full/*; echo "---compare---"; shasum -a 256 "$O/chats/chats.jsonl" "$O/chats-log.txt" "$O"/answer-log-*.txt "$O/answers/answers.jsonl" "$O/answers/answers_filtered.jsonl"
+total 1496
+-rw-r--r--  1 ben-hannan  staff    23K Sep 27 21:45 answer-log-1.txt
+-rw-r--r--  1 ben-hannan  staff    29K Sep 27 21:45 answer-log-2.txt
+-rw-r--r--  1 ben-hannan  staff    22K Sep 27 21:45 answer-log-3.txt
+-rw-r--r--  1 ben-hannan  staff   304K Sep 27 21:45 answers_filtered.jsonl
+-rw-r--r--  1 ben-hannan  staff   304K Sep 27 21:45 answers.jsonl
+-rw-r--r--  1 ben-hannan  staff   1.0K Sep 27 21:45 chats-log.txt
+-rw-r--r--  1 ben-hannan  staff    53K Sep 27 21:45 chats.jsonl
+00879d3b288b39bc1cfd556cb6f17b11f84f61d2145c570a902a4ce3132bb82b  artifacts/claude-k1h-20260926/luna/full/answer-log-1.txt
+9007b6335fd67096f725d9f64c977d5edb297770b4f9bd25fa3d9385d9d8c1db  artifacts/claude-k1h-20260926/luna/full/answer-log-2.txt
+424d46c3803bca229684d3b10a0abcc153a8db75ebe66a2e52e30517d97c7d91  artifacts/claude-k1h-20260926/luna/full/answer-log-3.txt
+cdf2c50bc8d0a52109b8772cced8c2ed6a07477a14671ae4e3aedd5dbf8a1aa1  artifacts/claude-k1h-20260926/luna/full/answers_filtered.jsonl
+cdf2c50bc8d0a52109b8772cced8c2ed6a07477a14671ae4e3aedd5dbf8a1aa1  artifacts/claude-k1h-20260926/luna/full/answers.jsonl
+5031d69b4895a37f3b9778d389fa19712948ed4502f884de341e22e325a53cf3  artifacts/claude-k1h-20260926/luna/full/chats-log.txt
+e90e866649e64e56b3476721b8f607863d2aed5a167b48b4e3d73f2b710cefdb  artifacts/claude-k1h-20260926/luna/full/chats.jsonl
+---compare---
+e90e866649e64e56b3476721b8f607863d2aed5a167b48b4e3d73f2b710cefdb  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/chats/chats.jsonl
+5031d69b4895a37f3b9778d389fa19712948ed4502f884de341e22e325a53cf3  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/chats-log.txt
+00879d3b288b39bc1cfd556cb6f17b11f84f61d2145c570a902a4ce3132bb82b  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answer-log-1.txt
+9007b6335fd67096f725d9f64c977d5edb297770b4f9bd25fa3d9385d9d8c1db  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answer-log-2.txt
+424d46c3803bca229684d3b10a0abcc153a8db75ebe66a2e52e30517d97c7d91  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answer-log-3.txt
+cdf2c50bc8d0a52109b8772cced8c2ed6a07477a14671ae4e3aedd5dbf8a1aa1  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers/answers.jsonl
+cdf2c50bc8d0a52109b8772cced8c2ed6a07477a14671ae4e3aedd5dbf8a1aa1  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV/O/answers/answers_filtered.jsonl
+[0m
+[0m← [0mWrite artifacts/claude-k1h-20260926/luna/full/REPORT.md
+Wrote file successfully.
+[0m
+[0m$ [0mgit add -f artifacts/claude-k1h-20260926/luna/full/answers.jsonl artifacts/claude-k1h-20260926/luna/full/answers_filtered.jsonl artifacts/claude-k1h-20260926/luna/full/chats.jsonl artifacts/claude-k1h-20260926/luna/full/chats-log.txt artifacts/claude-k1h-20260926/luna/full/answer-log-1.txt artifacts/claude-k1h-20260926/luna/full/answer-log-2.txt artifacts/claude-k1h-20260926/luna/full/answer-log-3.txt artifacts/claude-k1h-20260926/luna/full/REPORT.md 2>&1; echo "add-exit:$?"; git status --porcelain=v1 -- artifacts/claude-k1h-20260926/luna/full/; ls -lh artifacts/claude-k1h-20260926/luna/full/
+add-exit:0
+A  artifacts/claude-k1h-20260926/luna/full/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-1.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-2.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-3.txt
+A  artifacts/claude-k1h-20260926/luna/full/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/full/chats.jsonl
+total 1520
+-rw-r--r--  1 ben-hannan  staff    23K Sep 27 21:45 answer-log-1.txt
+-rw-r--r--  1 ben-hannan  staff    29K Sep 27 21:45 answer-log-2.txt
+-rw-r--r--  1 ben-hannan  staff    22K Sep 27 21:45 answer-log-3.txt
+-rw-r--r--  1 ben-hannan  staff   304K Sep 27 21:45 answers_filtered.jsonl
+-rw-r--r--  1 ben-hannan  staff   304K Sep 27 21:45 answers.jsonl
+-rw-r--r--  1 ben-hannan  staff   1.0K Sep 27 21:45 chats-log.txt
+-rw-r--r--  1 ben-hannan  staff    53K Sep 27 21:45 chats.jsonl
+-rw-r--r--  1 ben-hannan  staff   9.5K Sep 27 21:46 REPORT.md
+[0m
+[0m$ [0mD=$(cat /tmp/k1h_luna_D_path.txt); echo "removing D=$D"; rm -rf "$D"; echo "rm-exit:$?"; ls -ld "$D" 2>&1 || echo "confirmed-gone"; date -u +%FT%TZ
+removing D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV
+rm-exit:0
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.08G1HFx4hV: No such file or directory
+confirmed-gone
+2026-09-28T01:46:09Z
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard check (origin branches + running processes)
+[✓] Tree setup: fetch, archive, record commit
+[✓] Seals verification + data hash checks
+[✓] Selftests (luna, glm, routefilter)
+[✓] Chats run (7 calls chunk)
+[✓] Answers run (up to 6 chunks)
+[✓] Route filter + counts script
+[✓] Copy to worktree, REPORT.md, cleanup, verify
+[0m
