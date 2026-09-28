@@ -2710,3 +2710,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - 2026-09-27T19:53:36Z Job releases released rent-k1fv-1b-start (money stop $1.50, cap $4) under Ben's 19:19 UTC project instruction ("You can rent stuff yourself"); owner Creative answers thread, held at d4e69ed50. Queued hourly credit read 000-bash-vastcredit-1953.
 - 2026-09-28 21:57 UTC Director: LAUNCH lf-sz on vast (lfsz-1-start, kit 4e000f02b, est $0.15-0.18, stop $0.45) under Ben's 21:34 rule (spend under $0.50 needs no OK); credit $22.52 read 20:05 UTC.
 - 2026-09-28 23:15 UTC Director: LAUNCH lf-sz on vast (lfsz-1-start-r2, kit 31dd45b60ce23c0a4d66d2f1e08bcb34c6b8ae34 with the credit-parse fix, est $0.15-0.18, stop $0.45); first try stopped at the credit read, nothing rented, $0. Ben 23:15: keep other work on the Mac.
+- 2026-09-28 23:51 UTC Director: lfsz-1-start-r2 PULLED (HELD again) before launch, nothing rented, $0: Ben chose to keep work off vast for now.

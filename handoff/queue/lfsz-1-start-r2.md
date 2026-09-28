@@ -1,3 +1,4 @@
+STATUS: HELD. Pulled 23:51 UTC 09-28: Ben chose to keep work off vast for now (coordinator relay). Release only when Ben says vast is OK again.
 BASH-ONLY: yes
 GPU: rent (one vast card, best TFLOPS per $/h, >= 16 GB, at most $0.65/h; cap $0.45 for the whole task, the guard stops there)
 DISK: 1
