@@ -1,6 +1,6 @@
 # H12 stop-on-mazes: pass marks
 
-Written 2026-09-28 21:14 UTC (`date -u`), after DESIGN.md and **before any code for this test exists** (no plug-in, selftest or marks script
+Written 2026-09-28 between 21:06:37 and 21:08:34 UTC (`date -u`; commit `21b03ae01` pushed at 21:08:34; the first version of this line carried an estimated 21:14, corrected in the next commit), after DESIGN.md and **before any code for this test exists** (no plug-in, selftest or marks script
 has been written) and before any score of this design exists. No mark changes after this file is committed. Design: DESIGN.md.
 Numbers are "x of N". Labels: shown / suggested / untested.
 

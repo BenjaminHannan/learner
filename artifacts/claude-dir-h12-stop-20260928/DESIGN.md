@@ -1,6 +1,6 @@
 # H12: train the loop's learned stop on the new kind (mazes) while it adapts
 
-Written 2026-09-28 21:10 UTC (`date -u`) by Director helper H12, on top of main commit `bc6cb4368`. Nothing in this folder has been run.
+Written 2026-09-28 between 21:06:37 UTC (`date -u` when the folder was made) and 21:08:34 UTC (`date -u` at the push of commit `21b03ae01`; the first version of this line carried an estimated 21:10, corrected in the next commit) by Director helper H12, on top of main commit `bc6cb4368`. Nothing in this folder has been run.
 When this page was written no plug-in code, selftest or marks script for H12 existed. The pass marks are in PASSMARKS.md and
 were written next, before any code. Labels: **shown** = counted from a raw file or the code, you can check it;
 **suggested** = my reading, rests on stated assumptions; **untested** = nobody has run it. Counts are "x of N".
@@ -86,7 +86,11 @@ more than $0 and add a GPU-equivalence problem for no gain; not recommended.
 Each one starts from these results, with marks fixed before its first run.
 
 ## 8. What could not be tested, risks
-- No maze score of this design exists. Marks and code were written before any run. The code is checked by `scripts/claude_dir_h12_selftest.py` (records in `SELFTEST-plugin.log`, see PASSMARKS.md "Order"); a full 2,048-update rung was **not** run here.
+- No maze score of this design exists. Marks were written before any code, and code before any run. The plug-in is checked by `scripts/claude_dir_h12_selftest.py` (record `SELFTEST-plugin.log`, torch 2.14.0 CPU on the cloud box, random-init nets):
+  stop term off gives bit-identical weights to the harness Learner after 8 updates; stop term on gives a first-update loss equal to `claude_fewex_net.train_loss` for 3 free + 2 gradient rounds (5.341154 both); the stop head gets gradient (the baseline gives it none); 4 updates per batch.
+  I mutation-checked it: a wrong stop weight, 2 free rounds instead of 3, or 1 gradient round instead of 2 each make it fail. `smoke_harness.py` (record `SMOKE-harness.log`) runs the harness's own `adapt_job` with the plug-in on a fake random-init source net, shrunk to one rung, 2 batches (8 updates) and a 64-maze pool: it wrote a valid `adapt.json` and the harness's update-count check passed.
+  The marks script has its own selftest (`SELFTEST-marks.log`): it reproduces the baseline numbers quoted in PASSMARKS.md from the raw files and the four verdict words on synthetic records.
+  A full 2,048-update rung and a practised source net were **not** available here, so nothing says how well a practised net's stop learns on mazes (that is the experiment), and the Mac's torch build is untested (the queue job reruns both selftests there first).
 - Two seeds only, dev panel only, one architecture. The noise estimate behind the "helps" bars comes from the baseline's two seeds (suggested; see PASSMARKS.md). A same-recipe replicate would measure run-to-run noise properly; I did not add one to keep compute at two jobs.
 - The stop loss might change the body (point (b) in section 3); the fixed-16 rows show that. Old-kind and sleep rows are report-only (single sleep draws are inside noise, H8 X1).
 - Rounds without stop loss (section 3 (a)) mean the result may say "the baseline round structure gives the stop too little coverage", which would be a finding about the Learner, not about the idea.
