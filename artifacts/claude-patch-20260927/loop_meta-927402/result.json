@@ -1,0 +1,227 @@
+{
+  "utc": "2026-09-28T05:06:20Z",
+  "arm": "loop_meta",
+  "seed": 927402,
+  "torch": "2.14.0",
+  "device": "mps",
+  "dtype": "float32",
+  "autocast": false,
+  "training_seconds": 3010.280078709009,
+  "operations": {
+    "supervised_optimizer_steps": 18000,
+    "episode_optimizer_steps": 2000,
+    "supervised_examples": 1152000,
+    "support_examples": 8000,
+    "query_examples": 32000,
+    "support_writes": 0,
+    "inner_gradient_steps": 8000
+  },
+  "matrix_operations": {
+    "linear_forward_macs": 315535857584384,
+    "attention_forward_macs": 4533709297664,
+    "patch_forward_macs": 0,
+    "feedback_forward_macs": 0,
+    "block_calls": 509856,
+    "block_examples": 20244284
+  },
+  "operation_note": "Forward matrix multiply-adds only; excludes elementwise ops and backward/second derivatives. Optimizer and inner-step counts recorded separately.",
+  "dev": {
+    "sums": {
+      "right": 300,
+      "n": 300,
+      "mean_rounds": 6.3,
+      "cap_hits": 0,
+      "fixed_right": {
+        "4": 300,
+        "8": 300,
+        "16": 300,
+        "32": 300,
+        "48": 300
+      },
+      "seconds_full_depth_evaluation": 1.5494108750135638
+    },
+    "grids": {
+      "right": 244,
+      "n": 300,
+      "mean_rounds": 11.836666666666666,
+      "cap_hits": 9,
+      "fixed_right": {
+        "4": 145,
+        "8": 207,
+        "16": 248,
+        "32": 258,
+        "48": 260
+      },
+      "seconds_full_depth_evaluation": 1.9677460420061834
+    },
+    "sorting": {
+      "right": 299,
+      "n": 300,
+      "mean_rounds": 7.596666666666667,
+      "cap_hits": 0,
+      "fixed_right": {
+        "4": 295,
+        "8": 299,
+        "16": 299,
+        "32": 299,
+        "48": 299
+      },
+      "seconds_full_depth_evaluation": 1.498346832988318
+    },
+    "reversing": {
+      "right": 291,
+      "n": 300,
+      "mean_rounds": 6.586666666666667,
+      "cap_hits": 1,
+      "fixed_right": {
+        "4": 289,
+        "8": 290,
+        "16": 292,
+        "32": 292,
+        "48": 292
+      },
+      "seconds_full_depth_evaluation": 1.565352791978512
+    },
+    "counting": {
+      "right": 297,
+      "n": 300,
+      "mean_rounds": 7.183333333333334,
+      "cap_hits": 1,
+      "fixed_right": {
+        "4": 297,
+        "8": 297,
+        "16": 297,
+        "32": 297,
+        "48": 297
+      },
+      "seconds_full_depth_evaluation": 1.5866272080456838
+    },
+    "brackets": {
+      "right": 300,
+      "n": 300,
+      "mean_rounds": 3.006666666666667,
+      "cap_hits": 0,
+      "fixed_right": {
+        "4": 300,
+        "8": 300,
+        "16": 300,
+        "32": 300,
+        "48": 300
+      },
+      "seconds_full_depth_evaluation": 1.2964158749673516
+    }
+  },
+  "fixed_depth": 48,
+  "verify": {
+    "sums": {
+      "right": 300,
+      "n": 300,
+      "mean_rounds": 6.443333333333333,
+      "cap_hits": 0,
+      "fixed_right": {
+        "4": 300,
+        "8": 300,
+        "16": 300,
+        "32": 300,
+        "48": 300
+      },
+      "seconds_full_depth_evaluation": 1.5550710830138996
+    },
+    "grids": {
+      "right": 260,
+      "n": 300,
+      "mean_rounds": 12.39,
+      "cap_hits": 11,
+      "fixed_right": {
+        "4": 120,
+        "8": 201,
+        "16": 263,
+        "32": 272,
+        "48": 272
+      },
+      "seconds_full_depth_evaluation": 1.9154121250030585
+    },
+    "sorting": {
+      "right": 298,
+      "n": 300,
+      "mean_rounds": 7.433333333333334,
+      "cap_hits": 0,
+      "fixed_right": {
+        "4": 290,
+        "8": 297,
+        "16": 298,
+        "32": 298,
+        "48": 298
+      },
+      "seconds_full_depth_evaluation": 1.4946942090173252
+    },
+    "reversing": {
+      "right": 291,
+      "n": 300,
+      "mean_rounds": 6.6,
+      "cap_hits": 1,
+      "fixed_right": {
+        "4": 289,
+        "8": 291,
+        "16": 291,
+        "32": 291,
+        "48": 291
+      },
+      "seconds_full_depth_evaluation": 1.5067907079937868
+    },
+    "counting": {
+      "right": 297,
+      "n": 300,
+      "mean_rounds": 6.926666666666667,
+      "cap_hits": 1,
+      "fixed_right": {
+        "4": 296,
+        "8": 297,
+        "16": 296,
+        "32": 297,
+        "48": 297
+      },
+      "seconds_full_depth_evaluation": 1.4789123749942519
+    },
+    "brackets": {
+      "right": 300,
+      "n": 300,
+      "mean_rounds": 3.0033333333333334,
+      "cap_hits": 0,
+      "fixed_right": {
+        "4": 300,
+        "8": 300,
+        "16": 300,
+        "32": 300,
+        "48": 300
+      },
+      "seconds_full_depth_evaluation": 1.2985452910070308
+    }
+  },
+  "inference_timing": {
+    "sums": {
+      "n": 30,
+      "mean_seconds": 0.012800875135386984
+    },
+    "grids": {
+      "n": 30,
+      "mean_seconds": 0.022837109766745318
+    },
+    "sorting": {
+      "n": 30,
+      "mean_seconds": 0.01511579166399315
+    },
+    "reversing": {
+      "n": 30,
+      "mean_seconds": 0.0130065375007689
+    },
+    "counting": {
+      "n": 30,
+      "mean_seconds": 0.01414437780622393
+    },
+    "brackets": {
+      "n": 30,
+      "mean_seconds": 0.005729205599830796
+    }
+  }
+}

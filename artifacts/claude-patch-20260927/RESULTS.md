@@ -1,6 +1,6 @@
 # Result status
 
-Updated 2026-09-28T04:18:16Z. **Both patch seeds fail the grid practice gate; no maze verdict.**
+Updated 2026-09-28T05:11:51Z. **Both patch seeds fail the grid practice gate; no maze verdict.**
 
 **Shown:** the rank-eight patch net is built and the eight construction checks
 passed in fp32 on the local Apple GPU. Independent Sol recount agrees with the
@@ -67,9 +67,15 @@ development and verification raw rows for both arms and matches the recorded
 selected and fixed-48 counts. No maze advantage follows from a tied source
 score.
 
-**Running:** the seed-2 episodic loop and plain controls on the same qualified
-curriculum. Their results will complete the registered comparison but cannot
-reverse either patch seed's failure.
+**Shown:** the seed-2 episodic loop scored grids 260 of 300, versus the patch's
+272 of 300. Both miss 285 of 300; the patch remains within nine of this
+control on all six kinds, and both pass the other five absolute marks.
+SECOND-PRIMARY-CONTROL-RECOUNT.json regrades all development and verification
+raw rows for the patch and episodic loop, including fixed-48 counts.
+
+**Running:** the last seed-2 plain control on the same qualified curriculum.
+It will complete the registered comparison but cannot reverse the patch seeds'
+failure.
 
 **Untested:** few-example maze advantage, keeping old kinds after maze supports,
 sleep absorption with the patch removed, and whether wider practice helps the
