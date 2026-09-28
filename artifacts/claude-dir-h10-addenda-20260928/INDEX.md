@@ -1,0 +1,31 @@
+# Helper H10 review addenda: files written (H1, H2, H3, H6)
+
+Written 2026-09-28 21:11 UTC (`date -u`) by helper H10 (Claude) for the Director. Every file below is NEW; no sealed file (PASSMARKS.md, DESIGN.md, an existing script, an existing queue file) was edited. Nothing was run on a GPU or with torch (this box has none). sha256 is of the file as listed; this INDEX cannot hash itself.
+
+| file | test | what it is | how far it was checked | sha256 |
+|---|---|---|---|---|
+| `artifacts/claude-dir-h1-heldout-20260928/ADDENDUM-1.md` | H1 | review-fix addendum: V3 needs 3 shared rungs for the practised loop AND the fresh loop; new validity row V4 (practised plain at k=16,384 on dev, below 90% means the plain comparison is labelled expressivity) | text; numbers recounted against the sealed marks script and the raw maze ladders | `89ffe018948d2f16789f6414ac26adf840df5c6d5aa9e250d4df08edcae71d49` |
+| `scripts/claude_dir_h1_marks_add1.py` | H1 | computes V3-add1, V4 and the roll-up wording from dev ladders (imports the sealed marks script) | selftest ok on the maze numbers, band edges, plain-row 270/269 | `d13a3b1695e44c453949f12249bf5a4010234947c272fffee598b06f1a6f7cad` |
+| `artifacts/claude-dir-h10-addenda-20260928/h1-add1-selftest.log` | H1 | output of the selftest above | shown | `690eecc1e536bc03f283cae5a639ca86c7b213fc3488b175b4dc9a0d21667ca3` |
+| `artifacts/claude-dir-h2-numbers-20260928/ADDENDUM-1.md` | H2 | review-fix addendum: PASS wording, the no-search floor on the 300 P_other dev pairs read against the bar, practice exactness 0.5 to 0.9 lands in PARTIAL | text; floor numbers from the script below | `187c89ef762e551417b2bfa743b419f55fa956060b08dbdc0c106d4139725ef4` |
+| `scripts/claude_dir_h10_h2_floor.py` | H2 | code-only floors on the sealed dev pairs (random, stored skeleton, commonest skeleton, best fixed skeleton, best per pair); no net, no torch | run once, exit 0, about 95 s | `61582730082f4b330d96531b9f832aadf60fb81f70d96a8389a16474d70237a9` |
+| `artifacts/claude-dir-h10-addenda-20260928/h2-pother-floor.json` | H2 | output of the floor script | shown | `5c5db77edee7fcb40262559e4c005257f46fd08c492483ea3868fdf4019b0700` |
+| `artifacts/claude-dir-h3-design-20260928/ADDENDUM-1.md` | H3 | review-fix addendum: every gaining seed must break a gate to be REJECTED, three-draw sleep gates, F_few required row, gate weights exempt from weight decay, constant-g control, queue files | text; arithmetic shown in the file | `9f3e45e3040ceff634a8c7e1a9d4f4f0d2cbd09ce3384ca6f80c4346841719d8` |
+| `scripts/claude_dir_h3_report_add1.py` | H3 | verdict script with the addendum's rules (copy of the v1 report with new rows) | selftest ok (two fake seeds); end-to-end on fake harness JSON ok; no torch needed | `d02d14314fb34c09e3a542a5e3c6d85088d72e257b9b6d96637b61d9eea7d118` |
+| `scripts/claude_dir_h3_net_v2.py` | H3 | settle-gate loop v2: gate tensors exempt from weight decay, dead-gate statistics | py_compile only (no torch here) | `bad75d33775c32a6b339a43f9c0c6a143cc14449ba2339682557892d5e8ab65a` |
+| `scripts/claude_dir_h3_net_v2_const.py` | H3 | constant-g = 0.9 damping control as a plug-in over v2 | py_compile only | `d23299577d30e1188a0b6036c97946a0c7cf8287b702c77f3a4bc9ab354a0da5` |
+| `scripts/claude_dir_h3_practice_v2.py` | H3 | source practice with a --plugin flag | py_compile only | `5ceb3f7cc623570b80905a4491657f93e27c1d31e08e0ae883c56b1bdab81530` |
+| `scripts/claude_dir_h3_gate_report_v2.py` | H3 | gate report with std and the dead-gate flag | py_compile only | `2feeafd1ebc25ad58c2521f73a200fb1e840b3dd8e6c6324d576edf906d2520d` |
+| `scripts/claude_dir_h3_selftest_v2.py` | H3 | v1 selftest checks re-run on v2 plus groups, decay_effect, const_g, gate_std | py_compile only | `78d33baa17fca9844943800ae88e433f931643c862f584a87291824fb031920a` |
+| `artifacts/claude-dir-h3-design-20260928/queue-h3-2-practice-v2.md` | H3 | queue job 2 (v2 selftests, practice of H3 v2 and the control); STATUS: HELD | text; not run | `5dbbf4b74515b2037c5ae9976c94f445d6ab6957805ae82a007fda38ab8b2f01` |
+| `artifacts/claude-dir-h3-design-20260928/queue-h3-3-dev-v2.md` | H3 | queue job 3 (six dev ladders, dev table, gate reports); STATUS: HELD | text; not run | `34b4aca077a2b304ac18f6c35f38c254cf5702700a05872ff2fde010664ee140` |
+| `artifacts/claude-dir-h3-design-20260928/queue-h3-4-holdout-v2.md` | H3 | queue job 4 (six holdouts, verdict); STATUS: HELD | text; not run | `a1588bfadbf515ebd225c5ed1f40061a997961d8c2a8b45e2eb20bdd77fffc00` |
+| `artifacts/claude-dir-h6-sleeplen-20260928/ADDENDUM-1.md` | H6 | review-fix addendum: report-only mid-night curve (R1) and carry-over row plan (R2), kit edits for the Director | text; arithmetic shown in the file | `2bbd40f7f6552b53e7adef8c436ec383f764ba325ce917825530dcf6754f3005` |
+| `scripts/claude_dir_h6_sleeplen_add1.py` | H6 | wrapper that scores the curve inside the sealed night (imports the sealed H6 script); optional --save-final | py_compile only; hook logic checked against stub modules (not shipped) | `870a338184d2fa3234fc161c96d9d2e84dcff279a7f83ed2b85c7378b68af5af` |
+| `scripts/claude_dir_h6_curve_read.py` | H6 | reads the curve files, puts one label on each night, prints counts and integrity lines | selftest ok (6 cases, 11 edges, 6 file checks); no torch needed | `9e4cb324a25bd1569030ee66e3ac9f8aac4417a62f3179fa74a993e4803d6d55` |
+
+19 files plus this INDEX.md.
+
+Sealed files I read and did not change: each folder's PASSMARKS.md and DESIGN.md, scripts/claude_dir_h1_marks.py, claude_dir_h1_kinds.py, claude_dir_h2_pool.py, claude_dir_h6_sleeplen.py, claude_slp358n3_nights.py, claude_rsn358u_run.py, the H3 v1 scripts. For the H3 v1 selftest results I also read the files on origin/builder-outbox (the Mac's run), which is disclosed in the H3 addendum.
+
+Not run with torch (first run on a machine with torch must be each script's own selftest or smoke; on a traceback, stop and report, do not patch): claude_dir_h3_net_v2.py, claude_dir_h3_net_v2_const.py, claude_dir_h3_practice_v2.py, claude_dir_h3_gate_report_v2.py, claude_dir_h3_selftest_v2.py, claude_dir_h6_sleeplen_add1.py. Not written: the three-draw sleep driver named in the H3 addendum (b), and any code for the H6 carry-over row (plan only).
