@@ -1,0 +1,86 @@
+{
+  "loop_stored": 1645726,
+  "plain_stored": 1619965,
+  "band_1pct": [
+    1629269,
+    1662183
+  ],
+  "band_2pct": [
+    1612811,
+    1678641
+  ],
+  "designs": {
+    "1 refill loop (echo gain; reveal training adds none)": {
+      "parts": [
+        [
+          "echo gain s",
+          1
+        ]
+      ],
+      "extra": 1,
+      "stored": 1645727,
+      "vs_loop_pct": 0.0001,
+      "within_1pct": true,
+      "within_2pct": true
+    },
+    "2 twin-stream conflict stop (noise size fixed, not learned)": {
+      "parts": [
+        [
+          "conflict weight kappa",
+          1
+        ]
+      ],
+      "extra": 1,
+      "stored": 1645727,
+      "vs_loop_pct": 0.0001,
+      "within_1pct": true,
+      "within_2pct": true
+    },
+    "3 reach channel": {
+      "parts": [
+        [
+          "LayerNorm before the link and source projections",
+          512
+        ],
+        [
+          "link projections Wq,Wk rank 8, no bias",
+          4096
+        ],
+        [
+          "link offset table 9x9 + bias",
+          82
+        ],
+        [
+          "source-ness and target-ness vectors + biases",
+          514
+        ],
+        [
+          "discount gamma",
+          1
+        ],
+        [
+          "4 reach features -> width 256",
+          1280
+        ]
+      ],
+      "extra": 6485,
+      "stored": 1652211,
+      "vs_loop_pct": 0.3941,
+      "within_1pct": true,
+      "within_2pct": true
+    },
+    "4 soft-D4 loop (isotropic table 15/head + separable residual 18/head, minus old 18/head)": {
+      "parts": [
+        [
+          "extra table entries",
+          240
+        ]
+      ],
+      "extra": 240,
+      "stored": 1645966,
+      "vs_loop_pct": 0.0146,
+      "within_1pct": true,
+      "within_2pct": true
+    }
+  }
+}
