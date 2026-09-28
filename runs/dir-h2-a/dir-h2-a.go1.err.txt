@@ -1,0 +1,1112 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m✗ [0mRead handoff/queue/lis-302-gpu.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/queue/lis-302-gpu.md
+[0m
+[0m$ [0mpwd; ls; git status --short --branch | head -n 20; git remote -v | head
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+## claude/card-experiment-handoff-7c5b27...origin/claude/card-experiment-handoff-7c5b27 [ahead 51]
+A  artifacts/claude-k1h-20260926/luna/full/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-1.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-2.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-3.txt
+A  artifacts/claude-k1h-20260926/luna/full/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/full/chats.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+A  artifacts/claude-mu407-20260927/prep/RESULTS.md
+A  artifacts/claude-mu407-20260927/prep/facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/facts_all.jsonl
+A  artifacts/claude-mu407-20260927/prep/frames.json
+A  artifacts/claude-mu407-20260927/prep/panel/items.jsonl
+origin	git@github.com:BenjaminHannan/learner.git (fetch)
+origin	git@github.com:BenjaminHannan/learner.git (push)
+[0m
+[0m$ [0mls handoff/queue/ | head -n 50; echo ---; git show origin/main:handoff/queue/lis-302-gpu.md | head -n 20
+ls: handoff/queue/: No such file or directory
+---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1 | head; echo FETCH-DONE; echo ===DUPLICATE-GATE===; git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-dir-h2-numbers-20260928/runs/ 2>&1 | head -n 20; echo ---; git ls-tree -r --name-only origin/main -- artifacts/claude-dir-h2-numbers-20260928/runs/ 2>&1 | head -n 20; echo ===PASSMARKS===; git show origin/main:artifacts/claude-dir-h2-numbers-20260928/PASSMARKS.md 2>&1 | head -n 100; echo ===DOCSTRING===; git show origin/main:scripts/claude_dir_h2_run.py 2>&1 | head -n 80
+FETCH-DONE
+zsh:1: ==DUPLICATE-GATE=== not found
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox; echo FETCH-DONE
+FETCH-DONE
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-dir-h2-numbers-20260928/runs/
+(no output)
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- artifacts/claude-dir-h2-numbers-20260928/runs/
+(no output)
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-dir-h2-numbers-20260928/PASSMARKS.md
+# dir-h2 numbers: pass marks (written 2026-09-28T19:13Z, before any script or run; helper H2)
+
+These marks are fixed now. Nobody changes them after a score is seen. A separate step recounts the results from the raw
+files (tests.json, extra.json, train_log.jsonl, train_summary.json, poison.json) and this page only.
+Labels: SHOWN = counted from code here. SUGGESTED = fits the counts. UNTESTED = nobody has run it.
+
+## The idea being tested (plain words)
+The nets learn the 1,062 practice hands of "numbers" (target 24) perfectly, as a lookup table, and get 0 to 3 of 300 on the
+300 hands they never saw (12 of 12 nets: 16 of 3,600). Each practice hand is shown about 2,410 times. The idea: stop showing
+the same items so often. Give the numbers-4 practice a much bigger pool of different puzzles, and see whether hands the net
+has never seen become solvable.
+
+## The single change
+Only the pool the 4-number practice draws from. Old pool: the 1,062 practice hands, always target 24. New pool: every 4-number
+hand from 1-13 that is not one of the 300 held-out hands, paired with every target from 5 to 40 that the hand can reach
+(the same target range the 3-number puzzles already use), with the stored answer from the same solver
+(`claude_blurt1.solve`). 300 of those (hand, target) pairs with target not 24 are set aside as a dev check and removed from
+practice. Everything else is untouched: tasks, sizes, the 3-number and sum and grid streams, architecture, loss, halt rule,
+steps (60,000), batch (256), learning rate, schedule, fixed env 0 (kind not told), the 8 tests, the 48 test rounds and the own
+stop rule. Implemented as a new runner (`scripts/claude_dir_h2_run.py`) that imports the sealed 358u code and swaps only
+`Source.four`.
+
+Pool counts, SHOWN here in pure python (recounted 2026-09-28, matches the diagnosis: rule.json and answers.json):
+- new pool: 37,082 (hand, target) pairs over 1,519 distinct hands; 1,062 of the pairs are the old target-24 practice pairs
+  (same hands, same stored answers); minus 300 dev pairs = 36,782 practice pairs.
+- draws: numbers4 gets 1/6 of 60,000 steps x 256 = 2.56 M draws, so about 69.6 draws per pair (old: 2,410 per hand). 35 times fewer repeats.
+- the 300 held-out hands share no multiset with any pool pair (0 of 300 hands appear, at any target), so they are disjoint by hand
+  and therefore by (hand, target).
+- Honest limit (SHOWN): the new pool has 1,519 different hands, only 457 more than before. What grows is targets per hand, not
+  new hands. A net could still memorise (hand, target) pairs. That is one of the ways the idea can be shown wrong (below).
+- Honest limit (SHOWN): target-24 pairs fall from 100% to 1,062 of 36,782 (2.9%) of numbers4 practice.
+
+## Arms and runs
+Same size as the rsn-358u race (loop: 2 layers, width 512; plain: 8 layers, width 256; about 6.3 M weights each; same
+sizes as the 358u nets), 60,000 steps, batch 256, defaults only.
+- Primary: loop seeds 13 and 14, plain seeds 13 and 14 (4 nets). Marks below judge these.
+- Replication (only after the primary is scored): loop and plain seeds 15 and 16. Judged by the same marks as their own
+  batch; it can confirm or contradict, it cannot rescue a primary FAIL or overturn a primary WRONG.
+- Comparison (SHOWN, same recipe, old pool; tests.json of rsn358u and rsn358u2): held-out numbers4 of 300 per net,
+  loop 358u 1,1,0,1; plain 358u 1,0,1,3; loop 358u2 2,2,3,1. Twelve nets: range 0 to 3, mean 1.33, spread (sd) about 1.0.
+  sums4 and grids5 were 300 of 300 on all 12. Loop sums6 296 to 300 and grids6 287 to 297 (u and u2 together, 8 loop nets).
+
+## Tests and extra measures
+- Held-out numbers4: the sealed 300 hands (artifacts/claude-rsn358i-20260926/tests/numbers4.jsonl, sha256 in 358u SEAL-code),
+  target 24, right at the net's own stop (loop) or one pass (plain). Checked once per net.
+- Gates: sums4, grids5 (practised sizes), and for the loop arm sums6 and grids6 (bigger sizes), from the same sealed tests.
+- Practice exactness: numbers4 training exactness (stored-exact), mean of the last 3 log lines of train_log.jsonl.
+- P_other: the 300 dev (hand, target not 24) pairs above, right at the net's own stop (any valid answer counts, as in the tests).
+  Never trained on. Measured once per net by `claude_dir_h2_run.py extra`.
+- P_train24: 300 practice hands at target 24 (fixed sample), right at own stop. Report only.
+
+## Validity (V). Any miss = INCONCLUSIVE, not a pass or a fail
+- V0: steps_block_nograd = 0 on every loop net.
+- V1: poison check identical (kind field swapped) on every net.
+- V2: the run log prints the pool line: 36782 practice pairs, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool.
+- V3: sealed 358u code and tests match SEAL-code.sha256.txt (20 of 20 lines) before the run; new scripts match the sha256
+  listed in the queue job's SEAL step.
+
+## PASS marks (numbers4 held-out of 300)
+Threshold **30 of 300 per net.** Why: the twelve old nets sit at 0 to 3 (mean 1.33, spread about 1.0); 30 is 10 times the best
+old net and 4 times the best score reachable with no arithmetic at all (search-free floor B = 7.5 of 300, diagnosis section 1).
+A net at 30 or more has clearly done something the old ones did not do. Nothing below 30 is called a win.
+- **PASS-LOOP** = V0-V3 met, and loop s13 and s14 both have numbers4 >= 30, and loop sums4 >= 295 and grids5 >= 295 and
+  sums6 >= 285 and grids6 >= 275 on both seeds.
+- **PASS-PLAIN** = V1-V3 met, and plain s13 and s14 both have numbers4 >= 30, and sums4 >= 295 and grids5 >= 295 on both.
+- Gate wording: the old nets were 300 of 300 on sums4 and grids5, so 295 allows 5 of 300 of noise; loop sums6 and grids6 allow
+  about 12 below the old minimum (296 and 287).
+- The idea is SUPPORTED (label: shown for those nets, suggested beyond them) if PASS-LOOP or PASS-PLAIN. Both = the pool fixes it
+  for both arms. Only one = it fixes it for that arm only; no claim about the other.
+- A pass says the net solves unseen hands at target 24. It does not say it searches, and it says nothing about hands with 5 or 6 numbers
+  (numbers5 is reported, not judged).
+
+## The result that would prove the idea wrong
+**WRONG (bigger pool did not help)** = V0-V3 met, and every primary net has numbers4 <= 8 of 300 (at the search-free floor,
+8 is the smallest whole number above B = 7.5), and this is read as one of:
+- memorised again: practice exactness >= 0.9 AND P_other <= 8 of 300 on every net. The nets store the 36,782 pairs the way they
+  stored 1,062 hands; new pairs fail like new hands. 69 draws per pair was not enough, or the pool needs new hands, not new targets.
+- cannot fit: practice exactness < 0.5 on any net, with numbers4 <= 8. The net cannot even learn the bigger pool, which points to
+  cause 2 of the diagnosis (nothing rewards checking arithmetic) rather than repeats.
+- too little target 24 (NOT counted as the idea wrong): P_other >= 30 on at least one arm's both seeds while numbers4 <= 8. The net
+  generalises to unseen pairs but not to the graded target. It says the pool works and the target mix is the problem; a later
+  single change (weight on target 24) is not proposed here.
+The example the manager gave: practice exactness 1.0 but held-out still <= 3 of 300 with the big pool. That falls under
+"memorised again" and counts as WRONG.
+
+## Everything else
+Any result that is neither PASS nor WRONG (numbers4 of 9 to 29 on some net; 30 or more on only one of two seeds; the arms disagree):
+PARTIAL. No claim, no second change until the marks are read by the Director. If V0-V3 fail: INCONCLUSIVE.
+Prediction (SUGGESTED, not a result): PASS about 20 to 25%. The likeliest results are "memorised again" or "cannot fit". Either one
+sends the next step to a training signal that rewards checking (DESIGN.md section 5).
+
+## Procedure
+1. Director seals the new scripts (sha256 in the queue job) and runs `python -B scripts/claude_dir_h2_pool.py selftest` (no torch).
+2. BensPC runs the queue job (primary 4 nets), then `extra` once per net.
+3. A separate blind recount step reads only the raw files and this page and writes VERIFY-recount.md.
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_dir_h2_run.py | head -n 60
+#!/usr/bin/env python3
+"""dir-h2 numbers (helper H2, 2026-09-28): rsn-358u's sealed recipe with ONE change: the pool the 4-number practice draws from.
+
+Old pool: the 1,062 practice hands at target 24 (each drawn about 2,410 times in 60,000 steps).
+New pool: every 4-number hand of 1-13 that is not held out, with every reachable target 5-40, minus 300 dev pairs
+(claude_dir_h2_pool.py). Everything else is claude_rsn358u_run.py unchanged (imported): fixed env 0, 60,000 steps, batch 256,
+lr, schedule, loop and plain nets, tests, own stop, poison check. Plan and marks: artifacts/claude-dir-h2-numbers-20260928/.
+
+  python -B scripts/claude_dir_h2_run.py train --arm loop|plain --seed S --out DIR        (defaults only)
+  python -B scripts/claude_dir_h2_run.py eval --ckpt DIR/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out F
+  python -B scripts/claude_dir_h2_run.py poison --ckpt DIR/final.pt --out F
+  python -B scripts/claude_dir_h2_run.py extra --ckpt DIR/final.pt --out F     (P_other on 300 dev pairs, P_train24)
+  python -B scripts/claude_dir_h2_run.py selftest | check-mask
+"""
+from __future__ import annotations
+
+import json
+import random
+import sys
+from pathlib import Path
+
+import torch
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_rsn358u_run as U  # noqa: E402  (sealed; applies its fixed-env, gradient-check and autocast patches)
+import claude_dir_h2_pool as P  # noqa: E402
+
+R, E = U.R, U.E
+_POOL = {}
+
+
+def pools():
+    if not _POOL:
+        practice, dev = P.practice_and_dev()
+        _POOL["practice"], _POOL["dev"] = practice, dev
+    return _POOL["practice"], _POOL["dev"]
+
+
+class WideSource(R.Source):
+    """the sealed practice stream, except that the 4-number hands come from the wide pool"""
+
+    def __init__(self, seed, latin_pool=20000):
+        super().__init__(seed, latin_pool=latin_pool)
+        held = {tuple(h) for h, _, _ in E.split_four(E.number_hands()[0])[1]}
+        practice, dev = pools()
+        self.four = practice
+        print(P.summary_line(practice, dev, E.split_four(E.number_hands()[0])[1]), flush=True)
+        assert not ({tuple(h) for h, _, _ in practice} & held), "held-out hand in the pool"
+
+
+R.Source = WideSource
+
+
+@torch.no_grad()
+def extra(a):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    net = R.load(a.ckpt, device)
+    practice, dev = pools()
+    train4, _ = E.split_four(E.number_hands()[0])
+    rng = random.Random(35834)
+[0m
+[0m$ [0mssh benspc "cat 'C:/Users/benja/GPU-BUSY.txt' 2>&1; echo ---PGREP---; pgrep -f claude_dir_h2_run 2>&1; echo ---PGREP2---; pgrep -f rsn 2>&1; echo ---NVIDIA---; nvidia-smi 2>&1 | head -n 25"
+(no output)
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "echo hello" 2>&1; echo EXIT:$?
+hello
+EXIT:0
+[0m
+[0m$ [0mssh benspc 'cat C:/Users/benja/GPU-BUSY.txt'
+'cat' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh benspc "Get-Content C:\\Users\\benja\\GPU-BUSY.txt"
+'Get-Content' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh benspc "ver; echo TEST123"
+Microsoft Windows [Version 10.0.26200.9550]
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Get-Content C:\\Users\\benja\\GPU-BUSY.txt\""
+BUSY: queue job dir-h2-a since 2026-09-28T19:21:25Z - do not use this GPU until this file is gone
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- handoff/ | head -n 40; echo ---; git log --oneline -5 origin/main -- artifacts/claude-dir-h2-numbers-20260928/ 2>&1 | head
+handoff/HANDOFF.md
+handoff/director-board.md
+handoff/director-briefs/rules.md
+handoff/director-roadmap.md
+handoff/held/000-bash-benspc-delete6.md
+handoff/held/000-salvage-k1h-glm2.md
+handoff/held/000-stop-k1h-glm2.md
+handoff/held/000-stop-k1hz-salvage.md
+handoff/held/001-bench-bm390.md
+handoff/held/004-rd-371-train.md
+handoff/held/005-rsn-353-pc.md
+handoff/held/005s-rsn-358a-shared.md
+handoff/held/006-slp-363-train.md
+handoff/held/006b-blurt4-loop.md
+handoff/held/006d-rsn-358a-train.md
+handoff/held/006f-bm397-finalize.md
+handoff/held/006i-bm391-02c.md
+handoff/held/006j-rsn-358d-train.md
+handoff/held/006m-bm391-02c.md
+handoff/held/006m-chatgap-benspc.md
+handoff/held/006m-rsn-358f-flow.md
+handoff/held/006n-rsn-358g-grids.md
+handoff/held/007-e2e382-dev.md
+handoff/held/007-rsn-357-train.md
+handoff/held/007r-02dr-benspc.md
+handoff/held/007s-rt02d-benspc.md
+handoff/held/008-blurt2b-loop.md
+handoff/held/170-rv390-358i2-pc.md
+handoff/held/176-creative-brd11pc.md
+handoff/held/177-creative-brd12pc.md
+handoff/held/300-fixsleep-dl8pc.md
+handoff/held/301-fixsleep-dl11pc.md
+handoff/held/benspc-336b.md
+handoff/held/benspc-y1t.md
+handoff/held/benspc-y1v.md
+handoff/held/bm398w-luna-mac-b.md
+handoff/held/claude-madeup-g406-mac.md
+handoff/held/claude-sleep-358i2.md
+handoff/held/claude-sleep-358t3.md
+handoff/held/e2e-330-dev.md
+---
+1be1f7d80 Director: H2 numbers-pool job, H3 settle-gate selftest job, H4 end-to-end plan
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- handoff/queue/ | head -n 40
+handoff/queue/000-adapters-0926d.md
+handoff/queue/000-bash-benspc-disklist2.md
+handoff/queue/000-bash-benspc-probe-1506.md
+handoff/queue/000-bash-benspc-venvcheck-1509.md
+handoff/queue/000-bash-clear260-1608.md
+handoff/queue/000-bash-gpuprobe2.md
+handoff/queue/000-bash-guard358u.md
+handoff/queue/000-bash-m3pro-probe-1718.md
+handoff/queue/000-bash-probe173.md
+handoff/queue/000-bash-probe173b.md
+handoff/queue/000-bash-spend358u-1415.md
+handoff/queue/000-bash-stop-bm398w-b.md
+handoff/queue/000-bash-stop-bm398w.md
+handoff/queue/000-bash-stop172-go2.md
+handoff/queue/000-bash-stop172-gpuprobe.md
+handoff/queue/000-bash-vastcredit-1250.md
+handoff/queue/000-bash-vastcredit-1307.md
+handoff/queue/000-bash-vastcredit-1613.md
+handoff/queue/000-bash-vastcredit-1715.md
+handoff/queue/000-bash-vastcredit-1813.md
+handoff/queue/000-bash-vastcredit-1953.md
+handoff/queue/000-benspc-check.md
+handoff/queue/000-benspc-disklist.md
+handoff/queue/000-cache-pin.md
+handoff/queue/000-check-358t.md
+handoff/queue/000-ckpt-copy.md
+handoff/queue/000-collect-rd378g.md
+handoff/queue/000-collect2-rd378g.md
+handoff/queue/000-credit-0926b.md
+handoff/queue/000-credit-0926j.md
+handoff/queue/000-credit-0926k.md
+handoff/queue/000-credit-0926m.md
+handoff/queue/000-credit-0926n.md
+handoff/queue/000-diskcheck-0926.md
+handoff/queue/000-find-brd8w.md
+handoff/queue/000-glm-exitcodes.md
+handoff/queue/000-glm-helper-v11.md
+handoff/queue/000-glm-opencode-probe.md
+handoff/queue/000-glm-throughput.md
+handoff/queue/000-glm-v11-twoproc.md
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- handoff/queue/ | grep -i dir-h2
+handoff/queue/dir-h2-a.md
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/dir-h2-a.md | head -n 60
+COMMON RULES: follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (helper H2 of the Director, Claude, wrote this task on 2026-09-28). Report in your final reply: verdict first, integer counts, every deviation.
+GPU: yes (BensPC RTX 5070 Ti; one job at a time; $0, no rental). NO RENTALS, whatever fails. The watcher writes C:\Users\benja\GPU-BUSY.txt as "queue job <this file's name without .md>" while this task runs: that is this job, so go on and leave the file to the watcher. If the file names any other job, stop with BUSY and run nothing.
+WHERE: you run on the Mac. BensPC (Windows, RTX 5070 Ti) is reached from the Mac with `ssh benspc` (PowerShell, or git-bash for sha256sum/tar). Every BensPC command below runs ON BensPC over that ssh; stream the tree with `git archive ... | ssh benspc "tar -x -C <folder>"`; copy results back to the Mac worktree with scp. Never look for BensPC paths on the Mac itself.
+TIME CAP: 12 hours in total. ESTIMATE (not measured): 4-8 h for four nets, two at once (rsn-358u took about 90-100 min per net on a 5090 with 8 at once).
+DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-dir-h2-numbers-20260928/runs/.
+
+YOUR TASK: builder for dir-h2 (a bigger pool for the number puzzles) on BensPC: loop and plain, seeds 13 and 14 (4 nets). The Director's helper H2 wrote and sealed all code and marks. Run it and never edit it. If something breaks, stop and report the exact error; do not patch. Artifacts go in artifacts/claude-dir-h2-numbers-20260928/.
+READ FIRST (origin/main): artifacts/claude-dir-h2-numbers-20260928/PASSMARKS.md and the docstring of scripts/claude_dir_h2_run.py.
+Python on BensPC: C:/Users/benja/lis300/venv/Scripts/python.exe (torch CUDA + numpy). No installs, no model downloads, no network calls.
+INDEPENDENCE: artifacts/claude-rsn358i-20260926/tests/ is TEST-ONLY. Never open or print an item; the eval command writes counts only. Run each eval exactly once per checkpoint file. Do not compute or report any verdict or loop-minus-plain gap: the blind recount step does that.
+1. On BensPC: `git archive origin/main scripts artifacts/claude-dir-h2-numbers-20260928 artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt artifacts/claude-rsn358i-20260926/tests`, extract keeping paths into a fresh folder C:/Users/benja/dirh2/. Check `nvidia-smi` and free disk on C: (stop if under 3 GB; this job writes about 0.3 GB: four final.pt of about 26 MB each, kept twice).
+2. SEAL: every line of artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt (20) must match (sha256sum -c under Git Bash); and every line of artifacts/claude-dir-h2-numbers-20260928/SEAL-h2.sha256.txt (the Director writes it when it submits this job: PASSMARKS.md, the two new scripts) must match. Anything else: stop.
+3. Report only: `python -c "import torch;print(torch.__version__, torch.version.cuda)"`.
+4. Checks (all must pass, otherwise stop): `python -B scripts/claude_rsn358a_envs.py selftest` prints "selftest ok"; `python -B scripts/claude_dir_h2_pool.py selftest` (about 1-3 min) ends with "selftest ok" and its line [3] reads 0 held-out hands in the pool; `python -B scripts/claude_dir_h2_run.py selftest` ends with "run selftest ok"; `python -B scripts/claude_dir_h2_run.py check-mask` prints "check-mask ok"; `python -B scripts/claude_rsn358u_run.py selftest` ends with "selftest ok".
+5. TRAIN, each run logged to W/<R>.log, launched detached (the WMI Win32_Process.Create method 358i3's builder used survives SSH disconnect), in this order: loop s13, plain s13, loop s14, plain s14. Command: `python -B scripts/claude_dir_h2_run.py train --arm <arm> --seed <s> --out W/<arm>-s<s>` (defaults only). Start two at once. Each log must print, near its top, a line "h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool" (the pool builds in about 1-3 min); if any number differs, stop that run by exact PID and report. After 5 minutes record nvidia-smi memory used per process and free memory; start a third only if at least 5 GB is free, and so on; whenever one finishes, start the next in the order. After 30 minutes project the finish from the logs ("min" field). If all 4 cannot finish inside the cap, stop seed 14 of both arms by exact PID (TOO-SLOW, INCONCLUSIVE) and finish the rest.
+6. SEAL each final.pt BEFORE its eval: append its sha256 (64 hex characters) to artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt.
+7. For each checkpoint, exactly once each, in this order:
+   a. `python -B scripts/claude_dir_h2_run.py poison --ckpt W/<R>/final.pt --out W/<R>/poison.json`
+   b. `python -B scripts/claude_dir_h2_run.py eval --ckpt W/<R>/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/<R>/tests.json`
+   c. `python -B scripts/claude_dir_h2_run.py extra --ckpt W/<R>/final.pt --out W/<R>/extra.json`
+   Copy train_log.jsonl, train_summary.json, poison.json, tests.json, extra.json and the log into artifacts/claude-dir-h2-numbers-20260928/runs/<R>/ on the Mac (force-add; artifacts/ is git-ignored).
+8. Write artifacts/claude-dir-h2-numbers-20260928/runs/RUN-NOTE.md: per run the start and end time (date -u), minutes, GPU, torch/CUDA, memory line, the "h2 pool:" line as printed, the last log line, every deviation. No marks, no verdict.
+9. PUSH: artifacts/claude-dir-h2-numbers-20260928/runs artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt. Never push weights. Keep every final.pt on BensPC at C:/Users/benja/premonition-models/dirh2/<R>/ and copy them to the Mac at ~/premonition-models/dirh2/<R>/ (sha256 checked); remove C:/Users/benja/dirh2/ by exact path after the copy and confirm it is gone.
+10. Final reply: which runs finished, each run's numbers4 / sums4 / grids5 / P_other / P_train24 counts as printed in its files (integers, no verdict), and every deviation.
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Test-Path C:\\Users\\benja\\dirh2; Get-PSDrive C | Select-Object Free, Used; nvidia-smi; Get-CimInstance Win32_Process | Where-Object { \$_.CommandLine -like '*claude_dir_h2*' } | Select-Object ProcessId, CommandLine\""
+False
+
+Mon Sep 28 15:22:54 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 591.86                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070 Ti   WDDM  |   00000000:01:00.0  On |                  N/A |
+|  0%   33C    P8              7W /  250W |     435MiB /  16303MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1768    C+G   C:\Windows\System32\dwm.exe           N/A      |
+|    0   N/A  N/A            2316    C+G   ...(x86)\e2eSoft\iVCam\iVCam.exe      N/A      |
+|    0   N/A  N/A            3328    C+G   ...cord\app-1.0.9259\Discord.exe      N/A      |
+|    0   N/A  N/A            4152    C+G   ...indows\System32\ShellHost.exe      N/A      |
+|    0   N/A  N/A            5112    C+G   ...ta\Okta Verify\OktaVerify.exe      N/A      |
+|    0   N/A  N/A            5268    C+G   ...s\PowerToys.ColorPickerUI.exe      N/A      |
+|    0   N/A  N/A            8564    C+G   C:\Windows\explorer.exe               N/A      |
+|    0   N/A  N/A           10064    C+G   ...2txyewy\CrossDeviceResume.exe      N/A      |
+|    0   N/A  N/A           10660    C+G   ...Toys\PowerToys.FancyZones.exe      N/A      |
+|    0   N/A  N/A           12604    C+G   ...em32\ApplicationFrameHost.exe      N/A      |
+|    0   N/A  N/A           12760    C+G   ...7hta09mmv6hy\Build\Lively.exe      N/A      |
+|    0   N/A  N/A           13148    C+G   ...s\PowerToys.PowerLauncher.exe      N/A      |
+|    0   N/A  N/A           13348    C+G   ..._cw5n1h2txyewy\SearchHost.exe      N/A      |
+|    0   N/A  N/A           13380    C+G   ...y\StartMenuExperienceHost.exe      N/A      |
+|    0   N/A  N/A           15392    C+G   ....0.4234.48\msedgewebview2.exe      N/A      |
+|    0   N/A  N/A           15856    C+G   ...UI3Apps\PowerToys.Peek.UI.exe      N/A      |
+|    0   N/A  N/A           16692    C+G   ...8bbwe\PhoneExperienceHost.exe      N/A      |
+|    0   N/A  N/A           17304    C+G   ...xyewy\ShellExperienceHost.exe      N/A      |
+|    0   N/A  N/A           18288    C+G   ...ogram Files\ShareX\ShareX.exe      N/A      |
+|    0   N/A  N/A           19200    C+G   ...crosoft shared\ink\TabTip.exe      N/A      |
+|    0   N/A  N/A           19504    C+G   ...s\PowerToys.AdvancedPaste.exe      N/A      |
+|    0   N/A  N/A           19892    C+G   ...5n1h2txyewy\TextInputHost.exe      N/A      |
+|    0   N/A  N/A           20844    C+G   ...ntrolPanel\SystemSettings.exe      N/A      |
+|    0   N/A  N/A           20964    C+G   ...Lunar Client\Lunar Client.exe      N/A      |
+|    0   N/A  N/A           21352    C+G   C:\Windows\System32\Taskmgr.exe       N/A      |
++-----------------------------------------------------------------------------------------+
+       Free          Used
+       ----          ----
+14136778752 1009007054848
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-dir-h2-numbers-20260928/SEAL-h2.sha256.txt; echo ---; git ls-tree -r --name-only origin/main -- artifacts/claude-dir-h2-numbers-20260928/; echo ---; git ls-tree origin/main -- scripts/ | grep -E "dir_h2|rsn358" | head -n 20
+547fc255742a251395fc17fe64211cb668291401299853dba6e8b74d148a8f52  artifacts/claude-dir-h2-numbers-20260928/PASSMARKS.md
+1da453edb71c9abec07198b18705fe5dff89dd171b1dbda1566c92d1847c3727  scripts/claude_dir_h2_pool.py
+c179e3046c2eae807e001c540eb77930889c3fce171fadafcb00f7b7efc589db  scripts/claude_dir_h2_run.py
+---
+artifacts/claude-dir-h2-numbers-20260928/DESIGN.md
+artifacts/claude-dir-h2-numbers-20260928/PASSMARKS.md
+artifacts/claude-dir-h2-numbers-20260928/SEAL-h2.sha256.txt
+artifacts/claude-dir-h2-numbers-20260928/queue-h2-a.md
+artifacts/claude-dir-h2-numbers-20260928/queue-h2-b.md
+---
+100644 blob 707c966f3735783d16b9aa6fbfd736a98807ff75	scripts/claude_dir_h2_pool.py
+100644 blob bf0b0e462c88603a97e3eb18558b74a936a668a6	scripts/claude_dir_h2_run.py
+100644 blob a0364a466d0e224b168c34da2fc5c04ceb865d2a	scripts/claude_rsn358a2_run.py
+100644 blob 6824065f2b19b6fa278126c4f273c3cadf43d667	scripts/claude_rsn358a2_shared.py
+100644 blob 921d55d02513ccd88bf4b5d636db5488a23f1037	scripts/claude_rsn358a_envs.py
+100644 blob b7ce294c4f38758f879274a5b959bc819c3187db	scripts/claude_rsn358a_run.py
+100644 blob f8a78ace37dbaea72430c5420a7e2ccae06ae4b0	scripts/claude_rsn358b2_bridge.py
+100644 blob 8569d1e8dc88ed75a77602f8d2340ca44f5f88e8	scripts/claude_rsn358b3_panel.py
+100644 blob 6aa8651265d277df05b14e974d9cbe837d57e6bc	scripts/claude_rsn358b_sudoku.py
+100644 blob 42c2a9f14f15fdcddb5464cbe4c9088d3a475590	scripts/claude_rsn358c1_stop.py
+100644 blob 9004100a359e39b7b83a7dcad6065cd11dff04e8	scripts/claude_rsn358c2_run.py
+100644 blob c9af95c8ae329119183c26bac134a1e509e3bdf7	scripts/claude_rsn358d_run.py
+100644 blob d24537afa8eebcfb558b139db8b4ed6b3eee4b74	scripts/claude_rsn358e2_arms.py
+100644 blob b24b036acf40acd0cfbcd00fb1d9b961208fcffd	scripts/claude_rsn358e3_replay.py
+100644 blob 5c13ecf5b58f720d374453a370a2aeea8f467ab5	scripts/claude_rsn358e4_replayall.py
+100644 blob dc6d5e043847751067b7c47a72e11bf367b81903	scripts/claude_rsn358e4b_halfreplay.py
+100644 blob d6dbd8b1377b4ef46ac2b40287fbef2eb46c995d	scripts/claude_rsn358e5_warm.py
+100644 blob b28e9c3a1f6319658b6724fa708d30f5b5616534	scripts/claude_rsn358e6_sharedtrain.py
+100644 blob 2901f8cf15b9b29ae87a2b257374d4c6a08e457a	scripts/claude_rsn358e7_lateral.py
+100644 blob 1192c61b51bef52a67c40dddfc10115ad01f3549	scripts/claude_rsn358e8_growunits.py
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force C:\\Users\\benja\\dirh2 | Out-Null; Test-Path C:\\Users\\benja\\dirh2\"" && git archive origin/main scripts artifacts/claude-dir-h2-numbers-20260928 artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt artifacts/claude-rsn358i-20260926/tests | ssh benspc "tar -x -C C:/Users/benja/dirh2" && echo TRANSFER-OK
+True
+TRANSFER-OK
+[0m
+[0m$ [0mssh benspc "sha256sum --version"
+'sha256sum' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc 'sha256sum --version'"
+sha256sum (GNU coreutils) 8.32
+Copyright (C) 2020 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Ulrich Drepper, Scott Miller, and David Madore.
+[0m
+[0m$ [0mssh benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc 'cd /c/Users/benja/dirh2 && sha256sum -c artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt && sha256sum -c artifacts/claude-dir-h2-numbers-20260928/SEAL-h2.sha256.txt'"
+'sha256sum' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc 'cd /c/Users/benja/dirh2; sha256sum -c artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt'"
+scripts/claude_rsn358u_run.py: OK
+scripts/claude_rsn358i2_run.py: OK
+scripts/claude_rsn358i_run.py: OK
+scripts/claude_rsn358g_run.py: OK
+scripts/claude_rsn358a2_run.py: OK
+scripts/claude_rsn358a_run.py: OK
+scripts/claude_rsn358a_envs.py: OK
+scripts/claude_blurt1.py: OK
+artifacts/claude-rsn358i-20260926/tests/grids5.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/grids6.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/grids7.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/numbers4.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/numbers5.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums10.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums12.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums4.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums6.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums8.jsonl: OK
+artifacts/claude-rsn358u-20260927/PASSMARKS-draft.md: FAILED open or read
+artifacts/claude-rsn358u-20260927/PASSMARKS.md: FAILED open or read
+sha256sum: artifacts/claude-rsn358u-20260927/PASSMARKS-draft.md: No such file or directory
+sha256sum: artifacts/claude-rsn358u-20260927/PASSMARKS.md: No such file or directory
+sha256sum: WARNING: 2 listed files could not be read
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt
+f5f287afac9c2f99efafe4f0e06d050411d772d7ad1a24cb24d698ddcaa64112  scripts/claude_rsn358u_run.py
+8d69958c053342d47f44895375c16de3afdef7a55accdf4136ac55220fc82877  scripts/claude_rsn358i2_run.py
+4b9dfb907e49d47caefbbe606bc1610d12f15a85b39bce6aaa32ef78771f5ef4  scripts/claude_rsn358i_run.py
+0a82d5a512fe3da9a737a07935f9cd07fa78fbecd4446b736e85230355c0c928  scripts/claude_rsn358g_run.py
+80513101e4a6820f3fc32b2d23d01bcfc1ccca9457ae928826bdf37d89d816fe  scripts/claude_rsn358a2_run.py
+9b0e1a03ffdf354575e0a19acc58042c869c261565ba62e91e71af899cbca9b0  scripts/claude_rsn358a_run.py
+af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0  scripts/claude_rsn358a_envs.py
+c00aa62f4bc9ed710019581ee61288256238539c5bcfb6759d17f89c01a958de  scripts/claude_blurt1.py
+cfbdb334f1e8f0fb3fda980ae71d906dde250d77664f0cb14d0378070d4689c9  artifacts/claude-rsn358i-20260926/tests/grids5.jsonl
+1f922b36e6ecc74375079cca0447c11e0dce836d3deba54d187bb38147225179  artifacts/claude-rsn358i-20260926/tests/grids6.jsonl
+c9b56b4a766af88e7d520b7c440c46a45e407c90c46c6abf0f6ffae9584d2ee9  artifacts/claude-rsn358i-20260926/tests/grids7.jsonl
+e887fb6154ddd811fccec38884a6a88dbd69320bc72806147c18d7b40f6d1387  artifacts/claude-rsn358i-20260926/tests/numbers4.jsonl
+d9d53c3409f298870c0469dc2476556ea7839b6f2469a4c3b0e8f4abb01897ec  artifacts/claude-rsn358i-20260926/tests/numbers5.jsonl
+67e459cd8f5a482a66a9efb3d88906f65657a01f2894e364efcfa70125322f8b  artifacts/claude-rsn358i-20260926/tests/sums10.jsonl
+71eca5d906a2c3bd45e1f075ed763d166af5c903884fed69f18211e18cef868f  artifacts/claude-rsn358i-20260926/tests/sums12.jsonl
+01728d1912b590221e48835b7f787be4cb94f4f93aa4eae765fd46db1d7c5bfb  artifacts/claude-rsn358i-20260926/tests/sums4.jsonl
+a6ab304257625c83c87de063c925014cef49e3bfe3ec0c45a149b5ac2c3c9322  artifacts/claude-rsn358i-20260926/tests/sums6.jsonl
+312c46fd6c9fb54e28185ca9533e1993c11d8a4d6fc9ee4775edb7046a121465  artifacts/claude-rsn358i-20260926/tests/sums8.jsonl
+2c3e14eb84af4eb572e641994a5af87dae833b0fa6beb5db10f4161654e17489  artifacts/claude-rsn358u-20260927/PASSMARKS-draft.md
+d3391bff877c469abd9b4334b0f1113ca6e5f3716525c180533c817cb7e27fce  artifacts/claude-rsn358u-20260927/PASSMARKS.md
+[0m
+[0m$ [0mgit archive origin/main artifacts/claude-rsn358u-20260927/PASSMARKS.md artifacts/claude-rsn358u-20260927/PASSMARKS-draft.md | ssh benspc "tar -x -C C:/Users/benja/dirh2" && echo TRANSFER2-OK
+TRANSFER2-OK
+[0m
+[0m$ [0mssh benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc 'cd /c/Users/benja/dirh2; sha256sum -c artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt'"
+scripts/claude_rsn358u_run.py: OK
+scripts/claude_rsn358i2_run.py: OK
+scripts/claude_rsn358i_run.py: OK
+scripts/claude_rsn358g_run.py: OK
+scripts/claude_rsn358a2_run.py: OK
+scripts/claude_rsn358a_run.py: OK
+scripts/claude_rsn358a_envs.py: OK
+scripts/claude_blurt1.py: OK
+artifacts/claude-rsn358i-20260926/tests/grids5.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/grids6.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/grids7.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/numbers4.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/numbers5.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums10.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums12.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums4.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums6.jsonl: OK
+artifacts/claude-rsn358i-20260926/tests/sums8.jsonl: OK
+artifacts/claude-rsn358u-20260927/PASSMARKS-draft.md: OK
+artifacts/claude-rsn358u-20260927/PASSMARKS.md: OK
+[0m
+[0m$ [0mssh benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc 'cd /c/Users/benja/dirh2; sha256sum -c artifacts/claude-dir-h2-numbers-20260928/SEAL-h2.sha256.txt'"
+artifacts/claude-dir-h2-numbers-20260928/PASSMARKS.md: OK
+scripts/claude_dir_h2_pool.py: OK
+scripts/claude_dir_h2_run.py: OK
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"cd C:\\Users\\benja\\dirh2; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -c 'import torch;print(torch.__version__, torch.version.cuda)'; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_rsn358a_envs.py selftest\""
+2.11.0+cu128 12.8
+selftest ok: 1362 four-hands (1062 practice, 300 held out), 1346 three-hands
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"cd C:\\Users\\benja\\dirh2; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_pool.py selftest\""
+[1] sealed 358u code and tests: 20 of 20 sha256 lines match
+[2] pool 37082 pairs over 1519 hands; practice 36782, dev 300; old pool 1062 hands at target 24
+[3] held-out hands (300) in the pool: 0; held-out (hand, 24) pairs in the pool: 0; dev pairs in practice: 0
+[4] all 37082 stored answers pass the exact checker; the 1062 target-24 pairs equal the old practice pool
+[5] numbers4 draws 2560000; new 69.6 per pair (old 2411 per hand, 35x more); 200,000 simulated draws touched 36639 of 36782 pairs; target-24 share 0.029
+[6] claude_dir_h2_run.py assigns only ['R.Source', 'self.four'] in the sealed modules; no test-panel path, no key access
+selftest ok
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"cd C:\\Users\\benja\\dirh2; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_run.py selftest; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_run.py check-mask; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_rsn358u_run.py selftest\""
+[1] sealed 358u code and tests: 20 of 20 sha256 lines match
+[2] pool 37082 pairs over 1519 hands; practice 36782, dev 300; old pool 1062 hands at target 24
+[3] held-out hands (300) in the pool: 0; held-out (hand, 24) pairs in the pool: 0; dev pairs in practice: 0
+[4] all 37082 stored answers pass the exact checker; the 1062 target-24 pairs equal the old practice pool
+[5] numbers4 draws 2560000; new 69.6 per pair (old 2411 per hand, 35x more); 200,000 simulated draws touched 36639 of 36782 pairs; target-24 share 0.029
+[6] claude_dir_h2_run.py assigns only ['R.Source', 'self.four'] in the sealed modules; no test-panel path, no key access
+selftest ok
+run selftest ok (needs torch: imports the sealed runner and checks the swap)
+check-mask ok: narrow heads 0-3 ignore cells 2+ columns away; wide heads 4-7 unchanged
+selftest ok: torch 2.11.0+cu128, cache off, 0/8 block Linear weights without gradient after 3 free + 2 graded rounds
+selftest ok: every item gets env 0 (kinds seen [0, 1]); 358i2 checks pass
+[0m
+[0m$ [0mgit log --oneline -3 origin/main; git grep -l "Win32_Process" origin/main -- handoff/ artifacts/ 2>/dev/null | head
+5436f5430 Director takeover handoff: everything the Thread manager did (roles, Ben's preferences, Mac watcher, BensPC, vast, explainers, prompts, current state), plus explainer kit and a snapshot of the TM notes
+1be1f7d80 Director: H2 numbers-pool job, H3 settle-gate selftest job, H4 end-to-end plan
+3a5cdf552 Director roadmap, board and shared helper rules
+origin/main:artifacts/claude-dir-h2-numbers-20260928/queue-h2-a.md
+origin/main:artifacts/claude-dir-h2-numbers-20260928/queue-h2-b.md
+origin/main:artifacts/fable-ears119-20260922/RESULTS.md
+origin/main:artifacts/fable-ears119b-20260922/scp119b.txt
+origin/main:artifacts/fable-ears119e-20260922/scp119e.txt
+origin/main:artifacts/fable-ears119f-20260922/scp119f.txt
+origin/main:artifacts/fable-ears119g-20260922/scp119g.txt
+origin/main:artifacts/fable-ears119h-20260922/scp119h.txt
+origin/main:artifacts/fable-ears213-20260922/scp213.txt
+origin/main:artifacts/fable-talker120-20260922/RESULTS.md
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-dir-h2-numbers-20260928/queue-h2-a.md | head -n 80
+COMMON RULES: follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (helper H2 of the Director, Claude, wrote this task on 2026-09-28). Report in your final reply: verdict first, integer counts, every deviation.
+GPU: yes (BensPC RTX 5070 Ti; one job at a time; $0, no rental). NO RENTALS, whatever fails. The watcher writes C:\Users\benja\GPU-BUSY.txt as "queue job <this file's name without .md>" while this task runs: that is this job, so go on and leave the file to the watcher. If the file names any other job, stop with BUSY and run nothing.
+WHERE: you run on the Mac. BensPC (Windows, RTX 5070 Ti) is reached from the Mac with `ssh benspc` (PowerShell, or git-bash for sha256sum/tar). Every BensPC command below runs ON BensPC over that ssh; stream the tree with `git archive ... | ssh benspc "tar -x -C <folder>"`; copy results back to the Mac worktree with scp. Never look for BensPC paths on the Mac itself.
+TIME CAP: 12 hours in total. ESTIMATE (not measured): 4-8 h for four nets, two at once (rsn-358u took about 90-100 min per net on a 5090 with 8 at once).
+DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-dir-h2-numbers-20260928/runs/.
+
+YOUR TASK: builder for dir-h2 (a bigger pool for the number puzzles) on BensPC: loop and plain, seeds 13 and 14 (4 nets). The Director's helper H2 wrote and sealed all code and marks. Run it and never edit it. If something breaks, stop and report the exact error; do not patch. Artifacts go in artifacts/claude-dir-h2-numbers-20260928/.
+READ FIRST (origin/main): artifacts/claude-dir-h2-numbers-20260928/PASSMARKS.md and the docstring of scripts/claude_dir_h2_run.py.
+Python on BensPC: C:/Users/benja/lis300/venv/Scripts/python.exe (torch CUDA + numpy). No installs, no model downloads, no network calls.
+INDEPENDENCE: artifacts/claude-rsn358i-20260926/tests/ is TEST-ONLY. Never open or print an item; the eval command writes counts only. Run each eval exactly once per checkpoint file. Do not compute or report any verdict or loop-minus-plain gap: the blind recount step does that.
+1. On BensPC: `git archive origin/main scripts artifacts/claude-dir-h2-numbers-20260928 artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt artifacts/claude-rsn358i-20260926/tests`, extract keeping paths into a fresh folder C:/Users/benja/dirh2/. Check `nvidia-smi` and free disk on C: (stop if under 3 GB; this job writes about 0.3 GB: four final.pt of about 26 MB each, kept twice).
+2. SEAL: every line of artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt (20) must match (sha256sum -c under Git Bash); and every line of artifacts/claude-dir-h2-numbers-20260928/SEAL-h2.sha256.txt (the Director writes it when it submits this job: PASSMARKS.md, the two new scripts) must match. Anything else: stop.
+3. Report only: `python -c "import torch;print(torch.__version__, torch.version.cuda)"`.
+4. Checks (all must pass, otherwise stop): `python -B scripts/claude_rsn358a_envs.py selftest` prints "selftest ok"; `python -B scripts/claude_dir_h2_pool.py selftest` (about 1-3 min) ends with "selftest ok" and its line [3] reads 0 held-out hands in the pool; `python -B scripts/claude_dir_h2_run.py selftest` ends with "run selftest ok"; `python -B scripts/claude_dir_h2_run.py check-mask` prints "check-mask ok"; `python -B scripts/claude_rsn358u_run.py selftest` ends with "selftest ok".
+5. TRAIN, each run logged to W/<R>.log, launched detached (the WMI Win32_Process.Create method 358i3's builder used survives SSH disconnect), in this order: loop s13, plain s13, loop s14, plain s14. Command: `python -B scripts/claude_dir_h2_run.py train --arm <arm> --seed <s> --out W/<arm>-s<s>` (defaults only). Start two at once. Each log must print, near its top, a line "h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool" (the pool builds in about 1-3 min); if any number differs, stop that run by exact PID and report. After 5 minutes record nvidia-smi memory used per process and free memory; start a third only if at least 5 GB is free, and so on; whenever one finishes, start the next in the order. After 30 minutes project the finish from the logs ("min" field). If all 4 cannot finish inside the cap, stop seed 14 of both arms by exact PID (TOO-SLOW, INCONCLUSIVE) and finish the rest.
+6. SEAL each final.pt BEFORE its eval: append its sha256 (64 hex characters) to artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt.
+7. For each checkpoint, exactly once each, in this order:
+   a. `python -B scripts/claude_dir_h2_run.py poison --ckpt W/<R>/final.pt --out W/<R>/poison.json`
+   b. `python -B scripts/claude_dir_h2_run.py eval --ckpt W/<R>/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out W/<R>/tests.json`
+   c. `python -B scripts/claude_dir_h2_run.py extra --ckpt W/<R>/final.pt --out W/<R>/extra.json`
+   Copy train_log.jsonl, train_summary.json, poison.json, tests.json, extra.json and the log into artifacts/claude-dir-h2-numbers-20260928/runs/<R>/ on the Mac (force-add; artifacts/ is git-ignored).
+8. Write artifacts/claude-dir-h2-numbers-20260928/runs/RUN-NOTE.md: per run the start and end time (date -u), minutes, GPU, torch/CUDA, memory line, the "h2 pool:" line as printed, the last log line, every deviation. No marks, no verdict.
+9. PUSH: artifacts/claude-dir-h2-numbers-20260928/runs artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt. Never push weights. Keep every final.pt on BensPC at C:/Users/benja/premonition-models/dirh2/<R>/ and copy them to the Mac at ~/premonition-models/dirh2/<R>/ (sha256 checked); remove C:/Users/benja/dirh2/ by exact path after the copy and confirm it is gone.
+10. Final reply: which runs finished, each run's numbers4 / sums4 / grids5 / P_other / P_train24 counts as printed in its files (integers, no verdict), and every deviation.
+[0m
+[0m$ [0mgit grep "Win32_Process" origin/main -- artifacts/claude-rsn358i3-20260926/ 2>/dev/null | head -n 10; echo ---; git ls-tree -r --name-only origin/main -- artifacts/ | grep -i "358i3" | head -n 20
+---
+artifacts/claude-rsn358i3-20260926/PASSMARKS.md
+artifacts/claude-rsn358i3-20260926/SEAL-code.sha256.txt
+artifacts/claude-rsn358i3-20260926/VERIFY-recount.md
+[0m
+[0m← [0mWrite /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/dirh2w/W/run-loop-s14.cmd
+Wrote file successfully.
+[0m
+[0m← [0mWrite /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/dirh2w/W/run-plain-s13.cmd
+Wrote file successfully.
+[0m
+[0m← [0mWrite /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/dirh2w/W/run-loop-s13.cmd
+Wrote file successfully.
+[0m
+[0m← [0mWrite /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/dirh2w/W/run-plain-s14.cmd
+Wrote file successfully.
+[0m
+[0m$ [0mtar -c -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/dirh2w W | ssh benspc "tar -x -C C:/Users/benja/dirh2" && echo LAUNCHERS-OK
+LAUNCHERS-OK
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Test-Path C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe; \$t0 = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'); \$p1 = (Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='cmd /c C:\\Users\\benja\\dirh2\\W\\run-loop-s13.cmd'}).ProcessId; \$p2 = (Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='cmd /c C:\\Users\\benja\\dirh2\\W\\run-plain-s13.cmd'}).ProcessId; Start-Sleep -Seconds 20; Get-CimInstance Win32_Process | Where-Object { \$_.ParentProcessId -eq \$p1 -or \$_.ParentProcessId -eq \$p2 -or \$_.ProcessId -eq \$p1 -or \$_.ProcessId -eq \$p2 } | Select-Object ProcessId, ParentProcessId, Name; echo STARTED; echo \$t0; echo loop-s13=\$p1; echo plain-s13=\$p2\""
+True
+
+ProcessId ParentProcessId Name       
+--------- --------------- ----       
+     4960           14852 cmd.exe    
+    16436            4960 conhost.exe
+    15060           14852 cmd.exe    
+     9728           15060 conhost.exe
+     6644            4960 python.exe 
+    20720           15060 python.exe 
+STARTED
+2026-09-28T19:29:13Z
+loop-s13=4960
+plain-s13=15060
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Start-Sleep -Seconds 300; Get-Content C:\\Users\\benja\\dirh2\\W\\loop-s13.log -TotalCount 12; echo ---PLAIN---; Get-Content C:\\Users\\benja\\dirh2\\W\\plain-s13.log -TotalCount 12; echo ---GPU---; nvidia-smi\""
+h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool
+loop seed 13: 6438302 weights, data ready in 89s on cuda
+{"step": 500, "ce": 2.7983, "exact": 0.0032, "halt_bce": 0.0749, "lr": 0.00015027424797191312, "min": 1.9, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.001, "numbers4": 0.0, "sums1": 0.032, "sums2": 0.009, "sums3": 0.001, "sums4": 0.0}}
+{"step": 1000, "ce": 1.6443, "exact": 0.0159, "halt_bce": 0.0628, "lr": 0.000299794430213186, "min": 2.3, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.003, "numbers4": 0.0, "sums1": 0.106, "sums2": 0.058, "sums3": 0.008, "sums4": 0.002}}
+{"step": 1500, "ce": 1.4019, "exact": 0.0725, "halt_bce": 0.166, "lr": 0.00029953760005996916, "min": 2.7, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.014, "numbers4": 0.0, "sums1": 0.369, "sums2": 0.27, "sums3": 0.045, "sums4": 0.008}}
+{"step": 2000, "ce": 1.1805, "exact": 0.1802, "halt_bce": 0.1686, "lr": 0.00029917828430524096, "min": 3.2, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.033, "numbers4": 0.0, "sums1": 0.893, "sums2": 0.69, "sums3": 0.323, "sums4": 0.135}}
+{"step": 2500, "ce": 0.9541, "exact": 0.2878, "halt_bce": 0.1611, "lr": 0.00029871672920607153, "min": 3.6, "exact_by_kind": {"grids4": 0.002, "grids5": 0.0, "numbers3": 0.058, "numbers4": 0.001, "sums1": 0.981, "sums2": 0.923, "sums3": 0.745, "sums4": 0.606}, "dev": {"sums4": 173, "grids5": 0}}
+{"step": 3000, "ce": 0.917, "exact": 0.2962, "halt_bce": 0.135, "lr": 0.00029815325108927063, "min": 4.0, "exact_by_kind": {"grids4": 0.006, "grids5": 0.0, "numbers3": 0.086, "numbers4": 0.001, "sums1": 0.985, "sums2": 0.975, "sums3": 0.893, "sums4": 0.733}}
+{"step": 3500, "ce": 0.7791, "exact": 0.3563, "halt_bce": 0.132, "lr": 0.00029748823613459316, "min": 4.4, "exact_by_kind": {"grids4": 0.019, "grids5": 0.001, "numbers3": 0.109, "numbers4": 0.002, "sums1": 0.998, "sums2": 0.968, "sums3": 0.925, "sums4": 0.877}}
+{"step": 4000, "ce": 0.7586, "exact": 0.3339, "halt_bce": 0.1604, "lr": 0.0002967221401100708, "min": 4.8, "exact_by_kind": {"grids4": 0.095, "grids5": 0.012, "numbers3": 0.13, "numbers4": 0.002, "sums1": 0.999, "sums2": 0.982, "sums3": 0.941, "sums4": 0.878}}
+{"step": 4500, "ce": 0.6215, "exact": 0.4452, "halt_bce": 0.2126, "lr": 0.0002958554880596515, "min": 5.2, "exact_by_kind": {"grids4": 0.375, "grids5": 0.101, "numbers3": 0.185, "numbers4": 0.002, "sums1": 0.997, "sums2": 0.989, "sums3": 0.955, "sums4": 0.919}}
+{"step": 5000, "ce": 0.5291, "exact": 0.5182, "halt_bce": 0.226, "lr": 0.0002948888739433602, "min": 5.6, "exact_by_kind": {"grids4": 0.464, "grids5": 0.222, "numbers3": 0.246, "numbers4": 0.002, "sums1": 0.999, "sums2": 0.994, "sums3": 0.97, "sums4": 0.926}, "dev": {"sums4": 197, "grids5": 89}}
+---PLAIN---
+h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool
+plain seed 13: 6385149 weights, data ready in 89s on cuda
+{"step": 500, "ce": 2.7655, "exact": 0.0032, "halt_bce": 0.0, "lr": 0.00015027424797191312, "min": 1.9, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.033, "sums2": 0.009, "sums3": 0.0, "sums4": 0.0}}
+{"step": 1000, "ce": 1.5449, "exact": 0.0367, "halt_bce": 0.0, "lr": 0.000299794430213186, "min": 2.3, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.004, "numbers4": 0.0, "sums1": 0.3, "sums2": 0.081, "sums3": 0.016, "sums4": 0.004}}
+{"step": 1500, "ce": 1.2073, "exact": 0.1662, "halt_bce": 0.0, "lr": 0.00029953760005996916, "min": 2.6, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.025, "numbers4": 0.0, "sums1": 0.91, "sums2": 0.504, "sums3": 0.15, "sums4": 0.051}}
+{"step": 2000, "ce": 0.9796, "exact": 0.2694, "halt_bce": 0.0, "lr": 0.00029917828430524096, "min": 3.0, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.074, "numbers4": 0.001, "sums1": 0.991, "sums2": 0.886, "sums3": 0.672, "sums4": 0.452}}
+{"step": 2500, "ce": 0.757, "exact": 0.3638, "halt_bce": 0.0, "lr": 0.00029871672920607153, "min": 3.4, "exact_by_kind": {"grids4": 0.067, "grids5": 0.015, "numbers3": 0.119, "numbers4": 0.001, "sums1": 0.999, "sums2": 0.989, "sums3": 0.954, "sums4": 0.855}, "dev": {"sums4": 180, "grids5": 12}}
+{"step": 3000, "ce": 0.5912, "exact": 0.4311, "halt_bce": 0.0, "lr": 0.00029815325108927063, "min": 3.8, "exact_by_kind": {"grids4": 0.396, "grids5": 0.168, "numbers3": 0.197, "numbers4": 0.002, "sums1": 0.997, "sums2": 0.997, "sums3": 0.971, "sums4": 0.942}}
+{"step": 3500, "ce": 0.4604, "exact": 0.5397, "halt_bce": 0.0, "lr": 0.00029748823613459316, "min": 4.2, "exact_by_kind": {"grids4": 0.62, "grids5": 0.321, "numbers3": 0.268, "numbers4": 0.003, "sums1": 1.0, "sums2": 0.996, "sums3": 0.991, "sums4": 0.963}}
+{"step": 4000, "ce": 0.4421, "exact": 0.5741, "halt_bce": 0.0, "lr": 0.0002967221401100708, "min": 4.6, "exact_by_kind": {"grids4": 0.739, "grids5": 0.437, "numbers3": 0.37, "numbers4": 0.004, "sums1": 1.0, "sums2": 1.0, "sums3": 0.998, "sums4": 0.982}}
+{"step": 4500, "ce": 0.3471, "exact": 0.663, "halt_bce": 0.0, "lr": 0.0002958554880596515, "min": 4.9, "exact_by_kind": {"grids4": 0.87, "grids5": 0.545, "numbers3": 0.489, "numbers4": 0.004, "sums1": 1.0, "sums2": 0.997, "sums3": 0.984, "sums4": 0.973}}
+{"step": 5000, "ce": 0.2851, "exact": 0.7301, "halt_bce": 0.0, "lr": 0.0002948888739433602, "min": 5.3, "exact_by_kind": {"grids4": 0.934, "grids5": 0.601, "numbers3": 0.655, "numbers4": 0.004, "sums1": 1.0, "sums2": 1.0, "sums3": 0.998, "sums4": 0.983}, "dev": {"sums4": 198, "grids5": 139}}
+---GPU---
+Mon Sep 28 15:34:55 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 591.86                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070 Ti   WDDM  |   00000000:01:00.0  On |                  N/A |
+| 30%   52C    P1            161W /  250W |    5113MiB /  16303MiB |     80%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1768    C+G   C:\Windows\System32\dwm.exe           N/A      |
+|    0   N/A  N/A            2316    C+G   ...(x86)\e2eSoft\iVCam\iVCam.exe      N/A      |
+|    0   N/A  N/A            3328    C+G   ...cord\app-1.0.9259\Discord.exe      N/A      |
+|    0   N/A  N/A            4152    C+G   ...indows\System32\ShellHost.exe      N/A      |
+|    0   N/A  N/A            5112    C+G   ...ta\Okta Verify\OktaVerify.exe      N/A      |
+|    0   N/A  N/A            5268    C+G   ...s\PowerToys.ColorPickerUI.exe      N/A      |
+|    0   N/A  N/A            8564    C+G   C:\Windows\explorer.exe               N/A      |
+|    0   N/A  N/A            9648      C   ...s\Python\Python310\python.exe      N/A      |
+|    0   N/A  N/A           10064    C+G   ...2txyewy\CrossDeviceResume.exe      N/A      |
+|    0   N/A  N/A           10660    C+G   ...Toys\PowerToys.FancyZones.exe      N/A      |
+|    0   N/A  N/A           12604    C+G   ...em32\ApplicationFrameHost.exe      N/A      |
+|    0   N/A  N/A           12760    C+G   ...7hta09mmv6hy\Build\Lively.exe      N/A      |
+|    0   N/A  N/A           13148    C+G   ...s\PowerToys.PowerLauncher.exe      N/A      |
+|    0   N/A  N/A           13348    C+G   ..._cw5n1h2txyewy\SearchHost.exe      N/A      |
+|    0   N/A  N/A           13380    C+G   ...y\StartMenuExperienceHost.exe      N/A      |
+|    0   N/A  N/A           15392    C+G   ....0.4234.48\msedgewebview2.exe      N/A      |
+|    0   N/A  N/A           15856    C+G   ...UI3Apps\PowerToys.Peek.UI.exe      N/A      |
+|    0   N/A  N/A           16692    C+G   ...8bbwe\PhoneExperienceHost.exe      N/A      |
+|    0   N/A  N/A           17304    C+G   ...xyewy\ShellExperienceHost.exe      N/A      |
+|    0   N/A  N/A           18288    C+G   ...ogram Files\ShareX\ShareX.exe      N/A      |
+|    0   N/A  N/A           19200    C+G   ...crosoft shared\ink\TabTip.exe      N/A      |
+|    0   N/A  N/A           19504    C+G   ...s\PowerToys.AdvancedPaste.exe      N/A      |
+|    0   N/A  N/A           19892    C+G   ...5n1h2txyewy\TextInputHost.exe      N/A      |
+|    0   N/A  N/A           20844    C+G   ...ntrolPanel\SystemSettings.exe      N/A      |
+|    0   N/A  N/A           20908      C   ...s\Python\Python310\python.exe      N/A      |
+|    0   N/A  N/A           20964    C+G   ...Lunar Client\Lunar Client.exe      N/A      |
+|    0   N/A  N/A           21352    C+G   C:\Windows\System32\Taskmgr.exe       N/A      |
++-----------------------------------------------------------------------------------------+
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Start-Sleep -Seconds 3300; echo ---LOOP-TAIL---; Get-Content C:\\Users\\benja\\dirh2\\W\\loop-s13.log -Tail 3; echo ---PLAIN-TAIL---; Get-Content C:\\Users\\benja\\dirh2\\W\\plain-s13.log -Tail 3; echo ---PROCS---; Get-CimInstance Win32_Process | Where-Object { \$_.Name -eq 'python.exe' } | Select-Object ProcessId, ParentProcessId, CommandLine; echo ---GPUAPPS---; nvidia-smi --query-compute-apps=pid,used_memory --format=csv\""
+---LOOP-TAIL---
+{"step": 59000, "ce": 0.1034, "exact": 0.8702, "halt_bce": 0.0985, "lr": 2.05569786813925e-07, "min": 49.6, "exact_by_kind": {"grids4": 0.953, "grids5": 0.912, "numbers3": 1.0, "numbers4": 0.369, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+{"step": 59500, "ce": 0.0917, "exact": 0.8892, "halt_bce": 0.09, "lr": 5.1401253666411016e-08, "min": 50.0, "exact_by_kind": {"grids4": 0.971, "grids5": 0.935, "numbers3": 1.0, "numbers4": 0.376, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 0.999}}
+{"step": 60000, "ce": 0.0957, "exact": 0.8787, "halt_bce": 0.1026, "lr": 0.0, "min": 50.3, "exact_by_kind": {"grids4": 0.972, "grids5": 0.894, "numbers3": 1.0, "numbers4": 0.4, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 0.999}, "dev": {"sums4": 200, "grids5": 199}}
+---PLAIN-TAIL---
+{"step": 59000, "ce": 0.0008, "exact": 0.9987, "halt_bce": 0.0, "lr": 2.05569786813925e-07, "min": 46.5, "exact_by_kind": {"grids4": 1.0, "grids5": 0.992, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+{"step": 59500, "ce": 0.0008, "exact": 0.9986, "halt_bce": 0.0, "lr": 5.1401253666411016e-08, "min": 46.9, "exact_by_kind": {"grids4": 1.0, "grids5": 0.992, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+{"step": 60000, "ce": 0.0008, "exact": 0.9984, "halt_bce": 0.0, "lr": 0.0, "min": 47.3, "exact_by_kind": {"grids4": 1.0, "grids5": 0.991, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 199}}
+---PROCS---
+---GPUAPPS---
+pid, used_gpu_memory [MiB]
+1768, [N/A]
+4152, [N/A]
+10064, [N/A]
+8564, [N/A]
+13348, [N/A]
+13380, [N/A]
+15392, [N/A]
+19200, [N/A]
+17304, [N/A]
+19892, [N/A]
+5112, [N/A]
+19504, [N/A]
+15856, [N/A]
+5268, [N/A]
+10660, [N/A]
+13148, [N/A]
+3328, [N/A]
+2316, [N/A]
+20964, [N/A]
+12760, [N/A]
+18288, [N/A]
+21352, [N/A]
+12604, [N/A]
+20844, [N/A]
+16692, [N/A]
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Get-ChildItem C:\\Users\\benja\\dirh2\\W\\loop-s13, C:\\Users\\benja\\dirh2\\W\\plain-s13 | Select-Object Name, Length; echo ---LOOP-LAST---; Get-Content C:\\Users\\benja\\dirh2\\W\\loop-s13.log -Tail 2; echo ---PLAIN-LAST---; Get-Content C:\\Users\\benja\\dirh2\\W\\plain-s13.log -Tail 2; \$t0 = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'); \$p1 = (Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='cmd /c C:\\Users\\benja\\dirh2\\W\\run-loop-s14.cmd'}).ProcessId; \$p2 = (Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='cmd /c C:\\Users\\benja\\dirh2\\W\\run-plain-s14.cmd'}).ProcessId; echo STARTED; echo \$t0; echo loop-s14=\$p1; echo plain-s14=\$p2\""
+Name                 Length
+----                 ------
+final.pt           25764244
+train_log.jsonl       31992
+train_summary.json     2303
+final.pt           25573143
+train_log.jsonl       31114
+train_summary.json     5846
+---LOOP-LAST---
+{"step": 59500, "ce": 0.0917, "exact": 0.8892, "halt_bce": 0.09, "lr": 5.1401253666411016e-08, "min": 50.0, "exact_by_kind": {"grids4": 0.971, "grids5": 0.935, "numbers3": 1.0, "numbers4": 0.376, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 0.999}}
+{"step": 60000, "ce": 0.0957, "exact": 0.8787, "halt_bce": 0.1026, "lr": 0.0, "min": 50.3, "exact_by_kind": {"grids4": 0.972, "grids5": 0.894, "numbers3": 1.0, "numbers4": 0.4, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 0.999}, "dev": {"sums4": 200, "grids5": 199}}
+---PLAIN-LAST---
+{"step": 59500, "ce": 0.0008, "exact": 0.9986, "halt_bce": 0.0, "lr": 5.1401253666411016e-08, "min": 46.9, "exact_by_kind": {"grids4": 1.0, "grids5": 0.992, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+{"step": 60000, "ce": 0.0008, "exact": 0.9984, "halt_bce": 0.0, "lr": 0.0, "min": 47.3, "exact_by_kind": {"grids4": 1.0, "grids5": 0.991, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 199}}
+STARTED
+2026-09-28T20:30:25Z
+loop-s14=22552
+plain-s14=18212
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Start-Sleep -Seconds 3000; echo ---LOOP-TAIL---; Get-Content C:\\Users\\benja\\dirh2\\W\\loop-s14.log -Tail 2; echo ---PLAIN-TAIL---; Get-Content C:\\Users\\benja\\dirh2\\W\\plain-s14.log -Tail 2; echo ---PY---; Get-CimInstance Win32_Process | Where-Object { \$_.Name -eq 'python.exe' } | Select-Object ProcessId, ParentProcessId\""
+---LOOP-TAIL---
+{"step": 59000, "ce": 0.0753, "exact": 0.9054, "halt_bce": 0.1093, "lr": 2.05569786813925e-07, "min": 49.5, "exact_by_kind": {"grids4": 0.978, "grids5": 0.956, "numbers3": 1.0, "numbers4": 0.58, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 0.999}}
+{"step": 59500, "ce": 0.0783, "exact": 0.8972, "halt_bce": 0.1095, "lr": 5.1401253666411016e-08, "min": 49.8, "exact_by_kind": {"grids4": 0.943, "grids5": 0.918, "numbers3": 1.0, "numbers4": 0.581, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+---PLAIN-TAIL---
+{"step": 59500, "ce": 0.0015, "exact": 0.997, "halt_bce": 0.0, "lr": 5.1401253666411016e-08, "min": 47.0, "exact_by_kind": {"grids4": 1.0, "grids5": 0.981, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}}
+{"step": 60000, "ce": 0.0016, "exact": 0.9967, "halt_bce": 0.0, "lr": 0.0, "min": 47.4, "exact_by_kind": {"grids4": 1.0, "grids5": 0.981, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 193}}
+---PY---
+
+ProcessId ParentProcessId
+--------- ---------------
+    24260           22552
+    11932           24260
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Start-Sleep -Seconds 240; echo ---LOOP-LAST---; Get-Content C:\\Users\\benja\\dirh2\\W\\loop-s14.log -Tail 1; echo ---FILES---; Get-ChildItem C:\\Users\\benja\\dirh2\\W\\loop-s14, C:\\Users\\benja\\dirh2\\W\\plain-s14 | Select-Object Name, Length; echo ---PY---; Get-CimInstance Win32_Process | Where-Object { \$_.Name -eq 'python.exe' } | Select-Object ProcessId, ParentProcessId\""
+---LOOP-LAST---
+{"step": 60000, "ce": 0.0859, "exact": 0.8967, "halt_bce": 0.0946, "lr": 0.0, "min": 50.1, "exact_by_kind": {"grids4": 0.969, "grids5": 0.894, "numbers3": 1.0, "numbers4": 0.522, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 199}}
+---FILES---
+
+Name                 Length
+----                 ------
+final.pt           25764244
+train_log.jsonl       31921
+train_summary.json     2297
+final.pt           25573143
+train_log.jsonl       31168
+train_summary.json     5837
+---PY---
+[0m
+[0m$ [0mssh benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc 'cd /c/Users/benja/dirh2; sha256sum W/loop-s13/final.pt W/plain-s13/final.pt W/loop-s14/final.pt W/plain-s14/final.pt'"
+b1e803ed9f68322edc3a22d78cbe82fa143a4418b5a174b027c474128336a4e4 *W/loop-s13/final.pt
+736e24d9d48c404585ca87d458f3277ae230d6daa2bfb142f44f1137d1d65b91 *W/plain-s13/final.pt
+b1124937910718c7ee7fce728230608cf4972d13e5fc6f783b69083c5ea59e21 *W/loop-s14/final.pt
+31de714ca356da16e3e6cb94ddf76845519e8af78006e715a9cfb0f78520d0e0 *W/plain-s14/final.pt
+[0m
+[0m$ [0mls artifacts/claude-dir-h2-numbers-20260928/ 2>&1; echo ---; git check-ignore artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/tests.json && echo IGNORED
+ls: artifacts/claude-dir-h2-numbers-20260928/: No such file or directory
+---
+artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/tests.json
+IGNORED
+[0m
+[0m← [0mWrite artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt
+Wrote file successfully.
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"cd C:\\Users\\benja\\dirh2; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_run.py poison --ckpt W\\loop-s13\\final.pt --out W\\loop-s13\\poison.json; echo POISON-EXIT:\$LASTEXITCODE; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_run.py eval --ckpt W\\loop-s13\\final.pt --tests artifacts\\claude-rsn358i-20260926\\tests --out W\\loop-s13\\tests.json; echo EVAL-EXIT:\$LASTEXITCODE; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_run.py extra --ckpt W\\loop-s13\\final.pt --out W\\loop-s13\\extra.json; echo EXTRA-EXIT:\$LASTEXITCODE\""
+{"arm": "loop", "ckpt": "W\\loop-s13\\final.pt", "V1_identical": true, "by_kind": {"sums": {"n": 100, "identical": true}, "grids": {"n": 100, "identical": true}, "numbers": {"n": 100, "identical": true}}}
+POISON-EXIT:0
+sums4 {"n": 300, "right": 300, "right_v1_rule": 295, "mean_rounds": 7.33, "rounds_hist": {"3": 3, "4": 14, "5": 27, "6": 42, "7": 92, "8": 50, "9": 38, "10": 21, "11": 6, "12": 6, "14": 1}, "fixed_rounds": {"1": 294, "2": 300, "4": 300, "8": 300, "12": 300, "16": 300, "24": 300, "32": 300, "48": 300}, "right_at_any_round": 300, "role": "practised"}
+sums6 {"n": 300, "right": 294, "right_v1_rule": 236, "mean_rounds": 8.62, "rounds_hist": {"4": 5, "5": 16, "6": 42, "7": 52, "8": 55, "9": 39, "10": 28, "11": 26, "12": 13, "13": 3, "14": 7, "15": 8, "16": 5, "19": 1}, "fixed_rounds": {"1": 237, "2": 264, "4": 282, "8": 292, "12": 292, "16": 295, "24": 293, "32": 292, "48": 292}, "right_at_any_round": 299, "role": "bigger"}
+sums8 {"n": 300, "right": 248, "right_v1_rule": 186, "mean_rounds": 10.03, "rounds_hist": {"4": 2, "5": 5, "6": 18, "7": 54, "8": 39, "9": 49, "10": 32, "11": 23, "12": 26, "13": 13, "14": 16, "15": 6, "16": 3, "17": 3, "18": 3, "20": 1, "21": 1, "22": 1, "23": 1, "26": 1, "27": 1, "28": 1, "48": 1}, "fixed_rounds": {"1": 180, "2": 216, "4": 242, "8": 248, "12": 246, "16": 246, "24": 247, "32": 245, "48": 247}, "right_at_any_round": 274, "role": "report"}
+grids5 {"n": 300, "right": 300, "right_v1_rule": 251, "mean_rounds": 11.82, "rounds_hist": {"6": 1, "7": 3, "8": 15, "9": 20, "10": 46, "11": 56, "12": 56, "13": 31, "14": 34, "15": 25, "16": 7, "17": 4, "18": 2}, "fixed_rounds": {"1": 73, "2": 184, "4": 294, "8": 300, "12": 300, "16": 300, "24": 300, "32": 300, "48": 300}, "right_at_any_round": 300, "role": "practised"}
+grids6 {"n": 300, "right": 283, "right_v1_rule": 240, "mean_rounds": 15.88, "rounds_hist": {"8": 6, "9": 17, "10": 24, "11": 35, "12": 41, "13": 44, "14": 35, "15": 22, "16": 12, "17": 6, "18": 15, "19": 7, "20": 1, "21": 5, "22": 2, "23": 2, "24": 2, "25": 1, "28": 1, "33": 1, "48": 21}, "fixed_rounds": {"1": 42, "2": 127, "4": 231, "8": 279, "12": 280, "16": 283, "24": 283, "32": 282, "48": 283}, "right_at_any_round": 292, "role": "bigger"}
+grids7 {"n": 300, "right": 162, "right_v1_rule": 131, "mean_rounds": 30.03, "rounds_hist": {"8": 2, "9": 4, "10": 8, "11": 11, "12": 24, "13": 14, "14": 25, "15": 16, "16": 14, "17": 9, "18": 8, "19": 4, "20": 6, "21": 5, "22": 2, "23": 3, "24": 1, "25": 1, "26": 2, "27": 1, "29": 1, "30": 3, "37": 1, "46": 1, "48": 134}, "fixed_rounds": {"1": 9, "2": 53, "4": 144, "8": 176, "12": 163, "16": 159, "24": 159, "32": 162, "48": 157}, "right_at_any_round": 204, "role": "report"}
+numbers4 {"n": 300, "right": 4, "right_v1_rule": 6, "mean_rounds": 35.84, "rounds_hist": {"4": 1, "5": 2, "6": 7, "7": 14, "8": 13, "9": 13, "10": 19, "11": 9, "12": 9, "13": 2, "14": 3, "15": 1, "26": 1, "30": 1, "48": 205}, "fixed_rounds": {"1": 3, "2": 2, "4": 5, "8": 4, "12": 4, "16": 4, "24": 3, "32": 3, "48": 3}, "right_at_any_round": 14, "role": "practised"}
+numbers5 {"n": 300, "right": 1, "right_v1_rule": 1, "mean_rounds": 42.63, "rounds_hist": {"7": 1, "8": 4, "9": 8, "10": 12, "11": 5, "12": 6, "13": 4, "14": 1, "15": 2, "48": 257}, "fixed_rounds": {"1": 0, "2": 0, "4": 0, "8": 0, "12": 1, "16": 1, "24": 1, "32": 1, "48": 1}, "right_at_any_round": 1, "role": "bigger"}
+sums10 {"n": 300, "right": 215, "right_v1_rule": 168, "mean_rounds": 11.47, "rounds_hist": {"5": 6, "6": 17, "7": 35, "8": 29, "9": 44, "10": 38, "11": 26, "12": 26, "13": 16, "14": 10, "15": 7, "16": 8, "17": 6, "18": 8, "19": 5, "20": 3, "21": 2, "22": 2, "23": 3, "26": 1, "27": 1, "28": 1, "32": 1, "33": 2, "47": 1, "48": 2}, "fixed_rounds": {"1": 163, "2": 188, "4": 201, "8": 214, "12": 210, "16": 212, "24": 205, "32": 207, "48": 206}, "right_at_any_round": 251, "role": "report"}
+sums12 {"n": 300, "right": 169, "right_v1_rule": 120, "mean_rounds": 12.06, "rounds_hist": {"4": 1, "5": 1, "6": 9, "7": 23, "8": 32, "9": 38, "10": 41, "11": 31, "12": 28, "13": 18, "14": 18, "15": 12, "16": 11, "17": 7, "18": 4, "19": 4, "20": 4, "21": 4, "22": 1, "23": 3, "24": 1, "25": 1, "26": 2, "27": 1, "33": 1, "40": 1, "48": 3}, "fixed_rounds": {"1": 118, "2": 139, "4": 154, "8": 166, "12": 169, "16": 166, "24": 164, "32": 165, "48": 166}, "right_at_any_round": 197, "role": "report"}
+EVAL-EXIT:0
+P_other {"n": 300, "right": 7}
+P_train24 {"n": 300, "right": 117}
+EXTRA-EXIT:0
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"cd C:\\Users\\benja\\dirh2; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_run.py poison --ckpt W\\plain-s13\\final.pt --out W\\plain-s13\\poison.json; echo POISON-EXIT:\$LASTEXITCODE; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_run.py eval --ckpt W\\plain-s13\\final.pt --tests artifacts\\claude-rsn358i-20260926\\tests --out W\\plain-s13\\tests.json; echo EVAL-EXIT:\$LASTEXITCODE; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_run.py extra --ckpt W\\plain-s13\\final.pt --out W\\plain-s13\\extra.json; echo EXTRA-EXIT:\$LASTEXITCODE\""
+{"arm": "plain", "ckpt": "W\\plain-s13\\final.pt", "V1_identical": true, "by_kind": {"sums": {"n": 100, "identical": true}, "grids": {"n": 100, "identical": true}, "numbers": {"n": 100, "identical": true}}}
+POISON-EXIT:0
+sums4 {"n": 300, "right": 300, "role": "practised"}
+sums6 {"n": 300, "right": 178, "role": "bigger"}
+sums8 {"n": 300, "right": 70, "role": "report"}
+grids5 {"n": 300, "right": 298, "role": "practised"}
+grids6 {"n": 300, "right": 234, "role": "bigger"}
+grids7 {"n": 300, "right": 141, "role": "report"}
+numbers4 {"n": 300, "right": 6, "role": "practised"}
+numbers5 {"n": 300, "right": 0, "role": "bigger"}
+sums10 {"n": 300, "right": 32, "role": "report"}
+sums12 {"n": 300, "right": 15, "role": "report"}
+EVAL-EXIT:0
+P_other {"n": 300, "right": 7}
+P_train24 {"n": 300, "right": 300}
+EXTRA-EXIT:0
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"cd C:\\Users\\benja\\dirh2; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_run.py poison --ckpt W\\loop-s14\\final.pt --out W\\loop-s14\\poison.json; echo POISON-EXIT:\$LASTEXITCODE; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_run.py eval --ckpt W\\loop-s14\\final.pt --tests artifacts\\claude-rsn358i-20260926\\tests --out W\\loop-s14\\tests.json; echo EVAL-EXIT:\$LASTEXITCODE; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_run.py extra --ckpt W\\loop-s14\\final.pt --out W\\loop-s14\\extra.json; echo EXTRA-EXIT:\$LASTEXITCODE\""
+{"arm": "loop", "ckpt": "W\\loop-s14\\final.pt", "V1_identical": true, "by_kind": {"sums": {"n": 100, "identical": true}, "grids": {"n": 100, "identical": true}, "numbers": {"n": 100, "identical": true}}}
+POISON-EXIT:0
+sums4 {"n": 300, "right": 300, "right_v1_rule": 297, "mean_rounds": 7.09, "rounds_hist": {"4": 19, "5": 49, "6": 56, "7": 60, "8": 56, "9": 30, "10": 11, "11": 10, "12": 7, "13": 1, "14": 1}, "fixed_rounds": {"1": 297, "2": 300, "4": 300, "8": 300, "12": 300, "16": 300, "24": 299, "32": 299, "48": 299}, "right_at_any_round": 300, "role": "practised"}
+sums6 {"n": 300, "right": 295, "right_v1_rule": 259, "mean_rounds": 8.24, "rounds_hist": {"4": 6, "5": 21, "6": 49, "7": 47, "8": 51, "9": 39, "10": 36, "11": 30, "12": 11, "13": 5, "14": 1, "15": 4}, "fixed_rounds": {"1": 257, "2": 269, "4": 283, "8": 294, "12": 296, "16": 296, "24": 297, "32": 297, "48": 297}, "right_at_any_round": 299, "role": "bigger"}
+sums8 {"n": 300, "right": 258, "right_v1_rule": 194, "mean_rounds": 9.09, "rounds_hist": {"4": 1, "5": 9, "6": 26, "7": 48, "8": 55, "9": 42, "10": 38, "11": 36, "12": 20, "13": 13, "14": 4, "15": 3, "16": 3, "17": 1, "18": 1}, "fixed_rounds": {"1": 189, "2": 202, "4": 230, "8": 258, "12": 265, "16": 265, "24": 264, "32": 266, "48": 266}, "right_at_any_round": 286, "role": "report"}
+grids5 {"n": 300, "right": 300, "right_v1_rule": 265, "mean_rounds": 11.58, "rounds_hist": {"5": 2, "6": 5, "7": 5, "8": 13, "9": 25, "10": 50, "11": 52, "12": 46, "13": 43, "14": 30, "15": 13, "16": 4, "17": 10, "19": 1, "20": 1}, "fixed_rounds": {"1": 84, "2": 187, "4": 296, "8": 300, "12": 300, "16": 300, "24": 299, "32": 299, "48": 299}, "right_at_any_round": 300, "role": "practised"}
+grids6 {"n": 300, "right": 287, "right_v1_rule": 232, "mean_rounds": 15.11, "rounds_hist": {"6": 1, "7": 5, "8": 7, "9": 11, "10": 19, "11": 40, "12": 42, "13": 33, "14": 33, "15": 26, "16": 22, "17": 18, "18": 6, "19": 6, "20": 4, "21": 3, "22": 3, "23": 2, "24": 2, "27": 1, "29": 3, "48": 13}, "fixed_rounds": {"1": 43, "2": 132, "4": 236, "8": 281, "12": 284, "16": 285, "24": 287, "32": 287, "48": 287}, "right_at_any_round": 291, "role": "bigger"}
+grids7 {"n": 300, "right": 189, "right_v1_rule": 142, "mean_rounds": 26.23, "rounds_hist": {"7": 1, "8": 7, "9": 10, "10": 15, "11": 18, "12": 24, "13": 33, "14": 23, "15": 13, "16": 12, "17": 4, "18": 4, "19": 7, "20": 5, "21": 2, "23": 4, "24": 1, "25": 1, "27": 1, "28": 5, "32": 1, "34": 1, "35": 2, "42": 1, "48": 105}, "fixed_rounds": {"1": 14, "2": 63, "4": 143, "8": 187, "12": 188, "16": 187, "24": 187, "32": 185, "48": 185}, "right_at_any_round": 205, "role": "report"}
+numbers4 {"n": 300, "right": 4, "right_v1_rule": 2, "mean_rounds": 22.09, "rounds_hist": {"4": 2, "5": 2, "6": 19, "7": 24, "8": 28, "9": 41, "10": 41, "11": 15, "12": 10, "13": 13, "14": 4, "15": 1, "48": 100}, "fixed_rounds": {"1": 2, "2": 2, "4": 4, "8": 6, "12": 3, "16": 2, "24": 3, "32": 3, "48": 3}, "right_at_any_round": 13, "role": "practised"}
+numbers5 {"n": 300, "right": 0, "right_v1_rule": 0, "mean_rounds": 35.35, "rounds_hist": {"5": 2, "6": 5, "7": 6, "8": 13, "9": 13, "10": 16, "11": 15, "12": 9, "13": 8, "14": 3, "15": 7, "16": 2, "17": 1, "29": 1, "41": 1, "42": 1, "48": 197}, "fixed_rounds": {"1": 0, "2": 0, "4": 0, "8": 0, "12": 0, "16": 0, "24": 0, "32": 0, "48": 0}, "right_at_any_round": 0, "role": "bigger"}
+sums10 {"n": 300, "right": 211, "right_v1_rule": 175, "mean_rounds": 10.41, "rounds_hist": {"4": 1, "5": 8, "6": 19, "7": 33, "8": 36, "9": 47, "10": 34, "11": 30, "12": 31, "13": 13, "14": 12, "15": 10, "16": 7, "17": 3, "18": 2, "19": 5, "20": 3, "21": 2, "22": 2, "25": 1, "29": 1}, "fixed_rounds": {"1": 170, "2": 175, "4": 188, "8": 203, "12": 209, "16": 205, "24": 206, "32": 206, "48": 205}, "right_at_any_round": 259, "role": "report"}
+sums12 {"n": 300, "right": 168, "right_v1_rule": 126, "mean_rounds": 11.45, "rounds_hist": {"5": 1, "6": 15, "7": 27, "8": 37, "9": 34, "10": 29, "11": 37, "12": 21, "13": 26, "14": 19, "15": 7, "16": 6, "17": 11, "18": 13, "19": 4, "20": 4, "22": 3, "23": 3, "24": 1, "26": 1, "32": 1}, "fixed_rounds": {"1": 125, "2": 119, "4": 133, "8": 160, "12": 166, "16": 173, "24": 174, "32": 175, "48": 177}, "right_at_any_round": 215, "role": "report"}
+EVAL-EXIT:0
+P_other {"n": 300, "right": 10}
+P_train24 {"n": 300, "right": 174}
+EXTRA-EXIT:0
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"cd C:\\Users\\benja\\dirh2; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_run.py poison --ckpt W\\plain-s14\\final.pt --out W\\plain-s14\\poison.json; echo POISON-EXIT:\$LASTEXITCODE; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_run.py eval --ckpt W\\plain-s14\\final.pt --tests artifacts\\claude-rsn358i-20260926\\tests --out W\\plain-s14\\tests.json; echo EVAL-EXIT:\$LASTEXITCODE; & 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -B scripts\\claude_dir_h2_run.py extra --ckpt W\\plain-s14\\final.pt --out W\\plain-s14\\extra.json; echo EXTRA-EXIT:\$LASTEXITCODE\""
+{"arm": "plain", "ckpt": "W\\plain-s14\\final.pt", "V1_identical": true, "by_kind": {"sums": {"n": 100, "identical": true}, "grids": {"n": 100, "identical": true}, "numbers": {"n": 100, "identical": true}}}
+POISON-EXIT:0
+sums4 {"n": 300, "right": 300, "role": "practised"}
+sums6 {"n": 300, "right": 137, "role": "bigger"}
+sums8 {"n": 300, "right": 48, "role": "report"}
+grids5 {"n": 300, "right": 287, "role": "practised"}
+grids6 {"n": 300, "right": 226, "role": "bigger"}
+grids7 {"n": 300, "right": 137, "role": "report"}
+numbers4 {"n": 300, "right": 4, "role": "practised"}
+numbers5 {"n": 300, "right": 0, "role": "bigger"}
+sums10 {"n": 300, "right": 23, "role": "report"}
+sums12 {"n": 300, "right": 4, "role": "report"}
+EVAL-EXIT:0
+P_other {"n": 300, "right": 10}
+P_train24 {"n": 300, "right": 300}
+EXTRA-EXIT:0
+[0m
+[0m$ [0mmkdir -p artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13 artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13 artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14 artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14 && scp "benspc:C:/Users/benja/dirh2/W/loop-s13/train_log.jsonl" "benspc:C:/Users/benja/dirh2/W/loop-s13/train_summary.json" "benspc:C:/Users/benja/dirh2/W/loop-s13/poison.json" "benspc:C:/Users/benja/dirh2/W/loop-s13/tests.json" "benspc:C:/Users/benja/dirh2/W/loop-s13/extra.json" "benspc:C:/Users/benja/dirh2/W/loop-s13.log" artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/ && scp "benspc:C:/Users/benja/dirh2/W/plain-s13/train_log.jsonl" "benspc:C:/Users/benja/dirh2/W/plain-s13/train_summary.json" "benspc:C:/Users/benja/dirh2/W/plain-s13/poison.json" "benspc:C:/Users/benja/dirh2/W/plain-s13/tests.json" "benspc:C:/Users/benja/dirh2/W/plain-s13/extra.json" "benspc:C:/Users/benja/dirh2/W/plain-s13.log" artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/ && scp "benspc:C:/Users/benja/dirh2/W/loop-s14/train_log.jsonl" "benspc:C:/Users/benja/dirh2/W/loop-s14/train_summary.json" "benspc:C:/Users/benja/dirh2/W/loop-s14/poison.json" "benspc:C:/Users/benja/dirh2/W/loop-s14/tests.json" "benspc:C:/Users/benja/dirh2/W/loop-s14/extra.json" "benspc:C:/Users/benja/dirh2/W/loop-s14.log" artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/ && scp "benspc:C:/Users/benja/dirh2/W/plain-s14/train_log.jsonl" "benspc:C:/Users/benja/dirh2/W/plain-s14/train_summary.json" "benspc:C:/Users/benja/dirh2/W/plain-s14/poison.json" "benspc:C:/Users/benja/dirh2/W/plain-s14/tests.json" "benspc:C:/Users/benja/dirh2/W/plain-s14/extra.json" "benspc:C:/Users/benja/dirh2/W/plain-s14.log" artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/ && ls -la artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13 artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13 artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14 artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14
+artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13:
+total 168
+drwxr-xr-x  8 ben-hannan  staff    256 Sep 28 17:30 .
+drwxr-xr-x  6 ben-hannan  staff    192 Sep 28 17:30 ..
+-rw-------  1 ben-hannan  staff    198 Sep 28 17:30 extra.json
+-rw-------  1 ben-hannan  staff  32167 Sep 28 17:30 loop-s13.log
+-rw-------  1 ben-hannan  staff    267 Sep 28 17:30 poison.json
+-rw-------  1 ben-hannan  staff   6169 Sep 28 17:30 tests.json
+-rw-------  1 ben-hannan  staff  31992 Sep 28 17:30 train_log.jsonl
+-rw-------  1 ben-hannan  staff   2303 Sep 28 17:30 train_summary.json
+
+artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14:
+total 168
+drwxr-xr-x  8 ben-hannan  staff    256 Sep 28 17:30 .
+drwxr-xr-x  6 ben-hannan  staff    192 Sep 28 17:30 ..
+-rw-------  1 ben-hannan  staff    199 Sep 28 17:30 extra.json
+-rw-------  1 ben-hannan  staff  32096 Sep 28 17:30 loop-s14.log
+-rw-------  1 ben-hannan  staff    267 Sep 28 17:30 poison.json
+-rw-------  1 ben-hannan  staff   5994 Sep 28 17:30 tests.json
+-rw-------  1 ben-hannan  staff  31921 Sep 28 17:30 train_log.jsonl
+-rw-------  1 ben-hannan  staff   2297 Sep 28 17:30 train_summary.json
+
+artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13:
+total 168
+drwxr-xr-x  8 ben-hannan  staff    256 Sep 28 17:30 .
+drwxr-xr-x  6 ben-hannan  staff    192 Sep 28 17:30 ..
+-rw-------  1 ben-hannan  staff    200 Sep 28 17:30 extra.json
+-rw-------  1 ben-hannan  staff  31290 Sep 28 17:30 plain-s13.log
+-rw-------  1 ben-hannan  staff    269 Sep 28 17:30 poison.json
+-rw-------  1 ben-hannan  staff    817 Sep 28 17:30 tests.json
+-rw-------  1 ben-hannan  staff  31114 Sep 28 17:30 train_log.jsonl
+-rw-------  1 ben-hannan  staff   5846 Sep 28 17:30 train_summary.json
+
+artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14:
+total 168
+drwxr-xr-x  8 ben-hannan  staff    256 Sep 28 17:30 .
+drwxr-xr-x  6 ben-hannan  staff    192 Sep 28 17:30 ..
+-rw-------  1 ben-hannan  staff    201 Sep 28 17:30 extra.json
+-rw-------  1 ben-hannan  staff  31344 Sep 28 17:30 plain-s14.log
+-rw-------  1 ben-hannan  staff    269 Sep 28 17:30 poison.json
+-rw-------  1 ben-hannan  staff    816 Sep 28 17:30 tests.json
+-rw-------  1 ben-hannan  staff  31168 Sep 28 17:30 train_log.jsonl
+-rw-------  1 ben-hannan  staff   5837 Sep 28 17:30 train_summary.json
+[0m
+[0m$ [0mpython3 -c "
+import json
+for r in ['loop-s13','plain-s13','loop-s14','plain-s14']:
+    t = json.load(open(f'artifacts/claude-dir-h2-numbers-20260928/runs/{r}/tests.json'))
+    e = json.load(open(f'artifacts/claude-dir-h2-numbers-20260928/runs/{r}/extra.json'))
+    p = json.load(open(f'artifacts/claude-dir-h2-numbers-20260928/runs/{r}/poison.json'))
+    print(r, {k: v['right'] for k, v in t.items() if isinstance(v, dict) and 'right' in v}, {k: v['right'] for k, v in e.items() if isinstance(v, dict) and 'right' in v}, 'V1:', p.get('V1_identical'))
+"
+loop-s13 {} {'P_other': 7, 'P_train24': 117} V1: True
+plain-s13 {} {'P_other': 7, 'P_train24': 300} V1: True
+loop-s14 {} {'P_other': 10, 'P_train24': 174} V1: True
+plain-s14 {} {'P_other': 10, 'P_train24': 300} V1: True
+[0m
+[0m$ [0mpython3 -c "
+import json
+t = json.load(open('artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/tests.json'))
+print(type(t))
+def walk(o, d=0):
+    if isinstance(o, dict):
+        for k, v in o.items():
+            if k == 'right' and isinstance(v, int): print('RIGHT-FIELD')
+            walk(v, d+1)
+    elif isinstance(o, list):
+        print('list len', len(o), 'first-type', type(o[0]).__name__)
+walk(t)
+print(list(t.keys())[:20] if isinstance(t, dict) else '')
+"
+<class 'dict'>
+RIGHT-FIELD
+RIGHT-FIELD
+RIGHT-FIELD
+RIGHT-FIELD
+RIGHT-FIELD
+RIGHT-FIELD
+RIGHT-FIELD
+RIGHT-FIELD
+RIGHT-FIELD
+RIGHT-FIELD
+['arm', 'ckpt', 'tests']
+[0m
+[0m$ [0mpython3 -c "
+import json
+for r in ['loop-s13','plain-s13','loop-s14','plain-s14']:
+    t = json.load(open(f'artifacts/claude-dir-h2-numbers-20260928/runs/{r}/tests.json'))
+    print(r, {k: v['right'] for k, v in t['tests'].items()})
+"
+loop-s13 {'sums4': 300, 'sums6': 294, 'sums8': 248, 'grids5': 300, 'grids6': 283, 'grids7': 162, 'numbers4': 4, 'numbers5': 1, 'sums10': 215, 'sums12': 169}
+plain-s13 {'sums4': 300, 'sums6': 178, 'sums8': 70, 'grids5': 298, 'grids6': 234, 'grids7': 141, 'numbers4': 6, 'numbers5': 0, 'sums10': 32, 'sums12': 15}
+loop-s14 {'sums4': 300, 'sums6': 295, 'sums8': 258, 'grids5': 300, 'grids6': 287, 'grids7': 189, 'numbers4': 4, 'numbers5': 0, 'sums10': 211, 'sums12': 168}
+plain-s14 {'sums4': 300, 'sums6': 137, 'sums8': 48, 'grids5': 287, 'grids6': 226, 'grids7': 137, 'numbers4': 4, 'numbers5': 0, 'sums10': 23, 'sums12': 4}
+[0m
+[0m$ [0mpython3 -c "
+import json
+for r in ['loop-s13','plain-s13','loop-s14','plain-s14']:
+    s = json.load(open(f'artifacts/claude-dir-h2-numbers-20260928/runs/{r}/train_summary.json'))
+    print(r, json.dumps(s)[:600])
+"
+loop-s13 {"arm": "loop", "seed": 13, "weights": 6438302, "steps": 60000, "batch": 256, "lr": 0.0003, "warmup": 1000, "latin_pool": 20000, "minutes": 50.3, "device": "cuda", "torch": "2.11.0+cu128", "cuda": "12.8", "python": "3.10.9", "gpu": "NVIDIA GeForce RTX 5070 Ti", "autocast_cache": false, "steps_seen": 60000, "steps_block_nograd": 0, "grad_norms": [{"step": 1, "block0": 2.594801, "block1": 2.641799}, {"step": 2500, "block0": 0.336159, "block1": 0.431072}, {"step": 5000, "block0": 0.933021, "block1": 1.086953}, {"step": 7500, "block0": 0.004245, "block1": 0.004332}, {"step": 10000, "block0": 0.000
+plain-s13 {"arm": "plain", "seed": 13, "weights": 6385149, "steps": 60000, "batch": 256, "lr": 0.0003, "warmup": 1000, "latin_pool": 20000, "minutes": 47.3, "device": "cuda", "torch": "2.11.0+cu128", "cuda": "12.8", "python": "3.10.9", "gpu": "NVIDIA GeForce RTX 5070 Ti", "autocast_cache": false, "steps_seen": 60000, "steps_block_nograd": 0, "grad_norms": [{"step": 1, "block0": 1.67163, "block1": 1.626612, "block2": 1.643129, "block3": 1.599599, "block4": 1.661589, "block5": 1.519987, "block6": 1.527078, "block7": 1.535478}, {"step": 2500, "block0": 0.505184, "block1": 0.496644, "block2": 0.41611, "bloc
+loop-s14 {"arm": "loop", "seed": 14, "weights": 6438302, "steps": 60000, "batch": 256, "lr": 0.0003, "warmup": 1000, "latin_pool": 20000, "minutes": 50.1, "device": "cuda", "torch": "2.11.0+cu128", "cuda": "12.8", "python": "3.10.9", "gpu": "NVIDIA GeForce RTX 5070 Ti", "autocast_cache": false, "steps_seen": 60000, "steps_block_nograd": 0, "grad_norms": [{"step": 1, "block0": 2.88917, "block1": 2.908758}, {"step": 2500, "block0": 0.69285, "block1": 0.769877}, {"step": 5000, "block0": 0.777244, "block1": 0.865868}, {"step": 7500, "block0": 0.472283, "block1": 0.44437}, {"step": 10000, "block0": 0.038509
+plain-s14 {"arm": "plain", "seed": 14, "weights": 6385149, "steps": 60000, "batch": 256, "lr": 0.0003, "warmup": 1000, "latin_pool": 20000, "minutes": 47.4, "device": "cuda", "torch": "2.11.0+cu128", "cuda": "12.8", "python": "3.10.9", "gpu": "NVIDIA GeForce RTX 5070 Ti", "autocast_cache": false, "steps_seen": 60000, "steps_block_nograd": 0, "grad_norms": [{"step": 1, "block0": 1.643845, "block1": 1.61611, "block2": 1.617193, "block3": 1.606978, "block4": 1.511412, "block5": 1.56028, "block6": 1.520693, "block7": 1.461085}, {"step": 2500, "block0": 1.140841, "block1": 1.024923, "block2": 1.40242, "block
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force C:\\Users\\benja\\premonition-models\\dirh2\\loop-s13, C:\\Users\\benja\\premonition-models\\dirh2\\plain-s13, C:\\Users\\benja\\premonition-models\\dirh2\\loop-s14, C:\\Users\\benja\\premonition-models\\dirh2\\plain-s14 | Out-Null; Copy-Item C:\\Users\\benja\\dirh2\\W\\loop-s13\\final.pt C:\\Users\\benja\\premonition-models\\dirh2\\loop-s13\\final.pt; Copy-Item C:\\Users\\benja\\dirh2\\W\\plain-s13\\final.pt C:\\Users\\benja\\premonition-models\\dirh2\\plain-s13\\final.pt; Copy-Item C:\\Users\\benja\\dirh2\\W\\loop-s14\\final.pt C:\\Users\\benja\\premonition-models\\dirh2\\loop-s14\\final.pt; Copy-Item C:\\Users\\benja\\dirh2\\W\\plain-s14\\final.pt C:\\Users\\benja\\premonition-models\\dirh2\\plain-s14\\final.pt; Get-ChildItem C:\\Users\\benja\\premonition-models\\dirh2\\loop-s13, C:\\Users\\benja\\premonition-models\\dirh2\\plain-s13, C:\\Users\\benja\\premonition-models\\dirh2\\loop-s14, C:\\Users\\benja\\premonition-models\\dirh2\\plain-s14 | Select-Object FullName, Length, @{Name='UTC';Expression={\$_.LastWriteTimeUtc.ToString('yyyy-MM-ddTHH:mm:ssZ')}}; echo ---ORIG---; Get-ChildItem C:\\Users\\benja\\dirh2\\W\\loop-s13\\final.pt, C:\\Users\\benja\\dirh2\\W\\plain-s13\\final.pt, C:\\Users\\benja\\dirh2\\W\\loop-s14\\final.pt, C:\\Users\\benja\\dirh2\\W\\plain-s14\\final.pt | Select-Object FullName, @{Name='UTC';Expression={\$_.LastWriteTimeUtc.ToString('yyyy-MM-ddTHH:mm:ssZ')}}\""
+FullName                                                     Length UTC                 
+--------                                                     ------ ---                 
+C:\Users\benja\premonition-models\dirh2\loop-s13\final.pt  25764244 2026-09-28T20:19:33Z
+C:\Users\benja\premonition-models\dirh2\plain-s13\final.pt 25573143 2026-09-28T20:16:33Z
+C:\Users\benja\premonition-models\dirh2\loop-s14\final.pt  25764244 2026-09-28T21:20:33Z
+C:\Users\benja\premonition-models\dirh2\plain-s14\final.pt 25573143 2026-09-28T21:17:52Z
+---ORIG---
+C:\Users\benja\dirh2\W\loop-s13\final.pt                            2026-09-28T20:19:33Z
+C:\Users\benja\dirh2\W\plain-s13\final.pt                           2026-09-28T20:16:33Z
+C:\Users\benja\dirh2\W\loop-s14\final.pt                            2026-09-28T21:20:33Z
+C:\Users\benja\dirh2\W\plain-s14\final.pt                           2026-09-28T21:17:52Z
+[0m
+[0m$ [0mmkdir -p ~/premonition-models/dirh2/loop-s13 ~/premonition-models/dirh2/plain-s13 ~/premonition-models/dirh2/loop-s14 ~/premonition-models/dirh2/plain-s14 && scp "benspc:C:/Users/benja/premonition-models/dirh2/loop-s13/final.pt" ~/premonition-models/dirh2/loop-s13/final.pt && scp "benspc:C:/Users/benja/premonition-models/dirh2/plain-s13/final.pt" ~/premonition-models/dirh2/plain-s13/final.pt && scp "benspc:C:/Users/benja/premonition-models/dirh2/loop-s14/final.pt" ~/premonition-models/dirh2/loop-s14/final.pt && scp "benspc:C:/Users/benja/premonition-models/dirh2/plain-s14/final.pt" ~/premonition-models/dirh2/plain-s14/final.pt && sha256sum ~/premonition-models/dirh2/loop-s13/final.pt ~/premonition-models/dirh2/plain-s13/final.pt ~/premonition-models/dirh2/loop-s14/final.pt ~/premonition-models/dirh2/plain-s14/final.pt
+b1e803ed9f68322edc3a22d78cbe82fa143a4418b5a174b027c474128336a4e4  /Users/ben-hannan/premonition-models/dirh2/loop-s13/final.pt
+736e24d9d48c404585ca87d458f3277ae230d6daa2bfb142f44f1137d1d65b91  /Users/ben-hannan/premonition-models/dirh2/plain-s13/final.pt
+b1124937910718c7ee7fce728230608cf4972d13e5fc6f783b69083c5ea59e21  /Users/ben-hannan/premonition-models/dirh2/loop-s14/final.pt
+31de714ca356da16e3e6cb94ddf76845519e8af78006e715a9cfb0f78520d0e0  /Users/ben-hannan/premonition-models/dirh2/plain-s14/final.pt
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Remove-Item -Recurse -Force C:\\Users\\benja\\dirh2; Test-Path C:\\Users\\benja\\dirh2\""
+False
+[0m
+[0m$ [0mfor r in loop-s13 plain-s13 loop-s14 plain-s14; do echo "=== $r HEAD ==="; head -n 1 artifacts/claude-dir-h2-numbers-20260928/runs/$r/$r.log; echo "=== $r TAIL ==="; tail -n 1 artifacts/claude-dir-h2-numbers-20260928/runs/$r/$r.log; done
+=== loop-s13 HEAD ===
+h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool
+=== loop-s13 TAIL ===
+{"step": 60000, "ce": 0.0957, "exact": 0.8787, "halt_bce": 0.1026, "lr": 0.0, "min": 50.3, "exact_by_kind": {"grids4": 0.972, "grids5": 0.894, "numbers3": 1.0, "numbers4": 0.4, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 0.999}, "dev": {"sums4": 200, "grids5": 199}}
+=== plain-s13 HEAD ===
+h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool
+=== plain-s13 TAIL ===
+{"step": 60000, "ce": 0.0008, "exact": 0.9984, "halt_bce": 0.0, "lr": 0.0, "min": 47.3, "exact_by_kind": {"grids4": 1.0, "grids5": 0.991, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 199}}
+=== loop-s14 HEAD ===
+h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool
+=== loop-s14 TAIL ===
+{"step": 60000, "ce": 0.0859, "exact": 0.8967, "halt_bce": 0.0946, "lr": 0.0, "min": 50.1, "exact_by_kind": {"grids4": 0.969, "grids5": 0.894, "numbers3": 1.0, "numbers4": 0.522, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 199}}
+=== plain-s14 HEAD ===
+h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool
+=== plain-s14 TAIL ===
+{"step": 60000, "ce": 0.0016, "exact": 0.9967, "halt_bce": 0.0, "lr": 0.0, "min": 47.4, "exact_by_kind": {"grids4": 1.0, "grids5": 0.981, "numbers3": 1.0, "numbers4": 1.0, "sums1": 1.0, "sums2": 1.0, "sums3": 1.0, "sums4": 1.0}, "dev": {"sums4": 200, "grids5": 193}}
+[0m
+[0m← [0mWrite artifacts/claude-dir-h2-numbers-20260928/runs/RUN-NOTE.md
+Wrote file successfully.
+[0m
+[0m$ [0mgit add -f artifacts/claude-dir-h2-numbers-20260928/runs artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt && git status --short | head -n 40
+A  artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt
+A  artifacts/claude-dir-h2-numbers-20260928/runs/RUN-NOTE.md
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/loop-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/loop-s14.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/plain-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/plain-s14.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/train_summary.json
+A  artifacts/claude-k1h-20260926/luna/full/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-1.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-2.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-3.txt
+A  artifacts/claude-k1h-20260926/luna/full/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/full/chats.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+[0m
