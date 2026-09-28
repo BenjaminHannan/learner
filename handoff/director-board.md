@@ -10,3 +10,5 @@
 | H7 | Vast launch kit for sleep-length test | thread cmsg_01GSLCHTCnZxn7DhV19qcDvMXfgnnrzZHzF84Y9PaCJpiq; handoff/kit/sleeph6r | started 20:13 UTC | reply in thread |
 | H8 | Adversarial review of pending tests | thread cmsg_01GSLCHTCnZxn7DhV19qcDvMNT9uUUdAAY3izQx8BydFpH; artifacts/claude-dir-h8-review-20260928 | started 20:13 UTC | reply in thread |
 | H9 | Novelty research for reasoner | thread cmsg_01GSLCHTCnZxn7DhV19qcDvM83DXzppkmhpgaXkhhdEf5h; artifacts/claude-dir-h9-novelty-20260928 | started 20:13 UTC | reply in thread |
+| H10 | Review-fix addenda for H1/H2/H3/H6 | thread cmsg_01GSLCHTCnZxn7DhV19qcDvMGsKJTaMdsBwKaYDUwTdoxL | started 20:39 UTC | reply in thread |
+| H8 | (done) review of pending tests | artifacts/claude-dir-h8-review-20260928/REVIEW.md | done, 7 of 7 claims confirmed; prompts sent to Ben for patch + relnet chats | their addenda |
