@@ -6,7 +6,7 @@ on the equal-practice ruler, 2,048 maze updates with no replay drop the practise
 unchanged sleep (512 updates; each step 4 stored sums, 4 stored grids and 8 branch mazes, weights .25/.25/.5, CE on the true
 answers; store 128 + 128) brings them back only to sums 149/155 and grids 99/86 after k = 64, and sums 76/83 and grids 90/100
 after k = 16,384 (eq-runs/loop-s{0,1}-pre/adapt.json; scripts/claude_fewex_bench.py:208-226, claude_fewex_data.py:43-46).
-Each sleep took 121-197 s. The harness saves every rung's net (claude_fewex_eq_bench.py:118, `k{k}.pt`); the files are local to
+Each sleep took 121-197 s. The harness saves every rung's net (claude_fewex_eq_bench.py:109 and :119, `k0.pt` and `k{k}.pt`); the files are local to
 the chat that ran the ruler. The teacher (that chat's `k0.pt`, the practised source) scores 200 and 199 of 200 before mazes,
 so matching only its final answers would be almost the same as the true-answer loss; the prompt therefore matches its answers
 at every thinking round. Paste into the SAME chat that ran the equal-practice ruler. Everything below the line is the prompt.
