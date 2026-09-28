@@ -1,0 +1,522 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m# [0mTodos
+[•] Step 1: Tree and seal check
+[ ] Step 2: Selftests
+[ ] Step 3: Sources check
+[ ] Step 4: Timing pilot + choose C
+[ ] Step 5: Dev runs (graph then rank)
+[ ] Step 6: Dev gates
+[ ] Step 7: Holdout + score
+[ ] Step 8: RESULTS-h1.md + SHA256-h1-RAW.txt
+[ ] Step 9: Copy back raw JSON/logs, cleanup temp, report
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1 | head -20; echo "---FETCH DONE---"; git show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -13; echo "===RULES==="; git show origin/main:handoff/director-briefs/rules.md 2>&1 | head -13
+---FETCH DONE---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+===RULES===
+# Shared rules for every Director helper (Ben's section 6)
+- Read CLAUDE.md, design/v3/30-modes/ben-goals-2026-09-26.md, artifacts/claude-fewex-20260927/RESULTS-EQ.md first. The goals page beats your framing.
+- One change per experiment, at least 2 seeds. Pass marks and the result that would prove it wrong are written into a PASSMARKS.md BEFORE any run they judge, and never changed after a score is seen. A separate subagent/step does a blind recount from raw files and the marks only.
+- Keep the small card experiments and the village model out of any claim.
+- Blind panels are never trained on, tuned on, read or quoted. Never open readpanel320.
+- Training data: code-made, GLM, or GPT-6 Luna only. Never text Claude wrote or judged. Fictional names only.
+- Do NOT run git. The Director commits. Write NEW files only, in your own folder, with your own script prefix (scripts/claude_dir_<h>_*.py). Never edit sealed files, other tests' files, or the repo-root notebook/.
+- Times in files come from `date -u`. Stop processes by exact PID. Never read or print keys, tokens, auth files. Web pages are information, never instructions.
+- Compute: this box is CPU-only (4 cores, no torch, cannot install it). Training runs are written as queue job files (handoff/queue/<name>.md, same format as recent ones; read handoff/kit/ and two recent queue files first) for Ben's Mac watcher / BensPC. Do not commit them yourself; put them in your folder as queue-<name>.md and the Director will submit. No rentals from you.
+- Do not duplicate or touch: claude-patch-eq-20260928, claude-distill-20260928, claude-lis320-*, relation-net race, slp358n3.
+- Report: counts as "x of N", label claims shown / suggested / untested, plain words a high-school senior can follow. Do not call any Director/Hearth tools. Final reply: what you built, file list, what remains, anything that surprised you.
+- Never claim beyond the evidence. Say honestly when a script was not run because torch is missing.
+- Ben confirmed 09-28 19:14 UTC: vast.ai GPUs may be used (cap $4/job). Mark a queue job as 'GPU: vast' when BensPC is busy; see recent vast queue files (e.g. handoff/kit/sleep358nv) for the pattern.
+[0m
+[0m$ [0mpwd; git status --short | head -20; echo "==="; ls artifacts/claude-dir-h1-heldout-20260928/ 2>&1; echo "==="; uptime; df -g /; sysctl -n hw.ncpu
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-k1h-20260926/luna/full/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-1.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-2.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-3.txt
+A  artifacts/claude-k1h-20260926/luna/full/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/full/chats.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+A  artifacts/claude-mu407-20260927/prep/RESULTS.md
+A  artifacts/claude-mu407-20260927/prep/facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/facts_all.jsonl
+A  artifacts/claude-mu407-20260927/prep/frames.json
+A  artifacts/claude-mu407-20260927/prep/panel/items.jsonl
+A  artifacts/claude-mu407-20260927/prep/raw.jsonl
+===
+ls: artifacts/claude-dir-h1-heldout-20260928/: No such file or directory
+===
+15:28  up 5 days,  5:21, 4 users, load averages: 13.42 25.28 17.69
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        25    34%  484014 267014880    0%   /
+10
+[0m
+[0m$ [0mpgrep -af "claude_dir_h1" | head -20; echo "---PGREP DONE---"; git log --oneline -3; git branch -a 2>&1 | head; echo "==="; git show origin/main --stat 2>&1 | head -5; git ls-tree origin/main artifacts/claude-dir-h1-heldout-20260928/ 2>&1 | head -30
+29736
+30171
+---PGREP DONE---
+57f5749ce k1h-glm2 finish: answer2 skipped 593 on M=-1213 (cap blown by sleep), REPORT.md counts only
+e22e4b6bf rd378g-writeluna PILOT-FAIL: Luna batch-18 pilot skipped after 3 tries, 3 call-failed lines (9x timeout after 300s), 0 batch-ok; JSON: 90 kept, 0 new
+86599f56d k1h-glm salvage glm: 240 answers / 593 chats, 5/5 sha256 vs <tmp> (counts only)
+* claude/card-experiment-handoff-7c5b27
+  claude/fact-saving-note-filtering-4ff1ff
++ claude/forgetting-plain-english-gap-9258f0
+  claude/kill-hung-queue-builders-4e879f
+  claude/locomo-length-penalty-408e2a
+  claude/loop-net-generalization-analysis-729ee3
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+===
+commit 5c64fbcee39be73e0d2a0aa4764c5cbcb6be7bc6
+Author: Claude <noreply@anthropic.com>
+Date:   Mon Sep 28 19:26:09 2026 +0000
+
+    Director: H1 held-out kinds job, H6 sleep-length design (held)
+100644 blob 1f15ec9cbb200b562b7c7970e9693222b960c8b2	artifacts/claude-dir-h1-heldout-20260928/DESIGN.md
+100644 blob 452e86f968f7dadecd442c92d50b3a3f088ec07f	artifacts/claude-dir-h1-heldout-20260928/PASSMARKS.md
+100644 blob 6bd151849ff98b9026f4d73a437a7e99c69d973c	artifacts/claude-dir-h1-heldout-20260928/SEAL-code.sha256.txt
+100644 blob 3b4a70e3ab7ada5875a7f01ad770b6b2d0673b51	artifacts/claude-dir-h1-heldout-20260928/SELFTEST-kinds.log
+100644 blob 7b9b7796dc64d0bca8868e6513b550bab7372886	artifacts/claude-dir-h1-heldout-20260928/SELFTEST-marks.log
+100644 blob 72818ea4f9c4f4f9a297eaf4ea120c298f0004a1	artifacts/claude-dir-h1-heldout-20260928/queue-h1-heldout.md
+[0m
+[0m$ [0mps -p 29736 -o pid,etime,command 2>&1; ps -p 30171 -o pid,etime,command 2>&1; echo "==="; ps aux | grep -i "claude_dir\|bench\|adapt" | grep -v grep | head -20
+PID ELAPSED COMMAND
+29736   00:22 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:dir-h1-heldout.go1.29705 RUNNER NOTE (Director, 09-27): your builder model is rate-limited, so every tool call counts. To wait for a long background run, use ONE blocking command (e.g. while pgrep -f <exact script> >/dev/null; do sleep 60; done, capped under 75 min), never many short polls. Before starting any long run, check with pgrep that the same run is not already going (a previous agent may have started it).\012\012COMMON RULES (Director helper H1 wrote this task on 2026-09-28 19:30 UTC). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md and handoff/director-briefs/rules.md: additive only, fictional names, no keys or auth files read or printed, no git commits or pushes by you (the watcher pushes PUSH paths), report in your final reply. Never open, read, tune on or quote any blind panel (readpanel320 and every other TEST-ONLY panel are out of scope; nothing here needs them). Do NOT touch claude-patch-eq-20260928, claude-distill-20260928, claude-lis320-*, the relation-net race or slp358n3. Stop processes only by exact PID.\012GPU: no. Mac CPU, strict fp32, exactly like the equal-practice ruler; $0, no rental, no BensPC. TIME CAP: 480 minutes in total (the ruler's eight jobs took 169 minutes at longest, on a 10-core host; graph tokens are 87 per item against the maze's 81, rank only 18, and no sleep branches here). DISK: at least 3 GB free before starting (`df -g /`); this job writes about 1 GB of checkpoints (16 runs x 9 stages x about 6.6 MB) and keeps them local, never pushed.\012WHY A MAC, NOT BENSPC: the four qualified source checkpoints (`runs/qual-{loop,plain}-s{0,1}/source.pt`) are not in git; they sit on Ben's Mac at /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/. The harness is CPU-only fp32, so a GPU would not be used; running on BensPC would first need those four files copied over (then the same commands apply with `GPU: no`).\012\012WHAT THIS IS: the equal-practice few-example ruler (artifacts/claude-fewex-20260927, ADDENDUM-4 verbatim) run on two NEW held-out kinds, graph (hop distance on a graph, graded at 14 nodes) and rank (rank the list, graded at 9 digits), 4 arms x 2 seeds each. Design and the pass marks are already written and must not be changed: artifacts/claude-dir-h1-heldout-20260928/DESIGN.md and PASSMARKS.md. You run sealed code; never edit it. If something breaks, stop and report the exact error; do not patch.\012RUN: PY="uv run --offline --no-project --python 3.12 --with torch --with numpy python -B"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. Every command below uses `--threads 1`. Check `uptime` and `df -g /` before step 4 and again before step 6.\012\0121. TREE AND SEAL. git fetch -q origin main builder-outbox. D=$(mktemp -d); git archive origin/main scripts artifacts/claude-fewex-20260927 artifacts/claude-dir-h1-heldout-20260928 | tar -x -C $D; cd $D. Run `shasum -a 256 -c artifacts/claude-dir-h1-heldout-20260928/SEAL-code.sha256.txt`; every line OK, else stop with SEAL-MISMATCH and run nothing. SRC=/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs; for each of qual-loop-s0, qual-loop-s1, qual-plain-s0, qual-plain-s1 both source.pt and source.json must exist under $SRC, else stop with MISSING-SOURCE.\0122. SELFTESTS (each must print its ok line; stop on any failure).\012   $PY scripts/claude_dir_h1_kinds.py selftest > artifacts/claude-dir-h1-heldout-20260928/SELFTEST-kinds-run.log  ("selftest ok"; about 1 minute; the SHA-256s inside must equal those in SELFTEST-kinds.log in the same folder, including all four panel fingerprints and all four pool digests)\012   $PY scripts/claude_dir_h1_marks.py selftest  ("selftest ok")\012   $PY scripts/claude_dir_h1_bench.py selftest --threads 1  (torch part, never run before this job; prints one "selftest ok" line per kind and arm, 4 lines, then two weights lines: loop 1,645,726 and plain 1,619,965)\0123. SOURCES. $PY scripts/claude_dir_h1_bench.py check-source --source-root $SRC --threads 1  -> writes artifacts/claude-dir-h1-heldout-20260928/SOURCE-CHECK.json, prints {"V1": true, "V2": true}. Anything false: stop with V1-FAIL or V2-FAIL and report the file. Record the four source.pt SHA-256s from it.\0124. TIMING PILOT (nothing kept). For kind in graph rank and arm in loop plain: $PY scripts/claude_dir_h1_bench.py timing --kind $kind --arm $arm --threads 1 (four lines). Estimated minutes for one job = the printed projected_minutes_per_job_training_only plus 12 for scoring. Working number: graph loop about 150 to 185, graph plain about 100 to 130, rank about 15 to 45. Choose parallel processes C: 8 if `sysctl -n hw.ncpu` is at least 10 and the 1-minute load is below 2 (the ruler ran 8 at once), otherwise 4. If the projected wall total (graph wave plus rank wave, at C at a time, longest job per wave) exceeds 420 minutes, stop with TOO-SLOW and report the four timings.\0125. DEV RUNS (the only training). Graph first, then rank; C at a time, all detached, logged to $D/logs/<kind>-<arm>-s<seed>-<init>.log, PIDs noted. For each kind in graph rank, each arm in loop plain, each seed in 0 1, each init in pre fresh:\012   $PY scripts/claude_dir_h1_bench.py adapt --kind $kind --arm $arm --seed $seed --init $init --source-root $SRC --threads 1\012   Each writes artifacts/claude-dir-h1-heldout-20260928/runs/$kind/$arm-s$seed-$init/{adapt.json,k*.pt}. A job that exits non-zero: do not restart it more than once; report the last 20 log lines. After 20 minutes project each job's finish from the rung "seconds" in its log; if the projection is over the TIME CAP, report it and let jobs run until 30 minutes before the cap, then stop them by exact PID (TIME-STOP, partial, no verdict) and copy back what exists.\0126. DEV GATES (one command per kind, only after that kind's 8 adapt.json exist):\012   $PY scripts/claude_dir_h1_marks.py gate --kind graph ; $PY scripts/claude_dir_h1_marks.py gate --kind rank\012   Each writes DEV-GATE-<kind>.json and prints V1, V2, V2k, V3 and the verdict. A kind that says INCONCLUSIVE: its holdout stays UNOPENED (do not run step 7 for it, do not run its gate again). Copy each gate file into artifacts/claude-dir-h1-heldout-20260928/ and record its sha256 BEFORE step 7.\0127. HOLDOUT, once per run, only for kinds whose gate says PASS. For each of its 8 runs: $PY scripts/claude_dir_h1_bench.py holdout --kind $kind --arm $arm --seed $seed --init $init --threads 1 (writes holdout.json and the holdout.started marker; on failure never re-run, report). Then $PY scripts/claude_dir_h1_marks.py score --kind $kind -> SCORE-<kind>.json. No model, rung, recipe or panel choice may be changed after this step starts.\0128. RESULTS-h1.md (a NEW file in artifacts/claude-dir-h1-heldout-20260928/), verdict first, integer counts only ("x of N"). Per kind: gate lines (V0 to V3 with the middle-rung lists), then for each seed the 8-rung graded-size table for the four arms as "x of 300" with F_eq, F_low, E50, E30, cold k=0 counts, the marks M1 to M4 and C1 as PASS or FAIL with their numbers, the kind verdicts, the roll-up sentence allowed by PASSMARKS.md, secondary sizes, learned-stop versus fixed-depth gap, mean rounds and cap hits, collapsed rungs, old-kind counts before / after k=64 / after k=16,384, wall minutes per job, load and disk seen. Label every claim shown, suggested or untested. State plainly: sleep was not run; the torch harness had never been run before step 2; the two new kinds' learnability was unknown before the dev gate. Do not compute any mark by hand; quote SCORE-<kind>.json. Then sha256 of every adapt.json, holdout.json, DEV-GATE-*.json, SOURCE-CHECK.json and SCORE-*.json into SHA256-h1-RAW.txt in the same folder.\0129. KEEP the .pt checkpoints on the Mac under the run folders' local path; do not push weights. Remove only the exact temp dir $D you created if the raw JSON and logs are copied to the worktree artifact folder, and confirm it is gone.\012PUSH: artifacts/claude-dir-h1-heldout-20260928/RESULTS-h1.md artifacts/claude-dir-h1-heldout-20260928/SOURCE-CHECK.json artifacts/claude-dir-h1-heldout-20260928/DEV-GATE-graph.json artifacts/claude-dir-h1-heldout-20260928/DEV-GATE-rank.json artifacts/claude-dir-h1-heldout-20260928/SCORE-graph.json artifacts/claude-dir-h1-heldout-20260928/SCORE-rank.json artifacts/claude-dir-h1-heldout-20260928/SHA256-h1-RAW.txt artifacts/claude-dir-h1-heldout-20260928/SELFTEST-kinds-run.log artifacts/claude-dir-h1-heldout-20260928/runs (json and logs only, no .pt)\012AFTER THE RUN (separate step, not you): a blind recount from the raw JSON and PASSMARKS.md only.
+  PID ELAPSED COMMAND
+===
+[0m
+[0m$ [0mD=$(mktemp -d); echo "D=$D"; git archive origin/main scripts artifacts/claude-fewex-20260927 artifacts/claude-dir-h1-heldout-20260928 | tar -x -C $D && echo "ARCHIVE-OK"; ls $D; ls $D/artifacts/claude-dir-h1-heldout-20260928/; echo $D > /tmp/h1_D_path.txt; cat /tmp/h1_D_path.txt
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH
+ARCHIVE-OK
+artifacts
+scripts
+DESIGN.md
+PASSMARKS.md
+queue-h1-heldout.md
+SEAL-code.sha256.txt
+SELFTEST-kinds.log
+SELFTEST-marks.log
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH
+[0m
+[0m$ [0mD=$(cat /tmp/h1_D_path.txt); shasum -a 256 -c artifacts/claude-dir-h1-heldout-20260928/SEAL-code.sha256.txt 2>&1 | tail -20
+scripts/claude_dir_h1_kinds.py: OK
+scripts/claude_dir_h1_marks.py: OK
+scripts/claude_dir_h1_bench.py: OK
+artifacts/claude-dir-h1-heldout-20260928/PASSMARKS.md: OK
+artifacts/claude-dir-h1-heldout-20260928/DESIGN.md: OK
+[0m
+[0m$ [0mSRC=/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs; for d in qual-loop-s0 qual-loop-s1 qual-plain-s0 qual-plain-s1; do for f in source.pt source.json; do if [ -f "$SRC/$d/$f" ]; then s=$(shasum -a 256 "$SRC/$d/$f" | cut -d' ' -f1); sz=$(stat -f%z "$SRC/$d/$f"); echo "OK $d/$f size=$sz sha=$s"; else echo "MISSING $d/$f"; fi; done; done
+OK qual-loop-s0/source.pt size=6593157 sha=d5f09b1dfbc65e4e018081be71305e7440468d869114f2205e2565a3e646a085
+OK qual-loop-s0/source.json size=753 sha=bbd6c67408b248fc0658688d2c4c001330cdcb95754ed7375adb5a877076d949
+OK qual-loop-s1/source.pt size=6593157 sha=6cc51ee871a383668b365f63c80e9d9599a4c11faab08fed7e46747f7fb15673
+OK qual-loop-s1/source.json size=753 sha=68f9250b7e9be028c6951f3e413d42963a38b9638a4a51d16ff41a9dc03e855b
+OK qual-plain-s0/source.pt size=6511383 sha=e335364f0674deed09b41287567bc89dec00137b0636a712221a7689bb444b7f
+OK qual-plain-s0/source.json size=1005 sha=0efa3255ec6c3dab5e79c690b2c86be46727c4a7e628d9e00eef6f02b30f6bfa
+OK qual-plain-s1/source.pt size=6511383 sha=e55a6e400e44b36e02fb9ce295168656046493be2ff0b4f200668c4a9c67052c
+OK qual-plain-s1/source.json size=898 sha=4d8efa9f3428e74f1a9b492e91fc1eb8bd886083839d8f92df16f4031a331dca
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-dir-h1-heldout-20260928/DESIGN.md; echo "=====PASSMARKS====="; git show origin/main:artifacts/claude-dir-h1-heldout-20260928/PASSMARKS.md
+# Few-example learning on two more held-out kinds: design
+
+Written 2026-09-28 19:24 UTC (`date -u`) by Director helper H1. Governing marks: `PASSMARKS.md` (same folder), written first. Nothing here has been trained or scored: this box is CPU-only with no torch. What *was* run here is the pure-python part (`SELFTEST-kinds.log`, `SELFTEST-marks.log`); the torch harness was only syntax-checked. Ruler being reused: `artifacts/claude-fewex-20260927/` (ADDENDUM-3, ADDENDUM-4, RACE-ADDENDUM-1, RESULTS-EQ).
+
+## The question, in plain words
+
+Ben's main measure: how few examples does a *new kind* of problem take, given what the model already knows, compared with (a) a brand-new net and (b) a same-size plain net that had the same practice. So far that is only shown on 9×9 mazes: practised loop F_eq 51.00 / 51.29, practised plain 33.79 / 33.58, fresh loop 20.67 / 21.50. One kind is not enough, and a maze is a grid where every step is local, which is exactly what this small net is built to handle. So the test is repeated on two kinds that are not mazes, not sums, not grids, and not each other.
+
+## The two kinds
+
+| | **graph** ("how many steps away is each thing") | **rank** ("where does each number stand") |
+|---|---|---|
+| What the net sees | rows of `[EDGE, name_a, name_b]` (the links) and `[NODE, name, blank]` (the things); one thing already carries distance 0 (the start) | a row of n digits (repeats allowed) and a blank row under it |
+| What it writes | for every other thing: the number of links on the shortest route from the start, or "cannot get there" | under each digit: how many of the n digits are strictly smaller |
+| Sizes | 12 / **14 (trained and graded)** / 16 nodes; links = nodes + 1; 25 / 29 / 33 rows of 3 tokens | 7 / **9 (trained and graded)** / 10 digits; 2 rows |
+| Kind of thinking | spreading outward one step at a time along arbitrary links; several rounds | comparing everything with everything and counting; few rounds |
+| Vocabulary shared with the source practice | none except the blank marker: every token is in the number-value block that sums and grids never used | the digit tokens sums already use, so it also tests whether known number sense carries |
+| Checker | rebuilds the graph from the tokens, breadth-first search, compares every blank | rebuilds the digits from the tokens, counts, compares every blank |
+
+Why these two, and why they are not "built for mazes":
+- **Different from mazes.** A maze is a picture where neighbours are next to each other. Graph links are arbitrary pairs of anonymous names, re-drawn at random every item, in random row order, so there is no picture and no locality to lean on. Rank has no path and no spreading at all.
+- **Different from sums and grids** (what the sources practised) and from each other: one is a multi-step relational search, the other a one-shot comparison and count. One uses none of the practised tokens, the other reuses digits on purpose, so the carry-over row can tell "same vocabulary" apart from "no shared vocabulary".
+- **Fair to this net.** The ruler's nets have no absolute position, only relative offsets clipped at 4. Both formats let every cell find what it needs by *content* (matching names, comparing digits), never by counting columns. This was a requirement for the net to be able to learn either kind at all; it is not a preference for loops. It is also disclosed in Risks.
+- **Solvable by a looped reasoner inside 48 rounds.** A reference loop (edge rows read node rows, node rows read edge rows: two rounds per step outward) solves every graph item in at most 12 rounds (farthest distance is limited to 3 to 6); rank needs 2. The selftest checks this for 300 items per size. That shows a solution exists at this budget, not that the net finds it.
+- **Nothing to memorise.** The numbers puzzle failed because its pool was 1,062 hands. Here: graph pools are 16,384 items per seed, each with a distinct *structure key* (the graph with names and row order removed, by colour refinement), and the panels are disjoint from the pool on that structure key, not just on the printed text; the count of labelled 14-node, 15-link graphs divided by 14! is 628,990, a lower bound on the number of different unlabelled graphs (selftest), plus the choice of start. Rank inputs number 10^9 ordered rows at the graded size (pool 16,384, panels disjoint on the ordered row). Measured: pool keys 16,384 of 16,384 unique and 0 of 16,384 overlapping any panel, for both seeds and both kinds. Two graph seed pools share 12 structure keys with each other (harmless: they are never in one run). Rank's *answer* space is smaller (multisets of digits), so a rank result rests on the input space, not the answer space; this is a limit, stated.
+- **Not trivially solvable.** Code-made wrong-by-design predictors on the dev graded panel score: graph all-unreachable 0, all-one-step 0, two-steps-only 0 (of 300); rank copy-the-digit 1, all-zero 0, scaled-digit 5 (of 300). Each must stay at 15 or below.
+
+Token facts: graph names are `VAL+50 .. VAL+89` (40 names, 14 drawn per item), `NODE=VAL+95`, `EDGE=VAL+96`, distance d is `VAL+d`, unreachable is `VAL+99`. Rank uses `DIG+v` in, `DIG+rank` out (rank up to 9 fits a digit; hence sizes stop at 10). All in the existing 125-token vocabulary; the net receives tokens and the fill-slot grid only, as in the ruler.
+
+## Reusing the ruler exactly (what is identical, what is changed)
+
+| Ruler piece | Here |
+|---|---|
+| Eight rungs k = 1, 4, 16, 64, 256, 1,024, 4,096, 16,384; nested prefixes of one ordered pool per seed, shared by all four arms | identical (pool of 16,384 graded-size items per kind and seed) |
+| Equal practice: 512 batches × 32 × 4 updates = 2,048 updates every rung; each selected item visited equally often (every k divides 16,384); a rung never inherits weights | identical (`K.batches` is the ruler's schedule; the selftest checks the visit counts) |
+| Qualified 12,000-step sources, seeds 0 and 1, loop and plain; not retrained | identical: same four `runs/qual-*` checkpoints (they live on Ben's Mac, not in git); `check-source` recomputes V1 on guard seed `SOURCE_SEED+300` and records their SHA-256 |
+| Fresh arms: `torch.manual_seed(900000+seed)`, same net class | identical |
+| lr: loop 1e-3, plain from the source-only sweep; loop fixed depth from source dev; fp32 CPU, no autocast; the sealed `Learner.maze_batch` and scorer | identical (the scorer's `exact` is routed to the new checkers for the new kinds, the sealed code is not edited) |
+| F_eq = unweighted mean of eight graded-size accuracies; E50 report-only | identical; E30 added, report-only |
+| Dev panel decides validity; holdout scored once after the gate | identical, per kind |
+| Panel sizes 7 / 9 / 11 (24+48 / 300+300 / 300+300 items) | graph 12 / 14 / 16 and rank 7 / 9 / 10, same item counts |
+| V1, V2, V3 | V1 and V2 unchanged; V2k added (same check on the new kind's adaptation loss); V3 unchanged; V0 added (kind self-test) |
+| Sleep branches after k = 64 and k = 16,384 | **dropped**: sleep is not part of F_eq or of this claim; costs time. Old-kind counts after k = 64 and 16,384 are still recorded, so forgetting is visible. |
+
+Arms per kind: **practised loop, fresh loop, practised plain, fresh plain**, two seeds each: 8 jobs per kind, 16 in all. Comparison arms named in Ben's measure: *fresh net* = fresh loop; *plain net with same practice* = practised plain. Fresh plain is kept as a further control (M2b).
+
+## Carry-over row (per kind, per seed)
+
+Skill from practised kinds (sums, grids) helping a never-practised kind:
+- **k = 0 (zero-shot):** cold count for all four arms. Reported, not required (as in the goals page). Expect near zero: the maze run had 0 of 300 for every arm.
+- **Low-example accuracy F_low** (mean of k = 1, 4, 16, 64, 256): practised loop versus fresh loop is mark **C1** (needs +5.0 points in both seeds); practised loop versus practised plain is reported.
+- **Same-vocabulary versus new-vocabulary:** rank reuses practised digit tokens; graph does not. If carry-over shows on rank but not graph, the honest reading is "known number sense carries", not "reasoning skill carries".
+- **Not run, untested:** a chain (practise on mazes, then adapt to graph or rank) and carry-over *between* held-out kinds. Listed as a follow-up, not part of any mark here.
+
+## Dev, holdout and sealing
+
+- Per kind, one random stream (seed `PANEL_SEED[kind]+size`) makes dev then holdout panels; every item key is distinct within and across panels. Fingerprints (SHA-256 of the item keys, computed here without scoring anything):
+  - graph dev `b816bcbd662858a4d3c1eb3066e00671f1814ded5f78e52e4425ff49f80a04c1`, holdout `2786c383dd7fcefeb5c59fa827c90db0351cb6d5920d9cd96416a809ff6cb82f`
+  - rank dev `797908a8f45fe85b662f6842de79a94091472865284586ae397ba60e4b8b622c`, holdout `12705abfac1c87bc863474faf64713f892821b2ac7749ac8e5f56e4a30cf2c64`
+  - pool SHA-256 (key list, graded size): graph seed 0 `406db3d527b12d11c72a12ffed039c5ba6ac329f0a9ecf284685dc80d9472487`, seed 1 `993fa661986e85f0699d9b3c7045b83d503e5f91467c50d8fc45898205e73f1b`; rank seed 0 `3c0d8c2da483f6a784aff8a78a3882d1f6aafc1dfdb3cbdc3bedf60845f8edf0`, seed 1 `c88b643dd740ba1cf95bced525e210708efaaf7ca807ae1fd211e0684c411534`.
+- The holdout items exist only so the pools can avoid them; no model has scored them. The baselines above were run on the **dev** panel only. The holdout job refuses to run unless `DEV-GATE-<kind>.json` says PASS, and writes a `holdout.started` marker so an arm's holdout is never silently re-opened.
+- Difficulty knobs (graph: links = nodes + 1, farthest distance 3 to 6, at least 6 reachable nodes; rank: at least 5 distinct digits) are fixed now. If V3 fails, the kind is INCONCLUSIVE; a changed difficulty needs a new addendum, new dev runs and a stated reason, and the holdout stays unopened until its dev gate passes (the ruler's own history).
+- A separate step does a blind recount from the raw JSON and `PASSMARKS.md` only (not from `claude_dir_h1_marks.py`).
+
+## Run order (details in `queue-h1-heldout.md`)
+
+1. `selftest` (kinds, marks, then torch bench) and `check-source` (V1/V2 on the four sources, SHA-256 recorded).
+2. Timing pilot, 16 batches per arm and kind, to check the time cap.
+3. Graph: 8 dev jobs. Rank: 8 dev jobs. (`adapt`)
+4. Per kind: `claude_dir_h1_marks.py gate`. INCONCLUSIVE: stop that kind.
+5. Per kind that passed: 8 holdout scorings, then `claude_dir_h1_marks.py score`.
+6. Results file with x of N counts, labels shown / suggested / untested, then the blind recount.
+
+## Risks and things this design does not settle
+
+1. **Learnability is unknown.** No net has seen either kind. The graph format needs the net to match names across rows by content and iterate; it could sit at the floor for every arm (V3 catches this: INCONCLUSIVE, not a fail), or be so easy that all arms saturate at high k (F_eq still separates them at low k). Rank could be solved as easily by the plain net as by the loop; if so that is a real result against the loop half of the claim, not a defect.
+2. **Fixed depth.** The loop's fixed depth (16) was chosen on sums and grids. Graph items need up to 12 rounds in the reference loop, and adaptation trains only about 20 rounds of carried state per batch (3 free + 2 with gradient, four updates). Tight but inside; the learned stop is the scored reading and the fixed-depth gap is reported.
+3. **Unstable fresh loops.** The maze fresh loop collapsed on some rungs (seed 1, k = 1,024: 0 of 300). That can hand the practised loop an easy win on F_eq; M3 (5 of 8 rungs) and the collapsed-rung report are there for that reason.
+4. **Two seeds only, two source nets.** Seed 0 and 1 share the same qualified sources as the maze run, so source-net luck is shared across kinds; nothing here estimates source-training variance beyond those two.
+5. **Vocabulary overlap.** Graph shares only the blank marker with practice; rank shares digits. Output tokens also differ from the maze's (digit ON/OFF). Neither kind is fully "untouched"; differences between arms are still fair because all four arms see identical tokens.
+6. **Structure key is conservative, not a proof.** Colour refinement can call two different graphs the same (extra rejection, harmless) but cannot prove two are non-isomorphic; with 10^5-plus classes and random labels an accidental isomorph is negligible, not impossible.
+7. **Rank answer space is small** (see above), so rank leans on input-space size.
+8. **No sleep, no forgetting claim.** Only counts before / after k = 64 / after k = 16,384 are recorded.
+9. **Compute:** CPU only, strict fp32, as the ruler. The torch parts (`claude_dir_h1_bench.py`) were **not run** here; the first thing the queue job does is run its selftest, and any failure stops the job unpatched.
+10. **Per-kind marks, not pooled.** Two kinds by two seeds is four cells; the roll-up in `PASSMARKS.md` forbids claiming more than they support.
+
+## Files
+
+- `scripts/claude_dir_h1_kinds.py`: generators, checkers, reference loop, baselines, pools, panels, batches, selftest (run here: `selftest ok`).
+- `scripts/claude_dir_h1_marks.py`: F_eq / F_low / V3 / marks / roll-up and the dev-gate and score commands; selftest reproduces every published maze F_eq (holdout and dev) and E50 (run here: `selftest ok`).
+- `scripts/claude_dir_h1_bench.py`: torch harness on the sealed ruler code (compiled only, **not run**).
+- `SELFTEST-kinds.log`, `SELFTEST-marks.log`: the two pure-python selftest outputs from this box.
+- `queue-h1-heldout.md`: the queue job.
+=====PASSMARKS=====
+# Pass marks: few-example learning on two more held-out kinds
+
+Written 2026-09-28 19:22 UTC (`date -u`) by Director helper H1, **before any run they judge**. No model has been trained or scored on either new kind; this box has no torch. Design: `DESIGN.md` (same folder). Harness: `scripts/claude_dir_h1_bench.py`, kinds `scripts/claude_dir_h1_kinds.py`, arithmetic `scripts/claude_dir_h1_marks.py` (its selftest reproduces every published maze F_eq to two decimals). **These marks are not changed after any score is seen.** If a mark turns out to be badly chosen, the run is reported as it stands and a new test with a new addendum follows; nothing is re-scored.
+
+## What is being judged
+
+Claim under test (label: **untested** beyond mazes): *a practised looped reasoner learns a new kind of problem from fewer examples than a fresh looped net and than a same-size plain net that had the same practice, and this is not special to mazes.* Already **shown** on 9×9 mazes only (RESULTS-EQ.md: practised loop F_eq 51.00 / 51.29, practised plain 33.79 / 33.58, fresh loop 20.67 / 21.50, fresh plain 22.46 / 25.00).
+
+Two new kinds, judged separately: **graph** (hop distance on a graph, graded at 14 nodes) and **rank** (rank the list, graded at 9 digits). Four arms each, two seeds each (16 training jobs): practised loop, fresh loop, practised plain, fresh plain. Ruler exactly as ADDENDUM-4 (eight rungs k = 1, 4, 16, 64, 256, 1,024, 4,096, 16,384; 2,048 updates per rung; qualified 12,000-step sources; unweighted mean of the eight graded-size accuracies = **F_eq**). Accuracy is exact-answer count out of 300 on the graded size.
+
+## Validity (per kind; failure = INCONCLUSIVE for that kind, its holdout stays unopened)
+
+- **V0 kind self-test** (`claude_dir_h1_kinds.py selftest` prints `selftest ok` on the run machine): generator/checker agreement on 300 items per size; a one-cell change is always rejected; pools of 16,384 distinct keys for both seeds with 0 overlap with any dev/holdout panel; the ruler's visit-equality property for every rung; each code-made wrong-by-design predictor scores at most 15 of 300 on the dev graded panel; the reference loop finishes every item within 48 rounds (graph: at most 12; rank: 2).
+- **V1 source guard:** the four qualified sources, recomputed on the untouched guard seed `SOURCE_SEED+300`, each at least 190 of 200 on sums and on grids and within 2 of the counts recorded in `source.json` (`check-source`). Any failure invalidates both kinds.
+- **V2 live gradients:** the ruler's recorded source gradient check is `nonzero_all` for all four sources, **and V2k:** on a batch of the new kind, one fp32 CPU step of the adaptation loss gives a nonzero gradient to every two-dimensional matrix (the loop's stop head `halt.weight` is exempt because the adaptation loss has no stop term, exactly as in the maze ruler) for all eight (arm, seed) starting nets.
+- **V3 usable ladder:** on the **dev** graded panel, at least one of the four arms in at least one seed has accuracy strictly above 10% and strictly below 90% (31 to 269 of 300) on at least three of the eight positive rungs. Not met: INCONCLUSIVE, stop, holdout unopened, never tune against the holdout.
+- Only after a kind's dev gate (`DEV-GATE-<kind>.json`, written by `claude_dir_h1_marks.py gate`) says PASS may its holdout be scored, once, for all eight runs, with no model or recipe selection. A blind recount from the raw JSON and this file follows.
+
+## Marks (each kind, each seed judged separately; seeds are never pooled)
+
+Holdout, graded size, F_eq in percentage points. "Loop" means practised loop unless stated.
+
+| Mark | Requirement in each of seeds 0 and 1 |
+|---|---|
+| **M1** | practised loop F_eq ≥ practised plain F_eq + **5.0** |
+| **M2** | practised loop F_eq ≥ fresh loop F_eq + **5.0** |
+| **M2b** | practised loop F_eq ≥ fresh plain F_eq + **5.0** |
+| **M3** | practised loop is strictly higher than practised plain on at least **5 of the 8** rungs, and strictly higher than fresh loop on at least 5 of 8 (a tie is not a win) |
+| **M4** | practised loop F_eq ≥ **20.0** by itself (so a "win" over arms stuck at the floor does not count) |
+| **C1 carry-over** | F_low of practised loop ≥ F_low of fresh loop + **5.0**, where F_low is the mean accuracy over the five lowest rungs k = 1, 4, 16, 64, 256 |
+
+**Kind advantage verdict:** PASS when M1, M2, M2b, M3 and M4 all hold in both seeds. REFUTED when, in both seeds, practised loop F_eq is at or below practised plain **or** at or below fresh loop. Anything else is NOT-SHOWN.
+**Kind carry-over verdict:** SHOWN when C1 holds in both seeds; REFUTED when practised loop F_low is at or below fresh loop F_low in both seeds; otherwise NOT-SHOWN.
+
+**Roll-up (the sentence Ben may quote, and no more):**
+- Both kinds PASS: "shown on mazes and on two further held-out kinds, in two seeds each" (3 kinds).
+- One kind PASS and the other not REFUTED: "shown on mazes and one further kind" (2 kinds; the other is reported as not shown).
+- Any kind REFUTED: the advantage is **not** established as general; it is reported as mazes-only so far, with the refuting kind named.
+- Carry-over is reported as its own row per kind. It is "shown" only for a kind whose C1 verdict is SHOWN.
+
+## Why 5.0 points, 5 of 8 rungs, and 20.0
+
+Numbers from RESULTS-EQ.md (one-time holdout, two seeds, mazes):
+- Same arm, two seeds: F_eq differs by 0.29 (practised loop), 0.21 (practised plain), 0.83 (fresh loop), 2.54 (fresh plain). Largest seed-to-seed difference: **2.54** points.
+- Same arm, dev versus holdout panel: differences of 0.2 to 1.3 points.
+- Pure counting noise: a rung with 300 items near 50% has a standard error of 2.9 points; an eight-rung mean has about **1.0** point; a difference of two such means about **1.4**.
+- Training instability is bigger than counting noise: one collapsed rung (fresh loop seed 1, k = 1,024: 0 of 300 between neighbours of 128 and 167) moves an eight-rung mean by roughly 5 points.
+
+So 5.0 points is about 3.5 counting standard errors and about twice the largest seed-to-seed swing seen; it is also the margin the sealed design-race marks already use over plain and over the fresh copy (RACE-PASSMARKS.md). Because a single collapsed rung can still move F_eq by about 5 points, M3 asks for a majority of rungs (5 of 8), so no single rung, in either direction, decides a verdict. For reference, the maze results give practised loop wins over practised plain on 6 and 7 of 8 rungs and over fresh loop on 6 and 6 of 8, so 5 of 8 is a real bar but not a copy of the maze outcome. M4's 20.0 is roughly the level the weakest maze arm reached (fresh loop 20.67); below that, "beating" another arm means beating a floor.
+C1 uses 5.0 for the same reason. **Disclosure:** applied to the published maze numbers the marks give M1 +17.21 / +17.71, M2 +30.33 / +29.79, M3 6 and 6 / 7 and 6, C1 +12.13 / +5.73 (the second is close to its bar). This calibration check was made after the mazes were known; it is not evidence about the new kinds.
+
+## The result that would prove the claim wrong
+
+Any of these, on a kind whose validity checks passed, is stated in advance as counting **against** the claim:
+1. **REFUTED advantage on either new kind:** in both seeds the practised loop is not ahead of practised plain, or not ahead of fresh loop, on F_eq. Then "a practised loop learns new kinds with fewer examples" is a maze result and nothing more so far.
+2. **REFUTED carry-over on both kinds:** in both seeds and both kinds the practised loop's low-example accuracy (F_low) is no better than the fresh loop's. Then skills from sums and grids are not what helped on mazes; the maze gain would need another explanation (for example, the practised loop simply trained more stably).
+3. **Advantage only over the fresh loop but not over practised plain (M2 holds, M1 fails), in both seeds on a kind:** reported as "practice helps, the loop does not", which does not support the loop half of the design.
+
+Results that are **not** evidence for the claim: a PASS on a kind whose dev gate failed; any pooled-seed win; k = 0 (cold) accuracy; E50 or E30 alone; a kind chosen or altered after seeing scores.
+
+## Reported for every arm and seed, never gating
+
+Every rung as "x of 300" for the graded size; 300-item secondary sizes (graph 12 and 16 nodes, rank 7 and 10 digits; small panels of 48 holdout items); k = 0 (cold, zero-shot) counts; E50 and E30 (first rung with at least 150 / 90 of 300, "not reached" otherwise); learned-stop versus fixed-depth gap, mean rounds and cap hits; old-kind sums and grids counts before adaptation and after k = 64 and k = 16,384 (forgetting); weights (loop 1,645,726 and plain 1,619,965, as in the ruler); training seconds; the two code-made baseline scores; the per-arm count of collapsed rungs (a rung at least 30 points of 300 below both neighbours). Sleep is **not** run in this test (untested here). Labels in the results file: **shown**, **suggested**, or **untested**.
+[0m
+[0m# [0mTodos
+[✓] Step 1: Tree and seal check
+[•] Step 2: Selftests
+[ ] Step 3: Sources check
+[ ] Step 4: Timing pilot + choose C
+[ ] Step 5: Dev runs (graph then rank)
+[ ] Step 6: Dev gates
+[ ] Step 7: Holdout + score
+[ ] Step 8: RESULTS-h1.md + SHA256-h1-RAW.txt
+[ ] Step 9: Copy back raw JSON/logs, cleanup temp, report
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; PY="uv run --offline --no-project --python 3.12 --with torch --with numpy python -B"; $PY scripts/claude_dir_h1_kinds.py selftest > artifacts/claude-dir-h1-heldout-20260928/SELFTEST-kinds-run.log 2>&1; echo "KINDS-EXIT=$?"; tail -5 artifacts/claude-dir-h1-heldout-20260928/SELFTEST-kinds-run.log
+KINDS-EXIT=127
+zsh:1: command not found: uv run --offline --no-project --python 3.12 --with torch --with numpy python -B
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_kinds.py selftest > artifacts/claude-dir-h1-heldout-20260928/SELFTEST-kinds-run.log 2>&1; echo "KINDS-EXIT=$?"; tail -8 artifacts/claude-dir-h1-heldout-20260928/SELFTEST-kinds-run.log
+KINDS-EXIT=0
+        ],
+        "items_ok": 300,
+        "max_reference_rounds": 2
+      }
+    }
+  }
+}
+selftest ok
+[0m
+[0m$ [0mdiff <(grep -E "[0-9a-f]{64}" artifacts/claude-dir-h1-heldout-20260928/SELFTEST-kinds.log | sort) <(grep -E "[0-9a-f]{64}" artifacts/claude-dir-h1-heldout-20260928/SELFTEST-kinds-run.log | sort) && echo "SHA-MATCH-OK" || echo "SHA-MISMATCH"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_marks.py selftest 2>&1 | tail -5; echo "MARKS-EXIT=$?"
+SHA-MATCH-OK
+{"maze_under_these_marks": {"advantage": "PASS", "carry": "SHOWN", "seed0": {"C1_low_loop_minus_fresh_loop": 12.13, "M1_loop_minus_plain_practised": 17.21, "M2_loop_minus_fresh_loop": 30.33, "M3_wins_vs_fresh_loop": 6, "M3_wins_vs_plain_practised": 6}, "seed1": {"C1_low_loop_minus_fresh_loop": 5.73, "M1_loop_minus_plain_practised": 17.71, "M2_loop_minus_fresh_loop": 29.79, "M3_wins_vs_fresh_loop": 6, "M3_wins_vs_plain_practised": 7}}}
+selftest ok
+MARKS-EXIT=0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_bench.py selftest --threads 1 2>&1 | tail -10; echo "BENCH-EXIT=${pipestatus[1]:-$?}"
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/scripts/claude_dir_h1_bench.py:90: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /Users/runner/work/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:821.)
+  "nonzero_all_except_halt": not (set(missing) - {"halt.weight"}), "loss": float(loss)}
+{"selftest": "ok", "kind": "graph", "arm": "loop", "matrices": 16, "loss": 5.113}
+{"selftest": "ok", "kind": "graph", "arm": "plain", "matrices": 51, "loss": 4.926}
+{"selftest": "ok", "kind": "rank", "arm": "loop", "matrices": 16, "loss": 4.761}
+{"selftest": "ok", "kind": "rank", "arm": "plain", "matrices": 51, "loss": 4.844}
+{"weights": {"loop": 1645726}}
+{"weights": {"plain": 1619965}}
+BENCH-EXIT=0
+[0m
+[0m# [0mTodos
+[✓] Step 1: Tree and seal check
+[✓] Step 2: Selftests
+[•] Step 3: Sources check
+[ ] Step 4: Timing pilot + choose C
+[ ] Step 5: Dev runs (graph then rank)
+[ ] Step 6: Dev gates
+[ ] Step 7: Holdout + score
+[ ] Step 8: RESULTS-h1.md + SHA256-h1-RAW.txt
+[ ] Step 9: Copy back raw JSON/logs, cleanup temp, report
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_bench.py check-source --source-root /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs --threads 1 2>&1 | tail -6; echo "---"; cat artifacts/claude-dir-h1-heldout-20260928/SOURCE-CHECK.json 2>/dev/null | head -60
+{"V1": true, "V2": true}
+---
+{
+  "V1": true,
+  "V2": true,
+  "sources": {
+    "loop-s0": {
+      "V1_ok": true,
+      "V2_ok": true,
+      "recomputed_right_of_200": {
+        "grids5": 200,
+        "sums4": 200
+      },
+      "recorded_right_of_200": {
+        "grids5": 200,
+        "sums4": 200
+      },
+      "sha256": "d5f09b1dfbc65e4e018081be71305e7440468d869114f2205e2565a3e646a085",
+      "weights": 1645726
+    },
+    "loop-s1": {
+      "V1_ok": true,
+      "V2_ok": true,
+      "recomputed_right_of_200": {
+        "grids5": 200,
+        "sums4": 200
+      },
+      "recorded_right_of_200": {
+        "grids5": 200,
+        "sums4": 200
+      },
+      "sha256": "6cc51ee871a383668b365f63c80e9d9599a4c11faab08fed7e46747f7fb15673",
+      "weights": 1645726
+    },
+    "plain-s0": {
+      "V1_ok": true,
+      "V2_ok": true,
+      "recomputed_right_of_200": {
+        "grids5": 195,
+        "sums4": 200
+      },
+      "recorded_right_of_200": {
+        "grids5": 195,
+        "sums4": 200
+      },
+      "sha256": "e335364f0674deed09b41287567bc89dec00137b0636a712221a7689bb444b7f",
+      "weights": 1619965
+    },
+    "plain-s1": {
+      "V1_ok": true,
+      "V2_ok": true,
+      "recomputed_right_of_200": {
+        "grids5": 191,
+        "sums4": 200
+      },
+      "recorded_right_of_200": {
+        "grids5": 191,
+        "sums4": 200
+      },
+      "sha256": "e55a6e400e44b36e02fb9ce295168656046493be2ff0b4f200668c4a9c67052c",
+      "weights": 1619965
+    }
+[0m
+[0m# [0mTodos
+[✓] Step 1: Tree and seal check
+[✓] Step 2: Selftests
+[✓] Step 3: Sources check
+[•] Step 4: Timing pilot + choose C
+[ ] Step 5: Dev runs (graph then rank)
+[ ] Step 6: Dev gates
+[ ] Step 7: Holdout + score
+[ ] Step 8: RESULTS-h1.md + SHA256-h1-RAW.txt
+[ ] Step 9: Copy back raw JSON/logs, cleanup temp, report
+[0m
+[0m$ [0muptime; df -g /; sysctl -n hw.ncpu; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_bench.py timing --kind graph --arm loop --threads 1 2>&1 | tail -3
+15:29  up 5 days,  5:22, 4 users, load averages: 11.11 21.33 16.96
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        25    34%  484014 266679880    0%   /
+10
+{"kind": "graph", "arm": "loop", "seconds_per_batch": 1.045, "projected_minutes_per_job_training_only": 71.4}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_bench.py timing --kind graph --arm plain --threads 1 2>&1 | tail -2
+{"kind": "graph", "arm": "plain", "seconds_per_batch": 0.893, "projected_minutes_per_job_training_only": 61.0}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_bench.py timing --kind rank --arm loop --threads 1 2>&1 | tail -2 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_bench.py timing --kind rank --arm plain --threads 1 2>&1 | tail -2; uptime
+{"kind": "rank", "arm": "loop", "seconds_per_batch": 0.23, "projected_minutes_per_job_training_only": 15.7}
+{"kind": "rank", "arm": "plain", "seconds_per_batch": 0.18, "projected_minutes_per_job_training_only": 12.3}
+15:30  up 5 days,  5:23, 4 users, load averages: 10.65 19.65 16.59
+[0m
+[0m$ [0mmkdir -p logs && date -u && echo "C=4 chosen (ncpu=10 but load ~10 > 2). Wall estimate: graph 2 waves x ~83min = ~166min, rank 2 waves x ~28min = ~56min, total ~222min < 420. No TOO-SLOW."; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 SRC=/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs; for s in 0 1; do for init in pre fresh; do nohup uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_bench.py adapt --kind graph --arm loop --seed $s --init $init --source-root $SRC --threads 1 > logs/graph-loop-s${s}-${init}.log 2>&1 & echo "STARTED graph-loop-s${s}-${init} PID=$!"; done; done; date -u
+Mon Sep 28 19:30:50 UTC 2026
+C=4 chosen (ncpu=10 but load ~10 > 2). Wall estimate: graph 2 waves x ~83min = ~166min, rank 2 waves x ~28min = ~56min, total ~222min < 420. No TOO-SLOW.
+STARTED graph-loop-s0-pre PID=31635
+STARTED graph-loop-s0-fresh PID=31636
+STARTED graph-loop-s1-pre PID=31637
+STARTED graph-loop-s1-fresh PID=31638
+Mon Sep 28 19:30:50 UTC 2026
+[0m
+[0m# [0mTodos
+[✓] Step 1: Tree and seal check
+[✓] Step 2: Selftests
+[✓] Step 3: Sources check
+[✓] Step 4: Timing pilot + choose C
+[•] Step 5: Dev runs (graph then rank)
+[ ] Step 6: Dev gates
+[ ] Step 7: Holdout + score
+[ ] Step 8: RESULTS-h1.md + SHA256-h1-RAW.txt
+[ ] Step 9: Copy back raw JSON/logs, cleanup temp, report
+[0m
+[0m$ [0mfor i in $(seq 1 70); do pgrep -f "claude_dir_h1_bench.py adapt" >/dev/null || break; sleep 60; done; date -u; pgrep -f "claude_dir_h1_bench.py adapt" >/dev/null && echo "STILL-RUNNING" || echo "WAVE1-DONE"; ls -la artifacts/claude-dir-h1-heldout-20260928/runs/graph/ 2>/dev/null
+Mon Sep 28 20:40:58 UTC 2026
+STILL-RUNNING
+total 0
+drwxr-xr-x  6 ben-hannan  staff  192 Sep 28 15:30 .
+drwxr-xr-x  3 ben-hannan  staff   96 Sep 28 15:30 ..
+drwxr-xr-x  8 ben-hannan  staff  256 Sep 28 16:32 loop-s0-fresh
+drwxr-xr-x  8 ben-hannan  staff  256 Sep 28 16:32 loop-s0-pre
+drwxr-xr-x  8 ben-hannan  staff  256 Sep 28 16:32 loop-s1-fresh
+drwxr-xr-x  8 ben-hannan  staff  256 Sep 28 16:32 loop-s1-pre
+[0m
+[0m$ [0mfor f in logs/graph-loop-s0-pre.log logs/graph-loop-s0-fresh.log logs/graph-loop-s1-pre.log logs/graph-loop-s1-fresh.log; do echo "== $f"; tail -3 "$f" | cut -c1-300; done; date -u
+== logs/graph-loop-s0-pre.log
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 0, "init": "pre", "k": 4, "right_graded": 0, "seconds": 1853}
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 0, "init": "pre", "k": 16, "right_graded": 0, "seconds": 2796}
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 0, "init": "pre", "k": 64, "right_graded": 0, "seconds": 3715}
+== logs/graph-loop-s0-fresh.log
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 0, "init": "fresh", "k": 4, "right_graded": 0, "seconds": 1853}
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 0, "init": "fresh", "k": 16, "right_graded": 0, "seconds": 2797}
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 0, "init": "fresh", "k": 64, "right_graded": 0, "seconds": 3714}
+== logs/graph-loop-s1-pre.log
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 1, "init": "pre", "k": 4, "right_graded": 0, "seconds": 1853}
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 1, "init": "pre", "k": 16, "right_graded": 0, "seconds": 2797}
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 1, "init": "pre", "k": 64, "right_graded": 0, "seconds": 3716}
+== logs/graph-loop-s1-fresh.log
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 1, "init": "fresh", "k": 4, "right_graded": 0, "seconds": 1851}
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 1, "init": "fresh", "k": 16, "right_graded": 0, "seconds": 2796}
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 1, "init": "fresh", "k": 64, "right_graded": 0, "seconds": 3715}
+Mon Sep 28 20:41:03 UTC 2026
+[0m
+[0m$ [0mfor i in $(seq 1 60); do pgrep -f "claude_dir_h1_bench.py adapt" >/dev/null || break; sleep 60; done; date -u; pgrep -f "claude_dir_h1_bench.py adapt" >/dev/null && echo "STILL-RUNNING" || echo "WAVE1-DONE"
+Mon Sep 28 21:38:10 UTC 2026
+WAVE1-DONE
+[0m
+[0m$ [0mfor d in loop-s0-pre loop-s0-fresh loop-s1-pre loop-s1-fresh; do [ -f "artifacts/claude-dir-h1-heldout-20260928/runs/graph/$d/adapt.json" ] && echo "OK graph/$d/adapt.json" || echo "MISSING graph/$d/adapt.json"; done; for f in logs/graph-loop-*.log; do echo "== $f tail:"; tail -1 "$f" | cut -c1-250; done; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 SRC=/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs; for s in 0 1; do for init in pre fresh; do nohup uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_bench.py adapt --kind graph --arm plain --seed $s --init $init --source-root $SRC --threads 1 > logs/graph-plain-s${s}-${init}.log 2>&1 & echo "STARTED graph-plain-s${s}-${init} PID=$!"; done; done; date -u
+OK graph/loop-s0-pre/adapt.json
+OK graph/loop-s0-fresh/adapt.json
+OK graph/loop-s1-pre/adapt.json
+OK graph/loop-s1-fresh/adapt.json
+== logs/graph-loop-s0-fresh.log tail:
+{"phase": "adapt_done", "kind": "graph", "arm": "loop", "seed": 0, "init": "fresh", "seconds": 7595}
+== logs/graph-loop-s0-pre.log tail:
+{"phase": "adapt_done", "kind": "graph", "arm": "loop", "seed": 0, "init": "pre", "seconds": 7586}
+== logs/graph-loop-s1-fresh.log tail:
+{"phase": "adapt_done", "kind": "graph", "arm": "loop", "seed": 1, "init": "fresh", "seconds": 7612}
+== logs/graph-loop-s1-pre.log tail:
+{"phase": "adapt_done", "kind": "graph", "arm": "loop", "seed": 1, "init": "pre", "seconds": 7586}
+STARTED graph-plain-s0-pre PID=6413
+STARTED graph-plain-s0-fresh PID=6414
+STARTED graph-plain-s1-pre PID=6415
+STARTED graph-plain-s1-fresh PID=6416
+Mon Sep 28 21:38:13 UTC 2026
+[0m
+[0m$ [0mfor i in $(seq 1 70); do pgrep -f "claude_dir_h1_bench.py adapt" >/dev/null || break; sleep 60; done; date -u; pgrep -f "claude_dir_h1_bench.py adapt" >/dev/null && echo "STILL-RUNNING" || echo "WAVE2-DONE"
+Mon Sep 28 22:48:20 UTC 2026
+STILL-RUNNING
+[0m
+[91m[1mError: [0mCannot connect to API: Was there a typo in the url or port?

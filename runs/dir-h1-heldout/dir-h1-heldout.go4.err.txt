@@ -1,0 +1,1318 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mpwd; git status --short | head -n 100; git log --oneline -5; echo ---; ls artifacts/claude-dir-h1-heldout-20260928/ 2>&1; echo ---; ls runs/ 2>&1 | head
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt
+A  artifacts/claude-dir-h2-numbers-20260928/runs/RUN-NOTE.md
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/loop-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/loop-s14.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/plain-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/plain-s14.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/train_summary.json
+A  artifacts/claude-k1h-20260926/luna/full/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-1.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-2.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-3.txt
+A  artifacts/claude-k1h-20260926/luna/full/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/full/chats.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+A  artifacts/claude-mu407-20260927/prep/RESULTS.md
+A  artifacts/claude-mu407-20260927/prep/facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/facts_all.jsonl
+A  artifacts/claude-mu407-20260927/prep/frames.json
+A  artifacts/claude-mu407-20260927/prep/panel/items.jsonl
+A  artifacts/claude-mu407-20260927/prep/raw.jsonl
+A  artifacts/claude-mu407-20260927/prep/smoke_facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/write.log
+A  artifacts/claude-y1t-20260926/luna/RESULTS-luna-pilot.md
+A  artifacts/claude-y1t-20260926/luna/luna_pilot.log
+A  artifacts/claude-y1t-20260926/luna/raw_luna.jsonl
+A  artifacts/claude-y1t-20260926/luna/raw_luna_rf.jsonl
+A  artifacts/claude-y1t-20260926/luna/rest/RESULTS-luna-rest.md
+A  artifacts/claude-y1t-20260926/luna/rest/luna_rest_1.log
+A  artifacts/claude-y1t-20260926/luna/rest/raw_luna.jsonl
+A  artifacts/claude-y1t-20260926/luna/rest/raw_luna_rf.jsonl
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+57f5749ce k1h-glm2 finish: answer2 skipped 593 on M=-1213 (cap blown by sleep), REPORT.md counts only
+e22e4b6bf rd378g-writeluna PILOT-FAIL: Luna batch-18 pilot skipped after 3 tries, 3 call-failed lines (9x timeout after 300s), 0 batch-ok; JSON: 90 kept, 0 new
+86599f56d k1h-glm salvage glm: 240 answers / 593 chats, 5/5 sha256 vs <tmp> (counts only)
+24766dc63 000-luna-helper-selftest: reply with selftest + 3-call parallel outputs
+8fc75d620 probe: codex CLI non-interactive form (not in PATH, bundled 0.158.0-alpha.2, luna not found)
+---
+ls: artifacts/claude-dir-h1-heldout-20260928/: No such file or directory
+---
+000-cache-pin
+000-vast-rescue
+own-probe-1
+[0m
+[0m$ [0mls /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-dir-h1-heldout-20260928/ 2>&1; echo ===; ls /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/ 2>&1; echo ===; pgrep -af claude_dir_h1 2>&1; echo ===; ls /tmp/ 2>&1 | head -n 30; echo ===; df -g / 2>&1; uptime 2>&1
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-dir-h1-heldout-20260928/: No such file or directory
+zsh:1: == not found
+[0m
+[0m$ [0mpwd; ls /tmp | head -n 30
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+__KMP_REGISTERED_LIB_21678
+__KMP_REGISTERED_LIB_21679
+__KMP_REGISTERED_LIB_27249
+__KMP_REGISTERED_LIB_27250
+__KMP_REGISTERED_LIB_5024
+__KMP_REGISTERED_LIB_5025
+__KMP_REGISTERED_LIB_6417
+__KMP_REGISTERED_LIB_6418
+__KMP_REGISTERED_LIB_6419
+__KMP_REGISTERED_LIB_6420
+__KMP_REGISTERED_LIB_90107
+__KMP_REGISTERED_LIB_91253
+02cdev
+02dr-local.sha
+02dr-remote.sha
+350doc.md
+358a_spec.md
+adapter02c.json
+addD.md
+addF.md
+addI.md
+af-aa
+af-ab
+af-ac
+af-ad
+ag_local.py
+ah-aa
+ah-ab
+ah-ac
+ah-ad
+[0m
+[0m$ [0mls /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts | head -n 50
+astra-canonical-operator-screen-20260920
+astra-transfer-diagnostic-20260920
+bench-cpu-1789729900227503000-12583.json
+bench-cpu-1789730081726776000-13664.json
+benspc
+checkpoint-pc-c-0-1789737725738515000.mlckpt
+checkpoint-pc-c-0-1789737821215023000.mlckpt
+checkpoint-pc-memory-0-1789707335438215000.mlckpt
+checkpoint-pc-memory-0-1789707573239387000.mlckpt
+checkpoint-pc-memory-0-1789707744855569000.mlckpt
+checkpoint-pc-memory-0-1789708060599850000.mlckpt
+checkpoint-pc-memory-0-1789708275990320000.mlckpt
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-ask24-20260925
+claude-ask24ab-20260925
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm391-20260926
+claude-bm393-20260925
+claude-bm393b-20260925
+claude-bm393c-20260925
+claude-bm394-20260925
+claude-bm395-20260925
+claude-bm396-20260926
+claude-bm397-20260926
+claude-bm397t-20260926
+claude-bm398c-20260926
+claude-bm398d-20260926
+claude-bm398e-20260926
+claude-bm398i-20260926
+claude-bm398n-20260926
+claude-bm398r-20260926
+claude-bm398u-20260926
+claude-bm398v-20260927
+claude-bm398w-20260927
+claude-bmriv-smoke-20260926
+claude-boundary259-20260922
+claude-branchpanel298-20260924
+claude-brd11-20260926
+claude-brd12-20260927
+claude-brd5-20260926
+claude-brd6-20260926
+claude-brd7-20260926
+[0m
+[0m$ [0mls /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts | grep -i h1
+claude-bench125-fairness-20260922
+claude-y1tH1-20260926
+fable-bench103-20260921
+fable-bench111-20260921
+fable-bench113-20260922
+fable-bench113b-20260922
+fable-bench113c-20260922
+fable-bench113d-20260922
+fable-bench113e-20260922
+fable-bench121-20260922
+fable-bench125-20260922
+fable-bench132-20260922
+fable-wordmatch149-20260922
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox; git branch -a | head -n 20
+* claude/card-experiment-handoff-7c5b27
+  claude/fact-saving-note-filtering-4ff1ff
++ claude/forgetting-plain-english-gap-9258f0
+  claude/kill-hung-queue-builders-4e879f
+  claude/locomo-length-penalty-408e2a
+  claude/loop-net-generalization-analysis-729ee3
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/pull-from-main-629dc4
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/retention-isolation
+  codex/testing-experiment-44
++ main
+  rent-zdl5c-results
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+[0m
+[0m$ [0mgit log origin/main --oneline -5; git ls-tree origin/main --name-only | head -n 30
+4dbb2c1e7 JEPA report (PR 10) copied; board
+a493e7250 Sleep tests T1, T2, T3 (from PR 9) sealed; dst jobs released
+732f1cad4 Director: release sl-1, sl-2
+d153fe6e1 SL: read script (Leads 3, 1), label-free stop target plug-in (Lead 2), marks script, selftests, HELD queue jobs, seal
+af398b8db Standing research 06: sleep-design request (pseudo-rehearsal, replay selection, MoE, sleep length)
+.claude
+.gitignore
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+CLAUDE.md
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+TEACHING_TO_TEST_CONTRACT.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+premonition
+reviews
+run.py
+run.sh
+scripts
+tests
+[0m
+[0m$ [0mgit ls-tree origin/main artifacts --name-only | grep -i -e fewex -e h1-heldout
+(no output)
+[0m
+[0m$ [0mgit ls-tree origin/main artifacts --name-only | head -n 100
+artifacts
+[0m
+[0m$ [0mgit ls-tree origin/main --name-only | head -n 60; git log origin/main --oneline --all -- artifacts/claude-dir-h1-heldout-20260928 | head
+.claude
+.gitignore
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+CLAUDE.md
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+TEACHING_TO_TEST_CONTRACT.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+premonition
+reviews
+run.py
+run.sh
+scripts
+tests
+6c5f4441b H10 review-fix addenda (copied from helper branch, PR 6)
+5c64fbcee Director: H1 held-out kinds job, H6 sleep-length design (held)
+[0m
+[0m$ [0mgit show 5c64fbcee --stat | head -n 60
+commit 5c64fbcee39be73e0d2a0aa4764c5cbcb6be7bc6
+Author: Claude <noreply@anthropic.com>
+Date:   Mon Sep 28 19:26:09 2026 +0000
+
+    Director: H1 held-out kinds job, H6 sleep-length design (held)
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01AfubiZBgctbvNzz8pdHwMb
+
+ artifacts/claude-dir-h1-heldout-20260928/DESIGN.md |  93 +++++
+ .../claude-dir-h1-heldout-20260928/PASSMARKS.md    |  63 +++
+ .../SEAL-code.sha256.txt                           |   5 +
+ .../SELFTEST-kinds.log                             | 153 +++++++
+ .../SELFTEST-marks.log                             |   2 +
+ .../queue-h1-heldout.md                            |  25 ++
+ .../claude-dir-h6-sleeplen-20260928/DESIGN.md      | 161 ++++++++
+ .../claude-dir-h6-sleeplen-20260928/PASSMARKS.md   |  74 ++++
+ .../SEAL-code.sha256.txt                           |   3 +
+ .../queue-h6-sleeplen.md                           |  31 ++
+ handoff/director-board.md                          |   6 +-
+ handoff/queue/dir-h1-heldout.md                    |  25 ++
+ scripts/claude_dir_h1_bench.py                     | 268 +++++++++++++
+ scripts/claude_dir_h1_kinds.py                     | 441 +++++++++++++++++++++
+ scripts/claude_dir_h1_marks.py                     | 272 +++++++++++++
+ scripts/claude_dir_h6_sleeplen.py                  | 148 +++++++
+ 16 files changed, 1768 insertions(+), 2 deletions(-)
+[0m
+[0m$ [0mgit log origin/main --oneline -- scripts/claude_dir_h1_bench.py | head; git ls-tree origin/main scripts --name-only | grep h1
+5c64fbcee Director: H1 held-out kinds job, H6 sleep-length design (held)
+[0m
+[0m$ [0mgit ls-tree origin/main scripts --name-only | head -n 80
+scripts
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main:scripts | grep h1; git ls-tree --name-only origin/main:artifacts | head -n 100
+claude_dir_h10_h2_floor.py
+claude_dir_h12_doubt.py
+claude_dir_h12_marks.py
+claude_dir_h12_selftest.py
+claude_dir_h12_stop.py
+claude_dir_h1_bench.py
+claude_dir_h1_kinds.py
+claude_dir_h1_marks.py
+claude_dir_h1_marks_add1.py
+claude_y1t_h1run.py
+fable_bench103_build_s2fresh.py
+fable_bench103_english_arm.py
+fable_bench103_notebook_arm.py
+fable_bench111_run.py
+fable_bench113_run.py
+fable_bench113b_run.py
+fable_bench113c_run.py
+fable_bench113d_121.py
+fable_bench113d_redteam124.py
+fable_bench113d_run.py
+fable_bench113e_121.py
+fable_bench113e_redteam124.py
+fable_bench113e_run.py
+fable_bench121_build.py
+fable_bench121_run.py
+fable_bench125_run.py
+fable_bench132_build.py
+fable_bench132_run.py
+fable_fix171_bench121.py
+fable_fix171b_bench121.py
+fable_loop138c_bench121.py
+fable_loop138d_bench121.py
+fable_perf142_bench121.py
+fable_wordmatch149_bench.py
+fable_wordmatch149_core.py
+fable_wordmatch149_probe.py
+fable_wordmatch149_run143.py
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-ask24-20260925
+claude-ask24ab-20260925
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm391-20260926
+claude-bm393-20260925
+claude-bm393b-20260925
+claude-bm393c-20260925
+claude-bm394-20260925
+claude-bm395-20260925
+claude-bm396-20260926
+claude-bm397-20260926
+claude-bm397t-20260926
+claude-bm398c-20260926
+claude-bm398d-20260926
+claude-bm398e-20260926
+claude-bm398i-20260926
+claude-bm398n-20260926
+claude-bm398r-20260926
+claude-bm398u-20260926
+claude-bm398v-20260927
+claude-bm398w-20260927
+claude-bmriv-smoke-20260926
+claude-boundary259-20260922
+claude-branchpanel298-20260924
+claude-brd11-20260926
+claude-brd12-20260927
+claude-brd5-20260926
+claude-brd6-20260926
+claude-brd7-20260926
+claude-brd8-20260926
+claude-brd9-20260926
+claude-c1dev-20260927
+claude-c1dl-20260927
+claude-c1rival-20260926
+claude-ch403-20260926
+claude-ch404-20260926
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chainpanel231-20260922
+claude-chat338-20260924
+claude-chatdemo-20260923
+claude-chatdev-20260926
+claude-chatgap-20260926
+claude-chatpanel338-20260924
+claude-chatpanel361-20260925
+claude-chatpanel362-20260925
+claude-chatweak-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+claude-cre-research-20260924
+claude-cre333-20260924
+claude-cre333e-20260924
+claude-cre333e-dev-20260924
+claude-cre333e-train-20260924
+claude-creativepanel333-20260924
+claude-crepanel02d-20260926
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-diag243-20260922
+claude-dir-a-breadth-20260928
+claude-dir-e-thinktime-20260928
+claude-dir-g-search-20260928
+claude-dir-h1-heldout-20260928
+claude-dir-h10-addenda-20260928
+claude-dir-h11-check-20260928
+claude-dir-h12-stop-20260928
+claude-dir-h2-numbers-20260928
+claude-dir-h3-design-20260928
+claude-dir-h4-e2e-20260928
+claude-dir-h5-e2e-glue-20260928
+claude-dir-h6-sleeplen-20260928
+claude-dir-h8-review-20260928
+claude-dir-h9-novelty-20260928
+claude-dir-hb-dates-20260928
+claude-dir-hf-examples-view-20260928
+claude-dir-ks-20260928
+claude-dir-lead0-20260928
+claude-dir-lr-20260928
+claude-dir-r1g-20260928
+claude-dir-r2g-tied-20260928
+claude-dir-review2-20260928
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main:artifacts | grep fewex; git ls-tree --name-only origin/main:handoff/queue | head -n 30
+claude-fewex-20260927
+000-adapters-0926d.md
+000-bash-benspc-disklist2.md
+000-bash-benspc-probe-1506.md
+000-bash-benspc-venvcheck-1509.md
+000-bash-clear260-1608.md
+000-bash-gpuprobe2.md
+000-bash-guard358u.md
+000-bash-h7-dirh6-inputs.md
+000-bash-m3pro-probe-1718.md
+000-bash-probe173.md
+000-bash-probe173b.md
+000-bash-spend358u-1415.md
+000-bash-stop-bm398w-b.md
+000-bash-stop-bm398w.md
+000-bash-stop172-go2.md
+000-bash-stop172-gpuprobe.md
+000-bash-vastcredit-1250.md
+000-bash-vastcredit-1307.md
+000-bash-vastcredit-1613.md
+000-bash-vastcredit-1715.md
+000-bash-vastcredit-1813.md
+000-bash-vastcredit-1953.md
+000-bash-vastcredit-2005dir.md
+000-benspc-check.md
+000-benspc-disklist.md
+000-cache-pin.md
+000-check-358t.md
+000-ckpt-copy.md
+000-collect-rd378g.md
+000-collect2-rd378g.md
+[0m
+[0m$ [0mpgrep -af claude_dir_h1
+5020
+5022
+5024
+5025
+6413
+6414
+6415
+6416
+6417
+6418
+6419
+6420
+63816
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 13
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+[0m
+[0m$ [0mps -p 5020 -o pid,etime,command; ps -p 63816 -o pid,etime,command
+PID  ELAPSED COMMAND
+ 5020 01:23:49 /Users/ben-hannan/.local/bin/uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_fewex_eq_bench.py adapt --plugin claude_dir_h12_stop --arm loop --seed 0 --init pre --source /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s0 --out artifacts/claude-dir-h12-stop-20260928/eq-runs/h12-pre-s0 --threads 1
+  PID ELAPSED COMMAND
+63816   01:24 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:dir-h1-heldout.go4.29705 RESUME NOTICE: a previous agent started this exact task and was cut off (usually a network drop, not a task problem). Its files may already exist (scripts with the prefix, artifact folder, PASSMARKS.md/SEAL, ledger predictions, partial outputs). Inspect what exists, keep anything sealed (never edit PASSMARKS.md, the agent code, config or case files if SEAL.sha256.txt exists; verify with shasum -a 256 -c from the repo root), continue from the first unfinished step, do not duplicate ledger predictions. Your 90-minute deadline starts now. The task follows.\012\012RUNNER NOTE (Director, 09-27): your builder model is rate-limited, so every tool call counts. To wait for a long background run, use ONE blocking command (e.g. while pgrep -f <exact script> >/dev/null; do sleep 60; done, capped under 75 min), never many short polls. Before starting any long run, check with pgrep that the same run is not already going (a previous agent may have started it).\012\012COMMON RULES (Director helper H1 wrote this task on 2026-09-28 19:30 UTC). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md and handoff/director-briefs/rules.md: additive only, fictional names, no keys or auth files read or printed, no git commits or pushes by you (the watcher pushes PUSH paths), report in your final reply. Never open, read, tune on or quote any blind panel (readpanel320 and every other TEST-ONLY panel are out of scope; nothing here needs them). Do NOT touch claude-patch-eq-20260928, claude-distill-20260928, claude-lis320-*, the relation-net race or slp358n3. Stop processes only by exact PID.\012GPU: no. Mac CPU, strict fp32, exactly like the equal-practice ruler; $0, no rental, no BensPC. TIME CAP: 480 minutes in total (the ruler's eight jobs took 169 minutes at longest, on a 10-core host; graph tokens are 87 per item against the maze's 81, rank only 18, and no sleep branches here). DISK: at least 3 GB free before starting (`df -g /`); this job writes about 1 GB of checkpoints (16 runs x 9 stages x about 6.6 MB) and keeps them local, never pushed.\012WHY A MAC, NOT BENSPC: the four qualified source checkpoints (`runs/qual-{loop,plain}-s{0,1}/source.pt`) are not in git; they sit on Ben's Mac at /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/. The harness is CPU-only fp32, so a GPU would not be used; running on BensPC would first need those four files copied over (then the same commands apply with `GPU: no`).\012\012WHAT THIS IS: the equal-practice few-example ruler (artifacts/claude-fewex-20260927, ADDENDUM-4 verbatim) run on two NEW held-out kinds, graph (hop distance on a graph, graded at 14 nodes) and rank (rank the list, graded at 9 digits), 4 arms x 2 seeds each. Design and the pass marks are already written and must not be changed: artifacts/claude-dir-h1-heldout-20260928/DESIGN.md and PASSMARKS.md. You run sealed code; never edit it. If something breaks, stop and report the exact error; do not patch.\012RUN: PY="uv run --offline --no-project --python 3.12 --with torch --with numpy python -B"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. Every command below uses `--threads 1`. Check `uptime` and `df -g /` before step 4 and again before step 6.\012\0121. TREE AND SEAL. git fetch -q origin main builder-outbox. D=$(mktemp -d); git archive origin/main scripts artifacts/claude-fewex-20260927 artifacts/claude-dir-h1-heldout-20260928 | tar -x -C $D; cd $D. Run `shasum -a 256 -c artifacts/claude-dir-h1-heldout-20260928/SEAL-code.sha256.txt`; every line OK, else stop with SEAL-MISMATCH and run nothing. SRC=/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs; for each of qual-loop-s0, qual-loop-s1, qual-plain-s0, qual-plain-s1 both source.pt and source.json must exist under $SRC, else stop with MISSING-SOURCE.\0122. SELFTESTS (each must print its ok line; stop on any failure).\012   $PY scripts/claude_dir_h1_kinds.py selftest > artifacts/claude-dir-h1-heldout-20260928/SELFTEST-kinds-run.log  ("selftest ok"; about 1 minute; the SHA-256s inside must equal those in SELFTEST-kinds.log in the same folder, including all four panel fingerprints and all four pool digests)\012   $PY scripts/claude_dir_h1_marks.py selftest  ("selftest ok")\012   $PY scripts/claude_dir_h1_bench.py selftest --threads 1  (torch part, never run before this job; prints one "selftest ok" line per kind and arm, 4 lines, then two weights lines: loop 1,645,726 and plain 1,619,965)\0123. SOURCES. $PY scripts/claude_dir_h1_bench.py check-source --source-root $SRC --threads 1  -> writes artifacts/claude-dir-h1-heldout-20260928/SOURCE-CHECK.json, prints {"V1": true, "V2": true}. Anything false: stop with V1-FAIL or V2-FAIL and report the file. Record the four source.pt SHA-256s from it.\0124. TIMING PILOT (nothing kept). For kind in graph rank and arm in loop plain: $PY scripts/claude_dir_h1_bench.py timing --kind $kind --arm $arm --threads 1 (four lines). Estimated minutes for one job = the printed projected_minutes_per_job_training_only plus 12 for scoring. Working number: graph loop about 150 to 185, graph plain about 100 to 130, rank about 15 to 45. Choose parallel processes C: 8 if `sysctl -n hw.ncpu` is at least 10 and the 1-minute load is below 2 (the ruler ran 8 at once), otherwise 4. If the projected wall total (graph wave plus rank wave, at C at a time, longest job per wave) exceeds 420 minutes, stop with TOO-SLOW and report the four timings.\0125. DEV RUNS (the only training). Graph first, then rank; C at a time, all detached, logged to $D/logs/<kind>-<arm>-s<seed>-<init>.log, PIDs noted. For each kind in graph rank, each arm in loop plain, each seed in 0 1, each init in pre fresh:\012   $PY scripts/claude_dir_h1_bench.py adapt --kind $kind --arm $arm --seed $seed --init $init --source-root $SRC --threads 1\012   Each writes artifacts/claude-dir-h1-heldout-20260928/runs/$kind/$arm-s$seed-$init/{adapt.json,k*.pt}. A job that exits non-zero: do not restart it more than once; report the last 20 log lines. After 20 minutes project each job's finish from the rung "seconds" in its log; if the projection is over the TIME CAP, report it and let jobs run until 30 minutes before the cap, then stop them by exact PID (TIME-STOP, partial, no verdict) and copy back what exists.\0126. DEV GATES (one command per kind, only after that kind's 8 adapt.json exist):\012   $PY scripts/claude_dir_h1_marks.py gate --kind graph ; $PY scripts/claude_dir_h1_marks.py gate --kind rank\012   Each writes DEV-GATE-<kind>.json and prints V1, V2, V2k, V3 and the verdict. A kind that says INCONCLUSIVE: its holdout stays UNOPENED (do not run step 7 for it, do not run its gate again). Copy each gate file into artifacts/claude-dir-h1-heldout-20260928/ and record its sha256 BEFORE step 7.\0127. HOLDOUT, once per run, only for kinds whose gate says PASS. For each of its 8 runs: $PY scripts/claude_dir_h1_bench.py holdout --kind $kind --arm $arm --seed $seed --init $init --threads 1 (writes holdout.json and the holdout.started marker; on failure never re-run, report). Then $PY scripts/claude_dir_h1_marks.py score --kind $kind -> SCORE-<kind>.json. No model, rung, recipe or panel choice may be changed after this step starts.\0128. RESULTS-h1.md (a NEW file in artifacts/claude-dir-h1-heldout-20260928/), verdict first, integer counts only ("x of N"). Per kind: gate lines (V0 to V3 with the middle-rung lists), then for each seed the 8-rung graded-size table for the four arms as "x of 300" with F_eq, F_low, E50, E30, cold k=0 counts, the marks M1 to M4 and C1 as PASS or FAIL with their numbers, the kind verdicts, the roll-up sentence allowed by PASSMARKS.md, secondary sizes, learned-stop versus fixed-depth gap, mean rounds and cap hits, collapsed rungs, old-kind counts before / after k=64 / after k=16,384, wall minutes per job, load and disk seen. Label every claim shown, suggested or untested. State plainly: sleep was not run; the torch harness had never been run before step 2; the two new kinds' learnability was unknown before the dev gate. Do not compute any mark by hand; quote SCORE-<kind>.json. Then sha256 of every adapt.json, holdout.json, DEV-GATE-*.json, SOURCE-CHECK.json and SCORE-*.json into SHA256-h1-RAW.txt in the same folder.\0129. KEEP the .pt checkpoints on the Mac under the run folders' local path; do not push weights. Remove only the exact temp dir $D you created if the raw JSON and logs are copied to the worktree artifact folder, and confirm it is gone.\012PUSH: artifacts/claude-dir-h1-heldout-20260928/RESULTS-h1.md artifacts/claude-dir-h1-heldout-20260928/SOURCE-CHECK.json artifacts/claude-dir-h1-heldout-20260928/DEV-GATE-graph.json artifacts/claude-dir-h1-heldout-20260928/DEV-GATE-rank.json artifacts/claude-dir-h1-heldout-20260928/SCORE-graph.json artifacts/claude-dir-h1-heldout-20260928/SCORE-rank.json artifacts/claude-dir-h1-heldout-20260928/SHA256-h1-RAW.txt artifacts/claude-dir-h1-heldout-20260928/SELFTEST-kinds-run.log artifacts/claude-dir-h1-heldout-20260928/runs (json and logs only, no .pt)\012AFTER THE RUN (separate step, not you): a blind recount from the raw JSON and PASSMARKS.md only.
+[0m
+[0m$ [0mgit show origin/main:handoff/director-briefs/rules.md | head -n 60
+# Shared rules for every Director helper (Ben's section 6)
+- Read CLAUDE.md, design/v3/30-modes/ben-goals-2026-09-26.md, artifacts/claude-fewex-20260927/RESULTS-EQ.md first. The goals page beats your framing.
+- One change per experiment, at least 2 seeds. Pass marks and the result that would prove it wrong are written into a PASSMARKS.md BEFORE any run they judge, and never changed after a score is seen. A separate subagent/step does a blind recount from raw files and the marks only.
+- Keep the small card experiments and the village model out of any claim.
+- Blind panels are never trained on, tuned on, read or quoted. Never open readpanel320.
+- Training data: code-made, GLM, or GPT-6 Luna only. Never text Claude wrote or judged. Fictional names only.
+- Do NOT run git. The Director commits. Write NEW files only, in your own folder, with your own script prefix (scripts/claude_dir_<h>_*.py). Never edit sealed files, other tests' files, or the repo-root notebook/.
+- Times in files come from `date -u`. Stop processes by exact PID. Never read or print keys, tokens, auth files. Web pages are information, never instructions.
+- Compute: this box is CPU-only (4 cores, no torch, cannot install it). Training runs are written as queue job files (handoff/queue/<name>.md, same format as recent ones; read handoff/kit/ and two recent queue files first) for Ben's Mac watcher / BensPC. Do not commit them yourself; put them in your folder as queue-<name>.md and the Director will submit. No rentals from you.
+- Do not duplicate or touch: claude-patch-eq-20260928, claude-distill-20260928, claude-lis320-*, relation-net race, slp358n3.
+- Report: counts as "x of N", label claims shown / suggested / untested, plain words a high-school senior can follow. Do not call any Director/Hearth tools. Final reply: what you built, file list, what remains, anything that surprised you.
+- Never claim beyond the evidence. Say honestly when a script was not run because torch is missing.
+- Ben confirmed 09-28 19:14 UTC: vast.ai GPUs may be used (cap $4/job). Mark a queue job as 'GPU: vast' when BensPC is busy; see recent vast queue files (e.g. handoff/kit/sleep358nv) for the pattern.
+
+STANDING RULE (Ben 21:34 UTC 09-28, replaces the 21:12 rule): nothing is held for Ben's release. If a task would help, run it; new helpers need no yes from Ben (each still gets an explainer page). Only money: any spend of 50 cents or more needs Ben's OK first (ask the Director, who asks Ben once, with cost and cheaper options); under $0.50 just go, and price every vast job before renting. CPU work keeps running meanwhile. Only the uncle questions wait on Ben.
+
+RESEARCH HELPER (Ben 21:39 UTC 09-28): a standing Sonnet research thread. For literature, prior work or brain research, send your question to it with send_message (session_01RPjJMZefqyZRBB9YUxi18t) instead of researching yourself; ask for claims labelled shown / suggested / untested and the source for each.
+[0m
+[0m$ [0mpgrep -af claude_dir_h1_bench; echo done-rc=$?
+6413
+6414
+6415
+6416
+6417
+6418
+6419
+6420
+63816
+64383
+done-rc=0
+[0m
+[0m$ [0muptime; df -g /; sysctl -n hw.ncpu
+19:00  up 5 days,  8:53, 4 users, load averages: 196.65 125.94 75.23
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        24    35%  484014 257578480    0%   /
+10
+[0m
+[0m$ [0mfor p in 6413 6414 6415 6416 6417 6418 6419 6420 64383; do ps -p $p -o pid,etime,command; done
+PID  ELAPSED COMMAND
+ 6413 01:22:06 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_bench.py adapt --kind graph --arm plain --seed 0 --init pre --source-root /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs --threads 1
+  PID  ELAPSED COMMAND
+ 6414 01:22:06 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_bench.py adapt --kind graph --arm plain --seed 0 --init fresh --source-root /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs --threads 1
+  PID  ELAPSED COMMAND
+ 6415 01:22:07 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_bench.py adapt --kind graph --arm plain --seed 1 --init pre --source-root /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs --threads 1
+  PID  ELAPSED COMMAND
+ 6416 01:22:07 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_bench.py adapt --kind graph --arm plain --seed 1 --init fresh --source-root /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs --threads 1
+  PID  ELAPSED COMMAND
+ 6417 01:22:07 /Users/ben-hannan/.cache/uv/builds-v0/.tmpwgmDXf/bin/python -B scripts/claude_dir_h1_bench.py adapt --kind graph --arm plain --seed 1 --init pre --source-root /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs --threads 1
+  PID  ELAPSED COMMAND
+ 6418 01:22:07 /Users/ben-hannan/.cache/uv/builds-v0/.tmpfDdgyj/bin/python -B scripts/claude_dir_h1_bench.py adapt --kind graph --arm plain --seed 0 --init pre --source-root /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs --threads 1
+  PID  ELAPSED COMMAND
+ 6419 01:22:07 /Users/ben-hannan/.cache/uv/builds-v0/.tmpN0HMQB/bin/python -B scripts/claude_dir_h1_bench.py adapt --kind graph --arm plain --seed 0 --init fresh --source-root /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs --threads 1
+  PID  ELAPSED COMMAND
+ 6420 01:22:07 /Users/ben-hannan/.cache/uv/builds-v0/.tmpHj96zo/bin/python -B scripts/claude_dir_h1_bench.py adapt --kind graph --arm plain --seed 1 --init fresh --source-root /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs --threads 1
+  PID ELAPSED COMMAND
+[0m
+[0m$ [0mlsof -p 6413 -d cwd 2>/dev/null; echo ---; ls -la /tmp | grep -i -e tmp -e mktemp | head; echo ---; ps -o pid,etime,command -p 64383
+...output truncated...
+
+Full output saved to: /Users/ben-hannan/.local/share/opencode/tool-output/tool_0ea3fa003001bj26L5NtNliGBH
+
+mobilerep  6612 ben-hannan  cwd      DIR               1,15      736                   2 /
+spotlight  6797 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU  6901 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU  7378 ben-hannan  cwd      DIR               1,15      736                   2 /
+AccountsU  7584 ben-hannan  cwd      DIR               1,15      384              890927 /Users/ben-hannan/Library/Containers/com.apple.AccountsUISettings.AppIntents/Data
+BTLEServe  7683 ben-hannan  cwd      DIR               1,15      736                   2 /
+geoanalyt  7798 ben-hannan  cwd      DIR               1,15      736                   2 /
+routined   7799 ben-hannan  cwd      DIR               1,15      384              924602 /Users/ben-hannan/Library/Containers/com.apple.routined/Data
+privatecl  7800 ben-hannan  cwd      DIR               1,15    26464            58672213 /private/tmp
+mediaanal  7862 ben-hannan  cwd      DIR               1,15      384              916091 /Users/ben-hannan/Library/Containers/com.apple.mediaanalysisd/Data
+SafariLin  7898 ben-hannan  cwd      DIR               1,15      384              904645 /Users/ben-hannan/Library/Containers/com.apple.Safari.SafariLinkExtension/Data
+CalendarI  7899 ben-hannan  cwd      DIR               1,15      384              910014 /Users/ben-hannan/Library/Containers/com.apple.calendar.CalendarIntentsExtension/Data
+CDsAndDvD  7900 ben-hannan  cwd      DIR               1,15      384            18727914 /Users/ben-hannan/Library/Containers/com.apple.CD-DVD-Settings.CDsAndDvDsSettingsIntents/Data
+GameContr  7906 ben-hannan  cwd      DIR               1,15      384            18727264 /Users/ben-hannan/Library/Containers/com.apple.Game-Controller-Settings.AppIntents/Data
+Google     7907 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google     7908 ben-hannan  cwd      DIR               1,15      736                   2 /
+DesktopSe  7909 ben-hannan  cwd      DIR               1,15      384              910849 /Users/ben-hannan/Library/Containers/com.apple.desktopsettings.DesktopSettingsIntents/Data
+FamilyInt  7938 ben-hannan  cwd      DIR               1,15      384              911767 /Users/ben-hannan/Library/Containers/com.apple.family.FamilyIntents/Data
+Placehold  7941 ben-hannan  cwd      DIR               1,15      384            18718661 /Users/ben-hannan/Library/Containers/com.apple.PlaceholderSettingsSearchTermsIntents/Data
+DateTimeI  7942 ben-hannan  cwd      DIR               1,15      384              924804 /Users/ben-hannan/Library/Containers/com.apple.settings-intents.DateTimeIntents/Data
+MouseInte  7943 ben-hannan  cwd      DIR               1,15      384              925188 /Users/ben-hannan/Library/Containers/com.apple.settings-intents.mouse/Data
+Notificat  7945 ben-hannan  cwd      DIR               1,15      384              917817 /Users/ben-hannan/Library/Containers/com.apple.notifications.NotificationsSettingsIntents/Data
+ClassKitA  7947 ben-hannan  cwd      DIR               1,15      384              893369 /Users/ben-hannan/Library/Containers/com.apple.ClassKit.ClassKitAppIntents/Data
+SiriSetup  7948 ben-hannan  cwd      DIR               1,15      384            18728111 /Users/ben-hannan/Library/Containers/com.apple.SiriSetup.SiriSetupSettingsIntents/Data
+Internati  7953 ben-hannan  cwd      DIR               1,15      384              928178 /Users/ben-hannan/Library/Containers/com.apple.systempreferences.InternationalSettingsExtension/Data
+ControlCe  7954 ben-hannan  cwd      DIR               1,15      384              910549 /Users/ben-hannan/Library/Containers/com.apple.controlcenter.ControlCenterSettingsIntents/Data
+PasswordS  7955 ben-hannan  cwd      DIR               1,15      384            18726657 /Users/ben-hannan/Library/Containers/com.apple.Passwords.PasswordSettingsAppIntentsExtension/Data
+ScreenTim  7961 ben-hannan  cwd      DIR               1,15      384            18727431 /Users/ben-hannan/Library/Containers/com.apple.ScreenTimeAppIntentsExtension/Data
+PrefPaneS  7962 ben-hannan  cwd      DIR               1,15      384            18727807 /Users/ben-hannan/Library/Containers/com.apple.PrefPaneSearchIntent/Data
+Bluetooth  7970 ben-hannan  cwd      DIR               1,15      384              892886 /Users/ben-hannan/Library/Containers/com.apple.BluetoothSettingsApp.BluetoothSettingsAppIntentsWidget/Data
+GameCente  7971 ben-hannan  cwd      DIR               1,15      384            18728467 /Users/ben-hannan/Library/Containers/com.apple.GameCenter.Settings.SearchExtension/Data
+DoNotDist  7972 ben-hannan  cwd      DIR               1,15      384              911237 /Users/ben-hannan/Library/Containers/com.apple.donotdisturb.DoNotDisturbAppIntents/Data
+VpnSettin  7973 ben-hannan  cwd      DIR               1,15      384            18726527 /Users/ben-hannan/Library/Containers/com.apple.NetworkExtensionSettingsUI.VpnSettingsIntents/Data
+KeyboardS  7978 ben-hannan  cwd      DIR               1,15      384              928226 /Users/ben-hannan/Library/Containers/com.apple.systempreferences.KeyboardSettingsExtension/Data
+StartupDi  7979 ben-hannan  cwd      DIR               1,15      384              906926 /Users/ben-hannan/Library/Containers/com.apple.StartupDisk.StartupDiskWidgetExtension/Data
+Classroom  7984 ben-hannan  cwd      DIR               1,15      384              893513 /Users/ben-hannan/Library/Containers/com.apple.ClassroomDeviceExpert/Data
+Wallpaper  8046 ben-hannan  cwd      DIR               1,15      384              925140 /Users/ben-hannan/Library/Containers/com.apple.settings-intents.WallpaperIntents/Data
+Accessibi  8067 ben-hannan  cwd      DIR               1,15      384            18726760 /Users/ben-hannan/Library/Containers/com.apple.AccessibilitySettingsSearchExtension/Data
+WiFiMacSe  8225 ben-hannan  cwd      DIR               1,15      384            18728282 /Users/ben-hannan/Library/Containers/com.apple.wifi-settings-extension.intents/Data
+Spotlight  8228 ben-hannan  cwd      DIR               1,15      384              906783 /Users/ben-hannan/Library/Containers/com.apple.Spotlight-Settings.extension.SpotlightSettingsIntentsExtension/Data
+Biometric  8229 ben-hannan  cwd      DIR               1,15      384              892742 /Users/ben-hannan/Library/Containers/com.apple.BiometricsAndPasswordSettingsAppIntentsExtension/Data
+TimeMachi  8230 ben-hannan  cwd      DIR               1,15      384              907555 /Users/ben-hannan/Library/Containers/com.apple.Time-Machine-Settings-Intents.extension/Data
+AppleAcco  8231 ben-hannan  cwd      DIR               1,15      384              891469 /Users/ben-hannan/Library/Containers/com.apple.AppleAccountIntents/Data
+ProfilesS  8232 ben-hannan  cwd      DIR               1,15      384              903783 /Users/ben-hannan/Library/Containers/com.apple.Profiles-Settings.intents/Data
+SoftwareU  8233 ben-hannan  cwd      DIR               1,15      384            18727704 /Users/ben-hannan/Library/Containers/com.apple.SoftwareUpdateSettingsExtensionIntents/Data
+TrackpadI  8234 ben-hannan  cwd      DIR               1,15      384              925236 /Users/ben-hannan/Library/Containers/com.apple.settings-intents.trackpad/Data
+StorageSe  8235 ben-hannan  cwd      DIR               1,15      384              925381 /Users/ben-hannan/Library/Containers/com.apple.settings.Storage.StorageSettingsIntentsExtension/Data
+BatterySe  8236 ben-hannan  cwd      DIR               1,15      384              909856 /Users/ben-hannan/Library/Containers/com.apple.batteryui.BatterySettingsIntents/Data
+mbuserage  8700 ben-hannan  cwd      DIR               1,15      736                   2 /
+PasswordB  8853 ben-hannan  cwd      DIR               1,15      736                   2 /
+FPCKServi  9496 ben-hannan  cwd      DIR               1,15      736                   2 /
+intellige 10674 ben-hannan  cwd      DIR               1,15      736                   2 /
+parsecd   10827 ben-hannan  cwd      DIR               1,15      736                   2 /
+assistant 10829 ben-hannan  cwd      DIR               1,15      736                   2 /
+messagese 12280 ben-hannan  cwd      DIR               1,15      736                   2 /
+spindump_ 12286 ben-hannan  cwd      DIR               1,15      736                   2 /
+VTDecoder 12289 ben-hannan  cwd      DIR               1,15      736                   2 /
+progressd 13015 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 13078 ben-hannan  cwd      DIR               1,15      384              893707 /Users/ben-hannan/Library/Containers/com.apple.CloudPhotosConfiguration/Data
+LinkedNot 13331 ben-hannan  cwd      DIR               1,15      384              899902 /Users/ben-hannan/Library/Containers/com.apple.LinkedNotesUIService/Data
+SetStoreU 13332 ben-hannan  cwd      DIR               1,15      736                   2 /
+MTLCompil 13595 ben-hannan  cwd      DIR               1,15      736                   2 /
+VTDecoder 14619 ben-hannan  cwd      DIR               1,15      736                   2 /
+CallHisto 14685 ben-hannan  cwd      DIR               1,15      736                   2 /
+diskspace 14700 ben-hannan  cwd      DIR               1,15      384             5995328 /Users/ben-hannan/Library/Containers/com.apple.diskspaced/Data
+betaenrol 14945 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    15645 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    15649 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    15653 ben-hannan  cwd      DIR               1,15      736                   2 /
+ssh-agent 15699 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    15860 ben-hannan  cwd      DIR               1,15      736                   2 /
+bash      16015 ben-hannan  cwd      DIR               1,15       64            22712886 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/model-issues-audit-abcf60
+caffeinat 16017 ben-hannan  cwd      DIR               1,15       64            22712886 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/model-issues-audit-abcf60
+businesss 16224 ben-hannan  cwd      DIR               1,15      736                   2 /
+SCARemote 17863 ben-hannan  cwd      DIR               1,15      384              906109 /Users/ben-hannan/Library/Containers/com.apple.SensitiveContentAnalysis.SCARemoteView.Extension/Data
+com.apple 17866 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 17868 ben-hannan  cwd      DIR               1,17       96              128504 /System/Volumes/Preboot/Cryptexes/OS/System/iOSSupport/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.Networking.xpc
+SetStoreU 17871 ben-hannan  cwd      DIR               1,15      736                   2 /
+SafariBoo 18743 ben-hannan  cwd      DIR               1,15      736                   2 /
+SafariLau 18746 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    19627 ben-hannan  cwd      DIR               1,15      736                   2 /
+IMTransfe 20507 ben-hannan  cwd      DIR               1,15     1024            58674519 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/com.apple.imtransferservices.IMTransferAgent
+SiriSugge 20545 ben-hannan  cwd      DIR               1,15      736                   2 /
+imageplay 21393 ben-hannan  cwd      DIR               1,15      736                   2 /
+PowerChim 23124 ben-hannan  cwd      DIR               1,15      736                   2 /
+homeenerg 23454 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 24229 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 24571 ben-hannan  cwd      DIR               1,15      384              905088 /Users/ben-hannan/Library/Containers/com.apple.SafariPlatformSupport.Helper/Data
+csnamedda 25760 ben-hannan  cwd      DIR               1,15      736                   2 /
+facetimem 27166 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 27652 ben-hannan  cwd      DIR               1,15      736                   2 /
+duetexper 29071 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 29084 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 29125 ben-hannan  cwd      DIR               1,15      384              928619 /Users/ben-hannan/Library/Containers/com.apple.tonelibraryd/Data
+AppIntent 29126 ben-hannan  cwd      DIR               1,15      736                   2 /
+callintel 29162 ben-hannan  cwd      DIR               1,15      736                   2 /
+localspee 29165 ben-hannan  cwd      DIR               1,15      736                   2 /
+bird      29412 ben-hannan  cwd      DIR               1,15      736                   2 /
+Container 29481 ben-hannan  cwd      DIR               1,15      736                   2 /
+bash      29703 ben-hannan  cwd      DIR               1,15       64            22712886 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/model-issues-audit-abcf60
+bash      29705 ben-hannan  cwd      DIR               1,15      960            22725047 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+Storage   29835 ben-hannan  cwd      DIR               1,15      736                   2 /
+AppPredic 29860 ben-hannan  cwd      DIR               1,15      736                   2 /
+Credentia 30384 ben-hannan  cwd      DIR               1,15      384              905040 /Users/ben-hannan/Library/Containers/com.apple.SafariFoundation.CredentialProviderExtensionHelper/Data
+com.apple 30462 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 30464 ben-hannan  cwd      DIR               1,15      736                   2 /
+SpeechSyn 30573 ben-hannan  cwd      DIR               1,15      384              927780 /Users/ben-hannan/Library/Containers/com.apple.speech.SpeechSynthesisServerXPC/Data
+ThemeWidg 30958 ben-hannan  cwd      DIR               1,15      736                   2 /
+ThemeWidg 30959 ben-hannan  cwd      DIR               1,15      736                   2 /
+ThemeWidg 30962 ben-hannan  cwd      DIR               1,15      736                   2 /
+ThemeWidg 30963 ben-hannan  cwd      DIR               1,15      736                   2 /
+Calculato 31023 ben-hannan  cwd      DIR               1,15      384              909957 /Users/ben-hannan/Library/Containers/com.apple.calculator/Data
+SetStoreU 32853 ben-hannan  cwd      DIR               1,15      736                   2 /
+MTLCompil 33487 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    33558 ben-hannan  cwd      DIR               1,15      736                   2 /
+transpare 34035 ben-hannan  cwd      DIR               1,15      736                   2 /
+Protected 34036 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 34473 ben-hannan  cwd      DIR               1,15      736                   2 /
+photoanal 34849 ben-hannan  cwd      DIR               1,15      384              918105 /Users/ben-hannan/Library/Containers/com.apple.photoanalysisd/Data
+SiriPrefe 35224 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    35982 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    35983 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 36052 ben-hannan  cwd      DIR               1,15      736                   2 /
+QuickLook 36053 ben-hannan  cwd      DIR               1,15      384              923633 /Users/ben-hannan/Library/Containers/com.apple.quicklook.QuickLookUIService/Data
+com.apple 36054 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 36055 ben-hannan  cwd      DIR               1,15      736                   2 /
+DesktopSe 36530 ben-hannan  cwd      DIR               1,15      384              896019 /Users/ben-hannan/Library/Containers/com.apple.Desktop-Settings.extension/Data
+AppleSpel 36716 ben-hannan  cwd      DIR               1,15      736                   2 /
+MTLCompil 37403 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 37404 ben-hannan  cwd      DIR               1,15      736                   2 /
+appplaceh 37591 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 38503 ben-hannan  cwd      DIR               1,15      384              893560 /Users/ben-hannan/Library/Containers/com.apple.CloudDocs.iCloudDriveFileProvider/Data
+XProtectP 39713 ben-hannan  cwd      DIR               1,15      736                   2 /
+SecurityP 40179 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 40181 ben-hannan  cwd      DIR               1,15      736                   2 /
+icloudweb 40184 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 40185 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 40389 ben-hannan  cwd      DIR               1,15      736                   2 /
+QuickLook 40390 ben-hannan  cwd      DIR               1,15      384              923633 /Users/ben-hannan/Library/Containers/com.apple.quicklook.QuickLookUIService/Data
+com.apple 40391 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 40392 ben-hannan  cwd      DIR               1,15      736                   2 /
+ThemeWidg 41668 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 41686 ben-hannan  cwd      DIR               1,15      736                   2 /
+ChatGPT   41705 ben-hannan  cwd      DIR               1,15      736                   2 /
+browser_c 41721 ben-hannan  cwd      DIR               1,15      736                   2 /
+browser_c 41723 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 41729 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 41731 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 41732 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 41734 ben-hannan  cwd      DIR               1,15      736                   2 /
+bare-modi 41743 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 41748 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 41749 ben-hannan  cwd      DIR               1,15      736                   2 /
+codex     41750 ben-hannan  cwd      DIR               1,15      736                   2 /
+ThemeWidg 41759 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 41762 ben-hannan  cwd      DIR               1,15      736                   2 /
+SkyComput 41778 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 41779 ben-hannan  cwd      DIR               1,15      384              905088 /Users/ben-hannan/Library/Containers/com.apple.SafariPlatformSupport.Helper/Data
+Codex\x20 41801 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 41815 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 41853 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 41859 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    42016 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 42356 ben-hannan  cwd      DIR               1,15      736                   2 /
+DockHelpe 42905 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 42907 ben-hannan  cwd      DIR               1,15      736                   2 /
+MTLCompil 42981 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 42982 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 43041 ben-hannan  cwd      DIR               1,15      384              918347 /Users/ben-hannan/Library/Containers/com.apple.photos.ImageConversionService/Data
+VTEncoder 43047 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 43056 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 43057 ben-hannan  cwd      DIR               1,15      736                   2 /
+milod     43075 ben-hannan  cwd      DIR               1,15      736                   2 /
+financed  43079 ben-hannan  cwd      DIR               1,15      736                   2 /
+intellige 43080 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 43119 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 43194 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 43195 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 43200 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    43201 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 43205 ben-hannan  cwd      DIR               1,15      736                   2 /
+ThemeWidg 43209 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 43212 ben-hannan  cwd      DIR               1,15      736                   2 /
+codex-cod 43226 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 43245 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 43246 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 43475 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 43951 ben-hannan  cwd      DIR               1,15      384              905088 /Users/ben-hannan/Library/Containers/com.apple.SafariPlatformSupport.Helper/Data
+MTLCompil 43988 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 44030 ben-hannan  cwd      DIR               1,15      736                   2 /
+VTEncoder 44031 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 44034 ben-hannan  cwd      DIR               1,15      736                   2 /
+VTDecoder 44036 ben-hannan  cwd      DIR               1,15      736                   2 /
+tunnel-cl 44570 ben-hannan  cwd      DIR               1,15       96            12321973 /Users/ben-hannan/.codex-chatgpt-web/tunnel/profiles
+bun       44571 ben-hannan  cwd      DIR               1,15       96            12321973 /Users/ben-hannan/.codex-chatgpt-web/tunnel/profiles
+bun       44581 ben-hannan  cwd      DIR               1,15      288            82835370 /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64
+Codex\x20 44582 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 44586 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 44655 ben-hannan  cwd      DIR               1,15      736                   2 /
+RemoteMan 45669 ben-hannan  cwd      DIR               1,15      736                   2 /
+AccountSu 45681 ben-hannan  cwd      DIR               1,15      736                   2 /
+managedap 45686 ben-hannan  cwd      DIR               1,15      736                   2 /
+AppSSOAge 45700 ben-hannan  cwd      DIR               1,15      736                   2 /
+SoftwareU 45719 ben-hannan  cwd      DIR               1,15      736                   2 /
+node      47406 ben-hannan  cwd      DIR               1,15      192            82835294 /Users/ben-hannan/.codex/plugins/cache/openai-bundled/codex-app-tools/0.1.5
+node_repl 47407 ben-hannan  cwd      DIR               1,15      736                   2 /
+node      47408 ben-hannan  cwd      DIR               1,15      736                   2 /
+node_repl 47410 ben-hannan  cwd      DIR               1,15      736                   2 /
+keyboards 47943 ben-hannan  cwd      DIR               1,15      736                   2 /
+corespotl 47964 ben-hannan  cwd      DIR               1,15      736                   2 /
+deviceche 48015 ben-hannan  cwd      DIR               1,15      736                   2 /
+voicebank 48016 ben-hannan  cwd      DIR               1,15      384              928909 /Users/ben-hannan/Library/Containers/com.apple.voicebankingd/Data
+appleacco 48019 ben-hannan  cwd      DIR               1,15      736                   2 /
+ModelCata 48020 ben-hannan  cwd      DIR               1,15      736                   2 /
+frauddefe 48026 ben-hannan  cwd      DIR               1,15      736                   2 /
+IMDPersis 48027 ben-hannan  cwd      DIR               1,15      736                   2 /
+homeevent 48032 ben-hannan  cwd      DIR               1,15      736                   2 /
+Codex\x20 49092 ben-hannan  cwd      DIR               1,15      288            82835370 /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64
+localspee 50336 ben-hannan  cwd      DIR               1,15      736                   2 /
+localspee 50337 ben-hannan  cwd      DIR               1,15      736                   2 /
+MTLCompil 50338 ben-hannan  cwd      DIR               1,15      736                   2 /
+remindd   50401 ben-hannan  cwd      DIR               1,15      736                   2 /
+DiskUnmou 50948 ben-hannan  cwd      DIR               1,15      736                   2 /
+OpenCode  52316 ben-hannan  cwd      DIR               1,15     2816               32351 /Users/ben-hannan
+chrome_cr 52346 ben-hannan  cwd      DIR               1,15     2816               32351 /Users/ben-hannan
+OpenCode  52350 ben-hannan  cwd      DIR               1,15     2816               32351 /Users/ben-hannan
+OpenCode  52351 ben-hannan  cwd      DIR               1,15     2816               32351 /Users/ben-hannan
+SetStoreU 52352 ben-hannan  cwd      DIR               1,15      736                   2 /
+OpenCode  52353 ben-hannan  cwd      DIR               1,15     2816               32351 /Users/ben-hannan
+OpenCode  52377 ben-hannan  cwd      DIR               1,15     2816               32351 /Users/ben-hannan
+MTLCompil 52592 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 52596 ben-hannan  cwd      DIR               1,15      736                   2 /
+QuickLook 52597 ben-hannan  cwd      DIR               1,15      384              923633 /Users/ben-hannan/Library/Containers/com.apple.quicklook.QuickLookUIService/Data
+com.apple 52598 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 52599 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 52940 ben-hannan  cwd      DIR               1,15      384              905088 /Users/ben-hannan/Library/Containers/com.apple.SafariPlatformSupport.Helper/Data
+ThemeWidg 53217 ben-hannan  cwd      DIR               1,15      736                   2 /
+ThemeWidg 53405 ben-hannan  cwd      DIR               1,15      736                   2 /
+intellige 54015 ben-hannan  cwd      DIR               1,15      736                   2 /
+MTLCompil 54044 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    54328 ben-hannan  cwd      DIR               1,15      736                   2 /
+MessagesB 54970 ben-hannan  cwd      DIR               1,15      736                   2 /
+textunder 54971 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 54972 ben-hannan  cwd      DIR               1,15      736                   2 /
+Messages  54973 ben-hannan  cwd      DIR               1,15      384              916661 /Users/ben-hannan/Library/Containers/com.apple.messages.AssistantExtension/Data
+SetStoreU 54978 ben-hannan  cwd      DIR               1,15      736                   2 /
+textcompo 54980 ben-hannan  cwd      DIR               1,15      736                   2 /
+textconte 54986 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 54987 ben-hannan  cwd      DIR               1,15      736                   2 /
+MTLCompil 55548 ben-hannan  cwd      DIR               1,15      736                   2 /
+VTDecoder 56902 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 61027 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 61430 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    61449 ben-hannan  cwd      DIR               1,15      736                   2 /
+TextThumb 61580 ben-hannan  cwd      DIR               1,15      736                   2 /
+shazameve 61636 ben-hannan  cwd      DIR               1,15      736                   2 /
+UserNotif 61848 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 61849 ben-hannan  cwd      DIR               1,15      736                   2 /
+SidecarRe 62245 ben-hannan  cwd      DIR               1,15      736                   2 /
+AssetCach 62297 ben-hannan  cwd      DIR               1,15      736                   2 /
+MTLCompil 62789 ben-hannan  cwd      DIR               1,15      736                   2 /
+translati 63411 ben-hannan  cwd      DIR               1,15      736                   2 /
+sociallay 63462 ben-hannan  cwd      DIR               1,15      736                   2 /
+MTLCompil 63693 ben-hannan  cwd      DIR               1,15      736                   2 /
+opencode  63816 ben-hannan  cwd      DIR               1,15      960            22725047 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+mdworker_ 63819 ben-hannan  cwd      DIR               1,15      736                   2 /
+mdworker_ 63820 ben-hannan  cwd      DIR               1,15      736                   2 /
+mdworker_ 63821 ben-hannan  cwd      DIR               1,15      736                   2 /
+mdworker_ 63942 ben-hannan  cwd      DIR               1,15      736                   2 /
+mdworker_ 63943 ben-hannan  cwd      DIR               1,15      736                   2 /
+mdworker_ 63944 ben-hannan  cwd      DIR               1,15      736                   2 /
+mdworker_ 63945 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    63958 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    63980 ben-hannan  cwd      DIR               1,15      736                   2 /
+ChatGPT   63983 ben-hannan  cwd      DIR               1,15       96            90432267 /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/26.924.22138/extension-host/macos/arm64
+Audiovisu 64052 ben-hannan  cwd      DIR               1,15      736                   2 /
+ImageThum 64053 ben-hannan  cwd      DIR               1,15      736                   2 /
+generativ 64090 ben-hannan  cwd      DIR               1,15      736                   2 /
+bash      64279 ben-hannan  cwd      DIR               1,15     2816               32351 /Users/ben-hannan
+bash      64286 ben-hannan  cwd      DIR               1,15     2816               32351 /Users/ben-hannan
+bash      64295 ben-hannan  cwd      DIR               1,15     1984              567028 /Users/ben-hannan/Desktop/projects/polymarket/scout
+bash      64296 ben-hannan  cwd      DIR               1,15     1984              567028 /Users/ben-hannan/Desktop/projects/polymarket/scout
+python3.1 64354 ben-hannan  cwd      DIR               1,15     1984              567028 /Users/ben-hannan/Desktop/projects/polymarket/scout
+bash      64356 ben-hannan  cwd      DIR               1,15     1984              567028 /Users/ben-hannan/Desktop/projects/polymarket/scout
+python3.1 64357 ben-hannan  cwd      DIR               1,15     1984              567028 /Users/ben-hannan/Desktop/projects/polymarket/scout
+tee       64358 ben-hannan  cwd      DIR               1,15     1984              567028 /Users/ben-hannan/Desktop/projects/polymarket/scout
+bash      64360 ben-hannan  cwd      DIR               1,15     1984              567028 /Users/ben-hannan/Desktop/projects/polymarket/scout
+tee       64361 ben-hannan  cwd      DIR               1,15     1984              567028 /Users/ben-hannan/Desktop/projects/polymarket/scout
+sleep     64394 ben-hannan  cwd      DIR               1,15      960            22725047 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+bash      64431 ben-hannan  cwd      DIR               1,15      320            52026626 /Users/ben-hannan/premonition-watch/outbox
+sleep     64458 ben-hannan  cwd      DIR               1,15     1984              567028 /Users/ben-hannan/Desktop/projects/polymarket/scout
+sleep     64460 ben-hannan  cwd      DIR               1,15     1984              567028 /Users/ben-hannan/Desktop/projects/polymarket/scout
+git       64461 ben-hannan  cwd      DIR               1,15      320            52026626 /Users/ben-hannan/premonition-watch/outbox
+zsh       64462 ben-hannan  cwd      DIR               1,15      960            22725047 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+lsof      64463 ben-hannan  cwd      DIR               1,15      960            22725047 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+MTLCompil 65502 ben-hannan  cwd      DIR               1,15      736                   2 /
+dataacces 66948 ben-hannan  cwd      DIR               1,15      736                   2 /
+OfficeThu 66954 ben-hannan  cwd      DIR               1,15      736                   2 /
+WebThumbn 66955 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 66956 ben-hannan  cwd      DIR               1,17       96              117690 /System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.GPU.xpc
+knowledge 67575 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 68148 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 68149 ben-hannan  cwd      DIR               1,15      736                   2 /
+Intellige 68961 ben-hannan  cwd      DIR               1,15      736                   2 /
+nsattribu 69381 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 72142 ben-hannan  cwd      DIR               1,15      736                   2 /
+MTLCompil 72776 ben-hannan  cwd      DIR               1,15      736                   2 /
+colorsync 73049 ben-hannan  cwd      DIR               1,15      736                   2 /
+cksharing 73228 ben-hannan  cwd      DIR               1,15      736                   2 /
+jetpackas 73402 ben-hannan  cwd      DIR               1,15      736                   2 /
+filevault 73541 ben-hannan  cwd      DIR               1,15      736                   2 /
+deleted   73748 ben-hannan  cwd      DIR               1,15      736                   2 /
+Accessibi 76193 ben-hannan  cwd      DIR               1,15      736                   2 /
+adprivacy 76654 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    77467 ben-hannan  cwd      DIR               1,15      736                   2 /
+dmd       78366 ben-hannan  cwd      DIR               1,15      736                   2 /
+IOUIAgent 78368 ben-hannan  cwd      DIR               1,15      384              899325 /Users/ben-hannan/Library/Containers/com.apple.IOUIAgent/Data
+newsd     78445 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    78659 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    78922 ben-hannan  cwd      DIR               1,15      736                   2 /
+neagent   78964 ben-hannan  cwd      DIR               1,15      736                   2 /
+mdwrite   79566 ben-hannan  cwd      DIR               1,15      736                   2 /
+MTLCompil 79779 ben-hannan  cwd      DIR               1,15      736                   2 /
+IMTransco 81330 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 81331 ben-hannan  cwd      DIR               1,15      736                   2 /
+MessagesB 81332 ben-hannan  cwd      DIR               1,15      736                   2 /
+UnknownSe 81333 ben-hannan  cwd      DIR               1,15      736                   2 /
+coreautha 81797 ben-hannan  cwd      DIR               1,15      736                   2 /
+webprivac 84068 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 84070 ben-hannan  cwd      DIR               1,15      736                   2 /
+stickersd 84508 ben-hannan  cwd      DIR               1,15      736                   2 /
+siriappin 84751 ben-hannan  cwd      DIR               1,15      736                   2 /
+ContextSt 84955 ben-hannan  cwd      DIR               1,15      736                   2 /
+assistant 85433 ben-hannan  cwd      DIR               1,15      736                   2 /
+AppleInte 85935 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    86372 ben-hannan  cwd      DIR               1,15      736                   2 /
+tipsd     87846 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    88013 ben-hannan  cwd      DIR               1,15      736                   2 /
+spotlight 88988 ben-hannan  cwd      DIR               1,15      736                   2 /
+ShipIt    89494 ben-hannan  cwd      DIR               1,15      736                   2 /
+UnknownSe 89633 ben-hannan  cwd      DIR               1,15      736                   2 /
+MENotific 90504 ben-hannan  cwd      DIR               1,15      736                   2 /
+Backgroun 90505 ben-hannan  cwd      DIR               1,15      736                   2 /
+familycir 91098 ben-hannan  cwd      DIR               1,15      736                   2 /
+ctkd      91103 ben-hannan  cwd      DIR               1,15      736                   2 /
+coreauthd 91104 ben-hannan  cwd      DIR               1,15      736                   2 /
+syncdefau 91251 ben-hannan  cwd      DIR               1,15      736                   2 /
+contactsd 91278 ben-hannan  cwd      DIR               1,15      736                   2 /
+ciphermld 91856 ben-hannan  cwd      DIR               1,15      736                   2 /
+amsaccoun 92636 ben-hannan  cwd      DIR               1,15      736                   2 /
+photolibr 92682 ben-hannan  cwd      DIR               1,15      384              918289 /Users/ben-hannan/Library/Containers/com.apple.photolibraryd/Data
+ScopedBoo 92683 ben-hannan  cwd      DIR               1,15      736                   2 /
+ManagedSe 92684 ben-hannan  cwd      DIR               1,15      736                   2 /
+cloudphot 92719 ben-hannan  cwd      DIR               1,15      736                   2 /
+intellige 92753 ben-hannan  cwd      DIR               1,15      736                   2 /
+heard     92779 ben-hannan  cwd      DIR               1,15      736                   2 /
+callservi 92780 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 92781 ben-hannan  cwd      DIR               1,15      736                   2 /
+sirittsd  92784 ben-hannan  cwd      DIR               1,15      736                   2 /
+ScreenTim 92787 ben-hannan  cwd      DIR               1,15      384              905829 /Users/ben-hannan/Library/Containers/com.apple.ScreenTimeAgent/Data
+ScreenTim 92788 ben-hannan  cwd      DIR               1,15      736                   2 /
+postersyn 92793 ben-hannan  cwd      DIR               1,15      736                   2 /
+AudioComp 92795 ben-hannan  cwd      DIR               1,15      736                   2 /
+recentsd  92796 ben-hannan  cwd      DIR               1,15      384              910737 /Users/ben-hannan/Library/Containers/com.apple.corerecents.recentsd/Data
+pkd       92799 ben-hannan  cwd      DIR               1,15      736                   2 /
+UsageTrac 92801 ben-hannan  cwd      DIR               1,15      384              908229 /Users/ben-hannan/Library/Containers/com.apple.UsageTrackingAgent/Data
+followupd 92802 ben-hannan  cwd      DIR               1,15      736                   2 /
+intellige 92826 ben-hannan  cwd      DIR               1,15      736                   2 /
+axassetsd 92837 ben-hannan  cwd      DIR               1,15      384              909368 /Users/ben-hannan/Library/Containers/com.apple.accessibility.axassetsd/Data
+StatusKit 92838 ben-hannan  cwd      DIR               1,15      736                   2 /
+Categorie 92857 ben-hannan  cwd      DIR               1,15      736                   2 /
+talagentd 92866 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 92867 ben-hannan  cwd      DIR               1,15      736                   2 /
+networkse 92870 ben-hannan  cwd      DIR               1,15      736                   2 /
+swtranspa 92871 ben-hannan  cwd      DIR               1,15      736                   2 /
+FeatureAc 92872 ben-hannan  cwd      DIR               1,15      736                   2 /
+feedbackd 92873 ben-hannan  cwd      DIR               1,15      736                   2 /
+gamecontr 92878 ben-hannan  cwd      DIR               1,15      736                   2 /
+suggestd  92897 ben-hannan  cwd      DIR               1,15      736                   2 /
+analytics 92898 ben-hannan  cwd      DIR               1,15      736                   2 /
+ContextSe 92907 ben-hannan  cwd      DIR               1,15      736                   2 /
+replayd   92911 ben-hannan  cwd      DIR               1,15      736                   2 /
+Universal 92917 ben-hannan  cwd      DIR               1,15      736                   2 /
+audioacce 92919 ben-hannan  cwd      DIR               1,15      736                   2 /
+commerce  92920 ben-hannan  cwd      DIR               1,15      736                   2 /
+bluetooth 92939 ben-hannan  cwd      DIR               1,15      736                   2 /
+Keychain  92941 ben-hannan  cwd      DIR               1,15      736                   2 /
+node      92974 ben-hannan  cwd      DIR               1,15      192            82835294 /Users/ben-hannan/.codex/plugins/cache/openai-bundled/codex-app-tools/0.1.5
+node      92975 ben-hannan  cwd      DIR               1,15      928            21022250 /Users/ben-hannan/Desktop/projects/beautiful-model
+node_repl 92977 ben-hannan  cwd      DIR               1,15      928            21022250 /Users/ben-hannan/Desktop/projects/beautiful-model
+node_repl 93022 ben-hannan  cwd      DIR               1,15      928            21022250 /Users/ben-hannan/Desktop/projects/beautiful-model
+calaccess 93184 ben-hannan  cwd      DIR               1,15      736                   2 /
+DeviceCon 93202 ben-hannan  cwd      DIR               1,15      736                   2 /
+ReportCra 93207 ben-hannan  cwd      DIR               1,15      736                   2 /
+itunesclo 93211 ben-hannan  cwd      DIR               1,15      736                   2 /
+findmydev 93213 ben-hannan  cwd      DIR               1,15      736                   2 /
+CoreLocat 93216 ben-hannan  cwd      DIR               1,15      736                   2 /
+maild     93250 ben-hannan  cwd      DIR               1,15      736                   2 /
+knowledge 93278 ben-hannan  cwd      DIR               1,15      736                   2 /
+communica 93328 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 93338 ben-hannan  cwd      DIR               1,15      736                   2 /
+CoreServi 93369 ben-hannan  cwd      DIR               1,15      736                   2 /
+pbs       93370 ben-hannan  cwd      DIR               1,15      736                   2 /
+triald    93439 ben-hannan  cwd      DIR               1,15      736                   2 /
+Authentic 93440 ben-hannan  cwd      DIR               1,15      736                   2 /
+TrialArch 93442 ben-hannan  cwd      DIR               1,15      736                   2 /
+keychains 93443 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 93464 ben-hannan  cwd      DIR               1,15      384              912901 /Users/ben-hannan/Library/Containers/com.apple.geod/Data
+secinitd  93465 ben-hannan  cwd      DIR               1,15      736                   2 /
+cdpd      93488 ben-hannan  cwd      DIR               1,15      736                   2 /
+XProtect  93557 ben-hannan  cwd      DIR               1,15      736                   2 /
+assessmen 94076 ben-hannan  cwd      DIR               1,15      736                   2 /
+HubbleBla 95133 ben-hannan  cwd      DIR               1,15      736                   2 /
+IDSBlastD 95335 ben-hannan  cwd      DIR               1,15      736                   2 /
+contentli 96162 ben-hannan  cwd      DIR               1,15      736                   2 /
+inputanal 96198 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 96254 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 96257 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 96260 ben-hannan  cwd      DIR               1,15      736                   2 /
+proactive 96261 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    96262 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 96283 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 96284 ben-hannan  cwd      DIR               1,15      736                   2 /
+printtool 96664 ben-hannan  cwd      DIR               1,15      736                   2 /
+iconservi 96676 ben-hannan  cwd      DIR               1,15      736                   2 /
+WidgetRen 96678 ben-hannan  cwd      DIR               1,15      736                   2 /
+PrintCent 96681 ben-hannan  cwd      DIR               1,15      384              923350 /Users/ben-hannan/Library/Containers/com.apple.printcenter.PrintCenterWidget/Data
+CGPDFServ 96682 ben-hannan  cwd      DIR               1,15      736                   2 /
+VTDecoder 96685 ben-hannan  cwd      DIR               1,15      736                   2 /
+MTLCompil 96714 ben-hannan  cwd      DIR               1,15      736                   2 /
+replicato 96919 ben-hannan  cwd      DIR               1,15      736                   2 /
+iCloudNot 96931 ben-hannan  cwd      DIR               1,15      736                   2 /
+donotdist 96942 ben-hannan  cwd      DIR               1,15      736                   2 /
+findmyloc 96943 ben-hannan  cwd      DIR               1,15      736                   2 /
+searchpar 96944 ben-hannan  cwd      DIR               1,15      736                   2 /
+siriactio 97139 ben-hannan  cwd      DIR               1,15      736                   2 /
+mobiletim 97455 ben-hannan  cwd      DIR               1,15      736                   2 /
+Shortcuts 97466 ben-hannan  cwd      DIR               1,15      384              909076 /Users/ben-hannan/Library/Containers/com.apple.WorkflowKit.ShortcutsViewService/Data
+liveactiv 97471 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 97519 ben-hannan  cwd      DIR               1,15      736                   2 /
+ClaudeUsa 97532 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 97533 ben-hannan  cwd      DIR               1,15      736                   2 /
+QuickLook 97732 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 97733 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 97913 ben-hannan  cwd      DIR               1,15      736                   2 /
+storekita 97947 ben-hannan  cwd      DIR               1,15      736                   2 /
+managedco 98328 ben-hannan  cwd      DIR               1,15      736                   2 /
+naturalla 98332 ben-hannan  cwd      DIR               1,15      736                   2 /
+localizat 98498 ben-hannan  cwd      DIR               1,15      736                   2 /
+swcd      98599 ben-hannan  cwd      DIR               1,15      736                   2 /
+proactive 98646 ben-hannan  cwd      DIR               1,15      736                   2 /
+MTLAssetU 98647 ben-hannan  cwd      DIR               1,15      736                   2 /
+geodMachS 99076 ben-hannan  cwd      DIR               1,15      736                   2 /
+homed     99089 ben-hannan  cwd      DIR               1,15      736                   2 /
+media-ind 99090 ben-hannan  cwd      DIR               1,15     1152              927371 /Users/ben-hannan/Library/Containers/com.apple.siri.media-indexer/Data
+speechmai 99097 ben-hannan  cwd      DIR               1,15      736                   2 /
+hybridsea 99098 ben-hannan  cwd      DIR               1,15      736                   2 /
+siriknowl 99099 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 99138 ben-hannan  cwd      DIR               1,15      384              892485 /Users/ben-hannan/Library/Containers/com.apple.BKAgentService/Data
+AMPArtwor 99139 ben-hannan  cwd      DIR               1,15      416              884884 /Users/ben-hannan/Library/Containers/com.apple.AMPArtworkAgent/Data
+Google    99744 ben-hannan  cwd      DIR               1,15      736                   2 /
+EscrowSec 99747 ben-hannan  cwd      DIR               1,15      736                   2 /
+amsengage 99748 ben-hannan  cwd      DIR               1,15      736                   2 /
+TrustedPe 99753 ben-hannan  cwd      DIR               1,15      736                   2 /
+com.apple 99758 ben-hannan  cwd      DIR               1,15      736                   2 /
+SetStoreU 99767 ben-hannan  cwd      DIR               1,15      736                   2 /
+Google    99798 ben-hannan  cwd      DIR               1,15      736                   2 /
+appstorea 99817 ben-hannan  cwd      DIR               1,15      736                   2 /
+promotedc 99828 ben-hannan  cwd      DIR               1,15      736                   2 /
+amsondevi 99830 ben-hannan  cwd      DIR               1,15      736                   2 /
+seservice 99858 ben-hannan  cwd      DIR               1,15      736                   2 /
+---
+lrwxr-xr-x@ 1 root  wheel  11 Sep  3 06:34 /tmp -> private/tmp
+---
+  PID ELAPSED COMMAND
+[0m
+[0m$ [0mls /private/tmp | head -n 40
+__KMP_REGISTERED_LIB_21678
+__KMP_REGISTERED_LIB_21679
+__KMP_REGISTERED_LIB_27249
+__KMP_REGISTERED_LIB_27250
+__KMP_REGISTERED_LIB_5024
+__KMP_REGISTERED_LIB_5025
+__KMP_REGISTERED_LIB_6417
+__KMP_REGISTERED_LIB_6418
+__KMP_REGISTERED_LIB_6419
+__KMP_REGISTERED_LIB_6420
+__KMP_REGISTERED_LIB_90107
+__KMP_REGISTERED_LIB_91253
+02cdev
+02dr-local.sha
+02dr-remote.sha
+350doc.md
+358a_spec.md
+adapter02c.json
+addD.md
+addF.md
+addI.md
+af-aa
+af-ab
+af-ac
+af-ad
+ag_local.py
+ah-aa
+ah-ab
+ah-ac
+ah-ad
+amend.md
+an-aa
+an-ab
+an-ac
+an-ad
+anAA-aa
+anAA-ab
+anAA-ac
+anAA-ad
+anAA-ae
+[0m
+[0m$ [0mls -dt /private/tmp/tmp.* 2>/dev/null | head -n 10
+zsh:1: no matches found: /private/tmp/tmp.*
+[0m
+[0m$ [0mlsof -p 6413 2>/dev/null | grep -v -e Kontent -e Data | head -n 40
+COMMAND  PID       USER   FD     TYPE             DEVICE SIZE/OFF                NODE NAME
+uv      6413 ben-hannan  cwd      DIR               1,15      160            92149788 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH
+uv      6413 ben-hannan  txt      REG               1,15 36498144              246448 /Users/ben-hannan/.local/bin/uv
+uv      6413 ben-hannan  txt      REG               1,15  4129840 1152921500312609216 /usr/lib/dyld
+uv      6413 ben-hannan  txt      REG               1,15    77368            58672257 /private/var/db/diagnostics/logd/.plist-cache.W6NpWs4t
+uv      6413 ben-hannan    0r     CHR                3,2      0t0                 336 /dev/null
+uv      6413 ben-hannan    1w     REG               1,15     1067            92186260 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/logs/graph-plain-s0-pre.log
+uv      6413 ben-hannan    2w     REG               1,15     1067            92186260 /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/logs/graph-plain-s0-pre.log
+uv      6413 ben-hannan    3u  KQUEUE                                                 count=0, state=0xa
+uv      6413 ben-hannan    4u  KQUEUE                                                 count=0, state=0xa
+uv      6413 ben-hannan    5u  KQUEUE                                                 count=0, state=0xa
+uv      6413 ben-hannan    6u    unix 0x14b53b66517b1c92      0t0                     ->0x921ca35fb44abd85
+uv      6413 ben-hannan    7u    unix 0x921ca35fb44abd85      0t0                     ->0x14b53b66517b1c92
+uv      6413 ben-hannan    8u    unix 0x14b53b66517b1c92      0t0                     ->0x921ca35fb44abd85
+uv      6413 ben-hannan    9u     REG               1,15        0             6013361 /Users/ben-hannan/.cache/uv/.lock
+[0m
+[0m$ [0mD=/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH; ls "$D"; echo ---; ls "$D/logs"; echo ---; ls "$D/artifacts/claude-dir-h1-heldout-20260928" 2>/dev/null; echo ---; ls "$D/artifacts/claude-dir-h1-heldout-20260928/runs" 2>/dev/null
+artifacts
+logs
+scripts
+---
+graph-loop-s0-fresh.log
+graph-loop-s0-pre.log
+graph-loop-s1-fresh.log
+graph-loop-s1-pre.log
+graph-plain-s0-fresh.log
+graph-plain-s0-pre.log
+graph-plain-s1-fresh.log
+graph-plain-s1-pre.log
+---
+DESIGN.md
+PASSMARKS.md
+queue-h1-heldout.md
+runs
+SEAL-code.sha256.txt
+SELFTEST-kinds-run.log
+SELFTEST-kinds.log
+SELFTEST-marks.log
+SOURCE-CHECK.json
+---
+graph
+[0m
+[0m$ [0mD=/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH; tail -n 5 "$D/logs/graph-loop-s0-pre.log" "$D/logs/graph-loop-s1-pre.log" "$D/logs/graph-plain-s0-pre.log"; echo ===; find "$D/artifacts/claude-dir-h1-heldout-20260928/runs" -maxdepth 3 | head -n 40
+==> /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/logs/graph-loop-s0-pre.log <==
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 0, "init": "pre", "k": 256, "right_graded": 0, "seconds": 4711}
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 0, "init": "pre", "k": 1024, "right_graded": 0, "seconds": 5644}
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 0, "init": "pre", "k": 4096, "right_graded": 0, "seconds": 6599}
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 0, "init": "pre", "k": 16384, "right_graded": 0, "seconds": 7586}
+{"phase": "adapt_done", "kind": "graph", "arm": "loop", "seed": 0, "init": "pre", "seconds": 7586}
+
+==> /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/logs/graph-loop-s1-pre.log <==
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 1, "init": "pre", "k": 256, "right_graded": 0, "seconds": 4714}
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 1, "init": "pre", "k": 1024, "right_graded": 0, "seconds": 5645}
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 1, "init": "pre", "k": 4096, "right_graded": 0, "seconds": 6602}
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 1, "init": "pre", "k": 16384, "right_graded": 0, "seconds": 7586}
+{"phase": "adapt_done", "kind": "graph", "arm": "loop", "seed": 1, "init": "pre", "seconds": 7586}
+
+==> /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/logs/graph-plain-s0-pre.log <==
+{"phase": "rung", "kind": "graph", "arm": "plain", "seed": 0, "init": "pre", "k": 1, "right_graded": 0, "seconds": 764}
+{"phase": "rung", "kind": "graph", "arm": "plain", "seed": 0, "init": "pre", "k": 4, "right_graded": 0, "seconds": 1493}
+{"phase": "rung", "kind": "graph", "arm": "plain", "seed": 0, "init": "pre", "k": 16, "right_graded": 0, "seconds": 2203}
+{"phase": "rung", "kind": "graph", "arm": "plain", "seed": 0, "init": "pre", "k": 64, "right_graded": 0, "seconds": 2920}
+{"phase": "rung", "kind": "graph", "arm": "plain", "seed": 0, "init": "pre", "k": 256, "right_graded": 0, "seconds": 3787}
+zsh:1: == not found
+[0m
+[0m$ [0mD=/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH; for f in "$D"/logs/*.log; do echo "-- $f"; tail -n 2 "$f"; done
+-- /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/logs/graph-loop-s0-fresh.log
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 0, "init": "fresh", "k": 16384, "right_graded": 0, "seconds": 7595}
+{"phase": "adapt_done", "kind": "graph", "arm": "loop", "seed": 0, "init": "fresh", "seconds": 7595}
+-- /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/logs/graph-loop-s0-pre.log
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 0, "init": "pre", "k": 16384, "right_graded": 0, "seconds": 7586}
+{"phase": "adapt_done", "kind": "graph", "arm": "loop", "seed": 0, "init": "pre", "seconds": 7586}
+-- /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/logs/graph-loop-s1-fresh.log
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 1, "init": "fresh", "k": 16384, "right_graded": 0, "seconds": 7612}
+{"phase": "adapt_done", "kind": "graph", "arm": "loop", "seed": 1, "init": "fresh", "seconds": 7612}
+-- /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/logs/graph-loop-s1-pre.log
+{"phase": "rung", "kind": "graph", "arm": "loop", "seed": 1, "init": "pre", "k": 16384, "right_graded": 0, "seconds": 7586}
+{"phase": "adapt_done", "kind": "graph", "arm": "loop", "seed": 1, "init": "pre", "seconds": 7586}
+-- /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/logs/graph-plain-s0-fresh.log
+{"phase": "rung", "kind": "graph", "arm": "plain", "seed": 0, "init": "fresh", "k": 64, "right_graded": 0, "seconds": 2917}
+{"phase": "rung", "kind": "graph", "arm": "plain", "seed": 0, "init": "fresh", "k": 256, "right_graded": 0, "seconds": 3779}
+-- /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/logs/graph-plain-s0-pre.log
+{"phase": "rung", "kind": "graph", "arm": "plain", "seed": 0, "init": "pre", "k": 64, "right_graded": 0, "seconds": 2920}
+{"phase": "rung", "kind": "graph", "arm": "plain", "seed": 0, "init": "pre", "k": 256, "right_graded": 0, "seconds": 3787}
+-- /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/logs/graph-plain-s1-fresh.log
+{"phase": "rung", "kind": "graph", "arm": "plain", "seed": 1, "init": "fresh", "k": 64, "right_graded": 0, "seconds": 2919}
+{"phase": "rung", "kind": "graph", "arm": "plain", "seed": 1, "init": "fresh", "k": 256, "right_graded": 0, "seconds": 3783}
+-- /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/logs/graph-plain-s1-pre.log
+{"phase": "rung", "kind": "graph", "arm": "plain", "seed": 1, "init": "pre", "k": 64, "right_graded": 0, "seconds": 2919}
+{"phase": "rung", "kind": "graph", "arm": "plain", "seed": 1, "init": "pre", "k": 256, "right_graded": 0, "seconds": 3785}
+[0m
+[0m$ [0mD=/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH; cat "$D/artifacts/claude-dir-h1-heldout-20260928/SOURCE-CHECK.json"; echo; ls "$D/artifacts/claude-dir-h1-heldout-20260928/runs/graph"; find "$D/artifacts/claude-dir-h1-heldout-20260928/runs" -name adapt.json | sort
+{
+  "V1": true,
+  "V2": true,
+  "sources": {
+    "loop-s0": {
+      "V1_ok": true,
+      "V2_ok": true,
+      "recomputed_right_of_200": {
+        "grids5": 200,
+        "sums4": 200
+      },
+      "recorded_right_of_200": {
+        "grids5": 200,
+        "sums4": 200
+      },
+      "sha256": "d5f09b1dfbc65e4e018081be71305e7440468d869114f2205e2565a3e646a085",
+      "weights": 1645726
+    },
+    "loop-s1": {
+      "V1_ok": true,
+      "V2_ok": true,
+      "recomputed_right_of_200": {
+        "grids5": 200,
+        "sums4": 200
+      },
+      "recorded_right_of_200": {
+        "grids5": 200,
+        "sums4": 200
+      },
+      "sha256": "6cc51ee871a383668b365f63c80e9d9599a4c11faab08fed7e46747f7fb15673",
+      "weights": 1645726
+    },
+    "plain-s0": {
+      "V1_ok": true,
+      "V2_ok": true,
+      "recomputed_right_of_200": {
+        "grids5": 195,
+        "sums4": 200
+      },
+      "recorded_right_of_200": {
+        "grids5": 195,
+        "sums4": 200
+      },
+      "sha256": "e335364f0674deed09b41287567bc89dec00137b0636a712221a7689bb444b7f",
+      "weights": 1619965
+    },
+    "plain-s1": {
+      "V1_ok": true,
+      "V2_ok": true,
+      "recomputed_right_of_200": {
+        "grids5": 191,
+        "sums4": 200
+      },
+      "recorded_right_of_200": {
+        "grids5": 191,
+        "sums4": 200
+      },
+      "sha256": "e55a6e400e44b36e02fb9ce295168656046493be2ff0b4f200668c4a9c67052c",
+      "weights": 1619965
+    }
+  }
+}
+
+loop-s0-fresh
+loop-s0-pre
+loop-s1-fresh
+loop-s1-pre
+plain-s0-fresh
+plain-s0-pre
+plain-s1-fresh
+plain-s1-pre
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/artifacts/claude-dir-h1-heldout-20260928/runs/graph/loop-s0-fresh/adapt.json
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/artifacts/claude-dir-h1-heldout-20260928/runs/graph/loop-s0-pre/adapt.json
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/artifacts/claude-dir-h1-heldout-20260928/runs/graph/loop-s1-fresh/adapt.json
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH/artifacts/claude-dir-h1-heldout-20260928/runs/graph/loop-s1-pre/adapt.json
+[0m
+[0m$ [0mgrep -i -e h1-heldout -e dir-h1 artifacts/fable-predictions-ledger.md | head -n 20; echo done
+done
+[0m
+[0m$ [0mD=/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.dbxbeWUKUH; shasum -a 256 -c "$D/artifacts/claude-dir-h1-heldout-20260928/SEAL-code.sha256.txt" 2>&1 | tail -n 10; echo "rc=$?"; head -n 5 "$D/artifacts/claude-dir-h1-heldout-20260928/SELFTEST-kinds-run.log"; tail -n 3 "$D/artifacts/claude-dir-h1-heldout-20260928/SELFTEST-kinds-run.log"
+scripts/claude_dir_h1_kinds.py: OK
+scripts/claude_dir_h1_marks.py: OK
+scripts/claude_dir_h1_bench.py: OK
+artifacts/claude-dir-h1-heldout-20260928/PASSMARKS.md: OK
+artifacts/claude-dir-h1-heldout-20260928/DESIGN.md: OK
+rc=0
+{
+  "graph": {
+    "dev_graded_baselines_right_of_300": {
+      "all_one": 0,
+      "all_unreach": 0,
+  }
+}
+selftest ok
+[0m
+[91m[1mError: [0mCannot connect to API: Unable to connect. Is the computer able to access the url?
