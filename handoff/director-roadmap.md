@@ -24,3 +24,5 @@ Other chats still writing to main (do not duplicate, do not touch their folders)
 - Item 3/4: job dir-h1-heldout queued (graph + rank kinds). Item 2: H3 selftest job queued, H2 numbers job queued. Item 5: H6 design ready, vast job held (needs launch kit).
 
 Update 21:19 UTC 09-28 (Ben via coordinator): Ben supplies the uncle questions himself. Item 8 = a model good in general; build nothing uncle-specific. Keep the sealing procedure (02) for whatever he supplies. Weight the roadmap toward items 1 and 6 (general quality). My earlier three fixes to 02/03 still stand for the scoring step but are low priority.
+
+Update 21:19 UTC 09-28 (Ben via coordinator): premise = the model gets better with use and today's model is smaller than the one he will build. Favour work showing improvement with use (item 5 sleep) and holding up with size (item 7 scaling) over squeezing today's absolute scores.
