@@ -42,8 +42,16 @@ of both own loop controls on every kind. The controls received the same 18,000
 source batches and 2,000 episodes. FIRST-PRIMARY-CONTROL-STATUS.json records
 the six paired scores.
 
-**Running:** the remaining five registered source arms. Plain and seed 2 remain
-pending; the full eight-arm practice gate cannot be computed yet. Source commit: `fd250b3be`.
+**Shown:** seed 927401's plain control also finished and scored grids 164 of
+300. Thus every seed-1 arm misses the grid gate: patch 278, ordinary loop 274,
+episodic loop 282, plain 164, each of 300 against 285. All four arms pass the
+other five kinds' absolute marks; the patch stays within nine of 300 of both
+paired loop controls on every kind. The first seed's complete counts are in
+SEED1-STATUS.json. This registered run cannot enter the maze race.
+
+**Running:** four seed-2 source arms on the same qualified curriculum. Their
+results will complete the registered comparison but cannot reverse seed 1's
+failure.
 
 **Untested:** few-example maze advantage, keeping old kinds after maze supports,
 sleep absorption with the patch removed, and whether wider practice helps the
