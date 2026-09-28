@@ -38,10 +38,18 @@ def main(seed, source, out):
         p.requires_grad_(False)
     panels, banned = D.panels()
     pool, _, digest = EQ.make_pool(seed, banned)
-    res = {"seed": seed, "source": str(source), "fixed_depth": depth, "support_sha256": digest,
-           "panel": "dev 9x9 (300)", "ordinary_weights": "frozen, no optimizer", "rungs": {}}
-    res["rungs"]["0"] = {**B.score(base, panels["dev"][9], depth), "writes": 0}
+    part = out.with_suffix(".partial.json")
+    if part.exists():  # a restart: finished rungs are deterministic and are kept
+        res = json.loads(part.read_text())
+        res["interruptions"] = res.get("interruptions", 0) + 1
+    else:
+        res = {"seed": seed, "source": str(source), "fixed_depth": depth, "support_sha256": digest,
+               "panel": "dev 9x9 (300)", "ordinary_weights": "frozen, no optimizer", "rungs": {},
+               "interruptions": 0}
+        res["rungs"]["0"] = {**B.score(base, panels["dev"][9], depth), "writes": 0}
     for k in RUNGS:
+        if str(k) in res["rungs"]:
+            continue
         t0 = time.monotonic()
         net = copy.deepcopy(base)
         frozen = {n: p.clone() for n, p in net.named_parameters()}
