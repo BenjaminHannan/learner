@@ -10,7 +10,10 @@ share for names seen once, and the mark needed 25.
 
 Practice test on fresh Luna chats (chunks 11-13: 6,483 rows, 538 backref cards). The marks were sealed in
 PASSMARKS.md at f53ce4525 before any training. Nothing joins the build. A blind recount by a separate subagent is in
-RECOUNT.md.
+RECOUNT.md. It reads only PASSMARKS.md, bar.json and the four score files, and gets the same numbers and the same
+verdict. It flagged one count: in B-s331, matched minus right-owner cards is 33 but wrong-person is 30. The 3 are
+cards whose owner B read as "me" (`owner_me_instead: 3` in scores/B-s331.json), which the wrong-person count
+leaves out by definition. No mark uses them.
 
 ## Marks (B against A at the same seed; shares are exact ratios)
 | Mark | Seed 327: A | Seed 327: B | Seed 331: A | Seed 331: B | Bar | Met? |
