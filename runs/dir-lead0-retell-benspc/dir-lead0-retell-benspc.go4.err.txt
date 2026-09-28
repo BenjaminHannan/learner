@@ -1,0 +1,478 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m→ [0mRead .
+[0m✗ [0mRead artifacts/claude-dir-lead0-20260928 failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-dir-lead0-20260928
+[0m
+[0m$ [0mgit log --oneline -5; git status --short | head -30
+57f5749ce k1h-glm2 finish: answer2 skipped 593 on M=-1213 (cap blown by sleep), REPORT.md counts only
+e22e4b6bf rd378g-writeluna PILOT-FAIL: Luna batch-18 pilot skipped after 3 tries, 3 call-failed lines (9x timeout after 300s), 0 batch-ok; JSON: 90 kept, 0 new
+86599f56d k1h-glm salvage glm: 240 answers / 593 chats, 5/5 sha256 vs <tmp> (counts only)
+24766dc63 000-luna-helper-selftest: reply with selftest + 3-call parallel outputs
+8fc75d620 probe: codex CLI non-interactive form (not in PATH, bundled 0.158.0-alpha.2, luna not found)
+A  artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt
+A  artifacts/claude-dir-h2-numbers-20260928/runs/RUN-NOTE.md
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/loop-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/loop-s14.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/plain-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/plain-s14.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/train_summary.json
+A  artifacts/claude-k1h-20260926/luna/full/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-1.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-2.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-3.txt
+[0m
+[0m✗ [0mGlob "artifacts/claude-dir-lead0*" failed
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m✗ [0mGlob "scripts/claude_dir_lead0*" failed
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mls scripts/ | grep -i lead0; echo ---; ls artifacts/ | grep -i lead0; echo ---; git branch -a | head -20; git log --all --oneline | head -20
+---
+---
+* claude/card-experiment-handoff-7c5b27
+  claude/fact-saving-note-filtering-4ff1ff
++ claude/forgetting-plain-english-gap-9258f0
+  claude/kill-hung-queue-builders-4e879f
+  claude/locomo-length-penalty-408e2a
+  claude/loop-net-generalization-analysis-729ee3
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/pull-from-main-629dc4
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/retention-isolation
+  codex/testing-experiment-44
++ main
+  rent-zdl5c-results
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+af398b8db Standing research 06: sleep-design request (pseudo-rehearsal, replay selection, MoE, sleep length)
+b0fbd4aa5 Director board: seal sleep tests
+a8eab5110 Director: release lfsz-1-start (vast, under 0.50), ledger
+52d6767b6 Map Ben's sleep/memory idea against evidence; three draft single-change tests
+fc5eb2449 lf-sz: HELD queue jobs (start, collect) pinned to the kit commit
+4e000f02b lf-sz: same-size depth check (loop8 vs widened 2-layer and 4-layer loops): marks sealed, runner, recount, vast kit, run plan (no run yet)
+134108f03 Director board: KS
+57f518559 Keep-old-skills: marks, runner, Lead 2 plug-in, queue jobs ks-1..4 (no run yet)
+037eb6f12 Director board: Ben's sleep design thread
+75679cf74 Director board: deep or just big
+7903af66d Lead 0: talker retell check script, pass marks, BensPC queue job
+9605781ba Director board: dir-lr
+62d7af202 dir-lr: noise from raw files, Lead 0 lr diagnostic, Lead 1 staged unfreeze plug-in, marks, held Mac jobs
+c10f870bd SL: design and pass marks for stop-without-labels (Leads 3, 1, 2), before any code
+728759924 Director board: talker retell thread
+f449ec4d3 Standing research 05: joining reader, reasoner and talker
+29baf7580 Director board: research topic 4
+6a0c879c8 Standing research 04: learned search for the numbers puzzles
+6a6d4e889 Director board: keep old skills thread
+94373290e Addenda 1 for A, HB, R1g, R2g, H12 (review2 section 8) before any score; ls job for loop checkpoints
+[0m
+[0m$ [0mgit show 7903af66d --stat | head -30; echo ===; git log --all --oneline --grep="lead0" -i | head; echo ===; git ls-tree -r origin/main --name-only | grep -i lead0 | head -20
+commit 7903af66d71ca53e1d883db0750d24c9a0b2eb9b
+Author: Claude <noreply@anthropic.com>
+Date:   Mon Sep 28 21:51:26 2026 +0000
+
+    Lead 0: talker retell check script, pass marks, BensPC queue job
+    
+    Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01MrP8L1tnGeK3khLGBKeiu7
+
+ artifacts/claude-dir-lead0-20260928/PASSMARKS.md |  25 +++++
+ handoff/queue/dir-lead0-retell-benspc.md         |  11 +++
+ scripts/claude_dir_lead0_retell.py               | 119 +++++++++++++++++++++++
+ 3 files changed, 155 insertions(+)
+zsh:1: == not found
+[0m
+[0m$ [0mgit ls-tree -r origin/main --name-only | grep -i lead0 | head -20
+artifacts/claude-dir-lead0-20260928/PASSMARKS.md
+artifacts/claude-dir-lr-20260928/LEAD0-MARKS.md
+handoff/queue/dir-lead0-retell-benspc.md
+handoff/queue/dirlr-lead0-mac.md
+handoff/queue/ks-1-lead0-mac.md
+scripts/claude_dir_lead0_retell.py
+scripts/claude_dir_lr_lead0.py
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-dir-lead0-20260928/PASSMARKS.md; echo =====; git show origin/main:handoff/queue/dir-lead0-retell-benspc.md
+# Lead 0 pass marks: can the plain LFM talker retell a checked grid exactly?
+Written 2026-09-28 21:5x UTC (`date -u` 21:51 at script selftest), BEFORE any model run. Never edited after a score is seen.
+
+Change under test: none (read-only). Plain LFM2.5-1.2B-Instruct @0f604ada, no adapter, greedy, max 160 new tokens, thinking off, the 0.2d talker input (claude_e2e02d.system_text with the H1 note `reasoner_note`).
+Items: code-made squares, sizes 5/6/7 split 34/33/33, grid seeds 1 and 2 (100 items each). The note holds the code-made true solution.
+Score (code only): the last size x size run of numbers in the reply (`claude_rsn358b3_panel.final_grid`) equals the note's grid cell for cell. Count "x of 100".
+
+## Marks
+- **PASS (no fix needed, "shown"):** arm R exact >= 95 of 100 on seed 1 AND on seed 2.
+- **FAIL (fix owed):** arm R exact < 95 of 100 on either seed. Fail branch: a small copy-trained talker adapter on code-made note-to-reply rows (Luna-worded replies), judged by this same test on fresh grid seeds. No rule-based patch.
+- Reading: both seeds must clear the bar (the "every seed" rule); one seed under 95 is FAIL, not "not shown". A 90-94 result is reported as a narrow FAIL with its failure modes counted.
+- Result that proves the "plain talker is fine" claim wrong: any seed at 94 of 100 or lower.
+
+## Controls (reported, not gating)
+- Arm N (no note, puzzle only): if N exact is high, R would not show copying, only solving. Expected near 0 (358b2: the 1B alone solved 0 of 300). If N >= 20 of 100 the R result is flagged as not a clean copy test.
+- Failure modes counted for R misses: no grid, wrong grid that still solves the puzzle, wrong grid, cut off at 160 tokens.
+
+## Marks self-check (H8 list)
+1. Noise: decoding is greedy and deterministic, so the only spread is which 100 grids; the two seeds measure it. The bar (95) is a fixed threshold from H4/standing-05, not a gain over a baseline; no gain is claimed.
+2. "Every seed" reading: yes, both seeds must clear 95 for PASS.
+3. Comparator: not a comparison. Baseline evidence: 358b2's plain 1B copy from the message text was 25/39/28 of 100 (a different task: copying a puzzle out of chat, not retelling a note).
+4. Plain-net control: N arm above. A plain same-size net is the thing under test, so a "plain-net cannot pass" row does not apply; this test asks whether the plain one already passes.
+5. F_few: not applicable (no learning or examples).
+6. Sleep gates: not applicable.
+Small-card experiments and the village model are not used.
+zsh:1: ==== not found
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/dir-lead0-retell-benspc.md
+GPU: yes (BensPC RTX 5070 Ti; one job at a time; $0, NO rental, whatever fails). If C:\Users\benja\GPU-BUSY.txt names any job other than this file's name without .md, stop with BUSY and run nothing. Additive only, no secrets, download nothing, install nothing.
+Owner: Director helper "Lead 0" (Claude, 2026-09-28). Read-only check, no training. Pass marks sealed before the run: artifacts/claude-dir-lead0-20260928/PASSMARKS.md (PASS = 95 of 100 or more exact on BOTH grid seeds).
+WHERE: you run on the Mac; BensPC (Windows) is reached with `ssh benspc`. Every BensPC command runs on BensPC. Stream the tree with `git archive origin/main scripts | ssh benspc "tar -x -C <folder>"`; copy results back with scp.
+SETUP: Python C:/Users/benja/lis300/venv/Scripts/python.exe. Env: PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1.
+  L12DIR = C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b (used by the y1v and k1f jobs). If it does not exist, stop with MODEL-MISSING and download nothing.
+STEPS (from the tree root):
+1. `python -B scripts/claude_dir_lead0_retell.py selftest` must print "lead0 selftest 3/3 ok". Else stop.
+2. `python -B scripts/claude_dir_lead0_retell.py run --model L12DIR --out run_lead0 --seeds 1,2 --n 100 > log.txt` (four arms of 100 chats, minutes). Log must show four lines "lead0 seedS_R|N x of 100". Do not retry more than once on out-of-memory.
+3. Copy back run_lead0/ (seed1_R.jsonl, seed1_N.jsonl, seed2_R.jsonl, seed2_N.jsonl, summary.json) and log.txt to artifacts/claude-dir-lead0-20260928/run/ on the Mac. These files are DEV-free code-made data; nothing here is a sealed panel.
+4. Write artifacts/claude-dir-lead0-20260928/RESULTS.md (NEW file): GPU name, versions, model path, exit code, wall minutes, then a table with integer counts: for seed 1 and 2, arm R: exact x of 100, has grid, solves puzzle, cut off, by size; arm N the same. Verdict per PASSMARKS.md wording (PASS or FAIL), nothing else. Then list up to 5 miss replies verbatim to show the failure mode.
+PUSH: artifacts/claude-dir-lead0-20260928/run artifacts/claude-dir-lead0-20260928/RESULTS.md
+[0m
+[0m$ [0mgit ls-tree -r origin/main --name-only | grep -i -E "lead0|SEAL" | head -20; echo ---; git show origin/main:scripts/claude_dir_lead0_retell.py | head -60
+artifacts/claude-aliaspanel237-20260922/SEAL.sha256.txt
+artifacts/claude-aliaspanel237b-20260922/SEAL.sha256.txt
+artifacts/claude-apos247-20260922/SEAL.sha256.txt
+artifacts/claude-askpanel243-20260922/SEAL.sha256.txt
+artifacts/claude-bm390-20260925/SEAL-code.sha256.txt
+artifacts/claude-bm390-20260925/SEAL-finish.sha256.txt
+artifacts/claude-bm390-20260925/SEAL-winnl.sha256.txt
+artifacts/claude-bm390-20260925/SEAL-winnl2.sha256.txt
+artifacts/claude-bm391-20260926/SEAL-02c.sha256.txt
+artifacts/claude-bm391-20260926/SEAL.sha256.txt
+artifacts/claude-bm393-20260925/SEAL.sha256.txt
+artifacts/claude-bm393b-20260925/SEAL.sha256.txt
+artifacts/claude-bm393c-20260925/SEAL.sha256.txt
+artifacts/claude-bm394-20260925/SEAL-sudoku.sha256.txt
+artifacts/claude-bm395-20260925/SEAL.sha256.txt
+artifacts/claude-bm397-20260926/SEAL-general.sha256.txt
+artifacts/claude-bm397-20260926/SEAL-judge.sha256.txt
+artifacts/claude-bm397-20260926/SEAL.sha256.txt
+artifacts/claude-bm397t-20260926/SEAL.sha256.txt
+artifacts/claude-bm398c-20260926/SEAL.sha256.txt
+---
+#!/usr/bin/env python3
+"""Lead 0 (Director helper, 2026-09-28): can the plain LFM2.5-1.2B talker retell a code-made, checked grid exactly?
+
+Read-only: no training, no adapter, no reader, no reasoner. For each item the note is the H1 frame that
+claude_e2e02d.reasoner_note() builds, holding the code-made TRUE solution; the talker gets the same system text and
+chat form as the 0.2d chain (claude_e2e02d.system_text / user_text, empty W block, no history). Score = the last
+size x size run of numbers in the reply (claude_rsn358b3_panel.final_grid) equals the note's grid, cell for cell.
+Arms per grid seed: R (note = true solution, the test) and N (no note: the talker sees only the puzzle; a control,
+shows the talker is not just solving it). Greedy, max 160 new tokens, thinking off (as the chain).
+
+  python -B scripts/claude_dir_lead0_retell.py run --model LFM_SNAPSHOT_DIR --out DIR [--seeds 1,2] [--n 100]
+  python -B scripts/claude_dir_lead0_retell.py selftest      (no model: fake talkers)
+"""
+from __future__ import annotations
+import argparse, json, sys, time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_rsn358b2_bridge as B      # noqa: E402
+import claude_rsn358b3_panel as P       # noqa: E402
+
+SIZES = (5, 6, 7)
+
+
+def make_items(seed, n):
+    """n items per seed, split across SIZES (n=100 -> 34/33/33), code-made puzzle + true solution."""
+    counts = [n // 3 + (1 if i < n % 3 else 0) for i in range(3)]
+    items = []
+    for s, c in zip(SIZES, counts):
+        for k, r in enumerate(B.make_requests(seed * 100 + s, c, s, False)):
+            items.append({"id": "L0-%d-%d-%03d" % (seed, s, k), "size": s, "puz": r["puz"], "sol": r["sol"], "text": r["text"]})
+    return items
+
+
+def note_for(sol):
+    import claude_e2e02d as E
+    return E.reasoner_note({"ok": True, "grid": sol})
+
+
+def score_reply(reply, item):
+    g = P.final_grid(reply, item["size"])
+    return {"exact": g == item["sol"], "has_grid": g is not None, "solves_puzzle": B.is_solution(item["puz"], g) if g else False}
+
+
+def prompts(item, with_note):
+    import claude_e2e02d as E
+    system = E.system_text([], note_for(item["sol"]) if with_note else "")
+    return system, [{"role": "user", "content": E.user_text([], item["text"])}]
+
+
+def run_arm(talk, items, with_note):
+    out = []
+    for it in items:
+        system, msgs = prompts(it, with_note)
+        reply = talk.reply(system, msgs, 160)
+        out.append({"id": it["id"], "size": it["size"], "arm": "R" if with_note else "N", "reply": reply,
+                    "hit_max": getattr(talk, "hit_max", 0), **score_reply(reply, it)})
+    return out
+[0m
+[0m$ [0mssh benspc "cat C:/Users/benja/GPU-BUSY.txt 2>nul; echo ---; tasklist /FI \"IMAGENAME eq python.exe\" 2>nul | head -10"
+(no output)
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "echo OK && type C:\\Users\\benja\\GPU-BUSY.txt" 2>&1 | head -20
+OK 
+BUSY: queue job dir-lead0-retell-benspc since 2026-09-28T21:51:43Z - do not use this GPU until this file is gone
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "tasklist /FI \"IMAGENAME eq python.exe\" 2>&1 | head -20; echo ===; dir C:\\Users\\benja\\ 2>&1 | head -40" 2>&1 | head -60
+(no output)
+[0m
+[0m$ [0mssh benspc echo HELLO
+HELLO
+[0m
+[0m$ [0mssh benspc "wmic process where name='python.exe' get ProcessId,CommandLine"
+'wmic' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh benspc 'powershell -c "Get-Process python -ErrorAction SilentlyContinue | Select-Object Id,StartTime | Format-Table"'
+(no output)
+[0m
+[0m$ [0mssh benspc "dir C:\Users\benja\lead0 2>&1; dir C:\Users\benja\run_lead0 2>&1; ls C:/Users/benja/ 2>&1"
+Invalid switch - "Users".
+[0m
+[0m$ [0mssh benspc "powershell -c Get-Date"
+Monday, September 28, 2026 6:16:23 PM
+[0m
+[0m$ [0mssh benspc "powershell -c \"Get-Process python -ErrorAction SilentlyContinue | Format-Table Id,StartTime; Get-ChildItem C:/Users/benja -Directory | Select-Object Name\""
+Name                           
+----                           
+.cache                         
+.cai                           
+.claude                        
+.claude-flow                   
+.claude-server-commander       
+.codex                         
+.conda                         
+.config                        
+.copilot                       
+.dbus-keyrings                 
+.expo                          
+.idlerc                        
+.ipython                       
+.junie                         
+.jupyter                       
+.kaggle                        
+.keras                         
+.Ld2VirtualBox                 
+.Ld9VirtualBox                 
+.lmstudio                      
+.local                         
+.lunarclient                   
+.matplotlib                    
+.ollama                        
+.openjfx                       
+.pinokio                       
+.pymobiledevice3               
+.rustup                        
+.ssh                           
+.streamlit                     
+.triton                        
+.unsloth                       
+.vachi                         
+.vscode                        
+.vscode-shared                 
+ansel                          
+Apple                          
+beautiful-model                
+bin                            
+blurt2gpu                      
+blurt3r                        
+brainrot-bot                   
+catboost_info                  
+cbgpu                          
+Contacts                       
+cre333                         
+desmos-llm                     
+diag267                        
+diff1-observer                 
+dir                            
+dl9                            
+Documents                      
+Downloads                      
+e2e330dev                      
+e339style                      
+ears119                        
+ears119b                       
+ears119e                       
+ears119f                       
+ears119g                       
+ears119h                       
+ears213                        
+echo                           
+enc56                          
+fable47                        
+Favorites                      
+featlut                        
+Games                          
+Heaven                         
+IdeaProjects                   
+ideaverse                      
+jupyter-guide-to-linear-algebra
+KanyeLeaks                     
+Links                          
+lis300                         
+lis301                         
+lis302                         
+lis302stage-tmp                
+lis318                         
+lis319                         
+lis319c                        
+manim-env                      
+manim-mcp-server               
+MKDIR-DONE                     
+models                         
+Music                          
+MyCryptoProject                
+OneDrive                       
+OpenVoice                      
+own-m1n                        
+plinko-game                    
+Postman                        
+premonition-models             
+PyCharmMiscProject             
+PycharmProjects                
+rd371b                         
+rd378                          
+rsn299bpanel                   
+rsn299dev2                     
+rsn299dev3                     
+rsn299dev4                     
+rsn299panel                    
+rsn358i2                       
+rsn358i3                       
+rsn358s                        
+Saved Games                    
+scout-tasks                    
+scout_ship                     
+Scripts                        
+Searches                       
+smolear235                     
+speedrunigt                    
+talker101                      
+talker24                       
+text-predict                   
+tortoise-tts                   
+trading_bot                    
+TTS                            
+Videos                         
+w264                           
+x1probe                        
+x2probe                        
+xfer                           
+__pycache__
+[0m
+[0m$ [0mssh benspc "powershell -c \"Get-ChildItem C:/Users/benja/dir; Get-ChildItem C:/Users/benja/run_lead0 -ErrorAction SilentlyContinue; nvidia-smi --query-gpu=name,utilization.gpu,memory.used --format=csv\""
+name, utilization.gpu [%], memory.used [MiB]
+NVIDIA GeForce RTX 5070 Ti, 0 %, 434 MiB
+[0m
+[0m$ [0mgit ls-tree -r origin/main --name-only | grep -E "scripts/claude_(rsn358b2_bridge|rsn358b3_panel|e2e02d)" ; echo ---; git show origin/main:scripts/claude_dir_lead0_retell.py | sed -n '60,200p'
+scripts/claude_e2e02d.py
+scripts/claude_e2e02d_d0.py
+scripts/claude_e2e02d_g.py
+scripts/claude_rsn358b2_bridge.py
+scripts/claude_rsn358b3_panel.py
+---
+
+def summarize(rows):
+    def cnt(rs, k): return sum(1 for r in rs if r[k])
+    s = {"n": len(rows), "exact": cnt(rows, "exact"), "has_grid": cnt(rows, "has_grid"), "solves_puzzle": cnt(rows, "solves_puzzle"), "hit_max": cnt(rows, "hit_max")}
+    s["by_size"] = {str(z): {"n": sum(1 for r in rows if r["size"] == z), "exact": sum(1 for r in rows if r["size"] == z and r["exact"])} for z in SIZES}
+    return s
+
+
+def main_run(a):
+    import claude_e2e02d as E
+    bad = E.talker_problem(a.model)
+    if bad:
+        raise SystemExit("lead0: " + bad)
+    talk = E.Talker(a.model)
+    out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
+    summary = {"model": a.model, "started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+    for seed in [int(x) for x in a.seeds.split(",")]:
+        items = make_items(seed, a.n)
+        for with_note in (True, False):
+            rows = run_arm(talk, items, with_note)
+            name = "seed%d_%s" % (seed, "R" if with_note else "N")
+            (out / (name + ".jsonl")).write_text("".join(json.dumps(r) + "\n" for r in rows), newline="")
+            summary[name] = summarize(rows)
+            print("lead0", name, summary[name]["exact"], "of", summary[name]["n"], flush=True)
+    summary["ended_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    (out / "summary.json").write_text(json.dumps(summary, indent=1) + "\n", newline="")
+
+
+class _Perfect:
+    def reply(self, system, msgs, n):
+        i = system.find("(checked):\n")
+        return "Here it is:\n" + system[i + len("(checked):\n"):].split("\n\n")[0] if i >= 0 else "I can't tell."
+
+
+class _Drops:
+    def reply(self, system, msgs, n):
+        r = _Perfect().reply(system, msgs, n)
+        return r.replace("1 2", "1", 1) if r.startswith("Here") else r
+
+
+def selftest():
+    items = make_items(1, 100)
+    assert len(items) == 100 and len({i["id"] for i in items}) == 100
+    assert all(B.is_solution(i["puz"], i["sol"]) for i in items)
+    ok = 0
+    r = run_arm(_Perfect(), items, True); ok += summarize(r)["exact"] == 100
+    n = run_arm(_Perfect(), items, False); ok += summarize(n)["exact"] == 0
+    d = run_arm(_Drops(), items, True); ok += summarize(d)["exact"] < 100
+    assert make_items(1, 100) == items          # deterministic
+    print("lead0 selftest %d/3 ok" % ok)
+    return ok == 3
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser(); sub = ap.add_subparsers(dest="cmd", required=True)
+    r = sub.add_parser("run"); r.add_argument("--model", required=True); r.add_argument("--out", required=True)
+    r.add_argument("--seeds", default="1,2"); r.add_argument("--n", type=int, default=100)
+    sub.add_parser("selftest")
+    a = ap.parse_args()
+    sys.exit(0 if selftest() else 1) if a.cmd == "selftest" else main_run(a)
+[0m
+[0m$ [0mssh benspc "powershell -c \"Test-Path C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b; C:/Users/benja/lis300/venv/Scripts/python.exe --version\""
+True
+Python 3.10.9
+[0m
+[0m$ [0mgit archive origin/main scripts | ssh benspc "mkdir C:\Users\benja\dir\lead0 2>nul & tar -x -C C:\Users\benja\dir\lead0" && ssh benspc "powershell -c \"Get-ChildItem C:/Users/benja/dir/lead0/scripts | Select-Object -First 5 Name; (Get-ChildItem C:/Users/benja/dir/lead0/scripts).Count\""
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[91m[1mError: [0mCannot connect to API: Unable to connect. Is the computer able to access the url?
