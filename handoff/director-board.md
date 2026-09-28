@@ -7,3 +7,6 @@
 | H4 | End-to-end plan + marks | artifacts/claude-dir-h4-e2e-20260928 | done; H5 building panel/scorer/glue | H5 report |
 | H5 | E2E panel spec, scorer, glue stubs | artifacts/claude-dir-h5-e2e-glue-20260928 | done (selftests 31, 32, 27 pass). Open: E5a fix (Director default: gate reasoner on reader act field), Luna wording, lis-320 | H7 next |
 | H6 | Sleep length: lr-matched long night (arm B) | artifacts/claude-dir-h6-sleeplen-20260928 | designed; queue HELD (needs kit sleeph6v, vast) | Director writes kit |
+| H7 | Vast launch kit for sleep-length test | thread cmsg_01GSLCHTCnZxn7DhV19qcDvMXfgnnrzZHzF84Y9PaCJpiq; handoff/kit/sleeph6r | started 20:13 UTC | reply in thread |
+| H8 | Adversarial review of pending tests | thread cmsg_01GSLCHTCnZxn7DhV19qcDvMNT9uUUdAAY3izQx8BydFpH; artifacts/claude-dir-h8-review-20260928 | started 20:13 UTC | reply in thread |
+| H9 | Novelty research for reasoner | thread cmsg_01GSLCHTCnZxn7DhV19qcDvM83DXzppkmhpgaXkhhdEf5h; artifacts/claude-dir-h9-novelty-20260928 | started 20:13 UTC | reply in thread |
