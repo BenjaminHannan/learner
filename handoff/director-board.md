@@ -12,3 +12,7 @@
 | H9 | Novelty research for reasoner | thread cmsg_01GSLCHTCnZxn7DhV19qcDvM83DXzppkmhpgaXkhhdEf5h; artifacts/claude-dir-h9-novelty-20260928 | started 20:13 UTC | reply in thread |
 | H10 | Review-fix addenda for H1/H2/H3/H6 | thread cmsg_01GSLCHTCnZxn7DhV19qcDvMGsKJTaMdsBwKaYDUwTdoxL | started 20:39 UTC | reply in thread |
 | H8 | (done) review of pending tests | artifacts/claude-dir-h8-review-20260928/REVIEW.md | done, 7 of 7 claims confirmed; prompts sent to Ben for patch + relnet chats | their addenda |
+| H9 | (done) Novelty research; 4 designs ranked | artifacts/claude-dir-h9-novelty-20260928/REPORT.md | done; H11 checking | H11 CHECK.md |
+| H11 | Claim check of H9 report | thread cmsg_01GSLCHTCnZxn7DhV19qcDvM45rxS3Y7dmUzxDX69Ddkpz | started 20:58 UTC | reply in thread |
+| H12 | Train the stop on mazes (single change) | thread cmsg_01GSLCHTCnZxn7DhV19qcDvM4Juf7LQehM6FxHDrajGdav | started 20:58 UTC | reply in thread |
+| H7 | (done) vast kit for H6 | handoff/kit/sleeph6r | done, 181 of 181 fake-run checks; queue HELD until H10 addendum | release after H10 |
