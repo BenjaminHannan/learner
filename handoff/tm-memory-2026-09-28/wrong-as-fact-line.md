@@ -1,0 +1,20 @@
+---
+name: wrong-as-fact-line
+description: Wrong-as-fact thread (0.2c row H1): sf-401 baseline PASS; uw-2 (trained note-update head) sealed, trains on lis-320 Luna early cut; y1t-H1 FAIL+PROVED WRONG 18:23 09-27 (ffe17db00); state 09-27 20:00 UTC
+metadata:
+  type: project
+  modified: 2026-09-27T14:32:00.000Z
+---
+Thread cmsg_01FuvegZXjMmeUzStiEFVnEWL4xTTLAbZnjvWLHMt9LGKp (session cse_01QWd37P5QQ3kCUi8R1uV5mr). Row H1: X 8 vs G 5, FAIL stays FAIL; 0.2d-r H1 also FAIL, X' 12 vs G 6. Sibling: Making things up about you. See [[month-end-results]].
+
+- DIAGNOSIS: 10/13 judged-wrong are edit asks (corrections park in lis-314 pending).
+- sf-401 = hand-written doubt rule : doubted value named -> 314 confirm of the newer value, else hedge. Sealed 0136c8f7d (artifacts/claude-sf401-20260926; judges JUDGE-sf401.md).
+- 16:24 sf-401 VERIFIED PASS, all six marks (main cb649dc0b, VERIFY-sf401.md): judged wrong-as-fact A 8 -> B 2 of 231; edit right 21 -> 32 of 74; control right 45/44, don't know 67/68, never-told 20/20; +12 confirm questions (137/149). 42 of 74 edit asks still not right.
+- SPARE panel (711883a7e) = y1t-H1's test. MONEY: rentals need Ben's yes on an ELI5 plan via the TM ([[thread-manager-spending]]); BensPC/CPU default.
+- REDIRECT/BRAIN FIRST: sf-401 is a baseline only ([[redirect-and-brain-first]]).
+- Use GLM (Ben 16:39): nothing trained on is Claude-written or Claude-judged; Claude panels/judges only for sealed tests or data gates.
+- 17:17 BLAME (da3294a87, BLAME-after-verdict.md, scripts/claude_sf401_blame.py): B's 42 missed edit asks = 28 reader/save (old only 12, neither 16) + 14 answer step (new held 13, both 1). SEALED y1t-H1 marks (artifacts/claude-y1tH1-20260926): plain 1B vs y1t trained 1B on the SPARE panel: H1a judged wrong edit B <= A-max(4,ceil(A/3)), H1b edit right B >= A-3, H1c decoy right B >= A-2, H1d other judged wrong B <= A; INCONCLUSIVE if A < 8; judge seed 4013.
+- y1t-H1 wired: handoff/held/benspc-y1t.md step 5b writes artifacts/claude-y1tH1-20260926/run/rows_{A,B}.jsonl; then claude_y1tH1_score.py, claude_y1tH1_marks.py prep/split/marks (ADDENDUM-1 4c7722522). RESULT 09-27 18:23: FAIL, proved wrong (H1a A24 B27, H1b 33/25, H1c 26/29 ok, H1d 33/24 ok; recount agrees; VERIFY-y1tH1.md ffe17db00).
+- Ben stopped threads 14:30, lifted 14:34 UTC 09-27 with a USAGE RULE: only research, building/launching tests, reading results; no polling (one check at expected end, then <= 1 per 2h); TM messages only verdict/launch/blocker, <= 8 lines. uw-2 NOW: cut K=8 (1,584 chats), cards+gate 60/60 sealed 1fbfbe8ce; marks script scripts/claude_uw2_marks.py (panel/dev, counts only) sealed ea15c9c6e; benspc-uw2 queued 19:49 (0abd20607). Ben STOPPED all threads 19:58; trigger cancelled; TM told how to score it.
+- 20:28 OBVIOUS FIX FIRST: supersede on write (Mem0 UPDATE); reader never sees notes (claude_lis319_common.py:30). uw-1 DEV only (ba47635cc/6cf418e5a, scripts/claude_uw1_cards.py, CPU $0, plain 1B snapshot 87179e5c in scratch): notes -> 2/47 right, 188/522 false changes; note-number form 0/47; NOT sealed. uw-2 (trained note-update head, points at note N so compiler owner check doesn't apply) SEALED 4d535f833 after TM review; ADDENDUM-1 data code ed39303d0; test panel sealed 371a2103d (72 corr, 48 earlier-owner, audit 71/72). 09-27: ADDENDUM-2 7035a030d (source now Luna-worded, rawcheck2 --models gpt-6-luna; JUDGE-gate-uw2.md); pilot gate on lis-320 pilot8e 60/60 PASS 29afdddf0; ADDENDUM-3 9af58f2ac early cut = first K chunks stop=ok with worded_ok>=1500 via scripts/claude_uw2_cut.py pick/make (Reading facts agreed 10:20, d2bf93f2b); held handoff/held/benspc-uw2.md 314bb82cc (release after train/ + SEAL-uw2-data.sha256.txt + train/GATE-RESULT.md GATE-PASS). DEV root = folder with only lis-320 pilot+pilot2 (569 cards, 47 corr). Note form needs --arm B for both models. y1t-H1 ADDENDUM-3 machine BensPC (1847b9485). TM reviews all work adversarially (Ben 19:28).
+- Reports go to the Thread manager ([[ben-talks-only-to-thread-manager]]); no reply in the thread unless Ben writes there.

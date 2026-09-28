@@ -1,0 +1,14 @@
+---
+name: notebook-line
+description: Notebook compaction line ("nb-", exps 320-329, thread cmsg_01FuvegZXjMmeUzStiEFVnEWCqGqovgrHeqzd28AgWySnb): goal = fewer bytes per fact in a store the model reads directly
+metadata:
+  type: project
+  modified: 2026-09-23T19:06:00.722Z
+---
+Opened 2026-09-23 ~19:00 UTC in the "current structure" thread (coordinator cleared it for code + builders, prefix nb-, numbers 320-329).
+- Ben 19:02 UTC: "I mean a useable notebook. If the model can't read the notebook then size doesn't matter ... find a way to store fewer bytes per unit of information." Speed and accuracy are fine as they are, so they're guard marks only. (He thought human reaction time was 0.2 ms; it's ~200 ms.)
+- Baseline facts (cloud scratch): today's store = append-only JSON log, ~375 bytes/event (key names, nulls, 64-hex prev hash, raw sentence repeating name+value), 20k facts = 8.3 MB, gzip 1.5 MB, xz 1.1 MB. Scratch SQLite 1M facts no raw/hash = 47 bytes/fact, lookup p99 0.014 ms.
+- Queued on main (commit f213d6b6b): handoff/queue/nb-320-baseline.md (report-only; 20k/100k/1M; backend-pluggable runner scripts/claude_nb320_scale.py --factory) and nb-321-build.md (CompactNotebook321, SQLite stdlib, byte-identical export_events, append-only triggers; build+unit tests+seal only; PASSMARKS M1 size ≤1/5 baseline at 1M, P321.1 ≤1/8; M2 lossless export; M3 same answers; M4 open ≤1 s + memory ≤1/4; M5 p99 not slower; M6 crash; M7 tamper). Design note: design/v3/30-modes/320-notebook-compact.md.
+- Next: verify nb-320 + nb-321 build on builder-outbox, then queue nb-321-run (same sealed runner, compact factory) and a director held-out (new seed, heavy corrections) run in the cloud (contract code runs on cloud CPU). nb-322 = plug into 292 later (the reasoner reads in-memory indexes directly: fable_perf128_index.py:390).
+- Structure explainer published: https://claude.ai/artifact/LNPc7NvFsZLTXP5qxKp6Zs (modes: only LISTENING + SLEEP do work in 292; live loop checks SLEEP before LISTENING, fable_agent_loop.py:293-305; ModeScheduler only in demos).
+- 2026-09-24 03:20 UTC (restarted by coordinator for month-end plan 330, design/v3/30-modes/330-month-end-plan.md; Ben stopped the line 00:50 UTC 09-24): nb-320 landed (baseline exact; RETRACT index cliff: cold open 1.8 s at 20k, 59 s at 100k, 1M DNF; ~465 B/FACT). nb-321-build landed PASS on its unit tests (seals OK) BUT it keeps a full byte-identical events.jsonl beside store.db (dir 582 B/FACT vs 441) and open reads+hashes the whole JSON -> M1 size expected FAIL. Queued on main (ebab40fb7): nb-321-run (registered M1-M7 + cold-open ladder 500/2k/5k ops for the 3-day restart test) and nb-323-build (TurnLog323: durable fsync+read-back hash-chained BEGIN/END turn log built on daemon.log.jsonl fields, install_turnlog323 wraps loop.turn LAST; base 274). When verified, send_message both to month-end session session_01V2m2enaQcaFozptGxcMpCF (needed by Sat Sep 26).
