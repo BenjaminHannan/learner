@@ -1,0 +1,16 @@
+## adapt (dev) F_eq / F_few per run
+loop-pre: seed0 F_eq 51.21 F_few 12.42 | seed1 F_eq 51.67 F_few 14.75
+loop-fresh: seed0 F_eq 19.71 F_few 8.25 | seed1 F_eq 21.04 F_few 17.00
+plain-pre: seed0 F_eq 34.04 F_few 2.92 | seed1 F_eq 32.62 F_few 1.25
+plain-fresh: seed0 F_eq 21.58 F_few 2.42 | seed1 F_eq 23.71 F_few 2.67
+seed0-minus-seed1 F_eq gaps by arm: loop-pre -0.46, loop-fresh -1.33, plain-pre +1.42, plain-fresh -2.12
+rung-gap RMS over 32 (arm x rung) pairs: 11.21 points; /sqrt(8) = 3.96 (this is the H12 3.33 recipe: sd of a difference of two runs)
+directly measured: 4 seed-gaps of F_eq = -0.46, -1.33, +1.42, -2.12; RMS 1.46; max |gap| 2.12
+## holdout (holdout) F_eq / F_few per run
+loop-pre: seed0 F_eq 51.00 F_few 13.83 | seed1 F_eq 51.29 F_few 16.17
+loop-fresh: seed0 F_eq 20.67 F_few 8.00 | seed1 F_eq 21.50 F_few 16.92
+plain-pre: seed0 F_eq 33.79 F_few 3.33 | seed1 F_eq 33.58 F_few 1.00
+plain-fresh: seed0 F_eq 22.46 F_few 2.42 | seed1 F_eq 25.00 F_few 3.08
+seed0-minus-seed1 F_eq gaps by arm: loop-pre -0.29, loop-fresh -0.83, plain-pre +0.21, plain-fresh -2.54
+rung-gap RMS over 32 (arm x rung) pairs: 11.40 points; /sqrt(8) = 4.03 (this is the H12 3.33 recipe: sd of a difference of two runs)
+directly measured: 4 seed-gaps of F_eq = -0.29, -0.83, +0.21, -2.54; RMS 1.35; max |gap| 2.54
