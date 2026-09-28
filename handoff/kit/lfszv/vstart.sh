@@ -28,7 +28,7 @@ command -v "$VAST" > /dev/null || { echo "STOP: no vastai CLI; rented nothing"; 
 [ -f "$KEY.pub" ] || { echo "STOP: no $KEY.pub to attach; rented nothing"; exit 0; }
 L=$(labelled); [ -n "$L" ] && { echo "DUPLICATE: live instance(s) labelled $LABEL: $L"; exit 0; }
 mkdir -p "$G"; cp "$KD/handoff/kit/lfszv/vcommon.sh" "$KD/handoff/kit/lfszv/vguard.sh" "$G/"
-CR=$($VAST show user --raw < /dev/null 2>/dev/null | $PYJ 'import json,sys; print(round(float(json.load(sys.stdin).get("credit",0)),2))')
+CR=$($VAST show user --raw 2>/dev/null | grep -oE '"credit": *-?[0-9.]+' | grep -oE -- '-?[0-9.]+$' | head -1)
 log "credit \$${CR:-?}"
 over "${CR:-0}" 1.60 || { log "STOP: credit \$${CR:-?} is under the \$1.60 cap; nothing rented"; exit 0; }
 OFFERS=$($VAST search offers "$QUERY" -o dph --raw < /dev/null 2>/dev/null | $PYJ 'import json,sys
