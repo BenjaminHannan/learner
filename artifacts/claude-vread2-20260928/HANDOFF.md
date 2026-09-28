@@ -1,5 +1,8 @@
 # vread2 handoff: what is done and what is left (2026-09-28T02:17Z)
 
+**Superseded:** Ben asked the same session to finish, and it did: the rental ran through the execute + cat route
+(600760bc9). See RESULTS.md.
+
 **Done, at f53ce4525, before any training:**
 - PASSMARKS.md, the fresh data (`data/`, Luna chunks 11-13: 6,483 rows, 538 backref cards) and the code:
   - `scripts/claude_vread2_data.py`;
