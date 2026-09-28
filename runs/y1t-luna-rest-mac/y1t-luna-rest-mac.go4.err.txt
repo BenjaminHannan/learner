@@ -1,0 +1,279 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1 | head -20; echo FETCH_DONE; git show origin/builder-outbox:artifacts/claude-y1t-20260926/luna/rest/RESULTS-luna-rest.md 2>&1 | head -5; echo ---; git show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -20
+FETCH_DONE
+fatal: path 'artifacts/claude-y1t-20260926/luna/rest/RESULTS-luna-rest.md' does not exist in 'origin/builder-outbox'
+---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+[0m
+[0m$ [0mls -la artifacts/claude-y1t-20260926/luna/rest/ 2>&1; echo ---; ls artifacts/claude-y1t-20260926/luna/ 2>&1; echo ---; ls scripts/claude_y1t_luna.py scripts/claude_lis320_seed.py scripts/claude_y1t_topup.py scripts/claude_y1t_routefilter.py scripts/claude_luna_codex.py 2>&1; echo ---; pgrep -af "claude_y1t_luna|claude_luna" 2>&1 | head; echo PGRP_DONE
+ls: artifacts/claude-y1t-20260926/luna/rest/: No such file or directory
+---
+luna_pilot.log
+raw_luna_rf.jsonl
+raw_luna.jsonl
+rest2
+rest3
+RESULTS-luna-pilot.md
+---
+ls: scripts/claude_lis320_seed.py: No such file or directory
+ls: scripts/claude_y1t_luna.py: No such file or directory
+ls: scripts/claude_y1t_routefilter.py: No such file or directory
+ls: scripts/claude_y1t_topup.py: No such file or directory
+scripts/claude_luna_codex.py
+---
+53479
+54153
+60280
+64555
+PGRP_DONE
+[0m
+[0m$ [0mps -p 53479 -o pid,etime,command 2>&1; ps -p 54153 -o pid,etime,command 2>&1; ps -p 60280 -o pid,etime,command 2>&1; ps -p 64555 -o pid,etime,command 2>&1; echo ---; ls -la artifacts/claude-y1t-20260926/luna/rest2/ artifacts/claude-y1t-20260926/luna/rest3/ 2>&1; echo ---; git status --short 2>&1 | head -20; git log --oneline -3 2>&1
+PID  ELAPSED COMMAND
+53479 15:55:31 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:y1t-luna-rest-mac.go4.20011 RESUME NOTICE: a previous agent started this exact task and was cut off (usually a network drop, not a task problem). Its files may already exist (scripts with the prefix, artifact folder, PASSMARKS.md/SEAL, ledger predictions, partial outputs). Inspect what exists, keep anything sealed (never edit PASSMARKS.md, the agent code, config or case files if SEAL.sha256.txt exists; verify with shasum -a 256 -c from the repo root), continue from the first unfinished step, do not duplicate ledger predictions. Your 90-minute deadline starts now. The task follows.\012\012RUNNER NOTE (Director, 09-27): your builder model is rate-limited, so every tool call counts. To wait for a long background run, use ONE blocking command (e.g. while pgrep -f <exact script> >/dev/null; do sleep 60; done, capped under 75 min), never many short polls. Before starting any long run, check with pgrep that the same run is not already going (a previous agent may have started it).\012\012COMMON RULES (the "Answering from memory" thread, Claude, wrote this task on 2026-09-27 07:18 UTC). Follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, at most 4 parallel processes, report in your final reply). Get files with `git fetch -q origin main builder-outbox` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).\012GPU: no (Mac CPU; up to 255 GPT-6 Luna calls through Ben's Codex plan via scripts/claude_luna_codex.py, $0 extra). No opencode, no OpenRouter, no reader, no rental, no BensPC. Label: y1t-luna-rest. TIME CAP: 150 minutes. DISK: 1.\012LOAD-LIGHT: yes\012KEY RULES: never read, print, copy or commit anything under ~/.codex, any config or auth file, or any key. The helper never touches them.\012DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox already has artifacts/claude-y1t-20260926/luna/rest/RESULTS-luna-rest.md.\012WHY: artifacts/claude-y1t-20260926/ADDENDUM-5-luna-writer.md (sealed in SEAL-y1t-add5.sha256.txt). Its 60-dialog pilot passed L1, L2 and L3 (artifacts/claude-y1t-20260926/luna/PILOT-RESULT.md on origin/main), so Luna words the other 255 of the 315 redo dialogs with the same runner. Nothing is trained, checked or judged here.\012W: 3 workers (the Director's Luna share for this thread). This file has every step: do not open other jobs' queue files, the addendum or PILOT-RESULT.md.\012\0121. TREE (main's files come only from git archive after the fetch; the worktree's branch does not matter): D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-y1t-20260926/ADDENDUM-5-luna-writer.md artifacts/claude-y1t-20260926/SEAL-y1t-add5.sha256.txt | tar -x -C $D; git archive origin/builder-outbox artifacts/claude-y1t-20260926/glm/raw.jsonl artifacts/claude-y1t-20260926/topup/raw_new.jsonl artifacts/claude-y1t-20260926/luna/raw_luna_rf.jsonl | tar -x -C $D; cd $D; O=artifacts/claude-y1t-20260926/luna; mkdir -p $O/rest.\012   PY means `uv run --offline --no-project --python 3.12 python -B` (no torch needed); under zsh write it out in full. export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1.\0122. SEAL: `shasum -a 256 -c artifacts/claude-y1t-20260926/SEAL-y1t-add5.sha256.txt` (every line OK, else stop with SEAL-MISMATCH and run nothing).\0123. SEEDS: $PY scripts/claude_lis320_seed.py --seed 4027 --n 2400 --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl\012   $PY scripts/claude_y1t_topup.py split --seeds $O/seeds.jsonl --raw artifacts/claude-y1t-20260926/glm/raw.jsonl --out $O/split\012   $PY scripts/claude_y1t_luna.py pick --redo $O/split/seeds_redo.jsonl --done artifacts/claude-y1t-20260926/topup/raw_new.jsonl --out $O/luna_seeds.jsonl\012   Check with `shasum -a 256`: $O/seeds.jsonl = 42b344fba2dad802fa3109295dd3548c8aa7bdd5c947a356ba1c61c480360f43, $O/split/seeds_redo.jsonl = e80e84156cb2ac003711c97ad8d9d4761962c6c42b83d3730477dad8abc4ef8b, $O/luna_seeds.jsonl = 6184cd224078ad2eb71cdd606129cb29fc14e513960c26c0ee0b295f57b483de, $O/raw_luna_rf.jsonl = 5e98dec2f5f48042123e9c0b52a114923d8842a5b0148441f02c179d162e6e78 (the pilot's 60 rows). Any mismatch: stop with SEED-MISMATCH and run nothing. Record pick's printed line (expected "left": 315).\0124. CHECKS: $PY scripts/claude_y1t_luna.py --selftest (ends "y1t luna selftest ok (no network)") and $PY scripts/claude_y1t_routefilter.py --selftest. `uptime`, `df -g /`.\0125. RESUME FILE: cp $O/raw_luna_rf.jsonl $O/rest/raw_luna.jsonl (60 lines). The runner skips every dialog that already has a row in its --out file, so the pilot's 60 are not called again.\0126. RUN, at most two passes, each one shell command (a pass stops starting new batches after 55 minutes):\012   pass 1: $PY scripts/claude_y1t_luna.py --seeds $O/luna_seeds.jsonl --out $O/rest/raw_luna.jsonl --workers 3 --batch 20 --max-minutes 55 --max-failed 20 > $O/rest/luna_rest_1.log 2>&1\012   Its last line is the totals JSON; record it verbatim. If its "stopped" is "done" or "failed", do not run pass 2. If it is "time", run pass 2: the same command with > $O/rest/luna_rest_2.log, and record its totals line verbatim. Never a third pass; never delete or edit a row. Report the first line of each distinct "[y1tluna] call failed" error.\0127. ROUTE FILTER: $PY scripts/claude_y1t_routefilter.py filter --raw $O/rest/raw_luna.jsonl --out $O/rest/raw_luna_rf.jsonl; record its counts line verbatim.\0128. COUNT (counts only): lines in $O/rest/raw_luna.jsonl, rows with "parsed" not null, rows with parsed null, distinct dialog ids, how many of luna_seeds.jsonl's 315 ids have a row, and the model values.\0129. Copy $O/rest/raw_luna.jsonl, $O/rest/raw_luna_rf.jsonl and the pass logs into artifacts/claude-y1t-20260926/luna/rest/ of your worktree (force-add; artifacts/ is git-ignored) and write RESULTS-luna-rest.md there: every printed line verbatim, W, wall times, the counts, any error. Keep it to counts; Luna's text may not be summarised in it. Then rm -rf "$D" (exact path) and confirm it is gone.\012PUSH: artifacts/claude-y1t-20260926/luna/rest
+  PID  ELAPSED COMMAND
+54153 15:55:11 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:lis320-pilot8b-mac.go2.44066 RESUME NOTICE: a previous agent started this exact task and was cut off (usually a network drop, not a task problem). Its files may already exist (scripts with the prefix, artifact folder, PASSMARKS.md/SEAL, ledger predictions, partial outputs). Inspect what exists, keep anything sealed (never edit PASSMARKS.md, the agent code, config or case files if SEAL.sha256.txt exists; verify with shasum -a 256 -c from the repo root), continue from the first unfinished step, do not duplicate ledger predictions. Your 90-minute deadline starts now. The task follows.\012\012RUNNER NOTE (Director, 09-27): your builder model is rate-limited, so every tool call counts. To wait for a long background run, use ONE blocking command (e.g. while pgrep -f <exact script> >/dev/null; do sleep 60; done, capped under 75 min), never many short polls. Before starting any long run, check with pgrep that the same run is not already going (a previous agent may have started it).\012\012COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-27; re-queue of lis320-pilot8-mac, whose two builders died on "Rate limit exceeded" at 03:27-03:30 local before pushing anything). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive origin/main` (your worktree is not on main; never use its own scripts). Never check out or push a branch yourself (the watcher pushes PUSH paths).\012GPU: no (Mac CPU; 60 GPT-6 Luna wording calls plus 1 selftest call through Ben's Codex plan via scripts/claude_luna_codex.py; $0). No reader, no rental, no BensPC, no OpenRouter, no opencode. Label: lis320-pilot8b. TIME CAP: 60 minutes. DISK: 1.\012LOAD-LIGHT: yes\012CODEX RULES: never read, print, copy or commit anything under ~/.codex or any key or auth file. The helper runs each call in a fresh empty temp dir with a read-only sandbox; do not change that.\012PYTHON: run every script as `uv run --offline --no-project --python 3.12 python -B <script> ...` (standard library only).\012WHY: Ben (03:47 UTC 09-27): "just have luna rewrite all the training data". lis-320's writer moves from GLM (opencode plan at its usage limit since about 00:57 UTC) to GPT-6 Luna. The prompt, seeds, checks and marks are unchanged; pilot 7 failed on plan turns and too-tidy spelling; this pilot checks the two registered fixes (a wider plan cue list and one texting-style sentence) against thresholds fixed before it runs (artifacts/claude-lis320-20260926/ADDENDUM-10-luna-pilot7-fixes.md). Nothing is trained.\012\0120. ORPHAN CHECK (before step 1): run `pgrep -fl "claude_lis320_luna2.py --seeds"`. The first attempt (lis320-pilot8-mac) may have left a nohup'd wording python running. If one is found: record its PID and `lsof -a -p PID -d cwd` (path only), wait for it with one blocking command (`while kill -0 PID 2>/dev/null; do sleep 30; done`, at most 45 minutes), never kill it, and then use that cwd as $D: skip steps 1, 4 and 5 and continue from step 2 there (seals and selftests from that tree, without the live selftest call), then steps 6-8 on its $O files. Say so first in RESULTS.md. If none is found, do steps 1-8 as written.\0121. TREE: git fetch -q origin main; D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; cd $D; O=artifacts/claude-lis320-20260926/pilot8; mkdir -p $O. Record `git rev-parse origin/main`.\0122. SEALS (all OK or stop, run from $D): shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-6.sha256.txt; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-8.sha256.txt; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-9.sha256.txt; shasum -a 256 -c artifacts/claude-lis320-20260926/SEAL-ADDENDA-10.sha256.txt\0123. SELFTESTS (each must end ok/OK, else stop): scripts/claude_lis320_luna2.py --selftest; scripts/claude_lis320_seed_cr.py --selftest; scripts/claude_lis320_check_we3.py --selftest; scripts/claude_lis320_rawcheck2.py --selftest; then the ONE live call: scripts/claude_luna_codex.py --selftest (record its line; failure: stop and report).\0124. SEEDS: scripts/claude_lis320_seed_cr.py --seed 328 --n 60 --ask-back --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl   (record the printed counts)\0125. WORDING (3 workers, the Director's share): record `date -u` and `uptime`; scripts/claude_lis320_luna2.py --seeds $O/seeds.jsonl --out $O/raw.jsonl --workers 3 --max-minutes 40 > $O/glm.log 2>&1 ; record `date -u` and `uptime` again. Record the last line of glm.log verbatim (the totals JSON), the count of "call failed" lines and the first line of each distinct error.\0126. scripts/claude_lis320_rawcheck2.py --raw $O/raw.jsonl --seeds $O/seeds.jsonl --models gpt-6-luna   (record the line; ROUTE-FAIL: still do steps 7-8, and say so first in RESULTS.md)\0127. scripts/claude_lis320_check_we3.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl > $O/check.json ; scripts/claude_lis320_style.py --kept $O/kept.jsonl --out $O/style.json   (record check.json verbatim and the printed style line)\0128. Copy $O (seeds.jsonl, raw.jsonl, kept.jsonl, drops.jsonl, check.json, style.json, glm.log) into artifacts/claude-lis320-20260926/pilot8/ of your worktree and write RESULTS.md there: every printed count verbatim, the origin/main commit, the times, dialogs per minute, and any error or deviation. Luna output may be quoted (it is not Claude text), but keep RESULTS.md to counts. Then rm -rf "$D" (exact path) and confirm it is gone.\012PUSH: artifacts/claude-lis320-20260926/pilot8
+  PID ELAPSED COMMAND
+  PID  ELAPSED COMMAND
+64555 17:18:22 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:k1h-luna-full-mac.go1.64533 COMMON RULES (the "Creative answers in chat" thread, Claude, wrote this task on 2026-09-27 05:50 UTC). Get files with `git fetch -q origin main` and `git archive origin/main` (your worktree is not on main; never use its own scripts). Never check out or push a branch yourself (the watcher pushes PUSH paths). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.\012LOAD-LIGHT: yes\012GPU: no (Mac CPU). GPT-6 Luna calls through Ben's Codex plan via scripts/claude_luna_codex.py, 1 at a time (k1h's share): 7 chat-writing calls, then about 930 answers; each call up to 3 tries; $0. No GLM, no opencode command, no rental, no BensPC, no OpenRouter. Label: k1h-luna-full. TIME CAP: 7 hours 30 minutes. DISK: 1.\012CODEX RULES: never read, print, copy or commit anything under ~/.codex or any key or auth file. The helper runs each call in a fresh empty temp dir with a read-only sandbox; do not change that.\012PYTHON: run every script as `uv run --offline --no-project --python 3.12 python -B <script> ...` (standard library only; install nothing). Keep every single shell command under 70 minutes (each step below is capped to fit).\012WHY: k1h's Luna pilot passed its sealed marks (artifacts/claude-k1h-20260926/luna/pilot-score/RESULT.md). This is the full run sealed in artifacts/claude-k1h-20260926/ADDENDUM-5-luna.md: Luna answers every practice chat; nothing is trained here. The thread wrote the code: run it, never edit it. If something breaks, copy back what exists and report the exact error and traceback.\012Never open, print or quote a chat or an answer in your report: parse with a script that prints counts only.\012DUPLICATE GUARD, before anything else: stop with DUPLICATE if artifacts/claude-k1h-20260926/luna/full exists on origin/builder-outbox or origin/main, or if a running python or uv process (judge by the executable name; your own opencode command line contains this task's text, so ignore opencode lines) has claude_k1h_luna.py in its arguments.\012\0121. TREE: git fetch -q origin main; D=$(mktemp -d); git archive origin/main scripts artifacts/claude-k1e-20260926/train/items.jsonl artifacts/claude-k1h-20260926 artifacts/claude-k1f-20260926 artifacts/claude-k1fpanel-20260926/SEAL.sha256.txt | tar -x -C $D; cd $D; O=$D/O; mkdir -p $O/answers $O/chats. Record `git rev-parse origin/main`. Below, K=artifacts/claude-k1e-20260926/train/items.jsonl, G=artifacts/claude-k1h-20260926/glm/chats.jsonl, P=artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl.\0122. SEALS (run from $D; all OK or stop with SEAL-MISMATCH): shasum -a 256 -c on each of SEAL-k1h.sha256.txt (25 OK), SEAL-addendum1 (2), SEAL-addendum2 (4), SEAL-addendum3 (5), SEAL-addendum4 (3), SEAL-addendum5 (5), all in artifacts/claude-k1h-20260926/. Then `shasum -a 256 $G $P` must print 49c74254ea797454d98967b4b3123f23f51498ae8e70089ff978191db76ee8a2 for G and 8cfbc62d8a955935c0b6bcaddb4cf5720b749aaca5edc297867a871d0f9cc603 for P, else stop with DATA-MISMATCH. `wc -l < $G` must be 593.\0123. SELFTESTS (no network; each must print its line exactly, else stop with SELFTEST-FAIL): scripts/claude_k1h_luna.py selftest ("k1h luna selftest 8/8 ok"); scripts/claude_k1h_glm.py selftest ("k1h glm selftest 3/3 ok"); scripts/claude_k1h_routefilter.py selftest ("k1h routefilter selftest 2/2 ok").\0124. CHATS (7 calls = 36 minus floor(593 / 20), one chunk): record `date -u`; scripts/claude_k1h_luna.py chats --existing $K --existing $G --out $O/chats --calls 7 --chunk a --workers 1 --cap-minutes 50 > $O/chats-log.txt 2>&1 ; record `date -u`. Record every line of chats-log.txt that starts with "{" verbatim (counts only) and the number of "[k1h-luna-try]" lines for each kind= value. If $O/chats/chats.jsonl is missing or empty, say so and go on without it.\0125. ANSWERS: cp $P $O/answers/answers.jsonl (the pilot's 40 answers; the run skips them). Then run up to 6 chunks, one after another, each: record `date -u`; scripts/claude_k1h_luna.py answer --items $K --items $G --items $O/chats/chats.jsonl --out $O/answers --workers 1 --cap-minutes 60 > $O/answer-log-N.txt 2>&1 (N = 1..6; leave out `--items $O/chats/chats.jsonl` if step 4 wrote no chats); record `date -u` and the last line of that log verbatim. Stop the loop after a chunk whose last line shows "failed": 0 and "not_started": 0 (every item answered), or after chunk 6, or when the job has less than 75 minutes left. Record the number of "[k1h-luna-try]" lines for each kind= value over all chunks, and the median and largest secs= over the kind=ok lines.\0126. ROUTE FILTER: scripts/claude_k1h_routefilter.py --answers $O/answers/answers.jsonl --out $O/answers/answers_filtered.jsonl   (record the printed line verbatim).\0127. COUNTS (a script that prints counts only): for answers.jsonl and answers_filtered.jsonl: lines, rows with a non-empty "answer", rows with an empty one and their "error" values by kind, distinct item_id values, and distinct item_id values with a non-empty answer split by prefix (kt-, kh-, kl-); lines and distinct item_id values in $O/chats/chats.jsonl; the "\r\n" byte count in each .jsonl (expected 0).\0128. Copy answers.jsonl, answers_filtered.jsonl, chats.jsonl (if it exists), chats-log.txt and every answer-log-N.txt into your worktree as artifacts/claude-k1h-20260926/luna/full/ (force-add; artifacts/ is git-ignored) and check each copy's sha256 against $O's. Write REPORT.md there: the verdict (RAN, DUPLICATE, SEAL-MISMATCH, DATA-MISMATCH or SELFTEST-FAIL), the origin/main commit, the seal and selftest lines, every line recorded in steps 4 to 7, the times (UTC) of each step, and every error or deviation. Quote no chat and no answer. Then rm -rf "$D" (that exact path) and confirm it is gone.\012PUSH: artifacts/claude-k1h-20260926/luna/full
+---
+artifacts/claude-y1t-20260926/luna/rest2/:
+total 1760
+drwxr-xr-x  5 ben-hannan  staff     160 Sep 27 06:09 .
+drwxr-xr-x  8 ben-hannan  staff     256 Sep 27 06:58 ..
+-rw-r--r--  1 ben-hannan  staff    4595 Sep 27 06:09 luna_rest2.log
+-rw-r--r--  1 ben-hannan  staff  446044 Sep 27 06:09 raw_luna_rf.jsonl
+-rw-r--r--  1 ben-hannan  staff  446044 Sep 27 06:09 raw_luna.jsonl
+
+artifacts/claude-y1t-20260926/luna/rest3/:
+total 2488
+drwxr-xr-x  5 ben-hannan  staff     160 Sep 27 06:58 .
+drwxr-xr-x  8 ben-hannan  staff     256 Sep 27 06:58 ..
+-rw-r--r--  1 ben-hannan  staff    2774 Sep 27 06:58 luna_rest3.log
+-rw-r--r--  1 ben-hannan  staff  633813 Sep 27 06:58 raw_luna_rf.jsonl
+-rw-r--r--  1 ben-hannan  staff  633813 Sep 27 06:58 raw_luna.jsonl
+---
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+A  artifacts/claude-mu407-20260927/prep/RESULTS.md
+A  artifacts/claude-mu407-20260927/prep/facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/facts_all.jsonl
+A  artifacts/claude-mu407-20260927/prep/frames.json
+A  artifacts/claude-mu407-20260927/prep/panel/items.jsonl
+A  artifacts/claude-mu407-20260927/prep/raw.jsonl
+A  artifacts/claude-mu407-20260927/prep/smoke_facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/write.log
+A  artifacts/claude-y1t-20260926/luna/RESULTS-luna-pilot.md
+A  artifacts/claude-y1t-20260926/luna/luna_pilot.log
+A  artifacts/claude-y1t-20260926/luna/raw_luna.jsonl
+A  artifacts/claude-y1t-20260926/luna/raw_luna_rf.jsonl
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+e22e4b6bf rd378g-writeluna PILOT-FAIL: Luna batch-18 pilot skipped after 3 tries, 3 call-failed lines (9x timeout after 300s), 0 batch-ok; JSON: 90 kept, 0 new
+86599f56d k1h-glm salvage glm: 240 answers / 593 chats, 5/5 sha256 vs <tmp> (counts only)
+24766dc63 000-luna-helper-selftest: reply with selftest + 3-call parallel outputs
+[0m
+[0m$ [0mpgrep -fl "python.*claude_y1t_luna" 2>&1; echo PY_DONE; pgrep -fl "claude_y1t_luna.py --seeds" 2>&1; echo SEEDS_DONE; tail -3 artifacts/claude-y1t-20260926/luna/rest2/luna_rest2.log 2>&1; echo ---; tail -3 artifacts/claude-y1t-20260926/luna/rest3/luna_rest3.log 2>&1; echo ---; wc -l artifacts/claude-y1t-20260926/luna/rest2/raw_luna.jsonl artifacts/claude-y1t-20260926/luna/rest3/raw_luna.jsonl artifacts/claude-y1t-20260926/luna/raw_luna_rf.jsonl 2>&1
+PY_DONE
+SEEDS_DONE
+[glm320] s320-4027-02302 ok
+[glm320] s320-4027-02304 ok
+{"calls": 160, "parsed": 160, "skipped": 60, "failed_calls": 0, "batches": 11, "stopped": "time", "minutes": 53.3}
+---
+[glm320] s320-4027-02399 ok
+[glm320] s320-4027-02398 ok
+{"calls": 95, "parsed": 95, "skipped": 220, "failed_calls": 0, "batches": 16, "stopped": "done", "minutes": 33.9}
+---
+     220 artifacts/claude-y1t-20260926/luna/rest2/raw_luna.jsonl
+     315 artifacts/claude-y1t-20260926/luna/rest3/raw_luna.jsonl
+      60 artifacts/claude-y1t-20260926/luna/raw_luna_rf.jsonl
+     595 total
+[0m
+[0m$ [0mhead -5 artifacts/claude-y1t-20260926/luna/rest3/luna_rest3.log; echo ---; head -5 artifacts/claude-y1t-20260926/luna/rest2/luna_rest2.log; echo ---; python3 -c "
+import json
+for p in ['artifacts/claude-y1t-20260926/luna/rest3/raw_luna.jsonl','artifacts/claude-y1t-20260926/luna/rest2/raw_luna.jsonl']:
+    ids=set(); null=0; models=set()
+    with open(p) as f:
+        for line in f:
+            line=line.strip()
+            if not line: continue
+            r=json.loads(line)
+            ids.add(r.get('dialog_id', r.get('id')))
+            if r.get('parsed') is None: null+=1
+            m=r.get('model'); models.add(str(m))
+    print(p,'ids=',len(ids),'null=',null,'models=',models)
+"; echo ---; ls /tmp 2>&1 | head; echo ---; uptime; df -g / 2>&1 | head -5
+[glm320] s320-4027-02306 ok
+[glm320] s320-4027-02307 ok
+[glm320] s320-4027-02305 ok
+[glm320] s320-4027-02308 ok
+[glm320] s320-4027-02309 ok
+---
+[glm320] s320-4027-02145 ok
+[glm320] s320-4027-02146 ok
+[glm320] s320-4027-02147 ok
+[glm320] s320-4027-02148 ok
+[glm320] s320-4027-02149 ok
+---
+artifacts/claude-y1t-20260926/luna/rest3/raw_luna.jsonl ids= 315 null= 0 models= {'codex/gpt-6-luna'}
+artifacts/claude-y1t-20260926/luna/rest2/raw_luna.jsonl ids= 220 null= 0 models= {'codex/gpt-6-luna'}
+---
+__KMP_REGISTERED_LIB_19337
+__KMP_REGISTERED_LIB_27249
+__KMP_REGISTERED_LIB_27250
+__KMP_REGISTERED_LIB_34974
+__KMP_REGISTERED_LIB_34975
+__KMP_REGISTERED_LIB_73221
+__KMP_REGISTERED_LIB_73222
+__KMP_REGISTERED_LIB_73227
+__KMP_REGISTERED_LIB_73229
+__KMP_REGISTERED_LIB_73236
+---
+20:00  up 4 days,  9:53, 4 users, load averages: 57.45 64.57 65.26
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        24    35%  484014 254731200    0%   /
+[0m
+[0m$ [0mD=$(mktemp -d); echo "D=$D" > /tmp/y1t_rest_D.txt; cat /tmp/y1t_rest_D.txt; git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-y1t-20260926/ADDENDUM-5-luna-writer.md artifacts/claude-y1t-20260926/SEAL-y1t-add5.sha256.txt | tar -x -C $D; git archive origin/builder-outbox artifacts/claude-y1t-20260926/glm/raw.jsonl artifacts/claude-y1t-20260926/topup/raw_new.jsonl artifacts/claude-y1t-20260926/luna/raw_luna_rf.jsonl | tar -x -C $D; mkdir -p $D/artifacts/claude-y1t-20260926/luna/rest; ls $D/artifacts/claude-y1t-20260926/luna/; ls $D/scripts/ | grep -E "lis320_seed|topup|luna|routefilter|luna_codex"
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.Abk3XtCA8n
+raw_luna_rf.jsonl
+rest
+claude_dl11_luna.py
+claude_g406l_luna.py
+claude_k1h_luna.py
+claude_k1h_routefilter.py
+claude_lis320_luna.py
+claude_lis320_luna2.py
+claude_lis320_luna3.py
+claude_lis320_seed_cr.py
+claude_lis320_seed.py
+claude_luna_codex.py
+claude_luna_effort.py
+claude_luna_run.py
+claude_luna_run2.py
+claude_mu407_prep_luna.py
+claude_rd378g_lunadiag.py
+claude_y1t_luna.py
+claude_y1t_routefilter.py
+claude_y1t_topup.py
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; D=$(cat /tmp/y1t_rest_D.txt | cut -d= -f2); cd $D; O=artifacts/claude-y1t-20260926/luna; shasum -a 256 -c artifacts/claude-y1t-20260926/SEAL-y1t-add5.sha256.txt 2>&1 | tail -5; echo SEAL_DONE; uv run --offline --no-project --python 3.12 python -B scripts/claude_lis320_seed.py --seed 4027 --n 2400 --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl 2>&1 | tail -3; uv run --offline --no-project --python 3.12 python -B scripts/claude_y1t_topup.py split --seeds $O/seeds.jsonl --raw artifacts/claude-y1t-20260926/glm/raw.jsonl --out $O/split 2>&1 | tail -3; uv run --offline --no-project --python 3.12 python -B scripts/claude_y1t_luna.py pick --redo $O/split/seeds_redo.jsonl --done artifacts/claude-y1t-20260926/topup/raw_new.jsonl --out $O/luna_seeds.jsonl 2>&1 | tail -3
+scripts/claude_y1t_routefilter.py: OK
+scripts/claude_lis320_glm_oc.py: OK
+scripts/claude_lis320_glm.py: OK
+scripts/claude_y1t_topup.py: OK
+scripts/claude_lis320_seed.py: OK
+SEAL_DONE
+{"dialogs": 2400, "turns": 16816, "intents": {"ambiguous_pronoun": 517, "ask": 1253, "backref": 1548, "confirm": 480, "correct": 1586, "doubt": 544, "former": 1271, "hypothetical": 516, "jobhome": 825, "negation_only": 484, "plan": 482, "question": 502, "smalltalk": 652, "someone_else": 468, "teach": 5688}}
+{"seeds": 2400, "raw_rows": 1021, "parsed_kept": 645, "to_redo": 1755, "raw_rows_unparsed": 376}
+{"redo": 1755, "done": 1440, "left": 315}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; D=$(cat /tmp/y1t_rest_D.txt | cut -d= -f2); cd $D; O=artifacts/claude-y1t-20260926/luna; shasum -a 256 -c artifacts/claude-y1t-20260926/SEAL-y1t-add5.sha256.txt 2>&1 | grep -vc ": OK"; shasum -a 256 $O/seeds.jsonl $O/split/seeds_redo.jsonl $O/luna_seeds.jsonl artifacts/claude-y1t-20260926/luna/raw_luna_rf.jsonl; echo HASH_DONE; uv run --offline --no-project --python 3.12 python -B scripts/claude_y1t_luna.py --selftest 2>&1 | tail -2; uv run --offline --no-project --python 3.12 python -B scripts/claude_y1t_routefilter.py --selftest 2>&1 | tail -2; uptime; df -g / | head -3
+0
+42b344fba2dad802fa3109295dd3548c8aa7bdd5c947a356ba1c61c480360f43  artifacts/claude-y1t-20260926/luna/seeds.jsonl
+e80e84156cb2ac003711c97ad8d9d4761962c6c42b83d3730477dad8abc4ef8b  artifacts/claude-y1t-20260926/luna/split/seeds_redo.jsonl
+6184cd224078ad2eb71cdd606129cb29fc14e513960c26c0ee0b295f57b483de  artifacts/claude-y1t-20260926/luna/luna_seeds.jsonl
+5e98dec2f5f48042123e9c0b52a114923d8842a5b0148441f02c179d162e6e78  artifacts/claude-y1t-20260926/luna/raw_luna_rf.jsonl
+HASH_DONE
+lis320 glm_oc selftest 4/4 ok
+y1t luna selftest ok (no network)
+{"rows": 9, "empty": 1, "r1": 1, "r2": 3, "kept": 4}
+y1t routefilter selftest ok
+20:01  up 4 days,  9:54, 4 users, load averages: 57.16 64.15 65.10
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        24    35%  484014 254175320    0%   /
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; D=$(cat /tmp/y1t_rest_D.txt | cut -d= -f2); cd $D; O=artifacts/claude-y1t-20260926/luna; pgrep -fl "claude_y1t_luna.py --seeds" | head -3; echo PGREP_DONE; wc -l artifacts/claude-y1t-20260926/luna/raw_luna_rf.jsonl; cp artifacts/claude-y1t-20260926/luna/raw_luna_rf.jsonl $O/rest/raw_luna.jsonl; wc -l $O/rest/raw_luna.jsonl; cp /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-y1t-20260926/luna/rest3/raw_luna.jsonl $O/rest/raw_luna.jsonl; wc -l $O/rest/raw_luna.jsonl; date -u
+PGREP_DONE
+      60 artifacts/claude-y1t-20260926/luna/raw_luna_rf.jsonl
+      60 artifacts/claude-y1t-20260926/luna/rest/raw_luna.jsonl
+     315 artifacts/claude-y1t-20260926/luna/rest/raw_luna.jsonl
+Mon Sep 28 00:01:14 UTC 2026
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; D=$(cat /tmp/y1t_rest_D.txt | cut -d= -f2); cd $D; O=artifacts/claude-y1t-20260926/luna; date -u; uv run --offline --no-project --python 3.12 python -B scripts/claude_y1t_luna.py --seeds $O/luna_seeds.jsonl --out $O/rest/raw_luna.jsonl --workers 3 --batch 20 --max-minutes 55 --max-failed 20 > $O/rest/luna_rest_1.log 2>&1; echo EXIT=$?; date -u; tail -5 $O/rest/luna_rest_1.log; grep -c "call failed" $O/rest/luna_rest_1.log
+Mon Sep 28 00:01:19 UTC 2026
+EXIT=0
+Mon Sep 28 00:01:19 UTC 2026
+{"calls": 0, "parsed": 0, "skipped": 315, "failed_calls": 0, "batches": 16, "stopped": "done", "minutes": 0.0}
+0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; D=$(cat /tmp/y1t_rest_D.txt | cut -d= -f2); cd $D; O=artifacts/claude-y1t-20260926/luna; uv run --offline --no-project --python 3.12 python -B scripts/claude_y1t_routefilter.py filter --raw $O/rest/raw_luna.jsonl --out $O/rest/raw_luna_rf.jsonl 2>&1 | tail -3; echo FILTER_DONE; python3 -c "
+import json
+rows=[json.loads(l) for l in open('$O/rest/raw_luna.jsonl') if l.strip()]
+seeds=[json.loads(l) for l in open('$O/luna_seeds.jsonl') if l.strip()]
+sid=set()
+for s in seeds: sid.add(s.get('dialog_id', s.get('id', s.get('seed_id'))))
+rid=set(); null=0; models=set()
+for r in rows:
+    rid.add(r.get('dialog_id', r.get('id')))
+    if r.get('parsed') is None: null+=1
+    models.add(str(r.get('model')))
+print('lines=',len(rows),'parsed_notnull=',len(rows)-null,'parsed_null=',null,'distinct_ids=',len(rid),'seed_ids_covered=',len(rid & sid),'of',len(sid),'models=',sorted(models))
+rfr=[json.loads(l) for l in open('$O/rest/raw_luna_rf.jsonl') if l.strip()]
+print('rf_lines=',len(rfr))
+"; shasum -a 256 $O/rest/raw_luna.jsonl $O/rest/raw_luna_rf.jsonl; cmp -s $O/rest/raw_luna_rf.jsonl /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-y1t-20260926/luna/rest3/raw_luna_rf.jsonl && echo RF_SAME_AS_REST3 || echo RF_DIFFERS_FROM_REST3
+{"rows": 315, "empty": 0, "r1": 0, "r2": 0, "kept": 315}
+FILTER_DONE
+lines= 315 parsed_notnull= 315 parsed_null= 0 distinct_ids= 315 seed_ids_covered= 315 of 315 models= ['codex/gpt-6-luna']
+rf_lines= 315
+b49327ced60b24d74186025bd5be8648467ae1046889a03ed896667bf328e56e  artifacts/claude-y1t-20260926/luna/rest/raw_luna.jsonl
+b49327ced60b24d74186025bd5be8648467ae1046889a03ed896667bf328e56e  artifacts/claude-y1t-20260926/luna/rest/raw_luna_rf.jsonl
+RF_SAME_AS_REST3
+[0m
+[0m$ [0mstat -f "%N %Sm" artifacts/claude-y1t-20260926/luna/rest2/luna_rest2.log artifacts/claude-y1t-20260926/luna/rest3/luna_rest3.log artifacts/claude-y1t-20260926/luna/rest2/raw_luna.jsonl artifacts/claude-y1t-20260926/luna/rest3/raw_luna.jsonl; echo ---; grep "call failed" artifacts/claude-y1t-20260926/luna/rest2/luna_rest2.log artifacts/claude-y1t-20260926/luna/rest3/luna_rest3.log 2>&1 | head -5; echo FAILED_GREP_DONE; grep -c "ok$" artifacts/claude-y1t-20260926/luna/rest2/luna_rest2.log artifacts/claude-y1t-20260926/luna/rest3/luna_rest3.log; git rev-parse origin/main; git rev-parse origin/builder-outbox
+artifacts/claude-y1t-20260926/luna/rest2/luna_rest2.log Sep 27 06:09:22 2026
+artifacts/claude-y1t-20260926/luna/rest3/luna_rest3.log Sep 27 06:58:50 2026
+artifacts/claude-y1t-20260926/luna/rest2/raw_luna.jsonl Sep 27 06:09:22 2026
+artifacts/claude-y1t-20260926/luna/rest3/raw_luna.jsonl Sep 27 06:58:50 2026
+---
+FAILED_GREP_DONE
+artifacts/claude-y1t-20260926/luna/rest2/luna_rest2.log:160
+artifacts/claude-y1t-20260926/luna/rest3/luna_rest3.log:95
+3e8cf1186bf64cca8a77f0e5428596bd2bc70b30
+e6eba4d0c8939c377fe34cfa3cedd54d0276d3d4
+[0m
+[0m$ [0mD=$(cat /tmp/y1t_rest_D.txt | cut -d= -f2); mkdir -p artifacts/claude-y1t-20260926/luna/rest && cp $D/artifacts/claude-y1t-20260926/luna/rest/raw_luna.jsonl $D/artifacts/claude-y1t-20260926/luna/rest/raw_luna_rf.jsonl $D/artifacts/claude-y1t-20260926/luna/rest/luna_rest_1.log artifacts/claude-y1t-20260926/luna/rest/ && ls -la artifacts/claude-y1t-20260926/luna/rest/ && wc -l artifacts/claude-y1t-20260926/luna/rest/*
+total 2488
+drwxr-xr-x  5 ben-hannan  staff     160 Sep 27 20:01 .
+drwxr-xr-x  9 ben-hannan  staff     288 Sep 27 20:01 ..
+-rw-r--r--  1 ben-hannan  staff     111 Sep 27 20:01 luna_rest_1.log
+-rw-r--r--  1 ben-hannan  staff  633813 Sep 27 20:01 raw_luna_rf.jsonl
+-rw-r--r--  1 ben-hannan  staff  633813 Sep 27 20:01 raw_luna.jsonl
+       1 artifacts/claude-y1t-20260926/luna/rest/luna_rest_1.log
+     315 artifacts/claude-y1t-20260926/luna/rest/raw_luna_rf.jsonl
+     315 artifacts/claude-y1t-20260926/luna/rest/raw_luna.jsonl
+     631 total
+[0m
+[0m← [0mWrite artifacts/claude-y1t-20260926/luna/rest/RESULTS-luna-rest.md
+Wrote file successfully.
+[0m
+[0m$ [0mD=$(cat /tmp/y1t_rest_D.txt | cut -d= -f2); git add -f artifacts/claude-y1t-20260926/luna/rest/ 2>&1; git status --short artifacts/claude-y1t-20260926/luna/rest/ 2>&1; rm -rf "$D"; test ! -e "$D" && echo D_GONE || echo D_STILL_THERE; rm -f /tmp/y1t_rest_D.txt
+A  artifacts/claude-y1t-20260926/luna/rest/RESULTS-luna-rest.md
+A  artifacts/claude-y1t-20260926/luna/rest/luna_rest_1.log
+A  artifacts/claude-y1t-20260926/luna/rest/raw_luna.jsonl
+A  artifacts/claude-y1t-20260926/luna/rest/raw_luna_rf.jsonl
+D_GONE
+[0m
