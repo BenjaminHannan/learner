@@ -1,3 +1,4 @@
+STATUS: HELD. Real dependency: release about 30 min after dir-s3-vast-1-start-r2 reports STARTED (Director, 2026-09-29); collect must not run before the rental exists.
 BASH-ONLY: yes
 LOAD-LIGHT: yes
 GPU: rent (one vast card, best TFLOPS per $/h, >= 24 GB, at most $0.65/h; cap $2.50 for the whole task)
