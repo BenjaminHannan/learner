@@ -80,3 +80,4 @@
 - 02:34 UTC 09-29: Ben: talker decodes the reasoner's final state, does not read notes. S5 withdrawn, jobs moved to queue-retired/ (no delete). Roadmap updated. Waiting on a state-to-words decoder brief.
 - 02:35 UTC 09-29: Ben: talker is a thin translator both ways, reasoner does everything. Default decoder check approved by Ben via coordinator (last round, frozen reasoner, small decoder). Brief: handoff/director-briefs/translator-check.md (talker-alone control must fail). Sent to coordinator to start.
 - 02:36 UTC 09-29: Translator check thread started (cse_01JjYE7UPRnmX7gdUn8UPPRW, cmsg_01GSLCHTCnZxn7DhV19qcDvMGfj5VL8j9xSmKdgXqzz7wM).
+- 02:38 UTC 09-29: Huginn thread started (cse_01VUF9nqwZd9TMG197bQMWw3): prompt-every-round (Ben: definitely), all previous states (Ben's question, a test), random rounds, convergence stop.
