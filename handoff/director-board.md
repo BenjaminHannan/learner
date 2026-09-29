@@ -76,3 +76,4 @@
 - 02:13 UTC 09-29: S1 (turn and flip mazes) on main (d1336c3b0), seal OK, jobs s1-loop-mac + s1-plain-mac queued (Mac CPU $0). Blind recount must check the dev/holdout-layout skip (655/674 of 131,072 views).
 - 02:14 UTC 09-29: S5 Mac-path job dir-s5-talker-notes on main (ssh benspc; waits behind dir-g-a via GPU-BUSY).
 - 02:16 UTC 09-29: S2 (Watch it think) on main ac64f9e89, seal 10/10; s2think-1-mac HELD until ks-1 rebuilds the k64/k16384 nets (one-shot job would burn its name). Sleep64/16384 originals not on Mac: sleep part untested unless the originals are found.
+- 02:20 UTC 09-29: S3 (numbers nearest-valid) sealed, Mac-path jobs dir-s3-min, dir-s3-random on main. With dir-s5-talker-notes all three HELD until dir-g-a ends (a BUSY exit would burn the name); order after G: s3-min, s3-random, s5. Then blind recounts.
