@@ -1,4 +1,3 @@
-STATUS: HELD. DO NOT RUN (helper "keep old skills", 2026-09-29): superseded by ks-1-lead0-mac-r3.
 BASH-ONLY: yes
 GPU: no (Mac CPU, strict fp32, $0, no rental, no BensPC). LOAD-LIGHT: no (2 single-thread processes; rebuilds, if needed, take about 40 min each). TIME CAP: 300 minutes. LABEL: ks-1-lead0.
 DISK: 2 (checkpoints, about 7 MB per net, up to 9 nets per seed, stay local in $HOME/premonition-ks and are never pushed)
@@ -11,7 +10,7 @@ SRC=${KS_SRC:-/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claud
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH" OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 KS_SRC="$SRC" KS_NETS="$W/nets"
 echo "start $(date -u '+%F %T') UTC"; uptime; df -g / | tail -1
 FREE=$(df -g / | awk 'NR==2{print $4}'); [ "${FREE:-0}" -ge 3 ] || { echo "ABORT: under 3 GB free"; exit 4; }
-git -C "$G" fetch -q origin main || { echo "ABORT: fetch failed"; exit 4; }
+{ git -C "$G" fetch -q origin main || { sleep 30; git -C "$G" fetch -q origin main; } || { sleep 120; git -C "$G" fetch -q origin main; }; } || { echo "ABORT: fetch failed"; exit 4; }
 git -C "$G" cat-file -e "origin/main:$A/SEAL-code.sha256.txt" 2>/dev/null || { echo "WAITING: origin/main has no $A/SEAL-code.sha256.txt"; exit 5; }
 mkdir -p "$W" && git -C "$G" archive origin/main scripts artifacts/claude-fewex-20260927 $A | tar -x -C "$W" || { echo "ABORT: archive failed"; exit 4; }
 cd "$W" || exit 4
@@ -26,7 +25,7 @@ done
 U=$(command -v uv || echo "$HOME/.local/bin/uv")
 PY="$U run --offline --no-project --python 3.12 --with torch --with numpy python -B"
 mkdir -p $A/logs
-run2() { xargs -P 2 -I{} sh -c 'L=$(echo "{}" | tr " -" "__"); '"$PY"' scripts/claude_dir_ks_run.py {} > '"$A"'/logs/$L.log 2>&1 || echo "FAILED {}"'; }
+run2() { while read -r L; do while [ "$(jobs -rp | wc -l | tr -d ' ')" -ge 2 ]; do sleep 5; done; N=$(echo "$L" | tr ' -' '__'); ( $PY scripts/claude_dir_ks_run.py $L > $A/logs/$N.log 2>&1 || echo "FAILED $L" ) & done; wait; }
 $PY scripts/claude_dir_ks_run.py selftest 2>&1 | tee $A/selftest.log; grep -q '"uniform_mode_equals_harness_sleep": true' $A/selftest.log || { echo "STOP: plug-in selftest failed"; exit 7; }
 printf '%s\n' "prep --seed 0" "prep --seed 1" | run2
 for S in 0 1; do [ -f $A/prep/s$S.json ] || { echo "STOP: prep s$S wrote no record"; tail -20 $A/logs/prep*s$S* 2>/dev/null; exit 8; }; done
