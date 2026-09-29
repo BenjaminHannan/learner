@@ -1,0 +1,19 @@
+#!/bin/bash
+# FAKE ssh for the kit tests only: the "rental" is a folder on this box ($BROPC, set by the test), so the remote command runs locally,
+# stdin and stdout passed through. Fault injection through files under $FAKE/ssh:
+#   dead            host does not answer (exit 255)
+#   mutate-on-tar   N: the first N `pack.sh` calls come back with one byte of the first file changed (a copy that does not match its manifest)
+S=$FAKE/ssh; mkdir -p "$S"
+while [ $# -gt 1 ]; do
+  case "$1" in -i|-o|-p) shift 2;; -*) shift;; root@*) shift; break;; *) break;; esac
+done
+cmd=$*
+echo "$(date -u +%T) $cmd" | cut -c1-240 >> "$S/calls.log"
+[ -e "$S/dead" ] && exit 255
+case "$cmd" in "bash "*"box/pack.sh"*) m=$(cat "$S/mutate-on-tar" 2>/dev/null || echo 0)
+  if [ "$m" -gt 0 ]; then echo $((m-1)) > "$S/mutate-on-tar"
+    # a file that changed on the way (or a corrupt copy): flip one byte inside the first file's data of the tar stream, headers untouched
+    /bin/bash -c "$cmd" | /usr/bin/python3 -c 'import sys; d=bytearray(sys.stdin.buffer.read()); d[512+1]^=0x55; sys.stdout.buffer.write(d)'
+    exit 0
+  fi;; esac
+exec /bin/bash -c "$cmd"

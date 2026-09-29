@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+# FAKE python for the kit tests only (the box's `python -m venv`, the venv's python -m pip / -c / script runs). It answers the sealed scripts' subcommands
+# in SHAPE only (the files and printed lines the job scripts read); it is not the real code. Faults through files under $FAKE/py:
+#   torch-install  the version string the fake wheel reports (default 2.14.0+cpu)      pip-fail  present: pip install fails
+#   fail           a substring; a script run whose command line contains it exits 1 with a traceback line
+#   hang           present: `adapt` runs never end (until killed)
+import json, os, pathlib, sys, time
+FAKE = os.environ.get("FAKE", "/nonexistent"); P = pathlib.Path(FAKE) / "py"
+a = sys.argv[1:]
+def opt(name, default=None):
+    return a[a.index(name) + 1] if name in a else default
+def jdump(path, obj):
+    path = pathlib.Path(path); path.parent.mkdir(parents=True, exist_ok=True); path.write_text(json.dumps(obj))
+P.mkdir(parents=True, exist_ok=True)
+with open(P / "calls.log", "a") as f: f.write(" ".join(a)[:200] + "\n")
+if a[:2] == ["-m", "venv"]:
+    b = pathlib.Path(a[2]) / "bin"; b.mkdir(parents=True, exist_ok=True)
+    t = b / "python"
+    if t.exists() or t.is_symlink(): t.unlink()
+    t.symlink_to(os.path.realpath(__file__)); sys.exit(0)
+if a[:2] == ["-m", "pip"]:
+    if (P / "pip-fail").exists(): print("ERROR: fake pip failure"); sys.exit(1)
+    print("fake pip:", " ".join(a[3:]))
+    sys.exit(0)
+if a[:1] == ["-c"]:
+    ver = (P / "torch-install").read_text().strip() if (P / "torch-install").exists() else "2.14.0+cpu"
+    print("torch", ver, "numpy 2.4.6 cuda False built-with-cuda None"); sys.exit(0)
+if a[:2] == ["-B", "-"]:      # heredoc scripts of the queue files (summary printers): run them with the real python
+    os.execv(sys.executable, [sys.executable, "-"])
+if a[:1] != ["-B"]: print("fake python: unhandled", a); sys.exit(2)
+script = os.path.basename(a[1]); sub = a[2] if len(a) > 2 else ""
+line = " ".join(a)
+fl = (P / "fail").read_text().strip() if (P / "fail").exists() else ""
+if fl and fl in line:
+    print("Traceback (most recent call last):\n  fake failure injected for: " + fl); sys.exit(1)
+ok = lambda **k: print(json.dumps(dict(k)))
+A = lambda d: d   # artifact dir names are the jobs' own; the fake writes where the job reads
+if script == "claude_dir_ks_run.py":
+    ad = "artifacts/claude-dir-ks-20260928"
+    if sub == "selftest": ok(uniform_mode_equals_harness_sleep=True); sys.exit(0)
+    s = int(opt("--seed", 0))
+    if sub == "prep":
+        d = pathlib.Path(os.environ["KS_NETS"]) / f"loop-s{s}-pre"; d.mkdir(parents=True, exist_ok=True)
+        for k in ("k0", "k64", "k16384"): (d / f"{k}.pt").write_bytes(os.urandom(2000))
+        assert os.path.exists(os.environ["KS_SRC"] + f"/runs/qual-loop-s{s}/source.pt")
+        rung = {"origin": "rebuilt with harness functions", "dev9": 20, "committed_dev9": 20, "matches_committed": True}
+        jdump(f"{ad}/prep/s{s}.json", {"seed": s, "k0": {"old_before": {"sums4": 195}, "committed_old_before": {"sums4": 195}, "dev9": 10, "committed_dev9": 10}, "rungs": {"64": rung, "16384": rung}})
+        print("prep done", s); sys.exit(0)
+    if sub == "lead0":
+        k = opt("--k"); jdump(f"{ad}/lead0/s{s}-k{k}.json", {"P": {"sums4": 195}, "A": {"sums4": 150}, "revert": {"E": {"sums4": 190}}, "only": {"E": {"sums4": 160}}}); print("lead0 done"); sys.exit(0)
+if script == "claude_sweep_s2_think.py":
+    if sub == "selftest": ok(selftest="ok"); sys.exit(0)
+    if sub == "trace":
+        assert os.path.exists(opt("--ckpt")); jdump(opt("--out"), {"consistent": True}); print("trace ok", opt("--name")); sys.exit(0)
+    if sub == "judge": jdump(opt("--out"), {"words": {}}); print("JUDGE fake CONVERGES 0 DRIFTS 0"); sys.exit(0)
+if script == "claude_dir_trn_decode.py":
+    if sub == "selftest": print("trn selftest ok"); sys.exit(0)
+    if sub == "run":
+        t = opt("--tasks"); assert os.path.exists(opt("--src") + "/artifacts/claude-fewex-20260927/eq-runs/loop-s0-pre/k16384.pt")
+        print("trn row", t); jdump(pathlib.Path(opt("--out")) / f"{t}.json", {"rows": []}); sys.exit(0)
+if script in ("claude_dir_pond_marks.py", "claude_s1_d4_marks.py") and sub == "selftest": ok(selftest="ok"); sys.exit(0)
+if script == "claude_dir_pond_selftest.py": ok(selftest="ok"); sys.exit(0)
+if script == "claude_s1_d4_selftest.py": ok(selftest="ok", part_b="ran"); sys.exit(0)
+if script == "claude_dir_pond_marks.py" and sub == "judge":
+    arm = opt("--arms"); rung = {"right": 100, "fixed_right": 90, "cap_hits": 1, "mean_rounds": 20.0, "S1": True, "S2": False}
+    seed = {"s1_rungs_passing": 4, "s2_rungs_passing": 3, "F": {"F_eq": {"learned": .5, "fixed": .4}, "F_few": {"learned": .3, "fixed": .2}}, "rungs": {"64": rung}}
+    jdump(opt("--out"), {"overall": "NOT SHOWN", "arms": {arm: {"lambda": 0.001, "word": "NOT SHOWN", "seeds": {"0": seed, "1": seed}, "rows": {"A1": 1, "A2": 2, "P": 3, "body_reading": "x"}}}}); print("judged", arm); sys.exit(0)
+if script == "claude_fewex_eq_bench.py" and sub == "adapt":
+    if (P / "hang").exists(): time.sleep(100000)
+    o = pathlib.Path(opt("--out")); o.mkdir(parents=True, exist_ok=True)
+    assert os.path.exists(opt("--source") + "/source.pt") and os.path.exists(opt("--source") + "/source.json")
+    (o / "adapt.json").write_text("{}"); (o / "k16384.pt").write_bytes(os.urandom(3000)); (o / "k64.pt").write_bytes(os.urandom(3000))
+    print("d4_views drawn 100 redrawn 2"); print("adapt done", opt("--plugin"), opt("--seed")); sys.exit(0)
+if script == "claude_dir_h12_doubt.py":
+    if sub == "selftest": ok(selftest="ok"); sys.exit(0)
+    if sub == "extract":
+        assert os.path.exists(opt("--run-dir") + "/k16384.pt"); jdump(opt("--out"), {"items": []}); print("consistent_with_harness true", opt("--tag")); sys.exit(0)
+    if sub == "table": jdump(opt("--out"), {}); print("table row pooled k>=64"); sys.exit(0)
+if script == "claude_s1_d4_vote.py" and sub == "run":
+    jdump(pathlib.Path(opt("--dir")) / "vote.json", {"vote": 1}); print("vote ok", opt("--seed")); sys.exit(0)
+print("fake python: unhandled script call:", line); sys.exit(2)
