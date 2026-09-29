@@ -1,0 +1,79 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mfor i in 1 2 3 4; do git fetch -q origin main && break; sleep $((2**i)); done; echo FETCH_DONE:$?; for p in artifacts/claude-moe-deep-20260929/PASSMARKS.md artifacts/claude-moe-deep-20260929/SEAL.sha256.txt scripts/claude_moe_deep_net.py scripts/claude_moe_deep_run.py scripts/claude_moe_deep_report.py; do git cat-file -e origin/main:$p && echo "OK $p" || echo "MISSING $p"; done; date -u; git rev-parse origin/main | head -c 12; echo
+FETCH_DONE:0
+OK artifacts/claude-moe-deep-20260929/PASSMARKS.md
+OK artifacts/claude-moe-deep-20260929/SEAL.sha256.txt
+OK scripts/claude_moe_deep_net.py
+OK scripts/claude_moe_deep_run.py
+OK scripts/claude_moe_deep_report.py
+Tue Sep 29 11:18:56 UTC 2026
+8ba841fedbbb
+[0m
+[0m$ [0mSRC=/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs; ls "$SRC/qual-loop-s0/source.pt" "$SRC/qual-loop-s1/source.pt" 2>&1; shasum -a 256 "$SRC/qual-loop-s0/source.pt" "$SRC/qual-loop-s1/source.pt" 2>&1; pwd; git status --short | head -20
+/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s0/source.pt
+/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s1/source.pt
+d5f09b1dfbc65e4e018081be71305e7440468d869114f2205e2565a3e646a085  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s0/source.pt
+6cc51ee871a383668b365f63c80e9d9599a4c11faab08fed7e46747f7fb15673  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s1/source.pt
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-dir-g-build-20260928/timing/RUN-NOTE.md
+A  artifacts/claude-dir-g-build-20260928/timing/timing-par.json
+A  artifacts/claude-dir-g-build-20260928/timing/timing-par.log
+A  artifacts/claude-dir-g-build-20260928/timing/timing-ser.json
+A  artifacts/claude-dir-g-build-20260928/timing/timing-ser.log
+A  artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt
+A  artifacts/claude-dir-h2-numbers-20260928/runs/RUN-NOTE.md
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/loop-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/loop-s14.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/extra.json
+[0m
+[0m$ [0mssh benspc "cat C:\\Users\\benja\\GPU-BUSY.txt 2>&1; echo ---; pgrep -f claude_moe_deep 2>&1 || echo NOPGREP_MOE; ps aux 2>&1 | head -30" 2>&1; echo EXIT:$?
+'cat' is not recognized as an internal or external command,
+operable program or batch file.
+'head' is not recognized as an internal or external command,
+operable program or batch file.
+EXIT:255
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command Get-Content C:\\Users\\benja\\GPU-BUSY.txt; echo ---BUSY-END---" 2>&1; echo EXIT:$?
+BUSY: queue job mxd-1-smoke-phase1-benspc since 2026-09-29T11:18:42Z - do not use this GPU until this file is gone 
+---BUSY-END---
+EXIT:0
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force -Path C:\\Users\\benja\\moedeep | Out-Null; Get-PSDrive C | Select-Object Used,Free\"" 2>&1; echo MKDIR_EXIT:$?
+Used       Free
+         ----       ----
+1016413319168 6730514432
+
+
+MKDIR_EXIT:0
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"\$d=Get-PSDrive C; Write-Output (\$d.Free/1GB); Write-Output (\$d.Used/1GB); Get-ChildItem C:\\Users\\benja\\moedeep -ErrorAction SilentlyContinue | Select-Object Name,LastWriteTime\"" 2>&1; echo EXIT:$?
+6.2681999206543
+946.608749389648
+EXIT:0
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Get-CimInstance Win32_LogicalDisk -Filter \\\"DeviceID='C:'\\\" | Select-Object DeviceID,Size,FreeSpace; Get-CimInstance Win32_LogicalDisk | Select-Object DeviceID,Size,FreeSpace\"" 2>&1; echo EXIT:$?
+DeviceID          Size  FreeSpace
+--------          ----  ---------
+C:       1023143833600 6730469376
+C:       1023143833600 6730469376
+
+
+EXIT:0
+[0m
+[0m$ [0mdate -u; echo ---; git rev-parse --short origin/main
+Tue Sep 29 11:19:50 UTC 2026
+---
+8ba841fed
+[0m
