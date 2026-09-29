@@ -1,0 +1,17 @@
+BASH-ONLY: yes
+GPU: rent (one vast box used only as a many-core CPU machine; any GPU on it is unused and every job is strict fp32 CPU; at most $0.35/h; cap $2.50 for the whole task; credit floor $2.50)
+DISK: 1
+Owner: Opus manager session, for Ben (Ben asked for vast use 2026-09-29; this task's own cap is $2.50 of Ben's $5 for this session). This runs the sealed code of ten queued Mac jobs UNCHANGED on a rented CPU box because the Mac queue is jammed: ks-1-lead0-mac-r2, s2think-1-mac, trn-decode-mac, pond-{a,b,c,z}-dev, pond-doubt, s1-loop-mac, s1-plain-mac. The Mac copies of those jobs STAY QUEUED; the Director decides which to withdraw. Neither run (Mac or box) is chosen by its score. Only the machine changes (Linux for macOS: sha256sum for shasum, a pip-pinned torch 2.14.0 CPU wheel for uv); every deviation is in handoff/kit/opcpu/DEVIATIONS.md, and all outputs go ONLY to artifacts/opus-manager-20260929/cpu-vast/<test>/ (never into a sealed folder) through opus-cpu-vast-2-collect.
+It runs handoff/kit/opcpu/vstart.sh from the pinned commit (PIN=18deff81bf423c5285cf4ff4c890817d70457a6e, filled in after the kit is committed). It refuses and rents nothing if: main already has artifacts/opus-manager-20260929/cpu-vast/_rental/COLLECT.txt, an earlier start ran, an instance labelled opus-cpu is live, credit is under $2.50, the pinned commit lacks any sealed file the jobs read, or a Mac-only input is missing or wrong: the qualified nets qual-loop-s0 and qual-loop-s1 (source.pt checked against checkpoints-sha256.txt, source.json against SHA256-EQ-RAW.txt) under /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/. It rents the offer with the lowest $/h per CPU core (>= 32 effective cores, reliability >= 0.98, disk >= 40 GB, inet_down >= 200, any GPU, at most $0.35/h, and only if estimate 5.0 h x price <= $2.00); sends the pinned tree by git archive and the Mac-only inputs (also qual-plain-s0/s1 for s1-plain and the loop/plain source.pt and plain k16384 for trn-decode, each group only if present and matching, else that job is SKIPPED and says so); the rental checks the inputs' sha256, builds a venv with torch 2.14.0 CPU + numpy 2.4.6 (fail closed), then runs each job from its own private archive: wave 1 (about 14 single-thread processes at once) ks-1-lead0 (rebuilds the loop nets k64 / k16384 from the qual-loop sources, then lead0), pond-a/b/c/z-dev, s1-loop, s1-plain; wave 2 s2think and trn-decode (2 threads x 2) as soon as the ks nets exist; wave 3 pond-doubt after the four pond arms. Estimated 4.5 h typical, 6.9 h worst case, time cap 7 h; the Mac guard stops at $2.50 or 7 h (stall check by log growth and CPU load, no GPU reading) and destroys only after a manifest-verified copy of the small files (never a .pt), else it stops the instance, not destroys it. Never reads or prints the vast key. Tested against fakes only (handoff/kit/opcpu/test/fake_run.sh); the rental steps, the torch wheel install and the CPU speed are untested.
+```bash
+set -u
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+JOB=$(basename "$0" .bo.sh); PIN=18deff81bf423c5285cf4ff4c890817d70457a6e
+date -u; echo "job $JOB"
+git fetch -q origin main builder-outbox || echo "git fetch failed; trying the local copy of $PIN"
+K=$(mktemp -d)
+git archive "$PIN" handoff/kit/opcpu | tar -x -C "$K" || { echo "STOP: kit $PIN not found"; rm -rf "$K"; exit 0; }
+bash "$K/handoff/kit/opcpu/vstart.sh" "$K" "$PIN" "$JOB"; rc=$?
+rm -rf "$K"
+exit $rc
+```
