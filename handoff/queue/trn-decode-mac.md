@@ -1,3 +1,4 @@
+STATUS: HELD. Real dependency: the maze half needs k16384.pt (loop and plain), which the Mac does not hold until ks-1-lead0-mac-r2 rebuilds them; the job prints MISSING-NET and would burn its name. Director removes this line then (2026-09-29).
 BASH-ONLY: yes
 GPU: no (Mac CPU, fp32, $0, no rental, download nothing, install nothing). LOAD-LIGHT: no (two processes, 2 threads each). TIME CAP: 300 minutes. LABEL: trn-decode.
 DISK: 1
