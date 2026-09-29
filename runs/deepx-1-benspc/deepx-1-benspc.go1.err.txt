@@ -1,0 +1,98 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m# [0mTodos
+[•] Step 1: fetch origin/main, verify required paths, print date
+[ ] Step 2: stream tree to BensPC, check disk
+[ ] Step 3: SEAL checks + CUDA check on BensPC
+[ ] Step 4: selftest2 on BensPC
+[ ] Step 5-6: run source+dev for 4 pairs with copy-back after each
+[ ] Final report + push
+[0m
+[0m$ [0mfor i in 1 2 3 4; do git fetch -q origin main && break; sleep $((2**i)); done; for p in artifacts/claude-moe-deepx-20260929/PASSMARKS.md artifacts/claude-moe-deepx-20260929/SEAL.sha256.txt scripts/claude_moe_deepx_net.py scripts/claude_moe_deepx_run.py scripts/claude_moe_deepx_report.py artifacts/claude-moe-deep-20260929/SEAL.sha256.txt; do git cat-file -e origin/main:"$p" || { echo "MISSING $p"; exit 5; }; done; echo ALL-PRESENT; date -u; git rev-parse --short origin/main; git status --short | head -20
+ALL-PRESENT
+Tue Sep 29 11:21:31 UTC 2026
+ef1d45276
+A  artifacts/claude-dir-g-build-20260928/timing/RUN-NOTE.md
+A  artifacts/claude-dir-g-build-20260928/timing/timing-par.json
+A  artifacts/claude-dir-g-build-20260928/timing/timing-par.log
+A  artifacts/claude-dir-g-build-20260928/timing/timing-ser.json
+A  artifacts/claude-dir-g-build-20260928/timing/timing-ser.log
+A  artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt
+A  artifacts/claude-dir-h2-numbers-20260928/runs/RUN-NOTE.md
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/loop-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/loop-s14.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/extra.json
+[0m
+[0m# [0mTodos
+[✓] Step 1: fetch origin/main, verify required paths, print date
+[•] Step 2: stream tree to BensPC, check disk
+[ ] Step 3: SEAL checks + CUDA check on BensPC
+[ ] Step 4: selftest2 on BensPC
+[ ] Step 5-6: run source+dev for 4 pairs with copy-back after each
+[ ] Final report + push
+[0m
+[0m$ [0mssh benspc "mkdir C:\Users\benja\moedeepx" 2>&1 | head -5; echo "---mkdir done---"; git archive origin/main scripts artifacts/claude-moe-deep-20260929 artifacts/claude-moe-deepx-20260929 artifacts/claude-fewex-20260927 artifacts/claude-distill-20260928/checkpoints-sha256.txt | ssh benspc "tar -x -C C:/Users/benja/moedeepx" && echo ARCHIVE-OK; ssh benspc "df -h C:/Users/benja/moedeepx 2>/dev/null || wmic logicaldisk where DeviceID='C:' get Size,FreeSpace /format:list; powershell -c \"Get-PSDrive C | Select-Object Free,Used\""
+---mkdir done---
+ARCHIVE-OK
+The system cannot find the path specified.
+'wmic' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh benspc 'powershell -NoProfile -Command "Get-PSDrive C | Format-List Free, Used, Root"'
+Free : 6705041408
+Used : 1016438792192
+Root : C:\
+[0m
+[0m$ [0mssh benspc 'powershell -NoProfile -Command "$d=[IO.DriveInfo]::GetDrives()|Where-Object{$_.Name -eq \"C:\\\"}; Write-Output (\"FreeGB=\"+([math]::Round($d.AvailableFreeSpace/1GB,2))); Write-Output (\"TotalGB=\"+([math]::Round($d.TotalSize/1GB,2))); Get-Content C:\Users\benja\GPU-BUSY.txt 2>&1; Write-Output \"---MDIR---\"; ($du=(Get-ChildItem C:/Users/benja/moedeepx -Recurse -File -ErrorAction SilentlyContinue|Measure-Object Length -Sum).Sum); Write-Output (\"MDIR_GB=\"+([math]::Round($du/1GB,3)))"'
+FreeGB=6.24
+TotalGB=952.88
+BUSY: queue job deepx-1-benspc since 2026-09-29T11:21:15Z - do not use this GPU until this file is gone 
+---MDIR---
+22688007
+MDIR_GB=0.021
+[0m
+[0m$ [0mssh benspc 'pgrep -f claude_moe_deepx_run 2>/dev/null || echo NO-DEEPX-RUN; C:/Users/benja/lis300/venv/Scripts/python.exe -B -c "import torch;print(torch.__version__, torch.version.cuda, torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else None)"'
+NO-DEEPX-RUN; C:/Users/benja/lis300/venv/Scripts/python.exe -B -c "import torch;print(torch.__version__, torch.version.cuda, torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else None)"
+The system cannot find the path specified.
+[0m
+[0m$ [0mssh benspc "bash -lc 'pgrep -f claude_moe_deepx_run || echo NO-DEEPX-RUN; PYTHONUTF8=1 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 HF_HUB_OFFLINE=1 C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \"import torch;print(torch.__version__, torch.version.cuda, torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else None)\"'"
+NO-DEEPX-RUN; PYTHONUTF8=1 OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 HF_HUB_OFFLINE=1 C:/Users/benja/lis300/venv/Scripts/python.exe -B -c "import torch;print(torch.__version__, torch.version.cuda, torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else None)"'
+/bin/bash: -c: line 1: unexpected EOF while looking for matching `''
+[0m
+[0m$ [0mssh benspc "\"C:\Program Files\Git\bin\bash.exe\" -lc 'pgrep -f claude_moe_deepx_run || echo NO-DEEPX-RUN'"
+/usr/bin/bash: line 1: pgrep: command not found
+NO-DEEPX-RUN'
+[0m
+[0m$ [0mssh benspc "tasklist /FI \"IMAGENAME eq python.exe\" /FO LIST | findstr /I \"PID Image\""
+(no output)
+[0m
+[0m$ [0mssh benspc "cmd /c \"set PYTHONUTF8=1 ^& set OMP_NUM_THREADS=2 ^& set MKL_NUM_THREADS=2 ^& set HF_HUB_OFFLINE=1 ^& C:\Users\benja\lis300\venv\Scripts\python.exe -B -c import_torch_check\" 2>&1 || C:\Users\benja\lis300\venv\Scripts\python.exe -B --version"
+(no output)
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"\$env:PYTHONUTF8='1'; \$env:HF_HUB_OFFLINE='1'; & 'C:\Users\benja\lis300\venv\Scripts\python.exe' -B -c 'import torch;print(torch.__version__,torch.version.cuda,torch.cuda.is_available(),torch.cuda.get_device_name(0))'\""
+2.11.0+cu128 12.8 True NVIDIA GeForce RTX 5070 Ti
+[0m
+[0m$ [0mdate -u; git status --short -- artifacts/claude-moe-deepx-20260929 | head; git stash list | head -3
+Tue Sep 29 11:26:46 UTC 2026
+stash@{0}: autostash
+stash@{1}: autostash
+[0m
+[0m# [0mTodos
+[✓] Step 1: fetch origin/main, verify required paths, print date
+[✓] Step 2: stream tree to BensPC, check disk -> LOW-DISK stop (6.24GB < 10GB)
+[ ] Step 3: SEAL checks + CUDA check on BensPC
+[ ] Step 4: selftest2 on BensPC
+[ ] Step 5-6: run source+dev for 4 pairs with copy-back after each
+[✓] Final report + push (nothing to push)
+[0m
