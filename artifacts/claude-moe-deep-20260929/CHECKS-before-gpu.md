@@ -1,0 +1,11 @@
+# Checks run before any GPU job (after the seal at 3d49de206)
+
+Written 2026-09-29 01:27 UTC (date -u). Machine: this 4-core cloud container, torch 2.14.0+cpu, fp32. None of this is a result about mazes: nothing here was trained long enough to score anything, and no holdout item was read.
+
+**Shown (ran here):**
+- `claude_moe_deep_run.py selftest`: "selftest": "ok" (`selftest.json`, sealed). Both expert paths (padded batched and per-expert slices) match a naive per-cell computation: values within 2.1e-7, gradients within 1.4e-6; a cell's output is identical whether its puzzle is alone or in a batch (difference 0.0). Contract: 48 cell and 48 stop logits for the loops, 1 and 0 for plain-big; the harness gradient check passes (76 matrices for L8-E64). Expert liveness on a fresh net: 360 of 512 experts get a gradient from the two small check batches (a 4-digit sums batch has 12 distinct tokens, so a fresh router uses only part of each layer); reported, not gated (PASSMARKS V2).
+- Plumbing dry-run with toy budgets (4 practice steps, 2 batches per rung, rungs 1 / 64 / 16,384, 3-maze dev panels, holdout panel replaced by those dev items, lenient source identity): source -> qualified.json -> practised MoE ladder with stage checkpoints and routes.json -> loop control ladder from a stand-in loop source -> a loop control with a missing source skipped with "LOOP-SOURCE-MISMATCH" and the phase went on -> plain-big source (plain lr sweep) and ladder -> the MoE fresh copy -> holdout for the MoE and the loop control. Every step finished (exit 0). The script is outside the repo (scratchpad) and patches budgets from outside; the sealed scripts were not edited.
+- Resume: a source practice crashed after its step-4 checkpoint and rerun gives weights bit-identical to an uninterrupted run (CPU). The ladder's resume is the patch race's `claude_patch_eq_ladder.py` (its own selftest).
+- CPU speed, one thread, main entry L8-E64: 5.2 s per practice step, 20.7 s per maze batch (4 updates), 21.1 s to score 32 9x9 mazes over 48 rounds; loop 0.82 s, 2.8 s, 3.3 s. First version was 3.5x slower still: lopsided routing made the padded buffer huge; fixed before the seal by the per-expert path.
+
+**Untested:** CUDA (no GPU here), Windows paths on BensPC, BensPC's torch version, GPU speed, and the CPU-vs-GPU smoke (job mxd-1 runs it first).
