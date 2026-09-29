@@ -81,3 +81,4 @@
 - 02:35 UTC 09-29: Ben: talker is a thin translator both ways, reasoner does everything. Default decoder check approved by Ben via coordinator (last round, frozen reasoner, small decoder). Brief: handoff/director-briefs/translator-check.md (talker-alone control must fail). Sent to coordinator to start.
 - 02:36 UTC 09-29: Translator check thread started (cse_01JjYE7UPRnmX7gdUn8UPPRW, cmsg_01GSLCHTCnZxn7DhV19qcDvMGfj5VL8j9xSmKdgXqzz7wM).
 - 02:38 UTC 09-29: Huginn thread started (cse_01VUF9nqwZd9TMG197bQMWw3): prompt-every-round (Ben: definitely), all previous states (Ben's question, a test), random rounds, convergence stop.
+- 02:41 UTC 09-29: MoE reasoner (Ben's session build, mxd-1..4, seal at artifacts/claude-moe-deep-20260929) on main; thread 'Sparse experts reasoner' cse_01Fm2e1PBPssTBGagTwL97P3. mxd-1/3/4 HELD behind dir-g-a (BUSY exit would burn names); PC order G, S3 min/random, mxd-1, mxd-3/4, mxd-2.
