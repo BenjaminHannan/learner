@@ -1,4 +1,4 @@
-2026-09-28 20:45:54
+2026-09-28 20:48:25
 running:
 dir-g-a.running
 dir-h1-heldout-r2.running
@@ -8,14 +8,6 @@ h13-patch-race-dev-r2.running
 launched (no exit yet) / finished:
     1198
 
-and the repository exists.
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-2026-09-28 19:11:14 pushed dir-lead0-retell-benspc
-2026-09-28 19:49:28 watcher started (pid 5452)
-2026-09-28 19:49:32 orphan finished dir-h1-heldout
-2026-09-28 19:49:38 pushed dir-h1-heldout
-2026-09-28 19:49:43 pushed dst-t3-1-s13-benspc
-2026-09-28 19:49:45 launch dir-h1-heldout-r2
 2026-09-28 19:49:45 launch dirlr-lead0-mac-r2
 2026-09-28 19:49:45 launch dirlr-stage-mac-r2
 2026-09-28 19:49:46 launch dst-t3-2-s14-benspc
@@ -158,15 +150,23 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-28 20:45:49 load 357, holding relnet-guard-mac (       5 running)
 2026-09-28 20:45:52 load 359, holding sl-1-read-r2 (       5 running)
 2026-09-28 20:45:53 load 359, holding sl-2-source-r2 (       5 running)
+2026-09-28 20:48:17 load 386, holding pond-a-dev (       5 running)
+2026-09-28 20:48:18 load 386, holding pond-b-dev (       5 running)
+2026-09-28 20:48:19 load 386, holding pond-c-dev (       5 running)
+2026-09-28 20:48:19 load 386, holding pond-doubt (       5 running)
+2026-09-28 20:48:20 load 386, holding pond-z-dev (       5 running)
+2026-09-28 20:48:21 load 384, holding relnet-guard-mac (       5 running)
+2026-09-28 20:48:24 load 384, holding sl-1-read-r2 (       5 running)
+2026-09-28 20:48:24 load 384, holding sl-2-source-r2 (       5 running)
 
 diag:
 == dir-g-a
-70554 Sep 28 20:45 dir-g-a.go1.err.txt
-686 Sep 28 20:43 dir-g-a.go1.reply.md
-{"step": 100, "ce": 4.6479, "exact": 0.0, "exact_any_stream": 0.0, "halt_bce": 0.0733, "lr": 1.5149999999999999e-05, "min": 1.4, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbe
-{"step": 150, "ce": 4.2874, "exact": 0.0, "exact_any_stream": 0.0, "halt_bce": 0.0302, "lr": 6.634031406124699e-06, "min": 1.5, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "number
-{"step": 200, "ce": 4.3065, "exact": 0.0, "exact_any_stream": 0.0, "halt_bce": 0.0214, "lr": 0.0, "min": 1.6, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1":
-TIMING {"steps": 200, "K": 4, "pool": "h2", "serial_streams": false, "sec_per_step_mean_after_20": 0.0984, "projected_minutes_per_net_60000_steps_alone": 98.4, "peak_cuda_gb": 8.84, "gpu": "NVIDIA GeF
+72133 Sep 28 20:48 dir-g-a.go1.err.txt
+838 Sep 28 20:48 dir-g-a.go1.reply.md
+[0m$ [0msleep 120; ssh benspc '"C:\Program Files\Git\bin\bash.exe" -lc "head -c 2000 /c/Users/benja/dirg/W/g-s13.log"' 2>&1 | head -n 20
+h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool
+loop-g K=4 pool=h2 seed 13: 6440350 weights (2048 new), data ready in 76s on cuda
+{"step": 500, "ce": 3.2262, "exact": 0.0027, "exact_any_stream": 0.0036, "halt_bce": 0.0758, "lr": 0.00015027424797191312, "min": 2.1, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, 
 [0m
 == dir-h1-heldout-r2
 77158 Sep 28 19:54 dir-h1-heldout-r2.go1.err.txt
@@ -202,20 +202,20 @@ zsh:1: no matches found: artifacts/claude-patch-eq-20260928/logs/*.log
 [0m
 top5cpu:
 %CPU COMM
-71.9 java
-48.2 python3
-47.3 python
-43.0 python
-42.1 python
+47.5 WindowServer
+38.9 python
+38.3 python
+38.3 python3
+38.1 python
 procs:
-  352     1 18443-00:42:59 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1042   768       01:37:32 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
- 1375  1373       01:37:25 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
- 1388   788       01:37:25 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
- 4354     1       01:14:49 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 5461     1          56:25 S    /usr/bin/ssh-agent
- 6418  6392          56:09 SN   /usr/local/bin/opencode
- 6491  6469          56:09 SN   /usr/local/bin/opencode
- 6580  6553          56:09 SN   /usr/local/bin/opencode
- 7328  7292          56:04 SN   /usr/local/bin/opencode
-42056 42008          15:08 RN   /usr/local/bin/opencode
+  352     1 18443-00:45:31 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1042   768       01:40:04 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+ 1375  1373       01:39:57 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+ 1388   788       01:39:57 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+ 4354     1       01:17:21 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 5461     1          58:57 S    /usr/bin/ssh-agent
+ 6418  6392          58:41 SN   /usr/local/bin/opencode
+ 6491  6469          58:41 SN   /usr/local/bin/opencode
+ 6580  6553          58:41 SN   /usr/local/bin/opencode
+ 7328  7292          58:36 SN   /usr/local/bin/opencode
+42056 42008          17:40 RN   /usr/local/bin/opencode
