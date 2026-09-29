@@ -124,6 +124,11 @@ while [ ! -e "$H/STOP" ]; do
       if [ "$(echo "$ga" | tail -1)" != "rc=0" ]; then log "BensPC unreachable (ssh $(echo "$ga" | tail -1)), holding $n"; rm -f "$Q/$n.md.tmp"; continue; fi
       if [ "$(echo "$ga" | tail -1)" != "rc=0" ] || [ -z "$gm" ] || [ "$gm" -gt 3000 ] || [ "$gp" -gt 0 ]; then log "gpu busy on BensPC, holding $n: mem ${gm:-?} MiB, python.exe $gp, $(echo "$ga" | tail -1)"; rm -f "$Q/$n.md.tmp"; continue; fi
     fi
+    # one claim per experiment on BensPC: Mac job X-benspc and PC-runner job X-pc share base X; mkdir is atomic, so only one of the two watchers ever runs X (Director 11:2x UTC 09-29)
+    if grep -q '^GPU: yes' "$Q/$n.md.tmp"; then
+      base=$(echo "$n" | sed -E 's/-(benspc|pc)$//')
+      if ! ssh -o ConnectTimeout=10 -o BatchMode=yes benspc "mkdir C:\\Users\\benja\\claims >nul 2>&1 & mkdir C:\\Users\\benja\\claims\\$base" </dev/null >/dev/null 2>&1; then log "claim for $base already taken on BensPC (or ssh failed), skipping $n"; rm -f "$Q/$n.md.tmp"; continue; fi
+    fi
     mv "$Q/$n.md.tmp" "$Q/$n.md"; touch "$Q/$n.running"; log "launch $n"
     # a GPU: yes job claims BensPC visibly: C:\Users\benja\GPU-BUSY.txt names the job while it runs (outside agents: do not use the GPU while it exists)
     gpu=0; grep -q '^GPU: yes' "$Q/$n.md" && gpu=1

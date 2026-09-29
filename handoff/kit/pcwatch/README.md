@@ -28,3 +28,6 @@ Second question: the T3 jobs need the four checkpoints already at `C:/Users/benj
 ## Tested / untested (honest)
 - Tested on a Linux cloud box with a fake local git remote, `bash handoff/kit/pcwatch/test.sh` (12 of 12 checks): clone, launch, one at a time, results + 5 MB limit + status pushed to `pc-outbox`, exit 75 retried and not marked done, failing job marked done, Mac-only job ignored, stale marker cleared, GPU-BUSY.txt removed.
 - UNTESTED: everything Windows (Git Bash, `timeout`, `kill -0` on Windows pids, `icacls`, `schtasks`, the `cygpath` step), the real token and https push, `nvidia-smi` parsing, self-update, a clone of the real repo (about 500 MB of history, disk on the PC not checked), the -pc job scripts themselves (syntax checked only; they need torch, the model and checkpoints).
+
+## Shared claim (Director, 09-29)
+Both watchers (this one and the Mac watcher's BensPC path) take an atomic claim before starting a GPU job: `mkdir C:\Users\benja\claims\<base>`, where base is the job name without a trailing `-benspc` or `-pc`. So a Mac job X-benspc and a PC job X-pc can never both run; the loser is skipped (this runner writes `rc=CLAIMED`). A claim is never removed by the watchers: an experiment runs once, and a rerun needs a new name (as elsewhere). GPU memory limit is 3000 MiB (Ben: "just use the gpu").

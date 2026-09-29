@@ -98,3 +98,4 @@
 - 09:33 UTC 09-29: G2 code sealed (SEAL-g2 OK) and dir-g2-a RELEASED (Mac CPU $0, cap 6 h; job checks final.pt sha on the Mac, NO-WEIGHTS otherwise).
 10:32 UTC 09-29 Ben 'Just use the gpu': watcher GPU-memory gate 700 -> 3000 MiB in kit watcher.sh (running watchers self-update from main, no restart); mxd-1 HELD removed; dir-g-timing, dst-t3-1..4 were never held. G-b stays dropped. mxd-2/3/4 stay held.
 10:54 UTC 09-29 Ben: every explainer page includes a roadmap section; added to thread-helper-common.md and kit/eli5/README.md. No thread is mid-page (all helper threads idle/completed).
+11:18 UTC 09-29 pcwatch GPU_MEM_MAX 700->3000; shared claim dir C:\Users\benja\claims\<base> in both watchers (mkdir atomic) so X-benspc and X-pc never both run; pcwatch test.sh 12/12 PASS.

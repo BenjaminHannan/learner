@@ -15,7 +15,7 @@ set -u
 H=${PCW_HOME:-$HOME/pcwatch}; S=$H/state; W=$H/repo; O=$H/outbox; LOG=$H/watch.log
 REPO_URL=${REPO_URL:-https://github.com/BenjaminHannan/learner.git}
 CYCLE=${CYCLE:-120}; OUT=pc-outbox; IN=main
-BUSYF=${BUSYF:-$HOME/GPU-BUSY.txt}; GPU_MEM_MAX=${GPU_MEM_MAX:-700}
+BUSYF=${BUSYF:-$HOME/GPU-BUSY.txt}; GPU_MEM_MAX=${GPU_MEM_MAX:-3000}   # Ben 10:30 UTC 09-29 "just use the gpu": desktop apps hold 1300-1400 MiB
 TOKEN=$H/token
 mkdir -p "$S" "$H"
 log() { echo "$(date -u '+%F %T')Z $*" >> "$LOG"; }
@@ -97,6 +97,8 @@ launch_one() {
   gm=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -dc '0-9')
   if [ -n "$gm" ] && [ "$gm" -gt "$GPU_MEM_MAX" ]; then log "gpu memory ${gm} MiB > $GPU_MEM_MAX, holding"; return; fi
   f=$(eligible | head -1); [ -n "$f" ] || return; n=$(basename "$f" .md)
+  base=$(echo "$n" | sed -E 's/-(benspc|pc)$//'); CL=${CLAIMDIR:-$HOME/claims}; mkdir -p "$CL" 2>/dev/null   # shared claim with the Mac watcher (it mkdirs C:\Users\benja\claims\<base> over ssh); atomic, so X runs once
+  if ! mkdir "$CL/$base" 2>/dev/null; then echo "rc=CLAIMED" > "$S/$n.exit"; log "claim for $base already taken (Mac watcher or earlier run), $n marked done"; return; fi
   git -C "$W" checkout -q -f --detach "origin/$IN" 2>>"$LOG" || { log "checkout failed, holding $n"; return; }   # safe: nothing is running
   git -C "$W" show "origin/$IN:$f" > "$S/$n.md"
   awk '/^```bash/{f=1;next} /^```/{if(f)exit} f' "$S/$n.md" > "$S/$n.sh"

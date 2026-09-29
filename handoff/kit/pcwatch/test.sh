@@ -3,7 +3,7 @@
 # Builds a bare "origin", puts fake jobs on main, runs the watcher in ONCE mode round after round, checks the results.
 set -u
 HERE=$(cd "$(dirname "$0")" && pwd); T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
-export PCW_HOME=$T/home BUSYF=$T/GPU-BUSY.txt REPO_URL=$T/origin.git CYCLE=1 NO_SELF_UPDATE=1 ONCE=1
+export CLAIMDIR=$T/claims PCW_HOME=$T/home BUSYF=$T/GPU-BUSY.txt REPO_URL=$T/origin.git CYCLE=1 NO_SELF_UPDATE=1 ONCE=1
 git init -q --bare "$T/origin.git"; git init -q "$T/seed"; cd "$T/seed"; git config user.email t@t; git config user.name t
 mkdir -p handoff/pcqueue handoff/queue handoff/kit/pcwatch; cp "$HERE/watcher.sh" handoff/kit/pcwatch/
 mk() { printf 'GPU: yes\nRUNNER: pc\nTIME CAP: 1 minutes\nPUSH: out/%s\n```bash\n%s\n```\n' "$1" "$2" > "handoff/pcqueue/$1.md"; }
