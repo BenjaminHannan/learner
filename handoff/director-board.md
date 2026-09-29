@@ -82,3 +82,4 @@
 - 02:36 UTC 09-29: Translator check thread started (cse_01JjYE7UPRnmX7gdUn8UPPRW, cmsg_01GSLCHTCnZxn7DhV19qcDvMGfj5VL8j9xSmKdgXqzz7wM).
 - 02:38 UTC 09-29: Huginn thread started (cse_01VUF9nqwZd9TMG197bQMWw3): prompt-every-round (Ben: definitely), all previous states (Ben's question, a test), random rounds, convergence stop.
 - 02:41 UTC 09-29: MoE reasoner (Ben's session build, mxd-1..4, seal at artifacts/claude-moe-deep-20260929) on main; thread 'Sparse experts reasoner' cse_01Fm2e1PBPssTBGagTwL97P3. mxd-1/3/4 HELD behind dir-g-a (BUSY exit would burn names); PC order G, S3 min/random, mxd-1, mxd-3/4, mxd-2.
+- 02:42 UTC 09-29: MoE thread found the loop already adds the prompt each round (claude_fewex_net.py:77), so Huginn idea 1 is mostly in; idea 2 (previous states) new. Its plan copied to design/research/huginn-2026-09-29/. Huginn thread told next.
