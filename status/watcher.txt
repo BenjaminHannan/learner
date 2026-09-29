@@ -1,19 +1,10 @@
-2026-09-29 07:23:51
+2026-09-29 07:26:22
 running:
 deepx-1-benspc.running
 ks-1-lead0-mac-r3.running
 launched (no exit yet) / finished:
     1226
 
-2026-09-29 06:49:23 load 323, holding s1-loop-mac (       2 running)
-2026-09-29 06:49:24 load 323, holding s1-plain-mac (       2 running)
-2026-09-29 06:49:24 load 323, holding sl-1-read-r2 (       2 running)
-2026-09-29 06:49:24 load 323, holding sl-2-source-r2 (       2 running)
-2026-09-29 06:49:26 load 321, holding trn-decode-sums-mac (       2 running)
-2026-09-29 06:51:43 load 311, holding ks-1-lead0-mac-r3 (       2 running)
-2026-09-29 06:51:45 load 313, holding pond-c-dev (       2 running)
-2026-09-29 06:51:46 load 313, holding pond-doubt (       2 running)
-2026-09-29 06:51:46 load 313, holding pond-z-dev (       2 running)
 2026-09-29 06:51:47 load 313, holding relnet-guard-mac (       2 running)
 2026-09-29 06:51:49 load 313, holding s1-loop-mac (       2 running)
 2026-09-29 06:51:49 load 313, holding s1-plain-mac (       2 running)
@@ -155,34 +146,41 @@ launched (no exit yet) / finished:
 2026-09-29 07:23:49 load 305, holding sl-1-read-r2 (       2 running)
 2026-09-29 07:23:49 load 305, holding sl-2-source-r2 (       2 running)
 2026-09-29 07:23:51 load 305, holding trn-decode-sums-mac (       2 running)
+2026-09-29 07:26:15 load 310, holding pond-c-dev (       2 running)
+2026-09-29 07:26:16 load 310, holding pond-doubt (       2 running)
+2026-09-29 07:26:16 load 311, holding pond-z-dev (       2 running)
+2026-09-29 07:26:17 load 311, holding relnet-guard-mac (       2 running)
+2026-09-29 07:26:19 load 311, holding s1-loop-mac (       2 running)
+2026-09-29 07:26:19 load 311, holding s1-plain-mac (       2 running)
+2026-09-29 07:26:20 load 311, holding sl-1-read-r2 (       2 running)
+2026-09-29 07:26:20 load 311, holding sl-2-source-r2 (       2 running)
+2026-09-29 07:26:21 load 311, holding trn-decode-sums-mac (       2 running)
 
 diag:
 == deepx-1-benspc
-2607 Sep 29 07:21 deepx-1-benspc.go1.err.txt
-81 Sep 29 07:21 deepx-1-benspc.go1.reply.md
-[ ] Step 3: SEAL checks + CUDA check on BensPC
-[ ] Step 4: selftest2 on BensPC
-[ ] Step 5-6: run source+dev for 4 pairs with copy-back after each
-[ ] Final report + push
+6048 Sep 29 07:26 deepx-1-benspc.go1.err.txt
+212 Sep 29 07:25 deepx-1-benspc.go1.reply.md
+(no output)
+[0m
+[0m$ [0mssh benspc "cmd /c \"set PYTHONUTF8=1 ^& set OMP_NUM_THREADS=2 ^& set MKL_NUM_THREADS=2 ^& set HF_HUB_OFFLINE=1 ^& C:\Users\benja\lis300\venv\Scripts\python.exe -B -c import_torch_check\" 2>
+(no output)
 [0m
 == ks-1-lead0-mac-r3
 0 Sep 29 07:18 ks-1-lead0-mac-r3.go1.err.txt
-455 Sep 29 07:18 ks-1-lead0-mac-r3.go1.reply.md
+3349 Sep 29 07:25 ks-1-lead0-mac-r3.go1.reply.md
 top5cpu:
 %CPU COMM
-83.0 python
-81.4 python3
-80.9 python
-80.4 python
-79.9 python
+86.8 python
+85.9 python
+85.5 python
+84.7 python3
+83.7 python
 procs:
-  352     1 18443-11:20:56 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1042   768       12:15:29 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
- 1375  1373       12:15:22 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
- 1388   788       12:15:22 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
- 4354     1       11:52:46 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 5461     1       11:34:22 S    /usr/bin/ssh-agent
- 9197  9191          02:06 SN   ssh
-10173 10009          00:09 S    /usr/bin/ssh
-62906     1       10:30:18 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
- 8193  8168          02:35 RN   /usr/local/bin/opencode
+  352     1 18443-11:23:27 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1042   768       12:18:00 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+ 1375  1373       12:17:53 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+ 1388   788       12:17:53 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+ 4354     1       11:55:17 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 5461     1       11:36:53 S    /usr/bin/ssh-agent
+62906     1       10:32:49 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+ 8193  8168          05:06 RN   /usr/local/bin/opencode
