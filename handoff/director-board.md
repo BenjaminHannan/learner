@@ -79,3 +79,4 @@
 - 02:20 UTC 09-29: S3 (numbers nearest-valid) sealed, Mac-path jobs dir-s3-min, dir-s3-random on main. With dir-s5-talker-notes all three HELD until dir-g-a ends (a BUSY exit would burn the name); order after G: s3-min, s3-random, s5. Then blind recounts.
 - 02:34 UTC 09-29: Ben: talker decodes the reasoner's final state, does not read notes. S5 withdrawn, jobs moved to queue-retired/ (no delete). Roadmap updated. Waiting on a state-to-words decoder brief.
 - 02:35 UTC 09-29: Ben: talker is a thin translator both ways, reasoner does everything. Default decoder check approved by Ben via coordinator (last round, frozen reasoner, small decoder). Brief: handoff/director-briefs/translator-check.md (talker-alone control must fail). Sent to coordinator to start.
+- 02:36 UTC 09-29: Translator check thread started (cse_01JjYE7UPRnmX7gdUn8UPPRW, cmsg_01GSLCHTCnZxn7DhV19qcDvMGfj5VL8j9xSmKdgXqzz7wM).
