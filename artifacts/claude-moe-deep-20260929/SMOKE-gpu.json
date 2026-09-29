@@ -1,0 +1,53 @@
+{
+  "PASS": true,
+  "checks": {
+    "flags_strict_fp32": true,
+    "logits": true,
+    "routing": true,
+    "same_start": true,
+    "sleep_updates": true,
+    "stop_probs": true,
+    "updates": true
+  },
+  "logit_max_abs_diff": {
+    "0": 9.5367431640625e-07,
+    "47": 8.344650268554688e-07,
+    "7": 8.344650268554688e-07
+  },
+  "marks_fixed_in_advance": {
+    "logit_max_abs_diff": 0.001,
+    "route_agreement_min": 0.99,
+    "stop_prob_max_abs_diff": 0.001,
+    "update_rel_diff_all": 0.05,
+    "update_rel_diff_all_after_3_sleep_steps": 0.08
+  },
+  "route_agreement_min": 1.0,
+  "route_agreement_per_layer": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "run_meta": {
+    "deterministic_algorithms": true,
+    "device": "cuda",
+    "driver": "scripts/claude_moe_deep_run.py",
+    "float32_matmul_precision": "highest",
+    "gpu": "NVIDIA GeForce RTX 5080",
+    "tf32_cudnn": false,
+    "tf32_matmul": false,
+    "threads": 4,
+    "torch": "2.8.0+cu128"
+  },
+  "start_state_identical": true,
+  "stop_prob_max_abs_diff": 1.7881393432617188e-07,
+  "update_rel_diff_all": 0.00015887831163779163,
+  "update_rel_diff_all_after_3_sleep_steps": 0.0015512100040179022,
+  "update_rel_diff_worst_tensor": 0.0008929969273531605,
+  "utc": "2026-09-29T13:48:50Z",
+  "worst_tensor": "blocks.5.qkv.bias"
+}

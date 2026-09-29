@@ -1,0 +1,408 @@
+{
+  "arm": "loop",
+  "batch_size": 32,
+  "driver": "claude_patch_eq_ladder.py (resumable; same computation as the harness's adapt_job)",
+  "fixed_depth": 8,
+  "init": "pre",
+  "interruptions": 0,
+  "lr": 0.001,
+  "old": {
+    "after_16384": {
+      "grids5": {
+        "cap_hits": 124,
+        "fixed_right": 0,
+        "mean_rounds": 36.065,
+        "n": 200,
+        "right": 0
+      },
+      "sums4": {
+        "cap_hits": 18,
+        "fixed_right": 0,
+        "mean_rounds": 14.1,
+        "n": 200,
+        "right": 0
+      }
+    },
+    "after_64": {
+      "grids5": {
+        "cap_hits": 24,
+        "fixed_right": 0,
+        "mean_rounds": 16.965,
+        "n": 200,
+        "right": 0
+      },
+      "sums4": {
+        "cap_hits": 2,
+        "fixed_right": 0,
+        "mean_rounds": 7.14,
+        "n": 200,
+        "right": 0
+      }
+    },
+    "before": {
+      "grids5": {
+        "cap_hits": 154,
+        "fixed_right": 200,
+        "mean_rounds": 41.62,
+        "n": 200,
+        "right": 200
+      },
+      "sums4": {
+        "cap_hits": 127,
+        "fixed_right": 200,
+        "mean_rounds": 37.58,
+        "n": 200,
+        "right": 200
+      }
+    }
+  },
+  "optimizer_updates_per_rung": 2048,
+  "panel_layouts": {
+    "dev": {
+      "11": 300,
+      "7": 24,
+      "9": 300
+    },
+    "holdout": {
+      "11": 300,
+      "7": 48,
+      "9": 300
+    }
+  },
+  "persistent_coefficients": 19517438,
+  "rung_batches": 512,
+  "rung_extra": {
+    "1": {},
+    "1024": {},
+    "16": {},
+    "16384": {},
+    "256": {},
+    "4": {},
+    "4096": {},
+    "64": {}
+  },
+  "rung_seconds": {
+    "1": 837.7938699079677,
+    "1024": 896.4945628531277,
+    "16": 728.6406414848752,
+    "16384": 899.5072401063517,
+    "256": 923.8872003117576,
+    "4": 762.0185669921339,
+    "4096": 898.9266834151931,
+    "64": 951.763779676985
+  },
+  "rungs": {
+    "0": {
+      "11": {
+        "cap_hits": 300,
+        "fixed_right": 0,
+        "mean_rounds": 48.0,
+        "n": 300,
+        "right": 0
+      },
+      "7": {
+        "cap_hits": 24,
+        "fixed_right": 0,
+        "mean_rounds": 48.0,
+        "n": 24,
+        "right": 0
+      },
+      "9": {
+        "cap_hits": 300,
+        "fixed_right": 0,
+        "mean_rounds": 48.0,
+        "n": 300,
+        "right": 0
+      }
+    },
+    "1": {
+      "11": {
+        "cap_hits": 89,
+        "fixed_right": 0,
+        "mean_rounds": 28.653333333333332,
+        "n": 300,
+        "right": 0
+      },
+      "7": {
+        "cap_hits": 3,
+        "fixed_right": 0,
+        "mean_rounds": 16.875,
+        "n": 24,
+        "right": 0
+      },
+      "9": {
+        "cap_hits": 40,
+        "fixed_right": 1,
+        "mean_rounds": 20.57,
+        "n": 300,
+        "right": 0
+      }
+    },
+    "1024": {
+      "11": {
+        "cap_hits": 55,
+        "fixed_right": 186,
+        "mean_rounds": 21.323333333333334,
+        "n": 300,
+        "right": 208
+      },
+      "7": {
+        "cap_hits": 10,
+        "fixed_right": 24,
+        "mean_rounds": 27.875,
+        "n": 24,
+        "right": 24
+      },
+      "9": {
+        "cap_hits": 77,
+        "fixed_right": 284,
+        "mean_rounds": 21.843333333333334,
+        "n": 300,
+        "right": 282
+      }
+    },
+    "16": {
+      "11": {
+        "cap_hits": 165,
+        "fixed_right": 7,
+        "mean_rounds": 35.63666666666666,
+        "n": 300,
+        "right": 8
+      },
+      "7": {
+        "cap_hits": 1,
+        "fixed_right": 9,
+        "mean_rounds": 14.541666666666666,
+        "n": 24,
+        "right": 8
+      },
+      "9": {
+        "cap_hits": 67,
+        "fixed_right": 33,
+        "mean_rounds": 24.733333333333334,
+        "n": 300,
+        "right": 34
+      }
+    },
+    "16384": {
+      "11": {
+        "cap_hits": 146,
+        "fixed_right": 164,
+        "mean_rounds": 30.803333333333335,
+        "n": 300,
+        "right": 186
+      },
+      "7": {
+        "cap_hits": 0,
+        "fixed_right": 24,
+        "mean_rounds": 7.25,
+        "n": 24,
+        "right": 24
+      },
+      "9": {
+        "cap_hits": 24,
+        "fixed_right": 282,
+        "mean_rounds": 12.92,
+        "n": 300,
+        "right": 287
+      }
+    },
+    "256": {
+      "11": {
+        "cap_hits": 100,
+        "fixed_right": 140,
+        "mean_rounds": 29.006666666666668,
+        "n": 300,
+        "right": 139
+      },
+      "7": {
+        "cap_hits": 0,
+        "fixed_right": 24,
+        "mean_rounds": 11.708333333333334,
+        "n": 24,
+        "right": 24
+      },
+      "9": {
+        "cap_hits": 62,
+        "fixed_right": 260,
+        "mean_rounds": 22.323333333333334,
+        "n": 300,
+        "right": 263
+      }
+    },
+    "4": {
+      "11": {
+        "cap_hits": 261,
+        "fixed_right": 0,
+        "mean_rounds": 45.26,
+        "n": 300,
+        "right": 0
+      },
+      "7": {
+        "cap_hits": 9,
+        "fixed_right": 0,
+        "mean_rounds": 30.375,
+        "n": 24,
+        "right": 0
+      },
+      "9": {
+        "cap_hits": 186,
+        "fixed_right": 0,
+        "mean_rounds": 38.49333333333333,
+        "n": 300,
+        "right": 0
+      }
+    },
+    "4096": {
+      "11": {
+        "cap_hits": 44,
+        "fixed_right": 199,
+        "mean_rounds": 18.066666666666666,
+        "n": 300,
+        "right": 212
+      },
+      "7": {
+        "cap_hits": 3,
+        "fixed_right": 24,
+        "mean_rounds": 15.75,
+        "n": 24,
+        "right": 24
+      },
+      "9": {
+        "cap_hits": 18,
+        "fixed_right": 288,
+        "mean_rounds": 12.003333333333334,
+        "n": 300,
+        "right": 292
+      }
+    },
+    "64": {
+      "11": {
+        "cap_hits": 21,
+        "fixed_right": 127,
+        "mean_rounds": 14.76,
+        "n": 300,
+        "right": 132
+      },
+      "7": {
+        "cap_hits": 0,
+        "fixed_right": 19,
+        "mean_rounds": 9.25,
+        "n": 24,
+        "right": 19
+      },
+      "9": {
+        "cap_hits": 12,
+        "fixed_right": 198,
+        "mean_rounds": 11.703333333333333,
+        "n": 300,
+        "right": 206
+      }
+    }
+  },
+  "seed": 1,
+  "sleep": {
+    "16384": {
+      "maze_dev": {
+        "11": {
+          "cap_hits": 48,
+          "fixed_right": 225,
+          "mean_rounds": 17.786666666666665,
+          "n": 300,
+          "right": 236
+        },
+        "7": {
+          "cap_hits": 1,
+          "fixed_right": 22,
+          "mean_rounds": 10.75,
+          "n": 24,
+          "right": 22
+        },
+        "9": {
+          "cap_hits": 24,
+          "fixed_right": 268,
+          "mean_rounds": 12.81,
+          "n": 300,
+          "right": 271
+        }
+      },
+      "old": {
+        "grids5": {
+          "cap_hits": 171,
+          "fixed_right": 156,
+          "mean_rounds": 41.89,
+          "n": 200,
+          "right": 159
+        },
+        "sums4": {
+          "cap_hits": 6,
+          "fixed_right": 89,
+          "mean_rounds": 6.825,
+          "n": 200,
+          "right": 90
+        }
+      },
+      "seconds": 960.4847034690902,
+      "updates": 512
+    },
+    "64": {
+      "maze_dev": {
+        "11": {
+          "cap_hits": 15,
+          "fixed_right": 118,
+          "mean_rounds": 13.166666666666666,
+          "n": 300,
+          "right": 128
+        },
+        "7": {
+          "cap_hits": 0,
+          "fixed_right": 21,
+          "mean_rounds": 8.125,
+          "n": 24,
+          "right": 21
+        },
+        "9": {
+          "cap_hits": 6,
+          "fixed_right": 184,
+          "mean_rounds": 10.39,
+          "n": 300,
+          "right": 190
+        }
+      },
+      "old": {
+        "grids5": {
+          "cap_hits": 118,
+          "fixed_right": 144,
+          "mean_rounds": 30.595,
+          "n": 200,
+          "right": 154
+        },
+        "sums4": {
+          "cap_hits": 2,
+          "fixed_right": 128,
+          "mean_rounds": 5.805,
+          "n": 200,
+          "right": 130
+        }
+      },
+      "seconds": 991.7634222339839,
+      "updates": 512
+    }
+  },
+  "source": "/root/w/artifacts/claude-moe-deep-20260929/runs/L8-E64-s1",
+  "support_panel_overlap": 0,
+  "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e",
+  "support_unique_layouts": 16384,
+  "updates_per_batch": 4,
+  "visits_per_layout": {
+    "1": 16384,
+    "1024": 16,
+    "16": 1024,
+    "16384": 1,
+    "256": 64,
+    "4": 4096,
+    "4096": 4,
+    "64": 256
+  },
+  "weights": 19517438
+}

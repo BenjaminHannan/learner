@@ -1,0 +1,371 @@
+{
+  "split": "dev",
+  "note": "report-only rows; the verdict is on the holdout (final)",
+  "rows": {
+    "loop (recorded CPU) s0": {
+      "right9": [
+        2,
+        0,
+        21,
+        126,
+        263,
+        275,
+        256,
+        286
+      ],
+      "F_eq": 51.21,
+      "F_few": 12.42,
+      "stop_failures": []
+    },
+    "plain (recorded CPU) s0": {
+      "right9": [
+        1,
+        4,
+        1,
+        29,
+        127,
+        216,
+        229,
+        210
+      ],
+      "F_eq": 34.04,
+      "F_few": 2.92,
+      "stop_failures": []
+    },
+    "loop control (same GPU) s0": {
+      "right9": null,
+      "F_eq": null,
+      "F_few": null,
+      "stop_failures": null
+    },
+    "MoE L8-E64 s0": {
+      "right9": [
+        0,
+        10,
+        35,
+        102,
+        249,
+        289,
+        291,
+        274
+      ],
+      "F_eq": 52.08,
+      "F_few": 12.25,
+      "stop_failures": []
+    },
+    "MoE L8-E64 fresh s0": {
+      "right9": null,
+      "F_eq": null,
+      "F_few": null,
+      "stop_failures": null
+    },
+    "dense-act s0": {
+      "right9": null,
+      "F_eq": null,
+      "F_few": null,
+      "stop_failures": null
+    },
+    "dense-tot s0": {
+      "right9": null,
+      "F_eq": null,
+      "F_few": null,
+      "stop_failures": null
+    },
+    "plain-big s0": {
+      "right9": null,
+      "F_eq": null,
+      "F_few": null,
+      "stop_failures": null
+    },
+    "loop (recorded CPU) s1": {
+      "right9": [
+        0,
+        0,
+        4,
+        173,
+        277,
+        233,
+        292,
+        261
+      ],
+      "F_eq": 51.67,
+      "F_few": 14.75,
+      "stop_failures": []
+    },
+    "plain (recorded CPU) s1": {
+      "right9": [
+        0,
+        0,
+        1,
+        14,
+        118,
+        207,
+        228,
+        215
+      ],
+      "F_eq": 32.62,
+      "F_few": 1.25,
+      "stop_failures": []
+    },
+    "loop control (same GPU) s1": {
+      "right9": null,
+      "F_eq": null,
+      "F_few": null,
+      "stop_failures": null
+    },
+    "MoE L8-E64 s1": {
+      "right9": [
+        0,
+        0,
+        34,
+        206,
+        263,
+        282,
+        292,
+        287
+      ],
+      "F_eq": 56.83,
+      "F_few": 20.0,
+      "stop_failures": []
+    },
+    "MoE L8-E64 fresh s1": {
+      "right9": null,
+      "F_eq": null,
+      "F_few": null,
+      "stop_failures": null
+    },
+    "dense-act s1": {
+      "right9": null,
+      "F_eq": null,
+      "F_few": null,
+      "stop_failures": null
+    },
+    "dense-tot s1": {
+      "right9": null,
+      "F_eq": null,
+      "F_few": null,
+      "stop_failures": null
+    },
+    "plain-big s1": {
+      "right9": null,
+      "F_eq": null,
+      "F_few": null,
+      "stop_failures": null
+    }
+  },
+  "attribution": {
+    "A1_experts_equal_active": {
+      "deltas": [
+        null,
+        null
+      ],
+      "word": "NOT RUN"
+    },
+    "A2_experts_equal_total": {
+      "deltas": [
+        null,
+        null
+      ],
+      "word": "NOT RUN"
+    },
+    "A3_loop_equal_total": {
+      "deltas": [
+        null,
+        null
+      ],
+      "word": "NOT RUN"
+    },
+    "A5_practice": {
+      "deltas": [
+        null,
+        null
+      ],
+      "word": "NOT RUN"
+    },
+    "A4_dense_depth_vs_loop (2.76x weights, confounded)": {
+      "deltas": [
+        null,
+        null
+      ],
+      "word": "NOT RUN"
+    }
+  },
+  "scaling": {
+    "depth_at_64_experts": {
+      "0": {
+        "points": [
+          {
+            "cfg": "L2-E64",
+            "stored": null,
+            "active": null,
+            "F_eq": null,
+            "F_few": null,
+            "use_gain_64_to_16384": null
+          },
+          {
+            "cfg": "L4-E64",
+            "stored": null,
+            "active": null,
+            "F_eq": null,
+            "F_few": null,
+            "use_gain_64_to_16384": null
+          },
+          {
+            "cfg": "L8-E64",
+            "stored": 19517438,
+            "active": 4694014,
+            "F_eq": 52.08,
+            "F_few": 12.25,
+            "use_gain_64_to_16384": 57.33
+          },
+          {
+            "cfg": "L16-E64",
+            "stored": null,
+            "active": null,
+            "F_eq": null,
+            "F_few": null,
+            "use_gain_64_to_16384": null
+          }
+        ],
+        "largest_minus_smallest": null,
+        "slope_per_doubling": null,
+        "word": "NOT RUN (needs the smallest and the largest point)"
+      },
+      "1": {
+        "points": [
+          {
+            "cfg": "L2-E64",
+            "stored": null,
+            "active": null,
+            "F_eq": null,
+            "F_few": null,
+            "use_gain_64_to_16384": null
+          },
+          {
+            "cfg": "L4-E64",
+            "stored": null,
+            "active": null,
+            "F_eq": null,
+            "F_few": null,
+            "use_gain_64_to_16384": null
+          },
+          {
+            "cfg": "L8-E64",
+            "stored": 19517438,
+            "active": 4694014,
+            "F_eq": 56.83,
+            "F_few": 20.0,
+            "use_gain_64_to_16384": 27.0
+          },
+          {
+            "cfg": "L16-E64",
+            "stored": null,
+            "active": null,
+            "F_eq": null,
+            "F_few": null,
+            "use_gain_64_to_16384": null
+          }
+        ],
+        "largest_minus_smallest": null,
+        "slope_per_doubling": null,
+        "word": "NOT RUN (needs the smallest and the largest point)"
+      },
+      "word": "NOT RUN"
+    },
+    "experts_at_8_layers": {
+      "0": {
+        "points": [
+          {
+            "cfg": "L8-E16",
+            "stored": null,
+            "active": null,
+            "F_eq": null,
+            "F_few": null,
+            "use_gain_64_to_16384": null
+          },
+          {
+            "cfg": "L8-E32",
+            "stored": null,
+            "active": null,
+            "F_eq": null,
+            "F_few": null,
+            "use_gain_64_to_16384": null
+          },
+          {
+            "cfg": "L8-E64",
+            "stored": 19517438,
+            "active": 4694014,
+            "F_eq": 52.08,
+            "F_few": 12.25,
+            "use_gain_64_to_16384": 57.33
+          },
+          {
+            "cfg": "L8-E128",
+            "stored": null,
+            "active": null,
+            "F_eq": null,
+            "F_few": null,
+            "use_gain_64_to_16384": null
+          }
+        ],
+        "largest_minus_smallest": null,
+        "slope_per_doubling": null,
+        "word": "NOT RUN (needs the smallest and the largest point)"
+      },
+      "1": {
+        "points": [
+          {
+            "cfg": "L8-E16",
+            "stored": null,
+            "active": null,
+            "F_eq": null,
+            "F_few": null,
+            "use_gain_64_to_16384": null
+          },
+          {
+            "cfg": "L8-E32",
+            "stored": null,
+            "active": null,
+            "F_eq": null,
+            "F_few": null,
+            "use_gain_64_to_16384": null
+          },
+          {
+            "cfg": "L8-E64",
+            "stored": 19517438,
+            "active": 4694014,
+            "F_eq": 56.83,
+            "F_few": 20.0,
+            "use_gain_64_to_16384": 27.0
+          },
+          {
+            "cfg": "L8-E128",
+            "stored": null,
+            "active": null,
+            "F_eq": null,
+            "F_few": null,
+            "use_gain_64_to_16384": null
+          }
+        ],
+        "largest_minus_smallest": null,
+        "slope_per_doubling": null,
+        "word": "NOT RUN (needs the smallest and the largest point)"
+      },
+      "word": "NOT RUN"
+    }
+  },
+  "routes": {
+    "L8-E64-pre-s0": {
+      "dead_total": 40,
+      "experts_total": 512,
+      "worst_max_over_mean": 6.88,
+      "min_load_entropy": 0.8251
+    },
+    "L8-E64-pre-s1": {
+      "dead_total": 10,
+      "experts_total": 512,
+      "worst_max_over_mean": 6.03,
+      "min_load_entropy": 0.8375
+    }
+  }
+}
