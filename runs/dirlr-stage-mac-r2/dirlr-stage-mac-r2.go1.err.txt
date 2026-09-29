@@ -1,0 +1,1542 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mpwd; git status --short --branch; git log --oneline -5; git remote -v | head -20; ls artifacts/ 2>&1 | head -40
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+## claude/card-experiment-handoff-7c5b27...origin/claude/card-experiment-handoff-7c5b27 [ahead 51]
+A  artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt
+A  artifacts/claude-dir-h2-numbers-20260928/runs/RUN-NOTE.md
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/loop-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/loop-s14.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/plain-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/plain-s14.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/train_summary.json
+A  artifacts/claude-k1h-20260926/luna/full/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-1.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-2.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-3.txt
+A  artifacts/claude-k1h-20260926/luna/full/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/full/chats.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+A  artifacts/claude-mu407-20260927/prep/RESULTS.md
+A  artifacts/claude-mu407-20260927/prep/facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/facts_all.jsonl
+A  artifacts/claude-mu407-20260927/prep/frames.json
+A  artifacts/claude-mu407-20260927/prep/panel/items.jsonl
+A  artifacts/claude-mu407-20260927/prep/raw.jsonl
+A  artifacts/claude-mu407-20260927/prep/smoke_facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/write.log
+A  artifacts/claude-y1t-20260926/luna/RESULTS-luna-pilot.md
+A  artifacts/claude-y1t-20260926/luna/luna_pilot.log
+A  artifacts/claude-y1t-20260926/luna/raw_luna.jsonl
+A  artifacts/claude-y1t-20260926/luna/raw_luna_rf.jsonl
+A  artifacts/claude-y1t-20260926/luna/rest/RESULTS-luna-rest.md
+A  artifacts/claude-y1t-20260926/luna/rest/luna_rest_1.log
+A  artifacts/claude-y1t-20260926/luna/rest/raw_luna.jsonl
+A  artifacts/claude-y1t-20260926/luna/rest/raw_luna_rf.jsonl
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+?? scripts/claude_280n_panel.sh
+?? scripts/claude_280p_panel.sh
+?? scripts/claude_281_panel.sh
+?? scripts/claude_281_panelrun.sh
+?? scripts/claude_281_runall.sh
+?? scripts/claude_281b_panel.sh
+?? scripts/claude_281b_runall.sh
+?? scripts/claude_282_panel.sh
+?? scripts/claude_282_panelrun.sh
+?? scripts/claude_282_runall.sh
+?? scripts/claude_282b_panelrun.sh
+?? scripts/claude_282b_runall.sh
+?? scripts/claude_291_m1.py
+?? scripts/claude_291_m7run.py
+?? scripts/claude_291_m8.sh
+?? scripts/claude_291_panel.sh
+?? scripts/claude_291_runall.sh
+?? scripts/claude_291_score.py
+?? scripts/claude_292_corrarm_run.py
+?? scripts/claude_292_m5.sh
+?? scripts/claude_292_m5run.py
+?? scripts/claude_292_panelrun.py
+?? scripts/claude_292_runall.sh
+?? scripts/claude_292_score.py
+?? scripts/claude_called281_devcases.py
+?? scripts/claude_called281_panelrun.py
+?? scripts/claude_called281_panelscore.py
+?? scripts/claude_called281_regscore.py
+?? scripts/claude_called281_run.py
+?? scripts/claude_called281_score.py
+?? scripts/claude_called281b_devcases.py
+?? scripts/claude_called281b_panelrun.py
+?? scripts/claude_called281b_panelscore.py
+?? scripts/claude_called281b_regscore.py
+?? scripts/claude_called281b_run.py
+?? scripts/claude_called281b_score.py
+?? scripts/claude_capab280_devcases.py
+?? scripts/claude_capab280_regscore.py
+?? scripts/claude_capab280_run.py
+?? scripts/claude_capab280_score.py
+?? scripts/claude_capab280b_devcases.py
+?? scripts/claude_capab280b_paneladapt.py
+?? scripts/claude_capab280b_regscore.py
+?? scripts/claude_capab280b_run.py
+?? scripts/claude_capab280b_score.py
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_diag267_c3.py
+?? scripts/claude_diag267_c3client.py
+?? scripts/claude_diag267_qbuild.py
+?? scripts/claude_diag267_score.py
+?? scripts/claude_diag267_turns.py
+?? scripts/claude_diag271_roc.py
+?? scripts/claude_diag290_bisect.py
+?? scripts/claude_diag290_bisect2.py
+?? scripts/claude_diag290_pilot.py
+?? scripts/claude_diag290_probe.py
+?? scripts/claude_diag290_probe2.py
+?? scripts/claude_diag290_run.py
+?? scripts/claude_diag290_summary.py
+?? scripts/claude_diag293_pilot.py
+?? scripts/claude_diag293_pilot2.py
+?? scripts/claude_diag293_run.py
+?? scripts/claude_diag293_summary.py
+?? scripts/claude_ear265_armb.py
+?? scripts/claude_ear265_arms.py
+?? scripts/claude_ear265_canon.py
+?? scripts/claude_ear265_devset.py
+?? scripts/claude_ear265_panel.py
+?? scripts/claude_ear265_qbuild.py
+?? scripts/claude_ear265_scoremain.py
+?? scripts/claude_ear265_turns.py
+?? scripts/claude_ear269_armb.py
+?? scripts/claude_ear269_arms.py
+?? scripts/claude_ear269_devset.py
+?? scripts/claude_ear269_groupcheck.py
+?? scripts/claude_ear269_panel.py
+?? scripts/claude_ear269_qbuild.py
+?? scripts/claude_ear269_scoremain.py
+?? scripts/claude_ear269_turns.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/claude_earcheck264_armb.py
+?? scripts/claude_earcheck264_arms.py
+?? scripts/claude_earcheck264_client.py
+?? scripts/claude_earcheck264_commatags.py
+?? scripts/claude_earcheck264_devreport.py
+?? scripts/claude_earcheck264_devset.py
+?? scripts/claude_earcheck264_panel.py
+?? scripts/claude_earcheck264_qa.py
+?? scripts/claude_earcheck264_qbuild.py
+?? scripts/claude_earcheck264_scoremain.py
+?? scripts/claude_earcheck264_turns.py
+?? scripts/claude_fix138nb_label.py
+?? scripts/claude_fix255b_test.py
+?? scripts/claude_fix255b_text.py
+?? scripts/claude_fix263_comma.py
+?? scripts/claude_fix266_chainlift.py
+?? scripts/claude_fix266b_detector.py
+?? scripts/claude_fix268_nhopdir.py
+?? scripts/claude_fix280_capab.py
+?? scripts/claude_fix280b_general.py
+?? scripts/claude_fix281_called.py
+?? scripts/claude_fix281b_casual.py
+?? scripts/claude_fix282_small.py
+?? scripts/claude_fix282b_vocab.py
+?? scripts/claude_fix291_glue.py
+?? scripts/claude_glm_cleanup_20260926.py
+?? scripts/claude_glm_opencode.py
+?? scripts/claude_glm_throughput_20260926.py
+?? scripts/claude_join280m_regscore.py
+?? scripts/claude_join280m_run.py
+?? scripts/claude_join280m_score.py
+?? scripts/claude_join280n_score.py
+?? scripts/claude_join280p_score.py
+?? scripts/claude_lis310_agent.py
+?? scripts/claude_lis310_demo.py
+?? scripts/claude_lis310_test.py
+?? scripts/claude_lis311_agent.py
+?? scripts/claude_lis311_server.py
+?? scripts/claude_lis311_start.sh
+?? scripts/claude_lis311_try.py
+?? scripts/claude_loop138nb_agent.py
+?? scripts/claude_loop138p_agent.py
+?? scripts/claude_loop255b_agent.py
+?? scripts/claude_loop263_agent.py
+?? scripts/claude_loop266_agent.py
+?? scripts/claude_loop266b_agent.py
+?? scripts/claude_loop268_agent.py
+?? scripts/claude_loop280_agent.py
+?? scripts/claude_loop280b_agent.py
+?? scripts/claude_loop280m_agent.py
+?? scripts/claude_loop281_agent.py
+?? scripts/claude_loop281b_agent.py
+?? scripts/claude_loop282_agent.py
+?? scripts/claude_loop282b_agent.py
+?? scripts/claude_loop291_agent.py
+?? scripts/claude_loop292_agent.py
+?? scripts/claude_luna_codex.py
+?? scripts/claude_mouth241b_devrender_r.py
+?? scripts/claude_mouth241b_rer241_r.py
+?? scripts/claude_mut1_k1.py
+?? scripts/claude_mut1_k2.py
+?? scripts/claude_mut1_k3.py
+?? scripts/claude_mut1_k4.py
+?? scripts/claude_nb321_store.py
+?? scripts/claude_nb321_test.py
+?? scripts/claude_own_m0_build.py
+?? scripts/claude_own_m0_check.py
+?? scripts/claude_own_o0a2_compiler.py
+?? scripts/claude_own_o0a3_mutate.py
+?? scripts/claude_own_o0a_compiler.py
+?? scripts/claude_own_o0b_check.py
+?? scripts/claude_own_o0b_gen.py
+?? scripts/claude_own_o0c_prep.py
+?? scripts/claude_own_o0c_tok.py
+?? scripts/claude_own_o0d2_model.py
+?? scripts/claude_own_o0d2_test.py
+?? scripts/claude_own_o0d2_train.py
+?? scripts/claude_own_o0d_model.py
+?? scripts/claude_own_o0d_test.py
+?? scripts/claude_own_o0d_train.py
+?? scripts/claude_own_o0e2_model.py
+?? scripts/claude_own_o0e2_tests.py
+?? scripts/claude_own_o0e_model.py
+?? scripts/claude_own_o0e_serialize.py
+?? scripts/claude_own_o0e_tests.py
+?? scripts/claude_own_o0e_train.py
+?? scripts/claude_own_o0f_bench.py
+?? scripts/claude_probe255b_director.py
+?? scripts/claude_probe280p_run.py
+?? scripts/claude_probe280p_score.py
+?? scripts/claude_small282_devcases.py
+?? scripts/claude_small282_panelrun2.py
+?? scripts/claude_small282_regscore.py
+?? scripts/claude_small282_run.py
+?? scripts/claude_small282_score.py
+?? scripts/claude_small282b_devcases.py
+?? scripts/claude_small282b_regscore.py
+?? scripts/claude_small282b_run.py
+?? scripts/claude_small282b_score.py
+?? scripts/claude_type270_agent.py
+?? scripts/claude_type270_devrun.py
+?? scripts/claude_type270_devscore.py
+?? scripts/claude_type270_devset.py
+?? scripts/claude_type270_normalise.py
+?? scripts/claude_type270_panelrun.py
+?? scripts/claude_type270_panelscore.py
+?? scripts/claude_type270b_devscore.py
+?? scripts/claude_type270b_devset.py
+?? scripts/claude_type270b_normalise.py
+?? scripts/claude_type270b_panelscore.py
+?? scripts/claude_type270b_panelscore2.py
+?? scripts/claude_type270b_panelturns.py
+?? scripts/claude_type270b_qbuild.py
+?? scripts/claude_type270b_turns.py
+?? scripts/claude_typepanel270b_make.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+57f5749ce k1h-glm2 finish: answer2 skipped 593 on M=-1213 (cap blown by sleep), REPORT.md counts only
+e22e4b6bf rd378g-writeluna PILOT-FAIL: Luna batch-18 pilot skipped after 3 tries, 3 call-failed lines (9x timeout after 300s), 0 batch-ok; JSON: 90 kept, 0 new
+86599f56d k1h-glm salvage glm: 240 answers / 593 chats, 5/5 sha256 vs <tmp> (counts only)
+24766dc63 000-luna-helper-selftest: reply with selftest + 3-call parallel outputs
+8fc75d620 probe: codex CLI non-interactive form (not in PATH, bundled 0.158.0-alpha.2, luna not found)
+origin	git@github.com:BenjaminHannan/learner.git (fetch)
+origin	git@github.com:BenjaminHannan/learner.git (push)
+claude-adapters-20260926d
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm391-20260926
+claude-bm395-20260925
+claude-bm397t-20260926
+claude-bm398e-20260926
+claude-bm398i-20260926
+claude-bm398r-20260926
+claude-bm398w-20260927
+claude-bmriv-smoke-20260926
+claude-boundary259-20260922
+claude-brd5-20260926
+claude-brd6-20260926
+claude-brd7-20260926
+claude-brd8-20260926
+claude-brd8w-20260926
+claude-brd9-20260926
+claude-c1dev-20260927
+claude-c1dl-20260927
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-ch403-20260926
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+[0m
+[0m$ [0mgit fetch origin main 2>&1 | tail -5; git show origin/main:scripts/claude_dir_lr_stage_net.py 2>&1 | head -20; echo "---"; git show origin/main:scripts/claude_dir_lr_stage_report.py 2>&1 | head -20; echo "---"; git show origin/main:artifacts/claude-dir-lr-20260928/STAGE-PASSMARKS.md 2>&1 | head -40
+ls scripts/claude_dir_lr_stage* scripts/claude_fewex_eq_bench.py 2>&1; ls artifacts/claude-dir-lr-20260928/ 2>&1; ls artifacts/claude-fewex-20260927/runs/ 2>&1 | head -20
+From github.com:BenjaminHannan/learner
+ * branch                main       -> FETCH_HEAD
+"""Lead 1 plug-in: staged unfreeze at adaptation (head first, then everything).
+
+Same net, same data, same sealed harness. Only the adapt-step Learner changes: for the first
+FROZEN_UPDATES = 25% of the 2,048 maze updates only the output head (`head.*`) and stop head
+(`halt.*`, loop only) can move; then every weight trains, with no other change (same AdamW,
+same 50-step warm-up counted from update 0, same clip, same batches). The rule is the same for
+fresh, plain and practised nets. Nothing here touches the source nets or practice.
+  --plugin claude_dir_lr_stage_net     (PROTOCOL.md plug-in contract)
+Note: the loop's stop head gets no maze loss, so in the frozen stage only `head.*` moves.
+"""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_fewex_net import *  # noqa: F401,F403  Net, Practice, tensors, ce_and_exact, train_loss, ...
+import claude_fewex_bench as B
+
+FROZEN_UPDATES = 512  # 25% of B.UPDATES * 512 batches = 2,048
+HEAD_PREFIXES = ("head.", "halt.")
+
+---
+#!/usr/bin/env python3
+"""Apply STAGE-PASSMARKS.md to the staged-unfreeze dev (or holdout) records. Reads raw JSON only.
+
+  python3 -B scripts/claude_dir_lr_stage_report.py dev
+  python3 -B scripts/claude_dir_lr_stage_report.py holdout
+  python3 -B scripts/claude_dir_lr_stage_report.py selftest
+"""
+import json, sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+BASE = ROOT / "artifacts" / "claude-fewex-20260927" / "eq-runs"
+STAGE = ROOT / "artifacts" / "claude-dir-lr-20260928" / "stage-runs"
+KS = ("1", "4", "16", "64", "256", "1024", "4096", "16384")
+BAR_EQ, BAR_FEW = 8.0, 10.5   # points; STAGE-PASSMARKS.md
+STARTS = [(a, i) for a in ("loop", "plain") for i in ("pre", "fresh")]
+
+
+def curve(root, arm, seed, init, part):
+    d = json.loads((root / f"{arm}-s{seed}-{init}" / ("adapt.json" if part == "dev" else "holdout.json")).read_text())
+---
+# Lead 1 marks: staged unfreeze at adaptation. Sealed 2026-09-28 21:49 UTC, before any staged run.
+
+**One change.** During adaptation only, for the first 25% of the 2,048 maze updates (512 updates = 128 batches, exactly) only the output head (`head.*`) and the stop head (`halt.*`, loop only; it gets no maze loss, so in practice only `head.*` moves) may train; then every weight trains as before. Same rule for fresh, plain and practised nets. Plug-in `scripts/claude_dir_lr_stage_net.py` (a Learner subclass); the sealed harness, source nets, pool, batches, lr (1e-3 loop; source-chosen plain), optimizer, warm-up, clip and sleep are unchanged. Run through the sealed harness's `--plugin` and `--out`.
+**Runs.** 8 dev runs: {practised, fresh} x {loop, plain} x seeds {0, 1}, into `artifacts/claude-dir-lr-20260928/stage-runs/<arm>-s<seed>-<init>/`. Comparator: the stored unstaged run of the same start and seed, `artifacts/claude-fewex-20260927/eq-runs/` (Lead 0's 1e-3 rerun says whether it reproduces).
+**Score.** Dev, 9x9, learned stop. `F_eq` = mean of the 8 rungs (k=1..16,384); `F_few` = mean of k = 1, 4, 16, 64. Delta = staged minus unstaged, per seed, in points. Seeds never pooled.
+
+**Bars (fixed now).** **F_eq +8.0** and **F_few +10.5** points, both seeds (NOISE.md: the all-starts rung recipe gives 3.96 and 5.23; bars are 2x). Words per row: **HELPS** = Delta >= bar in both seeds; **HURTS** = Delta <= -bar in both seeds; otherwise **NOT SHOWN** (both Deltas printed). **REJECTED** only if the practised loop HURTS F_eq in both seeds (every-seed reading); anything short of HELPS and not that is "not shown".
+
+**Required rows for PROMOTE (all four, both seeds), practised loop:**
+1. F_eq Delta >= +8.0.
+2. F_few Delta >= +10.5 (its own row beside F_eq; F_few is not folded into F_eq).
+3. Plain-net row (a same-size plain net cannot pass it by unfreezing alone): staged practised loop F_eq minus staged practised plain F_eq >= +8.0. Plain gets the identical staging.
+4. Carry-over / not-memorising row: staged practised loop F_eq minus staged fresh loop F_eq >= +8.0 (fresh gets the identical staging). Panel layouts do not overlap the support (harness records `support_panel_overlap`, must be 0 of the support set).
+The other starts' Deltas (fresh loop, plain) are reported, not gated.
+
+**Result that would prove it wrong.** Practised-loop F_eq Delta below +8.0 in either seed: no gain shown. Below -8.0 in both: rejected. (Lead 1's research chance guess was 20%; untested.)
+**Holdout.** Only if dev gives PROMOTE, once per arm and seed with the harness's own `holdout` command, same bars against the stored baseline holdout. Never otherwise; never read before dev is committed.
+**Sleep.** Unchanged and not a gate. The harness's single sleep draw per rung is reported descriptively only, not used for any word. A sleep claim would need the mean of 3 draws with margin max(6, 2 x SE) and is not made here.
+**Report tool.** `scripts/claude_dir_lr_stage_report.py dev` (selftest included) prints exactly these words from raw JSON.
+
+**Self-check (common brief, in the file).**
+1. Bars above noise: F_eq +8.0 > 3.96 (all-starts rung recipe), and > direct same-start gaps (max 2.12 dev); F_few +10.5 > 5.23 and > the largest direct F_few seed gap (8.75, fresh loop). Source: NOISE.md / noise-from-raw.txt.
+2. Every-seed reading: REJECTED needs HURTS in both seeds; a non-win is "not shown".
+3. Comparator: same-start unstaged baseline. The practised loop (51.21 / 51.67 dev F_eq) already beats every plain start, so it is the higher loop; no loop-with-episodes exists in this test.
+4. Plain-net row 3 and fresh-loop row 4 above, both with identical staging; overlap check named.
+5. F_few is row 2, required on its own.
+6. Sleep: no sleep gate (stated above).
+zsh:2: no matches found: scripts/claude_dir_lr_stage*
+ls: artifacts/claude-dir-lr-20260928/: No such file or directory
+ls: artifacts/claude-fewex-20260927/runs/: No such file or directory
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main artifacts/ | head -30
+echo "---"
+git ls-tree --name-only origin/main artifacts/claude-fewex-20260927/ | head -40
+echo "---"
+git ls-tree --name-only origin/main scripts/ | grep -E "fewex|dir_lr_stage" | head -20
+python3 -c "import torch; print(torch.__version__)" 2>&1
+nproc 2>&1; sysctl -n hw.ncpu 2>&1; echo "pgrep check:"; pgrep -f claude_fewex_eq_bench 2>&1; pgrep -f claude_dir_lr_stage 2>&1; echo done
+artifacts/claude-aliaspanel237-20260922
+artifacts/claude-aliaspanel237b-20260922
+artifacts/claude-apos247-20260922
+artifacts/claude-ask24-20260925
+artifacts/claude-ask24ab-20260925
+artifacts/claude-askpanel243-20260922
+artifacts/claude-bench125-fairness-20260922
+artifacts/claude-blurt1-dev-20260925
+artifacts/claude-blurt2-20260925
+artifacts/claude-blurt4-20260925
+artifacts/claude-blurt5s-20260925
+artifacts/claude-bm390-20260925
+artifacts/claude-bm391-20260926
+artifacts/claude-bm393-20260925
+artifacts/claude-bm393b-20260925
+artifacts/claude-bm393c-20260925
+artifacts/claude-bm394-20260925
+artifacts/claude-bm395-20260925
+artifacts/claude-bm396-20260926
+artifacts/claude-bm397-20260926
+artifacts/claude-bm397t-20260926
+artifacts/claude-bm398c-20260926
+artifacts/claude-bm398d-20260926
+artifacts/claude-bm398e-20260926
+artifacts/claude-bm398i-20260926
+artifacts/claude-bm398n-20260926
+artifacts/claude-bm398r-20260926
+artifacts/claude-bm398u-20260926
+artifacts/claude-bm398v-20260927
+artifacts/claude-bm398w-20260927
+---
+artifacts/claude-fewex-20260927/ADDENDUM-1.md
+artifacts/claude-fewex-20260927/ADDENDUM-2.md
+artifacts/claude-fewex-20260927/ADDENDUM-3.md
+artifacts/claude-fewex-20260927/ADDENDUM-4.md
+artifacts/claude-fewex-20260927/BLIND-RECOUNT-EQ.md
+artifacts/claude-fewex-20260927/BLIND-RECOUNT.md
+artifacts/claude-fewex-20260927/EQ-DEV-GATE.json
+artifacts/claude-fewex-20260927/PASSMARKS.md
+artifacts/claude-fewex-20260927/PROTOCOL.md
+artifacts/claude-fewex-20260927/RACE-ADDENDUM-1.md
+artifacts/claude-fewex-20260927/RACE-PASSMARKS.md
+artifacts/claude-fewex-20260927/RESULTS-EQ.md
+artifacts/claude-fewex-20260927/RESULTS.md
+artifacts/claude-fewex-20260927/SHA256-EQ-RAW.txt
+artifacts/claude-fewex-20260927/SHA256-RAW.txt
+artifacts/claude-fewex-20260927/eq-runs
+artifacts/claude-fewex-20260927/runs
+---
+scripts/claude_dir_lr_stage_net.py
+scripts/claude_dir_lr_stage_report.py
+scripts/claude_fewex_bench.py
+scripts/claude_fewex_data.py
+scripts/claude_fewex_distill_report.py
+scripts/claude_fewex_distill_sleep.py
+scripts/claude_fewex_eq_bench.py
+scripts/claude_fewex_inconclusive_report.py
+scripts/claude_fewex_net.py
+scripts/claude_fewex_partial_recount.py
+scripts/claude_fewex_source_qualify.py
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'torch'
+zsh:7: command not found: nproc
+10
+pgrep check:
+done
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main artifacts/claude-fewex-20260927/runs/ | head -20
+echo "---eq-runs---"
+git ls-tree --name-only origin/main artifacts/claude-fewex-20260927/eq-runs/ | head -20
+echo "---stage dir on main---"
+git ls-tree --name-only origin/main artifacts/claude-dir-lr-20260928/ | head -20
+echo "---pwd---"; pwd; ls .. | head -20; ls /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/ | head -20
+artifacts/claude-fewex-20260927/runs/loop-s0-fresh
+artifacts/claude-fewex-20260927/runs/loop-s0-pre
+artifacts/claude-fewex-20260927/runs/loop-s0
+artifacts/claude-fewex-20260927/runs/loop-s1-fresh
+artifacts/claude-fewex-20260927/runs/loop-s1-pre
+artifacts/claude-fewex-20260927/runs/loop-s1
+artifacts/claude-fewex-20260927/runs/plain-s0-fresh
+artifacts/claude-fewex-20260927/runs/plain-s0-pre
+artifacts/claude-fewex-20260927/runs/plain-s0
+artifacts/claude-fewex-20260927/runs/plain-s1-fresh
+artifacts/claude-fewex-20260927/runs/plain-s1-pre
+artifacts/claude-fewex-20260927/runs/plain-s1
+artifacts/claude-fewex-20260927/runs/qual-loop-s0
+artifacts/claude-fewex-20260927/runs/qual-loop-s1
+artifacts/claude-fewex-20260927/runs/qual-plain-s0
+artifacts/claude-fewex-20260927/runs/qual-plain-s1
+---eq-runs---
+artifacts/claude-fewex-20260927/eq-runs/loop-s0-fresh
+artifacts/claude-fewex-20260927/eq-runs/loop-s0-pre
+artifacts/claude-fewex-20260927/eq-runs/loop-s1-fresh
+artifacts/claude-fewex-20260927/eq-runs/loop-s1-pre
+artifacts/claude-fewex-20260927/eq-runs/plain-s0-fresh
+artifacts/claude-fewex-20260927/eq-runs/plain-s0-pre
+artifacts/claude-fewex-20260927/eq-runs/plain-s1-fresh
+artifacts/claude-fewex-20260927/eq-runs/plain-s1-pre
+---stage dir on main---
+artifacts/claude-dir-lr-20260928/LEAD0-MARKS.md
+artifacts/claude-dir-lr-20260928/NOISE.md
+artifacts/claude-dir-lr-20260928/SEAL-code.sha256.txt
+artifacts/claude-dir-lr-20260928/SELFTESTS.log
+artifacts/claude-dir-lr-20260928/STAGE-PASSMARKS.md
+artifacts/claude-dir-lr-20260928/noise-from-raw.txt
+---pwd---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+card-experiment-handoff-7c5b27
+fact-saving-note-filtering-4ff1ff
+forgetting-plain-english-gap-9258f0
+model-architecture-review-0161ce
+premonition-design-review-792236
+pull-from-main-629dc4
+card-experiment-handoff-7c5b27
+fact-saving-note-filtering-4ff1ff
+forgetting-plain-english-gap-9258f0
+model-architecture-review-0161ce
+premonition-design-review-792236
+pull-from-main-629dc4
+[0m
+[0m$ [0mls /Users/ben-hannan/Desktop/projects/beautiful-model/ | head -30; echo "---"; git -C /Users/ben-hannan/Desktop/projects/beautiful-model status --short --branch 2>&1 | head -10; git -C /Users/ben-hannan/Desktop/projects/beautiful-model log --oneline -3 2>&1 | head -5
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+CLAUDE.md
+data
+design
+handoff
+learnlab
+memoir-quotes-confirmation.png
+memorylab
+premonition
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runtime.local.json
+scripts
+TEACHING_TO_TEST_CONTRACT.md
+tests
+---
+## main...origin/main [behind 118]
+?? .claude/skills/
+?? data/open/
+?? memoir-quotes-confirmation.png
+?? scripts/codex_sleep_p7.py
+f3318a6b9 Add reasoner idea harvest rounds 1-5
+f6e791317 distill-sleep: rebuilt sources and k64/k16384 rungs; not bit-identical to the ruler
+f49711b3f patch-eq: self-tests pass (zero patch = ordinary loop, fresh learner bit-identical to the harness's, identical episodes, all matrices live, smoke rung 512 writes / 2,048 updates)
+[0m
+[0m$ [0mls artifacts/claude-fewex-20260927/runs/qual-loop-s0/ 2>&1 | head -20
+ls artifacts/claude-fewex-20260927/runs/ 2>&1 | head -20
+which python3; python3 --version; which pip3; pip3 --version 2>&1 | head -2; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1 | head -5
+source.json
+source.pt
+loop-s0
+loop-s0-fresh
+loop-s0-pre
+loop-s1
+loop-s1-fresh
+loop-s1-pre
+pilot-plain-12k-s0-10000.pt
+pilot-plain-12k-s0-12000.pt
+pilot-plain-12k-s0-6000.pt
+pilot-plain-12k-s0-8000.pt
+pilot-plain-lr5e-4-s0.pt
+pilot-plain-s0.pt
+plain-s0
+plain-s0-fresh
+plain-s0-pre
+plain-s1
+plain-s1-fresh
+plain-s1-pre
+qual-loop-s0
+qual-loop-s1
+/usr/local/bin/python3
+Python 3.9.6
+/usr/local/bin/pip3
+pip 21.2.4 from /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/site-packages/pip (python 3.9)
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main artifacts/claude-fewex-20260927/runs/qual-loop-s0/ 2>&1 | head -20
+echo "---check lfs---"; git check-attr -a artifacts/claude-fewex-20260927/runs/qual-loop-s0/source.pt 2>&1 | head -5
+git log --oneline origin/main -3 2>&1 | head -5
+git -C /Users/ben-hannan/Desktop/projects/beautiful-model log --oneline HEAD..origin/main 2>&1 | head -10
+ls -la artifacts/claude-fewex-20260927/runs/qual-loop-s0/source.pt 2>&1 | head -5; du -h artifacts/claude-fewex-20260927/runs/qual-loop-s0/source.pt 2>&1 | head -5
+artifacts/claude-fewex-20260927/runs/qual-loop-s0/source.json
+---check lfs---
+d734daa6e Director board: PC runner thread
+973bf2d04 H14 brief: PC-side runner
+59bf2c2de Director board: relnet race thread
+d734daa6e Director board: PC runner thread
+973bf2d04 H14 brief: PC-side runner
+59bf2c2de Director board: relnet race thread
+e7097e29c Director board: G thread
+2b96a8391 R: trained nets and guard script
+5850037a8 H2 recount: WRONG-cannot-fit (from thread branch); V3 confirmed
+a55f739e3 Director board: S, T, W present; R state
+e26acf5c7 Director board: recount H2 thread
+013bc376f Director: resubmit dir-h1-heldout-r2; H2 finished on BensPC
+3bdcb9053 Director: lfsz-1-start-r2 with fixed kit pin; ledger
+-rw-r--r--@ 1 ben-hannan  staff  6593157 Sep 27 20:15 artifacts/claude-fewex-20260927/runs/qual-loop-s0/source.pt
+6.3M	artifacts/claude-fewex-20260927/runs/qual-loop-s0/source.pt
+[0m
+[0m$ [0mls scripts/claude_dir_lr_stage* scripts/claude_fewex_eq_bench.py artifacts/claude-dir-lr-20260928/STAGE-PASSMARKS.md 2>&1
+echo "---git status main---"; git status --short | head -20
+echo "---behind count---"; git rev-list --count HEAD..origin/main 2>&1
+echo "---origin main log---"; git log --oneline origin/main -5 2>&1
+echo "---local log---"; git log --oneline -3 2>&1
+zsh:1: no matches found: scripts/claude_dir_lr_stage*
+---git status main---
+?? .claude/skills/
+?? data/open/
+?? memoir-quotes-confirmation.png
+?? scripts/codex_sleep_p7.py
+---behind count---
+118
+---origin main log---
+d734daa6e Director board: PC runner thread
+973bf2d04 H14 brief: PC-side runner
+59bf2c2de Director board: relnet race thread
+e7097e29c Director board: G thread
+2b96a8391 R: trained nets and guard script
+---local log---
+f3318a6b9 Add reasoner idea harvest rounds 1-5
+f6e791317 distill-sleep: rebuilt sources and k64/k16384 rungs; not bit-identical to the ruler
+f49711b3f patch-eq: self-tests pass (zero patch = ordinary loop, fresh learner bit-identical to the harness's, identical episodes, all matrices live, smoke rung 512 writes / 2,048 updates)
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_fewex_eq_bench.py | head -150
+echo "=====TAIL====="
+python3 --version; ls -d /usr/local/bin/python* /opt/homebrew/bin/python* 2>&1; pip3 list 2>&1 | grep -i torch | head -5
+#!/usr/bin/env python3
+"""Equal-practice few-example ruler; see ADDENDUM-4.md.
+
+Reuses the sealed model, learner and scorers without changing the old harness.
+All baseline training and inference are fp32 CPU with no autocast.
+"""
+from __future__ import annotations
+
+import argparse
+import copy
+import hashlib
+import importlib
+import json
+import random
+import sys
+import time
+from pathlib import Path
+
+import torch
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_fewex_bench as B
+import claude_fewex_data as D
+
+ART = B.ART
+EQ_RUNS = ART / "eq-runs"
+RUNGS = (1, 4, 16, 64, 256, 1024, 4096, 16384)
+N_BATCHES = 512
+N_UPDATES = N_BATCHES * B.UPDATES
+POOL_SEED = 9292700
+
+
+def make_pool(seed, banned):
+    """One ordered, nested, panel-disjoint support pool per paired seed."""
+    rng = random.Random(POOL_SEED + seed)
+    seen = set()
+    pool = [D.unique_maze(rng, 9, banned, seen) for _ in range(RUNGS[-1])]
+    assert len(seen) == RUNGS[-1] and not seen & banned
+    keys = [D.layout_key(item) for item in pool]
+    digest = hashlib.sha256("\n".join(keys).encode()).hexdigest()
+    return pool, seen, digest
+
+
+def batches(pool, k, seed):
+    """Exactly 16,384 slots, in shuffled cycles shared across arms."""
+    rng = random.Random(9272700 + seed + k)
+    order = list(range(k))
+    pos = k
+    for _ in range(N_BATCHES):
+        batch = []
+        while len(batch) < B.MAZE_BATCH:
+            if pos == k:
+                rng.shuffle(order)
+                pos = 0
+            take = min(B.MAZE_BATCH - len(batch), k - pos)
+            batch.extend(pool[i] for i in order[pos:pos + take])
+            pos += take
+        yield batch
+
+
+def identity_source(source_dir, arm, seed):
+    source = json.loads((source_dir / "source.json").read_text())
+    if (source["arm"], source["seed"]) != (arm, seed):
+        raise ValueError("source checkpoint identity mismatch")
+    if not (source["old"]["sums4"]["right"] >= 190 and
+            source["old"]["grids5"]["right"] >= 190 and
+            source["gradient_check"]["nonzero_all"]):
+        raise ValueError("qualified source failed V1 or V2")
+    return source
+
+
+def old_scores(net, panel, depth):
+    return {name: B.score(net, items, depth) for name, items in panel.items()}
+
+
+def adapt_job(arm, seed, init, source_dir, out):
+    if (out / "adapt.json").exists():
+        raise FileExistsError("equal-practice dev run already complete")
+    start = time.monotonic()
+    src = identity_source(source_dir, arm, seed)
+    depth = src["fixed_depth"]
+    lr = src["plain_lr_sweep"]["chosen"] if arm == "plain" else 1e-3
+    panels, banned = D.panels()
+    pool, keys, digest = make_pool(seed, banned)
+    if init == "pre":
+        base = B.load_model(source_dir / "source.pt", arm)
+    else:
+        torch.manual_seed(900000 + seed)
+        base = B.N.Net(arm)
+    old = D.old_panels()
+    replay = D.replay_old()
+    out.mkdir(parents=True, exist_ok=True)
+    res = {
+        "arm": arm, "seed": seed, "init": init, "source": str(source_dir),
+        "fixed_depth": depth, "lr": lr, "weights": base.weight_count(),
+        "persistent_coefficients": base.weight_count(),
+        "support_unique_layouts": len(keys), "support_panel_overlap": len(keys & banned),
+        "support_sha256": digest, "rung_batches": N_BATCHES,
+        "batch_size": B.MAZE_BATCH, "updates_per_batch": B.UPDATES,
+        "optimizer_updates_per_rung": N_UPDATES,
+        "visits_per_layout": {str(k): N_BATCHES * B.MAZE_BATCH // k for k in RUNGS},
+        "panel_layouts": {split: {str(s): len({D.layout_key(x) for x in items})
+                                  for s, items in panel.items()}
+                          for split, panel in panels.items()},
+        "rungs": {}, "old": {}, "sleep": {}, "rung_seconds": {},
+    }
+    res["rungs"]["0"] = B.maze_scores(base, panels["dev"], depth)
+    res["old"]["before"] = old_scores(base, old, depth)
+    B.save_stage(base, out, "k0")
+    for k in RUNGS:
+        t0 = time.monotonic()
+        learner = getattr(B.N, "Learner", B.Learner)(copy.deepcopy(base), lr)
+        for batch in batches(pool, k, seed):
+            learner.maze_batch(batch)
+        if learner.steps != N_UPDATES:
+            raise ValueError(f"k={k}: expected {N_UPDATES} updates, got {learner.steps}")
+        net = learner.net
+        res["rungs"][str(k)] = B.maze_scores(net, panels["dev"], depth)
+        B.save_stage(net, out, f"k{k}")
+        if k in (64, 16384):
+            res["old"][f"after_{k}"] = old_scores(net, old, depth)
+            sleeper = getattr(B.N, "Learner", B.Learner)(copy.deepcopy(net), lr)
+            sleep_seconds = sleeper.sleep(pool[:k], seed + k, replay)
+            if sleeper.steps != B.SLEEP_STEPS:
+                raise ValueError(f"sleep k={k}: expected {B.SLEEP_STEPS} updates")
+            res["sleep"][str(k)] = {
+                "seconds": sleep_seconds, "updates": sleeper.steps,
+                "old": old_scores(sleeper.net, old, depth),
+                "maze_dev": B.maze_scores(sleeper.net, panels["dev"], depth),
+            }
+            B.save_stage(sleeper.net, out, f"sleep{k}")
+        res["rung_seconds"][str(k)] = time.monotonic() - t0
+        B.dump(out / "partial.json", res)
+        print(json.dumps({"phase": "rung", "arm": arm, "seed": seed, "init": init,
+                          "k": k, "right9": res["rungs"][str(k)]["9"]["right"],
+                          "seconds": round(time.monotonic() - start)}), flush=True)
+    res["training_seconds"] = time.monotonic() - start
+    B.dump(out / "adapt.json", res)
+    print(json.dumps({"phase": "adapt_done", "arm": arm, "seed": seed, "init": init,
+                      "seconds": round(res["training_seconds"])}), flush=True)
+
+
+def all_paths():
+    for arm in ("loop", "plain"):
+        for seed in (0, 1):
+            for init in ("pre", "fresh"):
+                yield arm, seed, init, EQ_RUNS / f"{arm}-s{seed}-{init}"
+
+
+def gate_job():
+=====TAIL=====
+Python 3.9.6
+zsh:3: no matches found: /opt/homebrew/bin/python*
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_fewex_eq_bench.py | grep -n "plugin\|def main\|adapt\|holdout" | head -30
+git show origin/main:scripts/claude_dir_lr_stage_net.py | head -80
+76:def adapt_job(arm, seed, init, source_dir, out):
+77:    if (out / "adapt.json").exists():
+138:    B.dump(out / "adapt.json", res)
+139:    print(json.dumps({"phase": "adapt_done", "arm": arm, "seed": seed, "init": init,
+160:        r = json.loads((path / "adapt.json").read_text())
+175:def holdout_job(arm, seed, init, out):
+178:        raise ValueError("dev V3 did not pass; holdout must stay sealed")
+179:    if (out / "holdout.json").exists():
+180:        raise FileExistsError("holdout already evaluated")
+181:    marker = out / "holdout.started"
+183:        pass  # Never silently re-open this arm's holdout after a partial run.
+184:    dev = json.loads((out / "adapt.json").read_text())
+192:        scores[name] = B.maze_scores(net, panels["holdout"], dev["fixed_depth"])
+193:    B.dump(out / "holdout.json", {"arm": arm, "seed": seed, "init": init,
+216:def main():
+218:    p.add_argument("cmd", choices=("selftest", "source", "adapt", "gate", "holdout"))
+225:    p.add_argument("--plugin", default="claude_fewex_net",
+228:    B.N = importlib.import_module(a.plugin)
+243:                p.error("--init required for adapt and holdout")
+244:            if a.cmd == "adapt":
+245:                adapt_job(a.arm, a.seed, a.init, source, out)
+247:                holdout_job(a.arm, a.seed, a.init, out)
+"""Lead 1 plug-in: staged unfreeze at adaptation (head first, then everything).
+
+Same net, same data, same sealed harness. Only the adapt-step Learner changes: for the first
+FROZEN_UPDATES = 25% of the 2,048 maze updates only the output head (`head.*`) and stop head
+(`halt.*`, loop only) can move; then every weight trains, with no other change (same AdamW,
+same 50-step warm-up counted from update 0, same clip, same batches). The rule is the same for
+fresh, plain and practised nets. Nothing here touches the source nets or practice.
+  --plugin claude_dir_lr_stage_net     (PROTOCOL.md plug-in contract)
+Note: the loop's stop head gets no maze loss, so in the frozen stage only `head.*` moves.
+"""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_fewex_net import *  # noqa: F401,F403  Net, Practice, tensors, ce_and_exact, train_loss, ...
+import claude_fewex_bench as B
+
+FROZEN_UPDATES = 512  # 25% of B.UPDATES * 512 batches = 2,048
+HEAD_PREFIXES = ("head.", "halt.")
+
+
+def set_frozen(net, frozen):
+    for name, p in net.named_parameters():
+        p.requires_grad = (not frozen) or name.startswith(HEAD_PREFIXES)
+
+
+class Learner(B.Learner):
+    def maze_batch(self, items):
+        assert FROZEN_UPDATES % B.UPDATES == 0
+        set_frozen(self.net, self.steps < FROZEN_UPDATES)
+        super().maze_batch(items)
+
+    def sleep(self, mazes, seed, old):
+        set_frozen(self.net, False)  # sleep is unchanged: every weight trains
+        return super().sleep(mazes, seed, old)
+
+
+def _selftest():
+    import copy, random, torch
+    import claude_fewex_data as D
+    global FROZEN_UPDATES
+    FROZEN_UPDATES = 8  # two batches, so the test is quick; the real value is 512
+    _, banned = D.panels()
+    rng, seen = random.Random(5), set()
+    items = [D.unique_maze(rng, 9, banned, seen) for _ in range(B.MAZE_BATCH)]
+    for arm in ("loop", "plain"):
+        torch.manual_seed(1)
+        net = Net(arm)
+        before = copy.deepcopy(net.state_dict())
+        L = Learner(net, 1e-3)
+        L.maze_batch(items); L.maze_batch(items)          # updates 0..7: frozen
+        after = net.state_dict()
+        moved = {k for k in before if not torch.equal(before[k], after[k])}
+        assert moved and all(k.startswith(HEAD_PREFIXES) for k in moved), (arm, sorted(moved))
+        mid = copy.deepcopy(net.state_dict())
+        L.maze_batch(items)                                # update 8..11: everything trains
+        moved2 = {k for k in mid if not torch.equal(mid[k], net.state_dict()[k])}
+        assert any(not k.startswith(HEAD_PREFIXES) for k in moved2), arm
+        assert all(p.requires_grad for p in net.parameters()), arm
+        assert L.steps == 12
+        print(f"stage plugin selftest ok {arm}: frozen stage moved {sorted(moved)}; after unfreeze {len(moved2)} tensors moved")
+
+
+if __name__ == "__main__":
+    _selftest()
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_fewex_eq_bench.py | sed -n '216,280p'
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("cmd", choices=("selftest", "source", "adapt", "gate", "holdout"))
+    p.add_argument("--arm", choices=("loop", "plain"))
+    p.add_argument("--seed", type=int, choices=(0, 1))
+    p.add_argument("--init", choices=("pre", "fresh"))
+    p.add_argument("--out", type=Path)
+    p.add_argument("--source", type=Path)
+    p.add_argument("--threads", type=int, default=1)
+    p.add_argument("--plugin", default="claude_fewex_net",
+                   help="importable module implementing PROTOCOL.md plug-in interface")
+    a = p.parse_args()
+    B.N = importlib.import_module(a.plugin)
+    torch.set_num_threads(a.threads)
+    if a.cmd == "selftest":
+        selftest()
+    elif a.cmd == "gate":
+        gate_job()
+    else:
+        if a.arm is None or a.seed is None:
+            p.error("--arm and --seed required")
+        source = a.source or ART / "runs" / f"qual-{a.arm}-s{a.seed}"
+        out = a.out or EQ_RUNS / f"{a.arm}-s{a.seed}-{a.init}"
+        if a.cmd == "source":
+            B.source_job(a.arm, a.seed, out)
+        else:
+            if a.init is None:
+                p.error("--init required for adapt and holdout")
+            if a.cmd == "adapt":
+                adapt_job(a.arm, a.seed, a.init, source, out)
+            else:
+                holdout_job(a.arm, a.seed, a.init, out)
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mls -d venv .venv ~/venv* /tmp/*venv* 2>&1 | head -10; ls /usr/local/lib/ 2>&1 | head -20; python3 -c "import sys; print(sys.version)"; ls ~/Library/Python/ 2>&1 | head -5; find / -maxdepth 4 -name "torch" -type d 2>/dev/null | head -5; echo "---brew---"; ls /opt/ 2>&1 | head -10
+zsh:1: no matches found: /Users/ben-hannan/venv*
+7z.so
+cairo
+cmake
+engines-3
+gio
+girepository-1.0
+glib-2.0
+ImageMagick
+lib7z.dylib
+libada.4.0.0.dylib
+libada.4.dylib
+libada.dylib
+libaom.3.14.1.dylib
+libaom.3.dylib
+libaom.a
+libaom.dylib
+libasprintf.0.dylib
+libasprintf.a
+libasprintf.dylib
+libavcodec.63.1.101.dylib
+3.9.6 (default, Aug 25 2026, 21:26:21) 
+[Clang 21.0.0 (clang-2100.3.34.2)]
+3.14
+3.9
+---brew---
+homebrew
+[0m
+[0m$ [0mls /opt/homebrew/bin/python* 2>&1; /opt/homebrew/bin/python3 --version 2>&1; ls /Library/Frameworks/Python.framework/Versions/ 2>&1; ls /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/ 2>&1 | head -10; pip3 index versions torch 2>&1 | head -5 || pip3 install --dry-run torch==2.14.0 2>&1 | head -20
+zsh:1: no matches found: /opt/homebrew/bin/python*
+zsh:1: no such file or directory: /opt/homebrew/bin/python3
+ls: /Library/Frameworks/Python.framework/Versions/: No such file or directory
+3.9
+Current
+WARNING: pip index is currently an experimental command. It may be removed/changed in a future release without prior warning.
+torch (2.8.0)
+Available versions: 2.8.0, 2.7.1, 2.7.0, 2.6.0, 2.5.1, 2.5.0, 2.4.1, 2.4.0, 2.3.1, 2.3.0, 2.2.2, 2.2.1, 2.2.0, 2.1.2, 2.1.1, 2.1.0, 2.0.1, 2.0.0, 1.13.1, 1.13.0, 1.12.1, 1.12.0, 1.11.0, 1.10.2, 1.10.1, 1.10.0, 1.9.0
+WARNING: You are using pip version 21.2.4; however, version 26.0.1 is available.
+You should consider upgrading via the '/Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m pip install --upgrade pip' command.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-fewex-20260927/PROTOCOL.md | head -100
+echo "==="
+git show origin/main:artifacts/claude-dir-lr-20260928/LEAD0-MARKS.md 2>&1 | head -60
+# Few-example ruler protocol
+
+Sealed 2026-09-27 22:36 UTC, before source training or any maze panel scoring. This is a new test. It does not change xfer-1 or rsn-358x.
+
+## Question and arms
+
+How many **different** solved maze layouts does a model need before it solves unseen mazes, after practice on sums and Latin grids? Two paired seeds, 0 and 1, have identical examples and panels across four arms: source-trained loop, source-trained plain transformer, fresh loop, and fresh plain transformer. Fresh models start with random weights and receive normal gradient updates. The loop has two shared width-256 blocks, eight heads, 1,645,726 weights, a learned stop head, and a 48-round cap. Plain has eight distinct width-128 blocks, eight heads, 1,619,965 weights, one pass, and no stop head. The size gap is 1.57% relative to the loop. All weights and all inference-accessible persistent coefficients count. Raw replay has 128 stored sums and 128 stored grids per arm. Temporary puzzle states and raw stream examples are reported separately from weights.
+
+## Data
+
+Source training: 6,000 batches of 64 sums (1–4 digits) or 4×4/5×5 Latin grids with the xfer-1 legend format, AdamW 1e-3 with warm-up and cosine decay. No maze appears in source training, validation, learning-rate choice, or stopping-depth choice. Source guard uses 200 fresh 4-digit sums and 200 fresh 5×5 grids, each separately. The model receives tokens and fill slots only, no family ID.
+
+New kind: Wilson uniform-spanning-tree perfect mazes, in the 358m token format, generated by code. A maze answer marks the unique path from start to goal and is checked by the 358m exact checker. Layout SHA-256 is computed from wall cells and size, omitting start/goal and answer. Both panel splits and all support and stream draws have distinct layout hashes, with no cross-overlap. For 7×7 the total possible layouts are limited, so the dev panel has 24 and the holdout has 48; 9×9 and 11×11 each have 300 per split. Every arm uses the same panels. The main score uses the 300-maze 9×9 holdout. The 7×7 and 11×11 panels are secondary. Panel counts and distinct-hash counts must be reported before size-specific conclusions.
+
+The sealed support set has 64 distinct 9×9 layouts per seed, nested at k=1, 4, 16, 64. Each k starts from a clean copy of the starting net, has eight shuffled passes, and uses batches of at most 32. The separate stream branch also starts clean, receives distinct 9×9 mazes in batches of 32, and checks after 256, 1,024, 4,096, 16,384, and 65,536. Supports never appear in the stream. k=0 is scored before adaptation. Each seed's examples are shared across arms.
+
+The loop uses xfer-1's kept maze recipe: four optimizer updates per batch, each with three no-gradient rounds and two gradient rounds, carrying a detached state between updates. There is no stop-head loss during maze adaptation. Plain receives four optimizer updates on the same batch. Plain's maze learning rate is selected from 5e-4, 1e-3, 2e-3 using only 64 steps on extra source puzzles and a separate source dev panel, before viewing maze scores. Loop uses 1e-3. All computation is fp32 CPU with autocast disabled. Record training wall time and optimizer updates.
+
+For each 64-example and 65,536-example branch, score old kinds after maze adaptation. Then sleep exactly 512 optimizer updates, each on 16 replay examples: four sums and four grids sampled from fixed 128-example stores, and eight maze examples sampled from that branch's own examples. One weighted loss combines these shape-homogeneous groups in a single optimizer update. Sleep adds no new maze examples. Score both old kinds and mazes after sleep. Old panels are also scored before adaptation.
+
+## Scores and order
+
+At each rung, record exact `x of 300` on 9×9 holdout, both secondary sizes, mean inference rounds, cap-hit count, and the result at the fixed depth chosen on **source dev** from 8, 16, 32, 48. Learned stop fires from round 3 when its probability exceeds 0.5 and predictions have been unchanged for three rounds. A stop failure is a learned-stop score more than two percentage points below that source-selected fixed depth. Plain has one round.
+
+`F_all` is the unweighted mean of 9×9 accuracy in percentage points over the nine positive rungs (four few plus five stream). `F_few` is the mean over k=1, 4, 16, 64. Report `F_few - cold`, the complete curve per arm and seed, and the report-only k=64 50% line. Report old kinds separately; `D_kind = old_before - old_after_sleep` in percentage points, for each sleep branch. A negative D means improvement.
+
+Run order: (1) selftest and one-step gradient checks; (2) source train and source guard for both seeds and both trained architectures; (3) dev adaptation, with no recipe changes after seeing dev maze scores; (4) apply V1–V3 in PASSMARKS.md; (5) if V3 passes, run the holdout **once**, after all baseline dev branches finish; (6) independent blind recount from raw JSON and marks. If V3 fails, report INCONCLUSIVE and do not run the holdout or retune. Raw JSON and checkpoints stay in this artifact folder. RESULTS.md records the seal commit hash. No result is valid unless this file, both marks files, and the harness were committed before step 1.
+
+## Plug-in contract for the design races
+
+Use `python -B scripts/claude_fewex_bench.py ... --plugin importable_module`; no harness edit is permitted. A plug-in provides `Net(arm)` with `arm`, `weight_count()`, a PyTorch state dict, and `forward(tokens, positions)` returning 48 per-round `[batch,cells,vocab]` cell-logit tensors and 48 `[batch]` stop-logit tensors for a recurrent arm (one cell-logit tensor and an empty stop list for plain). `positions` is the binary fill-slot grid, **not** a kind label. It also provides `Practice(arm, seed, total_steps)` with `.net` and `.step(items)`; `tensors`, `ce_and_exact`, `train_loss`; and optionally `Learner(net, lr)` with `.net`, `.steps`, `.maze_batch(items)`, and `.sleep(mazes, seed, old_replay)`. The baseline learner is used if `Learner` is absent. An optional `infer_rounds(tokens, positions, n)` returns predicted token IDs and stop probabilities with shapes `[batch,n,cells]` and `[batch,n]` to reduce inference memory. Training and inference hooks see puzzle tensors and corrections, never true query answers or family IDs. A design with fast weights must include every persistent coefficient in `weight_count()` and disclose raw memory bytes. Tests A–C keep this harness, data, evaluation, replay, and pass marks fixed. Test A's episodic source training must also be given to its loop control.
+
+Source dependencies at seal: `claude_rsn358a_envs.py` SHA-256 `af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0`; `claude_rsn358m_maze.py` SHA-256 `99c0b77c13deb32a146abda79784157c6bbad3745a9fa0a65840a12d27ad99bc`.
+===
+# Lead 0 marks (diagnostic, not a race entry). Sealed 2026-09-28 21:49 UTC, before any run.
+
+**Question.** Is the jumpiness of the few-example curve across k just the learning rate?
+**Change.** Only the AdamW learning rate of the adaptation Learner. Everything else is the sealed eq harness: same source net, pool, batches, 2,048 updates, dev 9x9 panel of 300 (`scripts/claude_dir_lr_lead0.py` imports it, edits nothing). No sleep, no holdout, no old panels.
+**Runs (main).** Practised loop, seed 1 (source `runs/qual-loop-s1`), k = 1,024 and 16,384, lr in {3e-4, 1e-3, 3e-3}: 6 counts of 300. The 1e-3 rows are a rerun of the stored baseline (233 and 261 of 300, `eq-runs/loop-s1-pre/adapt.json`); if the rerun differs, the ruler is not bit-reproducible on the run machine, and that difference is itself the same-start noise (reported, not hidden).
+**Runs (extra, same rules).** Fresh loop, seed 1, same 6. Reason: the collapse (0 of 300 at k=1,024, then 128, then 18) is in the *fresh* loop; the practised loop's stored dev curve is 173, 277, 233, 292, 261 for k = 64..16,384, which wobbles by about 60 counts but never collapses.
+
+**Bars (fixed now).** Counts of 300. One count is 0.33 points; the counting SE of a difference of two 300-maze scores is about 12 counts near 50%, so **30 counts (10 points)** is about 2.5 SE, and above the largest same-start seed gap in F_eq (2.5 points, NOISE.md) as a per-rung bar.
+- A rung is **lr-sensitive** if max minus min over the three lrs is >= 30 counts.
+- Practised loop word: **LR_MATTERS** (both rungs lr-sensitive), **LR_MATTERS_AT_ONE_RUNG**, or **NOT_THE_LR** (neither). 
+- Result that would prove the lr suspicion wrong: **NOT_THE_LR** on the practised loop (spread under 30 at both rungs) **and** no lr rescues the fresh loop's k=1,024 collapse to >= 60 of 300.
+- Fresh loop extra: "rescued" if any lr gives >= 60 of 300 at k=1,024 (stored 0).
+- Only 2 rungs and 1 seed, so this is a diagnostic: it can say "the lr moves this curve" (**shown**, for that net and seed) or "not shown"; it cannot say the lr explains the whole jumpiness elsewhere (**untested**).
+
+**What the answer changes.** LR_MATTERS: every later comparison must fix or sweep lr for both arms of the pair, and the stage-two win/loss reads only at the winning lr. NOT_THE_LR: the jumpiness is not the lr; keep 1e-3.
+
+**Self-check (common brief).** (1) Bar 30 counts sits above counting noise (~12 counts) and the noise in NOISE.md (max same-start F_eq gap 2.5 points). (2) Only two words, no rejection wording: "not shown" is the default. (3) Comparator is the stored same-start baseline plus a rerun of it. (4) Plain-net row: n/a for a diagnostic (no promotion claim). (5) F_few: n/a here; Lead 1 has it. (6) No sleep gate.
+[0m
+[0m$ [0mpip3 list 2>&1 | head -30; echo "---"; ls ~/miniconda* ~/anaconda* /opt/miniconda* 2>&1 | head -5; which conda uv 2>&1 | head -5; find /Users/ben-hannan -maxdepth 5 -name "torch" -type d 2>/dev/null | head -10; echo "---pythons---"; ls /usr/bin/python* 2>&1; compgen -c | grep -E "^python" | sort -u | head -10
+Package           Version
+----------------- -------
+altgraph          0.17.2
+et_xmlfile        2.0.0
+future            0.18.2
+macholib          1.15.2
+openpyxl          3.1.5
+pip               21.2.4
+PyMuPDF           1.26.5
+pypdf             6.19.0
+setuptools        58.0.4
+six               1.15.0
+typing_extensions 4.16.0
+wheel             0.37.0
+WARNING: You are using pip version 21.2.4; however, version 26.0.1 is available.
+You should consider upgrading via the '/Applications/Xcode.app/Contents/Developer/usr/bin/python3 -m pip install --upgrade pip' command.
+---
+zsh:1: no matches found: /Users/ben-hannan/miniconda*
+conda not found
+/Users/ben-hannan/.local/bin/uv
+/Users/ben-hannan/.cache/uv/wheels-v6/pypi/torch
+/Users/ben-hannan/.cache/uv/archive-v0/2gvxZ16FcBseynzx/torch
+---pythons---
+/usr/bin/python3
+zsh:1: command not found: compgen
+[0m
+[0m$ [0mls /Users/ben-hannan/.cache/uv/ 2>&1 | head -10; uv --version 2>&1; ls .venv 2>&1 | head -5; ls /Users/ben-hannan/Desktop/projects/beautiful-model/.venv 2>&1 | head -5; find /Users/ben-hannan/Desktop/projects/beautiful-model -maxdepth 2 -name "*.toml" -o -name "requirements*.txt" 2>&1 | head -10; cat pyproject.toml 2>&1 | head -40
+archive-v0
+builds-v0
+CACHEDIR.TAG
+environments-v2
+interpreter-v4
+sdists-v9
+simple-v24
+wheels-v6
+uv 0.12.7 (61291a8ca 2026-08-27 aarch64-apple-darwin)
+ls: .venv: No such file or directory
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/.venv: No such file or directory
+cat: pyproject.toml: No such file or directory
+[0m
+[0m$ [0mls /Users/ben-hannan/.cache/uv/archive-v0/ 2>&1 | head -10; du -sh /Users/ben-hannan/.cache/uv/ 2>&1 | head -5; uv pip list --help 2>&1 | head -5; echo "---"; ls ~/Library/Caches/uv/ 2>&1 | head -5; find / -maxdepth 6 -name "activate" -path "*venv*" 2>/dev/null | head -10
+_-gOEpaCnqIH8u1w
+_AvbciQUp9ylGXOp
+_Ukw408lB7Zf_BvK
+_yT9K-KXgEvPiRYV
+-40SPr5QZ7mb6Nub
+-d_ucZqvUcdC0d6n
+-FsMt7VkOep0G4F2
+-GZErt8k2XU5CUVi
+-uuZADmGyjI5Yo5s
+-uY73_FLh5pku0RW
+7.4G	/Users/ben-hannan/.cache/uv/
+List, in tabular format, packages installed in an environment
+
+Usage: uv pip list [OPTIONS]
+
+Options:
+---
+ls: /Users/ben-hannan/Library/Caches/uv/: No such file or directory
+/Users/ben-hannan/polish-consulate/.venv/bin/activate
+/Users/ben-hannan/premonition-chat/chatdemo-venv/bin/activate
+[0m
+[0m$ [0mls /Users/ben-hannan/.cache/uv/wheels-v6/pypi/torch/ 2>&1 | head -10; ls /Users/ben-hannan/.cache/uv/simple-v24/ 2>&1 | head -20; grep -r "torch==" scripts/ artifacts/claude-fewex-20260927/*.md 2>&1 | head -10; grep -r "torch" REMOTE_RUN.md 2>&1 | head -10
+2.14.0-cp312-cp312-macosx_14_0_arm64
+2.14.0-cp312-cp312-macosx_14_0_arm64.http
+2.14.0-cp312-cp312-macosx_14_0_arm64.msgpack
+pypi
+[0m
+[0m$ [0muv python list 2>&1 | head -20; ls ~/.local/share/uv/python/ 2>&1 | head -10; ls /Users/ben-hannan/.cache/uv/interpreter-v4/ 2>&1 | head -10
+error: Failed to inspect Python interpreter from search path at `/usr/local/bin/python3`
+  Caused by: Failed to query Python interpreter at `/usr/local/bin/python3`
+  Caused by: Bad CPU type in executable (os error 86)
+cpython-3.11-macos-aarch64-none
+cpython-3.11.16-macos-aarch64-none
+cpython-3.12-macos-aarch64-none
+cpython-3.12.14-macos-aarch64-none
+72477d20415402fe
+cde756dce160189f
+[0m
+[0m$ [0mls /Users/ben-hannan/.cache/uv/environments-v2/ 2>&1 | head -10; find /Users/ben-hannan/Desktop/projects/beautiful-model -maxdepth 3 -name ".python-version" -o -name "uv.lock" 2>&1 | head -5; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ 2>&1 | head -20
+526b7ca141df3200
+[0m
+[0m$ [0mpgrep -af "claude_fewex|claude_dir_lr" 2>&1; echo "pgrep-done"; git worktree list 2>&1 | head -10; sysctl -n hw.ncpu 2>&1
+6491
+6580
+9212
+9213
+9214
+9215
+9218
+9219
+9220
+9225
+pgrep-done
+/Users/ben-hannan/Desktop/projects/beautiful-model                                                       f3318a6b9 [main]
+/private/tmp/dl4push                                                                                     62ffcff47 (detached HEAD) prunable
+/private/tmp/lead0-main                                                                                  d734daa6e (detached HEAD)
+/private/tmp/rel                                                                                         4bc558489 (detached HEAD) prunable
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358d-push                           d2f4c096e (detached HEAD) prunable
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/trash-outbox                           346481d67 (detached HEAD) prunable
+/Users/ben-hannan/.codex/worktrees/lis320-finish/beautiful-model                                         47b22f0f7 (detached HEAD)
+/Users/ben-hannan/.codex/worktrees/retention-isolation/beautiful-model                                   cdb60eaec [codex/retention-isolation]
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27      57f5749ce [claude/card-experiment-handoff-7c5b27]
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/fact-saving-note-filtering-4ff1ff   123f01b9e (detached HEAD)
+10
+[0m
+[0m$ [0mps aux | grep -E "claude_fewex|claude_dir" | grep -v grep | head -20; echo "---"; ls /private/tmp/lead0-main/ 2>&1 | head -20; ls /private/tmp/lead0-main/artifacts/claude-dir-lr-20260928/ 2>&1 | head -20
+ben-hannan        9219 112.0  2.0 489720768 686784   ??  RN    7:51PM   0:04.99 /Users/ben-hannan/.cache/uv/builds-v0/.tmpHBRRof/bin/python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr 0.003
+ben-hannan        9220 110.8  2.0 489720976 684272   ??  RN    7:51PM   0:05.01 /Users/ben-hannan/.cache/uv/builds-v0/.tmpfxVsHg/bin/python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr 0.001
+ben-hannan        9218 109.5  2.0 489720784 686256   ??  RN    7:51PM   0:04.99 /Users/ben-hannan/.cache/uv/builds-v0/.tmpgn9rsG/bin/python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr 0.0003
+ben-hannan        9232  95.2  0.8 489283232 254464   ??  RN    7:51PM   0:02.70 /Users/ben-hannan/.cache/uv/builds-v0/.tmp4NIWPf/bin/python -B scripts/claude_dir_h1_bench.py check-source --source-root /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs --threads 1
+ben-hannan        9230   0.0  0.1 464212096  31184   ??  SN    7:51PM   0:00.02 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_bench.py check-source --source-root /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs --threads 1
+ben-hannan        9229   0.0  0.0 488786080   2672   ??  SNs   7:51PM   0:00.00 /bin/zsh -c D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.3rCdT0rj9t; cd $D && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h1_bench.py check-source --source-root /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs --threads 1 2>&1 | tail -5; echo "---FILE---"; cat artifacts/claude-dir-h1-heldout-20260928/SOURCE-CHECK.json 2>&1 | head -40
+ben-hannan        9214   0.0  0.1 464239968  31712   ??  SN    7:51PM   0:00.02 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr 0.001
+ben-hannan        9215   0.0  0.1 464205824  31344   ??  SN    7:51PM   0:00.02 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr 0.003
+ben-hannan        9213   0.0  0.1 464231984  31456   ??  SN    7:51PM   0:00.02 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr 0.0003
+---
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+CLAUDE.md
+data
+design
+handoff
+learnlab
+memorylab
+premonition
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scripts
+TEACHING_TO_TEST_CONTRACT.md
+tests
+lead0
+LEAD0-MARKS.md
+lead0-pre-0.0003.log
+lead0-pre-0.001.log
+lead0-pre-0.003.log
+noise-from-raw.txt
+NOISE.md
+SEAL-code.sha256.txt
+SELFTESTS.log
+STAGE-PASSMARKS.md
+[0m
+[0m$ [0mps aux | grep -E "stage|fewex_eq" | grep -v grep | head -20; echo "---stage-runs dirs---"; ls /private/tmp/lead0-main/artifacts/claude-dir-lr-20260928/stage-runs/ 2>&1 | head -20; ls artifacts/claude-dir-lr-20260928/ 2>&1 | head -20
+ben-hannan        6553   0.0  0.0 488785648   2384 s000  SN    7:49PM   0:00.01 bash /Users/ben-hannan/premonition-watch/rungo5.sh /Users/ben-hannan/premonition-watch/queue/dirlr-stage-mac-r2.md opencode/muse-spark-1.3-contributor-free
+---stage-runs dirs---
+ls: /private/tmp/lead0-main/artifacts/claude-dir-lr-20260928/stage-runs/: No such file or directory
+ls: artifacts/claude-dir-lr-20260928/: No such file or directory
+[0m
+[0m$ [0mcat /Users/ben-hannan/premonition-watch/queue/dirlr-stage-mac-r2.md 2>&1 | head -80; echo "==="; cat /Users/ben-hannan/premonition-watch/rungo5.sh 2>&1 | head -60
+HELD-UNTIL: scripts/claude_dir_lr_stage_net.py, scripts/claude_dir_lr_stage_report.py and artifacts/claude-dir-lr-20260928/STAGE-PASSMARKS.md are on origin/main; runs/qual-{loop,plain}-s{0,1}/source.pt are on the run machine.
+GPU: no
+LOAD-HEAVY: yes (8 dev runs, like the baseline's 169 min loop / 120 min plain when 8 run at once; staged runs skip body gradients for the first quarter, so likely a bit faster; run 4 at once with JOBS=4 if cores are short. Estimate, untested.)
+WHAT: Lead 1, staged unfreeze at adaptation (head and stop head only for the first 512 of 2,048 updates, then everything), same rule for fresh, plain, practised. Dev only. Sealed eq harness through --plugin; resumable is not built in for a rung, so rerun a run only after deleting its half-written folder.
+SETUP: torch==2.14.0 CPU, fp32. Clone origin/main; source nets in artifacts/claude-fewex-20260927/runs/qual-*/.
+RUN (repo root): 
+  for arm in loop plain; do for seed in 0 1; do for init in pre fresh; do
+    python -B scripts/claude_fewex_eq_bench.py adapt --arm $arm --seed $seed --init $init --plugin claude_dir_lr_stage_net --out artifacts/claude-dir-lr-20260928/stage-runs/$arm-s$seed-$init > artifacts/claude-dir-lr-20260928/stage-$arm-s$seed-$init.log 2>&1 &
+  done; done; done; wait
+(8 processes at once; or split into two waves of 4.) Watch the logs for Traceback.
+AFTER: `python3 -B scripts/claude_dir_lr_stage_report.py dev` prints the deltas and the STAGE-PASSMARKS.md verdict. Commit adapt.json files and logs (git add -f; NOT the .pt files) before anything else. Holdout only if the verdict is PROMOTE, once per arm and seed (`claude_fewex_eq_bench.py holdout ... --plugin claude_dir_lr_stage_net --out <same folder>`; needs the k*.pt files kept), then `report holdout`.
+NOT THIS JOB: any change to the recipe or the marks after a dev score is seen; the blind recount (Director's call).
+===
+#!/bin/bash
+# rungo5 = rungo4 with a builder chain that avoids the opencode-go plan (weekly Go usage limit hit ~00:57 UTC 09-27; Ben 03:04:18 "use muse spark 1.3").
+# Chain: $2 (watcher BM, default free Zen Muse), then free mimo-v2.6-flash (mimo-skill.md:13). Deployed by watcher.sh into $H each round (Director 03:17 UTC 09-27).
+# NOT a Luna/Codex builder: on 2026-09-27 03:53 UTC the Director's permission check refused running `codex exec` (GPT-6 Luna) as a queue builder ("create unsafe agents"), even least-privilege (workspace-write + network). No session should retry that route; Luna is used only as a read-only text helper (scripts/claude_luna_codex.py). Ben or his Mac Claude may set it up themselves.
+# rungo4 (= rungo3 + network-drop resume). 11:07-11:18 on 2026-09-22 six agents died on "unknown certificate verification error" /
+# "Cannot connect to API" and rungo3 wrote .done for them (reply > 300 bytes). Now: if the last lines of err.txt show a network
+# error, the run is NOT done; wait 120 s and resume on the SAME model (up to 6 network retries), with the RESUME NOTICE.
+# A killed opencode (exit >128) or a $n.stop file ends the loop WITHOUT fallback and WITHOUT a done marker.
+t="$1"; m1="${2:-opencode/muse-spark-1.3-contributor-free}"; Q=$(dirname "$t"); n=$(basename "$t" .md); W=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+. "$W/handoff/kit/mimo/ocdb.sh"
+cd "$W"
+# BASH-ONLY: yes = no LLM builder: run the first ```bash fenced block of the task file in $W (cap 75 min), reply = stdout (Director 09-27, free builders rate-limited/hanging)
+if grep -q '^BASH-ONLY: yes' "$t"; then
+  awk '/^```bash/{f=1;next} f&&/^```/{exit} f' "$t" > "$Q/$n.bo.sh"
+  echo "$(date +%T) bash-only $n" >> "$Q/log.txt"
+  perl -e 'alarm shift; exec @ARGV' 4500 bash "$Q/$n.bo.sh" < /dev/null > "$Q/$n.go1.reply.md" 2> "$Q/$n.go1.err.txt"; rc=$?
+  echo "rc=$rc" >> "$Q/$n.go1.reply.md"; [ $rc = 0 ] && echo bash-only > "$Q/$n.go1.done"
+  echo "$(date +%T) bash-only-exit $n rc=$rc" >> "$Q/log.txt"; exit $rc
+fi
+NET="unknown certificate verification error\|Cannot connect to API\|socket connection was closed\|ECONNRESET\|ETIMEDOUT\|fetch failed\|getaddrinfo\|network error\|Failed query\|database is locked\|Failed to execute statement"
+# DB lock errors (11:41: a long vacuum held the lock) are retried on the SAME model too, never by falling down the chain.
+nr=0; rr=0
+WAITNOTE="RUNNER NOTE (Director, 09-27): your builder model is rate-limited, so every tool call counts. To wait for a long background run, use ONE blocking command (e.g. while pgrep -f <exact script> >/dev/null; do sleep 60; done, capped under 75 min), never many short polls. Before starting any long run, check with pgrep that the same run is not already going (a previous agent may have started it).
+
+"
+set -- "$m1" opencode/mimo-v2.6-flash-free
+while [ $# -gt 0 ]; do
+  m="$1"
+  k=$(ls "$Q"/$n.go*.reply.md 2>/dev/null | wc -l); k=$((k+1))
+  PRE=""; if [ "$k" -gt 1 ]; then PRE="RESUME NOTICE: a previous agent started this exact task and was cut off (usually a network drop, not a task problem). Its files may already exist (scripts with the prefix, artifact folder, PASSMARKS.md/SEAL, ledger predictions, partial outputs). Inspect what exists, keep anything sealed (never edit PASSMARKS.md, the agent code, config or case files if SEAL.sha256.txt exists; verify with shasum -a 256 -c from the repo root), continue from the first unfinished step, do not duplicate ledger predictions. Your 90-minute deadline starts now. The task follows.
+
+"; fi
+  [ -e "$Q/$n.stop" ] && { echo "$(date +%T) stopped $n" >> "$Q/log.txt"; exit 2; }
+  w=0; while [ -e "$Q/PAUSE" ] || [ "$(df -k / | tail -1 | awk '{print int($4/1024)}')" -lt 2500 ]; do [ $w -eq 0 ] && echo "$(date +%T) waiting-disk $n" >> "$Q/log.txt"; w=$((w+1)); [ $w -gt 60 ] && { echo "$(date +%T) nospace $n" >> "$Q/log.txt"; exit 3; }; sleep 60; done
+  v=0; while pgrep -f "wal_checkpoint.TRUNCATE" > /dev/null && [ $v -lt 40 ]; do v=$((v+1)); sleep 15; done
+  echo "$(date +%T) go$k $n $m" >> "$Q/log.txt"
+  TT="mimo:$n.go$k.$$"
+  /usr/local/bin/opencode run --model "$m" --auto --dir "$W" --title "$TT" "$PRE$WAITNOTE$(cat "$t")" < /dev/null > "$Q/$n.go$k.reply.md" 2> "$Q/$n.go$k.err.txt" &
+  op=$!; st=0; el=0
+  # stall watchdog (09-27 08:xx UTC: free Zen builders sat at the bare "> build" line for 30+ min): if after 15 min the reply is empty and err is <= 60 bytes, stop THIS runner's own opencode child and retry later like a rate limit
+  while kill -0 $op 2>/dev/null; do sleep 30; el=$((el+30))
+    [ -e "$Q/$n.stop" ] && { kill $op 2>/dev/null; break; }
+    if [ $el -ge 900 ] && [ ! -s "$Q/$n.go$k.reply.md" ] && [ "$(wc -c < "$Q/$n.go$k.err.txt")" -le 60 ]; then st=1; kill $op 2>/dev/null; break; fi
+  done
+  wait $op; rc=$?
+  if [ $st = 1 ]; then del_title "$TT"
+    if [ $rr -lt 6 ]; then rr=$((rr+1)); echo "$(date +%T) stalled-go$k $n $m (no output in 15 min; resume $rr/6 in 600 s)" >> "$Q/log.txt"; sleep 600; continue; fi
+    echo "$(date +%T) stalled-giveup-go$k $n $m" >> "$Q/log.txt"; exit 5
+  fi
+  del_title "$TT"
+  if [ "$rc" -gt 128 ] || [ -e "$Q/$n.stop" ]; then echo "$(date +%T) killed-go$k $n $m rc=$rc" >> "$Q/log.txt"; exit 2; fi
+  if tail -5 "$Q/$n.go$k.err.txt" | sed 's/\x1b\[[0-9;]*m//g' | grep -q "$NET"; then
+    if [ $nr -lt 6 ]; then nr=$((nr+1)); echo "$(date +%T) neterr-failed-go$k $n $m (resume $nr/6 in 120 s)" >> "$Q/log.txt"; sleep 120; continue; fi
+    echo "$(date +%T) neterr-giveup-failed-go$k $n $m" >> "$Q/log.txt"; exit 4
+  fi
+  # free-model rate limit mid-task (006/008 agents died ~07:25 UTC 09-27 while their nohup'd Luna runs kept going): wait 10 min, resume on the SAME model with the RESUME NOTICE (it finds the running process), up to 6 times
+  if tail -5 "$Q/$n.go$k.err.txt" | sed 's/\x1b\[[0-9;]*m//g' | grep -q "Rate limit exceeded"; then
+    if [ $rr -lt 6 ]; then rr=$((rr+1)); echo "$(date +%T) ratelimit-failed-go$k $n $m (resume $rr/6 in 600 s)" >> "$Q/log.txt"; sleep 600; continue; fi
+  fi
+  # only the last 40 err lines count: agents print queue files whose WHY lines say "usage limit" (y1t-luna-pilot false fail, 07:16 UTC 09-27)
+[0m
+[0m$ [0mls /private/tmp/lead0-main/artifacts/claude-fewex-20260927/runs/qual-loop-s0/ 2>&1 | head -10; echo "---cwd of lead0---"; lsof -p 9219 2>&1 | grep cwd | head -3; echo "---lead0 log---"; ls -la /private/tmp/lead0-main/artifacts/claude-dir-lr-20260928/lead0/ 2>&1 | head -20
+source.json
+---cwd of lead0---
+python3.1 9219 ben-hannan  cwd    DIR   1,14       800            92250812 /private/tmp/lead0-main
+---lead0 log---
+total 0
+drwxr-xr-x   2 ben-hannan  wheel   64 Sep 28 19:51 .
+drwxr-xr-x  12 ben-hannan  wheel  384 Sep 28 19:51 ..
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_dir_lr_lead0.py | head -80; echo "==="; ls /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s0/ 2>&1 | head -10
+#!/usr/bin/env python3
+"""Lead 0: is the jumpy few-example curve just the learning rate?
+
+Re-adapts ONE start (default: practised loop, seed 1) at k = 1,024 and 16,384 with a chosen
+learning rate and nothing else changed (same pool, same batches, same 2,048 updates, same
+Learner as the sealed eq harness). Scores the DEV panel only, 9x9. No sleep, no old panels,
+no holdout. Imports the sealed harness; edits nothing.
+
+  python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr 3e-4
+  python -B scripts/claude_dir_lr_lead0.py verdict          # reads all lead0 json, applies LEAD0-MARKS.md
+  python -B scripts/claude_dir_lr_lead0.py selftest         # no torch needed
+"""
+import argparse, json, sys, time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+OUT = ROOT / "artifacts" / "claude-dir-lr-20260928" / "lead0"
+STORED = ROOT / "artifacts" / "claude-fewex-20260927" / "eq-runs"
+KS = (1024, 16384)
+LRS = ("0.0003", "0.001", "0.003")
+LR_SENSITIVE = 30      # counts of 300 (10 points); see LEAD0-MARKS.md
+COLLAPSE_FIX = 60      # fresh-loop rescue bar, counts of 300
+
+
+def run(a):
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import copy, torch
+    import claude_fewex_eq_bench as EQ
+    import claude_fewex_bench as B
+    import claude_fewex_data as D
+    import claude_fewex_net
+    B.N = claude_fewex_net
+    torch.set_num_threads(a.threads)
+    lr = float(a.lr)
+    src_dir = B.ART / "runs" / f"qual-{a.arm}-s{a.seed}"
+    src = EQ.identity_source(src_dir, a.arm, a.seed)
+    depth = src["fixed_depth"]
+    panels, banned = D.panels()
+    pool, _, digest = EQ.make_pool(a.seed, banned)
+    if a.init == "pre":
+        base = B.load_model(src_dir / "source.pt", a.arm)
+    else:
+        torch.manual_seed(900000 + a.seed)
+        base = B.N.Net(a.arm)
+    tag = f"{a.arm}-s{a.seed}-{a.init}-lr{a.lr}"
+    OUT.mkdir(parents=True, exist_ok=True)
+    for k in KS:
+        path = OUT / f"{tag}-k{k}.json"
+        if path.exists():
+            continue
+        t0 = time.monotonic()
+        learner = B.Learner(copy.deepcopy(base), lr)
+        for batch in EQ.batches(pool, k, a.seed):
+            learner.maze_batch(batch)
+        assert learner.steps == EQ.N_UPDATES
+        sc = B.score(learner.net, panels["dev"][9], depth)
+        B.dump(path, {"arm": a.arm, "seed": a.seed, "init": a.init, "lr": lr, "k": k,
+                      "updates": learner.steps, "support_sha256": digest, "panel": "dev-9x9",
+                      "right": sc["right"], "n": sc["n"], "fixed_right": sc["fixed_right"],
+                      "mean_rounds": sc["mean_rounds"], "cap_hits": sc["cap_hits"],
+                      "seconds": round(time.monotonic() - t0)})
+        print(json.dumps({"tag": tag, "k": k, "right": sc["right"], "n": sc["n"]}), flush=True)
+
+
+def stored_right(arm, seed, init, k):
+    d = json.loads((STORED / f"{arm}-s{seed}-{init}" / "adapt.json").read_text())
+    return d["rungs"][str(k)]["9"]["right"]
+
+
+def judge(counts, stored):
+    """counts {lr: {k: right}}; stored {k: right at lr 1e-3}. Pure function; see LEAD0-MARKS.md."""
+    out = {"rerun_matches_stored": all(counts.get("0.001", {}).get(k) == stored[k] for k in KS if k in counts.get("0.001", {})),
+           "spread": {}, "lr_sensitive_rungs": [], "best_lr": {}}
+    for k in KS:
+        v = {lr: counts[lr][k] for lr in counts if k in counts[lr]}
+        if len(v) < 3:
+            out["spread"][k] = None
+            continue
+        out["spread"][k] = max(v.values()) - min(v.values())
+        out["best_lr"][k] = max(v, key=v.get)
+===
+source.json
+source.pt
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_fewex_bench.py | grep -n "ART\|ROOT" | head -10; echo "==="; ps aux | grep lead0 | grep -v grep | head -5; ls -la /private/tmp/lead0-main/artifacts/claude-fewex-20260927/runs/ 2>&1 | head -10
+26:ART = Path(__file__).resolve().parents[1] / "artifacts" / "claude-fewex-20260927"
+===
+ben-hannan        9219 108.1  2.1 489720768 695504   ??  RN    7:51PM   0:29.97 /Users/ben-hannan/.cache/uv/builds-v0/.tmpHBRRof/bin/python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr 0.003
+ben-hannan        9220 107.3  2.1 489720976 693472   ??  RN    7:51PM   0:30.02 /Users/ben-hannan/.cache/uv/builds-v0/.tmpfxVsHg/bin/python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr 0.001
+ben-hannan        9218  95.3  2.1 489720784 696000   ??  RN    7:51PM   0:30.20 /Users/ben-hannan/.cache/uv/builds-v0/.tmpgn9rsG/bin/python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr 0.0003
+ben-hannan        9214   0.0  0.1 464214480  30992   ??  SN    7:51PM   0:00.02 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr 0.001
+ben-hannan        9215   0.0  0.1 464180656  30608   ??  SN    7:51PM   0:00.02 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr 0.003
+total 0
+drwxr-xr-x  18 ben-hannan  wheel  576 Sep 28 19:50 .
+drwxr-xr-x  19 ben-hannan  wheel  608 Sep 28 19:50 ..
+drwxr-xr-x   3 ben-hannan  wheel   96 Sep 28 19:50 loop-s0
+drwxr-xr-x   3 ben-hannan  wheel   96 Sep 28 19:50 loop-s0-fresh
+drwxr-xr-x   3 ben-hannan  wheel   96 Sep 28 19:50 loop-s0-pre
+drwxr-xr-x   3 ben-hannan  wheel   96 Sep 28 19:50 loop-s1
+drwxr-xr-x   3 ben-hannan  wheel   96 Sep 28 19:50 loop-s1-fresh
+drwxr-xr-x   3 ben-hannan  wheel   96 Sep 28 19:50 loop-s1-pre
+drwxr-xr-x   3 ben-hannan  wheel   96 Sep 28 19:50 plain-s0
+[0m
+[0m$ [0mls /private/tmp/lead0-main/artifacts/claude-fewex-20260927/runs/qual-loop-s1/ 2>&1; ls /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s1/ 2>&1; echo "---lead0 logs---"; ls /private/tmp/lead0-main/artifacts/claude-dir-lr-20260928/*.log 2>&1 | head -10; cat /private/tmp/lead0-main/artifacts/claude-dir-lr-20260928/lead0-pre-0.001.log 2>&1 | head -20 || echo "no log"
+source.json
+source.pt
+source.json
+source.pt
+---lead0 logs---
+/private/tmp/lead0-main/artifacts/claude-dir-lr-20260928/lead0-pre-0.0003.log
+/private/tmp/lead0-main/artifacts/claude-dir-lr-20260928/lead0-pre-0.001.log
+/private/tmp/lead0-main/artifacts/claude-dir-lr-20260928/lead0-pre-0.003.log
+/private/tmp/lead0-main/artifacts/claude-dir-lr-20260928/SELFTESTS.log
+[0m
+[0m$ [0mfor d in qual-loop-s0 qual-loop-s1 qual-plain-s0 qual-plain-s1; do echo -n "$d lead0-main: "; ls /private/tmp/lead0-main/artifacts/claude-fewex-20260927/runs/$d/ 2>&1 | tr '\n' ' '; echo ""; echo -n "$d main-checkout: "; ls artifacts/claude-fewex-20260927/runs/$d/ 2>&1 | tr '\n' ' '; echo ""; done; du -h /private/tmp/lead0-main/artifacts/claude-fewex-20260927/runs/qual-*/source.pt 2>&1 | head -10
+qual-loop-s0 lead0-main: source.json 
+qual-loop-s0 main-checkout: source.json source.pt 
+qual-loop-s1 lead0-main: source.json source.pt 
+qual-loop-s1 main-checkout: source.json source.pt 
+qual-plain-s0 lead0-main: source.json 
+qual-plain-s0 main-checkout: source.json source.pt 
+qual-plain-s1 lead0-main: source.json 
+qual-plain-s1 main-checkout: source.json source.pt 
+6.3M	/private/tmp/lead0-main/artifacts/claude-fewex-20260927/runs/qual-loop-s1/source.pt
+[0m
+[0m$ [0mR=/private/tmp/lead0-main; S=/Users/ben-hannan/Desktop/projects/beautiful-model; ls $R/scripts/claude_dir_lr_stage_net.py $R/scripts/claude_dir_lr_stage_report.py $R/artifacts/claude-dir-lr-20260928/STAGE-PASSMARKS.md 2>&1; echo "---copy missing source.pt---"; for d in qual-loop-s0 qual-plain-s0 qual-plain-s1; do cp -v $S/artifacts/claude-fewex-20260927/runs/$d/source.pt $R/artifacts/claude-fewex-20260927/runs/$d/source.pt 2>&1; done; ls -lh $R/artifacts/claude-fewex-20260927/runs/qual-*/source.pt 2>&1; echo "---stage-runs existing?---"; ls $R/artifacts/claude-dir-lr-20260928/stage-runs/ 2>&1 || echo "no stage-runs yet"; pgrep -f "claude_fewex_eq_bench.*adapt" 2>&1 || echo "no adapt running"
+/private/tmp/lead0-main/artifacts/claude-dir-lr-20260928/STAGE-PASSMARKS.md
+/private/tmp/lead0-main/scripts/claude_dir_lr_stage_net.py
+/private/tmp/lead0-main/scripts/claude_dir_lr_stage_report.py
+---copy missing source.pt---
+/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s0/source.pt -> /private/tmp/lead0-main/artifacts/claude-fewex-20260927/runs/qual-loop-s0/source.pt
+/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-plain-s0/source.pt -> /private/tmp/lead0-main/artifacts/claude-fewex-20260927/runs/qual-plain-s0/source.pt
+/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-plain-s1/source.pt -> /private/tmp/lead0-main/artifacts/claude-fewex-20260927/runs/qual-plain-s1/source.pt
+-rw-r--r--@ 1 ben-hannan  wheel   6.3M Sep 28 19:52 /private/tmp/lead0-main/artifacts/claude-fewex-20260927/runs/qual-loop-s0/source.pt
+-rw-r--r--@ 1 ben-hannan  wheel   6.3M Sep 28 19:51 /private/tmp/lead0-main/artifacts/claude-fewex-20260927/runs/qual-loop-s1/source.pt
+-rw-r--r--@ 1 ben-hannan  wheel   6.2M Sep 28 19:52 /private/tmp/lead0-main/artifacts/claude-fewex-20260927/runs/qual-plain-s0/source.pt
+-rw-r--r--@ 1 ben-hannan  wheel   6.2M Sep 28 19:52 /private/tmp/lead0-main/artifacts/claude-fewex-20260927/runs/qual-plain-s1/source.pt
+---stage-runs existing?---
+ls: /private/tmp/lead0-main/artifacts/claude-dir-lr-20260928/stage-runs/: No such file or directory
+no stage-runs yet
+no adapt running
+[0m
+[0m$ [0mmkdir -p artifacts/claude-dir-lr-20260928/stage-runs && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1; for spec in "loop 0 pre" "loop 0 fresh" "plain 0 pre" "plain 0 fresh"; do set -- $spec; arm=$1; seed=$2; init=$3; out="artifacts/claude-dir-lr-20260928/stage-runs/$arm-s$seed-$init"; log="artifacts/claude-dir-lr-20260928/stage-$arm-s$seed-$init.log"; rm -rf "$out"; nohup uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_fewex_eq_bench.py adapt --arm $arm --seed $seed --init $init --plugin claude_dir_lr_stage_net --out "$out" > "$log" 2>&1 & echo "started $arm-s$seed-$init pid=$!"; done; sleep 120; echo "---after 120s---"; ps aux | grep -E "claude_fewex_eq_bench.*adapt" | grep -v grep | head -10; echo "---logs---"; for f in artifacts/claude-dir-lr-20260928/stage-*.log; do echo "== $f =="; head -5 "$f" 2>&1; done
+started loop 0 pre-s- pid=9673
+started loop 0 fresh-s- pid=9675
+started plain 0 pre-s- pid=9677
+started plain 0 fresh-s- pid=9679
+---after 120s---
+---logs---
+== artifacts/claude-dir-lr-20260928/stage-loop 0 fresh-s-.log ==
+usage: claude_fewex_eq_bench.py [-h] [--arm {loop,plain}] [--seed {0,1}]
+                                [--init {pre,fresh}] [--out OUT]
+                                [--source SOURCE] [--threads THREADS]
+                                [--plugin PLUGIN]
+                                {selftest,source,adapt,gate,holdout}
+== artifacts/claude-dir-lr-20260928/stage-loop 0 pre-s-.log ==
+usage: claude_fewex_eq_bench.py [-h] [--arm {loop,plain}] [--seed {0,1}]
+                                [--init {pre,fresh}] [--out OUT]
+                                [--source SOURCE] [--threads THREADS]
+                                [--plugin PLUGIN]
+                                {selftest,source,adapt,gate,holdout}
+== artifacts/claude-dir-lr-20260928/stage-plain 0 fresh-s-.log ==
+usage: claude_fewex_eq_bench.py [-h] [--arm {loop,plain}] [--seed {0,1}]
+                                [--init {pre,fresh}] [--out OUT]
+                                [--source SOURCE] [--threads THREADS]
+                                [--plugin PLUGIN]
+                                {selftest,source,adapt,gate,holdout}
+== artifacts/claude-dir-lr-20260928/stage-plain 0 pre-s-.log ==
+usage: claude_fewex_eq_bench.py [-h] [--arm {loop,plain}] [--seed {0,1}]
+                                [--init {pre,fresh}] [--out OUT]
+                                [--source SOURCE] [--threads THREADS]
+                                [--plugin PLUGIN]
+                                {selftest,source,adapt,gate,holdout}
+[0m
+[0m$ [0mrm -f artifacts/claude-dir-lr-20260928/'stage-loop 0 fresh-s-.log' artifacts/claude-dir-lr-20260928/'stage-loop 0 pre-s-.log' artifacts/claude-dir-lr-20260928/'stage-plain 0 fresh-s-.log' artifacts/claude-dir-lr-20260928/'stage-plain 0 pre-s-.log'; rm -rf artifacts/claude-dir-lr-20260928/stage-runs; pgrep -f "claude_fewex_eq_bench.*adapt" || echo "clean, none running"; ls artifacts/claude-dir-lr-20260928/ 2>&1 | head -10
+clean, none running
+lead0
+LEAD0-MARKS.md
+lead0-pre-0.0003.log
+lead0-pre-0.001.log
+lead0-pre-0.003.log
+noise-from-raw.txt
+NOISE.md
+SEAL-code.sha256.txt
+SELFTESTS.log
+STAGE-PASSMARKS.md
+[0m
+[0m$ [0mmkdir -p artifacts/claude-dir-lr-20260928/stage-runs; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1; for arm in loop plain; do for init in pre fresh; do seed=0; out="artifacts/claude-dir-lr-20260928/stage-runs/$arm-s$seed-$init"; log="artifacts/claude-dir-lr-20260928/stage-$arm-s$seed-$init.log"; rm -rf "$out"; nohup uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_fewex_eq_bench.py adapt --arm "$arm" --seed "$seed" --init "$init" --plugin claude_dir_lr_stage_net --out "$out" > "$log" 2>&1 & echo "started $arm-s$seed-$init pid=$!"; done; done; sleep 90; echo "---procs---"; ps aux | grep "claude_fewex_eq_bench.*adapt" | grep -v grep | head -10; echo "---logs head---"; for f in artifacts/claude-dir-lr-20260928/stage-*.log; do echo "== $f: $(wc -l < "$f") lines"; done; grep -l "Traceback" artifacts/claude-dir-lr-20260928/stage-*.log 2>&1 || echo "no Traceback"
+started loop-s0-pre pid=11547
+started loop-s0-fresh pid=11549
+started plain-s0-pre pid=11551
+started plain-s0-fresh pid=11553
+---procs---
+ben-hannan       11555  75.1  1.4 489503648 476640   ??  RN    7:54PM   1:01.90 /Users/ben-hannan/.cache/uv/builds-v0/.tmpELwDQ2/bin/python -B scripts/claude_fewex_eq_bench.py adapt --arm loop --seed 0 --init pre --plugin claude_dir_lr_stage_net --out artifacts/claude-dir-lr-20260928/stage-runs/loop-s0-pre
+ben-hannan       11556  70.1  1.4 489503024 478224   ??  RN    7:54PM   1:01.64 /Users/ben-hannan/.cache/uv/builds-v0/.tmpsFJaI3/bin/python -B scripts/claude_fewex_eq_bench.py adapt --arm loop --seed 0 --init fresh --plugin claude_dir_lr_stage_net --out artifacts/claude-dir-lr-20260928/stage-runs/loop-s0-fresh
+ben-hannan       11558  67.5  1.4 489514928 480112   ??  RN    7:54PM   0:54.55 /Users/ben-hannan/.cache/uv/builds-v0/.tmpUod3wf/bin/python -B scripts/claude_fewex_eq_bench.py adapt --arm plain --seed 0 --init pre --plugin claude_dir_lr_stage_net --out artifacts/claude-dir-lr-20260928/stage-runs/plain-s0-pre
+ben-hannan       11557  65.9  1.4 489515248 479056   ??  RN    7:54PM   0:54.18 /Users/ben-hannan/.cache/uv/builds-v0/.tmpvcy5Lv/bin/python -B scripts/claude_fewex_eq_bench.py adapt --arm plain --seed 0 --init fresh --plugin claude_dir_lr_stage_net --out artifacts/claude-dir-lr-20260928/stage-runs/plain-s0-fresh
+ben-hannan       11553   0.0  0.1 464177648  30176   ??  SN    7:54PM   0:00.03 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_fewex_eq_bench.py adapt --arm plain --seed 0 --init fresh --plugin claude_dir_lr_stage_net --out artifacts/claude-dir-lr-20260928/stage-runs/plain-s0-fresh
+ben-hannan       11551   0.0  0.1 464196896  30560   ??  SN    7:54PM   0:00.03 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_fewex_eq_bench.py adapt --arm plain --seed 0 --init pre --plugin claude_dir_lr_stage_net --out artifacts/claude-dir-lr-20260928/stage-runs/plain-s0-pre
+ben-hannan       11549   0.0  0.1 464177600  30176   ??  SN    7:54PM   0:00.02 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_fewex_eq_bench.py adapt --arm loop --seed 0 --init fresh --plugin claude_dir_lr_stage_net --out artifacts/claude-dir-lr-20260928/stage-runs/loop-s0-fresh
+ben-hannan       11547   0.0  0.1 464188992  30752   ??  SN    7:54PM   0:00.03 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_fewex_eq_bench.py adapt --arm loop --seed 0 --init pre --plugin claude_dir_lr_stage_net --out artifacts/claude-dir-lr-20260928/stage-runs/loop-s0-pre
+---logs head---
+== artifacts/claude-dir-lr-20260928/stage-loop-s0-fresh.log:        0 lines
+== artifacts/claude-dir-lr-20260928/stage-loop-s0-pre.log:        0 lines
+== artifacts/claude-dir-lr-20260928/stage-plain-s0-fresh.log:        0 lines
+== artifacts/claude-dir-lr-20260928/stage-plain-s0-pre.log:        0 lines
+no Traceback
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1; for arm in loop plain; do for init in pre fresh; do seed=1; out="artifacts/claude-dir-lr-20260928/stage-runs/$arm-s$seed-$init"; log="artifacts/claude-dir-lr-20260928/stage-$arm-s$seed-$init.log"; rm -rf "$out"; nohup uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_fewex_eq_bench.py adapt --arm "$arm" --seed "$seed" --init "$init" --plugin claude_dir_lr_stage_net --out "$out" > "$log" 2>&1 & echo "started $arm-s$seed-$init pid=$!"; done; done; sleep 30; ps aux | grep "claude_fewex_eq_bench.*adapt" | grep -v grep | wc -l; grep -l "Traceback" artifacts/claude-dir-lr-20260928/stage-*.log 2>/dev/null || echo "no Traceback"
+started loop-s1-pre pid=13530
+started loop-s1-fresh pid=13532
+started plain-s1-pre pid=13534
+started plain-s1-fresh pid=13536
+      16
+no Traceback
+[0m
+[0m$ [0mwhile pgrep -f "claude_fewex_eq_bench.py adapt" >/dev/null; do sleep 60; done; echo "ALL ADAPT DONE rc=$?"; date; ls -la artifacts/claude-dir-lr-20260928/stage-runs/*/adapt.json 2>&1 | head -12; grep -l "Traceback" artifacts/claude-dir-lr-20260928/stage-*.log 2>/dev/null || echo "no Traceback in logs"
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 4400000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mdate; pgrep -f "claude_fewex_eq_bench.py adapt" | wc -l; for f in artifacts/claude-dir-lr-20260928/stage-*.log; do echo "== $f: $(wc -l < "$f") lines, last: $(tail -1 "$f" 2>/dev/null | cut -c1-160)"; done; ls artifacts/claude-dir-lr-20260928/stage-runs/*/adapt.json 2>&1 | head -10; grep -l "Traceback" artifacts/claude-dir-lr-20260928/stage-*.log 2>/dev/null || echo "no Traceback"
+Mon Sep 28 21:10:14 EDT 2026
+      16
+== artifacts/claude-dir-lr-20260928/stage-loop-s0-fresh.log:        1 lines, last: {"phase": "rung", "arm": "loop", "seed": 0, "init": "fresh", "k": 1, "right9": 0, "seconds": 3304}
+== artifacts/claude-dir-lr-20260928/stage-loop-s0-pre.log:        1 lines, last: {"phase": "rung", "arm": "loop", "seed": 0, "init": "pre", "k": 1, "right9": 0, "seconds": 3305}
+== artifacts/claude-dir-lr-20260928/stage-loop-s1-fresh.log:        2 lines, last: {"phase": "rung", "arm": "loop", "seed": 1, "init": "fresh", "k": 1, "right9": 0, "seconds": 3444}
+== artifacts/claude-dir-lr-20260928/stage-loop-s1-pre.log:        2 lines, last: {"phase": "rung", "arm": "loop", "seed": 1, "init": "pre", "k": 1, "right9": 0, "seconds": 3448}
+== artifacts/claude-dir-lr-20260928/stage-plain-s0-fresh.log:        2 lines, last: {"phase": "rung", "arm": "plain", "seed": 0, "init": "fresh", "k": 4, "right9": 0, "seconds": 3815}
+== artifacts/claude-dir-lr-20260928/stage-plain-s0-pre.log:        2 lines, last: {"phase": "rung", "arm": "plain", "seed": 0, "init": "pre", "k": 4, "right9": 1, "seconds": 3810}
+== artifacts/claude-dir-lr-20260928/stage-plain-s1-fresh.log:        3 lines, last: {"phase": "rung", "arm": "plain", "seed": 1, "init": "fresh", "k": 4, "right9": 0, "seconds": 3957}
+== artifacts/claude-dir-lr-20260928/stage-plain-s1-pre.log:        3 lines, last: {"phase": "rung", "arm": "plain", "seed": 1, "init": "pre", "k": 4, "right9": 0, "seconds": 3953}
+zsh:1: no matches found: artifacts/claude-dir-lr-20260928/stage-runs/*/adapt.json
+no Traceback
+[0m
