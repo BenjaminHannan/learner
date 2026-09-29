@@ -68,3 +68,4 @@
 - 00:16 UTC 09-29: R (relation net) ready on main 6abefbc29; relnet-guard-mac RELEASED. Next in order (held on real deps): smoke-benspc (needs guard source.json on main), then dev-s0/s1 (only if smoke PASS), then holdout. Needs qual-loop-s{0,1}/source.pt from Mac path.
 - 00:35 UTC 09-29: Ben approved sparse MoE + many layers (00:35 UTC). Thread 'Sparse experts, many layers' (cse_01HNztdHQXHUtB4BbmFn5Gfs) started; awaiting its plan/jobs. Roadmap updated.
 - 00:37 UTC 09-29: Sparse-MoE thread stopped; Ben runs it himself from a coordinator prompt and will report back (relay). Nothing queued. Approval of the architecture change stands.
+- 01:37 UTC 09-29: Speedrun-PR-360 proposal (ANVIL optimizer test, low priority, from a page-summary read) PARKED: Mac queue is full, lr thread covers optimizer questions, and 5 s of 34 s at 124M weights may not carry to 1.6M. Revisit when the Mac frees; step 1 (read the code) is free.
