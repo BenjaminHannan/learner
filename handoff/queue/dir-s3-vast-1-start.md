@@ -1,4 +1,3 @@
-STATUS: HELD. Released by the Director deleting this line (helper S3, 2026-09-29). Up to $2.50 of vast, inside Ben's $5 for tonight; the Director chooses the spend. Do not release together with dir-s3-min / dir-s3-random (BensPC copies) unless the Director wants both.
 BASH-ONLY: yes
 GPU: rent (one vast card, best TFLOPS per $/h, >= 24 GB, at most $0.65/h; cap $2.50 for the whole task)
 DISK: 1
