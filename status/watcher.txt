@@ -1,4 +1,4 @@
-2026-09-28 20:10:30
+2026-09-28 20:13:04
 running:
 dir-h1-heldout-r2.running
 dirlr-lead0-mac-r2.running
@@ -7,13 +7,6 @@ dst-t3-3-s15-benspc.running
 h13-patch-race-dev-r2.running
 launched (no exit yet) / finished:
     1196
-
-On branch builder-outbox
-Changes not staged for commit:
-  (use "git add <file>..." to update what will be committed)
-  (use "git restore <file>..." to discard changes in working directory)
-	modified:   .DS_Store
-
 
 It took 7.16 seconds to enumerate untracked files.
 See 'git help status' for information on how to improve this.
@@ -158,6 +151,13 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-28 20:08:01 load 202, holding sl-2-source-r2 (       5 running)
 2026-09-28 20:10:28 load 238, holding sl-1-read-r2 (       5 running)
 2026-09-28 20:10:29 load 238, holding sl-2-source-r2 (       5 running)
+2026-09-28 20:12:56 load 280, holding pond-a-dev (       5 running)
+2026-09-28 20:12:56 load 280, holding pond-b-dev (       5 running)
+2026-09-28 20:12:57 load 280, holding pond-c-dev (       5 running)
+2026-09-28 20:12:58 load 280, holding pond-doubt (       5 running)
+2026-09-28 20:12:59 load 280, holding pond-z-dev (       5 running)
+2026-09-28 20:13:02 load 283, holding sl-1-read-r2 (       5 running)
+2026-09-28 20:13:03 load 283, holding sl-2-source-r2 (       5 running)
 
 diag:
 == dir-h1-heldout-r2
@@ -185,12 +185,12 @@ started plain-s1-fresh pid=13536
 no Traceback
 [0m
 == dst-t3-3-s15-benspc
-49804 Sep 28 20:00 dst-t3-3-s15-benspc.go1.err.txt
-593 Sep 28 20:00 dst-t3-3-s15-benspc.go1.reply.md
-               6 Dir(s)  13,720,006,656 bytes free
-[0m
-[0m$ [0mgit archive origin/main scripts artifacts/claude-slp358n3-20260927 artifacts/claude-rsn358i-20260926/tests artifacts/claude-rsn358u-20260927/SEAL-run.sha256.txt artifacts/claude-dir-t3-recen
-ARCHIVE_EXIT=0
+51623 Sep 28 20:10 dst-t3-3-s15-benspc.go1.err.txt
+677 Sep 28 20:10 dst-t3-3-s15-benspc.go1.reply.md
+09/28/2026  07:55 PM    <DIR>          .
+09/28/2026  07:55 PM    <DIR>          ..
+               0 File(s)              0 bytes
+               2 Dir(s)  13,634,187,264 bytes free
 [0m
 == h13-patch-race-dev-r2
 62675 Sep 28 19:57 h13-patch-race-dev-r2.go1.err.txt
@@ -202,21 +202,21 @@ zsh:1: no matches found: artifacts/claude-patch-eq-20260928/logs/*.log
 [0m
 top5cpu:
 %CPU COMM
-72.1 WindowServer
-41.4 python
-40.4 python
-40.2 python
-39.2 python
+64.3 WindowServer
+43.7 python
+39.5 python
+38.1 python
+37.6 Codex
 procs:
-  352     1 18443-00:07:36 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1042   768       01:02:09 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
- 1375  1373       01:02:02 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
- 1388   788       01:02:02 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
- 4354     1          39:26 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 5461     1          21:02 S    /usr/bin/ssh-agent
-22748 22747          01:52 SN   /usr/bin/ssh
- 6418  6392          20:46 SN   /usr/local/bin/opencode
- 6491  6469          20:46 SN   /usr/local/bin/opencode
- 6580  6553          20:46 SN   /usr/local/bin/opencode
- 7328  7292          20:41 SN   /usr/local/bin/opencode
-10575 10554          17:24 SN   /usr/local/bin/opencode
+  352     1 18443-00:10:10 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1042   768       01:04:43 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+ 1375  1373       01:04:36 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+ 1388   788       01:04:36 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+ 4354     1          42:00 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 5461     1          23:36 S    /usr/bin/ssh-agent
+24621 24620          02:19 SN   /usr/bin/ssh
+ 6418  6392          23:20 SN   /usr/local/bin/opencode
+ 6491  6469          23:20 SN   /usr/local/bin/opencode
+ 6580  6553          23:20 SN   /usr/local/bin/opencode
+ 7328  7292          23:15 SN   /usr/local/bin/opencode
+10575 10554          19:58 SN   /usr/local/bin/opencode
