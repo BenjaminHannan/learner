@@ -122,7 +122,7 @@ while [ ! -e "$H/STOP" ]; do
       ga=$(ssh -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 -o BatchMode=yes benspc "nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits & tasklist /FI \"IMAGENAME eq python.exe\" /NH" </dev/null 2>/dev/null; echo "rc=$?")
       gm=$(echo "$ga" | grep -v '^rc=' | head -1 | tr -dc '0-9'); gp=$(echo "$ga" | grep -ic '^python.exe')   # never read rc=255 as memory
       if [ "$(echo "$ga" | tail -1)" != "rc=0" ]; then log "BensPC unreachable (ssh $(echo "$ga" | tail -1)), holding $n"; rm -f "$Q/$n.md.tmp"; continue; fi
-      if [ "$(echo "$ga" | tail -1)" != "rc=0" ] || [ -z "$gm" ] || [ "$gm" -gt 700 ] || [ "$gp" -gt 0 ]; then log "gpu busy on BensPC, holding $n: mem ${gm:-?} MiB, python.exe $gp, $(echo "$ga" | tail -1)"; rm -f "$Q/$n.md.tmp"; continue; fi
+      if [ "$(echo "$ga" | tail -1)" != "rc=0" ] || [ -z "$gm" ] || [ "$gm" -gt 3000 ] || [ "$gp" -gt 0 ]; then log "gpu busy on BensPC, holding $n: mem ${gm:-?} MiB, python.exe $gp, $(echo "$ga" | tail -1)"; rm -f "$Q/$n.md.tmp"; continue; fi
     fi
     mv "$Q/$n.md.tmp" "$Q/$n.md"; touch "$Q/$n.running"; log "launch $n"
     # a GPU: yes job claims BensPC visibly: C:\Users\benja\GPU-BUSY.txt names the job while it runs (outside agents: do not use the GPU while it exists)
