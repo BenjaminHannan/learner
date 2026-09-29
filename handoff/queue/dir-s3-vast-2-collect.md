@@ -1,4 +1,5 @@
 STATUS: HELD. Released by the Director deleting this line (helper S3, 2026-09-29). Up to $2.50 of vast, inside Ben's $5 for tonight; the Director chooses the spend. Do not release together with dir-s3-min / dir-s3-random (BensPC copies) unless the Director wants both.
+LOAD-LIGHT: yes (it only starts a vast rental and polls; the Mac load hold kept dir-s3-vast-1-start waiting from 00:25 EDT; Director 2026-09-29)
 BASH-ONLY: yes
 GPU: rent (one vast card, best TFLOPS per $/h, >= 24 GB, at most $0.65/h; cap $2.50 for the whole task)
 DISK: 1
