@@ -1,0 +1,990 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mpgrep -af claude_dir_lr_lead0 || echo "NO_PGREP_MATCH"; echo "---GIT---"; git status --short --branch | head -n 50; echo "---MAIN_CHECK---"; git ls-tree -r origin/main --name-only | grep -E "claude_dir_lr_lead0.py|LEAD0-MARKS.md|qual-loop-s1/source.pt" || echo "MISSING_ON_MAIN"; echo "---LOCAL---"; ls -l scripts/claude_dir_lr_lead0.py artifacts/claude-dir-lr-20260928/LEAD0-MARKS.md artifacts/claude-fewex-20260927/runs/qual-loop-s1/source.pt 2>&1; echo "---TORCH---"; python3 -c "import torch; print(torch.__version__)" 2>&1
+6491
+8221
+---GIT---
+## claude/card-experiment-handoff-7c5b27...origin/claude/card-experiment-handoff-7c5b27 [ahead 51]
+A  artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt
+A  artifacts/claude-dir-h2-numbers-20260928/runs/RUN-NOTE.md
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/loop-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/loop-s14.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/plain-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/plain-s14.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/train_summary.json
+A  artifacts/claude-k1h-20260926/luna/full/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-1.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-2.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-3.txt
+A  artifacts/claude-k1h-20260926/luna/full/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/full/chats.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+A  artifacts/claude-mu407-20260927/prep/RESULTS.md
+A  artifacts/claude-mu407-20260927/prep/facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/facts_all.jsonl
+A  artifacts/claude-mu407-20260927/prep/frames.json
+A  artifacts/claude-mu407-20260927/prep/panel/items.jsonl
+A  artifacts/claude-mu407-20260927/prep/raw.jsonl
+A  artifacts/claude-mu407-20260927/prep/smoke_facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/write.log
+A  artifacts/claude-y1t-20260926/luna/RESULTS-luna-pilot.md
+---MAIN_CHECK---
+artifacts/claude-dir-lr-20260928/LEAD0-MARKS.md
+scripts/claude_dir_lr_lead0.py
+---LOCAL---
+ls: artifacts/claude-dir-lr-20260928/LEAD0-MARKS.md: No such file or directory
+ls: artifacts/claude-fewex-20260927/runs/qual-loop-s1/source.pt: No such file or directory
+ls: scripts/claude_dir_lr_lead0.py: No such file or directory
+---TORCH---
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'torch'
+[0m
+[0m$ [0mps -p 6491 -o pid,etime,command 2>&1; ps -p 8221 -o pid,etime,command 2>&1; ps aux | grep -E "claude_dir|python" | grep -v grep | head -n 20; echo "---FIND_SOURCE---"; find /Users/ben-hannan/Desktop/projects/beautiful-model -maxdepth 6 -name "source.pt" -path "*qual-loop-s1*" 2>/dev/null | head; echo "---DIRS---"; pwd; git remote -v | head; git rev-parse --show-toplevel; ls /tmp 2>&1 | head -n 20
+PID ELAPSED COMMAND
+ 6491   00:20 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:dirlr-lead0-mac-r2.go1.6469 RUNNER NOTE (Director, 09-27): your builder model is rate-limited, so every tool call counts. To wait for a long background run, use ONE blocking command (e.g. while pgrep -f <exact script> >/dev/null; do sleep 60; done, capped under 75 min), never many short polls. Before starting any long run, check with pgrep that the same run is not already going (a previous agent may have started it).\012\012HELD-UNTIL: scripts/claude_dir_lr_lead0.py, artifacts/claude-dir-lr-20260928/LEAD0-MARKS.md are on origin/main (marks precede any run); artifacts/claude-fewex-20260927/runs/qual-loop-s1/source.pt exists on the run machine (it is local, not on main).\012GPU: no\012LOAD-HEAVY: no (3 one-thread processes, then 3 more; about 45 minutes each batch, my estimate from 169 min per 8 rungs; untested)\012WHAT: Lead 0. Re-adapt the practised loop, seed 1, at k = 1,024 and 16,384 with lr 3e-4, 1e-3, 3e-3 (fair ruler, dev 9x9 only, nothing else changed), then the same for the fresh loop, seed 1 (extra, drop it if the queue is tight). Result files are resumable; rerun the same command.\012SETUP: torch==2.14.0 CPU, fp32, same as the baseline. Clone origin/main; source nets under artifacts/claude-fewex-20260927/runs/qual-loop-s1/.\012RUN (repo root; the six commands of a block can run at once, one thread each):\012  for lr in 0.0003 0.001 0.003; do python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr $lr > artifacts/claude-dir-lr-20260928/lead0-pre-$lr.log 2>&1 & done; wait\012  for lr in 0.0003 0.001 0.003; do python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init fresh --lr $lr > artifacts/claude-dir-lr-20260928/lead0-fresh-$lr.log 2>&1 & done; wait\012AFTER: `python3 -B scripts/claude_dir_lr_lead0.py verdict` (prints counts and the LEAD0-MARKS.md word); commit artifacts/claude-dir-lr-20260928/lead0/*.json and the logs (git add -f).\012NOT THIS JOB: any holdout, sleep, or recipe change. Nothing in the marks changes after a score is seen.
+  PID ELAPSED COMMAND
+ben-hannan        7778 121.4  2.0 489619776 679600 s000  RN    7:49PM   0:10.42 /Users/ben-hannan/.cache/uv/builds-v0/.tmpBTjruO/bin/python -B scripts/claude_dir_h12_selftest.py
+ben-hannan        4334   0.0  0.1 488864208  41168   ??  S     7:31PM   0:00.74 /Users/ben-hannan/premonition-chat/chatdemo-venv/bin/python -B -u scripts/claude_chatdemo_server.py
+ben-hannan        7772   0.0  0.1 464209344  19280 s000  SN    7:49PM   0:00.02 /Users/ben-hannan/.local/bin/uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_h12_selftest.py
+---FIND_SOURCE---
+/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s1/source.pt
+---DIRS---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+origin	git@github.com:BenjaminHannan/learner.git (fetch)
+origin	git@github.com:BenjaminHannan/learner.git (push)
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+cc-socks
+claude-502
+claude-mcp-browser-bridge-ben-hannan
+clr-debug-pipe-612-1790636881-in
+clr-debug-pipe-612-1790636881-out
+codex-browser-use
+com.openai.sky.CUAService
+CommCenter.KeepAlive.Enabled
+dotnet-diagnostic-612-1790636881-socket
+MuseHubDrm_ipc2
+MuseHubSdk_ipc2
+plasticd5.exe.lock
+plasticdshell
+powerlog
+zeb_def_ipc_5014
+[0m
+[0m$ [0mecho "===MAIN_REPO==="; git -C /Users/ben-hannan/Desktop/projects/beautiful-model status --short --branch | head -n 20; git -C /Users/ben-hannan/Desktop/projects/beautiful-model log --oneline -3; ls -l /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/claude_dir_lr_lead0.py /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-dir-lr-20260928/LEAD0-MARKS.md 2>&1; ls -l /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s1/ 2>&1 | head -n 20; echo "===ORIGIN_MAIN_FILES==="; git ls-tree -r origin/main --name-only | grep claude-dir-lr-20260928 | head -n 20
+===MAIN_REPO===
+## main...origin/main [behind 118]
+?? .claude/skills/
+?? data/open/
+?? memoir-quotes-confirmation.png
+?? scripts/codex_sleep_p7.py
+f3318a6b9 Add reasoner idea harvest rounds 1-5
+f6e791317 distill-sleep: rebuilt sources and k64/k16384 rungs; not bit-identical to the ruler
+f49711b3f patch-eq: self-tests pass (zero patch = ordinary loop, fresh learner bit-identical to the harness's, identical episodes, all matrices live, smoke rung 512 writes / 2,048 updates)
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-dir-lr-20260928/LEAD0-MARKS.md: No such file or directory
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/claude_dir_lr_lead0.py: No such file or directory
+total 12888
+-rw-r--r--@ 1 ben-hannan  staff      753 Sep 27 20:15 source.json
+-rw-r--r--@ 1 ben-hannan  staff  6593157 Sep 27 20:15 source.pt
+===ORIGIN_MAIN_FILES===
+artifacts/claude-dir-lr-20260928/LEAD0-MARKS.md
+artifacts/claude-dir-lr-20260928/NOISE.md
+artifacts/claude-dir-lr-20260928/SEAL-code.sha256.txt
+artifacts/claude-dir-lr-20260928/SELFTESTS.log
+artifacts/claude-dir-lr-20260928/STAGE-PASSMARKS.md
+artifacts/claude-dir-lr-20260928/noise-from-raw.txt
+[0m
+[0m$ [0mgit fetch origin main 2>&1 | tail -n 5; echo "---SCRIPT_LINES---"; git show origin/main:scripts/claude_dir_lr_lead0.py 2>&1 | wc -l; git show origin/main:scripts/claude_dir_lr_lead0.py 2>&1 | head -n 120; echo "---MARKS---"; git show origin/main:artifacts/claude-dir-lr-20260928/LEAD0-MARKS.md 2>&1 | head -n 100
+From github.com:BenjaminHannan/learner
+ * branch                main       -> FETCH_HEAD
+---SCRIPT_LINES---
+     125
+#!/usr/bin/env python3
+"""Lead 0: is the jumpy few-example curve just the learning rate?
+
+Re-adapts ONE start (default: practised loop, seed 1) at k = 1,024 and 16,384 with a chosen
+learning rate and nothing else changed (same pool, same batches, same 2,048 updates, same
+Learner as the sealed eq harness). Scores the DEV panel only, 9x9. No sleep, no old panels,
+no holdout. Imports the sealed harness; edits nothing.
+
+  python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr 3e-4
+  python -B scripts/claude_dir_lr_lead0.py verdict          # reads all lead0 json, applies LEAD0-MARKS.md
+  python -B scripts/claude_dir_lr_lead0.py selftest         # no torch needed
+"""
+import argparse, json, sys, time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+OUT = ROOT / "artifacts" / "claude-dir-lr-20260928" / "lead0"
+STORED = ROOT / "artifacts" / "claude-fewex-20260927" / "eq-runs"
+KS = (1024, 16384)
+LRS = ("0.0003", "0.001", "0.003")
+LR_SENSITIVE = 30      # counts of 300 (10 points); see LEAD0-MARKS.md
+COLLAPSE_FIX = 60      # fresh-loop rescue bar, counts of 300
+
+
+def run(a):
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import copy, torch
+    import claude_fewex_eq_bench as EQ
+    import claude_fewex_bench as B
+    import claude_fewex_data as D
+    import claude_fewex_net
+    B.N = claude_fewex_net
+    torch.set_num_threads(a.threads)
+    lr = float(a.lr)
+    src_dir = B.ART / "runs" / f"qual-{a.arm}-s{a.seed}"
+    src = EQ.identity_source(src_dir, a.arm, a.seed)
+    depth = src["fixed_depth"]
+    panels, banned = D.panels()
+    pool, _, digest = EQ.make_pool(a.seed, banned)
+    if a.init == "pre":
+        base = B.load_model(src_dir / "source.pt", a.arm)
+    else:
+        torch.manual_seed(900000 + a.seed)
+        base = B.N.Net(a.arm)
+    tag = f"{a.arm}-s{a.seed}-{a.init}-lr{a.lr}"
+    OUT.mkdir(parents=True, exist_ok=True)
+    for k in KS:
+        path = OUT / f"{tag}-k{k}.json"
+        if path.exists():
+            continue
+        t0 = time.monotonic()
+        learner = B.Learner(copy.deepcopy(base), lr)
+        for batch in EQ.batches(pool, k, a.seed):
+            learner.maze_batch(batch)
+        assert learner.steps == EQ.N_UPDATES
+        sc = B.score(learner.net, panels["dev"][9], depth)
+        B.dump(path, {"arm": a.arm, "seed": a.seed, "init": a.init, "lr": lr, "k": k,
+                      "updates": learner.steps, "support_sha256": digest, "panel": "dev-9x9",
+                      "right": sc["right"], "n": sc["n"], "fixed_right": sc["fixed_right"],
+                      "mean_rounds": sc["mean_rounds"], "cap_hits": sc["cap_hits"],
+                      "seconds": round(time.monotonic() - t0)})
+        print(json.dumps({"tag": tag, "k": k, "right": sc["right"], "n": sc["n"]}), flush=True)
+
+
+def stored_right(arm, seed, init, k):
+    d = json.loads((STORED / f"{arm}-s{seed}-{init}" / "adapt.json").read_text())
+    return d["rungs"][str(k)]["9"]["right"]
+
+
+def judge(counts, stored):
+    """counts {lr: {k: right}}; stored {k: right at lr 1e-3}. Pure function; see LEAD0-MARKS.md."""
+    out = {"rerun_matches_stored": all(counts.get("0.001", {}).get(k) == stored[k] for k in KS if k in counts.get("0.001", {})),
+           "spread": {}, "lr_sensitive_rungs": [], "best_lr": {}}
+    for k in KS:
+        v = {lr: counts[lr][k] for lr in counts if k in counts[lr]}
+        if len(v) < 3:
+            out["spread"][k] = None
+            continue
+        out["spread"][k] = max(v.values()) - min(v.values())
+        out["best_lr"][k] = max(v, key=v.get)
+        if out["spread"][k] >= LR_SENSITIVE:
+            out["lr_sensitive_rungs"].append(k)
+    n = len(out["lr_sensitive_rungs"])
+    complete = all(out["spread"][k] is not None for k in KS)
+    out["word"] = ("INCOMPLETE" if not complete else
+                   "LR_MATTERS" if n == 2 else "LR_MATTERS_AT_ONE_RUNG" if n == 1 else "NOT_THE_LR")
+    return out
+
+
+def verdict(a=None):
+    rows = {}
+    for p in sorted(OUT.glob("*.json")):
+        d = json.loads(p.read_text())
+        rows.setdefault((d["arm"], d["seed"], d["init"]), {}).setdefault(f'{d["lr"]:g}', {})[d["k"]] = d["right"]
+    for (arm, seed, init), c in rows.items():
+        st = {k: stored_right(arm, seed, init, k) for k in KS}
+        print(arm, seed, init, "counts of 300:", json.dumps(c), "stored 1e-3:", st)
+        print("  ", judge(c, st))
+        if init == "fresh":
+            k = 1024
+            fixed = [lr for lr in c if c[lr].get(k, 0) >= COLLAPSE_FIX]
+            print(f"   fresh collapse at k=1024 (stored {st[k]} of 300): rescued (>= {COLLAPSE_FIX}) by lr {fixed or 'none'}")
+
+
+def selftest():
+    a = {"0.0003": {1024: 215, 16384: 250}, "0.001": {1024: 233, 16384: 261}, "0.003": {1024: 240, 16384: 100}}
+    r = judge(a, {1024: 233, 16384: 261})
+    assert r["word"] == "LR_MATTERS_AT_ONE_RUNG" and r["lr_sensitive_rungs"] == [16384] and r["rerun_matches_stored"], r
+    b = {"0.0003": {1024: 230, 16384: 255}, "0.001": {1024: 233, 16384: 261}, "0.003": {1024: 240, 16384: 270}}
+    assert judge(b, {1024: 233, 16384: 262})["word"] == "NOT_THE_LR"
+    assert not judge(b, {1024: 233, 16384: 262})["rerun_matches_stored"]
+    assert judge({"0.001": {1024: 1}}, {1024: 1, 16384: 1})["word"] == "INCOMPLETE"
+    print("lead0 selftest ok")
+
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    p.add_argument("cmd", choices=("run", "verdict", "selftest"))
+    p.add_argument("--arm", default="loop", choices=("loop", "plain"))
+    p.add_argument("--seed", type=int, default=1, choices=(0, 1))
+---MARKS---
+# Lead 0 marks (diagnostic, not a race entry). Sealed 2026-09-28 21:49 UTC, before any run.
+
+**Question.** Is the jumpiness of the few-example curve across k just the learning rate?
+**Change.** Only the AdamW learning rate of the adaptation Learner. Everything else is the sealed eq harness: same source net, pool, batches, 2,048 updates, dev 9x9 panel of 300 (`scripts/claude_dir_lr_lead0.py` imports it, edits nothing). No sleep, no holdout, no old panels.
+**Runs (main).** Practised loop, seed 1 (source `runs/qual-loop-s1`), k = 1,024 and 16,384, lr in {3e-4, 1e-3, 3e-3}: 6 counts of 300. The 1e-3 rows are a rerun of the stored baseline (233 and 261 of 300, `eq-runs/loop-s1-pre/adapt.json`); if the rerun differs, the ruler is not bit-reproducible on the run machine, and that difference is itself the same-start noise (reported, not hidden).
+**Runs (extra, same rules).** Fresh loop, seed 1, same 6. Reason: the collapse (0 of 300 at k=1,024, then 128, then 18) is in the *fresh* loop; the practised loop's stored dev curve is 173, 277, 233, 292, 261 for k = 64..16,384, which wobbles by about 60 counts but never collapses.
+
+**Bars (fixed now).** Counts of 300. One count is 0.33 points; the counting SE of a difference of two 300-maze scores is about 12 counts near 50%, so **30 counts (10 points)** is about 2.5 SE, and above the largest same-start seed gap in F_eq (2.5 points, NOISE.md) as a per-rung bar.
+- A rung is **lr-sensitive** if max minus min over the three lrs is >= 30 counts.
+- Practised loop word: **LR_MATTERS** (both rungs lr-sensitive), **LR_MATTERS_AT_ONE_RUNG**, or **NOT_THE_LR** (neither). 
+- Result that would prove the lr suspicion wrong: **NOT_THE_LR** on the practised loop (spread under 30 at both rungs) **and** no lr rescues the fresh loop's k=1,024 collapse to >= 60 of 300.
+- Fresh loop extra: "rescued" if any lr gives >= 60 of 300 at k=1,024 (stored 0).
+- Only 2 rungs and 1 seed, so this is a diagnostic: it can say "the lr moves this curve" (**shown**, for that net and seed) or "not shown"; it cannot say the lr explains the whole jumpiness elsewhere (**untested**).
+
+**What the answer changes.** LR_MATTERS: every later comparison must fix or sweep lr for both arms of the pair, and the stage-two win/loss reads only at the winning lr. NOT_THE_LR: the jumpiness is not the lr; keep 1e-3.
+
+**Self-check (common brief).** (1) Bar 30 counts sits above counting noise (~12 counts) and the noise in NOISE.md (max same-start F_eq gap 2.5 points). (2) Only two words, no rejection wording: "not shown" is the default. (3) Comparator is the stored same-start baseline plus a rerun of it. (4) Plain-net row: n/a for a diagnostic (no promotion claim). (5) F_few: n/a here; Lead 1 has it. (6) No sleep gate.
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_dir_lr_lead0.py 2>&1 | tail -n 30; echo "===EQ_FILES_ON_MAIN==="; git ls-tree -r origin/main --name-only | grep -E "claude_fewex_(eq_bench|bench|data|net).py|eq-runs/loop-s1-pre/adapt.json|qual-loop-s1" | head -n 20; echo "===LOCAL_EQ_RUNS==="; ls /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/eq-runs/ 2>&1 | head; echo "===PYTHONS==="; which python3; python3 --version; which uv; uv --version 2>&1 | head
+st = {k: stored_right(arm, seed, init, k) for k in KS}
+        print(arm, seed, init, "counts of 300:", json.dumps(c), "stored 1e-3:", st)
+        print("  ", judge(c, st))
+        if init == "fresh":
+            k = 1024
+            fixed = [lr for lr in c if c[lr].get(k, 0) >= COLLAPSE_FIX]
+            print(f"   fresh collapse at k=1024 (stored {st[k]} of 300): rescued (>= {COLLAPSE_FIX}) by lr {fixed or 'none'}")
+
+
+def selftest():
+    a = {"0.0003": {1024: 215, 16384: 250}, "0.001": {1024: 233, 16384: 261}, "0.003": {1024: 240, 16384: 100}}
+    r = judge(a, {1024: 233, 16384: 261})
+    assert r["word"] == "LR_MATTERS_AT_ONE_RUNG" and r["lr_sensitive_rungs"] == [16384] and r["rerun_matches_stored"], r
+    b = {"0.0003": {1024: 230, 16384: 255}, "0.001": {1024: 233, 16384: 261}, "0.003": {1024: 240, 16384: 270}}
+    assert judge(b, {1024: 233, 16384: 262})["word"] == "NOT_THE_LR"
+    assert not judge(b, {1024: 233, 16384: 262})["rerun_matches_stored"]
+    assert judge({"0.001": {1024: 1}}, {1024: 1, 16384: 1})["word"] == "INCOMPLETE"
+    print("lead0 selftest ok")
+
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    p.add_argument("cmd", choices=("run", "verdict", "selftest"))
+    p.add_argument("--arm", default="loop", choices=("loop", "plain"))
+    p.add_argument("--seed", type=int, default=1, choices=(0, 1))
+    p.add_argument("--init", default="pre", choices=("pre", "fresh"))
+    p.add_argument("--lr", default="0.001", choices=LRS)
+    p.add_argument("--threads", type=int, default=1)
+    a = p.parse_args()
+    {"run": run, "verdict": verdict, "selftest": lambda _: selftest()}[a.cmd](a)
+===EQ_FILES_ON_MAIN===
+artifacts/claude-distill-20260928/rebuild/qual-loop-s1/source.json
+artifacts/claude-fewex-20260927/eq-runs/loop-s1-pre/adapt.json
+artifacts/claude-fewex-20260927/runs/qual-loop-s1/source.json
+scripts/claude_fewex_bench.py
+scripts/claude_fewex_data.py
+scripts/claude_fewex_eq_bench.py
+scripts/claude_fewex_net.py
+===LOCAL_EQ_RUNS===
+loop-s0-fresh
+loop-s0-pre
+loop-s1-fresh
+loop-s1-pre
+plain-s0-fresh
+plain-s0-pre
+plain-s1-fresh
+plain-s1-pre
+===PYTHONS===
+/usr/local/bin/python3
+Python 3.9.6
+/Users/ben-hannan/.local/bin/uv
+uv 0.12.7 (61291a8ca 2026-08-27 aarch64-apple-darwin)
+[0m
+[0m$ [0mgit ls-tree -r origin/main --name-only | grep -iE "requirements|uv.lock|pyproject" | head; echo "---TORCH_REFS---"; git grep -n "torch==" origin/main -- 2>&1 | head -n 10; echo "---BASELINE_TORCH---"; git log --oneline origin/main -5 -- scripts/claude_fewex_bench.py; git show origin/main:scripts/claude_fewex_bench.py 2>&1 | grep -nE "torch|__version__|2\.14" | head -n 10
+handoff/memory/demo-requirements-uncle.md
+handoff/tm-memory-2026-09-28/rsn-358b3-requirements.md
+---TORCH_REFS---
+origin/main:artifacts/claude-dir-h6-sleeplen-20260928/queue-h6-sleeplen.md:11:- box/drive.sh: same header checks as sleep358nv (torch==2.11.0 cu128 pinned, SEAL-code 18 of 18 from slp-358n3, checkpoints 4 of 4, `claude_rsn358u_run.py selftest`). Then: copy run-vast/sizes.json to W/sizes.json (no pick-sizes); NO RESUME step; run `python -B scripts/claude_dir_h6_sleeplen.py smoke` and stop with FAILED if it does not print "smoke ok"; then launch the four seeds `python -B scripts/claude_dir_h6_sleeplen.py run --ckpt ck/s$S/final.pt --seed $S --sizes W/sizes.json --out W/s$S` (no --long flag: L and B are in every seed), each while 5 GB is free; no S-final.pt sealing. Write W/drive-state.txt lines and end with DONE or FAILED as before.
+origin/main:artifacts/claude-e2e02dg-20260927/kit/box.sh:41:# Now: 60 s reads, 10 retries, 3 tries on the same index rd-378g used; PyPI's torch==2.11.0 only if that index stays
+origin/main:artifacts/claude-e2e02dg-20260927/kit/box.sh:46:for t in 1 2 3; do pip install $PIPX torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128 >> W/pip.log 2>&1 && { TSRC=download.pytorch.org/whl/cu128; break; }; sleep 20; done
+origin/main:artifacts/claude-e2e02dg-20260927/kit/box.sh:47:[ -n "$TSRC" ] || { pip install $PIPX torch==2.11.0 >> W/pip.log 2>&1 && TSRC=pypi.org; }
+origin/main:artifacts/claude-e2e02dg-20260927/kit/box.sh:48:[ -n "$TSRC" ] || fail "pip install torch==2.11.0 (see W/pip.log)"
+origin/main:artifacts/claude-e2e02dg-20260927/runs/rent-e2e02dg-1/rent-e2e02dg-1.go1.reply.md:18:2026-09-27T23:37:41Z FAILED pip install torch==2.11.0 (see W/pip.log)
+origin/main:artifacts/claude-e2e02dg-20260927/vast/state.txt:3:2026-09-27T23:37:41Z FAILED pip install torch==2.11.0 (see W/pip.log)
+origin/main:artifacts/claude-e2e02dg-20260927/vast2/pip.log:2:torchaudio 2.8.0+cu128 requires torch==2.8.0, but you have torch 2.11.0+cu128 which is incompatible.
+origin/main:artifacts/claude-e2e02dg-20260927/vast2/pip.log:3:torchvision 0.23.0+cu128 requires torch==2.8.0, but you have torch 2.11.0+cu128 which is incompatible.
+origin/main:artifacts/claude-e2e02dg-20260927/vast3/pip.log:2:torchaudio 2.8.0+cu128 requires torch==2.8.0, but you have torch 2.11.0+cu128 which is incompatible.
+---BASELINE_TORCH---
+93e9ccba2 fewex: pair sleep replay draws before maze runs
+8ca5b9a51 fewex: restore xfer adaptation warm-up before maze runs
+3acb5d18a fewex: seal baseline protocol, harness, and race marks
+18:import torch
+44:    net.load_state_dict(torch.load(path, map_location="cpu", weights_only=True))
+52:@torch.no_grad()
+74:                ps = torch.stack([x.argmax(-1) for x in cells], 1).tolist()
+75:                qs = torch.stack([x.float().sigmoid() for x in stops], 1).tolist()
+106:                    (p.grad is None or not bool(torch.any(p.grad != 0)))])
+119:        opt = torch.optim.AdamW(clone.parameters(), lr=lr, weight_decay=.1, betas=(.9, .95))
+126:            torch.nn.utils.clip_grad_norm_(clone.parameters(), 1.)
+136:    torch.manual_seed(seed)
+162:    torch.save(net.state_dict(), out / "source.pt")
+[0m
+[0m$ [0mgit worktree add --detach /tmp/lead0-main origin/main 2>&1 | tail -n 3; ls /tmp/lead0-main/scripts/claude_dir_lr_lead0.py /tmp/lead0-main/artifacts/claude-dir-lr-20260928/LEAD0-MARKS.md 2>&1; mkdir -p /tmp/lead0-main/artifacts/claude-fewex-20260927/runs/qual-loop-s1; cp /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s1/source.pt /tmp/lead0-main/artifacts/claude-fewex-20260927/runs/qual-loop-s1/source.pt 2>&1; ls -l /tmp/lead0-main/artifacts/claude-fewex-20260927/runs/qual-loop-s1/ 2>&1; ls /tmp/lead0-main/artifacts/claude-dir-lr-20260928/lead0/ 2>&1 || echo "NO_LEAD0_YET"; uv cache dir 2>&1; ls ~/.cache/uv 2>&1 | head -n 5
+Preparing worktree (detached HEAD d734daa6e)
+Updating files:   7% (7618/104544)Updating files:   8% (8364/104544)Updating files:   9% (9409/104544)Updating files:   9% (10092/104544)Updating files:  10% (10455/104544)Updating files:  10% (10475/104544)Updating files:  10% (10630/104544)Updating files:  11% (11500/104544)Updating files:  12% (12546/104544)Updating files:  12% (13027/104544)Updating files:  13% (13591/104544)Updating files:  14% (14637/104544)Updating files:  15% (15682/104544)Updating files:  16% (16728/104544)Updating files:  17% (17773/104544)Updating files:  18% (18818/104544)Updating files:  19% (19864/104544)Updating files:  20% (20909/104544)Updating files:  20% (21866/104544)Updating files:  21% (21955/104544)Updating files:  22% (23000/104544)Updating files:  23% (24046/104544)Updating files:  24% (25091/104544)Updating files:  25% (26136/104544)Updating files:  26% (27182/104544)Updating files:  27% (28227/104544)Updating files:  28% (29273/104544)Updating files:  28% (29450/104544)Updating files:  29% (30318/104544)Updating files:  30% (31364/104544)Updating files:  31% (32409/104544)Updating files:  32% (33455/104544)Updating files:  33% (34500/104544)Updating files:  33% (35011/104544)Updating files:  34% (35545/104544)Updating files:  35% (36591/104544)Updating files:  36% (37636/104544)Updating files:  37% (38682/104544)Updating files:  38% (39727/104544)Updating files:  39% (40773/104544)Updating files:  40% (41818/104544)Updating files:  41% (42864/104544)Updating files:  41% (43356/104544)Updating files:  42% (43909/104544)Updating files:  43% (44954/104544)Updating files:  44% (46000/104544)Updating files:  45% (47045/104544)Updating files:  46% (48091/104544)Updating files:  47% (49136/104544)Updating files:  48% (50182/104544)Updating files:  48% (50733/104544)Updating files:  49% (51227/104544)Updating files:  50% (52272/104544)Updating files:  51% (53318/104544)Updating files:  52% (54363/104544)Updating files:  53% (55409/104544)Updating files:  54% (56454/104544)Updating files:  55% (57500/104544)Updating files:  55% (57605/104544)Updating files:  56% (58545/104544)Updating files:  57% (59591/104544)Updating files:  58% (60636/104544)Updating files:  59% (61681/104544)Updating files:  60% (62727/104544)Updating files:  61% (63772/104544)Updating files:  62% (64818/104544)Updating files:  62% (65080/104544)Updating files:  63% (65863/104544)Updating files:  64% (66909/104544)Updating files:  65% (67954/104544)Updating files:  66% (69000/104544)Updating files:  67% (70045/104544)Updating files:  68% (71090/104544)Updating files:  68% (71497/104544)Updating files:  69% (72136/104544)Updating files:  70% (73181/104544)Updating files:  71% (74227/104544)Updating files:  72% (75272/104544)Updating files:  73% (76318/104544)Updating files:  74% (77363/104544)Updating files:  75% (78408/104544)Updating files:  75% (79152/104544)Updating files:  76% (79454/104544)Updating files:  77% (80499/104544)Updating files:  78% (81545/104544)Updating files:  79% (82590/104544)Updating files:  80% (83636/104544)Updating files:  81% (84681/104544)Updating files:  82% (85727/104544)Updating files:  83% (86772/104544)Updating files:  83% (86944/104544)Updating files:  84% (87817/104544)Updating files:  85% (88863/104544)Updating files:  86% (89908/104544)Updating files:  87% (90954/104544)Updating files:  88% (91999/104544)Updating files:  89% (93045/104544)Updating files:  90% (94090/104544)Updating files:  90% (94868/104544)Updating files:  91% (95136/104544)Updating files:  92% (96181/104544)Updating files:  93% (97226/104544)Updating files:  94% (98272/104544)Updating files:  95% (99317/104544)Updating files:  96% (100363/104544)Updating files:  97% (101408/104544)Updating files:  98% (102454/104544)Updating files:  98% (102520/104544)Updating files:  99% (103499/104544)Updating files: 100% (104544/104544)Updating files: 100% (104544/104544), done.
+HEAD is now at d734daa6e Director board: PC runner thread
+/tmp/lead0-main/artifacts/claude-dir-lr-20260928/LEAD0-MARKS.md
+/tmp/lead0-main/scripts/claude_dir_lr_lead0.py
+total 12888
+-rw-r--r--  1 ben-hannan  wheel      753 Sep 28 19:50 source.json
+-rw-r--r--@ 1 ben-hannan  wheel  6593157 Sep 28 19:51 source.pt
+ls: /tmp/lead0-main/artifacts/claude-dir-lr-20260928/lead0/: No such file or directory
+NO_LEAD0_YET
+/Users/ben-hannan/.cache/uv
+archive-v0
+builds-v0
+CACHEDIR.TAG
+environments-v2
+interpreter-v4
+[0m
+[0m$ [0mpython3 -B scripts/claude_dir_lr_lead0.py selftest 2>&1; echo "---UV_TORCH---"; uv run --offline --no-project --python 3.12 --with torch --with numpy python -c "import torch; print(torch.__version__)" 2>&1 | tail -n 5
+lead0 selftest ok
+---UV_TORCH---
+2.14.0
+[0m
+[0m$ [0mfor lr in 0.0003 0.001 0.003; do nohup uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init pre --lr $lr > artifacts/claude-dir-lr-20260928/lead0-pre-$lr.log 2>&1 & done; echo LAUNCHED; sleep 5; pgrep -af "claude_dir_lr_lead0.py run" | head -n 10; ls -l artifacts/claude-dir-lr-20260928/ | head
+LAUNCHED
+6491
+9212
+9213
+9214
+9215
+9218
+9219
+9220
+total 48
+drwxr-xr-x  2 ben-hannan  wheel    64 Sep 28 19:51 lead0
+-rw-r--r--  1 ben-hannan  wheel  2745 Sep 28 19:50 LEAD0-MARKS.md
+-rw-r--r--  1 ben-hannan  wheel     0 Sep 28 19:51 lead0-pre-0.0003.log
+-rw-r--r--  1 ben-hannan  wheel     0 Sep 28 19:51 lead0-pre-0.001.log
+-rw-r--r--  1 ben-hannan  wheel     0 Sep 28 19:51 lead0-pre-0.003.log
+-rw-r--r--  1 ben-hannan  wheel  1304 Sep 28 19:50 noise-from-raw.txt
+-rw-r--r--  1 ben-hannan  wheel  1802 Sep 28 19:50 NOISE.md
+-rw-r--r--  1 ben-hannan  wheel   399 Sep 28 19:50 SEAL-code.sha256.txt
+-rw-r--r--  1 ben-hannan  wheel   499 Sep 28 19:50 SELFTESTS.log
+[0m
+[0m$ [0mfor i in $(seq 1 73); do pgrep -f "claude_dir_lr_lead0[.]py run" >/dev/null || { echo "DONE_EMPTY at iter $i"; break; }; echo "wait $i $(date +%H:%M) procs=$(pgrep -f 'claude_dir_lr_lead0[.]py run' | wc -l)"; sleep 60; done; echo "WAIT_EXIT"; ls -l artifacts/claude-dir-lr-20260928/lead0/ 2>&1; tail -n 5 artifacts/claude-dir-lr-20260928/lead0-pre-*.log 2>&1 | head -n 30
+wait 1 19:51 procs=       6
+wait 2 19:52 procs=       6
+wait 3 19:53 procs=       6
+wait 4 19:54 procs=       6
+wait 5 19:55 procs=       6
+wait 6 19:56 procs=       6
+wait 7 19:57 procs=       6
+wait 8 19:58 procs=       6
+wait 9 19:59 procs=       6
+wait 10 20:00 procs=       6
+wait 11 20:01 procs=       6
+wait 12 20:02 procs=       6
+wait 13 20:03 procs=       6
+wait 14 20:04 procs=       6
+wait 15 20:05 procs=       6
+wait 16 20:06 procs=       6
+wait 17 20:07 procs=       6
+wait 18 20:08 procs=       6
+wait 19 20:09 procs=       6
+wait 20 20:10 procs=       6
+wait 21 20:11 procs=       6
+wait 22 20:12 procs=       6
+wait 23 20:13 procs=       6
+wait 24 20:14 procs=       6
+wait 25 20:15 procs=       6
+wait 26 20:16 procs=       6
+wait 27 20:17 procs=       6
+wait 28 20:18 procs=       6
+wait 29 20:19 procs=       6
+wait 30 20:20 procs=       6
+wait 31 20:21 procs=       6
+wait 32 20:22 procs=       6
+wait 33 20:23 procs=       6
+wait 34 20:24 procs=       6
+wait 35 20:25 procs=       6
+wait 36 20:26 procs=       6
+wait 37 20:27 procs=       6
+wait 38 20:28 procs=       6
+wait 39 20:29 procs=       6
+wait 40 20:30 procs=       6
+wait 41 20:31 procs=       6
+wait 42 20:32 procs=       6
+wait 43 20:33 procs=       6
+wait 44 20:34 procs=       6
+wait 45 20:35 procs=       6
+wait 46 20:36 procs=       6
+wait 47 20:37 procs=       6
+wait 48 20:38 procs=       6
+wait 49 20:39 procs=       6
+wait 50 20:40 procs=       6
+wait 51 20:41 procs=       6
+wait 52 20:42 procs=       6
+wait 53 20:43 procs=       6
+wait 54 20:44 procs=       6
+wait 55 20:45 procs=       6
+wait 56 20:46 procs=       6
+wait 57 20:47 procs=       6
+wait 58 20:48 procs=       6
+wait 59 20:49 procs=       6
+wait 60 20:50 procs=       6
+wait 61 20:51 procs=       6
+wait 62 20:52 procs=       6
+wait 63 20:53 procs=       6
+wait 64 20:54 procs=       6
+wait 65 20:55 procs=       6
+wait 66 20:56 procs=       6
+wait 67 20:57 procs=       6
+wait 68 20:58 procs=       6
+wait 69 20:59 procs=       6
+wait 70 21:00 procs=       6
+wait 71 21:01 procs=       6
+wait 72 21:02 procs=       6
+wait 73 21:03 procs=       6
+WAIT_EXIT
+total 24
+-rw-r--r--  1 ben-hannan  wheel  320 Sep 28 20:36 loop-s1-pre-lr0.0003-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  318 Sep 28 20:36 loop-s1-pre-lr0.001-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  330 Sep 28 20:36 loop-s1-pre-lr0.003-k1024.json
+==> artifacts/claude-dir-lr-20260928/lead0-pre-0.0003.log <==
+{"tag": "loop-s1-pre-lr0.0003", "k": 1024, "right": 176, "n": 300}
+
+==> artifacts/claude-dir-lr-20260928/lead0-pre-0.001.log <==
+{"tag": "loop-s1-pre-lr0.001", "k": 1024, "right": 233, "n": 300}
+
+==> artifacts/claude-dir-lr-20260928/lead0-pre-0.003.log <==
+{"tag": "loop-s1-pre-lr0.003", "k": 1024, "right": 207, "n": 300}
+[0m
+[0m$ [0mfor i in $(seq 1 73); do pgrep -f "claude_dir_lr_lead0[.]py run" >/dev/null || { echo "DONE_EMPTY at iter $i"; break; }; echo "wait2 $i $(date +%H:%M) procs=$(pgrep -f 'claude_dir_lr_lead0[.]py run' | wc -l)"; sleep 60; done; echo "WAIT2_EXIT"; ls -l artifacts/claude-dir-lr-20260928/lead0/ 2>&1; echo "---LOGS---"; cat artifacts/claude-dir-lr-20260928/lead0-pre-*.log 2>&1
+wait2 1 21:04 procs=       6
+wait2 2 21:05 procs=       6
+wait2 3 21:06 procs=       6
+wait2 4 21:07 procs=       6
+wait2 5 21:08 procs=       6
+wait2 6 21:09 procs=       6
+wait2 7 21:10 procs=       6
+wait2 8 21:11 procs=       6
+wait2 9 21:12 procs=       6
+wait2 10 21:13 procs=       6
+wait2 11 21:14 procs=       6
+wait2 12 21:15 procs=       6
+wait2 13 21:16 procs=       6
+wait2 14 21:17 procs=       6
+wait2 15 21:18 procs=       6
+wait2 16 21:19 procs=       6
+wait2 17 21:20 procs=       6
+wait2 18 21:21 procs=       6
+wait2 19 21:22 procs=       6
+wait2 20 21:23 procs=       6
+wait2 21 21:24 procs=       6
+wait2 22 21:25 procs=       6
+wait2 23 21:26 procs=       6
+wait2 24 21:27 procs=       6
+wait2 25 21:28 procs=       6
+wait2 26 21:29 procs=       6
+wait2 27 21:30 procs=       6
+wait2 28 21:31 procs=       6
+wait2 29 21:32 procs=       6
+wait2 30 21:33 procs=       6
+wait2 31 21:34 procs=       6
+DONE_EMPTY at iter 32
+WAIT2_EXIT
+total 48
+-rw-r--r--  1 ben-hannan  wheel  320 Sep 28 20:36 loop-s1-pre-lr0.0003-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  320 Sep 28 21:35 loop-s1-pre-lr0.0003-k16384.json
+-rw-r--r--  1 ben-hannan  wheel  318 Sep 28 20:36 loop-s1-pre-lr0.001-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  333 Sep 28 21:35 loop-s1-pre-lr0.001-k16384.json
+-rw-r--r--  1 ben-hannan  wheel  330 Sep 28 20:36 loop-s1-pre-lr0.003-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  332 Sep 28 21:35 loop-s1-pre-lr0.003-k16384.json
+---LOGS---
+{"tag": "loop-s1-pre-lr0.0003", "k": 1024, "right": 176, "n": 300}
+{"tag": "loop-s1-pre-lr0.0003", "k": 16384, "right": 150, "n": 300}
+{"tag": "loop-s1-pre-lr0.001", "k": 1024, "right": 233, "n": 300}
+{"tag": "loop-s1-pre-lr0.001", "k": 16384, "right": 261, "n": 300}
+{"tag": "loop-s1-pre-lr0.003", "k": 1024, "right": 207, "n": 300}
+{"tag": "loop-s1-pre-lr0.003", "k": 16384, "right": 248, "n": 300}
+[0m
+[0m$ [0mfor lr in 0.0003 0.001 0.003; do nohup uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_lr_lead0.py run --arm loop --seed 1 --init fresh --lr $lr > artifacts/claude-dir-lr-20260928/lead0-fresh-$lr.log 2>&1 & done; echo LAUNCHED; sleep 5; pgrep -af "claude_dir_lr_lead0[.]py run" | head -n 10
+LAUNCHED
+2058
+2062
+2064
+2065
+2081
+2082
+2084
+6491
+[0m
+[0m$ [0mfor i in $(seq 1 73); do pgrep -f "claude_dir_lr_lead0[.]py run" >/dev/null || { echo "DONE_EMPTY at iter $i"; break; }; echo "wait3 $i $(date +%H:%M) procs=$(pgrep -f 'claude_dir_lr_lead0[.]py run' | wc -l)"; sleep 60; done; echo "WAIT3_EXIT"; ls -l artifacts/claude-dir-lr-20260928/lead0/ 2>&1; echo "---FRESH_LOGS---"; cat artifacts/claude-dir-lr-20260928/lead0-fresh-*.log 2>&1
+wait3 1 21:36 procs=       6
+wait3 2 21:37 procs=       6
+wait3 3 21:38 procs=       6
+wait3 4 21:39 procs=       6
+wait3 5 21:40 procs=       6
+wait3 6 21:41 procs=       6
+wait3 7 21:42 procs=       6
+wait3 8 21:43 procs=       6
+wait3 9 21:44 procs=       6
+wait3 10 21:45 procs=       6
+wait3 11 21:46 procs=       6
+wait3 12 21:47 procs=       6
+wait3 13 21:48 procs=       6
+wait3 14 21:49 procs=       6
+wait3 15 21:50 procs=       6
+wait3 16 21:51 procs=       6
+wait3 17 21:52 procs=       6
+wait3 18 21:53 procs=       6
+wait3 19 21:54 procs=       6
+wait3 20 21:55 procs=       6
+wait3 21 21:56 procs=       6
+wait3 22 21:57 procs=       6
+wait3 23 21:58 procs=       6
+wait3 24 21:59 procs=       6
+wait3 25 22:00 procs=       6
+wait3 26 22:01 procs=       6
+wait3 27 22:02 procs=       6
+wait3 28 22:03 procs=       6
+wait3 29 22:04 procs=       6
+wait3 30 22:05 procs=       6
+wait3 31 22:06 procs=       6
+wait3 32 22:07 procs=       6
+wait3 33 22:08 procs=       6
+wait3 34 22:09 procs=       6
+wait3 35 22:10 procs=       6
+wait3 36 22:11 procs=       6
+wait3 37 22:12 procs=       6
+wait3 38 22:13 procs=       6
+wait3 39 22:14 procs=       6
+wait3 40 22:15 procs=       6
+wait3 41 22:16 procs=       6
+wait3 42 22:17 procs=       6
+wait3 43 22:18 procs=       6
+wait3 44 22:19 procs=       6
+wait3 45 22:20 procs=       6
+wait3 46 22:21 procs=       6
+wait3 47 22:22 procs=       6
+wait3 48 22:23 procs=       6
+wait3 49 22:24 procs=       6
+wait3 50 22:25 procs=       6
+wait3 51 22:26 procs=       6
+wait3 52 22:27 procs=       6
+wait3 53 22:28 procs=       6
+wait3 54 22:29 procs=       6
+wait3 55 22:30 procs=       6
+wait3 56 22:31 procs=       6
+wait3 57 22:32 procs=       6
+wait3 58 22:33 procs=       6
+wait3 59 22:34 procs=       6
+wait3 60 22:35 procs=       6
+wait3 61 22:36 procs=       6
+wait3 62 22:37 procs=       6
+wait3 63 22:38 procs=       6
+wait3 64 22:39 procs=       6
+wait3 65 22:40 procs=       6
+wait3 66 22:41 procs=       6
+wait3 67 22:42 procs=       6
+wait3 68 22:43 procs=       6
+wait3 69 22:44 procs=       6
+wait3 70 22:45 procs=       6
+wait3 71 22:46 procs=       6
+wait3 72 22:47 procs=       6
+wait3 73 22:48 procs=       6
+WAIT3_EXIT
+total 72
+-rw-r--r--  1 ben-hannan  wheel  319 Sep 28 22:33 loop-s1-fresh-lr0.0003-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  313 Sep 28 22:33 loop-s1-fresh-lr0.001-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  313 Sep 28 22:33 loop-s1-fresh-lr0.003-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  320 Sep 28 20:36 loop-s1-pre-lr0.0003-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  320 Sep 28 21:35 loop-s1-pre-lr0.0003-k16384.json
+-rw-r--r--  1 ben-hannan  wheel  318 Sep 28 20:36 loop-s1-pre-lr0.001-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  333 Sep 28 21:35 loop-s1-pre-lr0.001-k16384.json
+-rw-r--r--  1 ben-hannan  wheel  330 Sep 28 20:36 loop-s1-pre-lr0.003-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  332 Sep 28 21:35 loop-s1-pre-lr0.003-k16384.json
+---FRESH_LOGS---
+{"tag": "loop-s1-fresh-lr0.0003", "k": 1024, "right": 60, "n": 300}
+{"tag": "loop-s1-fresh-lr0.001", "k": 1024, "right": 0, "n": 300}
+{"tag": "loop-s1-fresh-lr0.003", "k": 1024, "right": 0, "n": 300}
+[0m
+[0m$ [0mfor i in $(seq 1 73); do pgrep -f "claude_dir_lr_lead0[.]py run" >/dev/null || { echo "DONE_EMPTY at iter $i"; break; }; echo "wait4 $i $(date +%H:%M) procs=$(pgrep -f 'claude_dir_lr_lead0[.]py run' | wc -l)"; sleep 60; done; echo "WAIT4_EXIT"; ls -l artifacts/claude-dir-lr-20260928/lead0/ 2>&1; echo "---FRESH_LOGS---"; cat artifacts/claude-dir-lr-20260928/lead0-fresh-*.log 2>&1
+wait4 1 22:49 procs=       6
+wait4 2 22:50 procs=       6
+wait4 3 22:51 procs=       6
+wait4 4 22:52 procs=       6
+wait4 5 22:53 procs=       6
+wait4 6 22:54 procs=       6
+wait4 7 22:55 procs=       6
+wait4 8 22:56 procs=       6
+wait4 9 22:57 procs=       6
+wait4 10 22:58 procs=       6
+wait4 11 22:59 procs=       6
+wait4 12 23:00 procs=       6
+wait4 13 23:01 procs=       6
+wait4 14 23:02 procs=       6
+wait4 15 23:03 procs=       6
+wait4 16 23:04 procs=       6
+wait4 17 23:05 procs=       6
+wait4 18 23:06 procs=       6
+wait4 19 23:07 procs=       6
+wait4 20 23:08 procs=       6
+wait4 21 23:09 procs=       6
+wait4 22 23:10 procs=       6
+wait4 23 23:11 procs=       6
+wait4 24 23:12 procs=       6
+wait4 25 23:13 procs=       6
+wait4 26 23:14 procs=       6
+wait4 27 23:15 procs=       6
+wait4 28 23:16 procs=       6
+wait4 29 23:17 procs=       6
+wait4 30 23:18 procs=       6
+wait4 31 23:19 procs=       6
+wait4 32 23:20 procs=       6
+wait4 33 23:21 procs=       6
+wait4 34 23:22 procs=       6
+wait4 35 23:23 procs=       6
+wait4 36 23:24 procs=       6
+wait4 37 23:25 procs=       4
+DONE_EMPTY at iter 38
+WAIT4_EXIT
+total 96
+-rw-r--r--  1 ben-hannan  wheel  319 Sep 28 22:33 loop-s1-fresh-lr0.0003-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  333 Sep 28 23:25 loop-s1-fresh-lr0.0003-k16384.json
+-rw-r--r--  1 ben-hannan  wheel  313 Sep 28 22:33 loop-s1-fresh-lr0.001-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  331 Sep 28 23:25 loop-s1-fresh-lr0.001-k16384.json
+-rw-r--r--  1 ben-hannan  wheel  313 Sep 28 22:33 loop-s1-fresh-lr0.003-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  329 Sep 28 23:26 loop-s1-fresh-lr0.003-k16384.json
+-rw-r--r--  1 ben-hannan  wheel  320 Sep 28 20:36 loop-s1-pre-lr0.0003-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  320 Sep 28 21:35 loop-s1-pre-lr0.0003-k16384.json
+-rw-r--r--  1 ben-hannan  wheel  318 Sep 28 20:36 loop-s1-pre-lr0.001-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  333 Sep 28 21:35 loop-s1-pre-lr0.001-k16384.json
+-rw-r--r--  1 ben-hannan  wheel  330 Sep 28 20:36 loop-s1-pre-lr0.003-k1024.json
+-rw-r--r--  1 ben-hannan  wheel  332 Sep 28 21:35 loop-s1-pre-lr0.003-k16384.json
+---FRESH_LOGS---
+{"tag": "loop-s1-fresh-lr0.0003", "k": 1024, "right": 60, "n": 300}
+{"tag": "loop-s1-fresh-lr0.0003", "k": 16384, "right": 78, "n": 300}
+{"tag": "loop-s1-fresh-lr0.001", "k": 1024, "right": 0, "n": 300}
+{"tag": "loop-s1-fresh-lr0.001", "k": 16384, "right": 24, "n": 300}
+{"tag": "loop-s1-fresh-lr0.003", "k": 1024, "right": 0, "n": 300}
+{"tag": "loop-s1-fresh-lr0.003", "k": 16384, "right": 0, "n": 300}
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_dir_lr_lead0.py verdict 2>&1; echo "---JSONS---"; for f in artifacts/claude-dir-lr-20260928/lead0/*.json; do echo "$f"; cat "$f"; echo; done
+loop 1 fresh counts of 300: {"0.0003": {"1024": 60, "16384": 78}, "0.001": {"1024": 0, "16384": 24}, "0.003": {"1024": 0, "16384": 0}} stored 1e-3: {1024: 0, 16384: 24}
+   {'rerun_matches_stored': True, 'spread': {1024: 60, 16384: 78}, 'lr_sensitive_rungs': [1024, 16384], 'best_lr': {1024: '0.0003', 16384: '0.0003'}, 'word': 'LR_MATTERS'}
+   fresh collapse at k=1024 (stored 0 of 300): rescued (>= 60) by lr ['0.0003']
+loop 1 pre counts of 300: {"0.0003": {"1024": 176, "16384": 150}, "0.001": {"1024": 233, "16384": 261}, "0.003": {"1024": 207, "16384": 248}} stored 1e-3: {1024: 233, 16384: 261}
+   {'rerun_matches_stored': True, 'spread': {1024: 57, 16384: 111}, 'lr_sensitive_rungs': [1024, 16384], 'best_lr': {1024: '0.001', 16384: '0.001'}, 'word': 'LR_MATTERS'}
+---JSONS---
+artifacts/claude-dir-lr-20260928/lead0/loop-s1-fresh-lr0.0003-k1024.json
+{
+  "arm": "loop",
+  "cap_hits": 50,
+  "fixed_right": 63,
+  "init": "fresh",
+  "k": 1024,
+  "lr": 0.0003,
+  "mean_rounds": 24.89,
+  "n": 300,
+  "panel": "dev-9x9",
+  "right": 60,
+  "seconds": 3434,
+  "seed": 1,
+  "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e",
+  "updates": 2048
+}
+
+artifacts/claude-dir-lr-20260928/lead0/loop-s1-fresh-lr0.0003-k16384.json
+{
+  "arm": "loop",
+  "cap_hits": 53,
+  "fixed_right": 81,
+  "init": "fresh",
+  "k": 16384,
+  "lr": 0.0003,
+  "mean_rounds": 20.716666666666665,
+  "n": 300,
+  "panel": "dev-9x9",
+  "right": 78,
+  "seconds": 3104,
+  "seed": 1,
+  "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e",
+  "updates": 2048
+}
+
+artifacts/claude-dir-lr-20260928/lead0/loop-s1-fresh-lr0.001-k1024.json
+{
+  "arm": "loop",
+  "cap_hits": 0,
+  "fixed_right": 0,
+  "init": "fresh",
+  "k": 1024,
+  "lr": 0.001,
+  "mean_rounds": 3.0,
+  "n": 300,
+  "panel": "dev-9x9",
+  "right": 0,
+  "seconds": 3455,
+  "seed": 1,
+  "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e",
+  "updates": 2048
+}
+
+artifacts/claude-dir-lr-20260928/lead0/loop-s1-fresh-lr0.001-k16384.json
+{
+  "arm": "loop",
+  "cap_hits": 0,
+  "fixed_right": 22,
+  "init": "fresh",
+  "k": 16384,
+  "lr": 0.001,
+  "mean_rounds": 13.096666666666666,
+  "n": 300,
+  "panel": "dev-9x9",
+  "right": 24,
+  "seconds": 3107,
+  "seed": 1,
+  "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e",
+  "updates": 2048
+}
+
+artifacts/claude-dir-lr-20260928/lead0/loop-s1-fresh-lr0.003-k1024.json
+{
+  "arm": "loop",
+  "cap_hits": 0,
+  "fixed_right": 0,
+  "init": "fresh",
+  "k": 1024,
+  "lr": 0.003,
+  "mean_rounds": 4.0,
+  "n": 300,
+  "panel": "dev-9x9",
+  "right": 0,
+  "seconds": 3465,
+  "seed": 1,
+  "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e",
+  "updates": 2048
+}
+
+artifacts/claude-dir-lr-20260928/lead0/loop-s1-fresh-lr0.003-k16384.json
+{
+  "arm": "loop",
+  "cap_hits": 19,
+  "fixed_right": 0,
+  "init": "fresh",
+  "k": 16384,
+  "lr": 0.003,
+  "mean_rounds": 7.586666666666667,
+  "n": 300,
+  "panel": "dev-9x9",
+  "right": 0,
+  "seconds": 3136,
+  "seed": 1,
+  "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e",
+  "updates": 2048
+}
+
+artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.0003-k1024.json
+{
+  "arm": "loop",
+  "cap_hits": 297,
+  "fixed_right": 168,
+  "init": "pre",
+  "k": 1024,
+  "lr": 0.0003,
+  "mean_rounds": 47.75,
+  "n": 300,
+  "panel": "dev-9x9",
+  "right": 176,
+  "seconds": 2694,
+  "seed": 1,
+  "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e",
+  "updates": 2048
+}
+
+artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.0003-k16384.json
+{
+  "arm": "loop",
+  "cap_hits": 300,
+  "fixed_right": 143,
+  "init": "pre",
+  "k": 16384,
+  "lr": 0.0003,
+  "mean_rounds": 48.0,
+  "n": 300,
+  "panel": "dev-9x9",
+  "right": 150,
+  "seconds": 3547,
+  "seed": 1,
+  "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e",
+  "updates": 2048
+}
+
+artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.001-k1024.json
+{
+  "arm": "loop",
+  "cap_hits": 61,
+  "fixed_right": 220,
+  "init": "pre",
+  "k": 1024,
+  "lr": 0.001,
+  "mean_rounds": 19.92,
+  "n": 300,
+  "panel": "dev-9x9",
+  "right": 233,
+  "seconds": 2701,
+  "seed": 1,
+  "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e",
+  "updates": 2048
+}
+
+artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.001-k16384.json
+{
+  "arm": "loop",
+  "cap_hits": 194,
+  "fixed_right": 259,
+  "init": "pre",
+  "k": 16384,
+  "lr": 0.001,
+  "mean_rounds": 35.333333333333336,
+  "n": 300,
+  "panel": "dev-9x9",
+  "right": 261,
+  "seconds": 3536,
+  "seed": 1,
+  "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e",
+  "updates": 2048
+}
+
+artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.003-k1024.json
+{
+  "arm": "loop",
+  "cap_hits": 8,
+  "fixed_right": 205,
+  "init": "pre",
+  "k": 1024,
+  "lr": 0.003,
+  "mean_rounds": 12.066666666666666,
+  "n": 300,
+  "panel": "dev-9x9",
+  "right": 207,
+  "seconds": 2698,
+  "seed": 1,
+  "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e",
+  "updates": 2048
+}
+
+artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.003-k16384.json
+{
+  "arm": "loop",
+  "cap_hits": 14,
+  "fixed_right": 249,
+  "init": "pre",
+  "k": 16384,
+  "lr": 0.003,
+  "mean_rounds": 11.103333333333333,
+  "n": 300,
+  "panel": "dev-9x9",
+  "right": 248,
+  "seconds": 3545,
+  "seed": 1,
+  "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e",
+  "updates": 2048
+}
+[0m
+[0m$ [0mgit status --short | head -n 25; echo "---"; git log --oneline -2; git fetch origin main 2>&1 | tail -n 2; git log --oneline origin/main -3; echo "---BRANCHES---"; git branch -a | grep -iE "lead0|dir-lr" | head; echo "---IGNORE---"; git check-ignore -v artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.001-k1024.json artifacts/claude-dir-lr-20260928/lead0-pre-0.001.log 2>&1 | head
+---
+d734daa6e Director board: PC runner thread
+973bf2d04 H14 brief: PC-side runner
+From github.com:BenjaminHannan/learner
+ * branch                main       -> FETCH_HEAD
+3a9f302d6 opus manager: plan before any run (hist on local CPU; vast blocked)
+d93bb89d2 release dir-s3-vast-1-start (approved, cap 2.50); ledger
+f6ee7d5cf dir-s3: vast start/collect jobs (held), BensPC copies held
+---BRANCHES---
+---IGNORE---
+.gitignore:5:artifacts/	artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.001-k1024.json
+.gitignore:5:artifacts/	artifacts/claude-dir-lr-20260928/lead0-pre-0.001.log
+[0m
+[0m$ [0mgit ls-tree -r origin/main --name-only | grep "claude-dir-lr-20260928/lead0" | head; echo "---DIFF_BASE---"; git log --oneline d734daa6e..origin/main | head -n 15
+---DIFF_BASE---
+3a9f302d6 opus manager: plan before any run (hist on local CPU; vast blocked)
+d93bb89d2 release dir-s3-vast-1-start (approved, cap 2.50); ledger
+f6ee7d5cf dir-s3: vast start/collect jobs (held), BensPC copies held
+2e7458d32 dir-s3: vast kit (s3v), copy of lfszv adapted to 8 nets
+c3b7e35c6 board: vast budget $5 tonight
+ce91927bb hold trn-decode-mac until ks-1 nets exist
+635ba545b History read test (from PR 15) with Director seal
+f831890cb huginn plan copy; board
+f0e08ccc3 Translator check: sealed marks, decoder script, Mac queue job
+7cdde7f39 hold mxd jobs behind dir-g-a; roadmap target design
+8254506c5 roadmap: Huginn thread
+401a2cb98 board: translator thread
+1496d84cc translator design + brief
+90322a49c withdraw S5 (design correction from Ben); roadmap
+83b248df8 hold GPU jobs behind dir-g-a
+[0m
+[0m$ [0mgit checkout -B claude/dir-lr-lead0-mac-r2 origin/main 2>&1 | tail -n 2; git add -f artifacts/claude-dir-lr-20260928/lead0/ artifacts/claude-dir-lr-20260928/lead0-pre-0.0003.log artifacts/claude-dir-lr-20260928/lead0-pre-0.001.log artifacts/claude-dir-lr-20260928/lead0-pre-0.003.log artifacts/claude-dir-lr-20260928/lead0-fresh-0.0003.log artifacts/claude-dir-lr-20260928/lead0-fresh-0.001.log artifacts/claude-dir-lr-20260928/lead0-fresh-0.003.log; git status --short | head -n 25
+Switched to a new branch 'claude/dir-lr-lead0-mac-r2'
+branch 'claude/dir-lr-lead0-mac-r2' set up to track 'origin/main'.
+A  artifacts/claude-dir-lr-20260928/lead0-fresh-0.0003.log
+A  artifacts/claude-dir-lr-20260928/lead0-fresh-0.001.log
+A  artifacts/claude-dir-lr-20260928/lead0-fresh-0.003.log
+A  artifacts/claude-dir-lr-20260928/lead0-pre-0.0003.log
+A  artifacts/claude-dir-lr-20260928/lead0-pre-0.001.log
+A  artifacts/claude-dir-lr-20260928/lead0-pre-0.003.log
+A  artifacts/claude-dir-lr-20260928/lead0/loop-s1-fresh-lr0.0003-k1024.json
+A  artifacts/claude-dir-lr-20260928/lead0/loop-s1-fresh-lr0.0003-k16384.json
+A  artifacts/claude-dir-lr-20260928/lead0/loop-s1-fresh-lr0.001-k1024.json
+A  artifacts/claude-dir-lr-20260928/lead0/loop-s1-fresh-lr0.001-k16384.json
+A  artifacts/claude-dir-lr-20260928/lead0/loop-s1-fresh-lr0.003-k1024.json
+A  artifacts/claude-dir-lr-20260928/lead0/loop-s1-fresh-lr0.003-k16384.json
+A  artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.0003-k1024.json
+A  artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.0003-k16384.json
+A  artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.001-k1024.json
+A  artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.001-k16384.json
+A  artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.003-k1024.json
+A  artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.003-k16384.json
+[0m
+[0m✗ [0mgit commit -m "lead0: loop-s1 pre+fresh lr sweep, 12 counts dev-9x9, verdict LR_MATTERS" 2>&1 | tail -n 3; git push -u origin claude/dir-lr-lead0-mac-r2 2>&1 | tail -n 5; git log --oneline -2; git status --short | head -n 5 failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mgit commit -m "lead0: loop-s1 pre+fresh lr sweep, 12 counts dev-9x9, verdict LR_MATTERS" 2>&1 | tail -n 3; git log --oneline -2; git status --short | head -n 5
+create mode 100644 artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.001-k16384.json
+ create mode 100644 artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.003-k1024.json
+ create mode 100644 artifacts/claude-dir-lr-20260928/lead0/loop-s1-pre-lr0.003-k16384.json
+458f8f8e2 lead0: loop-s1 pre+fresh lr sweep, 12 counts dev-9x9, verdict LR_MATTERS
+3a9f302d6 opus manager: plan before any run (hist on local CPU; vast blocked)
+[0m
+[0m$ [0mpgrep -f "claude_dir_lr_lead0[.]py run" >/dev/null && echo "STILL_RUNNING" || echo "NO_RUNNERS"; git -C /Users/ben-hannan/Desktop/projects/beautiful-model worktree list 2>&1 | head -n 8
+NO_RUNNERS
+/Users/ben-hannan/Desktop/projects/beautiful-model                                                       f3318a6b9 [main]
+/private/tmp/dl4push                                                                                     62ffcff47 (detached HEAD) prunable
+/private/tmp/lead0-main                                                                                  458f8f8e2 [claude/dir-lr-lead0-mac-r2]
+/private/tmp/rel                                                                                         4bc558489 (detached HEAD) prunable
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn358d-push                           d2f4c096e (detached HEAD) prunable
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/trash-outbox                           346481d67 (detached HEAD) prunable
+/Users/ben-hannan/.codex/worktrees/lis320-finish/beautiful-model                                         47b22f0f7 (detached HEAD)
+/Users/ben-hannan/.codex/worktrees/retention-isolation/beautiful-model                                   cdb60eaec [codex/retention-isolation]
+[0m
