@@ -1,22 +1,10 @@
-2026-09-29 06:44:21
+2026-09-29 06:46:57
 running:
-dir-g-timing.running
 dir-g2-a.running
+dst-t3-4-s16-benspc.running
 launched (no exit yet) / finished:
-    1218
+    1220
 
-2026-09-29 06:12:58 gpu busy on BensPC, holding dst-t3-4-s16-benspc: mem 1397 MiB, python.exe 0, rc=0
-2026-09-29 06:12:59 load 241, holding ks-1-lead0-mac-r3 (       2 running)
-2026-09-29 06:13:01 load 241, holding pond-c-dev (       2 running)
-2026-09-29 06:13:01 load 241, holding pond-doubt (       2 running)
-2026-09-29 06:13:01 load 241, holding pond-z-dev (       2 running)
-2026-09-29 06:13:02 load 241, holding relnet-guard-mac (       2 running)
-2026-09-29 06:13:04 load 241, holding s1-loop-mac (       2 running)
-2026-09-29 06:13:04 load 241, holding s1-plain-mac (       2 running)
-2026-09-29 06:13:05 load 241, holding sl-1-read-r2 (       2 running)
-2026-09-29 06:13:05 load 241, holding sl-2-source-r2 (       2 running)
-2026-09-29 06:13:06 load 241, holding trn-decode-sums-mac (       2 running)
-2026-09-29 06:15:25 gpu busy on BensPC, holding dir-g-timing: mem 1397 MiB, python.exe 0, rc=0
 2026-09-29 06:15:28 gpu busy on BensPC, holding dst-t3-4-s16-benspc: mem 1397 MiB, python.exe 0, rc=0
 2026-09-29 06:15:28 load 243, holding ks-1-lead0-mac-r3 (       2 running)
 2026-09-29 06:15:30 load 243, holding pond-c-dev (       2 running)
@@ -155,16 +143,20 @@ launched (no exit yet) / finished:
 2026-09-29 06:44:18 load 353, holding sl-1-read-r2 (       2 running)
 2026-09-29 06:44:19 load 353, holding sl-2-source-r2 (       2 running)
 2026-09-29 06:44:20 load 352, holding trn-decode-sums-mac (       2 running)
+2026-09-29 06:46:38 pushed dir-g-timing
+2026-09-29 06:46:48 launch dst-t3-4-s16-benspc
+2026-09-29 06:46:49 load 346, holding ks-1-lead0-mac-r3 (       2 running)
+2026-09-29 06:46:52 load 345, holding pond-c-dev (       2 running)
+2026-09-29 06:46:52 load 345, holding pond-doubt (       2 running)
+2026-09-29 06:46:52 load 345, holding pond-z-dev (       2 running)
+2026-09-29 06:46:53 load 345, holding relnet-guard-mac (       2 running)
+2026-09-29 06:46:54 load 345, holding s1-loop-mac (       2 running)
+2026-09-29 06:46:55 load 343, holding s1-plain-mac (       2 running)
+2026-09-29 06:46:55 load 343, holding sl-1-read-r2 (       2 running)
+2026-09-29 06:46:56 load 343, holding sl-2-source-r2 (       2 running)
+2026-09-29 06:46:57 load 343, holding trn-decode-sums-mac (       2 running)
 
 diag:
-== dir-g-timing
-59762 Sep 29 06:44 dir-g-timing.go1.err.txt
-406 Sep 29 06:43 dir-g-timing.go1.reply.md
- L2: loop-g K=4 pool=h2 seed 13: 6440350 weights (2048 new), data ready in 77s on cuda
-[0m
-[0m← [0mWrite artifacts/claude-dir-g-build-20260928/timing/RUN-NOTE.md
-Wrote file successfully.
-[0m
 == dir-g2-a
 44784 Sep 29 06:00 dir-g2-a.go1.err.txt
 273 Sep 29 06:00 dir-g2-a.go1.reply.md
@@ -173,21 +165,28 @@ archive
 artifacts
 data
 [0m
+== dst-t3-4-s16-benspc
+811 Sep 29 06:46 dst-t3-4-s16-benspc.go1.err.txt
+62 Sep 29 06:46 dst-t3-4-s16-benspc.go1.reply.md
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
 top5cpu:
 %CPU COMM
-108.0 python
-94.8 python3
-94.6 python3
-84.2 python
-83.5 python
+137.4 opencode
+109.2 python
+71.4 python
+71.1 python
+70.3 python
 procs:
-  352     1 18443-10:41:26 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1042   768       11:35:59 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
- 1375  1373       11:35:52 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
- 1388   788       11:35:52 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
- 4354     1       11:13:16 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 5461     1       10:54:52 S    /usr/bin/ssh-agent
-62906     1       09:50:48 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
-78510 68819          00:03 SNs  ssh
-39359 39335          46:54 RN   /usr/local/bin/opencode
-68819 68793          10:47 RN   /usr/local/bin/opencode
+  352     1 18443-10:44:03 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1042   768       11:38:36 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+ 1375  1373       11:38:29 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+ 1388   788       11:38:29 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+ 4354     1       11:15:53 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 5461     1       10:57:29 S    /usr/bin/ssh-agent
+62906     1       09:53:25 S    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+39359 39335          49:31 RN   /usr/local/bin/opencode
+79937 79913          00:10 RN   /usr/local/bin/opencode
