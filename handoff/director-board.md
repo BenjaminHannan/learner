@@ -75,3 +75,4 @@
 - 02:13 UTC 09-29: S5 (talker reads notes) built+sealed (seal OK, dev100 hash 00bb9f9e matches), copied from PR 13 to main as handoff/pcqueue/dir-s5-talker-notes-pc.md. RUNNER: pc, but no pc-outbox branch exists, so the PC runner is NOT running (needs Ben's token steps). It downloads LongMemEval-S (277 MB dataset, sha-pinned, not a model): accepted. Waits behind dir-g-a.
 - 02:13 UTC 09-29: S1 (turn and flip mazes) on main (d1336c3b0), seal OK, jobs s1-loop-mac + s1-plain-mac queued (Mac CPU $0). Blind recount must check the dev/holdout-layout skip (655/674 of 131,072 views).
 - 02:14 UTC 09-29: S5 Mac-path job dir-s5-talker-notes on main (ssh benspc; waits behind dir-g-a via GPU-BUSY).
+- 02:16 UTC 09-29: S2 (Watch it think) on main ac64f9e89, seal 10/10; s2think-1-mac HELD until ks-1 rebuilds the k64/k16384 nets (one-shot job would burn its name). Sleep64/16384 originals not on Mac: sleep part untested unless the originals are found.

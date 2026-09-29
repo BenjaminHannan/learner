@@ -1,3 +1,4 @@
+STATUS: HELD. Real dependency: the job is one-shot and exits WAITING (5) without the adapted loop checkpoints; the Director removes this line once ks-1-lead0-mac-r2 has rebuilt them (2026-09-29).
 BASH-ONLY: yes
 GPU: no (Mac CPU, strict fp32, $0, no training, no rental, no BensPC). LOAD-LIGHT: no (2 single-thread processes, about 3 minutes per net). TIME CAP: 120 minutes. LABEL: s2think.
 DISK: 1
