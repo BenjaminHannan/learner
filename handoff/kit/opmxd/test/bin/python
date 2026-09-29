@@ -1,0 +1,40 @@
+#!/bin/bash
+# FAKE python for the opmxd kit test only: answers the torch check and stands in for scripts/claude_moe_deep_run.py (writes the same file names,
+# takes virtual time through the fake sleep). Control files under $FAKE/py:
+#   torch-ver (default 2.14.0+cu126), selftest-fail, smoke-fail (PASS false, SMOKE-FAIL, exit 1), smoke-crash (traceback, no json),
+#   die-<sub>-<cfg>-<seed> (N: die N times with a traceback), hang-<sub>-<cfg>-<seed> (sleep "forever"), unqualified-<seed> (source not qualified), dur (virtual s per part)
+P=$FAKE/py; mkdir -p "$P"
+case "$*" in
+  *"import torch"*) echo "torch $(cat "$P/torch-ver" 2>/dev/null || echo 2.14.0+cu126) 12.6 True FAKE RTX 4090"; exit 0;;
+  *claude_moe_deep_run.py*) ;;
+  *) echo "fake python: unhandled: $*" >&2; exit 1;;
+esac
+echo "$PPID $$" >> "$P/pids"
+shift; shift   # -B script
+sub=$1; shift; cfg=L8-E64; seed=0; ll=""
+while [ $# -gt 0 ]; do case "$1" in --cfg) cfg=$2; shift 2;; --seed) seed=$2; shift 2;; --loop-source-root) ll=$2; shift 2;; *) shift;; esac; done
+echo "$sub cfg=$cfg seed=$seed loop-root=${ll:-none}" >> "$P/calls.log"
+ART=artifacts/claude-moe-deep-20260929; dur=$(cat "$P/dur" 2>/dev/null || echo 900)
+tb() { echo "Traceback (most recent call last):"; echo "  File \"claude_moe_deep_run.py\", line 1, in <module>"; echo "RuntimeError: FAKE $1"; }
+case $sub in
+  selftest) [ -e "$P/selftest-fail" ] && { echo '{"selftest": "FAIL"}'; echo SELFTEST-FAIL >&2; exit 1; }
+    echo '{"selftest": "ok"}'; echo "fake selftest rewrote selftest.json" > $ART/selftest.json; exit 0;;
+  smoke) echo "{\"phase\": \"cpu_done\"}"; sleep $dur
+    [ -e "$P/smoke-crash" ] && { tb "smoke crash"; exit 1; }
+    ok=true; [ -e "$P/smoke-fail" ] && ok=false
+    echo "{\"PASS\": $ok, \"utc\": \"fake\"}" > $ART/SMOKE-gpu.json; echo '{"configs": {"L8-E64": {}}}' > $ART/TIMING-gpu.json
+    [ $ok = false ] && { echo "SMOKE-FAIL (see SMOKE-gpu.json): PASSMARKS.md section 'Machine' applies" >&2; exit 1; }; exit 0;;
+  source|dev) key=$sub-$cfg-$seed
+    [ -e "$P/hang-$key" ] && sleep 10000000
+    if [ -s "$P/die-$key" ]; then n=$(cat "$P/die-$key"); [ "$n" -gt 0 ] && { echo $((n-1)) > "$P/die-$key"; sleep 60; tb "die $key"; exit 1; }; fi
+    if [ $sub = dev ] && [ $cfg = loopctl ] && [ -z "$ll" ]; then echo "--loop-source-root is required for the loop control" >&2; exit 1; fi
+    if [ $sub = dev ] && [ -e "$P/unqualified-$seed" ] && [ $cfg != loopctl ]; then echo "SOURCE-NOT-QUALIFIED: $cfg seed $seed failed V1/V2" >&2; exit 1; fi
+    sleep $dur
+    if [ $sub = source ]; then d=$ART/runs/$cfg-s$seed; mkdir -p $d/lr1e-3; q=true; [ -e "$P/unqualified-$seed" ] && q=false
+      echo "{\"qualified\": $q, \"seed\": $seed}" > $d/qualified.json; echo '{"v1_pass": true}' > $d/lr1e-3/source.json; head -c 4096 /dev/urandom > $d/lr1e-3/source.pt; head -c 4096 /dev/urandom > $d/lr1e-3/resume.pt
+      echo "{\"phase\": \"qualified\", \"cfg\": \"$cfg\", \"seed\": $seed}"
+    else d=$ART/eq-runs/$cfg-pre-s$seed; mkdir -p $d; echo "{\"rungs\": {\"0\": {\"9\": {\"right\": 7}}}}" > $d/adapt.json; echo '{}' > $d/routes.json; head -c 4096 /dev/urandom > $d/k0.pt
+      echo "{\"phase\": \"dev_done\", \"cfg\": \"$cfg\", \"seed\": $seed}"; fi
+    exit 0;;
+  *) echo "fake python: unknown subcommand $sub" >&2; exit 1;;
+esac

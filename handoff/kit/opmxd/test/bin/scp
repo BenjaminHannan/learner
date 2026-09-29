@@ -1,0 +1,9 @@
+#!/bin/bash
+# FAKE scp for the opmxd kit test only: root@host:/root/r/... is $RENTAL/...
+[ -e "$FAKE/ssh/dead" ] && exit 255
+[ -e "$FAKE/ssh/scp-fail" ] && exit 1
+args=()
+while [ $# -gt 0 ]; do case "$1" in -i|-o|-P) shift 2;; -*) shift;; *) args+=("$1"); shift;; esac; done
+src=${args[0]}; dst=${args[1]}; dst=${dst#root@*:}; dst=${dst/\/root\/r/$RENTAL}
+echo "scp $src -> $dst" >> "$FAKE/ssh/calls.log"
+cp "$src" "$dst"

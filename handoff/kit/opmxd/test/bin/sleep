@@ -1,0 +1,4 @@
+#!/bin/bash
+# FAKE sleep for the kit tests only: sleeps 1/FAKE_SPEED of the asked time (pairs with the fake date).
+[ -n "${FAKE_SPEED:-}" ] || exec /usr/bin/sleep "$@"
+exec /usr/bin/sleep "$(awk -v s="$1" -v k="$FAKE_SPEED" 'BEGIN{printf "%.4f", s/k}')"

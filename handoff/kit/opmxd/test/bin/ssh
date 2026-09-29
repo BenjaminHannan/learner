@@ -1,0 +1,18 @@
+#!/bin/bash
+# FAKE ssh for the opmxd kit test only: the "rental" is the folder $RENTAL (its /root/r), the remote command runs locally with /root/r rewritten
+# to $RENTAL, stdin/stdout passed through. Fault injection through files under $FAKE/ssh:
+#   dead            host does not answer (exit 255)
+#   mutate-on-tar   N: the next N copy-back commands append a byte to W/selftest_rental.txt AFTER the manifest was made (a file that changed under the copy)
+S=$FAKE/ssh; mkdir -p "$S"
+while [ $# -gt 1 ]; do
+  case "$1" in -i|-o|-p) shift 2;; -*) shift;; root@*) shift; break;; *) break;; esac
+done
+cmd=$*
+echo "$(date -u +%T) $cmd" | cut -c1-260 >> "$S/calls.log"
+[ -e "$S/dead" ] && exit 255
+case "$cmd" in *"&& tar -cf -"*) m=$(cat "$S/mutate-on-tar" 2>/dev/null || echo 0)
+  if [ "$m" -gt 0 ]; then echo $((m-1)) > "$S/mutate-on-tar"; pre='&& tar -cf -'
+    cmd="${cmd%%"$pre"*}"'&& { printf x >> W/selftest_rental.txt; } && tar -cf -'"${cmd#*"$pre"}"; fi;; esac
+cmd=${cmd//\/root\/r/$RENTAL}
+export OPMXD_ROOT=$RENTAL PATH="$(cd "$(dirname "$0")" && pwd):$PATH"   # the queue job puts /usr/local/bin first on the Mac; the remote side must see the fakes first
+exec /bin/bash -c "$cmd"

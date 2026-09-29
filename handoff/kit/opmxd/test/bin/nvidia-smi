@@ -1,0 +1,2 @@
+#!/bin/bash
+case "$*" in *utilization.gpu*) cat "$FAKE/gpu/util" 2>/dev/null || echo 60;; *) echo "FAKE RTX 5090, 32607 MiB, 570.00";; esac
