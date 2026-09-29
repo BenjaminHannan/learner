@@ -1,0 +1,572 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mgit fetch origin main builder-outbox 2>&1 | head -20; echo "---DUPLICATE GATE---"; git show origin/main:artifacts/claude-dir-g-build-20260928/timing/timing-par.json 2>&1 | head -5; echo "---BUILDER-OUTBOX---"; git show origin/builder-outbox:artifacts/claude-dir-g-build-20260928/timing/timing-par.json 2>&1 | head -5; echo "---HANDOFF HEAD---"; git show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -20
+From github.com:BenjaminHannan/learner
+ * branch                main           -> FETCH_HEAD
+ * branch                builder-outbox -> FETCH_HEAD
+   283c363ea..779a68bde  builder-outbox -> origin/builder-outbox
+---DUPLICATE GATE---
+fatal: path 'artifacts/claude-dir-g-build-20260928/timing/timing-par.json' does not exist in 'origin/main'
+---BUILDER-OUTBOX---
+fatal: path 'artifacts/claude-dir-g-build-20260928/timing/timing-par.json' does not exist in 'origin/builder-outbox'
+---HANDOFF HEAD---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-dir-g-build-20260928/ADDENDUM-1.md 2>&1; echo "=====DOCSTRING====="; git show origin/main:scripts/claude_dir_g_run.py 2>&1 | head -100
+# ADDENDUM-1 to PASSMARKS.md (test G, "search inside the thought")
+
+Written 2026-09-28 23:55 UTC (`date -u`) by the G builder thread, at the Director's request, from the MARKS SELF-CHECK in `handoff/director-briefs/thread-helper-common.md`. New file. `artifacts/claude-dir-g-search-20260928/PASSMARKS.md` and `DESIGN.md` are not edited. **Every number that decides a verdict (30, B_s + 15, 2 x S_rand, F4, B_s + 8, D >= 2.0, the 295 gates) stays as sealed.**
+Labels: SHOWN = counted from a file or run here. SUGGESTED = reasoned. UNTESTED = nobody has run it.
+
+**Order (checked 23:49 UTC):** written before any score of G exists. origin/main holds only DESIGN.md, PASSMARKS.md, SURVEY.md, explainer files in `artifacts/claude-dir-g-search-20260928/`; no G run, log, tests.json or G-BASELINE. Nothing was trained with the new runner except 4-step CPU smoke runs on a throwaway net (they read no test file except that a 3-item-per-test plumbing run of an untrained net printed counts of 0).
+
+## MARKS SELF-CHECK (one line each)
+1. **Noise.** The sealed bars sit far above the measured run-to-run spread of the number-puzzle score. SHOWN, held-out numbers4 of 300: loop 4, 4 and plain 6, 4 in the wide-pool recount (`artifacts/claude-dir-h2-recount-20260928/RECOUNT.md`, table), and 0 to 3 for the eight-net old recipe (`artifacts/claude-rsn358u-20260927/RESULTS.md:12`, as quoted in `scripts/claude_numbers_diag_answers.py`, key `observed_358u_nets_numbers4_of_300`). So seed-to-seed spread is 0 to 2 of 300 for a net that scores 4, and the pure counting spread of a count near 4 of 300 is about 2 (binomial, SUGGESTED: sqrt(300 x 4/300)). The bar `S_pick >= max(30, B_s + 15)` is 26 above the noise-level 4; `S_any <= B_s + 8` is 8 above it (about 3 to 4 times the observed spread). The noise of S_pick, S_any and D themselves is not measured yet (UNTESTED: no G net exists); the 2 primary seeds are the first reading, and the replication rule (PASSMARKS "Replication") keeps a single seed from deciding.
+2. **"Every seed" reading.** PASS-G needs both primary seeds; WRONG needs both primary seeds (`S_any <= B_s + 8` on both); one seed passing or one seed failing is PARTIAL, which the marks already word as "no claim". Nothing is REJECTED on one seed. SHOWN (PASSMARKS "PASS-G", "WRONG", "Anything else"). No change needed.
+3. **Fair comparator.** B_s is the one-stream loop on the same recipe (the wide pool), per seed, read from that recipe's own tests.json; H2's four nets give loop 4, 4 and plain 6, 4 (SHOWN, RECOUNT.md). With either arm the bar is the same, because `max(30, B_s + 15)` = 30 for every B_s <= 15 (the higher of the two, 6, gives 21 < 30). The same-compute control for more thinking time is already in the test: the sealed loop already thinks up to 48 rounds, and `right_at_any_round_stream0` and `right_at_any_round_any_stream` are reported in tests.json (the run's old-style any-round oracle, for reading only). SUGGESTED: a same-*sample* control (best of 4 draws from the one-stream loop with noise added) does not exist and is not part of the marks; F4 (below) is the no-arithmetic version of it.
+4. **A row a plain same-size net cannot pass.** SHOWN: the plain nets of the same recipe scored 6 and 4 of 300 on held-out numbers4 (RECOUNT.md), so they miss the 30 bar by 24 or more, and they memorised the practice pool (practice exactness 1.0, P_train24 300 of 300) while missing held-out hands. The "not just memorising" reading is fixed: V4 (D >= 2.0) plus the practice-exactness line, with held-out hands guaranteed absent from the practice pool (the pool line prints 0 held-out hands in the pool; SHOWN by the H2 log line, checked by V-gate in the job). A pass therefore cannot come from a net that memorised the pool; the plain-net row already exists as data, no new run.
+5. **F_few (k = 1..64 examples).** Not applicable, stated so nobody looks for it: G tests search on unseen number hands with no examples in the input and no sleep or memory step. No F_eq exists in G either. The few-example rows belong to the tests that give the net examples.
+6. **Sleep gates.** Not applicable: G has no sleep phase.
+
+## Reading notes (SHOWN from `artifacts/claude-dir-g-build-20260928/f4.json`; no mark changed)
+- **F4 = 19.219 of 300** for the recipe "wide pool (h2)" (strategy B, the single commonest stored skeleton, 4 independent random orders; A 9.269, C 16.757; single-draw B 7.500, matching the diagnosis's 7.50). For the old pool F4 = 20.951 (strategy C). Independent-draw form 1 - (1 - p)^4 per hand, summed over the 300 held-out hands (`scripts/claude_dir_g_floor.py`); the marks' "upper bound 4 x 7.5 = 30" holds (19.2 <= 30). Because F4 < 30 the sealed bar stays `max(30, B_s + 15)`; the "F4 + 10" clause does not bind.
+- **Where the WRONG line sits against F4 (a reading, not a new mark).** WRONG needs `S_any <= B_s + 8` = 12 for B_s = 4. That is **below F4 = 19.2**: four streams that only guessed skeletons with no arithmetic would already beat it by luck. So a net that is not searching at all can easily land at S_any between 13 and 29, which the marks call PARTIAL. Read such an outcome as "no support for the mechanism", not "some progress". S_any <= 12 would mean the four tries are worse than four blind guesses (worse than no arithmetic), which would be unexpected.
+- **Practice exactness for the "all four streams memorised" line** = for each stream, the mean of `exact_stream_by_kind.numbers4` over the last 3 log lines of `train_log.jsonl` (streams reported separately); "all four streams >= 0.9" means all four values >= 0.9. The winner-only and any-stream values (`exact_by_kind`, `exact_any_by_kind`) are also logged, reading only.
+- **D** = mean over the 300 held-out numbers4 hands of the number of distinct final answers among the 4 streams, compared on the blank (answer) cells only, at each stream's own stop by the sealed stop rule. V4's D >= 2.0 is judged on this number.
+- **The recipe G trains on** is the H2 wide pool (`--pool h2`, the default), the one whose recount is WRONG-cannot-fit (entry rule). B_s = 4 (seed 13) and 4 (seed 14) from H2's loop nets. The Director writes G-BASELINE.md; a proposal is `G-BASELINE.proposed.md` here.
+
+## Build choices the design left open (each SHOWN in `scripts/claude_dir_g_run.py`; none is a mark)
+1. Start-vector init N(0, 1.0) per entry (the loop's state is a LayerNorm output, unit scale; "small random" in DESIGN.md section 3 is read as "not a designed vector", and 1.0 keeps the four streams apart at round 1). `--start-std`. A much smaller init is the likeliest way to get INCONCLUSIVE-COLLAPSED (V4) by accident.
+2. Gradient reaches the starts only on steps with no free (no-grad) round, about 15% of steps (total == k; SHOWN by `selftest`: no gradient with free rounds, gradient on all four without). The sealed detach after the free rounds is kept, so nothing but the starts and the loss weights changes. The starts still get plenty of movement in principle, but this is an UNTESTED reason why V4 could fail.
+3. The four start vectors have weight decay 0 (the sealed 0.1 would pull them toward zero and toward each other); every other parameter keeps 0.1.
+4. Per-item selection score = mean over the graded rounds of the item's mean token CE, detached; lowest wins, ties to the lowest stream index. Token loss = sum over items and streams of weight x summed token CE / total blank cells in the batch, averaged over graded rounds (so K = 1 is exactly the sealed loss).
+5. `--serial-streams` (same gradient, about a quarter of the memory, more time) exists in case four streams at once do not fit the GPU; `selftest` shows parallel and serial agree (loss difference 4.8e-07, largest gradient difference 1.2e-07 of scale 0.66, CPU fp32).
+6. Extra weights: 2,048 (4 x 512) on 6,438,302 = 0.032%, under the 0.05% in DESIGN.md.
+
+## What was run here (CPU, torch 2.14.0 cpu, this box) and what was not
+- V2 (SHOWN, `python -B scripts/claude_dir_g_run.py selftest`): K = 1 with zero start vs the sealed `Net.loop_train` on 8 fixed batches (3 sums4, 3 grids5, 2 numbers4 of 4 items): max abs difference logits 0.0, halt logit 0.0, token CE 4.8e-07, halt loss 1.2e-07 (bar 1e-5); test-time K = 1 predictions equal the sealed `loop_rounds`, halt probabilities within 1e-5. The sealed gradient check (`claude_rsn358i2_run.py selftest`) also passes through the new file.
+- `python -B scripts/claude_dir_g_floor.py` (F4): full run, both pools (about 2 minutes).
+- **Not run (UNTESTED):** any real training step on a GPU, so no timing, no memory number and no D at 200 steps yet (these come from the timing job `dir-g-timing`). The eval path was exercised only on an untrained 4-step net over 3 items per test.
+=====DOCSTRING=====
+#!/usr/bin/env python3
+"""dir-g (test G, "search inside the thought"; builder thread, 2026-09-28): the sealed loop with ONE change, K = 4 learned start states.
+
+Design and marks (sealed, not edited here): artifacts/claude-dir-g-search-20260928/{DESIGN,PASSMARKS}.md; this build's
+addendum: artifacts/claude-dir-g-build-20260928/ADDENDUM-1.md.
+
+The change (DESIGN.md section 3). The sealed loop starts every puzzle's thought from zeros. Here the loop starts from K = 4 learned
+vectors s_1..s_4 (each [d], broadcast over cells), i.e. four streams sharing every other weight (K x d = 2,048 extra weights).
+  train: the K streams run as K copies of the batch through the same rounds (same total, same k). Per item the stream with the
+         lowest mean graded-round token CE (selection detached; ties go to the lowest index) gets its token CE at weight 1, the
+         other three at weight 0.05 each. Halt BCE is applied to all K streams against each stream's own exactness (weight 0.5,
+         averaged over streams). Everything else (data, steps, batch, lr, schedule, rounds, wd, stop rule) is the sealed recipe,
+         imported from claude_dir_h2_run.py (the pool H2 built; --pool old gives the 1,062 target-24 hands instead).
+  test:  each stream stops by the sealed v2 stop rule; the answer is the stream whose halt probability at its stop is highest
+         (ties: lowest index). Reported: S_pick (right), S_rand (stream 0 right; also the mean over the 4), S_any (oracle),
+         D (mean number of distinct final answers among the 4 streams, compared on the blank cells).
+K = 1 with start zeros reproduces the sealed loop exactly (V2, `selftest`, CPU fp32).
+
+Implementation choices the design left open (each is listed in ADDENDUM-1.md; none is a mark):
+  * start init: N(0, 1.0) per entry. The loop's own state is a LayerNorm output (unit scale per cell), so 1.0 is "the size of a
+    state"; a much smaller std would make the four streams nearly identical at round 1. Flag --start-std.
+  * the sealed loop detaches after its free (no-grad) rounds, so the start vectors get gradient only on steps with no free round
+    (total == k, about 15% of steps). Kept, so that nothing but the starts and the loss weights changes.
+  * the start vectors are in their own AdamW group with weight decay 0 (the sealed recipe's 0.1 decay would pull the four starts
+    toward zero, i.e. toward each other). Everything else keeps wd 0.1.
+  * --serial-streams runs the K streams one after another (a no-grad pass picks the winners, then one forward/backward per stream)
+    to cut memory ~4x with the same gradient; `selftest` checks the two modes agree. Default: all K streams at once.
+
+  python -B scripts/claude_dir_g_run.py train --seed S --out DIR [--pool h2|old] [--K 4] [--serial-streams]     (defaults = the run)
+  python -B scripts/claude_dir_g_run.py eval --ckpt DIR/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out F
+  python -B scripts/claude_dir_g_run.py poison --ckpt DIR/final.pt --out F
+  python -B scripts/claude_dir_g_run.py timing [--steps 200] [--out F]     (real training steps on the real pool, then a projection)
+  python -B scripts/claude_dir_g_run.py selftest | check-mask
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import platform
+import random
+import sys
+import time
+from pathlib import Path
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_dir_h2_run as H2  # noqa: E402  (imports the sealed 358u chain: fixed env 0, autocast cache off, grad checks, stop rule v2)
+
+U = H2.U
+R, E = U.R, U.E
+I2 = U.I2
+stop_round = I2.I.G.V.stop_round
+OldSource = H2.WideSource.__mro__[1]           # the sealed 1,062-hand practice stream, before H2 swapped it out
+K_DEFAULT, START_STD, LEAK = 4, 1.0, 0.05
+HALT_W = 0.5
+NUMBERS_PRACTICE_DEV = 200
+
+
+# ---------------- model ----------------
+class GNet(R.Net):
+    """the sealed loop net plus K learned start states (the only new weights)"""
+
+    def __init__(self, K=K_DEFAULT, start_std=START_STD, zero_start=False):
+        super().__init__("loop")
+        self.K = K
+        d = R.ARMS["loop"]["d"]
+        init = torch.zeros(K, d) if zero_start else torch.randn(K, d) * start_std
+        self.starts = nn.Parameter(init)
+
+    def h0(self, ks, B, T):
+        """start states for the streams in ks, stream-major rows [len(ks) * B, T, d]"""
+        return self.starts[list(ks)].repeat_interleave(B, 0)[:, None, :].expand(-1, T, -1)
+
+    def train_rounds(self, tokens, slot, env, n_free, n_grad, ks):
+        """like R.Net.loop_train for the streams ks; rows are stream-major (row = j * B + i for ks[j], item i)"""
+        e, (dr, dc) = self.embed(tokens, slot, env)
+        B, T, _ = e.shape
+        eK = e.repeat(len(ks), 1, 1)
+        h = self.h0(ks, B, T)
+        if n_free:
+            with torch.no_grad():
+                for _ in range(n_free):
+                    h = self.step(h, eK.detach(), dr, dc)
+            h = h.detach()                                   # as sealed: gradient only through the last n_grad rounds
+        outs = []
+        for _ in range(n_grad):
+            h = self.step(h, eK, dr, dc)
+            outs.append(self.read(h))
+        return outs
+
+    @torch.no_grad()
+    def stream_rounds(self, tokens, slot, env, n):
+        """all K streams, n rounds: preds [K, B, n, T], halt probs [K, B, n]"""
+        e, (dr, dc) = self.embed(tokens, slot, env)
+        B, T, _ = e.shape
+        eK = e.repeat(self.K, 1, 1)
+[0m
+[0m$ [0mpwd; ssh benspc "powershell -NoProfile -Command \"Get-Content C:\\Users\\benja\\GPU-BUSY.txt 2>&1; echo '---PGREP---'; wmic process where \"name='python.exe'\" get CommandLine 2>&1 | head -20; nvidia-smi --query-gpu=index,name,memory.total,memory.used,memory.free --format=csv 2>&1 | head -5\""
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+BUSY: queue job dir-g-timing since 2026-09-29T10:33:34Z - do not use this GPU until this file is gone 
+---PGREP---
+wmic : The term 'wmic' is not recognized as the name of a cmdlet, function, script file, or operable program. Check 
+the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:67
++ ... nt C:\Users\benja\GPU-BUSY.txt 2>&1; echo '---PGREP---'; wmic process ...
++                                                              ~~~~
+    + CategoryInfo          : ObjectNotFound: (wmic:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+head : The term 'head' is not recognized as the name of a cmdlet, function, script file, or operable program. Check 
+the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:228
++ ... name,memory.total,memory.used,memory.free --format=csv 2>&1 | head -5
++                                                                   ~~~~
+    + CategoryInfo          : ObjectNotFound: (head:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Get-Process python -ErrorAction SilentlyContinue | Select-Object Id,ProcessName; Get-CimInstance Win32_Process -Filter \\\"Name='python.exe'\\\" | Select-Object ProcessId,CommandLine\""; echo "EXIT:$?"
+EXIT:0
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"nvidia-smi; Get-PSDrive C | Select-Object Used,Free; if (Test-Path C:\\Users\\benja\\dirg-timing) { Remove-Item -Recurse -Force C:\\Users\\benja\\dirg-timing }; New-Item -ItemType Directory -Path C:\\Users\\benja\\dirg-timing | Out-Null; echo FOLDER-READY\""
+Tue Sep 29 06:34:31 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 591.86                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070 Ti   WDDM  |   00000000:01:00.0 Off |                  N/A |
+|  0%   32C    P8              6W /  250W |    1397MiB /  16303MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1804    C+G   C:\Windows\System32\dwm.exe           N/A      |
+|    0   N/A  N/A            2012    C+G   ...ntrolPanel\SystemSettings.exe      N/A      |
+|    0   N/A  N/A            2716    C+G   ...em32\ApplicationFrameHost.exe      N/A      |
+|    0   N/A  N/A            3128    C+G   ...t\Edge\Application\msedge.exe      N/A      |
+|    0   N/A  N/A            3348    C+G   ..._cw5n1h2txyewy\SearchHost.exe      N/A      |
+|    0   N/A  N/A            4028    C+G   ...ta\Okta Verify\OktaVerify.exe      N/A      |
+|    0   N/A  N/A            4060    C+G   C:\Windows\explorer.exe               N/A      |
+|    0   N/A  N/A            6256    C+G   ...s\PowerToys.AdvancedPaste.exe      N/A      |
+|    0   N/A  N/A            7228    C+G   ...xyewy\ShellExperienceHost.exe      N/A      |
+|    0   N/A  N/A            8432    C+G   ...7hta09mmv6hy\Build\Lively.exe      N/A      |
+|    0   N/A  N/A            8756    C+G   ...cord\app-1.0.9259\Discord.exe      N/A      |
+|    0   N/A  N/A            8964    C+G   ...Chrome\Application\chrome.exe      N/A      |
+|    0   N/A  N/A            9664    C+G   ...Chrome\Application\chrome.exe      N/A      |
+|    0   N/A  N/A           12324    C+G   ...2txyewy\CrossDeviceResume.exe      N/A      |
+|    0   N/A  N/A           14084    C+G   ...y\StartMenuExperienceHost.exe      N/A      |
+|    0   N/A  N/A           14176    C+G   ...cw5n1h2txyewy\WidgetBoard.exe      N/A      |
+|    0   N/A  N/A           16928    C+G   ....0.4234.48\msedgewebview2.exe      N/A      |
+|    0   N/A  N/A           19372    C+G   ...8bbwe\PhoneExperienceHost.exe      N/A      |
+|    0   N/A  N/A           19740    C+G   ...kyb3d8bbwe\EdgeGameAssist.exe      N/A      |
+|    0   N/A  N/A           20172    C+G   ...5n1h2txyewy\TextInputHost.exe      N/A      |
+|    0   N/A  N/A           20272    C+G   ...s\PowerToys.PowerLauncher.exe      N/A      |
+|    0   N/A  N/A           21660    C+G   ...Toys\PowerToys.FancyZones.exe      N/A      |
+|    0   N/A  N/A           21856    C+G   ...s\PowerToys.ColorPickerUI.exe      N/A      |
+|    0   N/A  N/A           23048    C+G   ...(x86)\e2eSoft\iVCam\iVCam.exe      N/A      |
+|    0   N/A  N/A           23128    C+G   ...UI3Apps\PowerToys.Peek.UI.exe      N/A      |
+|    0   N/A  N/A           24476    C+G   ...indows\System32\ShellHost.exe      N/A      |
+|    0   N/A  N/A           25520    C+G   ...ogram Files\ShareX\ShareX.exe      N/A      |
+|    0   N/A  N/A           27824    C+G   ..._pzs8sxrjxfjjc\app\claude.exe      N/A      |
+|    0   N/A  N/A           28792    C+G   ..._pzs8sxrjxfjjc\app\claude.exe      N/A      |
+|    0   N/A  N/A           29704    C+G   ...Lunar Client\Lunar Client.exe      N/A      |
++-----------------------------------------------------------------------------------------+
+
+         Used       Free
+         ----       ----
+1016464269312 6679564288
+FOLDER-READY
+[0m
+[0m$ [0mgit archive origin/main scripts artifacts/claude-dir-g-search-20260928 artifacts/claude-dir-g-build-20260928 artifacts/claude-dir-h2-numbers-20260928/PASSMARKS.md artifacts/claude-dir-h2-numbers-20260928/SEAL-h2.sha256.txt artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt | ssh benspc "tar -x -C /c/Users/benja/dirg-timing"; echo "TAR-EXIT:$?"
+tar: could not chdir to '/c/Users/benja/dirg-timing'
+TAR-EXIT:1
+[0m
+[0m$ [0mgit archive origin/main scripts artifacts/claude-dir-g-search-20260928 artifacts/claude-dir-g-build-20260928 artifacts/claude-dir-h2-numbers-20260928/PASSMARKS.md artifacts/claude-dir-h2-numbers-20260928/SEAL-h2.sha256.txt artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt | ssh benspc "tar -x -C C:/Users/benja/dirg-timing"; echo "TAR-EXIT:$?"
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Get-ChildItem -Recurse C:\\Users\\benja\\dirg-timing | Select-Object -First 30 FullName; echo DONE\""
+FullName                                                                                      
+--------                                                                                      
+C:\Users\benja\dirg-timing\artifacts                                                          
+C:\Users\benja\dirg-timing\scripts                                                            
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928                              
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-search-20260928                             
+C:\Users\benja\dirg-timing\artifacts\claude-dir-h2-numbers-20260928                           
+C:\Users\benja\dirg-timing\artifacts\claude-rsn358u-20260927                                  
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\runs                         
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\ADDENDUM-1.md                
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\f4.json                      
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\G-BASELINE.md                
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\G-BASELINE.proposed.md       
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\queue-dir-g-a.md             
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\queue-dir-g-b.md             
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\queue-dir-g-timing.md        
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\RESULT.md                    
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\SEAL-g.sha256.txt            
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\SEAL-results.sha256.txt      
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\runs\g-s13                   
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\runs\g-s14                   
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\runs\RUN-NOTE.md             
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\runs\g-s13\g-s13.log         
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\runs\g-s13\poison.json       
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\runs\g-s13\tests.json        
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\runs\g-s13\timing-par.json   
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\runs\g-s13\train_log.jsonl   
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\runs\g-s13\train_summary.json
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\runs\g-s14\g-s14.log         
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\runs\g-s14\poison.json       
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\runs\g-s14\tests.json        
+C:\Users\benja\dirg-timing\artifacts\claude-dir-g-build-20260928\runs\g-s14\timing-par.json   
+DONE
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"\$env:Path += ';C:\\Program Files\\Git\\usr\\bin'; sha256sum --version\""
+sha256sum (GNU coreutils) 8.32
+Copyright (C) 2020 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Ulrich Drepper, Scott Miller, and David Madore.
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"\$env:Path += ';C:\\Program Files\\Git\\usr\\bin'; Set-Location C:\\Users\\benja\\dirg-timing; echo '===SEAL-CODE==='; sha256sum -c artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt 2>&1; echo '===SEAL-H2==='; sha256sum -c artifacts/claude-dir-h2-numbers-20260928/SEAL-h2.sha256.txt 2>&1; echo '===SEAL-G==='; sha256sum -c artifacts/claude-dir-g-build-20260928/SEAL-g.sha256.txt 2>&1\""
+===SEAL-CODE===
+scripts/claude_rsn358u_run.py: OK
+scripts/claude_rsn358i2_run.py: OK
+scripts/claude_rsn358i_run.py: OK
+scripts/claude_rsn358g_run.py: OK
+scripts/claude_rsn358a2_run.py: OK
+scripts/claude_rsn358a_run.py: OK
+scripts/claude_rsn358a_envs.py: OK
+scripts/claude_blurt1.py: OK
+artifacts/claude-rsn358i-20260926/tests/grids5.jsonl: FAILED open or read
+artifacts/claude-rsn358i-20260926/tests/grids6.jsonl: FAILED open or read
+artifacts/claude-rsn358i-20260926/tests/grids7.jsonl: FAILED open or read
+artifacts/claude-rsn358i-20260926/tests/numbers4.jsonl: FAILED open or read
+artifacts/claude-rsn358i-20260926/tests/numbers5.jsonl: FAILED open or read
+artifacts/claude-rsn358i-20260926/tests/sums10.jsonl: FAILED open or read
+artifacts/claude-rsn358i-20260926/tests/sums12.jsonl: FAILED open or read
+artifacts/claude-rsn358i-20260926/tests/sums4.jsonl: FAILED open or read
+artifacts/claude-rsn358i-20260926/tests/sums6.jsonl: FAILED open or read
+artifacts/claude-rsn358i-20260926/tests/sums8.jsonl: FAILED open or read
+artifacts/claude-rsn358u-20260927/PASSMARKS-draft.md: FAILED open or read
+artifacts/claude-rsn358u-20260927/PASSMARKS.md: FAILED open or read
+===SEAL-H2===
+artifacts/claude-dir-h2-numbers-20260928/PASSMARKS.md: OK
+scripts/claude_dir_h2_pool.py: OK
+scripts/claude_dir_h2_run.py: OK
+===SEAL-G===
+artifacts/claude-dir-g-search-20260928/PASSMARKS.md: OK
+artifacts/claude-dir-g-build-20260928/ADDENDUM-1.md: OK
+scripts/claude_dir_g_run.py: OK
+scripts/claude_dir_g_floor.py: OK
+artifacts/claude-dir-g-build-20260928/G-BASELINE.md: OK
+sha256sum : /usr/bin/sha256sum: artifacts/claude-rsn358i-20260926/tests/grids5.jsonl: No such file or directory
+At line:1 char:112
++ ... L-CODE==='; sha256sum -c artifacts/claude-rsn358u-20260927/SEAL-code. ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (/usr/bin/sha256...le or directory:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+/usr/bin/sha256sum: artifacts/claude-rsn358i-20260926/tests/grids6.jsonl: No such file or directory
+/usr/bin/sha256sum: artifacts/claude-rsn358i-20260926/tests/grids7.jsonl: No such file or directory
+/usr/bin/sha256sum: artifacts/claude-rsn358i-20260926/tests/numbers4.jsonl: No such file or directory
+/usr/bin/sha256sum: artifacts/claude-rsn358i-20260926/tests/numbers5.jsonl: No such file or directory
+/usr/bin/sha256sum: artifacts/claude-rsn358i-20260926/tests/sums10.jsonl: No such file or directory
+/usr/bin/sha256sum: artifacts/claude-rsn358i-20260926/tests/sums12.jsonl: No such file or directory
+/usr/bin/sha256sum: artifacts/claude-rsn358i-20260926/tests/sums4.jsonl: No such file or directory
+/usr/bin/sha256sum: artifacts/claude-rsn358i-20260926/tests/sums6.jsonl: No such file or directory
+/usr/bin/sha256sum: artifacts/claude-rsn358i-20260926/tests/sums8.jsonl: No such file or directory
+/usr/bin/sha256sum: artifacts/claude-rsn358u-20260927/PASSMARKS-draft.md: No such file or directory
+/usr/bin/sha256sum: artifacts/claude-rsn358u-20260927/PASSMARKS.md: No such file or directory
+/usr/bin/sha256sum: WARNING: 12 listed files could not be read
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Set-Location C:\\Users\\benja\\dirg-timing; C:/Users/benja/lis300/venv/Scripts/python.exe -c \\\"import torch;print(torch.__version__, torch.version.cuda, torch.cuda.get_device_name(0))\\\"; nvidia-smi --query-gpu=memory.total,memory.used,memory.free --format=csv\""
+2.11.0+cu128 12.8 NVIDIA GeForce RTX 5070 Ti
+memory.total [MiB], memory.used [MiB], memory.free [MiB]
+16303 MiB, 1397 MiB, 14599 MiB
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Set-Location C:\\Users\\benja\\dirg-timing; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_dir_g_run.py selftest 2>&1 | tail -30\""
+tail : The term 'tail' is not recognized as the name of a cmdlet, function, script file, or operable program. Check 
+the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:135
++ ... ts/python.exe -B scripts/claude_dir_g_run.py selftest 2>&1 | tail -30
++                                                                  ~~~~
+    + CategoryInfo          : ObjectNotFound: (tail:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Set-Location C:\\Users\\benja\\dirg-timing; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_dir_g_run.py selftest 2>&1 | Select-Object -Last 30\""
+C:/Users/benja/lis300/venv/Scripts/python.exe : C:\Users\benja\dirg-timing\scripts\claude_dir_g_run.py:416: 
+UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+At line:1 char:42
++ ... irg-timing; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/ ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\benja\...ected behavior.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Consider using tensor.detach() first. (Triggered internally at 
+[V2] K=1 zero start vs sealed loop on 8 fixed batches: max abs diff {'logits': 0.0, 'halt_logit': 0.0, 'ce': 4.76837158203125e-07, 'halt_loss': 1.1920928955078125e-07} (bar 1e-5) ok
+[V2b] K=1 stream_rounds == sealed loop_rounds (predictions equal, halt probs within 1e-5) ok
+[K4] winner weights ok (ties to the lowest index, 1 + 3 x 0.05 per item); parallel == serial (loss diff 4.8e-07, max grad diff 8.9e-08 of scale 0.66); starts: no gradient with free rounds, gradient on all 4 without ok
+[eval] g_evaluate runs on 4 items: keys ['D_mean_distinct_answers', 'S_any', 'S_pick', 'S_rand0', 'S_rand_mean'] ... ok
+[size] 2048 new weights on 6438302 (0.032%) ok
+selftest ok: torch 2.11.0+cu128, cache off, 0/8 block Linear weights without gradient after 3 free + 2 graded rounds
+selftest ok (torch 2.11.0+cu128 CPU fp32)
+C:\actions-runner\_work\pytorch\pytorch\pytorch\torch\csrc\autograd\generated\python_variable_methods.cpp:837.)
+  worst["logits"] = max(worst["logits"], float((lg_s - lg_g).abs().max()))
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Set-Location C:\\Users\\benja\\dirg-timing; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_dir_g_run.py check-mask 2>&1 | Select-Object -Last 5; echo '===FLOOR==='; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_dir_g_floor.py selftest 2>&1 | Select-Object -Last 5\""
+check-mask ok: narrow heads 0-3 ignore cells 2+ columns away; wide heads 4-7 unchanged
+===FLOOR===
+selftest ok: single-draw B on the held-out hands = 7.5 (diagnosis 7.50); F4 (old pool) = 20.951
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Set-Location C:\\Users\\benja\\dirg-timing; New-Item -ItemType Directory -Path W -ErrorAction SilentlyContinue | Out-Null; date -u; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_dir_g_run.py timing --steps 200 --seed 13 --pool h2 --out W/timing-par.json > W/timing-par.log 2>&1; echo \\\"PAR-EXIT:\$LASTEXITCODE\\\"; date -u; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_dir_g_run.py timing --steps 200 --seed 13 --pool h2 --serial-streams --out W/timing-ser.json > W/timing-ser.log 2>&1; echo \\\"SER-EXIT:\$LASTEXITCODE\\\"; date -u; nvidia-smi --query-gpu=memory.used,memory.free --format=csv\""
+Get-Date : Missing an argument for parameter 'UFormat'. Specify a parameter of type 'System.String' and try again.
+At line:1 char:126
++ ... ory -Path W -ErrorAction SilentlyContinue | Out-Null; date -u; C:/Use ...
++                                                                ~~
+    + CategoryInfo          : InvalidArgument: (:) [Get-Date], ParameterBindingException
+    + FullyQualifiedErrorId : MissingArgument,Microsoft.PowerShell.Commands.GetDateCommand
+ 
+PAR-EXIT:0
+Get-Date : Missing an argument for parameter 'UFormat'. Specify a parameter of type 'System.String' and try again.
+At line:1 char:331
++ ... W/timing-par.log 2>&1; echo "PAR-EXIT:$LASTEXITCODE"; date -u; C:/Use ...
++                                                                ~~
+    + CategoryInfo          : InvalidArgument: (:) [Get-Date], ParameterBindingException
+    + FullyQualifiedErrorId : MissingArgument,Microsoft.PowerShell.Commands.GetDateCommand
+ 
+SER-EXIT:0
+Get-Date : Missing an argument for parameter 'UFormat'. Specify a parameter of type 'System.String' and try again.
+At line:1 char:553
++ ... W/timing-ser.log 2>&1; echo "SER-EXIT:$LASTEXITCODE"; date -u; nvidia ...
++                                                                ~~
+    + CategoryInfo          : InvalidArgument: (:) [Get-Date], ParameterBindingException
+    + FullyQualifiedErrorId : MissingArgument,Microsoft.PowerShell.Commands.GetDateCommand
+ 
+memory.used [MiB], memory.free [MiB]
+1397 MiB, 14599 MiB
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"\$env:Path += ';C:\\Program Files\\Git\\usr\\bin'; Set-Location C:\\Users\\benja\\dirg-timing; echo '===PAR-TIMING==='; grep -a TIMING W/timing-par.log; echo '===SER-TIMING==='; grep -a TIMING W/timing-ser.log; echo '===PAR-DEV-LAST==='; grep -a dev W/timing-par.log | tail -3; echo '===SER-DEV-LAST==='; grep -a dev W/timing-ser.log | tail -3; echo '===FILES==='; ls -la W/\""
+===PAR-TIMING===
+===SER-TIMING===
+===PAR-DEV-LAST===
+===SER-DEV-LAST===
+===FILES===
+Get-ChildItem : A parameter cannot be found that matches parameter name 'la'.
+At line:1 char:361
++ ... grep -a dev W/timing-ser.log | tail -3; echo '===FILES==='; ls -la W/
++                                                                    ~~~
+    + CategoryInfo          : InvalidArgument: (:) [Get-ChildItem], ParameterBindingException
+    + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Commands.GetChildItemCommand
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Set-Location C:\\Users\\benja\\dirg-timing; Get-ChildItem W/; echo '===PAR-SIZE==='; (Get-Item W/timing-par.log).Length; (Get-Item W/timing-ser.log).Length; echo '===PAR-TAIL==='; Get-Content W/timing-par.log | Select-Object -Last 10\""
+Directory: C:\Users\benja\dirg-timing\W
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----         9/29/2026   6:40 AM           1721 timing-par.json                                                      
+-a----         9/29/2026   6:40 AM           8656 timing-par.log                                                       
+-a----         9/29/2026   6:42 AM           1721 timing-ser.json                                                      
+-a----         9/29/2026   6:42 AM           8656 timing-ser.log                                                       
+===PAR-SIZE===
+8656
+8656
+===PAR-TAIL===
+h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool
+loop-g K=4 pool=h2 seed 13: 6440350 weights (2048 new), data ready in 77s on cuda
+{"step": 50, "ce": 5.351, "exact": 0.0, "exact_any_stream": 0.0, "halt_bce": 0.5073, "lr": 1.3059366876077085e-05, "min": 1.4, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0, "sums4": 0.0}, "exact_any_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0, "sums4": 0.0}, "exact_stream_by_kind": {"grids4": [0.0, 0.0, 0.0, 0.0], "grids5": [0.0, 0.0, 0.0, 0.0], "numbers3": [0.0, 0.0, 0.0, 0.0], "numbers4": [0.0, 0.0, 0.0, 0.0], "sums1": [0.0, 0.0, 0.0, 0.0], "sums2": [0.0, 0.0, 0.0, 0.0], "sums3": [0.0, 0.0, 0.0, 0.0], "sums4": [0.0, 0.0, 0.0, 0.0]}}
+{"step": 100, "ce": 4.6479, "exact": 0.0, "exact_any_stream": 0.0, "halt_bce": 0.0733, "lr": 1.5149999999999999e-05, "min": 1.4, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0, "sums4": 0.0}, "exact_any_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0, "sums4": 0.0}, "exact_stream_by_kind": {"grids4": [0.0, 0.0, 0.0, 0.0], "grids5": [0.0, 0.0, 0.0, 0.0], "numbers3": [0.0, 0.0, 0.0, 0.0], "numbers4": [0.0, 0.0, 0.0, 0.0], "sums1": [0.0, 0.0, 0.0, 0.0], "sums2": [0.0, 0.0, 0.0, 0.0], "sums3": [0.0, 0.0, 0.0, 0.0], "sums4": [0.0, 0.0, 0.0, 0.0]}}
+{"step": 150, "ce": 4.2874, "exact": 0.0, "exact_any_stream": 0.0, "halt_bce": 0.0302, "lr": 6.634031406124699e-06, "min": 1.5, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0, "sums4": 0.0}, "exact_any_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0, "sums4": 0.0}, "exact_stream_by_kind": {"grids4": [0.0, 0.0, 0.0, 0.0], "grids5": [0.0, 0.0, 0.0, 0.0], "numbers3": [0.0, 0.0, 0.0, 0.0], "numbers4": [0.0, 0.0, 0.0, 0.0], "sums1": [0.0, 0.0, 0.0, 0.0], "sums2": [0.0, 0.0, 0.0, 0.0], "sums3": [0.0, 0.0, 0.0, 0.0], "sums4": [0.0, 0.0, 0.0, 0.0]}}
+{"step": 200, "ce": 4.3065, "exact": 0.0, "exact_any_stream": 0.0, "halt_bce": 0.0214, "lr": 0.0, "min": 1.6, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0}, "exact_any_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0}, "exact_stream_by_kind": {"grids4": [0.0, 0.0, 0.0, 0.0], "grids5": [0.0, 0.0, 0.0, 0.0], "numbers3": [0.0, 0.0, 0.0, 0.0], "numbers4": [0.0, 0.0, 0.0, 0.0], "sums1": [0.0, 0.0, 0.0, 0.0], "sums2": [0.0, 0.0, 0.0, 0.0], "sums3": [0.0, 0.0, 0.0, 0.0]}, "dev": {"sums4": {"pick": 0, "any": 0, "D": 1.0}, "grids5": {"pick": 0, "any": 0, "D": 1.0}, "numbers4practice": {"pick": 0, "any": 0, "D": 1.0}}}
+TIMING {"steps": 200, "K": 4, "pool": "h2", "serial_streams": false, "sec_per_step_mean_after_20": 0.0978, "projected_minutes_per_net_60000_steps_alone": 97.8, "peak_cuda_gb": 8.84, "gpu": "NVIDIA GeForce RTX 5070 Ti", "torch": "2.11.0+cu128", "cuda": "12.8", "steps_block_nograd": 0, "start_norms": [22.9, 21.023, 23.552, 20.944], "last_log_line": {"step": 200, "ce": 4.3065, "exact": 0.0, "exact_any_stream": 0.0, "halt_bce": 0.0214, "lr": 0.0, "min": 1.6, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0}, "exact_any_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0}, "exact_stream_by_kind": {"grids4": [0.0, 0.0, 0.0, 0.0], "grids5": [0.0, 0.0, 0.0, 0.0], "numbers3": [0.0, 0.0, 0.0, 0.0], "numbers4": [0.0, 0.0, 0.0, 0.0], "sums1": [0.0, 0.0, 0.0, 0.0], "sums2": [0.0, 0.0, 0.0, 0.0], "sums3": [0.0, 0.0, 0.0, 0.0]}, "dev": {"sums4": {"pick": 0, "any": 0, "D": 1.0}, "grids5": {"pick": 0, "any": 0, "D": 1.0}, "numbers4practice": {"pick": 0, "any": 0, "D": 1.0}}}, "note": "projection = mean seconds per step after step 20, times 60000; one net alone on the GPU; the round count per step is random (1-16), so 200 steps is a rough mean"}
+[0m
+[0m$ [0mls artifacts/claude-dir-g-build-20260928/ 2>&1; echo "---"; ls artifacts/claude-dir-g-build-20260928/timing/ 2>&1; echo "---"; ssh benspc "powershell -NoProfile -Command \"Set-Location C:\\Users\\benja\\dirg-timing; Get-Content W/timing-ser.log | Select-Object -Last 2\""
+runs
+SEAL-run.sha256.txt
+---
+ls: artifacts/claude-dir-g-build-20260928/timing/: No such file or directory
+---
+{"step": 200, "ce": 4.3066, "exact": 0.0, "exact_any_stream": 0.0, "halt_bce": 0.0214, "lr": 0.0, "min": 1.9, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0}, "exact_any_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0}, "exact_stream_by_kind": {"grids4": [0.0, 0.0, 0.0, 0.0], "grids5": [0.0, 0.0, 0.0, 0.0], "numbers3": [0.0, 0.0, 0.0, 0.0], "numbers4": [0.0, 0.0, 0.0, 0.0], "sums1": [0.0, 0.0, 0.0, 0.0], "sums2": [0.0, 0.0, 0.0, 0.0], "sums3": [0.0, 0.0, 0.0, 0.0]}, "dev": {"sums4": {"pick": 0, "any": 0, "D": 1.0}, "grids5": {"pick": 0, "any": 0, "D": 1.0}, "numbers4practice": {"pick": 0, "any": 0, "D": 1.0}}}
+TIMING {"steps": 200, "K": 4, "pool": "h2", "serial_streams": true, "sec_per_step_mean_after_20": 0.1715, "projected_minutes_per_net_60000_steps_alone": 171.5, "peak_cuda_gb": 2.41, "gpu": "NVIDIA GeForce RTX 5070 Ti", "torch": "2.11.0+cu128", "cuda": "12.8", "steps_block_nograd": 0, "start_norms": [22.9, 21.023, 23.552, 20.944], "last_log_line": {"step": 200, "ce": 4.3066, "exact": 0.0, "exact_any_stream": 0.0, "halt_bce": 0.0214, "lr": 0.0, "min": 1.9, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0}, "exact_any_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0}, "exact_stream_by_kind": {"grids4": [0.0, 0.0, 0.0, 0.0], "grids5": [0.0, 0.0, 0.0, 0.0], "numbers3": [0.0, 0.0, 0.0, 0.0], "numbers4": [0.0, 0.0, 0.0, 0.0], "sums1": [0.0, 0.0, 0.0, 0.0], "sums2": [0.0, 0.0, 0.0, 0.0], "sums3": [0.0, 0.0, 0.0, 0.0]}, "dev": {"sums4": {"pick": 0, "any": 0, "D": 1.0}, "grids5": {"pick": 0, "any": 0, "D": 1.0}, "numbers4practice": {"pick": 0, "any": 0, "D": 1.0}}}, "note": "projection = mean seconds per step after step 20, times 60000; one net alone on the GPU; the round count per step is random (1-16), so 200 steps is a rough mean"}
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-dir-g-build-20260928/queue-dir-g-timing.md 2>&1 | head -60; echo "=====UTCTIMES====="; ssh benspc "powershell -NoProfile -Command \"[DateTime]::UtcNow.ToString('o'); Get-ChildItem C:\\Users\\benja\\dirg-timing\\W | ForEach-Object { \$_.Name + ' ' + \$_.LastWriteTimeUtc.ToString('o') }\""
+COMMON RULES: follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (the G builder thread of the Director, Claude, wrote this task on 2026-09-28). Report in your final reply: verdict first, numbers as printed, every deviation.
+GPU: yes (BensPC RTX 5070 Ti; one job at a time; $0, no rental). NO RENTALS, whatever fails. The watcher writes C:\Users\benja\GPU-BUSY.txt as "queue job <this file's name without .md>" while this task runs: that is this job, so go on and leave the file to the watcher. If the file names any other job, stop with BUSY and run nothing.
+WHERE: you run on the Mac. BensPC (Windows, RTX 5070 Ti) is reached from the Mac with `ssh benspc` (PowerShell, or git-bash for sha256sum/tar). Every BensPC command below runs ON BensPC over that ssh; stream the tree with `git archive ... | ssh benspc "tar -x -C <folder>"`; copy results back to the Mac worktree with scp. Never look for BensPC paths on the Mac itself.
+TIME CAP: 60 minutes in total. ESTIMATE (not measured): 10 to 20 minutes (two timing runs of 200 steps each, plus the 1-3 minute pool build each).
+DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-dir-g-build-20260928/timing/timing-par.json.
+
+YOUR TASK: the 200-step timing run for test G (four learned start states, "search inside the thought"), on BensPC. REPORT ONLY: no registered marks, no checkpoint kept, no test file touched, not one test item opened. The G builder thread wrote all code. Run it and never edit it. If something breaks, stop and report the exact error; do not patch. Artifacts go in artifacts/claude-dir-g-build-20260928/timing/.
+READ FIRST (origin/main): artifacts/claude-dir-g-build-20260928/ADDENDUM-1.md and the docstring of scripts/claude_dir_g_run.py.
+Python on BensPC: C:/Users/benja/lis300/venv/Scripts/python.exe (torch CUDA + numpy). No installs, no model downloads, no network calls.
+1. On BensPC: `git archive origin/main scripts artifacts/claude-dir-g-search-20260928 artifacts/claude-dir-g-build-20260928 artifacts/claude-dir-h2-numbers-20260928/PASSMARKS.md artifacts/claude-dir-h2-numbers-20260928/SEAL-h2.sha256.txt artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt`, extract keeping paths into a fresh folder C:/Users/benja/dirg-timing/ (do NOT extract artifacts/claude-rsn358i-20260926/tests: this job never needs it). Check `nvidia-smi` and free disk on C: (stop if under 3 GB; this job writes almost nothing).
+2. SEAL: every line of artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt must match (sha256sum -c under Git Bash; the tests folder lines will be missing, that is expected: check the 358u code lines only and report how many matched of how many), every line of artifacts/claude-dir-h2-numbers-20260928/SEAL-h2.sha256.txt and, if present, artifacts/claude-dir-g-build-20260928/SEAL-g.sha256.txt must match. A mismatch: stop.
+3. Report: `python -c "import torch;print(torch.__version__, torch.version.cuda, torch.cuda.get_device_name(0))"`; `nvidia-smi --query-gpu=memory.total,memory.used,memory.free --format=csv`.
+4. Checks (all must pass, otherwise stop): `python -B scripts/claude_dir_g_run.py selftest` ends with "selftest ok" (CPU is fine, about 30 s; lines [V2], [V2b], [K4], [eval], [size] must all print); `python -B scripts/claude_dir_g_run.py check-mask` prints "check-mask ok"; `python -B scripts/claude_dir_g_floor.py selftest` prints "selftest ok".
+5. TIMING RUN 1 (all four streams at once, the default): `python -B scripts/claude_dir_g_run.py timing --steps 200 --seed 13 --pool h2 --out W/timing-par.json`, output to W/timing-par.log. It prints a line "TIMING {...}" at the end. If it dies with a CUDA out-of-memory error, record the exact error line and go to step 6 anyway.
+6. TIMING RUN 2 (the four streams one after another, less memory): the same command with `--serial-streams` added and `--out W/timing-ser.json`, log W/timing-ser.log. Then `nvidia-smi --query-gpu=memory.used,memory.free --format=csv` once more.
+7. Copy W/timing-par.json (if it exists), W/timing-ser.json, both logs and the nvidia-smi lines into artifacts/claude-dir-g-build-20260928/timing/ on the Mac (force-add; artifacts/ is git-ignored). Write timing/RUN-NOTE.md: start and end time (date -u), GPU, torch/CUDA, memory lines, for each run: sec_per_step_mean_after_20, projected_minutes_per_net_60000_steps_alone, peak_cuda_gb, steps_block_nograd, start_norms, and the D value in the last log line's "dev" entries (D of 200 practice hands after 200 steps), plus every deviation. State the projected hours for the two primary nets (seeds 13 and 14) run two at once as: 2 x projected minutes / 60 x 1.0 (upper reading: they take turns) and note that two at once may be faster. No marks, no verdict.
+8. PUSH: artifacts/claude-dir-g-build-20260928/timing. Remove C:/Users/benja/dirg-timing/ by exact path and confirm it is gone.
+9. Final reply: which timing runs finished; the three numbers per run (sec per step, projected minutes per net, peak GB); the D at 200 steps; every deviation.
+=====UTCTIMES=====
+2026-09-29T10:42:56.2755826Z
+timing-par.json 2026-09-29T10:40:10.0571730Z
+timing-par.log 2026-09-29T10:40:10.0581625Z
+timing-ser.json 2026-09-29T10:42:06.4004150Z
+timing-ser.log 2026-09-29T10:42:06.4014211Z
+[0m
+[0m$ [0mgit status --short | head; git branch --show-current; git log --oneline -3; mkdir -p artifacts/claude-dir-g-build-20260928/timing && scp "benspc:C:/Users/benja/dirg-timing/W/timing-par.json" "benspc:C:/Users/benja/dirg-timing/W/timing-ser.json" "benspc:C:/Users/benja/dirg-timing/W/timing-par.log" "benspc:C:/Users/benja/dirg-timing/W/timing-ser.log" artifacts/claude-dir-g-build-20260928/timing/ && ls -la artifacts/claude-dir-g-build-20260928/timing/
+A  artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt
+A  artifacts/claude-dir-h2-numbers-20260928/runs/RUN-NOTE.md
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/loop-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/loop-s14.log
+claude/card-experiment-handoff-7c5b27
+57f5749ce k1h-glm2 finish: answer2 skipped 593 on M=-1213 (cap blown by sleep), REPORT.md counts only
+e22e4b6bf rd378g-writeluna PILOT-FAIL: Luna batch-18 pilot skipped after 3 tries, 3 call-failed lines (9x timeout after 300s), 0 batch-ok; JSON: 90 kept, 0 new
+86599f56d k1h-glm salvage glm: 240 answers / 593 chats, 5/5 sha256 vs <tmp> (counts only)
+total 64
+drwxr-xr-x  6 ben-hannan  staff   192 Sep 29 06:43 .
+drwxr-xr-x  5 ben-hannan  staff   160 Sep 29 06:43 ..
+-rw-------  1 ben-hannan  staff  1721 Sep 29 06:43 timing-par.json
+-rw-------  1 ben-hannan  staff  8656 Sep 29 06:43 timing-par.log
+-rw-------  1 ben-hannan  staff  1721 Sep 29 06:43 timing-ser.json
+-rw-------  1 ben-hannan  staff  8656 Sep 29 06:43 timing-ser.log
+[0m
+[0m→ [0mRead artifacts/claude-dir-g-build-20260928/timing/timing-ser.json
+[0m→ [0mRead artifacts/claude-dir-g-build-20260928/timing/timing-par.json
+[0m✗ [0mRead artifacts/claude-dir-g-build-20260928/timing/timing-par.log failed[90m [limit=6][0m
+[91m[1mError: [0mCannot read binary file: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-dir-g-build-20260928/timing/timing-par.log
+[0m
+[0m$ [0mfile artifacts/claude-dir-g-build-20260928/timing/* && python3 -c "
+for f in ['timing-par.log','timing-ser.log']:
+    p='artifacts/claude-dir-g-build-20260928/timing/'+f
+    raw=open(p,'rb').read()
+    print(f, len(raw), raw[:4])
+    txt=raw.decode('utf-16')
+    print(txt[:600])
+    print('...')
+"
+artifacts/claude-dir-g-build-20260928/timing/timing-par.json: JSON data
+artifacts/claude-dir-g-build-20260928/timing/timing-par.log:  Unicode text, UTF-16, little-endian text, with very long lines (1283), with CRLF line terminators
+artifacts/claude-dir-g-build-20260928/timing/timing-ser.json: JSON data
+artifacts/claude-dir-g-build-20260928/timing/timing-ser.log:  Unicode text, UTF-16, little-endian text, with very long lines (1283), with CRLF line terminators
+timing-par.log 8656 b'\xff\xfeh\x00'
+h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool
+loop-g K=4 pool=h2 seed 13: 6440350 weights (2048 new), data ready in 77s on cuda
+{"step": 50, "ce": 5.351, "exact": 0.0, "exact_any_stream": 0.0, "halt_bce": 0.5073, "lr": 1.3059366876077085e-05, "min": 1.4, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0, "sums4": 0.0}, "exact_any_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0, "sums4
+...
+timing-ser.log 8656 b'\xff\xfeh\x00'
+h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool
+loop-g K=4 pool=h2 seed 13: 6440350 weights (2048 new), data ready in 77s on cuda
+{"step": 50, "ce": 5.351, "exact": 0.0, "exact_any_stream": 0.0, "halt_bce": 0.5073, "lr": 1.3059366876077085e-05, "min": 1.4, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0, "sums4": 0.0}, "exact_any_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, "numbers4": 0.0, "sums1": 0.0, "sums2": 0.0, "sums3": 0.0, "sums4
+...
+[0m
+[0m$ [0mpython3 -c "
+for f in ['timing-par.log','timing-ser.log']:
+    txt=open('artifacts/claude-dir-g-build-20260928/timing/'+f,encoding='utf-16').read()
+    lines=txt.splitlines()
+    print(f, 'nlines=',len(lines))
+    print(' L1:',lines[0][:120])
+    print(' L2:',lines[1][:120])
+"
+timing-par.log nlines= 7
+ L1: h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool
+ L2: loop-g K=4 pool=h2 seed 13: 6440350 weights (2048 new), data ready in 77s on cuda
+timing-ser.log nlines= 7
+ L1: h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool
+ L2: loop-g K=4 pool=h2 seed 13: 6440350 weights (2048 new), data ready in 77s on cuda
+[0m
+[0m← [0mWrite artifacts/claude-dir-g-build-20260928/timing/RUN-NOTE.md
+Wrote file successfully.
+[0m
+[0m$ [0mgit add -f artifacts/claude-dir-g-build-20260928/timing/ && git status --short | grep dir-g-build | head; echo "---"; ssh benspc "powershell -NoProfile -Command \"Remove-Item -Recurse -Force C:\\Users\\benja\\dirg-timing; if (Test-Path C:\\Users\\benja\\dirg-timing) { echo 'STILL-EXISTS' } else { echo 'GONE' }\""
+A  artifacts/claude-dir-g-build-20260928/timing/RUN-NOTE.md
+A  artifacts/claude-dir-g-build-20260928/timing/timing-par.json
+A  artifacts/claude-dir-g-build-20260928/timing/timing-par.log
+A  artifacts/claude-dir-g-build-20260928/timing/timing-ser.json
+A  artifacts/claude-dir-g-build-20260928/timing/timing-ser.log
+---
+GONE
+[0m
