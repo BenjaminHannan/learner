@@ -1,4 +1,4 @@
-2026-09-28 20:50:54
+2026-09-28 20:53:47
 running:
 dir-g-a.running
 dir-h1-heldout-r2.running
@@ -8,14 +8,6 @@ h13-patch-race-dev-r2.running
 launched (no exit yet) / finished:
     1198
 
-2026-09-28 19:52:26 pushed dst-t3-2-s14-benspc
-2026-09-28 19:52:41 pushed h12-stop-1-dev-r2
-2026-09-28 19:52:55 pushed h12-stop-2-doubt-r2
-2026-09-28 19:53:01 pushed ks-1-lead0-mac-r2
-2026-09-28 19:53:07 launch dst-t3-3-s15-benspc
-2026-09-28 19:53:09 load 107, holding sl-1-read-r2 (       6 running)
-2026-09-28 19:53:09 load 107, holding sl-2-source-r2 (       6 running)
-2026-09-28 19:55:34 pushed lfsz-1-start-r2
 2026-09-28 19:55:50 load 193, holding sl-1-read-r2 (       5 running)
 2026-09-28 19:55:50 load 193, holding sl-2-source-r2 (       5 running)
 2026-09-28 19:58:16 load 216, holding sl-1-read-r2 (       5 running)
@@ -158,15 +150,23 @@ launched (no exit yet) / finished:
 2026-09-28 20:50:51 load 420, holding relnet-guard-mac (       5 running)
 2026-09-28 20:50:53 load 420, holding sl-1-read-r2 (       5 running)
 2026-09-28 20:50:54 load 420, holding sl-2-source-r2 (       5 running)
+2026-09-28 20:53:31 load 358, holding pond-a-dev (       5 running)
+2026-09-28 20:53:37 load 361, holding pond-b-dev (       5 running)
+2026-09-28 20:53:40 load 361, holding pond-c-dev (       5 running)
+2026-09-28 20:53:42 load 362, holding pond-doubt (       5 running)
+2026-09-28 20:53:43 load 362, holding pond-z-dev (       5 running)
+2026-09-28 20:53:44 load 362, holding relnet-guard-mac (       5 running)
+2026-09-28 20:53:46 load 364, holding sl-1-read-r2 (       5 running)
+2026-09-28 20:53:47 load 364, holding sl-2-source-r2 (       5 running)
 
 diag:
 == dir-g-a
-72133 Sep 28 20:48 dir-g-a.go1.err.txt
+74427 Sep 28 20:50 dir-g-a.go1.err.txt
 838 Sep 28 20:48 dir-g-a.go1.reply.md
-[0m$ [0msleep 120; ssh benspc '"C:\Program Files\Git\bin\bash.exe" -lc "head -c 2000 /c/Users/benja/dirg/W/g-s13.log"' 2>&1 | head -n 20
-h2 pool: 36782 practice pairs over 1519 hands, 300 dev pairs, 0 held-out hands in the pool, 0 dev pairs in the pool
-loop-g K=4 pool=h2 seed 13: 6440350 weights (2048 new), data ready in 76s on cuda
-{"step": 500, "ce": 3.2262, "exact": 0.0027, "exact_any_stream": 0.0036, "halt_bce": 0.0758, "lr": 0.00015027424797191312, "min": 2.1, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.0, 
+|    0   N/A  N/A            5112    C+G   ...ta\Okta Verify\OktaVerify.exe      N/A      |
+|    0   N/A  N/A            5268    C+G   ...s\PowerToys.ColorPickerUI.exe      N/A      |
+|    0   N/A  N/A            8564    C+G   C:\Windows\explorer.exe               N/A      |
+2026-09-29T00:50:56Z
 [0m
 == dir-h1-heldout-r2
 77158 Sep 28 19:54 dir-h1-heldout-r2.go1.err.txt
@@ -202,21 +202,22 @@ zsh:1: no matches found: artifacts/claude-patch-eq-20260928/logs/*.log
 [0m
 top5cpu:
 %CPU COMM
-85.6 java
-81.4 fileproviderd
-39.5 python
-37.9 WindowServer
-36.9 python
+126.6 java
+45.6 python
+38.8 python
+36.1 python3
+36.0 python3
 procs:
-  352     1 18443-00:48:00 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1042   768       01:42:33 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
- 1375  1373       01:42:26 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
- 1388   788       01:42:26 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
- 4354     1       01:19:50 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 5461     1       01:01:26 S    /usr/bin/ssh-agent
-61255 58953          00:03 SN   ssh
- 6418  6392       01:01:10 SN   /usr/local/bin/opencode
- 6491  6469       01:01:10 SN   /usr/local/bin/opencode
- 6580  6553       01:01:10 SN   /usr/local/bin/opencode
- 7328  7292       01:01:05 SN   /usr/local/bin/opencode
-42056 42008          20:09 RN   /usr/local/bin/opencode
+  352     1 18443-00:50:53 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1042   768       01:45:26 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+ 1375  1373       01:45:19 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+ 1388   788       01:45:19 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+ 4354     1       01:22:43 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 5461     1       01:04:19 S    /usr/bin/ssh-agent
+61586 61585          02:37 SN   ssh
+62906     1          00:15 R    /System/Library/Frameworks/LocalAuthentication.framework/Support/coreautha.bundle/Contents/MacOS/coreautha
+ 6418  6392       01:04:03 SN   /usr/local/bin/opencode
+ 6491  6469       01:04:03 RN   /usr/local/bin/opencode
+ 6580  6553       01:04:03 SN   /usr/local/bin/opencode
+ 7328  7292       01:03:58 SN   /usr/local/bin/opencode
+42056 42008          23:02 RN   /usr/local/bin/opencode
