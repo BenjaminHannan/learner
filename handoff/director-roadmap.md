@@ -40,3 +40,9 @@ Five tests folded in. Rulings by the Director (reversible, my call):
 4. **Five days, five kinds**: HELD on a real dependency (H1's held-out kinds, dir-h1-heldout-r2 ~8 h). Start when they land.
 5. **Talker reads notes (LongMemEval dev slice)**: RUN with a guard: the 100-question slice must be hashed, disjoint from any earlier dev use, and drawn from the dev part only; the final test set stays sealed. BensPC after G.
 Also: sparse MoE noise bar (+8) is too tight for changes that need a new practice run; two extra baseline seeds are worth queueing (next in line).
+
+## Update 02:34 UTC 09-29: design correction from Ben (cmsg_01GSLCHTCnZxn7DhV19qcDvM3VcLVLmFpPRgHpkVLV9Hxn, 02:34 UTC)
+"the talker doesn't read the notes, the talker should interpret the final state of the reasoning model into words. We train the reasoning model to loop into a final state, and then the talker translates from the state to words."
+- **Sweep test 5 (talker reads notes) is WITHDRAWN**: it tested the wrong design. Jobs moved (not deleted) to handoff/queue-retired/ and handoff/pcqueue-retired/; the sealed files under artifacts/claude-dir-s5-lme-20260929/ stay as history, unrun. The sweep's ranking is now tests 1, 2, 3, 4 (test 4 held on H1 kinds).
+- **Design going forward for item 1:** reasoner loops to a final state; the talker decodes that state into words. The notebook still holds exact facts, but its content reaches the talker through the reasoner's state, not by the talker reading text. A fitting talker test is a state-to-words decoder check (can a small decoder turn the final state into the right words/answer, on states the reasoner already produces); the coordinator was asked for a brief; I will write it once Ben's design is spelled out (what "state" is fed: the last round only, or all rounds).
+- Item 6 (LongMemEval) risk noted: whether retrieval + state-decoding reaches good scores is untested. Do not use the final 400 questions before the design exists.
