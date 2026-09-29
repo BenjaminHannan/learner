@@ -48,7 +48,8 @@ Change: each expert has 2 hidden layers instead of 1, hidden width cut so total 
 Untested guess: depth inside experts and depth across layers overlap, so the gain may be small; the mxd-3 depth curve (2/4/8/16 layers) says
 whether depth helps at all. Run only if depth-at-64-experts is UP.
 
-## (c) Non-transformer core (MLP experts + cheap cross-position mixing, MLP-Mixer style)
+## (c) DROPPED (Ben 02:44 UTC: keep transformers; build only if he asks later)
+## (c, kept for reference) Non-transformer core (MLP experts + cheap cross-position mixing, MLP-Mixer style)
 Answer for Ben (suggested, not shown): the experts can be plain MLPs, but a net with no mixing across positions cannot pass information between
 maze cells, and a maze answer needs that. So the core needs some cross-cell mixing; attention is one way, a mixer layer (an MLP across positions)
 is another. A mixer needs a fixed number of positions; check that against maze sizes before building (untested).
@@ -57,4 +58,4 @@ needs Ben's word on architecture before any GPU time (the 00:35 approval covers 
 
 ## (d) Each previous loop state as input
 Not duplicated here: it is Idea 2 above and belongs to the Learn-from-Huginn thread. I will plan how the MoE core takes it once that thread says it passed.
-Order after the sealed run: Idea 1 variant, (a) if mxd-3 says UP, (b) if depth is UP, Idea 2, then (c) with Ben's OK.
+Order after the sealed run: Idea 1 variant, (a) if mxd-3 says UP, (b) if depth is UP, Idea 2, (c) is dropped.
