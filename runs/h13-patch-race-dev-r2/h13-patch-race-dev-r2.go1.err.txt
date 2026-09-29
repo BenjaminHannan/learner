@@ -1,0 +1,899 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m→ [0mRead .
+[0m
+[0m$ [0mgit status --short --branch; echo ---; git log --oneline -5; echo ---; git remote -v; echo ---; ls HANDOFF.md ADDENDUM-2.md scripts/claude_patch_eq_report_add2.py scripts/claude_patch_eq_dev_queue_add2.sh artifacts/claude-patch-eq-20260928/ 2>&1 | head -n 100
+## claude/card-experiment-handoff-7c5b27...origin/claude/card-experiment-handoff-7c5b27 [ahead 51]
+A  artifacts/claude-dir-h2-numbers-20260928/SEAL-run.sha256.txt
+A  artifacts/claude-dir-h2-numbers-20260928/runs/RUN-NOTE.md
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/loop-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/loop-s14.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/loop-s14/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/plain-s13.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s13/train_summary.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/extra.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/plain-s14.log
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/poison.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/tests.json
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/train_log.jsonl
+A  artifacts/claude-dir-h2-numbers-20260928/runs/plain-s14/train_summary.json
+A  artifacts/claude-k1h-20260926/luna/full/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-1.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-2.txt
+A  artifacts/claude-k1h-20260926/luna/full/answer-log-3.txt
+A  artifacts/claude-k1h-20260926/luna/full/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/full/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/full/chats.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/REPORT.md
+A  artifacts/claude-k1h-20260926/luna/pilot/answer-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/answers.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/answers_filtered.jsonl
+A  artifacts/claude-k1h-20260926/luna/pilot/chats-log.txt
+A  artifacts/claude-k1h-20260926/luna/pilot/chats.jsonl
+A  artifacts/claude-mu407-20260927/prep/RESULTS.md
+A  artifacts/claude-mu407-20260927/prep/facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/facts_all.jsonl
+A  artifacts/claude-mu407-20260927/prep/frames.json
+A  artifacts/claude-mu407-20260927/prep/panel/items.jsonl
+A  artifacts/claude-mu407-20260927/prep/raw.jsonl
+A  artifacts/claude-mu407-20260927/prep/smoke_facts.jsonl
+A  artifacts/claude-mu407-20260927/prep/write.log
+A  artifacts/claude-y1t-20260926/luna/RESULTS-luna-pilot.md
+A  artifacts/claude-y1t-20260926/luna/luna_pilot.log
+A  artifacts/claude-y1t-20260926/luna/raw_luna.jsonl
+A  artifacts/claude-y1t-20260926/luna/raw_luna_rf.jsonl
+A  artifacts/claude-y1t-20260926/luna/rest/RESULTS-luna-rest.md
+A  artifacts/claude-y1t-20260926/luna/rest/luna_rest_1.log
+A  artifacts/claude-y1t-20260926/luna/rest/raw_luna.jsonl
+A  artifacts/claude-y1t-20260926/luna/rest/raw_luna_rf.jsonl
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+?? scripts/claude_280n_panel.sh
+?? scripts/claude_280p_panel.sh
+?? scripts/claude_281_panel.sh
+?? scripts/claude_281_panelrun.sh
+?? scripts/claude_281_runall.sh
+?? scripts/claude_281b_panel.sh
+?? scripts/claude_281b_runall.sh
+?? scripts/claude_282_panel.sh
+?? scripts/claude_282_panelrun.sh
+?? scripts/claude_282_runall.sh
+?? scripts/claude_282b_panelrun.sh
+?? scripts/claude_282b_runall.sh
+?? scripts/claude_291_m1.py
+?? scripts/claude_291_m7run.py
+?? scripts/claude_291_m8.sh
+?? scripts/claude_291_panel.sh
+?? scripts/claude_291_runall.sh
+?? scripts/claude_291_score.py
+?? scripts/claude_292_corrarm_run.py
+?? scripts/claude_292_m5.sh
+?? scripts/claude_292_m5run.py
+?? scripts/claude_292_panelrun.py
+?? scripts/claude_292_runall.sh
+?? scripts/claude_292_score.py
+?? scripts/claude_called281_devcases.py
+?? scripts/claude_called281_panelrun.py
+?? scripts/claude_called281_panelscore.py
+?? scripts/claude_called281_regscore.py
+?? scripts/claude_called281_run.py
+?? scripts/claude_called281_score.py
+?? scripts/claude_called281b_devcases.py
+?? scripts/claude_called281b_panelrun.py
+?? scripts/claude_called281b_panelscore.py
+?? scripts/claude_called281b_regscore.py
+?? scripts/claude_called281b_run.py
+?? scripts/claude_called281b_score.py
+?? scripts/claude_capab280_devcases.py
+?? scripts/claude_capab280_regscore.py
+?? scripts/claude_capab280_run.py
+?? scripts/claude_capab280_score.py
+?? scripts/claude_capab280b_devcases.py
+?? scripts/claude_capab280b_paneladapt.py
+?? scripts/claude_capab280b_regscore.py
+?? scripts/claude_capab280b_run.py
+?? scripts/claude_capab280b_score.py
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_diag267_c3.py
+?? scripts/claude_diag267_c3client.py
+?? scripts/claude_diag267_qbuild.py
+?? scripts/claude_diag267_score.py
+?? scripts/claude_diag267_turns.py
+?? scripts/claude_diag271_roc.py
+?? scripts/claude_diag290_bisect.py
+?? scripts/claude_diag290_bisect2.py
+?? scripts/claude_diag290_pilot.py
+?? scripts/claude_diag290_probe.py
+?? scripts/claude_diag290_probe2.py
+?? scripts/claude_diag290_run.py
+?? scripts/claude_diag290_summary.py
+?? scripts/claude_diag293_pilot.py
+?? scripts/claude_diag293_pilot2.py
+?? scripts/claude_diag293_run.py
+?? scripts/claude_diag293_summary.py
+?? scripts/claude_ear265_armb.py
+?? scripts/claude_ear265_arms.py
+?? scripts/claude_ear265_canon.py
+?? scripts/claude_ear265_devset.py
+?? scripts/claude_ear265_panel.py
+?? scripts/claude_ear265_qbuild.py
+?? scripts/claude_ear265_scoremain.py
+?? scripts/claude_ear265_turns.py
+?? scripts/claude_ear269_armb.py
+?? scripts/claude_ear269_arms.py
+?? scripts/claude_ear269_devset.py
+?? scripts/claude_ear269_groupcheck.py
+?? scripts/claude_ear269_panel.py
+?? scripts/claude_ear269_qbuild.py
+?? scripts/claude_ear269_scoremain.py
+?? scripts/claude_ear269_turns.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/claude_earcheck264_armb.py
+?? scripts/claude_earcheck264_arms.py
+?? scripts/claude_earcheck264_client.py
+?? scripts/claude_earcheck264_commatags.py
+?? scripts/claude_earcheck264_devreport.py
+?? scripts/claude_earcheck264_devset.py
+?? scripts/claude_earcheck264_panel.py
+?? scripts/claude_earcheck264_qa.py
+?? scripts/claude_earcheck264_qbuild.py
+?? scripts/claude_earcheck264_scoremain.py
+?? scripts/claude_earcheck264_turns.py
+?? scripts/claude_fix138nb_label.py
+?? scripts/claude_fix255b_test.py
+?? scripts/claude_fix255b_text.py
+?? scripts/claude_fix263_comma.py
+?? scripts/claude_fix266_chainlift.py
+?? scripts/claude_fix266b_detector.py
+?? scripts/claude_fix268_nhopdir.py
+?? scripts/claude_fix280_capab.py
+?? scripts/claude_fix280b_general.py
+?? scripts/claude_fix281_called.py
+?? scripts/claude_fix281b_casual.py
+?? scripts/claude_fix282_small.py
+?? scripts/claude_fix282b_vocab.py
+?? scripts/claude_fix291_glue.py
+?? scripts/claude_glm_cleanup_20260926.py
+?? scripts/claude_glm_opencode.py
+?? scripts/claude_glm_throughput_20260926.py
+?? scripts/claude_join280m_regscore.py
+?? scripts/claude_join280m_run.py
+?? scripts/claude_join280m_score.py
+?? scripts/claude_join280n_score.py
+?? scripts/claude_join280p_score.py
+?? scripts/claude_lis310_agent.py
+?? scripts/claude_lis310_demo.py
+?? scripts/claude_lis310_test.py
+?? scripts/claude_lis311_agent.py
+?? scripts/claude_lis311_server.py
+?? scripts/claude_lis311_start.sh
+?? scripts/claude_lis311_try.py
+?? scripts/claude_loop138nb_agent.py
+?? scripts/claude_loop138p_agent.py
+?? scripts/claude_loop255b_agent.py
+?? scripts/claude_loop263_agent.py
+?? scripts/claude_loop266_agent.py
+?? scripts/claude_loop266b_agent.py
+?? scripts/claude_loop268_agent.py
+?? scripts/claude_loop280_agent.py
+?? scripts/claude_loop280b_agent.py
+?? scripts/claude_loop280m_agent.py
+?? scripts/claude_loop281_agent.py
+?? scripts/claude_loop281b_agent.py
+?? scripts/claude_loop282_agent.py
+?? scripts/claude_loop282b_agent.py
+?? scripts/claude_loop291_agent.py
+?? scripts/claude_loop292_agent.py
+?? scripts/claude_luna_codex.py
+?? scripts/claude_mouth241b_devrender_r.py
+?? scripts/claude_mouth241b_rer241_r.py
+?? scripts/claude_mut1_k1.py
+?? scripts/claude_mut1_k2.py
+?? scripts/claude_mut1_k3.py
+?? scripts/claude_mut1_k4.py
+?? scripts/claude_nb321_store.py
+?? scripts/claude_nb321_test.py
+?? scripts/claude_own_m0_build.py
+?? scripts/claude_own_m0_check.py
+?? scripts/claude_own_o0a2_compiler.py
+?? scripts/claude_own_o0a3_mutate.py
+?? scripts/claude_own_o0a_compiler.py
+?? scripts/claude_own_o0b_check.py
+?? scripts/claude_own_o0b_gen.py
+?? scripts/claude_own_o0c_prep.py
+?? scripts/claude_own_o0c_tok.py
+?? scripts/claude_own_o0d2_model.py
+?? scripts/claude_own_o0d2_test.py
+?? scripts/claude_own_o0d2_train.py
+?? scripts/claude_own_o0d_model.py
+?? scripts/claude_own_o0d_test.py
+?? scripts/claude_own_o0d_train.py
+?? scripts/claude_own_o0e2_model.py
+?? scripts/claude_own_o0e2_tests.py
+?? scripts/claude_own_o0e_model.py
+?? scripts/claude_own_o0e_serialize.py
+?? scripts/claude_own_o0e_tests.py
+?? scripts/claude_own_o0e_train.py
+?? scripts/claude_own_o0f_bench.py
+?? scripts/claude_probe255b_director.py
+?? scripts/claude_probe280p_run.py
+?? scripts/claude_probe280p_score.py
+?? scripts/claude_small282_devcases.py
+?? scripts/claude_small282_panelrun2.py
+?? scripts/claude_small282_regscore.py
+?? scripts/claude_small282_run.py
+?? scripts/claude_small282_score.py
+?? scripts/claude_small282b_devcases.py
+?? scripts/claude_small282b_regscore.py
+?? scripts/claude_small282b_run.py
+?? scripts/claude_small282b_score.py
+?? scripts/claude_type270_agent.py
+?? scripts/claude_type270_devrun.py
+?? scripts/claude_type270_devscore.py
+?? scripts/claude_type270_devset.py
+?? scripts/claude_type270_normalise.py
+?? scripts/claude_type270_panelrun.py
+?? scripts/claude_type270_panelscore.py
+?? scripts/claude_type270b_devscore.py
+?? scripts/claude_type270b_devset.py
+?? scripts/claude_type270b_normalise.py
+?? scripts/claude_type270b_panelscore.py
+?? scripts/claude_type270b_panelscore2.py
+?? scripts/claude_type270b_panelturns.py
+?? scripts/claude_type270b_qbuild.py
+?? scripts/claude_type270b_turns.py
+?? scripts/claude_typepanel270b_make.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+---
+57f5749ce k1h-glm2 finish: answer2 skipped 593 on M=-1213 (cap blown by sleep), REPORT.md counts only
+e22e4b6bf rd378g-writeluna PILOT-FAIL: Luna batch-18 pilot skipped after 3 tries, 3 call-failed lines (9x timeout after 300s), 0 batch-ok; JSON: 90 kept, 0 new
+86599f56d k1h-glm salvage glm: 240 answers / 593 chats, 5/5 sha256 vs <tmp> (counts only)
+24766dc63 000-luna-helper-selftest: reply with selftest + 3-call parallel outputs
+8fc75d620 probe: codex CLI non-interactive form (not in PATH, bundled 0.158.0-alpha.2, luna not found)
+---
+origin	git@github.com:BenjaminHannan/learner.git (fetch)
+origin	git@github.com:BenjaminHannan/learner.git (push)
+---
+ls: ADDENDUM-2.md: No such file or directory
+ls: artifacts/claude-patch-eq-20260928/: No such file or directory
+ls: HANDOFF.md: No such file or directory
+ls: scripts/claude_patch_eq_dev_queue_add2.sh: No such file or directory
+ls: scripts/claude_patch_eq_report_add2.py: No such file or directory
+[0m
+[0m$ [0mpgrep -af "claude_patch_eq|claude-patch-eq|patch_eq" || echo NO-PATCH-RUN; echo ---; pgrep -af "python3.*train|torchrun|bash scripts/" | head -n 20 || echo NO-TRAIN; echo ---; git branch -a | head -n 40; echo ---; git fetch origin main 2>&1 | tail -n 5; git fetch origin "claude/h13-patch-takeover-x4ph8v:refs/remotes/origin/claude/h13-patch-takeover-x4ph8v" "claude/funny-heisenberg-ot316m:refs/remotes/origin/claude/funny-heisenberg-ot316m" 2>&1 | tail -n 10
+6418
+7328
+8513
+---
+7328
+8513
+---
+* claude/card-experiment-handoff-7c5b27
+  claude/fact-saving-note-filtering-4ff1ff
++ claude/forgetting-plain-english-gap-9258f0
+  claude/kill-hung-queue-builders-4e879f
+  claude/locomo-length-penalty-408e2a
+  claude/loop-net-generalization-analysis-729ee3
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/pull-from-main-629dc4
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/retention-isolation
+  codex/testing-experiment-44
++ main
+  rent-zdl5c-results
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/builder-outbox-tmp
+  remotes/origin/builder-outbox-tmpfetch
+  remotes/origin/chat-flags
+  remotes/origin/claude/amazing-rubin-97wdjx
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/gracious-clarke-z0ekas
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/main-tmpfetch
+  remotes/origin/worktree-research
+---
+From github.com:BenjaminHannan/learner
+ * branch                main       -> FETCH_HEAD
+From github.com:BenjaminHannan/learner
+ * [new branch]          claude/h13-patch-takeover-x4ph8v -> origin/claude/h13-patch-takeover-x4ph8v
+ * [new branch]          claude/funny-heisenberg-ot316m -> origin/claude/funny-heisenberg-ot316m
+[0m
+[0m$ [0mps aux | grep -E "claude_patch_eq|patch-eq|dev_queue" | grep -v grep || echo NO-PATCH-PROC; echo ---; git show origin/main:ADDENDUM-2.md 2>&1 | head -n 80; echo ===; git ls-tree -r --name-only origin/main 2>&1 | grep -E "patch_eq|ADDENDUM|HANDOFF" | head -n 20; echo ===; git ls-tree -r --name-only "origin/claude/h13-patch-takeover-x4ph8v" 2>&1 | grep -E "patch-eq|source\.pt|checkpoints-sha256" | head -n 20
+NO-PATCH-PROC
+---
+fatal: path 'ADDENDUM-2.md' does not exist in 'origin/main'
+zsh:1: == not found
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -E "ADDENDUM|HANDOFF|patch_eq" | head -n 30
+artifacts/claude-bm391-20260926/ADDENDUM-02c-placement.md
+artifacts/claude-c1dev-20260927/ADDENDUM-1-bash-only.md
+artifacts/claude-c1dev-20260927/ADDENDUM-2-vast.md
+artifacts/claude-dir-a-breadth-20260928/ADDENDUM-1.md
+artifacts/claude-dir-h1-heldout-20260928/ADDENDUM-1.md
+artifacts/claude-dir-h12-stop-20260928/ADDENDUM-1.md
+artifacts/claude-dir-h2-numbers-20260928/ADDENDUM-1.md
+artifacts/claude-dir-h3-design-20260928/ADDENDUM-1.md
+artifacts/claude-dir-h6-sleeplen-20260928/ADDENDUM-1.md
+artifacts/claude-dir-hb-dates-20260928/ADDENDUM-1.md
+artifacts/claude-dir-r1g-20260928/ADDENDUM-1.md
+artifacts/claude-dir-r2g-tied-20260928/ADDENDUM-1.md
+artifacts/claude-dir-sl-20260928/PASSMARKS-ADDENDUM-1.md
+artifacts/claude-dl11-20260927/ADDENDUM-1.md
+artifacts/claude-dl8-20260926/ADDENDUM-1.md
+artifacts/claude-dl9-20260926/ADDENDUM-1.md
+artifacts/claude-dl9-20260926/ADDENDUM-2.md
+artifacts/claude-e2e02c-20260926/ADDENDUM-D1-dev.md
+artifacts/claude-e2e02dr-20260926/ADDENDUM-02dr-machine.md
+artifacts/claude-e2e382-20260925/ADDENDUM-383-benspc.md
+artifacts/claude-fewex-20260927/ADDENDUM-1.md
+artifacts/claude-fewex-20260927/ADDENDUM-2.md
+artifacts/claude-fewex-20260927/ADDENDUM-3.md
+artifacts/claude-fewex-20260927/ADDENDUM-4.md
+artifacts/claude-fewex-20260927/RACE-ADDENDUM-1.md
+artifacts/claude-g406-20260926/ADDENDUM-1-review.md
+artifacts/claude-g406-20260926/ADDENDUM-2-launch.md
+artifacts/claude-g406-20260926/ADDENDUM-3-resume.md
+artifacts/claude-g406-20260926/ADDENDUM-4-superseded.md
+artifacts/claude-g406l-20260927/ADDENDUM-1-resume.md
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep patch-eq | head -n 30
+artifacts/claude-patch-eq-20260928/ADDENDUM-1.md
+artifacts/claude-patch-eq-20260928/ADDENDUM-2.md
+artifacts/claude-patch-eq-20260928/DESIGN.md
+artifacts/claude-patch-eq-20260928/HANDOFF.md
+artifacts/claude-patch-eq-20260928/PASSMARKS.md
+artifacts/claude-patch-eq-20260928/add2-selftest.json
+artifacts/claude-patch-eq-20260928/checkpoints-sha256.txt
+artifacts/claude-patch-eq-20260928/ladder-selftest-loop.json
+artifacts/claude-patch-eq-20260928/ladder-selftest-patch.json
+artifacts/claude-patch-eq-20260928/runs/loop_ep-s0/practice.log
+artifacts/claude-patch-eq-20260928/runs/loop_ep-s0/source.json
+artifacts/claude-patch-eq-20260928/runs/loop_ep-s1/practice.log
+artifacts/claude-patch-eq-20260928/runs/loop_ep-s1/source.json
+artifacts/claude-patch-eq-20260928/runs/patch-s0/practice.log
+artifacts/claude-patch-eq-20260928/runs/patch-s0/source.json
+artifacts/claude-patch-eq-20260928/runs/patch-s1/practice.log
+artifacts/claude-patch-eq-20260928/runs/patch-s1/source.json
+artifacts/claude-patch-eq-20260928/selftest.json
+artifacts/claude-patch-eq-20260928/selftest.log
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -E "claude_patch_eq" | head -n 30; echo ---LOG---; git log --oneline origin/main -5
+scripts/claude_patch_eq_add2_sleepdraws.py
+scripts/claude_patch_eq_dev_queue.sh
+scripts/claude_patch_eq_dev_queue_add2.sh
+scripts/claude_patch_eq_fastpath.py
+scripts/claude_patch_eq_fetch_sources.sh
+scripts/claude_patch_eq_fresh.py
+scripts/claude_patch_eq_ladder.py
+scripts/claude_patch_eq_plugin.py
+scripts/claude_patch_eq_practice.py
+scripts/claude_patch_eq_practice_queue.sh
+scripts/claude_patch_eq_report.py
+scripts/claude_patch_eq_report_add2.py
+scripts/claude_patch_eq_selftest.py
+scripts/claude_patch_eq_writesoff.py
+---LOG---
+d734daa6e Director board: PC runner thread
+973bf2d04 H14 brief: PC-side runner
+59bf2c2de Director board: relnet race thread
+e7097e29c Director board: G thread
+2b96a8391 R: trained nets and guard script
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-patch-eq-20260928/checkpoints-sha256.txt; echo ---BRANCH-FILES---; git ls-tree -r --name-only "origin/claude/h13-patch-takeover-x4ph8v" | grep -E "patch-eq.*source.pt|patch-eq.*checkpoints" | head -n 20; echo ---OTHER-BRANCH---; git ls-tree -r --name-only "origin/claude/funny-heisenberg-ot316m" | grep -E "patch-eq.*source.pt|patch-eq.*checkpoints" | head -n 20
+fd44f0c109f02d5fe6e16c3a713f753f2f9e8dce198642f56dd508f5720dbaa4  runs/loop_ep-s0/source.pt
+10bbdf792e42a75e7dd440a67146d4dc77e6f26dbd935d0101b2c1b70cdab7c0  runs/loop_ep-s1/source.pt
+de7c41aaa13f5030a4cb4618b7b1e9fbcbad62b821fe9733d590d5b581dfbac2  runs/patch-s0/source.pt
+40f016c128e2a21137338ff43dbca0aa2fcaeea4795b56821d3d0e7232602931  runs/patch-s1/source.pt
+---BRANCH-FILES---
+artifacts/claude-patch-eq-20260928/checkpoints-sha256.txt
+artifacts/claude-patch-eq-20260928/runs/loop_ep-s0/source.pt
+artifacts/claude-patch-eq-20260928/runs/loop_ep-s1/source.pt
+artifacts/claude-patch-eq-20260928/runs/patch-s0/source.pt
+artifacts/claude-patch-eq-20260928/runs/patch-s1/source.pt
+---OTHER-BRANCH---
+artifacts/claude-patch-eq-20260928/checkpoints-sha256.txt
+artifacts/claude-patch-eq-20260928/runs/loop_ep-s0/source.pt
+artifacts/claude-patch-eq-20260928/runs/loop_ep-s1/source.pt
+artifacts/claude-patch-eq-20260928/runs/patch-s0/source.pt
+artifacts/claude-patch-eq-20260928/runs/patch-s1/source.pt
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-patch-eq-20260928/HANDOFF.md | head -n 150; echo =====ADDENDUM2=====; git show origin/main:artifacts/claude-patch-eq-20260928/ADDENDUM-2.md | head -n 250
+# Handoff: the patch race on the equal-practice ruler
+
+Written 2026-09-28 21:22 UTC (`date -u`) by the outgoing director, on Ben's instruction to stop and hand
+over. **Nothing has been scored on a maze.** No dev score and no holdout score of this test exists. All marks are
+sealed and unchanged. Read this file, then PASSMARKS.md, DESIGN.md and ADDENDUM-1.md in this folder.
+
+## 1. The task, in one paragraph
+Race Ben's "clip-on patch" (a rank-8, feedback-written fast-weight patch on the recurrent loop) against the
+ordinary loop on the equal-practice few-example ruler (artifacts/claude-fewex-20260927: ADDENDUM-4.md,
+RACE-ADDENDUM-1.md, harness scripts/claude_fewex_eq_bench.py). All practice is on sums and Latin grids only,
+exactly like the sparse test (artifacts/claude-sparse-20260928). Test A: patch `F_eq` at least 10 points above the
+**loop with episodes** in **both** seeds (plus the other marks in PASSMARKS.md). The originating prompt is
+reviews/chat-prompt-patches-eq-race-2026-09-28.md; it is the authority for scope and the final report.
+
+## 2. State at handoff (all shown, from files in this folder)
+| Step | State | Evidence |
+|---|---|---|
+| Marks, practice recipe, adapter design | done, sealed | PASSMARKS.md, DESIGN.md at `948652576` |
+| Self-tests (zero patch = ordinary loop; fresh learner bit-identical to the harness's; identical episodes for both arms; all matrices live; smoke rung = 512 writes and exactly 2,048 updates; sleep ends with the patch removed) | done | selftest.json / .log at `f49711b3f` |
+| Practice of 4 source nets (patch and loop with episodes, seeds 0 and 1) | done | runs/*/source.json, `e66daf091` |
+| Source guard | **passed**: all four nets 200 of 200 sums and 200 of 200 grids; 20 of 20 (patch) and 16 of 16 (loop) matrices live | same |
+| Resumable ladder driver | done and checked bit-identical to an uninterrupted run and to the harness's own loop | ADDENDUM-1.md, ladder-selftest-*.json, `a970243bd` |
+| Dev ladders (6) and fast path (2) | **not started as a record.** Two earlier launches were killed by container restarts; a third was stopped by Ben's instruction about one minute after launch (21:20 UTC). eq-runs/ is empty. | this file |
+| Holdout, RESULTS.md, blind recount, final report | not started | |
+
+Practice numbers worth knowing (report only; nothing depended on them): source-selected fixed depths are
+patch 48 / 8 and loop-with-episodes 8 / 32 (seed 0 / seed 1). Learned-stop guard was also 200 of 200 on both kinds
+for every net after the 12,000 batches, before the episodes. Practice took 7,660-8,313 s per net (four at once, one
+thread each). The trained patch's factor norms are about 0.09-0.10 against the sealed bound of 1.0 (Frobenius);
+that says nothing about whether the patch helps.
+
+## 3. Where things are
+- Marks and design: PASSMARKS.md, DESIGN.md, ADDENDUM-1.md (execution only; no mark changed).
+- Code, all new files: scripts/claude_patch_eq_{plugin,fresh,practice,selftest,ladder,fastpath,report}.py and the
+  launchers scripts/claude_patch_eq_{practice,dev}_queue.sh. The ruler's harness and the old patch files are untouched.
+- Source nets: artifacts/claude-patch-eq-20260928/runs/{patch,loop_ep}-s{0,1}/source.pt (6.6 MB each). `artifacts/`
+  is gitignored, so **they are not on main.** checkpoints-sha256.txt records their hashes. To keep them, the
+  outgoing director also pushed the four `source.pt` files, and only those, to the branch
+  `claude/funny-heisenberg-ot316m` (see section 8). If both the checkout and that branch are lost, retraining is
+  deterministic but takes about 2.5 h per net, and the hashes are the check.
+- Baseline arms you reuse, not retrain: artifacts/claude-fewex-20260927/eq-runs/{plain-s{0,1}-pre,loop-s{0,1}-pre}.
+  Their `adapt.json` and `holdout.json` are on main; `eq-runs/loop-*` is report-only.
+
+## 4. How to continue (in order; change nothing about the recipe)
+Setup on a fresh machine: `pip install torch==2.14.0+cpu --index-url https://download.pytorch.org/whl/cpu numpy`
+(fp32 CPU, no autocast, same device for every arm; the sparse test and baseline were CPU). Clone main. Restore the
+four `source.pt` files under runs/ (verify sha256) if they are not present.
+
+1. **Dev ladders and fast path:** `bash scripts/claude_patch_eq_dev_queue.sh` (4 jobs at a time, 1 thread each; jobs
+   are patch-s0/s1, fresh-s0/s1, loopep-s0/s1, fast-s0/s1; logs in logs/, queue line in dev-queue.log). It is
+   idempotent: after any restart, run it again and each job resumes from its 32-batch checkpoint; finished jobs are
+   skipped. Watch for `adapt_done` lines and for `Traceback`. Nothing may change after any dev score is seen.
+2. `python -B scripts/claude_patch_eq_report.py dev` prints dev tables (race-dev.json). Commit the dev records
+   (eq-runs/*/adapt.json and partial/ck-free files, fastpath-dev-s*.json, race-dev.json) **before** the holdout.
+3. **Holdout, once**, per arm and seed, with the harness's own command and the same `--plugin`, `--arm loop`,
+   `--seed`, `--init`, `--out` as the ladder: patch = `--plugin claude_patch_eq_plugin --init pre --out
+   eq-runs/patch-s$S`; fresh = `--plugin claude_patch_eq_fresh --init fresh --out eq-runs/fresh-s$S`; loop with
+   episodes = default plug-in, `--init pre`, `--out eq-runs/loopep-s$S`. It refuses unless
+   claude-fewex-20260927/EQ-DEV-GATE.json says PASS (it does) and drops a `holdout.started` marker, so never re-run a
+   partial holdout job silently; if one dies, tell Ben and decide together.
+4. `python -B scripts/claude_patch_eq_report.py holdout` applies PASSMARKS.md and writes race-holdout.json with the
+   verdict (PASS / REJECTED / NOT PROMOTED, failing marks per seed). It was tested on the baseline's JSON as
+   stand-ins: it reproduces the baseline's 51.00 and 51.29 and the sleep counts.
+5. Write RESULTS.md (verdict, main table x of 300, old kinds x of 200, gates per seed, report-only items listed in
+   PASSMARKS.md, fast-path dev table, timings, deviations including the restarts and the driver). Get a **blind
+   recount** from a separate subagent that reads only the raw JSON and PASSMARKS.md. Push to main.
+6. Final report to Ben, 10 lines at most, plain words, result first (the six questions are at the end of the
+   originating prompt), with commit hashes.
+
+## 5. Time
+Measured, not guessed. On this 4-core CPU with four one-thread jobs at once: one patch maze rung about 65 minutes
+(4.7 s per maze batch alone, against 3.1 s for the loop), so a patch ladder is roughly 9-10 hours plus sleeps and
+scoring; a fresh-patch rung took about 33 minutes (k = 1); a loop-with-episodes ladder is expected near the fresh
+one (untested). Eight jobs in two waves: **expect 15 hours or more**, longer than the first estimate of 6-10 h.
+More cores would help, since the jobs are independent. A GPU would need the strict fp32 CPU-equivalence smoke result
+that ADDENDUM-4's GPU rule asks for, recorded before any maze score.
+
+## 6. Decisions already made (do not reopen without Ben)
+- Adaptation per rung: each maze batch is written into the patch once (mean of the batch's per-puzzle
+  proposals, one blend), then gets the loop's four ordinary updates: 512 writes and 2,048 updates. Sleep is the
+  harness's 512 updates with the patch fixed, patch zeroed afterwards. Fresh patch: never written, writer frozen.
+- Loop with episodes: same 12,000 batches and same 2,000 episodes (second-order inner SGD, lr 0.01), run through the
+  ruler's own loop class. It was trained with claude_patch_net's `loop` (same parameter names and shapes; explicit
+  attention); a strict load into the ruler's class gives logits equal to about 7e-7, not bit-equal. Tell the reader.
+- "The loop" in every mark is the loop with episodes. The baseline loop is report-only.
+- The seed pool, panels, replay, learning rates and thresholds are the ruler's; the report script reads them.
+
+## 7. Things I would watch (suggested, untested)
+- Patch and fresh patch share a random init under the harness seed (900000 + seed); a fresh loss of ground would
+  show up as low `F_eq` for the fresh arm, as the sparse test's fresh arm did.
+- If the patch's dev curve is flat across all rungs, the write may not matter at this scale; the fast-path dev
+  table (frozen weights, 512 writes only) is where that shows. Report it plainly either way.
+- The old six-kind run is closed; do not reuse its checkpoints or budget-v2/ (sealed, unrun).
+
+## 8. Practical traps
+- The container has restarted three times; every process died each time. Use the idempotent launcher, relaunch
+  after a restart notice, and never trust a background job across one.
+- Local `main` in this checkout is a stale ref of a shallow clone. Work from the checkout and push with
+  `git pull --rebase origin main && git push origin HEAD:main`. Never force-push. `git checkout -B main ...` was
+  denied by the harness's classifier; don't try to work around that.
+- Session branch: `claude/funny-heisenberg-ot316m` carries the same commits as main plus one extra commit holding
+  the four `source.pt` files (added with `git add -f`). Ben's prompt says commit to main, no PRs; the branch is
+  only a safe copy. No PR was opened.
+- Times in files come from `date -u`; stop processes by exact PID; never touch secrets; label claims shown,
+  suggested or untested; counts as "x of 300" / "x of 200". CLAUDE.md asks for a plain-language summary for Ben
+  (a high-school senior) in every result.
+- Money so far: $0. Nothing was rented.
+zsh:1: ====ADDENDUM2===== not found
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-patch-eq-20260928/ADDENDUM-2.md | head -n 300
+# Addendum 2: seven fixes from the independent review (marks and report only; recipe, practice and code of the arms unchanged)
+
+Written 2026-09-28 21:31 UTC (`date -u`) by helper H13, who took the race over from the outgoing director. **Nothing has been scored on a maze:**
+`artifacts/claude-patch-eq-20260928/eq-runs/` does not exist yet, so no dev score and no holdout score of this test exists. This file and its
+report script (scripts/claude_patch_eq_report_add2.py, tested by `selftest` below) are committed before any maze rung is
+scored. Nothing here changes after any dev score is seen. PASSMARKS.md and ADDENDUM-1.md stay as written; where this file says
+otherwise, this file wins. Source of the fixes: artifacts/claude-dir-h8-review-20260928/REVIEW.md (X1-X4, P1-P4) and
+reviews/chat-prompt-patches-review-fixes-2026-09-28.md. I checked each finding against the code and the raw files (below);
+**none is rejected.**
+
+## The seven changes
+1. **X1, sleep gates.** The old-kind gates after the k=64 and k=16,384 sleeps compare three-draw means, not single draws.
+   Draw 0 is the ladder's own sleep (in adapt.json); draws 1 and 2 use sleep seed `seed + k + 101` and `seed + k + 202`, the same
+   offsets as scripts/claude_fewex_distill_sleep.py, from the ladder's saved `k64.pt` / `k16384.pt`, run by
+   scripts/claude_patch_eq_add2_sleepdraws.py for **both** the patch and the loop with episodes. Per seed, branch and kind:
+   the patch's three-draw mean must be at least the loop's three-draw mean minus `max(6, 2 x SE)`, where
+   `SE = sqrt(sd_patch^2/3 + sd_loop^2/3)` (sample SDs of the three draws). Mark 3's "before adaptation" gates (at least 190 of 200; within 6 of the loop) have no draw noise (one fixed checkpoint, scored once) and stay as sealed.
+   *Checked (shown):* the distill run's R128 sleeps give s0 k64 sums 174, 158, 134 and grids 104, 104, 94; s1 k16,384 sums 42, 69, 43 (recounted from artifacts/claude-distill-20260928/sleeps/*.json). A sealed single-draw margin of 6 is smaller than that spread.
+2. **X2, the words.** "A maze gain made only by breaking an old-kind gate" is REJECTED **only if there is at least one gaining seed and EVERY gaining seed breaks an old-kind gate** (as PASSMARKS.md said and claude_patch_eq_report.py:121-124 already did). One seed that gains and passes every gate stops this rejection. A "gaining seed" is one whose `F_eq` is above the comparator of change 3. Old-kind gates here are marks 4a, 4b and 6 below.
+3. **P1, the comparator.** "The loop" in marks 1 and 2 and in every REJECTED reading is the **higher of** the loop with episodes and the baseline ordinary loop (`eq-runs/loop-s{seed}-pre` in the ruler: 51.00 / 51.29 `F_eq`, RESULTS-EQ.md). Mark 1 is patch `F_eq` at least +10 over that. Marks 3b onward still use the loop with episodes only where they say so.
+4. **P2, writes off.** One extra dev ladder per seed and one holdout: the practised patch net with `Net.WRITES = False` (scripts/claude_patch_eq_writesoff.py, `--init pre`, source runs/patch-s{seed}); same rungs and the same ordinary updates per rung as the patch, but no writes. Report only, no gate. Wording rule fixed now: "the writes helped" may be said only if the patch is at least 5 points above the writes-off arm on `F_eq` in **both** seeds; otherwise "not shown". The same is reported for `F_few`.
+5. **X3, few examples.** `F_few` = mean over k = 1, 4, 16, 64 of 100 x right / 300 on the 9x9 holdout, learned stop. **New required mark 2:** patch `F_few` at least +5 over the higher of the loop with episodes and the baseline loop, in both seeds. `F_few` is quoted next to `F_eq` in the verdict sentence. (+5 because a real few-example gain of +12 on four rungs is ~+6 on the eight-rung mean, and the review's bar was "+5 over the loop".)
+6. **X4, non-wins.** A non-PASS is "NOT PROMOTED (not shown)" unless **both seeds are at least 2 points below** the comparator on `F_eq`, which is REJECTED. This replaces "no higher than the loop in both seeds". The per-seed differences are printed next to the verdict.
+7. **P3, P4.** The verdict sentence says "at 1.5x the compute" (measured 4.7 s against 3.1 s per maze batch, DESIGN.md; write rounds are in adapt.json). Old-kind scores after each sleep **with the patch kept** (scored just before the sleep zeroes it) are report only, from the patch's sleep draws 1 and 2 (`old_patch_kept_report_only`).
+
+## Marks as they now stand (each seed on its own, never pooled)
+1. `F_eq`: patch at least +10 over the higher of loop-with-episodes and baseline loop.
+2. `F_few`: patch at least +5 over the same comparator.
+3. `F_eq`: patch at least +5 over the baseline plain net and at least +5 over the fresh patch.
+4. Old kinds before maze adaptation: at least 190 of 200 each (4a), and no more than 6 of 200 below the loop with episodes on each kind (4b).
+5. Size within 2% of the loop with episodes.
+6. After the k=64 and after the k=16,384 sleep, each old kind: three-draw patch mean not below the three-draw loop-with-episodes mean by more than `max(6, 2 x SE)`.
+**PASS** = marks 1-6 hold in both seeds. **REJECTED** = both seeds at least 2 points below the comparator on `F_eq` (change 6), or a gain made only by breaking (change 2). Otherwise **NOT PROMOTED (not shown)**.
+Report only: everything listed as report only in PASSMARKS.md, the writes-off comparison (change 4), the patch-kept sleep scores (change 7), the fast path, `F_eq`/`F_few` of every arm.
+
+## What changes in what runs
+- New jobs on top of the sealed ladder driver (unchanged): writes-off ladder per seed (2 jobs); sleep draws 1 and 2 for patch and loop with episodes, per seed and branch (16 jobs, about 5-10 minutes each on one thread, untested for the patch: a 4-step smoke test of both arms ran, 38 s and 24 s).
+- Holdout: harness `holdout`, once per arm and seed, now also for the writes-off arm (`--plugin claude_patch_eq_writesoff --init pre --out eq-runs/writesoff-s$S`).
+- The report script is scripts/claude_patch_eq_report_add2.py (`dev`, `holdout`, `selftest`). The old scripts/claude_patch_eq_report.py is not used for the verdict.
+
+## Reproduction (the addendum's own pass marks), 2026-09-28 21:31 UTC
+`python3 -B scripts/claude_patch_eq_report_add2.py selftest` -> add2-selftest.json in this folder (fake numbers; checks words and arithmetic, not any model). Pass: it prints "all_expected": true, meaning
+(a) with one seed that gains and breaks a gate and one that gains and passes, the every-reading prints NOT PROMOTED (not shown) and the any-reading (not used) would print REJECTED; (b) both gain and both break -> REJECTED; (c) both gain and pass -> PASS; (d) one seed slightly below and one above -> not shown; both at least 2 below -> REJECTED; (e) a patch equal to the loop with one noisy sleep draw (-12) fails the old single-draw rule but passes the three-draw rule; (f) the sentence contains "1.5x the compute". The script's real-data path was also run on the ruler's baseline JSON as stand-ins for the arms (no patch data exists).
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-patch-eq-20260928/ADDENDUM-2.md | tail -n 100; echo ---DEVQUEUE---; git show origin/main:scripts/claude_patch_eq_dev_queue_add2.sh | head -n 120
+# Addendum 2: seven fixes from the independent review (marks and report only; recipe, practice and code of the arms unchanged)
+
+Written 2026-09-28 21:31 UTC (`date -u`) by helper H13, who took the race over from the outgoing director. **Nothing has been scored on a maze:**
+`artifacts/claude-patch-eq-20260928/eq-runs/` does not exist yet, so no dev score and no holdout score of this test exists. This file and its
+report script (scripts/claude_patch_eq_report_add2.py, tested by `selftest` below) are committed before any maze rung is
+scored. Nothing here changes after any dev score is seen. PASSMARKS.md and ADDENDUM-1.md stay as written; where this file says
+otherwise, this file wins. Source of the fixes: artifacts/claude-dir-h8-review-20260928/REVIEW.md (X1-X4, P1-P4) and
+reviews/chat-prompt-patches-review-fixes-2026-09-28.md. I checked each finding against the code and the raw files (below);
+**none is rejected.**
+
+## The seven changes
+1. **X1, sleep gates.** The old-kind gates after the k=64 and k=16,384 sleeps compare three-draw means, not single draws.
+   Draw 0 is the ladder's own sleep (in adapt.json); draws 1 and 2 use sleep seed `seed + k + 101` and `seed + k + 202`, the same
+   offsets as scripts/claude_fewex_distill_sleep.py, from the ladder's saved `k64.pt` / `k16384.pt`, run by
+   scripts/claude_patch_eq_add2_sleepdraws.py for **both** the patch and the loop with episodes. Per seed, branch and kind:
+   the patch's three-draw mean must be at least the loop's three-draw mean minus `max(6, 2 x SE)`, where
+   `SE = sqrt(sd_patch^2/3 + sd_loop^2/3)` (sample SDs of the three draws). Mark 3's "before adaptation" gates (at least 190 of 200; within 6 of the loop) have no draw noise (one fixed checkpoint, scored once) and stay as sealed.
+   *Checked (shown):* the distill run's R128 sleeps give s0 k64 sums 174, 158, 134 and grids 104, 104, 94; s1 k16,384 sums 42, 69, 43 (recounted from artifacts/claude-distill-20260928/sleeps/*.json). A sealed single-draw margin of 6 is smaller than that spread.
+2. **X2, the words.** "A maze gain made only by breaking an old-kind gate" is REJECTED **only if there is at least one gaining seed and EVERY gaining seed breaks an old-kind gate** (as PASSMARKS.md said and claude_patch_eq_report.py:121-124 already did). One seed that gains and passes every gate stops this rejection. A "gaining seed" is one whose `F_eq` is above the comparator of change 3. Old-kind gates here are marks 4a, 4b and 6 below.
+3. **P1, the comparator.** "The loop" in marks 1 and 2 and in every REJECTED reading is the **higher of** the loop with episodes and the baseline ordinary loop (`eq-runs/loop-s{seed}-pre` in the ruler: 51.00 / 51.29 `F_eq`, RESULTS-EQ.md). Mark 1 is patch `F_eq` at least +10 over that. Marks 3b onward still use the loop with episodes only where they say so.
+4. **P2, writes off.** One extra dev ladder per seed and one holdout: the practised patch net with `Net.WRITES = False` (scripts/claude_patch_eq_writesoff.py, `--init pre`, source runs/patch-s{seed}); same rungs and the same ordinary updates per rung as the patch, but no writes. Report only, no gate. Wording rule fixed now: "the writes helped" may be said only if the patch is at least 5 points above the writes-off arm on `F_eq` in **both** seeds; otherwise "not shown". The same is reported for `F_few`.
+5. **X3, few examples.** `F_few` = mean over k = 1, 4, 16, 64 of 100 x right / 300 on the 9x9 holdout, learned stop. **New required mark 2:** patch `F_few` at least +5 over the higher of the loop with episodes and the baseline loop, in both seeds. `F_few` is quoted next to `F_eq` in the verdict sentence. (+5 because a real few-example gain of +12 on four rungs is ~+6 on the eight-rung mean, and the review's bar was "+5 over the loop".)
+6. **X4, non-wins.** A non-PASS is "NOT PROMOTED (not shown)" unless **both seeds are at least 2 points below** the comparator on `F_eq`, which is REJECTED. This replaces "no higher than the loop in both seeds". The per-seed differences are printed next to the verdict.
+7. **P3, P4.** The verdict sentence says "at 1.5x the compute" (measured 4.7 s against 3.1 s per maze batch, DESIGN.md; write rounds are in adapt.json). Old-kind scores after each sleep **with the patch kept** (scored just before the sleep zeroes it) are report only, from the patch's sleep draws 1 and 2 (`old_patch_kept_report_only`).
+
+## Marks as they now stand (each seed on its own, never pooled)
+1. `F_eq`: patch at least +10 over the higher of loop-with-episodes and baseline loop.
+2. `F_few`: patch at least +5 over the same comparator.
+3. `F_eq`: patch at least +5 over the baseline plain net and at least +5 over the fresh patch.
+4. Old kinds before maze adaptation: at least 190 of 200 each (4a), and no more than 6 of 200 below the loop with episodes on each kind (4b).
+5. Size within 2% of the loop with episodes.
+6. After the k=64 and after the k=16,384 sleep, each old kind: three-draw patch mean not below the three-draw loop-with-episodes mean by more than `max(6, 2 x SE)`.
+**PASS** = marks 1-6 hold in both seeds. **REJECTED** = both seeds at least 2 points below the comparator on `F_eq` (change 6), or a gain made only by breaking (change 2). Otherwise **NOT PROMOTED (not shown)**.
+Report only: everything listed as report only in PASSMARKS.md, the writes-off comparison (change 4), the patch-kept sleep scores (change 7), the fast path, `F_eq`/`F_few` of every arm.
+
+## What changes in what runs
+- New jobs on top of the sealed ladder driver (unchanged): writes-off ladder per seed (2 jobs); sleep draws 1 and 2 for patch and loop with episodes, per seed and branch (16 jobs, about 5-10 minutes each on one thread, untested for the patch: a 4-step smoke test of both arms ran, 38 s and 24 s).
+- Holdout: harness `holdout`, once per arm and seed, now also for the writes-off arm (`--plugin claude_patch_eq_writesoff --init pre --out eq-runs/writesoff-s$S`).
+- The report script is scripts/claude_patch_eq_report_add2.py (`dev`, `holdout`, `selftest`). The old scripts/claude_patch_eq_report.py is not used for the verdict.
+
+## Reproduction (the addendum's own pass marks), 2026-09-28 21:31 UTC
+`python3 -B scripts/claude_patch_eq_report_add2.py selftest` -> add2-selftest.json in this folder (fake numbers; checks words and arithmetic, not any model). Pass: it prints "all_expected": true, meaning
+(a) with one seed that gains and breaks a gate and one that gains and passes, the every-reading prints NOT PROMOTED (not shown) and the any-reading (not used) would print REJECTED; (b) both gain and both break -> REJECTED; (c) both gain and pass -> PASS; (d) one seed slightly below and one above -> not shown; both at least 2 below -> REJECTED; (e) a patch equal to the loop with one noisy sleep draw (-12) fails the old single-draw rule but passes the three-draw rule; (f) the sentence contains "1.5x the compute". The script's real-data path was also run on the ruler's baseline JSON as stand-ins for the arms (no patch data exists).
+---DEVQUEUE---
+#!/bin/bash
+# ADDENDUM-2 job list: the sealed dev ladders and fast path, plus the writes-off ladders, then the sleep draws.
+# Idempotent (a finished job is skipped; an unfinished ladder resumes from its 32-batch checkpoint).
+# Phase 1 runs $JOBS at a time (default 4), one thread each, longest first; phase 2 (draws) after every ladder.
+# CPU, fp32, torch 2.14.0, no GPU. Run from the repo root. Needs runs/*/source.pt (sha256 in checkpoints-sha256.txt).
+cd "$(dirname "$0")/.." || exit 1
+A=artifacts/claude-patch-eq-20260928
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+bash scripts/claude_patch_eq_fetch_sources.sh || exit 1
+job() {
+  case $1 in
+    patch-s*)  s=${1#patch-s};  [ -f $A/eq-runs/patch-s$s/adapt.json ] || python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_patch_eq_plugin --seed $s --init pre   --source $A/runs/patch-s$s   --out $A/eq-runs/patch-s$s ;;
+    wsoff-s*)  s=${1#wsoff-s};  [ -f $A/eq-runs/writesoff-s$s/adapt.json ] || python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_patch_eq_writesoff --seed $s --init pre --source $A/runs/patch-s$s --out $A/eq-runs/writesoff-s$s ;;
+    fresh-s*)  s=${1#fresh-s};  [ -f $A/eq-runs/fresh-s$s/adapt.json ] || python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_patch_eq_fresh  --seed $s --init fresh --source $A/runs/patch-s$s   --out $A/eq-runs/fresh-s$s ;;
+    loopep-s*) s=${1#loopep-s}; [ -f $A/eq-runs/loopep-s$s/adapt.json ] || python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_fewex_net --seed $s --init pre --source $A/runs/loop_ep-s$s --out $A/eq-runs/loopep-s$s ;;
+    fast-s*)   s=${1#fast-s};   [ -f $A/fastpath-dev-s$s.json ] || python3 -B -u scripts/claude_patch_eq_fastpath.py --seed $s --source $A/runs/patch-s$s --out $A/fastpath-dev-s$s.json ;;
+    draw-*)    IFS=- read -r _ arm s k d <<< "$1"; [ -f $A/eq-runs/sleepdraws/$arm-s$s-k$k-d$d.json ] || python3 -B -u scripts/claude_patch_eq_add2_sleepdraws.py --arm $arm --seed $s --k $k --draw $d ;;
+  esac
+}
+export -f job; export A
+mkdir -p $A/eq-runs $A/logs
+printf "%s\n" patch-s0 patch-s1 wsoff-s0 wsoff-s1 loopep-s0 loopep-s1 fresh-s0 fresh-s1 fast-s0 fast-s1 | \
+  xargs -P ${JOBS:-4} -I{} bash -c 'job {} >> $A/logs/{}.log 2>&1; echo "{} exit $? $(date -u +%H:%M)"'
+for f in patch-s0 patch-s1 loopep-s0 loopep-s1; do [ -f $A/eq-runs/${f%%-*}-s${f##*s}/adapt.json ] || { echo "ladder $f unfinished; not running draws"; exit 1; }; done
+for arm in patch loop_ep; do for s in 0 1; do for k in 64 16384; do for d in 1 2; do echo draw-$arm-$s-$k-$d; done; done; done; done | \
+  xargs -P ${JOBS:-4} -I{} bash -c 'job {} >> $A/logs/{}.log 2>&1; echo "{} exit $? $(date -u +%H:%M)"'
+echo "queue done $(date -u +%H:%M)"
+[0m
+[0m$ [0mpwd; df -h /tmp /Users/ben-hannan/Desktop/projects/beautiful-model 2>&1 | head -n 10; python3 --version; python3 -c "import torch; print(torch.__version__)" 2>&1 | head -n 5; ls /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/ 2>&1 | head -n 20
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on
+/dev/disk3s3   460Gi   305Gi   106Gi    75%    4.6M  1.1G    0%   /System/Volumes/Data
+/dev/disk3s3   460Gi   305Gi   106Gi    75%    4.6M  1.1G    0%   /System/Volumes/Data
+Python 3.9.6
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'torch'
+card-experiment-handoff-7c5b27
+fact-saving-note-filtering-4ff1ff
+forgetting-plain-english-gap-9258f0
+model-architecture-review-0161ce
+premonition-design-review-792236
+pull-from-main-629dc4
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_patch_eq_fetch_sources.sh; echo ---PYTHON---; which python3; ls /usr/local/bin/python* /opt/homebrew/bin/python* 2>&1 | head; pip3 --version 2>&1 | head -n 3
+#!/bin/bash
+# Fetch the four practised source nets (not on main) over https from the branch that holds them, then check sha256.
+# Prints FETCH-FAILED with the reason if the branch cannot be reached (e.g. no https credentials; the ssh remote is not used).
+cd "$(dirname "$0")/.." || exit 1
+A=artifacts/claude-patch-eq-20260928
+BR=claude/h13-patch-takeover-x4ph8v
+URL=https://github.com/BenjaminHannan/learner.git
+need=0
+for r in patch-s0 patch-s1 loop_ep-s0 loop_ep-s1; do [ -f $A/runs/$r/source.pt ] || need=1; done
+if [ $need = 1 ]; then
+  GIT_TERMINAL_PROMPT=0 git fetch -q "$URL" "$BR" 2> /tmp/h13-fetch.err || {
+    echo "FETCH-FAILED: could not fetch $BR over https from $URL. Reason: $(tail -1 /tmp/h13-fetch.err)"
+    echo "Fix: give this Mac https access to the repo (gh auth / credential helper), or copy runs/*/source.pt in by hand (sha256 in checkpoints-sha256.txt)."; exit 1; }
+  for r in patch-s0 patch-s1 loop_ep-s0 loop_ep-s1; do
+    [ -f $A/runs/$r/source.pt ] || git show FETCH_HEAD:$A/runs/$r/source.pt > $A/runs/$r/source.pt || { echo "FETCH-FAILED: $r/source.pt not on $BR"; rm -f $A/runs/$r/source.pt; exit 1; }
+  done
+fi
+( cd $A && sha256sum -c checkpoints-sha256.txt 2>/dev/null || shasum -a 256 -c checkpoints-sha256.txt ) || { echo "SOURCE-NETS-MISMATCH"; exit 1; }
+echo "source nets ok: 4 of 4 sha256 match"
+---PYTHON---
+/usr/local/bin/python3
+zsh:1: no matches found: /opt/homebrew/bin/python*
+pip 21.2.4 from /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/site-packages/pip (python 3.9)
+[0m
+[0m$ [0mls /usr/local/bin/ | grep -i python; ls /Library/Frameworks/Python.framework/Versions/ 2>&1 | head; which -a python3.11 python3.12 python3.10 conda uv 2>&1 | head -n 10; ls ~/miniconda3/bin/python* ~/anaconda3/bin/python* /opt/miniconda*/bin/python* 2>&1 | head -n 5
+python3
+python3-config
+python3.12
+python3.12-config
+python3.14
+python3.14-config
+ls: /Library/Frameworks/Python.framework/Versions/: No such file or directory
+/Users/ben-hannan/.local/bin/python3.11
+/Users/ben-hannan/.local/bin/python3.12
+/usr/local/bin/python3.12
+/Users/ben-hannan/.local/bin/uv
+zsh:1: no matches found: /Users/ben-hannan/miniconda3/bin/python*
+[0m
+[0m$ [0m/usr/local/bin/python3.12 --version; /Users/ben-hannan/.local/bin/python3.12 --version; /Users/ben-hannan/.local/bin/python3.11 --version; /Users/ben-hannan/.local/bin/python3.12 -c "import torch; print(torch.__version__)" 2>&1 | head -n 3; /usr/local/bin/python3.12 -c "import torch; print(torch.__version__)" 2>&1 | head -n 3
+zsh:1: bad CPU type in executable: /usr/local/bin/python3.12
+Python 3.12.14
+Python 3.11.16
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'torch'
+zsh:1: bad CPU type in executable: /usr/local/bin/python3.12
+[0m
+[0m$ [0mls -d ../patch-eq-add2-run 2>&1; git clone --branch main git@github.com:BenjaminHannan/learner.git ../patch-eq-add2-run 2>&1 | tail -n 3; ls ../patch-eq-add2-run/artifacts/claude-patch-eq-20260928/ADDENDUM-2.md ../patch-eq-add2-run/scripts/claude_patch_eq_dev_queue_add2.sh ../patch-eq-add2-run/scripts/claude_patch_eq_report_add2.py 2>&1
+ls: ../patch-eq-add2-run: No such file or directory
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mls -d ../patch-eq-add2-run 2>&1 && rm -rf ../patch-eq-add2-run.partial 2>&1; git clone --depth 1 --branch main git@github.com:BenjaminHannan/learner.git ../patch-eq-add2-run 2>&1 | tail -n 3; ls ../patch-eq-add2-run/artifacts/claude-patch-eq-20260928/ADDENDUM-2.md ../patch-eq-add2-run/scripts/claude_patch_eq_dev_queue_add2.sh 2>&1
+ls: ../patch-eq-add2-run: No such file or directory
+Cloning into '../patch-eq-add2-run'...
+Updating files:   5% (5267/104544)Updating files:   6% (6273/104544)Updating files:   7% (7319/104544)Updating files:   8% (8364/104544)Updating files:   8% (9156/104544)Updating files:   9% (9409/104544)Updating files:   9% (10201/104544)Updating files:  10% (10455/104544)Updating files:  10% (10611/104544)Updating files:  11% (11500/104544)Updating files:  12% (12546/104544)Updating files:  12% (12676/104544)Updating files:  13% (13591/104544)Updating files:  14% (14637/104544)Updating files:  15% (15682/104544)Updating files:  16% (16728/104544)Updating files:  17% (17773/104544)Updating files:  17% (18118/104544)Updating files:  18% (18818/104544)Updating files:  19% (19864/104544)Updating files:  20% (20909/104544)Updating files:  21% (21955/104544)Updating files:  22% (23000/104544)Updating files:  22% (23245/104544)Updating files:  23% (24046/104544)Updating files:  24% (25091/104544)Updating files:  25% (26136/104544)Updating files:  26% (27182/104544)Updating files:  27% (28227/104544)Updating files:  27% (28398/104544)Updating files:  28% (29273/104544)Updating files:  29% (30318/104544)Updating files:  30% (31364/104544)Updating files:  31% (32409/104544)Updating files:  31% (33055/104544)Updating files:  32% (33455/104544)Updating files:  33% (34500/104544)Updating files:  34% (35545/104544)Updating files:  35% (36591/104544)Updating files:  35% (37123/104544)Updating files:  36% (37636/104544)Updating files:  37% (38682/104544)Updating files:  38% (39727/104544)Updating files:  39% (40773/104544)Updating files:  40% (41818/104544)Updating files:  41% (42864/104544)Updating files:  41% (42915/104544)Updating files:  42% (43909/104544)Updating files:  43% (44954/104544)Updating files:  44% (46000/104544)Updating files:  45% (47045/104544)Updating files:  46% (48091/104544)Updating files:  46% (48691/104544)Updating files:  47% (49136/104544)Updating files:  48% (50182/104544)Updating files:  49% (51227/104544)Updating files:  50% (52272/104544)Updating files:  51% (53318/104544)Updating files:  52% (54363/104544)Updating files:  52% (54677/104544)Updating files:  53% (55409/104544)Updating files:  54% (56454/104544)Updating files:  55% (57500/104544)Updating files:  56% (58545/104544)Updating files:  57% (59591/104544)Updating files:  57% (60197/104544)Updating files:  58% (60636/104544)Updating files:  59% (61681/104544)Updating files:  60% (62727/104544)Updating files:  61% (63772/104544)Updating files:  61% (64163/104544)Updating files:  62% (64818/104544)Updating files:  63% (65863/104544)Updating files:  64% (66909/104544)Updating files:  64% (67307/104544)Updating files:  65% (67954/104544)Updating files:  66% (69000/104544)Updating files:  67% (70045/104544)Updating files:  68% (71090/104544)Updating files:  68% (72035/104544)Updating files:  69% (72136/104544)Updating files:  70% (73181/104544)Updating files:  71% (74227/104544)Updating files:  72% (75272/104544)Updating files:  72% (75786/104544)Updating files:  73% (76318/104544)Updating files:  74% (77363/104544)Updating files:  75% (78408/104544)Updating files:  76% (79454/104544)Updating files:  76% (79867/104544)Updating files:  77% (80499/104544)Updating files:  78% (81545/104544)Updating files:  79% (82590/104544)Updating files:  80% (83636/104544)Updating files:  80% (83685/104544)Updating files:  81% (84681/104544)Updating files:  82% (85727/104544)Updating files:  83% (86772/104544)Updating files:  83% (87039/104544)Updating files:  84% (87817/104544)Updating files:  85% (88863/104544)Updating files:  86% (89908/104544)Updating files:  86% (90469/104544)Updating files:  87% (90954/104544)Updating files:  88% (91999/104544)Updating files:  89% (93045/104544)Updating files:  89% (94050/104544)Updating files:  90% (94090/104544)Updating files:  91% (95136/104544)Updating files:  92% (96181/104544)Updating files:  93% (97226/104544)Updating files:  93% (97675/104544)Updating files:  94% (98272/104544)Updating files:  95% (99317/104544)Updating files:  96% (100363/104544)Updating files:  96% (101165/104544)Updating files:  97% (101408/104544)Updating files:  98% (102454/104544)Updating files:  99% (103499/104544)Updating files: 100% (104544/104544)Updating files: 100% (104544/104544), done.
+../patch-eq-add2-run/artifacts/claude-patch-eq-20260928/ADDENDUM-2.md
+../patch-eq-add2-run/scripts/claude_patch_eq_dev_queue_add2.sh
+[0m
+[0m$ [0m/Users/ben-hannan/.local/bin/python3.12 -m pip install --upgrade pip 2>&1 | tail -n 2; /Users/ben-hannan/.local/bin/python3.12 -m pip install "torch==2.14.0" numpy 2>&1 | tail -n 5; /Users/ben-hannan/.local/bin/python3.12 -c "import torch, numpy; print(torch.__version__, numpy.__version__)" 2>&1 | tail -n 3
+note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+hint: See PEP 668 for the detailed specification.
+× This environment is externally managed
+╰─> This Python installation is managed by uv and should not be modified.
+
+note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+hint: See PEP 668 for the detailed specification.
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'torch'
+[0m
+[0m$ [0mexport PATH="/Users/ben-hannan/.local/bin:$PATH"; uv venv --python 3.12 ../patch-eq-add2-run/.venv 2>&1 | tail -n 3; ../patch-eq-add2-run/.venv/bin/python -m pip install "torch==2.14.0" numpy 2>&1 | tail -n 5; ../patch-eq-add2-run/.venv/bin/python -c "import torch, numpy; print(torch.__version__, numpy.__version__)" 2>&1 | tail -n 3
+Using CPython 3.12.14
+Creating virtual environment at: ../patch-eq-add2-run/.venv
+Activate with: source ../patch-eq-add2-run/.venv/bin/activate
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/../patch-eq-add2-run/.venv/bin/python: No module named pip
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'torch'
+[0m
+[0m$ [0mexport PATH="/Users/ben-hannan/.local/bin:$PATH"; uv pip install --python ../patch-eq-add2-run/.venv/bin/python "torch==2.14.0" numpy 2>&1 | tail -n 8; ../patch-eq-add2-run/.venv/bin/python -c "import torch, numpy; print(torch.__version__, numpy.__version__)" 2>&1 | tail -n 3
++ markupsafe==3.0.3
+ + mpmath==1.3.0
+ + networkx==3.7
+ + numpy==2.5.3
+ + setuptools==84.0.0
+ + sympy==1.14.0
+ + torch==2.14.0
+ + typing-extensions==4.16.0
+2.14.0 2.5.3
+[0m
+[0m$ [0mexport PATH="$PWD/.venv/bin:/Users/ben-hannan/.local/bin:$PATH"; python3 -c "import torch; print('torch', torch.__version__)" && pgrep -af "claude_patch_eq_dev_queue_add2|claude_patch_eq_ladder|claude_patch_eq_fastpath|claude_patch_eq_add2_sleepdraws" | grep -v grep || echo NO-RUN-CONFIRMED; git fetch --depth 1 origin claude/h13-patch-takeover-x4ph8v 2>&1 | tail -n 2; A=artifacts/claude-patch-eq-20260928; for r in patch-s0 patch-s1 loop_ep-s0 loop_ep-s1; do mkdir -p $A/runs/$r; [ -f $A/runs/$r/source.pt ] || git show FETCH_HEAD:$A/runs/$r/source.pt > $A/runs/$r/source.pt || echo FETCH-FAILED $r; done; shasum -a 256 -c $A/checkpoints-sha256.txt && JOBS=4 nohup bash scripts/claude_patch_eq_dev_queue_add2.sh > $A/logs/queue-add2.out 2>&1 & echo LAUNCHED $!; sleep 120; tail -n 15 $A/logs/queue-add2.out 2>&1; ls $A/logs/ 2>&1 | head -n 15; for i in $(seq 1 68); do pgrep -f claude_patch_eq_dev_queue_add2 >/dev/null || break; sleep 60; done; echo WAIT-DONE; tail -n 25 $A/logs/queue-add2.out 2>&1; grep -il "traceback" $A/logs/*.log 2>&1 | head -n 10 || echo NO-TRACEBACK
+torch 2.14.0
+7328
+11928
+From github.com:BenjaminHannan/learner
+ * branch                claude/h13-patch-takeover-x4ph8v -> FETCH_HEAD
+shasum: runs/loop_ep-s0/source.pt: No such file or directory
+runs/loop_ep-s0/source.pt: FAILED open or read
+runs/loop_ep-s1/source.pt: FAILED open or read
+runs/patch-s0/source.pt: FAILED open or read
+runs/patch-s1/source.pt: FAILED open or read
+LAUNCHED 0
+shasum: runs/loop_ep-s1/source.pt: No such file or directory
+shasum: runs/patch-s0/source.pt: No such file or directory
+shasum: runs/patch-s1/source.pt: No such file or directory
+shasum: WARNING: 4 listed files could not be read
+tail: artifacts/claude-patch-eq-20260928/logs/queue-add2.out: No such file or directory
+ls: artifacts/claude-patch-eq-20260928/logs/: No such file or directory
+WAIT-DONE
+tail: artifacts/claude-patch-eq-20260928/logs/queue-add2.out: No such file or directory
+zsh:1: no matches found: artifacts/claude-patch-eq-20260928/logs/*.log
+[0m
+[0m$ [0mexport PATH="$PWD/.venv/bin:/Users/ben-hannan/.local/bin:$PATH"; A=artifacts/claude-patch-eq-20260928; ls -la $A/runs/patch-s0/source.pt $A/runs/patch-s1/source.pt $A/runs/loop_ep-s0/source.pt $A/runs/loop_ep-s1/source.pt; (cd $A && shasum -a 256 -c checkpoints-sha256.txt); mkdir -p $A/logs; if [ -f $A/logs/queue.pid ] && kill -0 $(cat $A/logs/queue.pid) 2>/dev/null; then echo ALREADY-GOING pid=$(cat $A/logs/queue.pid); else JOBS=4 nohup bash scripts/claude_patch_eq_dev_queue_add2.sh > $A/logs/queue-add2.out 2>&1 & echo $! | tee $A/logs/queue.pid; fi; sleep 120; tail -n 15 $A/logs/queue-add2.out; ps aux | grep "[c]laude_patch_eq" | head -n 8; QP=$(cat $A/logs/queue.pid); for i in $(seq 1 66); do kill -0 $QP 2>/dev/null || break; sleep 60; done; echo WAIT-DONE; tail -n 25 $A/logs/queue-add2.out; grep -ril "traceback" $A/logs/ 2>/dev/null || echo NO-TRACEBACK; grep -h "unfinished" $A/logs/queue-add2.out 2>/dev/null || echo NO-UNFINISHED-YET
+-rw-r--r--  1 ben-hannan  staff  6593157 Sep 28 19:55 artifacts/claude-patch-eq-20260928/runs/loop_ep-s0/source.pt
+-rw-r--r--  1 ben-hannan  staff  6593157 Sep 28 19:55 artifacts/claude-patch-eq-20260928/runs/loop_ep-s1/source.pt
+-rw-r--r--  1 ben-hannan  staff  6623585 Sep 28 19:55 artifacts/claude-patch-eq-20260928/runs/patch-s0/source.pt
+-rw-r--r--  1 ben-hannan  staff  6623585 Sep 28 19:55 artifacts/claude-patch-eq-20260928/runs/patch-s1/source.pt
+runs/loop_ep-s0/source.pt: OK
+runs/loop_ep-s1/source.pt: OK
+runs/patch-s0/source.pt: OK
+runs/patch-s1/source.pt: OK
+14160
+runs/loop_ep-s0/source.pt: OK
+runs/loop_ep-s1/source.pt: OK
+runs/patch-s0/source.pt: OK
+runs/patch-s1/source.pt: OK
+source nets ok: 4 of 4 sha256 match
+ben-hannan       14223  46.5  1.5 489532416 492416   ??  RN    7:58PM   0:51.97 python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_patch_eq_plugin --seed 1 --init pre --source artifacts/claude-patch-eq-20260928/runs/patch-s1 --out artifacts/claude-patch-eq-20260928/eq-runs/patch-s1
+ben-hannan       14207  44.8  1.5 489528080 494304   ??  RN    7:58PM   0:51.81 python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_patch_eq_plugin --seed 0 --init pre --source artifacts/claude-patch-eq-20260928/runs/patch-s0 --out artifacts/claude-patch-eq-20260928/eq-runs/patch-s0
+ben-hannan       14242  43.0  1.5 489531488 493696   ??  RN    7:58PM   0:51.50 python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_patch_eq_writesoff --seed 1 --init pre --source artifacts/claude-patch-eq-20260928/runs/patch-s1 --out artifacts/claude-patch-eq-20260928/eq-runs/writesoff-s1
+ben-hannan       14230  32.5  1.5 489527072 488768   ??  RN    7:58PM   0:51.88 python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_patch_eq_writesoff --seed 0 --init pre --source artifacts/claude-patch-eq-20260928/runs/patch-s0 --out artifacts/claude-patch-eq-20260928/eq-runs/writesoff-s0
+ben-hannan        7328   0.7  0.7 562750224 250096 s000  SN    7:49PM   0:24.01 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:h13-patch-race-dev-r2.go1.7292 RUNNER NOTE (Director, 09-27): your builder model is rate-limited, so every tool call counts. To wait for a long background run, use ONE blocking command (e.g. while pgrep -f <exact script> >/dev/null; do sleep 60; done, capped under 75 min), never many short polls. Before starting any long run, check with pgrep that the same run is not already going (a previous agent may have started it).\012\012HELD-UNTIL: ADDENDUM-2.md and scripts/claude_patch_eq_report_add2.py are on origin/main (they are the mark that must precede any maze score); the four practised source nets are on the run machine with sha256 4 of 4 matching artifacts/claude-patch-eq-20260928/checkpoints-sha256.txt (the launcher checks and stops with SOURCE-NETS-MISMATCH).\012GPU: no\012LOAD-HEAVY: yes (about 15 hours; 4 one-thread jobs at once)\012WHAT: patch race, equal-practice ruler, with ADDENDUM-2. Ten dev jobs (patch, writes-off patch, loop with episodes, fresh patch, fast path; seeds 0 and 1), then 16 sleep-draw jobs. Ladders resume after any interruption; rerun the same command.\012SETUP: torch==2.14.0 CPU, fp32 (same as the baseline). Clone origin/main; put runs/{patch,loop_ep}-s{0,1}/source.pt under artifacts/claude-patch-eq-20260928/ (they are NOT on main; they are on branch claude/h13-patch-takeover-x4ph8v with git add -f, and on claude/funny-heisenberg-ot316m).\012RUN: `JOBS=4 bash scripts/claude_patch_eq_dev_queue_add2.sh` (from the repo root; log lines "<job> exit <code> <time>"; per-job logs in artifacts/claude-patch-eq-20260928/logs/). Do not edit it. Watch for Traceback and "unfinished".\012AFTER: copy eq-runs/ (adapt.json, partial.json, sleepdraws/*.json; NOT the k*.pt / sleep*.pt / ck.pt except keep k64.pt and k16384.pt until the draws are done), fastpath-dev-s*.json and logs to the box that commits; `python3 -B scripts/claude_patch_eq_report_add2.py dev` prints the dev tables. Commit the dev records BEFORE the holdout. Nothing about the recipe or marks may change after any dev score is seen.\012NOT THIS JOB: the holdout (once per arm and seed with the harness's own command, see HANDOFF.md section 4 and ADDENDUM-2.md "What changes in what runs"), RESULTS.md, and the blind recount (a separate thread).
+ben-hannan       14160   0.0  0.0 488781888   1328   ??  SN    7:58PM   0:00.01 bash scripts/claude_patch_eq_dev_queue_add2.sh
+ben-hannan       14133   0.0  0.0 488789984   2432   ??  SNs   7:58PM   0:00.02 /bin/zsh -c export PATH="$PWD/.venv/bin:/Users/ben-hannan/.local/bin:$PATH"; A=artifacts/claude-patch-eq-20260928; ls -la $A/runs/patch-s0/source.pt $A/runs/patch-s1/source.pt $A/runs/loop_ep-s0/source.pt $A/runs/loop_ep-s1/source.pt; (cd $A && shasum -a 256 -c checkpoints-sha256.txt); mkdir -p $A/logs; if [ -f $A/logs/queue.pid ] && kill -0 $(cat $A/logs/queue.pid) 2>/dev/null; then echo ALREADY-GOING pid=$(cat $A/logs/queue.pid); else JOBS=4 nohup bash scripts/claude_patch_eq_dev_queue_add2.sh > $A/logs/queue-add2.out 2>&1 & echo $! | tee $A/logs/queue.pid; fi; sleep 120; tail -n 15 $A/logs/queue-add2.out; ps aux | grep "[c]laude_patch_eq" | head -n 8; QP=$(cat $A/logs/queue.pid); for i in $(seq 1 66); do kill -0 $QP 2>/dev/null || break; sleep 60; done; echo WAIT-DONE; tail -n 25 $A/logs/queue-add2.out; grep -ril "traceback" $A/logs/ 2>/dev/null || echo NO-TRACEBACK; grep -h "unfinished" $A/logs/queue-add2.out 2>/dev/null || echo NO-UNFINISHED-YET
+WAIT-DONE
+runs/loop_ep-s0/source.pt: OK
+runs/loop_ep-s1/source.pt: OK
+runs/patch-s0/source.pt: OK
+runs/patch-s1/source.pt: OK
+source nets ok: 4 of 4 sha256 match
+NO-TRACEBACK
+NO-UNFINISHED-YET
+[0m
+[0m$ [0mA=artifacts/claude-patch-eq-20260928; QP=$(cat $A/logs/queue.pid); kill -0 $QP 2>/dev/null && echo QUEUE-ALIVE pid=$QP || echo QUEUE-DEAD; tail -n 8 $A/logs/queue-add2.out; ls -la $A/eq-runs/ 2>/dev/null | head -n 12; tail -n 3 $A/logs/patch-s0.log $A/logs/wsoff-s0.log 2>/dev/null; grep -ril "traceback" $A/logs/ 2>/dev/null || echo NO-TRACEBACK
+QUEUE-ALIVE pid=14160
+runs/loop_ep-s0/source.pt: OK
+runs/loop_ep-s1/source.pt: OK
+runs/patch-s0/source.pt: OK
+runs/patch-s1/source.pt: OK
+source nets ok: 4 of 4 sha256 match
+total 0
+drwxr-xr-x   6 ben-hannan  staff  192 Sep 28 19:58 .
+drwxr-xr-x  16 ben-hannan  staff  512 Sep 28 19:58 ..
+drwxr-xr-x   5 ben-hannan  staff  160 Sep 28 20:59 patch-s0
+drwxr-xr-x   5 ben-hannan  staff  160 Sep 28 21:00 patch-s1
+drwxr-xr-x   6 ben-hannan  staff  192 Sep 28 21:05 writesoff-s0
+drwxr-xr-x   6 ben-hannan  staff  192 Sep 28 21:05 writesoff-s1
+==> artifacts/claude-patch-eq-20260928/logs/patch-s0.log <==
+
+==> artifacts/claude-patch-eq-20260928/logs/wsoff-s0.log <==
+{"phase": "rung", "arm": "loop", "seed": 0, "init": "pre", "k": 1, "right9": 0, "train_seconds": 3150, "interruptions": 0}
+NO-TRACEBACK
+[0m
