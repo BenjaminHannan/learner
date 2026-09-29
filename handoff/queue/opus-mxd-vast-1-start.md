@@ -1,3 +1,4 @@
+STATUS: HELD. Superseded (2026-09-29 10:5x UTC): Ben said "the repo is public, try it now"; Ben's MoE session is running phase 1 on vast directly from its container (no Mac step). Do not release; it would duplicate that rental.
 BASH-ONLY: yes
 GPU: rent (one vast card, best TFLOPS per $/h, >= 16 GB, at most $0.50/h; cap $2.50 for the whole task)
 DISK: 1
