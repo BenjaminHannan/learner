@@ -1,0 +1,265 @@
+[0m
+> build · muse-spark-1.3-contributor-free
+[0m
+[0m$ [0mpwd; echo "---"; sysctl -n hw.ncpu 2>/dev/null || echo 4; echo "---pgrep practice---"; pgrep -af claude_dir_hist_practice || echo "no practice running"; echo "---pgrep bench---"; pgrep -af claude_fewex_eq_bench || echo "no bench running"; echo "---uptime---"; uptime; df -g / | tail -1; echo "---ls---"; ls; echo "---worktree---"; git rev-parse --show-toplevel 2>&1; git log --oneline -3 2>&1 | head -5
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+---
+10
+---pgrep practice---
+12740
+13705
+---pgrep bench---
+12740
+13705
+52331
+52335
+52337
+52338
+---uptime---
+ 3:18  up  7:52, 2 users, load averages: 127.11 161.24 188.77
+/dev/disk3s1s1       460   12       103    11%  484014 1081623480    0%   /
+---ls---
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+---worktree---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+57f5749ce k1h-glm2 finish: answer2 skipped 593 on M=-1213 (cap blown by sleep), REPORT.md counts only
+e22e4b6bf rd378g-writeluna PILOT-FAIL: Luna batch-18 pilot skipped after 3 tries, 3 call-failed lines (9x timeout after 300s), 0 batch-ok; JSON: 90 kept, 0 new
+86599f56d k1h-glm salvage glm: 240 answers / 593 chats, 5/5 sha256 vs <tmp> (counts only)
+[0m
+[0m$ [0mps aux | grep -E "claude_dir_hist|fewex" | grep -v grep | head -20; echo "==="; ps aux | sort -nrk3 | head -10; echo "==="; ls ~/premonition-hist/artifacts/claude-dir-hist-20260929/runs/ 2>&1 | head -20; echo "==="; tail -3 ~/premonition-hist/artifacts/claude-dir-hist-20260929/runs/practice-*.log 2>&1 | head -40
+ben-hannan       38703 129.9  1.4 489742128 466896   ??  RN    1:54AM  85:21.52 python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_fewex_net --seed 0 --init pre --source artifacts/claude-patch-eq-20260928/runs/loop_ep-s0 --out artifacts/claude-patch-eq-20260928/eq-runs/loopep-s0
+ben-hannan       52337 126.9  1.3 489737376 425472 s000  RN    2:09AM  68:37.92 /Users/ben-hannan/.cache/uv/builds-v0/.tmpftRr8Q/bin/python -B scripts/claude_fewex_eq_bench.py adapt --plugin claude_dir_h12_stop --arm loop --seed 0 --init pre --source /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s0 --out artifacts/claude-dir-h12-stop-20260928/eq-runs/h12-pre-s0 --threads 1
+ben-hannan       52338 126.6  1.3 489735584 427696 s000  RN    2:09AM  68:38.41 /Users/ben-hannan/.cache/uv/builds-v0/.tmpfvsj6m/bin/python -B scripts/claude_fewex_eq_bench.py adapt --plugin claude_dir_h12_stop --arm loop --seed 1 --init pre --source /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s1 --out artifacts/claude-dir-h12-stop-20260928/eq-runs/h12-pre-s1 --threads 1
+ben-hannan       38852 125.8  1.4 489751152 470208   ??  RN    1:54AM  85:16.43 python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_fewex_net --seed 1 --init pre --source artifacts/claude-patch-eq-20260928/runs/loop_ep-s1 --out artifacts/claude-patch-eq-20260928/eq-runs/loopep-s1
+ben-hannan       52335   0.0  0.0 464207232  16288 s000  SN    2:09AM   0:00.04 /Users/ben-hannan/.local/bin/uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_fewex_eq_bench.py adapt --plugin claude_dir_h12_stop --arm loop --seed 1 --init pre --source /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s1 --out artifacts/claude-dir-h12-stop-20260928/eq-runs/h12-pre-s1 --threads 1
+ben-hannan       52331   0.0  0.0 464199136  16288 s000  SN    2:09AM   0:00.04 /Users/ben-hannan/.local/bin/uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_fewex_eq_bench.py adapt --plugin claude_dir_h12_stop --arm loop --seed 0 --init pre --source /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s0 --out artifacts/claude-dir-h12-stop-20260928/eq-runs/h12-pre-s0 --threads 1
+===
+ben-hannan       52337 128.4  1.3 489737376 425472 s000  RN    2:09AM  68:38.07 /Users/ben-hannan/.cache/uv/builds-v0/.tmpftRr8Q/bin/python -B scripts/claude_fewex_eq_bench.py adapt --plugin claude_dir_h12_stop --arm loop --seed 0 --init pre --source /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s0 --out artifacts/claude-dir-h12-stop-20260928/eq-runs/h12-pre-s0 --threads 1
+ben-hannan       38703 126.4  1.4 489742128 466896   ??  RN    1:54AM  85:21.66 python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_fewex_net --seed 0 --init pre --source artifacts/claude-patch-eq-20260928/runs/loop_ep-s0 --out artifacts/claude-patch-eq-20260928/eq-runs/loopep-s0
+ben-hannan       52338 122.1  1.3 489735584 427696 s000  RN    2:09AM  68:38.55 /Users/ben-hannan/.cache/uv/builds-v0/.tmpfvsj6m/bin/python -B scripts/claude_fewex_eq_bench.py adapt --plugin claude_dir_h12_stop --arm loop --seed 1 --init pre --source /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/claude-fewex-20260927/runs/qual-loop-s1 --out artifacts/claude-dir-h12-stop-20260928/eq-runs/h12-pre-s1 --threads 1
+ben-hannan       38852 122.1  1.4 489751152 470208   ??  RN    1:54AM  85:16.57 python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_fewex_net --seed 1 --init pre --source artifacts/claude-patch-eq-20260928/runs/loop_ep-s1 --out artifacts/claude-patch-eq-20260928/eq-runs/loopep-s1
+ben-hannan       14207 121.8  1.3 489765888 450080   ??  RN    7:58PM 275:35.88 python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_patch_eq_plugin --seed 0 --init pre --source artifacts/claude-patch-eq-20260928/runs/patch-s0 --out artifacts/claude-patch-eq-20260928/eq-runs/patch-s0
+ben-hannan       14223 118.1  1.1 489761120 363024   ??  RN    7:58PM 275:55.06 python3 -B -u scripts/claude_patch_eq_ladder.py adapt --plugin claude_patch_eq_plugin --seed 1 --init pre --source artifacts/claude-patch-eq-20260928/runs/patch-s1 --out artifacts/claude-patch-eq-20260928/eq-runs/patch-s1
+ben-hannan         793  56.7  0.1 488912560  30896   ??  R     7:08PM  59:15.89 /System/Library/PrivateFrameworks/FileProvider.framework/Support/fileproviderd
+_mds_stores      14222  29.5  0.8 491144864 263008   ??  Rs   11:36PM   2:08.25 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds_stores
+ben-hannan       12740  15.5  2.5 562751376 853888 s000  RN    3:18AM   0:12.45 /usr/local/bin/opencode run --model opencode/muse-spark-1.3-contributor-free --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:hist-1-practice.go1.12714 RUNNER NOTE (Director, 09-27): your builder model is rate-limited, so every tool call counts. To wait for a long background run, use ONE blocking command (e.g. while pgrep -f <exact script> >/dev/null; do sleep 60; done, capped under 75 min), never many short polls. Before starting any long run, check with pgrep that the same run is not already going (a previous agent may have started it).\012\012COMMON RULES (helper Huginn ideas, Claude, wrote this 2026-09-29 for the Director; adapted from the H3 v2 jobs). You are a build/verification agent; follow handoff/director-briefs/rules.md. Additive only: create new files, never edit an existing one. Fictional names only. Do not run git commit or push (the Director commits). Never read or print keys or auth files. Blind panels and readpanel320 are never opened. Claims never exceed the numbers; report every miss.\012STATUS: QUEUED (no real dependency; Mac CPU, $0).\012GPU: no (CPU only, fp32; the ruler forbids autocast and TF32). DISK: 2.\012WORKDIR: run from the git worktree (the current directory). The job builds a private copy of origin/main in $HOME/premonition-hist (committed files only); checkpoints stay there and are never pushed.\012LOAD-LIGHT: no (four processes x 2 threads when `sysctl -n hw.ncpu` is at least 10, otherwise two waves of two). TIME CAP: 330 minutes when four run at once, 660 when two waves (H3 estimate about 1 to 3 hours per seed; untested for this net). LABEL: hist-practice.\012WHY: artifacts/claude-dir-hist-20260929/PASSMARKS.md validity V1. Source practice (ADDENDUM-3 recipe: 12,000 batches of 64 sums or Latin grids, no maze) of the history-read loop (window 8) and its window-1 control, seeds 0 and 1.\012STOP RULES: (1) if the selftests fail, print the first traceback verbatim and STOP. (2) after training, if v1_pass is false or gradient_check.nonzero_all is false for any of the four sources, report it and STOP (no maze run).\012\012```bash\012set -o pipefail\012G=$(pwd); W=$HOME/premonition-hist\012echo "start $(date -u '+%F %T') UTC"; uptime; df -g / | tail -1\012for i in 1 2 3 4; do git -C "$G" fetch -q origin main && break || sleep $((i*5)); done\012git -C "$G" show origin/main:scripts/claude_dir_hist_net.py > /dev/null || { echo "ABORT: fetch or files missing"; exit 4; }\012mkdir -p "$W"; git -C "$G" archive origin/main scripts artifacts/claude-dir-hist-20260929 artifacts/claude-fewex-20260927 | tar -x -C "$W" || exit 4\012cd "$W" || exit 4\012export OMP_NUM_THREADS=2 MKL_NUM_THREADS=2\012U=$(command -v uv || echo "$HOME/.local/bin/uv")\012PY="$U run --offline --no-project --python 3.12 --with torch --with numpy python -B"\012A=artifacts/claude-dir-hist-20260929; mkdir -p $A/runs\012$PY scripts/claude_dir_hist_marks.py selftest 2>&1 | tee $A/selftest-marks.log\012$PY scripts/claude_dir_hist_selftest.py 2>&1 | tee $A/selftest.log\012grep -q "SELFTEST ok" $A/selftest.log || { echo "STOP: selftest failed"; exit 6; }\012for PL in claude_dir_hist_net claude_dir_hist_net_w1; do\012  $PY scripts/claude_fewex_eq_bench.py selftest --plugin $PL --threads 2 2>&1 | tee -a $A/harness-selftest.log\012  [ ${PIPESTATUS[0]} -eq 0 ] || { echo "STOP: harness selftest failed for $PL"; exit 6; }\012done\012NC=$(sysctl -n hw.ncpu 2>/dev/null || echo 4)\012prac() {  # $1 seed, $2 plugin, $3 run name\012  nohup perl -e 'alarm shift; exec @ARGV' 19800 $PY scripts/claude_dir_hist_practice.py --seed $1 --plugin $2 --out $A/runs/$3-s$1 --threads 2 > $A/runs/practice-$3-s$1.log 2>&1 &\012  echo "practice $3 seed $1 pid $!"\012}\012for S in 0 1; do prac $S claude_dir_hist_net hist; done\012if [ "$NC" -ge 10 ]; then for S in 0 1; do prac $S claude_dir_hist_net_w1 histw1; done; wait\012else wait; for S in 0 1; do prac $S claude_dir_hist_net_w1 histw1; done; wait; fi\012for R in hist histw1; do for S in 0 1; do\012  echo "== $R seed $S"; tail -2 $A/runs/practice-$R-s$S.log\012  $PY - $A/runs/$R-s$S/source.json <<'PYEOF'\012import json, sys\012r = json.load(open(sys.argv[1]))\012print(json.dumps({"seed": r["seed"], "plugin": r.get("plugin"), "weights": r["weights"], "fixed_depth": r["fixed_depth"], "old": {k: v["right"] for k, v in r["old"].items()}, "v1_pass": r["v1_pass"], "nonzero_all": r["gradient_check"]["nonzero_all"], "train_seconds": round(r["train_seconds"])}))\012PYEOF\012done; done\012shasum -a 256 $A/runs/hist-s0/source.pt $A/runs/hist-s1/source.pt $A/runs/histw1-s0/source.pt $A/runs/histw1-s1/source.pt | tee $A/checkpoints-sha256.txt\012mkdir -p "$G/$A/runs"\012for R in hist histw1; do for S in 0 1; do mkdir -p "$G/$A/runs/$R-s$S"; cp $A/runs/$R-s$S/source.json "$G/$A/runs/$R-s$S/"; cp $A/runs/practice-$R-s$S.log "$G/$A/runs/"; done; done\012cp $A/checkpoints-sha256.txt $A/selftest.log $A/selftest-marks.log $A/harness-selftest.log "$G/$A/"\012echo "end $(date -u '+%F %T') UTC"\012```\012REPORT (final reply, counts only): torch and python versions; every printed selftest line verbatim; wall time per run; the four printed source.json lines (x of 200 for sums4 and grids5, weights, v1_pass, nonzero_all).\012PUSH: artifacts/claude-dir-hist-20260929/runs artifacts/claude-dir-hist-20260929/checkpoints-sha256.txt artifacts/claude-dir-hist-20260929/selftest.log artifacts/claude-dir-hist-20260929/selftest-marks.log artifacts/claude-dir-hist-20260929/harness-selftest.log   (source.json, logs only; NOT the .pt files)
+root               366  10.6  0.2 488930880  63840   ??  Rs   31Mar76   2:08.31 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds
+===
+ls: /Users/ben-hannan/premonition-hist/artifacts/claude-dir-hist-20260929/runs/: No such file or directory
+===
+zsh:1: no matches found: /Users/ben-hannan/premonition-hist/artifacts/claude-dir-hist-20260929/runs/practice-*.log
+[0m
+[0m← [0mWrite /tmp/hist-practice-job.sh
+Wrote file successfully.
+[0m
+[0m$ [0mnohup zsh /tmp/hist-practice-job.sh > /tmp/hist-practice-driver.log 2>&1 & echo "driver pid $!"; sleep 20; echo "---driver head---"; head -20 /tmp/hist-practice-driver.log 2>&1; echo "---pgrep practice---"; pgrep -af claude_dir_hist_practice | grep -v opencode | head -5 || echo "no practice procs yet"
+driver pid 13735
+---driver head---
+start 2026-09-29 07:19:36 UTC
+ 3:19  up  7:53, 2 users, load averages: 120.54 154.69 184.93
+/dev/disk3s1s1       460   12       103    11%  484014 1081244080    0%   /
+/tmp/hist-practice-job.sh:12: no such file or directory: /Users/ben-hannan/.local/bin/uv run --offline --no-project --python 3.12 --with torch --with numpy python -B
+/tmp/hist-practice-job.sh:13: no such file or directory: /Users/ben-hannan/.local/bin/uv run --offline --no-project --python 3.12 --with torch --with numpy python -B
+STOP: selftest failed
+---pgrep practice---
+12740
+13734
+[0m
+[0m$ [0mpgrep -af claude_dir_hist_practice | grep -v opencode | grep -v pgrep || echo "no practice procs running"; nohup bash /tmp/hist-practice-job.sh > /tmp/hist-practice-driver.log 2>&1 & echo "driver pid $!"; sleep 90; echo "---driver---"; cat /tmp/hist-practice-driver.log 2>&1 | head -30; echo "---practice procs---"; pgrep -af claude_dir_hist_practice | grep -v opencode | head -6 || echo none
+12740
+13770
+driver pid 13774
+---driver---
+start 2026-09-29 07:20:10 UTC
+ 3:20  up  7:53, 2 users, load averages: 120.57 150.85 182.31
+/dev/disk3s1s1       460   12       103    11%  484014 1080542520    0%   /
+baseline F_eq (higher read): [51.21, 51.67] plain: [34.04, 32.62]
+SELFTEST-marks ok
+loop_params_same_init: ok 
+extra_weights: ok {'stored': 1744414, 'loop_stored': 1645726, 'extra': 98688, 'window': 8}
+starts_as_loop: ok 
+ring_capped: ok [1, 2, 3, 4, 5, 6, 7, 8, 8, 8, 8, 8]
+control_window1: ok 
+read_changes_output_when_on: ok 
+grads_reach_read: ok 
+forward_shapes: ok 
+SELFTEST ok
+{"seed": 0, "support_unique_layouts": 16384, "support_panel_overlap": 0, "support_sha256": "3efe54c5218d83ebc7b26e11899f9a2cd4dbbeb013521ccc69ef58dc84cabe2d", "panel_layouts": {"dev": {"7": 24, "9": 300, "11": 300}, "holdout": {"7": 48, "9": 300, "11": 300}}}
+{"seed": 1, "support_unique_layouts": 16384, "support_panel_overlap": 0, "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e", "panel_layouts": {"dev": {"7": 24, "9": 300, "11": 300}, "holdout": {"7": 48, "9": 300, "11": 300}}}
+{"seed": 0, "support_unique_layouts": 16384, "support_panel_overlap": 0, "support_sha256": "3efe54c5218d83ebc7b26e11899f9a2cd4dbbeb013521ccc69ef58dc84cabe2d", "panel_layouts": {"dev": {"7": 24, "9": 300, "11": 300}, "holdout": {"7": 48, "9": 300, "11": 300}}}
+{"seed": 1, "support_unique_layouts": 16384, "support_panel_overlap": 0, "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e", "panel_layouts": {"dev": {"7": 24, "9": 300, "11": 300}, "holdout": {"7": 48, "9": 300, "11": 300}}}
+practice hist seed 0 pid 13807
+practice hist seed 1 pid 13808
+practice histw1 seed 0 pid 13809
+practice histw1 seed 1 pid 13810
+---practice procs---
+12740
+13770
+13807
+13808
+13809
+13810
+[0m
+[0m$ [0mfor i in $(seq 1 73); do kill -0 13774 2>/dev/null || { echo "driver done at iter $i"; break; }; sleep 60; done; echo "---driver tail---"; tail -5 /tmp/hist-practice-driver.log; echo "---practice logs---"; tail -2 ~/premonition-hist/artifacts/claude-dir-hist-20260929/runs/practice-*.log 2>&1; echo "---procs---"; pgrep -af claude_dir_hist_practice.py | grep -v opencode | head -6 || echo "no practice procs"
+---driver tail---
+{"seed": 1, "support_unique_layouts": 16384, "support_panel_overlap": 0, "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e", "panel_layouts": {"dev": {"7": 24, "9": 300, "11": 300}, "holdout": {"7": 48, "9": 300, "11": 300}}}
+practice hist seed 0 pid 13807
+practice hist seed 1 pid 13808
+practice histw1 seed 0 pid 13809
+practice histw1 seed 1 pid 13810
+---practice logs---
+==> /Users/ben-hannan/premonition-hist/artifacts/claude-dir-hist-20260929/runs/practice-hist-s0.log <==
+{"phase": "h3_practice", "seed": 0, "step": 4000, "loss_mean_last": 0.1662120051952952, "seconds": 3474}
+{"phase": "h3_practice", "seed": 0, "step": 5000, "loss_mean_last": 0.10788222015756037, "seconds": 4337}
+
+==> /Users/ben-hannan/premonition-hist/artifacts/claude-dir-hist-20260929/runs/practice-hist-s1.log <==
+{"phase": "h3_practice", "seed": 1, "step": 4000, "loss_mean_last": 0.1817222473091242, "seconds": 3517}
+{"phase": "h3_practice", "seed": 1, "step": 5000, "loss_mean_last": 0.12504497034141968, "seconds": 4401}
+
+==> /Users/ben-hannan/premonition-hist/artifacts/claude-dir-hist-20260929/runs/practice-histw1-s0.log <==
+{"phase": "h3_practice", "seed": 0, "step": 4000, "loss_mean_last": 0.16685605535886133, "seconds": 3216}
+{"phase": "h3_practice", "seed": 0, "step": 5000, "loss_mean_last": 0.11552400021733775, "seconds": 4023}
+
+==> /Users/ben-hannan/premonition-hist/artifacts/claude-dir-hist-20260929/runs/practice-histw1-s1.log <==
+{"phase": "h3_practice", "seed": 1, "step": 4000, "loss_mean_last": 0.17812487905223678, "seconds": 3255}
+{"phase": "h3_practice", "seed": 1, "step": 5000, "loss_mean_last": 0.12235066490370082, "seconds": 4078}
+---procs---
+12740
+13807
+13808
+13809
+13810
+13811
+[0m
+[0m$ [0mfor i in $(seq 1 73); do kill -0 13774 2>/dev/null || { echo "driver done at iter $i"; break; }; sleep 60; done; echo "---driver tail---"; tail -8 /tmp/hist-practice-driver.log; echo "---practice logs---"; tail -1 ~/premonition-hist/artifacts/claude-dir-hist-20260929/runs/practice-*.log 2>&1; echo "---procs---"; pgrep -af claude_dir_hist_practice.py | grep -v opencode | head -6 || echo "no practice procs"
+---driver tail---
+{"seed": 0, "support_unique_layouts": 16384, "support_panel_overlap": 0, "support_sha256": "3efe54c5218d83ebc7b26e11899f9a2cd4dbbeb013521ccc69ef58dc84cabe2d", "panel_layouts": {"dev": {"7": 24, "9": 300, "11": 300}, "holdout": {"7": 48, "9": 300, "11": 300}}}
+{"seed": 1, "support_unique_layouts": 16384, "support_panel_overlap": 0, "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e", "panel_layouts": {"dev": {"7": 24, "9": 300, "11": 300}, "holdout": {"7": 48, "9": 300, "11": 300}}}
+{"seed": 0, "support_unique_layouts": 16384, "support_panel_overlap": 0, "support_sha256": "3efe54c5218d83ebc7b26e11899f9a2cd4dbbeb013521ccc69ef58dc84cabe2d", "panel_layouts": {"dev": {"7": 24, "9": 300, "11": 300}, "holdout": {"7": 48, "9": 300, "11": 300}}}
+{"seed": 1, "support_unique_layouts": 16384, "support_panel_overlap": 0, "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e", "panel_layouts": {"dev": {"7": 24, "9": 300, "11": 300}, "holdout": {"7": 48, "9": 300, "11": 300}}}
+practice hist seed 0 pid 13807
+practice hist seed 1 pid 13808
+practice histw1 seed 0 pid 13809
+practice histw1 seed 1 pid 13810
+---practice logs---
+==> /Users/ben-hannan/premonition-hist/artifacts/claude-dir-hist-20260929/runs/practice-hist-s0.log <==
+{"phase": "h3_practice", "seed": 0, "step": 9000, "loss_mean_last": 0.04923832107972385, "seconds": 8354}
+
+==> /Users/ben-hannan/premonition-hist/artifacts/claude-dir-hist-20260929/runs/practice-hist-s1.log <==
+{"phase": "h3_practice", "seed": 1, "step": 9000, "loss_mean_last": 0.050143783944439746, "seconds": 8549}
+
+==> /Users/ben-hannan/premonition-hist/artifacts/claude-dir-hist-20260929/runs/practice-histw1-s0.log <==
+{"phase": "h3_practice", "seed": 0, "step": 10000, "loss_mean_last": 0.03668819266158153, "seconds": 8669}
+
+==> /Users/ben-hannan/premonition-hist/artifacts/claude-dir-hist-20260929/runs/practice-histw1-s1.log <==
+{"phase": "h3_practice", "seed": 1, "step": 10000, "loss_mean_last": 0.04667439312864826, "seconds": 8831}
+---procs---
+12740
+13807
+13808
+13809
+13810
+13811
+[0m
+[0m$ [0mfor i in $(seq 1 70); do kill -0 13774 2>/dev/null || { echo "driver done at iter $i"; break; }; sleep 60; done; echo "---driver tail---"; tail -25 /tmp/hist-practice-driver.log; echo "---procs---"; pgrep -af claude_dir_hist_practice.py | grep -v opencode | head -6 || echo "no practice procs"
+driver done at iter 51
+---driver tail---
+practice hist seed 0 pid 13807
+practice hist seed 1 pid 13808
+practice histw1 seed 0 pid 13809
+practice histw1 seed 1 pid 13810
+== hist seed 0
+{"phase": "h3_practice", "seed": 0, "step": 12000, "loss_mean_last": 0.03701199384276265, "seconds": 11504}
+{"phase": "h3_practice_done", "seed": 0, "old": {"sums4": 200, "grids5": 200}, "v1_pass": true, "seconds": 11504}
+{"seed": 0, "plugin": "claude_dir_hist_net", "weights": 1744414, "fixed_depth": 8, "old": {"grids5": 200, "sums4": 200}, "v1_pass": true, "nonzero_all": true, "train_seconds": 11504}
+== hist seed 1
+{"phase": "h3_practice", "seed": 1, "step": 12000, "loss_mean_last": 0.045398648782542295, "seconds": 11710}
+{"phase": "h3_practice_done", "seed": 1, "old": {"sums4": 200, "grids5": 200}, "v1_pass": true, "seconds": 11710}
+{"seed": 1, "plugin": "claude_dir_hist_net", "weights": 1744414, "fixed_depth": 8, "old": {"grids5": 200, "sums4": 200}, "v1_pass": true, "nonzero_all": true, "train_seconds": 11710}
+== histw1 seed 0
+{"phase": "h3_practice", "seed": 0, "step": 12000, "loss_mean_last": 0.03700651995692988, "seconds": 10600}
+{"phase": "h3_practice_done", "seed": 0, "old": {"sums4": 200, "grids5": 200}, "v1_pass": true, "seconds": 10600}
+{"seed": 0, "plugin": "claude_dir_hist_net_w1", "weights": 1744414, "fixed_depth": 8, "old": {"grids5": 200, "sums4": 200}, "v1_pass": true, "nonzero_all": false, "train_seconds": 10600}
+== histw1 seed 1
+{"phase": "h3_practice", "seed": 1, "step": 12000, "loss_mean_last": 0.04454579549535174, "seconds": 10759}
+{"phase": "h3_practice_done", "seed": 1, "old": {"sums4": 200, "grids5": 200}, "v1_pass": true, "seconds": 10759}
+{"seed": 1, "plugin": "claude_dir_hist_net_w1", "weights": 1744414, "fixed_depth": 8, "old": {"grids5": 200, "sums4": 200}, "v1_pass": true, "nonzero_all": false, "train_seconds": 10759}
+6a8747ee9f3dac70596f103e75d7fa79b344cb4e2d6654f817b16a38124b283f  artifacts/claude-dir-hist-20260929/runs/hist-s0/source.pt
+c7f16250c5c70f083d369e0075c300ab78b336242530d75aa3d7893c75f5a41b  artifacts/claude-dir-hist-20260929/runs/hist-s1/source.pt
+6a355ddf49843edddabbc567fffecbd2b87771e85960976ee24db5284f85434d  artifacts/claude-dir-hist-20260929/runs/histw1-s0/source.pt
+0fe2555b05f1cb8c50b8ea52166683134b067981627cd3cc33c6e2ee968d9ac5  artifacts/claude-dir-hist-20260929/runs/histw1-s1/source.pt
+end 2026-09-29 10:38:24 UTC
+---procs---
+12740
+32142
+[0m
+[0m$ [0mW=$HOME/premonition-hist; G=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27; A=artifacts/claude-dir-hist-20260929; "$HOME/.local/bin/uv" run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import sys,torch; print('python', sys.version.split()[0]); print('torch', torch.__version__)" 2>&1 | tail -2; echo "=== selftest-marks ==="; cat $W/$A/selftest-marks.log; echo "=== selftest ==="; cat $W/$A/selftest.log; echo "=== harness ==="; cat $W/$A/harness-selftest.log; echo "=== copied to worktree ==="; ls -R "$G/$A/runs" 2>&1; ls -la "$G/$A/"*.log "$G/$A/"*.txt 2>&1
+python 3.12.14
+torch 2.14.0
+=== selftest-marks ===
+baseline F_eq (higher read): [51.21, 51.67] plain: [34.04, 32.62]
+SELFTEST-marks ok
+=== selftest ===
+loop_params_same_init: ok 
+extra_weights: ok {'stored': 1744414, 'loop_stored': 1645726, 'extra': 98688, 'window': 8}
+starts_as_loop: ok 
+ring_capped: ok [1, 2, 3, 4, 5, 6, 7, 8, 8, 8, 8, 8]
+control_window1: ok 
+read_changes_output_when_on: ok 
+grads_reach_read: ok 
+forward_shapes: ok 
+SELFTEST ok
+=== harness ===
+{"seed": 0, "support_unique_layouts": 16384, "support_panel_overlap": 0, "support_sha256": "3efe54c5218d83ebc7b26e11899f9a2cd4dbbeb013521ccc69ef58dc84cabe2d", "panel_layouts": {"dev": {"7": 24, "9": 300, "11": 300}, "holdout": {"7": 48, "9": 300, "11": 300}}}
+{"seed": 1, "support_unique_layouts": 16384, "support_panel_overlap": 0, "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e", "panel_layouts": {"dev": {"7": 24, "9": 300, "11": 300}, "holdout": {"7": 48, "9": 300, "11": 300}}}
+{"seed": 0, "support_unique_layouts": 16384, "support_panel_overlap": 0, "support_sha256": "3efe54c5218d83ebc7b26e11899f9a2cd4dbbeb013521ccc69ef58dc84cabe2d", "panel_layouts": {"dev": {"7": 24, "9": 300, "11": 300}, "holdout": {"7": 48, "9": 300, "11": 300}}}
+{"seed": 1, "support_unique_layouts": 16384, "support_panel_overlap": 0, "support_sha256": "ad4a726c50a6e26a72339ecc046cc978d03068877e38e50042a93899b462677e", "panel_layouts": {"dev": {"7": 24, "9": 300, "11": 300}, "holdout": {"7": 48, "9": 300, "11": 300}}}
+=== copied to worktree ===
+hist-s0
+hist-s1
+histw1-s0
+histw1-s1
+practice-hist-s0.log
+practice-hist-s1.log
+practice-histw1-s0.log
+practice-histw1-s1.log
+
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-dir-hist-20260929/runs/hist-s0:
+source.json
+
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-dir-hist-20260929/runs/hist-s1:
+source.json
+
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-dir-hist-20260929/runs/histw1-s0:
+source.json
+
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-dir-hist-20260929/runs/histw1-s1:
+source.json
+-rw-r--r--  1 ben-hannan  staff   500 Sep 29 06:38 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-dir-hist-20260929/checkpoints-sha256.txt
+-rw-r--r--  1 ben-hannan  staff  1040 Sep 29 06:38 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-dir-hist-20260929/harness-selftest.log
+-rw-r--r--  1 ben-hannan  staff    84 Sep 29 06:38 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-dir-hist-20260929/selftest-marks.log
+-rw-r--r--  1 ben-hannan  staff   299 Sep 29 06:38 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-dir-hist-20260929/selftest.log
+[0m
