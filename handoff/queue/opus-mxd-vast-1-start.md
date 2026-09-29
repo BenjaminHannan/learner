@@ -1,3 +1,4 @@
+STATUS: HELD. Not approved against the $5 vast budget for tonight (coordinator 04:49 UTC 09-29). Only the coordinator/Director release it after a budget decision.
 BASH-ONLY: yes
 GPU: rent (one vast card, best TFLOPS per $/h, >= 16 GB, at most $0.50/h; cap $2.50 for the whole task)
 DISK: 1

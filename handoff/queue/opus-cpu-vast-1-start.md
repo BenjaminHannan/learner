@@ -1,3 +1,4 @@
+STATUS: HELD. Not approved against the $5 vast budget for tonight (coordinator 04:49 UTC 09-29). Only the coordinator/Director release it after a budget decision.
 BASH-ONLY: yes
 GPU: rent (one vast box used only as a many-core CPU machine; any GPU on it is unused and every job is strict fp32 CPU; at most $0.35/h; cap $2.50 for the whole task; credit floor $2.50)
 DISK: 1
