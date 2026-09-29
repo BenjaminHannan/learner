@@ -10,3 +10,6 @@ Rules Ben set (his own skill text, 09-26): 5 to 8 cards in beginner order; each 
 
 ## Roadmap section (required from 10:53 UTC 09-29, Ben)
 Every explainer page ends (or opens, after the answer) with a "Where this fits" roadmap: three parts drawn as a simple strip or list, in the page's own style: DONE (what earlier steps showed), THIS STEP (what this task tests and its pass mark), NEXT (what follows if it passes, and if it fails). Source: handoff/director-roadmap.md and handoff/director-board.md. Same word rules as the rest of the page: plain words, counts as "x of N".
+
+## Pictures first (Ben, 13:33 UTC 09-29)
+Lead with pictures: a how-it-works SVG diagram at the top, results as bar/line charts with the pass mark drawn as a line, and the roadmap as a box strip (done / this step / next). Short captions only. Draw charts to one scale, label every mark, use theme colour tokens so both light and dark read, and run check.js (no OUT/OVL, scroll width equals viewport). example-director.html shows the style.
