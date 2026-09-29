@@ -7,3 +7,6 @@ Ben's "eli5" pages: an HTML artifact for someone who knows nothing about the top
 - `check.js`: finds SVG labels that overlap or leave their picture, and horizontal scroll, at 400 px light and 720 px dark. Chromium and Playwright are preinstalled in cloud sessions: `NODE_PATH=$(npm root -g) node handoff/kit/eli5/check.js page.html`.
 
 Rules Ben set (his own skill text, 09-26): 5 to 8 cards in beginner order; each card one big picture that carries the idea alone, a headline of about 8 words and at most one short sentence; everyday comparisons instead of jargon; real numbers only, rounded, drawn to scale; guesses labelled ("our best guess"); open with a hero card, end with "what happens next" if there is one; readable on a phone and in both themes; sources in a small footer.
+
+## Roadmap section (required from 10:53 UTC 09-29, Ben)
+Every explainer page ends (or opens, after the answer) with a "Where this fits" roadmap: three parts drawn as a simple strip or list, in the page's own style: DONE (what earlier steps showed), THIS STEP (what this task tests and its pass mark), NEXT (what follows if it passes, and if it fails). Source: handoff/director-roadmap.md and handoff/director-board.md. Same word rules as the rest of the page: plain words, counts as "x of N".

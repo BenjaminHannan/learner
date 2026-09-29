@@ -97,3 +97,4 @@
 - 09:30 UTC 09-29: G2 (check-head on frozen G nets; one change; PASS mean S_pick_new >=36 s13 / >=30 s14 over 3 head seeds; WRONG <=33 and <=27; controls shuffled-label, AUC>=0.70; PASS predicted ~25%) marks copied+sealed (SEAL-marks). Runs on Mac CPU $0 (nets' final.pt on Ben's Mac); vast not needed.
 - 09:33 UTC 09-29: G2 code sealed (SEAL-g2 OK) and dir-g2-a RELEASED (Mac CPU $0, cap 6 h; job checks final.pt sha on the Mac, NO-WEIGHTS otherwise).
 10:32 UTC 09-29 Ben 'Just use the gpu': watcher GPU-memory gate 700 -> 3000 MiB in kit watcher.sh (running watchers self-update from main, no restart); mxd-1 HELD removed; dir-g-timing, dst-t3-1..4 were never held. G-b stays dropped. mxd-2/3/4 stay held.
+10:54 UTC 09-29 Ben: every explainer page includes a roadmap section; added to thread-helper-common.md and kit/eli5/README.md. No thread is mid-page (all helper threads idle/completed).
