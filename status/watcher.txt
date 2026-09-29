@@ -1,4 +1,4 @@
-2026-09-28 20:40:51
+2026-09-28 20:43:19
 running:
 dir-g-a.running
 dir-h1-heldout-r2.running
@@ -7,14 +7,6 @@ dirlr-stage-mac-r2.running
 h13-patch-race-dev-r2.running
 launched (no exit yet) / finished:
     1198
-
-fatal: Could not read from remote repository.
-
-Please make sure you have the correct access rights
-and the repository exists.
-chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
-ssh: connect to host github.com port 22: Undefined error: 0
-fatal: Could not read from remote repository.
 
 Please make sure you have the correct access rights
 and the repository exists.
@@ -158,15 +150,22 @@ chdir: error retrieving current directory: getcwd: cannot access parent director
 2026-09-28 20:40:47 load 382, holding relnet-guard-mac (       5 running)
 2026-09-28 20:40:50 load 382, holding sl-1-read-r2 (       5 running)
 2026-09-28 20:40:50 load 382, holding sl-2-source-r2 (       5 running)
+2026-09-28 20:43:11 load 353, holding pond-a-dev (       5 running)
+2026-09-28 20:43:12 load 353, holding pond-b-dev (       5 running)
+2026-09-28 20:43:13 load 353, holding pond-c-dev (       5 running)
+2026-09-28 20:43:13 load 353, holding pond-doubt (       5 running)
+2026-09-28 20:43:14 load 353, holding pond-z-dev (       5 running)
+2026-09-28 20:43:15 load 353, holding relnet-guard-mac (       5 running)
+2026-09-28 20:43:17 load 350, holding sl-1-read-r2 (       5 running)
+2026-09-28 20:43:18 load 350, holding sl-2-source-r2 (       5 running)
 
 diag:
 == dir-g-a
-55889 Sep 28 20:40 dir-g-a.go1.err.txt
-568 Sep 28 20:40 dir-g-a.go1.reply.md
-48a040744854cbc9d31a48fc6b84d76ac6589b7ff9e632e873a2e5164fdd980d  artifacts/claude-dir-g-build-20260928/ADDENDUM-1.md
-655011c41a7a0ccc22ba7f398f960d6e5b5285bf0c1be7f7b6cda313b936244b  scripts/claude_dir_g_run.py
-a0d52967756c2cce2bdb20f32be4eb1bcddb7cd0fa53cb8c1bd1a56f9e3ac71a  scripts/claude_dir_g_floor.py
-f2a4a3bb2538b070de5b0590c072cc5b88f4f579c5a5d6cf67699f5199f88f9f  artifacts/claude-dir-g-build-20260928/G-BASELINE.md
+64186 Sep 28 20:43 dir-g-a.go1.err.txt
+634 Sep 28 20:41 dir-g-a.go1.reply.md
+[4] all 37082 stored answers pass the exact checker; the 1062 target-24 pairs equal the old practice pool
+[5] numbers4 draws 2560000; new 69.6 per pair (old 2411 per hand, 35x more); 200,000 simulated draws touched 36639 of 36782 pairs; target-24 share 0.029
+selftest ok
 [0m
 == dir-h1-heldout-r2
 77158 Sep 28 19:54 dir-h1-heldout-r2.go1.err.txt
@@ -202,21 +201,21 @@ zsh:1: no matches found: artifacts/claude-patch-eq-20260928/logs/*.log
 [0m
 top5cpu:
 %CPU COMM
-167.0 java
-54.8 WindowServer
-31.8 python
-31.4 python
-29.8 python
+91.9 java
+42.7 python
+40.0 python
+38.9 python3
+37.8 python3
 procs:
-  352     1 18443-00:37:57 Ss   /System/Library/CoreServices/powerd.bundle/powerd
- 1042   768       01:32:30 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
- 1375  1373       01:32:23 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
- 1388   788       01:32:23 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
- 4354     1       01:09:47 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
- 5461     1          51:23 S    /usr/bin/ssh-agent
-52500 52499          00:02 SN   ssh
- 6418  6392          51:07 SN   /usr/local/bin/opencode
- 6491  6469          51:07 SN   /usr/local/bin/opencode
- 6580  6553          51:07 SN   /usr/local/bin/opencode
- 7328  7292          51:02 SN   /usr/local/bin/opencode
-42056 42008          10:06 RN   /usr/local/bin/opencode
+  352     1 18443-00:40:24 Ss   /System/Library/CoreServices/powerd.bundle/powerd
+ 1042   768       01:34:57 S    /Users/ben-hannan/.codex/plugins/cache/openai-bundled/chrome/latest/extension-host/macos/arm64/ChatGPT for Chrome
+ 1375  1373       01:34:50 S    /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+ 1388   788       01:34:50 Ss   /Users/ben-hannan/.codex-chatgpt-web/versions/6.1.0-darwin-arm64/runtime/bun
+ 4354     1       01:12:14 S    /System/Library/Frameworks/CryptoTokenKit.framework/ctkahp.bundle/Contents/MacOS/ctkahp
+ 5461     1          53:50 S    /usr/bin/ssh-agent
+54613 54612          00:02 SN   ssh
+ 6418  6392          53:34 SN   /usr/local/bin/opencode
+ 6491  6469          53:34 SN   /usr/local/bin/opencode
+ 6580  6553          53:34 RN   /usr/local/bin/opencode
+ 7328  7292          53:29 SN   /usr/local/bin/opencode
+42056 42008          12:33 RN   /usr/local/bin/opencode
