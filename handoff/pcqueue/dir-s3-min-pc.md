@@ -12,7 +12,7 @@ export PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1
 date -u
 [ -f "$TREE/artifacts/claude-dir-s3-numbers-20260929/SEAL-s3.sha256.txt" ] || { echo "WAITING: SEAL-s3 not on main"; exit 5; }
 rm -rf "$W"; mkdir -p "$W" "$KEEP"
-(cd "$TREE" && git archive HEAD scripts artifacts/claude-dir-s3-numbers-20260929 artifacts/claude-dir-h2-numbers-20260928 artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt artifacts/claude-rsn358i-20260926/tests) | tar -x -C "$W" || exit 75
+(cd "$TREE" && git archive HEAD scripts artifacts/claude-dir-s3-numbers-20260929 artifacts/claude-dir-h2-numbers-20260928 artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt artifacts/claude-rsn358u-20260927/PASSMARKS.md artifacts/claude-rsn358u-20260927/PASSMARKS-draft.md artifacts/claude-rsn358i-20260926/tests) | tar -x -C "$W" || exit 75
 cd "$W" || exit 1
 sha256sum -c artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt || { echo SEAL-MISMATCH 358u; exit 6; }
 sha256sum -c artifacts/claude-dir-s3-numbers-20260929/SEAL-s3.sha256.txt || { echo SEAL-MISMATCH s3; exit 6; }

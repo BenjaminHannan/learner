@@ -64,7 +64,7 @@ while read -r OID DPH CORES HID GPU TF RAM WV EST; do
         SS=$(sshto "$H" "$P"); ok=$($SS "echo ssh-ok" < /dev/null 2>/dev/null); [ "$ok" = ssh-ok ] && break; fi; fi
     sleep 10; done
   [ "$ok" = ssh-ok ] || { log "rental $n: no ssh within 8 min (status ${s:-?})"; destroy "$I"; continue; }
-  git archive "$PIN" scripts $A artifacts/claude-dir-h2-numbers-20260928 artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt artifacts/claude-rsn358i-20260926/tests handoff/kit/s3v/box | $SS "mkdir -p /root/r && tar -x -C /root/r" 2>> "$G/log.txt"
+  git archive "$PIN" scripts $A artifacts/claude-dir-h2-numbers-20260928 artifacts/claude-rsn358u-20260927/SEAL-code.sha256.txt artifacts/claude-rsn358u-20260927/PASSMARKS.md artifacts/claude-rsn358u-20260927/PASSMARKS-draft.md artifacts/claude-rsn358i-20260926/tests handoff/kit/s3v/box | $SS "mkdir -p /root/r && tar -x -C /root/r" 2>> "$G/log.txt"
   want=$(git show "$PIN:handoff/kit/s3v/box/drive.sh" | shasum -a 256 | awk '{print $1}')
   got=$($SS "sha256sum /root/r/handoff/kit/s3v/box/drive.sh" < /dev/null 2>/dev/null | awk '{print $1}')
   [ "$want" = "$got" ] || { log "rental $n: drive.sh on the rental ($got) does not match $PIN ($want)"; destroy "$I"; continue; }
