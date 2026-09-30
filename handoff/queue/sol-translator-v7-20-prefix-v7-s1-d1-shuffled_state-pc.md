@@ -1,3 +1,5 @@
+STATUS: HELD
+DEFERRED: direct human awake-model/minimal-actual-sleep priority; original sealed V7 artifact unchanged, no claimed completion.
 BASH-ONLY: yes
 LOAD-LIGHT: yes
 GPU: yes
