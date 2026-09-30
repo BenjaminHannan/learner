@@ -1,0 +1,53 @@
+{
+  "schema": "sol.cloud.pc-process-template-freeze.v2",
+  "created_utc": "2026-09-30T08:34:49.902886+00:00",
+  "parent_requested": "read-only v2 process inventory with exact V12 resume stat metadata",
+  "v1_preserved": true,
+  "files": [
+    {
+      "path": "artifacts/sol-cloud-pc-process-20260930/COLLECTOR-v2.py",
+      "sha256": "a061dc82c80b80b1d91e5df7bd6c724ef3392e07471569064b2e03d8362a6a8e",
+      "bytes": 12617
+    },
+    {
+      "path": "artifacts/sol-cloud-pc-process-20260930/queue-template-sol-cloud-pc-process-reconcile-v2.md",
+      "sha256": "d756362a07193fda0d7e1140b896aa54c7b086eb626b4fc7ab4c28b3d650db7a",
+      "bytes": 2225
+    },
+    {
+      "path": "artifacts/sol-cloud-pc-process-20260930/CHECK_V2.py",
+      "sha256": "5665cb66499c2f0c30dfba1c5f675b8da7f13252bed8605c1db64e6278713326",
+      "bytes": 4904
+    },
+    {
+      "path": "artifacts/sol-cloud-pc-process-20260930/CHECKS-v2.json",
+      "sha256": "b0693d892a8f8c63481a9ce7012ae33d2b2d4a97b8108b166c36a9602e07a4c8",
+      "bytes": 1761
+    }
+  ],
+  "v1_collector_sha256": "60d8ff63f55884a245e319ca93d27e975a9a8bb44c2f09c8964c8083aeb9b483",
+  "checks": {
+    "passed": 16,
+    "total": 16
+  },
+  "execution": {
+    "live_queue_created": false,
+    "network_calls": 0,
+    "model_calls": 0,
+    "optimizer_updates": 0,
+    "pc_writes": 0,
+    "process_stops": 0
+  },
+  "changes": [
+    "Use exact physical watcher rc=0 collection receipt",
+    "Materialize pinned collector from origin/main and reject existing mismatch",
+    "Validate current physical queue running/md/no.exit before setting JOB",
+    "Include only bytes and mtime_ns for the two exact authorized connected-resume.pt files",
+    "Expose actual remote Python version and tar extraction filter support",
+    "Whitelist actual shared V12 project root for categorical process ownership"
+  ],
+  "pending": [
+    "Integrator main publication and exactly one v2 watcher launch",
+    "Actual PID ownership/free-disk/runtime and V12 size receipt"
+  ]
+}
