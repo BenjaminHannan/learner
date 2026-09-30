@@ -1,4 +1,22 @@
 # Director board. Updated 2026-09-28 19:30 UTC.
+
+## Active lead takeover — 2026-09-30 02:32 UTC / September 29 New York
+
+Ben requests end-to-end completion in the stated five-stage order, Sol workers,
+independent blind recounts, and a $7.50 total Vast budget tonight. Current plan and
+lane ownership: [Sol execution board](../artifacts/sol-director-20260929/PLAN.md).
+Six Sol lanes are active: compute, spatial failure diagnosis, learned stopping,
+composition, frozen-state translator, and multikind sleep/runtime. No new
+scientific promotion or rental has occurred. Current complete-model status:
+**NOT SHOWN**. Historical entries below remain intact as evidence history.
+
+**Deadline steering:** Ben now requires a runnable end-to-end proof of concept
+by **07:00 September 30, America/New_York (11:00 UTC)**. Prioritize actual latent
+reasoner + notebook + thin translator + sleep integration. The full scientific
+finish line is unchanged but is not a prerequisite for calling the version a
+proof of concept. Ben confirms an RTX 5070 Ti over Tailscale; use free GPU tests
+first. Account reset is authorized below 3% remaining (initially 76% remaining).
+
 | Helper | Problem | Folder | State | Next check |
 |---|---|---|---|---|
 | H1 | Few-example ruler on graph + rank kinds | artifacts/claude-dir-h1-heldout-20260928 | sealed, job dir-h1-heldout queued (Mac CPU, ~8h) | results |
