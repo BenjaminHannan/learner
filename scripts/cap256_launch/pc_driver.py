@@ -20,7 +20,8 @@ import hashlib
 import importlib.util
 import json
 import os
-from pathlib import Path, PurePosixPath
+from pathlib import Path
+import site
 import subprocess
 import sys
 import time
@@ -211,6 +212,32 @@ class Driver:
             os.fsync(stream.fileno())
         return path, hashlib.sha256(data).hexdigest()
 
+    def quarantine_zero_update(self, run_dir, job_id):
+        """Move aside (never delete) a prior attempt that made no optimizer update.
+
+        The sealed runner refuses an existing arm directory. A directory is only
+        moved when it holds FAILED.json with optimizer_updates == 0, no
+        TRAIN-RAW.jsonl and no checkpoint; anything else is left untouched.
+        """
+        failed = run_dir / 'FAILED.json'
+        names = sorted(p.name for p in run_dir.iterdir())
+        if (not failed.is_file() or (run_dir / 'TRAIN-RAW.jsonl').exists()
+                or any(n.endswith(('.pt', '.tmp')) for n in names)):
+            raise RuntimeError('prior arm output is not a zero-update failure; refusing to move %s: %s' % (run_dir, names))
+        record = json.loads(failed.read_text(encoding='utf8').splitlines()[-1])
+        if record.get('optimizer_updates') != 0:
+            raise RuntimeError('prior arm FAILED.json records optimizer updates; refusing to move')
+        manifest = {'from': str(run_dir), 'moved_by_job': job_id, 'utc': iso(),
+                    'prior_job': record.get('job'), 'prior_error': record.get('error'),
+                    'files': {n: {'bytes': (run_dir / n).stat().st_size, 'sha256': sha_file(run_dir / n)}
+                              for n in names if (run_dir / n).is_file()}}
+        target = (self.root / OWN_REL / (self.spec['run_namespace'] + '-zero-update-attempts')
+                  / ('%s-%s-%s' % (run_dir.parent.name, run_dir.name, record.get('job'))))
+        target.parent.mkdir(parents=True, exist_ok=True)
+        os.rename(run_dir, target)
+        write_json(target / 'QUARANTINE-MANIFEST.json', manifest, exclusive=True)
+        return {'quarantined_to': str(target), 'quarantined_prior_job': record.get('job')}
+
     # ---- one arm --------------------------------------------------------------------------
     def run_arm(self, seed, arm, previous_exit):
         job_id = 'cap256-s%d-%s-%s' % (seed, arm, self.batch_id)
@@ -230,6 +257,9 @@ class Driver:
         mark('picked_up', driver_pid=os.getpid())
         run_dir = self.root / OWN_REL / self.spec['run_namespace'] / ('seed%d' % seed) / arm
         try:
+            if run_dir.exists() and self.request.get('quarantine_zero_update_failures'):
+                moved = self.quarantine_zero_update(run_dir, job_id)
+                mark('quarantined_prior_zero_update_attempt', **moved)
             if run_dir.exists():
                 raise RuntimeError('arm output already exists at %s; refusing to overwrite evidence' % run_dir)
             plan, smoke = self.verify_package()
@@ -248,7 +278,12 @@ class Driver:
             return state
 
         stdout_path, stderr_path = job_dir / 'runner-stdout.log', job_dir / 'runner-stderr.log'
-        env = dict(os.environ, JOB=job_id, TREE=str(self.root.resolve()), PYTHONUNBUFFERED='1')
+        # The sealed runner re-launches its worker with the *base* interpreter
+        # (sys._base_executable), which does not see the venv. Point it at the
+        # venv packages, as earlier successful PC jobs did.
+        env = dict(os.environ, JOB=job_id, TREE=str(self.root.resolve()), PYTHONUNBUFFERED='1',
+                   PYTHONPATH=os.pathsep.join(site.getsitepackages()), PYTHONDONTWRITEBYTECODE='1',
+                   HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1')
         flags = getattr(subprocess, 'CREATE_NEW_PROCESS_GROUP', 0)
         started = now()
         with stdout_path.open('xb') as out, stderr_path.open('xb') as err:

@@ -188,6 +188,43 @@ class DriverTests(unittest.TestCase):
         self.assertIn('refusing to overwrite', state['error'])
         self.assertFalse(state['runner_invoked'])
 
+    def test_zero_update_failure_is_moved_aside_not_deleted(self):
+        FakeDriver.updates = {(0, 'loop'): 5120}
+        old = self.root / pc_driver.OWN_REL / 'ns' / 'seed0' / 'loop'
+        old.mkdir(parents=True)
+        (old / 'FAILED.json').write_text(json.dumps({'optimizer_updates': 0, 'job': 'old', 'error': 'ImportError'}) + '\n')
+        (old / 'LAUNCH.json').write_text('{}\n')
+        self.request.update(arms=[[0, 'loop']], quarantine_zero_update_failures=True)
+        batch = FakeDriver(self.request).run()
+        self.assertEqual(batch['jobs'][0]['status'], 'completed')
+        moved = self.root / pc_driver.OWN_REL / 'ns-zero-update-attempts' / 'seed0-loop-old'
+        self.assertTrue((moved / 'FAILED.json').is_file() and (moved / 'LAUNCH.json').is_file())
+        manifest = json.loads((moved / 'QUARANTINE-MANIFEST.json').read_text())
+        self.assertIn('FAILED.json', manifest['files'])
+
+    def test_prior_attempt_with_updates_is_never_moved(self):
+        old = self.root / pc_driver.OWN_REL / 'ns' / 'seed0' / 'loop'
+        old.mkdir(parents=True)
+        (old / 'FAILED.json').write_text(json.dumps({'optimizer_updates': 12}) + '\n')
+        (old / 'TRAIN-RAW.jsonl').write_text('{}\n')
+        self.request.update(arms=[[0, 'loop']], quarantine_zero_update_failures=True)
+        batch = FakeDriver(self.request).run()
+        self.assertEqual(batch['jobs'][0]['status'], 'failed')
+        self.assertTrue((old / 'TRAIN-RAW.jsonl').is_file())
+
+    def test_runner_env_points_base_python_at_venv_packages(self):
+        seen = {}
+        class Capture(FakeDriver):
+            def runner_argv(self, seed, arm, inventory_path, inventory_sha):
+                return [sys.executable, '-c', 'import os,json,pathlib,sys; pathlib.Path(sys.argv[1]).write_text(json.dumps(dict(os.environ)))',
+                        str(self.root / 'env.json')]
+        self.request['arms'] = [[0, 'loop']]
+        Capture(self.request).run()
+        env = json.loads((self.root / 'env.json').read_text())
+        self.assertIn('site-packages', env['PYTHONPATH'])
+        self.assertEqual(env['HF_HUB_OFFLINE'], '1')
+        self.assertEqual(env['JOB'], 'cap256-s0-loop-b1')
+
     def test_guard_block_records_the_offending_process(self):
         class Busy(FakeDriver):
             def probe_processes(self):

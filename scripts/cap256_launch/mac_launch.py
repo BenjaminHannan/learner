@@ -67,7 +67,7 @@ lock=state/'LOCK.json'
 if lock.exists() and not queue_behind:out(ok=False,error='a batch holds the lock; pass --queue-behind to queue',lock=lock.read_text())
 ns=root/'artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1'/req['spec']['run_namespace']
 for seed,arm in req['arms']:
-    if (ns/('seed%d'%seed)/arm).exists():out(ok=False,error='arm output already exists',arm=[seed,arm])
+    if (ns/('seed%d'%seed)/arm).exists() and not req.get('quarantine_zero_update_failures'):out(ok=False,error='arm output already exists',arm=[seed,arm])
     for b in (state/'batches').glob('*/BATCH.json'):
         rec=json.loads(b.read_text())
         if rec.get('status') in ('waiting_for_lock','running') and [seed,arm] in rec.get('arms',[]):
@@ -120,7 +120,8 @@ def start(args):
     batch_id = queued.strftime('%Y%m%dT%H%M%SZ')
     spec_for_pc = {k: v for k, v in spec.items()}
     request = {'batch_id': batch_id, 'commit': commit, 'queued_utc': queued.isoformat(), 'root': PCROOT,
-               'arms': arms, 'spec': spec_for_pc, 'previous_exit_utc': args.previous_exit_utc}
+               'arms': arms, 'spec': spec_for_pc, 'previous_exit_utc': args.previous_exit_utc,
+               'quarantine_zero_update_failures': args.quarantine_zero_update_failures}
     source = header(ROOT=PCROOT, REQUEST=request, FILES=files, QUEUE_BEHIND=args.queue_behind, PCPY=PCPY) + STAGE
     rc, out, err = pc_python(source)
     receipt = {'batch_id': batch_id, 'commit': commit, 'queued_utc': request['queued_utc'], 'arms': arms,
@@ -170,6 +171,8 @@ def main():
     s.add_argument('--commit', required=True)
     s.add_argument('--arms', required=True, help='comma list of ' + ','.join(ARMS))
     s.add_argument('--queue-behind', action='store_true', help='wait for the running batch instead of refusing')
+    s.add_argument('--quarantine-zero-update-failures', action='store_true',
+                   help='move aside (never delete) a prior arm dir that failed with 0 optimizer updates')
     s.add_argument('--previous-exit-utc', help='for idle-time accounting when queueing behind a batch')
     sub.add_parser('status')
     f = sub.add_parser('fetch')
