@@ -175,6 +175,16 @@ class DriverTests(unittest.TestCase):
         self.assertIsNotNone(state['idle_seconds_since_previous_arm'])
         self.assertFalse((self.root / 'launch-cap256' / 'LOCK.json').exists())
 
+    def test_queued_batch_measures_idle_from_previous_runner_exit(self):
+        FakeDriver.updates = {(0, 'loop'): 5120, (0, 'plain'): 5120}
+        self.request['arms'] = [[0, 'loop']]
+        FakeDriver(self.request).run()
+        second = dict(self.request, batch_id='b2', arms=[[0, 'plain']])
+        batch = FakeDriver(second).run()
+        idle = batch['jobs'][0]['idle_seconds_since_previous_arm']
+        self.assertIsNotNone(idle)
+        self.assertGreaterEqual(idle, 0)
+
     def test_existing_arm_output_is_never_overwritten(self):
         FakeDriver.updates = {(0, 'loop'): 5120}
         existing = self.root / pc_driver.OWN_REL / 'ns' / 'seed0' / 'loop'

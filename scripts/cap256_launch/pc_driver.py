@@ -389,6 +389,18 @@ class Driver:
                     raise TimeoutError('lock held by %r for too long' % holder)
                 time.sleep(15)
 
+    def latest_runner_exit(self):
+        """Most recent runner exit from any earlier job, for idle-gap accounting."""
+        ends = []
+        for path in (self.state / 'jobs').glob('*/STATE.json'):
+            try:
+                ended = json.loads(path.read_text(encoding='utf8')).get('runner_ended_utc')
+            except (OSError, ValueError):
+                continue
+            if ended:
+                ends.append(datetime.datetime.fromisoformat(ended))
+        return max(ends) if ends else None
+
     def run(self):
         self.batch_dir.mkdir(parents=True, exist_ok=True)
         batch = {'batch_id': self.batch_id, 'commit': self.request['commit'], 'queued_utc': self.request['queued_utc'],
@@ -400,9 +412,11 @@ class Driver:
             batch['status'] = 'running'
             write_json(self.batch_dir / 'BATCH.json', batch)
             previous_exit = None
+            if self.request.get('previous_exit_utc'):
+                previous_exit = datetime.datetime.fromisoformat(self.request['previous_exit_utc'])
+            else:
+                previous_exit = self.latest_runner_exit()
             for index, (seed, arm) in enumerate(self.request['arms']):
-                if previous_exit is None and self.request.get('previous_exit_utc'):
-                    previous_exit = datetime.datetime.fromisoformat(self.request['previous_exit_utc'])
                 result = self.run_arm(seed, arm, previous_exit)
                 batch['jobs'].append({k: result.get(k) for k in (
                     'job_id', 'status', 'optimizer_updates', 'returncode', 'idle_seconds_since_previous_arm')})
