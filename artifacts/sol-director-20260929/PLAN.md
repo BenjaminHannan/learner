@@ -226,3 +226,7 @@ V11 published6b7953b82, watcher seed0launch06:19:24Z, firstdurable1at0.859s; own
 ### V11 seed0 behavior failure — 06:22 UTC
 
 Owner inspected all96already-saved TRAINoutputs (no new inference/scoring). Loop16/16 identical "The 2004 film"; noNotebook andshuffled also16identical. Distinct16latentdigests do not show understanding. MeaningfulQA NOTshown; no grammatical rendering followup authorized from this evidence. Independent source diagnosis targets teacherforcing/generation parity; existingTRAINraw loss/gradient analysis byLeibniz. Seed1watcheractualstart06:21:42Z,50/200at14.437s; continueoriginalsealedrun once, no panelrescore.
+
+## Handoff snapshot 06:29 UTC /02:29 EDT
+
+Dot handoff requested, actual takeover NOT confirmed. James remains queue integrator until trusted transfer; existing authorized work continues, avoid duplicate new launches. Full self-contained state: artifacts/sol-director-20260929/HANDOFF-20260930-0629.json. V11 both200/rc0,96outputs each, conditioning failed; V12workerpacket pending. Staticnight25actualupdates rc0, notactivated/notdaylearning; actual tensor audit481/481,90changedcoretensors/90Adamstates at25. Dayrows0. Usage28%remaining/resetunused/spend$0;4h31mdeadline.
