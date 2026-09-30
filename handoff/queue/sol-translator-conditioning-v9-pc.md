@@ -1,3 +1,5 @@
+STATUS: HELD
+REASON: observed V8 Windows cp1252 corpus decode; queued entry must enable UTF8 before Python initialization. Original sealed V9 preserved.
 BASH-ONLY: yes
 LOAD-LIGHT: yes
 GPU: no
