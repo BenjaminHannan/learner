@@ -1,0 +1,50 @@
+{
+  "schema": "sol.nextdemo.preparation.v1",
+  "status": "SCAFFOLDING TESTED; ACTUAL MODEL BEHAVIOR UNTESTED",
+  "training_eligible": false,
+  "ownership": "Derek assigned the four new disjoint paths; prior lane explicitly relinquished by relay. No existing runtime or execution package edited.",
+  "background": {
+    "relayed_proposal": "artifacts/sol-cloud-next-demo-20260930/PLAN-v1.json",
+    "local_file_available": false,
+    "claim": "Root reports a structured TRAIN pair with verified answer changing 0 to 1. This file was unavailable locally, so neither its full hash nor contents were independently verified. It supplies no human English episodes or behavioral success."
+  },
+  "runtime_admission": {
+    "schema": "sol.nextdemo.numeric-inference.v1",
+    "required_fields": ["schema", "runtime_root", "checkpoint", "seed", "arm", "update", "plan_sha256", "seal_sha256", "constructor", "device", "binding", "code_pins"],
+    "checkpoint": "Explicit path and external SHA256. Only sol.cloud.numeric-fit.identity.v1 is supported; future broader-run schema requires an additive reviewed adapter revision if incompatible.",
+    "binding": "Complete inherited numeric checkpoint binding, including connected_resume_path and connected_resume_sha256; shared fields must exactly match the existing pinned base runtime.",
+    "constructor": "Exact native ordered loop/plain constructor from selected checkpoint, checked against native model constructor. Four fixed sparse rounds retained; FP32 checkpoint state and loaded parameters checked.",
+    "code_pins": "Exact path-to-SHA mapping for scripts/sol_cloud_numeric_fit_v2.py, scripts/sol_nextdemo_runtime_v1.py and scripts/sol_nextdemo_dev_v1.py. Existing load_joined admission additionally checks its pinned base source seal and component provenance.",
+    "output": "Query final latent only reaches decoder. Disclosed reader_only diagnostic executes zero core rounds and is never production inference. Other arms execute four core rounds."
+  },
+  "fixture": {
+    "schema": "sol.nextdemo.human-dev.v1",
+    "required_fields": ["schema", "origin", "source_ref", "training_eligible", "episodes"],
+    "origin": "human-authored-development",
+    "training_eligible": false,
+    "episode_fields": ["id", "events"],
+    "teach_and_correct_fields": ["kind", "text"],
+    "ask_fields": ["kind", "text", "accepted", "measure"],
+    "measure_values": ["before", "corrected", "missing_fact", "fresh_multihop"],
+    "bounds": "At most two episodes, twelve events each. Proposed smallest behavioral fixture has teach, before ask, correction, corrected ask, fresh multihop ask and missing-fact ask per episode. Human source verifier supplies literal text and accepted strings; no fixtures are fabricated here.",
+    "freshness": "Fixture owner records exclusion from every selected checkpoint training set and prior development use. Without that check, report development output only, never fresh generalization.",
+    "notebook": "Append literal teaching and correction bytes in source order. Never delete or resolve stale statements by hand. Question text is not appended as notebook knowledge; assistant output never becomes source material.",
+    "limits": "Reject empty questions, questions above48 tokenizer tokens and notebooks above512 tokens before the existing truncating tokenizer runs. No automatic cropping or retrieval.",
+    "provenance_limit": "A pinned origin declaration does not independently establish human authorship. Root must verify source_ref and release the episodes before an actual behavior run."
+  },
+  "bounded_matrix": {
+    "seeds": [0, 1],
+    "loop_interventions": ["full", "pre_correction", "no_notebook", "zero_final", "reverse_final", "reader_only"],
+    "plain": "Full arm using compatible existing plain checkpoint; skip with explicit unavailable reason if no compatible checkpoint. It is not a parameter-matched scaling proof.",
+    "maximum_proposed_model_calls": 112,
+    "account": "Two episodes times four asks times six loop arms plus one plain arm times two seeds =112 native generation calls. This is a proposal, not a launch or prerequisite for the priority256-row run.",
+    "controls": "Missing-fact asks require a human accepted abstention. Pre-correction context should retain the original answer where applicable; updated context should produce the corrected answer. Score these directions separately using the corresponding full-arm before and after rows. No-notebook, zero-final and reader-only successes weaken notebook/core dependence claims. Reversal is a sensitivity diagnostic, not a guarantee of disabling reasoning.",
+    "pass_fail": "Per arm: PASS only if every generated answer matches a literal human accepted answer and native generation records valid observed terminal EOS and strip parity. Exact text matching can reject valid paraphrases; no model judge or arithmetic solver is used. English grammar and semantic equivalence remain independent human review fields.",
+    "attribution": "System answer success is not reasoner-specific proof. Frozen reader/talker can compute; residual-information and off-distribution controls do not conclusively locate reasoning. No fair advantage, notebook correctness or scaling qualification is inferred from these counts."
+  },
+  "command": "python -B scripts/sol_nextdemo_dev_v1.py --fixture HUMAN_DEV.json --fixture-sha256 EXTERNAL_SHA --manifest INFERENCE.json --manifest-sha256 EXTERNAL_SHA --out NEW_RAW.json --intervention full",
+  "recount": "Separate reviewer checks saved raw outputs, human accepted strings, source hashes, masks, EOS and intervention identities without rerunning inference. No user-sealed kit is read or generated.",
+  "non_actions": ["training", "activation", "queue edits", "main push", "rentals", "cleanup", "network changes"],
+  "missing_inputs": ["Released independently verified human-authored English development episodes", "Selected closed checkpoint files and full hashes for both seeds and optional plain arm", "Exact inference manifests and compatible checkpoint schema confirmation"],
+  "next_action": "Root reviews/integrates branch, then obtains human development episodes and selected checkpoint manifests. Run only as a separately authorized bounded development diagnostic after the priority capability execution; do not add a gate to that run."
+}
