@@ -185,3 +185,7 @@ Owner inspected all96already-saved TRAINoutputs (no new inference/scoring). Loop
 ## Handoff snapshot 06:29 UTC /02:29 EDT
 
 Dot handoff requested, actual takeover NOT confirmed. James remains queue integrator until trusted transfer; existing authorized work continues, avoid duplicate new launches. Full self-contained state: artifacts/sol-director-20260929/HANDOFF-20260930-0629.json. V11 both200/rc0,96outputs each, conditioning failed; V12workerpacket pending. Staticnight25actualupdates rc0, notactivated/notdaylearning; actual tensor audit481/481,90changedcoretensors/90Adamstates at25. Dayrows0. Usage28%remaining/resetunused/spend$0;4h31mdeadline.
+
+## Verified handover 06:50 UTC
+
+Direct human messages in Derek conversation verified using supported read_thread: resume ongoing jobs and singleexecutioncoordinator. Derek management,01a0f103-8453-75c1-90a6-f86d121450d8 executioncoordination, James soleintegration/queue/git. Oldsupervisor remainsSTOPPED/heartbeatPAUSED. V12release b5a84eda0 was alreadyinflightbeforestop; bothjobsclosedrc0, doNOTrestart. Staticnight25closed, doNOTrepeat. PCfree1,440,477,184B at06:50:22;366,735,360B beyond1GiBreserve; GPU0%1764/16303MiB. No cache/checkpointdeletion. Newexperimentchoices/Derek, actualdayeligibledata unavailablelastverified.
