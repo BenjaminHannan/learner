@@ -82,5 +82,46 @@
     "reset_threshold_remaining_percent": 3
   },
   "independent_review_policy": "Never send author narratives/SUMMARY to blind reviewer. Composition recount awaits its raw results and a separately scoped assignment.",
-  "future_raw_policy": "Every future run saves input identity, labels, predictions, masks and source/checkpoint/version hashes before independent recount. Preserve old runs; no regenerating labels/rescoring."
+  "future_raw_policy": "Every future run saves input identity, labels, predictions, masks and source/checkpoint/version hashes before independent recount. Preserve old runs; no regenerating labels/rescoring.",
+  "source_readiness": {
+    "original_job": "sol-stop-readiness-source-v2",
+    "original_status": "failed before Python: incompatible /usr/local/bin/python3; no reserved inputs",
+    "successor_job": "sol-compose-stop-source-runtimefix-20260930",
+    "state": "COMPLETE diagnostic gate NOT MET",
+    "seconds": 32.57982887500839,
+    "candidate_sums_counts": [
+      24,
+      24
+    ],
+    "candidate_grids_counts": [
+      20,
+      21
+    ],
+    "N_per_kind": 24,
+    "higher_controls_grids_counts": [
+      24,
+      24
+    ],
+    "accepted_stop_ready": false,
+    "scope": "source hashes only; never transfers to human-grounded weights",
+    "recount": "pending"
+  },
+  "human_grounding": {
+    "state": "packaging bounded v2; GPU slot free",
+    "owner": "Leibniz",
+    "controls_owner": "Peirce",
+    "stopping_owner": "Epicurus",
+    "TRAIN": 512,
+    "fresh_dev": 100,
+    "seeds": [
+      0,
+      1
+    ],
+    "plan_updates_per_seed": 500,
+    "training_cap_seconds": 3000,
+    "wrapper_cap_seconds": 3950,
+    "source": "question query only; human context notebook; decoder final query state only",
+    "trained_weights_available": false,
+    "pending": "durable populated-optimizer/RNG TRAIN checkpoint + deploymentseal/transport"
+  }
 }

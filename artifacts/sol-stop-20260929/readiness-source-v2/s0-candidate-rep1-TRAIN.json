@@ -1,0 +1,1909 @@
+{
+  "calibration": [
+    {
+      "threshold": 0.5,
+      "unsafe": 0,
+      "stops": 32
+    },
+    {
+      "threshold": 0.75,
+      "unsafe": 0,
+      "stops": 32
+    },
+    {
+      "threshold": 0.9,
+      "unsafe": 0,
+      "stops": 32
+    },
+    {
+      "threshold": 0.95,
+      "unsafe": 0,
+      "stops": 32
+    },
+    {
+      "threshold": 0.99,
+      "unsafe": 0,
+      "stops": 32
+    },
+    {
+      "threshold": 1.0,
+      "unsafe": 0,
+      "stops": 0
+    }
+  ],
+  "threshold": 0.5,
+  "noise_raw": {
+    "sums4": {
+      "exact": 16,
+      "n": 16,
+      "correct": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "rounds": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "stopped": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "physical_sizes": [
+        [
+          8
+        ],
+        [
+          8
+        ]
+      ],
+      "physical_row_rounds": 16,
+      "selected_row_rounds": 16,
+      "work": [
+        {
+          "phases": {
+            "embed_prefix": {
+              "linear_macs": 0,
+              "observed_module_calls": 2
+            },
+            "transition": {
+              "linear_macs": 315064320,
+              "observed_module_calls": 21
+            },
+            "read": {
+              "linear_macs": 3842048,
+              "observed_module_calls": 3
+            },
+            "controller": {
+              "linear_macs": 65792,
+              "observed_module_calls": 2
+            }
+          },
+          "modules": {
+            "embed_prefix:program.tok": {
+              "calls": 1,
+              "input_elements": 120,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "embed_prefix:program.slot": {
+              "calls": 1,
+              "input_elements": 120,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0.ln1": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0.qkv": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 23592960
+            },
+            "transition:program.blocks.0.out": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 7864320
+            },
+            "transition:program.blocks.0.ln2": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0.mlp.router": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 120,
+              "linear_macs": 245760
+            },
+            "transition:program.blocks.0.mlp.experts.0.0": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.blocks.0.mlp.experts.0.2": {
+              "calls": 1,
+              "input_elements": 122880,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.blocks.0.mlp.experts.1.0": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.blocks.0.mlp.experts.1.2": {
+              "calls": 1,
+              "input_elements": 122880,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.blocks.1": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.1.ln1": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.1.qkv": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 23592960
+            },
+            "transition:program.blocks.1.out": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 7864320
+            },
+            "transition:program.blocks.1.ln2": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.1.mlp.router": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 120,
+              "linear_macs": 245760
+            },
+            "transition:program.blocks.1.mlp.experts.0.0": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.blocks.1.mlp.experts.0.2": {
+              "calls": 1,
+              "input_elements": 122880,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.blocks.1.mlp.experts.1.0": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.blocks.1.mlp.experts.1.2": {
+              "calls": 1,
+              "input_elements": 122880,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.ln_state": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "read:program.ln_out": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "read:program.head": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 3840000
+            },
+            "read:program.halt": {
+              "calls": 1,
+              "input_elements": 2048,
+              "leading_entries": 8,
+              "linear_macs": 2048
+            },
+            "controller:controller.mlp.0": {
+              "calls": 1,
+              "input_elements": 2048,
+              "leading_entries": 8,
+              "linear_macs": 65536
+            },
+            "controller:controller.mlp.2": {
+              "calls": 1,
+              "input_elements": 256,
+              "leading_entries": 8,
+              "linear_macs": 256
+            }
+          },
+          "linear_macs_are_partial_not_FLOPs": true,
+          "attention_functional_ops_and_GRU_MACs_not_counted": true,
+          "latency_claim": false
+        },
+        {
+          "phases": {
+            "embed_prefix": {
+              "linear_macs": 0,
+              "observed_module_calls": 2
+            },
+            "transition": {
+              "linear_macs": 315064320,
+              "observed_module_calls": 21
+            },
+            "read": {
+              "linear_macs": 3842048,
+              "observed_module_calls": 3
+            },
+            "controller": {
+              "linear_macs": 65792,
+              "observed_module_calls": 2
+            }
+          },
+          "modules": {
+            "embed_prefix:program.tok": {
+              "calls": 1,
+              "input_elements": 120,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "embed_prefix:program.slot": {
+              "calls": 1,
+              "input_elements": 120,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0.ln1": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0.qkv": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 23592960
+            },
+            "transition:program.blocks.0.out": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 7864320
+            },
+            "transition:program.blocks.0.ln2": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0.mlp.router": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 120,
+              "linear_macs": 245760
+            },
+            "transition:program.blocks.0.mlp.experts.0.0": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.blocks.0.mlp.experts.0.2": {
+              "calls": 1,
+              "input_elements": 122880,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.blocks.0.mlp.experts.1.0": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.blocks.0.mlp.experts.1.2": {
+              "calls": 1,
+              "input_elements": 122880,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.blocks.1": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.1.ln1": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.1.qkv": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 23592960
+            },
+            "transition:program.blocks.1.out": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 7864320
+            },
+            "transition:program.blocks.1.ln2": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.1.mlp.router": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 120,
+              "linear_macs": 245760
+            },
+            "transition:program.blocks.1.mlp.experts.0.0": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.blocks.1.mlp.experts.0.2": {
+              "calls": 1,
+              "input_elements": 122880,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.blocks.1.mlp.experts.1.0": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.blocks.1.mlp.experts.1.2": {
+              "calls": 1,
+              "input_elements": 122880,
+              "leading_entries": 120,
+              "linear_macs": 31457280
+            },
+            "transition:program.ln_state": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "read:program.ln_out": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "read:program.head": {
+              "calls": 1,
+              "input_elements": 30720,
+              "leading_entries": 8,
+              "linear_macs": 3840000
+            },
+            "read:program.halt": {
+              "calls": 1,
+              "input_elements": 2048,
+              "leading_entries": 8,
+              "linear_macs": 2048
+            },
+            "controller:controller.mlp.0": {
+              "calls": 1,
+              "input_elements": 2048,
+              "leading_entries": 8,
+              "linear_macs": 65536
+            },
+            "controller:controller.mlp.2": {
+              "calls": 1,
+              "input_elements": 256,
+              "leading_entries": 8,
+              "linear_macs": 256
+            }
+          },
+          "linear_macs_are_partial_not_FLOPs": true,
+          "attention_functional_ops_and_GRU_MACs_not_counted": true,
+          "latency_claim": false
+        }
+      ],
+      "predictions": [
+        [
+          3,
+          3,
+          10,
+          10,
+          3,
+          3,
+          3,
+          10,
+          3,
+          4,
+          3,
+          3,
+          10,
+          9,
+          4
+        ],
+        [
+          0,
+          0,
+          3,
+          5,
+          5,
+          0,
+          11,
+          11,
+          5,
+          3,
+          0,
+          11,
+          11,
+          5,
+          5
+        ],
+        [
+          0,
+          5,
+          4,
+          5,
+          5,
+          0,
+          9,
+          2,
+          3,
+          4,
+          0,
+          9,
+          2,
+          9,
+          4
+        ],
+        [
+          0,
+          9,
+          3,
+          8,
+          2,
+          0,
+          0,
+          0,
+          4,
+          3,
+          0,
+          9,
+          3,
+          8,
+          2
+        ],
+        [
+          0,
+          3,
+          3,
+          8,
+          5,
+          0,
+          0,
+          10,
+          7,
+          5,
+          0,
+          3,
+          10,
+          7,
+          6
+        ],
+        [
+          0,
+          10,
+          9,
+          7,
+          3,
+          0,
+          0,
+          0,
+          3,
+          3,
+          0,
+          10,
+          9,
+          7,
+          8
+        ],
+        [
+          3,
+          4,
+          2,
+          11,
+          5,
+          3,
+          6,
+          3,
+          11,
+          7,
+          3,
+          6,
+          3,
+          11,
+          3
+        ],
+        [
+          3,
+          11,
+          3,
+          7,
+          11,
+          3,
+          11,
+          6,
+          7,
+          11,
+          3,
+          11,
+          2,
+          7,
+          11
+        ],
+        [
+          0,
+          0,
+          9,
+          10,
+          11,
+          0,
+          5,
+          9,
+          10,
+          11,
+          0,
+          5,
+          9,
+          10,
+          11
+        ],
+        [
+          0,
+          6,
+          3,
+          7,
+          6,
+          0,
+          6,
+          6,
+          3,
+          3,
+          0,
+          6,
+          6,
+          7,
+          6
+        ],
+        [
+          3,
+          0,
+          4,
+          7,
+          20,
+          3,
+          4,
+          5,
+          6,
+          3,
+          3,
+          4,
+          4,
+          6,
+          6
+        ],
+        [
+          3,
+          4,
+          5,
+          5,
+          5,
+          3,
+          4,
+          5,
+          2,
+          9,
+          3,
+          4,
+          5,
+          6,
+          8
+        ],
+        [
+          0,
+          11,
+          6,
+          3,
+          11,
+          0,
+          0,
+          5,
+          2,
+          11,
+          0,
+          11,
+          2,
+          2,
+          11
+        ],
+        [
+          0,
+          2,
+          11,
+          9,
+          5,
+          0,
+          2,
+          11,
+          9,
+          4,
+          0,
+          11,
+          11,
+          9,
+          4
+        ],
+        [
+          0,
+          8,
+          6,
+          14,
+          3,
+          0,
+          10,
+          10,
+          5,
+          3,
+          0,
+          9,
+          10,
+          5,
+          8
+        ],
+        [
+          0,
+          4,
+          20,
+          2,
+          6,
+          0,
+          7,
+          3,
+          2,
+          6,
+          0,
+          7,
+          9,
+          2,
+          6
+        ]
+      ],
+      "all_batch_exact_latent_prediction_depth_stop_parity": false
+    },
+    "grids5": {
+      "exact": 14,
+      "n": 16,
+      "correct": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true,
+        true
+      ],
+      "rounds": [
+        3,
+        1,
+        3,
+        3,
+        2,
+        1,
+        1,
+        4,
+        5,
+        3,
+        3,
+        2,
+        1,
+        3,
+        3,
+        4
+      ],
+      "stopped": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "physical_sizes": [
+        [
+          8,
+          5,
+          4,
+          1
+        ],
+        [
+          8,
+          7,
+          6,
+          2,
+          1
+        ]
+      ],
+      "physical_row_rounds": 42,
+      "selected_row_rounds": 42,
+      "work": [
+        {
+          "phases": {
+            "embed_prefix": {
+              "linear_macs": 0,
+              "observed_module_calls": 2
+            },
+            "transition": {
+              "linear_macs": 1654087680,
+              "observed_module_calls": 84
+            },
+            "read": {
+              "linear_macs": 20164608,
+              "observed_module_calls": 12
+            },
+            "controller": {
+              "linear_macs": 148032,
+              "observed_module_calls": 8
+            }
+          },
+          "modules": {
+            "embed_prefix:program.tok": {
+              "calls": 1,
+              "input_elements": 280,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "embed_prefix:program.slot": {
+              "calls": 1,
+              "input_elements": 280,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 18,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0.ln1": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 18,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0.qkv": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 18,
+              "linear_macs": 123863040
+            },
+            "transition:program.blocks.0.out": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 18,
+              "linear_macs": 41287680
+            },
+            "transition:program.blocks.0.ln2": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 18,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0.mlp.router": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 630,
+              "linear_macs": 1290240
+            },
+            "transition:program.blocks.0.mlp.experts.0.0": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 630,
+              "linear_macs": 165150720
+            },
+            "transition:program.blocks.0.mlp.experts.0.2": {
+              "calls": 4,
+              "input_elements": 645120,
+              "leading_entries": 630,
+              "linear_macs": 165150720
+            },
+            "transition:program.blocks.0.mlp.experts.1.0": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 630,
+              "linear_macs": 165150720
+            },
+            "transition:program.blocks.0.mlp.experts.1.2": {
+              "calls": 4,
+              "input_elements": 645120,
+              "leading_entries": 630,
+              "linear_macs": 165150720
+            },
+            "transition:program.blocks.1": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 18,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.1.ln1": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 18,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.1.qkv": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 18,
+              "linear_macs": 123863040
+            },
+            "transition:program.blocks.1.out": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 18,
+              "linear_macs": 41287680
+            },
+            "transition:program.blocks.1.ln2": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 18,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.1.mlp.router": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 630,
+              "linear_macs": 1290240
+            },
+            "transition:program.blocks.1.mlp.experts.0.0": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 630,
+              "linear_macs": 165150720
+            },
+            "transition:program.blocks.1.mlp.experts.0.2": {
+              "calls": 4,
+              "input_elements": 645120,
+              "leading_entries": 630,
+              "linear_macs": 165150720
+            },
+            "transition:program.blocks.1.mlp.experts.1.0": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 630,
+              "linear_macs": 165150720
+            },
+            "transition:program.blocks.1.mlp.experts.1.2": {
+              "calls": 4,
+              "input_elements": 645120,
+              "leading_entries": 630,
+              "linear_macs": 165150720
+            },
+            "transition:program.ln_state": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 18,
+              "linear_macs": 0
+            },
+            "read:program.ln_out": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 18,
+              "linear_macs": 0
+            },
+            "read:program.head": {
+              "calls": 4,
+              "input_elements": 161280,
+              "leading_entries": 18,
+              "linear_macs": 20160000
+            },
+            "read:program.halt": {
+              "calls": 4,
+              "input_elements": 4608,
+              "leading_entries": 18,
+              "linear_macs": 4608
+            },
+            "controller:controller.mlp.0": {
+              "calls": 4,
+              "input_elements": 4608,
+              "leading_entries": 18,
+              "linear_macs": 147456
+            },
+            "controller:controller.mlp.2": {
+              "calls": 4,
+              "input_elements": 576,
+              "leading_entries": 18,
+              "linear_macs": 576
+            }
+          },
+          "linear_macs_are_partial_not_FLOPs": true,
+          "attention_functional_ops_and_GRU_MACs_not_counted": true,
+          "latency_claim": false
+        },
+        {
+          "phases": {
+            "embed_prefix": {
+              "linear_macs": 0,
+              "observed_module_calls": 2
+            },
+            "transition": {
+              "linear_macs": 2205450240,
+              "observed_module_calls": 105
+            },
+            "read": {
+              "linear_macs": 26886144,
+              "observed_module_calls": 15
+            },
+            "controller": {
+              "linear_macs": 197376,
+              "observed_module_calls": 10
+            }
+          },
+          "modules": {
+            "embed_prefix:program.tok": {
+              "calls": 1,
+              "input_elements": 280,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "embed_prefix:program.slot": {
+              "calls": 1,
+              "input_elements": 280,
+              "leading_entries": 8,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 24,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0.ln1": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 24,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0.qkv": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 24,
+              "linear_macs": 165150720
+            },
+            "transition:program.blocks.0.out": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 24,
+              "linear_macs": 55050240
+            },
+            "transition:program.blocks.0.ln2": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 24,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.0.mlp.router": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 840,
+              "linear_macs": 1720320
+            },
+            "transition:program.blocks.0.mlp.experts.0.0": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 840,
+              "linear_macs": 220200960
+            },
+            "transition:program.blocks.0.mlp.experts.0.2": {
+              "calls": 5,
+              "input_elements": 860160,
+              "leading_entries": 840,
+              "linear_macs": 220200960
+            },
+            "transition:program.blocks.0.mlp.experts.1.0": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 840,
+              "linear_macs": 220200960
+            },
+            "transition:program.blocks.0.mlp.experts.1.2": {
+              "calls": 5,
+              "input_elements": 860160,
+              "leading_entries": 840,
+              "linear_macs": 220200960
+            },
+            "transition:program.blocks.1": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 24,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.1.ln1": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 24,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.1.qkv": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 24,
+              "linear_macs": 165150720
+            },
+            "transition:program.blocks.1.out": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 24,
+              "linear_macs": 55050240
+            },
+            "transition:program.blocks.1.ln2": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 24,
+              "linear_macs": 0
+            },
+            "transition:program.blocks.1.mlp.router": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 840,
+              "linear_macs": 1720320
+            },
+            "transition:program.blocks.1.mlp.experts.0.0": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 840,
+              "linear_macs": 220200960
+            },
+            "transition:program.blocks.1.mlp.experts.0.2": {
+              "calls": 5,
+              "input_elements": 860160,
+              "leading_entries": 840,
+              "linear_macs": 220200960
+            },
+            "transition:program.blocks.1.mlp.experts.1.0": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 840,
+              "linear_macs": 220200960
+            },
+            "transition:program.blocks.1.mlp.experts.1.2": {
+              "calls": 5,
+              "input_elements": 860160,
+              "leading_entries": 840,
+              "linear_macs": 220200960
+            },
+            "transition:program.ln_state": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 24,
+              "linear_macs": 0
+            },
+            "read:program.ln_out": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 24,
+              "linear_macs": 0
+            },
+            "read:program.head": {
+              "calls": 5,
+              "input_elements": 215040,
+              "leading_entries": 24,
+              "linear_macs": 26880000
+            },
+            "read:program.halt": {
+              "calls": 5,
+              "input_elements": 6144,
+              "leading_entries": 24,
+              "linear_macs": 6144
+            },
+            "controller:controller.mlp.0": {
+              "calls": 5,
+              "input_elements": 6144,
+              "leading_entries": 24,
+              "linear_macs": 196608
+            },
+            "controller:controller.mlp.2": {
+              "calls": 5,
+              "input_elements": 768,
+              "leading_entries": 24,
+              "linear_macs": 768
+            }
+          },
+          "linear_macs_are_partial_not_FLOPs": true,
+          "attention_functional_ops_and_GRU_MACs_not_counted": true,
+          "latency_claim": false
+        }
+      ],
+      "predictions": [
+        [
+          19,
+          20,
+          17,
+          13,
+          12,
+          17,
+          13,
+          20,
+          12,
+          19,
+          13,
+          12,
+          19,
+          17,
+          20,
+          20,
+          17,
+          12,
+          19,
+          13,
+          12,
+          19,
+          13,
+          20,
+          17,
+          0,
+          8,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          12,
+          18,
+          14,
+          16,
+          19,
+          16,
+          19,
+          12,
+          18,
+          14,
+          14,
+          16,
+          19,
+          12,
+          18,
+          19,
+          12,
+          18,
+          14,
+          16,
+          18,
+          14,
+          16,
+          19,
+          12,
+          0,
+          0,
+          0,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          19,
+          12,
+          15,
+          14,
+          16,
+          15,
+          14,
+          12,
+          16,
+          19,
+          12,
+          15,
+          16,
+          19,
+          14,
+          14,
+          16,
+          19,
+          15,
+          12,
+          16,
+          19,
+          14,
+          12,
+          15,
+          9,
+          9,
+          9,
+          9,
+          9,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          17,
+          18,
+          14,
+          12,
+          13,
+          18,
+          13,
+          12,
+          17,
+          14,
+          13,
+          17,
+          18,
+          14,
+          12,
+          12,
+          14,
+          17,
+          13,
+          18,
+          14,
+          12,
+          13,
+          18,
+          17,
+          4,
+          4,
+          4,
+          8,
+          8,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          15,
+          12,
+          20,
+          16,
+          17,
+          16,
+          20,
+          15,
+          17,
+          12,
+          12,
+          15,
+          17,
+          20,
+          16,
+          17,
+          16,
+          12,
+          15,
+          20,
+          20,
+          17,
+          16,
+          12,
+          15,
+          11,
+          6,
+          11,
+          11,
+          11,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          17,
+          14,
+          19,
+          12,
+          18,
+          19,
+          17,
+          18,
+          14,
+          12,
+          18,
+          19,
+          12,
+          17,
+          14,
+          14,
+          12,
+          17,
+          18,
+          19,
+          12,
+          18,
+          14,
+          19,
+          17,
+          8,
+          0,
+          8,
+          3,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          12,
+          20,
+          15,
+          13,
+          19,
+          15,
+          13,
+          20,
+          19,
+          12,
+          13,
+          19,
+          12,
+          20,
+          15,
+          19,
+          12,
+          13,
+          15,
+          20,
+          20,
+          15,
+          19,
+          12,
+          13,
+          0,
+          0,
+          0,
+          6,
+          11,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          18,
+          14,
+          17,
+          19,
+          16,
+          16,
+          17,
+          19,
+          14,
+          18,
+          19,
+          16,
+          14,
+          18,
+          17,
+          14,
+          18,
+          16,
+          17,
+          19,
+          17,
+          19,
+          18,
+          16,
+          14,
+          9,
+          0,
+          0,
+          0,
+          9,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          20,
+          19,
+          12,
+          17,
+          13,
+          12,
+          17,
+          13,
+          19,
+          20,
+          13,
+          20,
+          17,
+          20,
+          12,
+          17,
+          13,
+          19,
+          12,
+          19,
+          19,
+          12,
+          20,
+          13,
+          17,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          19,
+          17,
+          20,
+          14,
+          18,
+          18,
+          19,
+          17,
+          20,
+          14,
+          20,
+          14,
+          19,
+          18,
+          17,
+          14,
+          20,
+          18,
+          17,
+          19,
+          17,
+          18,
+          14,
+          19,
+          20,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          14,
+          20,
+          15,
+          17,
+          18,
+          18,
+          15,
+          17,
+          20,
+          14,
+          17,
+          18,
+          14,
+          15,
+          20,
+          15,
+          14,
+          20,
+          18,
+          17,
+          20,
+          17,
+          18,
+          14,
+          15,
+          6,
+          7,
+          6,
+          6,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          19,
+          15,
+          14,
+          16,
+          12,
+          12,
+          19,
+          16,
+          14,
+          15,
+          16,
+          12,
+          15,
+          19,
+          14,
+          14,
+          16,
+          12,
+          15,
+          19,
+          15,
+          14,
+          19,
+          12,
+          16,
+          9,
+          9,
+          9,
+          9,
+          9,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          20,
+          19,
+          14,
+          15,
+          17,
+          15,
+          14,
+          19,
+          17,
+          20,
+          14,
+          20,
+          17,
+          19,
+          15,
+          17,
+          15,
+          20,
+          14,
+          17,
+          19,
+          17,
+          15,
+          20,
+          14,
+          0,
+          0,
+          6,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          19,
+          16,
+          15,
+          12,
+          14,
+          12,
+          15,
+          14,
+          19,
+          16,
+          15,
+          12,
+          16,
+          14,
+          19,
+          14,
+          19,
+          12,
+          16,
+          15,
+          16,
+          14,
+          19,
+          15,
+          12,
+          9,
+          9,
+          9,
+          9,
+          9,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          19,
+          16,
+          17,
+          15,
+          18,
+          18,
+          17,
+          15,
+          19,
+          16,
+          15,
+          19,
+          18,
+          16,
+          17,
+          16,
+          18,
+          19,
+          17,
+          15,
+          17,
+          15,
+          16,
+          18,
+          19,
+          10,
+          9,
+          9,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          16,
+          12,
+          14,
+          20,
+          19,
+          20,
+          14,
+          19,
+          12,
+          16,
+          19,
+          16,
+          12,
+          14,
+          20,
+          12,
+          20,
+          16,
+          19,
+          14,
+          14,
+          19,
+          20,
+          16,
+          12,
+          0,
+          6,
+          11,
+          0,
+          11,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "all_batch_exact_latent_prediction_depth_stop_parity": false
+    }
+  },
+  "collection": [
+    {
+      "kind": "sums4",
+      "rows": 8,
+      "physical_row_rounds": 384,
+      "recurrent_tokens": 15
+    },
+    {
+      "kind": "sums4",
+      "rows": 8,
+      "physical_row_rounds": 384,
+      "recurrent_tokens": 15
+    },
+    {
+      "kind": "sums4",
+      "rows": 8,
+      "physical_row_rounds": 384,
+      "recurrent_tokens": 15
+    },
+    {
+      "kind": "sums4",
+      "rows": 8,
+      "physical_row_rounds": 384,
+      "recurrent_tokens": 15
+    },
+    {
+      "kind": "grids5",
+      "rows": 8,
+      "physical_row_rounds": 384,
+      "recurrent_tokens": 35
+    },
+    {
+      "kind": "grids5",
+      "rows": 8,
+      "physical_row_rounds": 384,
+      "recurrent_tokens": 35
+    },
+    {
+      "kind": "grids5",
+      "rows": 8,
+      "physical_row_rounds": 384,
+      "recurrent_tokens": 35
+    },
+    {
+      "kind": "grids5",
+      "rows": 8,
+      "physical_row_rounds": 384,
+      "recurrent_tokens": 35
+    }
+  ],
+  "calibration_collection": [
+    {
+      "kind": "sums4",
+      "rows": 8,
+      "physical_row_rounds": 384,
+      "recurrent_tokens": 15
+    },
+    {
+      "kind": "sums4",
+      "rows": 8,
+      "physical_row_rounds": 384,
+      "recurrent_tokens": 15
+    },
+    {
+      "kind": "grids5",
+      "rows": 8,
+      "physical_row_rounds": 384,
+      "recurrent_tokens": 35
+    },
+    {
+      "kind": "grids5",
+      "rows": 8,
+      "physical_row_rounds": 384,
+      "recurrent_tokens": 35
+    }
+  ],
+  "fit_updates": 256,
+  "fit_batch": 256,
+  "fit_seed": 76104001,
+  "positive_TRAIN_labels": 3019,
+  "TRAIN_labels": 3072,
+  "core_sha256_before_after": "79a2a6c863cc6b04d996056751cc64ca9cb63c9e8b708468b33b83c457047c1e",
+  "head_sha256": "31564d035eedfbd77003181e6afcab463c7eeedd41c58fa4e3e41a993aef27a9"
+}
