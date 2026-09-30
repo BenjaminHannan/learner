@@ -1,0 +1,250 @@
+{
+  "schema_version": "numeric-diagnostic-protocol-v3",
+  "sealed_UTC": "2026-09-30T14:31:05.126301+00:00",
+  "status": "BLOCKED_CURRENT_REPORTED_DISK_PENDING_FRESH_RUNTIME_RESOURCE_GATES",
+  "current_pool_rows": 396,
+  "future286_rows_current_fit_eligible": false,
+  "selector_policy_sha256": "9b880ad38972893f6aa1901548cd35bed838dfebf211709bd369a56d428e14a8",
+  "row_seal_sha256": "21f5b56db65828b241adf538f502608802b2263d02565a8761ba74c5dfd4dd74",
+  "rows": 16,
+  "seeds": [
+    0,
+    1
+  ],
+  "arms": [
+    "ordered_loop",
+    "ordered_sparse_unshared_plain"
+  ],
+  "rounds_or_segments": 4,
+  "visits_per_row": 50,
+  "updates_per_arm_per_seed": 800,
+  "aggregate_optimizer_updates": 3200,
+  "numeric_target_CE_plus_EOS_only": true,
+  "sparse_auxiliary_in_objective": false,
+  "frozen_LM": true,
+  "precision": "FP32",
+  "batch": 1,
+  "optimizer": {
+    "name": "AdamW",
+    "lr": 0.001,
+    "weight_decay": 0,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "clip": 1.0,
+    "reset_identically_each_new_arm": true
+  },
+  "warmstart": {
+    "source": "V12_CONNECTED200_selected_by_parent",
+    "seed0_path": "C:/Users/benja/sol-translator-tiny-v12/artifacts/sol-translator-20260929/tiny-v12-s0/connected-resume.pt",
+    "seed0_sha256": "5858bd5dc4446d78bc49e04149740f98c9adce0e7938089728eec009c33d4b55",
+    "seed1_path": "C:/Users/benja/sol-translator-tiny-v12/artifacts/sol-translator-20260929/tiny-v12-s1/connected-resume.pt",
+    "seed1_sha256": "b9198f7ae81be7bba331fc35982320e39a287b54a3c15c3c4db28f97fc7100c8",
+    "load": "strict core/reader/prefix into existing V11 binding constructors; reject TABLE; clone selected core into OrderedPlainAttentionReasoner",
+    "same_seed_initial_core_function_reader_prefix_both_arms": true,
+    "old_optimizer_and_RNG_resumed": false,
+    "same_declared_CPU_CUDA_training_RNG_reset_after_construction_and_preflight": true,
+    "inherited_V11_V12_training_lineage_compute_report_separately": true
+  },
+  "plain_constructor": {
+    "module": "sol_spatial_poc_ordered_v2",
+    "class": "OrderedPlainAttentionReasoner",
+    "sparse": true,
+    "unshared_segments": 4,
+    "distinct_blocks": 8,
+    "dense_architecture_created": false,
+    "source_sha256": "5344e622855c875312f77a88095d287a5709e17dbaca23c90bdd8733b0a38291"
+  },
+  "source_parameter_and_compute_accounting": {
+    "not_runtime_instantiated_or_FLOPs_measured": true,
+    "loop_core_parameters": 9007790,
+    "plain_core_parameters_analytic": 35834942,
+    "reader_prefix_parameters_each_arm": 154528,
+    "loop_total_trainable_parameters": 9162318,
+    "plain_total_trainable_parameters_analytic": 35989470,
+    "loop_expert_MLPs_stored": 16,
+    "plain_expert_MLPs_stored": 64,
+    "selected_expert_token_calls_each_pass": 16,
+    "attention_block_calls_each_pass": 8,
+    "dominant_MLP_MACs_each_token_each_pass": 8388608,
+    "router_MACs_each_token_each_pass": 16384,
+    "attention_MACs_each_token_each_pass_formula": "8*(4*256*256 + 2*T*256), T=complete question tokens+EOS<=49",
+    "other_operations": "same block definitions/selected counts; routing, softmax, masking, bias, gating/scatter, norm/GELU and common LM shape work; actual compute/latency still measured separately",
+    "stored_parameter_active_count_is_FLOPs_or_speed": false,
+    "extra_plain_parameters_and_Adam_work_disclosed": true,
+    "plain_three_FP32_parameter_moment_copies_bytes_analytic": 431873640
+  },
+  "marks": {
+    "primary_each_seed_at_update800": "ordered_loop complete canonical numeric target IDs plus exactly one observed terminal EOS exact16/16",
+    "plain_same_metric_independently_reported": true,
+    "both_seed_same_verdict_required": true,
+    "numeric_parser_secondary_not_primary_substitute": true,
+    "predictions_saved_updates": [
+      0,
+      200,
+      400,
+      800
+    ],
+    "fit_is_capability_notebook_or_generalization_claim": false,
+    "primary_metric": "target_ids_plus_observed_EOS_exact",
+    "prior_nonEOS_exact_is_secondary_only": true
+  },
+  "storage": {
+    "unit": "MiB",
+    "approved_hard_cap_per_seed_pair_including_actual_atomic_peak": 1280,
+    "loop_final_checkpoint_cap": 108,
+    "plain_final_checkpoint_cap": 416,
+    "raw_cap_per_seed_pair": 16,
+    "intermediate_checkpoint_files": 0,
+    "tensor_frames": 0,
+    "one_atomic_checkpoint_extra_peak": 0,
+    "conservative_planned_per_pair_peak": 540,
+    "margin_to_hard_cap": 740,
+    "all_actual_serialization_buffer_allocation_peak_measurements_pending": true,
+    "minimum_free_reserve_bytes": 1073741824,
+    "planned_peak_plus_reserve_startup_floor_bytes": 1648361472,
+    "hard_cap_plus_reserve_bytes": 2415919104,
+    "fresh_inventory_includes_retained_old_outputs": true,
+    "previous_seed_pair_retention_must_count_in_next_fresh_inventory": true,
+    "no_evidence_cache_or_unrelated_deletion": true,
+    "resource_fail_action": "BLOCK_AND_REVIEW_SMALLER_STORAGE_PLAN_NO_SCHEDULE_OR_TRAINING_CHANGE",
+    "atomic_accounting": "first write only: one bounded temporary checkpoint replaces an absent immutable destination; file is counted once inside its checkpoint cap, not twice",
+    "first_time_checkpoint_destination_absence_required": true,
+    "existing_checkpoint_destination_or_retry_tmp_action": "BLOCK_NO_OVERWRITE_OR_UNACCOUNTED_DUPLICATE",
+    "both_seed_pairs_conservative_matrix_peak_MiB": 1088,
+    "both_seed_pairs_plus_reserve_first_launch_floor_bytes": 2214592512,
+    "both_seed_conservative_resource_feasibility_required_before_first_launch": true,
+    "assumed_smaller_actual_retained_sizes_can_satisfy_prelaunch_conservative_gate": false,
+    "narrower_loop108_raw8_bounds_adopted": false,
+    "reported_fresh_inventory_not_a_new_measurement_by_protocol_writer": {
+      "source": "root/integrator actual PC free-space probe",
+      "observed_UTC": "2026-09-30T14:11:40+00:00",
+      "free_bytes": 2212827136,
+      "approved_full_matrix_floor_bytes": 2214592512,
+      "deficit_bytes": 1765376,
+      "whole_matrix_conservative_fit": false,
+      "action": "BLOCK_FIRST_LAUNCH_UNTIL_FRESH_VERIFIED_FULL_MATRIX_FREE_SPACE_GATE_PASSES"
+    },
+    "global_shared_delivery_staging_telemetry_log_cap": 8,
+    "global_shared_cap_counted_once_across_both_seed_pairs": true,
+    "global_cap_includes_allocation_rounding_owned_stream_headroom_and_2MiB_metadata_partial_write_slack": true,
+    "planned_pair_excludes_global_shared_cap": true,
+    "both_seed_pairs_retained_checkpoint_raw_peak_MiB": 1080,
+    "proof_backed_loop108_adopted": true,
+    "raw8_adopted": false,
+    "analytic_loop_checkpoint_bound": {
+      "eligible_FP32_parameter_bytes": 36648244,
+      "three_FP32_parameter_moment_copies_bytes": 109944732,
+      "declared_serialization_overhead_allowance_bytes": 3145728,
+      "planned_checkpoint_bytes": 113090460,
+      "checkpoint_cap_bytes": 113246208,
+      "analytic_not_measured_serializer_bound": true,
+      "prewrite_bounded_sink_enforces_checkpoint_cap": true,
+      "proof": {
+        "path": "artifacts/sol-cloud-numeric-storage-proof-20260930/RESULT-v1.json",
+        "sha256": "64995798abb4a79b41ec28caf714eb50a02ada4235815860051ed47ecc64f80e",
+        "bytes": 3166
+      }
+    },
+    "zero_Adam_serialization_extra_launch_gate_required": false,
+    "actual_final_bounded_checkpoint_serialization_and_reload_validation_required": true,
+    "actual_global_shared_allocated_bytes_enforcement_required_at_runtime": true,
+    "actual_deployment_global_allocation_validation_completed": false,
+    "completed_fit_required_before_protocol_seal": false,
+    "source_and_CPU_proof_pins": {
+      "runner": {
+        "path": "scripts/sol_cloud_numeric_fit_v1.py",
+        "sha256": "26894839a47f2b7f1c712e712f80f2043272f8a81628d008d2806209cd2407cb",
+        "bytes": 48283
+      },
+      "runner_source_freeze": {
+        "path": "artifacts/sol-cloud-numeric-fit-20260930/CODE-SOURCE-FREEZE-v3.json",
+        "sha256": "037b3d12f138923c913efc224bb858b8d2bb6ff40a06906ad6da1a9ed82150d3",
+        "bytes": 694
+      },
+      "global_enforcement_source": {
+        "path": "artifacts/sol-cloud-coordinator-20260930/integration/numeric-capability-v1/PC-BOOTSTRAP.py",
+        "sha256": "4f815075a7e43cb06360eac0be5441dbef5bee089ed5d0a530ab9fb47b513103",
+        "bytes": 16072
+      },
+      "global_enforcement_CPU_checks": {
+        "path": "artifacts/sol-cloud-coordinator-20260930/integration/numeric-capability-v1/TRANSPORT-CHECKS-v5.json",
+        "sha256": "0216a50b856b2924e9d9872a01434bc9c5d660b0b53c55b6afe906b1b585f5b2",
+        "bytes": 1944
+      },
+      "global_storage_proof": {
+        "path": "artifacts/sol-cloud-coordinator-20260930/integration/numeric-capability-v1/GLOBAL-STORAGE-PROOF-v1.json",
+        "sha256": "dc9f23dd8ef0a92e4b644ff1370d3bb6770fbe96f6c86da6e619cc800607b3a9",
+        "bytes": 2323
+      },
+      "global_enforcement_source_freeze": {
+        "path": "artifacts/sol-cloud-coordinator-20260930/integration/numeric-capability-v1/TRANSPORT-SOURCE-FREEZE-v1.json",
+        "sha256": "b8591cdc4f511f0913489fe2fce7821b7535eb00d48aeea32c26725efaf775db",
+        "bytes": 1101
+      }
+    }
+  },
+  "runtime": {
+    "seconds_hard_cap_each_arm_seed": 600,
+    "four_serial_runs_seconds_cap": 2400,
+    "GPU_concurrency": 1,
+    "old_r5_human_short_span_driver_wall_reference_seconds": [
+      176.906,
+      186.625
+    ],
+    "reference_not_new_numeric_plain_measurement": true
+  },
+  "model_input_allowlist": [
+    "question"
+  ],
+  "notebook_tokens": 0,
+  "full_question_plus_EOS_required": true,
+  "facts_tree_IDs_template_audits_or_targets_as_model_question_input": false,
+  "reserved_or_fresh_eval_consumed": false,
+  "other_pool_rows": "TRAIN_UNUSED_NOT_HOLDOUT",
+  "model_or_optimizer_calls_by_this_protocol": 0,
+  "predecessor": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/numeric-diagnostic-v4/PROTOCOL-v2.json",
+    "sha256": "13ca259968060a3ac5f955f0f23c2ef477d3d483d728c24418866b08da2f459a",
+    "preserved": true
+  },
+  "primary_metric": "target_ids_plus_observed_EOS_exact",
+  "observed_EOS_contract": {
+    "capture": "actual raw emitted ID tensor from the SAME native lm.generate call used by existing decoder",
+    "complete_generated_ID_sequence_equals_canonical_target_ids_with_EOS": true,
+    "exactly_one_EOS_and_terminal_required": true,
+    "EOS_must_be_observed_not_appended_or_inferred": true,
+    "generation_kwargs_and_graph_unchanged": true,
+    "second_generation_or_teacher_conditioned_inference_allowed": false,
+    "targets_used_for_post_generation_recount_only": true,
+    "missing_multiple_nonterminal_EOS_extra_prose_or_max_token_termination_primary_pass": false,
+    "nonEOS_returned_IDs_and_text_still_saved_for_secondary_metric": true
+  },
+  "changes_only": [
+    "proof-backed loop108 checkpoint cap with raw16 retained",
+    "540MiB per-seed-pair plus one GLOBAL8MiB allocation-rounded shared cap",
+    "1088MiB full both-seed matrix before first launch plus1GiB reserve",
+    "truthful latest reported disk deficit1765376B"
+  ],
+  "unchanged": [
+    "selected16rows",
+    "source_labels",
+    "schedules",
+    "800updates50visits",
+    "arms",
+    "seeds",
+    "numericCEobjective",
+    "optimizer",
+    "RNGpolicy",
+    "warmstart",
+    "generation_kwargs",
+    "no_new_inference",
+    "strict actual same-call complete target+one terminal observedEOS primary",
+    "both-seed16of16 exact-fit marks",
+    "first-time bounded atomic checkpoint accounting",
+    "600seconds perarmseed",
+    "no extra zeroAdam serialization launch gate"
+  ]
+}

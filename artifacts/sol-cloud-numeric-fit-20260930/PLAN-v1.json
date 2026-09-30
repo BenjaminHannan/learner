@@ -1,0 +1,191 @@
+{
+  "LM_provenance": {
+    "path": "artifacts/sol-translator-20260929/CACHED-LFM-ORIGINAL-PROVENANCE.json",
+    "sha256": "ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8"
+  },
+  "arms": [
+    "loop",
+    "plain"
+  ],
+  "batch": 1,
+  "budget": {
+    "checkpoint_cap_bytes": {
+      "loop": 134217728,
+      "plain": 436207616
+    },
+    "delivery_cap_bytes": 8388608,
+    "outer_seconds": 600,
+    "pair_cap_bytes": 1342177280,
+    "planned_pair_peak_bytes": 1031798784,
+    "raw_cap_bytes_per_pair": 16777216,
+    "retained_free_bytes": 1073741824,
+    "worker_seconds": 570
+  },
+  "checkpoint_updates": [
+    800
+  ],
+  "claims": {
+    "activation": false,
+    "advantage": false,
+    "capacity_engineering_only": true,
+    "generalization": false,
+    "learned_stopping": false,
+    "sleep": false
+  },
+  "diagnostic_updates": [
+    0,
+    200,
+    400,
+    800
+  ],
+  "generation_max_new_tokens": 32,
+  "initial_function_check": "all16 exact final query tensors before first optimizer; reader and prefix shared warmstart withinseed",
+  "input_scope": "question-only-empty-notebook",
+  "objective": "numeric-answer-CE-only",
+  "optimizer": {
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "clip_norm": 1,
+    "eps": 1e-08,
+    "lr": 0.001,
+    "name": "AdamW",
+    "reset": true,
+    "weight_decay": 0
+  },
+  "plain_constructor": "OrderedPlainAttentionReasoner(strict-loaded-loop); sparse=True;4unsharedsegments/8blocks; copied state_norms",
+  "primary_mark": "loop seed0 and seed1 each16/16 strict generated nonEOS target token-ID match at800; plain scored identically",
+  "primary_metric": "target_ids_exact",
+  "protocol": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/numeric-diagnostic-v4/PROTOCOL-v1.json",
+    "sha256": "1a9b3bf2bfdc7240b4eac80522013ae476f0f0c8c9b36045868ba074409edc96"
+  },
+  "question_cap": 48,
+  "rng_seeds": {
+    "0": 0,
+    "1": 1
+  },
+  "rounds": 4,
+  "run_namespace": "run-v1",
+  "schedules": {
+    "0": {
+      "path": "artifacts/sol-cloud-capability-plan-20260930/numeric-diagnostic-v4/SCHEDULE-s0-v1.json",
+      "sha256": "0baf2bbdfee172be829d89a1231f7da451d4cb984f3ed981da1c244d1734b1b8"
+    },
+    "1": {
+      "path": "artifacts/sol-cloud-capability-plan-20260930/numeric-diagnostic-v4/SCHEDULE-s1-v1.json",
+      "sha256": "c2be52e70ef5c1e81005d0962380b9700946953d93f1435e49506fd8ef75fa03"
+    }
+  },
+  "schema": "sol.cloud.numeric-fit.plan.v1",
+  "secondary_metric": "strict numeric-constant-only exact Fraction parsing, never primary substitution",
+  "seeds": [
+    0,
+    1
+  ],
+  "selected_ids": [
+    "LUNA-B00-009",
+    "LUNA-B00-011",
+    "LUNA-B00-014",
+    "LUNA-B00-016",
+    "LUNA-B00-042",
+    "LUNA-B00-051",
+    "LUNA-B00-069",
+    "LUNA-B00-070",
+    "LUNA-B00-071",
+    "LUNA-B00-081",
+    "LUNA-B00-083",
+    "LUNA-B00-084",
+    "LUNA-B00-095",
+    "LUNA-B00-097",
+    "LUNA-B00-100",
+    "LUNA-B01-016"
+  ],
+  "selection": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/numeric-diagnostic-v4/ROW-SEAL-v1.json",
+    "sha256": "21f5b56db65828b241adf538f502608802b2263d02565a8761ba74c5dfd4dd74"
+  },
+  "source": {
+    "loader": {
+      "path": "scripts/sol_cloud_luna_batch_adapter_v1.py",
+      "sha256": "161ddff3587982d5da2c671700e62e6f85f61950a4b65ba742bb7b18b936f97b"
+    },
+    "manifest": {
+      "path": "artifacts/sol-cloud-luna-train-20260930/loader-v1/accepted396-v1/MANIFEST.json",
+      "sha256": "8d17b6a552e2c1ab9eae8c6fc5f1d80207a5a98113b2c04ce516560b94e6f266"
+    },
+    "question": {
+      "path": "artifacts/sol-cloud-luna-train-20260930/loader-v1/accepted396-v1/QUESTION-PACKET.json",
+      "sha256": "ddd85c45bb9edd04e4d2b2f51b9dd83b59035d579f5c349460d547993cd4cea7"
+    },
+    "target": {
+      "path": "artifacts/sol-cloud-luna-train-20260930/loader-v1/accepted396-v1/NUMERIC-TARGETS.json",
+      "sha256": "bd78d68324f26c72ea02115c9bb7323a97268bfbf01d1d84aafde74eb0df5239"
+    }
+  },
+  "target_with_EOS_cap": 64,
+  "token_audit": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/numeric-diagnostic-v4/ROW-SEAL-v1.json",
+    "sha256": "21f5b56db65828b241adf538f502608802b2263d02565a8761ba74c5dfd4dd74"
+  },
+  "token_gate": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/numeric-diagnostic-v4/TOKEN-GATE-v1.json",
+    "sha256": "4641218ac9641722fce1b41f46c56eb117b182b11f4ed5b2f60eab271ceddea8"
+  },
+  "unused_data": "Other accepted rows remain TRAIN unused, never holdout; no protected/evaluation access",
+  "updates_per_arm": 800,
+  "visits_per_row": 50,
+  "warmstart": {
+    "basis": "Exact V11 module scaffolds and original human lineage; strict V12 connected200 seed-specific core/reader/prefix overlay before copying OrderedPlainAttentionReasoner; original Adam retained in source but reset for fit",
+    "tuples": {
+      "0": {
+        "adapter_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s0-loop\\bootstrap-English-s0.pt",
+        "adapter_sha256": "e8092da239875f911c5845f4cbb9e89fbf6b197b665bcd7163df8af63c62a063",
+        "annotation_manifest_sha256": "b663fb6d548c41ce881974ffe0f588f45d9faf14371388e1a45af38636ad61f6",
+        "connected_resume_path": "C:/Users/benja/sol-translator-tiny-v12/artifacts/sol-translator-20260929/tiny-v12-s0/connected-resume.pt",
+        "connected_resume_sha256": "5858bd5dc4446d78bc49e04149740f98c9adce0e7938089728eec009c33d4b55",
+        "device": "cuda",
+        "factory": "scripts.sol_translator_runtime_ordered_v10:load_d256_notebook_factories",
+        "grounding_updates_measured": 200,
+        "lm_path": "C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b",
+        "lm_provenance": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\CACHED-LFM-ORIGINAL-PROVENANCE.json",
+        "order_contract": "sol-ordered-notebook-v2",
+        "ordered_core_sha256": "5344e622855c875312f77a88095d287a5709e17dbaca23c90bdd8733b0a38291",
+        "parent_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s0-loop\\parent-s0.pt",
+        "parent_sha256": "c5a5c3a726da63d442778b3dda017f34f2f4f460358dbaf9c5136495a27e41cb",
+        "reader_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s0-loop\\input-s0.pt",
+        "reader_sha256": "fe2a38dd97bfffb0f4d6c35a8b4da33a307bf65663d1376722069d37420e671e",
+        "reader_version": "human-notebook-v2",
+        "runtime_factory_sha256": "b00c78f2bee11117ef0176d472e904158e9ce579e4004d23e18feb5d702c4e76",
+        "semantic_status": "UNQUALIFIED until actual allowed-input diagnostic; fixed4 unqualified learnedstop",
+        "stop_factory_sha256": "150290c3f2bc82d46cab91047c8e21879de2ddc231f44f06371148e1116e5238",
+        "target_scope": "verbatim short HUMAN answers; grammatical conversation NOT proven"
+      },
+      "1": {
+        "adapter_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s1-loop\\bootstrap-English-s1.pt",
+        "adapter_sha256": "1c05f1e439e3dd698aebb886bc27227e3554c59bbbffcb5d8ac1025f3240fddc",
+        "annotation_manifest_sha256": "b663fb6d548c41ce881974ffe0f588f45d9faf14371388e1a45af38636ad61f6",
+        "connected_resume_path": "C:/Users/benja/sol-translator-tiny-v12/artifacts/sol-translator-20260929/tiny-v12-s1/connected-resume.pt",
+        "connected_resume_sha256": "b9198f7ae81be7bba331fc35982320e39a287b54a3c15c3c4db28f97fc7100c8",
+        "device": "cuda",
+        "factory": "scripts.sol_translator_runtime_ordered_v10:load_d256_notebook_factories",
+        "grounding_updates_measured": 200,
+        "lm_path": "C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b",
+        "lm_provenance": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\CACHED-LFM-ORIGINAL-PROVENANCE.json",
+        "order_contract": "sol-ordered-notebook-v2",
+        "ordered_core_sha256": "5344e622855c875312f77a88095d287a5709e17dbaca23c90bdd8733b0a38291",
+        "parent_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s1-loop\\parent-s1.pt",
+        "parent_sha256": "dadea558737ffdf42c294d22f08039f99a7dfce93e0e2466bfefbb1d1b470127",
+        "reader_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s1-loop\\input-s1.pt",
+        "reader_sha256": "29039905bd11193cfb795b5368bf06dae2dc76626b5e084f0432f905bbb54f84",
+        "reader_version": "human-notebook-v2",
+        "runtime_factory_sha256": "b00c78f2bee11117ef0176d472e904158e9ce579e4004d23e18feb5d702c4e76",
+        "semantic_status": "UNQUALIFIED until actual allowed-input diagnostic; fixed4 unqualified learnedstop",
+        "stop_factory_sha256": "150290c3f2bc82d46cab91047c8e21879de2ddc231f44f06371148e1116e5238",
+        "target_scope": "verbatim short HUMAN answers; grammatical conversation NOT proven"
+      }
+    }
+  },
+  "warmstart_family": "V12-connected200"
+}
