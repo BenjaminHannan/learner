@@ -1,0 +1,46 @@
+Sole execution owner integration; active r2 is unchanged.
+
+1. Reuse the pinned queue_recovery_v1 helper. Build runtime_manifest from the
+   approved spec's exact files and packaged_runtime_pins closure, using the same
+   output_layout for execution/publication/runtime paths. ACTIVE-RUNTIME-MANIFEST
+   records the actual r2 closure: 67 files, 1,674,446 source bytes.
+2. Register only explicitly approved useful jobs, in serial order, in ReadyJobs.
+   stage_package(manifest, source_cache, git_provider(repository)) can run while
+   the previous GPU job runs: it reads pinned Git source bytes only. mark_ready
+   verifies physical files and syntax; it does not import/run model code.
+3. On actual terminal receipt, record it using ReceiptStore.record, then call
+   claim_next from the existing integrator's completion callback with NEW native
+   PC/watcher inventory (checked_utc within 30 seconds, no owned PID, watcher job
+   or GPU claim, ownership_closed true). Reserve locally before the existing
+   sole integrator publishes/dispatches. Always keep native release/resource
+   gates. No new daemon, polling job, GPU dispatcher or supervisor is introduced.
+4. Reopen the same SQLite receipt store after coordinator restart. Claimed or
+   running jobs block another reservation until their actual terminal outcome
+   is reconciled. Completed jobs are never selected again. Failed predecessors
+   block until an explicitly reviewed successor/disposition is provided; don't
+   convert failure into completion or change science to keep the GPU busy.
+5. Retain failure stdout/stderr through failure_receipt before parsing/discarding
+   responses. Raw bodies and phase/update metadata survive restart; after dispatch
+   updates remain unknown without evidence. Return manifests contain references,
+   sizes and hashes, not duplicate encoded payloads. Partial evidence has a clear
+   error and is never overwritten. Optional exported excerpts are redacted for
+   supplied/common credential forms and still require review before export.
+6. NEXT-RELAY-OBSERVABILITY.patch is for a separately sealed v3 successor: copy
+   r2 relay source to the named v3 path, apply the patch, then update and review
+   the NEW spec/seals/pins through the sole integrator. Never apply to active r2.
+   It fixes discarded exception messages and failure-only stdout persistence;
+   preserves resource gates; records post-dispatch update uncertainty.
+7. Append latency_ledger values from actual ready/publication/pickup/PC-start/
+   first-update/completion/next-first-update timestamps. Missing times remain
+   null. PC-start-to-first-update includes loading; separate load completion
+   needs its own real timestamp. Current live transition sample count is zero.
+
+Verification: python -B -m unittest discover -s tests -p 'test_sol_cloud_ready*.py' -v
+18 focused tests pass. Pure generated-PC imports use exact pinned Git bytes,
+AST restrictions and a stdlib whitelist. No training, inference, live queue,
+SSH, resource cleanup, security/network change or main push was performed.
+
+Native activation/real handoff measurement is pending the sole execution owner.
+Latest r2 SSHrc2/watcherrc1 has UNKNOWN updates; preserve and reconcile it first.
+Network loss, host outages and failed worker notifications are mitigated by
+durable receipts/actionable errors, not solved by claims of universal uptime.

@@ -1,0 +1,67 @@
+{
+  "schema": "sol.cloud.reliability-latency-ledger.v1",
+  "actual_transition_sample_count": 0,
+  "rows": [
+    {
+      "job": "sol-cloud-capability256-v1-s0-loop-train",
+      "timestamps": {
+        "package_ready": null,
+        "published": "2026-09-30T19:28:01Z",
+        "watcher_pickup": null,
+        "pc_start": null,
+        "first_update": null,
+        "completed": null,
+        "next_first_update": null
+      },
+      "seconds": {
+        "publication_to_pickup": null,
+        "handoff_to_PC_start": null,
+        "PC_start_to_first_update_including_load": null,
+        "completion_to_next_first_update": null
+      },
+      "sample_count": 0,
+      "load_only_seconds": null,
+      "load_only_note": "requires explicit load-completion evidence"
+    },
+    {
+      "job": "sol-cloud-capability256-v1-s0-loop-train-r2",
+      "timestamps": {
+        "package_ready": null,
+        "published": "2026-09-30T19:44:51Z",
+        "watcher_pickup": null,
+        "pc_start": null,
+        "first_update": null,
+        "completed": null,
+        "next_first_update": null
+      },
+      "seconds": {
+        "publication_to_pickup": null,
+        "handoff_to_PC_start": null,
+        "PC_start_to_first_update_including_load": null,
+        "completion_to_next_first_update": null
+      },
+      "sample_count": 0,
+      "load_only_seconds": null,
+      "load_only_note": "requires explicit load-completion evidence"
+    }
+  ],
+  "publication_sources": [
+    "0181f6a3863dc43a3383274ea37c76b1f73afa1c committer timestamp",
+    "467ff3381a39523f28e79401b08aa321a19d842c committer timestamp"
+  ],
+  "historical_fit_first_update": {
+    "job": "sol-translator-human-v6-s0-pc",
+    "seconds_current_launch": 0.84,
+    "updates": 1,
+    "sample_count": 1,
+    "source": "artifacts/sol-director-20260929/human-v6-s0-launch-evidence/DURABLE-RECEIPTS-AS-OF-FIRST-COLLECTION.json",
+    "limitation": "fit-relative duration; not end-to-end launch or model-load latency"
+  },
+  "missing": [
+    "actual watcher pickup",
+    "native PC process start",
+    "absolute first-update timestamp",
+    "completion and next-first-update pair"
+  ],
+  "no_UTC_first_update_estimated": true
+}

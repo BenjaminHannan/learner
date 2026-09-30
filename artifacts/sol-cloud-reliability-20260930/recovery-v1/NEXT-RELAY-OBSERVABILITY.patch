@@ -1,0 +1,73 @@
+--- a/artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/mac-launch-v3/MAC-LAUNCH-v3.py
++++ b/artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/mac-launch-v3/MAC-LAUNCH-v3.py
+@@ -92,12 +92,13 @@
+ def pc_source(spec,records,proof):
+     """Inline bounded PC bootstrap. No archive/model bytes are copied."""
+     return r'''import base64,ctypes,datetime,gzip,hashlib,importlib.util,json,os,pathlib,platform,shutil,subprocess,sys,time
+-root=pathlib.Path(__ROOT__);spec=__SPEC__;records=__RECORDS__;proof=__PROOF__;started=time.monotonic()
++root=pathlib.Path(__ROOT__);spec=__SPEC__;records=__RECORDS__;proof=__PROOF__;started=time.monotonic();runner_dispatched=False
+ def digest(data):return hashlib.sha256(data).hexdigest()
+-def fail(stage,kind):
++def fail(stage,kind,message=None):
+  print(json.dumps({'schema':'sol.cloud.capability256.bootstrap-failure.v1','job':spec['job'],
+-  'stage':stage,'error_type':kind,'PC_originals_preserved':True,'activation':False,
+-  'model_calls':0,'GPU_optimizer_start':False}),flush=True);raise SystemExit(2)
++  'stage':stage,'error_type':kind,'error_message':message,'PC_originals_preserved':True,'activation':False,
++  'runner_dispatched':runner_dispatched,'optimizer_updates':None if runner_dispatched else 0,
++  'model_calls':None if runner_dispatched else 0,'GPU_optimizer_start':None if runner_dispatched else False}),flush=True);raise SystemExit(2)
+ try:
+  assert platform.system()=='Windows' and sys.version_info[:3]==(3,10,9),'native PC3.10.9 required'
+  assert root.is_dir() and not root.is_symlink(),'exact existing owned repo required'
+@@ -279,7 +280,7 @@
+   '--seal',str(seal_path),'--seal-sha256',spec['seal']['sha256'],
+   '--release',str(release_path),'--release-sha256',spec['release']['sha256'],
+   '--inventory',str(inv_path),'--inventory-sha256',inv_sha]
+- launched=time.monotonic()
++ launched=time.monotonic();runner_dispatched=True
+  try:p=subprocess.run(argv,cwd=str(root),env=env,capture_output=True,timeout=max(1,4500-(time.monotonic()-started)))
+  except subprocess.TimeoutExpired as e:
+   pout=e.stdout or b'';perr=e.stderr or b'';rc=None;timed=True
+@@ -315,7 +316,7 @@
+                    'runner_stderr_b64':base64.b64encode(perr).decode('ascii')},sort_keys=True),flush=True)
+  raise SystemExit(rc if rc is not None else 124)
+ except SystemExit:raise
+-except Exception as e:fail('bounded-PC-bootstrap',type(e).__name__)
++except Exception as e:fail('bounded-PC-bootstrap',type(e).__name__,str(e)[:2048])
+ '''.replace('__ROOT__',repr(PCROOT)).replace('__SPEC__',repr(spec)).replace('__RECORDS__',repr(records)).replace('__PROOF__',repr(proof))
+
+ 
+@@ -371,12 +372,32 @@
+             'stderr_sha256':digest(stderr),'PC_originals_preserved':True},indent=2,sort_keys=True)+'\n')
+     try:packet=json.loads(stdout.decode('utf8').splitlines()[-1])
+     except (ValueError,UnicodeError,IndexError):packet=None
+-    success=(rc==0 and not timed and isinstance(packet,dict)
++    summary=packet.get('summary') if isinstance(packet,dict) else None
++    valid_arm_summary=(isinstance(summary,dict)
++        and summary.get('schema')=='sol.cloud.capability256.arm-return.v1'
++        and summary.get('job')==job and summary.get('seed')==seed and summary.get('arm')==arm
++        and isinstance(summary.get('files'),list)
++        and all(isinstance(item,dict) for item in summary['files']))
++    success=(rc==0 and not timed and valid_arm_summary
+              and packet.get('summary',{}).get('schema')=='sol.cloud.capability256.arm-return.v1'
+              and packet['summary'].get('job')==job and packet['summary'].get('seed')==seed
+              and packet['summary'].get('arm')==arm and packet['summary'].get('runner_returncode')==0
+              and packet['summary'].get('runner_timed_out') is False)
+-    if isinstance(packet,dict) and packet.get('summary',{}).get('job')==job:
++    if not valid_arm_summary:
++        # Failure body retained once; valid arm payloads are unpacked below.
++        with (out/'PC-bootstrap-stdout.log.gz').open('xb') as f:
++            f.write(gzip.compress(stdout,compresslevel=6,mtime=0))
++        observed=packet if isinstance(packet,dict) else {}
++        with (out/'PC-FAILURE-STATE.json').open('x',encoding='utf8') as f:
++            f.write(json.dumps({'job':job,'phase':observed.get('stage','unknown'),
++                'error_type':observed.get('error_type','unknown'),
++                'transport_returncode':rc,'timed_out':timed,
++                'dispatched':'unknown until original PC ownership/receipts reconciled',
++                'optimizer_updates':None,'retry_performed':False,
++                'stdout_body':'PC-bootstrap-stdout.log.gz','stderr_body':'PC-stderr.log.gz',
++                'external_export_requires_redaction_review':True,
++                'PC_originals_preserved':True},indent=2,sort_keys=True)+'\n')
++    if valid_arm_summary:
+         result=packet['summary'];
+         compact=dict(result);compact['files']=[{k:v for k,v in item.items() if k!='data_b64'} for item in result.get('files',[])]
+         (out/'PC-ARM-RETURN.json').write_text(json.dumps(compact,indent=2,sort_keys=True)+'\n',encoding='utf8')
