@@ -1,0 +1,702 @@
+V6 — INDEPENDENT ACTUAL EXECUTION-RECEIPT AUDIT
+2026-09-30T04:50:34.722239+00:00
+Engineering execution audit only; no behavior narratives read, no TRAIN/evaluation scoring, model deserialization, inference, learning, cache mutation, queue edits, process kills or Git. SSH runs stdlib metadata/hash reads and scoped process query only.
+PC snapshot UTC: 2026-09-30T04:50:34.721742+00:00 to 2026-09-30T04:50:35.271050+00:00
+Seal expected e63640f98afc04b122f80423a719891646be45f4c1a40ae8de4e244fcc2924a9; match=True. Payload expected d041d58ad7979447d473ea0d56d99ef079c039b42ba3307697431feeb0101b9f; match=True. All 50 pin checks match=True.
+No authored behavior verdict used. Watcher local dates are EDT (UTC-4). LAUNCH precedes preflight/optimizer and alone does not prove training.
+
+SEED 0: COMPLETED
+{
+  "seed": 0,
+  "state": "COMPLETED",
+  "launch": {
+    "job": "sol-translator-human-v6-s0-pc",
+    "seed": 0,
+    "utc": "2026-09-30T04:38:05Z",
+    "stage": "TRAIN",
+    "package_sha256": "d041d58ad7979447d473ea0d56d99ef079c039b42ba3307697431feeb0101b9f",
+    "seal_sha256": "e63640f98afc04b122f80423a719891646be45f4c1a40ae8de4e244fcc2924a9",
+    "resume": false,
+    "no_dev_scoring": true,
+    "precision_policy": "full frozen FP32 LFM including embedding/head; reader/core FP32; actual tensor dtypes/VRAM recorded"
+  },
+  "optimizer_ready_events": [
+    {
+      "status": "OPTIMIZER-READY",
+      "seed": 0,
+      "train_rows": 512,
+      "device": "cuda",
+      "reader_version": "human-notebook-v2",
+      "job": "sol-translator-human-v6-s0-pc",
+      "launch_id": "20260930T043826-sol-translator-human-v6-s0-pc",
+      "resume_start_update": 0,
+      "resume_checkpoint_sha256": null,
+      "source_parent_sha256": "d5f09b1dfbc65e4e018081be71305e7440468d869114f2205e2565a3e646a085",
+      "initial_core_sha256": "79a2a6c863cc6b04d996056751cc64ca9cb63c9e8b708468b33b83c457047c1e",
+      "plan_sha256": "a190850d99d7b2a552f2e018d3e2a150f213e85b5dfd97d90d0623a76a89e50f",
+      "deployment_seal_sha256": "e63640f98afc04b122f80423a719891646be45f4c1a40ae8de4e244fcc2924a9",
+      "stop_code_sha256": "3e4356e027c2e8c9746a9aef1cb20b04c3b1fe6160ffe5c35a4bf2c727a198d5"
+    }
+  ],
+  "first_durable_event": {
+    "status": "DURABLE-TRAIN-WEIGHTS",
+    "seed": 0,
+    "updates": 1,
+    "seconds_current_launch": 0.84,
+    "resume_sha256": "278d15761c27cad444ed29bda4f8d2c7e87eeff98df2d0fdca843f8979dc70de"
+  },
+  "last_durable_event": {
+    "status": "DURABLE-TRAIN-WEIGHTS",
+    "seed": 0,
+    "updates": 500,
+    "seconds_current_launch": 241.06,
+    "resume_sha256": "f5c659c60d8a7ad9787d650c00bf76e4c9713f61624f9728239f7c85cf52b4ff"
+  },
+  "durable_ledger_update": 500,
+  "raw_watermark_update": 500,
+  "last_raw_complete_update": 500,
+  "raw_training_rows": 1000,
+  "update_rows_all_batch2": true,
+  "target_token_visits_match_ledger": true,
+  "input_token_visits_match_ledger": true,
+  "ledger": {
+    "stage": "JOINT-HUMAN-GROUNDING",
+    "seed": 0,
+    "parent_frozen": true,
+    "input_text_origin": "SQuAD TRAIN human-only",
+    "model_provenance_sha256": "ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8",
+    "human_pairs_sha256": "97ded0da22d53a34c94d172736fb6658fbee6c3367469cb3eab96714902d6cc5",
+    "source_sha256": "d5f09b1dfbc65e4e018081be71305e7440468d869114f2205e2565a3e646a085",
+    "core_initial_sha256": "79a2a6c863cc6b04d996056751cc64ca9cb63c9e8b708468b33b83c457047c1e",
+    "stored_core_parameters": 9007790,
+    "active_core_parameters": 2700974,
+    "LM_parameters": 1170340608,
+    "input_projection_parameters": 78112,
+    "output_adapter_parameters": 76416,
+    "updates": 500,
+    "LM_training_forwards": 4000,
+    "human_target_token_visits": 113248,
+    "input_token_visits": 201747,
+    "trained_rows": 512,
+    "wall_seconds": 240.81,
+    "sleep_updates": 0,
+    "input_scope": "question query only; context notebook; final query only",
+    "reader_version": "human-notebook-v2",
+    "batch": 2,
+    "rounds": 4,
+    "precision": {
+      "LM_embeddings": "torch.float32",
+      "LM_head": "torch.float32",
+      "reader_and_core": "FP32"
+    },
+    "job": "sol-translator-human-v6-s0-pc",
+    "plan_sha256": "a190850d99d7b2a552f2e018d3e2a150f213e85b5dfd97d90d0623a76a89e50f",
+    "deployment_seal_sha256": "e63640f98afc04b122f80423a719891646be45f4c1a40ae8de4e244fcc2924a9",
+    "stop_code_sha256": "3e4356e027c2e8c9746a9aef1cb20b04c3b1fe6160ffe5c35a4bf2c727a198d5",
+    "driver_sha256": "285529d88e08555dd7caa609a07d0ea58c9c915bef57411f6f979f7c2d2be1f4",
+    "fixed_input_truncation": {
+      "question_cap": 48,
+      "context_cap": 256,
+      "train_n": 512,
+      "question_truncated_n": 0,
+      "context_truncated_n": 122,
+      "selection": "fixed prefix; no label-dependent crop/drop; no DEV statistics"
+    },
+    "launch_id": "20260930T043826-sol-translator-human-v6-s0-pc",
+    "resume_start_update": 0,
+    "raw_watermark_update": 500,
+    "wall_seconds_current_launch": 241.06,
+    "parent_checkpoint_sha256": "d4734c09c6d02378b5367f6ce3c504ea9e282648afab738b06f99287b4d51bf1",
+    "interrupted": false,
+    "requested_updates_completed": true,
+    "core_final_sha256": "fb8babec2dacc3852d38fcf35dcaf6ab1680b3b2f391f999d4d576b93d2ce7e7",
+    "peak_cuda_bytes": 6328242176
+  },
+  "preflight": {
+    "stage": "QUEUED-NUMERIC-FULL-GRAPH-MEMORY",
+    "seed": 0,
+    "source_sha256": "d5f09b1dfbc65e4e018081be71305e7440468d869114f2205e2565a3e646a085",
+    "plan_sha256": "a190850d99d7b2a552f2e018d3e2a150f213e85b5dfd97d90d0623a76a89e50f",
+    "probe_sha256": "e61b292892669f8175129dc0afa9ec6e9507db396072efc13d35dba21f7813ff",
+    "job": "sol-translator-human-v6-s0-pc",
+    "torch": "2.11.0+cu128",
+    "GPU": "NVIDIA GeForce RTX 5070 Ti",
+    "device_total_bytes": 17094475776,
+    "cap_bytes": 17094475776,
+    "free_before_bytes": 11019485184,
+    "LM_parameter_bytes": 4681362432,
+    "trainable_parameter_bytes": 36649272,
+    "LM_embedding_dtype": "torch.float32",
+    "LM_head_dtype": "torch.float32",
+    "peak_allocated_bytes_measured": 6620131840,
+    "peak_reserved_bytes_measured": 6696206336,
+    "optimizer_margin_bytes_inferred_not_measured": 146597088,
+    "safety_reserve_bytes": 536870912,
+    "cap_guard_passed": true,
+    "wall_seconds_measured": 1.187000000005355,
+    "input_identity_sha256": "ccc3dbd569b1374352b4ccf249ee8e429b7ff8495a45ba5f57cc0b8ad1150161",
+    "optimizer_steps": 0,
+    "human_examples": 0,
+    "semantic_noise": "INSUFFICIENT; numeric memory compatibility only",
+    "parameter_update_performed": false,
+    "sleep_ready": false,
+    "wrapper_sha256": "2c69477aa8e5afda161c3b079233140d787d99fcccd211dc43fa7e9dc938b35e",
+    "model_provenance_sha256": "ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8",
+    "deployment_v6_seal_sha256": "e63640f98afc04b122f80423a719891646be45f4c1a40ae8de4e244fcc2924a9",
+    "reader_driver_sha256": "285529d88e08555dd7caa609a07d0ea58c9c915bef57411f6f979f7c2d2be1f4",
+    "total_preflight_seconds": 7.203000000008615,
+    "child_exit_before_TRAIN": true,
+    "training_first_optimizer_peak": "NOT YET MEASURED"
+  },
+  "transport": {
+    "returncode": 0,
+    "seed": 0,
+    "wall_seconds": 267.0,
+    "paths_and_hashes": {
+      "artifacts\\sol-translator-20260929\\ground-v6-s0\\bootstrap-English-s0.pt": "d57fa37e7d3fbf45315163a5fd9c311908a79c23e43dfd6beef8b7ad248acfa1",
+      "artifacts\\sol-translator-20260929\\ground-v6-s0\\CACHE-LOADER-VERIFICATION.json": "03f5c04a80450aa5b4e9057b4347c649028b4f824afff2a3bf0586b3bc255589",
+      "artifacts\\sol-translator-20260929\\ground-v6-s0\\grounding-s0-STARTED.json": "06c34c6cd0e4e9c7849356dcce8df63b5efdfcefe065f584c179f32bd6d4dcda",
+      "artifacts\\sol-translator-20260929\\ground-v6-s0\\grounding-s0.json": "f2a4db2a637df869b3ca682c10e23c7fed764543f11e4d42dd292980fa352a82",
+      "artifacts\\sol-translator-20260929\\ground-v6-s0\\input-s0.pt": "503cb6920b604c9addbf2841dab220b8e69bc405efb7742e9826d0a59446aa06",
+      "artifacts\\sol-translator-20260929\\ground-v6-s0\\LAUNCH.json": "0e9bc1a9695ec4fec55075d56b812984e4fdeea99eb904ec543b9d44aea42f45",
+      "artifacts\\sol-translator-20260929\\ground-v6-s0\\LFM-provenance.json": "ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8",
+      "artifacts\\sol-translator-20260929\\ground-v6-s0\\MEMORY-PREFLIGHT.json": "f6c72642f2029d7403ff487e7961ee9215a10f9af02fc35475d704f21b4350be",
+      "artifacts\\sol-translator-20260929\\ground-v6-s0\\parent-s0.pt": "d4734c09c6d02378b5367f6ce3c504ea9e282648afab738b06f99287b4d51bf1",
+      "artifacts\\sol-translator-20260929\\ground-v6-s0\\resume-s0.pt": "f5c659c60d8a7ad9787d650c00bf76e4c9713f61624f9728239f7c85cf52b4ff",
+      "artifacts\\sol-translator-20260929\\ground-v6-s0\\train-raw-s0.jsonl": "207dbd2dc36caf76f58136c99f1b5c01a38da08f91d79821102d00428860b1d7"
+    },
+    "stage": "TRAIN only; no DEV scored",
+    "first_weight_estimate": "use measured DURABLE-TRAIN-WEIGHTS stdout; no speculative success",
+    "sleep_updates": 0
+  },
+  "checkpoint_hashes": {
+    "resume-s0.pt": {
+      "sha256": "f5c659c60d8a7ad9787d650c00bf76e4c9713f61624f9728239f7c85cf52b4ff",
+      "path": "C:\\Users\\benja\\sol-translator-human-v6\\artifacts\\sol-translator-20260929\\ground-v6-s0\\resume-s0.pt",
+      "bytes": 109586571,
+      "file_stable_during_hash": true
+    },
+    "parent-s0.pt": {
+      "sha256": "d4734c09c6d02378b5367f6ce3c504ea9e282648afab738b06f99287b4d51bf1",
+      "path": "C:\\Users\\benja\\sol-translator-human-v6\\artifacts\\sol-translator-20260929\\ground-v6-s0\\parent-s0.pt",
+      "bytes": 36078605,
+      "file_stable_during_hash": true
+    },
+    "input-s0.pt": {
+      "sha256": "503cb6920b604c9addbf2841dab220b8e69bc405efb7742e9826d0a59446aa06",
+      "path": "C:\\Users\\benja\\sol-translator-human-v6\\artifacts\\sol-translator-20260929\\ground-v6-s0\\input-s0.pt",
+      "bytes": 315937,
+      "file_stable_during_hash": true
+    },
+    "bootstrap-English-s0.pt": {
+      "sha256": "d57fa37e7d3fbf45315163a5fd9c311908a79c23e43dfd6beef8b7ad248acfa1",
+      "path": "C:\\Users\\benja\\sol-translator-human-v6\\artifacts\\sol-translator-20260929\\ground-v6-s0\\bootstrap-English-s0.pt",
+      "bytes": 309681,
+      "file_stable_during_hash": true
+    }
+  },
+  "snapshot_consistency": {
+    "ledger_unchanged_during_collection": true,
+    "parent_hash_matches_ledger": true
+  },
+  "process_live": false
+}
+
+SEED 1: COMPLETED
+{
+  "seed": 1,
+  "state": "COMPLETED",
+  "launch": {
+    "job": "sol-translator-human-v6-s1-pc",
+    "seed": 1,
+    "utc": "2026-09-30T04:44:39Z",
+    "stage": "TRAIN",
+    "package_sha256": "d041d58ad7979447d473ea0d56d99ef079c039b42ba3307697431feeb0101b9f",
+    "seal_sha256": "e63640f98afc04b122f80423a719891646be45f4c1a40ae8de4e244fcc2924a9",
+    "resume": false,
+    "no_dev_scoring": true,
+    "precision_policy": "full frozen FP32 LFM including embedding/head; reader/core FP32; actual tensor dtypes/VRAM recorded"
+  },
+  "optimizer_ready_events": [
+    {
+      "status": "OPTIMIZER-READY",
+      "seed": 1,
+      "train_rows": 512,
+      "device": "cuda",
+      "reader_version": "human-notebook-v2",
+      "job": "sol-translator-human-v6-s1-pc",
+      "launch_id": "20260930T044502-sol-translator-human-v6-s1-pc",
+      "resume_start_update": 0,
+      "resume_checkpoint_sha256": null,
+      "source_parent_sha256": "6cc51ee871a383668b365f63c80e9d9599a4c11faab08fed7e46747f7fb15673",
+      "initial_core_sha256": "b17a9b5c6004524ae577240139f6ba1da91e3e0504c61e597e0be7120b254ba8",
+      "plan_sha256": "a190850d99d7b2a552f2e018d3e2a150f213e85b5dfd97d90d0623a76a89e50f",
+      "deployment_seal_sha256": "e63640f98afc04b122f80423a719891646be45f4c1a40ae8de4e244fcc2924a9",
+      "stop_code_sha256": "3e4356e027c2e8c9746a9aef1cb20b04c3b1fe6160ffe5c35a4bf2c727a198d5"
+    }
+  ],
+  "first_durable_event": {
+    "status": "DURABLE-TRAIN-WEIGHTS",
+    "seed": 1,
+    "updates": 1,
+    "seconds_current_launch": 0.81,
+    "resume_sha256": "4c2ac83ad85ce0dfb3e0ab2365e61a510d172da530e94b91f5408030fae3969f"
+  },
+  "last_durable_event": {
+    "status": "DURABLE-TRAIN-WEIGHTS",
+    "seed": 1,
+    "updates": 500,
+    "seconds_current_launch": 234.92,
+    "resume_sha256": "f045b9763890424e7a5bbf37ab27dafd76c7cd8e786ad9db3ae11815326dabb8"
+  },
+  "durable_ledger_update": 500,
+  "raw_watermark_update": 500,
+  "last_raw_complete_update": 500,
+  "raw_training_rows": 1000,
+  "update_rows_all_batch2": true,
+  "target_token_visits_match_ledger": true,
+  "input_token_visits_match_ledger": true,
+  "ledger": {
+    "stage": "JOINT-HUMAN-GROUNDING",
+    "seed": 1,
+    "parent_frozen": true,
+    "input_text_origin": "SQuAD TRAIN human-only",
+    "model_provenance_sha256": "ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8",
+    "human_pairs_sha256": "97ded0da22d53a34c94d172736fb6658fbee6c3367469cb3eab96714902d6cc5",
+    "source_sha256": "6cc51ee871a383668b365f63c80e9d9599a4c11faab08fed7e46747f7fb15673",
+    "core_initial_sha256": "b17a9b5c6004524ae577240139f6ba1da91e3e0504c61e597e0be7120b254ba8",
+    "stored_core_parameters": 9007790,
+    "active_core_parameters": 2700974,
+    "LM_parameters": 1170340608,
+    "input_projection_parameters": 78112,
+    "output_adapter_parameters": 76416,
+    "updates": 500,
+    "LM_training_forwards": 4000,
+    "human_target_token_visits": 112380,
+    "input_token_visits": 202581,
+    "trained_rows": 512,
+    "wall_seconds": 234.69,
+    "sleep_updates": 0,
+    "input_scope": "question query only; context notebook; final query only",
+    "reader_version": "human-notebook-v2",
+    "batch": 2,
+    "rounds": 4,
+    "precision": {
+      "LM_embeddings": "torch.float32",
+      "LM_head": "torch.float32",
+      "reader_and_core": "FP32"
+    },
+    "job": "sol-translator-human-v6-s1-pc",
+    "plan_sha256": "a190850d99d7b2a552f2e018d3e2a150f213e85b5dfd97d90d0623a76a89e50f",
+    "deployment_seal_sha256": "e63640f98afc04b122f80423a719891646be45f4c1a40ae8de4e244fcc2924a9",
+    "stop_code_sha256": "3e4356e027c2e8c9746a9aef1cb20b04c3b1fe6160ffe5c35a4bf2c727a198d5",
+    "driver_sha256": "285529d88e08555dd7caa609a07d0ea58c9c915bef57411f6f979f7c2d2be1f4",
+    "fixed_input_truncation": {
+      "question_cap": 48,
+      "context_cap": 256,
+      "train_n": 512,
+      "question_truncated_n": 0,
+      "context_truncated_n": 122,
+      "selection": "fixed prefix; no label-dependent crop/drop; no DEV statistics"
+    },
+    "launch_id": "20260930T044502-sol-translator-human-v6-s1-pc",
+    "resume_start_update": 0,
+    "raw_watermark_update": 500,
+    "wall_seconds_current_launch": 234.92,
+    "parent_checkpoint_sha256": "f271a23fe832e8c5482c6fdf2dd4e80ee970826f6b44cf9ccfae42d5e16fe88c",
+    "interrupted": false,
+    "requested_updates_completed": true,
+    "core_final_sha256": "9dbc38fa3201a3a250943770158d08a5d4b0363e3373898679159653abd0e6c8",
+    "peak_cuda_bytes": 6287076352
+  },
+  "preflight": {
+    "stage": "QUEUED-NUMERIC-FULL-GRAPH-MEMORY",
+    "seed": 1,
+    "source_sha256": "6cc51ee871a383668b365f63c80e9d9599a4c11faab08fed7e46747f7fb15673",
+    "plan_sha256": "a190850d99d7b2a552f2e018d3e2a150f213e85b5dfd97d90d0623a76a89e50f",
+    "probe_sha256": "e61b292892669f8175129dc0afa9ec6e9507db396072efc13d35dba21f7813ff",
+    "job": "sol-translator-human-v6-s1-pc",
+    "torch": "2.11.0+cu128",
+    "GPU": "NVIDIA GeForce RTX 5070 Ti",
+    "device_total_bytes": 17094475776,
+    "cap_bytes": 17094475776,
+    "free_before_bytes": 11019485184,
+    "LM_parameter_bytes": 4681362432,
+    "trainable_parameter_bytes": 36649272,
+    "LM_embedding_dtype": "torch.float32",
+    "LM_head_dtype": "torch.float32",
+    "peak_allocated_bytes_measured": 6620131840,
+    "peak_reserved_bytes_measured": 6696206336,
+    "optimizer_margin_bytes_inferred_not_measured": 146597088,
+    "safety_reserve_bytes": 536870912,
+    "cap_guard_passed": true,
+    "wall_seconds_measured": 1.1089999999967404,
+    "input_identity_sha256": "f641abb9344db59bf6cc5988379519ce18c2244e7b574470c3980b8dc9c07c01",
+    "optimizer_steps": 0,
+    "human_examples": 0,
+    "semantic_noise": "INSUFFICIENT; numeric memory compatibility only",
+    "parameter_update_performed": false,
+    "sleep_ready": false,
+    "wrapper_sha256": "2c69477aa8e5afda161c3b079233140d787d99fcccd211dc43fa7e9dc938b35e",
+    "model_provenance_sha256": "ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8",
+    "deployment_v6_seal_sha256": "e63640f98afc04b122f80423a719891646be45f4c1a40ae8de4e244fcc2924a9",
+    "reader_driver_sha256": "285529d88e08555dd7caa609a07d0ea58c9c915bef57411f6f979f7c2d2be1f4",
+    "total_preflight_seconds": 7.547000000005937,
+    "child_exit_before_TRAIN": true,
+    "training_first_optimizer_peak": "NOT YET MEASURED"
+  },
+  "transport": {
+    "returncode": 0,
+    "seed": 1,
+    "wall_seconds": 262.1869999999908,
+    "paths_and_hashes": {
+      "artifacts\\sol-translator-20260929\\ground-v6-s1\\bootstrap-English-s1.pt": "f85d4253e2888a1435e94373316a10f4d6b45502522c7cbdfbab91a15ecdd83b",
+      "artifacts\\sol-translator-20260929\\ground-v6-s1\\CACHE-LOADER-VERIFICATION.json": "03f5c04a80450aa5b4e9057b4347c649028b4f824afff2a3bf0586b3bc255589",
+      "artifacts\\sol-translator-20260929\\ground-v6-s1\\grounding-s1-STARTED.json": "c13d6869720f5ee3e16a93a39a823af8434cf0b4f43e8d6370bd128099c80d35",
+      "artifacts\\sol-translator-20260929\\ground-v6-s1\\grounding-s1.json": "4b6a0bc9a34ef241a3b780d79d324caf97c3e2cc7a20a254a8cb359ed1a0e73f",
+      "artifacts\\sol-translator-20260929\\ground-v6-s1\\input-s1.pt": "69e04b79518b3af62f6cd5ca8c3434435b3a146e55ae162dec34966b536d8876",
+      "artifacts\\sol-translator-20260929\\ground-v6-s1\\LAUNCH.json": "2c55083cadc8e277367a5d22bea056c62c23a5d2a43daf4f74e9250670c7a5da",
+      "artifacts\\sol-translator-20260929\\ground-v6-s1\\LFM-provenance.json": "ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8",
+      "artifacts\\sol-translator-20260929\\ground-v6-s1\\MEMORY-PREFLIGHT.json": "de5cd1475b15a4a1c7d52467395409e37af947deedc6148fac8917ed70ea5673",
+      "artifacts\\sol-translator-20260929\\ground-v6-s1\\parent-s1.pt": "f271a23fe832e8c5482c6fdf2dd4e80ee970826f6b44cf9ccfae42d5e16fe88c",
+      "artifacts\\sol-translator-20260929\\ground-v6-s1\\resume-s1.pt": "f045b9763890424e7a5bbf37ab27dafd76c7cd8e786ad9db3ae11815326dabb8",
+      "artifacts\\sol-translator-20260929\\ground-v6-s1\\train-raw-s1.jsonl": "5779d84cc6e496cf160a809f0a14d0e737d02bd5c97b6537d2ba9448e388f9e6"
+    },
+    "stage": "TRAIN only; no DEV scored",
+    "first_weight_estimate": "use measured DURABLE-TRAIN-WEIGHTS stdout; no speculative success",
+    "sleep_updates": 0
+  },
+  "checkpoint_hashes": {
+    "resume-s1.pt": {
+      "sha256": "f045b9763890424e7a5bbf37ab27dafd76c7cd8e786ad9db3ae11815326dabb8",
+      "path": "C:\\Users\\benja\\sol-translator-human-v6\\artifacts\\sol-translator-20260929\\ground-v6-s1\\resume-s1.pt",
+      "bytes": 109586507,
+      "file_stable_during_hash": true
+    },
+    "parent-s1.pt": {
+      "sha256": "f271a23fe832e8c5482c6fdf2dd4e80ee970826f6b44cf9ccfae42d5e16fe88c",
+      "path": "C:\\Users\\benja\\sol-translator-human-v6\\artifacts\\sol-translator-20260929\\ground-v6-s1\\parent-s1.pt",
+      "bytes": 36078541,
+      "file_stable_during_hash": true
+    },
+    "input-s1.pt": {
+      "sha256": "69e04b79518b3af62f6cd5ca8c3434435b3a146e55ae162dec34966b536d8876",
+      "path": "C:\\Users\\benja\\sol-translator-human-v6\\artifacts\\sol-translator-20260929\\ground-v6-s1\\input-s1.pt",
+      "bytes": 315937,
+      "file_stable_during_hash": true
+    },
+    "bootstrap-English-s1.pt": {
+      "sha256": "f85d4253e2888a1435e94373316a10f4d6b45502522c7cbdfbab91a15ecdd83b",
+      "path": "C:\\Users\\benja\\sol-translator-human-v6\\artifacts\\sol-translator-20260929\\ground-v6-s1\\bootstrap-English-s1.pt",
+      "bytes": 309681,
+      "file_stable_during_hash": true
+    }
+  },
+  "snapshot_consistency": {
+    "ledger_unchanged_during_collection": true,
+    "parent_hash_matches_ledger": true
+  },
+  "process_live": false
+}
+
+Watcher events:
+2026-09-30 00:37:58 launch sol-translator-human-v6-s0-pc
+2026-09-30 00:44:30 pushed sol-translator-human-v6-s0-pc
+2026-09-30 00:44:33 launch sol-translator-human-v6-s1-pc
+
+Limits:
+Live seed snapshots are time-bounded; unchanged files and ledger/parent matches are reported separately.
+STARTED.optimizer_started=false describes pre-optimizer stage, not final state.
+Logged durable updates and verified checkpoint bytes establish execution evidence; optimizer/RNG internals were not deserialized or independently restored.
+Exact wall-clock first optimizer completion is not logged; launch_id UTC and first durable elapsed time are supplied without inventing a timestamp.
+Preflight optimizer margin is inferred, not measured; separate first-optimizer peak is absent.
+No English/grammar/stop/semantic quality inference or scientific promotion.
+Sealed budget500 updates/seed,batch2,4 rounds,3000s TRAIN/3950s watcher,zero sleep. Preflight measured VRAM on RTX5070Ti; actual TRAIN peak allocated is ledger evidence, not first-optimizer peak. Receipt hashes and bounds are execution support only.
+
+Local copied artifact checks:
+[
+  {
+    "seed": 0,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s0\\bootstrap-English-s0.pt",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-weights-s0/bootstrap-English-s0.pt",
+    "expected": "d57fa37e7d3fbf45315163a5fd9c311908a79c23e43dfd6beef8b7ad248acfa1",
+    "actual": "d57fa37e7d3fbf45315163a5fd9c311908a79c23e43dfd6beef8b7ad248acfa1",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 0,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s0\\CACHE-LOADER-VERIFICATION.json",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/CACHE-LOADER-VERIFICATION.json",
+    "expected": "03f5c04a80450aa5b4e9057b4347c649028b4f824afff2a3bf0586b3bc255589",
+    "actual": "03f5c04a80450aa5b4e9057b4347c649028b4f824afff2a3bf0586b3bc255589",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 0,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s0\\grounding-s0-STARTED.json",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/grounding-s0-STARTED.json",
+    "expected": "06c34c6cd0e4e9c7849356dcce8df63b5efdfcefe065f584c179f32bd6d4dcda",
+    "actual": "06c34c6cd0e4e9c7849356dcce8df63b5efdfcefe065f584c179f32bd6d4dcda",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 0,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s0\\grounding-s0.json",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/grounding-s0.json",
+    "expected": "f2a4db2a637df869b3ca682c10e23c7fed764543f11e4d42dd292980fa352a82",
+    "actual": "f2a4db2a637df869b3ca682c10e23c7fed764543f11e4d42dd292980fa352a82",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 0,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s0\\input-s0.pt",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-weights-s0/input-s0.pt",
+    "expected": "503cb6920b604c9addbf2841dab220b8e69bc405efb7742e9826d0a59446aa06",
+    "actual": "503cb6920b604c9addbf2841dab220b8e69bc405efb7742e9826d0a59446aa06",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 0,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s0\\LAUNCH.json",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/LAUNCH.json",
+    "expected": "0e9bc1a9695ec4fec55075d56b812984e4fdeea99eb904ec543b9d44aea42f45",
+    "actual": "0e9bc1a9695ec4fec55075d56b812984e4fdeea99eb904ec543b9d44aea42f45",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 0,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s0\\LFM-provenance.json",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/LFM-provenance.json",
+    "expected": "ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8",
+    "actual": "ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 0,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s0\\MEMORY-PREFLIGHT.json",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/MEMORY-PREFLIGHT.json",
+    "expected": "f6c72642f2029d7403ff487e7961ee9215a10f9af02fc35475d704f21b4350be",
+    "actual": "f6c72642f2029d7403ff487e7961ee9215a10f9af02fc35475d704f21b4350be",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 0,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s0\\parent-s0.pt",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-weights-s0/parent-s0.pt",
+    "expected": "d4734c09c6d02378b5367f6ce3c504ea9e282648afab738b06f99287b4d51bf1",
+    "actual": "d4734c09c6d02378b5367f6ce3c504ea9e282648afab738b06f99287b4d51bf1",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 0,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s0\\resume-s0.pt",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/resume-s0.pt",
+    "expected": "f5c659c60d8a7ad9787d650c00bf76e4c9713f61624f9728239f7c85cf52b4ff",
+    "actual": null,
+    "match": false,
+    "available": false
+  },
+  {
+    "seed": 0,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s0\\train-raw-s0.jsonl",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/train-raw-s0.jsonl",
+    "expected": "207dbd2dc36caf76f58136c99f1b5c01a38da08f91d79821102d00428860b1d7",
+    "actual": "207dbd2dc36caf76f58136c99f1b5c01a38da08f91d79821102d00428860b1d7",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 1,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s1\\bootstrap-English-s1.pt",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-weights-s1/bootstrap-English-s1.pt",
+    "expected": "f85d4253e2888a1435e94373316a10f4d6b45502522c7cbdfbab91a15ecdd83b",
+    "actual": "f85d4253e2888a1435e94373316a10f4d6b45502522c7cbdfbab91a15ecdd83b",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 1,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s1\\CACHE-LOADER-VERIFICATION.json",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/CACHE-LOADER-VERIFICATION.json",
+    "expected": "03f5c04a80450aa5b4e9057b4347c649028b4f824afff2a3bf0586b3bc255589",
+    "actual": "03f5c04a80450aa5b4e9057b4347c649028b4f824afff2a3bf0586b3bc255589",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 1,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s1\\grounding-s1-STARTED.json",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/grounding-s1-STARTED.json",
+    "expected": "c13d6869720f5ee3e16a93a39a823af8434cf0b4f43e8d6370bd128099c80d35",
+    "actual": "c13d6869720f5ee3e16a93a39a823af8434cf0b4f43e8d6370bd128099c80d35",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 1,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s1\\grounding-s1.json",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/grounding-s1.json",
+    "expected": "4b6a0bc9a34ef241a3b780d79d324caf97c3e2cc7a20a254a8cb359ed1a0e73f",
+    "actual": "4b6a0bc9a34ef241a3b780d79d324caf97c3e2cc7a20a254a8cb359ed1a0e73f",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 1,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s1\\input-s1.pt",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-weights-s1/input-s1.pt",
+    "expected": "69e04b79518b3af62f6cd5ca8c3434435b3a146e55ae162dec34966b536d8876",
+    "actual": "69e04b79518b3af62f6cd5ca8c3434435b3a146e55ae162dec34966b536d8876",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 1,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s1\\LAUNCH.json",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/LAUNCH.json",
+    "expected": "2c55083cadc8e277367a5d22bea056c62c23a5d2a43daf4f74e9250670c7a5da",
+    "actual": "2c55083cadc8e277367a5d22bea056c62c23a5d2a43daf4f74e9250670c7a5da",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 1,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s1\\LFM-provenance.json",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/LFM-provenance.json",
+    "expected": "ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8",
+    "actual": "ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 1,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s1\\MEMORY-PREFLIGHT.json",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/MEMORY-PREFLIGHT.json",
+    "expected": "de5cd1475b15a4a1c7d52467395409e37af947deedc6148fac8917ed70ea5673",
+    "actual": "de5cd1475b15a4a1c7d52467395409e37af947deedc6148fac8917ed70ea5673",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 1,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s1\\parent-s1.pt",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-weights-s1/parent-s1.pt",
+    "expected": "f271a23fe832e8c5482c6fdf2dd4e80ee970826f6b44cf9ccfae42d5e16fe88c",
+    "actual": "f271a23fe832e8c5482c6fdf2dd4e80ee970826f6b44cf9ccfae42d5e16fe88c",
+    "match": true,
+    "available": true
+  },
+  {
+    "seed": 1,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s1\\resume-s1.pt",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/resume-s1.pt",
+    "expected": "f045b9763890424e7a5bbf37ab27dafd76c7cd8e786ad9db3ae11815326dabb8",
+    "actual": null,
+    "match": false,
+    "available": false
+  },
+  {
+    "seed": 1,
+    "expected_remote_path": "artifacts\\sol-translator-20260929\\ground-v6-s1\\train-raw-s1.jsonl",
+    "local_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/train-raw-s1.jsonl",
+    "expected": "5779d84cc6e496cf160a809f0a14d0e737d02bd5c97b6537d2ba9448e388f9e6",
+    "actual": "5779d84cc6e496cf160a809f0a14d0e737d02bd5c97b6537d2ba9448e388f9e6",
+    "match": true,
+    "available": true
+  }
+]
+
+Evidence SHA256:
+ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/CACHED-LFM-ORIGINAL-PROVENANCE.json
+fb66fe7188201d17375fcf38489938048f47adc3e249edbb1db3cdf28ad5a3c4  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/DEPLOYMENT-V6-ADDENDUM.md
+6fe868bfe67963d88edbbd8a9f5a6a1402491cb2b647729fcb623e938677febf  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/DEPLOYMENT-V6-PACKAGE.json
+a190850d99d7b2a552f2e018d3e2a150f213e85b5dfd97d90d0623a76a89e50f  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/DEPLOYMENT-V6-PLAN.json
+e63640f98afc04b122f80423a719891646be45f4c1a40ae8de4e244fcc2924a9  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/DEPLOYMENT-V6-SEAL.json
+d53d3b69436bd0ea1ef601bc5f29fcdbd9da83c061870483f1ef4a86aa05903f  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ENGLISH-ADDENDUM-1.md
+7935957688cc6c99acad053be82e0cc0b89b02b5fbf00e2ded8d42669a3fa14d  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ENGLISH-PASSMARKS.md
+433517f84803edf28f5427ce95917d203545e6f1b219815f4be0fb57d49782e4  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ENGLISH-PLAN.json
+b8421607ea7a324e45f92c874f74fc2752fcd1a413bf4d86bd256f809c6f27d6  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/EXACT-BLOB-VERIFIED-PC.json
+baaae2d1411a5cdc1f84f2750ecef6c9d797e596785dcffa83ff58666441c6e3  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/GROUNDING-PASSMARKS.md
+0897d5e08ecea99d3f5aed42b8ef3384f7f07326fa2468344ff813fbda3ce856  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/GROUNDING-PLAN.json
+bf0364a30049d262deabb5963218296b86a5bbcb3a25f55dcf01de657186a1ad  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/PC-TOKENIZER.json
+a8afa2944c30eaa63d9994cb9884fe052b8962c1dd4102ef39d1894b1e2372b0  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/V6-CACHE-POLICY-TESTS.json
+6a1647e544e0a073d4c134dd9b86bb8e48e094187ad4ca8b916414881956c331  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/V6-FINAL-CONTRACTS.json
+a661b3b29443c74adaa1f4311c4e7e0be480fd07973a917a3d7e7ed2817c5844  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/corpus/human-documents/26a35810c1a33ab172c3d552f4f319fa549a4cdd1f6e12e08eb5a8113f35df55.txt
+d3bc149d1bd61035e594d62adf6966f40ef570b15d71a04cf83cdf802723d302  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/corpus/human-documents/30b35eacfc08617f121e2330490175ec94eb4927d90383bed1cf156f9c9ca6b7.txt
+ad59e0bab9a8f4f51be64a9dee3bb642132661ef45d14227d4fe93eb72199832  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/corpus/human-documents/69bdb883d9c0da45ee781543259cda826fc76078007f7adfde125e84721086e2.txt
+6e712f4b81e4e8f1514c669e6fb9ae906e832ef2b851574f1b760c67f16d5bf6  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/corpus/human-documents/9157c7090a084c29e73c7257bf4baa8f2c46a7cbb0490bb46df02caeb563ceaa.txt
+25c7238abc08e9aa8c52d0332736f17f2468998da5d59b34b048ce1b3d8e08f8  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/corpus/human-documents/95903d66ebdf2fbc102a78525e964aee1d48c789a1df74100245a0027919747a.txt
+d8ed63d99052a2610d86031536f878bd652d417a118d8f283fea902176257df7  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/corpus/human-documents/b8d24268a24800083538b9a030a1dbf872fcf8230c5b807f5554d3fedcf652c2.txt
+782b710da74bd02cade2786fca9e9dd5fbf0f810c6d37a4636a0bace48ba8451  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/corpus/human-documents/ffd450f28d4521198873a6d6e91bd83007e1fd551a5652dc4dc19ec1ddd48bd3.txt
+97ded0da22d53a34c94d172736fb6658fbee6c3367469cb3eab96714902d6cc5  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/corpus/pairs.json
+4919ab717006169a93a7da4c20a972d9b8844165cbf2b74850373f30d34dc539  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/corpus/registry.json
+3527663986b8295af4f7fcdff1ba1ff3f72d07d61a20f487cb238a6ef92fd955  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/corpus/train-v1.1.json
+03f5c04a80450aa5b4e9057b4347c649028b4f824afff2a3bf0586b3bc255589  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/CACHE-LOADER-VERIFICATION.json
+0e9bc1a9695ec4fec55075d56b812984e4fdeea99eb904ec543b9d44aea42f45  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/LAUNCH.json
+ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/LFM-provenance.json
+f6c72642f2029d7403ff487e7961ee9215a10f9af02fc35475d704f21b4350be  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/MEMORY-PREFLIGHT.json
+312f356bd452ca532d35fb7a2867fa444388097398e36be125203d6b30d90a77  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/TRANSPORT-RESULT.json
+06c34c6cd0e4e9c7849356dcce8df63b5efdfcefe065f584c179f32bd6d4dcda  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/grounding-s0-STARTED.json
+f2a4db2a637df869b3ca682c10e23c7fed764543f11e4d42dd292980fa352a82  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/grounding-s0.json
+207dbd2dc36caf76f58136c99f1b5c01a38da08f91d79821102d00428860b1d7  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s0/train-raw-s0.jsonl
+03f5c04a80450aa5b4e9057b4347c649028b4f824afff2a3bf0586b3bc255589  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/CACHE-LOADER-VERIFICATION.json
+2c55083cadc8e277367a5d22bea056c62c23a5d2a43daf4f74e9250670c7a5da  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/LAUNCH.json
+ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/LFM-provenance.json
+de5cd1475b15a4a1c7d52467395409e37af947deedc6148fac8917ed70ea5673  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/MEMORY-PREFLIGHT.json
+b2d08c74aa922243ec690ac8c2ca0b61e471caf8dac7f0716aa5af75c959e4bb  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/TRANSPORT-RESULT.json
+c13d6869720f5ee3e16a93a39a823af8434cf0b4f43e8d6370bd128099c80d35  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/grounding-s1-STARTED.json
+4b6a0bc9a34ef241a3b780d79d324caf97c3e2cc7a20a254a8cb359ed1a0e73f  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/grounding-s1.json
+5779d84cc6e496cf160a809f0a14d0e737d02bd5c97b6537d2ba9448e388f9e6  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-s1/train-raw-s1.jsonl
+d57fa37e7d3fbf45315163a5fd9c311908a79c23e43dfd6beef8b7ad248acfa1  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-weights-s0/bootstrap-English-s0.pt
+503cb6920b604c9addbf2841dab220b8e69bc405efb7742e9826d0a59446aa06  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-weights-s0/input-s0.pt
+d4734c09c6d02378b5367f6ce3c504ea9e282648afab738b06f99287b4d51bf1  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-weights-s0/parent-s0.pt
+f85d4253e2888a1435e94373316a10f4d6b45502522c7cbdfbab91a15ecdd83b  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-weights-s1/bootstrap-English-s1.pt
+69e04b79518b3af62f6cd5ca8c3434435b3a146e55ae162dec34966b536d8876  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-weights-s1/input-s1.pt
+f271a23fe832e8c5482c6fdf2dd4e80ee970826f6b44cf9ccfae42d5e16fe88c  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/ground-v6-weights-s1/parent-s1.pt
+58c94ab1903ad25886931af557d279c95390ecf74e6e08c10e85532e39b0ff3b  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/queue-sol-translator-human-v6-s0-pc.md
+8153cc11342e316e596ce0c8e7cec08d2eb0c61bdd9514cebf13d9cfb8aede45  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/queue-sol-translator-human-v6-s1-pc.md
+9e9653bddcb6a5ea2274e0984b1d4e49db6d9cd7b77e68ff957f1ba8252fadfa  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/seed-source-provenance.json
+d5f09b1dfbc65e4e018081be71305e7440468d869114f2205e2565a3e646a085  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/seed-sources/qualified-source-s0.pt
+6cc51ee871a383668b365f63c80e9d9599a4c11faab08fed7e46747f7fb15673  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/seed-sources/qualified-source-s1.pt
+d041d58ad7979447d473ea0d56d99ef079c039b42ba3307697431feeb0101b9f  /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/sol-translator-20260929/translator-v6-payload.tar.gz
+c00aa62f4bc9ed710019581ee61288256238539c5bcfb6759d17f89c01a958de  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/claude_blurt1.py
+2f9415f5973686733c130b5edcfcfea6901de9ede546b3863fc1a4699f89c5d7  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/claude_fewex_net.py
+af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/claude_rsn358a_envs.py
+b14b3a0df49c04fc3905d910abd05fdc38759846928fd25026a3ff806eb9cf25  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_spatial_attention_core.py
+e61b292892669f8175129dc0afa9ec6e9507db396072efc13d35dba21f7813ff  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_spatial_poc_memory.py
+3e4356e027c2e8c9746a9aef1cb20b04c3b1fe6160ffe5c35a4bf2c727a198d5  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_stop_adapter.py
+845f955e798af2f1850804e27fa74af80c5d96751cd77d36effaa72c3e67d680  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_stop_api4.py
+f81aa9b304d409ed00d47d0fefc7e322334f4746d63fe7dbef519989ee8df6bd  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_stop_grounded_adapter_v4.py
+13579440c1283298569edcc2f2b5014b0d4aef7871a7a9eacea34c88cc6e7edc  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_cache_policy_v6.py
+5253fb2c4e85e36a2d77cdf0f0e73337c7cbefea1374fecdb1b05315ae3e667c  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_decoder.py
+7b8b21968b290f98fcf18eca375ede5f43d49fc637cb463e76dc2c5e696b55bf  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_deploy_v6.py
+2b96d9581b27204232d177335e90b2918a46dbda23d28fc7f01174b0f0709f47  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_english.py
+b0aff6aa8bbbb8be62d2d194e5da13e2d3bb7302cc6bee3cb9db9026d23ac39f  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_english_v6.py
+3fdbba089a5c00ac91104aec0eb4724eb9d11a2e9bfa6149723f0c48d503ea13  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_factories.py
+13720d071b4425e8f3813a3cc91618523525a21c2d4f17f80e39a9e0b2c62263  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_grounding.py
+285529d88e08555dd7caa609a07d0ea58c9c915bef57411f6f979f7c2d2be1f4  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_grounding_v6.py
+2b2e9d407e343526b0577ca44f7f48ee6d6fa81bb019439656ca0eec6c87f0f3  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_language_proof.py
+2c69477aa8e5afda161c3b079233140d787d99fcccd211dc43fa7e9dc938b35e  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_pc_preflight_v6.py
+6e11dc3ea9d11a3c8ec3a84ebeada66ffaa4b19f6622205354f577b8f6f22934  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_provenance.py
+aa46bbf22756ff366d4fcc23771f4e33403fe70977bc8822cde5817cc191efe8  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_runtime.py
+02c5dd5f81eeaf84378194f50101d6b87f5ef1bbf80e03935015f3182c3286b9  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_runtime_fixed4_v6.py
+bea978aa8f377f48b625b75e51352c93c821ad3577047fa752b4086f9193856b  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_runtime_v6.py
+2ae5b518118ccb150f344d69a25c8c9f4c21537d0dcc76223afd8704b0aefd62  /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/sol_translator_v6_tests.py
+93ff7811a209e2a8479230bbb9b6bc19f7f311d3af383ec350c1db2a7e7d5494  /Users/ben-hannan/premonition-watch/queue/sol-translator-human-v6-s0-pc.exit
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /Users/ben-hannan/premonition-watch/queue/sol-translator-human-v6-s0-pc.go1.err.txt
+7379af7a29c9703ba62ee4e470007d3206bbf7c7c602e3ae66006cdc1c0a7f01  /Users/ben-hannan/premonition-watch/queue/sol-translator-human-v6-s0-pc.go1.reply.md
+58c94ab1903ad25886931af557d279c95390ecf74e6e08c10e85532e39b0ff3b  /Users/ben-hannan/premonition-watch/queue/sol-translator-human-v6-s0-pc.md
+93ff7811a209e2a8479230bbb9b6bc19f7f311d3af383ec350c1db2a7e7d5494  /Users/ben-hannan/premonition-watch/queue/sol-translator-human-v6-s1-pc.exit
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /Users/ben-hannan/premonition-watch/queue/sol-translator-human-v6-s1-pc.go1.err.txt
+8aa7c1ac6866cc0b88b3f6fecf16fe9278b0a1b74bf6b6f9453451dbb71b6156  /Users/ben-hannan/premonition-watch/queue/sol-translator-human-v6-s1-pc.go1.reply.md
+8153cc11342e316e596ce0c8e7cec08d2eb0c61bdd9514cebf13d9cfb8aede45  /Users/ben-hannan/premonition-watch/queue/sol-translator-human-v6-s1-pc.md
+4ec0f2daffe78663cf11f30a34c923cdfeba886a7ec6aa1d2c46e9575576bbf7  /Users/ben-hannan/premonition-watch/watch.log
