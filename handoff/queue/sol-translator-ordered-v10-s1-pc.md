@@ -1,3 +1,5 @@
+STATUS: HELD
+REASON: seed0 actual import failure missing sol_spatial_poc_plain.py in archive; original source/seal unchanged, additive successor required.
 BASH-ONLY: yes
 LOAD-LIGHT: yes
 GPU: yes
