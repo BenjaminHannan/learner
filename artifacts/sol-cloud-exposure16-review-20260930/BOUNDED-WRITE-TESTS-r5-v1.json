@@ -1,0 +1,107 @@
+{
+  "schema": "sol.cloud.exposure16.independent.bounded-writer-tests.v1",
+  "seal_sha256": "d8a50948c5c5831928fd3d68e2ed87f8620bbf3af0b5dbfa8efe27afde08a018",
+  "driver_sha256": "9e01bc1505a87fce53831e6a618239dbf76217aebc8312cb1125fdf5259092db",
+  "observed_utc": "2026-09-30T09:01:34.531743+00:00",
+  "tests": [
+    {
+      "name": "exact_per_file_boundary",
+      "passed": true
+    },
+    {
+      "name": "overflow_append_rejected_without_growth",
+      "passed": true
+    },
+    {
+      "name": "initial_oversized_write_rejected_before_any_growth",
+      "passed": true
+    },
+    {
+      "name": "random_seek_overwrite_keeps_high_water_extent",
+      "passed": true
+    },
+    {
+      "name": "seek_beyond_cap_restores_position",
+      "passed": true
+    },
+    {
+      "name": "sparse_write_bounded_by_extent",
+      "passed": true
+    },
+    {
+      "name": "aggregate_callback_rejects_before_backing_write",
+      "passed": true
+    },
+    {
+      "name": "buffered_pending_growth_charged_once",
+      "passed": true,
+      "reported_stat_bytes": 0,
+      "charged_extent_bytes": 4
+    },
+    {
+      "name": "aggregate_one_byte_overflow_rejected_before_write",
+      "passed": true
+    },
+    {
+      "name": "persisted_growth_not_double_counted_at_exact_aggregate_boundary",
+      "passed": true
+    },
+    {
+      "name": "overwrite_at_aggregate_cap_allowed_without_extra_growth",
+      "passed": true
+    },
+    {
+      "name": "reserve_allocation_margin_one_byte_short_rejects_before_write",
+      "passed": true
+    },
+    {
+      "name": "reserve_plus_pending_plus64KiB_exact_boundary_allowed",
+      "passed": true
+    },
+    {
+      "name": "flush_rechecks_buffered_pending_and_allocation_reserve",
+      "passed": true
+    },
+    {
+      "name": "binary_zip_serializer_roundtrip_with_seeks",
+      "passed": true,
+      "actual_serialized_bytes": 184
+    },
+    {
+      "name": "binary_serializer_overshoot_rejected_before_cap",
+      "passed": true,
+      "actual_serialized_bytes": 22
+    },
+    {
+      "name": "JSON_allocation_guard_before_open_exact_bytes_plus64KiB",
+      "passed": true,
+      "checked_bytes": 65560
+    },
+    {
+      "name": "model_graph_generation_diagnostics_and_fit_AST_unchanged_from_r3",
+      "passed": true,
+      "AST_sha256": {
+        "graph": "9499e3e3add8e7f6405fad2fec5d3ffb1ce10f006247092d3907fc52aedae2e0",
+        "packet": "d7801f8a830d1275df7505db2c2029f8e5543096a68675847c1fe944752ecd67",
+        "diagnostic": "37ba2fa90c621b33633d01c3b086edeb77b3d6301d5e902ab36b2219e4aeb1b8",
+        "entire_800_update_loop": "f54f79f5f8f9e2cb1cfa44413f62e59177f9fa0133bced6ca928ba6ed41019e8"
+      }
+    },
+    {
+      "name": "native_allocation_unit_guard_precedes_first_evidence_write",
+      "passed": true
+    }
+  ],
+  "test_count": 19,
+  "passed_count": 19,
+  "all_passed": true,
+  "methods": "Numeric BytesIO fixtures and exact AST-extracted guards; stdlib ZIP serializer only",
+  "actual_target_PyTorch_serializer_verified": false,
+  "actual_Windows_allocation_unit_verified": false,
+  "models_loaded": 0,
+  "optimizer_updates": 0,
+  "GPU_calls": 0,
+  "actual_processes_launched": 0,
+  "human_or_reserved_source_opened": false,
+  "all_generated_artifacts_are_nontraining": true
+}

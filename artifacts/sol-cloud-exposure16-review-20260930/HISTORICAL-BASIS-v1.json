@@ -1,0 +1,126 @@
+{
+  "schema": "sol.cloud.exposure16.pre-run-review.v1.historical-basis",
+  "review_phase": "historical plan metadata only; new implementation awaits source freeze",
+  "sources": {
+    "TINY-V12-PLAN.json": {
+      "path": "artifacts/sol-translator-20260929/TINY-V12-PLAN.json",
+      "sha256": "2f005e576da5fdf69c80dddb44f45c583c096ebc8ba3a172c5bbb53ae3f94515",
+      "metadata": {
+        "TRAIN_ids": [
+          "5733be284776f41900661182",
+          "5733be284776f4190066117f",
+          "5733bf84d058e614000b61be",
+          "5733bf84d058e614000b61bf"
+        ],
+        "seeds": [
+          0,
+          1
+        ],
+        "updates_each_arm": 200,
+        "batch": 1,
+        "connected_lr": 0.001,
+        "weight_decay": 0,
+        "clip_norm": 1,
+        "tuples": {
+          "0": {
+            "factory": "scripts.sol_translator_runtime_ordered_v10:load_d256_notebook_factories",
+            "runtime_factory_sha256": "b00c78f2bee11117ef0176d472e904158e9ce579e4004d23e18feb5d702c4e76",
+            "stop_factory_sha256": "150290c3f2bc82d46cab91047c8e21879de2ddc231f44f06371148e1116e5238",
+            "ordered_core_sha256": "5344e622855c875312f77a88095d287a5709e17dbaca23c90bdd8733b0a38291",
+            "order_contract": "sol-ordered-notebook-v2",
+            "reader_version": "human-notebook-v2",
+            "lm_path": "C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b",
+            "lm_provenance": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\CACHED-LFM-ORIGINAL-PROVENANCE.json",
+            "device": "cuda",
+            "semantic_status": "UNQUALIFIED until actual allowed-input diagnostic; fixed4 unqualified learnedstop",
+            "grounding_updates_measured": 200,
+            "annotation_manifest_sha256": "b663fb6d548c41ce881974ffe0f588f45d9faf14371388e1a45af38636ad61f6",
+            "target_scope": "verbatim short HUMAN answers; grammatical conversation NOT proven",
+            "parent_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s0-loop\\parent-s0.pt",
+            "parent_sha256": "c5a5c3a726da63d442778b3dda017f34f2f4f460358dbaf9c5136495a27e41cb",
+            "reader_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s0-loop\\input-s0.pt",
+            "reader_sha256": "fe2a38dd97bfffb0f4d6c35a8b4da33a307bf65663d1376722069d37420e671e",
+            "adapter_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s0-loop\\bootstrap-English-s0.pt",
+            "adapter_sha256": "e8092da239875f911c5845f4cbb9e89fbf6b197b665bcd7163df8af63c62a063"
+          },
+          "1": {
+            "factory": "scripts.sol_translator_runtime_ordered_v10:load_d256_notebook_factories",
+            "runtime_factory_sha256": "b00c78f2bee11117ef0176d472e904158e9ce579e4004d23e18feb5d702c4e76",
+            "stop_factory_sha256": "150290c3f2bc82d46cab91047c8e21879de2ddc231f44f06371148e1116e5238",
+            "ordered_core_sha256": "5344e622855c875312f77a88095d287a5709e17dbaca23c90bdd8733b0a38291",
+            "order_contract": "sol-ordered-notebook-v2",
+            "reader_version": "human-notebook-v2",
+            "lm_path": "C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b",
+            "lm_provenance": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\CACHED-LFM-ORIGINAL-PROVENANCE.json",
+            "device": "cuda",
+            "semantic_status": "UNQUALIFIED until actual allowed-input diagnostic; fixed4 unqualified learnedstop",
+            "grounding_updates_measured": 200,
+            "annotation_manifest_sha256": "b663fb6d548c41ce881974ffe0f588f45d9faf14371388e1a45af38636ad61f6",
+            "target_scope": "verbatim short HUMAN answers; grammatical conversation NOT proven",
+            "parent_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s1-loop\\parent-s1.pt",
+            "parent_sha256": "dadea558737ffdf42c294d22f08039f99a7dfce93e0e2466bfefbb1d1b470127",
+            "reader_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s1-loop\\input-s1.pt",
+            "reader_sha256": "29039905bd11193cfb795b5368bf06dae2dc76626b5e084f0432f905bbb54f84",
+            "adapter_path": "C:\\Users\\benja\\sol-translator-answer-v11\\artifacts\\sol-translator-20260929\\ground-answer-v11-s1-loop\\bootstrap-English-s1.pt",
+            "adapter_sha256": "1c05f1e439e3dd698aebb886bc27227e3554c59bbbffcb5d8ac1025f3240fddc"
+          }
+        },
+        "annotation_manifest_sha256": "b663fb6d548c41ce881974ffe0f588f45d9faf14371388e1a45af38636ad61f6",
+        "objective": "verbatim HUMAN answer+EOS CE; connected adds existing mean8 routeraux, table has no core/aux; CE-only autograd recorded separately",
+        "output_contract": "Connected generated output only from finalquery->sharedprefix; no raw question/context/answer LM prompt; no model text labels",
+        "question_selection": "First two fixed sharedcontext pairs from previous TRAIN-development diagnostic; not fresh proof and not success-selected",
+        "retained_free_bytes": 1073741824,
+        "startup_free_bytes": 1493172224,
+        "output_cap_bytes": 402653184
+      }
+    },
+    "TINY-V12-SEAL.json": {
+      "path": "artifacts/sol-translator-20260929/TINY-V12-SEAL.json",
+      "sha256": "38c822ec411365e4253c32fcbf2404773191cbd12a6639e88caf6b1874b02cab",
+      "metadata": {
+        "sealed_utc": "2026-09-30T06:29:48Z"
+      }
+    },
+    "ANSWER-V11-DIAGNOSTIC-PLAN.json": {
+      "path": "artifacts/sol-translator-20260929/ANSWER-V11-DIAGNOSTIC-PLAN.json",
+      "sha256": "71ef0bd66f71ed8f5da43288d0b15dc62bbd739e23e89ef2e6029cf2691cc34a",
+      "metadata": {
+        "TRAIN_diagnostic_ids": [
+          "5733be284776f41900661182",
+          "5733be284776f4190066117f",
+          "5733bf84d058e614000b61be",
+          "5733bf84d058e614000b61bf",
+          "5733bed24776f41900661188",
+          "5733bed24776f41900661189",
+          "5733a70c4776f41900660f64",
+          "5733a70c4776f41900660f62",
+          "5733a7bd4776f41900660f6b",
+          "5733a7bd4776f41900660f6a",
+          "5733ac31d058e614000b5ff6",
+          "5733ac31d058e614000b5ff4",
+          "5733ad384776f41900660fec",
+          "5733ad384776f41900660fee",
+          "5733ae924776f41900661015",
+          "5733ae924776f41900661017"
+        ],
+        "training_updates": 200,
+        "annotation_manifest_sha256": "b663fb6d548c41ce881974ffe0f588f45d9faf14371388e1a45af38636ad61f6"
+      }
+    }
+  },
+  "checks": {
+    "sixteen_historical_ids": true,
+    "V12_four_IDs_are_historical_first_four": true,
+    "seed_pair": true,
+    "initialization_plan_records_V11_closed200_tuples": true
+  },
+  "physical_checkpoints_opened": false,
+  "human_question_context_answer_fields_decoded": 0,
+  "raw_corpus_opened": false,
+  "new_source_review_started": false,
+  "models_executed": 0,
+  "optimizer_updates": 0,
+  "historical_timing_receipts_locally_available": false,
+  "historical_runtime_74s_for_400_mixed_arm_updates_status": "parent-reported; not a locally verified measurement",
+  "all_generated_artifacts_are_nontraining": true
+}

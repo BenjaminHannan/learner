@@ -1,0 +1,54 @@
+{
+  "schema": "sol.cloud.exposure16.pre-run-review.v1.verdict",
+  "seal_sha256": "55c7f578cd0d8a89d055f0858133d4533ac533fcc52bcbf73aeaf5238d8a60ae",
+  "driver_sha256": "d432cf578c44a4e3a75ffa7d26413e21200977f551f637274debfa4fcd01339a",
+  "release_readiness": false,
+  "verdict": "V1 mechanically consistent preparation, not releasable; immutable version superseded by pending additive repair and tighter parent caps",
+  "independent_checks_passed": 13,
+  "independent_checks_total": 13,
+  "sealed_files_hash_checked": 62,
+  "schedule_updates_per_seed": 800,
+  "schedule_visits_each_of_16_rows_per_seed": 50,
+  "metadata_audit_sha256": "8b259d4899355432f11461ec460469a3242caa324c36eb17f441dbc5de4d0e83",
+  "material_findings": [
+    {
+      "id": "dynamic-checkpoint-identity",
+      "source_lines": [268, 288, 354, 361],
+      "finding": "Diagnostic binary/raw records carry the initial V11 binding and update number, but no current core/reader/prefix fingerprints; intermediate rolling checkpoint hashes are printed rather than durably linked in a dedicated checkpoint receipt",
+      "required_repair": "Durable initial/current fingerprints and checkpoint byte-hash receipts linked to diagnostics, frame hashes and raw watermarks",
+      "worker_acknowledged": true
+    },
+    {
+      "id": "memory-probe-target-coverage",
+      "source_lines": [232, 235],
+      "finding": "Longest question-plus-notebook selection does not include target length, despite claiming the longest actual CE-plus-auxiliary graph",
+      "required_repair": "Zero-optimizer preflight for all sixteen approved real rows, preserving tensor fingerprints and RNG and clearing gradients before fit",
+      "worker_acknowledged": true
+    },
+    {
+      "id": "superseded-hard-caps",
+      "finding": "V1 permits 2160 child seconds and 512 MiB aggregate output, exceeding the newly authorized hard 600 seconds per seed and 384 MiB aggregate output including atomic peak",
+      "required_repair": "Additive sealed revision with actual own-child hard timeout and output accounting under the new caps; no silent budget expansion"
+    },
+    {
+      "id": "post-bridge-resource-fit",
+      "finding": "Reported pre-bridge headroom cannot cover bridge256MiB plus old exposure512MiB maximum; fresh inventory must account for retained bridge outputs",
+      "shortfall_before_delivery_bytes": 19927040,
+      "shortfall_with_16MiB_delivery_bytes": 36704256,
+      "required_repair": "Fresh post-bridge disk/GPU/process/claim inventory and verified parameter/checkpoint/frame estimates before release"
+    }
+  ],
+  "interpretation_limits": [
+    "Existing sixteen TRAIN examples test optimization and memorization, not meaningful grammatical conversation",
+    "Notebook removal and donor latent swaps change multiple latent properties; they do not isolate direction, norm or semantics",
+    "Fixed four rounds do not qualify learned stopping",
+    "Both-seed descriptive counts require independent saved-raw recount; scientific proof is deferred",
+    "Held templates are preparation artifacts; watcher environment and exact remote timeout/transport remain integration duties"
+  ],
+  "models_loaded": 0,
+  "optimizer_updates": 0,
+  "new_heldout_or_reserved_tests": 0,
+  "raw_official_corpus_opened": false,
+  "activation_qualified": false,
+  "all_generated_artifacts_are_nontraining": true
+}

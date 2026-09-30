@@ -1,0 +1,85 @@
+{
+  "schema": "sol.cloud.exposure16.pre-run-review.v3.verdict",
+  "seal_sha256": "d8a50948c5c5831928fd3d68e2ed87f8620bbf3af0b5dbfa8efe27afde08a018",
+  "driver_sha256": "9e01bc1505a87fce53831e6a618239dbf76217aebc8312cb1125fdf5259092db",
+  "release_readiness": true,
+  "release_readiness_definition": "Independent frozen protocol review passes for the parent-authorized conditional release. This is not a claim that current physical launch conditions are met. Integrator must enforce all listed conditions and runtime gates before fitting.",
+  "current_physical_launch_readiness_verified": false,
+  "verdict": "PASS: exact frozen r5 protocol; conditional after bridge, native offline launch smoke, fresh exclusive inventory and zero-optimizer preflights",
+  "metadata_checks_passed": 17,
+  "metadata_checks_total": 17,
+  "source_checks_passed": 18,
+  "source_checks_total": 18,
+  "sealed_files_hash_checked": 62,
+  "admission_gate_mock_cases_passed": 20,
+  "owned_supervisor_mock_cases_passed": 3,
+  "bounded_writer_numeric_cases_passed": 19,
+  "schedule_updates_per_seed": 800,
+  "schedule_seeds": [
+    0,
+    1
+  ],
+  "schedule_visits_each_of_16_rows_per_seed": 50,
+  "models_loaded": 0,
+  "optimizer_updates": 0,
+  "actual_processes_launched": 0,
+  "actual_target_runtime_or_model_performance_verified": false,
+  "evidence": {
+    "METADATA-AUDIT-r5-v1.json": "0fd963f56f14d919b44a37bf5ac76242448f5009276ae8a1633b111c60b66daf",
+    "GATE-TESTS-r5-v1.json": "9d8cf7b36256f2ad25c5e70b5cec1ec5c1be8a48fa9b7cb87327d51d154a0d49",
+    "SOURCE-REVIEW-r5-v1.json": "435194c5ea3f4cd30e7eed4bdcda7c45183bdf7dbb5b6b9c1f815373f7fb1996",
+    "BOUNDED-WRITE-TESTS-r5-v1.json": "192d3298ab675aff16e67d53ae5b84144c5e789d431ecdd0dc37bdefc5c4a06a"
+  },
+  "resolved_material_findings": [
+    "Initial/current state fingerprints and checkpoint/raw identity receipts are durable",
+    "All16 zero-optimizer probes include real HUMAN target lengths, unchanged fingerprints, cleared gradients and CPU/CUDA RNG restoration",
+    "600s per-seed owned supervisor and 384MiB combined output/atomic/delivery budget",
+    "Actual backing writes now bounded before growth; buffered pending bytes and64KiB allocation reserve included"
+  ],
+  "required_launch_conditions": [
+    "Fixture capture-to-night rollback bridge completes first; retained bridge outputs included in inventory",
+    "Independent native Mac3.9.6/PC3.10.9 offline import/capability smoke passes for exact selected launch package; Python3.10 tar delivery uses exact-member extraction",
+    "Fresh inventory <=120s, no project GPU process or conflicting watcher claim, exact V11 warm checkpoint closure, confirmed <=108MiB serialized checkpoint bound",
+    "Measured startup free >=1476395008 bytes, delivered package and tree <=8388608 bytes, allocation unit <=65536 bytes",
+    "Actual all16 zero-optimizer memory/fingerprint/RNG, frame/raw projection and full zeroAdam serialization preflights pass before optimizer creation",
+    "Integrator establishes watcher JOB/exact TREE, one owned worker supervisor, unique queue claim and600s outer transport bound; seeds serially, no orphaned worker",
+    "Both800 schedules must close within sealed limits; otherwise preserve incomplete evidence and do not reduce schedule or activate"
+  ],
+  "resource_arithmetic": {
+    "per_seed_checkpoint_bytes": 113246208,
+    "per_seed_raw_bytes": 8388608,
+    "per_seed_frames_bytes": 16777216,
+    "two_seed_retained_bytes": 276824064,
+    "additional_atomic_peak_bytes": 113246208,
+    "planned_peak_output_plus_delivery_bytes": 398458880,
+    "hard_aggregate_bytes": 402653184,
+    "slack_bytes": 4194304,
+    "operating_run_cap_bytes": 394264576,
+    "reserve_bytes": 1073741824,
+    "hard_seconds_per_seed": 600,
+    "owned_worker_seconds": 570,
+    "rental_cost_USD": 0,
+    "runtime_ETA_inferred_not_measured": true
+  },
+  "historical_checkpoint_stat": {
+    "parent_reported_outbox": "a9d97cf4eee3118bd615011f47dbe6211fb87034",
+    "observed_utc": "2026-09-30T08:37:32.96Z",
+    "both_seed_saved_V12_checkpoint_bytes": 109564463,
+    "per_seed_cap_bytes": 113246208,
+    "margin_bytes": 3681745,
+    "current_PC_free_bytes_then": 1822674944,
+    "conditional_slack_after_full_bridge_and_startup_bytes": 77844480,
+    "independently_read_checkpoint_bytes": false
+  },
+  "interpretation_limits": [
+    "Only existing predeclared HUMAN TRAIN optimization/memorization, not meaningful grammatical conversation or generalization",
+    "Removal and donor swaps do not isolate latent direction, scale/norm or semantics. Swapped-control greedy expected answer is donor identity; teacher-forced labels remain the original row and must be named accordingly",
+    "Fixed4 is not qualified learned stopping",
+    "Exact generated IDs plus pinned tokenizer retained; decoded model strings are recoverable without new inference and never training material",
+    "Both-seed descriptive outcomes require independent saved-raw recount without rescoring. Scientific promotion and activation remain false"
+  ],
+  "holdout_or_reserved_tests": 0,
+  "raw_official_corpus_opened": false,
+  "activation_qualified": false,
+  "all_generated_artifacts_are_nontraining": true
+}

@@ -1,0 +1,51 @@
+{
+  "schema": "sol.independent.bridge-v3-transport-failure.v1",
+  "immutable_outbox_commit": "693678ea38a3dbad3a692a0a9bf19195a001d2cd",
+  "records": [
+    {
+      "path": "runs/sol-cloud-fixture-night-v3-benspc/sol-cloud-fixture-night-v3-benspc.exit",
+      "content": "rc=1\n",
+      "encoding": "utf-8",
+      "sha": "321433716569dadbf6fd8846770e0c0a4bc88b4e",
+      "display_url": "https://github.com/BenjaminHannan/learner/blob/693678ea38a3dbad3a692a0a9bf19195a001d2cd/runs/sol-cloud-fixture-night-v3-benspc/sol-cloud-fixture-night-v3-benspc.exit",
+      "display_title": "sol-cloud-fixture-night-v3-benspc.exit"
+    },
+    {
+      "path": "artifacts/sol-cloud-coordinator-20260930/integration/fixture-night-v1/execution-v3/PC-stdout.log",
+      "content": "Traceback (most recent call last):\r\n  File \"<stdin>\", line 133, in <module>\r\n  File \"<stdin>\", line 115, in main\r\nAssertionError: aggregate payload/output/return atomic cap; PC originals retained\r\n",
+      "encoding": "utf-8",
+      "sha": "748e391c227d73d9940a52c51c81e25c12d1511a",
+      "display_url": "https://github.com/BenjaminHannan/learner/blob/693678ea38a3dbad3a692a0a9bf19195a001d2cd/artifacts/sol-cloud-coordinator-20260930/integration/fixture-night-v1/execution-v3/PC-stdout.log",
+      "display_title": "PC-stdout.log"
+    },
+    {
+      "path": "artifacts/sol-cloud-coordinator-20260930/integration/fixture-night-v1/execution-v3/MAC-FAILURE.json",
+      "content": "{\n  \"PC_bootstrap_dispatched\": true,\n  \"actual_user_day\": false,\n  \"exception_type\": \"CalledProcessError\",\n  \"job\": \"sol-cloud-fixture-night-v3-benspc\",\n  \"optimizer_updates\": \"unknown; inspect saved night ledger\",\n  \"raw_diagnostics_suppressed\": true,\n  \"stage\": \"return saved manifest\",\n  \"subprocess_returncode\": 1\n}\n",
+      "encoding": "utf-8",
+      "sha": "43e48c85efd3c08a57fa786a1b99e894eb6a0993",
+      "display_url": "https://github.com/BenjaminHannan/learner/blob/693678ea38a3dbad3a692a0a9bf19195a001d2cd/artifacts/sol-cloud-coordinator-20260930/integration/fixture-night-v1/execution-v3/MAC-FAILURE.json",
+      "display_title": "MAC-FAILURE.json"
+    },
+    {
+      "path": "artifacts/sol-cloud-coordinator-20260930/integration/fixture-night-v1/execution-v3/PC-TRANSPORT-EXIT.json",
+      "content": "{\n  \"activated\": false,\n  \"actual_user_day\": false,\n  \"returncode\": 1\n}\n",
+      "encoding": "utf-8",
+      "sha": "4cb44634162671cc80c28b846c0bb4319c7b104b",
+      "display_url": "https://github.com/BenjaminHannan/learner/blob/693678ea38a3dbad3a692a0a9bf19195a001d2cd/artifacts/sol-cloud-coordinator-20260930/integration/fixture-night-v1/execution-v3/PC-TRANSPORT-EXIT.json",
+      "display_title": "PC-TRANSPORT-EXIT.json"
+    },
+    {
+      "path": "artifacts/sol-cloud-coordinator-20260930/integration/fixture-night-v1/execution-v3/PC-PREFLIGHT.json",
+      "content": "{\n  \"actual_user_day\": false,\n  \"free_disk_bytes\": 1917333504,\n  \"fresh_root_created\": true,\n  \"python_exe_conflicts\": 0\n}\n",
+      "encoding": "utf-8",
+      "sha": "21a3edcc670299a617027fc1fdd584c38c560fbb",
+      "display_url": "https://github.com/BenjaminHannan/learner/blob/693678ea38a3dbad3a692a0a9bf19195a001d2cd/artifacts/sol-cloud-coordinator-20260930/integration/fixture-night-v1/execution-v3/PC-PREFLIGHT.json",
+      "display_title": "PC-PREFLIGHT.json"
+    }
+  ],
+  "verdict": "TRANSPORT_FAILED_AFTER_FIXTURE_SUBPROCESS_RETURN_BEFORE_ARCHIVE",
+  "source_basis": "Reviewed PC-BOOTSTRAP-v3.py writes TRANSPORT-v3.json in finally, then checks project_bytes+source_bytes+1MiB against256MiB before archive creation. The actual saved traceback identifies that cap assertion.",
+  "optimizer_updates": "UNCONFIRMED: original PC night-ledger not yet recovered",
+  "activation": "UNCONFIRMED runtime candidate disposition; transport metadata says activated=false, policy prohibits activation",
+  "next": "Read-only exact artifact recovery from retained PC evidence; do not rerun training."
+}
