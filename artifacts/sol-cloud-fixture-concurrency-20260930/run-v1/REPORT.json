@@ -1,0 +1,59 @@
+{
+  "schema": "sol.cloud.fixture-concurrency-report.v1",
+  "started_utc": "2026-09-30T08:43:36.100519+00:00",
+  "completed_utc": "2026-09-30T08:43:45.846380+00:00",
+  "passed": 5,
+  "total": 5,
+  "cases": [
+    {
+      "case": "two rounds of simultaneous independent claims",
+      "pass": true,
+      "wall_seconds": 2.357987893000427
+    },
+    {
+      "case": "simultaneous dispatch lifecycle starts",
+      "pass": true,
+      "wall_seconds": 1.277180538999346
+    },
+    {
+      "case": "committed activity across process boundaries",
+      "pass": true,
+      "wall_seconds": 2.447263858000042
+    },
+    {
+      "case": "read-only readers under actual dirty writer transaction",
+      "pass": true,
+      "wall_seconds": 1.2269453819999399
+    },
+    {
+      "case": "complete/failed lifecycle claims cannot be re-admitted",
+      "pass": true,
+      "wall_seconds": 2.4311295260004044
+    }
+  ],
+  "actual_user_day": false,
+  "model_calls": 0,
+  "optimizer_updates": 0,
+  "network_calls": 0,
+  "training_cycle_executed": false,
+  "production_source_mutations": 0,
+  "test_children_only": true,
+  "temporary_databases_removed": true,
+  "source_pins": {
+    "scripts/sol_cloud_fixture_v1.py": "0480ffced7883e8be721842e53ba9439102a019149027f81ca2455f8492dff24",
+    "scripts/sol_cloud_day_adapter_v1.py": "5cef30bf8cc46667a41635ee6f4167b2cb4ab1f4915023d7ed7d2ba8db4f774f",
+    "scripts/sol_cloud_trainonly_v1.py": "a730907978cca5856c8b6ca318d2dac25e85d2df15390a5f085549884698cadf",
+    "artifacts/sol-cloud-trainonly-20260930/TRAIN-PACKET.json": "46ae697a2dc183048832fed4ef42144888afa08fe5e82db5ccb338c5703fea7e",
+    "artifacts/sol-cloud-trainonly-20260930/TRAIN-MANIFEST.json": "690bd7f6b12fadc5c350ed65d710c82e4e4bd1d8e1dda968e5f8f50b8fc75b7b"
+  },
+  "test_source_sha256": "4141c1d2f287d6395341d841034b3d8b61452d158d698c6db1faaa6ee5744fee",
+  "raw_sha256": "a60b67bdb7af1a16ed8229252bbc672dd92b29fb7f63849fc1533b67b638e58a",
+  "plan_sha256": "455e3045eac777241668ca1dc8b61cca687c5154fae7ba83bfa6d9367a196c9a",
+  "reference_only": "Temporary JSON is no model, checkpoint, candidate or optimizer evidence.",
+  "limits": [
+    "These are SQLite engineering lifecycle tests, not executed sleep or semantic evidence.",
+    "Complete/failed are state-machine test transitions; no real candidate rollback occurred.",
+    "Activity invalidation is checked after activity commit, not during an optimizer step.",
+    "SQLite BEGIN IMMEDIATE permits readers; an exclusive writer lock is outside this test."
+  ]
+}
