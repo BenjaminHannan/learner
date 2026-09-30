@@ -5,8 +5,9 @@
 Ben requests end-to-end completion in the stated five-stage order, Sol workers,
 independent blind recounts, and a $7.50 total Vast budget tonight. Current plan and
 lane ownership: [Sol execution board](../artifacts/sol-director-20260929/PLAN.md).
-Six Sol lanes are active: compute, spatial failure diagnosis, learned stopping,
-composition, frozen-state translator, and multikind sleep/runtime. No new
+Six Sol lanes are active: reasoner/spatial diagnosis, learned stopping,
+composition, frozen-state translator, multikind sleep/runtime, and dreamer/filter
+research. Compute reconnaissance and the visual vision page are complete. No new
 scientific promotion or rental has occurred. Current complete-model status:
 **NOT SHOWN**. Historical entries below remain intact as evidence history.
 
@@ -16,6 +17,8 @@ reasoner + notebook + thin translator + sleep integration. The full scientific
 finish line is unchanged but is not a prerequisite for calling the version a
 proof of concept. Ben confirms an RTX 5070 Ti over Tailscale; use free GPU tests
 first. Account reset is authorized below 3% remaining (initially 76% remaining).
+
+**02:58 UTC update:** [Sol-authored visual vision](../artifacts/sol-vision-20260929/vision.html) reviewed; layout checks pass at 400/720/1200 px in light/dark. Free PC CUDA smoke passed; the two-seed spatial diagnostic is running. Dreamer/filter research now has a dedicated Sol worker: discovery → verification → sleep consolidation, tested on fresh transfer tasks. Audio and vision are committed later capabilities. Neither the joined English path nor sleep benefit is yet shown. Attention/composition sleep drafts are held until checkpoint-specific stop readiness, per Ben’s stage order. New GPU spend remains $0.00.
 
 | Helper | Problem | Folder | State | Next check |
 |---|---|---|---|---|

@@ -49,6 +49,34 @@ An overnight heartbeat is scheduled every 15 minutes in this chat to resume
 coordination if needed and report meaningful changes. It must report readiness
 and any unmet requirements by the deadline, then pause its recurring schedule.
 
+### Later capabilities and optional experiments
+
+Ben explicitly wants **audio and vision eventually**. They belong on the later
+roadmap, outside tonight's required text proof of concept: thin modality
+translators feed the same latent reasoner. Video is a possible extension.
+
+The additional pictured ideas are optional, adopted only if they help: a creative
+proposal-and-filter mechanism; tools/agentic jobs on request; a skills notebook;
+idle curiosity and assigned-topic web research. None licenses a second model to
+do the reasoner's job, unchecked web text to become trusted memory, or generated
+prose to become training data. Quarantine external material, retain sources, and
+test usefulness before adding complexity. These ideas do not displace tonight's
+conversation, reasoner, notebook, sleep and fair-comparison work.
+
+**Priority research update:** Ben specifically asks for research on the dreamer
+and filter and says it is important. Bohr now runs the dedicated Sol research pass; the visual explainer is complete. Read the project's existing creative-model
+intent; distinguish it from similarly named reinforcement-learning systems.
+Study proposal diversity, filtering/verification, equal-compute controls,
+latent-reasoner integration and permitted sleep data. Adoption remains dependent
+on measured benefit, but the research is now explicitly requested work.
+
+Ben further clarified the purpose: discover useful novel ideas beyond the current
+model’s reliable ability, filter them, and consolidate the discoveries during
+sleep so the model grows. Test next-day direct solving and transfer on new
+problems, rather than memorization of selected attempts. This is a design goal,
+not measured evidence. Verified internal structured solutions and outcomes may
+be replayed; model-authored prose remains excluded from training.
+
 ## Design and stage order
 
 ```mermaid
@@ -76,7 +104,7 @@ flowchart LR
 
 | Lane | Worker | New files owned | Deliverable / dependency |
 |---|---|---|---|
-| Compute | Noether | artifacts/sol-ops-20260929, scripts/sol_ops_* | Live queue health, available compute, cheapest priced launch and cleanup plan |
+| Dreamer + filter | Bohr | artifacts/sol-dreamer-20260929, scripts/sol_dreamer_* | Primary-source research; novel internal discovery → verification → sleep consolidation; fresh transfer and retention tests |
 | Spatial diagnosis | Peirce | artifacts/sol-spatial-20260929, scripts/sol_spatial_* | Two-seed +1 GRU gate-bias test, unchanged and dense controls; diagnostic, not adoption of a GRU target |
 | Stop | Epicurus | artifacts/sol-stop-20260929, scripts/sol_stop_* | Actual active-row stopping, final-state contract, TRAIN-only calibration and parity |
 | Composition | James | artifacts/sol-compose-20260929, scripts/sol_compose_* | Learned cross-program communication, fresh symbolic compositions, fair controls |
