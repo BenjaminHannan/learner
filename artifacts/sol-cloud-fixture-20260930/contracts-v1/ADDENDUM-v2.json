@@ -1,0 +1,9 @@
+{
+  "reason": "cross-worker integration read found the night driver owns artifacts/sol-cloud-night-20260930; fixture restricted even read-only rollback receipt to its own output root",
+  "repair": "allow reading exact rollback.json in either fixture-owned or night-owned artifact tree; all fixture writes still require fixture-owned paths",
+  "before_source_freeze": "SOURCE-FREEZE-v1.json",
+  "marks": "existing 11 contracts must pass, plus allow exact night receipt and refuse unrelated owner trees/other JSON names",
+  "budget": "one updated stdlib suite, zero optimizer/model/network calls",
+  "actual_user_day": false,
+  "scientific_claim": "none; integration mechanics only"
+}

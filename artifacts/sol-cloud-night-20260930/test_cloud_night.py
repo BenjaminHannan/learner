@@ -1,0 +1,214 @@
+"""Stdlib engineering checks; these never train, infer, or certify semantics."""
+from copy import deepcopy
+import hashlib
+import json
+import os
+from pathlib import Path
+import sqlite3
+import subprocess
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch
+from types import SimpleNamespace
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'scripts'))
+import sol_cloud_candidate_v1 as candidate
+import sol_cloud_night_v1 as night
+
+
+def guard(identity='a', ce=1.0):
+    account = {'input_ids': [[11, 0]], 'input_mask': [[True, True]],
+               'notebook_ids': [[22]], 'notebook_mask': [[True]]}
+    return {**account, 'id': identity, 'CE': ce, 'actual_user_day': False,
+            'round': 4, 'labels': [[1, 2, 0]], 'label_mask': [[True, True, True]],
+            'predictions': [[1, 2, 0]], 'generated_ids': [1, 2], 'eos_token_id': 0,
+            'source_sha256': '0' * 64,
+            'input_identity_sha256': hashlib.sha256(json.dumps(account, sort_keys=True).encode()).hexdigest()}
+
+
+class NightContractTests(unittest.TestCase):
+    def test_symlink_to_protected_content_rejected_before_hash(self):
+        protected = Path('/not-a-real-directory/uncle-questions/forbidden')
+        with patch.object(candidate.Path, 'resolve', return_value=protected):
+            with patch.object(candidate, 'sha') as hashing:
+                with self.assertRaisesRegex(ValueError, 'unsafe dependency'):
+                    candidate.verify_files({'/tmp/benign-link': '0'*64})
+                hashing.assert_not_called()
+            with patch.object(candidate.importlib.util, 'find_spec', return_value=SimpleNamespace(origin='/tmp/benign-module.py')):
+                with patch.object(candidate, 'sha') as hashing:
+                    with self.assertRaisesRegex(ValueError, 'unsafe dependency'):
+                        candidate.import_pinned('sol_benign', {'dependency_pins': {}})
+                    hashing.assert_not_called()
+
+    def test_unpinned_requested_module_not_executed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            module = Path(directory) / 'standalone.py'
+            module.write_text('raise RuntimeError("should not execute")\n')
+            with patch.object(candidate.importlib.util, 'find_spec', return_value=SimpleNamespace(origin=str(module))):
+                with patch.object(candidate.importlib, 'import_module') as importing:
+                    with self.assertRaisesRegex(ValueError, 'source not pinned'):
+                        candidate.import_pinned('sol_standalone', {'dependency_pins': {}})
+                    importing.assert_not_called()
+
+    def test_long_question_token_parity_and_untruncated_target(self):
+        class NumericTokenizer:
+            eos_token_id = 0
+            def encode(self, text, add_special_tokens=False):
+                return [int(value) for value in text.split()]
+        tokens = candidate.expected_token_record(NumericTokenizer(),
+            {'question': ' '.join(map(str, range(1, 61))), 'context': ' '.join(map(str, range(1, 531))),
+             'target_text': '1 2'}, {'question_cap': 48, 'context_cap': 512})
+        self.assertEqual(tokens['input_ids'], [list(range(1, 49)) + [0]])
+        self.assertEqual(tokens['notebook_ids'], [list(range(1, 513))])
+        self.assertEqual(tokens['labels'], [[1, 2, 0]])
+        with self.assertRaisesRegex(ValueError, 'target truncation forbidden'):
+            candidate.expected_token_record(NumericTokenizer(), {'question': '1', 'context': '1',
+                'target_text': ' '.join(map(str, range(1, 65)))}, {'context_cap': 512})
+
+    def test_queue_gate_precedes_torch(self):
+        env = dict(os.environ)
+        env.pop('JOB', None)
+        env.pop('TREE', None)
+        result = subprocess.run([sys.executable, '-c',
+            "import sys; sys.path.insert(0,'scripts'); import sol_cloud_night_v1 as n; "
+            "assert 'torch' not in sys.modules; n.require_watcher()"], cwd=ROOT, env=env,
+            capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('watcher JOB and exact TREE', result.stderr)
+        self.assertNotIn('No module named', result.stderr)
+
+    def test_queue_wrong_tree_rejected(self):
+        with patch.dict(os.environ, {'JOB': 'fixture-test', 'TREE': '/tmp'}, clear=False):
+            with self.assertRaises(RuntimeError):
+                night.require_watcher()
+
+    def test_readonly_pointer_absence_preserved(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'not-initialized.sqlite3'
+            self.assertEqual(candidate.pointer_snapshot(path), {'exists': False, 'path': str(path)})
+            self.assertFalse(path.exists())
+            self.assertEqual(candidate.pointer_snapshot(None), {'exists': False, 'path': None})
+
+    def test_existing_pointer_snapshot_does_not_mutate_bytes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            reference = Path(directory) / 'bundle.json'
+            reference.write_text('{}\n')
+            db_path = Path(directory) / 'pointer.sqlite3'
+            with sqlite3.connect(db_path) as db:
+                db.execute('CREATE TABLE current_bundle (id INTEGER,revision INTEGER,record TEXT)')
+                db.execute('CREATE TABLE history (revision INTEGER)')
+                db.execute('INSERT INTO current_bundle VALUES(1,0,?)', (json.dumps(candidate.pin(reference)),))
+                db.execute('INSERT INTO history VALUES(0)')
+            before = db_path.read_bytes()
+            snapshot = candidate.pointer_snapshot(db_path)
+            self.assertTrue(snapshot['exists'])
+            self.assertEqual(snapshot['revision'], 0)
+            self.assertEqual(snapshot['history_rows'], 1)
+            self.assertEqual(before, db_path.read_bytes())
+
+    def test_reference_mutation_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            reference = Path(directory) / 'bundle.json'
+            reference.write_text('{}\n')
+            record = candidate.pin(reference)
+            database = Path(directory) / 'pointer.sqlite3'
+            with sqlite3.connect(database) as db:
+                db.execute('CREATE TABLE current_bundle (id INTEGER,revision INTEGER,record TEXT)')
+                db.execute('CREATE TABLE history (revision INTEGER)')
+                db.execute('INSERT INTO current_bundle VALUES(1,0,?)', (json.dumps(record),))
+            reference.write_text('{"changed": true}\n')
+            with self.assertRaisesRegex(ValueError, 'pin changed'):
+                candidate.pointer_snapshot(database)
+
+    def test_unsafe_dependency_rejected_before_content_access(self):
+        for path in ['/missing/uncle-questions/blocked', '/missing/readpanel320',
+                     '/missing/DEV100', '/missing/stop88', '/missing/pairs.json',
+                     '/missing/train-v1.1.json', '/missing/human-documents/blocked',
+                     '/missing/blind/blocked', '/missing/sealed-panels/blocked',
+                     '/missing/sealedquestions/blocked']:
+            with self.subTest(path=path), self.assertRaisesRegex(ValueError, 'unsafe dependency'):
+                candidate.verify_files({path: '0' * 64})
+
+    def test_guard_recount_ignores_author_exact_flag(self):
+        before = [guard()]
+        repeat = deepcopy(before)
+        after = deepcopy(before)
+        before[0]['human_target_exact'] = False
+        after[0]['human_target_exact'] = False
+        result = candidate.guard_recount(before, repeat, after, ['a'])
+        self.assertTrue(result['pass'])
+        self.assertEqual(result['before_exact'], 1)
+
+    def test_guard_loss_rejects(self):
+        before, repeated, after = [guard()], [guard()], [guard(ce=1.01)]
+        self.assertFalse(candidate.guard_recount(before, repeated, after, ['a'])['pass'])
+
+    def test_guard_lost_exact_rejects(self):
+        before, repeated, after = [guard()], [guard()], [guard(ce=0.9)]
+        after[0]['generated_ids'] = [2, 1]
+        result = candidate.guard_recount(before, repeated, after, ['a'])
+        self.assertFalse(result['pass'])
+        self.assertEqual(result['lost_prior_exact_ids'], ['a'])
+
+    def test_guard_measured_noise_recount(self):
+        result = candidate.guard_recount([guard()], [guard(ce=1.005)], [guard(ce=1.009)], ['a'])
+        self.assertTrue(result['pass'])
+        self.assertAlmostEqual(result['repeat_CE_noise_measured'], 0.005)
+
+    def test_guard_target_mask_and_identity_forgery_rejected(self):
+        for key, value in [('labels', [[2, 1, 0]]), ('label_mask', [[True, False, True]]),
+                           ('input_identity_sha256', 'f' * 64), ('source_sha256', '1' * 64),
+                           ('id', 'changed'), ('actual_user_day', True), ('CE', float('nan'))]:
+            after = [guard()]
+            after[0][key] = value
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                candidate.guard_recount([guard()], [guard()], after, ['a'])
+
+    def test_plan_budget_and_scope_reject_mutations(self):
+        plan = {'version': candidate.VERSION, 'updates': 25, 'batch': 2, 'fixed_rounds': 4,
+                'context_cap': 512, 'lr': 1e-5, 'weight_decay': 0.01, 'actual_user_day': False,
+                'activation_policy': 'explicit-rollback', 'wall_cap_seconds': 600,
+                'disk_floor_bytes': 1024**3, 'output_cap_bytes': 256*1024**2,
+                'experience_ids': ['a'], 'replay_ids': ['b'], 'guard_ids': ['c']}
+        night.check_plan(plan)
+        for key, value in [('updates', 24), ('batch', 1), ('fixed_rounds', 3),
+                           ('activation_policy', 'activate'), ('actual_user_day', True),
+                           ('output_cap_bytes', 256*1024**2+1), ('disk_floor_bytes', 1024**3-1),
+                           ('guard_ids', ['a'])]:
+            mutated = dict(plan, **{key: value})
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                night.check_plan(mutated)
+
+    def test_fixture_cannot_change_human_fields(self):
+        original = dict(id='a', question='q', context='c', answer_text='a', target_text='a',
+                        accepted_human_answers=['a'], source_sha256='0'*64)
+        fixture = dict(original, origin='verified-human-TRAIN-fixture', actual_user_day=False)
+        self.assertEqual(night.join_fixture({'a': original}, [fixture], {'experience_ids': ['a']}), [fixture])
+        for key, value in [('context', 'changed'), ('target_text', 'changed'), ('actual_user_day', True)]:
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                night.join_fixture({'a': original}, [dict(fixture, **{key: value})], {'experience_ids': ['a']})
+
+    def test_rejection_does_not_initialize_absent_pointer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            reference, manifest, validation = (output / name for name in ['previous.json', 'candidate-manifest.json', 'validation.json'])
+            for path in [reference, manifest, validation]:
+                path.write_text('{}\n')
+            database = output / 'active.sqlite3'
+            before = candidate.pointer_snapshot(database)
+            binding_path = output / 'binding.json'
+            binding_path.write_text(json.dumps({'source': {'previous_bundle': candidate.pin(reference), 'pointer_db': str(database)}}))
+            with patch.object(candidate, 'validate', return_value={'mechanics_complete': True, 'guard': {'pass': False}}):
+                receipt = candidate.reject(binding_path, candidate.sha(binding_path), output / 'plan.json', output, before)
+            self.assertFalse(database.exists())
+            self.assertFalse(receipt['activated'])
+            self.assertEqual(receipt['disposition'], 'rollback')
+            self.assertTrue(receipt['previous_bundle_reference_only'])
+            self.assertEqual(receipt['pointer_before'], receipt['pointer_after'])
+            self.assertTrue((output / 'rollback.json').exists())
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

@@ -1,0 +1,40 @@
+{
+  "stage": "ready for independent source/evidence review; no queue publication or actual training performed by this worker",
+  "source_pins": {
+    "scripts/sol_cloud_fixture_v1.py": "a4ecb56f3b882a4b5fb690175eccafe9bfa7528baf0f844ebbccda127fdcd5c3",
+    "scripts/sol_cloud_day_adapter_v1.py": "b92f9d5e97f5230dcb68375ce7b96983fad9a4953f153a215460091abec8792f",
+    "tests/sol_cloud_fixture_v1/test_fixture.py": "034e3adf601f8e515e7a80beae5562021d441770dd0da7901d69e43a27ad3b8f",
+    "artifacts/sol-cloud-fixture-20260930/contracts-v1/PRE-RUN.json": "e608ce80fd947357bd8224a1785c1312da86ccb48fdf47908c1f605802d93d8c",
+    "artifacts/sol-cloud-fixture-20260930/contracts-v1/FAILURE-1.json": "208cbd599da2610d790bbcc1f79586e9c016e350134236158894d2a292bdeb08",
+    "artifacts/sol-cloud-fixture-20260930/contracts-v1/RAW-2.json": "e3e3fccb8885f9164b8b41e8ca2be9026b755dda6761e70feb818d1af4eb8771",
+    "artifacts/sol-cloud-fixture-20260930/contracts-v1/RAW-3.json": "9010b714aa96820ded46eb32bb60d4e663bf999baab9547e1a4f222888f5c828",
+    "artifacts/sol-cloud-fixture-20260930/contracts-v1/human-admission/ADMISSION-RAW.json": "eb2ec1940d519d72c8e27c390ada5b4dde40a4c195042290435307245faca922"
+  },
+  "unit_contracts_passed": 11,
+  "unit_contracts_total": 11,
+  "latest_unit_raw": "artifacts/sol-cloud-fixture-20260930/contracts-v1/RAW-3.json",
+  "human_packet_admission": {
+    "raw": "artifacts/sol-cloud-fixture-20260930/contracts-v1/human-admission/ADMISSION-RAW.json",
+    "rows": 1,
+    "status": "passed with pre-explicit-close source hashes saved in that receipt; current unit contracts also check read-only admission under writer lock"
+  },
+  "actual_user_day": false,
+  "optimizer_updates": 0,
+  "model_calls": 0,
+  "network_calls": 0,
+  "known_limits": [
+    "no actual night cycle executed here",
+    "fixture activity is explicit store activity; it is not automatic monitoring of a live assistant session",
+    "source SQL batch binds a bundle leaf; night driver independently checks actual awake model tuple",
+    "human targets are existing answer spans, often phrases; grammatical meaningful chat unshown",
+    "SQLite running claims are consumed on failure; no automatic resume/retry or duplicate optimizer dispatch"
+  ],
+  "source_contract": {
+    "packet": "standalone HUMAN TRAIN packet externally pinned",
+    "manifest": "standalone provenance/exclusion manifest externally pinned",
+    "loader": "TRAIN-only load_packet(path,sha,manifest_path,manifest_sha) externally pinned"
+  },
+  "adapter_contract": "load_rows(path,expected_sha256,bundle_sha256=None) returns original TRAIN ids/fields plus source_row_id,day_record_id,origin,training_origin,actual_user_day:false,bundle_sha256,source_packet_sha256",
+  "dispatch": "watcher JOB and exact TREE mandatory; one pinned Python argv containing --day-rows {day_batch} and --day-sha256 {day_batch_sha256}; no shell or direct training from this worker",
+  "rollback_contract": "night driver rollback.json schema sol.cloud.candidate-disposition.v1; candidate+validation pins; actual_user_day:false,activated:false,operation reject-candidate-retain-prior, pointer_before==pointer_after,mechanics_complete:true"
+}

@@ -1,0 +1,450 @@
+#!/usr/bin/env python3
+"""Saved-evidence validation and explicit rejection for the cloud fixture night.
+
+This module does no fitting or model inference. Tensor checks require torch on
+the queue target. The disposition never temporarily activates a candidate.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import importlib
+import importlib.util
+import json
+import math
+import os
+from pathlib import Path
+import sqlite3
+
+VERSION = 'sol.cloud.night.v1'
+
+PROTECTED_PATH_PARTS = ('/uncle-questions/', 'readpanel320', 'dev100', 'stop88',
+                        '/human-documents/', '/pairs.json', '/train-v1.1.json',
+                        '/blind/', '/sealed-panels/', '/sealedquestions/')
+
+
+def checked_path(path):
+    def reject_protected(value):
+        normalized = str(value).lower().replace('\\', '/')
+        if any(part in normalized for part in PROTECTED_PATH_PARTS):
+            raise ValueError('unsafe dependency content path: ' + str(value))
+    # Reject a literal protected path before even resolving it. A benign
+    # symlink's resolved destination is checked before any content read/hash.
+    reject_protected(path)
+    resolved = Path(path).resolve()
+    reject_protected(resolved)
+    return resolved
+
+
+def sha(path):
+    h = hashlib.sha256()
+    with checked_path(path).open('rb') as stream:
+        for chunk in iter(lambda: stream.read(1 << 20), b''):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def read(path):
+    return json.loads(checked_path(path).read_text(encoding='utf8'))
+
+
+def write(path, value):
+    path = checked_path(path)
+    temporary = path.with_name(path.name + '.tmp')
+    with temporary.open('x', encoding='utf8') as stream:
+        stream.write(json.dumps(value, indent=2, allow_nan=False) + '\n')
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.replace(temporary, path)
+    # POSIX directory fsync makes the rename durable; Windows does not expose it.
+    if os.name != 'nt':
+        descriptor = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+
+
+def pin(path):
+    path = checked_path(path)
+    return {'path': str(path), 'sha256': sha(path)}
+
+
+def verify_files(pins):
+    for path, expected in pins.items():
+        resolved = checked_path(path)
+        if sha(resolved) != expected:
+            raise ValueError('bound file changed: ' + str(path))
+
+
+def import_pinned(name, binding):
+    specification = importlib.util.find_spec(name)
+    if specification is None or specification.origin is None:
+        raise ValueError('bound module missing: ' + name)
+    path = checked_path(specification.origin)
+    if binding['dependency_pins'].get(str(path)) != sha(path):
+        raise ValueError('requested module source not pinned: ' + name)
+    return importlib.import_module(name)
+
+
+def pointer_snapshot(database):
+    """Read without constructor writes or any pointer mutation."""
+    if database is None:
+        return {'exists': False, 'path': None}
+    path = checked_path(database)
+    if not path.exists():
+        return {'exists': False, 'path': str(path)}
+    if not path.is_file():
+        raise ValueError('pointer path must be absent or a database file')
+    database_sha256 = sha(path)
+    wal = path.with_name(path.name + '-wal')
+    wal_sha256 = sha(wal) if wal.is_file() else None
+    with sqlite3.connect(path.as_uri() + '?mode=ro', uri=True, timeout=10) as db:
+        db.execute('PRAGMA query_only=ON')
+        row = db.execute('SELECT revision,record FROM current_bundle WHERE id=1').fetchone()
+        count = db.execute('SELECT COUNT(*) FROM history').fetchone()[0]
+    if row is None:
+        raise ValueError('active bundle absent')
+    bundle = json.loads(row[1])
+    if set(bundle) != {'path', 'sha256'} or sha(bundle['path']) != bundle['sha256']:
+        raise ValueError('active bundle pin changed')
+    if sha(path) != database_sha256 or (sha(wal) if wal.is_file() else None) != wal_sha256:
+        raise ValueError('pointer database bytes raced read-only snapshot')
+    return {'exists': True, 'path': str(path), 'revision': row[0], 'bundle': bundle, 'history_rows': count,
+            'database_sha256': database_sha256, 'wal_sha256': wal_sha256}
+
+
+def validate_rows(rows, expected_ids):
+    if not rows or [r['id'] for r in rows] != expected_ids:
+        raise ValueError('guard identities changed or empty')
+    if len(expected_ids) != len(set(expected_ids)):
+        raise ValueError('duplicate guard identities')
+    for row in rows:
+        if row.get('actual_user_day') is not False or row.get('round') != 4:
+            raise ValueError('fixture/fixed4 disclosure missing')
+        if len(row['labels']) != 1 or len(row['label_mask']) != 1:
+            raise ValueError('physically sliced guard row required')
+        labels, masks = row['labels'][0], row['label_mask'][0]
+        if not labels or len(labels) != len(masks) or not any(masks):
+            raise ValueError('guard labels/masks unaligned')
+        if any(type(label) is not int or type(mask) is not bool or mask != (label != -100)
+               for label, mask in zip(labels, masks)):
+            raise ValueError('target mask differs from labels')
+        if len(row['predictions']) != 1 or len(row['predictions'][0]) != len(labels):
+            raise ValueError('predictions not aligned with labels')
+        for ids, mask in [('input_ids', 'input_mask'), ('notebook_ids', 'notebook_mask')]:
+            if len(row[ids]) != 1 or len(row[mask]) != 1 or len(row[ids][0]) != len(row[mask][0]):
+                raise ValueError('input masks unaligned')
+            if any(type(x) is not int for x in row[ids][0]) or any(type(x) is not bool for x in row[mask][0]):
+                raise ValueError('invalid input token or mask')
+        account = {key: row[key] for key in ('input_ids', 'input_mask', 'notebook_ids', 'notebook_mask')}
+        expected = hashlib.sha256(json.dumps(account, sort_keys=True).encode()).hexdigest()
+        if expected != row['input_identity_sha256']:
+            raise ValueError('guard input identity changed')
+        if not math.isfinite(row['CE']):
+            raise ValueError('nonfinite saved guard loss')
+        if not isinstance(row['generated_ids'], list) or any(type(x) is not int for x in row['generated_ids']):
+            raise ValueError('invalid generated token record')
+
+
+def exact_target(row):
+    expected = [x for x, valid in zip(row['labels'][0], row['label_mask'][0]) if valid]
+    if expected and expected[-1] == row['eos_token_id']:
+        expected = expected[:-1]
+    return row['generated_ids'] == expected
+
+
+def expected_token_record(tokenizer, row, plan):
+    """Reconstruct the sealed source tokens without model inference."""
+    targets = tokenizer.encode(row['target_text'], add_special_tokens=False) + [tokenizer.eos_token_id]
+    if len(targets) > 64:
+        raise ValueError('human target exceeds64; target truncation forbidden')
+    question = tokenizer.encode(row['question'], add_special_tokens=False)[:plan.get('question_cap', 48)] + [tokenizer.eos_token_id]
+    context = tokenizer.encode(row['context'], add_special_tokens=False)[:plan['context_cap']]
+    return {'labels': [targets], 'label_mask': [[True] * len(targets)],
+            'input_ids': [question], 'notebook_ids': [context],
+            'input_mask': [[True] * len(question)], 'notebook_mask': [[True] * len(context)]}
+
+
+def guard_recount(before, repeat, after, expected_ids):
+    for rows in (before, repeat, after):
+        validate_rows(rows, expected_ids)
+    for old, repeated, new in zip(before, repeat, after):
+        for key in ('labels', 'label_mask', 'input_identity_sha256', 'source_sha256', 'eos_token_id'):
+            if old[key] != repeated[key] or old[key] != new[key]:
+                raise ValueError('guard source/input/target drift: ' + key)
+    old_mean = sum(row['CE'] for row in before) / len(before)
+    repeat_mean = sum(row['CE'] for row in repeat) / len(repeat)
+    new_mean = sum(row['CE'] for row in after) / len(after)
+    noise = abs(repeat_mean - old_mean)
+    lost = [old['id'] for old, new in zip(before, after) if exact_target(old) and not exact_target(new)]
+    tolerance = 2 * noise + 1e-6
+    return {'pass': not lost and new_mean <= old_mean + tolerance,
+            'before_mean_CE': old_mean, 'repeat_mean_CE': repeat_mean, 'after_mean_CE': new_mean,
+            'repeat_CE_noise_measured': noise, 'CE_tolerance': tolerance,
+            'lost_prior_exact_ids': lost,
+            'before_exact': sum(exact_target(row) for row in before),
+            'after_exact': sum(exact_target(row) for row in after), 'guard_rows': len(before),
+            'target_scope': 'verbatim official human short answer + EOS; evidence_text retained as provenance only',
+            'scope': 'open HUMAN TRAIN engineering guard; semantics and unseen retention NOT SHOWN'}
+
+
+def fingerprint(state):
+    import torch
+    digest = hashlib.sha256()
+    for name, tensor in sorted(state.items()):
+        digest.update(f'{name}:{tensor.dtype}:{tuple(tensor.shape)}'.encode())
+        digest.update(tensor.detach().cpu().contiguous().reshape(-1).view(torch.uint8).numpy().tobytes())
+    return digest.hexdigest()
+
+
+def tensor_validation(binding, ledger, output):
+    """Compare durable source, candidate, resume, moments and frozen prefix."""
+    import torch
+    source = binding['source']
+    original = torch.load(source['parent']['path'], map_location='cpu', weights_only=True)
+    candidate = torch.load(output / 'candidate-parent.pt', map_location='cpu', weights_only=True)
+    resume = torch.load(output / 'night-resume.pt', map_location='cpu', weights_only=True)
+    if original['constructor'] != candidate['constructor']:
+        raise ValueError('candidate constructor changed')
+    before, after, saved = original['state_dict'], candidate['state_dict'], resume['core']
+    if before.keys() != after.keys() or after.keys() != saved.keys():
+        raise ValueError('core tensor names changed')
+    checks = []
+    for name in before:
+        old, new, restored = before[name], after[name], saved[name]
+        if (old.shape != new.shape or old.dtype != new.dtype or new.shape != restored.shape
+                or new.dtype != restored.dtype or not torch.equal(new, restored)):
+            raise ValueError('candidate/resume tensor mismatch: ' + name)
+        if not bool(torch.isfinite(new).all()):
+            raise ValueError('nonfinite candidate tensor: ' + name)
+        changed = not torch.equal(old, new)
+        if ('halt' in name or name in ('position_frequencies', 'boundary_roles')) and changed:
+            raise ValueError('frozen halt/position/role tensor changed: ' + name)
+        checks.append({'name': name, 'shape': list(new.shape), 'dtype': str(new.dtype),
+                       'changed': changed, 'candidate_resume_exact': True,
+                       'before_sha256': fingerprint({name: old}),
+                       'after_sha256': fingerprint({name: new}), 'finite': True})
+    changed_count = sum(row['changed'] for row in checks)
+    if not changed_count or fingerprint(before) != ledger['core_before'] or fingerprint(after) != ledger['core_after']:
+        raise ValueError('changed-core fingerprints not proven')
+    names = resume['optimizer_parameter_names']
+    optimizer = resume['optimizer']
+    parameter_ids = [x for group in optimizer['param_groups'] for x in group['params']]
+    if len(parameter_ids) != len(names) or len(set(parameter_ids)) != len(names) or any('halt' in name for name in names):
+        raise ValueError('optimizer parameter scope changed')
+    expected_names = ledger['optimizer_parameter_names']
+    if names != expected_names or set(names) - set(before):
+        raise ValueError('optimizer tensor/name binding changed')
+    if any(row['changed'] and row['name'] not in names for row in checks):
+        raise ValueError('tensor outside optimizer scope changed')
+    states = optimizer['state']
+    if not states or set(states) - set(parameter_ids):
+        raise ValueError('optimizer moments missing or outside core parameter scope')
+    moment_checks = []
+    dormant_names = []
+    for parameter_id, name in zip(parameter_ids, names):
+        if parameter_id not in states:
+            if not torch.equal(before[name], after[name]):
+                raise ValueError('tensor changed without Adam state: ' + name)
+            dormant_names.append(name)
+            continue
+        state = states[parameter_id]
+        if set(state) != {'step', 'exp_avg', 'exp_avg_sq'}:
+            raise ValueError('unexpected Adam state')
+        step = state['step']
+        number = int(step.item()) if isinstance(step, torch.Tensor) else int(step)
+        if (float(step) != number or not 1 <= number <= 25
+                or number != ledger['optimizer_participation_counts'][name]):
+            raise ValueError('Adam step differs from exact gradient participation count')
+        for key in ('exp_avg', 'exp_avg_sq'):
+            if (state[key].shape != after[name].shape or state[key].dtype != after[name].dtype
+                    or not bool(torch.isfinite(state[key]).all())):
+                raise ValueError('invalid populated Adam moments')
+        if ledger['optimizer_nonzero_gradient_counts'][name] and not bool((state['exp_avg_sq'] != 0).any()):
+            raise ValueError('saved nonzero gradients have erased Adam second moments')
+        moment_checks.append({'name': name, 'parameter_id': parameter_id, 'initial_step': 0,
+                              'final_step': number, 'exp_avg_sha256': fingerprint({name: state['exp_avg']}),
+                              'exp_avg_sq_sha256': fingerprint({name: state['exp_avg_sq']})})
+    if resume['ledger'] != ledger or resume['binding_sha256'] != ledger['binding_sha256']:
+        raise ValueError('durable resume ledger/binding differs')
+    if resume['frozen_component_fingerprints'] != ledger['frozen_component_fingerprints']:
+        raise ValueError('frozen fingerprint evidence differs')
+    prior_prefix = torch.load(source['prefix']['path'], map_location='cpu', weights_only=True)
+    candidate_prefix = torch.load(output / 'candidate-English.pt', map_location='cpu', weights_only=True)
+    if fingerprint(prior_prefix['adapter_state']) != fingerprint(candidate_prefix['adapter_state']):
+        raise ValueError('frozen output prefix changed')
+    expected_prefix = dict(prior_prefix, parent_sha256=sha(output / 'candidate-parent.pt'),
+                           training_stage='cloud-fixture-night-frozen-prefix-rebound-unqualified')
+    if set(expected_prefix) != set(candidate_prefix):
+        raise ValueError('candidate prefix schema changed')
+    if any(expected_prefix[key] != candidate_prefix[key] for key in expected_prefix if key != 'adapter_state'):
+        raise ValueError('candidate prefix metadata binding changed')
+    return {'core_tensors': checks, 'changed_core_tensors': changed_count, 'Adam_states': moment_checks,
+            'dormant_optimizer_parameters_unchanged': dormant_names,
+            'checkpoint_reload_exact': True, 'populated_Adam_reload_exact': ledger['populated_Adam_reload_exact'],
+            'halt_frozen': True, 'position_and_role_buffers_frozen': True,
+            'prefix_frozen': True, 'core_before': fingerprint(before),
+            'core_after': fingerprint(after), 'actual_user_day': False}
+
+
+def validate(binding_path, binding_sha256, plan_path, output):
+    output = checked_path(output)
+    if sha(binding_path) != binding_sha256:
+        raise ValueError('binding hash changed')
+    binding, plan = read(binding_path), read(plan_path)
+    if binding['version'] != VERSION or plan['version'] != VERSION or sha(plan_path) != binding['plan_sha256']:
+        raise ValueError('plan/binding mismatch')
+    verify_files(binding['dependency_pins'])
+    if binding['dependency_pins'].get(str(Path(__file__).resolve())) != sha(__file__):
+        raise ValueError('candidate validator source not pinned')
+    verify_files({record['path']: record['sha256'] for record in binding['source'].values()
+                  if isinstance(record, dict) and set(record) == {'path', 'sha256'}})
+    ledger = read(output / 'night-ledger.json')
+    if (not ledger['closed'] or ledger['updates'] != 25 or ledger['raw_watermark_update'] != 25
+            or ledger['core_optimizer_calls'] != 25 or ledger['core_Adam_initial_step'] != 0):
+        raise ValueError('night did not complete exactly 25 updates')
+    if ledger['actual_user_day'] is not False or ledger['fixture_rows'] <= 0 or ledger['activated'] is not False:
+        raise ValueError('fixture/activation disclosure invalid')
+    if (ledger['model_authored_targets'] != 0 or ledger['DEV_model_calls'] != 0
+            or ledger['learned_stop_qualified'] is not False or ledger['optimizer_scope'] != 'ordered core ONLY; halt frozen'):
+        raise ValueError('invalid optimizer/provenance scope')
+    if ledger['binding_sha256'] != binding_sha256 or ledger['plan_sha256'] != sha(plan_path):
+        raise ValueError('ledger binding drift')
+    if not ledger['checkpoint_reload_exact'] or not ledger['populated_Adam_reload_exact'] or not ledger['frozen_components_unchanged']:
+        raise ValueError('durability/frozen checks absent')
+    manifest = read(output / 'candidate-manifest.json')
+    expected_manifest = {'version': VERSION, 'seed': binding['seed'], 'actual_user_day': False,
+                         'activated': False, 'activation_eligible': False, 'fixture_rows': ledger['fixture_rows'],
+                         'execution_policy': 'native-fixed4', 'learned_stop': 'UNQUALIFIED',
+                         'parent': pin(output / 'candidate-parent.pt'), 'prefix': pin(output / 'candidate-English.pt'),
+                         'resume': pin(output / 'night-resume.pt'), 'ledger': pin(output / 'night-ledger.json'),
+                         'reader': binding['source']['reader'], 'provenance': binding['source']['provenance'],
+                         'previous_bundle': binding['source']['previous_bundle'],
+                         'source_binding_sha256': binding_sha256, 'target_scope': ledger['target_scope'],
+                         'scientific_gain': 'NOT SHOWN', 'semantics': 'NOT SHOWN'}
+    if manifest != expected_manifest:
+        raise ValueError('candidate manifest pins/source/fixture metadata differ')
+    verify_files(ledger['input_pins'])
+    update_rows = [json.loads(line) for line in (output / 'optimizer-updates.jsonl').read_text(encoding='utf8').splitlines()]
+    if len(update_rows) != 25 or [row['update'] for row in update_rows] != list(range(1, 26)):
+        raise ValueError('exactly 25 ordered actual optimizer update records required')
+    participation = dict.fromkeys(ledger['optimizer_parameter_names'], 0)
+    nonzero_counts = dict(participation)
+    previous_fingerprint = ledger['core_before']
+    for row in update_rows:
+        if (row['core_before'] != previous_fingerprint or row['core_after'] == row['core_before']
+                or row['binding_sha256'] != binding_sha256 or row['actual_user_day'] is not False):
+            raise ValueError('optimizer update fingerprint/binding chain invalid')
+        if not row['gradients'] or len({item['name'] for item in row['gradients']}) != len(row['gradients']):
+            raise ValueError('duplicate/empty actual core gradient records')
+        if not any(item['nonzero'] for item in row['gradients']):
+            raise ValueError('no nonzero core gradient for actual optimizer call')
+        for item in row['gradients']:
+            if item['name'] not in participation or not math.isfinite(item['l2_norm']) or item['l2_norm'] < 0:
+                raise ValueError('optimizer gradient out of scope/nonfinite')
+            if item['nonzero'] != (item['l2_norm'] > 0):
+                raise ValueError('gradient nonzero flag differs from saved norm')
+            participation[item['name']] += 1
+            nonzero_counts[item['name']] += int(item['nonzero'])
+        previous_fingerprint = row['core_after']
+    if (participation != ledger['optimizer_participation_counts']
+            or nonzero_counts != ledger['optimizer_nonzero_gradient_counts']
+            or previous_fingerprint != ledger['core_after']):
+        raise ValueError('optimizer participation/fingerprint final chain changed')
+    day_module = import_pinned(binding['modules']['day_adapter'], binding)
+    rows = day_module.inspect_rows(ledger['day_rows_path'], ledger['day_rows_sha256'],
+                                   binding['source']['previous_bundle']['sha256'])
+    if [row['id'] for row in rows] != ledger['experience_ids'] or len(rows) != ledger['fixture_rows']:
+        raise ValueError('fixture records differ from optimizer ledger')
+    raw_path = output / 'night-raw.jsonl'
+    raw = [json.loads(line) for line in raw_path.read_text(encoding='utf8').splitlines()]
+    if len(raw) != 50:
+        raise ValueError('exactly 50 physical batch records required')
+    expected_schedule = ledger['sample_schedule']
+    if len(expected_schedule) != 25:
+        raise ValueError('schedule length changed')
+    train_module = import_pinned(binding['modules']['trainonly'], binding)
+    train_rows, _ = train_module.human_rows(packet=binding['train']['packet']['path'],
+        manifest=binding['train']['manifest']['path'],
+        expected_packet_sha256=binding['train']['packet']['sha256'],
+        expected_manifest_sha256=binding['train']['manifest']['sha256'])
+    train = {row['id']: row for row in train_rows}
+    from transformers import AutoTokenizer
+    tokenizer = AutoTokenizer.from_pretrained(binding['source']['model_path'], local_files_only=True, trust_remote_code=False)
+    for update in range(1, 26):
+        batch = raw[(update - 1) * 2:update * 2]
+        if [row['id'] for row in batch] != expected_schedule[update - 1] or any(row['update'] != update for row in batch):
+            raise ValueError('raw schedule/update identity mismatch')
+        for row in batch:
+            if row['actual_user_day'] is not False or row['binding_sha256'] != binding_sha256:
+                raise ValueError('raw fixture/binding drift')
+            if row['labels_origin'] != 'verified-human-TRAIN-answer' or row['origin'] not in ('verified-human-TRAIN-fixture', 'verified-human-origin-verbatim'):
+                raise ValueError('raw target origin invalid')
+            if not math.isfinite(row['CE']):
+                raise ValueError('nonfinite raw optimizer loss')
+            original = train[row['id']]
+            expected_tokens = expected_token_record(tokenizer, original, plan)
+            if (any(row[key] != value for key, value in expected_tokens.items())
+                    or row['source_sha256'] != original['source_sha256']):
+                raise ValueError('raw tokens/labels/source differ from exact human packet')
+    guard_rows = [read(output / name) for name in ('guard-before.json', 'guard-before-repeat.json', 'guard-after.json')]
+    for group in guard_rows:
+        for row in group:
+            original = train[row['id']]
+            expected_tokens = expected_token_record(tokenizer, original, plan)
+            if any(row[key] != value for key, value in expected_tokens.items()) or row['source_sha256'] != original['source_sha256']:
+                raise ValueError('guard tokens/labels/source differ from exact human packet')
+    guard = guard_recount(*guard_rows, plan['guard_ids'])
+    if guard['repeat_CE_noise_measured'] != ledger['repeat_CE_noise_measured']:
+        raise ValueError('saved noise differs from raw recount')
+    tensors = tensor_validation(binding, ledger, output)
+    result = {'schema': 'sol.cloud.candidate-validation.v1', 'actual_user_day': False,
+              'mechanics_complete': True, 'guard': guard, 'tensor_validation': tensors,
+              'binding_sha256': binding_sha256, 'plan_sha256': sha(plan_path),
+              'candidate_manifest': pin(output / 'candidate-manifest.json'),
+              'saved_evidence': {str(path): sha(path) for path in output.iterdir() if path.is_file()},
+              'activation_authorized': False, 'scientific_gain': 'NOT SHOWN',
+              'semantics': 'NOT SHOWN; existing awake model semantically broken',
+              'reason': 'authorized fixture mechanics test requires explicit rollback regardless of guard'}
+    write(output / 'validation.json', result)
+    return result
+
+
+def reject(binding_path, binding_sha256, plan_path, output, pointer_before):
+    """Validate the candidate, then durably reject it without touching the pointer."""
+    output = checked_path(output)
+    binding = read(binding_path)
+    result = validate(binding_path, binding_sha256, plan_path, output)
+    previous = binding['source']['previous_bundle']
+    current = pointer_snapshot(binding['source']['pointer_db'])
+    if pointer_before != current or (current['exists'] and current['bundle'] != previous) or sha(previous['path']) != previous['sha256']:
+        raise ValueError('prior active pointer/bundle changed during fixture night')
+    receipt = {'schema': 'sol.cloud.candidate-disposition.v1', 'actual_user_day': False,
+               'activated': False, 'disposition': 'rollback', 'operation': 'reject-candidate-retain-prior',
+               'previous_bundle_sha256': previous['sha256'],
+               'candidate_manifest': pin(output / 'candidate-manifest.json'),
+               'pointer_before': pointer_before, 'pointer_after': current,
+               'prior_pointer_unchanged': True, 'previous_bundle_unchanged': True,
+               'validation': pin(output / 'validation.json'), 'mechanics_complete': result['mechanics_complete'],
+               'guard_passed': result['guard']['pass'], 'activation_eligible': False,
+               'reason': 'fixture night only; no semantic activation qualification',
+               'rollback_kind': 'explicit rejection of inactive durable candidate; predecessor not required'}
+    receipt['previous_bundle_reference_only'] = not current['exists']
+    write(output / 'rollback.json', receipt)
+    # Recheck after durable disposition to catch concurrent pointer changes.
+    if pointer_snapshot(binding['source']['pointer_db']) != current or sha(previous['path']) != previous['sha256']:
+        raise ValueError('prior bundle changed while recording rejection')
+    return receipt
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--binding', required=True)
+    parser.add_argument('--binding-sha256', required=True)
+    parser.add_argument('--plan', required=True)
+    parser.add_argument('--output', required=True)
+    parser.add_argument('--pointer-before', required=True)
+    args = parser.parse_args()
+    print(json.dumps(reject(args.binding, args.binding_sha256, args.plan, args.output,
+                            read(args.pointer_before)), allow_nan=False), flush=True)

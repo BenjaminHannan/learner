@@ -1,0 +1,44 @@
+{
+  "schema": "sol.cloud.verifier.trainonly-review.v1",
+  "status": "PASS FOR EXISTING RELEASED TRAIN512 FIXTURE",
+  "non_training_material": true,
+  "scientific_qualification": false,
+  "source_sha256": "a730907978cca5856c8b6ca318d2dac25e85d2df15390a5f085549884698cadf",
+  "tests_sha256": "c4086700e8feb0f14e5e3a3318775e6bb2848776c4785fac1e249b2ae9b8b087",
+  "packet_sha256": "46ae697a2dc183048832fed4ef42144888afa08fe5e82db5ccb338c5703fea7e",
+  "manifest_sha256": "690bd7f6b12fadc5c350ed65d710c82e4e4bd1d8e1dda968e5f8f50b8fc75b7b",
+  "owner_tests_independently_executed": 12,
+  "owner_tests_passed": 12,
+  "independent_checks_passed": 13,
+  "checks": [
+    "freeze hash loader",
+    "freeze hash tests_source",
+    "freeze hash packet",
+    "freeze hash manifest",
+    "freeze hash raw_test_output",
+    "runtime file set is packet and manifest only",
+    "admitted count and unique identities",
+    "all rows actual_user_day false",
+    "all rows model_authored_text false",
+    "only existing human span targets",
+    "invalid standalone bytes refused before any JSON decoder call",
+    "copied registry and TRAIN annotation bytes match original legacy pins",
+    "reserved source metadata excludes every emitted row"
+  ],
+  "actual_user_day": false,
+  "model_calls": 0,
+  "optimizer_steps": 0,
+  "legacy_raw_builder_executed_by_verifier": false,
+  "legacy_corpus_or_documents_opened_by_verifier": false,
+  "engineering_findings": [
+    "Metadata pass decodes only object keys and identity/split/source/passage metadata; candidate question/context/answer/evidence decode follows full reserved source/key exclusions",
+    "Poisoned reserved text and nested unknown payload tests pass without content decoding",
+    "Runtime standalone packet and manifest are externally hash pinned before JSON decode; original registry/annotation metadata reconstructed to verify hardcoded old hashes",
+    "Runtime row labels/question/context hashes and official human answer character spans are checked; target is existing human annotation"
+  ],
+  "limitations": [
+    "No independent stop88 identity/passages overlap certificate is available; scope stays explicitly released existing TRAIN512",
+    "Prior official source provenance uses saved immutable registry/annotation bindings; verifier did not reopen official raw source",
+    "TRAIN span admission and 12 stdlib tests do not qualify semantics, conversational grammar, learned stopping, sleep gain or live user learning"
+  ]
+}
