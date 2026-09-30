@@ -1,0 +1,44 @@
+{
+  "TRAIN_modal_contract": {
+    "model_calls": 0,
+    "output_contract": "deterministic numeric constant+EOS, no native LM termination claim",
+    "source": {
+      "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/TRAIN-ANSWER-PRIOR-v3.json",
+      "sha256": "608be98f5d917938b255d9ba1d6816fb1fae0eeb20804d3fd8e6f71b0a7449bd"
+    },
+    "source_split": "TRAIN256 only",
+    "tie_rule": "lexicographically smallest canonical target"
+  },
+  "TRAIN_mode_baseline": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/TRAIN-ANSWER-PRIOR-v3.json",
+    "sha256": "608be98f5d917938b255d9ba1d6816fb1fae0eeb20804d3fd8e6f71b0a7449bd"
+  },
+  "arm_scoring": "identical",
+  "arms": [
+    "loop",
+    "plain"
+  ],
+  "causal_scope": "system-level numeric QA; frozen LM may compute from final latents; zero states/whole-latent swaps do not localize reasoning",
+  "control_scoring": "same canonical token equality+terminalEOS; zero-loop observes actually emittedEOS",
+  "controls": [
+    "TRAIN-modal",
+    "native-zero-loop-final-only"
+  ],
+  "frequency_slices_label_join": "TRAIN-only histogram fixed before terminal eval; eval labels joined only final scoring",
+  "marks": {
+    "new_structure": 52,
+    "range": 26,
+    "seen": 52,
+    "train": 244
+  },
+  "no_loop": "same questions/masks/shape, native begin state,zero advances/read_latent/FinalLatent-only,perfinalarm if bounded",
+  "optimizer_dynamics_limitation": "shared parameters sum gradients over four uses; unshared copies have distinct gradients/Adam moments; identical recipe andinitialfunction do not imply identical optimizer dynamics; no4x LR correction",
+  "primary_metric": "target_ids_plus_observed_EOS_exact",
+  "recurrent_seed_rule": "both-seeds-same-verdict",
+  "schema": "sol.cloud.capability256.comparators.v1",
+  "seeds": [
+    0,
+    1
+  ],
+  "zero_loop_contract": "native-begin-read-no-advance-final-query-latent-only"
+}
