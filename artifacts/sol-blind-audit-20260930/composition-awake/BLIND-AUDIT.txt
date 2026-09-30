@@ -1,0 +1,777 @@
+PREMONITION COMPOSITION AWAKE — INDEPENDENT BLIND RECOUNT
+Saved UTC: 2026-09-30T03:34:57.297257+00:00
+Job: sol-compose-awake-20260929-benspc
+Blind saved prediction-label-round recount only; no authored SUMMARY/report/narratives, source content, holdout or notebook contents read; no inference, generation, rescoring, learning or git.
+Verdict: SCREEN NOT MET; SCIENTIFIC PROMOTION NOT SHOWN
+Availability: All 12 training and 12 evaluation JSONs, labels/predictions/fixed predictions/rounds, both presealed protocols, noise, checkpoint manifest, data manifest and completion present. Ten comparator checkpoint bytes absent locally; exact initialization/order hashes and score chronology absent.
+
+Authority: SPEC-AWAKE.json and ADDENDUM-AWAKE.md supersede original sleep budgets only. Awake512 updates/arm/seed, batch32 half composed/half primitive, six fp32 full-gradient rounds, lr.001/wd0/clip1, zero sleep. Original causal controls and dev gates remain. No historical RESULTS-EQ narrative was read.
+Gate: BOTH seeds on BOTH splits require candidate>=160/200; gap to strongest of five controls>=max(10pp,2*control span+1pp); learned-stop loss<=4/200. A screen cannot authorize scientific promotion. TRAIN stop readiness independently requires n100, learned exact>=90, loss<=2, mean rounds<=4.5, cap hits<=10; even passing author readiness does not authorize sleep.
+
+Exact prediction-versus-label recount (learned/fixed; TRAIN denominator100, dev denominator200):
+seed arm                       TRAIN       structure   order
+0    compose                    13/13       24/24       27/27      
+0    no_communication           12/12       25/25       25/25      
+0    joint                      14/14       23/23       20/20      
+0    plain                      19/19       23/23       16/16      
+0    record_only                20/20       24/24       16/16      
+0    numeric_only               17/17       27/27       21/21      
+1    compose                    15/15       28/28       22/22      
+1    no_communication           18/18       34/34       21/21      
+1    joint                      18/18       26/26       22/22      
+1    plain                      15/15       25/25       21/21      
+1    record_only                15/15       31/31       18/18      
+1    numeric_only               16/16       27/27       16/16      
+
+All36 rows were independently compared against saved labels; 6000 learned predictions and6000 fixed predictions,6000 round values. All stored exact/fixed/mean/cap metrics and lengths are checked in recount.json. Labels were not regenerated. Query hash equality and label equality across all12 evaluations of each dev split are checked separately.
+Noise dev_structure: control spans {'no_communication': 4.5, 'joint': 1.5, 'plain': 1.0, 'record_only': 3.5, 'numeric_only': 0.0}; max4.5pp; bar10pp; stored noise match True.
+Noise dev_order: control spans {'no_communication': 2.0, 'joint': 1.0, 'plain': 2.5, 'record_only': 1.0, 'numeric_only': 2.5}; max2.5pp; bar10pp; stored noise match True.
+seed0 dev_structure: candidate24/200, strongest27/200 (['numeric_only']), gap-1.5pp, floor/gap/stop False/False/True; SCREEN MET=False; deltas to controls {'no_communication': -1, 'joint': 1, 'plain': 1, 'record_only': 0, 'numeric_only': -3}.
+seed1 dev_structure: candidate28/200, strongest34/200 (['no_communication']), gap-3.0pp, floor/gap/stop False/False/True; SCREEN MET=False; deltas to controls {'no_communication': -6, 'joint': 2, 'plain': 3, 'record_only': -3, 'numeric_only': 1}.
+seed0 dev_order: candidate27/200, strongest25/200 (['no_communication']), gap1.0pp, floor/gap/stop False/False/True; SCREEN MET=False; deltas to controls {'no_communication': 2, 'joint': 7, 'plain': 11, 'record_only': 11, 'numeric_only': 6}.
+seed1 dev_order: candidate22/200, strongest22/200 (['joint']), gap0.0pp, floor/gap/stop False/False/True; SCREEN MET=False; deltas to controls {'no_communication': 1, 'joint': 0, 'plain': 1, 'record_only': 4, 'numeric_only': 6}.
+Seed0: SCREEN NOT MET; NOT SHOWN ON DEV
+Seed1: SCREEN NOT MET; NOT SHOWN ON DEV
+
+TRAIN readiness:
+compose-s0: exact13/100, fixed13/100, loss0, mean6.0, cap hits100/100; readiness=False.
+no_communication-s0: exact12/100, fixed12/100, loss0, mean6.0, cap hits100/100; readiness=False.
+joint-s0: exact14/100, fixed14/100, loss0, mean6.0, cap hits100/100; readiness=False.
+plain-s0: exact19/100, fixed19/100, loss0, mean6.0, cap hits100/100; readiness=False.
+record_only-s0: exact20/100, fixed20/100, loss0, mean6.0, cap hits100/100; readiness=False.
+numeric_only-s0: exact17/100, fixed17/100, loss0, mean6.0, cap hits100/100; readiness=False.
+compose-s1: exact15/100, fixed15/100, loss0, mean6.0, cap hits100/100; readiness=False.
+no_communication-s1: exact18/100, fixed18/100, loss0, mean6.0, cap hits100/100; readiness=False.
+joint-s1: exact18/100, fixed18/100, loss0, mean6.0, cap hits100/100; readiness=False.
+plain-s1: exact15/100, fixed15/100, loss0, mean6.0, cap hits100/100; readiness=False.
+record_only-s1: exact15/100, fixed15/100, loss0, mean6.0, cap hits100/100; readiness=False.
+numeric_only-s1: exact16/100, fixed16/100, loss0, mean6.0, cap hits100/100; readiness=False.
+
+Budgets: 6144 awake optimizer updates; 196608 presentations; each arm/seed512 and16384 (8192 composed+8192 primitive per sealed recipe). Total sleep updates0. Completion records465.75seconds (<3600); deviceCUDA torch2.11.0+cu128. No inherited source weights per sealed recipe.
+Only first/last four loss records per arm survive (steps1..4,509..512); no all-step ledger, sampled batch IDs/order hashes, initial state hashes or per-phase timestamps survive. Completion/budget numbers are recorded evidence, not reconstruction of actual512 steps. Partial MAC subset excludes pointwise/reductions/equality/optimizer; backward2x estimate is not measured FLOPs.
+Causal controls: {"0": {"budget_equal": true, "counts_equal": true, "forward_macs_equal": true, "initial_weights_and_minibatch_schedule_hashes": "NOT SAVED; cannot independently verify exact causal initialization/order match"}, "1": {"budget_equal": true, "counts_equal": true, "forward_macs_equal": true, "initial_weights_and_minibatch_schedule_hashes": "NOT SAVED; cannot independently verify exact causal initialization/order match"}}
+Compose/no_communication intervention cuts communication after executing programs; this preserves recorded computation and shapes, not useful-capacity equality. Joint/plain stored counts are within0.5% per recorded arithmetic; single-program controls smaller. Only joint/plain count arithmetic is independently available, not architecture execution verification. No useful/active-weight, speed or equal-compute win follows.
+Important data-manifest discrepancy: raw dev query hashes and labels match across both seeds, but DATA.json retains seed1-specific dev manifests differing from the shared raw dev query hashes. Treat DATA seed1 dev entries as stale/inconsistent provenance, not the scored pool. Full source tables are not reconstructed; table novelty/noncommutation/label semantics beyond saved labels remain unverified. Reverse-order dev also changes topology; it cannot isolate order causality.
+Seal: STARTED embedded seal matches current preseal.20 permitted paths are hashed; prohibited handoff/queue path is not accessed. See exact match results below. No eval timestamps or candidate/control/noise publication chronology are recorded in raw JSON; pre-candidate noise/control sealing cannot be independently established from these records. Hash consistency is not trusted external timestamping.
+Checkpoint manifest lists12. Only compose-s0/s1 bytes are available under awake-weights and verified; ten comparator checkpoint bytes absent locally. No checkpoint was deserialized. Stop-readiness records do not individually embed checkpoint hashes; binding relies on filename/manifest rather than standalone raw cryptographic linkage.
+No sleep, statistical/general reasoning, scaling, English, benchmark, F_eq/F_few or roadmap claim is established. Diagnostic GRUs remain outside target claims. Both seeds independently fail the dev screen; no design rejection. No post-blind source review was performed for this recount. Actual code/raw/seals untouched; James owns integration/push.
+
+Seal checks:
+[
+  {
+    "path": "scripts/sol_compose_awake.py",
+    "expected": "94b6b95fdafc60f5c9b1ae859896360cfdb5e0ffe2bfb42e24485429d1a0a5fd",
+    "actual": "94b6b95fdafc60f5c9b1ae859896360cfdb5e0ffe2bfb42e24485429d1a0a5fd",
+    "match": true
+  },
+  {
+    "path": "scripts/sol_compose_context.py",
+    "expected": "9aff6ab3a98d290d297f14c237cd7c95527ce6898382075c17611329c3cdbac2",
+    "actual": "9aff6ab3a98d290d297f14c237cd7c95527ce6898382075c17611329c3cdbac2",
+    "match": true
+  },
+  {
+    "path": "scripts/sol_compose_contracts.py",
+    "expected": "8573d8088a1694fb9b798bb78721017aeaa8fababf79ccb027b90415074198aa",
+    "actual": "8573d8088a1694fb9b798bb78721017aeaa8fababf79ccb027b90415074198aa",
+    "match": true
+  },
+  {
+    "path": "scripts/sol_compose_data.py",
+    "expected": "e4b45be8456ec91d734a268610b19e966acd4a26d4750b3fcc3a3842e1b97ad8",
+    "actual": "e4b45be8456ec91d734a268610b19e966acd4a26d4750b3fcc3a3842e1b97ad8",
+    "match": true
+  },
+  {
+    "path": "scripts/sol_compose_model.py",
+    "expected": "a6066ca6c2dc5c15ed986b1e42fef50ba53e6870a634c97ebc20878dbb6fce87",
+    "actual": "a6066ca6c2dc5c15ed986b1e42fef50ba53e6870a634c97ebc20878dbb6fce87",
+    "match": true
+  },
+  {
+    "path": "scripts/sol_compose_notebook.py",
+    "expected": "14f0e26971c0a809e0484c9dbae902c6b456511f861dd48323312a2f835b123f",
+    "actual": "14f0e26971c0a809e0484c9dbae902c6b456511f861dd48323312a2f835b123f",
+    "match": true
+  },
+  {
+    "path": "scripts/sol_compose_run.py",
+    "expected": "f90f334bfaa176e2baa6407d5c530cc9a2e1ac688df1b563645b5c78050e156c",
+    "actual": "f90f334bfaa176e2baa6407d5c530cc9a2e1ac688df1b563645b5c78050e156c",
+    "match": true
+  },
+  {
+    "path": "scripts/sol_compose_stage.py",
+    "expected": "d757a8aa1ad1394d11ec918ee9fddf4eb2f8a7a8d4b8e835e203fb5904ca7ada",
+    "actual": "d757a8aa1ad1394d11ec918ee9fddf4eb2f8a7a8d4b8e835e203fb5904ca7ada",
+    "match": true
+  },
+  {
+    "path": "artifacts/sol-compose-20260929/dependencies/sol_compose_numeric_relation.py",
+    "expected": "553d03f10cc5e09d7b469e8bb8734cd8c7a640501c39fbff8820b868bf0918c2",
+    "actual": "553d03f10cc5e09d7b469e8bb8734cd8c7a640501c39fbff8820b868bf0918c2",
+    "match": true
+  },
+  {
+    "path": "artifacts/sol-compose-20260929/dependencies/sol_compose_record_atom.py",
+    "expected": "bf83947713f044926fdab96493c939fa24a6d76b1d1050ac791bf57162cf2813",
+    "actual": "bf83947713f044926fdab96493c939fa24a6d76b1d1050ac791bf57162cf2813",
+    "match": true
+  },
+  {
+    "path": "artifacts/sol-compose-20260929/dependencies/sol_compose_source_interface.py",
+    "expected": "b8d36ca041569f6f2a303551220ab48889e4ea636c253e2d2fdc4c5f42f47b53",
+    "actual": "b8d36ca041569f6f2a303551220ab48889e4ea636c253e2d2fdc4c5f42f47b53",
+    "match": true
+  },
+  {
+    "path": "artifacts/sol-compose-20260929/SPEC.json",
+    "expected": "adc6e9afcebb20be21373e7b9cfc1dda3091860e42656c78ba55f1d439e26aa6",
+    "actual": "adc6e9afcebb20be21373e7b9cfc1dda3091860e42656c78ba55f1d439e26aa6",
+    "match": true
+  },
+  {
+    "path": "artifacts/sol-compose-20260929/PASSMARKS.md",
+    "expected": "d57b45e3357ef985f31cb28987d290a32197b51b7048e2aa139cad5fb672aaca",
+    "actual": "d57b45e3357ef985f31cb28987d290a32197b51b7048e2aa139cad5fb672aaca",
+    "match": true
+  },
+  {
+    "path": "artifacts/sol-compose-20260929/SPEC-AWAKE.json",
+    "expected": "2da189a80ab5587361ea3b95e47b9cfa4c1469b8b55dd77bda00eea91e61507b",
+    "actual": "2da189a80ab5587361ea3b95e47b9cfa4c1469b8b55dd77bda00eea91e61507b",
+    "match": true
+  },
+  {
+    "path": "artifacts/sol-compose-20260929/ADDENDUM-AWAKE.md",
+    "expected": "6de18d04763a6a1cf46fd58329fbe3ae4e1df97cc2f5989dd3fff74aaca4c958",
+    "actual": "6de18d04763a6a1cf46fd58329fbe3ae4e1df97cc2f5989dd3fff74aaca4c958",
+    "match": true
+  },
+  {
+    "path": "artifacts/sol-compose-20260929/API.md",
+    "expected": "3056f47b61cad9fc0639acbb769f8d066d5f40029f76484234b10bc5713e1d32",
+    "actual": "3056f47b61cad9fc0639acbb769f8d066d5f40029f76484234b10bc5713e1d32",
+    "match": true
+  },
+  {
+    "path": "artifacts/sol-compose-20260929/NOTEBOOK-SCHEMA.md",
+    "expected": "1ce6ba086c8c8577fbe6eda596bdd85c7474bb153028536575ce3961dbb227b0",
+    "actual": "1ce6ba086c8c8577fbe6eda596bdd85c7474bb153028536575ce3961dbb227b0",
+    "match": true
+  },
+  {
+    "path": "artifacts/sol-compose-20260929/CANDIDATE-EXTENSION.md",
+    "expected": "9944c2a55eede00af0379496f29336f704051d30e34a77d9db6f84be3bb3d669",
+    "actual": "9944c2a55eede00af0379496f29336f704051d30e34a77d9db6f84be3bb3d669",
+    "match": true
+  },
+  {
+    "path": "artifacts/sol-compose-20260929/dependencies/PROVENANCE.json",
+    "expected": "b903b51474d7afa2ffa3febec0de9977085613fb977ba8db56f9b96e719d0f61",
+    "actual": "b903b51474d7afa2ffa3febec0de9977085613fb977ba8db56f9b96e719d0f61",
+    "match": true
+  },
+  {
+    "path": "artifacts/sol-compose-20260929/queue-sol-compose-awake-20260929-benspc.md",
+    "expected": "09b489b3bd2cf7ecff4a79249a400a9b63996776d64e2f631b39ce310e06c7a0",
+    "actual": "09b489b3bd2cf7ecff4a79249a400a9b63996776d64e2f631b39ce310e06c7a0",
+    "match": true
+  },
+  {
+    "path": "handoff/queue/sol-compose-awake-20260929-benspc.md",
+    "status": "NOT ACCESSED: prohibited handoff path",
+    "expected": "09b489b3bd2cf7ecff4a79249a400a9b63996776d64e2f631b39ce310e06c7a0"
+  }
+]
+
+Checkpoint checks:
+[
+  {
+    "key": "compose-s0",
+    "manifest_path": "artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_compose-s0.pt",
+    "local_alternate": "artifacts/sol-compose-20260929/awake-weights/compose-s0.pt",
+    "expected": "f13c7949fede60c4f8aa4f3e95529d635e8824afcb41358982ab51ce12d7acd4",
+    "actual": "f13c7949fede60c4f8aa4f3e95529d635e8824afcb41358982ab51ce12d7acd4",
+    "verified": true,
+    "available": true
+  },
+  {
+    "key": "compose-s1",
+    "manifest_path": "artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_compose-s1.pt",
+    "local_alternate": "artifacts/sol-compose-20260929/awake-weights/compose-s1.pt",
+    "expected": "886359f4b54edffd88d44085f6f67ad0d3df2d7f6a63630a1ae1e3f2b31c3a6c",
+    "actual": "886359f4b54edffd88d44085f6f67ad0d3df2d7f6a63630a1ae1e3f2b31c3a6c",
+    "verified": true,
+    "available": true
+  },
+  {
+    "key": "joint-s0",
+    "manifest_path": "artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_joint-s0.pt",
+    "local_alternate": null,
+    "expected": "889cf3bf4847395defb961c4a6ad198433dc271a9b0e820bea7e138e7e53642f",
+    "actual": null,
+    "verified": false,
+    "available": false
+  },
+  {
+    "key": "joint-s1",
+    "manifest_path": "artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_joint-s1.pt",
+    "local_alternate": null,
+    "expected": "ec4acf2d5ed64dce275fbf147c10e07fe48e1a5157bffb186693976e7d791287",
+    "actual": null,
+    "verified": false,
+    "available": false
+  },
+  {
+    "key": "no_communication-s0",
+    "manifest_path": "artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_no_communication-s0.pt",
+    "local_alternate": null,
+    "expected": "236a153c1553d60584eaddc400eb11325efad851bf2a258c2f327684528f877e",
+    "actual": null,
+    "verified": false,
+    "available": false
+  },
+  {
+    "key": "no_communication-s1",
+    "manifest_path": "artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_no_communication-s1.pt",
+    "local_alternate": null,
+    "expected": "dac3fb8b66afa98046e5f15a7ab187d658a69c9b7cc4bdb5644519a194316c31",
+    "actual": null,
+    "verified": false,
+    "available": false
+  },
+  {
+    "key": "numeric_only-s0",
+    "manifest_path": "artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_numeric_only-s0.pt",
+    "local_alternate": null,
+    "expected": "d977532cebcaf695a348debb3f4cc38d66149b073dbc5748529b67200beb330e",
+    "actual": null,
+    "verified": false,
+    "available": false
+  },
+  {
+    "key": "numeric_only-s1",
+    "manifest_path": "artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_numeric_only-s1.pt",
+    "local_alternate": null,
+    "expected": "5a232583f2ec94c6b63247519e156e7073f3553233633176d0c7e0851f4ea906",
+    "actual": null,
+    "verified": false,
+    "available": false
+  },
+  {
+    "key": "plain-s0",
+    "manifest_path": "artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_plain-s0.pt",
+    "local_alternate": null,
+    "expected": "f73c95d6616358a90382155efe7c8b116e5a5088b8307f3692c050002770d3b1",
+    "actual": null,
+    "verified": false,
+    "available": false
+  },
+  {
+    "key": "plain-s1",
+    "manifest_path": "artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_plain-s1.pt",
+    "local_alternate": null,
+    "expected": "98e09c1e3324c35f6af3665f876ae79b7598ce4bb7cf8866839f23eef37010ce",
+    "actual": null,
+    "verified": false,
+    "available": false
+  },
+  {
+    "key": "record_only-s0",
+    "manifest_path": "artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_record_only-s0.pt",
+    "local_alternate": null,
+    "expected": "6bf73c790713c4833caed4d862e3fb3c4cffe4b4a4ca1e2007d5de25eef31589",
+    "actual": null,
+    "verified": false,
+    "available": false
+  },
+  {
+    "key": "record_only-s1",
+    "manifest_path": "artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_record_only-s1.pt",
+    "local_alternate": null,
+    "expected": "c880b4a4a424e7126f1e7844863b3725c2ee4feeff7ff81b851bbe789a9749ee",
+    "actual": null,
+    "verified": false,
+    "available": false
+  }
+]
+
+Training per-arm budget/MAC/count records:
+[
+  {
+    "key": "compose-s0",
+    "updates": 512,
+    "presentations": 16384,
+    "sleep_updates": 0,
+    "seconds": 57.92200000000594,
+    "counts": {
+      "numeric": 41840,
+      "record": 119970,
+      "stored": 323160,
+      "trainable": 323160,
+      "transformer": 83464
+    },
+    "cuda_peak_allocated_bytes": 155147264,
+    "forward_macs": {
+      "gru": 115548880896,
+      "linear": 215895506944,
+      "matrix": 50532974592,
+      "scope": "forward MAC subset; excludes pointwise/reductions/equality/optimizer",
+      "total": 381977362432
+    },
+    "backward_macs_estimate": 763954724864,
+    "mac_arithmetic_match": true,
+    "sampled_loss_steps": [
+      1,
+      2,
+      3,
+      4,
+      509,
+      510,
+      511,
+      512
+    ],
+    "sampled_losses_finite": true
+  },
+  {
+    "key": "no_communication-s0",
+    "updates": 512,
+    "presentations": 16384,
+    "sleep_updates": 0,
+    "seconds": 39.79700000000594,
+    "counts": {
+      "numeric": 41840,
+      "record": 119970,
+      "stored": 323160,
+      "trainable": 323160,
+      "transformer": 83464
+    },
+    "cuda_peak_allocated_bytes": 153812480,
+    "forward_macs": {
+      "gru": 115548880896,
+      "linear": 215895506944,
+      "matrix": 50532974592,
+      "scope": "forward MAC subset; excludes pointwise/reductions/equality/optimizer",
+      "total": 381977362432
+    },
+    "backward_macs_estimate": 763954724864,
+    "mac_arithmetic_match": true,
+    "sampled_loss_steps": [
+      1,
+      2,
+      3,
+      4,
+      509,
+      510,
+      511,
+      512
+    ],
+    "sampled_losses_finite": true
+  },
+  {
+    "key": "joint-s0",
+    "updates": 512,
+    "presentations": 16384,
+    "sleep_updates": 0,
+    "seconds": 17.202999999994063,
+    "counts": {
+      "numeric": 0,
+      "record": 0,
+      "stored": 323180,
+      "trainable": 323180,
+      "transformer": 245294
+    },
+    "cuda_peak_allocated_bytes": 71383040,
+    "forward_macs": {
+      "gru": 0,
+      "linear": 304674242560,
+      "matrix": 4567597056,
+      "scope": "forward MAC subset; excludes pointwise/reductions/equality/optimizer",
+      "total": 309241839616
+    },
+    "backward_macs_estimate": 618483679232,
+    "mac_arithmetic_match": true,
+    "sampled_loss_steps": [
+      1,
+      2,
+      3,
+      4,
+      509,
+      510,
+      511,
+      512
+    ],
+    "sampled_losses_finite": true
+  },
+  {
+    "key": "plain-s0",
+    "updates": 512,
+    "presentations": 16384,
+    "sleep_updates": 0,
+    "seconds": 19.421999999991385,
+    "counts": {
+      "numeric": 0,
+      "record": 0,
+      "stored": 322860,
+      "trainable": 322860,
+      "transformer": 244974
+    },
+    "cuda_peak_allocated_bytes": 41100288,
+    "forward_macs": {
+      "gru": 0,
+      "linear": 85291171840,
+      "matrix": 4567597056,
+      "scope": "forward MAC subset; excludes pointwise/reductions/equality/optimizer",
+      "total": 89858768896
+    },
+    "backward_macs_estimate": 179717537792,
+    "mac_arithmetic_match": true,
+    "sampled_loss_steps": [
+      1,
+      2,
+      3,
+      4,
+      509,
+      510,
+      511,
+      512
+    ],
+    "sampled_losses_finite": true
+  },
+  {
+    "key": "record_only-s0",
+    "updates": 512,
+    "presentations": 16384,
+    "sleep_updates": 0,
+    "seconds": 45.21899999999732,
+    "counts": {
+      "numeric": 0,
+      "record": 119970,
+      "stored": 281320,
+      "trainable": 281320,
+      "transformer": 83464
+    },
+    "cuda_peak_allocated_bytes": 125576192,
+    "forward_macs": {
+      "gru": 89389006848,
+      "linear": 155340242944,
+      "matrix": 49010442240,
+      "scope": "forward MAC subset; excludes pointwise/reductions/equality/optimizer",
+      "total": 293739692032
+    },
+    "backward_macs_estimate": 587479384064,
+    "mac_arithmetic_match": true,
+    "sampled_loss_steps": [
+      1,
+      2,
+      3,
+      4,
+      509,
+      510,
+      511,
+      512
+    ],
+    "sampled_losses_finite": true
+  },
+  {
+    "key": "numeric_only-s0",
+    "updates": 512,
+    "presentations": 16384,
+    "sleep_updates": 0,
+    "seconds": 41.375,
+    "counts": {
+      "numeric": 41840,
+      "record": 0,
+      "stored": 203190,
+      "trainable": 203190,
+      "transformer": 83464
+    },
+    "cuda_peak_allocated_bytes": 73401856,
+    "forward_macs": {
+      "gru": 26159874048,
+      "linear": 155950514176,
+      "matrix": 6090129408,
+      "scope": "forward MAC subset; excludes pointwise/reductions/equality/optimizer",
+      "total": 188200517632
+    },
+    "backward_macs_estimate": 376401035264,
+    "mac_arithmetic_match": true,
+    "sampled_loss_steps": [
+      1,
+      2,
+      3,
+      4,
+      509,
+      510,
+      511,
+      512
+    ],
+    "sampled_losses_finite": true
+  },
+  {
+    "key": "compose-s1",
+    "updates": 512,
+    "presentations": 16384,
+    "sleep_updates": 0,
+    "seconds": 57.54700000000594,
+    "counts": {
+      "numeric": 41840,
+      "record": 119970,
+      "stored": 323160,
+      "trainable": 323160,
+      "transformer": 83464
+    },
+    "cuda_peak_allocated_bytes": 155148800,
+    "forward_macs": {
+      "gru": 115548880896,
+      "linear": 215895506944,
+      "matrix": 50532974592,
+      "scope": "forward MAC subset; excludes pointwise/reductions/equality/optimizer",
+      "total": 381977362432
+    },
+    "backward_macs_estimate": 763954724864,
+    "mac_arithmetic_match": true,
+    "sampled_loss_steps": [
+      1,
+      2,
+      3,
+      4,
+      509,
+      510,
+      511,
+      512
+    ],
+    "sampled_losses_finite": true
+  },
+  {
+    "key": "no_communication-s1",
+    "updates": 512,
+    "presentations": 16384,
+    "sleep_updates": 0,
+    "seconds": 39.01499999999942,
+    "counts": {
+      "numeric": 41840,
+      "record": 119970,
+      "stored": 323160,
+      "trainable": 323160,
+      "transformer": 83464
+    },
+    "cuda_peak_allocated_bytes": 153811968,
+    "forward_macs": {
+      "gru": 115548880896,
+      "linear": 215895506944,
+      "matrix": 50532974592,
+      "scope": "forward MAC subset; excludes pointwise/reductions/equality/optimizer",
+      "total": 381977362432
+    },
+    "backward_macs_estimate": 763954724864,
+    "mac_arithmetic_match": true,
+    "sampled_loss_steps": [
+      1,
+      2,
+      3,
+      4,
+      509,
+      510,
+      511,
+      512
+    ],
+    "sampled_losses_finite": true
+  },
+  {
+    "key": "joint-s1",
+    "updates": 512,
+    "presentations": 16384,
+    "sleep_updates": 0,
+    "seconds": 18.046999999991385,
+    "counts": {
+      "numeric": 0,
+      "record": 0,
+      "stored": 323180,
+      "trainable": 323180,
+      "transformer": 245294
+    },
+    "cuda_peak_allocated_bytes": 71383040,
+    "forward_macs": {
+      "gru": 0,
+      "linear": 304674242560,
+      "matrix": 4567597056,
+      "scope": "forward MAC subset; excludes pointwise/reductions/equality/optimizer",
+      "total": 309241839616
+    },
+    "backward_macs_estimate": 618483679232,
+    "mac_arithmetic_match": true,
+    "sampled_loss_steps": [
+      1,
+      2,
+      3,
+      4,
+      509,
+      510,
+      511,
+      512
+    ],
+    "sampled_losses_finite": true
+  },
+  {
+    "key": "plain-s1",
+    "updates": 512,
+    "presentations": 16384,
+    "sleep_updates": 0,
+    "seconds": 18.735000000000582,
+    "counts": {
+      "numeric": 0,
+      "record": 0,
+      "stored": 322860,
+      "trainable": 322860,
+      "transformer": 244974
+    },
+    "cuda_peak_allocated_bytes": 41100288,
+    "forward_macs": {
+      "gru": 0,
+      "linear": 85291171840,
+      "matrix": 4567597056,
+      "scope": "forward MAC subset; excludes pointwise/reductions/equality/optimizer",
+      "total": 89858768896
+    },
+    "backward_macs_estimate": 179717537792,
+    "mac_arithmetic_match": true,
+    "sampled_loss_steps": [
+      1,
+      2,
+      3,
+      4,
+      509,
+      510,
+      511,
+      512
+    ],
+    "sampled_losses_finite": true
+  },
+  {
+    "key": "record_only-s1",
+    "updates": 512,
+    "presentations": 16384,
+    "sleep_updates": 0,
+    "seconds": 45.8130000000092,
+    "counts": {
+      "numeric": 0,
+      "record": 119970,
+      "stored": 281320,
+      "trainable": 281320,
+      "transformer": 83464
+    },
+    "cuda_peak_allocated_bytes": 125576192,
+    "forward_macs": {
+      "gru": 89389006848,
+      "linear": 155340242944,
+      "matrix": 49010442240,
+      "scope": "forward MAC subset; excludes pointwise/reductions/equality/optimizer",
+      "total": 293739692032
+    },
+    "backward_macs_estimate": 587479384064,
+    "mac_arithmetic_match": true,
+    "sampled_loss_steps": [
+      1,
+      2,
+      3,
+      4,
+      509,
+      510,
+      511,
+      512
+    ],
+    "sampled_losses_finite": true
+  },
+  {
+    "key": "numeric_only-s1",
+    "updates": 512,
+    "presentations": 16384,
+    "sleep_updates": 0,
+    "seconds": 41.469000000011874,
+    "counts": {
+      "numeric": 41840,
+      "record": 0,
+      "stored": 203190,
+      "trainable": 203190,
+      "transformer": 83464
+    },
+    "cuda_peak_allocated_bytes": 73403392,
+    "forward_macs": {
+      "gru": 26159874048,
+      "linear": 155950514176,
+      "matrix": 6090129408,
+      "scope": "forward MAC subset; excludes pointwise/reductions/equality/optimizer",
+      "total": 188200517632
+    },
+    "backward_macs_estimate": 376401035264,
+    "mac_arithmetic_match": true,
+    "sampled_loss_steps": [
+      1,
+      2,
+      3,
+      4,
+      509,
+      510,
+      511,
+      512
+    ],
+    "sampled_losses_finite": true
+  }
+]
+
+All raw/protocol SHA256 values:
+6de18d04763a6a1cf46fd58329fbe3ae4e1df97cc2f5989dd3fff74aaca4c958  artifacts/sol-compose-20260929/ADDENDUM-AWAKE.md
+3056f47b61cad9fc0639acbb769f8d066d5f40029f76484234b10bc5713e1d32  artifacts/sol-compose-20260929/API.md
+9944c2a55eede00af0379496f29336f704051d30e34a77d9db6f84be3bb3d669  artifacts/sol-compose-20260929/CANDIDATE-EXTENSION.md
+1ce6ba086c8c8577fbe6eda596bdd85c7474bb153028536575ce3961dbb227b0  artifacts/sol-compose-20260929/NOTEBOOK-SCHEMA.md
+d57b45e3357ef985f31cb28987d290a32197b51b7048e2aa139cad5fb672aaca  artifacts/sol-compose-20260929/PASSMARKS.md
+4a352c405112cfcd43f016d41fb65fc29f6ca799d658c4dc54c9533c679499d3  artifacts/sol-compose-20260929/SEAL-AWAKE.json
+2da189a80ab5587361ea3b95e47b9cfa4c1469b8b55dd77bda00eea91e61507b  artifacts/sol-compose-20260929/SPEC-AWAKE.json
+adc6e9afcebb20be21373e7b9cfc1dda3091860e42656c78ba55f1d439e26aa6  artifacts/sol-compose-20260929/SPEC.json
+7e822d60f916e022c74c6b0a556ccd2d8a1ad7e27603833979bfde50a630e672  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_CHECKPOINT-SEAL.json
+369149779b3a12203234a8250dba45ca311d5ee062ab9d34a143c8dfd563b8bc  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_COMPLETE.json
+d06ee1b6ef35c3bae6f2f87d6d4c73a2029876657872f43d40fc584c66880a34  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_DATA.json
+1b7934a9bf531581f3aaf25039b8b27f20658851f15f146020f324b49f020c95  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_NOISE.json
+bc673de5582bed58074533c284a6395d1713c07283e6ee3e910c71dc35826b28  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_PC-CONTRACT.json
+2ce53141988f07b549f2dedefccf0c46a894ff35c5a58ec170ba3ec70444a038  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_STARTED.json
+e03f2aad117d92326f96655197b0e0ea73a2cff91f88f647fea281aa1ef698e7  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_compose-s0_raw.json
+8aeac97b5ece21eb08c27f3ef9ea93f833e4c097835352688f161e0c20652649  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_compose-s0_training.json
+892edfa9d7ef6bcd3fc1fe66608cbba6557fe6715fe690b314c0fb4907bddc41  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_compose-s1_raw.json
+4ba3e2aae90020098c53311602d191ae0335a20a013ef9f6a51d0ebe23a998fb  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_compose-s1_training.json
+61c3d8b5e0b917e253d695a15901d2285e5af7d4c87aeedc05c64bd83034d340  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_joint-s0_raw.json
+64c44221d84f0666b52243dd2f4d987aab8d289356b049ac98ea037443c79a31  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_joint-s0_training.json
+15f3680b5cb6576cddce47b65afb0bf76668d75da12875e029de5a1926017314  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_joint-s1_raw.json
+7769b98dda1668df758a5fcf6c6ba799f1cb0381fbdfe098b1dc850f6cfacf19  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_joint-s1_training.json
+b1789f81f31f917d4b79156d1f3b63c694ad7465ad1e4f524b664a3bdae8d07a  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_no_communication-s0_raw.json
+98cced02e0ea9822e262f2ab9c9072512f3dabe5649d597094cca9a65913f22d  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_no_communication-s0_training.json
+27df814dc23e681424c309c77395b884363ef844ab7d9fd034164b68408a1ef1  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_no_communication-s1_raw.json
+1a1b29abba3d862601c0f7b0658bf8412104f1c0007d89ae67912d839646a065  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_no_communication-s1_training.json
+95aee9060b08883961e97dfe3aa9e3aa1ce6933aac3d4e71dfaa3e4ed42dd761  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_numeric_only-s0_raw.json
+dd6e2063600986c3957e2835bd9737df7478807448bdd0f06f6de699fc56cd48  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_numeric_only-s0_training.json
+058e6226739d3f719196b30e94a122d5ea89ee6b77b6b6f427436b851263ce15  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_numeric_only-s1_raw.json
+570305242ddb1e5f344147b75b7137677df7587244160ead694d36503e1eb884  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_numeric_only-s1_training.json
+41bb980e5f558bcc00516805e0eb7a5ae017a93f4b9e92084fe746b67751465d  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_plain-s0_raw.json
+65231b54e2052fbcc798e6ad8ab596cd316698e78cbdaed53e0961a5b7f3f50a  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_plain-s0_training.json
+2696f293a639b5afc0eab1447798e63ef4c54029290d94ecef34b6ad653adede  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_plain-s1_raw.json
+c3f6672b09682223a4072a9e3f0ee5ade01af833439b01bcb9275aa05456f35a  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_plain-s1_training.json
+e49721fae82cc77da2533e55f5d6d6cf55f974244375fd8f9acb9a9a841ff3c6  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_record_only-s0_raw.json
+af6ce8ca304c727c826ab38a0ef0fe5bfb0bc3b63cdf8d893573aa5c91afdd46  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_record_only-s0_training.json
+5da7532c79afd3f722d31c09539f4e0bb80c10a712b65728bef2039d7f33245f  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_record_only-s1_raw.json
+0c7c07b1656dd9e4964893806a97182e2cdfb4541bffcce65e1bba1247e9d058  artifacts/sol-compose-20260929/awake-pc/sol_compose_awake_record_only-s1_training.json
+f13c7949fede60c4f8aa4f3e95529d635e8824afcb41358982ab51ce12d7acd4  artifacts/sol-compose-20260929/awake-weights/compose-s0.pt
+886359f4b54edffd88d44085f6f67ad0d3df2d7f6a63630a1ae1e3f2b31c3a6c  artifacts/sol-compose-20260929/awake-weights/compose-s1.pt
+b903b51474d7afa2ffa3febec0de9977085613fb977ba8db56f9b96e719d0f61  artifacts/sol-compose-20260929/dependencies/PROVENANCE.json
+553d03f10cc5e09d7b469e8bb8734cd8c7a640501c39fbff8820b868bf0918c2  artifacts/sol-compose-20260929/dependencies/sol_compose_numeric_relation.py
+bf83947713f044926fdab96493c939fa24a6d76b1d1050ac791bf57162cf2813  artifacts/sol-compose-20260929/dependencies/sol_compose_record_atom.py
+b8d36ca041569f6f2a303551220ab48889e4ea636c253e2d2fdc4c5f42f47b53  artifacts/sol-compose-20260929/dependencies/sol_compose_source_interface.py
+09b489b3bd2cf7ecff4a79249a400a9b63996776d64e2f631b39ce310e06c7a0  artifacts/sol-compose-20260929/queue-sol-compose-awake-20260929-benspc.md
+94b6b95fdafc60f5c9b1ae859896360cfdb5e0ffe2bfb42e24485429d1a0a5fd  scripts/sol_compose_awake.py
+9aff6ab3a98d290d297f14c237cd7c95527ce6898382075c17611329c3cdbac2  scripts/sol_compose_context.py
+8573d8088a1694fb9b798bb78721017aeaa8fababf79ccb027b90415074198aa  scripts/sol_compose_contracts.py
+e4b45be8456ec91d734a268610b19e966acd4a26d4750b3fcc3a3842e1b97ad8  scripts/sol_compose_data.py
+a6066ca6c2dc5c15ed986b1e42fef50ba53e6870a634c97ebc20878dbb6fce87  scripts/sol_compose_model.py
+14f0e26971c0a809e0484c9dbae902c6b456511f861dd48323312a2f835b123f  scripts/sol_compose_notebook.py
+f90f334bfaa176e2baa6407d5c530cc9a2e1ac688df1b563645b5c78050e156c  scripts/sol_compose_run.py
+d757a8aa1ad1394d11ec918ee9fddf4eb2f8a7a8d4b8e835e203fb5904ca7ada  scripts/sol_compose_stage.py
