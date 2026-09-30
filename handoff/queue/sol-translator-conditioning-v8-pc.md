@@ -1,3 +1,5 @@
+STATUS: HELD
+SUPERSEDED: v9 corrects verify_manifest argument type before intended run; original sealed artifact preserved.
 BASH-ONLY: yes
 LOAD-LIGHT: yes
 GPU: no
