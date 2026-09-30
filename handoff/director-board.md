@@ -167,3 +167,13 @@ James published additive ordered V10r2 df7b24f5b. Watcher launched seed0 05:59:2
 Required: real task experience → verified feedback → replay → durable general procedural skill in reasoner weights, transfer to new files/tasks plus old-skill guards. Not mere personalization/notebook/workbook memorization. Only human inputs/corrections and independently verified structured numeric/action outcomes; no model prose/code/formula text training. Bernoulli owns eligible day learner and explicit PC-to-Mac watcher bridge. Schema/logging or static SQuAD replay alone does not complete the real-experience path. No spreadsheet action requested; broad Excel transfer demo deferred.
 
 Meaningful chat AND actual25-update night candidate with validation/guarded activation or rollback required; statistical gain proof deferred. James fixes resumeledger mismatch, raw repeatnoise recount, exactguard/input identity checks; Dewey independently rechecks. DEV100/stop88 unconsumed.
+
+### Correction 06:05 UTC: seed1 disk floor
+
+Watcher seed1 launch06:03:51Z exited rc1 before CUDA/preflight/optimizer: initial 2GiB disk-floor assertion. Earlier seed1 completion ETA withdrawn. Seed0 remains CLOSED500/rc0; no two-seed completion. Own generated transport archive inventory underway; preserve cache/checkpoints/raw, new queue identity only after remediation.
+
+## Measured milestone 2026-09-30 06:20 UTC
+
+Static human replay night job sol-compose-night-v2-s0-pc completed rc0,25actual core updates,40.531s transport. Exact qualified awake seed0 binding; changedcore saved;90populatedAdamstates; actual checkpoint/Adam reload checks passed. OpenTRAINguard meanCE2.4937402755→2.4845909774, repeatCEdifference0, no lost prior exact IDs. Candidate fresh nativefixed4 receipt emitted; NOT activated, actual_day_experience=false. This does NOT demonstrate usefulchat, dayexperiencelearning, retention/generalization or statistically established sleepgain. Independent rawrecount pending.
+
+V11 published6b7953b82, watcher seed0launch06:19:24Z, firstdurable1at0.859s; ownerobserved150/200at44.062s. Bothseeds presealed/symmetricV6+V7warm, humananswer annotation+EOS targets, samecontextdifferentquestions, noState/embedding/noNotebook/untrained/shuffled matchedhead diagnostics. These controls are not independently trained fairbudget models. NoDEV100/stop88. Awaitclosed96outputs and seed1; no grammaticalchat proof. Oldr2s1 remainsclosedopt0diskfailure, no rerun. Newfloor explicitlybudgeted1552MiB; no filesdeleted.
