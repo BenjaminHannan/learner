@@ -29,7 +29,7 @@ BASE_PYTHONS = (
     r'c:\users\benja\appdata\local\programs\python\python310\pythonw.exe',
 )
 RUNNER_MARKS = ('sol_cloud_capability256_v1.py',)
-DRIVER_MARK = 'cap256_launch'
+DRIVER_MARK = 'pc_driver.py'  # PC path: launch-cap256\\pkg\\<commit>\\pc_driver.py
 MODEL_SERVER_MARKS = ('llama-server', 'lm studio', 'lmstudio', 'ollama', 'vllm',
                       'text-generation', 'kobold', 'exllama', 'torchrun')
 GPU_MEMORY_CAP_MIB = 3000

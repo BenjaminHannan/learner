@@ -8,6 +8,7 @@ import sys
 import tempfile
 import textwrap
 import unittest
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts' / 'cap256_launch'))
 import pc_driver  # noqa: E402
@@ -26,9 +27,9 @@ MANIM = {'pid': 25576, 'ppid': 25200, 'name': 'pythonw.exe',
                     r'\Claude\Projects\Oliver Machine learning\render_server.py"'}
 DWM = {'pid': 1804, 'ppid': 900, 'name': 'dwm.exe', 'exe': r'C:\Windows\System32\dwm.exe', 'cmdline': 'dwm.exe'}
 SELF_LAUNCHER = {'pid': 500, 'ppid': 400, 'name': 'python.exe', 'exe': VENV,
-                 'cmdline': VENV + r' -X utf8 -B C:\x\launch-cap256\pkg\abc\pc_driver.py run'}
+                 'cmdline': VENV + r' -X utf8 -B ' + ROOT + r'\launch-cap256\pkg\abc\pc_driver.py run'}
 SELF = {'pid': 501, 'ppid': 500, 'name': 'python.exe', 'exe': BASE,
-        'cmdline': BASE + r' -X utf8 -B C:\x\launch-cap256\pkg\abc\pc_driver.py run'}
+        'cmdline': BASE + r' -X utf8 -B ' + ROOT + r'\launch-cap256\pkg\abc\pc_driver.py run'}
 QUIET_GPU = [[0, 12, 2015, 16303]]
 
 
@@ -87,10 +88,13 @@ class GuardTests(unittest.TestCase):
         self.assertIn('GPU memory', d['block'][0]['reason'])
 
     def test_waiting_launcher_driver_does_not_block_lock_holder(self):
-        other = {'pid': 600, 'ppid': 1, 'name': 'python.exe', 'exe': BASE,
-                 'cmdline': BASE + r' C:\x\launch-cap256\pkg\def\pc_driver.py run'}
-        d = decide([other])
+        # Real PC layout: venv launcher -> base-python child, both running pc_driver.py.
+        cmd = r' -X utf8 -B "C:\Users\benja\sol-cloud-numeric-capability-v1\launch-cap256\pkg\35c5754718\pc_driver.py" run'
+        launcher = {'pid': 600, 'ppid': 1, 'name': 'python.exe', 'exe': VENV, 'cmdline': VENV + cmd}
+        child = {'pid': 601, 'ppid': 600, 'name': 'python.exe', 'exe': BASE, 'cmdline': BASE + cmd}
+        d = decide([launcher, child])
         self.assertTrue(d['ok'], d)
+        self.assertEqual({p['pid'] for p in d['allowed_python']}, {600, 601})
 
 
 FAKE_RUNNER = textwrap.dedent('''
@@ -184,6 +188,25 @@ class DriverTests(unittest.TestCase):
         idle = batch['jobs'][0]['idle_seconds_since_previous_arm']
         self.assertIsNotNone(idle)
         self.assertGreaterEqual(idle, 0)
+
+    def test_live_lock_holder_is_waited_for_not_treated_as_stale(self):
+        holder = dict(SELF, pid=18904)
+        class Live(FakeDriver):
+            def probe_processes(self):
+                return [holder]
+        self.assertTrue(Live(self.request).pid_alive_driver(18904))
+        self.assertFalse(Live(self.request).pid_alive_driver(4242))
+        driver = Live(self.request)
+        driver.state.mkdir(parents=True)
+        lock_data = {'pid': 18904, 'batch_id': 'other'}
+        pc_driver.write_json(driver.lock, lock_data, exclusive=True)
+        before = driver.lock.read_bytes()
+        with mock.patch.object(pc_driver.time, 'sleep', side_effect=InterruptedError('wait observed')) as sleep:
+            with self.assertRaisesRegex(InterruptedError, 'wait observed'):
+                driver.acquire_lock()
+        sleep.assert_called_once_with(15)
+        self.assertEqual(driver.lock.read_bytes(), before)
+        self.assertEqual(list(driver.state.glob('LOCK.stale-*')), [])
 
     def test_existing_arm_output_is_never_overwritten(self):
         FakeDriver.updates = {(0, 'loop'): 5120}
