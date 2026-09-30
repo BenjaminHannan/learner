@@ -1,0 +1,69 @@
+{
+  "schema": "sol.cloud.offline-launch-smoke-freeze.v1",
+  "created_utc": "2026-09-30T09:09:49.497757+00:00",
+  "files": [
+    {
+      "path": "scripts/sol_cloud_offline_launch_smoke_v1.py",
+      "sha256": "fa70d07c3a097f00195978848602619fb17c2e5a5eba583261e8c3acf3480f92",
+      "bytes": 20207
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/CHECK_LOCAL.py",
+      "sha256": "d263b103cafb49bc2bb6c49f58df3a953a50c83c50ae209d10adc79a93e44a84",
+      "bytes": 4683
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/CHECKS-v1.json",
+      "sha256": "737ca79f69de1ca589f771340504c8d02a09d5d89a2978c53983e187598d70cf",
+      "bytes": 2629
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/queue-template-sol-cloud-offline-launch-smoke-r5-v1.md",
+      "sha256": "1581de580648437c1b25deb3fb7ad1a21bd2c2c713261c21f70979223b081df1",
+      "bytes": 2419
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/r5-v1/LOCAL-RECEIPT-v1.json",
+      "sha256": "9e3fae90a249ba6a20a5b266507f88ebcd5bfa5900bd858c791c5107d17b2887",
+      "bytes": 3095
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/r5-v1/LOCAL-RECEIPT-v2.json",
+      "sha256": "e3e60012a03ff46d30e272e8b58fb6f8790d17be490b0924ef3c6470adb3d3b1",
+      "bytes": 3286
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/r5-v1/PREPARATION.json",
+      "sha256": "480ae36b50cee19d784025ba044e146fc030d1861de4a128eca1c27b19733aca",
+      "bytes": 429
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/r5-v1/SOURCE-PACKAGE.json",
+      "sha256": "81da5a87401bc7eeec398269feba6236179883127afaea772db5189d4a231f0f",
+      "bytes": 111454
+    }
+  ],
+  "local_checks": {
+    "passed": 24,
+    "total": 24,
+    "bash_syntax": "PASS"
+  },
+  "actual_target_host_receipts": "PENDING watcher execution by integrator",
+  "scope": "Only selected sealed r5 TRAIN-loader/driver/preparer bytes; in-memory imports and runtime capabilities, never main/training/model/data loading",
+  "source_seal_sha256": "d8a50948c5c5831928fd3d68e2ed87f8620bbf3af0b5dbfa8efe27afde08a018",
+  "selected_source_count": 3,
+  "broad_closure_imported": false,
+  "model_calls": 0,
+  "optimizer_updates": 0,
+  "GPU_calls": 0,
+  "PC_writes": 0,
+  "live_queue_created": false,
+  "manual_extraction": "none; package layout uses strict containment and regular-member/link checks only",
+  "reference": "https://docs.python.org/3/library/tarfile.html#supporting-older-python-versions",
+  "limits": [
+    "Current local receipt is Linux3.12.14 only, not Mac/PC qualification.",
+    "Actual target imports are sealed memory imports with virtual layout, not physical deployment verification.",
+    "Actual selected-module filesystem/process/network/model import attempts are denied during import.",
+    "Native read-only allocation metadata is captured to check r5 unit-cap assumptions; no output volume written."
+  ]
+}

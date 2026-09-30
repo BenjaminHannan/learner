@@ -1,0 +1,78 @@
+{
+  "schema": "sol.cloud.offline-launch-smoke-freeze.v2",
+  "created_utc": "2026-09-30T09:13:44.624183+00:00",
+  "files": [
+    {
+      "path": "scripts/sol_cloud_offline_launch_smoke_v1.py",
+      "sha256": "e6416052cc2cc7ae8f5331a80a6f9421b7a60a72b550a0ff02d24123487f7516",
+      "bytes": 20444
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/CHECK_LOCAL.py",
+      "sha256": "ce18a1e52ededeec55e2ddde5e86820310d2869edcf09bd1109c58e7a1c0a573",
+      "bytes": 5629
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/CHECKS-v2.json",
+      "sha256": "80cd0f3c986163616cc18cd2757b9a8fc872e4316197ca76a489a8ac0b88ec2f",
+      "bytes": 2939
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/queue-template-sol-cloud-offline-launch-smoke-r5-v2.md",
+      "sha256": "bb9fd455a70ef28e509d9e6a69ddcbdf56c0b2b003bc08884939a9ea2e59e5c7",
+      "bytes": 2357
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/r5-v1/SOURCE-PACKAGE.json",
+      "sha256": "81da5a87401bc7eeec398269feba6236179883127afaea772db5189d4a231f0f",
+      "bytes": 111454
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/r5-v1/GENERATED-PROBE-LOCAL-v2.json",
+      "sha256": "f1b1a30ab52d383f14c9546ff8935f57c3c223cb70631ff5d72fd5d3c3212f73",
+      "bytes": 3289
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/FAILED-CANDIDATE-DRIVER-v1.py",
+      "sha256": "fa70d07c3a097f00195978848602619fb17c2e5a5eba583261e8c3acf3480f92",
+      "bytes": 20207
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/CANDIDATE-FAILURE-v1.json",
+      "sha256": "b514bdbfdf5a7a8611088d6d03146b2953aaf91b31e17ab2a7fadc33a0fdcf31",
+      "bytes": 733
+    },
+    {
+      "path": "artifacts/sol-cloud-launch-smoke-20260930/FREEZE-v1.json",
+      "sha256": "7f316431631000bbff593554cba8544399085960d4276521c96eccf3c9407fdd",
+      "bytes": 2956
+    }
+  ],
+  "checks": {
+    "passed": 27,
+    "total": 27,
+    "queue_Python_heredoc_compile": "PASS",
+    "queue_bash_syntax": "PASS",
+    "actual_local_generated_probe": "PASS"
+  },
+  "source_seal_sha256": "d8a50948c5c5831928fd3d68e2ed87f8620bbf3af0b5dbfa8efe27afde08a018",
+  "actual_target_host_receipts": "PENDING watcher execution",
+  "selected_module_count": 3,
+  "fixes": [
+    "Preserve future import as first statement; set virtual __file__ before ROOT computation",
+    "Use structured literal template fields instead of global token replacement; independently compile Python heredoc"
+  ],
+  "previous_failures_preserved": true,
+  "model_calls": 0,
+  "optimizer_updates": 0,
+  "PC_writes": 0,
+  "GPU_calls": 0,
+  "live_queue_created": false,
+  "limits": [
+    "Actual local import proof is Linux only, not Mac/PC.",
+    "Target host imports use exact pinned memory sources and virtual package layout, not deployed file verification.",
+    "No model/data/tokenizer/optimizer import or function runs; audit blocks side effects during imports.",
+    "No tar extraction to disk; capability exercises real empty-member filter API and containment/link-filter calls."
+  ],
+  "reference": "https://docs.python.org/3/library/tarfile.html#supporting-older-python-versions"
+}
