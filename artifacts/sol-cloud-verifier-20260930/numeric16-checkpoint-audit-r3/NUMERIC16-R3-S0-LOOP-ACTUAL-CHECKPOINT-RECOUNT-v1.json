@@ -1,0 +1,84 @@
+{
+  "GPU_calls": 0,
+  "LM_tensor_proof": "LM weights are not in this checkpoint; recorded frozen-LM fingerprint equality remains source/runtime evidence only.",
+  "actual_Adam_states": 102,
+  "actual_Adam_step_histogram": {
+    "243": 8,
+    "371": 8,
+    "527": 8,
+    "626": 8,
+    "730": 8,
+    "783": 8,
+    "798": 8,
+    "800": 46
+  },
+  "actual_tensor_checks_passed": 2030,
+  "approved_original_repo_root": "C:/Users/benja/sol-cloud-numeric-capability-v1",
+  "arm": "loop",
+  "changed_parameters_per_component": {
+    "core": 86,
+    "prefix": 6,
+    "reader": 6
+  },
+  "checker_sha256": "4d1d81e73bf5a6eab3cc605e3cbeee661cc41478d343159a80dc8377ce97968d",
+  "checkpoint": {
+    "bytes": 109627251,
+    "path": "artifacts\\sol-cloud-numeric-fit-20260930\\run-v1\\seed0\\loop\\final-resume.pt",
+    "sha256": "6b63344aeeafaa2d51a6255c282b20822cca3872a47f0fe44f8fc35b74908584"
+  },
+  "completed_utc": "2026-09-30T17:56:29.787841+00:00",
+  "component_inventory": {
+    "core": {
+      "fingerprint": "962d7013e26566886a0cb20756d32736737e941ade8f8a404e377b06e5cc6e88",
+      "state_tensors": 100,
+      "stored_elements_including_buffers": 9008430
+    },
+    "prefix": {
+      "fingerprint": "0d930a6990dc30c987e7304760137b36ea5661e5979683aa15076752958bf385",
+      "state_tensors": 6,
+      "stored_elements_including_buffers": 76416
+    },
+    "reader": {
+      "fingerprint": "5145d6ef87e150032ce7cd936df35bb8f88f1f017f21c199810b797f724f76a9",
+      "state_tensors": 6,
+      "stored_elements_including_buffers": 78112
+    }
+  },
+  "eligible_parameter_bytes": 36648244,
+  "eligible_parameters": 108,
+  "fixed_halt_and_buffers_unchanged": true,
+  "global_update": 800,
+  "limits": [
+    "No model construction/forward/inference/tokenizer/optimizer/RNG restore or CUDA.",
+    "Actual saved tensor/Adam mechanics only, not capability/generalization/advantage/stopping/activation qualification.",
+    "Sparse parameter Adam steps equal participation and need not all be800."
+  ],
+  "model_calls": 0,
+  "optimizer_calls": 0,
+  "participating_parameters_per_component": {
+    "core": 90,
+    "prefix": 6,
+    "reader": 6
+  },
+  "queue_operations": 0,
+  "report_training_eligible": false,
+  "safe_load": {
+    "map_location": "cpu",
+    "torch_version": "2.11.0+cu128",
+    "unsafe_fallback": false,
+    "weights_only": true
+  },
+  "same_saved_raw_and_frame_SHA": true,
+  "schema": "sol.cloud.independent.numeric16.actual-checkpoint-recount.v2",
+  "seed": 0,
+  "source_pins_verified_before_load": true,
+  "tokenizer_calls": 0,
+  "unchanged_absent_Adam_parameters": [
+    "core.tok.weight",
+    "core.slot.weight",
+    "core.ln_out.weight",
+    "core.ln_out.bias",
+    "core.head.weight",
+    "core.head.bias"
+  ]
+}
