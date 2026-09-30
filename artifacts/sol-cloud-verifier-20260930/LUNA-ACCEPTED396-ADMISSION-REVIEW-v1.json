@@ -1,0 +1,60 @@
+{
+  "schema": "sol.cloud.luna.accepted396.independent-engineering-admission-review.v1",
+  "observed_utc": "2026-09-30T13:05:58.281737+00:00",
+  "verdict": "PASS frozen accepted-only runtime source/target projection; tokenizer and fit seal remain separate",
+  "freeze_sha256": "b8901d317dd348cba2ea255826f3e35801acb8154ed2a0086ef1d6b3bd15ea69",
+  "metadata_pins": {
+    "artifacts/sol-cloud-luna-train-20260930/batch00-v2-input-v1/audit_batch_00_v2_summary.json": "bdde119ffffb0ef913aaf18079e9c41ad97f5e8f93a9afbd3f0a741ca11b80a8",
+    "artifacts/sol-cloud-luna-train-20260930/b01-b03-v2-input-v1/accepted_only_manifest_b01_b03_v2.json": "83f1b8e4d8be81b0a3935cf0beaba1f8645cc9dcd2b97469fad835e05bf6fd22"
+  },
+  "accepted_counts": {
+    "b00": 100,
+    "b01-b03": 296
+  },
+  "accepted_IDs_sha256": "cb3e24e2a4223e603ea1d5b9203a33ceb7ed34dc107d03a5d5eaed7e6fa6415c",
+  "held_ids_metadata_only": [
+    "LUNA-B01-012",
+    "LUNA-B02-025",
+    "LUNA-B02-030",
+    "LUNA-B03-033"
+  ],
+  "pre_content_decode_ID_scans": {
+    "QUESTION-PACKET.json": {
+      "IDs_only_scanned_before_content_decode": 396,
+      "held_ID_intersection": []
+    },
+    "NUMERIC-TARGETS.json": {
+      "IDs_only_scanned_before_content_decode": 396,
+      "held_ID_intersection": []
+    }
+  },
+  "actual_runtime_files_opened": [
+    "artifacts/sol-cloud-luna-train-20260930/loader-v1/accepted396-v1/MANIFEST.json",
+    "artifacts/sol-cloud-luna-train-20260930/loader-v1/accepted396-v1/QUESTION-PACKET.json",
+    "artifacts/sol-cloud-luna-train-20260930/loader-v1/accepted396-v1/NUMERIC-TARGETS.json"
+  ],
+  "runtime_exact_admitted_count": 396,
+  "CPU_numeric_fixture_cases_passed": 11,
+  "CPU_raw": {
+    "path": "artifacts/sol-cloud-verifier-20260930/LUNA-ADMISSION-CPU-RAW-v1.txt",
+    "sha256": "976781aa3d4bfeaaeacfb7b1e590afac2c2401215af9790625042f199adfba6b"
+  },
+  "only_reader_input_field": "question",
+  "numeric_target_separate_from_model_input": true,
+  "notebook_tokens": 0,
+  "synthetic_origin_not_human": true,
+  "actual_new_model_or_tokenizer_calls": 0,
+  "actual_optimizer_updates": 0,
+  "held_question_or_answer_values_decoded": 0,
+  "raw_builder_executed": false,
+  "actual_user_day": false,
+  "fit_release_by_review": false,
+  "limits": [
+    "Independent English meaning and pre-tree timing rely externally pinned acceptance/lock receipts; local Fraction arithmetic cannot establish these semantic facts.",
+    "This reviewer opened only allowed accepted-ID metadata and exact prepared accepted-only packets. Mixed original independent/comparison files were neither hashed nor opened.",
+    "Original builder hashes complete mixed files before its field-span metadata filter; its no-held-value-decode claim is supported by poison fixtures, but it is not a no-held-raw-byte-access certificate. Do not execute the raw builder in this reviewer lane.",
+    "Prepared runtime uses trusted fixed file pins and fixed accepted-ID hash. A future repinned packet would need a new metadata-first membership certification; no implicit eligibility extension.",
+    "Actual shipped-tokenizer complete query+EOS and target length/token seals remain pending sole integrator CPU audit.",
+    "No numeric capability/generalization, label-independent semantic structure certification, comparator equality or training release follows."
+  ]
+}
