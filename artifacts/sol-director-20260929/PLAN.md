@@ -169,3 +169,12 @@ Sources: handoff/director-roadmap.md; handoff/director-board.md;
 handoff/director-briefs/thread-helper-common.md;
 reviews/premonition-moe-2026-09-29/{README,REPORT,PROOF_PROTOCOL}.md;
 artifacts/claude-fewex-20260927/RESULTS-EQ.md.
+
+
+## Sol integrator update — 2026-09-30 UTC
+
+Lead is MANAGEMENT ONLY: assign tasks and evaluate self-contained Sol reports; no file reads, edits, tests, integration or git. James is sole integrator with explicit user authorization for reviewed owned main commits/pushes and watcher queue submissions. Vision published ff8703139. Heartbeat updated via supported tool, ACTIVE15-minute schedule preserved. Usage70%remaining; reset not used; budget0/$7.50.
+
+Composition awake-only job `sol-compose-awake-20260929-benspc` now being submitted. 21-file preseal, seeds0/1, six controls/candidate arms,512updates each, zero sleep,3600s driver/4200s wrapper. Mechanics15/15; no performance evidence. Original7200s sleep draft NOT submitted. Two-seed diagnosticspan never constitutes statisticalproof. Wait fresh independentraw+presealedmarkrecount before scientificpromotion.
+
+Sleep remains BLOCKED on exactcheckpoint learned-stopreadiness and realEnglish/notebookfactories. Bernoulli completed/closed;30/30integritymechanics not sleeptraining. Bohr alone owns dreamer/filterresearch. Source/SleepMoE contextadapter and Composer64board compatibility require owner stop/translator integration; do not relabel symbols as conversational proof.
