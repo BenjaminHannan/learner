@@ -1,0 +1,11 @@
+# Numeric fit Mac watcher relay
+
+Shown: the stdlib-only Mac relay passed26 of26 focused CPU launch/failure checks. Its module imports safely without executing main. Source and generated bootstraps parse for nativeMac3.9 andPC3.10 capabilities; all four held-job Bash renderings pass syntax checks. These checks ran onLinux using inert transport functions/mocks, not native hosts, models or optimizers.
+
+The relay stages only the integrator's byte-pinned package from origin/main and calls the pinnedPC run_packet entry through stdin. It uses verified native/usr/bin/python3 and existing strictSSH, plus actual copied-main Q.running ownership and no other GPU watcher claim. Four jobs are serial: seed0loop, seed0plain, seed1loop, seed1plain. Before a later job, every predecessor needs a physical rc=<integer> Q.exit and no Q.running; thePCbootstrap independently checks exact prior transport disposition. No job waits for prerequisites during its own600second budget.
+
+The same monotonic600second budget covers Mac source staging, PCpreflight, PC-owned bounded driver and evidence return. No archive/extraction/filter or checkpoint/LMweight transfer occurs. Every source/return member has a contained relative path and exactbyte/hash binding. Only bounded JSON/JSONL/log evidence is copied initially; large states/raw evidence remain onPC. The frozen model objective/scoring is unchanged: canonical numeric target+EOS, no number extraction.
+
+Exact PCstdout/stderr plus SSHdisposition are saved independently of final-manifest parsing. Missing/malformed manifests, PCbootstrap failures, subprocess errors and timeouts leave saved bytes. After dispatch, optimizer state remains unknown unless actual PCevidence establishes it. Small-return SSH failures also preserve stdout/stderr/exit. Optional MacPID lookup absence/timeout is nonfatal. No currentexperiment/source or failure receipt was modified.
+
+Pending: integrator finalPACKAGE/release/PCbootstrap pins. BUILD-v1.py then writes exactfour transport specs and heldqueue files plus FREEZE-v1.json after verifying those supplied external hashes. Only sole integrator publishes queues/main; only first seed0loop job should initially go live. No SSH, model call, optimizer update, GPU action or livequeue was performed by this worker.
