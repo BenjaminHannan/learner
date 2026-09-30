@@ -1,0 +1,35 @@
+{
+  "scope": "Independent non-blind v4 additive strict known-host collection source/seal review",
+  "status": "PASS FOR PUBLICATION",
+  "checks_passed": 13,
+  "checks": [
+    "sealed hash artifacts/sol-cloud-coordinator-20260930/integration/static-night-raw-collection-v4/ADDENDUM.json",
+    "sealed hash artifacts/sol-cloud-coordinator-20260930/integration/static-night-raw-collection-v4/CHECKS.json",
+    "sealed hash artifacts/sol-cloud-coordinator-20260930/integration/static-night-raw-collection-v4/COLLECTOR.py",
+    "sealed hash artifacts/sol-cloud-coordinator-20260930/integration/static-night-raw-collection-v4/SPEC.json",
+    "sealed hash artifacts/sol-cloud-coordinator-20260930/integration/static-night-raw-collection-v4/queue-sol-cloud-static-night-raw-collect-v4.md",
+    "sealed hash handoff/queue/sol-cloud-static-night-raw-collect-v4.md",
+    "embedded source exact",
+    "shell parse",
+    "source delta only namespace and strict known-host controls",
+    "SSH known-host strict no persistent updates",
+    "SCP known-host strict no updates",
+    "PUSH exact newnamespace",
+    "v3 seal preserved"
+  ],
+  "source_sha256": "1f33c1689b042151bc156d2241121a505d05884b4576a03719c9b5fbe035033a",
+  "queue_sha256": "6b5a7b36bca6d7e6afb52af4b0c201cd70827c32925dc524f686781e8ab73c95",
+  "reviewed_seal_sha256": "c9750a2f58855a289af14a2acf6609810b7ce8fb55438c8703c8f7374685515f",
+  "prior_review": "artifacts/sol-cloud-verifier-20260930/COLLECTION-V3-REVIEW.json",
+  "prior_review_sha256": "4d776b796103412e5834ba1a973c0f087be2a8d6dd5b2b01168e196e7917cb8a",
+  "SSH_calls": 0,
+  "optimizer_steps": 0,
+  "model_calls": 0,
+  "collection_executed_here": false,
+  "review_harness_failure_preserved": {
+    "first_attempt": "KeyError checking inferred addendum key preserved_previous_seal_sha256",
+    "cause": "Verifier harness used a nonexistent field name; no producer defect or host execution",
+    "correction": "Read exact actual old_packet_seal_sha256 key; unchanged producer source"
+  },
+  "publication_condition": "Only live v4 queue is submitted; old v2/v3 unsubmitted drafts remain unsubmitted. Host receipts must confirm actual native runtime and exact three-file recovery."
+}
