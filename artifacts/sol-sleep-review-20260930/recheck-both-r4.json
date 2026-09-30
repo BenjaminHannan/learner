@@ -1,0 +1,278 @@
+{
+  "pins": {
+    "v1": "8f48c553f24147b697c98be8e396afdb96e0d2282dda47922fff138903f153b7",
+    "v2": "1b011c35408b2db968d44c215c90818e6244563b5406e37983cd30c1f8bfbb2b"
+  },
+  "command": "python3 -B scripts/sol_sleep_review_both_r4_20260930.py",
+  "shared_guard_helpers_and_ledger_finalization_AST_identical": true,
+  "F1": "Resolved in both: actual finalization source with mocked storage produces equal resume/JSON ledgers; real torch serialization unrun.",
+  "F2": "Resolved in both: inflated noise, missing/modified repeat and honest CE regression rejected.",
+  "F3": "Original reproductions resolved in both: stale input hash, missing/duplicate/reordered guard IDs, changed plan and malformed input mask rejected.",
+  "residual": "RESOLVED in both: formerly accepted invalid label mask now rejects; empty/all-ignored labels, integer masks, Boolean token IDs and multiple label rows also reject eagerly.",
+  "scope": "50 of 50 expected synthetic observations: 23 negative cases reject and 2 positive/mock-finalization cases succeed per version; no models/corpus/checkpoints, training or inference. Actual night not shown; queued25 still required.",
+  "day_boundary": "v2 day callback source inspected (pinned loader, bundle, IDs/origins). Day branch not executed: no day rows, model/data imports, or full release-binding validation. F1/F2/F3 plus residual only.",
+  "results": {
+    "v1": {
+      "source_sha256": "8f48c553f24147b697c98be8e396afdb96e0d2282dda47922fff138903f153b7",
+      "scope": "source-only synthetic contracts; no models/corpus",
+      "cases": [
+        {
+          "case": "valid eight-row baseline",
+          "accepted": true,
+          "evidence": "accepted"
+        },
+        {
+          "case": "F2 inflated noise with actual zero repeat rejects",
+          "accepted": false,
+          "evidence": "declared noise differs from pinned repeated raw measurement"
+        },
+        {
+          "case": "CE regression with honest zero noise rejects",
+          "accepted": false,
+          "evidence": "candidate must roll back"
+        },
+        {
+          "case": "lost exact sentence rejects",
+          "accepted": false,
+          "evidence": "candidate must roll back"
+        },
+        {
+          "case": "F3 changed input under stale hash rejects",
+          "accepted": false,
+          "evidence": "guard input bytes differ from identity"
+        },
+        {
+          "case": "F3 one-row evidence rejects",
+          "accepted": false,
+          "evidence": "exact eight presealed guard identities required"
+        },
+        {
+          "case": "duplicate guard ID rejects",
+          "accepted": false,
+          "evidence": "exact eight presealed guard identities required"
+        },
+        {
+          "case": "reordered guard IDs reject",
+          "accepted": false,
+          "evidence": "exact eight presealed guard identities required"
+        },
+        {
+          "case": "changed repeat labels reject",
+          "accepted": false,
+          "evidence": "guard input/label/mask changed: labels"
+        },
+        {
+          "case": "nonfinite repeat rejects",
+          "accepted": false,
+          "evidence": "nonfinite guard CE"
+        },
+        {
+          "case": "modified pinned repeat rejects",
+          "accepted": false,
+          "evidence": "raw decision evidence changed"
+        },
+        {
+          "case": "missing repeat rejects",
+          "accepted": false,
+          "evidence": "'repeat'"
+        },
+        {
+          "case": "modified pinned plan rejects",
+          "accepted": false,
+          "evidence": "immutable dependency changed: plan"
+        },
+        {
+          "case": "unclosed ledger rejects",
+          "accepted": false,
+          "evidence": "no complete changed-core overnight checkpoint"
+        },
+        {
+          "case": "24 updates reject",
+          "accepted": false,
+          "evidence": "no complete changed-core overnight checkpoint"
+        },
+        {
+          "case": "unchanged core rejects",
+          "accepted": false,
+          "evidence": "no complete changed-core overnight checkpoint"
+        },
+        {
+          "case": "failed Adam reload rejects",
+          "accepted": false,
+          "evidence": "saved candidate/optimizer reload not verified"
+        },
+        {
+          "case": "input mask shape rejects even with correct hash",
+          "accepted": false,
+          "evidence": "input mask shape differs"
+        },
+        {
+          "case": "RESIDUAL invalid label mask hides a lost exact sentence",
+          "accepted": false,
+          "evidence": "label mask must exactly equal target != -100"
+        },
+        {
+          "case": "empty labels reject eagerly",
+          "accepted": false,
+          "evidence": "nonempty aligned target required"
+        },
+        {
+          "case": "all ignored labels reject eagerly",
+          "accepted": false,
+          "evidence": "nonempty aligned target required"
+        },
+        {
+          "case": "integer mask rejects eagerly",
+          "accepted": false,
+          "evidence": "label mask must exactly equal target != -100"
+        },
+        {
+          "case": "Boolean target ID rejects eagerly",
+          "accepted": false,
+          "evidence": "label mask must exactly equal target != -100"
+        },
+        {
+          "case": "two label rows reject eagerly",
+          "accepted": false,
+          "evidence": "one label/mask row required"
+        },
+        {
+          "case": "F1 finalization makes resume and JSON ledger equal",
+          "accepted": true,
+          "evidence": "exact source block with mocked torch save/load and replace; no real serialization"
+        }
+      ]
+    },
+    "v2": {
+      "source_sha256": "1b011c35408b2db968d44c215c90818e6244563b5406e37983cd30c1f8bfbb2b",
+      "scope": "source-only synthetic contracts; no models/corpus",
+      "cases": [
+        {
+          "case": "valid eight-row baseline",
+          "accepted": true,
+          "evidence": "accepted"
+        },
+        {
+          "case": "F2 inflated noise with actual zero repeat rejects",
+          "accepted": false,
+          "evidence": "declared noise differs from pinned repeated raw measurement"
+        },
+        {
+          "case": "CE regression with honest zero noise rejects",
+          "accepted": false,
+          "evidence": "candidate must roll back"
+        },
+        {
+          "case": "lost exact sentence rejects",
+          "accepted": false,
+          "evidence": "candidate must roll back"
+        },
+        {
+          "case": "F3 changed input under stale hash rejects",
+          "accepted": false,
+          "evidence": "guard input bytes differ from identity"
+        },
+        {
+          "case": "F3 one-row evidence rejects",
+          "accepted": false,
+          "evidence": "exact eight presealed guard identities required"
+        },
+        {
+          "case": "duplicate guard ID rejects",
+          "accepted": false,
+          "evidence": "exact eight presealed guard identities required"
+        },
+        {
+          "case": "reordered guard IDs reject",
+          "accepted": false,
+          "evidence": "exact eight presealed guard identities required"
+        },
+        {
+          "case": "changed repeat labels reject",
+          "accepted": false,
+          "evidence": "guard input/label/mask changed: labels"
+        },
+        {
+          "case": "nonfinite repeat rejects",
+          "accepted": false,
+          "evidence": "nonfinite guard CE"
+        },
+        {
+          "case": "modified pinned repeat rejects",
+          "accepted": false,
+          "evidence": "raw decision evidence changed"
+        },
+        {
+          "case": "missing repeat rejects",
+          "accepted": false,
+          "evidence": "'repeat'"
+        },
+        {
+          "case": "modified pinned plan rejects",
+          "accepted": false,
+          "evidence": "immutable dependency changed: plan"
+        },
+        {
+          "case": "unclosed ledger rejects",
+          "accepted": false,
+          "evidence": "no complete changed-core overnight checkpoint"
+        },
+        {
+          "case": "24 updates reject",
+          "accepted": false,
+          "evidence": "no complete changed-core overnight checkpoint"
+        },
+        {
+          "case": "unchanged core rejects",
+          "accepted": false,
+          "evidence": "no complete changed-core overnight checkpoint"
+        },
+        {
+          "case": "failed Adam reload rejects",
+          "accepted": false,
+          "evidence": "saved candidate/optimizer reload not verified"
+        },
+        {
+          "case": "input mask shape rejects even with correct hash",
+          "accepted": false,
+          "evidence": "input mask shape differs"
+        },
+        {
+          "case": "RESIDUAL invalid label mask hides a lost exact sentence",
+          "accepted": false,
+          "evidence": "label mask must exactly equal target != -100"
+        },
+        {
+          "case": "empty labels reject eagerly",
+          "accepted": false,
+          "evidence": "nonempty aligned target required"
+        },
+        {
+          "case": "all ignored labels reject eagerly",
+          "accepted": false,
+          "evidence": "nonempty aligned target required"
+        },
+        {
+          "case": "integer mask rejects eagerly",
+          "accepted": false,
+          "evidence": "label mask must exactly equal target != -100"
+        },
+        {
+          "case": "Boolean target ID rejects eagerly",
+          "accepted": false,
+          "evidence": "label mask must exactly equal target != -100"
+        },
+        {
+          "case": "two label rows reject eagerly",
+          "accepted": false,
+          "evidence": "one label/mask row required"
+        },
+        {
+          "case": "F1 finalization makes resume and JSON ledger equal",
+          "accepted": true,
+          "evidence": "exact source block with mocked torch save/load and replace; no real serialization"
+        }
+      ]
+    }
+  }
+}
