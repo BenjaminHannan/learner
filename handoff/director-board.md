@@ -1,5 +1,52 @@
 # Director board. Updated 2026-09-28 19:30 UTC.
 
+## Current user order — 2026-09-30 11:28 UTC / 07:28 New York
+
+This entry supersedes the deadline and progression in the historical entries
+below. Ben lifted the rushed delivery deadline and ordered: **useful capability
+at the current size → fair scaling demonstration → demonstrated notebook use
+→ sleep replay**. Keep exactly four fixed latent rounds for the current chat
+path. Learned stopping, new memory formats and vector-code research remain
+deferred. Sleep stays disabled until the preceding gates pass. Complete-model
+capability, fair scaling and notebook dependence are **NOT SHOWN**.
+
+The no-sleep engineering baseline is installed on BensPC:
+`C:\Users\benja\sol-cloud-chat-delivery-v1\CHAT.cmd`. Main release
+`cd8fb1756369bc64f64dddf01b0c3cc0baefbbda` uses CLI SHA-256
+`efd48a179488808fd1b7839c91a57f3bd03117d8f6ae175f5ec9f0c9accdba1a`
+and existing V12 **connected** seed-0 checkpoint SHA-256
+`5858bd5dc4446d78bc49e04149740f98c9adce0e7938089728eec009c33d4b55`.
+The TABLE arm is excluded. The watcher smoke completed at 11:19:52 UTC,
+return code 0, with three actual generated answers on already fitted HUMAN
+TRAIN inputs. The receipt was published afterward at immutable builder-outbox
+`a53d18d620b7434a881fe9c75255e5e48bd0dee4`. This is a runnable memorization
+baseline, not evidence of general conversational competence or notebook use.
+Sleep, optimizer updates and activation were all disabled. Independent saved
+raw-output recount passed 122 engineering checks; source review also passed.
+The direct Windows launcher check is in progress. Actual receipts and the
+independent recount are published in main commit `cdf3fd4e8`.
+
+The reasoner stores 9,007,790 parameters; the reader has 78,112 and the output
+prefix 76,416. Two shared D256 blocks each select two of eight MLP experts per
+token, reused for four rounds. Frozen talker exact parameter accounting is being
+recovered from its pinned metadata. Own rental spend remains $0; historical
+spend is unknown. Existing budget and single-rental approval limits persist.
+
+Ben now explicitly permits Luna-authored word problems with synthetic lineage
+and independently verified numeric targets, and reward training on the model's
+own English responses. This is a narrow data-policy update: generated code,
+rationales and unrelated generated training material remain excluded. Checked
+supervised-answer training and response-reward training are separate arms;
+reward/judge calibration, matched budgets, both seeds and fresh human evaluation
+must be sealed before capability claims. Fluent wrong answers must not become
+preferred through reward or advantage normalization. Parent Derek owns the new
+Luna batches and research decisions; Sol owns implementation and independent
+verification. Existing reserved panels remain excluded.
+
+Report verified completion to Derek for the user-requested Slack notification.
+Do not send a premature completion notification. Old seals, failed runs and
+evidence remain intact; no completed V12 or static-night experiment is rerun.
+
 ## Active lead takeover — 2026-09-30 02:32 UTC / September 29 New York
 
 Ben requests end-to-end completion in the stated five-stage order, Sol workers,
