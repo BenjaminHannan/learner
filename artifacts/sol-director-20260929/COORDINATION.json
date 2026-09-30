@@ -4,11 +4,13 @@
   "agents": {
     "spatial": {
       "agent_id": "01a0f025-dec6-7d21-b8ca-5710340e6985",
-      "nickname": "Peirce"
+      "nickname": "Peirce",
+      "next": "Peirce awake-only source queue is prepared fallback; composition currently occupies GPU"
     },
     "stop": {
       "agent_id": "01a0f025-df9e-7303-a221-eb872390efe7",
-      "nickname": "Epicurus"
+      "nickname": "Epicurus",
+      "next": "Epicurus assigned new Composer64 exact-checkpoint readiness runner/adapter; existing D256 qualification cannot transfer"
     },
     "compose": {
       "agent_id": "01a0f025-e11e-7f12-81fb-513bf5c1de0a",
@@ -16,7 +18,8 @@
     },
     "translator": {
       "agent_id": "01a0f027-52c6-7731-88a2-ee0b704a151b",
-      "nickname": "Leibniz"
+      "nickname": "Leibniz",
+      "next": "Leibniz requested exact human-English grounding queue + pinned notebook/decoder factories for next GPU slot"
     },
     "sleep": {
       "agent_id": "01a0f025-e32c-72b3-9373-5e1a2e69c277",
@@ -61,11 +64,13 @@
   },
   "composition_awake": {
     "job": "sol-compose-awake-20260929-benspc",
-    "state": "SUBMITTING",
+    "state": "RUNNING \u2014 watcher + GPU confirmed",
     "sleep_updates": 0,
     "cap_seconds": 3600,
-    "evidence": "15/15 contracts; zero training so far",
-    "independent_recount_required": true
+    "evidence": "PC torch2.11.0+cu128 RTX5070Ti contracts15/15 seeds0/1; six seed0 arms completed by 2026-09-30T03:21:46Z; no task scores available yet",
+    "independent_recount_required": true,
+    "checkpoint_status": "seed0 six arms trained; seed1/frozen scoring pending at last receipt",
+    "started_evidence": "watcher .running marker and go1.reply.md GPU receipt"
   },
   "usage": {
     "remaining_percent": 70,
