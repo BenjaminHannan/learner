@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "purpose": "plain-mechanics-before-first-synthetic-check",
+  "files": {
+    "scripts/sol_spatial_poc_plain.py": "878de58d016d30912323664a240952b7221870f2070e21feeecee82079c12fef",
+    "scripts/sol_spatial_poc_plain_smoke.py": "0280d2fcef8d0037758f53138f94c6ce9e0f50d0d2a09e81be1b6e32b36712c6",
+    "scripts/sol_spatial_attention_core.py": "b14b3a0df49c04fc3905d910abd05fdc38759846928fd25026a3ff806eb9cf25",
+    "scripts/claude_fewex_net.py": "2f9415f5973686733c130b5edcfcfea6901de9ede546b3863fc1a4699f89c5d7",
+    "scripts/claude_rsn358a_envs.py": "af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0",
+    "artifacts/sol-spatial-20260929/PLAIN-SPEC.json": "8e1ab606d3d65b9a4709b8900ce2990bca1d60778cf6e5eda4badf65d78082f5",
+    "artifacts/sol-spatial-20260929/PLAIN-PASSMARKS.md": "409fc43d87f62beaef1d2d4bda1a850f6e95c861135b8d4fb42fed8e11eeed30",
+    "artifacts/sol-spatial-20260929/attention-ready/source-upcycled-s0.pt": "1c8ba46366fdd28705670e73db0b75e8f1a95fddba0ed44cfb723655347fb880",
+    "artifacts/sol-spatial-20260929/attention-ready/source-upcycled-s1.pt": "0d4f4cea5fa34aefca73b31847498f20868c9dce56da9fbf8735b16717a24c7f",
+    "scripts/sol_spatial_poc_plain_smoke_r2.py": "f2f854a8f2464227a97ca952032248aee1beb814f14add41d1de57ca3c165b96",
+    "scripts/claude_blurt1.py": "c00aa62f4bc9ed710019581ee61288256238539c5bcfb6759d17f89c01a958de"
+  },
+  "supersedes_unrun_smoke_seal_sha256": "54929f2f192f8e6de297d950efbfc114fa0bffab2c87c7a7f4eaa1ec0a61ba9b",
+  "reason": "Construct all controls before differentiable forwards so no transient autograd caches are deepcopied; add imported symbolic vocabulary dependency. Original seal/runner preserved."
+}
