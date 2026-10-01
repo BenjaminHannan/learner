@@ -25,6 +25,11 @@ class SnapshotTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder,patch.object(Path,'rglob',return_value=iter([vanished])),patch.object(Path,'stat',side_effect=[SimpleNamespace(st_mode=stat.S_IFDIR),FileNotFoundError()]):
             self.assertEqual(allocated_bytes(folder,4096),134217728)
 
+    def test_confirmation_receipt_has_same_bounded_reservation(self):
+        vanished=Path('/root/launch-cap256/confirmations/batch/BATCH.json.tmp-17-25-1')
+        with tempfile.TemporaryDirectory() as folder,patch.object(Path,'rglob',return_value=iter([vanished])),patch.object(Path,'stat',side_effect=[SimpleNamespace(st_mode=stat.S_IFDIR),FileNotFoundError()]):
+            self.assertEqual(allocated_bytes(folder,4096),1048576)
+
     def test_unknown_vanished_entry_fails_closed(self):
         vanished=Path('/root/source.json')
         with tempfile.TemporaryDirectory() as folder,patch.object(Path,'rglob',return_value=iter([vanished])),patch.object(Path,'stat',side_effect=[SimpleNamespace(st_mode=stat.S_IFDIR),FileNotFoundError()]):

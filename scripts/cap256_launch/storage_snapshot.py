@@ -14,7 +14,7 @@ CHECKPOINT_RESERVATION_BYTES=134217728
 def vanished_reservation(path):
     path=Path(path)
     components=path.parts
-    if 'launch-cap256' in components and 'mixtures' in components:
+    if 'launch-cap256' in components and any(n in components for n in ('mixtures','confirmations')):
         for name in ('BATCH.json','PROGRESS.json'):
             if path.name==name or path.name.startswith(name+'.tmp'):
                 return RECEIPT_RESERVATION_BYTES
