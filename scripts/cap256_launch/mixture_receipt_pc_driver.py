@@ -15,9 +15,11 @@ def execute(request_path):
     import pc_driver as dmod
     import pc_guard
     import receipt_io
+    import recovery_guide
     assert pc_guard.DRIVER_MARK=='pc_driver.py'
-    assert 'receipt_io.py' in request['launcher_sha256']
+    assert all(name in request['launcher_sha256'] for name in ('receipt_io.py','recovery_guide.py'))
     for name,h in request['launcher_sha256'].items():assert dmod.sha_file(Path(request['pkg'])/name)==h
+    guide_start=recovery_guide.require_start(request['root'],request)
     dmod.write_json=receipt_io.write_json
     d=dmod.Driver(request);cfgpath=d.root/request['config']['path']
     assert dmod.sha_file(cfgpath)==request['config']['sha256'];cfg=json.loads(cfgpath.read_bytes())
@@ -31,6 +33,7 @@ def execute(request_path):
     batchdir=d.state/'mixtures'/d.batch_id;batchdir.mkdir(parents=True,exist_ok=False)
     state={'batch_id':d.batch_id,'commit':request['commit'],'phase':'TRAIN-only-continuation','status':'preflight','jobs':[],'queued_utc':request['queued_utc'],'driver_pid':os.getpid(),'config_sha256':request['config']['sha256']}
     def save():dmod.write_json(batchdir/'BATCH.json',state)
+    dmod.write_json(batchdir/'GUIDE-START.json',guide_start,exclusive=True)
     save();locked=False;proc=None
     try:
         if d.lock.exists():raise RuntimeError('existing lock; do not queue behind')
@@ -97,6 +100,8 @@ def execute(request_path):
             dmod.write_json(jobdir/'EXIT.json',{'returncode':rc,'closed':success},exclusive=True)
             state['status']='completed' if success else 'failed'
 
+        if state['status']=='failed':
+            state['guide_failure_consultation']=recovery_guide.consult_failure(d.root,d.batch_id,RuntimeError('owned runner returned non-success'),'Stop the batch; preserve all receipts and output; no automatic retry or cap change.')
         state['driver_ended_utc']=dmod.iso();save()
     except Exception as error:
         state.update(status='failed',error_type=type(error).__name__,error=str(error),driver_ended_utc=dmod.iso())
@@ -106,6 +111,10 @@ def execute(request_path):
             except subprocess.TimeoutExpired:
                 state.update(status='owned_runner_exit_unconfirmed_lock_preserved',owned_runner_pid=proc.pid)
             else:state.update(status='failed',owned_runner_returncode=proc.returncode,driver_ended_utc=dmod.iso())
+        try:
+            state['guide_failure_consultation']=recovery_guide.consult_failure(d.root,d.batch_id,error,'Stop only the owned runner and preserve evidence; apply bounded receipt handling; no scientific retry or cap increase.')
+        except Exception as guide_error:
+            state['guide_consultation_error']=repr(guide_error)
         receipt_io.write_terminal_failure(batchdir/'BATCH.json',state)
     finally:
         if locked and (proc is None or proc.poll() is not None):
