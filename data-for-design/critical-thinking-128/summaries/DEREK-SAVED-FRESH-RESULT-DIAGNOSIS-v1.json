@@ -1,0 +1,1051 @@
+{
+  "GPU_calls": 0,
+  "PC_calls": 0,
+  "Torch_imports": 0,
+  "claim_scope": "narrow arithmetic transfer on one newly admitted panel; no broad English reasoning or own-core independence claim",
+  "comparative_decisions": [
+    {
+      "both_seed_pair_improvement": false,
+      "checkpoint_selection_authorized": false,
+      "comparison": "low-minus-control",
+      "has_negative": false,
+      "has_tie": true,
+      "level": "static"
+    },
+    {
+      "both_seed_pair_improvement": false,
+      "checkpoint_selection_authorized": false,
+      "comparison": "low-minus-control",
+      "has_negative": false,
+      "has_tie": true,
+      "level": "contextual"
+    },
+    {
+      "both_seed_pair_improvement": false,
+      "checkpoint_selection_authorized": false,
+      "comparison": "contextual-minus-static",
+      "has_negative": false,
+      "has_tie": true,
+      "level": "control"
+    },
+    {
+      "both_seed_pair_improvement": false,
+      "checkpoint_selection_authorized": false,
+      "comparison": "contextual-minus-static",
+      "has_negative": false,
+      "has_tie": true,
+      "level": "low_lr"
+    }
+  ],
+  "emitted_number_method": "Lookup saved token IDs in the already qualified generic90 map; no decoding or model call.",
+  "endpoint_table": [
+    {
+      "arm": "contextual",
+      "checkpoint": {
+        "path": "artifacts/train-contextual-lr-stability-v1/control/seed1/contextual/final-resume.pt",
+        "sha256": "4c3c410f99ae37a8f46d5de58af7b71d550d841d6ecd306d2a1c2c8199c1330d"
+      },
+      "condition": "control",
+      "correct_call_wrong_final": 8,
+      "correct_task_calls": 9,
+      "groups": {
+        "add": {
+          "call": 3,
+          "final": 1,
+          "rows": 8
+        },
+        "inventory": {
+          "call": 5,
+          "final": 1,
+          "rows": 8
+        },
+        "relational": {
+          "call": 4,
+          "final": 0,
+          "rows": 8
+        },
+        "sub": {
+          "call": 6,
+          "final": 0,
+          "rows": 8
+        }
+      },
+      "learning_rate": 0.001,
+      "pairs": 8,
+      "rows": 16,
+      "seed": 1,
+      "strict_final_correct": 1,
+      "strict_final_given_correct_call_denominator": 9,
+      "strict_final_given_correct_call_numerator": 1,
+      "strict_pair_correct": 0,
+      "wrong_call_wrong_final": 7,
+      "wrong_operands": 1,
+      "wrong_operation": 7
+    },
+    {
+      "arm": "contextual",
+      "checkpoint": {
+        "path": "artifacts/train-contextual-lr-stability-v1/low_lr/seed1/contextual/final-resume.pt",
+        "sha256": "75d1592f4ef24771e5083d915a50deeeb35894f683c5678739d798bb0df8d9d5"
+      },
+      "condition": "low_lr",
+      "correct_call_wrong_final": 7,
+      "correct_task_calls": 9,
+      "groups": {
+        "add": {
+          "call": 3,
+          "final": 1,
+          "rows": 8
+        },
+        "inventory": {
+          "call": 5,
+          "final": 2,
+          "rows": 8
+        },
+        "relational": {
+          "call": 4,
+          "final": 0,
+          "rows": 8
+        },
+        "sub": {
+          "call": 6,
+          "final": 1,
+          "rows": 8
+        }
+      },
+      "learning_rate": 0.0001,
+      "pairs": 8,
+      "rows": 16,
+      "seed": 1,
+      "strict_final_correct": 2,
+      "strict_final_given_correct_call_denominator": 9,
+      "strict_final_given_correct_call_numerator": 2,
+      "strict_pair_correct": 0,
+      "wrong_call_wrong_final": 7,
+      "wrong_operands": 1,
+      "wrong_operation": 6
+    },
+    {
+      "arm": "static",
+      "checkpoint": {
+        "path": "artifacts/train-contextual-lr-stability-v1/control/seed0/static/final-resume.pt",
+        "sha256": "9b026f7246e5ffe1a3841da5b1f70437e212d724bb0ae111add42cbc99a85294"
+      },
+      "condition": "control",
+      "correct_call_wrong_final": 9,
+      "correct_task_calls": 11,
+      "groups": {
+        "add": {
+          "call": 4,
+          "final": 0,
+          "rows": 8
+        },
+        "inventory": {
+          "call": 7,
+          "final": 1,
+          "rows": 8
+        },
+        "relational": {
+          "call": 4,
+          "final": 1,
+          "rows": 8
+        },
+        "sub": {
+          "call": 7,
+          "final": 2,
+          "rows": 8
+        }
+      },
+      "learning_rate": 0.001,
+      "pairs": 8,
+      "rows": 16,
+      "seed": 0,
+      "strict_final_correct": 2,
+      "strict_final_given_correct_call_denominator": 11,
+      "strict_final_given_correct_call_numerator": 2,
+      "strict_pair_correct": 0,
+      "wrong_call_wrong_final": 5,
+      "wrong_operands": 1,
+      "wrong_operation": 4
+    },
+    {
+      "arm": "static",
+      "checkpoint": {
+        "path": "artifacts/train-contextual-lr-stability-v1/low_lr/seed0/static/final-resume.pt",
+        "sha256": "4387ca2a72471ac000aef289458d5bd5dec1fc4d3c690ef87f344a377d8892d7"
+      },
+      "condition": "low_lr",
+      "correct_call_wrong_final": 9,
+      "correct_task_calls": 11,
+      "groups": {
+        "add": {
+          "call": 4,
+          "final": 0,
+          "rows": 8
+        },
+        "inventory": {
+          "call": 7,
+          "final": 1,
+          "rows": 8
+        },
+        "relational": {
+          "call": 4,
+          "final": 1,
+          "rows": 8
+        },
+        "sub": {
+          "call": 7,
+          "final": 2,
+          "rows": 8
+        }
+      },
+      "learning_rate": 0.0001,
+      "pairs": 8,
+      "rows": 16,
+      "seed": 0,
+      "strict_final_correct": 2,
+      "strict_final_given_correct_call_denominator": 11,
+      "strict_final_given_correct_call_numerator": 2,
+      "strict_pair_correct": 0,
+      "wrong_call_wrong_final": 5,
+      "wrong_operands": 1,
+      "wrong_operation": 4
+    },
+    {
+      "arm": "contextual",
+      "checkpoint": {
+        "path": "artifacts/train-contextual-lr-stability-v1/control/seed0/contextual/final-resume.pt",
+        "sha256": "49a350235164a7c2f4ccc2731358dc615cf8a25086abd32afe71e4c3bd44c001"
+      },
+      "condition": "control",
+      "correct_call_wrong_final": 8,
+      "correct_task_calls": 11,
+      "groups": {
+        "add": {
+          "call": 4,
+          "final": 2,
+          "rows": 8
+        },
+        "inventory": {
+          "call": 8,
+          "final": 3,
+          "rows": 8
+        },
+        "relational": {
+          "call": 3,
+          "final": 0,
+          "rows": 8
+        },
+        "sub": {
+          "call": 7,
+          "final": 1,
+          "rows": 8
+        }
+      },
+      "learning_rate": 0.001,
+      "pairs": 8,
+      "rows": 16,
+      "seed": 0,
+      "strict_final_correct": 3,
+      "strict_final_given_correct_call_denominator": 11,
+      "strict_final_given_correct_call_numerator": 3,
+      "strict_pair_correct": 0,
+      "wrong_call_wrong_final": 5,
+      "wrong_operands": 0,
+      "wrong_operation": 5
+    },
+    {
+      "arm": "contextual",
+      "checkpoint": {
+        "path": "artifacts/train-contextual-lr-stability-v1/low_lr/seed0/contextual/final-resume.pt",
+        "sha256": "4a7d9c661bf6a2e14595cfc95b1750786c919a8eb8f3b4bbc6561b8a973675a0"
+      },
+      "condition": "low_lr",
+      "correct_call_wrong_final": 8,
+      "correct_task_calls": 11,
+      "groups": {
+        "add": {
+          "call": 4,
+          "final": 2,
+          "rows": 8
+        },
+        "inventory": {
+          "call": 8,
+          "final": 3,
+          "rows": 8
+        },
+        "relational": {
+          "call": 3,
+          "final": 0,
+          "rows": 8
+        },
+        "sub": {
+          "call": 7,
+          "final": 1,
+          "rows": 8
+        }
+      },
+      "learning_rate": 0.0001,
+      "pairs": 8,
+      "rows": 16,
+      "seed": 0,
+      "strict_final_correct": 3,
+      "strict_final_given_correct_call_denominator": 11,
+      "strict_final_given_correct_call_numerator": 3,
+      "strict_pair_correct": 0,
+      "wrong_call_wrong_final": 5,
+      "wrong_operands": 0,
+      "wrong_operation": 5
+    },
+    {
+      "arm": "static",
+      "checkpoint": {
+        "path": "artifacts/train-contextual-lr-stability-v1/control/seed1/static/final-resume.pt",
+        "sha256": "e97082e348b5f25007f2c6ba020c62116b75388cdac5bfd4e48f2c0b596e263c"
+      },
+      "condition": "control",
+      "correct_call_wrong_final": 11,
+      "correct_task_calls": 12,
+      "groups": {
+        "add": {
+          "call": 4,
+          "final": 0,
+          "rows": 8
+        },
+        "inventory": {
+          "call": 8,
+          "final": 0,
+          "rows": 8
+        },
+        "relational": {
+          "call": 4,
+          "final": 1,
+          "rows": 8
+        },
+        "sub": {
+          "call": 8,
+          "final": 1,
+          "rows": 8
+        }
+      },
+      "learning_rate": 0.001,
+      "pairs": 8,
+      "rows": 16,
+      "seed": 1,
+      "strict_final_correct": 1,
+      "strict_final_given_correct_call_denominator": 12,
+      "strict_final_given_correct_call_numerator": 1,
+      "strict_pair_correct": 0,
+      "wrong_call_wrong_final": 4,
+      "wrong_operands": 0,
+      "wrong_operation": 4
+    },
+    {
+      "arm": "static",
+      "checkpoint": {
+        "path": "artifacts/train-contextual-lr-stability-v1/low_lr/seed1/static/final-resume.pt",
+        "sha256": "f994cd10a52052840e6d8b3bd2f68547ce8cb666bd401f31af954313ff930531"
+      },
+      "condition": "low_lr",
+      "correct_call_wrong_final": 11,
+      "correct_task_calls": 12,
+      "groups": {
+        "add": {
+          "call": 4,
+          "final": 0,
+          "rows": 8
+        },
+        "inventory": {
+          "call": 8,
+          "final": 1,
+          "rows": 8
+        },
+        "relational": {
+          "call": 4,
+          "final": 0,
+          "rows": 8
+        },
+        "sub": {
+          "call": 8,
+          "final": 1,
+          "rows": 8
+        }
+      },
+      "learning_rate": 0.0001,
+      "pairs": 8,
+      "rows": 16,
+      "seed": 1,
+      "strict_final_correct": 1,
+      "strict_final_given_correct_call_denominator": 12,
+      "strict_final_given_correct_call_numerator": 1,
+      "strict_pair_correct": 0,
+      "wrong_call_wrong_final": 4,
+      "wrong_operands": 0,
+      "wrong_operation": 4
+    }
+  ],
+  "gold_access_stage": "Completed score already consumed gold after root and independent raw128/closure gates; this diagnosis reads saved Gold only.",
+  "hypotheses_not_proved": [
+    "A cause of wrong operation selection or numeric readout",
+    "Broad English reasoning transfer",
+    "Own-core independence"
+  ],
+  "matched_contrasts": [
+    {
+      "comparison": "low-minus-control",
+      "conditioned_final_numerator_delta": 0,
+      "level": "static",
+      "seed": 0,
+      "strict_item_delta": 0,
+      "strict_pair_delta": 0,
+      "task_call_delta": 0
+    },
+    {
+      "comparison": "low-minus-control",
+      "conditioned_final_numerator_delta": 0,
+      "level": "contextual",
+      "seed": 0,
+      "strict_item_delta": 0,
+      "strict_pair_delta": 0,
+      "task_call_delta": 0
+    },
+    {
+      "comparison": "contextual-minus-static",
+      "conditioned_final_numerator_delta": 1,
+      "level": "control",
+      "seed": 0,
+      "strict_item_delta": 1,
+      "strict_pair_delta": 0,
+      "task_call_delta": 0
+    },
+    {
+      "comparison": "contextual-minus-static",
+      "conditioned_final_numerator_delta": 1,
+      "level": "low_lr",
+      "seed": 0,
+      "strict_item_delta": 1,
+      "strict_pair_delta": 0,
+      "task_call_delta": 0
+    },
+    {
+      "comparison": "low-minus-control",
+      "conditioned_final_numerator_delta": 0,
+      "level": "static",
+      "seed": 1,
+      "strict_item_delta": 0,
+      "strict_pair_delta": 0,
+      "task_call_delta": 0
+    },
+    {
+      "comparison": "low-minus-control",
+      "conditioned_final_numerator_delta": 1,
+      "level": "contextual",
+      "seed": 1,
+      "strict_item_delta": 1,
+      "strict_pair_delta": 0,
+      "task_call_delta": 0
+    },
+    {
+      "comparison": "contextual-minus-static",
+      "conditioned_final_numerator_delta": 0,
+      "level": "control",
+      "seed": 1,
+      "strict_item_delta": 0,
+      "strict_pair_delta": 0,
+      "task_call_delta": -3
+    },
+    {
+      "comparison": "contextual-minus-static",
+      "conditioned_final_numerator_delta": 1,
+      "level": "low_lr",
+      "seed": 1,
+      "strict_item_delta": 1,
+      "strict_pair_delta": 0,
+      "task_call_delta": -3
+    }
+  ],
+  "measured_findings": [
+    "All128 strict native/EOS/four-loop contracts pass saved checks.",
+    "Wrong task calls include operation selection, operand selection, one omitted call and three saved tool errors; exact counts recorded.",
+    "Correct numeric calculator signals frequently coexist with wrong emitted numeric tokens.",
+    "Every fixed matched-pair comparison ties zero complete pairs; no two-seed pair improvement."
+  ],
+  "model_calls": 0,
+  "new_experiment_or_architecture_change_authorized_by_diagnosis": false,
+  "novelty_claim_limits": "Question novelty within named544 available hashes and named exact parent40/positive-local union pair exclusions only; historical question metadata incomplete and global operand-pair novelty unverified.",
+  "numeric_error_description": {
+    "emitted_distribution_all128": {
+      "15": 2,
+      "22": 6,
+      "25": 9,
+      "27": 6,
+      "31": 11,
+      "32": 8,
+      "41": 4,
+      "42": 19,
+      "44": 11,
+      "46": 4,
+      "51": 3,
+      "52": 5,
+      "55": 2,
+      "57": 4,
+      "67": 6,
+      "70": 3,
+      "71": 2,
+      "72": 4,
+      "77": 5,
+      "78": 2,
+      "79": 6,
+      "82": 2,
+      "83": 2,
+      "84": 2
+    },
+    "emitted_minus_expected_mean": -9.044247787610619,
+    "mapped_wrong_finals": 113,
+    "mean_absolute_distance": 23.04424778761062,
+    "negative": 58,
+    "positive": 55
+  },
+  "primary_seed1_contextual_low_lr_rows": [
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 5441,
+      "calculator_status": "OK",
+      "category": "correct_call_wrong_final",
+      "emitted_saved_map_value": 70,
+      "emitted_token_ids": [
+        2476,
+        7
+      ],
+      "executed_operands": [
+        46,
+        15
+      ],
+      "executed_operation": "ADD",
+      "expected": 61,
+      "expected_token_ids": [
+        5441,
+        7
+      ],
+      "id": "inventory-01-add",
+      "independent_arithmetic_of_attempted_operands": 61,
+      "independently_checked_calculator_result": 61,
+      "operands_correct": true,
+      "operation_correct": true,
+      "original_question": "Mara packed 46 red apples and 15 green apples. How many apples did she pack altogether?",
+      "signed_numeric_distance": 9,
+      "strict_final_correct": false,
+      "task_call_correct": true
+    },
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 2999,
+      "calculator_status": "OK",
+      "category": "correct",
+      "emitted_saved_map_value": 31,
+      "emitted_token_ids": [
+        2999,
+        7
+      ],
+      "executed_operands": [
+        46,
+        15
+      ],
+      "executed_operation": "SUB",
+      "expected": 31,
+      "expected_token_ids": [
+        2999,
+        7
+      ],
+      "id": "inventory-01-sub",
+      "independent_arithmetic_of_attempted_operands": 31,
+      "independently_checked_calculator_result": 31,
+      "operands_correct": true,
+      "operation_correct": true,
+      "original_question": "Mara packed 46 red apples and 15 green apples. How many more red apples than green apples did she pack?",
+      "signed_numeric_distance": 0,
+      "strict_final_correct": true,
+      "task_call_correct": true
+    },
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 4739,
+      "calculator_status": "OK",
+      "category": "correct",
+      "emitted_saved_map_value": 79,
+      "emitted_token_ids": [
+        4739,
+        7
+      ],
+      "executed_operands": [
+        58,
+        21
+      ],
+      "executed_operation": "ADD",
+      "expected": 79,
+      "expected_token_ids": [
+        4739,
+        7
+      ],
+      "id": "inventory-02-add",
+      "independent_arithmetic_of_attempted_operands": 79,
+      "independently_checked_calculator_result": 79,
+      "operands_correct": true,
+      "operation_correct": true,
+      "original_question": "Dev placed 58 notebooks on the top shelf and 21 notebooks on the lower shelf. How many notebooks did Dev place altogether?",
+      "signed_numeric_distance": 0,
+      "strict_final_correct": true,
+      "task_call_correct": true
+    },
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 4739,
+      "calculator_status": "OK",
+      "category": "wrong_call_wrong_final",
+      "emitted_saved_map_value": 79,
+      "emitted_token_ids": [
+        4739,
+        7
+      ],
+      "executed_operands": [
+        58,
+        21
+      ],
+      "executed_operation": "ADD",
+      "expected": 37,
+      "expected_token_ids": [
+        3092,
+        7
+      ],
+      "id": "inventory-02-sub",
+      "independent_arithmetic_of_attempted_operands": 79,
+      "independently_checked_calculator_result": 79,
+      "operands_correct": true,
+      "operation_correct": false,
+      "original_question": "Dev placed 58 notebooks on the top shelf and 21 notebooks on the lower shelf. How many more notebooks are on the top shelf than on the lower shelf?",
+      "signed_numeric_distance": 42,
+      "strict_final_correct": false,
+      "task_call_correct": false
+    },
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 1826,
+      "calculator_status": "OK",
+      "category": "wrong_call_wrong_final",
+      "emitted_saved_map_value": 27,
+      "emitted_token_ids": [
+        2142,
+        7
+      ],
+      "executed_operands": [
+        38,
+        14
+      ],
+      "executed_operation": "SUB",
+      "expected": 52,
+      "expected_token_ids": [
+        7058,
+        7
+      ],
+      "id": "inventory-03-add",
+      "independent_arithmetic_of_attempted_operands": 24,
+      "independently_checked_calculator_result": 24,
+      "operands_correct": true,
+      "operation_correct": false,
+      "original_question": "Luca sorted 38 red beads and 14 blue beads into a tray. How many beads did Luca sort altogether?",
+      "signed_numeric_distance": -25,
+      "strict_final_correct": false,
+      "task_call_correct": false
+    },
+    {
+      "calculator_error": "DUPLICATE_REFERENCE",
+      "calculator_numeric_token_id": null,
+      "calculator_status": "ERROR",
+      "category": "wrong_call_wrong_final",
+      "emitted_saved_map_value": 25,
+      "emitted_token_ids": [
+        1698,
+        7
+      ],
+      "executed_operands": [
+        38,
+        38
+      ],
+      "executed_operation": "SUB",
+      "expected": 24,
+      "expected_token_ids": [
+        1826,
+        7
+      ],
+      "id": "inventory-03-sub",
+      "independent_arithmetic_of_attempted_operands": 0,
+      "independently_checked_calculator_result": null,
+      "operands_correct": false,
+      "operation_correct": true,
+      "original_question": "Luca sorted 38 red beads and 14 blue beads into a tray. How many more red beads than blue beads did Luca sort?",
+      "signed_numeric_distance": 1,
+      "strict_final_correct": false,
+      "task_call_correct": false
+    },
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 4170,
+      "calculator_status": "OK",
+      "category": "correct_call_wrong_final",
+      "emitted_saved_map_value": 77,
+      "emitted_token_ids": [
+        3556,
+        7
+      ],
+      "executed_operands": [
+        72,
+        25
+      ],
+      "executed_operation": "ADD",
+      "expected": 97,
+      "expected_token_ids": [
+        4170,
+        7
+      ],
+      "id": "inventory-04-add",
+      "independent_arithmetic_of_attempted_operands": 97,
+      "independently_checked_calculator_result": 97,
+      "operands_correct": true,
+      "operation_correct": true,
+      "original_question": "Tess arranged 72 postcards on the red rack and 25 postcards on the blue rack. How many postcards did Tess arrange altogether?",
+      "signed_numeric_distance": -20,
+      "strict_final_correct": false,
+      "task_call_correct": true
+    },
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 3745,
+      "calculator_status": "OK",
+      "category": "correct_call_wrong_final",
+      "emitted_saved_map_value": 70,
+      "emitted_token_ids": [
+        2476,
+        7
+      ],
+      "executed_operands": [
+        72,
+        25
+      ],
+      "executed_operation": "SUB",
+      "expected": 47,
+      "expected_token_ids": [
+        3745,
+        7
+      ],
+      "id": "inventory-04-sub",
+      "independent_arithmetic_of_attempted_operands": 47,
+      "independently_checked_calculator_result": 47,
+      "operands_correct": true,
+      "operation_correct": true,
+      "original_question": "Tess arranged 72 postcards on the red rack and 25 postcards on the blue rack. How many more postcards are on the red rack than on the blue rack?",
+      "signed_numeric_distance": 23,
+      "strict_final_correct": false,
+      "task_call_correct": true
+    },
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 4536,
+      "calculator_status": "OK",
+      "category": "wrong_call_wrong_final",
+      "emitted_saved_map_value": 42,
+      "emitted_token_ids": [
+        4344,
+        7
+      ],
+      "executed_operands": [
+        63,
+        22
+      ],
+      "executed_operation": "SUB",
+      "expected": 85,
+      "expected_token_ids": [
+        3520,
+        7
+      ],
+      "id": "relational-01-add",
+      "independent_arithmetic_of_attempted_operands": 41,
+      "independently_checked_calculator_result": 41,
+      "operands_correct": true,
+      "operation_correct": false,
+      "original_question": "Omar has 63 marbles. Mina has 22 more marbles than Omar. How many marbles does Mina have?",
+      "signed_numeric_distance": -43,
+      "strict_final_correct": false,
+      "task_call_correct": false
+    },
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 4536,
+      "calculator_status": "OK",
+      "category": "correct_call_wrong_final",
+      "emitted_saved_map_value": 44,
+      "emitted_token_ids": [
+        3337,
+        7
+      ],
+      "executed_operands": [
+        63,
+        22
+      ],
+      "executed_operation": "SUB",
+      "expected": 41,
+      "expected_token_ids": [
+        4536,
+        7
+      ],
+      "id": "relational-01-sub",
+      "independent_arithmetic_of_attempted_operands": 41,
+      "independently_checked_calculator_result": 41,
+      "operands_correct": true,
+      "operation_correct": true,
+      "original_question": "Mina has 63 marbles. Mina has 22 more marbles than Omar. How many marbles does Omar have?",
+      "signed_numeric_distance": 3,
+      "strict_final_correct": false,
+      "task_call_correct": true
+    },
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 2925,
+      "calculator_status": "OK",
+      "category": "wrong_call_wrong_final",
+      "emitted_saved_map_value": 44,
+      "emitted_token_ids": [
+        3337,
+        7
+      ],
+      "executed_operands": [
+        51,
+        19
+      ],
+      "executed_operation": "SUB",
+      "expected": 70,
+      "expected_token_ids": [
+        2476,
+        7
+      ],
+      "id": "relational-02-add",
+      "independent_arithmetic_of_attempted_operands": 32,
+      "independently_checked_calculator_result": 32,
+      "operands_correct": true,
+      "operation_correct": false,
+      "original_question": "Rae has 51 postcards. Jules has 19 more postcards than Rae. How many postcards does Jules have?",
+      "signed_numeric_distance": -26,
+      "strict_final_correct": false,
+      "task_call_correct": false
+    },
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 2925,
+      "calculator_status": "OK",
+      "category": "correct_call_wrong_final",
+      "emitted_saved_map_value": 42,
+      "emitted_token_ids": [
+        4344,
+        7
+      ],
+      "executed_operands": [
+        51,
+        19
+      ],
+      "executed_operation": "SUB",
+      "expected": 32,
+      "expected_token_ids": [
+        2925,
+        7
+      ],
+      "id": "relational-02-sub",
+      "independent_arithmetic_of_attempted_operands": 32,
+      "independently_checked_calculator_result": 32,
+      "operands_correct": true,
+      "operation_correct": true,
+      "original_question": "Jules has 51 postcards. Jules has 19 more postcards than Rae. How many postcards does Rae have?",
+      "signed_numeric_distance": 10,
+      "strict_final_correct": false,
+      "task_call_correct": true
+    },
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 4536,
+      "calculator_status": "OK",
+      "category": "wrong_call_wrong_final",
+      "emitted_saved_map_value": 44,
+      "emitted_token_ids": [
+        3337,
+        7
+      ],
+      "executed_operands": [
+        69,
+        28
+      ],
+      "executed_operation": "SUB",
+      "expected": 97,
+      "expected_token_ids": [
+        4170,
+        7
+      ],
+      "id": "relational-03-add",
+      "independent_arithmetic_of_attempted_operands": 41,
+      "independently_checked_calculator_result": 41,
+      "operands_correct": true,
+      "operation_correct": false,
+      "original_question": "Amir owns 69 toy cars. Lena owns 28 more toy cars than Amir. How many toy cars does Lena own?",
+      "signed_numeric_distance": -53,
+      "strict_final_correct": false,
+      "task_call_correct": false
+    },
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 4536,
+      "calculator_status": "OK",
+      "category": "correct_call_wrong_final",
+      "emitted_saved_map_value": 42,
+      "emitted_token_ids": [
+        4344,
+        7
+      ],
+      "executed_operands": [
+        69,
+        28
+      ],
+      "executed_operation": "SUB",
+      "expected": 41,
+      "expected_token_ids": [
+        4536,
+        7
+      ],
+      "id": "relational-03-sub",
+      "independent_arithmetic_of_attempted_operands": 41,
+      "independently_checked_calculator_result": 41,
+      "operands_correct": true,
+      "operation_correct": true,
+      "original_question": "Lena owns 69 toy cars. Lena owns 28 more toy cars than Amir. How many toy cars does Amir own?",
+      "signed_numeric_distance": 1,
+      "strict_final_correct": false,
+      "task_call_correct": true
+    },
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 2925,
+      "calculator_status": "OK",
+      "category": "wrong_call_wrong_final",
+      "emitted_saved_map_value": 42,
+      "emitted_token_ids": [
+        4344,
+        7
+      ],
+      "executed_operands": [
+        47,
+        15
+      ],
+      "executed_operation": "SUB",
+      "expected": 62,
+      "expected_token_ids": [
+        5370,
+        7
+      ],
+      "id": "relational-04-add",
+      "independent_arithmetic_of_attempted_operands": 32,
+      "independently_checked_calculator_result": 32,
+      "operands_correct": true,
+      "operation_correct": false,
+      "original_question": "Seth has 47 model planes. Noor has 15 more model planes than Seth. How many model planes does Noor have?",
+      "signed_numeric_distance": -20,
+      "strict_final_correct": false,
+      "task_call_correct": false
+    },
+    {
+      "calculator_error": null,
+      "calculator_numeric_token_id": 2925,
+      "calculator_status": "OK",
+      "category": "correct_call_wrong_final",
+      "emitted_saved_map_value": 42,
+      "emitted_token_ids": [
+        4344,
+        7
+      ],
+      "executed_operands": [
+        47,
+        15
+      ],
+      "executed_operation": "SUB",
+      "expected": 32,
+      "expected_token_ids": [
+        2925,
+        7
+      ],
+      "id": "relational-04-sub",
+      "independent_arithmetic_of_attempted_operands": 32,
+      "independently_checked_calculator_result": 32,
+      "operands_correct": true,
+      "operation_correct": true,
+      "original_question": "Noor has 47 model planes. Noor has 15 more model planes than Seth. How many model planes does Seth have?",
+      "signed_numeric_distance": 10,
+      "strict_final_correct": false,
+      "task_call_correct": true
+    }
+  ],
+  "prior_fitting_STOP_unchanged": true,
+  "runbook": {
+    "action": "Derive CPU-only summaries from immutable completed score/trace evidence; preserve failed admission and all receipts; no new experiment.",
+    "rules": [
+      "execution.preflight",
+      "limits.authority",
+      "failure.preserve"
+    ],
+    "sha256": "3186e016f7a83f59a5095f719f272527a793689957c9fc639d05637def31bf5d",
+    "version": "1.2"
+  },
+  "schema": "cap256.saved-fresh-result-diagnosis.v1",
+  "score_reexecuted": false,
+  "separate_peer_full_recount": "Parent designated independent reviewer; this artifact does not rerun the scorer.",
+  "source_pins": {
+    "gold_already_consumed_by_completed_score": {
+      "path": "artifacts/cap256-launch/contextual-input-compare-v1/FRESH-TERMINAL-EVAL-PREPARATION-v1/POSTTERMINAL-CPU-SCORING-v1/GOLD-PRIVATE-v1.json",
+      "sha256": "66c0b23e63730c389ad06ee1b53a14512651c8d589902721f190e406e367bc74"
+    },
+    "qualified_generic_integer_map": {
+      "path": "artifacts/cap256-launch/contextual-input-compare-v1/FRESH-TERMINAL-EVAL-PREPARATION-v1/GENERIC-NUMERIC-TOKEN-PROOF-v1.json",
+      "sha256": "bc070262bd35d32c252aabcc32205a799e5620a7aa5be570752f3d48fbe0344c"
+    },
+    "raw": {
+      "path": "artifacts/cap256-launch/contextual-input-compare-v1/FRESH-TERMINAL-EVAL-PREPARATION-v1/ACTUAL-NATIVE-CLOSEOUT-MIRROR-v1/EVAL-OBSERVATIONS.jsonl",
+      "sha256": "9c26b925e133307d81345e14b71bd518c5ca05750c47529a4c24633df41ba852"
+    },
+    "score": {
+      "path": "artifacts/cap256-launch/contextual-input-compare-v1/FRESH-TERMINAL-EVAL-PREPARATION-v1/POSTTERMINAL-CPU-SCORING-v1/SCORE-v1.json",
+      "sha256": "e6298b7f9ed033a9e079e7720bb8b447290155ea5d7da88166293f84e6ba1ebc"
+    },
+    "source": {
+      "path": "artifacts/cap256-launch/contextual-input-compare-v1/FRESH-TERMINAL-EVAL-PREPARATION-v1/DEREK-SAVED-FRESH-RESULT-DIAGNOSIS-v2.py",
+      "sha256": "0204384a9bf093f37f083bff8401856e40894848d3a82ea5d4bafdef1e62c325"
+    }
+  },
+  "status": "SAVED_SCORE_AND_TRACE_DIAGNOSIS_COMPLETED",
+  "strict_complete_pairs": 0,
+  "tokenizer_or_decoder_calls": 0,
+  "total_pairs": 64,
+  "total_rows": 128,
+  "totals": {
+    "call": 86,
+    "call_status_ERROR": 3,
+    "call_status_NONE": 1,
+    "call_status_OK": 124,
+    "correct": 15,
+    "correct_call_wrong_final": 71,
+    "final": 15,
+    "first_action_ADD": 35,
+    "first_action_NONE": 1,
+    "first_action_SUB": 92,
+    "wrong_call_wrong_final": 42,
+    "wrong_operands": 4,
+    "wrong_operation": 39,
+    "wrong_task_call_no_call": 1,
+    "wrong_task_call_tool_error_DUPLICATE_REFERENCE": 1,
+    "wrong_task_call_tool_error_UNSUPPORTED_NUMERIC_TOKEN": 2,
+    "wrong_task_call_wrong_operation": 38
+  }
+}

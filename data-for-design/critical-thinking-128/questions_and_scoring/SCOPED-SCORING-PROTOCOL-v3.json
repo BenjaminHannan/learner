@@ -1,0 +1,111 @@
+{
+  "EVAL_contextual_backbone_calls": 16,
+  "EVAL_features_shared_across_all_matching_cells": true,
+  "EVAL_fit_gate": "none",
+  "EVAL_input_cache_after_all_eight_final_closures": true,
+  "EVAL_max_new_tokens": 32,
+  "EVAL_optimizer_updates": 0,
+  "EVAL_static_embedding_calls": 16,
+  "EVAL_teacherforced_examples": 0,
+  "GPU_dispatch_authorized": false,
+  "all128_raw_frozen_before_any_EVAL_gold_access": true,
+  "arms": [
+    "static",
+    "contextual"
+  ],
+  "claim_scope": "narrow arithmetic transfer on one newly admitted panel; no broad English reasoning or own-core independence claim",
+  "comparative_policy": "report signed low-minus-control within each input mode and contextual-minus-static within each LR for both seeds, including ties and negative differences; both-seed positive complete-pair deltas required for a comparative improvement claim; no post-hoc checkpoint or arm selection",
+  "conditions": [
+    {
+      "condition": "control",
+      "learning_rate": 0.001
+    },
+    {
+      "condition": "low_lr",
+      "learning_rate": 0.0001
+    }
+  ],
+  "endpoints": {
+    "path": "artifacts/cap256-launch/contextual-input-compare-v1/FRESH-TERMINAL-EVAL-PREPARATION-v1/ENDPOINTS-v1.json",
+    "sha256": "d65403c4ae27124f60448ae8696680922943cde8def506f648c474e075a5b2e3"
+  },
+  "execution_order": [
+    [
+      1,
+      "contextual",
+      "control"
+    ],
+    [
+      1,
+      "contextual",
+      "low_lr"
+    ],
+    [
+      0,
+      "static",
+      "control"
+    ],
+    [
+      0,
+      "static",
+      "low_lr"
+    ],
+    [
+      0,
+      "contextual",
+      "control"
+    ],
+    [
+      0,
+      "contextual",
+      "low_lr"
+    ],
+    [
+      1,
+      "static",
+      "control"
+    ],
+    [
+      1,
+      "static",
+      "low_lr"
+    ]
+  ],
+  "exposure_scope": "All named available authorized question metadata plus exact parent-supplied40 pair exclusions; old local40 and consumed context8 union checked separately with exact count. Missing historical question scopes are reported; no global novelty claim.",
+  "four_fixed_latent_loops": true,
+  "global_operand_pair_novelty_verified": false,
+  "historical_question_metadata_incomplete": true,
+  "max_question_tokens_including_EOS": 49,
+  "metric_policy": [
+    "strict complete final number-plus-EOS items/16",
+    "both-member strict complete pairs/8",
+    "correct equivalent task calls/16",
+    "correct finals among correct calls numerator/denominator",
+    "all128-query latency including failures; separate cold feature extraction and warm cached-feature use"
+  ],
+  "native_EVAL_call_limit": 128,
+  "new_EVAL_pairs": 8,
+  "new_EVAL_rows": 16,
+  "no_checkpoint_selection": true,
+  "no_consumed_panel_reuse": true,
+  "novelty_claim_limits": "Question novelty within named544 available hashes and named exact parent40/positive-local union pair exclusions only; historical question metadata incomplete and global operand-pair novelty unverified.",
+  "one_panel_once": true,
+  "pair_exclusion_union": {
+    "path": "artifacts/cap256-launch/contextual-input-compare-v1/FRESH-TERMINAL-EVAL-PREPARATION-v1/CHECKED-PARENT40-LOCAL40-CONTEXT8-UNION-v3.json",
+    "sha256": "37664fac5b5c629ba82e74f47e33dff365c0b0ea7891ebff27e9156ffb7231e2"
+  },
+  "panel_source_rule": "one new parent Luna panel with verified physical author/reviewer identity, exact wording and independently qualified token/span/input receipts; no old confirmation or consumed panel payload",
+  "parent_scoped_review_required": true,
+  "prospective_success": "report every predeclared input-mode/LR arm; an arm solving all16 items and8 pairs in both seeds demonstrates narrow arithmetic transfer only on this one admitted panel",
+  "schema": "cap256.fresh-terminal-eval-protocol.v2",
+  "seeds": [
+    0,
+    1
+  ],
+  "separate_execution_authorization": {
+    "path": "artifacts/cap256-launch/contextual-input-compare-v1/FRESH-TERMINAL-EVAL-PREPARATION-v1/PARENT-SCOPED-AUTHORIZATION-v3.json",
+    "sha256": "4d2e783602166f3cf1e1d06155bcf31d7575ff32dac02d5ba53767bbf7eccb55"
+  },
+  "stop_and_failure": "prior TRAIN fitting STOP remains in force; success or failure authorizes no fitting, architecture/loss change, repeat evaluation, case generation or extra model call; preserve original outputs and seek focused source/research help",
+  "terminal_updates": 5120
+}
