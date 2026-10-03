@@ -13,6 +13,7 @@ Writes OUT/final-checkpoint.pt (parent-shaped, so the English pilot can start fr
 import argparse
 import copy
 import json
+import math
 from pathlib import Path
 import sys
 import time
@@ -88,6 +89,7 @@ def main():
     ap.add_argument('--dev-n', type=int, default=100)
     ap.add_argument('--minutes', type=float, default=120)
     ap.add_argument('--lr-mult', type=float, default=1.0)
+    ap.add_argument('--lr-final-mult', type=float, default=None, help='cosine-decay lr from lr-mult to this multiple over the run')
     ap.add_argument('--copy-path', action='store_true', help='prefix = 8 pooled vectors + the prompt token embeddings (talker can copy prompt tokens)')
     ap.add_argument('--families', default='', help='comma list: train and score only these families (diagnosis)')
     a = ap.parse_args()
@@ -150,6 +152,11 @@ def main():
         for g in opt.param_groups:
             g['lr'] = base_lr
         for i, row in enumerate(rows, 1):
+            if a.lr_final_mult is not None:
+                fin = runtime.ADAM_RECIPE['lr'] * a.lr_final_mult
+                cur = fin + 0.5 * (base_lr - fin) * (1 + math.cos(math.pi * (i - 1) / len(rows)))
+                for g in opt.param_groups:
+                    g['lr'] = cur
             enc = encode(tokenizer, row, torch, ctx.device)
             if enc is None:
                 continue
