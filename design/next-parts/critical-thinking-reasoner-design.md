@@ -110,12 +110,16 @@ Deferred until after S, each a single change later: a plan head for operation ch
 - Don't re-propose fast weights / Hebbian for the maze race (its forbidden list, `2026-09-28-reasoner-idea-harvest-r1-r5.md:10-13`). The ban covers that race only. v5 lists "an error-correcting fast-weight matrix" as a lower-ranked alternative "if binding or temporary-memory errors dominate", needing transfer and clean-restart evidence (v5 l.97; shown).
 - Don't fix a skill list, put modality-specific code in the core, or rest a mark on an unopened paper.
 
-## 6. Modality-agnostic interface contract (v0, untested)
+## 6. Modality-agnostic interface contract (v1, untested)
 
 **In:** `Workspace`
 - `tokens [B, N, d]` with d = 256 (today's core width). Each modality adapter owns its own projection to d.
 - `role [B, N]` and `modality [B, N]`, two int ids per vector (decision: a pair, matching the vision design on PR #22, not one combined segment id). Roles: question, notebook, example_k, tool_result, register. Modalities: text, image, audio, and more later. The core adds `Embedding(n_role, d) + Embedding(n_mod, d)`, both zero-init. A pair avoids a table that grows as roles x modalities, so audio needs one new modality id and no new roles.
-- `coords [B, N, ≤3]` optional (row, column, time), turned into relative-bias indices. Coordinates left empty get the neutral "no position" index, which should be a *new* index rather than today's offset-0.
+- `coords [B, N, 3]` float (row, column, time) plus `coord_valid [B, N, 3]` bool, one flag per axis. Settled 10-03 (v1, after the audio thread's review on PR #25 §j3); all untested:
+  - **Per-axis "no position".** Each axis has its own neutral bias index, new, not today's offset-0. If either token in a pair lacks an axis, that axis uses its neutral index. Audio sets row and column absent, so it no longer sits on image patch (0, 0).
+  - **Row/column bias only within one source.** Row and column offsets count only between two tokens with the same (role, modality) pair; across sources they use the neutral index. So text position 3 and image column 3 are not "the same place". Text order uses the column axis with row absent.
+  - **Time in seconds, relative to now.** `time` = when the token happened minus now, so it is ≤ 0 (audio's choice). Time differences go into log-spaced signed buckets: 0, 50, 100, 200, 400, 800 ms, 1.6 s, older (each side of zero), plus "no time". Time bias applies across all sources that carry time, so a sound and a frame can be ordered. The ±4 clip and the ±1 narrow heads apply to row and column only. Audio's S2 test (log buckets vs 50 ms buckets clipped at ±4) checks this choice.
+  - **Who carries time.** Registers and action tokens: time = 0 ("now"), row and column absent, so the core can tell which slot is newest. Audio slots and video frames: their time. Tool results: when they arrived. The question: 0. Notebook text, guides and examples: time absent.
 - `valid [B, N]` bool.
 - `provenance` metadata. This is never used as an input feature.
 
@@ -215,3 +219,4 @@ See critical-thinking-shape-shortlist.md (ranked shortlist from the 10-03 litera
 18. Citations and Huginn caveat. Applied.
 
 Rejected: none. Source notes: v5 l.428 gives $6.77 headroom (05:32 UTC); v5-check's $6.55 is C.json at 11:38 UTC. Both are now superseded. C.json's diagnostics A and B are a four-cell diagnostic and a return-intervention protocol; their files are not in that commit.
+- §6 contract v1 (13:55 UTC 10-03): per-axis coord flags with per-axis neutral bias, row/column bias only within one (role, modality) source, time as seconds-before-now in log-spaced buckets, registers and actions at time 0. From the audio thread's review (PR #25 §j3).
