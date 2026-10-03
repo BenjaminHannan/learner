@@ -44,11 +44,14 @@ def main():
     ap.add_argument('--seeds', default='0')
     ap.add_argument('--arms', default='control,treatment')
     ap.add_argument('--phase', default='both')
+    ap.add_argument('--overfit-items', type=int, default=4)
+    ap.add_argument('--overfit-updates', type=int, default=0, help='train only QA frames 0,1,4,5 for N updates')
     a = ap.parse_args()
     root = Path(a.root).resolve()
     seeds = [int(s) for s in a.seeds.split(',')]
     arms = a.arms.split(',')
-    total = a.passes * sched.PER_PASS
+    OVER = tuple(4 * (i // 2) + i % 2 for i in range(a.overfit_items))
+    total = a.overfit_updates or a.passes * sched.PER_PASS
     base = 'artifacts/english-sweep/' + a.tag
     if a.phase != 'eval':
         if BUSY.exists():
@@ -71,7 +74,12 @@ def main():
                 if kind == 'train':
                     sched.PASSES, sched.UPDATES = a.passes, total
                     sched.QA_UPDATES, sched.AUX_UPDATES = 48 * a.passes, 24 * a.passes
-                    admitted['schedules'] = {s: sched.pilot_schedule(s) for s in (0, 1)}
+                    if not a.overfit_updates:
+                        admitted['schedules'] = {s: sched.pilot_schedule(s) for s in (0, 1)}
+                    else:
+                        recs = [{'update': n + 1, 'task_role': 'QA', 'control_frame_index': OVER[n % len(OVER)],
+                                 'treatment_frame_index': OVER[n % len(OVER)]} for n in range(total)]
+                        admitted['schedules'] = {0: recs, 1: recs}
                 return admitted
             runtime.validate_native_config = validate
             trainer.TOTAL = total
@@ -128,6 +136,15 @@ def main():
             rows = [json.loads(l) for l in (root / base / 'eval' / ('RAW-%s.jsonl' % st['state_id'])).read_text().splitlines()]
             fit = scorer.score_train_fit(rows, bank)
             out['runs'][st['state_id']] = {'train_fit': fit['correct'], 'final_CE': ce[(st['seed'], st['arm'])]}
+            if a.overfit_updates:
+                ex = bank['examples']
+                ok = 0
+                for r in rows:
+                    if r['panel'] == 'TRAIN' and r['frame_index'] in OVER:
+                        pp, qq = divmod(r['frame_index'], 4)
+                        qu = ex[pp]['questions'][qq]
+                        ok += scorer.is_correct(r['output_text'], qu['canonical_answer'], qu.get('accepted_answers', []))
+                out['runs'][st['state_id']]['fit_on_the_trained_items'] = ok
         (root / base / 'SWEEP-RESULT.json').write_text(json.dumps(out, indent=1))
         print('SWEEP-RESULT ' + json.dumps(out), flush=True)
     finally:

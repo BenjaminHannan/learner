@@ -16,3 +16,21 @@ Marks (pre-fixed): PASS needs D>=6 on P1 and P2 both seeds; harm = loss vs own p
 
 Treatment-only arithmetic benchmark retry (v2 seal): completed, 64 updates, mechanical test only.
 Notes: I briefly overwrote EVAL-CONFIG-v1.json then restored the exact original bytes (sha bb9aae3b...). Failed first eval attempt (base-Python ImportError, gold not read) kept at eval-v1-failed-importerror-20261003T1554Z on the PC.
+
+## 2026-10-03 17:50Z Underfit diagnosis + sweep (exploratory fast lane, seed 0, TRAIN panel only; eval untouched)
+Harness: scripts/cap256_launch/sweep_english_trainfit_v1.py (train fit = correct of 48 TRAIN QA, greedy decode, same as pilot).
+
+| config (seed 0) | control fit /48 | treatment fit /48 | last-pass CE |
+|---|---|---|---|
+| pilot baseline (lr 1e-3, 2304 upd) | 6 | 5 | 1.9 / 1.7 |
+| lr x3 | 6 | 4 | 1.73 / 1.62 |
+| lr x10 | 3 | 1 | 2.07 / 2.06 |
+| 2x updates (4608) | 22 | not run (see below) | 1.01 |
+| QA-only, 48 items, 2304 upd | 12 | - | 1.02 |
+| overfit 4 items, 400 upd | 4/4 on the 4 | - | 0.0007 |
+
+Shown: (a) the pipeline can memorise 4 items (CE 0.0007, 4/4 correct) so training+scoring are not broken. (d) teacher-forced exact answers during training (4,4,7 /48 last pass) match free-generation fit (6,5,14): no decode mismatch. (c) loss asserts an independent masked-token CE on every update (never failed); answers ~4.2 tokens incl. EOS. (b) 64 of 114 tensors get no gradient: halt/tok/slot/head/ln_out/tool are by design (contract NONE_GRAD_CORE_CHILDREN, 4 fixed loops bypass them); core MLP experts 2-7 get zero gradient in every block (8 experts, top-2 routing, aux balance loss observed-only, not in the loss): routing only ever uses experts 0 and 1, inherited from the parent. No accidental cut found.
+Shown: higher lr does not help (x10 worse); more updates does (6 -> 22 at 2x); removing the auxiliary frames does not fix it (QA-only 12/48 at same count).
+Suggested (untested): the limit is optimisation speed / capacity on 48 items, not a bug; routing collapse onto 2 experts may reduce capacity.
+Mistakes/notes: I killed the sweep chain at ~16:45Z which also killed the up2 treatment run at update 4195/4608 (no treatment number); stale GPU-BUSY cleared. up4 not yet run.
+Next: 4x updates (9216), both arms, seed 0.
