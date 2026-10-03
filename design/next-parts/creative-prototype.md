@@ -270,7 +270,12 @@ That memo's rules, carried over (suggested mapping, the memo was written for a d
   restating the problem, pieces library, tools) stay later rungs, one at a time.
 - Learned stopping, compressed notes and n-grams are out of scope.
 
-## 10. Open questions for Ben (one word each; default in brackets)
+## 10. Decisions and open questions
+**Decided 2026-10-03 12:14 UTC** under Ben's broad-autonomy note (relayed by the channel session): every recommended
+default in brackets below is adopted, including the pass marks in 6c. Ben can overrule any of them; a change must be
+made before the pass-marks file is hash-pinned. Q11 (reconcile with design v5) is still open until v5 lands.
+
+Questions as asked (default in brackets):
 Architecture or reasoning-method questions (the first run needs none of them):
 - Q1 First run uses only LM sampling temperature for variety? [yes]
 - Q2 Prefix or core-input noise (V3, V4, V5) as a later separate experiment? [later]
