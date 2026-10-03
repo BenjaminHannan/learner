@@ -242,6 +242,16 @@ Conflicts and changes this forces
 5. **Fresh panels.** The doc says reserved numerical-pair coverage is unknown and that bounded 16-question panels are the current practice. My 32-pair panels are larger than anything authored so far; the authoring and independent-check cost has to be agreed with the parent before N1 is scheduled, and N1 may start at 16 pairs per seed with classification by the lower seed (power is lower; say so in the result).
 6. **Loops and size.** The doc still describes four loops and says architecture and reasoning-method changes need a separate decision, while Ben has lifted the loop and size rules for scaling. No effect on the notebook rungs; they inherit whatever configuration scaling selects.
 
+## 11d. Calculator code path (read from branch claude/critical-thinking-data-128-outputs, `pipeline_code/`)
+
+Read only `calculator_tools.py` and `calculator_runtime_depth_compare.py` (top docstrings and the begin/registry code). Nothing in that folder's answer key was opened or is used as a panel.
+- shown: the typed request is real code. `build_registry` makes literal references with offsets into the original question string; `execute_integer_call` runs at most one bounded integer call per loop; four loops exactly; two pointer heads pick left and right operands.
+- shown: references must lie inside the **original query tokens** and the registry holds at most 8 literals (`literal reference must belong to original query tokens`).
+- shown: in this runtime the core's notebook channel is **already used**: `memo` is a fixed 8-slot block holding four value/status pairs for tool results, passed as `notebook_mask=ones((1,8))`. The 512-token text notebook of the `sol_nextdemo` runtime is a different channel use in a different core family.
+- Consequence (suggested): as built, a calculator call cannot point at numbers that live in a notebook, and notebook text and tool-result slots would compete for the same memo channel. So N2 needs one of two code changes, both untested: (A) put notebook numerals into the query string, which erases the notebook-versus-inline difference N2 is meant to test; or (B) extend the registry so literals can come from notebook tokens, and keep tool-result slots separate from the notebook text (8 reserved positions plus up to 512 notebook positions). B is the design's choice. It is an interface change, so it is a decision with B as the default, and N2 is not scheduled until B exists and passes CPU fixtures.
+- The same registry pattern (literal spans with offsets, validated by the host) is the template for N4's typed write request: spans in the heard turn instead of the question.
+- N1, N3, N3b and N5 do not depend on the calculator and are unaffected.
+
 ## 12. Where this sits
 
 English pilot (current-size capability) then fair scaling, then **notebook learning (this)**, then sleep replay from verified experience. The creative prototype and later learned-stopping/compressed-notes work remain after. This part produces the things sleep replay needs: a trustworthy log of exact, correctable, source-tagged facts and a measured reader and writer.
