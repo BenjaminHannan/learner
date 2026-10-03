@@ -1,324 +1,368 @@
-# Creative prototype: worker try, varied candidates, checker, verified TRAIN experiences (DESIGN DRAFT)
+# Creative prototype: design v2 (worker try, varied candidates, checker, verified experiences)
 
-Date 2026-10-03. Design only: nothing here was run, trained, bought or edited in the repo.
-Labels on every claim: **shown** (a sealed result in a named file), **suggested** (reasoning or literature),
-**untested** (a plan). "From brief" = stated in Ben's brief to this thread, not checked against a file.
+Written 2026-10-03, replacing v1 of the same day after a full review. Design only: nothing was trained, run on a GPU, or
+bought. No reserved, blind or consumed evaluation panel was opened.
 
-**Reconciliation status (2026-10-03 13:35 UTC).** Checked against `docs/premonition-status/CURRENT.json` and the
-integrated design docx (`.../FRESH-TERMINAL-EVAL-PREPARATION-v1/DESIGN-WORKING-v6/Premonition integrated model design.docx`,
-commit c5cfd9176 on `claude/premonition-launch-recovery-96c708`; the brief calls it v5). Section 11 lists what
-it changes in this design. Optimizer, loss and token-limit details still need a check against the code before any run.
+How v2 was made: three independent Opus reviews (a critic of v1, a from-scratch design, and a CPU-only maths study that
+drove the real calculator tool code) were merged into a draft. A fourth Opus pass checked the draft and found five
+must-fix problems; all are fixed below. A fifth pass re-checking the fixes is in progress. Reports are in `creative-prototype-notes/`.
 
-**Rule changes from Ben (12:09 UTC, after this draft was written).** Scaling the reasoner and adding reasoning
-depth (more loops) no longer need his approval, and he gave broad autonomy to use judgment where a rule only
-technically says no. So V3-V5 (section 2) and extra loops are now allowed in principle. They stay out of the
-first run only to keep it to one change; Q2 becomes "which one next", not "may we".
+Sources: **v6** = the integrated design doc text (commit c5cfd9176 on `claude/premonition-launch-recovery-96c708`; the
+brief calls it v5), **C.json** = `docs/premonition-status/CURRENT.json` on that branch, **code** = the calculator pipeline
+on branch `claude/critical-thinking-data-128-outputs` (`data-for-design/critical-thinking-128/pipeline_code/`), **PR23** =
+the critical-thinking reasoner design (PR #23), **maths** = `creative-prototype-notes/math/math-report.md`, **check** =
+`creative-prototype-notes/v2-check.md`.
 
-## 0. Plain-language summary for Ben
+Labels: **shown** = read in code, a checked result, or the cited doc. **suggested** = reasoning or literature.
+**untested** = a plan or guess nobody has measured. Small card experiments and the village model play no part here. The
+older number-puzzle work used a different model (MiniCPM5-1B with LoRA) and is cited only as a hint.
 
-The model already tries word problems once and gets some right (15 of 128 on the last fresh test, from brief).
-This part adds a "try lots of ways" step. On a practice problem, the model writes many complete solutions, each a
-little different, because we let the talker pick words with some randomness. A checker program, written by
-someone else and locked with a fingerprint, keeps only the solutions that are fully right: right final answer,
-and every calculator step really adds up. Those kept solutions become new practice examples. We train only the
-parts we are allowed to train (reader, core, prefix), never the talker.
+## 0. Summary for Ben
 
-Then we test on brand-new problems nobody has used, written and double-checked separately. We compare against
-three "fake treatments": (A) no extra training at all, just sampling; (C) the same amount of training on the
-model's wrong attempts, or only on things it already knew; (D) training on the official answers. If training on
-its own checked lucky hits does not beat the fakes by margins we wrote down in advance, the idea failed here.
+We give the model small number puzzles like "use 14, 9 and 30 once each, adding or subtracting, to make 35". A checker
+can tell if an answer is right without an answer key, by redoing the steps. The model tries each practice puzzle 32
+times, keeps its right answers and practises on them. Then we test on puzzles it has never seen. We compare it with the
+same model with no practice, and with a copy that practised on the same number of its own tries picked at random. It
+counts only if the trained model wins by a fixed margin (10 points over no practice, 8 over the random-practice copy)
+and also does better when we change only the target number. That last test proves it is aiming at the target, not just
+following the puzzle's rules.
 
-We did something like this before on a different model (a 1B model guessing number puzzles). Its lucky-guess rate
-about doubled after practising its own hits, twice in a row, and practising only known answers made its guesses
-all the same (shown, but on that other model, so it is a hint, not proof for this one). Its first-try answers
-improved only a little and not reliably. So we measure both: luck (how often any of many tries is right) and
-first try.
+Words used below: a **candidate** is one complete try (the list of calculator steps). **Luck** is the share of tries
+that are right. **Seed** is one training run with its own random start; we use 3 per arm.
 
-Nothing in this design changes the architecture. A few optional variation knobs would need your OK; they are
-listed as questions and the first run does not use them.
+Why puzzles instead of the word problems: in today's word problems the model's calculator step is picked before it
+speaks, there are only about three possible results, and it can only say numbers from a shelf of 27 it saw in training
+(shown). Trying many times there gives no real search to learn from.
 
-## 1. What we already know (do not overclaim)
+What it cannot show: with adding and subtracting, nearly every puzzle has exactly one real answer, so "creative" here
+means finding it more often, not inventing many answers. A program that tries everything always wins; the claim is
+about learning, never about beating search. It does not fix the talker's number shelf.
 
-### 1a. Current architecture (from brief, unreconciled)
-- Frozen LiquidAI/LFM2.5-1.2B-Instruct is the output LM ("talker"). A contextual reader feeds a ~9M latent core
-  that runs 4 loops over internal vectors; it emits 8 learned 2048-d prefix vectors to the frozen LM. The LM does
-  not automatically see the original question.
-- Results so far: 15/128 correct final answers on the fresh eval (now consumed, never reused); 86 correct
-  calculator calls, 71 of them followed by a wrong final answer; no checkpoint solved both members of a complete
-  pair; some TRAIN32 branches reach 32/32 but transfer is unproved.
-- Suggested reading of the 71: the model often does the right arithmetic but loses it on the way to the final
-  answer. Accepted candidates are exactly examples where it did not lose it, so they are the natural teaching
-  signal. Untested.
+Choices made for you under your autonomy note (you can overrule any before the pass marks are sealed): the new puzzle
+family; sampling the reasoner's step choices for extra tries; training the weights now because there is nowhere to put
+examples in context yet; replaying saved steps during training; a control trained on solver answers. Cost: about 2.5 to
+3.5 GPU hours on your PC plus a replication, $0 (untested estimate). The CPU parts can be built now.
 
-### 1b. OLD results, shown on a different model, not evidence for the current architecture
-Model: plain MiniCPM5-1B with LoRA "sleep"; task: number puzzles ("use each of [4, 7, 8] once with + - * / to make
-39"); exact code checker. Files: `artifacts/claude-blurt2-20260925/` and
-`design/v3/30-modes/creative-roadmap-2026-09-25.md`.
+## 1. What v1 got wrong, and what v2 keeps
 
-| Run | What it measured | Result | File |
+| # | v1 flaw (severity) | Evidence | v2 fix |
 |---|---|---|---|
-| blurt-1 | free guesses right | 2/1800 (T 0.6), 4/1800 (T 1.0); 69-78% used numbers not given | roadmap table |
-| blurt-2 rule-keeping guesses | right on DEV misses | 42/1,740 (2.4%) | RESULTS-cpu.md |
-| blurt-2 loop, first try after sleep | CPU: 6/127 -> 15, 19 (C 6, 6); GPU: 6/127 -> 13, 11 (C 5, 6) | registered FAIL overall (GPU +6 vs mark +8) | VERIFY-blurt2.md |
-| blurt-2p placebo (sleep on wrong guesses) | W 14, 13 vs P 10, 9 (S0 8/120) | FAIL (W-P +4, mark +5); wrong-guess practice gave +1.5 | VERIFY-blurt2p.md |
-| blurt-3 luck | lucky guesses of 1,980: 63 -> W 126, 136 vs C 85, 87; puzzles reached 27 -> 38, 38 vs C 3, 4 | PASS | VERIFY-blurt3.md |
-| blurt-3r replication | of 2,010: 59 -> W 129, 148 vs C 59, 58; puzzles 29 -> 40, 43 vs C 4, 3 | PASS, replicated | VERIFY-blurt3r.md |
+| 1 | Fatal: LM temperature as the variation source | Action and pointers are argmax per loop before the LM decodes (code, `calculator_runtime_depth_compare.py`, `forward`) | Sample the call heads (section 3) |
+| 2 | Fatal: arm D (gold on the same problems) | With one correct call, every accepted trace is the gold trace, so B equals D (suggested from code) | Puzzles checked without a key; a solver-trained positive control (section 8) |
+| 3 | Fatal: answer-shelf confound | All 113 wrong finals were training answers; 0 of 64 off-shelf answers right (shown, PR23 F1) | Puzzles are scored on the call trace, not the talker's number |
+| 4 | Fatal: no chance floors | Random calls on 2-number word problems saturate pass@32 (94% to 99.7%, computed, maths) | Exact uniform and rules-only floors (section 5) |
+| 5 | Fatal: arm C1 trained on wrong answers | Harm training; v6 "do not distill known mistakes" | Rule-valid, value-blind placebo R (section 8) |
+| 6 | Major: in-context arm E | The calculator path has no example slot; its 8 notebook slots are the 4 tool pairs (shown, code) | Deferred until a context path exists (section 12) |
+| 7 | Major: diversity adjustment, per-problem cap | Meaningless when all accepted traces are identical | Coverage guard; variety by sign pattern |
+| 8 | Major: two working checker states | v6 asks for accepted / rejected / unresolved | Three defined states (section 6) |
+| 9 | Major: recipe misdescribed | Trainable parts are core, reader, prefix and tool; loss is final CE plus call CE (shown, code and v6 l.80) | Recipe stated and every change flagged (section 7) |
+| 10 | Major: leaned on the "40 calls, 2 of 6 rescued" diagnostic | No receipt; the execution owner has no record (10-03) | Not cited as evidence; a sealed probe instead (section 11) |
+| 11 | Major: no retention after intervening learning | v6 l.187 | S2 with a real intervening block (section 9) |
+| 12 | Minor: statistics | Ratios on pooled samples, arms treated as independent | Paired per-puzzle differences, seed-and-puzzle bootstrap, ordered verdicts |
 
-Lessons carried over (suggested for the new model): (i) luck is the measure that moved, first-try answers moved
-little; (ii) practising only known answers collapses variety, so a known-answers-only arm is a real placebo and a
-real danger; (iii) part of any gain is plain practice (+1.5 in blurt-2p), so a wrong-candidates placebo is needed;
-(iv) the checker must reject answers that use numbers not in the problem.
-Small card experiments and the village model play no part in this design or its claims.
+Kept from v1: gold scoring is not live verification; fresh sets written after practice data is frozen, by a separate
+author, hash-pinned and touched once per arm; choices made on DEV, never on fresh sets; consumed panels block-listed;
+marks fixed before running; typed calls as training targets, never free-text rationale; planted-violation tests for
+the checker; one round only; a failure table.
 
-## 2. Candidate generation and variation
+## 2. Facts that drive the design
 
-Worker attempt = one greedy pass (temperature 0) of the full pipeline on a TRAIN problem: reader, core (4 loops),
-8 prefix vectors, frozen LM writes a trace with calculator calls and a final answer. A candidate is one complete
-such trace. Sampling alone is not learned creativity: generation is only the raw material; the learning claim
-rests on the trained arms beating the controls (section 4).
+- Each loop the action head (`Linear(256,3)` over the mean of h+e at question positions) picks NONE, ADD or SUB, and two
+  bilinear pointer heads pick ordered references among the question's integer literals and earlier OK results. The
+  runtime takes argmax. The tool runs, its result goes into a reserved value/status slot, and the core advances. Four
+  loops always run. After the fourth advance, `read_latent` feeds the prefix and the frozen LM decodes greedily (shown,
+  code). The 8-vector prefix comes from v6 and the brief; the prefix module is not in the calculator code.
+- So a complete call trajectory exists before any LM decoding; producing it touches the LM only through each result
+  token's embedding (shown, code).
+- Tool limits: exactly two distinct references per call, at most 8 literals and 3 prior results, at most 4 calls. A
+  result enters only if it is one canonical numeric token (shown, code). In the public LFM2.5 tokenizer every integer
+  0 to 999 is one token and no negative is (computed, maths), while v6 says "two-digit" results; checked on the PC in S0b.
+- Training: trainable modules core, reader, prefix, tool (shown, code). Loss: final-answer CE plus averaged call CE.
+  Training executes the model's own predicted calls and targets the correct call until it succeeds, then NONE (shown,
+  v6 l.80). One teacher-forced example per optimizer update; about 0.41 s per update (shown, check citing C.json and
+  the audit script).
+- Calls fired at loop 0 in 127 of 128 consumed-panel outputs (shown, C.json and the data-branch README).
+- v6 on creativity (shown): plain sampling is the first baseline; experiences count when they later improve the
+  worker; replaying rescued questions is not method learning; clean restarts; rejected guesses never become context;
+  no hit means no signal; checks must match the claim; restricted formal tasks may provide goal predicates; context
+  reuse first, then an adapter, then replay, each needing fresh transfer and retention.
+- C.json (shown): the approved curriculum is not yet admitted; `new_worked_example_supervision_authorized` is false;
+  `checkpoint_selection_authorized` is false for the terminal panel; `new_Premonition_GPU_dispatch_allowed` was false at
+  11:44 UTC (Ben then gave the PC GPU to Premonition at about 12:00; the execution owner's record decides).
 
-| Variation source | Machinery | Needs approval? | First run? |
+## 3. The candidate and how it varies
+
+A **candidate** is the full four-loop trajectory: per loop the (action, left, right) choice, the tool status and result,
+and each choice's log-probability. For puzzles the trajectory is the solution ("14+30=44, 44-9=35, NONE, NONE").
+
+| Variation source | Changes the calls? | Verdict |
+|---|---|---|
+| LM decode temperature | No (calls are fixed first) | Wrong lever (shown) |
+| Sample action and pointers from softmax(logits / tau) each loop | Yes | **Used** for the explorer (flag F1) |
+| Latent noise, multi-start; a separate explorer network | Yes | Later, one at a time |
+
+The worker attempt stays argmax. Each candidate starts from a clean `begin_latent`; no candidate sees another or a
+verdict (shown, code). Sampling uses uniforms drawn in advance per (puzzle, sample, loop, head), so every arm sees the
+same random numbers (common random numbers).
+
+## 4. Why puzzles, and what word problems can and cannot show
+
+**Word problems (shown, code; computed, maths).** With two literals, the first loop has 9 head combinations; 4 are
+duplicate-reference errors and the 4 valid calls give 3 distinct values. With the real heads sampled independently a
+random try picks the exactly right call 1 time in 12 (1 in 6 if the two pointers are drawn as a pair), so within 32
+tries the call is found 94% to 99.7% of the time. With the answer key as checker, keeping the hit and training on it
+equals the gold-call training the recipe already does. Without the key, the calculator cannot tell 18-7 from 18+7
+(v6 l.165), so every guess is unresolved. The final number is capped by the shelf (PR23 F1).
+
+**Make-the-target puzzles (decision D1; default yes).** "Use A, B and C, each exactly once, adding or subtracting, to
+make T." Why this tests the idea honestly (suggested): the checker needs only the problem, which v6 names as deployable
+for restricted formal tasks; luck is far from saturated (0.54% per uniform try on 3 numbers, computed); the graded object
+is the call trace, so the shelf cannot fake a result; it exercises composition and pointers to earlier results, which
+the protocol supports but no experiment has tested (v6 l.80). Why it is not "unrelated generated data" (judgment): same
+reader, core, heads, calculator, loop budget and result slots, and v6 l.66's generator rule. If Ben says no, run only
+the word diagnostic (section 11).
+
+**Honest limit (computed, maths).** With add and subtract, a solution is a plus or minus for each number; 97 to 100% of
+puzzles have one sign pattern; the other "solutions" are re-orderings. An exhaustive solver is used only to certify
+puzzles, count solutions and compute floors, never inside the loop.
+
+## 5. Puzzles: rules, tiers, floors
+
+**Acceptance rule STRICT (one definition; computed in maths and checked against the real tool).** Take the OK calls in
+loop order. They must form one expression tree that uses every given number exactly once as a leaf (by literal id,
+never by value), uses each intermediate result exactly once later, and never uses the target literal (it is in the
+question and pointable). The last OK result equals the target. NONE and ERROR loops may appear anywhere (an ERROR makes
+no result). Rejection reasons: no OK call, wrong final value, a number unused or reused, the target literal used, an
+intermediate result unused.
+
+**Training form.** Accepted runs whose OK calls fill loops 1 to m (m = numbers minus 1) followed only by NONE. Accepted
+runs in any other form count as hits for scoring but are never trained on (their count is reported).
+
+**Also reported:** STOP (a valid tree reached the target but the model kept calling afterwards), which separates finding
+from stopping; and **rule-valid** rate (a valid tree using each number once and not the target, any final value).
+
+**Tiers** (results assumed 0..99; random policy = uniform action, then uniform ordered pair; computed, maths):
+
+| Tier | Rule | Distinct puzzles | Uniform hit per try | pass@8 | pass@32 |
+|---|---|---|---|---|---|
+| W warm-up | 2 numbers, 2..60, target a+b (if at most 99) or larger minus smaller | 3,283 | 6.51% | 37.1% | 75.0% |
+| P practice and main test | 3 numbers, 2..40, solvable, target not a given number, no 2-number shortcut | 33,670 | 0.544% | 4.24% | 15.6% |
+| T transfer | 4 numbers, 2..60, solvable, no 2- or 3-number shortcut | 2,318,380 | 0.0161% | 0.128% | 0.513% |
+
+**Rules-only floor (computed, check).** A policy that has learned only the rules (each number once, chain the first
+result into the second call, avoid the target, then stop) and picks operations and order at random hits 14.4% per try
+on tier P (pass@8 66.9%); also avoiding negative steps, 25.7% per try (pass@8 85.4%). The fixed policy "add all three"
+solves 26.4% of tier-P puzzles. So luck alone cannot show aiming, and pass@8 saturates for a rule-learner. This is why
+the primary measure is per-try luck and why the test uses twin targets (below).
+
+If S0b finds results up to 999 are accepted, all floors are recomputed (uniform floors fall 3 to 20% at 3 or 4 numbers).
+
+**Splits, by number set** (the sorted given numbers; every target and wording of one number set stays in one split):
+practice 1,024 P; DEV 128 P (64 twin pairs; tau, gates and the seed-spread check only); T1 256 P (main test, once);
+T1b 256 P (sealed now for the replication); T2 256 P (persistence test, once); X 128 (64 T-tier plus 64 P-tier in 2
+held-out templates; report only). Ten English templates with names and objects, two held out for X. Numbers in random
+order; no other digits in the sentence.
+
+**Twin targets.** T1, T1b, T2 and DEV are built as twin pairs: the same numbers and wording, two targets with different
+sign patterns (99.6% of tier-P number sets have 2 or more valid targets, computed, check). Sign patterns are balanced
+across each set as far as the pool allows, so "add all three" cannot carry a score. A target-blind policy solves both
+twins equally often on average; a policy that aims solves its own target more.
+
+## 6. Checker and acceptance states
+
+- **Accepted:** both checkers find STRICT true.
+- **Rejected:** one of the rejection reasons above, found by both checkers.
+- **Unresolved:** the checkers disagree, a replay of the logged actions through the stdlib tool does not reproduce the
+  logged results, or the run crashed or was cut off. Unresolved counts as no hit and never enters training.
+
+Independence: checker A replays the action list with its own arithmetic, ignoring logged values. Checker B is written by
+a different agent from the rules text alone and rebuilds the tree from `operand_references`; it does not use the
+generator's solver. Neither shares code with the generator, runtime or training code. The model never sees either.
+Gate before any GPU stage: A and B agree on all solver solutions of 500 puzzles, on 100,000 uniformly sampled
+trajectories over those puzzles, and both reject 20 planted violations of each rejection reason.
+
+## 7. The loop and the learning update
+
+1. Name the worker version V0 (hashes of core, reader, prefix, tool and LM).
+2. On each practice puzzle: the worker attempt (argmax), then 32 sampled candidates at the DEV-chosen tau for W's pool,
+   then 32 more with different random numbers for R's pool (more for a puzzle if R's pool lacks enough rule-valid
+   runs, up to 256). Store every candidate with its state. Report v6's explorer counts: newly solved puzzles,
+   duplicates, unresolved, latency.
+3. W keeps at most 2 accepted training-form runs per puzzle (distinct call orders).
+4. Train. The recipe changes below are shared by every trained arm and flagged:
+   - **F3 full-weight update** of all four trainable parts (core, reader, prefix, tool). This is the replay-style step
+     v6 puts last, taken early because no context slot or adapter exists. It is never promoted without S2.
+   - **F7 forced replay**: puzzle rows execute the stored calls loop by loop (call CE toward each stored choice, the
+     stored choice is executed, its result written), instead of executing predicted calls. Regression test: replaying a
+     run's own argmax trajectory reproduces its logits and outputs exactly. TRAIN32 rows keep the original protocol.
+   - **F6** final-answer CE weight 0 on puzzle rows (the graded object is the trace); TRAIN32 rows keep the full loss.
+   - **F8** 512 updates, each accumulating 8 puzzle rows and 2 TRAIN32 rows (the recipe uses 1 row per update).
+     Constant LR 1e-4 (the terminal low-LR value), fresh Adam.
+
+Parent (flag F5): the seed-0/static terminal low-LR checkpoint, chosen by a rule that uses no panel score (stable 32/32
+TRAIN finals at all three checks, v6 l.374-376; static input needs no LM forward for reader features). The replication
+uses seed-1/static on T1b. If a newer worker exists before this runs, use that named version and redo DEV.
+
+## 8. Arms (the one change: which trajectories the model trains on)
+
+| Arm | Trains on (same puzzles, count, updates and TRAIN32 mix) | Question it answers |
+|---|---|---|
+| N | Nothing (the parent, sampled the same way) | Plain sampling baseline |
+| W | Its own checker-accepted runs | The prototype |
+| R placebo | Its own rule-valid runs in training form from R's pool, chosen at random without looking at the value | Does aiming at the target matter, beyond learning the rules and to stop? |
+| PC positive control | Solver runs in training form for the same puzzles, one drawn at random (fixed seed) per W record (flag F4) | Can this model learn these puzzles at all? |
+
+R is matched to W on rules and shape, so a W win cannot come from learning the format. R keeps hits only at their
+natural rate among rule-valid runs (about 14% to 26%, computed); if more than half of R's records are also accepted,
+the placebo is too close to W and the run is inconclusive. R trains mostly on wrong tries; it is a control that is never
+promoted, which is how it differs from v1's harm arm. PC uses solver-made worked examples, which C.json marks
+unauthorized for the curriculum; here it is a control only, never a discovery claim.
+
+Seeds: 3 training seeds for each of W, R and PC; N is one parent. The test contract asks for 5 seeds with a 4-of-5
+rule; 3 are used because the power check in S0 must show they suffice, and the DEV spread rule below adds 2 seeds if not.
+
+## 9. Measures and verdicts (fixed now; sealed by hash in a PASSMARKS file before any GPU stage)
+
+**Primary, luck:** on T1, the share of the 32 sampled tries per puzzle that are accepted, averaged over 256 puzzles, in
+percentage points. The puzzle is the unit. Arm differences are paired by puzzle; intervals come from a bootstrap that
+resamples seeds within each arm and then puzzles.
+**Aiming (goal use):** per puzzle, the share of its tries that hit its own target minus the share whose rule-valid final
+equals its twin's target; averaged over both members of every pair. A target-blind policy scores about 0.
+**Secondary:** first try (argmax) twin-pair completion, both members solved, out of 128 pairs.
+**Guards:** coverage (puzzles with at least one hit in 32), STOP-rule luck, TRAIN32 (rehearsed in every update, so it
+measures harm, not retention).
+**Report only:** uniform and rules-only floors, rule-valid rate, sign patterns found, violations by type, loop of first
+call, X slice, latency.
+
+Marks (means over the 3 seeds of a trained arm):
+- **L1** luck: W minus N at least 10 points, every W seed above N.
+- **L2** luck: W minus R at least 8 points, every W seed above the R mean, interval above 0.
+- **G0** aiming: W minus R on goal use at least 5 points with interval above 0, and W's goal use above 0 with interval
+  above 0.
+- **G1** coverage: mean W at least mean N minus 2 points.
+- **G2** finding: on STOP-rule luck, W minus R at least 4 points.
+- **G3** no harm on rehearsed items: per W seed, TRAIN32 calls drop at most 1 and finals at most 2.
+- **PC gate:** PC minus N at least 10 points of luck and PC goal use above 0 with interval above 0.
+
+**Ordered verdicts** (the first that applies):
+1. **Void:** the sampler regression failed, the checkers disagree on any T1 candidate, or unresolved is above 1%.
+2. **Inconclusive, cold start:** fewer than 100 tier-P practice puzzles with an accepted training-form run (fallback
+   W-tier puzzles do not count). Remedy: the fixed fallback in S3, never more seeds.
+3. **Inconclusive, placebo too close:** more than half of R's records are accepted runs.
+4. **PASS:** L1, L2, G0, G1, G2, G3. Claim: "after training on its own checked solutions, the model aims at the target
+   and solves fresh puzzles more often than a matched placebo". Not claimed: transfer, persistence, live verification.
+5. **Rules only:** L1 holds, G0 fails.
+6. **Sharper but narrower:** L1, L2, G0 hold, G1 fails.
+7. **Gain with harm:** L1, L2, G0 hold, G3 fails.
+8. **Stopping only:** L1, L2, G0, G1, G3 hold, G2 fails.
+9. **Unreadable:** none of 4 to 8 applies and the PC gate fails. The limit is the model; write an outside-opinion prompt.
+10. **Proved wrong:** the PC gate passes, and the upper end of the 95% interval is below 5 points for W minus R on luck
+    and below 3 points for W minus R on goal use.
+11. **Not shown:** anything else.
+
+**Secondary marks:** S1 first try: W minus N at least 8 of 128 twin pairs and W above R. S2 persistence: after one
+identical intervening block of 512 updates of new single-call word problems (from the approved curriculum bank if
+admitted, else the E2 practice pool; never a panel), applied to W, R and N, and a process restart, on T2: W minus R on
+luck at least half of its T1 value with interval above 0. The block's weight change is measured and must be at least
+half of the main training's, or S2 is not scored.
+
+**Power (provisional).** For one comparison at 256 puzzles, 3 seeds, seed spread 5 points and a 10-point mark: false
+pass 1.9%, power 85% at a real 15-point gain (computed, maths, greedy model with 3 control seeds). The joint PASS and
+the 8-point L2 mark were not computed. S0 re-runs the maths scripts with these exact rules; each primary mark must give
+a false pass of at most 5% and power of at least 80% at a 15-point gain with seed spread 5, else seeds go to 5 before
+sealing. A real 10-point gain will often read as "not shown". Seed-spread rule: after training, R's 3 seeds are scored
+on DEV (never a claimed score); if they spread by more than 19 points, add 2 seeds per arm before T1 is scored.
+
+## 10. Stages and gates
+
+| Stage | What | Gate | Where, cost |
 |---|---|---|---|
-| V1 LM decode temperature (and top-p) | existing sampler | No: inference setting, nothing learned or wired differently (suggested) | Yes |
-| V2 seed variation of V1 | existing | No | Yes (part of V1) |
-| V3 Gaussian noise on the 8 prefix vectors at inference | new perturbation of the reasoning path | **Yes, QUESTION Q2** | No |
-| V4 noise on core inputs or initial loop state | changes what the core reasons over | **Yes, QUESTION Q2** | No |
-| V5 dropout left on at inference in reader/core | only if dropout exists; changes the reasoning path | **Yes, QUESTION Q2** | No |
-| Rephrased prompts, extra loops, longer reasoning | prompt edits / extra depth | Out: prompt-based variation is not asked for; extra depth is forbidden | No |
+| S0 | Generator, renderer, canonical form, twin builder, solver, floor calculator, checkers A and B, splitter, store writer; power re-run; seal DEV, T1, T1b, T2, X and PASSMARKS | None, can start now | CPU, $0 |
+| S0b | On the PC: accepted result range; every rendering fits the question cap with at most 8 literals | S0 tests pass | Windows CPU, $0 |
+| S1 | Sampler patch (tau above 0 samples, tau 0 is argmax) and forced-replay patch. Regression: tau 0 reproduces the parent's saved TRAIN32 calls and answers exactly; replay test from section 7 | S0b | GPU, minutes |
+| S2 | DEV: tau in {1.0, 1.5, 2.0, 3.0}, measuring the share of tries with a second OK call; pick the most accepted (ties go lower). Cold-start gate: an accepted training-form run on at least 10% of DEV puzzles in 32 tries | S1 | GPU, minutes |
+| S3 | Explore practice with V0, build both pools and the store, audit the checkers | S2 gate passes. Else, once: add 256 W-tier puzzles to practice and re-run the gate on 64 W-tier DEV puzzles; if it then fails, stop and propose hindsight relabelling as its own experiment | GPU, about 15 to 30 min |
+| S4 | Train W, R, PC, 3 seeds each; DEV seed-spread check | S3 audit clean | GPU, about 75 to 100 min (check, from C.json step timings) |
+| S5 | Freeze T1 outputs for all arms, then score | PASSMARKS hash unchanged | GPU, about 30 to 60 min |
+| S6 | Intervening block for W, R, N; restart; T2 | Verdict PASS | GPU, about 30 min |
+| S7 | Replication on seed-1/static with T1b | Verdict PASS | as S3 to S5 |
 
-First run: V1 only. Temperature chosen by a DEV rule fixed in advance (as in blurt-3): try T in {0.7, 1.0}
-on a TRAIN-side DEV slice, pick the one with more accepted candidates; ties go to 0.7. Untested.
-k = 16 candidates per TRAIN problem (k = 32 for evaluation sampling, section 5).
+Timings other than the measured per-update cost are untested estimates. S0 and S0b touch no checkpoint or panel and can
+run any time. GPU stages go through the single execution owner after the English pilot and the curriculum, per Ben's
+priority order and the owner's current GPU record. New outputs go to new folders; parents are copied, never changed.
 
-Why V3-V5 are interesting later (suggested): V1 varies only how the frozen LM words the plan the prefix gives
-it. If the prefix itself encodes one wrong plan, temperature may never reach a different plan. V3 would vary the
-plan. That is a reasoning-method change, so it needs Ben's yes and its own one-change experiment.
+## 11. Word problems: a diagnostic now, a separate test later
 
-## 3. The checker
+**W0 diagnostic (inference only).** On 32 practice word problems supplied by the parent (never a panel), half with
+off-shelf answers: (a) force each possible first call, then greedy; (b) greedy calls with 32 LM-temperature samples of
+the final number. Predictions sealed now (suggested): off-shelf rescues by (b) at most 2 of 16; final right after a
+forced right call at most 30% on off-shelf items. If off-shelf rescues reach 8 of 16, the shelf reading is wrong and
+word problems get their own creative test sooner. Every acceptance is labelled "known-answer", never "verified". This
+replaces the unreceipted "2 of 6 rescued" figure.
 
-### 3a. What it checks (numerical word problems)
-A candidate is **accepted** only if all of these hold:
-1. **Final answer exact.** Parsed by a fixed parser (one number, units stripped by a fixed list); compared as an
-   exact rational to the reference answer. A fixed rounding rule only where the problem says "to the nearest".
-2. **Independent recomputation.** The reference answer comes from a solver program written for each family by
-   the checker author, and it must agree with the problem author's stated answer. Disagreement removes the
-   problem from every split (logged, not silently fixed).
-3. **Calculator trace valid.** Every call parses; the checker re-executes each expression with its own evaluator
-   (not the runtime calculator) and the recorded result must match; the final answer must equal the result of
-   some call or a number stated in the problem.
-4. **No invented numbers.** Every operand in every call is a number in the problem, a result of an earlier call,
-   or on a short fixed constant list (for example 1, 2, 10, 100, 60, 1000). This blocks lucky answer-only hits,
-   the blurt-1 failure (old, shown on a different model).
-Answer-right but trace-invalid candidates are logged as **lucky-unsupported**, never accepted, and reported.
+**E2, a later separate experiment (sketch, untested).** Single-call ADD/SUB word problems with one or two distractor
+numbers (24 programs at 4 literals). Known-answer acceptance with the three states and the Mira gap reported. Arms:
+A (none), C2 (more practice on known items), B (own search-selected), G-rand (answer-key labels on an equal number of
+random misses), G-all (positive control). Primary: per-try correct-call rate, chance-corrected and paired by problem;
+final answers split into on-shelf, newly trained and never seen. Claim ceiling: "learning from search-selected,
+key-checked labels improves fresh call choice". Gate: after PR23 C1 or the curriculum shows the talker can say off-shelf
+numbers.
 
-### 3b. Gold scoring is not unknown-live verification
-This checker knows the answer. So any result here can only claim "learning from checked hits on problems with
-known answers". It does not show the model can verify answers to questions nobody has solved. A later rung could
-test families that are checkable without the answer (for example "find x" families checked by substituting x back),
-labelled untested here.
+## 12. Experience store and the hand-off to sleep replay
 
-### 3c. Independence
-- Separate author: the checker code, the reference solvers and the fresh problems are written by a different
-  thread from the one that writes the generator and training code. (QUESTION Q6.)
-- Hash-pinned: sha256 of checker code, solver code and each problem file is written in the pass-marks file
-  before any generation. A changed hash voids the run.
-- Answers never visible to the model: references sit in a file read only by the checker. Training reads only
-  accepted candidate text (the model's own words) and the accept bit. Gold answers reach training only in arm D.
-- Splits: TRAIN (practice, generator may see problem text), DEV (a slice of TRAIN-side problems for temperature
-  choice only), FRESH (section 5). The consumed 128-output fresh eval goes on a blocklist by text hash and is
-  excluded from every split. Reserved user and blind panels are never opened or used.
-- Luna word problems (from brief): usable only after independent checking, meaning the checker author's solver and
-  a second independent solution agree. Unchecked ones are dropped, not fixed by hand.
+One JSON line per candidate, append-only, plus a per-round manifest. Fields: schema; record id; family; instance key
+(hash of canonical form and rules version); number-set key; split; problem text, template and canonical form; question
+token ids and literal registry; per-loop steps (action, refs, status, value, token id, log-probability); acceptance
+state, the claim it establishes ("last OK result equals target under STRICT v1"), checker A and B hashes and agreement,
+reason code, training-form flag; provenance (worker version hashes, source worker or explorer, pool W or R, tau, sample
+index, seed, runtime, generator, time); eligibility (positive replay yes or no, consumed panel no).
 
-## 4. From accepted candidates to training data
+Fit to the PR23 section 6 Workspace contract (suggested): question tokens are role 0, modality 0, column = token
+position; each tool result is role 3 with time = its arrival. When a context path exists, an accepted record renders as
+role 2 (example), row = example index, with the trace as text ("14 + 30 = 44 ; 44 - 9 = 35"). Provenance is never an
+input feature. A context-reuse arm then becomes the next one-change test, in v6's order.
 
-### 4a. Format (wins.jsonl-compatible, extends the agreed creative-blurt format)
-One JSON line per accepted experience:
-`problem_id, problem_sha, problem (text), trace (full candidate text), calls [{expr, result}], answer,
-checked_by "creative-checker", checker_sha, temperature, sample_seed, try_index, k, parent_ckpt_sha,
-greedy_was_right (bool), split "TRAIN", source "creative-cand"`.
-Older rows (`cpu-3/wins/wins.jsonl`, 151 rows) use `problem, rows_used, steps, answer, checked_by, turn_id,
-source, tries`; the new rows keep those keys (steps = calls) so the sleep thread's reader still works. Shown
-(file read); compatibility with the current sleep code is untested.
+For sleep replay: accepted records only, deduplicated by (instance key, canonical tree); rejected and unresolved kept
+apart; consumed panels never eligible. Hindsight relabelling ("a valid tree that made 22 solves make-22") must check the
+relabelled puzzle's number set against every test split, which the number-set split makes possible. Old `wins.jsonl`
+rows use free-text steps (shown), so a converter is needed. Expect gains to stall after about two rounds without new
+puzzles (suggested, ReST-EM in its setting).
 
-### 4b. Dedup and balance
-- Dedup within a problem on the canonical call sequence (whitespace stripped, numbers normalised).
-- Cap: at most 2 accepted experiences per problem; if more, keep the 2 whose call sequences differ most. Keeps
-  easy problems from dominating and keeps variety (lesson ii). (QUESTION Q8.)
-- Arm B also keeps the parent's own greedy-right answers on TRAIN (as the old W arm did); both kinds are counted.
-- Near-duplicate guard: no TRAIN problem shares template and all numbers with any FRESH problem.
+## 13. Failure branches
 
-### 4c. Training (rejection-sampling fine-tune)
-- Trainable: reader, core, prefix only. Frozen LM. Same loss the current pipeline already uses: next-token loss
-  of the frozen LM on the target trace, gradients flowing only into reader/core/prefix (from brief,
-  unreconciled). Only the data changes; no new objective, no answer copying, no auxiliary heads, no latent matching.
-- Same parent checkpoint, optimizer, learning rate schedule, batch size and step count as the English pilot
-  (from brief, unreconciled: the exact values must be copied from the pilot config before registering).
-- Exposure matched: every trained arm sees the same number of examples for the same number of steps; short arms
-  repeat examples to reach the count (as blurt-3's C did).
-- One round only. A second round (sample again from the trained model) is a later one-change step.
+| Verdict | Next single change |
+|---|---|
+| Inconclusive, cold start | Hindsight relabelling as its own experiment against R |
+| Rules only | Stop the claim at "learned the rules"; try a second round from W, registered separately |
+| Unreadable | Outside-opinion prompt; look at call timing (calls fire at loop 0) first |
+| Proved wrong or not shown | Stop this line; record the result |
+| Sharper but narrower | Mix R-style breadth into W's data, one change |
+| Gain with harm | Lower LR or tool-only update (an adapter stand-in), one change |
+| PASS, S1 fails | Luck learned, first try not; second round (expert iteration), registered separately |
+| PASS, S2 fails | Hand to the sleep-replay design (retention) |
+| PASS | Replicate (S7) before any claim beyond one parent |
 
-### 4d. Hand-off to sleep replay
-The accepted file plus a `rejected.jsonl` summary (counts per problem, lucky-unsupported rows) go to the sleep
-thread. Sleep decides how to replay them; this part only promises checked rows in the agreed format.
+## 14. What this cannot claim
 
-## 5. Arms
+- That puzzle skill helps word problems (X and word transfer are report-only).
+- Anything about the talker's number shelf (PR23 C1 and the curriculum own that).
+- Known risks (untested): cold start for a 9M core on frozen embeddings; the first call is a linear choice over averaged
+  features at loop 0; the parent was trained to stop after one call, so two-call tries may be rare at low tau; the seed
+  spread may exceed 5 points.
 
-All arms start from the same parent; seeds 0 and 1 for every trained arm.
+## 15. Decisions and flags (defaults taken under Ben's autonomy note; Ben can overrule before PASSMARKS is sealed)
 
-| Arm | Trained on | Purpose |
+| Flag | Choice | Default |
 |---|---|---|
-| A control | nothing; parent sampled exactly as at evaluation | plain sampling, no creative training |
-| B treatment | parent's greedy-right TRAIN answers + accepted candidates on TRAIN misses | the idea |
-| C1 placebo, wrong | same problems, same count, rejected candidates (wrong or invalid trace) instead of accepted | is it just practice on own text? |
-| C2 placebo, known only | parent's greedy-right TRAIN answers only, repeated to B's count | is it just rehearsing what it knew? (collapsed variety in old runs) |
-| D optional, gold SFT | gold reference traces for the same problems B won, same count | do own hits add anything over the answer key? |
+| D1 | New task family: make-the-target puzzles in English | Yes |
+| F1 | Sample the call heads at inference (explorer only) | Yes |
+| F3 | Full-weight update before context reuse or an adapter | Yes |
+| F4 | Positive control on solver runs | Yes, control only |
+| F5 | Parent: seed-0/static low-LR terminal checkpoint, by a no-score rule | Yes, unless a newer worker exists |
+| F6 | Final-answer CE weight 0 on puzzle rows | Yes |
+| F7 | Forced replay of stored calls in training | Yes |
+| F8 | 10 rows per update instead of 1 | Yes |
+| Later | Latent noise, call timing, a separate explorer, hindsight relabelling, context reuse | One at a time |
 
-Compute: 4 trained arms x 2 seeds = 8 short fine-tunes plus generation; on BensPC at $0 (QUESTION Q9). No money.
-
-## 6. Fresh evaluation
-
-### 6a. The set
-- 256 new problems, written after the TRAIN data is frozen, by the checker author (not the generator thread),
-  checked by two independent solutions. Hash-pinned before any arm is evaluated. Never used for anything else,
-  touched once per arm.
-- Families: F1-F3 = three families present in TRAIN, new instances (64 each, 192 total; built as 96 pairs of two
-  variants of one scenario so pair completion can be counted). F4 = 64 problems from a family not in TRAIN
-  (different look: for example a rates or unit family if TRAIN has none), reported separately as the transfer check.
-- Luna word problems may fill a family only after independent checking (3c).
-
-### 6b. Measures (all on FRESH, all checker-accepted, so lucky-unsupported counts as wrong)
-- **Primary L, luck:** 32 samples per problem at the DEV temperature. Report luck rate per k for k in {1, 4, 16}
-  with the standard unbiased pass@k estimator, and accepted samples out of 192 x 32 = 6,144. Diversity adjustment:
-  a problem's hits count only up to its number of distinct accepted call sequences, so 32 copies of one trace
-  count as 1 (blocks the C2-style collapse being scored as luck).
-- **Primary G, first try:** greedy pass@1 on F1-F3 (out of 192).
-- Secondary: coverage (problems with at least one accepted sample of 32); pair completion (both members solved
-  greedy); calls right but final wrong (the "71" pattern; should fall); lucky-unsupported count; F4 versions of
-  all of the above; no-harm check on a regression panel the current pipeline already uses (not a reserved panel).
-
-### 6c. Pass marks (fixed now, before any run; numbers are proposals for Ben to accept)
-Means are over the two seeds.
-- **L1 luck rises:** diversity-adjusted accepted samples, B >= 1.5 x A.
-- **L2 the hits caused it:** B >= 1.3 x max(C1, C2), and each B seed beats each C1 and each C2 seed.
-- **L3 no collapse:** B coverage >= A coverage.
-- **G1 first try:** B - A >= +13 of 192, and B - max(C1, C2) >= +8, each B seed above each C seed.
-- **No harm:** regression panel drops no more than 3 points for B.
-- Verdict words: L1+L2+L3 = "luck PASS"; G1 as well = "full PASS"; F4 is reported, not required.
-- **Proved wrong:** mean B <= mean C1 or mean B <= mean C2 on diversity-adjusted luck. That would mean checked
-  hits add nothing beyond practice.
-- **Inconclusive:** fewer than 40 TRAIN misses won (problems with an accepted candidate), or A has fewer than 10
-  covered FRESH problems, or the two B seeds land on opposite sides of a mark. Inconclusive is reported as such and
-  is not a pass.
-- D is compared, not marked: D >= B is a finding (section 7), not a failure.
-
-### 6d. Power, honestly (suggested)
-With first-try accuracy near 12% (15/128, from brief), one arm on 192 problems has a standard error of about
-2.3 points (about 4.5 problems), and a difference between two arms about 6.4 problems. +13 is about 2 standard
-errors, so a real +6 point gain can still miss G1. Two seeds is a small sample (the old blurt-2 gain shrank from
-+11 to +6 on repeat). Luck uses 6,144 samples but they are clustered in 192 problems, so the problem, not the
-sample, is the unit; a 1.5x mark is coarse on purpose.
-
-### 6e. Teaching-to-the-test contract (TEACHING_TO_TEST_CONTRACT.md)
-That memo's rules, carried over (suggested mapping, the memo was written for a different memory design):
-- Nothing taught contains an answer to a scored query: FRESH text, numbers and answers never enter training.
-- Scored items need something the teaching did not contain: new instances, plus F4, a family never taught.
-- Touched once: each arm is evaluated on FRESH once; temperature and k are chosen on DEV, never on FRESH.
-- Shortcut baseline: a "template-nearest" predictor (apply the most common TRAIN call sequence for the matching
-  template to the FRESH numbers) is scored; B's G1 gain must exceed that predictor's gain over A, or the claim is
-  "learned family habits", not problem solving.
-- Benefit and damage reported separately (no-harm panel).
-
-## 7. Failure branches and decision table
-
-| Outcome | Reading | Next (one change) |
-|---|---|---|
-| Fewer than 40 TRAIN misses won | generator rarely hits | raise k to 64 on DEV; if still low, ask Ben about V3 prefix noise (Q2) |
-| Many lucky-unsupported, few accepted | right numbers by guessing | keep checker strict; report; do not relax rule 4 |
-| Luck PASS, G1 fail | same as old model: luck learned, first try not | second round of sampling from B (expert iteration), registered separately |
-| Full PASS | both moved | replicate on new TRAIN and FRESH seeds before claiming; then F4 transfer as its own test |
-| B about equal to C1 | it is practice on own text | stop; the checked-hit idea is not shown here |
-| B about equal to C2, C2 kept variety | rehearsal explains it | stop; record that old collapse did not repeat |
-| D >= B | answer key teaches as well | creative loop matters only where no key exists; move to an answer-free checkable family (3b) |
-| Seeds split | noise | one replication with new seeds, registered before running |
-| No-harm fails | forgetting | hand to sleep thread (retention, standing note 03) before any more creative training |
-| F1-F3 pass, F4 fails | no transfer | claim limited to trained families |
-
-## 8. Risks and leakage
-- Checker bugs accept wrong traces: the checker author writes a small checker test set with known wrong traces;
-  it must reject all of them before the hash is pinned. Untested.
-- Generator and checker written by one author share blind spots: separate thread (Q6).
-- FRESH overlap with TRAIN or the consumed 128: hash plus template-and-numbers filter; overlaps dropped and counted
-  (old runs dropped 14 to 30 per set, shown in the VERIFY files).
-- Gold answers leaking into B: training loader reads only accepted.jsonl; a check asserts no field named answer
-  from the reference file is present.
-- The frozen LM does not see the question, so a trace can be "right" for the prefix's plan but copy numbers
-  wrongly; rule 4 catches numbers not in the problem. Suggested.
-- Variety collapse (lesson ii) hiding as luck: diversity adjustment and L3.
-- Calibration temptation: changing marks after results. Marks are fixed in the pass-marks file with its hash.
-- TRAIN32 32/32 is not transfer (from brief); this design never uses TRAIN32 scores as evidence.
-
-## 9. Roadmap placement and hand-off to sleep replay
-- Placement (suggested): after the current first-try pipeline is stable enough to have a parent checkpoint, and
-  before sleep replay. This part produces checked experiences; sleep replay decides how to keep them without
-  forgetting (`design/research/sleep-design-2026-09-28/MAP.md` row 2: model picks what goes into replay,
-  including creative wins, never tested on the current reasoner; standing note 03 Lead 2, weakest-first sampling
-  of a small store, untested).
-- Hand-off: accepted.jsonl (4a) plus rejected summary; sleep can test "replay accepted candidates" against
-  "replay gold" with the same arms logic. The old creative rungs (open-problems shelf retried after each sleep,
-  restating the problem, pieces library, tools) stay later rungs, one at a time.
-- Learned stopping, compressed notes and n-grams are out of scope.
-
-## 10. Decisions and open questions
-**Decided 2026-10-03 12:14 UTC** under Ben's broad-autonomy note (relayed by the channel session): every recommended
-default in brackets below is adopted, including the pass marks in 6c. Ben can overrule any of them; a change must be
-made before the pass-marks file is hash-pinned. Q11 (reconcile with design v5) is still open until v5 lands.
-
-Questions as asked (default in brackets):
-Architecture or reasoning-method questions (the first run needs none of them):
-- Q1 First run uses only LM sampling temperature for variety? [yes]
-- Q2 Prefix or core-input noise (V3, V4, V5) as a later separate experiment? [later]
-Design questions:
-- Q3 Run both placebos C1 and C2? [both]
-- Q4 Include gold-answer arm D? [yes]
-- Q5 Fresh set of 256 (192 + 64 transfer)? [yes]
-- Q6 A separate thread writes the checker and fresh problems? [yes]
-- Q7 Require a valid calculator trace to accept (answer alone is not enough)? [yes]
-- Q8 Cap accepted candidates per problem at 2? [2]
-- Q9 Run on BensPC at $0? [yes]
-- Q10 Accept the pass marks in 6c as written? [yes]
-- Q11 Before running, reconcile with CURRENT.json and design v5 once they are pushed? [yes]
-
-## 11. Reconciliation with the integrated design doc (conflicts and fixes, 2026-10-03)
-Source: the docx above (paragraph claims quoted in short; all read, none run).
-1. **Calls are typed requests, not free text.** The doc says the reasoner emits, per loop, no call or a typed request
-   (allowed operation, ordered operand references, call id), at most one call per loop (four total), host-validated, in
-   an add/subtract domain with two-digit single-token results. So a "candidate" is a sequence of typed calls plus a final
-   answer, and the invented-numbers rule (3a rule 4) becomes "every operand reference points to a number in the problem or
-   an earlier call result". The `expr` field in 4a becomes `op, operand_refs, call_id, result`. FIX: wording only.
-2. **Arithmetic validity is not interpretation.** The doc's Mira example (18 minus 7 vs 18 plus 7) shows a calculator
-   check accepts a wrong reading. FIX: the checker compares each call's operation and operand bindings to the
-   generator-oracle canonical form, and reports three states (accepted / rejected / unresolved), not two. Unresolved
-   candidates are kept as diagnostics and never trained on.
-3. **Diversity adjustment breaks in a one-call domain.** With add/subtract and mostly one call, every correct candidate
-   has the same call sequence, so "count distinct traces" collapses luck to coverage. FIX: primary luck = pass@k and
-   coverage; the distinct-trace guard applies only to problems with 2 or more calls (build at least a third of FRESH
-   from 2-call composition if the generator supports it, otherwise say luck measures coverage only). L1-L3 stay as written.
-4. **Training on accepted candidates is a later-stage update.** The doc says verified experiences are first reused through
-   context, and weight updates (adapter, replay) need separate transfer and retention evidence, with creative retry
-   "not worker learning" by itself. This design's arm B updates reader, core and prefix on accepted candidates. It is
-   the approved prototype step, but under the doc's rules it must be reported as "learning update from verified
-   experiences" and needs a context-reuse comparison. FIX: add arm E (accepted experiences supplied as in-context
-   examples at inference, no weight change) as a cheap extra control, and keep sleep replay and adapters out of scope.
-5. **Existing creative diagnostic.** 40 calls, 2 of 6 practice failures rescued, 2 checked experiences saved, gold-answer
-   acceptance, zero optimizer updates (doc). This is the baseline evidence for generation: it shows sampling can rescue some
-   failures, but with known answers, so it is neither answer-hidden verification nor learned creativity. Plain stochastic
-   sampling stays the first baseline (matches arm A). A separate learned explorer (rewarded for newly rescued problems
-   against a frozen worker version) is the doc's later proposal and is out of scope here.
-6. **Positive targets.** The doc prefers checked input-answer pairs over self-authored explanations. FIX: arm B trains on the
-   typed-call sequence plus final answer only, never free-text rationale.
-7. **Splits and consumed panels.** The doc keeps equivalent semantic instances together so paraphrases cannot leak across
-   splits, and excludes every consumed panel (the 128, the 64, the 16, the 24) from positive replay. FIX: block-list all of
-   them, and split TRAIN, DEV and FRESH by semantic instance, not by surface wording.
-8. **No conflict found** on: frozen LM, 4 loops, 8 prefix vectors, pairs as the unit for completion, the point that gold
-   checking is not answer-hidden, and that TRAIN32 scores are not transfer evidence.
+An outside opinion (Astra, or GPT with these tables pasted) on D1 and placebo R before S3 is worthwhile; the prompt is
+not written yet.
