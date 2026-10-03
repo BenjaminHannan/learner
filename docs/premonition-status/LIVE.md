@@ -60,3 +60,9 @@ Pass mark (fixed now, from the Projects coordinator): the test passes if, for th
 Setup: same recipe as tag up4 (lr 1e-3, 9216 updates, seed 0, control + treatment) plus 0.01 x router balance aux in the loss (aux was constant 0.001 in earlier runs: router never moved). Seed 1 states in the rescore are the existing up4s1 endpoints (not retrained), so this is a seed-0 comparison only. Exploratory; eval v3 already seen; not a sealed claim.
 Disk: PC free ~4.9 GB before this run (one run writes ~0.12 GB per arm); will report if < 2 GB.
 Held for Ben: committing the parent checkpoints to GitHub (claude/real-pipeline-checkpoints) is an outward-facing publish of trained weights; not done without his OK.
+
+### 20:55Z step log
+- Balance-loss run `bal9216` (seed 0, control+treatment, 9216 updates, aux 0.01) started on the PC GPU; train fit comes first, then I rescore fresh eval v3 with the registered pass mark above.
+- Calculator/reasoner configs found and exported to branch `claude/real-pipeline-code` (commit 70ef16198): RELEASE-MANIFEST-v3, TRAIN frames, schedules, runners. Eval/fresh frames and the source checkpoints are not exported.
+- Disk on the PC: 4.57 GB free (above the 2 GB warning line).
+- Parent-checkpoint branch (`claude/real-pipeline-checkpoints`) NOT created: publishing trained weights to GitHub waits for Ben's OK.
