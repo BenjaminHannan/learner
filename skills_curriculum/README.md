@@ -7,7 +7,7 @@ reserved, blind or fresh-eval data.
 ## Run it
 ```bash
 python -m skills_curriculum.build --out OUT --train 200000 --dev-per-cell 40 --seed 1 [--tokenizer tokenizer.json]
-python -m unittest skills_curriculum.tests.test_curriculum          # 16 tests, about 25 s
+python -m unittest skills_curriculum.tests.test_curriculum          # 17 tests, about 25 s
 python -m skills_curriculum.token_report --tokenizer tokenizer.json --rows OUT/train.jsonl [--frames-out frames.jsonl]
 ```
 `from skills_curriculum.build import iter_train` gives an endless clean stream with no file at all
@@ -51,8 +51,10 @@ parsing code and must match; 4. length. The other 19 families get checks 1, 2 an
 206,200 rows of the 200k build).
 
 ## Known limits
-- Induction families (`group_induct` especially, also 2-shot `string_transform`) can have more than one rule that fits the
-  examples; they are not filtered for a unique rule yet.
+- Rule-from-examples families are filtered so only one answer survives across a stated set of simple rules: affine and
+  pair rules (`fewshot_number_rule`), 10 word rules (`string_transform`), multiples and thresholds with their opposites
+  (`group_induct`), the five sequence kinds (`seq_next`) and multiples, parity and digit count (`odd_one_out`). Before the
+  filter 27% of `odd_one_out` and 18% of `group_induct` draws were ambiguous. A rule outside those sets could still fit.
 - Yes/no, true/false and A/B answers cannot have a held-out answer, so those families have no `dev/answer` rows.
 - The estimator that keeps rows under the token cap is conservative; the real count needs the pinned tokenizer file
   (`token_report.py`, or `--tokenizer` on build). It came out at 62 max for the 200k build.

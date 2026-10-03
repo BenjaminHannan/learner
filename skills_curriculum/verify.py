@@ -312,4 +312,99 @@ def check_item(it):
             bad.append(f"parser says {got!r}, item says {ans!r}")
     if it["est_tokens"] > MAX_TOKENS_EST:
         bad.append(f"too long: {it['est_tokens']}")
+    if it["family"] in AMBIG and AMBIG[it["family"]](canon):
+        bad.append("more than one simple rule fits the examples")
     return bad
+
+
+# ---------------------------------------------------------------- unique-rule check for induction families
+def _fit_seq(shown):
+    """All next-values predicted by every simple sequence rule that fits `shown`."""
+    s, out = shown, set()
+    d = [b - a for a, b in zip(s, s[1:])]
+    if len(set(d)) == 1:
+        out.add(s[-1] + d[0])
+    if all(x != 0 for x in s[:-1]) and all(b % a == 0 for a, b in zip(s, s[1:])):
+        r = [b // a for a, b in zip(s, s[1:])]
+        if len(set(r)) == 1:
+            out.add(s[-1] * r[0])
+    if len(d) >= 3:
+        e = [b - a for a, b in zip(d, d[1:])]
+        if len(set(e)) == 1:
+            out.add(s[-1] + d[-1] + e[0])
+        if all(d[i] == d[i % 2] for i in range(len(d))):
+            out.add(s[-1] + d[len(d) % 2])
+    if len(s) >= 3 and all(s[i] == s[i - 1] + s[i - 2] for i in range(2, len(s))):
+        out.add(s[-1] + s[-2])
+    return out
+
+
+def amb_seq_next(p):
+    m = re.search(r"(-?\d+(?:, -?\d+)+)", p)
+    shown = [int(t) for t in m[1].split(",")]
+    return len(_fit_seq(shown)) != 1
+
+
+def amb_odd_one_out(p):
+    xs = [int(t) for t in re.search(r": ([\d, ]+)\?", p)[1].split(",")]
+    odd = set()
+    rules = [lambda x, m=m: x % m == 0 for m in range(2, 10)] + [lambda x: x % 2 == 1, lambda x: len(str(x)) == 2, lambda x: len(str(x)) == 3]
+    for f in rules:
+        bad = [x for x in xs if not f(x)]
+        if len(bad) == 1 and len(xs) - 1 >= 3:
+            odd.add(bad[0])
+    return len(odd) != 1
+
+
+def amb_fewshot_number_rule(p):
+    m = re.match(r"Examples: (.*)\. Now (.*?) -> \?$", p)
+    ex = m[1].split("; ")
+    outs = set()
+    if ex[0].startswith("("):
+        prs = [tuple(map(int, re.findall(r"-?\d+", e))) for e in ex]
+        q = tuple(map(int, re.findall(r"-?\d+", m[2])))
+        hyp = [lambda a, b: a + b, lambda a, b: abs(a - b), lambda a, b: a - b, lambda a, b: a * b, lambda a, b: max(a, b), lambda a, b: min(a, b)]
+        for f in hyp:
+            if all(f(a, b) == r for a, b, r in prs):
+                outs.add(f(*q))
+        return len(outs) != 1
+    pts = [tuple(map(int, e.split(" -> "))) for e in ex]
+    x = int(m[2])
+    for A in range(0, 13):
+        for B in range(-60, 61):
+            if all(A * a + B == r for a, r in pts):
+                outs.add(A * x + B)
+    # also squares / digit-sum style rules would be exotic; the affine class is what the generator uses
+    return len(outs) != 1
+
+
+STR_RULES = {"reverse": lambda s: s[::-1], "first_last": lambda s: s[0] + s[-1], "sort": lambda s: "".join(sorted(s)),
+             "drop_first": lambda s: s[1:], "double": lambda s: s + s, "drop_last": lambda s: s[:-1], "last_first": lambda s: s[-1] + s[0],
+             "first_only": lambda s: s[0], "last_only": lambda s: s[-1], "rot": lambda s: s[1:] + s[0]}
+
+
+def amb_string_transform(p):
+    m = re.match(r"Examples: (.*)\. Now (\w+) -> \?$", p)
+    pts = [e.split(" -> ") for e in m[1].split("; ")]
+    outs = {f(m[2]) for f in STR_RULES.values() if all(f(a) == b for a, b in pts)}
+    return len(outs) != 1
+
+
+def amb_group_induct(p):
+    m = re.match(r"Group A: ([\d, ]+)\. Group B: ([\d, ]+)\. Which group does (\d+) belong to\?", p)
+    A = [int(t) for t in m[1].split(",")]
+    B = [int(t) for t in m[2].split(",")]
+    q = int(m[3])
+    preds = set()
+    rules = []
+    for k in range(2, 10):
+        rules += [lambda x, k=k: x % k == 0, lambda x, k=k: x % k != 0]
+    for t in range(5, 95):
+        rules += [lambda x, t=t: x >= t, lambda x, t=t: x < t]
+    for f in rules:
+        if all(f(a) for a in A) and not any(f(b) for b in B):
+            preds.add("A" if f(q) else "B")
+    return len(preds) != 1
+
+
+AMBIG = {k[4:]: v for k, v in globals().items() if k.startswith("amb_")}

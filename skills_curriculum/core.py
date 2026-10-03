@@ -204,9 +204,17 @@ def undo_layout(prompt, layout):
 
 
 def make_item(fid, seed, index, diff, force_variant=None):
+    for attempt in range(60):
+        it = _make_item(fid, seed, index, diff, force_variant, attempt)
+        if not _ambiguous(it):
+            return it
+    raise RuntimeError(f"could not make an unambiguous {fid} item")
+
+
+def _make_item(fid, seed, index, diff, force_variant, attempt):
     """Make one item. Returns the full record with hold-out flags; caller decides keep/reject."""
     fam = FAMILIES[fid]
-    rng = random.Random(f"{seed}|{fid}|{index}")
+    rng = random.Random(f"{seed}|{fid}|{index}" + (f"|{attempt}" if attempt else ""))
     ctx = Ctx(fid, rng, diff)
     variant = force_variant or ctx.variant(fam["variants"])
     out = fam["fn"](ctx, variant)
@@ -240,6 +248,21 @@ def make_item(fid, seed, index, diff, force_variant=None):
     }
     item["est_tokens"] = est_tokens(item["prompt"])
     return item
+
+
+def _ambiguous(item):
+    """Induction families: reject items where more than one simple rule fits the examples but gives different answers."""
+    from . import verify
+    f = verify.AMBIG.get(item["family"])
+    if f is None:
+        return False
+    w = item["wrap"]
+    t = item["prompt"]
+    if w["pre"]:
+        t = t[len(w["pre"]) + 1:]
+    if w["post"]:
+        t = t[:-(len(w["post"]) + 1)]
+    return f(undo_layout(t, item["layout"]))
 
 
 def split_of(flags):

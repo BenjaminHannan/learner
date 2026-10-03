@@ -110,6 +110,15 @@ class CurriculumTests(unittest.TestCase):
         self.assertEqual(len(held), 1)
         self.assertFalse(used & set(held))
 
+    def test_ambiguity_filter_is_on(self):
+        fams = {r["family"] for r in self.train}
+        self.assertTrue({"fewshot_number_rule", "group_induct", "odd_one_out", "seq_next"} <= fams)
+        self.assertTrue({"string_transform"} <= {r["family"] for r in self.dev["family"]})
+        bad = core._make_item("group_induct", 1, 0, 0, None, 0)
+        bad["prompt"] = "Group A: 4, 8, 12. Group B: 5, 7, 9. Which group does 10 belong to?"
+        bad["wrap"], bad["layout"] = {"pre": "", "post": ""}, "facts_first"
+        self.assertTrue(core._ambiguous(bad))
+
     def test_deterministic(self):
         d2 = tempfile.mkdtemp()
         build.build(d2, 4800, 10, 7)
