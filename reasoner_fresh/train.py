@@ -18,6 +18,7 @@ p.add_argument("--out", default=str(HERE / "results"))
 p.add_argument("--copy", action="store_true", help="arm C: add the calculator result token embedding as a 9th prefix vector (direct copy path)")
 p.add_argument("--call-loop", type=int, default=0, help="first loop at which the calculator may be called (0 = original)")
 p.add_argument("--wording", choices=["old", "mix"], default="old", help="mix: half old 4 templates, half procedurally composed frames (gen2), disjoint from eval new wording")
+p.add_argument("--eval-form", default="EVAL-FORM-v1.json")
 p.add_argument("--device", default="cuda")
 p.add_argument("--probe", action="store_true", help="fit check on arm A only: no eval-form scoring, no result files")
 args = p.parse_args()
@@ -128,8 +129,8 @@ def summarize(res, T):
 def main():
     torch.manual_seed(args.seed); random.seed(args.seed)
     Tans, Hans = gen.answer_split(); Tset = set(Tans)
-    form = json.loads((HERE / "EVAL-FORM-v1.json").read_text())
-    ex = gen.eval_pair_set(form)
+    form = json.loads((HERE / args.eval_form).read_text())
+    ex = gen.eval_pair_set(form) | gen.eval_pair_set(json.loads((HERE / "EVAL-FORM-v1.json").read_text()))
     n_total = args.steps * args.batch
     if args.arm == "A":
         pool = json.loads((HERE / "ARM-A-POOL-v1.json").read_text())
