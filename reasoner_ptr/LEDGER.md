@@ -8,5 +8,7 @@
 | 54053228 | 50484118 | RTX 3090 (California) | 0.139 | A, B | 19:17 | 21:44 (stopped 21:37) | yes: 12/12 JSON files per arm read back and parsed | ~$0.37 (hung 1.5 h on a wait-loop bug: pgrep matched its own job script) |
 | 54053230 | 49476168 | RTX 3090 (Utah) | 0.144 | W, BW | 19:17 | 21:44 (stopped 21:37) | yes: 12/12 JSON files per arm read back and parsed | ~$0.38 (hung 1.5 h on a wait-loop bug: pgrep matched its own job script) |
 | 54053231 | 44133030 | RTX 3090 (US) | 0.164 | C | 19:17 | 21:44 (stopped 21:37) | yes: 12/12 JSON files per arm read back and parsed | ~$0.43 (hung 1.5 h on a wait-loop bug: pgrep matched its own job script) |
-| 54067360 | 37955906 | RTX 3090 (BC, Canada) | 0.150 | B | 21:39 | | | |
-| 54067364 | 43703592 | RTX 3090 (California) | 0.169 | BW | 21:39 | | | |
+| 54067360 | 37955906 | RTX 3090 (BC, Canada) | 0.150 | B | 21:39 | 22:19 | yes: results.tar.gz sha256 matched manifest, 18 JSON files | ~$0.10 |
+| 54067364 | 43703592 | RTX 3090 (California) | 0.169 | BW | 21:39 | 22:31 | yes: results.tar.gz sha256 matched manifest, 18 JSON files | ~$0.15 |
+
+Total for this test: about $1.5 (about $1.1 of it from the hung wait loop on the first three boxes).
