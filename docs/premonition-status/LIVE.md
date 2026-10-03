@@ -101,3 +101,12 @@ Shown: in_dist dev accuracy 5, 6, 3, 6 of 100 at 4k, 8k, 12k, 16k updates. Even 
 Suggested (not tested): the 8-vector exit is the bottleneck, even for copying a made-up word; matches the cloud thread's finding that wrong fresh answers are copies.
 Untested: whether many more updates would fix it.
 Diagnosis registered BEFORE running: copy_word family only, 3000 updates, seed-0 parent, lr 1e-3, dev check every 1000 on 50 held-out copy_word rows. Copy accuracy >= 80% = copying is learnable through the exit (so the failure is curriculum/other skills). Copy accuracy < 30% = the 8-vector exit cannot even copy a made-up word. In between = inconclusive.
+
+## 21:39Z RESULT copy-only diagnosis: BELOW the 30% mark, 0/40
+copy_word rows only, 3000 updates (stride 4 through 13,436 rows), seed-0 parent, lr 1e-3. Held-out copy_word dev rows (n=40 per shift file with enough rows; family shift has none): 0/40 correct on in_dist, answer, frame, vocab and variant at every check (1000, 2000, 3000 updates). Training loss fell only from 4.2 to 3.2 and training exact match stayed ~0.
+(First launch of this test lost its --families flag to a shell-expansion slip in my launcher, trained on all families, was stopped after ~1 minute; its output was not used.)
+Shown: with the current exit, the model does not learn to copy a short made-up word from its own prompt in 3000 updates (0%), while the English-pilot QA training set was fit at 40-43/48 in the same architecture (memorised answers, not copying).
+Suggested (not proven): the 8 pooled exit vectors do not carry the spelling of the prompt, so copying new words fails; matches PR #33 (pooled exit: 0.3% on unseen answers) and the earlier fresh-eval pattern.
+Untested: more than 3000 updates; a different learning rate; whether the parent's memorised QA habits slow copying (a fresh-weights start).
+Choice (coordinator asked for the PR #33 copy path): PR #33 copies a calculator tool RESULT into the answer, but here the answer is a span of the PROMPT, so a straight port does not apply. The same idea for prompts: let the frozen LM read the prompt's own token embeddings directly next to the 8 pooled vectors (prefix = 8 pooled + the prompt's raw token embeddings, up to 64), so the talker can copy tokens. One change only.
+Pass marks for that test, fixed now: same setup as above (copy_word only, 3000 updates, seed-0 parent, lr 1e-3, same dev rows). PASS if copy_word in_dist dev accuracy >= 80% at 3000 updates. Wrong if < 30% (then the failure is not just the exit). 30-80% inconclusive.
