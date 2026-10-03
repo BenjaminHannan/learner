@@ -8,8 +8,10 @@ from model import Block, UpcycledMLP, CLIP, D, LOOPS, LO, HI
 
 class Reasoner2(nn.Module):
     NL, NS = 3, 2  # literal candidates, result-slot candidates
-    def __init__(self, lm_width):
+    def __init__(self, lm_width, ordered=False):
         super().__init__()
+        self.ordered = ordered
+        self.loop_q = nn.Parameter(torch.randn(LOOPS, D) * 0.02)
         self.reader = nn.Sequential(nn.LayerNorm(lm_width), nn.Linear(lm_width, 32), nn.GELU(), nn.Linear(32, D))
         self.blocks = nn.ModuleList(Block(D, 8) for _ in range(2))
         for b in self.blocks:
@@ -56,7 +58,12 @@ class Reasoner2(nn.Module):
             e = torch.cat([q, torch.stack(values, 1), torch.stack(stats, 1)], 1)
             hf = h + e
             f = hf[:, :T]
-            qm = (f * m).sum(1) / m.sum(1)
+            if self.ordered:  # loop-indexed attention read: each loop has its own query over the question positions
+                sc = (f @ self.loop_q[loop]) / math.sqrt(D)
+                w = sc.float().masked_fill(~qmask, -1e4).softmax(-1).to(f.dtype)
+                qm = (f * w[..., None]).sum(1)
+            else:
+                qm = (f * m).sum(1) / m.sum(1)
             act_logits = self.action(qm)
             refs = [f[ar, lit_idx[:, j]] for j in range(self.NL)] + [hf[:, T + k] for k in range(self.NS)]
             ref = torch.stack(refs, 1)

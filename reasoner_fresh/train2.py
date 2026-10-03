@@ -3,7 +3,7 @@ import argparse, json, math, random, time
 from pathlib import Path
 import torch
 from torch.nn import functional as F
-import gen, gen_two
+import gen, gen_two, gen_two2
 from model2 import Reasoner2, LOOPS, LO, HI
 
 HERE = Path(__file__).resolve().parent
@@ -11,7 +11,7 @@ p = argparse.ArgumentParser()
 p.add_argument("--seed", type=int, required=True); p.add_argument("--steps", type=int, default=3000)
 p.add_argument("--batch", type=int, default=16); p.add_argument("--lr", type=float, default=1e-3)
 p.add_argument("--lm", default="LiquidAI/LFM2.5-1.2B-Instruct"); p.add_argument("--out", default=str(HERE / "results2"))
-p.add_argument("--device", default="cuda"); p.add_argument("--no-copy", action="store_true")
+p.add_argument("--device", default="cuda"); p.add_argument("--no-copy", action="store_true"); p.add_argument("--varied", action="store_true"); p.add_argument("--ordered", action="store_true"); p.add_argument("--eval-file", default="EVAL-TWO-v2.json")
 args = p.parse_args()
 from transformers import AutoTokenizer, AutoModelForCausalLM
 dev = args.device
@@ -84,7 +84,7 @@ def evaluate(model, rows, bs=32):
                 op1 = r["op1"] if two else r["op"]
                 call1 = good(c0, op1, {(0, 1), (1, 0)} if op1 == "ADD" else {(0, 1)})
                 call2 = (good(c1, r["op2"], {(3, 2), (2, 3)} if r["op2"] == "ADD" else {(3, 2)})) if two else int(c1[0][j]) == 0
-                out.append({"id": r.get("id"), "cell": r.get("cell"), "steps": r["steps"], "op1": op1, "op2": r.get("op2"), "answer": r["answer"],
+                out.append({"id": r.get("id"), "cell": r.get("cell"), "structure": r.get("structure"), "steps": r["steps"], "op1": op1, "op2": r.get("op2"), "answer": r["answer"],
                             "pred": tok.decode([int(pred[j])]).strip(), "final_ok": int(pred[j]) == int(ans[j]), "call1_ok": bool(call1),
                             "call2_ok": bool(call2), "chain_ok": bool(call1 and call2)})
     model.train(); return out
@@ -93,16 +93,16 @@ def evaluate(model, rows, bs=32):
 def main():
     torch.manual_seed(args.seed); random.seed(args.seed)
     T, Ho = gen.answer_split(); Ts = set(T)
-    form = json.loads((HERE / "EVAL-TWO-v1.json").read_text())
+    form = json.loads((HERE / args.eval_file).read_text())
     v1 = json.loads((HERE / "EVAL-FORM-v1.json").read_text()); v2 = json.loads((HERE / "EVAL-FORM-v2.json").read_text())
     ex = gen.eval_pair_set(v1) | gen.eval_pair_set(v2) | {(r["x"], r["y"], r["z"]) for r in form}
     n_total = args.steps * args.batch
-    data = gen_two.stream_two(ex, args.seed, n_total)
+    data = gen_two2.stream(ex, args.seed, n_total, args.varied)
     assert all(r["answer"] in Ts for r in data) and sum(r["steps"] == 2 for r in data) > 0
-    model = Reasoner2(LMW).to(dev)
+    model = Reasoner2(LMW, ordered=args.ordered).to(dev)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.1, betas=(0.9, 0.95))
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / 200) * 0.5 * (1 + math.cos(math.pi * min(i, args.steps) / args.steps)))
-    name = f"two-seed{args.seed}" + ("-nocopy" if args.no_copy else "")
+    name = "twoB-" + ("V" if args.varied else "") + ("O" if args.ordered else "") + ("base" if not (args.varied or args.ordered) else "") + f"-seed{args.seed}"
     Path(args.out).mkdir(parents=True, exist_ok=True)
     t0 = time.time()
     fit = [r for r in data[-400:] if r["steps"] == 2][:96]
