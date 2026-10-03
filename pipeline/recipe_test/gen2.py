@@ -62,7 +62,7 @@ def grams(s, n=6):
 
 
 def eval_frames():
-    ev = gen.load("templates_eval.json")
+    ev = gen.load(gen.EVAL_FILE)
     return [f[k] for f in ev["families"] for k in ("add", "sub")]
 
 
@@ -88,7 +88,7 @@ def disjointness_report():
     evs = set().union(*(sentences(f) for f in eval_frames()))
     shared_g = sum(1 for _, f in keep if grams(f) & evg)
     shared_s = sum(1 for _, f in keep if sentences(f) & evs)
-    tr = gen.load("templates_train.json"); ev = gen.load("templates_eval.json")
+    tr = gen.load("templates_train.json"); ev = gen.load(gen.EVAL_FILE)
     return {"raw_frames": len(keep) + len(dropped), "kept": len(keep), "dropped_for_overlap": len(dropped),
             "kept_sharing_6gram_with_eval": shared_g, "kept_sharing_full_sentence_with_eval": shared_s,
             "name_overlap": sorted(set(tr["names"]) & set(ev["names"])), "noun_overlap": sorted(set(tr["nouns"]) & set(ev["nouns"])),
@@ -98,7 +98,7 @@ def disjointness_report():
 def stream_w(excluded_pairs, seed, n):
     """n unique-text training questions; half old-wording (tr-* families), half composed frames. Answers in T only."""
     T, _ = gen.answer_split(); Ts = set(T)
-    tr = gen.load("templates_train.json"); rng = random.Random(8_100_000 + seed)
+    tr = gen.load("templates_train.json"); rng = random.Random((gen.STREAM_B_BASE + 1_000_000) + seed)
     keep, _ = pruned_frames()
     byop = {o: [f for p, f in keep if p == o] for o in ("ADD", "SUB")}
     out, seen = [], set()

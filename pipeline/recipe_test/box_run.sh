@@ -12,7 +12,8 @@ python3 -c "
 from huggingface_hub import snapshot_download as s
 print('LM at', s('LiquidAI/LFM2.5-1.2B-Instruct', revision='0f604ada3f766f9f257460c4c9f0b5d6f69d431b', local_dir='/workspace/lfm'))"
 mkdir -p /workspace/results
-flags() { case $1 in pool-old) echo "";; copy-mix) echo "--copy --wording mix";; copy-old) echo "--copy";; pool-mix) echo "--wording mix";; esac; }
+export RT_ROUND=${RT_ROUND:-1}
+flags() { case $1 in pool-old) echo "";; copy-mix) echo "--copy --wording mix";; copy-old) echo "--copy";; pool-mix) echo "--wording mix";; copy-ctx-mix) echo "--copy --ctx --wording mix";; esac; }
 emit() { # emit <wave-number>: print the wave's result files as base64 with sha256s
   cd /workspace/results
   tar czf /workspace/wave$1.tgz *.json 2>/dev/null

@@ -8,7 +8,12 @@ import hashlib, json, random
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-SPLIT_SEED, POOL_SEED, EVAL_SEED = 20261101, 20261102, 20261103
+import os
+ROUND = os.environ.get("RT_ROUND", "1")  # round 1 = first recipe test; round 2 = fresh set for the contextual-reader test
+if ROUND == "2":
+    SPLIT_SEED, POOL_SEED, EVAL_SEED, STREAM_B_BASE, EVAL_FILE = 20261201, 20261202, 20261203, 7_200_000, "templates_eval_r2.json"
+else:
+    SPLIT_SEED, POOL_SEED, EVAL_SEED, STREAM_B_BASE, EVAL_FILE = 20261101, 20261102, 20261103, 7_100_000, "templates_eval.json"
 LO, HI = 10, 99
 
 
@@ -34,7 +39,7 @@ def render(fam, op, names, nouns, x, y, rng):
 
 def eval_form(n_per_cell=24):
     T, H = answer_split(); Ts, Hs = set(T), set(H)
-    tr, ev = load("templates_train.json"), load("templates_eval.json")
+    tr, ev = load("templates_train.json"), load(EVAL_FILE)
     rng = random.Random(EVAL_SEED)
     pairs = [(x, y) for x in range(LO, HI) for y in range(LO, HI) if valid_pair(x, y)]
     unseen = [p for p in pairs if p[0] + p[1] in Hs and p[0] - p[1] in Hs]
@@ -96,7 +101,7 @@ def pool_a(excluded_pairs, size=256):
 
 def stream_b(excluded_pairs, seed, n):
     """n never-repeating training questions (unique text) for arm B, per run seed."""
-    g = train_sampler(excluded_pairs, 7_100_000 + seed); out, seen = [], set()
+    g = train_sampler(excluded_pairs, STREAM_B_BASE + seed); out, seen = [], set()
     while len(out) < n:
         r = next(g)
         if r["text"] not in seen:

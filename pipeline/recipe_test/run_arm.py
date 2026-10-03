@@ -33,6 +33,7 @@ from sol_stop_ordered_api2 import ordered_attention_math
 p = argparse.ArgumentParser()
 p.add_argument("--seed", type=int, required=True)
 p.add_argument("--copy", action="store_true")
+p.add_argument("--ctx", action="store_true", help="reader reads the frozen LM's contextual last-layer states instead of lexical embeddings")
 p.add_argument("--wording", choices=["old", "mix"], default="old")
 p.add_argument("--steps", type=int, default=3000)
 p.add_argument("--batch", type=int, default=16)
@@ -114,7 +115,11 @@ def calc_forward(model, ids, regs):
     B, n = ids.shape
     core, reader, tool = model.core, model.reader, model.tool
     with torch.no_grad():
-        e0 = emb(ids)
+        if args.ctx:
+            bosc = torch.full((B, 1), BOS, device=dev, dtype=ids.dtype)
+            e0 = lm(input_ids=torch.cat([bosc, ids], 1), output_hidden_states=True).hidden_states[-1][:, 1:].float()
+        else:
+            e0 = emb(ids)
     mask = torch.ones(B, n, dtype=torch.bool, device=dev)
     query = reader(e0, mask)  # [B,1,n,256]
     role = tool.role
@@ -320,7 +325,7 @@ def main():
     params = [q for q in model.parameters() if q.requires_grad]
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.1, betas=(0.9, 0.95))
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / 200) * 0.5 * (1 + math.cos(math.pi * min(i, args.steps) / args.steps)))
-    name = args.name or f"{'copy' if args.copy else 'pool'}-{args.wording}-seed{args.seed}"
+    name = args.name or f"{'copy' if args.copy else 'pool'}{'-ctx' if args.ctx else ''}-{args.wording}-seed{args.seed}"
     outdir = Path(args.out); outdir.mkdir(parents=True, exist_ok=True)
     logf = open(outdir / f"{name}.log", "w")
     t0 = time.time()
@@ -335,7 +340,7 @@ def main():
             print(msg, flush=True); logf.write(msg + "\n"); logf.flush()
     fit = evaluate(model, fit_rows)
     ev = evaluate(model, form)
-    res = {"name": name, "seed": args.seed, "copy": args.copy, "wording": args.wording, "steps": args.steps, "batch": args.batch,
+    res = {"name": name, "seed": args.seed, "copy": args.copy, "ctx": args.ctx, "round": gen.ROUND, "wording": args.wording, "steps": args.steps, "batch": args.batch,
            "seconds": round(time.time() - t0), "eval": summarize(ev, Tset),
            "train_fit_192": {k: rate(fit, k)[0] for k in ("final_ok", "call_ok", "last_result_ok")}}
     (outdir / f"{name}.json").write_text(json.dumps(res, indent=1))
