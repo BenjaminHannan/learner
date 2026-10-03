@@ -55,3 +55,6 @@ Labels: **shown** = in the code or a measured result (cited). **Suggested** = re
 1. Does "beat bigger models at its size" count the 1.2B borrowed LM? If yes, the competition is 1-2B models trained on trillions of tokens, and item 1 dominates. If only the core counts, the fair comparison is small reasoners like HRM/TRM (27M / 7M) on puzzles.
 2. OK to build a large generated skills curriculum (millions of never-repeating items, many skill types) as the core's pretraining? Default: yes, starting from the PR #29 generator.
 3. OK to add a dense self-supervised loss for the core (item 2a)? Default: test it as one change after the door results.
+
+## Ben's answer (19:41 UTC): "all"
+Read as: the whole model counts toward its size, including the borrowed 1.2B LM, so the comparison is 1-2B models; and yes to both the generated skills curriculum and the dense self-supervised loss test. Item 1 (core pretraining data) is the top priority.
