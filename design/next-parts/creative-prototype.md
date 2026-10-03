@@ -4,11 +4,10 @@ Date 2026-10-03. Design only: nothing here was run, trained, bought or edited in
 Labels on every claim: **shown** (a sealed result in a named file), **suggested** (reasoning or literature),
 **untested** (a plan). "From brief" = stated in Ben's brief to this thread, not checked against a file.
 
-**Reconciliation status (2026-10-03 12:11 UTC).** `docs/premonition-status/CURRENT.json` is now on branch
-`claude/premonition-launch-recovery-96c708` and was read: it agrees with the brief on the frozen LFM2.5 talker,
-the English TRAIN bank (sha256 f2f5cce3...), no new GPU dispatch and no new spend. Integrated design doc v5 and the
-English TRAIN bank are not pushed yet (waiting on a force-add past .gitignore), so claims about the pilot's exact
-optimizer, loss and token limits remain "from brief, unreconciled" and Q11 still applies before any run.
+**Reconciliation status (2026-10-03 13:35 UTC).** Checked against `docs/premonition-status/CURRENT.json` and the
+integrated design docx (`.../FRESH-TERMINAL-EVAL-PREPARATION-v1/DESIGN-WORKING-v6/Premonition integrated model design.docx`,
+commit c5cfd9176 on `claude/premonition-launch-recovery-96c708`; the brief calls it v5). Section 11 lists what
+it changes in this design. Optimizer, loss and token-limit details still need a check against the code before any run.
 
 **Rule changes from Ben (12:09 UTC, after this draft was written).** Scaling the reasoner and adding reasoning
 depth (more loops) no longer need his approval, and he gave broad autonomy to use judgment where a rule only
@@ -289,3 +288,37 @@ Design questions:
 - Q9 Run on BensPC at $0? [yes]
 - Q10 Accept the pass marks in 6c as written? [yes]
 - Q11 Before running, reconcile with CURRENT.json and design v5 once they are pushed? [yes]
+
+## 11. Reconciliation with the integrated design doc (conflicts and fixes, 2026-10-03)
+Source: the docx above (paragraph claims quoted in short; all read, none run).
+1. **Calls are typed requests, not free text.** The doc says the reasoner emits, per loop, no call or a typed request
+   (allowed operation, ordered operand references, call id), at most one call per loop (four total), host-validated, in
+   an add/subtract domain with two-digit single-token results. So a "candidate" is a sequence of typed calls plus a final
+   answer, and the invented-numbers rule (3a rule 4) becomes "every operand reference points to a number in the problem or
+   an earlier call result". The `expr` field in 4a becomes `op, operand_refs, call_id, result`. FIX: wording only.
+2. **Arithmetic validity is not interpretation.** The doc's Mira example (18 minus 7 vs 18 plus 7) shows a calculator
+   check accepts a wrong reading. FIX: the checker compares each call's operation and operand bindings to the
+   generator-oracle canonical form, and reports three states (accepted / rejected / unresolved), not two. Unresolved
+   candidates are kept as diagnostics and never trained on.
+3. **Diversity adjustment breaks in a one-call domain.** With add/subtract and mostly one call, every correct candidate
+   has the same call sequence, so "count distinct traces" collapses luck to coverage. FIX: primary luck = pass@k and
+   coverage; the distinct-trace guard applies only to problems with 2 or more calls (build at least a third of FRESH
+   from 2-call composition if the generator supports it, otherwise say luck measures coverage only). L1-L3 stay as written.
+4. **Training on accepted candidates is a later-stage update.** The doc says verified experiences are first reused through
+   context, and weight updates (adapter, replay) need separate transfer and retention evidence, with creative retry
+   "not worker learning" by itself. This design's arm B updates reader, core and prefix on accepted candidates. It is
+   the approved prototype step, but under the doc's rules it must be reported as "learning update from verified
+   experiences" and needs a context-reuse comparison. FIX: add arm E (accepted experiences supplied as in-context
+   examples at inference, no weight change) as a cheap extra control, and keep sleep replay and adapters out of scope.
+5. **Existing creative diagnostic.** 40 calls, 2 of 6 practice failures rescued, 2 checked experiences saved, gold-answer
+   acceptance, zero optimizer updates (doc). This is the baseline evidence for generation: it shows sampling can rescue some
+   failures, but with known answers, so it is neither answer-hidden verification nor learned creativity. Plain stochastic
+   sampling stays the first baseline (matches arm A). A separate learned explorer (rewarded for newly rescued problems
+   against a frozen worker version) is the doc's later proposal and is out of scope here.
+6. **Positive targets.** The doc prefers checked input-answer pairs over self-authored explanations. FIX: arm B trains on the
+   typed-call sequence plus final answer only, never free-text rationale.
+7. **Splits and consumed panels.** The doc keeps equivalent semantic instances together so paraphrases cannot leak across
+   splits, and excludes every consumed panel (the 128, the 64, the 16, the 24) from positive replay. FIX: block-list all of
+   them, and split TRAIN, DEV and FRESH by semantic instance, not by surface wording.
+8. **No conflict found** on: frozen LM, 4 loops, 8 prefix vectors, pairs as the unit for completion, the point that gold
+   checking is not answer-hidden, and that TRAIN32 scores are not transfer evidence.
