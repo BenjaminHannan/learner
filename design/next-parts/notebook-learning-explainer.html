@@ -137,6 +137,7 @@ code{font-family:var(--mono);font-size:12px}
 <tr><td>N1</td><td>Exact lookup among 1, 4, 8 entries; missing-fact "I don't know"</td><td>16/32 pairs at 4 entries, both seeds</td><td>1-entry band under 8 pairs: exact strings cannot cross the prefixes (triggers Q2)</td></tr>
 <tr><td>N2</td><td>Notebook gives numbers, calculator call uses them</td><td>16/32 pairs on call arguments</td><td>N1 passes but calls under 8</td></tr>
 <tr><td>N3</td><td>Later line corrects an earlier one</td><td>16/32 edit pairs and guard controls ≥ 24/32</td><td>Guards fail: it learned "last number wins"</td></tr>
+<tr><td>N3b</td><td>Two-hop reads, after a correction, and with a missing premise</td><td>16/32 pairs; missing-premise ≥ 24/32</td><td>Old answer survives a correction</td></tr>
 <tr><td>N4</td><td>Model writes notes and corrections itself</td><td>≥ 80% exact writes, ≤ 10% junk, end-to-end 16/32</td><td>Exact writes under 50% while N1 passes</td></tr>
 <tr><td>N5</td><td>Restart between sessions; 4 to 32 entries</td><td>Within 4 pairs of N1; 16 entries ≥ half of 4 entries</td><td>Under 8 pairs at 16 entries</td></tr>
 </table></div>
@@ -157,11 +158,11 @@ code{font-family:var(--mono);font-size:12px}
 
 <section class="ask">
 <h2>Questions for Ben</h2>
-<p><b>Q0 (default yes):</b> may a calculator-call loop be joined to the notebook runtime? The current runtime has none.</p>
-<p><b>Q1 (default yes):</b> may notebook write and edit be extra tool calls, like calculator calls? Reader, core, prefixes and LM stay as they are.</p>
+<p><b>Q0 (default yes):</b> may the notebook runtime use the design's per-loop calculator protocol? The notebook runtime file has none.</p>
+<p><b>Q1 (default yes):</b> may notebook write and edit be typed requests with pointers into the heard text, like calculator calls? (Design v6 prefers this over generated text.) Reader, core, prefixes and LM stay as they are.</p>
 <p><b>Q2 (only if N1 or N4 hits the bottleneck):</b> may the host copy an exact span the model points to?</p>
 <p><b>Q3 (later):</b> for notebooks over 512 tokens, may the host pick entries with plain keyword matching first?</p>
 </section>
 
-<p class="sub">Built against the pushed branch and CURRENT.json; integrated design v5 is not pushed yet. Pass marks classify by the lower seed; see the full design for the review amendments. Full design: design/next-parts/notebook-learning.md in the learner repo.</p>
+<p class="sub">Built against the pushed branch and CURRENT.json; checked against the integrated design v6 working draft (section 11c). Pass marks classify by the lower seed; see the full design for the review amendments. Full design: design/next-parts/notebook-learning.md in the learner repo.</p>
 </main>

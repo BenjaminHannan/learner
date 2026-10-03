@@ -180,7 +180,7 @@ Sleep link (suggested, not part of this design): sleep must keep the main notebo
 
 ## 10. Questions for Ben (defaults chosen under his autonomy note; he can overrule)
 
-- **Q0 (default: yes)**: may a calculator-call loop be joined to the notebook runtime (N2 depends on it)?
+- **Q0 (default: yes, revised by section 11c)**: may the notebook runtime use the integrated design's per-loop calculator protocol (N2 depends on it)?
 - **Q1 (default: yes, proceed on this design)**: May notebook write and edit be added as extra tool calls in the same generated-text-then-host-acts style as calculator calls? No change to the reader, core, loops or prefix, no LM fine-tuning.
 - **Q2 (ask only if N1 or N4 fails the bottleneck test)**: If exact values cannot be written through the prefix by normal training, may the model choose a span of the heard text and the host copy it exactly (a pointer write)? This is close to the "forced answer copying" the brief forbids without approval, so it is not assumed.
 - **Q3 (later, scaling part)**: For notebooks over 512 tokens, may the host select entries with deterministic BM25 before the reader?
@@ -223,6 +223,24 @@ Pass marks
 
 Other
 - Loop count: now free to vary (Ben lifted the extra-depth rule); see section 11.
+
+## 11c. Check against integrated design v6 working draft (commit c5cfd9176)
+
+File read: `artifacts/cap256-launch/contextual-input-compare-v1/FRESH-TERMINAL-EVAL-PREPARATION-v1/DESIGN-WORKING-v6/Premonition integrated model design.docx` (the coordinator called it v5; the folder says DESIGN-WORKING-v6). Read by text search for notebook, calculator, interface and loop passages, not line by line.
+
+Agrees with this design
+- shown: the doc says to prove notebook retrieval, corrections, multi-hop use and missing-information abstention **before** reliable writing. N1 to N3 come before N4 here for the same reason; N4 stays gated on them.
+- shown: the doc wants matched inline versus notebook renderings, a consistent renderer between training and evaluation, a small notebook given in full as the starting design, and original-wording records with provenance and version history. Same as sections 4 to 6.
+- shown: both-correct pair scores are already the doc's metric (matched ADD/SUB pairs, zero in every endpoint); it also warns that matching removes one shortcut, not every lexical one. That is why the pair design here adds the position and distractor controls.
+- shown: "missing evidence means cannot determine from the notebook"; measure unnecessary abstention on answerable cases too.
+
+Conflicts and changes this forces
+1. **Calculator protocol (changes N2 and Q0).** The doc's implemented protocol is typed requests chosen by the reasoner on each of the four loops (an allowed operation plus ordered operand pointers into the input, at most one call per loop, host executes, result consumed by the next update). It is not generated text, and it rejects forced calculator copying. So N2 must use that protocol; my "build a harness loop" default is replaced by: **use the existing per-loop calculator protocol and read the call's operand pointers as the notebook-reading readout.** The runtime file I reviewed (`sol_nextdemo_runtime_v1.py`) does not contain it, so which code path carries it must be confirmed with the execution owner before N2 is scheduled. Q0 becomes: does the notebook runtime get the same per-loop calculator protocol (default yes, since it is the doc's own design).
+2. **Write interface (changes N4 and Q1/Q2).** I proposed model-generated `NOTE{...}` text. The doc handles tool use as typed requests with pointers and treats learned reference selection as a literature option, not an approved repair, and requires separate decisions for new interfaces. Cleaner fit: N4 uses a **typed write request** (action write or supersede, plus pointer span(s) into the heard turn), validated and appended by the host. That makes Q2's pointer-write the main path, not a fallback. Ben's autonomy note covers choosing it, but it is an interface change, so it stays labelled as a decision with the pointer-write as the default, and the generated-text write is kept as the comparison arm. Untested which works.
+3. **Multi-hop was out of scope; the doc puts it in the notebook proof.** Add **N3b**: two-hop reads (the doc's "Aster is in Room 4, Room 4 is on the second floor"), the same chain after a correction (old answer must not survive), and the chain with the second premise missing (answer is "the notebook does not establish it"). Same pair rule, same lower-seed classification. Pass mark kept at 16 of 32 pairs for the two-hop and correction items and at least 24 of 32 on the missing-premise items; fixed before data is drawn.
+4. **Oracle versus actual retrieval.** The doc asks for matched inline, oracle-selected, and retriever-selected conditions. This design gives the model the whole small notebook (oracle selection). The retriever-selected condition is added to N5 once the notebook exceeds the window.
+5. **Fresh panels.** The doc says reserved numerical-pair coverage is unknown and that bounded 16-question panels are the current practice. My 32-pair panels are larger than anything authored so far; the authoring and independent-check cost has to be agreed with the parent before N1 is scheduled, and N1 may start at 16 pairs per seed with classification by the lower seed (power is lower; say so in the result).
+6. **Loops and size.** The doc still describes four loops and says architecture and reasoning-method changes need a separate decision, while Ben has lifted the loop and size rules for scaling. No effect on the notebook rungs; they inherit whatever configuration scaling selects.
 
 ## 12. Where this sits
 
