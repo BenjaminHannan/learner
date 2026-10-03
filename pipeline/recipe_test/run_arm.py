@@ -349,10 +349,11 @@ def main():
     n_total = int(args.steps * args.batch * 1.25) + 64
     if args.task == "two":
         import gen_two_r3 as g3
-        form = g3.build_eval()
+        fits = lambda t: len(tok.encode(t, add_special_tokens=False)) + 1 <= 49  # real core query cap
+        form = g3.build_eval(fits=fits)
         ex_t = {(r["x"], r["y"], r["z"]) for r in form}
         ex_p = gen.eval_pair_set(gen.eval_form())
-        data = g3.stream(ex_t, ex_p, args.seed, n_total)
+        data = g3.stream(ex_t, ex_p, args.seed, n_total, fits=fits)
         assert all(r["answer"] in Tset for r in data) and not ({(r["x"], r["y"], r["z"]) for r in data if r["steps"] == 2} & ex_t)
         ex = ex_p
     else:

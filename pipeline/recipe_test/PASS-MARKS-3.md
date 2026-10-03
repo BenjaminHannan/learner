@@ -22,3 +22,7 @@ Gate: TWO train fit (last 192 two-step training items, chain) mean >= 70%, else 
 PASS: mean gain >= +15 AND interval lower bound > 0. FAILS: mean gain < +5. Otherwise partial, no claim.
 Also reported with no mark: TWO's own level (stand-in prior: V arm 56.5%, VO 70.8% chain), table-layout and question-first chain rates (the weak spots there: 31-48% / 47-59%), seed SD.
 Rows for every run copied back and sha-checked before any box is destroyed. Budget cap ~$2.5.
+
+## Addendum (22:55 UTC, before any completed run): the real core refuses questions over 49 tokens (with EOS)
+The first launch crashed in 8 of 12 runs when a long training item reached the real core (`ordered_begin`: query cap 49). No run had finished, no result was read. Fix: training items and eval items are
+resampled until they fit 49 tokens (`fits` in `gen_two_r3.py`); all 192 eval questions already fit (max 47 tokens), so the eval set is unchanged. Marks above are unchanged.

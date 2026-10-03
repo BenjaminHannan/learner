@@ -68,7 +68,7 @@ def disjointness():
             "noun_overlap": sorted(set(tr["nouns"]) & set(e2["nouns"]))}
 
 
-def build_eval(per_cell=6, seed=20261301):
+def build_eval(per_cell=6, seed=20261301, fits=lambda t: True):
     T, H = gen.answer_split(); rng = random.Random(seed)
     e2 = gen.load(gen.EVAL_FILE); ef = eval_frames(); rows = []; used = set()
     for sname, frames in ef.items():
@@ -81,13 +81,15 @@ def build_eval(per_cell=6, seed=20261301):
                         v = gen_two.ok_values(x, y, z, o1, o2)
                         if v and v[1] in finals and (x, y, z) not in used: break
                     used.add((x, y, z))
-                    text = rng.choice(fr)[2].format(name=rng.choice(e2["names"]), noun=rng.choice(e2["nouns"]), x=x, y=y, z=z)
+                    while True:  # resample wording slots until the question fits the real core's 49-token cap (with EOS)
+                        text = rng.choice(fr)[2].format(name=rng.choice(e2["names"]), noun=rng.choice(e2["nouns"]), x=x, y=y, z=z)
+                        if fits(text): break
                     rows.append({"id": f"{sname}-{o1}{o2}-{cell}-{k}", "cell": f"{cell}/{sname}", "structure": sname, "steps": 2, "op1": o1, "op2": o2,
                                  "x": x, "y": y, "z": z, "r1": v[0], "answer": v[1], "text": text})
     return rows
 
 
-def stream(excluded_triples, excluded_pairs, seed, n, one_step_frac=0.3):
+def stream(excluded_triples, excluded_pairs, seed, n, one_step_frac=0.3, fits=lambda t: True):
     T, _ = gen.answer_split(); Ts = set(T)
     tr = gen.load("templates_train.json"); rng = random.Random(9_600_000 + seed)
     fr = train_frames()
@@ -96,7 +98,7 @@ def stream(excluded_triples, excluded_pairs, seed, n, one_step_frac=0.3):
     while len(out) < n:
         if rng.random() < one_step_frac:
             r = next(one)
-            if r["text"] in seen: continue
+            if r["text"] in seen or not fits(r["text"]): continue
             r = dict(r); r["steps"] = 1; seen.add(r["text"]); out.append(r); continue
         while True:
             x, y, z = (rng.randint(10, 99) for _ in range(3))
@@ -104,7 +106,7 @@ def stream(excluded_triples, excluded_pairs, seed, n, one_step_frac=0.3):
             v = gen_two.ok_values(x, y, z, o1, o2)
             if v is None or v[1] not in Ts or (x, y, z) in excluded_triples: continue
             text = frame.format(name=rng.choice(tr["names"]), noun=rng.choice(tr["nouns"]), place=rng.choice(gen_two.EV_PLACES), x=x, y=y, z=z)
-            if text in seen: continue
+            if text in seen or not fits(text): continue
             break
         seen.add(text)
         out.append({"steps": 2, "op1": o1, "op2": o2, "x": x, "y": y, "z": z, "r1": v[0], "answer": v[1], "text": text})
