@@ -10,6 +10,8 @@ Rulers stay separate: the puzzle ruler (F_eq on 9×9 mazes), the assistant panel
 
 ## 1. Summary for Ben
 
+- **Current recipe (18:35 UTC, PR #29, reimplementation, shown there):** the copy route plus varied training wording (180 composed sentence frames instead of 4 templates). On new wording the right-call rate rose from 81.6% to 98.1% (paired +16.5, 95% CI +5.6 to +27.4, all 6 seeds up), seed spread fell from 11.9 to 2.8 SD, overall accuracy 99.0%, unseen answers 99.3%. Lesson so far: the exit route and wording variety moved the numbers; the call-timing trick did not. Next on vast: a freshly sealed eval with new story structures, then two-step chained problems.
+- **What this means for the ranks below (suggested):** one-step calculator questions are nearly solved, so they can no longer tell shape ideas apart. Ranks 2-8 should be judged on the two-step chained problems, where the core has to carry a result from one call into the next. Rank 5 (score every operation) drops in priority unless chained problems bring wrong calls back.
 - **Update 18:00 UTC:** the copy route held across 12 runs (new answers 81-100%). "Think before calling" did not help over 6 seeds and is demoted. All marks now need at least 6 paired seeds.
 - **New first pick (16:30 UTC):** let the answer copy the calculator's result directly. A test with never-repeating data showed the current exit only says answers it was trained on, so better data alone doesn't help.
 - **Best bets for "beat bigger models at our size":** extra parallel copies of the thinking state (*state lanes*), and a tiny "look at your neighbours" layer (*Canon layers*). Both are cheap and both have published wins against bigger plain models.
