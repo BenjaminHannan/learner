@@ -20,3 +20,13 @@ Total about $1.35 (estimate from hourly rates, not the invoice). Copy-back: resu
 | 54066644 | RTX 3090 Ti | 0.222 | 21:32-22:09 | CTX seeds 0-2 | 22:09 | ~$0.14 |
 | 54066645 | Q RTX 8000 | 0.255 | 21:32-22:09 | CTX seeds 3-5 (slow, no TF32) | 22:09 | ~$0.16 |
 Round 2 about $0.6. Whole thread about $2.0 (estimate from hourly rates).
+
+## Round 3 (two-step), credit $6.66 at 23:29 UTC
+| contract | GPU | $/h | UTC | job | destroyed | est. cost |
+|---|---|---|---|---|---|---|
+| 54072716, 54072717, 54072718, 54072721 | 4080S / 3090 Ti / A10 / 3090 | 0.22-0.30 | 22:31-22:48 | first launch: 8 of 12 runs crashed on the real core's 49-token cap | 22:48 | ~$0.27 |
+| 54074342 | RTX 3090 | 0.151 | 22:49-23:29 | TWO seeds 0-2 | 23:29 after sha-checked copy-back | ~$0.10 |
+| 54074346 | RTX 3090 | 0.202 | 22:49-23:29 | TWO seeds 3-5 | 23:29 | ~$0.13 |
+| 54074348 | RTX 4080S | 0.216 | 22:49-23:29 | TWO-O seeds 0-2 | 23:29 | ~$0.14 |
+| 54074349 | RTX 3090 | 0.296 | 22:49-23:29 | TWO-O seeds 3-5 | 23:29 | ~$0.20 |
+Round 3 about $0.85; thread total about $2.9 (estimates from hourly rates).
