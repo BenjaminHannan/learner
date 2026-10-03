@@ -1,0 +1,152 @@
+{
+ "bank": {
+  "path": "artifacts/cap256-launch/contextual-input-compare-v1/ENGLISH-PARAPHRASE-RECONSTRUCTION-CPU-FEASIBILITY-v1/CONFIRMED-TRAIN-CONTENT-v3/english_training_candidates_v3.json",
+  "sha256": "f2f5cce3dd2775af16ab13db8fa36b08a70b305bd1229df9e9471c4fdf7fb9ac"
+ },
+ "budget": {
+  "aggregate_spend_usd_cap": "0.00",
+  "cuda_peak_reserved_cap_bytes": 10737418240,
+  "new_output_bytes": 2147483648,
+  "project_cap_bytes": 100000000000,
+  "retained_free_bytes": 2147483648,
+  "worker_seconds": 14400
+ },
+ "cache_namespace": "artifacts/english-pilot-v1/feature-cache",
+ "device": "cuda",
+ "dispatch_allowed": true,
+ "feature_identity": {
+  "attention_implementation": "sdpa",
+  "cache_protocol": "ordered-full-question-causal-no-past-no-cache-pre-reader-v1",
+  "configuration_code_sha256": "2dfafbc958c1b86d757fbf9c8c568e568febaa018b15cfab63f92381d51103ec",
+  "contextual_layer": "model.last_hidden_state-final-post-embedding_norm",
+  "dtype": "float32",
+  "feature_width": 2048,
+  "model_code_sha256": "9a2b5aca091018c3350a545bcdedf1908837dc07002d26814e815b5e51b91d93",
+  "model_files": {
+   "config.json": "15d6157fb6df3f8272e2fe90e18f57727ccf02a125c94469198b0f3281510185",
+   "generation_config.json": "5ffd97da1dec4308543894569662d96e923ed01f7a9d8c7ff5aea7f800738cbd",
+   "model.safetensors": "1ba63d9adb03ae43581db0e136e4416febe0441aff7296397bd455fb6017f73a"
+  },
+  "model_id": "LiquidAI/LFM2.5-1.2B-Instruct",
+  "revision": "0f604ada3f766f9f257460c4c9f0b5d6f69d431b",
+  "runtime": {
+   "safetensors": "0.8.0",
+   "torch": "2.11.0+cu128",
+   "transformers": "5.17.0"
+  },
+  "schema": "cap256.question-feature-identity.v1",
+  "special_token_ids": {
+   "bos": 1,
+   "eos": 7,
+   "pad": 0
+  },
+  "tokenizer_files": {
+   "special_tokens_map.json": "742aefe2b7dec496e8caffdba03a75d0c1a9925d53bd3f3e0d388c96b591b6f4",
+   "tokenizer.json": "df1d8d5ec5d091b460562ffd545e4a5e91d17d4a0db7ebe733be34ed374377bd",
+   "tokenizer_config.json": "2a52ec012d3df831ba434b081bef3726a6ee22501f062ad8353c557a0cfa0d01"
+  },
+  "worker_sha256": "155f7256c183880f6b52cad4bd97fe2085de7110da4195d749f7775d2f2c3a42"
+ },
+ "frames": {
+  "path": "artifacts/cap256-launch/contextual-input-compare-v1/ENGLISH-PILOT-v1/NATIVE-G0-v1/TRAIN-FRAMES-v2.json",
+  "sha256": "b73704711fa124615c34564c5dd2bfc6b8c0932d6fcd2b424b023e3a057a902a"
+ },
+ "fresh_inputs": {
+  "path": "artifacts/cap256-launch/contextual-input-compare-v1/ENGLISH-PILOT-v1/FRESH-INPUTS-v1/fresh_inputs_only_v1.json",
+  "sha256": "126d89f3ad5a2ec8defe93bc03b6f07104f11a2d6e13ec4b02f52b8b6dbb3a88"
+ },
+ "kind": "eval",
+ "lm": {
+  "adapter": {
+   "path": "artifacts/sol-translator-20260929/ground-answer-v11-s0-loop/bootstrap-English-s0.pt",
+   "sha256": "e8092da239875f911c5845f4cbb9e89fbf6b197b665bcd7163df8af63c62a063"
+  },
+  "model_path": "C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b",
+  "provenance": {
+   "path": "artifacts/sol-translator-20260929/CACHED-LFM-ORIGINAL-PROVENANCE.json",
+   "sha256": "ec5d42dc87c2f2d8a25168de33b5c8324c8f777f75e7c1b69b8c6205fe97bee8"
+  }
+ },
+ "output_namespace": "artifacts/english-pilot-v1/eval-v1",
+ "parents": [
+  {
+   "checkpoint": {
+    "path": "artifacts/train-contextual-lr-stability-v1/control/seed0/contextual/final-resume.pt",
+    "sha256": "49a350235164a7c2f4ccc2731358dc615cf8a25086abd32afe71e4c3bd44c001"
+   },
+   "seed": 0
+  },
+  {
+   "checkpoint": {
+    "path": "artifacts/train-contextual-lr-stability-v1/control/seed1/contextual/final-resume.pt",
+    "sha256": "4c3c410f99ae37a8f46d5de58af7b71d550d841d6ecd306d2a1c2c8199c1330d"
+   },
+   "seed": 1
+  }
+ ],
+ "runner": {
+  "path": "scripts/cap256_launch/eval_english_fresh_windows_v1.py",
+  "sha256": "5fe7fd520ce8e493cd88b3e5d9ddadc4c015e2d530a10cd19296fb8a2d480723"
+ },
+ "schedule": {
+  "path": "artifacts/cap256-launch/contextual-input-compare-v1/ENGLISH-PILOT-v1/FULL-PILOT-SCHEDULE-v1.json",
+  "sha256": "090c30f3c0b165505e4003df904a0c4491d9c69abf845663e37618bf637bfa2a"
+ },
+ "schema": "premonition.English-pilot-native-config.v1",
+ "states": [
+  {
+   "arm": null,
+   "checkpoint": {
+    "path": "artifacts/train-contextual-lr-stability-v1/control/seed0/contextual/final-resume.pt",
+    "sha256": "49a350235164a7c2f4ccc2731358dc615cf8a25086abd32afe71e4c3bd44c001"
+   },
+   "seed": 0,
+   "state_id": "seed0-parent"
+  },
+  {
+   "arm": null,
+   "checkpoint": {
+    "path": "artifacts/train-contextual-lr-stability-v1/control/seed1/contextual/final-resume.pt",
+    "sha256": "4c3c410f99ae37a8f46d5de58af7b71d550d841d6ecd306d2a1c2c8199c1330d"
+   },
+   "seed": 1,
+   "state_id": "seed1-parent"
+  },
+  {
+   "arm": "control",
+   "checkpoint": {
+    "path": "artifacts/english-pilot-v1/train-v1/seed0/control/final-checkpoint.pt",
+    "sha256": "3de579f8d2658325edfec41f7eda9288f047d7348ab4d4b98f7da4b627c8a441"
+   },
+   "seed": 0,
+   "state_id": "seed0-control"
+  },
+  {
+   "arm": "treatment",
+   "checkpoint": {
+    "path": "artifacts/english-pilot-v1/train-v1/seed0/treatment/final-checkpoint.pt",
+    "sha256": "dccf954b5fc91b8a57202b5dc4516430464c3e0801a80c7c84f937673bc4f7da"
+   },
+   "seed": 0,
+   "state_id": "seed0-treatment"
+  },
+  {
+   "arm": "control",
+   "checkpoint": {
+    "path": "artifacts/english-pilot-v1/train-v1/seed1/control/final-checkpoint.pt",
+    "sha256": "647d4d0797f65d7b57d90b4a789d8c4b4852a5c2bfa4225dfd649ca514c689c8"
+   },
+   "seed": 1,
+   "state_id": "seed1-control"
+  },
+  {
+   "arm": "treatment",
+   "checkpoint": {
+    "path": "artifacts/english-pilot-v1/train-v1/seed1/treatment/final-checkpoint.pt",
+    "sha256": "b49ef003c060c646bb98e3379f99341d990290960d54b477405533d47d093d1d"
+   },
+   "seed": 1,
+   "state_id": "seed1-treatment"
+  }
+ ]
+}
