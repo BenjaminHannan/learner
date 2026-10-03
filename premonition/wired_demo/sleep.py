@@ -148,4 +148,4 @@ def arms_matched(reports) -> bool:
 
 def plain_mix(day, U: int, rng: random.Random):
     """PF control: day records only, same number of records as the S mix."""
-    return {"day": rng.sample(day, min(U, len(day))), "earlier": [], "anchor": []}
+    return {"day": [day[i % len(day)] for i in rng.sample(range(max(U, len(day))), U)], "earlier": [], "anchor": []}

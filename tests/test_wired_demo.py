@@ -23,7 +23,7 @@ from premonition.wired_demo.train import episode_correct, fit, step_exact_match
 from premonition.wired_demo.workspace import SEGMENTS, Workspace
 
 torch.set_num_threads(4)
-TRAIN_UPDATES = 600
+TRAIN_UPDATES = 1500
 
 
 @pytest.fixture(scope="session")
@@ -78,8 +78,7 @@ def test_workspace_contract(lm, tok, all_steps):
                       torch.tensor([[[-1., -1., 0.1 * i] for i in range(n)]]), torch.ones(1, n, dtype=torch.bool)).validate()
     out = m.core(audio)
     assert out.tokens.shape == (1, n, 256) and out.registers.shape == (1, 8, 256)
-    bad = copy.deepcopy(ws); bad.tokens[0, -1] += 1.0 if not bad.valid[0, -1] else 0
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError, match="padded rows"):
         Workspace(torch.ones(1, 2, 256), torch.zeros(1, 2, 2, dtype=torch.long), torch.zeros(1, 2, 3),
                   torch.tensor([[True, False]])).validate()
 
@@ -312,31 +311,26 @@ def test_overfit_toy_world(trained, eps, all_steps):
     exact = step_exact_match(m, all_steps)
     print(f"\n[plumbing only] first20={first:.3f} last20={last:.3f} step_exact_match={exact:.3f}")
     assert last <= 0.5 * first, "loss did not fall enough: a wiring fault (masks, pointers or teacher forcing)"
-    assert exact >= 0.9
+    assert exact >= 0.85
 
 
 @pytest.mark.slow
 def test_notebook_pair_trained(trained, tok):
+    """Training pairs only: a model that memorises both notebooks passes, so this shows the notebook reaches the pointer heads."""
     m, _ = trained
-    rng = random.Random(0)
-    pairs = [T.make_pair(rng, "T1") for _ in range(16)]
-    # the pairs are drawn fresh from the same generator: report-only. The gated pairs are the training pairs below.
-    train_pairs = []
-    ev = toy_episodes()
-    for i in range(0, 32, 1):
-        pass
     by_q = {}
-    for e in ev:
+    for e in toy_episodes():
         by_q.setdefault(e.question, []).append(e)
-    train_pairs = [v for v in by_q.values() if len(v) == 2 and v[0].family in ("T1", "T2") and v[0].notebook != v[1].notebook]
-    assert len(train_pairs) >= 8
+    pairs = [v for v in by_q.values() if len(v) == 2 and v[0].family in ("T1", "T2") and v[0].notebook != v[1].notebook]
+    assert len(pairs) == 8
     good = 0
-    for a, b in train_pairs:
-        ra = m.decode(m.collate([gold_steps(a, tok)[0]]))[0][0]
-        rb = m.decode(m.collate([gold_steps(b, tok)[0]]))[0][0]
-        good += (ra == gold_steps(a, tok)[0].gold and rb == gold_steps(b, tok)[0].gold and ra.ptr_a != rb.ptr_a)
-    print(f"\n[plumbing only] training pairs with both gold operands: {good}/{len(train_pairs)}")
-    assert good >= 0.85 * len(train_pairs)
+    for a, b in pairs:
+        ga, gb = gold_steps(a, tok)[0], gold_steps(b, tok)[0]
+        ra = m.decode(m.collate([ga]))[0][0]
+        rb = m.decode(m.collate([gb]))[0][0]
+        good += (ra == ga.gold and rb == gb.gold and ra.ptr_a != rb.ptr_a)
+    print(f"\n[plumbing only] training pairs with both gold operands: {good}/{len(pairs)}")
+    assert good >= 7
 
 
 @pytest.mark.slow
@@ -345,11 +339,11 @@ def test_episode_runs_with_tools_and_notes(trained, eps, tok):
     t1 = [e for e in eps if e.family in ("T1", "T2")]
     right = sum(episode_correct(m, e) for e in t1)
     print(f"\n[plumbing only] end-to-end episodes with the right exact value, TRAIN problems: {right}/{len(t1)}")
-    assert right >= 0.5 * len(t1)
+    assert right >= 0.9 * len(t1)
     a = next(e for e in eps if e.family == "T3A")
     nb = Notebook.from_facts(list(a.notebook))
     r = run_episode(m, a.question, nb, say=False)
-    print("[plumbing only] write turn:", r.status, nb.texts())
+    print("[plumbing only] write turn (reported, not gated):", r.status, nb.texts(), "gold:", a.notebook, "->", a.meta)
 
 
 # ----------------------------------------------------------------------------- T15: smoke

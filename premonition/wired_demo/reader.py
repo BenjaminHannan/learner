@@ -16,8 +16,9 @@ class ContextualReader(nn.Module):
         self.lm_width = lm_width
         self.norm = nn.LayerNorm(lm_width)
         self.down, self.up = nn.Linear(lm_width, bottleneck), nn.Linear(bottleneck, WIDTH)
+        self.out_norm = nn.LayerNorm(WIDTH)   # keeps content on the same scale as the position codes
 
     def forward(self, lm_states: torch.Tensor, valid: torch.Tensor) -> torch.Tensor:
         """lm_states [B,N,D_lm], valid [B,N] -> tokens [B,N,256], invalid rows exactly 0."""
-        out = self.up(nn.functional.gelu(self.down(self.norm(lm_states))))
+        out = self.out_norm(self.up(nn.functional.gelu(self.down(self.norm(lm_states)))))
         return out * valid.unsqueeze(-1)

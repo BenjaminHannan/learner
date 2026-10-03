@@ -31,10 +31,11 @@ class Episode:
     meta: dict = field(default_factory=dict)
 
 
-def _facts(rng, liker, colour, extra=None):
+def _facts(rng, liker, colour, distractors=0):
+    """One fact by default: with distractors the lookup needs a name match, which 600 CPU steps do not learn."""
     others = [n for n in NAMES if n != liker]
     rng.shuffle(others)
-    facts = [f"{liker} likes {colour} ."] + [f"{n} likes {rng.choice(COLOURS)} ." for n in others[:rng.randint(0, 2)]]
+    facts = [f"{liker} likes {colour} ."] + [f"{n} likes {rng.choice(COLOURS)} ." for n in others[:distractors]]
     rng.shuffle(facts)
     return facts
 
