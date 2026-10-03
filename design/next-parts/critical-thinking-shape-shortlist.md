@@ -10,6 +10,7 @@ Rulers stay separate: the puzzle ruler (F_eq on 9×9 mazes), the assistant panel
 
 ## 1. Summary for Ben
 
+- **New first pick (16:30 UTC):** let the answer copy the calculator's result directly. A test with never-repeating data showed the current exit only says answers it was trained on, so better data alone doesn't help.
 - **Best bets for "beat bigger models at our size":** extra parallel copies of the thinking state (*state lanes*), and a tiny "look at your neighbours" layer (*Canon layers*). Both are cheap and both have published wins against bigger plain models.
 - **Best bets for the wrong-operation errors (38 of 128):** let the model think *before* it calls the calculator (today every call fires before any thinking round), and train it to score every operation instead of copying one.
 - **Free to try today, on the CPU:** make each thinking round take a smaller step. It needs no training on saved puzzle models.
@@ -24,6 +25,7 @@ Each idea scored on five questions: does it attack a failure we have **shown**; 
 
 | Rank | Idea | Aims at | Added weights | First test | Ruler | Label |
 |---|---|---|---|---|---|---|
+| 0 | Pointer exit (copy the tool result) | Answers stuck to the training set | ~260 + 1:1 map | Running on vast (PR #29) | Assistant format | papers shown, untested for us |
 | 1 | Think before calling | 38 wrong operations; all calls fire at loop 0 | 0 | After the English pilot | Assistant panel | fact shown, fix untested |
 | 2 | State lanes (Hyperloop) | Beat a plain model 2× our size | ~12k (0.14%) | Practice-side, 3 seeds | Puzzle, then §7 ladder | paper shown, untested for us |
 | 3 | Damped round update | Answers wander after round 16; the stop never fires | 0 to 256 | **Free, CPU, saved nets** | Puzzle | paper shown, untested for us |
@@ -118,7 +120,16 @@ Each idea scored on five questions: does it attack a failure we have **shown**; 
 
 ## 6. What I'd do first
 
-**A caution from the F1 check** (`critical-thinking-notes/f1_report.md`, shown on the saved outputs): every one of the 113 wrong final answers is a number that appeared as a training answer, and none of the 64 rows whose right answer never appeared in training got it right. So in practice today's model only says numbers it has seen in training (whether that is forced by the output setup is untested). No shape change on this list fixes that by itself; the data change (C3, or v5's approved 1024-example curriculum) comes first, and shape changes are judged on top of it (suggested).
+**Update 16:30 UTC 10-03: the exit, not the data, looks like the bottleneck.** The F1 check on the saved outputs (shown) found every wrong answer was a training answer. A follow-up on vast.ai (PR #29, `reasoner_fresh/RESULTS.md`, a reimplementation of the recipe, not the PC pipeline) then trained on 48,000 never-repeating questions. Shown there: answers never seen in training scored 0.0% and 4.2% (vs 0.0% and 3.1% for a repeated pool), while the calculator call was right about 90% of the time and train fit was 100%. 375 of 377 wrong unseen answers were training answers. So never-repeating data alone does not fix it. The averaged 8-vector exit behaves like a lookup over the answers it was trained to say (suggested). Note the test also asks the exit to make the LM say a token it was never trained to produce. That is why rank 0 below now comes first.
+
+### Rank 0 (added 16:30 UTC). Pointer exit: let the answer copy the tool result
+
+- **What:** the output path gets a second route that reads the calculator's result slot directly (1:1, no pooling), plus a learned gate that picks "copy the result" or "say something else". This is the pointer-generator idea. It is not v5's rejected *forced* copying, because the gate is learned and can decline.
+- **Sources:** See, Liu, Manning, *Get To The Point: Summarization with Pointer-Generator Networks*, arXiv 1704.04368 (2017). Vinyals, Fortunato, Jaitly, *Pointer Networks*, arXiv 1506.03134 (2015). Both are widely used and cited here from memory, so re-open them before a pass mark rests on them. **Shown in those papers:** copying handles words never seen as outputs, which a fixed output set cannot do.
+- **Our core:** the value slot already holds the result's own LM token embedding (`_numeric_value` in `calculator_runtime_depth_compare.py`, shown). The talker adds one route that maps the result slot into the prefix 1:1, and one gate scalar. Roughly 260 weights for the gate, plus whatever the 1:1 map needs (one 256 → LM-width map if not shared with the existing 32 path).
+- **Test:** the vast thread is already running "direct result path to the talker" (PR #29, same eval, same sealed marks), so this ranks first and is not duplicated here. PR #29's marks apply: PASS needs unseen-answer accuracy ≥ 50% on both seeds. **Wrong:** ≤ 15% on both seeds.
+- **Risk:** a pure copy route would solve calculator questions without any reasoning. Keep the gate, and keep questions that need a step after the call (for example, using the result in a second call) in the eval, so the gate can't just always copy.
+
 
 1. **Now, free:** the damped-round CPU test (rank 3) on saved puzzle checkpoints, if the execution owner can spare the files. It changes nothing in the pilot.
 2. **After the English pilot reports:** rank 1 (think before calling), then rank 5. They go straight at the wrong-operation errors.
