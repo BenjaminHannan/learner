@@ -123,3 +123,7 @@ Same as the earlier main run except --copy-path: 50,000 updates (every 4th row o
 PASS: in_dist >= 80% at the end. Report all per-shift accuracies; "generalises" only if answer, frame and vocab are each within 15 points of in_dist (family reported, no mark).
 STOP EARLY: at the 16,000-update check, if in_dist is still <= 10/100 (earlier run without the copy path: 5, 6, 3, 6 of 100 at 4k/8k/12k/16k).
 If PASS, stage B (English pilot from this core, seed 0, 9216 updates, eval v3) uses the marks registered earlier (P1 >= 12/48 or P2 >= 8/48, harm <= 3, train fit >= 40/48).
+
+### 22:16Z INTERIM skills pretraining WITH copy path (task skmain2, 13k of 50k updates in)
+Shown: in_dist dev accuracy 35, 53, 54 of 100 at 4k, 8k, 12k updates (same run without the copy path: 5, 6, 3). Training exact match: 94% on stage 1, 80% stage 2, ~70% stage 3 (it falls as harder stages start, as expected). Stop-early rule (<= 10/100 at 16k) cannot trigger. Still below the 80% pass mark; final check at 50k (~23:35Z). PC disk free 4.06 GB (> 2 GB).
+Suggested: the copy path unlocked learning in the earliest, copy-style stages; whether the harder reasoning stages (levels 5-8) get learned is the open question.
