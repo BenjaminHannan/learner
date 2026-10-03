@@ -69,3 +69,14 @@ Held for Ben: committing the parent checkpoints to GitHub (claude/real-pipeline-
 
 ### 19:53Z checkpoints pushed (Ben answered "Yes, push them" in the Terminal)
 Branch claude/real-pipeline-checkpoints, commit 56d720549: seed0/seed1 parent final-resume.pt (60.7 MB each) + bootstrap-English-s0.pt (0.31 MB), hashes match config pins. Not merged to main.
+
+## 20:00Z QUEUED, pass marks registered BEFORE training: skills-curriculum pretraining of the core (PR #32, commit 4344acad4)
+Runs only after bal9216 and its rescore finish. Exploratory (fast lane); not a sealed claim; eval v3 has been seen several times.
+Stage A (pretrain, frozen LFM, same reader+core, prompt -> short answer, easy-to-hard stages, ~2 h cap, >=200k never-repeating rows, streamed if disk < 2 GB):
+- VOID if in_dist dev accuracy < 80% at the end (the core did not learn the curriculum).
+- Report accuracy on each single-shift dev file (answer, frame, vocab, variant, family) vs in_dist. "Generalises" only if answer, frame and vocab are each within 15 points of in_dist. family shift is reported, no pass mark (whole new skills).
+Stage B (English pilot seed 0, 9216 updates, control+treatment, starting from the pretrained core, rescored on fresh eval v3):
+- Train-fit gate 40/48 (else void). Null baseline so far: understanding (P1) 2-7/48, transfer (P2) 1-3/48.
+- PASS if P1 >= 12/48 OR P2 >= 8/48 for the pretrained-core endpoints, with harm <= 3. Treatment minus control reported separately (>= 6 for a treatment claim).
+- Wrong if: P1 <= 7 and P2 <= 3 (same as the null baseline).
+Open engineering step: PR #32 rows are not in the pilot's frame format; I need a small skills trainer that reuses english_graph/english_loss with prompt as the passage and answer as the target. Not written yet.
