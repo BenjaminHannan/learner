@@ -44,6 +44,7 @@ def main():
     ap.add_argument('--seeds', default='0')
     ap.add_argument('--arms', default='control,treatment')
     ap.add_argument('--phase', default='both')
+    ap.add_argument('--aux-weight', type=float, default=0.0, help='add this x router balance aux to the loss')
     ap.add_argument('--overfit-items', type=int, default=4)
     ap.add_argument('--overfit-updates', type=int, default=0, help='train only QA frames 0,1,4,5 for N updates')
     a = ap.parse_args()
@@ -98,6 +99,19 @@ def main():
                     g['lr'] = lr
                 return orig_step(rt, ctx, modules, named, opt, frame_index, participation, nonzero)
             trainer.train_step = step
+            if a.aux_weight:
+                aux_box = {}
+                orig_graph, orig_loss = runtime.english_graph, runtime.english_loss
+
+                def graph(rt, core, reader, features, mask):
+                    h, aux = orig_graph(rt, core, reader, features, mask)
+                    aux_box['aux'] = aux
+                    return h, aux
+
+                def loss_fn(rt, lm, dec, h, mask, target):
+                    per, prediction, stats = orig_loss(rt, lm, dec, h, mask, target)
+                    return per + a.aux_weight * aux_box['aux'], prediction, stats
+                runtime.english_graph, runtime.english_loss = graph, loss_fn
             targs = argparse.Namespace(root=str(root), config=str(tpath), config_sha256=tsha, require_owned_stdin=True,
                                        check=False, resume=False, segment_updates=None)
             sys.stdin = io.StringIO(trainer.GO_LINE)

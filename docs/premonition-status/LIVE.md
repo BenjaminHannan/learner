@@ -34,3 +34,7 @@ Shown: higher lr does not help (x10 worse); more updates does (6 -> 22 at 2x); r
 Suggested (untested): the limit is optimisation speed / capacity on 48 items, not a bug; routing collapse onto 2 experts may reduce capacity.
 Mistakes/notes: I killed the sweep chain at ~16:45Z which also killed the up2 treatment run at update 4195/4608 (no treatment number); stale GPU-BUSY cleared. up4 not yet run.
 Next: 4x updates (9216), both arms, seed 0.
+
+## 2026-10-03 ~19:00Z 4x updates (9216) reaches the train-fit bar on seed 0
+Shown (exploratory, TRAIN panel only): seed 0 at lr 1e-3, 9216 updates: control 43/48 (CE 0.23), treatment 41/48 (CE 0.43). Both >= 40. Mechanism note (shown): router balance aux was constant 0.001 in the pilot log, i.e. router weights never moved off zero; with identical expert clones the CE gives the router zero gradient, so experts 0 and 1 stay identical and the 8-expert MLP acts as one plain MLP. Not yet tested whether putting the balance loss in the loss helps (aux64 did not run; not needed now).
+Running: seed 1 both arms at 9216 updates (tag up4s1). Next: rescore seeds 0+1 on fresh eval v3 once, same pass marks. Caveat: eval v3 was already scored once (numbers seen), so this rescore is exploratory, not a sealed claim.
