@@ -15,9 +15,9 @@ mkdir -p /workspace/results
 flags() { case $1 in pool-old) echo "";; copy-mix) echo "--copy --wording mix";; copy-old) echo "--copy";; pool-mix) echo "--wording mix";; esac; }
 emit() { # emit <wave-number>: print the wave's result files as base64 with sha256s
   cd /workspace/results
-  tar czf /workspace/wave$1.tgz *.json *.log 2>/dev/null
+  tar czf /workspace/wave$1.tgz *.json 2>/dev/null
   echo "BEGIN-B64 wave$1.tgz $(sha256sum /workspace/wave$1.tgz | cut -d' ' -f1) $(stat -c %s /workspace/wave$1.tgz)"
-  base64 -w 3000 /workspace/wave$1.tgz | awk '{print "B64 " NR " " $0}'
+  base64 -w 380 /workspace/wave$1.tgz | awk '{print "B64 " NR " " $0}'
   echo "END-B64 wave$1.tgz"
   (sha256sum *.json; echo MANIFEST-END) | sed 's/^/MANIFEST /'
   cd /workspace/bundle
@@ -35,7 +35,7 @@ while [ $# -gt 0 ]; do
   while kill -0 $(echo $PIDS | cut -d' ' -f1) 2>/dev/null || pgrep -f run_arm.py >/dev/null; do
     for f in /workspace/run-*.out; do echo "$(basename $f): $(grep -E '^step|Error|Traceback' $f | tail -1 | cut -c1-200)"; done; sleep 90
   done
-  for f in /workspace/run-*.out; do grep -E "Traceback|Error" $f | head -3; grep "^RESULT-JSON" $f | cut -c1-1500; done
+  for f in /workspace/run-*.out; do grep -E "Traceback|Error" $f | head -3; done
   emit $W
 done
 echo ALL-DONE
