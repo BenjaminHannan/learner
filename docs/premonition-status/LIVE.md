@@ -55,13 +55,13 @@ Shown: the models memorise the 48 TRAIN questions (40-43/48) but answer only 2-7
 Caveats: eval v3 had already been scored once (UNDERFIT-VOID numbers seen) and the length was chosen on TRAIN only; this is exploratory, not a sealed claim. S1 paraphrase scoring not done. Seed 0 endpoints came from the sweep (tag up4), seed 1 from tag up4s1; same code, same lr.
 Stopping per the coordinator's plan; next step is a decision for Ben / the coordinator.
 
-## 2026-10-03 ~20:40Z Next test registered BEFORE training: router balance loss (aux weight 0.01), seed 0, 9216 updates
+## 2026-10-03 ~19:2xZ (real UTC; corrected from 20:40Z) Next test registered BEFORE training: router balance loss (aux weight 0.01), seed 0, 9216 updates
 Pass mark (fixed now, from the Projects coordinator): the test passes if, for the aux-loss endpoints, understanding (P1) OR transfer (P2) reaches >= 6/48 on fresh eval v3 AND harm <= 3 (P1 lost vs the parent, T_harm = 3). Train-fit gate stays 40/48 (below it the test is void). Treatment-minus-control difference reported separately (needs >= 6 on both for a treatment claim). Wrong if: both arms stay below 6 on both measures.
 Setup: same recipe as tag up4 (lr 1e-3, 9216 updates, seed 0, control + treatment) plus 0.01 x router balance aux in the loss (aux was constant 0.001 in earlier runs: router never moved). Seed 1 states in the rescore are the existing up4s1 endpoints (not retrained), so this is a seed-0 comparison only. Exploratory; eval v3 already seen; not a sealed claim.
 Disk: PC free ~4.9 GB before this run (one run writes ~0.12 GB per arm); will report if < 2 GB.
 Held for Ben: committing the parent checkpoints to GitHub (claude/real-pipeline-checkpoints) is an outward-facing publish of trained weights; not done without his OK.
 
-### 20:55Z step log
+### 19:3xZ (real UTC; corrected from 20:55Z) step log
 - Balance-loss run `bal9216` (seed 0, control+treatment, 9216 updates, aux 0.01) started on the PC GPU; train fit comes first, then I rescore fresh eval v3 with the registered pass mark above.
 - Calculator/reasoner configs found and exported to branch `claude/real-pipeline-code` (commit 70ef16198): RELEASE-MANIFEST-v3, TRAIN frames, schedules, runners. Eval/fresh frames and the source checkpoints are not exported.
 - Disk on the PC: 4.57 GB free (above the 2 GB warning line).
