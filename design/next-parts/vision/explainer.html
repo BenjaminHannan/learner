@@ -46,7 +46,7 @@ table{border-collapse:collapse;font-size:.88rem;min-width:600px;font-variant-num
 <tr><td>Position stamps were about 3x louder than the picture.</td><td>Stamps start at one tenth strength and learn their own volume.</td></tr>
 <tr><td>Code said 256 wide, the plan said 32.</td><td>Code now matches the plan. 11 CPU tests pass.</td></tr>
 <tr><td>"Image as notebook or grid?" no longer means much with the new shared format.</td><td>Split into E4a (how position enters) and E4b (more tokens or a close-up look, only if real screenshots need it).</td></tr>
-<tr><td>Caption training uses the same answer pipe the reasoner thread is checking.</td><td>Vision waits for that check first.</td></tr></table></div></section>
+<tr><td>Caption training uses the same answer pipe the reasoner thread is checking.</td><td>Score E1 twice: through that path, and with a read-out that skips it. That way a failure points at the right part.</td></tr></table></div></section>
 
 <section><h2>GPU tests, one change at a time (none run)</h2><div class="box"><table>
 <tr><th>Test</th><th>Change</th><th>Passes if</th><th>Wrong if</th></tr>
