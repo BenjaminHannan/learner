@@ -252,6 +252,14 @@ Read only `calculator_tools.py` and `calculator_runtime_depth_compare.py` (top d
 - The same registry pattern (literal spans with offsets, validated by the host) is the template for N4's typed write request: spans in the heard turn instead of the question.
 - N1, N3, N3b and N5 do not depend on the calculator and are unaffected.
 
+## 11e. Toy-skeleton result relayed by the coordinator (PR #27; I have not read it)
+
+Reported to me, second-hand: an end-to-end CPU skeleton on toy data (about 1.7M parameters, tiny stand-in LM) read the notebook correctly (both members of all 8 pairs right), but its own writing was weak: 6 of 16 writes right on training data, and at 600 steps it did not use the notebook at all (about 1,500 steps were needed). Label: suggested only, since it is a toy, not Premonition, and unverified by me. Changes to this plan:
+- N4 treats writing as the slower-to-learn skill. Train it with teacher-forced span targets (the correct pointer span for each fact turn), not only end-to-end answer loss, and report the write rate on TRAIN as well as fresh, so "cannot fit" is separated from "does not generalise".
+- The forced-write sub-arm from section 11b becomes mandatory, and the training budget for N4 is set after N1 reads, not copied from it. A run that stops early must be reported as "notebook not yet used", not as a failed notebook.
+- Add a step-count sweep note to N1 and N4: compare against the toy's finding that use appears late (a threshold between 600 and 1,500 steps there); the pass marks are unchanged.
+- No change to the ladder order or to the controls.
+
 ## 12. Where this sits
 
 English pilot (current-size capability) then fair scaling, then **notebook learning (this)**, then sleep replay from verified experience. The creative prototype and later learned-stopping/compressed-notes work remain after. This part produces the things sleep replay needs: a trustworthy log of exact, correctable, source-tagged facts and a measured reader and writer.
