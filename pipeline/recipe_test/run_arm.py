@@ -34,6 +34,8 @@ p = argparse.ArgumentParser()
 p.add_argument("--seed", type=int, required=True)
 p.add_argument("--copy", action="store_true")
 p.add_argument("--ctx", action="store_true", help="reader reads the frozen LM's contextual last-layer states instead of lexical embeddings")
+p.add_argument("--task", choices=["one", "two"], default="one")
+p.add_argument("--ordered", action="store_true", help="each loop reads the question with its own learned attention query instead of the mean")
 p.add_argument("--wording", choices=["old", "mix"], default="old")
 p.add_argument("--steps", type=int, default=3000)
 p.add_argument("--batch", type=int, default=16)
@@ -83,6 +85,7 @@ class Model(nn.Module):
         self.reader = HumanInputProjection(LMW)
         self.adapter = StatePrefix(256, LMW, 32, 8)
         self.tool = CalculatorPath(256)
+        self.loop_q = nn.Parameter(torch.randn(4, 256) * 0.02)  # only used with --ordered
 
 
 _cache = {}
@@ -95,7 +98,8 @@ def encode_row(r):
         return _cache[key]
     ids = tok.encode(r["text"], add_special_tokens=False) + [EOS]
     reg = build_registry(r["text"], tok)
-    assert len(reg) == 2 and [e["value"] for e in reg] == [r["x"], r["y"]], (r["text"], reg)
+    want = [r["x"], r["y"]] + ([r["z"]] if r.get("steps", 1) == 2 else [])
+    assert [e["value"] for e in reg] == want, (r["text"], reg)
     out = (ids, reg)
     _cache[key] = out
     return out
@@ -136,7 +140,11 @@ def calc_forward(model, ids, regs):
     latest = [None] * B
     for L in range(4):
         feats = state["h"] + state["e"]
-        qmean = feats[:, :n].mean(1)
+        if args.ordered:  # loop-indexed ordered read: loop L attends over the question with its own learned query
+            w = ((feats[:, :n] @ model.loop_q[L]) / 16.0).softmax(-1)
+            qmean = (feats[:, :n] * w[..., None]).sum(1)
+        else:
+            qmean = feats[:, :n].mean(1)
         action_logits = tool.action(qmean)
         C = max(len(c) for c in cands)
         refm = feats.new_zeros((B, C, 256)); valid = torch.zeros(B, C, dtype=torch.bool, device=dev)
@@ -212,19 +220,25 @@ def forward(model, rows):
 
 
 def supervision(r, loops_traces):
-    """real label policy: task call until a correct predicted task call, then NONE. pointers = candidate index of x,y literal."""
-    want = "ADD" if r["op"] == "ADD" else "SUB"
-    refs = ("literal:0", "literal:1")
-    labels, done = [], False
+    """real label policy, extended to chains: the task calls in order, each repeated until a correct predicted call, then NONE.
+    One-step rows reduce exactly to the round-1/2 policy. Pointers = candidate indices of the desired refs."""
+    two = r.get("steps", 1) == 2
+    op1 = r["op1"] if two else r["op"]
+    desired = [(op1, ("literal:0", "literal:1"))] + ([(r["op2"], (None, "literal:2"))] if two else [])
+    labels, stage, rid = [], 0, None
     for tr in loops_traces:
-        if done:
-            labels.append((0, None))
-        else:
-            cid = tr["candidate_ids"]
-            labels.append((ACTIONS.index(want), [cid.index(refs[0]), cid.index(refs[1])]))
+        if stage == len(desired):
+            labels.append((0, None)); continue
+        want, refs = desired[stage]
+        if stage == 1:
+            refs = (rid, "literal:2")
+        cid = tr["candidate_ids"]
+        labels.append((ACTIONS.index(want), [cid.index(refs[0]), cid.index(refs[1])]))
         if task_call_matches(tr, want, refs):
-            done = True
-    return labels, done
+            if stage == 0:
+                rid = tr["result"]["id"]
+            stage += 1
+    return labels, stage
 
 
 def losses(rows, logits, ans, loops, traces):
@@ -270,14 +284,17 @@ def evaluate(model, rows):
         logits, ans, loops, traces = forward(model, chunk)
         pred = logits[:, 0].argmax(-1); pred2 = logits[:, 1].argmax(-1)
         for b, r in enumerate(chunk):
-            want = "ADD" if r["op"] == "ADD" else "SUB"
-            hits = [task_call_matches(tr, want, ("literal:0", "literal:1")) for tr in traces[b]]
+            _, stage = supervision(r, traces[b])
+            need = 2 if r.get("steps", 1) == 2 else 1
             last_ok = [tr for tr in traces[b] if tr["status"] == "OK"]
-            out.append({"id": r.get("id"), "cell": r.get("cell"), "op": r["op"], "answer": r["answer"],
+            first_hit = any(task_call_matches(tr, (r["op1"] if need == 2 else r["op"]), ("literal:0", "literal:1")) for tr in traces[b])
+            out.append({"id": r.get("id"), "cell": r.get("cell"), "structure": r.get("structure"), "steps": need,
+                        "op": r.get("op"), "op1": r.get("op1"), "op2": r.get("op2"), "answer": r["answer"],
                         "pred": tok.decode([int(pred[b])]).strip(),
                         "final_ok": bool(pred[b] == ans[b] and pred2[b] == EOS),
                         "first_token_ok": bool(pred[b] == ans[b]),
-                        "call_ok": any(hits), "first_call_ok": hits[0],
+                        "call_ok": stage >= need, "call1_ok": stage >= 1, "chain_ok": stage >= need,
+                        "first_call_ok": traces[b][0]["status"] == "OK" and first_hit,
                         "last_result_ok": bool(last_ok and last_ok[-1]["result"]["value"] == r["answer"]),
                         "calls_made": sum(tr["action"] != "NONE" for tr in traces[b])})
     model.train(); return out
@@ -306,26 +323,55 @@ def summarize(res, T):
     return s
 
 
+def summarize_two(res, T):
+    s = {}
+    def agg(sel):
+        sel = list(sel)
+        d = {k: rate(sel, k) for k in ("chain_ok", "call1_ok", "final_ok", "last_result_ok")}
+        d["call2_given_call1"] = rate([r for r in sel if r["call1_ok"]], "chain_ok")
+        return d
+    s["all"] = agg(res)
+    for st in sorted({r["structure"] for r in res}):
+        s[st] = agg(r for r in res if r["structure"] == st)
+    for cell in ("unseen", "seen"):
+        s[cell] = agg(r for r in res if r["cell"].startswith(cell))
+        wrong = [r for r in res if r["cell"].startswith(cell) and not r["final_ok"]]
+        s[cell].update(wrong_answers=len(wrong), wrong_equal_a_training_answer=sum(1 for r in wrong if r["pred"].isdigit() and int(r["pred"]) in T))
+    for op in ("ADD", "SUB"):
+        s["second_" + op] = agg(r for r in res if r["op2"] == op)
+        s["first_" + op] = agg(r for r in res if r["op1"] == op)
+    return s
+
+
 def main():
     random.seed(args.seed)
     Tans, _ = gen.answer_split(); Tset = set(Tans)
-    form = gen.eval_form()
-    ex = gen.eval_pair_set(form)
     n_total = int(args.steps * args.batch * 1.25) + 64
-    data = gen2.stream_w(ex, args.seed, n_total) if args.wording == "mix" else gen.stream_b(ex, args.seed, n_total)
-    assert all(r["answer"] in Tset for r in data) and not ({(r["x"], r["y"]) for r in data} & ex)
+    if args.task == "two":
+        import gen_two_r3 as g3
+        form = g3.build_eval()
+        ex_t = {(r["x"], r["y"], r["z"]) for r in form}
+        ex_p = gen.eval_pair_set(gen.eval_form())
+        data = g3.stream(ex_t, ex_p, args.seed, n_total)
+        assert all(r["answer"] in Tset for r in data) and not ({(r["x"], r["y"], r["z"]) for r in data if r["steps"] == 2} & ex_t)
+        ex = ex_p
+    else:
+        form = gen.eval_form()
+        ex = gen.eval_pair_set(form)
+        data = gen2.stream_w(ex, args.seed, n_total) if args.wording == "mix" else gen.stream_b(ex, args.seed, n_total)
+        assert all(r["answer"] in Tset for r in data) and not ({(r["x"], r["y"]) for r in data} & ex)
     assert len({r["text"] for r in data}) == len(data)
     t0 = time.time()
     batches = bucket_batches(data, args.batch, random.Random(100 + args.seed))
     assert len(batches) >= args.steps, (len(batches), args.steps)
     batches = batches[:args.steps]
-    fit_rows = [r for b in batches[-12:] for r in b][:192]  # last training-stream questions (train wording share only reported)
+    fit_rows = [r for b in batches[-24:] for r in b if (args.task == "one" or r["steps"] == 2)][:192]  # last training-stream questions (train wording share only reported)
     print(f"encoded {n_total} rows in {time.time()-t0:.0f}s; {len(batches)} batches", flush=True)
     model = Model(args.seed).to(dev)
     params = [q for q in model.parameters() if q.requires_grad]
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.1, betas=(0.9, 0.95))
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / 200) * 0.5 * (1 + math.cos(math.pi * min(i, args.steps) / args.steps)))
-    name = args.name or f"{'copy' if args.copy else 'pool'}{'-ctx' if args.ctx else ''}-{args.wording}-seed{args.seed}"
+    name = args.name or f"{'two-' if args.task == 'two' else ''}{'copy' if args.copy else 'pool'}{'-ctx' if args.ctx else ''}{'-ord' if args.ordered else ''}-{args.wording}-seed{args.seed}"
     outdir = Path(args.out); outdir.mkdir(parents=True, exist_ok=True)
     logf = open(outdir / f"{name}.log", "w")
     t0 = time.time()
@@ -341,8 +387,9 @@ def main():
     fit = evaluate(model, fit_rows)
     ev = evaluate(model, form)
     res = {"name": name, "seed": args.seed, "copy": args.copy, "ctx": args.ctx, "round": gen.ROUND, "wording": args.wording, "steps": args.steps, "batch": args.batch,
-           "seconds": round(time.time() - t0), "eval": summarize(ev, Tset),
-           "train_fit_192": {k: rate(fit, k)[0] for k in ("final_ok", "call_ok", "last_result_ok")}}
+           "seconds": round(time.time() - t0), "task": args.task, "ordered": args.ordered,
+           "eval": (summarize_two if args.task == "two" else summarize)(ev, Tset),
+           "train_fit_192": {k: rate(fit, k)[0] for k in ("final_ok", "call_ok", "chain_ok", "last_result_ok")}}
     (outdir / f"{name}.json").write_text(json.dumps(res, indent=1))
     (outdir / f"{name}-rows.json").write_text(json.dumps(ev))
     (outdir / f"{name}-fitrows.json").write_text(json.dumps(fit))
