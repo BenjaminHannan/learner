@@ -143,3 +143,51 @@ What it means: with a copy path for the result and a calculator for the call, th
 Not shown: other task kinds (here only two-number add/subtract), larger numbers, multi-step problems, truly new story structures, or the PC pipeline. This is a calculator-assisted copy task; it says little about how a model computes hard answers itself. The eval new-wording set is only 6 families and has now been used for many decisions in this thread, so it should be refreshed before any headline claim.
 
 Cost: box 54045204 (RTX 3090, $0.163/h) ~18:02-18:36 UTC ~$0.10. Total for this thread about $0.60; credit about $13.9.
+
+---
+# Follow-up 5: sealed headline confirmation on new story structures (rule in `PASS-MARKS-6.md`; eval `EVAL-FORM-v2.json` sealed in `SEAL-v2.json`)
+
+Eval v2: 96 matched ADD/SUB pairs in six story structures that training never shows (question first, distractor sentence, table layout, quoted dialogue, future tense with scene-setting, distance with units). One subagent wrote it, an independent subagent checked it (`EVAL2-CHECK-REPORT.md`; first check found number words like "two"/"first" in the text, the author's templates were patched by me and the check re-run: PASS), hash-sealed before any training, scored once per run. Arms, 6 seeds each: copy-only (old 4 templates) vs combined (copy path + varied training wording). All 2304 rows were counted and checked against the form before the boxes were destroyed (`results/*-v2-rows.json`, `results/SUMMARY-eval2.json`). One box crashed with CUDA errors on 5 of 6 combined runs (bad GPU); I destroyed it and re-ran all 6 seeds on another box (extra cost ~$0.09).
+
+Right-call rate on all 192 v2 questions:
+
+| seed | copy-only | combined | gain |
+|---|---|---|---|
+| 0 | 74.5% | 81.8% | +7.3 |
+| 1 | 73.4% | 80.2% | +6.8 |
+| 2 | 69.8% | 78.1% | +8.3 |
+| 3 | 65.6% | 76.0% | +10.4 |
+| 4 | 66.7% | 75.5% | +8.9 |
+| 5 | 75.5% | 84.9% | +9.4 |
+
+Paired mean gain **+8.5 points** (SD 1.3, 95% interval +7.1 to +9.9). Combined mean right-call rate **79.4%** (SD 3.6; copy-only 70.9%, SD 4.2).
+
+Rule: CONFIRMED needed mean gain >= +8 (met), interval lower bound > 0 (met), and combined mean >= 80% (**missed by 0.6 points**). FALSIFIED needed gain < +3 (not met). Strictly: not a full CONFIRMED, in between. Read it as: the gain from varied wording holds on genuinely new story structures and is consistent on every seed, but it is smaller than on the first eval (+16.5) and the combined recipe is not near-perfect there (79%).
+
+Where it still fails (right-call rate, copy-only / combined): table layout 38% / 36%, question-first 64% / 70%, distance-with-units 57% / 78%, dialogue 76% / 98%, future-scene 92% / 100%, distractor 100% / 94%. So the remaining errors are specific structures (a list layout with no sentence, the question stated before the facts), which the composer never shows. Final accuracy equals the right-call rate in every run (copy path), unseen-answer accuracy is 72.2% (copy-only) and 78.6% (combined) against 69.6% / 80.2% on seen answers, and no wrong unseen answer is a training answer (0 of 283).
+
+Standing numbers on this harder eval (6 seeds): copy-only SD 4.2 points, combined SD 3.6; paired-gain SD 1.3.
+
+---
+# Follow-up 6: two-step problems, chained calls (fast lane, marks in `PASS-MARKS-7.md`, fixed before training)
+
+Recipe as before (copy path, 4 loops) plus a call head that can point at 3 numbers and at the result slots of calls 1 and 2; training = 70% two-step items (x op1 y, then that result op2 z) plus 30% one-step items, never-repeating, two-step training wording from `gen_two.py` (pruned of any frame sharing a sentence or 6-gram with the eval frames). Eval: 96 two-step questions with different wording (48 final answers unseen as training answers, 48 seen), simple held-out split, no sealing. 6 seeds; 576 rows checked before destroying the box (`results/two-seed*-rows.json`, `results/SUMMARY-twostep.json`). Code: `model2.py`, `train2.py`, `gen_two.py`, `build_eval_two.py`.
+
+| measure (mean of 6 seeds, SD) | value |
+|---|---|
+| call 1 right | 64.4% (2.0) |
+| call 2 right | 45.7% (1.2) |
+| both calls right (chain) | 39.9% (0.9) |
+| final accuracy | 39.9% (0.9) |
+| final on unseen answers / seen answers | 42.7% / 37.2% |
+| train fit (two-step items, chain) | 100% (all seeds, at the end of training) |
+
+Rule: HOLDS needed chain >= 80% and unseen >= 75% and < 20% of wrong unseen finals equal to a training answer. FAILS if chain < 50% or unseen < 40%. Chain is 39.9%: **FAILS**.
+
+What it shows:
+- The copy path holds in the sense that matters: whenever the chain is right, the final answer is right (final accuracy equals chain rate in every run). No readout error appears.
+- The calls do not hold on the new wording. Per operation pair (seed 0; seed 3 is similar): add-then-add 19/24 chain right, subtract-then-add 20/24; **any problem whose second step is a subtraction is 0/48 on call 2**, and add-then-subtract also loses call 1 (1/24 and 5/24). The training fit is 100%, so this is generalisation to new wording of the loss/gain phrases, not inability to learn the task.
+- That is the same kind of failure as before (call decided from pooled features on wording seen only in 4 families of phrases), now made worse by two operations in one text. Suggested, not shown: the calls need the same wording variety that fixed the one-step case, plus likely a way to read the operations in order (the action head reads a mean over the question, which cannot tell the first operation from the second).
+- 59% of wrong unseen finals equal a training answer (97 of 165); this is about what chance gives for wrong values (training answers are two-thirds of the values), so it is not evidence of a lookup.
+
+Cost for follow-ups 5 and 6: boxes 54049235, 54049236 (crashed), 54049875, 54052643 at ~$0.16/h for 0.5-0.9 h each: about $0.45. Credit now about $13.0. Total for this thread about $1.1.
