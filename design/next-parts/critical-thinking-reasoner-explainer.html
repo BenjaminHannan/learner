@@ -1,0 +1,147 @@
+<title>Reasoner Design Page</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: picture first. Each section is one diagram with a few lines under it. */
+:root{
+  --bg:#f6f7f8; --fg:#1b2127; --muted:#5a6672; --line:#cfd6dc; --card:#ffffff;
+  --accent:#1f6f8b; --warn:#b4531a; --good:#2f7d4f; --soft:#e4eef2;
+  --f-display:'Fraunces',Georgia,serif; --f-body:'Source Sans 3',system-ui,sans-serif; --f-mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12171b; --fg:#e6ebef; --muted:#9aa7b2; --line:#34404a; --card:#1a2127;
+  --accent:#6fc0dc; --warn:#e8935a; --good:#6cc08b; --soft:#1f2c34; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171b; --fg:#e6ebef; --muted:#9aa7b2; --line:#34404a; --card:#1a2127;
+  --accent:#6fc0dc; --warn:#e8935a; --good:#6cc08b; --soft:#1f2c34; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;padding-inline:16px;padding-block:20px}
+main{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-display);font-size:clamp(26px,5vw,36px);line-height:1.15;margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-size:21px;margin:0 0 4px;text-wrap:balance}
+p{margin:6px 0;max-width:65ch}
+.sub{color:var(--muted);margin:0}
+section{display:flex;flex-direction:column;gap:8px}
+.fig{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:10px;overflow-x:auto}
+.fig svg{display:block;min-width:620px;width:100%;height:auto}
+svg text{font-family:var(--f-body);fill:var(--fg);font-size:13px}
+svg .m{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+svg .b{font-weight:600}
+.box{fill:var(--soft);stroke:var(--line)}
+.hot{fill:none;stroke:var(--warn);stroke-width:2;stroke-dasharray:5 3}
+.ln{stroke:var(--fg);stroke-width:1.4;fill:none}
+.tag{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+ul{margin:4px 0;padding-left:20px} li{margin:2px 0;max-width:65ch}
+a{color:var(--accent)}
+.lab{font-family:var(--f-mono);font-size:12px}
+</style>
+<main>
+<header>
+<h1>A reasoner that gets the most thinking per parameter</h1>
+<p class="sub">Design only. Nothing was trained or run. Every claim is tagged shown, suggested or untested in the full doc (<code>design/next-parts/critical-thinking-reasoner-design.md</code>).</p>
+</header>
+
+<section>
+<h2>1. Where today's pipe is narrow</h2>
+<div class="fig"><svg viewBox="0 0 760 190" role="img" aria-label="Pipeline from question words through reader, core, 32-wide layer and averaging to 8 vectors into the language model">
+<rect class="box" x="10" y="60" width="100" height="56" rx="5"/><text x="60" y="85" text-anchor="middle" class="b">Words</text><text x="60" y="102" text-anchor="middle" class="m">≤48 + notes 256</text>
+<rect class="box" x="150" y="60" width="110" height="56" rx="5"/><text x="205" y="85" text-anchor="middle" class="b">Reader</text><text x="205" y="102" text-anchor="middle" class="m">one word at a time</text>
+<rect class="box" x="300" y="45" width="150" height="86" rx="5"/><text x="375" y="72" text-anchor="middle" class="b">Core, 4 rounds</text><text x="375" y="90" text-anchor="middle" class="m">2 blocks, 8 experts</text><text x="375" y="106" text-anchor="middle" class="m">~9M stored</text>
+<rect class="box" x="490" y="60" width="100" height="56" rx="5"/><text x="540" y="85" text-anchor="middle" class="b">32 wide</text><text x="540" y="102" text-anchor="middle" class="m">then average</text>
+<rect class="box" x="630" y="60" width="120" height="56" rx="5"/><text x="690" y="85" text-anchor="middle" class="b">8 vectors</text><text x="690" y="102" text-anchor="middle" class="m">→ frozen LM</text>
+<path class="ln" d="M110 88H150M260 88H300M450 88H490M590 88H630"/>
+<rect class="hot" x="480" y="50" width="280" height="76" rx="8"/>
+<text x="620" y="38" text-anchor="middle" style="fill:var(--warn)" class="b">suspected squeeze (untested)</text>
+<rect class="hot" x="140" y="50" width="130" height="76" rx="8"/>
+<text x="205" y="38" text-anchor="middle" style="fill:var(--warn)" class="b">no word context</text>
+<text x="10" y="170" class="m">Calculator panel: 86/128 right setup, 15/128 right final answer. Pipeline code for it lives on Ben's Mac, so this match is not confirmed (check F0).</text>
+</svg></div>
+<p>Shown in code: the reader uses fixed word vectors with no context, and the output averages every question position into 8 vectors through 32 numbers. A long exact number could be smeared. That is a guess until the free checks run.</p>
+</section>
+
+<section>
+<h2>2. The proposed shape</h2>
+<div class="fig"><svg viewBox="0 0 760 250" role="img" aria-label="Proposed architecture with modality encoders, workspace, looped core, draft registers, halt head, tool port and talker">
+<rect class="box" x="10" y="20" width="130" height="50" rx="5"/><text x="75" y="42" text-anchor="middle" class="b">Text encoder</text><text x="75" y="58" text-anchor="middle" class="m">reader (today)</text>
+<rect class="box" x="10" y="85" width="130" height="50" rx="5"/><text x="75" y="107" text-anchor="middle" class="b">Vision / audio</text><text x="75" y="123" text-anchor="middle" class="m">other threads</text>
+<rect class="box" x="10" y="150" width="130" height="50" rx="5"/><text x="75" y="172" text-anchor="middle" class="b">Tool results</text><text x="75" y="188" text-anchor="middle" class="m">calculator, guides</text>
+<rect class="box" x="190" y="50" width="130" height="120" rx="5"/><text x="255" y="80" text-anchor="middle" class="b">Workspace</text><text x="255" y="100" text-anchor="middle" class="m">vectors + type tag</text><text x="255" y="116" text-anchor="middle" class="m">+ coordinates</text><text x="255" y="132" text-anchor="middle" class="m">+ valid mask</text>
+<rect class="box" x="370" y="50" width="150" height="120" rx="5"/><text x="445" y="80" text-anchor="middle" class="b">Looped core</text><text x="445" y="100" text-anchor="middle" class="m">same 2 blocks,</text><text x="445" y="116" text-anchor="middle" class="m">random number of rounds</text><text x="445" y="132" text-anchor="middle" class="m">8 experts held fixed</text>
+<rect class="box" x="570" y="20" width="180" height="46" rx="5"/><text x="660" y="40" text-anchor="middle" class="b">Answer notepad</text><text x="660" y="56" text-anchor="middle" class="m">8 slots, read 1 to 1</text>
+<rect class="box" x="570" y="82" width="180" height="40" rx="5"/><text x="660" y="107" text-anchor="middle" class="b">Stop head</text>
+<rect class="box" x="570" y="138" width="180" height="40" rx="5"/><text x="660" y="163" text-anchor="middle" class="b">Tool / action port</text>
+<rect class="box" x="570" y="194" width="180" height="40" rx="5"/><text x="660" y="219" text-anchor="middle" class="b">Talker → frozen LM</text>
+<path class="ln" d="M140 45H165V95H190M140 110H190M140 175H165V125H190M320 110H370M520 100H545V43H570M520 105H570M520 125H545V158H570M660 66V72M660 178V194"/>
+<path class="ln" d="M570 158H545V210H400V170" style="stroke-dasharray:4 3"/>
+<text x="420" y="240" text-anchor="middle" class="m">tool result re-enters the workspace</text>
+</svg></div>
+<p>Five parts, each a separate test. The core never sees raw text, pixels or sound, so any encoder that outputs vectors can plug in. The talker only reads the notepad.</p>
+</section>
+
+<section>
+<h2>3. One change at a time</h2>
+<div class="fig"><svg viewBox="0 0 760 200" role="img" aria-label="Ordered experiment ladder from free checks through C1 to C5 and scaling test S">
+<rect x="10" y="20" width="150" height="70" rx="5" fill="var(--soft)" stroke="var(--good)" stroke-width="2"/><text x="85" y="44" text-anchor="middle" class="b">Free checks F0-F4</text><text x="85" y="62" text-anchor="middle" class="m">read saved outputs</text><text x="85" y="76" text-anchor="middle" class="m">no training</text>
+<g class="lab">
+<rect class="box" x="190" y="20" width="110" height="70" rx="5"/><text x="245" y="44" text-anchor="middle" class="b">C1 pipe test</text><text x="245" y="62" text-anchor="middle" class="m">repeat a number</text><text x="245" y="76" text-anchor="middle" class="m">through the pipe</text>
+<rect class="box" x="320" y="20" width="110" height="70" rx="5"/><text x="375" y="44" text-anchor="middle" class="b">C2 fix pipe</text><text x="375" y="62" text-anchor="middle" class="m">only if C1 fails</text>
+<rect class="box" x="450" y="20" width="110" height="70" rx="5"/><text x="505" y="44" text-anchor="middle" class="b">C3 new data</text><text x="505" y="62" text-anchor="middle" class="m">never repeats</text>
+<rect class="box" x="580" y="20" width="110" height="70" rx="5"/><text x="635" y="44" text-anchor="middle" class="b">C4 think longer</text><text x="635" y="62" text-anchor="middle" class="m">random rounds</text>
+<rect class="box" x="250" y="115" width="140" height="62" rx="5"/><text x="320" y="140" text-anchor="middle" class="b">C5 few examples</text><text x="320" y="158" text-anchor="middle" class="m">ordered notebook</text>
+<rect x="430" y="115" width="200" height="62" rx="5" fill="var(--soft)" stroke="var(--accent)" stroke-width="2"/><text x="530" y="140" text-anchor="middle" class="b">S: scaling test</text><text x="530" y="158" text-anchor="middle" class="m">ends stage one</text>
+</g>
+<path class="ln" d="M160 55H190M300 55H320M430 55H450M560 55H580M635 90V102H320V115M390 146H430"/>
+</svg></div>
+<ul>
+<li>Pass marks and the result that would prove each change wrong are written and hash-sealed before each run. Two seeds each.</li>
+<li>Example: C1 passes at ≥95% exact on 1 to 4 digit numbers, and means the squeeze is not the problem if it does.</li>
+<li>Two failed changes aimed at the same problem mean we stop and ask outside models before trying a third.</li>
+</ul>
+</section>
+
+<section>
+<h2>4. Beating bigger models at our size</h2>
+<div class="fig"><svg viewBox="0 0 760 240" role="img" aria-label="Schematic of what a passing scaling test would look like: our curve below plain model curves at all sizes">
+<line class="ln" x1="70" y1="20" x2="70" y2="190"/><line class="ln" x1="70" y1="190" x2="710" y2="190"/>
+<text x="26" y="110" transform="rotate(-90 26 110)" text-anchor="middle" class="m">held-out loss (lower is better)</text>
+<text x="390" y="218" text-anchor="middle" class="m">stored parameters, log scale (e.g. 2M / 9M / 36M)</text>
+<polyline fill="none" stroke="var(--muted)" stroke-width="2" points="130,60 390,100 650,140"/>
+<polyline fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 3" points="130,40 390,80 650,120"/>
+<polyline fill="none" stroke="var(--accent)" stroke-width="3" points="130,85 390,115 650,145"/>
+<text x="660" y="40" class="m" style="fill:var(--muted)">plain, 2× our size</text>
+<text x="660" y="165" class="b" style="fill:var(--accent)">ours</text>
+<text x="76" y="14" class="m">Schematic of the pass condition only. No results exist yet.</text>
+</svg></div>
+<p>Same recipe at three sizes against a plain, non-looped model at 1×, 2× and 4× each size. "Improves with scale" needs all three: we beat the 2× plain model at every size, our curve is at least as steep, and extra thinking rounds still help at the largest size.</p>
+<p>In the schematic the blue line would need to sit under the 2× line at all three sizes and not bend toward it. If the gap shrinks every step, the gain was a small-model artifact. The one measured point so far is the maze test: looped 51.0 vs plain 33.8 at about 1.6M weights, one size only.</p>
+</section>
+
+<section>
+<h2>5. Roadmap</h2>
+<div class="fig"><svg viewBox="0 0 760 130" role="img" aria-label="Roadmap from free checks to scaling to Minecraft north star">
+<path class="ln" d="M20 50H730"/>
+<g class="lab">
+<circle cx="50" cy="50" r="7" fill="var(--good)"/><text x="50" y="30" text-anchor="middle" class="b">A</text><text x="50" y="80" text-anchor="middle" class="m">free checks</text>
+<circle cy="50" cx="170" r="7" fill="var(--accent)"/><text x="170" y="30" text-anchor="middle" class="b">B</text><text x="170" y="80" text-anchor="middle" class="m">C1, fix pipe if needed</text>
+<circle cx="300" cy="50" r="7" fill="var(--accent)"/><text x="300" y="30" text-anchor="middle" class="b">C</text><text x="300" y="80" text-anchor="middle" class="m">C3 data, C4 rounds</text>
+<circle cx="420" cy="50" r="7" fill="var(--accent)"/><text x="420" y="30" text-anchor="middle" class="b">D</text><text x="420" y="80" text-anchor="middle" class="m">C5 few examples</text>
+<circle cx="530" cy="50" r="7" fill="var(--accent)"/><text x="530" y="30" text-anchor="middle" class="b">E</text><text x="530" y="80" text-anchor="middle" class="m">scaling test</text>
+<circle cx="640" cy="50" r="7" fill="var(--warn)"/><text x="640" y="30" text-anchor="middle" class="b">F</text><text x="640" y="80" text-anchor="middle" class="m">scale up, facts later</text>
+<text x="640" y="110" text-anchor="middle" class="m" style="fill:var(--warn)">north star: play Minecraft by screen</text>
+</g>
+</svg></div>
+<ul>
+<li>No skill list for stage one. It is a proof of concept for the recipe, not the final skills.</li>
+<li>Minecraft (long term, untested): the tool port becomes keyboard and mouse actions, each new frame re-enters as workspace vectors, and online guides arrive as notebook text. Nothing in stage one changes except keeping the interface modality-agnostic.</li>
+</ul>
+</section>
+
+<section>
+<h2>6. Questions for Ben</h2>
+<ul>
+<li>Is a talker widened from 32 to 256 still "thin"? (Default: only if the pipe test fails.)</li>
+<li>May the reader see the LM's context-aware vectors? (Default: no.)</li>
+<li>Can the Mac pipeline details and the 128 saved outputs be shared so the free checks can run?</li>
+<li>Which sizes and compute budget for the scaling test?</li>
+<li>Should 256 be the shared vector width with the vision and audio threads?</li>
+</ul>
+</section>
+</main>
