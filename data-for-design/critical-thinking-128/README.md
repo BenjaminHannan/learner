@@ -35,7 +35,7 @@ Mechanism of the failure mode (see the trace file): the model emits a calculator
 
 `summaries/`
 - `TERMINAL-FRESH-SCORED-TABLE-v1.tsv`, `DEREK-RESULT-TABLE-v1.tsv` - the 8-row endpoint tables.
-- `DEREK-SAVED-128-ROW-NUMERIC-TRACE-v1.tsv` - per-row: expected, emitted value, executed operation/operands, calculator value, outcome (`correct`, `correct_call_wrong_final`, `wrong_call_wrong_final`). Note: the first 3 columns after `seed` in this file cover seed 1 rows at the top; check the `seed` column for the rest.
+- `DEREK-SAVED-128-ROW-NUMERIC-TRACE-v1.tsv` - per-row: expected, emitted value, executed operation/operands, calculator value, outcome (`correct`, `correct_call_wrong_final`, `wrong_call_wrong_final`).
 - `DEREK-SAVED-FRESH-RESULT-DIAGNOSIS-v1.json`, `DEREK-SAVED-FRESH-RESULT-DIAGNOSIS-v2.py` - saved diagnosis and the script that produced it (CPU only, reads the saved files).
 - `DEREK-ALL128-SAVED-PERFORMANCE-v1.json` - latency/memory summary.
 - `INDEPENDENT-POSTGOLD-RECOUNT-v1.json` - separate recount that matches the totals above.
