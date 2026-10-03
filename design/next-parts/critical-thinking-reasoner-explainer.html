@@ -52,13 +52,62 @@ a{color:var(--accent)}
 <text x="620" y="38" text-anchor="middle" style="fill:var(--warn)" class="b">suspected squeeze (untested)</text>
 <rect class="hot" x="140" y="50" width="130" height="76" rx="8"/>
 <text x="205" y="38" text-anchor="middle" style="fill:var(--warn)" class="b">no word context</text>
-<text x="10" y="170" class="m">Calculator panel: 86/128 right setup, 15/128 right final answer. Pipeline code for it lives on Ben's Mac, so this match is not confirmed (check F0).</text>
+<text x="10" y="170" class="m">Calculator panel: 86/128 right call, 15/128 right final answer. Its pipeline code is now on GitHub; whether it uses this exact output path is still open (F0).</text>
 </svg></div>
 <p>Shown in code: the reader uses fixed word vectors with no context, and the output averages every question position into 8 vectors through 32 numbers. A long exact number could be smeared. That is a guess until the free checks run.</p>
 </section>
 
+
 <section>
-<h2>2. The proposed shape</h2>
+<h2>2. What the 128 saved answers show</h2>
+<div class="fig"><svg viewBox="0 0 760 230" role="img" aria-label="Bar chart: of 64 rows whose right answer appeared in training, 15 were answered correctly; of 64 rows whose right answer never appeared in training, 0 were correct">
+<line class="ln" x1="200" y1="30" x2="200" y2="170"/>
+<line x1="200" y1="170" x2="720" y2="170" style="stroke:var(--line)"/>
+<g class="m"><text x="200" y="188" text-anchor="middle">0</text><text x="370" y="188" text-anchor="middle">20</text><text x="540" y="188" text-anchor="middle">40</text><text x="710" y="188" text-anchor="middle">60</text></g>
+<line x1="370" y1="30" x2="370" y2="170" style="stroke:var(--line);stroke-dasharray:2 3"/><line x1="540" y1="30" x2="540" y2="170" style="stroke:var(--line);stroke-dasharray:2 3"/><line x1="710" y1="30" x2="710" y2="170" style="stroke:var(--line);stroke-dasharray:2 3"/>
+<text x="190" y="62" text-anchor="end" class="b">Answer seen</text><text x="190" y="78" text-anchor="end" class="m">in training (64 rows)</text>
+<rect x="200" y="50" width="544" height="34" fill="var(--soft)" stroke="var(--line)"/>
+<rect x="200" y="50" width="127.5" height="34" fill="var(--good)"/>
+<text x="335" y="72" class="b">15 right</text>
+<text x="190" y="127" text-anchor="end" class="b">Answer never</text><text x="190" y="143" text-anchor="end" class="m">in training (64 rows)</text>
+<rect x="200" y="115" width="544" height="34" fill="var(--soft)" stroke="var(--line)"/>
+<rect x="200" y="115" width="2" height="34" fill="var(--warn)"/>
+<text x="210" y="137" class="b" style="fill:var(--warn)">0 right</text>
+<text x="460" y="215" text-anchor="middle" class="m">rows of the consumed panel (16 questions × 8 checkpoints), study only, never a score</text>
+</svg></div>
+<p>Shown: all 113 wrong answers are numbers the model saw as training answers. When the right number was new, it never said it. Carry, borrow, seed and reader type made little difference. So in practice the model picks from numbers it has seen, which points to memorising. The data change comes before any shape change.</p>
+<p>Also shown in the pipeline code: the calculator call is chosen <b>before the first thinking round</b>. 127 of 128 rows called at loop 0. Thinking can't help pick the operation if the pick comes first.</p>
+</section>
+
+<section>
+<h2>3. More shape ideas from recent papers</h2>
+<div class="fig"><svg viewBox="0 0 760 330" role="img" aria-label="Ranked list of eight shape ideas with what each aims at and its weight cost">
+<g class="m"><text x="10" y="20">rank</text><text x="60" y="20">idea</text><text x="330" y="20">aims at</text><text x="610" y="20">added weights</text></g>
+<line x1="10" y1="28" x2="750" y2="28" style="stroke:var(--line)"/>
+<g>
+<rect x="10" y="36" width="740" height="32" rx="4" fill="var(--soft)" stroke="var(--good)" stroke-width="2"/>
+<text x="24" y="57" class="b">1</text><text x="60" y="57" class="b">Think before calling</text><text x="330" y="57">38 wrong operations</text><text x="610" y="57">0</text>
+<text x="24" y="93" class="b">2</text><text x="60" y="93" class="b">State lanes</text><text x="330" y="93">beat a plain model 2× our size</text><text x="610" y="93">~12k</text>
+<text x="24" y="129" class="b">3</text><text x="60" y="129" class="b">Smaller step per round</text><text x="330" y="129">answers that wander; free CPU test</text><text x="610" y="129">0 to 256</text>
+<text x="24" y="165" class="b">4</text><text x="60" y="165" class="b">Canon layers</text><text x="330" y="165">weak word order</text><text x="610" y="165">~3k</text>
+<text x="24" y="201" class="b">5</text><text x="60" y="201" class="b">Score every operation</text><text x="330" y="201">wrong operation choice</text><text x="610" y="201">~4k</text>
+<text x="24" y="237" class="b">6</text><text x="60" y="237" class="b">Pair-binding head</text><text x="330" y="237">learn from a few examples</text><text x="610" y="237">0 to 65k</text>
+<text x="24" y="273" class="b">7</text><text x="60" y="273" class="b">Task-code search</text><text x="330" y="273">few examples, forget nothing</text><text x="610" y="273">0</text>
+<text x="24" y="309" class="b">8</text><text x="60" y="309" class="b">Unshared entry block</text><text x="330" y="309">no context before round 1</text><text x="610" y="309">~790k</text>
+</g>
+<g style="stroke:var(--line)"><line x1="10" y1="76" x2="750" y2="76"/><line x1="10" y1="112" x2="750" y2="112"/><line x1="10" y1="148" x2="750" y2="148"/><line x1="10" y1="184" x2="750" y2="184"/><line x1="10" y1="220" x2="750" y2="220"/><line x1="10" y1="256" x2="750" y2="256"/><line x1="10" y1="292" x2="750" y2="292"/></g>
+</svg></div>
+<ul>
+<li><b>Think before calling</b> (our own data): block the calculator for the first 2 rounds so the core thinks before it picks. Zero weights.</li>
+<li><b>State lanes</b> (Hyperloop Transformers, 2026): 4 parallel copies of the thinking state. The paper reports matching plain models with about 50% fewer weights. It grows state, not weights.</li>
+<li><b>Smaller step per round</b> (two 2026 papers): each round moves only a quarter of the way. Testable today on saved puzzle models, on the CPU.</li>
+<li><b>Canon layers</b> (Allen-Zhu, 2025): each word mixes in its neighbours. About 2× reasoning depth in the paper, for 3k weights.</li>
+<li>Ranks 5 to 8 and the parked ideas (fact table, world model for Minecraft, fast reflex) are in <code>critical-thinking-shape-shortlist.md</code>. All are untested for us.</li>
+</ul>
+</section>
+
+<section>
+<h2>4. The proposed shape</h2>
 <div class="fig"><svg viewBox="0 0 760 250" role="img" aria-label="Proposed architecture with modality encoders, workspace, looped core, draft registers, halt head, tool port and talker">
 <rect class="box" x="10" y="20" width="130" height="50" rx="5"/><text x="75" y="42" text-anchor="middle" class="b">Text encoder</text><text x="75" y="58" text-anchor="middle" class="m">reader (today)</text>
 <rect class="box" x="10" y="85" width="130" height="50" rx="5"/><text x="75" y="107" text-anchor="middle" class="b">Vision / audio</text><text x="75" y="123" text-anchor="middle" class="m">other threads</text>
@@ -77,7 +126,7 @@ a{color:var(--accent)}
 </section>
 
 <section>
-<h2>3. One change at a time</h2>
+<h2>5. One change at a time</h2>
 <div class="fig"><svg viewBox="0 0 760 200" role="img" aria-label="Ordered experiment ladder from free checks through C1 to C5 and scaling test S">
 <rect x="10" y="20" width="150" height="70" rx="5" fill="var(--soft)" stroke="var(--good)" stroke-width="2"/><text x="85" y="44" text-anchor="middle" class="b">Free checks F0-F4</text><text x="85" y="62" text-anchor="middle" class="m">read saved outputs</text><text x="85" y="76" text-anchor="middle" class="m">no training</text>
 <g class="lab">
@@ -98,7 +147,7 @@ a{color:var(--accent)}
 </section>
 
 <section>
-<h2>4. Beating bigger models at our size</h2>
+<h2>6. Beating bigger models at our size</h2>
 <div class="fig"><svg viewBox="0 0 760 240" role="img" aria-label="Schematic of what a passing scaling test would look like: our curve below plain model curves at all sizes">
 <line class="ln" x1="70" y1="20" x2="70" y2="190"/><line class="ln" x1="70" y1="190" x2="710" y2="190"/>
 <text x="26" y="110" transform="rotate(-90 26 110)" text-anchor="middle" class="m">held-out loss (lower is better)</text>
@@ -115,7 +164,7 @@ a{color:var(--accent)}
 </section>
 
 <section>
-<h2>5. Roadmap</h2>
+<h2>7. Roadmap</h2>
 <div class="fig"><svg viewBox="0 0 760 130" role="img" aria-label="Roadmap from free checks to scaling to Minecraft north star">
 <path class="ln" d="M20 50H730"/>
 <g class="lab">
@@ -135,11 +184,12 @@ a{color:var(--accent)}
 </section>
 
 <section>
-<h2>6. Decided and still open</h2>
+<h2>8. Decided and still open</h2>
 <ul>
-<li>Decided by default: talker stays 32 wide unless the pipe test fails, reader keeps static word vectors, shared width is 256 to match the vision design (PR #22), scaling uses the fair-scaling ladder (PR #18, 3 seeds per size).</li>
-<li>Open for Ben: may we study the 128 saved outputs? They come from an already-scored panel, so that counts as peeking. If not, the free checks are replaced by the pipe test alone.</li>
-<li>Open: which kinds of tasks go into the never-repeating training data.</li>
+<li>Decided: talker stays 32 wide unless the pipe test fails; shared width is 256 with a (role, modality) tag per vector, matching vision (PR #22) and audio (PR #24); scaling uses the fair-scaling ladder (PR #18, 3 seeds per size).</li>
+<li>Changed after checking design doc v5: the reader type (static or context-aware) belongs to the English pilot, so this design no longer picks one. The tests are a menu of separate decisions after the pilot, and the free checks run on the CPU only.</li>
+<li>Ben said yes to studying the 128 saved answers for design only. They are never a score.</li>
+<li>Open: which kinds of tasks go into the never-repeating training data, and the compute for the scaling test once it is reached.</li>
 </ul>
 </section>
 </main>
