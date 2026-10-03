@@ -39,7 +39,7 @@ There are three rulers, and their numbers are never mixed:
 ## 3. Architecture proposal
 
 ```
-[modality encoder(s)] --latent tokens + segment + coords--> [Workspace assembly]
+[modality encoder(s)] --latent tokens + role+modality + coords--> [Workspace assembly]
   text: frozen-LM word vectors -> thin reader (today)          |  question | notebook | examples | tool results | R draft registers
   vision / audio: other threads                                 v
                                                [Looped core: 2 shared blocks x N rounds, MoE held at 8/top-2]
@@ -52,7 +52,7 @@ There are three rulers, and their numbers are never mixed:
                               [Talker: per-register map 256 -> h -> LM width, 1:1, no pooling] -> frozen LM
 ```
 
-1. **Workspace assembly:** each vector gets a learned *segment* vector, optional *coordinates* and a validity mask. This fixes the bag-of-words notebook and is the §6 contract (untested).
+1. **Workspace assembly:** each vector gets a learned *role* and *modality* vector pair, optional *coordinates* and a validity mask. This fixes the bag-of-words notebook and is the §6 contract (untested).
 2. **Draft registers:** R = 8 learned vectors attending every round. They hold the current answer (TRM's *y*); question positions are scratch (*z*). In TRM, two states beat one or three (suggested, cited abstract).
 3. **Looped core:** today's blocks, trained with random depth so extra test-time rounds help. The puzzle ruler already trains this way (shown); the benefit on the assistant path is suggested (Huginn).
 4. **Talker:** reads the registers 1:1. One hidden layer, no attention, no reasoning; the width (32 today) is an open question.
@@ -103,7 +103,7 @@ Deferred until after S, each a single change later: a plan head for operation ch
 
 **In:** `Workspace`
 - `tokens [B, N, d]` with d = 256 (today's core width). Each modality adapter owns its own projection to d.
-- `segment [B, N]` int from a shared table: question, notebook, example_k, tool_result, register, plus one id per modality (text / image / audio).
+- `role [B, N]` and `modality [B, N]`, two int ids per vector (decision: a pair, matching the vision design on PR #22, not one combined segment id). Roles: question, notebook, example_k, tool_result, register. Modalities: text, image, audio, and more later. The core adds `Embedding(n_role, d) + Embedding(n_mod, d)`, both zero-init. A pair avoids a table that grows as roles x modalities, so audio needs one new modality id and no new roles.
 - `coords [B, N, ≤3]` optional (row, column, time), turned into relative-bias indices. Coordinates left empty get the neutral "no position" index, which should be a *new* index rather than today's offset-0.
 - `valid [B, N]` bool.
 - `provenance` metadata. This is never used as an input feature.
@@ -148,7 +148,7 @@ A: F0-F4 (free) → B: C1, then C2a/C2b only if needed → C: C3, C4 → D: C5 �
 Settled under Ben's standing autonomy (coordinator, 13:26 UTC; defaults taken, reversible):
 1. **Talker width:** stays 32 unless C1 fails; only then widen (C2b). Not a "thin" violation to test it.
 2. **Reader:** stays on static word vectors. No LM hidden states.
-3. **Shared width:** d = 256, matching the vision design (PR #22), which uses `tokens [B,N,256]`, a layout tag (grid / seq / set), a zero-init modality embedding and optional coordinates. §6 should be merged with that contract rather than kept separate. Differences to reconcile: this doc proposes a segment table that also covers notebook / example / tool-result roles and a `valid` mask, because the core has no padding mask today (shown in PR #22 as well).
+3. **Shared width:** d = 256, matching the vision design (PR #22), which uses `tokens [B,N,256]`, a layout tag (grid / seq / set), a zero-init modality embedding and optional coordinates. §6 should be merged with that contract rather than kept separate. Reconciled (13:28 UTC): each vector carries a (role, modality) pair, as in the vision design, plus `coords` and a `valid` mask.
 4. **Scaling sizes and compute:** per §7 (PR #18 ladder, 3 seeds).
 
 Still open for Ben:
