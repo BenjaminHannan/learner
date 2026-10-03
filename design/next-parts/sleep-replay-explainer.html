@@ -215,12 +215,12 @@ ol,ul{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:6px;ma
 </section>
 
 <section>
-  <h2>Questions for Ben</h2>
+  <h2>Decisions made</h2>
   <ol>
-    <li>Is nightly training of the reader, core and prefix (frozen LM untouched) on verified experiences approved as method, not architecture? Assumed yes.</li>
-    <li>A question-writing head would be a new component. Defer? Assumed defer.</li>
-    <li>Blending toward yesterday's checkpoint or a low-rank day piece: allowed later as a single-change arm? Assumed ask again if S forgets.</li>
-    <li>Who authors the fresh forms and how many? Five nights need roughly 15 retention forms plus transfer and plasticity forms; the TRAIN bank has 48 questions.</li>
+    <li>Nightly training of reader, core and prefix with the frozen LM untouched: approved as method.</li>
+    <li>Question-writing head: deferred. Blend or low-rank arm: allowed later as a single change.</li>
+    <li>Fresh forms: one subagent writes, a second independent one checks every item, sealed by hash before any run and kept out of training.</li>
+    <li>More loops are now allowed, but only as its own one-change arm. The base design keeps 4 loops so arms stay comparable with the pilot.</li>
   </ol>
   <p class="note"><b>For Ben, plainly:</b> the model tries problems all day, a checker marks them, and at night it studies the checked work mixed with older work. We prove it with new questions, against a model that never sleeps and one that just studies the day's work with no mixing.</p>
 </section>
