@@ -36,7 +36,7 @@ The frozen LM is identical (same pinned revision, FP32, no fine-tuning, no causa
 | A. Reasoner width D (blocks, experts, loops fixed) | D = 256 (base), 384, 512, 768 | No. Ben ruled scaling needs no approval (2026-10-03) | 1 |
 | B. Experts: total vs active | 8/top-2 base; 16/top-2 and 32/top-2 (total grows, active fixed); and an equal-total dense width as the comparator | No (same ruling) | 2 |
 | C. Loop count (4 -> 8) | train-time loops only | No. Ben removed the extra-reasoning-depth rule (2026-10-03) | 3 |
-| D. Reader/translator width. Checked in code: the reader reads the frozen LM's *input-embedding table* (not cached LM states) through 2048->32->256 (about 78K params), and the prefix adapter is 259->32->GELU->2048 pooled to 8 tokens. So D here means the thin-translator hidden size, 32 -> 128 -> 512 [shown in `train_mixture.py:150-151`, `sol_translator_english_v6.py:41-45`] | 1x, 4x, 16x on the 32-wide hidden | No (same ruling) | 4 |
+| D. Reader/translator width. Checked in code (static route; see section 11 item 2 for the contextual route): the reader reads the frozen LM's *input-embedding table* (not cached LM states) through 2048->32->256 (about 78K params), and the prefix adapter is 259->32->GELU->2048 pooled to 8 tokens. So D here means the thin-translator hidden size, 32 -> 128 -> 512 [shown in `train_mixture.py:150-151`, `sol_translator_english_v6.py:41-45`] | 1x, 4x, 16x on the 32-wide hidden | No (same ruling) | 4 |
 
 Loops are now an allowed axis: train-time loops 4 -> 6 -> 8 with width fixed at base, reported with FLOPs per update since loops multiply reasoner cost. Test-time-only extra loops (a 4-loop-trained model run for 6) is a cheap add-on; label it "untrained depth".
 
@@ -124,6 +124,17 @@ Still binding from the brief: no LM fine-tuning, no causal-mask change, no force
 ## 10. Plain-language summary
 
 We want to know if a bigger "thinking part" actually understands more English, or just memorises more. We make the thinking part a few sizes bigger while keeping the language model, the data, the tuning effort and the training length identical, then test all of them on brand-new questions nobody has trained on or looked at. We only say it scales if the biggest beats the smallest by a clear margin in every seed and the "cheating" controls (no thinking part, same-size non-looping net) stay low. If bigger just fits the training questions better, that is reported as memorising, not scaling.
+
+## 11. Reconciliation with integrated design v5
+
+Checked against `Premonition integrated model design.docx` (DESIGN-WORKING-v6 folder, commit c5cfd9176). Consistent: priority order (current-size, then "fair scaling of a working recipe"), 5070 Ti 16 GB, frozen LM, four loops, 8 experts top-2, sealed fresh panels. Conflicts and gaps, and what this file now says:
+
+1. **"Working recipe" gate.** v5 scales only a working recipe. Its latest evidence does not yet show one: fresh transfer is unproved, the depth comparison and the eight-versus-32 coverage test scored zero of eight fresh pairs in every endpoint, and the contextual branch is unstable (seed 1/contextual fits 24/32 or 29/32 TRAIN). So G0 is **not met today**; this design is queued behind the English pilot, not ahead of it.
+2. **Reader description.** v5 has two input routes: static (thin projection of frozen lexical embeddings, the route the v4 code reads) and contextual (frozen final causal token states of the output LM, cached before the trainable reader). My section 3 axis D text is correct for the static route only. The ladder must say which route it uses; default is the contextual route, since the approved English pilot uses it. The 32-wide-pipe finding applies to the translators in both.
+3. **Prior depth result.** v5 already tested depth at about equal total parameters (16 distinct blocks reused across 4 loops, 64 block visits vs 8) with no fresh-pair benefit. Axis C here is different (loops at fixed blocks, and total parameters growing), and a null at equal parameters does not predict the result when parameters grow. Both facts go in the report.
+4. **Evaluation size.** v5 uses 16-question parent-supplied panels (8 pairs). Eight pairs cannot resolve a size trend, so section 5 asks for a bank of at least 200 questions. Ben approved a larger checked TRAIN set; a larger fresh bank needs the same independent checking and is new work.
+5. **Consumed panels.** v5 lists consumed panels; section 5 excludes them and any v5-reserved item, but I could not read the exclusion lists. The bank author must take them from v5 and the owner's manifests, not from this file.
+6. **Own-weights interface.** v5 says the eventual own-weights interface is unproved. Scaling results here are for the borrowed-LM interface only.
 
 ## 11. Review trail
 
