@@ -130,12 +130,13 @@ Every-seed rule: a pass needs both seeds above margin; a fail on either seed is 
 
 Compute and cost: none requested here. Phase 1 needs only what a pilot night needs on the PC GPU, which the execution owner controls. Any spend of 50 cents or more goes to Ben first.
 
-## 10. Questions for Ben (architecture or method; nothing assumed)
+## 10. Decisions (answered 2026-10-03 by the channel session under Ben's broad-autonomy message; none of these is Ben's explicit sign-off on this design)
 
-1. Is nightly training of the reader, core and prefix generator (frozen LM untouched) on verified experiences approved as a training-method use, not an architecture change? Default assumed: yes.
-2. A question-writing head (the model writes its own replay inputs) would be a new component. Not used in this design. Defer until the generator-replay phase shows whether it is needed? Default: defer.
-3. Weight blending toward yesterday's checkpoint, or a low-rank day piece folded in at night, would be a training-method change. Not used. Allowed later as a one-change arm? Default: ask again if S forgets.
-4. Who authors the fresh evaluation forms and how many (Ben-supplied, as with the uncle questions, or independently written and checked)?
+1. Nightly training of the reader, core and prefix generator with the frozen LM untouched: approved as a training method.
+2. Question-writing head: deferred.
+3. Checkpoint blend toward yesterday, or a low-rank day piece: allowed later as a single-change arm without asking again.
+4. Fresh evaluation forms: written by a separate authoring subagent, every item checked by a second independent subagent, numerics and word problems recomputed independently, forms sealed by hash before any run and excluded from all training data. Authoring is Opus-class work per Ben's architecture rule.
+5. Reasoning depth: Ben removed the extra-depth and scaling approval rules (2026-10-03 12:09). The loop count may therefore be a night-time variable, but only as its own one-change arm (section 6 "later single changes"): same sleep recipe at a larger loop count, never changed together with the replay mix. The base design keeps 4 loops so that S, F0 and PF stay comparable with the pilot. Still off without approval unless Ben says otherwise: LM fine-tuning, causal-mask changes, forced answer copying, digit auxiliary heads, latent-matching objectives.
 
 ## 11. Risks
 
@@ -144,7 +145,7 @@ Compute and cost: none requested here. Phase 1 needs only what a pilot night nee
 - Checker gaming or leakage of keys into attempts. Keys stay outside the attempt path.
 - Small store collapse (shown on the old solver at 16 per kind): cap and mix are measured.
 - Plasticity loss over nights: probed, not assumed.
-- Evaluation pool cost is large relative to the 48-question bank.
+- Evaluation pool cost is large relative to the 48-question bank; the authoring and checking subagents carry it.
 - All numeric starting values (256 updates, shares, yield band) are guesses from the older solver and are replaced by the noise run and v5 facts.
 
 ## 12. Plain-language summary for Ben
