@@ -138,6 +138,21 @@ Compute and cost: none requested here. Phase 1 needs only what a pilot night nee
 4. Fresh evaluation forms: written by a separate authoring subagent, every item checked by a second independent subagent, numerics and word problems recomputed independently, forms sealed by hash before any run and excluded from all training data. Authoring is Opus-class work per Ben's architecture rule.
 5. Reasoning depth: Ben removed the extra-depth and scaling approval rules (2026-10-03 12:09). The loop count may therefore be a night-time variable, but only as its own one-change arm (section 6 "later single changes"): same sleep recipe at a larger loop count, never changed together with the replay mix. The base design keeps 4 loops so that S, F0 and PF stay comparable with the pilot. Still off without approval unless Ben says otherwise: LM fine-tuning, causal-mask changes, forced answer copying, digit auxiliary heads, latent-matching objectives.
 
+## 10a. Opus architecture review (read-only subagent, 2026-10-03; every point suggested or untested, v5 unread)
+
+Method points to settle as "same as the pilot" before sealing (the "not an architecture change" claim in section 3 holds only if they are):
+- **Loss placement.** Which loops get the loss and whether gradients run through all 4 loops: copy the pilot exactly.
+- **Day decoding equals evaluation decoding.** No best-of-N at answer time; sampling many candidates is for logging only, and only checked ones are stored.
+- **Who writes class B steps.** The checker supplies a result, not steps. Targets are built by a fixed, pre-registered rule (the model's own attempt with the checked result substituted at the failing point, or a checked reference solution from the authoring pipeline), never a teacher's free text. Open.
+- **Class C and forced copying.** Training "tool right, answer wrong" records on a target whose final equals the calculator return teaches copying through the data, not the architecture. Treated as an ablation arm (C included vs excluded) until Ben says it is not the forbidden forced answer copying. Open question to Ben.
+- **Optimizer state.** One choice (reset with a short warmup, or carry over), applied identically in S, PF, SU and PG, saved with each checkpoint.
+
+Guards added to every night's log, with stop thresholds fixed before the run:
+- Prefix drift on a fixed anchor set: prefix norm, cosine similarity to the parent's prefixes, and KL of the frozen LM's next-token predictions against the parent's. The prefix is the only channel into the LM, so drift can degrade everything at once.
+- Per-loop latent norm and step-to-step change; keep the pilot's gradient clipping.
+- Cap on repeats per record, matched between S and PF.
+- Per-kind anchor-set scores to catch reader drift.
+
 ## 11. Risks
 
 - Self-training can reinforce its own mistakes; the anchor share and checker independence are the guards, and SU measures the effect.
