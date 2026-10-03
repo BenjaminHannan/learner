@@ -82,3 +82,34 @@ What it means:
 - Suggested next: more seeds (e.g. 6 per arm) on the same eval to settle whether the delay helps or the baseline's seed luck dominates. Each extra run is about $0.02.
 
 Cost: box 54038731 (RTX 3090, $0.163/h) ~16:58-17:30 UTC ~$0.09. Running total for this thread about $0.40 of the credit.
+
+---
+# Follow-up 3: 6 seeds of "think before calling" (rule in `PASS-MARKS-4.md`, fixed before seeds 3-5)
+
+Seeds 0-2 came from follow-up 2 (exploratory); seeds 3-5 are new runs of the same code. All 1152 rows checked against the eval form before the box was destroyed (`results/*-rows.json`, `results/SUMMARY-6seed.json`).
+
+Right-call rate on new-wording questions (96 per run):
+
+| seed | copy only | call after 2 rounds | gain |
+|---|---|---|---|
+| 0 | 74.0% | 93.8% | +19.8 |
+| 1 | 64.6% | 100.0% | +35.4 |
+| 2 | 99.0% | 85.4% | -13.5 |
+| 3 | 87.5% | 86.5% | -1.0 |
+| 4 | 79.2% | 62.5% | -16.7 |
+| 5 | 85.4% | 72.9% | -12.5 |
+
+Paired mean gain **+1.9 points** (SD 21.2, 95% t-interval for n=6: -20.3 to +24.1). Clean seeds 3-5 alone: mean gain **-10.1**.
+
+Rule: PASS needed mean >= +4 with the interval above 0 and the clean seeds above 0; FALSIFIED if the 6-seed mean gain < +2. The mean is +1.9, so **FALSIFIED** (narrowly on the mean, clearly on the clean seeds). The +14 from three seeds was seed luck, not an effect of the delay.
+
+Standing numbers for future marks (6 seeds, same recipe, same eval; right-call rate on new wording is the noisy one):
+- Copy-only arm: new-wording right-call mean 81.6%, SD 11.9 points (range 64.6-99.0). Final accuracy over all 192 questions mean 90.8%, SD 5.9 (range 82.3-99.5). Unseen-answer final accuracy mean 92.5%, SD 5.3 (range 84.4-100).
+- Delay arm: new-wording right-call mean 83.5%, SD 13.7 (62.5-100). Final all 91.8%, SD 6.9. Unseen-answer final 91.8%, SD 6.7.
+- A single-seed difference under about 25 points on new-wording calls, or about 12 points on overall accuracy, cannot be told from seed noise at 2-3 seeds; marks for future single changes should be paired over at least 6 seeds.
+- Train-wording right-call rate is 100% in every run of both arms; the variation is entirely in generalising to new wording.
+- No wrong unseen answer is a training answer in any of the 12 runs, so the copy path result stands across all of them.
+
+What it means: the unseen-answer problem is solved by the copy path in all 12 runs (unseen final 81-100%). The remaining error is call quality on new wording, and it is mostly seed luck: delaying the call does not fix it. Suggested next: a change aimed at wording generalisation itself (more varied training wording, since the training stream has only 4 templates), measured paired over 6 seeds.
+
+Cost: box 54041927 (RTX 3090, $0.163/h) ~17:33-18:10 UTC ~$0.10. Total for this thread about $0.50; credit about $14.0.
