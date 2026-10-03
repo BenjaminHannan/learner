@@ -16,6 +16,7 @@ p.add_argument("--lr", type=float, default=1e-3)
 p.add_argument("--lm", default="LiquidAI/LFM2.5-1.2B-Instruct")
 p.add_argument("--out", default=str(HERE / "results"))
 p.add_argument("--copy", action="store_true", help="arm C: add the calculator result token embedding as a 9th prefix vector (direct copy path)")
+p.add_argument("--call-loop", type=int, default=0, help="first loop at which the calculator may be called (0 = original)")
 p.add_argument("--device", default="cuda")
 p.add_argument("--probe", action="store_true", help="fit check on arm A only: no eval-form scoring, no result files")
 args = p.parse_args()
@@ -72,11 +73,11 @@ def run_batch(model, rows, train):
         act = torch.tensor([1 if r["op"] == "ADD" else 2 for r in rows], device=dev)
         gold = {"action": act, "left": torch.zeros_like(act), "right": torch.ones_like(act)}
     with torch.autocast(dev, dtype=torch.bfloat16, enabled=dev == "cuda"):
-        prefix, log = model(feats, qm, lit, lit_ok, vals, embed_numbers, gold)
+        prefix, log = model(feats, qm, lit, lit_ok, vals, embed_numbers, gold, args.call_loop)
         B = len(rows)
         parts = [emb(torch.full((B, 1), BOS, device=dev)), prefix.to(emb.weight.dtype)]
         if args.copy:
-            _, _, _, res0, ok0 = log["calls"][0]
+            _, _, _, res0, ok0 = log["calls"][args.call_loop]
             copyv = emb(NUMID[(res0 - LO).clamp(0, HI - LO)]) * ok0[:, None].to(emb.weight.dtype)
             parts.append(copyv[:, None])
         inp = torch.cat(parts + [emb(ans[:, None])], 1)
@@ -91,7 +92,7 @@ def evaluate(model, rows, bs=32):
             chunk = rows[i:i + bs]
             logits, ans, log, _ = run_batch(model, chunk, False)
             pred = logits[:, POS].argmax(-1)
-            act, li, ri, res, ok = log["calls"][0]
+            act, li, ri, res, ok = log["calls"][args.call_loop]
             for j, r in enumerate(chunk):
                 want = 1 if r["op"] == "ADD" else 2
                 good_ops = {(0, 1), (1, 0)} if r["op"] == "ADD" else {(0, 1)}
@@ -144,7 +145,7 @@ def main():
     nparam = sum(p_.numel() for p_ in model.parameters())
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.1, betas=(0.9, 0.95))
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / 200) * 0.5 * (1 + math.cos(math.pi * min(i, args.steps) / args.steps)))
-    name = f"arm{args.arm}{'copy' if args.copy else ''}-seed{args.seed}"
+    name = f"arm{args.arm}{'copy' if args.copy else ''}{'-delay%d' % args.call_loop if args.call_loop else ''}-seed{args.seed}"
     outdir = Path(args.out); outdir.mkdir(parents=True, exist_ok=True)
     logf = open(outdir / f"{name}.log", "w")
     t0 = time.time()
@@ -154,7 +155,8 @@ def main():
         logits, ans, log, gold = run_batch(model, rows, True)
         ce = F.cross_entropy(logits[:, POS], ans) + 0.5 * F.cross_entropy(logits[:, POS + 1], torch.full_like(ans, EOS))
         act0 = gold["action"]
-        ca = F.cross_entropy(log["act"][0], act0) + sum(F.cross_entropy(a, torch.zeros_like(act0)) for a in log["act"][1:]) / (LOOPS - 1)
+        cl = args.call_loop
+        ca = F.cross_entropy(log["act"][cl], act0) + sum(F.cross_entropy(a, torch.zeros_like(act0)) for i_, a in enumerate(log["act"]) if i_ > cl) / max(1, LOOPS - 1 - cl) if cl < LOOPS - 1 else F.cross_entropy(log["act"][cl], act0)
         cp = F.cross_entropy(log["left"], gold["left"]) + F.cross_entropy(log["right"], gold["right"])
         loss = ce + ca + cp + model.aux()
         opt.zero_grad(set_to_none=True); loss.backward()

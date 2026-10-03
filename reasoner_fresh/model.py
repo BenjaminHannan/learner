@@ -90,7 +90,7 @@ class Reasoner(nn.Module):
             z = b(z, dr, dc, key_ok)
         return self.ln_state(z)
 
-    def forward(self, feats, qmask, lit_idx, lit_ok, lit_vals, embed_numbers, gold=None):
+    def forward(self, feats, qmask, lit_idx, lit_ok, lit_vals, embed_numbers, gold=None, call_loop=0):
         """feats [B,T,LM] frozen contextual states (right padded, last valid position is EOS); qmask [B,T] bool;
         lit_idx [B,L] positions of the number literals in text order; lit_ok [B,L]; lit_vals [B,L] their integers;
         embed_numbers(values[B] long) -> [B,LM] frozen LM embedding of that number's token.
@@ -122,13 +122,15 @@ class Reasoner(nn.Module):
             ll = (torch.einsum("bd,df,blf->bl", qm, self.left, ref) / math.sqrt(D)).masked_fill(~lit_ok, -1e4)
             rl = (torch.einsum("bd,df,blf->bl", qm, self.right, ref) / math.sqrt(D)).masked_fill(~lit_ok, -1e4)
             log["act"].append(act_logits)
-            if loop == 0:
+            if loop == call_loop:
                 log["left"], log["right"] = ll, rl
             if gold is not None:
-                act = gold["action"] if loop == 0 else torch.zeros_like(gold["action"])
+                act = gold["action"] if loop == call_loop else torch.zeros_like(gold["action"])
                 li, ri = gold["left"], gold["right"]
             else:
                 act, li, ri = act_logits.argmax(-1), ll.argmax(-1), rl.argmax(-1)
+            if loop < call_loop:
+                act = torch.zeros_like(act)  # calculator blocked until the core has advanced call_loop rounds
             a, b = lit_vals[ar, li], lit_vals[ar, ri]
             res = torch.where(act == 1, a + b, torch.where(act == 2, a - b, torch.zeros_like(a)))
             ok = (act != 0) & (res >= LO) & (res <= HI)
