@@ -25,13 +25,17 @@ def pos2d(h, w, width=LATENT_WIDTH):
 
 
 class GridAdapter(nn.Module):
-    def __init__(self, enc_dim, grid=(8, 8), hidden=256, modality="image", width=LATENT_WIDTH):
+    def __init__(self, enc_dim, grid=(8, 8), hidden=32, modality="image", width=LATENT_WIDTH, pos_scale=0.1):
         super().__init__()
         self.grid, self.width = tuple(grid), width
         self.proj = nn.Sequential(nn.LayerNorm(enc_dim), nn.Linear(enc_dim, hidden), nn.GELU(), nn.Linear(hidden, width))
         self.modality = nn.Embedding(len(MODALITIES), width)
         self.register_buffer("modality_id", torch.tensor(MODALITIES[modality]), persistent=False)
-        nn.init.normal_(self.modality.weight, std=0.02)
+        nn.init.zeros_(self.modality.weight)  # zero-init: matches DESIGN.md and workspace.SegmentEmbedding
+        # Raw pos2d has norm ~11.3 per slot (10.3 shared by all slots) vs ~3.4 for adapter content, so it is
+        # scaled by a learned scalar starting at 0.1 (review R1). Only used in notebook mode, as a stopgap
+        # until the core reads Workspace.coords.
+        self.pos_scale = nn.Parameter(torch.tensor(float(pos_scale)))
 
     def forward(self, feats, src_grid, as_notebook=False):
         """feats [B,N,D] with N == gh*gw -> latent [B,H,W,width] on the fixed target grid."""
@@ -45,7 +49,7 @@ class GridAdapter(nn.Module):
         x = x.permute(0, 2, 3, 1)
         out = self.proj(x) + self.modality(self.modality_id)
         if as_notebook:  # notebook slots have no geometry in begin_latent, so add the fixed position code
-            out = out + pos2d(*self.grid, self.width).to(out)
+            out = out + self.pos_scale * pos2d(*self.grid, self.width).to(out)
             return out.flatten(1, 2)  # [B,H*W,width]
         return out
 

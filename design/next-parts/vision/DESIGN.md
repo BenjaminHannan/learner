@@ -1,102 +1,100 @@
-# Images into the Premonition reasoner: design memo (2026-10-03)
+# Images into the Premonition reasoner: design v2 (2026-10-03, Opus thread)
 
-Labels: **[shown]** = read in this repo's code; **[suggested]** = my reasoning, not tested; **[untested]** = outside fact I'm recalling and haven't checked. This memo covers only the village-model pipeline (frozen LFM2.5-1.2B, reader, ~9M looped core, 8 prefix vectors). The small card experiments are mentioned only as a later source of tasks.
+Supersedes `DESIGN-v1.md` (kept for history). Sources for this version: a fresh look at the code, an independent
+Opus review (`REVIEW-opus-2026-10-03.md`), CPU probes on the real frozen SigLIP2 encoder (`cpu_probes/`), and the
+Workspace contract v1 settled on PR #23.
 
-## 0. What the code does now
-- `HumanInputProjection`: LN(lm_width) -> Linear(lm_width,32) -> GELU -> Linear(32,256), output `[B,1,T,256]`. Text arrives as a 1xT grid **[shown]**.
-- `begin_latent(latent [B,H,W,256], notebook [B,M,256])` concatenates the notebook after the grid. Notebook rows get offset index `CLIP` in both dr and dc, which means relative offset 0. So every notebook slot looks like "same cell" to every query, and the narrow heads (half the heads, which mask |dc|>1) can still see them **[shown]**. As a result **the notebook has no geometry**, and `begin_latent` takes **no padding mask** **[shown]**.
-- `read_latent` returns only the first `query_n` = HxW positions to the output translator **[shown]**.
-- CLIP=4, so relative offsets saturate past ±4 **[shown]**. Core = 2 blocks at d=256 with 8-expert upcycled MLPs, about 9M **[suggested, from the shapes]**.
+Labels: **shown** = read in code, measured here, or read in a cited source. **suggested** = reasoning, not tested.
+**untested** = a guess or a recalled fact. This file is about the village model only (frozen LFM2.5-1.2B talker,
+reader, ~9M looped core). The small card experiments are not part of it.
 
-## 1. Candidate frozen encoders (vision tower only)
-| Encoder | ~Params | Width / grid | Notes |
+## 1. What changed from v1, and why
+
+| v1 | v2 | Why |
+|---|---|---|
+| E5: loops vs an identity lesion | E5 is a **round curve** (1/2/4/8/16 rounds, trained with random depth) plus a **frozen-feature probe ceiling** | With the image in the notebook, `read_latent` returns only question positions, so the image reaches the answer only through rounds. Removing the loop cuts the image off and the test passes by construction. **shown** (code + unit test `test_lesion_trap...`) |
+| pos2d added at full size | pos2d times a learned scalar starting at 0.1 | Raw pos2d norm is 11.3 per slot, and 10.3 of that is the same for all 64 slots; adapter content is ~3.4. Position would drown the picture. **shown** (computed) |
+| Code: hidden=256, random modality tag | Code now matches the memo: hidden=32, zero-init tag (~35k params) | Code and memo disagreed. **shown**, fixed, tested |
+| E3 position on/off, E4 notebook vs grid | **E4a** how position enters (coords bias vs scaled pos2d vs none). **E4b** token budget (64 pooled vs 256 vs 64 global + 64 glimpse) | Under PR #23 the talker reads registers and coords drive the bias, so "query grid vs notebook" stops being a real choice. **suggested** |
+| S1 caption alignment first | S1 waits for the reasoner thread's C1/C2 (output path check) | S1 trains through the same average-pooled 8-vector output that C1 tests. If that path is the bottleneck, a vision failure would be misread. **suggested** |
+| E1 shuffled image only | E1 adds a **blind arm** (no image tokens) and a test-time shuffle of the trained model; distractor captions from the same scene type | Separates "uses the image" from "LM prior" and "learned gist only". **suggested** |
+| Own segment/position format | Workspace v1: `role`, `modality`, `coords [B,N,3]` (row, col, time), `coord_valid [B,N,3]`, `valid` | Shared with reasoner and audio. A still image has time absent; a video frame carries its own time (seconds, <= 0). **shown** in `workspace.py` + test |
+| Screen: squash to 256x256 | Screen stage: SigLIP2-B **NaFlex** (keeps 16:9, ~12x21 grid, uses `valid`) | Squashing stretches glyphs 1.78x. LFM2-VL-450M itself uses SigLIP2 NaFlex base (model card). **shown** (card), benefit **untested** |
+| Guides as screenshots or text | Guides through the **text path** as `tool_result` tokens | A 256-px encoder is a poor reader of page text. In-game text goes through the image path. **suggested** |
+
+Kept: frozen SigLIP2-B/16 at 256 px for stage 1; thin adapter with no attention; image in the notebook until the core
+reads `coords`; DINOv2-S as the one swap test (DINOv3 has a custom licence and gated weights, **shown**).
+
+## 2. CPU probes on real SigLIP2 features (done, shown)
+
+Frozen `google/siglip2-base-patch16-256` (vision tower 92.9M stored params, measured), 1,500 train / 500 test synthetic
+images per task, different seeds, ridge linear probes. Marks were fixed in `cpu_probes/MARKS.md` before running.
+A linear probe is a lower bound on what an adapter + core could get. These are encoder checks, not reasoning checks.
+
+| Task (chance) | raw pixels 32x32 | last 16x16 | last 8x8 | last 4x4 | pen. 8x8 | last 8x8 PCA-32 |
+|---|---|---|---|---|---|---|
+| count 1-9 (11%) | 19.6 | 54.6 | 55.4 | 57.8 | 51.4 | 48.4 |
+| red left of blue (50%) | 89.0 | 95.4 | 96.2 | 96.0 | 94.6 | 95.4 |
+| more red than blue (50%) | 62.0 | 86.8 | 87.2 | 90.0 | 87.0 | 87.4 |
+| one 9-px digit (10%) | 10.2 | 99.6 | 99.6 | 99.6 | 99.8 | 89.0 |
+| hotbar, 9 digits at once (10%), mean per slot | 63.9 | 100.0 | 99.8 | 97.7 | not run | 94.7 |
+
+Decisions by the fixed marks:
+- **P1 pooling:** 8x8 vs 16x16 differs by <1 pt on count and digit. **Keep 8x8.** Even 4x4 loses nothing here.
+- **P2 layer:** last beats penultimate by 1.9 pts on the mean. **Keep the last layer.** (The common "use layer -2" habit did not help here.)
+- **P3 width:** PCA-32 loses 4.5 pts on the mean (7 on count, 10.6 on digit). Between the marks, so **keep h=32 as the start** and let E2 decide; the digit loss is a warning for UI reading.
+- **P4 small text:** one isolated 9-px digit is read at 99.6%. A global view is enough *for one item*.
+- **P5 too easy?** "More red than blue" is 87% for a linear probe, below the 90% bar, so it stays usable, but there is little headroom. Counting (55% linear) has the most room for the core to show reasoning. Raw pixels never beat SigLIP, so the encoder suits these tasks.
+- **P6 hotbar** (marks added before running, `MARKS.md` addendum A): 8x8 reads all nine 9-px digits at 99.8% vs 100% at 16x16. Within 3 pts, so **keep 8x8 for UI too**. Even 4x4 gets 97.7%.
+- Reading: the frozen ViT's patches are contextual, so a pooled 8x8 cell still carries what was inside it. On clean synthetic images, pooling to 8x8 costs nothing we could measure. Caveats (**untested**): Minecraft's pixel font sits on textured slots with shadows, and on a real 1080p screen squashed to 256 px a digit may be ~7 px, smaller than the 9 px tested. So the glimpse (E4b) is now **conditional**: run it only if P4-MC/P3-MC on real screenshots fail.
+
+## 3. Path (stage 1)
+
+`image 256x256 -> frozen SigLIP2-B/16, last layer, 16x16x768 -> 2x2 avg pool to 8x8 -> LN, Linear(768,32), GELU, Linear(32,256)
+-> + 0.1*pos2d (learned scale, notebook mode only) -> Workspace(role=notebook, modality=image, coords=(row,col,-), time absent)`.
+The question stays text. When the core reads `coords`, pos2d is dropped (E4a decides).
+
+## 4. GPU experiments, one change each (none run; 2 seeds; marks fixed now)
+
+Order: wait for reasoner C1/C2 -> E1 -> E2 -> E4a -> E4b -> S2 skills with E5 -> E6 -> E7.
+
+| # | Single change | Pass | Proves it wrong |
 |---|---|---|---|
-| SigLIP2-B/16 @256px | ~86-93M | 768, 16x16 | Aligned with language. A SigLIP2 base tower is reportedly the encoder in LFM2-VL-450M, the same family as our LM **[untested]** |
-| SigLIP-B/16 (v1) | ~86M | 768, 14x14@224 or 16x16@256 | Older, well supported **[untested]** |
-| DINOv2-S/14 | ~21-22M | 384, 16x16@224 | Strong spatial features, no language alignment **[untested]** |
-| TinyCLIP ViT-8M/16 | ~8M image side | ~256, 14x14 | **Unsure** of exact count and quality |
-| MobileCLIP-S0 | ~11M image side | conv/hybrid | **Unsure**. Its grid output is not a plain ViT grid |
-| MobileViT-S | ~5.6M | ImageNet classifier | **Unsure** and weak as a general feature source |
-| SigLIP So400m | ~400M | 1152 | Too big for stage 1 |
+| E1 | S1 adapter with real images vs shuffled images; plus blind arm and test-time shuffle (controls, not changes) | held-out caption loss >=0.15 nats/token below shuffled and blind; 8-way same-scene caption pick >=50% | real within 0.05 nats of shuffled or blind |
+| E2 | adapter hidden 32 -> 128 | >=10 pts on 8-way pick, both seeds | <3 pts |
+| E4a | position: scaled pos2d vs coords relative bias (needs the reasoner's coords bias) on left/right/above and nearest-to-X | coords >=5 pts better, both seeds | gap <2 -> keep pos2d until scale-up |
+| E4b | (only if P3-MC/P4-MC fail on real screenshots) 64 pooled vs 64 global + 64 glimpse at a *given* location, on real hotbar reading and small-object count | glimpse >=20 pts better | <5 pts -> pooling is not the bottleneck; drop glimpse |
+| E4c | (only if E4b passes) given glimpse location -> location chosen by the registers | recovers >=70% of E4b's gain | <30% -> needs another training signal; outside opinion |
+| E5 | protocol: core trained with random depth, scored at 1/2/4/8/16 rounds, vs a 2-layer MLP probe on frozen features + question id | on count-then-compare, 8 rounds beats the MLP probe by >=15 pts and 1 round by >=10 pts, both seeds | probe within 5 pts of the core, or 8 rounds <= 1 round + 3 pts (encoder or LM is doing the thinking) |
+| E6 | text replay on vs off during S2 | text eval within 1 pt of pre-vision | drop >3 pts even with replay |
+| E7 | SigLIP2-B -> DINOv2-S/14 | report only; neither wins unless >=5 pts | - |
 
-**Stage-1 pick: SigLIP2-B/16 at 256px, frozen, features cached once.** It gives a native 16x16 grid, its features are aligned with text (which helps the frozen LM read our prefixes), and the most likely LFM pairing is with this family **[suggested]**. Use DINOv2-S as the single swap test (E7).
+S2 data must include compositional held-out splits (unseen colour x shape, counts above the trained range) and a
+per-template answer-balance check, so a blind guess scores at chance.
 
-## 2. Modality-agnostic interface contract
-Every translator (text, image, audio) emits one `Percept` **[suggested]**:
-```
-tokens  [B, N, 256]   float, same dtype/device as core
-layout  "grid" (H,W with N=H*W) | "seq" (N=T, treated as H=1) | "set"
-coords  [B, N, 2] int (row, col) or None   # for a future reasoner that takes coords
-valid   [B, N] bool                         # needed once padding exists
-modality int  -> nn.Embedding(n_mod, 256), ZERO-INIT, added to tokens
-role    "query" | "context"
-```
-- **Shim to today's core**: the `query` Percept is reshaped to `[B,H,W,256]` as the latent, and `context` Percepts are flattened and concatenated into the notebook. The contract is defined at the translator output, not at `begin_latent`, so the sibling reasoner redesign can take `coords` and `valid` directly **[suggested]**.
-- **Stage-1 placement**: the text question stays the query (1xT), so the output translator keeps seeing the input type it was trained on. **The image is notebook context.** Its notebook slots have no relative geometry, so the image adapter adds a fixed 2D sin-cos position (row half, col half, 0 params) before the tag **[suggested]**. Putting the image in the latent grid instead is experiment E4.
-- **Fixed grid**: resize to 256x256 (squash, no crop), take 16x16 SigLIP patches, then 2x2 average pool to **8x8 = 64 slots** (default; 16x16 = 256 is the E-later option). A fixed N means no padding, which matters because the notebook has no mask **[shown, for the missing mask]**. On 8x8, offsets up to ±4 stay distinct under CLIP. On 16x16 many offsets merge **[shown, for CLIP]**.
-- With a zero-init modality tag, the text path stays exactly as it is at initialisation (test T1) **[suggested]**.
+## 5. Roadmap to playing Minecraft from the screen (all suggested unless cited)
 
-## 3. Adapter
-`LN(768) -> Linear(768,h) -> GELU -> Linear(h,256) + pos2d + tag[image]`. This mirrors `HumanInputProjection` and is the same thin translator with no attention **[suggested]**.
-- h=32 (matches the text pipe): about 1.5k + 24.6k + 8.4k ≈ **35k trainable**.
-- h=128: about **132k**. The tag adds 256 per modality.
-- **Start at h=32** so that "image vs text" is the only difference from the text path. The width is tested alone in E2. A frozen ViT feature is already contextual, so 32 may hold up better here than it does for single token embeddings, but this is **[untested]**.
+1. **Stills (stage 1).** Sections 3-4.
+2. **A small 2D survival game first** (Crafter-like), run on CPU at high speed, before Minecraft.
+3. **Frames.** A *fast loop* at 10-20 Hz: encoder + 1-4 core rounds per frame, carrying the core state from the last frame, so thinking spreads across frames. Older frames enter the notebook as compressed register snapshots with their time (Workspace time, log buckets). The 1.2B LM is a *slow loop*, called only to speak or to read guides. Cost estimate: SigLIP2-B ~44 GFLOP/frame, core ~6 GFLOP/frame, so 10-20 Hz looks feasible on the 5070 Ti; latency **untested**.
+4. **Glimpse, if needed.** If real screenshots show the global 8x8 view misses UI detail, the registers pick where to look at full resolution (E4b/E4c), and that choice is the first trained action. CPU probes so far say a global view may be enough.
+5. **Keyboard and mouse head** on the registers: multi-binary keys, binned mouse dx/dy, click. VPT used a 20 Hz keyboard-and-mouse interface at 128x128 (**shown**, arXiv 2206.11795).
+6. **Learning from video.** VPT trained an inverse-dynamics model on 1,962 h of labelled play and labelled ~70k h of web video; the diamond pickaxe still needed fine-tuning plus RL and worked in 2.5% of episodes (**shown**). Our version is small: Ben records a few hours of his own play with key logging, and a small inverse-dynamics head on our frozen features labels more video.
+7. **Cheap world model.** DreamerV3 found diamonds from 64x64 pixels in 100M steps on one GPU for 9 days (**shown**), beyond our budget. Instead, an auxiliary loss predicts the next frame's SigLIP features from the registers plus the action.
+8. **Guides.** Fetched page text enters as `tool_result` tokens through the text path.
+9. **Sound.** Audio slots share the time axis, so "creeper hiss 400 ms ago, behind" and the current frame can be ordered in one workspace (audio thread, PR #24/#25).
 
-## 4. Training stages
-| Stage | Trainable | Frozen | Data |
-|---|---|---|---|
-| S0 CPU | nothing | all | contract tests, feature cache |
-| S1 align | image adapter (+tag) | SigLIP2, LM, core, text reader, output adapter | human captions (e.g. COCO). Query = fixed text "What is in the picture?". Loss = existing `human_loss` on the caption |
-| S2 skills | core (low LR) + image adapter | SigLIP2, LM, text reader | synthetic images: count, compare, left/right/above, count-then-compare |
-| S3 retention | same as S2 | same | S2 mixed with text replay |
-
-**Cheap tests with no GPU** **[suggested]**:
-- T1: with a zero tag and an empty notebook, text outputs are bitwise equal to the current pipeline (CPU, a few rows).
-- T2: shape and dtype guards. N=64, the notebook concat path runs, and `query_n` is unchanged.
-- T3: feature cache is deterministic. Same image gives the same sha256 of features.
-- T4: bottleneck rank. PCA on about 2k cached SigLIP patch vectors, measuring the variance kept at 32 vs 128 dims. Also a closed-form ridge probe for color/shape/position on synthetic images through a random 32- vs 128-dim projection (CPU, minutes).
-- T5: position sanity. Check that pos2d sin-cos values differ for all 64 slots.
-- T6: parameter count printout matches §3.
-
-## 5. GPU experiments (one change each; set noise from 2 seeds first)
-| # | Single change | Pass mark (fixed now) | Proves it wrong |
-|---|---|---|---|
-| E1 | S1 adapter on vs **shuffled image** (features from another image) | held-out caption loss ≥0.15 nats/token below shuffled; 8-way caption pick by LM loss ≥50% (chance 12.5%) | real within 0.05 nats of shuffled → image info isn't getting through |
-| E2 | h=32 → h=128 | ≥10 pts better 8-way pick on both seeds = 32 is a cap | <3 pts gain → 32 is not the limit here |
-| E3 | pos2d on vs off (left/right/above task) | on ≥85%, off ≤60% (chance 50%) | off also ≥85% → SigLIP already carries position, so pos2d isn't needed |
-| E4 | image as notebook+pos2d vs image as **latent grid 8x8** (question → notebook) | grid ≥5 pts better on relation+count, both seeds | gap <2 pts → keep the notebook |
-| E5 | core lesion: identity in place of 4 loops | loops beat lesion by ≥15 pts on count-then-compare | gap <5 pts → encoder/LM is doing the thinking, against Ben's rule |
-| E6 | S3 text replay on vs off | with replay, text eval within 1 pt of pre-vision | drop >3 pts even with replay → shared core is being overwritten |
-| E7 | SigLIP2-B → DINOv2-S | report only. Neither wins unless ≥5 pts | — |
-
-## 6. Risks
-- **No geometry in the notebook** **[shown]**. Fixing it with absolute pos2d is a workaround. The proper fix is to pass `coords` into the reasoner's bias, which is the sibling thread's call.
-- **No notebook mask** **[shown]**. Variable grids or multiple images need `valid` before they can be used.
-- **The encoder or the LM does the reasoning.** SigLIP features already hold some count and relation information **[untested]**, and the LM may answer from priors. E5 and a no-image baseline guard against this.
-- **Narrow heads** mask |dc|>1. In grid placement (E4), half the heads see 3-column stripes **[shown]**. This suits puzzles but is unknown for images.
-- **Capacity of 8 prefix vectors** may limit long captions. S1 judges on retrieval, not caption fluency **[suggested]**.
-- **Captions vs skills**: S1 captioning is only alignment. Skills come from S2 synthetic tasks, which keeps the "skills first, facts later" order.
-- **Provenance rules**: the human-origin checks in `human_rows` are text-specific. Caption data needs its own registry **[shown, for text-only checks]**.
-- **Licences**: SigLIP2 and DINOv2 are, I believe, Apache-2.0 **[untested]**.
-- **Hard choice worth an outside opinion**: E4, grid vs notebook. Either Astra or GPT could review it before GPU time.
+## 6. CPU checks still open
+- **P3-MC:** does SigLIP2 tell Minecraft blocks apart? 200 labelled crops from Ben's screenshots, 20 classes. Probe >=70% -> fine; <40% -> plan a Minecraft-specific encoder (MineCLIP swap). Needs ~20 screenshots from Ben.
+- **P4-MC:** measure hotbar digit height after the planned resize at Ben's resolution and GUI scale. Under 7 px (below what P6 tested) -> run E4b; also run the P6 probe on real hotbar crops.
+- **P5-NaFlex:** grid shapes for 16:9 and 4:3 through `workspace.py`.
 
 ## Plain-language summary for Ben
-We borrow a ready-made image reader (SigLIP2) that turns a picture into a 16x16 grid of feature vectors. We average that down to 8x8 and squeeze each square through a tiny ~35k-parameter adapter into the same 256-number format the reasoner already uses for text. We also stamp each square with "this is an image" and "this square is at row r, column c". The question stays as text. The picture goes into the reasoner's "notebook". The current notebook has no sense of where things are, which is why we add the position stamps. First we train only the tiny adapter, then the reasoner on picture puzzles. Each later test changes one thing and has a pass mark written down in advance.
-
-## Roadmap (added by the thread, after Ben's Minecraft answer; all [suggested])
-1. **Now (CPU, this PR):** contract, adapter prototype, 7 tests with a stand-in frozen encoder. Real SigLIP2 not loaded here.
-2. **Pilot (GPU, after the English pilot frees the PC):** S1 then E1-E3. Hand to the execution owner via the coordinator.
-3. **Skills:** S2 synthetic puzzles, E4-E6.
-4. **Video:** frames at a few per second go through the same adapter; older frames become notebook slots with a time tag. Needs the reasoner's coords/mask (sibling thread).
-5. **Screen agent:** the reasoner output goes to a small action head (keys, mouse dx/dy, click) in a closed loop. Ben: play Minecraft like a person from the screen, with keyboard and mouse. Action head, latency and safety of a real game loop are untested.
-6. **Reading guides online:** web pages as screenshots go through the same image path (OCR-like reading by SigLIP2 is untested), or as text through the text path. Browser access is a separate design.
-
-Prototype notes: `vision_adapter.py` (GridAdapter, pos2d, FrozenPatchEncoder stand-in) and `test_vision_adapter.py`. Shown by test: the adapter output feeds the real AttentionReasoner both as latent grid and as notebook, the encoder gets no gradients, and a toy quadrant task is learnable through the adapter. This says nothing about real images or reasoning.
-
-## Reconciliation with PR #23 (shared Workspace contract)
-PR #23 (critical-thinking reasoner, section 6) defines `Workspace`: `tokens [B,N,256]`, `segment [B,N]`, `coords [B,N,<=3]`, `valid [B,N]`. This design adopts it and drops its own format. Changes to the first draft above:
-- **Modality tag + role -> segment.** One learned zero-init embedding per role (question, notebook, example, tool_result, register) and per modality (text, image, audio), summed. Segment shape here is `[B,N,2]` (role, modality) so one vector can carry both. PR #23 uses a single id per vector; if it keeps one id, the pair can be folded into one table with a product vocabulary. Both are cheap; decide when the reasoner thread freezes the table.
-- **Layout tag (grid/seq/set) dropped.** Coordinates carry it: images get (row, col, 0), audio will get (0, 0, time), text may get none.
-- **Position code.** My fixed sin-cos code was a workaround for the notebook having no geometry. If the core uses `coords` for its bias with a new neutral index (as PR #23 proposes), the workaround is unnecessary and E3 changes to coords-on vs coords-off.
-- **Mask.** `valid` is in the contract, so variable grids and several images become possible (they were blocked before).
-- Prototype: `workspace.py` (`Workspace`, `SegmentEmbedding`, `image_to_workspace`) and one test. The real core does not yet read `segment`, `coords` or `valid`; that is the reasoner thread's change. Audio thread should emit the same record.
+We still borrow Google's SigLIP2 "eye" and squeeze its 16x16 grid to 8x8. We tested that on this computer with the real
+eye and made-up pictures. Squeezing lost nothing we could measure, the eye's last layer was best, and even a row of
+nine tiny digits (like a Minecraft hotbar) was read 99.8% right after squeezing. Real Minecraft screenshots are the
+next check, because its font and textures are messier than our test pictures. We also fixed three things. The old "is the reasoner really
+thinking?" test was rigged to pass, so now we compare 1 thinking round against 8 and against a simple guesser.
+The "where is this square" stamps were three times louder than the picture, so they now start quiet. And the code
+now matches the plan. For Minecraft, the model will think a little on every frame and keep thinking across frames,
+the big language model stays out of the fast loop, and guides are read as text.

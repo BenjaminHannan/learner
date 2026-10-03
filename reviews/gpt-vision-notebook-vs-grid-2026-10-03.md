@@ -1,4 +1,6 @@
 # Outside opinion prompt: should an image go into the reasoner as the grid or as notebook slots?
+
+> **Superseded 2026-10-03 (design v2):** under the shared Workspace contract the grid-vs-notebook question becomes E4a (how position enters) and E4b (token budget). No need to send this prompt.
 (For GPT web; it cannot see the repo. Stand-alone. Offered to Ben; he decides whether to send it.)
 
 ## Setting

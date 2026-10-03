@@ -18,13 +18,20 @@ def test_encoder_frozen_adapter_trains():
     enc = FrozenPatchEncoder(); ad = GridAdapter(96, grid=(4, 4))
     assert not any(p.requires_grad for p in enc.parameters())
     f, g = enc(torch.randn(2, 3, 32, 32)); ad(f, g).sum().backward()
-    assert all(p.grad is not None for p in ad.parameters())
+    assert all(p.grad is not None for n, p in ad.named_parameters() if n != "pos_scale")  # pos_scale is notebook-mode only
 
 def test_modality_tag_changes_latent():
     f = torch.randn(1, 16, 8)
     a, b = GridAdapter(8, (4, 4), modality="image"), GridAdapter(8, (4, 4), modality="audio")
+    with torch.no_grad(): a.modality.weight.normal_()  # zero-init by default, so perturb to see the tag act
     b.load_state_dict(a.state_dict()); b.modality_id.fill_(2)
     assert not torch.allclose(a(f, (4, 4)), b(f, (4, 4)))
+
+def test_modality_tag_zero_init_is_noop():
+    f = torch.randn(1, 16, 8)
+    a, b = GridAdapter(8, (4, 4), modality="image"), GridAdapter(8, (4, 4), modality="audio")
+    b.load_state_dict(a.state_dict())
+    assert torch.equal(a(f, (4, 4)), b(f, (4, 4)))
 
 def test_feeds_real_reasoner_with_notebook():
     import claude_fewex_net as N
@@ -67,9 +74,34 @@ def test_pos2d_unique_and_notebook_mode_runs():
     assert out["final_latent"].shape == (2, 12, 256)  # query_n unchanged by notebook
 
 def test_workspace_contract_and_zero_init():
-    from workspace import image_to_workspace, SegmentEmbedding
+    from workspace import image_to_workspace, SegmentEmbedding, same_source_mask, TIME
     enc = FrozenPatchEncoder(); ad = GridAdapter(96, grid=(8, 8))
     f, g = enc(torch.randn(2, 3, 64, 64)); lat = ad(f, g).flatten(1, 2)
-    ws = image_to_workspace(lat)
-    assert ws.coords.shape == (2, 64, 3) and ws.valid.all()
-    assert torch.equal(SegmentEmbedding()(ws), ws.tokens)  # zero-init: no change at start
+    still = image_to_workspace(lat, (8, 8))
+    assert still.coords.shape == (2, 64, 3) and still.valid.all() and not still.coord_valid[..., TIME].any()
+    frame = image_to_workspace(lat, (8, 8), time_s=-0.1)
+    assert frame.coord_valid[..., TIME].all() and (frame.coords[..., TIME] == -0.1).all()
+    assert torch.equal(SegmentEmbedding()(still), still.tokens)  # zero-init: no change at start
+    both = still.cat(image_to_workspace(lat, (8, 8), role="question"))
+    m = same_source_mask(both)
+    assert m[:, :64, :64].all() and not m[:, :64, 64:].any()  # row/col never compared across sources
+
+def test_lesion_trap_notebook_reaches_readout_only_through_rounds():
+    """Review finding: with the image in the notebook, read_latent sees only question positions, so a
+    'no loop' lesion cuts the image off entirely. E5 must compare round counts, not loop vs identity."""
+    import claude_fewex_net as N
+    from sol_spatial_attention_core import AttentionReasoner
+    torch.manual_seed(0)
+    r = AttentionReasoner(N.Net("loop"), experts=2, active=1)
+    nb = torch.randn(1, 4, 256, requires_grad=True)
+    st = r.begin_latent(torch.randn(1, 1, 5, 256), nb)
+    h0, _ = r.read_latent(st)
+    assert not h0.requires_grad or torch.autograd.grad(h0.sum(), nb, allow_unused=True)[0] is None
+    h1, _ = r.read_latent(r.advance_latent(st))
+    g = torch.autograd.grad(h1.sum(), nb)[0]
+    assert g.abs().sum() > 0
+
+def test_default_hidden_32_and_param_count():
+    ad = GridAdapter(768)
+    n = sum(p.numel() for p in ad.parameters())
+    assert ad.proj[1].out_features == 32 and 30_000 < n < 40_000  # DESIGN.md says ~35k
