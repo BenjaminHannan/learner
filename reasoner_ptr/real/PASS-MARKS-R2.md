@@ -1,4 +1,4 @@
-# Real-pipeline pointer test: pass marks (fixed 2026-10-03 ~22:55 UTC, before any training run)
+# Real-pipeline pointer test: pass marks (fixed 2026-10-03 ~22:38 UTC (commit 65d5bc859), before any training run)
 
 Ask: coordinator relay 22:33 UTC (pointer vs no pointer on the real-model recipe, 6 paired seeds, fresh fast-lane
 story set with new-word answers). Fast lane: generated held-out split; split seed, eval seed and marks written here first.
