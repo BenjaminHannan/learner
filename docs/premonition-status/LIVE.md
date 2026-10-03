@@ -95,3 +95,9 @@ Next: skills-curriculum pretraining speed probe is running on the PC GPU.
 
 ## 20:56Z LAUNCHED skills-curriculum pretraining (stage A), pass marks as registered above
 Speed probe (600 updates, clean, ~500 updates/min; 0/20 in_dist at 600 updates, too early to judge). Real run: task skmain, seed-0 parent, 50,000 updates taken as an even stride (every 4th row) through the 200,000-row stream (PR #32 @ 57c45293f, ambiguity filter; train hash matches the manifest after CRLF->LF), lr 1e-3 continuing the parent's Adam, in_dist dev check every 4000 updates, 100 dev rows per shift file at the end, time cap 120 min. Output: artifacts/skills/main/ on the PC (SKILLS-RESULT.json, parent-shaped final-checkpoint.pt). Stage B (English pilot from this core) only starts if in_dist >= 80% (else VOID).
+
+## 21:29Z INTERIM skills pretraining main run: not learning; stopped at ~16k of 50k updates for a diagnosis
+Shown: in_dist dev accuracy 5, 6, 3, 6 of 100 at 4k, 8k, 12k, 16k updates. Even stage 1 (copy and look-up) only reached ~13% exact in training and its loss plateaued near 2.1; loss rose when harder stages began (stage 4 ~2.4-3.0). The registered pass mark (in_dist >= 80% at the end) cannot be reached on this trajectory. No checkpoint was saved (it saves at the end only).
+Suggested (not tested): the 8-vector exit is the bottleneck, even for copying a made-up word; matches the cloud thread's finding that wrong fresh answers are copies.
+Untested: whether many more updates would fix it.
+Diagnosis registered BEFORE running: copy_word family only, 3000 updates, seed-0 parent, lr 1e-3, dev check every 1000 on 50 held-out copy_word rows. Copy accuracy >= 80% = copying is learnable through the exit (so the failure is curriculum/other skills). Copy accuracy < 30% = the 8-vector exit cannot even copy a made-up word. In between = inconclusive.

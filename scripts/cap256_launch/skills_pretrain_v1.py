@@ -86,6 +86,7 @@ def main():
     ap.add_argument('--dev-n', type=int, default=100)
     ap.add_argument('--minutes', type=float, default=120)
     ap.add_argument('--lr-mult', type=float, default=1.0)
+    ap.add_argument('--families', default='', help='comma list: train and score only these families (diagnosis)')
     a = ap.parse_args()
     root = Path(a.root).resolve()
     out = root / a.out
@@ -112,6 +113,10 @@ def main():
         ctx.lm, ctx.dec, ctx.device = lm, dec, cfg['device']
         dev = load_dev(a.data, a.dev_n)
         rows_all = [json.loads(l) for l in (Path(a.data) / 'train.jsonl').read_text().splitlines()]
+        if a.families:
+            keep = set(a.families.split(','))
+            rows_all = [r for r in rows_all if r['family'] in keep]
+            dev = {k: [r for r in json.loads('[' + ','.join(l for l in (Path(a.data) / 'dev' / (k + '.jsonl')).read_text().splitlines()) + ']') if r['family'] in keep][:a.dev_n] for k in DEV if (Path(a.data) / 'dev' / (k + '.jsonl')).exists()}
         stride = max(1, len(rows_all) // a.updates)
         rows = rows_all[::stride][:a.updates]
         print(json.dumps({'event': 'skills-start', 'train_rows': len(rows_all), 'used': len(rows), 'stride': stride}), flush=True)
