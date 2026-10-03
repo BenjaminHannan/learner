@@ -25,8 +25,8 @@ Each idea scored on five questions: does it attack a failure we have **shown**; 
 
 | Rank | Idea | Aims at | Added weights | First test | Ruler | Label |
 |---|---|---|---|---|---|---|
-| 0 | Pointer exit (copy the tool result) | Answers stuck to the training set | ~260 + 1:1 map | Running on vast (PR #29) | Assistant format | papers shown, untested for us |
-| 1 | Think before calling | 38 wrong operations; all calls fire at loop 0 | 0 | After the English pilot | Assistant panel | fact shown, fix untested |
+| 0 | Pointer exit (copy the tool result) | Answers stuck to the training set | ~260 + 1:1 map | **Done on vast: unseen 0-4% to 84-90%** | Assistant format | shown (reimplementation) |
+| 1 | Think before calling | 38 wrong operations; all calls fire at loop 0 | 0 | Running on vast (on top of rank 0) | Assistant panel | fact shown, fix untested |
 | 2 | State lanes (Hyperloop) | Beat a plain model 2× our size | ~12k (0.14%) | Practice-side, 3 seeds | Puzzle, then §7 ladder | paper shown, untested for us |
 | 3 | Damped round update | Answers wander after round 16; the stop never fires | 0 to 256 | **Free, CPU, saved nets** | Puzzle | paper shown, untested for us |
 | 4 | Canon layers | Weak word order; bag-like notebook | ~3k (0.03%) | Generated pointer-chasing | Generated, then assistant | paper shown, untested for us |
@@ -127,7 +127,8 @@ Each idea scored on five questions: does it attack a failure we have **shown**; 
 - **What:** the output path gets a second route that reads the calculator's result slot directly (1:1, no pooling), plus a learned gate that picks "copy the result" or "say something else". This is the pointer-generator idea. It is not v5's rejected *forced* copying, because the gate is learned and can decline.
 - **Sources:** See, Liu, Manning, *Get To The Point: Summarization with Pointer-Generator Networks*, arXiv 1704.04368 (2017). Vinyals, Fortunato, Jaitly, *Pointer Networks*, arXiv 1506.03134 (2015). Both are widely used and cited here from memory, so re-open them before a pass mark rests on them. **Shown in those papers:** copying handles words never seen as outputs, which a fixed output set cannot do.
 - **Our core:** the value slot already holds the result's own LM token embedding (`_numeric_value` in `calculator_runtime_depth_compare.py`, shown). The talker adds one route that maps the result slot into the prefix 1:1, and one gate scalar. Roughly 260 weights for the gate, plus whatever the 1:1 map needs (one 256 → LM-width map if not shared with the existing 32 path).
-- **Test:** the vast thread is already running "direct result path to the talker" (PR #29, same eval, same sealed marks), so this ranks first and is not duplicated here. PR #29's marks apply: PASS needs unseen-answer accuracy ≥ 50% on both seeds. **Wrong:** ≤ 15% on both seeds.
+- **Result (16:52 UTC, PR #29 `reasoner_fresh/RESULTS.md`, reimplementation, shown there):** the tested version fed the frozen LM's embedding of the result token in as a 9th prefix vector, with no gate. Unseen-answer accuracy rose from 0.0% / 4.2% to 89.6% / 84.4% (2 seeds). Final accuracy now equals the right-call rate exactly, and none of the wrong answers is a training answer (0 of 25). One mark was missed: seen answers fell 6.2 and 5.2 points against a 5-point limit, so it is "not falsified" rather than a full pass. Still open: the learned gate (untested), multi-step answers, and the PC pipeline.
+- **What it moves:** every remaining error is now a wrong call, and the call is right only 60-69% of the time on new wording. So rank 1 (think before calling, now running on vast on top of the copy path) and rank 5 (score every operation) are next.
 - **Risk:** a pure copy route would solve calculator questions without any reasoning. Keep the gate, and keep questions that need a step after the call (for example, using the result in a second call) in the eval, so the gate can't just always copy.
 
 

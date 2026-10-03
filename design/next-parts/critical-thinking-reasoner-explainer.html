@@ -77,6 +77,7 @@ a{color:var(--accent)}
 </svg></div>
 <p>Shown: all 113 wrong answers are numbers the model saw as training answers. When the right number was new, it never said it. Carry, borrow, seed and reader type made little difference. So in practice the model picks from numbers it has seen.</p>
 <p><b>Update:</b> a later test trained on 48,000 never-repeating questions (a rebuilt copy of the recipe on vast.ai). New answers still scored 0% and 4%, even though the calculator call was right about 90% of the time. So better data alone doesn't fix it. The exit that averages into 8 vectors looks like the bottleneck. The new first pick is a route that lets the answer copy the calculator's result directly.</p>
+<p><b>Result:</b> it worked. With the copy route, new answers went from 0% and 4% to 90% and 84%. Every remaining mistake is now a wrong calculator call, which is right only 60-69% of the time on new wording. So "think before calling" is being tested next.</p>
 <p>Also shown in the pipeline code: the calculator call is chosen <b>before the first thinking round</b>. 127 of 128 rows called at loop 0. Thinking can't help pick the operation if the pick comes first.</p>
 </section>
 
