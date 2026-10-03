@@ -92,3 +92,11 @@ We borrow a ready-made image reader (SigLIP2) that turns a picture into a 16x16 
 6. **Reading guides online:** web pages as screenshots go through the same image path (OCR-like reading by SigLIP2 is untested), or as text through the text path. Browser access is a separate design.
 
 Prototype notes: `vision_adapter.py` (GridAdapter, pos2d, FrozenPatchEncoder stand-in) and `test_vision_adapter.py`. Shown by test: the adapter output feeds the real AttentionReasoner both as latent grid and as notebook, the encoder gets no gradients, and a toy quadrant task is learnable through the adapter. This says nothing about real images or reasoning.
+
+## Reconciliation with PR #23 (shared Workspace contract)
+PR #23 (critical-thinking reasoner, section 6) defines `Workspace`: `tokens [B,N,256]`, `segment [B,N]`, `coords [B,N,<=3]`, `valid [B,N]`. This design adopts it and drops its own format. Changes to the first draft above:
+- **Modality tag + role -> segment.** One learned zero-init embedding per role (question, notebook, example, tool_result, register) and per modality (text, image, audio), summed. Segment shape here is `[B,N,2]` (role, modality) so one vector can carry both. PR #23 uses a single id per vector; if it keeps one id, the pair can be folded into one table with a product vocabulary. Both are cheap; decide when the reasoner thread freezes the table.
+- **Layout tag (grid/seq/set) dropped.** Coordinates carry it: images get (row, col, 0), audio will get (0, 0, time), text may get none.
+- **Position code.** My fixed sin-cos code was a workaround for the notebook having no geometry. If the core uses `coords` for its bias with a new neutral index (as PR #23 proposes), the workaround is unnecessary and E3 changes to coords-on vs coords-off.
+- **Mask.** `valid` is in the contract, so variable grids and several images become possible (they were blocked before).
+- Prototype: `workspace.py` (`Workspace`, `SegmentEmbedding`, `image_to_workspace`) and one test. The real core does not yet read `segment`, `coords` or `valid`; that is the reasoner thread's change. Audio thread should emit the same record.

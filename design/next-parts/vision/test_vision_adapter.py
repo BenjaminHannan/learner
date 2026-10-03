@@ -65,3 +65,11 @@ def test_pos2d_unique_and_notebook_mode_runs():
     assert nb.shape == (2, 64, 256)
     out = r.reason_latent(torch.randn(2, 1, 12, 256), notebook=nb.detach(), cap=3)
     assert out["final_latent"].shape == (2, 12, 256)  # query_n unchanged by notebook
+
+def test_workspace_contract_and_zero_init():
+    from workspace import image_to_workspace, SegmentEmbedding
+    enc = FrozenPatchEncoder(); ad = GridAdapter(96, grid=(8, 8))
+    f, g = enc(torch.randn(2, 3, 64, 64)); lat = ad(f, g).flatten(1, 2)
+    ws = image_to_workspace(lat)
+    assert ws.coords.shape == (2, 64, 3) and ws.valid.all()
+    assert torch.equal(SegmentEmbedding()(ws), ws.tokens)  # zero-init: no change at start
