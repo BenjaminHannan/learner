@@ -10,3 +10,13 @@
 | 54059819 | RTX 4080S | 0.222 | 20:25-21:20 | copy-old seeds 0-5 | 21:20 | ~$0.20 |
 | 54059820 | RTX 3090 | 0.242 | 20:25-21:20 | pool-mix seeds 0-5 | 21:20 | ~$0.22 |
 Total about $1.35 (estimate from hourly rates, not the invoice). Copy-back: result tarballs came through the box log in 380-char lines, each sha256-checked and every extracted json checked against the box's MANIFEST lines (0 mismatches, 24 runs).
+
+## Round 2 (contextual reader), credit $8.43 at 22:10 UTC
+| contract | GPU | $/h | UTC | job | destroyed | est. cost |
+|---|---|---|---|---|---|---|
+| 54066196, 54066198, 54066199, 54066201 | 3090 / 3090 Ti / 3090 Ti / Q RTX 8000 | 0.20-0.26 | 21:28-21:32 | aborted at once: my launch list lacked templates_eval_r2.json | 21:32 | ~$0.03 |
+| 54066631 | RTX 3090 | 0.201 | 21:32-22:09 | RECIPE seeds 0-2 | 22:09 after sha-checked copy-back | ~$0.12 |
+| 54066632 | RTX 3090 Ti | 0.242 | 21:32-22:09 | RECIPE seeds 3-5 | 22:09 | ~$0.15 |
+| 54066644 | RTX 3090 Ti | 0.222 | 21:32-22:09 | CTX seeds 0-2 | 22:09 | ~$0.14 |
+| 54066645 | Q RTX 8000 | 0.255 | 21:32-22:09 | CTX seeds 3-5 (slow, no TF32) | 22:09 | ~$0.16 |
+Round 2 about $0.6. Whole thread about $2.0 (estimate from hourly rates).
