@@ -38,3 +38,19 @@ Next: 4x updates (9216), both arms, seed 0.
 ## 2026-10-03 ~19:00Z 4x updates (9216) reaches the train-fit bar on seed 0
 Shown (exploratory, TRAIN panel only): seed 0 at lr 1e-3, 9216 updates: control 43/48 (CE 0.23), treatment 41/48 (CE 0.43). Both >= 40. Mechanism note (shown): router balance aux was constant 0.001 in the pilot log, i.e. router weights never moved off zero; with identical expert clones the CE gives the router zero gradient, so experts 0 and 1 stay identical and the 8-expert MLP acts as one plain MLP. Not yet tested whether putting the balance loss in the loss helps (aux64 did not run; not needed now).
 Running: seed 1 both arms at 9216 updates (tag up4s1). Next: rescore seeds 0+1 on fresh eval v3 once, same pass marks. Caveat: eval v3 was already scored once (numbers seen), so this rescore is exploratory, not a sealed claim.
+
+## 2026-10-03 ~20:10Z 9216-update rescore on fresh eval v3: NULL (exploratory, no claim)
+Ran: seed 1 at 9216 updates (control 40/48, treatment 43/48 train fit), then generated and scored all 6 states on fresh eval v3 once, same scorer and marks (only the run-length check changed 2304 -> 9216). V1 and V3 pass. Train fit: s0 control 43, s0 treatment 41, s1 control 40, s1 treatment 43 (all >= 40).
+
+| state | understanding P1 /48 | transfer P2 /48 |
+|---|---|---|
+| seed0 control | 3 | 1 |
+| seed0 treatment | 3 | 1 |
+| seed1 control | 7 | 2 |
+| seed1 treatment | 2 | 3 |
+| parents | 0 | 0 |
+
+Treatment minus control: seed 0 = (0, 0); seed 1 = (-5, +1). PASS needs >= 6 on both P1 and P2 for both seeds (T=6): not met. Harm vs parent: none (all runs score above the parents' 0). Verdict NULL by the pre-fixed rule.
+Shown: the models memorise the 48 TRAIN questions (40-43/48) but answer only 2-7/48 fresh understanding questions and 1-3/48 transfer questions; no treatment benefit over control in either seed. Suggested (untested): the training set is memorised, not generalised, so the paraphrase auxiliary at this scale, data size and design does not buy comprehension. Untested: more/diverse data, router balance loss, stronger treatment.
+Caveats: eval v3 had already been scored once (UNDERFIT-VOID numbers seen) and the length was chosen on TRAIN only; this is exploratory, not a sealed claim. S1 paraphrase scoring not done. Seed 0 endpoints came from the sweep (tag up4), seed 1 from tag up4s1; same code, same lr.
+Stopping per the coordinator's plan; next step is a decision for Ben / the coordinator.
