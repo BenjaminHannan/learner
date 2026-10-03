@@ -1,62 +1,72 @@
 <title>Premonition Vision Input</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;600&display=swap">
 <style>
-:root{--bg:#f6f7f9;--fg:#1b2430;--mut:#5b6675;--card:#fff;--line:#d5dae1;--acc:#1f6f8b;--acc2:#c2571a;--fill:#e3eef3}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12171d;--fg:#e6eaef;--mut:#9aa5b3;--card:#1a212a;--line:#2e3743;--acc:#5fb4d1;--acc2:#f09a5c;--fill:#1f3039;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#12171d;--fg:#e6eaef;--mut:#9aa5b3;--card:#1a212a;--line:#2e3743;--acc:#5fb4d1;--acc2:#f09a5c;--fill:#1f3039;color-scheme:dark}
-body{background:var(--bg);color:var(--fg);font:16px/1.5 "IBM Plex Sans",system-ui,sans-serif;padding-inline:16px;padding-block:24px}
+/* Layout: one reading column; each section is a diagram or chart with two lines of text under it */
+:root{--bg:#f6f7f9;--fg:#1b2430;--mut:#5b6675;--card:#fff;--line:#d5dae1;--acc:#1f6f8b;--acc2:#c2571a;--fill:#e3eef3;--s0:#b9c2cc;--s1:#7fb3c7;--s2:#1f6f8b;--s3:#9a7bb8;--good:#2f7d4f;--bad:#b23b3b;
+--display:"IBM Plex Mono",ui-monospace,monospace;--body:"IBM Plex Sans",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12171d;--fg:#e6eaef;--mut:#9aa5b3;--card:#1a212a;--line:#2e3743;--acc:#5fb4d1;--acc2:#f09a5c;--fill:#1f3039;--s0:#4a5562;--s1:#3f7f97;--s2:#5fb4d1;--s3:#b89ad6;--good:#6cc48f;--bad:#e07a7a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12171d;--fg:#e6eaef;--mut:#9aa5b3;--card:#1a212a;--line:#2e3743;--acc:#5fb4d1;--acc2:#f09a5c;--fill:#1f3039;--s0:#4a5562;--s1:#3f7f97;--s2:#5fb4d1;--s3:#b89ad6;--good:#6cc48f;--bad:#e07a7a;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--body);padding-inline:16px;padding-block:24px}
 main{max-width:860px;margin:auto;display:grid;gap:28px}
-h1,h2{font-family:"IBM Plex Mono",ui-monospace,monospace;text-wrap:balance;margin:0}
+h1,h2{font-family:var(--display);text-wrap:balance;margin:0}
 h1{font-size:1.5rem}h2{font-size:1.05rem;color:var(--acc)}
 p{margin:6px 0;max-width:65ch}.mut{color:var(--mut)}
 .box{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto;min-width:0}
-svg{display:block;min-width:640px;width:100%;height:auto}svg text{fill:var(--fg);font:13px "IBM Plex Mono",monospace}
+svg{display:block;min-width:600px;width:100%;height:auto}svg text{fill:var(--fg);font:12px var(--display)}
+svg .ax{fill:var(--mut)}.grid{stroke:var(--line)}.chance{stroke:var(--acc2);stroke-width:1.5;stroke-dasharray:4 3}
+.s0{fill:var(--s0)}.s1{fill:var(--s1)}.s2{fill:var(--s2)}.s3{fill:var(--s3)}
 .r{fill:var(--card);stroke:var(--line)}.a{fill:var(--fill);stroke:var(--acc)}.o{fill:none;stroke:var(--acc2);stroke-width:2}
-table{border-collapse:collapse;font-size:.88rem;min-width:560px}td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+table{border-collapse:collapse;font-size:.88rem;min-width:600px;font-variant-numeric:tabular-nums}td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.tag{font:12px var(--display);padding:1px 6px;border-radius:3px;border:1px solid currentColor;white-space:nowrap}.tg{color:var(--good)}.tb{color:var(--bad)}.tm{color:var(--mut)}
 </style>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans&display=swap">
 <main>
 <div><h1>How a picture reaches the reasoner</h1>
-<p class="mut">Design only. Nothing here was trained. Tests on CPU pass with a stand-in encoder, not a real one.</p></div>
+<p class="mut">Design v2, 3 Oct. Checked on CPU with the real frozen image encoder and made-up pictures. Nothing has been trained on a GPU yet.</p></div>
 
 <section><h2>The path</h2><div class="box">
-<svg viewBox="0 0 800 130" role="img" aria-label="Image to frozen SigLIP2 to 8x8 pool to adapter to notebook slots to reasoner core">
-<rect class="r" x="5" y="40" width="90" height="50" rx="4"/><text x="22" y="70">image</text>
-<rect class="r" x="125" y="40" width="130" height="50" rx="4"/><text x="137" y="62">SigLIP2-B</text><text x="137" y="80">frozen 16x16</text>
-<rect class="r" x="285" y="40" width="100" height="50" rx="4"/><text x="297" y="62">pool</text><text x="297" y="80">8x8 = 64</text>
-<rect class="a" x="415" y="40" width="130" height="50" rx="4"/><text x="427" y="62">adapter ~35k</text><text x="427" y="80">+tag +position</text>
-<rect class="a" x="575" y="40" width="130" height="50" rx="4"/><text x="587" y="62">reasoner core</text><text x="587" y="80">4 loops, ~9M</text>
-<path d="M95 65h30M255 65h30M385 65h30M545 65h30" stroke="var(--mut)" stroke-width="2"/>
-<text x="415" y="112">only blue boxes learn</text></svg></div></section>
+<svg viewBox="0 0 800 130" role="img" aria-label="Image to frozen SigLIP2 to 8x8 pool to adapter to workspace to reasoner core">
+<rect class="r" x="5" y="40" width="80" height="50" rx="4"/><text x="20" y="70">image</text>
+<rect class="r" x="110" y="40" width="130" height="50" rx="4"/><text x="122" y="62">SigLIP2-B</text><text x="122" y="80">frozen, 16x16</text>
+<rect class="r" x="265" y="40" width="100" height="50" rx="4"/><text x="277" y="62">pool</text><text x="277" y="80">8x8 = 64</text>
+<rect class="a" x="390" y="40" width="130" height="50" rx="4"/><text x="402" y="62">adapter ~35k</text><text x="402" y="80">32 wide</text>
+<rect class="r" x="545" y="40" width="110" height="50" rx="4"/><text x="557" y="62">workspace</text><text x="557" y="80">role, row, col</text>
+<rect class="a" x="680" y="40" width="115" height="50" rx="4"/><text x="692" y="62">reasoner</text><text x="692" y="80">loops, ~9M</text>
+<path d="M85 65h25M240 65h25M365 65h25M520 65h25M655 65h25" stroke="var(--mut)" stroke-width="2"/>
+<text x="390" y="115">blue boxes learn; the eye stays frozen</text></svg>
+<p class="mut">The workspace is the shared format for text, images and sound. Each piece says what it is, where it sits in the picture, and when it happened.</p></div></section>
 
-<section><h2>Open question: where does the picture sit?</h2><div class="box">
-<svg viewBox="0 0 800 170" role="img" aria-label="Option A image in notebook, option B image as main grid">
-<text x="10" y="20">A (default): question = main row, image = notebook</text>
-<g class="r"><rect x="10" y="30" width="24" height="24"/><rect x="34" y="30" width="24" height="24"/><rect x="58" y="30" width="24" height="24"/><rect x="82" y="30" width="24" height="24"/></g><text x="10" y="72">question tokens</text>
-<g class="a"><rect x="10" y="90" width="12" height="12"/><rect x="22" y="90" width="12" height="12"/><rect x="34" y="90" width="12" height="12"/><rect x="46" y="90" width="12" height="12"/><rect x="58" y="90" width="12" height="12"/></g><text x="10" y="122">64 image slots, no geometry,</text><text x="10" y="138">so we add a fixed position code</text>
-<text x="420" y="20">B (test E4): image = main 8x8 grid</text>
-<g class="a"><rect x="420" y="30" width="16" height="16"/><rect x="436" y="30" width="16" height="16"/><rect x="452" y="30" width="16" height="16"/><rect x="420" y="46" width="16" height="16"/><rect x="436" y="46" width="16" height="16"/><rect x="452" y="46" width="16" height="16"/><rect x="420" y="62" width="16" height="16"/><rect x="436" y="62" width="16" height="16"/><rect x="452" y="62" width="16" height="16"/></g><text x="490" y="60">real 2D neighbours,</text><text x="490" y="78">question goes to notebook</text>
-<rect class="o" x="2" y="2" width="396" height="160" rx="4"/></svg>
-<p class="mut">Shown in the code: notebook slots see every cell as "same place", and there is no padding mask. Which option is better is untested; E4 decides. A review prompt for GPT is in reviews/.</p></div></section>
+<section><h2>Does shrinking 16x16 to 8x8 lose anything?</h2><div class="box">
+<svg viewBox="0 0 660 260" role="img" aria-label="Linear probe accuracy on five synthetic tasks for raw pixels and SigLIP2 features pooled to 16x16, 8x8 and 4x4"><line x1="50" x2="640" y1="200.0" y2="200.0" class="grid"/><text x="42" y="204.0" text-anchor="end" class="ax">0</text><line x1="50" x2="640" y1="155.0" y2="155.0" class="grid"/><text x="42" y="159.0" text-anchor="end" class="ax">25</text><line x1="50" x2="640" y1="110.0" y2="110.0" class="grid"/><text x="42" y="114.0" text-anchor="end" class="ax">50</text><line x1="50" x2="640" y1="65.0" y2="65.0" class="grid"/><text x="42" y="69.0" text-anchor="end" class="ax">75</text><line x1="50" x2="640" y1="20.0" y2="20.0" class="grid"/><text x="42" y="24.0" text-anchor="end" class="ax">100</text><rect x="62" y="164.7" width="20" height="35.3" class="s0"><title>count, raw pixels: 19.6%</title></rect><rect x="85" y="101.7" width="20" height="98.3" class="s1"><title>count, 16x16: 54.6%</title></rect><rect x="108" y="100.3" width="20" height="99.7" class="s2"><title>count, 8x8 (plan): 55.4%</title></rect><rect x="131" y="96.0" width="20" height="104.0" class="s3"><title>count, 4x4: 57.8%</title></rect><line x1="59" x2="154" y1="180.2" y2="180.2" class="chance"/><text x="106" y="218" text-anchor="middle">count</text><rect x="180" y="39.8" width="20" height="160.2" class="s0"><title>left/right, raw pixels: 89.0%</title></rect><rect x="203" y="28.3" width="20" height="171.7" class="s1"><title>left/right, 16x16: 95.4%</title></rect><rect x="226" y="26.8" width="20" height="173.2" class="s2"><title>left/right, 8x8 (plan): 96.2%</title></rect><rect x="249" y="27.2" width="20" height="172.8" class="s3"><title>left/right, 4x4: 96.0%</title></rect><line x1="177" x2="272" y1="110.0" y2="110.0" class="chance"/><text x="224" y="218" text-anchor="middle">left/right</text><rect x="298" y="88.4" width="20" height="111.6" class="s0"><title>more red, raw pixels: 62.0%</title></rect><rect x="321" y="43.8" width="20" height="156.2" class="s1"><title>more red, 16x16: 86.8%</title></rect><rect x="344" y="43.0" width="20" height="157.0" class="s2"><title>more red, 8x8 (plan): 87.2%</title></rect><rect x="367" y="38.0" width="20" height="162.0" class="s3"><title>more red, 4x4: 90.0%</title></rect><line x1="295" x2="390" y1="110.0" y2="110.0" class="chance"/><text x="342" y="218" text-anchor="middle">more red</text><rect x="416" y="181.6" width="20" height="18.4" class="s0"><title>one digit, raw pixels: 10.2%</title></rect><rect x="439" y="20.7" width="20" height="179.3" class="s1"><title>one digit, 16x16: 99.6%</title></rect><rect x="462" y="20.7" width="20" height="179.3" class="s2"><title>one digit, 8x8 (plan): 99.6%</title></rect><rect x="485" y="20.7" width="20" height="179.3" class="s3"><title>one digit, 4x4: 99.6%</title></rect><line x1="413" x2="508" y1="182.0" y2="182.0" class="chance"/><text x="460" y="218" text-anchor="middle">one digit</text><rect x="534" y="85.0" width="20" height="115.0" class="s0"><title>hotbar 9 digits, raw pixels: 63.9%</title></rect><rect x="557" y="20.0" width="20" height="180.0" class="s1"><title>hotbar 9 digits, 16x16: 100%</title></rect><rect x="580" y="20.4" width="20" height="179.6" class="s2"><title>hotbar 9 digits, 8x8 (plan): 99.8%</title></rect><rect x="603" y="24.1" width="20" height="175.9" class="s3"><title>hotbar 9 digits, 4x4: 97.7%</title></rect><line x1="531" x2="626" y1="182.0" y2="182.0" class="chance"/><text x="578" y="218" text-anchor="middle">hotbar 9 digits</text><rect x="50" y="236" width="12" height="12" class="s0"/><text x="68" y="246">raw pixels</text><rect x="180" y="236" width="12" height="12" class="s1"/><text x="198" y="246">16x16</text><rect x="310" y="236" width="12" height="12" class="s2"/><text x="328" y="246">8x8 (plan)</text><rect x="440" y="236" width="12" height="12" class="s3"/><text x="458" y="246">4x4</text><line x1="570" x2="595" y1="242" y2="242" class="chance"/><text x="602" y="246">chance</text></svg>
+<p>Linear probe accuracy (%) on 500 test pictures per task. 8x8 matched 16x16 everywhere, including a row of nine tiny digits like a Minecraft hotbar (99.8%). So the plan keeps 8x8.</p>
+<p class="mut">Pass marks were written before running. Caveat: these are clean made-up pictures. Real Minecraft screenshots, with its pixel font and textures, are the next check.</p></div></section>
 
-<section><h2>Tests, one change at a time (GPU, later)</h2><div class="box"><table>
+<section><h2>What changed from v1</h2><div class="box"><table>
+<tr><th>Problem found</th><th>Fix</th></tr>
+<tr><td>The "is it really thinking?" test passed by design. Switching the loop off cuts the picture off completely.</td><td>Score 1 vs 2, 4, 8, 16 thinking rounds, and beat a simple guesser reading the eye directly.</td></tr>
+<tr><td>Position stamps were about 3x louder than the picture.</td><td>Stamps start at one tenth strength and learn their own volume.</td></tr>
+<tr><td>Code said 256 wide, the plan said 32.</td><td>Code now matches the plan. 11 CPU tests pass.</td></tr>
+<tr><td>"Image as notebook or grid?" no longer means much with the new shared format.</td><td>Split into E4a (how position enters) and E4b (more tokens or a close-up look, only if real screenshots need it).</td></tr>
+<tr><td>Caption training uses the same answer pipe the reasoner thread is checking.</td><td>Vision waits for that check first.</td></tr></table></div></section>
+
+<section><h2>GPU tests, one change at a time (none run)</h2><div class="box"><table>
 <tr><th>Test</th><th>Change</th><th>Passes if</th><th>Wrong if</th></tr>
-<tr><td>E1</td><td>real vs shuffled image</td><td>caption loss 0.15 nats lower, 8-way pick ≥50%</td><td>within 0.05 nats</td></tr>
+<tr><td>E1</td><td>real vs shuffled vs no picture</td><td>caption loss 0.15 nats lower than both</td><td>within 0.05</td></tr>
 <tr><td>E2</td><td>adapter 32 → 128 wide</td><td>≥10 pts, both seeds</td><td>&lt;3 pts</td></tr>
-<tr><td>E3</td><td>position code on/off</td><td>on ≥85%, off ≤60%</td><td>off also ≥85%</td></tr>
-<tr><td>E4</td><td>notebook vs main grid</td><td>grid ≥5 pts better</td><td>gap &lt;2 pts</td></tr>
-<tr><td>E5</td><td>loops vs identity</td><td>loops ≥15 pts better</td><td>gap &lt;5 pts (encoder/LM doing the thinking)</td></tr>
-<tr><td>E6</td><td>text replay on/off</td><td>text within 1 pt</td><td>drop &gt;3 pts</td></tr>
-<tr><td>E7</td><td>SigLIP2 → DINOv2-S</td><td>report only</td><td>—</td></tr></table></div></section>
+<tr><td>E4a</td><td>position stamps vs reasoner's own position sense</td><td>≥5 pts</td><td>&lt;2 pts</td></tr>
+<tr><td>E4b</td><td>add a close-up look (only if screenshots fail)</td><td>≥20 pts</td><td>&lt;5 pts</td></tr>
+<tr><td>E5</td><td>1 vs 8 thinking rounds, vs simple guesser</td><td>+10 over 1 round, +15 over guesser</td><td>guesser within 5</td></tr>
+<tr><td>E6</td><td>keep practising text while learning pictures</td><td>text within 1 pt</td><td>drop &gt;3 pts</td></tr>
+<tr><td>E7</td><td>swap eye: SigLIP2 → DINOv2</td><td colspan="2">report only</td></tr></table></div></section>
 
-<section><h2>Roadmap</h2><div class="box">
-<svg viewBox="0 0 800 110" role="img" aria-label="Roadmap from CPU prototype to screen agent">
+<section><h2>Roadmap to playing Minecraft from the screen</h2><div class="box">
+<svg viewBox="0 0 800 120" role="img" aria-label="Roadmap from still pictures to Minecraft">
 <path d="M20 50h760" stroke="var(--line)" stroke-width="3"/>
-<g class="a"><circle cx="50" cy="50" r="9"/></g><g class="r"><circle cx="190" cy="50" r="9"/><circle cx="330" cy="50" r="9"/><circle cx="470" cy="50" r="9"/><circle cx="610" cy="50" r="9"/><circle cx="750" cy="50" r="9"/></g>
-<text x="14" y="24">CPU adapter</text><text x="14" y="82">done, 7 tests</text>
-<text x="140" y="24">caption pilot</text><text x="140" y="82">E1-E3</text>
-<text x="290" y="24">puzzles</text><text x="290" y="82">E4-E6</text>
-<text x="435" y="24">video frames</text><text x="435" y="82">time tags</text>
-<text x="570" y="24">screen agent</text><text x="570" y="82">keys + mouse</text>
-<text x="700" y="24">web guides</text><text x="700" y="82">read pages</text></svg>
-<p class="mut">Ben's long-term test: play Minecraft like a person from the screen with keyboard and mouse, reading guides online. Video, the action head and web reading are untested ideas.</p></div></section>
+<circle cx="50" cy="50" r="9" class="a"/><circle cx="190" cy="50" r="9" class="r"/><circle cx="330" cy="50" r="9" class="r"/><circle cx="470" cy="50" r="9" class="r"/><circle cx="610" cy="50" r="9" class="r"/><circle cx="750" cy="50" r="9" class="r"/>
+<text x="14" y="24">CPU checks</text><text x="14" y="82">done</text>
+<text x="150" y="24">still pictures</text><text x="150" y="82">E1-E7</text>
+<text x="290" y="24">2D game</text><text x="290" y="82">fast, on CPU</text>
+<text x="425" y="24">video frames</text><text x="425" y="82">think across</text><text x="425" y="98">frames</text>
+<text x="565" y="24">keys + mouse</text><text x="565" y="82">learn from your</text><text x="565" y="98">recorded play</text>
+<text x="700" y="24">Minecraft</text><text x="700" y="82">guides as text</text></svg>
+<p class="mut">The eye and reasoner run 10 to 20 times a second. The big language model stays out of that fast loop and is only called to talk or read guides. OpenAI's VPT and DreamerV3 reached diamonds with thousands of hours of video or nine GPU-days, so we borrow their ideas at small scale. All later steps are untested.</p></div></section>
 </main>
