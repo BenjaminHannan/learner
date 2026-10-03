@@ -113,3 +113,33 @@ Standing numbers for future marks (6 seeds, same recipe, same eval; right-call r
 What it means: the unseen-answer problem is solved by the copy path in all 12 runs (unseen final 81-100%). The remaining error is call quality on new wording, and it is mostly seed luck: delaying the call does not fix it. Suggested next: a change aimed at wording generalisation itself (more varied training wording, since the training stream has only 4 templates), measured paired over 6 seeds.
 
 Cost: box 54041927 (RTX 3090, $0.163/h) ~17:33-18:10 UTC ~$0.10. Total for this thread about $0.50; credit about $14.0.
+
+---
+# Follow-up 4: varied training wording (rule in `PASS-MARKS-5.md`, fixed before training)
+
+One change on the copy-path base: the training stream is half the old 4 templates and half 180 procedurally composed frames (`gen2.py`) instead of the 4 old templates only. Baseline: the copy-only runs for seeds 0-5 (the pipeline is deterministic per seed; the exact re-run of pooled B showed this). 6 new runs, seeds 0-5. All 1152 rows checked against the eval form before the box was destroyed (`results/armBcopy-mix-seed*-rows.json`, `results/SUMMARY-wording.json`).
+
+**Disjointness check (how):** `gen2.py` drops every composed frame (24 of 204 dropped) that shares a full sentence or any word 6-gram (placeholders kept as tokens) with any of the 12 eval new-wording frames. The kept 180 frames share 0 six-grams and 0 sentences with the eval; training and eval names (0 shared) and nouns (0 shared) are disjoint; no training question text equals an eval question (checked on a 2000-question sample); eval operand pairs are excluded from training. Report: `results/DISJOINTNESS-REPORT.json`. Limit: this is surface overlap only; the composed stories (two quantities in two places, start-then-gain/loss) share their overall shape with some eval families.
+
+Right-call rate on new-wording questions (96 per run):
+
+| seed | old wording only | varied wording | gain |
+|---|---|---|---|
+| 0 | 74.0% | 100.0% | +26.0 |
+| 1 | 64.6% | 92.7% | +28.1 |
+| 2 | 99.0% | 100.0% | +1.0 |
+| 3 | 87.5% | 97.9% | +10.4 |
+| 4 | 79.2% | 100.0% | +20.8 |
+| 5 | 85.4% | 97.9% | +12.5 |
+
+Paired mean gain **+16.5 points** (SD 10.4, 95% t-interval +5.6 to +27.4). Every seed is up. Train-wording right-call rate is 100% in all six.
+
+Rule: PASS needed mean >= +8, interval lower bound > 0, and train-wording right-call mean >= 98%. All three hold: **PASS** (shown on this eval, 6 paired seeds).
+
+Spread: varied-wording new-wording right-call mean 98.1%, SD 2.8 points (range 92.7-100), against SD 11.9 for old wording. Final accuracy over all 192 questions: mean 99.0%, SD 1.4 (old wording 90.8%, SD 5.9). Unseen-answer final accuracy mean 99.3%, SD 1.3. No wrong unseen answer is a training answer. Pairs both right were not re-counted here.
+
+What it means: with a copy path for the result and a calculator for the call, the failures on unseen answers and on new wording both went away on this task, once training wording was varied. The lever for the remaining error was wording variety, not training length or call timing.
+
+Not shown: other task kinds (here only two-number add/subtract), larger numbers, multi-step problems, truly new story structures, or the PC pipeline. This is a calculator-assisted copy task; it says little about how a model computes hard answers itself. The eval new-wording set is only 6 families and has now been used for many decisions in this thread, so it should be refreshed before any headline claim.
+
+Cost: box 54045204 (RTX 3090, $0.163/h) ~18:02-18:36 UTC ~$0.10. Total for this thread about $0.60; credit about $13.9.
