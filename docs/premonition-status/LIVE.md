@@ -80,3 +80,15 @@ Stage B (English pilot seed 0, 9216 updates, control+treatment, starting from th
 - PASS if P1 >= 12/48 OR P2 >= 8/48 for the pretrained-core endpoints, with harm <= 3. Treatment minus control reported separately (>= 6 for a treatment claim).
 - Wrong if: P1 <= 7 and P2 <= 3 (same as the null baseline).
 Open engineering step: PR #32 rows are not in the pilot's frame format; I need a small skills trainer that reuses english_graph/english_loss with prompt as the passage and answer as the target. Not written yet.
+
+## 20:51Z RESULT bal9216 (router balance loss 0.01, seed 0, 9216 updates): FAILS the registered pass mark
+Train fit gate passed: control 40/48, treatment 41/48. Fresh eval v3 (exploratory, seen before; seed 1 endpoints are the old up4s1 ones, not retrained):
+| state | P1 understanding /48 | P2 transfer /48 |
+|---|---|---|
+| seed0 parent | 0 | 0 |
+| seed0 control (balance loss) | 2 | 1 |
+| seed0 treatment (balance loss) | 5 | 1 |
+Pass mark was P1 or P2 >= 6/48 with harm <= 3: NOT met (best 5). The registered "wrong if" (both arms stay below 6 on both measures) IS met. Treatment minus control: P1 +3, P2 0 (needed >= 6). Harm vs parent 0 (no loss). Scorer verdict NULL.
+Shown: every correct fresh answer, in all six endpoints, is a yes/no item; short-answer fresh items are 0/38 (P1) and 0/35 (P2) correct for every state. Suggested: the model still copies/produces training-style answers for open questions (matches the coordinator's copy finding). Untested: whether a pointer exit or wider entry fixes that (cloud thread).
+Files: artifacts/.../ENGLISH-PILOT-v1/RESULTS-v3-bal/ (SCORES-bal.json, RAW, SEALED, closed receipts), scorer now takes an optional results-dir argument.
+Next: skills-curriculum pretraining speed probe is running on the PC GPU.

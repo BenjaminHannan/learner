@@ -27,10 +27,11 @@ def check_runs_9216(receipts):
 
 sc.check_runs = check_runs_9216
 root, out = Path(sys.argv[1]), sys.argv[2]
+RES = sys.argv[4] if len(sys.argv) > 4 else 'RESULTS-v2-9216'
 freeze = common.read_json(root / 'FRESH-EVAL-FREEZE-v1.json')
 bank = common.read_json(sys.argv[3])
-receipts = [common.read_json(root / 'RESULTS-v2-9216' / 'closed' / ('seed%d-%s.json' % (s, a)))
+receipts = [common.read_json(root / RES / 'closed' / ('seed%d-%s.json' % (s, a)))
             for s in (0, 1) for a in ('control', 'treatment')]
-rec = sc.score(root / 'RESULTS-v2-9216' / 'eval', root / freeze['eval_items']['path'], freeze['eval_items']['sha256'], bank, receipts)
+rec = sc.score(root / RES / 'eval', root / freeze['eval_items']['path'], freeze['eval_items']['sha256'], bank, receipts)
 rec['freeze_sha256'] = common.digest(root / 'FRESH-EVAL-FREEZE-v1.json')
 print(json.dumps({'verdict': rec['verdict'], 'sha': common.write_new_json(out, rec)}))
