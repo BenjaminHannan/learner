@@ -31,8 +31,13 @@ compared byte-for-byte (SHA-256) with the copies that actually ran on BensPC (pa
 Calculator / reasoner: `calculator_pc_driver.py`, `calculator_eval_resume_pc_driver.py`,
 `calculator_recovery_pc_driver.py`, `calculator_runtime.py`, `calculator_tools.py`,
 `audit_native_calculator_results.py`, `fresh_core_calculator_constructor.py`, `calculator_runtime_depth_compare.py`.
-**Their configs/data are NOT exported** (not found under one clear path; they live under
-`C:/Users/benja/sol-cloud-numeric-capability-v1/launch-cap256/pkg/*` on the PC). Ask before relying on them.
+Configs/data exported (all under `pipeline/artifacts/cap256-launch/calculator-poc-v1/`): `RELEASE-MANIFEST-v3.json`
+(the training config, sha256 40b2ef6e…), TRAIN frames, fixed schedules, token qualification, architecture contract,
+throughput receipt, evaluation protocol, `BASELINE-FRESH-CONFIG.json`. Also added: `train_calculator_poc_v3.py`,
+`eval_calculator_poc.py`, `train_primitive_curriculum_v2.py`. **Not exported:** the fresh/eval frames
+(`EVAL-FRAMES-PRIVATE*.json`), and the source checkpoints the manifest pins (`run-capability256-continuation40-v1`
+seed0/1 `final-resume.pt`, sizes not measured). The manifest's `storage_snapshot` path points into a `launch-cap256/pkg/`
+folder that is not exported (the Mac copy is `scripts/cap256_launch/storage_snapshot.py`). Not run or tested here.
 
 ## Data a cloud box needs (not in the repo)
 | file (path relative to root) | size | note |

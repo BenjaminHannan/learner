@@ -1,0 +1,34 @@
+{
+  "schema": "cap256.calculator-evaluation.v1",
+  "seeds": [
+    0,
+    1
+  ],
+  "execution_order": [
+    [
+      0,
+      "calculator"
+    ],
+    [
+      1,
+      "calculator"
+    ]
+  ],
+  "train_rows": 10,
+  "fresh_rows": 16,
+  "train_native_calls": 20,
+  "fresh_native_calls": 32,
+  "native_call_limit": 52,
+  "teacherforced_examples": 0,
+  "optimizer_updates": 0,
+  "latent_advances": 4,
+  "max_new_tokens": 32,
+  "fit_gate": "both-seeds-all10-correct-equivalent-task-call-and-strict-final",
+  "addition_refs_order_equivalent": true,
+  "subtraction_refs_ordered": true,
+  "fresh_after_fit_gate_only": true,
+  "classification": "single-passdescriptivefreshtransfer ifstrictbothseedTRAINcallandanswergate passes; noisolatedarchitectureeffect",
+  "future_answer_gold_scope": "labels/scoringonly; rawobservedbeforereveal",
+  "ledger_OK": "validarithmeticexecuted,notsemanticcorrectness",
+  "reserved_data": "noaccess"
+}

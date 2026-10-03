@@ -1,0 +1,110 @@
+{
+  "baseline_endpoints": [
+    {
+      "arm": "primitive_baseline",
+      "checkpoint": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-primitive-baseline1024-repair-v2\\seed0\\primitive_baseline\\final-resume.pt",
+        "sha256": "ba53a70f24afe0a995a71bbcdeec7fa4f318224a032c3b0c8b402bd2668c22f3"
+      },
+      "closed": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-primitive-baseline1024-repair-v2\\seed0\\primitive_baseline\\CLOSED.json",
+        "sha256": "731c947f5a25d2a328e70cbb5815c8e99f0fc583d1275e9029c272e6eb1e4c28"
+      },
+      "seed": 0
+    },
+    {
+      "arm": "primitive_baseline",
+      "checkpoint": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-primitive-baseline1024-repair-v2\\seed1\\primitive_baseline\\final-resume.pt",
+        "sha256": "befc6e4004d4431b8ce6501f9f5f0410f1da8c7c540e656f17ad2ae0c1057ce8"
+      },
+      "closed": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-primitive-baseline1024-repair-v2\\seed1\\primitive_baseline\\CLOSED.json",
+        "sha256": "81db8c954b030474564833b0f4d2b87548511e4b62f931c135531dc8c56c3ea9"
+      },
+      "seed": 1
+    }
+  ],
+  "baseline_runner": {
+    "path": "scripts/cap256_launch/train_primitive_baseline_poc_v2.py",
+    "sha256": "77de5669a5980c1d7cf3ffedc3fec406ae73b2c5e9ecc9802eb14c862f6e645a"
+  },
+  "baseline_training_config": {
+    "path": "artifacts/cap256-launch/primitive-baseline-poc-v1/RELEASE-MANIFEST-v3.json",
+    "sha256": "7a817706579ea794a2e1323ee4c43d8a13228e19b6a41232206a9f772f12cf80"
+  },
+  "budget": {
+    "cuda_peak_reserved_cap_bytes": 15032385536,
+    "new_output_bytes": 33554432,
+    "project_cap_bytes": 100000000000,
+    "retained_free_bytes": 2147483648,
+    "spend_usd": 0,
+    "wall_seconds": 180
+  },
+  "calculator_config": {
+    "path": "artifacts/cap256-launch/calculator-poc-v1/RELEASE-MANIFEST-v3.json",
+    "sha256": "40b2ef6ef005157ac6f0aea4a5760ebf8699e9c2bfa61f7d4205abb5af9d8e7c"
+  },
+  "checkpoint_write_allowed": false,
+  "dispatch_allowed": true,
+  "evaluation_protocol": {
+    "path": "artifacts/cap256-launch/native-baseline20-v1/COMPARISON-PROTOCOL-TEMPLATE.json",
+    "sha256": "608f84c32c7f08c6454ec6da2fe147d3ccf39b0d2f764dc93ccb8e2e744f68c4"
+  },
+  "evaluation_runner": {
+    "path": "scripts/cap256_launch/eval_primitive_baseline_native.py",
+    "sha256": "afb289b7d6f451c001e80df9a56393aac70a08cf2874ac214119744c428fc08c"
+  },
+  "exclusive_lock_verified": true,
+  "frames": {
+    "path": "artifacts/cap256-launch/calculator-poc-v1/TRAIN-FRAMES-PRIVATE-v2.json",
+    "sha256": "8faa3a942b82c150170c2f438b075ae9b0f9ed05ffce81b9caf9c3d35bdf4e65"
+  },
+  "fresh_frames": {
+    "path": "artifacts/cap256-launch/calculator-poc-v1/EVAL-FRAMES-PRIVATE-v2.json",
+    "sha256": "a825cd2c3295c019cbc451764ddd3b3f9f605f0c9580bfcee2e60ceeb15c2ce3"
+  },
+  "live_execution_validated": false,
+  "optimizer_updates": 0,
+  "output_accounting_extra_paths": [
+    "artifacts/cap256-launch/calculator-native-resume-v1",
+    "launch-cap256/pkg/baseline-fresh-after-calculator-20261001T210000Z",
+    "launch-cap256/mixtures/baseline-fresh-after-calculator-20261001T210000Z",
+    "launch-cap256/requests/baseline-fresh-after-calculator-20261001T210000Z.json",
+    "launch-cap256/queues/calculator-native-resume-20261001T210000Z",
+    "launch-cap256/preflight/baseline-fresh-after-calculator-20261001T210000Z"
+  ],
+  "output_namespace": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/run-native-baseline20-v1-fresh-after-calculator",
+  "reserved_data_allowed": false,
+  "resume_helpers": {
+    "path": "scripts/cap256_launch/train_primitive_curriculum_v2.py",
+    "sha256": "4e8a09e0cd0538144f1168655b30ae166aea324904706fb0ed95138555536cfb"
+  },
+  "routing": "Unconditional baseline TRAIN20 after calculator execution ends; baseline fresh32 only after its pinned strict both-seed TRAIN10 calculator gate.",
+  "schema": "cap256.primitive-baseline-native.v1",
+  "seeds": [
+    0,
+    1
+  ],
+  "source_plan": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/PLAN-v3.json",
+    "sha256": "ceb522253ae98f80ad65c4102563a3a604b5d4dc70b4ffb671d4e59f4c1e8470"
+  },
+  "source_release": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/RELEASE-v4.json",
+    "sha256": "6f0ce5259c468ef363bcd059c7d82c8f9fcf9a14d2b4402d79dae8dcd75b7638"
+  },
+  "source_runner": {
+    "path": "scripts/sol_cloud_capability256_v1.py",
+    "sha256": "dfeef09f14fdcd0a1987c38d6a89a560f4ef02159b732cd1665cf51e9fa39b01"
+  },
+  "source_seal": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/SEAL-v9.json",
+    "sha256": "af4409a378f9d6670b4846a97e4bdf471a019c5b3555d7dc68bcc37ffd4b4c70"
+  },
+  "storage_snapshot": {
+    "path": "launch-cap256/pkg/cap256-primitive-baseline-20261001T201100Z/storage_snapshot.py",
+    "sha256": "2a4ce03930934d2881ed9f9568c11bb22c1931f0c2bbdba43218fd9d3736bb7d"
+  },
+  "teacherforced_examples": 0
+}

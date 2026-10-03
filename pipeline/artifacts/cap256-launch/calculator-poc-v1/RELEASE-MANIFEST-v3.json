@@ -1,0 +1,708 @@
+{
+  "schema": "cap256.calculator-poc.v1",
+  "arm": "calculator",
+  "seeds": [
+    0,
+    1
+  ],
+  "additional_updates": 1024,
+  "lr": 0.001,
+  "recipe": {
+    "batch": 1,
+    "rounds": 4,
+    "calls_per_loop_max": 1,
+    "calls_total_max": 4,
+    "call_order": "predict-call-insert-own-pair-then-one-advance",
+    "policy_features": "original-query-h-plus-e-and-eligible-span-or-result-means",
+    "literal_spans_max": 8,
+    "prior_results_max": 3,
+    "reserved_tool_pairs": 4,
+    "actions": [
+      "NONE",
+      "ADD",
+      "SUB"
+    ],
+    "statuses": [
+      "PENDING",
+      "NONE",
+      "OK",
+      "ERROR"
+    ],
+    "action_bias": true,
+    "pointer_bias": false,
+    "predicted_calls_only": true,
+    "halt_frozen": true,
+    "LM_frozen": true,
+    "full_FP32": true,
+    "optimizer_reset": false,
+    "objective": "final-numeric-CE-plus-mean4-action-CE-plus-eligible-loop-mean2-pointer-CE",
+    "loss_weights": {
+      "final_CE": 1,
+      "action_CE": 1,
+      "pointer_CE": 1
+    },
+    "label_policy": "checked-task-call-until-correct-predicted-task-call-then-NONE",
+    "source_update": 10240,
+    "additional_updates": 1024,
+    "case_exposure": {
+      "carry": 256,
+      "no_carry": 256,
+      "borrow": 256,
+      "no_borrow": 256
+    },
+    "head_initialization": "isolated-fork-rng-seed-equals-matched-seed",
+    "old_Adam_group_preserved": true,
+    "new_tool_group_fresh": true,
+    "optimizer": {
+      "name": "AdamW",
+      "lr": 0.001,
+      "weight_decay": 0,
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "clip_norm": 1
+    },
+    "checkpoint_updates": [
+      1024
+    ],
+    "midpoint_checkpoint": false
+  },
+  "historical_controls_required": false,
+  "execution_order": [
+    [
+      0,
+      "calculator"
+    ],
+    [
+      1,
+      "calculator"
+    ]
+  ],
+  "checkpoint_updates": [
+    1024
+  ],
+  "dispatch_allowed": true,
+  "exclusive_lock_verified": true,
+  "readiness": {
+    "architecture_contract_frozen": true,
+    "corpus_frozen": true,
+    "fresh_evaluation_frozen": true,
+    "numeric_registry_tokenizer_qualified": true,
+    "source_state_verified": true,
+    "throughput_budget_verified": true,
+    "live_driver_verified": true
+  },
+  "selected_rows": [
+    {
+      "answer": 86,
+      "canonical_numeric_target": "86",
+      "case": "carry",
+      "cell": "add/carry",
+      "id": "LUNA-B01-005",
+      "operands": [
+        47,
+        39
+      ],
+      "operation": "add",
+      "question": "Mira mailed 47 postcards in June and 39 in July. How many postcards did she mail during those months?",
+      "question_sha256": "b116a1190f054434eead20c5a3072f78d71a218cba2c9104b193e5db2725ff9e",
+      "source": "pinned-existing-TRAIN",
+      "source_family": "batch_01/b01_t01",
+      "source_group": "41717790f8b07dad2bc9c2eaec8d2d21adbd67a682f1c48d15d2565b9ab090e5",
+      "split_role": "TRAIN",
+      "independently_verified": true
+    },
+    {
+      "answer": 85,
+      "canonical_numeric_target": "85",
+      "case": "carry",
+      "cell": "add/carry",
+      "id": "LUNA-B06-030",
+      "operands": [
+        38,
+        47
+      ],
+      "operation": "add",
+      "question": "A rower practices for 38 minutes in the morning and 47 minutes in the afternoon. How many practice minutes is that?",
+      "question_sha256": "50f43a99042188bc174924358a3ebdaef4b213921334a74acf3167e858871b97",
+      "source": "pinned-existing-TRAIN",
+      "source_family": "batch_06/b06_t06",
+      "source_group": "24f3d6421f4353e4331bb966451399d7a1c4fef6be95110464d775db0baacb37",
+      "split_role": "TRAIN",
+      "independently_verified": true
+    },
+    {
+      "answer": 62,
+      "canonical_numeric_target": "62",
+      "case": "carry",
+      "cell": "add/carry",
+      "id": "LUNA-B12-092",
+      "operands": [
+        28,
+        34
+      ],
+      "operation": "add",
+      "question": "Two non-overlapping lots make up an order. Lot A has 28 crates of produce, and Lot B has 34. How many crates of produce are in the full order?",
+      "question_sha256": "233fbbdf6a9bf180f171ec55176e15ddd0a2026b5add485903d0d7c27b912b1a",
+      "source": "pinned-existing-TRAIN",
+      "source_family": "batch_12/b12_t10",
+      "source_group": "811fe55ab857511da3c5c4a065edb92a02ec7148f22439a9512045744232bb93",
+      "split_role": "TRAIN",
+      "independently_verified": true
+    },
+    {
+      "answer": 25,
+      "canonical_numeric_target": "25",
+      "case": "no_carry",
+      "cell": "add/no_carry",
+      "id": "LUNA-B12-045",
+      "operands": [
+        12,
+        13
+      ],
+      "operation": "add",
+      "question": "The supply contains two non-overlapping groups: 12 paper badges and 13 cloth badges. Count all the badges.",
+      "question_sha256": "13f5e6ddf2f583da0940f656c71ef2f2ba34dc45d89a329afded9fd629cdc3ed",
+      "source": "pinned-existing-TRAIN",
+      "source_family": "batch_12/b12_t05",
+      "source_group": "7290218a8f1a521e40c65d0aeeceb5440ad550f553ef02b48a7053951ac5a3da",
+      "split_role": "TRAIN",
+      "independently_verified": true
+    },
+    {
+      "answer": 29,
+      "canonical_numeric_target": "29",
+      "case": "no_carry",
+      "cell": "add/no_carry",
+      "id": "LUNA-B12-049",
+      "operands": [
+        16,
+        13
+      ],
+      "operation": "add",
+      "question": "A team sorted 16 morning orders and 13 afternoon orders into separate piles. How many orders are in the two piles combined?",
+      "question_sha256": "49876827c83691f4d4c1e4ca3a1ad912a35220f61ca2a79a4ec7ceb62adbc42c",
+      "source": "pinned-existing-TRAIN",
+      "source_family": "batch_12/b12_t05",
+      "source_group": "7290218a8f1a521e40c65d0aeeceb5440ad550f553ef02b48a7053951ac5a3da",
+      "split_role": "TRAIN",
+      "independently_verified": true
+    },
+    {
+      "answer": 67,
+      "canonical_numeric_target": "67",
+      "case": "no_carry",
+      "cell": "add/no_carry",
+      "id": "LUNA-B19-003",
+      "operands": [
+        26,
+        41
+      ],
+      "operation": "add",
+      "question": "A tray had some seed packets. After 26 packets were taken out, 41 packets remained. How many packets were in the tray before any were taken out?",
+      "question_sha256": "711edccb7582b63ec4a901481ca50a7071e369ba7665188afba41a36ff8ca189",
+      "source": "pinned-existing-TRAIN",
+      "source_family": "batch_19/b19_as02",
+      "source_group": "bde2b834249b8fb6305ed6587dc0aaa9a6707c6b701aebfbfd508df690f166ab",
+      "split_role": "TRAIN",
+      "independently_verified": true
+    },
+    {
+      "answer": 24,
+      "canonical_numeric_target": "24",
+      "case": "borrow",
+      "cell": "sub/borrow",
+      "id": "LUNA-B01-010",
+      "operands": [
+        92,
+        68
+      ],
+      "operation": "subtract",
+      "question": "A long path is 92 meters and a short path is 68 meters. What is the difference in their lengths?",
+      "question_sha256": "6a65fc6109b729aae7f6cbd9fa56f57315e3647c33e0d89ed6abf989220637a6",
+      "source": "pinned-existing-TRAIN",
+      "source_family": "batch_01/b01_t02",
+      "source_group": "40312133888cbd056c751611b4b129896f30dfcbfebddecceacd2a4100fe746e",
+      "split_role": "TRAIN",
+      "independently_verified": true
+    },
+    {
+      "answer": 46,
+      "canonical_numeric_target": "46",
+      "case": "borrow",
+      "cell": "sub/borrow",
+      "id": "LUNA-B19-004",
+      "operands": [
+        64,
+        18
+      ],
+      "operation": "subtract",
+      "question": "A reading cart held an unknown number of books. After 18 more books were added, it held 64. How many books were on the cart before the addition?",
+      "question_sha256": "a7bce8b9365e713266248b417186f3892d4d07386e75e8c470bbf69c9f0c8459",
+      "source": "pinned-existing-TRAIN",
+      "source_family": "batch_19/b19_as02",
+      "source_group": "bde2b834249b8fb6305ed6587dc0aaa9a6707c6b701aebfbfd508df690f166ab",
+      "split_role": "TRAIN",
+      "independently_verified": true
+    },
+    {
+      "answer": 40,
+      "canonical_numeric_target": "40",
+      "case": "no_borrow",
+      "cell": "sub/no_borrow",
+      "id": "LUNA-B12-060",
+      "operands": [
+        70,
+        30
+      ],
+      "operation": "subtract",
+      "question": "The team counted 70 cards, then set aside 30. How many cards were not set aside?",
+      "question_sha256": "009fa2466cc6302aa8c481373a8aa9edb48848d5be9ad71dbc07af366540a9e7",
+      "source": "pinned-existing-TRAIN",
+      "source_family": "batch_12/b12_t06",
+      "source_group": "39a10b6572757d19a73757e9335088e934786b249426b80dce5d31cd40d43768",
+      "split_role": "TRAIN",
+      "independently_verified": true
+    },
+    {
+      "answer": 41,
+      "canonical_numeric_target": "41",
+      "case": "no_borrow",
+      "cell": "sub/no_borrow",
+      "id": "train_01",
+      "operands": [
+        72,
+        31
+      ],
+      "operation": "subtract",
+      "question": "At the neighborhood skating rink, volunteers counted 72 rental helmets before opening. They lent 31 helmets to a nearby youth group. How many remained?",
+      "question_sha256": "95090e2a077ae5599b90e0db1a867ef0189bc4c82920016f92c4cfaf809cc801",
+      "source": "Luna-proposed",
+      "source_family": "neighborhood_skating_rink",
+      "source_group": "recreation",
+      "split_role": "TRAIN",
+      "independently_verified": true
+    }
+  ],
+  "original_ids": [
+    "LUNA-B00-005",
+    "LUNA-B00-007",
+    "LUNA-B00-009",
+    "LUNA-B00-011",
+    "LUNA-B00-014",
+    "LUNA-B00-016",
+    "LUNA-B00-030",
+    "LUNA-B00-042",
+    "LUNA-B00-048",
+    "LUNA-B00-051",
+    "LUNA-B00-057",
+    "LUNA-B00-058",
+    "LUNA-B00-062",
+    "LUNA-B00-063",
+    "LUNA-B00-069",
+    "LUNA-B00-070",
+    "LUNA-B00-071",
+    "LUNA-B00-075",
+    "LUNA-B00-081",
+    "LUNA-B00-083",
+    "LUNA-B00-084",
+    "LUNA-B00-088",
+    "LUNA-B00-095",
+    "LUNA-B00-097",
+    "LUNA-B00-098",
+    "LUNA-B00-100",
+    "LUNA-B01-005",
+    "LUNA-B01-010",
+    "LUNA-B01-013",
+    "LUNA-B01-016",
+    "LUNA-B01-028",
+    "LUNA-B01-036",
+    "LUNA-B01-092",
+    "LUNA-B02-014",
+    "LUNA-B02-015",
+    "LUNA-B02-021",
+    "LUNA-B02-022",
+    "LUNA-B02-024",
+    "LUNA-B02-028",
+    "LUNA-B02-029",
+    "LUNA-B02-044",
+    "LUNA-B02-045",
+    "LUNA-B02-047",
+    "LUNA-B02-049",
+    "LUNA-B02-059",
+    "LUNA-B02-064",
+    "LUNA-B02-065",
+    "LUNA-B02-067",
+    "LUNA-B02-069",
+    "LUNA-B02-070",
+    "LUNA-B02-073",
+    "LUNA-B02-081",
+    "LUNA-B02-088",
+    "LUNA-B02-091",
+    "LUNA-B02-092",
+    "LUNA-B02-094",
+    "LUNA-B02-098",
+    "LUNA-B02-100",
+    "LUNA-B03-008",
+    "LUNA-B03-016",
+    "LUNA-B03-017",
+    "LUNA-B03-018",
+    "LUNA-B03-019",
+    "LUNA-B03-020",
+    "LUNA-B03-026",
+    "LUNA-B03-029",
+    "LUNA-B03-036",
+    "LUNA-B03-038",
+    "LUNA-B03-039",
+    "LUNA-B03-041",
+    "LUNA-B03-045",
+    "LUNA-B03-049",
+    "LUNA-B03-068",
+    "LUNA-B03-076",
+    "LUNA-B03-086",
+    "LUNA-B03-092",
+    "LUNA-B03-094",
+    "LUNA-B04-001",
+    "LUNA-B04-002",
+    "LUNA-B04-003",
+    "LUNA-B04-004",
+    "LUNA-B04-015",
+    "LUNA-B04-022",
+    "LUNA-B04-024",
+    "LUNA-B04-086",
+    "LUNA-B04-090",
+    "LUNA-B04-097",
+    "LUNA-B04-098",
+    "LUNA-B04-099",
+    "LUNA-B04-100",
+    "LUNA-B05-017",
+    "LUNA-B05-021",
+    "LUNA-B05-024",
+    "LUNA-B05-028",
+    "LUNA-B05-036",
+    "LUNA-B05-039",
+    "LUNA-B05-051",
+    "LUNA-B05-052",
+    "LUNA-B05-055",
+    "LUNA-B05-061",
+    "LUNA-B05-063",
+    "LUNA-B05-065",
+    "LUNA-B05-078",
+    "LUNA-B05-079",
+    "LUNA-B05-081",
+    "LUNA-B05-085",
+    "LUNA-B05-089",
+    "LUNA-B05-095",
+    "LUNA-B05-097",
+    "LUNA-B05-100",
+    "LUNA-B06-009",
+    "LUNA-B06-036",
+    "LUNA-B06-041",
+    "LUNA-B06-042",
+    "LUNA-B06-044",
+    "LUNA-B06-045",
+    "LUNA-B06-046",
+    "LUNA-B06-051",
+    "LUNA-B06-052",
+    "LUNA-B06-053",
+    "LUNA-B06-054",
+    "LUNA-B06-055",
+    "LUNA-B06-068",
+    "LUNA-B06-080",
+    "LUNA-B06-087",
+    "LUNA-B07-017",
+    "LUNA-B07-036",
+    "LUNA-B07-052",
+    "LUNA-B07-060",
+    "LUNA-B07-067",
+    "LUNA-B07-068",
+    "LUNA-B07-082",
+    "LUNA-B07-092",
+    "LUNA-B08-013",
+    "LUNA-B08-014",
+    "LUNA-B08-022",
+    "LUNA-B08-023",
+    "LUNA-B08-026",
+    "LUNA-B08-038",
+    "LUNA-B08-039",
+    "LUNA-B08-056",
+    "LUNA-B08-057",
+    "LUNA-B08-058",
+    "LUNA-B08-059",
+    "LUNA-B08-060",
+    "LUNA-B08-064",
+    "LUNA-B08-076",
+    "LUNA-B08-090",
+    "LUNA-B08-091",
+    "LUNA-B08-092",
+    "LUNA-B08-093",
+    "LUNA-B08-094",
+    "LUNA-B08-099",
+    "LUNA-B09-011",
+    "LUNA-B09-013",
+    "LUNA-B09-015",
+    "LUNA-B09-016",
+    "LUNA-B09-019",
+    "LUNA-B09-026",
+    "LUNA-B09-027",
+    "LUNA-B09-033",
+    "LUNA-B09-034",
+    "LUNA-B09-041",
+    "LUNA-B09-045",
+    "LUNA-B09-068",
+    "LUNA-B09-070",
+    "LUNA-B09-074",
+    "LUNA-B09-088",
+    "LUNA-B09-090",
+    "LUNA-B10-008",
+    "LUNA-B10-033",
+    "LUNA-B10-034",
+    "LUNA-B10-035",
+    "LUNA-B10-086",
+    "LUNA-B10-087",
+    "LUNA-B10-090",
+    "LUNA-B10-093",
+    "LUNA-B10-100",
+    "LUNA-B11-021",
+    "LUNA-B12-026",
+    "LUNA-B12-045",
+    "LUNA-B12-049",
+    "LUNA-B12-060",
+    "LUNA-B12-070",
+    "LUNA-B12-072",
+    "LUNA-B12-082",
+    "LUNA-B12-092",
+    "LUNA-B13-007",
+    "LUNA-B13-028",
+    "LUNA-B13-032",
+    "LUNA-B13-050",
+    "LUNA-B13-066",
+    "LUNA-B13-076",
+    "LUNA-B13-088",
+    "LUNA-B15-021",
+    "LUNA-B15-024",
+    "LUNA-B15-027",
+    "LUNA-B15-030",
+    "LUNA-B15-055",
+    "LUNA-B15-083",
+    "LUNA-B16-009",
+    "LUNA-B16-041",
+    "LUNA-B16-042",
+    "LUNA-B16-045",
+    "LUNA-B16-046",
+    "LUNA-B16-047",
+    "LUNA-B16-049",
+    "LUNA-B16-050",
+    "LUNA-B16-051",
+    "LUNA-B16-054",
+    "LUNA-B16-057",
+    "LUNA-B16-075",
+    "LUNA-B16-087",
+    "LUNA-B17-030",
+    "LUNA-B17-032",
+    "LUNA-B17-083",
+    "LUNA-B17-084",
+    "LUNA-B17-091",
+    "LUNA-B17-092",
+    "LUNA-B17-093",
+    "LUNA-B17-094",
+    "LUNA-B18-001",
+    "LUNA-B18-002",
+    "LUNA-B18-003",
+    "LUNA-B18-004",
+    "LUNA-B18-013",
+    "LUNA-B18-014",
+    "LUNA-B18-017",
+    "LUNA-B18-019",
+    "LUNA-B18-021",
+    "LUNA-B18-023",
+    "LUNA-B18-031",
+    "LUNA-B18-048",
+    "LUNA-B18-053",
+    "LUNA-B18-074",
+    "LUNA-B18-076",
+    "LUNA-B18-081",
+    "LUNA-B18-082",
+    "LUNA-B18-083",
+    "LUNA-B18-084",
+    "LUNA-B19-023",
+    "LUNA-B19-027",
+    "LUNA-B19-028",
+    "LUNA-B19-029",
+    "LUNA-B19-030",
+    "LUNA-B19-035",
+    "LUNA-B19-036",
+    "LUNA-B19-063",
+    "LUNA-B19-071",
+    "LUNA-B19-072",
+    "LUNA-B19-073",
+    "LUNA-B19-076",
+    "LUNA-B19-078",
+    "LUNA-B19-095",
+    "LUNA-B19-096",
+    "LUNA-B19-099"
+  ],
+  "sources": [
+    {
+      "arm": "repeat256",
+      "checkpoint": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-capability256-continuation40-v1\\seed0\\loop\\final-resume.pt",
+        "sha256": "2a9e06a1af2b63855d65401a4e08ce839398749c03ab0ffe675658bc1bfb7b4a"
+      },
+      "closed": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-capability256-continuation40-v1\\seed0\\loop\\CLOSED.json",
+        "sha256": "0645e5531f17a4a2f834db9d5afbe75340748bb95978001b6fa024b51380dab7"
+      },
+      "original_frames": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-capability256-v1\\seed0\\loop\\INPUT-FRAMES.json",
+        "sha256": "4c27a60d2081b1581ebf610b4494667a745c5f17a3a38cafed35dc349b90b8a7"
+      },
+      "seed": 0
+    },
+    {
+      "arm": "repeat256",
+      "checkpoint": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-capability256-continuation40-v1\\seed1\\loop\\final-resume.pt",
+        "sha256": "2f3a2e0828f6040d4d75bdc4c8456ebd9e1db57b69c0f6217295515a9bd9fd11"
+      },
+      "closed": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-capability256-continuation40-v1\\seed1\\loop\\CLOSED.json",
+        "sha256": "18d253a4f60f686b922595502d1ef963d11038b09e67b8dc19d5a4420fd21dc2"
+      },
+      "original_frames": {
+        "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-capability256-v1\\seed1\\loop\\INPUT-FRAMES.json",
+        "sha256": "2d98fc48f497662cabc31db01eedc037ba046b7145892fa5a4d584d0fb9a90d1"
+      },
+      "seed": 1
+    }
+  ],
+  "source_plan": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/PLAN-v3.json",
+    "sha256": "ceb522253ae98f80ad65c4102563a3a604b5d4dc70b4ffb671d4e59f4c1e8470"
+  },
+  "source_seal": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/SEAL-v9.json",
+    "sha256": "af4409a378f9d6670b4846a97e4bdf471a019c5b3555d7dc68bcc37ffd4b4c70"
+  },
+  "source_release": {
+    "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/RELEASE-v4.json",
+    "sha256": "6f0ce5259c468ef363bcd059c7d82c8f9fcf9a14d2b4402d79dae8dcd75b7638"
+  },
+  "source_runner": {
+    "path": "scripts/sol_cloud_capability256_v1.py",
+    "sha256": "dfeef09f14fdcd0a1987c38d6a89a560f4ef02159b732cd1665cf51e9fa39b01"
+  },
+  "runner": {
+    "path": "scripts/cap256_launch/train_calculator_poc_v3.py",
+    "sha256": "bc32ae6b19f6a7e751dbcfe5933fe4642751e349cfba56c0104cecd2fddc6837"
+  },
+  "continuation_runner": {
+    "path": "scripts/cap256_launch/train_calculator_poc_v3.py",
+    "sha256": "bc32ae6b19f6a7e751dbcfe5933fe4642751e349cfba56c0104cecd2fddc6837"
+  },
+  "runtime_module": {
+    "path": "scripts/cap256_launch/calculator_runtime.py",
+    "sha256": "564b661baabe7fb3c37c9bfbc9557c48ea8547c757c9a2d30ad865865b735b35"
+  },
+  "calculator_tools": {
+    "path": "scripts/cap256_launch/calculator_tools.py",
+    "sha256": "9be10c33cf4a8786aeb7c981754c351d7c3395fc19e50d369facc85a9f3172c9"
+  },
+  "resume_helpers": {
+    "path": "scripts/cap256_launch/train_primitive_curriculum_v2.py",
+    "sha256": "4e8a09e0cd0538144f1168655b30ae166aea324904706fb0ed95138555536cfb"
+  },
+  "storage_snapshot": {
+    "path": "launch-cap256/pkg/cap256-calculator-poc-20261001T202000Z/storage_snapshot.py",
+    "sha256": "2a4ce03930934d2881ed9f9568c11bb22c1931f0c2bbdba43218fd9d3736bb7d"
+  },
+  "checkpoint_io": {
+    "path": "scripts/cap256_launch/checkpoint_io.py",
+    "sha256": "24a03f009b4e8429401c9504bae02fcb38ca4c800396883e29e483cdb79dde8e"
+  },
+  "frames": {
+    "path": "artifacts/cap256-launch/calculator-poc-v1/TRAIN-FRAMES-PRIVATE-v2.json",
+    "sha256": "8faa3a942b82c150170c2f438b075ae9b0f9ed05ffce81b9caf9c3d35bdf4e65"
+  },
+  "fresh_frames": {
+    "path": "artifacts/cap256-launch/calculator-poc-v1/EVAL-FRAMES-PRIVATE-v2.json",
+    "sha256": "a825cd2c3295c019cbc451764ddd3b3f9f605f0c9580bfcee2e60ceeb15c2ce3"
+  },
+  "schedules": {
+    "path": "artifacts/cap256-launch/calculator-poc-v1/FIXED-SCHEDULES-v2.json",
+    "sha256": "338d66de9cd06da11a91621d061f4e2472e89d40073f9a82f49bda5344399b80"
+  },
+  "corpus_audit": {
+    "path": "artifacts/cap256-launch/primitive-baseline-poc-v1/CORPUS-ADMISSION.json",
+    "sha256": "cba2a24e186f66405d7047431d53d78ad666ffdfa8302c9bf515c2d81a5a2f9d"
+  },
+  "token_qualification": {
+    "path": "artifacts/cap256-launch/calculator-poc-v1/TOKEN-QUALIFICATION.json",
+    "sha256": "8d933ba07787f7c8c1a3328be4df20364a73876ba9a795fcb3363a65a25355c4"
+  },
+  "architecture_contract": {
+    "path": "artifacts/cap256-launch/calculator-poc-v1/ARCHITECTURE-CONTRACT.json",
+    "sha256": "1d36bbd5c968895d2faf321f107717d9b2cbf76aa55193889e8d649c07254b7c"
+  },
+  "throughput_receipt": {
+    "path": "artifacts/cap256-launch/calculator-poc-v1/THROUGHPUT-PLANNING.json",
+    "sha256": "8e1d7613aa54c566e477ce3d318359a12b1e1bee133671c9024f3f700aaa3b7a"
+  },
+  "evaluation_runner": {
+    "path": "scripts/cap256_launch/eval_calculator_poc.py",
+    "sha256": "e969d4797154433f3331527d4099a22f7e02f5554ea45514ae7253c57b35a0ca"
+  },
+  "evaluation_protocol": {
+    "path": "artifacts/cap256-launch/calculator-poc-v1/EVALUATION-PROTOCOL.json",
+    "sha256": "634eb5f39ec7bd0589fe0795cb82d6170e3aafd5ffda081e949ba860124fe329"
+  },
+  "input_namespace": "artifacts/cap256-launch/calculator-poc-v1",
+  "output_namespace": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/run-calculator-poc1024-recovery-v3",
+  "output_accounting_extra_paths": [
+    "artifacts/cap256-launch/calculator-poc-v1",
+    "launch-cap256/pkg/cap256-calculator-poc-20261001T202000Z",
+    "launch-cap256/mixtures/cap256-calculator-poc-20261001T202000Z",
+    "launch-cap256/requests/cap256-calculator-poc-20261001T202000Z.json",
+    "launch-cap256/queues/cap256-calculator-poc-20261001T202000Z",
+    "launch-cap256/preflight/cap256-calculator-poc-20261001T202000Z",
+    "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/run-calculator-poc1024-v1",
+    "launch-cap256/pkg/cap256-calculator-recovery-20261001T204200Z",
+    "launch-cap256/mixtures/cap256-calculator-recovery-20261001T204200Z",
+    "launch-cap256/requests/cap256-calculator-recovery-20261001T204200Z.json",
+    "launch-cap256/queues/cap256-calculator-recovery-20261001T204200Z",
+    "launch-cap256/preflight/cap256-calculator-recovery-20261001T204200Z"
+  ],
+  "budget": {
+    "optimizer_seconds": 300,
+    "worker_seconds": 360,
+    "total_job_seconds": 900,
+    "matrix_cap_bytes": 1073741824,
+    "pair_cap_bytes": 536870912,
+    "checkpoint_cap_bytes": 134217728,
+    "project_cap_bytes": 100000000000,
+    "retained_free_bytes": 2147483648,
+    "raw_cap_bytes_per_pair": 16777216,
+    "cuda_peak_reserved_cap_bytes": 15032385536,
+    "evaluation_seconds": 180,
+    "spend_usd": 0,
+    "historical_recovery_budget_reused": false,
+    "source": "authorized-operational-recovery1GiB-whole-fit-preallocation"
+  },
+  "replay_reference": {
+    "seed": 0,
+    "raw": {
+      "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-calculator-poc1024-v1\\seed0\\calculator\\TRAIN-RAW.jsonl",
+      "sha256": "2432760931565312568e03a1a6cadbe3a0f394e63993b3128f64ca83f590739b"
+    },
+    "failed": {
+      "path": "artifacts\\sol-cloud-capability-plan-20260930\\corpus1965-v1\\run-calculator-poc1024-v1\\seed0\\calculator\\FAILED.json",
+      "sha256": "6fb8795e12a7c16b075699b7db06e7c3c624b9d8df01dfd2028e0fce5c16345b"
+    },
+    "source_config": {
+      "path": "artifacts\\cap256-launch\\calculator-poc-v1\\RELEASE-MANIFEST.json",
+      "sha256": "aed0208b8bc853401525afc07d6badfb7117aaa1ad30054ceaabcdf263f2fc22"
+    }
+  }
+}
