@@ -151,8 +151,8 @@ Settled under Ben's standing autonomy (coordinator, 13:26 UTC; defaults taken, r
 3. **Shared width:** d = 256, matching the vision design (PR #22), which uses `tokens [B,N,256]`, a layout tag (grid / seq / set), a zero-init modality embedding and optional coordinates. §6 should be merged with that contract rather than kept separate. Reconciled (13:28 UTC): each vector carries a (role, modality) pair, as in the vision design, plus `coords` and a `valid` mask.
 4. **Scaling sizes and compute:** per §7 (PR #18 ladder, 3 seeds).
 
-Still open for Ben:
-5. **Peeking:** the 128 saved panel outputs come from an already-scored fresh panel, so mining them for F1 and F2 counts as peeking at a consumed set. Ben decides whether that is allowed. Without it, F1-F3 are replaced by C1's fresh generated items. The Mac pipeline code (F0) will be requested from the execution owner once the pilot is frozen.
+Still open:
+5. **Peeking (Ben, 13:29 UTC, "yes" to my question; read as permission):** the 128 saved panel outputs may be mined for F1-F3 even though that panel is consumed. They are used only to steer design, never as a score, and the panel is not reused for any pass mark. The Mac pipeline code (F0) will be requested from the execution owner once the pilot is frozen.
 6. **Task kinds in the C3 stream:** deliberately left open.
 
 ## Appendix: corrections to the earlier reports
