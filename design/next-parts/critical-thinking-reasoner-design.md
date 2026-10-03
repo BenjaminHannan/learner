@@ -64,7 +64,7 @@ There are three rulers, and their numbers are never mixed:
 ## 4. Menu of experiments (proposals, in order)
 
 **Rules for every row:**
-- One change against the row before; 2 seeds; marks sealed by hash before the run. A score between the marks earns one extra seed, then the line stops.
+- One change against the row before; **at least 6 paired seeds** (both arms use the same seeds; report the paired mean difference with its 95% CI); marks sealed by hash before the run. A result between the marks earns 4 more paired seeds, then the line stops. Why (shown, PR #29 reimplementation, 10-03): seed-to-seed noise on the copy-path baseline is 81.6% ± 11.9 SD for new-wording right-call rate and 90.8% ± 5.9 for overall accuracy, and a +14-point gain from 2 seeds vanished at 6 (+1.9, CI -20 to +24). Practice-side puzzle rows keep their own 3-seed rule until their noise is measured.
 - Panels are parent-supplied and independently checked, built as matched ADD/SUB pairs with siblings grouped (SVAMP motivates contrast pairs, v5 [42]). A pair counts only if both answers are right. Pass marks are counted in pairs.
 - Generation sees only the question. Answers are frozen before gold is opened; each panel is consumed once, never enters positive replay, and reserved panels are never inspected.
 - Score call, operand order (ADD commutative, SUB strict) and final-given-right-call per seed and arm, with ties and negative results. (v5 l.19, l.65, l.175, l.414; shown)
@@ -221,3 +221,4 @@ See critical-thinking-shape-shortlist.md (ranked shortlist from the 10-03 litera
 Rejected: none. Source notes: v5 l.428 gives $6.77 headroom (05:32 UTC); v5-check's $6.55 is C.json at 11:38 UTC. Both are now superseded. C.json's diagnostics A and B are a four-cell diagnostic and a return-intervention protocol; their files are not in that commit.
 - §6 contract v1 (13:55 UTC 10-03): per-axis coord flags with per-axis neutral bias, row/column bias only within one (role, modality) source, time as seconds-before-now in log-spaced buckets, registers and actions at time 0. From the audio thread's review (PR #25 §j3).
 - §6 role table fixed (14:20 UTC 10-03): question 0, notebook 1, example 2, tool_result 3, register 4, action 5; example index goes in the row coordinate. Note from vision (PR #26): `read_latent` returns question positions only, so inputs held in the notebook can't be lesioned through the output; registers (C2a) would fix this.
+- 6-paired-seed rule (18:00 UTC 10-03) replaces the 2-seed rule for assistant-format rows, from PR #29's measured noise. Think-before-calling tested on vast: no gain over 6 seeds (shortlist rank 1 demoted). Copy path (shortlist rank 0) held across 12 runs.

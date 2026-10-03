@@ -10,6 +10,7 @@ Rulers stay separate: the puzzle ruler (F_eq on 9×9 mazes), the assistant panel
 
 ## 1. Summary for Ben
 
+- **Update 18:00 UTC:** the copy route held across 12 runs (new answers 81-100%). "Think before calling" did not help over 6 seeds and is demoted. All marks now need at least 6 paired seeds.
 - **New first pick (16:30 UTC):** let the answer copy the calculator's result directly. A test with never-repeating data showed the current exit only says answers it was trained on, so better data alone doesn't help.
 - **Best bets for "beat bigger models at our size":** extra parallel copies of the thinking state (*state lanes*), and a tiny "look at your neighbours" layer (*Canon layers*). Both are cheap and both have published wins against bigger plain models.
 - **Best bets for the wrong-operation errors (38 of 128):** let the model think *before* it calls the calculator (today every call fires before any thinking round), and train it to score every operation instead of copying one.
@@ -26,7 +27,7 @@ Each idea scored on five questions: does it attack a failure we have **shown**; 
 | Rank | Idea | Aims at | Added weights | First test | Ruler | Label |
 |---|---|---|---|---|---|---|
 | 0 | Pointer exit (copy the tool result) | Answers stuck to the training set | ~260 + 1:1 map | **Done on vast: unseen 0-4% to 84-90%** | Assistant format | shown (reimplementation) |
-| 1 | Think before calling | 38 wrong operations; all calls fire at loop 0 | 0 | Running on vast (on top of rank 0) | Assistant panel | fact shown, fix untested |
+| ~~1~~ | Think before calling (**demoted**) | 38 wrong operations; all calls fire at loop 0 | 0 | **Tested on vast, 6 seeds: no gain** | Assistant format | shown: no effect (reimplementation) |
 | 2 | State lanes (Hyperloop) | Beat a plain model 2× our size | ~12k (0.14%) | Practice-side, 3 seeds | Puzzle, then §7 ladder | paper shown, untested for us |
 | 3 | Damped round update | Answers wander after round 16; the stop never fires | 0 to 256 | **Free, CPU, saved nets** | Puzzle | paper shown, untested for us |
 | 4 | Canon layers | Weak word order; bag-like notebook | ~3k (0.03%) | Generated pointer-chasing | Generated, then assistant | paper shown, untested for us |
@@ -35,7 +36,10 @@ Each idea scored on five questions: does it attack a failure we have **shown**; 
 | 7 | Task-code search (LPN) | Learn from a few examples, forget nothing | 0 stored | After C5 | Few-shot episodes | paper shown, untested |
 | 8 | Unshared entry block | The reader sees no context before round 1 | ~0.79M (+9%) | Practice-side, 3 seeds | Puzzle | suggested |
 
-### Rank 1. Think before calling (from our own data)
+### Rank 1, demoted 18:00 UTC. Think before calling (from our own data)
+
+- **Result (PR #29, 6 paired seeds, reimplementation, shown there):** blocking the call for 2 rounds on top of the copy path changed the new-wording right-call rate by +1.9 points on average (95% CI -20 to +24). An earlier +14 from 2 seeds was seed luck. Kept here for the record; not pursued. Rank 5 (score every operation) and more varied training wording (being tested on vast; the stream had only 4 sentence templates) are now the leads for wrong calls.
+
 
 - **What:** the calculator port may only fire after the core has run at least 2 rounds. Today the call is read before any round (see below), so looping cannot help pick the operation.
 - **Evidence:** **shown** in code and outputs. The pipeline scores the operation from `h+e` at the top of each loop, and at loop 0 that is the state straight from `begin_latent`, before any `advance_latent` (`pipeline_code/calculator_runtime_depth_compare.py:117-124, 148` on branch `claude/critical-thinking-data-128-outputs`). In the saved outputs, 127 of 128 rows made exactly one call, at loop 0, and one row made none (`critical-thinking-notes/f1_stdout.txt`). 38 of 128 picked the wrong operation. **Suggested:** a choice made before thinking can't benefit from thinking. Ouro and TRM-style results only show gains from rounds that actually run before the output is read.
@@ -133,8 +137,8 @@ Each idea scored on five questions: does it attack a failure we have **shown**; 
 
 
 1. **Now, free:** the damped-round CPU test (rank 3) on saved puzzle checkpoints, if the execution owner can spare the files. It changes nothing in the pilot.
-2. **After the English pilot reports:** rank 1 (think before calling), then rank 5. They go straight at the wrong-operation errors.
+2. **Wrong calls (the limit now):** more varied wording in training (running on vast), then rank 5 (score every operation). Rank 1 was tested and showed no gain.
 3. **Practice-side, puzzle ruler:** rank 2 (lanes), then rank 4 (Canon) on generated data. Lanes go into the §7 ladder if they pass.
 4. **After C5:** ranks 6 and 7, for few-example learning.
 
-One change per row, 2 seeds (3 for practice-side), marks sealed by hash before each run, as in the design doc §4.
+One change per row, at least 6 paired seeds (same seeds for both arms), marks sealed by hash before each run, as in the design doc §4. Measured noise on the copy-path baseline (PR #29): new-wording right-call rate 81.6% ± 11.9 SD and overall accuracy 90.8% ± 5.9 across seeds, so 2-3 seeds cannot see a gain under about 15 points.
