@@ -56,3 +56,29 @@ What it means:
 - Suggested next single change: improve the call on new wording (operation/operand choice after thinking, "think before calling" in the shortlist), since that is now the only error source.
 
 Cost: box 54035873 (stopped at once, relaunch after a log fix) ~$0.00; box 54035893 (RTX 3090, $0.163/h) ~16:29-16:52 UTC ~$0.08. Running total for this thread about $0.30.
+
+---
+# Follow-up 2: think before calling (2026-10-03, marks in `PASS-MARKS-3.md`, fixed before training)
+
+One change on the copy-path base: the calculator is blocked in loops 0 and 1, so the first call is read after 2 core advances (loop 2). Baseline: copy-path arm (call at loop 0). Seeds 0, 1, 2 each, same sealed eval, 3000 x 16 updates. All 1152 per-question rows were copied back, counted and checked against the eval form before the box was destroyed (`results/*-rows.json`, `results/SUMMARY-delay-test.json`).
+
+Headline: right-call rate on new-wording questions (96 per seed).
+
+| seed | copy only (call at loop 0) | call after 2 rounds | change |
+|---|---|---|---|
+| 0 | 73.96% | 93.75% | +19.8 |
+| 1 | 64.58% | 100.0% | +35.4 |
+| 2 | 98.96% | 85.42% | -13.5 |
+| mean | 79.2% | 93.1% | +13.9 |
+
+Right-call rate on train wording is 100% in all six runs. Final accuracy (all 192 questions): copy only 87.0 / 82.3 / 99.5%, delay 96.9 / 100 / 92.7%. Unseen-answer accuracy: copy only 89.6 / 84.4 / 100%, delay 96.9 / 100 / 91.7%; no wrong unseen answer is a training answer in any of the six runs.
+
+Marks: PASS needed >= +4 points on all 3 seeds AND >= +8 on average AND train-wording call not >3 points lower. Mean (+13.9) and train wording are fine, but **seed 2 went down 13.5 points, so the all-seeds condition is missed: no full PASS.** FALSIFIED needed mean < +3 or negative on 2 of 3 seeds: not met. Result: in between.
+
+What it means:
+- The seed spread is huge. The copy-only baseline's new-wording call rate ranges 65% to 99% across seeds, so the earlier "seen-answer drop of 5-6 points" for the copy arm was seed noise (its seen accuracy is 84 / 80 / 99% over three seeds, mean 88%, against the pooled arm's 91 / 85).
+- Blocking the call for 2 rounds looks helpful on average (+14 points; 2 of 3 seeds up by 20-35) and narrows the spread (85-100% vs 65-99%), but with 3 seeds and one seed worse, this is suggested, not shown.
+- Not shown: that the effect holds with other wording families, other tasks, or beyond the 4-loop budget.
+- Suggested next: more seeds (e.g. 6 per arm) on the same eval to settle whether the delay helps or the baseline's seed luck dominates. Each extra run is about $0.02.
+
+Cost: box 54038731 (RTX 3090, $0.163/h) ~16:58-17:30 UTC ~$0.09. Running total for this thread about $0.40 of the credit.
