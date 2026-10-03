@@ -15,7 +15,7 @@ Labels: **SHOWN** = checked in code, a test, or a source I actually read (cited)
 - The ear is now our own tiny "streaming" ear (about half a million numbers) that hears in stereo and reacts within about 60 ms. Whisper, the old choice, is built for 30-second speech clips and is too slow and too blind to direction for a game. It stays for the later speech track.
 - Plain stereo can tell left from right and near from far, but **not front from back**: the game just makes one ear louder. "Behind you" comes from Minecraft's 3D-audio option, from vision ("I hear it but can't see it", which is a reasoning step), or from turning the head.
 - Sound goes to the reasoner the same way as text and pictures: a row of 256-wide slots, one per 50 ms (one game tick), with the time of each slot. The last 2 seconds are kept.
-- What exists today: the streaming ear's plumbing and 67 tests, which show it is causal (it never changes its mind about the past) and fast (about 2 ms of CPU per 50 ms of sound). **They say nothing about whether it can actually hear a creeper.** That is experiments S1-S3 and G1-G3.
+- What exists today: the streaming ear's plumbing and 68 tests, which show it is causal (it never changes its mind about the past) and fast (about 2 ms of CPU per 50 ms of sound). **They say nothing about whether it can actually hear a creeper.** That is experiments S1-S3 and G1-G3.
 - Audio does not jump the GPU queue. Skills and critical thinking come first.
 
 ## (a) What "audio into the reasoner" means
@@ -74,7 +74,7 @@ Audio does **not** define its own contract. It fills the shared `Workspace` reco
 | Workspace field (shared) | Audio value | Where in code |
 |---|---|---|
 | `tokens [B,N,256]` float | projected slot vectors, float32; padded rows exactly 0 | `adapt()` |
-| `segment [B,N,2]` long = (role id, modality id) | (question / notebook / example / tool_result, `audio`=7) from the shared `SEGMENTS` table (`question 0, notebook 1, example 2, tool_result 3, register 4, text 5, image 6, audio 7`) | built only in `audio_segment()`, so a switch to one combined id touches one function |
+| `segment [B,N,2]` long = (role id, modality id) | (question / notebook / example / tool_result, `audio`=2) from contract v1's two tables (PR #23 commit 80540de9e): roles `question 0, notebook 1, example 2, tool_result 3, register 4, action 5`; modalities `text 0, image 1, audio 2`. For the example role, row = example index (`adapt(..., example_index=i)`) | built only in `audio_segment()` |
 | `coords [B,N,3]` float (row, col, time) | `(0, 0, t)`, **t = slot centre in seconds** = `(j + 0.5) * k * frame_period` | `adapt()` / `slot_times()` |
 | `valid [B,N]` bool | True = real audio, False = right padding | `adapt()`, `batch()` |
 
@@ -95,7 +95,7 @@ What the adapter does **not** do: it adds no role or modality vector. PR #23 put
 
 Defaults for audio (all SUGGESTED, none trained):
 - Encoder: Whisper-base, D_enc=512, 50 Hz. k=4 -> **12.5 slots/s** (80 ms). A 10 s spoken question gives 125 slots; the same question as text is about 30-40 tokens (assumes ~150 words/min; SUGGESTED). k=8 is experiment E3.
-- **Time unit: seconds, not frame index.** Encoders at 50 Hz and 41.67 Hz then agree on "when" (SHOWN by a test for equal slot spans). Row and col are fixed at 0, so audio order lives only in the time coordinate. How the core turns float seconds into relative-bias indices (bucket size) is PR #23's call; 80 ms buckets would give one index per slot.
+- **Time unit: seconds, not frame index.** Encoders at 50 Hz and 41.67 Hz then agree on "when" (SHOWN by a test for equal slot spans). Row and col are absent (`coord_valid` False; row = example index for the example role), so audio order lives only in the time coordinate. Contract v1 buckets time differences on a signed log scale (section j3).
 - **hidden=256, not 32.** The 32-wide pipe in the text reader may cap capacity (fair-scaling thread). Stacked audio frames carry more than one token does. Adapter size: 590,336 parameters with stack k=4, hidden=256; 74,016 at hidden=32; 197,120 with mean-pool (SHOWN by `parameter_count()`). Whether the text reader should widen is its own experiment (E0), text path only.
 - Sinusoid in tokens: off (`pos_scale=0`). Order should travel in `coords`. Turn it on only while audio sits in today's notebook, which ignores position (as PR #22 does with its `pos2d` for notebook images). That is experiment E5.
 - Role: a spoken question is `question`; a sound to reason about next to a text question is `notebook`.
@@ -162,7 +162,7 @@ Every eval set is a fresh sealed set (section i). Chance levels are stated so a 
 
 ## (h) Roadmap
 
-- **Now (CPU, done here):** frontend, adapter contract, synthetic signals, streaming stereo ear (section j2); 67 plumbing tests. Design reviewed by an independent Opus reviewer (2026-10-03).
+- **Now (CPU, done here):** frontend, adapter contract, synthetic signals, streaming stereo ear (section j2); 68 plumbing tests. Design reviewed by an independent Opus reviewer (2026-10-03).
 - **Next (revised 2026-10-03, see j6):** game-sound S1a-S1c on CPU with rendered sounds; S2 once PR #23's core reads coords; S3 after vision. The speech track (A0, E1-E7) after that. E0 moves to the reasoner/scaling work.
 - **Later:** E3-E7; a general-sound encoder if E4 says so; Mimi for spoken output in the talker; once the redesigned core reads `segment`, `coords` and `valid`, retire the `to_core_layout` shim; vision through the same contract. Ben's long-term Minecraft test (screen in, keyboard/mouse out) is a natural later use of the sound path: mob noises, footsteps and damage cues as sound-only events. This does not change the first step.
 

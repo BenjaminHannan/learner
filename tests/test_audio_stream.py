@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 from premonition.audio import synth
-from premonition.audio.adapter import ModalityAdapterSpec, SEGMENTS, init_weights
+from premonition.audio.adapter import ModalityAdapterSpec, MODALITY_IDS, ROLE_IDS, init_weights
 from premonition.audio.frontend import N_MELS, log_mel
 from premonition.audio.stream import (AudioWindow, CausalConvEar, CausalConvEarSpec, StreamingStereoMel,
                                       hearing_latency_bound, ild_pan_estimate, init_ear_weights)
@@ -145,7 +145,7 @@ def test_window_slots_are_one_tick_and_times_are_relative():
     assert v.tolist() == [True] * 4 + [False] * 4
     t = ws["coords"][v, 2]
     assert np.allclose(t, np.array([0.025, 0.075, 0.125, 0.175]) - 0.23) and np.all(t <= 0)
-    assert np.all(ws["segment"] == [SEGMENTS["notebook"], SEGMENTS["audio"]])
+    assert np.all(ws["segment"] == [ROLE_IDS["notebook"], MODALITY_IDS["audio"]])
     assert np.all(ws["tokens"][~v] == 0) and np.all(ws["coords"][~v] == 0)
     cv = ws["coord_valid"]                                       # Workspace v1: row/col absent
     assert cv.shape == (8, 3) and not cv[:, :2].any() and np.array_equal(cv[:, 2], v)

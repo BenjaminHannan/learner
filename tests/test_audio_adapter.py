@@ -17,16 +17,31 @@ def spec(**kw):
     return A.ModalityAdapterSpec(**base)
 
 
-def test_segment_table_matches_pr22_workspace():
-    # Literal copy of SEGMENTS in PR #22 design/next-parts/vision/workspace.py (commit 912bfe7de).
-    assert A.SEGMENTS == {"question": 0, "notebook": 1, "example": 2, "tool_result": 3, "register": 4,
-                          "text": 5, "image": 6, "audio": 7}
+def test_id_tables_match_workspace_v1():
+    # Literal copy of PR #23 section 6 (commit 80540de9e), matching vision's PR #26.
+    assert A.ROLE_IDS == {"question": 0, "notebook": 1, "example": 2, "tool_result": 3, "register": 4,
+                          "action": 5}
+    assert A.MODALITY_IDS == {"text": 0, "image": 1, "audio": 2}
+
+
+def test_example_role_puts_example_index_in_row():
+    sp = spec()
+    w = A.init_weights(sp, seed=2)
+    x = F.log_mel(S.syllables(2))
+    out = A.adapt(sp, w, x, role="example", example_index=3)
+    v = out["valid"]
+    assert np.all(out["coords"][v, 0] == 3) and np.all(out["coord_valid"][v, 0])
+    assert not out["coord_valid"][:, 1].any() and np.array_equal(out["coord_valid"][:, 2], v)
+    with pytest.raises(ValueError):
+        A.adapt(sp, w, x, role="example")
+    with pytest.raises(ValueError):
+        A.adapt(sp, w, x, role="notebook", example_index=0)
 
 
 def test_audio_segment_is_role_modality_pair():
     g = A.audio_segment("notebook", 5)
     assert g.dtype == np.int64 and g.shape == (5, 2)
-    assert (g == [1, 7]).all()
+    assert (g == [1, 2]).all()
     with pytest.raises(ValueError):
         A.audio_segment("register", 3)      # registers belong to the core, not an input adapter
     with pytest.raises(ValueError):
