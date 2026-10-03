@@ -94,6 +94,17 @@ footer code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem
   </div>
 
   <div class="card">
+    <div class="row"><span class="kicker">Tested on rented GPUs, 6 seeds each</span><span class="verdict v-pass">pointer passed</span></div>
+    <h2>The pointer works: 0% to 51% on new words</h2>
+    <p>Story questions whose answer is a name or word the model never saw. Today's door out gets every one wrong.</p>
+    <svg viewBox="0 0 360 224" role="img" aria-label="Right answers by version: today 0 and 17 percent, sharper averages 0 and 15, wider door 0 and 28, pointer 51 and 51, pointer plus wider door 56 and 53">
+      <rect x="0" y="6" width="10" height="10" rx="2" fill="var(--pass)"/><text x="14" y="15" font-size="10.5" fill="var(--ink)">new words (never in training)</text><rect x="190" y="6" width="10" height="10" rx="2" fill="var(--neutral)"/><text x="204" y="15" font-size="10.5" fill="var(--ink)">words seen in training</text>
+      <text x="0" y="49" font-size="11" fill="var(--ink)">today (8 averages)</text><rect x="118" y="34" width="230" height="11" rx="2" fill="var(--track)"/><rect x="118" y="47" width="230" height="11" rx="2" fill="var(--track)"/><rect x="118" y="34" width="0.0" height="11" rx="2" fill="var(--pass)"/><rect x="118" y="47" width="38.9" height="11" rx="2" fill="var(--neutral)"/><text x="122.0" y="43.5" font-size="9.5" font-weight="700" fill="var(--pass)">0%</text><text x="160.9" y="56.5" font-size="9.5" fill="var(--ink2)">17%</text><text x="0" y="83" font-size="11" fill="var(--ink)">sharper averages</text><rect x="118" y="68" width="230" height="11" rx="2" fill="var(--track)"/><rect x="118" y="81" width="230" height="11" rx="2" fill="var(--track)"/><rect x="118" y="68" width="0.0" height="11" rx="2" fill="var(--pass)"/><rect x="118" y="81" width="34.3" height="11" rx="2" fill="var(--neutral)"/><text x="122.0" y="77.5" font-size="9.5" font-weight="700" fill="var(--pass)">0%</text><text x="156.3" y="90.5" font-size="9.5" fill="var(--ink2)">15%</text><text x="0" y="117" font-size="11" fill="var(--ink)">wider door in</text><rect x="118" y="102" width="230" height="11" rx="2" fill="var(--track)"/><rect x="118" y="115" width="230" height="11" rx="2" fill="var(--track)"/><rect x="118" y="102" width="0.0" height="11" rx="2" fill="var(--pass)"/><rect x="118" y="115" width="64.9" height="11" rx="2" fill="var(--neutral)"/><text x="122.0" y="111.5" font-size="9.5" font-weight="700" fill="var(--pass)">0%</text><text x="186.9" y="124.5" font-size="9.5" fill="var(--ink2)">28%</text><text x="0" y="151" font-size="11" fill="var(--ink)">pointer exit</text><rect x="118" y="136" width="230" height="11" rx="2" fill="var(--track)"/><rect x="118" y="149" width="230" height="11" rx="2" fill="var(--track)"/><rect x="118" y="136" width="117.5" height="11" rx="2" fill="var(--pass)"/><rect x="118" y="149" width="118.2" height="11" rx="2" fill="var(--neutral)"/><text x="239.5" y="145.5" font-size="9.5" font-weight="700" fill="var(--pass)">51%</text><text x="240.2" y="158.5" font-size="9.5" fill="var(--ink2)">51%</text><text x="0" y="185" font-size="11" fill="var(--ink)">pointer + wider door</text><rect x="118" y="170" width="230" height="11" rx="2" fill="var(--track)"/><rect x="118" y="183" width="230" height="11" rx="2" fill="var(--track)"/><rect x="118" y="170" width="129.3" height="11" rx="2" fill="var(--pass)"/><rect x="118" y="183" width="122.4" height="11" rx="2" fill="var(--neutral)"/><text x="251.3" y="179.5" font-size="9.5" font-weight="700" fill="var(--pass)">56%</text><text x="244.4" y="192.5" font-size="9.5" fill="var(--ink2)">53%</text>
+      <line x1="118" y1="204" x2="348" y2="204" stroke="var(--line)"/><g font-size="9.5" fill="var(--ink2)"><text x="118" y="216" text-anchor="middle">0</text><text x="233.0" y="216" text-anchor="middle">50</text><text x="348" y="216" text-anchor="end">100%</text></g>
+    </svg>
+    <p class="small">Pointer vs today on new words: +51 points (range +45 to +57), every seed up. Blur the pointer and it drops back to 0%. The wider door in passed narrowly on its own (+10 points), but adds only +3.5 on top of the pointer, which isn't settled yet. Still only about half right overall, so there is more to fix.</p>
+  </div>
+  <div class="card">
     <div class="row"><span class="kicker">Proof from today</span><span class="verdict v-pass">shown</span></div>
     <h2>Fixing the door out already worked once</h2>
     <p>Calculator answers the model never saw in training. Right % on rented-GPU runs (PR #29).</p>
@@ -141,7 +152,7 @@ footer code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem
   </div>
 
   <div class="card">
-    <div class="row"><span class="kicker">First pick</span><span class="tag">untested for words</span></div>
+    <div class="row"><span class="kicker">First pick</span><span class="verdict v-pass">passed</span></div>
     <h2>Let the core point at the word to say</h2>
     <p>Today the story is blended like paint. A pointer hands the talker the exact word, as the calculator fix did for numbers.</p>
     <svg viewBox="0 0 360 230" role="img" aria-label="Top: words blended into a gray average, talker guesses Leo. Bottom: core points at Mia, talker says Mia">
@@ -210,7 +221,7 @@ footer code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem
   </div>
 
   <div class="card">
-    <div class="row"><span class="kicker">The first test</span><span class="tag">about $0.60 on a rented GPU</span></div>
+    <div class="row"><span class="kicker">The first test</span><span class="verdict v-pass">done: passed</span></div>
     <h2>Stories with names it has never seen</h2>
     <p>"Mia took the cup. Who has the cup?" Eval names never appear in training. 6 seeds per arm, marks fixed first.</p>
     <svg viewBox="0 0 360 140" role="img" aria-label="Pass mark: pointer beats today by 25 points on new names. Proven wrong if under 8 points">
@@ -241,10 +252,10 @@ footer code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem
         <text x="10" y="42">Copy path for</text><text x="10" y="56">calculator: 99%</text>
         <text x="10" y="78">Varied wording:</text><text x="10" y="92">+16.5 points</text>
         <text x="10" y="114">English pilot:</text><text x="10" y="128">no gain yet</text>
-        <text x="134" y="42">Free check on</text><text x="134" y="56">English answers</text>
-        <text x="134" y="78">Pointer test on</text><text x="134" y="92">new names,</text><text x="134" y="106">pass at +25</text>
-        <text x="258" y="42">Pass: pointer</text><text x="258" y="56">into English,</text><text x="258" y="70">then picks 2, 3</text>
-        <text x="258" y="92">Fail: more and</text><text x="258" y="106">more varied</text><text x="258" y="120">English data</text>
+        <text x="134" y="42">Free check: 74%</text><text x="134" y="56">of wrong English</text><text x="134" y="70">answers were old</text>
+        <text x="134" y="92">Pointer test:</text><text x="134" y="106">passed, +51</text>
+        <text x="258" y="42">Put the pointer</text><text x="258" y="56">in the real</text><text x="258" y="70">model, rerun</text><text x="258" y="84">English</text>
+        <text x="258" y="106">Train longer,</text><text x="258" y="120">vary wording</text>
       </g>
     </svg>
   </div>
