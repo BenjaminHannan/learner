@@ -215,10 +215,10 @@ Rule (per arm vs BASE): PASS = paired mean gain >= +15 with interval lower bound
 
 What it shows:
 - Varied wording is the main lever again: it takes the "second step is a subtraction" calls from 0% to 53%, and fixes distance-with-units (84-97%). Every seed is up for V and VO.
-- The ordered read does nothing alone but adds +14 points on top of varied wording (VO 70.8% vs V 56.5%, with a stable per-seed gap). So the ordered read helps only once the wording is diverse enough to learn from; alone it cannot fix a wording failure. This interaction is suggested by 6 paired seeds, not isolated by a separate arm of V vs VO (that is the V vs VO comparison above, paired by seed in the saved summary).
+- The ordered read does nothing alone but adds +14 points on top of varied wording (VO 70.8% vs V 56.5%, with a stable per-seed gap). So the ordered read helps only once the wording is diverse enough to learn from; alone it cannot fix a wording failure. This interaction is suggested by 6 paired seeds, not isolated by a separate arm of V vs VO (see the V vs VO per-seed differences in the saved summary).
 - Still weak: table layout (31-48%) and question-first (47-59%), both far from the 80% bar set earlier for one-step. Seed spread is larger for V and VO (SD 4.7-5.1) than for BASE (1.4).
 - The copy path holds throughout: final accuracy equals chain rate in every run; unseen-answer finals track the chain rate (V 58.2%, VO 70.3%).
 
 Limits: fast lane (no authored/sealed eval); the eval's held-out structures were written by me, and BASE/O never saw any of them; add/subtract only, two-digit values, an exact calculator; the training frames for the weak structures are procedural (few sentence shapes each).
 
-Cost: four boxes, ~$0.16/h, ~0.9 h each: about $0.55. Credit now about $12.3. Total for this thread about $1.7.
+Cost: four boxes, ~$0.16/h, ~0.9 h each: about $0.55. Credit now about $11.1 (shared with other threads). Total for this thread about $1.7.
