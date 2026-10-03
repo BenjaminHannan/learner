@@ -191,3 +191,34 @@ What it shows:
 - 59% of wrong unseen finals equal a training answer (97 of 165); this is about what chance gives for wrong values (training answers are two-thirds of the values), so it is not evidence of a lookup.
 
 Cost for follow-ups 5 and 6: boxes 54049235, 54049236 (crashed), 54049875, 54052643 at ~$0.16/h for 0.5-0.9 h each: about $0.45. Credit now about $13.0. Total for this thread about $1.1.
+
+---
+# Follow-up 7: two-step with varied wording (V) and ordered read (O) (fast lane, marks in `PASS-MARKS-8.md`, fixed before training)
+
+Four arms, 6 seeds each, all scored on `EVAL-TWO-v2.json`: 96 two-step questions with the earlier eval wording plus 96 held-out variants of table / question-first / distance structures (wording in no training frame; `results/DISJOINTNESS-TWO.json`: 0 shared 6-grams, 0 shared sentences). BASE = narrative wording only. V = BASE plus composed table, question-first and distance-with-units training frames. O = each loop reads the question with its own learned attention query instead of the mean. VO = both. All 4608 rows were checked against the eval form before the boxes were destroyed (`results/twoB-*-rows.json`, `results/SUMMARY-twostep-arms.json`). Code: `gen_two2.py`, `model2.py` (`ordered`), `train2.py`, `build_eval_two2.py`.
+
+Chain rate (both calls right = final right) on all 192 questions, mean over 6 seeds (SD):
+
+| arm | all 192 | earlier wording | held-out table/question-first/distance | call 1 | call 2 | second op = SUB | second op = ADD | paired gain vs BASE (95% interval) |
+|---|---|---|---|---|---|---|---|---|
+| BASE | 28.0% (1.4) | 39.6% | 16.5% | 54.7% | 34.0% | **0.0%** | 56.1% | - |
+| V | 56.5% (4.7) | 54.9% | 58.2% | 68.5% | 67.0% | 53.0% | 60.1% | +28.5 (+22.3 to +34.7) |
+| O | 25.6% (2.1) | 41.1% | 10.1% | 49.5% | 32.0% | 0.0% | 51.2% | -2.4 (-4.6 to -0.3) |
+| VO | **70.8%** (5.1) | 77.4% | 64.2% | 77.7% | 79.3% | 66.1% | 75.5% | **+42.8** (+36.5 to +49.0) |
+
+Per held-out structure (chain, mean of 6 seeds), BASE / V / O / VO: question-first 39% / 59% / 25% / 47%, table 0.5% / 31% / 1% / 48%, distance 10% / 84% / 4% / 97%, earlier wording 40% / 55% / 41% / 77%.
+
+Rule (per arm vs BASE): PASS = paired mean gain >= +15 with interval lower bound > 0; FAILS = gain < +5.
+- **V: PASS** (+28.5).
+- **O alone: FAILS** (-2.4; slightly worse, interval just below 0).
+- **VO: PASS** (+42.8, and the best arm).
+
+What it shows:
+- Varied wording is the main lever again: it takes the "second step is a subtraction" calls from 0% to 53%, and fixes distance-with-units (84-97%). Every seed is up for V and VO.
+- The ordered read does nothing alone but adds +14 points on top of varied wording (VO 70.8% vs V 56.5%, with a stable per-seed gap). So the ordered read helps only once the wording is diverse enough to learn from; alone it cannot fix a wording failure. This interaction is suggested by 6 paired seeds, not isolated by a separate arm of V vs VO (that is the V vs VO comparison above, paired by seed in the saved summary).
+- Still weak: table layout (31-48%) and question-first (47-59%), both far from the 80% bar set earlier for one-step. Seed spread is larger for V and VO (SD 4.7-5.1) than for BASE (1.4).
+- The copy path holds throughout: final accuracy equals chain rate in every run; unseen-answer finals track the chain rate (V 58.2%, VO 70.3%).
+
+Limits: fast lane (no authored/sealed eval); the eval's held-out structures were written by me, and BASE/O never saw any of them; add/subtract only, two-digit values, an exact calculator; the training frames for the weak structures are procedural (few sentence shapes each).
+
+Cost: four boxes, ~$0.16/h, ~0.9 h each: about $0.55. Credit now about $12.3. Total for this thread about $1.7.
