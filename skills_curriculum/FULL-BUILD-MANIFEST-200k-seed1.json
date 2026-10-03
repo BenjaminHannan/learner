@@ -1,0 +1,597 @@
+{
+ "answer_frac": 0.15,
+ "counts": {
+  "dev_answer": 1200,
+  "dev_family": 160,
+  "dev_frame": 1360,
+  "dev_in_dist": 1360,
+  "dev_variant": 1320,
+  "dev_vocab": 800,
+  "train": 200000
+ },
+ "families": {
+  "arith_bare": {
+   "distinct_train_answers": 682,
+   "doc": "one-step arithmetic with no story",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 2,
+   "parse_checked": true,
+   "train_rows": 6255,
+   "variants": [
+    "symbol",
+    "verbal",
+    "missing",
+    "subtract_word"
+   ]
+  },
+  "backward_solve": {
+   "distinct_train_answers": 58,
+   "doc": "work backwards from a result",
+   "heldout_family": false,
+   "layout_varied": true,
+   "level": 6,
+   "parse_checked": false,
+   "train_rows": 4022,
+   "variants": [
+    "sum_diff_larger",
+    "sum_diff_smaller",
+    "think_of_number"
+   ]
+  },
+  "chain_ops": {
+   "distinct_train_answers": 614,
+   "doc": "chained steps: every operation in every position",
+   "heldout_family": false,
+   "layout_varied": true,
+   "level": 6,
+   "parse_checked": false,
+   "train_rows": 3931,
+   "variants": [
+    "two_step",
+    "three_step",
+    "sub_second",
+    "sub_first"
+   ]
+  },
+  "chain_story2": {
+   "distinct_train_answers": 234,
+   "doc": "two chained calculator steps in a story",
+   "heldout_family": false,
+   "layout_varied": true,
+   "level": 6,
+   "parse_checked": false,
+   "train_rows": 3942,
+   "variants": [
+    "add_sub",
+    "sub_add",
+    "mul_add",
+    "mul_sub",
+    "distractor"
+   ]
+  },
+  "cipher_map": {
+   "distinct_train_answers": 1009,
+   "doc": "use a small code table given in the prompt",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 7,
+   "parse_checked": true,
+   "train_rows": 4894,
+   "variants": [
+    "encode",
+    "decode"
+   ]
+  },
+  "clock_date": {
+   "distinct_train_answers": 0,
+   "doc": "clock and weekday arithmetic",
+   "heldout_family": true,
+   "layout_varied": false,
+   "level": 6,
+   "parse_checked": false,
+   "train_rows": 0,
+   "variants": [
+    "minutes_later",
+    "minutes_earlier",
+    "weekday_ahead",
+    "weekday_back"
+   ]
+  },
+  "compare_numbers": {
+   "distinct_train_answers": 809,
+   "doc": "compare numbers",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 2,
+   "parse_checked": true,
+   "train_rows": 6481,
+   "variants": [
+    "larger",
+    "smaller",
+    "largest_of",
+    "smallest_of",
+    "count_above"
+   ]
+  },
+  "copy_word": {
+   "distinct_train_answers": 4467,
+   "doc": "copy a made-up word exactly",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 1,
+   "parse_checked": true,
+   "train_rows": 13436,
+   "variants": [
+    "plain",
+    "echo",
+    "distractor"
+   ]
+  },
+  "digits_parity": {
+   "distinct_train_answers": 29,
+   "doc": "digits and odd/even",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 2,
+   "parse_checked": true,
+   "train_rows": 6559,
+   "variants": [
+    "parity",
+    "digit_sum",
+    "tens_digit",
+    "num_digits"
+   ]
+  },
+  "distance_units": {
+   "distinct_train_answers": 57,
+   "doc": "speed, distance and time with units written out",
+   "heldout_family": false,
+   "layout_varied": true,
+   "level": 6,
+   "parse_checked": false,
+   "train_rows": 4022,
+   "variants": [
+    "distance",
+    "speed",
+    "time"
+   ]
+  },
+  "div_exact": {
+   "distinct_train_answers": 37,
+   "doc": "exact division",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 2,
+   "parse_checked": true,
+   "train_rows": 6319,
+   "variants": [
+    "bare",
+    "share",
+    "groups"
+   ]
+  },
+  "fewshot_number_rule": {
+   "distinct_train_answers": 159,
+   "doc": "infer a number rule from examples, then apply it",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 7,
+   "parse_checked": true,
+   "train_rows": 5029,
+   "variants": [
+    "add",
+    "mult",
+    "affine",
+    "pair_sum",
+    "pair_diff"
+   ]
+  },
+  "group_induct": {
+   "distinct_train_answers": 2,
+   "doc": "guess which group a new number belongs to",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 7,
+   "parse_checked": false,
+   "train_rows": 5035,
+   "variants": [
+    "multiple",
+    "parity",
+    "threshold"
+   ]
+  },
+  "kin_chain": {
+   "distinct_train_answers": 34,
+   "doc": "compose two relations",
+   "heldout_family": false,
+   "layout_varied": true,
+   "level": 8,
+   "parse_checked": false,
+   "train_rows": 4121,
+   "variants": [
+    "grandparent",
+    "child_of_child",
+    "yes_no_older"
+   ]
+  },
+  "letter_ops": {
+   "distinct_train_answers": 23,
+   "doc": "letters of a word",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 1,
+   "parse_checked": true,
+   "train_rows": 13317,
+   "variants": [
+    "count",
+    "length",
+    "first",
+    "last",
+    "nth"
+   ]
+  },
+  "list_index": {
+   "distinct_train_answers": 41,
+   "doc": "pick an item from a list of words",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 1,
+   "parse_checked": true,
+   "train_rows": 13406,
+   "variants": [
+    "ordinal",
+    "first_last",
+    "after",
+    "before",
+    "position_of"
+   ]
+  },
+  "list_stats": {
+   "distinct_train_answers": 90,
+   "doc": "small statistics of a number list",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 2,
+   "parse_checked": true,
+   "train_rows": 6464,
+   "variants": [
+    "sum",
+    "range",
+    "count_even",
+    "second_largest"
+   ]
+  },
+  "object_track": {
+   "distinct_train_answers": 42,
+   "doc": "follow who has / where something is",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 4,
+   "parse_checked": false,
+   "train_rows": 5166,
+   "variants": [
+    "handoff",
+    "move_place",
+    "swap"
+   ]
+  },
+  "odd_one_out": {
+   "distinct_train_answers": 99,
+   "doc": "find the number that breaks the rule",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 3,
+   "parse_checked": false,
+   "train_rows": 6930,
+   "variants": [
+    "multiples",
+    "parity",
+    "digit_count"
+   ]
+  },
+  "op_define": {
+   "distinct_train_answers": 0,
+   "doc": "learn a made-up operation from its definition",
+   "heldout_family": true,
+   "layout_varied": false,
+   "level": 7,
+   "parse_checked": false,
+   "train_rows": 0,
+   "variants": [
+    "linear",
+    "maxmin",
+    "product_minus",
+    "nested"
+   ]
+  },
+  "order_chain": {
+   "distinct_train_answers": 39,
+   "doc": "order from pairwise comparisons",
+   "heldout_family": false,
+   "layout_varied": true,
+   "level": 4,
+   "parse_checked": false,
+   "train_rows": 5091,
+   "variants": [
+    "tallest",
+    "shortest",
+    "yes_no",
+    "middle"
+   ]
+  },
+  "passage_qa": {
+   "distinct_train_answers": 73,
+   "doc": "short passage with distractors",
+   "heldout_family": false,
+   "layout_varied": true,
+   "level": 8,
+   "parse_checked": false,
+   "train_rows": 3998,
+   "variants": [
+    "color",
+    "owner",
+    "count_total",
+    "place"
+   ]
+  },
+  "percent_rate": {
+   "distinct_train_answers": 114,
+   "doc": "percentages, multiples and rates",
+   "heldout_family": false,
+   "layout_varied": true,
+   "level": 6,
+   "parse_checked": false,
+   "train_rows": 3878,
+   "variants": [
+    "percent",
+    "times_as_many",
+    "rate_total",
+    "rate_each"
+   ]
+  },
+  "prop_eval": {
+   "distinct_train_answers": 2,
+   "doc": "evaluate true/false statements",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 5,
+   "parse_checked": true,
+   "train_rows": 5027,
+   "variants": [
+    "and_or",
+    "not",
+    "nested",
+    "implies"
+   ]
+  },
+  "rule_apply": {
+   "distinct_train_answers": 91,
+   "doc": "apply a rule stated in the prompt",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 5,
+   "parse_checked": false,
+   "train_rows": 5079,
+   "variants": [
+    "number_rule",
+    "lookup_rule",
+    "threshold"
+   ]
+  },
+  "seq_cycle": {
+   "distinct_train_answers": 23,
+   "doc": "repeating patterns",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 3,
+   "parse_checked": true,
+   "train_rows": 6849,
+   "variants": [
+    "next_letter",
+    "kth_letter",
+    "kth_number"
+   ]
+  },
+  "seq_next": {
+   "distinct_train_answers": 153,
+   "doc": "continue a number sequence",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 3,
+   "parse_checked": false,
+   "train_rows": 6859,
+   "variants": [
+    "arith",
+    "geom",
+    "growing_step",
+    "alternating",
+    "fib_like"
+   ]
+  },
+  "state_update": {
+   "distinct_train_answers": 84,
+   "doc": "keep a running count through events",
+   "heldout_family": false,
+   "layout_varied": true,
+   "level": 4,
+   "parse_checked": false,
+   "train_rows": 5106,
+   "variants": [
+    "add_remove",
+    "two_containers"
+   ]
+  },
+  "story_addsub": {
+   "distinct_train_answers": 691,
+   "doc": "one-step story problems, composed wording",
+   "heldout_family": false,
+   "layout_varied": true,
+   "level": 2,
+   "parse_checked": false,
+   "train_rows": 6498,
+   "variants": [
+    "total",
+    "difference",
+    "gain",
+    "loss"
+   ]
+  },
+  "story_chain3": {
+   "distinct_train_answers": 378,
+   "doc": "three chained steps with a question at the end",
+   "heldout_family": false,
+   "layout_varied": true,
+   "level": 8,
+   "parse_checked": false,
+   "train_rows": 4095,
+   "variants": [
+    "three_step",
+    "compare_after"
+   ]
+  },
+  "string_transform": {
+   "distinct_train_answers": 0,
+   "doc": "infer a word rule from examples",
+   "heldout_family": true,
+   "layout_varied": false,
+   "level": 7,
+   "parse_checked": true,
+   "train_rows": 0,
+   "variants": [
+    "reverse",
+    "first_last",
+    "sort",
+    "drop_first",
+    "double"
+   ]
+  },
+  "syllogism": {
+   "distinct_train_answers": 2,
+   "doc": "reasoning over invented categories",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 5,
+   "parse_checked": true,
+   "train_rows": 5093,
+   "variants": [
+    "all",
+    "none",
+    "unknown",
+    "chain",
+    "distractor"
+   ]
+  },
+  "table_calc": {
+   "distinct_train_answers": 40,
+   "doc": "read a small table laid out in rows",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 6,
+   "parse_checked": false,
+   "train_rows": 3947,
+   "variants": [
+    "row_total",
+    "column_sum",
+    "cost"
+   ]
+  },
+  "table_lookup": {
+   "distinct_train_answers": 133,
+   "doc": "read facts from a small table in text",
+   "heldout_family": false,
+   "layout_varied": true,
+   "level": 4,
+   "parse_checked": true,
+   "train_rows": 5120,
+   "variants": [
+    "lookup",
+    "sum_two",
+    "most",
+    "difference"
+   ]
+  },
+  "unit_convert": {
+   "distinct_train_answers": 0,
+   "doc": "use conversion facts given in the prompt",
+   "heldout_family": true,
+   "layout_varied": true,
+   "level": 6,
+   "parse_checked": true,
+   "train_rows": 0,
+   "variants": [
+    "single",
+    "inverse",
+    "two_hop"
+   ]
+  },
+  "var_chain": {
+   "distinct_train_answers": 647,
+   "doc": "follow variable assignments",
+   "heldout_family": false,
+   "layout_varied": true,
+   "level": 4,
+   "parse_checked": true,
+   "train_rows": 5002,
+   "variants": [
+    "forward",
+    "reassign",
+    "distractor",
+    "two_vars"
+   ]
+  },
+  "verify_claim": {
+   "distinct_train_answers": 2,
+   "doc": "check whether a stated fact is correct",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 5,
+   "parse_checked": true,
+   "train_rows": 5047,
+   "variants": [
+    "add",
+    "sub",
+    "mul",
+    "sorted"
+   ]
+  },
+  "word_filter": {
+   "distinct_train_answers": 7,
+   "doc": "count words in a list that meet a test",
+   "heldout_family": false,
+   "layout_varied": false,
+   "level": 8,
+   "parse_checked": true,
+   "train_rows": 3982,
+   "variants": [
+    "start_letter",
+    "longer_than",
+    "contains"
+   ]
+  }
+ },
+ "files_sha256": {
+  "dev/answer.jsonl": "a877e9f5e9efa58353332139c8e613bebb05c0353eb92044121cabf5dabbc013",
+  "dev/family.jsonl": "54219ba89c38131ffdc0cb7e72e6fce8f67107156a276738b0d38f9ceb37d020",
+  "dev/frame.jsonl": "6bd7f21e623f1029442b2e2832343392a5f22017e5618ce130877b14b02c30ca",
+  "dev/in_dist.jsonl": "9f48123a6915a840abff54eac2169e774f7e9e5adf85afc320ffa7ee979d92d6",
+  "dev/variant.jsonl": "d08e83bea96b477e159672bdab3eeb2e0d4716ee91046c4686d773d43a82716a",
+  "dev/vocab.jsonl": "d5ab06d13aae029bd77309ffadb48414de1c3ff1eaf2e69b2d31d22703ebadd6",
+  "train.jsonl": "68250d1ccbb637ff608d0472fe99d9e272115dea1ce020802095c0e54ec1ca99"
+ },
+ "frame_frac": 0.2,
+ "max_tokens_est": 62,
+ "real_tokens": {
+  "max_input_with_EOS": 62,
+  "over_64": 0
+ },
+ "split_seed": 2026100377,
+ "train_max_est_tokens": 62,
+ "train_unique_prompts": 200000,
+ "verify": {
+  "examples": [],
+  "rows_checked": 206200,
+  "rows_failing": 0
+ },
+ "vocab_frac": 0.2
+}
