@@ -16,7 +16,7 @@ reader, ~9M looped core). The small card experiments are not part of it.
 | pos2d added at full size | pos2d times a learned scalar starting at 0.1 | Raw pos2d norm is 11.3 per slot, and 10.3 of that is the same for all 64 slots; adapter content is ~3.4. Position would drown the picture. **shown** (computed) |
 | Code: hidden=256, random modality tag | Code now matches the memo: hidden=32, zero-init tag (~35k params) | Code and memo disagreed. **shown**, fixed, tested |
 | E3 position on/off, E4 notebook vs grid | **E4a** how position enters (coords bias vs scaled pos2d vs none). **E4b** token budget (64 pooled vs 256 vs 64 global + 64 glimpse) | Under PR #23 the talker reads registers and coords drive the bias, so "query grid vs notebook" stops being a real choice. **suggested** |
-| S1 caption alignment first | S1 waits for the reasoner thread's C1/C2 (output path check) | S1 trains through the same average-pooled 8-vector output that C1 tests. If that path is the bottleneck, a vision failure would be misread. **suggested** |
+| S1 caption alignment first | S1/E1 run on today's pipe with the pipe logged as a known confound, plus a second read-out that skips it (update 14:16: C1/C2 won't report soon, per the reasoner thread) | S1 trains through the same average-pooled 8-vector output that C1 tests. A direct read-out of the core state tells "vision failed" apart from "the output pipe failed". **suggested** |
 | E1 shuffled image only | E1 adds a **blind arm** (no image tokens) and a test-time shuffle of the trained model; distractor captions from the same scene type | Separates "uses the image" from "LM prior" and "learned gist only". **suggested** |
 | Own segment/position format | Workspace v1: `role`, `modality`, `coords [B,N,3]` (row, col, time), `coord_valid [B,N,3]`, `valid` | Shared with reasoner and audio. A still image has time absent; a video frame carries its own time (seconds, <= 0). **shown** in `workspace.py` + test |
 | Screen: squash to 256x256 | Screen stage: SigLIP2-B **NaFlex** (keeps 16:9, ~12x21 grid, uses `valid`) | Squashing stretches glyphs 1.78x. LFM2-VL-450M itself uses SigLIP2 NaFlex base (model card). **shown** (card), benefit **untested** |
@@ -56,11 +56,16 @@ The question stays text. When the core reads `coords`, pos2d is dropped (E4a dec
 
 ## 4. GPU experiments, one change each (none run; 2 seeds; marks fixed now)
 
-Order: wait for reasoner C1/C2 -> E1 -> E2 -> E4a -> E4b -> S2 skills with E5 -> E6 -> E7.
+Order: E1 (once the English pilot frees the GPU) -> E2 -> E4a (needs the core to read coords) -> E4b (only if screenshots fail) -> S2 skills with E5 -> E6 -> E7.
+
+**E1 does not wait for the reasoner's C1/C2.** The 8-vector output pipe is a known confound, so E1 is scored two ways:
+- **A (through the pipe):** caption loss of the frozen LM reading the 8 prefix vectors (today's path).
+- **B (around the pipe):** an 8-way same-scene caption pick by a linear head trained on the core's final question-position states (mean-pooled), against frozen mean LM embeddings of each caption. Head trained on TRAIN, scored on held-out. This never touches the 8 averaged vectors.
+- Reading: B passes and A fails -> the image gets into the core and the output pipe loses it (evidence for the reasoner's C2a registers, not a vision failure). Both fail -> vision path problem. Both pass -> fine.
 
 | # | Single change | Pass | Proves it wrong |
 |---|---|---|---|
-| E1 | S1 adapter with real images vs shuffled images; plus blind arm and test-time shuffle (controls, not changes) | held-out caption loss >=0.15 nats/token below shuffled and blind; 8-way same-scene caption pick >=50% | real within 0.05 nats of shuffled or blind |
+| E1 | S1 adapter with real images vs shuffled images; plus blind arm and test-time shuffle (controls, not changes) | A: held-out caption loss >=0.15 nats/token below shuffled and blind. B: 8-way same-scene pick >=50% (chance 12.5%) and >=25 pts above shuffled. Both seeds | A: real within 0.05 nats of shuffled or blind. B: within 10 pts of shuffled |
 | E2 | adapter hidden 32 -> 128 | >=10 pts on 8-way pick, both seeds | <3 pts |
 | E4a | position: scaled pos2d vs coords relative bias (needs the reasoner's coords bias) on left/right/above and nearest-to-X | coords >=5 pts better, both seeds | gap <2 -> keep pos2d until scale-up |
 | E4b | (only if P3-MC/P4-MC fail on real screenshots) 64 pooled vs 64 global + 64 glimpse at a *given* location, on real hotbar reading and small-object count | glimpse >=20 pts better | <5 pts -> pooling is not the bottleneck; drop glimpse |
