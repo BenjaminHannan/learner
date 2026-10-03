@@ -127,3 +127,6 @@ If PASS, stage B (English pilot from this core, seed 0, 9216 updates, eval v3) u
 ### 22:16Z INTERIM skills pretraining WITH copy path (task skmain2, 13k of 50k updates in)
 Shown: in_dist dev accuracy 35, 53, 54 of 100 at 4k, 8k, 12k updates (same run without the copy path: 5, 6, 3). Training exact match: 94% on stage 1, 80% stage 2, ~70% stage 3 (it falls as harder stages start, as expected). Stop-early rule (<= 10/100 at 16k) cannot trigger. Still below the 80% pass mark; final check at 50k (~23:35Z). PC disk free 4.06 GB (> 2 GB).
 Suggested: the copy path unlocked learning in the earliest, copy-style stages; whether the harder reasoning stages (levels 5-8) get learned is the open question.
+
+### 23:12Z INTERIM skills pretraining with copy path (40k of 50k updates)
+Shown: in_dist dev accuracy of 100 at 4k..40k updates (every 4k): 35, 53, 54, 49, 59, 66, 67, 69, 67, 73. Slowly rising, still below the 80% mark; final value and per-shift numbers at 50k (~23:30Z). PC disk free 4.05 GB.
