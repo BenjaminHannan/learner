@@ -66,3 +66,6 @@ Held for Ben: committing the parent checkpoints to GitHub (claude/real-pipeline-
 - Calculator/reasoner configs found and exported to branch `claude/real-pipeline-code` (commit 70ef16198): RELEASE-MANIFEST-v3, TRAIN frames, schedules, runners. Eval/fresh frames and the source checkpoints are not exported.
 - Disk on the PC: 4.57 GB free (above the 2 GB warning line).
 - Parent-checkpoint branch (`claude/real-pipeline-checkpoints`) NOT created: publishing trained weights to GitHub waits for Ben's OK.
+
+### 19:53Z checkpoints pushed (Ben answered "Yes, push them" in the Terminal)
+Branch claude/real-pipeline-checkpoints, commit 56d720549: seed0/seed1 parent final-resume.pt (60.7 MB each) + bootstrap-English-s0.pt (0.31 MB), hashes match config pins. Not merged to main.
