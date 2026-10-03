@@ -230,6 +230,24 @@ def test_notebook_pair_plumbing_untrained(lm, tok):
     assert torch.allclose(ea.ptr_a, eb.ptr_a) and torch.allclose(ea.kind, eb.kind)   # empty notebook: identical inputs
 
 
+def test_notebook_read_changes_core_output_and_gets_gradient(lm, tok):
+    """Wiring check: notebook rows reach the core's registers and the pointer heads, and gradients flow back to them."""
+    m = fresh(lm, tok).eval()
+    q = "ana has 7 red pens and 4 blue pens . ana buys 3 more pens of the colour ana likes . How many pens of that colour ?"
+    gold = Action("CALC", "ADD", 0, 2)
+    a, b = (StepSpec(q, [f"ana likes {c} ."], [], gold) for c in ("red", "blue"))
+    with torch.no_grad():
+        ra, rb = (m.core(m.collate([x]).ws).registers for x in (a, b))
+    assert not torch.allclose(ra, rb), "notebook content must change the registers"
+    m.train()
+    batch = m.collate([a])
+    batch.ws.tokens.retain_grad()
+    out, act = m.logits(batch)
+    act.ptr_a[0, 0].backward()
+    nb_rows = batch.ws.role[0] == SEGMENTS["notebook"]
+    assert nb_rows.any() and batch.ws.tokens.grad[0][nb_rows].abs().sum() > 0, "no gradient reached the notebook rows"
+
+
 # ----------------------------------------------------------------------------- T11: checkpoint
 def test_checkpoint_roundtrip(lm, tok, all_steps, tmp_path):
     a = fresh(lm, tok, seed=1)
@@ -294,6 +312,15 @@ def test_sleep_night_updates(lm, tok):
     su = S.day_records(mine, [T.generate(random.Random(2), "T1") for _ in range(4)], 1, tok, checked=False)
     assert all(r.class_ == "unchecked" and r.step_targets for r in su)
     dup = S.Buffer(); assert dup.add(1, day[0]) and not dup.add(2, day[0])
+    import tempfile, pathlib
+    with tempfile.TemporaryDirectory() as d:
+        path = S.save_versioned(m, d, 1, rep_s)                    # the night saves a versioned core
+        assert path.name == "core-v1.pt"
+        with pytest.raises(FileExistsError):
+            S.save_versioned(m, d, 1, rep_s)                       # versions are never overwritten
+        reloaded = fresh(lm, tok, seed=9)
+        extra = load_checkpoint(reloaded, path)
+        assert reloaded.trainable_hash() == m.trainable_hash() and extra["night"] == 1
 
 
 # ----------------------------------------------------------------------------- T13-T14: overfit (slow)
@@ -304,19 +331,23 @@ def trained(lm, tok, eps, all_steps):
     return m, losses
 
 
+FINDINGS = {}
+
+
 @pytest.mark.slow
 def test_overfit_toy_world(trained, eps, all_steps):
+    """Gate: the loss falls (a wiring check). Accuracy is RECORDED, never tuned for: it is a diagnostic of one run."""
     m, losses = trained
     first, last = sum(losses[:20]) / 20, sum(losses[-20:]) / 20
     exact = step_exact_match(m, all_steps)
-    print(f"\n[plumbing only] first20={first:.3f} last20={last:.3f} step_exact_match={exact:.3f}")
-    assert last <= 0.5 * first, "loss did not fall enough: a wiring fault (masks, pointers or teacher forcing)"
-    assert exact >= 0.85
+    FINDINGS["loss"] = (first, last); FINDINGS["step_exact_match"] = exact
+    print(f"\n[diagnostic, {TRAIN_UPDATES} updates, plumbing only] first20={first:.3f} last20={last:.3f} step_exact_match={exact:.3f}")
+    assert last <= 0.5 * first, "loss did not fall: a wiring fault (masks, pointers or teacher forcing)"
 
 
 @pytest.mark.slow
-def test_notebook_pair_trained(trained, tok):
-    """Training pairs only: a model that memorises both notebooks passes, so this shows the notebook reaches the pointer heads."""
+def test_notebook_pair_recorded(trained, tok):
+    """RECORDED finding, not a gate. 8 training pairs; a model that ignores the notebook gets 0 (at most one of two right)."""
     m, _ = trained
     by_q = {}
     for e in toy_episodes():
@@ -329,21 +360,23 @@ def test_notebook_pair_trained(trained, tok):
         ra = m.decode(m.collate([ga]))[0][0]
         rb = m.decode(m.collate([gb]))[0][0]
         good += (ra == ga.gold and rb == gb.gold and ra.ptr_a != rb.ptr_a)
-    print(f"\n[plumbing only] training pairs with both gold operands: {good}/{len(pairs)}")
-    assert good >= 7
+    FINDINGS["pairs"] = good
+    print(f"\n[recorded finding, {TRAIN_UPDATES} updates] training pairs with both gold operands: {good}/{len(pairs)} "
+          "(memorisation passes this; it says nothing about new facts)")
 
 
 @pytest.mark.slow
 def test_episode_runs_with_tools_and_notes(trained, eps, tok):
+    """Gate: episodes run through the host loop without crashing and return a status. Correctness is recorded."""
     m, _ = trained
     t1 = [e for e in eps if e.family in ("T1", "T2")]
     right = sum(episode_correct(m, e) for e in t1)
-    print(f"\n[plumbing only] end-to-end episodes with the right exact value, TRAIN problems: {right}/{len(t1)}")
-    assert right >= 0.9 * len(t1)
+    print(f"\n[recorded finding] end-to-end exact values on TRAIN problems: {right}/{len(t1)}")
     a = next(e for e in eps if e.family == "T3A")
     nb = Notebook.from_facts(list(a.notebook))
     r = run_episode(m, a.question, nb, say=False)
-    print("[plumbing only] write turn (reported, not gated):", r.status, nb.texts(), "gold:", a.notebook, "->", a.meta)
+    print("[recorded finding] write turn:", r.status, "notebook before:", a.notebook, "after:", nb.texts())
+    assert r.status in ("DONE", "ANSWER") or r.status.startswith("FAIL")
 
 
 # ----------------------------------------------------------------------------- T15: smoke

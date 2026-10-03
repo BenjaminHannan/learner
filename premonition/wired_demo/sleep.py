@@ -149,3 +149,15 @@ def arms_matched(reports) -> bool:
 def plain_mix(day, U: int, rng: random.Random):
     """PF control: day records only, same number of records as the S mix."""
     return {"day": [day[i % len(day)] for i in rng.sample(range(max(U, len(day))), U)], "earlier": [], "anchor": []}
+
+
+def save_versioned(model: WiredModel, directory, night_index: int, report: NightReport):
+    """Save the core (all trained modules) after a night as core-v<N>.pt; earlier versions are never overwritten."""
+    from pathlib import Path
+    from .model import save_checkpoint
+    path = Path(directory) / f"core-v{night_index}.pt"
+    if path.exists():
+        raise FileExistsError(path)
+    save_checkpoint(model, path, extra={"night": night_index, "arm": report.arm,
+                                        "trainable_hash": report.trainable_hash_after, "shares": report.shares})
+    return path

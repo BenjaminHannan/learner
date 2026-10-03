@@ -85,7 +85,7 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:.9em}
 
 <section>
 <h2>What the tests showed</h2>
-<p>16 CPU tests pass, in about two minutes. They also ran on your Mac in a fresh copy of the branch.</p>
+<p>17 CPU tests pass, in about two minutes. 16 ran on your Mac in a fresh copy of the branch; the 17th checks that the notebook changes the core's output and that gradients reach the notebook rows. The sleep test also saves and reloads a versioned core. Accuracy numbers below are recorded diagnostics from one run, not gates.</p>
 <div class="wrap"><table>
 <tr><th>Check</th><th>Result</th><th>What it shows</th></tr>
 <tr><td>Workspace contract, shapes, padding, loop count</td><td class="pass">pass</td><td>Parts fit; vision and audio can later plug in as the same record</td></tr>
@@ -94,7 +94,7 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:.9em}
 <tr><td>Notebook write, edit, history, full, lock</td><td class="pass">pass</td><td>Host-side notebook behaves; sleep cannot write it</td></tr>
 <tr><td>Checkpoint save and reload</td><td class="pass">pass</td><td>Bit-identical outputs; wrong LM or config is refused</td></tr>
 <tr><td>Sleep night: weights change, LM and notebook do not, arms matched</td><td class="pass">pass</td><td>The loop runs. Says nothing about learning</td></tr>
-<tr><td>Overfit 48 toy episodes, 1500 updates</td><td class="pass">pass</td><td>Loss fell 7.7 to 1.4; 92% of steps exact; 48 of 48 toy problems right; 8 of 8 notebook pairs right on training pairs</td></tr>
+<tr><td>Diagnostic: overfit 48 toy episodes, 1500 updates (recorded, not tuned to pass)</td><td>recorded</td><td>Loss fell 7.7 to 1.4; 92% of steps exact; 48 of 48 toy problems right; 8 of 8 notebook pairs right on training pairs</td></tr>
 </table></div>
 <p><b class="fail">Weak spot.</b> The model-driven notebook write only half works: on training steps the write action is right 6 of 16 times in the plain run. The write helper itself is tested and fine; the model has not learned when to use it. The same model also needs more than 600 updates before it uses the notebook at all (0 of 8 pairs at 600).</p>
 </section>
