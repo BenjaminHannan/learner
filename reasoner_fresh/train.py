@@ -16,7 +16,7 @@ p.add_argument("--lr", type=float, default=1e-3)
 p.add_argument("--lm", default="LiquidAI/LFM2.5-1.2B-Instruct")
 p.add_argument("--out", default=str(HERE / "results"))
 p.add_argument("--device", default="cuda")
-p.add_argument("--smoke", action="store_true")
+p.add_argument("--probe", action="store_true", help="fit check on arm A only: no eval-form scoring, no result files")
 args = p.parse_args()
 
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -157,13 +157,20 @@ def main():
             if step % 500 == 0 or step == args.steps - 1:
                 fr = evaluate(model, fit_rows[:64]); msg += f" | trainfit64 final {sum(r['final_ok'] for r in fr)/64:.3f} call {sum(r['call_ok'] for r in fr)/64:.3f}"
             print(msg, flush=True); logf.write(msg + "\n"); logf.flush()
-    ev = evaluate(model, form); fit = evaluate(model, fit_rows)
+    fit = evaluate(model, fit_rows)
+    if args.probe:
+        print(f"PROBE {name} lr {args.lr} trainfit192 final {sum(r['final_ok'] for r in fit)/192:.4f} call {sum(r['call_ok'] for r in fit)/192:.4f}", flush=True)
+        return
+    ev = evaluate(model, form)
     res = {"arm": args.arm, "seed": args.seed, "steps": args.steps, "batch": args.batch, "params": nparam,
            "seconds": round(time.time() - t0), "eval": summarize(ev, Tset),
            "train_fit_192": {"final": sum(r["final_ok"] for r in fit) / 192, "call": sum(r["call_ok"] for r in fit) / 192},
            "calls_made_dist": {k: sum(1 for r in ev if r["calls_made"] == k) for k in range(5)}}
     (outdir / f"{name}.json").write_text(json.dumps(res, indent=1))
     (outdir / f"{name}-rows.json").write_text(json.dumps(ev))
+    import base64, gzip
+    print("RESULT-JSON " + name + " " + json.dumps(res), flush=True)
+    print("ROWS-B64 " + name + " " + base64.b64encode(gzip.compress(json.dumps(ev).encode())).decode(), flush=True)
     print(json.dumps(res["eval"]["unseen"]), json.dumps(res["eval"]["seen"]), res["train_fit_192"], flush=True)
 
 
