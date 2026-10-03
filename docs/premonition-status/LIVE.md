@@ -130,3 +130,23 @@ Suggested: the copy path unlocked learning in the earliest, copy-style stages; w
 
 ### 23:12Z INTERIM skills pretraining with copy path (40k of 50k updates)
 Shown: in_dist dev accuracy of 100 at 4k..40k updates (every 4k): 35, 53, 54, 49, 59, 66, 67, 69, 67, 73. Slowly rising, still below the 80% mark; final value and per-shift numbers at 50k (~23:30Z). PC disk free 4.05 GB.
+
+## 23:33Z RESULT skills pretraining WITH copy path (50,000 updates): FAILS the registered 80% mark; big gain over no copy path
+Shown (one seed, exploratory; 100 dev rows per file; PC disk free 4.0 GB):
+| dev file | correct /100 |
+|---|---|
+| in_dist (mark: >= 80) | 72 |
+| answer shift | 63 |
+| frame shift | 65 |
+| vocab shift | 78 |
+| variant shift | 50 |
+| family shift (whole new skills) | 13 |
+In-dist over time (every 4k updates): 35, 53, 54, 49, 59, 66, 67, 69, 67, 73, 72, 72, 72, so it plateaued near 72 from about 24k updates on. Same run without the copy path: 5, 6, 3, 6 of 100 (stopped at 16k). Answer, frame and vocab are each within 15 points of in_dist (the registered "generalises" rule), variant is 22 below, family 13/100 as expected for unseen skills.
+Training exact match by stage (last 3 reports): stage 1 copy/look-up 91-94%, 2 arithmetic 89%, 3 sequences 69-71%, 4 tracking/binding 63-67%, 5 logic 78-79%, 6 multi-step 67-69%, 7 rule-from-examples 59-67%, 8 reading/composing 70-74%, 9 uniform mix 72-75%. Weakest: stages 3, 4, 6, 7.
+Verdict by the registered mark: VOID for the English-pilot stage B (in_dist < 80%), so stage B was NOT launched.
+Plain language: letting the talker see the prompt words turned a model that could learn nothing into one that gets about 7 in 10 curriculum problems right, including new wording and new words, but it stops improving at ~72% and fails whole new skills.
+Suggested: the remaining errors are on skills that need several computed steps (sequences, tracking, multi-step, learn-a-rule), not on copying.
+Untested: constant lr 1e-3 may be what plateaus it; step supervision (the curriculum rows carry worked steps); more loops; the cloud thread's contextual reader.
+Checked against the code (coordinator suggested a contextual reader): skills_pretrain_v1.py already feeds the reader the frozen LM's final-layer contextual hidden states (extract_question_features with arm 'contextual' = last_hidden_state), so that change is already in this run, not a new lever here.
+Checkpoint kept on the PC: artifacts/skills/main2/final-checkpoint.pt (60.7 MB, parent-shaped), SKILLS-RESULT.json copied to artifacts/skills-main2/ in the repo. Nothing deleted.
+PROPOSED next single change (not launched; needs marks fixed first): same run, plus a cosine-style learning-rate decay (1e-3 down to 1e-4 over the 50k updates), everything else identical. Suggested marks: PASS if in_dist >= 80; improvement claim only if in_dist >= 78 (the earlier plateau 72 +/- 3 noise from the last 6 checks); wrong if in_dist <= 75. Alternative if Ben/coordinator prefer: step supervision on the worked steps.
