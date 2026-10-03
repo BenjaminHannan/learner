@@ -23,7 +23,7 @@ Do not treat this file as superseding v5. Where v5 disagrees, v5 wins and this f
 
 - **G0 floor.** The base size (the English pilot's size) already shows fresh comprehension above chance and above the talker-alone / no-reasoner control in *both* seeds on the pilot's own fresh bank. Scaling from a floor of zero measures nothing. If G0 fails, this stage does not start; the English pilot's failure branch is followed instead.
 - **G1 interface check (CPU).** Parameter and FLOP counts for every ladder point recorded; checkpoint fits the 134 MiB cap or the cap is explicitly raised by the owner (the 144M point does not fit; see 4).
-- **G2 resources.** The GPU hold is released by Ben (Premonition's hold stays active while the separate Qwen service holds nearly all VRAM). No scaling job is queued until then.
+- **G2 resources.** Resolved: Ben (2026-10-03 12:09 UTC, via the channel session) freed the PC GPU for Premonition full time. Still verify at launch that the Qwen service is not holding VRAM, and keep one execution owner and one queue.
 - **G3 evaluation.** The fresh bank in section 5 is authored, independently checked, hashed and sealed before the first scaling run.
 
 ## 3. What scales, one axis at a time
@@ -32,12 +32,12 @@ The frozen LM is identical (same pinned revision, FP32, no fine-tuning, no causa
 
 | Axis | Ladder | Needs Ben's approval? | Priority |
 |---|---|---|---|
-| A. Reasoner width D (blocks, experts, loops fixed) | D = 256 (base), 384, 512, 768 | Probably not (same architecture, bigger). Asked anyway, Q1 | 1 |
-| B. Experts: total vs active | 8/top-2 base; 16/top-2 and 32/top-2 (total grows, active fixed); and an equal-total dense width as the comparator | Same as A | 2 |
-| C. Loop count (4 -> 8) | train-time loops only | **Yes.** The brief bars "extra reasoning depth" without approval | 3, blocked |
-| D. Reader size (the learned reader before the reasoner; the LM states it reads are cached) | 1x, 2x, 4x | Q1 | 4 |
+| A. Reasoner width D (blocks, experts, loops fixed) | D = 256 (base), 384, 512, 768 | No. Ben ruled scaling needs no approval (2026-10-03) | 1 |
+| B. Experts: total vs active | 8/top-2 base; 16/top-2 and 32/top-2 (total grows, active fixed); and an equal-total dense width as the comparator | No (same ruling) | 2 |
+| C. Loop count (4 -> 8) | train-time loops only | No. Ben removed the extra-reasoning-depth rule (2026-10-03) | 3 |
+| D. Reader size (the learned reader before the reasoner; the LM states it reads are cached) | 1x, 2x, 4x | No (same ruling) | 4 |
 
-Test-time-only loop extrapolation (run a 4-loop-trained model for 6 loops) is cheap but is also extra reasoning depth; hold it for Q2 and label results "untrained depth".
+Loops are now an allowed axis: train-time loops 4 -> 6 -> 8 with width fixed at base, reported with FLOPs per update since loops multiply reasoner cost. Test-time-only extra loops (a 4-loop-trained model run for 6) is a cheap add-on; label it "untrained depth".
 
 Reported parameter counts per point: total, active per token, and reasoner FLOPs per update. For axis A the points are roughly 1x, 2.2x, 4x, 9x of D=256 if the reasoner scales as D^2 [suggested, unmeasured]. "Roughly 9M, 20M, 36M, 80M" is therefore an estimate until counted in code.
 
@@ -90,23 +90,25 @@ Dominant cost is the frozen 1.2B FP32 LM forward and backward (gradients flow th
 
 - Time: forecast ~0.11 s/update (v4 receipts) to measured 0.413 s/update (benchmark control). At 10,240 updates that is 20 min to 70 min per run, plus ~10 min evaluation. Ladder of 4 sizes x 3 seeds = 12 runs, plus 1 LR grid per size (3 short runs x 4 sizes), plus plain controls at the largest two sizes: roughly **10-30 GPU hours** [unverified range; first smoke narrows it].
 - Memory: LM FP32 about 4.7 GB plus activations, so the existing cap of 15.0 GB leaves roughly 10 GB for reasoner, Adam state (about 3x parameter bytes in FP32) and activations. A 100M-parameter reasoner needs about 1.6 GB for weights plus Adam; the 768-wide point is likely to fit, and a >300M reasoner is the realistic ceiling [suggested]. Larger needs a bigger card and is outside this stage.
-- Checkpoints: 134 MiB per-arm cap is below the larger points (80M params x 4 B = 320 MB). Either raise the cap with the owner's approval or store reasoner-only checkpoints; either way respect the 100 GiB project cap and 1 GiB free-space safeguard.
-- Spend: none requested. Everything here is PC-GPU-only and waits on the GPU hold. Any vast rental would need Ben's approval of the $-amount under the standing rule.
+- Checkpoints: 134 MiB per-arm cap is below the larger points (80M params x 4 B = 320 MB). Either raise the cap (owner decision) or store reasoner-only checkpoints; either way respect the 100 GiB project cap and 1 GiB free-space safeguard.
+- Spend: none requested. Everything here is PC-GPU-only. Any vast rental would need Ben's approval of the $-amount under the standing rule.
 
 **CPU work that can start now without GPU:** author and independently check the larger TRAIN set and the fresh bank; write ladder configs and the parameter/FLOP counter; precompute exposure schedules and hash them; write the analysis script (bootstrap, pass-mark table) and test it on synthetic results; run fixture tests that every ladder point loads, preserves token IDs/masks/EOS/numeral spans/positions, and keeps the frozen LM pin.
 
-## 8. Questions for Ben (sent via the channel session)
+## 8. Rulings from Ben (2026-10-03 12:09 UTC, relayed by the channel session)
 
-1. Does scaling reasoner width, expert count or reader size count as an architecture change needing approval, or only changes to the loop/prefix/LM structure?
-2. May train-time loop count (and test-time extra loops) be scaled as axis C? Default if no answer: not done.
-3. May the GPU hold be released for scaling runs after the English pilot reports, and for how long?
-4. Is a larger TRAIN set (beyond the 24-passage qualification bank) acceptable to author for this stage?
+1. Scaling width, experts or reader size needs no approval. The scaling rule is removed.
+2. Loop count may be scaled. The extra-reasoning-depth rule is removed.
+3. A larger checked TRAIN set than the 24-passage bank may be authored.
+4. The PC GPU is free for Premonition full time.
+
+Still binding from the brief: no LM fine-tuning, no causal-mask change, no forced answer copying, no digit auxiliary heads or latent-matching objectives; never inspect reserved panels; spending needs a fresh authorisation.
 
 ## 9. Order of work
 
 1. Now (CPU): confirm numbers against v5; author bigger TRAIN set and fresh bank; fixtures; analysis script.
 2. When the English pilot reports: check G0. If failed, stop and follow the pilot's failure branch.
-3. When GPU is released: LR grid per size (seed 0), then ladder A, then B, then D; C only if approved.
+3. When GPU is released: LR grid per size (seed 0), then ladder A, then B, then D; then C.
 4. Report per section 6. Any change to the design after a fresh score is seen consumes the bank.
 
 ## 10. Plain-language summary
