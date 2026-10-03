@@ -147,6 +147,8 @@ def test_window_slots_are_one_tick_and_times_are_relative():
     assert np.allclose(t, np.array([0.025, 0.075, 0.125, 0.175]) - 0.23) and np.all(t <= 0)
     assert np.all(ws["segment"] == [SEGMENTS["notebook"], SEGMENTS["audio"]])
     assert np.all(ws["tokens"][~v] == 0) and np.all(ws["coords"][~v] == 0)
+    cv = ws["coord_valid"]                                       # Workspace v1: row/col absent
+    assert cv.shape == (8, 3) and not cv[:, :2].any() and np.array_equal(cv[:, 2], v)
 
 
 def test_window_keeps_only_last_slots_and_never_revises():

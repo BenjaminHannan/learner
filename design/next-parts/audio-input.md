@@ -250,21 +250,24 @@ Whisper-base stays as the ear for the **speech track only** (spoken questions, m
 
 Shown on CPU (container Xeon 2.1 GHz, numpy, one thread, random weights): front end + ear + window take a median of 1.95 ms per 50 ms chunk (p95 2.26 ms). Worst-case algorithmic delay from a sound's first sample to the slot that holds it is 60 ms (10 ms to the first frame plus up to 40 ms to fill the slot; `hearing_latency_bound`), although a sound at the very edge of a Hann window is faint, so useful detection may take about half a window longer (SUGGESTED).
 
-### j3. Fitting the shared Workspace (and three problems the reviewer found)
+### j3. Fitting the shared Workspace (contract v1)
 
 | Field | Game-sound value |
 |---|---|
 | `tokens [N,256]` | one slot per 50 ms, the last 40 slots |
 | `segment` | (`notebook`, `audio`): sound is context for the current step, not the question |
 | `coords` | time = slot centre **minus now**, in seconds (always <= 0), so numbers stay small in a long game; the core's relative bias only uses differences |
+| `coord_valid` | (False, False, valid): row and column absent, time present on real slots |
 | `valid` | False for empty slots at the start of a stream |
 
 **No direction field** (SUGGESTED default). `coords` say where a token sits in its input, and drive the core's relative-position bias. Azimuth is an uncertain property of the sound's content (front/back ambiguous without HRTF), so it belongs in the token, learned by the ear, with an auxiliary azimuth (sin, cos) head while pretraining the ear so it is decodable. Mapping azimuth onto image columns to help audio-vision binding is rejected: it is wrong for off-screen sounds, which are the ones that matter. Binding is learned from content and tested in S3.
 
-Problems for the Workspace owner (PR #23), raised here, not changed in code yet:
-1. **Audio sits at (row 0, col 0)** in `adapt()`. In a mixed workspace that means "the same place as image patch (0,0)". Audio needs a per-axis "no position" value for row and col (PR #23 already plans a neutral "no position" index; it should apply per axis). SHOWN in code; the harm is SUGGESTED.
-2. **The time bias is too short.** PR #23's relative bias clips at +/-4 steps (half the heads +/-1). With 50 ms buckets the core can directly compare times only +/-200 ms apart, yet a hiss 1 s ago matters. Suggested fix: log-spaced time buckets (0, 50, 100, 200, 400, 800 ms, 1.6 s, older). Storing slots at 50 ms does not require biasing at 50 ms. This is experiment S2.
-3. **Registers need t = 0.** The register / action tokens that read the workspace must carry time "now", otherwise nothing tells the core which audio slot is newest.
+Three problems were raised with the Workspace owner (PR #23). All three are **settled in Workspace contract v1** (PR #23 section 6, commit c208de425), and the audio code now follows it (all untested beyond plumbing):
+1. **Audio sat at (row 0, col 0)**, the same place as image patch (0,0). Fixed: a per-axis `coord_valid [N,3]` bool with a neutral "no position" bias per axis. Audio emits `coord_valid = (False, False, valid)`, built only in `audio_coord_valid()`. Row and column offsets count only within one (role, modality) source.
+2. **The time bias was too short** (+/-4 steps = +/-200 ms at 50 ms buckets). Fixed: time is seconds relative to now (<= 0), bucketed on a signed log scale (0, 50, 100, 200, 400, 800 ms, 1.6 s, older, plus "no time"), applied across all timed sources so a sound and a video frame can be ordered. The +/-4 clip and the +/-1 heads now apply to row and column only. Experiment S2 tests this choice.
+3. **Registers need t = 0.** Fixed: registers and action tokens carry time 0 with row and column absent; tool results carry their arrival time; the question carries 0; notebook text, guides and examples have time absent.
+
+For offline clips, `adapt()` keeps clip-relative times; a caller building a v1 Workspace sets `time_offset = -(clip seconds)` so times are <= 0. The streaming `AudioWindow` already gives times relative to now.
 
 The ear is causal, so past slots never change: cache them, and let the core re-read the ~40-slot window each step. Tie the slot rate to the policy's step rate (20 Hz today, same as the game tick).
 

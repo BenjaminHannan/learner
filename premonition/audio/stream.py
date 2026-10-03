@@ -38,7 +38,7 @@ import math
 
 import numpy as np
 
-from .adapter import ModalityAdapterSpec, adapt, audio_segment, _gelu
+from .adapter import ModalityAdapterSpec, adapt, audio_coord_valid, audio_segment, _gelu
 from .frontend import HOP_LENGTH, N_FFT, N_MELS, SAMPLE_RATE, hann_window, mel_filterbank
 
 N_CHANNEL_FEATURES = 3          # left log-mel, right log-mel, ILD (left minus right)
@@ -263,7 +263,7 @@ class AudioWindow:
         for i, (tok, centre) in enumerate(self._slots):
             tokens[i], coords[i, 2], valid[i] = tok, centre - now, True
         return {"tokens": tokens, "segment": audio_segment(self.role, n, self.spec.modality),
-                "coords": coords, "valid": valid}
+                "coords": coords, "coord_valid": audio_coord_valid(valid), "valid": valid}
 
 
 def hearing_latency_bound(hop: int = HOP_LENGTH, n_fft: int = N_FFT, sr: int = SAMPLE_RATE,

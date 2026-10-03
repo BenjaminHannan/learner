@@ -20,6 +20,11 @@ Output of ``adapt()`` is exactly those four fields, for one clip (N = ceil(T_in 
                                ``audio_segment()`` so the encoding can switch in one place.
     coords   float32 [N, 3]    (row, col, time) = (0, 0, slot centre in SECONDS).
                                time = time_offset + (j + 0.5) * k * frame_period.
+                               Workspace v1 wants time relative to now (<= 0): set
+                               time_offset = -(clip seconds), or use stream.AudioWindow.
+    coord_valid bool [N, 3]    per-axis "has this coordinate" (Workspace v1, PR #23
+                               commit c208de425): audio = (False, False, valid), so row
+                               and col are absent and do not collide with image patch (0, 0).
                                Padded rows are 0 and must be ignored via ``valid``.
     valid    bool    [N]       True = real content, False = right padding.
 
@@ -45,7 +50,7 @@ SEGMENTS = {"question": 0, "notebook": 1, "example": 2, "tool_result": 3, "regis
             "text": 5, "image": 6, "audio": 7}
 ROLES = ("question", "notebook", "example", "tool_result")   # roles an input adapter may emit
 MODALITIES = ("text", "image", "audio")
-FIELDS = ("tokens", "segment", "coords", "valid")
+FIELDS = ("tokens", "segment", "coords", "coord_valid", "valid")
 POOL_MODES = ("stack", "mean")
 
 
@@ -60,6 +65,12 @@ def audio_segment(role: str, n: int, modality: str = "audio") -> np.ndarray:
     if modality not in MODALITIES:
         raise ValueError(f"modality must be one of {MODALITIES}")
     return np.tile(np.array([SEGMENTS[role], SEGMENTS[modality]], np.int64), (n, 1))
+
+
+def audio_coord_valid(valid: np.ndarray) -> np.ndarray:
+    """[N, 3] bool per-axis flags: audio has no row or column, and time only where valid."""
+    v = np.asarray(valid, bool)
+    return np.stack([np.zeros_like(v), np.zeros_like(v), v], axis=-1)
 
 
 @dataclass(frozen=True)
@@ -217,8 +228,10 @@ def adapt(spec: ModalityAdapterSpec, weights: dict, frames: np.ndarray,
     tokens = np.where(slot_valid[:, None], h, 0.0).astype(np.float32)
     coords = np.zeros((n, 3), np.float32)
     coords[:, 2] = np.where(slot_valid, t, 0.0)
+    coord_valid = audio_coord_valid(slot_valid)
 
-    out = {"tokens": tokens, "segment": segment, "coords": coords, "valid": slot_valid}
+    out = {"tokens": tokens, "segment": segment, "coords": coords, "coord_valid": coord_valid,
+           "valid": slot_valid}
     check_output(spec, out, t_in)
     return out
 
@@ -228,7 +241,9 @@ def check_output(spec: ModalityAdapterSpec, out: dict, t_in: int) -> None:
     n = spec.out_len(t_in)
     if tuple(out) != FIELDS:
         raise AssertionError(f"fields {tuple(out)} != {FIELDS}")
-    s, g, c, v = (out[k] for k in FIELDS)
+    s, g, c, cv, v = (out[k] for k in FIELDS)
+    if cv.dtype != bool or cv.shape != (n, 3) or not np.array_equal(cv, audio_coord_valid(v)):
+        raise AssertionError("coord_valid must be bool [N, 3] = (False, False, valid) for audio")
     if s.dtype != np.float32 or s.shape != (n, spec.d_model):
         raise AssertionError(f"tokens must be float32 [{n},{spec.d_model}], got {s.dtype} {s.shape}")
     if g.dtype != np.int64 or g.shape != (n, 2):
@@ -252,7 +267,8 @@ def batch(clips: list) -> dict:
     n = max(len(c["valid"]) for c in clips)
     b, d = len(clips), clips[0]["tokens"].shape[1]
     out = {"tokens": np.zeros((b, n, d), np.float32), "segment": np.zeros((b, n, 2), np.int64),
-           "coords": np.zeros((b, n, 3), np.float32), "valid": np.zeros((b, n), bool)}
+           "coords": np.zeros((b, n, 3), np.float32), "coord_valid": np.zeros((b, n, 3), bool),
+           "valid": np.zeros((b, n), bool)}
     for i, c in enumerate(clips):
         m = len(c["valid"])
         for k in FIELDS:
