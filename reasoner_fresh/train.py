@@ -17,6 +17,7 @@ p.add_argument("--lm", default="LiquidAI/LFM2.5-1.2B-Instruct")
 p.add_argument("--out", default=str(HERE / "results"))
 p.add_argument("--copy", action="store_true", help="arm C: add the calculator result token embedding as a 9th prefix vector (direct copy path)")
 p.add_argument("--call-loop", type=int, default=0, help="first loop at which the calculator may be called (0 = original)")
+p.add_argument("--wording", choices=["old", "mix"], default="old", help="mix: half old 4 templates, half procedurally composed frames (gen2), disjoint from eval new wording")
 p.add_argument("--device", default="cuda")
 p.add_argument("--probe", action="store_true", help="fit check on arm A only: no eval-form scoring, no result files")
 args = p.parse_args()
@@ -138,14 +139,18 @@ def main():
             perm = list(range(len(pool))); rng.shuffle(perm); order += perm
         data = [pool[i] for i in order[:n_total]]
     else:
-        data = gen.stream_b(ex, args.seed, n_total)
+        if args.wording == 'mix':
+            import gen2
+            data = gen2.stream_w(ex, args.seed, n_total)
+        else:
+            data = gen.stream_b(ex, args.seed, n_total)
         assert len({r["text"] for r in data}) == len(data)
     assert all(r["answer"] in Tset for r in data) and not ({(r["x"], r["y"]) for r in data} & ex)
     model = Reasoner(LMW).to(dev)
     nparam = sum(p_.numel() for p_ in model.parameters())
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.1, betas=(0.9, 0.95))
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / 200) * 0.5 * (1 + math.cos(math.pi * min(i, args.steps) / args.steps)))
-    name = f"arm{args.arm}{'copy' if args.copy else ''}{'-delay%d' % args.call_loop if args.call_loop else ''}-seed{args.seed}"
+    name = f"arm{args.arm}{'copy' if args.copy else ''}{'-delay%d' % args.call_loop if args.call_loop else ''}{'-mix' if args.wording == 'mix' else ''}-seed{args.seed}"
     outdir = Path(args.out); outdir.mkdir(parents=True, exist_ok=True)
     logf = open(outdir / f"{name}.log", "w")
     t0 = time.time()
