@@ -17,5 +17,5 @@ for S in 0 1; do
   python3 train.py --arm B --copy --seed $S --steps 3000 --out results > run-Bcopy$S.out 2>&1 &
 done
 while pgrep -f "train.py --arm" >/dev/null; do for f in run-*.out; do echo "$f: $(grep -E '^step' $f | tail -1 | cut -c1-200)"; done; sleep 60; done
-for f in run-*.out; do echo "=== $f"; grep -E "Traceback|Error" $f; grep -E "^RESULT-JSON" $f | cut -c1-300; grep -cE "^ROW " $f; done
+for f in run-*.out; do echo "=== $f"; grep -E "Traceback|Error" $f; grep -E "^RESULT-JSON" $f | cut -c1-300; grep -E "^ROW " $f | cut -c1-260; done
 echo ALL-DONE

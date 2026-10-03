@@ -34,3 +34,25 @@ Give the result a direct path to the output (e.g. the talker reads the calculato
 ## Known problems / provenance
 - Per-question rows were printed to the box log but truncated by the log service, and the box was destroyed before I confirmed the copy-back (my error: the rule was to check first). Aggregates above come from the intact summary lines in `results/box-log-excerpt.txt`; per-question rows are lost. A re-run (about 20 minutes on one RTX 3090) would regenerate them.
 - Cost ledger: box 54028432 (RTX 3090, $0.163/h) 15:14-16:02 UTC, no output (stuck, destroyed): ~$0.13. Box 54032774 (same type) ~16:03-16:27 UTC: ~$0.07. Total about $0.20 of the $14.71 credit.
+
+---
+# Follow-up: direct copy path (2026-10-03, marks in `PASS-MARKS-2.md`, fixed before training)
+
+One change: arm C = arm B plus the frozen LM's own embedding of the calculator's result token as a 9th prefix vector (zeros if the call was invalid). Compared with a re-run of arm B (it reproduced the first run's numbers exactly). Same sealed eval form, 3000 x 16 updates, lr 1e-3, seeds 0 and 1. All 768 per-question rows were copied back and counted before the box was destroyed (`results/*-rows.json`, `results/SUMMARY-copy-test.json`).
+
+| run | unseen answers | seen answers | right call (unseen / seen) | pairs both right unseen / seen | wrong unseen = training answer |
+|---|---|---|---|---|---|
+| B pooled, seed 0 | 0.0% | 90.6% | 94.8% / 90.6% | 0/48 / 39/48 | 96/96 |
+| B pooled, seed 1 | 4.2% | 85.4% | 90.6% / 85.4% | 0/48 / 34/48 | 91/92 |
+| C copy, seed 0 | 89.6% | 84.4% | 89.6% / 84.4% | 38/48 / 33/48 | 0/10 |
+| C copy, seed 1 | 84.4% | 80.2% | 84.4% / 80.2% | 33/48 / 29/48 | 0/15 |
+
+Marks: unseen >= 50% (met both seeds), beats B by >= 25 points (met), unseen >= 70% of seen (met; unseen is higher than seen), and C seen not more than 5 points below B seen (**missed**: 6.2 and 5.2 points down). Not falsified. Strictly that is not a full PASS; read it as: the copy path removes the lookup, and costs about 5-6 points on seen answers in new wording.
+
+What it means:
+- With the copy path, final accuracy equals the right-call rate exactly (unseen 89.6% = call 89.6%, and so on). Every remaining error is a wrong call, none is a wrong readout. The wrong unseen answers are no longer training answers (0 of 25).
+- So the pooled exit was the whole problem for unseen answers, in this recipe. The next limit is the call itself: 80-90% overall, and on new wording the seen-answer call rate is only 60-69% for C (71-81% for B).
+- Not shown: that this holds for other tasks, bigger numbers, multi-step answers, or the PC pipeline. The copy only works because a calculator hands over the exact token; it removes the need for the model to compute it.
+- Suggested next single change: improve the call on new wording (operation/operand choice after thinking, "think before calling" in the shortlist), since that is now the only error source.
+
+Cost: box 54035873 (stopped at once, relaunch after a log fix) ~$0.00; box 54035893 (RTX 3090, $0.163/h) ~16:30-16:57 UTC ~$0.08. Running total for this thread about $0.30.
