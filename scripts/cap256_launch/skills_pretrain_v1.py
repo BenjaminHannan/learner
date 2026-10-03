@@ -26,6 +26,7 @@ import train_english_paraphrase_pilot_windows_v1 as trainer  # noqa: E402
 
 BUSY = Path(r'C:\Users\benja\GPU-BUSY.txt')
 EXP = 'artifacts/cap256-launch/contextual-input-compare-v1/ENGLISH-PILOT-v1/CONFIGS-v1/'
+CP = {'ids': None}
 DEV = ('in_dist', 'answer', 'frame', 'vocab', 'variant', 'family')
 
 
@@ -54,6 +55,7 @@ def evaluate(rt, ctx, modules, rows, tokenizer):
             skipped += 1
             continue
         ids, mask, _ = enc
+        CP['ids'] = ids
         feats = rt.compare.extract_question_features(ctx.lm, ids, mask, 'contextual', torch)
         obs = runtime.generate_observed(rt, ctx.dec, parts['core'], parts['reader'], feats, mask, 12)
         out = obs['MODEL_native_decoder_return'][0] if obs['MODEL_native_decoder_return'] else []
@@ -86,6 +88,7 @@ def main():
     ap.add_argument('--dev-n', type=int, default=100)
     ap.add_argument('--minutes', type=float, default=120)
     ap.add_argument('--lr-mult', type=float, default=1.0)
+    ap.add_argument('--copy-path', action='store_true', help='prefix = 8 pooled vectors + the prompt token embeddings (talker can copy prompt tokens)')
     ap.add_argument('--families', default='', help='comma list: train and score only these families (diagnosis)')
     a = ap.parse_args()
     root = Path(a.root).resolve()
@@ -109,6 +112,28 @@ def main():
         opt = runtime.make_optimizer(torch, [p for _, p in named])
         runtime.restore_adam(torch, opt, saved, named)
         participation, nonzero = Counter(saved['participation']), Counter()
+        if a.copy_path:
+            ad = dec.adapter
+            emb = lm.get_input_embeddings()
+            o_train, o_fwd = ad.project_training, ad.forward
+
+            def with_prompt(pref):
+                with torch.no_grad():
+                    pe = emb(CP['ids']).to(pref.dtype)
+                return torch.cat((pref, pe), 1)
+            ad.project_training = lambda *x, **k: with_prompt(o_train(*x, **k))
+            ad.forward = lambda *x, **k: with_prompt(o_fwd(*x, **k))
+
+            def loss_fn(rt_, lm_, dec_, h, mask, target):
+                prefix = dec_.adapter.project_training(h, torch.ones_like(h, dtype=torch.bool), mask, (1, h.shape[1]))
+                per, pred = rt_.human_loss(lm_, prefix, target, dec_.bos_id, dec_.eos_id, True, True)
+                valid = target != -100
+                ok = (pred == target) & valid
+                return per, pred, {'CE': float(per.detach().mean()), 'valid_target_tokens': int(valid.sum()),
+                                   'first_token_CE': 0.0, 'EOS_CE': 0.0,
+                                   'teacherforced_token_accuracy': float(ok.sum()) / int(valid.sum()),
+                                   'teacherforced_exact': bool(ok.sum() == valid.sum())}
+            runtime.english_loss = loss_fn
         ctx = type('Ctx', (), {})()
         ctx.lm, ctx.dec, ctx.device = lm, dec, cfg['device']
         dev = load_dev(a.data, a.dev_n)
@@ -129,6 +154,7 @@ def main():
             if enc is None:
                 continue
             ids, mask, labels = enc
+            CP['ids'] = ids
             feats = rt.compare.extract_question_features(lm, ids, mask, 'contextual', torch)
             ctx.tokens, ctx.features = {0: (ids, mask, labels)}, {0: feats}
             r = trainer.train_step(rt, ctx, modules, named, opt, 0, participation, nonzero)

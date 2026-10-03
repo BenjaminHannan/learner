@@ -110,3 +110,16 @@ Suggested (not proven): the 8 pooled exit vectors do not carry the spelling of t
 Untested: more than 3000 updates; a different learning rate; whether the parent's memorised QA habits slow copying (a fresh-weights start).
 Choice (coordinator asked for the PR #33 copy path): PR #33 copies a calculator tool RESULT into the answer, but here the answer is a span of the PROMPT, so a straight port does not apply. The same idea for prompts: let the frozen LM read the prompt's own token embeddings directly next to the 8 pooled vectors (prefix = 8 pooled + the prompt's raw token embeddings, up to 64), so the talker can copy tokens. One change only.
 Pass marks for that test, fixed now: same setup as above (copy_word only, 3000 updates, seed-0 parent, lr 1e-3, same dev rows). PASS if copy_word in_dist dev accuracy >= 80% at 3000 updates. Wrong if < 30% (then the failure is not just the exit). 30-80% inconclusive.
+
+## 21:48Z RESULT copy-path test: PASS (copy_word held-out dev 40/40; was 0/40 without it)
+Change: prefix = the 8 pooled exit vectors + the prompt's own token embeddings (frozen LM embedding table), nothing else different (copy_word only, 3000 updates, seed-0 parent, lr 1e-3, stride 4). Note: the first attempt to launch this test failed on a quoting error before anything ran; this is the only run.
+Shown (one run, exploratory, copy_word dev rows n=40 per file): in_dist 40/40 at 1000, 2000 and 3000 updates; at 3000: answer-shift 38/40, frame-shift 40/40, vocab-shift 39/40, variant-shift 30/40. Training exact match was 85% by update 500 (0% in the same time without the copy path). Registered mark (>= 80% in_dist at 3000) met; the variant shift (75%) is the weakest.
+Limits: copy_word is the easiest family; dev rows are held-out words but the family is trained on; one seed; says nothing about the other 37 families, and the other skills need computing, not just copying.
+Suggested: the 8 pooled vectors cannot carry a new word's spelling; letting the talker see the prompt tokens removes that limit for copying (consistent with PR #33's copy path for tool results).
+Untested: all-families training with the copy path (next, registered below); whether arithmetic-type answers (computed, not copied) improve at all.
+
+## 21:48Z NEXT job, pass marks fixed BEFORE launch: all-families skills pretraining with the prompt-token copy path (stage A)
+Same as the earlier main run except --copy-path: 50,000 updates (every 4th row of the 200,000-row stream, PR #32 @ 57c45293f), seed-0 parent, lr 1e-3, in_dist check every 4000 on 100 rows, final per-shift dev (answer, frame, vocab, variant, family) on 100 rows each, time cap 120 min.
+PASS: in_dist >= 80% at the end. Report all per-shift accuracies; "generalises" only if answer, frame and vocab are each within 15 points of in_dist (family reported, no mark).
+STOP EARLY: at the 16,000-update check, if in_dist is still <= 10/100 (earlier run without the copy path: 5, 6, 3, 6 of 100 at 4k/8k/12k/16k).
+If PASS, stage B (English pilot from this core, seed 0, 9216 updates, eval v3) uses the marks registered earlier (P1 >= 12/48 or P2 >= 8/48, harm <= 3, train fit >= 40/48).
