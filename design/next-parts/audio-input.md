@@ -191,3 +191,18 @@ SHOWN by `python3 -m pytest tests/test_audio_frontend.py tests/test_audio_adapte
 **These tests show the plumbing works. They say nothing about whether audio reasoning works.** Bit-exact match with Whisper's own frontend is UNTESTED (experiment A0).
 
 Sources read: github.com/openai/whisper (README, whisper/audio.py, whisper/model.py); librosa filters.py and core/convert.py; HF config/cards/API for LiquidAI/LFM2.5-1.2B-Base, LiquidAI/LFM2-Audio-1.5B, openai/whisper-tiny, openai/whisper-base, UsefulSensors/moonshine-tiny/-base, facebook/wav2vec2-base, facebook/hubert-base-ls960, microsoft/wavlm-base-plus, MIT/ast-finetuned-audioset-10-10-0.4593, laion/clap-htsat-unfused, kyutai/mimi, facebook/encodec_24khz; arXiv 2410.15608 (Moonshine); arXiv 2310.13289 (SALMONN, abstract via search).
+
+---
+
+## (j) Game sound: direction and reaction speed (added 2026-10-03; ALL SUGGESTED, NOT RUN)
+
+Ben's long-term test is Minecraft played like a person. The sound that matters there is an alarm (a creeper hiss behind you), where the model must know that it happened, roughly where, and react fast. Naming the sound is not enough.
+
+- **Training data (SUGGESTED):** record the game itself. The engine knows the source, time and direction of every sound, so labels are free. Nothing recorded yet; licence/ToS of recording not checked.
+- **Direction (SUGGESTED, not built):** the current adapter takes mono. Take two channels, keep a per-slot direction value (e.g. level and time difference between channels, or a learned left/right/behind code) and carry it in `coords` or extra token features. `coords` currently has (0, 0, t) for audio, so a direction field needs agreement with the Workspace owner (PR #23) before use.
+- **Latency (SUGGESTED):** Whisper pads every clip to 30 s, which is a poor fit for streaming. For the game stage, test a streaming-friendly ear (Moonshine-style variable length, or a small causal conv ear) against Whisper-base. This revisits the Whisper-base default for that stage only.
+- **Experiments (NOT RUN, one change each):**
+  - G1: add stereo + direction. Pass: direction of a held-out synthetic noise burst (left/right/behind) classified >= 90% (chance 33%); falsified if mono input does within 10 points.
+  - G2: mute test. In a scripted creeper-approach scenario, the sound-on model must avoid the explosion >= 20 points more often than the same model with sound muted; falsified if the gap is < 5 points.
+  - G3: reaction delay. Time from hiss start to the first evasive action under 1.0 s on the scenario set; falsified if it is not below the muted-model delay.
+  Fresh scenario sets follow section (i): one authoring agent, an independent checker, hash seal.
