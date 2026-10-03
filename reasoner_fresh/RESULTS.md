@@ -55,4 +55,4 @@ What it means:
 - Not shown: that this holds for other tasks, bigger numbers, multi-step answers, or the PC pipeline. The copy only works because a calculator hands over the exact token; it removes the need for the model to compute it.
 - Suggested next single change: improve the call on new wording (operation/operand choice after thinking, "think before calling" in the shortlist), since that is now the only error source.
 
-Cost: box 54035873 (stopped at once, relaunch after a log fix) ~$0.00; box 54035893 (RTX 3090, $0.163/h) ~16:30-16:57 UTC ~$0.08. Running total for this thread about $0.30.
+Cost: box 54035873 (stopped at once, relaunch after a log fix) ~$0.00; box 54035893 (RTX 3090, $0.163/h) ~16:29-16:52 UTC ~$0.08. Running total for this thread about $0.30.
