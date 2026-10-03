@@ -26,14 +26,16 @@ nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 printf '%s' "$@" | base64 -d > pack.tar.xz
 echo "__SHA__  pack.tar.xz" | sha256sum -c || { say FAIL-pack; finish FAIL; }
 python -c "import tarfile; tarfile.open('pack.tar.xz','r:xz').extractall('.')"
-pip install -q "transformers==5.18.0" accelerate > out/pip.log 2>&1 || { tail -3 out/pip.log; finish FAIL; }
+PIP_BREAK_SYSTEM_PACKAGES=1 pip install -q --break-system-packages "transformers==5.18.0" accelerate > out/pip.log 2>&1 || { tail -3 out/pip.log; finish FAIL; }
 export HF_HUB_DISABLE_PROGRESS_BARS=1 TRANSFORMERS_VERBOSITY=error TOKENIZERS_PARALLELISM=false
 python -c "from huggingface_hub import snapshot_download as s; s('LiquidAI/LFM2.5-1.2B-Instruct')" || finish FAIL
 sha256sum EVAL-FORM.json
 for ARM in __ARMS__; do
   say "WAVE $ARM"
-  for S in 0 1 2 3 4 5; do python train_ptr.py --arm $ARM --seed $S --out out > out/run-$ARM-$S.out 2>&1 & done
-  while pgrep -f train_ptr.py > /dev/null; do sleep 120; for f in out/run-$ARM-*.out; do grep -E "step" $f | tail -1 | cut -c1-120; done; done
+  PIDS=""
+  for S in 0 1 2 3 4 5; do python train_ptr.py --arm $ARM --seed $S --out out > out/run-$ARM-$S.out 2>&1 & PIDS="$PIDS $!"; done
+  (while true; do sleep 120; for f in out/run-$ARM-*.out; do grep -E " step " $f | tail -1 | cut -c1-120; done; done) & TICK=$!
+  wait $PIDS; kill $TICK 2>/dev/null
   for f in out/run-$ARM-*.out; do grep -E "Traceback|Error" $f | head -3; grep RESULT-JSON $f | cut -c1-400; done
 done
 finish DONE
