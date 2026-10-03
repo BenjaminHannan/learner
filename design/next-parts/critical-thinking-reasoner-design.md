@@ -119,7 +119,7 @@ Deferred until after S, each a single change later: a plan head for operation ch
 
 **Aim:** beat bigger plain models per parameter, with an edge that holds or grows with size. **Design (untested; marks fixed now):**
 
-- *Ours at three sizes*, e.g. 2M / 9M / 36M stored core weights, grown by width, experts held at 8. Data, interfaces, optimiser and schedule are identical; training tokens scale by one rule fixed in advance.
+- *Ours at three sizes*: reuse the fair-scaling ladder (PR #18) so the two plans do not diverge: core width D = 256 / 384 / 512 (9.0M / 20.2M / 36M stored core weights, shown there), experts held at 8. **3 seeds per size**, the same small LR grid per size chosen on a TRAIN-derived dev split, one fresh start recipe for every size (no warm-start for the base only), and the larger identical TRAIN set. PR #18's matched-condition rules and void conditions apply here unchanged. Compute stays inside the PC GPU plus the vast budget the execution owner holds.
 - *Plain baseline:* a non-looped transformer with the same reader, talker and data, at 1×, 2× and 4× each size. Compared at **matched stored params** (plain gets equal training FLOPs, so more data) and at **matched training FLOPs**.
 
 The puzzle ruler already gives one point (shown): loop 51.0 vs plain 33.8 F_eq at ~1.6M matched weights, at one size and without matched compute.
@@ -143,14 +143,17 @@ A: F0-F4 (free) → B: C1, then C2a/C2b only if needed → C: C3, C4 → D: C5 �
 - **Guides as notebook facts:** looked-up text goes in as a notebook segment, the same route facts will use later. Reading a guide and then acting on it is the few-shot test in C5 with a longer horizon.
 - Nothing in stage one needs to change for this. It only constrains the interface: keep §6 modality-agnostic and keep the output able to name an action as well as words.
 
-## 9. Open questions for Ben
+## 9. Open questions and decisions
 
-1. Does widening the talker hidden layer from 32 to 256 still count as "thin"? Assuming an LM width of 2048 (not checked), adapter weights go from about 76k to about 590k, still with no attention (C2b).
-2. Is a contextual reader (LM hidden states) allowed, or does the reasoner keep doing all the understanding? Default: not allowed.
-3. Can the Mac's pipeline facts, the 128 outputs and the checkpoints be shared so F0-F2 can run?
-4. Which size range and compute budget should the efficiency test use? Should stored params or active params be the headline?
-5. Should d = 256 be the shared latent width with the vision and audio threads, or should each encoder project to whatever width the core has?
-6. Which task kinds go into the C3 stream? This design deliberately leaves that open.
+Settled under Ben's standing autonomy (coordinator, 13:26 UTC; defaults taken, reversible):
+1. **Talker width:** stays 32 unless C1 fails; only then widen (C2b). Not a "thin" violation to test it.
+2. **Reader:** stays on static word vectors. No LM hidden states.
+3. **Shared width:** d = 256, matching the vision design (PR #22), which uses `tokens [B,N,256]`, a layout tag (grid / seq / set), a zero-init modality embedding and optional coordinates. §6 should be merged with that contract rather than kept separate. Differences to reconcile: this doc proposes a segment table that also covers notebook / example / tool-result roles and a `valid` mask, because the core has no padding mask today (shown in PR #22 as well).
+4. **Scaling sizes and compute:** per §7 (PR #18 ladder, 3 seeds).
+
+Still open for Ben:
+5. **Peeking:** the 128 saved panel outputs come from an already-scored fresh panel, so mining them for F1 and F2 counts as peeking at a consumed set. Ben decides whether that is allowed. Without it, F1-F3 are replaced by C1's fresh generated items. The Mac pipeline code (F0) will be requested from the execution owner once the pilot is frozen.
+6. **Task kinds in the C3 stream:** deliberately left open.
 
 ## Appendix: corrections to the earlier reports
 

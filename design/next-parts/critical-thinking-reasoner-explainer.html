@@ -102,7 +102,7 @@ a{color:var(--accent)}
 <div class="fig"><svg viewBox="0 0 760 240" role="img" aria-label="Schematic of what a passing scaling test would look like: our curve below plain model curves at all sizes">
 <line class="ln" x1="70" y1="20" x2="70" y2="190"/><line class="ln" x1="70" y1="190" x2="710" y2="190"/>
 <text x="26" y="110" transform="rotate(-90 26 110)" text-anchor="middle" class="m">held-out loss (lower is better)</text>
-<text x="390" y="218" text-anchor="middle" class="m">stored parameters, log scale (e.g. 2M / 9M / 36M)</text>
+<text x="390" y="218" text-anchor="middle" class="m">stored parameters, log scale (D = 256 / 384 / 512 (9M / 20M / 36M))</text>
 <polyline fill="none" stroke="var(--muted)" stroke-width="2" points="130,60 390,100 650,140"/>
 <polyline fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 3" points="130,40 390,80 650,120"/>
 <polyline fill="none" stroke="var(--accent)" stroke-width="3" points="130,85 390,115 650,145"/>
@@ -135,13 +135,11 @@ a{color:var(--accent)}
 </section>
 
 <section>
-<h2>6. Questions for Ben</h2>
+<h2>6. Decided and still open</h2>
 <ul>
-<li>Is a talker widened from 32 to 256 still "thin"? (Default: only if the pipe test fails.)</li>
-<li>May the reader see the LM's context-aware vectors? (Default: no.)</li>
-<li>Can the Mac pipeline details and the 128 saved outputs be shared so the free checks can run?</li>
-<li>Which sizes and compute budget for the scaling test?</li>
-<li>Should 256 be the shared vector width with the vision and audio threads?</li>
+<li>Decided by default: talker stays 32 wide unless the pipe test fails, reader keeps static word vectors, shared width is 256 to match the vision design (PR #22), scaling uses the fair-scaling ladder (PR #18, 3 seeds per size).</li>
+<li>Open for Ben: may we study the 128 saved outputs? They come from an already-scored panel, so that counts as peeking. If not, the free checks are replaced by the pipe test alone.</li>
+<li>Open: which kinds of tasks go into the never-repeating training data.</li>
 </ul>
 </section>
 </main>
