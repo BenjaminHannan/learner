@@ -10,6 +10,11 @@ Small card experiments and the village model are kept out of every claim. The ea
 - Dependencies on other parts: the English pilot (what the model can do at current size), fair scaling (which sizes), notebook (facts live there, so sleep protects skills only), creative prototype (supplies the attempt-checker-accept loop this part reuses).
 - Consumed fresh questions (the 128 outputs / 8 checkpoints evaluation) are never replay or tuning data.
 
+### Reconciled against CURRENT.json (commit 42552d9ee, confirmed 2026-10-03 00:56 UTC; design v5 still unread)
+- Matches the brief: English TRAIN bank `english_training_candidates_v3.json` sha256 f2f5cce3...; English CPU successor status SOURCE_READY_NATIVE_NOT_RUN (native qualification unrun, no native success claimed); partial benchmark mean control update 0.4134 s, no gain or generalisation claimed.
+- The file's GPU hold text predates Ben's 11:59 decision to give Premonition the PC GPU full time; the design assumes the later decision.
+- Still unverified: trainable parameter groups, loss placement across loops, optimizer and clipping settings, checkpoint pins. Those need v5 before sealing (section 10a).
+
 ## 1. What earlier work already tells us (all from the older small solver)
 
 | finding | label | file |
