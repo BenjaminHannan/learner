@@ -258,3 +258,6 @@ Shown (fresh weights, speed only; torch 2.11.0+cu128; ran alone, GPU-BUSY held, 
 
 ## 22:35Z START fix screen v2 on BensPC (plateau thread, spec artifacts/fix-screen-v2/PC-JOB.md @ 41371412f; marks in FIX-SCREEN-v2.md, fixed before running)
 Staged the spec's skills_pretrain_v1.py (sha 96AA5B3D...) over the pipeline copy (old copy kept as skills_pretrain_v1.py.pre-fixscreen2.bak). Smoke passed (prefix-widened, SKILLS-RESULT). Queue running: Z (lesion, eval only) then X1-X3 (exit widened 32->256), one at a time; ~1.5 h. PC now has ~98 GB free (was 3.5 GB). No checkpoints written. Logs C:\Users\benja\fixscreen2-*.log, fixscreen2-queue.log.
+
+## 23:04Z fix screen v2: Z (lesion) done; X1-X3 relaunched after my script bug
+Z finished. My first X launch failed instantly (PowerShell variables are case-insensitive: loop variable $s overwrote the script path $S), and a second launch had a mangled output path, which I stopped by exact PID before it could overwrite anything (an empty stray folder artifacts/fixscreen2/X remains on the PC, no checkpoints). X1-X3 are now running correctly, ~25 min each.
