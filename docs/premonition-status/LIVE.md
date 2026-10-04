@@ -255,3 +255,6 @@ Shown (fresh weights, speed only; torch 2.11.0+cu128; ran alone, GPU-BUSY held, 
 - System (answer only): short prompts 18.5 questions/s at batch 1, 147 at 16, 212 at 64, 228 at 128; long prompts 18.1, 127, 160, 162.
 - Bare LFM2.5-1.2B, 64 new tokens: batch 1 decode 73 tok/s fp32+tf32 (short), 55-73 bf16; batch 64 decode 4452-4669 tok/s fp32, 4256-4314 bf16; prefill 16.7-17.1k tok/s fp32, ~30k bf16 at batch 64.
 - Versus the Mac (M1 Pro, MPS, entry above): about 3x faster at batch 1 for the system (18.5 vs 5.6 questions/s), about 10x at large batch (228 vs 21).
+
+## 22:35Z START fix screen v2 on BensPC (plateau thread, spec artifacts/fix-screen-v2/PC-JOB.md @ 41371412f; marks in FIX-SCREEN-v2.md, fixed before running)
+Staged the spec's skills_pretrain_v1.py (sha 96AA5B3D...) over the pipeline copy (old copy kept as skills_pretrain_v1.py.pre-fixscreen2.bak). Smoke passed (prefix-widened, SKILLS-RESULT). Queue running: Z (lesion, eval only) then X1-X3 (exit widened 32->256), one at a time; ~1.5 h. PC now has ~98 GB free (was 3.5 GB). No checkpoints written. Logs C:\Users\benja\fixscreen2-*.log, fixscreen2-queue.log.
