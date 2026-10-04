@@ -237,3 +237,15 @@ Shown (fresh weights, so speed only; torch 2.14.1, transformers 4.57.6 -- the cl
 - Bare LFM2.5-1.2B, 64 new tokens, batch 1: decode 25 tok/s fp32, 37 tok/s bf16 (prefill ~500-590 tok/s). Batch 32: decode 341-413 tok/s fp32, 475-484 tok/s bf16.
 One local fix (not pushed): MPS cannot run adaptive_avg_pool1d when the length is not divisible by 8, so a shim (artifacts/bench-tps/run_bench_mps_shim.py) computes that pooling exactly with window slices on the device (checked: max diff 0.0 vs CPU). It adds a few small ops per row, so the system numbers may be slightly pessimistic. The batch-32 long-set figure (11.0) is below batch 16 (13.8), so the Mac numbers are noisy; one run, median of 10.
 The BensPC 5070 Ti run is waiting for the English queue to finish.
+
+## 19:46Z Cloud recipe (allptr + 8000 generated practice rows) on BensPC: 12 of 12 runs done. PASS for both arms (marks: PASS-MARKS-PTR-PC.md)
+Shown (6 paired seeds, 192 fresh questions, exact match; fast lane, in-family test, fresh set not sealed). Bar = bare LM 8-shot on the same set = 75.0% (matches the cloud). Raw files: artifacts/ptr-pc/.
+| arm | fresh mean (95% CI) | per seed | vs bar | new question kinds (bar 67.7) |
+|---|---|---|---|---|
+| S from scratch | 91.9 (90.0 to 93.8) | 92.7 94.3 92.7 92.2 89.1 90.6 | +16.9 | 79.9 |
+| M from main2 skills checkpoint | 91.2 (90.0 to 92.5) | 91.1 89.6 92.2 92.2 92.2 90.1 | +16.2 | 88.1 |
+- Both arms: every seed at least 14 points above the bar, so PASS (mark was bar + 5 = 80.0). Cloud's round 4 was 92.6% and round 5 new-kinds 79.9%; the PC from-scratch arm reproduces both (91.9, 79.9).
+- M vs S on the fresh set: mean -0.7, CI -3.3 to +2.0, so no help and no harm (registered rule: no help). On the new kinds (read, not judged): M +8.2, CI -2.1 to +18.5, mostly one seed (+26.0, S seed 5 only 62.0); the other five seeds are -1.6 to +9.9. Suggested at most, untested: skills initialisation helps new kinds. Do not claim it.
+- Read, not judged: contains 94.1 (S) / 93.9 (M); generated held-out panel 99.6 / 99.2; train fit 92.0 / 91.1; zeroing the core's 8 vectors gives 0.0% in all 12 runs.
+- Limits: the test shares its six question kinds with the generator; the talker sees every prompt word (allptr), so the frozen LM does part of the reading; fresh set unsealed; toy English task, not the village model. This is not the earlier English pilot (which scored 2-7/48 on fresh comprehension): different recipe (all-words + pointer, 8000 generated rows), not comparable numbers.
+Next: speed benchmark on the 5070 Ti.
