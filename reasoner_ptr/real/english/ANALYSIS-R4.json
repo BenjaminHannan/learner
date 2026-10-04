@@ -1,0 +1,120 @@
+{
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5
+ ],
+ "allptr_gen": {
+  "all": 92.6,
+  "all_contains": 94.4,
+  "fresh_source": 92.9,
+  "fresh_paraphrase": 92.4,
+  "new_word_answers": 93.0,
+  "short_answer": 92.8,
+  "yes_no": 90.9,
+  "train_fit_bank": 94.6,
+  "gen_heldout": 99.7,
+  "lesion_zero_pool": 0.0,
+  "families": {
+   "comparative_direction": 95.3,
+   "event_ordering": 81.8,
+   "explicit_negation_with_positive_alternative": 99.0,
+   "giver_recipient_roles": 97.9,
+   "two_simple_relations_combined": 94.8,
+   "unambiguous_descriptive_reference": 87.0
+  },
+  "wrong_is_bank_answer": [
+   12,
+   85
+  ]
+ },
+ "allptr_r3": {
+  "all": 34.7,
+  "all_contains": 42.8,
+  "fresh_source": 35.1,
+  "fresh_paraphrase": 34.4,
+  "new_word_answers": 33.0,
+  "short_answer": 33.1,
+  "yes_no": 47.0
+ },
+ "lm_alone": {
+  "all": 29.7,
+  "all_contains": 76.0,
+  "fresh_source": 29.2,
+  "fresh_paraphrase": 30.2,
+  "new_word_answers": 34.8,
+  "short_answer": 33.5,
+  "yes_no": 0.0
+ },
+ "lm_fewshot": {
+  "all": 75.0,
+  "all_contains": 77.6,
+  "fresh_source": 74.0,
+  "fresh_paraphrase": 76.0,
+  "new_word_answers": 76.8,
+  "short_answer": 75.3,
+  "yes_no": 72.7,
+  "families": {
+   "comparative_direction": 84.4,
+   "event_ordering": 50.0,
+   "explicit_negation_with_positive_alternative": 81.2,
+   "giver_recipient_roles": 87.5,
+   "two_simple_relations_combined": 71.9,
+   "unambiguous_descriptive_reference": 75.0
+  }
+ },
+ "bar": 75.0,
+ "judged1_gen_minus_r3": {
+  "n": 6,
+  "mean": 57.9,
+  "ci": [
+   38.7,
+   77.1
+  ],
+  "per_seed": [
+   67.7,
+   21.4,
+   67.7,
+   69.3,
+   60.9,
+   60.4
+  ],
+  "verdict": "PASS"
+ },
+ "judged2_gen_minus_bar": {
+  "n": 6,
+  "mean": 17.6,
+  "ci": [
+   14.7,
+   20.6
+  ],
+  "per_seed": [
+   14.1,
+   14.6,
+   20.8,
+   18.2,
+   17.7,
+   20.3
+  ],
+  "verdict": "PASS"
+ },
+ "contains_vs_lm_alone": {
+  "n": 6,
+  "mean": 18.4,
+  "ci": [
+   16.0,
+   20.8
+  ],
+  "per_seed": [
+   16.2,
+   16.2,
+   20.8,
+   18.2,
+   17.7,
+   21.4
+  ]
+ }
+}
