@@ -1,6 +1,6 @@
 # Fix screen v1: which single change lets the model fit what it practises?
 
-Written 2026-10-04 20:40 UTC, before any run. Fast lane (exploratory). Follows plateau diagnosis v1 (`../plateau-diag-v1/results/RESULT-v1.md`): main2 fits only 48% of 2,000 rows it practised 6 times; fair scaling (PR #18) showed a 4x core does not fit better.
+Written 2026-10-04 20:20 UTC, before any run. Fast lane (exploratory). Follows plateau diagnosis v1 (`../plateau-diag-v1/results/RESULT-v1.md`): main2 fits only 48% of 2,000 rows it practised 6 times; fair scaling (PR #18) showed a 4x core does not fit better.
 
 ## Setup (same as the diagnosis F arms, cut to 3 passes)
 Start main2 (copy path). Worst-8 families: chain_ops, state_update, cipher_map, chain_story2, var_chain, seq_cycle, fewshot_number_rule, group_induct. 2,000 fixed rows (seeds 1-3, identical draws to F1-F3), 3 passes = 6,000 updates, batch 1. Scored at update 6,000 on 320 of the training rows ("fit") and the 320 held-out in_dist rows of the same families.
@@ -11,7 +11,7 @@ Start main2 (copy path). Worst-8 families: chain_ops, state_update, cipher_map, 
 - **W (wider reader):** `--reader-hidden 256`. The reader's 2048->32->256 pipe becomes 2048->256->256. Function-preserving: old units copied, new units feed zero weights, so the start is exactly main2. Widened layers start fresh Adam state.
 - **L (more rounds):** `--rounds 8` (shared weights, parent used 4).
 - **O (calmer optimiser):** `--lr-mult 0.3` (lr 3e-4 instead of 1e-3).
-- **P (allptr exit), added 20:50 UTC before it ran, at the coordinator's request:** `--pointer`. Adds the cloud recipe's 8 pointer vectors (Linear 256->8 on the core's final state, softmax over prompt positions, value = that prompt token's LM input embedding) between the 8 pooled vectors and the prompt embeddings the copy path already appends. New parameters, so its start is not exactly main2 (its update-0 score is reported). Runs on a second box.
+- **P (allptr exit), added 20:24 UTC before it ran, at the coordinator's request:** `--pointer`. Adds the cloud recipe's 8 pointer vectors (Linear 256->8 on the core's final state, softmax over prompt positions, value = that prompt token's LM input embedding) between the 8 pooled vectors and the prompt embeddings the copy path already appends. New parameters, so its start is not exactly main2 (its update-0 score is reported). Runs on a second box.
 Nothing else in the exit (StatePrefix, copy path) changes: other threads own talker changes.
 
 ## Marks (fixed now)
