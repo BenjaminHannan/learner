@@ -89,7 +89,7 @@ def build_eval(per_cell=6, seed=20261301, fits=lambda t: True):
     return rows
 
 
-def stream(excluded_triples, excluded_pairs, seed, n, one_step_frac=0.3, fits=lambda t: True, frames="base"):
+def stream(excluded_triples, excluded_pairs, seed, n, one_step_frac=0.3, fits=lambda t: True, frames="base", long_frac=0.0, ntok=None):
     T, _ = gen.answer_split(); Ts = set(T)
     tr = gen.load("templates_train.json"); rng = random.Random(9_600_000 + seed)
     fr = train_frames()
@@ -115,6 +115,9 @@ def stream(excluded_triples, excluded_pairs, seed, n, one_step_frac=0.3, fits=la
             v = gen_two.ok_values(x, y, z, o1, o2)
             if v is None or v[1] not in Ts or (x, y, z) in excluded_triples: continue
             text = frame.format(name=rng.choice(tr["names"]), noun=rng.choice(tr["nouns"]), place=rng.choice(gen_two.EV_PLACES), x=x, y=y, z=z)
+            if long_frac and rng.random() < long_frac:  # round 7: neutral filler sentences make the question longer; the answer is unchanged
+                import gen_two_long
+                text = gen_two_long.lengthen(text, rng, gen_two_long.FILL_TRAIN, ntok, lo=20) or text
             if text in seen or not fits(text): continue
             break
         seen.add(text)

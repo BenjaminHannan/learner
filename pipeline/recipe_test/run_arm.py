@@ -40,6 +40,7 @@ p.add_argument("--wording", choices=["old", "mix"], default="old")
 p.add_argument("--frames", choices=["base", "comp", "tabv", "rlv"], default="base", help="two-step training frames: the fixed set, or the fixed set plus composed frames (round 4)")
 p.add_argument("--blind", action="store_true", help="also evaluate on the independently written layouts (round 5)")
 p.add_argument("--blind2", action="store_true", help="also evaluate on the round-6 independently written layouts")
+p.add_argument("--long", action="store_true", help="round 7: lift the core query cap to 160 tokens, train on 30%% lengthened items, also score a long (55-150 token) fresh set")
 p.add_argument("--steps", type=int, default=3000)
 p.add_argument("--batch", type=int, default=16)
 p.add_argument("--lr", type=float, default=1e-3)
@@ -352,13 +353,22 @@ def main():
     n_total = int(args.steps * args.batch * 1.25) + 64
     if args.task == "two":
         import gen_two_r3 as g3
-        fits = lambda t: len(tok.encode(t, add_special_tokens=False)) + 1 <= 49  # real core query cap
+        ntok = lambda t: len(tok.encode(t, add_special_tokens=False)) + 1
+        fits = lambda t: ntok(t) <= 49  # real core query cap (short eval sets stay under it)
+        if args.long:
+            import sol_spatial_poc_ordered_v2 as _ov2
+            _ov2.QUERY_CAP = 160  # the cap is an interface guard in ordered_begin, read at call time; fresh weights, nothing sealed is changed on disk
+            fits_train = lambda t: ntok(t) <= 160
+        else:
+            fits_train = fits
         form = g3.build_eval(fits=fits)
         form_b = g3.build_blind(fits=fits, used={(r["x"], r["y"], r["z"]) for r in form}) if args.blind else []
         form_b2 = g3.build_blind(fits=fits, seed=20261601, fname="eval_layouts_r6_blind.json", used={(r["x"], r["y"], r["z"]) for r in form + form_b}) if args.blind2 else []
-        ex_t = {(r["x"], r["y"], r["z"]) for r in form + form_b + form_b2}
+        import gen_two_long
+        form_l = gen_two_long.build_long(ntok, used={(r["x"], r["y"], r["z"]) for r in form + form_b + form_b2}) if args.long else []
+        ex_t = {(r["x"], r["y"], r["z"]) for r in form + form_b + form_b2 + form_l}
         ex_p = gen.eval_pair_set(gen.eval_form())
-        data = g3.stream(ex_t, ex_p, args.seed, n_total, fits=fits, frames=args.frames)
+        data = g3.stream(ex_t, ex_p, args.seed, n_total, fits=fits_train, frames=args.frames, long_frac=0.3 if args.long else 0.0, ntok=ntok)
         assert all(r["answer"] in Tset for r in data) and not ({(r["x"], r["y"], r["z"]) for r in data if r["steps"] == 2} & ex_t)
         ex = ex_p
     else:
@@ -377,7 +387,7 @@ def main():
     params = [q for q in model.parameters() if q.requires_grad]
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.1, betas=(0.9, 0.95))
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / 200) * 0.5 * (1 + math.cos(math.pi * min(i, args.steps) / args.steps)))
-    name = args.name or f"{'two-' if args.task == 'two' else ''}{'copy' if args.copy else 'pool'}{'-ctx' if args.ctx else ''}{'-ord' if args.ordered else ''}{('-' + args.frames if args.frames != 'base' else '')}-{args.wording}-seed{args.seed}"
+    name = args.name or f"{'two-' if args.task == 'two' else ''}{'copy' if args.copy else 'pool'}{'-ctx' if args.ctx else ''}{'-ord' if args.ordered else ''}{('-' + args.frames if args.frames != 'base' else '') + ('-long' if args.long else '')}-{args.wording}-seed{args.seed}"
     outdir = Path(args.out); outdir.mkdir(parents=True, exist_ok=True)
     logf = open(outdir / f"{name}.log", "w")
     t0 = time.time()
@@ -400,6 +410,14 @@ def main():
         evb = evaluate(model, form_b)
         res["eval_blind"] = summarize_two(evb, Tset)
         (outdir / f"{name}-blindrows.json").write_text(json.dumps(evb))
+    if args.long:
+        evl = evaluate(model, form_l)
+        res["eval_long"] = summarize_two(evl, Tset)
+        for lo, hi in ((55, 80), (81, 110), (111, 150)):
+            sel = [r_ for r_, f_ in zip(sorted(evl, key=lambda q: q["id"]), sorted(form_l, key=lambda q: q["id"])) if lo <= f_["ntok"] <= hi]
+            res["eval_long"][f"tok_{lo}_{hi}"] = {"chain_ok": list(rate(sel, "chain_ok")), "call1_ok": list(rate(sel, "call1_ok"))}
+        res["eval_long"]["ntok_min_max"] = [min(f_["ntok"] for f_ in form_l), max(f_["ntok"] for f_ in form_l)]
+        (outdir / f"{name}-longrows.json").write_text(json.dumps(evl))
     if args.blind2:
         evb2 = evaluate(model, form_b2)
         res["eval_blind2"] = summarize_two(evb2, Tset)
