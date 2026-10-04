@@ -156,3 +156,10 @@ One change vs main2 (72/100): learning rate cosine-decays 1e-3 -> 1e-4 over the 
 
 ### 00:40Z INTERIM main3 (copy path + LR decay), 28k of 50k updates
 Shown: in_dist of 100 at 4k..28k: 32, 55, 53, 56, 61, 65, 66 (main2 at the same points: 35, 53, 54, 49, 59, 66, 67), so no difference so far; the decay only bites late. PC disk free 4.0 GB. Final ~01:25Z.
+
+## 01:26Z RESULT main3 (copy path + LR decay 1e-3 -> 1e-4, 50,000 updates): WRONG by the registered mark; decay did not help
+Shown (one seed, exploratory, 100 dev rows per file; disk free 3.9 GB): in_dist 65 (mark: pass >= 80, improvement >= 78, wrong <= 75). Per-shift vs main2: answer 59 (63), frame 63 (65), vocab 77 (78), variant 51 (50), family 13 (13). In-dist curve: 32, 55, 53, 56, 61, 65, 66, 64, 61, 63, 63, 62, final 65; it peaked near 66 at 28k and drifted down as the rate fell, i.e. slightly worse than constant rate (72), within noise of 5-7 points on 100 rows.
+Plain language: lowering the learning rate did not unstick it; the ~70% ceiling comes from something else.
+Suggested: the limit is the training signal or the model's capacity for multi-step skills, not the optimiser rate. Untested: step supervision, longer runs, bigger/different core.
+Stage B not launched. main2 and main3 checkpoints both kept (artifacts/skills/main2, main3 on the PC); SKILLS-RESULT.json in artifacts/skills-main3/.
+NEXT (coordinator said step supervision), NOT launched; marks fixed now: curriculum rows have a "steps" list (e.g. ["copy sune"]). Change: train target = steps joined as a short worked line followed by the final answer, scored only on the final answer (generation cap raised from 12 tokens to fit), everything else as main2 (copy path, constant lr 1e-3, 50k updates, seed 0, same dev rows). PASS in_dist >= 80; improvement claim >= 78 (main2 72, +/- ~5); wrong <= 75; stop at 16k if in_dist <= 40. Needs a code change (target builder, longer generation, answer extraction) written and tested on a small run before launch.
