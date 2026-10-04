@@ -9,10 +9,12 @@ stride through train.jsonl so every stage is visited.
 usage: skills_pretrain_v1.py --root PKG --data OUT_DIR --out REL_DIR --updates N [--parent-seed 0]
        [--eval-every 4000] [--dev-n 100] [--minutes 120] [--phase train|eval]
        [--parent-path CKPT.pt] [--eval-at-start] [--no-checkpoint]   (stiffness test, STIFFNESS-TEST-v1.md)
+       [--eval-only] [--dev-kinds in_dist,family] [--sample-seed S] [--fixed-rows M --passes P]   (plateau diagnosis, PLATEAU-DIAG-v1.md)
 Writes OUT/final-checkpoint.pt (parent-shaped, so the English pilot can start from it) and OUT/SKILLS-RESULT.json.
 """
 import argparse
 import copy
+import random
 import json
 import math
 from pathlib import Path
@@ -54,6 +56,7 @@ def evaluate(rt, ctx, modules, rows, tokenizer):
     for _, m in modules:
         m.eval()
     ok = skipped = 0
+    fam = {}
     for row in rows:
         enc = encode(tokenizer, row, torch, ctx.device)
         if enc is None:
@@ -67,11 +70,15 @@ def evaluate(rt, ctx, modules, rows, tokenizer):
         text = tokenizer.decode(out, skip_special_tokens=True)
         if STEPS['on']:
             text = text.rsplit('#', 1)[-1] if '#' in text else '\x00no-answer'
-        ok += norm(text) in {norm(a) for a in row['accepted']}
+        hit = norm(text) in {norm(a) for a in row['accepted']}
+        ok += hit
+        f = fam.setdefault(row.get('family', '?'), [0, 0])
+        f[0] += hit
+        f[1] += 1
     for _, m in modules:
         m.train()
     parts['core'].halt.requires_grad_(False)
-    return {'correct': ok, 'n': len(rows) - skipped, 'skipped': skipped}
+    return {'correct': ok, 'n': len(rows) - skipped, 'skipped': skipped, 'by_family': fam}
 
 
 def load_dev(data, n):
@@ -102,6 +109,11 @@ def main():
     ap.add_argument('--parent-path', default='', help='start from this parent-shaped checkpoint (e.g. a skills final-checkpoint.pt) instead of the pinned seed parent; any update count accepted')
     ap.add_argument('--eval-at-start', action='store_true', help='score in_dist once before the first update (curve point at update 0)')
     ap.add_argument('--no-checkpoint', action='store_true', help='do not write final-checkpoint.pt (saves ~61 MB of disk per run)')
+    ap.add_argument('--eval-only', action='store_true', help='no training: score the starting checkpoint on the dev files')
+    ap.add_argument('--dev-kinds', default='', help='comma list of dev files to score (default: all six)')
+    ap.add_argument('--sample-seed', type=int, default=None, help='train on a seeded random sample of the (family-filtered) rows instead of the ordered stride')
+    ap.add_argument('--fixed-rows', type=int, default=0, help='with --sample-seed: draw this many rows once and repeat them --passes times (reshuffled each pass); also scores them as dev "trainfit"')
+    ap.add_argument('--passes', type=int, default=1)
     a = ap.parse_args()
     STEPS['on'] = a.steps
     root = Path(a.root).resolve()
@@ -160,15 +172,29 @@ def main():
             keep = set(a.families.split(','))
             rows_all = [r for r in rows_all if r['family'] in keep]
             dev = {k: [r for r in json.loads('[' + ','.join(l for l in (Path(a.data) / 'dev' / (k + '.jsonl')).read_text().splitlines()) + ']') if r['family'] in keep][:a.dev_n] for k in DEV if (Path(a.data) / 'dev' / (k + '.jsonl')).exists()}
-        stride = max(1, len(rows_all) // a.updates)
-        rows = rows_all[::stride][:a.updates]
+        if a.dev_kinds:
+            dev = {k: v for k, v in dev.items() if k in a.dev_kinds.split(',')}
+        stride = max(1, len(rows_all) // max(1, a.updates))
+        if a.eval_only:
+            rows = []
+        elif a.sample_seed is not None and a.fixed_rows:
+            rng = random.Random('fixed|%d' % a.sample_seed)
+            fixed = rng.sample(rows_all, a.fixed_rows)
+            rows = []
+            for _ in range(a.passes):
+                rows += rng.sample(fixed, len(fixed))
+            dev['trainfit'] = fixed[:a.dev_n]
+        elif a.sample_seed is not None:
+            rows = random.Random('sample|%d' % a.sample_seed).sample(rows_all, min(a.updates, len(rows_all)))
+        else:
+            rows = rows_all[::stride][:a.updates]
         print(json.dumps({'event': 'skills-start', 'train_rows': len(rows_all), 'used': len(rows), 'stride': stride}), flush=True)
         log, curve, t0, done = [], [], time.time(), 0
         base_lr = runtime.ADAM_RECIPE['lr'] * a.lr_mult
         for g in opt.param_groups:
             g['lr'] = base_lr
         if a.eval_at_start:
-            curve.append({'update': 0, 'in_dist': evaluate(rt, ctx, modules, dev['in_dist'], tokenizer)})
+            curve.append({'update': 0, **{k: evaluate(rt, ctx, modules, dev[k], tokenizer) for k in ('in_dist', 'trainfit') if k in dev}})
             print(json.dumps({'event': 'skills-eval', **curve[-1]}), flush=True)
         for i, row in enumerate(rows, 1):
             if a.lr_final_mult is not None:
@@ -193,7 +219,7 @@ def main():
                                   'exact': round(sum(x[2] for x in last) / len(last), 3),
                                   'minutes': round((time.time() - t0) / 60, 1)}), flush=True)
             if i % a.eval_every == 0:
-                curve.append({'update': i, 'in_dist': evaluate(rt, ctx, modules, dev['in_dist'], tokenizer)})
+                curve.append({'update': i, **{k: evaluate(rt, ctx, modules, dev[k], tokenizer) for k in ('in_dist', 'trainfit') if k in dev}})
                 print(json.dumps({'event': 'skills-eval', **curve[-1]}), flush=True)
             if (time.time() - t0) / 60 > a.minutes:
                 print(json.dumps({'event': 'skills-time-cap', 'update': i}), flush=True)
@@ -207,7 +233,8 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
+        res = {'updates_done': done, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+               'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}
         (out / 'SKILLS-RESULT.json').write_text(json.dumps(res, indent=1))
