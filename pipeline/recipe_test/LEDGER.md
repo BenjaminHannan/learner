@@ -46,3 +46,6 @@ Round 3 about $0.85; thread total about $2.9 (estimates from hourly rates).
 ## Round 6 (2026-10-04)
 - 15:18Z six RTX 5090 boxes, commit 84d73be0: 54165279 (tabv 0,1; $0.388/h RO), 54165281 (tabv 2,3), 54165286 (tabv 4,5), 54165289 (rlv 2,3), 54165290 (rlv 4,5), plus rlv 0,1 (relaunched on offer 43165153 after a 429). Credit $18.45 before.
 - 15:41Z round 6 results copied back sha-checked (12 runs, 60 files); six boxes destroyed. Credit $15.78.
+
+## Round 7 (2026-10-04)
+- 15:44Z six RTX 5090 boxes, commit 2231eb48, one run each (two-tabv-long): 54168251 (seed 0), 54168253 (1), 54168254 (2), 54168255 (3), 54168257 (4), seed 5 on offer 45669284 (relaunched after a 429). Credit $15.45 before.
