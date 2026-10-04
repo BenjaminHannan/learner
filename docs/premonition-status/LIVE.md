@@ -167,3 +167,6 @@ NEXT (coordinator said step supervision), NOT launched; marks fixed now: curricu
 ## 01:34Z LAUNCH skills pretraining, copy path + step supervision (task skstep, tag main4)
 Smoke test (600 updates, 20 dev rows, tag smoke4): end to end OK; answers are extracted from the text after the last "#" and scored (in_dist 5/20, other shifts 2-12/20 at 600 updates, nothing claimed); checkpoint written. Code: --steps in skills_pretrain_v1.py (target = steps joined by " ; " + " # " + answer, EOS; generation cap 12 -> 48 tokens; scored only on the final answer; no "#" in the output = wrong). Steps are short (mean 20 chars, max 106).
 Full run = main2 setup (constant lr 1e-3, copy path, seed-0 parent, 50,000 updates stride 4, dev 100 rows, eval every 4k) + steps. Marks (registered above, coordinator confirmed): PASS in_dist >= 80; improvement claim >= 78 (main2 72); wrong <= 75; stop at 16k if in_dist <= 40. Note: many steps are bare labels ("compose", "read passage"), so only some families get real worked computation; main2/main3 checkpoints kept; disk free 3.9 GB. Ends ~03:20Z.
+
+### 02:02Z INTERIM main4 (copy path + step supervision), 13k of 50k updates
+Shown: in_dist of 100 at 4k, 8k, 12k: 21, 39, 39 (main2: 35, 53, 54; main3: 32, 55, 53). Behind both so far; the 16k stop check (<= 40) is due in a few minutes and the stop rule may trigger. PC disk free 3.85 GB.
