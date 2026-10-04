@@ -16,3 +16,5 @@ Forecast: smoke ran all four sizes in 93 s for 30 updates, so about 1.5 to 2 h p
 
 Boxes for seeds 1 to 5 finished training about 15:55 to 16:20 but were stopped, pulled and destroyed only at 16:57 (my watcher was killed by its time limit), so each idled about 40 to 60 minutes: about $1.0 per box including loading. Seed 0 re-run: box 54176245 (RTX 5090, US, $0.45/h) created 16:55, job started 18:34 after a long load, ran about 5x slower than the others, destroyed 19:01 with nothing usable.
 Estimated total for this thread about $7.0 (vast does not itemise per thread; shared balance $22.05 at 14:44, $7.60 at 19:00 across all threads). No further spend without approval.
+
+Seed 0 final re-run: box 54189011 (RTX 5090, Taiwan, created 18:58 UTC) never started training within 10 minutes of 'running' and was destroyed at 19:16 (~$0.15); box 54190956 (RTX 5090, Switzerland, $0.56/h, created 19:16 UTC) trained seed 0 (L2, L4, L8 plus lm_fewshot), finished 20:50 UTC, results copied back (sha256 matched), destroyed 20:51 UTC (~$0.85). Shared balance after: $9.64 at 20:51 UTC. Times in this ledger are UTC.
