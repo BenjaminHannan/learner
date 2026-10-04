@@ -33,3 +33,6 @@ Round 3 about $0.85; thread total about $2.9 (estimates from hourly rates).
 
 ## Round 4 (2026-10-04)
 - 12:49Z 54149669 (3090 $0.139/h, seeds 0,1), 54149670 (3090 $0.151/h, seeds 2,3), 54149671 (3090 $0.156/h, seeds 4,5): two-ctx-comp, commit 67cba7ab. Credit before: $2.56.
+- 12:55Z 54149671 destroyed (pip failed: huggingface_hub missing; no run started, ~$0.01). Relaunched seeds 4,5 on RTX 5090 offer 53547156 ($0.446/h, torch 2.8 cu128 image), per Ben.
+- 12:58Z 54149669 destroyed (pip failed, no run; ~$0.02). Seeds 0,1 relaunched on 5090 offer 45669057 ($0.47/h). Seeds 2,3 still on 54149670 (3090), 4,5 on 54150085 (5090).
+- 13:15Z results copied back sha-checked (3 waves); 54150696, 54150085, 54149670 destroyed. Round 4 cost ~$0.46 (incl. two failed pip boxes ~$0.03). Credit \$2.10 at 13:20Z 10-04.
