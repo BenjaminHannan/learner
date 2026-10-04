@@ -25,7 +25,7 @@ from torch import nn
 from torch.nn import functional as F
 
 p = argparse.ArgumentParser()
-p.add_argument("--arm", choices=["pool", "allptr", "lm_alone", "lm_fewshot"], required=True)
+p.add_argument("--arm", choices=["pool", "allptr", "copytalk", "copytalk_nocore", "lm_alone", "lm_fewshot"], required=True)
 p.add_argument("--seed", type=int, default=0)
 p.add_argument("--steps", type=int, default=2000)
 p.add_argument("--batch", type=int, default=16)
@@ -73,7 +73,10 @@ def rows_of(path, panels, examples=None):
             for qi, q in enumerate(e["questions"]):
                 out.append({"id": f"{e['id']}-{key}-q{qi}", "family": e["family"], "panel": panel, "type": q["type"],
                             "text": e[key] + " " + q["question"], "passage": e[key], "question": q["question"],
-                            "answer": q["canonical_answer"], "accepted": [norm(a) for a in [q["canonical_answer"]] + q["accepted_answers"]]})
+                            "answer": q["canonical_answer"], "accepted": [norm(a) for a in [q["canonical_answer"]] + q["accepted_answers"]],
+                            "accepted_raw": [q["canonical_answer"]] + list(q["accepted_answers"])})
+    for r in out:
+        r["atype"] = atype_of(r)
     return out
 
 
@@ -86,6 +89,44 @@ def ids_of(r):
         assert len(ids) <= 49, (r["id"], len(ids))
         _cache[r["text"]] = ids
     return _cache[r["text"]]
+
+
+_span_cache = {}
+
+
+def find_span(r):
+    """(start, end) inclusive token span of the answer inside the prompt ids (EOS excluded), else None.
+    yes/no answers are never spans. Candidates: canonical + raw accepted answers, each with/without a leading
+    space and with the first letter capitalised; first candidate that occurs wins (earliest occurrence)."""
+    key = (r["text"], r["answer"], tuple(r.get("accepted_raw", ())))
+    if key in _span_cache:
+        return _span_cache[key]
+    res = None
+    if norm(r["answer"]) not in ("yes", "no"):
+        ids = ids_of(r)[:-1]; n = len(ids)
+        cands = []
+        for a in [r["answer"]] + list(r.get("accepted_raw", [])):
+            a = a.strip()
+            if not a: continue
+            for v in (a, a[:1].upper() + a[1:]):
+                for t in (" " + v, v):
+                    c = tok.encode(t, add_special_tokens=False)
+                    if c and c not in cands: cands.append(c)
+        for c in cands:
+            L = len(c)
+            for i in range(n - L + 1):
+                if ids[i:i + L] == c:
+                    res = (i, i + L - 1); break
+            if res: break
+    _span_cache[key] = res
+    return res
+
+
+def atype_of(r):
+    if norm(r["answer"]) in ("yes", "no"): return "yes_no"
+    sp = find_span(r)
+    if sp is None: return "nonspan"
+    return "span1" if len(tok.decode(ids_of(r)[sp[0]:sp[1] + 1]).split()) == 1 else "spanN"
 
 
 def ans_ids(r):
@@ -118,10 +159,35 @@ if not args.arm.startswith("lm_"):
             self.tool = CalculatorPath(256)  # only its role/status vectors fill the 8 notebook slots, as in the recipe
             if args.arm == "allptr":
                 self.ptr = nn.Linear(256, K)
+            if args.arm.startswith("copytalk"):  # created last: other arms' param count and init RNG stream unchanged
+                self.talk = CopyTalk(256, len(CLASSES))
+
+    class CopyTalk(nn.Module):
+        """Copy-and-gate head: span start/end over prompt positions + gate over [<span>] + vocab answers."""
+        def __init__(self, d, ncls):
+            super().__init__()
+            self.d = d
+            self.span = nn.Linear(d, 2)
+            self.q = nn.Parameter(torch.randn(d) * d ** -0.5)
+            self.ln = nn.LayerNorm(d)
+            self.gate = nn.Linear(d, ncls)
+
+        def forward(self, h):
+            B, n, _ = h.shape
+            sl = self.span(h).float()  # [B,n,2]
+            neg = torch.zeros(n, device=h.device); neg[n - 1] = -1e4  # final EOS cannot be a span position
+            start, end = sl[..., 0] + neg, sl[..., 1] + neg
+            w = (h @ self.q / math.sqrt(self.d)).float().softmax(1)
+            pooled = self.ln(torch.einsum("bn,bnd->bd", w, h))
+            return start, end, self.gate(pooled).float()
 
 
-def make_prefix(model, ids, lesion=None):
-    """ids [B,n] (equal prompt length incl. EOS) -> prefix embeddings [B,P,LMW]."""
+SHUF_B1 = [0]
+
+
+def core_states(model, ids, run_core=True):
+    """ids [B,n] -> (query [B,n,256] = reader output, h [B,n,256] = core states, mask, tok_e).
+    run_core=False (copytalk_nocore): core skipped, h = query."""
     B, n = ids.shape
     with torch.no_grad():
         bosc = torch.full((B, 1), BOS, device=dev, dtype=ids.dtype)
@@ -129,6 +195,8 @@ def make_prefix(model, ids, lesion=None):
         tok_e = emb(ids).float()
     mask = torch.ones(B, n, dtype=torch.bool, device=dev)
     query = model.reader(e0, mask)
+    if not run_core:
+        return query, (query[:, 0] if query.dim() == 4 else query), mask, tok_e  # reader emits [B,1,n,256]
     role = model.tool.role; pending = model.tool.status.weight[STATUS_IDS["PENDING"]]
     memo = query.new_zeros((B, 8, 256))
     for pair in range(4):
@@ -138,6 +206,16 @@ def make_prefix(model, ids, lesion=None):
         for _ in range(4):
             state = model.core.advance_latent(state)
     h = state["h"][:, :n]
+    return query, h, mask, tok_e
+
+
+def make_prefix(model, ids, lesion=None):
+    """ids [B,n] (equal prompt length incl. EOS) -> prefix embeddings [B,P,LMW]."""
+    B, n = ids.shape
+    query, h, mask, tok_e = core_states(model, ids)
+    if lesion == "shuffle_core":
+        if B > 1: h = h.roll(1, dims=0)  # core states of a different question of the same length
+        else: SHUF_B1[0] += 1
     prefix = model.adapter.project_training(h, torch.ones_like(h, dtype=torch.bool), mask, (1, n))
     if lesion == "zero_pool":
         prefix = prefix * 0
@@ -155,7 +233,56 @@ def group_by_len(rows):
     return list(by.values())
 
 
+CLASSES, CIDX = ["<span>"], {}
+SKIPPED = [0]
+
+
+def label_of(r):
+    """(class, start, end) or None."""
+    a = norm(r["answer"])
+    if a not in ("yes", "no"):
+        sp = find_span(r)
+        if sp is not None: return (0, sp[0], sp[1])
+    return (CIDX[a], -1, -1) if a in CIDX else None
+
+
+def copy_loss(model, rows):
+    ids = torch.tensor([ids_of(r) for r in rows], device=dev)
+    _, h, _, _ = core_states(model, ids, run_core=args.arm != "copytalk_nocore")
+    start, end, gate = model.talk(h)
+    labs = [(i, label_of(r)) for i, r in enumerate(rows)]
+    SKIPPED[0] += sum(l is None for _, l in labs); labs = [(i, l) for i, l in labs if l is not None]
+    if not labs: return h.sum() * 0
+    ix = torch.tensor([i for i, _ in labs], device=dev)
+    cl = torch.tensor([l[0] for _, l in labs], device=dev)
+    loss = F.cross_entropy(gate[ix], cl, reduction="sum")
+    sp = [(i, l) for i, l in labs if l[0] == 0]
+    if sp:
+        si = torch.tensor([i for i, _ in sp], device=dev)
+        loss = loss + F.cross_entropy(start[si], torch.tensor([l[1] for _, l in sp], device=dev), reduction="sum") \
+                    + F.cross_entropy(end[si], torch.tensor([l[2] for _, l in sp], device=dev), reduction="sum")
+    return loss / len(labs)
+
+
+def copy_predict(model, ids, h):
+    start, end, gate = model.talk(h)
+    n = ids.shape[1]
+    ar = torch.arange(n, device=dev)
+    d = ar[None, :] - ar[:, None]  # e - s
+    valid = (d >= 0) & (d <= 11) & (ar[None, :] < n - 1) & (ar[:, None] < n - 1)
+    sc = (start[:, :, None] + end[:, None, :]).masked_fill(~valid[None], -1e9).flatten(1).argmax(1)
+    cls = gate.argmax(-1).tolist(); out = []
+    for b in range(ids.shape[0]):
+        if cls[b] == 0:
+            s, e = divmod(int(sc[b]), n); out.append(tok.decode(ids[b, s:e + 1].tolist()).strip())
+        else:
+            out.append(CLASSES[cls[b]])
+    return out
+
+
 def loss_on(model, rows):
+    if args.arm.startswith("copytalk"):
+        return copy_loss(model, rows)
     ids = torch.tensor([ids_of(r) for r in rows], device=dev)
     pre = make_prefix(model, ids)
     B, P = pre.shape[0], pre.shape[1]
@@ -188,7 +315,14 @@ def generate(pre):
 def score(r, pred):
     n = norm(pred)
     return {"id": r["id"], "family": r["family"], "panel": r["panel"], "type": r["type"], "answer": r["answer"],
-            "pred": pred, "ok": n in r["accepted"], "contains": any(a and a in n for a in r["accepted"])}
+            "pred": pred, "atype": r.get("atype"), "ok": n in r["accepted"], "contains": any(a and a in n for a in r["accepted"])}
+
+
+TIMING = [False, 0.0]  # [on, accumulated talk-stage seconds]
+
+
+def _sync():
+    if dev == "cuda": torch.cuda.synchronize()
 
 
 @torch.no_grad()
@@ -197,7 +331,16 @@ def evaluate(model, rows, lesion=None):
     for g in group_by_len(rows):
         for i in range(0, len(g), 32):
             c = g[i:i + 32]
-            preds = generate(make_prefix(model, torch.tensor([ids_of(r) for r in c], device=dev), lesion))
+            ids = torch.tensor([ids_of(r) for r in c], device=dev)
+            if args.arm.startswith("copytalk"):
+                _, h, _, _ = core_states(model, ids, run_core=args.arm != "copytalk_nocore")
+                if TIMING[0]: _sync(); t = time.time()
+                preds = copy_predict(model, ids, h)
+            else:
+                pre = make_prefix(model, ids, lesion)
+                if TIMING[0]: _sync(); t = time.time()
+                preds = generate(pre)
+            if TIMING[0]: _sync(); TIMING[1] += time.time() - t
             out += [score(r, pr) for r, pr in zip(c, preds)]
     model.train(); return out
 
@@ -232,6 +375,8 @@ def summarize(res, train_answers, bank_words):
     s["short_answer"] = rate(r for r in res if r["type"] == "short_answer")
     new = [r for r in res if r["type"] == "short_answer" and not (set(norm(r["answer"]).split()) & bank_words)]
     s["new_word_answers"] = rate(new)
+    for at in ("yes_no", "span1", "spanN", "nonspan"):
+        s["atype:" + at] = rate(r for r in res if r.get("atype") == at)
     wrong = [r for r in res if not r["ok"]]
     s["wrong_is_train_answer"] = [sum(norm(r["pred"]) in train_answers for r in wrong), len(wrong)]
     return s
@@ -281,6 +426,13 @@ def main():
         print("RESULT-JSON " + name + " fresh " + str(res["eval"]["all"]) + " contains " + str(res["eval"]["all_contains"]), flush=True)
         return
     random.seed(args.seed)
+    if args.arm.startswith("copytalk"):
+        vocab = {"yes", "no"} | {norm(r["answer"]) for r in train + gen_train if norm(r["answer"]) not in ("yes", "no") and find_span(r) is None}
+        CLASSES.extend(sorted(vocab)); CIDX.update({c: i for i, c in enumerate(CLASSES) if i})
+        lab = {"span": 0, "vocab": 0, "unlabeled": 0}
+        for r in train + gen_train:
+            l = label_of(r); lab["unlabeled" if l is None else "span" if l[0] == 0 else "vocab"] += 1
+        print(f"copytalk V={len(vocab)} classes={len(CLASSES)} label_mix={lab}", flush=True)
     model = Model(args.seed).to(dev)
     params = [q for q in model.parameters() if q.requires_grad]
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.1, betas=(0.9, 0.95))
@@ -315,6 +467,18 @@ def main():
         evx2 = evaluate(model, extra2[:args.limit] if args.limit else extra2); res["extra2"] = summarize(evx2, train_answers, bank_words)
         (outdir / f"{name}-extra2-rows.json").write_text(json.dumps(evx2))
     res["kinds"] = args.kinds; res["block_r6"] = args.block_r6
+    if args.arm.startswith("copytalk"):
+        res["V"] = len(CLASSES) - 1; res["skipped_unlabeled"] = SKIPPED[0]
+    pooled = (extra[:args.limit] if args.limit else extra) + (extra2[:args.limit] if args.limit else extra2)
+    if pooled:
+        if args.arm == "allptr":
+            evs = evaluate(model, pooled, "shuffle_core"); res["lesion_shuffle_core_unseen"] = summarize(evs, train_answers, bank_words)
+            res["shuffle_core_b1_unchanged"] = SHUF_B1[0]
+            (outdir / f"{name}-lesion-shuffle_core-unseen-rows.json").write_text(json.dumps(evs))
+        _sync(); TIMING[0] = True; TIMING[1] = 0.0; t1 = time.time()
+        evaluate(model, pooled); _sync()
+        res["infer_ms_per_q"] = round((time.time() - t1) * 1000 / len(pooled), 3)
+        res["talk_ms_per_q"] = round(TIMING[1] * 1000 / len(pooled), 3); TIMING[0] = False
     if args.arm == "allptr":
         evl = evaluate(model, fresh, "zero_pool"); res["lesion_zero_pool"] = summarize(evl, train_answers, bank_words)
         (outdir / f"{name}-lesion-zero_pool-rows.json").write_text(json.dumps(evl))
