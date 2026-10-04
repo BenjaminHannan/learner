@@ -170,3 +170,6 @@ Full run = main2 setup (constant lr 1e-3, copy path, seed-0 parent, 50,000 updat
 
 ### 02:02Z INTERIM main4 (copy path + step supervision), 13k of 50k updates
 Shown: in_dist of 100 at 4k, 8k, 12k: 21, 39, 39 (main2: 35, 53, 54; main3: 32, 55, 53). Behind both so far; the 16k stop check (<= 40) is due in a few minutes and the stop rule may trigger. PC disk free 3.85 GB.
+
+### 02:10Z main4 16k stop check: PASSED the check, run continues
+Shown: in_dist 47/100 at 16k (stop rule was <= 40), curve 21, 39, 39, 47 (main2 35, 53, 54, 49). Still not above main2; nothing claimed. Disk free 3.85 GB. Ends ~03:20Z.
