@@ -23,3 +23,16 @@ Total for this round: about $1.12 (rate x minutes, storage extra). vast credit a
 | 54102090 | 48386184 | RTX 3090 (US) | 5 | 04:05 | 05:30 | yes: results.tar.gz sha256 matched manifest | ~$0.23 |
 
 Total for round 4: about $0.89.
+
+## Round 5 (new kinds: full + lofo per box; seed 0 box also runs lm_fewshot)
+
+| box | offer | GPU | seed | created (UTC) | destroyed (UTC) | copy-back checked | cost |
+|---|---|---|---|---|---|---|---|
+| 54111411 | 50484108 | RTX 3090 (California) | 0 | 05:49 | 07:06 | yes: results.tar.gz sha256 matched manifest | ~$0.18 |
+| 54111412 | 25495503 | RTX 3090 (CZ) | 1 | 05:49 | 06:45 | yes: results.tar.gz sha256 matched manifest | ~$0.14 |
+| 54111413 | 43703607 | RTX 3090 (California) | 2 | 05:49 | 07:06 | yes: results.tar.gz sha256 matched manifest | ~$0.19 |
+| 54111414 | 53871121 | RTX 3090 (Jiangsu) | 3 | 05:49 | 06:47 | yes: results.tar.gz sha256 matched manifest | ~$0.15 |
+| 54111415 | 44133018 | RTX 3090 (US) | 4 | 05:49 | 07:10 | yes: results.tar.gz sha256 matched manifest | ~$0.22 |
+| 54111417 | 35413600 | RTX 3090 (US) | 5 | 05:49 | 07:02 | yes: results.tar.gz sha256 matched manifest | ~$0.20 |
+
+Total for round 5: about $1.08. vast credit at 07:11 UTC: $2.76 (shared with other threads).
