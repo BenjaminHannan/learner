@@ -3,7 +3,7 @@
 Fast lane. Never scored on GOLD-PRIVATE-v1.json; no reserved or blind panel touched.
 
 ## One change
-Round 4 English recipe (`reasoner_ptr/real/english/run_english.py`, branch `claude/project-thread-ajo58u`,
+Round 4 English recipe (`reasoner_ptr/real/english/run_english.py` at commit `ba5b64aee`, the code that produced round 4,
 `--arm allptr --gen 8000`, 6 practised kinds, 2000 steps) with only
 `--lm LiquidAI/LFM2.5-350M --revision 9e6c6ccf47cd318696e137d381a7ded8fe4df09f` changed.
 The reader and exit adapter shrink with the LM width (2048 -> 1024); the core is unchanged.
