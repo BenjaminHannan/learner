@@ -94,6 +94,22 @@ footer code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem
   </div>
 
   <div class="card">
+    <div class="row"><span class="kicker">Does the talker need to read the question? 6 seeds, 5:25 PM ET</span><span class="verdict v-fail">yes, it does</span></div>
+    <h2>Without the question's words the talker gets 19%; with them, 83%</h2>
+    <p>Three talkers, same training. Today's sees the core's 16 vectors, then every question word. "Question first" puts the words before the vectors so the second read can reuse the first. "Core vectors only" sees no words at all.</p>
+    <svg viewBox="0 0 360 100" role="img" aria-label="Exactly right over 576 English questions: today 83%, question first 75%, core vectors only 19%">
+      <text x="0" y="12" font-size="10.5" fill="var(--ink2)">exactly right, 576 English questions</text>
+      <text x="0" y="34" font-size="11" fill="var(--ink)">today (words after)</text><rect x="118" y="22" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="22" width="190.7" height="16" rx="2" fill="var(--pass)"/><text x="304.7" y="34" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="end">83%</text><text x="0" y="60" font-size="11" fill="var(--ink)">question first</text><rect x="118" y="48" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="48" width="173.0" height="16" rx="2" fill="var(--neutral)"/><text x="287.0" y="60" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="end">75%</text><text x="0" y="86" font-size="11" fill="var(--ink)">core vectors only</text><rect x="118" y="74" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="74" width="43.5" height="16" rx="2" fill="var(--fail)"/><text x="157.5" y="86" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="end">19%</text>
+    </svg>
+    <svg viewBox="0 0 360 126" role="img" aria-label="Time to first answer word at batch 1: bare 1.0x, all three talkers 3.0x">
+      <text x="0" y="12" font-size="10.5" fill="var(--ink2)">time to the first answer word, one question at a time</text>
+      <text x="0" y="34" font-size="11" fill="var(--ink)">bare 1.2B</text><rect x="118" y="22" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="22" width="65.7" height="16" rx="2" fill="var(--line)"/><text x="179.7" y="34" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="end">1.0x</text><text x="0" y="60" font-size="11" fill="var(--ink)">today</text><rect x="118" y="48" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="48" width="195.2" height="16" rx="2" fill="var(--neutral)"/><text x="309.2" y="60" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="end">3.0x</text><text x="0" y="86" font-size="11" fill="var(--ink)">question first</text><rect x="118" y="74" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="74" width="194.5" height="16" rx="2" fill="var(--neutral)"/><text x="308.5" y="86" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="end">3.0x</text><text x="0" y="112" font-size="11" fill="var(--ink)">core vectors only</text><rect x="118" y="100" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="100" width="195.2" height="16" rx="2" fill="var(--neutral)"/><text x="309.2" y="112" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="end">3.0x</text>
+    </svg>
+    <p class="small">All three take the same time, about 3x the bare model to the first word and 1.3x for an 8-word answer. So re-reading the question isn't what costs time. The cost is the core plus one extra pass, which costs about the same at any length (inferred). Question first loses 8 points and saves nothing.</p>
+    <p class="small">Read: keep today's talker. A talker that only translates the core's state would need a much stronger copy path than the 8-slot pointer. Cost about $2.30, including a pause for credit.</p>
+  </div>
+
+  <div class="card">
     <div class="row"><span class="kicker">12 practised kinds vs 6, 6 seeds, 16:14 UTC</span><span class="verdict v-pass">goal hit, cause unclear</span></div>
     <h2>83% on never-practised kinds, but a second test only ties the bare model</h2>
     <p>Set 1: the six new kinds from last round. Set 2: six more new kinds (speech, weather, price, direction, how long, where from), never scored before.</p>
@@ -320,7 +336,7 @@ footer code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem
   </div>
 
   <footer>
-    Shown in code: <code>scripts/sol_translator_english.py:15-46</code>, <code>scripts/cap256_launch/english_pilot_runtime_v1.py:143-162</code>, <code>reasoner_fresh/model.py:70,81,147</code>. Results: PR #29 <code>reasoner_fresh/RESULTS.md</code>; PR #30 <code>reasoner_ptr/real/RESULTS-R2.md</code>, <code>reasoner_ptr/real/english/RESULTS-R3.md</code>, <code>RESULTS-R4.md</code>, <code>RESULTS-R5.md</code>, <code>RESULTS-R6.md</code>; LIVE.md 20:10 UTC. Full note with marks: <code>design/info-paths/information-paths.md</code>.<br>
+    Shown in code: <code>scripts/sol_translator_english.py:15-46</code>, <code>scripts/cap256_launch/english_pilot_runtime_v1.py:143-162</code>, <code>reasoner_fresh/model.py:70,81,147</code>. Results: PR #29 <code>reasoner_fresh/RESULTS.md</code>; PR #30 <code>reasoner_ptr/real/RESULTS-R2.md</code>, <code>reasoner_ptr/real/english/RESULTS-R3.md</code>, <code>RESULTS-R4.md</code>, <code>RESULTS-R5.md</code>, <code>RESULTS-R6.md</code>, <code>RESULTS-R7.md</code>; LIVE.md 20:10 UTC. Full note with marks: <code>design/info-paths/information-paths.md</code>.<br>
     Papers: pointer-generator 1704.04368 · single-vector capacity 2502.13063 · middle layers 2502.02013 · Dense Connector 2405.13800 · P-tuning v2 2110.07602 · Cache-to-Cache 2510.03215 · MM1 2403.09611 · copying vs state-space 2402.01032 · LFM2 2511.23404.
   </footer>
 </div>

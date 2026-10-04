@@ -67,9 +67,11 @@ Paused at 19:31 UTC on the coordinator's credit warning ($4.83 left at $5.04/hr)
 
 | box | offer | GPU | seed | created (UTC) | destroyed (UTC) | copy-back checked | cost |
 |---|---|---|---|---|---|---|---|
-| 54193351 | 53751040 | RTX 3090 (Indonesia) | 0 | 19:39 | | | |
-| 54193352 | 43573725 | RTX 3090 (Spain) | 1 | 19:39 | | | |
-| 54193355 | 48386175 | RTX 3090 (US) | 2 | 19:39 | | | |
-| 54193356 | 34224257 | RTX 3090 (British Columbia) | 3 | 19:39 | | | |
-| 54193357 | 50020833 | RTX 3090 (Ontario) | 4 | 19:39 | | | |
-| 54193361 | 53180089 | RTX 3090 (Switzerland) | 5 | 19:39 | | | |
+| 54193351 | 53751040 | RTX 3090 (Indonesia) | 0 | 19:39 | 21:25 | yes: results.tar.gz sha256 matched manifest | ~$0.31 |
+| 54193352 | 43573725 | RTX 3090 (Spain) | 1 | 19:39 | 21:00 | yes: results.tar.gz sha256 matched manifest | ~$0.25 |
+| 54193355 | 48386175 | RTX 3090 (US) | 2 | 19:39 | 21:15 | yes: results.tar.gz sha256 matched manifest | ~$0.31 |
+| 54193356 | 34224257 | RTX 3090 (British Columbia) | 3 | 19:39 | 20:45 | yes: results.tar.gz sha256 matched manifest | ~$0.21 |
+| 54193357 | 50020833 | RTX 3090 (Ontario) | 4 | 19:39 | 20:43 | yes: results.tar.gz sha256 matched manifest | ~$0.22 |
+| 54193361 | 53180089 | RTX 3090 (Switzerland) | 5 | 19:39 | 20:50 | yes: results.tar.gz sha256 matched manifest | ~$0.29 |
+
+Total for round 7: about $2.30, including the paused first attempt (~$0.72). vast credit at 21:25 UTC: $8.86 (shared with other threads).
