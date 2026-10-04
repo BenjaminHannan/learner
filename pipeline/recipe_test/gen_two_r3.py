@@ -96,6 +96,9 @@ def stream(excluded_triples, excluded_pairs, seed, n, one_step_frac=0.3, fits=la
     if frames == "comp":
         import gen_two_v
         fr = fr + gen_two_v.train_frames()
+    elif frames == "tabv":
+        import gen_two_v
+        fr = fr + gen_two_v.train_frames(tab=6000)
     one = iter(gen2.stream_w(excluded_pairs, 700 + seed, int(n * one_step_frac) + 2000))
     out, seen = [], set()
     while len(out) < n:
@@ -114,3 +117,31 @@ def stream(excluded_triples, excluded_pairs, seed, n, one_step_frac=0.3, fits=la
         seen.add(text)
         out.append({"steps": 2, "op1": o1, "op2": o2, "x": x, "y": y, "z": z, "r1": v[0], "answer": v[1], "text": text})
     return out
+
+
+def build_blind(per_cell=2, seed=20261501, fits=lambda t: True, used=frozenset()):
+    """Round 5: 12 independently written layout families (eval_layouts_r5_blind.json, written by a separate worker given only the task description).
+    12 families x 4 op pairs x (per_cell unseen + per_cell seen finals) = 192 questions."""
+    import json, os
+    T, H = gen.answer_split(); rng = random.Random(seed)
+    e2 = gen.load(gen.EVAL_FILE); rows = []; used = set(used)
+    fams = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "eval_layouts_r5_blind.json")))["families"]
+    for fam in fams:
+        for o1, o2 in itertools.product(("ADD", "SUB"), repeat=2):
+            texts = fam["frames"][f"{o1}-{o2}"]; k = 0
+            for cell, finals in (("unseen", set(H)), ("seen", set(T))):
+                for j in range(per_cell):
+                    while True:
+                        x, y, z = (rng.randint(10, 99) for _ in range(3))
+                        v = gen_two.ok_values(x, y, z, o1, o2)
+                        if v and v[1] in finals and (x, y, z) not in used: break
+                    used.add((x, y, z))
+                    text = None
+                    for _ in range(200):
+                        c = texts[k % len(texts)].format(name=rng.choice(e2["names"]), noun=rng.choice(e2["nouns"]), x=x, y=y, z=z)
+                        if fits(c): text = c; break
+                    assert text, ("cannot fit 49 tokens", fam["name"])
+                    k += 1
+                    rows.append({"id": f"{fam['name']}-{o1}{o2}-{cell}-{j}", "cell": f"{cell}/{fam['name']}", "structure": fam["kind"], "steps": 2, "op1": o1, "op2": o2,
+                                 "x": x, "y": y, "z": z, "r1": v[0], "answer": v[1], "text": text})
+    return rows

@@ -54,8 +54,45 @@ def compose(rng, n):
     return out
 
 
-def train_frames(n=12000):
+# ---- round 5: extra table-style variety (authored by the design model, after seeing only the KINDS of the blind layouts, not their wording)
+TV_HEAD = ["INVENTORY {noun}", "{noun} count", "Daily tally ({noun})", "Notebook page: {noun}", "Sheet 2 - {noun}", "{name}'s {noun} list", "Register of {noun}", "Chart: {noun}"]
+TV_START = ["start: {x}", "day-open {x}", "initial amount = {x}", "base {x}", "carried over {x}", "x0 {x}"]
+TV_GAIN = ["+{y}", "arrived {y}", "IN {y}", "topped up by {y}", "credit {y}", "plus {y} added", "supplied {y}"]
+TV_LOSS = ["-{y}", "left {y}", "OUT {y}", "drawn down by {y}", "debit {y}", "minus {y} removed", "withdrawn {y}"]
+TV_SEP = [" ; ", " | ", " || ", " / ", " :: ", " -- ", " > "]
+TV_ASK = ["total now?", "balance =", "how many at the end?", "end value?", "what remains?", "sum at close:", "closing figure?"]
+TV_LABELS = [("row 1", "row 2"), ("step a", "step b"), ("mon", "tue"), ("first", "then"), ("entry #1", "entry #2"), ("early", "late")]
+
+
+def tab_extra(rng, n):
+    out = []
+    for _ in range(n):
+        o1, o2 = rng.choice(("ADD", "SUB")), rng.choice(("ADD", "SUB"))
+        g = lambda o, a, b: rng.choice(a if o == "ADD" else b)
+        l1, l2 = rng.choice(TV_LABELS)
+        c1 = f"{l1} {g(o1, TV_GAIN, TV_LOSS)}"; c2 = f"{l2} {g(o2, TV_GAIN, TV_LOSS)}".replace("{y}", "{z}")
+        st, hd, ask = rng.choice(TV_START), rng.choice(TV_HEAD), rng.choice(TV_ASK)
+        k = rng.random()
+        if k < 0.4:    # one line
+            sep = rng.choice(TV_SEP); t = f"{hd}{sep}{st}{sep}{c1}{sep}{c2}{sep}{ask}"
+        elif k < 0.8:  # rows on separate lines
+            t = f"{hd}\n{st}\n{c1}\n{c2}\n{ask}"
+        else:          # question or ask line first
+            sep = rng.choice(TV_SEP); t = f"{ask} {hd}{sep}{st}{sep}{c1}{sep}{c2}"
+        out.append((o1, o2, t))
+    return out
+
+
+def blind_frames():
+    import os, json
+    p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "eval_layouts_r5_blind.json")
+    if not os.path.exists(p): return []
+    return [(0, 0, t) for f in json.load(open(p))["families"] for v in f["frames"].values() for t in v]
+
+
+def train_frames(n=12000, tab=0):
     fr = list(set(compose(random.Random(4_000_001), n)))
-    ev = g3.all_eval_frames()
+    if tab: fr += list(set(tab_extra(random.Random(5_000_001), tab)))
+    ev = g3.all_eval_frames() + blind_frames()
     evg = set().union(*(gen2.grams(t) for _, _, t in ev)); evs = set().union(*(gen2.sentences(t) for _, _, t in ev))
     return [f for f in fr if not (gen2.grams(f[2]) & evg or gen2.sentences(f[2]) & evs)]

@@ -1,0 +1,316 @@
+{
+ "families": [
+  {
+   "name": "ledger",
+   "kind": "table",
+   "frames": {
+    "ADD-ADD": [
+     "LEDGER | item: {noun} | opening: {x} | entry A: IN {y} | entry B: IN {z} | closing balance = ?",
+     "Stock book - {noun}\nOpening  {x}\nFirst entry  received {y}\nSecond entry  received {z}\nClosing stock?",
+     "DATE | DETAIL | QTY\nmorning | {noun} on hand | {x}\nnoon | picked up | {y}\nevening | picked up | {z}\nEnd-of-day total?"
+    ],
+    "ADD-SUB": [
+     "LEDGER | item: {noun} | opening: {x} | entry A: IN {y} | entry B: OUT {z} | closing balance = ?",
+     "Stock book - {noun}\nOpening  {x}\nFirst entry  received {y}\nSecond entry  shipped out {z}\nClosing stock?",
+     "DATE | DETAIL | QTY\nmorning | {noun} on hand | {x}\nnoon | picked up | {y}\nevening | dropped off | {z}\nEnd-of-day total?"
+    ],
+    "SUB-ADD": [
+     "LEDGER | item: {noun} | opening: {x} | entry A: OUT {y} | entry B: IN {z} | closing balance = ?",
+     "Stock book - {noun}\nOpening  {x}\nFirst entry  shipped out {y}\nSecond entry  received {z}\nClosing stock?",
+     "DATE | DETAIL | QTY\nmorning | {noun} on hand | {x}\nnoon | dropped off | {y}\nevening | picked up | {z}\nEnd-of-day total?"
+    ],
+    "SUB-SUB": [
+     "LEDGER | item: {noun} | opening: {x} | entry A: OUT {y} | entry B: OUT {z} | closing balance = ?",
+     "Stock book - {noun}\nOpening  {x}\nFirst entry  shipped out {y}\nSecond entry  shipped out {z}\nClosing stock?",
+     "DATE | DETAIL | QTY\nmorning | {noun} on hand | {x}\nnoon | dropped off | {y}\nevening | dropped off | {z}\nEnd-of-day total?"
+    ]
+   }
+  },
+  {
+   "name": "spreadsheet",
+   "kind": "table",
+   "frames": {
+    "ADD-ADD": [
+     "A: {noun} start = {x} ; B: bought {y} ; C: bought {z} ; D: final count = ?",
+     "{noun} tracker || start: {x} || change one: gained {y} || change two: gained {z} || result cell?",
+     "columns: label, amount\nstart,{x}\nthen added,{y}\nthen added,{z}\nsum of {noun} left at the end?"
+    ],
+    "ADD-SUB": [
+     "A: {noun} start = {x} ; B: bought {y} ; C: sold {z} ; D: final count = ?",
+     "{noun} tracker || start: {x} || change one: gained {y} || change two: lost {z} || result cell?",
+     "columns: label, amount\nstart,{x}\nthen added,{y}\nthen removed,{z}\nsum of {noun} left at the end?"
+    ],
+    "SUB-ADD": [
+     "A: {noun} start = {x} ; B: sold {y} ; C: bought {z} ; D: final count = ?",
+     "{noun} tracker || start: {x} || change one: lost {y} || change two: gained {z} || result cell?",
+     "columns: label, amount\nstart,{x}\nthen removed,{y}\nthen added,{z}\nsum of {noun} left at the end?"
+    ],
+    "SUB-SUB": [
+     "A: {noun} start = {x} ; B: sold {y} ; C: sold {z} ; D: final count = ?",
+     "{noun} tracker || start: {x} || change one: lost {y} || change two: lost {z} || result cell?",
+     "columns: label, amount\nstart,{x}\nthen removed,{y}\nthen removed,{z}\nsum of {noun} left at the end?"
+    ]
+   }
+  },
+  {
+   "name": "receipt_log",
+   "kind": "table",
+   "frames": {
+    "ADD-ADD": [
+     "WAREHOUSE LOG {noun}\nopen bal {x}\ntook in {y}\ntook in {z}\nclose bal ?",
+     "Shift log ; {noun} at start {x} ; mid-shift collected {y} ; later collected {z} ; total at shift end?",
+     "== INVENTORY TAPE ==\n{noun}: {x}\nline two: received {y}\nline three: received {z}\nTOTAL REMAINING:"
+    ],
+    "ADD-SUB": [
+     "WAREHOUSE LOG {noun}\nopen bal {x}\ntook in {y}\ntook out {z}\nclose bal ?",
+     "Shift log ; {noun} at start {x} ; mid-shift collected {y} ; later handed over {z} ; total at shift end?",
+     "== INVENTORY TAPE ==\n{noun}: {x}\nline two: received {y}\nline three: shipped out {z}\nTOTAL REMAINING:"
+    ],
+    "SUB-ADD": [
+     "WAREHOUSE LOG {noun}\nopen bal {x}\ntook out {y}\ntook in {z}\nclose bal ?",
+     "Shift log ; {noun} at start {x} ; mid-shift handed over {y} ; later collected {z} ; total at shift end?",
+     "== INVENTORY TAPE ==\n{noun}: {x}\nline two: shipped out {y}\nline three: received {z}\nTOTAL REMAINING:"
+    ],
+    "SUB-SUB": [
+     "WAREHOUSE LOG {noun}\nopen bal {x}\ntook out {y}\ntook out {z}\nclose bal ?",
+     "Shift log ; {noun} at start {x} ; mid-shift handed over {y} ; later handed over {z} ; total at shift end?",
+     "== INVENTORY TAPE ==\n{noun}: {x}\nline two: shipped out {y}\nline three: shipped out {z}\nTOTAL REMAINING:"
+    ]
+   }
+  },
+  {
+   "name": "scoreboard",
+   "kind": "table",
+   "frames": {
+    "ADD-ADD": [
+     "{name} | {noun} | START {x} | ROUND ONE gained {y} | ROUND TWO gained {z} | FINAL TOTAL?",
+     "SCOREBOARD - {name}'s {noun}: begins {x} / first round earned {y} / second round earned {z} / what is the final tally?",
+     "Tally sheet\n{name}: {x} {noun} to begin\nRound A: gained {y}\nRound B: gained {z}\nFinal score?"
+    ],
+    "ADD-SUB": [
+     "{name} | {noun} | START {x} | ROUND ONE gained {y} | ROUND TWO lost {z} | FINAL TOTAL?",
+     "SCOREBOARD - {name}'s {noun}: begins {x} / first round earned {y} / second round spent {z} / what is the final tally?",
+     "Tally sheet\n{name}: {x} {noun} to begin\nRound A: gained {y}\nRound B: lost {z}\nFinal score?"
+    ],
+    "SUB-ADD": [
+     "{name} | {noun} | START {x} | ROUND ONE lost {y} | ROUND TWO gained {z} | FINAL TOTAL?",
+     "SCOREBOARD - {name}'s {noun}: begins {x} / first round spent {y} / second round earned {z} / what is the final tally?",
+     "Tally sheet\n{name}: {x} {noun} to begin\nRound A: lost {y}\nRound B: gained {z}\nFinal score?"
+    ],
+    "SUB-SUB": [
+     "{name} | {noun} | START {x} | ROUND ONE lost {y} | ROUND TWO lost {z} | FINAL TOTAL?",
+     "SCOREBOARD - {name}'s {noun}: begins {x} / first round spent {y} / second round spent {z} / what is the final tally?",
+     "Tally sheet\n{name}: {x} {noun} to begin\nRound A: lost {y}\nRound B: lost {z}\nFinal score?"
+    ]
+   }
+  },
+  {
+   "name": "question_first_a",
+   "kind": "question_first",
+   "frames": {
+    "ADD-ADD": [
+     "How many {noun} are there at the end? At first there were {x}, then added {y}, and after that added {z}.",
+     "What is the final number of {noun}? The count began at {x}; first took in {y}; next took in {z}.",
+     "Final total of {noun}, please: it started at {x}, then bought {y}, and finally bought {z}."
+    ],
+    "ADD-SUB": [
+     "How many {noun} are there at the end? At first there were {x}, then added {y}, and after that removed {z}.",
+     "What is the final number of {noun}? The count began at {x}; first took in {y}; next took out {z}.",
+     "Final total of {noun}, please: it started at {x}, then bought {y}, and finally sold {z}."
+    ],
+    "SUB-ADD": [
+     "How many {noun} are there at the end? At first there were {x}, then removed {y}, and after that added {z}.",
+     "What is the final number of {noun}? The count began at {x}; first took out {y}; next took in {z}.",
+     "Final total of {noun}, please: it started at {x}, then sold {y}, and finally bought {z}."
+    ],
+    "SUB-SUB": [
+     "How many {noun} are there at the end? At first there were {x}, then removed {y}, and after that removed {z}.",
+     "What is the final number of {noun}? The count began at {x}; first took out {y}; next took out {z}.",
+     "Final total of {noun}, please: it started at {x}, then sold {y}, and finally sold {z}."
+    ]
+   }
+  },
+  {
+   "name": "question_first_b",
+   "kind": "question_first",
+   "frames": {
+    "ADD-ADD": [
+     "Can you work out how many {noun} {name} has left in the end? {name} began with {x}, then gained {y}, then gained {z}.",
+     "Question: how many {noun} remain once everything is done? Beginning amount {x}. First added {y}. Second added {z}.",
+     "Find the ending amount of {noun}. Start from {x}, received {y}, and then received {z}. How many now?"
+    ],
+    "ADD-SUB": [
+     "Can you work out how many {noun} {name} has left in the end? {name} began with {x}, then gained {y}, then lost {z}.",
+     "Question: how many {noun} remain once everything is done? Beginning amount {x}. First added {y}. Second removed {z}.",
+     "Find the ending amount of {noun}. Start from {x}, received {y}, and then shipped out {z}. How many now?"
+    ],
+    "SUB-ADD": [
+     "Can you work out how many {noun} {name} has left in the end? {name} began with {x}, then lost {y}, then gained {z}.",
+     "Question: how many {noun} remain once everything is done? Beginning amount {x}. First removed {y}. Second added {z}.",
+     "Find the ending amount of {noun}. Start from {x}, shipped out {y}, and then received {z}. How many now?"
+    ],
+    "SUB-SUB": [
+     "Can you work out how many {noun} {name} has left in the end? {name} began with {x}, then lost {y}, then lost {z}.",
+     "Question: how many {noun} remain once everything is done? Beginning amount {x}. First removed {y}. Second removed {z}.",
+     "Find the ending amount of {noun}. Start from {x}, shipped out {y}, and then shipped out {z}. How many now?"
+    ]
+   }
+  },
+  {
+   "name": "first_person_a",
+   "kind": "first_person",
+   "frames": {
+    "ADD-ADD": [
+     "I started the week with {x} {noun}. On Tuesday I bought {y} of them, and on Friday I bought {z}. How many {noun} do I have now?",
+     "I had {x} {noun} in my bag. Then I picked up {y}, and later I picked up {z}. How many {noun} did I end up with?",
+     "Yesterday I counted {x} {noun}. Since then I found {y} and, after that, I found {z}. What is my total now?"
+    ],
+    "ADD-SUB": [
+     "I started the week with {x} {noun}. On Tuesday I bought {y} of them, and on Friday I sold {z}. How many {noun} do I have now?",
+     "I had {x} {noun} in my bag. Then I picked up {y}, and later I dropped off {z}. How many {noun} did I end up with?",
+     "Yesterday I counted {x} {noun}. Since then I found {y} and, after that, I lost {z}. What is my total now?"
+    ],
+    "SUB-ADD": [
+     "I started the week with {x} {noun}. On Tuesday I sold {y} of them, and on Friday I bought {z}. How many {noun} do I have now?",
+     "I had {x} {noun} in my bag. Then I dropped off {y}, and later I picked up {z}. How many {noun} did I end up with?",
+     "Yesterday I counted {x} {noun}. Since then I lost {y} and, after that, I found {z}. What is my total now?"
+    ],
+    "SUB-SUB": [
+     "I started the week with {x} {noun}. On Tuesday I sold {y} of them, and on Friday I sold {z}. How many {noun} do I have now?",
+     "I had {x} {noun} in my bag. Then I dropped off {y}, and later I dropped off {z}. How many {noun} did I end up with?",
+     "Yesterday I counted {x} {noun}. Since then I lost {y} and, after that, I lost {z}. What is my total now?"
+    ]
+   }
+  },
+  {
+   "name": "first_person_b",
+   "kind": "first_person",
+   "frames": {
+    "ADD-ADD": [
+     "My shelf held {x} {noun}. This morning I added {y}; this evening I added {z}. How many are on my shelf at the end?",
+     "When I opened my box there were {x} {noun}. I collected {y}, then I collected {z}. Tell me how many I finish with.",
+     "I kept {x} {noun} in the garage. I got {y} last week and got {z} this week. How many do I own now?"
+    ],
+    "ADD-SUB": [
+     "My shelf held {x} {noun}. This morning I added {y}; this evening I removed {z}. How many are on my shelf at the end?",
+     "When I opened my box there were {x} {noun}. I collected {y}, then I handed over {z}. Tell me how many I finish with.",
+     "I kept {x} {noun} in the garage. I got {y} last week and gave away {z} this week. How many do I own now?"
+    ],
+    "SUB-ADD": [
+     "My shelf held {x} {noun}. This morning I removed {y}; this evening I added {z}. How many are on my shelf at the end?",
+     "When I opened my box there were {x} {noun}. I handed over {y}, then I collected {z}. Tell me how many I finish with.",
+     "I kept {x} {noun} in the garage. I gave away {y} last week and got {z} this week. How many do I own now?"
+    ],
+    "SUB-SUB": [
+     "My shelf held {x} {noun}. This morning I removed {y}; this evening I removed {z}. How many are on my shelf at the end?",
+     "When I opened my box there were {x} {noun}. I handed over {y}, then I handed over {z}. Tell me how many I finish with.",
+     "I kept {x} {noun} in the garage. I gave away {y} last week and gave away {z} this week. How many do I own now?"
+    ]
+   }
+  },
+  {
+   "name": "chat",
+   "kind": "chat",
+   "frames": {
+    "ADD-ADD": [
+     "hey so we had {x} {noun} right? then we added {y} and then added {z}. how many now??",
+     "ok update: {x} {noun} at the start. gained {y} after lunch. then gained {z}. final number pls",
+     "lol quick q - started w/ {x} {noun}, bought {y}, then bought {z}. whats the total left"
+    ],
+    "ADD-SUB": [
+     "hey so we had {x} {noun} right? then we added {y} and then removed {z}. how many now??",
+     "ok update: {x} {noun} at the start. gained {y} after lunch. then lost {z}. final number pls",
+     "lol quick q - started w/ {x} {noun}, bought {y}, then sold {z}. whats the total left"
+    ],
+    "SUB-ADD": [
+     "hey so we had {x} {noun} right? then we removed {y} and then added {z}. how many now??",
+     "ok update: {x} {noun} at the start. lost {y} after lunch. then gained {z}. final number pls",
+     "lol quick q - started w/ {x} {noun}, sold {y}, then bought {z}. whats the total left"
+    ],
+    "SUB-SUB": [
+     "hey so we had {x} {noun} right? then we removed {y} and then removed {z}. how many now??",
+     "ok update: {x} {noun} at the start. lost {y} after lunch. then lost {z}. final number pls",
+     "lol quick q - started w/ {x} {noun}, sold {y}, then sold {z}. whats the total left"
+    ]
+   }
+  },
+  {
+   "name": "instruction",
+   "kind": "instruction",
+   "frames": {
+    "ADD-ADD": [
+     "Checklist: begin with {x} {noun}. First, added {y}. Next, added {z}. Last, write down how many {noun} you have.",
+     "Instructions: set out {x} {noun}. Then took in {y}. Then took in {z}. Count what you have and report the final amount.",
+     "Do this in order. Start with {x} {noun}. Step one: made {y}. Step two: made {z}. Finish by stating the final number of {noun}."
+    ],
+    "ADD-SUB": [
+     "Checklist: begin with {x} {noun}. First, added {y}. Next, removed {z}. Last, write down how many {noun} you have.",
+     "Instructions: set out {x} {noun}. Then took in {y}. Then took out {z}. Count what you have and report the final amount.",
+     "Do this in order. Start with {x} {noun}. Step one: made {y}. Step two: used {z}. Finish by stating the final number of {noun}."
+    ],
+    "SUB-ADD": [
+     "Checklist: begin with {x} {noun}. First, removed {y}. Next, added {z}. Last, write down how many {noun} you have.",
+     "Instructions: set out {x} {noun}. Then took out {y}. Then took in {z}. Count what you have and report the final amount.",
+     "Do this in order. Start with {x} {noun}. Step one: used {y}. Step two: made {z}. Finish by stating the final number of {noun}."
+    ],
+    "SUB-SUB": [
+     "Checklist: begin with {x} {noun}. First, removed {y}. Next, removed {z}. Last, write down how many {noun} you have.",
+     "Instructions: set out {x} {noun}. Then took out {y}. Then took out {z}. Count what you have and report the final amount.",
+     "Do this in order. Start with {x} {noun}. Step one: used {y}. Step two: used {z}. Finish by stating the final number of {noun}."
+    ]
+   }
+  },
+  {
+   "name": "report",
+   "kind": "report",
+   "frames": {
+    "ADD-ADD": [
+     "Local report: the town's {noun} numbered {x} at the start of the month. Officials said they received {y} in week one and received {z} in week two. Final count?",
+     "BREAKING: {name} reports {x} {noun} on record. Later, the total gained {y}, then gained {z}. What is the total now?",
+     "According to the survey, there were {x} {noun} at first. Afterwards the group gained {y}, and then gained {z}. How many were left in the final tally?"
+    ],
+    "ADD-SUB": [
+     "Local report: the town's {noun} numbered {x} at the start of the month. Officials said they received {y} in week one and shipped out {z} in week two. Final count?",
+     "BREAKING: {name} reports {x} {noun} on record. Later, the total gained {y}, then lost {z}. What is the total now?",
+     "According to the survey, there were {x} {noun} at first. Afterwards the group gained {y}, and then lost {z}. How many were left in the final tally?"
+    ],
+    "SUB-ADD": [
+     "Local report: the town's {noun} numbered {x} at the start of the month. Officials said they shipped out {y} in week one and received {z} in week two. Final count?",
+     "BREAKING: {name} reports {x} {noun} on record. Later, the total lost {y}, then gained {z}. What is the total now?",
+     "According to the survey, there were {x} {noun} at first. Afterwards the group lost {y}, and then gained {z}. How many were left in the final tally?"
+    ],
+    "SUB-SUB": [
+     "Local report: the town's {noun} numbered {x} at the start of the month. Officials said they shipped out {y} in week one and shipped out {z} in week two. Final count?",
+     "BREAKING: {name} reports {x} {noun} on record. Later, the total lost {y}, then lost {z}. What is the total now?",
+     "According to the survey, there were {x} {noun} at first. Afterwards the group lost {y}, and then lost {z}. How many were left in the final tally?"
+    ]
+   }
+  },
+  {
+   "name": "riddle_diary",
+   "kind": "other",
+   "frames": {
+    "ADD-ADD": [
+     "Dear diary, today began with {x} {noun}. By noon I picked up {y}, and by night I picked up {z}. How many {noun} are there in the end?",
+     "A puzzle for you: a pile holds {x} {noun}. Someone collected {y}, and then someone collected {z}. What is left in the pile?",
+     "Once upon a time {name} had {x} {noun}. Then {name} found {y}, and afterward found {z}. How many {noun} did {name} have at the end?"
+    ],
+    "ADD-SUB": [
+     "Dear diary, today began with {x} {noun}. By noon I picked up {y}, and by night I dropped off {z}. How many {noun} are there in the end?",
+     "A puzzle for you: a pile holds {x} {noun}. Someone collected {y}, and then someone handed over {z}. What is left in the pile?",
+     "Once upon a time {name} had {x} {noun}. Then {name} found {y}, and afterward lost {z}. How many {noun} did {name} have at the end?"
+    ],
+    "SUB-ADD": [
+     "Dear diary, today began with {x} {noun}. By noon I dropped off {y}, and by night I picked up {z}. How many {noun} are there in the end?",
+     "A puzzle for you: a pile holds {x} {noun}. Someone handed over {y}, and then someone collected {z}. What is left in the pile?",
+     "Once upon a time {name} had {x} {noun}. Then {name} lost {y}, and afterward found {z}. How many {noun} did {name} have at the end?"
+    ],
+    "SUB-SUB": [
+     "Dear diary, today began with {x} {noun}. By noon I dropped off {y}, and by night I dropped off {z}. How many {noun} are there in the end?",
+     "A puzzle for you: a pile holds {x} {noun}. Someone handed over {y}, and then someone handed over {z}. What is left in the pile?",
+     "Once upon a time {name} had {x} {noun}. Then {name} lost {y}, and afterward lost {z}. How many {noun} did {name} have at the end?"
+    ]
+   }
+  }
+ ]
+}
