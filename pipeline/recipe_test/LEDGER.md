@@ -54,3 +54,5 @@ Round 3 about $0.85; thread total about $2.9 (estimates from hourly rates).
 
 ## Round 8 (2026-10-04)
 - 16:39Z six RTX 5090 boxes, commit 9e3035ad, two runs each: 54174527 (long-d 0,1), 54174529 (long-d 2,3), 54174531 (long-d 4,5), 54174541 (dist-d 0,1), 54174544 (dist-d 2,3), 54174545 (dist-d 4,5). Credit $11.03 before.
+- 17:14Z two long-d boxes (54174527, 54174529) were ~20x slow (cause unknown, 2 of 12 boxes this round), destroyed (~$0.2); long-d seeds 0-3 relaunched on offers 44173782, 49025071.
+- 17:32Z round 8 results copied back sha-checked (12 runs, 84 files); all boxes destroyed. Credit $8.43.
