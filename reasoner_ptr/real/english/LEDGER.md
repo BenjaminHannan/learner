@@ -41,9 +41,11 @@ Total for round 5: about $1.08. vast credit at 07:11 UTC: $2.76 (shared with oth
 
 | box | offer | GPU | seed | created (UTC) | destroyed (UTC) | copy-back checked | cost |
 |---|---|---|---|---|---|---|---|
-| 54161987 | 35580420 | RTX 3090 (Yunnan) | 0 | 14:47 | | | |
-| 54161988 | 43703600 | RTX 3090 (California) | 1 | 14:47 | | | |
-| 54161991 | 34224257 | RTX 3090 (British Columbia) | 2 | 14:47 | | | |
-| 54161992 | 27741149 | RTX 3090 (CZ) | 3 | 14:47 | | | |
-| 54161994 | 51025613 | RTX 3090 (Taiwan) | 4 | 14:47 | | | |
-| 54161996 | 45640045 | RTX 3090 (Wisconsin) | 5 | 14:47 | | | |
+| 54161987 | 35580420 | RTX 3090 (Yunnan) | 0 | 14:47 | 16:14 | yes: results.tar.gz sha256 matched manifest | ~$0.22 |
+| 54161988 | 43703600 | RTX 3090 (California) | 1 | 14:47 | 16:01 | yes: results.tar.gz sha256 matched manifest | ~$0.19 |
+| 54161991 | 34224257 | RTX 3090 (British Columbia) | 2 | 14:47 | 15:36 | yes: results.tar.gz sha256 matched manifest | ~$0.14 |
+| 54161992 | 27741149 | RTX 3090 (CZ) | 3 | 14:47 | 15:45 | yes: results.tar.gz sha256 matched manifest | ~$0.17 |
+| 54161994 | 51025613 | RTX 3090 (Taiwan) | 4 | 14:47 | 16:00 | yes: results.tar.gz sha256 matched manifest | ~$0.23 |
+| 54161996 | 45640045 | RTX 3090 (Wisconsin) | 5 | 14:47 | 15:38 | yes: results.tar.gz sha256 matched manifest | ~$0.16 |
+
+Total for round 6: about $1.10. vast credit at 16:15 UTC: $12.47 (shared with other threads).
