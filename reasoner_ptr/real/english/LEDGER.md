@@ -36,3 +36,14 @@ Total for round 4: about $0.89.
 | 54111417 | 35413600 | RTX 3090 (US) | 5 | 05:49 | 07:02 | yes: results.tar.gz sha256 matched manifest | ~$0.20 |
 
 Total for round 5: about $1.08. vast credit at 07:11 UTC: $2.76 (shared with other threads).
+
+## Round 6 (six vs twelve practised kinds per box; seed 0 box also runs lm_fewshot)
+
+| box | offer | GPU | seed | created (UTC) | destroyed (UTC) | copy-back checked | cost |
+|---|---|---|---|---|---|---|---|
+| 54161987 | 35580420 | RTX 3090 (Yunnan) | 0 | 14:47 | | | |
+| 54161988 | 43703600 | RTX 3090 (California) | 1 | 14:47 | | | |
+| 54161991 | 34224257 | RTX 3090 (British Columbia) | 2 | 14:47 | | | |
+| 54161992 | 27741149 | RTX 3090 (CZ) | 3 | 14:47 | | | |
+| 54161994 | 51025613 | RTX 3090 (Taiwan) | 4 | 14:47 | | | |
+| 54161996 | 45640045 | RTX 3090 (Wisconsin) | 5 | 14:47 | | | |
