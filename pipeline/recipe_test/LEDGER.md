@@ -42,3 +42,6 @@ Round 3 about $0.85; thread total about $2.9 (estimates from hourly rates).
 - ~14:45Z aborted first launch (6 boxes destroyed within ~2 min; frame bug caught by smoke test; ~$0.05). Relaunch below.
 - 14:44Z relaunch, commit 344aa27f, six 5090 boxes: 54161732 (comp 0,1), 54161733 (comp 2,3), 54161734 (comp 4,5), 54161735 (tabv 0,1), 54161736 (tabv 2,3), 54161737 (tabv 4,5).
 - 15:14Z results copied back sha-checked (12 runs); all six round-5 boxes destroyed. Credit $18.66.
+
+## Round 6 (2026-10-04)
+- 15:18Z six RTX 5090 boxes, commit 84d73be0: 54165279 (tabv 0,1; $0.388/h RO), 54165281 (tabv 2,3), 54165286 (tabv 4,5), 54165289 (rlv 2,3), 54165290 (rlv 4,5), plus rlv 0,1 (relaunched on offer 43165153 after a 429). Credit $18.45 before.
