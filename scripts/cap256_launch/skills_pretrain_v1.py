@@ -115,6 +115,8 @@ def main():
     ap.add_argument('--fixed-rows', type=int, default=0, help='with --sample-seed: draw this many rows once and repeat them --passes times (reshuffled each pass); also scores them as dev "trainfit"')
     ap.add_argument('--passes', type=int, default=1)
     ap.add_argument('--pointer', action='store_true', help='with --copy-path: add 8 pointer vectors (Linear 256->8 softmax over prompt positions, value = prompt embedding), the allptr exit; fresh params')
+    ap.add_argument('--prefix-hidden', type=int, default=0, help='widen the exit StatePrefix 259->32->2048 hidden to this width; function-preserving, fresh Adam state for the widened layers')
+    ap.add_argument('--zero-pool', action='store_true', help='with --copy-path: zero the 8 pooled core vectors (lesion: does the core matter?)')
     ap.add_argument('--rounds', type=int, default=4, help='latent loop rounds (shared weights; parent used 4)')
     ap.add_argument('--reader-hidden', type=int, default=0, help='widen the reader 2048->32->256 bottleneck to this width; function-preserving (new units feed zero weights), new weights get fresh Adam state; checkpoint then has the wider shape')
     a = ap.parse_args()
@@ -157,12 +159,15 @@ def main():
                 h, q = core.read_latent(state)
                 return h, q, torch.stack(terms).mean()
             rt.train_api.fixed4_training = fixed_rounds
-        if a.reader_hidden:
-            reader = runtime.module_dict(modules)['reader']
-            l1, l2 = reader.proj[1], reader.proj[3]
-            old_h, H = l1.out_features, a.reader_hidden
+        for which, H in (('reader', a.reader_hidden), ('prefix', a.prefix_hidden)):
+            if not H:
+                continue
+            seq = runtime.module_dict(modules)['reader'].proj if which == 'reader' else dec.adapter.project
+            i1, i2 = (1, 3) if which == 'reader' else (0, 2)
+            l1, l2 = seq[i1], seq[i2]
+            old_h = l1.out_features
             if H <= old_h:
-                raise SystemExit('--reader-hidden must exceed %d' % old_h)
+                raise SystemExit('--%s-hidden must exceed %d' % (which, old_h))
             g = torch.Generator(device='cpu').manual_seed(1000 + (a.sample_seed or 0))
             n1 = torch.nn.Linear(l1.in_features, H).to(l1.weight.device)
             n2 = torch.nn.Linear(H, l2.out_features).to(l2.weight.device)
@@ -176,15 +181,15 @@ def main():
                 n2.weight[:, :old_h] = l2.weight
                 n2.bias.copy_(l2.bias)
             swap = {id(l1.weight): n1.weight, id(l1.bias): n1.bias, id(l2.weight): n2.weight, id(l2.bias): n2.bias}
-            reader.proj[1], reader.proj[3] = n1, n2
+            seq[i1], seq[i2] = n1, n2
             new_named = [(n, swap.get(id(p), p)) for n, p in named]
             opt2 = runtime.make_optimizer(torch, [p for _, p in new_named])
             for (_, p_old), (_, p_new) in zip(named, new_named):
                 if p_old is p_new and opt.state.get(p_old):
                     opt2.state[p_new] = opt.state[p_old]
             named, opt = new_named, opt2
-            print(json.dumps({'event': 'reader-widened', 'from': old_h, 'to': H,
-                              'reader_params': sum(p.numel() for p in reader.parameters())}), flush=True)
+            print(json.dumps({'event': which + '-widened', 'from': old_h, 'to': H,
+                              'params': sum(p.numel() for p in seq.parameters())}), flush=True)
         if a.copy_path:
             ad = dec.adapter
             emb = lm.get_input_embeddings()
@@ -205,7 +210,7 @@ def main():
             def with_prompt(pref, h):
                 with torch.no_grad():
                     pe = emb(CP['ids']).to(pref.dtype)
-                parts = [pref]
+                parts = [pref * 0 if a.zero_pool else pref]
                 if ptr is not None:
                     pw = ptr(h.float()).softmax(1)
                     parts.append(torch.einsum('bnk,bnl->bkl', pw, pe))
@@ -292,7 +297,7 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}
