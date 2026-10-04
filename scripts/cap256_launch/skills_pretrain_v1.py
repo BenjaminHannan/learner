@@ -28,6 +28,8 @@ import train_english_paraphrase_pilot_windows_v1 as trainer  # noqa: E402
 BUSY = Path(r'C:\Users\benja\GPU-BUSY.txt')
 EXP = 'artifacts/cap256-launch/contextual-input-compare-v1/ENGLISH-PILOT-v1/CONFIGS-v1/'
 CP = {'ids': None}
+STEPS = {'on': False}
+SEP = ' # '
 DEV = ('in_dist', 'answer', 'frame', 'vocab', 'variant', 'family')
 
 
@@ -39,7 +41,8 @@ def encode(tokenizer, row, torch, device):
     ids = list(tokenizer.encode(row['prompt'], add_special_tokens=False)) + [common.EOS_ID]
     if len(ids) > 64:
         return None
-    labels = list(tokenizer.encode(row['answer'], add_special_tokens=False)) + [common.EOS_ID]
+    tgt = (' ; '.join(row['steps']) + SEP + row['answer']) if STEPS['on'] else row['answer']
+    labels = list(tokenizer.encode(tgt, add_special_tokens=False)) + [common.EOS_ID]
     return (torch.tensor([ids], device=device, dtype=torch.long), torch.ones((1, len(ids)), device=device, dtype=torch.bool),
             torch.tensor([labels], device=device, dtype=torch.long))
 
@@ -58,9 +61,11 @@ def evaluate(rt, ctx, modules, rows, tokenizer):
         ids, mask, _ = enc
         CP['ids'] = ids
         feats = rt.compare.extract_question_features(ctx.lm, ids, mask, 'contextual', torch)
-        obs = runtime.generate_observed(rt, ctx.dec, parts['core'], parts['reader'], feats, mask, 12)
+        obs = runtime.generate_observed(rt, ctx.dec, parts['core'], parts['reader'], feats, mask, 48 if STEPS['on'] else 12)
         out = obs['MODEL_native_decoder_return'][0] if obs['MODEL_native_decoder_return'] else []
         text = tokenizer.decode(out, skip_special_tokens=True)
+        if STEPS['on']:
+            text = text.rsplit('#', 1)[-1] if '#' in text else '\x00no-answer'
         ok += norm(text) in {norm(a) for a in row['accepted']}
     for _, m in modules:
         m.train()
@@ -90,9 +95,11 @@ def main():
     ap.add_argument('--minutes', type=float, default=120)
     ap.add_argument('--lr-mult', type=float, default=1.0)
     ap.add_argument('--lr-final-mult', type=float, default=None, help='cosine-decay lr from lr-mult to this multiple over the run')
+    ap.add_argument('--steps', action='store_true', help='target = worked steps + " # " + answer; scored on the text after the last #')
     ap.add_argument('--copy-path', action='store_true', help='prefix = 8 pooled vectors + the prompt token embeddings (talker can copy prompt tokens)')
     ap.add_argument('--families', default='', help='comma list: train and score only these families (diagnosis)')
     a = ap.parse_args()
+    STEPS['on'] = a.steps
     root = Path(a.root).resolve()
     out = root / a.out
     out.mkdir(parents=True, exist_ok=True)
