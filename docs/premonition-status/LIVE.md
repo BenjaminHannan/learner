@@ -221,3 +221,6 @@ Queue: C:\Users\benja\stiffrun.ps1 (task stiffjob) waits until the English queue
 
 ## 14:44Z Stiffness test moved to a Vast box (Fernando thread, Ben's go-ahead relayed); PC copy removed
 Removed the waiting stiffjob task and its two waiting processes (exact PIDs; English queue processes untouched, M1 still running). Pushed main2 final-checkpoint.pt (sha256 e82bd12b...04f6, 60698601 bytes, copy only) to claude/real-pipeline-checkpoints at skills/main2/final-checkpoint.pt. Seed-0 parent (sha 49a35023...) and TRAIN-CONFIG-v2.json (sha f0709733...) were already on that branch under pipeline/.
+
+## 16:05Z Stiffness test v1 result (run on Vast by the Fernando thread): NOT STIFF
+main2 20.9% vs parent 10.4% on two unseen skill families after 4000 updates; main2 ahead on 6 of 6 seeds (mean +10.5). Registered rule gives NOT STIFF; the 65-72 skills plateau is suggested not to be plasticity loss. Write-up (their run, not re-checked by me): artifacts/stiffness-test-v1/results/RESULT-v1.md on branch claude/project-thread-aya9pk. Confirmed: no stiffjob task and no stiffrun process remain on BensPC.
