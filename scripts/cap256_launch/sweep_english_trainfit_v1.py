@@ -129,6 +129,10 @@ def main():
             return
         # ---- train-fit eval (TRAIN panel only)
         ecfg = json.loads((root / EXP / 'EVAL-CONFIG-v1.json').read_text())
+        if a.parent0:
+            psha = common.digest(root / a.parent0)
+            ecfg['parents'][0]['checkpoint'] = {'path': a.parent0, 'sha256': psha}
+            runtime.PARENT_SHAS[0] = psha
         states = []
         ce = {}
         for s in seeds:
