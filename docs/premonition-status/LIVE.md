@@ -153,3 +153,6 @@ PROPOSED next single change (not launched; needs marks fixed first): same run, p
 
 ## 23:44Z LAUNCH skills pretraining, copy path + LR decay (task skmain3, tag main3)
 One change vs main2 (72/100): learning rate cosine-decays 1e-3 -> 1e-4 over the 50,000 updates (--lr-final-mult 0.1); copy path, seed-0 parent, stride 4, dev rows, eval every 4k all unchanged. Marks fixed before launch (coordinator confirmed): PASS in_dist >= 80 (then straight to stage B); improvement claim only if >= 78; wrong if <= 75. If it fails, step supervision is next (needs its own marks). main2 checkpoint kept (artifacts/skills/main2/); output goes to artifacts/skills/main3/. PC disk free 4.0 GB before launch (> 2 GB). Ends ~01:25Z.
+
+### 00:40Z INTERIM main3 (copy path + LR decay), 28k of 50k updates
+Shown: in_dist of 100 at 4k..28k: 32, 55, 53, 56, 61, 65, 66 (main2 at the same points: 35, 53, 54, 49, 59, 66, 67), so no difference so far; the decay only bites late. PC disk free 4.0 GB. Final ~01:25Z.
