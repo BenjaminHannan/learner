@@ -211,3 +211,6 @@ Marks and design are in docs/premonition-status/PASS-MARKS-PTR-PC.md (committed 
 ## 12:24Z cloud-recipe port launched on BensPC (GPU-BUSY held by each job in turn)
 Shown: main2 skills checkpoint plugs into the cloud model class strictly (core/reader/prefix/tool: 0 missing, 0 unexpected); dry run 20 steps ~1.1 s/step -> ~37 min per 2000-step run.
 Queue (ptrqueue.cmd, sequential): lm_fewshot baseline, then seeds 0-5 of arm S (scratch) and arm M (main2 init), interleaved by seed, 8000 generated rows each, plus NEW-KINDS-R5 as a read-only extra. About 8 h total. Marks: PASS-MARKS-PTR-PC.md. Logs/results under C:\Users\benja\ptr-english\ (out\, S*.log, M*.log). No checkpoints written; disk ~3.5 GB free.
+
+## 12:27Z cloud-recipe port: baseline reproduced, 12-run queue (S0..S5, M0..M5) running
+Shown: bare LM 8-shot on the same 192 fresh questions = 75.0% exact / 77.6% contains on the PC, identical to the cloud's number. So the bar is 75.0%; PASS needs mean >= 80.0 (marks unchanged). First queue attempt failed instantly (argparse: '--tag -S'); fixed with '--tag=-S', no GPU time lost, no results discarded. Seed 0 arm S started; ~37 min per run, ~7.5 h for 12.
