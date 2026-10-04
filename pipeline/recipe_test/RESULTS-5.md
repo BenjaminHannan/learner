@@ -21,4 +21,4 @@ Blind layouts the recipe handles: chat 96%, first-person 85-95%, riddle/diary 87
 - Suggested, untested: row-style tables (ledger, receipt) were the real gap; table variety helps those but does not move other layouts. Report style (60%) is the next weak spot.
 - Caveats: the blind set is written by a separate Claude worker, not a person or another vendor; 144 texts grammar-unchecked; two-digit add/subtract, fresh weights.
 
-Cost round 5: about $3.39 (incl. an aborted first launch ~$0.05); credit $18.66 at 15:14Z.
+Cost round 5: about $0.7 (6 boxes x ~25 min at ~$0.48/h plus the aborted first launch ~$0.05; estimated from rates, the balance is shared with other threads: it read $18.66 at the end).
