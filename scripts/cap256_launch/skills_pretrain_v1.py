@@ -114,6 +114,7 @@ def main():
     ap.add_argument('--sample-seed', type=int, default=None, help='train on a seeded random sample of the (family-filtered) rows instead of the ordered stride')
     ap.add_argument('--fixed-rows', type=int, default=0, help='with --sample-seed: draw this many rows once and repeat them --passes times (reshuffled each pass); also scores them as dev "trainfit"')
     ap.add_argument('--passes', type=int, default=1)
+    ap.add_argument('--pointer', action='store_true', help='with --copy-path: add 8 pointer vectors (Linear 256->8 softmax over prompt positions, value = prompt embedding), the allptr exit; fresh params')
     ap.add_argument('--rounds', type=int, default=4, help='latent loop rounds (shared weights; parent used 4)')
     ap.add_argument('--reader-hidden', type=int, default=0, help='widen the reader 2048->32->256 bottleneck to this width; function-preserving (new units feed zero weights), new weights get fresh Adam state; checkpoint then has the wider shape')
     a = ap.parse_args()
@@ -189,12 +190,28 @@ def main():
             emb = lm.get_input_embeddings()
             o_train, o_fwd = ad.project_training, ad.forward
 
-            def with_prompt(pref):
+            ptr = None
+            if a.pointer:  # allptr exit (reasoner_ptr/real/english/run_english.py): + 8 pointer vectors over prompt embeddings
+                g = torch.Generator(device='cpu').manual_seed(2000 + (a.sample_seed or 0))
+                ptr = torch.nn.Linear(256, 8)
+                with torch.no_grad():
+                    bound = 1.0 / math.sqrt(256)
+                    ptr.weight.copy_((torch.rand(8, 256, generator=g) * 2 - 1).mul_(bound))
+                    ptr.bias.copy_((torch.rand(8, generator=g) * 2 - 1).mul_(bound))
+                ptr = ptr.to(cfg['device'])
+                opt.add_param_group({'params': list(ptr.parameters())})
+                named = named + [('ptr.weight', ptr.weight), ('ptr.bias', ptr.bias)]
+
+            def with_prompt(pref, h):
                 with torch.no_grad():
                     pe = emb(CP['ids']).to(pref.dtype)
-                return torch.cat((pref, pe), 1)
-            ad.project_training = lambda *x, **k: with_prompt(o_train(*x, **k))
-            ad.forward = lambda *x, **k: with_prompt(o_fwd(*x, **k))
+                parts = [pref]
+                if ptr is not None:
+                    pw = ptr(h.float()).softmax(1)
+                    parts.append(torch.einsum('bnk,bnl->bkl', pw, pe))
+                return torch.cat(parts + [pe], 1)
+            ad.project_training = lambda *x, **k: with_prompt(o_train(*x, **k), x[0])
+            ad.forward = lambda *x, **k: with_prompt(o_fwd(*x, **k), x[0].latent)
 
             def loss_fn(rt_, lm_, dec_, h, mask, target):
                 prefix = dec_.adapter.project_training(h, torch.ones_like(h, dtype=torch.bool), mask, (1, h.shape[1]))
@@ -275,7 +292,7 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'rounds': a.rounds, 'reader_hidden': a.reader_hidden or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}

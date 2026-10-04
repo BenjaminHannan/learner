@@ -11,7 +11,8 @@ Start main2 (copy path). Worst-8 families: chain_ops, state_update, cipher_map, 
 - **W (wider reader):** `--reader-hidden 256`. The reader's 2048->32->256 pipe becomes 2048->256->256. Function-preserving: old units copied, new units feed zero weights, so the start is exactly main2. Widened layers start fresh Adam state.
 - **L (more rounds):** `--rounds 8` (shared weights, parent used 4).
 - **O (calmer optimiser):** `--lr-mult 0.3` (lr 3e-4 instead of 1e-3).
-The exit (StatePrefix, copy path) is not touched: other threads own talker changes.
+- **P (allptr exit), added 20:50 UTC before it ran, at the coordinator's request:** `--pointer`. Adds the cloud recipe's 8 pointer vectors (Linear 256->8 on the core's final state, softmax over prompt positions, value = that prompt token's LM input embedding) between the 8 pooled vectors and the prompt embeddings the copy path already appends. New parameters, so its start is not exactly main2 (its update-0 score is reported). Runs on a second box.
+Nothing else in the exit (StatePrefix, copy path) changes: other threads own talker changes.
 
 ## Marks (fixed now)
 - An arm **FIXES FIT** if its mean fit is >= +15 points over baseline (>= 64.8) and all 3 seeds beat their paired baseline seed.
