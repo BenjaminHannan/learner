@@ -85,14 +85,62 @@ def tab_extra(rng, n):
 
 def blind_frames():
     import os, json
-    p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "eval_layouts_r5_blind.json")
-    if not os.path.exists(p): return []
-    return [(0, 0, t) for f in json.load(open(p))["families"] for v in f["frames"].values() for t in v]
+    out = []
+    for fn in ("eval_layouts_r5_blind.json", "eval_layouts_r6_blind.json"):
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)), fn)
+        if os.path.exists(p): out += [(0, 0, t) for f in json.load(open(p))["families"] for v in f["frames"].values() for t in v]
+    return out
 
 
-def train_frames(n=12000, tab=0):
+# ---- round 6: report / ledger / receipt / spreadsheet style practice (written WITHOUT reading the round-6 blind set, which I never opened)
+RP_OPEN = ["Incident summary: the {noun} on record stood at {x}.", "Minutes of the stores meeting. Opening position for {noun}: {x}.", "Audit note: the register listed {x} {noun} at the outset.",
+           "Quarterly brief. Holdings of {noun} began at {x}.", "Status memo to the manager: {x} {noun} were on hand at the outset."]
+RP_G = ["It was later confirmed that {y} more had been received.", "The memo records an inflow of {y}.", "Officials noted that {y} were added to the stock.", "A top-up of {y} was signed off."]
+RP_L = ["It was later confirmed that {y} had been written off.", "The memo records an outflow of {y}.", "Officials noted that {y} were struck from the stock.", "A withdrawal of {y} was signed off."]
+RP_G2 = ["Afterwards, {z} more came in.", "Subsequently an inflow of {z} was logged.", "The follow-up shows {z} added.", "Then a further {z} were received."]
+RP_L2 = ["Afterwards, {z} went out.", "Subsequently an outflow of {z} was logged.", "The follow-up shows {z} struck off.", "Then a further {z} were written off."]
+RP_END = ["The auditor requests the closing figure.", "State the resulting total.", "What number does the register now show?", "Give the balance at the close of the report."]
+LG_HEAD = ["GENERAL LEDGER: {noun}", "Account: {noun}", "Bookkeeping page for {noun}", "Statement of {noun}"]
+LG_OPEN = ["Brought forward {x}", "Opening balance {x}", "Balance b/f {x}", "Starting entry {x}"]
+LG_CR = ["Credit entry {y}", "Deposit of {y}", "Receipt of {y}", "Credited {y}"]
+LG_DR = ["Debit entry {y}", "Withdrawal of {y}", "Payment out {y}", "Debited {y}"]
+LG_END = ["Closing balance?", "Carried forward?", "Balance c/f ?", "Resulting balance:"]
+SS_HEAD = ["item,amount", "field | value", "Col A | Col B", "label ; qty"]
+SS_ROWS = [("start", "inbound", "outbound"), ("open", "added", "removed"), ("base", "increase", "decrease"), ("opening stock", "goods in", "goods out")]
+RC_HEAD = ["DELIVERY NOTE ({noun})", "PACKING SLIP: {noun}", "Shop receipt, {noun}", "Dispatch slip for {noun}"]
+RC_G = ["extra {y} included", "bonus {y} packed in", "restock {y}", "{y} loaded on"]
+RC_L = ["{y} returned", "{y} taken off", "refund of {y} items", "{y} unloaded"]
+
+
+def rl_extra(rng, n):
+    out = []
+    for _ in range(n):
+        o1, o2 = rng.choice(("ADD", "SUB")), rng.choice(("ADD", "SUB"))
+        g = lambda o, a, b: rng.choice(a if o == "ADD" else b)
+        k = rng.random()
+        if k < 0.3:
+            t = " ".join([rng.choice(RP_OPEN), g(o1, RP_G, RP_L), g(o2, RP_G2, RP_L2).replace("{y}", "{z}"), rng.choice(RP_END)])
+        elif k < 0.55:
+            sep = rng.choice(["\n", " ; ", " / "])
+            c2 = g(o2, LG_CR, LG_DR).replace("{y}", "{z}")
+            t = sep.join([rng.choice(LG_HEAD), rng.choice(LG_OPEN), g(o1, LG_CR, LG_DR), c2, rng.choice(LG_END)])
+        elif k < 0.8:
+            r0, ra, rb = rng.choice(SS_ROWS)
+            hd = rng.choice(SS_HEAD); sep = "," if "," in hd else (" | " if "|" in hd else " ; ")
+            ch = lambda o, w: (ra if o == "ADD" else rb)
+            rows = [f"{r0}{sep}{{x}}", f"{ch(o1, 0)}{sep}{{y}}", f"{ch(o2, 0)}{sep}{{z}}", rng.choice(["final value?", "total after all rows?", "last row: result?"])]
+            t = "\n".join([hd] + rows)
+        else:
+            sep = rng.choice([" ; ", "\n", " | "])
+            t = sep.join([rng.choice(RC_HEAD), rng.choice(["carried over {x}", "on hand {x}", "opening count {x}"]), g(o1, RC_G, RC_L), g(o2, RC_G, RC_L).replace("{y}", "{z}"), rng.choice(["count now?", "quantity at the end?", "how many remain?"])])
+        out.append((o1, o2, t))
+    return out
+
+
+def train_frames(n=12000, tab=0, rl=0):
     fr = list(set(compose(random.Random(4_000_001), n)))
     if tab: fr += list(set(tab_extra(random.Random(5_000_001), tab)))
+    if rl: fr += list(set(rl_extra(random.Random(6_000_001), rl)))
     import re
     fr = [f for f in fr if not re.search(r"\d", f[2])]  # a digit in the frame would add a literal the registry check rejects
     ev = g3.all_eval_frames() + blind_frames()

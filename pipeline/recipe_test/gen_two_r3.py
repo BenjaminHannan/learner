@@ -96,6 +96,9 @@ def stream(excluded_triples, excluded_pairs, seed, n, one_step_frac=0.3, fits=la
     if frames == "comp":
         import gen_two_v
         fr = fr + gen_two_v.train_frames()
+    elif frames == "rlv":
+        import gen_two_v
+        fr = fr + gen_two_v.train_frames(tab=6000, rl=6000)
     elif frames == "tabv":
         import gen_two_v
         fr = fr + gen_two_v.train_frames(tab=6000)
@@ -119,13 +122,13 @@ def stream(excluded_triples, excluded_pairs, seed, n, one_step_frac=0.3, fits=la
     return out
 
 
-def build_blind(per_cell=2, seed=20261501, fits=lambda t: True, used=frozenset()):
+def build_blind(per_cell=2, seed=20261501, fits=lambda t: True, used=frozenset(), fname="eval_layouts_r5_blind.json"):
     """Round 5: 12 independently written layout families (eval_layouts_r5_blind.json, written by a separate worker given only the task description).
     12 families x 4 op pairs x (per_cell unseen + per_cell seen finals) = 192 questions."""
     import json, os
     T, H = gen.answer_split(); rng = random.Random(seed)
     e2 = gen.load(gen.EVAL_FILE); rows = []; used = set(used)
-    fams = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "eval_layouts_r5_blind.json")))["families"]
+    fams = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), fname)))["families"]
     for fam in fams:
         for o1, o2 in itertools.product(("ADD", "SUB"), repeat=2):
             texts = fam["frames"][f"{o1}-{o2}"]; k = 0

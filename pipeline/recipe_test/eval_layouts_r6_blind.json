@@ -1,0 +1,316 @@
+{
+ "families": [
+  {
+   "name": "news brief",
+   "kind": "report",
+   "frames": {
+    "ADD-ADD": [
+     "BRIEF: The depot began the week holding {x} {noun}. Mid-week it taken in {y}, and by Friday it had taken in {z} more. How many {noun} does the depot hold now?",
+     "Local desk report: Stock stood at {x} {noun} on Monday. Officials confirmed {y} were added, then another {z} were added. What is the final count of {noun}?",
+     "Council news: the hall kept {x} {noun} in store. Over the weekend {y} arrived, and on Tuesday {z} arrived. Report the final number of {noun}."
+    ],
+    "ADD-SUB": [
+     "BRIEF: The depot began the week holding {x} {noun}. Mid-week it taken in {y}, and by Friday it had shipped out {z} more. How many {noun} does the depot hold now?",
+     "Local desk report: Stock stood at {x} {noun} on Monday. Officials confirmed {y} were added, then another {z} were removed. What is the final count of {noun}?",
+     "Council news: the hall kept {x} {noun} in store. Over the weekend {y} arrived, and on Tuesday {z} were given away. Report the final number of {noun}."
+    ],
+    "SUB-ADD": [
+     "BRIEF: The depot began the week holding {x} {noun}. Mid-week it shipped out {y}, and by Friday it had taken in {z} more. How many {noun} does the depot hold now?",
+     "Local desk report: Stock stood at {x} {noun} on Monday. Officials confirmed {y} were removed, then another {z} were added. What is the final count of {noun}?",
+     "Council news: the hall kept {x} {noun} in store. Over the weekend {y} went missing, and on Tuesday {z} arrived. Report the final number of {noun}."
+    ],
+    "SUB-SUB": [
+     "BRIEF: The depot began the week holding {x} {noun}. Mid-week it shipped out {y}, and by Friday it had shipped out {z} more. How many {noun} does the depot hold now?",
+     "Local desk report: Stock stood at {x} {noun} on Monday. Officials confirmed {y} were removed, then another {z} were removed. What is the final count of {noun}?",
+     "Council news: the hall kept {x} {noun} in store. Over the weekend {y} went missing, and on Tuesday {z} were given away. Report the final number of {noun}."
+    ]
+   }
+  },
+  {
+   "name": "incident report",
+   "kind": "report",
+   "frames": {
+    "ADD-ADD": [
+     "INCIDENT LOG. Initial inventory: {x} {noun}. Event one: {y} {noun} recovered. Event two: {z} {noun} recovered. State the closing inventory.",
+     "Audit finding: at the start the count was {x} {noun}. The auditor noted {y} surplus found during the first check and {z} surplus found during the second. What count should the final record show?",
+     "Incident summary for {name}: {x} {noun} on site; later {y} were brought in, afterwards {z} were brought in. How many {noun} remain on site in the end?"
+    ],
+    "ADD-SUB": [
+     "INCIDENT LOG. Initial inventory: {x} {noun}. Event one: {y} {noun} recovered. Event two: {z} {noun} lost. State the closing inventory.",
+     "Audit finding: at the start the count was {x} {noun}. The auditor noted {y} surplus found during the first check and {z} shortfall written off during the second. What count should the final record show?",
+     "Incident summary for {name}: {x} {noun} on site; later {y} were brought in, afterwards {z} were carted away. How many {noun} remain on site in the end?"
+    ],
+    "SUB-ADD": [
+     "INCIDENT LOG. Initial inventory: {x} {noun}. Event one: {y} {noun} lost. Event two: {z} {noun} recovered. State the closing inventory.",
+     "Audit finding: at the start the count was {x} {noun}. The auditor noted {y} shortfall written off during the first check and {z} surplus found during the second. What count should the final record show?",
+     "Incident summary for {name}: {x} {noun} on site; later {y} were carted away, afterwards {z} were brought in. How many {noun} remain on site in the end?"
+    ],
+    "SUB-SUB": [
+     "INCIDENT LOG. Initial inventory: {x} {noun}. Event one: {y} {noun} lost. Event two: {z} {noun} lost. State the closing inventory.",
+     "Audit finding: at the start the count was {x} {noun}. The auditor noted {y} shortfall written off during the first check and {z} shortfall written off during the second. What count should the final record show?",
+     "Incident summary for {name}: {x} {noun} on site; later {y} were carted away, afterwards {z} were carted away. How many {noun} remain on site in the end?"
+    ]
+   }
+  },
+  {
+   "name": "memo minutes",
+   "kind": "report",
+   "frames": {
+    "ADD-ADD": [
+     "MEMO to all staff. We currently hold {x} {noun}. Action item one: order {y}. Action item two: order {z}. Please confirm the resulting total of {noun}.",
+     "Minutes of the stock meeting. Present holding: {x} {noun}. Resolved that the team will purchase {y} and subsequently purchase {z}. What is the total after both resolutions?",
+     "Internal note from {name}: our shelf has {x} {noun}. Next we top up with {y} of them, then we top up with {z} of them. Final tally, please."
+    ],
+    "ADD-SUB": [
+     "MEMO to all staff. We currently hold {x} {noun}. Action item one: order {y}. Action item two: return {z}. Please confirm the resulting total of {noun}.",
+     "Minutes of the stock meeting. Present holding: {x} {noun}. Resolved that the team will purchase {y} and subsequently sell off {z}. What is the total after both resolutions?",
+     "Internal note from {name}: our shelf has {x} {noun}. Next we top up with {y} of them, then we hand out {z} of them. Final tally, please."
+    ],
+    "SUB-ADD": [
+     "MEMO to all staff. We currently hold {x} {noun}. Action item one: return {y}. Action item two: order {z}. Please confirm the resulting total of {noun}.",
+     "Minutes of the stock meeting. Present holding: {x} {noun}. Resolved that the team will sell off {y} and subsequently purchase {z}. What is the total after both resolutions?",
+     "Internal note from {name}: our shelf has {x} {noun}. Next we hand out {y} of them, then we top up with {z} of them. Final tally, please."
+    ],
+    "SUB-SUB": [
+     "MEMO to all staff. We currently hold {x} {noun}. Action item one: return {y}. Action item two: return {z}. Please confirm the resulting total of {noun}.",
+     "Minutes of the stock meeting. Present holding: {x} {noun}. Resolved that the team will sell off {y} and subsequently sell off {z}. What is the total after both resolutions?",
+     "Internal note from {name}: our shelf has {x} {noun}. Next we hand out {y} of them, then we hand out {z} of them. Final tally, please."
+    ]
+   }
+  },
+  {
+   "name": "ledger lines",
+   "kind": "ledger",
+   "frames": {
+    "ADD-ADD": [
+     "Opening balance: {x} {noun}\nCredit: {y}\nCredit: {z}\nClosing balance?",
+     "Brought forward {x} {noun} ; receipts of {y} ; receipts of {z} ; carried forward = ?",
+     "Account of {name}. Start {x} {noun}. Entry A: deposit of {y}. Entry B: deposit of {z}. What is the balance after entry B?"
+    ],
+    "ADD-SUB": [
+     "Opening balance: {x} {noun}\nCredit: {y}\nDebit: {z}\nClosing balance?",
+     "Brought forward {x} {noun} ; receipts of {y} ; issues of {z} ; carried forward = ?",
+     "Account of {name}. Start {x} {noun}. Entry A: deposit of {y}. Entry B: withdrawal of {z}. What is the balance after entry B?"
+    ],
+    "SUB-ADD": [
+     "Opening balance: {x} {noun}\nDebit: {y}\nCredit: {z}\nClosing balance?",
+     "Brought forward {x} {noun} ; issues of {y} ; receipts of {z} ; carried forward = ?",
+     "Account of {name}. Start {x} {noun}. Entry A: withdrawal of {y}. Entry B: deposit of {z}. What is the balance after entry B?"
+    ],
+    "SUB-SUB": [
+     "Opening balance: {x} {noun}\nDebit: {y}\nDebit: {z}\nClosing balance?",
+     "Brought forward {x} {noun} ; issues of {y} ; issues of {z} ; carried forward = ?",
+     "Account of {name}. Start {x} {noun}. Entry A: withdrawal of {y}. Entry B: withdrawal of {z}. What is the balance after entry B?"
+    ]
+   }
+  },
+  {
+   "name": "bank statement",
+   "kind": "ledger",
+   "frames": {
+    "ADD-ADD": [
+     "STATEMENT\nOpening: {x} {noun}\nLine one: {y} in\nLine two: {z} in\nBalance at close?",
+     "Date | Movement | Running total\nStart | - | {x} {noun}\nDay one | {y} gained | ?\nDay two | {z} gained | ?\nWhat is the last running total?",
+     "Ledger note: balance {x} {noun}. Posting one, {y}, credited. Posting two, {z}, credited. Compute the final balance."
+    ],
+    "ADD-SUB": [
+     "STATEMENT\nOpening: {x} {noun}\nLine one: {y} in\nLine two: {z} out\nBalance at close?",
+     "Date | Movement | Running total\nStart | - | {x} {noun}\nDay one | {y} gained | ?\nDay two | {z} spent | ?\nWhat is the last running total?",
+     "Ledger note: balance {x} {noun}. Posting one, {y}, credited. Posting two, {z}, debited. Compute the final balance."
+    ],
+    "SUB-ADD": [
+     "STATEMENT\nOpening: {x} {noun}\nLine one: {y} out\nLine two: {z} in\nBalance at close?",
+     "Date | Movement | Running total\nStart | - | {x} {noun}\nDay one | {y} spent | ?\nDay two | {z} gained | ?\nWhat is the last running total?",
+     "Ledger note: balance {x} {noun}. Posting one, {y}, debited. Posting two, {z}, credited. Compute the final balance."
+    ],
+    "SUB-SUB": [
+     "STATEMENT\nOpening: {x} {noun}\nLine one: {y} out\nLine two: {z} out\nBalance at close?",
+     "Date | Movement | Running total\nStart | - | {x} {noun}\nDay one | {y} spent | ?\nDay two | {z} spent | ?\nWhat is the last running total?",
+     "Ledger note: balance {x} {noun}. Posting one, {y}, debited. Posting two, {z}, debited. Compute the final balance."
+    ]
+   }
+  },
+  {
+   "name": "shop receipt",
+   "kind": "receipt",
+   "frames": {
+    "ADD-ADD": [
+     "RECEIPT\nOn hand at open: {x} {noun}\nDelivered {y}\nDelivered {z}\nTOTAL ON HAND:",
+     "Corner Store slip. Shelf started with {x} {noun}. Customer one returned {y}. Customer two returned {z}. How many {noun} are on the shelf at the end?",
+     "Till tape: {x} {noun} in drawer. {y} restocked. {z} restocked. Items now in drawer?"
+    ],
+    "ADD-SUB": [
+     "RECEIPT\nOn hand at open: {x} {noun}\nDelivered {y}\nSold {z}\nTOTAL ON HAND:",
+     "Corner Store slip. Shelf started with {x} {noun}. Customer one returned {y}. Customer two bought {z}. How many {noun} are on the shelf at the end?",
+     "Till tape: {x} {noun} in drawer. {y} restocked. {z} rung up and taken. Items now in drawer?"
+    ],
+    "SUB-ADD": [
+     "RECEIPT\nOn hand at open: {x} {noun}\nSold {y}\nDelivered {z}\nTOTAL ON HAND:",
+     "Corner Store slip. Shelf started with {x} {noun}. Customer one bought {y}. Customer two returned {z}. How many {noun} are on the shelf at the end?",
+     "Till tape: {x} {noun} in drawer. {y} rung up and taken. {z} restocked. Items now in drawer?"
+    ],
+    "SUB-SUB": [
+     "RECEIPT\nOn hand at open: {x} {noun}\nSold {y}\nSold {z}\nTOTAL ON HAND:",
+     "Corner Store slip. Shelf started with {x} {noun}. Customer one bought {y}. Customer two bought {z}. How many {noun} are on the shelf at the end?",
+     "Till tape: {x} {noun} in drawer. {y} rung up and taken. {z} rung up and taken. Items now in drawer?"
+    ]
+   }
+  },
+  {
+   "name": "warehouse slip",
+   "kind": "receipt",
+   "frames": {
+    "ADD-ADD": [
+     "DELIVERY NOTE: Pallet opened with {x} {noun}. Line one: add {y}. Line two: add {z}. Quantity on pallet at end?",
+     "Packing list for {name}. Box contains {x} {noun} to begin. Packer slipped in {y}, then slipped in {z}. How many {noun} are in the box when sealed?",
+     "WAREHOUSE SLIP | start qty {x} {noun} | inbound: {y} received | later: {z} received | final qty?"
+    ],
+    "ADD-SUB": [
+     "DELIVERY NOTE: Pallet opened with {x} {noun}. Line one: add {y}. Line two: remove {z}. Quantity on pallet at end?",
+     "Packing list for {name}. Box contains {x} {noun} to begin. Packer slipped in {y}, then took out {z}. How many {noun} are in the box when sealed?",
+     "WAREHOUSE SLIP | start qty {x} {noun} | inbound: {y} received | later: {z} dispatched | final qty?"
+    ],
+    "SUB-ADD": [
+     "DELIVERY NOTE: Pallet opened with {x} {noun}. Line one: remove {y}. Line two: add {z}. Quantity on pallet at end?",
+     "Packing list for {name}. Box contains {x} {noun} to begin. Packer took out {y}, then slipped in {z}. How many {noun} are in the box when sealed?",
+     "WAREHOUSE SLIP | start qty {x} {noun} | inbound: {y} dispatched | later: {z} received | final qty?"
+    ],
+    "SUB-SUB": [
+     "DELIVERY NOTE: Pallet opened with {x} {noun}. Line one: remove {y}. Line two: remove {z}. Quantity on pallet at end?",
+     "Packing list for {name}. Box contains {x} {noun} to begin. Packer took out {y}, then took out {z}. How many {noun} are in the box when sealed?",
+     "WAREHOUSE SLIP | start qty {x} {noun} | inbound: {y} dispatched | later: {z} dispatched | final qty?"
+    ]
+   }
+  },
+  {
+   "name": "sheet cells",
+   "kind": "spreadsheet",
+   "frames": {
+    "ADD-ADD": [
+     "Cell A: start = {x} {noun}\nCell B: change = plus {y}\nCell C: change = plus {z}\nWhat does the result cell D display?",
+     "Cell one holds {x} {noun}. Cell two says: increase by {y}. Cell three says: increase by {z}. What value ends up in the final cell?",
+     "Row one: initial | {x} {noun}. Row two: step one | gain {y}. Row three: step two | gain {z}. Row four: result | ?"
+    ],
+    "ADD-SUB": [
+     "Cell A: start = {x} {noun}\nCell B: change = plus {y}\nCell C: change = minus {z}\nWhat does the result cell D display?",
+     "Cell one holds {x} {noun}. Cell two says: increase by {y}. Cell three says: decrease by {z}. What value ends up in the final cell?",
+     "Row one: initial | {x} {noun}. Row two: step one | gain {y}. Row three: step two | loss {z}. Row four: result | ?"
+    ],
+    "SUB-ADD": [
+     "Cell A: start = {x} {noun}\nCell B: change = minus {y}\nCell C: change = plus {z}\nWhat does the result cell D display?",
+     "Cell one holds {x} {noun}. Cell two says: decrease by {y}. Cell three says: increase by {z}. What value ends up in the final cell?",
+     "Row one: initial | {x} {noun}. Row two: step one | loss {y}. Row three: step two | gain {z}. Row four: result | ?"
+    ],
+    "SUB-SUB": [
+     "Cell A: start = {x} {noun}\nCell B: change = minus {y}\nCell C: change = minus {z}\nWhat does the result cell D display?",
+     "Cell one holds {x} {noun}. Cell two says: decrease by {y}. Cell three says: decrease by {z}. What value ends up in the final cell?",
+     "Row one: initial | {x} {noun}. Row two: step one | loss {y}. Row three: step two | loss {z}. Row four: result | ?"
+    ]
+   }
+  },
+  {
+   "name": "csv table",
+   "kind": "spreadsheet",
+   "frames": {
+    "ADD-ADD": [
+     "item,start,stepone,steptwo,end\n{noun},{x},up {y},up {z},?\nFill in the end column.",
+     "| Qty start | First move | Second move | Qty end |\n| {x} {noun} | {y} added | {z} added | ? |\nSolve for the last column.",
+     "Column header: {noun}. Row for {name}: begin {x}; first update {y} (more); second update {z} (more). Give the end value."
+    ],
+    "ADD-SUB": [
+     "item,start,stepone,steptwo,end\n{noun},{x},up {y},down {z},?\nFill in the end column.",
+     "| Qty start | First move | Second move | Qty end |\n| {x} {noun} | {y} added | {z} taken away | ? |\nSolve for the last column.",
+     "Column header: {noun}. Row for {name}: begin {x}; first update {y} (more); second update {z} (fewer). Give the end value."
+    ],
+    "SUB-ADD": [
+     "item,start,stepone,steptwo,end\n{noun},{x},down {y},up {z},?\nFill in the end column.",
+     "| Qty start | First move | Second move | Qty end |\n| {x} {noun} | {y} taken away | {z} added | ? |\nSolve for the last column.",
+     "Column header: {noun}. Row for {name}: begin {x}; first update {y} (fewer); second update {z} (more). Give the end value."
+    ],
+    "SUB-SUB": [
+     "item,start,stepone,steptwo,end\n{noun},{x},down {y},down {z},?\nFill in the end column.",
+     "| Qty start | First move | Second move | Qty end |\n| {x} {noun} | {y} taken away | {z} taken away | ? |\nSolve for the last column.",
+     "Column header: {noun}. Row for {name}: begin {x}; first update {y} (fewer); second update {z} (fewer). Give the end value."
+    ]
+   }
+  },
+  {
+   "name": "recipe steps",
+   "kind": "other",
+   "frames": {
+    "ADD-ADD": [
+     "Step one: Start with {x} {noun}. Step two: Toss in {y}. Step three: Toss in {z}. How many {noun} are in the bowl at the end?",
+     "Pantry check. There are {x} {noun}. First you buy {y} of them, then you buy {z} of them. How many are left in the pantry?",
+     "Prep list, {name} cooking: {x} {noun} ready. Step A brings in {y}. Step B brings in {z}. Count of {noun} afterwards?"
+    ],
+    "ADD-SUB": [
+     "Step one: Start with {x} {noun}. Step two: Toss in {y}. Step three: Pick out {z}. How many {noun} are in the bowl at the end?",
+     "Pantry check. There are {x} {noun}. First you buy {y} of them, then you use up {z} of them. How many are left in the pantry?",
+     "Prep list, {name} cooking: {x} {noun} ready. Step A brings in {y}. Step B uses {z}. Count of {noun} afterwards?"
+    ],
+    "SUB-ADD": [
+     "Step one: Start with {x} {noun}. Step two: Pick out {y}. Step three: Toss in {z}. How many {noun} are in the bowl at the end?",
+     "Pantry check. There are {x} {noun}. First you use up {y} of them, then you buy {z} of them. How many are left in the pantry?",
+     "Prep list, {name} cooking: {x} {noun} ready. Step A uses {y}. Step B brings in {z}. Count of {noun} afterwards?"
+    ],
+    "SUB-SUB": [
+     "Step one: Start with {x} {noun}. Step two: Pick out {y}. Step three: Pick out {z}. How many {noun} are in the bowl at the end?",
+     "Pantry check. There are {x} {noun}. First you use up {y} of them, then you use up {z} of them. How many are left in the pantry?",
+     "Prep list, {name} cooking: {x} {noun} ready. Step A uses {y}. Step B uses {z}. Count of {noun} afterwards?"
+    ]
+   }
+  },
+  {
+   "name": "tweet post",
+   "kind": "other",
+   "frames": {
+    "ADD-ADD": [
+     "so i had {x} {noun}, then found {y}, and then found {z}. how many now??",
+     "{name} here: woke up with {x} {noun}. Lunchtime scored {y}. By night scored {z}. What is my final number?",
+     "Thread: we began at {x} {noun}. Big news, {y} joined! Then plot twist, {z} joined. Where does that leave the total?"
+    ],
+    "ADD-SUB": [
+     "so i had {x} {noun}, then found {y}, and then lost {z}. how many now??",
+     "{name} here: woke up with {x} {noun}. Lunchtime scored {y}. By night gave away {z}. What is my final number?",
+     "Thread: we began at {x} {noun}. Big news, {y} joined! Then plot twist, {z} left. Where does that leave the total?"
+    ],
+    "SUB-ADD": [
+     "so i had {x} {noun}, then lost {y}, and then found {z}. how many now??",
+     "{name} here: woke up with {x} {noun}. Lunchtime gave away {y}. By night scored {z}. What is my final number?",
+     "Thread: we began at {x} {noun}. Big news, {y} left! Then plot twist, {z} joined. Where does that leave the total?"
+    ],
+    "SUB-SUB": [
+     "so i had {x} {noun}, then lost {y}, and then lost {z}. how many now??",
+     "{name} here: woke up with {x} {noun}. Lunchtime gave away {y}. By night gave away {z}. What is my final number?",
+     "Thread: we began at {x} {noun}. Big news, {y} left! Then plot twist, {z} left. Where does that leave the total?"
+    ]
+   }
+  },
+  {
+   "name": "class puzzle",
+   "kind": "other",
+   "frames": {
+    "ADD-ADD": [
+     "Ms. Reed has {x} {noun} in her classroom. A student donated {y} of them, and later another student donated {z}. How many {noun} does Ms. Reed have in the end?",
+     "{name} owns {x} {noun}. Each of two events changes that number: the first gives {name} an extra {y}, the second gives {name} an extra {z}. After both events, how many {noun} does {name} have?",
+     "A box starts with {x} {noun}. Puzzle: first {y} magically appear, and then {z} magically appear. What final amount is in the box?"
+    ],
+    "ADD-SUB": [
+     "Ms. Reed has {x} {noun} in her classroom. A student donated {y} of them, and later another student borrowed {z}. How many {noun} does Ms. Reed have in the end?",
+     "{name} owns {x} {noun}. Each of two events changes that number: the first gives {name} an extra {y}, the second takes from {name} {z}. After both events, how many {noun} does {name} have?",
+     "A box starts with {x} {noun}. Puzzle: first {y} magically appear, and then {z} vanish. What final amount is in the box?"
+    ],
+    "SUB-ADD": [
+     "Ms. Reed has {x} {noun} in her classroom. A student borrowed {y} of them, and later another student donated {z}. How many {noun} does Ms. Reed have in the end?",
+     "{name} owns {x} {noun}. Each of two events changes that number: the first takes from {name} {y}, the second gives {name} an extra {z}. After both events, how many {noun} does {name} have?",
+     "A box starts with {x} {noun}. Puzzle: first {y} vanish, and then {z} magically appear. What final amount is in the box?"
+    ],
+    "SUB-SUB": [
+     "Ms. Reed has {x} {noun} in her classroom. A student borrowed {y} of them, and later another student borrowed {z}. How many {noun} does Ms. Reed have in the end?",
+     "{name} owns {x} {noun}. Each of two events changes that number: the first takes from {name} {y}, the second takes from {name} {z}. After both events, how many {noun} does {name} have?",
+     "A box starts with {x} {noun}. Puzzle: first {y} vanish, and then {z} vanish. What final amount is in the box?"
+    ]
+   }
+  }
+ ]
+}

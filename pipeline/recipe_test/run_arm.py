@@ -37,8 +37,9 @@ p.add_argument("--ctx", action="store_true", help="reader reads the frozen LM's 
 p.add_argument("--task", choices=["one", "two"], default="one")
 p.add_argument("--ordered", action="store_true", help="each loop reads the question with its own learned attention query instead of the mean")
 p.add_argument("--wording", choices=["old", "mix"], default="old")
-p.add_argument("--frames", choices=["base", "comp", "tabv"], default="base", help="two-step training frames: the fixed set, or the fixed set plus composed frames (round 4)")
+p.add_argument("--frames", choices=["base", "comp", "tabv", "rlv"], default="base", help="two-step training frames: the fixed set, or the fixed set plus composed frames (round 4)")
 p.add_argument("--blind", action="store_true", help="also evaluate on the independently written layouts (round 5)")
+p.add_argument("--blind2", action="store_true", help="also evaluate on the round-6 independently written layouts")
 p.add_argument("--steps", type=int, default=3000)
 p.add_argument("--batch", type=int, default=16)
 p.add_argument("--lr", type=float, default=1e-3)
@@ -354,7 +355,8 @@ def main():
         fits = lambda t: len(tok.encode(t, add_special_tokens=False)) + 1 <= 49  # real core query cap
         form = g3.build_eval(fits=fits)
         form_b = g3.build_blind(fits=fits, used={(r["x"], r["y"], r["z"]) for r in form}) if args.blind else []
-        ex_t = {(r["x"], r["y"], r["z"]) for r in form} | {(r["x"], r["y"], r["z"]) for r in form_b}
+        form_b2 = g3.build_blind(fits=fits, seed=20261601, fname="eval_layouts_r6_blind.json", used={(r["x"], r["y"], r["z"]) for r in form + form_b}) if args.blind2 else []
+        ex_t = {(r["x"], r["y"], r["z"]) for r in form + form_b + form_b2}
         ex_p = gen.eval_pair_set(gen.eval_form())
         data = g3.stream(ex_t, ex_p, args.seed, n_total, fits=fits, frames=args.frames)
         assert all(r["answer"] in Tset for r in data) and not ({(r["x"], r["y"], r["z"]) for r in data if r["steps"] == 2} & ex_t)
@@ -398,6 +400,10 @@ def main():
         evb = evaluate(model, form_b)
         res["eval_blind"] = summarize_two(evb, Tset)
         (outdir / f"{name}-blindrows.json").write_text(json.dumps(evb))
+    if args.blind2:
+        evb2 = evaluate(model, form_b2)
+        res["eval_blind2"] = summarize_two(evb2, Tset)
+        (outdir / f"{name}-blind2rows.json").write_text(json.dumps(evb2))
     (outdir / f"{name}.json").write_text(json.dumps(res, indent=1))
     (outdir / f"{name}-rows.json").write_text(json.dumps(ev))
     (outdir / f"{name}-fitrows.json").write_text(json.dumps(fit))
