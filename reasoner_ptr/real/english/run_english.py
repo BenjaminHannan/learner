@@ -25,7 +25,7 @@ from torch import nn
 from torch.nn import functional as F
 
 p = argparse.ArgumentParser()
-p.add_argument("--arm", choices=["pool", "allptr", "lm_alone"], required=True)
+p.add_argument("--arm", choices=["pool", "allptr", "lm_alone", "lm_fewshot"], required=True)
 p.add_argument("--seed", type=int, default=0)
 p.add_argument("--steps", type=int, default=2000)
 p.add_argument("--batch", type=int, default=16)
@@ -38,6 +38,8 @@ p.add_argument("--out", default=str(HERE / "results"))
 p.add_argument("--device", default="cuda")
 p.add_argument("--max-new", type=int, default=12)
 p.add_argument("--limit", type=int, default=0)  # dry runs only
+p.add_argument("--gen", type=int, default=0)  # round 4: add this many generated examples (gen_english.py) to the bank
+p.add_argument("--heldout", default=str(HERE / "GEN-HELDOUT-R4.json"))
 args = p.parse_args()
 dev = args.device
 
@@ -58,9 +60,9 @@ def norm(s):
     s = re.sub(r"\s+", " ", s); return re.sub(r"[.!?,;:]+$", "", s).strip()
 
 
-def rows_of(path, panels):
+def rows_of(path, panels, examples=None):
     out = []
-    for e in json.load(open(path))["examples"]:
+    for e in (examples if examples is not None else json.load(open(path))["examples"]):
         for panel, key in panels:
             for qi, q in enumerate(e["questions"]):
                 out.append({"id": f"{e['id']}-{key}-q{qi}", "family": e["family"], "panel": panel, "type": q["type"],
@@ -84,7 +86,7 @@ def ans_ids(r):
     return tok.encode(" " + r["answer"], add_special_tokens=False) + [EOS]
 
 
-if args.arm != "lm_alone":
+if not args.arm.startswith("lm_"):
     from calculator_runtime import CalculatorPath, STATUS_IDS
     from sol_translator_grounding import HumanInputProjection
     from sol_translator_english_v6 import StatePrefix
@@ -194,11 +196,18 @@ def evaluate(model, rows, lesion=None):
     model.train(); return out
 
 
+SHOTS = []
+
+
 @torch.no_grad()
 def eval_lm_alone(rows):
     out = []
     for r in rows:
-        msgs = [{"role": "user", "content": f"{r['passage']}\n{r['question']}\nAnswer with a short phrase only."}]
+        msgs = []
+        for sh in SHOTS:
+            msgs += [{"role": "user", "content": f"{sh['passage']}\n{sh['question']}\nAnswer with a short phrase only."},
+                     {"role": "assistant", "content": sh["answer"]}]
+        msgs += [{"role": "user", "content": f"{r['passage']}\n{r['question']}\nAnswer with a short phrase only."}]
         ids = tok.apply_chat_template(msgs, add_generation_prompt=True, return_tensors="pt", return_dict=True)["input_ids"].to(dev)
         g = lm.generate(ids, max_new_tokens=args.max_new, do_sample=False)
         out.append(score(r, tok.decode(g[0, ids.shape[1]:], skip_special_tokens=True).strip()))
@@ -224,19 +233,30 @@ def summarize(res, train_answers, bank_words):
 
 def main():
     train = rows_of(args.train, [("train_source", "source_text"), ("train_paraphrase", "paraphrase")])
+    gen_train, held = [], []
+    if args.gen:
+        import gen_english as GE
+        gen_train = rows_of(None, [("gen_source", "source_text"), ("gen_paraphrase", "paraphrase")], GE.make(args.gen, 1000 + args.seed, "train"))
+        held = rows_of(args.heldout, [("held_source", "source_text"), ("held_paraphrase", "paraphrase")])
     fresh = rows_of(args.fresh, [("fresh_source", "source_text"), ("fresh_paraphrase", "paraphrase")])
     bank = json.load(open(args.train))["examples"]
     train_answers = {a for r in train for a in r["accepted"]}
     stop = {"the", "a", "an", "to", "of", "in", "on", "by", "with", "did", "and", "yes", "no"}
     bank_words = {w for e in bank for t in (e["source_text"], e["paraphrase"]) for w in norm(t).replace(",", " ").replace(";", " ").replace(".", " ").replace("'s", " ").split()} - stop
-    assert not ({r["text"] for r in fresh} & {r["text"] for r in train})
+    assert not ({r["text"] for r in fresh} & {r["text"] for r in train + gen_train})
+    assert not ({r["text"] for r in held} & {r["text"] for r in gen_train})
     if args.limit:
         fresh = fresh[::max(1, len(fresh) // args.limit)][:args.limit]
     outdir = Path(args.out); outdir.mkdir(parents=True, exist_ok=True)
-    name = f"{args.arm}-seed{args.seed}"
-    if args.arm == "lm_alone":
+    name = f"{args.arm}{'-gen' if args.gen else ''}-seed{args.seed}"
+    if args.arm.startswith("lm_"):
+        if args.arm == "lm_fewshot":  # one bank example per family, first question, source text (8 shots incl. 2 yes/no)
+            fams = {}
+            for r in train:
+                if r["panel"] == "train_source": fams.setdefault(r["family"], []).append(r)
+            SHOTS.extend([v[0] for v in fams.values()] + [r for r in train if r["type"] == "yes_no" and r["panel"] == "train_source"][:2])
         ev = eval_lm_alone(fresh); fit = eval_lm_alone(train[:args.limit] if args.limit else train)
-        res = {"arm": "lm_alone", "train_fit": summarize(fit, train_answers, bank_words)["all"], "eval": summarize(ev, train_answers, bank_words)}
+        res = {"arm": args.arm, "train_fit": summarize(fit, train_answers, bank_words)["all"], "eval": summarize(ev, train_answers, bank_words)}
         (outdir / f"{name}-rows.json").write_text(json.dumps(ev))
         (outdir / f"{name}.json").write_text(json.dumps(res, indent=1))
         print("RESULT-JSON " + name + " fresh " + str(res["eval"]["all"]) + " contains " + str(res["eval"]["all_contains"]), flush=True)
@@ -250,7 +270,7 @@ def main():
     t0 = time.time()
     for step in range(args.steps):
         while len(order) < args.batch:
-            ep = train[:]; rng.shuffle(ep); order += ep
+            ep = train + gen_train; rng.shuffle(ep); order += ep
         rows, order = order[:args.batch], order[args.batch:]
         opt.zero_grad(set_to_none=True); tot = 0.0
         for g in group_by_len(rows):  # equal prompt lengths per forward; accumulate to one step of `batch` rows
@@ -265,6 +285,10 @@ def main():
            "eval": summarize(ev, train_answers, bank_words)}
     (outdir / f"{name}-rows.json").write_text(json.dumps(ev))
     (outdir / f"{name}-train-rows.json").write_text(json.dumps(fit))
+    if held:
+        evh = evaluate(model, held); res["gen_heldout"] = summarize(evh, train_answers, bank_words)
+        (outdir / f"{name}-heldout-rows.json").write_text(json.dumps(evh))
+    res["gen"] = args.gen
     if args.arm == "allptr":
         evl = evaluate(model, fresh, "zero_pool"); res["lesion_zero_pool"] = summarize(evl, train_answers, bank_words)
         (outdir / f"{name}-lesion-zero_pool-rows.json").write_text(json.dumps(evl))
