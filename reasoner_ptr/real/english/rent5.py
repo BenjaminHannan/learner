@@ -6,7 +6,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE)); sys.path.insert(0, str(HERE.parent)); sys.path.insert(0, str(HERE.parent.parent))
 import rent, rent2, rent3
-OWN = rent3.OWN + ["NEW-KINDS-R5.json", "PASS-MARKS-R5.md", "NEW-KINDS2-R6.json", "PASS-MARKS-R6.md"]  # round 6 adds the last two
+OWN = rent3.OWN + ["NEW-KINDS-R5.json", "PASS-MARKS-R5.md", "NEW-KINDS2-R6.json", "PASS-MARKS-R6.md", "PASS-MARKS-R7.md"]  # rounds 6 and 7
 LOOP = 'for A in __ARMS__; do python english_test/run_english.py --arm $A --seed __SEED__ __XARGS__ --out $J/out > $J/out/run-$A.out 2>&1 & PIDS="$PIDS $!"; done'
 
 

@@ -10,6 +10,9 @@ Arms (one change vs pool):
   pool    today's real exit: 8 pooled prefix vectors.
   allptr  pool + 8 pointer vectors (Linear(256->8), softmax over prompt positions, value = LM input embedding there)
           + the LM input embeddings of every prompt token (the 'all words' arm; Ben 02:01 UTC 10-04: no objection).
+  ptr     (round 7) pool + pointer only: the talker sees the core's 16 vectors and no question words.
+  qfirst  (round 7) [BOS + question tokens][pool + pointer][answer]: the question comes first, so at test the
+          second pass reuses the first pass's LM cache and only processes the 16 core vectors plus the answer.
 Lesion at test (allptr): the 8 pooled core vectors zeroed. Reference (--arm lm_alone, eval only): the frozen
 instruct LM with its chat template, passage + question, no trained parts.
 """
@@ -25,7 +28,7 @@ from torch import nn
 from torch.nn import functional as F
 
 p = argparse.ArgumentParser()
-p.add_argument("--arm", choices=["pool", "allptr", "lm_alone", "lm_fewshot"], required=True)
+p.add_argument("--arm", choices=["pool", "allptr", "ptr", "qfirst", "lm_alone", "lm_fewshot"], required=True)
 p.add_argument("--seed", type=int, default=0)
 p.add_argument("--steps", type=int, default=2000)
 p.add_argument("--batch", type=int, default=16)
@@ -46,6 +49,8 @@ p.add_argument("--tag", default="")
 p.add_argument("--kinds", type=int, default=6)  # round 6: 12 = six more generated practice kinds
 p.add_argument("--block-r6", action="store_true")  # round 6: generator also avoids NEW-KINDS-R5/NEW-KINDS2-R6 words
 p.add_argument("--extra-eval2", default="")  # round 6: second unseen-kinds file, reported as res["extra2"]
+p.add_argument("--timing", action="store_true")  # round 7: batch-1 speed against the bare LM on the same box
+p.add_argument("--timing-peers", type=int, default=1)  # runs sharing the GPU: time only after all have finished eval, one at a time
 args = p.parse_args()
 dev = args.device
 
@@ -92,6 +97,7 @@ def ans_ids(r):
     return tok.encode(" " + r["answer"], add_special_tokens=False) + [EOS]
 
 
+PTR_ARMS = ("allptr", "ptr", "qfirst")
 if not args.arm.startswith("lm_"):
     from calculator_runtime import CalculatorPath, STATUS_IDS
     from sol_translator_grounding import HumanInputProjection
@@ -116,16 +122,17 @@ if not args.arm.startswith("lm_"):
             self.reader = HumanInputProjection(LMW)
             self.adapter = StatePrefix(256, LMW, 32, 8)
             self.tool = CalculatorPath(256)  # only its role/status vectors fill the 8 notebook slots, as in the recipe
-            if args.arm == "allptr":
+            if args.arm in PTR_ARMS:
                 self.ptr = nn.Linear(256, K)
 
 
-def make_prefix(model, ids, lesion=None):
-    """ids [B,n] (equal prompt length incl. EOS) -> prefix embeddings [B,P,LMW]."""
+def make_prefix(model, ids, lesion=None, want_cache=False):
+    """ids [B,n] (equal prompt length incl. EOS) -> prefix embeddings [B,P,LMW] (and the first pass's LM cache)."""
     B, n = ids.shape
     with torch.no_grad():
         bosc = torch.full((B, 1), BOS, device=dev, dtype=ids.dtype)
-        e0 = lm(input_ids=torch.cat([bosc, ids], 1), output_hidden_states=True).hidden_states[-1][:, 1:].float()
+        o = lm(input_ids=torch.cat([bosc, ids], 1), output_hidden_states=True, use_cache=want_cache)
+        e0 = o.hidden_states[-1][:, 1:].float()
         tok_e = emb(ids).float()
     mask = torch.ones(B, n, dtype=torch.bool, device=dev)
     query = model.reader(e0, mask)
@@ -139,13 +146,17 @@ def make_prefix(model, ids, lesion=None):
             state = model.core.advance_latent(state)
     h = state["h"][:, :n]
     prefix = model.adapter.project_training(h, torch.ones_like(h, dtype=torch.bool), mask, (1, n))
-    if lesion == "zero_pool":
+    if lesion in ("zero_pool", "zero_core"):
         prefix = prefix * 0
     parts = [prefix]
-    if args.arm == "allptr":
+    if args.arm in PTR_ARMS:
         pw = model.ptr(h).float().softmax(1)
-        parts += [torch.einsum("bnk,bnl->bkl", pw, tok_e), tok_e]
-    return torch.cat(parts, 1).to(emb.weight.dtype)
+        pv = torch.einsum("bnk,bnl->bkl", pw, tok_e)
+        parts.append(pv * 0 if lesion == "zero_core" else pv)
+    if args.arm == "allptr":
+        parts.append(tok_e)
+    pre = torch.cat(parts, 1).to(emb.weight.dtype)
+    return (pre, o.past_key_values) if want_cache else pre
 
 
 def group_by_len(rows):
@@ -164,8 +175,14 @@ def loss_on(model, rows):
     inp_ids = torch.full((B, m), EOS, device=dev, dtype=torch.long)
     for b, a in enumerate(A):
         tgt[b, :len(a)] = torch.tensor(a); inp_ids[b, :len(a) - 1] = torch.tensor(a[:-1])
-    inp = torch.cat([pre, emb(torch.full((B, 1), BOS, device=dev)), emb(inp_ids[:, :m - 1])], 1)
-    logits = lm(inputs_embeds=inp).logits.float()[:, P:]  # predicts answer tokens then EOS
+    if args.arm == "qfirst":  # [BOS + question tokens][16 core vectors][answer]: the question part is the first pass again
+        q = emb(torch.cat([torch.full((B, 1), BOS, device=dev), ids], 1))
+        inp = torch.cat([q, pre, emb(inp_ids[:, :m - 1])], 1)
+        L = q.shape[1] + P - 1
+        logits = lm(inputs_embeds=inp).logits.float()[:, L:L + m]
+    else:
+        inp = torch.cat([pre, emb(torch.full((B, 1), BOS, device=dev)), emb(inp_ids[:, :m - 1])], 1)
+        logits = lm(inputs_embeds=inp).logits.float()[:, P:]  # predicts answer tokens then EOS
     return F.cross_entropy(logits.transpose(1, 2), tgt, ignore_index=-100, reduction="sum") / (tgt != -100).sum()
 
 
@@ -185,6 +202,61 @@ def generate(pre):
     return [tok.decode(o).strip() for o in out]
 
 
+@torch.no_grad()
+def generate_qfirst(model, ids, lesion=None, max_new=None):
+    """Reuse: the first pass's cache already holds BOS + question; feed only the 16 core vectors, then decode."""
+    pre, cache = make_prefix(model, ids, lesion, want_cache=True)
+    o = lm(inputs_embeds=pre, past_key_values=cache, use_cache=True)
+    B = ids.shape[0]; out = [[] for _ in range(B)]; done = [False] * B
+    for _ in range(max_new or args.max_new):
+        nxt = o.logits[:, -1].argmax(-1)
+        for b in range(B):
+            if not done[b]:
+                if int(nxt[b]) == EOS: done[b] = True
+                else: out[b].append(int(nxt[b]))
+        if all(done) and max_new is None: break
+        o = lm(inputs_embeds=emb(nxt[:, None]), past_key_values=o.past_key_values, use_cache=True)
+    return [tok.decode(t).strip() for t in out]
+
+
+@torch.no_grad()
+def timing(model, rows, n=48, steps=8):
+    """Batch-1 wall time per question on this box, cached decoding everywhere: time to first answer token and
+    to `steps` answer tokens. bare = frozen LM on BOS + question; arm = this arm's deployable path."""
+    sync = (lambda: torch.cuda.synchronize()) if dev == "cuda" else (lambda: None)
+    model.eval(); T = {"bare": [], "arm": []}
+    def bare(ids):
+        o = lm(input_ids=torch.cat([torch.tensor([[BOS]], device=dev), ids], 1), use_cache=True); yield
+        for _ in range(steps - 1):
+            o = lm(input_ids=o.logits[:, -1].argmax(-1)[:, None], past_key_values=o.past_key_values, use_cache=True)
+        yield
+    def arm(ids):
+        if args.arm == "qfirst":
+            pre, cache = make_prefix(model, ids, want_cache=True)
+            o = lm(inputs_embeds=pre, past_key_values=cache, use_cache=True)
+        else:
+            pre = make_prefix(model, ids)
+            o = lm(inputs_embeds=torch.cat([pre, emb(torch.tensor([[BOS]], device=dev))], 1), use_cache=True)
+        o.logits[:, -1].argmax(-1); yield
+        for _ in range(steps - 1):
+            o = lm(inputs_embeds=emb(o.logits[:, -1].argmax(-1)[:, None]), past_key_values=o.past_key_values, use_cache=True)
+        yield
+    warm = 5 if len(rows) > 10 else 1
+    for i, r in enumerate(rows[:n + warm]):
+        ids = torch.tensor([ids_of(r)], device=dev)
+        for k, f in (("bare", bare), ("arm", arm)):
+            sync(); t = time.perf_counter(); g = f(ids); next(g); sync(); t1 = time.perf_counter() - t
+            next(g, None); sync(); t2 = time.perf_counter() - t
+            if i >= warm: T[k].append((t1, t2))
+    model.train()
+    med = lambda v: round(1000 * sorted(v)[len(v) // 2], 2)
+    out = {k: {"first_ms": med([a for a, _ in v]), "total_ms": med([b for _, b in v])} for k, v in T.items()}
+    out["first_ratio"] = round(out["arm"]["first_ms"] / out["bare"]["first_ms"], 3)
+    out["total_ratio"] = round(out["arm"]["total_ms"] / out["bare"]["total_ms"], 3)
+    out["n"] = len(T["bare"]); out["steps"] = steps
+    return out
+
+
 def score(r, pred):
     n = norm(pred)
     return {"id": r["id"], "family": r["family"], "panel": r["panel"], "type": r["type"], "answer": r["answer"],
@@ -197,7 +269,8 @@ def evaluate(model, rows, lesion=None):
     for g in group_by_len(rows):
         for i in range(0, len(g), 32):
             c = g[i:i + 32]
-            preds = generate(make_prefix(model, torch.tensor([ids_of(r) for r in c], device=dev), lesion))
+            ids = torch.tensor([ids_of(r) for r in c], device=dev)
+            preds = generate_qfirst(model, ids, lesion) if args.arm == "qfirst" else generate(make_prefix(model, ids, lesion))
             out += [score(r, pr) for r, pr in zip(c, preds)]
     model.train(); return out
 
@@ -297,6 +370,14 @@ def main():
         torch.nn.utils.clip_grad_norm_(params, 1.0); opt.step(); sched.step()
         if step % 100 == 0 or step == args.steps - 1:
             print(f"{name} step {step} loss {tot:.4f} t {time.time()-t0:.0f}s", flush=True)
+    if args.limit and args.arm == "qfirst":  # dry run: the reused-cache path must match the full training path
+        with torch.no_grad():
+            g = group_by_len(fresh)[0][:2]; ids = torch.tensor([ids_of(r) for r in g], device=dev)
+            pre, cache = make_prefix(model, ids, want_cache=True)
+            a = lm(inputs_embeds=pre, past_key_values=cache).logits[:, -1].float()
+            q = emb(torch.cat([torch.full((len(g), 1), BOS, device=dev), ids], 1))
+            b = lm(inputs_embeds=torch.cat([q, pre], 1)).logits[:, -1].float()
+            print("REUSE-CHECK max abs diff", float((a - b).abs().max()), "argmax equal", bool((a.argmax(-1) == b.argmax(-1)).all()), flush=True)
     fit = evaluate(model, train[:args.limit] if args.limit else train)
     ev = evaluate(model, fresh)
     res = {"arm": args.arm, "seed": args.seed, "steps": args.steps, "batch": args.batch, "seconds": round(time.time() - t0),
@@ -315,9 +396,17 @@ def main():
         evx2 = evaluate(model, extra2[:args.limit] if args.limit else extra2); res["extra2"] = summarize(evx2, train_answers, bank_words)
         (outdir / f"{name}-extra2-rows.json").write_text(json.dumps(evx2))
     res["kinds"] = args.kinds; res["block_r6"] = args.block_r6
-    if args.arm == "allptr":
-        evl = evaluate(model, fresh, "zero_pool"); res["lesion_zero_pool"] = summarize(evl, train_answers, bank_words)
-        (outdir / f"{name}-lesion-zero_pool-rows.json").write_text(json.dumps(evl))
+    for les in (["zero_pool"] if args.arm in PTR_ARMS else []) + (["zero_core"] if args.arm == "qfirst" else []):
+        evl = evaluate(model, fresh, les); res["lesion_" + les] = summarize(evl, train_answers, bank_words)
+        (outdir / f"{name}-lesion-{les}-rows.json").write_text(json.dumps(evl))
+    if args.timing:
+        import fcntl
+        (outdir / f"evaldone-{name}").touch()
+        tw = time.time()
+        while len(list(outdir.glob("evaldone-*"))) < args.timing_peers and time.time() - tw < 2400:
+            time.sleep(10)
+        with open(outdir / "timing.lock", "w") as lk:
+            fcntl.flock(lk, fcntl.LOCK_EX); res["timing"] = timing(model, fresh); fcntl.flock(lk, fcntl.LOCK_UN); print("TIMING " + name + " " + json.dumps(res["timing"]), flush=True)
     (outdir / f"{name}.json").write_text(json.dumps(res, indent=1))
     print("RESULT-JSON " + name + " fit " + str(res["train_fit"]) + " fresh " + str(res["eval"]["all"]) + " newword " + str(res["eval"]["new_word_answers"]), flush=True)
 
