@@ -45,6 +45,7 @@ def main():
     ap.add_argument('--arms', default='control,treatment')
     ap.add_argument('--phase', default='both')
     ap.add_argument('--aux-weight', type=float, default=0.0, help='add this x router balance aux to the loss')
+    ap.add_argument('--parent0', default='', help='root-relative path of a rebased skills checkpoint to use as the seed-0 parent')
     ap.add_argument('--overfit-items', type=int, default=4)
     ap.add_argument('--overfit-updates', type=int, default=0, help='train only QA frames 0,1,4,5 for N updates')
     a = ap.parse_args()
@@ -64,6 +65,10 @@ def main():
             tcfg = json.loads((root / EXP / 'TRAIN-CONFIG-v2.json').read_text())
             tcfg['output_namespace'] = base + '/train'
             tcfg['resume_every_updates'] = 576
+            if a.parent0:
+                psha = common.digest(root / a.parent0)
+                tcfg['parents'][0]['checkpoint'] = {'path': a.parent0, 'sha256': psha}
+                runtime.PARENT_SHAS[0] = psha
             tcfg['budget']['worker_seconds'] = 28800
             tpath = root / base / 'TRAIN-CONFIG.json'
             tsha = write_cfg(tpath, tcfg)
