@@ -10,6 +10,6 @@
 | 54188310 | 4 | 18:52 | 19:31 | no (dropped) | very slow box, replaced |
 | 54192656 | 0 | 19:32 | 20:12 | sha256 matched | |
 | 54192658 | 4 | 19:32 | 20:11 | no (dropped) | very slow box, replaced |
-| 54196803 | 4 | 20:11 | | | running |
+| 54196803 | 4 | 20:11 | 20:28 | sha256 matched | |
 
-Credit $7.84 before; $9.61 at 19:33 (someone topped up). Total about $1.6.
+Credit $7.84 before; $9.61 at 19:33 (someone topped up). Credit $5.86 at 20:28 (shared). Total about $1.8.
