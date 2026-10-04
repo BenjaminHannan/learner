@@ -56,9 +56,20 @@ Seven extra boxes (54188893, 54188896, 54188898, 54188901, 54188902, 54188904 an
 
 | box | offer | GPU | seed | created (UTC) | destroyed (UTC) | copy-back checked | cost |
 |---|---|---|---|---|---|---|---|
-| 54188891 | 54008080 | RTX 3090 (Shanghai) | 0 | 18:57 | | | |
-| 54189012 | 37955904 | RTX 3090 (British Columbia) | 1 | 18:58 | | | |
-| 54189013 | 43703594 | RTX 3090 (California) | 2 | 18:58 | | | |
-| 54189014 | 42492588 | RTX 3090 (US) | 3 | 18:58 | | | |
-| 54189015 | 47865397 | RTX 3090 (Spain) | 4 | 18:58 | | | |
-| 54189017 | 34224257 | RTX 3090 (British Columbia) | 5 | 18:58 | | | |
+| 54188891 | 54008080 | RTX 3090 (Shanghai) | 0 | 18:57 | 19:39 | paused before results: logs only, in results7/partial-pause | ~$0.12 |
+| 54189012 | 37955904 | RTX 3090 (British Columbia) | 1 | 18:58 | 19:39 | paused before results: logs only, in results7/partial-pause | ~$0.12 |
+| 54189013 | 43703594 | RTX 3090 (California) | 2 | 18:58 | 19:39 | paused before results: logs only, in results7/partial-pause | ~$0.12 |
+| 54189014 | 42492588 | RTX 3090 (US) | 3 | 18:58 | 19:39 | paused before results: logs only, in results7/partial-pause | ~$0.12 |
+| 54189015 | 47865397 | RTX 3090 (Spain) | 4 | 18:58 | 19:39 | paused before results: logs only, in results7/partial-pause | ~$0.12 |
+| 54189017 | 34224257 | RTX 3090 (British Columbia) | 5 | 18:58 | 19:39 | paused before results: logs only, in results7/partial-pause | ~$0.12 |
+
+Paused at 19:31 UTC on the coordinator's credit warning ($4.83 left at $5.04/hr). The boxes were stopped at steps 300 to 900 of 2000, and logs were copied to `results7/partial-pause/`. No checkpoints exist mid-run. The boxes were destroyed at 19:39. Credit then read $9.37 after Ben's top-up, so the round restarted from scratch on fresh boxes:
+
+| box | offer | GPU | seed | created (UTC) | destroyed (UTC) | copy-back checked | cost |
+|---|---|---|---|---|---|---|---|
+| 54193351 | 53751040 | RTX 3090 (Indonesia) | 0 | 19:39 | | | |
+| 54193352 | 43573725 | RTX 3090 (Spain) | 1 | 19:39 | | | |
+| 54193355 | 48386175 | RTX 3090 (US) | 2 | 19:39 | | | |
+| 54193356 | 34224257 | RTX 3090 (British Columbia) | 3 | 19:39 | | | |
+| 54193357 | 50020833 | RTX 3090 (Ontario) | 4 | 19:39 | | | |
+| 54193361 | 53180089 | RTX 3090 (Switzerland) | 5 | 19:39 | | | |
