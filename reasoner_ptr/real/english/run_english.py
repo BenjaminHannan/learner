@@ -40,6 +40,9 @@ p.add_argument("--max-new", type=int, default=12)
 p.add_argument("--limit", type=int, default=0)  # dry runs only
 p.add_argument("--gen", type=int, default=0)  # round 4: add this many generated examples (gen_english.py) to the bank
 p.add_argument("--heldout", default=str(HERE / "GEN-HELDOUT-R4.json"))
+p.add_argument("--drop-fams", default="")  # round 5: comma list of families removed from bank rows and generated rows
+p.add_argument("--extra-eval", default="")  # round 5: extra eval file (new question kinds), reported as res["extra"]
+p.add_argument("--tag", default="")
 args = p.parse_args()
 dev = args.device
 
@@ -233,11 +236,14 @@ def summarize(res, train_answers, bank_words):
 
 def main():
     train = rows_of(args.train, [("train_source", "source_text"), ("train_paraphrase", "paraphrase")])
+    drop = [f for f in args.drop_fams.split(",") if f]
+    train = [r for r in train if r["family"] not in drop]
     gen_train, held = [], []
     if args.gen:
         import gen_english as GE
-        gen_train = rows_of(None, [("gen_source", "source_text"), ("gen_paraphrase", "paraphrase")], GE.make(args.gen, 1000 + args.seed, "train"))
-        held = rows_of(args.heldout, [("held_source", "source_text"), ("held_paraphrase", "paraphrase")])
+        gen_train = rows_of(None, [("gen_source", "source_text"), ("gen_paraphrase", "paraphrase")], GE.make(args.gen, 1000 + args.seed, "train", drop=drop))
+        held = [r for r in rows_of(args.heldout, [("held_source", "source_text"), ("held_paraphrase", "paraphrase")]) if r["family"] not in drop]
+    extra = rows_of(args.extra_eval, [("new_source", "source_text"), ("new_paraphrase", "paraphrase")]) if args.extra_eval else []
     fresh = rows_of(args.fresh, [("fresh_source", "source_text"), ("fresh_paraphrase", "paraphrase")])
     bank = json.load(open(args.train))["examples"]
     train_answers = {a for r in train for a in r["accepted"]}
@@ -248,7 +254,7 @@ def main():
     if args.limit:
         fresh = fresh[::max(1, len(fresh) // args.limit)][:args.limit]
     outdir = Path(args.out); outdir.mkdir(parents=True, exist_ok=True)
-    name = f"{args.arm}{'-gen' if args.gen else ''}-seed{args.seed}"
+    name = f"{args.arm}{'-gen' if args.gen else ''}{args.tag}-seed{args.seed}"
     if args.arm.startswith("lm_"):
         if args.arm == "lm_fewshot":  # one bank example per family, first question, source text (8 shots incl. 2 yes/no)
             fams = {}
@@ -256,7 +262,10 @@ def main():
                 if r["panel"] == "train_source": fams.setdefault(r["family"], []).append(r)
             SHOTS.extend([v[0] for v in fams.values()] + [r for r in train if r["type"] == "yes_no" and r["panel"] == "train_source"][:2])
         ev = eval_lm_alone(fresh); fit = eval_lm_alone(train[:args.limit] if args.limit else train)
-        res = {"arm": args.arm, "train_fit": summarize(fit, train_answers, bank_words)["all"], "eval": summarize(ev, train_answers, bank_words)}
+        if extra:
+            evx = eval_lm_alone(extra[:args.limit] if args.limit else extra)
+            (outdir / f"{name}-extra-rows.json").write_text(json.dumps(evx))
+        res = {"arm": args.arm, "extra": summarize(evx, train_answers, bank_words) if extra else None, "train_fit": summarize(fit, train_answers, bank_words)["all"], "eval": summarize(ev, train_answers, bank_words)}
         (outdir / f"{name}-rows.json").write_text(json.dumps(ev))
         (outdir / f"{name}.json").write_text(json.dumps(res, indent=1))
         print("RESULT-JSON " + name + " fresh " + str(res["eval"]["all"]) + " contains " + str(res["eval"]["all_contains"]), flush=True)
@@ -288,7 +297,10 @@ def main():
     if held:
         evh = evaluate(model, held); res["gen_heldout"] = summarize(evh, train_answers, bank_words)
         (outdir / f"{name}-heldout-rows.json").write_text(json.dumps(evh))
-    res["gen"] = args.gen
+    res["gen"] = args.gen; res["drop_fams"] = drop; res["tag"] = args.tag
+    if extra:
+        evx = evaluate(model, extra[:args.limit] if args.limit else extra); res["extra"] = summarize(evx, train_answers, bank_words)
+        (outdir / f"{name}-extra-rows.json").write_text(json.dumps(evx))
     if args.arm == "allptr":
         evl = evaluate(model, fresh, "zero_pool"); res["lesion_zero_pool"] = summarize(evl, train_answers, bank_words)
         (outdir / f"{name}-lesion-zero_pool-rows.json").write_text(json.dumps(evl))

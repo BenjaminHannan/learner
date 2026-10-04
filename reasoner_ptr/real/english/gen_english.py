@@ -260,10 +260,15 @@ def fits(texts):
     return all(len(_tok.encode(t, add_special_tokens=False)) <= CAP for t in texts)
 
 
-def make(n, seed, part, avoid=()):
+FAM_NAMES = ["giver_recipient_roles", "comparative_direction", "explicit_negation_with_positive_alternative",
+             "event_ordering", "unambiguous_descriptive_reference", "two_simple_relations_combined"]  # same order as FAMS
+
+
+def make(n, seed, part, avoid=(), drop=()):
     r = random.Random(seed); P = Pools(part); out, seen = [], set(avoid)
+    fams = [f for f, nm in zip(FAMS, FAM_NAMES) if nm not in drop]
     while len(out) < n:
-        fam, s, para, qs = FAMS[len(out) % 6](r, P)
+        fam, s, para, qs = fams[len(out) % len(fams)](r, P)
         if any(not x["canonical_answer"] or not x["question"] for x in qs) or s in seen: continue
         if not fits([t + " " + x["question"] for t in (s, para) for x in qs]): continue
         seen.add(s)
