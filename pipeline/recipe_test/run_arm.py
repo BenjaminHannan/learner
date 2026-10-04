@@ -37,6 +37,7 @@ p.add_argument("--ctx", action="store_true", help="reader reads the frozen LM's 
 p.add_argument("--task", choices=["one", "two"], default="one")
 p.add_argument("--ordered", action="store_true", help="each loop reads the question with its own learned attention query instead of the mean")
 p.add_argument("--wording", choices=["old", "mix"], default="old")
+p.add_argument("--frames", choices=["base", "comp"], default="base", help="two-step training frames: the fixed set, or the fixed set plus composed frames (round 4)")
 p.add_argument("--steps", type=int, default=3000)
 p.add_argument("--batch", type=int, default=16)
 p.add_argument("--lr", type=float, default=1e-3)
@@ -353,7 +354,7 @@ def main():
         form = g3.build_eval(fits=fits)
         ex_t = {(r["x"], r["y"], r["z"]) for r in form}
         ex_p = gen.eval_pair_set(gen.eval_form())
-        data = g3.stream(ex_t, ex_p, args.seed, n_total, fits=fits)
+        data = g3.stream(ex_t, ex_p, args.seed, n_total, fits=fits, frames=args.frames)
         assert all(r["answer"] in Tset for r in data) and not ({(r["x"], r["y"], r["z"]) for r in data if r["steps"] == 2} & ex_t)
         ex = ex_p
     else:
@@ -372,7 +373,7 @@ def main():
     params = [q for q in model.parameters() if q.requires_grad]
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.1, betas=(0.9, 0.95))
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / 200) * 0.5 * (1 + math.cos(math.pi * min(i, args.steps) / args.steps)))
-    name = args.name or f"{'two-' if args.task == 'two' else ''}{'copy' if args.copy else 'pool'}{'-ctx' if args.ctx else ''}{'-ord' if args.ordered else ''}-{args.wording}-seed{args.seed}"
+    name = args.name or f"{'two-' if args.task == 'two' else ''}{'copy' if args.copy else 'pool'}{'-ctx' if args.ctx else ''}{'-ord' if args.ordered else ''}{'-comp' if args.frames == 'comp' else ''}-{args.wording}-seed{args.seed}"
     outdir = Path(args.out); outdir.mkdir(parents=True, exist_ok=True)
     logf = open(outdir / f"{name}.log", "w")
     t0 = time.time()
@@ -388,7 +389,7 @@ def main():
     fit = evaluate(model, fit_rows)
     ev = evaluate(model, form)
     res = {"name": name, "seed": args.seed, "copy": args.copy, "ctx": args.ctx, "round": gen.ROUND, "wording": args.wording, "steps": args.steps, "batch": args.batch,
-           "seconds": round(time.time() - t0), "task": args.task, "ordered": args.ordered,
+           "seconds": round(time.time() - t0), "task": args.task, "ordered": args.ordered, "frames": args.frames,
            "eval": (summarize_two if args.task == "two" else summarize)(ev, Tset),
            "train_fit_192": {k: rate(fit, k)[0] for k in ("final_ok", "call_ok", "chain_ok", "last_result_ok")}}
     (outdir / f"{name}.json").write_text(json.dumps(res, indent=1))

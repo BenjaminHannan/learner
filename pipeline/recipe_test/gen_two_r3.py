@@ -89,10 +89,13 @@ def build_eval(per_cell=6, seed=20261301, fits=lambda t: True):
     return rows
 
 
-def stream(excluded_triples, excluded_pairs, seed, n, one_step_frac=0.3, fits=lambda t: True):
+def stream(excluded_triples, excluded_pairs, seed, n, one_step_frac=0.3, fits=lambda t: True, frames="base"):
     T, _ = gen.answer_split(); Ts = set(T)
     tr = gen.load("templates_train.json"); rng = random.Random(9_600_000 + seed)
     fr = train_frames()
+    if frames == "comp":
+        import gen_two_v
+        fr = fr + gen_two_v.train_frames()
     one = iter(gen2.stream_w(excluded_pairs, 700 + seed, int(n * one_step_frac) + 2000))
     out, seen = [], set()
     while len(out) < n:
