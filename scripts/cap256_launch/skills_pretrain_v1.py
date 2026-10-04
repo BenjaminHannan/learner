@@ -8,6 +8,7 @@ stride through train.jsonl so every stage is visited.
 
 usage: skills_pretrain_v1.py --root PKG --data OUT_DIR --out REL_DIR --updates N [--parent-seed 0]
        [--eval-every 4000] [--dev-n 100] [--minutes 120] [--phase train|eval]
+       [--parent-path CKPT.pt] [--eval-at-start] [--no-checkpoint]   (stiffness test, STIFFNESS-TEST-v1.md)
 Writes OUT/final-checkpoint.pt (parent-shaped, so the English pilot can start from it) and OUT/SKILLS-RESULT.json.
 """
 import argparse
@@ -98,6 +99,9 @@ def main():
     ap.add_argument('--steps', action='store_true', help='target = worked steps + " # " + answer; scored on the text after the last #')
     ap.add_argument('--copy-path', action='store_true', help='prefix = 8 pooled vectors + the prompt token embeddings (talker can copy prompt tokens)')
     ap.add_argument('--families', default='', help='comma list: train and score only these families (diagnosis)')
+    ap.add_argument('--parent-path', default='', help='start from this parent-shaped checkpoint (e.g. a skills final-checkpoint.pt) instead of the pinned seed parent; any update count accepted')
+    ap.add_argument('--eval-at-start', action='store_true', help='score in_dist once before the first update (curve point at update 0)')
+    ap.add_argument('--no-checkpoint', action='store_true', help='do not write final-checkpoint.pt (saves ~61 MB of disk per run)')
     a = ap.parse_args()
     STEPS['on'] = a.steps
     root = Path(a.root).resolve()
@@ -113,11 +117,16 @@ def main():
         rt.compare.install_cuda_memory_budget(torch, cfg['budget']['cuda_peak_reserved_cap_bytes'])
         dec, tokenizer, lm = runtime.load_native_stack(rt, root, cfg)
         parent = next(p for p in cfg['parents'] if p['seed'] == a.parent_seed)
-        saved = torch.load(common.pinned(root, parent['checkpoint']), map_location='cpu', weights_only=True)
+        if a.parent_path:
+            src = Path(a.parent_path).resolve()
+            saved = torch.load(src, map_location='cpu', weights_only=True)
+            print(json.dumps({'event': 'parent-path', 'path': str(src), 'sha256': common.digest(src), 'update': saved.get('update')}), flush=True)
+        else:
+            saved = torch.load(common.pinned(root, parent['checkpoint']), map_location='cpu', weights_only=True)
         modules = runtime.build_modules(rt, dec, a.parent_seed, cfg['device'])
         named = runtime.restore_parent_modules(rt, saved, modules, lm)
         names = [n for n, _ in named]
-        runtime.validate_parent_metadata(saved, names, runtime.PARENT_UPDATE)
+        runtime.validate_parent_metadata(saved, names, saved['update'] if a.parent_path else runtime.PARENT_UPDATE)
         opt = runtime.make_optimizer(torch, [p for _, p in named])
         runtime.restore_adam(torch, opt, saved, named)
         participation, nonzero = Counter(saved['participation']), Counter()
@@ -158,6 +167,9 @@ def main():
         base_lr = runtime.ADAM_RECIPE['lr'] * a.lr_mult
         for g in opt.param_groups:
             g['lr'] = base_lr
+        if a.eval_at_start:
+            curve.append({'update': 0, 'in_dist': evaluate(rt, ctx, modules, dev['in_dist'], tokenizer)})
+            print(json.dumps({'event': 'skills-eval', **curve[-1]}), flush=True)
         for i, row in enumerate(rows, 1):
             if a.lr_final_mult is not None:
                 fin = runtime.ADAM_RECIPE['lr'] * a.lr_final_mult
@@ -187,14 +199,17 @@ def main():
                 print(json.dumps({'event': 'skills-time-cap', 'update': i}), flush=True)
                 break
         final = {k: evaluate(rt, ctx, modules, v, tokenizer) for k, v in dev.items()}
-        payload = copy.copy(saved)
-        payload.update(runtime.checkpoint_payload(modules, opt, names, participation,
-                                                  {'update': runtime.PARENT_UPDATE + done}, common.rng_snapshot(torch)))
-        ck = out / 'final-checkpoint.pt'
-        torch.save(payload, ck)
+        ck_sha = None
+        if not a.no_checkpoint:
+            payload = copy.copy(saved)
+            payload.update(runtime.checkpoint_payload(modules, opt, names, participation,
+                                                      {'update': runtime.PARENT_UPDATE + done}, common.rng_snapshot(torch)))
+            ck = out / 'final-checkpoint.pt'
+            torch.save(payload, ck)
+            ck_sha = common.digest(ck)
         res = {'updates_done': done, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
-               'dev_n': a.dev_n, 'final_dev': final, 'in_dist_curve': curve,
-               'checkpoint_sha256': common.digest(ck), 'minutes': round((time.time() - t0) / 60, 1)}
+               'dev_n': a.dev_n, 'final_dev': final, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
+               'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}
         (out / 'SKILLS-RESULT.json').write_text(json.dumps(res, indent=1))
         print('SKILLS-RESULT ' + json.dumps(res), flush=True)
     finally:
