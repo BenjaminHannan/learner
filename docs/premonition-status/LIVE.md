@@ -230,3 +230,10 @@ The Mac holds both ~2.1 GB reader models (I cannot see inside Vast box 52755827,
 - /Users/ben-hannan/premonition-models/lis319f-merged/model.safetensors, 2161290944 bytes, sha256 970ef0acd5966f9e1a42049025d4ed807dee3989225201fd9dbcc6b4aa6b4f9b
 - /Users/ben-hannan/premonition-models/lis319-merged/model.safetensors, 2161290944 bytes, sha256 e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76
 Same folders also hold tokenizer.json (lis319-merged sha 3e065a55...fed81) and config.json (sha 28edd4e3...6773). The Mac is a single copy: if it is the only other copy, back it up before deleting the box.
+
+## 18:43Z Speed benchmark (bench_tps.py, PR #35 commit 9c3d86c36) on the Mac: Apple M1 Pro, 34 GB, MPS
+Shown (fresh weights, so speed only; torch 2.14.1, transformers 4.57.6 -- the cloud used 5.17.0, not pinned here). Large batch 32. Raw: artifacts/bench-tps/mac-m1pro-mps.json.
+- System (reader+core+exit, one answer token per question): short prompts (39 tok) 5.6 questions/s at batch 1, 19.6 at 16, 21.1 at 32 and 64; long prompts (67 tok) 5.0 at batch 1, 13.8 at 16, 11.0 at 32, 14.0 at 64.
+- Bare LFM2.5-1.2B, 64 new tokens, batch 1: decode 25 tok/s fp32, 37 tok/s bf16 (prefill ~500-590 tok/s). Batch 32: decode 341-413 tok/s fp32, 475-484 tok/s bf16.
+One local fix (not pushed): MPS cannot run adaptive_avg_pool1d when the length is not divisible by 8, so a shim (artifacts/bench-tps/run_bench_mps_shim.py) computes that pooling exactly with window slices on the device (checked: max diff 0.0 vs CPU). It adds a few small ops per row, so the system numbers may be slightly pessimistic. The batch-32 long-set figure (11.0) is below batch 16 (13.8), so the Mac numbers are noisy; one run, median of 10.
+The BensPC 5070 Ti run is waiting for the English queue to finish.
