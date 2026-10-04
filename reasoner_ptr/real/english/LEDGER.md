@@ -49,3 +49,16 @@ Total for round 5: about $1.08. vast credit at 07:11 UTC: $2.76 (shared with oth
 | 54161996 | 45640045 | RTX 3090 (Wisconsin) | 5 | 14:47 | 15:38 | yes: results.tar.gz sha256 matched manifest | ~$0.16 |
 
 Total for round 6: about $1.10. vast credit at 16:15 UTC: $12.47 (shared with other threads).
+
+## Round 7 (question-first reuse vs thin talker vs allptr, three runs per box)
+
+Seven extra boxes (54188893, 54188896, 54188898, 54188901, 54188902, 54188904 and 54188906) were created by a loop bug with seed-0 arguments. They were destroyed within a minute while still loading, so they hold no data and cost about $0.
+
+| box | offer | GPU | seed | created (UTC) | destroyed (UTC) | copy-back checked | cost |
+|---|---|---|---|---|---|---|---|
+| 54188891 | 54008080 | RTX 3090 (Shanghai) | 0 | 18:57 | | | |
+| 54189012 | 37955904 | RTX 3090 (British Columbia) | 1 | 18:58 | | | |
+| 54189013 | 43703594 | RTX 3090 (California) | 2 | 18:58 | | | |
+| 54189014 | 42492588 | RTX 3090 (US) | 3 | 18:58 | | | |
+| 54189015 | 47865397 | RTX 3090 (Spain) | 4 | 18:58 | | | |
+| 54189017 | 34224257 | RTX 3090 (British Columbia) | 5 | 18:58 | | | |
