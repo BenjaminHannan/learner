@@ -43,6 +43,9 @@ p.add_argument("--heldout", default=str(HERE / "GEN-HELDOUT-R4.json"))
 p.add_argument("--drop-fams", default="")  # round 5: comma list of families removed from bank rows and generated rows
 p.add_argument("--extra-eval", default="")  # round 5: extra eval file (new question kinds), reported as res["extra"]
 p.add_argument("--tag", default="")
+p.add_argument("--kinds", type=int, default=6)  # round 6: 12 = six more generated practice kinds
+p.add_argument("--block-r6", action="store_true")  # round 6: generator also avoids NEW-KINDS-R5/NEW-KINDS2-R6 words
+p.add_argument("--extra-eval2", default="")  # round 6: second unseen-kinds file, reported as res["extra2"]
 args = p.parse_args()
 dev = args.device
 
@@ -241,9 +244,12 @@ def main():
     gen_train, held = [], []
     if args.gen:
         import gen_english as GE
-        gen_train = rows_of(None, [("gen_source", "source_text"), ("gen_paraphrase", "paraphrase")], GE.make(args.gen, 1000 + args.seed, "train", drop=drop))
+        gen_train = rows_of(None, [("gen_source", "source_text"), ("gen_paraphrase", "paraphrase")], GE.make(args.gen, 1000 + args.seed, "train", drop=drop, kinds=args.kinds, block_files=GE.BLOCK_R6 if args.block_r6 else ("FRESH-EN-R3.json",)))
         held = [r for r in rows_of(args.heldout, [("held_source", "source_text"), ("held_paraphrase", "paraphrase")]) if r["family"] not in drop]
     extra = rows_of(args.extra_eval, [("new_source", "source_text"), ("new_paraphrase", "paraphrase")]) if args.extra_eval else []
+    extra2 = rows_of(args.extra_eval2, [("new2_source", "source_text"), ("new2_paraphrase", "paraphrase")]) if args.extra_eval2 else []
+    if gen_train:
+        assert not ({r["text"] for r in extra + extra2} & {r["text"] for r in gen_train})
     fresh = rows_of(args.fresh, [("fresh_source", "source_text"), ("fresh_paraphrase", "paraphrase")])
     bank = json.load(open(args.train))["examples"]
     train_answers = {a for r in train for a in r["accepted"]}
@@ -265,7 +271,11 @@ def main():
         if extra:
             evx = eval_lm_alone(extra[:args.limit] if args.limit else extra)
             (outdir / f"{name}-extra-rows.json").write_text(json.dumps(evx))
-        res = {"arm": args.arm, "extra": summarize(evx, train_answers, bank_words) if extra else None, "train_fit": summarize(fit, train_answers, bank_words)["all"], "eval": summarize(ev, train_answers, bank_words)}
+        if extra2:
+            evx2 = eval_lm_alone(extra2[:args.limit] if args.limit else extra2)
+            (outdir / f"{name}-extra2-rows.json").write_text(json.dumps(evx2))
+        res = {"arm": args.arm, "extra": summarize(evx, train_answers, bank_words) if extra else None,
+               "extra2": summarize(evx2, train_answers, bank_words) if extra2 else None, "train_fit": summarize(fit, train_answers, bank_words)["all"], "eval": summarize(ev, train_answers, bank_words)}
         (outdir / f"{name}-rows.json").write_text(json.dumps(ev))
         (outdir / f"{name}.json").write_text(json.dumps(res, indent=1))
         print("RESULT-JSON " + name + " fresh " + str(res["eval"]["all"]) + " contains " + str(res["eval"]["all_contains"]), flush=True)
@@ -301,6 +311,10 @@ def main():
     if extra:
         evx = evaluate(model, extra[:args.limit] if args.limit else extra); res["extra"] = summarize(evx, train_answers, bank_words)
         (outdir / f"{name}-extra-rows.json").write_text(json.dumps(evx))
+    if extra2:
+        evx2 = evaluate(model, extra2[:args.limit] if args.limit else extra2); res["extra2"] = summarize(evx2, train_answers, bank_words)
+        (outdir / f"{name}-extra2-rows.json").write_text(json.dumps(evx2))
+    res["kinds"] = args.kinds; res["block_r6"] = args.block_r6
     if args.arm == "allptr":
         evl = evaluate(model, fresh, "zero_pool"); res["lesion_zero_pool"] = summarize(evl, train_answers, bank_words)
         (outdir / f"{name}-lesion-zero_pool-rows.json").write_text(json.dumps(evl))

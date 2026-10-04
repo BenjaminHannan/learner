@@ -78,7 +78,7 @@ def search(a):
          "disk_space": {"gte": 40}, "inet_down": {"gte": 300}, "cpu_cores_effective": {"gte": 8},
          "order": [["dph_total", "asc"]], "limit": 100}
     offers = call("POST", "/bundles/", q).get("offers") or []
-    for o in [o for o in offers if o.get("gpu_name") in ("RTX 3090", "RTX 4090", "RTX 3090 Ti")][: a.n]:
+    for o in [o for o in offers if o.get("gpu_name") in (a.gpus.split(",") if a.gpus else ("RTX 3090", "RTX 4090", "RTX 3090 Ti"))][: a.n]:
         print(json.dumps({k: o.get(k) for k in ("id", "gpu_name", "dph_total", "reliability", "inet_down",
                                                  "cpu_cores_effective", "cpu_ram", "disk_space", "geolocation")}))
 
@@ -161,7 +161,7 @@ def main():
     ap.add_argument("cmd", choices=["pack", "search", "create", "status", "logs", "pull", "destroy"])
     ap.add_argument("--out"); ap.add_argument("--arms", default="A,B"); ap.add_argument("--offer"); ap.add_argument("--args")
     ap.add_argument("--label", default="claude-twodoors"); ap.add_argument("--id"); ap.add_argument("--n", type=int, default=8)
-    ap.add_argument("--show", type=int, default=40)
+    ap.add_argument("--show", type=int, default=40); ap.add_argument("--gpus", default="")
     a = ap.parse_args()
     {"pack": pack, "search": search, "create": create, "status": status, "logs": logs, "pull": pull, "destroy": destroy}[a.cmd](a)
 

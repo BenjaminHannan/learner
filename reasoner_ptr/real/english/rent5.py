@@ -6,7 +6,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE)); sys.path.insert(0, str(HERE.parent)); sys.path.insert(0, str(HERE.parent.parent))
 import rent, rent2, rent3
-OWN = rent3.OWN + ["NEW-KINDS-R5.json", "PASS-MARKS-R5.md"]
+OWN = rent3.OWN + ["NEW-KINDS-R5.json", "PASS-MARKS-R5.md", "NEW-KINDS2-R6.json", "PASS-MARKS-R6.md"]  # round 6 adds the last two
 LOOP = 'for A in __ARMS__; do python english_test/run_english.py --arm $A --seed __SEED__ __XARGS__ --out $J/out > $J/out/run-$A.out 2>&1 & PIDS="$PIDS $!"; done'
 
 
@@ -22,7 +22,7 @@ def pack(seed, out, extra, runs):
     data = buf.getvalue(); h = hashlib.sha256(data).hexdigest()
     assert LOOP in rent3.JOB, "loop line changed"
     cmds = " ".join(f'python english_test/run_english.py --seed {seed} {r} --out $J/out > $J/out/run-{i}.out 2>&1 & PIDS="$PIDS $!";' for i, r in enumerate(runs))
-    ex = f"python english_test/run_english.py --arm {extra} --extra-eval english_test/NEW-KINDS-R5.json --out $J/out > $J/out/run-{extra}.out 2>&1;" if extra else ""
+    ex = f"python english_test/run_english.py --arm {extra} --extra-eval english_test/NEW-KINDS-R5.json --extra-eval2 english_test/NEW-KINDS2-R6.json --out $J/out > $J/out/run-{extra}.out 2>&1;" if extra else ""
     job = rent3.JOB.replace(LOOP, cmds).replace("__SHA__", h).replace("__EXTRA__", ex).replace("sha256sum FRESH-EN-R3.json", "sha256sum NEW-KINDS-R5.json FRESH-EN-R3.json")
     b64 = base64.b64encode(data).decode()
     args = ["bash", "-c", job, "engreal"] + [b64[i:i + rent.CHUNK] for i in range(0, len(b64), rent.CHUNK)]

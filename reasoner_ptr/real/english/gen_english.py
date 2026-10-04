@@ -19,11 +19,10 @@ def norm(s):
     return re.sub(r"[.!?,;:]+$", "", re.sub(r"\s+", " ", s)).strip()
 
 
-def fresh_blocklist():
-    d = json.load(open(HERE / "FRESH-EN-R3.json"))
+def fresh_blocklist(files=("FRESH-EN-R3.json",)):
     stop = {"the", "a", "an", "to", "of", "in", "on", "by", "with", "did", "and", "yes", "no", "was", "his", "her", "one", "that", "after", "before", "inside"}
     words = set()
-    for e in d["examples"]:
+    for e in [e for f in files if (HERE / f).exists() for e in json.load(open(HERE / f))["examples"]]:
         for t in (e["source_text"], e["paraphrase"]):
             words |= {w for w in re.findall(r"[A-Z][a-z]+", t)}  # capitalised words: names (and sentence starts)
         for q in e["questions"]:
@@ -116,8 +115,9 @@ def obj_variants(phrase):
 
 
 class Pools:
-    def __init__(self, part):
-        block = fresh_blocklist()
+    def __init__(self, part, block_files=("FRESH-EN-R3.json",)):
+        block = fresh_blocklist(block_files)
+        self.block = block
         rng = random.Random(SPLIT_SEED)
         names = sorted({(a + b).capitalize() for a in SYL1 for b in SYL2} - {w.capitalize() for w in block})
         bank = json.load(open(HERE / "english_training_candidates_v3.json"))
@@ -249,6 +249,84 @@ def ex_two(r, P):
 
 
 FAMS = [ex_giver, ex_compare, ex_neg, ex_order, ex_ref, ex_two]
+
+# ---- round 6: six more practice kinds. None is one of the test kinds in NEW-KINDS-R5 (counting, location, cause,
+# time, attribute, instrument) or NEW-KINDS2-R6 (speech, weather, price, direction, duration, origin).
+FEELINGS = ["happy", "sad", "tired", "proud", "nervous", "calm", "bored", "excited", "angry", "scared", "glad", "sleepy",
+            "hungry", "upset", "cheerful", "grumpy", "relieved", "surprised", "lonely", "worried"]
+EVENTS2 = ["game", "trip", "test", "concert", "race", "meeting", "party", "lesson", "match", "play", "picnic", "visit"]
+PETS = ["dog", "cat", "fish", "bird", "horse", "goat", "rabbit", "turtle", "hamster", "pony", "parrot", "lamb"]
+DO = [("painted", "paint"), ("washed", "wash"), ("fixed", "fix"), ("opened", "open"), ("carried", "carry"), ("cleaned", "clean"),
+      ("moved", "move"), ("checked", "check"), ("dried", "dry"), ("wrapped", "wrap"), ("polished", "polish"), ("sorted", "sort"),
+      ("lifted", "lift"), ("filled", "fill"), ("emptied", "empty"), ("folded", "fold")]
+
+
+def _ok(P, *ws):
+    return not any(w in P.block for x in ws for w in x.lower().split())
+
+
+def ex_owner(r, P):
+    a, b = r.sample(P.names, 2); n = r.choice(P.nouns); x, y = r.sample(P.adjs, 2)
+    s = f"The {x} {n} belongs to {a}, and the {y} {n} belongs to {b}."
+    para = f"{b} owns the {y} {n}, while {a} owns the {x} {n}."
+    if r.random() < 0.5: s, para = para, s
+    qs = [q(f"Who owns the {x} {n}?", "short_answer", a, [f"{a} does", f"{a}'s"]),
+          q(f"Whose is the {y} {n}?", "short_answer", b, [f"{b}'s", f"it is {b}'s"]),
+          q(f"Does {a} own the {y} {n}?", "yes_no", "No", [])]
+    return "owner_possession", s, para, r.sample(qs[:2], 2) if r.random() < 0.75 else [r.choice(qs[:2]), qs[2]]
+
+
+def ex_agent(r, P):
+    a, b = r.sample(P.names, 2); (v1, b1), (v2, b2) = r.sample(DO, 2)
+    o1, o2 = [r.choice(P.adjs) + " " + nn for nn in r.sample(P.nouns, 2)]
+    s = f"{a} {v1} the {o1} while {b} {v2} the {o2}."
+    para = f"While {a} {v1} the {o1}, {b} {v2} the {o2}."
+    qs = [q(f"Who {v1} the {o1}?", "short_answer", a, [f"{a} did"]),
+          q(f"What did {b} {b2}?", "short_answer", o2, obj_variants(o2)[1:]),
+          q(f"Did {b} {b1} the {o1}?", "yes_no", "No", [])]
+    return "agent_action", s, para, [qs[0], qs[1]] if r.random() < 0.75 else [r.choice(qs[:2]), qs[2]]
+
+
+def ex_companion(r, P):
+    a, b, c = r.sample(P.names, 3); pl = r.choice(P.places)
+    s = f"{a} went to the {pl} with {b}, and {c} stayed home."
+    para = f"{c} stayed home while {a} and {b} went to the {pl}."
+    qs = [q(f"Who went to the {pl} with {a}?", "short_answer", b, [f"{b} did", f"with {b}"]),
+          q("Who stayed home?", "short_answer", c, [f"{c} did"]),
+          q(f"Did {c} go to the {pl}?", "yes_no", "No", [])]
+    return "companion_with", s, para, r.sample(qs, 2)
+
+
+def ex_feeling(r, P):
+    a, b = r.sample(P.names, 2); f1, f2 = r.sample([f for f in FEELINGS if _ok(P, f)], 2); ev = r.choice(EVENTS2)
+    s = f"After the {ev}, {a} felt {f1}, but {b} felt {f2}."
+    para = f"{b} felt {f2} after the {ev}, while {a} felt {f1}."
+    qs = [q(f"How did {b} feel after the {ev}?", "short_answer", f2, [f"{b} felt {f2}", f"{f2}"]),
+          q(f"How did {a} feel after the {ev}?", "short_answer", f1, [f"{a} felt {f1}"]),
+          q(f"Did {a} feel {f2}?", "yes_no", "No", [])]
+    return "feeling_state", s, para, r.sample(qs, 2)
+
+
+def ex_naming(r, P):
+    a, b, n1, n2 = r.sample(P.names, 4); p1, p2 = r.sample([p for p in PETS if _ok(P, p)], 2)
+    s = f"{a}'s {p1} is named {n1}, and {b}'s {p2} is named {n2}."
+    para = f"{b} has a {p2} called {n2}, and {a} has a {p1} called {n1}."
+    qs = [q(f"What is the name of {b}'s {p2}?", "short_answer", n2, [f"it is {n2}", f"{n2}"]),
+          q(f"What is {a}'s {p1} called?", "short_answer", n1, [f"it is called {n1}"]),
+          q(f"Whose {p1} is named {n1}?", "short_answer", a, [f"{a}'s"])]
+    return "naming", s, para, r.sample(qs, 2)
+
+
+def ex_activity(r, P):
+    a = r.choice(P.names); pl1, pl2 = r.sample(P.places, 2); (p1, _), (p2, _) = r.sample(ACTS, 2)
+    s = f"At the {pl1}, {a} {p1}, and at the {pl2}, {a} {p2}."
+    para = f"{a} {p2} at the {pl2} and {p1} at the {pl1}."
+    qs = [q(f"What did {a} do at the {pl2}?", "short_answer", p2, [f"{a} {p2}"]),
+          q(f"What did {a} do at the {pl1}?", "short_answer", p1, [f"{a} {p1}"])]
+    return "activity_place", s, para, qs
+
+
+FAMS12 = FAMS + [ex_owner, ex_agent, ex_companion, ex_feeling, ex_naming, ex_activity]
 _tok = None
 
 
@@ -264,9 +342,15 @@ FAM_NAMES = ["giver_recipient_roles", "comparative_direction", "explicit_negatio
              "event_ordering", "unambiguous_descriptive_reference", "two_simple_relations_combined"]  # same order as FAMS
 
 
-def make(n, seed, part, avoid=(), drop=()):
-    r = random.Random(seed); P = Pools(part); out, seen = [], set(avoid)
-    fams = [f for f, nm in zip(FAMS, FAM_NAMES) if nm not in drop]
+FAM_NAMES12 = FAM_NAMES + ["owner_possession", "agent_action", "companion_with", "feeling_state", "naming", "activity_place"]
+BLOCK_R6 = ("FRESH-EN-R3.json", "NEW-KINDS-R5.json", "NEW-KINDS2-R6.json")
+
+
+def make(n, seed, part, avoid=(), drop=(), kinds=6, block_files=("FRESH-EN-R3.json",)):
+    """kinds=6: the round-4 families. kinds=12: plus the six round-6 kinds. Rounds 4/5 used the defaults."""
+    r = random.Random(seed); P = Pools(part, block_files); out, seen = [], set(avoid)
+    fl, nl = (FAMS, FAM_NAMES) if kinds == 6 else (FAMS12, FAM_NAMES12)
+    fams = [f for f, nm in zip(fl, nl) if nm not in drop]
     while len(out) < n:
         fam, s, para, qs = fams[len(out) % len(fams)](r, P)
         if any(not x["canonical_answer"] or not x["question"] for x in qs) or s in seen: continue
