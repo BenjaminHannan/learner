@@ -1,0 +1,395 @@
+=== PLAT START 2026-10-04T19:03:01Z
+NVIDIA GeForce RTX 5090, 32607 MiB
+               total        used        free      shared  buff/cache   available
+Mem:             108           3          48           0          58         104
+debconf: delaying package configuration, since apt-utils is not installed
+e82bd12babf763a3fd080486fbab72088f516edc64a3456241340ea6bc1204f6  /job/repo/skills/main2/final-checkpoint.pt
+49a350235164a7c2f4ccc2731358dc615cf8a25086abd32afe71e4c3bd44c001  /job/repo/pipeline/artifacts/train-contextual-lr-stability-v1/control/seed0/contextual/final-resume.pt
+2.11.0+cu128 2.11.0+cu128 5.17.0 0.8.0
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+total 4
+drwxr-xr-x 3 root root 4096 Oct  4 19:03 .
+drwxr-xr-x 3 root root   54 Oct  4 19:03 ..
+drwxr-xr-x 2 root root   23 Oct  4 19:03 .eval_results
+lrwxrwxrwx 1 root root   52 Oct  4 19:03 .gitattributes -> ../../blobs/a6344aac8c09253b3b630fb776ae94478aa0275b
+lrwxrwxrwx 1 root root   52 Oct  4 19:03 LICENSE -> ../../blobs/7fb1127cc01c34199fa391322ea59a1d5c8c692e
+lrwxrwxrwx 1 root root   52 Oct  4 19:03 README.md -> ../../blobs/e1f74e1217b613432b8b741a96bda46b2f44cd99
+lrwxrwxrwx 1 root root   52 Oct  4 19:03 chat_template.jinja -> ../../blobs/4bba41b1eea86b9f3725ca30a89bb4656e17e25a
+lrwxrwxrwx 1 root root   52 Oct  4 19:03 config.json -> ../../blobs/42d7131e339aa00fecec1da8541151f9d0962835
+lrwxrwxrwx 1 root root   52 Oct  4 19:03 generation_config.json -> ../../blobs/0ec736a123e9569cb6aef0c86f7ee22523b2640f
+total 2290608
+drwxr-xr-x 2 root root       4096 Oct  4 19:03 .
+drwxr-xr-x 3 root root         54 Oct  4 19:03 ..
+-rw-r--r-- 1 root root      10644 Oct  4 19:03 LICENSE
+-rw-r--r-- 1 root root      16291 Oct  4 19:03 README.md
+-rw-r--r-- 1 root root       5487 Oct  4 19:03 chat_template.jinja
+-rw-r--r-- 1 root root       1224 Oct  4 19:03 config.json
+-rw-r--r-- 1 root root        132 Oct  4 19:03 generation_config.json
+-r--r--r-- 1 root root 2340697936 Oct  4 19:03 model.safetensors
+-rw-r--r-- 1 root root        434 Oct  4 19:03 special_tokens_map.json
+curriculum hashes match
+=== SMOKE 2026-10-04T19:04:34Z
+SKILLS-RESULT {"updates_done": 40, "sample_seed": 9, "fixed_rows": 20, "passes": 2, "families": "arith_bare,seq_next", "stride": 327, "parent_seed": 0, "lr_mult": 1.0, "dev_n": 10, "final_dev": {"in_dist": {"correct": 10, "n": 10, "skipped": 0, "by_family": {"arith_bare": [10, 10]}}, "answer": {"correct": 10, "n": 10, "skipped": 0, "by_family": {"arith_bare": [10, 10]}}, "frame": {"correct": 10, "n": 10, "skipped": 0, "by_family": {"arith_bare": [10, 10]}}, "vocab": {"correct": 0, "n": 0, "skipp
+=== EVAL 2026-10-04T19:04:50Z
+=== WORST8 chain_ops,state_update,cipher_map,chain_story2,var_chain,seq_cycle,fewshot_number_rule,group_induct 2026-10-04T19:05:45Z
+/job/out/run-F1.out {"event": "skills-progress", "update": 500, "stage": 9, "CE": 0.9822, "exact": 0.452, "minutes": 2.8}
+/job/out/run-F2.out {"event": "skills-progress", "update": 500, "stage": 9, "CE": 0.9867, "exact": 0.406, "minutes": 2.8}
+/job/out/run-N1.out {"event": "skills-progress", "update": 500, "stage": 3, "CE": 1.0626, "exact": 0.41, "minutes": 2.4}
+/job/out/run-N2.out {"event": "skills-progress", "update": 500, "stage": 7, "CE": 1.0064, "exact": 0.442, "minutes": 2.4}
+21517 MiB
+/job/out/run-F1.out {"event": "skills-progress", "update": 1000, "stage": 8, "CE": 0.9461, "exact": 0.464, "minutes": 4.4}
+/job/out/run-F2.out {"event": "skills-progress", "update": 1000, "stage": 7, "CE": 0.9766, "exact": 0.45, "minutes": 4.4}
+/job/out/run-N1.out {"event": "skills-progress", "update": 1500, "stage": 8, "CE": 0.9366, "exact": 0.47, "minutes": 5.5}
+/job/out/run-N2.out {"event": "skills-progress", "update": 1500, "stage": 9, "CE": 0.9915, "exact": 0.452, "minutes": 5.5}
+21535 MiB
+/job/out/run-F1.out {"event": "skills-progress", "update": 2000, "stage": 8, "CE": 0.8698, "exact": 0.496, "minutes": 7.6}
+/job/out/run-F2.out {"event": "skills-progress", "update": 2000, "stage": 7, "CE": 0.911, "exact": 0.502, "minutes": 7.6}
+/job/out/run-N1.out {"event": "skills-progress", "update": 2500, "stage": 9, "CE": 0.946, "exact": 0.486, "minutes": 8.7}
+/job/out/run-N2.out {"event": "skills-progress", "update": 2500, "stage": 6, "CE": 0.8619, "exact": 0.528, "minutes": 8.7}
+21553 MiB
+/job/out/run-F1.out {"event": "skills-progress", "update": 3000, "stage": 9, "CE": 0.8626, "exact": 0.522, "minutes": 10.9}
+/job/out/run-F2.out {"event": "skills-progress", "update": 3000, "stage": 5, "CE": 0.7494, "exact": 0.604, "minutes": 10.9}
+/job/out/run-N1.out {"event": "skills-eval", "update": 3000, "in_dist": {"correct": 118, "n": 320, "skipped": 0, "by_family": {"chain_ops": [8, 40], "chain_story2": [18, 40], "ciph
+/job/out/run-N2.out {"event": "skills-eval", "update": 3000, "in_dist": {"correct": 125, "n": 320, "skipped": 0, "by_family": {"chain_ops": [8, 40], "chain_story2": [16, 40], "ciph
+21571 MiB
+/job/out/run-F1.out {"event": "skills-progress", "update": 3500, "stage": 9, "CE": 0.8014, "exact": 0.55, "minutes": 13.6}
+/job/out/run-F2.out {"event": "skills-progress", "update": 3500, "stage": 3, "CE": 0.8806, "exact": 0.512, "minutes": 13.6}
+/job/out/run-N1.out {"event": "skills-progress", "update": 4000, "stage": 7, "CE": 0.8438, "exact": 0.522, "minutes": 14.2}
+/job/out/run-N2.out {"event": "skills-progress", "update": 4000, "stage": 7, "CE": 0.8455, "exact": 0.526, "minutes": 14.2}
+21571 MiB
+/job/out/run-F1.out {"event": "skills-progress", "update": 4500, "stage": 6, "CE": 0.7627, "exact": 0.584, "minutes": 16.8}
+/job/out/run-F2.out {"event": "skills-progress", "update": 4500, "stage": 9, "CE": 0.6829, "exact": 0.614, "minutes": 16.8}
+/job/out/run-N1.out {"event": "skills-progress", "update": 5000, "stage": 7, "CE": 0.8221, "exact": 0.548, "minutes": 17.4}
+/job/out/run-N2.out {"event": "skills-progress", "update": 5000, "stage": 9, "CE": 0.8067, "exact": 0.514, "minutes": 17.4}
+21571 MiB
+/job/out/run-F1.out {"event": "skills-progress", "update": 5500, "stage": 6, "CE": 0.7598, "exact": 0.576, "minutes": 19.9}
+/job/out/run-F2.out {"event": "skills-progress", "update": 5500, "stage": 9, "CE": 0.7669, "exact": 0.592, "minutes": 20.0}
+/job/out/run-N1.out {"event": "skills-progress", "update": 6000, "stage": 4, "CE": 0.8573, "exact": 0.498, "minutes": 20.6}
+/job/out/run-N2.out {"event": "skills-progress", "update": 6000, "stage": 6, "CE": 0.8363, "exact": 0.526, "minutes": 20.6}
+21571 MiB
+/job/out/run-F1.out {"event": "skills-eval", "update": 6000, "in_dist": {"correct": 110, "n": 320, "skipped": 0, "by_family": {"chain_ops": [9, 40], "chain_story2": [18, 40], "ciph
+/job/out/run-F2.out {"event": "skills-eval", "update": 6000, "in_dist": {"correct": 119, "n": 320, "skipped": 0, "by_family": {"chain_ops": [10, 40], "chain_story2": [18, 40], "cip
+/job/out/run-N1.out {"event": "skills-progress", "update": 6500, "stage": 7, "CE": 0.7837, "exact": 0.56, "minutes": 22.9}
+/job/out/run-N2.out {"event": "skills-progress", "update": 6500, "stage": 9, "CE": 0.8546, "exact": 0.504, "minutes": 22.9}
+21571 MiB
+/job/out/run-F1.out {"event": "skills-progress", "update": 7000, "stage": 7, "CE": 0.7658, "exact": 0.596, "minutes": 25.9}
+/job/out/run-F2.out {"event": "skills-progress", "update": 7000, "stage": 9, "CE": 0.6684, "exact": 0.618, "minutes": 26.0}
+/job/out/run-N1.out {"event": "skills-progress", "update": 7500, "stage": 6, "CE": 0.8032, "exact": 0.528, "minutes": 26.1}
+/job/out/run-N2.out {"event": "skills-progress", "update": 7500, "stage": 6, "CE": 0.865, "exact": 0.526, "minutes": 26.1}
+21571 MiB
+/job/out/run-F1.out {"event": "skills-progress", "update": 8000, "stage": 9, "CE": 0.8086, "exact": 0.556, "minutes": 29.1}
+/job/out/run-F2.out {"event": "skills-progress", "update": 8000, "stage": 3, "CE": 0.7091, "exact": 0.592, "minutes": 29.2}
+/job/out/run-N1.out {"event": "skills-progress", "update": 8500, "stage": 5, "CE": 0.8134, "exact": 0.56, "minutes": 29.3}
+/job/out/run-N2.out {"event": "skills-progress", "update": 8500, "stage": 9, "CE": 0.752, "exact": 0.556, "minutes": 29.2}
+21571 MiB
+/job/out/run-F1.out {"event": "skills-progress", "update": 9000, "stage": 6, "CE": 0.6373, "exact": 0.654, "minutes": 32.4}
+/job/out/run-F2.out {"event": "skills-progress", "update": 9000, "stage": 9, "CE": 0.6596, "exact": 0.666, "minutes": 32.5}
+/job/out/run-N1.out {"event": "skills-eval", "update": 9000, "in_dist": {"correct": 138, "n": 320, "skipped": 0, "by_family": {"chain_ops": [10, 40], "chain_story2": [22, 40], "cip
+/job/out/run-N2.out {"event": "skills-eval", "update": 9000, "in_dist": {"correct": 124, "n": 320, "skipped": 0, "by_family": {"chain_ops": [7, 40], "chain_story2": [21, 40], "ciph
+21571 MiB
+/job/out/run-F1.out {"event": "skills-progress", "update": 9500, "stage": 8, "CE": 0.8097, "exact": 0.578, "minutes": 35.1}
+/job/out/run-F2.out {"event": "skills-progress", "update": 9500, "stage": 7, "CE": 0.6735, "exact": 0.636, "minutes": 35.2}
+/job/out/run-N1.out {"event": "skills-progress", "update": 10000, "stage": 9, "CE": 0.776, "exact": 0.546, "minutes": 34.8}
+/job/out/run-N2.out {"event": "skills-progress", "update": 10000, "stage": 7, "CE": 0.7594, "exact": 0.564, "minutes": 34.8}
+21571 MiB
+/job/out/run-F1.out {"event": "skills-progress", "update": 10500, "stage": 6, "CE": 0.6731, "exact": 0.638, "minutes": 38.3}
+/job/out/run-F2.out {"event": "skills-progress", "update": 10500, "stage": 9, "CE": 0.5688, "exact": 0.69, "minutes": 38.4}
+/job/out/run-N1.out {"event": "skills-progress", "update": 11000, "stage": 3, "CE": 0.81, "exact": 0.566, "minutes": 38.0}
+/job/out/run-N2.out {"event": "skills-progress", "update": 11000, "stage": 9, "CE": 0.7642, "exact": 0.57, "minutes": 37.9}
+21571 MiB
+/job/out/run-F1.out {"event": "skills-progress", "update": 11500, "stage": 7, "CE": 0.6691, "exact": 0.634, "minutes": 41.6}
+/job/out/run-F2.out {"event": "skills-progress", "update": 11500, "stage": 7, "CE": 0.6221, "exact": 0.642, "minutes": 41.7}
+/job/out/run-N1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 113, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [19, 40], "ci
+/job/out/run-N2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 118, "n": 320, "skipped": 0, "by_family": {"chain_ops": [8, 40], "chain_story2": [14, 40], "cip
+21571 MiB
+/job/out/run-F1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 102, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [16, 40], "ci
+/job/out/run-F2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 106, "n": 320, "skipped": 0, "by_family": {"chain_ops": [10, 40], "chain_story2": [20, 40], "ci
+/job/out/run-N1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 113, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [19, 40], "ci
+/job/out/run-N2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 118, "n": 320, "skipped": 0, "by_family": {"chain_ops": [8, 40], "chain_story2": [14, 40], "cip
+10790 MiB
+/job/out/run-F1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 102, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [16, 40], "ci
+/job/out/run-F2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 106, "n": 320, "skipped": 0, "by_family": {"chain_ops": [10, 40], "chain_story2": [20, 40], "ci
+/job/out/run-F3.out {"event": "skills-progress", "update": 1000, "stage": 9, "CE": 0.8888, "exact": 0.474, "minutes": 2.3}
+/job/out/run-N1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 113, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [19, 40], "ci
+/job/out/run-N2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 118, "n": 320, "skipped": 0, "by_family": {"chain_ops": [8, 40], "chain_story2": [14, 40], "cip
+/job/out/run-N3.out {"event": "skills-progress", "update": 1500, "stage": 9, "CE": 1.0216, "exact": 0.442, "minutes": 2.8}
+10776 MiB
+/job/out/run-F1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 102, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [16, 40], "ci
+/job/out/run-F2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 106, "n": 320, "skipped": 0, "by_family": {"chain_ops": [10, 40], "chain_story2": [20, 40], "ci
+/job/out/run-F3.out {"event": "skills-progress", "update": 3000, "stage": 7, "CE": 0.762, "exact": 0.564, "minutes": 5.6}
+/job/out/run-N1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 113, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [19, 40], "ci
+/job/out/run-N2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 118, "n": 320, "skipped": 0, "by_family": {"chain_ops": [8, 40], "chain_story2": [14, 40], "cip
+/job/out/run-N3.out {"event": "skills-eval", "update": 3000, "in_dist": {"correct": 114, "n": 320, "skipped": 0, "by_family": {"chain_ops": [9, 40], "chain_story2": [16, 40], "ciph
+10776 MiB
+/job/out/run-F1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 102, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [16, 40], "ci
+/job/out/run-F2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 106, "n": 320, "skipped": 0, "by_family": {"chain_ops": [10, 40], "chain_story2": [20, 40], "ci
+/job/out/run-F3.out {"event": "skills-progress", "update": 4500, "stage": 9, "CE": 0.7472, "exact": 0.586, "minutes": 8.6}
+/job/out/run-N1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 113, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [19, 40], "ci
+/job/out/run-N2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 118, "n": 320, "skipped": 0, "by_family": {"chain_ops": [8, 40], "chain_story2": [14, 40], "cip
+/job/out/run-N3.out {"event": "skills-progress", "update": 4500, "stage": 9, "CE": 0.822, "exact": 0.508, "minutes": 8.1}
+10776 MiB
+/job/out/run-F1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 102, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [16, 40], "ci
+/job/out/run-F2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 106, "n": 320, "skipped": 0, "by_family": {"chain_ops": [10, 40], "chain_story2": [20, 40], "ci
+/job/out/run-F3.out {"event": "skills-eval", "update": 6000, "in_dist": {"correct": 118, "n": 320, "skipped": 0, "by_family": {"chain_ops": [9, 40], "chain_story2": [16, 40], "ciph
+/job/out/run-N1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 113, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [19, 40], "ci
+/job/out/run-N2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 118, "n": 320, "skipped": 0, "by_family": {"chain_ops": [8, 40], "chain_story2": [14, 40], "cip
+/job/out/run-N3.out {"event": "skills-progress", "update": 6500, "stage": 9, "CE": 0.8379, "exact": 0.52, "minutes": 11.7}
+10776 MiB
+/job/out/run-F1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 102, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [16, 40], "ci
+/job/out/run-F2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 106, "n": 320, "skipped": 0, "by_family": {"chain_ops": [10, 40], "chain_story2": [20, 40], "ci
+/job/out/run-F3.out {"event": "skills-progress", "update": 7500, "stage": 7, "CE": 0.7258, "exact": 0.606, "minutes": 14.1}
+/job/out/run-N1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 113, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [19, 40], "ci
+/job/out/run-N2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 118, "n": 320, "skipped": 0, "by_family": {"chain_ops": [8, 40], "chain_story2": [14, 40], "cip
+/job/out/run-N3.out {"event": "skills-progress", "update": 8000, "stage": 9, "CE": 0.864, "exact": 0.536, "minutes": 14.1}
+10776 MiB
+/job/out/run-F1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 102, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [16, 40], "ci
+/job/out/run-F2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 106, "n": 320, "skipped": 0, "by_family": {"chain_ops": [10, 40], "chain_story2": [20, 40], "ci
+/job/out/run-F3.out {"event": "skills-eval", "update": 9000, "in_dist": {"correct": 115, "n": 320, "skipped": 0, "by_family": {"chain_ops": [10, 40], "chain_story2": [19, 40], "cip
+/job/out/run-N1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 113, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [19, 40], "ci
+/job/out/run-N2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 118, "n": 320, "skipped": 0, "by_family": {"chain_ops": [8, 40], "chain_story2": [14, 40], "cip
+/job/out/run-N3.out {"event": "skills-progress", "update": 10000, "stage": 6, "CE": 0.8432, "exact": 0.536, "minutes": 17.8}
+10776 MiB
+/job/out/run-F1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 102, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [16, 40], "ci
+/job/out/run-F2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 106, "n": 320, "skipped": 0, "by_family": {"chain_ops": [10, 40], "chain_story2": [20, 40], "ci
+/job/out/run-F3.out {"event": "skills-progress", "update": 11000, "stage": 4, "CE": 0.6943, "exact": 0.64, "minutes": 20.5}
+/job/out/run-N1.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 113, "n": 320, "skipped": 0, "by_family": {"chain_ops": [11, 40], "chain_story2": [19, 40], "ci
+/job/out/run-N2.out {"event": "skills-eval", "update": 12000, "in_dist": {"correct": 118, "n": 320, "skipped": 0, "by_family": {"chain_ops": [8, 40], "chain_story2": [14, 40], "cip
+/job/out/run-N3.out {"event": "skills-progress", "update": 11500, "stage": 7, "CE": 0.6993, "exact": 0.586, "minutes": 20.2}
+10776 MiB
+main2 in_dist over all 1360 rows: 68.5%; family shift: 24.4%
+| family | correct/n | % |
+|---|---|---|
+| chain_ops | 6/40 | 15 |
+| state_update | 6/40 | 15 |
+| cipher_map | 8/40 | 20 |
+| chain_story2 | 11/40 | 28 |
+| var_chain | 11/40 | 28 |
+| seq_cycle | 14/40 | 35 |
+| fewshot_number_rule | 15/40 | 38 |
+| group_induct | 18/40 | 45 |
+| seq_next | 19/40 | 48 |
+| story_chain3 | 23/40 | 58 |
+| word_filter | 23/40 | 58 |
+| list_stats | 24/40 | 60 |
+| odd_one_out | 26/40 | 65 |
+| verify_claim | 26/40 | 65 |
+| order_chain | 28/40 | 70 |
+| rule_apply | 28/40 | 70 |
+| table_lookup | 29/40 | 72 |
+| digits_parity | 31/40 | 78 |
+| object_track | 32/40 | 80 |
+| percent_rate | 32/40 | 80 |
+| prop_eval | 32/40 | 80 |
+| backward_solve | 34/40 | 85 |
+| compare_numbers | 35/40 | 88 |
+| table_calc | 35/40 | 88 |
+| kin_chain | 36/40 | 90 |
+| letter_ops | 36/40 | 90 |
+| arith_bare | 38/40 | 95 |
+| copy_word | 39/40 | 98 |
+| list_index | 39/40 | 98 |
+| story_addsub | 39/40 | 98 |
+| syllogism | 39/40 | 98 |
+| distance_units | 40/40 | 100 |
+| div_exact | 40/40 | 100 |
+| passage_qa | 40/40 | 100 |
+worst 8 = chain_ops,state_update,cipher_map,chain_story2,var_chain,seq_cycle,fewshot_number_rule,group_induct; they hold 54% of all in_dist errors (concentrated if >= 60)
+start (main2 on the worst-8 held-out rows): 27.8%
+| run | held-out % | train-fit % |
+|---|---|---|
+| F1 | 31.9 | 43.4 |
+| F2 | 33.1 | 52.8 |
+| F3 | 37.8 | 48.1 |
+| N1 | 35.3 | - |
+| N2 | 36.9 | - |
+| N3 | 41.2 | - |
+VERDICT: CAN-NOT-FIT (capacity or answer-only signal limit): fixed-set train fit 48.1 < 85
+=== MANIFEST 2026-10-04T20:15:59Z
+b6ee4ec8ef2c6bf448586674daa643287ba90e7a9ac8ed9f8e1dea6e011f5c01  results.tar.gz
+-rw-r--r-- 1 root root 10399 Oct  4 20:15 export/results.tar.gz
+B64BEGIN
+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
+bWxjG9vYxja2sY1tbF9F+38Sn2N/AAgCAA==
+B64END
+=== PLAT DONE 2026-10-04T20:15:59Z

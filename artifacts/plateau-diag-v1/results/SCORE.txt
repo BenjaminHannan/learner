@@ -1,0 +1,48 @@
+main2 in_dist over all 1360 rows: 68.5%; family shift: 24.4%
+| family | correct/n | % |
+|---|---|---|
+| chain_ops | 6/40 | 15 |
+| state_update | 6/40 | 15 |
+| cipher_map | 8/40 | 20 |
+| chain_story2 | 11/40 | 28 |
+| var_chain | 11/40 | 28 |
+| seq_cycle | 14/40 | 35 |
+| fewshot_number_rule | 15/40 | 38 |
+| group_induct | 18/40 | 45 |
+| seq_next | 19/40 | 48 |
+| story_chain3 | 23/40 | 58 |
+| word_filter | 23/40 | 58 |
+| list_stats | 24/40 | 60 |
+| odd_one_out | 26/40 | 65 |
+| verify_claim | 26/40 | 65 |
+| order_chain | 28/40 | 70 |
+| rule_apply | 28/40 | 70 |
+| table_lookup | 29/40 | 72 |
+| digits_parity | 31/40 | 78 |
+| object_track | 32/40 | 80 |
+| percent_rate | 32/40 | 80 |
+| prop_eval | 32/40 | 80 |
+| backward_solve | 34/40 | 85 |
+| compare_numbers | 35/40 | 88 |
+| table_calc | 35/40 | 88 |
+| kin_chain | 36/40 | 90 |
+| letter_ops | 36/40 | 90 |
+| arith_bare | 38/40 | 95 |
+| copy_word | 39/40 | 98 |
+| list_index | 39/40 | 98 |
+| story_addsub | 39/40 | 98 |
+| syllogism | 39/40 | 98 |
+| distance_units | 40/40 | 100 |
+| div_exact | 40/40 | 100 |
+| passage_qa | 40/40 | 100 |
+worst 8 = chain_ops,state_update,cipher_map,chain_story2,var_chain,seq_cycle,fewshot_number_rule,group_induct; they hold 54% of all in_dist errors (concentrated if >= 60)
+start (main2 on the worst-8 held-out rows): 27.8%
+| run | held-out % | train-fit % |
+|---|---|---|
+| F1 | 31.9 | 43.4 |
+| F2 | 33.1 | 52.8 |
+| F3 | 37.8 | 48.1 |
+| N1 | 35.3 | - |
+| N2 | 36.9 | - |
+| N3 | 41.2 | - |
+VERDICT: CAN-NOT-FIT (capacity or answer-only signal limit): fixed-set train fit 48.1 < 85
