@@ -78,3 +78,70 @@ def build_long(ntok, per=1, seed=20261701, used=frozenset()):
                 rows.append({"id": f"{fname}-{o1}{o2}-{cell}", "cell": f"{cell}/{fname}", "structure": kind, "steps": 2, "op1": o1, "op2": o2, "x": x, "y": y, "z": z,
                              "r1": v[0], "answer": v[1], "text": t, "ntok": ntok(t)})
     return rows
+
+
+# ---- round 8: distractor numbers (irrelevant numbers inside the extra text)
+DIST_TRAIN = [
+    "The meeting was held in room {d} at the end of the hallway.", "A bus numbered {d} rumbled past the window just then.", "The old house on the corner had stood there for about {d} years.",
+    "It was already {d} minutes past the hour when the discussion began.", "The thermometer by the door read {d} degrees that morning.", "On the notice board hung a schedule for page {d} of the handbook.",
+    "The elevator stopped on floor {d} before the doors slid open.", "The local team finished the afternoon game with a score of {d} on the board.", "A sign near the entrance said the extension to dial was {d}.",
+    "The street address on the envelope read {d} Maple Road.", "A calendar on the wall was turned to the {d}th of the month.", "The coach left from platform {d} just after the bell rang.",
+    "The radio announced that the road numbered {d} was closed for repairs.", "The meeting room had a plaque reading suite {d} beside its door.", "The tower clock chimed at {d} minutes before the appointed time.",
+    "Somebody wrote the code {d} on a small yellow card beside the phone.", "The locker next to the stairs was labelled {d} in faded letters.", "It was a warm {d} degrees outside as people walked home.",
+    "The pamphlet on the table continued on page {d} in small print.", "A taxi marked {d} waited quietly at the curb across the road.", "The library shelf marked {d} stood at the back of the quiet room.",
+    "A seat numbered {d} had been reserved near the front of the hall.", "The song on the radio had been playing for {d} seconds already.", "Gate {d} at the station was crowded with travellers.",
+    "The sign on the fence said the park closes at {d} minutes past dusk.", "The recipe card in the drawer was filed under number {d}.", "The museum guide mentioned that the statue dates back about {d} years.",
+    "The postal box in the lobby was numbered {d} and painted green.", "A banner above the stage read edition {d} in bold letters.", "The workshop starts in hall {d} on the far side of the campus.",
+    "The track on the disc was number {d} and lasted a short while.", "The ferry sailed from pier {d} at the edge of the harbour.", "The hotel put the visiting guest in room {d} overlooking the garden.",
+    "A battered sign pointed toward highway {d} and the next town.", "The loudspeaker repeated that line {d} was running a little late.", "The photograph on the wall was taken in the year of the {d}th festival.",
+    "The attic door was marked with a small brass plate showing {d}.", "A neighbour mentioned that the old bridge is roughly {d} metres from the shop.", "The tiny cafe sat at number {d} on the winding market street.",
+    "The program booklet listed the closing act on page {d} near the back."]
+
+
+def _forbidden_words_ok(s): return True
+
+
+def lengthen_d(text, rng, fpool, dpool, ntok, forbid, lo=LONG_LO, hi=LONG_HI, kd=None):
+    """Insert 1-4 distractor-number sentences (values distinct from x,y,z and from each other) plus 0-4 neutral fillers; None if the length cannot land in [lo, hi]."""
+    segs = _SENT.split(text)
+    kd = kd or rng.randint(1, 4)
+    for _ in range(60):
+        vals = rng.sample([v for v in range(2, 100) if v not in forbid], kd)
+        items = [d.format(d=v) for d, v in zip(rng.sample(dpool, kd), vals)] + rng.sample(fpool, rng.randint(0, 4))
+        s = list(segs)
+        for it in items: s.insert(rng.randint(0, len(s)), it)
+        t = " ".join(s); n = ntok(t)
+        if lo <= n <= hi: return t
+    return None
+
+
+def eval_distractors():
+    d = json.load(open(os.path.join(HERE, "eval_distractors_r8.json")))["distractors"]
+    tg = set().union(*(gen2.grams(t, 5) for t in DIST_TRAIN)); ts = {t.lower() for t in DIST_TRAIN}
+    return [f for f in d if f.lower() not in ts and not (gen2.grams(f, 5) & tg)]
+
+
+def build_distr(ntok, seed=20261801, used=frozenset()):
+    """192 long two-step questions with 1-4 irrelevant numbers inside: 24 families x 4 op pairs x (1 unseen + 1 seen final); x, y, z distinct."""
+    T, H = gen.answer_split(); rng = random.Random(seed); e2 = gen.load(gen.EVAL_FILE)
+    fpool = eval_fillers(); dpool = eval_distractors(); rows = []; used = set(used)
+    fams = []
+    for fn in ("eval_layouts_r5_blind.json", "eval_layouts_r6_blind.json"):
+        fams += [(fn[13:15] + "-" + f["name"], f["kind"], f["frames"]) for f in json.load(open(os.path.join(HERE, fn)))["families"]]
+    for fname, kind, frames in fams:
+        for o1, o2 in itertools.product(("ADD", "SUB"), repeat=2):
+            texts = frames[f"{o1}-{o2}"]
+            for cell, finals in (("unseen", set(H)), ("seen", set(T))):
+                while True:
+                    x, y, z = (rng.randint(10, 99) for _ in range(3))
+                    v = gen_two.ok_values(x, y, z, o1, o2)
+                    if v and v[1] in finals and (x, y, z) not in used and len({x, y, z}) == 3: break
+                used.add((x, y, z)); t = None
+                for _ in range(500):
+                    base = rng.choice(texts).format(name=rng.choice(e2["names"]), noun=rng.choice(e2["nouns"]), x=x, y=y, z=z)
+                    t = lengthen_d(base, rng, fpool, dpool, ntok, {x, y, z})
+                    if t: break
+                assert t, ("cannot lengthen", fname)
+                rows.append({"id": f"{fname}-{o1}{o2}-{cell}", "cell": f"{cell}/{fname}", "structure": kind, "steps": 2, "op1": o1, "op2": o2, "x": x, "y": y, "z": z,
+                             "r1": v[0], "answer": v[1], "text": t, "ntok": ntok(t), "ndist": 1})
+    return rows

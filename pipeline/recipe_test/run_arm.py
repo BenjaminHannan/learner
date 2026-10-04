@@ -41,6 +41,8 @@ p.add_argument("--frames", choices=["base", "comp", "tabv", "rlv"], default="bas
 p.add_argument("--blind", action="store_true", help="also evaluate on the independently written layouts (round 5)")
 p.add_argument("--blind2", action="store_true", help="also evaluate on the round-6 independently written layouts")
 p.add_argument("--long", action="store_true", help="round 7: lift the core query cap to 160 tokens, train on 30%% lengthened items, also score a long (55-150 token) fresh set")
+p.add_argument("--dist", action="store_true", help="round 8: half of the lengthened training items also carry irrelevant numbers (needs --long)")
+p.add_argument("--distr", action="store_true", help="round 8: also score the long set with irrelevant numbers inside")
 p.add_argument("--steps", type=int, default=3000)
 p.add_argument("--batch", type=int, default=16)
 p.add_argument("--lr", type=float, default=1e-3)
@@ -103,8 +105,13 @@ def encode_row(r):
     ids = tok.encode(r["text"], add_special_tokens=False) + [EOS]
     reg = build_registry(r["text"], tok)
     want = [r["x"], r["y"]] + ([r["z"]] if r.get("steps", 1) == 2 else [])
-    assert [e["value"] for e in reg] == want, (r["text"], reg)
-    out = (ids, reg)
+    vals = [e["value"] for e in reg]
+    if vals == want:
+        lit = list(range(len(want)))
+    else:  # round 8: irrelevant numbers inside the text; the task operands must each appear exactly once among the literals
+        assert len(reg) <= 8 and len(set(want)) == len(want) and all(vals.count(w) == 1 for w in want), (r["text"], reg)
+        lit = [vals.index(w) for w in want]
+    out = (ids, reg, lit)
     _cache[key] = out
     return out
 
@@ -228,14 +235,15 @@ def supervision(r, loops_traces):
     One-step rows reduce exactly to the round-1/2 policy. Pointers = candidate indices of the desired refs."""
     two = r.get("steps", 1) == 2
     op1 = r["op1"] if two else r["op"]
-    desired = [(op1, ("literal:0", "literal:1"))] + ([(r["op2"], (None, "literal:2"))] if two else [])
+    lit = encode_row(r)[2]
+    desired = [(op1, (f"literal:{lit[0]}", f"literal:{lit[1]}"))] + ([(r["op2"], (None, f"literal:{lit[2]}"))] if two else [])
     labels, stage, rid = [], 0, None
     for tr in loops_traces:
         if stage == len(desired):
             labels.append((0, None)); continue
         want, refs = desired[stage]
         if stage == 1:
-            refs = (rid, "literal:2")
+            refs = (rid, f"literal:{lit[2]}")
         cid = tr["candidate_ids"]
         labels.append((ACTIONS.index(want), [cid.index(refs[0]), cid.index(refs[1])]))
         if task_call_matches(tr, want, refs):
@@ -291,7 +299,7 @@ def evaluate(model, rows):
             _, stage = supervision(r, traces[b])
             need = 2 if r.get("steps", 1) == 2 else 1
             last_ok = [tr for tr in traces[b] if tr["status"] == "OK"]
-            first_hit = any(task_call_matches(tr, (r["op1"] if need == 2 else r["op"]), ("literal:0", "literal:1")) for tr in traces[b])
+            first_hit = any(task_call_matches(tr, (r["op1"] if need == 2 else r["op"]), (f"literal:{encode_row(r)[2][0]}", f"literal:{encode_row(r)[2][1]}")) for tr in traces[b])
             out.append({"id": r.get("id"), "cell": r.get("cell"), "structure": r.get("structure"), "steps": need,
                         "op": r.get("op"), "op1": r.get("op1"), "op2": r.get("op2"), "answer": r["answer"],
                         "pred": tok.decode([int(pred[b])]).strip(),
@@ -366,9 +374,10 @@ def main():
         form_b2 = g3.build_blind(fits=fits, seed=20261601, fname="eval_layouts_r6_blind.json", used={(r["x"], r["y"], r["z"]) for r in form + form_b}) if args.blind2 else []
         import gen_two_long
         form_l = gen_two_long.build_long(ntok, used={(r["x"], r["y"], r["z"]) for r in form + form_b + form_b2}) if args.long else []
-        ex_t = {(r["x"], r["y"], r["z"]) for r in form + form_b + form_b2 + form_l}
+        form_d = gen_two_long.build_distr(ntok, used={(r["x"], r["y"], r["z"]) for r in form + form_b + form_b2 + form_l}) if args.distr else []
+        ex_t = {(r["x"], r["y"], r["z"]) for r in form + form_b + form_b2 + form_l + form_d}
         ex_p = gen.eval_pair_set(gen.eval_form())
-        data = g3.stream(ex_t, ex_p, args.seed, n_total, fits=fits_train, frames=args.frames, long_frac=0.3 if args.long else 0.0, ntok=ntok)
+        data = g3.stream(ex_t, ex_p, args.seed, n_total, fits=fits_train, frames=args.frames, long_frac=0.3 if args.long else 0.0, ntok=ntok, dist_frac=0.5 if args.dist else 0.0)
         assert all(r["answer"] in Tset for r in data) and not ({(r["x"], r["y"], r["z"]) for r in data if r["steps"] == 2} & ex_t)
         ex = ex_p
     else:
@@ -387,7 +396,7 @@ def main():
     params = [q for q in model.parameters() if q.requires_grad]
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.1, betas=(0.9, 0.95))
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / 200) * 0.5 * (1 + math.cos(math.pi * min(i, args.steps) / args.steps)))
-    name = args.name or f"{'two-' if args.task == 'two' else ''}{'copy' if args.copy else 'pool'}{'-ctx' if args.ctx else ''}{'-ord' if args.ordered else ''}{('-' + args.frames if args.frames != 'base' else '') + ('-long' if args.long else '')}-{args.wording}-seed{args.seed}"
+    name = args.name or f"{'two-' if args.task == 'two' else ''}{'copy' if args.copy else 'pool'}{'-ctx' if args.ctx else ''}{'-ord' if args.ordered else ''}{('-' + args.frames if args.frames != 'base' else '') + ('-long' if args.long else '') + ('-dist' if args.dist else '')}-{args.wording}-seed{args.seed}"
     outdir = Path(args.out); outdir.mkdir(parents=True, exist_ok=True)
     logf = open(outdir / f"{name}.log", "w")
     t0 = time.time()
@@ -418,6 +427,13 @@ def main():
             res["eval_long"][f"tok_{lo}_{hi}"] = {"chain_ok": list(rate(sel, "chain_ok")), "call1_ok": list(rate(sel, "call1_ok"))}
         res["eval_long"]["ntok_min_max"] = [min(f_["ntok"] for f_ in form_l), max(f_["ntok"] for f_ in form_l)]
         (outdir / f"{name}-longrows.json").write_text(json.dumps(evl))
+    if args.distr:
+        evd = evaluate(model, form_d)
+        res["eval_distr"] = summarize_two(evd, Tset)
+        for lo, hi in ((55, 80), (81, 110), (111, 150)):
+            sel = [r_ for r_, f_ in zip(sorted(evd, key=lambda q: q["id"]), sorted(form_d, key=lambda q: q["id"])) if lo <= f_["ntok"] <= hi]
+            res["eval_distr"][f"tok_{lo}_{hi}"] = {"chain_ok": list(rate(sel, "chain_ok")), "call1_ok": list(rate(sel, "call1_ok"))}
+        (outdir / f"{name}-distrrows.json").write_text(json.dumps(evd))
     if args.blind2:
         evb2 = evaluate(model, form_b2)
         res["eval_blind2"] = summarize_two(evb2, Tset)
