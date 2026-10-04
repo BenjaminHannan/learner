@@ -190,3 +190,16 @@ Caveats: one seed (seed 0 only; seed-1 numbers in the scorer reuse the earlier 9
 
 ### 05:14Z Stage B training done (seed 0, main2 skills parent, 9216 updates): train fit 46/48 control, 45/48 treatment
 Shown: train fit (TRAIN panel, gate >= 40/48) 46 (control, final CE 0.050) and 45 (treatment, final CE 0.230); earlier 9216 runs from the 5120-update parent: 40-43/48. Gate met, and a few points higher than before; one seed, so the gap is not claimed. Fresh eval (P1/P2) next. PC disk free 3.5 GB.
+
+## 05:24Z RESULT stage B (English pilot seed 0 from the main2 skills checkpoint, 9216 updates): WRONG by the registered marks; NULL. Skills pretraining did not carry over to fresh English questions
+Shown (seed 0 is new; the seed-1 rows are the earlier 9216-update runs re-scored in the same frame; exploratory, eval v3 seen many times, nothing sealed):
+| seed-0 state | train fit /48 | fresh understanding P1 /48 | meaning transfer P2 /48 |
+|---|---|---|---|
+| skills parent (before English training) | 0 | 0 | 0 |
+| control endpoint | 46 | 2 | 0 |
+| treatment endpoint | 45 | 3 | 0 |
+Registered marks: PASS needed P1 >= 12 or P2 >= 8 (with harm <= 3, train fit >= 40): not met. WRONG if P1 <= 7 and P2 <= 3 for both arms: met (P1 2 and 3, P2 0 and 0). Harm vs parent: none (parent scores 0). Short-answer items: 0 of 38 (P1) and 0 of 35 (P2) correct in every seed-0 state; the only correct answers are 2-3 of 10 yes/no items on P1 (below the 50% a coin would give) and 0 of 13 on P2. Treatment minus control (the pilot's own effect): +1 on P1, 0 on P2.
+Compared with before: train fit 46/45 (was 40-43 from the 5120-update parent), but fresh scores are no better than the earlier 9216 runs (P1 2-7, P2 1-3; bal9216 best 5/1). The scorer verdict is NULL.
+Plain language: learning the skills curriculum first made the model fit its 48 practice questions slightly better, but it still cannot answer new questions asked in new words; every free-answer fresh question was wrong.
+Suggested: the skills core did learn skills but they do not reach the English exit: the English path still goes through the 8 pooled vectors, which (as the copy-only test showed) cannot carry content such as names or numbers copied from the question, and the fresh questions need exactly that. Untested: the English exit with the copy path (stage B2; it hands the frozen LM the question tokens, so a PASS would partly measure the frozen LM reading the question, not our core), a longer or different English schedule, other seeds.
+Files: artifacts/.../ENGLISH-PILOT-v1/RESULTS-v3-stageB/ (SCORES-stageB.json, RAW, SEALED, closed receipts, EVAL-CONFIG-stageB.json); sweep scripts rebase_skills_parent_v1.py, eval_english_9216_from_v1.py. Stage B task and eval task deleted; PC idle, disk free 3.5 GB; no checkpoints deleted (skills main2/main3/main4/main4-run1, rebased parent, stageB endpoints all kept).
