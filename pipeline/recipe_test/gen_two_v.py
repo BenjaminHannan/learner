@@ -55,13 +55,13 @@ def compose(rng, n):
 
 
 # ---- round 5: extra table-style variety (authored by the design model, after seeing only the KINDS of the blind layouts, not their wording)
-TV_HEAD = ["INVENTORY {noun}", "{noun} count", "Daily tally ({noun})", "Notebook page: {noun}", "Sheet 2 - {noun}", "{name}'s {noun} list", "Register of {noun}", "Chart: {noun}"]
-TV_START = ["start: {x}", "day-open {x}", "initial amount = {x}", "base {x}", "carried over {x}", "x0 {x}"]
-TV_GAIN = ["+{y}", "arrived {y}", "IN {y}", "topped up by {y}", "credit {y}", "plus {y} added", "supplied {y}"]
-TV_LOSS = ["-{y}", "left {y}", "OUT {y}", "drawn down by {y}", "debit {y}", "minus {y} removed", "withdrawn {y}"]
+TV_HEAD = ["INVENTORY {noun}", "{noun} count", "Daily tally ({noun})", "Notebook page: {noun}", "Sheet B - {noun}", "{name}'s {noun} list", "Register of {noun}", "Chart: {noun}"]
+TV_START = ["start: {x}", "day-open {x}", "initial amount = {x}", "base {x}", "carried over {x}", "opening value {x}"]
+TV_GAIN = ["up {y}", "arrived {y}", "IN {y}", "topped up by {y}", "credit {y}", "plus {y} added", "supplied {y}"]
+TV_LOSS = ["down {y}", "left {y}", "OUT {y}", "drawn down by {y}", "debit {y}", "minus {y} removed", "withdrawn {y}"]
 TV_SEP = [" ; ", " | ", " || ", " / ", " :: ", " -- ", " > "]
 TV_ASK = ["total now?", "balance =", "how many at the end?", "end value?", "what remains?", "sum at close:", "closing figure?"]
-TV_LABELS = [("row 1", "row 2"), ("step a", "step b"), ("mon", "tue"), ("first", "then"), ("entry #1", "entry #2"), ("early", "late")]
+TV_LABELS = [("row one", "row two"), ("step a", "step b"), ("mon", "tue"), ("first", "then"), ("entry A", "entry B"), ("early", "late")]
 
 
 def tab_extra(rng, n):
@@ -93,6 +93,8 @@ def blind_frames():
 def train_frames(n=12000, tab=0):
     fr = list(set(compose(random.Random(4_000_001), n)))
     if tab: fr += list(set(tab_extra(random.Random(5_000_001), tab)))
+    import re
+    fr = [f for f in fr if not re.search(r"\d", f[2])]  # a digit in the frame would add a literal the registry check rejects
     ev = g3.all_eval_frames() + blind_frames()
     evg = set().union(*(gen2.grams(t) for _, _, t in ev)); evs = set().union(*(gen2.sentences(t) for _, _, t in ev))
     return [f for f in fr if not (gen2.grams(f[2]) & evg or gen2.sentences(f[2]) & evs)]
