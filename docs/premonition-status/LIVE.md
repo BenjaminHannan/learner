@@ -224,3 +224,9 @@ Removed the waiting stiffjob task and its two waiting processes (exact PIDs; Eng
 
 ## 16:05Z Stiffness test v1 result (run on Vast by the Fernando thread): NOT STIFF
 main2 20.9% vs parent 10.4% on two unseen skill families after 4000 updates; main2 ahead on 6 of 6 seeds (mean +10.5). Registered rule gives NOT STIFF; the 65-72 skills plateau is suggested not to be plasticity loss. Write-up (their run, not re-checked by me): artifacts/stiffness-test-v1/results/RESULT-v1.md on branch claude/project-thread-aya9pk. Confirmed: no stiffjob task and no stiffrun process remain on BensPC.
+
+## Vast 4070 readers checksum (17:48Z, read-only, nothing deleted)
+The Mac holds both ~2.1 GB reader models (I cannot see inside Vast box 52755827, so whether the box's files are these two is for the cleanup thread to confirm by comparing sha256):
+- /Users/ben-hannan/premonition-models/lis319f-merged/model.safetensors, 2161290944 bytes, sha256 970ef0acd5966f9e1a42049025d4ed807dee3989225201fd9dbcc6b4aa6b4f9b
+- /Users/ben-hannan/premonition-models/lis319-merged/model.safetensors, 2161290944 bytes, sha256 e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76
+Same folders also hold tokenizer.json (lis319-merged sha 3e065a55...fed81) and config.json (sha 28edd4e3...6773). The Mac is a single copy: if it is the only other copy, back it up before deleting the box.
