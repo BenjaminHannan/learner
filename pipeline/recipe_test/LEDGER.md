@@ -30,3 +30,6 @@ Round 2 about $0.6. Whole thread about $2.0 (estimate from hourly rates).
 | 54074348 | RTX 4080S | 0.216 | 22:49-23:29 | TWO-O seeds 0-2 | 23:29 | ~$0.14 |
 | 54074349 | RTX 3090 | 0.296 | 22:49-23:29 | TWO-O seeds 3-5 | 23:29 | ~$0.20 |
 Round 3 about $0.85; thread total about $2.9 (estimates from hourly rates).
+
+## Round 4 (2026-10-04)
+- 12:49Z 54149669 (3090 $0.139/h, seeds 0,1), 54149670 (3090 $0.151/h, seeds 2,3), 54149671 (3090 $0.156/h, seeds 4,5): two-ctx-comp, commit 67cba7ab. Credit before: $2.56.
