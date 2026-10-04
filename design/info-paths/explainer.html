@@ -94,6 +94,18 @@ footer code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem
   </div>
 
   <div class="card">
+    <div class="row"><span class="kicker">English, real model, 6 seeds, 05:30 UTC</span><span class="verdict v-pass">passed both marks</span></div>
+    <h2>More practice questions: 35% to 93%, past the bare 1.2B model</h2>
+    <p>Same model and same fresh test, now trained on 8000 made-up practice stories of the same six kinds as well.</p>
+    <svg viewBox="0 0 360 160" role="img" aria-label="Fresh English exactly right: 48 questions only 35 percent, plus 8000 generated 93, 1.2B model with 8 examples 75, with no examples 30">
+      <text x="0" y="12" font-size="10.5" fill="var(--ink2)">fresh English questions answered exactly right</text>
+      <text x="0" y="38" font-size="11" fill="var(--ink)">48 questions only</text><rect x="118" y="26" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="26" width="79.8" height="16" rx="2" fill="var(--neutral)"/><text x="201.8" y="38" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="start">35%</text><text x="0" y="68" font-size="11" fill="var(--ink)">+ 8000 generated</text><rect x="118" y="56" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="56" width="213.0" height="16" rx="2" fill="var(--pass)"/><text x="327.0" y="68" font-size="10" font-weight="700" fill="var(--card)" text-anchor="end">93%</text><text x="0" y="98" font-size="11" fill="var(--ink)">1.2B LM, 8 examples</text><rect x="118" y="86" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="86" width="172.5" height="16" rx="2" fill="var(--neutral)"/><text x="294.5" y="98" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="start">75%</text><text x="0" y="128" font-size="11" fill="var(--ink)">1.2B LM, no examples</text><rect x="118" y="116" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="116" width="68.3" height="16" rx="2" fill="var(--neutral)"/><text x="190.3" y="128" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="start">30%</text>
+      <line x1="118" y1="146" x2="348" y2="146" stroke="var(--line)"/><g font-size="9.5" fill="var(--ink2)"><text x="118" y="158" text-anchor="middle">0</text><text x="233.0" y="158" text-anchor="middle">50</text><text x="348" y="158" text-anchor="end">100%</text></g>
+    </svg>
+    <p class="small">+58 points from the extra practice (range +39 to +77). It beats the bare 1.2B model shown 8 worked examples by +18 (range +15 to +21), and every seed beats it. Seeds now land between 89% and 96%. Blank the core and it falls to 0%.</p>
+    <p class="small">Catch: the test uses the same six kinds of question as the practice. New kinds are untested. Cost about $0.89.</p>
+  </div>
+  <div class="card">
     <div class="row"><span class="kicker">English, real model, 6 seeds, 03:45 UTC</span><span class="verdict v-pass">passed, low bar</span></div>
     <h2>English: new words now come out, but 48 questions is too few</h2>
     <p>Trained on the pilot's 48 practice questions, tested on 192 fresh questions about 48 new mini-stories.</p>
@@ -277,15 +289,15 @@ footer code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem
         <text x="10" y="78">Varied wording:</text><text x="10" y="92">+16.5 points</text>
         <text x="10" y="114">English pilot:</text><text x="10" y="128">no gain yet</text>
         <text x="134" y="42">Free check: 74%</text><text x="134" y="56">of wrong English</text><text x="134" y="70">answers were old</text>
-        <text x="134" y="92">Pointer test:</text><text x="134" y="106">passed, +51</text><text x="134" y="120">Real +57, Eng +30</text>
-        <text x="258" y="42">English: many</text><text x="258" y="56">generated</text><text x="258" y="70">questions, same</text><text x="258" y="84">test</text>
+        <text x="134" y="92">Pointer test:</text><text x="134" y="106">passed, +51</text><text x="134" y="120">English 93%</text>
+        <text x="258" y="42">Test new kinds</text><text x="258" y="56">of question the</text><text x="258" y="70">practice never</text><text x="258" y="84">covered</text>
         <text x="258" y="106">Train longer,</text><text x="258" y="120">vary wording</text>
       </g>
     </svg>
   </div>
 
   <footer>
-    Shown in code: <code>scripts/sol_translator_english.py:15-46</code>, <code>scripts/cap256_launch/english_pilot_runtime_v1.py:143-162</code>, <code>reasoner_fresh/model.py:70,81,147</code>. Results: PR #29 <code>reasoner_fresh/RESULTS.md</code>; PR #30 <code>reasoner_ptr/real/RESULTS-R2.md</code>, <code>reasoner_ptr/real/english/RESULTS-R3.md</code>; LIVE.md 20:10 UTC. Full note with marks: <code>design/info-paths/information-paths.md</code>.<br>
+    Shown in code: <code>scripts/sol_translator_english.py:15-46</code>, <code>scripts/cap256_launch/english_pilot_runtime_v1.py:143-162</code>, <code>reasoner_fresh/model.py:70,81,147</code>. Results: PR #29 <code>reasoner_fresh/RESULTS.md</code>; PR #30 <code>reasoner_ptr/real/RESULTS-R2.md</code>, <code>reasoner_ptr/real/english/RESULTS-R3.md</code>, <code>RESULTS-R4.md</code>; LIVE.md 20:10 UTC. Full note with marks: <code>design/info-paths/information-paths.md</code>.<br>
     Papers: pointer-generator 1704.04368 · single-vector capacity 2502.13063 · middle layers 2502.02013 · Dense Connector 2405.13800 · P-tuning v2 2110.07602 · Cache-to-Cache 2510.03215 · MM1 2403.09611 · copying vs state-space 2402.01032 · LFM2 2511.23404.
   </footer>
 </div>
