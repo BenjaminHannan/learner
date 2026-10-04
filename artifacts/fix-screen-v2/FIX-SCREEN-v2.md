@@ -1,6 +1,6 @@
 # Fix screen v2: the exit pipe, and does the core matter at all?
 
-Written 2026-10-04 22:35 UTC, before any run. Fast lane. Follows fix screen v1 (`../fix-screen-v1/results/RESULT-v1.md`): reader width, 8 rounds, lr 3e-4 and the pointer exit all left fit at ~48-50%.
+Written 2026-10-04 22:27 UTC, before any run. Fast lane. Follows fix screen v1 (`../fix-screen-v1/results/RESULT-v1.md`): reader width, 8 rounds, lr 3e-4 and the pointer exit all left fit at ~48-50%.
 
 ## Runs (Ben's PC, sequential; same setup as screen v1)
 Start main2 (copy path). Worst-8 families: chain_ops,state_update,cipher_map,chain_story2,var_chain,seq_cycle,fewshot_number_rule,group_induct.
