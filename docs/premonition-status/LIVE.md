@@ -173,3 +173,6 @@ Shown: in_dist of 100 at 4k, 8k, 12k: 21, 39, 39 (main2: 35, 53, 54; main3: 32, 
 
 ### 02:10Z main4 16k stop check: PASSED the check, run continues
 Shown: in_dist 47/100 at 16k (stop rule was <= 40), curve 21, 39, 39, 47 (main2 35, 53, 54, 49). Still not above main2; nothing claimed. Disk free 3.85 GB. Ends ~03:20Z.
+
+### 03:01Z WARNING: BensPC unreachable since ~02:44Z
+SSH to the PC (Tailscale 100.75.113.114:22) times out; scp also fails. Last good read of main4 (step supervision) was 02:10Z: in_dist 21, 39, 39, 47 at 4k-16k; the run was scheduled-task based and was due to end ~03:20Z, but its state is unknown. Stage-B prep code (rebase_skills_parent_v1.py, sweep --parent0) is pushed but NOT yet copied to the PC. Nothing launched, nothing deleted. Needs the PC woken/restarted by Ben if it stays down. Coordinator's rule on file: if main4 < 80, stage B runs from the best skills checkpoint (main2 72 unless main4 beats it), exploratory, no copy path in the English exit.
