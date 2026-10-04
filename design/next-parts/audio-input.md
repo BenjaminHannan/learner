@@ -1,6 +1,6 @@
 # Audio input for Premonition (speech and other sounds)
 
-Status: design + CPU plumbing only. **No experiment in this file has been run.**
+Status: design + CPU plumbing only. **No experiment in this file has been run** except the S0 plumbing check in section (j).
 Date: 2026-10-03. Code: `premonition/audio/`. Tests: `tests/test_audio_frontend.py`, `tests/test_audio_adapter.py`.
 
 Labels: **SHOWN** = checked in code, a test, or a source I actually read (cited). **SUGGESTED** = reasoned, not checked. **UNTESTED** = a claim about behaviour nobody has measured.
@@ -9,13 +9,14 @@ Labels: **SHOWN** = checked in code, a test, or a source I actually read (cited)
 
 ## (g) Summary for Ben (read this first)
 
-- Sound goes in like this: microphone wave -> a borrowed, frozen "ear" (Whisper-base's encoder) turns every 20 ms into a list of 512 numbers -> a small "adapter" we train glues 4 of those together (80 ms), squeezes them to 256 numbers, and hands them to the reasoner as a row of slots. That is the same shape the reasoner already gets from text.
-- The adapter is only a translator. It does no thinking. The reasoner thinks.
-- The adapter is built so that text, audio and (later) vision all plug in the same way. Every vector carries a label pair (its job, such as question or notebook, and where it came from, such as audio) plus its time and a real/padding flag, in the same record vision uses.
-- The main test of whether it works is a **parity test**: ask the same question as text and as speech. If the reasoner reasons equally well both ways, audio works. If it only does well on audio when it can cheat (voice, loudness, recording quirks), it does not.
-- What exists today: a numpy sound-to-features front end, the adapter's reference code, and 46 tests. The tests show the pipes are connected correctly. **They say nothing about whether the model can reason about sound.** That needs GPU runs, which wait until the English pilot is done.
+**Revised 2026-10-03 by the Opus audio thread. The main track is now game sound (section j); speech is later.**
 
----
+- The point is hearing sounds that matter, like a creeper hissing behind you. That needs three things: notice it, know roughly where, and react in well under a second (a creeper gives 1.5 s, and sprinting away takes about 0.7 s).
+- The ear is now our own tiny "streaming" ear (about half a million numbers) that hears in stereo and reacts within about 60 ms. Whisper, the old choice, is built for 30-second speech clips and is too slow and too blind to direction for a game. It stays for the later speech track.
+- Plain stereo can tell left from right and near from far, but **not front from back**: the game just makes one ear louder. "Behind you" comes from Minecraft's 3D-audio option, from vision ("I hear it but can't see it", which is a reasoning step), or from turning the head.
+- Sound goes to the reasoner the same way as text and pictures: a row of 256-wide slots, one per 50 ms (one game tick), with the time of each slot. The last 2 seconds are kept.
+- What exists today: the streaming ear's plumbing and 68 tests, which show it is causal (it never changes its mind about the past) and fast (about 2 ms of CPU per 50 ms of sound). **They say nothing about whether it can actually hear a creeper.** That is experiments S1-S3 and G1-G3.
+- Audio does not jump the GPU queue. Skills and critical thinking come first.
 
 ## (a) What "audio into the reasoner" means
 
@@ -60,7 +61,7 @@ Parameter counts marked SHOWN were read from the published safetensors headers (
 | LFM2-Audio-1.5B's encoder | FastConformer 115M (SHOWN, card) | LFM Open License v1.0 for the model (SHOWN, card) | - | heavy | already mapped into LFM2's space, but LFM2, not LFM2.5 (compatibility UNTESTED) |
 | Plain log-mel + small conv (ours) | ~0.1-1M (SUGGESTED) | ours | 100 Hz in, any rate out | best | learns an ear from scratch: needs much more audio. Keep as a **control** |
 
-**Recommendation: Whisper-base encoder, frozen,** for both speech and first non-speech tests.
+**Recommendation (speech track only, revised 2026-10-03): Whisper-base encoder, frozen.** For game and environment sound, the default is now our own small causal stereo ear; see section (j2).
 Why (SUGGESTED): smallest well-known encoder that is (1) trained on a huge, varied audio set, (2) permissively licensed, (3) fed by a log-mel front end we can reproduce in numpy (`premonition/audio/frontend.py`), (4) the usual choice for audio-LLM work (SALMONN uses a Whisper encoder; SHOWN from the arXiv abstract). Width 512 at 50 Hz fits the adapter cheaply.
 Fallback: Moonshine-base if the 30-second padding cost hurts CPU or latency; it is the same size and handles variable length. Second encoder for general sound (BEATs or AST) only if experiment E4 shows Whisper features miss non-speech events. Mimi is for **speech output** later, not input.
 
@@ -73,7 +74,7 @@ Audio does **not** define its own contract. It fills the shared `Workspace` reco
 | Workspace field (shared) | Audio value | Where in code |
 |---|---|---|
 | `tokens [B,N,256]` float | projected slot vectors, float32; padded rows exactly 0 | `adapt()` |
-| `segment [B,N,2]` long = (role id, modality id) | (question / notebook / example / tool_result, `audio`=7) from the shared `SEGMENTS` table (`question 0, notebook 1, example 2, tool_result 3, register 4, text 5, image 6, audio 7`) | built only in `audio_segment()`, so a switch to one combined id touches one function |
+| `segment [B,N,2]` long = (role id, modality id) | (question / notebook / example / tool_result, `audio`=2) from contract v1's two tables (PR #23 commit 80540de9e): roles `question 0, notebook 1, example 2, tool_result 3, register 4, action 5`; modalities `text 0, image 1, audio 2`. For the example role, row = example index (`adapt(..., example_index=i)`) | built only in `audio_segment()` |
 | `coords [B,N,3]` float (row, col, time) | `(0, 0, t)`, **t = slot centre in seconds** = `(j + 0.5) * k * frame_period` | `adapt()` / `slot_times()` |
 | `valid [B,N]` bool | True = real audio, False = right padding | `adapt()`, `batch()` |
 
@@ -94,7 +95,7 @@ What the adapter does **not** do: it adds no role or modality vector. PR #23 put
 
 Defaults for audio (all SUGGESTED, none trained):
 - Encoder: Whisper-base, D_enc=512, 50 Hz. k=4 -> **12.5 slots/s** (80 ms). A 10 s spoken question gives 125 slots; the same question as text is about 30-40 tokens (assumes ~150 words/min; SUGGESTED). k=8 is experiment E3.
-- **Time unit: seconds, not frame index.** Encoders at 50 Hz and 41.67 Hz then agree on "when" (SHOWN by a test for equal slot spans). Row and col are fixed at 0, so audio order lives only in the time coordinate. How the core turns float seconds into relative-bias indices (bucket size) is PR #23's call; 80 ms buckets would give one index per slot.
+- **Time unit: seconds, not frame index.** Encoders at 50 Hz and 41.67 Hz then agree on "when" (SHOWN by a test for equal slot spans). Row and col are absent (`coord_valid` False; row = example index for the example role), so audio order lives only in the time coordinate. Contract v1 buckets time differences on a signed log scale (section j3).
 - **hidden=256, not 32.** The 32-wide pipe in the text reader may cap capacity (fair-scaling thread). Stacked audio frames carry more than one token does. Adapter size: 590,336 parameters with stack k=4, hidden=256; 74,016 at hidden=32; 197,120 with mean-pool (SHOWN by `parameter_count()`). Whether the text reader should widen is its own experiment (E0), text path only.
 - Sinusoid in tokens: off (`pos_scale=0`). Order should travel in `coords`. Turn it on only while audio sits in today's notebook, which ignores position (as PR #22 does with its `pos2d` for notebook images). That is experiment E5.
 - Role: a spoken question is `question`; a sound to reason about next to a text question is `notebook`.
@@ -139,7 +140,9 @@ Pass gate before stage 1b: retrieval test in E1.
 
 ---
 
-## (f) Experiments (ALL NOT RUN; one change each; pass marks fixed here)
+## (f) Speech-track experiments (ALL NOT RUN; one change each; pass marks fixed here)
+
+Revised order: these come after the game-sound S-track (section j5). E0 is reasoner/scaling work, not audio.
 
 Every eval set is a fresh sealed set (section i). Chance levels are stated so a pass cannot be luck.
 
@@ -159,8 +162,8 @@ Every eval set is a fresh sealed set (section i). Chance levels are stated so a 
 
 ## (h) Roadmap
 
-- **Now (CPU, done here):** frontend, adapter contract, synthetic signals, 46 plumbing tests. Design reviewed.
-- **Next (after the English pilot frees the GPU):** A0, then E0 (text only), then E1, E2. Fresh sealed sets for E1/E2 authored and checked first.
+- **Now (CPU, done here):** frontend, adapter contract, synthetic signals, streaming stereo ear (section j2); 68 plumbing tests. Design reviewed by an independent Opus reviewer (2026-10-03).
+- **Next (revised 2026-10-03, see j6):** game-sound S1a-S1c on CPU with rendered sounds; S2 once PR #23's core reads coords; S3 after vision. The speech track (A0, E1-E7) after that. E0 moves to the reasoner/scaling work.
 - **Later:** E3-E7; a general-sound encoder if E4 says so; Mimi for spoken output in the talker; once the redesigned core reads `segment`, `coords` and `valid`, retire the `to_core_layout` shim; vision through the same contract. Ben's long-term Minecraft test (screen in, keyboard/mouse out) is a natural later use of the sound path: mob noises, footsteps and damage cues as sound-only events. This does not change the first step.
 
 ### Open questions and chosen defaults
@@ -188,21 +191,116 @@ Every eval set is a fresh sealed set (section i). Chance levels are stated so a 
 
 SHOWN by `python3 -m pytest tests/test_audio_frontend.py tests/test_audio_adapter.py` (46 passed): frame-count arithmetic (30 s -> 3000 frames), a pure sine peaks in the nearest mel bin (within 1) for 250 Hz-6 kHz, chirps rise, noise bursts are localised in time, determinism, silence and tone are separable by mean energy (frontend) and by slot norm (adapter), downsample length = ceil(T/k), padded rows are exactly zero and padded content cannot leak, mean-pool ignores padded frames, slot coordinates match across frame rates, 30 s of slots get distinct position codes, segment = (role, audio) pair with ids matching PR #22's table, coords = (0, 0, seconds), the adapter adds no role/modality vector, batching pads with valid False, strict shape and dtype errors.
 
+Also SHOWN by `tests/test_audio_stream.py` (21 passed, added 2026-10-03): the stereo front end gives the same frames whatever the chunk sizes, never changes past frames when later audio arrives, gives zero level difference for mono, reads left/right from level difference with a hand-written baseline, and is blind to front/back for amplitude-panned sources; the causal ear streamed in random chunks equals a full pass, and is causal with a 63-frame receptive field; the Workspace window makes 50 ms slots, keeps the last N, never revises a slot, and gives times relative to now.
+
 **These tests show the plumbing works. They say nothing about whether audio reasoning works.** Bit-exact match with Whisper's own frontend is UNTESTED (experiment A0).
 
 Sources read: github.com/openai/whisper (README, whisper/audio.py, whisper/model.py); librosa filters.py and core/convert.py; HF config/cards/API for LiquidAI/LFM2.5-1.2B-Base, LiquidAI/LFM2-Audio-1.5B, openai/whisper-tiny, openai/whisper-base, UsefulSensors/moonshine-tiny/-base, facebook/wav2vec2-base, facebook/hubert-base-ls960, microsoft/wavlm-base-plus, MIT/ast-finetuned-audioset-10-10-0.4593, laion/clap-htsat-unfused, kyutai/mimi, facebook/encodec_24khz; arXiv 2410.15608 (Moonshine); arXiv 2310.13289 (SALMONN, abstract via search).
 
 ---
 
-## (j) Game sound: direction and reaction speed (added 2026-10-03; ALL SUGGESTED, NOT RUN)
+## (j) Game sound: hearing what matters, from where, in time (revised 2026-10-03 by the Opus audio thread)
 
-Ben's long-term test is Minecraft played like a person. The sound that matters there is an alarm (a creeper hiss behind you), where the model must know that it happened, roughly where, and react fast. Naming the sound is not enough.
+Ben's aim (13:39 UTC): "hear sounds", e.g. a creeper hissing behind you in Minecraft. That is a different job from captioning or transcribing. The model must notice a sound that matters, judge roughly where it is, and act fast enough. This section supersedes the earlier short draft of (j) and changes the default plan: **game sound is now the primary audio track; speech (sections a-f, Whisper-base) is a later, secondary track.**
 
-- **Training data (SUGGESTED):** record the game itself. The engine knows the source, time and direction of every sound, so labels are free. Nothing recorded yet; licence/ToS of recording not checked.
-- **Direction (SUGGESTED, not built):** the current adapter takes mono. Take two channels, keep a per-slot direction value (e.g. level and time difference between channels, or a learned left/right/behind code) and carry it in `coords` or extra token features. `coords` currently has (0, 0, t) for audio, so a direction field needs agreement with the Workspace owner (PR #23) before use.
-- **Latency (SUGGESTED):** Whisper pads every clip to 30 s, which is a poor fit for streaming. For the game stage, test a streaming-friendly ear (Moonshine-style variable length, or a small causal conv ear) against Whisper-base. This revisits the Whisper-base default for that stage only.
-- **Experiments (NOT RUN, one change each):**
-  - G1: add stereo + direction. Pass: direction of a held-out synthetic noise burst (left/right/behind) classified >= 90% (chance 33%); falsified if mono input does within 10 points.
-  - G2: mute test. In a scripted creeper-approach scenario, the sound-on model must avoid the explosion >= 20 points more often than the same model with sound muted; falsified if the gap is < 5 points.
-  - G3: reaction delay. Time from hiss start to the first evasive action under 1.0 s on the scenario set; falsified if it is not below the muted-model delay.
-  Fresh scenario sets follow section (i): one authoring agent, an independent checker, hash seal.
+Labels as above. Facts checked on the web by an independent Opus reviewer on 2026-10-03 carry their source.
+
+### j1. What the creeper case actually demands (SHOWN facts, SUGGESTED consequences)
+
+| Fact | Source | Consequence for the design |
+|---|---|---|
+| A creeper ignites within 3 blocks and explodes 30 ticks (1.5 s) later; it needs unbroken line of sight; getting 7 blocks away or breaking line of sight cancels it | minecraft.wiki/w/Creeper | The whole loop (hear, decide, act) must fit well inside 1.5 s. Escaping 3 -> 7 blocks takes about 0.7 s sprinting (speed from memory), so reaction must be <= ~0.6-0.8 s. The old G3 mark of 1.0 s was too loose. |
+| No hiss without line of sight | minecraft.wiki/w/Creeper | A hiss you hear but cannot see means "in your blind area" (behind or to the side), not "behind a wall". |
+| Mono sound sources are positioned by OpenAL and fade with distance; OpenAL Soft's non-HRTF stereo default ("panpot") is plain amplitude panning | docs.neoforged.net (sounds), OpenAL Soft alsoft.conf | Plain stereo gives left/right and loudness (distance), but **no front/back**: a source 30 deg ahead-left and 150 deg behind-left sound identical. Our toy panner reproduces this (test `test_amplitude_panning_is_front_back_blind`). |
+| Java 1.19 (22w11a) added a "Directional Audio" option, HRTF-based, best with headphones | minecraft.wiki/w/Options | With HRTF on, front/back cues exist (time and spectral differences). Mel + level difference alone may lose them; phase or GCC-PHAT features are the matching change (SUGGESTED). |
+| "Show Subtitles" (renamed "Closed Captions" in 1.21.9) prints the sound name with `<` / `>` arrows, only for off-screen sounds | minecraft.wiki/w/Subtitles | Must be **off** in every sound test, or the vision path can cheat. They also cannot say "behind", so they are no ceiling for direction. |
+| MineRL and MineDojo give no audio observation; MineDojo does give damage source direction | minerl.readthedocs.io, docs.minedojo.org | We need our own capture harness. Existing Minecraft research environments do not help with sound. |
+
+So "behind you" has three possible sources, and the design uses all three as separate, testable routes (SUGGESTED):
+1. **HRTF on** ("Directional Audio"): the ear can hear front/back directly.
+2. **Fusion with vision:** a sound with no matching thing on screen is in the blind area. This is a reasoning step, not a perception trick, which is what Ben wants the reasoner to be good at.
+3. **Active hearing:** turn the head and listen to how the pan changes. This needs the action loop, so it comes last.
+
+### j2. The ear, re-examined
+
+The old default was frozen Whisper-base. For game sound it is the wrong ear (SHOWN unless marked):
+- It needs a 30 s input (reference code asserts 3000 mel frames); slicing its position table for short clips works mechanically but is reported to degrade.
+- It is not causal: every frame attends to the whole 30 s window.
+- It is mono and trained mostly on speech.
+- Cost: about 90 GFLOP per call (SUGGESTED arithmetic: ~62 G matmuls + ~27 G attention + ~3 G convs). Re-running it every 50 ms tick would be ~25,000x the cost of the small ear below.
+- Our own Whisper-style front end is not causal either: it centres frames (12.5 ms look-ahead) and floors every frame at the loudest frame of the clip (SHOWN in `frontend.log_mel`, and by `test_whisper_frontend_is_not_causal`).
+
+**New default for game sound: our own small causal ear on stereo features** (`premonition/audio/stream.py`, SUGGESTED design, plumbing SHOWN):
+
+```
+stereo samples (16 kHz, 2 ch), pushed in chunks as they arrive
+  -> StreamingStereoMel: uncentred STFT (25 ms window, 10 ms hop), fixed log floor,
+     features per frame = [left log-mel 80 | right log-mel 80 | left - right 80]  (240)
+  -> CausalConvEar: 5 dilated causal conv layers (kernel 3, dilations 1,2,4,8,16), width 128,
+     residual + GELU; receptive field 63 frames = 0.63 s; 289,408 params
+  -> AudioWindow: 5 frames per slot = 50 ms = one game tick; adapter (stack, hidden 256) -> 256-wide
+     slot, 229,888 params; keep the last 40 slots (2 s) as Workspace tokens
+```
+
+Why this default (SUGGESTED): it is causal by construction; it is tiny (~0.52M params, which **must count toward the model's size budget** when claiming "beats bigger models at its size"); Minecraft's sound vocabulary is closed, and labels are free (a client mod or offline rendering knows each sound's id, time and position), so the usual reason to borrow an ear, too little labelled data, does not apply; and it takes stereo natively.
+
+**The fair opponent** is a frozen small pretrained frame-level ear: `frame_mn06` from fschmid56/PretrainedSED (1.62M params, frame-level AudioSet Strong detection at 40 ms, MIT; SHOWN from the repo README). These are mono, so the single change is "run it on L and R separately and concatenate with the level difference", so a stereo-vs-mono gap is not mistaken for an ear gap. Clip-level models (EfficientAT clip models, PANNs CNN10) are the wrong opponent: they label whole clips.
+
+Whisper-base stays as the ear for the **speech track only** (spoken questions, maybe spoken guides later). That track is no longer first.
+
+Shown on CPU (container Xeon 2.1 GHz, numpy, one thread, random weights): front end + ear + window take a median of 1.95 ms per 50 ms chunk (p95 2.26 ms). Worst-case algorithmic delay from a sound's first sample to the slot that holds it is 60 ms (10 ms to the first frame plus up to 40 ms to fill the slot; `hearing_latency_bound`), although a sound at the very edge of a Hann window is faint, so useful detection may take about half a window longer (SUGGESTED).
+
+### j3. Fitting the shared Workspace (contract v1)
+
+| Field | Game-sound value |
+|---|---|
+| `tokens [N,256]` | one slot per 50 ms, the last 40 slots |
+| `segment` | (`notebook`, `audio`): sound is context for the current step, not the question |
+| `coords` | time = slot centre **minus now**, in seconds (always <= 0), so numbers stay small in a long game; the core's relative bias only uses differences |
+| `coord_valid` | (False, False, valid): row and column absent, time present on real slots |
+| `valid` | False for empty slots at the start of a stream |
+
+**No direction field** (SUGGESTED default). `coords` say where a token sits in its input, and drive the core's relative-position bias. Azimuth is an uncertain property of the sound's content (front/back ambiguous without HRTF), so it belongs in the token, learned by the ear, with an auxiliary azimuth (sin, cos) head while pretraining the ear so it is decodable. Mapping azimuth onto image columns to help audio-vision binding is rejected: it is wrong for off-screen sounds, which are the ones that matter. Binding is learned from content and tested in S3.
+
+Three problems were raised with the Workspace owner (PR #23). All three are **settled in Workspace contract v1** (PR #23 section 6, commit c208de425), and the audio code now follows it (all untested beyond plumbing):
+1. **Audio sat at (row 0, col 0)**, the same place as image patch (0,0). Fixed: a per-axis `coord_valid [N,3]` bool with a neutral "no position" bias per axis. Audio emits `coord_valid = (False, False, valid)`, built only in `audio_coord_valid()`. Row and column offsets count only within one (role, modality) source.
+2. **The time bias was too short** (+/-4 steps = +/-200 ms at 50 ms buckets). Fixed: time is seconds relative to now (<= 0), bucketed on a signed log scale (0, 50, 100, 200, 400, 800 ms, 1.6 s, older, plus "no time"), applied across all timed sources so a sound and a video frame can be ordered. The +/-4 clip and the +/-1 heads now apply to row and column only. Experiment S2 tests this choice.
+3. **Registers need t = 0.** Fixed: registers and action tokens carry time 0 with row and column absent; tool results carry their arrival time; the question carries 0; notebook text, guides and examples have time absent.
+
+For offline clips, `adapt()` keeps clip-relative times; a caller building a v1 Workspace sets `time_offset = -(clip seconds)` so times are <= 0. The streaming `AudioWindow` already gives times relative to now.
+
+The ear is causal, so past slots never change: cache them, and let the core re-read the ~40-slot window each step. Tie the slot rate to the policy's step rate (20 Hz today, same as the game tick).
+
+### j4. Data (SUGGESTED, nothing recorded or rendered yet)
+
+Kept strictly separate, as the CLAUDE.md asks:
+- **Small synthetic tests (CPU):** toy stereo scenes from `synth.stereo_scene` (hiss, steps, groan, twang with exact times and azimuths). Plumbing and early ear checks only. They are not Minecraft sounds.
+- **Offline-rendered game sounds:** play the game's sound files through OpenAL Soft at known positions, HRTF on and off. Unlimited labelled stereo data without running the game. Mojang's asset terms are **not checked**; Luanti's openly licensed sounds are a fallback.
+- **Real game recordings:** capture system audio and the screen together on Ben's PC, with a client mod logging each sound event (id, time, position relative to the player). Subtitles off. Terms not checked.
+
+### j5. Experiments (ALL NOT RUN except S0; one change each; marks fixed now)
+
+Small synthetic / rendered (CPU is enough for S0-S1; a 0.5M ear trains on CPU):
+
+| ID | One change | Pass mark | Proves it wrong |
+|---|---|---|---|
+| S0 | switch to the causal stereo ear (plumbing) | chunked output = full pass (max abs diff < 1e-5); changing future samples never changes past outputs; delay bound <= 60 ms | any past slot changes when later audio arrives. **Status: passes on CPU** (`tests/test_audio_stream.py`, 21 tests); says nothing about hearing |
+| S1a | stereo vs mono input, same ear, rendered sounds | left/right accuracy >= 90% (chance 50%); event-onset F1 >= 0.8 at +/-100 ms | mono within 10 points on left/right (labels leak through loudness) |
+| S1b | our ear vs frozen `frame_mn06` per channel + level difference, same head | adopt ours if detection F1 is within 0.03 of the pretrained ear at <= 1/3 of its params | pretrained ear wins by > 0.05 on held-out sound variants |
+| S1c | fixed log floor vs running-max normaliser, distance-band task | fixed >= 10 points better | within 3 points |
+| S2 | log-spaced time buckets vs 50 ms buckets clipped at +/-4 (needs PR #23's core) | "which came first" on events 0.5-2 s apart >= 15 points higher; shuffled-audio control <= chance + 5 | gain < 5 points |
+| S3 | add vision to audio: "heard but not seen" | on-screen/off-screen F1 >= 0.85 with audio + vision, audio-only <= 0.65 | audio-only within 5 points of audio + vision (a loudness or pan shortcut) |
+
+Real game (separate sets, after the vision path and an action head exist):
+
+| ID | One change | Pass mark | Proves it wrong |
+|---|---|---|---|
+| G1 | HRTF on vs off, same ear | front/back accuracy >= 75% with HRTF, <= 60% without | HRTF-off also >= 70% (leak from vision or scene motion) |
+| G2 | sound on vs muted, scripted creeper approaches | >= 20 points fewer explosions with sound on | gap < 5 points |
+| G3 | sound on vs muted, creeper starting behind | median hiss-to-evasive-action <= 0.6 s and survival >= 70% | not faster than muted by >= 0.3 s |
+
+Fresh scenario sets follow section (i): one authoring agent, an independent checker, hash seal.
+
+### j6. Order of work (SUGGESTED)
+
+Audio does **not** take the first GPU slot; skills and critical thinking come first. S0 is done. S1a-S1c can run on CPU once rendered sounds exist. S2 waits for PR #23's core to read `coords`, `segment` and `valid` (today's `to_core_layout` shim drops coords). S3 waits for the vision path (PR #22). G1-G3 wait for the action loop. The speech track (A0, E1-E7) follows after S2; E0 (widen the 32-wide text reader) is reasoner/scaling work and belongs with PR #18 / PR #23.

@@ -17,16 +17,31 @@ def spec(**kw):
     return A.ModalityAdapterSpec(**base)
 
 
-def test_segment_table_matches_pr22_workspace():
-    # Literal copy of SEGMENTS in PR #22 design/next-parts/vision/workspace.py (commit 912bfe7de).
-    assert A.SEGMENTS == {"question": 0, "notebook": 1, "example": 2, "tool_result": 3, "register": 4,
-                          "text": 5, "image": 6, "audio": 7}
+def test_id_tables_match_workspace_v1():
+    # Literal copy of PR #23 section 6 (commit 80540de9e), matching vision's PR #26.
+    assert A.ROLE_IDS == {"question": 0, "notebook": 1, "example": 2, "tool_result": 3, "register": 4,
+                          "action": 5}
+    assert A.MODALITY_IDS == {"text": 0, "image": 1, "audio": 2}
+
+
+def test_example_role_puts_example_index_in_row():
+    sp = spec()
+    w = A.init_weights(sp, seed=2)
+    x = F.log_mel(S.syllables(2))
+    out = A.adapt(sp, w, x, role="example", example_index=3)
+    v = out["valid"]
+    assert np.all(out["coords"][v, 0] == 3) and np.all(out["coord_valid"][v, 0])
+    assert not out["coord_valid"][:, 1].any() and np.array_equal(out["coord_valid"][:, 2], v)
+    with pytest.raises(ValueError):
+        A.adapt(sp, w, x, role="example")
+    with pytest.raises(ValueError):
+        A.adapt(sp, w, x, role="notebook", example_index=0)
 
 
 def test_audio_segment_is_role_modality_pair():
     g = A.audio_segment("notebook", 5)
     assert g.dtype == np.int64 and g.shape == (5, 2)
-    assert (g == [1, 7]).all()
+    assert (g == [1, 2]).all()
     with pytest.raises(ValueError):
         A.audio_segment("register", 3)      # registers belong to the core, not an input adapter
     with pytest.raises(ValueError):
@@ -49,7 +64,9 @@ def test_output_is_exactly_the_workspace_fields(pool, hidden):
     x = F.log_mel(S.syllables(3))
     out = A.adapt(sp, w, x, role="question")
     n = sp.out_len(len(x))
-    assert tuple(out) == ("tokens", "segment", "coords", "valid")
+    assert tuple(out) == ("tokens", "segment", "coords", "coord_valid", "valid")
+    assert out["coord_valid"].dtype == bool and out["coord_valid"].shape == (n, 3)
+    assert not out["coord_valid"][:, :2].any() and np.array_equal(out["coord_valid"][:, 2], out["valid"])
     assert out["tokens"].dtype == np.float32 and out["tokens"].shape == (n, 256)
     assert out["segment"].dtype == np.int64 and out["segment"].shape == (n, 2)
     assert out["coords"].dtype == np.float32 and out["coords"].shape == (n, 3)
@@ -154,6 +171,7 @@ def test_batch_and_core_layout():
     assert b["tokens"].shape == (2, max(n1, n2), 256) and b["segment"].shape == (2, max(n1, n2), 2)
     assert b["valid"][0].sum() == n1 and not b["valid"][0, n1:].any()
     assert np.all(b["tokens"][0, n1:] == 0)
+    assert b["coord_valid"].shape == (2, max(n1, n2), 3) and not b["coord_valid"][0, n1:].any()
     kind, latent = A.to_core_layout(o1)
     assert kind == "latent" and latent.shape == (1, 1, n1, 256)
     kind, nb = A.to_core_layout(o2)

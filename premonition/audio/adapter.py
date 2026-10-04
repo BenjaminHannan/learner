@@ -9,17 +9,22 @@ Source of the contract (read 2026-10-03 from open PRs, may still move):
     both zero-init. Audio adds one modality id and no new roles.
   - PR #22 (origin/claude/project-thread-qjn27k, commit 912bfe7de)
     design/next-parts/vision/workspace.py: Workspace(tokens [B,N,256] float,
-    segment [B,N,2] long = (role id, modality id) from one SEGMENTS table,
+    segment [B,N,2] long = (role id, modality id) from the role and modality id tables,
     valid [B,N] bool, coords [B,N,3] float (row, col, time) or None).
 
 Output of ``adapt()`` is exactly those four fields, for one clip (N = ceil(T_in / k)):
 
     tokens   float32 [N, 256]  projected slot vectors; rows with valid False are exactly 0.
                                NO modality/role tag is added here: the core adds it.
-    segment  int64   [N, 2]    (role id, modality id) from SEGMENTS, built only by
+    segment  int64   [N, 2]    (role id, modality id) from ROLE_IDS / MODALITY_IDS, built only by
                                ``audio_segment()`` so the encoding can switch in one place.
     coords   float32 [N, 3]    (row, col, time) = (0, 0, slot centre in SECONDS).
                                time = time_offset + (j + 0.5) * k * frame_period.
+                               Workspace v1 wants time relative to now (<= 0): set
+                               time_offset = -(clip seconds), or use stream.AudioWindow.
+    coord_valid bool [N, 3]    per-axis "has this coordinate" (Workspace v1, PR #23
+                               commit c208de425): audio = (False, False, valid), so row
+                               and col are absent and do not collide with image patch (0, 0).
                                Padded rows are 0 and must be ignored via ``valid``.
     valid    bool    [N]       True = real content, False = right padding.
 
@@ -39,13 +44,14 @@ import math
 
 import numpy as np
 
-# Same ids as PR #22 design/next-parts/vision/workspace.py SEGMENTS (one table,
-# roles then modalities). Pair = (role id, modality id).
-SEGMENTS = {"question": 0, "notebook": 1, "example": 2, "tool_result": 3, "register": 4,
-            "text": 5, "image": 6, "audio": 7}
+# Workspace contract v1 id tables, from PR #23 section 6 (commit 80540de9e, matching
+# vision's workspace.py on PR #26). Role and modality are separate tables; the pair is
+# (role id, modality id). Example order is not a role: within "example", row = example index.
+ROLE_IDS = {"question": 0, "notebook": 1, "example": 2, "tool_result": 3, "register": 4, "action": 5}
+MODALITY_IDS = {"text": 0, "image": 1, "audio": 2}
 ROLES = ("question", "notebook", "example", "tool_result")   # roles an input adapter may emit
 MODALITIES = ("text", "image", "audio")
-FIELDS = ("tokens", "segment", "coords", "valid")
+FIELDS = ("tokens", "segment", "coords", "coord_valid", "valid")
 POOL_MODES = ("stack", "mean")
 
 
@@ -59,7 +65,15 @@ def audio_segment(role: str, n: int, modality: str = "audio") -> np.ndarray:
         raise ValueError(f"role must be one of {ROLES}")
     if modality not in MODALITIES:
         raise ValueError(f"modality must be one of {MODALITIES}")
-    return np.tile(np.array([SEGMENTS[role], SEGMENTS[modality]], np.int64), (n, 1))
+    return np.tile(np.array([ROLE_IDS[role], MODALITY_IDS[modality]], np.int64), (n, 1))
+
+
+def audio_coord_valid(valid: np.ndarray, has_row: bool = False) -> np.ndarray:
+    """[N, 3] bool per-axis flags. Audio has no column; row only for the example role
+    (row = example index); time only where valid."""
+    v = np.asarray(valid, bool)
+    row = v if has_row else np.zeros_like(v)
+    return np.stack([row, np.zeros_like(v), v], axis=-1)
 
 
 @dataclass(frozen=True)
@@ -183,8 +197,17 @@ def slot_times(spec: ModalityAdapterSpec, n: int) -> np.ndarray:
 
 
 def adapt(spec: ModalityAdapterSpec, weights: dict, frames: np.ndarray,
-          valid: np.ndarray | None = None, role: str = "question") -> dict:
-    """Encoder frames [T_in, d_in] -> one clip's Workspace fields (module docstring)."""
+          valid: np.ndarray | None = None, role: str = "question",
+          example_index: int | None = None) -> dict:
+    """Encoder frames [T_in, d_in] -> one clip's Workspace fields (module docstring).
+
+    role "example" needs ``example_index`` (it goes in the row coordinate, as
+    contract v1 says); other roles must leave it None.
+    """
+    if (role == "example") != (example_index is not None):
+        raise ValueError("example_index is required for role 'example' and only for it")
+    if example_index is not None and (not isinstance(example_index, int) or example_index < 0):
+        raise ValueError("example_index must be a non-negative int")
     frames = np.asarray(frames)
     if frames.ndim != 2 or frames.shape[1] != spec.d_in:
         raise ValueError(f"frames must be [T, {spec.d_in}], got {frames.shape}")
@@ -217,8 +240,12 @@ def adapt(spec: ModalityAdapterSpec, weights: dict, frames: np.ndarray,
     tokens = np.where(slot_valid[:, None], h, 0.0).astype(np.float32)
     coords = np.zeros((n, 3), np.float32)
     coords[:, 2] = np.where(slot_valid, t, 0.0)
+    if example_index is not None:
+        coords[:, 0] = np.where(slot_valid, example_index, 0)
+    coord_valid = audio_coord_valid(slot_valid, has_row=example_index is not None)
 
-    out = {"tokens": tokens, "segment": segment, "coords": coords, "valid": slot_valid}
+    out = {"tokens": tokens, "segment": segment, "coords": coords, "coord_valid": coord_valid,
+           "valid": slot_valid}
     check_output(spec, out, t_in)
     return out
 
@@ -228,19 +255,23 @@ def check_output(spec: ModalityAdapterSpec, out: dict, t_in: int) -> None:
     n = spec.out_len(t_in)
     if tuple(out) != FIELDS:
         raise AssertionError(f"fields {tuple(out)} != {FIELDS}")
-    s, g, c, v = (out[k] for k in FIELDS)
+    s, g, c, cv, v = (out[k] for k in FIELDS)
+    is_example = bool(len(g)) and g.ndim == 2 and g[0, 0] == ROLE_IDS["example"]
+    if cv.dtype != bool or cv.shape != (n, 3) or not np.array_equal(cv, audio_coord_valid(v, is_example)):
+        raise AssertionError("coord_valid must be bool [N, 3] = (row only for example, False, valid)")
     if s.dtype != np.float32 or s.shape != (n, spec.d_model):
         raise AssertionError(f"tokens must be float32 [{n},{spec.d_model}], got {s.dtype} {s.shape}")
     if g.dtype != np.int64 or g.shape != (n, 2):
         raise AssertionError("segment must be int64 [N, 2] (role id, modality id)")
-    if not (np.isin(g[:, 0], [SEGMENTS[r] for r in ROLES]).all() and np.all(g[:, 1] == SEGMENTS[spec.modality])):
-        raise AssertionError("segment ids not from SEGMENTS / wrong modality")
+    if not (np.isin(g[:, 0], [ROLE_IDS[r] for r in ROLES]).all() and np.all(g[:, 1] == MODALITY_IDS[spec.modality])):
+        raise AssertionError("segment ids not from ROLE_IDS / MODALITY_IDS, or wrong modality")
     if c.dtype != np.float32 or c.shape != (n, 3):
         raise AssertionError("coords must be float32 [N, 3]")
     if v.dtype != bool or v.shape != (n,):
         raise AssertionError("valid must be bool [N]")
-    if np.any(c[:, :2] != 0) or np.any(np.diff(c[v, 2]) <= 0) or np.any(c[~v] != 0):
-        raise AssertionError("coords must be (0, 0, increasing seconds) on valid rows, 0 on padding")
+    if (not is_example and np.any(c[:, 0] != 0)) or np.any(c[:, 1] != 0) or np.any(np.diff(c[v, 2]) <= 0) \
+            or np.any(c[~v] != 0):
+        raise AssertionError("coords must be (row, 0, increasing seconds) on valid rows, 0 on padding")
     if not np.all(np.isfinite(s)) or np.any(s[~v] != 0):
         raise AssertionError("tokens must be finite and exactly 0 where valid is False")
 
@@ -252,7 +283,8 @@ def batch(clips: list) -> dict:
     n = max(len(c["valid"]) for c in clips)
     b, d = len(clips), clips[0]["tokens"].shape[1]
     out = {"tokens": np.zeros((b, n, d), np.float32), "segment": np.zeros((b, n, 2), np.int64),
-           "coords": np.zeros((b, n, 3), np.float32), "valid": np.zeros((b, n), bool)}
+           "coords": np.zeros((b, n, 3), np.float32), "coord_valid": np.zeros((b, n, 3), bool),
+           "valid": np.zeros((b, n), bool)}
     for i, c in enumerate(clips):
         m = len(c["valid"])
         for k in FIELDS:
@@ -269,5 +301,5 @@ def to_core_layout(out: dict):
     Padded slots are dropped because the current core has no padding mask.
     """
     x = out["tokens"][out["valid"]]
-    question = out["segment"][0, 0] == SEGMENTS["question"]
+    question = out["segment"][0, 0] == ROLE_IDS["question"]
     return ("latent", x[None, None]) if question else ("notebook", x[None])
