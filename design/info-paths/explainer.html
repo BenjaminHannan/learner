@@ -94,6 +94,17 @@ footer code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem
   </div>
 
   <div class="card">
+    <div class="row"><span class="kicker">12 practised kinds vs 6, 6 seeds, 16:14 UTC</span><span class="verdict v-pass">goal hit, cause unclear</span></div>
+    <h2>83% on never-practised kinds, but a second test only ties the bare model</h2>
+    <p>Set 1: the six new kinds from last round. Set 2: six more new kinds (speech, weather, price, direction, how long, where from), never scored before.</p>
+    <svg viewBox="0 0 360 190" role="img" aria-label="Set 1: 6 kinds 81, 12 kinds 83, bare model 68. Set 2: 6 kinds 75, 12 kinds 78, bare model 78">
+      <text x="0" y="12" font-size="10.5" fill="var(--ink2)">exactly right on kinds never practised</text>
+      <text x="0" y="34" font-size="11" fill="var(--ink)">set 1: 6 kinds</text><rect x="118" y="22" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="22" width="186.5" height="16" rx="2" fill="var(--neutral)"/><text x="300.5" y="34" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="end">81%</text><text x="0" y="60" font-size="11" fill="var(--ink)">set 1: 12 kinds</text><rect x="118" y="48" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="48" width="190.9" height="16" rx="2" fill="var(--pass)"/><text x="304.9" y="60" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="end">83%</text><text x="0" y="86" font-size="11" fill="var(--ink)">set 1: bare 1.2B</text><rect x="118" y="74" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="74" width="155.7" height="16" rx="2" fill="var(--line)"/><text x="269.7" y="86" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="end">68%</text><text x="0" y="120" font-size="11" fill="var(--ink)">set 2: 6 kinds</text><rect x="118" y="108" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="108" width="173.2" height="16" rx="2" fill="var(--neutral)"/><text x="287.2" y="120" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="end">75%</text><text x="0" y="146" font-size="11" fill="var(--ink)">set 2: 12 kinds</text><rect x="118" y="134" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="134" width="179.9" height="16" rx="2" fill="var(--pass)"/><text x="293.9" y="146" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="end">78%</text><text x="0" y="172" font-size="11" fill="var(--ink)">set 2: bare 1.2B</text><rect x="118" y="160" width="230" height="16" rx="2" fill="var(--track)"/><rect x="118" y="160" width="178.5" height="16" rx="2" fill="var(--line)"/><text x="292.5" y="172" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="end">78%</text>
+    </svg>
+    <p class="small">Set 1 passed the 80% goal (83%, +15 over the bare model). But the 6-kind rerun also got 81% there, so the 6 extra kinds added only about +2 (not shown). On set 2 we tie the bare model (78% vs 78%); speech answers are weak for both (about 45%).</p>
+    <p class="small">Read: more kinds of practice helps a little at best; beating the bare model depends on which new kind. Cost about $1.10.</p>
+  </div>
+  <div class="card">
     <div class="row"><span class="kicker">New kinds of question, 6 seeds, 07:10 UTC</span><span class="verdict v-pass">passed one, one in between</span></div>
     <h2>On six kinds it never practised, it still beats the bare 1.2B model</h2>
     <p>Six brand-new kinds of question (when, why, how many, what tool, what color, where now) that none of the practice stories covered.</p>
@@ -302,14 +313,14 @@ footer code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem
         <text x="10" y="114">English pilot:</text><text x="10" y="128">no gain yet</text>
         <text x="134" y="42">Free check: 74%</text><text x="134" y="56">of wrong English</text><text x="134" y="70">answers were old</text>
         <text x="134" y="92">Pointer test:</text><text x="134" y="106">passed, +51</text><text x="134" y="120">English 93%</text>
-        <text x="258" y="42">Practise more</text><text x="258" y="56">kinds (12, not 6),</text><text x="258" y="70">test the same</text><text x="258" y="84">new kinds</text>
+        <text x="258" y="42">Find a bigger</text><text x="258" y="56">lever for new</text><text x="258" y="70">kinds (long</text><text x="258" y="84">quotes, counting)</text>
         <text x="258" y="106">Train longer,</text><text x="258" y="120">vary wording</text>
       </g>
     </svg>
   </div>
 
   <footer>
-    Shown in code: <code>scripts/sol_translator_english.py:15-46</code>, <code>scripts/cap256_launch/english_pilot_runtime_v1.py:143-162</code>, <code>reasoner_fresh/model.py:70,81,147</code>. Results: PR #29 <code>reasoner_fresh/RESULTS.md</code>; PR #30 <code>reasoner_ptr/real/RESULTS-R2.md</code>, <code>reasoner_ptr/real/english/RESULTS-R3.md</code>, <code>RESULTS-R4.md</code>, <code>RESULTS-R5.md</code>; LIVE.md 20:10 UTC. Full note with marks: <code>design/info-paths/information-paths.md</code>.<br>
+    Shown in code: <code>scripts/sol_translator_english.py:15-46</code>, <code>scripts/cap256_launch/english_pilot_runtime_v1.py:143-162</code>, <code>reasoner_fresh/model.py:70,81,147</code>. Results: PR #29 <code>reasoner_fresh/RESULTS.md</code>; PR #30 <code>reasoner_ptr/real/RESULTS-R2.md</code>, <code>reasoner_ptr/real/english/RESULTS-R3.md</code>, <code>RESULTS-R4.md</code>, <code>RESULTS-R5.md</code>, <code>RESULTS-R6.md</code>; LIVE.md 20:10 UTC. Full note with marks: <code>design/info-paths/information-paths.md</code>.<br>
     Papers: pointer-generator 1704.04368 · single-vector capacity 2502.13063 · middle layers 2502.02013 · Dense Connector 2405.13800 · P-tuning v2 2110.07602 · Cache-to-Cache 2510.03215 · MM1 2403.09611 · copying vs state-space 2402.01032 · LFM2 2511.23404.
   </footer>
 </div>
