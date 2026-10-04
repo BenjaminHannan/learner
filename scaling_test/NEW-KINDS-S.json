@@ -1,0 +1,1226 @@
+{
+ "title": "Held-out English comprehension eval S, NEW question kinds (48 examples, 6 families)",
+ "note": "HELD-OUT EVAL ONLY. Never use for training. Six NEW families not in the training bank, R3 or R5 (superlative_extreme, what_changed_state, sum_of_two_quantities, possession_transfer_result, passive_who_did_to_whom, exclusion_only_except). Same answer-key policy as NEW-KINDS-R5.json (mechanical normalization, then exact match against accepted_answers; yes_no accepts only Yes/No). Expose only source_text or paraphrase plus question strings to the learner.",
+ "examples": [
+  {
+   "id": "new_superlative_extreme_01",
+   "family": "superlative_extreme",
+   "source_text": "Orlin is taller than Brisa, and Brisa is taller than Hobart.",
+   "paraphrase": "Hobart is shorter than Brisa, who is shorter than Orlin.",
+   "questions": [
+    {
+     "question": "Who is the tallest?",
+     "type": "short_answer",
+     "canonical_answer": "Orlin",
+     "accepted_answers": [
+      "Orlin",
+      "Orlin is"
+     ]
+    },
+    {
+     "question": "Is Hobart the shortest?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_superlative_extreme_02",
+   "family": "superlative_extreme",
+   "source_text": "Ysolde beat Wendel to the finish, and Fenwick came in behind them both.",
+   "paraphrase": "Both Ysolde and Wendel finished ahead of Fenwick, with Ysolde in front of Wendel.",
+   "questions": [
+    {
+     "question": "Who finished last?",
+     "type": "short_answer",
+     "canonical_answer": "Fenwick",
+     "accepted_answers": [
+      "Fenwick",
+      "Fenwick did"
+     ]
+    },
+    {
+     "question": "Did Fenwick finish behind Wendel?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_superlative_extreme_03",
+   "family": "superlative_extreme",
+   "source_text": "Ansel is two years older than Greta, and Greta is older than Lucan.",
+   "paraphrase": "Lucan is younger than Greta, and Greta is two years younger than Ansel.",
+   "questions": [
+    {
+     "question": "Who is the youngest?",
+     "type": "short_answer",
+     "canonical_answer": "Lucan",
+     "accepted_answers": [
+      "Lucan",
+      "Lucan is"
+     ]
+    },
+    {
+     "question": "Is Greta older than Ansel?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_superlative_extreme_04",
+   "family": "superlative_extreme",
+   "source_text": "Odalys's pumpkin outweighs Perrin's, but Sorrel's outweighs them both.",
+   "paraphrase": "Sorrel grew a pumpkin heavier than both Odalys's and Perrin's, and Perrin's weighs less than Odalys's.",
+   "questions": [
+    {
+     "question": "Whose pumpkin is the heaviest?",
+     "type": "short_answer",
+     "canonical_answer": "Sorrel's",
+     "accepted_answers": [
+      "Sorrel's",
+      "Sorrel",
+      "Sorrel's pumpkin",
+      "Sorrel's is"
+     ]
+    },
+    {
+     "question": "Is Perrin's pumpkin lighter than Sorrel's?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_superlative_extreme_05",
+   "family": "superlative_extreme",
+   "source_text": "Thaddeus saved more money than Ulrik, but less than Vesna.",
+   "paraphrase": "Vesna saved more than Thaddeus, who saved more than Ulrik.",
+   "questions": [
+    {
+     "question": "Who saved the most?",
+     "type": "short_answer",
+     "canonical_answer": "Vesna",
+     "accepted_answers": [
+      "Vesna",
+      "Vesna did"
+     ]
+    },
+    {
+     "question": "Did Ulrik save the least?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_superlative_extreme_06",
+   "family": "superlative_extreme",
+   "source_text": "Zephyr's stack of blocks was shorter than Beatrix's, and Caspar's was shorter than Zephyr's.",
+   "paraphrase": "Beatrix's stack stood higher than Zephyr's, which stood higher than Caspar's.",
+   "questions": [
+    {
+     "question": "Whose stack was the shortest?",
+     "type": "short_answer",
+     "canonical_answer": "Caspar's",
+     "accepted_answers": [
+      "Caspar's",
+      "Caspar",
+      "Caspar's stack",
+      "Caspar's was"
+     ]
+    },
+    {
+     "question": "Was Caspar's stack taller than Zephyr's?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_superlative_extreme_07",
+   "family": "superlative_extreme",
+   "source_text": "Elspeth's gong rang louder than Florin's but quieter than Dorian's.",
+   "paraphrase": "Florin's gong was quieter than Elspeth's, and Dorian's was louder than hers.",
+   "questions": [
+    {
+     "question": "Whose gong was the loudest?",
+     "type": "short_answer",
+     "canonical_answer": "Dorian's",
+     "accepted_answers": [
+      "Dorian's",
+      "Dorian",
+      "Dorian's gong",
+      "Dorian's was"
+     ]
+    },
+    {
+     "question": "Was Florin's gong louder than Elspeth's?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_superlative_extreme_08",
+   "family": "superlative_extreme",
+   "source_text": "Jasper paid less for his cloak than Kestrel did, and Leopold paid more than Kestrel.",
+   "paraphrase": "Kestrel paid more for a cloak than Jasper, but less than Leopold.",
+   "questions": [
+    {
+     "question": "Who paid the most?",
+     "type": "short_answer",
+     "canonical_answer": "Leopold",
+     "accepted_answers": [
+      "Leopold",
+      "Leopold did"
+     ]
+    },
+    {
+     "question": "Did Jasper pay the most?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_what_changed_state_01",
+   "family": "what_changed_state",
+   "source_text": "At dawn the pond was frozen; by noon it had melted.",
+   "paraphrase": "The pond had melted by noon, although at dawn it was frozen.",
+   "questions": [
+    {
+     "question": "How was the pond at dawn?",
+     "type": "short_answer",
+     "canonical_answer": "frozen",
+     "accepted_answers": [
+      "frozen",
+      "it was frozen",
+      "was frozen"
+     ]
+    },
+    {
+     "question": "Was the pond still frozen at noon?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_what_changed_state_02",
+   "family": "what_changed_state",
+   "source_text": "Before the storm Marguerite's gate was painted yellow; afterwards it was bare.",
+   "paraphrase": "The storm left Marguerite's gate bare; earlier it had been painted yellow.",
+   "questions": [
+    {
+     "question": "What was the gate like after the storm?",
+     "type": "short_answer",
+     "canonical_answer": "bare",
+     "accepted_answers": [
+      "bare",
+      "it was bare",
+      "was bare"
+     ]
+    },
+    {
+     "question": "Was the gate yellow before the storm?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_what_changed_state_03",
+   "family": "what_changed_state",
+   "source_text": "Tobias's barrel held rainwater on Monday and was empty by Friday.",
+   "paraphrase": "By Friday Tobias's barrel was empty, though on Monday it held rainwater.",
+   "questions": [
+    {
+     "question": "What did the barrel hold on Monday?",
+     "type": "short_answer",
+     "canonical_answer": "rainwater",
+     "accepted_answers": [
+      "rainwater",
+      "it held rainwater",
+      "held rainwater"
+     ]
+    },
+    {
+     "question": "Was the barrel full on Friday?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_what_changed_state_04",
+   "family": "what_changed_state",
+   "source_text": "Ingrid's sapling was knee-high last spring and is now taller than the fence.",
+   "paraphrase": "The fence is now shorter than Ingrid's sapling, which was only knee-high last spring.",
+   "questions": [
+    {
+     "question": "How tall was the sapling last spring?",
+     "type": "short_answer",
+     "canonical_answer": "knee-high",
+     "accepted_answers": [
+      "knee-high",
+      "knee high",
+      "it was knee-high",
+      "was knee-high"
+     ]
+    },
+    {
+     "question": "Is the sapling taller than the fence now?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_what_changed_state_05",
+   "family": "what_changed_state",
+   "source_text": "Cormac's kayak was dented before the trip and undamaged after the repair.",
+   "paraphrase": "After the repair Cormac's kayak was undamaged; before the trip it had been dented.",
+   "questions": [
+    {
+     "question": "What was the kayak's condition after the repair?",
+     "type": "short_answer",
+     "canonical_answer": "undamaged",
+     "accepted_answers": [
+      "undamaged",
+      "it was undamaged",
+      "was undamaged"
+     ]
+    },
+    {
+     "question": "Was the kayak dented before the trip?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_what_changed_state_06",
+   "family": "what_changed_state",
+   "source_text": "The fountain ran dry in August and was flowing again by October.",
+   "paraphrase": "By October the fountain was flowing again, after running dry in August.",
+   "questions": [
+    {
+     "question": "What was the fountain doing in October?",
+     "type": "short_answer",
+     "canonical_answer": "flowing",
+     "accepted_answers": [
+      "flowing",
+      "it was flowing",
+      "flowing again"
+     ]
+    },
+    {
+     "question": "Was the fountain flowing in August?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_what_changed_state_07",
+   "family": "what_changed_state",
+   "source_text": "The cabin door was latched when Nadine arrived and unlatched when she left.",
+   "paraphrase": "When Nadine left, the cabin door was unlatched; on her arrival it had been latched.",
+   "questions": [
+    {
+     "question": "What state was the door in when Nadine left?",
+     "type": "short_answer",
+     "canonical_answer": "unlatched",
+     "accepted_answers": [
+      "unlatched",
+      "it was unlatched",
+      "was unlatched"
+     ]
+    },
+    {
+     "question": "Was the door unlatched when Nadine arrived?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_what_changed_state_08",
+   "family": "what_changed_state",
+   "source_text": "The lawn was yellow in July; after the August rains it was lush.",
+   "paraphrase": "After the August rains the lawn was lush, whereas in July it had been yellow.",
+   "questions": [
+    {
+     "question": "How was the lawn after the rains?",
+     "type": "short_answer",
+     "canonical_answer": "lush",
+     "accepted_answers": [
+      "lush",
+      "it was lush",
+      "was lush"
+     ]
+    },
+    {
+     "question": "Is the lawn lush after the rains?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_sum_of_two_quantities_01",
+   "family": "sum_of_two_quantities",
+   "source_text": "Petra caught three trout and Rafferty caught four.",
+   "paraphrase": "Rafferty's catch was four trout, and Petra's was three.",
+   "questions": [
+    {
+     "question": "How many trout did they catch altogether?",
+     "type": "short_answer",
+     "canonical_answer": "seven",
+     "accepted_answers": [
+      "seven",
+      "7"
+     ]
+    },
+    {
+     "question": "Did they catch more than six trout in all?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_sum_of_two_quantities_02",
+   "family": "sum_of_two_quantities",
+   "source_text": "Selwyn has two sisters and three brothers.",
+   "paraphrase": "Selwyn's siblings are three brothers and two sisters.",
+   "questions": [
+    {
+     "question": "How many siblings does Selwyn have?",
+     "type": "short_answer",
+     "canonical_answer": "five",
+     "accepted_answers": [
+      "five",
+      "5"
+     ]
+    },
+    {
+     "question": "Does Selwyn have exactly four siblings?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_sum_of_two_quantities_03",
+   "family": "sum_of_two_quantities",
+   "source_text": "Tamsin read six pages in the morning and six in the evening.",
+   "paraphrase": "Tamsin's morning reading was six pages, and her evening reading was six as well.",
+   "questions": [
+    {
+     "question": "How many pages did Tamsin read in total?",
+     "type": "short_answer",
+     "canonical_answer": "twelve",
+     "accepted_answers": [
+      "twelve",
+      "12"
+     ]
+    },
+    {
+     "question": "Did she read exactly ten pages in all?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_sum_of_two_quantities_04",
+   "family": "sum_of_two_quantities",
+   "source_text": "Ursula picked eight cherries from one tree and one from another.",
+   "paraphrase": "From one tree Ursula picked eight cherries, and from a second she picked just one.",
+   "questions": [
+    {
+     "question": "How many cherries did Ursula pick in all?",
+     "type": "short_answer",
+     "canonical_answer": "nine",
+     "accepted_answers": [
+      "nine",
+      "9"
+     ]
+    },
+    {
+     "question": "Did she pick more cherries from the first tree?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_sum_of_two_quantities_05",
+   "family": "sum_of_two_quantities",
+   "source_text": "Viktor's hens laid four eggs on Monday and four on Tuesday.",
+   "paraphrase": "Over Monday and Tuesday, Viktor's hens laid four eggs each day.",
+   "questions": [
+    {
+     "question": "How many eggs did the hens lay over the two days?",
+     "type": "short_answer",
+     "canonical_answer": "eight",
+     "accepted_answers": [
+      "eight",
+      "8"
+     ]
+    },
+    {
+     "question": "Did they lay nine eggs in total?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_sum_of_two_quantities_06",
+   "family": "sum_of_two_quantities",
+   "source_text": "Winifred needs seven stamps for letters and three for parcels.",
+   "paraphrase": "Three stamps are required for Winifred's parcels, and seven for her letters.",
+   "questions": [
+    {
+     "question": "How many stamps does Winifred need in all?",
+     "type": "short_answer",
+     "canonical_answer": "ten",
+     "accepted_answers": [
+      "ten",
+      "10"
+     ]
+    },
+    {
+     "question": "Does she need more stamps for parcels than for letters?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_sum_of_two_quantities_07",
+   "family": "sum_of_two_quantities",
+   "source_text": "A bus held nine riders when two more climbed aboard.",
+   "paraphrase": "Two additional riders boarded a bus that already carried nine.",
+   "questions": [
+    {
+     "question": "How many riders are on the bus now?",
+     "type": "short_answer",
+     "canonical_answer": "eleven",
+     "accepted_answers": [
+      "eleven",
+      "11"
+     ]
+    },
+    {
+     "question": "Are there more than ten riders now?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_sum_of_two_quantities_08",
+   "family": "sum_of_two_quantities",
+   "source_text": "Hobart owns three cats and two dogs, and Ewan owns one cat.",
+   "paraphrase": "Ewan owns one cat; Hobart has two dogs and three cats.",
+   "questions": [
+    {
+     "question": "How many cats do Hobart and Ewan own in all?",
+     "type": "short_answer",
+     "canonical_answer": "four",
+     "accepted_answers": [
+      "four",
+      "4"
+     ]
+    },
+    {
+     "question": "Do Hobart and Ewan own six animals together?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_possession_transfer_result_01",
+   "family": "possession_transfer_result",
+   "source_text": "Ronan lent a scooter to Brisa, and Brisa lent it to Hobart.",
+   "paraphrase": "Hobart borrowed from Brisa the scooter that Ronan had lent her.",
+   "questions": [
+    {
+     "question": "Who has the scooter now?",
+     "type": "short_answer",
+     "canonical_answer": "Hobart",
+     "accepted_answers": [
+      "Hobart",
+      "Hobart does"
+     ]
+    },
+    {
+     "question": "Does Ronan have the scooter now?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_possession_transfer_result_02",
+   "family": "possession_transfer_result",
+   "source_text": "Ansel gave Greta a telescope, then Greta returned it to Ansel.",
+   "paraphrase": "Greta handed the telescope back to Ansel after receiving it from him.",
+   "questions": [
+    {
+     "question": "Who has the telescope now?",
+     "type": "short_answer",
+     "canonical_answer": "Ansel",
+     "accepted_answers": [
+      "Ansel",
+      "Ansel does"
+     ]
+    },
+    {
+     "question": "Does Ansel have the telescope now?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_possession_transfer_result_03",
+   "family": "possession_transfer_result",
+   "source_text": "Lucan sold an accordion to Odalys, who later swapped it with Perrin for a kite.",
+   "paraphrase": "After buying an accordion from Lucan, Odalys exchanged it with Perrin and got a kite in return.",
+   "questions": [
+    {
+     "question": "Who has the accordion now?",
+     "type": "short_answer",
+     "canonical_answer": "Perrin",
+     "accepted_answers": [
+      "Perrin",
+      "Perrin does"
+     ]
+    },
+    {
+     "question": "Does Perrin have the kite?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_possession_transfer_result_04",
+   "family": "possession_transfer_result",
+   "source_text": "Thaddeus left an umbrella with Ulrik. Ulrik passed it to Vesna, who gave it back to Thaddeus.",
+   "paraphrase": "The umbrella went from Thaddeus to Ulrik, then to Vesna, and finally returned to Thaddeus.",
+   "questions": [
+    {
+     "question": "Who has the umbrella now?",
+     "type": "short_answer",
+     "canonical_answer": "Thaddeus",
+     "accepted_answers": [
+      "Thaddeus",
+      "Thaddeus does"
+     ]
+    },
+    {
+     "question": "Does Vesna have the umbrella now?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_possession_transfer_result_05",
+   "family": "possession_transfer_result",
+   "source_text": "Xavi lent his raincoat to Yarrow. Yarrow kept it until Zephyr asked and received it.",
+   "paraphrase": "Zephyr asked Yarrow for the raincoat that Xavi had lent to Yarrow, and got it.",
+   "questions": [
+    {
+     "question": "Who has the raincoat now?",
+     "type": "short_answer",
+     "canonical_answer": "Zephyr",
+     "accepted_answers": [
+      "Zephyr",
+      "Zephyr does"
+     ]
+    },
+    {
+     "question": "Does Zephyr have the raincoat now?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_possession_transfer_result_06",
+   "family": "possession_transfer_result",
+   "source_text": "Beatrix received a canoe from Caspar and sold it to Dorian for ten dollars.",
+   "paraphrase": "Dorian bought for ten dollars a canoe that Beatrix had got from Caspar.",
+   "questions": [
+    {
+     "question": "Who owns the canoe now?",
+     "type": "short_answer",
+     "canonical_answer": "Dorian",
+     "accepted_answers": [
+      "Dorian",
+      "Dorian does"
+     ]
+    },
+    {
+     "question": "Did Beatrix sell the canoe to Dorian?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_possession_transfer_result_07",
+   "family": "possession_transfer_result",
+   "source_text": "Kestrel gave Leopold a sled, but Leopold passed it straight on to Mirela.",
+   "paraphrase": "Mirela ended up with the sled that Kestrel had given Leopold, who passed it on at once.",
+   "questions": [
+    {
+     "question": "Who has the sled in the end?",
+     "type": "short_answer",
+     "canonical_answer": "Mirela",
+     "accepted_answers": [
+      "Mirela",
+      "Mirela does"
+     ]
+    },
+    {
+     "question": "Did Leopold give the sled to Mirela?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_possession_transfer_result_08",
+   "family": "possession_transfer_result",
+   "source_text": "Nadine lent Osric a banjo, and he lent it to Petra. Petra later returned it to Nadine.",
+   "paraphrase": "Osric lent Petra the banjo he had borrowed from Nadine; Petra later gave it back to Nadine.",
+   "questions": [
+    {
+     "question": "Who has the banjo now?",
+     "type": "short_answer",
+     "canonical_answer": "Nadine",
+     "accepted_answers": [
+      "Nadine",
+      "Nadine does"
+     ]
+    },
+    {
+     "question": "Did Nadine lend the banjo to Petra?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_passive_who_did_to_whom_01",
+   "family": "passive_who_did_to_whom",
+   "source_text": "At the fair, Hobart was photographed by Ronan.",
+   "paraphrase": "At the fair, Ronan photographed Hobart.",
+   "questions": [
+    {
+     "question": "Who took the photograph?",
+     "type": "short_answer",
+     "canonical_answer": "Ronan",
+     "accepted_answers": [
+      "Ronan",
+      "Ronan did"
+     ]
+    },
+    {
+     "question": "Did Ronan photograph Hobart?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_passive_who_did_to_whom_02",
+   "family": "passive_who_did_to_whom",
+   "source_text": "Fenwick was rescued by Marguerite after the boat tipped.",
+   "paraphrase": "After the boat tipped, Marguerite rescued Fenwick.",
+   "questions": [
+    {
+     "question": "Who was rescued?",
+     "type": "short_answer",
+     "canonical_answer": "Fenwick",
+     "accepted_answers": [
+      "Fenwick",
+      "Fenwick was"
+     ]
+    },
+    {
+     "question": "Did Marguerite rescue Fenwick?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_passive_who_did_to_whom_03",
+   "family": "passive_who_did_to_whom",
+   "source_text": "Tobias was taught chess by Ingrid, and Ingrid was taught chess by Cormac.",
+   "paraphrase": "Cormac taught Ingrid chess, and she taught Tobias.",
+   "questions": [
+    {
+     "question": "Who taught Ingrid?",
+     "type": "short_answer",
+     "canonical_answer": "Cormac",
+     "accepted_answers": [
+      "Cormac",
+      "Cormac did"
+     ]
+    },
+    {
+     "question": "Did Tobias teach Ingrid?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_passive_who_did_to_whom_04",
+   "family": "passive_who_did_to_whom",
+   "source_text": "Delphine was invited to the party by Ansel, but Greta was not invited by him.",
+   "paraphrase": "Ansel invited Delphine to the party; Greta did not get an invitation from him.",
+   "questions": [
+    {
+     "question": "Who invited Delphine?",
+     "type": "short_answer",
+     "canonical_answer": "Ansel",
+     "accepted_answers": [
+      "Ansel",
+      "Ansel did"
+     ]
+    },
+    {
+     "question": "Did Ansel invite Greta?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_passive_who_did_to_whom_05",
+   "family": "passive_who_did_to_whom",
+   "source_text": "Lucan was greeted by Odalys, and Odalys was followed by Perrin.",
+   "paraphrase": "Odalys greeted Lucan, and Perrin followed Odalys.",
+   "questions": [
+    {
+     "question": "Who followed Odalys?",
+     "type": "short_answer",
+     "canonical_answer": "Perrin",
+     "accepted_answers": [
+      "Perrin",
+      "Perrin did"
+     ]
+    },
+    {
+     "question": "Did Odalys greet Lucan?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_passive_who_did_to_whom_06",
+   "family": "passive_who_did_to_whom",
+   "source_text": "The letter was written by Ulrik and read aloud by Vesna.",
+   "paraphrase": "Ulrik wrote the letter, and Vesna read it aloud.",
+   "questions": [
+    {
+     "question": "Who read the letter aloud?",
+     "type": "short_answer",
+     "canonical_answer": "Vesna",
+     "accepted_answers": [
+      "Vesna",
+      "Vesna did"
+     ]
+    },
+    {
+     "question": "Did Ulrik write the letter?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_passive_who_did_to_whom_07",
+   "family": "passive_who_did_to_whom",
+   "source_text": "The cake was baked by Yarrow and eaten by Zephyr.",
+   "paraphrase": "Yarrow baked the cake, which Zephyr ate.",
+   "questions": [
+    {
+     "question": "Who ate the cake?",
+     "type": "short_answer",
+     "canonical_answer": "Zephyr",
+     "accepted_answers": [
+      "Zephyr",
+      "Zephyr did"
+     ]
+    },
+    {
+     "question": "Did Zephyr bake the cake?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_passive_who_did_to_whom_08",
+   "family": "passive_who_did_to_whom",
+   "source_text": "Beatrix was warned by Caspar, who had been warned by Dorian.",
+   "paraphrase": "Dorian warned Caspar, and Caspar warned Beatrix.",
+   "questions": [
+    {
+     "question": "Who warned Caspar?",
+     "type": "short_answer",
+     "canonical_answer": "Dorian",
+     "accepted_answers": [
+      "Dorian",
+      "Dorian did"
+     ]
+    },
+    {
+     "question": "Was Beatrix warned by Dorian?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_exclusion_only_except_01",
+   "family": "exclusion_only_except",
+   "source_text": "Only Elspeth brought a tent to the campsite.",
+   "paraphrase": "Nobody except Elspeth brought a tent to the campsite.",
+   "questions": [
+    {
+     "question": "Who brought a tent?",
+     "type": "short_answer",
+     "canonical_answer": "Elspeth",
+     "accepted_answers": [
+      "Elspeth",
+      "Elspeth did"
+     ]
+    },
+    {
+     "question": "Did Florin bring a tent?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_exclusion_only_except_02",
+   "family": "exclusion_only_except",
+   "source_text": "The choir was Gideon, Hester and Ewan; all but Gideon wore a sash.",
+   "paraphrase": "Gideon was the only choir member without a sash; Hester and Ewan wore one.",
+   "questions": [
+    {
+     "question": "Who did not wear a sash?",
+     "type": "short_answer",
+     "canonical_answer": "Gideon",
+     "accepted_answers": [
+      "Gideon",
+      "Gideon did not"
+     ]
+    },
+    {
+     "question": "Did Hester wear a sash?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_exclusion_only_except_03",
+   "family": "exclusion_only_except",
+   "source_text": "Nadine, Osric and Petra all entered the race, but only Osric finished.",
+   "paraphrase": "All three of Nadine, Osric and Petra entered the race, yet Osric alone crossed the finish line.",
+   "questions": [
+    {
+     "question": "How many entrants finished?",
+     "type": "short_answer",
+     "canonical_answer": "one",
+     "accepted_answers": [
+      "one",
+      "1",
+      "only one",
+      "1"
+     ]
+    },
+    {
+     "question": "Did Osric finish the race?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_exclusion_only_except_04",
+   "family": "exclusion_only_except",
+   "source_text": "Selwyn, Tamsin and Rafferty were asked to sing; each except Rafferty agreed.",
+   "paraphrase": "Selwyn and Tamsin agreed when asked to sing, but Rafferty did not.",
+   "questions": [
+    {
+     "question": "Who did not agree?",
+     "type": "short_answer",
+     "canonical_answer": "Rafferty",
+     "accepted_answers": [
+      "Rafferty",
+      "Rafferty did not"
+     ]
+    },
+    {
+     "question": "Did Tamsin agree to sing?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_exclusion_only_except_05",
+   "family": "exclusion_only_except",
+   "source_text": "Ursula sold nothing but lemonade at her stall.",
+   "paraphrase": "Lemonade was the only thing Ursula's stall sold.",
+   "questions": [
+    {
+     "question": "What did Ursula sell?",
+     "type": "short_answer",
+     "canonical_answer": "lemonade",
+     "accepted_answers": [
+      "lemonade",
+      "Ursula sold lemonade"
+     ]
+    },
+    {
+     "question": "Did Ursula's stall sell anything besides lemonade?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_exclusion_only_except_06",
+   "family": "exclusion_only_except",
+   "source_text": "The neighbors were Winifred, Xavi and Yarrow; Viktor invited all except Winifred.",
+   "paraphrase": "Viktor invited Xavi and Yarrow, but not Winifred, the third neighbor.",
+   "questions": [
+    {
+     "question": "Who was not invited?",
+     "type": "short_answer",
+     "canonical_answer": "Winifred",
+     "accepted_answers": [
+      "Winifred",
+      "Winifred was not"
+     ]
+    },
+    {
+     "question": "Was Xavi invited?",
+     "type": "yes_no",
+     "canonical_answer": "Yes",
+     "accepted_answers": [
+      "Yes"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_exclusion_only_except_07",
+   "family": "exclusion_only_except",
+   "source_text": "Zephyr ate only the crust of the sandwich.",
+   "paraphrase": "Of the sandwich, Zephyr ate nothing but the crust.",
+   "questions": [
+    {
+     "question": "What did Zephyr eat?",
+     "type": "short_answer",
+     "canonical_answer": "the crust",
+     "accepted_answers": [
+      "the crust",
+      "crust"
+     ]
+    },
+    {
+     "question": "Did Zephyr eat the filling?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "new_exclusion_only_except_08",
+   "family": "exclusion_only_except",
+   "source_text": "Caspar fixed every shutter in the house except the one upstairs.",
+   "paraphrase": "The only shutter in the house that Caspar did not fix was the upstairs one.",
+   "questions": [
+    {
+     "question": "Which shutter did Caspar not fix?",
+     "type": "short_answer",
+     "canonical_answer": "the upstairs one",
+     "accepted_answers": [
+      "the upstairs one",
+      "upstairs",
+      "the upstairs shutter",
+      "upstairs shutter",
+      "the one upstairs"
+     ]
+    },
+    {
+     "question": "Did Caspar fix the upstairs shutter?",
+     "type": "yes_no",
+     "canonical_answer": "No",
+     "accepted_answers": [
+      "No"
+     ]
+    }
+   ]
+  }
+ ]
+}
