@@ -2,12 +2,18 @@
 
 Ask: Ben approved the 18-run deciding test (timeline, 19:13 UTC 10-04 = 3:13 PM ET, "thr run has my ok"). It is the top pick in
 `/mnt/project-files/reader-talker-compare/armB-report.md`: replace the second LM pass (the talker) with a small
-copy-and-gate head, so the answer has to come out of the core. Fast lane: 6 paired seeds, cap about $2.
+copy-and-gate head, so the answer has to come out of the core. Fast lane: 6 paired seeds, cap about $2. This is 13 runs: 6 copytalk, 6 copytalk_nocore and 1 allptr.
 
 ## Runs: seeds 0-5, three arms per seed, every other setting identical
 All three arms use the round-6 "six" settings: `--gen 8000 --kinds 6 --block-r6`, 2000 updates of 16 rows,
 `--extra-eval NEW-KINDS-R5.json --extra-eval2 NEW-KINDS2-R6.json`.
-- **allptr** is the control, rerun on the same seeds. The LM talker gets the prefix, the pointers and all the prompt words.
+- **allptr** is the control. The LM talker gets the prefix, the pointers and all the prompt words. Amended 19:30 UTC,
+  still before any run, to save credit: the control is round 6's `six` arm, which used these exact settings
+  and seeds 0-5 (`results6/box*/out/allptr-gen-six-seed*.json`). This round reruns allptr for seed 0 only, which gives:
+  - its talk-stage timing on the same GPU type;
+  - the shuffled-core lesion;
+  - a reproduction check (read, not judged: it should be within 3 points of round 6 seed 0 on unseen kinds).
+  The runner change must leave allptr's training path unchanged.
 - **copytalk** is the one change. It drops the second LM pass entirely. A head on the core's final token states makes
   the answer from three parts:
   - a start/end span pointer over the prompt;
@@ -23,7 +29,7 @@ All three arms use the round-6 "six" settings: `--gen 8000 --kinds 6 --block-r6`
   - the mean gap on unseen kinds is at least -5.0 points;
   - the mean gap on GEN-HELDOUT-R4 is at least -5.0 points;
   - at least 5 of 6 seeds are within 8 points on unseen kinds;
-  - the talk stage is at least 5x faster per question (`talk_ms_per_q`, same GPU type, same fp32 runner, eval batch 32).
+  - the talk stage is at least 5x faster per question (`talk_ms_per_q`, measured against the seed-0 allptr rerun on the same GPU type, same fp32 runner, eval batch 32).
 - **FAILS (proves the top pick wrong):** either of these:
   - the mean gap on unseen kinds is below -10.0;
   - copytalk falls below the bare 8-shot LM on either unseen set (lm_fewshot: 67.7% on NEW-KINDS-R5, 77.6% on NEW-KINDS2-R6).
@@ -40,7 +46,7 @@ All three arms use the round-6 "six" settings: `--gen 8000 --kinds 6 --block-r6`
 - FRESH-EN-R3.
 - Whole-question inference time (`infer_ms_per_q`).
 - Trainable parameter counts.
-- **allptr shuffled-core lesion on unseen kinds:** the core states come from another question of the same length.
+- **allptr shuffled-core lesion on unseen kinds (seed 0 only):** the core states come from another question of the same length.
   This is the fairer version of the zero-pool lesion.
 
 ## Rules
