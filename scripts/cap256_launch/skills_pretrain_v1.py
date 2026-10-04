@@ -114,6 +114,8 @@ def main():
     ap.add_argument('--sample-seed', type=int, default=None, help='train on a seeded random sample of the (family-filtered) rows instead of the ordered stride')
     ap.add_argument('--fixed-rows', type=int, default=0, help='with --sample-seed: draw this many rows once and repeat them --passes times (reshuffled each pass); also scores them as dev "trainfit"')
     ap.add_argument('--passes', type=int, default=1)
+    ap.add_argument('--rounds', type=int, default=4, help='latent loop rounds (shared weights; parent used 4)')
+    ap.add_argument('--reader-hidden', type=int, default=0, help='widen the reader 2048->32->256 bottleneck to this width; function-preserving (new units feed zero weights), new weights get fresh Adam state; checkpoint then has the wider shape')
     a = ap.parse_args()
     STEPS['on'] = a.steps
     root = Path(a.root).resolve()
@@ -142,6 +144,46 @@ def main():
         opt = runtime.make_optimizer(torch, [p for _, p in named])
         runtime.restore_adam(torch, opt, saved, named)
         participation, nonzero = Counter(saved['participation']), Counter()
+        if a.rounds != 4:
+            R = a.rounds
+
+            def fixed_rounds(core, query, notebook=None, **metadata):
+                state = core.begin_latent(query, notebook, **metadata)
+                terms = []
+                for _ in range(R):
+                    state = core.advance_latent(state)
+                    terms.extend(block.mlp.aux for block in core.blocks)
+                h, q = core.read_latent(state)
+                return h, q, torch.stack(terms).mean()
+            rt.train_api.fixed4_training = fixed_rounds
+        if a.reader_hidden:
+            reader = runtime.module_dict(modules)['reader']
+            l1, l2 = reader.proj[1], reader.proj[3]
+            old_h, H = l1.out_features, a.reader_hidden
+            if H <= old_h:
+                raise SystemExit('--reader-hidden must exceed %d' % old_h)
+            g = torch.Generator(device='cpu').manual_seed(1000 + (a.sample_seed or 0))
+            n1 = torch.nn.Linear(l1.in_features, H).to(l1.weight.device)
+            n2 = torch.nn.Linear(H, l2.out_features).to(l2.weight.device)
+            with torch.no_grad():
+                bound = 1.0 / math.sqrt(l1.in_features)
+                n1.weight.copy_((torch.rand(H, l1.in_features, generator=g) * 2 - 1).mul_(bound))
+                n1.bias.copy_((torch.rand(H, generator=g) * 2 - 1).mul_(bound))
+                n1.weight[:old_h] = l1.weight
+                n1.bias[:old_h] = l1.bias
+                n2.weight.zero_()
+                n2.weight[:, :old_h] = l2.weight
+                n2.bias.copy_(l2.bias)
+            swap = {id(l1.weight): n1.weight, id(l1.bias): n1.bias, id(l2.weight): n2.weight, id(l2.bias): n2.bias}
+            reader.proj[1], reader.proj[3] = n1, n2
+            new_named = [(n, swap.get(id(p), p)) for n, p in named]
+            opt2 = runtime.make_optimizer(torch, [p for _, p in new_named])
+            for (_, p_old), (_, p_new) in zip(named, new_named):
+                if p_old is p_new and opt.state.get(p_old):
+                    opt2.state[p_new] = opt.state[p_old]
+            named, opt = new_named, opt2
+            print(json.dumps({'event': 'reader-widened', 'from': old_h, 'to': H,
+                              'reader_params': sum(p.numel() for p in reader.parameters())}), flush=True)
         if a.copy_path:
             ad = dec.adapter
             emb = lm.get_input_embeddings()
@@ -233,7 +275,7 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+        res = {'updates_done': done, 'rounds': a.rounds, 'reader_hidden': a.reader_hidden or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}
