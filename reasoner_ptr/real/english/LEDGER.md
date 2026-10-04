@@ -49,3 +49,25 @@ Total for round 5: about $1.08. vast credit at 07:11 UTC: $2.76 (shared with oth
 | 54161996 | 45640045 | RTX 3090 (Wisconsin) | 5 | 14:47 | 15:38 | yes: results.tar.gz sha256 matched manifest | ~$0.16 |
 
 Total for round 6: about $1.10. vast credit at 16:15 UTC: $12.47 (shared with other threads).
+
+## Copy-talker test (PASS-MARKS-CT.md), boxes created 19:49 UTC 10-04 (3:49 PM ET)
+| box | offer | GPU | seed | runs |
+|---|---|---|---|---|
+| 54194500 | 53593337 | RTX 3090 (Spain) | 0 | allptr, copytalk, copytalk_nocore |
+| 54194501 | 43703594 | RTX 3090 (California) | 1 | copytalk, copytalk_nocore |
+| 54194502 | 53871119 | RTX 3090 (Jiangsu) | 2 | copytalk, copytalk_nocore |
+| 54194503 | 48246139 | RTX 3090 (N. Macedonia) | 3 | copytalk, copytalk_nocore |
+| 54194505 | 51025609 | RTX 3090 (Taiwan) | 4 | copytalk, copytalk_nocore |
+| 54194506 | 51312365 | RTX 3090 (Estonia) | 5 | copytalk, copytalk_nocore |
+Vast credit before renting: $8.79 (shared).
+First attempt failed in under a minute: `--tag -ct` was read by argparse as an option. All 6 boxes destroyed 19:58 UTC (about $0.05). Fixed to `--tag=-ct`.
+Second attempt, created 20:01 UTC (4:01 PM ET):
+| box | offer | GPU | seed |
+|---|---|---|---|
+| 54195608 | 51111742 | RTX 3090 Ti (Vietnam) | 0 |
+| 54195610 | 43703607 | RTX 3090 (California) | 1 |
+| 54195612 | 53871119 | RTX 3090 (Jiangsu) | 2 |
+| 54195644 | 33519537 | RTX 3090 (Czechia) | 3 |
+| 54195614 | 46739601 | RTX 3090 (Hungary) | 4 |
+| 54195615 | 48246139 | RTX 3090 (N. Macedonia) | 5 |
+All 6 boxes copied back (sha256 matched manifest) and destroyed: seeds 5,3,2,1,4 at 20:24-20:46 UTC, seed 0 at 21:07 UTC. Total cost about $0.75 including the failed first attempt. Vast credit $9.17 at 21:07 UTC (shared).
