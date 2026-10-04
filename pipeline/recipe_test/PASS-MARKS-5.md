@@ -20,6 +20,6 @@ Gate: train fit (last 192 two-step training items, chain) >= 70% for both arms, 
 Wrong-if: TABV gain <= 0 on blind tables means table wording variety is not what limits tables (suspects: operands in columns, 49-token cap, loop depth).
 Budget cap ~$6, 5090s (~$0.45/h), 12 runs; credit must stay >= $1 (shared with other threads).
 
-## Addendum (14:58 UTC, before any run finished): first launch of 6 boxes was destroyed within ~2 minutes (no result read)
+## Addendum (about 14:45 UTC, before any run finished): first launch of 6 boxes was destroyed within ~2 minutes (no result read)
 The CPU smoke test found that two of my new table frames broke the real registry check (a digit in a row label, "row 1", and "-{y}" parsed as a negative number). Fixed: row labels without digits, "-/+" row forms replaced by "down/up", frames with any digit dropped.
 All 12,384 sampled training and eval rows now pass the registry check. Marks above unchanged. Cost of the aborted launch about $0.05.

@@ -39,4 +39,5 @@ Round 3 about $0.85; thread total about $2.9 (estimates from hourly rates).
 
 ## Round 5 (2026-10-04)
 - Credit \$22.05 at 14:37Z (Ben's top-up landed). 14:42Z six RTX 5090 boxes (torch 2.8 cu128 image), commit e666bc01: 54161541 (comp seeds 0,1; \$0.47/h), 54161544 (comp 2,3), 54161562 (comp 4,5), 54161563 (tabv 0,1), 54161565 (tabv 2,3; \$0.476/h), 54161567 (tabv 4,5; \$0.498/h). Expected ~\$0.15 each for ~20 min.
-- 14:50Z aborted first launch (6 boxes destroyed within ~2 min; frame bug caught by smoke test; ~$0.05). Relaunch below.
+- ~14:45Z aborted first launch (6 boxes destroyed within ~2 min; frame bug caught by smoke test; ~$0.05). Relaunch below.
+- 14:44Z relaunch, commit 344aa27f, six 5090 boxes: 54161732 (comp 0,1), 54161733 (comp 2,3), 54161734 (comp 4,5), 54161735 (tabv 0,1), 54161736 (tabv 2,3), 54161737 (tabv 4,5).
