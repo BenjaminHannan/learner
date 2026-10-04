@@ -214,3 +214,7 @@ Queue (ptrqueue.cmd, sequential): lm_fewshot baseline, then seeds 0-5 of arm S (
 
 ## 12:27Z cloud-recipe port: baseline reproduced, 12-run queue (S0..S5, M0..M5) running
 Shown: bare LM 8-shot on the same 192 fresh questions = 75.0% exact / 77.6% contains on the PC, identical to the cloud's number. So the bar is 75.0%; PASS needs mean >= 80.0 (marks unchanged). First queue attempt failed instantly (argparse: '--tag -S'); fixed with '--tag=-S', no GPU time lost, no results discarded. Seed 0 arm S started; ~37 min per run, ~7.5 h for 12.
+
+## 14:00Z Stiffness test v1 queued on BensPC (after the English queue)
+Request from the Fernando-thesis thread (PR #34, commit fe22d7ebf); spec and marks: artifacts/stiffness-test-v1/STIFFNESS-TEST-v1.md (fixed before training). Pulled its 3 new flags into skills_pretrain_v1.py (defaults unchanged), the data (6 seeds) and the scorer into this branch; the PC copy of skills_pretrain_v1.py replaced (sha256 9D1964BA...; the old version stays in git).
+Queue: C:\Users\benja\stiffrun.ps1 (task stiffjob) waits until the English queue's last result (out\allptr-gen-M-seed5.json) exists and GPU-BUSY.txt is clear, then runs A1 B1 ... A6 B6 sequentially (4000 updates each, no checkpoints; A reads main2 final-checkpoint.pt read-only). Gives up after 14 h of waiting. Logs C:\Users\benja\stiffness-{A|B}{s}.log and stiffness-queue.log. English queue not touched. Est. start ~20:00Z, finish ~23:00Z. No spec changes needed so far; the main2 metadata check (update 55120) is untested until A1 starts.
