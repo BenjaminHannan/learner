@@ -217,11 +217,11 @@ def collectck(a):
                 if h is None or hashlib.sha256(raw).hexdigest() == h:    # no CKFULL seen: gzip's own CRC checks it
                     with tarfile.open(fileobj=io.BytesIO(raw), mode='r:gz') as t:
                         t.extractall(out, filter='data')
-                    (out / (jr.replace('/', '__') + '.tgz.sha256')).write_text(h + '\n')
+                    (out / (jr.replace('/', '__') + '.tgz.sha256')).write_text(hashlib.sha256(raw).hexdigest() + '\n')
                     done_ck.add(jr)
         have = sorted(p.name for p in parts.iterdir())
         print(json.dumps({'t_min': round((time.time() - t0) / 60, 1), 'parts': len(have), 'ckpts_done': sorted(done_ck),
-                          'announced': len(set(full) | set(nparts)), 'ckdone': ckdone, 'results': sorted(x for x in saved if not x.startswith('ck'))}),
+                          'announced': len(set(full) | set(nparts)), 'ckdone': ckdone, 'results': sorted(x for x in saved if not x.startswith(('ck', 'rp')))}),
               flush=True)
         if ckdone is not None and all(jr in done_ck for jr in set(full) | set(nparts)):
             return
