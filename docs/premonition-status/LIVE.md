@@ -274,3 +274,10 @@ Staged the branch's skills_pretrain_v1.py (sha EA077199...) on the PC and launch
 
 ## 00:59Z START fix screen v3 on BensPC (PC is back; spec artifacts/fix-screen-v3/PC-JOB.md @ 99b883729)
 Smoke passed: lm-lora rank 8 on 92 linears, 5,554,176 extra params, lm-lora-first-step A_with_grad 92 == A_total 92 (hooks fire everywhere), SKILLS-RESULT printed. Queue launched: S (shuffled-core lesion, eval only, ~2 min) then A1-A3 (rank-8 LoRA on the frozen LM, 6000 updates each, ~20-30 min each), one at a time, ~1.5 h. No checkpoints written; PC has ~120 GB free; the LoRA is an opt-in flag, shared LM setup unchanged.
+
+## 02:12Z FINISH fix screen v3 on BensPC: S core carries little; A (LM LoRA r8) HURTS
+Shown (fast lane, results on claude/project-thread-aya9pk artifacts/fix-screen-v3/results/).
+- S (each question's 8 pooled vectors swapped for the previous question's, 1360 in_dist): 1014 correct = 74.6% vs intact 68.5%. Mark >= 58.5 = "core carries little question-specific information" for this checkpoint; shuffling did not hurt (slightly higher). Note this conflicts in spirit with Z (zeroing = 0%): zeroing breaks the input format, shuffling keeps it, so the answers rely on the copy path and not on the core's per-question content.
+- A1-A3 (rank-8 LoRA on all 92 LM linears, 6000 updates): train fit 13.4 / 11.2 / 11.2 vs baseline 50.6 / 52.5 / 46.3 = -37.2 / -41.2 / -35.0, mean -37.8; held-out in_dist 27.8 -> 10.0 / 9.4 / 9.1. Registered: HURTS.
+- Caveat (suggested, untested): the adapter trained at the harness lr 1e-3, which may be far too high for a LoRA on an LM; the collapse may be instability, not a verdict on LM-side adapters. A lower-lr rerun would test that.
+PC idle, marker released.
