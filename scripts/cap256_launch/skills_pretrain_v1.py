@@ -45,6 +45,7 @@ SHUF = {'prev': None, 'on': False}
 CHAT = {}
 TWO = {'ce2': []}
 AUX = {}
+LES = {'mode': None, 'store': {}, 'fam': None, 'key': None}  # --final-lesions: replace each row's pooled core vectors at eval
 
 def rich_steps(row):
     """Worked steps from the row's own meta for the four families whose curriculum steps are only labels
@@ -111,6 +112,7 @@ def evaluate(rt, ctx, modules, rows, tokenizer):
             continue
         ids, mask, _ = enc
         CP['ids'] = ids
+        LES['fam'], LES['key'] = row.get('family', '?'), row.get('id', id(row))
         feats = rt.compare.extract_question_features(ctx.lm, ids, mask, 'contextual', torch)
         if row is rows[0] and not SHUF['on']:  # what length does the LM input have at generation?
             with torch.no_grad():
@@ -156,6 +158,7 @@ def main():
     ap.add_argument('--minutes', type=float, default=120)
     ap.add_argument('--lr-mult', type=float, default=1.0)
     ap.add_argument('--lr-final-mult', type=float, default=None, help='cosine-decay lr from lr-mult to this multiple over the run')
+    ap.add_argument('--final-lesions', action='store_true', help='after training, score trainfit and in_dist again with each row\'s pooled core vectors replaced by its family mean, another same-family row\'s, or the global mean (copy-path only)')
     ap.add_argument('--steps-rich', action='store_true', help='with --steps: worked steps from row meta for cipher_map, fewshot_number_rule, group_induct, seq_cycle (their curriculum steps are labels only)')
     ap.add_argument('--steps', action='store_true', help='target = worked steps + " # " + answer; scored on the text after the last #')
     ap.add_argument('--copy-path', action='store_true', help='prefix = 8 pooled vectors + the prompt token embeddings (talker can copy prompt tokens)')
@@ -366,6 +369,14 @@ def main():
                                         emb(torch.tensor([CHAT['tail']], device=q.device))], 1).to(pref.dtype)
                     else:
                         pe = emb(CP['ids']).to(pref.dtype)
+                if LES['mode'] == 'collect':
+                    LES['store'].setdefault(LES['key'], (LES['fam'], pref.detach().clone()))
+                elif LES['mode'] == 'family_mean':
+                    pref = LES['fmean'][LES['fam']].to(pref.dtype)
+                elif LES['mode'] == 'global_mean':
+                    pref = LES['gmean'].to(pref.dtype)
+                elif LES['mode'] == 'shuffle_same_family':
+                    pref = LES['swap'][LES['key']].to(pref.dtype)
                 if a.shuffle_pool:
                     prev, SHUF['prev'] = SHUF['prev'], pref.detach()
                     pref = prev if prev is not None else pref * 0
@@ -483,6 +494,26 @@ def main():
                 print(json.dumps({'event': 'skills-time-cap', 'update': i}), flush=True)
                 break
         final = {k: evaluate(rt, ctx, modules, v, tokenizer) for k, v in dev.items()}
+        lesions = None
+        if a.final_lesions:  # how much of the score needs this row's own core vectors? (generation, real metric)
+            lesions = {}
+            for split in ('trainfit', 'in_dist'):
+                if split not in dev:
+                    continue
+                LES['mode'], LES['store'] = 'collect', {}
+                res_ = {'intact': evaluate(rt, ctx, modules, dev[split], tokenizer)}
+                byf = {}
+                for key_, (f_, v_) in LES['store'].items():
+                    byf.setdefault(f_, []).append((key_, v_))
+                LES['fmean'] = {f_: torch.stack([v_ for _, v_ in kv]).mean(0) for f_, kv in byf.items()}
+                LES['gmean'] = torch.stack([v_ for _, v_ in LES['store'].values()]).mean(0)
+                LES['swap'] = {kv[j][0]: kv[(j + 1) % len(kv)][1] for kv in byf.values() for j in range(len(kv))}
+                for mode in ('family_mean', 'shuffle_same_family', 'global_mean'):
+                    LES['mode'] = mode
+                    res_[mode] = evaluate(rt, ctx, modules, dev[split], tokenizer)
+                LES['mode'] = None
+                lesions[split] = res_
+                print(json.dumps({'event': 'final-lesions', 'split': split, **{m: r_['correct'] for m, r_ in res_.items()}}), flush=True)
         ck_sha = None
         if not a.no_checkpoint:
             payload = copy.copy(saved)
@@ -493,7 +524,7 @@ def main():
             ck_sha = common.digest(ck)
         res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'lora_lr_mult': a.lora_lr_mult if a.lm_lora else None, 'gen_fix': a.gen_fix, 'steps': a.steps, 'steps_rich': a.steps_rich, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
-               'dev_n': a.dev_n, 'final_dev': final, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
+               'dev_n': a.dev_n, 'final_dev': final, 'final_lesions': lesions, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}
         (out / 'SKILLS-RESULT.json').write_text(json.dumps(res, indent=1))
         print('SKILLS-RESULT ' + json.dumps(res), flush=True)
