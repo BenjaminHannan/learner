@@ -166,4 +166,44 @@ Marks, fixed now (means over the 2 screen seeds; the confirm repeats them on 6):
 - If B1-a is proved wrong, way B at this size is dead: the next single change is a larger student (about 100M), and
   if that also fails, way A.
 
+### B1 data spec, fixed before generation (Ben chose Plan B on the card, 7:44 PM ET)
+Test 1 (the layer map, way A) is cancelled.
+
+TEACH covers 60 kinds: the 6 practised round-4 kinds (so both arms practised what FRESH-EN-R3 tests) plus these 54.
+Each kind is a one-sentence passage, a paraphrase, one short-answer question and one yes/no question, in the
+format of `FRESH-EN-R3.json`. Example questions are shown in brackets.
+
+1 owner_possession (Whose kite is red?) · 2 agent_action (What did Tev do?) · 3 companion_with (Who did Tev go with?) ·
+4 feeling_state (How did Tev feel?) · 5 naming (What is the dog's name?) · 6 family_relation (Who is Tev's sister?) ·
+7 occupation (What is Tev's job?) · 8 part_whole (Which part of the bike broke?) · 9 goal_want (What did Tev want?) ·
+10 object_eaten (What did Tev eat?) · 11 object_made (What did Tev bake?) · 12 object_read (What did Tev read?) ·
+13 container_contents (What was in the box?) · 14 category_member (Is the robin a bird?) · 15 ability (Can Tev swim?) ·
+16 rule_must (What must Tev do?) · 17 like_best (What does Tev like best?) · 18 dislike (What does Tev dislike?) ·
+19 plan_next (What will Tev do next?) · 20 habit (What does Tev do every day?) · 21 if_then (What happens if the bell
+rings?) · 22 team_member (Which team is Tev on?) · 23 helper (Who helped Tev?) · 24 patient_target (Who did the dog
+chase?) · 25 winner (Who won the race?) · 26 loser (Who lost the game?) · 27 learned (What did Tev learn?) ·
+28 topic_about (What was the book about?) · 29 creator (Who painted the picture?) · 30 language_spoken (What language
+does Tev speak?) · 31 hobby (What is Tev's hobby?) · 32 title_role (Who is the captain?) · 33 best_friend (Who is Tev's
+best friend?) · 34 lost_item (What did Tev lose?) · 35 found_item (What did Tev find?) · 36 choice_pick (Did Tev pick tea
+or milk?) · 37 fact_yes_no (Did Tev lock the door?) · 38 forgot (What did Tev forget?) · 39 permission (Who let Tev
+in?) · 40 game_played (What game did they play?) · 41 clothing (What did Tev wear?) · 42 replacement (What replaced the
+old clock?) · 43 visitor (Who visited Tev?) · 44 joiner (Who joined the club?) · 45 search_for (What was Tev looking
+for?) · 46 fear (What is Tev afraid of?) · 47 wish (What does Tev wish for?) · 48 pronoun_reference (In "Tev called Pim
+because she was late", who was late?) · 49 teacher_of (Who taught Tev?) · 50 neighbor (Who is Tev's neighbor?) ·
+51 named_after (Who was the dog named after?) · 52 caretaker (Who feeds the cat?) · 53 opponent (Who did Tev play
+against?) · 54 role_in_play (Who played the king?)
+
+Overlap guard against the 12 held-out kinds, checked by script on every kept row (any hit drops the row):
+- Question words: how many, how much, where, why, when, what time, which way, how long, come from, use to, used for,
+  what for, cost, price, pay, said, say, tell, told, asked.
+- Weather words in passage or question: rain, snow, sun, sunny, wind, windy, cloud, cloudy, storm, fog, hot, cold.
+- Attribute questions about colour, size, shape or material ("what colour", "how big", "made of").
+- Every name and answer word in NEW-KINDS-R5 and NEW-KINDS2-R6 (the `--block-r6` list).
+- Report the drop count per kind. A kind that loses more than half its rows is replaced from a spare list fixed
+  in the same commit as the generator, before any student trains.
+
+Teacher prompts: one fixed prompt per kind with 2 hand-written examples, temperature 0.9 to write and greedy to
+answer. The prompts and generator are committed before the first student run. The question writer and the answerer
+are both the 1.2B; nothing else writes training rows.
+
 Nothing here touches GOLD-PRIVATE, reserved or blind panels.
