@@ -8,6 +8,7 @@ The proxy adds the Vast key to console.vast.ai requests; this script never reads
   status --id ID
   tail --id ID [--n 60]                   last log lines (result lines hidden)
   collect --id ID [--out DIR]             decode every finished job's RBEGIN/R|/REND block, check sha256, extract
+  collectck --id ID --out DIR [--max-min M] reassemble checkpoints printed in parts by box/ck_export.sh
   destroy --id ID                         and confirm it is gone
   credit
 """
@@ -155,6 +156,76 @@ def waitfor(a):
     print(json.dumps({'timeout': True, 'waited_min': round((time.time() - t0) / 60, 1)}))
 
 
+def collectck(a):
+    """Reassemble checkpoints printed in parts by box/ck_export.sh, and save any normal result block seen on the way.
+    Reads the last 20000 log lines every 40 s until CKDONE is seen and every announced checkpoint is complete (or
+    --max-min). Parts land in OUT/parts/, finished checkpoints are extracted into OUT (job/run/checkpoint.pt), result
+    blocks into custom_io/results/. Never deletes anything."""
+    out = Path(a.out)
+    parts = out / 'parts'
+    parts.mkdir(parents=True, exist_ok=True)
+    full, done_ck, saved, ckdone, t0 = {}, set(), set(), None, time.time()
+    for p in out.glob('*/*/checkpoint.pt'):
+        done_ck.add('%s/%s' % (p.parent.parent.name, p.parent.name))
+    while time.time() - t0 < a.max_min * 60:
+        text = log_text(a.id, tail=20000)
+        blocks, cur = {}, None
+        for ln in text.splitlines():
+            if ln.startswith('CKFULL|'):
+                _, jr, h, n = ln.split('|')
+                full[jr] = (h, int(n))
+            elif ln.startswith('CKDONE|'):
+                ckdone = int(ln.split('|')[1])
+            elif ln.startswith('RBEGIN|'):
+                f = ln.split('|')
+                cur = f[1]
+                blocks[cur] = {'sha': f[2], 'size': int(f[3]), 'meta': f[4:], 'parts': []}
+            elif ln.startswith('R|') and cur:
+                _, name, data = ln.split('|', 2)
+                if name == cur:
+                    blocks[name]['parts'].append(data)
+            elif ln.startswith('REND|'):
+                if cur in blocks:
+                    blocks[cur]['end'] = True
+                cur = None
+        for name, b in blocks.items():
+            if not b.get('end') or name in saved:
+                continue
+            try:
+                raw = base64.b64decode(''.join(b['parts']))
+            except Exception:
+                continue
+            if hashlib.sha256(raw).hexdigest() != b['sha'] or len(raw) != b['size']:
+                continue
+            if len(b['meta']) == 3:                      # a checkpoint part: job/run, k, n
+                jr, k, n = b['meta']
+                (parts / ('%s.%03d' % (jr.replace('/', '__'), int(k)))).write_bytes(raw)
+            else:                                        # a normal result tarball
+                with tarfile.open(fileobj=io.BytesIO(raw), mode='r:gz') as t:
+                    t.extractall(OUT, filter='data')
+                (OUT / name).mkdir(parents=True, exist_ok=True)
+                (OUT / name / 'result.tgz.sha256').write_text(b['sha'] + '\n')
+            saved.add(name)
+        for jr, (h, n) in full.items():
+            if jr in done_ck:
+                continue
+            ps = [parts / ('%s.%03d' % (jr.replace('/', '__'), k)) for k in range(n)]
+            if all(p.exists() for p in ps):
+                raw = b''.join(p.read_bytes() for p in ps)
+                if hashlib.sha256(raw).hexdigest() == h:
+                    with tarfile.open(fileobj=io.BytesIO(raw), mode='r:gz') as t:
+                        t.extractall(out, filter='data')
+                    (out / (jr.replace('/', '__') + '.tgz.sha256')).write_text(h + '\n')
+                    done_ck.add(jr)
+        have = sorted(p.name for p in parts.iterdir())
+        print(json.dumps({'t_min': round((time.time() - t0) / 60, 1), 'parts': len(have), 'ckpts_done': sorted(done_ck),
+                          'announced': len(full), 'ckdone': ckdone, 'results': sorted(x for x in saved if not x.startswith('ck'))}),
+              flush=True)
+        if ckdone is not None and full and all(jr in done_ck for jr in full):
+            return
+        time.sleep(40)
+
+
 def destroy(a):
     r = call('DELETE', '/instances/%s/' % a.id)
     print(json.dumps({'destroy': r.get('success'), 'msg': r.get('msg')}))
@@ -172,7 +243,7 @@ def credit(a):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['search', 'create', 'status', 'tail', 'collect', 'destroy', 'credit', 'waitfor'])
+    ap.add_argument('cmd', choices=['search', 'create', 'status', 'tail', 'collect', 'collectck', 'destroy', 'credit', 'waitfor'])
     ap.add_argument('--gpu', default='RTX 5090')
     ap.add_argument('--n', type=int, default=60)
     ap.add_argument('--offer')
@@ -185,7 +256,7 @@ def main():
     ap.add_argument('--max-min', type=float, default=120)
     a = ap.parse_args()
     {'search': search, 'create': create, 'status': status, 'tail': tail, 'collect': collect, 'destroy': destroy,
-     'credit': credit, 'waitfor': waitfor}[a.cmd](a)
+     'credit': credit, 'waitfor': waitfor, 'collectck': collectck}[a.cmd](a)
 
 
 if __name__ == '__main__':
