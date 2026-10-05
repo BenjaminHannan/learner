@@ -184,3 +184,10 @@ CRD with seeds 4-9 (jobs 43-crdc-s4..s9; box D seeds 4-6, box B seeds 7-9), pair
 The LM writing SR2's chain steps, trained on exactly PLCD's 17,000 rows with the cosine decay: held-out **158 / 160 and 158 / 160** (98.8%); fit 314 / 320 and 317 / 320. Paired with PLCD (plan + calculator, same rows and schedule): 155 and 159, so PLCD is behind by 3 and ahead by 1.
 - By the marks (seed 3 still running): **"the LM's steps catch up with the data"** (mean >= 152 already holds unless LMDC3 is below 140), and **not** "the plan route beats the LM's steps at matched data and schedule". PLCD's 97.6% vs SR2's 86.8% was the 17,000 distinct rows and the decay, not the route. The prediction (140-150) was too low.
 - So at equal practice the 1.2B LM writing steps and the small thinker's plan are level on these chain kinds (PLS: 82.8 vs 85.8 at the screen's practice; PLCD/LMDC: about 98-99 at 17,000 rows).
+
+## Added 11:29 UTC, before they ran: arm WD (both doors at 2048, Ben's ask)
+SR2 plus one change, both doors widened at once: `--reader-hidden 2048` (into the thinker: 2048 -> 2048 -> 256 instead of 2048 -> 32 -> 256) and `--prefix-hidden 2048` (out to the talker: 259 -> 2048 -> 2048 instead of 259 -> 32 -> 2048). Both widenings are function-preserving (new units start with zero output weights), so the run starts exactly at main2. The thinker's middle stays 256 wide. Seeds 1-3 with `--final-lesions`, paired with SR2 seeds 1-3 (fit 271 / 287 / 269, mean 275.7; held-out 254 / 267 / 253, mean 258.0; family-mean lesion on fit -1.9 to -5.3 points on every SR2/CF run). Runs on Ben's PC (`PC-JOB-wd.md`).
+- **"The wide doors let the thinker carry each question"** if the family-mean lesion costs >= 10 points of fit on every seed (SR2: <= 5.3).
+- **"Wide doors help the score"** if mean fit >= 284 (SR2 + 8 rows); **"hurt"** if <= 268 (SR2 - 8).
+- Wrong (the doors are not what keeps the thinker out) if the family-mean lesion stays under 5 points on every seed.
+- Prediction: fit within 8 rows of SR2 and the family-mean lesion under 5 points. The talker reads the question itself, so a wider door gives it nothing it needs from the thinker.
