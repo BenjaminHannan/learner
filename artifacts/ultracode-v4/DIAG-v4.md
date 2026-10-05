@@ -278,3 +278,20 @@ PX plus one change, `--ptr-hops 2` (being built): each pointer slot first attend
 - **"The fixed query was the limit"** if the content-kind pointers (cipher_map + group_induct + seq_cycle) rise by >= 30 over PX's 44 / 120.
 - **Wrong** if held < 96 / 160 AND content-kind pointers < 60 / 120: then the query's form is not the limit either; next suspects are that the thinker's token states do not hold the pairings (probe them) or the sub-word split of cipher words.
 - Prediction: seq_cycle and group_induct gain most (seq_cycle >= 30 / 40); cipher_map stays under 15 / 40 because "daa" splits into 'da' + 'a', so one token holds two letters.
+
+## Result 22:05 UTC: PLR (one router per round in the planner) — WRONG, drop per-round routing
+Jobs 49-plr-s1..s6 on Vast box G (Ben said rent at 21:30 UTC because his PC was full with the swarm runs). Same rows and recipe as PLS; held plan-exact at the last eval.
+
+| seed | PLS held /160 | PLR held /160 | gain | PLR fit /320 |
+|---|---|---|---|---|
+| 1 | 140 | 126 | -14 | 299 |
+| 2 | 141 | 136 | -5 | 303 |
+| 3 | 112 | 140 | +28 | 311 |
+| 4 | 131 | 129 | -2 | 292 |
+| 5 | 138 | 143 | +5 | 307 |
+| 6 | 133 | 113 | -20 | 268 |
+| mean | 132.5 | **131.2** | **-1.3** | 296.7 |
+
+- Pass (mean >= 137.3 and ahead on >= 5): **no**. **Wrong mark hit:** mean gain -1.3 (< 1.6) and ahead on 2 of 6 (<= 3).
+- Not void: the rounds do pick different experts (cosine between two rounds' expert counts, mean 0.40-0.55 per seed, minimum 0.14-0.19), so the routers did learn per-round choices; they just do not help.
+- Shown (6 paired seeds): per-round routers do not lift the planner. Seed 3's +28 is PLS's weak seed (112) recovering, and seeds 1 and 6 fall by 14 and 20, so the spread grows rather than the mean. Dropped as written.
