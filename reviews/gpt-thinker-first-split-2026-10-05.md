@@ -41,22 +41,29 @@ The owner wants the thinker to be most of the model, with the reader and talker 
 talk. Long run: nothing pretrained, and the whole model should beat 1-2B models at the same total size (the borrowed
 LM counts toward size). Hardware: one RTX 5070 Ti (16 GB) and an M1 Pro laptop; short cloud rentals are possible.
 
-## Our proposed plan (please attack it)
-"Cut the big model open": reader = word table + layers 0-1, thinker = layers 2-13 run as a loop (2-3 rounds, with
-the reader output joined back in each round through a learned adapter, as in McLeish et al. 2025 "retrofitted
-recurrence"), talker = layers 14-15. One pass, so the talker only sees what came through the thinker. Thinker =
-774M of 1,170M weights (66%), 86% of the layer passes at 2 rounds. Train only the thinker layers on our practice set
-(8000 generated questions, 2000 updates of 16).
-First test (no training): skip each layer, and repeat each layer, on 576 questions, to find where reading ends and
-talking starts. Second test: the cut-open model vs today's model, marks fixed in advance (practised >= 89, new kinds
->= 75, thinker switched off <= 10%, first token <= 2.0x the bare LM).
-Alternatives we ranked lower: distilling into a thinker-heavy student; building everything from scratch (fine at
-3-100M, far too costly at 1B for us); growing the small core (+1.9 only).
+## The chosen plan (please attack it)
+"Teacher, then goodbye": keep our own thinker and use the 1.2B only during training.
+- Student: our from-scratch design B2 (character reader with 2 conv layers, a looped controller that writes small
+  programs for an exact calculator or copies words from the question, a copy talker). At 10.8M weights about 80% of
+  it is the looped thinker (estimated from the code).
+- Teacher data: the 1.2B writes one-sentence passages, a paraphrase and two questions in 60 question kinds (the 6
+  kinds we already practise plus 54 new ones such as owner, helper, winner, fear, pronoun reference), then answers
+  each question from the passage and from the paraphrase. Rows are kept only when both answers match and the answer
+  appears in the passage. 200,000 rows. A script drops any row that touches the 12 held-out test kinds (counting,
+  location, cause, time, attribute, instrument, speech, weather, price, direction, duration, origin) or their words.
+- Control: the same student trained on 200,000 rows from our hand-written generator (6 kinds only), and a plain
+  transformer of the same size trained on the teacher data.
+- Marks fixed in advance (2 seeds, then 6): teacher-data student minus generator student on the 12 held-out kinds
+  >= +15 points on both seeds (proved wrong below +5); feeding another question's thinker state drops it to <= 10%;
+  B2 minus the plain transformer >= +3.
+- Rejected alternative ("cut open"): keep the 1.2B's first 2 layers as reader and last 2 as talker, and loop its
+  middle 12 layers as the thinker (as in McLeish et al. 2025, "retrofitted recurrence"). The thinker becomes 66% of
+  the weights, but our own thinker is retired and the model is more borrowed, so the owner turned it down.
 
 ## What I want from you
-1. Is "cut open and loop the middle" the right first move for this goal? What would you do instead, and why?
-2. The biggest risk you see in the plan (for example: a 2-layer talker cannot write answers without re-reading the
-   question; looping a hybrid conv/attention model; 8000 examples being far too few to retrain 774M weights).
+1. Is "teacher, then goodbye" the right first move for this goal? What would you do instead, and why?
+2. The biggest risk you see in the plan (for example: a 10.8M model cannot learn enough English from 200,000 short
+   rows; 1.2B-written questions are too samey or too wrong; 60 kinds are still too few for transfer to new kinds).
 3. One change at a time: propose at most three tests, each with pass marks fixed in advance and the result that would
    prove it wrong.
 4. A plain-language summary (a few sentences) for a high-school senior.
