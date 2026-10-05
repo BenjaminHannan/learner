@@ -42,6 +42,8 @@ def norm(s):
 
 LORA = {'on': True}
 SHUF = {'prev': None, 'on': False}
+CHAT = {}
+TWO = {'ce2': []}
 
 def encode(tokenizer, row, torch, device):
     ids = list(tokenizer.encode(row['prompt'], add_special_tokens=False)) + [common.EOS_ID]
@@ -129,6 +131,11 @@ def main():
     ap.add_argument('--lm-lora', type=int, default=0, help='rank-r LoRA on every Linear inside the frozen LM (not lm_head), used only when the LM talks (off during reader feature extraction); B=0 so the start is exactly the parent; kept outside lm.parameters()')
     ap.add_argument('--shuffle-pool', action='store_true', help='with --copy-path: replace the 8 pooled core vectors with the previous question\'s (lesion: does the core carry question-specific information?)')
     ap.add_argument('--gen-fix', action='store_true', help='with --copy-path: generation sees the training layout [pooled][prompt][BOS] (the old patch put the prompt in twice at generation)')
+    ap.add_argument('--back', type=int, default=0, help='with --copy-path --gen-fix: a second exit (copy of the trained StatePrefix, fresh Adam) writes this many vectors AFTER the question, right before BOS')
+    ap.add_argument('--chat', action='store_true', help='with --copy-path --gen-fix: the question sits in the LM native chat template; the token before the answer is the template newline instead of BOS')
+    ap.add_argument('--no-front', action='store_true', help='with --copy-path --gen-fix: drop the 8 front vectors (use with --back)')
+    ap.add_argument('--two-path', type=float, default=0.0, help='with --copy-path --gen-fix: add this weight x answer CE with the LM seeing only the core vectors (no question words)')
+    ap.add_argument('--accum', type=int, default=1, help='rows per optimizer update (gradient accumulation); --updates counts rows')
     ap.add_argument('--rounds', type=int, default=4, help='latent loop rounds (shared weights; parent used 4)')
     ap.add_argument('--reader-hidden', type=int, default=0, help='widen the reader 2048->32->256 bottleneck to this width; function-preserving (new units feed zero weights), new weights get fresh Adam state; checkpoint then has the wider shape')
     a = ap.parse_args()
@@ -240,7 +247,23 @@ def main():
         if a.copy_path:
             ad = dec.adapter
             emb = lm.get_input_embeddings()
+            if (a.back or a.chat or a.two_path or a.no_front) and not a.gen_fix:
+                raise SystemExit('--back/--chat/--two-path/--no-front need --gen-fix')
+            ad2 = None
+            if a.back:  # a second exit (copy of the trained one, fresh Adam state) writing K vectors AFTER the question
+                ad2 = copy.deepcopy(ad)
+                ad2.prefix_tokens = a.back
+                opt.add_param_group({'params': list(ad2.parameters())})
+                named = named + [('prefix2.' + n, p) for n, p in ad2.named_parameters()]
+                print(json.dumps({'event': 'back-exit', 'vectors': a.back, 'params': sum(p.numel() for p in ad2.parameters())}), flush=True)
             o_train, o_fwd = ad.project_training, ad.forward
+            if a.chat:  # native LFM chat layout: <|startoftext|><|im_start|>user\n Q <|im_end|>\n<|im_start|>assistant [back] \n ANSWER <|im_end|>
+                CHAT['head'] = list(tokenizer.encode('<|startoftext|><|im_start|>user\n', add_special_tokens=False))
+                tail = list(tokenizer.encode('<|im_end|>\n<|im_start|>assistant\n', add_special_tokens=False))
+                CHAT['tail'], CHAT['nl'] = tail[:-1], tail[-1]
+                dec.bos_id = CHAT['nl']  # the token right before the answer (human_loss and generate put it there)
+                print(json.dumps({'event': 'chat-layout', 'head': CHAT['head'], 'tail': CHAT['tail'], 'before_answer': CHAT['nl'],
+                                  'decoded': tokenizer.decode(CHAT['head'] + [11111] + CHAT['tail'] + [CHAT['nl']])}), flush=True)
 
             ptr = None
             if a.pointer:  # allptr exit (reasoner_ptr/real/english/run_english.py): + 8 pointer vectors over prompt embeddings
@@ -254,18 +277,26 @@ def main():
                 opt.add_param_group({'params': list(ptr.parameters())})
                 named = named + [('ptr.weight', ptr.weight), ('ptr.bias', ptr.bias)]
 
-            def with_prompt(pref, h):
+            def with_prompt(pref, h, x=None, alone=False):
                 with torch.no_grad():
-                    pe = emb(CP['ids']).to(pref.dtype)
+                    if a.chat:
+                        q = CP['ids'][:, :-1]  # drop the plain EOS; the chat tail closes the user turn
+                        pe = torch.cat([emb(torch.tensor([CHAT['head']], device=q.device)), emb(q),
+                                        emb(torch.tensor([CHAT['tail']], device=q.device))], 1).to(pref.dtype)
+                    else:
+                        pe = emb(CP['ids']).to(pref.dtype)
                 if a.shuffle_pool:
                     prev, SHUF['prev'] = SHUF['prev'], pref.detach()
                     pref = prev if prev is not None else pref * 0
-                parts = [pref * 0 if a.zero_pool else pref]
+                parts = [] if a.no_front else [pref * 0 if a.zero_pool else pref]
                 if ptr is not None:
                     pw = ptr(h.float()).softmax(1)
                     parts.append(torch.einsum('bnk,bnl->bkl', pw, pe))
-                return torch.cat(parts + [pe], 1)
-            ad.project_training = lambda *x, **k: with_prompt(o_train(*x, **k), x[0])
+                back = [type(ad2).project_training(ad2, *x)] if ad2 is not None else []
+                if alone:  # two-path loss: the LM sees only the core's vectors, no question words
+                    return torch.cat(([pref] if not a.no_front else []) + back, 1)
+                return torch.cat(parts + [pe] + back, 1)
+            ad.project_training = lambda *x, **k: with_prompt(o_train(*x, **k), x[0], x)
             ad.forward = lambda *x, **k: with_prompt(o_fwd(*x, **k), x[0].latent)
             if a.gen_fix:
                 # o_fwd (StatePrefix.forward) calls self.project_training, which is the patched instance attribute
@@ -275,8 +306,14 @@ def main():
                 ad.forward = lambda p, **k: ad.project_training(p.latent, p.latent_mask, p.answer_mask, p.token_shape)
 
             def loss_fn(rt_, lm_, dec_, h, mask, target):
-                prefix = dec_.adapter.project_training(h, torch.ones_like(h, dtype=torch.bool), mask, (1, h.shape[1]))
+                x = (h, torch.ones_like(h, dtype=torch.bool), mask, (1, h.shape[1]))
+                prefix = dec_.adapter.project_training(*x)
                 per, pred = rt_.human_loss(lm_, prefix, target, dec_.bos_id, dec_.eos_id, True, True)
+                if a.two_path:
+                    alone = with_prompt(o_train(*x), h, x, alone=True)
+                    per2 = rt_.human_loss(lm_, alone, target, dec_.bos_id, dec_.eos_id, True, False)
+                    TWO['ce2'].append(float(per2.detach().mean()))
+                    per = per + a.two_path * per2
                 valid = target != -100
                 ok = (pred == target) & valid
                 return per, pred, {'CE': float(per.detach().mean()), 'valid_target_tokens': int(valid.sum()),
@@ -331,7 +368,18 @@ def main():
             CP['ids'] = ids
             feats = rt.compare.extract_question_features(lm, ids, mask, 'contextual', torch)
             ctx.tokens, ctx.features = {0: (ids, mask, labels)}, {0: feats}
-            r = trainer.train_step(rt, ctx, modules, named, opt, 0, participation, nonzero)
+            if a.accum > 1:  # batch a.accum rows per optimizer update (mean loss, one clip at 1.0, one AdamW step)
+                parts_ = runtime.module_dict(modules)
+                if (i - 1) % a.accum == 0:
+                    opt.zero_grad(set_to_none=True)
+                h_, _ = runtime.english_graph(rt, parts_['core'], parts_['reader'], feats, mask)
+                per_, _, r = runtime.english_loss(rt, lm, dec, h_, mask, labels)
+                (per_.mean() / a.accum).backward()
+                if i % a.accum == 0 or i == len(rows):
+                    torch.nn.utils.clip_grad_norm_([p for _, p in named], 1.0)
+                    opt.step()
+            else:
+                r = trainer.train_step(rt, ctx, modules, named, opt, 0, participation, nonzero)
             if a.lm_lora and done == 0:
                 lg = [(n, p.grad) for n, p in named if n.startswith('lora.') and n.endswith('_A.weight')]
                 print(json.dumps({'event': 'lm-lora-first-step', 'A_with_grad': sum(1 for _, g_ in lg if g_ is not None),
@@ -343,6 +391,7 @@ def main():
                 print(json.dumps({'event': 'skills-progress', 'update': i, 'stage': row['stage'],
                                   'CE': round(sum(x[1] for x in last) / len(last), 4),
                                   'exact': round(sum(x[2] for x in last) / len(last), 3),
+                                  **({'CE2': round(sum(TWO['ce2'][-500:]) / len(TWO['ce2'][-500:]), 4)} if TWO['ce2'] else {}),
                                   'minutes': round((time.time() - t0) / 60, 1)}), flush=True)
             if i % a.eval_every == 0:
                 curve.append({'update': i, **{k: evaluate(rt, ctx, modules, dev[k], tokenizer) for k in ('in_dist', 'trainfit') if k in dev}})
@@ -359,7 +408,7 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'gen_fix': a.gen_fix, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'gen_fix': a.gen_fix, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}
