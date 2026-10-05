@@ -48,6 +48,13 @@ AUX = {}
 LES = {'mode': None, 'store': {}, 'fam': None, 'key': None}  # --final-lesions: replace each row's pooled core vectors at eval
 
 def rich_steps(row):
+    try:
+        return _rich_steps(row)
+    except (KeyError, IndexError, ValueError):  # dev splits with other variants/meta keep their curriculum steps
+        return row['steps']
+
+
+def _rich_steps(row):
     """Worked steps from the row's own meta for the four families whose curriculum steps are only labels
     ("look up each letter", "infer rule", "cycle length 2"); every other family keeps its steps. Each list ends in
     a line that states the answer's ingredients, so the answer after " # " follows from the steps alone."""
@@ -77,6 +84,15 @@ def rich_steps(row):
             for k in range(2, 20):
                 if all(x % k == 0 for x in A) and not any(x % k == 0 for x in B):
                     return ['A multiples of %d' % k, '%d is %s' % (q, 'one' if q % k == 0 else 'not')]
+    if f == 'seq_cycle' and STEPS.get('seq2'):  # v2: no counting of shown items, mod written as a division
+        pat, L = m['pat'], len(m['pat'])
+        if v == 'kth_letter':
+            k, i = m['k'], (m['k'] - 1) % len(m['pat'])
+            return ['cycle ' + ' '.join('%d=%s' % (j, c) for j, c in enumerate(pat)),
+                    '%d-1 = %d = %d*%d + %d' % (k, k - 1, L, (k - 1) // L, i), '%d=%s' % (i, pat[i])]
+        if v == 'next_letter':
+            last, nxt = pat[(m['n'] - 1) % L], pat[m['n'] % L]
+            return ['cycle ' + ' '.join(pat), 'last is %s' % last, 'after %s comes %s' % (last, nxt)]
     if f == 'seq_cycle':
         pat = m['pat']
         if v == 'kth_letter':
@@ -159,6 +175,7 @@ def main():
     ap.add_argument('--lr-mult', type=float, default=1.0)
     ap.add_argument('--lr-final-mult', type=float, default=None, help='cosine-decay lr from lr-mult to this multiple over the run')
     ap.add_argument('--final-lesions', action='store_true', help='after training, score trainfit and in_dist again with each row\'s pooled core vectors replaced by its family mean, another same-family row\'s, or the global mean (copy-path only)')
+    ap.add_argument('--seq-steps-v2', action='store_true', help='with --steps-rich: seq_cycle steps without counting (next_letter: last letter, what follows it; kth_letter: indexed cycle, k-1 as L*q + r)')
     ap.add_argument('--steps-rich', action='store_true', help='with --steps: worked steps from row meta for cipher_map, fewshot_number_rule, group_induct, seq_cycle (their curriculum steps are labels only)')
     ap.add_argument('--steps', action='store_true', help='target = worked steps + " # " + answer; scored on the text after the last #')
     ap.add_argument('--copy-path', action='store_true', help='prefix = 8 pooled vectors + the prompt token embeddings (talker can copy prompt tokens)')
@@ -192,6 +209,7 @@ def main():
     a = ap.parse_args()
     STEPS['on'] = a.steps
     STEPS['rich'] = a.steps_rich
+    STEPS['seq2'] = a.seq_steps_v2
     if a.steps_rich and not a.steps:
         raise SystemExit('--steps-rich needs --steps')
     SHUF['on'] = a.shuffle_pool
@@ -522,7 +540,7 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'lora_lr_mult': a.lora_lr_mult if a.lm_lora else None, 'gen_fix': a.gen_fix, 'steps': a.steps, 'steps_rich': a.steps_rich, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'lora_lr_mult': a.lora_lr_mult if a.lm_lora else None, 'gen_fix': a.gen_fix, 'steps': a.steps, 'steps_rich': a.steps_rich, 'seq_steps_v2': a.seq_steps_v2, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'final_lesions': lesions, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}
