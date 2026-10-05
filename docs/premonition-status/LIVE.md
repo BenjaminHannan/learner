@@ -261,3 +261,10 @@ Staged the spec's skills_pretrain_v1.py (sha 96AA5B3D...) over the pipeline copy
 
 ## 23:04Z fix screen v2: Z (lesion) done; X1-X3 relaunched after my script bug
 Z finished. My first X launch failed instantly (PowerShell variables are case-insensitive: loop variable $s overwrote the script path $S), and a second launch had a mangled output path, which I stopped by exact PID before it could overwrite anything (an empty stray folder artifacts/fixscreen2/X remains on the PC, no checkpoints). X1-X3 are now running correctly, ~25 min each.
+
+## 00:03Z FINISH fix screen v2 on BensPC (plateau thread): Z core matters; X (exit 32->256) NO EFFECT
+Shown (3 seeds, fast lane; results pushed to artifacts/fix-screen-v2/results/ on claude/project-thread-aya9pk).
+- Z (core's 8 pooled vectors zeroed, main2, 1360 in_dist rows): 0 correct. Mark: <= 48.5% means "core matters"; intact main2 = 68.5%. The language model still sees every prompt word, so the answers depend on the core's vectors, not just the copied words.
+- X1-X3 (StatePrefix widened 259->32->2048 to 259->256->2048, 6000 updates, 2000 fixed rows x 3 passes, worst-8 families): train fit at update 6000 = 51.2 / 53.8 / 46.6 vs baseline 50.6 / 52.5 / 46.3, gains +0.6 / +1.2 / +0.3, mean +0.7. Registered rule: NO EFFECT (HELPS needs +5). in_dist 36.2 / 39.1 / 38.1 (start 27.8).
+- Widening the exit pipe does not lift the fit; with screen v1 (reader width, rounds, lr, pointer exit) all four tried fixes leave fit at about 46-54. Not yet tried (suggested only): ideas outside these.
+PC idle, marker released. Caveat: one X launch failed from my script bug and was relaunched; results are from the correct run.
