@@ -223,7 +223,10 @@ def collectck(a):
         print(json.dumps({'t_min': round((time.time() - t0) / 60, 1), 'parts': len(have), 'ckpts_done': sorted(done_ck),
                           'announced': len(set(full) | set(nparts)), 'ckdone': ckdone, 'results': sorted(x for x in saved if not x.startswith(('ck', 'rp')))}),
               flush=True)
-        if ckdone is not None and all(jr in done_ck for jr in set(full) | set(nparts)):
+        if a.want:                                       # explicit list: stop only when each checkpoint / result is saved
+            if all(w in done_ck or w in saved for w in a.want.replace(',', ' ').split()):
+                return
+        elif ckdone is not None and all(jr in done_ck for jr in set(full) | set(nparts)):
             return
         time.sleep(40)
 
@@ -257,6 +260,7 @@ def main():
     ap.add_argument('--seen', default='')
     ap.add_argument('--max-min', type=float, default=120)
     ap.add_argument('--tail', type=int, default=9000, help='collectck: log lines per read (a 20000-line read of a big log can take minutes to appear)')
+    ap.add_argument('--want', default='', help='collectck: job/run checkpoints and result names that must all be saved before it stops (then CKDONE is ignored)')
     a = ap.parse_args()
     {'search': search, 'create': create, 'status': status, 'tail': tail, 'collect': collect, 'destroy': destroy,
      'credit': credit, 'waitfor': waitfor, 'collectck': collectck}[a.cmd](a)
