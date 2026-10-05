@@ -132,3 +132,14 @@ PLOD held plan over training: 73 / 110 / 126 / 118 / 132 / 126 / 141 / 128 / 139
 PLOD with seeds 2-6 (jobs 33-plod-s2..s6, box B; seed changes the init, the row order and which 17,000 of the 17,981 rows are used; held-out rows are the same 160). Together with seed 1:
 - **CONFIRMED** if the mean final held-out plan-exact over the 6 seeds is >= 85% (136/160) and every seed is >= 80% (128/160). Wrong if the 6-seed mean is < 80%.
 - The best-checkpoint numbers are reported next to the final ones but do not decide.
+
+## PLC partial (jobs 33-plod-s2..s6, read 08:05 UTC)
+Seeds 3, 5, 6 finished; seeds 2 and 4 crashed with CUDA out-of-memory (three 10.5 GB runs started together on one 32 GB GPU; no score) and re-run one at a time (`36-plod-s2-rerun`, `36-plod-s4-rerun`, `# MEM 30000`), unchanged.
+| seed | final held plan | best held plan | final ops | final ptr | fit plan |
+|---|---|---|---|---|---|
+| 1 (PLOD) | 139 (86.9%) | 141 | 141 | 151 | 285 |
+| 3 | 125 (78.1%) | 138 | 128 | 151 | 267 |
+| 5 | 128 (80.0%) | 136 | 130 | 148 | 272 |
+| 6 | 135 (84.4%) | 137 | 138 | 152 | 261 |
+- 4 of 6 seeds: final mean 131.75 / 160 (82.3%); seed 3 is below the 80% floor, so PLC **cannot be CONFIRMED** whatever seeds 2 and 4 give. Best-checkpoint mean 138 (86.3%), which does not decide. By family the weak spot moves between seeds (state_update 24 and 23 / 40 on seeds 3 and 5, 31-37 on the others).
+- Reading: the plan route lands at about 82% final (86% at its best checkpoint) on new chain questions, against 85-87% for the LM writing steps. The last evals swing by up to 13 rows (constant lr 1e-3, batch 1, no decay), so the recipe's end point is noisy.

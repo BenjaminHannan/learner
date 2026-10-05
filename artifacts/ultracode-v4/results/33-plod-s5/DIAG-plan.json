@@ -1,0 +1,910 @@
+{
+ "args": {
+  "mode": "plan",
+  "root": "/job/repo/pipeline",
+  "data": "/job/data",
+  "out": "/job/repo/pipeline/artifacts/uc/33-plod-s5",
+  "parent_path": "/job/repo/skills/main2/final-checkpoint.pt",
+  "sample_seed": 5,
+  "chan_per_family": 8,
+  "chan_steps": 150,
+  "chan_lr": 0.02,
+  "head": "mlp",
+  "families": "chain_ops,state_update,cipher_map,chain_story2,var_chain,seq_cycle,fewshot_number_rule,group_induct",
+  "target": "answer",
+  "learner": "core",
+  "warmup": 200,
+  "reader_hidden": 0,
+  "updates": 6000,
+  "fresh_rows": 17000,
+  "op_attend": true,
+  "batch": 1,
+  "lr": 0.001,
+  "fresh_core": true
+ },
+ "result": {
+  "curve": [
+   {
+    "update": 0,
+    "fit": {
+     "plan": 0,
+     "ops": 1,
+     "ptr": 1,
+     "n": 320
+    },
+    "held": {
+     "plan": 0,
+     "ops": 0,
+     "ptr": 0,
+     "n": 160
+    },
+    "fit_by_family": {
+     "var_chain": [
+      0,
+      93
+     ],
+     "chain_ops": [
+      0,
+      64
+     ],
+     "state_update": [
+      0,
+      90
+     ],
+     "chain_story2": [
+      0,
+      73
+     ]
+    },
+    "held_by_family": {
+     "chain_ops": [
+      0,
+      40
+     ],
+     "chain_story2": [
+      0,
+      40
+     ],
+     "state_update": [
+      0,
+      40
+     ],
+     "var_chain": [
+      0,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "chain_ops": [
+      0,
+      40
+     ],
+     "chain_story2": [
+      0,
+      40
+     ],
+     "state_update": [
+      0,
+      40
+     ],
+     "var_chain": [
+      0,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "chain_ops": [
+      0,
+      40
+     ],
+     "chain_story2": [
+      0,
+      40
+     ],
+     "state_update": [
+      0,
+      40
+     ],
+     "var_chain": [
+      0,
+      40
+     ]
+    },
+    "minutes": 2.6
+   },
+   {
+    "update": 2000,
+    "fit": {
+     "plan": 158,
+     "ops": 159,
+     "ptr": 266,
+     "n": 320
+    },
+    "held": {
+     "plan": 82,
+     "ops": 83,
+     "ptr": 130,
+     "n": 160
+    },
+    "fit_by_family": {
+     "var_chain": [
+      33,
+      93
+     ],
+     "chain_ops": [
+      43,
+      64
+     ],
+     "state_update": [
+      9,
+      90
+     ],
+     "chain_story2": [
+      73,
+      73
+     ]
+    },
+    "held_by_family": {
+     "chain_ops": [
+      25,
+      40
+     ],
+     "chain_story2": [
+      39,
+      40
+     ],
+     "state_update": [
+      4,
+      40
+     ],
+     "var_chain": [
+      14,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "chain_ops": [
+      25,
+      40
+     ],
+     "chain_story2": [
+      39,
+      40
+     ],
+     "state_update": [
+      5,
+      40
+     ],
+     "var_chain": [
+      14,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "chain_ops": [
+      32,
+      40
+     ],
+     "chain_story2": [
+      39,
+      40
+     ],
+     "state_update": [
+      27,
+      40
+     ],
+     "var_chain": [
+      32,
+      40
+     ]
+    },
+    "minutes": 4.1
+   },
+   {
+    "update": 4000,
+    "fit": {
+     "plan": 235,
+     "ops": 248,
+     "ptr": 284,
+     "n": 320
+    },
+    "held": {
+     "plan": 122,
+     "ops": 126,
+     "ptr": 143,
+     "n": 160
+    },
+    "fit_by_family": {
+     "var_chain": [
+      62,
+      93
+     ],
+     "chain_ops": [
+      46,
+      64
+     ],
+     "state_update": [
+      54,
+      90
+     ],
+     "chain_story2": [
+      73,
+      73
+     ]
+    },
+    "held_by_family": {
+     "chain_ops": [
+      31,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      25,
+      40
+     ],
+     "var_chain": [
+      26,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "chain_ops": [
+      32,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      27,
+      40
+     ],
+     "var_chain": [
+      27,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "chain_ops": [
+      38,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      31,
+      40
+     ],
+     "var_chain": [
+      34,
+      40
+     ]
+    },
+    "minutes": 5.6
+   },
+   {
+    "update": 6000,
+    "fit": {
+     "plan": 224,
+     "ops": 231,
+     "ptr": 288,
+     "n": 320
+    },
+    "held": {
+     "plan": 116,
+     "ops": 119,
+     "ptr": 140,
+     "n": 160
+    },
+    "fit_by_family": {
+     "var_chain": [
+      56,
+      93
+     ],
+     "chain_ops": [
+      45,
+      64
+     ],
+     "state_update": [
+      50,
+      90
+     ],
+     "chain_story2": [
+      73,
+      73
+     ]
+    },
+    "held_by_family": {
+     "chain_ops": [
+      32,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      17,
+      40
+     ],
+     "var_chain": [
+      27,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "chain_ops": [
+      32,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      20,
+      40
+     ],
+     "var_chain": [
+      27,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "chain_ops": [
+      35,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      30,
+      40
+     ],
+     "var_chain": [
+      35,
+      40
+     ]
+    },
+    "minutes": 7.0
+   },
+   {
+    "update": 8000,
+    "fit": {
+     "plan": 255,
+     "ops": 265,
+     "ptr": 294,
+     "n": 320
+    },
+    "held": {
+     "plan": 122,
+     "ops": 123,
+     "ptr": 141,
+     "n": 160
+    },
+    "fit_by_family": {
+     "var_chain": [
+      66,
+      93
+     ],
+     "chain_ops": [
+      45,
+      64
+     ],
+     "state_update": [
+      71,
+      90
+     ],
+     "chain_story2": [
+      73,
+      73
+     ]
+    },
+    "held_by_family": {
+     "chain_ops": [
+      23,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      31,
+      40
+     ],
+     "var_chain": [
+      28,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "chain_ops": [
+      23,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      32,
+      40
+     ],
+     "var_chain": [
+      28,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "chain_ops": [
+      34,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      33,
+      40
+     ],
+     "var_chain": [
+      34,
+      40
+     ]
+    },
+    "minutes": 8.5
+   },
+   {
+    "update": 10000,
+    "fit": {
+     "plan": 255,
+     "ops": 261,
+     "ptr": 295,
+     "n": 320
+    },
+    "held": {
+     "plan": 125,
+     "ops": 131,
+     "ptr": 143,
+     "n": 160
+    },
+    "fit_by_family": {
+     "var_chain": [
+      62,
+      93
+     ],
+     "chain_ops": [
+      54,
+      64
+     ],
+     "state_update": [
+      67,
+      90
+     ],
+     "chain_story2": [
+      72,
+      73
+     ]
+    },
+    "held_by_family": {
+     "chain_ops": [
+      27,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      31,
+      40
+     ],
+     "var_chain": [
+      27,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "chain_ops": [
+      30,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      33,
+      40
+     ],
+     "var_chain": [
+      28,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "chain_ops": [
+      34,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      35,
+      40
+     ],
+     "var_chain": [
+      34,
+      40
+     ]
+    },
+    "minutes": 9.9
+   },
+   {
+    "update": 12000,
+    "fit": {
+     "plan": 266,
+     "ops": 273,
+     "ptr": 298,
+     "n": 320
+    },
+    "held": {
+     "plan": 131,
+     "ops": 138,
+     "ptr": 147,
+     "n": 160
+    },
+    "fit_by_family": {
+     "var_chain": [
+      70,
+      93
+     ],
+     "chain_ops": [
+      58,
+      64
+     ],
+     "state_update": [
+      65,
+      90
+     ],
+     "chain_story2": [
+      73,
+      73
+     ]
+    },
+    "held_by_family": {
+     "chain_ops": [
+      34,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      28,
+      40
+     ],
+     "var_chain": [
+      29,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "chain_ops": [
+      36,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      32,
+      40
+     ],
+     "var_chain": [
+      30,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "chain_ops": [
+      37,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      34,
+      40
+     ],
+     "var_chain": [
+      36,
+      40
+     ]
+    },
+    "minutes": 11.4
+   },
+   {
+    "update": 14000,
+    "fit": {
+     "plan": 292,
+     "ops": 293,
+     "ptr": 306,
+     "n": 320
+    },
+    "held": {
+     "plan": 136,
+     "ops": 139,
+     "ptr": 147,
+     "n": 160
+    },
+    "fit_by_family": {
+     "var_chain": [
+      77,
+      93
+     ],
+     "chain_ops": [
+      63,
+      64
+     ],
+     "state_update": [
+      79,
+      90
+     ],
+     "chain_story2": [
+      73,
+      73
+     ]
+    },
+    "held_by_family": {
+     "chain_ops": [
+      36,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      30,
+      40
+     ],
+     "var_chain": [
+      30,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "chain_ops": [
+      36,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      32,
+      40
+     ],
+     "var_chain": [
+      31,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "chain_ops": [
+      37,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      35,
+      40
+     ],
+     "var_chain": [
+      35,
+      40
+     ]
+    },
+    "minutes": 12.8
+   },
+   {
+    "update": 16000,
+    "fit": {
+     "plan": 289,
+     "ops": 290,
+     "ptr": 310,
+     "n": 320
+    },
+    "held": {
+     "plan": 135,
+     "ops": 140,
+     "ptr": 143,
+     "n": 160
+    },
+    "fit_by_family": {
+     "var_chain": [
+      75,
+      93
+     ],
+     "chain_ops": [
+      60,
+      64
+     ],
+     "state_update": [
+      81,
+      90
+     ],
+     "chain_story2": [
+      73,
+      73
+     ]
+    },
+    "held_by_family": {
+     "chain_ops": [
+      31,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      34,
+      40
+     ],
+     "var_chain": [
+      30,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "chain_ops": [
+      31,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      39,
+      40
+     ],
+     "var_chain": [
+      30,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "chain_ops": [
+      36,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      34,
+      40
+     ],
+     "var_chain": [
+      33,
+      40
+     ]
+    },
+    "minutes": 14.8
+   },
+   {
+    "update": 17000,
+    "fit": {
+     "plan": 272,
+     "ops": 277,
+     "ptr": 300,
+     "n": 320
+    },
+    "held": {
+     "plan": 128,
+     "ops": 130,
+     "ptr": 148,
+     "n": 160
+    },
+    "fit_by_family": {
+     "var_chain": [
+      67,
+      93
+     ],
+     "chain_ops": [
+      63,
+      64
+     ],
+     "state_update": [
+      69,
+      90
+     ],
+     "chain_story2": [
+      73,
+      73
+     ]
+    },
+    "held_by_family": {
+     "chain_ops": [
+      37,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      23,
+      40
+     ],
+     "var_chain": [
+      28,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "chain_ops": [
+      38,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      24,
+      40
+     ],
+     "var_chain": [
+      28,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "chain_ops": [
+      38,
+      40
+     ],
+     "chain_story2": [
+      40,
+      40
+     ],
+     "state_update": [
+      37,
+      40
+     ],
+     "var_chain": [
+      33,
+      40
+     ]
+    },
+    "minutes": 16.1
+   }
+  ]
+ },
+ "minutes": 16.3
+}
