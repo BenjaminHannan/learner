@@ -10,6 +10,7 @@ usage: skills_pretrain_v1.py --root PKG --data OUT_DIR --out REL_DIR --updates N
        [--eval-every 4000] [--dev-n 100] [--minutes 120] [--phase train|eval]
        [--parent-path CKPT.pt] [--eval-at-start] [--no-checkpoint]   (stiffness test, STIFFNESS-TEST-v1.md)
        [--eval-only] [--dev-kinds in_dist,family] [--sample-seed S] [--fixed-rows M --passes P]   (plateau diagnosis, PLATEAU-DIAG-v1.md)
+       [--plan-route N]   (copy-path + gen-fix + steps: a frozen planner + exact calculator answers the 4 chain families; the LM speaks it)
 Writes OUT/final-checkpoint.pt (parent-shaped, so the English pilot can start from it) and OUT/SKILLS-RESULT.json.
 """
 import argparse
@@ -46,7 +47,9 @@ CHAT = {}
 TWO = {'ce2': []}
 AUX = {}
 TXT = {'on': False}
-LES = {'mode': None, 'store': {}, 'fam': None, 'key': None}  # --final-lesions: replace each row's pooled core vectors at eval
+LES = {'mode': None, 'store': {}, 'fam': None, 'key': None, 'rstore': {}, 'rswap': {}}  # --final-lesions: replace each row's pooled core vectors at eval (rstore/rswap: --plan-route R tokens)
+CHAIN_FAMS = ('chain_ops', 'state_update', 'chain_story2', 'var_chain')  # --plan-route: the families the planner + calculator answer
+PLAN = {'on': False, 'pl': None, 'ud': None, 'shown': False}
 
 def rich_steps(row):
     try:
@@ -110,12 +113,140 @@ def encode(tokenizer, row, torch, device):
     if len(ids) > 64:
         return None
     steps = rich_steps(row) if STEPS.get('rich') else row['steps']
-    if row.get('family') in STEPS.get('none', ()):
-        steps = []  # --answer-only-fams: target ' # answer', scored by the same parse
+    if row.get('family') in STEPS.get('none', ()) or (PLAN['on'] and row.get('family') in CHAIN_FAMS):
+        steps = []  # --answer-only-fams / --plan-route chain rows: target ' # answer', scored by the same parse
     tgt = (' ; '.join(steps) + SEP + row['answer']) if STEPS['on'] else row['answer']
     labels = list(tokenizer.encode(tgt, add_special_tokens=False)) + [common.EOS_ID]
     return (torch.tensor([ids], device=device, dtype=torch.long), torch.ones((1, len(ids)), device=device, dtype=torch.bool),
             torch.tensor([labels], device=device, dtype=torch.long))
+
+
+# ---------------------------------------------------------------- --plan-route: frozen planner + exact calculator
+class Planner:
+    """The uc_diag_v4 --mode plan --op-attend learner: its own reader + core and three heads, no LM in its loss.
+    ptr: per question token, slot 0 = start number, slots 1..5 = operand of step 1..5; op: 5 steps x {+,-,*,/,STOP}
+    from the 8-chunk pooled state; op_tok: adds what the pointer-attended token says to each step's op (pointer detached)."""
+
+    def __init__(self, reader, core, ptr, op, op_tok):
+        self.reader, self.core, self.ptr, self.op, self.op_tok = reader, core, ptr, op, op_tok
+
+    def modules(self):
+        return [self.core, self.reader, self.ptr, self.op, self.op_tok]
+
+    def logits(self, rt, f, mask):
+        F = rt.torch.nn.functional
+        h, _ = runtime.english_graph(rt, self.core, self.reader, f, mask)
+        z = F.layer_norm(h.float(), (256,))
+        lg, ol = self.ptr(z[0]), self.op(F.adaptive_avg_pool1d(z[0].T[None], 8)[0].T.reshape(1, -1)).view(5, 5)
+        return lg, ol + self.op_tok(F.softmax(lg[:, 1:].detach(), 0).T @ z[0])
+
+
+def plan_value(rt, tokenizer, ud, pl, feats, ids, mask):
+    """argmax pointers + ops of the (frozen) planner, run through the exact calculator -> int, or None if not executable"""
+    with rt.torch.no_grad():
+        lg, ol = pl.logits(rt, feats, mask)
+    am, oa = lg.argmax(0).tolist(), ol.argmax(1).tolist()
+    toks = [tokenizer.decode([t]).strip() for t in ids[0].tolist()]
+    return ud.plan_exec(ud.to_int(toks[am[0]]), [ud.PLAN_OPS[j] for j in oa], [ud.to_int(toks[t]) for t in am[1:]])
+
+
+def train_planner(rt, lm, tokenizer, ud, parts, rows, seed, device, every=2000):
+    """Build the planner from deep copies of the restored reader + core, re-initialised like ud.reset_fresh (torch seeded with
+    `seed` first, then again right before the heads, as mode_plan does), and train it like mode_plan --op-attend --fresh-rows:
+    one pass over `rows` (rows whose plan does not parse / has >5 steps / has a literal missing from the question / is too long
+    are skipped), batch 1, AdamW lr 1e-3 wd 0, clip 1.0, linear warmup 200, loss = op CE summed over the 5 steps + pointer NLL
+    over the used slots. Features are computed per row (one pass, no cache). Returns the planner, frozen (eval, requires_grad off),
+    and an info dict. The caller's RNG state is restored afterwards, so the main run's RNG does not depend on the route."""
+    torch = rt.torch
+    F = torch.nn.functional
+    t0 = time.time()
+    dv = torch.device(device)
+    with torch.random.fork_rng(devices=[dv.index if dv.index is not None else torch.cuda.current_device()] if dv.type == 'cuda' else []):
+        pc, pr = copy.deepcopy(parts['core']), copy.deepcopy(parts['reader'])
+        if not rt.cap64.is_bound(pc):  # deepcopy keeps the instance binding on the copy; rebind if it ever does not
+            vars(pc).pop('begin_latent', None)
+            rt.cap64.bind_english_cap64(pc)
+        torch.manual_seed(seed)
+        ud.reset_fresh({'core': pc, 'reader': pr})
+        pc.halt.requires_grad_(False)
+        torch.manual_seed(seed)
+        ptr, op = torch.nn.Linear(256, 6).to(device), torch.nn.Linear(2048, 25).to(device)
+        op_tok = torch.nn.Linear(256, 5).to(device)
+        pl = Planner(pr, pc, ptr, op, op_tok)
+        train_params = [p for m in (pc, pr) for p in m.parameters() if p.requires_grad] + \
+            [p for m in (ptr, op, op_tok) for p in m.parameters()]
+        opt = torch.optim.AdamW(train_params, lr=1e-3, weight_decay=0)
+        sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / 200))
+        pc.train()
+        pr.train()
+        u, dropped, losses = 0, Counter(), []
+        for row in rows:
+            enc = encode(tokenizer, row, torch, device)
+            lab, why = ud.plan_labels(tokenizer, row, enc[0][0].tolist()) if enc else (None, 'long')
+            if lab is None:
+                dropped[why] += 1
+                continue
+            ids, mask, _ = enc
+            f = rt.compare.extract_question_features(lm, ids, mask, 'contextual', torch)
+            ops5 = lab['ops'] + ['STOP'] * (5 - len(lab['ops']))
+            tgt = torch.tensor([ud.PLAN_OPS.index(o) for o in ops5], device=device)
+            opt.zero_grad(set_to_none=True)
+            lg, ol = pl.logits(rt, f, mask)
+            lp = F.log_softmax(lg, 0)
+            loss = F.cross_entropy(ol, tgt, reduction='sum') - sum(
+                torch.logsumexp(lp[torch.tensor(lab['P'][k], device=device), k], 0) for k in range(len(lab['ops']) + 1))
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(train_params, 1.0)
+            opt.step()
+            sched.step()
+            u += 1
+            losses.append(float(loss.detach()))
+            if u % every == 0:
+                print(json.dumps({'event': 'plan-pretrain', 'update': u, 'loss': round(sum(losses[-every:]) / every, 4),
+                                  'minutes': round((time.time() - t0) / 60, 2)}), flush=True)
+        for m in pl.modules():
+            m.eval()
+            m.requires_grad_(False)
+    info = {'rows': len(rows), 'updates': u, 'minutes': round((time.time() - t0) / 60, 2),
+            'final_loss': round(sum(losses[-every:]) / len(losses[-every:]), 4) if losses else None,
+            'dropped': dict(dropped), 'seed': seed}
+    return pl, info
+
+
+def plan_swap_map(rstore):
+    """{key: (family, R)} in visit order -> {key: R of the next same-family row, cyclic} (same construction as LES['swap'])"""
+    byf = {}
+    for k, (f, R) in rstore.items():
+        byf.setdefault(f, []).append((k, R))
+    return {kv[j][0]: kv[(j + 1) % len(kv)][1] for kv in byf.values() for j in range(len(kv))}
+
+
+def plan_lesion_R(own_R):
+    """--final-lesions: 'collect' remembers this chain row's R; 'plan_swap' returns the next same-family row's R; else the row's own"""
+    if LES['mode'] == 'collect':
+        LES['rstore'].setdefault(LES['key'], (LES['fam'], own_R))
+    elif LES['mode'] == 'plan_swap':
+        return LES['rswap'].get(LES['key'], own_R)
+    return own_R
+
+
+def plan_route_row(rt, tokenizer, row, feats, ids, mask, device):
+    """--plan-route: set CP['R'] for this row = ' = <planner value>' tokens for a chain-family row ('?' if the plan cannot run),
+    None for any other row. Returns (is_chain_row, planner value). Does nothing (CP untouched) when the route is off."""
+    if not PLAN['on']:
+        return False, None
+    CP['R'] = None
+    if row.get('family') not in CHAIN_FAMS:
+        return False, None
+    v = plan_value(rt, tokenizer, PLAN['ud'], PLAN['pl'], feats, ids, mask)
+    CP['R'] = plan_lesion_R(rt.torch.tensor([tokenizer.encode(' = %s' % (v if v is not None else '?'), add_special_tokens=False)], device=device))
+    return True, v
+
+
+def append_R(torch, emb, pe):
+    """question embeddings pe [1,N,D] -> pe followed by the embeddings of CP['R'] when a chain row has one"""
+    R = CP.get('R')
+    return pe if R is None else torch.cat([pe, emb(R).to(pe.dtype)], 1)
 
 
 def evaluate(rt, ctx, modules, rows, tokenizer):
@@ -123,8 +254,14 @@ def evaluate(rt, ctx, modules, rows, tokenizer):
     parts = runtime.module_dict(modules)
     for _, m in modules:
         m.eval()
-    ok = skipped = 0
+    ok = skipped = plan_ok = plan_n = 0
     fam, texts = {}, []
+
+    def lm_input_len(feats, mask):  # length of what the LM gets before BOS at generation
+        with torch.no_grad():
+            h_, _ = runtime.english_graph(rt, parts['core'], parts['reader'], feats, mask)
+            pk = rt.FinalLatent(h_, torch.ones_like(h_, dtype=torch.bool), mask, (1, h_.shape[1]))
+            return int(ctx.dec.adapter(pk).shape[1])
     for row in rows:
         enc = encode(tokenizer, row, torch, ctx.device)
         if enc is None:
@@ -134,11 +271,19 @@ def evaluate(rt, ctx, modules, rows, tokenizer):
         CP['ids'] = ids
         LES['fam'], LES['key'] = row.get('family', '?'), row.get('id', id(row))
         feats = rt.compare.extract_question_features(ctx.lm, ids, mask, 'contextual', torch)
+        chain, pv = plan_route_row(rt, tokenizer, row, feats, ids, mask, ctx.device)  # --plan-route: sets CP['R']
+        if chain:
+            plan_n += 1
+            plan_ok += pv is not None and str(pv) == norm(row['answer'])
+            if not PLAN['shown']:  # layout of the first chain row: [front vectors][question + EOS][R] then BOS
+                PLAN['shown'] = True
+                plen = lm_input_len(feats, mask)
+                print(json.dumps({'event': 'plan-route-layout', 'id': row.get('id'), 'family': row['family'],
+                                  'prompt_tokens_with_EOS': int(ids.shape[1]), 'R_ids': CP['R'][0].tolist(),
+                                  'R_decoded': tokenizer.decode(CP['R'][0].tolist()), 'planner_value': pv, 'answer': row['answer'],
+                                  'lm_input_before_BOS': plen, 'front_vectors': plen - int(ids.shape[1]) - int(CP['R'].shape[1])}), flush=True)
         if row is rows[0] and not SHUF['on']:  # what length does the LM input have at generation?
-            with torch.no_grad():
-                h_, _ = runtime.english_graph(rt, parts['core'], parts['reader'], feats, mask)
-                pk = rt.FinalLatent(h_, torch.ones_like(h_, dtype=torch.bool), mask, (1, h_.shape[1]))
-                plen = int(ctx.dec.adapter(pk).shape[1])
+            plen = lm_input_len(feats, mask)
             print(json.dumps({'event': 'gen-layout', 'prompt_tokens_with_EOS': int(ids.shape[1]), 'lm_input_before_BOS': plen}), flush=True)
         obs = runtime.generate_observed(rt, ctx.dec, parts['core'], parts['reader'], feats, mask, 48 if STEPS['on'] else 12)
         out = obs['MODEL_native_decoder_return'][0] if obs['MODEL_native_decoder_return'] else []
@@ -155,7 +300,8 @@ def evaluate(rt, ctx, modules, rows, tokenizer):
     for _, m in modules:
         m.train()
     parts['core'].halt.requires_grad_(False)
-    return {'correct': ok, 'n': len(rows) - skipped, 'skipped': skipped, 'by_family': fam, **({'texts': texts} if TXT['on'] else {})}
+    return {'correct': ok, 'n': len(rows) - skipped, 'skipped': skipped, 'by_family': fam, **({'texts': texts} if TXT['on'] else {}),
+            **({'plan_correct': plan_ok, 'plan_n': plan_n} if PLAN['on'] else {})}
 
 
 def load_dev(data, n):
@@ -180,6 +326,7 @@ def main():
     ap.add_argument('--minutes', type=float, default=120)
     ap.add_argument('--lr-mult', type=float, default=1.0)
     ap.add_argument('--lr-final-mult', type=float, default=None, help='cosine-decay lr from lr-mult to this multiple over the run')
+    ap.add_argument('--plan-route', type=int, default=0, help='N>0, with --copy-path --gen-fix --steps: first train a frozen planner (fresh reader+core copies + pointer/op heads, no LM in its loss; uc_diag_v4 --mode plan --op-attend) on N distinct chain-family rows, one pass; then chain_ops/state_update/chain_story2/var_chain rows get " = <value>" (planner argmax plan run through an exact calculator) appended after the question embeddings and the target " # answer"; --final-lesions adds plan_swap')
     ap.add_argument('--final-lesions', action='store_true', help='after training, score trainfit and in_dist again with each row\'s pooled core vectors replaced by its family mean, another same-family row\'s, or the global mean (copy-path only)')
     ap.add_argument('--answer-only-fams', default='', help='with --steps: these families get the target " # " + answer, no steps')
     ap.add_argument('--save-texts', action='store_true', help='keep every generated text in the eval results (id, family, answer, text, hit, lesion mode)')
@@ -222,6 +369,11 @@ def main():
     if STEPS['none'] and not a.steps:
         raise SystemExit('--answer-only-fams needs --steps')
     TXT['on'] = a.save_texts
+    if a.plan_route < 0:
+        raise SystemExit('--plan-route must be >= 0')
+    if a.plan_route and not (a.copy_path and a.gen_fix and a.steps):
+        raise SystemExit('--plan-route needs --copy-path --gen-fix --steps')
+    PLAN['on'] = a.plan_route > 0
     if a.steps_rich and not a.steps:
         raise SystemExit('--steps-rich needs --steps')
     SHUF['on'] = a.shuffle_pool
@@ -399,6 +551,7 @@ def main():
                                         emb(torch.tensor([CHAT['tail']], device=q.device))], 1).to(pref.dtype)
                     else:
                         pe = emb(CP['ids']).to(pref.dtype)
+                    pe_r = pe if alone else append_R(torch, emb, pe)  # --plan-route: ' = value' tokens after the question (pointer keeps the question only)
                 if LES['mode'] == 'collect':
                     LES['store'].setdefault(LES['key'], (LES['fam'], pref.detach().clone()))
                 elif LES['mode'] == 'family_mean':
@@ -417,7 +570,7 @@ def main():
                 back = [type(ad2).project_training(ad2, *x)] if ad2 is not None else []
                 if alone:  # two-path loss: the LM sees only the core's vectors, no question words
                     return torch.cat(([pref] if not a.no_front else []) + back, 1)
-                return torch.cat(parts + [pe] + back, 1)
+                return torch.cat(parts + [pe_r] + back, 1)
             ad.project_training = lambda *x, **k: with_prompt(o_train(*x, **k), x[0], x)
             ad.forward = lambda *x, **k: with_prompt(o_fwd(*x, **k), x[0].latent)
             if a.gen_fix:
@@ -472,6 +625,18 @@ def main():
         else:
             rows = rows_all[::stride][:a.updates]
         print(json.dumps({'event': 'skills-start', 'train_rows': len(rows_all), 'used': len(rows), 'stride': stride}), flush=True)
+        plan_info = None
+        if a.plan_route:  # frozen planner for the chain families, trained first (not in `named`, not in opt, not counted in t0/--minutes)
+            import uc_diag_v4 as ud  # its pure helpers only: parse_plan / plan_labels / to_int / plan_exec / reset_fresh
+            all_train = rows_all if not a.families else [json.loads(l) for l in (Path(a.data) / 'train.jsonl').read_text().splitlines()]
+            chain_rows = [r for r in all_train if r['family'] in CHAIN_FAMS]
+            pseed, n_plan = a.sample_seed or 0, min(a.plan_route, len(chain_rows))
+            plan_rows = random.Random('plan|%d' % pseed).sample(chain_rows, n_plan)
+            print(json.dumps({'event': 'plan-pretrain-start', 'requested': a.plan_route, 'chain_rows_available': len(chain_rows),
+                              'rows': n_plan, 'seed': pseed}), flush=True)
+            PLAN['pl'], plan_info = train_planner(rt, lm, tokenizer, ud, runtime.module_dict(modules), plan_rows, pseed, cfg['device'])
+            PLAN['ud'] = ud
+            print(json.dumps({'event': 'plan-pretrain-done', **plan_info}), flush=True)
         log, curve, t0, done = [], [], time.time(), 0
         base_lr = runtime.ADAM_RECIPE['lr'] * a.lr_mult
         for g in opt.param_groups:
@@ -491,6 +656,7 @@ def main():
             ids, mask, labels = enc
             CP['ids'] = ids
             feats = rt.compare.extract_question_features(lm, ids, mask, 'contextual', torch)
+            plan_route_row(rt, tokenizer, row, feats, ids, mask, ctx.device)  # --plan-route: sets CP['R'] (None for non-chain rows)
             ctx.tokens, ctx.features = {0: (ids, mask, labels)}, {0: feats}
             if a.accum > 1:  # batch a.accum rows per optimizer update (mean loss, one clip at 1.0, one AdamW step)
                 parts_ = runtime.module_dict(modules)
@@ -530,7 +696,7 @@ def main():
             for split in ('trainfit', 'in_dist'):
                 if split not in dev:
                     continue
-                LES['mode'], LES['store'] = 'collect', {}
+                LES['mode'], LES['store'], LES['rstore'] = 'collect', {}, {}
                 res_ = {'intact': evaluate(rt, ctx, modules, dev[split], tokenizer)}
                 byf = {}
                 for key_, (f_, v_) in LES['store'].items():
@@ -538,7 +704,8 @@ def main():
                 LES['fmean'] = {f_: torch.stack([v_ for _, v_ in kv]).mean(0) for f_, kv in byf.items()}
                 LES['gmean'] = torch.stack([v_ for _, v_ in LES['store'].values()]).mean(0)
                 LES['swap'] = {kv[j][0]: kv[(j + 1) % len(kv)][1] for kv in byf.values() for j in range(len(kv))}
-                for mode in ('family_mean', 'shuffle_same_family', 'global_mean'):
+                LES['rswap'] = plan_swap_map(LES['rstore'])  # --plan-route: each chain row gets the next same-family row's R
+                for mode in ('family_mean', 'shuffle_same_family', 'global_mean') + (('plan_swap',) if a.plan_route else ()):
                     LES['mode'] = mode
                     res_[mode] = evaluate(rt, ctx, modules, dev[split], tokenizer)
                 LES['mode'] = None
@@ -552,7 +719,7 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'lora_lr_mult': a.lora_lr_mult if a.lm_lora else None, 'gen_fix': a.gen_fix, 'steps': a.steps, 'steps_rich': a.steps_rich, 'seq_steps_v2': a.seq_steps_v2, 'answer_only_fams': a.answer_only_fams or None, 'save_texts': a.save_texts, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'lora_lr_mult': a.lora_lr_mult if a.lm_lora else None, 'gen_fix': a.gen_fix, 'steps': a.steps, 'steps_rich': a.steps_rich, 'seq_steps_v2': a.seq_steps_v2, 'answer_only_fams': a.answer_only_fams or None, 'save_texts': a.save_texts, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'plan_route': a.plan_route or None, 'plan_pretrain': plan_info, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'final_lesions': lesions, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}
