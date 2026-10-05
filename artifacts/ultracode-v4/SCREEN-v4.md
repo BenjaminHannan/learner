@@ -24,7 +24,7 @@ main2, `--copy-path --gen-fix`, worst-8 families, 2,000 fixed rows x 3 passes = 
 ## Baseline result (job 11, read 02:27 UTC)
 B1-B3 fit 214 / 213 / 212 of 320 (mean 66.6%), held-out 158 / 153 / 151 (mean 48.3%); fit was still rising from 3k to 6k updates (+20 rows per seed).
 
-## Added 02:29 UTC, before it ran: calibration P (more practice), box B
+## Added 02:30 UTC, before it ran: calibration P (more practice), box B
 - **P (6 passes):** the baseline continued to 12,000 updates on the same 2,000 rows (`--passes 6 --updates 12000`; the first 6,000 updates are the baseline's own order). Evals at 3k, 6k, 9k, 12k. This is a budget calibration, not a 6k screen arm, so it is judged on its own marks:
   - "the mark is a practice-budget question" if 12k fit >= 85% (272/320) on all 3 seeds;
   - "more practice alone will not reach it soon" if mean 12k fit < 75% (240/320);
