@@ -96,3 +96,16 @@ One change from PL fresh: `--fresh-rows 17000` (new in mode plan, the same 3 lin
 - **"The plan route reaches the mark with more data"** if held-out plan-exact >= 85%. **"Ops stay the limit"** if held-out pointer >= 90% and op-sequence < 80%. Below 70% held-out plan: more data alone does not get there; the op head needs a redesign (read op words per token, as the pointer head does).
 - For comparison, the LM writing steps on these four families' held-out rows: SR2 seeds 1-3 86.2 / 88.1 / 86.2% (mean 86.8%), CF4-CF6 83.1 / 84.4 / 86.9% (the panel's "about 89%" in the PL marks was high).
 - Prediction: held-out plan 75-90%; pointer >= 93%; var_chain ops the slowest.
+
+## PLD result (job 31-pld-fresh, read 07:05 UTC)
+Fresh core, 17,000 distinct chain rows, one pass. Held-out plan-exact over training (of 160): 59 / 71 / 79 / 105 / 102 / 114 / 114 / 121 at 2k ... 16k, and **111 / 160 (69.4%) at the end** (17,000). End: op-sequence 115 (71.9%), pointer 139 (86.9%); fit plan 233 / 320 (72.8%). By family at the end (plan / ops / ptr of 40): chain_story2 37 / 39 / 38, state_update 30 / 32 / 35, chain_ops 25 / 25 / 38, var_chain 19 / 19 / 28.
+- By the marks: not "the plan route reaches the mark with more data" (69.4% < 85%). "Ops stay the limit" is not met as written at the final point (pointer 86.9% < 90%; it was 93.8% at 16k). The final point is **below 70%: more data alone does not get there; the op head needs a redesign.** The last 1,000 updates cost 10 rows (constant lr, batch 1), so the plateau is about 70-76%.
+- Plan-exact still tracks op-sequence (111 vs 115): the ops are the limit, worst on var_chain.
+
+## Added 07:09 UTC, before they ran: PLO and PLOD (the op redesign the PLD mark calls for)
+One change: `--op-attend`. Each step's op logits also read the core's state at the token its operand pointer picks: op_j += Linear(256, 5)(sum_t softmax(ptr slot j+1)_t z_t), with the pointer weights detached (the pointer keeps its own loss only). The pooled op head stays (it still decides STOP). In "gets 6 more" or "p = q * 4" the operand sits next to its operation word, which the 8 position-pooled chunks blur.
+- **PLO** = PL fresh + `--op-attend` (2,000 rows x 3 passes; paired with PL fresh: held plan 97, ops 98 of 160). **PLOD** = PLD + `--op-attend` (17,000 distinct rows; paired with PLD: 111 / 115). Box B, jobs 32-plo-fresh and 32-plod-fresh. Primary reading = the final eval; the best eval is reported too.
+- **"Reading the op at its operand fixes the op limit"** if PLO held-out op-sequence >= 80% (128 / 160) and held plan >= 121 / 160 (+15 points over PL fresh).
+- **"The plan route reaches the mark"** if PLOD held-out plan-exact >= 85% (136 / 160). Then the next step is wiring the plan heads and the exact calculator into the real model (core plans, calculator computes, LM speaks the result), judged on the fit screen with lesions.
+- Wrong if PLO held-out op-sequence < 70% (112 / 160): the operand's neighbourhood does not carry the op either.
+- Prediction: PLO held ops 75-90%, plan 70-85%; PLOD plan 80-92%; var_chain still the weakest.

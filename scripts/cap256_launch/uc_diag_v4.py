@@ -703,14 +703,19 @@ def mode_plan(a):
         reset_fresh(parts)
     torch.manual_seed(a.sample_seed)
     ptr, op = torch.nn.Linear(256, 6).to(dev), torch.nn.Linear(2048, 25).to(dev)
-    train_params = [p for n, p in named if n.startswith(('core.', 'reader.'))] + list(ptr.parameters()) + list(op.parameters())
+    op_tok = torch.nn.Linear(256, 5).to(dev) if a.op_attend else None  # --op-attend: step j's op also reads the token its operand pointer picks
+    train_params = [p for n, p in named if n.startswith(('core.', 'reader.'))] + list(ptr.parameters()) + list(op.parameters()) + \
+        (list(op_tok.parameters()) if op_tok is not None else [])
     opt = torch.optim.AdamW(train_params, lr=a.lr, weight_decay=0)
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / a.warmup)) if a.warmup > 0 else None
 
     def fwd(c):
         h, _ = runtime.english_graph(rt, parts['core'], parts['reader'], c['f'], c['mask'])
         z = F.layer_norm(h.float(), (256,))
-        return ptr(z[0]), op(F.adaptive_avg_pool1d(z[0].T[None], 8)[0].T.reshape(1, -1)).view(5, 5)
+        lg, ol = ptr(z[0]), op(F.adaptive_avg_pool1d(z[0].T[None], 8)[0].T.reshape(1, -1)).view(5, 5)
+        if op_tok is not None:
+            ol = ol + op_tok(F.softmax(lg[:, 1:].detach(), 0).T @ z[0])
+        return lg, ol
 
     def score(rows):
         for _, m in modules:
@@ -774,6 +779,7 @@ def main():
     ap.add_argument('--reader-hidden', type=int, default=0, help='direct mode: widen the reader 2048->32->256 to 2048->H->256')
     ap.add_argument('--updates', type=int, default=6000)
     ap.add_argument('--fresh-rows', type=int, default=0, help='direct mode: N distinct rows, one pass each (--updates ignored)')
+    ap.add_argument('--op-attend', action='store_true', help='plan mode: each step\'s op head also reads the core state at its operand pointer')
     ap.add_argument('--batch', type=int, default=1)
     ap.add_argument('--lr', type=float, default=1e-3)
     ap.add_argument('--fresh-core', action='store_true')
