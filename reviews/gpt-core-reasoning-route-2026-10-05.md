@@ -32,7 +32,7 @@ Screen: 2,000 fixed training rows x 3 passes = 6,000 updates at batch 1. **Fit**
 | baseline, 2x practice | 72.4% | 49.4% |
 | talker writes worked steps, then ` # answer` | 78.3% | 69.8% |
 | worked steps, with hand-written steps for the 4 label-only kinds ("SR2") | **86.1%** | **80.6%** |
-| SR2, 6 new seeds (confirmation) | CF_FIT | CF_HELD |
+| SR2, 6 new seeds (confirmation) | **85.5%** (every seed >= 81.9%) | **81.3%** |
 
 **Lesions (who does the work?).** After training, I replace each question's 8 thinker vectors with (i) the average for its kind, (ii) another same-kind question's vectors, (iii) one global average. Points lost on fit / held-out:
 
@@ -54,7 +54,7 @@ So the thinker's vectors carry which **kind** of puzzle it is (and the talker ne
 | linear readout of LM features (no thinker) | 147/320 / 0.6% | 146/320 / 2.6% |
 | generic 4-layer d=256 transformer on LM features | 26/320 / 3.1% | 20/320 / 2.6% |
 | generic transformer, 17,000 distinct rows, one pass | 10/320 / 3.1% | - |
-| fresh thinker, 17,000 distinct rows, one pass | LDD_CORE | - |
+| fresh thinker, 17,000 distinct rows, one pass | 5/320 / 2.5% | - |
 
 **Plan + calculator test (no LM in the loss).** Instead of computing, the thinker outputs a plan: 6 pointer slots over the question's tokens (start number, then up to 5 operands) and 5 op slots ({+, -, *, /, STOP}, read from the 8 position-pooled chunks of the thinker output). An exact integer calculator executes the plan. Executing the gold plan reproduces the answer on all 17,981 training rows. Held-out = 160 new chain rows.
 
@@ -63,8 +63,9 @@ So the thinker's vectors carry which **kind** of puzzle it is (and the talker ne
 | trained thinker, 2k rows x 3 | 26.9% | 32.5% | 58.1% |
 | fresh thinker, 2k rows x 3 | 60.6% | 61.3% | 91.3% |
 | fresh thinker, 17k distinct rows (end; best 75.6%) | 69.4% | 71.9% | 86.9% |
-| fresh thinker, op head also reads the token its operand pointer picks, 2k x 3 | PLO_PLAN | PLO_OPS | PLO_PTR |
-| same, 17k rows | PLOD_PLAN | PLOD_OPS | PLOD_PTR |
+| fresh thinker, op head also reads the token its operand pointer picks, 2k x 3 | 77.5% | 80.6% | 85.6% |
+| same, 17k rows (1 seed) | 86.9% | 88.1% | 94.4% |
+| same, 17k rows, 6 seeds (end; best checkpoint 86.0%) | 83.0% (seeds 78.1-87.5%) | 85.1% | 93.1% |
 
 For comparison, the talker writing steps (SR2) gets 84-88% of these four kinds' held-out rows right. An audit of its wrong chain answers: 67% misreads (a dropped step, a wrong operand, the wrong value carried into the last line), 0-10% arithmetic slips, the rest format breaks.
 
