@@ -6,7 +6,7 @@ PFX=${PFX:-rp}      # block-label prefix (see ck_export.sh)
 LOG=${LOG:-/proc/1/fd/1}
 for r in ${RESULTS:-}; do
   T=$J/res/re-$r.tgz; tar -czf $T --exclude='*.pt' --exclude='stdout.txt' -C $J/w $r 2>/dev/null
-  ( flock 9; echo "RBEGIN|$r|$(sha256sum $T | cut -c1-64)|$(stat -c %s $T)"; base64 -w 480 $T | sed "s/^/R|$r|/"; echo "REND|$r" ) 9>$J/print.lock >> $LOG
+  ( flock 9; echo "RBEGIN|$r|$(sha256sum $T | cut -c1-64)|$(stat -c %s $T)"; base64 -w 300 $T | sed "s/^/R|$r|/"; echo "REND|$r" ) 9>$J/print.lock >> $LOG
   sleep 60
 done
 N=0

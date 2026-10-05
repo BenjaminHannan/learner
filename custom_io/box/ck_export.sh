@@ -11,7 +11,7 @@ N=0
 # first re-print the small result tarballs of the jobs named in RESULTS (their first print is buried under the export)
 for r in ${RESULTS:-}; do
   T=$J/res/re-$r.tgz; tar -czf $T --exclude='*.pt' --exclude='stdout.txt' -C $J/w $r 2>/dev/null
-  ( flock 9; echo "RBEGIN|$r|$(sha256sum $T | cut -c1-64)|$(stat -c %s $T)"; base64 -w 480 $T | sed "s/^/R|$r|/"; echo "REND|$r" ) 9>$J/print.lock >> $LOG
+  ( flock 9; echo "RBEGIN|$r|$(sha256sum $T | cut -c1-64)|$(stat -c %s $T)"; base64 -w 300 $T | sed "s/^/R|$r|/"; echo "REND|$r" ) 9>$J/print.lock >> $LOG
   sleep 30
 done
 for c in $GLOB; do
