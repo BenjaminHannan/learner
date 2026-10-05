@@ -123,4 +123,47 @@ Marks, fixed now (screen means over 2 seeds; the confirm repeats them on 6):
   unseen pooled on both seeds: a 2-layer talker cannot replace the re-reading LM. Next single change then: a 4-layer
   talker; if that also fails, way B.
 
+## 6. Ben's objection (7:11 PM ET) and Plan B's first test
+
+Ben: "is this getting rid of the thinker model we already have and replacing it with a looped 1.2B thinker?" Yes.
+Way A retires the 9M core as its own network; only its ideas (the loop, plan + exact calculator) move into the LM's
+middle layers. That makes the model more borrowed, against the nothing-pretrained goal. Test 1 is on hold; Ben is
+choosing between A and B on a decision card (B recommended).
+
+Way B keeps our own thinker: the 1.2B is only a teacher during training and never ships.
+- The B2 design already has the wanted shape. Estimated from `custom_io/models/ledger.py` (S size, d=256): the 2 core
+  blocks are about 2.3M of 3.3M weights (~70%), the character reader about 0.7M, the talker heads a few percent
+  (suggested; count with `n_params` per module before quoting it as shown).
+- What B2 lacks is breadth: every from-scratch model there scores 0-4% on held-out families, and the copy talker
+  (fed by the 1.2B reader) got 13.6% on new English kinds. The custom report's own reading is that new kinds need
+  task variety. The teacher's job is to supply that variety, which a hand-written generator cannot.
+- Prior art (suggested): TinyStories (Eldan and Li 2023) trained models under 10M weights to write fluent simple
+  English from LLM-written simple text. Our eval sets are one-sentence passages with short questions, close to that
+  register.
+
+### Test B1: teacher-made variety for a thinker-heavy model (untested; 2 seeds, then 6)
+Owner suggestion: the custom reader/talker thread runs the student side (it owns B2); a Sonnet thread builds the
+teacher data. Own machines first.
+
+- **Teacher data (TEACH):** LFM2.5-1.2B-Instruct writes simple one-sentence passages, a paraphrase, and questions in
+  60 question kinds (list fixed before generation; none of the 12 R5/R6 test kinds; every R5/R6 name and answer word
+  blocked, as `--block-r6` does). It answers each question from the passage and again from the paraphrase; a row is
+  kept only when both answers match exactly and the answer appears in the passage. 200,000 kept rows.
+- **Control data (GEN):** 200,000 rows from round 6's generator (`gen_english.py`, the six practised kinds,
+  `--block-r6`). The one change between arms is where the practice comes from.
+- **Students (same recipe, same updates):** B2 at M size (10.8M) on TEACH, B2 on GEN, and `plain_tf` of the same size
+  on TEACH (the shape control).
+- **Scores:** FRESH-EN-R3 (practised kinds, human wording) and NEW-KINDS-R5 + NEW-KINDS2-R6 pooled (384, kinds never
+  practised by either arm). Lesions: donor state and thinker loops = 0.
+
+Marks, fixed now (means over the 2 screen seeds; the confirm repeats them on 6):
+- **B1-a, variety helps new kinds:** B2-TEACH minus B2-GEN on new kinds pooled >= +15 points, ahead on both seeds.
+  **Proved wrong:** < +5.
+- **B1-b, the thinker decides:** B2-TEACH with a donor's state <= 10% on new kinds pooled.
+- **B1-c, the shape matters:** B2-TEACH minus plain_tf-TEACH >= +3 on new kinds pooled, ahead on both seeds.
+- Read, not judged: distance to the bare 1.2B 8-shot (75.0 practised; 67.7 and 77.6 on the new-kind sets) and to
+  today's sandwich (92.2; 78.2 pooled).
+- If B1-a is proved wrong, way B at this size is dead: the next single change is a larger student (about 100M), and
+  if that also fails, way A.
+
 Nothing here touches GOLD-PRIVATE, reserved or blind panels.
