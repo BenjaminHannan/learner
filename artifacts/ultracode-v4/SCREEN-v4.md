@@ -83,3 +83,41 @@ SR2 reached the mark on seeds 1-3, so it gets the confirmation now; MX's own 3-s
 - Lesions with the SL/BL marks (3-point band = "family switch"; family-mean drop >= 10 points and >= 5 more than BL's = "needs core row content"). Share for Ben = ((CF intact - CF family-mean) - (B intact - B family-mean)) / (CF intact - B intact), with B's drop from BL1-BL3.
 - Saved texts feed an offline audit of the wrong chain-family rows: arithmetic slip / wrong operands or ops / final copy / truncated or no '#'.
 - Prediction (panel): mean fit 84-88%, every seed >= 80% with p ~0.6; family-mean lesion within 3 points; core-content share < 15%.
+
+## Arm MX result (job 22, read 06:18 UTC)
+MX1-MX3 fit **277 / 278 / 273 of 320 (mean 86.25%)**, held-out 255 / 259 / 259 (mean 80.5%). By the screen marks: **REACHES THE MARK**. Versus SR1-SR3, paired: seq_cycle 3-seed fit 94 -> **119 / 172** (>= 115: "answer-only restores seq_cycle"); the other 7 families 706 -> 709 (held). But seq_cycle held-out 63 -> 62 / 120 while its fit gained 25 rows: **MEMORISES-SEQ** is flagged. By the panel's rule SR2 stays the confirmed arm (3-seed mean held-out 258.0 vs MX 257.7), so MX gets no confirmation of its own.
+
+## Core lesion results (SL, BL, MX, CF4-CF6; read 06:18 UTC)
+After training, each row's 8 core vectors are replaced by the family mean, by another same-family row's vectors, or by the global mean (positive control); drops in points of 320 rows.
+
+| run | fit intact | family-mean | same-family | global-mean | held intact | family-mean | same-family | global-mean |
+|---|---|---|---|---|---|---|---|---|
+| BL2 (baseline) | 213 | -5.9 | -7.2 | -23.8 | 153 | -0.9 | 0.0 | -12.2 |
+| BL3 | 212 | -1.2 | -2.8 | -19.7 | 151 | +0.6 | -0.3 | -14.4 |
+| SL1 (steps) | 259 | -3.4 | -7.8 | -35.9 | 228 | -0.3 | -2.2 | -28.8 |
+| SL2 | 241 | -3.4 | -4.7 | -34.1 | 215 | +1.2 | -1.9 | -25.0 |
+| SL3 | 252 | +0.6 | -1.2 | -28.1 | 227 | 0.0 | +0.6 | -25.0 |
+| MX1 | 277 | -2.5 | -5.9 | -42.8 | 255 | -0.3 | -2.5 | -36.6 |
+| MX2 | 278 | -5.0 | -5.3 | -39.1 | 259 | -1.6 | -2.2 | -42.5 |
+| MX3 | 273 | -0.3 | -0.9 | -36.2 | 259 | -1.9 | -2.5 | -33.4 |
+| CF4 (SR2 flags) | 269 | -1.9 | -3.1 | -43.4 | 250 | -0.6 | -1.6 | -37.2 |
+| CF5 | 262 | -3.1 | -1.6 | -33.4 | 256 | -3.4 | -5.6 | -35.0 |
+| CF6 | 278 | -3.8 | -6.9 | -36.2 | 265 | -2.2 | -3.4 | -33.1 |
+
+(BL1 crashed with out-of-memory and is re-running.)
+- "Needs core row content" (family-mean drop >= 10 points and >= 5 more than BL's): **not met on any run** (largest family-mean drop 5.0 points, MX2).
+- "Family switch" (family-mean and same-family both within 3 points on fit and held-out): met on SL3, MX3 and CF4; the others miss by up to 4.8 points, nearly all of it on practised rows (fit). On held-out, family-mean costs at most 3.4 points on every steps run.
+- Share of the steps lift that needs core row content, paired by seed with BL: S seed 2 ((241-230) - (213-194)) / (241-213) = **-0.29**; seed 3 ((252-254) - (212-208)) / (252-212) = **-0.15**. The steps lift needs no row content from the core (the steps runs lose less to the family-mean lesion than the baseline does).
+- The global-mean lesion costs 28-43 points with steps vs 20-24 without: with steps, the core's per-family signal (which format to write) matters more, not less.
+- Reading for Ben: the LM does the thinking by writing the steps; the core tells it which kind of puzzle it is. Per the panel's plan, FZ (freeze the core) is skipped, since its result is predictable from these lesions.
+
+## Error audit of CF4-CF6 saved texts (offline, `scripts/cap256_launch/uc_audit_v4.py`, read 06:18 UTC)
+Wrong chain-family rows (chain_ops, state_update, chain_story2, var_chain) with intact core vectors, 3 seeds pooled:
+
+| split | wrong rows | misread (extraction) | format | no '#' | arithmetic slip | final copy |
+|---|---|---|---|---|---|---|
+| fit | 52 | 35 (67%) | 13 | 4 | 0 (0%) | 0 |
+| held-out | 73 | 49 (67%) | 14 | 2 | 7 (9.6%) | 1 |
+
+- "An exact tool would remove most chain residuals" (slips >= 50%): **no**. Slips are 0% and 9.6%. Most misses are misreads: a dropped step (e.g. stops after 2 of 3 operations), a wrong operand, the wrong value carried into the last line (state_update adds jar A's old count), or a merged line the parser cannot read.
+- So a calculator alone would fix little of what is left; what is left is reading the question.
