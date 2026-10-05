@@ -66,18 +66,41 @@ So the thinker's vectors carry which **kind** of puzzle it is (and the talker ne
 | fresh thinker, op head also reads the token its operand pointer picks, 2k x 3 | 77.5% | 80.6% | 85.6% |
 | same, 17k rows (1 seed) | 86.9% | 88.1% | 94.4% |
 | same, 17k rows, 6 seeds (end; best checkpoint 86.0%) | 83.0% (seeds 78.1-87.5%) | 85.1% | 93.1% |
+| same, 17k rows, learning rate decayed to 0 along a cosine over the pass, 6 seeds | **97.6%** (every seed >= 95.6%) | - | - |
+| same recipe but trained only on the screen's own ~890 chain rows x 3 (matched practice), 6 seeds | 82.8% (one seed never learned the jar ops) | - | - |
 
-For comparison, the talker writing steps (SR2) gets 84-88% of these four kinds' held-out rows right. An audit of its wrong chain answers: 67% misreads (a dropped step, a wrong operand, the wrong value carried into the last line), 0-10% arithmetic slips, the rest format breaks.
+For comparison, the talker writing steps (SR2) gets 84-88% of these four kinds' held-out rows right; on the same matched seeds 85.8%. **Equal-data control (2 seeds so far, third finishing):** the talker writing steps, trained on the planner's exact 17,000 chain rows with the same cosine decay, gets **98.8%**. So at equal data and schedule the plan route is level with the LM writing its own steps, not better. An audit of its wrong chain answers: 67% misreads (a dropped step, a wrong operand, the wrong value carried into the last line), 0-10% arithmetic slips, the rest format breaks.
+
+**The plan route inside the real model (6 seeds, shown).** The planner above (decayed, 17k rows) is trained first and frozen. In the screen, each chain row's LM input becomes `[8 vectors][question][" = <planner's value>"][BOS]` and the target is `" # answer"`; the other 4 kinds keep SR2's worked steps. Paired with SR2's 6 confirmation seeds:
+
+| | fit (of 320) | held-out (of 320) | chain held-out (of 160) | chain held-out when each row gets another same-kind row's planner value |
+|---|---|---|---|---|
+| SR2 (talker writes steps) | 85.5% | 81.3% | 138.2 | - |
+| SR2 + planner value | **92.9%** (lowest seed 88.8%) | **89.7%** | 156.3 (ahead on 6/6 seeds) | **2.3** |
+
+So in this setup the thinker's plan decides every chain answer and the LM just repeats it; the gain on chain rows is confounded with the planner's extra 17k rows of practice. The other 4 kinds' held-out also rose (130.7 vs 121.8 of 160; cause untested).
+
+**Plans for the other 4 kinds (1 seed each, shown).** I extended the plan language with a COPY op (output the pointed token) so cipher_map (decode/encode via a letter-number table in the question), fewshot_number_rule (pointer to the query, ops from the examples), group_induct and seq_cycle (pointer to the answer token) can be written as plans. Gold plans reproduce every answer. Held plan-exact of 160 (40 per kind), 17k rows, decayed lr:
+
+| reader width | all | cipher_map | fewshot | group_induct | seq_cycle | ops right | fit (of 320) |
+|---|---|---|---|---|---|---|---|
+| 32 (as above) | 77 | 1 | 33 | 26 | 17 | 156 | - |
+| 256 (fresh) | 75 | 0 | 35 | 26 | 14 | 156 | 175 |
+
+The talker writing steps gets about 121 of 160 on these rows. The ops are nearly always right; the **pointers** fail exactly where the target must be found **by its content** (find the number paired with letter "d" in the table; find which earlier item the pattern repeats), and they fail on practised rows too. Each pointer slot is a fixed learned query (Linear(256, 6) over the thinker's per-token states), so its query cannot depend on what was read. A 2048-wide reader run is queued.
+
+**Queued, not yet run (marks written):** (a) the reader into the thinker AND the exit to the talker both 2048 wide in the real model; (b) "the talker calls the calculator": the planner's plan is given to the talker as text (" thinker: 10 - 5 * 5"), the talker is trained to write " calc(10 - 5 * 5)", the call is intercepted, an exact calculator's reply " = 25" is inserted (no loss on it) and the talker continues " # 25"; lesions swap the note with another row's or drop it; (c) one router per loop round in the thinker's MoE layers (Chain-of-Experts).
 
 ## 4. My goal and the question
 
 I want the **thinker** (not the borrowed LM) to do the reasoning: skills and critical thinking first, learn from few examples, and eventually beat 1-2B models at whole size (the LM counts towards size). A separate effort is looking at replacing the 1.2B reader/talker with something smaller.
 
 Questions:
-1. Given the data, what is the most likely reason no small learner computes even one arithmetic step here, while the thinker can learn *where* the numbers are? Is it data, the batch-1 recipe, the number representation (one token per number 0-999, embeddings from the LM), or something else?
-2. Is "the thinker plans, an exact tool computes, the LM speaks" a sound direction for my goal, or does it just move the reasoning into a hand-built tool? What would make it count as the thinker reasoning?
-3. What should the thinker's interface to the numbers be (pointers to tokens, digit-level codes, a learned number embedding, a scratchpad the thinker writes and reads), and should the 32-wide reader go?
-4. How should the thinker share the work with the talker, so that the lesions above would show the thinker mattering for each question?
+1. Why does no small learner compute even one arithmetic step here, while the thinker learns *where* the numbers are and *which* operations to apply almost perfectly? Is it data, the batch-1 recipe, the number representation (one token per number 0-999, embeddings from the LM), or something else?
+2. The equal-data control says the LM writing its own steps is as good as the thinker's plan. What experiment would show the thinker doing reasoning the LM cannot (or doing it with less data, which is my actual goal: learn from few examples)? Is "the thinker plans, an exact tool computes" a sound direction, or does it move the reasoning into a hand-built tool?
+3. The content-lookup failure: what pointer design would let a plan find "the number paired with d" or "the item the pattern repeats"? (Query computed from the thinker's state? Two-hop pointers? Letting the thinker write intermediate tokens it can point at later?) Predict what the 2048-wide reader run will show.
+4. Predict the "talker calls the calculator" result against the direct route (chain held-out 156 of 160), and say what could go wrong (e.g. the talker copies the note badly, or ignores it and writes its own call).
+5. How should this extend beyond arithmetic chains toward general skills, without hand-writing a plan language per puzzle kind?
 
 For each proposal: **one change at a time**, with the pass mark written in advance (on the fit / held-out numbers above, or the plan test), and the result that would prove it wrong. Order them by expected value per GPU-hour on one RTX 5090.
 
