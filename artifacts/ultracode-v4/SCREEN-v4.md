@@ -135,3 +135,10 @@ From the plan tests in `DIAG-v4.md` (PLOD: a fresh reader+core trained to output
 - Attribution: **"the thinker decides each chain answer"** if `plan_swap` lowers the chain families' fit and held-out by >= 50 points (chain rows only) on every seed. The LM speaks the plan if chain-family accuracy (intact) is within 3 points of the planner's own plan-exact on those rows.
 - Wrong if: chain held-out sum < 402 (more than 15 rows under SR2), or `plan_swap` costs < 25 points on chain rows.
 - Prediction: chain held-out about 87% (the planner's), chain fit 88-92%, overall fit 84-88%; `plan_swap` leaves chain rows near 5%.
+
+## Added 09:12 UTC, before they ran: arm CRD (CR with the decayed planner)
+One change from CR: `--plan-cosine` (new in `skills_pretrain_v1.py`): the planner's lr decays from 1e-3 to 0 along a cosine over its one pass of 17,000 chain rows, as in PLCD (`DIAG-v4.md`: 97.6% held-out plan-exact on 6 seeds vs 83.0% without the decay). Seeds 1-3 (CRD1-CRD3), paired with CR1-CR3 and SR2's SRB1-SRB3. Started before CR1-CR3 finish, on the idle boxes (D: seeds 1-2, B: seed 3).
+- Same screen and attribution marks as CR: **REACHES THE MARK** if mean fit >= 272/320 and every seed >= 256; chain held-out 3-seed sum **"matches the LM's steps"** within 15 rows of SR2's 417 / 480, **"beats"** if >= 432; other-4 fit sum within 15 rows of 420; **"the thinker decides each chain answer"** if `plan_swap` lowers chain fit and held-out by >= 50 points on every seed; the LM speaks the plan if chain accuracy is within 3 points of the planner's own plan-exact.
+- Vs CR (paired): **"the better planner carries through"** if the chain held-out sum rises by >= 20 rows over CR's.
+- Wrong if the chain held-out sum is < 432 (the planner's gain does not reach the answers), or CRD's chain accuracy is more than 3 points under its own plan-exact (the LM fails to say the value).
+- Prediction: chain held-out about 95% (456 / 480), chain fit 96-98%, overall fit 88-92%; `plan_swap` leaves chain rows near 5%.
