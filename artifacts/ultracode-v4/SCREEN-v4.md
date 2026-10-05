@@ -149,3 +149,21 @@ PLS (`DIAG-v4.md`) shows the thinker's plan only ties the LM's steps on the scre
 - **"The LM's steps catch up with the data"** if LMDC's 3-seed mean held-out is >= 152 / 160 (95%): then PLCD's lead over SR2 was the data, not the route.
 - Anything else: the data helps the LM but less than the route (report the paired gaps).
 - Prediction: LMDC 140-150 (88-94%); the misreads that make up two thirds of the LM's chain errors shrink with more varied practice but do not vanish.
+
+## CRD partial: seeds 1-2 (jobs 38-crd-s1, 38-crd-s2, read 10:21 UTC)
+| run | fit | held-out | chain held (of 160) | planner plan-exact, chain held | other-4 held (of 160) | plan_swap: chain held | SR2 same seed: fit / held / chain held |
+|---|---|---|---|---|---|---|---|
+| CRD1 | 295 (92.2%) | 288 (90.0%) | 158 | 159 | 130 | 2 | 271 / 254 / 138 |
+| CRD2 | 293 (91.6%) | 291 (90.9%) | 152 | 154 | 139 | 2 | 287 / 267 / 141 |
+
+- Lesions (change in rows of 320, fit / held-out): CRD1 family-mean +1 / +3, same-family swap -15 / -4, global-mean -138 / -121, **plan_swap -135 / -156**; CRD2 -6 / -9, -5 / -7, -135 / -126, **plan_swap -136 / -150**. On chain rows, plan_swap takes held-out from 158 to 2 and from 152 to 2: the planner's value decides every chain answer, and the LM says it (chain accuracy within 1-2 rows of the planner's own plan-exact).
+- Planner pretrain on this box: 14.3 / 14.6 minutes for the 17,000 rows (cosine to 0, loss 0.15 / 0.23).
+- Marks are read when CRD3 is in.
+
+## Added 10:21 UTC, before they ran: CRDC, the 6-seed confirmation of CRD
+CRD with seeds 4-9 (jobs 43-crdc-s4..s9; box D seeds 4-6, box B seeds 7-9), paired with CF4-CF9 (SR2 on the same seeds: fit 269 / 262 / 278 / 286 / 265 / 281, held-out 250 / 256 / 265 / 266 / 261 / 262, chain held 133 / 135 / 139 / 142 / 140 / 140).
+- **CONFIRMED** (the route model reaches the mark) if the mean fit over seeds 4-9 is >= 272 / 320 and every seed is >= 256.
+- **"The thinker's route beats the LM's steps on new chain questions"** if CRDC's chain held-out is ahead of the paired CF seed on >= 5 of 6 seeds with a mean gain >= 5 rows.
+- **"The thinker decides each chain answer"** if plan_swap lowers chain held-out by >= 50 rows of 160 on every seed.
+- Wrong if the mean fit is < 272, or plan_swap costs < 25 rows on any seed.
+- Prediction: fit 288-298, held-out 280-295, chain held 150-159 on every seed, plan_swap leaves chain rows under 6.
