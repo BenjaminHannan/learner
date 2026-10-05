@@ -1,6 +1,6 @@
 # Calibration runs (exploratory, no verdict)
 
-Written 2026-10-05 ~03:35 UTC (11:35 PM ET Oct 4), before the runs. Job `queue/01-calib.sh`, one seed each.
+Written 2026-10-05 03:20 UTC (11:20 PM ET Oct 4), before the runs. Job `queue/01-calib.sh`, one seed each.
 Purpose: set the update budget and see how hard the skills benchmark is for plain char-level transformers trained from
 scratch, before any design is tested. These rows are NOT reused as baselines for any verdict; every comparison with
 marks uses fresh paired seeds.
