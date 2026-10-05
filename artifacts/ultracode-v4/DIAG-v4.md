@@ -310,3 +310,9 @@ Jobs 50-pxh-s1 and 50-pxw2048-s1 on Vast box G, alone this time (17,000 rows, se
 - PXW2048 matches PXW and PX, as predicted when PXW came back.
 - Shown (1 seed each, as marked): four different pointer and door designs land on the same per-family numbers, on practised rows too (fit: cipher_map 1-2 / 66, seq_cycle 42-46 / 89, group_induct 45 / 69 in every run). The labels are reachable (every row keeps a plan; a pointer may land on any position holding the right piece). So the limit is upstream of the pointer's form and of the door's width.
 - Next suspects, as written before the run (untested): the thinker's token states do not hold the pairings the lookup needs (probe them), or the word pieces (cipher words split into several tokens) make some answers unreachable as written. Neither is queued; the content kinds stay with the talker, which gets 130.7 / 160 on them in CRDC.
+
+## Added 22:55 UTC: audit test T3, all planner heads global (marks fixed by the model audit at 22:40 UTC, before any run)
+PX recipe (fresh planner, 4 content kinds, 17,000 rows, `--op-attend --lr-cosine`) plus one change, `--global-heads` (new): heads 0-3 of each core block no longer only see +-1 token (`scripts/claude_fewex_net.py:23,42,44`, `CLIP, WINDOW = 4, 1`; checked: the English query is laid out as one row, so `dc` is the token distance, and at WINDOW 1 token 0 cannot see 18 of the other 19 tokens in those heads). PXH did not pass, so it runs on top of PX. Seed 1 vs PX (77 / 160; content pointers 44 / 120).
+- **Helps** if content pointers >= 74 / 120 or held >= 121 / 160.
+- **Wrong** if held < 96 and content pointers < 60.
+- My prediction: wrong, like PXW / PXH / PXW2048 (all four designs hit the same per-family ceilings on practised rows).

@@ -48,6 +48,7 @@ SHUF = {'prev': None, 'on': False}
 CHAT = {}
 TWO = {'ce2': []}
 AUX = {}
+QN = {}  # --quiet-notes: the exit's learnable note length
 TXT = {'on': False}
 LES = {'mode': None, 'store': {}, 'fam': None, 'key': None, 'rstore': {}, 'rswap': {}, 'nstore': {}, 'nswap': {}}  # --final-lesions: replace each row's pooled core vectors at eval (rstore/rswap: --plan-route R tokens; nstore/nswap: --plan-talk notes)
 CHAIN_FAMS = ('chain_ops', 'state_update', 'chain_story2', 'var_chain')  # --plan-route: the families the planner + calculator answer
@@ -590,8 +591,11 @@ def main():
     ap.add_argument('--wd', type=float, default=0.0, help='AdamW weight decay (parent recipe 0)')
     ap.add_argument('--rounds', type=int, default=4, help='latent loop rounds (shared weights; parent used 4)')
     ap.add_argument('--reader-hidden', type=int, default=0, help='widen the reader 2048->32->256 bottleneck to this width; function-preserving (new units feed zero weights), new weights get fresh Adam state; checkpoint then has the wider shape')
+    ap.add_argument('--quiet-notes', action='store_true', help='with --copy-path: each of the exit\'s 8 vectors is rescaled to one learnable length (start = the mean length of the LM\'s word vectors, ~0.74; main2\'s notes are ~960 long); its own Adam group; logged as quiet_gain')
     ap.add_argument('--direct-reader', action='store_true', help='merged Hearer+Reader: drop the reader 2048->32->256 and let the thinker read the frozen LM\'s states through its LayerNorm + one Linear 2048->256; the Linear starts as the least-squares fit to the old reader on the first 256 distinct training questions (R^2 logged), fresh Adam state; the --plan-route planner gets the same layout (fresh, as before)')
     a = ap.parse_args()
+    if a.quiet_notes and not a.copy_path:
+        raise SystemExit('--quiet-notes needs --copy-path')
     if a.direct_reader and (a.reader_hidden or a.lm_lora or a.eval_only):
         raise SystemExit('--direct-reader excludes --reader-hidden, --lm-lora and --eval-only')
     STEPS['on'] = a.steps
@@ -760,6 +764,17 @@ def main():
                 named = named + [('prefix2.' + n, p) for n, p in ad2.named_parameters()]
                 print(json.dumps({'event': 'back-exit', 'vectors': a.back, 'params': sum(p.numel() for p in ad2.parameters())}), flush=True)
             o_train, o_fwd = ad.project_training, ad.forward
+            if a.quiet_notes:  # each of the exit's 8 vectors rescaled to one learnable length that starts at a word vector's mean length
+                o_train0 = o_train
+                qgain = torch.nn.Parameter(emb.weight.detach().float().norm(dim=1).mean().reshape(()).clone())
+
+                def o_train(*x, **k):
+                    p_ = o_train0(*x, **k)
+                    return p_ * (qgain / p_.float().norm(dim=-1, keepdim=True).clamp_min(1e-6)).to(p_.dtype)
+                opt.add_param_group({'params': [qgain]})
+                named = named + [('prefix.quiet_gain', qgain)]
+                QN['gain'] = qgain
+                print(json.dumps({'event': 'quiet-notes', 'gain_start': round(float(qgain), 4)}), flush=True)
             if a.chat:  # native LFM chat layout: <|startoftext|><|im_start|>user\n Q <|im_end|>\n<|im_start|>assistant [back] \n ANSWER <|im_end|>
                 CHAT['head'] = list(tokenizer.encode('<|startoftext|><|im_start|>user\n', add_special_tokens=False))
                 tail = list(tokenizer.encode('<|im_end|>\n<|im_start|>assistant\n', add_special_tokens=False))
@@ -938,6 +953,7 @@ def main():
                                   'CE': round(sum(x[1] for x in last) / len(last), 4),
                                   'exact': round(sum(x[2] for x in last) / len(last), 3),
                                   **({'CE2': round(sum(TWO['ce2'][-500:]) / len(TWO['ce2'][-500:]), 4)} if TWO['ce2'] else {}),
+                                  **({'quiet_gain': round(float(QN['gain']), 4)} if QN else {}),
                                   'minutes': round((time.time() - t0) / 60, 1)}), flush=True)
             if i % a.eval_every == 0:
                 curve.append({'update': i, **{k: evaluate(rt, ctx, modules, dev[k], tokenizer) for k in ('in_dist', 'trainfit') if k in dev}})
@@ -976,7 +992,7 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'lora_lr_mult': a.lora_lr_mult if a.lm_lora else None, 'gen_fix': a.gen_fix, 'steps': a.steps, 'steps_rich': a.steps_rich, 'seq_steps_v2': a.seq_steps_v2, 'answer_only_fams': a.answer_only_fams or None, 'save_texts': a.save_texts, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'plan_route': a.plan_route or None, 'plan_talk': a.plan_talk, 'plan_pretrain': plan_info, 'direct_reader': DR, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'lora_lr_mult': a.lora_lr_mult if a.lm_lora else None, 'gen_fix': a.gen_fix, 'steps': a.steps, 'steps_rich': a.steps_rich, 'seq_steps_v2': a.seq_steps_v2, 'answer_only_fams': a.answer_only_fams or None, 'save_texts': a.save_texts, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'plan_route': a.plan_route or None, 'plan_talk': a.plan_talk, 'plan_pretrain': plan_info, 'direct_reader': DR, 'quiet_gain_end': round(float(QN['gain']), 4) if QN else None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'final_lesions': lesions, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}

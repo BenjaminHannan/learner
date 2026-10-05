@@ -792,6 +792,8 @@ def mode_plan(a):
         raise SystemExit('plan mode: --reader-hidden needs --fresh-core')
     if a.round_routers and not a.fresh_core:
         raise SystemExit('plan mode: --round-routers needs --fresh-core')
+    if a.global_heads and not a.fresh_core:
+        raise SystemExit('plan mode: --global-heads needs --fresh-core')
     rt, torch, cfg, dec, tok, lm, modules, named = setup(a)
     if a.screen_rows:  # the skills screen's own draw (8 families, 2,000 fixed rows, 3 passes), kept to --plan-fams in order; one update per row occurrence
         fixed, order, fit, held = rows_for(a.data, a.sample_seed, n_fixed=2000, fams=W8, passes=3)
@@ -833,6 +835,10 @@ def mode_plan(a):
         seq = parts['reader'].proj
         seq[1], seq[3] = torch.nn.Linear(seq[1].in_features, a.reader_hidden).to(dev), torch.nn.Linear(a.reader_hidden, seq[3].out_features).to(dev)
         emit('plan-reader', {'hidden': a.reader_hidden})
+    if a.global_heads:  # claude_fewex_net.Block masks heads 0-3 to tokens within WINDOW (1) columns; the English query is one row, so +-1 token
+        N = sys.modules[type(parts['core'].blocks[0]).__module__]
+        emit('plan-global-heads', {'module': N.__name__, 'window_before': N.WINDOW, 'heads': parts['core'].blocks[0].h})
+        N.WINDOW = 10 ** 9  # every head sees every token; position biases (clipped at CLIP) are unchanged
     rr = install_round_routers(torch, parts['core'], ROUNDS, a.sample_seed + 10 ** 6) if a.round_routers else None  # one router per round; below the heads are seeded as before
     if rr:
         emit('plan-round-routers', {'rounds': ROUNDS, 'blocks': len(parts['core'].blocks), 'added_params': sum(p.numel() for p in rr['params']),
@@ -951,7 +957,11 @@ def main():
                     '(Chain-of-Experts), experts stay shared; prints plan-round-experts (top-2 expert counts per block and round on the held-out rows) after each eval')
     ap.add_argument('--ptr-hops', type=int, default=1, help='plan mode: 2 = pointer logits also get a content-addressed second hop '
                     '(slot k\'s first-hop token state -> query -> keys of all tokens; zero-init query); 1 = fixed query per slot')
+    ap.add_argument('--global-heads', action='store_true', help='plan mode (needs --fresh-core): all 8 attention heads of the planner core see '
+                    'every token (by default heads 0-3 only see +-1 token: claude_fewex_net WINDOW)')
     a = ap.parse_args()
+    if a.global_heads and a.mode != 'plan':
+        raise SystemExit('--global-heads is plan mode only')
     if a.round_routers and a.mode != 'plan':
         raise SystemExit('--round-routers is plan mode only')
     if a.ptr_hops not in (1, 2):
