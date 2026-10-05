@@ -76,7 +76,7 @@ SR2 (SRB1-SRB3) fit **271 / 287 / 269 of 320 (mean 86.1%; seeds 84.7 / 89.7 / 84
 - Versus SR, paired: seq_cycle 3-seed fit 94 -> **122 / 172**: one row short of the 123 mark, so "v2 fixes seq_cycle" is **not** met (prediction 125-150 missed; its wrong-if, < 110, did not happen). The other 7 families 706 -> 705 (held). seq_cycle held-out did not move (63 -> 61 / 120), so the seq_cycle fit gain is mostly on practised rows.
 - Next by the marks: the 6-seed confirmation CF (seeds 4-9). The panel's rule picks between SR2 and MX by 3-seed mean held-out if both reach; MX1-MX2 are still running.
 
-## Added 04:39 UTC, before they ran: 6-seed confirmation CF of SR2 (seeds 4-9), boxes A and C
+## Added 04:37 UTC, before they ran: 6-seed confirmation CF of SR2 (seeds 4-9), boxes A and C
 SR2 reached the mark on seeds 1-3, so it gets the confirmation now; MX's own 3-seed result is still running. If MX also reaches and has a higher 3-seed mean held-out (the panel's rule), MX gets the same confirmation with the same marks, and the kept arm is the one that confirms (both: the higher confirmation held-out).
 - **CF4-CF9** = `--steps --steps-rich --seq-steps-v2 --final-lesions --save-texts`, seeds 4-9 (new fixed rows per seed, same 6,000 updates). No LM weights change, so no English check is needed.
 - Marks (fixed now, from the panel): **CONFIRMED** if the mean fit over seeds 4-9 is >= 272/320 (85%) and every seed is >= 256 (80%). Otherwise not kept, and the 9-seed mean is reported.
