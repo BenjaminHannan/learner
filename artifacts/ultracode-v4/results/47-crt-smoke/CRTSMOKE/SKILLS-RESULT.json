@@ -1,0 +1,3913 @@
+{
+ "updates_done": 40,
+ "rounds": 4,
+ "pointer": false,
+ "reader_hidden": null,
+ "prefix_hidden": null,
+ "zero_pool": false,
+ "shuffle_pool": false,
+ "lm_lora": null,
+ "lora_lr_mult": null,
+ "gen_fix": true,
+ "steps": true,
+ "steps_rich": true,
+ "seq_steps_v2": true,
+ "answer_only_fams": null,
+ "save_texts": true,
+ "back": null,
+ "chat": false,
+ "no_front": false,
+ "two_path": null,
+ "accum": 1,
+ "moe_revive": null,
+ "aux_weight": null,
+ "fresh_adam": false,
+ "wd": null,
+ "plan_route": 300,
+ "plan_talk": true,
+ "plan_pretrain": {
+  "rows": 300,
+  "updates": 300,
+  "minutes": 0.74,
+  "final_loss": 7.4568,
+  "dropped": {},
+  "seed": 9,
+  "cosine": true,
+  "cosine_updates": 300
+ },
+ "sample_seed": 9,
+ "fixed_rows": 20,
+ "passes": 2,
+ "families": "chain_ops,state_update,cipher_map,chain_story2,var_chain,seq_cycle,fewshot_number_rule,group_induct",
+ "stride": 994,
+ "parent_seed": 0,
+ "lr_mult": 1.0,
+ "dev_n": 16,
+ "final_dev": {
+  "in_dist": {
+   "correct": 0,
+   "n": 16,
+   "skipped": 0,
+   "by_family": {
+    "chain_ops": [
+     0,
+     16
+    ]
+   },
+   "texts": [
+    [
+     "chain_ops-DI1-1",
+     "chain_ops",
+     "25",
+     "50",
+     false,
+     null,
+     "10 + 5 - 5",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-7",
+     "chain_ops",
+     "15",
+     "36",
+     false,
+     null,
+     "27 + 3 - 6",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-24",
+     "chain_ops",
+     "90",
+     "86",
+     false,
+     null,
+     "76 + 16 - 2",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-33",
+     "chain_ops",
+     "5",
+     "2*(60 - 14) + 1 = 60 + 22 - 2 + 1 = 57",
+     false,
+     null,
+     "60 + 22 - 2",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-38",
+     "chain_ops",
+     "65",
+     "47)",
+     false,
+     null,
+     "56 + 10 - 19",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-39",
+     "chain_ops",
+     "4",
+     "1 = 3",
+     false,
+     null,
+     "44 + 32 - 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-41",
+     "chain_ops",
+     "132",
+     "2*(85-19)=2*67=134",
+     false,
+     null,
+     "85 + 19 - 2",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-49",
+     "chain_ops",
+     "6",
+     "2*(23-17)+2=23. 23-6=17. 17-6=11.",
+     false,
+     null,
+     "23 + 17 - 17",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-54",
+     "chain_ops",
+     "373",
+     "178 + 2 - 17 = 163",
+     false,
+     null,
+     "178 + 2 - 17",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-59",
+     "chain_ops",
+     "4",
+     "65+32-23=84",
+     false,
+     null,
+     "65 + 32 - 23",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-70",
+     "chain_ops",
+     "3696",
+     "154 + 6*4 = 154 + 24 = 178",
+     false,
+     null,
+     "154 + 6 - 4",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-76",
+     "chain_ops",
+     "51",
+     "3*(34+2-3)=3*33=99",
+     false,
+     null,
+     "34 + 2 - 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-87",
+     "chain_ops",
+     "18",
+     "42+7-12=37",
+     false,
+     null,
+     "42 + 7 - 12",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-89",
+     "chain_ops",
+     "2",
+     "10",
+     false,
+     null,
+     "9 + 5 - 2",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-92",
+     "chain_ops",
+     "270",
+     "93*3=279.",
+     false,
+     null,
+     "93 + 3 - 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-DI1-94",
+     "chain_ops",
+     "240",
+     "59*3=177? No, let's recalculate. 59 + 21 = 80. 80 - 3 = 77. 77 * 3 = 231. So the answer is 231",
+     false,
+     null,
+     "59 + 21 - 3",
+     null,
+     null
+    ]
+   ],
+   "plan_correct": 1,
+   "plan_n": 16,
+   "talk": {
+    "n": 16,
+    "calls": 0,
+    "call_eq_note": 0,
+    "answer_eq_calc": 0
+   }
+  },
+  "answer": {
+   "correct": 0,
+   "n": 16,
+   "skipped": 0,
+   "by_family": {
+    "chain_ops": [
+     0,
+     16
+    ]
+   },
+   "texts": [
+    [
+     "chain_ops-Da1-122",
+     "chain_ops",
+     "61",
+     "37",
+     false,
+     null,
+     "28 + 12 - 21",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-137",
+     "chain_ops",
+     "35",
+     "42]",
+     false,
+     null,
+     "51 + 3 - 18",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-142",
+     "chain_ops",
+     "43",
+     "45+19-38+17=39",
+     false,
+     null,
+     "45 + 19 - 17",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-159",
+     "chain_ops",
+     "61",
+     "13 + 8 = 21",
+     false,
+     null,
+     "8 + 2 - 2",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-178",
+     "chain_ops",
+     "10",
+     "147 - 25 - 14 = 119",
+     false,
+     null,
+     "147 + 3 - 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-279",
+     "chain_ops",
+     "61",
+     "3",
+     false,
+     null,
+     "91 + 25 - 2",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-304",
+     "chain_ops",
+     "43",
+     "45",
+     false,
+     null,
+     "50 + 11 - 4",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-320",
+     "chain_ops",
+     "11",
+     "= 44",
+     false,
+     null,
+     "34 + 12 - 2",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-353",
+     "chain_ops",
+     "11",
+     "0 = 42 + 24 - 6 = 60",
+     false,
+     null,
+     "42 + 24 - 6",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-404",
+     "chain_ops",
+     "43",
+     "83 - 30 = 53. So the answer is 53.\n\n83 - 10 - 30 = 53.\n\nYes.\n\n83 - 10 - 30 = 53.\n\nAnswer: 53",
+     false,
+     null,
+     "83 + 10 - 10",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-467",
+     "chain_ops",
+     "35",
+     "31]45-31=14",
+     false,
+     null,
+     "45 + 30 - 9",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-490",
+     "chain_ops",
+     "85",
+     "= 172",
+     false,
+     null,
+     "124 + 38 - 1",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-538",
+     "chain_ops",
+     "126",
+     "152 + 13 = 165; 165 - 39 = 126. So the answer is 126.",
+     false,
+     null,
+     "152 + 13 - 39",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-620",
+     "chain_ops",
+     "126",
+     "6*58=348. 348 + 6 = 354. 354 * 1 = 354. 354 is the answer. 354\n354",
+     false,
+     null,
+     "58 + 37 - 6",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-650",
+     "chain_ops",
+     "61",
+     "",
+     false,
+     null,
+     "17 + 2 - 27",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Da1-657",
+     "chain_ops",
+     "552",
+     "672=672",
+     false,
+     null,
+     "168 + 30 - 4",
+     null,
+     null
+    ]
+   ],
+   "plan_correct": 1,
+   "plan_n": 16,
+   "talk": {
+    "n": 16,
+    "calls": 0,
+    "call_eq_note": 0,
+    "answer_eq_calc": 0
+   }
+  },
+  "frame": {
+   "correct": 0,
+   "n": 16,
+   "skipped": 0,
+   "by_family": {
+    "chain_ops": [
+     0,
+     16
+    ]
+   },
+   "texts": [
+    [
+     "chain_ops-Df1-2",
+     "chain_ops",
+     "832",
+     "2*141 - 14 = 2*141 - 14 = 282 - 14 = 268",
+     false,
+     null,
+     "141 + 3 - 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-5",
+     "chain_ops",
+     "93",
+     "32 + 20 = 57",
+     false,
+     null,
+     "21 + 5 - 5",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-65",
+     "chain_ops",
+     "16",
+     "40)",
+     false,
+     null,
+     "23 + 17 - 10",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-68",
+     "chain_ops",
+     "80",
+     "148)",
+     false,
+     null,
+     "119 + 29 - 10",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-86",
+     "chain_ops",
+     "31",
+     "=90",
+     false,
+     null,
+     "88 + 5 - 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-92",
+     "chain_ops",
+     "48",
+     "5] = 58 - 22 + 17 - 5 = 38",
+     false,
+     null,
+     "58 + 22 - 17",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-135",
+     "chain_ops",
+     "1500",
+     "125 + 4 - 3 = 126.",
+     false,
+     null,
+     "125 + 4 - 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-152",
+     "chain_ops",
+     "76",
+     "78+21=99; 99-19=80. So the answer is 80",
+     false,
+     null,
+     "78 + 21 - 19",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-187",
+     "chain_ops",
+     "182",
+     " 107 + 2 - 32 = 73",
+     false,
+     null,
+     "107 + 2 - 32",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-202",
+     "chain_ops",
+     "46",
+     " 140",
+     false,
+     null,
+     "47 + 24 * 2",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-203",
+     "chain_ops",
+     "4",
+     "6-5 = 5. So the answer is 5.",
+     false,
+     null,
+     "58 + 4 - 4",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-246",
+     "chain_ops",
+     "660",
+     "5*142=710. So Fay has 710 balloons. 5 * 142 = 710. Fay has 710 balloons. Fay has 710 balloons.",
+     false,
+     null,
+     "142 + 10 - 5",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-247",
+     "chain_ops",
+     "18",
+     "1 = 1",
+     false,
+     null,
+     "36 + 36 - 8",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-336",
+     "chain_ops",
+     "49",
+     "51+20-18=53",
+     false,
+     null,
+     "51 + 20 - 18",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-372",
+     "chain_ops",
+     "51",
+     "23 - 37 = -14. So the answer is -14.",
+     false,
+     null,
+     "13 + 5 - 37",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Df1-430",
+     "chain_ops",
+     "5",
+     "180/6 =30. So Sue has 30.\n\nfinal answer:30",
+     false,
+     null,
+     "180 + 6 - 6",
+     null,
+     null
+    ]
+   ],
+   "plan_correct": 0,
+   "plan_n": 16,
+   "talk": {
+    "n": 16,
+    "calls": 0,
+    "call_eq_note": 0,
+    "answer_eq_calc": 0
+   }
+  },
+  "vocab": {
+   "correct": 0,
+   "n": 16,
+   "skipped": 0,
+   "by_family": {
+    "chain_ops": [
+     0,
+     16
+    ]
+   },
+   "texts": [
+    [
+     "chain_ops-Dv1-30",
+     "chain_ops",
+     "37",
+     "46+36-27=55",
+     false,
+     null,
+     "46 + 36 - 27",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-38",
+     "chain_ops",
+     "112",
+     "63 + 22 - 27 = 63.",
+     false,
+     null,
+     "63 + 22 - 27",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-40",
+     "chain_ops",
+     "44",
+     "46+8-6=48",
+     false,
+     null,
+     "46 + 8 - 6",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-45",
+     "chain_ops",
+     "23",
+     "=64",
+     false,
+     null,
+     "50 + 19 - 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-47",
+     "chain_ops",
+     "49",
+     "41",
+     false,
+     null,
+     "104 + 16 - 39",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-50",
+     "chain_ops",
+     "23",
+     "39+7-23=23",
+     false,
+     null,
+     "39 + 7 - 23",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-71",
+     "chain_ops",
+     "68",
+     "4*51=204",
+     false,
+     null,
+     "51 + 3 - 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-72",
+     "chain_ops",
+     "76",
+     "80",
+     false,
+     null,
+     "51 + 27 - 2",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-92",
+     "chain_ops",
+     "475",
+     "5*(117-22)=5*95=475",
+     false,
+     null,
+     "117 + 22 - 5",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-96",
+     "chain_ops",
+     "15",
+     "= 52",
+     false,
+     null,
+     "55 + 10 - 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-98",
+     "chain_ops",
+     "23",
+     "= 22",
+     false,
+     null,
+     "21 + 14 - 14 + 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-107",
+     "chain_ops",
+     "258",
+     "45",
+     false,
+     null,
+     "81 + 38 - 6",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-108",
+     "chain_ops",
+     "198",
+     "23 + 23 = 46",
+     false,
+     null,
+     "38 + 4 - 4",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-114",
+     "chain_ops",
+     "144",
+     "38] = 138 + 34 = 172; 172 - 38 = 134",
+     false,
+     null,
+     "138 + 39 - 5",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-122",
+     "chain_ops",
+     "21",
+     "3*36=108. So Val ends up with 108 shells. 3",
+     false,
+     null,
+     "36 + 29 - 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-132",
+     "chain_ops",
+     "38",
+     "38+21+21=80",
+     false,
+     null,
+     "38 + 21 - 21",
+     null,
+     null
+    ]
+   ],
+   "plan_correct": 3,
+   "plan_n": 16,
+   "talk": {
+    "n": 16,
+    "calls": 0,
+    "call_eq_note": 0,
+    "answer_eq_calc": 0
+   }
+  },
+  "variant": {
+   "correct": 0,
+   "n": 16,
+   "skipped": 0,
+   "by_family": {
+    "chain_ops": [
+     0,
+     16
+    ]
+   },
+   "texts": [
+    [
+     "chain_ops-Dv1-2",
+     "chain_ops",
+     "2",
+     "22",
+     false,
+     null,
+     "22 + 9 - 11",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-3",
+     "chain_ops",
+     "46",
+     "118/2 = 59. So Cy has 59 rings. 59 is odd. So Cy has 1 ring at the end. Answer: 1",
+     false,
+     null,
+     "118 + 26 - 26",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-4",
+     "chain_ops",
+     "28",
+     "37] = 48. \n\nAnswer: 48",
+     false,
+     null,
+     "48 + 17 - 17",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-6",
+     "chain_ops",
+     "15",
+     "8 = 43 - 2 + 2 - 8 = 43 - 8 = 35. 35 / 8 = 4.375. So the answer is 4.375. But that is not an",
+     false,
+     null,
+     "43 + 2 - 2",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-23",
+     "chain_ops",
+     "106",
+     "25?=47+0=47. 47+25=72. 72-25=47. So the answer is 47.",
+     false,
+     null,
+     "47 + 34 - 34",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-27",
+     "chain_ops",
+     "28",
+     "=87.",
+     false,
+     null,
+     "87 + 3 - 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-31",
+     "chain_ops",
+     "127",
+     "2",
+     false,
+     null,
+     "83 + 2 - 39",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-32",
+     "chain_ops",
+     "14",
+     "38 - 20 + 7 = 15",
+     false,
+     null,
+     "38 + 3 - 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-42",
+     "chain_ops",
+     "136",
+     "43+4-36=11",
+     false,
+     null,
+     "43 + 4 - 36",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-49",
+     "chain_ops",
+     "65",
+     "45",
+     false,
+     null,
+     "92 + 5 - 32",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-53",
+     "chain_ops",
+     "48",
+     "=153",
+     false,
+     null,
+     "153 + 3 - 3",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-54",
+     "chain_ops",
+     "48",
+     "6+? 57-15+6=48",
+     false,
+     null,
+     "57 + 15 - 15",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-77",
+     "chain_ops",
+     "69",
+     "58+24-13=59",
+     false,
+     null,
+     "58 + 24 - 13",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-82",
+     "chain_ops",
+     "76",
+     "63+14-1=76.",
+     false,
+     null,
+     "63 + 14 - 14",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-84",
+     "chain_ops",
+     "250",
+     "5*5 + 35 = 70",
+     false,
+     null,
+     "17 + 26 - 26",
+     null,
+     null
+    ],
+    [
+     "chain_ops-Dv1-85",
+     "chain_ops",
+     "70",
+     "250",
+     false,
+     null,
+     "50 + 36 - 5",
+     null,
+     null
+    ]
+   ],
+   "plan_correct": 2,
+   "plan_n": 16,
+   "talk": {
+    "n": 16,
+    "calls": 0,
+    "call_eq_note": 0,
+    "answer_eq_calc": 0
+   }
+  },
+  "family": {
+   "correct": 0,
+   "n": 0,
+   "skipped": 0,
+   "by_family": {},
+   "texts": [],
+   "plan_correct": 0,
+   "plan_n": 0,
+   "talk": {
+    "n": 0,
+    "calls": 0,
+    "call_eq_note": 0,
+    "answer_eq_calc": 0
+   }
+  },
+  "trainfit": {
+   "correct": 0,
+   "n": 16,
+   "skipped": 0,
+   "by_family": {
+    "group_induct": [
+     0,
+     2
+    ],
+    "seq_cycle": [
+     0,
+     5
+    ],
+    "fewshot_number_rule": [
+     0,
+     4
+    ],
+    "chain_ops": [
+     0,
+     2
+    ],
+    "chain_story2": [
+     0,
+     2
+    ],
+    "var_chain": [
+     0,
+     1
+    ]
+   },
+   "texts": [
+    [
+     "group_induct-T1-4340",
+     "group_induct",
+     "B",
+     "77",
+     false,
+     null
+    ],
+    [
+     "seq_cycle-T1-12777",
+     "seq_cycle",
+     "a",
+     "a",
+     false,
+     null
+    ],
+    [
+     "fewshot_number_rule-T1-4472",
+     "fewshot_number_rule",
+     "33",
+     "33",
+     false,
+     null
+    ],
+    [
+     "chain_ops-T1-6925",
+     "chain_ops",
+     "45",
+     "=45. \n\nAnswer: 45\nthis is the answer.",
+     false,
+     null,
+     "45 + 6 - 6",
+     null,
+     null
+    ],
+    [
+     "seq_cycle-T1-6707",
+     "seq_cycle",
+     "x",
+     "g x c g x c g ?",
+     false,
+     null
+    ],
+    [
+     "chain_story2-T1-9498",
+     "chain_story2",
+     "6",
+     "2",
+     false,
+     null,
+     "2 + 10 - 14",
+     null,
+     null
+    ],
+    [
+     "seq_cycle-T1-7564",
+     "seq_cycle",
+     "e",
+     "e",
+     false,
+     null
+    ],
+    [
+     "seq_cycle-T1-7827",
+     "seq_cycle",
+     "y",
+     "y",
+     false,
+     null
+    ],
+    [
+     "fewshot_number_rule-T1-5487",
+     "fewshot_number_rule",
+     "34",
+     "28 -> 36",
+     false,
+     null
+    ],
+    [
+     "chain_ops-T1-5396",
+     "chain_ops",
+     "17",
+     "40 + 1/3 = 40.333... keep 1. So 40.333... - 1 = 39.333... keep 1. So 39.333... = 120/3 = ",
+     false,
+     null,
+     "77 + 7 - 7",
+     null,
+     null
+    ],
+    [
+     "chain_story2-T1-4475",
+     "chain_story2",
+     "35",
+     "",
+     false,
+     null,
+     "52 + 15 - 32",
+     null,
+     null
+    ],
+    [
+     "fewshot_number_rule-T1-3913",
+     "fewshot_number_rule",
+     "168",
+     "168",
+     false,
+     null
+    ],
+    [
+     "var_chain-T1-5129",
+     "var_chain",
+     "66",
+     "?",
+     false,
+     null,
+     "7 + 8 * 7 + 17 + 7",
+     null,
+     null
+    ],
+    [
+     "group_induct-T1-7128",
+     "group_induct",
+     "B",
+     "B",
+     false,
+     null
+    ],
+    [
+     "fewshot_number_rule-T1-8979",
+     "fewshot_number_rule",
+     "47",
+     "47",
+     false,
+     null
+    ],
+    [
+     "seq_cycle-T1-2579",
+     "seq_cycle",
+     "j",
+     "j",
+     false,
+     null
+    ]
+   ],
+   "plan_correct": 2,
+   "plan_n": 5,
+   "talk": {
+    "n": 5,
+    "calls": 0,
+    "call_eq_note": 0,
+    "answer_eq_calc": 0
+   }
+  }
+ },
+ "final_lesions": {
+  "trainfit": {
+   "intact": {
+    "correct": 0,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      0,
+      2
+     ],
+     "seq_cycle": [
+      0,
+      5
+     ],
+     "fewshot_number_rule": [
+      0,
+      4
+     ],
+     "chain_ops": [
+      0,
+      2
+     ],
+     "chain_story2": [
+      0,
+      2
+     ],
+     "var_chain": [
+      0,
+      1
+     ]
+    },
+    "texts": [
+     [
+      "group_induct-T1-4340",
+      "group_induct",
+      "B",
+      "77",
+      false,
+      "collect"
+     ],
+     [
+      "seq_cycle-T1-12777",
+      "seq_cycle",
+      "a",
+      "a",
+      false,
+      "collect"
+     ],
+     [
+      "fewshot_number_rule-T1-4472",
+      "fewshot_number_rule",
+      "33",
+      "33",
+      false,
+      "collect"
+     ],
+     [
+      "chain_ops-T1-6925",
+      "chain_ops",
+      "45",
+      "=45. \n\nAnswer: 45\nthis is the answer.",
+      false,
+      "collect",
+      "45 + 6 - 6",
+      null,
+      null
+     ],
+     [
+      "seq_cycle-T1-6707",
+      "seq_cycle",
+      "x",
+      "g x c g x c g ?",
+      false,
+      "collect"
+     ],
+     [
+      "chain_story2-T1-9498",
+      "chain_story2",
+      "6",
+      "2",
+      false,
+      "collect",
+      "2 + 10 - 14",
+      null,
+      null
+     ],
+     [
+      "seq_cycle-T1-7564",
+      "seq_cycle",
+      "e",
+      "e",
+      false,
+      "collect"
+     ],
+     [
+      "seq_cycle-T1-7827",
+      "seq_cycle",
+      "y",
+      "y",
+      false,
+      "collect"
+     ],
+     [
+      "fewshot_number_rule-T1-5487",
+      "fewshot_number_rule",
+      "34",
+      "28 -> 36",
+      false,
+      "collect"
+     ],
+     [
+      "chain_ops-T1-5396",
+      "chain_ops",
+      "17",
+      "40 + 1/3 = 40.333... keep 1. So 40.333... - 1 = 39.333... keep 1. So 39.333... = 120/3 = ",
+      false,
+      "collect",
+      "77 + 7 - 7",
+      null,
+      null
+     ],
+     [
+      "chain_story2-T1-4475",
+      "chain_story2",
+      "35",
+      "",
+      false,
+      "collect",
+      "52 + 15 - 32",
+      null,
+      null
+     ],
+     [
+      "fewshot_number_rule-T1-3913",
+      "fewshot_number_rule",
+      "168",
+      "168",
+      false,
+      "collect"
+     ],
+     [
+      "var_chain-T1-5129",
+      "var_chain",
+      "66",
+      "?",
+      false,
+      "collect",
+      "7 + 8 * 7 + 17 + 7",
+      null,
+      null
+     ],
+     [
+      "group_induct-T1-7128",
+      "group_induct",
+      "B",
+      "B",
+      false,
+      "collect"
+     ],
+     [
+      "fewshot_number_rule-T1-8979",
+      "fewshot_number_rule",
+      "47",
+      "47",
+      false,
+      "collect"
+     ],
+     [
+      "seq_cycle-T1-2579",
+      "seq_cycle",
+      "j",
+      "j",
+      false,
+      "collect"
+     ]
+    ],
+    "plan_correct": 2,
+    "plan_n": 5,
+    "talk": {
+     "n": 5,
+     "calls": 0,
+     "call_eq_note": 0,
+     "answer_eq_calc": 0
+    }
+   },
+   "family_mean": {
+    "correct": 0,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      0,
+      2
+     ],
+     "seq_cycle": [
+      0,
+      5
+     ],
+     "fewshot_number_rule": [
+      0,
+      4
+     ],
+     "chain_ops": [
+      0,
+      2
+     ],
+     "chain_story2": [
+      0,
+      2
+     ],
+     "var_chain": [
+      0,
+      1
+     ]
+    },
+    "texts": [
+     [
+      "group_induct-T1-4340",
+      "group_induct",
+      "B",
+      "77",
+      false,
+      "family_mean"
+     ],
+     [
+      "seq_cycle-T1-12777",
+      "seq_cycle",
+      "a",
+      "a",
+      false,
+      "family_mean"
+     ],
+     [
+      "fewshot_number_rule-T1-4472",
+      "fewshot_number_rule",
+      "33",
+      "33",
+      false,
+      "family_mean"
+     ],
+     [
+      "chain_ops-T1-6925",
+      "chain_ops",
+      "45",
+      "=45. \n\nAnswer: 45\nthis is the answer.",
+      false,
+      "family_mean",
+      "45 + 6 - 6",
+      null,
+      null
+     ],
+     [
+      "seq_cycle-T1-6707",
+      "seq_cycle",
+      "x",
+      "g",
+      false,
+      "family_mean"
+     ],
+     [
+      "chain_story2-T1-9498",
+      "chain_story2",
+      "6",
+      "2",
+      false,
+      "family_mean",
+      "2 + 10 - 14",
+      null,
+      null
+     ],
+     [
+      "seq_cycle-T1-7564",
+      "seq_cycle",
+      "e",
+      "o",
+      false,
+      "family_mean"
+     ],
+     [
+      "seq_cycle-T1-7827",
+      "seq_cycle",
+      "y",
+      "y",
+      false,
+      "family_mean"
+     ],
+     [
+      "fewshot_number_rule-T1-5487",
+      "fewshot_number_rule",
+      "34",
+      "28 -> 36",
+      false,
+      "family_mean"
+     ],
+     [
+      "chain_ops-T1-5396",
+      "chain_ops",
+      "17",
+      "40 + 1/3 = 40.333... keep 1. So 40.333... - 1 = 39.333... keep 1. So 39.333... = 120/3 = ",
+      false,
+      "family_mean",
+      "77 + 7 - 7",
+      null,
+      null
+     ],
+     [
+      "chain_story2-T1-4475",
+      "chain_story2",
+      "35",
+      "",
+      false,
+      "family_mean",
+      "52 + 15 - 32",
+      null,
+      null
+     ],
+     [
+      "fewshot_number_rule-T1-3913",
+      "fewshot_number_rule",
+      "168",
+      "168",
+      false,
+      "family_mean"
+     ],
+     [
+      "var_chain-T1-5129",
+      "var_chain",
+      "66",
+      "?",
+      false,
+      "family_mean",
+      "7 + 8 * 7 + 17 + 7",
+      null,
+      null
+     ],
+     [
+      "group_induct-T1-7128",
+      "group_induct",
+      "B",
+      "B",
+      false,
+      "family_mean"
+     ],
+     [
+      "fewshot_number_rule-T1-8979",
+      "fewshot_number_rule",
+      "47",
+      "47",
+      false,
+      "family_mean"
+     ],
+     [
+      "seq_cycle-T1-2579",
+      "seq_cycle",
+      "j",
+      "j",
+      false,
+      "family_mean"
+     ]
+    ],
+    "plan_correct": 2,
+    "plan_n": 5,
+    "talk": {
+     "n": 5,
+     "calls": 0,
+     "call_eq_note": 0,
+     "answer_eq_calc": 0
+    }
+   },
+   "shuffle_same_family": {
+    "correct": 0,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      0,
+      2
+     ],
+     "seq_cycle": [
+      0,
+      5
+     ],
+     "fewshot_number_rule": [
+      0,
+      4
+     ],
+     "chain_ops": [
+      0,
+      2
+     ],
+     "chain_story2": [
+      0,
+      2
+     ],
+     "var_chain": [
+      0,
+      1
+     ]
+    },
+    "texts": [
+     [
+      "group_induct-T1-4340",
+      "group_induct",
+      "B",
+      "77",
+      false,
+      "shuffle_same_family"
+     ],
+     [
+      "seq_cycle-T1-12777",
+      "seq_cycle",
+      "a",
+      "a",
+      false,
+      "shuffle_same_family"
+     ],
+     [
+      "fewshot_number_rule-T1-4472",
+      "fewshot_number_rule",
+      "33",
+      "33",
+      false,
+      "shuffle_same_family"
+     ],
+     [
+      "chain_ops-T1-6925",
+      "chain_ops",
+      "45",
+      "=45. \n\nAnswer: 45\nthis is the answer.",
+      false,
+      "shuffle_same_family",
+      "45 + 6 - 6",
+      null,
+      null
+     ],
+     [
+      "seq_cycle-T1-6707",
+      "seq_cycle",
+      "x",
+      "g",
+      false,
+      "shuffle_same_family"
+     ],
+     [
+      "chain_story2-T1-9498",
+      "chain_story2",
+      "6",
+      "2",
+      false,
+      "shuffle_same_family",
+      "2 + 10 - 14",
+      null,
+      null
+     ],
+     [
+      "seq_cycle-T1-7564",
+      "seq_cycle",
+      "e",
+      "o",
+      false,
+      "shuffle_same_family"
+     ],
+     [
+      "seq_cycle-T1-7827",
+      "seq_cycle",
+      "y",
+      "y",
+      false,
+      "shuffle_same_family"
+     ],
+     [
+      "fewshot_number_rule-T1-5487",
+      "fewshot_number_rule",
+      "34",
+      "28 -> 36",
+      false,
+      "shuffle_same_family"
+     ],
+     [
+      "chain_ops-T1-5396",
+      "chain_ops",
+      "17",
+      "40 + 1/3 = 40.333... keep 1. So 40.333... - 1 = 39.333... keep 1. So 39.333... = 120/3 = ",
+      false,
+      "shuffle_same_family",
+      "77 + 7 - 7",
+      null,
+      null
+     ],
+     [
+      "chain_story2-T1-4475",
+      "chain_story2",
+      "35",
+      "",
+      false,
+      "shuffle_same_family",
+      "52 + 15 - 32",
+      null,
+      null
+     ],
+     [
+      "fewshot_number_rule-T1-3913",
+      "fewshot_number_rule",
+      "168",
+      "168",
+      false,
+      "shuffle_same_family"
+     ],
+     [
+      "var_chain-T1-5129",
+      "var_chain",
+      "66",
+      "?",
+      false,
+      "shuffle_same_family",
+      "7 + 8 * 7 + 17 + 7",
+      null,
+      null
+     ],
+     [
+      "group_induct-T1-7128",
+      "group_induct",
+      "B",
+      "B",
+      false,
+      "shuffle_same_family"
+     ],
+     [
+      "fewshot_number_rule-T1-8979",
+      "fewshot_number_rule",
+      "47",
+      "47",
+      false,
+      "shuffle_same_family"
+     ],
+     [
+      "seq_cycle-T1-2579",
+      "seq_cycle",
+      "j",
+      "j",
+      false,
+      "shuffle_same_family"
+     ]
+    ],
+    "plan_correct": 2,
+    "plan_n": 5,
+    "talk": {
+     "n": 5,
+     "calls": 0,
+     "call_eq_note": 0,
+     "answer_eq_calc": 0
+    }
+   },
+   "global_mean": {
+    "correct": 0,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      0,
+      2
+     ],
+     "seq_cycle": [
+      0,
+      5
+     ],
+     "fewshot_number_rule": [
+      0,
+      4
+     ],
+     "chain_ops": [
+      0,
+      2
+     ],
+     "chain_story2": [
+      0,
+      2
+     ],
+     "var_chain": [
+      0,
+      1
+     ]
+    },
+    "texts": [
+     [
+      "group_induct-T1-4340",
+      "group_induct",
+      "B",
+      "B",
+      false,
+      "global_mean"
+     ],
+     [
+      "seq_cycle-T1-12777",
+      "seq_cycle",
+      "a",
+      "a",
+      false,
+      "global_mean"
+     ],
+     [
+      "fewshot_number_rule-T1-4472",
+      "fewshot_number_rule",
+      "33",
+      "33",
+      false,
+      "global_mean"
+     ],
+     [
+      "chain_ops-T1-6925",
+      "chain_ops",
+      "45",
+      "45+45=90;90-6=84.84.84/6=14. So Milo has 14 scarves.\n\nAnswer:14\n\n",
+      false,
+      "global_mean",
+      "45 + 6 - 6",
+      null,
+      null
+     ],
+     [
+      "seq_cycle-T1-6707",
+      "seq_cycle",
+      "x",
+      "g",
+      false,
+      "global_mean"
+     ],
+     [
+      "chain_story2-T1-9498",
+      "chain_story2",
+      "6",
+      "4",
+      false,
+      "global_mean",
+      "2 + 10 - 14",
+      null,
+      null
+     ],
+     [
+      "seq_cycle-T1-7564",
+      "seq_cycle",
+      "e",
+      "e",
+      false,
+      "global_mean"
+     ],
+     [
+      "seq_cycle-T1-7827",
+      "seq_cycle",
+      "y",
+      "y",
+      false,
+      "global_mean"
+     ],
+     [
+      "fewshot_number_rule-T1-5487",
+      "fewshot_number_rule",
+      "34",
+      "24",
+      false,
+      "global_mean"
+     ],
+     [
+      "chain_ops-T1-5396",
+      "chain_ops",
+      "17",
+      "40 + 1 = 48; 48 / 3 = 16 + 1 = 17.",
+      false,
+      "global_mean",
+      "77 + 7 - 7",
+      null,
+      null
+     ],
+     [
+      "chain_story2-T1-4475",
+      "chain_story2",
+      "35",
+      "25)",
+      false,
+      "global_mean",
+      "52 + 15 - 32",
+      null,
+      null
+     ],
+     [
+      "fewshot_number_rule-T1-3913",
+      "fewshot_number_rule",
+      "168",
+      "168",
+      false,
+      "global_mean"
+     ],
+     [
+      "var_chain-T1-5129",
+      "var_chain",
+      "66",
+      "?",
+      false,
+      "global_mean",
+      "7 + 8 * 7 + 17 + 7",
+      null,
+      null
+     ],
+     [
+      "group_induct-T1-7128",
+      "group_induct",
+      "B",
+      "B",
+      false,
+      "global_mean"
+     ],
+     [
+      "fewshot_number_rule-T1-8979",
+      "fewshot_number_rule",
+      "47",
+      "37",
+      false,
+      "global_mean"
+     ],
+     [
+      "seq_cycle-T1-2579",
+      "seq_cycle",
+      "j",
+      "j",
+      false,
+      "global_mean"
+     ]
+    ],
+    "plan_correct": 2,
+    "plan_n": 5,
+    "talk": {
+     "n": 5,
+     "calls": 0,
+     "call_eq_note": 0,
+     "answer_eq_calc": 0
+    }
+   },
+   "plan_swap": {
+    "correct": 0,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      0,
+      2
+     ],
+     "seq_cycle": [
+      0,
+      5
+     ],
+     "fewshot_number_rule": [
+      0,
+      4
+     ],
+     "chain_ops": [
+      0,
+      2
+     ],
+     "chain_story2": [
+      0,
+      2
+     ],
+     "var_chain": [
+      0,
+      1
+     ]
+    },
+    "texts": [
+     [
+      "group_induct-T1-4340",
+      "group_induct",
+      "B",
+      "77",
+      false,
+      "plan_swap"
+     ],
+     [
+      "seq_cycle-T1-12777",
+      "seq_cycle",
+      "a",
+      "a",
+      false,
+      "plan_swap"
+     ],
+     [
+      "fewshot_number_rule-T1-4472",
+      "fewshot_number_rule",
+      "33",
+      "33",
+      false,
+      "plan_swap"
+     ],
+     [
+      "chain_ops-T1-6925",
+      "chain_ops",
+      "45",
+      "77 = 77 - 7 + 7 - 7 = 70? Wait, let's do it step by step.\n\nFirst: 45 * 6 = 270.\n\nThen: 270 / 6 =",
+      false,
+      "plan_swap",
+      "77 + 7 - 7",
+      null,
+      null
+     ],
+     [
+      "seq_cycle-T1-6707",
+      "seq_cycle",
+      "x",
+      "g x c g x c g ?",
+      false,
+      "plan_swap"
+     ],
+     [
+      "chain_story2-T1-9498",
+      "chain_story2",
+      "6",
+      "52+15-32=35",
+      false,
+      "plan_swap",
+      "52 + 15 - 32",
+      null,
+      null
+     ],
+     [
+      "seq_cycle-T1-7564",
+      "seq_cycle",
+      "e",
+      "e",
+      false,
+      "plan_swap"
+     ],
+     [
+      "seq_cycle-T1-7827",
+      "seq_cycle",
+      "y",
+      "y",
+      false,
+      "plan_swap"
+     ],
+     [
+      "fewshot_number_rule-T1-5487",
+      "fewshot_number_rule",
+      "34",
+      "28 -> 36",
+      false,
+      "plan_swap"
+     ],
+     [
+      "chain_ops-T1-5396",
+      "chain_ops",
+      "17",
+      "=45. 40+6=46. 46/3=15.33. Keep 6. So 6. So answer is 6.",
+      false,
+      "plan_swap",
+      "45 + 6 - 6",
+      null,
+      null
+     ],
+     [
+      "chain_story2-T1-4475",
+      "chain_story2",
+      "35",
+      "2",
+      false,
+      "plan_swap",
+      "2 + 10 - 14",
+      null,
+      null
+     ],
+     [
+      "fewshot_number_rule-T1-3913",
+      "fewshot_number_rule",
+      "168",
+      "168",
+      false,
+      "plan_swap"
+     ],
+     [
+      "var_chain-T1-5129",
+      "var_chain",
+      "66",
+      "?",
+      false,
+      "plan_swap",
+      "7 + 8 * 7 + 17 + 7",
+      null,
+      null
+     ],
+     [
+      "group_induct-T1-7128",
+      "group_induct",
+      "B",
+      "B",
+      false,
+      "plan_swap"
+     ],
+     [
+      "fewshot_number_rule-T1-8979",
+      "fewshot_number_rule",
+      "47",
+      "47",
+      false,
+      "plan_swap"
+     ],
+     [
+      "seq_cycle-T1-2579",
+      "seq_cycle",
+      "j",
+      "j",
+      false,
+      "plan_swap"
+     ]
+    ],
+    "plan_correct": 2,
+    "plan_n": 5,
+    "talk": {
+     "n": 5,
+     "calls": 0,
+     "call_eq_note": 0,
+     "answer_eq_calc": 0
+    }
+   },
+   "note_drop": {
+    "correct": 0,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      0,
+      2
+     ],
+     "seq_cycle": [
+      0,
+      5
+     ],
+     "fewshot_number_rule": [
+      0,
+      4
+     ],
+     "chain_ops": [
+      0,
+      2
+     ],
+     "chain_story2": [
+      0,
+      2
+     ],
+     "var_chain": [
+      0,
+      1
+     ]
+    },
+    "texts": [
+     [
+      "group_induct-T1-4340",
+      "group_induct",
+      "B",
+      "77",
+      false,
+      "note_drop"
+     ],
+     [
+      "seq_cycle-T1-12777",
+      "seq_cycle",
+      "a",
+      "a",
+      false,
+      "note_drop"
+     ],
+     [
+      "fewshot_number_rule-T1-4472",
+      "fewshot_number_rule",
+      "33",
+      "33",
+      false,
+      "note_drop"
+     ],
+     [
+      "chain_ops-T1-6925",
+      "chain_ops",
+      "45",
+      "27",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "seq_cycle-T1-6707",
+      "seq_cycle",
+      "x",
+      "g x c g x c g ?",
+      false,
+      "note_drop"
+     ],
+     [
+      "chain_story2-T1-9498",
+      "chain_story2",
+      "6",
+      "4",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "seq_cycle-T1-7564",
+      "seq_cycle",
+      "e",
+      "e",
+      false,
+      "note_drop"
+     ],
+     [
+      "seq_cycle-T1-7827",
+      "seq_cycle",
+      "y",
+      "y",
+      false,
+      "note_drop"
+     ],
+     [
+      "fewshot_number_rule-T1-5487",
+      "fewshot_number_rule",
+      "34",
+      "28 -> 36",
+      false,
+      "note_drop"
+     ],
+     [
+      "chain_ops-T1-5396",
+      "chain_ops",
+      "17",
+      "13",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_story2-T1-4475",
+      "chain_story2",
+      "35",
+      "25",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "fewshot_number_rule-T1-3913",
+      "fewshot_number_rule",
+      "168",
+      "168",
+      false,
+      "note_drop"
+     ],
+     [
+      "var_chain-T1-5129",
+      "var_chain",
+      "66",
+      "33",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "group_induct-T1-7128",
+      "group_induct",
+      "B",
+      "B",
+      false,
+      "note_drop"
+     ],
+     [
+      "fewshot_number_rule-T1-8979",
+      "fewshot_number_rule",
+      "47",
+      "47",
+      false,
+      "note_drop"
+     ],
+     [
+      "seq_cycle-T1-2579",
+      "seq_cycle",
+      "j",
+      "j",
+      false,
+      "note_drop"
+     ]
+    ],
+    "plan_correct": 2,
+    "plan_n": 5,
+    "talk": {
+     "n": 5,
+     "calls": 0,
+     "call_eq_note": 0,
+     "answer_eq_calc": 0
+    }
+   }
+  },
+  "in_dist": {
+   "intact": {
+    "correct": 0,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      0,
+      16
+     ]
+    },
+    "texts": [
+     [
+      "chain_ops-DI1-1",
+      "chain_ops",
+      "25",
+      "50",
+      false,
+      "collect",
+      "10 + 5 - 5",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-7",
+      "chain_ops",
+      "15",
+      "36",
+      false,
+      "collect",
+      "27 + 3 - 6",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-24",
+      "chain_ops",
+      "90",
+      "86",
+      false,
+      "collect",
+      "76 + 16 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-33",
+      "chain_ops",
+      "5",
+      "2*(60 - 14) + 1 = 60 + 22 - 2 + 1 = 57",
+      false,
+      "collect",
+      "60 + 22 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-38",
+      "chain_ops",
+      "65",
+      "47)",
+      false,
+      "collect",
+      "56 + 10 - 19",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-39",
+      "chain_ops",
+      "4",
+      "1 = 3",
+      false,
+      "collect",
+      "44 + 32 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-41",
+      "chain_ops",
+      "132",
+      "2*(85-19)=2*67=134",
+      false,
+      "collect",
+      "85 + 19 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-49",
+      "chain_ops",
+      "6",
+      "2*(23-17)+2=23. 23-6=17. 17-6=11.",
+      false,
+      "collect",
+      "23 + 17 - 17",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-54",
+      "chain_ops",
+      "373",
+      "178 + 2 - 17 = 163",
+      false,
+      "collect",
+      "178 + 2 - 17",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-59",
+      "chain_ops",
+      "4",
+      "65+32-23=84",
+      false,
+      "collect",
+      "65 + 32 - 23",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-70",
+      "chain_ops",
+      "3696",
+      "154 + 6*4 = 154 + 24 = 178",
+      false,
+      "collect",
+      "154 + 6 - 4",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-76",
+      "chain_ops",
+      "51",
+      "3*(34+2-3)=3*33=99",
+      false,
+      "collect",
+      "34 + 2 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-87",
+      "chain_ops",
+      "18",
+      "42+7-12=37",
+      false,
+      "collect",
+      "42 + 7 - 12",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-89",
+      "chain_ops",
+      "2",
+      "10",
+      false,
+      "collect",
+      "9 + 5 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-92",
+      "chain_ops",
+      "270",
+      "93*3=279.",
+      false,
+      "collect",
+      "93 + 3 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-94",
+      "chain_ops",
+      "240",
+      "59*3=177? No, let's recalculate. 59 + 21 = 80. 80 - 3 = 77. 77 * 3 = 231. So the answer is 231",
+      false,
+      "collect",
+      "59 + 21 - 3",
+      null,
+      null
+     ]
+    ],
+    "plan_correct": 1,
+    "plan_n": 16,
+    "talk": {
+     "n": 16,
+     "calls": 0,
+     "call_eq_note": 0,
+     "answer_eq_calc": 0
+    }
+   },
+   "family_mean": {
+    "correct": 0,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      0,
+      16
+     ]
+    },
+    "texts": [
+     [
+      "chain_ops-DI1-1",
+      "chain_ops",
+      "25",
+      "50",
+      false,
+      "family_mean",
+      "10 + 5 - 5",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-7",
+      "chain_ops",
+      "15",
+      "36)",
+      false,
+      "family_mean",
+      "27 + 3 - 6",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-24",
+      "chain_ops",
+      "90",
+      "86",
+      false,
+      "family_mean",
+      "76 + 16 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-33",
+      "chain_ops",
+      "5",
+      "2*(60 - 14) + 1 = 60 + 22 - 2 + 1 = 57",
+      false,
+      "family_mean",
+      "60 + 22 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-38",
+      "chain_ops",
+      "65",
+      "56 + 10 - 19 = 47",
+      false,
+      "family_mean",
+      "56 + 10 - 19",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-39",
+      "chain_ops",
+      "4",
+      "1=44-32+1=13",
+      false,
+      "family_mean",
+      "44 + 32 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-41",
+      "chain_ops",
+      "132",
+      "2*(85-19)=2*67=134",
+      false,
+      "family_mean",
+      "85 + 19 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-49",
+      "chain_ops",
+      "6",
+      "2*(23-17)+2=23. 23-6=17. 17-6=11.",
+      false,
+      "family_mean",
+      "23 + 17 - 17",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-54",
+      "chain_ops",
+      "373",
+      "178 + 2 - 17 = 163",
+      false,
+      "family_mean",
+      "178 + 2 - 17",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-59",
+      "chain_ops",
+      "4",
+      "65+32-6+23=100",
+      false,
+      "family_mean",
+      "65 + 32 - 23",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-70",
+      "chain_ops",
+      "3696",
+      "154 + 6*4 = 154 + 24 = 178",
+      false,
+      "family_mean",
+      "154 + 6 - 4",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-76",
+      "chain_ops",
+      "51",
+      "3*(34-2)=3*32=96. So Sam has 96 cups.",
+      false,
+      "family_mean",
+      "34 + 2 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-87",
+      "chain_ops",
+      "18",
+      "42+7-12=37",
+      false,
+      "family_mean",
+      "42 + 7 - 12",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-89",
+      "chain_ops",
+      "2",
+      "10",
+      false,
+      "family_mean",
+      "9 + 5 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-92",
+      "chain_ops",
+      "270",
+      "93*3=279.",
+      false,
+      "family_mean",
+      "93 + 3 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-94",
+      "chain_ops",
+      "240",
+      "59*3=177? No, let's recalculate. 59 + 21 = 80. 80 - 3 = 77. 77 * 3 = 231. So the answer is 231",
+      false,
+      "family_mean",
+      "59 + 21 - 3",
+      null,
+      null
+     ]
+    ],
+    "plan_correct": 1,
+    "plan_n": 16,
+    "talk": {
+     "n": 16,
+     "calls": 0,
+     "call_eq_note": 0,
+     "answer_eq_calc": 0
+    }
+   },
+   "shuffle_same_family": {
+    "correct": 0,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      0,
+      16
+     ]
+    },
+    "texts": [
+     [
+      "chain_ops-DI1-1",
+      "chain_ops",
+      "25",
+      "50",
+      false,
+      "shuffle_same_family",
+      "10 + 5 - 5",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-7",
+      "chain_ops",
+      "15",
+      "36)",
+      false,
+      "shuffle_same_family",
+      "27 + 3 - 6",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-24",
+      "chain_ops",
+      "90",
+      "86",
+      false,
+      "shuffle_same_family",
+      "76 + 16 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-33",
+      "chain_ops",
+      "5",
+      "2*(60 - 14) + 1 = 60 + 28 + 1 = 89.\n\n89 - 14 = 75.\n\nfinal answer: 75",
+      false,
+      "shuffle_same_family",
+      "60 + 22 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-38",
+      "chain_ops",
+      "65",
+      "56 + 10 - 19 = 47",
+      false,
+      "shuffle_same_family",
+      "56 + 10 - 19",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-39",
+      "chain_ops",
+      "4",
+      "1=44-32+1=13",
+      false,
+      "shuffle_same_family",
+      "44 + 32 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-41",
+      "chain_ops",
+      "132",
+      "2*(85-19)=2*67=134",
+      false,
+      "shuffle_same_family",
+      "85 + 19 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-49",
+      "chain_ops",
+      "6",
+      "2*(23-17)+2=23. 23-6=17. 17+2=19.",
+      false,
+      "shuffle_same_family",
+      "23 + 17 - 17",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-54",
+      "chain_ops",
+      "373",
+      "178 + 2 - 17 = 163",
+      false,
+      "shuffle_same_family",
+      "178 + 2 - 17",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-59",
+      "chain_ops",
+      "4",
+      "65+32-6+23=100",
+      false,
+      "shuffle_same_family",
+      "65 + 32 - 23",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-70",
+      "chain_ops",
+      "3696",
+      "154 + 6*4 = 154 + 24 = 178",
+      false,
+      "shuffle_same_family",
+      "154 + 6 - 4",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-76",
+      "chain_ops",
+      "51",
+      "3*(34-2)=3*30=90",
+      false,
+      "shuffle_same_family",
+      "34 + 2 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-87",
+      "chain_ops",
+      "18",
+      "42+7-12=37",
+      false,
+      "shuffle_same_family",
+      "42 + 7 - 12",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-89",
+      "chain_ops",
+      "2",
+      "10",
+      false,
+      "shuffle_same_family",
+      "9 + 5 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-92",
+      "chain_ops",
+      "270",
+      "93*3=279.",
+      false,
+      "shuffle_same_family",
+      "93 + 3 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-94",
+      "chain_ops",
+      "240",
+      "59*3=177. So Abe has 177 keys.",
+      false,
+      "shuffle_same_family",
+      "59 + 21 - 3",
+      null,
+      null
+     ]
+    ],
+    "plan_correct": 1,
+    "plan_n": 16,
+    "talk": {
+     "n": 16,
+     "calls": 0,
+     "call_eq_note": 0,
+     "answer_eq_calc": 0
+    }
+   },
+   "global_mean": {
+    "correct": 0,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      0,
+      16
+     ]
+    },
+    "texts": [
+     [
+      "chain_ops-DI1-1",
+      "chain_ops",
+      "25",
+      "50",
+      false,
+      "global_mean",
+      "10 + 5 - 5",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-7",
+      "chain_ops",
+      "15",
+      "36)",
+      false,
+      "global_mean",
+      "27 + 3 - 6",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-24",
+      "chain_ops",
+      "90",
+      "86",
+      false,
+      "global_mean",
+      "76 + 16 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-33",
+      "chain_ops",
+      "5",
+      "2*(60 - 14) + 1 = 60 + 22 - 2 + 1 = 57",
+      false,
+      "global_mean",
+      "60 + 22 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-38",
+      "chain_ops",
+      "65",
+      "56 + 10 - 19 = 47",
+      false,
+      "global_mean",
+      "56 + 10 - 19",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-39",
+      "chain_ops",
+      "4",
+      "1=44-32+1=13",
+      false,
+      "global_mean",
+      "44 + 32 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-41",
+      "chain_ops",
+      "132",
+      "2*(85-19)=2*67=134",
+      false,
+      "global_mean",
+      "85 + 19 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-49",
+      "chain_ops",
+      "6",
+      "2*(23-17)+2=23. 23-6=17. 17-6=11.",
+      false,
+      "global_mean",
+      "23 + 17 - 17",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-54",
+      "chain_ops",
+      "373",
+      "178 + 2 - 17 = 163",
+      false,
+      "global_mean",
+      "178 + 2 - 17",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-59",
+      "chain_ops",
+      "4",
+      "65+32-6+23=100",
+      false,
+      "global_mean",
+      "65 + 32 - 23",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-70",
+      "chain_ops",
+      "3696",
+      "154 + 6*4 = 154 + 24 = 178",
+      false,
+      "global_mean",
+      "154 + 6 - 4",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-76",
+      "chain_ops",
+      "51",
+      "3*(34-2)=3*32=96. So Sam has 96 cups.",
+      false,
+      "global_mean",
+      "34 + 2 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-87",
+      "chain_ops",
+      "18",
+      "42+7-12=37",
+      false,
+      "global_mean",
+      "42 + 7 - 12",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-89",
+      "chain_ops",
+      "2",
+      "10",
+      false,
+      "global_mean",
+      "9 + 5 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-92",
+      "chain_ops",
+      "270",
+      "93*3=279.",
+      false,
+      "global_mean",
+      "93 + 3 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-94",
+      "chain_ops",
+      "240",
+      "59*3=177? No, let's recalculate. 59 + 21 = 80. 80 - 3 = 77. 77 * 3 = 231. So the answer is 231",
+      false,
+      "global_mean",
+      "59 + 21 - 3",
+      null,
+      null
+     ]
+    ],
+    "plan_correct": 1,
+    "plan_n": 16,
+    "talk": {
+     "n": 16,
+     "calls": 0,
+     "call_eq_note": 0,
+     "answer_eq_calc": 0
+    }
+   },
+   "plan_swap": {
+    "correct": 0,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      0,
+      16
+     ]
+    },
+    "texts": [
+     [
+      "chain_ops-DI1-1",
+      "chain_ops",
+      "25",
+      "27*5=135? Wait, let's do it step by step.\n\nStart with 10.\n\n1. Gus has 10 pebbles.\n\n2. Gus gives away 5. So 10 -",
+      false,
+      "plan_swap",
+      "27 + 3 - 6",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-7",
+      "chain_ops",
+      "15",
+      " 76 + 16 - 2 = 90",
+      false,
+      "plan_swap",
+      "76 + 16 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-24",
+      "chain_ops",
+      "90",
+      "60",
+      false,
+      "plan_swap",
+      "60 + 22 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-33",
+      "chain_ops",
+      "5",
+      "=43",
+      false,
+      "plan_swap",
+      "56 + 10 - 19",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-38",
+      "chain_ops",
+      "65",
+      "?",
+      false,
+      "plan_swap",
+      "44 + 32 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-39",
+      "chain_ops",
+      "4",
+      "3 = 104 - 2 = 102? No. Let's try: 44 - 32 = 12. 12 / 3 = 4. So 4.\n\nAnswer: 4",
+      false,
+      "plan_swap",
+      "85 + 19 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-41",
+      "chain_ops",
+      "132",
+      "2*(85-19)=2*67=134",
+      false,
+      "plan_swap",
+      "23 + 17 - 17",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-49",
+      "chain_ops",
+      "6",
+      "2*(23-17) - 6 = 2*6 - 6 = 12 - 6 = 6",
+      false,
+      "plan_swap",
+      "178 + 2 - 17",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-54",
+      "chain_ops",
+      "373",
+      "?",
+      false,
+      "plan_swap",
+      "65 + 32 - 23",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-59",
+      "chain_ops",
+      "4",
+      "23?=154-6+23=151.\n\n151-23=128. Fay has 128 cards.\n\nanswer:128",
+      false,
+      "plan_swap",
+      "154 + 6 - 4",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-70",
+      "chain_ops",
+      "3696",
+      "4",
+      false,
+      "plan_swap",
+      "34 + 2 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-76",
+      "chain_ops",
+      "51",
+      "3*(3*(3*(3*(3+1)))))]=42+7-12=37",
+      false,
+      "plan_swap",
+      "42 + 7 - 12",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-87",
+      "chain_ops",
+      "18",
+      "42+12=54. 42+7+12=51. 42+1/7+12=54. 54+1=55. 54+1=55. 55+1=56. ",
+      false,
+      "plan_swap",
+      "9 + 5 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-89",
+      "chain_ops",
+      "2",
+      "? 9-5-2=1? 1? No. 93-5=88, 88-2=86. Hmm. Maybe the answer is 86? But I'm not sure. Let's see",
+      false,
+      "plan_swap",
+      "93 + 3 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-92",
+      "chain_ops",
+      "270",
+      " 93? No. 93-3=90; 90*3=270. So 270. \n\n270",
+      false,
+      "plan_swap",
+      "59 + 21 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-94",
+      "chain_ops",
+      "240",
+      "3*(59+21)=3*80=240",
+      false,
+      "plan_swap",
+      "10 + 5 - 5",
+      null,
+      null
+     ]
+    ],
+    "plan_correct": 1,
+    "plan_n": 16,
+    "talk": {
+     "n": 16,
+     "calls": 0,
+     "call_eq_note": 0,
+     "answer_eq_calc": 0
+    }
+   },
+   "note_drop": {
+    "correct": 0,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      0,
+      16
+     ]
+    },
+    "texts": [
+     [
+      "chain_ops-DI1-1",
+      "chain_ops",
+      "25",
+      "50",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-7",
+      "chain_ops",
+      "15",
+      "30",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-24",
+      "chain_ops",
+      "90",
+      "90",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-33",
+      "chain_ops",
+      "5",
+      "16",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-38",
+      "chain_ops",
+      "65",
+      "55",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-39",
+      "chain_ops",
+      "4",
+      "1",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-41",
+      "chain_ops",
+      "132",
+      "150",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-49",
+      "chain_ops",
+      "6",
+      "38",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-54",
+      "chain_ops",
+      "373",
+      "367",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-59",
+      "chain_ops",
+      "4",
+      "30",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-70",
+      "chain_ops",
+      "3696",
+      "616",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-76",
+      "chain_ops",
+      "51",
+      "102",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-87",
+      "chain_ops",
+      "18",
+      "43",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-89",
+      "chain_ops",
+      "2",
+      "2",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-92",
+      "chain_ops",
+      "270",
+      "270",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-94",
+      "chain_ops",
+      "240",
+      "198",
+      false,
+      "note_drop",
+      null,
+      null,
+      null
+     ]
+    ],
+    "plan_correct": 1,
+    "plan_n": 16,
+    "talk": {
+     "n": 16,
+     "calls": 0,
+     "call_eq_note": 0,
+     "answer_eq_calc": 0
+    }
+   }
+  }
+ },
+ "in_dist_curve": [
+  {
+   "update": 40,
+   "in_dist": {
+    "correct": 0,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      0,
+      16
+     ]
+    },
+    "texts": [
+     [
+      "chain_ops-DI1-1",
+      "chain_ops",
+      "25",
+      "50",
+      false,
+      null,
+      "10 + 5 - 5",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-7",
+      "chain_ops",
+      "15",
+      "36",
+      false,
+      null,
+      "27 + 3 - 6",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-24",
+      "chain_ops",
+      "90",
+      "86",
+      false,
+      null,
+      "76 + 16 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-33",
+      "chain_ops",
+      "5",
+      "2*(60 - 14) + 1 = 60 + 22 - 2 + 1 = 57",
+      false,
+      null,
+      "60 + 22 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-38",
+      "chain_ops",
+      "65",
+      "47)",
+      false,
+      null,
+      "56 + 10 - 19",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-39",
+      "chain_ops",
+      "4",
+      "1 = 3",
+      false,
+      null,
+      "44 + 32 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-41",
+      "chain_ops",
+      "132",
+      "2*(85-19)=2*67=134",
+      false,
+      null,
+      "85 + 19 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-49",
+      "chain_ops",
+      "6",
+      "2*(23-17)+2=23. 23-6=17. 17-6=11.",
+      false,
+      null,
+      "23 + 17 - 17",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-54",
+      "chain_ops",
+      "373",
+      "178 + 2 - 17 = 163",
+      false,
+      null,
+      "178 + 2 - 17",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-59",
+      "chain_ops",
+      "4",
+      "65+32-23=84",
+      false,
+      null,
+      "65 + 32 - 23",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-70",
+      "chain_ops",
+      "3696",
+      "154 + 6*4 = 154 + 24 = 178",
+      false,
+      null,
+      "154 + 6 - 4",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-76",
+      "chain_ops",
+      "51",
+      "3*(34+2-3)=3*33=99",
+      false,
+      null,
+      "34 + 2 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-87",
+      "chain_ops",
+      "18",
+      "42+7-12=37",
+      false,
+      null,
+      "42 + 7 - 12",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-89",
+      "chain_ops",
+      "2",
+      "10",
+      false,
+      null,
+      "9 + 5 - 2",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-92",
+      "chain_ops",
+      "270",
+      "93*3=279.",
+      false,
+      null,
+      "93 + 3 - 3",
+      null,
+      null
+     ],
+     [
+      "chain_ops-DI1-94",
+      "chain_ops",
+      "240",
+      "59*3=177? No, let's recalculate. 59 + 21 = 80. 80 - 3 = 77. 77 * 3 = 231. So the answer is 231",
+      false,
+      null,
+      "59 + 21 - 3",
+      null,
+      null
+     ]
+    ],
+    "plan_correct": 1,
+    "plan_n": 16,
+    "talk": {
+     "n": 16,
+     "calls": 0,
+     "call_eq_note": 0,
+     "answer_eq_calc": 0
+    }
+   },
+   "trainfit": {
+    "correct": 0,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      0,
+      2
+     ],
+     "seq_cycle": [
+      0,
+      5
+     ],
+     "fewshot_number_rule": [
+      0,
+      4
+     ],
+     "chain_ops": [
+      0,
+      2
+     ],
+     "chain_story2": [
+      0,
+      2
+     ],
+     "var_chain": [
+      0,
+      1
+     ]
+    },
+    "texts": [
+     [
+      "group_induct-T1-4340",
+      "group_induct",
+      "B",
+      "77",
+      false,
+      null
+     ],
+     [
+      "seq_cycle-T1-12777",
+      "seq_cycle",
+      "a",
+      "a",
+      false,
+      null
+     ],
+     [
+      "fewshot_number_rule-T1-4472",
+      "fewshot_number_rule",
+      "33",
+      "33",
+      false,
+      null
+     ],
+     [
+      "chain_ops-T1-6925",
+      "chain_ops",
+      "45",
+      "=45. \n\nAnswer: 45\nthis is the answer.",
+      false,
+      null,
+      "45 + 6 - 6",
+      null,
+      null
+     ],
+     [
+      "seq_cycle-T1-6707",
+      "seq_cycle",
+      "x",
+      "g x c g x c g ?",
+      false,
+      null
+     ],
+     [
+      "chain_story2-T1-9498",
+      "chain_story2",
+      "6",
+      "2",
+      false,
+      null,
+      "2 + 10 - 14",
+      null,
+      null
+     ],
+     [
+      "seq_cycle-T1-7564",
+      "seq_cycle",
+      "e",
+      "e",
+      false,
+      null
+     ],
+     [
+      "seq_cycle-T1-7827",
+      "seq_cycle",
+      "y",
+      "y",
+      false,
+      null
+     ],
+     [
+      "fewshot_number_rule-T1-5487",
+      "fewshot_number_rule",
+      "34",
+      "28 -> 36",
+      false,
+      null
+     ],
+     [
+      "chain_ops-T1-5396",
+      "chain_ops",
+      "17",
+      "40 + 1/3 = 40.333... keep 1. So 40.333... - 1 = 39.333... keep 1. So 39.333... = 120/3 = ",
+      false,
+      null,
+      "77 + 7 - 7",
+      null,
+      null
+     ],
+     [
+      "chain_story2-T1-4475",
+      "chain_story2",
+      "35",
+      "",
+      false,
+      null,
+      "52 + 15 - 32",
+      null,
+      null
+     ],
+     [
+      "fewshot_number_rule-T1-3913",
+      "fewshot_number_rule",
+      "168",
+      "168",
+      false,
+      null
+     ],
+     [
+      "var_chain-T1-5129",
+      "var_chain",
+      "66",
+      "?",
+      false,
+      null,
+      "7 + 8 * 7 + 17 + 7",
+      null,
+      null
+     ],
+     [
+      "group_induct-T1-7128",
+      "group_induct",
+      "B",
+      "B",
+      false,
+      null
+     ],
+     [
+      "fewshot_number_rule-T1-8979",
+      "fewshot_number_rule",
+      "47",
+      "47",
+      false,
+      null
+     ],
+     [
+      "seq_cycle-T1-2579",
+      "seq_cycle",
+      "j",
+      "j",
+      false,
+      null
+     ]
+    ],
+    "plan_correct": 2,
+    "plan_n": 5,
+    "talk": {
+     "n": 5,
+     "calls": 0,
+     "call_eq_note": 0,
+     "answer_eq_calc": 0
+    }
+   }
+  }
+ ],
+ "parent_path": "/job/repo/skills/main2/final-checkpoint.pt",
+ "checkpoint_sha256": null,
+ "minutes": 2.1
+}
