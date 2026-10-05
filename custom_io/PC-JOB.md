@@ -28,22 +28,20 @@ Mac (in `~/custom-io/src`): `python3 -m custom_io.local_runner setup --work ~/cu
 It must print `setup ok` (both builds hash-checked). If it stops on a hash mismatch, stop and tell the thread.
 
 ## 3. Run the queues
-**PC queue 32 (the B2 screen, 2 runs at once): run it ONLY if `custom_io/results/29-b2-screen/` is not on the branch yet**
-(13:00 UTC: B2 is running on cloud box C's idle GPU instead, while that box finishes printing checkpoints). Same launch as queue 30 below, with
-`custom_io\queue_local\32-pc-b2-screen.txt`, `--par 2` and stdout to `C:\Users\benja\custom-io\work\q32.log`. Then
-queue 30 (or alongside it if nvidia-smi shows room for more runs; each run gates on its own free memory).
+Updated 14:45 UTC (10:45 AM ET). Queue 32 (B2 screen) is done on the cloud: skip it.
 
-PC queue 30 (pythia-31m lr pick, then plain_tf and plain_tf_steps on seeds 200-202; 9 runs, up to 3 at a time).
+**PC queue 33 first: the B2 confirm** (B2, plain_tf and plain_tf_steps on seeds 200-205; 18 runs, up to 3 at a time).
 Launch it detached the way you launched the fix screens, so it survives the ssh session ending:
 ```
-python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\30-pc-baselines.txt --device cuda --par 3 --busy C:\Users\benja\GPU-BUSY.txt
+python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\33-pc-confirm-b2.txt --device cuda --par 3 --busy C:\Users\benja\GPU-BUSY.txt
 ```
-with stdout to `C:\Users\benja\custom-io\work\q30.log`. Each run starts only when nvidia-smi shows its memory free
-(5-6 GB per run), so it waits while the blocker thread's jobs fill the card and never stops them. It adds one line per
-running run to GPU-BUSY.txt and removes only its own lines. If your convention for the blocker queue treats any existing
-GPU-BUSY.txt as "busy, don't start", pass `--busy C:\Users\benja\GPU-BUSY-custom-io.txt` instead so both threads can run.
-To yield the card: create `C:\Users\benja\custom-io\work\STOP` (running runs finish, no new ones start); delete it and
-re-run the same command to resume (finished runs are skipped).
+with stdout to `C:\Users\benja\custom-io\work\q33.log`. Then PC queue 30 (pythia-31m lr pick, 3 runs), same command with
+`30-pc-baselines.txt` and `q30.log`; it can run alongside 33 when nvidia-smi shows room. Each run starts only when
+nvidia-smi shows its memory free (5-6 GB per run), so it waits while the blocker thread's jobs fill the card and never stops
+them. It adds one line per running run to GPU-BUSY.txt and removes only its own lines. If your convention for the blocker
+queue treats any existing GPU-BUSY.txt as "busy, don't start", pass `--busy C:\Users\benja\GPU-BUSY-custom-io.txt` instead
+so both threads can run. To yield the card: create `C:\Users\benja\custom-io\work\STOP` (running runs finish, no new ones
+start); delete it and re-run the same command to resume (finished runs are skipped).
 
 Mac queue 31 (speed probes, about 15 min, then 8-shot pythia-31m and SmolLM2-135M on the dev splits, no training):
 ```
