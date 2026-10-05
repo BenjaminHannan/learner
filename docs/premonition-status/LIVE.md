@@ -268,3 +268,6 @@ Shown (3 seeds, fast lane; results pushed to artifacts/fix-screen-v2/results/ on
 - X1-X3 (StatePrefix widened 259->32->2048 to 259->256->2048, 6000 updates, 2000 fixed rows x 3 passes, worst-8 families): train fit at update 6000 = 51.2 / 53.8 / 46.6 vs baseline 50.6 / 52.5 / 46.3, gains +0.6 / +1.2 / +0.3, mean +0.7. Registered rule: NO EFFECT (HELPS needs +5). in_dist 36.2 / 39.1 / 38.1 (start 27.8).
 - Widening the exit pipe does not lift the fit; with screen v1 (reader width, rounds, lr, pointer exit) all four tried fixes leave fit at about 46-54. Not yet tried (suggested only): ideas outside these.
 PC idle, marker released. Caveat: one X launch failed from my script bug and was relaunched; results are from the correct run.
+
+## 00:18Z fix screen v3 (plateau thread, spec artifacts/fix-screen-v3/PC-JOB.md @ 99b883729): staged, smoke launched, PC then went unreachable
+Staged the branch's skills_pretrain_v1.py (sha EA077199...) on the PC and launched the 1-min smoke (--lm-lora 8); variable names checked for case-insensitive clashes (none; script path now $SCRIPT, loop variable $seed). Then BensPC stopped answering ssh/ping (timeouts since ~00:10Z), so I could not read the smoke output and have NOT started the S and A1-A3 queue. Waiting for the PC to return; the smoke (if it ran) holds no checkpoint and ends by itself.
