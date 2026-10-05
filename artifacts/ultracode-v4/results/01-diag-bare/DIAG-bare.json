@@ -1,0 +1,507 @@
+{
+ "args": {
+  "mode": "bare",
+  "root": "/job/repo/pipeline",
+  "data": "/job/data",
+  "out": "/job/repo/pipeline/artifacts/uc/01-diag-bare",
+  "parent_path": "",
+  "sample_seed": 1,
+  "chan_per_family": 8,
+  "chan_steps": 150,
+  "chan_lr": 0.02,
+  "head": "mlp",
+  "updates": 6000,
+  "batch": 1,
+  "lr": 0.001,
+  "fresh_core": false
+ },
+ "result": {
+  "trainfit/chat_direct": {
+   "correct": 5,
+   "n": 320,
+   "by_family": {
+    "group_induct": [
+     0,
+     48
+    ],
+    "chain_story2": [
+     0,
+     38
+    ],
+    "seq_cycle": [
+     0,
+     60
+    ],
+    "chain_ops": [
+     0,
+     27
+    ],
+    "var_chain": [
+     2,
+     35
+    ],
+    "cipher_map": [
+     0,
+     35
+    ],
+    "fewshot_number_rule": [
+     2,
+     38
+    ],
+    "state_update": [
+     1,
+     39
+    ]
+   },
+   "examples": [
+    [
+     "Question time. Group A: 40, 78, 60. Group B: 27, 69, 81. Which group does 54 belong to?",
+     "A",
+     "Group B"
+    ],
+    [
+     "Next problem: The pattern t w q i repeats forever. What is item number 9?",
+     "t",
+     "7"
+    ],
+    [
+     "u e c t u e c t u e c ? What comes next?",
+     "t",
+     "I'm sorry, but the prompt is unclear. Could you please provide the question"
+    ],
+    [
+     "Solve this. Vic has 46 beads. Then Vic uses up 31. Then Vic loses 13. How many beads does Vic have at the end?",
+     "2",
+     "28"
+    ],
+    [
+     "Examples: 22 -> 44; 23 -> 45; 25 -> 47. Now 8 -> ? Be brief.",
+     "30",
+     "4"
+    ],
+    [
+     "A small challenge: The pattern m r c repeats forever. What is item number 9?",
+     "c",
+     "7"
+    ],
+    [
+     "Quick one: Examples: 28 -> 58; 9 -> 39. Now 18 -> ?",
+     "48",
+     "27"
+    ],
+    [
+     "Solve this. The pattern o u s a repeats forever. What is item number 8?",
+     "a",
+     "8"
+    ]
+   ],
+   "seconds": 7.2
+  },
+  "trainfit/chat_steps": {
+   "correct": 138,
+   "n": 320,
+   "by_family": {
+    "group_induct": [
+     0,
+     48
+    ],
+    "chain_story2": [
+     33,
+     38
+    ],
+    "seq_cycle": [
+     14,
+     60
+    ],
+    "chain_ops": [
+     22,
+     27
+    ],
+    "var_chain": [
+     27,
+     35
+    ],
+    "cipher_map": [
+     1,
+     35
+    ],
+    "fewshot_number_rule": [
+     10,
+     38
+    ],
+    "state_update": [
+     31,
+     39
+    ]
+   },
+   "examples": [
+    [
+     "Question time. Group A: 40, 78, 60. Group B: 27, 69, 81. Which group does 54 belong to?",
+     "A",
+     " Maybe the groups are meant to be compared in a different way.\n\nLet\u2019s compute the differences or ranges:\n\n- Group A: 40, 78, 60  \n  - Differences: 78 - 40 = 38,"
+    ],
+    [
+     "Next problem: The pattern t w q i repeats forever. What is item number 9?",
+     "t",
+     "check the counting:\n\n- Position 1: t  \n- Position 2: w  \n- Position 3: q  \n- Position 4: i  \n- Position 5: t  \n- Position 6: w  \n- Position 7: q  \n- Position 8:"
+    ],
+    [
+     "u e c t u e c t u e c ? What comes next?",
+     "t",
+     " repeats every 3 letters.\n\nTherefore, the next letter after \"c\" would be the next in the cycle, which is **u**.\n\nSo the next letter is **u**.\n\nAnswer: Answer: u"
+    ],
+    [
+     "Solve this. Vic has 46 beads. Then Vic uses up 31. Then Vic loses 13. How many beads does Vic have at the end?",
+     "2",
+     "p 31 beads:  \n   46 - 31 = 15 beads remaining.\n3. Then Vic loses 13 beads:  \n   15 - 13 = 2 beads remaining.\n\nSo, Vic has 2 beads at the end.\n\nAnswer: Answer: 2"
+    ],
+    [
+     "Examples: 22 -> 44; 23 -> 45; 25 -> 47. Now 8 -> ? Be brief.",
+     "30",
+     "- From 25 to 47: +22\n\nWait, that doesn't match. Let's look at differences:\n\n- 44 - 22 = 22  \n- 45 - 23 = 22  \n- 47 - 25 = 22  \n\nSo the pattern is:  \nEach number"
+    ],
+    [
+     "A small challenge: The pattern m r c repeats forever. What is item number 9?",
+     "c",
+     ": c\n- 4th: m\n- 5th: r\n- 6th: c\n- ...\n\nSo the 3rd item is c. Therefore, the 9th item is also **c**.\n\nWait \u2014 let's double-check with counting:\n\n- Item 1: m\n- Item"
+    ],
+    [
+     "Quick one: Examples: 28 -> 58; 9 -> 39. Now 18 -> ?",
+     "48",
+     "e the number and add 30.\n\nLet\u2019s test this:\n\n- 28 + 30 = 58\n- 9 + 30 = 39\n\nThis matches the examples.\n\nNow apply the same rule to 18:\n\n18 + 30 = 48\n\nSo 18 \u2192 48\n\n"
+    ],
+    [
+     "Solve this. The pattern o u s a repeats forever. What is item number 8?",
+     "a",
+     "1st\n- The 7th is the same as the 2nd\n- The 8th is the same as the 3rd\n\nSo, item number 8 corresponds to the 3rd item in the sequence.\n\nTherefore, the answer is:"
+    ]
+   ],
+   "seconds": 215.5
+  },
+  "trainfit/raw_copy": {
+   "correct": 0,
+   "n": 320,
+   "by_family": {
+    "group_induct": [
+     0,
+     48
+    ],
+    "chain_story2": [
+     0,
+     38
+    ],
+    "seq_cycle": [
+     0,
+     60
+    ],
+    "chain_ops": [
+     0,
+     27
+    ],
+    "var_chain": [
+     0,
+     35
+    ],
+    "cipher_map": [
+     0,
+     35
+    ],
+    "fewshot_number_rule": [
+     0,
+     38
+    ],
+    "state_update": [
+     0,
+     39
+    ]
+   },
+   "examples": [
+    [
+     "Question time. Group A: 40, 78, 60. Group B: 27, 69, 81. Which group does 54 belong to?",
+     "A",
+     "**Question:** What is the primary function of a **cor"
+    ],
+    [
+     "Next problem: The pattern t w q i repeats forever. What is item number 9?",
+     "t",
+     "<\nIn the early 2000s,"
+    ],
+    [
+     "u e c t u e c t u e c ? What comes next?",
+     "t",
+     "\u00a0cmphore (Latin for \"charming one\") is"
+    ],
+    [
+     "Solve this. Vic has 46 beads. Then Vic uses up 31. Then Vic loses 13. How many beads does Vic have at the end?",
+     "2",
+     " averts the risk of losing money by investing in a divers"
+    ],
+    [
+     "Examples: 22 -> 44; 23 -> 45; 25 -> 47. Now 8 -> ? Be brief.",
+     "30",
+     " averts the spread of the disease by reducing contact between infected"
+    ],
+    [
+     "A small challenge: The pattern m r c repeats forever. What is item number 9?",
+     "c",
+     " averts the risk of a negative outcome by taking proactive measures"
+    ],
+    [
+     "Quick one: Examples: 28 -> 58; 9 -> 39. Now 18 -> ?",
+     "48",
+     " averich, aka the great british, is a"
+    ],
+    [
+     "Solve this. The pattern o u s a repeats forever. What is item number 8?",
+     "a",
+     "**Question:**  \nWhat is the primary function of a **"
+    ]
+   ],
+   "seconds": 12.6
+  },
+  "heldout/chat_direct": {
+   "correct": 9,
+   "n": 320,
+   "by_family": {
+    "chain_ops": [
+     2,
+     40
+    ],
+    "chain_story2": [
+     1,
+     40
+    ],
+    "cipher_map": [
+     0,
+     40
+    ],
+    "fewshot_number_rule": [
+     1,
+     40
+    ],
+    "group_induct": [
+     0,
+     40
+    ],
+    "seq_cycle": [
+     0,
+     40
+    ],
+    "state_update": [
+     1,
+     40
+    ],
+    "var_chain": [
+     4,
+     40
+    ]
+   },
+   "examples": [
+    [
+     "Let's see. Facts: Gus has 10 pebbles. Then Gus gives away 5. Then Gus multiplies the amount by 5. Question: How many peb",
+     "25",
+     "5"
+    ],
+    [
+     "Zoe has 10 boxes with 3 pencils in each. Then Zoe gives away 24 of the pencils. How many pencils does Zoe have now?",
+     "6",
+     "9"
+    ],
+    [
+     "Code: e=4, h=2, a=5, b=1. Write beb as numbers.",
+     "1 4 1",
+     "3"
+    ],
+    [
+     "Try this problem. Examples: (47, 16) -> 63; (26, 12) -> 38. Now (47, 16) -> ?",
+     "63",
+     "63"
+    ],
+    [
+     "Group A: 20, 68, 80. Group B: 81, 79, 27. Which group does 60 belong to?",
+     "A",
+     "Group B"
+    ],
+    [
+     "The pattern a s e repeats forever. What is item number 10?",
+     "a",
+     "8"
+    ],
+    [
+     "A jar holds 32 marbles. 4 are removed. 7 are added. How many marbles are in the jar now?",
+     "35",
+     "32"
+    ],
+    [
+     "Here is a puzzle. Facts: q = 8. p = q * 4. n = p + 9. Question: What is n?",
+     "41",
+     "23"
+    ]
+   ],
+   "seconds": 7.7
+  },
+  "heldout/chat_steps": {
+   "correct": 144,
+   "n": 320,
+   "by_family": {
+    "chain_ops": [
+     25,
+     40
+    ],
+    "chain_story2": [
+     32,
+     40
+    ],
+    "cipher_map": [
+     1,
+     40
+    ],
+    "fewshot_number_rule": [
+     22,
+     40
+    ],
+    "group_induct": [
+     0,
+     40
+    ],
+    "seq_cycle": [
+     7,
+     40
+    ],
+    "state_update": [
+     29,
+     40
+    ],
+    "var_chain": [
+     28,
+     40
+    ]
+   },
+   "examples": [
+    [
+     "Let's see. Facts: Gus has 10 pebbles. Then Gus gives away 5. Then Gus multiplies the amount by 5. Question: How many peb",
+     "25",
+     "es:  \n   10 - 5 = 5 pebbles remaining.\n3. Then Gus multiplies the amount by 5:  \n   5 \u00d7 5 = 25 pebbles.\n\nSo, at the end, Gus has 25 pebbles.\n\nAnswer: Answer: 25"
+    ],
+    [
+     "Zoe has 10 boxes with 3 pencils in each. Then Zoe gives away 24 of the pencils. How many pencils does Zoe have now?",
+     "6",
+     " pencils.\n\nNext, Zoe gives away 24 pencils.\n\nSo, the number of pencils she has left = 30 - 24 = 6 pencils.\n\nTherefore, Zoe now has 6 pencils.\n\nAnswer: Answer: 6"
+    ],
+    [
+     "Code: e=4, h=2, a=5, b=1. Write beb as numbers.",
+     "1 4 1",
+     "alue is **40**.\n\nAlternatively, if \"beb\" refers to a different formula, please clarify. But based on the numbers provided, the calculation leads to:\n\nAnswer: 40"
+    ],
+    [
+     "Try this problem. Examples: (47, 16) -> 63; (26, 12) -> 38. Now (47, 16) -> ?",
+     "63",
+     "first number plus some function of the second.\n\nLet\u2019s suppose the result is first number + 2 \u00d7 second number:\n\nFor (47, 16): 47 + 2\u00d716 = 47 + 32 = 79 \u2192 not 38\n\n"
+    ],
+    [
+     "Group A: 20, 68, 80. Group B: 81, 79, 27. Which group does 60 belong to?",
+     "A",
+     "either group. That suggests either the question has a typo or we need to reinterpret.\n\nWait \u2014 perhaps the question meant to ask which group 60 is closest to, or"
+    ],
+    [
+     "The pattern a s e repeats forever. What is item number 10?",
+     "a",
+     " item at position 10 corresponds to the same position as remainder 1, which is \"s\".\n\nWait \u2014 let's double-check with a count:\n\n- Item 1: a (remainder 1)\n- Item 2"
+    ],
+    [
+     "A jar holds 32 marbles. 4 are removed. 7 are added. How many marbles are in the jar now?",
+     "35",
+     "oved:\n   $ 32 - 4 = 28 $ marbles remaining.\n\n2. Then, 7 marbles are added:\n   $ 28 + 7 = 35 $ marbles.\n\nSo, the jar now contains 35 marbles.\n\nAnswer: Answer: 35"
+    ],
+    [
+     "Here is a puzzle. Facts: q = 8. p = q * 4. n = p + 9. Question: What is n?",
+     "41",
+     "cond fact:  \n   $ p = q \\times 4 = 8 \\times 4 = 32 $\n\n3. From the third fact:  \n   $ n = p + 9 = 32 + 9 = 41 $\n\nSo the value of $ n $ is 41.\n\nAnswer: Answer: 41"
+    ]
+   ],
+   "seconds": 209.2
+  },
+  "heldout/raw_copy": {
+   "correct": 0,
+   "n": 320,
+   "by_family": {
+    "chain_ops": [
+     0,
+     40
+    ],
+    "chain_story2": [
+     0,
+     40
+    ],
+    "cipher_map": [
+     0,
+     40
+    ],
+    "fewshot_number_rule": [
+     0,
+     40
+    ],
+    "group_induct": [
+     0,
+     40
+    ],
+    "seq_cycle": [
+     0,
+     40
+    ],
+    "state_update": [
+     0,
+     40
+    ],
+    "var_chain": [
+     0,
+     40
+    ]
+   },
+   "examples": [
+    [
+     "Let's see. Facts: Gus has 10 pebbles. Then Gus gives away 5. Then Gus multiplies the amount by 5. Question: How many peb",
+     "25",
+     "**Question:**  \nWhat is the primary purpose of the `"
+    ],
+    [
+     "Zoe has 10 boxes with 3 pencils in each. Then Zoe gives away 24 of the pencils. How many pencils does Zoe have now?",
+     "6",
+     "### Question 1\nWhat is the"
+    ],
+    [
+     "Code: e=4, h=2, a=5, b=1. Write beb as numbers.",
+     "1 4 1",
+     "\u00a0cmphyr: The name of the character in the game"
+    ],
+    [
+     "Try this problem. Examples: (47, 16) -> 63; (26, 12) -> 38. Now (47, 16) -> ?",
+     "63",
+     " averich, aka the great british, is a"
+    ],
+    [
+     "Group A: 20, 68, 80. Group B: 81, 79, 27. Which group does 60 belong to?",
+     "A",
+     " averich, aka the man in the middle, is"
+    ],
+    [
+     "The pattern a s e repeats forever. What is item number 10?",
+     "a",
+     " averts the risk of losing money by investing in a divers"
+    ],
+    [
+     "A jar holds 32 marbles. 4 are removed. 7 are added. How many marbles are in the jar now?",
+     "35",
+     "**Question:** Which of the following best describes the primary"
+    ],
+    [
+     "Here is a puzzle. Facts: q = 8. p = q * 4. n = p + 9. Question: What is n?",
+     "41",
+     " averies, a French company, has announced that it will"
+    ]
+   ],
+   "seconds": 10.9
+  }
+ },
+ "minutes": 8.0
+}

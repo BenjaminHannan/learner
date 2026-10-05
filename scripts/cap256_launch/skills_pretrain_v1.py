@@ -129,6 +129,7 @@ def main():
     ap.add_argument('--pointer', action='store_true', help='with --copy-path: add 8 pointer vectors (Linear 256->8 softmax over prompt positions, value = prompt embedding), the allptr exit; fresh params')
     ap.add_argument('--prefix-hidden', type=int, default=0, help='widen the exit StatePrefix 259->32->2048 hidden to this width; function-preserving, fresh Adam state for the widened layers')
     ap.add_argument('--zero-pool', action='store_true', help='with --copy-path: zero the 8 pooled core vectors (lesion: does the core matter?)')
+    ap.add_argument('--lora-lr-mult', type=float, default=1.0, help='LoRA adapters train at this multiple of the base lr (v3 used 1.0, i.e. 1e-3)')
     ap.add_argument('--lm-lora', type=int, default=0, help='rank-r LoRA on every Linear inside the frozen LM (not lm_head), used only when the LM talks (off during reader feature extraction); B=0 so the start is exactly the parent; kept outside lm.parameters()')
     ap.add_argument('--shuffle-pool', action='store_true', help='with --copy-path: replace the 8 pooled core vectors with the previous question\'s (lesion: does the core carry question-specific information?)')
     ap.add_argument('--gen-fix', action='store_true', help='with --copy-path: generation sees the training layout [pooled][prompt][BOS] (the old patch put the prompt in twice at generation)')
@@ -233,7 +234,7 @@ def main():
                     LORA['on'] = True
             rt.compare.extract_question_features = extract_off
             named = named + [('lora.' + n, p) for n, p in lora.named_parameters()]
-            opt.add_param_group({'params': list(lora.parameters())})
+            opt.add_param_group({'params': list(lora.parameters()), 'lr_scale': a.lora_lr_mult})
             print(json.dumps({'event': 'lm-lora', 'rank': r_, 'linears': len(lora) // 2,
                               'params': sum(p.numel() for p in lora.parameters())}), flush=True)
         if a.rounds != 4:
@@ -388,7 +389,7 @@ def main():
         log, curve, t0, done = [], [], time.time(), 0
         base_lr = runtime.ADAM_RECIPE['lr'] * a.lr_mult
         for g in opt.param_groups:
-            g['lr'] = base_lr
+            g['lr'] = base_lr * g.get('lr_scale', 1.0)
         if a.eval_at_start:
             curve.append({'update': 0, **{k: evaluate(rt, ctx, modules, dev[k], tokenizer) for k in ('in_dist', 'trainfit') if k in dev}})
             print(json.dumps({'event': 'skills-eval', **curve[-1]}), flush=True)
@@ -397,7 +398,7 @@ def main():
                 fin = runtime.ADAM_RECIPE['lr'] * a.lr_final_mult
                 cur = fin + 0.5 * (base_lr - fin) * (1 + math.cos(math.pi * (i - 1) / len(rows)))
                 for g in opt.param_groups:
-                    g['lr'] = cur
+                    g['lr'] = cur * g.get('lr_scale', 1.0)
             enc = encode(tokenizer, row, torch, ctx.device)
             if enc is None:
                 continue
@@ -445,7 +446,7 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'gen_fix': a.gen_fix, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'lora_lr_mult': a.lora_lr_mult if a.lm_lora else None, 'gen_fix': a.gen_fix, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}
