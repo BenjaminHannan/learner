@@ -99,7 +99,8 @@ points into the recipient's prompt, so the recipient's own word comes out. B2 (`
 change: a content-addressed copy talker. Seeds 100 and 101, paired with the existing tf, tfsteps and B runs at those seeds
 (same code path and flags; B2 is expected to run on BensPC's 5070 Ti in bf16, the earlier runs ran on Vast 5090s in bf16).
 **Copy-target families** (fixed now): letter_ops, copy_word, cipher_map, group_induct, digits_parity, exact match pooled over
-the five dev splits (1,000 rows per seed).
+the five dev splits (1,000 rows per seed; correction 12:50 UTC, before any B2 run: the dev data has 800 rows of these
+families per seed, not 1,000; the marks are unchanged).
 GO to confirm needs ALL of:
 - G1-G3 as in the screen.
 - **G4':** pooled-5 d vs plain_tf_steps >= +1.0 and vs C1' >= 0 (raised from -1: B already ties them).

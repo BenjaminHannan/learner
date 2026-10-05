@@ -1,8 +1,10 @@
 """Pass-mark analysis (PASS-MARKS.md, computed exactly as written).
 python3 -m custom_io.analyze --stage screen|confirm --results DIR [DIR...] --out FILE.json [--seeds 100,101]
 Reads every RESULT.json under the dirs; run folders are <arm>_s<seed> (A_s100, A0_s100, B_s100, tf_s100, tfsteps_s100,
-l2x2_s100, pythia31m_s200, pythia31m_fewshot_s200, smollm135_fewshot_s200 ...). Only status 'ok' runs count. Anything
-missing -> 'n/a' (never a crash). Mark value True/False/'n/a'."""
+l2x2_s100, B2_s100, pythia31m_s200, pythia31m_fewshot_s200, smollm135_fewshot_s200 ...). Only status 'ok' runs count. Anything
+missing -> 'n/a' (never a crash). Mark value True/False/'n/a'.
+Arm B2 (B + content-addressed copy talker, PASS-MARKS.md addendum 2) gets G4', G5', B2.copy and the copy evidence instead of G4 / G5, B's
+evidence marks (ids B2.loops1 ...), its own prove-wrong marks and a report (B2 - B per split and per family, nocopy / nowordc)."""
 import argparse, json, math, os, re
 from custom_io.evalx import CHAIN5, ONE_STEP
 
@@ -15,6 +17,8 @@ NUMBER_FAMS = ['arith_bare', 'backward_solve', 'chain_ops', 'chain_story2', 'com
                'table_calc', 'var_chain', 'word_filter']
 STRING_FAMS = ['cipher_map', 'copy_word', 'group_induct', 'kin_chain', 'object_track', 'order_chain', 'prop_eval', 'seq_cycle',
                'syllogism', 'verify_claim']
+# addendum 2: copy-target families (exact match pooled over POOL; a family absent from a split just has no rows there)
+COPY_FAMS = ['letter_ops', 'copy_word', 'cipher_map', 'group_induct', 'digits_parity']
 T975 = [12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179, 2.160, 2.145, 2.131, 2.120, 2.110,
         2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064, 2.060, 2.056, 2.052, 2.048, 2.045, 2.042]
 
@@ -94,6 +98,33 @@ def ONE(r, les=None):
         return None
 
 
+def FAMS(fams, splits=POOL):
+    """micro exact match (%) of the families `fams` pooled over `splits` (by_family correct / n), for a run or one of its lesions."""
+    def fn(r, les=None):
+        fe = _fe(r, les)
+        try:
+            bf = [fe[s]['by_family'] for s in splits]
+            c = sum(b[f]['correct'] for b in bf for f in fams if f in b)
+            n = sum(b[f]['n'] for b in bf for f in fams if f in b)
+            return 100 * c / n
+        except (TypeError, KeyError, ZeroDivisionError):
+            return None
+    return fn
+
+
+CT = FAMS(COPY_FAMS)
+
+
+def string_donor_drop(r):
+    """addendum 2: intact in_dist minus donor-swap in_dist (points), pooled over STRING_FAMS (rows weighted), from by_family."""
+    ib, db = g(r, 'final_eval', 'in_dist', 'by_family'), g(r, 'lesions', 'donor', 'in_dist', 'by_family')
+    try:
+        fs = [f for f in STRING_FAMS if f in ib and f in db]
+        return 100 * sum(ib[f]['correct'] for f in fs) / sum(ib[f]['n'] for f in fs) - sum(db[f]['exact'] * db[f]['n'] for f in fs) / sum(db[f]['n'] for f in fs)
+    except (TypeError, ZeroDivisionError):
+        return None
+
+
 def donor_group(r, fams):
     bf = g(r, 'lesions', 'donor', 'in_dist', 'by_family')
     try:
@@ -119,8 +150,9 @@ def loops_key(r):
     return f'loops:{2 * n}' if n and f'loops:{2 * n}' in (r.get('lesions') or {}) else (f'loops:{ks[-1]}' if ks and ks[-1] > 2 else None)
 
 
-def wiring(r):
-    """-> {check: True/False/'n/a'} for one run (checks whose lesion the model does not have are 'n/a')."""
+def wiring(r, b2=False):
+    """-> {check: True/False/'n/a'} for one run (checks whose lesion the model does not have are 'n/a').
+    b2 (addendum 2): the string-family donor_match check is replaced by string-family donor drop >= 20 on in_dist."""
     ind, ls = SPL('in_dist'), r.get('lesions') or {}
     w = {'shuffle_state<=10': chk(ind(r, 'shuffle_state'), '<=', 10) if 'shuffle_state' in ls else 'n/a',
          'zero_state<=5': chk(ind(r, 'zero_state'), '<=', 5) if 'zero_state' in ls else 'n/a',
@@ -130,7 +162,10 @@ def wiring(r):
     d = sub(ind(r), g(r, 'lesions', 'donor', 'in_dist', 'exact'))
     w['donor drop>=20'] = chk(d, '>=', 20)
     for nm, fams in (('number', NUMBER_FAMS), ('string', STRING_FAMS)):
-        w[f'donor_match {nm}>=50'] = chk(donor_group(r, fams), '>=', 50)
+        if b2 and nm == 'string':
+            w['donor drop string>=20'] = chk(string_donor_drop(r), '>=', 20)
+        else:
+            w[f'donor_match {nm}>=50'] = chk(donor_group(r, fams), '>=', 50)
     return w
 
 
@@ -198,7 +233,7 @@ def diff_marks(runs, arm, seeds, stage):
 
 
 def evidence(runs, arm, seeds):
-    """Real-evidence lesion marks for A / A0 / B (every seed)."""
+    """Real-evidence lesion marks for A / A0 / B / B2 (every seed). B2 gets B's marks (ids B2.loops1 ...) plus the copy evidence."""
     M, ps = [], lambda i, d, fn, op, thr: per_seed_mark(i, d, runs, arm, seeds, fn, op, thr)
     if arm == 'A':
         M += [ps('A.cf', 'interchange cf_match >= 40', lambda r: xget(r, 'interchange', 'cf_match'), '>=', 40),
@@ -211,14 +246,14 @@ def evidence(runs, arm, seeds):
         M += [ps('A0.loops1', 'loops:1 chain-5 <= 15', lambda r: C5(r, 'loops:1'), '<=', 15),
               ps('A0.onestep', 'loops:1 one-step families within 5 of intact',
                  lambda r: None if None in (ONE(r), ONE(r, 'loops:1')) else abs(ONE(r) - ONE(r, 'loops:1')), '<=', 5)]
-    if arm == 'B':
-        M += [ps('B.loops1', 'loops:1 chain-5 <= 5', lambda r: C5(r, 'loops:1'), '<=', 5),
-              ps('B.loops2', 'loops:2 cuts chain-5 by >= 40', lambda r: sub(C5(r), C5(r, 'loops:2')), '>=', 40),
-              ps('B.onestep', 'loops:2 one-op families within 5 of intact',
+    if arm == 'B' or arm.startswith('B2'):
+        M += [ps(f'{arm}.loops1', 'loops:1 chain-5 <= 5', lambda r: C5(r, 'loops:1'), '<=', 5),
+              ps(f'{arm}.loops2', 'loops:2 cuts chain-5 by >= 40', lambda r: sub(C5(r), C5(r, 'loops:2')), '>=', 40),
+              ps(f'{arm}.onestep', 'loops:2 one-op families within 5 of intact',
                  lambda r: None if None in (ONE(r), ONE(r, 'loops:2')) else abs(ONE(r) - ONE(r, 'loops:2')), '<=', 5),
-              ps('B.noexec', 'noexec program families <= 10 (extra.noexec.program_families, else chain-5 noexec)',
+              ps(f'{arm}.noexec', 'noexec program families <= 10 (extra.noexec.program_families, else chain-5 noexec)',
                  lambda r: xget(r, 'noexec', 'program_families') if xget(r, 'noexec', 'program_families') is not None else C5(r, 'noexec'), '<=', 10),
-              ps('B.opswap', 'opswap >= 90% outputs equal swapped program value',
+              ps(f'{arm}.opswap', 'opswap >= 90% outputs equal swapped program value',
                  lambda r: xget(r, 'opswap', 'swap_match', 'match'), '>=', 90)]
     return M
 
@@ -240,7 +275,46 @@ def wrong_marks(runs, arm, seeds, D):
         p5, c1p, c1c = D['pooled5_vs_tf']['mean'], D['pooled5_vs_C1']['mean'], D['chain5_vs_C1']['mean']
         W += [mark('wrongB.chain5', 'chain-5 d < +10', c5, '<', 10), mark('wrongB.pooled5', 'pooled-5 d <= 0', p5, '<=', 0),
               mark('wrongB.C1', "C1' within 3 points of B on both chain-5 and pooled-5", [c1c, c1p], ok=allof([chk(c1c, '<=', 3), chk(c1p, '<=', 3)]))]
+    if arm.startswith('B2'):
+        full = lambda st: st['mean'] if st['n'] == len(seeds) else None          # a prove-wrong mark needs every seed
+        dB, dCT = stats(paired(runs, arm, seeds, P5, 'B')), stats(paired(runs, arm, seeds, CT, 'B'))
+        mv = stats({s: None if None in (CT(runs[(arm, s)]), CT(runs[(arm, s)], 'nocopy')) else abs(CT(runs[(arm, s)]) - CT(runs[(arm, s)], 'nocopy'))
+                    for s in seeds if (arm, s) in runs})
+        W += [mark('wrongB2.pooled5', 'B2 - B pooled-5 < 0', full(dB), '<', 0),
+              mark('wrongB2.copyfams', 'copy-target families rise < +3 vs B (seed mean)', full(dCT), '<', 3),
+              mark('wrongB2.nocopy', 'nocopy moves the copy-target families by < 5 (seed mean of |change|; the copy path is not used)', full(mv), '<', 5)]
     return W
+
+
+def b2_gates(runs, arm, seeds, D, wire):
+    """addendum 2 gates after G1-G3: G4', G5', B2.copy, copy evidence -> (G4' mark, G5' mark, [B2.copy, B2.nocopy])."""
+    d_st, d_c1 = D['pooled5_vs_tfsteps']['mean'], D['pooled5_vs_C1']['mean']
+    g4 = mark("G4'", "pooled-5 d vs plain_tf_steps >= +1.0 and vs C1' (tfsteps calc) >= 0", [d_st, d_c1], ok=allof([chk(d_st, '>=', 1.0), chk(d_c1, '>=', 0.0)]))
+    g5 = mark("G5'", "wiring lesions hold in every seed (string donor_match replaced by string donor drop >= 20 on in_dist)", dict(wire),
+              ok=allof(allof(w.values()) if w else 'n/a' for w in wire.values()))
+    dB = stats(paired(runs, arm, seeds, P5, 'B'))
+    cp = mark('B2.copy', 'B2 - B pooled-5 >= +1.5 (seed mean, paired by seed with arm B)', dB['mean'], '>=', 1.5,
+              ok=allof([chk(dB['mean'], '>=', 1.5), 'n/a' if dB['n'] < len(seeds) else True]))
+    ce = per_seed_mark('B2.nocopy', 'copy evidence: nocopy lowers the copy-target families (' + ', '.join(COPY_FAMS) + ') by >= 20 points, each seed',
+                       runs, arm, seeds, lambda r: sub(CT(r), CT(r, 'nocopy')), '>=', 20)
+    return g4, g5, [cp, ce]
+
+
+def b2_report(runs, arm, seeds):
+    """B2 - B per split and per family, copy-target families under nocopy / nowordc, gate (extra.copy_gate). Reported either way (not marks)."""
+    splits = POOL + ['family']
+    rep = {'B2_minus_B_per_split': {'pooled5': stats(paired(runs, arm, seeds, P5, 'B')), **{s: stats(paired(runs, arm, seeds, SPL(s), 'B')) for s in splits}}}
+    fams = sorted({f for (a, _), r in runs.items() if a == arm for s in POOL for f in (g(r, 'final_eval', s, 'by_family') or {})})
+    rep['B2_minus_B_by_family_pooled5'] = {f: stats(paired(runs, arm, seeds, FAMS([f]), 'B')) for f in fams}
+    rep['copy_target_families'] = {'B2': stats({s: CT(runs[(arm, s)]) for s in seeds if (arm, s) in runs}), 'B': stats({s: CT(runs[('B', s)]) for s in seeds if ('B', s) in runs}),
+                                   'B2_minus_B': stats(paired(runs, arm, seeds, CT, 'B')), 'families': COPY_FAMS,
+                                   'n_rows': {s: sum(g(runs[(arm, s)], 'final_eval', sp, 'by_family', f, 'n') or 0 for sp in POOL for f in COPY_FAMS) for s in seeds if (arm, s) in runs}}
+    for les in ('nocopy', 'nowordc'):
+        rep[f'{les}_change'] = {'pooled5': stats({s: sub(P5(runs[(arm, s)], les), P5(runs[(arm, s)])) for s in seeds if (arm, s) in runs}),
+                                'copy_target': stats({s: sub(CT(runs[(arm, s)], les), CT(runs[(arm, s)])) for s in seeds if (arm, s) in runs}),
+                                **{f: stats({s: sub(FAMS([f])(runs[(arm, s)], les), FAMS([f])(runs[(arm, s)])) for s in seeds if (arm, s) in runs}) for f in COPY_FAMS}}
+    rep['copy_gate'] = {s: g(runs[(arm, s)], 'extra', 'copy_gate') for s in seeds if (arm, s) in runs}
+    return rep
 
 
 def design_arms(runs):
@@ -252,25 +326,32 @@ def screen(runs, seeds):
     for arm in design_arms(runs):
         D = diff_marks(runs, arm, seeds, 'screen')
         d_tf5, d_c5, d_in, d_st = (D[k] for k in ('pooled5_vs_tf', 'chain5_vs_tf', 'in_dist_vs_tf', 'pooled5_vs_tfsteps'))
-        wire = {s: wiring(runs[(arm, s)]) if (arm, s) in runs else {} for s in seeds}
+        b2 = arm.startswith('B2')
+        wire = {s: wiring(runs[(arm, s)], b2) if (arm, s) in runs else {} for s in seeds}
         w_ok = allof(allof(w.values()) if w else 'n/a' for w in wire.values())
         G = [mark('G1', 'pooled-5 d vs plain_tf >= +1.0', d_tf5['mean'], '>=', 1.0),
              mark('G2', 'chain-5 d vs plain_tf >= +8, all seeds positive', d_c5['mean'], '>=', 8.0,
                   ok=allof([chk(d_c5['mean'], '>=', 8.0), 'n/a' if d_c5['n'] < len(seeds) else d_c5['pos'] == d_c5['n']])),
              mark('G3', 'in_dist d vs plain_tf >= -2.0', d_in['mean'], '>=', -2.0),
              mark('G4', 'pooled-5 d vs plain_tf_steps >= -1.0', d_st['mean'], '>=', -1.0)]
-        if arm.startswith('B'):
-            G[3]['ok'] = allof([G[3]['ok'], chk(D['pooled5_vs_C1']['mean'], '>=', -1.0)])
-            G[3]['desc'] += " and vs C1' (tfsteps calc) >= -1.0"
-            G[3]['value'] = [d_st['mean'], D['pooled5_vs_C1']['mean']]
-        G.append(mark('G5', 'wiring lesions hold in every seed', {s: w for s, w in wire.items()}, ok=w_ok))
+        if b2:
+            g4, g5, extra = b2_gates(runs, arm, seeds, D, wire)
+            G = G[:3] + [g4, g5] + extra
+        else:
+            if arm.startswith('B'):
+                G[3]['ok'] = allof([G[3]['ok'], chk(D['pooled5_vs_C1']['mean'], '>=', -1.0)])
+                G[3]['desc'] += " and vs C1' (tfsteps calc) >= -1.0"
+                G[3]['value'] = [d_st['mean'], D['pooled5_vs_C1']['mean']]
+            G.append(mark('G5', 'wiring lesions hold in every seed', {s: w for s, w in wire.items()}, ok=w_ok))
         go = allof(m['ok'] for m in G)
-        complete = all((arm, s) in runs and (BASE, s) in runs and (STEPS, s) in runs for s in seeds)
+        complete = all((arm, s) in runs and (BASE, s) in runs and (STEPS, s) in runs and (not b2 or ('B', s) in runs) for s in seeds)
         out[arm] = {'diffs': D, 'G': G, 'verdict': 'incomplete (missing seeds)' if not complete else {True: 'GO', False: 'NO-GO', 'n/a': 'incomplete (n/a marks)'}[go],
                     'complete': complete,
                     'evidence': evidence(runs, arm, seeds), 'prove_wrong': wrong_marks(runs, arm, seeds, D)}
         if arm == 'A':
             out[arm]['A_minus_A0_chain5'] = stats(paired(runs, 'A', seeds, C5, 'A0'))
+        if b2:
+            out[arm]['report'] = b2_report(runs, arm, seeds)
     return out
 
 
@@ -317,7 +398,7 @@ def confirm(runs, seeds):
             verdict = 'PASS-1 (PASS-2 pending: n/a marks)'
         out[arm] = {'diffs': D, 'PASS1': P1, 'PASS2': P2, 'secondary': sec, 'FAIL': fail, 'verdict': verdict, 'complete': complete,
                     'evidence': evidence(runs, arm, seeds), 'prove_wrong': wrong_marks(runs, arm, seeds, D),
-                    'wiring': {s: wiring(runs[(arm, s)]) for s in seeds if (arm, s) in runs}}
+                    'wiring': {s: wiring(runs[(arm, s)], arm.startswith('B2')) for s in seeds if (arm, s) in runs}}
     return out
 
 
@@ -326,9 +407,34 @@ def f(v):
     return 'n/a' if v is None else f'{v:.2f}' if isinstance(v, float) else str(v)
 
 
+def srow(label, st, w=24):
+    ps = ' '.join(f'{k}:{f(v)}' for k, v in st['per_seed'].items())
+    return f"    {label:{w}s} {f(st['mean']):>8} {'' if not st['ci'] else '[%.2f, %.2f]' % tuple(st['ci'])}  per seed {ps}"
+
+
+def show_report(rep):
+    """B2 report block (not marks): B2 - B per split / per copy-target family, nocopy / nowordc changes, copy gate."""
+    print('  report (B2 - B, same seed; mean [95% CI] per seed):')
+    for k, st in rep['B2_minus_B_per_split'].items():
+        print(srow(f'per split {k}', st))
+    for fam in rep['copy_target_families']['families']:
+        if fam in rep['B2_minus_B_by_family_pooled5']:
+            print(srow(f'per family {fam}', rep['B2_minus_B_by_family_pooled5'][fam]))
+    ct = rep['copy_target_families']
+    print(f"    copy-target families (rows per seed {ct['n_rows']}): " + ', '.join(f"{k} {f(ct[k]['mean'])}" for k in ('B2', 'B', 'B2_minus_B')))
+    for les in ('nocopy', 'nowordc'):
+        print(f'  lesion {les}: change vs intact B2 (points)')
+        for k, st in rep[f'{les}_change'].items():
+            print(srow(k, st))
+    for sd, gt in rep['copy_gate'].items():
+        if gt:
+            print(f"    copy_gate seed {sd} (mean 1 - g on target-char registers, GEN rows): overall {f(gt.get('overall'))}; " +
+                  ', '.join(f'{k} {f(v)}' for k, v in (gt.get('by_family') or {}).items() if k in rep['copy_target_families']['families']))
+
+
 def show(res, stage):
     for arm, a in res.items():
-        print(f"\n=== {arm}: {a['verdict']}{'' if a['complete'] else '  (not every seed has plain_tf and plain_tf_steps)'}")
+        print(f"\n=== {arm}: {a['verdict']}{'' if a['complete'] else '  (not every seed has plain_tf and plain_tf_steps' + (' and B' if arm.startswith('B2') else '') + ')'}")
         print('  paired differences (design - baseline, same seed): mean [95% CI] pos/n')
         for k, s in a['diffs'].items():
             print(f"    {k:22s} {f(s['mean']):>8} {'' if not s['ci'] else '[%.2f, %.2f]' % tuple(s['ci'])} {s['pos']}/{s['n']}")
@@ -337,6 +443,8 @@ def show(res, stage):
                 v = m['value']
                 v = {k: (f(x) if not isinstance(x, dict) else 'dict') for k, x in v.items()} if isinstance(v, dict) else f(v) if not isinstance(v, list) else [f(x) for x in v]
                 print(f"  [{ {True: 'ok', False: 'NO', 'n/a': 'n/a'}[m['ok']]:>3}] {m['id']:12s} {m['desc']}  -> {v}")
+        if 'report' in a:
+            show_report(a['report'])
         if stage == 'confirm':
             print(f"  [ {a['secondary']['ok']}] secondary: {a['secondary']['desc']} -> {f(a['secondary']['value'])};  FAIL rule: {a['FAIL']}")
 

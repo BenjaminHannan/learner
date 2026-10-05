@@ -15,7 +15,12 @@ compare_numbers excluded: they can be answered without the executor); noexec.all
 opswap.swap_match = chain-5 rows right when intact whose swap changes the pointed value (invalid swapped replays counted separately).
 chain5_lesions = chain-5 under loops:1 / loops:2 / noexec for all rows, NUM-mode rows and the story_chain3 WORD rows (coin-flip floor).
 Deviation from the design text (switch off with "wpos": false): the word key also sees the word's start char (content-free), so the
-pointer can be learned from the reader's positions instead of having to count words."""
+pointer can be learned from the reader's positions instead of having to count words.
+B2 = B + `copy=True` (design/design-B2.md; default False = exactly B): the new modules are created last (same seed -> every shared weight starts
+as in B). WORD keys += k_wc(ln_wc(mean of the reader output X over the word's chars)); GEN becomes a pointer-generator: p = g * softmax(readout(R))
++ (1 - g) * (attention of q_cp(ln_t(R)) over k_cp(X) of the CURRENT batch's prompt, scattered onto the prompt's chars), g = sigmoid(g_cp(ln_t(R))),
+trained by -log(p[target] + 1e-6), decoded by argmax p (fp32). Lesions: 'nocopy' (g = 1), 'nowordc' (no content term in the WORD keys).
+copy=True size (vocab 108, S cfg) = 3,302,481 (+1.79% vs plain_tf S). extra_evals adds copy_gate (per family mean 1 - g on target-char registers)."""
 import math
 import numpy as np
 import torch
@@ -94,9 +99,9 @@ class CBlock(nn.Module):
 class Ledger(Model):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap']
 
-    def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True):
+    def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, copy=False):
         super().__init__(vocab)
-        self.d, self.n_loops, self.dk, self.w_noop, self.wpos = d, n_loops, dk, w_noop, wpos
+        self.d, self.n_loops, self.dk, self.w_noop, self.wpos, self.copy = d, n_loops, dk, w_noop, wpos, copy
         self.reader = CharReader(len(vocab), d, reader_layers)
         self.vcode = nn.Linear(93, d)
         self.stype, self.ordinal, self.op_emb, self.step_emb, self.src, self.ctrl = (
@@ -117,6 +122,13 @@ class Ledger(Model):
             for lin in (b.o, b.p, b.out):
                 nn.init.normal_(lin.weight, std=0.02 / math.sqrt(3 * blocks * n_loops))
         self._spans = {}
+        if copy:        # created LAST: no RNG draw above changes, so every weight shared with B starts identical at the same seed
+            self.LESIONS = Ledger.LESIONS + ['nocopy', 'nowordc']
+            self.ln_wc = nn.LayerNorm(d)
+            self.k_wc, self.q_cp, self.k_cp, self.g_cp = nn.Linear(d, dk), nn.Linear(d, dk), nn.Linear(d, dk), nn.Linear(d, 1)
+            for m in (self.k_wc, self.q_cp, self.k_cp, self.g_cp):
+                nn.init.normal_(m.weight, std=0.02)
+                nn.init.zeros_(m.bias)
 
     # ---- hand-written number / word tokenizer (prompt text only; cached per prompt) ----
     def spans(self, prompt):
@@ -150,10 +162,31 @@ class Ledger(Model):
         with torch.autocast(q.device.type, enabled=False):          # pointers in fp32
             return (torch.einsum('bk,bmk->bm', q.float(), k.float()) / math.sqrt(self.dk)).masked_fill(~ok, -1e9)
 
+    def word_content(self, X, ws, we):
+        """[B,W,dk] B2 content term of the WORD keys: k_wc(ln_wc(mean of the reader output X over the word's chars [ws, we))); zero for empty words."""
+        t_ix = torch.arange(X.shape[1], device=X.device)
+        inw = (t_ix >= ws[..., None]) & (t_ix < we[..., None])                                       # [B,W,T]
+        cnt = inw.sum(-1)
+        pool = torch.bmm(inw.to(X.dtype), X) / cnt.clamp(min=1)[..., None]
+        return self.k_wc(self.ln_wc(pool)) * (cnt > 0)[..., None]
+
+    def gen_copy(self, R, X, xm, ids, nocopy=False):
+        """B2 pointer-generator over the 9 GEN registers, fp32. R [B,9,d], X [B,T,d] reader output and xm [B,T] mask of the CURRENT batch's prompt,
+        ids [B,T] its char ids. -> (p [B,9,V] = g * softmax(readout(R)) + (1 - g) * copy, g [B,9,1]); nocopy forces g = 1."""
+        with torch.autocast(R.device.type, enabled=False):
+            R, X = R.float(), X.float()
+            h = self.ln_t(R)
+            p_vocab = (F.linear(h, self.reader.tok.weight.float()) + self.bias.float()).softmax(-1)
+            gate = torch.ones_like(h[..., :1]) if nocopy else torch.sigmoid(self.g_cp(h))
+            a = (torch.einsum('bid,btd->bit', self.q_cp(h), self.k_cp(X)) / math.sqrt(self.dk)).masked_fill(~xm[:, None, :], -1e9).softmax(-1)
+            p_copy = torch.zeros_like(p_vocab).scatter_add_(2, ids[:, None, :].expand(-1, R.shape[1], -1), a)
+            return gate * p_vocab + (1 - gate) * p_copy, gate
+
     # ---- reasoner ----
     def run(self, batch, loops=None, gold=None, lesion=None):
-        """One pass. gold (training) = dict(op [B,L], a/b [B,L,M] bool) teacher-forces every written step. lesion: 'noexec' / 'opswap'.
-        -> dict(R registers [B,9,d], vals [B,M] int64, valid, lmode, lans, lword, steps [(op, a, b logits)], prog (ops, a, b [B,L]))."""
+        """One pass. gold (training) = dict(op [B,L], a/b [B,L,M] bool) teacher-forces every written step. lesion: 'noexec' / 'opswap' / 'nowordc'.
+        -> dict(R registers [B,9,d], vals [B,M] int64, valid, lmode, lans, lword, steps [(op, a, b logits)], prog (ops, a, b [B,L]);
+        copy=True adds X [B,T,d] and xm [B,T] (reader output and prompt mask) so that loss() does not run the reader twice)."""
         X, xm = self.reader(batch)
         ns, ne, nv, ws, we = self.tokenize(batch)
         B, T, dev = X.shape[0], X.shape[1], X.device
@@ -169,6 +202,8 @@ class Ledger(Model):
         S0 = S0 * valid[:, :R0, None]
         Rs = torch.zeros(B, N_RES, self.d, device=dev, dtype=S0.dtype)
         Kw, wvalid = self.word_keys(ws, we), we > ws
+        if self.copy and lesion != 'nowordc':
+            Kw = Kw + self.word_content(X, ws, we)
         kvx = [b.kv_of(X + self.src.weight[1]) for b in self.core]
         P = self.reader.place.weight[:N_REG]
         Z = torch.cat([self.ctrl.weight, P]).expand(B, -1, -1)
@@ -210,6 +245,8 @@ class Ledger(Model):
         L = N_RES
         pad = lambda i: torch.stack([x[i] for x in prog] + [torch.zeros(B, dtype=torch.long, device=dev)] * (L - len(prog)), 1)
         out['prog'] = tuple(pad(i) for i in range(3))
+        if self.copy:
+            out['X'], out['xm'] = X, xm
         return out
 
     def state(self, batch, loops=None, lesion=None):
@@ -220,9 +257,15 @@ class Ledger(Model):
     def readout(self, R):
         return F.linear(self.ln_t(R), self.reader.tok.weight) + self.bias
 
-    def talk(self, state, batch):
+    def talk(self, state, batch, lesion=None):
+        """lesion (B2 only): 'nocopy'. The GEN copy keys come from the reader run on `batch` (the CURRENT rows, also under a donor swap)."""
         R, vals, valid, lmode, lans, lword = state
-        gen = [self.vocab.decode(r)[::-1] for r in self.readout(R).argmax(-1).tolist()]     # registers are units-first
+        if self.copy:
+            X, xm = self.reader(batch)
+            ids = self.gen_copy(R, X, xm, batch['prompt_ids'], lesion == 'nocopy')[0].argmax(-1)
+        else:
+            ids = self.readout(R).argmax(-1)
+        gen = [self.vocab.decode(r)[::-1] for r in ids.tolist()]     # registers are units-first
         mode, k, w = lmode.argmax(-1).tolist(), lans.argmax(-1).tolist(), lword.argmax(-1).tolist()
         vals, valid, out = vals.tolist(), valid.tolist(), []
         for i, row in enumerate(batch['rows']):
@@ -237,8 +280,10 @@ class Ledger(Model):
 
     @torch.no_grad()
     def generate(self, batch, lesion=None):
-        if lesion in ('noexec', 'opswap'):
+        if lesion in ('noexec', 'opswap') or (self.copy and lesion == 'nowordc'):
             return self.talk(self.state(batch, lesion=lesion), batch)
+        if self.copy and lesion == 'nocopy':
+            return self.talk(self.state(batch), batch, lesion=lesion)
         return super().generate(batch, lesion)
 
     # ---- loss ----
@@ -282,10 +327,18 @@ class Ledger(Model):
         marg = lambda lg, m, sel: torch.where(sel, -(torch.logsumexp(lg.masked_fill(~m, -1e9), -1) - torch.logsumexp(lg, -1)), torch.zeros_like(lg[:, 0])).sum() / B
         lmode = F.cross_entropy(o['lmode'].float(), g['mode'])
         lans, lword = marg(o['lans'], g['ans'], g['mode'] == 0), marg(o['lword'], g['word'], g['mode'] == 1)
-        ce = F.cross_entropy(self.readout(o['R']).float().flatten(0, 1), g['gen'].flatten(), ignore_index=-100, reduction='none').view(B, -1)
         n_t = (g['gen'] >= 0).sum(1).clamp(min=1)
+        if self.copy:       # pointer-generator: -log p[target] (fp32), the same masking and normalisation as the vocabulary CE below
+            p, gate = self.gen_copy(o['R'], o['X'], o['xm'], batch['prompt_ids'])
+            tg = g['gen']
+            ce = -torch.log(p.gather(2, tg.clamp(min=0)[..., None])[..., 0] + 1e-6).masked_fill(tg < 0, 0.0)
+        else:
+            ce = F.cross_entropy(self.readout(o['R']).float().flatten(0, 1), g['gen'].flatten(), ignore_index=-100, reduction='none').view(B, -1)
         lgen = (ce.sum(1) / n_t).mul(g['mode'] == 2).sum() / B
         aux = dict(prog=lop + lptr, op_acc=hits / tot.clamp(min=1), mode=lmode, ans=lans, word=lword, gen=lgen)
+        if self.copy:       # mean copy share (1 - g) over the registers that hold a target char (not the EOS slot) of GEN rows
+            tm = (g['gen'] >= 0) & (g['gen'] != EOS) & (g['mode'] == 2)[:, None]
+            aux['copy_share'] = ((1 - gate[..., 0]) * tm).sum() / tm.sum().clamp(min=1)
         return lop + lptr + lmode + lans + lword + lgen, {k: v.detach() for k, v in aux.items()}
 
     # ---- extra evals (train.py --final-eval) ----
@@ -393,5 +446,31 @@ class Ledger(Model):
         out['opswap'] = dict(swap_match=pc(s5['match'], s5['aff']), n_affected=s5['aff'], n_invalid_swap=s5['invalid'], n_unchanged=s5['unchanged'],
                              stays_intact=pc(s5['intact'], s5['aff']), chain5=dict(swap_match=pc(s5['match'], s5['aff']), n=s5['aff']),
                              swap_match_all=pc(sa['match'], sa['aff']), n_all=sa['aff'], n_all_invalid=sa['invalid'])
+        if self.copy:
+            out['copy_gate'] = self.copy_gate_eval(rows, ctx)
         self.train(was)
         return out
+
+    @torch.no_grad()
+    def copy_gate_eval(self, rows, ctx):
+        """copy_gate: per family mean of (1 - g) over the GEN registers that hold a target char (not the EOS slot), on the GEN-mode rows of `rows`
+        (dev in_dist; at most 3000, spread evenly). 1 = the register copies from the prompt, 0 = it reads the vocabulary. {by_family, n_regs, overall, n_rows}."""
+        from custom_io.data import collate, Dataset, to_device
+        from custom_io.evalx import subsample
+        gen_rows = subsample([r for r in rows if pp.row_targets(r)['mode'] == 2], 3000)
+        dev, bs, amp = ctx['device'], ctx['batch_size'], ctx['amp']
+        tot, cnt = {}, {}
+        for s in range(0, len(gen_rows), bs):
+            rs = gen_rows[s:s + bs]
+            b = to_device(collate([Dataset(rs, self.vocab, strict=False)[i] for i in range(len(rs))]), dev)
+            with amp():
+                o = self.run(b)
+                _, gate = self.gen_copy(o['R'], o['X'], o['xm'], b['prompt_ids'])
+            tgt = self.gold(rs, dev)['gen']
+            hold = (tgt >= 0) & (tgt != EOS)
+            share = ((1 - gate[..., 0]) * hold).sum(1).tolist()
+            for i, r in enumerate(rs):
+                f = r['family']
+                tot[f], cnt[f] = tot.get(f, 0.0) + share[i], cnt.get(f, 0) + int(hold[i].sum())
+        return dict(by_family={f: tot[f] / cnt[f] for f in sorted(cnt) if cnt[f]}, n_regs={f: cnt[f] for f in sorted(cnt)},
+                    overall=sum(tot.values()) / max(sum(cnt.values()), 1), n_rows=len(gen_rows))
