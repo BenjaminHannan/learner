@@ -14,6 +14,7 @@ Same stack and rows as the fit screens (skills_pretrain_v1.py: main2, worst-8 fa
                   --families/--target/--head vocab/--learner/--warmup: learning ladder (LD)
   --mode probe    eval-only: can the number tokens be read back from the LM features, the 32-wide reader, the
                   core's input and its rounds 1 and 4? (token and row probes, kNN and ridge)
+  --mode plan     can reader+core learn the fold plan (start literal, ops, operand pointers) of an exact calculator? no LM in the loss
 Prints one line per result starting with RESULT and writes OUT/DIAG-<mode>.json.
 """
 import argparse
@@ -606,9 +607,156 @@ def mode_probe(a):
     return out
 
 
+# ---------------------------------------------------------------- fold plan
+PLAN_OPS = ('+', '-', '*', '/', 'STOP')
+
+
+def parse_plan(row):
+    """steps -> (start, ops, operands); ValueError if a step does not parse. state_update '+d -> r' steps: op = sign, operand = d"""
+    start, ops, ws = None, [], []
+    for s in row['steps']:
+        if row['family'] == 'var_chain':
+            s = re.sub(r'^\w+ = ', '', s)
+        m = re.search(r'([-+])(\d+) -> (-?\d+)', s) if row['family'] == 'state_update' else None
+        if m:
+            o, w = m.group(1), int(m.group(2))
+            if start is None:
+                start = int(m.group(3)) - (w if o == '+' else -w)
+        else:
+            m = re.search(r'(-?\d+) ([-+*/]) (-?\d+)( = (-?\d+))?', s)
+            if not m:
+                raise ValueError(s)
+            o, w = m.group(2), int(m.group(3))
+            if start is None:
+                start = int(m.group(1))
+        ops.append(o)
+        ws.append(w)
+    if not ops:
+        raise ValueError('no steps')
+    return start, ops, ws
+
+
+def plan_labels(tok, row, ids):
+    """ids = prompt token ids incl. EOS -> (label dict, None), or (None, drop reason: parse / steps / ptr). P[k] = positions of slot k's literal"""
+    try:
+        start, ops, ws = parse_plan(row)
+    except ValueError:
+        return None, 'parse'
+    if len(ops) > 5:
+        return None, 'steps'
+    toks = [tok.decode([t]).strip() for t in ids]
+    P = [[t for t, s in enumerate(toks) if s == str(abs(v))] for v in [start] + ws]
+    if not all(P):
+        return None, 'ptr'
+    return {'toks': toks, 'P': P, 'start': start, 'ops': ops, 'ws': ws}, None
+
+
+def to_int(s):
+    return int(s) if re.fullmatch(r'-?\d+', s) else None
+
+
+def plan_exec(v, ops, ws):
+    """fold v through ops (symbols, STOP ends) with operands ws (int or None); None when not executable ('/' must divide exactly)"""
+    for o, w in zip(ops, ws):
+        if v is None or o == 'STOP':
+            break
+        if w is None:
+            return None
+        if o == '/':
+            if w == 0 or v % w:
+                return None
+            v //= w
+        else:
+            v = v + w if o == '+' else v - w if o == '-' else v * w
+    return v
+
+
+def mode_plan(a):
+    rt, torch, cfg, dec, tok, lm, modules, named = setup(a)
+    fixed, order, fit, held = rows_for(a.data, a.sample_seed, fams=list(CHAIN), passes=3)
+    parts = runtime.module_dict(modules)
+    dev = cfg['device']
+    F = torch.nn.functional
+    t0 = time.time()
+    L, why = {}, {}
+    for r in fixed + held:
+        enc = sp.encode(tok, r, torch, dev)
+        lab, why[r['id']] = plan_labels(tok, r, enc[0][0].tolist()) if enc else (None, 'long')
+        if lab:
+            ids, mask, _ = enc
+            ops5 = lab['ops'] + ['STOP'] * (5 - len(lab['ops']))
+            L[r['id']] = {**lab, 'ids': ids, 'mask': mask, 'tgt': torch.tensor([PLAN_OPS.index(o) for o in ops5], device=dev),
+                          'f': rt.compare.extract_question_features(lm, ids, mask, 'contextual', torch)}
+    pre = {'fixed': fixed, 'order': order, 'held': held}
+    fixed, order, held = [[r for r in pre[k] if r['id'] in L] for k in pre]
+    fit = fixed[:len(fit)]
+    emit('plan-drop', {'dropped': {k: len(v) - len(g) for (k, v), g in zip(pre.items(), (fixed, order, held))},
+                       'kept': {'fixed': len(fixed), 'order': len(order), 'fit': len(fit), 'held': len(held)},
+                       'reasons': {f: {w: sum(why[r['id']] == w for r in pre['fixed'] + pre['held'] if r['family'] == f)
+                                       for w in ('parse', 'steps', 'long', 'ptr')} for f in CHAIN},
+                       'dropped_by_family': {f: {k: [sum(r['id'] not in L for r in pre[k] if r['family'] == f), sum(r['family'] == f for r in pre[k])]
+                                                 for k in ('fixed', 'held')} for f in CHAIN}})
+    emit('plan-cache', {'rows': len(L), 'seconds': round(time.time() - t0, 1)})
+    if a.fresh_core:
+        torch.manual_seed(a.sample_seed)
+        reset_fresh(parts)
+    torch.manual_seed(a.sample_seed)
+    ptr, op = torch.nn.Linear(256, 6).to(dev), torch.nn.Linear(2048, 25).to(dev)
+    train_params = [p for n, p in named if n.startswith(('core.', 'reader.'))] + list(ptr.parameters()) + list(op.parameters())
+    opt = torch.optim.AdamW(train_params, lr=a.lr, weight_decay=0)
+    sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / a.warmup)) if a.warmup > 0 else None
+
+    def fwd(c):
+        h, _ = runtime.english_graph(rt, parts['core'], parts['reader'], c['f'], c['mask'])
+        z = F.layer_norm(h.float(), (256,))
+        return ptr(z[0]), op(F.adaptive_avg_pool1d(z[0].T[None], 8)[0].T.reshape(1, -1)).view(5, 5)
+
+    def score(rows):
+        for _, m in modules:
+            m.eval()
+        res = []
+        with torch.no_grad():
+            for r in rows:
+                c = L[r['id']]
+                lg, ol = fwd(c)
+                am, oa = lg.argmax(0).tolist(), ol.argmax(1).tolist()
+                v = plan_exec(to_int(c['toks'][am[0]]), [PLAN_OPS[j] for j in oa], [to_int(c['toks'][t]) for t in am[1:]])
+                res.append((v is not None and str(v) == sp.norm(r['answer']), oa == c['tgt'].tolist(),
+                            all(am[k] in c['P'][k] for k in range(len(c['ops']) + 1))))
+        for _, m in modules:
+            m.train()
+        parts['core'].halt.requires_grad_(False)
+        return ({'plan': sum(x[0] for x in res), 'ops': sum(x[1] for x in res), 'ptr': sum(x[2] for x in res), 'n': len(rows)},
+                [by_family(rows, [x[i] for x in res]) for i in range(3)])
+
+    def evaluate(u):
+        (fs, fb), (hs, hb) = score(fit), score(held)
+        curve.append({'update': u, 'fit': fs, 'held': hs, 'fit_by_family': fb[0], 'held_by_family': hb[0], 'ops_by_family': hb[1],
+                      'ptr_by_family': hb[2], 'minutes': round((time.time() - t0) / 60, 1)})
+        emit('plan-eval', curve[-1])
+    curve = []
+    evaluate(0)
+    n_upd = min(a.updates, len(order))
+    for u in range(1, n_upd + 1):
+        opt.zero_grad(set_to_none=True)
+        c = L[order[u - 1]['id']]
+        lg, ol = fwd(c)
+        lp = F.log_softmax(lg, 0)
+        loss = F.cross_entropy(ol, c['tgt'], reduction='sum') - sum(
+            torch.logsumexp(lp[torch.tensor(c['P'][k], device=dev), k], 0) for k in range(len(c['ops']) + 1))
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(train_params, 1.0)
+        opt.step()
+        if sched is not None:
+            sched.step()
+        if u in (2000, 4000) or u == n_upd:
+            evaluate(u)
+    return {'curve': curve}
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--mode', required=True, choices=['bare', 'chan', 'direct', 'geom', 'exitcap', 'probe'])
+    ap.add_argument('--mode', required=True, choices=['bare', 'chan', 'direct', 'geom', 'exitcap', 'probe', 'plan'])
     ap.add_argument('--root', required=True)
     ap.add_argument('--data', required=True)
     ap.add_argument('--out', required=True)
@@ -632,7 +780,7 @@ def main():
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
-    res = {'bare': mode_bare, 'chan': mode_chan, 'direct': mode_direct, 'geom': mode_geom, 'exitcap': mode_exitcap, 'probe': mode_probe}[a.mode](a)
+    res = {'bare': mode_bare, 'chan': mode_chan, 'direct': mode_direct, 'geom': mode_geom, 'exitcap': mode_exitcap, 'probe': mode_probe, 'plan': mode_plan}[a.mode](a)
     (out / ('DIAG-%s.json' % a.mode)).write_text(json.dumps({'args': vars(a), 'result': res,
                                                               'minutes': round((time.time() - t0) / 60, 1)}, indent=1))
     print('DIAG-DONE ' + a.mode, flush=True)
