@@ -40,3 +40,6 @@ S1-S3 fit 259 / 241 / 252 of 320 (mean 78.3%) vs paired baseline 214 / 213 / 212
   - Also paired against S1-S3: "rich steps fix the label families" if the 4 families' 3-seed fit sum rises by 60+ rows over S (from 346 / 524) and the 4 chain families stay within 15 rows of S (406 / 436).
   - Prediction: mean fit 84-90%; wrong if the 4 label families gain fewer than 20 rows over S.
 - **SP (steps, 6 passes):** S continued to 12,000 updates on the same rows (`--steps --passes 6 --updates 12000`). Calibration with P's marks: "a practice-budget question" if 12k fit >= 85% on all 3 seeds; "more practice alone will not reach it soon" if mean 12k fit < 75%; otherwise in between. Its first 6,000 updates repeat S exactly.
+
+## Calibration P result (job 13, read 03:12 UTC)
+P1-P3 at 6k reproduce B1-B3 exactly (214 / 213 / 212). At 9k: 230 / 222 / 220; at 12k: 230 / 230 / 235 of 320 (mean 72.4%), held-out 157 / 152 / 165 (mean 49.4%, +1.3 over 6k). Mean 12k fit < 75% -> **"more practice alone will not reach it soon"**; the extra fit is mostly memorised (held-out flat).
