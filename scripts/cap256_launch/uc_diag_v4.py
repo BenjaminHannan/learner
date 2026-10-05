@@ -10,7 +10,10 @@ Same stack and rows as the fit screens (skills_pretrain_v1.py: main2, worst-8 fa
                   own prefix; steps until teacher-forced exact (max --chan-steps)
   --mode direct   can reader+core learn these rows with a clean signal? main2's reader+core + a new answer-class
                   head on the core state (no LM in the loss), 6,000 updates in the fit screen's row order;
-                  scored on trainfit and held-out (answers never seen in the 2,000 rows count as wrong)
+                  scored on trainfit and held-out (answers never seen in the 2,000 rows count as wrong);
+                  --families/--target/--head vocab/--learner/--warmup: learning ladder (LD)
+  --mode probe    eval-only: can the number tokens be read back from the LM features, the 32-wide reader, the
+                  core's input and its rounds 1 and 4? (token and row probes, kNN and ridge)
 Prints one line per result starting with RESULT and writes OUT/DIAG-<mode>.json.
 """
 import argparse
@@ -35,17 +38,33 @@ def emit(tag, obj):
     print('RESULT ' + json.dumps({'tag': tag, **obj}), flush=True)
 
 
-def rows_for(data, seed, n_fixed=2000, dev_n=320):
+def rows_for(data, seed, n_fixed=2000, dev_n=320, fams=None, passes=3):
+    fs = set(fams or W8)
     rows_all = [json.loads(l) for l in (Path(data) / 'train.jsonl').read_text().splitlines()]
-    rows_all = [r for r in rows_all if r['family'] in set(W8)]
+    rows_all = [r for r in rows_all if r['family'] in fs]
     rng = random.Random('fixed|%d' % seed)
     fixed = rng.sample(rows_all, n_fixed)
     order = []
-    for _ in range(3):
+    for _ in range(passes):
         order += rng.sample(fixed, len(fixed))
     dev = [json.loads(l) for l in (Path(data) / 'dev' / 'in_dist.jsonl').read_text().splitlines()]
-    held = [r for r in dev if r['family'] in set(W8)][:dev_n]
+    held = [r for r in dev if r['family'] in fs][:dev_n]
     return fixed, order, fixed[:dev_n], held
+
+
+def target_text(row, kind):
+    """answer = norm(answer); x0 = first integer in the prompt; step1 = last integer in steps[0]; None if absent"""
+    if kind == 'answer':
+        return sp.norm(row['answer'])
+    m = re.findall(r'\d+', row['prompt']) if kind == 'x0' else re.findall(r'-?\d+', row['steps'][0] if row['steps'] else '')
+    return (m[0] if kind == 'x0' else m[-1]) if m else None
+
+
+def reset_fresh(parts):
+    for m in (parts['core'], parts['reader']):
+        for mod in m.modules():
+            if hasattr(mod, 'reset_parameters') and mod is not m:
+                mod.reset_parameters()
 
 
 def hit(text, row):
@@ -324,10 +343,22 @@ def mode_exitcap(a):
 # ---------------------------------------------------------------- direct head
 def mode_direct(a):
     rt, torch, cfg, dec, tok, lm, modules, named = setup(a)
-    fixed, order, fit, held = rows_for(a.data, a.sample_seed)
+    fixed, order, fit, held = rows_for(a.data, a.sample_seed, fams=a.families.split(','), passes=3)
     parts = runtime.module_dict(modules)
     dev = cfg['device']
-    classes = sorted({sp.norm(r['answer']) for r in fixed})
+    T = lambda r: target_text(r, a.target)
+    ntok = lambda r: len(tok.encode(T(r), add_special_tokens=False))
+    if a.head == 'vocab' or a.target != 'answer':
+        ok = {id(r): T(r) is not None and (a.head != 'vocab' or ntok(r) == 1) for r in fixed + held}
+        pre = {'fixed': fixed, 'order': order, 'held': held}
+        fixed, order, held = [[r for r in pre[k] if ok[id(r)]] for k in ('fixed', 'order', 'held')]
+        fit = fixed[:len(fit)]
+        emit('direct-drop', {'target': a.target, 'head': a.head, 'dropped': {k: len(v) - len(g) for (k, v), g in zip(pre.items(), (fixed, order, held))},
+                             'kept': {'fixed': len(fixed), 'order': len(order), 'fit': len(fit), 'held': len(held)},
+                             'dropped_by_family': {f: {k: [sum(not ok[id(r)] for r in pre[k] if r['family'] == f), sum(r['family'] == f for r in pre[k])]
+                                                             for k in ('fixed', 'held')}
+                                                   for f in sorted({r['family'] for r in pre['fixed'] + pre['held']})}})
+    classes = sorted({T(r) for r in fixed})
     cid = {c: i for i, c in enumerate(classes)}
     cache = {}
 
@@ -342,21 +373,56 @@ def mode_direct(a):
     for r in fixed + held:
         feats(r)
     emit('direct-cache', {'rows': len(cache), 'classes': len(classes), 'seconds': round(time.time() - t0, 1),
-                          'held_unseen_answers': sum(sp.norm(r['answer']) not in cid for r in held)})
+                          'held_unseen_answers': sum(T(r) not in cid for r in held)})
     if a.fresh_core:
-        for m in (parts['core'], parts['reader']):
-            for mod in m.modules():
-                if hasattr(mod, 'reset_parameters') and mod is not m:
-                    mod.reset_parameters()
+        reset_fresh(parts)
     torch.manual_seed(a.sample_seed)
-    width = 8 * 256
-    head = (torch.nn.Linear(width, len(classes)) if a.head == 'linear' else
-            torch.nn.Sequential(torch.nn.Linear(width, 512), torch.nn.GELU(), torch.nn.Linear(512, len(classes)))).to(dev)
-    train_params = [p for n, p in named if n.startswith(('core.', 'reader.'))] + list(head.parameters())
+    width = {'core': 8 * 256, 'lmread': 3 * 2048, 'tfm': 8 * 256}[a.learner]
+    nout = 2048 if a.head == 'vocab' else len(classes)
+    if a.head == 'vocab':
+        class VocabHead(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.proj = torch.nn.Linear(width, 2048)
+                self.E = lm.get_input_embeddings().weight.detach().float().to(dev)
+
+            def forward(self, s):
+                return self.proj(s) @ self.E.T
+        head = VocabHead().to(dev)
+        label = lambda r: tok.encode(T(r), add_special_tokens=False)[0]
+    else:
+        head = (torch.nn.Linear(width, nout) if a.head == 'linear' else
+                torch.nn.Sequential(torch.nn.Linear(width, 512), torch.nn.GELU(), torch.nn.Linear(512, nout))).to(dev)
+        label = lambda r: cid.get(T(r), -1)
+    tfm = None
+    if a.learner == 'tfm':
+        class Tfm(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.inp = torch.nn.Linear(2048, 256)
+                self.pos = torch.nn.Parameter(torch.randn(64, 256) * 0.02)
+                self.enc = torch.nn.TransformerEncoder(torch.nn.TransformerEncoderLayer(
+                    256, 8, 1024, dropout=0.0, activation='gelu', batch_first=True, norm_first=True), 4)
+                self.ln = torch.nn.LayerNorm(256)
+
+            def forward(self, f):
+                x = self.inp(torch.nn.functional.layer_norm(f.float(), (2048,))) + self.pos[:f.shape[1]]
+                z = self.ln(self.enc(x))
+                return torch.nn.functional.adaptive_avg_pool1d(z[0].T[None], 8)[0].T.reshape(1, -1)
+        tfm = Tfm().to(dev)
+    learner_params = {'core': [p for n, p in named if n.startswith(('core.', 'reader.'))], 'lmread': [],
+                      'tfm': list(tfm.parameters()) if tfm is not None else []}[a.learner]
+    train_params = learner_params + list(head.parameters())
     opt = torch.optim.AdamW(train_params, lr=a.lr, weight_decay=0)
+    sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / a.warmup)) if a.warmup > 0 else None
 
     def state(row):
         f, mask = feats(row)
+        if a.learner == 'lmread':
+            z = torch.nn.functional.layer_norm(f.float(), (2048,))
+            return torch.cat([z.mean(1), z[:, -1], z[:, -2]], 1)
+        if a.learner == 'tfm':
+            return tfm(f)
         h, _ = runtime.english_graph(rt, parts['core'], parts['reader'], f, mask)
         z = torch.nn.functional.layer_norm(h.float(), (256,))
         return torch.nn.functional.adaptive_avg_pool1d(z[0].T[None], 8)[0].T.reshape(1, -1)
@@ -367,7 +433,7 @@ def mode_direct(a):
         ok = []
         with torch.no_grad():
             for r in rows:
-                ok.append(classes[int(head(state(r)).argmax())] == sp.norm(r['answer']))
+                ok.append(int(head(state(r)).argmax()) == label(r))
         for _, m in modules:
             m.train()
         parts['core'].halt.requires_grad_(False)
@@ -375,7 +441,7 @@ def mode_direct(a):
     curve = []
     curve.append({'update': 0, 'trainfit': score(fit), 'heldout': score(held)})
     emit('direct-eval', {'update': 0, 'fit': curve[-1]['trainfit']['correct'], 'held': curve[-1]['heldout']['correct']})
-    n_upd = a.updates
+    n_upd = min(a.updates, len(order))
     bs = a.batch
     i = 0
     stream = order * (1 + (n_upd * bs) // len(order))
@@ -384,10 +450,12 @@ def mode_direct(a):
         loss = 0
         for r in stream[(u - 1) * bs:u * bs]:
             logit = head(state(r))
-            loss = loss + torch.nn.functional.cross_entropy(logit, torch.tensor([cid[sp.norm(r['answer'])]], device=dev)) / bs
+            loss = loss + torch.nn.functional.cross_entropy(logit, torch.tensor([label(r)], device=dev)) / bs
         loss.backward()
         torch.nn.utils.clip_grad_norm_(train_params, 1.0)
         opt.step()
+        if sched is not None:
+            sched.step()
         if u % 1500 == 0 or u == n_upd:
             curve.append({'update': u, 'trainfit': score(fit), 'heldout': score(held)})
             emit('direct-eval', {'update': u, 'fit': curve[-1]['trainfit']['correct'], 'held': curve[-1]['heldout']['correct'],
@@ -397,9 +465,132 @@ def mode_direct(a):
     return {'classes': len(classes), 'curve': curve}
 
 
+# ---------------------------------------------------------------- number-identity probe
+STAGES = ('f', 'r32', 'e', 'h1', 'h4')
+CHAIN = ('chain_ops', 'state_update', 'chain_story2', 'var_chain')
+
+
+def ridge_pred(torch, Xtr, Ytr, Xte, vmask, crit):
+    """ridge with lambda in {1e-2,1,1e2} x tr(X^T X)/d picked on the rows in vmask (higher crit is better), then refit on all"""
+    Xtr, Ytr, Xte = Xtr.double(), Ytr.double(), Xte.double()
+
+    def fit(X, Y, m):
+        mx, my = X.mean(0), Y.mean(0)
+        A = (X - mx).T @ (X - mx)
+        A = A + m * A.diagonal().sum() / X.shape[1] * torch.eye(X.shape[1], device=X.device, dtype=X.dtype)
+        W = torch.linalg.solve(A, (X - mx).T @ (Y - my))
+        return lambda Z: (Z - mx) @ W + my
+    best = 1.0
+    if bool(vmask.any()) and bool((~vmask).any()):
+        best = max((1e-2, 1.0, 1e2), key=lambda m: crit(fit(Xtr[~vmask], Ytr[~vmask], m)(Xtr[vmask]), vmask))
+    return fit(Xtr, Ytr, best)(Xte), best
+
+
+def knn_pred(torch, Xtr, Xte):
+    A, B = torch.nn.functional.normalize(Xtr, dim=1), torch.nn.functional.normalize(Xte, dim=1)
+    return torch.cat([(B[i:i + 512] @ A.T).argmax(1) for i in range(0, len(B), 512)])
+
+
+def mode_probe(a):
+    rt, torch, cfg, dec, tok, lm, modules, named = setup(a)
+    fixed, _, _, held = rows_for(a.data, a.sample_seed)
+    parts = runtime.module_dict(modules)
+    core, reader = parts['core'], parts['reader']
+    dev = cfg['device']
+    if a.fresh_core:
+        torch.manual_seed(a.sample_seed)
+        reset_fresh(parts)
+    for _, m in modules:
+        m.eval()
+    store = {}
+    hook = reader.proj[2].register_forward_hook(lambda m, i, o: store.__setitem__('r32', o.detach()))
+    recs = {'fixed': [], 'held': []}
+    norms = {'q': [], 'pos': [], 'h4': []}
+    t0 = time.time()
+    for split, rows in (('fixed', fixed), ('held', held)):
+        for ri, row in enumerate(rows):
+            enc = sp.encode(tok, row, torch, dev)
+            if enc is None:
+                continue
+            ids, mask = enc[:2]
+            with torch.no_grad():
+                f = rt.compare.extract_question_features(lm, ids, mask, 'contextual', torch)
+            with torch.no_grad(), rt.ordered_attention_math():
+                q = rt.compare.project_cached_question(reader, f, mask)
+                st = core.begin_latent(q, None, query_mask=mask)
+                n = st['query_n']
+                reps = {'f': f[0], 'r32': store['r32'][0], 'e': st['e'][0, :n]}
+                for r in range(1, 5):
+                    st = core.advance_latent(st)
+                    if r in (1, 4):
+                        reps['h%d' % r] = st['h'][0, :n]
+            norms['q'].append(q[0, 0, :n].float().norm(dim=-1))
+            norms['pos'].append((st['e'][0, :n] - q[0, 0, :n]).float().norm(dim=-1))
+            norms['h4'].append(reps['h4'].float().norm(dim=-1))
+            ss = [tok.decode([i]).strip() for i in ids[0].tolist()[:n]]
+            toks = [t for t, s in enumerate(ss) if s.isdigit() and len(s) <= 3]
+            rec = {'ri': ri, 'row': row, 'lab': [int(ss[t]) for t in toks],
+                   'tok': {k: v[toks].float() for k, v in reps.items()},
+                   'x': {k: torch.cat([v.mean(0), v[-1]]).float() for k, v in reps.items()} if row['family'] in CHAIN else None}
+            recs[split].append(rec)
+    hook.remove()
+    emit('probe-cache', {'fixed': len(recs['fixed']), 'held': len(recs['held']), 'seconds': round(time.time() - t0, 1)})
+    med = {k: round(float(torch.cat(v).median()), 3) for k, v in norms.items()}
+    emit('probe-norms', {'q_median': med['q'], 'pos_code_median': med['pos'], 'h4_median': med['h4']})
+    nval = 400
+    cut = len(fixed) - nval
+    out = {'norms': med, 'token': {}, 'row': {t: {} for t in ('x0', 'step1', 'answer')}}
+    lab_tr = torch.tensor([l for r in recs['fixed'] for l in r['lab']], device=dev)
+    lab_te = torch.tensor([l for r in recs['held'] for l in r['lab']], device=dev)
+    classes = sorted(set(lab_tr.tolist()))
+    cidx = {c: i for i, c in enumerate(classes)}
+    seen = torch.tensor([int(l) in cidx for l in lab_te.tolist()], device=dev)
+    ytr = torch.tensor([cidx[int(l)] for l in lab_tr.tolist()], device=dev)
+    yte = torch.tensor([cidx.get(int(l), -1) for l in lab_te.tolist()], device=dev)
+    vtok = torch.tensor([r['ri'] >= cut for r in recs['fixed'] for _ in r['lab']], device=dev)
+    onehot = torch.nn.functional.one_hot(ytr, len(classes)).double()
+    cov = round(float(seen.float().mean()), 4) if len(lab_te) else None
+    for st_name in STAGES:
+        Xtr = torch.cat([r['tok'][st_name] for r in recs['fixed']])
+        Xte = torch.cat([r['tok'][st_name] for r in recs['held']])
+        mu, sd = Xtr.mean(0), Xtr.std(0) + 1e-6
+        Xtr, Xte = (Xtr - mu) / sd, (Xte - mu) / sd
+        knn = float((ytr[knn_pred(torch, Xtr, Xte[seen])] == yte[seen]).float().mean())
+        P, lam = ridge_pred(torch, Xtr, onehot, Xte[seen], vtok, lambda P, vm: float((P.argmax(1) == ytr[vm]).float().mean()))
+        ridge = float((P.argmax(1) == yte[seen]).float().mean())
+        out['token'][st_name] = {'knn': round(knn, 4), 'ridge': round(ridge, 4), 'coverage': cov, 'n': int(seen.sum()), 'ridge_lambda_mult': lam}
+    emit('probe-token', out['token'])
+    rtr = [r for r in recs['fixed'] if r['x'] is not None]
+    rte = [r for r in recs['held'] if r['x'] is not None]
+    ns = {}
+    for tgt in ('x0', 'step1', 'answer'):
+        def val(r):
+            try:
+                return float(int(target_text(r['row'], tgt)))
+            except (TypeError, ValueError):
+                return None
+        tr = [r for r in rtr if val(r) is not None]
+        te = [r for r in rte if val(r) is not None]
+        y = torch.tensor([val(r) for r in tr], device=dev).double()
+        yt = torch.tensor([val(r) for r in te], device=dev).double()
+        m, s_ = y.mean(), y.std() + 1e-6
+        y, yt = ((y - m) / s_)[:, None], ((yt - m) / s_)[:, None]
+        vm = torch.tensor([r['ri'] >= cut for r in tr], device=dev)
+        for st_name in STAGES:
+            Xtr = torch.stack([r['x'][st_name] for r in tr])
+            Xte = torch.stack([r['x'][st_name] for r in te])
+            mu, sd = Xtr.mean(0), Xtr.std(0) + 1e-6
+            P, _ = ridge_pred(torch, (Xtr - mu) / sd, y, (Xte - mu) / sd, vm, lambda P, v: -float((P - y[v]).pow(2).mean()))
+            out['row'][tgt][st_name] = round(float(1 - (P - yt).pow(2).sum() / (yt - yt.mean()).pow(2).sum()), 4)
+        ns[tgt] = {'train': len(tr), 'held': len(te)}
+    emit('probe-row', out['row'])
+    emit('probe-row-n', ns)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--mode', required=True, choices=['bare', 'chan', 'direct', 'geom', 'exitcap'])
+    ap.add_argument('--mode', required=True, choices=['bare', 'chan', 'direct', 'geom', 'exitcap', 'probe'])
     ap.add_argument('--root', required=True)
     ap.add_argument('--data', required=True)
     ap.add_argument('--out', required=True)
@@ -408,7 +599,11 @@ def main():
     ap.add_argument('--chan-per-family', type=int, default=8)
     ap.add_argument('--chan-steps', type=int, default=150)
     ap.add_argument('--chan-lr', type=float, default=0.02, help='Adam lr as a multiple of the row prefix RMS')
-    ap.add_argument('--head', default='mlp', choices=['mlp', 'linear'])
+    ap.add_argument('--head', default='mlp', choices=['mlp', 'linear', 'vocab'])
+    ap.add_argument('--families', default=','.join(W8))
+    ap.add_argument('--target', default='answer', choices=['answer', 'x0', 'step1'])
+    ap.add_argument('--learner', default='core', choices=['core', 'lmread', 'tfm'])
+    ap.add_argument('--warmup', type=int, default=0)
     ap.add_argument('--updates', type=int, default=6000)
     ap.add_argument('--batch', type=int, default=1)
     ap.add_argument('--lr', type=float, default=1e-3)
@@ -417,7 +612,7 @@ def main():
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
-    res = {'bare': mode_bare, 'chan': mode_chan, 'direct': mode_direct, 'geom': mode_geom, 'exitcap': mode_exitcap}[a.mode](a)
+    res = {'bare': mode_bare, 'chan': mode_chan, 'direct': mode_direct, 'geom': mode_geom, 'exitcap': mode_exitcap, 'probe': mode_probe}[a.mode](a)
     (out / ('DIAG-%s.json' % a.mode)).write_text(json.dumps({'args': vars(a), 'result': res,
                                                               'minutes': round((time.time() - t0) / 60, 1)}, indent=1))
     print('DIAG-DONE ' + a.mode, flush=True)
