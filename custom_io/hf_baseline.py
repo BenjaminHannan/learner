@@ -49,7 +49,10 @@ class HFLM(Model):
     def __init__(self, vocab, hf_id, revision=None, shots=0, train_rows=(), seed=0):
         super().__init__(vocab)
         self.tok = AutoTokenizer.from_pretrained(hf_id, revision=revision)
-        self.lm = AutoModelForCausalLM.from_pretrained(hf_id, revision=revision, dtype=torch.float32)
+        try:                    # transformers >= 4.56 takes dtype=; older versions (e.g. on Ben's machines) torch_dtype=
+            self.lm = AutoModelForCausalLM.from_pretrained(hf_id, revision=revision, dtype=torch.float32)
+        except TypeError:
+            self.lm = AutoModelForCausalLM.from_pretrained(hf_id, revision=revision, torch_dtype=torch.float32)
         if self.tok.pad_token is None:
             self.tok.pad_token = self.tok.eos_token
         bos = self.tok.bos_token_id

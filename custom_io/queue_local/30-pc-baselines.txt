@@ -1,0 +1,15 @@
+# BensPC RTX 5070 Ti (cuda), run with: python -m custom_io.local_runner run --queue custom_io/queue_local/30-pc-baselines.txt --device cuda --par 3
+# Same-size baselines that any confirm needs (custom_io/PASS-MARKS.md), whichever design is confirmed:
+# 1) pythia-31m fine-tune lr pick (6k updates each, seed 200; the best pooled-5 lr is used for the 24k runs later),
+# 2) plain_tf and plain_tf_steps on confirm seeds 200-202 (24k updates, batch 256, same flags as the screen, no time cap).
+# MEM 6000
+hf: py31_lr1e-4_s200 --hf-id EleutherAI/pythia-31m --mode finetune --steps 6000 --batch 256 --lr 1e-4 --bf16 --seed 200 --log-every 500 --final-eval
+hf: py31_lr3e-4_s200 --hf-id EleutherAI/pythia-31m --mode finetune --steps 6000 --batch 256 --lr 3e-4 --bf16 --seed 200 --log-every 500 --final-eval
+hf: py31_lr1e-3_s200 --hf-id EleutherAI/pythia-31m --mode finetune --steps 6000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
+# MEM 5000
+tf_s200 --model plain_tf --cfg '{"d_model":256,"n_layers":4,"n_heads":4}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
+tfsteps_s200 --model plain_tf_steps --cfg '{}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
+tf_s201 --model plain_tf --cfg '{"d_model":256,"n_layers":4,"n_heads":4}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval
+tfsteps_s201 --model plain_tf_steps --cfg '{}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval
+tf_s202 --model plain_tf --cfg '{"d_model":256,"n_layers":4,"n_heads":4}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 202 --log-every 500 --final-eval
+tfsteps_s202 --model plain_tf_steps --cfg '{}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 202 --log-every 500 --final-eval
