@@ -21,11 +21,15 @@ git clone -q --depth 1 --filter=blob:none --sparse -b $BR $R mine && (cd mine &&
 git clone -q --depth 1 --filter=blob:none --sparse -b claude/project-thread-y0sxwe $R cur && (cd cur && git sparse-checkout set skills_curriculum) || die clone-cur
 (cd cur && python -m skills_curriculum.build --out $J/data --train 200000 --dev-per-cell 40 --seed 1 > $J/out/build.log 2>&1) || die build
 python -c "import json; a=json.load(open('$J/cur/skills_curriculum/FULL-BUILD-MANIFEST-200k-seed1.json'))['files_sha256']; b=json.load(open('$J/data/manifest.json'))['files_sha256']; assert a==b, 'curriculum hash mismatch'; print('curriculum hashes match')" || die hash
+(cd cur && python -m skills_curriculum.build --out $J/data_big --train 200000 --dev-per-cell 200 --seed 1 > $J/out/build_big.log 2>&1) || die build-big
+[ "$(sha256sum $J/data/train.jsonl | cut -c1-64)" = "$(sha256sum $J/data_big/train.jsonl | cut -c1-64)" ] || die big-train-hash
+echo "big build train.jsonl hash matches"
 PIP_BREAK_SYSTEM_PACKAGES=1 pip install -q --break-system-packages "transformers==5.17.0" "safetensors==0.8.0" accelerate numpy > out/pip.log 2>&1 || { tail -3 out/pip.log; die pip; }
 python -c "import torch, transformers; print(torch.__version__, transformers.__version__, torch.cuda.get_device_name(0))"
 export HF_HUB_DISABLE_PROGRESS_BARS=1 TRANSFORMERS_VERBOSITY=error TOKENIZERS_PARALLELISM=false OMP_NUM_THREADS=2 PYTHONUNBUFFERED=1
 D=$J/data
-export J D
+DB=$J/data_big
+export J D DB
 emit() {  # name : print the job's outputs as base64 lines
   n=$1; T=$J/res/$n.tgz
   (cd $J/w/$n 2>/dev/null && for f in */stdout.txt stdout.txt; do [ -f "$f" ] && grep -E '"event"|Traceback|Error|error|RESULT' "$f" | cut -c1-4000 > "${f%.txt}.events.txt"; done)
@@ -62,7 +66,7 @@ while true; do
     say "JOB START $n (free ${free} MiB, running $running)"
     ( mkdir -p $J/w/$n; export JOB=$n
       # run NAME args... : one custom_io.train run of this job, in its own output folder
-      run() { m=$1; shift; mkdir -p $J/w/$JOB/$m; (cd $J/code/$JOB && python -m custom_io.train --data $D --out $J/w/$JOB/$m "$@" > $J/w/$JOB/$m/stdout.txt 2>&1); }
+      run() { m=$1; shift; mkdir -p $J/w/$JOB/$m; (cd $J/code/$JOB && python -m custom_io.train --data $D --big-data $DB --out $J/w/$JOB/$m "$@" > $J/w/$JOB/$m/stdout.txt 2>&1); }
       export -f run
       (cd $J/code/$n && bash -c "source $J/state/$n.sh") > $J/w/$n/stdout.txt 2>&1
       echo "rc=$?" > $J/w/$n/rc.txt; emit $n; say "JOB END $n $(cat $J/w/$n/rc.txt)"; touch $J/state/$n.done; rm -f $J/state/$n.running ) &

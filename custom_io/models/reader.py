@@ -4,6 +4,7 @@ x = E_char[id] + E_pos[t] + E_place[place]; place = a char's index from the righ
 (units digit 0, tens 1, ...; letters likewise), 15 for spaces/padding, clamped at 14. Then `layers` masked residual
 blocks x + Conv1d_k5(GELU(LN x)) and a final LayerNorm. Receptive field: +-2 chars per block (+-4 with 2 blocks), so
 every relation between words further apart has to be computed by the reasoner, not here."""
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -42,15 +43,19 @@ class CharReader(nn.Module):
         self._cache = {}
 
     def places(self, batch):
-        """place ids for batch['rows'] prompts, padded to prompt_ids' width (donor_eval may widen it); cached."""
+        """place ids for batch['rows'] prompts, padded to prompt_ids' width (donor_eval may widen it). Cached per prompt
+        (int8 numpy rows), so a shuffled batch costs one small copy per row instead of a regex pass."""
         ids = batch['prompt_ids']
-        T, key = ids.shape[1], tuple(r['prompt'] for r in batch['rows'])
-        hit = self._cache.get(key)
-        if hit is None or hit.shape[1] != T or hit.device != ids.device:
-            if len(self._cache) > 4096:
-                self._cache.clear()
-            hit = self._cache[key] = place_ids(key, T, ids.device)
-        return hit
+        out = np.full((ids.shape[0], ids.shape[1]), PLACE_NONE, dtype=np.int64)
+        for b, r in enumerate(batch['rows']):
+            p = r['prompt']
+            v = self._cache.get(p)
+            if v is None:
+                if len(self._cache) > 400_000:
+                    self._cache.clear()
+                v = self._cache[p] = place_ids([p], len(p))[0].numpy().astype(np.int8)
+            out[b, :len(v)] = v
+        return torch.from_numpy(out).to(ids.device, non_blocking=True)
 
     def forward(self, batch):
         """-> X [B,T,d] (zeros at padding), mask [B,T] bool."""

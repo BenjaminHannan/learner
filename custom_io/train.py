@@ -3,7 +3,7 @@ import argparse, contextlib, json, math, os, random, sys, time
 import numpy as np
 import torch
 from custom_io.data import DEFAULT_DATA, CharVocab, Dataset, load_rows, to_device, train_batches
-from custom_io.evalx import can_donor, donor_all, eval_all, evaluate, short, subsample
+from custom_io.evalx import can_donor, chain_panel, donor_all, eval_all, evaluate, short, subsample, _dev_rows, is_hit
 from custom_io.models import NAMES, build
 
 
@@ -21,12 +21,47 @@ def jprint(**kw):
     print(json.dumps(kw), flush=True)
 
 
+def lesion_names(model):
+    """Every generate() lesion final_eval runs: the model's own (not loops) + loops:K for K in {0,1,2,2n}."""
+    names = [l for l in model.LESIONS if l.split(':')[0] != 'loops']
+    if getattr(model, 'n_loops', 1) > 1:    # a 1-loop model's sweep is only a format check (loops:1 = intact); skip it
+        names += [f'loops:{k}' for k in sorted({0, 1, 2, 2 * model.n_loops})]
+    return names
+
+
+def chain5_eval(model, args, device, amp):
+    """chain-5 panel (big build) for the intact model and every lesion -> {'intact': {..., 'hits': {id: 0/1}}, lesion: {...}}."""
+    rows = {r['id']: r for r in _dev_rows(args.big_data, 'in_dist', None)}
+    out = {}
+    for lesion in [None] + lesion_names(model):
+        with amp():
+            r = chain_panel(model, args.big_data, lesion, args.eval_batch, device, return_preds=lesion is None)
+        if lesion is None:
+            r['hits'] = {i: int(is_hit(p, rows[i])) for i, p in r.pop('preds').items()}
+        out[lesion or 'intact'] = r
+        jprint(event='eval', lesion=lesion, chain5=round(r['exact'], 2), n=r['n'])
+    return out
+
+
+def run_extra(model, args, device, amp, result):
+    """model.extra_evals(ctx) -> result['extra']; a failure is recorded in result['extra_error'], never raised."""
+    try:
+        ctx = dict(data=args.data, big=args.big_data, device=device, batch_size=args.eval_batch, amp=amp)
+        result['extra'] = model.extra_evals(ctx)
+        json.dumps(result['extra'])
+        jprint(event='extra', **{k: (round(v, 3) if isinstance(v, float) else v) for k, v in result['extra'].items()
+                                 if isinstance(v, (int, float, str, bool))}, keys=sorted(result['extra']))
+    except Exception:
+        import traceback
+        result.pop('extra', None)
+        result['extra_error'] = traceback.format_exc()
+        jprint(event='extra_error', error=result['extra_error'].strip().splitlines()[-1])
+
+
 def final_eval(model, args, device, amp):
     """Full eval_all, then every lesion the model supports (+ loops:K sweep for models with n_loops, + the donor swap
     for models with state/talk, stored under lesions['donor'] as {split: donor_eval result})."""
-    names = [l for l in model.LESIONS if l.split(':')[0] != 'loops']
-    if hasattr(model, 'n_loops'):
-        names += [f'loops:{k}' for k in sorted({0, 1, 2, 2 * model.n_loops})]
+    names = lesion_names(model)
     runs = {}
     for lesion in [None] + names:
         with amp():
@@ -44,6 +79,7 @@ def main(argv=None):
     ap.add_argument('--model', required=True, choices=NAMES)
     ap.add_argument('--cfg', default='{}', help='JSON dict of model kwargs')
     ap.add_argument('--data', default=DEFAULT_DATA, help='dir with train.jsonl and dev/')
+    ap.add_argument('--big-data', default=None, help='data root with a 200-per-cell dev/ (chain-5 panel + extra_evals)')
     ap.add_argument('--vocab', help='vocab json (default: DATA/charvocab.json, built from DATA/train.jsonl if absent)')
     ap.add_argument('--steps', type=int, default=3000)
     ap.add_argument('--batch', type=int, default=64)
@@ -130,6 +166,12 @@ def main(argv=None):
     write()                                           # trained model + stats survive even if the eval below dies
     if args.final_eval:
         result['final_eval'], result['lesions'] = final_eval(model, args, device, amp)
+        write()
+        if args.big_data:
+            result['chain5'] = chain5_eval(model, args, device, amp)
+            write()
+        if hasattr(model, 'extra_evals'):
+            run_extra(model, args, device, amp, result)
     write()
     jprint(event='done', steps=step, status=status, steps_per_s=round(result['steps_per_s'], 3), wall_s=round(result['wall_s'], 1),
            **(short(result['final_eval']) if result['final_eval'] else {}))

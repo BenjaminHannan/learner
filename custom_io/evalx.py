@@ -8,6 +8,8 @@ from custom_io.data import DEFAULT_DATA, DEV_SPLITS, Dataset, collate, load_rows
 
 MULTISTEP = {'chain_ops', 'chain_story2', 'story_chain3', 'var_chain', 'state_update', 'backward_solve',
              'kin_chain', 'object_track', 'order_chain', 'table_calc', 'distance_units', 'percent_rate'}
+CHAIN5 = ['chain_ops', 'chain_story2', 'story_chain3', 'state_update', 'var_chain']
+ONE_STEP = ['arith_bare', 'div_exact', 'story_addsub']
 
 
 def norm(s):
@@ -126,6 +128,14 @@ def donor_eval(model, rows, batch_size=128, device=None, seed=0):
 def _dev_rows(dev_dir, split, max_per_split):
     d = os.path.join(dev_dir, 'dev')
     return subsample(load_rows(os.path.join(d if os.path.isdir(d) else dev_dir, f'{split}.jsonl')), max_per_split)
+
+
+def chain_panel(model, big_root, lesion=None, batch_size=128, device=None, return_preds=False):
+    """chain-5: evaluate() on the CHAIN5 families of the big build's dev/in_dist.jsonl (200 rows per cell).
+    -> {'exact', 'n', 'by_family': {fam: {correct, n}}} (+ 'preds' with return_preds)."""
+    rows = [r for r in _dev_rows(big_root, 'in_dist', None) if r['family'] in CHAIN5]
+    r = evaluate(model, rows, batch_size, device, lesion, return_preds)
+    return {k: r[k] for k in ('exact', 'n', 'by_family') + (('preds',) if return_preds else ())}
 
 
 def can_donor(model):
