@@ -41,7 +41,7 @@ def norm(s):
 
 
 LORA = {'on': True}
-SHUF = {'prev': None}
+SHUF = {'prev': None, 'on': False}
 
 def encode(tokenizer, row, torch, device):
     ids = list(tokenizer.encode(row['prompt'], add_special_tokens=False)) + [common.EOS_ID]
@@ -68,6 +68,12 @@ def evaluate(rt, ctx, modules, rows, tokenizer):
         ids, mask, _ = enc
         CP['ids'] = ids
         feats = rt.compare.extract_question_features(ctx.lm, ids, mask, 'contextual', torch)
+        if row is rows[0] and not SHUF['on']:  # what length does the LM input have at generation?
+            with torch.no_grad():
+                h_, _ = runtime.english_graph(rt, parts['core'], parts['reader'], feats, mask)
+                pk = rt.FinalLatent(h_, torch.ones_like(h_, dtype=torch.bool), mask, (1, h_.shape[1]))
+                plen = int(ctx.dec.adapter(pk).shape[1])
+            print(json.dumps({'event': 'gen-layout', 'prompt_tokens_with_EOS': int(ids.shape[1]), 'lm_input_before_BOS': plen}), flush=True)
         obs = runtime.generate_observed(rt, ctx.dec, parts['core'], parts['reader'], feats, mask, 48 if STEPS['on'] else 12)
         out = obs['MODEL_native_decoder_return'][0] if obs['MODEL_native_decoder_return'] else []
         text = tokenizer.decode(out, skip_special_tokens=True)
@@ -122,10 +128,12 @@ def main():
     ap.add_argument('--zero-pool', action='store_true', help='with --copy-path: zero the 8 pooled core vectors (lesion: does the core matter?)')
     ap.add_argument('--lm-lora', type=int, default=0, help='rank-r LoRA on every Linear inside the frozen LM (not lm_head), used only when the LM talks (off during reader feature extraction); B=0 so the start is exactly the parent; kept outside lm.parameters()')
     ap.add_argument('--shuffle-pool', action='store_true', help='with --copy-path: replace the 8 pooled core vectors with the previous question\'s (lesion: does the core carry question-specific information?)')
+    ap.add_argument('--gen-fix', action='store_true', help='with --copy-path: generation sees the training layout [pooled][prompt][BOS] (the old patch put the prompt in twice at generation)')
     ap.add_argument('--rounds', type=int, default=4, help='latent loop rounds (shared weights; parent used 4)')
     ap.add_argument('--reader-hidden', type=int, default=0, help='widen the reader 2048->32->256 bottleneck to this width; function-preserving (new units feed zero weights), new weights get fresh Adam state; checkpoint then has the wider shape')
     a = ap.parse_args()
     STEPS['on'] = a.steps
+    SHUF['on'] = a.shuffle_pool
     root = Path(a.root).resolve()
     out = root / a.out
     out.mkdir(parents=True, exist_ok=True)
@@ -259,6 +267,12 @@ def main():
                 return torch.cat(parts + [pe], 1)
             ad.project_training = lambda *x, **k: with_prompt(o_train(*x, **k), x[0])
             ad.forward = lambda *x, **k: with_prompt(o_fwd(*x, **k), x[0].latent)
+            if a.gen_fix:
+                # o_fwd (StatePrefix.forward) calls self.project_training, which is the patched instance attribute
+                # above, so the old forward appended the prompt (and pointer, zero/shuffle lesions) twice at
+                # generation: [pooled][prompt][prompt][BOS]. Training sees [pooled][prompt][BOS]. This makes
+                # generation see exactly the training layout.
+                ad.forward = lambda p, **k: ad.project_training(p.latent, p.latent_mask, p.answer_mask, p.token_shape)
 
             def loss_fn(rt_, lm_, dec_, h, mask, target):
                 prefix = dec_.adapter.project_training(h, torch.ones_like(h, dtype=torch.bool), mask, (1, h.shape[1]))
@@ -283,6 +297,8 @@ def main():
         stride = max(1, len(rows_all) // max(1, a.updates))
         if a.eval_only:
             rows = []
+            if a.sample_seed is not None and a.fixed_rows:  # same draw as the training branch, scored only
+                dev['trainfit'] = random.Random('fixed|%d' % a.sample_seed).sample(rows_all, a.fixed_rows)[:a.dev_n]
         elif a.sample_seed is not None and a.fixed_rows:
             rng = random.Random('fixed|%d' % a.sample_seed)
             fixed = rng.sample(rows_all, a.fixed_rows)
@@ -343,7 +359,7 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'gen_fix': a.gen_fix, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}

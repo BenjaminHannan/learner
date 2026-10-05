@@ -21,3 +21,9 @@ Written 2026-10-05 01:45 UTC (9:45 PM ET Oct 4), before any of these ran. Fast l
 
 ## Limits
 One seed, one box, exploratory. Exact-match scoring. Nothing here touches GOLD-PRIVATE, reserved or blind panels.
+
+## Added 02:05 UTC, before it ran: a generation-layout bug check (job 06)
+Reading `skills_pretrain_v1.py` with `--copy-path`: `ad.forward` is patched to `with_prompt(o_fwd(...))`, but `o_fwd` (StatePrefix.forward) calls `self.project_training`, which is the *patched* instance attribute, so generation appends the prompt twice: the LM sees `[pooled][prompt][prompt][BOS]` at generation but `[pooled][prompt][BOS]` in training. The zero-pool lesion then also zeroes the first prompt copy, and the shuffle lesion swaps twice per row (so v3's S scores the current row's own vectors). Every copy-path fit/held-out number so far is a generation score, so all of them were measured on the doubled layout.
+- New flag `--gen-fix` makes generation use exactly the training layout; each eval now logs `gen-layout` (LM input length before BOS) so the bug is visible directly (buggy = 8 + 2N, fixed = 8 + N).
+- Job 06 scores main2 (no training) on the seed-1 trainfit rows and the 320 worst-8 held-out rows, with and without the fix, then on all 1,360 in_dist rows with the fix, intact / zero-pool / shuffle-pool.
+- Marks: "the doubled prompt hurts" if the fix raises trainfit or held-out by 5+ points. Lesions under the fix: "core carries question-specific information" if shuffle drops 20+ points below fixed intact; "core carries little" if within 10 points; zero-pool reported.

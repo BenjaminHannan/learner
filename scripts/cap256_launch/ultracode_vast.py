@@ -136,6 +136,22 @@ def collect(a):
     print(json.dumps(got))
 
 
+def waitfor(a):
+    """poll every 2 min; return when a job not in --seen has finished (REND), on UC-FAIL, or after --max-min"""
+    seen = set(filter(None, (a.seen or '').split(',')))
+    t0 = time.time()
+    while time.time() - t0 < a.max_min * 60:
+        text = log_text(a.id)
+        done = {ln.split('|')[1] for ln in text.splitlines() if ln.startswith('REND|')}
+        fail = [ln for ln in text.splitlines() if 'UC-FAIL' in ln or 'Traceback' in ln]
+        if done - seen or fail:
+            print(json.dumps({'finished': sorted(done), 'new': sorted(done - seen), 'fail': fail[-3:],
+                              'waited_min': round((time.time() - t0) / 60, 1)}))
+            return
+        time.sleep(120)
+    print(json.dumps({'timeout': True, 'waited_min': round((time.time() - t0) / 60, 1)}))
+
+
 def destroy(a):
     r = call('DELETE', '/instances/%s/' % a.id)
     print(json.dumps({'destroy': r.get('success'), 'msg': r.get('msg')}))
@@ -153,7 +169,7 @@ def credit(a):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['search', 'create', 'status', 'tail', 'collect', 'destroy', 'credit'])
+    ap.add_argument('cmd', choices=['search', 'create', 'status', 'tail', 'collect', 'destroy', 'credit', 'waitfor'])
     ap.add_argument('--gpu', default='RTX 5090')
     ap.add_argument('--n', type=int, default=60)
     ap.add_argument('--offer')
@@ -161,9 +177,11 @@ def main():
     ap.add_argument('--maxpar', type=int, default=5)
     ap.add_argument('--id')
     ap.add_argument('--out', default=str(OUT))
+    ap.add_argument('--seen', default='')
+    ap.add_argument('--max-min', type=float, default=120)
     a = ap.parse_args()
     {'search': search, 'create': create, 'status': status, 'tail': tail, 'collect': collect, 'destroy': destroy,
-     'credit': credit}[a.cmd](a)
+     'credit': credit, 'waitfor': waitfor}[a.cmd](a)
 
 
 if __name__ == '__main__':
