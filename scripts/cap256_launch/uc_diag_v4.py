@@ -376,6 +376,23 @@ def mode_direct(a):
                           'held_unseen_answers': sum(T(r) not in cid for r in held)})
     if a.fresh_core:
         reset_fresh(parts)
+    if a.reader_hidden:  # wider reader: function-preserving (new units' outputs start at 0), or fresh with --fresh-core
+        seq = parts['reader'].proj
+        l1, l2 = seq[1], seq[3]
+        g = torch.Generator(device='cpu').manual_seed(1000 + a.sample_seed)
+        n1, n2 = torch.nn.Linear(l1.in_features, a.reader_hidden).to(dev), torch.nn.Linear(a.reader_hidden, l2.out_features).to(dev)
+        if not a.fresh_core:
+            with torch.no_grad():
+                bound = 1.0 / math.sqrt(l1.in_features)
+                n1.weight.copy_((torch.rand(a.reader_hidden, l1.in_features, generator=g) * 2 - 1).mul_(bound))
+                n1.bias.copy_((torch.rand(a.reader_hidden, generator=g) * 2 - 1).mul_(bound))
+                n1.weight[:l1.out_features] = l1.weight
+                n1.bias[:l1.out_features] = l1.bias
+                n2.weight.zero_()
+                n2.weight[:, :l1.out_features] = l2.weight
+                n2.bias.copy_(l2.bias)
+        seq[1], seq[3] = n1, n2
+        emit('direct-reader', {'hidden': a.reader_hidden, 'fresh': a.fresh_core})
     torch.manual_seed(a.sample_seed)
     width = {'core': 8 * 256, 'lmread': 3 * 2048, 'tfm': 8 * 256}[a.learner]
     nout = 2048 if a.head == 'vocab' else len(classes)
@@ -410,7 +427,7 @@ def mode_direct(a):
                 z = self.ln(self.enc(x))
                 return torch.nn.functional.adaptive_avg_pool1d(z[0].T[None], 8)[0].T.reshape(1, -1)
         tfm = Tfm().to(dev)
-    learner_params = {'core': [p for n, p in named if n.startswith(('core.', 'reader.'))], 'lmread': [],
+    learner_params = {'core': [p for n, p in named if n.startswith('core.')] + (list(parts['reader'].parameters()) if a.reader_hidden else [p for n, p in named if n.startswith('reader.')]), 'lmread': [],
                       'tfm': list(tfm.parameters()) if tfm is not None else []}[a.learner]
     train_params = learner_params + list(head.parameters())
     opt = torch.optim.AdamW(train_params, lr=a.lr, weight_decay=0)
@@ -604,6 +621,7 @@ def main():
     ap.add_argument('--target', default='answer', choices=['answer', 'x0', 'step1'])
     ap.add_argument('--learner', default='core', choices=['core', 'lmread', 'tfm'])
     ap.add_argument('--warmup', type=int, default=0)
+    ap.add_argument('--reader-hidden', type=int, default=0, help='direct mode: widen the reader 2048->32->256 to 2048->H->256')
     ap.add_argument('--updates', type=int, default=6000)
     ap.add_argument('--batch', type=int, default=1)
     ap.add_argument('--lr', type=float, default=1e-3)
