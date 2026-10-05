@@ -203,3 +203,12 @@ SR2 plus one change, both doors widened at once: `--reader-hidden 2048` (into th
 - By the CR marks: **REACHES THE MARK** (mean fit 278 >= 272, lowest 270 >= 256). Chain held-out sum 405 vs SR2's 417: **"matches"** (within 15 rows), not "beats". **"The thinker decides each chain answer"**: plan_swap leaves 2-3 of 160 on every seed. The LM speaks the plan within 3 points on seeds 1 and 3 (1 and 0 rows under plan-exact); seed 2 is 5 rows (3.1 points) under. Not wrong (405 >= 402; plan_swap costs >= 129 rows).
 - **CRD vs CR (the CRD mark):** chain held-out +22 / +20 / +23 rows on the paired seeds (sum 470 vs 405, >= 20): **"the better planner carries through"** to the real model's answers.
 - Planner pretrain took 84-87 minutes on box C (3 runs plus other jobs sharing one GPU) against 14-23 minutes for CRD on less crowded boxes; the recipe is the same apart from the decay.
+
+## Added 11:32 UTC, before they ran: arm CRT (the talker calls the calculator, Ben's design)
+CRD plus one change, `--plan-talk` (being built): on chain rows the thinker no longer hands the talker a finished value. It hands over its plan as a short note in the talker's own tokens (' thinker: 10 - 5 * 5'). The talker is trained to write a calculator call (' calc(10 - 5 * 5)'); at generation the call is intercepted, an exact left-to-right calculator answers (' = 25'; no loss on these tokens, the tool writes them), and the talker continues to ' # 25'. Other kinds keep SR2's targets. Lesions: plan_swap (the note of another same-family question) and note_drop (no note). Seeds 1-3, paired with CRD1-CRD3. Runs on Ben's PC.
+- Screen mark as before: **REACHES THE MARK** if mean fit >= 272 and every seed >= 256.
+- **"The talker-called calculator works as well as the direct route"** if the chain held-out sum is within 10 rows of CRD's 470 / 480.
+- **"The thinker's note drives the call"** if, under plan_swap, chain held-out falls by >= 50 rows of 160 on every seed and the talker's call copies the injected note on >= 90% of chain rows.
+- note_drop is reported, not marked: if the talker still answers chain rows well with no note, it can write the call from the question alone.
+- Wrong if the chain held-out sum is < 440, or under plan_swap the call copies the injected note on < 70% of chain rows (the talker writes its own call and ignores the thinker).
+- Prediction: chain held sum 455-475; plan_swap leaves chain rows under 10 / 160 with the call copying the note on > 95%; note_drop 40-80% (the talker can partly read the question itself).
