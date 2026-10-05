@@ -191,3 +191,15 @@ SR2 plus one change, both doors widened at once: `--reader-hidden 2048` (into th
 - **"Wide doors help the score"** if mean fit >= 284 (SR2 + 8 rows); **"hurt"** if <= 268 (SR2 - 8).
 - Wrong (the doors are not what keeps the thinker out) if the family-mean lesion stays under 5 points on every seed.
 - Prediction: fit within 8 rows of SR2 and the family-mean lesion under 5 points. The talker reads the question itself, so a wider door gives it nothing it needs from the thinker.
+
+## CR result, 3 seeds (jobs 35-cr-s1..s3, constant-lr planner, read 11:30 UTC)
+| run | fit | held-out | chain fit / held | planner plan-exact, chain held | other-4 fit / held | plan_swap: chain held | CRD same seed: fit / held / chain held |
+|---|---|---|---|---|---|---|---|
+| CR1 | 287 | 268 | 124 / 136 | 137 | 163 / 132 | 3 | 295 / 288 / 158 |
+| CR2 | 277 | 249 | 126 / 132 | 137 | 151 / 117 | 2 | 293 / 291 / 152 |
+| CR3 | 270 | 263 | 128 / 137 | 137 | 142 / 126 | 2 | 302 / 281 / 160 |
+| **mean** | **278.0 (86.9%)** | 260.0 (81.3%) | chain held sum **405 / 480** | 411 | other-4 fit sum 456 | 2.3 | 296.7 / 286.7 / sum 470 |
+
+- By the CR marks: **REACHES THE MARK** (mean fit 278 >= 272, lowest 270 >= 256). Chain held-out sum 405 vs SR2's 417: **"matches"** (within 15 rows), not "beats". **"The thinker decides each chain answer"**: plan_swap leaves 2-3 of 160 on every seed. The LM speaks the plan within 3 points on seeds 1 and 3 (1 and 0 rows under plan-exact); seed 2 is 5 rows (3.1 points) under. Not wrong (405 >= 402; plan_swap costs >= 129 rows).
+- **CRD vs CR (the CRD mark):** chain held-out +22 / +20 / +23 rows on the paired seeds (sum 470 vs 405, >= 20): **"the better planner carries through"** to the real model's answers.
+- Planner pretrain took 84-87 minutes on box C (3 runs plus other jobs sharing one GPU) against 14-23 minutes for CRD on less crowded boxes; the recipe is the same apart from the decay.
