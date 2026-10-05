@@ -165,3 +165,18 @@ One change from PLOD / PLC: `--lr-cosine` (new in mode plan): after the 200-upda
 
 - By the marks: **not CONFIRMED** (mean 83.0% < 85%, seed 3 at 78.1% < 80%) and **not wrong** (mean >= 80%). The plan route lands at 83% final on new chain questions, 86% at its best checkpoint, against 84.8-86.8% for the LM writing steps on the same rows (SR2 and CF4-6 means).
 - The final-vs-best gap (4.8 rows on average, up to 13 on seed 3) is the end-point noise PLCD (cosine lr decay, box D) tests. Ops still trail pointers by 13 rows; state_update is the weak family on seeds 2, 3 and 5 (23-25 / 40).
+
+## Added 08:35 UTC, before they ran: PX and PXA (does the thinker's plan extend to the other four kinds?)
+One new flag, `--plan-fams` (mode plan). The plan language gains one op, CAT (append the pointed token to the answer), and the other four worst-8 kinds become plans the thinker writes:
+- seq_cycle, group_induct: point at the answer token in the question (the letter that comes next; the group's letter).
+- cipher_map: point at each answer piece in the code table, joined with CAT ('7 6 6', 'h e a').
+- fewshot_number_rule: a calculator plan built from the examples: add rule = query - in1 + out1 (sign of out1 folded into the op), mult rule = query * out1 / in1, pair sum = a + b. The thinker has to pick the rule from the examples.
+Recipe as PLOD (fresh reader+core, `--op-attend`, 17,000 distinct rows, one pass, constant lr 1e-3, warmup 200), seed 1. Defaults (chain kinds only) stay bit-identical to PLOD/PLCD.
+- **PX** (the other four kinds only). Held-out = the same 160 rows the skills screen scores for these kinds. The LM writing steps (SR2 seeds 1-3 + CF4-CF9, 9 seeds) gets **120.9 / 160** on them (75.6%; per seed 115-126; of 40: cipher_map 30.6, fewshot_number_rule 31.1, group_induct 35.6, seq_cycle 23.7).
+  - **"The plan extends to the other kinds"** if held plan-exact >= 121 / 160 (the LM's mean); **"beats the LM"** if >= 136 (85%).
+  - Wrong if < 96 / 160 (60%): pointers and a calculator do not carry these kinds.
+  - Prediction: cipher_map 36-40, group_induct 28-38, fewshot_number_rule 28-38, seq_cycle 18-32 (kth_letter needs (k-1) mod p, the expected weak spot); total 115-140.
+- **PXA** (all 8 kinds in one thinker, 34,000 distinct rows drawn from the 8 kinds' 39,788 train rows, one pass). Held-out = 320 rows.
+  - **"One thinker plans all 8 kinds"** if held >= 85% (272 / 320), with its chain part within 10 rows of PLC's 6-seed mean (132.8) and its other-4 part within 10 rows of PX.
+  - Wrong if held < 75% (240 / 320).
+- One seed each (screens). If PX passes, the next step is the trainer's `--plan-route` for all 8 kinds (the thinker answers every worst-8 question, the LM only says it), judged on the fit screen with plan_swap lesions.
