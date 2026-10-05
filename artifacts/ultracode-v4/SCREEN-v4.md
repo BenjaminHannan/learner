@@ -67,3 +67,6 @@ The design panel (5 designers, 3 judges, 1 synthesizer; plan in `artifacts/ultra
 - Marks vs B1-B3: the screen marks (REACHES THE MARK if mean fit >= 272/320 and every seed >= 256). Vs SR1-SR3, paired by seed: "answer-only restores seq_cycle" if seq_cycle's 3-seed fit sum >= 115/172 and the other 7 families' sum is within 15 rows of SR's 706 (SR 3-seed fit 800 minus seq_cycle 94). Flag MEMORISES-SEQ if seq_cycle fit gains >= 20 rows over SR while its held-out gains < 5. Lesions are read with the SL/BL marks above.
 - Wrong if: seq_cycle's fit sum stays below 105/172, the other 7 lose more than 15 rows against SR, or mean fit falls below SR's 266.7.
 - Prediction (panel): seq_cycle 112-128/172, mean fit ~276 (86%), REACHES with p ~0.6; held-out 78-82%; family-mean lesion within 3 points of intact.
+
+## Calibration SP result (job 15, read 04:01 UTC)
+SP1-SP3 at 6k reproduce S1-S3 exactly (259 / 241 / 252). At 9k: 271 / 267 / 259; at 12k: **279 / 274 / 280 of 320 (mean 86.8%; every seed >= 85%)**. Held-out 252 / 246 / 253 (mean 78.9%, +9.1 over 6k: unlike P, the extra practice with steps also lifts held-out). By the marks: **"a practice-budget question"**: with the curriculum's own steps, the step route reaches the mark at 6 passes. (The screen's REACHES THE MARK is defined at 3 passes, so this is not a screen pass.)
