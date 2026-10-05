@@ -92,7 +92,8 @@ After training, each row's 8 core vectors are replaced by the family mean, by an
 
 | run | fit intact | family-mean | same-family | global-mean | held intact | family-mean | same-family | global-mean |
 |---|---|---|---|---|---|---|---|---|
-| BL2 (baseline) | 213 | -5.9 | -7.2 | -23.8 | 153 | -0.9 | 0.0 | -12.2 |
+| BL1 (baseline, re-run) | 214 | -2.2 | -3.8 | -18.1 | 158 | -0.3 | +0.3 | -11.2 |
+| BL2 | 213 | -5.9 | -7.2 | -23.8 | 153 | -0.9 | 0.0 | -12.2 |
 | BL3 | 212 | -1.2 | -2.8 | -19.7 | 151 | +0.6 | -0.3 | -14.4 |
 | SL1 (steps) | 259 | -3.4 | -7.8 | -35.9 | 228 | -0.3 | -2.2 | -28.8 |
 | SL2 | 241 | -3.4 | -4.7 | -34.1 | 215 | +1.2 | -1.9 | -25.0 |
@@ -104,10 +105,10 @@ After training, each row's 8 core vectors are replaced by the family mean, by an
 | CF5 | 262 | -3.1 | -1.6 | -33.4 | 256 | -3.4 | -5.6 | -35.0 |
 | CF6 | 278 | -3.8 | -6.9 | -36.2 | 265 | -2.2 | -3.4 | -33.1 |
 
-(BL1 crashed with out-of-memory and is re-running.)
+(BL1 first crashed with out-of-memory; its re-run, added 06:43 UTC, reproduces B1's 214 exactly.)
 - "Needs core row content" (family-mean drop >= 10 points and >= 5 more than BL's): **not met on any run** (largest family-mean drop 5.0 points, MX2).
 - "Family switch" (family-mean and same-family both within 3 points on fit and held-out): met on SL3, MX3 and CF4; the others miss by up to 4.8 points, nearly all of it on practised rows (fit). On held-out, family-mean costs at most 3.4 points on every steps run.
-- Share of the steps lift that needs core row content, paired by seed with BL: S seed 2 ((241-230) - (213-194)) / (241-213) = **-0.29**; seed 3 ((252-254) - (212-208)) / (252-212) = **-0.15**. The steps lift needs no row content from the core (the steps runs lose less to the family-mean lesion than the baseline does).
+- Share of the steps lift that needs core row content, paired by seed with BL: S seed 1 ((259-248) - (214-207)) / (259-214) = **+0.09**; seed 2 ((241-230) - (213-194)) / (241-213) = **-0.29**; seed 3 ((252-254) - (212-208)) / (252-212) = **-0.15**. Mean -0.12: the steps lift needs no row content from the core (at most 9% on one seed; on the other two the steps runs lose less to the family-mean lesion than the baseline does).
 - The global-mean lesion costs 28-43 points with steps vs 20-24 without: with steps, the core's per-family signal (which format to write) matters more, not less.
 - Reading for Ben: the LM does the thinking by writing the steps; the core tells it which kind of puzzle it is. Per the panel's plan, FZ (freeze the core) is skipped, since its result is predictable from these lesions.
 
