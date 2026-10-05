@@ -271,3 +271,10 @@ It ran on box C after all (the box had already picked the job up when I removed 
 - Shown (1 seed, as marked): an 8x wider reader changes nothing. The ops are right on 156 / 160 rows both times; the pointers are what fail, and they also fail on the PRACTISED rows (fit 175 / 320), so this is not overfitting.
 - Verdict as written before the run: a fixed query per pointer slot cannot do lookups by content, even with identity kept. Next design (untested): compute each slot's query from the thinker's state (a content-addressed pointer), so "find the letter d in the table" can be asked as a question rather than learned as a fixed position.
 - PXW2048 (reader 2048) is now expected to match PXW; kept as Ben asked for the 2048 door, but moved after WD and CRT on the PC.
+
+## Added 12:08 UTC, before it ran: PXH (a two-hop, content-addressed pointer)
+PX plus one change, `--ptr-hops 2` (being built): each pointer slot first attends with its fixed query (a new head, no labels of its own), reads the state it lands on, and turns that into a slot-specific content query over all tokens; the final pointer = the old fixed-query score + that content score (the content part starts at zero, so at update 0 it equals PX's pointer). Reader 32 as in PX; same rows, seed 1, held-out and recipe (17,000 rows, --op-attend, --lr-cosine, --plan-fams cipher_map,fewshot_number_rule,group_induct,seq_cycle). Runs on Ben's PC or M1 when they are back.
+- **"A content query carries the content kinds"** if held plan-exact >= 121 / 160 (the LM's mean on these rows).
+- **"The fixed query was the limit"** if the content-kind pointers (cipher_map + group_induct + seq_cycle) rise by >= 30 over PX's 44 / 120.
+- **Wrong** if held < 96 / 160 AND content-kind pointers < 60 / 120: then the query's form is not the limit either; next suspects are that the thinker's token states do not hold the pairings (probe them) or the sub-word split of cipher words.
+- Prediction: seq_cycle and group_induct gain most (seq_cycle >= 30 / 40); cipher_map stays under 15 / 40 because "daa" splits into 'da' + 'a', so one token holds two letters.
