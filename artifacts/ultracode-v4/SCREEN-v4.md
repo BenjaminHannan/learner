@@ -61,9 +61,9 @@ All three runs finished training and their 6,000-update eval, then crashed in th
 - Prediction: seq_cycle 125-150 / 172; mean fit 85-89%. Wrong if seq_cycle stays under 110.
 - If SR2 REACHES THE MARK, its 6-seed confirmation (seeds 4-9, own marks written first, with --final-lesions) follows, and since the LM weights do not change, no English check is needed. Whether the core or the LM does the work is measured by the lesions (SL/BL now, and the confirmation's own).
 
-## Added 03:55 UTC, before they ran: arm MX (from the design panel), box A
+## Added 03:57 UTC, before they ran: arm MX (from the design panel), box A
 The design panel (5 designers, 3 judges, 1 synthesizer; plan in `artifacts/ultracode-v4/PANEL-v4.md`) picked MX as the second route to the mark next to SR2, plus a core diagnostic battery (PR, LD, conditional OR / PL / LDD / DS / FZ) and a conditional 6-seed confirmation CF.
 - **MX:** `--steps --steps-rich --answer-only-fams seq_cycle --final-lesions`: SR, except seq_cycle's target is just ` # answer` (no steps). One change against SR.
-- Marks vs B1-B3: the screen marks (REACHES THE MARK if mean fit >= 272/320 and every seed >= 256). Vs SR1-SR3, paired by seed: "answer-only restores seq_cycle" if seq_cycle's 3-seed fit sum >= 115/172 and the other 7 families' sum is within 15 rows of SR's 726 (SR 3-seed fit 820 minus seq_cycle 94). Flag MEMORISES-SEQ if seq_cycle fit gains >= 20 rows over SR while its held-out gains < 5. Lesions are read with the SL/BL marks above.
+- Marks vs B1-B3: the screen marks (REACHES THE MARK if mean fit >= 272/320 and every seed >= 256). Vs SR1-SR3, paired by seed: "answer-only restores seq_cycle" if seq_cycle's 3-seed fit sum >= 115/172 and the other 7 families' sum is within 15 rows of SR's 706 (SR 3-seed fit 800 minus seq_cycle 94). Flag MEMORISES-SEQ if seq_cycle fit gains >= 20 rows over SR while its held-out gains < 5. Lesions are read with the SL/BL marks above.
 - Wrong if: seq_cycle's fit sum stays below 105/172, the other 7 lose more than 15 rows against SR, or mean fit falls below SR's 266.7.
 - Prediction (panel): seq_cycle 112-128/172, mean fit ~276 (86%), REACHES with p ~0.6; held-out 78-82%; family-mean lesion within 3 points of intact.
