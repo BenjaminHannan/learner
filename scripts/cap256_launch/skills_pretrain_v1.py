@@ -40,6 +40,9 @@ def norm(s):
     return ' '.join(s.strip().lower().split())
 
 
+LORA = {'on': True}
+SHUF = {'prev': None}
+
 def encode(tokenizer, row, torch, device):
     ids = list(tokenizer.encode(row['prompt'], add_special_tokens=False)) + [common.EOS_ID]
     if len(ids) > 64:
@@ -117,6 +120,8 @@ def main():
     ap.add_argument('--pointer', action='store_true', help='with --copy-path: add 8 pointer vectors (Linear 256->8 softmax over prompt positions, value = prompt embedding), the allptr exit; fresh params')
     ap.add_argument('--prefix-hidden', type=int, default=0, help='widen the exit StatePrefix 259->32->2048 hidden to this width; function-preserving, fresh Adam state for the widened layers')
     ap.add_argument('--zero-pool', action='store_true', help='with --copy-path: zero the 8 pooled core vectors (lesion: does the core matter?)')
+    ap.add_argument('--lm-lora', type=int, default=0, help='rank-r LoRA on every Linear inside the frozen LM (not lm_head), used only when the LM talks (off during reader feature extraction); B=0 so the start is exactly the parent; kept outside lm.parameters()')
+    ap.add_argument('--shuffle-pool', action='store_true', help='with --copy-path: replace the 8 pooled core vectors with the previous question\'s (lesion: does the core carry question-specific information?)')
     ap.add_argument('--rounds', type=int, default=4, help='latent loop rounds (shared weights; parent used 4)')
     ap.add_argument('--reader-hidden', type=int, default=0, help='widen the reader 2048->32->256 bottleneck to this width; function-preserving (new units feed zero weights), new weights get fresh Adam state; checkpoint then has the wider shape')
     a = ap.parse_args()
@@ -147,6 +152,40 @@ def main():
         opt = runtime.make_optimizer(torch, [p for _, p in named])
         runtime.restore_adam(torch, opt, saved, named)
         participation, nonzero = Counter(saved['participation']), Counter()
+        if a.lm_lora:
+            r_, lora = a.lm_lora, torch.nn.ModuleDict()
+            g = torch.Generator(device='cpu').manual_seed(3000 + (a.sample_seed or 0))
+            LORA['on'] = True
+
+            def hook(mod, inp, out, key=None):
+                if not LORA['on']:
+                    return out
+                A, B = lora[key + '_A'], lora[key + '_B']
+                return out + B(A(inp[0].to(A.weight.dtype))).to(out.dtype)
+            for name, mod in lm.model.named_modules():
+                if isinstance(mod, torch.nn.Linear):
+                    key = name.replace('.', '__')
+                    A = torch.nn.Linear(mod.in_features, r_, bias=False)
+                    B = torch.nn.Linear(r_, mod.out_features, bias=False)
+                    with torch.no_grad():
+                        A.weight.copy_(torch.randn(r_, mod.in_features, generator=g) / math.sqrt(mod.in_features))
+                        B.weight.zero_()
+                    lora[key + '_A'], lora[key + '_B'] = A, B
+                    mod.register_forward_hook(lambda m, i, o, key=key: hook(m, i, o, key))
+            lora = lora.to(cfg['device'])
+            o_extract = rt.compare.extract_question_features
+
+            def extract_off(*x, **k):
+                LORA['on'] = False
+                try:
+                    return o_extract(*x, **k)
+                finally:
+                    LORA['on'] = True
+            rt.compare.extract_question_features = extract_off
+            named = named + [('lora.' + n, p) for n, p in lora.named_parameters()]
+            opt.add_param_group({'params': list(lora.parameters())})
+            print(json.dumps({'event': 'lm-lora', 'rank': r_, 'linears': len(lora) // 2,
+                              'params': sum(p.numel() for p in lora.parameters())}), flush=True)
         if a.rounds != 4:
             R = a.rounds
 
@@ -210,6 +249,9 @@ def main():
             def with_prompt(pref, h):
                 with torch.no_grad():
                     pe = emb(CP['ids']).to(pref.dtype)
+                if a.shuffle_pool:
+                    prev, SHUF['prev'] = SHUF['prev'], pref.detach()
+                    pref = prev if prev is not None else pref * 0
                 parts = [pref * 0 if a.zero_pool else pref]
                 if ptr is not None:
                     pw = ptr(h.float()).softmax(1)
@@ -274,6 +316,10 @@ def main():
             feats = rt.compare.extract_question_features(lm, ids, mask, 'contextual', torch)
             ctx.tokens, ctx.features = {0: (ids, mask, labels)}, {0: feats}
             r = trainer.train_step(rt, ctx, modules, named, opt, 0, participation, nonzero)
+            if a.lm_lora and done == 0:
+                lg = [(n, p.grad) for n, p in named if n.startswith('lora.') and n.endswith('_A.weight')]
+                print(json.dumps({'event': 'lm-lora-first-step', 'A_with_grad': sum(1 for _, g_ in lg if g_ is not None),
+                                  'A_total': len(lg)}), flush=True)
             done += 1
             log.append((row['stage'], r['CE'], r['teacherforced_exact']))
             if i % 500 == 0:
@@ -297,7 +343,7 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}
