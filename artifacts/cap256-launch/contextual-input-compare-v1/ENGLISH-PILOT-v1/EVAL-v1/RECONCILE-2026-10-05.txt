@@ -1,0 +1,13 @@
+English pilot G9 eval: reconciliation note (2026-10-05)
+LAUNCH-ATTEMPT-RECORD.txt is stale. Attempt 2 (-Tag eval2) WAS launched on 2026-10-03 15:55:02Z
+(ops\eval2-STATUS.txt: pid 20128, wholejob 14400, exit 0 at 15:57:47Z; driver receipt
+DRIVER-RECEIPTS\eval-20261003T155502Z-30436-9c1f82, returncode 0). Output eval-v1 was sealed
+(SEALED.json f2de68ba37ca5a230ff199b3a302e4ae068950f546e6010a2d096fe57bc69a52, gold_accessed=false)
+and scored in commit dae7fa39c -> RESULTS-v1/SCORES-v1.json, verdict UNDERFIT-VOID.
+2026-10-05 checks (no GPU, no relaunch; fresh items are single-use):
+- PC run-eval.ps1 sha256 74b78f82...d491b6 matches.
+- All 8 files in PC eval-v1 hash-identical to RESULTS-v1/eval-v1; all 6 RAW hashes match SEALED.json.
+- Scorer (39be47e5..., = PILOT-FREEZE) re-run on Mac with FRESH-EVAL-FREEZE-v1, TRAIN bank f2f5cce3...,
+  4 RESULTS-v1/train-v1 CLOSED receipts: output byte-identical to SCORES-v1.json (UNDERFIT-VOID).
+- Blind S1 sheet built: RESULTS-v1/BLIND-PARAPHRASE-SHEET-v1.json sha d941665d8166a09eeb089cd9a76ce4c8789703656ba1e8c674ac93b12fe96ea7 (36 rows).
+  KEY (sha d8313829954624ff650f2a7efc93bb14af93d5bd922683e98d7184be92602924) held out of git, kept away from the rater.
