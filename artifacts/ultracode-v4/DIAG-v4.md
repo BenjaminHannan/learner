@@ -109,3 +109,23 @@ One change: `--op-attend`. Each step's op logits also read the core's state at t
 - **"The plan route reaches the mark"** if PLOD held-out plan-exact >= 85% (136 / 160). Then the next step is wiring the plan heads and the exact calculator into the real model (core plans, calculator computes, LM speaks the result), judged on the fit screen with lesions.
 - Wrong if PLO held-out op-sequence < 70% (112 / 160): the operand's neighbourhood does not carry the op either.
 - Prediction: PLO held ops 75-90%, plan 70-85%; PLOD plan 80-92%; var_chain still the weakest.
+
+## PLO and PLOD results (jobs 32-plo-fresh, 32-plod-fresh, read 07:29 UTC)
+`--op-attend`: each step's op also reads the core state at its pointed operand. Held-out = the same 160 new chain rows.
+
+| run | fit plan | held plan | held ops | held ptr |
+|---|---|---|---|---|
+| PL fresh (2k x 3, before) | 206/320 | 97/160 (60.6%) | 98 (61.3%) | 146 (91.3%) |
+| **PLO** (2k x 3, op-attend) | 273/320 (85.3%) | **124/160 (77.5%)** | **129 (80.6%)** | 137 (85.6%) |
+| PLD (17k rows, before) | 233/320 | 111/160 (69.4%) | 115 (71.9%) | 139 (86.9%) |
+| **PLOD** (17k rows, op-attend) | 285/320 (89.1%) | **139/160 (86.9%)** | 141 (88.1%) | 151 (94.4%) |
+
+PLOD held plan over training: 73 / 110 / 126 / 118 / 132 / 126 / 141 / 128 / 139 (2k ... 16k, end); best 141 (88.1%). By family at the end (plan of 40): chain_story2 40, state_update 37, chain_ops 32, var_chain 30.
+- By the marks: PLO **"reading the op at its operand fixes the op limit"** (ops 80.6% >= 80% and plan +27 rows >= +15 over PL fresh). PLOD **"the plan route reaches the mark"** (86.9% >= 85%). Predictions held (PLO ops 75-90, plan 70-85; PLOD 80-92).
+- For comparison, the LM writing worked steps scores 84.4-88.1% on the same four kinds' held-out rows (SR2 seeds 1-3 mean 86.8%, CF4-CF6 mean 84.8%). Here no LM is in the loop at all after the reader: the core reads the question into a plan and an exact calculator computes the answer.
+- Limits: one seed; the final eval moves by up to 13 rows between checkpoints (constant lr, batch 1); 17,000 distinct rows vs the screen's 2,000 x 3; four chain kinds only; the core still reads the frozen LM's features (the reader side of the sandwich is unchanged).
+
+## Added 07:31 UTC, before they ran: PLC, the 6-seed confirmation of PLOD
+PLOD with seeds 2-6 (jobs 33-plod-s2..s6, box B; seed changes the init, the row order and which 17,000 of the 17,981 rows are used; held-out rows are the same 160). Together with seed 1:
+- **CONFIRMED** if the mean final held-out plan-exact over the 6 seeds is >= 85% (136/160) and every seed is >= 80% (128/160). Wrong if the 6-seed mean is < 80%.
+- The best-checkpoint numbers are reported next to the final ones but do not decide.
