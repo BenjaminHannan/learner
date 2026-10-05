@@ -30,3 +30,13 @@ B1-B3 fit 214 / 213 / 212 of 320 (mean 66.6%), held-out 158 / 153 / 151 (mean 48
   - "more practice alone will not reach it soon" if mean 12k fit < 75% (240/320);
   - otherwise "in between", and the 9k-to-12k slope is reported.
   - Held-out at 12k is reported; if fit rises 10+ points over 6k while held-out rises < 3, it is flagged MEMORISES.
+
+## Arm S result (job 12, read 02:56 UTC)
+S1-S3 fit 259 / 241 / 252 of 320 (mean 78.3%) vs paired baseline 214 / 213 / 212: gains +45 / +28 / +40 rows, mean **+11.8 points, all 3 seeds positive -> HELPS** (not FIXES FIT, not REACHES THE MARK: seeds 80.9 / 75.3 / 78.8%). Held-out 228 / 215 / 227 vs 158 / 153 / 151: **+21.7 points** (no MEMORISES flag). The prediction held: the 4 chain families gained most (3-seed fit sums, baseline -> S: chain_ops 42 -> 92 / 96, chain_story2 77 -> 102 / 103, state_update 61 -> 102 / 118, var_chain 66 -> 110 / 119). The 4 families whose curriculum "steps" are only labels lost fit: cipher_map 77 -> 63 / 105, fewshot_number_rule 70 -> 41 / 108; group_induct 123 -> 125 / 139, seq_cycle 123 -> 117 / 172.
+
+## Added 02:58 UTC, before they ran: arm SR (rich steps, box A) and calibration SP (steps + 6 passes, box B)
+- **SR (rich steps):** `--steps --steps-rich`: the same as S, except cipher_map, fewshot_number_rule, group_induct and seq_cycle get worked steps built from each row's own meta (e.g. cipher encode `d=7 ; a=6 ; a=6`, fewshot add `37 - 23 = 14 ; rule: add 14 ; 12 + 14 = 26`, group parity `A even, B odd ; 58 is even`, seq_cycle `cycle y f, length 2 ; (7-1) mod 2 = 0 ; item 0 = y`). Checked on all 21,807 training rows of those families: the last step implies the row's answer every time; longest target 31 tokens (generation limit 48). The 4 chain families keep their curriculum steps.
+  - Paired against the baseline B1-B3 with the screen's marks above (REACHES THE MARK / FIXES FIT / HELPS / NO EFFECT / HURTS).
+  - Also paired against S1-S3: "rich steps fix the label families" if the 4 families' 3-seed fit sum rises by 60+ rows over S (from 346 / 524) and the 4 chain families stay within 15 rows of S (406 / 436).
+  - Prediction: mean fit 84-90%; wrong if the 4 label families gain fewer than 20 rows over S.
+- **SP (steps, 6 passes):** S continued to 12,000 updates on the same rows (`--steps --passes 6 --updates 12000`). Calibration with P's marks: "a practice-budget question" if 12k fit >= 85% on all 3 seeds; "more practice alone will not reach it soon" if mean 12k fit < 75%; otherwise in between. Its first 6,000 updates repeat S exactly.

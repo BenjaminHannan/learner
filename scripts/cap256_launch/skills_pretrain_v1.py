@@ -46,11 +46,52 @@ CHAT = {}
 TWO = {'ce2': []}
 AUX = {}
 
+def rich_steps(row):
+    """Worked steps from the row's own meta for the four families whose curriculum steps are only labels
+    ("look up each letter", "infer rule", "cycle length 2"); every other family keeps its steps. Each list ends in
+    a line that states the answer's ingredients, so the answer after " # " follows from the steps alone."""
+    f, v, m = row['family'], row.get('variant'), row.get('meta') or {}
+    if f == 'cipher_map':
+        table = dict(zip(m['letters'], m['nums']))
+        if v == 'encode':
+            return ['%s=%d' % (c, table[c]) for c in m['w']]
+        inv = {n: c for c, n in table.items()}
+        return ['%d=%s' % (n, inv[n]) for n in m['n']]
+    if f == 'fewshot_number_rule':
+        if v == 'pair_sum':
+            (a, b), q = m['pairs'][0], m['pairs'][-1]
+            return ['%d + %d = %d so add' % (a, b, a + b), '%d + %d = %d' % (q[0], q[1], q[0] + q[1])]
+        x0, q = m['xs'][0], m['xs'][-1]
+        if v == 'add':
+            return ['%d - %d = %d' % (x0 * m['A'] + m['B'], x0, m['B']), 'rule: add %d' % m['B'], '%d + %d = %d' % (q, m['B'], q + m['B'])]
+        if v == 'mult':
+            return ['%d / %d = %d' % (x0 * m['A'] + m['B'], x0, m['A']), 'rule: times %d' % m['A'], '%d * %d = %d' % (q, m['A'], q * m['A'])]
+    if f == 'group_induct':
+        A, B, q = m['A'], m['B'], m['q']
+        if v == 'parity':
+            ea = 'even' if A[0] % 2 == 0 else 'odd'
+            eb = 'odd' if ea == 'even' else 'even'
+            return ['A %s, B %s' % (ea, eb), '%d is %s' % (q, 'even' if q % 2 == 0 else 'odd')]
+        if v == 'multiple':
+            for k in range(2, 20):
+                if all(x % k == 0 for x in A) and not any(x % k == 0 for x in B):
+                    return ['A multiples of %d' % k, '%d is %s' % (q, 'one' if q % k == 0 else 'not')]
+    if f == 'seq_cycle':
+        pat = m['pat']
+        if v == 'kth_letter':
+            i = (m['k'] - 1) % len(pat)
+            return ['cycle %s, length %d' % (' '.join(pat), len(pat)), '(%d-1) mod %d = %d' % (m['k'], len(pat), i), 'item %d = %s' % (i, pat[i])]
+        if v == 'next_letter':
+            i = m['n'] % len(pat)
+            return ['cycle %s, length %d' % (' '.join(pat), len(pat)), '%d mod %d = %d' % (m['n'], len(pat), i), 'item %d = %s' % (i, pat[i])]
+    return row['steps']
+
+
 def encode(tokenizer, row, torch, device):
     ids = list(tokenizer.encode(row['prompt'], add_special_tokens=False)) + [common.EOS_ID]
     if len(ids) > 64:
         return None
-    tgt = (' ; '.join(row['steps']) + SEP + row['answer']) if STEPS['on'] else row['answer']
+    tgt = (' ; '.join(rich_steps(row) if STEPS.get('rich') else row['steps']) + SEP + row['answer']) if STEPS['on'] else row['answer']
     labels = list(tokenizer.encode(tgt, add_special_tokens=False)) + [common.EOS_ID]
     return (torch.tensor([ids], device=device, dtype=torch.long), torch.ones((1, len(ids)), device=device, dtype=torch.bool),
             torch.tensor([labels], device=device, dtype=torch.long))
@@ -115,6 +156,7 @@ def main():
     ap.add_argument('--minutes', type=float, default=120)
     ap.add_argument('--lr-mult', type=float, default=1.0)
     ap.add_argument('--lr-final-mult', type=float, default=None, help='cosine-decay lr from lr-mult to this multiple over the run')
+    ap.add_argument('--steps-rich', action='store_true', help='with --steps: worked steps from row meta for cipher_map, fewshot_number_rule, group_induct, seq_cycle (their curriculum steps are labels only)')
     ap.add_argument('--steps', action='store_true', help='target = worked steps + " # " + answer; scored on the text after the last #')
     ap.add_argument('--copy-path', action='store_true', help='prefix = 8 pooled vectors + the prompt token embeddings (talker can copy prompt tokens)')
     ap.add_argument('--families', default='', help='comma list: train and score only these families (diagnosis)')
@@ -146,6 +188,9 @@ def main():
     ap.add_argument('--reader-hidden', type=int, default=0, help='widen the reader 2048->32->256 bottleneck to this width; function-preserving (new units feed zero weights), new weights get fresh Adam state; checkpoint then has the wider shape')
     a = ap.parse_args()
     STEPS['on'] = a.steps
+    STEPS['rich'] = a.steps_rich
+    if a.steps_rich and not a.steps:
+        raise SystemExit('--steps-rich needs --steps')
     SHUF['on'] = a.shuffle_pool
     root = Path(a.root).resolve()
     out = root / a.out
@@ -446,7 +491,7 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'lora_lr_mult': a.lora_lr_mult if a.lm_lora else None, 'gen_fix': a.gen_fix, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'lora_lr_mult': a.lora_lr_mult if a.lm_lora else None, 'gen_fix': a.gen_fix, 'steps': a.steps, 'steps_rich': a.steps_rich, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}
