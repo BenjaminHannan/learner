@@ -77,6 +77,9 @@ LD's best core variant scored 3.1% on step1 (< 25%), so PL runs. `uc_diag_v4.py 
 ## LDD result, tfm (job 29-ldd-tfm, read 06:25 UTC)
 16,815 distinct single-token rows, one pass each: held-out step1 **5 / 159 (3.1%)** at the end (best 8 / 159 at 16.5k); fit 10 / 320. The generic transformer learns no first step from 8.5x more distinct rows either. Fresh core (box C) still running; the LDD mark is read when both are in.
 
+## LDD result, fresh core (job 29-ldd-core-fresh, read 07:35 UTC)
+Same 16,815 rows, one pass: held-out step1 **4 / 159 (2.5%)** at the end (best 6 / 159); fit 5 / 320. By the LDD marks, both learners < 25%: **"not learnable at this scale either"**. Learned arithmetic from step labels is out of reach for a learner this size on these features at a practical budget (batch 1, AdamW 1e-3, no weight decay; a different recipe is untested). Per the decision tree, the core-side path for the chain families is the tool route (PL), which is the next result below.
+
 ## PL result (jobs 30-plan-main2, 30-plan-fresh, read 06:33 UTC)
 Held-out = 160 new chain-family rows, after 6,000 updates (2,000 rows x 3 passes). plan = the executed plan gives the exact answer; ops = all 5 op slots right; ptr = every used pointer on the right number.
 
