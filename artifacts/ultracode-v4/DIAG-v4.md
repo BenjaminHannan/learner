@@ -102,7 +102,7 @@ Fresh core, 17,000 distinct chain rows, one pass. Held-out plan-exact over train
 - By the marks: not "the plan route reaches the mark with more data" (69.4% < 85%). "Ops stay the limit" is not met as written at the final point (pointer 86.9% < 90%; it was 93.8% at 16k). The final point is **below 70%: more data alone does not get there; the op head needs a redesign.** The last 1,000 updates cost 10 rows (constant lr, batch 1), so the plateau is about 70-76%.
 - Plan-exact still tracks op-sequence (111 vs 115): the ops are the limit, worst on var_chain.
 
-## Added 07:09 UTC, before they ran: PLO and PLOD (the op redesign the PLD mark calls for)
+## Added 07:07 UTC, before they ran: PLO and PLOD (the op redesign the PLD mark calls for)
 One change: `--op-attend`. Each step's op logits also read the core's state at the token its operand pointer picks: op_j += Linear(256, 5)(sum_t softmax(ptr slot j+1)_t z_t), with the pointer weights detached (the pointer keeps its own loss only). The pooled op head stays (it still decides STOP). In "gets 6 more" or "p = q * 4" the operand sits next to its operation word, which the 8 position-pooled chunks blur.
 - **PLO** = PL fresh + `--op-attend` (2,000 rows x 3 passes; paired with PL fresh: held plan 97, ops 98 of 160). **PLOD** = PLD + `--op-attend` (17,000 distinct rows; paired with PLD: 111 / 115). Box B, jobs 32-plo-fresh and 32-plod-fresh. Primary reading = the final eval; the best eval is reported too.
 - **"Reading the op at its operand fixes the op limit"** if PLO held-out op-sequence >= 80% (128 / 160) and held plan >= 121 / 160 (+15 points over PL fresh).
