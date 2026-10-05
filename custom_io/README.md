@@ -27,6 +27,13 @@ follows whichever of steps or minutes runs out first), then still evals. `--bf16
 in_dist rows. `--eval-max N` caps rows per dev split in the final eval. Progress = JSON lines on stdout.
 `--out` gets `checkpoint.pt` and `RESULT.json` (config, n_params, steps, train_s, steps_per_s, wall_s, final_train_loss, final_eval, lesions{name: eval_all}); a state/talk model also gets `lesions['donor']` = `{split: donor_eval}` and a JSON `eval` line with `exact` and `donor_match` per split.
 
+**Pretrained baselines** `python3 -m custom_io.hf_baseline --hf-id EleutherAI/pythia-70m --mode finetune|fewshot ...` (needs `transformers==5.17.0`; HF hub weights, no checkpoint is saved). Same CLI as train.py (`--steps --batch --warmup --seed --order --bf16 --minutes --eval-max --eval-batch --final-eval --out`, same row order via `data.train_batches`) plus `--revision`, `--shots`; `--lr` defaults to 1e-4.
+Text = `{prompt}\nAnswer:` then ` {answer}\n`; finetune = AdamW (0.9, 0.95, wd 0), warmup + cosine to 10%, clip 1, loss only on ` {answer}\n` + eos (prompt and answer are tokenised separately, then joined). Decode = greedy, 16 new tokens, left-padded, cut at the first newline, scored by `evalx.eval_all`.
+`--mode fewshot`: no training; `--shots` solved train rows per prompt (same family if it is in train, else random families; seeded per row id; oldest shots dropped if the context would overflow); always runs the final eval.
+The adapter is `hf_baseline.HFLM` (a `models/base.py` Model: `loss`, `generate`; no lesions, no state/talk). RESULT.json = train.py's fields (`lesions` = {}) + `n_params` (all, tied weights once) + `n_params_non_embedding`; config has `transformers` version, `resolved_revision` (commit), `shots_policy`.
+Gotchas: BPE is not char-level (pythia merges digits, `" 1234"` -> `" 12","34"`; SmolLM2 splits every digit); pythia ctx 2048, SmolLM2 8192 (8-shot dev prompts are ~280 tokens, max ~440); pad token = eos when missing; `eval_batch` default is 64 (few-shot prompts are long).
+Numbers (4-core CPU, shared box): pythia-14m 14.07M params (1.19M non-embedding) ~5 steps/s at batch 8; SmolLM2-135M 134.5M (106.2M) ~0.6 steps/s at batch 8; dev eval rows are ~0.3 s per 32 on pythia-14m.
+
 **Packing** `custom_io/pack.sh jobs.txt [logdir]`: one command per line, all run concurrently, one log each, waits, exit 1 if any failed.
 
 **Numbers** prompt chars: mean 81, p99 163, max 204; a batch of 64 pads to ~161 (max 196) so the longest sequence is ~220 <= 224.
