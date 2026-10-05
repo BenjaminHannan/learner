@@ -4,10 +4,24 @@ from custom_io.data import CharVocab
 from custom_io.models.plain_tf import PlainTF
 
 MODELS = {'plain_tf': PlainTF}
+# designs from custom_io/PASS-MARKS.md, imported lazily so each lives in its own file: name -> 'module:Class'
+LAZY = {
+    'register_loop': 'custom_io.models.register_loop:RegisterLoop',     # A (steps=True) and A0 (steps=False)
+    'ledger': 'custom_io.models.ledger:Ledger',                         # B (Ledger-lite)
+    'plain_tf_steps': 'custom_io.models.plain_tf_steps:PlainTFSteps',   # writes steps then ' # ' answer; C1' decode
+}
+NAMES = sorted(set(MODELS) | set(LAZY))
+
+
+def get_class(name):
+    if name not in MODELS:
+        mod, cls = LAZY[name].split(':')
+        MODELS[name] = getattr(__import__(mod, fromlist=[cls]), cls)
+    return MODELS[name]
 
 
 def build(name, vocab, **cfg):
-    return MODELS[name](vocab, **cfg)
+    return get_class(name)(vocab, **cfg)
 
 
 def load_model(path, device='cpu'):

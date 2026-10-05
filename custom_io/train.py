@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from custom_io.data import DEFAULT_DATA, CharVocab, Dataset, load_rows, to_device, train_batches
 from custom_io.evalx import can_donor, donor_all, eval_all, evaluate, short, subsample
-from custom_io.models import MODELS, build
+from custom_io.models import NAMES, build
 
 
 def lr_at(step, steps, warmup, base, elapsed=0.0, cap=None):
@@ -41,7 +41,7 @@ def final_eval(model, args, device, amp):
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument('--model', required=True, choices=sorted(MODELS))
+    ap.add_argument('--model', required=True, choices=NAMES)
     ap.add_argument('--cfg', default='{}', help='JSON dict of model kwargs')
     ap.add_argument('--data', default=DEFAULT_DATA, help='dir with train.jsonl and dev/')
     ap.add_argument('--vocab', help='vocab json (default: DATA/charvocab.json, built from DATA/train.jsonl if absent)')
