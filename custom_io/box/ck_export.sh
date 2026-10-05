@@ -5,6 +5,7 @@
 # after a CKFULL|job/run|tgz-sha|n line. vast.py collectck reads the log every 40 s and reassembles. RESULTS="job ..."
 # re-prints those jobs' result tarballs first, in the normal 4-field format.
 PACE=${PACE:-100}
+PFX=${PFX:-ck}      # block-label prefix; give a second export on the same box its own (the collector keys blocks by label)
 LOG=${LOG:-/proc/1/fd/1}
 N=0
 # first re-print the small result tarballs of the jobs named in RESULTS (their first print is buried under the export)
@@ -23,8 +24,8 @@ for c in $GLOB; do
   echo "CKFULL|$job/$run|$full|$n" >> $LOG
   for p in $(ls $J/res/ck-$job-$run.part.* | sort); do
     k=$((10#${p##*.})); N=$((N + 1)); h=$(sha256sum $p | cut -c1-64)
-    ( flock 9; echo "RBEGIN|ck$N|$h|$(stat -c %s $p)|$job/$run|$k|$n"; base64 -w 480 $p | sed "s/^/R|ck$N|/"; echo "REND|ck$N" ) 9>$J/print.lock >> $LOG
-    echo "part ck$N $job/$run $k/$n"
+    ( flock 9; echo "RBEGIN|$PFX$N|$h|$(stat -c %s $p)|$job/$run|$k|$n"; base64 -w 480 $p | sed "s/^/R|$PFX$N|/"; echo "REND|$PFX$N" ) 9>$J/print.lock >> $LOG
+    echo "part $PFX$N $job/$run $k/$n"
     sleep $PACE
   done
 done

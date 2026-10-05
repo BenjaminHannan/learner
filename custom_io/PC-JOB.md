@@ -28,9 +28,10 @@ Mac (in `~/custom-io/src`): `python3 -m custom_io.local_runner setup --work ~/cu
 It must print `setup ok` (both builds hash-checked). If it stops on a hash mismatch, stop and tell the thread.
 
 ## 3. Run the queues
-**First, PC queue 32 (added 12:55 UTC, 8:55 AM ET): the B2 screen, 2 runs at once.** Same launch as queue 30 below, with
-`custom_io\queue_local\32-pc-b2-screen.txt`, `--par 2` and stdout to `C:\Users\benja\custom-io\work\q32.log`. Start
-queue 30 after it (or alongside it if nvidia-smi shows room for more runs; each run gates on its own free memory).
+**PC queue 32 (the B2 screen, 2 runs at once): run it ONLY if `custom_io/results/29-b2-screen/` is not on the branch yet**
+(13:00 UTC: B2 is running on cloud box C's idle GPU instead, while that box finishes printing checkpoints). Same launch as queue 30 below, with
+`custom_io\queue_local\32-pc-b2-screen.txt`, `--par 2` and stdout to `C:\Users\benja\custom-io\work\q32.log`. Then
+queue 30 (or alongside it if nvidia-smi shows room for more runs; each run gates on its own free memory).
 
 PC queue 30 (pythia-31m lr pick, then plain_tf and plain_tf_steps on seeds 200-202; 9 runs, up to 3 at a time).
 Launch it detached the way you launched the fix screens, so it survives the ssh session ending:
