@@ -208,3 +208,19 @@ PLOD/PLC plus one change, `--lr-cosine` (lr decays from 1e-3 to 0 along a cosine
 - **"With the same practice, the thinker's plan beats the LM's steps"** if the PLS 6-seed mean held plan-exact is >= 140.3 (LM + 3 rows) and PLS is ahead on at least 5 of the 6 paired seeds.
 - **"Ties"** if the mean is within 3 rows of 137.3; **"the LM learns more from the same practice"** if it is more than 3 rows under (then the 97.6% needs the extra practice rows, and the real-model route would train its planner on extra rows the LM never sees).
 - Prediction: 115-140 (PLO, 2,000 chain rows x 3 at a constant lr, got 124).
+
+## PLS result, 6 seeds (jobs 39-pls-s1..s6, read 09:48 UTC)
+The thinker's plan trained only on the chain rows the skills screen practised (880-888 rows x 3 passes, 2,640-2,715 updates, `--lr-cosine`; `plan-screen` confirms the held-out rows are the usual 160).
+
+| seed | PLS held plan | LM steps, same seed | diff | PLS ops / ptr | PLS state_update |
+|---|---|---|---|---|---|
+| 1 | 140 | 138 (SR2) | +2 | 144 / 148 | 36 |
+| 2 | 141 | 141 (SR2) | 0 | 140 / 148 | 33 |
+| 3 | 112 | 138 (SR2) | -26 | 112 / 148 | 9 |
+| 4 | 131 | 133 (CF4) | -2 | 136 / 139 | 31 |
+| 5 | 138 | 135 (CF5) | +3 | 142 / 141 | 29 |
+| 6 | 133 | 139 (CF6) | -6 | 136 / 143 | 29 |
+| **mean** | **132.5 (82.8%)** | 137.3 (85.8%) | -4.8 | 135.0 / 144.5 | 27.8 / 40 |
+
+- By the marks: **"the LM learns more from the same practice"** (mean 4.8 rows under the LM, ahead on 2 of 6). Without seed 3, whose op head never learned state_update (9 / 40; pointers 148 / 160 were fine), the other five average 136.6, a tie. So with matched practice the thinker's plan is about level with the LM's steps, not ahead; the 97.6% of PLCD needs its 17,000 distinct rows.
+- Open question this leaves: would the LM's steps also climb with those 17,000 rows? Arm LMDC (below in `SCREEN-v4.md`) tests it.

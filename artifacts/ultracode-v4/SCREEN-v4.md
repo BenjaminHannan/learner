@@ -142,3 +142,10 @@ One change from CR: `--plan-cosine` (new in `skills_pretrain_v1.py`): the planne
 - Vs CR (paired): **"the better planner carries through"** if the chain held-out sum rises by >= 20 rows over CR's.
 - Wrong if the chain held-out sum is < 432 (the planner's gain does not reach the answers), or CRD's chain accuracy is more than 3 points under its own plan-exact (the LM fails to say the value).
 - Prediction: chain held-out about 95% (456 / 480), chain fit 96-98%, overall fit 88-92%; `plan_swap` leaves chain rows near 5%.
+
+## Added 09:48 UTC, before they ran: arm LMDC (the LM's steps on PLCD's data and schedule)
+PLS (`DIAG-v4.md`) shows the thinker's plan only ties the LM's steps on the screen's own chain practice (82.8% vs 85.8%), so PLCD's 97.6% vs the LM's 86.8% mixes two changes: the route and 17,000 distinct rows. **LMDC** = SR2's chain step targets (`--steps --steps-rich --seq-steps-v2`) on the 4 chain kinds only (`--families chain_ops,state_update,chain_story2,var_chain`), trained on exactly PLCD's rows in PLCD's order (`--fixed-rows 17000 --passes 1` draws with the same `fixed|seed` RNG as `uc_diag_v4.rows_for`), one pass, lr decaying from 1e-3 to 0 on a cosine (`--lr-final-mult 0`), `--minutes 400` so the 170-minute cap does not cut it. Held-out = the same 160 chain rows. Seeds 1-3, paired with PLCD seeds 1-3 (155 / 159 / 155).
+- **"The plan route beats the LM's steps at matched data and schedule"** if PLCD is ahead by >= 5 rows on each of the 3 paired seeds.
+- **"The LM's steps catch up with the data"** if LMDC's 3-seed mean held-out is >= 152 / 160 (95%): then PLCD's lead over SR2 was the data, not the route.
+- Anything else: the data helps the LM but less than the route (report the paired gaps).
+- Prediction: LMDC 140-150 (88-94%); the misreads that make up two thirds of the LM's chain errors shrink with more varied practice but do not vanish.
