@@ -43,3 +43,9 @@ S1-S3 fit 259 / 241 / 252 of 320 (mean 78.3%) vs paired baseline 214 / 213 / 212
 
 ## Calibration P result (job 13, read 03:12 UTC)
 P1-P3 at 6k reproduce B1-B3 exactly (214 / 213 / 212). At 9k: 230 / 222 / 220; at 12k: 230 / 230 / 235 of 320 (mean 72.4%), held-out 157 / 152 / 165 (mean 49.4%, +1.3 over 6k). Mean 12k fit < 75% -> **"more practice alone will not reach it soon"**; the extra fit is mostly memorised (held-out flat).
+
+## Added 03:14 UTC, before they ran: core lesions SL (S + lesions) and BL (baseline + lesions)
+Asked through the coordinator (Ben wants the reasoner, not the LM, doing the reasoning): how much of S's lift needs the core? S and B ran without checkpoints, so both are re-run exactly (P showed re-runs are deterministic: P1-P3 at 6k = B1-B3) with `--final-lesions`: after training, trainfit and held-out are scored again by generation with each row's 8 pooled core vectors replaced by (i) its family's mean, (ii) another same-family row's vectors, (iii) the global mean.
+- **SL1-SL3** = `--steps --final-lesions`, seeds 1-3 (box A); **BL1-BL3** = `--final-lesions`, seeds 1-3 (box B). Their intact scores must equal S1-S3 / B1-B3 (else the lesion runs are not the same models, and this is reported).
+- Marks, on the 3-seed means: **"the core is still only a family switch"** if S's family-mean and same-family lesions are both within 3 points of S intact on trainfit and on held-out. **"S's lift needs the core's row content"** if S's family-mean lesion drops trainfit by 10+ points AND by 5+ points more than B's own family-mean drop. In between: reported as is.
+- Reported for Ben: the share of the S lift that needs row content from the core = ((S intact - S family-mean) - (B intact - B family-mean)) / (S intact - B intact), on trainfit and on held-out.
