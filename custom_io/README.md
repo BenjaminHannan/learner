@@ -10,17 +10,22 @@ Prompts do NOT contain BOS/SEP; a model adds what it needs. `--order shuffled|cu
 - `loss(batch)` -> scalar, or `(scalar, {aux_name: value})` (aux is logged)
 - `generate(batch, lesion=None)` -> `list[str]`, greedy, in `batch['rows']` order
 - `n_params()`; `LESIONS` = subset of `shuffle_state`, `zero_state`, `loops`; call `self.check_lesion(lesion)` -> `(name, K)`
+- optional reasoner/talker split: `state(batch, loops=None)` -> the reasoner's final state (tensor or tuple of tensors, batch first), `talk(state, batch)` -> `list[str]` (`batch` = the CURRENT rows: only what the talker may read, e.g. a copy source, plus lengths);
+  `supports_donor()` is True when both exist, and then `generate()` is free (`talk(state(batch, loops), batch)`, with the loops/zero_state/shuffle_state lesions applied to the state)
 - a model with an `n_loops` attribute is also swept over `loops:K`, K in {0,1,2,2*n_loops}, by `--final-eval`
 
 **Eval** `evalx.evaluate(model, rows, batch_size, device, lesion)` -> `{exact(%), correct, n, by_family, by_level, multistep}`;
 `eval_all(model, data_dir, max_per_split, lesion)` -> same, per dev split (in_dist answer frame vocab variant family).
+`evalx.donor_eval(model, rows, batch_size, device, seed=0)` = donor-swap lesion (needs `state`/`talk`): every row gets a donor of the same family whose answer differs from all the row's accepted answers
+(`donor_pairs`; rows with none are skipped and counted); `talk(model.state(donor_batch), current_batch)` -> `{exact, donor_match (pred == donor's answer), n, skipped, by_family}`.
+Donor and current batches are collated separately, then padded to one prompt length. `eval_all(..., donor=True)` adds `donor` to each split; `donor_all` gives `{split: donor_eval}`.
 Hit = `norm(pred)` in `{norm(a) for a in accepted}`. `python3 -m custom_io.evalx --run RUN_DIR --data DIR` re-evals a checkpoint.
 
 **Train** `python3 -m custom_io.train --model plain_tf --cfg '{"d_model":256,"n_layers":4,"n_heads":4,"n_loops":1}' --steps 3000 --batch 64 --lr 1e-3 --out runs/x --final-eval`
 AdamW (0.9, 0.95, wd 0.1 on matrices), `--warmup 300` then cosine to 10%, `--grad-clip 1`. `--minutes M` caps wall time (the cosine
 follows whichever of steps or minutes runs out first), then still evals. `--bf16` is autocast on cuda only. `--eval-every N` = quick eval on 200
 in_dist rows. `--eval-max N` caps rows per dev split in the final eval. Progress = JSON lines on stdout.
-`--out` gets `checkpoint.pt` and `RESULT.json` (config, n_params, steps, train_s, steps_per_s, wall_s, final_train_loss, final_eval, lesions{name: eval_all}).
+`--out` gets `checkpoint.pt` and `RESULT.json` (config, n_params, steps, train_s, steps_per_s, wall_s, final_train_loss, final_eval, lesions{name: eval_all}); a state/talk model also gets `lesions['donor']` = `{split: donor_eval}` and a JSON `eval` line with `exact` and `donor_match` per split.
 
 **Packing** `custom_io/pack.sh jobs.txt [logdir]`: one command per line, all run concurrently, one log each, waits, exit 1 if any failed.
 

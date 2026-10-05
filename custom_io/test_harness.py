@@ -1,10 +1,14 @@
 """python3 -m custom_io.test_harness [--data DIR]  -- end-to-end smoke test on CPU (~1 min)."""
 import argparse, contextlib, io, json, os, random, subprocess, sys, tempfile, time
+from types import SimpleNamespace
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from custom_io import data as D
 from custom_io import train
-from custom_io.evalx import MULTISTEP, eval_all, evaluate, is_hit, norm
+from custom_io.evalx import MULTISTEP, donor_all, donor_eval, donor_pairs, eval_all, evaluate, is_hit, norm, subsample
 from custom_io.models import build, load_model
+from custom_io.models.base import Model
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 T0 = time.time()
@@ -12,6 +16,47 @@ T0 = time.time()
 
 def step(msg):
     print(f'[{time.time() - T0:6.1f}s] {msg}', flush=True)
+
+
+class ToyStateTalk(Model):
+    """Toy reasoner/talker split. state = (masked mean of prompt embeddings, prompt mask: a time-dim tensor whose
+    shape must match the CURRENT batch); talk = linear head -> 9 answer slots. Uses nothing from `batch` but its shape."""
+    LESIONS = ['zero_state', 'shuffle_state']
+
+    def __init__(self, vocab, d=64):
+        super().__init__(vocab)
+        self.emb, self.head = nn.Embedding(len(vocab), d), nn.Linear(d, (D.MAX_ANS + 1) * len(vocab))
+
+    def logits(self, h):
+        return self.head(h).view(len(h), D.MAX_ANS + 1, -1)
+
+    def state(self, batch, loops=None):
+        m = batch['prompt_mask'][..., None].float()
+        return (self.emb(batch['prompt_ids']) * m).sum(1) / m.sum(1), batch['prompt_mask']
+
+    def talk(self, state, batch):
+        assert state[1].shape == batch['prompt_mask'].shape, 'state time dim must line up with the current batch'
+        return [self.vocab.decode(o) for o in self.logits(state[0]).argmax(-1).tolist()]
+
+    def loss(self, batch):
+        lg, m = self.logits(self.state(batch)[0]), batch['ans_mask']
+        return F.cross_entropy(lg[m], batch['ans_ids'][m])
+
+
+class ToyOracle(Model):
+    """state = the batch's own answers (cheats on purpose). mode 'donor': talk() copies them out; 'current': talk()
+    copies the CURRENT batch's answers instead. Checks donor/current alignment in donor_eval."""
+
+    def __init__(self, vocab, mode):
+        super().__init__(vocab)
+        self.mode, self.dummy = mode, nn.Parameter(torch.zeros(1))
+
+    def state(self, batch, loops=None):
+        return batch['ans_ids'], batch['prompt_mask']
+
+    def talk(self, state, batch):
+        assert state[1].shape == batch['prompt_mask'].shape and len(state[0]) == len(batch['rows'])
+        return [self.vocab.decode(a) for a in (state[0] if self.mode == 'donor' else batch['ans_ids'])]
 
 
 def main():
@@ -101,6 +146,50 @@ def main():
         pass
     assert build('plain_tf', v, d_model=64, n_layers=2, n_heads=2, n_loops=3).n_params() == mm.n_params()
     step('    memorise-16 = 100%, batched == single-row decode, lesion validation, looped has same n_params')
+    # donor swap: pairing, interface, order/batch-size independence, memorised-state toy, eval_all / final_eval plumbing
+    mk = lambda f, a: {'family': f, 'answer': a, 'accepted': [a], 'prompt': 'p' * len(a), 'level': 1}
+    toy_rows = [mk('A', '1'), mk('A', ' One '), mk('A', 'one'), mk('B', 'z'), mk('B', 'Z'), mk('C', 'q'), mk('C', 'r')]
+    pairs, skip = donor_pairs(toy_rows)
+    assert dict(pairs).keys() == {0, 1, 2, 5, 6} and skip == 2 and all(j != i for i, j in pairs)       # B: one normalised answer
+    assert all(toy_rows[i]['family'] == toy_rows[j]['family'] and norm(toy_rows[i]['answer']) != norm(toy_rows[j]['answer']) for i, j in pairs)
+    assert dict(pairs)[1] == 0 and dict(pairs)[2] == 0 and dict(pairs)[0] in (1, 2) and donor_pairs(toy_rows) == (pairs, skip)
+    ind = [r for r in D.load_rows(os.path.join(data, 'dev', 'in_dist.jsonl')) if len(r['answer']) <= D.MAX_ANS]
+    sub = subsample(ind, 300)
+    pairs, skip = donor_pairs(sub, 0)
+    assert len(pairs) + skip == 300 and pairs == donor_pairs(sub, 0)[0] != donor_pairs(sub, 1)[0]
+    assert all(sub[i]['family'] == sub[j]['family'] and norm(sub[j]['answer']) not in {norm(a) for a in sub[i]['accepted']} for i, j in pairs)
+    for mode, want in (('donor', (100.0, 0.0)), ('current', (0.0, 100.0))):      # (donor_match, exact)
+        orc, shuf = ToyOracle(v, mode), random.Random(1).sample(sub, 300)
+        for rows_, bs in ((sub, 128), (shuf, 7), (shuf, 1)):                       # any order / batch size pairs the same rows
+            r = donor_eval(orc, rows_, bs, 'cpu')
+            assert (r['donor_match'], r['exact']) == want and r['n'] + r['skipped'] == 300 and r['n'] > 250, (mode, bs, r)
+            assert sum(f['n'] for f in r['by_family'].values()) == r['n'] and set(r['by_family']) <= {x['family'] for x in sub}
+    assert not build('plain_tf', v, d_model=64, n_layers=2, n_heads=2).supports_donor() and ToyStateTalk(v).supports_donor()
+    fams = {}
+    for r in ind:
+        fams.setdefault(r['family'], []).append(r)
+    mem = [r for f in sorted(fams)[:4] for r in subsample(fams[f], 6)]
+    torch.manual_seed(0)
+    toy = ToyStateTalk(v)
+    mb = D.collate([D.Dataset(mem, v)[i] for i in range(len(mem))])
+    opt = torch.optim.AdamW(toy.parameters(), 1e-2)
+    for _ in range(300):
+        toy.loss(mb).backward(); opt.step(); opt.zero_grad()
+    assert evaluate(toy, mem, 8)['exact'] == 100.0, 'toy talker could not memorise its states'
+    assert evaluate(toy, mem, 24, lesion='zero_state')['exact'] < 50 and evaluate(toy, mem, 24, lesion='shuffle_state')['exact'] < 50
+    dr = donor_eval(toy, mem, 5, 'cpu')
+    assert dr['donor_match'] == 100.0 and dr['exact'] == 0.0 and dr['n'] + dr['skipped'] == len(mem) and dr['n'] >= 12, dr
+    ea = eval_all(toy, data, 20, donor=True)
+    assert all(e['donor']['n'] + e['donor']['skipped'] == 20 for e in ea.values())
+    assert all('donor' not in e for e in eval_all(mm, data, 4, donor=True).values()), 'plain_tf has no donor swap'
+    out_io = io.StringIO()
+    with contextlib.redirect_stdout(out_io):
+        fin, les = train.final_eval(toy, SimpleNamespace(data=data, eval_max=20, eval_batch=16), torch.device('cpu'), contextlib.nullcontext)
+    ev = [json.loads(l) for l in out_io.getvalue().splitlines()]
+    assert set(les) == {'zero_state', 'shuffle_state', 'donor'} and set(les['donor']) == set(D.DEV_SPLITS) and json.dumps(les)
+    assert les['donor'] == donor_all(toy, data, 20, 16, torch.device('cpu')) and set(fin) == set(D.DEV_SPLITS)
+    assert ev[-1]['event'] == 'eval' and ev[-1]['lesion'] == 'donor' and set(ev[-1]['in_dist']) == {'exact', 'donor_match'}
+    step(f"(e) donor swap: pairs same-family/different-answer, oracle alignment ok at batch 128/7/1, toy donor_match={dr['donor_match']:.0f} exact={dr['exact']:.0f} n={dr['n']} skipped={dr['skipped']}")
     print(f'PASS  total wall time {time.time() - T0:.1f}s')
 
 

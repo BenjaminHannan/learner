@@ -3,7 +3,7 @@ import argparse, contextlib, json, math, os, random, sys, time
 import numpy as np
 import torch
 from custom_io.data import DEFAULT_DATA, CharVocab, Dataset, load_rows, to_device, train_batches
-from custom_io.evalx import eval_all, evaluate, short, subsample
+from custom_io.evalx import can_donor, donor_all, eval_all, evaluate, short, subsample
 from custom_io.models import MODELS, build
 
 
@@ -22,7 +22,8 @@ def jprint(**kw):
 
 
 def final_eval(model, args, device, amp):
-    """Full eval_all, then every lesion the model supports (+ loops:K sweep for models with n_loops)."""
+    """Full eval_all, then every lesion the model supports (+ loops:K sweep for models with n_loops, + the donor swap
+    for models with state/talk, stored under lesions['donor'] as {split: donor_eval result})."""
     names = [l for l in model.LESIONS if l.split(':')[0] != 'loops']
     if hasattr(model, 'n_loops'):
         names += [f'loops:{k}' for k in sorted({0, 1, 2, 2 * model.n_loops})]
@@ -31,6 +32,10 @@ def final_eval(model, args, device, amp):
         with amp():
             runs[lesion] = eval_all(model, args.data, args.eval_max, lesion, args.eval_batch, device)
         jprint(event='eval', lesion=lesion, **short(runs[lesion]))
+    if can_donor(model):
+        with amp():
+            runs['donor'] = donor_all(model, args.data, args.eval_max, args.eval_batch, device)
+        jprint(event='eval', lesion='donor', **{s: {k: round(v[k], 2) for k in ('exact', 'donor_match')} for s, v in runs['donor'].items()})
     return runs.pop(None), runs
 
 
