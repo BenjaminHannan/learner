@@ -12,7 +12,7 @@ hf: lines).
 
 Queue file lines: `NAME args...` = one `python -m custom_io.train --data WORK/data --big-data WORK/data_big
 --out WORK/results/QUEUE/NAME args...` run; `hf: NAME args...` = one `python -m custom_io.hf_baseline --data WORK/data
---out ... args...` run. `#` starts a comment; `# MEM 5000` sets the MiB a run needs free before it starts (default 5000;
+--out ... args...` run; `team: NAME args...` = one `python -m custom_io.team --data WORK/data --out ... args...` run. `#` starts a comment; `# MEM 5000` sets the MiB a run needs free before it starts (default 5000;
 a later `# MEM` line changes it for the lines after it). Args are split like a shell does (shlex), so keep the
 single-quoted JSON of the Vast queue files. On MPS, --bf16 is dropped (bf16 autocast is cuda only) and --device mps is
 added; a pairing is only fair between runs on the same device, so a queue file should not be split across machines.
@@ -107,7 +107,7 @@ def free_mib(device):
 
 
 def parse_queue(path):
-    """-> [(name, kind 'train'|'hf', args list, mem MiB)]"""
+    """-> [(name, kind 'train'|'hf'|'team', args list, mem MiB)]"""
     runs, mem, seen = [], 5000, set()
     for raw in open(path, encoding='utf-8'):
         line = raw.strip()
@@ -121,6 +121,8 @@ def parse_queue(path):
         kind = 'train'
         if line.startswith('hf:'):
             kind, line = 'hf', line[3:].strip()
+        elif line.startswith('team:'):
+            kind, line = 'team', line[5:].strip()
         toks = shlex.split(line)
         name, args = toks[0], toks[1:]
         if name in seen:
@@ -138,6 +140,8 @@ def command(kind, args, work, out, device):
         args += ['--device', device]
     if kind == 'hf':
         return [sys.executable, '-m', 'custom_io.hf_baseline', '--data', str(work / 'data'), '--out', str(out)] + args
+    if kind == 'team':
+        return [sys.executable, '-m', 'custom_io.team', '--data', str(work / 'data'), '--out', str(out)] + args
     return [sys.executable, '-m', 'custom_io.train', '--data', str(work / 'data'), '--big-data', str(work / 'data_big'),
             '--out', str(out)] + args
 
@@ -173,7 +177,8 @@ def summary_line(out):
     except (OSError, ValueError):
         return 'no RESULT.json'
     fe = r.get('final_eval') or {}
-    pick = {s: round(fe[s]['exact'], 2) for s in ('in_dist', 'answer', 'frame', 'vocab', 'variant') if s in fe}
+    pick = {s: round(fe[s]['team']['team_vote'] if 'team' in fe[s] else fe[s]['exact'], 2)
+            for s in ('in_dist', 'answer', 'frame', 'vocab', 'variant') if s in fe}
     c5 = ((r.get('chain5') or {}).get('intact') or {}).get('exact')
     return json.dumps(dict(status=r.get('status'), steps=r.get('steps'), steps_per_s=round(r.get('steps_per_s') or 0, 2),
                            chain5=c5, **pick))

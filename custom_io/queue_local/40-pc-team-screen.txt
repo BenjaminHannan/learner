@@ -1,0 +1,10 @@
+# BensPC RTX 5070 Ti (cuda): team screen for Ben's swarm idea ("see if they can be trained together", 2026-10-05).
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\40-pc-team-screen.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+# Marks fixed before any run: custom_io/TEAM-PASS-MARKS.md. One change between arms: --route (on = a coach decides which
+# rows each member practises; off = members train independently, the control). Each line trains 3 members + a coach.
+# Same seeds/steps/batch/lr as the solo screen. ON and OFF of a seed pair up, so keep all 4 on this one device.
+# MEM 7000
+team: team_on_s100 --route on --seed 100 --steps 24000 --batch 256 --lr 1e-3 --bf16 --log-every 500 --final-eval
+team: team_off_s100 --route off --seed 100 --steps 24000 --batch 256 --lr 1e-3 --bf16 --log-every 500 --final-eval
+team: team_on_s101 --route on --seed 101 --steps 24000 --batch 256 --lr 1e-3 --bf16 --log-every 500 --final-eval
+team: team_off_s101 --route off --seed 101 --steps 24000 --batch 256 --lr 1e-3 --bf16 --log-every 500 --final-eval
