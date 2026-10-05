@@ -16,7 +16,8 @@ Same stack and rows as the fit screens (skills_pretrain_v1.py: main2, worst-8 fa
                   core's input and its rounds 1 and 4? (token and row probes, kNN and ridge)
   --mode plan     can reader+core learn the fold plan (start literal, ops, operand pointers) of an exact calculator? no LM in the loss;
                   --plan-fams adds cipher_map / fewshot_number_rule / group_induct / seq_cycle (op set gains CAT = copy the pointed token);
-                  --screen-rows trains on the skills screen's own practised rows (its 8-family draw kept to --plan-fams)
+                  --screen-rows trains on the skills screen's own practised rows (its 8-family draw kept to --plan-fams);
+                  --round-routers (needs --fresh-core) gives each MoE block its own router per core round (experts shared)
 Prints one line per result starting with RESULT and writes OUT/DIAG-<mode>.json.
 """
 import argparse
@@ -719,6 +720,65 @@ def plan_correct(toks, pieces, am, ops, answer):
     return v is not None and str(v) == sp.norm(answer)
 
 
+ROUNDS = 4  # rounds the core runs per forward: fixed4_training (sol_spatial_poc_ordered_train_api_v2.py) calls advance_latent exactly 4 times
+
+
+def install_round_routers(torch, core, rounds, seed):
+    """--round-routers (Chain-of-Experts, arXiv 2506.18945: a looped MoE needs its own router per pass). Every UpcycledMLP in `core` gets one
+    router PER ROUND (default PyTorch nn.Linear init from `seed`; draw order: block 0 rounds 0..R-1, then block 1) in place of its single
+    router; the experts stay shared. The round is read from the loop state ('round': 0 after begin_latent, +1 per advance_latent), set
+    by a wrapper on core.advance_latent, so no counter can go stale (begin_latent is the cap64-bound method that english_graph re-checks,
+    and the core's own forward is never called). A router call outside advance_latent, or a round >= R, raises. While recording, each
+    advance adds every block's UpcycledMLP.last_counts into rec[block][round]. Returns the new routers' params, the dropped old
+    routers' params (ids), and start()/take() for the recording."""
+    nn = torch.nn
+    ctl = {'round': None, 'rec': None}
+
+    class RoundRouter(nn.Module):
+        def __init__(self, old):
+            super().__init__()
+            self.routers = nn.ModuleList(nn.Linear(old.in_features, old.out_features) for _ in range(rounds))
+
+        def forward(self, x):
+            if ctl['round'] is None:
+                raise RuntimeError('round router called outside core.advance_latent')
+            return self.routers[ctl['round']](x)
+
+    torch.manual_seed(seed)
+    old_ids, new = set(), []
+    for blk in core.blocks:
+        old = blk.mlp.router
+        rr = RoundRouter(old).to(old.weight.device)
+        old_ids |= {id(p) for p in old.parameters()}
+        blk.mlp.router = rr
+        new += list(rr.parameters())
+    advance = core.advance_latent
+
+    def advance_round(state):
+        r = state['round']
+        if not 0 <= r < rounds:
+            raise RuntimeError('round routers: round %d outside 0..%d' % (r, rounds - 1))
+        ctl['round'] = r
+        try:
+            out = advance(state)
+        finally:
+            ctl['round'] = None
+        if ctl['rec'] is not None:
+            for b, blk in enumerate(core.blocks):
+                ctl['rec'][b][r] = [x + y for x, y in zip(ctl['rec'][b][r], blk.mlp.last_counts)]
+        return out
+
+    core.advance_latent = advance_round
+
+    def start():
+        ctl['rec'] = [[[0] * len(blk.mlp.experts) for _ in range(rounds)] for blk in core.blocks]
+
+    def take():
+        rec, ctl['rec'] = ctl['rec'], None
+        return rec
+    return {'params': new, 'old_ids': old_ids, 'start': start, 'take': take}
+
+
 def mode_plan(a):
     fams = list(dict.fromkeys(f.strip() for f in a.plan_fams.split(',') if f.strip()))
     if not fams or any(f not in CHAIN + PLAN_X for f in fams):
@@ -728,6 +788,8 @@ def mode_plan(a):
         raise SystemExit('--screen-rows and --fresh-rows are incompatible')
     if a.reader_hidden and not a.fresh_core:
         raise SystemExit('plan mode: --reader-hidden needs --fresh-core')
+    if a.round_routers and not a.fresh_core:
+        raise SystemExit('plan mode: --round-routers needs --fresh-core')
     rt, torch, cfg, dec, tok, lm, modules, named = setup(a)
     if a.screen_rows:  # the skills screen's own draw (8 families, 2,000 fixed rows, 3 passes), kept to --plan-fams in order; one update per row occurrence
         fixed, order, fit, held = rows_for(a.data, a.sample_seed, n_fixed=2000, fams=W8, passes=3)
@@ -769,12 +831,18 @@ def mode_plan(a):
         seq = parts['reader'].proj
         seq[1], seq[3] = torch.nn.Linear(seq[1].in_features, a.reader_hidden).to(dev), torch.nn.Linear(a.reader_hidden, seq[3].out_features).to(dev)
         emit('plan-reader', {'hidden': a.reader_hidden})
+    rr = install_round_routers(torch, parts['core'], ROUNDS, a.sample_seed + 10 ** 6) if a.round_routers else None  # one router per round; below the heads are seeded as before
+    if rr:
+        emit('plan-round-routers', {'rounds': ROUNDS, 'blocks': len(parts['core'].blocks), 'added_params': sum(p.numel() for p in rr['params']),
+                                    'dropped_params': len(rr['old_ids'])})
     torch.manual_seed(a.sample_seed)
     ptr, op = torch.nn.Linear(256, 6).to(dev), torch.nn.Linear(2048, 5 * len(OPS)).to(dev)
     op_tok = torch.nn.Linear(256, len(OPS)).to(dev) if a.op_attend else None  # --op-attend: step j's op also reads the token its operand pointer picks
     train_params = [p for n, p in named if n.startswith(('core.',) if a.reader_hidden else ('core.', 'reader.'))] + \
         (list(parts['reader'].parameters()) if a.reader_hidden else []) + list(ptr.parameters()) + list(op.parameters()) + \
         (list(op_tok.parameters()) if op_tok is not None else [])
+    if rr:  # `named` was built before the patch: drop the replaced routers (now unused), add the per-round ones
+        train_params = [p for p in train_params if id(p) not in rr['old_ids']] + rr['params']
     opt = torch.optim.AdamW(train_params, lr=a.lr, weight_decay=0)
     n_upd = len(order) if a.fresh_rows or a.screen_rows else min(a.updates, len(order))
     cos = (lambda i: 0.5 * (1 + math.cos(math.pi * min(i, n_upd) / n_upd))) if a.lr_cosine else (lambda i: 1.0)  # --lr-cosine: decay to 0 over the run
@@ -806,10 +874,16 @@ def mode_plan(a):
                 [by_family(rows, [x[i] for x in res]) for i in range(3)])
 
     def evaluate(u):
-        (fs, fb), (hs, hb) = score(fit), score(held)
+        fs, fb = score(fit)
+        if rr:
+            rr['start']()  # top-2 expert counts per block and round, summed over the held-out rows
+        hs, hb = score(held)
         curve.append({'update': u, 'fit': fs, 'held': hs, 'fit_by_family': fb[0], 'held_by_family': hb[0], 'ops_by_family': hb[1],
                       'ptr_by_family': hb[2], 'minutes': round((time.time() - t0) / 60, 1)})
         emit('plan-eval', curve[-1])
+        if rr:
+            curve[-1]['round_experts'] = rr['take']()
+            emit('plan-round-experts', {'update': u, 'held_rows': len(held), 'counts': curve[-1]['round_experts']})
     curve = []
     evaluate(0)
     for u in range(1, n_upd + 1):
@@ -857,7 +931,11 @@ def main():
     ap.add_argument('--batch', type=int, default=1)
     ap.add_argument('--lr', type=float, default=1e-3)
     ap.add_argument('--fresh-core', action='store_true')
+    ap.add_argument('--round-routers', action='store_true', help='plan mode (needs --fresh-core): each MoE block gets one router per core round '
+                    '(Chain-of-Experts), experts stay shared; prints plan-round-experts (top-2 expert counts per block and round on the held-out rows) after each eval')
     a = ap.parse_args()
+    if a.round_routers and a.mode != 'plan':
+        raise SystemExit('--round-routers is plan mode only')
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
