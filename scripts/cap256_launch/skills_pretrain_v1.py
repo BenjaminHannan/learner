@@ -150,13 +150,14 @@ def plan_value(rt, tokenizer, ud, pl, feats, ids, mask):
     return ud.plan_exec(ud.to_int(toks[am[0]]), [ud.PLAN_OPS[j] for j in oa], [ud.to_int(toks[t]) for t in am[1:]])
 
 
-def train_planner(rt, lm, tokenizer, ud, parts, rows, seed, device, every=2000):
+def train_planner(rt, lm, tokenizer, ud, parts, rows, seed, device, every=2000, cosine=False):
     """Build the planner from deep copies of the restored reader + core, re-initialised like ud.reset_fresh (torch seeded with
     `seed` first, then again right before the heads, as mode_plan does), and train it like mode_plan --op-attend --fresh-rows:
     one pass over `rows` (rows whose plan does not parse / has >5 steps / has a literal missing from the question / is too long
     are skipped), batch 1, AdamW lr 1e-3 wd 0, clip 1.0, linear warmup 200, loss = op CE summed over the 5 steps + pointer NLL
     over the used slots. Features are computed per row (one pass, no cache). Returns the planner, frozen (eval, requires_grad off),
-    and an info dict. The caller's RNG state is restored afterwards, so the main run's RNG does not depend on the route."""
+    and an info dict. The caller's RNG state is restored afterwards, so the main run's RNG does not depend on the route.
+    cosine (--plan-cosine): the lr also decays to 0 along a cosine over the kept rows, as mode_plan --lr-cosine."""
     torch = rt.torch
     F = torch.nn.functional
     t0 = time.time()
@@ -176,7 +177,9 @@ def train_planner(rt, lm, tokenizer, ud, parts, rows, seed, device, every=2000):
         train_params = [p for m in (pc, pr) for p in m.parameters() if p.requires_grad] + \
             [p for m in (ptr, op, op_tok) for p in m.parameters()]
         opt = torch.optim.AdamW(train_params, lr=1e-3, weight_decay=0)
-        sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / 200))
+        n_upd = sum(1 for r in rows if (lambda e: e and ud.plan_labels(tokenizer, r, e[0][0].tolist())[0])(encode(tokenizer, r, torch, device))) if cosine else 0
+        cos = (lambda i: 0.5 * (1 + math.cos(math.pi * min(i, n_upd) / n_upd))) if cosine and n_upd else (lambda i: 1.0)
+        sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / 200) * cos(i))
         pc.train()
         pr.train()
         u, dropped, losses = 0, Counter(), []
@@ -209,7 +212,7 @@ def train_planner(rt, lm, tokenizer, ud, parts, rows, seed, device, every=2000):
             m.requires_grad_(False)
     info = {'rows': len(rows), 'updates': u, 'minutes': round((time.time() - t0) / 60, 2),
             'final_loss': round(sum(losses[-every:]) / len(losses[-every:]), 4) if losses else None,
-            'dropped': dict(dropped), 'seed': seed}
+            'dropped': dict(dropped), 'seed': seed, 'cosine': bool(cosine), 'cosine_updates': n_upd}
     return pl, info
 
 
@@ -327,6 +330,7 @@ def main():
     ap.add_argument('--lr-mult', type=float, default=1.0)
     ap.add_argument('--lr-final-mult', type=float, default=None, help='cosine-decay lr from lr-mult to this multiple over the run')
     ap.add_argument('--plan-route', type=int, default=0, help='N>0, with --copy-path --gen-fix --steps: first train a frozen planner (fresh reader+core copies + pointer/op heads, no LM in its loss; uc_diag_v4 --mode plan --op-attend) on N distinct chain-family rows, one pass; then chain_ops/state_update/chain_story2/var_chain rows get " = <value>" (planner argmax plan run through an exact calculator) appended after the question embeddings and the target " # answer"; --final-lesions adds plan_swap')
+    ap.add_argument('--plan-cosine', action='store_true', help='with --plan-route: the planner\'s lr decays to 0 along a cosine over its one pass (uc_diag_v4 --lr-cosine)')
     ap.add_argument('--final-lesions', action='store_true', help='after training, score trainfit and in_dist again with each row\'s pooled core vectors replaced by its family mean, another same-family row\'s, or the global mean (copy-path only)')
     ap.add_argument('--answer-only-fams', default='', help='with --steps: these families get the target " # " + answer, no steps')
     ap.add_argument('--save-texts', action='store_true', help='keep every generated text in the eval results (id, family, answer, text, hit, lesion mode)')
@@ -371,6 +375,8 @@ def main():
     TXT['on'] = a.save_texts
     if a.plan_route < 0:
         raise SystemExit('--plan-route must be >= 0')
+    if a.plan_cosine and not a.plan_route:
+        raise SystemExit('--plan-cosine needs --plan-route')
     if a.plan_route and not (a.copy_path and a.gen_fix and a.steps):
         raise SystemExit('--plan-route needs --copy-path --gen-fix --steps')
     PLAN['on'] = a.plan_route > 0
@@ -634,7 +640,8 @@ def main():
             plan_rows = random.Random('plan|%d' % pseed).sample(chain_rows, n_plan)
             print(json.dumps({'event': 'plan-pretrain-start', 'requested': a.plan_route, 'chain_rows_available': len(chain_rows),
                               'rows': n_plan, 'seed': pseed}), flush=True)
-            PLAN['pl'], plan_info = train_planner(rt, lm, tokenizer, ud, runtime.module_dict(modules), plan_rows, pseed, cfg['device'])
+            PLAN['pl'], plan_info = train_planner(rt, lm, tokenizer, ud, runtime.module_dict(modules), plan_rows, pseed, cfg['device'],
+                                                    cosine=a.plan_cosine)
             PLAN['ud'] = ud
             print(json.dumps({'event': 'plan-pretrain-done', **plan_info}), flush=True)
         log, curve, t0, done = [], [], time.time(), 0
