@@ -14,5 +14,8 @@ COMMON="--mode plan --warmup 200 --fresh-core --op-attend --lr-cosine --root $P 
 python $U $COMMON --out $P/artifacts/uc/42-pxw-smoke --fresh-rows 200
 # the run (~30-40 min)
 python $U $COMMON --out $P/artifacts/uc/42-pxw-s1 --fresh-rows 17000 > $P/artifacts/uc/42-pxw-s1.stdout.txt 2>&1
+# second run, PXW2048 (added 11:26 UTC): the same with the reader at 2048 instead of 256 (the later --reader-hidden wins).
+# Run it after 42-pxw-s1 on the PC (each needs about 11 GB, so not both at once on 16 GB), or at the same time on the M1 Pro if the pipeline runs there (about 3x slower).
+python $U $COMMON --reader-hidden 2048 --out $P/artifacts/uc/44-pxw2048-s1 --fresh-rows 17000 > $P/artifacts/uc/44-pxw2048-s1.stdout.txt 2>&1
 ```
-Results: push `$P/artifacts/uc/42-pxw-s1/DIAG-plan.json` and `42-pxw-s1.stdout.txt` to `artifacts/ultracode-v4/results/42-pxw-s1/` on branch `claude/ultracode-learning-blocker-gh011t` (`git add -f`; artifacts/ is gitignored). Pass marks: `artifacts/ultracode-v4/DIAG-v4.md`, section "PXW", written before the run.
+Results: push each run's `DIAG-plan.json` and stdout (`42-pxw-s1`, `44-pxw2048-s1`) to `artifacts/ultracode-v4/results/<run>/` on branch `claude/ultracode-learning-blocker-gh011t` (`git add -f`; artifacts/ is gitignored). Pass marks: `artifacts/ultracode-v4/DIAG-v4.md`, sections "PXW" and "PXW2048", written before the runs.

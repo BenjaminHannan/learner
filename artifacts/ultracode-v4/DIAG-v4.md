@@ -245,3 +245,9 @@ PX plus one change: `--reader-hidden 256` (new in mode plan): the thinker's fres
 - **"Identity was the limit"** if the pointers on cipher_map + group_induct + seq_cycle rise by >= 30 rows over PX's 44 / 120.
 - Wrong if held < 96 / 160 again: a fixed query per pointer slot cannot do content lookups even with identity kept; the next design would compute each slot's query from the thinker's state (a content-addressed pointer).
 - Prediction: 90-125. Identity should help group_induct and seq_cycle most; cipher_map stays hard, because "Write daa as numbers" splits the word into sub-word tokens ('da', 'a') and each lookup is two hops (find the letter's entry in the table, then point at its number).
+
+## Added 11:26 UTC, before it ran: PXW2048 (the reader with no narrow door)
+Ben asked for the door at 2048. PXW with `--reader-hidden 2048` instead of 256: the thinker's fresh reader is 2048 -> 2048 -> 256 (the thinker itself is 256 wide, so 256 is the most that can enter it without widening the thinker). Same rows, seed, held-out and recipe as PX and PXW. Runs on Ben's PC after PXW, or on the M1 Pro in parallel (`PC-JOB-pxw.md`).
+- Same marks as PXW: **"carries the content kinds"** if held plan-exact >= 121 / 160; **"identity was the limit"** if the content-kind pointers (cipher_map + group_induct + seq_cycle) rise by >= 30 over PX's 44 / 120; wrong if < 96 / 160.
+- Vs PXW: **"wider than 256 still helps"** if PXW2048 is >= 10 rows above PXW; otherwise 256 is wide enough for this.
+- Prediction: within 10 rows of PXW.
