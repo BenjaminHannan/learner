@@ -180,3 +180,23 @@ Recipe as PLOD (fresh reader+core, `--op-attend`, 17,000 distinct rows, one pass
   - **"One thinker plans all 8 kinds"** if held >= 85% (272 / 320), with its chain part within 10 rows of PLC's 6-seed mean (132.8) and its other-4 part within 10 rows of PX.
   - Wrong if held < 75% (240 / 320).
 - One seed each (screens). If PX passes, the next step is the trainer's `--plan-route` for all 8 kinds (the thinker answers every worst-8 question, the LM only says it), judged on the fit screen with plan_swap lesions.
+
+## PLCD result, 6 seeds (jobs 37-plcd-s1..s6, read 08:50 UTC)
+PLOD/PLC plus one change, `--lr-cosine` (lr decays from 1e-3 to 0 along a cosine over the 17,000 updates). Same seeds, rows and held-out 160 chain rows as PLC.
+
+| seed | final held plan | best | final ops | final ptr | fit plan | PLC final (paired) |
+|---|---|---|---|---|---|---|
+| 1 | 155 (96.9%) | 156 | 157 | 157 | 313 | 139 |
+| 2 | 159 (99.4%) | 159 | 159 | 160 | 315 | 130 |
+| 3 | 155 (96.9%) | 155 | 156 | 158 | 315 | 125 |
+| 4 | 153 (95.6%) | 153 | 156 | 155 | 312 | 140 |
+| 5 | 158 (98.8%) | 158 | 158 | 160 | 313 | 128 |
+| 6 | 157 (98.1%) | 157 | 157 | 158 | 312 | 135 |
+| **mean** | **156.2 (97.6%)**, sd 2.2 | 156.3 | 157.2 (98.2%) | 158.0 (98.8%) | 313.3 (97.9%) | 132.8 (83.0%) |
+
+- By the marks: **CONFIRMED** (mean 97.6% >= 85%, lowest seed 95.6% >= 80%) and **"the decay steadies the end point"** (final 156.2 vs best 156.3). Paired gain over PLC +13 to +30 rows on every seed (mean +23.3). The prediction (136-141) was far too low: the constant lr, not the plan design, was holding the route at 83%.
+- By family at the end (of 40, seeds 1-6): chain_ops 38/40/39/36/39/40, chain_story2 40 on all, state_update 40/39/39/38/39/40, var_chain 37/40/37/39/40/37.
+- Against the LM writing worked steps on the same 160 rows (SR2 seeds 1-3 86.8%, CF4-CF6 84.8%): the thinker's plan plus the calculator is about 11 points higher, with no LM in the loop after the reader.
+- Overlap check: no held-out chain prompt appears in train.jsonl; 15 of the 160 have the same numbers and steps as some training row (11 of them chain_story2, which every seed gets 40/40). Dropping all 15 still leaves every seed >= 95%.
+- Not matched on data: the planner saw 17,000 distinct chain rows once; the screen's LM saw about 900 chain rows three times. The matched test (the plan route trained only on the screen's own chain rows) is next.
+- Per the PLCD marks, the trainer's planner gets the same decay: new flag `--plan-cosine` in `skills_pretrain_v1.py` (default off, so CR1-CR3 stay reproducible).
