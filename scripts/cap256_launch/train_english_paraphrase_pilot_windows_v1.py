@@ -82,14 +82,19 @@ def latest_resume(folder):
     return best
 
 
-def train_step(rt, ctx, modules, named, opt, frame_index, participation, nonzero):
+def train_step(rt, ctx, modules, named, opt, frame_index, participation, nonzero, receipt=True, prof=None):
+    """receipt=False skips the per-update gradient receipt (finite/LM-frozen/participation checks); prof = optional dict of per-part seconds."""
     torch = rt.torch
     parts = runtime.module_dict(modules)
+    clock = (lambda: (common.synchronize(torch), time.perf_counter())[1]) if prof is not None else (lambda: 0.0)
+    t0 = clock()
     opt.zero_grad(set_to_none=True)
     ids, mask, labels = ctx.tokens[frame_index]
     h, aux = runtime.english_graph(rt, parts['core'], parts['reader'], ctx.features[frame_index], mask)
+    t1 = clock()
     per, prediction, stats = runtime.english_loss(rt, ctx.lm, ctx.dec, h, mask, labels)
     loss = per.mean()
+    t2 = clock()
     contract = {}
 
     def before_step():
@@ -103,7 +108,18 @@ def train_step(rt, ctx, modules, named, opt, frame_index, participation, nonzero
                 participation[name] += 1
                 if bool(torch.count_nonzero(p.grad)):
                     nonzero[name] += 1
-    preclip = rt.sealed.numeric_optimizer_step(loss, opt, [p for _, p in named], torch, before_step)
+    tr = [0.0]
+
+    def timed_before_step():
+        a0 = clock()
+        before_step()
+        tr[0] = clock() - a0
+    t3 = clock()
+    preclip = rt.sealed.numeric_optimizer_step(loss, opt, [p for _, p in named], torch, (timed_before_step if prof is not None else before_step) if receipt else None)
+    t4 = clock()
+    if prof is not None:
+        for k, v in (('graph_fwd', t1 - t0), ('loss_fwd', t2 - t1), ('backward_clip_step', t4 - t3 - tr[0]), ('receipt', tr[0])):
+            prof[k] = prof.get(k, 0.0) + v
     if not bool(torch.stack([torch.isfinite(p.detach()).all() for _, p in named]).all()):
         raise ValueError('nonfinite trainable parameter after update')
     return {'frame_index': frame_index, 'input_tokens_with_EOS': int(ids.shape[1]), **stats,
