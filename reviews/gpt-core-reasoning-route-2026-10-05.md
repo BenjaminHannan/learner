@@ -87,7 +87,7 @@ So in this setup the thinker's plan decides every chain answer and the LM just r
 | 32 (as above) | 77 | 1 | 33 | 26 | 17 | 156 | - |
 | 256 (fresh) | 75 | 0 | 35 | 26 | 14 | 156 | 175 |
 
-The talker writing steps gets about 121 of 160 on these rows. The ops are nearly always right; the **pointers** fail exactly where the target must be found **by its content** (find the number paired with letter "d" in the table; find which earlier item the pattern repeats), and they fail on practised rows too. Each pointer slot is a fixed learned query (Linear(256, 6) over the thinker's per-token states), so its query cannot depend on what was read. A 2048-wide reader run is queued.
+The talker writing steps gets about 121 of 160 on these rows. The ops are nearly always right; the **pointers** fail exactly where the target must be found **by its content** (find the number paired with letter "d" in the table; find which earlier item the pattern repeats), and they fail on practised rows too. Each pointer slot is a fixed learned query (Linear(256, 6) over the thinker's per-token states), so the query vector itself cannot depend on what was read (only the token states it scores can). A 2048-wide reader run is queued.
 
 **Queued, not yet run (marks written):** (a) the reader into the thinker AND the exit to the talker both 2048 wide in the real model; (b) "the talker calls the calculator": the planner's plan is given to the talker as text (" thinker: 10 - 5 * 5"), the talker is trained to write " calc(10 - 5 * 5)", the call is intercepted, an exact calculator's reply " = 25" is inserted (no loss on it) and the talker continues " # 25"; lesions swap the note with another row's or drop it; (c) one router per loop round in the thinker's MoE layers (Chain-of-Experts).
 
