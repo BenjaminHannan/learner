@@ -200,3 +200,11 @@ PLOD/PLC plus one change, `--lr-cosine` (lr decays from 1e-3 to 0 along a cosine
 - Overlap check: no held-out chain prompt appears in train.jsonl; 15 of the 160 have the same numbers and steps as some training row (11 of them chain_story2, which every seed gets 40/40). Dropping all 15 still leaves every seed >= 95%.
 - Not matched on data: the planner saw 17,000 distinct chain rows once; the screen's LM saw about 900 chain rows three times. The matched test (the plan route trained only on the screen's own chain rows) is next.
 - Per the PLCD marks, the trainer's planner gets the same decay: new flag `--plan-cosine` in `skills_pretrain_v1.py` (default off, so CR1-CR3 stay reproducible).
+
+## Added 09:34 UTC, before they ran: PLS (matched practice) and the PX/PXA recipe
+**PX/PXA recipe amended before either ran:** both use `--lr-cosine` (PLCD confirmed it), otherwise as written at 08:35. Marks unchanged.
+
+**PLS** = PLCD's recipe (fresh reader+core, `--op-attend`, `--lr-cosine`, warmup 200) trained only on the chain rows the skills screen practised: new flag `--screen-rows` draws the screen's own 8-family set (2,000 fixed rows x 3 passes, the trainer's RNG for that seed) and keeps the chain rows in order (about 890 rows x 3 passes, about 2,670 updates). Held-out = the same 160 chain rows. Seeds 1-6, paired with the LM writing steps on the same seeds: SR2 seeds 1-3 and CF4-CF6 get **138 / 141 / 138 / 133 / 135 / 139** of these 160 (mean 137.3, 85.8%).
+- **"With the same practice, the thinker's plan beats the LM's steps"** if the PLS 6-seed mean held plan-exact is >= 140.3 (LM + 3 rows) and PLS is ahead on at least 5 of the 6 paired seeds.
+- **"Ties"** if the mean is within 3 rows of 137.3; **"the LM learns more from the same practice"** if it is more than 3 rows under (then the 97.6% needs the extra practice rows, and the real-model route would train its planner on extra rows the LM never sees).
+- Prediction: 115-140 (PLO, 2,000 chain rows x 3 at a constant lr, got 124).

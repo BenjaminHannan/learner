@@ -14,7 +14,9 @@ Same stack and rows as the fit screens (skills_pretrain_v1.py: main2, worst-8 fa
                   --families/--target/--head vocab/--learner/--warmup: learning ladder (LD)
   --mode probe    eval-only: can the number tokens be read back from the LM features, the 32-wide reader, the
                   core's input and its rounds 1 and 4? (token and row probes, kNN and ridge)
-  --mode plan     can reader+core learn the fold plan (start literal, ops, operand pointers) of an exact calculator? no LM in the loss
+  --mode plan     can reader+core learn the fold plan (start literal, ops, operand pointers) of an exact calculator? no LM in the loss;
+                  --plan-fams adds cipher_map / fewshot_number_rule / group_induct / seq_cycle (op set gains CAT = copy the pointed token);
+                  --screen-rows trains on the skills screen's own practised rows (its 8-family draw kept to --plan-fams)
 Prints one line per result starting with RESULT and writes OUT/DIAG-<mode>.json.
 """
 import argparse
@@ -609,6 +611,7 @@ def mode_probe(a):
 
 # ---------------------------------------------------------------- fold plan
 PLAN_OPS = ('+', '-', '*', '/', 'STOP')
+PLAN_X = ('cipher_map', 'fewshot_number_rule', 'group_induct', 'seq_cycle')  # --plan-fams beyond CHAIN; with any of these the op set gains CAT
 
 
 def parse_plan(row):
@@ -651,6 +654,36 @@ def plan_labels(tok, row, ids):
     return {'toks': toks, 'P': P, 'start': start, 'ops': ops, 'ws': ws}, None
 
 
+def plan_labels_x(tok, row, ids):
+    """PLAN_X row (from row['meta']) -> (label dict as plan_labels, None) or (None, drop reason: parse / steps / ptr). Copy rows (cipher_map,
+    group_induct, seq_cycle) also get 'pieces' = the strings to copy in order (ops = CAT x (n-1)); fewshot_number_rule is a calculator plan"""
+    f, v, m, pieces = row['family'], row.get('variant'), row.get('meta') or {}, None
+    try:
+        if f in ('seq_cycle', 'group_induct'):
+            pieces = [row['answer']]
+        elif f == 'cipher_map' and v in ('encode', 'decode'):
+            pieces = row['answer'].split() if v == 'encode' else list(row['answer'])
+        elif f == 'fewshot_number_rule' and v == 'pair_sum':
+            start, ops, ws = m['pairs'][-1][0], ['+'], [m['pairs'][-1][1]]
+        elif f == 'fewshot_number_rule' and v in ('add', 'mult') and (m['A'] == 1 if v == 'add' else m['B'] == 0):
+            q, in1 = m['xs'][-1], m['xs'][0]  # add: q - in1 + out1; mult: q * out1 / in1. A negative out1 is a separate '-' token: its sign goes into the op
+            out1 = m['A'] * in1 + m['B']
+            start, ops, ws = (q, ['-', '+' if out1 >= 0 else '-'], [in1, abs(out1)]) if v == 'add' else (q, ['*', '/'], [out1, in1])
+        else:
+            return None, 'parse'
+        if pieces is not None:
+            start, ops, ws = pieces[0], ['CAT'] * (len(pieces) - 1), pieces[1:]
+    except (KeyError, IndexError, TypeError, ValueError):
+        return None, 'parse'
+    if len(ops) > 5:
+        return None, 'steps'
+    toks = [tok.decode([t]).strip() for t in ids]
+    P = [[t for t, s in enumerate(toks) if s == x] for x in (pieces if pieces is not None else [str(abs(x)) for x in [start] + ws])]
+    if not all(P):
+        return None, 'ptr'
+    return {'toks': toks, 'P': P, 'start': start, 'ops': ops, 'ws': ws, **({} if pieces is None else {'pieces': pieces})}, None
+
+
 def to_int(s):
     return int(s) if re.fullmatch(r'-?\d+', s) else None
 
@@ -671,10 +704,39 @@ def plan_exec(v, ops, ws):
     return v
 
 
+def plan_correct(toks, pieces, am, ops, answer):
+    """one row's argmax pointers am (slots 0..5) and decoded ops (5 symbols, may hold CAT) -> correct? pieces = gold strings of a copy row, else None.
+    Ops before the first STOP: all CAT -> copy toks[am[0..n]], correct iff == pieces; none -> copy row: toks[am[0]] == pieces, calculator row:
+    plan_exec of the lone start; CAT mixed with arithmetic, or CAT on a calculator row, or arithmetic on a copy row -> wrong"""
+    pre = ops[:ops.index('STOP')] if 'STOP' in ops else list(ops)
+    if pre and all(o == 'CAT' for o in pre):
+        return pieces is not None and [toks[am[k]] for k in range(len(pre) + 1)] == pieces
+    if pieces is not None:
+        return not pre and [toks[am[0]]] == pieces
+    if 'CAT' in pre:
+        return False
+    v = plan_exec(to_int(toks[am[0]]), ops, [to_int(toks[t]) for t in am[1:]])
+    return v is not None and str(v) == sp.norm(answer)
+
+
 def mode_plan(a):
+    fams = list(dict.fromkeys(f.strip() for f in a.plan_fams.split(',') if f.strip()))
+    if not fams or any(f not in CHAIN + PLAN_X for f in fams):
+        raise SystemExit('--plan-fams: comma-separated, from ' + ','.join(CHAIN + PLAN_X))
+    OPS = PLAN_OPS + ('CAT',) if any(f not in CHAIN for f in fams) else PLAN_OPS  # chain-only: the original 5 classes, shapes and RNG use
+    if a.screen_rows and a.fresh_rows:
+        raise SystemExit('--screen-rows and --fresh-rows are incompatible')
     rt, torch, cfg, dec, tok, lm, modules, named = setup(a)
-    fixed, order, fit, held = rows_for(a.data, a.sample_seed, n_fixed=a.fresh_rows or 2000, fams=list(CHAIN),
-                                       passes=1 if a.fresh_rows else 3)  # --fresh-rows N: N distinct rows seen once each
+    if a.screen_rows:  # the skills screen's own draw (8 families, 2,000 fixed rows, 3 passes), kept to --plan-fams in order; one update per row occurrence
+        fixed, order, fit, held = rows_for(a.data, a.sample_seed, n_fixed=2000, fams=W8, passes=3)
+        fixed, order, held = [[r for r in rs if r['family'] in fams] for rs in (fixed, order, held)]
+        fit = fixed[:min(320, len(fixed))]
+        dev = [json.loads(l) for l in (Path(a.data) / 'dev' / 'in_dist.jsonl').read_text().splitlines()]
+        emit('plan-screen', {'fixed': len(fixed), 'order': len(order), 'fit': len(fit), 'held': len(held),
+                             'held_same_as_plan_mode': [r['id'] for r in held] == [r['id'] for r in dev if r['family'] in fams][:320]})
+    else:
+        fixed, order, fit, held = rows_for(a.data, a.sample_seed, n_fixed=a.fresh_rows or 2000, fams=fams,
+                                           passes=1 if a.fresh_rows else 3)  # --fresh-rows N: N distinct rows seen once each
     parts = runtime.module_dict(modules)
     dev = cfg['device']
     F = torch.nn.functional
@@ -682,11 +744,11 @@ def mode_plan(a):
     L, why = {}, {}
     for r in fixed + held:
         enc = sp.encode(tok, r, torch, dev)
-        lab, why[r['id']] = plan_labels(tok, r, enc[0][0].tolist()) if enc else (None, 'long')
+        lab, why[r['id']] = (plan_labels if r['family'] in CHAIN else plan_labels_x)(tok, r, enc[0][0].tolist()) if enc else (None, 'long')
         if lab:
             ids, mask, _ = enc
             ops5 = lab['ops'] + ['STOP'] * (5 - len(lab['ops']))
-            L[r['id']] = {**lab, 'ids': ids, 'mask': mask, 'tgt': torch.tensor([PLAN_OPS.index(o) for o in ops5], device=dev),
+            L[r['id']] = {**lab, 'ids': ids, 'mask': mask, 'tgt': torch.tensor([OPS.index(o) for o in ops5], device=dev),
                           'f': rt.compare.extract_question_features(lm, ids, mask, 'contextual', torch)}
     pre = {'fixed': fixed, 'order': order, 'held': held}
     fixed, order, held = [[r for r in pre[k] if r['id'] in L] for k in pre]
@@ -694,27 +756,27 @@ def mode_plan(a):
     emit('plan-drop', {'dropped': {k: len(v) - len(g) for (k, v), g in zip(pre.items(), (fixed, order, held))},
                        'kept': {'fixed': len(fixed), 'order': len(order), 'fit': len(fit), 'held': len(held)},
                        'reasons': {f: {w: sum(why[r['id']] == w for r in pre['fixed'] + pre['held'] if r['family'] == f)
-                                       for w in ('parse', 'steps', 'long', 'ptr')} for f in CHAIN},
+                                       for w in ('parse', 'steps', 'long', 'ptr')} for f in fams},
                        'dropped_by_family': {f: {k: [sum(r['id'] not in L for r in pre[k] if r['family'] == f), sum(r['family'] == f for r in pre[k])]
-                                                 for k in ('fixed', 'held')} for f in CHAIN}})
+                                                 for k in ('fixed', 'held')} for f in fams}})
     emit('plan-cache', {'rows': len(L), 'seconds': round(time.time() - t0, 1)})
     if a.fresh_core:
         torch.manual_seed(a.sample_seed)
         reset_fresh(parts)
     torch.manual_seed(a.sample_seed)
-    ptr, op = torch.nn.Linear(256, 6).to(dev), torch.nn.Linear(2048, 25).to(dev)
-    op_tok = torch.nn.Linear(256, 5).to(dev) if a.op_attend else None  # --op-attend: step j's op also reads the token its operand pointer picks
+    ptr, op = torch.nn.Linear(256, 6).to(dev), torch.nn.Linear(2048, 5 * len(OPS)).to(dev)
+    op_tok = torch.nn.Linear(256, len(OPS)).to(dev) if a.op_attend else None  # --op-attend: step j's op also reads the token its operand pointer picks
     train_params = [p for n, p in named if n.startswith(('core.', 'reader.'))] + list(ptr.parameters()) + list(op.parameters()) + \
         (list(op_tok.parameters()) if op_tok is not None else [])
     opt = torch.optim.AdamW(train_params, lr=a.lr, weight_decay=0)
-    n_upd = len(order) if a.fresh_rows else min(a.updates, len(order))
+    n_upd = len(order) if a.fresh_rows or a.screen_rows else min(a.updates, len(order))
     cos = (lambda i: 0.5 * (1 + math.cos(math.pi * min(i, n_upd) / n_upd))) if a.lr_cosine else (lambda i: 1.0)  # --lr-cosine: decay to 0 over the run
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / max(1, a.warmup)) * cos(i)) if a.warmup > 0 or a.lr_cosine else None
 
     def fwd(c):
         h, _ = runtime.english_graph(rt, parts['core'], parts['reader'], c['f'], c['mask'])
         z = F.layer_norm(h.float(), (256,))
-        lg, ol = ptr(z[0]), op(F.adaptive_avg_pool1d(z[0].T[None], 8)[0].T.reshape(1, -1)).view(5, 5)
+        lg, ol = ptr(z[0]), op(F.adaptive_avg_pool1d(z[0].T[None], 8)[0].T.reshape(1, -1)).view(5, len(OPS))
         if op_tok is not None:
             ol = ol + op_tok(F.softmax(lg[:, 1:].detach(), 0).T @ z[0])
         return lg, ol
@@ -728,8 +790,7 @@ def mode_plan(a):
                 c = L[r['id']]
                 lg, ol = fwd(c)
                 am, oa = lg.argmax(0).tolist(), ol.argmax(1).tolist()
-                v = plan_exec(to_int(c['toks'][am[0]]), [PLAN_OPS[j] for j in oa], [to_int(c['toks'][t]) for t in am[1:]])
-                res.append((v is not None and str(v) == sp.norm(r['answer']), oa == c['tgt'].tolist(),
+                res.append((plan_correct(c['toks'], c.get('pieces'), am, [OPS[j] for j in oa], r['answer']), oa == c['tgt'].tolist(),
                             all(am[k] in c['P'][k] for k in range(len(c['ops']) + 1))))
         for _, m in modules:
             m.train()
@@ -782,6 +843,10 @@ def main():
     ap.add_argument('--fresh-rows', type=int, default=0, help='direct mode: N distinct rows, one pass each (--updates ignored)')
     ap.add_argument('--lr-cosine', action='store_true', help='plan mode: cosine-decay the lr to 0 over the run (after the warmup ramp)')
     ap.add_argument('--op-attend', action='store_true', help='plan mode: each step\'s op head also reads the core state at its operand pointer')
+    ap.add_argument('--screen-rows', action='store_true', help='plan mode: train on the skills screen\'s own practised rows (its 8-family draw: '
+                    '2,000 fixed rows x 3 passes, same RNG) kept to --plan-fams, in order; one update per row occurrence; incompatible with --fresh-rows')
+    ap.add_argument('--plan-fams', default=','.join(CHAIN), help='plan mode: comma-separated families to train and score on, from the 4 chain ones plus '
+                    'cipher_map, fewshot_number_rule, group_induct, seq_cycle (any of these adds the CAT op = copy the pointed token, 6 op classes)')
     ap.add_argument('--batch', type=int, default=1)
     ap.add_argument('--lr', type=float, default=1e-3)
     ap.add_argument('--fresh-core', action='store_true')
