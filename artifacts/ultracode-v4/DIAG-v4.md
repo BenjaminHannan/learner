@@ -151,3 +151,17 @@ One change from PLOD / PLC: `--lr-cosine` (new in mode plan): after the 200-upda
 - Wrong if the 6-seed mean final is below PLC's 6-seed mean final: the noise is not from the constant lr.
 - Prediction: mean final 136-141, every seed >= 130.
 - If CONFIRMED, the trainer's planner (`--plan-route`) gets the same decay before the next real-model run; CR1-CR3 (running now) use the constant lr.
+
+## PLC result, 6 seeds (jobs 32-plod-fresh, 33-plod-s3/s5/s6, 36-plod-s2-rerun, 36-plod-s4-rerun, read 08:29 UTC)
+| seed | final held plan | best held plan | final ops | final ptr | fit plan |
+|---|---|---|---|---|---|
+| 1 (PLOD) | 139 (86.9%) | 141 | 141 | 151 | 285 |
+| 2 | 130 (81.3%) | 134 | 137 | 141 | 273 |
+| 3 | 125 (78.1%) | 138 | 128 | 151 | 267 |
+| 4 | 140 (87.5%) | 140 | 143 | 151 | 284 |
+| 5 | 128 (80.0%) | 136 | 130 | 148 | 272 |
+| 6 | 135 (84.4%) | 137 | 138 | 152 | 261 |
+| **mean** | **132.8 (83.0%)**, sd 6.1 | 137.7 (86.0%), sd 2.6 | 136.2 (85.1%) | 149.0 (93.1%) | 273.7 (85.5%) |
+
+- By the marks: **not CONFIRMED** (mean 83.0% < 85%, seed 3 at 78.1% < 80%) and **not wrong** (mean >= 80%). The plan route lands at 83% final on new chain questions, 86% at its best checkpoint, against 84.8-86.8% for the LM writing steps on the same rows (SR2 and CF4-6 means).
+- The final-vs-best gap (4.8 rows on average, up to 13 on seed 3) is the end-point noise PLCD (cosine lr decay, box D) tests. Ops still trail pointers by 13 rows; state_update is the weak family on seeds 2, 3 and 5 (23-25 / 40).
