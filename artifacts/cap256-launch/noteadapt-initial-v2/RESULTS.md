@@ -1,0 +1,22 @@
+The initial-fact note-use v2 pilot showed no measured benefit in either route or seed. The fixed primary criterion was not met.
+
+| Seed | Adaptation route | History present /8 | History removed /8 | Primary pair both correct, full / empty | TRAIN mean CE, pass1 → pass4 | Last-pass teacher-forced exact /32 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 0 | notebook | 0 | 0 | False / False | 5.406441 → 2.706037 | 2 |
+| 0 | inline | 0 | 0 | False / False | 5.286536 → 2.623877 | 7 |
+| 1 | notebook | 0 | 0 | False / False | 4.709530 → 2.836980 | 2 |
+| 1 | inline | 0 | 0 | False / False | 4.686392 → 2.356433 | 5 |
+
+All64 outputs emitted valid terminal EOS; zero outputs were empty EOS. Exact canonical-token+EOS scores are zero throughout, with zero paired gains/losses. Neither notebook nor inline shows the frozen two-seed gain plus primary NE-I00/NE-I01 counterfactual-pair result. Inline failure prevents a notebook-specific causal diagnosis. This is a small pilot, not statistical certification, generalization, correction-learning, abstention or learned-write evidence.
+
+TRAIN CE falls across all four passes in every fit. The last-pass teacher-forced counts are predictions before each scheduled update on different TRAIN rows; they are not fixed-endpoint native TRAIN accuracy, which was not measured. Only2–7/32 are exact in those records, supporting incomplete fit within128updates. No nonfinite loss/norm flags occurred.125/128,124/128,124/128,127/128 updates were clipped; this establishes active clipping, not its cause. Frozen component hashes and source bindings pass. The saved input IDs/masks, literal question/history placements and independent labels match the actual frozen tokenizer for all32TRAIN frames perfit and all64TEST observations. A representation/optimizer/data limitation remains unlocalized.
+
+Job `cap256-noteadapt-initial-v2-20261001T030856Z`: runner 2026-10-01T03:08:57.597335+00:00 → 2026-10-01T03:16:53.879514+00:00 UTC, exit0 and CLOSED.closed=true. First completed optimizer update03:09:10.416411UTC. Exactly128updates/four visits perfit,512total, with same parent40 model and matched saved-parent RNG withinseed but NEW empty Adam states in both routes. Core-only training; reader/prefix/LM/halt remain frozen; four loops; numeric CE only, auxiliary weight0; LR.001/zero decay/.9,.999/eps1e-8/clip1.
+
+Measured wrapper wall 476.282179s; worker 474.812000s; fit wall total 418.860000s; evaluation 54.062000s for64native calls (1.184calls/s including four evaluation loads). Peak CUDA allocation 4872305152bytes. All perfit300s, totalfit1200s and evaluation600s limits were met.
+
+Independent CPU/tokenizer-only recount made0modelcalls and0optimizerupdates. It verifies all four unique fit identities and plan hashes, parent/new full checkpoint hashes, fresh identical initial Adam/RNG/parameter names withinseed, exact128update/4visit sequences, numerical masks/labels/token bindings, all64native sequence and answer/native observation parity, actual EOS, strict scores and fixed primary-pair conditions. The runtime additionally verified durable checkpoint+Adam reload equality and frozen weight fingerprints. Native observations save argument-key contract, not option values; fixed decoding values are established by pinned source. Raw source, gold labels, frames, optimizer logs and tokens remain private onPC.
+
+Root prospectively selected initial-only v2 after the correction-stage token audit, before any new fit/TEST outcomes. All32TRAIN/8TEST initial cases passed actual tokenizer; all correction/missing stages were uniformly omitted, with no source rewrite, truncation or cap change. No correction-learning claim is permitted. All8TESTworlds and all their variants are now consumed/reserved, excluded from future training/replay. Earlier sealed capability/fresh seen/range and48-call POC verdicts remain unchanged.
+
+Next decision: keep replay parked and address TRAIN fit with one separately frozen bounded control before spending more fresh TEST rows. Both routes underfit by the saved traces, so this result does not support blaming notebook access alone. A success replay scaffold and a failure saved-record diagnostic brief are prepared onCPU, but neither is dispatched; any new adaptation/replay checkpoint schema, data/source isolation, scientific selection and resource manifest must be resolved separately. Do not reuse these8TESTworlds for tuning or a fresh claim.

@@ -1,0 +1,230 @@
+{
+  "RNG_and_order": "restore identical checkpoint model RNG within seed; precompute separate fixed exposure schedules with local schedule RNG; record schedule hashes and actual perrow visits, never use training RNG to reshuffle after outcome",
+  "actual_metadata_feasibility": {
+    "augmentation_rows": 256,
+    "augmentation_storygroups": 68,
+    "development_rows": 32,
+    "development_storygroups": 8,
+    "footprint_L1": 300,
+    "footprint_deficit_rows": 150,
+    "footprint_shortage_count": 44,
+    "joint_wholegroup_feasible_prospectively": true,
+    "label_bands_available": false,
+    "new_structural_source_groups_pending_collision_qualification": 96,
+    "no_TRAIN_admission": true,
+    "originalTRAIN_storygroups": 155,
+    "selection_report_path": "/tmp/cap256-data-diversity-3xnCi6Cq/actual-metadata-v2/SELECTION-REPORT.json"
+  },
+  "additional_visits": {
+    "diverse512": {
+      "additional": 20,
+      "original": 20
+    },
+    "repeat256": {
+      "additional": 0,
+      "original": 40
+    }
+  },
+  "architecture": "unchanged ordered D256 loop: two shared blocks,8 experts/top2,4loops,thin32 translators/eight-tokenprefix, frozen fullFP32LM",
+  "arms": [
+    "repeat256",
+    "diverse512"
+  ],
+  "augmentation_group_scope": "All token-eligible members of68 original storygroups; nine49\u201353token original members in6groups omitted. All members of all68groups reserved from any future evaluation.",
+  "branch_selection": "Parent chooses one successor from actual10240endpointresults. AddedTRAIN CE cannot select success. No newgrid, additionaltraining or automaticGPUdispatch.",
+  "budget": {
+    "checkpoint_cap_bytes_per_arm": 134217728,
+    "cuda_peak_reserved_cap_bytes": 15032385536,
+    "final_evaluation_seconds": 1200,
+    "global_delivery_bytes": 16777216,
+    "new_matrix_cap_bytes": 1140850688,
+    "optimizer_seconds_per_arm": 1800,
+    "project_cap_bytes": 107374182400,
+    "raw_cap_bytes_per_arm": 33554432,
+    "retained_disk_free_bytes": 1073741824,
+    "status": "UNRELEASED: mainowner must forecast10240steps plus baseline/endpoint diagnostics, runtime/hardware/disk and remainingwindow. Priorcaps retained as ceilings until ownerreconciliation; no bypass/precisionchange.",
+    "total_worker_seconds": 9600,
+    "updates_per_arm": 10240,
+    "worker_seconds_per_arm": 2400
+  },
+  "development_holdout": {
+    "baseline": "No model baseline calls under root revised resource freeze; pairwise updatedcontrol/treatment only.",
+    "common_to_both_seeds_and_arms": true,
+    "exclude_from_all_training": true,
+    "feasibility": "PROSPECTIVELY YES: exact32 in8groups disjoint from augmentation256 in68groups and recordedoriginalconsumed/reservedgroups; finalpool collision qualification pending",
+    "future_final": "distinct unopened finalsource required for strongerclaim; development32 consumed once with no score-driven redraw",
+    "rows": 32,
+    "token_caps": "same48query/32label includingEOS, generationmax32",
+    "whole_story_groups": true
+  },
+  "diagnostics": {
+    "TRAIN_teacherforced_examples": 2048,
+    "dev_native_calls": 128,
+    "dev_teacherforced_examples": 128,
+    "native_TRAIN_calls": 0,
+    "primary": "Fixed32dev strict targettoken+actually emittedEOS treatment-minus-control eachseed; bothpositive supports limitedPOC only. No sourcebaseline calls under revised freeze.",
+    "secondary": "Story-balanced devCE; original256 and additional256 endpointCE permodel, no nativeTRAIN generation. CE improvement without exact gain is probability-only.",
+    "source_baseline_calls": 0,
+    "updates": [
+      10240
+    ]
+  },
+  "dispatch_allowed": false,
+  "estimand_scope": "overall TRAIN data-policy effect at matched10240 optimizersteps; footprint/label-length/difficulty marginals change; no pure-diversity or exact-quota-matching claim",
+  "execution_order": [
+    [
+      0,
+      "repeat256"
+    ],
+    [
+      0,
+      "diverse512"
+    ],
+    [
+      1,
+      "diverse512"
+    ],
+    [
+      1,
+      "repeat256"
+    ]
+  ],
+  "experiment_label": "changed training mixture at fixed updates: diversity, repetition and composition allchange",
+  "failure_successor": {
+    "CPU_seconds": 60,
+    "controlled_change": "diagnostic granularity only",
+    "inputs": "savedreceipts and row/group metadata only",
+    "model_calls": 0,
+    "new_output_bytes": 1048576,
+    "no_auto_retry": true,
+    "optimizer_updates": 0,
+    "output": "bothseed/cap/invariance report; originalretention, addedTRAINuptake, devstory-balancedCE probability-only diagnostic",
+    "trigger": "mixed/zeroeffects or invalidcomparison"
+  },
+  "falsifier": "Full valid runs required. Positive paired devexact treatment-minuscontrol in bothseeds supports limited POC only. Mixed,zero or negative paired effects are inconclusive for remedy/capacity; no scoredriven redraw. CE gains on exposed treatmentTRAIN cannot trigger successrelease alone. Caps/provenance/incompletearms invalidate comparison.",
+  "final_original_visit_counts": {
+    "diverse512": 60,
+    "repeat256": 80
+  },
+  "final_update_cursor": 20480,
+  "fixed_selection_pins": {
+    "OWNER-METADATA-NORMALIZED.json": {
+      "path": "/tmp/cap256-data-diversity-3xnCi6Cq/actual-metadata-v2/OWNER-METADATA-NORMALIZED.json",
+      "sha256": "5013f8936dc414bc55f5437db494c5d09ab9365e98139c0aecf745cda6200dd8"
+    },
+    "SELECTED-METADATA.json": {
+      "path": "/tmp/cap256-data-diversity-3xnCi6Cq/actual-metadata-v2/SELECTED-METADATA.json",
+      "sha256": "3c2cba4aaea83fc2b809c32435e984a39a492d63805e82f8ecbef2dbc701696d"
+    },
+    "SELECTION-REPORT.json": {
+      "path": "/tmp/cap256-data-diversity-3xnCi6Cq/actual-metadata-v2/SELECTION-REPORT.json",
+      "sha256": "76fb6a777141aec84d8142989514e450e7098b70cd757155d0cc09d8ebb94d8d"
+    },
+    "SOURCE-EXCLUSION-AUDIT.json": {
+      "path": "/tmp/cap256-data-diversity-3xnCi6Cq/actual-metadata-v2/SOURCE-EXCLUSION-AUDIT.json",
+      "sha256": "d7a27ca24396cd77b157698a2de570c80a252603e0ca8fda2b376568a7bc2fa3"
+    }
+  },
+  "frozen_development_metadata_sha256": "3958982ea5eadef774cb87e6f09e4b83e24b69da12a1bb686cad281f05c4062c",
+  "future_evidence": "Proposedcommonfresh32dev reserved beforeselection; oldfailedfresh64/source reserved/consumedpanelgroups excluded; distinct unopened finalsource required for laterstrongerclaims.",
+  "hypothesis": "From identical originalcapabilityloop40 model/Adam/RNG withinseed, the changed512TRAINmixture (20visits each) improves fresh32dev exactansweraccuracy versus repeatedoriginal256 (40visits), at10240steps; changedcomposition/repetition/diversity, not purediversity.",
+  "input_scope": "original question-only, empty notebook; noteadapt models/inputs/weights excluded from this experiment",
+  "no_reselection": "No redraw or newseed/hash namespace if laterexclusions break dev32 or augmentation256. Owner supplies collision report; any conflict blocks release and requires explicit root reconciliation, not silentreplacement.",
+  "objective": "numeric-answer-CE-only; unchanged clip/auxiliary exclusion and original optimizer groups",
+  "owner_eligibility_count": {
+    "eligible_additional_rows": 675,
+    "eligible_storygroups": 194,
+    "exact256_wholegroup_feasible": true,
+    "footprint_shortages": 44,
+    "source": "parent owner metadata summary; full packet and sha pin still required",
+    "unfillable_quota_rows": 150
+  },
+  "preserved_unreleased_capacity_draft": "/tmp/cap256-scaling-pilot/pilot-RJHBN6Ae",
+  "previous_protocol_sha256": "d31da18f9ce071e6a1b0eb6e8e14ad020eaea2c8da48f7ae6042c874f2804e84",
+  "purpose": "One proposed original-question-only changed training mixture at fixed10240steps; dev32 primary. No noteadapt checkpoints and no automatic redraw.",
+  "rate_admission": "Mainowner owns actual10240-step forecast and hardcap reconciliation. Prior measuredrate receipt pins in SOURCE-EXCLUSION-AUDIT.json remain available; no independentGPUprobe.",
+  "schema": "cap256.changed-training-mixture.10240.protocol.v4",
+  "seeds": [
+    0,
+    1
+  ],
+  "selection": "Frozen suppliedIDs unchanged; complete eligible-subset groups with omissions disclosed; no redraw.",
+  "selection_CPU_cap_seconds": 60,
+  "source_commit": "080086bb7771e1ae4ad86b244298350a4d8c72e8",
+  "source_exclusion_amendment": {
+    "additional_required": [
+      "ALL notebook54 source/storygroups",
+      "ALL consumed NX8 source/storygroups",
+      "ALL96 structural sourcegroups",
+      "any other subsequent consumed/source-reserved groups identified by owner"
+    ],
+    "frozen_dev_groups": [
+      "5666d269404bf04a888bd18143c533c078feeec206553946880dbb44f3892186",
+      "69d7e8218cb828ebe6c77fef54e0a88c1d658f5cc32f74ff346d536359ffd0be",
+      "69d7e8218cb828ebe6c77fef54e0a88c1d658f5cc32f74ff346d536359ffd0be",
+      "69d7e8218cb828ebe6c77fef54e0a88c1d658f5cc32f74ff346d536359ffd0be",
+      "69d7e8218cb828ebe6c77fef54e0a88c1d658f5cc32f74ff346d536359ffd0be",
+      "69d7e8218cb828ebe6c77fef54e0a88c1d658f5cc32f74ff346d536359ffd0be",
+      "42d229e94b5145f82a310106383c1925e9128064df94df01e8927903f8ba7996",
+      "42d229e94b5145f82a310106383c1925e9128064df94df01e8927903f8ba7996",
+      "42d229e94b5145f82a310106383c1925e9128064df94df01e8927903f8ba7996",
+      "42d229e94b5145f82a310106383c1925e9128064df94df01e8927903f8ba7996",
+      "42d229e94b5145f82a310106383c1925e9128064df94df01e8927903f8ba7996",
+      "b1f94bf128d8b5e0e1551db4b88ba10b05bb211b3e7dcbb04528d2abf566f3b8",
+      "b1f94bf128d8b5e0e1551db4b88ba10b05bb211b3e7dcbb04528d2abf566f3b8",
+      "b1f94bf128d8b5e0e1551db4b88ba10b05bb211b3e7dcbb04528d2abf566f3b8",
+      "b1f94bf128d8b5e0e1551db4b88ba10b05bb211b3e7dcbb04528d2abf566f3b8",
+      "b1f94bf128d8b5e0e1551db4b88ba10b05bb211b3e7dcbb04528d2abf566f3b8",
+      "b08f13114adc0979aebc70caf8b52663f0ca7008415d3ab6e42452b08ab0f579",
+      "b08f13114adc0979aebc70caf8b52663f0ca7008415d3ab6e42452b08ab0f579",
+      "b08f13114adc0979aebc70caf8b52663f0ca7008415d3ab6e42452b08ab0f579",
+      "b08f13114adc0979aebc70caf8b52663f0ca7008415d3ab6e42452b08ab0f579",
+      "b08f13114adc0979aebc70caf8b52663f0ca7008415d3ab6e42452b08ab0f579",
+      "aab8e57aa0544b30b11595e409c25d7a16309fefda2cb22800fad5eb3b468b90",
+      "aab8e57aa0544b30b11595e409c25d7a16309fefda2cb22800fad5eb3b468b90",
+      "aab8e57aa0544b30b11595e409c25d7a16309fefda2cb22800fad5eb3b468b90",
+      "aab8e57aa0544b30b11595e409c25d7a16309fefda2cb22800fad5eb3b468b90",
+      "92f301e87ef9775fad9a540fc71cc1c959c7b20154daa57a7150dc8af00a8424",
+      "92f301e87ef9775fad9a540fc71cc1c959c7b20154daa57a7150dc8af00a8424",
+      "92f301e87ef9775fad9a540fc71cc1c959c7b20154daa57a7150dc8af00a8424",
+      "92f301e87ef9775fad9a540fc71cc1c959c7b20154daa57a7150dc8af00a8424",
+      "92f301e87ef9775fad9a540fc71cc1c959c7b20154daa57a7150dc8af00a8424",
+      "2b45a5029c4bc278229af5b7dce77fa76a8c091838d0db1c48d3b6076f4ad3ec",
+      "2b45a5029c4bc278229af5b7dce77fa76a8c091838d0db1c48d3b6076f4ad3ec"
+    ],
+    "known_existing_exclusions": "original416 plus new64seen plus3originalfresh-range stories; prior metadata union483IDs/228groups",
+    "qualification_if_collision": "stop and report conflictinggroupIDs/cohort; do not regenerate anyselection",
+    "status": "PENDING owner collision/source qualification against pinnedoriginal/additional/dev selections"
+  },
+  "source_parent_checkpoint_pins": {
+    "0": {
+      "family": "originalcapabilityloop40",
+      "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/run-capability256-continuation40-v1/seed0/loop/final-resume.pt",
+      "sha256": "2a9e06a1af2b63855d65401a4e08ce839398749c03ab0ffe675658bc1bfb7b4a"
+    },
+    "1": {
+      "family": "originalcapabilityloop40",
+      "path": "artifacts/sol-cloud-capability-plan-20260930/corpus1965-v1/run-capability256-continuation40-v1/seed1/loop/final-resume.pt",
+      "sha256": "2f3a2e0828f6040d4d75bdc4c8456ebd9e1db57b69c0f6217295515a9bd9fd11"
+    }
+  },
+  "source_sha256": {
+    "scripts/cap256_launch/analyze_train_receipts.py": "a7f6f8f0beed5b04c086bb337148d0342ff3419629bccca03cfc84230ae502d5",
+    "scripts/cap256_launch/train_continue.py": "471631cc146ef46d9d0aa53e54bb7453abcd05d8bf65e579bd5a968ffe839657",
+    "scripts/sol_cloud_capability256_v1.py": "dfeef09f14fdcd0a1987c38d6a89a560f4ef02159b732cd1665cf51e9fa39b01",
+    "scripts/sol_spatial_poc_ordered_train_api_v2.py": "c2bcbf5ec222053bd711d8834429e3f7197490706aebe457634eb4dbc9b0cf1a",
+    "scripts/sol_spatial_poc_ordered_v2.py": "5344e622855c875312f77a88095d287a5709e17dbaca23c90bdd8733b0a38291"
+  },
+  "source_snapshot_at_metadata_check": "f0b9ea9a9a20e08a2c504c43abe0a8f71471a85f",
+  "start_state": "for each seed strict clone of own visit40 model, reader, prefix, exact Adam state/groups/step/parameter order and torch/CUDA/Python RNG; no optimizer reset or LR change",
+  "success_successor": {
+    "controlled_change": "evidence source only: one separately frozen unopened finalsource under owner/rootreconciliation; same fourclosedendpoints, zeroadditionaltraining",
+    "dependency": "newsourcequalification and fixedsize/metric/time/outputcap before seeing outputs; no reuse/redraw of consumed dev32",
+    "dispatch_allowed": false,
+    "status": "prepared boundeddecision, notautomaticcontinuation",
+    "trigger": "bothseeds positive dev32pairedexacteffect; four valid closedmatchedruns; source integrity/caps pass"
+  },
+  "total_updates": 40960,
+  "updates_per_arm": 10240,
+  "version": "owner-reconciled-10240-v4"
+}
