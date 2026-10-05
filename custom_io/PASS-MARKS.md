@@ -90,3 +90,23 @@ tf and tfsteps runs (same seed; the extra table is created last, so every other 
 - **Place codes help step writing too:** tfstepsp - tfsteps pooled-5 d >= +2.0; then tfstepsp becomes the bar every
   custom design must beat (G4 is re-scored against it as well and reported both ways).
 - Reported per family as well (the lookup families above). 2 seeds only: this is a screen, not a claim.
+
+## Addendum 2: B2 screen (written 2026-10-05 about 12:30 UTC, 8:30 AM ET, before any B2 code or run)
+Screen verdicts so far (`custom_io/results/SCREEN-ANALYSIS.json`): A, A0 and L2x2 NO-GO. B NO-GO by the letter: G1-G4
+pass (pooled-5 +14.2 vs plain_tf, +0.8 vs plain_tf_steps, -0.3 vs C1'; chain-5 +65.4), but G5 fails on one wiring
+check, donor_match on the string families (both seeds). That check cannot pass for a pointer talker: a donor's state
+points into the recipient's prompt, so the recipient's own word comes out. B2 (`design/design-B2.md`) is B plus one
+change: a content-addressed copy talker. Seeds 100 and 101, paired with the existing tf, tfsteps and B runs at those seeds
+(same code path and flags; B2 is expected to run on BensPC's 5070 Ti in bf16, the earlier runs ran on Vast 5090s in bf16).
+**Copy-target families** (fixed now): letter_ops, copy_word, cipher_map, group_induct, digits_parity, exact match pooled over
+the five dev splits (1,000 rows per seed).
+GO to confirm needs ALL of:
+- G1-G3 as in the screen.
+- **G4':** pooled-5 d vs plain_tf_steps >= +1.0 and vs C1' >= 0 (raised from -1: B already ties them).
+- **G5':** the screen's wiring checks, with the string-family donor_match check replaced by: string-family donor drop
+  >= 20 points on in_dist (the state, not the talker, decides what is copied).
+- **B2.copy:** B2 - B pooled-5 >= +1.5 (2-seed mean).
+- **Copy evidence:** lesion `nocopy` lowers the copy-target families by >= 20 points (each seed).
+Proves the idea wrong: B2 - B pooled-5 < 0; or copy-target families rise < +3 vs B; or `nocopy` moves them by < 5
+(the copy path is not used). Reported either way: B2 - B per split and per family, `nowordc`, all screen lesions.
+If B2 is GO, the confirm (seeds 200-205) uses the PASS-1 / PASS-2 marks above unchanged, with B2 as the design.

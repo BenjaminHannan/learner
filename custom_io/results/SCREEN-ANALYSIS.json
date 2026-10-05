@@ -1,0 +1,911 @@
+{
+ "stage": "screen",
+ "seeds": [
+  100,
+  101
+ ],
+ "runs": [
+  "A0_s100",
+  "A0_s101",
+  "A_s100",
+  "A_s101",
+  "B_s100",
+  "B_s101",
+  "l2x2_s100",
+  "l2x2_s101",
+  "tf_s100",
+  "tf_s101",
+  "tfsteps_s100",
+  "tfsteps_s101"
+ ],
+ "skipped": [],
+ "arms": {
+  "A": {
+   "diffs": {
+    "pooled5_vs_tf": {
+     "n": 2,
+     "mean": 10.124172185430464,
+     "sd": 0.3160907796694792,
+     "ci": [
+      7.284254966887453,
+      12.964089403973475
+     ],
+     "pos": 2,
+     "per_seed": {
+      "100": 10.347682119205295,
+      "101": 9.900662251655632
+     }
+    },
+    "chain5_vs_tf": {
+     "n": 2,
+     "mean": 28.9,
+     "sd": 1.131370849898472,
+     "ci": [
+      18.735200000000034,
+      39.06479999999996
+     ],
+     "pos": 2,
+     "per_seed": {
+      "100": 29.699999999999996,
+      "101": 28.1
+     }
+    },
+    "in_dist_vs_tf": {
+     "n": 2,
+     "mean": 8.75,
+     "sd": 2.2876984097211928,
+     "ci": [
+      -11.80382352941185,
+      29.30382352941185
+     ],
+     "pos": 2,
+     "per_seed": {
+      "100": 10.367647058823536,
+      "101": 7.132352941176464
+     }
+    },
+    "variant_vs_tf": {
+     "n": 2,
+     "mean": 4.659090909090908,
+     "sd": 2.089179126232983,
+     "ci": [
+      -14.111136363636378,
+      23.429318181818196
+     ],
+     "pos": 2,
+     "per_seed": {
+      "100": 3.18181818181818,
+      "101": 6.136363636363637
+     }
+    },
+    "pooled5_vs_tfsteps": {
+     "n": 2,
+     "mean": -3.2615894039735096,
+     "sd": 1.3814337778147892,
+     "ci": [
+      -15.673079470198772,
+      9.149900662251753
+     ],
+     "pos": 0,
+     "per_seed": {
+      "100": -4.2384105960264975,
+      "101": -2.2847682119205217
+     }
+    },
+    "chain5_vs_tfsteps": {
+     "n": 2,
+     "mean": -30.750000000000004,
+     "sd": 0.7778174593052033,
+     "ci": [
+      -37.73830000000001,
+      -23.761699999999994
+     ],
+     "pos": 0,
+     "per_seed": {
+      "100": -30.200000000000003,
+      "101": -31.300000000000004
+     }
+    }
+   },
+   "G": [
+    {
+     "id": "G1",
+     "desc": "pooled-5 d vs plain_tf >= +1.0",
+     "value": 10.124172185430464,
+     "op": ">=",
+     "thr": 1.0,
+     "ok": true
+    },
+    {
+     "id": "G2",
+     "desc": "chain-5 d vs plain_tf >= +8, all seeds positive",
+     "value": 28.9,
+     "op": ">=",
+     "thr": 8.0,
+     "ok": true
+    },
+    {
+     "id": "G3",
+     "desc": "in_dist d vs plain_tf >= -2.0",
+     "value": 8.75,
+     "op": ">=",
+     "thr": -2.0,
+     "ok": true
+    },
+    {
+     "id": "G4",
+     "desc": "pooled-5 d vs plain_tf_steps >= -1.0",
+     "value": -3.2615894039735096,
+     "op": ">=",
+     "thr": -1.0,
+     "ok": false
+    },
+    {
+     "id": "G5",
+     "desc": "wiring lesions hold in every seed",
+     "value": {
+      "100": {
+       "shuffle_state<=10": true,
+       "zero_state<=5": true,
+       "loops:0<=5": true,
+       "loops:2n within 3": true,
+       "donor drop>=20": true,
+       "donor_match number>=50": true,
+       "donor_match string>=50": true
+      },
+      "101": {
+       "shuffle_state<=10": true,
+       "zero_state<=5": true,
+       "loops:0<=5": true,
+       "loops:2n within 3": true,
+       "donor drop>=20": true,
+       "donor_match number>=50": true,
+       "donor_match string>=50": true
+      }
+     },
+     "op": null,
+     "thr": null,
+     "ok": true
+    }
+   ],
+   "verdict": "NO-GO",
+   "complete": true,
+   "evidence": [
+    {
+     "id": "A.cf",
+     "desc": "interchange cf_match >= 40",
+     "value": {
+      "100": 1.837270341207349,
+      "101": 1.7060367454068242
+     },
+     "op": ">=",
+     "thr": 40,
+     "ok": false,
+     "per_seed_ok": {
+      "100": false,
+      "101": false
+     }
+    },
+    {
+     "id": "A.own",
+     "desc": "interchange own_match <= 30",
+     "value": {
+      "100": 31.758530183727036,
+      "101": 39.37007874015748
+     },
+     "op": "<=",
+     "thr": 30,
+     "ok": false,
+     "per_seed_ok": {
+      "100": false,
+      "101": false
+     }
+    },
+    {
+     "id": "A.blind",
+     "desc": "blind1 chain-5 <= 10",
+     "value": {
+      "100": 0.5,
+      "101": 1.1
+     },
+     "op": "<=",
+     "thr": 10,
+     "ok": true,
+     "per_seed_ok": {
+      "100": true,
+      "101": true
+     }
+    },
+    {
+     "id": "A.A-A0",
+     "desc": "A - A0 chain-5 >= +8 (seed mean; every seed needed)",
+     "value": 19.749999999999996,
+     "op": ">=",
+     "thr": 8,
+     "ok": true
+    }
+   ],
+   "prove_wrong": [
+    {
+     "id": "wrongA.chain5",
+     "desc": "chain-5 d < +3",
+     "value": 28.9,
+     "op": "<",
+     "thr": 3,
+     "ok": false
+    },
+    {
+     "id": "wrongA.A-A0",
+     "desc": "A - A0 chain-5 < +3",
+     "value": 19.749999999999996,
+     "op": "<",
+     "thr": 3,
+     "ok": false
+    },
+    {
+     "id": "wrongA.cf",
+     "desc": "cf_match < 15",
+     "value": 1.7716535433070866,
+     "op": "<",
+     "thr": 15,
+     "ok": true
+    },
+    {
+     "id": "wrongA.in_dist",
+     "desc": "in_dist d < -4",
+     "value": 8.75,
+     "op": "<",
+     "thr": -4,
+     "ok": false
+    },
+    {
+     "id": "wrongA.answer-only",
+     "desc": "A - A0 < 3 and A0 - plain_tf < 3 (answer-only recursion ruled out)",
+     "value": 19.749999999999996,
+     "op": null,
+     "thr": null,
+     "ok": false
+    }
+   ],
+   "A_minus_A0_chain5": {
+    "n": 2,
+    "mean": 19.749999999999996,
+    "sd": 0.07071067811865576,
+    "ci": [
+     19.11469999999999,
+     20.385300000000004
+    ],
+    "pos": 2,
+    "per_seed": {
+     "100": 19.699999999999996,
+     "101": 19.799999999999997
+    }
+   }
+  },
+  "A0": {
+   "diffs": {
+    "pooled5_vs_tf": {
+     "n": 2,
+     "mean": 6.158940397350992,
+     "sd": 1.428262041469521,
+     "ci": [
+      -6.673278145695404,
+      18.99115894039739
+     ],
+     "pos": 2,
+     "per_seed": {
+      "100": 7.168874172185433,
+      "101": 5.149006622516552
+     }
+    },
+    "chain5_vs_tf": {
+     "n": 2,
+     "mean": 9.150000000000002,
+     "sd": 1.2020815280171278,
+     "ci": [
+      -1.6500999999999681,
+      19.95009999999997
+     ],
+     "pos": 2,
+     "per_seed": {
+      "100": 10.0,
+      "101": 8.300000000000004
+     }
+    },
+    "in_dist_vs_tf": {
+     "n": 2,
+     "mean": 5.845588235294116,
+     "sd": 4.731376256468808,
+     "ci": [
+      -36.66345588235291,
+      48.354632352941145
+     ],
+     "pos": 2,
+     "per_seed": {
+      "100": 9.191176470588232,
+      "101": 2.5
+     }
+    },
+    "variant_vs_tf": {
+     "n": 2,
+     "mean": 1.25,
+     "sd": 1.9820417351441115,
+     "ci": [
+      -16.557651515151523,
+      19.057651515151523
+     ],
+     "pos": 1,
+     "per_seed": {
+      "100": -0.15151515151515227,
+      "101": 2.6515151515151523
+     }
+    },
+    "pooled5_vs_tfsteps": {
+     "n": 2,
+     "mean": -7.226821192052981,
+     "sd": 0.2692625160147473,
+     "ci": [
+      -9.646009933774856,
+      -4.807632450331106
+     ],
+     "pos": 0,
+     "per_seed": {
+      "100": -7.41721854304636,
+      "101": -7.036423841059602
+     }
+    },
+    "chain5_vs_tfsteps": {
+     "n": 2,
+     "mean": -50.5,
+     "sd": 0.848528137423859,
+     "ci": [
+      -58.12360000000002,
+      -42.87639999999998
+     ],
+     "pos": 0,
+     "per_seed": {
+      "100": -49.9,
+      "101": -51.1
+     }
+    }
+   },
+   "G": [
+    {
+     "id": "G1",
+     "desc": "pooled-5 d vs plain_tf >= +1.0",
+     "value": 6.158940397350992,
+     "op": ">=",
+     "thr": 1.0,
+     "ok": true
+    },
+    {
+     "id": "G2",
+     "desc": "chain-5 d vs plain_tf >= +8, all seeds positive",
+     "value": 9.150000000000002,
+     "op": ">=",
+     "thr": 8.0,
+     "ok": true
+    },
+    {
+     "id": "G3",
+     "desc": "in_dist d vs plain_tf >= -2.0",
+     "value": 5.845588235294116,
+     "op": ">=",
+     "thr": -2.0,
+     "ok": true
+    },
+    {
+     "id": "G4",
+     "desc": "pooled-5 d vs plain_tf_steps >= -1.0",
+     "value": -7.226821192052981,
+     "op": ">=",
+     "thr": -1.0,
+     "ok": false
+    },
+    {
+     "id": "G5",
+     "desc": "wiring lesions hold in every seed",
+     "value": {
+      "100": {
+       "shuffle_state<=10": true,
+       "zero_state<=5": true,
+       "loops:0<=5": true,
+       "loops:2n within 3": true,
+       "donor drop>=20": true,
+       "donor_match number>=50": true,
+       "donor_match string>=50": true
+      },
+      "101": {
+       "shuffle_state<=10": true,
+       "zero_state<=5": true,
+       "loops:0<=5": true,
+       "loops:2n within 3": true,
+       "donor drop>=20": true,
+       "donor_match number>=50": true,
+       "donor_match string>=50": true
+      }
+     },
+     "op": null,
+     "thr": null,
+     "ok": true
+    }
+   ],
+   "verdict": "NO-GO",
+   "complete": true,
+   "evidence": [
+    {
+     "id": "A0.loops1",
+     "desc": "loops:1 chain-5 <= 15",
+     "value": {
+      "100": 41.0,
+      "101": 39.4
+     },
+     "op": "<=",
+     "thr": 15,
+     "ok": false,
+     "per_seed_ok": {
+      "100": false,
+      "101": false
+     }
+    },
+    {
+     "id": "A0.onestep",
+     "desc": "loops:1 one-step families within 5 of intact",
+     "value": {
+      "100": 6.666666666666657,
+      "101": 4.166666666666657
+     },
+     "op": "<=",
+     "thr": 5,
+     "ok": false,
+     "per_seed_ok": {
+      "100": false,
+      "101": true
+     }
+    }
+   ],
+   "prove_wrong": []
+  },
+  "B": {
+   "diffs": {
+    "pooled5_vs_tf": {
+     "n": 2,
+     "mean": 14.197019867549674,
+     "sd": 0.38633317515159465,
+     "ci": [
+      10.726009933774803,
+      17.668029801324543
+     ],
+     "pos": 2,
+     "per_seed": {
+      "100": 14.470198675496697,
+      "101": 13.923841059602651
+     }
+    },
+    "chain5_vs_tf": {
+     "n": 2,
+     "mean": 65.4,
+     "sd": 0.9899494936611605,
+     "ci": [
+      56.505800000000065,
+      74.29419999999995
+     ],
+     "pos": 2,
+     "per_seed": {
+      "100": 66.1,
+      "101": 64.7
+     }
+    },
+    "in_dist_vs_tf": {
+     "n": 2,
+     "mean": 9.632352941176471,
+     "sd": 1.3518217875625238,
+     "ci": [
+      -2.513088235294175,
+      21.77779411764712
+     ],
+     "pos": 2,
+     "per_seed": {
+      "100": 10.588235294117652,
+      "101": 8.67647058823529
+     }
+    },
+    "variant_vs_tf": {
+     "n": 2,
+     "mean": 11.553030303030303,
+     "sd": 2.732003472766206,
+     "ci": [
+      -12.99265151515151,
+      36.09871212121212
+     ],
+     "pos": 2,
+     "per_seed": {
+      "100": 9.621212121212121,
+      "101": 13.484848484848484
+     }
+    },
+    "pooled5_vs_tfsteps": {
+     "n": 2,
+     "mean": 0.8112582781457007,
+     "sd": 1.3111913823326737,
+     "ci": [
+      -10.9691390728477,
+      12.591655629139101
+     ],
+     "pos": 1,
+     "per_seed": {
+      "100": -0.11589403973509604,
+      "101": 1.7384105960264975
+     }
+    },
+    "chain5_vs_tfsteps": {
+     "n": 2,
+     "mean": 5.75,
+     "sd": 0.6363961030678968,
+     "ci": [
+      0.0322999999999638,
+      11.467700000000036
+     ],
+     "pos": 2,
+     "per_seed": {
+      "100": 6.200000000000003,
+      "101": 5.299999999999997
+     }
+    },
+    "pooled5_vs_C1": {
+     "n": 2,
+     "mean": -0.33940397350993123,
+     "sd": 1.0419288663179265,
+     "ci": [
+      -9.700612582781458,
+      9.021804635761596
+     ],
+     "pos": 1,
+     "per_seed": {
+      "100": -1.0761589403973488,
+      "101": 0.39735099337748636
+     }
+    },
+    "chain5_vs_C1": {
+     "n": 2,
+     "mean": 3.200000000000003,
+     "sd": 0.28284271247462306,
+     "ci": [
+      0.658799999999967,
+      5.741200000000038
+     ],
+     "pos": 2,
+     "per_seed": {
+      "100": 3.4000000000000057,
+      "101": 3.0
+     }
+    }
+   },
+   "G": [
+    {
+     "id": "G1",
+     "desc": "pooled-5 d vs plain_tf >= +1.0",
+     "value": 14.197019867549674,
+     "op": ">=",
+     "thr": 1.0,
+     "ok": true
+    },
+    {
+     "id": "G2",
+     "desc": "chain-5 d vs plain_tf >= +8, all seeds positive",
+     "value": 65.4,
+     "op": ">=",
+     "thr": 8.0,
+     "ok": true
+    },
+    {
+     "id": "G3",
+     "desc": "in_dist d vs plain_tf >= -2.0",
+     "value": 9.632352941176471,
+     "op": ">=",
+     "thr": -2.0,
+     "ok": true
+    },
+    {
+     "id": "G4",
+     "desc": "pooled-5 d vs plain_tf_steps >= -1.0 and vs C1' (tfsteps calc) >= -1.0",
+     "value": [
+      0.8112582781457007,
+      -0.33940397350993123
+     ],
+     "op": ">=",
+     "thr": -1.0,
+     "ok": true
+    },
+    {
+     "id": "G5",
+     "desc": "wiring lesions hold in every seed",
+     "value": {
+      "100": {
+       "shuffle_state<=10": true,
+       "zero_state<=5": true,
+       "loops:0<=5": true,
+       "loops:2n within 3": true,
+       "donor drop>=20": true,
+       "donor_match number>=50": true,
+       "donor_match string>=50": false
+      },
+      "101": {
+       "shuffle_state<=10": true,
+       "zero_state<=5": true,
+       "loops:0<=5": true,
+       "loops:2n within 3": true,
+       "donor drop>=20": true,
+       "donor_match number>=50": true,
+       "donor_match string>=50": false
+      }
+     },
+     "op": null,
+     "thr": null,
+     "ok": false
+    }
+   ],
+   "verdict": "NO-GO",
+   "complete": true,
+   "evidence": [
+    {
+     "id": "B.loops1",
+     "desc": "loops:1 chain-5 <= 5",
+     "value": {
+      "100": 2.3,
+      "101": 0.5
+     },
+     "op": "<=",
+     "thr": 5,
+     "ok": true,
+     "per_seed_ok": {
+      "100": true,
+      "101": true
+     }
+    },
+    {
+     "id": "B.loops2",
+     "desc": "loops:2 cuts chain-5 by >= 40",
+     "value": {
+      "100": 97.60000000000001,
+      "101": 98.1
+     },
+     "op": ">=",
+     "thr": 40,
+     "ok": true,
+     "per_seed_ok": {
+      "100": true,
+      "101": true
+     }
+    },
+    {
+     "id": "B.onestep",
+     "desc": "loops:2 one-op families within 5 of intact",
+     "value": {
+      "100": 94.16666666666667,
+      "101": 90.0
+     },
+     "op": "<=",
+     "thr": 5,
+     "ok": false,
+     "per_seed_ok": {
+      "100": false,
+      "101": false
+     }
+    },
+    {
+     "id": "B.noexec",
+     "desc": "noexec program families <= 10 (extra.noexec.program_families, else chain-5 noexec)",
+     "value": {
+      "100": 0.9592326139088729,
+      "101": 0.4316546762589928
+     },
+     "op": "<=",
+     "thr": 10,
+     "ok": true,
+     "per_seed_ok": {
+      "100": true,
+      "101": true
+     }
+    },
+    {
+     "id": "B.opswap",
+     "desc": "opswap >= 90% outputs equal swapped program value",
+     "value": {
+      "100": 99.87951807228916,
+      "101": 99.87951807228916
+     },
+     "op": ">=",
+     "thr": 90,
+     "ok": true,
+     "per_seed_ok": {
+      "100": true,
+      "101": true
+     }
+    }
+   ],
+   "prove_wrong": [
+    {
+     "id": "wrongB.chain5",
+     "desc": "chain-5 d < +10",
+     "value": 65.4,
+     "op": "<",
+     "thr": 10,
+     "ok": false
+    },
+    {
+     "id": "wrongB.pooled5",
+     "desc": "pooled-5 d <= 0",
+     "value": 14.197019867549674,
+     "op": "<=",
+     "thr": 0,
+     "ok": false
+    },
+    {
+     "id": "wrongB.C1",
+     "desc": "C1' within 3 points of B on both chain-5 and pooled-5",
+     "value": [
+      3.200000000000003,
+      -0.33940397350993123
+     ],
+     "op": null,
+     "thr": null,
+     "ok": false
+    }
+   ]
+  },
+  "l2x2": {
+   "diffs": {
+    "pooled5_vs_tf": {
+     "n": 2,
+     "mean": -5.413907284768214,
+     "sd": 0.5385250320294946,
+     "ci": [
+      -10.252284768211965,
+      -0.5755298013244632
+     ],
+     "pos": 0,
+     "per_seed": {
+      "100": -5.033112582781456,
+      "101": -5.794701986754973
+     }
+    },
+    "chain5_vs_tf": {
+     "n": 2,
+     "mean": -7.949999999999999,
+     "sd": 1.7677669529663638,
+     "ci": [
+      -23.832499999999953,
+      7.932499999999953
+     ],
+     "pos": 0,
+     "per_seed": {
+      "100": -6.700000000000003,
+      "101": -9.199999999999996
+     }
+    },
+    "in_dist_vs_tf": {
+     "n": 2,
+     "mean": -5.073529411764703,
+     "sd": 3.015602449177924,
+     "ci": [
+      -32.167205882352945,
+      22.02014705882354
+     ],
+     "pos": 0,
+     "per_seed": {
+      "100": -2.941176470588232,
+      "101": -7.205882352941174
+     }
+    },
+    "variant_vs_tf": {
+     "n": 2,
+     "mean": -2.878787878787879,
+     "sd": 1.8213356485108059,
+     "ci": [
+      -19.24257575757577,
+      13.485000000000014
+     ],
+     "pos": 0,
+     "per_seed": {
+      "100": -4.166666666666668,
+      "101": -1.59090909090909
+     }
+    },
+    "pooled5_vs_tfsteps": {
+     "n": 2,
+     "mean": -18.799668874172188,
+     "sd": 1.1589995254547738,
+     "ci": [
+      -29.21269867549671,
+      -8.386639072847666
+     ],
+     "pos": 0,
+     "per_seed": {
+      "100": -19.61920529801325,
+      "101": -17.980132450331126
+     }
+    },
+    "chain5_vs_tfsteps": {
+     "n": 2,
+     "mean": -67.6,
+     "sd": 1.4142135623730951,
+     "ci": [
+      -80.306,
+      -54.89399999999999
+     ],
+     "pos": 0,
+     "per_seed": {
+      "100": -66.6,
+      "101": -68.6
+     }
+    }
+   },
+   "G": [
+    {
+     "id": "G1",
+     "desc": "pooled-5 d vs plain_tf >= +1.0",
+     "value": -5.413907284768214,
+     "op": ">=",
+     "thr": 1.0,
+     "ok": false
+    },
+    {
+     "id": "G2",
+     "desc": "chain-5 d vs plain_tf >= +8, all seeds positive",
+     "value": -7.949999999999999,
+     "op": ">=",
+     "thr": 8.0,
+     "ok": false
+    },
+    {
+     "id": "G3",
+     "desc": "in_dist d vs plain_tf >= -2.0",
+     "value": -5.073529411764703,
+     "op": ">=",
+     "thr": -2.0,
+     "ok": false
+    },
+    {
+     "id": "G4",
+     "desc": "pooled-5 d vs plain_tf_steps >= -1.0",
+     "value": -18.799668874172188,
+     "op": ">=",
+     "thr": -1.0,
+     "ok": false
+    },
+    {
+     "id": "G5",
+     "desc": "wiring lesions hold in every seed",
+     "value": {
+      "100": {
+       "shuffle_state<=10": "n/a",
+       "zero_state<=5": "n/a",
+       "loops:0<=5": true,
+       "loops:2n within 3": false,
+       "donor drop>=20": "n/a",
+       "donor_match number>=50": "n/a",
+       "donor_match string>=50": "n/a"
+      },
+      "101": {
+       "shuffle_state<=10": "n/a",
+       "zero_state<=5": "n/a",
+       "loops:0<=5": true,
+       "loops:2n within 3": false,
+       "donor drop>=20": "n/a",
+       "donor_match number>=50": "n/a",
+       "donor_match string>=50": "n/a"
+      }
+     },
+     "op": null,
+     "thr": null,
+     "ok": false
+    }
+   ],
+   "verdict": "NO-GO",
+   "complete": true,
+   "evidence": [],
+   "prove_wrong": []
+  }
+ }
+}
