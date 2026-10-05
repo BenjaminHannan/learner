@@ -258,3 +258,16 @@ Marks as fixed by the paper thread in `/mnt/project-files/papers/chain-of-expert
 - **Proves it wrong:** mean gain under 1.6 rows, or ahead on 3 or fewer seeds. Then drop per-round routing.
 - In between: inconclusive, do not adopt. **Void** if the logged per-round expert counts are near-identical across rounds.
 - Checked in code: the main model's routers start at exactly zero (`scripts/sol_spatial_attention_core.py:24`), so with identical expert copies the router gets no gradient and experts 2-7 never train; the planner's fresh cores re-initialise them (`uc_diag_v4.reset_fresh`).
+
+## Result 12:03 UTC: PXW (the wider reader, 256 instead of 32) — WRONG, the door was not the limit
+It ran on box C after all (the box had already picked the job up when I removed its file from the queue). 17,000 rows, seed 1, same as PX.
+
+| run | held plan-exact /160 | cipher_map | fewshot | group_induct | seq_cycle | content pointers (cipher+group+seq) /120 | ops right /160 | fit /320 |
+|---|---|---|---|---|---|---|---|---|
+| PX (reader 32) | 77 | 1 | 33 | 26 | 17 | 44 | 156 | n/a |
+| PXW (reader 256) | **75** | 0 | 35 | 26 | 14 | **40** | 156 | 175 |
+
+- Mark "carries the content kinds" (>= 121): **no**. Mark "identity was the limit" (content pointers +30): **no** (-4). **Wrong mark hit: held 75 < 96.**
+- Shown (1 seed, as marked): an 8x wider reader changes nothing. The ops are right on 156 / 160 rows both times; the pointers are what fail, and they also fail on the PRACTISED rows (fit 175 / 320), so this is not overfitting.
+- Verdict as written before the run: a fixed query per pointer slot cannot do lookups by content, even with identity kept. Next design (untested): compute each slot's query from the thinker's state (a content-addressed pointer), so "find the letter d in the table" can be asked as a question rather than learned as a fixed position.
+- PXW2048 (reader 2048) is now expected to match PXW; kept as Ben asked for the 2048 door, but moved after WD and CRT on the PC.

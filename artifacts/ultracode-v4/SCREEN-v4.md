@@ -212,3 +212,22 @@ CRD plus one change, `--plan-talk` (being built): on chain rows the thinker no l
 - note_drop is reported, not marked: if the talker still answers chain rows well with no note, it can write the call from the question alone.
 - Wrong if the chain held-out sum is < 440, or under plan_swap the call copies the injected note on < 70% of chain rows (the talker writes its own call and ignores the thinker).
 - Prediction: chain held sum 455-475; plan_swap leaves chain rows under 10 / 160 with the call copying the note on > 95%; note_drop 40-80% (the talker can partly read the question itself).
+
+## Result 12:03 UTC: CRDC, the decayed-planner route on 6 new seeds (marks fixed 10:22 UTC)
+SR2 + `--plan-route 17000 --plan-cosine`, seeds 4-9, paired with SR2's confirmation seeds CF4-CF9 (CF8 = its rerun). Fit and held-out are of 320; chain held is the 4 chain families' 160 held-out rows; plan_swap is the lesion that gives each chain row another same-family row's planner value.
+
+| seed | CRDC fit | CRDC held | CRDC chain held | plan_swap chain held | CF fit | CF held | CF chain held | chain gain |
+|---|---|---|---|---|---|---|---|---|
+| 4 | 303 | 297 | 159 | 3 | 269 | 250 | 133 | +26 |
+| 5 | 284 | 277 | 152 | 3 | 262 | 256 | 135 | +17 |
+| 6 | 298 | 291 | 156 | 2 | 278 | 265 | 139 | +17 |
+| 7 | 309 | 289 | 156 | 2 | 286 | 266 | 142 | +14 |
+| 8 | 295 | 287 | 157 | 2 | 265 | 261 | 140 | +17 |
+| 9 | 295 | 281 | 158 | 2 | 281 | 262 | 140 | +18 |
+| mean | **297.3 (92.9%)** | **287.0 (89.7%)** | 156.3 | 2.3 | 273.5 (85.5%) | 260.0 (81.3%) | 138.2 | **+18.2** |
+
+- **CONFIRMED: reaches the mark** (mean fit 297.3 >= 272, every seed >= 256; lowest 284).
+- **"Beats SR2 on chain rows"**: ahead on 6 of 6 seeds, mean gain +18.2 (mark: >= 5 of 6, >= 5). Shown, but confounded as written at 11:24 UTC: the planner practised on 17,000 chain rows that SR2 never saw, and LMDC shows the LM's own steps reach 98.8% with those rows. So this is "more chain practice through the thinker helps the whole model", not "the thinker reasons better than the LM".
+- **The thinker decides every chain answer** on every seed: plan_swap takes chain held from 152-159 to 2-3 (drop >= 149 rows; mark >= 50).
+- The planner alone gets 154-159 of 160 chain plans right (plan_correct); chain held is within 2 rows of that on every seed, so the talker almost always just says the planner's value.
+- Held-out on the other 4 kinds (160 rows): CRDC 130.7 vs CF 121.8 on average (+8.9). Suggested, untested: the core no longer spends capacity on chain rows.
