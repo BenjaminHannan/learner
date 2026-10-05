@@ -45,6 +45,7 @@ SHUF = {'prev': None, 'on': False}
 CHAT = {}
 TWO = {'ce2': []}
 AUX = {}
+TXT = {'on': False}
 LES = {'mode': None, 'store': {}, 'fam': None, 'key': None}  # --final-lesions: replace each row's pooled core vectors at eval
 
 def rich_steps(row):
@@ -108,7 +109,10 @@ def encode(tokenizer, row, torch, device):
     ids = list(tokenizer.encode(row['prompt'], add_special_tokens=False)) + [common.EOS_ID]
     if len(ids) > 64:
         return None
-    tgt = (' ; '.join(rich_steps(row) if STEPS.get('rich') else row['steps']) + SEP + row['answer']) if STEPS['on'] else row['answer']
+    steps = rich_steps(row) if STEPS.get('rich') else row['steps']
+    if row.get('family') in STEPS.get('none', ()):
+        steps = []  # --answer-only-fams: target ' # answer', scored by the same parse
+    tgt = (' ; '.join(steps) + SEP + row['answer']) if STEPS['on'] else row['answer']
     labels = list(tokenizer.encode(tgt, add_special_tokens=False)) + [common.EOS_ID]
     return (torch.tensor([ids], device=device, dtype=torch.long), torch.ones((1, len(ids)), device=device, dtype=torch.bool),
             torch.tensor([labels], device=device, dtype=torch.long))
@@ -120,7 +124,7 @@ def evaluate(rt, ctx, modules, rows, tokenizer):
     for _, m in modules:
         m.eval()
     ok = skipped = 0
-    fam = {}
+    fam, texts = {}, []
     for row in rows:
         enc = encode(tokenizer, row, torch, ctx.device)
         if enc is None:
@@ -138,18 +142,20 @@ def evaluate(rt, ctx, modules, rows, tokenizer):
             print(json.dumps({'event': 'gen-layout', 'prompt_tokens_with_EOS': int(ids.shape[1]), 'lm_input_before_BOS': plen}), flush=True)
         obs = runtime.generate_observed(rt, ctx.dec, parts['core'], parts['reader'], feats, mask, 48 if STEPS['on'] else 12)
         out = obs['MODEL_native_decoder_return'][0] if obs['MODEL_native_decoder_return'] else []
-        text = tokenizer.decode(out, skip_special_tokens=True)
+        text = raw = tokenizer.decode(out, skip_special_tokens=True)
         if STEPS['on']:
             text = text.rsplit('#', 1)[-1] if '#' in text else '\x00no-answer'
         hit = norm(text) in {norm(a) for a in row['accepted']}
         ok += hit
+        if TXT['on']:
+            texts.append([row.get('id'), row.get('family'), row['answer'], raw, bool(hit), LES['mode']])
         f = fam.setdefault(row.get('family', '?'), [0, 0])
         f[0] += hit
         f[1] += 1
     for _, m in modules:
         m.train()
     parts['core'].halt.requires_grad_(False)
-    return {'correct': ok, 'n': len(rows) - skipped, 'skipped': skipped, 'by_family': fam}
+    return {'correct': ok, 'n': len(rows) - skipped, 'skipped': skipped, 'by_family': fam, **({'texts': texts} if TXT['on'] else {})}
 
 
 def load_dev(data, n):
@@ -175,6 +181,8 @@ def main():
     ap.add_argument('--lr-mult', type=float, default=1.0)
     ap.add_argument('--lr-final-mult', type=float, default=None, help='cosine-decay lr from lr-mult to this multiple over the run')
     ap.add_argument('--final-lesions', action='store_true', help='after training, score trainfit and in_dist again with each row\'s pooled core vectors replaced by its family mean, another same-family row\'s, or the global mean (copy-path only)')
+    ap.add_argument('--answer-only-fams', default='', help='with --steps: these families get the target " # " + answer, no steps')
+    ap.add_argument('--save-texts', action='store_true', help='keep every generated text in the eval results (id, family, answer, text, hit, lesion mode)')
     ap.add_argument('--seq-steps-v2', action='store_true', help='with --steps-rich: seq_cycle steps without counting (next_letter: last letter, what follows it; kth_letter: indexed cycle, k-1 as L*q + r)')
     ap.add_argument('--steps-rich', action='store_true', help='with --steps: worked steps from row meta for cipher_map, fewshot_number_rule, group_induct, seq_cycle (their curriculum steps are labels only)')
     ap.add_argument('--steps', action='store_true', help='target = worked steps + " # " + answer; scored on the text after the last #')
@@ -210,6 +218,10 @@ def main():
     STEPS['on'] = a.steps
     STEPS['rich'] = a.steps_rich
     STEPS['seq2'] = a.seq_steps_v2
+    STEPS['none'] = {f for f in a.answer_only_fams.split(',') if f}
+    if STEPS['none'] and not a.steps:
+        raise SystemExit('--answer-only-fams needs --steps')
+    TXT['on'] = a.save_texts
     if a.steps_rich and not a.steps:
         raise SystemExit('--steps-rich needs --steps')
     SHUF['on'] = a.shuffle_pool
@@ -540,7 +552,7 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'lora_lr_mult': a.lora_lr_mult if a.lm_lora else None, 'gen_fix': a.gen_fix, 'steps': a.steps, 'steps_rich': a.steps_rich, 'seq_steps_v2': a.seq_steps_v2, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'lora_lr_mult': a.lora_lr_mult if a.lm_lora else None, 'gen_fix': a.gen_fix, 'steps': a.steps, 'steps_rich': a.steps_rich, 'seq_steps_v2': a.seq_steps_v2, 'answer_only_fams': a.answer_only_fams or None, 'save_texts': a.save_texts, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'final_lesions': lesions, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}
