@@ -70,3 +70,8 @@ The design panel (5 designers, 3 judges, 1 synthesizer; plan in `artifacts/ultra
 
 ## Calibration SP result (job 15, read 04:01 UTC)
 SP1-SP3 at 6k reproduce S1-S3 exactly (259 / 241 / 252). At 9k: 271 / 267 / 259; at 12k: **279 / 274 / 280 of 320 (mean 86.8%; every seed >= 85%)**. Held-out 252 / 246 / 253 (mean 78.9%, +9.1 over 6k: unlike P, the extra practice with steps also lifts held-out). By the marks: **"a practice-budget question"**: with the curriculum's own steps, the step route reaches the mark at 6 passes. (The screen's REACHES THE MARK is defined at 3 passes, so this is not a screen pass.)
+
+## Arm SR2 result (job 21, read 04:36 UTC)
+SR2 (SRB1-SRB3) fit **271 / 287 / 269 of 320 (mean 86.1%; seeds 84.7 / 89.7 / 84.1%)** vs paired baseline 214 / 213 / 212: gains +57 / +74 / +57 rows (mean +19.8 points). By the marks: **REACHES THE MARK** (mean >= 85% and every seed >= 80%). Held-out 254 / 267 / 253 (mean 80.6%; +32.5 over baseline, +0.1 over SR). All three runs finished cleanly (rc 0).
+- Versus SR, paired: seq_cycle 3-seed fit 94 -> **122 / 172**: one row short of the 123 mark, so "v2 fixes seq_cycle" is **not** met (prediction 125-150 missed; its wrong-if, < 110, did not happen). The other 7 families 706 -> 705 (held). seq_cycle held-out did not move (63 -> 61 / 120), so the seq_cycle fit gain is mostly on practised rows.
+- Next by the marks: the 6-seed confirmation CF (seeds 4-9). The panel's rule picks between SR2 and MX by 3-seed mean held-out if both reach; MX1-MX2 are still running.
