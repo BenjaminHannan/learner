@@ -251,3 +251,10 @@ Ben asked for the door at 2048. PXW with `--reader-hidden 2048` instead of 256: 
 - Same marks as PXW: **"carries the content kinds"** if held plan-exact >= 121 / 160; **"identity was the limit"** if the content-kind pointers (cipher_map + group_induct + seq_cycle) rise by >= 30 over PX's 44 / 120; wrong if < 96 / 160.
 - Vs PXW: **"wider than 256 still helps"** if PXW2048 is >= 10 rows above PXW; otherwise 256 is wide enough for this.
 - Prediction: within 10 rows of PXW.
+
+## Added 11:38 UTC, before they ran: PLR (one router per round in the planner; Chain-of-Experts, arXiv 2506.18945)
+Marks as fixed by the paper thread in `/mnt/project-files/papers/chain-of-experts-2506.18945.md`, copied here. PLS plus one change, `--round-routers` (being built): each UpcycledMLP in the planner's core gets one router per round instead of one router reused on all rounds; the experts stay shared; about 16k added parameters. Seeds 1-6, paired with PLS (140 / 141 / 112 / 131 / 138 / 133, mean 132.5); LM steps on the same seeds mean 137.3. Low priority: runs on Ben's PC or M1 after the door and talker-calculator runs, never on Vast.
+- **Pass:** 6-seed mean held plan-exact >= 137.3 AND ahead of PLS on >= 5 of 6 paired seeds.
+- **Proves it wrong:** mean gain under 1.6 rows, or ahead on 3 or fewer seeds. Then drop per-round routing.
+- In between: inconclusive, do not adopt. **Void** if the logged per-round expert counts are near-identical across rounds.
+- Checked in code: the main model's routers start at exactly zero (`scripts/sol_spatial_attention_core.py:24`), so with identical expert copies the router gets no gradient and experts 2-7 never train; the planner's fresh cores re-initialise them (`uc_diag_v4.reset_fresh`).
