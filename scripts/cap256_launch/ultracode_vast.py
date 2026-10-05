@@ -62,7 +62,7 @@ def search(a):
 
 def create(a):
     script = BOX.read_text()
-    args = ['bash', '-c', 'export MAXPAR=%d\n' % a.maxpar + script, 'uc']
+    args = ['bash', '-c', 'export MAXPAR=%d QSUB=%s\n' % (a.maxpar, a.qsub) + script, 'uc']
     body = {'client_id': 'me', 'image': IMAGE, 'disk': 80, 'label': a.label, 'runtype': 'args', 'args': args,
             'target_state': 'running'}
     r = call('PUT', '/asks/%s/' % a.offer, body, timeout=120)
@@ -177,6 +177,7 @@ def main():
     ap.add_argument('--offer')
     ap.add_argument('--label', default='claude-ultracode-v4')
     ap.add_argument('--maxpar', type=int, default=5)
+    ap.add_argument('--qsub', default='')
     ap.add_argument('--id')
     ap.add_argument('--out', default=str(OUT))
     ap.add_argument('--seen', default='')

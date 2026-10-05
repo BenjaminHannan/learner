@@ -11,6 +11,7 @@ J=/job; mkdir -p $J/out $J/res $J/state $J/w; cd $J
 BR=claude/ultracode-learning-blocker-gh011t
 R=https://github.com/BenjaminHannan/learner
 MAXPAR=${MAXPAR:-5}
+QSUB=${QSUB:-}   # e.g. /b: this box reads queue/b/*.sh only, so two boxes never run the same job
 say() { echo "=== $* $(date -u +%FT%TZ)"; }
 die() { say "UC-FAIL $*"; sleep 21600; exit 1; }
 say "UC START"
@@ -62,7 +63,7 @@ last=0
 while true; do
   (cd mine && git fetch -q --depth 1 origin $BR && git reset -q --hard FETCH_HEAD) 2>/dev/null
   cp mine/scripts/cap256_launch/*.py $P/scripts/cap256_launch/ 2>/dev/null
-  Q=mine/artifacts/ultracode-v4/queue
+  Q=mine/artifacts/ultracode-v4/queue${QSUB:-}
   [ -f $Q/STOP ] && { say "UC STOP"; break; }
   if [ -f $Q/REPRINT ]; then
     s=$(sha256sum $Q/REPRINT | cut -c1-16)
