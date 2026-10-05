@@ -158,17 +158,17 @@ def waitfor(a):
 
 def collectck(a):
     """Reassemble checkpoints printed in parts by box/ck_export.sh, and save any normal result block seen on the way.
-    Reads the last 20000 log lines every 40 s until CKDONE is seen and every announced checkpoint is complete (or
+    Reads the last --tail log lines (default 9000, enough for the newest 3 MB part) every 40 s until CKDONE is seen and every announced checkpoint is complete (or
     --max-min). Parts land in OUT/parts/, finished checkpoints are extracted into OUT (job/run/checkpoint.pt), result
     blocks into custom_io/results/. Never deletes anything."""
     out = Path(a.out)
     parts = out / 'parts'
     parts.mkdir(parents=True, exist_ok=True)
-    full, done_ck, saved, ckdone, t0 = {}, set(), set(), None, time.time()
+    full, nparts, done_ck, saved, ckdone, t0 = {}, {}, set(), set(), None, time.time()
     for p in out.glob('*/*/checkpoint.pt'):
         done_ck.add('%s/%s' % (p.parent.parent.name, p.parent.name))
     while time.time() - t0 < a.max_min * 60:
-        text = log_text(a.id, tail=20000)
+        text = log_text(a.id, tail=a.tail)
         blocks, cur = {}, None
         for ln in text.splitlines():
             if ln.startswith('CKFULL|'):
@@ -200,28 +200,30 @@ def collectck(a):
             if len(b['meta']) == 3:                      # a checkpoint part: job/run, k, n
                 jr, k, n = b['meta']
                 (parts / ('%s.%03d' % (jr.replace('/', '__'), int(k)))).write_bytes(raw)
+                nparts[jr] = int(n)
             else:                                        # a normal result tarball
                 with tarfile.open(fileobj=io.BytesIO(raw), mode='r:gz') as t:
                     t.extractall(OUT, filter='data')
                 (OUT / name).mkdir(parents=True, exist_ok=True)
                 (OUT / name / 'result.tgz.sha256').write_text(b['sha'] + '\n')
             saved.add(name)
-        for jr, (h, n) in full.items():
+        for jr in set(full) | set(nparts):
             if jr in done_ck:
                 continue
+            h, n = full.get(jr, (None, nparts.get(jr)))
             ps = [parts / ('%s.%03d' % (jr.replace('/', '__'), k)) for k in range(n)]
             if all(p.exists() for p in ps):
                 raw = b''.join(p.read_bytes() for p in ps)
-                if hashlib.sha256(raw).hexdigest() == h:
+                if h is None or hashlib.sha256(raw).hexdigest() == h:    # no CKFULL seen: gzip's own CRC checks it
                     with tarfile.open(fileobj=io.BytesIO(raw), mode='r:gz') as t:
                         t.extractall(out, filter='data')
                     (out / (jr.replace('/', '__') + '.tgz.sha256')).write_text(h + '\n')
                     done_ck.add(jr)
         have = sorted(p.name for p in parts.iterdir())
         print(json.dumps({'t_min': round((time.time() - t0) / 60, 1), 'parts': len(have), 'ckpts_done': sorted(done_ck),
-                          'announced': len(full), 'ckdone': ckdone, 'results': sorted(x for x in saved if not x.startswith('ck'))}),
+                          'announced': len(set(full) | set(nparts)), 'ckdone': ckdone, 'results': sorted(x for x in saved if not x.startswith('ck'))}),
               flush=True)
-        if ckdone is not None and full and all(jr in done_ck for jr in full):
+        if ckdone is not None and all(jr in done_ck for jr in set(full) | set(nparts)):
             return
         time.sleep(40)
 
@@ -254,6 +256,7 @@ def main():
     ap.add_argument('--out', default=str(OUT))
     ap.add_argument('--seen', default='')
     ap.add_argument('--max-min', type=float, default=120)
+    ap.add_argument('--tail', type=int, default=9000, help='collectck: log lines per read (a 20000-line read of a big log can take minutes to appear)')
     a = ap.parse_args()
     {'search': search, 'create': create, 'status': status, 'tail': tail, 'collect': collect, 'destroy': destroy,
      'credit': credit, 'waitfor': waitfor, 'collectck': collectck}[a.cmd](a)
