@@ -190,6 +190,137 @@ def mode_chan(a):
     return out
 
 
+# ---------------------------------------------------------------- geometry, fixed point, family-mean lesion
+def tf_exact(rt, torch, dec, lm, prefix, labels):
+    with torch.no_grad():
+        _, pred = rt.human_loss(lm, prefix, labels, dec.bos_id, dec.eos_id, True, True)
+    return bool((pred == labels).all())
+
+
+def mode_geom(a):
+    rt, torch, cfg, dec, tok, lm, modules, named = setup(a)
+    _, _, fit, held = rows_for(a.data, a.sample_seed)
+    parts = runtime.module_dict(modules)
+    core, reader = parts['core'], parts['reader']
+    for _, m in modules:
+        m.eval()
+    emb = lm.get_input_embeddings()
+    recs = []
+    for row in fit + held:
+        ids, mask, labels = sp.encode(tok, row, torch, cfg['device'])
+        f = rt.compare.extract_question_features(lm, ids, mask, 'contextual', torch)
+        with torch.no_grad(), rt.ordered_attention_math():
+            query = rt.compare.project_cached_question(reader, f, mask)
+            st = core.begin_latent(query, None, query_mask=mask)
+            hs = []
+            for _ in range(8):
+                st = core.advance_latent(st)
+                hs.append(st['h'][:, :st['query_n']].clone())
+            e = st['e'][:, :st['query_n']]
+            h4 = hs[3]
+            pref = dec.adapter.project_training(h4, torch.ones_like(h4, dtype=torch.bool), mask, (1, h4.shape[1]))
+            pe = emb(ids)
+        rel = [float((hs[r] - hs[r - 1]).norm() / hs[r].norm()) for r in range(1, 8)]
+        recs.append({'row': row, 'ids': ids, 'labels': labels, 'pref': pref, 'pe': pe, 'rel': rel,
+                     'e_over_h': float(e.norm() / h4.norm()), 'held': row in held,
+                     'p8': dec.adapter.project_training(hs[7], torch.ones_like(hs[7], dtype=torch.bool), mask, (1, h4.shape[1]))})
+    n = len(recs)
+    rel_mean = [sum(r['rel'][k] for r in recs) / n for k in range(7)]
+    emit('fixed-point', {'rel_change_round2_to_8': [round(x, 5) for x in rel_mean],
+                         'e_over_h': round(sum(r['e_over_h'] for r in recs) / n, 3)})
+    P = torch.stack([r['pref'][0].flatten() for r in recs])
+    Pn = torch.nn.functional.normalize(P, dim=1)
+    cos = (Pn @ Pn.T)
+    off = cos[~torch.eye(n, dtype=torch.bool, device=cos.device)]
+    fams = sorted({r['row']['family'] for r in recs})
+    fam_mean = {f: torch.stack([r['pref'] for r in recs if r['row']['family'] == f and not r['held']]).mean(0) for f in fams}
+    spread = [float((r['pref'] - fam_mean[r['row']['family']]).norm() / r['pref'].norm()) for r in recs]
+    allmean = torch.stack([r['pref'] for r in recs if not r['held']]).mean(0)
+    emit('prefix-geometry', {'cos_mean': round(float(off.mean()), 4), 'cos_min': round(float(off.min()), 4),
+                             'spread_vs_family_mean': round(sum(spread) / n, 4),
+                             'prefix_norm': round(float(P.norm(dim=1).mean()), 2),
+                             'emb_token_norm': round(float(emb.weight.norm(dim=1).mean()), 4)})
+    out = {}
+    for split in ('trainfit', 'heldout'):
+        rs = [r for r in recs if r['held'] == (split == 'heldout')]
+        res = {}
+        for name, fn in (('intact', lambda r: r['pref']), ('family_mean', lambda r: fam_mean[r['row']['family']]),
+                         ('global_mean', lambda r: allmean), ('rounds8', lambda r: r['p8'])):
+            oks = [tf_exact(rt, torch, dec, lm, torch.cat([fn(r), r['pe']], 1), r['labels']) for r in rs]
+            res[name] = {'correct': sum(oks), 'n': len(rs), 'by_family': by_family([r['row'] for r in rs], oks)}
+        # shuffle within family (next row of the same family)
+        oks = []
+        for i, r in enumerate(rs):
+            same = [x for x in rs if x['row']['family'] == r['row']['family'] and x is not r]
+            oks.append(tf_exact(rt, torch, dec, lm, torch.cat([same[i % len(same)]['pref'], r['pe']], 1), r['labels']))
+        res['shuffle_same_family'] = {'correct': sum(oks), 'n': len(rs), 'by_family': by_family([r['row'] for r in rs], oks)}
+        out[split] = res
+        emit('lesions-tf', {'split': split, **{k: v['correct'] for k, v in res.items()}, 'n': len(rs),
+                            'by_family': {k: v['by_family'] for k, v in res.items()}})
+    return {'rel_change': rel_mean, 'lesions': out}
+
+
+# ---------------------------------------------------------------- exit expressivity
+def mode_exitcap(a):
+    rt, torch, cfg, dec, tok, lm, modules, named = setup(a)
+    _, _, fit, _ = rows_for(a.data, a.sample_seed)
+    parts = runtime.module_dict(modules)
+    for _, m in modules:
+        m.eval()
+    emb = lm.get_input_embeddings()
+    ad = dec.adapter
+    picked, per_fam = [], {}
+    for row in fit:
+        ids, mask, labels = sp.encode(tok, row, torch, cfg['device'])
+        f = rt.compare.extract_question_features(lm, ids, mask, 'contextual', torch)
+        with torch.no_grad():
+            h, _ = runtime.english_graph(rt, parts['core'], parts['reader'], f, mask)
+            pref = ad.project_training(h, torch.ones_like(h, dtype=torch.bool), mask, (1, h.shape[1]))
+            pe = emb(ids)
+        if tf_exact(rt, torch, dec, lm, torch.cat([pref, pe], 1), labels) or per_fam.get(row['family'], 0) >= a.chan_per_family:
+            continue
+        per_fam[row['family']] = per_fam.get(row['family'], 0) + 1
+        picked.append((row, ids, mask, labels, h.detach().clone(), pe.detach()))
+    out = {}
+    for what in ('h', 'hidden'):
+        steps = []
+        for row, ids, mask, labels, h0, pe in picked:
+            N = h0.shape[1]
+            if what == 'h':
+                v = torch.nn.Parameter(h0.clone())
+                make = lambda: ad.project_training(v, torch.ones_like(v, dtype=torch.bool), mask, (1, N))
+            else:
+                # per-token exit hidden (after GELU, N x hidden) -> second Linear -> chunk means
+                with torch.no_grad():
+                    hf = h0.float()
+                    mean = hf.mean(-1, keepdim=True)
+                    var = (hf - mean).square().mean(-1, keepdim=True)
+                    nrm = (hf - mean) * torch.rsqrt(var + 1e-5)
+                    c = torch.arange(N, device=hf.device).float() / max(N - 1, 1)
+                    geom = torch.stack((torch.zeros_like(c), c), -1)[None]
+                    z = torch.cat((nrm * ad.scale + ad.bias, geom, torch.ones(1, N, 1, device=hf.device)), -1)
+                    hid0 = ad.project[1](ad.project[0](z))
+                v = torch.nn.Parameter(hid0.clone())
+                make = lambda: torch.nn.functional.adaptive_avg_pool1d(ad.project[2](v)[0].T[None], 8)[0].T[None]
+            opt = torch.optim.Adam([v], lr=a.chan_lr * float(v.detach().pow(2).mean().sqrt()))
+            got = None
+            for s_ in range(a.chan_steps + 1):
+                per, pred = rt.human_loss(lm, torch.cat([make(), pe], 1), labels, dec.bos_id, dec.eos_id, True, True)
+                if bool((pred == labels).all()):
+                    got = s_
+                    break
+                opt.zero_grad()
+                per.mean().backward()
+                opt.step()
+            steps.append(got)
+            out.setdefault(what, {}).setdefault(row['family'], []).append(got)
+        ok = [x for x in steps if x is not None]
+        emit('exitcap', {'optimise': what, 'solved': len(ok), 'n': len(steps),
+                         'median_steps': sorted(ok)[len(ok) // 2] if ok else None,
+                         'by_family': {f: [sum(x is not None for x in xs), len(xs)] for f, xs in out[what].items()}})
+    return out
+
+
 # ---------------------------------------------------------------- direct head
 def mode_direct(a):
     rt, torch, cfg, dec, tok, lm, modules, named = setup(a)
@@ -268,7 +399,7 @@ def mode_direct(a):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--mode', required=True, choices=['bare', 'chan', 'direct'])
+    ap.add_argument('--mode', required=True, choices=['bare', 'chan', 'direct', 'geom', 'exitcap'])
     ap.add_argument('--root', required=True)
     ap.add_argument('--data', required=True)
     ap.add_argument('--out', required=True)
@@ -286,7 +417,7 @@ def main():
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
-    res = {'bare': mode_bare, 'chan': mode_chan, 'direct': mode_direct}[a.mode](a)
+    res = {'bare': mode_bare, 'chan': mode_chan, 'direct': mode_direct, 'geom': mode_geom, 'exitcap': mode_exitcap}[a.mode](a)
     (out / ('DIAG-%s.json' % a.mode)).write_text(json.dumps({'args': vars(a), 'result': res,
                                                               'minutes': round((time.time() - t0) / 60, 1)}, indent=1))
     print('DIAG-DONE ' + a.mode, flush=True)
