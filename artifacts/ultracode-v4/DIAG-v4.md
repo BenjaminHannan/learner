@@ -125,7 +125,7 @@ PLOD held plan over training: 73 / 110 / 126 / 118 / 132 / 126 / 141 / 128 / 139
 - For comparison, the LM writing worked steps scores 84.4-88.1% on the same four kinds' held-out rows (SR2 seeds 1-3 mean 86.8%, CF4-CF6 mean 84.8%). Here no LM is in the loop at all after the reader: the core reads the question into a plan and an exact calculator computes the answer.
 - Limits: one seed; the final eval moves by up to 13 rows between checkpoints (constant lr, batch 1); 17,000 distinct rows vs the screen's 2,000 x 3; four chain kinds only; the core still reads the frozen LM's features (the reader side of the sandwich is unchanged).
 
-## Added 07:31 UTC, before they ran: PLC, the 6-seed confirmation of PLOD
+## Added 07:30 UTC, before they ran: PLC, the 6-seed confirmation of PLOD
 PLOD with seeds 2-6 (jobs 33-plod-s2..s6, box B; seed changes the init, the row order and which 17,000 of the 17,981 rows are used; held-out rows are the same 160). Together with seed 1:
 - **CONFIRMED** if the mean final held-out plan-exact over the 6 seeds is >= 85% (136/160) and every seed is >= 80% (128/160). Wrong if the 6-seed mean is < 80%.
 - The best-checkpoint numbers are reported next to the final ones but do not decide.
