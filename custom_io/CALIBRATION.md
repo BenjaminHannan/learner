@@ -20,4 +20,13 @@ All: 8,000 updates, batch 256, AdamW, bf16, shuffled order, full eval on the 6 d
 Weakest families for all three: chain_ops 2-8%, state_update 8-10%, var_chain 12-20%, table_lookup 22-28%,
 chain_story2 18-28%. Held-out families: 0-3%. Reference: the 1.2B sandwich (main2) is 74.6% on in_dist.
 
-## 02-calib-long (queued 03:42 UTC): the same 3.2M and 10.8M at 24,000 updates.
+## Result of 02-calib-long (04:05 UTC, 12:05 AM ET; one seed, exploratory)
+| run | params | in_dist | answer | frame | vocab | variant | family | multi-step in_dist | min |
+|---|---|---|---|---|---|---|---|---|---|
+| tf3m_24k | 3.2M | 73.6 | 43.0 | 69.4 | 58.4 | 19.5 | 0.6 | 59.2 | 14.4 |
+| tf10m_24k | 10.8M | 76.0 | 41.8 | 72.4 | 63.9 | 21.7 | 3.8 | 64.0 | 22.4 |
+
+Suggested (one seed): at 24k updates a 10.8M plain char transformer trained from scratch already matches the 1.2B
+sandwich's 74.6% on in_dist. Both are still improving, so 24k updates is the minimum fair budget.
+
+## 03-noise (queued 04:08 UTC): tf3m_24k seeds 1-3, to measure seed spread before marks are set.
