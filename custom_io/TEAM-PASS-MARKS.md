@@ -37,6 +37,14 @@ Primary readout: team-vote exact on the `variant` dev split (1,320 rows). Guard:
 - In between: inconclusive; run seeds 102 and 103 before deciding.
 - **Void if** routing never took: in ON's last train log line the coach's mean top probability per row (`coach_max`)
   is below 0.40 (uniform is 0.33), i.e. the coach routed almost nothing.
+- **Amendment, 2026-10-05 3:58 PM ET, before any team result existed (both seed-100 runs were mid-training):** GPT
+  pointed out that `coach_max` is not a test of routing. A coach that gives every row the same (0.8, 0.1, 0.1) passes
+  it but routes nothing, because member i's sampling prob 0.5/512 + 0.5 c_i / (512 c_i) is uniform whenever its coach
+  score is constant across rows. The void rule is replaced: from the saved final coach, on 50 fresh pools of 512 training
+  rows, compute each member's sampling distribution and its total-variation distance from uniform; **void if the mean
+  over members is under 0.05** (less than 5% of the sampling mass moved; the maximum possible with mix 0.5 is 0.5). The
+  old `coach_max` number is still reported. This reads only the final coach, so it understates routing earlier in
+  training. Note also that ON - OFF measures practice allocation only: both arms already have a coach choosing answers.
 
 Secondary, reported but not a mark: (a) does the team help at all? OFF team-vote vs OFF's best single member on variant
 (a team "helps" at >= +2.0); (b) shared mistakes between members, ON vs OFF (training together should make members
