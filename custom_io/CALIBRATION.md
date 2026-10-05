@@ -29,4 +29,16 @@ chain_story2 18-28%. Held-out families: 0-3%. Reference: the 1.2B sandwich (main
 Suggested (one seed): at 24k updates a 10.8M plain char transformer trained from scratch already matches the 1.2B
 sandwich's 74.6% on in_dist. Both are still improving, so 24k updates is the minimum fair budget.
 
-## 03-noise (queued 04:08 UTC): tf3m_24k seeds 1-3, to measure seed spread before marks are set.
+## Result of 03-noise (04:33 UTC, 12:33 AM ET): seed spread of the 3.2M plain transformer, 24k updates
+| seed | in_dist | answer | frame | vocab | variant | family | multi-step in_dist | pooled 5 splits |
+|---|---|---|---|---|---|---|---|---|
+| 0 (02-calib-long) | 73.6 | 43.0 | 69.4 | 58.4 | 19.5 | 0.6 | 59.2 | 52.7 |
+| 1 | 77.6 | 44.0 | 72.1 | 61.0 | 19.0 | 1.9 | 64.2 | 54.7 |
+| 2 | 76.0 | 44.3 | 71.8 | 60.9 | 20.9 | 0.6 | 61.2 | 54.7 |
+| 3 | 75.5 | 43.6 | 71.5 | 61.6 | 21.2 | 0.0 | 63.8 | 54.6 |
+| **mean (sd)** | **75.7 (1.7)** | 43.7 (0.6) | 71.2 (1.2) | 60.5 (1.4) | 20.2 (1.1) | 0.8 (0.8) | 62.1 (2.3) | **54.2 (1.0)** |
+
+Seed 0 ran 3-way shared with different timing (861 s vs 1,173 s); same code and settings.
+Shown (4 seeds): a 3.2M character transformer trained from scratch for ~20 minutes matches the 1.2B sandwich on in_dist
+(75.7 vs 74.6; the sandwich figure is one checkpoint, 40 rows per family). Pooled-5 seed sd is about 1 point, so a paired
+6-seed difference of 3 points is well outside noise.

@@ -1,0 +1,3501 @@
+{
+ "config": {
+  "model": "plain_tf",
+  "cfg": {
+   "d_model": 256,
+   "n_layers": 4,
+   "n_heads": 4
+  },
+  "data": "/job/data",
+  "vocab": null,
+  "steps": 24000,
+  "batch": 256,
+  "lr": 0.001,
+  "warmup": 300,
+  "grad_clip": 1.0,
+  "seed": 1,
+  "order": "shuffled",
+  "device": "auto",
+  "bf16": true,
+  "log_every": 100,
+  "eval_every": 0,
+  "final_eval": true,
+  "eval_max": null,
+  "eval_batch": 128,
+  "minutes": 50.0,
+  "out": "/job/w/03-noise/tf3m_24k_s1"
+ },
+ "n_params": 3244544,
+ "steps": 24000,
+ "status": "ok",
+ "final_train_loss": 0.021758816242218017,
+ "train_s": 1158.4060590267181,
+ "steps_per_s": 20.718123677775456,
+ "final_eval": {
+  "in_dist": {
+   "by_family": {
+    "arith_bare": {
+     "correct": 33,
+     "n": 40
+    },
+    "backward_solve": {
+     "correct": 40,
+     "n": 40
+    },
+    "chain_ops": {
+     "correct": 2,
+     "n": 40
+    },
+    "chain_story2": {
+     "correct": 24,
+     "n": 40
+    },
+    "cipher_map": {
+     "correct": 21,
+     "n": 40
+    },
+    "compare_numbers": {
+     "correct": 40,
+     "n": 40
+    },
+    "copy_word": {
+     "correct": 40,
+     "n": 40
+    },
+    "digits_parity": {
+     "correct": 39,
+     "n": 40
+    },
+    "distance_units": {
+     "correct": 40,
+     "n": 40
+    },
+    "div_exact": {
+     "correct": 40,
+     "n": 40
+    },
+    "fewshot_number_rule": {
+     "correct": 26,
+     "n": 40
+    },
+    "group_induct": {
+     "correct": 39,
+     "n": 40
+    },
+    "kin_chain": {
+     "correct": 34,
+     "n": 40
+    },
+    "letter_ops": {
+     "correct": 39,
+     "n": 40
+    },
+    "list_index": {
+     "correct": 23,
+     "n": 40
+    },
+    "list_stats": {
+     "correct": 38,
+     "n": 40
+    },
+    "object_track": {
+     "correct": 27,
+     "n": 40
+    },
+    "odd_one_out": {
+     "correct": 37,
+     "n": 40
+    },
+    "order_chain": {
+     "correct": 25,
+     "n": 40
+    },
+    "passage_qa": {
+     "correct": 40,
+     "n": 40
+    },
+    "percent_rate": {
+     "correct": 38,
+     "n": 40
+    },
+    "prop_eval": {
+     "correct": 40,
+     "n": 40
+    },
+    "rule_apply": {
+     "correct": 33,
+     "n": 40
+    },
+    "seq_cycle": {
+     "correct": 21,
+     "n": 40
+    },
+    "seq_next": {
+     "correct": 39,
+     "n": 40
+    },
+    "state_update": {
+     "correct": 21,
+     "n": 40
+    },
+    "story_addsub": {
+     "correct": 37,
+     "n": 40
+    },
+    "story_chain3": {
+     "correct": 26,
+     "n": 40
+    },
+    "syllogism": {
+     "correct": 40,
+     "n": 40
+    },
+    "table_calc": {
+     "correct": 20,
+     "n": 40
+    },
+    "table_lookup": {
+     "correct": 12,
+     "n": 40
+    },
+    "var_chain": {
+     "correct": 11,
+     "n": 40
+    },
+    "verify_claim": {
+     "correct": 31,
+     "n": 40
+    },
+    "word_filter": {
+     "correct": 40,
+     "n": 40
+    }
+   },
+   "by_level": {
+    "2": {
+     "correct": 227,
+     "n": 240
+    },
+    "6": {
+     "correct": 164,
+     "n": 240
+    },
+    "7": {
+     "correct": 86,
+     "n": 120
+    },
+    "1": {
+     "correct": 102,
+     "n": 120
+    },
+    "8": {
+     "correct": 140,
+     "n": 160
+    },
+    "4": {
+     "correct": 96,
+     "n": 200
+    },
+    "3": {
+     "correct": 97,
+     "n": 120
+    },
+    "5": {
+     "correct": 144,
+     "n": 160
+    }
+   },
+   "multistep": {
+    "correct": 308,
+    "n": 480,
+    "exact": 64.16666666666667
+   },
+   "correct": 1056,
+   "n": 1360,
+   "exact": 77.6470588235294
+  },
+  "answer": {
+   "by_family": {
+    "arith_bare": {
+     "correct": 24,
+     "n": 40
+    },
+    "backward_solve": {
+     "correct": 13,
+     "n": 40
+    },
+    "chain_ops": {
+     "correct": 1,
+     "n": 40
+    },
+    "chain_story2": {
+     "correct": 9,
+     "n": 40
+    },
+    "cipher_map": {
+     "correct": 20,
+     "n": 40
+    },
+    "compare_numbers": {
+     "correct": 38,
+     "n": 40
+    },
+    "copy_word": {
+     "correct": 40,
+     "n": 40
+    },
+    "digits_parity": {
+     "correct": 12,
+     "n": 40
+    },
+    "distance_units": {
+     "correct": 27,
+     "n": 40
+    },
+    "div_exact": {
+     "correct": 38,
+     "n": 40
+    },
+    "fewshot_number_rule": {
+     "correct": 16,
+     "n": 40
+    },
+    "kin_chain": {
+     "correct": 36,
+     "n": 40
+    },
+    "letter_ops": {
+     "correct": 39,
+     "n": 40
+    },
+    "list_index": {
+     "correct": 7,
+     "n": 40
+    },
+    "list_stats": {
+     "correct": 16,
+     "n": 40
+    },
+    "object_track": {
+     "correct": 1,
+     "n": 40
+    },
+    "odd_one_out": {
+     "correct": 37,
+     "n": 40
+    },
+    "order_chain": {
+     "correct": 4,
+     "n": 40
+    },
+    "passage_qa": {
+     "correct": 29,
+     "n": 40
+    },
+    "percent_rate": {
+     "correct": 11,
+     "n": 40
+    },
+    "rule_apply": {
+     "correct": 35,
+     "n": 40
+    },
+    "seq_cycle": {
+     "correct": 12,
+     "n": 40
+    },
+    "seq_next": {
+     "correct": 10,
+     "n": 40
+    },
+    "state_update": {
+     "correct": 1,
+     "n": 40
+    },
+    "story_addsub": {
+     "correct": 32,
+     "n": 40
+    },
+    "story_chain3": {
+     "correct": 3,
+     "n": 40
+    },
+    "table_calc": {
+     "correct": 3,
+     "n": 40
+    },
+    "table_lookup": {
+     "correct": 9,
+     "n": 40
+    },
+    "var_chain": {
+     "correct": 5,
+     "n": 40
+    },
+    "word_filter": {
+     "correct": 0,
+     "n": 40
+    }
+   },
+   "by_level": {
+    "2": {
+     "correct": 160,
+     "n": 240
+    },
+    "6": {
+     "correct": 64,
+     "n": 240
+    },
+    "7": {
+     "correct": 36,
+     "n": 80
+    },
+    "1": {
+     "correct": 86,
+     "n": 120
+    },
+    "8": {
+     "correct": 68,
+     "n": 160
+    },
+    "4": {
+     "correct": 20,
+     "n": 200
+    },
+    "3": {
+     "correct": 59,
+     "n": 120
+    },
+    "5": {
+     "correct": 35,
+     "n": 40
+    }
+   },
+   "multistep": {
+    "correct": 114,
+    "n": 480,
+    "exact": 23.75
+   },
+   "correct": 528,
+   "n": 1200,
+   "exact": 44.0
+  },
+  "frame": {
+   "by_family": {
+    "arith_bare": {
+     "correct": 27,
+     "n": 40
+    },
+    "backward_solve": {
+     "correct": 37,
+     "n": 40
+    },
+    "chain_ops": {
+     "correct": 5,
+     "n": 40
+    },
+    "chain_story2": {
+     "correct": 19,
+     "n": 40
+    },
+    "cipher_map": {
+     "correct": 16,
+     "n": 40
+    },
+    "compare_numbers": {
+     "correct": 36,
+     "n": 40
+    },
+    "copy_word": {
+     "correct": 35,
+     "n": 40
+    },
+    "digits_parity": {
+     "correct": 36,
+     "n": 40
+    },
+    "distance_units": {
+     "correct": 37,
+     "n": 40
+    },
+    "div_exact": {
+     "correct": 37,
+     "n": 40
+    },
+    "fewshot_number_rule": {
+     "correct": 19,
+     "n": 40
+    },
+    "group_induct": {
+     "correct": 38,
+     "n": 40
+    },
+    "kin_chain": {
+     "correct": 28,
+     "n": 40
+    },
+    "letter_ops": {
+     "correct": 34,
+     "n": 40
+    },
+    "list_index": {
+     "correct": 20,
+     "n": 40
+    },
+    "list_stats": {
+     "correct": 36,
+     "n": 40
+    },
+    "object_track": {
+     "correct": 32,
+     "n": 40
+    },
+    "odd_one_out": {
+     "correct": 35,
+     "n": 40
+    },
+    "order_chain": {
+     "correct": 20,
+     "n": 40
+    },
+    "passage_qa": {
+     "correct": 39,
+     "n": 40
+    },
+    "percent_rate": {
+     "correct": 34,
+     "n": 40
+    },
+    "prop_eval": {
+     "correct": 39,
+     "n": 40
+    },
+    "rule_apply": {
+     "correct": 29,
+     "n": 40
+    },
+    "seq_cycle": {
+     "correct": 26,
+     "n": 40
+    },
+    "seq_next": {
+     "correct": 35,
+     "n": 40
+    },
+    "state_update": {
+     "correct": 21,
+     "n": 40
+    },
+    "story_addsub": {
+     "correct": 29,
+     "n": 40
+    },
+    "story_chain3": {
+     "correct": 20,
+     "n": 40
+    },
+    "syllogism": {
+     "correct": 40,
+     "n": 40
+    },
+    "table_calc": {
+     "correct": 31,
+     "n": 40
+    },
+    "table_lookup": {
+     "correct": 12,
+     "n": 40
+    },
+    "var_chain": {
+     "correct": 15,
+     "n": 40
+    },
+    "verify_claim": {
+     "correct": 27,
+     "n": 40
+    },
+    "word_filter": {
+     "correct": 37,
+     "n": 40
+    }
+   },
+   "by_level": {
+    "2": {
+     "correct": 201,
+     "n": 240
+    },
+    "6": {
+     "correct": 163,
+     "n": 240
+    },
+    "7": {
+     "correct": 73,
+     "n": 120
+    },
+    "1": {
+     "correct": 89,
+     "n": 120
+    },
+    "8": {
+     "correct": 124,
+     "n": 160
+    },
+    "4": {
+     "correct": 100,
+     "n": 200
+    },
+    "3": {
+     "correct": 96,
+     "n": 120
+    },
+    "5": {
+     "correct": 135,
+     "n": 160
+    }
+   },
+   "multistep": {
+    "correct": 299,
+    "n": 480,
+    "exact": 62.291666666666664
+   },
+   "correct": 981,
+   "n": 1360,
+   "exact": 72.13235294117646
+  },
+  "vocab": {
+   "by_family": {
+    "chain_ops": {
+     "correct": 2,
+     "n": 40
+    },
+    "chain_story2": {
+     "correct": 23,
+     "n": 40
+    },
+    "copy_word": {
+     "correct": 8,
+     "n": 40
+    },
+    "distance_units": {
+     "correct": 40,
+     "n": 40
+    },
+    "div_exact": {
+     "correct": 40,
+     "n": 40
+    },
+    "kin_chain": {
+     "correct": 24,
+     "n": 40
+    },
+    "letter_ops": {
+     "correct": 40,
+     "n": 40
+    },
+    "list_index": {
+     "correct": 14,
+     "n": 40
+    },
+    "object_track": {
+     "correct": 20,
+     "n": 40
+    },
+    "order_chain": {
+     "correct": 21,
+     "n": 40
+    },
+    "passage_qa": {
+     "correct": 33,
+     "n": 40
+    },
+    "percent_rate": {
+     "correct": 37,
+     "n": 40
+    },
+    "rule_apply": {
+     "correct": 19,
+     "n": 40
+    },
+    "state_update": {
+     "correct": 16,
+     "n": 40
+    },
+    "story_addsub": {
+     "correct": 31,
+     "n": 40
+    },
+    "story_chain3": {
+     "correct": 13,
+     "n": 40
+    },
+    "syllogism": {
+     "correct": 40,
+     "n": 40
+    },
+    "table_calc": {
+     "correct": 20,
+     "n": 40
+    },
+    "table_lookup": {
+     "correct": 10,
+     "n": 40
+    },
+    "word_filter": {
+     "correct": 37,
+     "n": 40
+    }
+   },
+   "by_level": {
+    "6": {
+     "correct": 122,
+     "n": 200
+    },
+    "1": {
+     "correct": 62,
+     "n": 120
+    },
+    "2": {
+     "correct": 71,
+     "n": 80
+    },
+    "8": {
+     "correct": 107,
+     "n": 160
+    },
+    "4": {
+     "correct": 67,
+     "n": 160
+    },
+    "5": {
+     "correct": 59,
+     "n": 80
+    }
+   },
+   "multistep": {
+    "correct": 216,
+    "n": 400,
+    "exact": 54.0
+   },
+   "correct": 488,
+   "n": 800,
+   "exact": 61.0
+  },
+  "variant": {
+   "by_family": {
+    "arith_bare": {
+     "correct": 6,
+     "n": 40
+    },
+    "backward_solve": {
+     "correct": 8,
+     "n": 40
+    },
+    "chain_ops": {
+     "correct": 3,
+     "n": 40
+    },
+    "chain_story2": {
+     "correct": 1,
+     "n": 40
+    },
+    "compare_numbers": {
+     "correct": 2,
+     "n": 40
+    },
+    "copy_word": {
+     "correct": 0,
+     "n": 40
+    },
+    "digits_parity": {
+     "correct": 4,
+     "n": 40
+    },
+    "distance_units": {
+     "correct": 10,
+     "n": 40
+    },
+    "div_exact": {
+     "correct": 0,
+     "n": 40
+    },
+    "fewshot_number_rule": {
+     "correct": 0,
+     "n": 40
+    },
+    "group_induct": {
+     "correct": 17,
+     "n": 40
+    },
+    "kin_chain": {
+     "correct": 24,
+     "n": 40
+    },
+    "letter_ops": {
+     "correct": 1,
+     "n": 40
+    },
+    "list_index": {
+     "correct": 10,
+     "n": 40
+    },
+    "list_stats": {
+     "correct": 0,
+     "n": 40
+    },
+    "object_track": {
+     "correct": 0,
+     "n": 40
+    },
+    "odd_one_out": {
+     "correct": 2,
+     "n": 40
+    },
+    "order_chain": {
+     "correct": 8,
+     "n": 40
+    },
+    "passage_qa": {
+     "correct": 14,
+     "n": 40
+    },
+    "percent_rate": {
+     "correct": 12,
+     "n": 40
+    },
+    "prop_eval": {
+     "correct": 22,
+     "n": 40
+    },
+    "rule_apply": {
+     "correct": 1,
+     "n": 40
+    },
+    "seq_cycle": {
+     "correct": 3,
+     "n": 40
+    },
+    "seq_next": {
+     "correct": 0,
+     "n": 40
+    },
+    "state_update": {
+     "correct": 13,
+     "n": 40
+    },
+    "story_addsub": {
+     "correct": 21,
+     "n": 40
+    },
+    "story_chain3": {
+     "correct": 24,
+     "n": 40
+    },
+    "syllogism": {
+     "correct": 19,
+     "n": 40
+    },
+    "table_calc": {
+     "correct": 0,
+     "n": 40
+    },
+    "table_lookup": {
+     "correct": 6,
+     "n": 40
+    },
+    "var_chain": {
+     "correct": 5,
+     "n": 40
+    },
+    "verify_claim": {
+     "correct": 0,
+     "n": 40
+    },
+    "word_filter": {
+     "correct": 15,
+     "n": 40
+    }
+   },
+   "by_level": {
+    "2": {
+     "correct": 33,
+     "n": 240
+    },
+    "6": {
+     "correct": 34,
+     "n": 240
+    },
+    "1": {
+     "correct": 11,
+     "n": 120
+    },
+    "7": {
+     "correct": 17,
+     "n": 80
+    },
+    "8": {
+     "correct": 77,
+     "n": 160
+    },
+    "4": {
+     "correct": 32,
+     "n": 200
+    },
+    "3": {
+     "correct": 5,
+     "n": 120
+    },
+    "5": {
+     "correct": 42,
+     "n": 160
+    }
+   },
+   "multistep": {
+    "correct": 108,
+    "n": 480,
+    "exact": 22.5
+   },
+   "correct": 251,
+   "n": 1320,
+   "exact": 19.015151515151516
+  },
+  "family": {
+   "by_family": {
+    "clock_date": {
+     "correct": 0,
+     "n": 40
+    },
+    "op_define": {
+     "correct": 2,
+     "n": 40
+    },
+    "string_transform": {
+     "correct": 0,
+     "n": 40
+    },
+    "unit_convert": {
+     "correct": 1,
+     "n": 40
+    }
+   },
+   "by_level": {
+    "6": {
+     "correct": 1,
+     "n": 80
+    },
+    "7": {
+     "correct": 2,
+     "n": 80
+    }
+   },
+   "multistep": {
+    "correct": 0,
+    "n": 0,
+    "exact": 0.0
+   },
+   "correct": 3,
+   "n": 160,
+   "exact": 1.875
+  }
+ },
+ "lesions": {
+  "loops:0": {
+   "in_dist": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 0,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 0,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 0,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 0,
+      "n": 40
+     },
+     "cipher_map": {
+      "correct": 0,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 0,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 0,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 0,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 0,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 0,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 0,
+      "n": 40
+     },
+     "group_induct": {
+      "correct": 0,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 0,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 0,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 0,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 0,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 0,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 0,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 0,
+      "n": 40
+     },
+     "prop_eval": {
+      "correct": 0,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 0,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 0,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 0,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 0,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 0,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 0,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 0,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 0,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 0,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "verify_claim": {
+      "correct": 0,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 0,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 0,
+      "n": 240
+     },
+     "6": {
+      "correct": 0,
+      "n": 240
+     },
+     "7": {
+      "correct": 0,
+      "n": 120
+     },
+     "1": {
+      "correct": 0,
+      "n": 120
+     },
+     "8": {
+      "correct": 0,
+      "n": 160
+     },
+     "4": {
+      "correct": 0,
+      "n": 200
+     },
+     "3": {
+      "correct": 0,
+      "n": 120
+     },
+     "5": {
+      "correct": 0,
+      "n": 160
+     }
+    },
+    "multistep": {
+     "correct": 0,
+     "n": 480,
+     "exact": 0.0
+    },
+    "correct": 0,
+    "n": 1360,
+    "exact": 0.0
+   },
+   "answer": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 0,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 0,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 0,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 0,
+      "n": 40
+     },
+     "cipher_map": {
+      "correct": 0,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 0,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 0,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 0,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 0,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 0,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 0,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 0,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 0,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 0,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 0,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 0,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 0,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 0,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 0,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 0,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 0,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 0,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 0,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 0,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 0,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 0,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 0,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 0,
+      "n": 240
+     },
+     "6": {
+      "correct": 0,
+      "n": 240
+     },
+     "7": {
+      "correct": 0,
+      "n": 80
+     },
+     "1": {
+      "correct": 0,
+      "n": 120
+     },
+     "8": {
+      "correct": 0,
+      "n": 160
+     },
+     "4": {
+      "correct": 0,
+      "n": 200
+     },
+     "3": {
+      "correct": 0,
+      "n": 120
+     },
+     "5": {
+      "correct": 0,
+      "n": 40
+     }
+    },
+    "multistep": {
+     "correct": 0,
+     "n": 480,
+     "exact": 0.0
+    },
+    "correct": 0,
+    "n": 1200,
+    "exact": 0.0
+   },
+   "frame": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 0,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 0,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 0,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 0,
+      "n": 40
+     },
+     "cipher_map": {
+      "correct": 0,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 0,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 0,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 0,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 0,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 0,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 0,
+      "n": 40
+     },
+     "group_induct": {
+      "correct": 0,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 0,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 0,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 0,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 0,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 0,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 0,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 0,
+      "n": 40
+     },
+     "prop_eval": {
+      "correct": 0,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 0,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 0,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 0,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 0,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 0,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 0,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 0,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 0,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 0,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "verify_claim": {
+      "correct": 0,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 0,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 0,
+      "n": 240
+     },
+     "6": {
+      "correct": 0,
+      "n": 240
+     },
+     "7": {
+      "correct": 0,
+      "n": 120
+     },
+     "1": {
+      "correct": 0,
+      "n": 120
+     },
+     "8": {
+      "correct": 0,
+      "n": 160
+     },
+     "4": {
+      "correct": 0,
+      "n": 200
+     },
+     "3": {
+      "correct": 0,
+      "n": 120
+     },
+     "5": {
+      "correct": 0,
+      "n": 160
+     }
+    },
+    "multistep": {
+     "correct": 0,
+     "n": 480,
+     "exact": 0.0
+    },
+    "correct": 0,
+    "n": 1360,
+    "exact": 0.0
+   },
+   "vocab": {
+    "by_family": {
+     "chain_ops": {
+      "correct": 0,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 0,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 0,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 0,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 0,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 0,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 0,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 0,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 0,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 0,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 0,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 0,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 0,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 0,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 0,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 0,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 0,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 0,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "6": {
+      "correct": 0,
+      "n": 200
+     },
+     "1": {
+      "correct": 0,
+      "n": 120
+     },
+     "2": {
+      "correct": 0,
+      "n": 80
+     },
+     "8": {
+      "correct": 0,
+      "n": 160
+     },
+     "4": {
+      "correct": 0,
+      "n": 160
+     },
+     "5": {
+      "correct": 0,
+      "n": 80
+     }
+    },
+    "multistep": {
+     "correct": 0,
+     "n": 400,
+     "exact": 0.0
+    },
+    "correct": 0,
+    "n": 800,
+    "exact": 0.0
+   },
+   "variant": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 0,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 0,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 0,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 0,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 0,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 0,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 0,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 0,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 0,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 0,
+      "n": 40
+     },
+     "group_induct": {
+      "correct": 0,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 0,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 0,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 0,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 0,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 0,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 0,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 0,
+      "n": 40
+     },
+     "prop_eval": {
+      "correct": 0,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 0,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 0,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 0,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 0,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 0,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 0,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 0,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 0,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 0,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "verify_claim": {
+      "correct": 0,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 0,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 0,
+      "n": 240
+     },
+     "6": {
+      "correct": 0,
+      "n": 240
+     },
+     "1": {
+      "correct": 0,
+      "n": 120
+     },
+     "7": {
+      "correct": 0,
+      "n": 80
+     },
+     "8": {
+      "correct": 0,
+      "n": 160
+     },
+     "4": {
+      "correct": 0,
+      "n": 200
+     },
+     "3": {
+      "correct": 0,
+      "n": 120
+     },
+     "5": {
+      "correct": 0,
+      "n": 160
+     }
+    },
+    "multistep": {
+     "correct": 0,
+     "n": 480,
+     "exact": 0.0
+    },
+    "correct": 0,
+    "n": 1320,
+    "exact": 0.0
+   },
+   "family": {
+    "by_family": {
+     "clock_date": {
+      "correct": 0,
+      "n": 40
+     },
+     "op_define": {
+      "correct": 0,
+      "n": 40
+     },
+     "string_transform": {
+      "correct": 0,
+      "n": 40
+     },
+     "unit_convert": {
+      "correct": 0,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "6": {
+      "correct": 0,
+      "n": 80
+     },
+     "7": {
+      "correct": 0,
+      "n": 80
+     }
+    },
+    "multistep": {
+     "correct": 0,
+     "n": 0,
+     "exact": 0.0
+    },
+    "correct": 0,
+    "n": 160,
+    "exact": 0.0
+   }
+  },
+  "loops:1": {
+   "in_dist": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 33,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 40,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 2,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 24,
+      "n": 40
+     },
+     "cipher_map": {
+      "correct": 21,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 40,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 40,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 39,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 40,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 40,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 26,
+      "n": 40
+     },
+     "group_induct": {
+      "correct": 39,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 34,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 39,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 23,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 38,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 27,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 37,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 25,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 40,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 38,
+      "n": 40
+     },
+     "prop_eval": {
+      "correct": 40,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 33,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 21,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 39,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 21,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 37,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 26,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 40,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 20,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 12,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 11,
+      "n": 40
+     },
+     "verify_claim": {
+      "correct": 31,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 40,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 227,
+      "n": 240
+     },
+     "6": {
+      "correct": 164,
+      "n": 240
+     },
+     "7": {
+      "correct": 86,
+      "n": 120
+     },
+     "1": {
+      "correct": 102,
+      "n": 120
+     },
+     "8": {
+      "correct": 140,
+      "n": 160
+     },
+     "4": {
+      "correct": 96,
+      "n": 200
+     },
+     "3": {
+      "correct": 97,
+      "n": 120
+     },
+     "5": {
+      "correct": 144,
+      "n": 160
+     }
+    },
+    "multistep": {
+     "correct": 308,
+     "n": 480,
+     "exact": 64.16666666666667
+    },
+    "correct": 1056,
+    "n": 1360,
+    "exact": 77.6470588235294
+   },
+   "answer": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 24,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 13,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 1,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 9,
+      "n": 40
+     },
+     "cipher_map": {
+      "correct": 20,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 38,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 40,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 12,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 27,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 38,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 16,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 36,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 39,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 7,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 16,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 1,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 37,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 4,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 29,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 11,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 35,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 12,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 10,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 1,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 32,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 3,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 3,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 9,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 5,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 0,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 160,
+      "n": 240
+     },
+     "6": {
+      "correct": 64,
+      "n": 240
+     },
+     "7": {
+      "correct": 36,
+      "n": 80
+     },
+     "1": {
+      "correct": 86,
+      "n": 120
+     },
+     "8": {
+      "correct": 68,
+      "n": 160
+     },
+     "4": {
+      "correct": 20,
+      "n": 200
+     },
+     "3": {
+      "correct": 59,
+      "n": 120
+     },
+     "5": {
+      "correct": 35,
+      "n": 40
+     }
+    },
+    "multistep": {
+     "correct": 114,
+     "n": 480,
+     "exact": 23.75
+    },
+    "correct": 528,
+    "n": 1200,
+    "exact": 44.0
+   },
+   "frame": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 27,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 37,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 5,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 19,
+      "n": 40
+     },
+     "cipher_map": {
+      "correct": 16,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 36,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 35,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 36,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 37,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 37,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 19,
+      "n": 40
+     },
+     "group_induct": {
+      "correct": 38,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 28,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 34,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 20,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 36,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 32,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 35,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 20,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 39,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 34,
+      "n": 40
+     },
+     "prop_eval": {
+      "correct": 39,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 29,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 26,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 35,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 21,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 29,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 20,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 40,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 31,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 12,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 15,
+      "n": 40
+     },
+     "verify_claim": {
+      "correct": 27,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 37,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 201,
+      "n": 240
+     },
+     "6": {
+      "correct": 163,
+      "n": 240
+     },
+     "7": {
+      "correct": 73,
+      "n": 120
+     },
+     "1": {
+      "correct": 89,
+      "n": 120
+     },
+     "8": {
+      "correct": 124,
+      "n": 160
+     },
+     "4": {
+      "correct": 100,
+      "n": 200
+     },
+     "3": {
+      "correct": 96,
+      "n": 120
+     },
+     "5": {
+      "correct": 135,
+      "n": 160
+     }
+    },
+    "multistep": {
+     "correct": 299,
+     "n": 480,
+     "exact": 62.291666666666664
+    },
+    "correct": 981,
+    "n": 1360,
+    "exact": 72.13235294117646
+   },
+   "vocab": {
+    "by_family": {
+     "chain_ops": {
+      "correct": 2,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 23,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 8,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 40,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 40,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 24,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 40,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 14,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 20,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 21,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 33,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 37,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 19,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 16,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 31,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 13,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 40,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 20,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 10,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 37,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "6": {
+      "correct": 122,
+      "n": 200
+     },
+     "1": {
+      "correct": 62,
+      "n": 120
+     },
+     "2": {
+      "correct": 71,
+      "n": 80
+     },
+     "8": {
+      "correct": 107,
+      "n": 160
+     },
+     "4": {
+      "correct": 67,
+      "n": 160
+     },
+     "5": {
+      "correct": 59,
+      "n": 80
+     }
+    },
+    "multistep": {
+     "correct": 216,
+     "n": 400,
+     "exact": 54.0
+    },
+    "correct": 488,
+    "n": 800,
+    "exact": 61.0
+   },
+   "variant": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 6,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 8,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 3,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 1,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 2,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 0,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 4,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 10,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 0,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 0,
+      "n": 40
+     },
+     "group_induct": {
+      "correct": 17,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 24,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 1,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 10,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 0,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 0,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 2,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 8,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 14,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 12,
+      "n": 40
+     },
+     "prop_eval": {
+      "correct": 22,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 1,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 3,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 0,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 13,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 21,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 24,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 19,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 0,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 6,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 5,
+      "n": 40
+     },
+     "verify_claim": {
+      "correct": 0,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 15,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 33,
+      "n": 240
+     },
+     "6": {
+      "correct": 34,
+      "n": 240
+     },
+     "1": {
+      "correct": 11,
+      "n": 120
+     },
+     "7": {
+      "correct": 17,
+      "n": 80
+     },
+     "8": {
+      "correct": 77,
+      "n": 160
+     },
+     "4": {
+      "correct": 32,
+      "n": 200
+     },
+     "3": {
+      "correct": 5,
+      "n": 120
+     },
+     "5": {
+      "correct": 42,
+      "n": 160
+     }
+    },
+    "multistep": {
+     "correct": 108,
+     "n": 480,
+     "exact": 22.5
+    },
+    "correct": 251,
+    "n": 1320,
+    "exact": 19.015151515151516
+   },
+   "family": {
+    "by_family": {
+     "clock_date": {
+      "correct": 0,
+      "n": 40
+     },
+     "op_define": {
+      "correct": 2,
+      "n": 40
+     },
+     "string_transform": {
+      "correct": 0,
+      "n": 40
+     },
+     "unit_convert": {
+      "correct": 1,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "6": {
+      "correct": 1,
+      "n": 80
+     },
+     "7": {
+      "correct": 2,
+      "n": 80
+     }
+    },
+    "multistep": {
+     "correct": 0,
+     "n": 0,
+     "exact": 0.0
+    },
+    "correct": 3,
+    "n": 160,
+    "exact": 1.875
+   }
+  },
+  "loops:2": {
+   "in_dist": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 10,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 4,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 1,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 8,
+      "n": 40
+     },
+     "cipher_map": {
+      "correct": 11,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 10,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 17,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 27,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 10,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 16,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 7,
+      "n": 40
+     },
+     "group_induct": {
+      "correct": 29,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 11,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 37,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 16,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 18,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 18,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 23,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 4,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 13,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 10,
+      "n": 40
+     },
+     "prop_eval": {
+      "correct": 40,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 11,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 23,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 10,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 3,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 12,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 10,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 36,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 9,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 8,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 2,
+      "n": 40
+     },
+     "verify_claim": {
+      "correct": 21,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 29,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 93,
+      "n": 240
+     },
+     "6": {
+      "correct": 42,
+      "n": 240
+     },
+     "7": {
+      "correct": 47,
+      "n": 120
+     },
+     "1": {
+      "correct": 70,
+      "n": 120
+     },
+     "8": {
+      "correct": 63,
+      "n": 160
+     },
+     "4": {
+      "correct": 35,
+      "n": 200
+     },
+     "3": {
+      "correct": 56,
+      "n": 120
+     },
+     "5": {
+      "correct": 108,
+      "n": 160
+     }
+    },
+    "multistep": {
+     "correct": 90,
+     "n": 480,
+     "exact": 18.75
+    },
+    "correct": 514,
+    "n": 1360,
+    "exact": 37.794117647058826
+   },
+   "answer": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 3,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 1,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 1,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 1,
+      "n": 40
+     },
+     "cipher_map": {
+      "correct": 9,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 14,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 20,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 6,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 2,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 10,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 6,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 7,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 38,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 3,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 0,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 0,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 25,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 2,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 2,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 5,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 5,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 3,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 3,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 6,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 0,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 2,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 3,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 0,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 0,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 39,
+      "n": 240
+     },
+     "6": {
+      "correct": 9,
+      "n": 240
+     },
+     "7": {
+      "correct": 15,
+      "n": 80
+     },
+     "1": {
+      "correct": 61,
+      "n": 120
+     },
+     "8": {
+      "correct": 9,
+      "n": 160
+     },
+     "4": {
+      "correct": 6,
+      "n": 200
+     },
+     "3": {
+      "correct": 33,
+      "n": 120
+     },
+     "5": {
+      "correct": 5,
+      "n": 40
+     }
+    },
+    "multistep": {
+     "correct": 19,
+     "n": 480,
+     "exact": 3.9583333333333335
+    },
+    "correct": 177,
+    "n": 1200,
+    "exact": 14.75
+   },
+   "frame": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 7,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 7,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 2,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 7,
+      "n": 40
+     },
+     "cipher_map": {
+      "correct": 5,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 7,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 10,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 16,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 3,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 11,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 3,
+      "n": 40
+     },
+     "group_induct": {
+      "correct": 28,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 6,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 22,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 13,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 19,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 17,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 24,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 7,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 8,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 6,
+      "n": 40
+     },
+     "prop_eval": {
+      "correct": 33,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 8,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 18,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 8,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 5,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 13,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 8,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 25,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 10,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 5,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 3,
+      "n": 40
+     },
+     "verify_claim": {
+      "correct": 23,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 32,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 73,
+      "n": 240
+     },
+     "6": {
+      "correct": 35,
+      "n": 240
+     },
+     "7": {
+      "correct": 36,
+      "n": 120
+     },
+     "1": {
+      "correct": 45,
+      "n": 120
+     },
+     "8": {
+      "correct": 54,
+      "n": 160
+     },
+     "4": {
+      "correct": 37,
+      "n": 200
+     },
+     "3": {
+      "correct": 50,
+      "n": 120
+     },
+     "5": {
+      "correct": 89,
+      "n": 160
+     }
+    },
+    "multistep": {
+     "correct": 81,
+     "n": 480,
+     "exact": 16.875
+    },
+    "correct": 419,
+    "n": 1360,
+    "exact": 30.808823529411764
+   },
+   "vocab": {
+    "by_family": {
+     "chain_ops": {
+      "correct": 0,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 7,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 3,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 5,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 11,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 13,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 38,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 9,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 10,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 7,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 10,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 10,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 7,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 4,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 7,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 8,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 31,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 4,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 4,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 27,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "6": {
+      "correct": 26,
+      "n": 200
+     },
+     "1": {
+      "correct": 50,
+      "n": 120
+     },
+     "2": {
+      "correct": 18,
+      "n": 80
+     },
+     "8": {
+      "correct": 58,
+      "n": 160
+     },
+     "4": {
+      "correct": 25,
+      "n": 160
+     },
+     "5": {
+      "correct": 38,
+      "n": 80
+     }
+    },
+    "multistep": {
+     "correct": 68,
+     "n": 400,
+     "exact": 17.0
+    },
+    "correct": 215,
+    "n": 800,
+    "exact": 26.875
+   },
+   "variant": {
+    "by_family": {
+     "arith_bare": {
+      "correct": 4,
+      "n": 40
+     },
+     "backward_solve": {
+      "correct": 2,
+      "n": 40
+     },
+     "chain_ops": {
+      "correct": 1,
+      "n": 40
+     },
+     "chain_story2": {
+      "correct": 0,
+      "n": 40
+     },
+     "compare_numbers": {
+      "correct": 0,
+      "n": 40
+     },
+     "copy_word": {
+      "correct": 0,
+      "n": 40
+     },
+     "digits_parity": {
+      "correct": 3,
+      "n": 40
+     },
+     "distance_units": {
+      "correct": 0,
+      "n": 40
+     },
+     "div_exact": {
+      "correct": 2,
+      "n": 40
+     },
+     "fewshot_number_rule": {
+      "correct": 0,
+      "n": 40
+     },
+     "group_induct": {
+      "correct": 14,
+      "n": 40
+     },
+     "kin_chain": {
+      "correct": 6,
+      "n": 40
+     },
+     "letter_ops": {
+      "correct": 0,
+      "n": 40
+     },
+     "list_index": {
+      "correct": 4,
+      "n": 40
+     },
+     "list_stats": {
+      "correct": 0,
+      "n": 40
+     },
+     "object_track": {
+      "correct": 0,
+      "n": 40
+     },
+     "odd_one_out": {
+      "correct": 0,
+      "n": 40
+     },
+     "order_chain": {
+      "correct": 5,
+      "n": 40
+     },
+     "passage_qa": {
+      "correct": 0,
+      "n": 40
+     },
+     "percent_rate": {
+      "correct": 0,
+      "n": 40
+     },
+     "prop_eval": {
+      "correct": 22,
+      "n": 40
+     },
+     "rule_apply": {
+      "correct": 1,
+      "n": 40
+     },
+     "seq_cycle": {
+      "correct": 0,
+      "n": 40
+     },
+     "seq_next": {
+      "correct": 0,
+      "n": 40
+     },
+     "state_update": {
+      "correct": 5,
+      "n": 40
+     },
+     "story_addsub": {
+      "correct": 6,
+      "n": 40
+     },
+     "story_chain3": {
+      "correct": 7,
+      "n": 40
+     },
+     "syllogism": {
+      "correct": 15,
+      "n": 40
+     },
+     "table_calc": {
+      "correct": 0,
+      "n": 40
+     },
+     "table_lookup": {
+      "correct": 3,
+      "n": 40
+     },
+     "var_chain": {
+      "correct": 3,
+      "n": 40
+     },
+     "verify_claim": {
+      "correct": 1,
+      "n": 40
+     },
+     "word_filter": {
+      "correct": 14,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "2": {
+      "correct": 15,
+      "n": 240
+     },
+     "6": {
+      "correct": 3,
+      "n": 240
+     },
+     "1": {
+      "correct": 4,
+      "n": 120
+     },
+     "7": {
+      "correct": 14,
+      "n": 80
+     },
+     "8": {
+      "correct": 27,
+      "n": 160
+     },
+     "4": {
+      "correct": 16,
+      "n": 200
+     },
+     "3": {
+      "correct": 0,
+      "n": 120
+     },
+     "5": {
+      "correct": 39,
+      "n": 160
+     }
+    },
+    "multistep": {
+     "correct": 29,
+     "n": 480,
+     "exact": 6.041666666666667
+    },
+    "correct": 118,
+    "n": 1320,
+    "exact": 8.93939393939394
+   },
+   "family": {
+    "by_family": {
+     "clock_date": {
+      "correct": 0,
+      "n": 40
+     },
+     "op_define": {
+      "correct": 1,
+      "n": 40
+     },
+     "string_transform": {
+      "correct": 0,
+      "n": 40
+     },
+     "unit_convert": {
+      "correct": 2,
+      "n": 40
+     }
+    },
+    "by_level": {
+     "6": {
+      "correct": 2,
+      "n": 80
+     },
+     "7": {
+      "correct": 1,
+      "n": 80
+     }
+    },
+    "multistep": {
+     "correct": 0,
+     "n": 0,
+     "exact": 0.0
+    },
+    "correct": 3,
+    "n": 160,
+    "exact": 1.875
+   }
+  }
+ },
+ "wall_s": 1173.0692856311798
+}
