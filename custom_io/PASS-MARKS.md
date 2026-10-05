@@ -76,3 +76,17 @@ Real evidence, B:
 Screen about $1.1, confirm one design about $1.5, open LMs about $0.5 (box $0.45-0.55/h). If over $3, drop
 pythia-14m first, then shrink the lr grid to {1e-4, 3e-4}. A second confirmed design or the 10.8M pair only if money
 remains above the $1 floor.
+
+## Addendum 1: ingredient test, place codes alone (written 2026-10-05 about 11:20 UTC, 7:20 AM ET, before these runs)
+Why: after the first screen results, design A beats plain_tf by about +10 pooled-5 points, most of it on lookup and
+rule families (cipher_map, fewshot_number_rule, seq_cycle, list_index) as well as chains. A's reader adds place codes
+(each char's index from the right end of its word). This test asks whether place codes alone, given to plain_tf, buy
+that gain (SYNTHESIS section 5, step 2). One change: `place: true` (one 16 x 256 table added at prompt chars, +4,096
+params). Arms tfp (plain_tf + place) and tfstepsp (plain_tf_steps + place), seeds 100 and 101, paired with the screen's
+tf and tfsteps runs (same seed; the extra table is created last, so every other weight starts identical).
+- **Place codes explain most of A's gain:** tfp - tf pooled-5 d >= +5.0 (2-seed mean). Then A's slots and loop add
+  only A - tfp, and A - tfp < +3 means A's custom structure adds nothing that counts.
+- **Place codes do nothing:** tfp - tf pooled-5 d < +1.0.
+- **Place codes help step writing too:** tfstepsp - tfsteps pooled-5 d >= +2.0; then tfstepsp becomes the bar every
+  custom design must beat (G4 is re-scored against it as well and reported both ways).
+- Reported per family as well (the lookup families above). 2 seeds only: this is a screen, not a claim.

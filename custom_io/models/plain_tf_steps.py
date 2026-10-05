@@ -63,10 +63,12 @@ def final_answer(text):
 class PlainTFSteps(PlainTF):
     LESIONS = ['calc']
 
-    def __init__(self, vocab, d_model=256, n_layers=4, n_heads=4, n_loops=1):
+    def __init__(self, vocab, d_model=256, n_layers=4, n_heads=4, n_loops=1, place=False):
         super().__init__(vocab, d_model, n_layers, n_heads, n_loops)
         self.pos = nn.Embedding(MAX_POS, d_model)
         nn.init.normal_(self.pos.weight, std=0.02)
+        if place:                   # last, after pos is replaced, so no other weight's init moves (see PlainTF._add_place)
+            self._add_place()
 
     def _targets(self, batch):
         """-> ids [B, A] (target chars + EOS, PAD after), mask [B, A]."""
@@ -90,7 +92,7 @@ class PlainTFSteps(PlainTF):
         tgt = torch.full_like(seq, -100)
         tgt.scatter_(1, (1 + lens)[:, None] + j, torch.where(am, a, torch.full_like(a, -100)))
         W = int((2 + lens + am.sum(1)).max())
-        lg = self.logits(self.hidden(seq[:, :W])).float()
+        lg = self.logits(self.hidden_upto(seq, W, None, self.place_seq(batch, seq.shape[1]))).float()
         return F.cross_entropy(lg.reshape(-1, lg.shape[-1]), tgt[:, :W].reshape(-1), ignore_index=-100)
 
     @torch.no_grad()
@@ -103,10 +105,11 @@ class PlainTFSteps(PlainTF):
         seq[:, 0], seq[:, 1:1 + T] = BOS, p
         r = torch.arange(B, device=p.device)
         seq[r, 1 + lens] = SEP
+        pl = self.place_seq(batch, seq.shape[1])
         txt, queue, done = [''] * B, [[] for _ in range(B)], [False] * B
         for t in range(MAX_NEW):
             n = int((2 + lens).max()) + t
-            h = self.hidden(seq[:, :n], loops)[r, 1 + lens + t]
+            h = self.hidden_upto(seq, n, loops, pl)[r, 1 + lens + t]
             nxt = self.logits(h).argmax(-1)
             forced = [(q.pop(0) if q and not d else None) for q, d in zip(queue, done)]
             if any(f is not None for f in forced):

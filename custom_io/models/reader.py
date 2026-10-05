@@ -23,6 +23,23 @@ def place_ids(prompts, T, device=None):
     return out.to(device) if device is not None else out
 
 
+def batch_places(batch, cache):
+    """[B, T] long on batch['prompt_ids'].device: place ids for batch['rows'] prompts, PLACE_NONE for spaces and for
+    padding out to prompt_ids' width (donor_eval may widen it). `cache` is a plain dict the caller owns: it holds one
+    int8 numpy row per distinct prompt, so a shuffled batch costs one small copy per row instead of a regex pass."""
+    ids = batch['prompt_ids']
+    out = np.full((ids.shape[0], ids.shape[1]), PLACE_NONE, dtype=np.int64)
+    for b, r in enumerate(batch['rows']):
+        p = r['prompt']
+        v = cache.get(p)
+        if v is None:
+            if len(cache) > 400_000:
+                cache.clear()
+            v = cache[p] = place_ids([p], len(p))[0].numpy().astype(np.int8)
+        out[b, :len(v)] = v
+    return torch.from_numpy(out).to(ids.device, non_blocking=True)
+
+
 class ConvBlock(nn.Module):
     def __init__(self, d, k=5):
         super().__init__()
@@ -43,19 +60,8 @@ class CharReader(nn.Module):
         self._cache = {}
 
     def places(self, batch):
-        """place ids for batch['rows'] prompts, padded to prompt_ids' width (donor_eval may widen it). Cached per prompt
-        (int8 numpy rows), so a shuffled batch costs one small copy per row instead of a regex pass."""
-        ids = batch['prompt_ids']
-        out = np.full((ids.shape[0], ids.shape[1]), PLACE_NONE, dtype=np.int64)
-        for b, r in enumerate(batch['rows']):
-            p = r['prompt']
-            v = self._cache.get(p)
-            if v is None:
-                if len(self._cache) > 400_000:
-                    self._cache.clear()
-                v = self._cache[p] = place_ids([p], len(p))[0].numpy().astype(np.int8)
-            out[b, :len(v)] = v
-        return torch.from_numpy(out).to(ids.device, non_blocking=True)
+        """place ids for batch['rows'] prompts, padded to prompt_ids' width (see batch_places); cached per prompt."""
+        return batch_places(batch, self._cache)
 
     def forward(self, batch):
         """-> X [B,T,d] (zeros at padding), mask [B,T] bool."""
