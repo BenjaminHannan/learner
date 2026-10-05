@@ -224,3 +224,24 @@ The thinker's plan trained only on the chain rows the skills screen practised (8
 
 - By the marks: **"the LM learns more from the same practice"** (mean 4.8 rows under the LM, ahead on 2 of 6). Without seed 3, whose op head never learned state_update (9 / 40; pointers 148 / 160 were fine), the other five average 136.6, a tie. So with matched practice the thinker's plan is about level with the LM's steps, not ahead; the 97.6% of PLCD needs its 17,000 distinct rows.
 - Open question this leaves: would the LM's steps also climb with those 17,000 rows? Arm LMDC (below in `SCREEN-v4.md`) tests it.
+
+## PX result (job 40-px-s1, read 10:19 UTC)
+The other four kinds as plans (fresh reader+core, `--op-attend`, `--lr-cosine`, 17,000 distinct rows, no drops). Held-out plan-exact over training (of 160): 53 / 60 / 57 / 69 / 68 / 68 / 74 / 75 at 2k ... 16k, **77 / 160 (48.1%) at the end**; fit 173 / 320.
+
+| kind (of 40) | plan | ops | pointers | LM steps (9-seed mean) |
+|---|---|---|---|---|
+| cipher_map | **1** | 40 | 1 | 30.6 |
+| fewshot_number_rule | **33** | 36 | 34 | 31.1 |
+| group_induct | 26 | 40 | 26 | 35.6 |
+| seq_cycle | 17 | 40 | 17 | 23.7 |
+
+- By the marks: **wrong** (77 < 96): pointers plus a calculator, as built, do not carry these kinds. Not "the plan extends".
+- Where it fails is specific. The ops are right on 156 / 160; the pointers are wrong. The kind that works (fewshot_number_rule, 33 / 40, above the LM's 31.1) needs pointers chosen by **role** (the query, the first example's input and output), like the chain kinds (98.8% pointers in PLCD). The kinds that fail need pointers chosen by **content**: cipher_map has to find the code-table entry whose letter or number equals a given one, seq_cycle the letter that matches the cycle position, group_induct the group whose numbers share the query's property. Suggested cause: the content-matching needs token identity inside the thinker, and the 32-wide reader drops it (probe: 98.5% in the LM features, 17.6% after the reader, 29.8% for a random 32-wide reader). Untested.
+- PXA (all 8 kinds in one thinker) is cancelled before it ran: with the other four at 48%, its mark (85% on 320) cannot be met, and the run would cost about an hour of box C.
+
+## Added 10:19 UTC, before it ran: PXW (does a wide reader let the plan do content lookups?)
+PX plus one change: `--reader-hidden 256` (new in mode plan): the thinker's fresh reader is 2048 -> 256 -> 256 instead of 2048 -> 32 -> 256. Same rows, seed, held-out and recipe as PX. Box C (job 42-pxw-s1).
+- **"A wide reader lets the plan carry the content kinds"** if held plan-exact >= 121 / 160 (the LM's mean on these rows, the PX mark).
+- **"Identity was the limit"** if the pointers on cipher_map + group_induct + seq_cycle rise by >= 30 rows over PX's 44 / 120.
+- Wrong if held < 96 / 160 again: a fixed query per pointer slot cannot do content lookups even with identity kept; the next design would compute each slot's query from the thinker's state (a content-addressed pointer).
+- Prediction: 90-125. Identity should help group_induct and seq_cycle most; cipher_map stays hard, because "Write daa as numbers" splits the word into sub-word tokens ('da', 'a') and each lookup is two hops (find the letter's entry in the table, then point at its number).

@@ -726,6 +726,8 @@ def mode_plan(a):
     OPS = PLAN_OPS + ('CAT',) if any(f not in CHAIN for f in fams) else PLAN_OPS  # chain-only: the original 5 classes, shapes and RNG use
     if a.screen_rows and a.fresh_rows:
         raise SystemExit('--screen-rows and --fresh-rows are incompatible')
+    if a.reader_hidden and not a.fresh_core:
+        raise SystemExit('plan mode: --reader-hidden needs --fresh-core')
     rt, torch, cfg, dec, tok, lm, modules, named = setup(a)
     if a.screen_rows:  # the skills screen's own draw (8 families, 2,000 fixed rows, 3 passes), kept to --plan-fams in order; one update per row occurrence
         fixed, order, fit, held = rows_for(a.data, a.sample_seed, n_fixed=2000, fams=W8, passes=3)
@@ -763,10 +765,15 @@ def mode_plan(a):
     if a.fresh_core:
         torch.manual_seed(a.sample_seed)
         reset_fresh(parts)
+    if a.reader_hidden:  # --reader-hidden H (needs --fresh-core): a fresh wider reader 2048->H->256 instead of the 32-wide squeeze
+        seq = parts['reader'].proj
+        seq[1], seq[3] = torch.nn.Linear(seq[1].in_features, a.reader_hidden).to(dev), torch.nn.Linear(a.reader_hidden, seq[3].out_features).to(dev)
+        emit('plan-reader', {'hidden': a.reader_hidden})
     torch.manual_seed(a.sample_seed)
     ptr, op = torch.nn.Linear(256, 6).to(dev), torch.nn.Linear(2048, 5 * len(OPS)).to(dev)
     op_tok = torch.nn.Linear(256, len(OPS)).to(dev) if a.op_attend else None  # --op-attend: step j's op also reads the token its operand pointer picks
-    train_params = [p for n, p in named if n.startswith(('core.', 'reader.'))] + list(ptr.parameters()) + list(op.parameters()) + \
+    train_params = [p for n, p in named if n.startswith(('core.',) if a.reader_hidden else ('core.', 'reader.'))] + \
+        (list(parts['reader'].parameters()) if a.reader_hidden else []) + list(ptr.parameters()) + list(op.parameters()) + \
         (list(op_tok.parameters()) if op_tok is not None else [])
     opt = torch.optim.AdamW(train_params, lr=a.lr, weight_decay=0)
     n_upd = len(order) if a.fresh_rows or a.screen_rows else min(a.updates, len(order))
@@ -838,7 +845,7 @@ def main():
     ap.add_argument('--target', default='answer', choices=['answer', 'x0', 'step1'])
     ap.add_argument('--learner', default='core', choices=['core', 'lmread', 'tfm'])
     ap.add_argument('--warmup', type=int, default=0)
-    ap.add_argument('--reader-hidden', type=int, default=0, help='direct mode: widen the reader 2048->32->256 to 2048->H->256')
+    ap.add_argument('--reader-hidden', type=int, default=0, help='direct mode: widen the reader 2048->32->256 to 2048->H->256; plan mode (with --fresh-core): a fresh 2048->H->256 reader')
     ap.add_argument('--updates', type=int, default=6000)
     ap.add_argument('--fresh-rows', type=int, default=0, help='direct mode: N distinct rows, one pass each (--updates ignored)')
     ap.add_argument('--lr-cosine', action='store_true', help='plan mode: cosine-decay the lr to 0 over the run (after the warmup ramp)')
