@@ -82,7 +82,7 @@ def status(a):
                                              'status_msg', 'gpu_name', 'dph_total', 'start_date', 'duration')}))
 
 
-def log_text(i, tail=200000):
+def log_text(i, tail=20000):
     r = call('PUT', '/instances/request_logs/%s/' % i, {'tail': str(tail)})
     url = r.get('result_url')
     if not url:
@@ -90,9 +90,11 @@ def log_text(i, tail=200000):
     for _ in range(24):
         time.sleep(5)
         try:
-            return get(url, 120).decode('utf-8', 'replace')
+            t = get(url, 120).decode('utf-8', 'replace')
         except Exception:
             continue
+        if t.strip():
+            return t
     return ''
 
 
