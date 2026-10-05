@@ -316,3 +316,14 @@ PX recipe (fresh planner, 4 content kinds, 17,000 rows, `--op-attend --lr-cosine
 - **Helps** if content pointers >= 74 / 120 or held >= 121 / 160.
 - **Wrong** if held < 96 and content pointers < 60.
 - My prediction: wrong, like PXW / PXH / PXW2048 (all four designs hit the same per-family ceilings on practised rows).
+
+## Result 23:32 UTC: T3 (all planner heads global) — WRONG
+Job 53-t3-s1 on Vast box F; `plan-global-heads` in the log (module claude_fewex_net, WINDOW 1 -> off, 8 heads).
+
+| run | held plan-exact /160 | cipher_map | fewshot | group_induct | seq_cycle | content pointers /120 | ops right /160 | fit /320 |
+|---|---|---|---|---|---|---|---|---|
+| PX | 77 | 1 | 33 | 26 | 17 | 44 | 156 | 173 |
+| **T3 (all heads global)** | **78** | 0 | 32 | 26 | 20 | **46** | 153 | 167 |
+
+- Helps (content pointers >= 74 or held >= 121): **no**. **Wrong mark hit** (held 78 < 96 and content pointers 46 < 60), as predicted.
+- Five designs now land on the same per-family numbers (PX, PXW, PXW2048, PXH, T3): group_induct is 26 / 40 held and 45 / 69 fit in all five, cipher_map 0-2. Suggested (untested): the planner settles on one position rule that happens to be right on a fixed subset of rows, and none of these changes lets it learn the lookup itself. Checking which rows are right in each run would show it; per-row outputs are not saved by plan mode yet.
