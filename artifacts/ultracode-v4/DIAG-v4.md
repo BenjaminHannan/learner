@@ -46,3 +46,24 @@ Number-token identity on held tokens (best of 1-NN and ridge; 1,389 tokens, 99% 
 - By the marks: **"reader bottleneck destroys number identity"** (f >= 90% and r32 < 50%). Not "identity reaches the core" (h4 8.9% < 80%). Row probe: **"the core adds nothing"** (R2(step1|h4) <= R2(step1|f)).
 - Per the decision tree: OR is skipped (it would fail for an input reason). LD runs as planned (the lmread and tfm learners read the full 2,048-wide f, so they test whether a small learner can learn the step when it does see the numbers).
 - LD smokes (60 updates, each learner) ran clean; 23 / 1,977 fixed rows and 1 / 160 held rows are dropped for multi-token step1 targets (all var_chain).
+
+## LD result (job 27, read 06:11 UTC)
+Held-out single-token rows (step1: 159 rows; answer: 151 rows), at the end of 3 passes (5,931 / 5,811 updates). Fit = the first 320 fixed rows.
+
+| learner | step1 fit | step1 held-out | answer fit | answer held-out |
+|---|---|---|---|---|
+| main2 core | 7/320 | 5/159 (3.1%) | 6/320 | 1/151 (0.7%) |
+| fresh core | 11/320 | 5/159 (3.1%) | - | - |
+| lmread (linear readout of LM features, no core) | 147/320 | 1/159 (0.6%) | 146/320 | 4/151 (2.6%) |
+| tfm (generic 4-layer d=256 transformer) | 26/320 | 5/159 (3.1%) | 20/320 | 4/151 (2.6%) |
+
+- By the marks: step1 **"regime limit"** (all four <= 25%). Not "core-specific defect" (max(lmread, tfm) 3.1% = max(core, fresh core) 3.1%). answer: **"answer-only regime limit"** (all three <= 15%). The prediction (lmread 10-40% on step1) was wrong: the frozen final-layer features do not hold the first step linearly for new rows. lmread memorises (147/320 fit) but does not generalise; the cores cannot even memorise in 6k updates.
+- Per the decision tree (c): run **LDD** and **PL**.
+
+## Added 06:11 UTC, before they ran: LDD (marks as in `PANEL-v4.md`, copied here)
+`--fresh-rows 17000` (new, 3 lines in mode_direct): 17,000 distinct rows of the 4 chain families, one pass each (17,000 updates), trainfit = the first 320 of them, held-out = the same 159 rows as LD. Learners: tfm (box B, job 29-ldd-tfm) and fresh core (box C, job 29-ldd-core-fresh).
+- **"Data-limited (learnable with about 17k distinct rows)"** if either learner reaches >= 50% held-out on step1. **"Not learnable at this scale either"** if both stay < 25%. In between: inconclusive.
+- If both < 25%, learned arithmetic from step labels is out of reach for a learner this size on these features at a practical budget, and the faithful core-side path for the chain families is the tool route (PL).
+
+## Added 06:11 UTC: CF8 and BL1 re-run
+Both crashed with CUDA out-of-memory on box C (six runs shared one 32 GB GPU; tracebacks in `results/24-conf-s8/CF8/stdout.events.txt` and `results/20-base-lesion-s1/BL1/stdout.events.txt`), so they produced no score. They re-run unchanged (same flags, same seeds) on box A as `28-conf-s8-rerun` and `28-base-lesion-s1-rerun`, two runs on one GPU. Runs are deterministic, so this is the same experiment, not a new draw.

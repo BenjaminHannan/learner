@@ -343,7 +343,8 @@ def mode_exitcap(a):
 # ---------------------------------------------------------------- direct head
 def mode_direct(a):
     rt, torch, cfg, dec, tok, lm, modules, named = setup(a)
-    fixed, order, fit, held = rows_for(a.data, a.sample_seed, fams=a.families.split(','), passes=3)
+    fixed, order, fit, held = rows_for(a.data, a.sample_seed, n_fixed=a.fresh_rows or 2000, fams=a.families.split(','),
+                                       passes=1 if a.fresh_rows else 3)  # --fresh-rows N: N distinct rows seen once each
     parts = runtime.module_dict(modules)
     dev = cfg['device']
     T = lambda r: target_text(r, a.target)
@@ -458,7 +459,7 @@ def mode_direct(a):
     curve = []
     curve.append({'update': 0, 'trainfit': score(fit), 'heldout': score(held)})
     emit('direct-eval', {'update': 0, 'fit': curve[-1]['trainfit']['correct'], 'held': curve[-1]['heldout']['correct']})
-    n_upd = min(a.updates, len(order))
+    n_upd = len(order) if a.fresh_rows else min(a.updates, len(order))
     bs = a.batch
     i = 0
     stream = order * (1 + (n_upd * bs) // len(order))
@@ -623,6 +624,7 @@ def main():
     ap.add_argument('--warmup', type=int, default=0)
     ap.add_argument('--reader-hidden', type=int, default=0, help='direct mode: widen the reader 2048->32->256 to 2048->H->256')
     ap.add_argument('--updates', type=int, default=6000)
+    ap.add_argument('--fresh-rows', type=int, default=0, help='direct mode: N distinct rows, one pass each (--updates ignored)')
     ap.add_argument('--batch', type=int, default=1)
     ap.add_argument('--lr', type=float, default=1e-3)
     ap.add_argument('--fresh-core', action='store_true')
