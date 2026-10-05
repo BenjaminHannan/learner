@@ -707,7 +707,9 @@ def mode_plan(a):
     train_params = [p for n, p in named if n.startswith(('core.', 'reader.'))] + list(ptr.parameters()) + list(op.parameters()) + \
         (list(op_tok.parameters()) if op_tok is not None else [])
     opt = torch.optim.AdamW(train_params, lr=a.lr, weight_decay=0)
-    sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / a.warmup)) if a.warmup > 0 else None
+    n_upd = len(order) if a.fresh_rows else min(a.updates, len(order))
+    cos = (lambda i: 0.5 * (1 + math.cos(math.pi * min(i, n_upd) / n_upd))) if a.lr_cosine else (lambda i: 1.0)  # --lr-cosine: decay to 0 over the run
+    sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda i: min(1, (i + 1) / max(1, a.warmup)) * cos(i)) if a.warmup > 0 or a.lr_cosine else None
 
     def fwd(c):
         h, _ = runtime.english_graph(rt, parts['core'], parts['reader'], c['f'], c['mask'])
@@ -742,7 +744,6 @@ def mode_plan(a):
         emit('plan-eval', curve[-1])
     curve = []
     evaluate(0)
-    n_upd = len(order) if a.fresh_rows else min(a.updates, len(order))
     for u in range(1, n_upd + 1):
         opt.zero_grad(set_to_none=True)
         c = L[order[u - 1]['id']]
@@ -779,6 +780,7 @@ def main():
     ap.add_argument('--reader-hidden', type=int, default=0, help='direct mode: widen the reader 2048->32->256 to 2048->H->256')
     ap.add_argument('--updates', type=int, default=6000)
     ap.add_argument('--fresh-rows', type=int, default=0, help='direct mode: N distinct rows, one pass each (--updates ignored)')
+    ap.add_argument('--lr-cosine', action='store_true', help='plan mode: cosine-decay the lr to 0 over the run (after the warmup ramp)')
     ap.add_argument('--op-attend', action='store_true', help='plan mode: each step\'s op head also reads the core state at its operand pointer')
     ap.add_argument('--batch', type=int, default=1)
     ap.add_argument('--lr', type=float, default=1e-3)
