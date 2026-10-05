@@ -73,3 +73,26 @@ LD's best core variant scored 3.1% on step1 (< 25%), so PL runs. `uc_diag_v4.py 
 - **"Core can plan; build the calculator route"** if held-out plan-exact >= 85% and fit plan-exact >= 90% (main2 core). **"Core cannot plan these chains"** if held-out plan-exact < 60%. In between: the op and pointer accuracies locate the failure.
 - Wrong if held-out plan-exact < 60% or op-sequence exact < 80%: then reader+core cannot even read which operation each sentence asks for at this budget; close the tool route and keep LM steps as the only route for the chain families.
 - Prediction (panel): held-out op-sequence exact 85-97%, pointer exact 75-95%, plan-exact 65-90%; fresh core within 10 points of main2. For comparison, SR2's LM-written steps on these families score about 93% fit and 89% held-out; the CF4-6 audit says 67% of the LM's chain misses are misreads.
+
+## LDD result, tfm (job 29-ldd-tfm, read 06:25 UTC)
+16,815 distinct single-token rows, one pass each: held-out step1 **5 / 159 (3.1%)** at the end (best 8 / 159 at 16.5k); fit 10 / 320. The generic transformer learns no first step from 8.5x more distinct rows either. Fresh core (box C) still running; the LDD mark is read when both are in.
+
+## PL result (jobs 30-plan-main2, 30-plan-fresh, read 06:33 UTC)
+Held-out = 160 new chain-family rows, after 6,000 updates (2,000 rows x 3 passes). plan = the executed plan gives the exact answer; ops = all 5 op slots right; ptr = every used pointer on the right number.
+
+| core | fit plan | held plan | held ops | held ptr |
+|---|---|---|---|---|
+| main2 core | 94/320 (29%) | 43/160 (26.9%) | 52/160 (32.5%) | 93/160 (58.1%) |
+| fresh core | 206/320 (64%) | **97/160 (60.6%)** | 98/160 (61.3%) | **146/160 (91.3%)** |
+
+Fresh core over training, held plan: 1 -> 51 -> 73 -> 97 (updates 0 / 2k / 4k / 6k), still rising. By family at 6k (fresh, held plan / ops / ptr of 40): chain_story2 39 / 40 / 39, state_update 23 / 23 / 36, chain_ops 21 / 22 / 36, var_chain 14 / 13 / 35.
+- By the marks: main2 core **"core cannot plan these chains"** (26.9% < 60%) and the wrong-if is hit (op-sequence 32.5% < 80%). Fresh core: **in between** (60.6%, just above the 60% line), with op-sequence 61.3% < 80% (the wrong-if's second clause). Not "core can plan" (needs >= 85% held and >= 90% fit).
+- Locating the failure (the in-between rule): pointers are nearly solved on new questions (91.3%); the op sequence is the limit (61.3%), and plan-exact tracks it almost one for one (97 vs 98). var_chain's ops (13 / 40) are worst: its op symbols sit in a chain of definitions, and the op head reads 8 position-pooled chunks, not the tokens themselves.
+- The prediction "fresh core within 10 points of main2" was wrong: the fresh core is 34 points better on held-out plan. main2's skills training left a core that learns this worse than a random one.
+- This is the first test in which the core learns something about individual questions that carries over to new ones: which numbers to use (91%) and, partly, which operations (61%). Every learner failed to compute even one step (LD, LDD).
+
+## Added 06:36 UTC, before it ran: PLD (does the plan route reach the mark with more distinct rows?)
+One change from PL fresh: `--fresh-rows 17000` (new in mode plan, the same 3 lines as in direct): 17,000 distinct chain rows, one pass each (about 17,000 updates), fresh core, eval every 2,000 updates on the same fit-style first 320 rows and the same 160 held-out rows. Box B, job 31-pld-fresh.
+- **"The plan route reaches the mark with more data"** if held-out plan-exact >= 85%. **"Ops stay the limit"** if held-out pointer >= 90% and op-sequence < 80%. Below 70% held-out plan: more data alone does not get there; the op head needs a redesign (read op words per token, as the pointer head does).
+- For comparison, the LM writing steps on these four families' held-out rows: SR2 seeds 1-3 86.2 / 88.1 / 86.2% (mean 86.8%), CF4-CF6 83.1 / 84.4 / 86.9% (the panel's "about 89%" in the PL marks was high).
+- Prediction: held-out plan 75-90%; pointer >= 93%; var_chain ops the slowest.

@@ -673,7 +673,8 @@ def plan_exec(v, ops, ws):
 
 def mode_plan(a):
     rt, torch, cfg, dec, tok, lm, modules, named = setup(a)
-    fixed, order, fit, held = rows_for(a.data, a.sample_seed, fams=list(CHAIN), passes=3)
+    fixed, order, fit, held = rows_for(a.data, a.sample_seed, n_fixed=a.fresh_rows or 2000, fams=list(CHAIN),
+                                       passes=1 if a.fresh_rows else 3)  # --fresh-rows N: N distinct rows seen once each
     parts = runtime.module_dict(modules)
     dev = cfg['device']
     F = torch.nn.functional
@@ -736,7 +737,7 @@ def mode_plan(a):
         emit('plan-eval', curve[-1])
     curve = []
     evaluate(0)
-    n_upd = min(a.updates, len(order))
+    n_upd = len(order) if a.fresh_rows else min(a.updates, len(order))
     for u in range(1, n_upd + 1):
         opt.zero_grad(set_to_none=True)
         c = L[order[u - 1]['id']]
@@ -749,7 +750,7 @@ def mode_plan(a):
         opt.step()
         if sched is not None:
             sched.step()
-        if u in (2000, 4000) or u == n_upd:
+        if (u % 2000 == 0 and (u <= 4000 or a.fresh_rows)) or u == n_upd:
             evaluate(u)
     return {'curve': curve}
 
