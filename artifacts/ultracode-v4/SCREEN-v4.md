@@ -167,3 +167,20 @@ CRD with seeds 4-9 (jobs 43-crdc-s4..s9; box D seeds 4-6, box B seeds 7-9), pair
 - **"The thinker decides each chain answer"** if plan_swap lowers chain held-out by >= 50 rows of 160 on every seed.
 - Wrong if the mean fit is < 272, or plan_swap costs < 25 rows on any seed.
 - Prediction: fit 288-298, held-out 280-295, chain held 150-159 on every seed, plan_swap leaves chain rows under 6.
+
+## CRD result, 3 seeds (jobs 38-crd-s1..s3, read 11:24 UTC)
+| run | fit | held-out | chain fit / held (held of 160) | planner plan-exact, chain held | other-4 fit / held | plan_swap: chain held | SR2 same seed: fit / held / chain held |
+|---|---|---|---|---|---|---|---|
+| CRD1 | 295 | 288 | 137 / 158 | 159 | 158 / 130 | 2 | 271 / 254 / 138 |
+| CRD2 | 293 | 291 | 140 / 152 | 154 | 153 / 139 | 2 | 287 / 267 / 141 |
+| CRD3 | 302 | 281 | 153 / 160 | 160 | 149 / 121 | 2 | 269 / 253 / 138 |
+| **mean** | **296.7 (92.7%)** | **286.7 (89.6%)** | 3-seed chain held sum **470 / 480** | 473 | other-4 fit sum 460 | 2 | 275.7 / 258.0 / sum 417 |
+
+- By the marks: **REACHES THE MARK** (mean fit 296.7 >= 272, lowest 293 >= 256). Chain held-out sum 470 vs SR2's 417: **"beats"** (>= 432). Other-4 fit sum 460 vs SR2's 420: not "within 15 rows" but 40 rows *higher* (the mark guarded against a loss). **"The thinker decides each chain answer"**: plan_swap takes chain held-out from 158 / 152 / 160 to 2 / 2 / 2 (>= 50 rows on every seed). The LM speaks the plan: chain accuracy is within 2 rows of the planner's own plan-exact on every seed. None of the "wrong" conditions holds.
+- Caveat, from LMDC below: the planner trains on 17,000 chain rows the SR2 model never saw, so the gain over SR2 on chain rows is the extra practice, not the route. What the route shows is that the reasoning for chain questions can move from the LM to the thinker with no loss.
+- Other lesions (held-out, rows of 320): family-mean +3 / -9 / -2, same-family swap -4 / -7 / 0, global-mean -121 / -126 / -109.
+
+## LMDC partial: seeds 1-2 (jobs 41-lmdc-s1, 41-lmdc-s2, read 11:24 UTC)
+The LM writing SR2's chain steps, trained on exactly PLCD's 17,000 rows with the cosine decay: held-out **158 / 160 and 158 / 160** (98.8%); fit 314 / 320 and 317 / 320. Paired with PLCD (plan + calculator, same rows and schedule): 155 and 159, so PLCD is behind by 3 and ahead by 1.
+- By the marks (seed 3 still running): **"the LM's steps catch up with the data"** (mean >= 152 already holds unless LMDC3 is below 140), and **not** "the plan route beats the LM's steps at matched data and schedule". PLCD's 97.6% vs SR2's 86.8% was the 17,000 distinct rows and the decay, not the route. The prediction (140-150) was too low.
+- So at equal practice the 1.2B LM writing steps and the small thinker's plan are level on these chain kinds (PLS: 82.8 vs 85.8 at the screen's practice; PLCD/LMDC: about 98-99 at 17,000 rows).
