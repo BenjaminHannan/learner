@@ -271,3 +271,6 @@ PC idle, marker released. Caveat: one X launch failed from my script bug and was
 
 ## 00:18Z fix screen v3 (plateau thread, spec artifacts/fix-screen-v3/PC-JOB.md @ 99b883729): staged, smoke launched, PC then went unreachable
 Staged the branch's skills_pretrain_v1.py (sha EA077199...) on the PC and launched the 1-min smoke (--lm-lora 8); variable names checked for case-insensitive clashes (none; script path now $SCRIPT, loop variable $seed). Then BensPC stopped answering ssh/ping (timeouts since ~00:10Z), so I could not read the smoke output and have NOT started the S and A1-A3 queue. Waiting for the PC to return; the smoke (if it ran) holds no checkpoint and ends by itself.
+
+## 00:59Z START fix screen v3 on BensPC (PC is back; spec artifacts/fix-screen-v3/PC-JOB.md @ 99b883729)
+Smoke passed: lm-lora rank 8 on 92 linears, 5,554,176 extra params, lm-lora-first-step A_with_grad 92 == A_total 92 (hooks fire everywhere), SKILLS-RESULT printed. Queue launched: S (shuffled-core lesion, eval only, ~2 min) then A1-A3 (rank-8 LoRA on the frozen LM, 6000 updates each, ~20-30 min each), one at a time, ~1.5 h. No checkpoints written; PC has ~120 GB free; the LoRA is an opt-in flag, shared LM setup unchanged.
