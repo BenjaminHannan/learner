@@ -258,3 +258,26 @@ CRDC on these seeds: fit 303 / 284 / 298 / 309 / 295 / 295 (mean 297.3); held 29
 - **Wrong** (the Reader's squeeze is not what keeps the thinker out) if mean held is within 5 of CRDC AND the family-mean lesion costs under 16 rows (5 points) on every seed.
 - Chain held is reported, not marked: the planner reads through the same new layout, and a drop below 150 mean would mean the direct map hurts the planner.
 - Prediction: within 5 of CRDC, and the family-mean lesion under 16 rows. PXW (a 256-wide reader for the planner) and the number-pointer result say the door is not the limit, and the talker reads the question itself.
+
+## WD result, 3 seeds (jobs 45-wd-s1..s3 on Vast box E, read 22:40 UTC) — wide doors help a lot; the thinker still mostly switches by family
+SR2 plus both doors at 2048 (`--reader-hidden 2048 --prefix-hidden 2048`), paired with SR2's SRB1-SRB3. Same rows, recipe and seeds; all rc 0, 55-58 minutes each with three on one RTX 5090.
+
+| seed | SR2 fit | WD fit | SR2 held | WD held | WD family-mean lesion, fit | WD family-mean lesion, held |
+|---|---|---|---|---|---|---|
+| 1 | 271 | **297** | 254 | **281** | -24 (7.5 pts) | -15 |
+| 2 | 287 | **300** | 267 | **277** | -17 (5.3 pts) | -2 |
+| 3 | 269 | **305** | 253 | **295** | -25 (7.8 pts) | -30 |
+| mean | 275.7 | **300.7 (94.0%)** | 258.0 | **284.3 (88.8%)** | -22.0 | -15.7 |
+
+- **"Wide doors help the score": YES** (mean fit 300.7 >= 284; +25.0 rows, ahead on 3 of 3). Held-out +26.3 rows, ahead on 3 of 3.
+- **"The thinker carries each question": no** (the family-mean lesion costs 5.3-7.8 points of fit, under 10 on every seed). **Not wrong** either (over 5 points on every seed; SR2/CF: 1.2-5.3). The thinker's own per-question content matters a little more than before; it is still mostly a family switch.
+- My prediction (fit within 8 rows of SR2, lesion under 5 points) was **wrong**.
+- Where the held-out gain comes from (3-seed sums, SR2 -> WD): seq_cycle 61 -> 98 (+37), state_update 91 -> 115 (+24), cipher_map 95 -> 111 (+16), chain_ops 104 -> 111 (+7); the other four within 4 rows. Two of the three big gains are content-lookup kinds that the planner's pointers could not do (DIAG-v4 PX/PXH).
+- Shown on 3 seeds; it needs the 6-seed confirmation below before it is kept. Both doors changed at once (Ben's ask), so which door carries the gain is untested; MH (reader side only, on top of CRDC) is running.
+
+## Added 22:45 UTC, before they ran: WDC, the 6-seed confirmation of WD (seeds 4-9)
+Same arm as WD, seeds 4-9, paired with SR2's confirmation CF4-CF9 (fit 269 / 262 / 278 / 286 / 265 / 281, mean 273.5; held 250 / 256 / 265 / 266 / 261 / 262, mean 260.0; CF8 = its rerun). Runs on Vast boxes E and G after the MH runs (Ben's PC is full with the swarm runs until about 01:30 UTC; the boxes are already rented).
+- **CONFIRMED "wide doors help"** if mean fit >= 281.5 (CF + 8) AND mean held >= 268.0 (CF + 8) AND ahead of CF on fit on >= 5 of 6 paired seeds.
+- **Wrong** (the screen gain was seed luck) if the mean fit gain is under 3 rows or WD is ahead on fit on 3 or fewer seeds.
+- In between: inconclusive. The family-mean lesion is reported per seed, with the 10-point mark as before.
+- Prediction: fit gain +15 to +30, held gain +15 to +30, ahead on 6 of 6; family-mean lesion 4-9 points.
