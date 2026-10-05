@@ -19,3 +19,13 @@ python $U $COMMON --out $P/artifacts/uc/42-pxw-s1 --fresh-rows 17000 > $P/artifa
 python $U $COMMON --reader-hidden 2048 --out $P/artifacts/uc/44-pxw2048-s1 --fresh-rows 17000 > $P/artifacts/uc/44-pxw2048-s1.stdout.txt 2>&1
 ```
 Results: push each run's `DIAG-plan.json` and stdout (`42-pxw-s1`, `44-pxw2048-s1`) to `artifacts/ultracode-v4/results/<run>/` on branch `claude/ultracode-learning-blocker-gh011t` (`git add -f`; artifacts/ is gitignored). Pass marks: `artifacts/ultracode-v4/DIAG-v4.md`, sections "PXW" and "PXW2048", written before the runs.
+
+## Added 12:25 UTC: 48-pxh-s1 (two-hop content-addressed pointer; marks: DIAG-v4.md section "PXH")
+Needs commit with `--ptr-hops` (after 01b222e4a). Reader 32 (no `--reader-hidden`), else the same as PXW; about 11 GB, so not alongside another 11 GB job on the 16 GB card (or run it on the M1 Pro).
+```
+COMMON_H="--mode plan --warmup 200 --fresh-core --op-attend --lr-cosine --root $P --data $D --parent-path $M2 --plan-fams cipher_map,fewshot_number_rule,group_induct,seq_cycle --sample-seed 1 --ptr-hops 2"
+# smoke (~2 min): must print RESULT plan-ptr-hops {"hops": 2, "added_params": 116678}, plan-eval, then DIAG-DONE plan
+python $U $COMMON_H --out $P/artifacts/uc/48-pxh-smoke --fresh-rows 200
+python $U $COMMON_H --out $P/artifacts/uc/48-pxh-s1 --fresh-rows 17000 > $P/artifacts/uc/48-pxh-s1.stdout.txt 2>&1
+```
+Push `DIAG-plan.json` and stdout to `artifacts/ultracode-v4/results/48-pxh-s1/`.

@@ -18,6 +18,8 @@ Same stack and rows as the fit screens (skills_pretrain_v1.py: main2, worst-8 fa
                   --plan-fams adds cipher_map / fewshot_number_rule / group_induct / seq_cycle (op set gains CAT = copy the pointed token);
                   --screen-rows trains on the skills screen's own practised rows (its 8-family draw kept to --plan-fams);
                   --round-routers (needs --fresh-core) gives each MoE block its own router per core round (experts shared)
+                  --ptr-hops 2 adds a content-addressed second hop to the pointers: slot k reads the token its first hop picks and asks the
+                  keys of all tokens with that state (zero-init query, so update 0 equals the fixed-query pointer)
 Prints one line per result starting with RESULT and writes OUT/DIAG-<mode>.json.
 """
 import argparse
@@ -838,9 +840,19 @@ def mode_plan(a):
     torch.manual_seed(a.sample_seed)
     ptr, op = torch.nn.Linear(256, 6).to(dev), torch.nn.Linear(2048, 5 * len(OPS)).to(dev)
     op_tok = torch.nn.Linear(256, len(OPS)).to(dev) if a.op_attend else None  # --op-attend: step j's op also reads the token its operand pointer picks
+    hop1 = hop_q = hop_k = ar6 = None
+    if a.ptr_hops == 2:  # --ptr-hops 2: own seed, drawn after the heads above; the RNG state after is the flag-off one
+        with torch.random.fork_rng(devices=list(range(torch.cuda.device_count()))):
+            torch.manual_seed(a.sample_seed + 2 * 10 ** 6)
+            hop1, hop_q, hop_k = torch.nn.Linear(256, 6).to(dev), torch.nn.Linear(256, 6 * 64).to(dev), torch.nn.Linear(256, 64).to(dev)
+        torch.nn.init.zeros_(hop_q.weight)  # content term is exactly 0 at update 0
+        torch.nn.init.zeros_(hop_q.bias)
+        ar6 = torch.arange(6, device=dev)
+        emit('plan-ptr-hops', {'hops': 2, 'added_params': sum(p.numel() for m in (hop1, hop_q, hop_k) for p in m.parameters())})
     train_params = [p for n, p in named if n.startswith(('core.',) if a.reader_hidden else ('core.', 'reader.'))] + \
         (list(parts['reader'].parameters()) if a.reader_hidden else []) + list(ptr.parameters()) + list(op.parameters()) + \
-        (list(op_tok.parameters()) if op_tok is not None else [])
+        (list(op_tok.parameters()) if op_tok is not None else []) + \
+        [p for m in (hop1, hop_q, hop_k) if m is not None for p in m.parameters()]
     if rr:  # `named` was built before the patch: drop the replaced routers (now unused), add the per-round ones
         train_params = [p for p in train_params if id(p) not in rr['old_ids']] + rr['params']
     opt = torch.optim.AdamW(train_params, lr=a.lr, weight_decay=0)
@@ -852,6 +864,10 @@ def mode_plan(a):
         h, _ = runtime.english_graph(rt, parts['core'], parts['reader'], c['f'], c['mask'])
         z = F.layer_norm(h.float(), (256,))
         lg, ol = ptr(z[0]), op(F.adaptive_avg_pool1d(z[0].T[None], 8)[0].T.reshape(1, -1)).view(5, len(OPS))
+        if hop1 is not None:  # slot k: first hop = softmax over tokens of hop1(z)[:, k] -> its state s_k -> query k -> dot the keys of all tokens
+            s6 = F.softmax(hop1(z[0]), 0).T @ z[0]
+            qk = hop_q(s6).view(6, 6, 64)[ar6, ar6]  # slot k uses its own block of the projection
+            lg = lg + hop_k(z[0]) @ qk.T / 8.0
         if op_tok is not None:
             ol = ol + op_tok(F.softmax(lg[:, 1:].detach(), 0).T @ z[0])
         return lg, ol
@@ -933,9 +949,15 @@ def main():
     ap.add_argument('--fresh-core', action='store_true')
     ap.add_argument('--round-routers', action='store_true', help='plan mode (needs --fresh-core): each MoE block gets one router per core round '
                     '(Chain-of-Experts), experts stay shared; prints plan-round-experts (top-2 expert counts per block and round on the held-out rows) after each eval')
+    ap.add_argument('--ptr-hops', type=int, default=1, help='plan mode: 2 = pointer logits also get a content-addressed second hop '
+                    '(slot k\'s first-hop token state -> query -> keys of all tokens; zero-init query); 1 = fixed query per slot')
     a = ap.parse_args()
     if a.round_routers and a.mode != 'plan':
         raise SystemExit('--round-routers is plan mode only')
+    if a.ptr_hops not in (1, 2):
+        raise SystemExit('--ptr-hops must be 1 or 2, got %d' % a.ptr_hops)
+    if a.ptr_hops == 2 and a.mode != 'plan':
+        raise SystemExit('--ptr-hops 2 is plan mode only')
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
