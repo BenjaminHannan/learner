@@ -125,6 +125,43 @@ def encode(tokenizer, row, torch, device):
             torch.tensor([labels], device=device, dtype=torch.long))
 
 
+def direct_reader_swap(torch, reader, opt, named, feats):
+    """--direct-reader: reader.proj = LN -> Linear(2048,32) -> GELU -> Linear(32,256) becomes LN -> Linear(2048,256), keeping the
+    same LayerNorm module (its weights and Adam state carry over). The new Linear is the ridge least-squares fit to the old proj's
+    outputs on `feats` (a list of [N,2048] frozen-LM states, one per question): fitted on the first 7/8 of the questions, R^2
+    also reported on the last 1/8. The four old Linear tensors leave the optimizer; the new Linear gets its own group (fresh Adam
+    state, the optimizer's defaults). Returns (named, info)."""
+    seq = reader.proj
+    ln, l1, l3 = seq[0], seq[1], seq[3]
+    cut = len(feats) - len(feats) // 8
+    with torch.no_grad():
+        X = [torch.cat([ln(f.float()) for f in part]).double() for part in (feats[:cut], feats[cut:])]
+        Y = [torch.cat([seq(f.float()) for f in part]).double() for part in (feats[:cut], feats[cut:])]
+        Xa = [torch.cat([x, torch.ones(len(x), 1, dtype=x.dtype, device=x.device)], 1) for x in X]
+        A = Xa[0].T @ Xa[0]
+        A += 1e-3 * A.diagonal().mean() * torch.eye(A.shape[0], dtype=A.dtype, device=A.device)
+        Wb = torch.linalg.solve(A, Xa[0].T @ Y[0])
+
+        def r2(x, y):
+            return float(1 - ((y - x @ Wb) ** 2).sum() / ((y - y.mean(0)) ** 2).sum())
+        lin = torch.nn.Linear(l1.in_features, l3.out_features).to(l1.weight.device)
+        lin.weight.copy_(Wb[:-1].T.float())
+        lin.bias.copy_(Wb[-1].float())
+        info = {'questions': len(feats), 'fit_tokens': len(Xa[0]), 'check_tokens': len(Xa[1]),
+                'r2_fit': round(r2(Xa[0], Y[0]), 4), 'r2_check': round(r2(Xa[1], Y[1]), 4) if len(Xa[1]) else None}
+    old = (l1.weight, l1.bias, l3.weight, l3.bias)
+    gone = {id(p) for p in old}
+    for g in opt.param_groups:
+        g['params'] = [p for p in g['params'] if id(p) not in gone]
+    for p in old:
+        opt.state.pop(p, None)
+    opt.add_param_group({'params': [lin.weight, lin.bias]})
+    reader.proj = torch.nn.Sequential(ln, lin)
+    named = [(n, p) for n, p in named if id(p) not in gone] + [('reader.direct.weight', lin.weight), ('reader.direct.bias', lin.bias)]
+    info['params'] = sum(p.numel() for p in reader.parameters())
+    return named, info
+
+
 # ---------------------------------------------------------------- --plan-route: frozen planner + exact calculator
 class Planner:
     """The uc_diag_v4 --mode plan --op-attend learner: its own reader + core and three heads, no LM in its loss.
@@ -553,7 +590,10 @@ def main():
     ap.add_argument('--wd', type=float, default=0.0, help='AdamW weight decay (parent recipe 0)')
     ap.add_argument('--rounds', type=int, default=4, help='latent loop rounds (shared weights; parent used 4)')
     ap.add_argument('--reader-hidden', type=int, default=0, help='widen the reader 2048->32->256 bottleneck to this width; function-preserving (new units feed zero weights), new weights get fresh Adam state; checkpoint then has the wider shape')
+    ap.add_argument('--direct-reader', action='store_true', help='merged Hearer+Reader: drop the reader 2048->32->256 and let the thinker read the frozen LM\'s states through its LayerNorm + one Linear 2048->256; the Linear starts as the least-squares fit to the old reader on the first 256 distinct training questions (R^2 logged), fresh Adam state; the --plan-route planner gets the same layout (fresh, as before)')
     a = ap.parse_args()
+    if a.direct_reader and (a.reader_hidden or a.lm_lora or a.eval_only):
+        raise SystemExit('--direct-reader excludes --reader-hidden, --lm-lora and --eval-only')
     STEPS['on'] = a.steps
     STEPS['rich'] = a.steps_rich
     STEPS['seq2'] = a.seq_steps_v2
@@ -822,6 +862,21 @@ def main():
         else:
             rows = rows_all[::stride][:a.updates]
         print(json.dumps({'event': 'skills-start', 'train_rows': len(rows_all), 'used': len(rows), 'stride': stride}), flush=True)
+        DR = None
+        if a.direct_reader:  # before the planner, so its deep copy of the reader has the new layout
+            seen_, feats_ = set(), []
+            for r_ in rows:
+                if r_['prompt'] in seen_:
+                    continue
+                seen_.add(r_['prompt'])
+                enc_ = encode(tokenizer, r_, torch, cfg['device'])
+                if enc_:
+                    feats_.append(rt.compare.extract_question_features(lm, enc_[0], enc_[1], 'contextual', torch)[0])
+                if len(feats_) == 256:
+                    break
+            named, DR = direct_reader_swap(torch, runtime.module_dict(modules)['reader'], opt, named, feats_)
+            del feats_
+            print(json.dumps({'event': 'direct-reader', **DR}), flush=True)
         plan_info = None
         if a.plan_route:  # frozen planner for the chain families, trained first (not in `named`, not in opt, not counted in t0/--minutes)
             import uc_diag_v4 as ud  # its pure helpers only: parse_plan / plan_labels / to_int / plan_exec / reset_fresh
@@ -921,7 +976,7 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'lora_lr_mult': a.lora_lr_mult if a.lm_lora else None, 'gen_fix': a.gen_fix, 'steps': a.steps, 'steps_rich': a.steps_rich, 'seq_steps_v2': a.seq_steps_v2, 'answer_only_fams': a.answer_only_fams or None, 'save_texts': a.save_texts, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'plan_route': a.plan_route or None, 'plan_talk': a.plan_talk, 'plan_pretrain': plan_info, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'lora_lr_mult': a.lora_lr_mult if a.lm_lora else None, 'gen_fix': a.gen_fix, 'steps': a.steps, 'steps_rich': a.steps_rich, 'seq_steps_v2': a.seq_steps_v2, 'answer_only_fams': a.answer_only_fams or None, 'save_texts': a.save_texts, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'plan_route': a.plan_route or None, 'plan_talk': a.plan_talk, 'plan_pretrain': plan_info, 'direct_reader': DR, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'final_lesions': lesions, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}
