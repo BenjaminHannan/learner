@@ -231,3 +231,14 @@ SR2 + `--plan-route 17000 --plan-cosine`, seeds 4-9, paired with SR2's confirmat
 - **The thinker decides every chain answer** on every seed: plan_swap takes chain held from 152-159 to 2-3 (drop >= 149 rows; mark >= 50).
 - The planner alone gets 154-159 of 160 chain plans right (plan_correct); chain held is within 2 rows of that on every seed, so the talker almost always just says the planner's value.
 - Held-out on the other 4 kinds (160 rows): CRDC 130.7 vs CF 121.8 on average (+8.9). Suggested, untested: the core no longer spends capacity on chain rows.
+
+## Result 13:10 UTC: LMDC, 3 seeds (marks fixed 09:48 UTC) — the LM's steps catch up with the data
+| seed | LMDC held (of 160) | PLCD held, same seed | gap (PLCD - LMDC) | LMDC fit (of 320) |
+|---|---|---|---|---|
+| 1 | 158 | 155 | -3 | 314 |
+| 2 | 158 | 159 | +1 | 317 |
+| 3 | 158 | 155 | -3 | 316 |
+| mean | **158.0 (98.75%)** | 156.3 | -1.7 | 315.7 |
+- **"The LM's steps catch up with the data"** (mean >= 152): yes. **"The plan route beats the LM's steps at matched data and schedule"** (>= 5 rows ahead on each seed): no; the LM is ahead on 2 of 3.
+- So PLCD's lead over SR2 (97.6% vs 86.8% on these rows) was the 17,000 distinct rows plus the decay, not the route. At equal data the thinker-plans route is level with the LM writing its own steps (shown, 3 seeds); its value is that the thinker, not the LM, decides each chain answer (CRD/CRDC plan_swap lesions), not that it is more accurate.
+- My prediction (140-150) was wrong: with varied practice the LM's misreads almost vanish (2 misses of 160 on every seed, one chain_ops and one var_chain).
