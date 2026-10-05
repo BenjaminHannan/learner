@@ -1,6 +1,6 @@
 # Fit screen v4 (ultracode): marks, written before any arm ran
 
-Written 2026-10-05 02:20 UTC (10:20 PM ET Oct 4). Fast lane. Boxes: Vast RTX 5090 A (queue/) and B (queue/b/).
+Written 2026-10-05 02:13 UTC (10:13 PM ET Oct 4). Fast lane. Boxes: Vast RTX 5090 A (queue/) and B (queue/b/).
 
 ## What changed since screens v1-v3
 - Every eval now uses `--gen-fix`: generation sees the training layout `[pooled][prompt][BOS]`. Before, generation saw the prompt twice. Shown in job 06: main2 worst-8 trainfit 121 -> 161 / 320, held-out 89 -> 123 / 320, all 1,360 in_dist 68.5% -> 74.6%.
