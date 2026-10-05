@@ -9,7 +9,7 @@ S=$P/scripts/cap256_launch/skills_pretrain_v1.py
 W8=chain_ops,state_update,cipher_map,chain_story2,var_chain,seq_cycle,fewshot_number_rule,group_induct
 FIT="--families $W8 --updates 6000 --eval-every 3000 --dev-n 320 --eval-at-start --fixed-rows 2000 --passes 3"
 COMMON="--root $P --data $D --parent-path $M2 --no-checkpoint --minutes 170 --copy-path --gen-fix $FIT --steps --steps-rich --seq-steps-v2 --reader-hidden 2048 --prefix-hidden 2048 --final-lesions --save-texts"
-# smoke (~2 min): must print the widened reader/prefix lines and SKILLS-RESULT
+# smoke (~2 min): must print events reader-widened and prefix-widened (to 2048) and SKILLS-RESULT
 python $S --root $P --data $D --parent-path $M2 --no-checkpoint --copy-path --gen-fix --families $W8 --fixed-rows 20 --passes 2 --updates 40 --eval-every 40 --dev-n 16 --sample-seed 9 --steps --reader-hidden 2048 --prefix-hidden 2048 --out $P/artifacts/uc/45-wd-smoke
 # seeds 1 and 2 together, then seed 3
 python $S $COMMON --sample-seed 1 --out $P/artifacts/uc/45-wd-s1/WD1 > $P/artifacts/uc/45-wd-s1.stdout.txt 2>&1 &
