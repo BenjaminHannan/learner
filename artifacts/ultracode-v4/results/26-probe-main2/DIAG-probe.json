@@ -1,0 +1,90 @@
+{
+ "args": {
+  "mode": "probe",
+  "root": "/job/repo/pipeline",
+  "data": "/job/data",
+  "out": "/job/repo/pipeline/artifacts/uc/26-probe-main2",
+  "parent_path": "/job/repo/skills/main2/final-checkpoint.pt",
+  "sample_seed": 1,
+  "chan_per_family": 8,
+  "chan_steps": 150,
+  "chan_lr": 0.02,
+  "head": "mlp",
+  "families": "chain_ops,state_update,cipher_map,chain_story2,var_chain,seq_cycle,fewshot_number_rule,group_induct",
+  "target": "answer",
+  "learner": "core",
+  "warmup": 0,
+  "updates": 6000,
+  "batch": 1,
+  "lr": 0.001,
+  "fresh_core": false
+ },
+ "result": {
+  "norms": {
+   "q": 677.217,
+   "pos": 11.358,
+   "h4": 17.081
+  },
+  "token": {
+   "f": {
+    "knn": 0.4334,
+    "ridge": 0.9849,
+    "coverage": 0.9921,
+    "n": 1389,
+    "ridge_lambda_mult": 0.01
+   },
+   "r32": {
+    "knn": 0.1764,
+    "ridge": 0.1102,
+    "coverage": 0.9921,
+    "n": 1389,
+    "ridge_lambda_mult": 0.01
+   },
+   "e": {
+    "knn": 0.1569,
+    "ridge": 0.1037,
+    "coverage": 0.9921,
+    "n": 1389,
+    "ridge_lambda_mult": 0.01
+   },
+   "h1": {
+    "knn": 0.0857,
+    "ridge": 0.0727,
+    "coverage": 0.9921,
+    "n": 1389,
+    "ridge_lambda_mult": 0.01
+   },
+   "h4": {
+    "knn": 0.0893,
+    "ridge": 0.072,
+    "coverage": 0.9921,
+    "n": 1389,
+    "ridge_lambda_mult": 0.01
+   }
+  },
+  "row": {
+   "x0": {
+    "f": 0.4556,
+    "r32": 0.2209,
+    "e": 0.2712,
+    "h1": 0.168,
+    "h4": 0.1666
+   },
+   "step1": {
+    "f": 0.2155,
+    "r32": 0.0918,
+    "e": 0.0848,
+    "h1": 0.0874,
+    "h4": 0.085
+   },
+   "answer": {
+    "f": 0.0317,
+    "r32": -0.015,
+    "e": -0.0254,
+    "h1": 0.0089,
+    "h4": 0.0075
+   }
+  }
+ },
+ "minutes": 1.1
+}

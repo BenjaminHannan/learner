@@ -1,0 +1,122 @@
+{
+ "args": {
+  "mode": "direct",
+  "root": "/job/repo/pipeline",
+  "data": "/job/data",
+  "out": "/job/repo/pipeline/artifacts/uc/25-ld-smoke-core",
+  "parent_path": "/job/repo/skills/main2/final-checkpoint.pt",
+  "sample_seed": 1,
+  "chan_per_family": 8,
+  "chan_steps": 150,
+  "chan_lr": 0.02,
+  "head": "vocab",
+  "families": "chain_ops,state_update,chain_story2,var_chain",
+  "target": "step1",
+  "learner": "core",
+  "warmup": 20,
+  "updates": 60,
+  "batch": 1,
+  "lr": 0.001,
+  "fresh_core": false
+ },
+ "result": {
+  "classes": 268,
+  "curve": [
+   {
+    "update": 0,
+    "trainfit": {
+     "correct": 0,
+     "n": 320,
+     "by_family": {
+      "chain_story2": [
+       0,
+       79
+      ],
+      "var_chain": [
+       0,
+       80
+      ],
+      "state_update": [
+       0,
+       81
+      ],
+      "chain_ops": [
+       0,
+       80
+      ]
+     }
+    },
+    "heldout": {
+     "correct": 0,
+     "n": 159,
+     "by_family": {
+      "chain_ops": [
+       0,
+       40
+      ],
+      "chain_story2": [
+       0,
+       40
+      ],
+      "state_update": [
+       0,
+       40
+      ],
+      "var_chain": [
+       0,
+       39
+      ]
+     }
+    }
+   },
+   {
+    "update": 60,
+    "trainfit": {
+     "correct": 5,
+     "n": 320,
+     "by_family": {
+      "chain_story2": [
+       0,
+       79
+      ],
+      "var_chain": [
+       1,
+       80
+      ],
+      "state_update": [
+       4,
+       81
+      ],
+      "chain_ops": [
+       0,
+       80
+      ]
+     }
+    },
+    "heldout": {
+     "correct": 4,
+     "n": 159,
+     "by_family": {
+      "chain_ops": [
+       2,
+       40
+      ],
+      "chain_story2": [
+       0,
+       40
+      ],
+      "state_update": [
+       1,
+       40
+      ],
+      "var_chain": [
+       1,
+       39
+      ]
+     }
+    }
+   }
+  ]
+ },
+ "minutes": 0.8
+}
