@@ -44,6 +44,7 @@ LORA = {'on': True}
 SHUF = {'prev': None, 'on': False}
 CHAT = {}
 TWO = {'ce2': []}
+AUX = {}
 
 def encode(tokenizer, row, torch, device):
     ids = list(tokenizer.encode(row['prompt'], add_special_tokens=False)) + [common.EOS_ID]
@@ -136,6 +137,10 @@ def main():
     ap.add_argument('--no-front', action='store_true', help='with --copy-path --gen-fix: drop the 8 front vectors (use with --back)')
     ap.add_argument('--two-path', type=float, default=0.0, help='with --copy-path --gen-fix: add this weight x answer CE with the LM seeing only the core vectors (no question words)')
     ap.add_argument('--accum', type=int, default=1, help='rows per optimizer update (gradient accumulation); --updates counts rows')
+    ap.add_argument('--moe-revive', type=float, default=0.0, help='copy expert 0 into experts 2-7 and give the zero routers a random init with this std (function-preserving at the start)')
+    ap.add_argument('--aux-weight', type=float, default=0.0, help='add this weight x the MoE load-balancing aux term to the loss (it is computed but excluded today)')
+    ap.add_argument('--fresh-adam', action='store_true', help='start Adam moments from zero instead of the parent state')
+    ap.add_argument('--wd', type=float, default=0.0, help='AdamW weight decay (parent recipe 0)')
     ap.add_argument('--rounds', type=int, default=4, help='latent loop rounds (shared weights; parent used 4)')
     ap.add_argument('--reader-hidden', type=int, default=0, help='widen the reader 2048->32->256 bottleneck to this width; function-preserving (new units feed zero weights), new weights get fresh Adam state; checkpoint then has the wider shape')
     a = ap.parse_args()
@@ -167,6 +172,36 @@ def main():
         opt = runtime.make_optimizer(torch, [p for _, p in named])
         runtime.restore_adam(torch, opt, saved, named)
         participation, nonzero = Counter(saved['participation']), Counter()
+        if a.moe_revive:
+            # main2's routers are exactly zero (zero init, equal clones, aux not in the loss), so every token goes to
+            # experts 0+1 with weight 0.5 each and experts 2-7 never train. Copy expert 0 into 2-7 (function-preserving:
+            # all experts equal, so any routing gives the same output) and give each router a small random init so
+            # tokens spread out and the experts can diverge.
+            core_ = runtime.module_dict(modules)['core']
+            g = torch.Generator(device='cpu').manual_seed(4000 + (a.sample_seed or 0))
+            with torch.no_grad():
+                for block in core_.blocks:
+                    mlp = block.mlp
+                    for e_ in mlp.experts[2:]:
+                        e_.load_state_dict(mlp.experts[0].state_dict())
+                    mlp.router.weight.copy_(torch.randn(mlp.router.weight.shape, generator=g) * a.moe_revive)
+            for n_, p_ in named:
+                if '.mlp.experts.' in n_ and int(n_.split('.mlp.experts.')[1].split('.')[0]) >= 2:
+                    opt.state.pop(p_, None)
+            print(json.dumps({'event': 'moe-revived', 'router_std': a.moe_revive}), flush=True)
+        if a.aux_weight:
+            o_graph = runtime.english_graph
+
+            def graph_aux(*x, **k):
+                h_, aux_ = o_graph(*x, **k)
+                AUX['v'] = aux_
+                return h_, aux_
+            runtime.english_graph = graph_aux
+        if a.fresh_adam:
+            opt.state.clear()
+        if a.wd:
+            for g_ in opt.param_groups:
+                g_['weight_decay'] = a.wd
         if a.lm_lora:
             r_, lora = a.lm_lora, torch.nn.ModuleDict()
             g = torch.Generator(device='cpu').manual_seed(3000 + (a.sample_seed or 0))
@@ -309,6 +344,8 @@ def main():
                 x = (h, torch.ones_like(h, dtype=torch.bool), mask, (1, h.shape[1]))
                 prefix = dec_.adapter.project_training(*x)
                 per, pred = rt_.human_loss(lm_, prefix, target, dec_.bos_id, dec_.eos_id, True, True)
+                if a.aux_weight and AUX.get('v') is not None and AUX['v'].requires_grad:
+                    per = per + a.aux_weight * AUX['v']
                 if a.two_path:
                     alone = with_prompt(o_train(*x), h, x, alone=True)
                     per2 = rt_.human_loss(lm_, alone, target, dec_.bos_id, dec_.eos_id, True, False)
@@ -408,7 +445,7 @@ def main():
             ck = out / 'final-checkpoint.pt'
             torch.save(payload, ck)
             ck_sha = common.digest(ck)
-        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'gen_fix': a.gen_fix, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
+        res = {'updates_done': done, 'rounds': a.rounds, 'pointer': a.pointer, 'reader_hidden': a.reader_hidden or None, 'prefix_hidden': a.prefix_hidden or None, 'zero_pool': a.zero_pool, 'shuffle_pool': a.shuffle_pool, 'lm_lora': a.lm_lora or None, 'gen_fix': a.gen_fix, 'back': a.back or None, 'chat': a.chat, 'no_front': a.no_front, 'two_path': a.two_path or None, 'accum': a.accum, 'moe_revive': a.moe_revive or None, 'aux_weight': a.aux_weight or None, 'fresh_adam': a.fresh_adam, 'wd': a.wd or None, 'sample_seed': a.sample_seed, 'fixed_rows': a.fixed_rows, 'passes': a.passes,
                'families': a.families or None, 'stride': stride, 'parent_seed': a.parent_seed, 'lr_mult': a.lr_mult,
                'dev_n': a.dev_n, 'final_dev': final, 'in_dist_curve': curve, 'parent_path': a.parent_path or None,
                'checkpoint_sha256': ck_sha, 'minutes': round((time.time() - t0) / 60, 1)}
