@@ -295,3 +295,18 @@ Jobs 49-plr-s1..s6 on Vast box G (Ben said rent at 21:30 UTC because his PC was 
 - Pass (mean >= 137.3 and ahead on >= 5): **no**. **Wrong mark hit:** mean gain -1.3 (< 1.6) and ahead on 2 of 6 (<= 3).
 - Not void: the rounds do pick different experts (cosine between two rounds' expert counts, mean 0.40-0.55 per seed, minimum 0.14-0.19), so the routers did learn per-round choices; they just do not help.
 - Shown (6 paired seeds): per-round routers do not lift the planner. Seed 3's +28 is PLS's weak seed (112) recovering, and seeds 1 and 6 fall by 14 and 20, so the spread grows rather than the mean. Dropped as written.
+
+## Result 22:35 UTC: PXH (two-hop content pointer) — WRONG; PXW2048 (reader 2048) — same as PX, as expected
+Jobs 50-pxh-s1 and 50-pxw2048-s1 on Vast box G, alone this time (17,000 rows, seed 1, same held-out and recipe as PX). Both ran as built: `plan-ptr-hops` (116,678 added parameters) and `plan-reader` (hidden 2048) are in their logs.
+
+| run | held plan-exact /160 | cipher_map | fewshot | group_induct | seq_cycle | content pointers /120 | ops right /160 | fit /320 |
+|---|---|---|---|---|---|---|---|---|
+| PX (reader 32, fixed query) | 77 | 1 | 33 | 26 | 17 | 44 | 156 | 173 |
+| PXW (reader 256) | 75 | 0 | 35 | 26 | 14 | 40 | 156 | 175 |
+| **PXH (two-hop content query)** | **76** | 1 | 32 | 26 | 17 | **44** | 156 | 171 |
+| **PXW2048 (reader 2048)** | **77** | 0 | 33 | 26 | 18 | **44** | 155 | 168 |
+
+- PXH: "carries the content kinds" (>= 121): **no**. "The fixed query was the limit" (content pointers +30): **no** (+0). **Wrong mark hit** (held 76 < 96 and content pointers 44 < 60). Prediction (seq_cycle >= 30) wrong too: 17.
+- PXW2048 matches PXW and PX, as predicted when PXW came back.
+- Shown (1 seed each, as marked): four different pointer and door designs land on the same per-family numbers, on practised rows too (fit: cipher_map 1-2 / 66, seq_cycle 42-46 / 89, group_induct 45 / 69 in every run). The labels are reachable (every row keeps a plan; a pointer may land on any position holding the right piece). So the limit is upstream of the pointer's form and of the door's width.
+- Next suspects, as written before the run (untested): the thinker's token states do not hold the pairings the lookup needs (probe them), or the word pieces (cipher words split into several tokens) make some answers unreachable as written. Neither is queued; the content kinds stay with the talker, which gets 130.7 / 160 on them in CRDC.

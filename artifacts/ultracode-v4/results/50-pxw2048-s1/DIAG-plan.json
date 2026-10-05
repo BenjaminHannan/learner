@@ -1,0 +1,915 @@
+{
+ "args": {
+  "mode": "plan",
+  "root": "/job/repo/pipeline",
+  "data": "/job/data",
+  "out": "/job/repo/pipeline/artifacts/uc/50-pxw2048-s1",
+  "parent_path": "/job/repo/skills/main2/final-checkpoint.pt",
+  "sample_seed": 1,
+  "chan_per_family": 8,
+  "chan_steps": 150,
+  "chan_lr": 0.02,
+  "head": "mlp",
+  "families": "chain_ops,state_update,cipher_map,chain_story2,var_chain,seq_cycle,fewshot_number_rule,group_induct",
+  "target": "answer",
+  "learner": "core",
+  "warmup": 200,
+  "reader_hidden": 2048,
+  "updates": 6000,
+  "fresh_rows": 17000,
+  "lr_cosine": true,
+  "op_attend": true,
+  "screen_rows": false,
+  "plan_fams": "cipher_map,fewshot_number_rule,group_induct,seq_cycle",
+  "batch": 1,
+  "lr": 0.001,
+  "fresh_core": true,
+  "round_routers": false,
+  "ptr_hops": 1
+ },
+ "result": {
+  "curve": [
+   {
+    "update": 0,
+    "fit": {
+     "plan": 10,
+     "ops": 0,
+     "ptr": 23,
+     "n": 320
+    },
+    "held": {
+     "plan": 3,
+     "ops": 0,
+     "ptr": 7,
+     "n": 160
+    },
+    "fit_by_family": {
+     "cipher_map": [
+      0,
+      66
+     ],
+     "seq_cycle": [
+      1,
+      89
+     ],
+     "fewshot_number_rule": [
+      2,
+      96
+     ],
+     "group_induct": [
+      7,
+      69
+     ]
+    },
+    "held_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      0,
+      40
+     ],
+     "group_induct": [
+      3,
+      40
+     ],
+     "seq_cycle": [
+      0,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      0,
+      40
+     ],
+     "group_induct": [
+      0,
+      40
+     ],
+     "seq_cycle": [
+      0,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      0,
+      40
+     ],
+     "group_induct": [
+      5,
+      40
+     ],
+     "seq_cycle": [
+      2,
+      40
+     ]
+    },
+    "minutes": 4.7
+   },
+   {
+    "update": 2000,
+    "fit": {
+     "plan": 120,
+     "ops": 273,
+     "ptr": 131,
+     "n": 320
+    },
+    "held": {
+     "plan": 53,
+     "ops": 142,
+     "ptr": 54,
+     "n": 160
+    },
+    "fit_by_family": {
+     "cipher_map": [
+      1,
+      66
+     ],
+     "seq_cycle": [
+      39,
+      89
+     ],
+     "fewshot_number_rule": [
+      48,
+      96
+     ],
+     "group_induct": [
+      32,
+      69
+     ]
+    },
+    "held_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      23,
+      40
+     ],
+     "group_induct": [
+      14,
+      40
+     ],
+     "seq_cycle": [
+      16,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "cipher_map": [
+      40,
+      40
+     ],
+     "fewshot_number_rule": [
+      23,
+      40
+     ],
+     "group_induct": [
+      40,
+      40
+     ],
+     "seq_cycle": [
+      39,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      24,
+      40
+     ],
+     "group_induct": [
+      14,
+      40
+     ],
+     "seq_cycle": [
+      16,
+      40
+     ]
+    },
+    "minutes": 7.5
+   },
+   {
+    "update": 4000,
+    "fit": {
+     "plan": 117,
+     "ops": 262,
+     "ptr": 147,
+     "n": 320
+    },
+    "held": {
+     "plan": 55,
+     "ops": 136,
+     "ptr": 65,
+     "n": 160
+    },
+    "fit_by_family": {
+     "cipher_map": [
+      0,
+      66
+     ],
+     "seq_cycle": [
+      38,
+      89
+     ],
+     "fewshot_number_rule": [
+      34,
+      96
+     ],
+     "group_induct": [
+      45,
+      69
+     ]
+    },
+    "held_by_family": {
+     "cipher_map": [
+      1,
+      40
+     ],
+     "fewshot_number_rule": [
+      14,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      14,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "cipher_map": [
+      40,
+      40
+     ],
+     "fewshot_number_rule": [
+      16,
+      40
+     ],
+     "group_induct": [
+      40,
+      40
+     ],
+     "seq_cycle": [
+      40,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "cipher_map": [
+      1,
+      40
+     ],
+     "fewshot_number_rule": [
+      24,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      14,
+      40
+     ]
+    },
+    "minutes": 10.2
+   },
+   {
+    "update": 6000,
+    "fit": {
+     "plan": 157,
+     "ops": 289,
+     "ptr": 161,
+     "n": 320
+    },
+    "held": {
+     "plan": 73,
+     "ops": 149,
+     "ptr": 77,
+     "n": 160
+    },
+    "fit_by_family": {
+     "cipher_map": [
+      0,
+      66
+     ],
+     "seq_cycle": [
+      47,
+      89
+     ],
+     "fewshot_number_rule": [
+      65,
+      96
+     ],
+     "group_induct": [
+      45,
+      69
+     ]
+    },
+    "held_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      29,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      18,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "cipher_map": [
+      40,
+      40
+     ],
+     "fewshot_number_rule": [
+      29,
+      40
+     ],
+     "group_induct": [
+      40,
+      40
+     ],
+     "seq_cycle": [
+      40,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      33,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      18,
+      40
+     ]
+    },
+    "minutes": 12.9
+   },
+   {
+    "update": 8000,
+    "fit": {
+     "plan": 167,
+     "ops": 302,
+     "ptr": 174,
+     "n": 320
+    },
+    "held": {
+     "plan": 74,
+     "ops": 155,
+     "ptr": 75,
+     "n": 160
+    },
+    "fit_by_family": {
+     "cipher_map": [
+      0,
+      66
+     ],
+     "seq_cycle": [
+      48,
+      89
+     ],
+     "fewshot_number_rule": [
+      74,
+      96
+     ],
+     "group_induct": [
+      45,
+      69
+     ]
+    },
+    "held_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      31,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      17,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "cipher_map": [
+      40,
+      40
+     ],
+     "fewshot_number_rule": [
+      35,
+      40
+     ],
+     "group_induct": [
+      40,
+      40
+     ],
+     "seq_cycle": [
+      40,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      32,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      17,
+      40
+     ]
+    },
+    "minutes": 15.6
+   },
+   {
+    "update": 10000,
+    "fit": {
+     "plan": 159,
+     "ops": 299,
+     "ptr": 161,
+     "n": 320
+    },
+    "held": {
+     "plan": 75,
+     "ops": 153,
+     "ptr": 76,
+     "n": 160
+    },
+    "fit_by_family": {
+     "cipher_map": [
+      1,
+      66
+     ],
+     "seq_cycle": [
+      44,
+      89
+     ],
+     "fewshot_number_rule": [
+      69,
+      96
+     ],
+     "group_induct": [
+      45,
+      69
+     ]
+    },
+    "held_by_family": {
+     "cipher_map": [
+      1,
+      40
+     ],
+     "fewshot_number_rule": [
+      30,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      18,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "cipher_map": [
+      40,
+      40
+     ],
+     "fewshot_number_rule": [
+      33,
+      40
+     ],
+     "group_induct": [
+      40,
+      40
+     ],
+     "seq_cycle": [
+      40,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "cipher_map": [
+      1,
+      40
+     ],
+     "fewshot_number_rule": [
+      31,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      18,
+      40
+     ]
+    },
+    "minutes": 18.5
+   },
+   {
+    "update": 12000,
+    "fit": {
+     "plan": 164,
+     "ops": 301,
+     "ptr": 171,
+     "n": 320
+    },
+    "held": {
+     "plan": 76,
+     "ops": 151,
+     "ptr": 80,
+     "n": 160
+    },
+    "fit_by_family": {
+     "cipher_map": [
+      1,
+      66
+     ],
+     "seq_cycle": [
+      42,
+      89
+     ],
+     "fewshot_number_rule": [
+      76,
+      96
+     ],
+     "group_induct": [
+      45,
+      69
+     ]
+    },
+    "held_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      30,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      20,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "cipher_map": [
+      40,
+      40
+     ],
+     "fewshot_number_rule": [
+      31,
+      40
+     ],
+     "group_induct": [
+      40,
+      40
+     ],
+     "seq_cycle": [
+      40,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      34,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      20,
+      40
+     ]
+    },
+    "minutes": 21.5
+   },
+   {
+    "update": 14000,
+    "fit": {
+     "plan": 171,
+     "ops": 307,
+     "ptr": 176,
+     "n": 320
+    },
+    "held": {
+     "plan": 76,
+     "ops": 156,
+     "ptr": 77,
+     "n": 160
+    },
+    "fit_by_family": {
+     "cipher_map": [
+      2,
+      66
+     ],
+     "seq_cycle": [
+      45,
+      89
+     ],
+     "fewshot_number_rule": [
+      79,
+      96
+     ],
+     "group_induct": [
+      45,
+      69
+     ]
+    },
+    "held_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      32,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      18,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "cipher_map": [
+      40,
+      40
+     ],
+     "fewshot_number_rule": [
+      36,
+      40
+     ],
+     "group_induct": [
+      40,
+      40
+     ],
+     "seq_cycle": [
+      40,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      33,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      18,
+      40
+     ]
+    },
+    "minutes": 24.4
+   },
+   {
+    "update": 16000,
+    "fit": {
+     "plan": 166,
+     "ops": 306,
+     "ptr": 169,
+     "n": 320
+    },
+    "held": {
+     "plan": 78,
+     "ops": 155,
+     "ptr": 79,
+     "n": 160
+    },
+    "fit_by_family": {
+     "cipher_map": [
+      1,
+      66
+     ],
+     "seq_cycle": [
+      41,
+      89
+     ],
+     "fewshot_number_rule": [
+      79,
+      96
+     ],
+     "group_induct": [
+      45,
+      69
+     ]
+    },
+    "held_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      33,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      19,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "cipher_map": [
+      40,
+      40
+     ],
+     "fewshot_number_rule": [
+      35,
+      40
+     ],
+     "group_induct": [
+      40,
+      40
+     ],
+     "seq_cycle": [
+      40,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      34,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      19,
+      40
+     ]
+    },
+    "minutes": 27.3
+   },
+   {
+    "update": 17000,
+    "fit": {
+     "plan": 168,
+     "ops": 307,
+     "ptr": 170,
+     "n": 320
+    },
+    "held": {
+     "plan": 77,
+     "ops": 155,
+     "ptr": 78,
+     "n": 160
+    },
+    "fit_by_family": {
+     "cipher_map": [
+      1,
+      66
+     ],
+     "seq_cycle": [
+      42,
+      89
+     ],
+     "fewshot_number_rule": [
+      80,
+      96
+     ],
+     "group_induct": [
+      45,
+      69
+     ]
+    },
+    "held_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      33,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      18,
+      40
+     ]
+    },
+    "ops_by_family": {
+     "cipher_map": [
+      40,
+      40
+     ],
+     "fewshot_number_rule": [
+      35,
+      40
+     ],
+     "group_induct": [
+      40,
+      40
+     ],
+     "seq_cycle": [
+      40,
+      40
+     ]
+    },
+    "ptr_by_family": {
+     "cipher_map": [
+      0,
+      40
+     ],
+     "fewshot_number_rule": [
+      34,
+      40
+     ],
+     "group_induct": [
+      26,
+      40
+     ],
+     "seq_cycle": [
+      18,
+      40
+     ]
+    },
+    "minutes": 28.8
+   }
+  ]
+ },
+ "minutes": 29.0
+}
