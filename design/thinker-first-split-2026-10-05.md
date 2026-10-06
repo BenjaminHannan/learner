@@ -206,4 +206,19 @@ Teacher prompts: one fixed prompt per kind with 2 hand-written examples, tempera
 answer. The prompts and generator are committed before the first student run. The question writer and the answerer
 are both the 1.2B; nothing else writes training rows.
 
+### B1 addendum, 2026-10-06 5:15 PM ET, after the data was built and before any student trains
+Data actually built (PR #46, `/mnt/project-files/plan-b/data/MANIFEST.json`, read here):
+- TEACH `teach.jsonl`: 171,940 questions (148,694 passages) over all 60 kinds, no spares used. That's short of
+  200,000; Ben said at 3:11 PM ET to use this data with no new teacher run.
+- The GEN arm therefore uses `gen_matched_171940.jsonl` (the first 171,940 GEN questions), so the arms are equal in
+  size, as section 6 requires. The 200,000-row `gen.jsonl` is not used for B1.
+- Answer types differ between arms. TEACH is 51% yes/no (87,807 of 171,940), GEN-matched is 11% (18,925). The eval
+  sets are about 12% yes/no (FRESH 11 of 96, R5 12 of 96, R6 10 of 96). Extra yes/no practice alone could move new-kind
+  scores by up to about 6 points.
+
+Added rule, fixed now (it only tightens B1-a): B1-a is also scored on short-answer questions alone. If B1-a passes
+overall but the short-answer-only gap (TEACH minus GEN) is below +10, the verdict is NOT SHOWN (driven by yes/no),
+not PASS. Report per-kind and per-type scores for both arms.
+`teach_clean.jsonl` (94,831) and `gen_matched_94831.jsonl` are read-only extras if run; they don't change the verdict.
+
 Nothing here touches GOLD-PRIVATE, reserved or blind panels.
