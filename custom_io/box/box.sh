@@ -34,8 +34,11 @@ PIP_BREAK_SYSTEM_PACKAGES=1 pip install -q --break-system-packages "transformers
 python -c "import torch, transformers; print(torch.__version__, transformers.__version__, torch.cuda.get_device_name(0))"
 export HF_HUB_DISABLE_PROGRESS_BARS=1 TRANSFORMERS_VERBOSITY=error TOKENIZERS_PARALLELISM=false OMP_NUM_THREADS=2 PYTHONUNBUFFERED=1
 if [ "$EG" = 1 ]; then
-  (cd mine && python -c "from huggingface_hub import snapshot_download as s; from custom_io.models.eg import EG_ID, EG_REV; s(EG_ID, revision=EG_REV, local_dir='$J/eg2')") \
-    > out/eg_dl.log 2>&1 || { tail -3 out/eg_dl.log; die eg-download; }
+  for k in 1 2 3 4 5 6; do   # anonymous Hugging Face downloads are rate limited per IP (a shared box IP can be out of requests): wait and retry
+    (cd mine && python -c "from huggingface_hub import snapshot_download as s; from custom_io.models.eg import EG_ID, EG_REV; s(EG_ID, revision=EG_REV, local_dir='$J/eg2')") \
+      > out/eg_dl.log 2>&1 && break
+    tail -2 out/eg_dl.log; [ $k = 6 ] && die eg-download; say "eg download try $k failed, retrying in 4 min"; sleep 240
+  done
   export CUSTOM_IO_EG2=$J/eg2
   (cd mine && python -m custom_io.models.eg check cuda) || die eg-check
 fi
