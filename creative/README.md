@@ -35,7 +35,7 @@ Branch note: this branch is cut from `claude/custom-reader-talker-4x309r` so `cu
 - The plain-net and fresh-net training for "examples to learn" (`labelled_sets` builds the k = 0, 8, 32, 128 data only).
 
 ## Spec revision of 10-06 (relay from the roadmap thread), applied
-1. **Signal gate replaces cold start** (`scoreboard.dev_gate`): >= 50% of DEV tries follow the rules AND an accepted try on >= 100 distinct practice puzzles. Reach@32 is report-only; reach@4 is the reach mark (and what `tune_temperature` picks on).
+1. **Signal gate replaces cold start** (`scoreboard.dev_gate`; REWRITTEN later on 10-06, see the section at the end): an accepted try on >= 100 distinct practice puzzles. Reach@32 is report-only; reach@4 is the reach mark (and what `tune_temperature` picks on).
 2. **Sameness gate** = distinct rule-following programs (canonical key) >= 4 per puzzle. `distinct` (result-changing) is still reported; variety is reported with and without branching (`nobranch_*`).
 3. Puzzle generator unchanged. Correct-solution variety is report-only: `cli score --split x`.
 4. **Aim check** (`scoreboard.aim_check`, `cli aim`): own tries, twin-prompt tries scored on the real target, and the value-blind rule follower (`sampler.rule_follower_tries`, matches the exact floor: 2.25% vs 2.39% on 64 DEV puzzles), luck and reach@4. A report, not a gate; repeat on W.
@@ -58,3 +58,13 @@ Branch note: this branch is cut from `claude/custom-reader-talker-4x309r` so `cu
 
 ## Pilot as decided 10-06 (`creative/pilot.py`, tested by `tests/test_pilot.py`)
 Warm-up ladder (1,500 two-number puzzles + 1,500 / 3,000 / 6,000 three-number solver puzzles on number sets in no sealed split; <= 4 visits per record; smallest rung that passes the DEV signal gate wins), temperature re-chosen after each rung (reach@4 among sameness-passing temperatures, widen on an edge), warm-up harm vs raw (pooled-5 chain families), headroom (DEV luck, first try), PC arm with skills replay (lr edge rule, widen x3 up to twice, updates at the 4-visit cap), PC gate (PC - N >= +10 luck, first-try gain beside it). Fallbacks if the ladder fails: (a) warmed parent does not fit its own warm-up puzzles (greedy < 90%) -> 16 visits per warm-up record; (b) it fits but fails DEV -> `dream_rows` (random rule-following 3-number programs labelled with what they make, number sets in no sealed split); (c) stop and report. Hindsight is not a warm-up. Job file for the Mac: `creative/MAC-JOB.md`.
+
+## Gates and marks rewritten 10-06 (roadmap thread, after the second pilot)
+The old signal gate asked for >= 50% rule-following tries; the value-blind follower's own share is 58%, so the bar asked for near-perfect legality (both Mac pilots sat at 25-31% at every temperature and rung). Now (`scoreboard.dev_gate`):
+- **Signal:** an accepted try on >= 100 distinct practice puzzles.
+- **Aim:** luck / rules_share >= 0.082 (twice the follower's 0.041 = 2.4% / 58%). A feasibility check, not a claim.
+- **Sameness:** >= 4 distinct rule-following programs per puzzle (unchanged). `rules_share` is reported, never gated. The gate verdict names every failed part.
+- **Warm-up:** `--ladder 1500` (default), max 4 visits. 6,000 and 6,000 @ 16 visits are comparison runs only (`--ladder 6000`, `--fallbacks`); fallbacks are off by default. The fallback fork (a)/(b) uses `FIT_MIN = 0.9` in `pilot.py`: a threshold the build thread chose, not in the spec; the failure message now lists the fallbacks that actually ran.
+- **Marks (`marks.py`):** L1 W/N >= 1.6 and W-N >= +3, W above N on every parent; L2 W/R >= 1.4 and W-R >= +2.5 (interval above 0); G0 W/R >= 1.5 and W-R >= +3 (interval above 0) and W above N (interval above 0); PC gate PC/N >= 1.6 and PC-N >= +3 (`marks.pc_gate`, also used by the pilot); proved wrong: PC gate passes and W-R upper end below +1.5 points (luck) and below +1 (aim). G1, G2, G3, F1, lesion and H unchanged. Ratios are ratios of parent means.
+- **Disclosure:** these changes were made after seeing DEV numbers (a feasibility check, not a claim), and PC's +2 points on the first warm-up was known when the marks were re-scaled. T1 and T1b stay sealed. The same note is written into every `pilot.json` (`notes`).
+- `creative/diagnose.py` (read-only): why tries break the rules, per temperature, branching on/off; can re-make the warmed parent.

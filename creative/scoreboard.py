@@ -6,8 +6,9 @@ from math import comb
 from creative.checkers import verdict
 from creative.programs import NOOP, cone, result_key, run
 
-RULES_SHARE_MIN = 0.50      # signal gate: at least half of the DEV tries follow the rules
 PRACTICE_SOLVED_MIN = 100   # signal gate: an accepted try on at least 100 distinct practice puzzles
+BLIND_HIT_GIVEN_RULES = 0.041   # value-blind rule follower on DEV: 2.4% of tries hit / 58% of tries follow the rules (shown, PR #44)
+AIM_MIN = 2 * BLIND_HIT_GIVEN_RULES   # aim gate: luck / rules_share >= twice the follower's (0.082); rules_share itself is reported, never gated
 SAMENESS_MIN = 4.0          # sameness gate: >= 4 distinct rule-following programs per puzzle on average (canonical key)
 
 
@@ -78,16 +79,19 @@ def score_puzzles(rows, tries, raw=None, greedy=None):
 
 
 def dev_gate(rows, tries, raw=None, nobranch=None, practice=None):
-    """The gates on DEV after warm-up (roadmap section 6, as revised 10-06).
-      signal:   >= 50% of DEV tries follow the rules AND the warmed parent has an accepted try on >= 100 distinct practice puzzles
-                (practice = (practice_rows, practice_tries), 32 tries each). Reach@32 is report-only: rules alone reach about half the puzzles.
+    """The gates on DEV after warm-up (roadmap section 6, rewritten 10-06 after the second pilot).
+      signal:   the warmed parent has an accepted try on >= 100 distinct practice puzzles (practice = (practice_rows, practice_tries), 32 tries each).
+      aim:      among its rule-following tries the share that hit the target (luck / rules_share) is >= 2x the value-blind rule follower's
+                (0.041), i.e. >= 0.082. A feasibility check, not a claim (G0 is the claim). The share of tries that follow the rules is
+                REPORTED, never gated: the follower's own share is only 58%, so any bar near 50% asks for near-perfect legality, not signal.
       sameness: distinct rule-following programs (canonical key) >= 4 per puzzle on average, with the sampler's branching on.
-    Reported, not gated: reach@4 / @32, the old result-changing count `distinct`, and the variety without branching (nobranch = tries sampled with
-    branch=0). A failed gate stops C1 with T1 sealed: signal -> fix the warm-up; sameness -> C3b first.
-    -> dict(signal_ok, sameness_ok, verdict, ...)."""
+    Reported, not gated: rules_share, reach@4 / @32, the old result-changing count `distinct`, and the variety without branching (nobranch = tries
+    sampled with branch=0). A failed gate stops C1 with T1 sealed: signal -> fix the warm-up; aim -> the warm-up taught format but no aim;
+    sameness -> C3b first.   -> dict(signal_ok, aim_ok, sameness_ok, verdict, ...)."""
     s = score_puzzles(rows, tries, raw)
+    hit_given_rules = s['luck'] / s['rules_share'] if s['rules_share'] > 0 else 0.0
     out = dict(rules_share=s['rules_share'], distinct_rules=s['distinct_rules'], distinct=s['distinct'], luck=s['luck'], reach4=s['reach4'],
-               reach32=s['reach32'], dup_drop_rate=s.get('dup_drop_rate'), unresolved=s['unresolved'])
+               reach32=s['reach32'], hit_given_rules=hit_given_rules, dup_drop_rate=s.get('dup_drop_rate'), unresolved=s['unresolved'])
     if nobranch is not None:
         sn = score_puzzles(rows, nobranch)
         out.update(nobranch_distinct_rules=sn['distinct_rules'], nobranch_distinct=sn['distinct'], nobranch_rules_share=sn['rules_share'])
@@ -95,13 +99,14 @@ def dev_gate(rows, tries, raw=None, nobranch=None, practice=None):
     if practice is not None:
         solved = sum(any(judge_try(r, x) == 'accept' for x in t) for r, t in zip(*practice))
         out['practice_solved'] = solved
-    sig = s['rules_share'] >= RULES_SHARE_MIN and solved is not None and solved >= PRACTICE_SOLVED_MIN
+    sig = solved is not None and solved >= PRACTICE_SOLVED_MIN
+    aim = hit_given_rules >= AIM_MIN
     same = s['distinct_rules'] >= SAMENESS_MIN
-    v = ('pass' if sig and same else 'stop: signal and sameness' if not sig and not same else
-         'stop: signal (fix the warm-up)' if not sig else 'stop: sameness (C3b first)')
+    bad = [n for n, ok in (('signal (fix the warm-up)', sig), ('aim (warm-up taught the format, not aim)', aim), ('sameness (C3b first)', same)) if not ok]
+    v = 'pass' if not bad else 'stop: ' + ' and '.join(bad)
     if practice is None:
         v += ' [practice puzzles not given: signal gate incomplete]'
-    out.update(signal_ok=sig, sameness_ok=same, verdict=v)
+    out.update(signal_ok=sig, aim_ok=aim, sameness_ok=same, verdict=v)
     return out
 
 

@@ -271,6 +271,15 @@ def test_scoreboard_and_gate():
     gp = scoreboard.dev_gate(rows, many, None, None, (splits()['practice'][:120], prac_inj))
     assert gp['signal_ok'] and gp['sameness_ok'] and gp['verdict'] == 'pass' and gp['practice_solved'] == 120, gp
     assert scoreboard.dev_gate(rows, many, None, None, (splits()['practice'][:99], prac_inj[:99]))['verdict'].startswith('stop: signal')
+    assert gp['aim_ok'] and gp['hit_given_rules'] >= scoreboard.AIM_MIN and 'rules_share' in gp
+    # aim gate: rule-following tries that never hit fail it however many practice puzzles are solved; a low rules share alone never fails the gate
+    miss = [[x for x in sampler.rule_follower_tries([r], 60, 1)[0] if scoreboard.judge_try(r, x, rules_only=True) == 'accept'
+             and scoreboard.judge_try(r, x) != 'accept'][:12] for r in rows]
+    gm = scoreboard.dev_gate(rows, miss, None, None, (splits()['practice'][:120], prac_inj))
+    assert not gm['aim_ok'] and 'aim' in gm['verdict'] and gm['signal_ok'], gm
+    thin = [t[:6] + [sampler.TryRec(Try((1,) * 7, (0,) * 7, (1,) * 7, 0)) for _ in range(60)] if i % 2 else t for i, t in enumerate(many)]
+    gt = scoreboard.dev_gate(rows, thin, None, None, (splits()['practice'][:120], prac_inj))
+    assert gt['rules_share'] < 0.5 and not gt.get('verdict', '').startswith('stop: signal'), gt
     # the value-blind rule follower reproduces the exact rules-only floor, and the aim check reports own / twin / rules
     rf = sampler.rule_follower_tries(splits()['dev'][:64], 32, 0)
     sr = scoreboard.score_puzzles(splits()['dev'][:64], rf)
@@ -385,6 +394,11 @@ def test_marks_and_verdicts():
         p['W']['donor_luck'] = .5
     assert marks.c1_verdict(bad, dict(gate_pass=True))[0] == 'void'                       # donor lesion fails
     assert marks.c1_verdict(parents(.0, .0, .0), dict(gate_pass=True))[0] == 'proved wrong'
+    flat = parents(.25, .2, .12)                                   # +3 points on a high base is under 1.6x: L1 must fail
+    for p in flat:
+        p['N']['luck'], p['W']['luck'], p['R']['luck'] = .20, .23, .20
+    assert not marks.c1_marks(flat)['L1']
+    assert marks.pc_gate(3.5, 1.7) and not marks.pc_gate(2.5, 2.0) and not marks.pc_gate(4.0, 1.4)
     c2 = [dict(N=dict(first_try=.10, reach4=.3, skills=.7), R=dict(first_try=.10, reach4=.3, skills=.7), W=dict(first_try=.30 + rng.uniform(-.01, .01), reach4=.4, skills=.69)) for _ in range(6)]
     assert marks.c2b_verdict(c2)[0] == 'PASS'
     c2[0]['W']['skills'] = .60

@@ -26,21 +26,34 @@ def paired(parents, a, b, metric):
     return m, m - h, m + h, all(x > 0 for x in d)
 
 
+def ratio(parents, a, b, metric):
+    """Ratio of the parent means of a to b (inf if b is 0 and a is positive, 0 if both are 0)."""
+    ma = sum(p[a][metric] for p in parents) / len(parents)
+    mb = sum(p[b][metric] for p in parents) / len(parents)
+    return ma / mb if mb > 0 else (math.inf if ma > 0 else 0.0)
+
+
+def pc_gate(pc_minus_n_points, pc_over_n):
+    """Positive control: PC / N >= 1.6 and PC - N >= +3 points (luck). Used by the pilot and by c1_marks."""
+    return pc_over_n >= 1.6 and pc_minus_n_points >= 3
+
+
 def c1_marks(parents):
+    """Re-scaled 10-06 (ratio plus an absolute guard, below the old blurt-3 effect of +3.2 to +4.4 points)."""
     P = lambda a, b, k: paired(parents, a, b, k)
     m = {}
     wn, wr = P('W', 'N', 'luck'), P('W', 'R', 'luck')
-    m['L1'] = wn[0] >= 10 and wn[3]
-    m['L2'] = wr[0] >= 8 and wr[1] > 0
+    m['L1'] = ratio(parents, 'W', 'N', 'luck') >= 1.6 and wn[0] >= 3 and wn[3]
+    m['L2'] = ratio(parents, 'W', 'R', 'luck') >= 1.4 and wr[0] >= 2.5 and wr[1] > 0
     gr, gn = P('W', 'R', 'aim'), P('W', 'N', 'aim')
-    m['G0'] = gr[0] >= 5 and gr[1] > 0 and gn[1] > 0
+    m['G0'] = ratio(parents, 'W', 'R', 'aim') >= 1.5 and gr[0] >= 3 and gr[1] > 0 and gn[1] > 0
     m['G1'] = not (P('W', 'N', 'reach4')[2] < -2)
     m['G2'] = P('W', 'R', 'stop_luck')[0] >= 4
     m['G3'] = all(100 * (p['N']['skills'] - p['W']['skills']) <= 2 for p in parents)
     f_n, f_r = P('W', 'N', 'first_try'), P('W', 'R', 'first_try')
     m['F1'] = f_n[0] >= 5 and f_n[1] > 0 and f_r[0] >= 5 and f_r[1] > 0
     m['lesion_donor'] = all(p['W']['donor_luck'] <= p['W']['rules_floor'] for p in parents)
-    m['PC'] = P('PC', 'N', 'luck')[0] >= 10
+    m['PC'] = pc_gate(P('PC', 'N', 'luck')[0], ratio(parents, 'PC', 'N', 'luck'))
     hw, hh = P('H', 'W', 'reach32'), P('H', 'Hw', 'reach32')
     m['H_question'] = hw[0] >= 5 and hw[1] > 0 and hh[0] > 0
     m['_diffs'] = dict(W_N_luck=wn[:3], W_R_luck=wr[:3], W_R_aim=gr[:3], W_N_aim=gn[:3], W_N_reach4=P('W', 'N', 'reach4')[:3],
@@ -66,7 +79,7 @@ def c1_verdict(parents, flags):
     if not m['G3'] and m['L1'] and m['L2']:
         return 'gain with harm', m
     d = m['_diffs']
-    if m['PC'] and d['W_R_luck'][2] < 5 and d['W_R_aim'][2] < 3:
+    if m['PC'] and d['W_R_luck'][2] < 1.5 and d['W_R_aim'][2] < 1:
         return 'proved wrong', m
     return 'not shown', m
 

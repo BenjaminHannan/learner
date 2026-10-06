@@ -1,8 +1,8 @@
 """python3 -m creative.cli <command>   (nothing here trains; dev-gate and lesions only sample from a checkpoint)
   build-splits [--out creative/data/c1]    write the sealed C1 splits and MANIFEST.json (deterministic; re-run = same hashes)
   floors [--split dev] [--uniform-samples N]   S0: per-try and pass@4 floors for B2's slots (rules-only exact, uniform Monte-Carlo)
-  dev-gate --ckpt PATH [--temps 0.7,1,1.3,1.6,2] [--device cpu]   choose the temperature on DEV (reach@4), then the signal gate (>= 50% rule-following
-                  tries on DEV and an accepted try on >= 100 distinct practice puzzles) and the sameness gate (>= 4 distinct rule-following programs),
+  dev-gate --ckpt PATH [--temps 0.7,1,1.3,1.6,2] [--device cpu]   choose the temperature on DEV (reach@4), then the signal gate (an accepted try on
+                  >= 100 distinct practice puzzles), the aim gate (luck / rules share >= 0.082) and the sameness gate (>= 4 distinct rule-following programs),
                   variety with and without branching, and the aim check (own vs twin vs value-blind rule follower)
   aim --ckpt PATH --temperature T          the aim check alone (run it on W after sleep too)
   score --ckpt PATH --split x              the scoreboard on any split (X = correct-solution variety, report only)
@@ -30,8 +30,8 @@ def main(argv=None):
     ap.add_argument('--limit', type=int)
     ap.add_argument('--practice-limit', type=int)
     ap.add_argument('--lrs', default='3e-4,1e-3,3e-3,1e-2')
-    ap.add_argument('--ladder', default='1500,3000,6000', help='pilot: warm-up 3-number puzzle counts, smallest passing the signal gate wins')
-    ap.add_argument('--no-fallbacks', action='store_true', help='pilot: skip fallbacks a (16 visits) and b (dreams)')
+    ap.add_argument('--ladder', default='1500', help='pilot: warm-up 3-number puzzle counts, smallest passing the gates wins (decided 10-06: 1500; 3000,6000 are comparison runs)')
+    ap.add_argument('--fallbacks', action='store_true', help='pilot: after the last rung fails, try fallbacks a (16 visits) and b (dreams)')
     ap.add_argument('--dreams', type=int, default=3000)
     ap.add_argument('--skills-data', help='pilot: custom_io data dir with dev/in_dist.jsonl (use WORK/data_big) for the skills score / warm-up harm')
     ap.add_argument('--skills-train', help='skills train.jsonl for replay (pilot); without it warm-up harm is not measured')
@@ -42,7 +42,7 @@ def main(argv=None):
     if a.cmd == 'pilot':
         from creative import pilot
         pilot.pilot(a.ckpt, a.out, a.data, a.device, a.skills_train, a.skills_data, ladder=tuple(int(x) for x in a.ladder.split(',')),
-                    lrs=tuple(float(x) for x in a.lrs.split(',')), tries=a.tries, practice_limit=a.practice_limit, fallbacks=not a.no_fallbacks, dreams_n=a.dreams,
+                    lrs=tuple(float(x) for x in a.lrs.split(',')), tries=a.tries, practice_limit=a.practice_limit, fallbacks=a.fallbacks, dreams_n=a.dreams,
                     log=lambda d: print(json.dumps(d), flush=True))
         return
     rows = puzzles.load_split(a.data, a.split)[:a.limit]

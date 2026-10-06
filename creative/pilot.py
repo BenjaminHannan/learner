@@ -1,22 +1,27 @@
 """DEV-only pilot of C1 (roadmap D7, as decided 10-06): one parent. Reads no T1 / T1b / X.
   0. raw parent: skills score (warm-up harm baseline).
-  1. warm-up LADDER: every rung = the 1,500 two-number puzzles + N three-number solver puzzles (N in 1,500 / 3,000 / 6,000; number sets in no sealed split),
+  1. warm-up LADDER: every rung = the 1,500 two-number puzzles + N three-number solver puzzles (decided 10-06: N = 1,500 only; 3,000 / 6,000 are comparison runs; number sets in no sealed split),
      every record seen at most 4 times, skills replay on when given.
-     Fallbacks if the last rung fails (roadmap 10-06): (a) if the warmed parent does not reproduce its own warm-up puzzles (greedy < 90%), repeat the last rung with up to
+     Fallbacks (off unless --fallbacks) if the last rung fails (roadmap 10-06): (a) if the warmed parent does not reproduce its own warm-up puzzles (greedy < FIT_MIN = 0.9, a threshold chosen by the build thread), repeat the last rung with up to
      16 visits per warm-up record (the 4-visit cap is for sleep records only); (b) if it fits but still fails DEV, add `dreams` (random rule-following 3-number
      programs labelled with the value they make, on number sets in no sealed split); (c) otherwise stop and report. Hindsight relabelling is NOT a warm-up (arm H). After each rung: re-choose the temperature on DEV (highest reach@4 among temperatures
-     passing sameness; widen on a grid edge), run the signal + sameness gates at that temperature. The smallest rung that passes the signal gate wins; if
+     passing sameness; widen on a grid edge), run the signal + aim + sameness gates at that temperature (rules share is reported, never gated). The smallest rung that passes wins; if
      none does the pilot stops and says so (C1 stops with T1 sealed).
   2. warmed parent: headroom (DEV luck, first try), skills score and harm against raw, aim check, floors.
   3. PC arm only (solver programs for practice puzzles, <= 2 per puzzle, skills replay on): lr grid with the edge rule (widen x3 on an edge, <= 2 times),
-     update count at the 4-visit cap. At the re-chosen temperature: PC - N luck (gate: >= +10 points), PC's first-try gain, skills harm.
+     update count at the 4-visit cap. At the re-chosen temperature: PC - N luck (gate: PC / N >= 1.6 and PC - N >= +3 points), PC's first-try gain, skills harm.
 Writes out_dir/pilot.json after every stage (and warmed.pt). Without --skills-train there is no replay: flagged `no_replay`, harm unmeasured."""
 import copy, json, os, random, time
-from creative import arms, puzzles, sampler, scoreboard, sleep
+from creative import arms, marks, puzzles, sampler, scoreboard, sleep
 from custom_io.data import load_rows
 from custom_io.evalx import CHAIN5, evaluate
 
-LADDER = (1500, 3000, 6000)
+LADDER = (1500,)       # decided 10-06: --warm3 1500 with max_visits 4 on both parents; 6,000 and 6,000 @ 16 visits are comparison runs only
+FIT_MIN = 0.9          # fallback (a)/(b) fork: warmed parent 'fits' its own warm-up puzzles at greedy >= 0.9. Chosen by the build thread (Sonnet), not in the spec.
+NOTES = ('Gates rewritten 10-06 AFTER seeing DEV numbers from the second pilot (feasibility check, not a claim): signal = accepted try on >= 100 practice puzzles; '
+         'aim = luck / rules_share >= 0.082 (2x the value-blind follower); sameness >= 4; rules_share reported, never gated. Marks re-scaled to ratio + guard '
+         '(L1 1.6x and +3, L2 1.4x and +2.5, G0 1.5x and +3, PC 1.6x and +3). PC gave +2 points on the first (failed) warm-up and that was known when the marks '
+         'were re-scaled. T1 and T1b stay sealed.')
 LRS = (3e-4, 1e-3, 3e-3, 1e-2)
 TEMPS = (0.7, 1.0, 1.5, 2.0)
 
@@ -42,10 +47,10 @@ def scored(model, dev, vocab, device, T, tries):
 
 
 def pilot(ckpt, out_dir, data, device='cpu', skills_train=None, skills_data=None, replay_n=None, ladder=LADDER, warm_n=1500, warm_lr=3e-4,
-          lrs=LRS, pc_per_puzzle=2, tries=32, practice_limit=None, batch=64, temps=TEMPS, seed=0, log=print, fallbacks=True, dreams_n=3000):
+          lrs=LRS, pc_per_puzzle=2, tries=32, practice_limit=None, batch=64, temps=TEMPS, seed=0, log=print, fallbacks=False, dreams_n=3000):
     os.makedirs(out_dir, exist_ok=True)
     t0 = time.time()
-    res = dict(ckpt=ckpt, seed=seed, no_replay=skills_train is None, ladder_rungs=[])
+    res = dict(ckpt=ckpt, seed=seed, no_replay=skills_train is None, notes=NOTES, ladder_rungs=[])
     save = lambda: json.dump(res, open(os.path.join(out_dir, 'pilot.json'), 'w'), indent=1)
     raw_model, vocab, meta = sleep.load_parent(ckpt, device)
     raw_model.eval()
@@ -86,7 +91,7 @@ def pilot(ckpt, out_dir, data, device='cpu', skills_train=None, skills_data=None
         return m, rung
 
     def passes(rung):
-        return not isinstance(rung['gate'], str) and rung['gate']['signal_ok']
+        return not isinstance(rung['gate'], str) and rung['gate']['signal_ok'] and rung['gate']['aim_ok']
 
     def fits_own_warmup(m, n=256):
         """Fallback (a): does the warmed parent reproduce its own warm-up puzzles? Greedy first try on a sample of the 3-number warm-up puzzles (T from the pilot, not used)."""
@@ -105,19 +110,20 @@ def pilot(ckpt, out_dir, data, device='cpu', skills_train=None, skills_data=None
         res['fallback_a_fit_own_warmup_greedy'] = fit
         save()
         log(dict(event='fallback a: fit on own warm-up puzzles', greedy_accepted=fit))
-        if fit < 0.9:                                              # (a) it does not fit: up to 16 visits per warm-up record
+        if fit < FIT_MIN:                                          # (a) it does not fit: up to 16 visits per warm-up record
             m, rung = rung_run(ladder[-1], 0, 16, 'fallback a: 16 visits')
             if passes(rung):
                 warmed, chosen = m, rung
             else:
                 fit = fits_own_warmup(m)
                 res['fallback_a_fit_after_16_visits'] = fit
-        if warmed is None and fit >= 0.9:                          # (b) it fits but fails DEV: dreams
-            m, rung = rung_run(ladder[-1], dreams_n, 4 if fit >= 0.9 else 16, 'fallback b: dreams')
+        if warmed is None and fit >= FIT_MIN:                      # (b) it fits but fails DEV: dreams
+            m, rung = rung_run(ladder[-1], dreams_n, 4, 'fallback b: dreams')
             if passes(rung):
                 warmed, chosen = m, rung
     if warmed is None:
-        res['result'] = 'LADDER FAILED: no rung passed the signal gate (including fallbacks a and b); C1 stops with T1 sealed. Send the numbers to the coordinator.'
+        ran = [x['tag'] for x in res['ladder_rungs'] if x['tag']]
+        res['result'] = ('LADDER FAILED: no rung passed the gates (fallbacks run: %s); C1 stops with T1 sealed. Send the numbers to the coordinator.' % (', '.join(ran) or 'none'))
         res['wall_s'] = time.time() - t0
         save()
         return res
@@ -162,8 +168,9 @@ def pilot(ckpt, out_dir, data, device='cpu', skills_train=None, skills_data=None
     b = rows_[best]
     res['pc_choice'] = dict(lr=best, updates=upd, widened=widen, on_edge=best in (min(rows_), max(rows_)),
                             note='chosen on DEV with the PC arm only; freeze before any T1 run')
-    res['pc_gate'] = dict(pc_minus_n_luck_points=b['luck_gain'], first_try_gain_points=b['first_try_gain'], needed_points=10.0, passes=b['luck_gain'] >= 10,
-                          temperature=T, with_replay=bool(replay))
+    pc_over_n = b['dev_luck'] / s0['luck'] if s0['luck'] > 0 else (float('inf') if b['dev_luck'] > 0 else 0.0)
+    res['pc_gate'] = dict(pc_minus_n_luck_points=b['luck_gain'], pc_over_n_luck=pc_over_n, first_try_gain_points=b['first_try_gain'], needed_points=3.0, needed_ratio=1.6,
+                          passes=marks.pc_gate(b['luck_gain'], pc_over_n), temperature=T, with_replay=bool(replay))
     if res['skills_raw'] and b['skills']:
         res['pc_gate']['harm_pooled5_points_vs_warmed'] = 100 * (res['warmed']['skills']['pooled5'] - b['skills']['pooled5']) if res['warmed']['skills'] else None
     res['wall_s'] = time.time() - t0

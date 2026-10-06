@@ -24,12 +24,19 @@ def setup(d):
     return ck, data
 
 
+def test_default_is_one_rung_without_fallbacks():
+    import inspect
+    sig = inspect.signature(pilot.pilot)
+    assert sig.parameters['ladder'].default == (1500,) and sig.parameters['fallbacks'].default is False
+    print('ok default_is_one_rung_without_fallbacks')
+
+
 def test_ladder_fails_and_fallbacks_run():
     with tempfile.TemporaryDirectory() as d:
         ck, data = setup(d)
         out = os.path.join(d, 'out')
         r = pilot.pilot(ck, out, os.path.join('creative', 'data', 'c1'), skills_train=os.path.join(data, 'train.jsonl'), skills_data=data, ladder=(32, 64),
-                        warm_n=32, tries=4, practice_limit=24, batch=16, temps=(1.0,), dreams_n=32, log=lambda x: None)
+                        warm_n=32, tries=4, practice_limit=24, batch=16, temps=(1.0,), dreams_n=32, fallbacks=True, log=lambda x: None)
         assert r['result'].startswith('LADDER FAILED') and not r['no_replay'] and r['replay_rows'] == 39
         tags = [x['tag'] for x in r['ladder_rungs']]
         assert [x['warm3'] for x in r['ladder_rungs'][:2]] == [32, 64] and 'fallback_a_fit_own_warmup_greedy' in r
@@ -41,7 +48,7 @@ def test_ladder_fails_and_fallbacks_run():
 def test_pc_stage_with_forced_gate():
     """Force the signal gate and the temperature so the PC stage runs: lr grid with the edge rule, the PC gate, harm vs the warmed parent."""
     real_gate, real_temp = scoreboard.dev_gate, scoreboard.choose_temperature
-    scoreboard.dev_gate = lambda *a, **k: dict(real_gate(*a, **k), signal_ok=True, verdict='pass')
+    scoreboard.dev_gate = lambda *a, **k: dict(real_gate(*a, **k), signal_ok=True, aim_ok=True, verdict='pass')
     scoreboard.choose_temperature = lambda *a, **k: dict(best=1.0, evaluated={}, widened=0, edge_note=None)
     try:
         with tempfile.TemporaryDirectory() as d:
@@ -52,7 +59,8 @@ def test_pc_stage_with_forced_gate():
             assert r['warmed']['warm3'] == 32 and 'headroom' in r['warmed'] and 'harm_pooled5_points' in r['warmed']
             lrs = [x['lr'] for x in r['pc_grid']]
             assert len(lrs) >= 2 and r['pc_choice']['widened'] <= 2 and len(set(lrs)) == len(lrs)
-            assert set(r['pc_gate']) >= {'pc_minus_n_luck_points', 'first_try_gain_points', 'needed_points', 'passes', 'with_replay'} and r['pc_gate']['with_replay']
+            assert set(r['pc_gate']) >= {'pc_minus_n_luck_points', 'pc_over_n_luck', 'first_try_gain_points', 'needed_points', 'needed_ratio', 'passes', 'with_replay'} and r['pc_gate']['with_replay']
+            assert r['pc_gate']['needed_points'] == 3.0 and r['pc_gate']['needed_ratio'] == 1.6 and 'Gates rewritten' in r['notes']
             assert all(x['updates'] == sleep.max_updates(x['n_records'], 16, True, 4) for x in r['pc_grid'])
     finally:
         scoreboard.dev_gate, scoreboard.choose_temperature = real_gate, real_temp
