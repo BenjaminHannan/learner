@@ -253,7 +253,13 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   DEV (the least warm-up that teaches the format leaves the most room for sleep to help); the warmed parent's DEV luck
   and first try are reported as headroom. In this puzzle family any labelled three-number program is a correct
   solution for some target, so the format cannot be taught without some aiming; the claim cap above already covers
-  that.
+  that. If 6,000 still fails the signal gate: first check whether the warmed parent fits its own warm-up puzzles; if
+  not, allow up to 16 visits per warm-up record (the 4-visit cap is for sleep records); if it fits but fails DEV, add
+  "dreams" (random rule-following programs labelled with the value they make, as in DreamCoder and DeepCoder), which
+  are code-made like the solver puzzles; if that fails too, stop and redesign (a step-by-step subgoal head as in
+  ExeDec would be an architecture change, outside C1). Hindsight on the model's own tries is not a warm-up: raw B2's
+  tries break the rules 99.6% of the time, and a rule-breaking program cannot be relabelled into a valid three-number
+  puzzle. Hindsight stays an arm (H).
 - **DEV pilot, B2 s100 (shown, CPU, no skills replay, `/mnt/project-files/creative-pilot/`):** raw B2 writes
   rule-following programs on 0.2% of tries and solves 1 of 256 practice puzzles; after the two-number-only warm-up
   (200 updates) 0.4% and 3 of 256, with 0.1 distinct rule-following programs per puzzle (gate 4). Both gates failed.
@@ -353,6 +359,10 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
     matches W. The claim is about sleep only; a claim that our thinker's design beats a transformer would need one
     with the same executor and copy talker.
   - Proved wrong: W - R upper end below +3.
+  - No key leak: W, R and H records are answered by the try's own output, never the key (the build tests this by
+    corrupting every key); the key-agreement check of C2a is a measurement only and never filters records; sleep-pool
+    questions and test questions share no (rule, examples, query) triple. H relabels the shown examples with what the
+    try computes, so it carries no key either.
 - **Owner:** the same Sonnet build thread after C1 (C2a and the arms are built and smoke-tested on synthetic kinds;
   the real rule rows and the held-out sealing are its next step).
 
@@ -423,3 +433,7 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   three-number programs (rule-following tries 0.2% raw, 0.4% warmed). Decided here: a mixed two- and three-number
   warm-up on unsealed number sets, sized as the smallest that passes the signal gate; temperature chosen among values
   that pass the sameness gate, widening the grid at an edge; learning-rate grid 3e-4 to 1e-2; PC gate kept at +10.
+- **Warm-up papers (Sonnet papers thread, `/mnt/project-files/papers/warmup-blocker-papers.md`, abstracts only):** they
+  support the mixed two- and three-number warm-up (Lee 2025; length transfer needs the longer task in the mix,
+  2506.09251) and give the fallback order above (more visits, then DreamCoder/DeepCoder-style dreams). CodeIt/SOAR
+  hindsight is already arm H and cannot serve as the warm-up for C1 (see the warm-up bullet).
