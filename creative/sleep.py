@@ -116,3 +116,30 @@ def sleep(model, records, replay_rows, vocab, cfg, device='cpu', amp=None, log=N
             log(dict(event='sleep', step=step + 1, loss=round(float(np.mean(losses[-50:])), 4)))
     assert max(visits.values()) <= cfg.max_visits, 'a record was seen too often'
     return dict(loss=losses, visits=visits, updates=cfg.updates, cfg=asdict(cfg))
+
+
+@torch.no_grad()
+def split_loss(model, records, replay_rows, vocab, device='cpu', n=256, batch=64, seed=0):
+    """The sleep loss split in two, measured after the sleep on fixed samples: puzzle rows (the records it slept on) versus skills replay rows.
+    -> dict(puzzle_rows, replay_rows) (mean model.loss over up to n rows each; None when a side is empty)."""
+    rng = random.Random(seed)
+    was = model.training
+    model.eval()
+    out = {}
+    for name, rows in (('puzzle_rows', records), ('replay_rows', replay_rows)):
+        if not rows:
+            out[name] = None
+            continue
+        pick = rng.sample(list(rows), min(n, len(rows)))
+        tot, cnt = 0.0, 0
+        for s in range(0, len(pick), batch):
+            rs = pick[s:s + batch]
+            ds = Dataset(rs, vocab, strict=False)
+            b = to_device(collate([ds[i] for i in range(len(rs))]), device)
+            o = model.loss(b)
+            o = o[0] if isinstance(o, tuple) else o
+            tot += float(o) * len(rs)
+            cnt += len(rs)
+        out[name] = tot / cnt
+    model.train(was)
+    return out

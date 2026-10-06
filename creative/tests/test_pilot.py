@@ -55,16 +55,40 @@ def test_pc_stage_with_forced_gate():
             ck, data = setup(d)
             out = os.path.join(d, 'out')
             r = pilot.pilot(ck, out, os.path.join('creative', 'data', 'c1'), skills_train=os.path.join(data, 'train.jsonl'), skills_data=data, ladder=(32,),
-                            warm_n=32, lrs=(1e-3, 3e-3), tries=4, practice_limit=24, batch=16, temps=(1.0,), log=lambda x: None)
+                            warm_n=32, lrs=(1e-3, 3e-3), visits=(1, 2), extra_visits=4, tries=4, practice_limit=24, batch=16, temps=(1.0,), log=lambda x: None)
             assert r['warmed']['warm3'] == 32 and 'headroom' in r['warmed'] and 'harm_pooled5_points' in r['warmed']
-            lrs = [x['lr'] for x in r['pc_grid']]
-            assert len(lrs) >= 2 and r['pc_choice']['widened'] <= 2 and len(set(lrs)) == len(lrs)
+            keys = [(x['lr'], x['visits']) for x in r['pc_grid']]
+            assert len(keys) >= 4 and len(set(keys)) == len(keys) and {k[0] for k in keys} >= {1e-3, 3e-3} and {k[1] for k in keys} >= {1, 2}
+            assert r['pc_choice']['visits'] in (1, 2, 4) and 'dose_extended' in r['pc_choice'] and 'dose grid' in r['notes'].lower()
+            assert all(x['within_skills_limit'] == (x['skills_harm_points'] is None or x['skills_harm_points'] <= pilot.SKILLS_HARM_MAX) for x in r['pc_grid'])
+            assert all(set(x['loss_split_after']) == {'puzzle_rows', 'replay_rows'} and x['dev_twin_luck'] is not None and x['dev_plain_hit_given_legal'] is not None for x in r['pc_grid'])
+            assert set(r['pc_n']) >= {'dev_luck', 'dev_twin_luck', 'dev_first_try', 'dev_first_try_masked', 'dev_plain_luck', 'loss_split'} and 'stop_rule' in r['pc_gate']
             assert set(r['pc_gate']) >= {'pc_minus_n_luck_points', 'pc_over_n_luck', 'first_try_gain_points', 'needed_points', 'needed_ratio', 'passes', 'with_replay'} and r['pc_gate']['with_replay']
-            assert r['pc_gate']['needed_points'] == 3.0 and r['pc_gate']['needed_ratio'] == 1.6 and 'Gates rewritten' in r['notes']
-            assert all(x['updates'] == sleep.max_updates(x['n_records'], 16, True, 4) for x in r['pc_grid'])
+            assert r['sampler'] == 'masked level 4' and 'used-number' in r['notes'] and r['floors']['exact_legal_per_try'] > r['floors']['rules_only_per_try']
+            assert r['warmed']['headroom']['dev_first_try_masked'] is not None and r['warmed']['headroom']['dev_plain_rules_share'] is not None
+            assert all(x['dev_plain_rules_share'] is not None and x['dev_first_try_masked'] is not None for x in r['pc_grid'])
+            assert (r['pc_gate'].get('needed_points'), r['pc_gate'].get('needed_ratio')) == (3.0, 1.6) and 'Gates rewritten' in r['notes']
+            assert all(x['updates'] == sleep.max_updates(x['n_records'], 16, True, x['visits']) for x in r['pc_grid'])
+            assert (pilot.LRS, pilot.VISITS) == ((3e-4, 1e-3), (4, 8, 16))
     finally:
         scoreboard.dev_gate, scoreboard.choose_temperature = real_gate, real_temp
     print('ok pc_stage_with_forced_gate')
+
+
+def test_pc_stop_when_no_setting_within_skills_limit():
+    real_gate, real_temp, real_max = scoreboard.dev_gate, scoreboard.choose_temperature, pilot.SKILLS_HARM_MAX
+    scoreboard.dev_gate = lambda *a, **k: dict(real_gate(*a, **k), signal_ok=True, aim_ok=True, verdict='pass')
+    scoreboard.choose_temperature = lambda *a, **k: dict(best=1.0, evaluated={}, widened=0, edge_note=None)
+    pilot.SKILLS_HARM_MAX = -1e9
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            ck, data = setup(d)
+            r = pilot.pilot(ck, os.path.join(d, 'out'), os.path.join('creative', 'data', 'c1'), skills_train=os.path.join(data, 'train.jsonl'), skills_data=data, ladder=(32,),
+                            warm_n=32, lrs=(1e-3,), visits=(1,), extra_visits=None, tries=4, practice_limit=24, batch=16, temps=(1.0,), log=lambda x: None)
+            assert r['pc_gate']['passes'] is False and 'skills limit' in r['pc_gate']['reason'] and 'stop_rule' in r['pc_gate'] and len(r['pc_grid']) == 1
+    finally:
+        scoreboard.dev_gate, scoreboard.choose_temperature, pilot.SKILLS_HARM_MAX = real_gate, real_temp, real_max
+    print('ok pc_stop_when_no_setting_within_skills_limit')
 
 
 def test_temperature_rule():

@@ -17,6 +17,7 @@ from custom_io.models import progparse as pp
 from creative.programs import COMM, M, N_RES, R0, Try, raw_key
 
 N_NUM, N_REG = pp.N_NUM, 9
+C1_LEVEL = 4        # C1's try sampler (decided 10-06): the used-number + exact-division mask of creative/legal.py. Plain = level 0. C2 does NOT use it.
 
 
 @dataclass
@@ -134,10 +135,14 @@ def first_step_candidates(model, rows, vocab, device, k=8, bs=256):
 
 
 @torch.no_grad()
-def sample_tries(model, rows, vocab, device, n_tries=32, temperature=1.0, branch=8, max_rounds=4, seed=0, bs=2048, loops=None):
+def sample_tries(model, rows, vocab, device, n_tries=32, temperature=1.0, branch=8, max_rounds=4, seed=0, bs=2048, loops=None, level=0):
     """The shared sampler. For each row: n_tries samples, the first round split evenly over the top-`branch` first steps (each branch forces
     its first step and samples the rest), duplicates dropped, then free top-up rounds (up to max_rounds in all) until n_tries distinct
-    programs or the rounds run out. -> (tries, raw) with tries[i] = list of TryRec (<= n_tries distinct) and raw[i] = programs sampled."""
+    programs or the rounds run out. -> (tries, raw) with tries[i] = list of TryRec (<= n_tries distinct) and raw[i] = programs sampled.
+    level > 0: the same loop with creative.legal's masks (C1 uses `C1_LEVEL`); level 0 is the plain sampler (loops is plain-only)."""
+    if level:
+        from creative import legal
+        return legal.sample_tries_masked(model, rows, vocab, device, n_tries, temperature, level, branch, max_rounds, seed, bs)
     gen = torch.Generator(device=device)
     gen.manual_seed(seed)
     cands = first_step_candidates(model, rows, vocab, device, branch) if branch and loops != 0 else [[] for _ in rows]
@@ -172,29 +177,43 @@ def sample_tries(model, rows, vocab, device, n_tries=32, temperature=1.0, branch
 
 
 @torch.no_grad()
-def greedy_tries(model, rows, vocab, device, bs=512):
-    """The first try the user would see: one greedy pass per row. -> list of TryRec."""
+def greedy_tries(model, rows, vocab, device, bs=512, level=0):
+    """The first try the user would see: one greedy pass per row (level 0 = B2's own plain greedy, which F1 uses). -> list of TryRec."""
     out = []
+    if level:
+        from creative import legal
+        for s in range(0, len(rows), bs):
+            rs = rows[s:s + bs]
+            out += _tries_from(legal.sample_run_masked(model, make_batch(rs, vocab, device), legal._k(rs), level, greedy=True))
+        return out
     for s in range(0, len(rows), bs):
         out += _tries_from(sample_run(model, make_batch(rows[s:s + bs], vocab, device), greedy=True))
     return out
 
 
-def rule_follower_tries(rows, n_tries=32, seed=0, max_draws=2000):
+def rule_follower_tries(rows, n_tries=32, seed=0, max_draws=2000, exact=False):
     """The value-blind rule follower: random programs that obey the rules (each step takes two distinct unspent given numbers or results, op from
     + - x /, the last result is the answer), without looking at any target. Same dedup as the shared sampler (up to n_tries distinct).
-    Its per-try luck equals puzzles.rules_only_floor. -> list of [TryRec]."""
+    Its per-try luck equals puzzles.rules_only_floor. exact=True: each step is uniform over the steps whose result is exact (the C1 mask's
+    legal set), luck equals puzzles.rules_only_floor(exact=True). -> list of [TryRec]."""
     import random
-    from creative.programs import ARITH
+    from creative.programs import ARITH, apply
     rng = random.Random(seed)
     out = []
     for row in rows:
         k, keys, tr = len(row['nums']), set(), []
         for _ in range(max_draws):
             pool, steps = list(range(k)), []
+            val = {i: row['nums'][i] for i in range(k)}
             while len(pool) > 1:
-                a, b = rng.sample(pool, 2)
-                steps.append((rng.choice(ARITH), a, b))
+                for _try in range(1000):
+                    a, b = rng.sample(pool, 2)
+                    op = rng.choice(ARITH)
+                    v = apply(op, val[a], val[b]) if exact else 0
+                    if v is not None:
+                        break
+                steps.append((op, a, b))
+                val[R0 + len(steps) - 1] = v
                 pool = [x for x in pool if x not in (a, b)] + [R0 + len(steps) - 1]
             t = Try.make(steps, pool[0])
             if raw_key(t) not in keys:

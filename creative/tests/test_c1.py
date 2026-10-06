@@ -287,10 +287,27 @@ def test_scoreboard_and_gate():
     assert abs(sr['luck'] - fl) < 0.01 and sr['unresolved'] == 0, (sr['luck'], fl)
     aim = scoreboard.aim_check(m, rows, VOCAB, 'cpu', n_tries=8)
     assert set(aim) >= {'own', 'twin', 'rules', 'own_minus_rules_luck', 'own_minus_twin_luck'} and aim['rules']['luck'] >= 0
-    les = scoreboard.lesions(m, rows, VOCAB, 'cpu', n_tries=8)
+    les = scoreboard.lesions(m, rows, VOCAB, 'cpu', n_tries=8, level=0)
     assert set(les) == {'luck', 'donor_luck', 'rules_floor', 'donor_ok', 'loops0_luck'} and les['loops0_luck'] == 0 and les['donor_ok']
+    lm = scoreboard.lesions(m, rows, VOCAB, 'cpu', n_tries=8)                      # masked (C1 default): floor is the exact-legal floor; 8 tries on 8 puzzles is too few to assert donor_ok
+    assert set(lm) == set(les) and lm['loops0_luck'] == 0 and lm['rules_floor'] > les['rules_floor']
     print('  random B2 on 8 dev puzzles:', {k: round(v, 4) for k, v in s.items() if isinstance(v, float)})
     print('  gate:', g['verdict'], '| rule follower luck', round(sr['luck'], 4), 'vs exact floor', round(fl, 4))
+    # decided 10-06: C1's sampler is the level-4 mask; the follower is uniform over EXACT legal programs (floor 4.02% per try on DEV)
+    dv = splits()['dev']
+    rfx = sampler.rule_follower_tries(dv[:64], 32, 0, exact=True)
+    assert all(scoreboard.judge_try(r, x, rules_only=True) == 'accept' for r, t in zip(dv[:64], rfx) for x in t)      # every try legal
+    srx = scoreboard.score_puzzles(dv[:64], rfx)
+    flx = sum(puzzles.rules_only_floor(r['nums'], r['target'], exact=True) for r in dv[:64]) / 64
+    assert srx['rules_share'] == 1.0 and abs(srx['luck'] - flx) < 0.02, (srx['luck'], flx)
+    assert abs(sum(puzzles.rules_only_floor(r['nums'], r['target'], exact=True) for r in dv) / len(dv) - scoreboard.BLIND_EXACT_FLOOR) < 5e-4
+    assert abs(scoreboard.AIM_MIN - 2 * scoreboard.BLIND_EXACT_FLOOR) < 1e-12 and sampler.C1_LEVEL == 4
+    mt, _ = sampler.sample_tries(m, dv[:6], VOCAB, 'cpu', n_tries=16, temperature=1.0, seed=2, level=4)
+    assert all(scoreboard.judge_try(r, x, rules_only=True) == 'accept' for r, t in zip(dv[:6], mt) for x in t)         # masked tries are always legal
+    mg = sampler.greedy_tries(m, dv[:6], VOCAB, 'cpu', level=4)
+    assert all(scoreboard.judge_try(r, x, rules_only=True) == 'accept' for r, x in zip(dv[:6], mg))
+    ac = scoreboard.aim_check(m, dv[:6], VOCAB, 'cpu', 8, 1.0)
+    assert ac['own']['rules_share'] == 1.0 and ac['rules']['rules_share'] == 1.0
     print('ok scoreboard_and_gate')
 
 

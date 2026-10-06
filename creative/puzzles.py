@@ -180,9 +180,10 @@ def solver_records(row, k, rng):
 
 
 # ---- floors (recomputed for B2's slots; stage S0) ----
-def rules_only_floor(nums, target):
+def rules_only_floor(nums, target, exact=False):
     """Exact per-try luck of a value-blind rule-following random try: each step picks an op from + - x / and two distinct available
-    slots (given numbers and earlier results not yet spent) uniformly at random; the last result is the answer. An inexact division is a miss."""
+    slots (given numbers and earlier results not yet spent) uniformly at random; the last result is the answer. An inexact division is a miss.
+    exact=True (the C1 mask's legal set, decided 10-06): steps with an inexact result are never drawn; the follower is uniform over the exact steps."""
     def go(pool):
         if len(pool) == 1:
             return Fraction(int(pool[0] == target))
@@ -193,8 +194,11 @@ def rules_only_floor(nums, target):
                 for x, y in ((pool[i], pool[j]), (pool[j], pool[i])):
                     cnt += 1
                     v = apply(op, x, y)
+                    if exact and v is None:
+                        cnt -= 1
+                        continue
                     tot += go(rest + [v]) if v is not None else 0
-        return tot / cnt
+        return tot / cnt if cnt else Fraction(0)
     return float(go(list(nums)))
 
 

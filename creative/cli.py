@@ -33,6 +33,7 @@ def main(argv=None):
     ap.add_argument('--ladder', default='1500', help='pilot: warm-up 3-number puzzle counts, smallest passing the gates wins (decided 10-06: 1500; 3000,6000 are comparison runs)')
     ap.add_argument('--fallbacks', action='store_true', help='pilot: after the last rung fails, try fallbacks a (16 visits) and b (dreams)')
     ap.add_argument('--dreams', type=int, default=3000)
+    ap.add_argument('--level', type=int, default=4, help='try sampler: 4 = C1 (used-number + exact-division mask, decided 10-06), 0 = plain sampler (labelled comparison only)')
     ap.add_argument('--skills-data', help='pilot: custom_io data dir with dev/in_dist.jsonl (use WORK/data_big) for the skills score / warm-up harm')
     ap.add_argument('--skills-train', help='skills train.jsonl for replay (pilot); without it warm-up harm is not measured')
     a = ap.parse_args(argv)
@@ -42,7 +43,7 @@ def main(argv=None):
     if a.cmd == 'pilot':
         from creative import pilot
         pilot.pilot(a.ckpt, a.out, a.data, a.device, a.skills_train, a.skills_data, ladder=tuple(int(x) for x in a.ladder.split(',')),
-                    lrs=tuple(float(x) for x in a.lrs.split(',')), tries=a.tries, practice_limit=a.practice_limit, fallbacks=a.fallbacks, dreams_n=a.dreams,
+                    lrs=tuple(float(x) for x in a.lrs.split(',')), tries=a.tries, practice_limit=a.practice_limit, fallbacks=a.fallbacks, dreams_n=a.dreams, level=a.level,
                     log=lambda d: print(json.dumps(d), flush=True))
         return
     rows = puzzles.load_split(a.data, a.split)[:a.limit]
@@ -50,7 +51,9 @@ def main(argv=None):
         rules = [puzzles.rules_only_floor(r['nums'], r['target']) for r in rows]
         uni = [puzzles.uniform_floor(r['nums'], r['target'], a.uniform_samples, seed=i) for i, r in enumerate(rows)]
         n = len(rows)
-        print(json.dumps(dict(split=a.split, n=n, rules_only_per_try=sum(rules) / n, rules_only_pass4=sum(puzzles.pass_at(p, 4) for p in rules) / n,
+        ex = [puzzles.rules_only_floor(r['nums'], r['target'], exact=True) for r in rows]
+        print(json.dumps(dict(split=a.split, n=n, exact_legal_per_try=sum(ex) / n, exact_legal_pass4=sum(puzzles.pass_at(p, 4) for p in ex) / n,
+                              exact_legal_pass32=sum(puzzles.pass_at(p, 32) for p in ex) / n, rules_only_per_try=sum(rules) / n, rules_only_pass4=sum(puzzles.pass_at(p, 4) for p in rules) / n,
                               rules_only_pass32=sum(puzzles.pass_at(p, 32) for p in rules) / n, uniform_per_try=sum(uni) / n,
                               uniform_pass4=sum(puzzles.pass_at(p, 4) for p in uni) / n, uniform_samples=a.uniform_samples), indent=1))
         return
@@ -58,23 +61,23 @@ def main(argv=None):
     model, vocab, meta = sleep.load_parent(a.ckpt, a.device)
     model.eval()
     if a.cmd == 'dev-gate':
-        best, grid = scoreboard.tune_temperature(model, rows, vocab, a.device, [float(x) for x in a.temps.split(',')], a.tries)
-        tr, raw = sampler.sample_tries(model, rows, vocab, a.device, a.tries, best)
-        nb, _ = sampler.sample_tries(model, rows, vocab, a.device, a.tries, best, branch=0)
+        best, grid = scoreboard.tune_temperature(model, rows, vocab, a.device, [float(x) for x in a.temps.split(',')], a.tries, level=a.level)
+        tr, raw = sampler.sample_tries(model, rows, vocab, a.device, a.tries, best, level=a.level)
+        nb, _ = sampler.sample_tries(model, rows, vocab, a.device, a.tries, best, branch=0, level=a.level)
         prac = puzzles.load_split(a.data, 'practice')[:a.practice_limit]
-        ptr, _ = sampler.sample_tries(model, prac, vocab, a.device, a.tries, best)
+        ptr, _ = sampler.sample_tries(model, prac, vocab, a.device, a.tries, best, level=a.level)
         g = scoreboard.dev_gate(rows, tr, raw, nb, (prac, ptr))
-        aim = scoreboard.aim_check(model, rows, vocab, a.device, a.tries, best)
+        aim = scoreboard.aim_check(model, rows, vocab, a.device, a.tries, best, level=a.level)
         print(json.dumps(dict(temperature=best, grid={str(k): v for k, v in grid.items()}, gate=g, aim=aim), indent=1))
     elif a.cmd == 'aim':
-        print(json.dumps(scoreboard.aim_check(model, rows, vocab, a.device, a.tries, a.temperature), indent=1))
+        print(json.dumps(scoreboard.aim_check(model, rows, vocab, a.device, a.tries, a.temperature, level=a.level), indent=1))
     elif a.cmd == 'score':
-        tr, raw = sampler.sample_tries(model, rows, vocab, a.device, a.tries, a.temperature)
+        tr, raw = sampler.sample_tries(model, rows, vocab, a.device, a.tries, a.temperature, level=a.level)
         s = scoreboard.score_puzzles(rows, tr, raw, sampler.greedy_tries(model, rows, vocab, a.device))
         s.pop('per_puzzle')
         print(json.dumps(s, indent=1))
     else:
-        print(json.dumps(scoreboard.lesions(model, rows, vocab, a.device, a.tries, a.temperature), indent=1))
+        print(json.dumps(scoreboard.lesions(model, rows, vocab, a.device, a.tries, a.temperature, level=a.level), indent=1))
 
 if __name__ == '__main__':
     main()

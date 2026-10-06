@@ -5,10 +5,11 @@ Reach@4 is the expected value over random 4-tries subsets of the kept tries (hyp
 from math import comb
 from creative.checkers import verdict
 from creative.programs import NOOP, cone, result_key, run
+from creative.sampler import C1_LEVEL
 
 PRACTICE_SOLVED_MIN = 100   # signal gate: an accepted try on at least 100 distinct practice puzzles
-BLIND_HIT_GIVEN_RULES = 0.041   # value-blind rule follower on DEV: 2.4% of tries hit / 58% of tries follow the rules (shown, PR #44)
-AIM_MIN = 2 * BLIND_HIT_GIVEN_RULES   # aim gate: luck / rules_share >= twice the follower's (0.082); rules_share itself is reported, never gated
+BLIND_EXACT_FLOOR = 0.0402      # DEV, exact legal programs (C1's mask): the value-blind follower's per-try luck = mean puzzles.rules_only_floor(exact=True) (shown, PR #44)
+AIM_MIN = 2 * BLIND_EXACT_FLOOR # aim gate: luck / rules_share >= twice that floor (0.0804); under the mask rules_share is ~1; it is reported, never gated
 SAMENESS_MIN = 4.0          # sameness gate: >= 4 distinct rule-following programs per puzzle on average (canonical key)
 
 
@@ -82,7 +83,7 @@ def dev_gate(rows, tries, raw=None, nobranch=None, practice=None):
     """The gates on DEV after warm-up (roadmap section 6, rewritten 10-06 after the second pilot).
       signal:   the warmed parent has an accepted try on >= 100 distinct practice puzzles (practice = (practice_rows, practice_tries), 32 tries each).
       aim:      among its rule-following tries the share that hit the target (luck / rules_share) is >= 2x the value-blind rule follower's
-                (0.041), i.e. >= 0.082. A feasibility check, not a claim (G0 is the claim). The share of tries that follow the rules is
+                (exact legal programs, 4.02%), i.e. >= 0.0804. A feasibility check, not a claim (G0 is the claim). The share of tries that follow the rules is
                 REPORTED, never gated: the follower's own share is only 58%, so any bar near 50% asks for near-perfect legality, not signal.
       sameness: distinct rule-following programs (canonical key) >= 4 per puzzle on average, with the sampler's branching on.
     Reported, not gated: rules_share, reach@4 / @32, the old result-changing count `distinct`, and the variety without branching (nobranch = tries
@@ -110,7 +111,7 @@ def dev_gate(rows, tries, raw=None, nobranch=None, practice=None):
     return out
 
 
-def choose_temperature(model, rows, vocab, device, grid=(0.7, 1.0, 1.5, 2.0), n_tries=32, seed=0, max_widen=3, log=None):
+def choose_temperature(model, rows, vocab, device, grid=(0.7, 1.0, 1.5, 2.0), n_tries=32, seed=0, max_widen=3, log=None, level=C1_LEVEL):
     """Choose the sampling temperature on DEV only (roadmap section 6, 10-06): the highest reach@4, only among temperatures that pass the sameness gate
     (>= 4 distinct rule-following programs per puzzle). If the choice lands on a grid edge, widen the grid there (x1.5 up / /1.5 down, rounded) and choose
     again, up to max_widen times. None eligible -> best = None. Frozen afterwards.
@@ -120,7 +121,7 @@ def choose_temperature(model, rows, vocab, device, grid=(0.7, 1.0, 1.5, 2.0), n_
 
     def evaluate(T):
         if T not in ev:
-            tr, raw = sample_tries(model, rows, vocab, device, n_tries=n_tries, temperature=T, seed=seed)
+            tr, raw = sample_tries(model, rows, vocab, device, n_tries=n_tries, temperature=T, seed=seed, level=level)
             s = score_puzzles(rows, tr, raw)
             ev[T] = dict(reach4=s['reach4'], reach32=s['reach32'], distinct_rules=s['distinct_rules'], rules_share=s['rules_share'],
                          eligible=s['distinct_rules'] >= SAMENESS_MIN)
@@ -143,38 +144,38 @@ def choose_temperature(model, rows, vocab, device, grid=(0.7, 1.0, 1.5, 2.0), n_
     return dict(best=best, evaluated={str(k): v for k, v in sorted(ev.items())}, widened=widened, edge_note=note)
 
 
-def tune_temperature(model, rows, vocab, device, grid=(0.7, 1.0, 1.5, 2.0), n_tries=32, seed=0):
+def tune_temperature(model, rows, vocab, device, grid=(0.7, 1.0, 1.5, 2.0), n_tries=32, seed=0, level=C1_LEVEL):
     """Compat wrapper: (best, {T: (reach4, distinct_rules)}). best falls back to the grid's best reach@4 when no temperature passes sameness."""
-    r = choose_temperature(model, rows, vocab, device, grid, n_tries, seed)
+    r = choose_temperature(model, rows, vocab, device, grid, n_tries, seed, level=level)
     grid_ = {float(k): (v['reach4'], v['distinct_rules']) for k, v in r['evaluated'].items()}
     return (r['best'] if r['best'] is not None else max(grid_, key=lambda T: grid_[T])), grid_
 
 
-def lesions(model, rows, vocab, device, n_tries=32, temperature=1.0, seed=0):
+def lesions(model, rows, vocab, device, n_tries=32, temperature=1.0, seed=0, level=C1_LEVEL):
     """C1's lesion (roadmap section 6): DONOR ONLY. Tries sampled on the TWIN puzzle's prompt (same numbers, the other target) and judged on the
     recipient's own target must not score above the rules-only floor; otherwise the run is void. loops0_luck (loops:0 writes no steps, so 0 by
     construction) is reported, not a test. Run on W after sleep. -> dict(luck, donor_luck, rules_floor, donor_ok, loops0_luck)."""
     from creative.puzzles import rules_only_floor
     from creative.sampler import sample_tries
-    tr, raw = sample_tries(model, rows, vocab, device, n_tries, temperature, seed=seed)
-    t0, _ = sample_tries(model, rows, vocab, device, n_tries, temperature, seed=seed, loops=0)
-    td, _ = sample_tries(model, [r['twin'] for r in rows], vocab, device, n_tries, temperature, seed=seed)
+    tr, raw = sample_tries(model, rows, vocab, device, n_tries, temperature, seed=seed, level=level)
+    t0, _ = sample_tries(model, rows, vocab, device, n_tries, temperature, seed=seed, loops=0)       # plain sampler: loops:0 writes nothing (0 by construction)
+    td, _ = sample_tries(model, [r['twin'] for r in rows], vocab, device, n_tries, temperature, seed=seed, level=level)
     share = lambda rs, ts: sum(judge_try(r, x) == 'accept' for r, t in zip(rs, ts) for x in t) / max(sum(len(t) for t in ts), 1)
-    floor = sum(rules_only_floor(r['nums'], r['target']) for r in rows) / len(rows)
+    floor = sum(rules_only_floor(r['nums'], r['target'], exact=bool(level)) for r in rows) / len(rows)
     donor = share(rows, td)
     return dict(luck=share(rows, tr), donor_luck=donor, rules_floor=floor, donor_ok=donor <= floor, loops0_luck=share(rows, t0))
 
 
-def aim_check(model, rows, vocab, device, n_tries=32, temperature=1.0, seed=0):
+def aim_check(model, rows, vocab, device, n_tries=32, temperature=1.0, seed=0, level=C1_LEVEL):
     """AIM CHECK on DEV (a report, not a gate; no training), same tries and checker throughout:
       own:   the model's tries for the real target, judged on the real target
       twin:  the model's tries for the TWIN target, judged on the real target
       rules: the value-blind rule follower (random rule-following programs, same dedup), judged on the real target
     Luck and reach@4 for each. If rules matches own, search is still random and G0 decides whether sleep taught aim. Repeat on W after sleep."""
     from creative.sampler import rule_follower_tries, sample_tries
-    own, raw = sample_tries(model, rows, vocab, device, n_tries, temperature, seed=seed)
-    twin, _ = sample_tries(model, [r['twin'] for r in rows], vocab, device, n_tries, temperature, seed=seed)
-    rf = rule_follower_tries(rows, n_tries, seed)
+    own, raw = sample_tries(model, rows, vocab, device, n_tries, temperature, seed=seed, level=level)
+    twin, _ = sample_tries(model, [r['twin'] for r in rows], vocab, device, n_tries, temperature, seed=seed, level=level)
+    rf = rule_follower_tries(rows, n_tries, seed, exact=bool(level))
     out = {}
     for name, tr in (('own', own), ('twin', twin), ('rules', rf)):
         sc = score_puzzles(rows, tr)                     # twin tries are scored on the real rows (rows[i] has the real target)
