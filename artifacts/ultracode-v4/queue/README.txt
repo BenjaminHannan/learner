@@ -1,0 +1,1 @@
+Queue for scripts/cap256_launch/ultracode_box.sh. Each NN-name.sh runs once on the box (sourced after prelude.sh: run NAME args...). Header lines "# MEM <MiB>" and "# PAR <runs>" set the free-GPU need and slots.

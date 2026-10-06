@@ -1,0 +1,618 @@
+{
+ "updates_done": 6000,
+ "rounds": 4,
+ "pointer": false,
+ "reader_hidden": null,
+ "prefix_hidden": null,
+ "zero_pool": false,
+ "shuffle_pool": false,
+ "lm_lora": null,
+ "lora_lr_mult": null,
+ "gen_fix": true,
+ "steps": true,
+ "steps_rich": true,
+ "back": null,
+ "chat": false,
+ "no_front": false,
+ "two_path": null,
+ "accum": 1,
+ "moe_revive": null,
+ "aux_weight": null,
+ "fresh_adam": false,
+ "wd": null,
+ "sample_seed": 1,
+ "fixed_rows": 2000,
+ "passes": 3,
+ "families": "chain_ops,state_update,cipher_map,chain_story2,var_chain,seq_cycle,fewshot_number_rule,group_induct",
+ "stride": 1989,
+ "parent_seed": 0,
+ "lr_mult": 1.0,
+ "dev_n": 16,
+ "final_dev": {
+  "in_dist": {
+   "correct": 13,
+   "n": 16,
+   "skipped": 0,
+   "by_family": {
+    "chain_ops": [
+     13,
+     16
+    ]
+   }
+  },
+  "answer": {
+   "correct": 15,
+   "n": 16,
+   "skipped": 0,
+   "by_family": {
+    "chain_ops": [
+     15,
+     16
+    ]
+   }
+  },
+  "frame": {
+   "correct": 15,
+   "n": 16,
+   "skipped": 0,
+   "by_family": {
+    "chain_ops": [
+     15,
+     16
+    ]
+   }
+  },
+  "vocab": {
+   "correct": 16,
+   "n": 16,
+   "skipped": 0,
+   "by_family": {
+    "chain_ops": [
+     16,
+     16
+    ]
+   }
+  },
+  "variant": {
+   "correct": 15,
+   "n": 16,
+   "skipped": 0,
+   "by_family": {
+    "chain_ops": [
+     15,
+     16
+    ]
+   }
+  },
+  "family": {
+   "correct": 0,
+   "n": 0,
+   "skipped": 0,
+   "by_family": {}
+  },
+  "trainfit": {
+   "correct": 15,
+   "n": 16,
+   "skipped": 0,
+   "by_family": {
+    "group_induct": [
+     1,
+     1
+    ],
+    "chain_story2": [
+     5,
+     5
+    ],
+    "seq_cycle": [
+     3,
+     4
+    ],
+    "chain_ops": [
+     1,
+     1
+    ],
+    "var_chain": [
+     2,
+     2
+    ],
+    "cipher_map": [
+     1,
+     1
+    ],
+    "fewshot_number_rule": [
+     2,
+     2
+    ]
+   }
+  }
+ },
+ "final_lesions": {
+  "trainfit": {
+   "intact": {
+    "correct": 15,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      1,
+      1
+     ],
+     "chain_story2": [
+      5,
+      5
+     ],
+     "seq_cycle": [
+      3,
+      4
+     ],
+     "chain_ops": [
+      1,
+      1
+     ],
+     "var_chain": [
+      2,
+      2
+     ],
+     "cipher_map": [
+      1,
+      1
+     ],
+     "fewshot_number_rule": [
+      2,
+      2
+     ]
+    }
+   },
+   "family_mean": {
+    "correct": 14,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      1,
+      1
+     ],
+     "chain_story2": [
+      5,
+      5
+     ],
+     "seq_cycle": [
+      2,
+      4
+     ],
+     "chain_ops": [
+      1,
+      1
+     ],
+     "var_chain": [
+      2,
+      2
+     ],
+     "cipher_map": [
+      1,
+      1
+     ],
+     "fewshot_number_rule": [
+      2,
+      2
+     ]
+    }
+   },
+   "shuffle_same_family": {
+    "correct": 15,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      1,
+      1
+     ],
+     "chain_story2": [
+      5,
+      5
+     ],
+     "seq_cycle": [
+      3,
+      4
+     ],
+     "chain_ops": [
+      1,
+      1
+     ],
+     "var_chain": [
+      2,
+      2
+     ],
+     "cipher_map": [
+      1,
+      1
+     ],
+     "fewshot_number_rule": [
+      2,
+      2
+     ]
+    }
+   },
+   "global_mean": {
+    "correct": 9,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      0,
+      1
+     ],
+     "chain_story2": [
+      5,
+      5
+     ],
+     "seq_cycle": [
+      0,
+      4
+     ],
+     "chain_ops": [
+      1,
+      1
+     ],
+     "var_chain": [
+      2,
+      2
+     ],
+     "cipher_map": [
+      0,
+      1
+     ],
+     "fewshot_number_rule": [
+      1,
+      2
+     ]
+    }
+   }
+  },
+  "in_dist": {
+   "intact": {
+    "correct": 13,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      13,
+      16
+     ]
+    }
+   },
+   "family_mean": {
+    "correct": 13,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      13,
+      16
+     ]
+    }
+   },
+   "shuffle_same_family": {
+    "correct": 13,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      13,
+      16
+     ]
+    }
+   },
+   "global_mean": {
+    "correct": 13,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      13,
+      16
+     ]
+    }
+   }
+  }
+ },
+ "in_dist_curve": [
+  {
+   "update": 1000,
+   "in_dist": {
+    "correct": 12,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      12,
+      16
+     ]
+    }
+   },
+   "trainfit": {
+    "correct": 12,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      1,
+      1
+     ],
+     "chain_story2": [
+      5,
+      5
+     ],
+     "seq_cycle": [
+      1,
+      4
+     ],
+     "chain_ops": [
+      1,
+      1
+     ],
+     "var_chain": [
+      2,
+      2
+     ],
+     "cipher_map": [
+      1,
+      1
+     ],
+     "fewshot_number_rule": [
+      1,
+      2
+     ]
+    }
+   }
+  },
+  {
+   "update": 2000,
+   "in_dist": {
+    "correct": 13,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      13,
+      16
+     ]
+    }
+   },
+   "trainfit": {
+    "correct": 10,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      0,
+      1
+     ],
+     "chain_story2": [
+      4,
+      5
+     ],
+     "seq_cycle": [
+      0,
+      4
+     ],
+     "chain_ops": [
+      1,
+      1
+     ],
+     "var_chain": [
+      2,
+      2
+     ],
+     "cipher_map": [
+      1,
+      1
+     ],
+     "fewshot_number_rule": [
+      2,
+      2
+     ]
+    }
+   }
+  },
+  {
+   "update": 3000,
+   "in_dist": {
+    "correct": 13,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      13,
+      16
+     ]
+    }
+   },
+   "trainfit": {
+    "correct": 12,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      1,
+      1
+     ],
+     "chain_story2": [
+      5,
+      5
+     ],
+     "seq_cycle": [
+      1,
+      4
+     ],
+     "chain_ops": [
+      1,
+      1
+     ],
+     "var_chain": [
+      2,
+      2
+     ],
+     "cipher_map": [
+      0,
+      1
+     ],
+     "fewshot_number_rule": [
+      2,
+      2
+     ]
+    }
+   }
+  },
+  {
+   "update": 4000,
+   "in_dist": {
+    "correct": 13,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      13,
+      16
+     ]
+    }
+   },
+   "trainfit": {
+    "correct": 11,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      0,
+      1
+     ],
+     "chain_story2": [
+      5,
+      5
+     ],
+     "seq_cycle": [
+      1,
+      4
+     ],
+     "chain_ops": [
+      1,
+      1
+     ],
+     "var_chain": [
+      2,
+      2
+     ],
+     "cipher_map": [
+      0,
+      1
+     ],
+     "fewshot_number_rule": [
+      2,
+      2
+     ]
+    }
+   }
+  },
+  {
+   "update": 5000,
+   "in_dist": {
+    "correct": 14,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      14,
+      16
+     ]
+    }
+   },
+   "trainfit": {
+    "correct": 13,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      1,
+      1
+     ],
+     "chain_story2": [
+      5,
+      5
+     ],
+     "seq_cycle": [
+      2,
+      4
+     ],
+     "chain_ops": [
+      1,
+      1
+     ],
+     "var_chain": [
+      2,
+      2
+     ],
+     "cipher_map": [
+      0,
+      1
+     ],
+     "fewshot_number_rule": [
+      2,
+      2
+     ]
+    }
+   }
+  },
+  {
+   "update": 6000,
+   "in_dist": {
+    "correct": 13,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "chain_ops": [
+      13,
+      16
+     ]
+    }
+   },
+   "trainfit": {
+    "correct": 15,
+    "n": 16,
+    "skipped": 0,
+    "by_family": {
+     "group_induct": [
+      1,
+      1
+     ],
+     "chain_story2": [
+      5,
+      5
+     ],
+     "seq_cycle": [
+      3,
+      4
+     ],
+     "chain_ops": [
+      1,
+      1
+     ],
+     "var_chain": [
+      2,
+      2
+     ],
+     "cipher_map": [
+      1,
+      1
+     ],
+     "fewshot_number_rule": [
+      2,
+      2
+     ]
+    }
+   }
+  }
+ ],
+ "parent_path": "/job/repo/skills/main2/final-checkpoint.pt",
+ "checkpoint_sha256": null,
+ "minutes": 30.4
+}
