@@ -63,10 +63,12 @@ class CharReader(nn.Module):
         """place ids for batch['rows'] prompts, padded to prompt_ids' width (see batch_places); cached per prompt."""
         return batch_places(batch, self._cache)
 
-    def forward(self, batch):
-        """-> X [B,T,d] (zeros at padding), mask [B,T] bool."""
+    def forward(self, batch, extra=None):
+        """-> X [B,T,d] (zeros at padding), mask [B,T] bool. extra [B,T,d] (Ledger eg_embed) is added to the input embedding, before the conv blocks."""
         ids, mask = batch['prompt_ids'], batch['prompt_mask']
         x = self.tok(ids) + self.pos(torch.arange(ids.shape[1], device=ids.device)) + self.place(self.places(batch))
+        if extra is not None:
+            x = x + extra
         x = x * mask[..., None]
         for blk in self.blocks:
             x = blk(x, mask)

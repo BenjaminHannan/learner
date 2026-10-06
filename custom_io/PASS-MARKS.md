@@ -147,3 +147,34 @@ If B1-a is proved wrong, way B at this size is dead (source section 6): next sin
   in exactly this form (analyze_b1 reads it; `<hex>` = sha256 of `plan_b/<arm>/MANIFEST.json`, from the machine that builds the data the queue trains on):
   - teach MANIFEST.json sha256 40316ed14090e7e438030ce6ed403b9054d19f136e92c1d90c789955a1c3fe9d
   - gen MANIFEST.json sha256 9121d7ac26ffa5b04481a99f5817d6db0ce494a8357f0c79b1160f7d69ebc875
+
+## Addendum 4: EmbeddingGemma 2 arms for B2 (written 2026-10-06 about 17:40 UTC, 1:40 PM ET, before any EG run; design/EG2-embedding.md)
+Source: the marks at `/mnt/project-files/embeddinggemma/PASS-MARKS-meaning-teacher.md` (written 10-06 before any run), applied unchanged to both arms.
+Ben (1:10 PM ET): no need to keep this one free of pretrained parts; use EmbeddingGemma 2 as the model's embedding.
+**Arms** (each paired by seed with plain B2 `B2_s200`, `B2_s201` of queue 33, same PC, same recipe: 200k skills rows, 24,000 updates, batch 256,
+lr 1e-3, bf16, `--cfg '{"copy":true}'` plus the one switch):
+- **EGE** (`"eg_embed":true`): frozen EmbeddingGemma 2 text part (google/embeddinggemma-2 at revision 914f7f89, 271,002,624 params) gives the
+  768-d per-token state of every prompt token (prompt = `task: sentence similarity | query: ` + prompt); each character gets its token's
+  state through LayerNorm and a zero-initialised Linear(768 -> 256), added to B2's own character embedding before its conv reader. Trainable
+  3,500,881; whole model with EmbeddingGemma counted 274,503,505.
+- **EGT** (`"eg_teach":0.1`): training-only meaning teacher exactly as in the source: mean of the 8 control tokens after iteration t = 1 ->
+  LayerNorm -> Linear(256 -> 256), loss += 0.1 * (1 - cos) to EmbeddingGemma's pooled vector of the training prompt, cut to 256 dims and
+  re-normalised. The head (66,304) is dropped after training: shipped model = B2, 3,302,481, nothing pretrained inside. Deviation from the source:
+  the teacher vectors are computed on the fly from each training batch (same frozen model, same prompts) instead of once into a file; dev
+  prompts are still never embedded for this arm (tested).
+**Pass (each arm on its own, all must hold, 2-seed screen):**
+1. pooled-5 gain >= +1.0 on BOTH seeds.
+2. variant-split gain >= +3.0, 2-seed mean.
+3. No dev split (in_dist, answer, frame, vocab, variant) drops more than 2.0, 2-seed mean.
+4. chain-5 >= 99.0 on both seeds.
+5. Leak check: loops:0 in_dist <= 5% on both seeds; donor in_dist <= 5% on both seeds (absolute, as written; plain B2's own values on the
+   same seeds are reported next to them, read only, because B2 itself read 6.76 at loops:0 on screen seed 101).
+**What proves it wrong:** any pass mark missed for an arm -> that arm stops. EGT passing -> the source's shuffled-teacher control (teacher
+vectors permuted across training rows, 1 run per seed; defined now: a FIXED map, `numpy.random.RandomState(0).permutation` over the
+train.jsonl line order with any fixed point swapped with the next line, and each row's target is EmbeddingGemma's vector of its mapped
+row's prompt, the same map every epoch, not a per-batch shuffle): if it keeps >= 2/3 of EGT's pooled-5 gain the gain is regularisation, not meaning ->
+reject. EGE passing -> no shuffle control (the embedding ships inside the model, so its gain counts whatever its source); next is the 6-seed
+confirm at the same marks. Nothing is adopted on 2 seeds (noise rule).
+**Size rule:** EGE is a 274.5M model (borrowed parts count), so a pass is a B2-internal result; whether it beats similar-size models is a separate
+comparison against ~135M-360M models, not judged here. EGT ships at 3,302,481.
+**Read only:** the family split, per-family changes, the other lesions, steps per second and peak memory.

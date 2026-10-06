@@ -13,7 +13,7 @@ hf: lines).
 Queue file lines: `NAME args...` = one `python -m custom_io.train --data WORK/data --big-data WORK/data_big
 --out WORK/results/QUEUE/NAME args...` run; `hf: NAME args...` = one `python -m custom_io.hf_baseline --data WORK/data
 --out ... args...` run. `#` starts a comment; `# MEM 5000` sets the MiB a run needs free before it starts (default 5000;
-a later `# MEM` line changes it for the lines after it). Args are split like a shell does (shlex), so keep the
+a later `# MEM` line changes it for the lines after it); `# ENV KEY=VALUE` sets an environment variable for every run of the queue. Args are split like a shell does (shlex), so keep the
 single-quoted JSON of the Vast queue files. On MPS, --bf16 is dropped (bf16 autocast is cuda only) and --device mps is
 added; a pairing is only fair between runs on the same device, so a queue file should not be split across machines.
 
@@ -104,6 +104,20 @@ def free_mib(device):
         return int(out.strip().splitlines()[0])
     except Exception:
         return None
+
+
+def queue_env(path):
+    """`# ENV KEY=VALUE` lines of a queue file -> {KEY: VALUE}, given to every run of that queue (on top of child_env), so a
+    detached launch needs no shell variables. The value is the rest of the line, unquoted (Windows ; and backslashes survive)."""
+    env = {}
+    for raw in open(path, encoding='utf-8'):
+        line = raw.strip()
+        if line.startswith('#') and line[1:].split()[:1] == ['ENV']:
+            key, eq, val = line[1:].strip()[3:].strip().partition('=')
+            if not eq or not key.strip():
+                sys.exit(f'bad ENV line in {path}: {raw.rstrip()}')
+            env[key.strip()] = val.strip()
+    return env
 
 
 def parse_queue(path, work=None):
@@ -211,6 +225,9 @@ def run(a):
         shutil.copytree(HERE, code / 'custom_io', ignore=shutil.ignore_patterns('results', '__pycache__', '*.pt'))
     shutil.copy2(qpath, res / qpath.name)
     busy = Busy(a.busy, a.owner)
+    qenv = queue_env(qpath)
+    if qenv:
+        say(f'queue env: {qenv}')
     todo = [x for x in runs if not (res / x[0] / 'RESULT.json').exists()]
     say(f'queue {qname}: {len(runs)} runs, {len(runs) - len(todo)} already done, device {device}, par {a.par}')
     active = {}                                    # name -> (Popen, out, start)
@@ -234,7 +251,7 @@ def run(a):
                 out.mkdir(parents=True, exist_ok=True)
                 cmd = command(kind, args, work, out, device)
                 (out / 'cmd.txt').write_text(' '.join(shlex.quote(c) for c in cmd) + '\n', encoding='utf-8')
-                p = subprocess.Popen(cmd, cwd=code, env=child_env(device), stdout=open(out / 'stdout.txt', 'w', encoding='utf-8'),
+                p = subprocess.Popen(cmd, cwd=code, env={**child_env(device), **qenv}, stdout=open(out / 'stdout.txt', 'w', encoding='utf-8'),
                                      stderr=subprocess.STDOUT)
                 busy.add(f'{qname}/{name}', p.pid)
                 active[name] = (p, out, time.time())

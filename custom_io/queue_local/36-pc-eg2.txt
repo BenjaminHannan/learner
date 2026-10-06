@@ -1,0 +1,13 @@
+# BensPC RTX 5070 Ti (cuda): EmbeddingGemma 2 arms for B2 (PASS-MARKS.md addendum 4, written before any EG run; design/EG2-embedding.md).
+# Needs transformers >= 5.19 in C:\Users\benja\eg_site, the weights in C:\Users\benja\eg2 and `python -m custom_io.models.eg check cuda`
+# printing "ok": true (PC-JOB.md section 6). The two ENV lines below go to every run of this queue only (local_runner queue_env):
+# ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
+# ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\36-pc-eg2.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+# Paired by seed with B2_s200 / B2_s201 of queue 33 (same PC, same flags; only the one switch differs). EGE = EmbeddingGemma 2 as the
+# embedding (whole model 274,503,505 with it counted); EGT = training-only meaning teacher (ships as B2, 3,302,481).
+# MEM 7000
+EGE_s200 --model ledger --cfg '{"copy":true,"eg_embed":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
+EGT_s200 --model ledger --cfg '{"copy":true,"eg_teach":0.1}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
+EGE_s201 --model ledger --cfg '{"copy":true,"eg_embed":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval
+EGT_s201 --model ledger --cfg '{"copy":true,"eg_teach":0.1}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval

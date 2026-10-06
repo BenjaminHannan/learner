@@ -73,3 +73,28 @@ queue 33 froze). Then, once queues 33 and 30 have finished, the six runs (2 at a
 python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\35-pc-b1-students.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
 ```
 Push the results as in section 4 (no checkpoint.pt). Each run takes a few hours on the 5070 Ti.
+
+## 6. EmbeddingGemma 2 arms (queue 36, after queue 35, or alongside when the card has 7 GB free)
+Marks: PASS-MARKS.md addendum 4. Design: design/EG2-embedding.md. The runs need transformers >= 5.19, which the shared venv does not
+have (it has 5.17, and the running queues use it), so it goes in its own folder. Queue 36 carries its own two variables in `# ENV`
+lines (PYTHONPATH with that folder first, and CUSTOM_IO_EG2 = the local weights), and the runner hands them to every run of that queue
+only, so a detached launch needs nothing set in the shell. Once, on the PC, in PowerShell (re-stage `custom_io` from the branch first;
+queue 36 needs the newest code, the runner's `# ENV` support included):
+```
+python -m pip install --target C:\Users\benja\eg_site transformers==5.19.0
+Remove-Item -Recurse -Force C:\Users\benja\eg_site\numpy, C:\Users\benja\eg_site\numpy-*.dist-info, C:\Users\benja\eg_site\numpy.libs -ErrorAction SilentlyContinue
+$env:PYTHONPATH = 'C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages'
+python -c "from huggingface_hub import snapshot_download; snapshot_download('google/embeddinggemma-2', revision='914f7f89142e33e77833254d9c9b90c3cef7303b', local_dir=r'C:\Users\benja\eg2')"
+$env:CUSTOM_IO_EG2 = 'C:\Users\benja\eg2'
+python -m custom_io.models.eg check cuda
+```
+The last line must print `"ok": true` (the text part is 271,002,624 params and 3 probe vectors match the build box's within cos 0.999;
+bf16 on the build box's CPU gave 0.99988 or better). Removing eg_site's numpy keeps the venv's own, the one torch was installed with
+(transformers 5.19 runs on Python 3.10 and only needs numpy >= 1.17). If the paths differ on the PC, edit the two `# ENV` lines of
+`36-pc-eg2.txt` to match. Then, once queue 35 has finished or while the card has 7 GB free, launch it detached like the others:
+```
+python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\36-pc-eg2.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+```
+with stdout to `C:\Users\benja\custom-io\work\q36.log`; its first line must show `queue env: {...}` with both variables. Four runs
+(EGE and EGT, seeds 200 and 201), paired with queue 33's B2_s200 and B2_s201 on this PC. Push the results as in section 4 (no
+checkpoint.pt); the analysis is `python -m custom_io.analyze_eg --results custom_io/results/33-pc-confirm-b2 custom_io/results/36-pc-eg2`.

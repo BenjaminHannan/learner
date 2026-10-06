@@ -1,0 +1,212 @@
+"""python3 -m custom_io.tests.test_ledger_eg   (CPU, about a minute; the loss fingerprint needs the skills data at data.DEFAULT_DATA / $CUSTOM_IO_DATA)
+EG arms (design/EG2-embedding.md): (1) both switches off is exactly B2 (the fingerprints test_ledger_span took at HEAD 0265b8bc5); (2) eg_embed adds only
+ln_eg / eg_proj (last), zero-initialised, so the seeded model computes B2's loss and answers exactly at step 0, and the extra input term then learns;
+(3) eg_teach adds only ln_mt / mt_head (last): loss = B2 loss + w * meaning, the teacher is only ever run on the loss batch (never in generate, the
+lesions or the donor swap), and the shipped size drops the head; (4) the frozen EmbeddingGemma never shows up in parameters(), the optimizer or the
+checkpoint; talk() embeds the CURRENT rows (donor swap). A stub stands in for EmbeddingGemma 2 here; with $CUSTOM_IO_EG2 (a local copy) and
+transformers >= 5.19 importable, (5) also checks the real tokenizer's char -> token map on 2000 training prompts and runs one real forward."""
+import hashlib, os, sys, time
+import numpy as np
+import torch
+from custom_io.data import DEFAULT_DATA
+from custom_io.models.ledger import Ledger
+from custom_io.tests.test_ledger import M_CFG, SMALL, batch_of, train_rows, vocab
+from custom_io.tests.test_ledger_span import GOLD, GOLD_TRAIN_BYTES
+
+S_CFG = dict(d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8)
+
+
+class StubEG:
+    """Deterministic stand-in for models/eg.FrozenEG: per-char states and a pooled vector made from the prompt text alone; logs every prompt it embeds."""
+
+    def __init__(self):
+        self.seen = []
+
+    def encode(self, prompts, T, device, chars=True):
+        self.seen += list(prompts)
+        H = torch.zeros(len(prompts), T, 768)
+        pooled = torch.zeros(len(prompts), 768)
+        for b, p in enumerate(prompts):
+            g = torch.Generator().manual_seed(int(hashlib.sha1(p.encode()).hexdigest()[:8], 16))
+            n = min(len(p), T)
+            H[b, :n] = torch.randn(n, 768, generator=g) * 40
+            pooled[b] = torch.randn(768, generator=g)
+        return (H.to(device) if chars else None), pooled.to(device)
+
+
+def seeded(cfg, seed=0, v=None, **kw):
+    torch.manual_seed(seed)
+    m = Ledger(v or vocab(), **cfg, **kw)
+    if hasattr(m, '_eg'):
+        m._eg = [StubEG()]
+    return m
+
+
+def data_ok():
+    f = os.path.join(DEFAULT_DATA, 'train.jsonl')
+    return os.path.exists(f) and os.path.getsize(f) == GOLD_TRAIN_BYTES
+
+
+def test_off_is_b2():
+    """eg_embed=False, eg_teach=0: the B2 fingerprints (params, keys, seeded init, loss, aux) of the code before span or the EG arms existed."""
+    v, rows = vocab(), train_rows(48, 4)
+    for name, cfg in (('SMALL', SMALL), ('M', M_CFG)):
+        gd, m = GOLD[name], seeded(cfg, 0, v, copy=True, eg_embed=False, eg_teach=0.0)
+        sd = m.state_dict()
+        assert m.n_params() == gd['params'] and len(sd) == gd['keys'], (name, m.n_params(), len(sd))
+        assert hashlib.sha1(repr([(k, tuple(t.shape)) for k, t in sd.items()]).encode()).hexdigest() == gd['keyhash'], name
+        assert abs(sum(float(t.double().abs().sum()) for t in sd.values()) / gd['wabs'] - 1) < 1e-8, name
+        assert not hasattr(m, '_eg') and not hasattr(m, 'eg_proj') and not hasattr(m, 'mt_head')
+        b = batch_of(rows, v)
+        assert 'z1' not in m.run(b)
+        if data_ok():
+            loss, aux = m.loss(b)
+            assert abs(loss.item() - gd['loss']) < 1e-4, (name, loss.item(), gd['loss'])
+            assert set(aux) == set(gd['aux']) and all(abs(float(aux[k]) - x) < 1e-4 for k, x in gd['aux'].items()), (name, aux)
+        print(f'  {name}: {m.n_params():,} params, init {"+ loss " if data_ok() else ""}match B2')
+    print('ok off_is_b2')
+
+
+def test_embed_init_and_learning():
+    """eg_embed: keys = B2's + ln_eg + eg_proj; every B2 weight identical at the same seed; eg_proj zero, so loss, aux and answers equal B2's at step 0;
+    after one step eg_proj has moved and the answers depend on the EmbeddingGemma states; size counts the 271,002,624 borrowed params."""
+    v, rows = vocab(), train_rows(48, 4)
+    a, m = seeded(SMALL, 7, v, copy=True), seeded(SMALL, 7, v, copy=True, eg_embed=True)
+    sa, sm = a.state_dict(), m.state_dict()
+    assert list(sm)[:len(sa)] == list(sa) and list(sm)[len(sa):] == ['ln_eg.weight', 'ln_eg.bias', 'eg_proj.weight', 'eg_proj.bias'], list(sm)[len(sa):]
+    assert all(torch.equal(sa[k], sm[k]) for k in sa)
+    assert (m.eg_proj.weight == 0).all() and (m.eg_proj.bias == 0).all()
+    b = batch_of(rows, v)
+    la, xa = a.loss(b)
+    lm, xm = m.loss(b)
+    assert torch.equal(la, lm) and set(xa) == set(xm) and all(torch.equal(xa[k], xm[k]) for k in xa), (la.item(), lm.item())
+    a.eval(); m.eval()
+    assert a.generate(b) == m.generate(b)
+    m.train()
+    opt = torch.optim.AdamW([p for p in m.parameters() if p.requires_grad], lr=1e-2)
+    lm, _ = m.loss(b)
+    lm.backward()
+    assert m.eg_proj.weight.grad is not None and m.eg_proj.weight.grad.abs().sum() > 0
+    opt.step(); opt.zero_grad()
+    assert m.eg_proj.weight.abs().sum() > 0
+    m.eval()
+    X1 = m.read(b)[0]
+    m.eg().encode = (lambda f: lambda p, T, d, chars=True: (lambda r: (r[0] * 0 if r[0] is not None else None, r[1]))(f(p, T, d, chars)))(m.eg().encode)
+    X0 = m.read(b)[0]
+    assert not torch.allclose(X0, X1), 'the reader output does not depend on the EmbeddingGemma states'
+    S = seeded(S_CFG, 0, v, copy=True, eg_embed=True).size()
+    assert S == dict(trainable=3_302_481 + 1_536 + 196_864, discarded=0, frozen_borrowed=271_002_624, shipped_trainable=3_500_881,
+                     whole=3_500_881 + 271_002_624), S
+    print(f'  S cfg eg_embed: {S}')
+    print('ok embed_init_and_learning')
+
+
+def test_teach_loss_and_never_at_eval():
+    """eg_teach: keys = B2's + ln_mt + mt_head; B2 weights identical at the same seed; loss = B2 loss + w * meaning (B2 aux unchanged); answers equal
+    B2's (the head never touches inference); the teacher embeds only the loss batch's prompts, never anything in generate / lesions / donor."""
+    from custom_io.evalx import donor_eval
+    v, rows = vocab(), train_rows(48, 4)
+    a, m = seeded(SMALL, 3, v, copy=True), seeded(SMALL, 3, v, copy=True, eg_teach=0.1)
+    sa, sm = a.state_dict(), m.state_dict()
+    assert list(sm)[len(sa):] == ['ln_mt.weight', 'ln_mt.bias', 'mt_head.weight', 'mt_head.bias'] and all(torch.equal(sa[k], sm[k]) for k in sa)
+    b = batch_of(rows, v)
+    la, xa = a.loss(b)
+    lm, xm = m.loss(b)
+    assert set(xm) == set(xa) | {'meaning'} and all(torch.equal(xa[k], xm[k]) for k in xa)
+    assert 0 < float(xm['meaning']) < 2 and abs(lm.item() - (la.item() + 0.1 * float(xm['meaning']))) < 1e-5
+    assert m.eg().seen == [r['prompt'] for r in rows]
+    lm.backward()
+    assert m.mt_head.weight.grad.abs().sum() > 0 and m.core[0].q.weight.grad.abs().sum() > 0
+    m.eg().seen.clear()
+    a.eval(); m.eval()
+    assert a.generate(b) == m.generate(b)
+    for les in m.LESIONS + ['loops:0', 'loops:1']:
+        m.generate(b, les)
+    donor_eval(m, rows[:24], 8, 'cpu')
+    assert m.eg().seen == [], 'the teacher ran outside the training loss'
+    S = seeded(S_CFG, 0, v, copy=True, eg_teach=0.1).size()
+    assert S['discarded'] == 2 * 256 + 256 * 256 + 256 and S['shipped_trainable'] == S['whole'] == 3_302_481 and S['frozen_borrowed'] == 0, S
+    print(f'  S cfg eg_teach: {S}')
+    print('ok teach_loss_and_never_at_eval')
+
+
+def test_frozen_part_never_trained_or_saved():
+    """The EmbeddingGemma object is not a submodule: not in parameters(), state_dict() or a checkpoint round trip; talk() embeds the CURRENT rows."""
+    from custom_io.evalx import donor_eval
+    v, rows = vocab(), train_rows(48, 5)
+    m = seeded(SMALL, 1, v, copy=True, eg_embed=True)
+    assert 'eg' not in dict(m.named_children()) and not any(k.startswith(('_eg', 'eg.')) for k in m.state_dict())
+    m2 = seeded(SMALL, 2, v, copy=True, eg_embed=True)
+    m2.load_state_dict(m.state_dict())
+    m.eval()
+    with torch.no_grad():
+        m.eg_proj.weight.normal_(std=0.02)
+    m.eg().seen.clear()
+    r = donor_eval(m, rows[:24], 8, 'cpu')
+    assert r['n'] > 0
+    assert len(m.eg().seen) >= 2 * r['n'], (len(m.eg().seen), r['n'])     # each pair embeds the donor (state) and the current row (talk)
+    print('ok frozen_part_never_trained_or_saved')
+
+
+def test_bf16_states_without_autocast_and_queue_env():
+    """EmbeddingGemma gives bf16 states on cuda: read() must work with them outside autocast too; queue 36's `# ENV` lines reach every run."""
+    from custom_io.local_runner import parse_queue, queue_env
+    v, rows = vocab(), train_rows(8, 6)
+    m = seeded(SMALL, 4, v, copy=True, eg_embed=True)
+    f = m.eg().encode
+    m.eg().encode = lambda p, T, d, chars=True: (lambda r: (r[0].to(torch.bfloat16), r[1]))(f(p, T, d, chars))
+    X, _ = m.read(batch_of(rows, v))
+    assert X.dtype == torch.float32 and torch.isfinite(X).all()
+    q = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'queue_local', '36-pc-eg2.txt')
+    env = queue_env(q)
+    assert set(env) == {'PYTHONPATH', 'CUSTOM_IO_EG2'} and env['PYTHONPATH'].startswith('C:\\Users\\benja\\eg_site;'), env
+    assert [r[0] for r in parse_queue(q)] == ['EGE_s200', 'EGT_s200', 'EGE_s201', 'EGT_s201']
+    print('ok bf16_states_without_autocast_and_queue_env')
+
+
+def test_real_tokenizer_alignment():
+    """With $CUSTOM_IO_EG2 and transformers >= 5.19: every char of 2000 training prompts lies inside the token it maps to; digits map to single-digit
+    tokens; one real forward gives finite states of the right shape and zeros past each prompt."""
+    path = os.environ.get('CUSTOM_IO_EG2')
+    try:
+        import transformers
+        ok = path and tuple(int(x) for x in transformers.__version__.split('.')[:2]) >= (5, 19)
+    except ImportError:
+        ok = False
+    if not ok:
+        print('  skipped: set CUSTOM_IO_EG2 to a local copy and put transformers >= 5.19 on the path')
+        return
+    from custom_io.models.eg import PREFIX, FrozenEG
+    eg = FrozenEG(path).load(torch.device('cpu'))
+    rows = train_rows(2000, 9)
+    n0, bad, digits = len(PREFIX), 0, 0
+    for r in rows:
+        p = r['prompt']
+        ids, c2t = eg.align(p)
+        off = eg.tok(PREFIX + p, return_offsets_mapping=True)['offset_mapping']
+        assert len(c2t) == len(p) and (c2t >= 0).all()
+        for i, j in enumerate(c2t.tolist()):
+            s, e = off[j]
+            bad += not (s <= n0 + i < e)
+            if p[i].isdigit():
+                digits += 1
+                assert eg.tok.convert_ids_to_tokens(int(ids[j])) == p[i], (p, i, eg.tok.convert_ids_to_tokens(int(ids[j])))
+    assert bad == 0, bad
+    ps = [r['prompt'] for r in rows[:4]]
+    T = max(map(len, ps)) + 3
+    H, pooled = eg.encode(ps, T, torch.device('cpu'))
+    assert H.shape == (4, T, 768) and pooled.shape == (4, 768) and torch.isfinite(H).all()
+    assert all((H[b, len(p):] == 0).all() for b, p in enumerate(ps)) and all((H[b, :len(p)].abs().sum(-1) > 0).all() for b, p in enumerate(ps))
+    print(f'  real tokenizer: {len(rows)} prompts, every char inside its token, {digits} digit chars on single-digit tokens')
+    print('ok real_tokenizer_alignment')
+
+
+if __name__ == '__main__':
+    torch.set_num_threads(min(torch.get_num_threads(), 2))
+    t0 = time.time()
+    for name, fn in list(globals().items()):
+        if name.startswith('test_'):
+            t = time.time()
+            fn()
+            print(f'  [{name} {time.time() - t:.0f}s]')
+    print(f'all ok ({time.time() - t0:.0f}s)')

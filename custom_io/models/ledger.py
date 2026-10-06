@@ -25,7 +25,15 @@ span=True (design/B1-students.md; default False = exactly B / B2): the WORD talk
 pointer (lword) and an end pointer (lwend = ptr(q_wend(zf)) over the same word keys; q_wend is created last, state() appends lwend). Targets are every (s, e) whose
 en_norm text equals en_norm(answer) (the taught string); NUM rows stay NUM, yes/no and unmatched answers are GEN (answer[:GEN_MAX], the register targets never change
 with data.MAX_ANS). Loss -log sum p_start(s) p_end(e) over the targets; decode = argmax log p_start(s) + log p_end(e) with s <= e < s + span_max inside the row's words.
-B2 + span, vocab 108, M cfg = 10,914,681 params (B2 M 10,890,041 + q_wend 24,640)."""
+B2 + span, vocab 108, M cfg = 10,914,681 params (B2 M 10,890,041 + q_wend 24,640).
+EG arms (design/EG2-embedding.md; both default off = exactly B2). The frozen EmbeddingGemma 2 text part (models/eg.py, 271,002,624 params) is held in a
+plain list: never trained, counted in n_params() or saved. eg_embed=True: every char's reader input embedding also gets eg_proj(ln_eg(H)), H = the
+768-d EmbeddingGemma state of the token holding that char (per-token states, spread over the token's chars); the conv blocks, controller and talker
+are unchanged and the CURRENT rows' prompt is embedded in run() and in talk() alike. eg_proj is zero-initialised, so at step 0 the model computes exactly
+what B2 computes. eg_teach=w > 0: training-only meaning teacher, loss += w * (1 - cos(mt_head(ln_mt(mean of the 8 control tokens after iteration t = 1)),
+EmbeddingGemma's pooled vector of the TRAINING prompt cut to 256 dims and re-normalised)); never run at eval, and ln_mt / mt_head are dropped from
+the shipped size. Both arms' modules are created last (after copy / span), so every B2 weight starts identical at the same seed. size() reports
+trainable, discarded and frozen-borrowed params and the whole-model size (borrowed parts counted)."""
 import math
 import numpy as np
 import torch
@@ -105,10 +113,12 @@ class CBlock(nn.Module):
 class Ledger(Model):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap']
 
-    def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, copy=False, span=False, span_max=12):
+    def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, copy=False, span=False, span_max=12,
+                 eg_embed=False, eg_teach=0.0, eg_path=None):
         super().__init__(vocab)
         self.d, self.n_loops, self.dk, self.w_noop, self.wpos, self.copy = d, n_loops, dk, w_noop, wpos, copy
         self.span, self.span_max = span, span_max
+        self.eg_embed, self.eg_teach = bool(eg_embed), float(eg_teach)
         self.reader = CharReader(len(vocab), d, reader_layers)
         self.vcode = nn.Linear(93, d)
         self.stype, self.ordinal, self.op_emb, self.step_emb, self.src, self.ctrl = (
@@ -141,6 +151,17 @@ class Ledger(Model):
             self.q_wend = nn.Linear(d, dk)
             nn.init.normal_(self.q_wend.weight, std=0.02)
             nn.init.zeros_(self.q_wend.bias)
+        if self.eg_embed or self.eg_teach:      # created after every other module, so every B / B2 / span weight starts identical at the same seed
+            from custom_io.models.eg import EG_DIM, MT_DIM, FrozenEG
+            self._eg = [FrozenEG(eg_path)]      # a list, not a submodule: never trained, counted or saved
+        if self.eg_embed:       # zero-initialised, so the extra input term is 0 at step 0 (building the Linear draws RNG, after every B2 weight)
+            self.ln_eg, self.eg_proj = nn.LayerNorm(EG_DIM), nn.Linear(EG_DIM, d)
+            nn.init.zeros_(self.eg_proj.weight)
+            nn.init.zeros_(self.eg_proj.bias)
+        if self.eg_teach:
+            self.ln_mt, self.mt_head = nn.LayerNorm(d), nn.Linear(d, MT_DIM)
+            nn.init.normal_(self.mt_head.weight, std=0.02)
+            nn.init.zeros_(self.mt_head.bias)
 
     # ---- hand-written number / word tokenizer (prompt text only; cached per prompt) ----
     def spans(self, prompt):
@@ -194,12 +215,33 @@ class Ledger(Model):
             p_copy = torch.zeros_like(p_vocab).scatter_add_(2, ids[:, None, :].expand(-1, R.shape[1], -1), a)
             return gate * p_vocab + (1 - gate) * p_copy, gate
 
+    # ---- EmbeddingGemma arms ----
+    def eg(self):
+        return self._eg[0]
+
+    def read(self, batch):
+        """The reader on `batch` -> (X [B,T,d], mask). eg_embed: the input embedding also gets eg_proj(ln_eg(H)), H = EmbeddingGemma's state of the
+        token holding each char of THIS batch's prompts."""
+        if not self.eg_embed:
+            return self.reader(batch)
+        ids = batch['prompt_ids']
+        H, _ = self.eg().encode([r['prompt'] for r in batch['rows']], ids.shape[1], ids.device)
+        return self.reader(batch, extra=self.eg_proj(self.ln_eg(H.float())))     # H is bf16 on cuda; fp32 here works with or without autocast
+
+    def size(self):
+        """{trainable, discarded (training-only heads, not shipped), frozen_borrowed (EmbeddingGemma 2 text part, eg_embed only), shipped_trainable, whole}."""
+        from custom_io.models.eg import N_TEXT
+        tr = self.n_params()
+        disc = sum(p.numel() for m in (getattr(self, 'ln_mt', None), getattr(self, 'mt_head', None)) if m is not None for p in m.parameters())
+        fz = N_TEXT if self.eg_embed else 0
+        return dict(trainable=tr, discarded=disc, frozen_borrowed=fz, shipped_trainable=tr - disc, whole=tr - disc + fz)
+
     # ---- reasoner ----
     def run(self, batch, loops=None, gold=None, lesion=None):
         """One pass. gold (training) = dict(op [B,L], a/b [B,L,M] bool) teacher-forces every written step. lesion: 'noexec' / 'opswap' / 'nowordc'.
         -> dict(R registers [B,9,d], vals [B,M] int64, valid, lmode, lans, lword, steps [(op, a, b logits)], prog (ops, a, b [B,L]);
         copy=True adds X [B,T,d] and xm [B,T] (reader output and prompt mask) so that loss() does not run the reader twice)."""
-        X, xm = self.reader(batch)
+        X, xm = self.read(batch)
         ns, ne, nv, ws, we = self.tokenize(batch)
         B, T, dev = X.shape[0], X.shape[1], X.device
         t_ix = torch.arange(T, device=dev)
@@ -229,6 +271,8 @@ class Ledger(Model):
             Z = Z + self.step_emb.weight[ts]
             for b, kx, ks in zip(self.core, kvx, kvs):
                 Z = b(Z, ks, kx, mask)
+            if t == 1 and self.eg_teach:
+                z1 = Z[:, :N_CTRL].mean(1)       # the meaning teacher's input: the 8 control tokens after iteration t = 1
             if not 1 <= t <= N_RES:
                 continue
             z = self.ln_z(Z[:, 0])
@@ -261,6 +305,8 @@ class Ledger(Model):
             out['lwend'] = self.ptr(self.q_wend(zf), Kw, wvalid)
         if self.copy:
             out['X'], out['xm'] = X, xm
+        if self.eg_teach and n > 1:
+            out['z1'] = z1
         return out
 
     def state(self, batch, loops=None, lesion=None):
@@ -290,7 +336,7 @@ class Ledger(Model):
         return_modes: also the decoded mode of every row (0 NUM, 1 WORD / SPAN, 2 GEN; GEN also when a NUM / WORD pointer is invalid)."""
         R, vals, valid, lmode, lans, lword, *rest = state
         if self.copy:
-            X, xm = self.reader(batch)
+            X, xm = self.read(batch)
             ids = self.gen_copy(R, X, xm, batch['prompt_ids'], lesion == 'nocopy')[0].argmax(-1)
         else:
             ids = self.readout(R).argmax(-1)
@@ -400,7 +446,15 @@ class Ledger(Model):
         if self.copy:       # mean copy share (1 - g) over the registers that hold a target char (not the EOS slot) of GEN rows
             tm = (g['gen'] >= 0) & (g['gen'] != EOS) & (g['mode'] == 2)[:, None]
             aux['copy_share'] = ((1 - gate[..., 0]) * tm).sum() / tm.sum().clamp(min=1)
-        return lop + lptr + lmode + lans + lword + lgen, {k: v.detach() for k, v in aux.items()}
+        total = lop + lptr + lmode + lans + lword + lgen
+        if self.eg_teach:   # training prompts only: loss() never runs on dev rows
+            from custom_io.models.eg import teacher_vec
+            _, pooled = self.eg().encode([r['prompt'] for r in batch['rows']], batch['prompt_ids'].shape[1], dev, chars=False)
+            head = self.mt_head(self.ln_mt(o['z1'])).float()
+            lmt = (1 - F.cosine_similarity(head, teacher_vec(pooled), dim=-1)).mean()
+            total = total + self.eg_teach * lmt
+            aux['meaning'] = lmt
+        return total, {k: v.detach() for k, v in aux.items()}
 
     # ---- extra evals (train.py --final-eval) ----
     @torch.no_grad()
@@ -509,6 +563,8 @@ class Ledger(Model):
                              swap_match_all=pc(sa['match'], sa['aff']), n_all=sa['aff'], n_all_invalid=sa['invalid'])
         if self.copy:
             out['copy_gate'] = self.copy_gate_eval(rows, ctx)
+        if self.eg_embed or self.eg_teach:
+            out['size'] = self.size()
         self.train(was)
         return out
 
