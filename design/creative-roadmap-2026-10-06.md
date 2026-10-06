@@ -326,9 +326,11 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   - H hindsight: rule-following tries relabelled as "make v" for the value v they actually made, same count.
   - H' wrong relabel: the same tries relabelled to a value they did not make, same count (blurt-4's control).
   - PC positive control: solver programs for W's puzzles, same count.
-- **Sleep recipe (identical across arms):** fresh AdamW; a fixed number of updates with each puzzle record seen at most
-  4 times; every batch half puzzle rows, half replay of the 200k skills rows; learning rate and update count chosen on
-  DEV using the PC arm only, then frozen.
+- **Sleep recipe (identical across arms):** fresh AdamW; every puzzle record is seen the same number of times
+  (visits), so updates = visits x records / 32; every batch half puzzle rows, half replay of the 200k skills rows;
+  learning rate and visits chosen on DEV using the PC arm only (lr 3e-4 or 1e-3; visits 4, 8 or 16, and one try at 32
+  if 16 wins), among settings that cost skills at most 2 points, then frozen. Visits were fixed at 4 until 10-06 (see
+  the PC gate under Marks).
 - **Marks** (6 parents; luck = share of 32 tries accepted on T1; 95% t-intervals over parents on paired differences).
   Re-scaled 10-06, before any sleep arm ran on the new warm-up, because the old point marks were mis-scaled: the one
   replicated creative result we have (blurt-3 and blurt-3r on the 1B) moved luck from 3.2% to 6.4-6.9% and from 2.9% to
@@ -355,6 +357,16 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
     replay on; PC's first-try gain is reported beside it. Disclosure: PC on the first, failed warm-up gave +2 points on
     DEV (0.05% to 2.0%), so this re-scaling is not blind to every sleep number, though its size comes from the old 1B
     runs and not from that one. If PC still misses on both pilot parents, the roadmap thread decides before sealing.
+    Pilot 2 with the plain sampler (shown, DEV, commit 531adb7ea): PC / N 1.15 and 1.20, PC - N +0.7 and +0.9 points,
+    first try -1.6 and +1.6 (one DEV puzzle is 0.8 points), at lr 1e-3 with 4 visits (172 updates); lr 3e-3 and 1e-2
+    cost skills 9 to 68 points. Decided 10-06: the gate is judged on the masked sampler, which every arm uses, and pilot
+    2 stays a labelled comparison. The mark does not move. The PC arm gets a dose grid on DEV (see the sleep recipe)
+    because pilot 2 suggests 4 visits is too small a dose: the same kind of solver programs, at 6,000 three-number
+    puzzles and 16 visits, raised the warmed parent's plain luck from 4.7% to 8.2% (1.75x), while 4 visits of PC moved
+    it 1.2x (suggested, not shown: those two doses differ in puzzle count as well as visits). If the masked PC misses on
+    either parent at every setting that keeps skills within 2 points, C1 stops with T1 sealed and comes back here.
+    Disclosure: the dose grid was added after seeing PC miss on DEV; it applies to every arm the same way, and T1 and
+    T1b stayed sealed.
 - **Ordered verdicts:** void (checkers disagree on a T1 try, unresolved above 1%, or a lesion fails) -> gate stop ->
   placebo too close (over half of R's records are accepted tries) -> PASS (L1, L2, G0, G1, G2, G3), named "PASS with
   first answers" when F1 also holds and "PASS, search only" when it does not -> rules only (L1 holds, G0 fails) -> gain with harm (G3 fails) -> **proved wrong** (the PC gate passes, yet W - R has an upper end
@@ -486,3 +498,8 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   written before the s101 numbers, pass on both parents (masked luck 2.8x and 2.9x plain; own target 2.9x and 3.2x the
   twin's; 10.5 and 10.6 legal programs). Pilot 2, already running on the Mac with the plain sampler, finishes as a
   labelled comparison and is never pooled with masked arms.
+- **PC gate on pilot 2 (10-06):** PC missed on both parents with the plain sampler (1.15x and 1.20x against 1.6x).
+  Decided: judge the gate on the masked run (the C1 sampler) and keep the mark; give the PC arm a DEV dose grid
+  (lr 3e-4 or 1e-3; visits 4, 8, 16) with a 2-point skills limit; report for every setting the plain sampler's legal
+  share and hit rate among legal tries, and the sleep loss split into puzzle rows and replay rows (pilot 2's single
+  loss mixes them, so it cannot say whether PC's records were learned); stop before sealing if masked PC still misses.
