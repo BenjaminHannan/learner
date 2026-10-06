@@ -370,3 +370,25 @@ CRDC plus `--quiet-notes` (each of the exit's 8 vectors rescaled to one learnabl
 - The loss is all on the four kinds the main thinker and the talker answer (other-4 held 130.7 -> 71.0). Chain held is level (155.5 vs 156.3), because the planner's value does not pass through the notes.
 - It learns slower from the start: mean CE at update 500 is 3.46 vs 1.21, and the final training CE is 0.13-0.20 vs 0.04 (CRDC4). The learnable length hardly moved (0.736 -> 0.75-0.82), so the model did not make the notes loud again within 6,000 updates.
 - Suggested, untested: the parent (main2) learned to work with loud notes. At about 1,300x a word's length, a note's residual stays pinned through all 16 LM layers (audit: cos 1.000), so every layer reads the same note. Quieting them at fine-tune time removes what the parent learned. A from-scratch quiet run would separate "quiet is worse" from "changing it late is worse"; it is not queued (bench parked).
+
+## CRDW result, 6 seeds (jobs 57-crdw-s4..s9 on Vast boxes E and G, read 04:55 UTC Oct 6) — does not stack by the marks; the planner was changed too
+**Correction to the CRDW marks above.** They say "the planner is unchanged (its own fresh 32-wide reader)". That is wrong. `train_planner` deep-copies `parts['reader']` (`skills_pretrain_v1.py:305`), and `--reader-hidden` widens that reader first (line 723; the `reader-widened` event comes before `plan-pretrain-start` in every CRDW log). So the planner also got a fresh 2048-wide reader. CRDW therefore changed two things: both doors of the main model, and the planner's reader. I found this after the run, from the planner's loss.
+
+| seed | CRDC held | CRDW held | gain | other-4 held CRDC / CRDW | chain held CRDC / CRDW | planner final loss CRDC / CRDW | CRDC fit | CRDW fit | family-mean lesion, fit rows (CRDC / CRDW) | plan_swap chain held |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 4 | 297 | 292 | -5 | 138 / 138 | 159 / 154 | 0.20 / 0.43 | 303 | 292 | 0 / -30 | 2 |
+| 5 | 277 | 302 | +25 | 125 / 144 | 152 / 158 | 0.26 / 0.48 | 284 | 302 | -6 / -10 | 2 |
+| 6 | 291 | 288 | -3 | 135 / 136 | 156 / 152 | 0.18 / 0.54 | 298 | 281 | 0 / -26 | 2 |
+| 7 | 289 | 299 | +10 | 133 / 144 | 156 / 155 | 0.19 / 0.52 | 309 | 305 | -15 / -10 | 2 |
+| 8 | 287 | 280 | -7 | 130 / 130 | 157 / 150 | 0.17 / 0.56 | 295 | 291 | -3 / -25 | 2 |
+| 9 | 281 | 288 | +7 | 123 / 140 | 158 / 148 | 0.32 / 0.63 | 295 | 294 | -12 / -26 | 2 |
+| mean | 287.0 | **291.5** | **+4.5** | 130.7 / **138.7** | 156.3 / **152.8** | 0.22 / 0.53 | 297.3 | 294.2 | -6.0 / -21.2 | 2.0 |
+
+- **Stacks** (held >= 292.0 and ahead on >= 5 of 6): **no** (291.5, ahead on 3 of 6).
+- **Wrong** (gain < +2 or ahead on <= 3 of 6): **hit**, on the "ahead on <= 3" clause; the mean gain itself is +4.5.
+- It splits by which part answers:
+  - **The 4 other kinds** (main thinker and talker, the part the doors were meant for): held 138.7 vs 130.7 (+8.0). Ahead on 4 of 6 and tied on 2, so never behind.
+  - **The 4 chain kinds** (the planner's value): held 152.8 vs 156.3 (-3.5), behind on 5 of 6. The planner itself is worse: plan_correct 152.8 vs 157.2, and its final pretraining loss is higher on every seed (0.43-0.63 vs 0.17-0.32).
+- So suggested, not shown: the wide doors still help the main model on top of the plan route, and a fresh 2048-wide reader hurts the planner in its one 17,000-row pass. The clean test (doors on the main model only, planner kept at 32) is not queued, because the bench is parked and it does not answer a question about B2.
+- **The thinker carries more of each question with the wide doors:** the family-mean lesion costs 10-30 rows of fit (mean 21.2) against 0-15 (mean 6.0) for CRDC. That is still under the 32-row bar on every seed. plan_swap still takes chain held to 2 on every seed.
+- All rc 0. Planner pretraining took 99-101 minutes per run with three on one GPU (CRDC: 9-32).
