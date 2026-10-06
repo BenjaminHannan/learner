@@ -11,10 +11,10 @@ The bench is the old "sandwich": a borrowed 1.2B language model reads the questi
 What it taught us, in order of size:
 1. **Let the thinker plan, and let an exact calculator do the sums.** On chain questions the thinker now decides every answer: give it another question's plan and the score drops from 156 to 2 out of 160. B2 already works this way.
 2. **Don't squeeze the paths in and out of the thinker.** Widening both from 32 to 2048 numbers added about 15 held-out questions out of 320 on 6 seeds. B2 already has no squeeze.
-3. **Slow the learning rate down at the end.** It took the planner from 83% to 98%. B2 already does this.
+3. **Slow the learning rate down at the end when training from scratch.** It took the planner from 83% to 98%. B2 already does this. On the main model's short top-up training it hurt instead (276 vs 287 held-out), so it is not a rule for every run.
 4. **Many ideas did nothing:** two-hop pointers, wider attention, per-round routers and a wider planner reader all hit the same ceiling on the four lookup-style kinds. Merging the Hearer and Reader and making the thinker's notes quiet both made it worse (quiet notes by a lot: 227 vs 287 held-out).
 
-So the bench mostly confirmed what B2 already does. The one open question it passes to B2 is in "Port to B2" below.
+So the bench mostly confirmed what B2 already does. Nothing new needs porting. It passes B2 one warning and one check; see "Port to B2" below.
 
 ## What the bench is
 
@@ -82,7 +82,7 @@ LMDC is the control (shown, 3 seeds). With the same 17,000 chain rows and decay,
 | MH | Hearer and Reader merged (Reader -> one Linear) | WORSE: held 278.8 vs 287.0, ahead 2 / 6 |
 | CRT | Talker writes `calc(note)` from the thinker's note | works, LEVEL: chain 471 vs 470 / 480 (3 seeds); copies a swapped note 79-96% |
 | T2 | quiet notes: exit vectors word-sized, learnable length | HURTS: held 226.5 vs 287.0, behind on 6 / 6; other-4 held 71.0 vs 130.7 |
-<!-- T1-ROW -->
+| T1 | the main model's lr decays to 0 (cosine) | HURTS: held 276.2 vs 287.0, behind on 6 / 6; other-4 held 120.2 vs 130.7; planner identical |
 
 Earlier, from the plateau thread (PR #34), these were also ruled out: stiffness, core size, truncation, too little practice, wider input pipe, 8 loops, lr 3e-4, pointer, wider exit (as a single change then).
 
@@ -102,7 +102,7 @@ Checked in its code: its thinker writes programs that an exact int64 executor ru
 - an lr that decays;
 - lesions that swap or drop the thinker's state.
 
-<!-- PORT-LIST -->
+**Nothing new to port (shown).** T1 was the only candidate: if decaying the main model's lr to 0 had helped, B2 could have tried a floor of 0 instead of 10%. It hurt on all 6 seeds, so there is no case for changing B2's floor.
 
 **Do not port:**
 - per-round routers;
@@ -118,6 +118,7 @@ Checked in its code: its thinker writes programs that an exact int64 executor ru
 **One check worth doing once in B2:** score a few hundred training rows through the eval path and the training path, and confirm they agree. On the bench, the prompt was fed twice at answer time but once in training. Every score was about 6 points low until `--gen-fix`.
 
 ## Open, untested, not queued
+- Whether the doors stack on the plan route when only the main model's doors widen. CRDW also widened the planner's reader, which cost chain rows; the planner reader can stay at 32 with a small code change.
 - Which door carries the wide-door gain: the reader alone or the exit alone. It needs one run each on CRDC.
 - Why the 4 other kinds flat-line. Saving per-row plan outputs in `uc_diag_v4.py --mode plan` would show it.
 - T5: folding the identical MoE experts into one (exact, CPU only).
