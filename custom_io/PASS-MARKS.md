@@ -111,3 +111,26 @@ GO to confirm needs ALL of:
 Proves the idea wrong: B2 - B pooled-5 < 0; or copy-target families rise < +3 vs B; or `nocopy` moves them by < 5
 (the copy path is not used). Reported either way: B2 - B per split and per family, `nowordc`, all screen lesions.
 If B2 is GO, the confirm (seeds 200-205) uses the PASS-1 / PASS-2 marks above unchanged, with B2 as the design.
+
+## Addendum 3: Test B1 students (written 2026-10-06 about 00:40 UTC, 8:40 PM ET 10-05, before any student trained; the code was being built)
+Plan B's Test B1 (`design/thinker-first-split-2026-10-05.md` section 6, branch `claude/project-thread-9ye9md`, PR #41;
+Ben chose Plan B at 7:44 PM ET). This thread runs the student side. Full build spec, reviewed before any code:
+`design/B1-students.md`. Its "operational choices" 1-13 are part of this addendum.
+**Students:** B2-M on TEACH (`b2t`), B2-M on GEN (`b2g`), plain_tf-M on TEACH (`tft`). B2-M = ledger M cfg with copy and
+the span talker (10,914,681); plain_tf-M = d_model 384, 6 layers, 6 heads, 32-char answers (10,782,336). Same recipe:
+16,000 updates, batch 256, lr 7e-4, warmup 500, bf16, `--max-ans 32`. Screen seeds 300 and 301 (confirm 300-305), every
+run of a seed on one device. Equal training-row counts in both arms (choice 3).
+**Scores:** round-6 scorer (choice 2). New kinds pooled = NEW-KINDS-R5 + NEW-KINDS2-R6, 384 rows; FRESH-EN-R3, 192 rows.
+**Marks (copied from the source, means over the screen seeds, unrounded):**
+- **B1-a:** b2t - b2g on new kinds pooled >= +15 and b2t ahead on both seeds. Proved wrong: mean < +5.
+- **B1-b:** b2t with a donor's state <= 10% on new kinds pooled. Donor = same kind, same question type, different
+  answer, no shared answer position (choice 9; the plain same-kind pairing is read only, because a donor's pointer
+  lands on the right word by position alone in 13-16% of those pairs).
+- **B1-c:** b2t - tft on new kinds pooled >= +3 and b2t ahead on both seeds.
+A mark is not judged if a run it needs is missing or invalid (`design/B1-students.md` section 5). Read only: loops:0,
+the other lesions, GEN-HELDOUT-R4 (the GEN arm's own distribution), the held-out in-dist slices, atype splits, the
+distance to the bare 1.2B 8-shot (75.0 FRESH; 67.7 R5, 77.6 R6) and to the sandwich (92.2 FRESH; 78.2 new pooled).
+If B1-a is proved wrong, way B at this size is dead (source section 6): next single change a ~100M student.
+**Data** (sha256 of the adapter's outputs, filled in before any student trains):
+- GEN source: `/mnt/project-files/plan-b/data/gen.jsonl`, sha256 c49c126cb82f5b7b11890c379012a243c8dc695205eb747d4f24df991c7cc629 (200,000 questions).
+- TEACH source: pending.
