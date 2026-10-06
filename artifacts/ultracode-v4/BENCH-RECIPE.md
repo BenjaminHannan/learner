@@ -36,7 +36,7 @@ So the bench mostly confirmed what B2 already does. The one open question it pas
 ## The reference recipe
 
 Best confirmed recipe: **CRDC** (6 seeds, shown): fit 297.3 / 320 (92.9%), held 287.0 / 320 (89.7%).
-<!-- CRDW-VERDICT: replaced when CRDW lands -->
+Adding the 2048 doors on top (CRDW) did not stack by its marks. It got held 291.5 and was ahead on only 3 of 6 seeds. That run also widened the planner's reader by accident, so it is not a clean test; see the ladder.
 
 ```
 P=<pipeline root>; D=<skills data>; M2=<main2 checkpoint>
@@ -66,7 +66,7 @@ What each part does:
 | SR2 | + LM-written worked steps | 273.5 | 260.0 | thinker = family switch (family-mean lesion <= 5.3 pts) |
 | CRDC | + thinker plans, calculator computes | **297.3** | **287.0** | plan_swap: chain held 156 -> 2-3 on every seed |
 | WDC | SR2 + both doors 2048 (no plan route) | 287.0 | 274.8 | family-mean lesion 0.9-8.1 pts |
-<!-- CRDW-ROW -->
+| CRDW | CRDC + both doors 2048 (the planner's reader got 2048 too) | 294.2 | 291.5 (ahead 3 / 6: does not stack) | other-4 held +8.0 (never behind); chain -3.5 (planner worse); family-mean lesion 10-30 rows |
 
 LMDC is the control (shown, 3 seeds). With the same 17,000 chain rows and decay, the LM's own worked steps reach 158 / 160 on held chain rows, level with the plan route. So the plan route's value is that the thinker decides the answer, not that it is more accurate at equal data.
 
