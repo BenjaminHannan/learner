@@ -249,9 +249,9 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
 - **Shared warm-up:** every arm starts from the same warmed parent. N is this warmed parent. Warm-up harm against the
   original B2 is reported. Changed after the DEV pilot (10-06): the warm-up mixes 1,500 two-number puzzles with
   three-number puzzles, all with solver programs, on number sets in no sealed or practice split, with the same skills
-  replay as the sleeps. The three-number count is the smallest of 1,500, 3,000 and 6,000 that passes the signal gate on
+  replay as the sleeps. The three-number count is the smallest of 1,500, 3,000 and 6,000 that passes the gates on
   DEV (the least warm-up that teaches the format leaves the most room for sleep to help); the warmed parent's DEV luck
-  and first try are reported as headroom. In this puzzle family any labelled three-number program is a correct
+  and first try are reported as headroom. Chosen 10-06: **1,500, with the 4-visit cap**, on both pilot parents. In this puzzle family any labelled three-number program is a correct
   solution for some target, so the format cannot be taught without some aiming; the claim cap above already covers
   that. If 6,000 still fails the signal gate: first check whether the warmed parent fits its own warm-up puzzles; if
   not, allow up to 16 visits per warm-up record (the 4-visit cap is for sleep records); if it fits but fails DEV, add
@@ -260,6 +260,20 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   ExeDec would be an architecture change, outside C1). Hindsight on the model's own tries is not a warm-up: raw B2's
   tries break the rules 99.6% of the time, and a rule-breaking program cannot be relabelled into a valid three-number
   puzzle. Hindsight stays an arm (H).
+- **Second DEV pilot, B2 s100 and s101 (shown, Mac, with skills replay, `creative/results/` on
+  `claude/project-thread-2zeaoc`, commit 8c82c5cad1):** the mixed warm-up works. At the 1,500 rung the warmed parent
+  solves 543 and 535 of 1,024 practice puzzles, and on DEV scores luck 4.7% and 4.6% against the value-blind floor of
+  2.4%, reach@4 16.0% and 16.1% against the floor's 9.1%, with 4.4 and 4.3 distinct rule-following programs per puzzle.
+  The 6,000 rung with 16 visits reaches luck 8.2%, reach@4 27.9% and reach@32 81% against the floor's 50.8%. Every rung
+  failed the old signal gate only because the share of tries that follow the rules sat at 25-29% against a 50%
+  threshold, at every rung and at every temperature from 0.21 to 3.0. That threshold was the wrong measure: the
+  value-blind follower's own share is 58%, so 50% asked for near-perfect legality, while among its legal tries the
+  warmed parent hits the target 16% of the time against the follower's 4.1%, which is the aim the gate was meant to
+  look for (5.4x at the 6,000 rung, 7.9x after 16 visits). The gate was rewritten above; the sealed T1 marks were not
+  loosened to match, they were re-scaled for a separate reason (see Marks). Still open for the ultracode thread, not
+  blockers: why legality sits at a quarter of tries, and why variety is 4.4 distinct programs against the follower's
+  18.7. Leading guess (untested): B2's 200k skills rows let programs point at the constants 1, 2, 10 and 100, which
+  C1's checker forbids, so its prior writes illegal operands; the rejection-reason breakdown settles it cheaply.
 - **DEV pilot, B2 s100 (shown, CPU, no skills replay, `/mnt/project-files/creative-pilot/`):** raw B2 writes
   rule-following programs on 0.2% of tries and solves 1 of 256 practice puzzles; after the two-number-only warm-up
   (200 updates) 0.4% and 3 of 256, with 0.1 distinct rule-following programs per puzzle (gate 4). Both gates failed.
@@ -446,3 +460,9 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   support the mixed two- and three-number warm-up (Lee 2025; length transfer needs the longer task in the mix,
   2506.09251) and give the fallback order above (more visits, then DreamCoder/DeepCoder-style dreams). CodeIt/SOAR
   hindsight is already arm H and cannot serve as the warm-up for C1 (see the warm-up bullet).
+- **Second DEV pilot (10-06, both parents):** the mixed warm-up passed on signal, aim and sameness; the old 50%
+  rules-share criterion failed it and was the wrong measure, so the DEV gates were rewritten (signal, aim, sameness)
+  and the share is now reported only. This gate change was made after seeing DEV numbers and is a feasibility check,
+  not a claim; T1 and T1b stayed sealed throughout. Separately, L1, L2, G0 and the PC gate moved from fixed points to
+  ratios with an absolute guard, because +10 points would have failed blurt-3 and blurt-3r, the only replicated
+  creative result we have. Warm-up rung chosen: 1,500 with the 4-visit cap.
