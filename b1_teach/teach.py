@@ -237,6 +237,18 @@ class Backend:
         return res
 
 
+def _opencode_key_from_auth():
+    """Read Ben's OpenCode Go key in place from opencode's own auth store (never printed or copied). Tries the Go provider first."""
+    for p in (Path.home() / ".local/share/opencode/auth.json", Path(os.environ.get("USERPROFILE", "~")).expanduser() / ".local/share/opencode/auth.json",
+              Path(os.environ.get("APPDATA", "~")).expanduser() / "opencode/auth.json"):
+        if p.exists():
+            d = json.loads(p.read_text())
+            for name in sorted(d, key=lambda n: ("go" not in n.lower(), n)):
+                if "opencode" in name.lower() and isinstance(d[name], dict) and (d[name].get("key") or d[name].get("access")):
+                    return d[name].get("key") or d[name].get("access")
+    raise SystemExit("no OPENCODE_API_KEY and no opencode auth.json entry found")
+
+
 class ApiBackend:
     """OpenAI-compatible chat API (OpenCode Go: https://opencode.ai/zen/go/v1). Key from $OPENCODE_API_KEY (never on the command line).
     Throttled; STOPS (exit 3) on the first 429/402/403/quota error or when the token cap is reached. Resumable like the others."""
@@ -246,7 +258,7 @@ class ApiBackend:
         import threading
         self.model, self.workers, self.cap = model, workers, max_tokens
         self.base = (base or os.environ.get("OPENCODE_BASE", "https://opencode.ai/zen/go/v1")).rstrip("/")
-        self.key = os.environ["OPENCODE_API_KEY"]
+        self.key = os.environ.get("OPENCODE_API_KEY") or _opencode_key_from_auth()
         self.interval, self.last, self.lock, self.used, self.stop = 60.0 / max_per_min, 0.0, threading.Lock(), 0, False
 
     def _one(self, msgs, max_new, temperature, top_p):
