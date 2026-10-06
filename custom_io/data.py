@@ -10,6 +10,13 @@ DEFAULT_DATA = os.environ.get(
 DEV_SPLITS = ['in_dist', 'answer', 'frame', 'vocab', 'variant', 'family']
 MAX_PROMPT, MAX_ANS = 208, 8            # answer slots: MAX_ANS chars + EOS = MAX_ANS + 1 = 9
 N_Q = 8
+
+
+def set_max_ans(n):
+    """Set MAX_ANS (answer chars before EOS; default 8). Dataset and collate read it at call time; call it before any data or model is built."""
+    global MAX_ANS
+    assert int(n) >= 1, n
+    MAX_ANS = int(n)
 SPECIALS = ['<pad>', '<bos>', '<eos>', '<sep>', '<unk>'] + [f'<q{i}>' for i in range(N_Q)]
 PAD, BOS, EOS, SEP, UNK = range(5)
 Q0 = 5                                   # Q_i id = Q0 + i, i in 0..7 (answer-slot queries)

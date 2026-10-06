@@ -16,7 +16,7 @@ def norm(s):
     return ' '.join(s.strip().lower().split())
 
 
-def is_hit(pred, row):
+def is_hit(pred, row, norm=norm):
     return norm(pred) in {norm(a) for a in row['accepted']}
 
 
@@ -34,8 +34,9 @@ def _tally(d, key, hit):
 
 
 @torch.no_grad()
-def evaluate(model, rows, batch_size=128, device=None, lesion=None, return_preds=False):
-    """-> {'exact' (%), 'correct', 'n', 'by_family', 'by_level' (str keys), 'multistep'} (+ 'preds' {id: pred})."""
+def evaluate(model, rows, batch_size=128, device=None, lesion=None, return_preds=False, norm=norm):
+    """-> {'exact' (%), 'correct', 'n', 'by_family', 'by_level' (str keys), 'multistep'} (+ 'preds' {id: pred}).
+    norm: the string normaliser a hit is judged under (english.en_norm for the English sets)."""
     device = device or next(model.parameters()).device
     was_training = model.training
     model.eval()
@@ -51,7 +52,7 @@ def evaluate(model, rows, batch_size=128, device=None, lesion=None, return_preds
     model.train(was_training)
     res = {'by_family': {}, 'by_level': {}, 'multistep': {'correct': 0, 'n': 0}}
     for r, p in zip(rows, preds):
-        hit = int(is_hit(p, r))
+        hit = int(is_hit(p, r, norm))
         _tally(res['by_family'], r['family'], hit)
         _tally(res['by_level'], str(r['level']), hit)
         if r['family'] in MULTISTEP:
@@ -71,10 +72,11 @@ def _pad_prompt(batch, T):
     return dict(batch, prompt_ids=F.pad(batch['prompt_ids'], (0, k)), prompt_mask=F.pad(batch['prompt_mask'], (0, k))) if k else batch
 
 
-def donor_pairs(rows, seed=0):
+def donor_pairs(rows, seed=0, norm=norm):
     """-> ([(i, j)], n_skipped): row i gets donor row j of the SAME family whose normalised answer is not
     one of i's accepted answers (so a donor-answer hit can never also be an exact hit). Row i is skipped
-    (and counted) if its family has no such row. Deterministic given seed and the order of `rows`."""
+    (and counted) if its family has no such row. Deterministic given seed and the order of `rows`.
+    donor_eval's `pairs` argument replaces this with any other pairing (english.judged_pairs)."""
     rng, fam, pairs = np.random.RandomState(seed), {}, []
     for i, r in enumerate(rows):
         fam.setdefault(r['family'], []).append(i)
@@ -88,19 +90,22 @@ def donor_pairs(rows, seed=0):
 
 
 @torch.no_grad()
-def donor_eval(model, rows, batch_size=128, device=None, seed=0):
+def donor_eval(model, rows, batch_size=128, device=None, seed=0, norm=norm, pairs=None, return_preds=False):
     """Donor-swap lesion. Every row i gets a donor row j (donor_pairs: same family, different answer); the reasoner
     runs on the donor, the talker answers row i: preds = model.talk(model.state(donor_batch), current_batch).
     So talk() receives the DONOR's state and the CURRENT rows' batch (lengths and copy sources come from the
     current batch). Both batches are collated separately, then padded to a common prompt length so a time dim
     in the state still matches the current batch's shape. Pairing is by index and independent of batch order.
     -> {'exact' (% equal to the current row's accepted answers), 'donor_match' (% equal to the donor row's answer),
-        'n' (rows scored), 'skipped' (no donor available), 'by_family': {fam: {exact, donor_match, n}}}."""
+        'n' (rows scored), 'skipped' (no donor available), 'by_family': {fam: {exact, donor_match, n}}}.
+    pairs: a ([(i, j)], n_skipped) tuple, or a function rows -> that tuple, instead of donor_pairs; norm: the hit normaliser;
+    return_preds: also 'preds' {row id: [donor row id, prediction]}."""
     device = device or next(model.parameters()).device
     was_training = model.training
     model.eval()
     ds = Dataset(rows, model.vocab, strict=False)
-    pairs, skipped = donor_pairs(rows, seed)
+    pairs, skipped = donor_pairs(rows, seed, norm) if pairs is None else pairs(rows) if callable(pairs) else pairs
+    pairs = list(pairs)
     pairs.sort(key=lambda p: max(len(rows[p[0]]['prompt']), len(rows[p[1]]['prompt'])))     # length-sorted: less padding
     preds = {}
     for s in range(0, len(pairs), batch_size):
@@ -116,13 +121,16 @@ def donor_eval(model, rows, batch_size=128, device=None, seed=0):
     fam = {}
     for i, j in pairs:
         c = fam.setdefault(rows[i]['family'], {'exact': 0, 'donor_match': 0, 'n': 0})
-        c['exact'] += is_hit(preds[i], rows[i])
+        c['exact'] += is_hit(preds[i], rows[i], norm)
         c['donor_match'] += norm(preds[i]) == norm(rows[j]['answer'])
         c['n'] += 1
     def pct(c):
         return {k: 100 * c[k] / max(c['n'], 1) for k in ('exact', 'donor_match')} | {'n': c['n']}
     tot = {k: sum(c[k] for c in fam.values()) for k in ('exact', 'donor_match', 'n')}
-    return {**pct(tot), 'skipped': skipped, 'by_family': {f: pct(c) for f, c in fam.items()}}
+    res = {**pct(tot), 'skipped': skipped, 'by_family': {f: pct(c) for f, c in fam.items()}}
+    if return_preds:
+        res['preds'] = {rows[i]['id']: [rows[j]['id'], preds[i]] for i, j in pairs}
+    return res
 
 
 def _dev_rows(dev_dir, split, max_per_split):

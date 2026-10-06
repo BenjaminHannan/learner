@@ -56,3 +56,17 @@ When a queue ends (and, for the PC queue, once after the first 3 runs end), copy
 ("Custom IO: results of queue NN from BensPC / M1"), pull --rebase and push to that branch. Keep every checkpoint.pt on
 the machine where it was made (never delete). Add one LIVE.md line per start and finish as usual. If a run fails, its
 `stdout.events.txt` and `rc.txt` are in its folder: push those too, the thread will fix and requeue.
+
+## 5. Test B1 students (queue 35)
+Build the data first (CPU, a few minutes; needs the TEACH jsonl and `plan-b/data/gen.jsonl` from the project files; `<TEACH>` and `<GEN>` are their paths):
+```
+python -m custom_io.english build --teach <TEACH> --gen <GEN> --out C:\Users\benja\custom-io\work\plan_b --eval custom_io\english_eval
+```
+It writes `plan_b\teach` and `plan_b\gen` (it refuses and writes nothing if a training passage equals an eval passage). Output bytes are LF on every
+machine, so the `MANIFEST.json` sha256 of each arm must equal the lines recorded in PASS-MARKS.md addendum 3 (`- teach MANIFEST.json sha256 <hex>`,
+`- gen MANIFEST.json sha256 <hex>`); if you build on this PC, report both shas (`certutil -hashfile ...\MANIFEST.json SHA256`) so they are recorded before
+any student trains. Then the six runs (2 at a time, one device for all):
+```
+python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\35-pc-b1-students.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+```
+Afterwards: `python -m custom_io.analyze_b1 --results C:\Users\benja\custom-io\work\results\35-pc-b1-students`.

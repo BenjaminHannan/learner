@@ -1,0 +1,13 @@
+# BensPC RTX 5070 Ti (cuda): Test B1 student side, the screen (design/B1-students.md; marks in PASS-MARKS.md addendum 3, fixed before any student trains).
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\35-pc-b1-students.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+# 3 students x seeds 300, 301: B2-M (copy + span) on TEACH, plain_tf-M on TEACH, B2-M on GEN. Same recipe for all (choice 8):
+# 16000 updates, batch 256, lr 7e-4, warmup 500, bf16, --max-ans 32, no time cap. Data from the adapter: {WORK}/plan_b/teach and
+# {WORK}/plan_b/gen (python -m custom_io.english build ...). All six on this one device (pairs must share a device).
+# After: python -m custom_io.analyze_b1 --results <work>\results\35-pc-b1-students
+# MEM 7500
+b2t_s300 --model ledger --cfg '{"d":384,"n_heads":6,"reader_layers":2,"blocks":3,"n_loops":8,"mlp":6.0,"copy":true,"span":true}' --data {WORK}/plan_b/teach --english-eval custom_io/english_eval --steps 16000 --batch 256 --lr 7e-4 --warmup 500 --bf16 --max-ans 32 --seed 300 --log-every 500 --final-eval
+tft_s300 --model plain_tf --cfg '{"d_model":384,"n_layers":6,"n_heads":6,"max_ans":32}' --data {WORK}/plan_b/teach --english-eval custom_io/english_eval --steps 16000 --batch 256 --lr 7e-4 --warmup 500 --bf16 --max-ans 32 --seed 300 --log-every 500 --final-eval
+b2g_s300 --model ledger --cfg '{"d":384,"n_heads":6,"reader_layers":2,"blocks":3,"n_loops":8,"mlp":6.0,"copy":true,"span":true}' --data {WORK}/plan_b/gen --english-eval custom_io/english_eval --steps 16000 --batch 256 --lr 7e-4 --warmup 500 --bf16 --max-ans 32 --seed 300 --log-every 500 --final-eval
+b2t_s301 --model ledger --cfg '{"d":384,"n_heads":6,"reader_layers":2,"blocks":3,"n_loops":8,"mlp":6.0,"copy":true,"span":true}' --data {WORK}/plan_b/teach --english-eval custom_io/english_eval --steps 16000 --batch 256 --lr 7e-4 --warmup 500 --bf16 --max-ans 32 --seed 301 --log-every 500 --final-eval
+tft_s301 --model plain_tf --cfg '{"d_model":384,"n_layers":6,"n_heads":6,"max_ans":32}' --data {WORK}/plan_b/teach --english-eval custom_io/english_eval --steps 16000 --batch 256 --lr 7e-4 --warmup 500 --bf16 --max-ans 32 --seed 301 --log-every 500 --final-eval
+b2g_s301 --model ledger --cfg '{"d":384,"n_heads":6,"reader_layers":2,"blocks":3,"n_loops":8,"mlp":6.0,"copy":true,"span":true}' --data {WORK}/plan_b/gen --english-eval custom_io/english_eval --steps 16000 --batch 256 --lr 7e-4 --warmup 500 --bf16 --max-ans 32 --seed 301 --log-every 500 --final-eval

@@ -134,3 +134,9 @@ If B1-a is proved wrong, way B at this size is dead (source section 6): next sin
 **Data** (sha256 of the adapter's outputs, filled in before any student trains):
 - GEN source: `/mnt/project-files/plan-b/data/gen.jsonl`, sha256 c49c126cb82f5b7b11890c379012a243c8dc695205eb747d4f24df991c7cc629 (200,000 questions).
 - TEACH source: pending.
+- Equal row counts take priority in choice 3: whole examples are dropped (seeded) from the longer arm, and only if an odd remainder is left, at most 3 rows
+  are trimmed from the end of one seeded example (the manifest records `rows_trimmed_from_one_example`; 0 on the real-data trials).
+- Adapter outputs are written with LF line ends on every machine, so the manifest sha256 is the same on Linux and Windows. Record one line per arm,
+  in exactly this form (analyze_b1 reads it; `<hex>` = sha256 of `plan_b/<arm>/MANIFEST.json`, from the machine that builds the data the queue trains on):
+  - teach MANIFEST.json sha256 pending
+  - gen MANIFEST.json sha256 pending

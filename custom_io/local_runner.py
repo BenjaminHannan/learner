@@ -106,8 +106,8 @@ def free_mib(device):
         return None
 
 
-def parse_queue(path):
-    """-> [(name, kind 'train'|'hf', args list, mem MiB)]"""
+def parse_queue(path, work=None):
+    """-> [(name, kind 'train'|'hf', args list, mem MiB)]. `{WORK}` inside a token (after shlex.split, so Windows backslashes survive) is the work dir."""
     runs, mem, seen = [], 5000, set()
     for raw in open(path, encoding='utf-8'):
         line = raw.strip()
@@ -121,7 +121,7 @@ def parse_queue(path):
         kind = 'train'
         if line.startswith('hf:'):
             kind, line = 'hf', line[3:].strip()
-        toks = shlex.split(line)
+        toks = [t.replace('{WORK}', str(work)) for t in shlex.split(line)] if work is not None else shlex.split(line)
         name, args = toks[0], toks[1:]
         if name in seen:
             sys.exit(f'duplicate run name {name} in {path}')
@@ -175,6 +175,15 @@ def summary_line(out):
     fe = r.get('final_eval') or {}
     pick = {s: round(fe[s]['exact'], 2) for s in ('in_dist', 'answer', 'frame', 'vocab', 'variant') if s in fe}
     c5 = ((r.get('chain5') or {}).get('intact') or {}).get('exact')
+    en = r.get('english') or {}
+    for k in ('fresh', 'new_pooled'):
+        v = (en.get('intact') or {}).get(k)
+        if isinstance(v, dict) and v.get('n'):
+            pick[f'en_{k}'] = round(v['exact'], 2)
+    dn = (((en.get('lesions') or {}).get('new_pooled') or {}).get('donor') or {})
+    dn = (dn.get('judged') or dn).get('exact')
+    if dn is not None:
+        pick['en_donor'] = round(dn, 2)
     return json.dumps(dict(status=r.get('status'), steps=r.get('steps'), steps_per_s=round(r.get('steps_per_s') or 0, 2),
                            chain5=c5, **pick))
 
@@ -193,7 +202,7 @@ def finish(out):
 def run(a):
     work, qpath = Path(a.work).resolve(), Path(a.queue).resolve()
     qname = qpath.stem
-    runs = parse_queue(qpath)
+    runs = parse_queue(qpath, work)
     device = a.device
     res = work / 'results' / qname
     res.mkdir(parents=True, exist_ok=True)

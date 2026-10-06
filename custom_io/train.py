@@ -2,6 +2,7 @@
 import argparse, contextlib, json, math, os, random, sys, time
 import numpy as np
 import torch
+from custom_io import data as D
 from custom_io.data import DEFAULT_DATA, CharVocab, Dataset, load_rows, to_device, train_batches
 from custom_io.evalx import can_donor, chain_panel, donor_all, eval_all, evaluate, short, subsample, _dev_rows, is_hit
 from custom_io.models import NAMES, build
@@ -74,6 +75,22 @@ def final_eval(model, args, device, amp):
     return runs.pop(None), runs
 
 
+def english_eval(model, args, device, amp):
+    """english.eval_english on the held-out in-dist slice (DATA/dev/in_dist.jsonl, every key kept) + the eval dir; one event line per set and lesion."""
+    from custom_io import english
+    held = load_rows(os.path.join(args.data, 'dev', 'in_dist.jsonl'), keep=None)
+    r = english.eval_english(model, args.english_eval, held, device, args.eval_batch, amp)
+    json.dumps(r)
+    for k, v in (r.get('intact') or {}).items():
+        if isinstance(v, dict) and 'exact' in v:
+            jprint(event='eval', set=k, exact=round(v['exact'], 2), n=v.get('n'))
+    for k1, v1 in (r.get('lesions') or {}).items():
+        for k2, v2 in (v1 or {}).items():
+            e = v2.get('exact', (v2.get('judged') or {}).get('exact')) if isinstance(v2, dict) else None
+            jprint(event='eval', lesion=f'{k1}/{k2}', exact=None if e is None else round(e, 2))
+    return r
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--model', required=True, choices=NAMES)
@@ -93,6 +110,8 @@ def main(argv=None):
     ap.add_argument('--log-every', type=int, default=100)
     ap.add_argument('--eval-every', type=int, default=0, help='quick eval on 200 rows of dev/in_dist every N steps')
     ap.add_argument('--final-eval', action='store_true')
+    ap.add_argument('--english-eval', help='dir of the four English eval sets: with --final-eval run english.eval_english (needs DATA/dev/in_dist.jsonl, vocab of 108) instead of eval_all, chain-5 and extra_evals')
+    ap.add_argument('--max-ans', type=int, default=8, help='answer chars before EOS (data.set_max_ans); a model with a smaller max_ans is refused')
     ap.add_argument('--eval-max', type=int, help='cap rows per dev split in the final eval')
     ap.add_argument('--eval-batch', type=int, default=128)
     ap.add_argument('--minutes', type=float, help='wall-clock cap on training; still evals afterwards')
@@ -103,12 +122,17 @@ def main(argv=None):
     amp = (lambda: torch.autocast(device.type, dtype=torch.bfloat16)) if args.bf16 and device.type == 'cuda' else contextlib.nullcontext
     random.seed(args.seed); np.random.seed(args.seed); torch.manual_seed(args.seed); torch.cuda.manual_seed_all(args.seed)
     t_start = time.time()
+    D.set_max_ans(args.max_ans)         # before any data or model is built
 
     rows = load_rows(os.path.join(args.data, 'train.jsonl'))
     vocab = CharVocab.get(args.data, args.vocab, rows)
     batches = train_batches(Dataset(rows, vocab), args.batch, args.order, args.seed)
     dev = subsample(load_rows(os.path.join(args.data, 'dev', 'in_dist.jsonl')), 200)
     model = build(args.model, vocab, **cfg).to(device)
+    if getattr(model, 'max_ans', args.max_ans) < args.max_ans:
+        sys.exit(f'--max-ans {args.max_ans} but the model has max_ans {model.max_ans}: its answer slots cannot hold the targets')
+    if args.english_eval and args.final_eval:
+        assert len(vocab) == 108, f'english eval needs the 108-id vocab, got {len(vocab)}'
     # no weight decay on biases, norms or embedding tables (so ids never seen in training keep their init scale)
     emb = {id(m.weight) for m in model.modules() if isinstance(m, torch.nn.Embedding)}
     decay = [p for p in model.parameters() if p.requires_grad and p.ndim >= 2 and id(p) not in emb]
@@ -161,10 +185,15 @@ def main(argv=None):
         torch.save(dict(model=model.state_dict(), name=args.model, cfg=cfg, chars=vocab.chars, step=step), os.path.join(args.out, 'checkpoint.pt'))
     def write():
         result['wall_s'] = time.time() - t_start
+        if device.type == 'cuda':       # peaks so far (training, then evals): later queues size --par and # MEM from these
+            result['peak_mem_mib'], result['peak_reserved_mib'] = (round(f(device) / 2 ** 20, 1) for f in (torch.cuda.max_memory_allocated, torch.cuda.max_memory_reserved))
         if args.out:
             json.dump(result, open(os.path.join(args.out, 'RESULT.json'), 'w'), indent=1)
     write()                                           # trained model + stats survive even if the eval below dies
-    if args.final_eval:
+    if args.final_eval and args.english_eval:
+        result['english'] = english_eval(model, args, device, amp)
+        write()
+    elif args.final_eval:
         result['final_eval'], result['lesions'] = final_eval(model, args, device, amp)
         write()
         if args.big_data:
@@ -174,6 +203,7 @@ def main(argv=None):
             run_extra(model, args, device, amp, result)
     write()
     jprint(event='done', steps=step, status=status, steps_per_s=round(result['steps_per_s'], 3), wall_s=round(result['wall_s'], 1),
+           **{k: result[k] for k in ('peak_mem_mib', 'peak_reserved_mib') if k in result},
            **(short(result['final_eval']) if result['final_eval'] else {}))
     return result
 
