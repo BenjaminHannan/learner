@@ -235,3 +235,14 @@ EGE (addendum 4) moves to queue 38 with EGT.
 **Marks:** exactly addendum 6's EGR marks 1-5, its proved-wrong rule and its "better than B2" label, each seed against plain B2 on the same seed.
 **Read only:** EGO minus EGR (what B2's own letters add once EmbeddingGemma reads the question), per family, with the letter families
 (letter_ops, copy_word, cipher_map, digits_parity, group_induct) listed on their own: those are where losing the letters should show first (suggested).
+
+## Addendum 8: EGM, a trained 2-layer adapter between EmbeddingGemma and the thinker (written 2026-10-06 about 20:25 UTC, 4:25 PM ET, before any EGM run)
+Ben (3:47 PM ET) asked for an intermediate between EmbeddingGemma and the thinker. EGO already has one: a LayerNorm and one trained linear map
+(768 -> 256), then the reader's own final LayerNorm. **EGM** (`{"copy":true,"eg_embed":true,"reader_layers":0,"letters_in":false,"eg_adapter":"mlp"}`)
+is EGO with one change: the adapter is LayerNorm -> Linear(768, 256) -> GELU -> Linear(256, 256) (LLaVA-1.5's projector shape; the last layer
+zero-initialised like EGO's), and the reader's final LayerNorm still normalises its output. Trainable 2,909,777 (+65,792); whole 273,912,401 with
+EmbeddingGemma counted. EmbeddingGemma stays frozen.
+**Runs:** EGM_s200, EGM_s201, paired with B2_s200 / B2_s201 of queue 33. Queue 36 is now EGM, EGO (the linear check), EGR; R0 moves to queue 38.
+**Marks:** exactly addendum 6's marks 1-5, proved-wrong rule and "better than B2" label, each seed against plain B2 on the same seed.
+**Which adapter goes on:** if EGM and EGO both pass, the one with the higher 2-seed pooled-5 mean goes to the 6-seed confirm; if they are within
+0.5 of each other, the linear one (smaller and simpler). Read only: EGM minus EGO per seed.

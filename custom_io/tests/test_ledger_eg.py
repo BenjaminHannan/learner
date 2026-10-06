@@ -148,6 +148,26 @@ def test_eg_only_reader():
     print('ok eg_only_reader')
 
 
+def test_mlp_adapter():
+    """PASS-MARKS.md addendum 8, EGM (EGO with eg_adapter='mlp'): adds exactly eg_hid (768 -> d) to EGO's keys, zero-initialised output, so at step 0 it
+    computes what EGO computes; after one step the hidden layer gets a gradient; the S-cfg size matches the addendum."""
+    v, rows = vocab(), train_rows(48, 4)
+    base = dict(copy=True, eg_embed=True, reader_layers=0, letters_in=False)
+    ego, egm = seeded(SMALL, 9, v, **base), seeded(SMALL, 9, v, **base, eg_adapter='mlp')
+    assert set(egm.state_dict()) - set(ego.state_dict()) == {'eg_hid.weight', 'eg_hid.bias'}
+    b = batch_of(rows, v)
+    assert torch.equal(ego.loss(b)[0], egm.loss(b)[0])
+    opt = torch.optim.AdamW(egm.parameters(), lr=1e-2)
+    for _ in range(2):
+        opt.zero_grad()
+        egm.loss(b)[0].backward()
+        opt.step()
+    assert egm.eg_hid.weight.grad.abs().sum() > 0 and egm.eg_proj.weight.abs().sum() > 0
+    assert seeded(S_CFG, 0, v, **base, eg_adapter='mlp').size() == dict(
+        trainable=2_909_777, discarded=0, frozen_borrowed=271_002_624, shipped_trainable=2_909_777, whole=273_912_401)
+    print('ok mlp_adapter')
+
+
 def test_teach_loss_and_never_at_eval():
     """eg_teach: keys = B2's + ln_mt + mt_head; B2 weights identical at the same seed; loss = B2 loss + w * meaning (B2 aux unchanged); answers equal
     B2's (the head never touches inference); the teacher embeds only the loss batch's prompts, never anything in generate / lesions / donor."""
@@ -205,8 +225,8 @@ def test_bf16_states_without_autocast_and_queue_env():
     X, _ = m.read(batch_of(rows, v))
     assert X.dtype == torch.float32 and torch.isfinite(X).all()
     qd = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'queue_local')
-    for name, runs in (('36-pc-eg2.txt', ['EGO_s200', 'EGO_s201', 'EGR_s200', 'EGR_s201', 'R0_s200', 'R0_s201']),
-                       ('38-pc-eg-teacher.txt', ['EGE_s200', 'EGE_s201', 'EGT_s200', 'EGT_s201'])):
+    for name, runs in (('36-pc-eg2.txt', ['EGM_s200', 'EGM_s201', 'EGO_s200', 'EGO_s201', 'EGR_s200', 'EGR_s201']),
+                       ('38-pc-eg-teacher.txt', ['R0_s200', 'R0_s201', 'EGE_s200', 'EGE_s201', 'EGT_s200', 'EGT_s201'])):
         q = os.path.join(qd, name)
         env = queue_env(q)
         assert set(env) == {'PYTHONPATH', 'CUSTOM_IO_EG2'} and env['PYTHONPATH'].startswith('C:\\Users\\benja\\eg_site;'), env

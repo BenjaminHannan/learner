@@ -1,5 +1,5 @@
 """EmbeddingGemma 2 arms for B2 (PASS-MARKS.md addendum 4), Test LR, the per-round readout loss (addendum 5), and the reader without its
-letter window, EGR and R0 (addendum 6), and EGO, EmbeddingGemma as the whole reader (addendum 7), computed exactly as written.
+letter window, EGR and R0 (addendum 6), EGO, EmbeddingGemma as the whole reader (addendum 7), and EGM, the same through a 2-layer adapter (addendum 8), computed exactly as written.
 python3 -m custom_io.analyze_eg --results custom_io/results/33-pc-confirm-b2 custom_io/results/36-pc-eg2 [--out custom_io/results/EG2-ANALYSIS.json]
 Arms EGE (eg_embed) and EGT (eg_teach 0.1), each paired by seed (200, 201) with plain B2 (run folders B2_s200, B2_s201). A run counts only if it
 is status 'ok', trained 24,000 steps with the B2 flags and its own switch, and the base run is plain B2 with the same flags; otherwise its
@@ -10,9 +10,10 @@ from custom_io.analyze import P5, SPL, C5, POOL, g, load, sub, chk, allof
 SEEDS, BASE = [200, 201], 'B2'
 ARMS = {'EGE': {'copy': True, 'eg_embed': True}, 'EGT': {'copy': True, 'eg_teach': 0.1}, 'LR': {'copy': True, 'round_readout': 1.0},
         'EGR': {'copy': True, 'eg_embed': True, 'reader_layers': 0}, 'R0': {'copy': True, 'reader_layers': 0},
-        'EGO': {'copy': True, 'eg_embed': True, 'reader_layers': 0, 'letters_in': False}}
+        'EGO': {'copy': True, 'eg_embed': True, 'reader_layers': 0, 'letters_in': False},
+        'EGM': {'copy': True, 'eg_embed': True, 'reader_layers': 0, 'letters_in': False, 'eg_adapter': 'mlp'}}
 RECIPE = dict(steps=24000, batch=256, lr=1e-3, bf16=True)
-SIZES = {'B2': 3302481, 'EGE': 3500881, 'EGT': 3368785, 'LR': 3302481, 'EGR': 2843985, 'R0': 2645585, 'EGO': 2843985}
+SIZES = {'B2': 3302481, 'EGE': 3500881, 'EGT': 3368785, 'LR': 3302481, 'EGR': 2843985, 'R0': 2645585, 'EGO': 2843985, 'EGM': 2909777}
 
 
 def valid(r, cfg, arm):
@@ -69,7 +70,7 @@ def judge(runs, arm):
     m['3 no dev split drops more than 2.0 (2-seed mean)'] = dict(value=drops, ok=allof(chk(v, '>=', -2.0) for v in drops.values()))
     m['4 chain-5 >= 99.0 on both seeds'] = dict(value=c5, ok=allof(chk(v, '>=', 99.0) for v in c5.values()) if len(c5) == len(SEEDS) else 'n/a')
     full = lambda dd: len(dd) == len(SEEDS)
-    if arm in ('EGR', 'R0', 'EGO'):        # addenda 6 and 7 (EGO uses EGR's marks)
+    if arm in ('EGR', 'R0', 'EGO', 'EGM'):        # addenda 6-8 (EGO and EGM use EGR's marks)
         return judge_reader(out, arm, pairs, d, mean, full, dp5, dspl, c5, lk, lk_base)
     if arm != 'LR':
         m['5 loops:0 in_dist <= 5 and donor in_dist <= 5 on both seeds'] = dict(
@@ -139,15 +140,15 @@ def judge_reader(out, arm, pairs, d, mean, full, dp5, dspl, c5, lk, lk_base):
 LETTER_FAMS = ['letter_ops', 'copy_word', 'cipher_map', 'digits_parity', 'group_induct']
 
 
-def ego_vs_egr(runs):
-    """Addendum 7, read only: EGO minus EGR per seed (pooled-5, and in_dist exact on each letter family), when both runs exist and are valid."""
+def arm_minus(runs, x, y):
+    """Read only (addenda 7 and 8): arm x minus arm y per seed (pooled-5, and in_dist exact on each letter family), when both runs exist and are valid."""
     def fam(r, f):
         x = g(r, 'final_eval', 'in_dist', 'by_family', f)
         return None if not x or not x.get('n') else 100 * x['correct'] / x['n']
     out = {}
     for s in SEEDS:
-        a, b = runs.get(('EGO', s)), runs.get(('EGR', s))
-        if a is None or b is None or valid(a, ARMS['EGO'], 'EGO') or valid(b, ARMS['EGR'], 'EGR'):
+        a, b = runs.get((x, s)), runs.get((y, s))
+        if a is None or b is None or valid(a, ARMS[x], x) or valid(b, ARMS[y], y):
             continue
         out[s] = dict(pooled5=sub(P5(a), P5(b)), **{f: sub(fam(a, f), fam(b, f)) for f in LETTER_FAMS})
     return out
@@ -168,7 +169,12 @@ def main(argv=None):
     a = ap.parse_args(argv)
     runs, skipped = load(a.results)
     res = dict(seeds=SEEDS, arms={arm: judge(runs, arm) for arm in ARMS}, skipped=skipped)
-    res['ego_minus_egr_read_only'] = ego_vs_egr(runs)
+    res['ego_minus_egr_read_only'] = arm_minus(runs, 'EGO', 'EGR')
+    res['egm_minus_ego_read_only'] = arm_minus(runs, 'EGM', 'EGO')
+    pm = {k: res['arms'][k] for k in ('EGM', 'EGO')}
+    if all(v['verdict'].startswith('PASS') for v in pm.values()):      # addendum 8: which adapter goes to the confirm
+        mm = {k: sum(v['marks']['1 pooled-5 change >= -1.0 on both seeds']['value'].values()) / len(SEEDS) for k, v in pm.items()}
+        res['adapter_for_confirm'] = 'EGO (linear)' if mm['EGM'] - mm['EGO'] <= 0.5 else 'EGM (2-layer)'
     os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
     json.dump(res, open(a.out, 'w'), indent=1, default=str)
     L = ['# EmbeddingGemma 2 arms (PASS-MARKS.md addendum 4), Test LR (addendum 5) and the reader without its window (addendum 6) for B2', '', f'Seeds {SEEDS}, each arm minus plain B2 on the same seed.', '']
@@ -184,8 +190,11 @@ def main(argv=None):
         if 'proved_wrong' in r:
             L += [f'- proved wrong: {r["proved_wrong"]}']
         L += [f'- read only: family split change {fmt(r["read_only"]["family_split"])}; size {r["read_only"]["size"]}', '']
-    if res['ego_minus_egr_read_only']:
-        L += ['## EGO minus EGR (read only, addendum 7)', '', f"- {fmt(res['ego_minus_egr_read_only'])}", '']
+    for key, title in (('ego_minus_egr_read_only', 'EGO minus EGR (read only, addendum 7)'), ('egm_minus_ego_read_only', 'EGM minus EGO (read only, addendum 8)')):
+        if res[key]:
+            L += [f'## {title}', '', f"- {fmt(res[key])}", '']
+    if res.get('adapter_for_confirm'):
+        L += [f"Adapter for the 6-seed confirm (addendum 8): {res['adapter_for_confirm']}", '']
     md = os.path.join(os.path.dirname(a.out) or '.', 'RESULTS-EG2.md')
     open(md, 'w').write('\n'.join(L) + '\n')
     print('\n'.join(L))

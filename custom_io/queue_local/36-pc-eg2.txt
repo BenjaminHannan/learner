@@ -1,19 +1,18 @@
-# BensPC RTX 5070 Ti (cuda): B2's reader replaced by EmbeddingGemma 2, and B2 without its letter window (PASS-MARKS.md addenda 7 and 6, written
-# before any of these runs). Runs AHEAD of queue 35 (Ben, 3:42 and 3:44 PM ET 10-06). EGE and EGT moved to queue 38.
+# BensPC RTX 5070 Ti (cuda): B2's reader replaced by EmbeddingGemma 2 (PASS-MARKS.md addenda 8, 7 and 6, written before any of these runs).
+# Runs AHEAD of queue 35 (Ben, 3:42, 3:44 and 3:47 PM ET 10-06). R0, EGE and EGT are in queue 38.
 # Needs transformers >= 5.19 in C:\Users\benja\eg_site, the weights in C:\Users\benja\eg2 and `python -m custom_io.models.eg check cuda`
 # printing "ok": true (PC-JOB.md section 6). The two ENV lines below go to every run of this queue only (local_runner queue_env):
 # ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
 # ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
 #   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\36-pc-eg2.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
 # Paired by seed with B2_s200 / B2_s201 of queue 33 (same PC, same flags):
-#   EGO = EmbeddingGemma 2 is the whole reader (no window, no letters in): trainable 2,843,985, whole 273,846,609 with EmbeddingGemma counted.
-#   EGR = EGO plus B2's own letters in the reader input (no window): same size.
-#   R0  = B2 with the window removed and nothing added: 2,645,585 (diagnostic).
+#   EGM = EmbeddingGemma 2 is the whole reader, through a trained 2-layer adapter: trainable 2,909,777, whole 273,912,401 with it counted.
+#   EGO = the same with a 1-layer (linear) adapter, the check: trainable 2,843,985, whole 273,846,609.
+#   EGR = EGO plus B2's own letters in the reader input (no window): same size as EGO.
 # MEM 7000
+EGM_s200 --model ledger --cfg '{"copy":true,"eg_embed":true,"reader_layers":0,"letters_in":false,"eg_adapter":"mlp"}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
+EGM_s201 --model ledger --cfg '{"copy":true,"eg_embed":true,"reader_layers":0,"letters_in":false,"eg_adapter":"mlp"}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval
 EGO_s200 --model ledger --cfg '{"copy":true,"eg_embed":true,"reader_layers":0,"letters_in":false}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
 EGO_s201 --model ledger --cfg '{"copy":true,"eg_embed":true,"reader_layers":0,"letters_in":false}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval
 EGR_s200 --model ledger --cfg '{"copy":true,"eg_embed":true,"reader_layers":0}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
 EGR_s201 --model ledger --cfg '{"copy":true,"eg_embed":true,"reader_layers":0}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval
-# MEM 5000
-R0_s200 --model ledger --cfg '{"copy":true,"reader_layers":0}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
-R0_s201 --model ledger --cfg '{"copy":true,"reader_layers":0}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval

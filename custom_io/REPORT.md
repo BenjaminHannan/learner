@@ -135,7 +135,8 @@ Per-run numbers: `custom_io/results/RESULTS-SCREEN.md` and `SCREEN-ANALYSIS.json
    **The reader without its window** (Ben, 3:42 PM ET 10-06; PASS-MARKS.md addendum 6): EGR swaps the +-4-character window for
    EmbeddingGemma 2 (whole 273.8M) and R0 drops the window with nothing added (2.6M, diagnostic). Queue 36 runs EGR, R0, then EGE, ahead
    of the B1 students; EGT moved to queue 38. Then Ben (3:44 PM ET): EmbeddingGemma as the whole reader. EGO (addendum 7) is EGR without
-   B2's own letters in the reader input; queue 36 is now EGO, EGR, R0, and EGE moved to queue 38 with EGT.
+   B2's own letters in the reader input. Then Ben (3:47 PM ET): an intermediate between EmbeddingGemma and the thinker. EGM (addendum 8) is EGO
+   with a trained 2-layer adapter instead of one linear map. Queue 36 is now EGM, EGO (the linear check), EGR; R0, EGE and EGT are in queue 38.
 5. **Looped-LM ideas (Amazon's ALoDLM):** a no-training probe of the two saved B2 checkpoints (`design/LOOPS-probe.md`, gates fixed first)
    found every program question right by round 8, the hidden state growing only 3-4x, and the loss in the no-program families, whose answers
    drift across rounds (answering at 16 rounds costs about 1 point). Test LR (addendum 5, queue 37): a readout loss at every round after the

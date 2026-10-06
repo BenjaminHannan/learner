@@ -1,10 +1,14 @@
-# BensPC RTX 5070 Ti (cuda): the two EmbeddingGemma 2 arms of PASS-MARKS.md addendum 4, moved out of queue 36 on 10-06 so the reader runs go
-# first: EGE (EmbeddingGemma added on top of the letter window; whole 274,503,505) and EGT (training-only meaning teacher; ships as B2,
-# 3,302,481). Runs after queue 37. Needs the same EmbeddingGemma setup as queue 36.
+# BensPC RTX 5070 Ti (cuda): runs moved out of queue 36 on 10-06 so the EmbeddingGemma-reader runs go first. Runs after queue 37.
+# R0 (PASS-MARKS.md addendum 6): B2 with the letter window removed and nothing added, 2,645,585 (diagnostic; needs no EmbeddingGemma).
+# EGE and EGT (addendum 4): EmbeddingGemma added on top of the letter window (whole 274,503,505), and as a training-only meaning teacher
+# (ships as B2, 3,302,481). Needs the same EmbeddingGemma setup as queue 36.
 # ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
 # ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
 #   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\38-pc-eg-teacher.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
 # Paired by seed with B2_s200 / B2_s201 of queue 33.
+# MEM 5000
+R0_s200 --model ledger --cfg '{"copy":true,"reader_layers":0}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
+R0_s201 --model ledger --cfg '{"copy":true,"reader_layers":0}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval
 # MEM 7000
 EGE_s200 --model ledger --cfg '{"copy":true,"eg_embed":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
 EGE_s201 --model ledger --cfg '{"copy":true,"eg_embed":true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval
