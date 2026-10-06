@@ -246,8 +246,20 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   1.9 solutions (DEV 2.0, T1 1.9, T1b 1.7, X 4.4). Reach@32 is therefore report-only in C1, and reach@4 is the reach
   mark. The generator stays as it is: preferring many-solution targets would raise every floor. Counts of distinct
   correct programs are report-only here and are read on X.
-- **Shared warm-up:** every arm starts from the same warmed parent: B2 learns the format on 2-number puzzles with solver
-  programs. N is this warmed parent. Warm-up harm against the original B2 is reported.
+- **Shared warm-up:** every arm starts from the same warmed parent. N is this warmed parent. Warm-up harm against the
+  original B2 is reported. Changed after the DEV pilot (10-06): the warm-up mixes 1,500 two-number puzzles with
+  three-number puzzles, all with solver programs, on number sets in no sealed or practice split, with the same skills
+  replay as the sleeps. The three-number count is the smallest of 1,500, 3,000 and 6,000 that passes the signal gate on
+  DEV (the least warm-up that teaches the format leaves the most room for sleep to help); the warmed parent's DEV luck
+  and first try are reported as headroom. In this puzzle family any labelled three-number program is a correct
+  solution for some target, so the format cannot be taught without some aiming; the claim cap above already covers
+  that.
+- **DEV pilot, B2 s100 (shown, CPU, no skills replay, `/mnt/project-files/creative-pilot/`):** raw B2 writes
+  rule-following programs on 0.2% of tries and solves 1 of 256 practice puzzles; after the two-number-only warm-up
+  (200 updates) 0.4% and 3 of 256, with 0.1 distinct rule-following programs per puzzle (gate 4). Both gates failed.
+  B2 has to chain a result into a second step, which two-number puzzles never show. The PC arm (1,377 solver records,
+  86 updates, lr 1e-3 at the grid edge) moved DEV luck from 0.05% to 2.0%, first try from 0 to 7.8% and reach@32 from
+  1.6% to 45%, at a temperature of 2.0 that was picked while every score was near zero.
 - **Gates on DEV after warm-up:** signal: at least half of the tries follow the rules, and the warmed parent has an
   accepted try on at least 100 distinct practice puzzles (rules alone reach about half the puzzles at 32 tries, so a
   pass@32 cold-start gate would test nothing here); sameness: >= 4 distinct rule-following programs per puzzle on
@@ -260,7 +272,8 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   If the rule follower matches the parent, search is still random before sleep, and G0 decides whether sleep taught
   aim. The same check is repeated on W after sleep.
 - **Tries:** 32 per practice puzzle from the shared sampler: sample op and operand pointers at a DEV-chosen temperature
-  (P0's sampler), drop duplicates (commutative order merged) before running and top up, branch over the top 8 first
+  (P0's sampler; chosen on the warmed parent by reach@4 among temperatures that pass the sameness gate, with the grid
+  widened whenever the choice lands on its edge), drop duplicates (commutative order merged) before running and top up, branch over the top 8 first
   steps. Variety is reported with and without branching, so the sampler's own variety stays visible.
 - **Checker (no answer key):** two independently written checkers. Allowed ops ADD, SUB, MUL, DIV only. Take the tree
   of steps that feeds the final answer slot: it uses each given number exactly once by slot id, never T's slot or a
@@ -294,7 +307,10 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
     above the rules-only floor; otherwise the run is void. (loops:0 writes no steps, so its luck is 0 by construction;
     reported, not a test.)
   - H question (secondary): reach@32 H - W >= +5 with interval above 0, and H - H' above 0.
-  - PC gate: PC - N >= +10.
+  - PC gate: PC - N >= +10, unchanged after the pilot. It is the positive control for L1's +10, so lowering it would
+    make L1 unreachable by design. It is measured after the new warm-up, at the re-chosen temperature, with skills
+    replay on; PC's first-try gain is reported beside it. If it still fails on both pilot parents, the roadmap thread
+    decides before anything is sealed.
 - **Ordered verdicts:** void (checkers disagree on a T1 try, unresolved above 1%, or a lesion fails) -> gate stop ->
   placebo too close (over half of R's records are accepted tries) -> PASS (L1, L2, G0, G1, G2, G3), named "PASS with
   first answers" when F1 also holds and "PASS, search only" when it does not -> rules only (L1 holds, G0 fails) -> gain with harm (G3 fails) -> **proved wrong** (the PC gate passes, yet W - R has an upper end
@@ -403,3 +419,7 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
 - **Ben (9:24 PM ET 10-05), answering the ideas card:** gift and plan ideas don't need a creative model; creativity is
   only for when the model runs into trouble. The ideas side track is removed, wall 3 is now about open worlds, and C4
   only ranks tries before a real check.
+- **DEV pilot on B2 s100 (10-06, build thread):** both DEV gates failed because a two-number warm-up does not teach
+  three-number programs (rule-following tries 0.2% raw, 0.4% warmed). Decided here: a mixed two- and three-number
+  warm-up on unsealed number sets, sized as the smallest that passes the signal gate; temperature chosen among values
+  that pass the sameness gate, widening the grid at an edge; learning-rate grid 3e-4 to 1e-2; PC gate kept at +10.
