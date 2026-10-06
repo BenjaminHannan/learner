@@ -1,0 +1,116 @@
+"""The creative scoreboard for C1 (roadmap section 1) and the DEV variety gate (section 6).
+
+score_puzzles(): per-puzzle verdicts from the two checkers, then luck, reach@4 / reach@32, variety, STOP-rule luck, own-vs-twin aim.
+Reach@4 is the expected value over random 4-tries subsets of the kept tries (hypergeometric), so the branch order never decides it."""
+from math import comb
+from creative.checkers import verdict
+from creative.programs import NOOP, cone, result_key, run
+
+COLD_START_MIN = 0.10       # an accepted try within 32 on >= 10% of DEV puzzles
+SAMENESS_MIN = 4.0          # >= 4 distinct result-changing programs per puzzle on average
+
+
+def reach_at(c, m, k):
+    """P(at least one accepted in k tries drawn without replacement from m kept tries holding c accepted)."""
+    if c == 0 or m == 0:
+        return 0.0
+    if m <= k:
+        return 1.0
+    return 1 - comb(m - c, k) / comb(m, k)
+
+
+def is_clean(t):
+    """STOP rule: the written steps are exactly the answer cone, first, then NOOP (nothing written off the tree)."""
+    c = cone(t)
+    return c is not None and c == list(range(len(c))) and all(op == NOOP for op in t.ops[len(c):])
+
+
+def judge_try(row, rec, rules_only=False):
+    nums = row['nums'] + [row['target']]
+    return verdict(nums, len(row['nums']), rec.t, check_value=not rules_only)[0]
+
+
+def score_puzzles(rows, tries, raw=None, greedy=None):
+    """rows: puzzle rows (with 'twin' on TWINS splits); tries[i]: list of TryRec; raw[i]: programs sampled; greedy[i]: one TryRec per row.
+    -> dict of pooled scores plus 'per_puzzle' details. All shares are over kept (distinct) tries."""
+    per, n_t = [], 0
+    tot = dict(acc=0, tries=0, rules=0, unres=0, clean=0, twin=0, raw=0)
+    for i, row in enumerate(rows):
+        nums = row['nums'] + [row['target']]
+        verds = [judge_try(row, r) for r in tries[i]]
+        rules = [judge_try(row, r, rules_only=True) == 'accept' for r in tries[i]]
+        acc = [v == 'accept' for v in verds]
+        clean = [a and is_clean(r.t) for a, r in zip(acc, tries[i])]
+        keys = {result_key(r.t, run(nums, r.t)[1]) for r in tries[i]}
+        keys.discard('dead')
+        acc_keys = {result_key(r.t, run(nums, r.t)[1]) for r, a in zip(tries[i], acc) if a}
+        rule_keys = {result_key(r.t, run(nums, r.t)[1]) for r, ok in zip(tries[i], rules) if ok}
+        d = dict(id=row['id'], m=len(tries[i]), c=sum(acc), distinct=len(keys), distinct_accepted=len(acc_keys), distinct_rules=len(rule_keys),
+                 reach4=reach_at(sum(acc), len(acc), 4), reach32=float(any(acc)))
+        if 'twin' in row:
+            tw = row['twin']
+            tn = row['nums'] + [tw['target']]
+            d['twin_c'] = sum(verdict(tn, len(row['nums']), r.t, target=tw['target'])[0] == 'accept' for r in tries[i])
+            tot['twin'] += d['twin_c']
+        if greedy is not None:
+            d['first'] = float(judge_try(row, greedy[i]) == 'accept')
+        per.append(d)
+        tot['acc'] += sum(acc); tot['tries'] += len(acc); tot['rules'] += sum(rules); tot['clean'] += sum(clean)
+        tot['unres'] += sum(v == 'unresolved' for v in verds)
+        tot['raw'] += (raw[i] if raw is not None else len(acc))
+    n = len(rows)
+    out = dict(n_puzzles=n, n_tries=tot['tries'], luck=tot['acc'] / max(tot['tries'], 1),
+               stop_luck=tot['clean'] / max(tot['tries'], 1), rules_share=tot['rules'] / max(tot['tries'], 1),
+               unresolved=tot['unres'] / max(tot['tries'], 1), reach4=sum(d['reach4'] for d in per) / n,
+               reach32=sum(d['reach32'] for d in per) / n, distinct=sum(d['distinct'] for d in per) / n,
+               distinct_accepted=sum(d['distinct_accepted'] for d in per) / n, distinct_rules=sum(d['distinct_rules'] for d in per) / n, kept_per_puzzle=tot['tries'] / n,
+               raw_per_puzzle=tot['raw'] / n)
+    if raw is not None:
+        out['dup_drop_rate'] = 1 - tot['tries'] / max(tot['raw'], 1)
+    if rows and 'twin' in rows[0]:
+        out['twin_luck'] = tot['twin'] / max(tot['tries'], 1)
+        out['aim'] = out['luck'] - out['twin_luck']
+    if greedy is not None:
+        out['first_try'] = sum(d['first'] for d in per) / n
+    out['per_puzzle'] = per
+    return out
+
+
+def dev_gate(rows, tries, raw=None):
+    """The gates on DEV after warm-up. -> dict(cold_start_ok, sameness_ok, verdict, reach32, distinct). A failed gate stops C1 with T1 sealed:
+    sameness -> C3b first; cold start -> stepping stones first (roadmap section 6)."""
+    s = score_puzzles(rows, tries, raw)
+    cold, same = s['reach32'] >= COLD_START_MIN, s['distinct'] >= SAMENESS_MIN
+    v = 'pass' if cold and same else ('stop: cold start and sameness' if not cold and not same else
+                                       'stop: cold start (stepping stones first)' if not cold else 'stop: sameness (C3b first)')
+    return dict(cold_start_ok=cold, sameness_ok=same, verdict=v, reach32=s['reach32'], distinct=s['distinct'], distinct_rules=s['distinct_rules'], luck=s['luck'],
+                reach4=s['reach4'], dup_drop_rate=s.get('dup_drop_rate'), unresolved=s['unresolved'])
+
+
+def tune_temperature(model, rows, vocab, device, grid=(0.7, 1.0, 1.3, 1.6, 2.0), n_tries=32, seed=0):
+    """Choose the sampling temperature on DEV only: highest reach@32, ties to more distinct programs. Frozen afterwards.
+    -> (best, {temperature: (reach32, distinct)})."""
+    from creative.sampler import sample_tries
+    res = {}
+    for T in grid:
+        tr, raw = sample_tries(model, rows, vocab, device, n_tries=n_tries, temperature=T, seed=seed)
+        s = score_puzzles(rows, tr, raw)
+        res[T] = (s['reach32'], s['distinct'])
+    return max(res, key=lambda T: res[T]), res
+
+
+def lesions(model, rows, vocab, device, n_tries=32, temperature=1.0, seed=0):
+    """C1's lesions (roadmap section 6), as sampler runs. Run them on W after sleep; the void rules are applied by the caller.
+      loops0: luck with loops:0 (no thinking); must be under half of the intact luck.
+      donor:  tries sampled on the TWIN puzzle's prompt (same numbers, the other target) and judged on the recipient's own target; must not
+              exceed the rules-only floor (a donor's thinker state must not raise hits on the recipient's target).
+    -> dict(luck, loops0_luck, donor_luck, rules_floor)."""
+    from creative.puzzles import rules_only_floor
+    from creative.sampler import sample_tries
+    tr, raw = sample_tries(model, rows, vocab, device, n_tries, temperature, seed=seed)
+    t0, _ = sample_tries(model, rows, vocab, device, n_tries, temperature, seed=seed, loops=0)
+    twins = [r['twin'] for r in rows]
+    td, _ = sample_tries(model, twins, vocab, device, n_tries, temperature, seed=seed)
+    share = lambda rs, ts: sum(judge_try(r, x) == 'accept' for r, t in zip(rs, ts) for x in t) / max(sum(len(t) for t in ts), 1)
+    return dict(luck=share(rows, tr), loops0_luck=share(rows, t0), donor_luck=share(rows, td),
+                rules_floor=sum(rules_only_floor(r['nums'], r['target']) for r in rows) / len(rows))
