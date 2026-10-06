@@ -573,6 +573,10 @@ def main():
     ap.add_argument('--sample-seed', type=int, default=None, help='train on a seeded random sample of the (family-filtered) rows instead of the ordered stride')
     ap.add_argument('--fixed-rows', type=int, default=0, help='with --sample-seed: draw this many rows once and repeat them --passes times (reshuffled each pass); also scores them as dev "trainfit"')
     ap.add_argument('--passes', type=int, default=1)
+    ap.add_argument('--feat-cache', type=int, default=0, help='T4: cache the frozen LM question features by token ids, up to this many distinct rows (0 = recompute every row, the old behaviour); off when --lm-lora')
+    ap.add_argument('--receipt-every', type=int, default=1, help='T4: run the per-update gradient receipt only every N updates (1 = every update, the old behaviour; the accum path never runs it)')
+    ap.add_argument('--profile-parts', action='store_true', help='T4: sync + time each part of the update; prints a skills-profile event at the end')
+    ap.add_argument('--ce-dump', type=int, default=0, help='T4: write the first N updates CE (repr floats) to <out>/ce-first-N.json')
     ap.add_argument('--pointer', action='store_true', help='with --copy-path: add 8 pointer vectors (Linear 256->8 softmax over prompt positions, value = prompt embedding), the allptr exit; fresh params')
     ap.add_argument('--prefix-hidden', type=int, default=0, help='widen the exit StatePrefix 259->32->2048 hidden to this width; function-preserving, fresh Adam state for the widened layers')
     ap.add_argument('--zero-pool', action='store_true', help='with --copy-path: zero the 8 pooled core vectors (lesion: does the core matter?)')
@@ -907,6 +911,7 @@ def main():
             print(json.dumps({'event': 'plan-pretrain-done', **plan_info}), flush=True)
             if a.plan_talk:
                 install_forced_tokens(rt, lm)  # generation: CP['F'] tokens are forced after BOS (no-op while CP['F'] is None)
+        FEAT_CACHE, PROF, CE_DUMP = {}, {}, []
         log, curve, t0, done = [], [], time.time(), 0
         base_lr = runtime.ADAM_RECIPE['lr'] * a.lr_mult
         for g in opt.param_groups:
@@ -925,7 +930,22 @@ def main():
                 continue
             ids, mask, labels = enc
             CP['ids'] = ids
-            feats = rt.compare.extract_question_features(lm, ids, mask, 'contextual', torch)
+            _tp = time.perf_counter() if a.profile_parts else 0.0
+            if a.feat_cache and not a.lm_lora:
+                _key = ids.detach().cpu().numpy().tobytes() + mask.detach().cpu().numpy().tobytes()
+                feats = FEAT_CACHE.get(_key)
+                if feats is None:
+                    feats = rt.compare.extract_question_features(lm, ids, mask, 'contextual', torch)
+                    if len(FEAT_CACHE) < a.feat_cache:
+                        FEAT_CACHE[_key] = feats
+                    FEAT_CACHE['_miss'] = FEAT_CACHE.get('_miss', 0) + 1
+                else:
+                    FEAT_CACHE['_hit'] = FEAT_CACHE.get('_hit', 0) + 1
+            else:
+                feats = rt.compare.extract_question_features(lm, ids, mask, 'contextual', torch)
+            if a.profile_parts:
+                common.synchronize(torch)
+                PROF['features'] = PROF.get('features', 0.0) + time.perf_counter() - _tp
             plan_route_row(rt, tokenizer, row, feats, ids, mask, ctx.device)  # --plan-route: sets CP['R'] (None for non-chain rows)
             labels = talk_train_row(torch, tokenizer, row, labels, ctx.device)  # --plan-talk chain rows: target = call + tool reply (loss-free) + " # answer" from this row's note
             ctx.tokens, ctx.features = {0: (ids, mask, labels)}, {0: feats}
@@ -940,7 +960,10 @@ def main():
                     torch.nn.utils.clip_grad_norm_([p for _, p in named], 1.0)
                     opt.step()
             else:
-                r = trainer.train_step(rt, ctx, modules, named, opt, 0, participation, nonzero)
+                r = trainer.train_step(rt, ctx, modules, named, opt, 0, participation, nonzero,
+                                       receipt=(i - 1) % a.receipt_every == 0, prof=PROF if a.profile_parts else None)
+            if a.ce_dump and done < a.ce_dump:
+                CE_DUMP.append(repr(float(r['CE'])))
             if a.lm_lora and done == 0:
                 lg = [(n, p.grad) for n, p in named if n.startswith('lora.') and n.endswith('_A.weight')]
                 print(json.dumps({'event': 'lm-lora-first-step', 'A_with_grad': sum(1 for _, g_ in lg if g_ is not None),
@@ -961,6 +984,12 @@ def main():
             if (time.time() - t0) / 60 > a.minutes:
                 print(json.dumps({'event': 'skills-time-cap', 'update': i}), flush=True)
                 break
+        if a.profile_parts or a.feat_cache:
+            print(json.dumps({'event': 'skills-profile', 'updates': done, 'seconds_by_part': {k: round(v, 3) for k, v in PROF.items()},
+                              'feat_cache_hits': FEAT_CACHE.get('_hit', 0), 'feat_cache_misses': FEAT_CACHE.get('_miss', 0),
+                              'wall_loop_seconds': round(time.time() - t0, 2)}), flush=True)
+        if a.ce_dump:
+            Path(a.out, 'ce-first-%d.json' % a.ce_dump).write_text(json.dumps(CE_DUMP))
         final = {k: evaluate(rt, ctx, modules, v, tokenizer) for k, v in dev.items()}
         lesions = None
         if a.final_lesions:  # how much of the score needs this row's own core vectors? (generation, real metric)
