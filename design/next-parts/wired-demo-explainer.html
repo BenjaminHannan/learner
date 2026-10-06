@@ -1,0 +1,123 @@
+<title>Wired-Up Demo</title>
+<style>
+/* Layout: one narrow reading column; each section is one picture plus a few short lines. */
+:root{--bg:#f6f7f9;--fg:#15202b;--mute:#5a6775;--card:#ffffff;--line:#d5dbe2;--real:#1c6f8c;--stand:#b4691a;--ok:#2d7a4f;--no:#a63d40;--sleep:#5b4b9a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f161d;--fg:#e4eaf0;--mute:#9aa7b4;--card:#18222c;--line:#2c3945;--real:#5bb4d2;--stand:#e0a050;--ok:#6cc08d;--no:#e07a7d;--sleep:#a999e6;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f161d;--fg:#e4eaf0;--mute:#9aa7b4;--card:#18222c;--line:#2c3945;--real:#5bb4d2;--stand:#e0a050;--ok:#6cc08d;--no:#e07a7d;--sleep:#a999e6;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:16px;padding-block:24px}
+main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:36px}
+h1{font-size:2rem;line-height:1.15;margin:0 0 8px;text-wrap:balance}
+h2{font-size:1.25rem;margin:0 0 6px;text-wrap:balance}
+p{margin:0 0 8px;max-width:65ch}
+.mute{color:var(--mute)}
+.banner{border:2px solid var(--stand);background:var(--card);padding:12px 14px;border-radius:6px}
+.banner b{color:var(--stand)}
+figure{margin:12px 0 0;overflow-x:auto}
+svg{display:block;width:100%;min-width:560px;height:auto;font-family:system-ui,sans-serif}
+.t{fill:var(--fg);font-size:13px}.m{fill:var(--mute);font-size:11px}.h{fill:var(--fg);font-size:13px;font-weight:700}
+.box{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+.frozen{stroke:var(--stand);stroke-width:2;stroke-dasharray:5 3;fill:var(--card)}
+.live{stroke:var(--real);stroke-width:2;fill:var(--card)}
+.arrow{stroke:var(--mute);stroke-width:1.5;fill:none}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+.wrap{overflow-x:auto}
+.pass{color:var(--ok);font-weight:700}.fail{color:var(--no);font-weight:700}
+.road{display:flex;flex-wrap:wrap;gap:8px}.road div{flex:1 1 150px;border:1px solid var(--line);background:var(--card);padding:8px 10px;border-radius:6px;font-size:14px}
+.road .now{border-color:var(--ok);border-width:2px}
+code{font-family:ui-monospace,Menlo,monospace;font-size:.9em}
+</style>
+<main>
+<header>
+<h1>Wired-Up Demo</h1>
+<p class="mute">Reader, reasoner, calculator, notebook and sleep loop running together on a laptop CPU.</p>
+<div class="banner"><b>Plumbing only.</b> The language model here is a tiny stand-in, the data is toy data written for the tests, and nothing is an evaluation. This shows the parts connect. It does not show that Premonition reads, reasons or learns.</div>
+</header>
+
+<section>
+<h2>The parts, connected</h2>
+<p>Orange dashed boxes are stand-ins or frozen. Blue boxes are trained. Everything is about 1.7M parameters, of which 1.2M train.</p>
+<figure><svg viewBox="0 0 760 250" role="img" aria-label="Pipeline from question and notebook through reader and core to action heads, calculator, notebook, and talker">
+<defs><marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="var(--mute)"/></marker></defs>
+<rect class="frozen" x="10" y="20" width="120" height="70" rx="6"/><text class="h" x="22" y="42">Tiny LM</text><text class="m" x="22" y="58">frozen stand-in for</text><text class="m" x="22" y="72">the 1.2B model</text>
+<rect class="live" x="160" y="20" width="100" height="70" rx="6"/><text class="h" x="172" y="42">Reader</text><text class="m" x="172" y="58">13k params</text><text class="m" x="172" y="72">256-wide tokens</text>
+<rect class="live" x="290" y="10" width="170" height="90" rx="6"/><text class="h" x="302" y="32">Looped core</text><text class="m" x="302" y="48">2 blocks, run 4 times</text><text class="m" x="302" y="62">reads question, notebook,</text><text class="m" x="302" y="76">tool results + 8 registers</text>
+<rect class="live" x="490" y="10" width="120" height="40" rx="6"/><text class="h" x="502" y="34">Action heads</text>
+<rect class="live" x="490" y="60" width="120" height="40" rx="6"/><text class="h" x="502" y="84">Prefix adapter</text>
+<rect class="box" x="640" y="10" width="110" height="40" rx="6"/><text class="h" x="652" y="34">Calculator</text>
+<rect class="box" x="640" y="60" width="110" height="40" rx="6"/><text class="h" x="652" y="84">Talker text</text>
+<rect class="box" x="290" y="170" width="170" height="60" rx="6"/><text class="h" x="302" y="192">Notebook</text><text class="m" x="302" y="208">up to 8 slots, host-side</text>
+<rect class="box" x="10" y="170" width="120" height="60" rx="6"/><text class="h" x="22" y="192">Question</text><text class="m" x="22" y="208">plain text</text>
+<rect class="box" x="520" y="170" width="230" height="60" rx="6" style="stroke:var(--sleep);stroke-width:2"/><text class="h" x="532" y="192" style="fill:var(--sleep)">Sleep night</text><text class="m" x="532" y="208">replays checked episodes, updates weights</text>
+<path class="arrow" d="M130 55H160" marker-end="url(#a)"/><path class="arrow" d="M260 55H290" marker-end="url(#a)"/><path class="arrow" d="M460 30H490" marker-end="url(#a)"/><path class="arrow" d="M460 80H490" marker-end="url(#a)"/><path class="arrow" d="M610 30H640" marker-end="url(#a)"/><path class="arrow" d="M610 80H640" marker-end="url(#a)"/>
+<path class="arrow" d="M70 170V90" marker-end="url(#a)"/><path class="arrow" d="M375 170V100" marker-end="url(#a)"/>
+<path class="arrow" d="M695 50V140H375V100" stroke-dasharray="4 3"/><text class="m" x="470" y="134">calculator result goes back in as new rows</text>
+<path class="arrow" d="M635 170V150" stroke="var(--sleep)"/><text class="m" x="640" y="160" style="fill:var(--sleep)">changes only the blue boxes</text>
+</svg></figure>
+</section>
+
+<section>
+<h2>One episode</h2>
+<p>The core never writes free text for a calculation. It picks a small structured action, the host carries it out, and the result goes back in as new rows the core can read.</p>
+<figure><svg viewBox="0 0 760 170" role="img" aria-label="Three steps: calculate, answer, with the result re-entering">
+<rect class="box" x="10" y="14" width="220" height="62" rx="6"/><text class="h" x="22" y="36">Step 1: CALC</text><text class="t" x="22" y="54">ADD, point at 7, point at 3</text><text class="m" x="22" y="68">operands point into the question only</text>
+<rect class="box" x="270" y="14" width="220" height="62" rx="6"/><text class="h" x="282" y="36">Host runs it exactly</text><text class="t" x="282" y="54">7 + 3 = 10 (exact fractions)</text><text class="m" x="282" y="68">rows "= 10" join the workspace</text>
+<rect class="box" x="530" y="14" width="220" height="62" rx="6"/><text class="h" x="542" y="36">Step 2: ANSWER</text><text class="t" x="542" y="54">point at result 1</text><text class="m" x="542" y="68">talker then writes "10"</text>
+<path class="arrow" d="M230 45H270" marker-end="url(#a)"/><path class="arrow" d="M490 45H530" marker-end="url(#a)"/>
+<text class="h" x="10" y="110">Actions:</text><text class="t" x="70" y="110">CALC(op, a, b)   NOTE_WRITE(slot, start, end)   ANSWER(pointer)   DONE</text>
+<text class="m" x="10" y="132">Reading the notebook is not an action: the core attends to notebook rows on every loop.</text>
+<text class="m" x="10" y="150">A fifth call, a bad pointer, or a divide by zero ends the episode with a named error.</text>
+</svg></figure>
+</section>
+
+<section>
+<h2>The notebook pair test, in plumbing form</h2>
+<p>Same question word for word. Only one notebook fact differs, so the correct number to pick differs. A model that ignores the notebook can get at most one of the two right.</p>
+<figure><svg viewBox="0 0 760 150" role="img" aria-label="Same question with two notebooks selecting different literals">
+<rect class="box" x="140" y="8" width="480" height="40" rx="6"/><text class="t" x="152" y="32">ana has 7 red pens and 4 blue pens. ana buys 3 more pens of the colour ana likes.</text>
+<rect class="box" x="10" y="80" width="330" height="56" rx="6"/><text class="h" x="22" y="102">Notebook: "ana likes red"</text><text class="t" x="22" y="122">pick 7, then ADD 3 = 10</text>
+<rect class="box" x="420" y="80" width="330" height="56" rx="6"/><text class="h" x="432" y="102">Notebook: "ana likes blue"</text><text class="t" x="432" y="122">pick 4, then ADD 3 = 7</text>
+<path class="arrow" d="M300 48L175 80" marker-end="url(#a)"/><path class="arrow" d="M460 48L585 80" marker-end="url(#a)"/>
+</svg></figure>
+<p class="mute">The notebook never supplies a number. It decides which number in the question to use, which matches the real pipeline's rule that calculator operands must come from the question.</p>
+</section>
+
+<section>
+<h2>What the tests showed</h2>
+<p>17 CPU tests pass, in about two minutes. 16 ran on your Mac in a fresh copy of the branch; the 17th checks that the notebook changes the core's output and that gradients reach the notebook rows. The sleep test also saves and reloads a versioned core. Accuracy numbers below are recorded diagnostics from one run, not gates.</p>
+<div class="wrap"><table>
+<tr><th>Check</th><th>Result</th><th>What it shows</th></tr>
+<tr><td>Workspace contract, shapes, padding, loop count</td><td class="pass">pass</td><td>Parts fit; vision and audio can later plug in as the same record</td></tr>
+<tr><td>Gradient reaches every trained module; frozen LM gets none</td><td class="pass">pass</td><td>Training signal flows through the stand-in LM into the adapter</td></tr>
+<tr><td>Calculator exact, errors named, notebook numbers refused</td><td class="pass">pass</td><td>Fractions stay exact; pointer rule enforced</td></tr>
+<tr><td>Notebook write, edit, history, full, lock</td><td class="pass">pass</td><td>Host-side notebook behaves; sleep cannot write it</td></tr>
+<tr><td>Checkpoint save and reload</td><td class="pass">pass</td><td>Bit-identical outputs; wrong LM or config is refused</td></tr>
+<tr><td>Sleep night: weights change, LM and notebook do not, arms matched</td><td class="pass">pass</td><td>The loop runs. Says nothing about learning</td></tr>
+<tr><td>Diagnostic: overfit 48 toy episodes, 1500 updates (recorded, not tuned to pass)</td><td>recorded</td><td>Loss fell 7.7 to 1.4; 92% of steps exact; 48 of 48 toy problems right; 8 of 8 notebook pairs right on training pairs</td></tr>
+</table></div>
+<p><b class="fail">Weak spot.</b> The model-driven notebook write only half works: on training steps the write action is right 6 of 16 times in the plain run. The write helper itself is tested and fine; the model has not learned when to use it. The same model also needs more than 600 updates before it uses the notebook at all (0 of 8 pairs at 600).</p>
+</section>
+
+<section>
+<h2>What this does not show</h2>
+<ul>
+<li>Nothing about the real 1.2B model, its tokenizer, or number handling.</li>
+<li>Overfitting 48 toy problems says nothing about new questions. Passing the pair test on training pairs says the notebook reaches the pointer heads, not that the model can read a new fact.</li>
+<li>The answer value comes from a pointer. The real open problem, getting a number through the 8 prefix vectors into model text, is not tested.</li>
+<li>Sleep records are checked against the generator's answer key, which is the weakest kind of check. No retention or learning claim.</li>
+<li>Real core is a mixture of experts and refuses padding. Here it is dense and padded with a mask.</li>
+</ul>
+</section>
+
+<section>
+<h2>Roadmap</h2>
+<div class="road">
+<div class="now"><b>Now</b><br>Parts connect on CPU</div>
+<div><b>Next</b><br>Swap the stand-in LM for the real one on the PC GPU (same five-method interface)</div>
+<div><b>Then</b><br>Registers vs pooling and span-copy vs text writes, tested one change at a time</div>
+<div><b>Later</b><br>Vision and audio plug in as the same Workspace record</div>
+</div>
+<p class="mute">Design memo with every interface and 14 fork decisions: <code>design/next-parts/wired-demo-architecture-memo.md</code>. Code: <code>premonition/wired_demo/</code>. Tests: <code>tests/test_wired_demo.py</code>.</p>
+</section>
+</main>
