@@ -272,4 +272,5 @@ against B2V on its box; EGM, EGO, EGR, EGE, EGT and R0 against queue 33's B2 on 
 are unchanged; the choice already compares each arm's pooled-5 change against its own base, so the machine drops out.
 **Device check (read only):** B2V minus queue 33's B2 per seed on pooled-5, reported next to the EGW result. If it is more than 3 points on either
 seed, the EGW result is reported as "machine-sensitive", and EGW is not picked over a passing PC arm until it is re-run on the PC.
-**Cost cap:** each box stops itself after 8.5 h (about $3.80 at $0.45 an hour), under the $4 a job standing cap; credit before renting $8.77.
+**Cost cap:** each box stops itself after 7.5 h (about $3.75 at $0.49-0.50 an hour with its disk), under the $4 a job standing cap, and both
+together leave the Vast credit (8.77 dollars before renting) above the 1 dollar floor.

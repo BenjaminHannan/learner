@@ -284,7 +284,7 @@ def test_egw_box_jobs():
         d = os.path.join(here, 'queue', sub)
         (job,) = [f for f in os.listdir(d) if f.endswith('.sh')]
         text = open(os.path.join(d, job)).read()
-        assert '--env "TFVER=5.19.0 EG=1 MAXH=8.5' in text and '# MEM 20000' in text
+        assert '--env "TFVER=5.19.0 EG=1 MAXH=7.5' in text and '# MEM 20000' in text
         runs = {sh[1]: sh[2:] for sh in (shlex.split(ln) for ln in text.splitlines() if ln.startswith('run '))}
         assert sorted(runs) == [f'B2V_s{seed}', f'EGW_s{seed}'], runs.keys()
         base = [x for x in q33[f'B2_s{seed}']]

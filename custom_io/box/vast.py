@@ -4,7 +4,7 @@ Adapted from scripts/cap256_launch/ultracode_vast.py on claude/ultracode-learnin
 
 The proxy adds the Vast key to console.vast.ai requests; this script never reads or prints a key.
   search [--gpu "RTX 5090"] [--n 8]       cheapest verified offers (reliability >= 0.98, CUDA >= 12.8)
-  create --offer ID [--label L] [--maxpar 5] [--qsub /egwA] [--env "TFVER=5.19.0 EG=1 MAXH=8.5"]   (env: box.sh header)
+  create --offer ID [--label L] [--maxpar 5] [--qsub /egwA] [--env "TFVER=5.19.0 EG=1 MAXH=7.5"]   (env: box.sh header)
   status --id ID
   tail --id ID [--n 60]                   last log lines (result lines hidden)
   collect --id ID [--out DIR]             decode every finished job's RBEGIN/R|/REND block, check sha256, extract
