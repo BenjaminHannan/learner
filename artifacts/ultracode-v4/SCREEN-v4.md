@@ -304,3 +304,22 @@ Ben's design: the thinker's plan goes to the talker as a note in words, the talk
 - note_drop (reported, not marked): with no note, the talker writes a call on only 7-44% of chain rows and gets 31-44 / 160 right, so it does not do the chain plans from the question on its own.
 - With the intact note, the talker calls on 159-160 / 160 chain rows, copies the note on 157-160, and the answer equals the calculator's on 157-160.
 - My predictions: chain sum 455-475 (right), plan_swap under 10 (right on 2 of 3), copying > 95% (wrong on 2 of 3), note_drop 40-80% (wrong: 19-28%).
+
+## MH result, 6 seeds (jobs 51-mh-s4..s9 on Vast boxes E and G, read 00:28 UTC Oct 6) — merging the Hearer and Reader makes the model WORSE
+CRDC plus `--direct-reader` (the Reader 2048 -> 32 -> 256 replaced by LayerNorm + one Linear 2048 -> 256 for the thinker and the planner). The start fit to the old Reader explains 97.7-98.0% of its output on unseen questions (R^2 0.977-0.980), so each run started close to main2. All rc 0.
+
+| seed | CRDC fit | MH fit | CRDC held | MH held | gain | CRDC other-4 held | MH other-4 held | MH chain held | MH plan_swap chain | MH family-mean lesion, fit |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 4 | 303 | 275 | 297 | 265 | -32 | 138 | 110 | 155 | 2 | +3 |
+| 5 | 284 | 297 | 277 | 284 | +7 | 125 | 129 | 155 | 3 | -7 |
+| 6 | 298 | 288 | 291 | 281 | -10 | 135 | 124 | 157 | 3 | -1 |
+| 7 | 309 | 301 | 289 | 294 | +5 | 133 | 136 | 158 | 3 | -5 |
+| 8 | 295 | 279 | 287 | 279 | -8 | 130 | 123 | 156 | 2 | 0 |
+| 9 | 295 | 282 | 281 | 270 | -11 | 123 | 115 | 155 | 2 | -8 |
+| mean | 297.3 | **287.0** | 287.0 | **278.8** | **-8.2** | 130.7 | **122.8** | 156.0 | 2.5 | -3.0 |
+
+- **"Merged is worse": YES** (mean held 278.8 <= 282.0; ahead on 2 of 6). Fit falls too (-10.3).
+- **"The thinker now carries each question": no** (the family-mean lesion costs at most 8 rows of fit; on seed 4 it even helps).
+- The loss is all on the four kinds the main thinker and talker answer (other-4 held -7.9); chain held is level (156.0 vs 156.3), so the planner reads fine through the plain Linear.
+- My prediction (within 5 of CRDC) was wrong in the other direction.
+- Compare WD (SR2 + both doors widened to 2048, keeping the Reader's nonlinear layer): +26 held over SR2 on 3 seeds. Suggested, untested: a wide nonlinear Reader helps and a plain linear one hurts, or the gain in WD comes from the exit door. A reader-only 2048 run on top of CRDC would separate them.
