@@ -50,3 +50,8 @@ Branch note: this branch is cut from `claude/custom-reader-talker-4x309r` so `cu
 - The uniform floor is near 0 and a few thousand samples cannot resolve it.
 - Forcing the top 8 first steps keeps about 7 distinct programs per puzzle even at near-zero temperature, which is why the gate now counts rule-following programs.
 - `loops:0` writes no steps, so its luck is 0 by construction.
+
+## Pilot prep (10-06, behind flags; nothing launched on Ben's machines)
+- `pilot --warm3 N` adds N 3-number solver puzzles to the warm-up. Their number sets appear in no sealed split (`puzzles.warmup3_rows`, ids `mk:warm3:*`; tested disjoint from practice/DEV/T1/T1b). Default 0 = the spec's 2-number-only warm-up.
+- The lr grid now defaults to 3e-4, 1e-3, 3e-3, 1e-2 (the first CPU pilot's best was 1e-3, the old grid's edge). The 4-visit cap still limits updates: `sleep.max_updates`.
+- First CPU pilot on s100 (2-number warm-up, no replay): raw 0.2% rule-following; warmed 0.4%, 3/256 practice puzzles solved; PC arm at lr 1e-3 (86 updates): DEV luck 2.0%, first try 7.8%, reach@32 45%. Files: /mnt/project-files/creative-pilot/.

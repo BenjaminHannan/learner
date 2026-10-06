@@ -20,8 +20,8 @@ def dev_report(model, vocab, dev, practice, device, tries, temps):
 
 
 def pilot(ckpt, out_dir, data, device='cpu', skills_train=None, replay_n=4000, warm_n=1500, warm_updates=200, warm_lr=3e-4,
-          lrs=(1e-4, 3e-4, 1e-3), pc_updates=(120,), pc_per_puzzle=2, pc_puzzles=1024, tries=32, practice_limit=None, batch=64,
-          temps=(0.7, 1.0, 1.3, 1.6, 2.0), seed=0, log=print, reuse_warmed=False):
+          lrs=(3e-4, 1e-3, 3e-3, 1e-2), pc_updates=(120,), pc_per_puzzle=2, pc_puzzles=1024, tries=32, practice_limit=None, batch=64,
+          temps=(0.7, 1.0, 1.3, 1.6, 2.0), seed=0, log=print, reuse_warmed=False, warm3_n=0):
     os.makedirs(out_dir, exist_ok=True)
     t0 = time.time()
     res = dict(ckpt=ckpt, seed=seed, no_replay=skills_train is None)
@@ -43,11 +43,12 @@ def pilot(ckpt, out_dir, data, device='cpu', skills_train=None, replay_n=4000, w
         save()
         log(dict(event='raw done', gate=res['raw']['gate']['verdict'], t=round(time.time() - t0)))
         wu = [arms.record(r, t, 'WU', 0) for r, t in puzzles.warmup_rows(warm_n, seed, per_pair=3)]
+        wu += [arms.record(r, t, 'WU3', 0) for r, t in puzzles.warmup3_rows(warm3_n, seed)] if warm3_n else []     # --warm3: mixed 2+3-number warm-up
         cfg = sleep.SleepCfg(updates=warm_updates, batch=batch, lr=warm_lr, warmup=20, seed=seed,
-                             max_visits=max(4, -(-warm_updates * (batch // 2 if replay else batch) // warm_n)))
+                             max_visits=max(4, -(-warm_updates * (batch // 2 if replay else batch) // len(wu))))
         out = sleep.sleep(model, wu, replay, vocab, cfg, device, log=log)
         res['warmup'] = dict(n_records=len(wu), updates=out['updates'], loss_first=sum(out['loss'][:10]) / 10, loss_last=sum(out['loss'][-10:]) / 10,
-                             max_visits=cfg.max_visits, replay_rows=len(replay))
+                             max_visits=cfg.max_visits, replay_rows=len(replay), n_three_number=warm3_n)
         sleep.save_parent(model, meta['name'], meta['cfg'], vocab, warmed_path, step=(meta['step'] or 0) + warm_updates, warmup=True)
         model.eval()
         log(dict(event='warm-up done', **res['warmup'], t=round(time.time() - t0)))

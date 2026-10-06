@@ -31,7 +31,8 @@ def main(argv=None):
     ap.add_argument('--warm-n', type=int, default=1500)
     ap.add_argument('--warm-updates', type=int, default=200)
     ap.add_argument('--pc-updates', default='120')
-    ap.add_argument('--lrs', default='1e-4,3e-4,1e-3')
+    ap.add_argument('--lrs', default='3e-4,1e-3,3e-3,1e-2')
+    ap.add_argument('--warm3', type=int, default=0, help='pilot: add N 3-number solver puzzles (number sets in no sealed split) to the warm-up')
     ap.add_argument('--reuse-warmed', action='store_true', help='pilot: skip raw + warm-up, reuse OUT/warmed.pt')
     ap.add_argument('--skills-train', help='skills train.jsonl for replay (pilot); without it warm-up harm is not measured')
     a = ap.parse_args(argv)
@@ -41,7 +42,7 @@ def main(argv=None):
     if a.cmd == 'pilot':
         from creative import pilot
         pilot.pilot(a.ckpt, a.out, a.data, a.device, a.skills_train, warm_n=a.warm_n, warm_updates=a.warm_updates,
-                    pc_updates=tuple(int(x) for x in a.pc_updates.split(',')), lrs=tuple(float(x) for x in a.lrs.split(',')), tries=a.tries, practice_limit=a.practice_limit, reuse_warmed=a.reuse_warmed, log=lambda d: print(json.dumps(d), flush=True))
+                    pc_updates=tuple(int(x) for x in a.pc_updates.split(',')), lrs=tuple(float(x) for x in a.lrs.split(',')), tries=a.tries, practice_limit=a.practice_limit, reuse_warmed=a.reuse_warmed, warm3_n=a.warm3, log=lambda d: print(json.dumps(d), flush=True))
         return
     rows = puzzles.load_split(a.data, a.split)[:a.limit]
     if a.cmd == 'floors':

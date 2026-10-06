@@ -46,6 +46,17 @@ def test_solver_and_floors():
     print('ok solver_and_floors')
 
 
+def test_warmup_sets():
+    sp = splits()
+    used = {tuple(sorted(r['nums'])) for k in puzzles.SPLITS for r in sp[k]}
+    w3 = puzzles.warmup3_rows(300, 0)
+    assert len({r['id'] for r, _ in w3}) == 300 and not any(tuple(sorted(r['nums'])) in used for r, _ in w3)
+    assert all(checkers.verdict(r['nums'] + [r['target']], 3, t)[0] == 'accept' for r, t in w3)
+    w2 = puzzles.warmup_rows(100, 0, per_pair=3)
+    assert all(checkers.verdict(r['nums'] + [r['target']], 2, t)[0] == 'accept' for r, t in w2)
+    print('ok warmup_sets')
+
+
 def test_splits_sealed():
     sp = splits()
     assert {k: len(v) for k, v in sp.items()} == dict(practice=1024, dev=128, t1=256, t1b=256, x=128)

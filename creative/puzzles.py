@@ -244,3 +244,30 @@ def warmup_rows(n, seed=0, per_pair=1):
                 out.append((make_row(f'mk:warmup:{len(out):04d}', pr, T, 'warmup'), rng.choice(opts[T])))
     assert len(out) == n, 'not enough 2-number puzzles'
     return out
+
+
+_USED3 = {}
+
+
+def warmup3_rows(n, seed=0, avoid=None):
+    """n 3-number warm-up puzzles from number sets that appear in NO sealed split (practice, DEV, T1, T1b), each with one solver program. Same rules and
+    one fixed instruction line as C1. Behind a flag in the pilot: it teaches rule-following on the real arity without touching any C1 puzzle.
+    -> [(row, Try)], ids 'mk:warm3:NNNN'."""
+    if 'sets' not in _USED3:
+        sp = build_splits()
+        _USED3['sets'] = {tuple(sorted(r['nums'])) for k in SPLITS for r in sp[k]}
+    used = _USED3['sets'] | set(avoid or ())
+    out = []
+    for tri in sorted(itertools.combinations_with_replacement(POOL, 3), key=lambda s: _h('set3w', seed, s)):
+        if len(out) >= n:
+            break
+        if tri in used:
+            continue
+        vt = valid_targets(tri)
+        if not vt:
+            continue
+        rng = random.Random(_h('wtarget3', seed, tri))
+        T = rng.choice(sorted(vt))
+        out.append((make_row(f'mk:warm3:{len(out):04d}', tri, T, 'warm3'), rng.choice(vt[T])))
+    assert len(out) == n
+    return out
