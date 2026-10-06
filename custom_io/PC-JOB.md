@@ -57,16 +57,19 @@ When a queue ends (and, for the PC queue, once after the first 3 runs end), copy
 the machine where it was made (never delete). Add one LIVE.md line per start and finish as usual. If a run fails, its
 `stdout.events.txt` and `rc.txt` are in its folder: push those too, the thread will fix and requeue.
 
-## 5. Test B1 students (queue 35)
-Build the data first (CPU, a few minutes; needs the TEACH jsonl and `plan-b/data/gen.jsonl` from the project files; `<TEACH>` and `<GEN>` are their paths):
+## 5. Test B1 students (queue 35, after queues 33 and 30)
+The data is already built and packed in the repo: `custom_io/data_b1/plan_b.tgz` (13 MB; sha256
+3c4042a64f39550f0bfa6fae9ffd5eae02779529d1e78c44477562b7c1ec2d20). Unpack it into the work dir so it gives `plan_b\teach` and `plan_b\gen`:
 ```
-python -m custom_io.english build --teach <TEACH> --gen <GEN> --out C:\Users\benja\custom-io\work\plan_b --eval custom_io\english_eval
+mkdir C:\Users\benja\custom-io\work\plan_b
+tar -xzf custom_io\data_b1\plan_b.tgz -C C:\Users\benja\custom-io\work\plan_b
+certutil -hashfile C:\Users\benja\custom-io\work\plan_b\teach\MANIFEST.json SHA256
+certutil -hashfile C:\Users\benja\custom-io\work\plan_b\gen\MANIFEST.json SHA256
 ```
-It writes `plan_b\teach` and `plan_b\gen` (it refuses and writes nothing if a training passage equals an eval passage). Output bytes are LF on every
-machine, so the `MANIFEST.json` sha256 of each arm must equal the lines recorded in PASS-MARKS.md addendum 3 (`- teach MANIFEST.json sha256 <hex>`,
-`- gen MANIFEST.json sha256 <hex>`); if you build on this PC, report both shas (`certutil -hashfile ...\MANIFEST.json SHA256`) so they are recorded before
-any student trains. Then the six runs (2 at a time, one device for all):
+The two shas must equal the `- teach MANIFEST.json sha256` and `- gen MANIFEST.json sha256` lines in PASS-MARKS.md addendum 3
+(40316ed1... and 9121d7ac...). If they differ, stop and say so. Re-stage `custom_io` from the branch first (the B1 code is newer than the copy
+queue 33 froze). Then, once queues 33 and 30 have finished, the six runs (2 at a time, one device for all):
 ```
 python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\35-pc-b1-students.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
 ```
-Afterwards: `python -m custom_io.analyze_b1 --results C:\Users\benja\custom-io\work\results\35-pc-b1-students`.
+Push the results as in section 4 (no checkpoint.pt). Each run takes a few hours on the 5070 Ti.

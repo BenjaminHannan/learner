@@ -107,10 +107,12 @@ def validate(arm, seed, res, expect, data_check=True):
         mp = os.path.join(data, 'MANIFEST.json') if data else None
         if not want_sha:
             why.append(f'no recorded {which} manifest sha256 (PASS-MARKS addendum 3 / --expect-{which})')
-        elif not mp or not os.path.exists(mp):
-            why.append(f'data manifest {mp} not found')
-        elif sha256(mp) != want_sha:
-            why.append(f'data manifest sha256 {sha256(mp)[:12]} != recorded {want_sha[:12]}')
+        else:
+            got = res.get('data_manifest_sha256') or (sha256(mp) if mp and os.path.exists(mp) else None)     # recorded at training time, else the file
+            if got is None:
+                why.append(f'data manifest {mp} not found and no data_manifest_sha256 in RESULT.json')
+            elif got != want_sha:
+                why.append(f'data manifest sha256 {got[:12]} != recorded {want_sha[:12]}')
     return why
 
 

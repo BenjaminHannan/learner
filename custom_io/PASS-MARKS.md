@@ -132,11 +132,18 @@ the other lesions, GEN-HELDOUT-R4 (the GEN arm's own distribution), the held-out
 distance to the bare 1.2B 8-shot (75.0 FRESH; 67.7 R5, 77.6 R6) and to the sandwich (92.2 FRESH; 78.2 new pooled).
 If B1-a is proved wrong, way B at this size is dead (source section 6): next single change a ~100M student.
 **Data** (sha256 of the adapter's outputs, filled in before any student trains):
-- GEN source: `/mnt/project-files/plan-b/data/gen.jsonl`, sha256 c49c126cb82f5b7b11890c379012a243c8dc695205eb747d4f24df991c7cc629 (200,000 questions).
-- TEACH source: pending.
+- Sources (recorded 2026-10-06 about 12:05 UTC, 8:05 AM ET, before any student trained), the default pair from the teacher-data thread (PR #46):
+  TEACH = `plan-b/data/teach_clean.jsonl` (94,831 questions: every short answer plus 5,349 yes and 5,349 no, after a yes/no support filter;
+  sha256 ea271eb4b143ca32a731278c7a0364128c58ec389fa3ba0353cce6573c1ecb05), GEN = `plan-b/data/gen_matched_94831.jsonl` (the same question
+  count and type mix from round 6's generator; sha256 2098d01a7b1e2df0f5ace716811d2c354fcbbde7f56297cd312e10692abcb667). If the teacher-data
+  thread's 1.2B-verified yes/no set lands before queue 35 starts, these lines and the two below are replaced by its build, still before any
+  student trains.
+- Built arms: 187,667 training rows each (16,000 updates x 256 = about 22 passes), held-out in-dist slices of 1,958 (TEACH) and 1,896 (GEN)
+  rows. The overlap guard refused nothing; no eval passage or near-copy (max word Jaccard 0.73, none >= 0.8). Its "eval name" counts are
+  common capitalised words (According, weekday names), not names. Packed for the PC as `custom_io/data_b1/plan_b.tgz`.
 - Equal row counts take priority in choice 3: whole examples are dropped (seeded) from the longer arm, and only if an odd remainder is left, at most 3 rows
   are trimmed from the end of one seeded example (the manifest records `rows_trimmed_from_one_example`; 0 on the real-data trials).
 - Adapter outputs are written with LF line ends on every machine, so the manifest sha256 is the same on Linux and Windows. Record one line per arm,
   in exactly this form (analyze_b1 reads it; `<hex>` = sha256 of `plan_b/<arm>/MANIFEST.json`, from the machine that builds the data the queue trains on):
-  - teach MANIFEST.json sha256 pending
-  - gen MANIFEST.json sha256 pending
+  - teach MANIFEST.json sha256 40316ed14090e7e438030ce6ed403b9054d19f136e92c1d90c789955a1c3fe9d
+  - gen MANIFEST.json sha256 9121d7ac26ffa5b04481a99f5817d6db0ce494a8357f0c79b1160f7d69ebc875
