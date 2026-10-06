@@ -452,10 +452,13 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
     last_digit, double_add (256 DEV questions; pool, test and labelled sealed). Best temperature 1.4 (the grid's top):
     reach@32 3.9% and 6.3% against a value-blind floor of 4.8% (gate: 10% and 3x the floor). Without the warm-up both
     parents write no rule-following program at all. So the warm-up teaches the format but B2's tries on new kinds are
-    at chance. Why (shown from the data, the per-kind split still to be read): the warm-up only ever writes "x, then
-    one op with a built constant". Two held-out kinds are recombinations of those pieces (affine: multiply then add;
-    double_add: add then double); three need a piece it never saw (reading x twice for square and sq_plus, the MOD op
-    for last_digit).
+    at chance. Why (shown from the data): the warm-up only ever writes "x, then one op with a built constant". Two
+    held-out kinds are recombinations of those pieces (affine: multiply then add; double_add: add then double); three
+    need a piece it never saw (reading x twice for square and sq_plus, the MOD op for last_digit). Per kind, reach@32
+    at T 1.4 (s100 / s101, commit ebdc26e2c): double_add 13.7% / 9.8%, square 3.9% / 19.6%, affine 1.9% / 1.9%,
+    sq_plus 0 / 0, last_digit 0 / 0. So the short recombination (double_add) is partly reachable, s101 sometimes reads
+    x twice on its own, and the kinds needing a new op or a longer chain get nothing. Variety passes (12.6 and 15.8
+    distinct rule-following programs).
   - **Stepping-stone stage (decided 10-06, the rule above):** C2 is not retired; it retires only if this stage also
     fails. One job per parent, DEV only, every sealed split stays closed:
     0. Practised-kind check (C1's lesson): the warmed parent on 256 fresh add/mult questions (new salt; practised kinds
