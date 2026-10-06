@@ -29,7 +29,7 @@ def main(argv=None):
     ap.add_argument('--uniform-samples', type=int, default=3000)
     ap.add_argument('--limit', type=int)
     ap.add_argument('--practice-limit', type=int)
-    ap.add_argument('--lrs', default='3e-4,1e-3,3e-3,1e-2')
+    ap.add_argument('--lrs', default='3e-4,1e-3', help='pilot: PC learning rates (decided 10-06: 3e-3 and 1e-2 dropped)')
     ap.add_argument('--ladder', default='1500', help='pilot: warm-up 3-number puzzle counts, smallest passing the gates wins (decided 10-06: 1500; 3000,6000 are comparison runs)')
     ap.add_argument('--fallbacks', action='store_true', help='pilot: after the last rung fails, try fallbacks a (16 visits) and b (dreams)')
     ap.add_argument('--dreams', type=int, default=3000)
