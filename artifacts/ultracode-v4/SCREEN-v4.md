@@ -350,3 +350,23 @@ CRDC plus one change: both doors at 2048 (`--reader-hidden 2048 --prefix-hidden 
 ## Added 01:25 UTC: T1 moves to boxes E and G (no change to its marks)
 
 The PC is running the Plan B teacher-data job (B1, about 12.6 GB of the 16 GB card, 2-3 hours), so T1 could not start there, and both own machines are full. T1 (`--lr-final-mult 0`, CRDC4-9, marks above unchanged) is queued as `queue/e/56-t1-s4,5`, `queue/g/56-t1-s7,8` (behind CRDW) and `queue/f/56-t1-s6,9` (moved there 03:20 UTC, starting next to the last two T2 runs). Seeds 4 and 7 wait for 20 GB free so they start as CRDW ends. Now on the same GPU type as CRDC, so the cross-GPU note above no longer applies. `PC-JOB-t1.md` is withdrawn.
+
+## T2 result, 6 seeds (jobs 54-t2-s4..s9 on Vast box F, read 04:20 UTC Oct 6) — quiet notes make the model much WORSE
+CRDC plus `--quiet-notes` (each of the exit's 8 vectors rescaled to one learnable length, starting at 0.736, a word vector's mean length). Paired with CRDC4-9. All rc 0; the `quiet-notes` event and `quiet_gain` are in every log. The eval path uses the same rescale (with `--gen-fix`, generation calls the patched `project_training`; checked in code), so this is not a train/eval mismatch.
+
+| seed | CRDC fit | T2 fit | CRDC held | T2 held | gain | CRDC other-4 held | T2 other-4 held | T2 chain held | family-mean lesion, fit rows | CE at update 500, CRDC / T2 | gain end |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 4 | 303 | 231 | 297 | 232 | -65 | 138 | 73 | 159 | -13 | 1.21 / 3.68 | 0.776 |
+| 5 | 284 | 222 | 277 | 217 | -60 | 125 | 66 | 151 | +5 | 1.23 / 3.24 | 0.817 |
+| 6 | 298 | 249 | 291 | 251 | -40 | 135 | 96 | 155 | -28 | 1.19 / 2.85 | 0.786 |
+| 7 | 309 | 223 | 289 | 216 | -73 | 133 | 60 | 156 | 0 | 1.20 / 4.03 | 0.772 |
+| 8 | 295 | 218 | 287 | 215 | -72 | 130 | 60 | 155 | -18 | 1.23 / 3.47 | 0.802 |
+| 9 | 295 | 211 | 281 | 228 | -53 | 123 | 71 | 157 | +2 | 1.22 / 3.47 | 0.748 |
+| mean | 297.3 | **225.7** | 287.0 | **226.5** | **-60.5** | 130.7 | **71.0** | 155.5 | -8.7 | 1.21 / 3.46 | 0.784 |
+
+- **Helps** (held >= 292.0, ahead on >= 5 of 6): **no**; behind on all 6 seeds.
+- **"The thinker carries each question"** (family-mean lesion >= 32 rows on every seed): **no** (at most 28 rows).
+- **Wrong** (within 5 of CRDC and lesion < 16 rows on every seed): **not met either**. The result is outside both marks: it **HURTS**, by 60.5 held-out rows, far past the screen's -5 "hurts" line. The audit's prediction (within 5) was wrong.
+- The loss is all on the four kinds the main thinker and the talker answer (other-4 held 130.7 -> 71.0). Chain held is level (155.5 vs 156.3), because the planner's value does not pass through the notes.
+- It learns slower from the start: mean CE at update 500 is 3.46 vs 1.21, and the final training CE is 0.13-0.20 vs 0.04 (CRDC4). The learnable length hardly moved (0.736 -> 0.75-0.82), so the model did not make the notes loud again within 6,000 updates.
+- Suggested, untested: the parent (main2) learned to work with loud notes. At about 1,300x a word's length, a note's residual stays pinned through all 16 LM layers (audit: cos 1.000), so every layer reads the same note. Quieting them at fine-tune time removes what the parent learned. A from-scratch quiet run would separate "quiet is worse" from "changing it late is worse"; it is not queued (bench parked).
