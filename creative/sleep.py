@@ -58,6 +58,11 @@ def _order(n, draws, rng):
     return out[:draws]
 
 
+def max_updates(n_records, batch, replay, max_visits=4):
+    """Most updates that keep every record at <= max_visits visits."""
+    return max_visits * n_records // (batch // 2 if replay else batch)
+
+
 def check_visits(n_records, cfg, replay=True):
     """Raises if the fixed update count would show a puzzle record more than max_visits times (half a batch per update with replay, all of it without)."""
     per = cfg.batch // 2 if replay else cfg.batch

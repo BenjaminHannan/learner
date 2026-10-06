@@ -222,9 +222,9 @@ def pass_at(p, k):
 
 
 # ---- shared warm-up: B2 learns the format on 2-number puzzles with solver programs ----
-def warmup_rows(n, seed=0):
+def warmup_rows(n, seed=0, per_pair=1):
     """n 2-number puzzles ("Numbers: A, B. Target: T. ...") with their solver program, each from its own number pair, T one exact operation of
-    the pair under the C1 rules (T >= 1, not a constant, not a given number). -> [(row, Try)]. Ids 'mk:warmup:NNNN'."""
+    the pair under the C1 rules (T >= 1, not a constant, not a given number). per_pair targets per pair (distinct targets). -> [(row, Try)]. Ids 'mk:warmup:NNNN'."""
     pairs = sorted(itertools.combinations_with_replacement(POOL, 2), key=lambda s: _h('set2', seed, s))
     out = []
     for pr in pairs:
@@ -239,8 +239,8 @@ def warmup_rows(n, seed=0):
         if not opts:
             continue
         rng = random.Random(_h('wtarget', seed, pr))
-        T = rng.choice(sorted(opts))
-        row = make_row(f'mk:warmup:{len(out):04d}', pr, T, 'warmup')
-        out.append((row, rng.choice(opts[T])))
+        for T in rng.sample(sorted(opts), min(per_pair, len(opts))):
+            if len(out) < n:
+                out.append((make_row(f'mk:warmup:{len(out):04d}', pr, T, 'warmup'), rng.choice(opts[T])))
     assert len(out) == n, 'not enough 2-number puzzles'
     return out
