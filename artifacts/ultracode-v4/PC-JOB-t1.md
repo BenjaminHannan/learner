@@ -1,3 +1,5 @@
+**WITHDRAWN 01:25 UTC 10-06: T1 runs on the cloud boxes instead (SCREEN-v4.md). Do not run it on the PC.**
+
 # PC job: T1 (ultracode v4; the main model's lr decays; for the Mac session, BensPC)
 
 Model-audit test T1, marks in `SCREEN-v4.md` ("audit tests T1 and T2"), written before the runs. Start when the swarm thread's runs have freed the RTX 5070 Ti (`GPU-BUSY.txt` marker shared as before). Same setup as `PC-JOB-crt.md` (copy this branch's `scripts/cap256_launch/skills_pretrain_v1.py` and `uc_diag_v4.py` over the pipeline's copies; same `<PIPE>`, `<DATA>`, `<M2>`). No new code: `--lr-final-mult` already exists.

@@ -346,3 +346,7 @@ CRDC plus one change: both doors at 2048 (`--reader-hidden 2048 --prefix-hidden 
 - **Wrong** (the doors' gain does not add to the route's) if the mean held gain is under +2 or ahead on <= 3 of 6.
 - Other-4 held is reported: WD's gain was mostly on seq_cycle and cipher_map (other-4) and state_update (a chain kind the planner already answers), so I expect the gain to be smaller here.
 - Prediction: held +3 to +10, mostly on other-4; family-mean lesion under 10 points.
+
+## Added 01:25 UTC: T1 moves to boxes E and G (no change to its marks)
+
+The PC is running the Plan B teacher-data job (B1, about 12.6 GB of the 16 GB card, 2-3 hours), so T1 could not start there, and both own machines are full. T1 (`--lr-final-mult 0`, CRDC4-9, marks above unchanged) is queued as `queue/e/56-t1-s4..6` and `queue/g/56-t1-s7..9`, behind CRDW. Seeds 4 and 7 wait for 20 GB free so they start as CRDW ends. Now on the same GPU type as CRDC, so the cross-GPU note above no longer applies. `PC-JOB-t1.md` is withdrawn.
