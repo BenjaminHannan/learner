@@ -42,7 +42,9 @@ letters_in=False (PASS-MARKS.md addendum 7, EGO; needs eg_embed; default True = 
 term only, with no letter embedding, so with reader_layers=0 EmbeddingGemma alone reads the prompt for the thinker. The letter table stays: the talker
 uses it as its output alphabet (the GEN readout is tied to it). Same parameters as with letters_in=True.
 eg_adapter='mlp' (PASS-MARKS.md addendum 8, EGM; default 'linear' = the arms above): the adapter between EmbeddingGemma and the reader input is
-LayerNorm -> Linear(768, d) -> GELU -> Linear(d, d) (the last one zero-initialised) instead of LayerNorm -> Linear(768, d); +65,792 params at d = 256."""
+LayerNorm -> Linear(768, d) -> GELU -> Linear(d, d) (the last one zero-initialised) instead of LayerNorm -> Linear(768, d); +65,792 params at d = 256.
+eg_adapter='none' (addendum 9, EGW; needs d = 768): no adapter. The thinker is built at EmbeddingGemma's width, so each char's input is
+LayerNorm(EmbeddingGemma state) + position + place code, then the reader's final LayerNorm; the thinker's own first layers do the adapting."""
 import math
 import numpy as np
 import torch
@@ -128,7 +130,7 @@ class Ledger(Model):
         self.d, self.n_loops, self.dk, self.w_noop, self.wpos, self.copy = d, n_loops, dk, w_noop, wpos, copy
         self.span, self.span_max = span, span_max
         self.eg_embed, self.eg_teach = bool(eg_embed), float(eg_teach)
-        assert eg_adapter in ('linear', 'mlp'), eg_adapter
+        assert eg_adapter in ('linear', 'mlp', 'none'), eg_adapter
         self.eg_adapter = eg_adapter
         self.round_readout = float(round_readout)
         assert letters_in or eg_embed, 'letters_in=False needs eg_embed (the reader input would carry no content)'
@@ -168,12 +170,16 @@ class Ledger(Model):
             from custom_io.models.eg import EG_DIM, MT_DIM, FrozenEG
             self._eg = [FrozenEG(eg_path)]      # a list, not a submodule: never trained, counted or saved
         if self.eg_embed:       # zero-initialised, so the extra input term is 0 at step 0 (building the Linear draws RNG, after every B2 weight)
-            if self.eg_adapter == 'mlp':        # addendum 8: LayerNorm -> Linear(768, d) -> GELU -> eg_proj; the reader's own final LayerNorm normalises the sum
+            if self.eg_adapter == 'none':       # addendum 9: the thinker is EmbeddingGemma's width, so its states go in through a LayerNorm only
+                assert d == EG_DIM, f"eg_adapter='none' needs d = {EG_DIM}, got {d}"
+                self.ln_eg = nn.LayerNorm(EG_DIM)
+            elif self.eg_adapter == 'mlp':        # addendum 8: LayerNorm -> Linear(768, d) -> GELU -> eg_proj; the reader's own final LayerNorm normalises the sum
                 self.ln_eg, self.eg_hid, self.eg_proj = nn.LayerNorm(EG_DIM), nn.Linear(EG_DIM, d), nn.Linear(d, d)
             else:
                 self.ln_eg, self.eg_proj = nn.LayerNorm(EG_DIM), nn.Linear(EG_DIM, d)
-            nn.init.zeros_(self.eg_proj.weight)
-            nn.init.zeros_(self.eg_proj.bias)
+            if self.eg_adapter != 'none':
+                nn.init.zeros_(self.eg_proj.weight)
+                nn.init.zeros_(self.eg_proj.bias)
         if self.eg_teach:
             self.ln_mt, self.mt_head = nn.LayerNorm(d), nn.Linear(d, MT_DIM)
             nn.init.normal_(self.mt_head.weight, std=0.02)
@@ -243,6 +249,8 @@ class Ledger(Model):
         ids = batch['prompt_ids']
         H, _ = self.eg().encode([r['prompt'] for r in batch['rows']], ids.shape[1], ids.device)
         h = self.ln_eg(H.float())       # H is bf16 on cuda; fp32 here works with or without autocast
+        if self.eg_adapter == 'none':
+            return self.reader(batch, extra=h)
         if self.eg_adapter == 'mlp':
             h = F.gelu(self.eg_hid(h))
         return self.reader(batch, extra=self.eg_proj(h))

@@ -246,3 +246,17 @@ EmbeddingGemma counted. EmbeddingGemma stays frozen.
 **Marks:** exactly addendum 6's marks 1-5, proved-wrong rule and "better than B2" label, each seed against plain B2 on the same seed.
 **Which adapter goes on:** if EGM and EGO both pass, the one with the higher 2-seed pooled-5 mean goes to the 6-seed confirm; if they are within
 0.5 of each other, the linear one (smaller and simpler). Read only: EGM minus EGO per seed.
+
+## Addendum 9: EGW, thinker slots built for EmbeddingGemma (written 2026-10-06 about 20:20 UTC, 4:20 PM ET, before any EGW run and before any EGM or EGO result)
+Ben (3:48 PM ET): instead of an adapter, new thinker slots made for Gemma. **EGW**
+(`{"copy":true,"d":768,"n_heads":12,"eg_embed":true,"reader_layers":0,"letters_in":false,"eg_adapter":"none"}`) builds B2's thinker and talker at
+EmbeddingGemma's width, 768 (12 heads of 64, the same head size as B2), so EmbeddingGemma's states go in through a LayerNorm with no adapter:
+each char's input is LayerNorm(its word piece's state) + position + place code, then the reader's final LayerNorm. The thinker's own first layers
+do the adapting. Trainable 22,164,357; whole 293,166,981 with EmbeddingGemma counted. Same recipe as every arm (24,000 updates, batch 256, lr 1e-3).
+**This is two changes from EGO, not one:** no adapter AND a thinker 3x wider (7.8x the trainable params). A win cannot be split between the
+direct slots and the extra width; a 768-wide B2 with its own letter reader would split it and is added only if EGW wins.
+**Runs:** EGW_s200, EGW_s201, paired with B2_s200 / B2_s201 of queue 33. Queue 36 is now EGW, EGM, EGO; EGR and R0 move to queue 38.
+**Marks:** exactly addendum 6's marks 1-5, proved-wrong rule and "better than B2" label, against plain B2 on the same seed.
+**Which EmbeddingGemma reader goes on (replaces addendum 8's rule; no EGM, EGO or EGW result exists yet):** among EGW, EGM and EGO, those that pass;
+the highest 2-seed pooled-5 mean wins, but any passing arm within 0.5 of it that is smaller wins instead (smallest first). The winner goes to the
+6-seed confirm at the same marks. Read only: EGW minus EGM per seed.

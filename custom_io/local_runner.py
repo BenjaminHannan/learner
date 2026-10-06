@@ -18,7 +18,8 @@ single-quoted JSON of the Vast queue files. On MPS, --bf16 is dropped (bf16 auto
 added; a pairing is only fair between runs on the same device, so a queue file should not be split across machines.
 
 A run whose RESULT.json already exists is skipped, so re-running the same queue resumes it. Each run trains from a frozen
-copy of custom_io taken when the queue starts (WORK/code/QUEUE), so a later git pull never changes a running queue.
+copy of custom_io taken when the queue starts (WORK/code/QUEUE-HASH, HASH = the custom_io sources), so a later git pull never
+changes a running queue, and a relaunch on re-staged code trains on that code, not on an older copy.
 Outputs per run: RESULT.json, checkpoint.pt (kept; never deleted), stdout.txt, stdout.events.txt, rc.txt.
 WORK/STOP (any content) stops new launches; running ones finish. The GPU-BUSY file gets one line per running run
 (`owner queue/name pid start-utc`), removed when the run ends; other owners' lines are left alone and only free memory
@@ -213,6 +214,16 @@ def finish(out):
         pass
 
 
+def code_hash():
+    """First 10 hex of a sha1 over every .py / .json file of custom_io outside results/ (paths and bytes), so a re-staged tree gets its own copy."""
+    h = hashlib.sha1()
+    for f in sorted(HERE.rglob('*')):
+        rel = f.relative_to(HERE).as_posix()
+        if f.is_file() and f.suffix in ('.py', '.json') and not rel.startswith('results/') and '__pycache__' not in rel:
+            h.update(rel.encode() + b'\0' + f.read_bytes() + b'\0')
+    return h.hexdigest()[:10]
+
+
 def run(a):
     work, qpath = Path(a.work).resolve(), Path(a.queue).resolve()
     qname = qpath.stem
@@ -220,9 +231,10 @@ def run(a):
     device = a.device
     res = work / 'results' / qname
     res.mkdir(parents=True, exist_ok=True)
-    code = work / 'code' / qname
-    if not (code / 'custom_io').exists():         # frozen copy, taken once per queue
+    code = work / 'code' / f'{qname}-{code_hash()}'   # frozen copy per queue AND code version: a resume reuses it, newer code gets a fresh one
+    if not (code / 'custom_io').exists():
         shutil.copytree(HERE, code / 'custom_io', ignore=shutil.ignore_patterns('results', '__pycache__', '*.pt'))
+    say(f'code: {code}')
     shutil.copy2(qpath, res / qpath.name)
     busy = Busy(a.busy, a.owner)
     qenv = queue_env(qpath)

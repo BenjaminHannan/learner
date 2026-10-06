@@ -168,6 +168,42 @@ def test_mlp_adapter():
     print('ok mlp_adapter')
 
 
+def test_wide_no_adapter():
+    """PASS-MARKS.md addendum 9, EGW (d = 768, eg_adapter='none', no letters in): EmbeddingGemma's states reach the reader output through ln_eg only
+    (no eg_proj / eg_hid), letters never do, one training step runs, 'none' at another width is refused, and the S-shaped size matches the addendum.
+    The check model is 768 wide with 1 block and a small MLP, to stay quick on CPU."""
+    v, rows = vocab(), train_rows(16, 4)
+    cfg = dict(d=768, n_heads=12, reader_layers=0, blocks=1, n_loops=8, mlp=1.0)
+    m = seeded(cfg, 2, v, copy=True, eg_embed=True, letters_in=False, eg_adapter='none')
+    keys = set(m.state_dict())
+    assert 'ln_eg.weight' in keys and not any(k.startswith(('eg_proj', 'eg_hid')) for k in keys)
+    b = batch_of(rows, v)
+    n = m.reader.tok.num_embeddings
+    b_rel = dict(b, prompt_ids=torch.where(b['prompt_mask'], (b['prompt_ids'] + 7) % n, b['prompt_ids']))
+    X1 = m.read(b)[0]
+    assert torch.equal(X1, m.read(b_rel)[0]), 'letters reached the EGW reader'
+    f = m.eg().encode
+    m.eg().encode = lambda p, T, d, chars=True: (lambda r: (r[0] * 0.5 + 1.0, r[1]))(f(p, T, d, chars))
+    assert not torch.allclose(X1, m.read(b)[0]), 'the reader output does not depend on the EmbeddingGemma states'
+    m.eg().encode = f
+    opt = torch.optim.AdamW(m.parameters(), lr=1e-3)
+    loss, _ = m.loss(b)
+    loss.backward()
+    opt.step()
+    assert torch.isfinite(loss) and m.ln_eg.weight.grad is not None
+    try:
+        seeded(SMALL, 0, v, copy=True, eg_embed=True, eg_adapter='none')
+        raise AssertionError("eg_adapter='none' at d=48 was accepted")
+    except AssertionError as e:
+        assert 'needs d = 768' in str(e), e
+    S = seeded(dict(S_CFG, d=768, n_heads=12), 0, v, copy=True, eg_embed=True, reader_layers=0, letters_in=False, eg_adapter='none').size()
+    assert S == dict(trainable=22_164_357, discarded=0, frozen_borrowed=271_002_624, shipped_trainable=22_164_357, whole=293_166_981), S
+    from custom_io.local_runner import code_hash
+    assert code_hash() == code_hash() and len(code_hash()) == 10
+    print(f'  EGW size {S}')
+    print('ok wide_no_adapter')
+
+
 def test_teach_loss_and_never_at_eval():
     """eg_teach: keys = B2's + ln_mt + mt_head; B2 weights identical at the same seed; loss = B2 loss + w * meaning (B2 aux unchanged); answers equal
     B2's (the head never touches inference); the teacher embeds only the loss batch's prompts, never anything in generate / lesions / donor."""
@@ -225,8 +261,8 @@ def test_bf16_states_without_autocast_and_queue_env():
     X, _ = m.read(batch_of(rows, v))
     assert X.dtype == torch.float32 and torch.isfinite(X).all()
     qd = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'queue_local')
-    for name, runs in (('36-pc-eg2.txt', ['EGM_s200', 'EGM_s201', 'EGO_s200', 'EGO_s201', 'EGR_s200', 'EGR_s201']),
-                       ('38-pc-eg-teacher.txt', ['R0_s200', 'R0_s201', 'EGE_s200', 'EGE_s201', 'EGT_s200', 'EGT_s201'])):
+    for name, runs in (('36-pc-eg2.txt', ['EGW_s200', 'EGW_s201', 'EGM_s200', 'EGM_s201', 'EGO_s200', 'EGO_s201']),
+                       ('38-pc-eg-teacher.txt', ['EGR_s200', 'EGR_s201', 'R0_s200', 'R0_s201', 'EGE_s200', 'EGE_s201', 'EGT_s200', 'EGT_s201'])):
         q = os.path.join(qd, name)
         env = queue_env(q)
         assert set(env) == {'PYTHONPATH', 'CUSTOM_IO_EG2'} and env['PYTHONPATH'].startswith('C:\\Users\\benja\\eg_site;'), env
