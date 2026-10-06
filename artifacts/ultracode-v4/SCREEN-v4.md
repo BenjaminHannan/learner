@@ -286,3 +286,21 @@ Same arm as WD, seeds 4-9, paired with SR2's confirmation CF4-CF9 (fit 269 / 262
 Both are CRDC plus one change, seeds 4-9, paired with CRDC4-9 (held 297 / 277 / 291 / 289 / 287 / 281, mean 287.0; other-4 held 138 / 125 / 135 / 133 / 130 / 123, mean 130.7; family-mean lesion 0 / 6 / 0 / 15 / 3 / 12 rows of fit).
 - **T1, the main model's lr decays** (`--lr-final-mult 0`: cosine from 1e-3 to 0 over the run for every optimizer group; checked in code, `skills_pretrain_v1.py` main loop). **Helps** if other-4 held mean >= 136.7 (+6) and ahead on >= 5 of 6. **Wrong** if the mean gain is under +2 or ahead on <= 3 of 6. Audit's prediction: +3 to +8. Runs on Ben's PC (RTX 5070 Ti) when the swarm runs end: own machines first. CRDC ran on RTX 5090s, so the pairing crosses GPU types; noted, not expected to matter at this noise level.
 - **T2, quiet notes** (`--quiet-notes`, new): each of the exit's 8 vectors is rescaled to one learnable length that starts at the LM's mean word-vector length (0.736; main2's notes average 964.5, audit probe). Note: the audit's text says "RMS-normalised times 0.74"; RMS 1 times 0.74 would make each note 0.74 x sqrt(2048) = 33 long (45x a word), so I implemented the stated aim, word-sized notes (unit length times the gain). **Helps** if mean held >= 292.0 and ahead on >= 5 of 6. **"The thinker now carries each question"** if the family-mean lesion costs >= 32 rows of fit on every seed. **Wrong** (loudness does not matter) if mean held is within 5 of CRDC AND the family-mean lesion stays under 16 rows on every seed. The first 500 updates' mean CE is logged (`skills-progress` at update 500) next to CRDC's; the gain is logged as `quiet_gain`. Audit's prediction: within 5 on held; lesion rises but stays under 32 rows. Runs on Vast box F after CRT (Ben's PC is full until about 01:30 UTC).
+
+## CRT result, 3 seeds (jobs 47-crt-s1..s3 on Vast box F, read 00:20 UTC Oct 6) — the talker-called calculator works as well as the direct route
+Ben's design: the thinker's plan goes to the talker as a note in words, the talker writes `calc(note)`, the calculator's reply is put in, and the talker answers. Paired with CRD1-CRD3. All rc 0; planner pretraining 40 minutes per run with three on one GPU.
+
+| seed | CRT fit | CRT held | CRT chain held | CRD fit / held / chain held | plan_swap: chain held (drop) | plan_swap: call copies the injected note | note_drop: chain held (calls written) | other-4 held | family-mean lesion, fit |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 300 | 295 | 159 | 295 / 288 / 158 | 2 (-157) | 153 / 160 (95.6%) | 44 (70) | 136 | -10 |
+| 2 | 300 | 278 | 153 | 293 / 291 / 152 | 4 (-149) | 135 / 160 (84.4%) | 31 (48) | 125 | -2 |
+| 3 | 294 | 284 | 159 | 302 / 281 / 160 | 14 (-145) | 127 / 160 (79.4%) | 39 (11) | 125 | -20 |
+| mean | **298.0 (93.1%)** | **285.7 (89.3%)** | sum **471 / 480** | 296.7 / 286.7 / sum 470 | 6.7 | 86.5% | 38.0 | 128.7 | -10.7 |
+
+- **REACHES THE MARK** (mean fit 298.0 >= 272; every seed >= 256, lowest 294).
+- **"The talker-called calculator works as well as the direct route": YES** (chain held-out sum 471 vs CRD's 470; within 10). Overall held 285.7 vs 286.7: level.
+- **"The thinker's note drives the call": not met as written.** The first half holds on every seed: swapping in another question's note drops chain held-out by 145-157 rows, so the thinker's note decides the chain answers. The second half (the call copies the injected note on >= 90% of chain rows) holds on seed 1 only (95.6%); seeds 2 and 3 copy it 84.4% and 79.4% of the time, and otherwise write their own call, mixing in the question's numbers (as in smoke 2).
+- **Not wrong** (chain sum 471 >= 440; copying >= 70% on every seed).
+- note_drop (reported, not marked): with no note, the talker writes a call on only 7-44% of chain rows and gets 31-44 / 160 right, so it does not do the chain plans from the question on its own.
+- With the intact note, the talker calls on 159-160 / 160 chain rows, copies the note on 157-160, and the answer equals the calculator's on 157-160.
+- My predictions: chain sum 455-475 (right), plan_swap under 10 (right on 2 of 3), copying > 95% (wrong on 2 of 3), note_drop 40-80% (wrong: 19-28%).
