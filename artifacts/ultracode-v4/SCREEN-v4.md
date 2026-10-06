@@ -323,3 +323,26 @@ CRDC plus `--direct-reader` (the Reader 2048 -> 32 -> 256 replaced by LayerNorm 
 - The loss is all on the four kinds the main thinker and talker answer (other-4 held -7.9); chain held is level (156.0 vs 156.3), so the planner reads fine through the plain Linear.
 - My prediction (within 5 of CRDC) was wrong in the other direction.
 - Compare WD (SR2 + both doors widened to 2048, keeping the Reader's nonlinear layer): +26 held over SR2 on 3 seeds. Suggested, untested: a wide nonlinear Reader helps and a plain linear one hurts, or the gain in WD comes from the exit door. A reader-only 2048 run on top of CRDC would separate them.
+
+## WDC result, 6 seeds (jobs 52-wdc-s4..s9 on Vast boxes E and G, read 01:15 UTC Oct 6) — CONFIRMED: wide doors help
+| seed | CF fit | WD fit | gain | CF held | WD held | gain | family-mean lesion, fit |
+|---|---|---|---|---|---|---|---|
+| 4 | 269 | 302 | +33 | 250 | 279 | +29 | -15 (4.7 pts) |
+| 5 | 262 | 286 | +24 | 256 | 268 | +12 | -6 (1.9 pts) |
+| 6 | 278 | 282 | +4 | 265 | 287 | +22 | -16 (5.0 pts) |
+| 7 | 286 | 294 | +8 | 266 | 280 | +14 | -3 (0.9 pts) |
+| 8 | 265 | 281 | +16 | 261 | 281 | +20 | -26 (8.1 pts) |
+| 9 | 281 | 277 | -4 | 262 | 254 | -8 | -24 (7.5 pts) |
+| mean | 273.5 | **287.0 (89.7%)** | **+13.5** | 260.0 | **274.8 (85.9%)** | **+14.8** | 0.9-8.1 pts |
+
+- **CONFIRMED "wide doors help"**: mean fit 287.0 >= 281.5, mean held 274.8 >= 268.0, ahead on fit on 5 of 6 (and on held on 5 of 6). Not wrong (gain far above 3). All rc 0.
+- The gain is about half the 3-seed screen's (+13.5 / +14.8 vs +25.0 / +26.3); over all 9 seeds: fit 291.6 vs 274.2, held 278.0 vs 259.3.
+- The thinker still does not carry each question (family-mean lesion under 10 points on every seed); my prediction for the lesion (4-9 points) was right on 4 of 6.
+- Which door carries the gain is still untested (both changed at once).
+
+## Added 01:20 UTC, before they ran: CRDW (the confirmed wide doors on top of the current best model)
+CRDC plus one change: both doors at 2048 (`--reader-hidden 2048 --prefix-hidden 2048`, the WD flags). Seeds 4-9 paired with CRDC4-9 (held 297 / 277 / 291 / 289 / 287 / 281, mean 287.0; other-4 held mean 130.7; fit mean 297.3). Runs on Vast boxes E and G (Ben's PC is busy with other threads' runs; T1 waits there). The planner is unchanged (its own fresh 32-wide reader), so the doors only touch the main thinker and talker.
+- **"The doors stack with the plan route"** if mean held >= 292.0 (CRDC + 5) AND ahead on >= 5 of 6.
+- **Wrong** (the doors' gain does not add to the route's) if the mean held gain is under +2 or ahead on <= 3 of 6.
+- Other-4 held is reported: WD's gain was mostly on seq_cycle and cipher_map (other-4) and state_update (a chain kind the planner already answers), so I expect the gain to be smaller here.
+- Prediction: held +3 to +10, mostly on other-4; family-mean lesion under 10 points.
