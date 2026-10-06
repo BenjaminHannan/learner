@@ -349,4 +349,4 @@ CRDC plus one change: both doors at 2048 (`--reader-hidden 2048 --prefix-hidden 
 
 ## Added 01:25 UTC: T1 moves to boxes E and G (no change to its marks)
 
-The PC is running the Plan B teacher-data job (B1, about 12.6 GB of the 16 GB card, 2-3 hours), so T1 could not start there, and both own machines are full. T1 (`--lr-final-mult 0`, CRDC4-9, marks above unchanged) is queued as `queue/e/56-t1-s4..6` and `queue/g/56-t1-s7..9`, behind CRDW. Seeds 4 and 7 wait for 20 GB free so they start as CRDW ends. Now on the same GPU type as CRDC, so the cross-GPU note above no longer applies. `PC-JOB-t1.md` is withdrawn.
+The PC is running the Plan B teacher-data job (B1, about 12.6 GB of the 16 GB card, 2-3 hours), so T1 could not start there, and both own machines are full. T1 (`--lr-final-mult 0`, CRDC4-9, marks above unchanged) is queued as `queue/e/56-t1-s4,5`, `queue/g/56-t1-s7,8` (behind CRDW) and `queue/f/56-t1-s6,9` (moved there 03:20 UTC, starting next to the last two T2 runs). Seeds 4 and 7 wait for 20 GB free so they start as CRDW ends. Now on the same GPU type as CRDC, so the cross-GPU note above no longer applies. `PC-JOB-t1.md` is withdrawn.
