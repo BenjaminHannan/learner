@@ -21,6 +21,7 @@ ap.add_argument("--per-kind", type=int, default=2100, help="items to write per k
 ap.add_argument("--write-n", type=int, default=25); ap.add_argument("--verify-m", type=int, default=40)
 ap.add_argument("--workers", type=int, default=8); ap.add_argument("--max-usd", type=float, default=0.45)
 ap.add_argument("--pilot-calls", type=int, default=0, help="stop after this many calls in total (pilot)")
+ap.add_argument("--no-think", action="store_true", help="send reasoning off (Qwen 3.x think by default and bill thinking tokens)")
 ap.add_argument("--only", default=""); ap.add_argument("--round", type=int, default=0); ap.add_argument("--seed", type=int, default=5003)
 a = ap.parse_args()
 out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
@@ -30,6 +31,8 @@ lock, state = threading.Lock(), {"usd": 0.0, "calls": 0, "tin": 0, "tout": 0, "s
 
 def call(msgs, max_new, temp):
     body = {"model": a.model, "messages": msgs, "max_tokens": max_new, "temperature": temp}
+    if a.no_think:
+        body["reasoning"] = {"enabled": False}
     req = urllib.request.Request(BASE + "/chat/completions", data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "Authorization": "Bearer " + KEY})
     for attempt in range(3):
         if state["stop"]:
