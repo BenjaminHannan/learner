@@ -181,3 +181,14 @@ pairs them by seed, and writes `results/B1-ANALYSIS.json` and `results/RESULTS-B
   "teach" and "gen" files, run `english build` into the scratchpad, then each of the three students at a tiny size
   for about 60 updates with `--final-eval --english-eval custom_io/english_eval`, and the full M configs for a few
   updates to print `n_params`.
+
+## Train path vs answer path check (2026-10-06, about 2:30 AM ET)
+
+The ultracode bench lost about 6 points to a prompt fed twice at answer time, so the same rows were scored both ways
+on CPU (`scratchpad/b1/trainvseval/check.py`, small models trained 800 updates on the smoke teach arm):
+- the adapter's training rows and the eval builder's rows for the same examples: 0 of 5,938 differ in prompt, taught
+  answer or accepted answers;
+- 300 training rows decoded from the training file and from the eval builder: identical on 300/300 (plain_tf 19.33%
+  both, B2 span 89.67% both);
+- plain_tf: the loss path's argmax reproduces its own greedy answer + EOS on 300/300 rows;
+- B2: the training forward (teacher-forced) gives the same answer as free decoding on 300/300 rows.

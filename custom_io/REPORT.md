@@ -125,7 +125,10 @@ Per-run numbers: `custom_io/results/RESULTS-SCREEN.md` and `SCREEN-ANALYSIS.json
 2. **If the leak matters:** make the word pointer's query come only from the reasoned state, with no constant part,
    and re-screen at 2 seeds (one change, untested).
 3. **For the families B2 loses:** give the thinker a program language for rules and lookups, as the blocker thread's
-   planner does for chains (suggested).
+   planner does for chains (suggested). Warning from the ultracode blocker thread's bench (2026-10-06,
+   `/mnt/project-files/bench/BENCH-RECIPE.md`): pointer programs for cipher_map, fewshot_number_rule, group_induct and
+   seq_cycle stayed flat at 77/160 across 5 designs (wider reader twice, two-hop pointer, global heads). So try an op
+   that is not "point at a position", and save per-row outputs before comparing designs.
 
 ## Files
 
