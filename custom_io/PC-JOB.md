@@ -98,3 +98,11 @@ python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queu
 with stdout to `C:\Users\benja\custom-io\work\q36.log`; its first line must show `queue env: {...}` with both variables. Four runs
 (EGE and EGT, seeds 200 and 201), paired with queue 33's B2_s200 and B2_s201 on this PC. Push the results as in section 4 (no
 checkpoint.pt); the analysis is `python -m custom_io.analyze_eg --results custom_io/results/33-pc-confirm-b2 custom_io/results/36-pc-eg2`.
+
+## 7. Test LR, a readout loss at every round (queue 37, after queue 36, or alongside when the card has 6 GB free)
+Marks: PASS-MARKS.md addendum 5. Plain B2 code plus one switch, no new packages (it does not need eg_site). From the same re-staged src:
+```
+python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\37-pc-loop-readout.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+```
+Two runs (LR_s200, LR_s201), paired with queue 33's B2_s200 and B2_s201. Push as in section 4; the analysis is
+`python -m custom_io.analyze_eg --results custom_io/results/33-pc-confirm-b2 custom_io/results/37-pc-loop-readout`.

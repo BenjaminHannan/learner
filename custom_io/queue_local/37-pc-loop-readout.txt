@@ -1,0 +1,7 @@
+# BensPC RTX 5070 Ti (cuda): Test LR, B2 with a readout loss at every round (PASS-MARKS.md addendum 5, written before any LR run;
+# design/LOOPS-probe.md has the no-training probe that opened it). After queue 36 (or alongside when the card has 6 GB free):
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\37-pc-loop-readout.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+# Paired by seed with B2_s200 / B2_s201 of queue 33 (same PC, same flags; only the one switch differs). 3,302,481 params, nothing pretrained.
+# MEM 6000
+LR_s200 --model ledger --cfg '{"copy":true,"round_readout":1.0}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
+LR_s201 --model ledger --cfg '{"copy":true,"round_readout":1.0}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval

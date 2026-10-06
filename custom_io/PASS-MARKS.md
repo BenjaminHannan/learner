@@ -178,3 +178,20 @@ confirm at the same marks. Nothing is adopted on 2 seeds (noise rule).
 **Size rule:** EGE is a 274.5M model (borrowed parts count), so a pass is a B2-internal result; whether it beats similar-size models is a separate
 comparison against ~135M-360M models, not judged here. EGT ships at 3,302,481.
 **Read only:** the family split, per-family changes, the other lesions, steps per second and peak memory.
+
+## Addendum 5: Test LR, a readout loss at every round for B2 (written 2026-10-06 about 18:40 UTC, 2:40 PM ET, before any LR code or run)
+Opened by gate G1 of design/LOOPS-probe.md (probe result there). **The one change** (`--cfg '{"copy":true,"round_readout":1.0}'`, default 0 =
+B2 exactly): during training, after every iteration t with L + 1 <= t <= 6 (L = the row's gold program steps, so its program is already written;
+t = 7 is the normal final readout), B2's own talker heads read the state (mode, answer pointer, word pointer, GEN registers with the copy
+path) and get the same losses as the final readout. Each row's loss is averaged over its rounds and added with weight 1.0 (fixed, no sweep).
+No new parameters: 3,302,481, nothing pretrained. Eval is unchanged (answers after the trained 8 loops).
+**Runs:** LR_s200, LR_s201, paired with B2_s200 / B2_s201 of queue 33 on the same PC and recipe (queue 37, after queue 36).
+**Pass (all, 2-seed screen):**
+1. pooled-5 gain >= +1.0 on BOTH seeds.
+2. Stability, the mechanism: in_dist at loops:16 minus in_dist at the trained 8 loops >= -0.3 on both seeds (plain B2 read -1.1 and -0.8 on the
+   screen checkpoints; its q33 values on seeds 200 / 201 are reported next to it).
+3. No dev split (in_dist, answer, frame, vocab, variant) drops more than 2.0, 2-seed mean.
+4. chain-5 >= 99.0 on both seeds; loops:1 chain-5 <= 5 on both seeds (the program still needs its rounds).
+5. Leak: loops:0 in_dist no more than 1.0 above plain B2 on the same seed, and donor in_dist <= 5, on both seeds.
+**Proved wrong:** pooled-5 gain < 0 (2-seed mean), or mark 2 missed on both seeds (the extra loss does not make the answer stable) -> stop;
+no halting gate or extra-loop test follows from this probe. A pass goes to the 6-seed confirm at the same marks (noise rule).

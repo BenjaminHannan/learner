@@ -33,7 +33,11 @@ are unchanged and the CURRENT rows' prompt is embedded in run() and in talk() al
 what B2 computes. eg_teach=w > 0: training-only meaning teacher, loss += w * (1 - cos(mt_head(ln_mt(mean of the 8 control tokens after iteration t = 1)),
 EmbeddingGemma's pooled vector of the TRAINING prompt cut to 256 dims and re-normalised)); never run at eval, and ln_mt / mt_head are dropped from
 the shipped size. Both arms' modules are created last (after copy / span), so every B2 weight starts identical at the same seed. size() reports
-trainable, discarded and frozen-borrowed params and the whole-model size (borrowed parts counted)."""
+trainable, discarded and frozen-borrowed params and the whole-model size (borrowed parts counted).
+round_readout=w > 0 (PASS-MARKS.md addendum 5, Test LR; default 0 = exactly B2): in training only, after every iteration t with L + 1 <= t <= n_loops - 2
+(L = the row's gold program steps, so its program is written; the last iteration is the normal readout) the same talker heads read the state and get
+the final readout's losses (mode, answer pointer, word pointer / span, GEN with the copy path); each row's mean over its rounds is added with weight w.
+No new parameters; eval is unchanged."""
 import math
 import numpy as np
 import torch
@@ -114,11 +118,12 @@ class Ledger(Model):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap']
 
     def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, copy=False, span=False, span_max=12,
-                 eg_embed=False, eg_teach=0.0, eg_path=None):
+                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0):
         super().__init__(vocab)
         self.d, self.n_loops, self.dk, self.w_noop, self.wpos, self.copy = d, n_loops, dk, w_noop, wpos, copy
         self.span, self.span_max = span, span_max
         self.eg_embed, self.eg_teach = bool(eg_embed), float(eg_teach)
+        self.round_readout = float(round_readout)
         self.reader = CharReader(len(vocab), d, reader_layers)
         self.vcode = nn.Linear(93, d)
         self.stype, self.ordinal, self.op_emb, self.step_emb, self.src, self.ctrl = (
@@ -237,10 +242,11 @@ class Ledger(Model):
         return dict(trainable=tr, discarded=disc, frozen_borrowed=fz, shipped_trainable=tr - disc, whole=tr - disc + fz)
 
     # ---- reasoner ----
-    def run(self, batch, loops=None, gold=None, lesion=None):
+    def run(self, batch, loops=None, gold=None, lesion=None, rounds=False):
         """One pass. gold (training) = dict(op [B,L], a/b [B,L,M] bool) teacher-forces every written step. lesion: 'noexec' / 'opswap' / 'nowordc'.
         -> dict(R registers [B,9,d], vals [B,M] int64, valid, lmode, lans, lword, steps [(op, a, b logits)], prog (ops, a, b [B,L]);
-        copy=True adds X [B,T,d] and xm [B,T] (reader output and prompt mask) so that loss() does not run the reader twice)."""
+        copy=True adds X [B,T,d] and xm [B,T] (reader output and prompt mask) so that loss() does not run the reader twice).
+        rounds=True (round_readout training) adds 'rounds' [(t, Z[:,1], registers, Rs, valid) after iterations 1..n-2], S0 and Kw."""
         X, xm = self.read(batch)
         ns, ne, nv, ws, we = self.tokenize(batch)
         B, T, dev = X.shape[0], X.shape[1], X.device
@@ -261,7 +267,7 @@ class Ledger(Model):
         kvx = [b.kv_of(X + self.src.weight[1]) for b in self.core]
         P = self.reader.place.weight[:N_REG]
         Z = torch.cat([self.ctrl.weight, P]).expand(B, -1, -1)
-        steps, prog = [], []
+        steps, prog, snaps = [], [], []
         n = self.n_loops if loops is None else loops
         for t in range(n):
             ts = min(t, self.n_loops - 1)
@@ -294,6 +300,8 @@ class Ledger(Model):
             vals[:, R0 + t - 1], valid[:, R0 + t - 1] = v, ok
             new = (self.vcode(value_code(v, ok)) + self.stype.weight[2] + self.op_emb(op) + self.step_emb.weight[ts] + self.res_from_z(z)) * ok[:, None]
             Rs = torch.cat([Rs[:, :t - 1], new[:, None].to(Rs.dtype), Rs[:, t:]], 1)
+            if rounds and t <= n - 2:
+                snaps.append((t, Z[:, 1], Z[:, N_CTRL:], Rs, valid))
         zf = self.ln_z(Z[:, 1])
         ks_ = self.k_slot(self.ln_k(torch.cat([S0, Rs], 1)))
         out = dict(R=Z[:, N_CTRL:], vals=vals, valid=valid, lmode=self.mode_head(zf), steps=steps, wvalid=wvalid,
@@ -307,6 +315,8 @@ class Ledger(Model):
             out['X'], out['xm'] = X, xm
         if self.eg_teach and n > 1:
             out['z1'] = z1
+        if rounds:
+            out['rounds'], out['S0'], out['Kw'] = snaps, S0, Kw
         return out
 
     def state(self, batch, loops=None, lesion=None):
@@ -412,10 +422,45 @@ class Ledger(Model):
         lp = torch.logsumexp(grid.masked_fill(~g['span'], -1e9).flatten(1), -1)
         return torch.where(g['mode'] == 1, -lp, torch.zeros_like(lp)).sum() / lp.shape[0]
 
+    def round_loss(self, o, g, batch):
+        """Test LR: the final readout's losses per row, at every snapshot round t >= L + 1 (L = gold program steps); mean over each row's rounds,
+        summed over rows / B (rows with no such round add 0)."""
+        B = g['mode'].shape[0]
+        L = (g['op'] > 0).sum(1)
+        n_t = (g['gen'] >= 0).sum(1).clamp(min=1)
+        acc = torch.zeros(B, device=L.device)
+        cnt = torch.zeros(B, device=L.device)
+        rowmarg = lambda lg, m, sel: torch.where(sel, -(torch.logsumexp(lg.masked_fill(~m, -1e9), -1) - torch.logsumexp(lg, -1)), torch.zeros_like(lg[:, 0]))
+        for t, z1, R, Rs, valid in o['rounds']:
+            sel = L + 1 <= t
+            if not sel.any():
+                continue
+            zf = self.ln_z(z1)
+            ks_ = self.k_slot(self.ln_k(torch.cat([o['S0'], Rs], 1)))
+            lm = F.cross_entropy(self.mode_head(zf).float(), g['mode'], reduction='none')
+            la = rowmarg(self.ptr(self.q_ans(zf), ks_, valid), g['ans'], g['mode'] == 0)
+            lw_ = self.ptr(self.q_word(zf), o['Kw'], o['wvalid'])
+            if self.span:
+                grid = lw_.float().log_softmax(-1)[:, :, None] + self.ptr(self.q_wend(zf), o['Kw'], o['wvalid']).float().log_softmax(-1)[:, None, :]
+                lp = torch.logsumexp(grid.masked_fill(~g['span'], -1e9).flatten(1), -1)
+                lw = torch.where(g['mode'] == 1, -lp, torch.zeros_like(lp))
+            else:
+                lw = rowmarg(lw_, g['word'], g['mode'] == 1)
+            if self.copy:
+                p, _ = self.gen_copy(R, o['X'], o['xm'], batch['prompt_ids'])
+                tg = g['gen']
+                ce = -torch.log(p.gather(2, tg.clamp(min=0)[..., None])[..., 0] + 1e-6).masked_fill(tg < 0, 0.0)
+            else:
+                ce = F.cross_entropy(self.readout(R).float().flatten(0, 1), g['gen'].flatten(), ignore_index=-100, reduction='none').view(B, -1)
+            lg = (ce.sum(1) / n_t) * (g['mode'] == 2)
+            acc = acc + (lm + la + lw + lg) * sel
+            cnt = cnt + sel
+        return (acc / cnt.clamp(min=1)).sum() / B
+
     def loss(self, batch):
         dev, B = batch['prompt_ids'].device, len(batch['rows'])
         g = self.gold(batch['rows'], dev)
-        o = self.run(batch, gold=g)
+        o = self.run(batch, gold=g, rounds=self.round_readout > 0)
         w_row = torch.where(g['has'], 1.0, self.w_noop)
         comm = torch.isin(g['op'], torch.tensor(COMM, device=dev))
         lop = lptr = 0.0
@@ -447,6 +492,10 @@ class Ledger(Model):
             tm = (g['gen'] >= 0) & (g['gen'] != EOS) & (g['mode'] == 2)[:, None]
             aux['copy_share'] = ((1 - gate[..., 0]) * tm).sum() / tm.sum().clamp(min=1)
         total = lop + lptr + lmode + lans + lword + lgen
+        if self.round_readout:
+            lrr = self.round_loss(o, g, batch)
+            total = total + self.round_readout * lrr
+            aux['rounds'] = lrr
         if self.eg_teach:   # training prompts only: loss() never runs on dev rows
             from custom_io.models.eg import teacher_vec
             _, pooled = self.eg().encode([r['prompt'] for r in batch['rows']], batch['prompt_ids'].shape[1], dev, chars=False)

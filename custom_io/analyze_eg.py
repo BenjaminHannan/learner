@@ -1,4 +1,4 @@
-"""EmbeddingGemma 2 arms for B2: PASS-MARKS.md addendum 4, computed exactly as written.
+"""EmbeddingGemma 2 arms for B2 (PASS-MARKS.md addendum 4) and Test LR, the per-round readout loss (addendum 5), computed exactly as written.
 python3 -m custom_io.analyze_eg --results custom_io/results/33-pc-confirm-b2 custom_io/results/36-pc-eg2 [--out custom_io/results/EG2-ANALYSIS.json]
 Arms EGE (eg_embed) and EGT (eg_teach 0.1), each paired by seed (200, 201) with plain B2 (run folders B2_s200, B2_s201). A run counts only if it
 is status 'ok', trained 24,000 steps with the B2 flags and its own switch, and the base run is plain B2 with the same flags; otherwise its
@@ -7,9 +7,9 @@ import argparse, json, os
 from custom_io.analyze import P5, SPL, C5, POOL, g, load, sub, chk, allof
 
 SEEDS, BASE = [200, 201], 'B2'
-ARMS = {'EGE': {'copy': True, 'eg_embed': True}, 'EGT': {'copy': True, 'eg_teach': 0.1}}
+ARMS = {'EGE': {'copy': True, 'eg_embed': True}, 'EGT': {'copy': True, 'eg_teach': 0.1}, 'LR': {'copy': True, 'round_readout': 1.0}}
 RECIPE = dict(steps=24000, batch=256, lr=1e-3, bf16=True)
-SIZES = {'B2': 3302481, 'EGE': 3500881, 'EGT': 3368785}
+SIZES = {'B2': 3302481, 'EGE': 3500881, 'EGT': 3368785, 'LR': 3302481}
 
 
 def valid(r, cfg, arm):
@@ -56,9 +56,26 @@ def judge(runs, arm):
     drops = {sp: mean(v) for sp, v in dspl.items()}
     m['3 no dev split drops more than 2.0 (2-seed mean)'] = dict(value=drops, ok=allof(chk(v, '>=', -2.0) for v in drops.values()))
     m['4 chain-5 >= 99.0 on both seeds'] = dict(value=c5, ok=allof(chk(v, '>=', 99.0) for v in c5.values()) if len(c5) == len(SEEDS) else 'n/a')
-    m['5 loops:0 in_dist <= 5 and donor in_dist <= 5 on both seeds'] = dict(
-        value=lk, plain_b2_same_seeds_read_only=lk_base,
-        ok=allof([chk(v['loops0'], '<=', 5) for v in lk.values()] + [chk(v['donor'], '<=', 5) for v in lk.values()]) if len(lk) == len(SEEDS) else 'n/a')
+    full = lambda dd: len(dd) == len(SEEDS)
+    if arm != 'LR':
+        m['5 loops:0 in_dist <= 5 and donor in_dist <= 5 on both seeds'] = dict(
+            value=lk, plain_b2_same_seeds_read_only=lk_base,
+            ok=allof([chk(v['loops0'], '<=', 5) for v in lk.values()] + [chk(v['donor'], '<=', 5) for v in lk.values()]) if full(lk) else 'n/a')
+    else:       # addendum 5: marks 2, 4 and 5 differ from the EG arms'
+        stab = {s: sub(SPL('in_dist')(a, 'loops:16'), SPL('in_dist')(a)) for s, (a, _) in pairs.items()}
+        stab_b = {s: sub(SPL('in_dist')(b, 'loops:16'), SPL('in_dist')(b)) for s, (_, b) in pairs.items()}
+        m.pop('2 variant gain >= +3.0, 2-seed mean')
+        m['2 in_dist at loops:16 minus at 8 >= -0.3 on both seeds'] = dict(value=stab, plain_b2_same_seeds_read_only=stab_b,
+                                                                             ok=allof(chk(v, '>=', -0.3) for v in stab.values()) if full(stab) else 'n/a')
+        l1 = {s: C5(a, 'loops:1') for s, (a, _) in pairs.items()}
+        m['4 chain-5 >= 99.0 and loops:1 chain-5 <= 5 on both seeds'] = dict(value=dict(chain5=c5, loops1_chain5=l1),
+            ok=allof([chk(v, '>=', 99.0) for v in c5.values()] + [chk(v, '<=', 5) for v in l1.values()]) if full(c5) else 'n/a')
+        m.pop('4 chain-5 >= 99.0 on both seeds')
+        m['5 loops:0 in_dist <= plain B2 + 1.0 and donor in_dist <= 5 on both seeds'] = dict(value=lk, plain_b2_same_seeds_read_only=lk_base,
+            ok=allof([chk(sub(lk[s]['loops0'], lk_base[s]['loops0']), '<=', 1.0) for s in lk] + [chk(v['donor'], '<=', 5) for v in lk.values()]) if full(lk) else 'n/a')
+        m = {k: m[k] for k in sorted(m)}
+        out['proved_wrong'] = dict(pooled5_mean_below_0=None if mean(dp5) is None else mean(dp5) < 0,
+                                   stability_missed_both=None if not full(stab) else all(v is not None and v < -0.3 for v in stab.values()))
     out['marks'] = m
     oks = [x['ok'] for x in m.values()]
     out['verdict'] = 'NOT JUDGED' if not out['judged'] or 'n/a' in oks else ('PASS' if all(x is True for x in oks) else 'FAIL (stop this arm)')
@@ -88,16 +105,18 @@ def main(argv=None):
     res = dict(seeds=SEEDS, arms={arm: judge(runs, arm) for arm in ARMS}, skipped=skipped)
     os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
     json.dump(res, open(a.out, 'w'), indent=1, default=str)
-    L = ['# EmbeddingGemma 2 arms for B2 (PASS-MARKS.md addendum 4)', '', f'Seeds {SEEDS}, each arm minus plain B2 on the same seed.', '']
+    L = ['# EmbeddingGemma 2 arms (PASS-MARKS.md addendum 4) and Test LR (addendum 5) for B2', '', f'Seeds {SEEDS}, each arm minus plain B2 on the same seed.', '']
     for arm, r in res['arms'].items():
         L += [f'## {arm}: {r["verdict"]}', '']
         if any(r['problems'].values()):
             L += [f'- problems: {r["problems"]}']
         for k, x in r['marks'].items():
-            gain = k[0] in '123'        # marks 1-3 are paired gains; 4-5 are absolute values
+            gain = k[0] in '123'        # marks 1-3 are signed differences; 4-5 are absolute values
             L += [f'- {k}: {fmt(x["value"], gain)} -> {x["ok"]}']
             if 'plain_b2_same_seeds_read_only' in x:
                 L += [f'  - plain B2 on the same seeds (read only): {fmt(x["plain_b2_same_seeds_read_only"], False)}']
+        if 'proved_wrong' in r:
+            L += [f'- proved wrong (addendum 5): {r["proved_wrong"]}']
         L += [f'- read only: family split change {fmt(r["read_only"]["family_split"])}; size {r["read_only"]["size"]}', '']
     md = os.path.join(os.path.dirname(a.out) or '.', 'RESULTS-EG2.md')
     open(md, 'w').write('\n'.join(L) + '\n')

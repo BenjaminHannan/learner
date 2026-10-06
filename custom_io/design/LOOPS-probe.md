@@ -34,3 +34,27 @@ no-op is its halting signal. The candidates only help B2 if B2 is short of loops
 
 A gate opening is not a pass: any training test it opens gets its own marks, written before it runs, 2 seeds against plain B2 on
 the same machine, then 6 seeds before anything is adopted (noise rule).
+
+## Result (2026-10-06, 2:35 PM ET; `custom_io/results/40-loops-probe/PROBE.json`, 6,800 in_dist rows per checkpoint, CPU)
+| | B2_s100 | B2_s101 |
+|---|---|---|
+| in_dist at K = 1 / 4 / 8 / 16 | 30.6 / 82.4 / 89.4 / 88.2 | 30.2 / 78.8 / 90.5 / 89.7 |
+| program rows (1-7 steps) at K = 8 / 16 | 92.7-100 / within 0.7 | 96.2-100 / unchanged |
+| no-program rows (L = 0, 4,007 rows) at K = 8 / 16 | 84.0 / 82.1 | 85.0 / 83.6 |
+| best family gain at K = 16 (>= 50 rows) | +2.0 (table_lookup) | +2.0 (word_filter, order_chain) |
+| worst family at K = 16 | cipher_map -13.0 | seq_next -14.5 |
+| wrong at 8 but right at some K in 9..16 | 53 of 724 (7.3%) | 54 of 644 (8.4%) |
+| overthinking (right before 8, wrong at 8) | 130 rows, 1.91% | 113 rows, 1.66% |
+| control-token size, iteration 8 / iteration 1 | 3.9x | 3.4x |
+| mean settle round, number / string families | 3.09 / 1.69 (L + 1 = 2.51 / 1.15) | 3.33 / 1.74 (2.49 / 1.15) |
+
+Gates: **G1 opens** on both checkpoints, but only on its second clause (7.3% and 8.4% of the rows wrong at 8 are right at some later
+round); no family gains 3 points, and answering at 16 is net worse (-1.1 and -0.8). **G2 stays shut** (1.91% and 1.66%, mark 2%).
+**G3 stays shut** (3.9x and 3.4x, mark 10x; the size grows by a steady amount per round, no blow-up).
+
+What it means (suggested): every program question is already right by round 8 and extra rounds do nothing for it. B2 already spends
+more rounds on arithmetic (number families settle about 1.6 rounds later than string families), exactly because their programs are
+longer: the no-op is a working halting signal. The loss sits in the no-program families (rules and lookups), where the answer is not
+stable across rounds: rows flip right and wrong as rounds go on. So the one ALoDLM idea that fits is its supervision at every depth,
+to make the answer stable once the program is written, not a halting gate and not more loops. The test G1 opens is Test LR
+(PASS-MARKS.md addendum 5). Its upside is small: the late-right rows are 0.8% of in_dist and the overthinking rows 1.7-1.9%.

@@ -164,6 +164,46 @@ def test_bf16_states_without_autocast_and_queue_env():
     print('ok bf16_states_without_autocast_and_queue_env')
 
 
+def test_round_readout():
+    """Test LR (PASS-MARKS.md addendum 5): round_readout=0 is B2 (fingerprints); round_readout=1 adds no parameter and no key, keeps the init and the
+    answers, and adds exactly the final readout's losses taken after earlier iterations: the round-3 term equals the final losses of the same model
+    stopped after iteration 3, on rows whose program (L <= 2 steps) is written by then."""
+    from custom_io.models import progparse as pp
+    v = vocab()
+    gd, m0 = GOLD['SMALL'], seeded(SMALL, 0, v, copy=True, round_readout=0.0)
+    assert m0.n_params() == gd['params'] and len(m0.state_dict()) == gd['keys']
+    if data_ok():
+        loss, aux = m0.loss(batch_of(train_rows(48, 4), v))
+        assert abs(loss.item() - gd['loss']) < 1e-4 and 'rounds' not in aux
+    a, m = seeded(SMALL, 8, v, copy=True), seeded(SMALL, 8, v, copy=True, round_readout=1.0)
+    sa, sm = a.state_dict(), m.state_dict()
+    assert list(sa) == list(sm) and all(torch.equal(sa[k], sm[k]) for k in sa) and a.n_params() == m.n_params()
+    rows = train_rows(48, 4)
+    b = batch_of(rows, v)
+    la, xa = a.loss(b)
+    lm, xm = m.loss(b)
+    assert set(xm) == set(xa) | {'rounds'} and all(torch.allclose(xa[k], xm[k]) for k in xa)
+    assert float(xm['rounds']) > 0 and abs(lm.item() - (la.item() + float(xm['rounds']))) < 1e-4
+    a.eval(); m.eval()
+    assert a.generate(b) == m.generate(b)
+    # equivalence: round t = 3 vs the final readout of the same weights stopped after iteration 3
+    short = [r for r in train_rows(400, 11) if len(pp.row_targets(r)['prog']) <= 2][:40]
+    bs = batch_of(short, v)
+    g = m.gold(short, 'cpu')
+    o = m.run(bs, gold=g, rounds=True)
+    assert [t for t, *_ in o['rounds']] == [1, 2, 3, 4, 5, 6]
+    r3 = m.round_loss(dict(o, rounds=[x for x in o['rounds'] if x[0] == 3]), g, bs)
+    import types
+    m4 = seeded(SMALL, 8, v, copy=True)
+    m4.load_state_dict(m.state_dict())
+    m4.run = types.MethodType(lambda self, batch, gold=None, rounds=False, **kw: Ledger.run(self, batch, loops=4, gold=gold), m4)
+    _, x4 = m4.loss(bs)
+    want = sum(float(x4[k]) for k in ('mode', 'ans', 'word', 'gen'))
+    assert abs(r3.item() - want) < 1e-4, (r3.item(), want)
+    print(f'  round-3 term {r3.item():.5f} = final readout after iteration 3 {want:.5f}')
+    print('ok round_readout')
+
+
 def test_real_tokenizer_alignment():
     """With $CUSTOM_IO_EG2 and transformers >= 5.19: every char of 2000 training prompts lies inside the token it maps to; digits map to single-digit
     tokens; one real forward gives finite states of the right shape and zeros past each prompt."""

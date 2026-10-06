@@ -132,7 +132,11 @@ Per-run numbers: `custom_io/results/RESULTS-SCREEN.md` and `SCREEN-ANALYSIS.json
 4. **EmbeddingGemma 2 inside B2** (Ben, 1:10 PM ET 10-06; marks in PASS-MARKS.md addendum 4, `design/EG2-embedding.md`): EGE feeds
    EmbeddingGemma 2's per-token states into B2's character embedding (whole model 274.5M with it counted); EGT uses it only as a training
    teacher (ships at 3.3M). 2 seeds each, paired with the confirm's B2 seeds 200 and 201, queue 36 on the PC (untested).
-5. **Backlog: a "used" mark for spent numbers** (from the creative roadmap, section 6, PR #43): in C1, sleep on checked programs improved
+5. **Looped-LM ideas (Amazon's ALoDLM):** a no-training probe of the two saved B2 checkpoints (`design/LOOPS-probe.md`, gates fixed first)
+   found every program question right by round 8, the hidden state growing only 3-4x, and the loss in the no-program families, whose answers
+   drift across rounds (answering at 16 rounds costs about 1 point). Test LR (addendum 5, queue 37): a readout loss at every round after the
+   program is written, 2 seeds (untested).
+6. **Backlog: a "used" mark for spent numbers** (from the creative roadmap, section 6, PR #43): in C1, sleep on checked programs improved
    B2's first answers but not its bookkeeping. The share of rule-following tries stayed flat and B2 keeps reusing numbers it has already
    spent, because it never records which slots it has read. A learned per-slot "used" mark inside B2 is the suggested fix (untested).
 
