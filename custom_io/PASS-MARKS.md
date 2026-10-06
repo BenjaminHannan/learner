@@ -221,3 +221,17 @@ recipe. A pass goes to the 6-seed confirm at the same marks before anything is a
 window does nothing on these tests" (it can go at no cost); anything else -> "unclear".
 **Size rule** as in addendum 4: EGR is a 273.8M model, so a pass is a B2-internal result. **Read only:** EGR minus EGE (what the window adds on
 top of EmbeddingGemma), per-split changes, the family split, steps per second.
+
+## Addendum 7: EGO, EmbeddingGemma 2 as B2's whole reader (written 2026-10-06 about 20:10 UTC, 4:10 PM ET, before any EGO run)
+Ben (3:44 PM ET): EmbeddingGemma takes the question in, hands it to the thinker, the thinker thinks, the talker answers. **EGO**
+(`{"copy":true,"eg_embed":true,"reader_layers":0,"letters_in":false}`) is EGR with one change: the letters are no longer added to the reader's
+input. Each character position carries only its position, its place code and the projection of the EmbeddingGemma state of the word piece it sits
+in, so nothing B2 learned about letters reaches the thinker; EmbeddingGemma alone reads the question. The talker is unchanged: it still copies
+words and letters by position and spells with its letter table (the GEN readout is tied to that table, so it stays, as the talker's alphabet).
+Same parameters as EGR: trainable 2,843,985, whole 273,846,609 with EmbeddingGemma counted. Kept per character because the copy and spell
+paths point at characters; a word-piece-level thinker input would change the talker too (two changes), so it is not this arm.
+**Runs:** EGO_s200, EGO_s201, the B2 recipe on the same PC, paired with B2_s200 / B2_s201 of queue 33. Queue 36 now runs EGO, then EGR, then R0;
+EGE (addendum 4) moves to queue 38 with EGT.
+**Marks:** exactly addendum 6's EGR marks 1-5, its proved-wrong rule and its "better than B2" label, each seed against plain B2 on the same seed.
+**Read only:** EGO minus EGR (what B2's own letters add once EmbeddingGemma reads the question), per family, with the letter families
+(letter_ops, copy_word, cipher_map, digits_parity, group_induct) listed on their own: those are where losing the letters should show first (suggested).

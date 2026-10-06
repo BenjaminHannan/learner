@@ -52,8 +52,9 @@ class ConvBlock(nn.Module):
 
 
 class CharReader(nn.Module):
-    def __init__(self, n_vocab, d, layers=2, k=5):
+    def __init__(self, n_vocab, d, layers=2, k=5, letters=True):
         super().__init__()
+        self.letters = letters      # False (Ledger letters_in=False): the letter table is not added to the input (the talker still uses it as its alphabet)
         self.tok, self.pos, self.place = nn.Embedding(n_vocab, d), nn.Embedding(MAX_PROMPT, d), nn.Embedding(N_PLACE, d)
         self.blocks = nn.ModuleList(ConvBlock(d, k) for _ in range(layers))
         self.ln = nn.LayerNorm(d)
@@ -66,7 +67,10 @@ class CharReader(nn.Module):
     def forward(self, batch, extra=None):
         """-> X [B,T,d] (zeros at padding), mask [B,T] bool. extra [B,T,d] (Ledger eg_embed) is added to the input embedding, before the conv blocks."""
         ids, mask = batch['prompt_ids'], batch['prompt_mask']
-        x = self.tok(ids) + self.pos(torch.arange(ids.shape[1], device=ids.device)) + self.place(self.places(batch))
+        if self.letters:
+            x = self.tok(ids) + self.pos(torch.arange(ids.shape[1], device=ids.device)) + self.place(self.places(batch))
+        else:
+            x = self.pos(torch.arange(ids.shape[1], device=ids.device)) + self.place(self.places(batch))
         if extra is not None:
             x = x + extra
         x = x * mask[..., None]

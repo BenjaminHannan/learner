@@ -119,6 +119,35 @@ def test_no_window_arms():
     print('ok no_window_arms')
 
 
+def test_eg_only_reader():
+    """PASS-MARKS.md addendum 7, EGO (eg_embed, reader_layers=0, letters_in=False): the prompt's letter ids never reach the reader (changing them
+    leaves its output unchanged, while EGR's changes), the letter table still trains as the talker's alphabet, eg_proj gets a gradient, and the
+    size equals EGR's. letters_in=False without eg_embed is refused."""
+    v, rows = vocab(), train_rows(48, 4)
+    egr = seeded(SMALL, 5, v, copy=True, eg_embed=True, reader_layers=0)
+    ego = seeded(SMALL, 5, v, copy=True, eg_embed=True, reader_layers=0, letters_in=False)
+    assert ego.size() == egr.size() and ego.n_params() == egr.n_params()
+    assert seeded(S_CFG, 0, v, copy=True, eg_embed=True, reader_layers=0, letters_in=False).size() == dict(
+        trainable=2_843_985, discarded=0, frozen_borrowed=271_002_624, shipped_trainable=2_843_985, whole=273_846_609)
+    b = batch_of(rows, v)
+    with torch.no_grad():
+        for mm in (egr, ego):
+            mm.eg_proj.weight.normal_(0, 0.02)
+    n = ego.reader.tok.num_embeddings
+    b_rel = dict(b, prompt_ids=torch.where(b['prompt_mask'], (b['prompt_ids'] + 7) % n, b['prompt_ids']))
+    assert torch.equal(ego.read(b)[0], ego.read(b_rel)[0]), 'letters reached the EGO reader'
+    assert not torch.equal(egr.read(b)[0], egr.read(b_rel)[0])
+    loss, _ = ego.loss(b)
+    loss.backward()
+    assert ego.reader.tok.weight.grad.abs().sum() > 0 and ego.eg_proj.weight.grad.abs().sum() > 0
+    try:
+        Ledger(v, **SMALL, copy=True, letters_in=False)
+        raise AssertionError('letters_in=False without eg_embed was accepted')
+    except AssertionError as e:
+        assert 'needs eg_embed' in str(e), e
+    print('ok eg_only_reader')
+
+
 def test_teach_loss_and_never_at_eval():
     """eg_teach: keys = B2's + ln_mt + mt_head; B2 weights identical at the same seed; loss = B2 loss + w * meaning (B2 aux unchanged); answers equal
     B2's (the head never touches inference); the teacher embeds only the loss batch's prompts, never anything in generate / lesions / donor."""
@@ -175,10 +204,13 @@ def test_bf16_states_without_autocast_and_queue_env():
     m.eg().encode = lambda p, T, d, chars=True: (lambda r: (r[0].to(torch.bfloat16), r[1]))(f(p, T, d, chars))
     X, _ = m.read(batch_of(rows, v))
     assert X.dtype == torch.float32 and torch.isfinite(X).all()
-    q = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'queue_local', '36-pc-eg2.txt')
-    env = queue_env(q)
-    assert set(env) == {'PYTHONPATH', 'CUSTOM_IO_EG2'} and env['PYTHONPATH'].startswith('C:\\Users\\benja\\eg_site;'), env
-    assert [r[0] for r in parse_queue(q)] == ['EGE_s200', 'EGT_s200', 'EGE_s201', 'EGT_s201']
+    qd = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'queue_local')
+    for name, runs in (('36-pc-eg2.txt', ['EGO_s200', 'EGO_s201', 'EGR_s200', 'EGR_s201', 'R0_s200', 'R0_s201']),
+                       ('38-pc-eg-teacher.txt', ['EGE_s200', 'EGE_s201', 'EGT_s200', 'EGT_s201'])):
+        q = os.path.join(qd, name)
+        env = queue_env(q)
+        assert set(env) == {'PYTHONPATH', 'CUSTOM_IO_EG2'} and env['PYTHONPATH'].startswith('C:\\Users\\benja\\eg_site;'), env
+        assert [r[0] for r in parse_queue(q)] == runs, (name, [r[0] for r in parse_queue(q)])
     print('ok bf16_states_without_autocast_and_queue_env')
 
 

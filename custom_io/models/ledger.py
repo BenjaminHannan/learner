@@ -37,7 +37,10 @@ trainable, discarded and frozen-borrowed params and the whole-model size (borrow
 round_readout=w > 0 (PASS-MARKS.md addendum 5, Test LR; default 0 = exactly B2): in training only, after every iteration t with L + 1 <= t <= n_loops - 2
 (L = the row's gold program steps, so its program is written; the last iteration is the normal readout) the same talker heads read the state and get
 the final readout's losses (mode, answer pointer, word pointer / span, GEN with the copy path); each row's mean over its rounds is added with weight w.
-No new parameters; eval is unchanged."""
+No new parameters; eval is unchanged.
+letters_in=False (PASS-MARKS.md addendum 7, EGO; needs eg_embed; default True = B2): the reader's input is position + place code + the EmbeddingGemma
+term only, with no letter embedding, so with reader_layers=0 EmbeddingGemma alone reads the prompt for the thinker. The letter table stays: the talker
+uses it as its output alphabet (the GEN readout is tied to it). Same parameters as with letters_in=True."""
 import math
 import numpy as np
 import torch
@@ -118,13 +121,14 @@ class Ledger(Model):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap']
 
     def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, copy=False, span=False, span_max=12,
-                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0):
+                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True):
         super().__init__(vocab)
         self.d, self.n_loops, self.dk, self.w_noop, self.wpos, self.copy = d, n_loops, dk, w_noop, wpos, copy
         self.span, self.span_max = span, span_max
         self.eg_embed, self.eg_teach = bool(eg_embed), float(eg_teach)
         self.round_readout = float(round_readout)
-        self.reader = CharReader(len(vocab), d, reader_layers)
+        assert letters_in or eg_embed, 'letters_in=False needs eg_embed (the reader input would carry no content)'
+        self.reader = CharReader(len(vocab), d, reader_layers, letters=bool(letters_in))
         self.vcode = nn.Linear(93, d)
         self.stype, self.ordinal, self.op_emb, self.step_emb, self.src, self.ctrl = (
             nn.Embedding(n, d) for n in (3, N_NUM, len(OPS), n_loops, 2, N_CTRL))
