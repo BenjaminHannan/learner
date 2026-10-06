@@ -210,15 +210,19 @@ are both the 1.2B; nothing else writes training rows.
 Data actually built (PR #46, `/mnt/project-files/plan-b/data/MANIFEST.json`, read here):
 - TEACH `teach.jsonl`: 171,940 questions (148,694 passages) over all 60 kinds, no spares used. That's short of
   200,000; Ben said at 3:11 PM ET to use this data with no new teacher run.
-- The GEN arm therefore uses `gen_matched_171940.jsonl` (the first 171,940 GEN questions), so the arms are equal in
-  size, as section 6 requires. The 200,000-row `gen.jsonl` is not used for B1.
-- Answer types differ between arms. TEACH is 51% yes/no (87,807 of 171,940), GEN-matched is 11% (18,925). The eval
-  sets are about 12% yes/no (FRESH 11 of 96, R5 12 of 96, R6 10 of 96). Extra yes/no practice alone could move new-kind
-  scores by up to about 6 points.
+- Answer types differ in the full set. `teach.jsonl` is 51% yes/no (87,807 of 171,940), while round 6's generator is about
+  11%. The eval sets are about 12% yes/no (FRESH 11 of 96, R5 12 of 96, R6 10 of 96). Extra yes/no practice alone could
+  move new-kind scores by up to about 6 points.
+- **The student arms use the type-matched pair** that the custom reader/talker thread fixed in `custom_io/PASS-MARKS.md`
+  addendum 3, before any student trained: TEACH = `teach_clean.jsonl` (94,831: every short answer plus 5,349 yes and
+  5,349 no, after a yes/no support filter) and GEN = `gen_matched_94831.jsonl` (94,831 from round 6's generator: 84,456
+  short, 3,454 yes, 6,921 no). Both arms have the same size and nearly the same type mix (yes/no 11.3% vs 10.9%; counted
+  here), and unsupported yes/no items are gone from TEACH. That fixes the confound
+  better than a 171,940-row match would, so `teach.jsonl` and `gen_matched_171940.jsonl` are not used for B1. A request
+  from this thread at 5:15 PM ET to switch to them was withdrawn at 5:20 PM ET.
 
-Added rule, fixed now (it only tightens B1-a): B1-a is also scored on short-answer questions alone. If B1-a passes
-overall but the short-answer-only gap (TEACH minus GEN) is below +10, the verdict is NOT SHOWN (driven by yes/no),
-not PASS. Report per-kind and per-type scores for both arms.
-`teach_clean.jsonl` (94,831) and `gen_matched_94831.jsonl` are read-only extras if run; they don't change the verdict.
+Extra guard, fixed now (it only tightens B1-a): B1-a is also scored on short-answer questions alone. If B1-a passes
+overall but the short-answer-only gap (TEACH minus GEN) is below +10, the verdict is NOT SHOWN, not PASS. Report
+per-kind and per-type scores for both arms.
 
 Nothing here touches GOLD-PRIVATE, reserved or blind panels.
