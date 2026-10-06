@@ -298,6 +298,19 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   (P0's sampler; chosen on the warmed parent by reach@4 among temperatures that pass the sameness gate, with the grid
   widened whenever the choice lands on its edge), drop duplicates (commutative order merged) before running and top up, branch over the top 8 first
   steps. Variety is reported with and without branching, so the sampler's own variety stays visible.
+- **Used-number mask (adopted 10-06, disclosed test scaffolding):** every arm's tries, the temperature choice and the
+  floors use the level-4 mask from the ultracode thread (`creative/legal.py`, PR #45): B2's own op and pointer heads
+  pick every step, restricted to unused numbers and results, + - x /, exact division, and a stop after the last real
+  step. The mask never reads the target (tested), so it cannot aim. Why: on DEV half of all plain tries broke the rules
+  the same way, by reading in step 2 a number step 1 had already used, because nothing in B2 marks a slot as used; that
+  is bookkeeping, not the creative question. Shown on DEV (1,500 rung, T 0.21): luck 4.7% to 13.1% (s100) and 4.6% to
+  13.4% (s101), 10.5 legal programs per puzzle instead of 4.4, and own-target luck still 2.9x and 3.2x the twin target's,
+  which sits at the value-blind follower's rate, so the mask makes no hits itself. Under Ben's 09-26 Redirect rule this
+  is an allowed stand-in: disclosed test scaffolding that isolates the learned part being tested, never product work.
+  The product route is a learned "used" mark inside B2 (B2 thread, untested). Disclosure: chosen after DEV numbers; the
+  same sampler for every arm, so it favours none; T1 and T1b stayed sealed. Floors are recomputed under the same rules
+  (the follower is uniform over exact legal programs: 4.1% per try), and the plain sampler's legal share is reported
+  for every arm, so whether sleep teaches B2 the bookkeeping on its own stays visible.
 - **Checker (no answer key):** two independently written checkers. Allowed ops ADD, SUB, MUL, DIV only. Take the tree
   of steps that feeds the final answer slot: it uses each given number exactly once by slot id, never T's slot or a
   constant, and ends on T. Unresolved (checkers disagree, a replay doesn't reproduce, a crash) counts as no hit. Planted
@@ -330,6 +343,8 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   - G2 stopping: STOP-rule luck W - R >= +4.
   - G3 harm: skills pooled-5 drops by at most 2 points against the warmed parent, every parent.
   - F1 first try (added from GPT-6 Pro's reply): greedy solves on T1, W - N >= +5 and W - R >= +5, intervals above 0.
+    Scored on B2's plain greedy try, without the mask (what the thinker does alone); the masked first try is reported
+    beside it.
     It decides whether a PASS also turned search into first answers.
   - Lesion: tries sampled from a donor puzzle's prompt (its twin) and judged on the recipient's target must not score
     above the rules-only floor; otherwise the run is void. (loops:0 writes no steps, so its luck is 0 by construction;
@@ -466,3 +481,8 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   not a claim; T1 and T1b stayed sealed throughout. Separately, L1, L2, G0 and the PC gate moved from fixed points to
   ratios with an absolute guard, because +10 points would have failed blurt-3 and blurt-3r, the only replicated
   creative result we have. Warm-up rung chosen: 1,500 with the 4-visit cap.
+- **Used-number mask (10-06, ultracode thread, PR #45):** adopted for C1's tries as disclosed test scaffolding (Ben's
+  09-26 rule on stand-ins), with the floors recomputed under the same rules and F1 scored without it. Its own marks,
+  written before the s101 numbers, pass on both parents (masked luck 2.8x and 2.9x plain; own target 2.9x and 3.2x the
+  twin's; 10.5 and 10.6 legal programs). Pilot 2, already running on the Mac with the plain sampler, finishes as a
+  labelled comparison and is never pooled with masked arms.
