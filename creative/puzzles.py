@@ -271,3 +271,31 @@ def warmup3_rows(n, seed=0, avoid=None):
         out.append((make_row(f'mk:warm3:{len(out):04d}', tri, T, 'warm3'), rng.choice(vt[T])))
     assert len(out) == n
     return out
+
+
+def dream_rows(n, seed=0, avoid=None):
+    """n 'dreams' (fallback b of the warm-up): random rule-following 3-number programs, labelled with the value they make, on number sets that appear in
+    NO sealed split (practice, DEV, T1, T1b) nor in `avoid`. Target filters as C1 (1 <= v <= T_MAX, not a given number, not a constant, no 2-number shortcut is
+    NOT required: a dream is whatever the random program made). -> [(row, Try)], ids 'mk:dream:NNNN'."""
+    from creative.programs import run
+    if 'sets' not in _USED3:
+        sp = build_splits()
+        _USED3['sets'] = {tuple(sorted(r['nums'])) for k in SPLITS for r in sp[k]}
+    used = _USED3['sets'] | set(avoid or ())
+    rng = random.Random(_h('dream', seed))
+    sets = [t for t in sorted(itertools.combinations_with_replacement(POOL, 3), key=lambda s: _h('set3d', seed, s)) if t not in used]
+    out, i = [], 0
+    while len(out) < n:
+        tri = sets[i % len(sets)]
+        i += 1
+        pool, steps = list(range(3)), []
+        while len(pool) > 1:
+            a, b = rng.sample(pool, 2)
+            steps.append((rng.choice(ARITH), a, b))
+            pool = [x for x in pool if x not in (a, b)] + [R0 + len(steps) - 1]
+        t = Try.make(steps, pool[0])
+        vals, valid = run(list(tri), t)
+        v = vals[t.ans]
+        if valid[t.ans] and all(valid[R0 + k] for k in range(len(steps))) and 1 <= v <= T_MAX and v not in CONSTS and v not in tri:
+            out.append((make_row(f'mk:dream:{len(out):04d}', tri, v, 'dream'), t))
+    return out

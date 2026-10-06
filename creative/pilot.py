@@ -1,84 +1,172 @@
-"""DEV-only pilot of C1 (roadmap D7): warm-up, floors, gates, aim check and the PC learning-rate choice on ONE parent. No T1 / T1b / X is read.
-Steps: (0) raw parent: gates + aim check; (1) shared warm-up on 2-number solver puzzles (+ skills replay if given); (2) warmed parent: DEV temperature,
-signal and sameness gates, aim check, rules-only floors; (3) PC arm only: sleep on solver programs for practice puzzles over a (lr, updates) grid,
-read DEV luck / reach@4 / aim after each, pick the best. Writes out_dir/pilot.json (+ warmed.pt). Without --skills-train there is no replay, so warm-up
-harm on skills is NOT measured (reported as no_replay)."""
+"""DEV-only pilot of C1 (roadmap D7, as decided 10-06): one parent. Reads no T1 / T1b / X.
+  0. raw parent: skills score (warm-up harm baseline).
+  1. warm-up LADDER: every rung = the 1,500 two-number puzzles + N three-number solver puzzles (N in 1,500 / 3,000 / 6,000; number sets in no sealed split),
+     every record seen at most 4 times, skills replay on when given.
+     Fallbacks if the last rung fails (roadmap 10-06): (a) if the warmed parent does not reproduce its own warm-up puzzles (greedy < 90%), repeat the last rung with up to
+     16 visits per warm-up record (the 4-visit cap is for sleep records only); (b) if it fits but still fails DEV, add `dreams` (random rule-following 3-number
+     programs labelled with the value they make, on number sets in no sealed split); (c) otherwise stop and report. Hindsight relabelling is NOT a warm-up (arm H). After each rung: re-choose the temperature on DEV (highest reach@4 among temperatures
+     passing sameness; widen on a grid edge), run the signal + sameness gates at that temperature. The smallest rung that passes the signal gate wins; if
+     none does the pilot stops and says so (C1 stops with T1 sealed).
+  2. warmed parent: headroom (DEV luck, first try), skills score and harm against raw, aim check, floors.
+  3. PC arm only (solver programs for practice puzzles, <= 2 per puzzle, skills replay on): lr grid with the edge rule (widen x3 on an edge, <= 2 times),
+     update count at the 4-visit cap. At the re-chosen temperature: PC - N luck (gate: >= +10 points), PC's first-try gain, skills harm.
+Writes out_dir/pilot.json after every stage (and warmed.pt). Without --skills-train there is no replay: flagged `no_replay`, harm unmeasured."""
 import copy, json, os, random, time
 from creative import arms, puzzles, sampler, scoreboard, sleep
+from custom_io.data import load_rows
+from custom_io.evalx import CHAIN5, evaluate
+
+LADDER = (1500, 3000, 6000)
+LRS = (3e-4, 1e-3, 3e-3, 1e-2)
+TEMPS = (0.7, 1.0, 1.5, 2.0)
 
 
-def dev_report(model, vocab, dev, practice, device, tries, temps):
-    best, grid = scoreboard.tune_temperature(model, dev, vocab, device, temps, tries)
-    tr, raw = sampler.sample_tries(model, dev, vocab, device, tries, best)
-    nb, _ = sampler.sample_tries(model, dev, vocab, device, tries, best, branch=0)
-    ptr, _ = sampler.sample_tries(model, practice, vocab, device, tries, best)
-    gate = scoreboard.dev_gate(dev, tr, raw, nb, (practice, ptr))
-    sc = scoreboard.score_puzzles(dev, tr, raw, sampler.greedy_tries(model, dev, vocab, device))
-    sc.pop('per_puzzle')
-    return dict(temperature=best, temp_grid={str(k): v for k, v in grid.items()}, gate=gate, scoreboard=sc,
-                aim=scoreboard.aim_check(model, dev, vocab, device, tries, best))
+def skills_eval(model, skills_data, device, bs=128):
+    """Practised skills: exact % on the five chain families (pooled-5) of skills_data/dev/in_dist.jsonl, plus all of in_dist. None without data."""
+    if not skills_data:
+        return None
+    rows = load_rows(os.path.join(skills_data, 'dev', 'in_dist.jsonl'))
+    was = model.training
+    model.eval()
+    r5 = evaluate(model, [r for r in rows if r['family'] in CHAIN5], bs, device)
+    ra = evaluate(model, rows, bs, device)
+    model.train(was)
+    return dict(pooled5=r5['exact'] / 100, n5=r5['n'], in_dist=ra['exact'] / 100, n_in_dist=ra['n'])
 
 
-def pilot(ckpt, out_dir, data, device='cpu', skills_train=None, replay_n=4000, warm_n=1500, warm_updates=200, warm_lr=3e-4,
-          lrs=(3e-4, 1e-3, 3e-3, 1e-2), pc_updates=(120,), pc_per_puzzle=2, pc_puzzles=1024, tries=32, practice_limit=None, batch=64,
-          temps=(0.7, 1.0, 1.3, 1.6, 2.0), seed=0, log=print, reuse_warmed=False, warm3_n=0):
+def scored(model, dev, vocab, device, T, tries):
+    tr, raw = sampler.sample_tries(model, dev, vocab, device, tries, T)
+    s = scoreboard.score_puzzles(dev, tr, raw, sampler.greedy_tries(model, dev, vocab, device))
+    s.pop('per_puzzle')
+    return s, tr, raw
+
+
+def pilot(ckpt, out_dir, data, device='cpu', skills_train=None, skills_data=None, replay_n=None, ladder=LADDER, warm_n=1500, warm_lr=3e-4,
+          lrs=LRS, pc_per_puzzle=2, tries=32, practice_limit=None, batch=64, temps=TEMPS, seed=0, log=print, fallbacks=True, dreams_n=3000):
     os.makedirs(out_dir, exist_ok=True)
     t0 = time.time()
-    res = dict(ckpt=ckpt, seed=seed, no_replay=skills_train is None)
+    res = dict(ckpt=ckpt, seed=seed, no_replay=skills_train is None, ladder_rungs=[])
     save = lambda: json.dump(res, open(os.path.join(out_dir, 'pilot.json'), 'w'), indent=1)
-    model, vocab, meta = sleep.load_parent(ckpt, device)
-    model.eval()
+    raw_model, vocab, meta = sleep.load_parent(ckpt, device)
+    raw_model.eval()
     dev = puzzles.load_split(data, 'dev')
-    practice = puzzles.load_split(data, 'practice')[:practice_limit]
+    practice_all = puzzles.load_split(data, 'practice')
+    practice = practice_all[:practice_limit]
     res['floors'] = dict(rules_only_per_try=sum(puzzles.rules_only_floor(r['nums'], r['target']) for r in dev) / len(dev))
     replay = sleep.load_replay(skills_train, replay_n, seed) if skills_train else []
-    warmed_path = os.path.join(out_dir, 'warmed.pt')
-    if reuse_warmed and os.path.exists(warmed_path):
-        model, vocab, meta = sleep.load_parent(warmed_path, device)
-        model.eval()
-        res['reused_warmed'] = warmed_path
-    else:
-        log(dict(event='raw parent'))
-        res['raw'] = dev_report(model, vocab, dev, practice, device, tries, temps)
-        save()
-        log(dict(event='raw done', gate=res['raw']['gate']['verdict'], t=round(time.time() - t0)))
-        wu = [arms.record(r, t, 'WU', 0) for r, t in puzzles.warmup_rows(warm_n, seed, per_pair=3)]
-        wu += [arms.record(r, t, 'WU3', 0) for r, t in puzzles.warmup3_rows(warm3_n, seed)] if warm3_n else []     # --warm3: mixed 2+3-number warm-up
-        cfg = sleep.SleepCfg(updates=warm_updates, batch=batch, lr=warm_lr, warmup=20, seed=seed,
-                             max_visits=max(4, -(-warm_updates * (batch // 2 if replay else batch) // len(wu))))
-        out = sleep.sleep(model, wu, replay, vocab, cfg, device, log=log)
-        res['warmup'] = dict(n_records=len(wu), updates=out['updates'], loss_first=sum(out['loss'][:10]) / 10, loss_last=sum(out['loss'][-10:]) / 10,
-                             max_visits=cfg.max_visits, replay_rows=len(replay), n_three_number=warm3_n)
-        sleep.save_parent(model, meta['name'], meta['cfg'], vocab, warmed_path, step=(meta['step'] or 0) + warm_updates, warmup=True)
-        model.eval()
-        log(dict(event='warm-up done', **res['warmup'], t=round(time.time() - t0)))
-    res['warmed'] = dev_report(model, vocab, dev, practice, device, tries, temps)
+    res['replay_rows'] = len(replay)
+    res['skills_raw'] = skills_eval(raw_model, skills_data, device)
     save()
-    log(dict(event='warmed done', gate=res['warmed']['gate']['verdict'], t=round(time.time() - t0)))
+    log(dict(event='raw skills', skills=res['skills_raw'], t=round(time.time() - t0)))
+
+    def rung_run(N, dreams=0, visits=4, tag=''):
+        """One warm-up rung: 1,500 two-number puzzles + N three-number solver puzzles (+ dreams); <= `visits` visits per record. Returns (model, rung)."""
+        m = copy.deepcopy(raw_model)
+        wu = [arms.record(r, t, 'WU', 0) for r, t in puzzles.warmup_rows(warm_n, seed, per_pair=3)]
+        wu += [arms.record(r, t, 'WU3', 0) for r, t in puzzles.warmup3_rows(N, seed)]
+        wu += [arms.record(r, t, 'DREAM', 0) for r, t in puzzles.dream_rows(dreams, seed)] if dreams else []
+        updates = sleep.max_updates(len(wu), batch, bool(replay), visits)
+        cfg = sleep.SleepCfg(updates=updates, batch=batch, lr=warm_lr, warmup=20, seed=seed, max_visits=visits)
+        out = sleep.sleep(m, wu, replay, vocab, cfg, device, log=log)
+        m.eval()
+        T = scoreboard.choose_temperature(m, dev, vocab, device, temps, tries, seed, log=log)
+        rung = dict(warm3=N, dreams=dreams, max_visits=visits, tag=tag, n_records=len(wu), updates=out['updates'],
+                    loss_last=sum(out['loss'][-10:]) / 10, temperature=T)
+        if T['best'] is None:
+            rung['gate'] = 'no temperature passes the sameness gate'
+        else:
+            tr, raw = sampler.sample_tries(m, dev, vocab, device, tries, T['best'])
+            nb, _ = sampler.sample_tries(m, dev, vocab, device, tries, T['best'], branch=0)
+            ptr, _ = sampler.sample_tries(m, practice, vocab, device, tries, T['best'])
+            rung['gate'] = scoreboard.dev_gate(dev, tr, raw, nb, (practice, ptr))
+        res['ladder_rungs'].append(rung)
+        save()
+        g = rung['gate']
+        log(dict(event='rung', warm3=N, dreams=dreams, visits=visits, verdict=g if isinstance(g, str) else g['verdict'], t=round(time.time() - t0)))
+        return m, rung
+
+    def passes(rung):
+        return not isinstance(rung['gate'], str) and rung['gate']['signal_ok']
+
+    def fits_own_warmup(m, n=256):
+        """Fallback (a): does the warmed parent reproduce its own warm-up puzzles? Greedy first try on a sample of the 3-number warm-up puzzles (T from the pilot, not used)."""
+        w = [r for r, _ in puzzles.warmup3_rows(max(ladder), seed)][:n]
+        gr = sampler.greedy_tries(m, w, vocab, device)
+        return sum(scoreboard.judge_try(r, g) == 'accept' for r, g in zip(w, gr)) / len(w)
+
+    warmed, chosen = None, None
+    for N in ladder:
+        m, rung = rung_run(N)
+        if passes(rung):
+            warmed, chosen = m, rung
+            break
+    if warmed is None and fallbacks:
+        fit = fits_own_warmup(m)                                   # m = the last rung's model (N = ladder[-1])
+        res['fallback_a_fit_own_warmup_greedy'] = fit
+        save()
+        log(dict(event='fallback a: fit on own warm-up puzzles', greedy_accepted=fit))
+        if fit < 0.9:                                              # (a) it does not fit: up to 16 visits per warm-up record
+            m, rung = rung_run(ladder[-1], 0, 16, 'fallback a: 16 visits')
+            if passes(rung):
+                warmed, chosen = m, rung
+            else:
+                fit = fits_own_warmup(m)
+                res['fallback_a_fit_after_16_visits'] = fit
+        if warmed is None and fit >= 0.9:                          # (b) it fits but fails DEV: dreams
+            m, rung = rung_run(ladder[-1], dreams_n, 4 if fit >= 0.9 else 16, 'fallback b: dreams')
+            if passes(rung):
+                warmed, chosen = m, rung
+    if warmed is None:
+        res['result'] = 'LADDER FAILED: no rung passed the signal gate (including fallbacks a and b); C1 stops with T1 sealed. Send the numbers to the coordinator.'
+        res['wall_s'] = time.time() - t0
+        save()
+        return res
+    N, T = chosen['warm3'], chosen['temperature']['best']
+    sleep.save_parent(warmed, meta['name'], meta['cfg'], vocab, os.path.join(out_dir, 'warmed.pt'), step=(meta['step'] or 0) + chosen['updates'], warmup=True, warm3=N)
+    s0, _, _ = scored(warmed, dev, vocab, device, T, tries)
+    res['warmed'] = dict(warm3=N, temperature=T, gate=chosen['gate'], headroom=dict(dev_luck=s0['luck'], dev_first_try=s0['first_try'], dev_reach4=s0['reach4']),
+                         scoreboard=s0, aim=scoreboard.aim_check(warmed, dev, vocab, device, tries, T), skills=skills_eval(warmed, skills_data, device))
+    if res['skills_raw'] and res['warmed']['skills']:
+        res['warmed']['harm_pooled5_points'] = 100 * (res['skills_raw']['pooled5'] - res['warmed']['skills']['pooled5'])
+    save()
+    log(dict(event='warmed', warm3=N, T=T, **res['warmed']['headroom'], t=round(time.time() - t0)))
 
     rng = random.Random(seed)
-    rows = puzzles.load_split(data, 'practice')[:pc_puzzles]          # the full practice split, whatever practice_limit says
-    pc = [arms.record(r, t, 'PC', k) for r in rows for k, t in enumerate(puzzles.solver_records(r, pc_per_puzzle, rng))]
-    res['pc_grid'], temp = [], res['warmed']['temperature']
-    for upd in pc_updates:
-        cap = sleep.max_updates(len(pc), batch, bool(replay), 4)
-        upd = min(upd, cap)                                           # the 4-visit cap, whatever the grid asked for
-        for lr in lrs:
-            m = copy.deepcopy(model)
-            c = sleep.SleepCfg(updates=upd, batch=batch, lr=lr, warmup=20, seed=seed)
-            so = sleep.sleep(m, pc, replay, vocab, c, device)
-            m.eval()
-            tr, raw = sampler.sample_tries(m, dev, vocab, device, tries, temp)
-            sc = scoreboard.score_puzzles(dev, tr, raw, sampler.greedy_tries(m, dev, vocab, device))
-            aim = scoreboard.aim_check(m, dev, vocab, device, tries, temp)
-            row = dict(updates=upd, lr=lr, n_records=len(pc), dev_luck=sc['luck'], dev_reach4=sc['reach4'], dev_reach32=sc['reach32'],
-                       dev_first_try=sc['first_try'], dev_aim=sc['aim'], own_minus_rules_luck=aim['own_minus_rules_luck'],
-                       loss_last=sum(so['loss'][-10:]) / 10)
-            res['pc_grid'].append(row)
-            save()
-            log(dict(event='pc', **row, t=round(time.time() - t0)))
-    best = max(res['pc_grid'], key=lambda r: (r['dev_luck'], r['dev_reach4']))
-    res['pc_choice'] = dict(lr=best['lr'], updates=best['updates'], note='chosen on DEV with the PC arm only; freeze before any T1 run')
+    pc = [arms.record(r, t, 'PC', k) for r in practice_all for k, t in enumerate(puzzles.solver_records(r, pc_per_puzzle, rng))]
+    upd = sleep.max_updates(len(pc), batch, bool(replay), 4)
+    grid, rows_, widen = list(lrs), {}, 0
+
+    def run_lr(lr):
+        if lr in rows_:
+            return
+        m = copy.deepcopy(warmed)
+        so = sleep.sleep(m, pc, replay, vocab, sleep.SleepCfg(updates=upd, batch=batch, lr=lr, warmup=20, seed=seed), device)
+        m.eval()
+        sc, _, _ = scored(m, dev, vocab, device, T, tries)
+        rows_[lr] = dict(lr=lr, updates=upd, n_records=len(pc), dev_luck=sc['luck'], dev_reach4=sc['reach4'], dev_reach32=sc['reach32'],
+                         dev_first_try=sc['first_try'], dev_aim=sc['aim'], luck_gain=100 * (sc['luck'] - s0['luck']), first_try_gain=100 * (sc['first_try'] - s0['first_try']),
+                         loss_last=sum(so['loss'][-10:]) / 10, skills=skills_eval(m, skills_data, device))
+        res['pc_grid'] = [rows_[k] for k in sorted(rows_)]
+        save()
+        log(dict(event='pc', **{k: v for k, v in rows_[lr].items() if k != 'skills'}, t=round(time.time() - t0)))
+
+    for lr in grid:
+        run_lr(lr)
+    while widen < 2:
+        best = max(rows_, key=lambda k: (rows_[k]['dev_luck'], rows_[k]['dev_reach4']))
+        if best not in (min(rows_), max(rows_)):
+            break
+        widen += 1
+        run_lr(best * 3 if best == max(rows_) else best / 3)
+    best = max(rows_, key=lambda k: (rows_[k]['dev_luck'], rows_[k]['dev_reach4']))
+    b = rows_[best]
+    res['pc_choice'] = dict(lr=best, updates=upd, widened=widen, on_edge=best in (min(rows_), max(rows_)),
+                            note='chosen on DEV with the PC arm only; freeze before any T1 run')
+    res['pc_gate'] = dict(pc_minus_n_luck_points=b['luck_gain'], first_try_gain_points=b['first_try_gain'], needed_points=10.0, passes=b['luck_gain'] >= 10,
+                          temperature=T, with_replay=bool(replay))
+    if res['skills_raw'] and b['skills']:
+        res['pc_gate']['harm_pooled5_points_vs_warmed'] = 100 * (res['warmed']['skills']['pooled5'] - b['skills']['pooled5']) if res['warmed']['skills'] else None
     res['wall_s'] = time.time() - t0
-    json.dump(res, open(os.path.join(out_dir, 'pilot.json'), 'w'), indent=1)
+    save()
+    log(dict(event='done', pc_gate=res['pc_gate'], wall_s=round(res['wall_s'])))
     return res

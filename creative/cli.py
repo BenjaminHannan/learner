@@ -6,7 +6,8 @@
                   variety with and without branching, and the aim check (own vs twin vs value-blind rule follower)
   aim --ckpt PATH --temperature T          the aim check alone (run it on W after sleep too)
   score --ckpt PATH --split x              the scoreboard on any split (X = correct-solution variety, report only)
-  pilot --ckpt PATH --out DIR [--skills-train train.jsonl]   DEV-only pilot: warm-up, gates, aim check, PC lr choice (reads no T1/T1b/X)
+  pilot --ckpt PATH --out DIR --skills-train WORK/data/train.jsonl --skills-data WORK/data_big   DEV-only pilot: warm-up ladder, re-chosen temperature,
+                  gates, aim check, PC lr choice and PC gate with skills replay (reads no T1/T1b/X)
   lesions --ckpt PATH --temperature T      donor lesion (must not beat the rules-only floor) and loops:0 (reported) on a slept checkpoint"""
 import argparse, json, os, sys
 from creative import puzzles
@@ -28,12 +29,11 @@ def main(argv=None):
     ap.add_argument('--uniform-samples', type=int, default=3000)
     ap.add_argument('--limit', type=int)
     ap.add_argument('--practice-limit', type=int)
-    ap.add_argument('--warm-n', type=int, default=1500)
-    ap.add_argument('--warm-updates', type=int, default=200)
-    ap.add_argument('--pc-updates', default='120')
     ap.add_argument('--lrs', default='3e-4,1e-3,3e-3,1e-2')
-    ap.add_argument('--warm3', type=int, default=0, help='pilot: add N 3-number solver puzzles (number sets in no sealed split) to the warm-up')
-    ap.add_argument('--reuse-warmed', action='store_true', help='pilot: skip raw + warm-up, reuse OUT/warmed.pt')
+    ap.add_argument('--ladder', default='1500,3000,6000', help='pilot: warm-up 3-number puzzle counts, smallest passing the signal gate wins')
+    ap.add_argument('--no-fallbacks', action='store_true', help='pilot: skip fallbacks a (16 visits) and b (dreams)')
+    ap.add_argument('--dreams', type=int, default=3000)
+    ap.add_argument('--skills-data', help='pilot: custom_io data dir with dev/in_dist.jsonl (use WORK/data_big) for the skills score / warm-up harm')
     ap.add_argument('--skills-train', help='skills train.jsonl for replay (pilot); without it warm-up harm is not measured')
     a = ap.parse_args(argv)
     if a.cmd == 'build-splits':
@@ -41,8 +41,9 @@ def main(argv=None):
         return
     if a.cmd == 'pilot':
         from creative import pilot
-        pilot.pilot(a.ckpt, a.out, a.data, a.device, a.skills_train, warm_n=a.warm_n, warm_updates=a.warm_updates,
-                    pc_updates=tuple(int(x) for x in a.pc_updates.split(',')), lrs=tuple(float(x) for x in a.lrs.split(',')), tries=a.tries, practice_limit=a.practice_limit, reuse_warmed=a.reuse_warmed, warm3_n=a.warm3, log=lambda d: print(json.dumps(d), flush=True))
+        pilot.pilot(a.ckpt, a.out, a.data, a.device, a.skills_train, a.skills_data, ladder=tuple(int(x) for x in a.ladder.split(',')),
+                    lrs=tuple(float(x) for x in a.lrs.split(',')), tries=a.tries, practice_limit=a.practice_limit, fallbacks=not a.no_fallbacks, dreams_n=a.dreams,
+                    log=lambda d: print(json.dumps(d), flush=True))
         return
     rows = puzzles.load_split(a.data, a.split)[:a.limit]
     if a.cmd == 'floors':

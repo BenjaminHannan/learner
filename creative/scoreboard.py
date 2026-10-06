@@ -105,16 +105,44 @@ def dev_gate(rows, tries, raw=None, nobranch=None, practice=None):
     return out
 
 
-def tune_temperature(model, rows, vocab, device, grid=(0.7, 1.0, 1.3, 1.6, 2.0), n_tries=32, seed=0):
-    """Choose the sampling temperature on DEV only: highest reach@4 (the reach mark), ties to more distinct rule-following programs. Frozen afterwards.
-    -> (best, {temperature: (reach32, distinct)})."""
+def choose_temperature(model, rows, vocab, device, grid=(0.7, 1.0, 1.5, 2.0), n_tries=32, seed=0, max_widen=3, log=None):
+    """Choose the sampling temperature on DEV only (roadmap section 6, 10-06): the highest reach@4, only among temperatures that pass the sameness gate
+    (>= 4 distinct rule-following programs per puzzle). If the choice lands on a grid edge, widen the grid there (x1.5 up / /1.5 down, rounded) and choose
+    again, up to max_widen times. None eligible -> best = None. Frozen afterwards.
+    -> dict(best, evaluated {T: dict(reach4, reach32, distinct_rules, rules_share, eligible)}, widened, edge_note)."""
     from creative.sampler import sample_tries
-    res = {}
+    ev = {}
+
+    def evaluate(T):
+        if T not in ev:
+            tr, raw = sample_tries(model, rows, vocab, device, n_tries=n_tries, temperature=T, seed=seed)
+            s = score_puzzles(rows, tr, raw)
+            ev[T] = dict(reach4=s['reach4'], reach32=s['reach32'], distinct_rules=s['distinct_rules'], rules_share=s['rules_share'],
+                         eligible=s['distinct_rules'] >= SAMENESS_MIN)
+            if log:
+                log(dict(event='temperature', T=T, **ev[T]))
+    pick = lambda: max((T for T in ev if ev[T]['eligible']), key=lambda T: (ev[T]['reach4'], ev[T]['distinct_rules']), default=None)
     for T in grid:
-        tr, raw = sample_tries(model, rows, vocab, device, n_tries=n_tries, temperature=T, seed=seed)
-        s = score_puzzles(rows, tr, raw)
-        res[T] = (s['reach4'], s['distinct_rules'])
-    return max(res, key=lambda T: res[T]), res
+        evaluate(T)
+    widened, note = 0, None
+    while widened < max_widen:
+        best = pick()
+        lo, hi = min(ev), max(ev)
+        if best is None or best not in (lo, hi):
+            break
+        widened += 1
+        evaluate(round(hi * 1.5, 2) if best == hi else round(lo / 1.5, 2))
+    best = pick()
+    if best is not None and best in (min(ev), max(ev)):
+        note = 'best temperature is still on the grid edge after widening'
+    return dict(best=best, evaluated={str(k): v for k, v in sorted(ev.items())}, widened=widened, edge_note=note)
+
+
+def tune_temperature(model, rows, vocab, device, grid=(0.7, 1.0, 1.5, 2.0), n_tries=32, seed=0):
+    """Compat wrapper: (best, {T: (reach4, distinct_rules)}). best falls back to the grid's best reach@4 when no temperature passes sameness."""
+    r = choose_temperature(model, rows, vocab, device, grid, n_tries, seed)
+    grid_ = {float(k): (v['reach4'], v['distinct_rules']) for k, v in r['evaluated'].items()}
+    return (r['best'] if r['best'] is not None else max(grid_, key=lambda T: grid_[T])), grid_
 
 
 def lesions(model, rows, vocab, device, n_tries=32, temperature=1.0, seed=0):
