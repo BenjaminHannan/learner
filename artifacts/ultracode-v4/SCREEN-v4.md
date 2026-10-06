@@ -392,3 +392,22 @@ CRDC plus `--quiet-notes` (each of the exit's 8 vectors rescaled to one learnabl
 - So suggested, not shown: the wide doors still help the main model on top of the plan route, and a fresh 2048-wide reader hurts the planner in its one 17,000-row pass. The clean test (doors on the main model only, planner kept at 32) is not queued, because the bench is parked and it does not answer a question about B2.
 - **The thinker carries more of each question with the wide doors:** the family-mean lesion costs 10-30 rows of fit (mean 21.2) against 0-15 (mean 6.0) for CRDC. That is still under the 32-row bar on every seed. plan_swap still takes chain held to 2 on every seed.
 - All rc 0. Planner pretraining took 99-101 minutes per run with three on one GPU (CRDC: 9-32).
+
+## T1 result, 6 seeds (jobs 56-t1-s4..s9 on Vast boxes E, F and G, read 06:12 UTC Oct 6) — the main model's lr decay HURTS
+CRDC plus `--lr-final-mult 0`: the main model's lr follows a cosine from 1e-3 to 0 over the 6,000 updates. The lr itself is not logged. The flag is in every job file, and the code applies it per update (`skills_pretrain_v1.py:918`). The planner is unaffected and comes out identical to CRDC's on every seed (same final pretraining loss, same plan_correct), so every difference below comes from the main model's training. All rc 0.
+
+| seed | CRDC held | T1 held | gain | CRDC other-4 held | T1 other-4 held | gain | chain held CRDC / T1 | CRDC fit | T1 fit | family-mean lesion, fit rows (CRDC / T1) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 4 | 297 | 276 | -21 | 138 | 119 | -19 | 159 / 157 | 303 | 296 | 0 / -15 |
+| 5 | 277 | 273 | -4 | 125 | 120 | -5 | 152 / 153 | 284 | 273 | -6 / -13 |
+| 6 | 291 | 271 | -20 | 135 | 115 | -20 | 156 / 156 | 298 | 281 | 0 / -3 |
+| 7 | 289 | 281 | -8 | 133 | 124 | -9 | 156 / 157 | 309 | 284 | -15 / -6 |
+| 8 | 287 | 279 | -8 | 130 | 124 | -6 | 157 / 155 | 295 | 285 | -3 / -7 |
+| 9 | 281 | 277 | -4 | 123 | 119 | -4 | 158 / 158 | 295 | 278 | -12 / +3 |
+| mean | 287.0 | **276.2** | **-10.8** | 130.7 | **120.2** | **-10.5** | 156.3 / 156.0 | 297.3 | 282.8 | -6.0 / -6.8 |
+
+- **Helps** (other-4 held >= 136.7 and ahead on >= 5 of 6): **no**. **Wrong** (gain < +2 or ahead on <= 3 of 6): **hit**. It actually hurts: behind on all 6 seeds on other-4 held, total held and fit. The audit's prediction (+3 to +8) was wrong.
+- By family (held, of 40, 6-seed mean): seq_cycle loses most (28.7 -> 23.2), then fewshot_number_rule (32.0 -> 29.8) and group_induct (36.2 -> 34.2). cipher_map 33.8 -> 33.0; the chain kinds are level.
+- The final training CE is about the same (CRDC4 0.043, T1L4 0.049), but fit on the 4 other kinds falls 155.8 -> 141.2.
+- Suggested, untested: unlike the planner (17,000 fresh rows from scratch, where the decay gave +23 rows), this run is short fine-tuning that is still learning at 6,000 updates. Turning the lr down for the second half costs learning rather than steadying the end point.
+- For B2 (cosine to 10% already, `custom_io/train.py:11`): this gives no reason to change its floor.
