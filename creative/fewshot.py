@@ -325,6 +325,47 @@ def dev_gate(rows, tries, floors, raw=None):
                 distinct_rules=s['distinct_rules'], unresolved=s['unresolved'])
 
 
+def score_samples(rows, samples, ks=(4, 32)):
+    """C2 scoring over independent plain samples WITH repeats, in sampling order (roadmap sec. 7). samples[i] = the n samples for row i (TryRec, order kept).
+    luck = accepted share of all samples (repeats counted); reach@k = share of questions with an accepted sample among the FIRST k drawn; variety (distinct accepted
+    programs, distinct rule-following programs) is reported for variety only. key_luck is reported, never selected on."""
+    tot = Counter()
+    per = []
+    for row, tr in zip(rows, samples):
+        p = parse(row['prompt'])
+        vs = [verdict(p, r.t) for r in tr]
+        acc = [v[0] == 'accept' for v in vs]
+        keyed = [a and str(v[2]) in row['accepted'] for a, v in zip(acc, vs)]
+        rk = {result_key(r.t, run(p['nums'], r.t)[1]) for r in tr if structure(p, r.t)[0]}
+        ak = {result_key(r.t, run(p['nums'], r.t)[1]) for r, a in zip(tr, acc) if a}
+        d = dict(id=row['id'], m=len(acc), c=sum(acc), distinct_rules=len(rk), distinct_accepted=len(ak), key_c=sum(keyed))
+        for k in ks:
+            d[f'reach{k}'] = float(any(acc[:k]))
+        per.append(d)
+        tot.update(n=len(acc), acc=sum(acc), keyed=sum(keyed), unres=sum(v[0] == 'unresolved' for v in vs))
+    n = max(len(rows), 1)
+    out = dict(n_questions=len(rows), n_samples=tot['n'], luck=tot['acc'] / max(tot['n'], 1), key_luck=tot['keyed'] / max(tot['n'], 1),
+               unresolved=tot['unres'] / max(tot['n'], 1), distinct_rules=sum(d['distinct_rules'] for d in per) / n,
+               distinct_accepted=sum(d['distinct_accepted'] for d in per) / n, per_question=per)
+    for k in ks:
+        out[f'reach{k}'] = sum(d[f'reach{k}'] for d in per) / n
+    return out
+
+
+def dev_gate_samples(rows, samples, floors):
+    """C2 DEV gate over plain samples with repeats: reach@32 >= 10% AND >= 3x the value-blind floor (mean of 1-(1-p)^32), sameness >= 4 distinct rule-following
+    programs per question. No mask."""
+    s = score_samples(rows, samples)
+    f = lambda k: sum(1 - (1 - p) ** k for p in floors) / len(floors)
+    floor32, floor4 = f(32), f(4)
+    cold = s['reach32'] >= GATE_REACH32_MIN and s['reach32'] >= GATE_FLOOR_MULT * floor32
+    same = s['distinct_rules'] >= GATE_SAMENESS_MIN
+    v = 'pass' if cold and same else ('stop: cold start and sameness' if not cold and not same else
+                                       'stop: cold start (stepping stones first)' if not cold else 'stop: sameness (C3b first)')
+    return dict(cold_start_ok=cold, sameness_ok=same, verdict=v, reach32=s['reach32'], floor_reach32=floor32, reach4=s['reach4'], floor_reach4=floor4,
+                luck=s['luck'], distinct_rules=s['distinct_rules'], distinct_accepted=s['distinct_accepted'], unresolved=s['unresolved'], n_samples=s['n_samples'])
+
+
 # ---- comparison nets' labelled data ----
 def labelled_sets(pool_rows, ks=(0, 8, 32, 128), seed=0):
     """Nested sets of k labelled examples (k in ks) drawn from a held-out-kind pool disjoint from the test questions: the plain nets' side of
