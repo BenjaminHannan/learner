@@ -261,7 +261,7 @@ def test_bf16_states_without_autocast_and_queue_env():
     X, _ = m.read(batch_of(rows, v))
     assert X.dtype == torch.float32 and torch.isfinite(X).all()
     qd = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'queue_local')
-    for name, runs in (('36-pc-eg2.txt', ['EGM_s200', 'EGM_s201', 'EGO_s200', 'EGO_s201']),
+    for name, runs in (('36-pc-eg2.txt', []),
                        ('38-pc-eg-teacher.txt', ['EGR_s200', 'EGR_s201', 'R0_s200', 'R0_s201', 'EGE_s200', 'EGE_s201', 'EGT_s200', 'EGT_s201'])):
         q = os.path.join(qd, name)
         env = queue_env(q)
@@ -271,8 +271,8 @@ def test_bf16_states_without_autocast_and_queue_env():
 
 
 def test_egw_box_jobs():
-    """Addendum 10: each rented box trains EGW and plain B2 (B2V) on one seed, with queue 33's B2 flags exactly (only the name and the cfg differ),
-    and the box script passes the env that fetches and checks EmbeddingGemma."""
+    """Addenda 10-11: each rented box trains EGW, EGM, EGO and plain B2 (B2V) on one seed, with queue 33's B2 flags exactly (only the name and the
+    cfg differ), and the box script passes the env that fetches and checks EmbeddingGemma."""
     import shlex
     from custom_io.analyze_eg import ARMS
     from custom_io.local_runner import parse_queue
@@ -282,15 +282,19 @@ def test_egw_box_jobs():
     cfg = lambda args: json.loads(args[args.index('--cfg') + 1])
     for sub, seed in (('egwA', 200), ('egwB', 201)):
         d = os.path.join(here, 'queue', sub)
-        (job,) = [f for f in os.listdir(d) if f.endswith('.sh')]
-        text = open(os.path.join(d, job)).read()
-        assert '--env "TFVER=5.19.0 EG=1 MAXH=7.5' in text and '# MEM 20000' in text
-        runs = {sh[1]: sh[2:] for sh in (shlex.split(ln) for ln in text.splitlines() if ln.startswith('run '))}
-        assert sorted(runs) == [f'B2V_s{seed}', f'EGW_s{seed}'], runs.keys()
+        jobs = sorted(f for f in os.listdir(d) if f.endswith('.sh'))
+        assert len(jobs) == 2, jobs
+        texts = [open(os.path.join(d, j)).read() for j in jobs]
+        assert '--env "TFVER=5.19.0 EG=1 MAXH=7.5' in texts[0] and '# MEM 20000' in texts[0] and '# MEM 12000' in texts[1], jobs
+        runs = {sh[1]: sh[2:] for t in texts for sh in (shlex.split(ln) for ln in t.splitlines() if ln.startswith('run '))}
+        assert sorted(runs) == [f'B2V_s{seed}', f'EGM_s{seed}', f'EGO_s{seed}', f'EGW_s{seed}'], runs.keys()
         base = [x for x in q33[f'B2_s{seed}']]
         for name, args in runs.items():
-            assert args[-1] == '&' and flags(args[:-1]) == flags(base), (name, args)
-        assert cfg(runs[f'EGW_s{seed}']) == ARMS['EGW'] and cfg(runs[f'B2V_s{seed}']) == {'copy': True} == cfg(base)
+            args = args[:-1] if args[-1] == '&' else args
+            assert flags(args) == flags(base), (name, args)
+        for arm in ('EGW', 'EGM', 'EGO'):
+            assert cfg(runs[f'{arm}_s{seed}']) == ARMS[arm], arm
+        assert cfg(runs[f'B2V_s{seed}']) == {'copy': True} == cfg(base)
     print('ok egw_box_jobs')
 
 

@@ -274,3 +274,15 @@ are unchanged; the choice already compares each arm's pooled-5 change against it
 seed, the EGW result is reported as "machine-sensitive", and EGW is not picked over a passing PC arm until it is re-run on the PC.
 **Cost cap:** each box stops itself after 7.5 h (about $3.75 at $0.49-0.50 an hour with its disk), under the $4 a job standing cap, and both
 together leave the Vast credit (8.77 dollars before renting) above the 1 dollar floor.
+
+## Addendum 11: EGM and EGO join EGW on the rented boxes (written 2026-10-06 about 21:10 UTC, 5:10 PM ET, before any EGW, EGM or EGO result)
+On the 5090s EGW trains at about 3 updates/s (4x the PC), so each box finishes EGW and B2V in about 2.5 h. On the PC, EGM_s200 alone holds
+13.6 GB, so queue 36 ran one run at a time (2.4 h each, done about 2:20 AM ET) and held queues 35, 37 and 38 behind it. So EGM and EGO move to
+the boxes too, by seed: **box A trains EGW_s200, B2V_s200, EGM_s200 and EGO_s200; box B the same for seed 201** (custom_io/queue/egwA,
+egwB), same recipe and flags. The PC's EGM_s200 is stopped at under 40% of its updates; nothing from it is scored. Queue 36 is retired and the
+PC goes straight on to queues 35, 37 and 38.
+**Base:** unchanged rule (plain B2 of the same seed on the same machine): every EmbeddingGemma reader arm for seed 200 is judged against B2V_s200
+on box A, and seed 201 against B2V_s201 on box B. EGR, R0, EGE and EGT (queue 38, PC) stay against queue 33's B2.
+**Choice (addendum 9) and the device check (addendum 10):** EGW, EGM and EGO now share machines seed by seed, so the choice between them is a
+same-machine comparison. The addendum 10 exclusion applies only when the passing arms were judged on different machines.
+**Cost:** the boxes stay up about 1.5 h longer (about $1.50 more in all); the 7.5 h self-stop is unchanged.

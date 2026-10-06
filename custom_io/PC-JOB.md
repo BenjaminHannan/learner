@@ -75,6 +75,8 @@ python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queu
 Push the results as in section 4 (no checkpoint.pt). Each run takes a few hours on the 5070 Ti.
 
 ## 6. The reader runs: EmbeddingGemma 2 as the reader, and B2 without its window (queue 36, BEFORE queue 35 since 10-06 4 PM ET)
+**RETIRED 5:10 PM ET 10-06 (PASS-MARKS.md addendum 11): do not launch queue 36.** EGW, EGM and EGO all train on two rented 5090s
+(custom_io/queue/egwA, egwB), each against plain B2 trained on the same box; the PC goes on to queues 35, 37 and 38. The text below is the record.
 Marks: PASS-MARKS.md addenda 8 (EGM) and 7 (EGO). EGW (addendum 9) does not run here any more: at 0.75 updates/s and 16 GB it would hold the
 card for about 18 h, so it runs on two rented 5090s with its own plain B2 there (addendum 10; custom_io/queue/egwA, egwB). They need the `eg_adapter` and `letters_in` switches (on the branch since
 4:30 PM ET 10-06), so re-stage first. Since then the runner keeps one frozen code copy per queue AND code version
@@ -101,7 +103,7 @@ python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queu
 ```
 with stdout to `C:\Users\benja\custom-io\work\q36.log`; its first line must show `queue env: {...}` with both variables. Four runs
 (EGM and EGO, seeds 200 and 201), paired with queue 33's B2_s200 and B2_s201 on this PC. EGR, R0, EGE and EGT are in queue 38 (section 8). Push the results as in section 4 (no
-checkpoint.pt); the analysis is `python -m custom_io.analyze_eg --results custom_io/results/33-pc-confirm-b2 custom_io/results/36-pc-eg2 custom_io/results/40-egw-s200 custom_io/results/41-egw-s201`
+checkpoint.pt); the analysis is `python -m custom_io.analyze_eg --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-egw-s200 custom_io/results/41-egw-s201 custom_io/results/42-eg-s200 custom_io/results/43-eg-s201`
 (the last two come from the rented boxes; each arm is paired with plain B2 of the same machine).
 
 ## 7. Test LR, a readout loss at every round (queue 37, after queue 36, or alongside when the card has 6 GB free)

@@ -139,7 +139,8 @@ Per-run numbers: `custom_io/results/RESULTS-SCREEN.md` and `SCREEN-ANALYSIS.json
    with a trained 2-layer adapter instead of one linear map. Then Ben (3:48 PM ET): thinker slots built for Gemma. EGW (addendum 9) builds the
    thinker at EmbeddingGemma's width (768) with no adapter (22.2M trainable, 293.2M whole; two changes from EGO, disclosed). Queue 36 is now
    EGM, EGO on the PC; EGR, R0, EGE and EGT are in queue 38. EGW ran at 0.75 updates/s on the PC and filled its card, so it moved to two rented
-   5090s, each also training plain B2 on its seed so EGW is judged against B2 from the same machine (addendum 10, same recipe).
+   5090s, each also training plain B2 on its seed so EGW is judged against B2 from the same machine (addendum 10, same recipe). There it runs
+   4x faster, so EGM and EGO joined it on the same boxes (addendum 11) and queue 36 on the PC is retired.
 5. **Looped-LM ideas (Amazon's ALoDLM):** a no-training probe of the two saved B2 checkpoints (`design/LOOPS-probe.md`, gates fixed first)
    found every program question right by round 8, the hidden state growing only 3-4x, and the loss in the no-program families, whose answers
    drift across rounds (answering at 16 rounds costs about 1 point). Test LR (addendum 5, queue 37): a readout loss at every round after the

@@ -48,20 +48,20 @@ def leak(r):
 def base_for(runs, a, s):
     """Plain B2 of seed s on the same machine as run a (config.device and config.data equal, addendum 10); else the first found, whose
     mismatch judge() then reports."""
-    c = [runs[(b, s)] for b in BASES if (b, s) in runs]
+    c = [(n, runs[(n, s)]) for n in BASES if (n, s) in runs]
     if a is not None:
-        for b in c:
+        for n, b in c:
             if all(g(a, 'config', k) == g(b, 'config', k) for k in ('device', 'data')):
-                return b
-    return c[0] if c else None
+                return n, b
+    return c[0] if c else (None, None)
 
 
 def judge(runs, arm):
     """Marks 1-5 for one arm -> dict."""
-    probs, pairs = {}, {}
+    probs, pairs, used = {}, {}, {}
     for s in SEEDS:
         a = runs.get((arm, s))
-        b = base_for(runs, a, s)
+        used[s], b = base_for(runs, a, s)
         p = (['missing'] if a is None else valid(a, ARMS[arm], arm)) + (['base missing'] if b is None else [f'base: {x}' for x in valid(b, {'copy': True}, 'B2')])
         if a is not None and b is not None:        # same machine: local_runner passes WORK/data, so the data path names the machine
             for k in ('device', 'data'):
@@ -70,7 +70,7 @@ def judge(runs, arm):
         probs[s] = p
         if not p:
             pairs[s] = (a, b)
-    out = dict(arm=arm, problems=probs, judged=len(pairs) == len(SEEDS))
+    out = dict(arm=arm, problems=probs, judged=len(pairs) == len(SEEDS), base={s: used[s] for s in pairs})
     d = lambda fn: {s: sub(fn(a), fn(b)) for s, (a, b) in pairs.items()}
     mean = lambda dd: sum(dd.values()) / len(dd) if dd and len(dd) == len(SEEDS) and None not in dd.values() else None
     dp5, dvar = d(P5), d(SPL('variant'))
@@ -192,9 +192,12 @@ def main(argv=None):
     res['b2v_minus_b2_pooled5_read_only'] = dev
     res['egw_machine_sensitive'] = any(v is not None and abs(v) > 3 for v in dev.values())
     passing = {k: res['arms'][k] for k in ('EGW', 'EGM', 'EGO') if res['arms'][k]['verdict'].startswith('PASS')}
-    if res['egw_machine_sensitive'] and 'EGW' in passing and len(passing) > 1:     # not picked over a passing PC arm until re-run on the PC
-        del passing['EGW']
-        res['reader_for_confirm_note'] = 'EGW passes but is machine-sensitive (addendum 10): left out of the choice until it is re-run on the PC'
+    on_pc = lambda k: set(passing[k]['base'].values()) == {BASE}
+    if res['egw_machine_sensitive'] and any(on_pc(k) for k in passing) and not all(on_pc(k) for k in passing):
+        # addenda 10-11: an arm judged on a rented box is not picked over a passing PC arm until it is re-run on the PC
+        left_out = sorted(k for k in passing if not on_pc(k))
+        passing = {k: v for k, v in passing.items() if on_pc(k)}
+        res['reader_for_confirm_note'] = f'{", ".join(left_out)} pass but were judged on the rented boxes, which are machine-sensitive (addendum 10): left out of the choice until re-run on the PC'
     if passing:     # addendum 9: the highest 2-seed pooled-5 mean wins, unless a smaller passing arm is within 0.5 of it
         mm = {k: sum(v['marks']['1 pooled-5 change >= -1.0 on both seeds']['value'].values()) / len(SEEDS) for k, v in passing.items()}
         best = max(mm.values())
@@ -221,7 +224,7 @@ def main(argv=None):
             L += [f'## {title}', '', f"- {fmt(res[key])}", '']
     if dev:
         L += ['## Device check (read only, addendum 10)', '', f"- plain B2 on the rented 5090 minus plain B2 on the PC, pooled-5: {fmt(dev)}"
-              + (' -> EGW machine-sensitive' if res['egw_machine_sensitive'] else ''), '']
+              + (' -> rented-box results machine-sensitive' if res['egw_machine_sensitive'] else ''), '']
     if res.get('reader_for_confirm_note'):
         L += [res['reader_for_confirm_note'], '']
     if res.get('reader_for_confirm'):
