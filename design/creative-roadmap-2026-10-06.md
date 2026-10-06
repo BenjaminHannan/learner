@@ -447,6 +447,36 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
     floor (a random program over the input and constants that fits every example by chance, computed first); sameness
     as in C1. If cold start fails: stepping stones first, in C6's form on these kinds (short verified rule programs,
     against matched unrelated practice and full-difficulty solver programs).
+  - **DEV gate result (10-06, Mac job 4, s100 and s101): stop, cold start.** Real rule rows: practised kinds add and
+    mult (warm-up: 2,048 solver programs, 4 visits, skills replay); held-out kinds affine, square, sq_plus,
+    last_digit, double_add (256 DEV questions; pool, test and labelled sealed). Best temperature 1.4 (the grid's top):
+    reach@32 3.9% and 6.3% against a value-blind floor of 4.8% (gate: 10% and 3x the floor). Without the warm-up both
+    parents write no rule-following program at all. So the warm-up teaches the format but B2's tries on new kinds are
+    at chance. Why (shown from the data, the per-kind split still to be read): the warm-up only ever writes "x, then
+    one op with a built constant". Two held-out kinds are recombinations of those pieces (affine: multiply then add;
+    double_add: add then double); three need a piece it never saw (reading x twice for square and sq_plus, the MOD op
+    for last_digit).
+  - **Stepping-stone stage (decided 10-06, the rule above):** C2 is not retired; it retires only if this stage also
+    fails. One job per parent, DEV only, every sealed split stays closed:
+    0. Practised-kind check (C1's lesson): the warmed parent on 256 fresh add/mult questions (new salt; practised kinds
+       are not sealed), reach@32 and first try. If reach@32 is below 50%, re-warm with 16 visits, re-run the plain DEV
+       gate on that parent, and use it for every arm below; if it passes alone, cold start was under-warming and C2b
+       starts from it with no stepping stones.
+    1. Stepping stones (SS): 2,048 rows made program-first by code, easier variants of the held-out kinds whose
+       reference program has at most 3 written steps and whose parameters are in no sealed split's list: affine with
+       a = 2 (b 3-15) or b in {1, 2} (a 3-6); sq_plus and double_add with b in {1, 2}; x mod k for k in {2, 3, 4, 5}
+       (last_digit's family). square has no easier variant of its own; sq_plus's easy variants contain its program as
+       their first step, which is the point of a stepping stone and is reported per kind.
+    2. Arms from the same warmed parent, same sleep: SS; placebo P, 2,048 more add/mult rows on fresh questions
+       (matched unrelated practice); PC, 2,048 full-difficulty solver programs for held-out kinds from the pool split
+       (report only, never used for C2b).
+    3. Each arm gets the same DEV gate (32 plain samples, repeats counted, temperatures 0.5-1.4, widened to 2.0 and 3.0
+       when the best is the top edge, C1's standing rule), with reach@32, reach@4, greedy first try and variety per
+       kind, and the number of DEV questions a stepping-stone rule also fits with a different answer.
+    Decision: if SS passes the cold-start and sameness gates on both parents, the SS parent becomes C2b's N and C2b
+    runs as written, its claim now "climbs from stepping stones". SS beating P by 5 or more points of reach@32 labels
+    the help as the stepping stones rather than more practice (reported). If SS misses on either parent, C2 retires at
+    cold start with its test never read, and wall 1 stands confirmed on B2; any other pattern comes back here.
 - **C2b, the creative test.** On held-out rule kinds, with no answer keys: 32 tries per question, keep tries that fit
   every example, sleep. Arms N, W, R (fits no example check, matched count), H (each try relabelled with the rule it
   actually computes on the examples). Comparison nets: a same-size plain transformer and a fresh net, each given k
@@ -563,3 +593,7 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
 - **C1 retired (10-06):** s100 missed the PC gate on the corrected count (1.29x, +2.8 at its frozen setting) while
   s101 passed (1.66x), so C1 stops at its DEV gate with T1 and T1b never read. A better s100 setting existed in the
   grid and was not taken (fourth post-hoc change). C2 continues as the main test.
+- **C2 cold start (10-06):** the DEV gate stopped C2 at cold start (reach@32 3.9% and 6.3% against a 4.8% floor).
+  Per the pre-set rule, stepping stones come next (section 7): easier variants of the held-out kinds made by code,
+  against matched add/mult practice, with full-difficulty solver programs as a report-only ceiling. C2 retires only if
+  the stepping-stone parent also misses the gate.
