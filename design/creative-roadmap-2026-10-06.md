@@ -298,6 +298,17 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   (P0's sampler; chosen on the warmed parent by reach@4 among temperatures that pass the sameness gate, with the grid
   widened whenever the choice lands on its edge), drop duplicates (commutative order merged) before running and top up, branch over the top 8 first
   steps. Variety is reported with and without branching, so the sampler's own variety stays visible.
+- **Luck is counted over samples, not distinct programs (fixed 10-06 after pilot 3):** luck is the share of sampled
+  tries the checker accepts, with repeats counted, from B2's plain sampler at the frozen temperature (the model alone,
+  as in F1); reach@4 is whether any of the first 4 sampled tries hits, in sampling order. This is how blurt-3 counted
+  ("right blurts among 30 samples"), and the marks below were scaled from blurt-3. The deduplicated, masked tries above
+  still collect every sleep pool and measure variety (sameness), and their luck is reported, never gated. Why (shown,
+  `creative/scoreboard.py` "all shares are over kept (distinct) tries"): counting each distinct program once caps luck
+  at the number of solutions over the number of distinct tries. DEV targets have 1.97 solutions; the warmed s101
+  parent already finds 1.42 of them among 10.6 distinct masked tries (luck 13.4%), so at that variety luck could reach
+  at most about 18.5%, 1.39 times N, and a 1.6x mark was out of reach unless variety fell. Pilot 2's plain dedup luck
+  had the same cap (27.3 distinct tries, at most 7.2%, 1.54x). The error was made here when the marks were re-scaled
+  from blurt-3's sample count onto C1's distinct-try share.
 - **Used-number mask (adopted 10-06, disclosed test scaffolding):** every arm's tries, the temperature choice and the
   floors use the level-4 mask from the ultracode thread (`creative/legal.py`, PR #45): B2's own op and pointer heads
   pick every step, restricted to unused numbers and results, + - x /, exact division, and a stop after the last real
@@ -331,7 +342,8 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   learning rate and visits chosen on DEV using the PC arm only (lr 3e-4 or 1e-3; visits 4, 8 or 16, and one try at 32
   if 16 wins), among settings that cost skills at most 2 points, then frozen. Visits were fixed at 4 until 10-06 (see
   the PC gate under Marks).
-- **Marks** (6 parents; luck = share of 32 tries accepted on T1; 95% t-intervals over parents on paired differences).
+- **Marks** (6 parents; luck = share of 32 plain sampled tries accepted on T1, repeats counted (see the luck bullet);
+  95% t-intervals over parents on paired differences).
   Re-scaled 10-06, before any sleep arm ran on the new warm-up, because the old point marks were mis-scaled: the one
   replicated creative result we have (blurt-3 and blurt-3r on the 1B) moved luck from 3.2% to 6.4-6.9% and from 2.9% to
   6.4-7.4%, which is +3.2 to +4.4 points, a doubling. A +10-point mark would have called those runs a failure, and B2's
@@ -367,6 +379,20 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
     either parent at every setting that keeps skills within 2 points, C1 stops with T1 sealed and comes back here.
     Disclosure: the dose grid was added after seeing PC miss on DEV; it applies to every arm the same way, and T1 and
     T1b stayed sealed.
+    Pilot 3, masked (shown, DEV, s101, commit 9e63311d9): on distinct-try luck PC missed at every setting (best lr
+    3e-4 with 16 visits: 1.16x, +2.1 points; 32 visits worse), which the stop rule above sent back here. The cause is
+    the cap in the luck bullet, not the sleep: at that frozen setting PC cut its loss on the puzzle records from 4.86 to
+    1.96, raised the plain first try from 8.6% to 14.8% and the masked first try from 20.3% to 31.3%, and raised
+    plain luck counted over samples (8 per puzzle, repeats counted) from 8.6% to 14.3%, 1.66x and +5.7 points, with
+    skills harm 0.4 points. Decided 10-06, before the roadmap thread saw any s100 number other than its distinct-try
+    best (1.11x, +1.5): the PC gate is judged on plain luck counted over samples, at the setting each parent's pilot 3
+    already froze by the rule above, from the numbers pilot 3 already logged (`dev_plain_luck`, 8 samples per puzzle);
+    the mark stays 1.6x and +3 points on both parents. s101 passes narrowly (1.66x; with 128 puzzles a few points of
+    noise either way). If s100 passes: freeze, and the power simulation uses this measure (re-measured with 32 samples
+    per puzzle and reported) before sealing. If s100 misses: C1 is retired at its DEV gate with T1 and T1b never read,
+    and the build thread moves to C2. Disclosure: this is the third change made after seeing DEV numbers (gates,
+    dose, now the luck count); the bar did not move, the measure now matches the runs the bar was scaled from and
+    matches F1, and T1 and T1b were never read.
 - **Ordered verdicts:** void (checkers disagree on a T1 try, unresolved above 1%, or a lesion fails) -> gate stop ->
   placebo too close (over half of R's records are accepted tries) -> PASS (L1, L2, G0, G1, G2, G3), named "PASS with
   first answers" when F1 also holds and "PASS, search only" when it does not -> rules only (L1 holds, G0 fails) -> gain with harm (G3 fails) -> **proved wrong** (the PC gate passes, yet W - R has an upper end
@@ -413,8 +439,11 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
     corrupting every key); the key-agreement check of C2a is a measurement only and never filters records; sleep-pool
     questions and test questions share no (rule, examples, query) triple. H relabels the shown examples with what the
     try computes, so it carries no key either.
-- **Owner:** the same Sonnet build thread after C1 (C2a and the arms are built and smoke-tested on synthetic kinds;
-  the real rule rows and the held-out sealing are its next step).
+- **Counting (from C1's pilot 3):** luck and reach@4 count sampled tries in sampling order with repeats included;
+  counts over distinct programs measure variety only.
+- **Owner:** the same Sonnet build thread (C2a and the arms are built and smoke-tested on synthetic kinds; the real
+  rule rows and the held-out sealing are its next step, started 10-06 alongside C1's last DEV check because C1's
+  plumbing works: PC sleep taught first answers on B2).
 
 ## 8. How it fits the other work
 
@@ -503,3 +532,10 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   (lr 3e-4 or 1e-3; visits 4, 8, 16) with a 2-point skills limit; report for every setting the plain sampler's legal
   share and hit rate among legal tries, and the sleep loss split into puzzle rows and replay rows (pilot 2's single
   loss mixes them, so it cannot say whether PC's records were learned); stop before sealing if masked PC still misses.
+- **Pilot 3, masked (10-06):** PC missed again on distinct-try luck, at every dose. Found here: luck counted each
+  distinct program once, which caps it at solutions over distinct tries (about 1.4x N at the parent's variety), so the
+  1.6x mark could not be met; the marks had been scaled from blurt-3, which counted right samples with repeats. The
+  sleep itself worked (s101: puzzle-record loss 4.86 to 1.96, plain first try +6.3 points, masked first try +10.9,
+  plain luck over samples 1.66x). Decided: count luck over samples on the plain sampler for every mark, keep the mask
+  for sleep pools and variety, judge the PC gate on pilot 3's logged plain sample luck at the frozen settings, retire
+  C1 if s100 misses. C1's plumbing works, so C2's CPU build and sealing start now and use the same counting.
