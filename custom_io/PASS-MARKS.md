@@ -260,3 +260,16 @@ direct slots and the extra width; a 768-wide B2 with its own letter reader would
 **Which EmbeddingGemma reader goes on (replaces addendum 8's rule; no EGM, EGO or EGW result exists yet):** among EGW, EGM and EGO, those that pass;
 the highest 2-seed pooled-5 mean wins, but any passing arm within 0.5 of it that is smaller wins instead (smallest first). The winner goes to the
 6-seed confirm at the same marks. Read only: EGW minus EGM per seed.
+
+## Addendum 10: EGW moves to two rented 5090s (written 2026-10-06 about 20:45 UTC, 4:45 PM ET, before any EGW, EGM or EGO result)
+EGW is too slow for Ben's PC: 0.75 updates/s, about 8.9 h a run, and it fills the 16 GB card, so the second seed cannot share it and EGM, EGO and
+queues 35, 37 and 38 would wait about 18 h. The recipe stays exactly as addendum 9 (24,000 updates, batch 256, lr 1e-3, bf16); cutting updates or
+batch would make EGW unfair against B2. Instead each EGW seed runs on its own rented RTX 5090 (custom_io/queue/egwA, egwB; box.sh with
+transformers 5.19 and EmbeddingGemma at the pinned revision), and **each box also trains plain B2 on the same seed (B2V_s200, B2V_s201)**, same
+flags as queue 33's B2. The PC's EGW_s200 is stopped at under 2,000 updates; nothing from it is scored.
+**Base:** every arm is judged against plain B2 of the same seed **on the same machine** (config.device and config.data equal), as before: EGW
+against B2V on its box; EGM, EGO, EGR, EGE, EGT and R0 against queue 33's B2 on the PC. Marks, proved-wrong rule, label and the addendum 9 choice
+are unchanged; the choice already compares each arm's pooled-5 change against its own base, so the machine drops out.
+**Device check (read only):** B2V minus queue 33's B2 per seed on pooled-5, reported next to the EGW result. If it is more than 3 points on either
+seed, the EGW result is reported as "machine-sensitive", and EGW is not picked over a passing PC arm until it is re-run on the PC.
+**Cost cap:** each box stops itself after 8.5 h (about $3.80 at $0.45 an hour), under the $4 a job standing cap; credit before renting $8.77.

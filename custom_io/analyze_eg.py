@@ -1,5 +1,6 @@
 """EmbeddingGemma 2 arms for B2 (PASS-MARKS.md addendum 4), Test LR, the per-round readout loss (addendum 5), and the reader without its
-letter window, EGR and R0 (addendum 6), EGO, EmbeddingGemma as the whole reader (addendum 7), EGM, the same through a 2-layer adapter (addendum 8), and EGW, a 768-wide thinker with no adapter (addendum 9), computed exactly as written.
+letter window, EGR and R0 (addendum 6), EGO, EmbeddingGemma as the whole reader (addendum 7), EGM, the same through a 2-layer adapter (addendum 8), and EGW, a 768-wide thinker with no adapter (addendum 9; on rented 5090s, each judged against
+plain B2 trained on the same box, B2V, addendum 10), computed exactly as written.
 python3 -m custom_io.analyze_eg --results custom_io/results/33-pc-confirm-b2 custom_io/results/36-pc-eg2 [--out custom_io/results/EG2-ANALYSIS.json]
 Arms EGE (eg_embed) and EGT (eg_teach 0.1), each paired by seed (200, 201) with plain B2 (run folders B2_s200, B2_s201). A run counts only if it
 is status 'ok', trained 24,000 steps with the B2 flags and its own switch, and the base run is plain B2 with the same flags; otherwise its
@@ -8,6 +9,7 @@ import argparse, json, os
 from custom_io.analyze import P5, SPL, C5, POOL, g, load, sub, chk, allof
 
 SEEDS, BASE = [200, 201], 'B2'
+BASES = (BASE, 'B2V')       # B2V: plain B2 trained on the same rented box as an arm (addendum 10)
 ARMS = {'EGE': {'copy': True, 'eg_embed': True}, 'EGT': {'copy': True, 'eg_teach': 0.1}, 'LR': {'copy': True, 'round_readout': 1.0},
         'EGR': {'copy': True, 'eg_embed': True, 'reader_layers': 0}, 'R0': {'copy': True, 'reader_layers': 0},
         'EGO': {'copy': True, 'eg_embed': True, 'reader_layers': 0, 'letters_in': False},
@@ -43,11 +45,23 @@ def leak(r):
     return dict(loops0=SPL('in_dist')(r, 'loops:0'), donor=g(r, 'lesions', 'donor', 'in_dist', 'exact'))
 
 
+def base_for(runs, a, s):
+    """Plain B2 of seed s on the same machine as run a (config.device and config.data equal, addendum 10); else the first found, whose
+    mismatch judge() then reports."""
+    c = [runs[(b, s)] for b in BASES if (b, s) in runs]
+    if a is not None:
+        for b in c:
+            if all(g(a, 'config', k) == g(b, 'config', k) for k in ('device', 'data')):
+                return b
+    return c[0] if c else None
+
+
 def judge(runs, arm):
     """Marks 1-5 for one arm -> dict."""
     probs, pairs = {}, {}
     for s in SEEDS:
-        a, b = runs.get((arm, s)), runs.get((BASE, s))
+        a = runs.get((arm, s))
+        b = base_for(runs, a, s)
         p = (['missing'] if a is None else valid(a, ARMS[arm], arm)) + (['base missing'] if b is None else [f'base: {x}' for x in valid(b, {'copy': True}, 'B2')])
         if a is not None and b is not None:        # same machine: local_runner passes WORK/data, so the data path names the machine
             for k in ('device', 'data'):
@@ -173,7 +187,14 @@ def main(argv=None):
     res['ego_minus_egr_read_only'] = arm_minus(runs, 'EGO', 'EGR')
     res['egm_minus_ego_read_only'] = arm_minus(runs, 'EGM', 'EGO')
     res['egw_minus_egm_read_only'] = arm_minus(runs, 'EGW', 'EGM')
+    # addendum 10: plain B2 on the rented box minus plain B2 on the PC, same seed (read only); over 3 points on a seed = EGW machine-sensitive
+    dev = {s: sub(P5(runs[('B2V', s)]), P5(runs[(BASE, s)])) for s in SEEDS if ('B2V', s) in runs and (BASE, s) in runs}
+    res['b2v_minus_b2_pooled5_read_only'] = dev
+    res['egw_machine_sensitive'] = any(v is not None and abs(v) > 3 for v in dev.values())
     passing = {k: res['arms'][k] for k in ('EGW', 'EGM', 'EGO') if res['arms'][k]['verdict'].startswith('PASS')}
+    if res['egw_machine_sensitive'] and 'EGW' in passing and len(passing) > 1:     # not picked over a passing PC arm until re-run on the PC
+        del passing['EGW']
+        res['reader_for_confirm_note'] = 'EGW passes but is machine-sensitive (addendum 10): left out of the choice until it is re-run on the PC'
     if passing:     # addendum 9: the highest 2-seed pooled-5 mean wins, unless a smaller passing arm is within 0.5 of it
         mm = {k: sum(v['marks']['1 pooled-5 change >= -1.0 on both seeds']['value'].values()) / len(SEEDS) for k, v in passing.items()}
         best = max(mm.values())
@@ -198,6 +219,11 @@ def main(argv=None):
                        ('egw_minus_egm_read_only', 'EGW minus EGM (read only, addendum 9)')):
         if res[key]:
             L += [f'## {title}', '', f"- {fmt(res[key])}", '']
+    if dev:
+        L += ['## Device check (read only, addendum 10)', '', f"- plain B2 on the rented 5090 minus plain B2 on the PC, pooled-5: {fmt(dev)}"
+              + (' -> EGW machine-sensitive' if res['egw_machine_sensitive'] else ''), '']
+    if res.get('reader_for_confirm_note'):
+        L += [res['reader_for_confirm_note'], '']
     if res.get('reader_for_confirm'):
         L += [f"EmbeddingGemma reader for the 6-seed confirm (addendum 9): {res['reader_for_confirm']} (2-seed pooled-5 change: {fmt(res['reader_for_confirm_means'])})", '']
     md = os.path.join(os.path.dirname(a.out) or '.', 'RESULTS-EG2.md')

@@ -1,17 +1,14 @@
-# BensPC RTX 5070 Ti (cuda): EmbeddingGemma 2 as B2's whole reader, three ways (PASS-MARKS.md addenda 9, 8 and 7, written before any of these
-# runs). Runs AHEAD of queue 35 (Ben, 3:44-3:48 PM ET 10-06). EGR, R0, EGE and EGT are in queue 38.
+# BensPC RTX 5070 Ti (cuda): EmbeddingGemma 2 as B2's whole reader, two of the three ways (PASS-MARKS.md addenda 8 and 7, written before any of
+# these runs). Runs AHEAD of queue 35 (Ben, 3:44-3:48 PM ET 10-06). EGR, R0, EGE and EGT are in queue 38. The third way, EGW, ran at 0.75
+# updates/s here and filled the card, so it moved to two rented 5090s (custom_io/queue/egwA, egwB; addendum 10), each with its own plain B2.
 # Needs transformers >= 5.19 in C:\Users\benja\eg_site, the weights in C:\Users\benja\eg2 and `python -m custom_io.models.eg check cuda`
 # printing "ok": true (PC-JOB.md section 6). The two ENV lines below go to every run of this queue only (local_runner queue_env):
 # ENV PYTHONPATH=C:\Users\benja\eg_site;C:\Users\benja\lis300\venv\Lib\site-packages
 # ENV CUSTOM_IO_EG2=C:\Users\benja\eg2
 #   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\36-pc-eg2.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
-# Paired by seed with B2_s200 / B2_s201 of queue 33 (same PC, same recipe). No letters reach the thinker in any of the three:
-#   EGW = thinker built at EmbeddingGemma's width (768), its states go straight in: trainable 22,164,357, whole 293,166,981.
+# Paired by seed with B2_s200 / B2_s201 of queue 33 (same PC, same recipe). No letters reach the thinker in either:
 #   EGM = B2-size thinker (256) behind a trained 2-layer adapter: trainable 2,909,777, whole 273,912,401.
 #   EGO = B2-size thinker behind a 1-layer (linear) adapter: trainable 2,843,985, whole 273,846,609.
-# MEM 8000
-EGW_s200 --model ledger --cfg '{"copy":true,"d":768,"n_heads":12,"eg_embed":true,"reader_layers":0,"letters_in":false,"eg_adapter":"none"}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
-EGW_s201 --model ledger --cfg '{"copy":true,"d":768,"n_heads":12,"eg_embed":true,"reader_layers":0,"letters_in":false,"eg_adapter":"none"}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval
 # MEM 7000
 EGM_s200 --model ledger --cfg '{"copy":true,"eg_embed":true,"reader_layers":0,"letters_in":false,"eg_adapter":"mlp"}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
 EGM_s201 --model ledger --cfg '{"copy":true,"eg_embed":true,"reader_layers":0,"letters_in":false,"eg_adapter":"mlp"}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval

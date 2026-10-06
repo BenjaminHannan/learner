@@ -75,7 +75,8 @@ python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queu
 Push the results as in section 4 (no checkpoint.pt). Each run takes a few hours on the 5070 Ti.
 
 ## 6. The reader runs: EmbeddingGemma 2 as the reader, and B2 without its window (queue 36, BEFORE queue 35 since 10-06 4 PM ET)
-Marks: PASS-MARKS.md addenda 9 (EGW), 8 (EGM) and 7 (EGO). They need the `eg_adapter` and `letters_in` switches (on the branch since
+Marks: PASS-MARKS.md addenda 8 (EGM) and 7 (EGO). EGW (addendum 9) does not run here any more: at 0.75 updates/s and 16 GB it would hold the
+card for about 18 h, so it runs on two rented 5090s with its own plain B2 there (addendum 10; custom_io/queue/egwA, egwB). They need the `eg_adapter` and `letters_in` switches (on the branch since
 4:30 PM ET 10-06), so re-stage first. Since then the runner keeps one frozen code copy per queue AND code version
 (WORK\code\QUEUE-HASH), so a relaunch after re-staging trains on the new code. Design: design/EG2-embedding.md. The runs need transformers >= 5.19, which the shared venv does not
 have (it has 5.17, and the running queues use it), so it goes in its own folder. Queue 36 carries its own two variables in `# ENV`
@@ -98,9 +99,10 @@ running runs alone and start 36 when the card has 7 GB free), detached like the 
 ```
 python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\36-pc-eg2.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
 ```
-with stdout to `C:\Users\benja\custom-io\work\q36.log`; its first line must show `queue env: {...}` with both variables. Six runs
-(EGW, EGM and EGO, seeds 200 and 201), paired with queue 33's B2_s200 and B2_s201 on this PC. EGR, R0, EGE and EGT are in queue 38 (section 8). Push the results as in section 4 (no
-checkpoint.pt); the analysis is `python -m custom_io.analyze_eg --results custom_io/results/33-pc-confirm-b2 custom_io/results/36-pc-eg2`.
+with stdout to `C:\Users\benja\custom-io\work\q36.log`; its first line must show `queue env: {...}` with both variables. Four runs
+(EGM and EGO, seeds 200 and 201), paired with queue 33's B2_s200 and B2_s201 on this PC. EGR, R0, EGE and EGT are in queue 38 (section 8). Push the results as in section 4 (no
+checkpoint.pt); the analysis is `python -m custom_io.analyze_eg --results custom_io/results/33-pc-confirm-b2 custom_io/results/36-pc-eg2 custom_io/results/40-egw-s200 custom_io/results/41-egw-s201`
+(the last two come from the rented boxes; each arm is paired with plain B2 of the same machine).
 
 ## 7. Test LR, a readout loss at every round (queue 37, after queue 36, or alongside when the card has 6 GB free)
 Marks: PASS-MARKS.md addendum 5. Plain B2 code plus one switch, no new packages (it does not need eg_site). From the same re-staged src:

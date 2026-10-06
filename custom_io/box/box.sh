@@ -6,14 +6,20 @@
 # .pt) are tarred and printed into the container log as base64 lines "R|name|..." between RBEGIN/REND with a sha256,
 # so the cloud container reads them through the Vast logs API. No credential is on the box; nothing listens.
 # custom_io/queue/STOP ends the loop; custom_io/queue/REPRINT (one job name per line) re-prints finished results.
+# Optional env (vast.py create --env): TFVER (transformers version, default 5.17.0); EG=1 fetches EmbeddingGemma 2 at its pinned revision into
+# $J/eg2, sets CUSTOM_IO_EG2 and needs `python -m custom_io.models.eg check cuda` ok; MAXH stops every job and the loop after that many hours
+# of uptime (a cost cap); IDLE_EXIT ends the loop that many seconds after the last job ended with nothing new; END_SLEEP / FAIL_SLEEP are the
+# seconds the box stays up after the loop ends / after a setup failure (the container then exits, so the GPU is no longer billed).
 set -u
 J=/job; mkdir -p $J/out $J/res $J/state $J/w; cd $J
 BR=claude/custom-reader-talker-4x309r
 R=https://github.com/BenjaminHannan/learner
 MAXPAR=${MAXPAR:-6}
 QSUB=${QSUB:-}
+TFVER=${TFVER:-5.17.0}; EG=${EG:-0}; MAXH=${MAXH:-0}; IDLE_EXIT=${IDLE_EXIT:-0}; END_SLEEP=${END_SLEEP:-21600}; FAIL_SLEEP=${FAIL_SLEEP:-21600}
+T0=$(date +%s)
 say() { echo "=== $* $(date -u +%FT%TZ)"; }
-die() { say "CIO-FAIL $*"; sleep 21600; exit 1; }
+die() { say "CIO-FAIL $*"; sleep $FAIL_SLEEP; exit 1; }
 say "CIO START"
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader; free -g | head -2; nproc
 command -v git >/dev/null || (apt-get update -qq && apt-get install -y -qq git >/dev/null) || die git
@@ -24,9 +30,15 @@ python -c "import json; a=json.load(open('$J/cur/skills_curriculum/FULL-BUILD-MA
 (cd cur && python -m skills_curriculum.build --out $J/data_big --train 200000 --dev-per-cell 200 --seed 1 > $J/out/build_big.log 2>&1) || die build-big
 [ "$(sha256sum $J/data/train.jsonl | cut -c1-64)" = "$(sha256sum $J/data_big/train.jsonl | cut -c1-64)" ] || die big-train-hash
 echo "big build train.jsonl hash matches"
-PIP_BREAK_SYSTEM_PACKAGES=1 pip install -q --break-system-packages "transformers==5.17.0" "safetensors==0.8.0" accelerate numpy > out/pip.log 2>&1 || { tail -3 out/pip.log; die pip; }
+PIP_BREAK_SYSTEM_PACKAGES=1 pip install -q --break-system-packages "transformers==$TFVER" "safetensors==0.8.0" accelerate numpy > out/pip.log 2>&1 || { tail -3 out/pip.log; die pip; }
 python -c "import torch, transformers; print(torch.__version__, transformers.__version__, torch.cuda.get_device_name(0))"
 export HF_HUB_DISABLE_PROGRESS_BARS=1 TRANSFORMERS_VERBOSITY=error TOKENIZERS_PARALLELISM=false OMP_NUM_THREADS=2 PYTHONUNBUFFERED=1
+if [ "$EG" = 1 ]; then
+  (cd mine && python -c "from huggingface_hub import snapshot_download as s; from custom_io.models.eg import EG_ID, EG_REV; s(EG_ID, revision=EG_REV, local_dir='$J/eg2')") \
+    > out/eg_dl.log 2>&1 || { tail -3 out/eg_dl.log; die eg-download; }
+  export CUSTOM_IO_EG2=$J/eg2
+  (cd mine && python -m custom_io.models.eg check cuda) || die eg-check
+fi
 D=$J/data
 DB=$J/data_big
 export J D DB
@@ -42,8 +54,11 @@ emit() {  # name : print the job's outputs as base64 lines
   ) 9>$J/print.lock
 }
 say "CIO READY"
-last=0
+last=0; idle=0
 while true; do
+  if [ "$MAXH" != 0 ] && [ $(( $(date +%s) - T0 )) -ge $(awk "BEGIN{print int($MAXH*3600)}") ]; then
+    say "CIO MAXH $MAXH h reached: stopping every job"; pkill -f custom_io.train; sleep 30; break
+  fi
   (cd mine && git fetch -q --depth 1 origin $BR && git reset -q --hard FETCH_HEAD) 2>/dev/null
   Q=mine/custom_io/queue${QSUB:-}
   [ -f $Q/STOP ] && { say "CIO STOP"; break; }
@@ -73,6 +88,14 @@ while true; do
     sleep 15
   done
   now=$(date +%s)
+  if [ "$IDLE_EXIT" != 0 ]; then
+    nrun=$(ls $J/state/*.running 2>/dev/null | wc -l); nnew=0
+    for f in $(ls $Q/*.sh 2>/dev/null); do [ -e $J/state/$(basename $f .sh).started ] || nnew=$((nnew + 1)); done
+    if [ $nrun -eq 0 ] && [ $nnew -eq 0 ] && ls $J/state/*.done >/dev/null 2>&1; then
+      [ $idle = 0 ] && idle=$now
+      [ $((now - idle)) -ge $IDLE_EXIT ] && { say "CIO IDLE EXIT"; break; }
+    else idle=0; fi
+  fi
   if [ $((now - last)) -ge 240 ]; then
     last=$now
     for r in $(ls $J/state/*.running 2>/dev/null); do n=$(basename $r .running)
@@ -83,4 +106,4 @@ while true; do
 done
 wait
 say "CIO DONE"
-sleep 21600
+sleep $END_SLEEP

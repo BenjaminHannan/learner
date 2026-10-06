@@ -5,7 +5,7 @@ ln_eg / eg_proj (last), zero-initialised, so the seeded model computes B2's loss
 lesions or the donor swap), and the shipped size drops the head; (4) the frozen EmbeddingGemma never shows up in parameters(), the optimizer or the
 checkpoint; talk() embeds the CURRENT rows (donor swap). A stub stands in for EmbeddingGemma 2 here; with $CUSTOM_IO_EG2 (a local copy) and
 transformers >= 5.19 importable, (5) also checks the real tokenizer's char -> token map on 2000 training prompts and runs one real forward."""
-import hashlib, os, sys, time
+import hashlib, json, os, sys, time
 import numpy as np
 import torch
 from custom_io.data import DEFAULT_DATA
@@ -261,13 +261,37 @@ def test_bf16_states_without_autocast_and_queue_env():
     X, _ = m.read(batch_of(rows, v))
     assert X.dtype == torch.float32 and torch.isfinite(X).all()
     qd = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'queue_local')
-    for name, runs in (('36-pc-eg2.txt', ['EGW_s200', 'EGW_s201', 'EGM_s200', 'EGM_s201', 'EGO_s200', 'EGO_s201']),
+    for name, runs in (('36-pc-eg2.txt', ['EGM_s200', 'EGM_s201', 'EGO_s200', 'EGO_s201']),
                        ('38-pc-eg-teacher.txt', ['EGR_s200', 'EGR_s201', 'R0_s200', 'R0_s201', 'EGE_s200', 'EGE_s201', 'EGT_s200', 'EGT_s201'])):
         q = os.path.join(qd, name)
         env = queue_env(q)
         assert set(env) == {'PYTHONPATH', 'CUSTOM_IO_EG2'} and env['PYTHONPATH'].startswith('C:\\Users\\benja\\eg_site;'), env
         assert [r[0] for r in parse_queue(q)] == runs, (name, [r[0] for r in parse_queue(q)])
     print('ok bf16_states_without_autocast_and_queue_env')
+
+
+def test_egw_box_jobs():
+    """Addendum 10: each rented box trains EGW and plain B2 (B2V) on one seed, with queue 33's B2 flags exactly (only the name and the cfg differ),
+    and the box script passes the env that fetches and checks EmbeddingGemma."""
+    import shlex
+    from custom_io.analyze_eg import ARMS
+    from custom_io.local_runner import parse_queue
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    q33 = {r[0]: r[2] for r in parse_queue(os.path.join(here, 'queue_local', '33-pc-confirm-b2.txt'))}
+    flags = lambda args: [x for i, x in enumerate(args) if x != '--cfg' and (i == 0 or args[i - 1] != '--cfg')]
+    cfg = lambda args: json.loads(args[args.index('--cfg') + 1])
+    for sub, seed in (('egwA', 200), ('egwB', 201)):
+        d = os.path.join(here, 'queue', sub)
+        (job,) = [f for f in os.listdir(d) if f.endswith('.sh')]
+        text = open(os.path.join(d, job)).read()
+        assert '--env "TFVER=5.19.0 EG=1 MAXH=8.5' in text and '# MEM 20000' in text
+        runs = {sh[1]: sh[2:] for sh in (shlex.split(ln) for ln in text.splitlines() if ln.startswith('run '))}
+        assert sorted(runs) == [f'B2V_s{seed}', f'EGW_s{seed}'], runs.keys()
+        base = [x for x in q33[f'B2_s{seed}']]
+        for name, args in runs.items():
+            assert args[-1] == '&' and flags(args[:-1]) == flags(base), (name, args)
+        assert cfg(runs[f'EGW_s{seed}']) == ARMS['EGW'] and cfg(runs[f'B2V_s{seed}']) == {'copy': True} == cfg(base)
+    print('ok egw_box_jobs')
 
 
 def test_round_readout():
