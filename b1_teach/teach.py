@@ -237,6 +237,64 @@ class Backend:
         return res
 
 
+class ApiBackend:
+    """OpenAI-compatible chat API (OpenCode Go: https://opencode.ai/zen/go/v1). Key from $OPENCODE_API_KEY (never on the command line).
+    Throttled; STOPS (exit 3) on the first 429/402/403/quota error or when the token cap is reached. Resumable like the others."""
+    kind = "api"
+
+    def __init__(self, model, base=None, workers=4, max_per_min=240, max_tokens=45_000_000):
+        import threading
+        self.model, self.workers, self.cap = model, workers, max_tokens
+        self.base = (base or os.environ.get("OPENCODE_BASE", "https://opencode.ai/zen/go/v1")).rstrip("/")
+        self.key = os.environ["OPENCODE_API_KEY"]
+        self.interval, self.last, self.lock, self.used, self.stop = 60.0 / max_per_min, 0.0, threading.Lock(), 0, False
+
+    def _one(self, msgs, max_new, temperature, top_p):
+        import urllib.request, urllib.error
+        body = {"model": self.model, "messages": msgs, "max_tokens": max_new, "temperature": temperature}
+        if temperature:
+            body["top_p"] = top_p
+        req = urllib.request.Request(self.base + "/chat/completions", data=json.dumps(body).encode(),
+                                     headers={"Content-Type": "application/json", "Authorization": "Bearer " + self.key})
+        for attempt in range(3):
+            if self.stop:
+                return None
+            with self.lock:                                   # global pace
+                w = self.last + self.interval - time.time()
+                if w > 0:
+                    time.sleep(w)
+                self.last = time.time()
+            try:
+                with urllib.request.urlopen(req, timeout=120) as r:
+                    d = json.load(r)
+                with self.lock:
+                    self.used += d.get("usage", {}).get("total_tokens", 0)
+                    if self.used >= self.cap:
+                        self.stop = True
+                return (d["choices"][0]["message"].get("content") or "").strip()
+            except urllib.error.HTTPError as e:
+                if e.code in (429, 402, 403) or b"quota" in e.read().lower():
+                    self.stop = True
+                    print(f"STOP: HTTP {e.code} from the API (rate/quota). Not retrying.", flush=True)
+                    return None
+                time.sleep(5 * (attempt + 1))
+            except Exception:
+                time.sleep(5 * (attempt + 1))
+        return ""
+
+    def chat(self, msgs, max_new, temperature=0.0, top_p=0.95, on_batch=None):
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(self.workers) as ex:
+            res = list(ex.map(lambda m: self._one(m, max_new, temperature, top_p), msgs))
+        if self.stop or any(r is None for r in res):
+            raise ApiStop(f"stopped after {self.used} tokens")
+        return res
+
+
+class ApiStop(Exception):
+    pass
+
+
 # ---------------------------------------------------------------- stages
 def read_jsonl(p):
     return [json.loads(l) for l in open(p)] if Path(p).exists() else []
@@ -260,7 +318,7 @@ def stage_write(be, out, R, per_kind, kinds, seed):
             msgs, yn = writer_messages(name, desc, ex, random.Random(f"{seed}|{iid}"))
             jobs.append((iid, name, yn, msgs))
     print(f"write r{R}: {len(jobs)} to do ({len(done)} done)", flush=True)
-    CH = 4096 if be.kind == "hf" else 20000                     # chunk so progress is saved
+    CH = {"hf": 4096, "api": 400}.get(be.kind, 20000)           # chunk so progress is saved
     t0 = time.time()
     for s in range(0, len(jobs), CH):
         ch = jobs[s:s + CH]
@@ -281,7 +339,7 @@ def stage_answer(be, out, R):
             append_jsonl(ap, [{"id": w["id"], "kind": w["kind"], "parsed": False, "raw": w["raw"]}]); continue
         todo.append((w, it))
     print(f"answer r{R}: {len(todo)} items to answer", flush=True)
-    CH = 2048 if be.kind == "hf" else 20000
+    CH = {"hf": 2048, "api": 150}.get(be.kind, 20000)
     t0 = time.time()
     for s in range(0, len(todo), CH):
         ch = todo[s:s + CH]
@@ -420,6 +478,10 @@ def main():
     ap.add_argument("--batch", type=int, default=128)
     ap.add_argument("--gpu-util", type=float, default=0.35)
     ap.add_argument("--seed", type=int, default=5002)
+    ap.add_argument("--api-model", default="deepseek-v4-flash", help="backend api: model id from GET <base>/models")
+    ap.add_argument("--workers", type=int, default=10)
+    ap.add_argument("--max-per-min", type=int, default=600)
+    ap.add_argument("--max-api-tokens", type=int, default=45_000_000)
     a = ap.parse_args()
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     spares_used = json.loads((out / "spares.json").read_text()) if (out / "spares.json").exists() else {}
@@ -428,7 +490,7 @@ def main():
     names = [k[0] for k in kinds]
     if a.stage == "filter":
         stage_filter(out, names, spares_used); return
-    be = Backend(a.backend, a.batch, a.gpu_util)
+    be = ApiBackend(a.api_model, workers=a.workers, max_per_min=a.max_per_min, max_tokens=a.max_api_tokens) if a.backend == "api" else Backend(a.backend, a.batch, a.gpu_util)
     print("backend", be.kind, flush=True)
     if a.stage in ("write", "answer"):
         R = a.round
@@ -465,4 +527,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except ApiStop as e:
+        print("API STOP:", e, "- progress saved, rerun the same command to resume", flush=True)
+        sys.exit(3)
