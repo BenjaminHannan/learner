@@ -1,0 +1,278 @@
+{
+ "ckpt": "/Users/ben-hannan/creative/ckpt/B2_s100.pt",
+ "seed": 0,
+ "no_replay": false,
+ "notes": "Gates rewritten 10-06 AFTER seeing DEV numbers from the second pilot (feasibility check, not a claim): signal = accepted try on >= 100 practice puzzles; aim = luck / rules_share >= 0.082 (2x the value-blind follower); sameness >= 4; rules_share reported, never gated. Marks re-scaled to ratio + guard (L1 1.6x and +3, L2 1.4x and +2.5, G0 1.5x and +3, PC 1.6x and +3). PC gave +2 points on the first (failed) warm-up and that was known when the marks were re-scaled. T1 and T1b stay sealed.",
+ "ladder_rungs": [
+  {
+   "warm3": 1500,
+   "dreams": 0,
+   "max_visits": 4,
+   "tag": "",
+   "n_records": 3000,
+   "updates": 375,
+   "loss_last": 1.181369411945343,
+   "temperature": {
+    "best": 0.21,
+    "evaluated": {
+     "0.21": {
+      "reach4": 0.15956876761995356,
+      "reach32": 0.5078125,
+      "distinct_rules": 4.4375,
+      "rules_share": 0.29147597254004576,
+      "eligible": true
+     },
+     "0.31": {
+      "reach4": 0.15512234817665885,
+      "reach32": 0.5234375,
+      "distinct_rules": 5.0078125,
+      "rules_share": 0.29065565307176044,
+      "eligible": true
+     },
+     "0.47": {
+      "reach4": 0.14121905543776198,
+      "reach32": 0.53125,
+      "distinct_rules": 5.4921875,
+      "rules_share": 0.27904102817597626,
+      "eligible": true
+     },
+     "0.7": {
+      "reach4": 0.13253936554326745,
+      "reach32": 0.515625,
+      "distinct_rules": 5.7265625,
+      "rules_share": 0.2688829137130286,
+      "eligible": true
+     },
+     "1.0": {
+      "reach4": 0.11947107028642936,
+      "reach32": 0.4921875,
+      "distinct_rules": 6.0234375,
+      "rules_share": 0.26806640625,
+      "eligible": true
+     },
+     "1.5": {
+      "reach4": 0.09731841803392659,
+      "reach32": 0.46875,
+      "distinct_rules": 5.96875,
+      "rules_share": 0.24560546875,
+      "eligible": true
+     },
+     "2.0": {
+      "reach4": 0.07693270300333704,
+      "reach32": 0.4140625,
+      "distinct_rules": 5.6875,
+      "rules_share": 0.220703125,
+      "eligible": true
+     }
+    },
+    "widened": 3,
+    "edge_note": "best temperature is still on the grid edge after widening"
+   },
+   "gate": {
+    "rules_share": 0.29147597254004576,
+    "distinct_rules": 4.4375,
+    "distinct": 16.3046875,
+    "luck": 0.04691075514874142,
+    "reach4": 0.15956876761995356,
+    "reach32": 0.5078125,
+    "hit_given_rules": 0.16094210009813545,
+    "dup_drop_rate": 0.6520700636942676,
+    "unresolved": 0.0,
+    "nobranch_distinct_rules": 3.0078125,
+    "nobranch_distinct": 9.8515625,
+    "nobranch_rules_share": 0.34635326650535775,
+    "practice_solved": 543,
+    "signal_ok": true,
+    "aim_ok": true,
+    "sameness_ok": true,
+    "verdict": "pass"
+   }
+  }
+ ],
+ "floors": {
+  "rules_only_per_try": 0.024129231770833332
+ },
+ "replay_rows": 200000,
+ "skills_raw": {
+  "pooled5": 0.997,
+  "n5": 1000,
+  "in_dist": 0.8935294117647059,
+  "n_in_dist": 6800
+ },
+ "warmed": {
+  "warm3": 1500,
+  "temperature": 0.21,
+  "gate": {
+   "rules_share": 0.29147597254004576,
+   "distinct_rules": 4.4375,
+   "distinct": 16.3046875,
+   "luck": 0.04691075514874142,
+   "reach4": 0.15956876761995356,
+   "reach32": 0.5078125,
+   "hit_given_rules": 0.16094210009813545,
+   "dup_drop_rate": 0.6520700636942676,
+   "unresolved": 0.0,
+   "nobranch_distinct_rules": 3.0078125,
+   "nobranch_distinct": 9.8515625,
+   "nobranch_rules_share": 0.34635326650535775,
+   "practice_solved": 543,
+   "signal_ok": true,
+   "aim_ok": true,
+   "sameness_ok": true,
+   "verdict": "pass"
+  },
+  "headroom": {
+   "dev_luck": 0.04691075514874142,
+   "dev_first_try": 0.1015625,
+   "dev_reach4": 0.15956876761995356
+  },
+  "scoreboard": {
+   "n_puzzles": 128,
+   "n_tries": 3496,
+   "luck": 0.04691075514874142,
+   "stop_luck": 0.04691075514874142,
+   "rules_share": 0.29147597254004576,
+   "unresolved": 0.0,
+   "reach4": 0.15956876761995356,
+   "reach32": 0.5078125,
+   "distinct": 16.3046875,
+   "distinct_accepted": 0.640625,
+   "distinct_rules": 4.4375,
+   "kept_per_puzzle": 27.3125,
+   "raw_per_puzzle": 78.5,
+   "dup_drop_rate": 0.6520700636942676,
+   "twin_luck": 0.014016018306636156,
+   "aim": 0.03289473684210527,
+   "first_try": 0.1015625
+  },
+  "aim": {
+   "own": {
+    "luck": 0.04691075514874142,
+    "reach4": 0.15956876761995356,
+    "reach32": 0.5078125,
+    "distinct_rules": 4.4375,
+    "rules_share": 0.29147597254004576
+   },
+   "twin": {
+    "luck": 0.012191664303941026,
+    "reach4": 0.04568963210884064,
+    "reach32": 0.1953125,
+    "distinct_rules": 4.5625,
+    "rules_share": 0.2900481996030621
+   },
+   "rules": {
+    "luck": 0.023681640625,
+    "reach4": 0.09082639564794216,
+    "reach32": 0.5078125,
+    "distinct_rules": 18.65625,
+    "rules_share": 0.5830078125
+   },
+   "own_minus_rules_luck": 0.02322911452374142,
+   "own_minus_twin_luck": 0.03471909084480039
+  },
+  "skills": {
+   "pooled5": 0.993,
+   "n5": 1000,
+   "in_dist": 0.88,
+   "n_in_dist": 6800
+  },
+  "harm_pooled5_points": 0.40000000000000036
+ },
+ "pc_grid": [
+  {
+   "lr": 0.0003,
+   "updates": 172,
+   "n_records": 1377,
+   "dev_luck": 0.04722142240138209,
+   "dev_reach4": 0.1725852297588672,
+   "dev_reach32": 0.5625,
+   "dev_first_try": 0.0703125,
+   "dev_aim": 0.03282464727900951,
+   "luck_gain": 0.031066725264067285,
+   "first_try_gain": -3.125,
+   "loss_last": 2.056677508354187,
+   "skills": {
+    "pooled5": 0.993,
+    "n5": 1000,
+    "in_dist": 0.8767647058823529,
+    "n_in_dist": 6800
+   }
+  },
+  {
+   "lr": 0.001,
+   "updates": 172,
+   "n_records": 1377,
+   "dev_luck": 0.05400746911806952,
+   "dev_reach4": 0.1883050482270797,
+   "dev_reach32": 0.625,
+   "dev_first_try": 0.0859375,
+   "dev_aim": 0.036483769031887395,
+   "luck_gain": 0.7096713969328101,
+   "first_try_gain": -1.5625,
+   "loss_last": 2.131567394733429,
+   "skills": {
+    "pooled5": 0.976,
+    "n5": 1000,
+    "in_dist": 0.8366176470588235,
+    "n_in_dist": 6800
+   }
+  },
+  {
+   "lr": 0.003,
+   "updates": 172,
+   "n_records": 1377,
+   "dev_luck": 0.04632310364794441,
+   "dev_reach4": 0.1642746416154534,
+   "dev_reach32": 0.5546875,
+   "dev_first_try": 0.0859375,
+   "dev_aim": 0.0280833815865663,
+   "luck_gain": -0.058765150079700956,
+   "first_try_gain": -1.5625,
+   "loss_last": 2.3474794387817384,
+   "skills": {
+    "pooled5": 0.902,
+    "n5": 1000,
+    "in_dist": 0.7266176470588235,
+    "n_in_dist": 6800
+   }
+  },
+  {
+   "lr": 0.01,
+   "updates": 172,
+   "n_records": 1377,
+   "dev_luck": 0.042119565217391304,
+   "dev_reach4": 0.1474635946814766,
+   "dev_reach32": 0.5625,
+   "dev_first_try": 0.0546875,
+   "dev_aim": 0.020652173913043477,
+   "luck_gain": -0.4791189931350116,
+   "first_try_gain": -4.6875,
+   "loss_last": 3.1443591356277465,
+   "skills": {
+    "pooled5": 0.311,
+    "n5": 1000,
+    "in_dist": 0.4026470588235294,
+    "n_in_dist": 6800
+   }
+  }
+ ],
+ "pc_choice": {
+  "lr": 0.001,
+  "updates": 172,
+  "widened": 0,
+  "on_edge": false,
+  "note": "chosen on DEV with the PC arm only; freeze before any T1 run"
+ },
+ "pc_gate": {
+  "pc_minus_n_luck_points": 0.7096713969328101,
+  "pc_over_n_luck": 1.151281170955921,
+  "first_try_gain_points": -1.5625,
+  "needed_points": 3.0,
+  "needed_ratio": 1.6,
+  "passes": false,
+  "temperature": 0.21,
+  "with_replay": true,
+  "harm_pooled5_points_vs_warmed": 1.7000000000000015
+ },
+ "wall_s": 3388.7715480327606
+}
