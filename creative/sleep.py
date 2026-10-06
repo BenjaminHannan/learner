@@ -58,12 +58,13 @@ def _order(n, draws, rng):
     return out[:draws]
 
 
-def check_visits(n_records, cfg):
-    """Raises if the fixed update count would show a puzzle record more than max_visits times."""
-    draws = cfg.updates * (cfg.batch // 2)
+def check_visits(n_records, cfg, replay=True):
+    """Raises if the fixed update count would show a puzzle record more than max_visits times (half a batch per update with replay, all of it without)."""
+    per = cfg.batch // 2 if replay else cfg.batch
+    draws = cfg.updates * per
     if n_records and draws > cfg.max_visits * n_records:
         raise ValueError(f'{cfg.updates} updates draw {draws} puzzle rows from {n_records} records '
-                         f'(> {cfg.max_visits} visits each); at most {cfg.max_visits * n_records // (cfg.batch // 2)} updates fit')
+                         f'(> {cfg.max_visits} visits each); at most {cfg.max_visits * n_records // per} updates fit')
 
 
 def sleep(model, records, replay_rows, vocab, cfg, device='cpu', amp=None, log=None):
@@ -75,7 +76,7 @@ def sleep(model, records, replay_rows, vocab, cfg, device='cpu', amp=None, log=N
         return dict(loss=[], visits={}, updates=0)
     if len({r['id'] for r in records}) != len(records):
         raise ValueError('puzzle record ids must be unique (the target cache is keyed by id)')
-    check_visits(len(records), cfg)
+    check_visits(len(records), cfg, bool(replay_rows))
     half = cfg.batch // 2 if replay_rows else cfg.batch
     draws = cfg.updates * half
     rng = random.Random(cfg.seed)

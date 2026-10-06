@@ -247,13 +247,30 @@ def test_scoreboard_and_gate():
     tw = [[sampler.TryRec(t) for t in puzzles.solutions(r['nums'], r['twin']['target'])[:3]] for r in rows]
     st = scoreboard.score_puzzles(rows, tw)
     assert st['luck'] == 0.0 and st['twin_luck'] == 1.0 and st['aim'] == -1.0
-    g = scoreboard.dev_gate(rows, tries, raw)
-    assert g['verdict'].startswith('stop') and not g['cold_start_ok']                # a random B2 must fail the cold-start gate
-    assert scoreboard.dev_gate(rows, inj)['verdict'].startswith('stop: sameness') or scoreboard.dev_gate(rows, inj)['verdict'] == 'pass'
+    prac = splits()['practice'][:8]
+    ptr, _ = sampler.sample_tries(m, prac, VOCAB, 'cpu', n_tries=8, temperature=1.5, seed=3)
+    nb, _ = sampler.sample_tries(m, rows, VOCAB, 'cpu', n_tries=16, temperature=1.5, seed=2, branch=0)
+    g = scoreboard.dev_gate(rows, tries, raw, nb, (prac, ptr))
+    assert g['verdict'].startswith('stop') and not g['signal_ok'] and 'nobranch_distinct_rules' in g and g['practice_solved'] == 0
+    assert 'reach32' in g and 'distinct' in g                                          # reported, not gated
+    # a passing gate: solver tries on every practice puzzle give signal; 4+ distinct rule-following programs per puzzle give sameness
+    prac_inj = [[sampler.TryRec(t) for t in puzzles.solutions(r['nums'], r['target'])[:1]] for r in splits()['practice'][:120]]
+    ok_rf = lambda r: [x for x in sampler.rule_follower_tries([r], 60, 1)[0] if scoreboard.judge_try(r, x, rules_only=True) == 'accept'][:12]
+    many = [[sampler.TryRec(t) for t in puzzles.solutions(r['nums'], r['target'])[:1]] + ok_rf(r) for r in rows]
+    gp = scoreboard.dev_gate(rows, many, None, None, (splits()['practice'][:120], prac_inj))
+    assert gp['signal_ok'] and gp['sameness_ok'] and gp['verdict'] == 'pass' and gp['practice_solved'] == 120, gp
+    assert scoreboard.dev_gate(rows, many, None, None, (splits()['practice'][:99], prac_inj[:99]))['verdict'].startswith('stop: signal')
+    # the value-blind rule follower reproduces the exact rules-only floor, and the aim check reports own / twin / rules
+    rf = sampler.rule_follower_tries(splits()['dev'][:64], 32, 0)
+    sr = scoreboard.score_puzzles(splits()['dev'][:64], rf)
+    fl = sum(puzzles.rules_only_floor(r['nums'], r['target']) for r in splits()['dev'][:64]) / 64
+    assert abs(sr['luck'] - fl) < 0.01 and sr['unresolved'] == 0, (sr['luck'], fl)
+    aim = scoreboard.aim_check(m, rows, VOCAB, 'cpu', n_tries=8)
+    assert set(aim) >= {'own', 'twin', 'rules', 'own_minus_rules_luck', 'own_minus_twin_luck'} and aim['rules']['luck'] >= 0
     les = scoreboard.lesions(m, rows, VOCAB, 'cpu', n_tries=8)
-    assert set(les) == {'luck', 'loops0_luck', 'donor_luck', 'rules_floor'} and les['loops0_luck'] == 0 and les['rules_floor'] > 0
+    assert set(les) == {'luck', 'donor_luck', 'rules_floor', 'donor_ok', 'loops0_luck'} and les['loops0_luck'] == 0 and les['donor_ok']
     print('  random B2 on 8 dev puzzles:', {k: round(v, 4) for k, v in s.items() if isinstance(v, float)})
-    print('  gate:', g['verdict'])
+    print('  gate:', g['verdict'], '| rule follower luck', round(sr['luck'], 4), 'vs exact floor', round(fl, 4))
     print('ok scoreboard_and_gate')
 
 
@@ -325,6 +342,43 @@ def test_sleep_plumbing():
     assert last < first * 0.5, (first, last)
     print(f'  overfit loss {first:.2f} -> {last:.2f} over 120 updates')
     print('ok sleep_plumbing')
+
+
+def _parent(luck, aim, reach4, stop, first, skills, donor=0.0, floor=0.02):
+    return dict(luck=luck, aim=aim, reach4=reach4, stop_luck=stop, first_try=first, skills=skills, donor_luck=donor, rules_floor=floor,
+                reach32=reach4, unresolved=0.0)
+
+
+def test_marks_and_verdicts():
+    from creative import marks
+    rng = random.Random(0)
+    j = lambda x: x + rng.uniform(-0.01, 0.01)
+    def parents(w_gain, w_aim, first_gain, skills_drop=0.0, pc=0.3):
+        out = []
+        for _ in range(6):
+            out.append(dict(N=_parent(j(.05), j(0), j(.2), j(.03), j(.10), .70), R=_parent(j(.06), j(0), j(.2), j(.03), j(.10), .70),
+                            W=_parent(j(.05 + w_gain), j(w_aim), j(.2 + w_gain), j(.03 + w_gain), j(.10 + first_gain), .70 - skills_drop),
+                            H=_parent(j(.1), j(.05), j(.3), j(.1), j(.1), .7), Hw=_parent(j(.05), j(0), j(.2), j(.03), j(.1), .7),
+                            PC=_parent(j(.05 + pc), j(.1), j(.5), j(.2), j(.3), .7)))
+        return out
+    v, m = marks.c1_verdict(parents(.25, .2, .12), dict(gate_pass=True))
+    assert v == 'PASS with first answers' and m['F1'], (v, m['_diffs'])
+    assert marks.c1_verdict(parents(.25, .2, .0), dict(gate_pass=True))[0] == 'PASS, search only'
+    assert marks.c1_verdict(parents(.25, .0, .0), dict(gate_pass=True))[0] == 'rules only'
+    assert marks.c1_verdict(parents(.25, .2, .12, skills_drop=.05), dict(gate_pass=True))[0] == 'gain with harm'
+    assert marks.c1_verdict(parents(.25, .2, .12), dict(gate_pass=False))[0] == 'gate stop'
+    assert marks.c1_verdict(parents(.25, .2, .12), dict(gate_pass=True, placebo_too_close=True))[0] == 'placebo too close'
+    assert marks.c1_verdict(parents(.25, .2, .12), dict(checkers_disagree=True))[0] == 'void'
+    bad = parents(.25, .2, .12)
+    for p in bad:
+        p['W']['donor_luck'] = .5
+    assert marks.c1_verdict(bad, dict(gate_pass=True))[0] == 'void'                       # donor lesion fails
+    assert marks.c1_verdict(parents(.0, .0, .0), dict(gate_pass=True))[0] == 'proved wrong'
+    c2 = [dict(N=dict(first_try=.10, reach4=.3, skills=.7), R=dict(first_try=.10, reach4=.3, skills=.7), W=dict(first_try=.30 + rng.uniform(-.01, .01), reach4=.4, skills=.69)) for _ in range(6)]
+    assert marks.c2b_verdict(c2)[0] == 'PASS'
+    c2[0]['W']['skills'] = .60
+    assert marks.c2b_verdict(c2)[0] == 'not shown'
+    print('ok marks_and_verdicts')
 
 
 if __name__ == '__main__':

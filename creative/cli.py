@@ -1,8 +1,13 @@
 """python3 -m creative.cli <command>   (nothing here trains; dev-gate and lesions only sample from a checkpoint)
   build-splits [--out creative/data/c1]    write the sealed C1 splits and MANIFEST.json (deterministic; re-run = same hashes)
   floors [--split dev] [--uniform-samples N]   S0: per-try and pass@4 floors for B2's slots (rules-only exact, uniform Monte-Carlo)
-  dev-gate --ckpt PATH [--split dev] [--temps 0.7,1,1.3,1.6,2] [--device cpu]   choose the temperature on DEV, then the cold-start and sameness gates
-  lesions --ckpt PATH --temperature T [--split dev]   loops:0 and donor lesions on a (slept) checkpoint"""
+  dev-gate --ckpt PATH [--temps 0.7,1,1.3,1.6,2] [--device cpu]   choose the temperature on DEV (reach@4), then the signal gate (>= 50% rule-following
+                  tries on DEV and an accepted try on >= 100 distinct practice puzzles) and the sameness gate (>= 4 distinct rule-following programs),
+                  variety with and without branching, and the aim check (own vs twin vs value-blind rule follower)
+  aim --ckpt PATH --temperature T          the aim check alone (run it on W after sleep too)
+  score --ckpt PATH --split x              the scoreboard on any split (X = correct-solution variety, report only)
+  pilot --ckpt PATH --out DIR [--skills-train train.jsonl]   DEV-only pilot: warm-up, gates, aim check, PC lr choice (reads no T1/T1b/X)
+  lesions --ckpt PATH --temperature T      donor lesion (must not beat the rules-only floor) and loops:0 (reported) on a slept checkpoint"""
 import argparse, json, os, sys
 from creative import puzzles
 
@@ -11,7 +16,7 @@ DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'c1')
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['build-splits', 'floors', 'dev-gate', 'lesions'])
+    ap.add_argument('cmd', choices=['build-splits', 'floors', 'dev-gate', 'aim', 'score', 'lesions', 'pilot'])
     ap.add_argument('--out', default=DATA)
     ap.add_argument('--data', default=DATA)
     ap.add_argument('--split', default='dev')
@@ -22,9 +27,20 @@ def main(argv=None):
     ap.add_argument('--tries', type=int, default=32)
     ap.add_argument('--uniform-samples', type=int, default=3000)
     ap.add_argument('--limit', type=int)
+    ap.add_argument('--practice-limit', type=int)
+    ap.add_argument('--warm-n', type=int, default=512)
+    ap.add_argument('--warm-updates', type=int, default=300)
+    ap.add_argument('--pc-updates', default='256')
+    ap.add_argument('--lrs', default='1e-4,3e-4,1e-3')
+    ap.add_argument('--skills-train', help='skills train.jsonl for replay (pilot); without it warm-up harm is not measured')
     a = ap.parse_args(argv)
     if a.cmd == 'build-splits':
         print(json.dumps(puzzles.write_splits(a.out), indent=1, sort_keys=True))
+        return
+    if a.cmd == 'pilot':
+        from creative import pilot
+        pilot.pilot(a.ckpt, a.out, a.data, a.device, a.skills_train, warm_n=a.warm_n, warm_updates=a.warm_updates,
+                    pc_updates=tuple(int(x) for x in a.pc_updates.split(',')), lrs=tuple(float(x) for x in a.lrs.split(',')), tries=a.tries, practice_limit=a.practice_limit, log=lambda d: print(json.dumps(d), flush=True))
         return
     rows = puzzles.load_split(a.data, a.split)[:a.limit]
     if a.cmd == 'floors':
@@ -41,11 +57,21 @@ def main(argv=None):
     if a.cmd == 'dev-gate':
         best, grid = scoreboard.tune_temperature(model, rows, vocab, a.device, [float(x) for x in a.temps.split(',')], a.tries)
         tr, raw = sampler.sample_tries(model, rows, vocab, a.device, a.tries, best)
-        g = scoreboard.dev_gate(rows, tr, raw)
-        print(json.dumps(dict(temperature=best, grid={str(k): v for k, v in grid.items()}, gate=g), indent=1))
+        nb, _ = sampler.sample_tries(model, rows, vocab, a.device, a.tries, best, branch=0)
+        prac = puzzles.load_split(a.data, 'practice')[:a.practice_limit]
+        ptr, _ = sampler.sample_tries(model, prac, vocab, a.device, a.tries, best)
+        g = scoreboard.dev_gate(rows, tr, raw, nb, (prac, ptr))
+        aim = scoreboard.aim_check(model, rows, vocab, a.device, a.tries, best)
+        print(json.dumps(dict(temperature=best, grid={str(k): v for k, v in grid.items()}, gate=g, aim=aim), indent=1))
+    elif a.cmd == 'aim':
+        print(json.dumps(scoreboard.aim_check(model, rows, vocab, a.device, a.tries, a.temperature), indent=1))
+    elif a.cmd == 'score':
+        tr, raw = sampler.sample_tries(model, rows, vocab, a.device, a.tries, a.temperature)
+        s = scoreboard.score_puzzles(rows, tr, raw, sampler.greedy_tries(model, rows, vocab, a.device))
+        s.pop('per_puzzle')
+        print(json.dumps(s, indent=1))
     else:
         print(json.dumps(scoreboard.lesions(model, rows, vocab, a.device, a.tries, a.temperature), indent=1))
-
 
 if __name__ == '__main__':
     main()

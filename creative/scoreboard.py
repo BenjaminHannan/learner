@@ -6,8 +6,9 @@ from math import comb
 from creative.checkers import verdict
 from creative.programs import NOOP, cone, result_key, run
 
-COLD_START_MIN = 0.10       # an accepted try within 32 on >= 10% of DEV puzzles
-SAMENESS_MIN = 4.0          # >= 4 distinct result-changing programs per puzzle on average
+RULES_SHARE_MIN = 0.50      # signal gate: at least half of the DEV tries follow the rules
+PRACTICE_SOLVED_MIN = 100   # signal gate: an accepted try on at least 100 distinct practice puzzles
+SAMENESS_MIN = 4.0          # sameness gate: >= 4 distinct rule-following programs per puzzle on average (canonical key)
 
 
 def reach_at(c, m, k):
@@ -76,41 +77,75 @@ def score_puzzles(rows, tries, raw=None, greedy=None):
     return out
 
 
-def dev_gate(rows, tries, raw=None):
-    """The gates on DEV after warm-up. -> dict(cold_start_ok, sameness_ok, verdict, reach32, distinct). A failed gate stops C1 with T1 sealed:
-    sameness -> C3b first; cold start -> stepping stones first (roadmap section 6)."""
+def dev_gate(rows, tries, raw=None, nobranch=None, practice=None):
+    """The gates on DEV after warm-up (roadmap section 6, as revised 10-06).
+      signal:   >= 50% of DEV tries follow the rules AND the warmed parent has an accepted try on >= 100 distinct practice puzzles
+                (practice = (practice_rows, practice_tries), 32 tries each). Reach@32 is report-only: rules alone reach about half the puzzles.
+      sameness: distinct rule-following programs (canonical key) >= 4 per puzzle on average, with the sampler's branching on.
+    Reported, not gated: reach@4 / @32, the old result-changing count `distinct`, and the variety without branching (nobranch = tries sampled with
+    branch=0). A failed gate stops C1 with T1 sealed: signal -> fix the warm-up; sameness -> C3b first.
+    -> dict(signal_ok, sameness_ok, verdict, ...)."""
     s = score_puzzles(rows, tries, raw)
-    cold, same = s['reach32'] >= COLD_START_MIN, s['distinct'] >= SAMENESS_MIN
-    v = 'pass' if cold and same else ('stop: cold start and sameness' if not cold and not same else
-                                       'stop: cold start (stepping stones first)' if not cold else 'stop: sameness (C3b first)')
-    return dict(cold_start_ok=cold, sameness_ok=same, verdict=v, reach32=s['reach32'], distinct=s['distinct'], distinct_rules=s['distinct_rules'], luck=s['luck'],
-                reach4=s['reach4'], dup_drop_rate=s.get('dup_drop_rate'), unresolved=s['unresolved'])
+    out = dict(rules_share=s['rules_share'], distinct_rules=s['distinct_rules'], distinct=s['distinct'], luck=s['luck'], reach4=s['reach4'],
+               reach32=s['reach32'], dup_drop_rate=s.get('dup_drop_rate'), unresolved=s['unresolved'])
+    if nobranch is not None:
+        sn = score_puzzles(rows, nobranch)
+        out.update(nobranch_distinct_rules=sn['distinct_rules'], nobranch_distinct=sn['distinct'], nobranch_rules_share=sn['rules_share'])
+    solved = None
+    if practice is not None:
+        solved = sum(any(judge_try(r, x) == 'accept' for x in t) for r, t in zip(*practice))
+        out['practice_solved'] = solved
+    sig = s['rules_share'] >= RULES_SHARE_MIN and solved is not None and solved >= PRACTICE_SOLVED_MIN
+    same = s['distinct_rules'] >= SAMENESS_MIN
+    v = ('pass' if sig and same else 'stop: signal and sameness' if not sig and not same else
+         'stop: signal (fix the warm-up)' if not sig else 'stop: sameness (C3b first)')
+    if practice is None:
+        v += ' [practice puzzles not given: signal gate incomplete]'
+    out.update(signal_ok=sig, sameness_ok=same, verdict=v)
+    return out
 
 
 def tune_temperature(model, rows, vocab, device, grid=(0.7, 1.0, 1.3, 1.6, 2.0), n_tries=32, seed=0):
-    """Choose the sampling temperature on DEV only: highest reach@32, ties to more distinct programs. Frozen afterwards.
+    """Choose the sampling temperature on DEV only: highest reach@4 (the reach mark), ties to more distinct rule-following programs. Frozen afterwards.
     -> (best, {temperature: (reach32, distinct)})."""
     from creative.sampler import sample_tries
     res = {}
     for T in grid:
         tr, raw = sample_tries(model, rows, vocab, device, n_tries=n_tries, temperature=T, seed=seed)
         s = score_puzzles(rows, tr, raw)
-        res[T] = (s['reach32'], s['distinct'])
+        res[T] = (s['reach4'], s['distinct_rules'])
     return max(res, key=lambda T: res[T]), res
 
 
 def lesions(model, rows, vocab, device, n_tries=32, temperature=1.0, seed=0):
-    """C1's lesions (roadmap section 6), as sampler runs. Run them on W after sleep; the void rules are applied by the caller.
-      loops0: luck with loops:0 (no thinking); must be under half of the intact luck.
-      donor:  tries sampled on the TWIN puzzle's prompt (same numbers, the other target) and judged on the recipient's own target; must not
-              exceed the rules-only floor (a donor's thinker state must not raise hits on the recipient's target).
-    -> dict(luck, loops0_luck, donor_luck, rules_floor)."""
+    """C1's lesion (roadmap section 6): DONOR ONLY. Tries sampled on the TWIN puzzle's prompt (same numbers, the other target) and judged on the
+    recipient's own target must not score above the rules-only floor; otherwise the run is void. loops0_luck (loops:0 writes no steps, so 0 by
+    construction) is reported, not a test. Run on W after sleep. -> dict(luck, donor_luck, rules_floor, donor_ok, loops0_luck)."""
     from creative.puzzles import rules_only_floor
     from creative.sampler import sample_tries
     tr, raw = sample_tries(model, rows, vocab, device, n_tries, temperature, seed=seed)
     t0, _ = sample_tries(model, rows, vocab, device, n_tries, temperature, seed=seed, loops=0)
-    twins = [r['twin'] for r in rows]
-    td, _ = sample_tries(model, twins, vocab, device, n_tries, temperature, seed=seed)
+    td, _ = sample_tries(model, [r['twin'] for r in rows], vocab, device, n_tries, temperature, seed=seed)
     share = lambda rs, ts: sum(judge_try(r, x) == 'accept' for r, t in zip(rs, ts) for x in t) / max(sum(len(t) for t in ts), 1)
-    return dict(luck=share(rows, tr), loops0_luck=share(rows, t0), donor_luck=share(rows, td),
-                rules_floor=sum(rules_only_floor(r['nums'], r['target']) for r in rows) / len(rows))
+    floor = sum(rules_only_floor(r['nums'], r['target']) for r in rows) / len(rows)
+    donor = share(rows, td)
+    return dict(luck=share(rows, tr), donor_luck=donor, rules_floor=floor, donor_ok=donor <= floor, loops0_luck=share(rows, t0))
+
+
+def aim_check(model, rows, vocab, device, n_tries=32, temperature=1.0, seed=0):
+    """AIM CHECK on DEV (a report, not a gate; no training), same tries and checker throughout:
+      own:   the model's tries for the real target, judged on the real target
+      twin:  the model's tries for the TWIN target, judged on the real target
+      rules: the value-blind rule follower (random rule-following programs, same dedup), judged on the real target
+    Luck and reach@4 for each. If rules matches own, search is still random and G0 decides whether sleep taught aim. Repeat on W after sleep."""
+    from creative.sampler import rule_follower_tries, sample_tries
+    own, raw = sample_tries(model, rows, vocab, device, n_tries, temperature, seed=seed)
+    twin, _ = sample_tries(model, [r['twin'] for r in rows], vocab, device, n_tries, temperature, seed=seed)
+    rf = rule_follower_tries(rows, n_tries, seed)
+    out = {}
+    for name, tr in (('own', own), ('twin', twin), ('rules', rf)):
+        sc = score_puzzles(rows, tr)                     # twin tries are scored on the real rows (rows[i] has the real target)
+        out[name] = dict(luck=sc['luck'], reach4=sc['reach4'], reach32=sc['reach32'], distinct_rules=sc['distinct_rules'], rules_share=sc['rules_share'])
+    out['own_minus_rules_luck'] = out['own']['luck'] - out['rules']['luck']
+    out['own_minus_twin_luck'] = out['own']['luck'] - out['twin']['luck']
+    return out

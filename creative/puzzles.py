@@ -219,3 +219,28 @@ def uniform_floor(nums, target, n_samples=20000, seed=0):
 
 def pass_at(p, k):
     return 1 - (1 - p) ** k
+
+
+# ---- shared warm-up: B2 learns the format on 2-number puzzles with solver programs ----
+def warmup_rows(n, seed=0):
+    """n 2-number puzzles ("Numbers: A, B. Target: T. ...") with their solver program, each from its own number pair, T one exact operation of
+    the pair under the C1 rules (T >= 1, not a constant, not a given number). -> [(row, Try)]. Ids 'mk:warmup:NNNN'."""
+    pairs = sorted(itertools.combinations_with_replacement(POOL, 2), key=lambda s: _h('set2', seed, s))
+    out = []
+    for pr in pairs:
+        if len(out) >= n:
+            break
+        opts = {}
+        for op in ARITH:
+            for x, y, a, b in ((pr[0], pr[1], 0, 1), (pr[1], pr[0], 1, 0)):
+                v = apply(op, x, y)
+                if v is not None and 1 <= v <= T_MAX and v not in CONSTS and v not in pr:
+                    opts.setdefault(v, []).append(Try.make([(op, a, b)], R0))
+        if not opts:
+            continue
+        rng = random.Random(_h('wtarget', seed, pr))
+        T = rng.choice(sorted(opts))
+        row = make_row(f'mk:warmup:{len(out):04d}', pr, T, 'warmup')
+        out.append((row, rng.choice(opts[T])))
+    assert len(out) == n, 'not enough 2-number puzzles'
+    return out

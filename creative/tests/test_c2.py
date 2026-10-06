@@ -164,6 +164,34 @@ def test_labelled_sets_and_synthetic():
     print('ok labelled_sets_and_synthetic')
 
 
+def test_representability_floor_and_gate():
+    rows = F.make_rows(F.HELD_OUT, 18, seed=11)
+    rep = F.representability(rows)
+    for kind, d in rep.items():
+        assert d['n'] > 0 and d['sealed'] and max(d['steps']) <= 7, (kind, d)
+    # a kind whose rule B2 cannot write (x**3 needs more than the 7 steps, or a string edit) is not sealed
+    cube = dict(row_for(lambda x: x ** 3 + 7 * x + 11, [13, 17, 19, 23], rid='cube'), kind='cube_poly')
+    assert not F.representability([cube], max_steps=3)['cube_poly']['sealed']
+    # floor: a random program fitting every example by chance is rare; a trivial row (all examples map x -> x) is common
+    hard = F.value_blind_floor(rows[0], 4000)
+    easy = F.value_blind_floor(row_for(lambda x: x, [14, 20, 35]), 4000)
+    assert 0 <= hard < 0.01 and easy > 20 * max(hard, 1e-4), (hard, easy)
+    # gate: injected reference programs pass cold start (>= 10% and >= 3x the floor); a random B2 does not
+    tries = []
+    for r in rows:
+        t = F.find_reference(r)
+        tries.append([sampler.TryRec(t)] + [sampler.TryRec(T_([(ADD, F.parse(r['prompt'])['q_slot'], C1 + k % 4)], R0)) for k in range(5)])
+    floors = [F.value_blind_floor(r, 500) for r in rows]
+    g = F.dev_gate(rows, tries, floors)
+    assert g['cold_start_ok'] and g['reach32'] == 1.0
+    m = model()
+    rt, _ = sampler.sample_tries(m, rows[:6], VOCAB, 'cpu', n_tries=8, temperature=1.5, seed=0)
+    g2 = F.dev_gate(rows[:6], rt, floors[:6])
+    assert not g2['cold_start_ok'] and g2['verdict'].startswith('stop')
+    print(f"  representability {({k: (d['found'], d['n'], max(d['steps'])) for k, d in rep.items()})}; floor hard {hard:.4f} easy {easy:.3f}; gate on reference tries: {g['verdict']}")
+    print('ok representability_floor_and_gate')
+
+
 if __name__ == '__main__':
     for name, fn in list(globals().items()):
         if name.startswith('test_'):

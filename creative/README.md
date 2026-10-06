@@ -34,10 +34,19 @@ Branch note: this branch is cut from `claude/custom-reader-talker-4x309r` so `cu
 - Real C2 rows: the skills data's fewshot_number_rule / rule_apply are parsed by `fewshot.parse`, but that data is not in this repo's checkout, so only synthetic kinds were smoke-tested. Sealing the held-out rule kinds by hash is C2's own step.
 - The plain-net and fresh-net training for "examples to learn" (`labelled_sets` builds the k = 0, 8, 32, 128 data only).
 
-## Things the roadmap thread should look at (numbers from this code, CPU, no model)
-1. **A value-blind rule follower already reaches 49% at pass@32.** Exact rules-only floor on DEV: 2.4% per try, 9.2% at pass@4, 48.8% at pass@32 (T1: 2.4 / 8.9 / 48.1). The uniform floor is near 0 (4e-6 in 2,000 samples; too few to resolve, S0 needs a smarter estimate). So the 10% cold-start gate at 32 tries is passed by a model that only learned the rules. The aim mark G0 (own target minus twin target) is what separates that from aiming; the gate alone does not.
-2. **Branching alone props up the sameness gate.** The top-8 first steps are forced, so even at temperature 0.05 a random B2 keeps 8 distinct programs per puzzle (6.9 result-changing). I added `distinct_rules` (distinct value-blind rule-following programs) next to `distinct`; suggest the sameness gate use that one. The spec text counts all result-changing programs, so I left the gate on `distinct` and report both.
-3. **Puzzles have few solutions.** Mean solutions per target: practice 1.9, DEV 2.0, T1 1.9, T1b 1.7, X (four numbers) 4.4. The critic's worry (one solution almost always) is only partly fixed by x and /. Option: prefer targets with >= 3 solutions. Not done, because the spec did not ask for it and it changes the puzzle set.
-4. **Dedup reading.** "Drop duplicates before running" is implemented as: dedup the sampled programs (commutative operand order merged) before any checking, top up in up to 3 more rounds. Luck is over kept tries (<= 32); `raw_per_puzzle` and `dup_drop_rate` are reported.
-5. **loops:0 lesion is trivial for this checker** (no steps means no result slot, so luck is 0). The donor lesion is the real one; here it is "tries sampled on the twin's prompt, judged on the recipient's target, compared with the rules-only floor".
-6. **Spec detail: the target is slot n.** Prompts list the given numbers first and the target last, so the checkers know the given numbers are slots 0..n-1 and the target is slot n.
+## Spec revision of 10-06 (relay from the roadmap thread), applied
+1. **Signal gate replaces cold start** (`scoreboard.dev_gate`): >= 50% of DEV tries follow the rules AND an accepted try on >= 100 distinct practice puzzles. Reach@32 is report-only; reach@4 is the reach mark (and what `tune_temperature` picks on).
+2. **Sameness gate** = distinct rule-following programs (canonical key) >= 4 per puzzle. `distinct` (result-changing) is still reported; variety is reported with and without branching (`nobranch_*`).
+3. Puzzle generator unchanged. Correct-solution variety is report-only: `cli score --split x`.
+4. **Aim check** (`scoreboard.aim_check`, `cli aim`): own tries, twin-prompt tries scored on the real target, and the value-blind rule follower (`sampler.rule_follower_tries`, matches the exact floor: 2.25% vs 2.39% on 64 DEV puzzles), luck and reach@4. A report, not a gate; repeat on W.
+5. **F1** and the verdict names live in `marks.py` (`c1_marks`, `c1_verdict`: void -> gate stop -> placebo too close -> PASS with first answers / PASS, search only -> rules only -> gain with harm -> proved wrong -> not shown; `c2b_verdict`). Tested on synthetic parents.
+6. **Lesion: donor only** (`scoreboard.lesions`: donor_ok = donor luck <= rules-only floor). loops:0 is reported.
+7. **DEV-only pilot** (`creative/pilot.py`, `cli pilot`): raw parent gates + aim, shared warm-up on 2-number solver puzzles, warmed-parent gates + aim, PC-arm lr/update grid on DEV. Reads no T1/T1b/X. Without `--skills-train` there is no replay and warm-up harm on skills is not measured (flagged `no_replay`).
+8. **C2:** `fewshot.find_reference` / `representability` (a kind is sealed only if every sampled question has a reference program in B2's executor within 7 steps), `value_blind_floor`, `fewshot.dev_gate` (reach@32 >= 10% AND >= 3x the floor's reach@32, sameness >= 4), `marks.c2b_verdict` (first try W-N >= +15, W-R >= +10, reach@4 and skills within 2 of N).
+
+## Numbers from this code (CPU, no model unless stated)
+- Value-blind rule follower on DEV: 2.4% per try, 9.2% pass@4, 48.8% pass@32. Only about 58% of its tries count as rule-following (inexact division and the like), so the 50% signal threshold is not far above a random rule follower; the practice-puzzle count is the real signal test.
+- Mean solutions per target: practice 1.9, DEV 2.0, T1 1.9, T1b 1.7, X 4.4.
+- The uniform floor is near 0 and a few thousand samples cannot resolve it.
+- Forcing the top 8 first steps keeps about 7 distinct programs per puzzle even at near-zero temperature, which is why the gate now counts rule-following programs.
+- `loops:0` writes no steps, so its luck is 0 by construction.

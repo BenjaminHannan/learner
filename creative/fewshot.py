@@ -129,11 +129,12 @@ def score_fewshot(rows, tries, raw=None):
         acc = [v[0] == 'accept' for v in vs]
         keyed = [a and str(v[2]) in row['accepted'] for a, v in zip(acc, vs)]
         keys = {result_key(r.t, run(p['nums'], r.t)[1]) for r in tries[i]} - {'dead'}
-        per.append(dict(id=row['id'], m=len(acc), c=sum(acc), reach4=reach_at(sum(acc), len(acc), 4), reach32=float(any(acc)), distinct=len(keys),
+        rk = {result_key(r.t, run(p['nums'], r.t)[1]) for r in tries[i] if structure(p, r.t)[0]}
+        per.append(dict(id=row['id'], m=len(acc), c=sum(acc), reach4=reach_at(sum(acc), len(acc), 4), reach32=float(any(acc)), distinct=len(keys), distinct_rules=len(rk),
                         key_c=sum(keyed)))
         tot.update(tries=len(acc), acc=sum(acc), keyed=sum(keyed), unres=sum(v[0] == 'unresolved' for v in vs), raw=raw[i] if raw else len(acc))
     n = max(len(rows), 1)
-    return dict(n_questions=len(rows), n_tries=tot['tries'], luck=tot['acc'] / max(tot['tries'], 1), key_luck=tot['keyed'] / max(tot['tries'], 1),
+    return dict(n_questions=len(rows), n_tries=tot['tries'], luck=tot['acc'] / max(tot['tries'], 1), distinct_rules=sum(d['distinct_rules'] for d in per) / n, key_luck=tot['keyed'] / max(tot['tries'], 1),
                 unresolved=tot['unres'] / max(tot['tries'], 1), reach4=sum(d['reach4'] for d in per) / n, reach32=sum(d['reach32'] for d in per) / n,
                 distinct=sum(d['distinct'] for d in per) / n, per_question=per)
 
@@ -225,6 +226,103 @@ def _recover(r):
 
 def record_try(r):
     return _recover(r)
+
+
+# ---- representability, floor and DEV gates (roadmap section 7, revised 10-06) ----
+SEARCH_OPS = (1, 2, 3, 4, 5, 6, 7)          # ADD SUB MUL DIV MOD MIN MAX (CMP only gives -1/0/1: left out of the reference search)
+
+
+def find_reference(row, max_steps=7, max_states=200000):
+    """Offline seal-time check (reads the key): breadth-first search for a program over the input x and the constants, at most max_steps steps,
+    that reproduces every example AND the key on the query. States are the vectors of values over (examples + query), so equal functions are
+    merged. -> Try or None (None = not found within the budget: reported as 'not shown representable', never as proved unrepresentable)."""
+    from creative.programs import CONSTS, apply
+    p = parse(row['prompt'])
+    xs = p['xs'] + [p['q']]
+    target = tuple(p['ys']) + (int(row['answer']),)
+    # slot -> value vector; slot ids as in B2: x = q_slot, constants 16..19, result s -> R0 + s
+    base = {p['q_slot']: tuple(xs)}
+    for i, c in enumerate(CONSTS):
+        base[N_NUM + i] = (c,) * len(xs)
+    if target in base.values():
+        return None
+    frontier = [((), dict(base))]
+    seen = {v for v in base.values()}
+    for depth in range(max_steps):
+        nxt = []
+        for steps, slots in frontier:
+            items = list(slots.items())
+            for sa, va in items:
+                for sb, vb in items:
+                    for op in SEARCH_OPS:
+                        out = tuple(apply(op, x, y) for x, y in zip(va, vb))
+                        if None in out or out in seen:
+                            continue
+                        seen.add(out)
+                        ns = dict(slots)
+                        ns[R0 + len(steps)] = out
+                        st = steps + ((op, sa, sb),)
+                        if out == target:
+                            return Try.make(list(st), R0 + len(steps))
+                        nxt.append((st, ns))
+                        if len(seen) > max_states:
+                            return None
+        frontier = nxt
+    return None
+
+
+def representability(rows, max_steps=7, max_states=200000):
+    """Per held-out kind: the share of its questions with a reference program within max_steps in B2's executor, and the step counts. A kind is
+    SEALED only if every sampled question has one (roadmap: 'sealed only if its reference program runs in B2's executor within 7 steps');
+    otherwise it is listed as wall 4 and not tested. -> {kind: dict(n, found, steps, sealed)}."""
+    out = {}
+    for r in rows:
+        d = out.setdefault(r['kind'], dict(n=0, found=0, steps=[]))
+        d['n'] += 1
+        t = find_reference(r, max_steps, max_states)
+        if t is not None and verdict(parse(r['prompt']), t)[0] == 'accept' and str(verdict(parse(r['prompt']), t)[2]) in r['accepted']:
+            d['found'] += 1
+            d['steps'].append(sum(1 for o in t.ops if o))
+    for d in out.values():
+        d['sealed'] = d['found'] == d['n']
+    return out
+
+
+def value_blind_floor(row, n_samples=20000, seed=0, max_len=4):
+    """Per-try chance that a RANDOM program over the input and the constants fits every example by luck (value-blind: nothing looks at the examples
+    when it is drawn). Length uniform 1..max_len; each step an op from SEARCH_OPS and two operands uniform over x, the four constants and earlier
+    results; the answer is the last result. Monte Carlo; the program must read x and run on every row, exactly as the checker demands."""
+    import random
+    rng = random.Random(seed)
+    p = parse(row['prompt'])
+    hits = 0
+    for _ in range(n_samples):
+        L = rng.randint(1, max_len)
+        slots = [p['q_slot'], 16, 17, 18, 19]
+        steps = []
+        for s in range(L):
+            steps.append((rng.choice(SEARCH_OPS), rng.choice(slots), rng.choice(slots)))
+            slots.append(R0 + s)
+        t = Try.make(steps, R0 + L - 1)
+        hits += verdict(p, t)[0] == 'accept'
+    return hits / n_samples
+
+
+GATE_REACH32_MIN, GATE_FLOOR_MULT, GATE_SAMENESS_MIN = 0.10, 3.0, 4.0
+
+
+def dev_gate(rows, tries, floors, raw=None):
+    """C2 DEV gates. cold start: an accepted try within 32 on >= 10% of questions AND >= 3x the value-blind floor (floors[i] = per-try floor of
+    question i; the floor's own reach@32 = mean of 1 - (1 - p)^32); sameness: >= 4 distinct rule-following programs per question.
+    If cold start fails: stepping stones first (C6's form on these kinds)."""
+    s = score_fewshot(rows, tries, raw)
+    floor32 = sum(1 - (1 - p) ** 32 for p in floors) / len(floors)
+    cold = s['reach32'] >= GATE_REACH32_MIN and s['reach32'] >= GATE_FLOOR_MULT * floor32
+    same = s['distinct_rules'] >= GATE_SAMENESS_MIN
+    v = 'pass' if cold and same else ('stop: cold start and sameness' if not cold and not same else
+                                       'stop: cold start (stepping stones first)' if not cold else 'stop: sameness (C3b first)')
+    return dict(cold_start_ok=cold, sameness_ok=same, verdict=v, reach32=s['reach32'], floor_reach32=floor32, reach4=s['reach4'], luck=s['luck'],
+                distinct_rules=s['distinct_rules'], unresolved=s['unresolved'])
 
 
 # ---- comparison nets' labelled data ----

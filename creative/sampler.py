@@ -178,3 +178,29 @@ def greedy_tries(model, rows, vocab, device, bs=512):
     for s in range(0, len(rows), bs):
         out += _tries_from(sample_run(model, make_batch(rows[s:s + bs], vocab, device), greedy=True))
     return out
+
+
+def rule_follower_tries(rows, n_tries=32, seed=0, max_draws=2000):
+    """The value-blind rule follower: random programs that obey the rules (each step takes two distinct unspent given numbers or results, op from
+    + - x /, the last result is the answer), without looking at any target. Same dedup as the shared sampler (up to n_tries distinct).
+    Its per-try luck equals puzzles.rules_only_floor. -> list of [TryRec]."""
+    import random
+    from creative.programs import ARITH
+    rng = random.Random(seed)
+    out = []
+    for row in rows:
+        k, keys, tr = len(row['nums']), set(), []
+        for _ in range(max_draws):
+            pool, steps = list(range(k)), []
+            while len(pool) > 1:
+                a, b = rng.sample(pool, 2)
+                steps.append((rng.choice(ARITH), a, b))
+                pool = [x for x in pool if x not in (a, b)] + [R0 + len(steps) - 1]
+            t = Try.make(steps, pool[0])
+            if raw_key(t) not in keys:
+                keys.add(raw_key(t))
+                tr.append(TryRec(t))
+            if len(tr) == n_tries:
+                break
+        out.append(tr)
+    return out
