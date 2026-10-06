@@ -32,7 +32,7 @@ lock, state = threading.Lock(), {"usd": 0.0, "calls": 0, "tin": 0, "tout": 0, "s
 def call(msgs, max_new, temp):
     body = {"model": a.model, "messages": msgs, "max_tokens": max_new, "temperature": temp}
     if a.no_think:
-        body["reasoning"] = {"enabled": False}
+        body["reasoning"] = {"enabled": False}; body["chat_template_kwargs"] = {"enable_thinking": False}
     req = urllib.request.Request(BASE + "/chat/completions", data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "Authorization": "Bearer " + KEY})
     for attempt in range(3):
         if state["stop"]:
