@@ -1,4 +1,5 @@
-"""EmbeddingGemma 2 arms for B2 (PASS-MARKS.md addendum 4) and Test LR, the per-round readout loss (addendum 5), computed exactly as written.
+"""EmbeddingGemma 2 arms for B2 (PASS-MARKS.md addendum 4), Test LR, the per-round readout loss (addendum 5), and the reader without its
+letter window, EGR and R0 (addendum 6), computed exactly as written.
 python3 -m custom_io.analyze_eg --results custom_io/results/33-pc-confirm-b2 custom_io/results/36-pc-eg2 [--out custom_io/results/EG2-ANALYSIS.json]
 Arms EGE (eg_embed) and EGT (eg_teach 0.1), each paired by seed (200, 201) with plain B2 (run folders B2_s200, B2_s201). A run counts only if it
 is status 'ok', trained 24,000 steps with the B2 flags and its own switch, and the base run is plain B2 with the same flags; otherwise its
@@ -7,9 +8,10 @@ import argparse, json, os
 from custom_io.analyze import P5, SPL, C5, POOL, g, load, sub, chk, allof
 
 SEEDS, BASE = [200, 201], 'B2'
-ARMS = {'EGE': {'copy': True, 'eg_embed': True}, 'EGT': {'copy': True, 'eg_teach': 0.1}, 'LR': {'copy': True, 'round_readout': 1.0}}
+ARMS = {'EGE': {'copy': True, 'eg_embed': True}, 'EGT': {'copy': True, 'eg_teach': 0.1}, 'LR': {'copy': True, 'round_readout': 1.0},
+        'EGR': {'copy': True, 'eg_embed': True, 'reader_layers': 0}, 'R0': {'copy': True, 'reader_layers': 0}}
 RECIPE = dict(steps=24000, batch=256, lr=1e-3, bf16=True)
-SIZES = {'B2': 3302481, 'EGE': 3500881, 'EGT': 3368785, 'LR': 3302481}
+SIZES = {'B2': 3302481, 'EGE': 3500881, 'EGT': 3368785, 'LR': 3302481, 'EGR': 2843985, 'R0': 2645585}
 
 
 def valid(r, cfg, arm):
@@ -23,6 +25,15 @@ def valid(r, cfg, arm):
     if r.get('n_params') != SIZES[arm]:
         bad.append(f"n_params {r.get('n_params')} (want {SIZES[arm]})")
     return bad
+
+
+def VF(r):
+    """exact match pooled over the vocab and frame splits (new words, new wording), addendum 6 mark 2."""
+    fe = g(r, 'final_eval')
+    try:
+        return 100 * sum(fe[s]['correct'] for s in ('vocab', 'frame')) / sum(fe[s]['n'] for s in ('vocab', 'frame'))
+    except (TypeError, KeyError, ZeroDivisionError):
+        return None
 
 
 def leak(r):
@@ -57,6 +68,8 @@ def judge(runs, arm):
     m['3 no dev split drops more than 2.0 (2-seed mean)'] = dict(value=drops, ok=allof(chk(v, '>=', -2.0) for v in drops.values()))
     m['4 chain-5 >= 99.0 on both seeds'] = dict(value=c5, ok=allof(chk(v, '>=', 99.0) for v in c5.values()) if len(c5) == len(SEEDS) else 'n/a')
     full = lambda dd: len(dd) == len(SEEDS)
+    if arm in ('EGR', 'R0'):        # addendum 6
+        return judge_reader(out, arm, pairs, d, mean, full, dp5, dspl, c5, lk, lk_base)
     if arm != 'LR':
         m['5 loops:0 in_dist <= 5 and donor in_dist <= 5 on both seeds'] = dict(
             value=lk, plain_b2_same_seeds_read_only=lk_base,
@@ -88,6 +101,40 @@ def judge(runs, arm):
     return out
 
 
+def judge_reader(out, arm, pairs, d, mean, full, dp5, dspl, c5, lk, lk_base):
+    """Addendum 6. EGR: marks 1-5 vs plain B2 on the same seed; R0: the diagnostic verdict only."""
+    drops = {sp: mean(v) for sp, v in dspl.items()}
+    ro = dict(per_split=dspl, family_split=d(SPL('family')),
+              abs={s: dict(arm_p5=P5(a), base_p5=P5(b), arm_vf=VF(a), base_vf=VF(b)) for s, (a, b) in pairs.items()},
+              steps_per_s={s: (a.get('steps_per_s'), b.get('steps_per_s')) for s, (a, b) in pairs.items()},
+              size={s: g(a, 'extra', 'size') for s, (a, _) in pairs.items()})
+    out['read_only'] = ro
+    if arm == 'R0':
+        gap = {s: (None if v is None else -v) for s, v in dp5.items()}        # B2 minus R0
+        out['marks'] = {'B2 minus R0 pooled-5, per seed': dict(value=gap, ok='read only')}
+        ok = out['judged'] and full(gap) and None not in gap.values()
+        out['verdict'] = ('NOT JUDGED' if not ok else 'the window matters' if all(v >= 1.0 for v in gap.values())
+                          else 'the window does nothing on these tests' if all(abs(v) < 1.0 for v in gap.values()) else 'unclear')
+        out['read_only']['per_split_drops_2seed_mean'] = drops
+        return out
+    dvf = d(VF)
+    m = {}
+    m['1 pooled-5 change >= -1.0 on both seeds'] = dict(value=dp5, ok=allof(chk(v, '>=', -1.0) for v in dp5.values()) if full(dp5) else 'n/a')
+    m['2 new words + new wording change >= 0.0, 2-seed mean'] = dict(value=mean(dvf), per_seed=dvf, ok=chk(mean(dvf), '>=', 0.0))
+    m['3 no dev split drops more than 2.0 (2-seed mean)'] = dict(value=drops, ok=allof(chk(v, '>=', -2.0) for v in drops.values()))
+    m['4 chain-5 >= 99.0 on both seeds'] = dict(value=c5, ok=allof(chk(v, '>=', 99.0) for v in c5.values()) if full(c5) else 'n/a')
+    m['5 loops:0 in_dist <= plain B2 + 1.0 and donor in_dist <= 5 on both seeds'] = dict(value=lk, plain_b2_same_seeds_read_only=lk_base,
+        ok=allof([chk(sub(lk[s]['loops0'], lk_base[s]['loops0']), '<=', 1.0) for s in lk] + [chk(v['donor'], '<=', 5) for v in lk.values()]) if full(lk) else 'n/a')
+    out['marks'] = m
+    oks = [x['ok'] for x in m.values()]
+    out['verdict'] = 'NOT JUDGED' if not out['judged'] or 'n/a' in oks else ('PASS' if all(x is True for x in oks) else 'FAIL (stop this arm)')
+    if out['verdict'] == 'PASS' and all(v is not None and v >= 1.0 for v in dp5.values()):
+        out['verdict'] = 'PASS, better than B2'
+    out['proved_wrong'] = dict(pooled5_mean_below_minus3=None if mean(dp5) is None else mean(dp5) < -3.0,
+                               chain5_below_95=None if not full(c5) else any(v is not None and v < 95.0 for v in c5.values()))
+    return out
+
+
 def fmt(v, signed=True):
     if isinstance(v, float):
         return f'{v:+.2f}' if signed and abs(v) < 50 else f'{v:.2f}'
@@ -105,7 +152,7 @@ def main(argv=None):
     res = dict(seeds=SEEDS, arms={arm: judge(runs, arm) for arm in ARMS}, skipped=skipped)
     os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
     json.dump(res, open(a.out, 'w'), indent=1, default=str)
-    L = ['# EmbeddingGemma 2 arms (PASS-MARKS.md addendum 4) and Test LR (addendum 5) for B2', '', f'Seeds {SEEDS}, each arm minus plain B2 on the same seed.', '']
+    L = ['# EmbeddingGemma 2 arms (PASS-MARKS.md addendum 4), Test LR (addendum 5) and the reader without its window (addendum 6) for B2', '', f'Seeds {SEEDS}, each arm minus plain B2 on the same seed.', '']
     for arm, r in res['arms'].items():
         L += [f'## {arm}: {r["verdict"]}', '']
         if any(r['problems'].values()):
@@ -116,7 +163,7 @@ def main(argv=None):
             if 'plain_b2_same_seeds_read_only' in x:
                 L += [f'  - plain B2 on the same seeds (read only): {fmt(x["plain_b2_same_seeds_read_only"], False)}']
         if 'proved_wrong' in r:
-            L += [f'- proved wrong (addendum 5): {r["proved_wrong"]}']
+            L += [f'- proved wrong: {r["proved_wrong"]}']
         L += [f'- read only: family split change {fmt(r["read_only"]["family_split"])}; size {r["read_only"]["size"]}', '']
     md = os.path.join(os.path.dirname(a.out) or '.', 'RESULTS-EG2.md')
     open(md, 'w').write('\n'.join(L) + '\n')

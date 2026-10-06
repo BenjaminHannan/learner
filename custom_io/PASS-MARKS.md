@@ -195,3 +195,29 @@ No new parameters: 3,302,481, nothing pretrained. Eval is unchanged (answers aft
 5. Leak: loops:0 in_dist no more than 1.0 above plain B2 on the same seed, and donor in_dist <= 5, on both seeds.
 **Proved wrong:** pooled-5 gain < 0 (2-seed mean), or mark 2 missed on both seeds (the extra loss does not make the answer stable) -> stop;
 no halting gate or extra-loop test follows from this probe. A pass goes to the 6-seed confirm at the same marks (noise rule).
+
+## Addendum 6: B2's reader without its letter window (written 2026-10-06 about 19:55 UTC, 3:55 PM ET, before any EGR or R0 run)
+Ben objects to the reader's +-4-character window (its 2 conv blocks, `models/reader.py`). The window was set by construction in
+`design/SYNTHESIS.md` before any training, so that all cross-word work falls to the thinker; no other window size was ever tried. Two new arms,
+each one change from a run that already exists (no code change: `reader_layers` is an existing switch):
+- **EGR** (`{"copy":true,"eg_embed":true,"reader_layers":0}`): EmbeddingGemma 2 replaces the window. A char's input is its letter, position and
+  place code plus the zero-initialised projection of its EmbeddingGemma token state (as in EGE), then a LayerNorm, with no conv: a char sees
+  its neighbours only through EmbeddingGemma, which reads the whole prompt. One change from EGE (window removed). Trainable 2,843,985; whole
+  model 273,846,609 with EmbeddingGemma's 271,002,624 counted.
+- **R0** (`{"copy":true,"reader_layers":0}`): plain B2 with the window removed and nothing added, so each char sees only itself before the
+  thinker. One change from B2. 2,645,585 params (656,896 fewer, all in the removed conv blocks, which can only hurt it). Diagnostic, never adopted.
+**Runs:** seeds 200 and 201, the B2 recipe on the same PC, paired with B2_s200 / B2_s201 of queue 33. Queue 36 now runs EGR, then R0, then EGE
+(addendum 4, unchanged), ahead of queue 35; EGT moves to queue 38.
+**EGR pass (all must hold, 2-seed screen, each seed against plain B2 on the same seed): "EmbeddingGemma can replace the window"**
+1. pooled-5 change >= -1.0 on both seeds.
+2. New words and new wording (the vocab and frame splits, exact match pooled over both) change >= 0.0, 2-seed mean.
+3. No dev split (in_dist, answer, frame, vocab, variant) drops more than 2.0, 2-seed mean.
+4. chain-5 >= 99.0 on both seeds.
+5. Leak: loops:0 in_dist no more than 1.0 above plain B2 on the same seed, and donor in_dist <= 5, on both seeds.
+A pass with pooled-5 change >= +1.0 on both seeds is also labelled "better than B2" (a label, not an extra mark).
+**Proved wrong:** pooled-5 change < -3.0 (2-seed mean), or chain-5 < 95.0 on either seed: EmbeddingGemma cannot stand in for the window at this
+recipe. A pass goes to the 6-seed confirm at the same marks before anything is adopted (noise rule).
+**R0 verdict (diagnostic):** B2 minus R0 pooled-5 >= +1.0 on both seeds -> "the window matters"; within 1.0 either way on both seeds -> "the
+window does nothing on these tests" (it can go at no cost); anything else -> "unclear".
+**Size rule** as in addendum 4: EGR is a 273.8M model, so a pass is a B2-internal result. **Read only:** EGR minus EGE (what the window adds on
+top of EmbeddingGemma), per-split changes, the family split, steps per second.

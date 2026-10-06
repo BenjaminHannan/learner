@@ -36,7 +36,7 @@ class StubEG:
 
 def seeded(cfg, seed=0, v=None, **kw):
     torch.manual_seed(seed)
-    m = Ledger(v or vocab(), **cfg, **kw)
+    m = Ledger(v or vocab(), **{**cfg, **kw})       # kw may override a cfg key (reader_layers)
     if hasattr(m, '_eg'):
         m._eg = [StubEG()]
     return m
@@ -99,6 +99,24 @@ def test_embed_init_and_learning():
                      whole=3_500_881 + 271_002_624), S
     print(f'  S cfg eg_embed: {S}')
     print('ok embed_init_and_learning')
+
+
+def test_no_window_arms():
+    """PASS-MARKS.md addendum 6: reader_layers=0 drops exactly the 2 conv blocks (R0), and EGR (eg_embed + reader_layers=0) is R0 plus ln_eg /
+    eg_proj, zero-initialised, so at step 0 its loss equals R0's; the sizes match the ones written in the addendum."""
+    v, rows = vocab(), train_rows(48, 4)
+    S = {k: seeded(S_CFG, 0, v, copy=True, **c).size() for k, c in (('B2', {}), ('R0', dict(reader_layers=0)),
+                                                                  ('EGR', dict(eg_embed=True, reader_layers=0)))}
+    assert S['B2']['whole'] - S['R0']['whole'] == 656_896 and S['R0']['whole'] == 2_645_585, S
+    assert S['EGR']['trainable'] == 2_843_985 and S['EGR']['whole'] == 273_846_609 and S['EGR']['frozen_borrowed'] == 271_002_624, S['EGR']
+    r0, egr = seeded(SMALL, 3, v, copy=True, reader_layers=0), seeded(SMALL, 3, v, copy=True, eg_embed=True, reader_layers=0)
+    assert len(r0.reader.blocks) == 0 and not any('reader.blocks' in k for k in egr.state_dict())
+    b = batch_of(rows, v)
+    l0, x0 = r0.loss(b)
+    l1, x1 = egr.loss(b)
+    assert torch.equal(l0, l1) and all(torch.equal(x0[k], x1[k]) for k in x0), (l0.item(), l1.item())
+    print(f'  R0 {S["R0"]["whole"]:,}; EGR trainable {S["EGR"]["trainable"]:,}, whole {S["EGR"]["whole"]:,}')
+    print('ok no_window_arms')
 
 
 def test_teach_loss_and_never_at_eval():

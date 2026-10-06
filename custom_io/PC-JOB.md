@@ -74,8 +74,8 @@ python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queu
 ```
 Push the results as in section 4 (no checkpoint.pt). Each run takes a few hours on the 5070 Ti.
 
-## 6. EmbeddingGemma 2 arms (queue 36, after queue 35, or alongside when the card has 7 GB free)
-Marks: PASS-MARKS.md addendum 4. Design: design/EG2-embedding.md. The runs need transformers >= 5.19, which the shared venv does not
+## 6. The reader runs: without its window, and with EmbeddingGemma 2 (queue 36, BEFORE queue 35 since 10-06 3:42 PM ET)
+Marks: PASS-MARKS.md addenda 6 (EGR, R0) and 4 (EGE). Design: design/EG2-embedding.md. The runs need transformers >= 5.19, which the shared venv does not
 have (it has 5.17, and the running queues use it), so it goes in its own folder. Queue 36 carries its own two variables in `# ENV`
 lines (PYTHONPATH with that folder first, and CUSTOM_IO_EG2 = the local weights), and the runner hands them to every run of that queue
 only, so a detached launch needs nothing set in the shell. Once, on the PC, in PowerShell (re-stage `custom_io` from the branch first;
@@ -91,12 +91,13 @@ python -m custom_io.models.eg check cuda
 The last line must print `"ok": true` (the text part is 271,002,624 params and 3 probe vectors match the build box's within cos 0.999;
 bf16 on the build box's CPU gave 0.99988 or better). Removing eg_site's numpy keeps the venv's own, the one torch was installed with
 (transformers 5.19 runs on Python 3.10 and only needs numpy >= 1.17). If the paths differ on the PC, edit the two `# ENV` lines of
-`36-pc-eg2.txt` to match. Then, once queue 35 has finished or while the card has 7 GB free, launch it detached like the others:
+`36-pc-eg2.txt` to match. Then launch it as soon as queue 30 is done, ahead of queue 35 (if queue 35 has already started, leave its
+running runs alone and start 36 when the card has 7 GB free), detached like the others:
 ```
 python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\36-pc-eg2.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
 ```
-with stdout to `C:\Users\benja\custom-io\work\q36.log`; its first line must show `queue env: {...}` with both variables. Four runs
-(EGE and EGT, seeds 200 and 201), paired with queue 33's B2_s200 and B2_s201 on this PC. Push the results as in section 4 (no
+with stdout to `C:\Users\benja\custom-io\work\q36.log`; its first line must show `queue env: {...}` with both variables. Six runs
+(EGR, R0 and EGE, seeds 200 and 201), paired with queue 33's B2_s200 and B2_s201 on this PC. EGT moved to queue 38 (section 8). Push the results as in section 4 (no
 checkpoint.pt); the analysis is `python -m custom_io.analyze_eg --results custom_io/results/33-pc-confirm-b2 custom_io/results/36-pc-eg2`.
 
 ## 7. Test LR, a readout loss at every round (queue 37, after queue 36, or alongside when the card has 6 GB free)
@@ -106,3 +107,10 @@ python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queu
 ```
 Two runs (LR_s200, LR_s201), paired with queue 33's B2_s200 and B2_s201. Push as in section 4; the analysis is
 `python -m custom_io.analyze_eg --results custom_io/results/33-pc-confirm-b2 custom_io/results/37-pc-loop-readout`.
+
+## 8. EGT, the training-only meaning teacher (queue 38, after queue 37)
+Marks: PASS-MARKS.md addendum 4. Same EmbeddingGemma setup as section 6 (its `# ENV` lines are in the queue file):
+```
+python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\38-pc-eg-teacher.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+```
+Two runs (EGT_s200, EGT_s201). The analysis is `python -m custom_io.analyze_eg --results custom_io/results/33-pc-confirm-b2 custom_io/results/38-pc-eg-teacher`.
