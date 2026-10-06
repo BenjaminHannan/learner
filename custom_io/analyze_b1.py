@@ -2,7 +2,8 @@
 python3 -m custom_io.analyze_b1 [--results DIR ...] [--seeds 300,301] [--out-json F] [--out-md F] [--expect-teach SHA] [--expect-gen SHA]
 Reads the RESULT.json of runs folded as b2t_sN (B2-M on TEACH), b2g_sN (B2-M on GEN), tft_sN (plain_tf-M on TEACH) under the results dirs, pairs them by
 seed and writes results/B1-ANALYSIS.json and results/RESULTS-B1.md. diff_s = A_s - B_s on new kinds pooled (unrounded %); 'ahead on both seeds' = diff_s > 0 for
-every seed. B1-a PASS: mean >= 15 and ahead on both; PROVED WRONG: mean < 5; else FAIL. B1-b PASS: mean donor exact (choice 9) <= 10 (printed
+every seed. B1-a PASS: mean >= 15 and ahead on both; PROVED WRONG: mean < 5; else FAIL; a PASS whose short-answer-only gap (the same diff on the
+new-kinds-pooled rows of type short_answer, mean over seeds) is below +10 is NOT SHOWN instead (thinker-first B1 addendum, 5:20 PM ET 10-06). B1-b PASS: mean donor exact (choice 9) <= 10 (printed
 UNINFORMATIVE when b2t's mean intact new-kinds score is under 20). B1-c PASS: mean >= 3 and ahead on both. A mark is NOT JUDGED when a run it needs is missing or
 invalid (status != ok, steps != 16000, recipe / cfg / size differs from choices 6-8, data MANIFEST.json sha256 differs from the one in PASS-MARKS addendum 3
 or --expect-*; --skip-data-check turns only that last check off, for smoke runs)."""
@@ -122,7 +123,10 @@ def metrics(res):
     m.update(n_params=res.get('n_params'), by_atype=g(en, 'intact', 'new_pooled', 'by_atype'),
              reachable={k: g(en, 'intact', k, 'reachable') for k in SETS}, lesions=en.get('lesions'),
              donor=g(en, 'lesions', 'new_pooled', 'donor'), donor_fresh=g(en, 'lesions', 'fresh', 'donor'),
-             loops0=g(en, 'lesions', 'new_pooled', 'loops:0'), peak_mem_mib=res.get('peak_mem_mib'))
+             loops0=g(en, 'lesions', 'new_pooled', 'loops:0'), peak_mem_mib=res.get('peak_mem_mib'),
+             short_new=g(en, 'intact', 'new_pooled', 'by_type', 'short_answer', 'exact'),
+             by_type={k: g(en, 'intact', k, 'by_type') for k in ('new_pooled', 'fresh')},
+             by_kind={k: g(en, 'intact', k, 'by_family') for k in ('new_pooled', 'fresh')})
     return m
 
 
@@ -143,8 +147,21 @@ def judge(runs, seeds):
     ni = 'NOT JUDGED'
     why = lambda *need: [f'{r}_s{s}: ' + '; '.join(runs[(r, s)]['reasons']) if (r, s) in runs else f'{r}_s{s}: missing'
                         for r in need for s in seeds if not ((r, s) in runs and runs[(r, s)]['valid'])]
-    marks['B1-a'] = dict(a, rule='PASS if mean >= +15 and ahead on every seed; PROVED WRONG if mean < +5; else FAIL', why_not=why('b2t', 'b2g'),
+    marks['B1-a'] = dict(a, rule='PASS if mean >= +15 and ahead on every seed; PROVED WRONG if mean < +5; else FAIL. A PASS whose short-answer-only gap '
+                         '(mean over seeds) is below +10 is NOT SHOWN (driven by yes/no)', why_not=why('b2t', 'b2g'),
                          verdict=ni if a['mean'] is None else 'PASS' if a['mean'] >= 15 and a['ahead_all'] else 'PROVED WRONG' if a['mean'] < 5 else 'FAIL')
+    sa = {}
+    for s in seeds:     # the extra guard: the same diff on the short_answer rows of new kinds pooled
+        x, y = runs.get(('b2t', s)), runs.get(('b2g', s))
+        ok = x and y and x['valid'] and y['valid'] and x['m'].get('short_new') is not None and y['m'].get('short_new') is not None
+        sa[s] = x['m']['short_new'] - y['m']['short_new'] if ok else None
+    sa_mu = mean(sa.values()) if all(v is not None for v in sa.values()) else None
+    marks['B1-a']['short_answer_only'] = dict(per_seed=sa, mean=sa_mu, rule='a PASS needs mean >= +10 here')
+    if marks['B1-a']['verdict'] == 'PASS':
+        if sa_mu is None:
+            marks['B1-a']['verdict'] = 'NOT JUDGED (passes overall; no short-answer-only scores to check the guard)'
+        elif sa_mu < 10:
+            marks['B1-a']['verdict'] = f'NOT SHOWN (driven by yes/no: short-answer-only gap {sa_mu:+.2f} < +10; overall {a["mean"]:+.2f})'
     marks['B1-c'] = dict(c, rule='PASS if mean >= +3 and ahead on every seed', why_not=why('b2t', 'tft'),
                          verdict=ni if c['mean'] is None else 'PASS' if c['mean'] >= 3 and c['ahead_all'] else 'FAIL')
     per = {s: g(runs.get(('b2t', s)) or {}, 'm', 'donor', 'exact') if (('b2t', s) in runs and runs[('b2t', s)]['valid']) else None for s in seeds}
@@ -159,7 +176,7 @@ def judge(runs, seeds):
 
 
 def read_only(runs, seeds, eval_dir):
-    ro = {'by_run': {}, 'mean': {}, 'atype_diffs': {}, 'always': {}, 'distance': {}}
+    ro = {'by_run': {}, 'mean': {}, 'atype_diffs': {}, 'always': {}, 'distance': {}, 'by_type': {}, 'by_kind': {}}
     for (arm, s), r in sorted(runs.items()):
         if s in seeds and r['valid']:
             ro['by_run'][f'{arm}_s{s}'] = r['m']
@@ -168,6 +185,14 @@ def read_only(runs, seeds, eval_dir):
         if ms:
             ro['mean'][arm] = {k: mean(m[k] for m in ms) for k in SETS} | dict(
                 n=len(ms), donor_exact=mean(g(m, 'donor', 'exact') for m in ms), loops0_exact=mean(g(m, 'loops0', 'exact') for m in ms))
+    for what in ('by_type', 'by_kind'):        # per question type and per kind, each arm's mean exact over valid seeds (new kinds pooled and FRESH)
+        for arm in ARMS:
+            ms = [runs[(arm, s)]['m'] for s in seeds if (arm, s) in runs and runs[(arm, s)]['valid']]
+            for k in ('new_pooled', 'fresh'):
+                keys = sorted({t for m in ms for t in (g(m, what, k) or {})})
+                if keys:
+                    ro[what].setdefault(k, {})[arm] = {t: dict(exact=mean(g(m, what, k, t, 'exact') for m in ms),
+                                                             n=g(ms[0], what, k, t, 'n')) for t in keys}
     for name, (x, y) in {'B1-a (b2t - b2g)': ('b2t', 'b2g'), 'B1-c (b2t - tft)': ('b2t', 'tft')}.items():
         types = sorted({t for s in seeds for arm in (x, y) if (arm, s) in runs and runs[(arm, s)]['valid'] for t in runs[(arm, s)]['m']['by_atype'] or {}})
         ro['atype_diffs'][name] = {t: diffs(runs, x, y, seeds, lambda m, t=t: g(m, 'by_atype', t, 'exact') or 0.0) for t in types}
@@ -191,6 +216,9 @@ def markdown(out):
          '## Marks', '', '| mark | verdict | mean | per seed | ahead on every seed |', '|---|---|---|---|---|']
     for k, m in out['marks'].items():
         L.append(f"| {k} | **{m['verdict']}** | {f2(m['mean'])} | {', '.join(f'{s}: {f2(v)}' for s, v in m['per_seed'].items())} | {m.get('ahead_all', '')} |")
+    sa = out['marks']['B1-a'].get('short_answer_only')
+    if sa:
+        L.append(f"| B1-a guard: short-answer rows only | needs mean >= +10 | {f2(sa['mean'])} | {', '.join(f'{s}: {f2(v)}' for s, v in sa['per_seed'].items())} | |")
     for k, m in out['marks'].items():
         if m['why_not']:
             L += ['', f'{k} could not be fully judged:'] + [f'- {w}' for w in m['why_not']]
@@ -212,6 +240,13 @@ def markdown(out):
     for name, d in ro['atype_diffs'].items():
         for t, x in d.items():
             L.append(f'| {name} | {t} | {f2(x["mean"])} |')
+    for what, title in (('by_type', 'question type'), ('by_kind', 'kind')):
+        for k, arms in ro.get(what, {}).items():
+            names = sorted({t for d in arms.values() for t in d})
+            L += ['', f'### By {title}, {k} (mean exact over valid seeds; n rows)', '', f'| {title} | n | ' + ' | '.join(arms) + ' |', '|' + '---|' * (len(arms) + 2)]
+            for t in names:
+                n = next((d[t]['n'] for d in arms.values() if t in d), '')
+                L.append(f'| {t} | {n} | ' + ' | '.join(f2(arms[a].get(t, {}).get('exact')) for a in arms) + ' |')
     L += ['', '### Always yes / always no (the yes/no rows)', '']
     for k, a in ro['always'].items():
         L.append(f"- {k}: {a['n_yes_no']} yes/no rows of {a['n']}; always-yes scores {a['always_yes']:.2f}% of them ({a['always_yes_on_all_rows']:.2f}% of all rows), always-no {a['always_no']:.2f}% ({a['always_no_on_all_rows']:.2f}%)")

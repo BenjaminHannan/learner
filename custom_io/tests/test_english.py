@@ -390,11 +390,13 @@ def test_evalx_defaults_unchanged():
     print('ok evalx defaults')
 
 
-def _fake_result(arm, seed, pooled, donor, data, steps=16000, status='ok'):
+def _fake_result(arm, seed, pooled, donor, data, steps=16000, status='ok', short=None):
     model = 'plain_tf' if arm == 'tft' else 'ledger'
     cfg = dict(d=384, n_heads=6, reader_layers=2, blocks=3, n_loops=8, mlp=6.0, copy=True, span=True) if model == 'ledger' else dict(d_model=384, n_layers=6, n_heads=6, max_ans=32)
-    blk = lambda x, n=384: dict(exact=x, correct=0, n=n, by_atype={'span1': dict(exact=x, n=10, correct=0)}, reachable=dict(n=n, share=100.0))
-    en = dict(intact={'fresh': blk(70, 192), 'new_r5': blk(pooled, 192), 'new_r6': blk(pooled, 192), 'new_pooled': blk(pooled), 'gen_heldout': blk(50, 192), 'in_dist_heldout': blk(90, 10)},
+    blk = lambda x, n=384, sh=None: dict(exact=x, correct=0, n=n, by_atype={'span1': dict(exact=x, n=10, correct=0)}, reachable=dict(n=n, share=100.0),
+                                         by_type={'short_answer': dict(exact=x if sh is None else sh, n=340, correct=0), 'yes_no': dict(exact=x, n=44, correct=0)},
+                                         by_family={'winner': dict(exact=x, n=n // 2, correct=0), 'fear': dict(exact=x, n=n // 2, correct=0)})
+    en = dict(intact={'fresh': blk(70, 192), 'new_r5': blk(pooled, 192), 'new_r6': blk(pooled, 192), 'new_pooled': blk(pooled, sh=short), 'gen_heldout': blk(50, 192), 'in_dist_heldout': blk(90, 10)},
               lesions={'new_pooled': {'donor': dict(exact=donor, n=376, skipped=8, plain=dict(exact=1.0))} if model == 'ledger' else {}, 'fresh': {}})
     return dict(config=dict(model=model, cfg=cfg, data=data, seed=seed, batch=256, lr=7e-4, warmup=500, bf16=True, max_ans=32, steps=16000, minutes=None, final_eval=True, grad_clip=1.0, order='shuffled'),
                 n_params=10782336 if model == 'plain_tf' else 10914681, steps=steps, status=status, english=en)
@@ -420,6 +422,16 @@ def test_analyze_b1():
         assert m['B1-b']['verdict'] == 'PASS' and m['B1-b']['mean'] == 5.0 and m['B1-c']['verdict'] == 'PASS' and abs(m['B1-c']['mean'] - 8.0) < 1e-9
         assert 'B1-a (b2t - b2g)' in out['read_only']['atype_diffs'] and out['read_only']['always']['new_pooled']['n_yes_no'] == 44
         assert 'PASS' in A.markdown(out) and json.dumps(out)
+        assert abs(m['B1-a']['short_answer_only']['mean'] - 18.5) < 1e-9 and 'B1-a guard' in A.markdown(out)
+        assert out['read_only']['by_type']['new_pooled']['b2t']['short_answer']['n'] == 340 and set(out['read_only']['by_kind']['fresh']) == {'b2t', 'b2g', 'tft'}
+        # the extra guard (thinker-first B1 addendum): passes overall, but on short answers alone TEACH is only +8 over GEN -> NOT SHOWN
+        for sd, (t, g_, st, sg) in {300: (60, 40, 48, 40), 301: (58, 41, 49, 41)}.items():
+            for arm, v, sh in (('b2t', t, st), ('b2g', g_, sg), ('tft', 50, None)):
+                os.makedirs(os.path.join(d, 'res_yn', f'{arm}_s{sd}'))
+                json.dump(_fake_result(arm, sd, v, 5.0, os.path.join(d, 'data', 'gen' if arm == 'b2g' else 'teach'), short=sh),
+                          open(os.path.join(d, 'res_yn', f'{arm}_s{sd}', 'RESULT.json'), 'w'))
+        yn = A.analyze([os.path.join(d, 'res_yn')], [300, 301], EVAL, '/nonexistent', dict(teach=shas['teach'], gen=shas['gen']))['marks']['B1-a']
+        assert yn['verdict'].startswith('NOT SHOWN') and abs(yn['short_answer_only']['mean'] - 8.0) < 1e-9 and abs(yn['mean'] - 18.5) < 1e-9, yn['verdict']
         wrong = A.analyze([os.path.join(d, 'res')], [300, 301, 302], EVAL, '/nonexistent', dict(teach=shas['teach'], gen=shas['gen']))     # seed 302 missing
         assert all(x['verdict'] == 'NOT JUDGED' for x in wrong['marks'].values())
         assert A.analyze([os.path.join(d, 'res')], [300, 301], EVAL, '/nonexistent', dict(teach='0' * 64, gen=shas['gen']))['marks']['B1-a']['verdict'] == 'NOT JUDGED'

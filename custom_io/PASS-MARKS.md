@@ -147,6 +147,12 @@ If B1-a is proved wrong, way B at this size is dead (source section 6): next sin
   in exactly this form (analyze_b1 reads it; `<hex>` = sha256 of `plan_b/<arm>/MANIFEST.json`, from the machine that builds the data the queue trains on):
   - teach MANIFEST.json sha256 40316ed14090e7e438030ce6ed403b9054d19f136e92c1d90c789955a1c3fe9d
   - gen MANIFEST.json sha256 9121d7ac26ffa5b04481a99f5817d6db0ce494a8357f0c79b1160f7d69ebc875
+- **Extra guard on B1-a** (added 2026-10-06 about 21:25 UTC, 5:25 PM ET, before any student trained; thinker-first B1 addendum, commit
+  32cd2128d on `claude/project-thread-9ye9md`): B1-a is also scored on the short-answer questions of new kinds pooled alone (340 of the 384
+  rows). If B1-a passes overall but that short-answer-only gap (b2t - b2g, mean over the screen seeds) is below +10, the verdict is NOT SHOWN
+  (driven by yes/no), not PASS. It only tightens B1-a. Per-kind and per-type scores of every arm are reported (read only). The data above is
+  unchanged: TEACH = teach_clean, GEN = gen_matched_94831 (the thinker-first thread withdrew its 5:15 PM ET switch to the 171,940-row pair at
+  5:20 PM ET; `teach.jsonl` is 51% yes/no).
 
 ## Addendum 4: EmbeddingGemma 2 arms for B2 (written 2026-10-06 about 17:40 UTC, 1:40 PM ET, before any EG run; design/EG2-embedding.md)
 Source: the marks at `/mnt/project-files/embeddinggemma/PASS-MARKS-meaning-teacher.md` (written 10-06 before any run), applied unchanged to both arms.
