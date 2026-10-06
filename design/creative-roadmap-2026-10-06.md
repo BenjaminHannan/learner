@@ -43,9 +43,11 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   - Choose: it picks its own practice, calls creative mode when stuck, and asks you when something is truly impossible.
   - Worlds: a tiny crafting world early, then a small Minecraft-like game, then Minecraft.
 - **The first real test (C2) is your few-examples idea.** The model gets a few examples of a new rule, tries many
-  programs, keeps the ones that reproduce every example (no answer key needed), and sleeps on them. Before it, a cheap
-  machinery check (C1) on make-the-target puzzles. The code for both is built (PR #44). A small trial on the two
-  existing B2 copies can run now; the sealed tests wait for B2's 6-run confirm. Every sleep test now scores better
+  programs, keeps the ones that reproduce every example (no answer key needed), and sleeps on them. The cheap
+  machinery check before it (C1, make-the-target puzzles) was closed on 10-06: practice on right answers made B2's
+  first answers better on both trial copies, but its right tries rose enough on only one of the two (1.66x and 1.29x
+  against a 1.6x bar fixed in advance), so C1's sealed test was never opened. C2 is being built now; its sealed test
+  waits for B2's 6-run confirm. Every sleep test now scores better
   first answers separately from better search (GPT-6 Pro's main point), and C2 passes only on first answers.
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
   when the model runs into trouble on a problem it is trying to solve. Gift and plan ideas are out of scope.
@@ -194,7 +196,7 @@ sealed in their own spec before running.
 | Step | One change | Pass (provisional after C2) | Proves it wrong |
 |---|---|---|---|
 | **C0** (done 10-06) | Scoreboard on B2, no training | Read: cold start on new kinds, narrow variety (shown) | n/a |
-| **C1** machinery check | B2 sleeps on its own checked tries for make-the-target puzzles (+ - x /); claim capped at "the loop works on B2", since a solver exists. Hindsight arm included | Section 6 | Section 6 |
+| **C1** machinery check | B2 sleeps on its own checked tries for make-the-target puzzles (+ - x /); claim capped at "the loop works on B2", since a solver exists. Hindsight arm included. **Retired 10-06 at its DEV gate** | Section 6 | Section 6 |
 | **C2** few-examples rules (the main first test) | C2a: programs over input roles, checked by re-running them on the prompt's own examples (no answer key). C2b: key-free sleep on held-out rule kinds | Section 7 | Section 7 |
 | **C3** keep the variety | Variety sleep rule (diverse picks + rare-correct upweight + some wrong tries pushed down), 5 nights, on C2's family, against C2's plain sleep; a fixed share of old-skill replay and at most a few near-duplicate programs per problem in both arms. Ask Ben first: rule-picked replay (his 09-21 "sleep is automatic") or model-picked (his 09-28 note) | Reach@4 after night 5 >= plain + 5 points (interval above 0); distinct rule-following programs do not fall night to night; first try and luck within 2 of plain; old skills within 2 of the parent | Reach@4 no better than plain |
 | **C3b** (only if a sameness gate fires) | One variety source at a time, each against the plain sampler at the same tries and checker calls: (a) half the tries are single type-valid edits of earlier winning programs; (b) winners kept by kind of behaviour instead of by score; (c) a small "style code" the sampler is conditioned on | Distinct rule-following programs per problem at least double at equal luck, and reach@4 >= plain + 5 on every parent | Variety up, reach flat |
@@ -226,6 +228,9 @@ sealed in their own spec before running.
 model; creativity is only for when the model runs into trouble.
 
 ## 6. C1 spec: machinery check (seal before any GPU stage)
+
+**Status: retired 10-06 at its DEV gate; T1 and T1b were never read** (see the PC gate under Marks and "What C1 leaves
+behind" at the end of this section). The spec below is kept as written.
 
 Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and fixed by this roadmap's review.
 
@@ -393,6 +398,10 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
     and the build thread moves to C2. Disclosure: this is the third change made after seeing DEV numbers (gates,
     dose, now the luck count); the bar did not move, the measure now matches the runs the bar was scaled from and
     matches F1, and T1 and T1b were never read.
+    **Result (shown, commit dcdcaf011):** both parents froze lr 3e-4 with 16 visits. s100: 9.9% to 12.7%, 1.29x and
+    +2.8 points, a miss; s101: 8.6% to 14.3%, 1.66x and +5.7, a pass. By the rule above, **C1 is retired at its DEV
+    gate.** Not taken: s100 at lr 1e-3 with 16 visits reached 16.2% (1.64x), but choosing that setting after seeing it
+    would have been a fourth change after the fact.
 - **Ordered verdicts:** void (checkers disagree on a T1 try, unresolved above 1%, or a lesion fails) -> gate stop ->
   placebo too close (over half of R's records are accepted tries) -> PASS (L1, L2, G0, G1, G2, G3), named "PASS with
   first answers" when F1 also holds and "PASS, search only" when it does not -> rules only (L1 holds, G0 fails) -> gain with harm (G3 fails) -> **proved wrong** (the PC gate passes, yet W - R has an upper end
@@ -405,6 +414,18 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   without editing it. Not built yet: the warm-up, the power simulation and the run loop.
 - **Cost (untested estimate):** B2 trains at about 8 updates a second on a 5090 (shown: 24,000 updates in 49 minutes).
   36 short sleeps plus sampling should take a few hours on one of Ben's machines, $0.
+- **What C1 leaves behind (10-06):**
+  - Shown on both parents, DEV, PC at the frozen setting: sleeping on checked right programs raised B2's first answer
+    with used numbers greyed out (18.8% to 28.1%, 20.3% to 31.3%) and its hit rate among its legal plain tries
+    (25.9% to 34.9%, 23.3% to 35.4%), with skills harm 0.1 and 0.4 points. Its plain first try moved +1.6 and +6.3
+    points, so the unaided gain is not consistent across parents.
+  - Shown: the same sleep did not teach the bookkeeping (plain legal share 38% to 36%, 37% to 40%). B2 needs a learned
+    "used" mark on its slots; that is B2 work, not creative work.
+  - Shown: luck must be counted over samples with repeats; counted over distinct programs it is capped by the
+    solution count (see the luck bullet). C2 counts this way from the start.
+  - Built and reused by C2: the sampler, both checkers, sleep with forced slot targets and skills replay, the arms.
+  - Not answered on B2: whether sleeping on its own hits beats a placebo. That question stays answered only on the
+    1B (blurt-3 and 3r passed; blurt-5s showed solver answers teach as well as own hits).
 - **Owner:** the Sonnet thread "Build the first creative test" builds and runs it; this thread keeps the design and
   scores the result.
 
@@ -539,3 +560,6 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   plain luck over samples 1.66x). Decided: count luck over samples on the plain sampler for every mark, keep the mask
   for sleep pools and variety, judge the PC gate on pilot 3's logged plain sample luck at the frozen settings, retire
   C1 if s100 misses. C1's plumbing works, so C2's CPU build and sealing start now and use the same counting.
+- **C1 retired (10-06):** s100 missed the PC gate on the corrected count (1.29x, +2.8 at its frozen setting) while
+  s101 passed (1.66x), so C1 stops at its DEV gate with T1 and T1b never read. A better s100 setting existed in the
+  grid and was not taken (fourth post-hoc change). C2 continues as the main test.
