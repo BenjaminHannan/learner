@@ -44,6 +44,7 @@ def fn(kind, params):
     if kind == 'sq_plus': return lambda x: x * x + params[0]
     if kind == 'last_digit': return lambda x: x % 10
     if kind == 'double_add': return lambda x: (x + params[0]) * 2
+    if kind == 'mod': return lambda x: x % params[0]                    # stepping stones only (creative/stones.py)
     raise KeyError(kind)
 
 
@@ -193,13 +194,14 @@ def load_split(out_dir, name):
     return [json.loads(l) for l in open(path)]
 
 
-def warm_records(rows, per_question=1, seed=0):
+def warm_records(rows, per_question=1, seed=0, allow=PRACTISED):
     """Solver-program training records for practised-kind questions: the kind's reference program (input slot moved to the question's own), answering with the
     program's own output (the same record form the C2 arms use)."""
     out = []
     for r in rows:
-        assert r['kind'] in PRACTISED, 'warm-up only teaches practised kinds'
+        assert r['kind'] in allow, f"{r['kind']} is not allowed in this record set"
         t, _, qs = reference(r['kind'], tuple(r['params']))
         p = fewshot.parse(r['prompt'])
-        out.append(fewshot._record(r, remap(t, qs, p['q_slot']), 'WU2', 0))
+        for k in range(per_question):
+            out.append(fewshot._record(r, remap(t, qs, p['q_slot']), 'WU2', k))
     return out

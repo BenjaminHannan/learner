@@ -20,6 +20,51 @@ def floors_for(rows, cache, n=4000):
     return fl
 
 
+def dev_report(m, vocab, dev, floors, device, n=32, seed=0, temps=TEMPS, extend=(2.0, 3.0), log=None):
+    """Plain no-mask samples with repeats at each temperature; widens to `extend` when the best reach@32 sits on the top edge. Adds greedy first try per kind.
+    -> dict(temps, best_temperature, verdict, greedy)."""
+    from creative import sampler
+    m.eval()
+    out = dict(temps={})
+
+    def one(T):
+        t0 = time.time()
+        samples = legal.raw_samples(m, dev, vocab, device, n=n, temperature=T, level=0, seed=seed)
+        g = fewshot.dev_gate_samples(dev, samples, floors)
+        sc = fewshot.score_samples(dev, samples)
+        g['by_kind'] = {}
+        for k in sorted({r['kind'] for r in dev}):
+            pq = [d for d, r in zip(sc['per_question'], dev) if r['kind'] == k]
+            g['by_kind'][k] = dict(n=len(pq), reach32=sum(d['reach32'] for d in pq) / len(pq), reach4=sum(d['reach4'] for d in pq) / len(pq),
+                                   luck=sum(d['c'] for d in pq) / sum(d['m'] for d in pq), distinct_rules=sum(d['distinct_rules'] for d in pq) / len(pq))
+        g['key_luck'] = sc['key_luck']
+        g['seconds'] = time.time() - t0
+        out['temps'][str(T)] = g
+        if log:
+            log('T', T, {a: g[a] for a in ('verdict', 'reach32', 'floor_reach32', 'reach4', 'luck', 'distinct_rules')})
+
+    for T in temps:
+        one(T)
+    best = max(out['temps'], key=lambda T: out['temps'][T]['reach32'])
+    if float(best) == max(temps):
+        for T in extend:
+            one(T)
+        best = max(out['temps'], key=lambda T: out['temps'][T]['reach32'])
+    out['best_temperature'] = float(best)
+    out['verdict'] = out['temps'][best]['verdict']
+    gt = sampler.greedy_tries(m, dev, vocab, device, level=0)
+    gk = {}
+    for r, t in zip(dev, gt):
+        v = fewshot.verdict(fewshot.parse(r['prompt']), t.t)
+        d = gk.setdefault(r['kind'], dict(n=0, fits=0, right=0))
+        d['n'] += 1
+        d['fits'] += v[0] == 'accept'
+        d['right'] += v[0] == 'accept' and str(v[2]) in r['accepted']
+    out['greedy_first_try'] = dict(by_kind={k: dict(d, fits_rate=d['fits'] / d['n']) for k, d in gk.items()},
+                                   fits_rate=sum(d['fits'] for d in gk.values()) / len(dev))
+    return out
+
+
 def run(ckpt, out, data='creative/data/c2', skills_train=None, warm=True, visits=4, lr=3e-4, n=32, device='cpu', seed=0, limit=None, temps=TEMPS):
     os.makedirs(out, exist_ok=True)
     m, vocab, meta = sleep.load_parent(ckpt, device)
@@ -38,27 +83,10 @@ def run(ckpt, out, data='creative/data/c2', skills_train=None, warm=True, visits
     dev = [dict(r, nums=fewshot.parse(r['prompt'])['nums']) for r in R.load_split(data, 'dev')[:limit]]
     floors = floors_for(dev, os.path.join(out, 'dev_floors.json'))
     res['floor'] = dict(mean_per_try=sum(floors) / len(floors), n_dev=len(dev))
-    res['temps'] = {}
-    for T in temps:
-        t0 = time.time()
-        samples = legal.raw_samples(m, dev, vocab, device, n=n, temperature=T, level=0, seed=seed)
-        g = fewshot.dev_gate_samples(dev, samples, floors)
-        sc = fewshot.score_samples(dev, samples)
-        g['by_kind'] = {}
-        for k in sorted({r['kind'] for r in dev}):
-            pq = [d for d, r in zip(sc['per_question'], dev) if r['kind'] == k]
-            g['by_kind'][k] = dict(n=len(pq), reach32=sum(d['reach32'] for d in pq) / len(pq), reach4=sum(d['reach4'] for d in pq) / len(pq),
-                                   luck=sum(d['c'] for d in pq) / sum(d['m'] for d in pq))
-        g['key_luck'] = sc['key_luck']
-        g['seconds'] = time.time() - t0
-        res['temps'][str(T)] = g
-        print('T', T, {a: g[a] for a in ('verdict', 'reach32', 'floor_reach32', 'reach4', 'luck', 'distinct_rules')}, flush=True)
-        json.dump(res, open(os.path.join(out, 'c2_dev.json'), 'w'), indent=1)
-    best = max(res['temps'], key=lambda T: res['temps'][T]['reach32'])
-    res['best_temperature'] = float(best)
-    res['verdict'] = res['temps'][best]['verdict']
+    res['floor']['n_floor_programs'] = 4000
+    res.update(dev_report(m, vocab, dev, floors, device, n, seed, temps, log=lambda *x: print(*x, flush=True)))
     json.dump(res, open(os.path.join(out, 'c2_dev.json'), 'w'), indent=1)
-    print('VERDICT', res['verdict'], 'at T', best, flush=True)
+    print('VERDICT', res['verdict'], 'at T', res['best_temperature'], flush=True)
     return res
 
 
