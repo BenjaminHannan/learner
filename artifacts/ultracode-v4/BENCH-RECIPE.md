@@ -12,7 +12,7 @@ What it taught us, in order of size:
 1. **Let the thinker plan, and let an exact calculator do the sums.** On chain questions the thinker now decides every answer: give it another question's plan and the score drops from 156 to 2 out of 160. B2 already works this way.
 2. **Don't squeeze the paths in and out of the thinker.** Widening both from 32 to 2048 numbers added about 15 held-out questions out of 320 on 6 seeds. B2 already has no squeeze.
 3. **Slow the learning rate down at the end.** It took the planner from 83% to 98%. B2 already does this.
-4. **Many ideas did nothing:** two-hop pointers, wider attention, per-round routers and a wider planner reader all hit the same ceiling on the four lookup-style kinds. Merging the Hearer and Reader and making the thinker's notes quiet both made it worse.
+4. **Many ideas did nothing:** two-hop pointers, wider attention, per-round routers and a wider planner reader all hit the same ceiling on the four lookup-style kinds. Merging the Hearer and Reader and making the thinker's notes quiet both made it worse (quiet notes by a lot: 227 vs 287 held-out).
 
 So the bench mostly confirmed what B2 already does. The one open question it passes to B2 is in "Port to B2" below.
 
@@ -81,7 +81,7 @@ LMDC is the control (shown, 3 seeds). With the same 17,000 chain rows and decay,
 | T3 | all planner heads see the whole question | WRONG: 78, content pointers 46 |
 | MH | Hearer and Reader merged (Reader -> one Linear) | WORSE: held 278.8 vs 287.0, ahead 2 / 6 |
 | CRT | Talker writes `calc(note)` from the thinker's note | works, LEVEL: chain 471 vs 470 / 480 (3 seeds); copies a swapped note 79-96% |
-<!-- T2-ROW -->
+| T2 | quiet notes: exit vectors word-sized, learnable length | HURTS: held 226.5 vs 287.0, behind on 6 / 6; other-4 held 71.0 vs 130.7 |
 <!-- T1-ROW -->
 
 Earlier, from the plateau thread (PR #34), these were also ruled out: stiffness, core size, truncation, too little practice, wider input pipe, 8 loops, lr 3e-4, pointer, wider exit (as a single change then).
