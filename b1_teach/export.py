@@ -35,8 +35,9 @@ for arm, src in (("teach", a.teach), ("gen", a.gen)):
             qonly += 1          # question text alone repeats (generic questions); passage never does, so the row is kept
         rows.append(r)
     random.Random(1).shuffle(rows) if arm == "teach" else None
-    rows = rows[:a.rows]
-    assert len(rows) == a.rows, (arm, len(rows), dict(drop))
+    n_want = len(rows) if a.rows <= 0 or (arm == 'teach' and a.rows > len(rows)) else a.rows
+    rows = rows[:n_want]
+    assert len(rows) == n_want, (arm, len(rows), dict(drop))
     ex = defaultdict(lambda: None); order = []
     for r in rows:
         key = (r["kind"], r["source_text"], r["paraphrase"])
@@ -48,7 +49,7 @@ for arm, src in (("teach", a.teach), ("gen", a.gen)):
         for k in order:
             f.write(json.dumps(ex[k]) + "\n")
     nq = sum(len(ex[k]["questions"]) for k in order)
-    assert nq == a.rows
+    assert nq == n_want
     manifest[arm] = {"file": p.name, "examples": len(order), "questions": nq, "sha256": hashlib.sha256(p.read_bytes()).hexdigest(), "bytes": p.stat().st_size,
                      "per_family": dict(Counter(ex[k]["family"] for k in order)), "types": dict(Counter(q["type"] for k in order for q in ex[k]["questions"])),
                      "dropped_at_export": dict(drop), "question_text_equal_to_an_eval_question_kept": qonly}
