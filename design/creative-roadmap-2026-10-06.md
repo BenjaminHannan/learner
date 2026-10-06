@@ -34,7 +34,7 @@ that work, and the model learns from them in sleep so next time it doesn't need 
      32 tries by our own thinker B2 found an answer for 1 question out of 240 on three never-seen kinds.
   2. Sameness: B2's 32 tries hold only 2 to 4.5 programs that really differ (averages), and sleeping on the same
      answers over and over once shrank the old model's reach from 27-29 puzzles to 3-4.
-  3. No checker for fuzzy things like ideas.
+  3. No checker yet for open worlds: there the checker has to be a simulator or the game itself.
   4. B2's program language can't even write some answers (dates, word edits).
 - **The plan climbs four floors**, one tested step at a time:
   - Search: try, check, sleep inside our own thinker.
@@ -47,8 +47,8 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   machinery check (C1) on make-the-target puzzles. The code for both is built (PR #44). A small trial on the two
   existing B2 copies can run now; the sealed tests wait for B2's 6-run confirm. Every sleep test now scores better
   first answers separately from better search (GPT-6 Pro's main point), and C2 passes only on first answers.
-- **One question for you:** park ideas with no right answer (gifts, plans) until the model has its own judge (C4)?
-  I recommend parking.
+- **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
+  when the model runs into trouble on a problem it is trying to solve. Gift and plan ideas are out of scope.
 
 ## 1. What "creative" means here, and the scoreboard
 
@@ -72,8 +72,8 @@ denominators and next to the value-blind floor (what a try that follows the rule
 | Harm | practised skills lost after sleep, against the parent | sleep once cost 61 and 98 of 200 general answers (dl-5) |
 | Lesions | the same scores with loops:0 and with a donor's thinker state | a "creative" gain must come from the thinker, not a pointer leak (B2 missed loops:0 by 1.76 points in one seed) |
 
-Later, for fuzzy work, add quality times novelty (CreativeBench, 2603.11863): junk that is new and copies that are
-good both score zero.
+Scope (Ben, 9:24 PM ET 10-05): the creative part is only for when the model runs into trouble on a task. Open-ended
+ideas (gifts, plans) are not its job, so no taste judge or novelty score is needed.
 
 ## 2. What we already know
 
@@ -116,6 +116,7 @@ good both score zero.
 3. First-try gains are small and unstable; luck and reach move more (shown). Sleep has so far improved the searcher more
    than the first answer, so every sleep test reports first try as its own mark.
 4. Learned judges are weak at small size (weak evidence for ideas; suggested generally by "Mind the Gap", 2412.02674).
+   Ideas are now out of scope, so this matters only for C4's ranking head, which is always checked against real checkers.
 5. Sleep can cost general skill, so every step needs a harm mark (shown, dl-5).
 
 ### Papers (the ones that shape this plan; full list in the papers file)
@@ -145,7 +146,8 @@ good both score zero.
 
 1. **Cold start.** No hit, no signal (P0).
 2. **Sameness.** Few distinct tries (P0: 2-4 that matter in 32), and training on winners narrows them further.
-3. **No checker.** Ideas, open-world plans and advice have no exact check, and small judges are weak.
+3. **No checker yet in open worlds.** Puzzles and rules carry their own check; in a game the check has to be the
+   simulator or the game itself (C5, C10), and small learned judges are weak.
 4. **The language can't say it.** A try cannot be right if the program language cannot express the answer (P0: dates
    and string edits). This one is a gap in B2's program language, owned by the custom reader/talker thread; the
    roadmap lists what each step needs from it.
@@ -158,8 +160,8 @@ good both score zero.
   dreamer, filter and worker: the filter starts as code. C4 adds the model's own filter, trained on the checker's
   verdicts, so the one model takes the filter role too. The free hook is sampling B2's heads (`ledger.py:227`, `269`;
   shown in P0).
-- **D2. The deciding filter is code until the ladder reaches fuzzy problems.** Checkers are part of the task (the
-  target, the examples, the simulator), never a learned judge's say-so, until C4's filter is shown to agree with them.
+- **D2. The deciding filter is always a real check.** Checkers are part of the task (the target, the examples, the
+  simulator or game), never a learned judge's say-so. C4's filter only ranks tries before the real check runs.
 - **D3. Teacher where it can answer, creativity where it can't.** The 1.2B writes problems, stepping stones and fading
   hints during training only (lesson 2). It never ships and never judges inside the shipped model. Ben's 09-26 rule
   holds: nothing written or judged by Claude goes into training. Test prompts use one fixed instruction line, the same
@@ -171,7 +173,7 @@ good both score zero.
   and branches over the top first steps. At sleep time, a variety rule (diverse picks, rare correct answers upweighted,
   some wrong tries pushed down) is tested as its own change (C3).
 - **D5. Climb a ladder of checkers:** the target (C1) -> the examples (C2) -> a simulator (C5, C10) -> the model's own
-  trained filter (C4) -> people.
+  trained filter that ranks tries for those checks (C4).
 - **D6. Honesty rules for every step:** one change, marks sealed before running, a placebo arm, a harm mark, lesions,
   fresh sealed test sets, 6 independent parents before any claim (the project's noise rule), and the result that
   proves it wrong.
@@ -220,9 +222,8 @@ sealed in their own spec before running.
 | **C10** | Craftax-Classic (fast symbolic Crafter), then Crafter pixels; a small world model lets the thinker "dream" tries that the real game then checks (Ben, 09-18: dreams count only if a simulator checks them) | Beats a same-size plain agent at equal steps by >= 5 reward points, interval above 0; stretch: human level (65%), all 22 achievements | At or below the same-size plain agent |
 | **C11** | Minecraft (screen in, keyboard and mouse out) | First rung: wooden-pickaxe rate above a same-size plain agent at equal steps. Today's best pixel result: Dreamer 4, diamonds in 0.7% of episodes at 2B weights. "Beats Minecraft" gets a written definition (for example, the Ender Dragon from a fresh survival start, no privileged state for the agent) before this floor starts | First rung not above the plain agent; the rest is a research gamble |
 
-**Side track: ideas with no checker** (gifts, plans, messages). Recommended: park until C4 gives the model its own judge.
-Then the judge learns from real outcomes (Ben's thumbs up or down), the 1.2B helps only in training, and every idea is
-shown labelled as a guess. Ben decides on the decision card.
+**Out of scope: ideas with no checker** (gifts, plans, messages). Ben, 9:24 PM ET 10-05: these don't need a creative
+model; creativity is only for when the model runs into trouble.
 
 ## 6. C1 spec: machinery check (seal before any GPU stage)
 
@@ -399,3 +400,6 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   known-answer replay arm in C1 (R already holds the rules constant, and blurt-3 ran that control); its pass mark of
   +10 reach@30 for the aim check, because blurt-3 started near chance and sleep created the aim, so the check is
   reported rather than gated; its milestone table past C2, which stays provisional until C2 reads out.
+- **Ben (9:24 PM ET 10-05), answering the ideas card:** gift and plan ideas don't need a creative model; creativity is
+  only for when the model runs into trouble. The ideas side track is removed, wall 3 is now about open worlds, and C4
+  only ranks tries before a real check.
