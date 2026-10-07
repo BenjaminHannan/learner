@@ -172,9 +172,34 @@ def run(out, skills_train, skills_data, device='cpu', seed=0):
     return res
 
 
+def run_ft(out, skills_train, skills_data, device='cpu', seed=0):
+    """Pilot (marks NIGHT-CHAIN-FT-MARKS.md): job 6's fine-tune with this parent's B settings and B's number of updates (n_w = |W|), on W + C
+    instead of W. Compared with the confirm's B run on W (confirm.json)."""
+    path = os.path.join(out, 'nightchain_ft.json')
+    if os.path.exists(path):
+        return json.load(open(path))
+    c = json.load(open(os.path.join(out, 'confirm.json')))
+    kw = c['B']['kw']
+    replay = sleep.load_replay(skills_train, None, seed)
+    dev = c2_stones._with_nums(R.load_split(DATA, 'dev'))
+    N, vocab, s, W, extra, info = night_records(out, 'C')
+    dN, _ = fs.dev_eval(N, dev, vocab, device)
+    s5 = fs.skills5(N, skills_data, device)
+    (m, minfo), flops, secs = fs.count_flops(lambda: fs.m_ft(N, W + extra, replay, vocab, device, len(W), **kw))
+    d, _ = fs.dev_eval(m, dev, vocab, device)
+    b = next(r for r in c['runs'] if r['set'] == 'W' and r['method'] == 'ft' and r['kw'] == kw)
+    res = dict(kw=kw, records=len(W + extra), extra=info, fit=minfo, sleep_tflops=flops / 1e12, seconds=round(secs),
+               BC=dict(dev_gain=100 * (d['right'] - dN['right']), by_kind=d['by_kind'], chain5_harm=round(100 * (s5 - fs.skills5(m, skills_data, device)), 6)),
+               B=dict(dev_gain=b['gain_points'], by_kind=b['dev']['by_kind'], chain5_harm=b['skills_harm_points'], sleep_tflops=b['sleep_tflops']))
+    json.dump(res, open(path, 'w'), indent=1)
+    log('NIGHTFT', os.path.basename(out), {k: res[k] for k in ('records', 'sleep_tflops', 'seconds')}, res['BC'], 'B', res['B'])
+    return res
+
+
 if __name__ == '__main__':
     a = argparse.ArgumentParser()
     a.add_argument('--out', nargs='+', required=True); a.add_argument('--skills-train'); a.add_argument('--skills-data')
+    a.add_argument('--ft', action='store_true', help='the fine-tune pilot (W + C records, B settings) instead of the memory arms')
     a = a.parse_args()
     for o in a.out:
-        run(o, a.skills_train, a.skills_data)
+        (run_ft if a.ft else run)(o, a.skills_train, a.skills_data)
