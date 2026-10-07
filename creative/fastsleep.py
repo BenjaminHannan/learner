@@ -305,8 +305,8 @@ def m_knn(N, recs, replay, vocab, device, n_w, k=16, tau=0.05, theta=0.9, c=20.0
         if 'w' not in _WARM:
             _WARM['w'] = R.warm_records(R.load_split(DATA, 'warm'))
         recs = list(recs) + _WARM['w'][:old]
-    steps, ans = build_memory(m, recs, vocab, device)
-    mem = Memory(steps, ans, m.op_head.out_features, pp.M, k, tau, theta, c)
+    steps, ans_mem = build_memory(m, recs, vocab, device)
+    mem = Memory(steps, ans_mem, m.op_head.out_features, pp.M, k, tau, theta, c)
     if cal:
         mem.calibrate(head_inputs(m, random.Random(seed).sample(replay, n_cal), vocab, device), cal)
     if not ans:
@@ -316,7 +316,7 @@ def m_knn(N, recs, replay, vocab, device, n_w, k=16, tau=0.05, theta=0.9, c=20.0
     m.op_head = _MemOp(m.op_head, mem)
     m.ptr = mem.wrap_ptr(m.ptr)
     m._mem = mem
-    return m, dict(memory=int(ans[0].shape[0]), k=k, tau=tau, theta=theta, c=c, version=2, cal=cal, old=old, ans=ans, theta_t=[round(x, 4) for x in mem.theta_t], theta_ans=round(mem.theta_ans, 4))
+    return m, dict(memory=int(ans_mem[0].shape[0]), k=k, tau=tau, theta=theta, c=c, version=2, cal=cal, old=old, ans=ans, theta_t=[round(x, 4) for x in mem.theta_t], theta_ans=round(mem.theta_ans, 4))
 
 
 # ---------------------------------------------------------------- method: lora (low-rank adapters on the thinker, everything else frozen)
