@@ -157,3 +157,8 @@ Fit: **not usable in the pool, and I did not include them.** (1) They are model-
 4. Decide whether to pay for TEACH 2x (about 60 new kinds); until then the teacher line stays 3.3M.
 
 Files: `data_pool/` on branch `claude/data-pool-8b`: `PLAN.md`, `overlap13.py`, `web_slice.py`, `measure/`, `results/`, `panels/`, `tests/`.
+
+## 10. Update Oct 7 (8a spec sealed): what was built
+- **Web slices** (FineWeb-Edu shard 0, grade <= 12, panel-checked against the current hash index, 0 documents hit): `rung3` 12.4M, `rung10` 37.2M, `rung30` 117.8M GPT-2 tokens (62% of the 8a pools 20M / 60M / 190M), nested (checked: rung3 is a prefix of rung10 is a prefix of rung30). 95 exact duplicates dropped, 224,832 too hard, 48,920 quality. Manifest `data_pool/built/web_slices_8a_MANIFEST.json`; file `/mnt/project-files/data-pool/built/web_slices_8a.tgz` (sha256 686dd25c...).
+- **Own text** (`gen_own_text.py`, 72.0M LFM tokens, 12 existing English kinds + 34 skills families + all 171,940 TEACH rows, no new kinds or teacher): every row has `rung` and `pos`; prefixes by tokens: 7.6M (rung 3), 22.8M (rung 10), 72.0M (rung 30), same mix in each (skills 65%, English 31%, TEACH 4.5%). Exact duplicates 0%. **Digit/name-shape duplicates: 20.5% / 23.2% / 25.7%** (arithmetic-style families repeat shapes with new numbers; this is the variety limit from section 2, not fixable without new kinds). TEACH could not be raised (3.24M tokens, section 5), so its share is 4.5%. Manifest `data_pool/built/own72_MANIFEST.json`; file `/mnt/project-files/data-pool/built/own72.tgz` (sha256 85dc19b3...). Regenerable byte-for-byte with the command in the script header.
+- Protected-panel hashes are not merged yet (Ben chose "start now" for 8a; the check must pass before 8c).
