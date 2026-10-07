@@ -293,7 +293,7 @@ on box A, and seed 201 against B2V_s201 on box B. EGR, R0, EGE and EGT (queue 38
 same-machine comparison. The addendum 10 exclusion applies only when the passing arms were judged on different machines.
 **Cost:** the boxes stay up about 1.5 h longer (about $1.50 more in all); the 7.5 h self-stop is unchanged.
 
-## Addendum 12: EGR moves to the rented boxes too (written 2026-10-07 about 00:25 UTC, 8:25 PM ET 10-06, before any EGR run)
+## Addendum 12: EGR moves to the rented boxes too (written 2026-10-07 about 00:00 UTC, 8:00 PM ET 10-06, before any EGR run)
 EGW failed (pooled-5 -3.39 / -5.30 against B2V on its box). Its losses sit in the tasks that need each letter: cipher_map fell from 100 to 1.2,
 and its training loss stayed 5-7x B2V's, almost all of it in the GEN talker that writes answers letter by letter (custom_io/diag_eg.py tests
 how much spelling EmbeddingGemma's states keep). EGR (addendum 6: EmbeddingGemma plus each char's own letter, no window,
