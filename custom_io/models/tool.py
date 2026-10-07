@@ -78,26 +78,34 @@ class Tool(Ledger):
             nn.init.normal_(m.weight, std=0.02)
             if getattr(m, 'bias', None) is not None:
                 nn.init.zeros_(m.bias)
-        self._gold = {}
+        self._gold, self._full_tape = {}, False
 
     # ---- the tape ----
-    def read_texts(self, texts, dev):
-        """Each string read by the reader on its own -> X [n, LE, d], ids [n, LE], mask [n, LE] (empty string: all masked)."""
-        ids = np.full((len(texts), LE), PAD, np.int64)
+    def read_texts(self, texts, dev, le=LE):
+        """Each string read by the reader on its own -> X [n, le, d], ids [n, le], mask [n, le] (an empty string: all masked, zeros). Only the
+        non-empty strings go through the reader (the reader's output is zero wherever the mask is, so this is the same result, faster)."""
+        ids = np.full((len(texts), le), PAD, np.int64)
         for i, s in enumerate(texts):
-            e = self.vocab.encode(s[:LE])
+            e = self.vocab.encode(s[:le])
             ids[i, :len(e)] = e
         ids = torch.from_numpy(ids).to(dev)
         mask = ids != PAD
-        X, _ = self.reader({'prompt_ids': ids, 'prompt_mask': mask, 'rows': [{'prompt': s[:LE]} for s in texts]})
+        full = [i for i, s in enumerate(texts) if s]
+        X = torch.zeros(len(texts), le, self.d, device=dev)
+        if full:
+            ix = torch.tensor(full, device=dev)
+            Xf, _ = self.reader({'prompt_ids': ids[ix], 'prompt_mask': mask[ix], 'rows': [{'prompt': texts[i][:le]} for i in full]})
+            X = X.to(Xf.dtype).index_copy(0, ix, Xf)
         return X, ids, mask
 
-    def tape_of(self, texts, dev):
-        """texts [B][N_RES] -> (X [B, N_RES*LE, d] with tape_emb added, ids, mask)."""
-        B = len(texts)
-        X, ids, mask = self.read_texts([s for row in texts for s in row], dev)
-        X = (X.view(B, N_RES, LE, -1) + self.tape_emb.weight[None, :, None].to(X.dtype)) * mask.view(B, N_RES, LE, 1)
-        return X.flatten(1, 2), ids.view(B, -1), mask.view(B, -1)
+    def tape_of(self, texts, dev, le=None):
+        """texts [B][K] -> (X [B, K*le, d] with tape_emb added, ids, mask); le = the longest entry (teacher forcing) or LE (free run). The layout
+        only decides where padding sits: the thinker and the copy attention see an entry's chars through the reader's positions and tape_emb[k]."""
+        B, K = len(texts), len(texts[0])
+        le = le or max(1, max(len(x) for row in texts for x in row))
+        X, ids, mask = self.read_texts([x for row in texts for x in row], dev, le)
+        X = (X.view(B, K, le, -1) + self.tape_emb.weight[None, :K, None].to(X.dtype)) * mask.view(B, K, le, 1)
+        return X.flatten(1, 2), ids.view(B, -1), mask.view(B, -1), le
 
     def cells(self, z):
         """[B,d] -> [B, 2*CELLS, d]: operand a's cells then b's, units first (cell j = W_k(z) + place row j)."""
@@ -128,16 +136,22 @@ class Tool(Ledger):
             Kw = Kw + self.word_content(X, ws, we)
         kvx = [b.kv_of(X + self.src.weight[1]) for b in self.core]
         kvs0 = [b.kv_of(S0 + self.src.weight[0]) for b in self.core]
-        texts = gold['tape'] if gold is not None else [[''] * N_RES for _ in range(B)]
-        Xt, idt, mt = self.tape_of(texts, dev)
-        ent = torch.arange(N_RES * LE, device=dev) // LE                 # entry index of every tape position
+        if gold is not None and not self._full_tape:    # teacher forcing: only the entries the longest gold program writes, each as long as the longest
+            K = max(1, int((gold['op'] > 0).sum(1).max()))
+            texts, le = [row[:K] for row in gold['tape']], None
+        elif gold is not None:                          # the same in the free-run layout (tests only)
+            K, texts, le = N_RES, [list(row) for row in gold['tape']], LE
+        else:
+            K, texts, le = N_RES, [[''] * N_RES for _ in range(B)], LE
+        Xt, idt, mt, le = self.tape_of(texts, dev, le)
+        ent = torch.arange(K * le, device=dev) // le                     # entry index of every tape position
         kvt = [b.kv_of(Xt + self.src.weight[1]) for b in self.core]
         Z = torch.cat([self.ctrl.weight, self.reader.place.weight[:9]]).expand(B, -1, -1)
         steps, calls, n = [], [[] for _ in range(B)], self.n_loops if loops is None else loops
         shown = torch.zeros(B, N_RES, dtype=torch.bool, device=dev)     # entries the thinker may see now
         for t in range(n):
             ts = min(t, self.n_loops - 1)
-            vis = mt & shown.gather(1, ent.expand(B, -1))
+            vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
             kvs = [torch.cat([a, c], 3) for a, c in zip(kvs0, kvt)]
             mask = torch.cat([valid, vis, xm], 1)
             Z = Z + self.step_emb.weight[ts]
@@ -170,14 +184,14 @@ class Tool(Ledger):
             if any(new):
                 for i in range(B):
                     texts[i][k] = new[i]
-                Xk, ik, mk = self.read_texts(new, dev)
+                Xk, ik, mk = self.read_texts(new, dev, le)
                 Xk = (Xk + self.tape_emb.weight[k].to(Xk.dtype)) * mk[..., None]
-                sl = slice(k * LE, (k + 1) * LE)
+                sl = slice(k * le, (k + 1) * le)
                 Xt, idt, mt = Xt.clone(), idt.clone(), mt.clone()
                 Xt[:, sl], idt[:, sl], mt[:, sl] = Xk.to(Xt.dtype), ik, mk
                 kvt = [b.kv_of(Xt + self.src.weight[1]) for b in self.core]
                 shown[:, k] = torch.tensor([o > 0 for o in op], device=dev)
-        vis = mt & shown.gather(1, ent.expand(B, -1))
+        vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
         zf = self.ln_z(Z[:, 1])
         out = dict(R=Z[:, N_CTRL:], lmode=self.mode_head(zf), lword=self.ptr(self.q_word(zf), Kw, wvalid), wvalid=wvalid, steps=steps,
                    X=torch.cat([X, Xt], 1), xm=torch.cat([xm, vis], 1), ids=torch.cat([batch['prompt_ids'], idt], 1),

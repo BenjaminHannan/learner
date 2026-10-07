@@ -79,7 +79,8 @@ def test_no_lookahead():
     with torch.no_grad():
         g = m.gold(rows, 'cpu')
         o1 = m.run(b, gold=g)
-        g2 = dict(g, tape=[[e if k != 1 else e.replace(' = ', ' = 9') for k, e in enumerate(tp)] for tp in g['tape']])
+        bump = lambda e: e.split(' = ')[0] + ' = ' + ''.join(str((int(c) + 1) % 10) if c.isdigit() else c for c in e.split(' = ')[1])
+        g2 = dict(g, tape=[[e if k != 1 else bump(e) for k, e in enumerate(tp)] for tp in g['tape']])       # same length: same tape layout
         o2 = m.run(b, gold=g2)
     for s in (0, 1):
         assert torch.equal(o1['steps'][s][0], o2['steps'][s][0]) and torch.equal(o1['steps'][s][1], o2['steps'][s][1]), s
@@ -89,6 +90,20 @@ def test_no_lookahead():
     assert (d2[shown] > 0).all(), d2
     assert not torch.equal(o1['R'], o2['R'])
     print('ok no_lookahead')
+
+
+def test_tape_layout():
+    """The trimmed teacher-forced tape (only the entries the batch uses, each as long as the longest) gives the same loss as the free-run layout."""
+    v = vocab()
+    m = seeded(SMALL, 4, v).eval()
+    b = batch_of(prog_rows(32, 1, 4), v)
+    with torch.no_grad():
+        l1, a1 = m.loss(b)
+        m._full_tape = True
+        l2, a2 = m.loss(b)
+        m._full_tape = False
+    assert abs(float(l1) / float(l2) - 1) < 1e-5 and all(abs(float(a1[k]) - float(a2[k])) < 1e-4 for k in a1), (float(l1), float(l2), a1, a2)
+    print('ok tape_layout', float(l1))
 
 
 def test_runs_and_lesions():
@@ -148,7 +163,7 @@ def test_extra_evals():
 
 # ---- the mechanism: the whole chain through the outside calculator, on numbers never seen in training ----------------------------
 MECH_CFG = dict(d=64, n_heads=2, reader_layers=2, blocks=1, n_loops=4, mlp=2.0)
-MECH_STEPS, MECH_CAP_S = 1000, 900       # 1000 steps: about 330 s on 2 busy CPU cores; held-out exact 99.7 (one call 150/150, two calls 149/150)
+MECH_STEPS, MECH_CAP_S = 1500, 900       # about 270 s on 2 busy CPU cores; curve (held-out exact): 79 at 500 steps, 84 at 1000, 96 at 1250, 99 at 1500
 
 
 def tool_rows(n, tag, seed, lo=1, hi=5):
