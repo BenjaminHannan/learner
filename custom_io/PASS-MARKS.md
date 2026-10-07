@@ -449,3 +449,17 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
 - **SD note (shown, reported, no mark changed):** the 0.94 is the SD of the paired difference B2 minus plain_tf; B2's own seed SD is 0.63. With
   a paired SD near 0.94 the CI half-width is 2.571 x 0.94 / sqrt(6) = 0.99, so mark (1) passes only if the mean difference is within about
   +-0.01 of zero; with SD 0.63, within about +-0.34. Sent to the architecture thread to decide before the 6-seed run; never loosened here.
+
+## Addendum 17, amendment (written 2026-10-07 about 17:25 UTC, 1:25 PM ET, before any T1 run)
+- **Parity mark 1 re-sealed by the architecture thread (MARKS-D0-T1 Amendment 2), mirrored here word for word:** 1a the 6-seed mean of T1 minus
+  B2 on pooled-5 is >= -1.0; 1b the lower bound of its 95% CI is >= -2.0; 1c T1 >= B2 - 1.0 on at least 5 of the 6 seeds. It replaces "the 95% CI
+  inside +-1.0", which no model could pass at the observed seed spread (SD note above). Marks 2-6, the screen and the proved-wrong line are unchanged.
+  `analyze_t1.confirm` computes 1a-1c and prints the paired SD of T1 minus B2 beside the verdict.
+- **T1's own leak definitions (fixed before the first run):** zero-round = lesion `loops:0`: the thinker runs no round, so no call is written and
+  the talker answers from the initial state and the question; donor = the donor row's whole thinker output (its registers, its transcript of calls
+  and results, and its mode and word logits) with the current row's question; the talker copies from the current question and the donor's transcript.
+- **Saved outputs (no-hardcoding plan, section 2):** every T1 run writes the intact per-row dev predictions of all 6 splits to PREDS.json
+  (`train.py --save-preds`) and its checkpoint.pt, and prints its trainable count against the sealed band (3,147,208 to 3,341,880; T1 3,277,393,
+  64,487 below the top).
+- **Replace, not alongside (Amendment 2):** T1 already removes the executor, the value codes and the result slots; the regex-found spans of the
+  question's numbers stay in T1 (disclosed) and the N1 rung removes them.

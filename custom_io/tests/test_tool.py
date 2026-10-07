@@ -249,8 +249,12 @@ def test_judge():
     k = -int(0.4 * n5 / 100 / 5) - 1                                                            # about -0.4 pooled-5 points on every seed
     alt = {s: (k if s % 2 else 0) for s in A.CONFIRM}                                          # a spread across seeds: mark 1 is the CI rule
     r = A.confirm(with_t1(d_correct=alt))
-    m1 = r['marks']['1 95% CI of pooled-5 T1 - B2 inside +-1.0']
-    assert abs(m1['value']['mean'] - sum(m1['value']['per_seed'].values()) / 6) < 1e-9 and m1['ok'] == (m1['value']['ci'][0] >= -1 and m1['value']['ci'][1] <= 1)
+    m1 = next(x for k, x in r['marks'].items() if k.startswith('1 parity'))
+    v1 = m1['value']
+    assert abs(v1['mean'] - sum(v1['per_seed'].values()) / 6) < 1e-9
+    assert m1['ok'] == (v1['mean'] >= -1 and v1['ci'][0] >= -2 and sum(x >= -1 for x in v1['per_seed'].values()) >= 5)
+    two_low = {s: (-int(1.5 * n5 / 100 / 5) - 1 if s in (200, 201) else 0) for s in A.CONFIRM}            # two seeds 1.5 below: 1c fails
+    assert not next(x for k, x in A.confirm(with_t1(d_correct=two_low))['marks'].items() if k.startswith('1 parity'))['ok']
     big = -int(2.5 * n5 / 100 / 5) - 1
     assert A.confirm(with_t1(d_correct=big))['verdict'] == 'PROVED WRONG'
     assert A.confirm(with_t1(tool_off=5.0))['verdict'].startswith('NOT SHOWN')
@@ -267,6 +271,8 @@ def test_queue40():
     q40 = parse_queue(os.path.join(here, 'queue_local', '40-pc-t1-screen.txt'))
     assert [r[0] for r in q40] == ['T1_s200', 'T1_s201']
     for name, _, args, mem in q40:
+        assert args[-1] == '--save-preds'                                       # per-row dev predictions (no-hardcoding plan, section 2)
+        args = args[:-1]
         b2 = q33[name.replace('T1', 'B2')]
         swap = lambda xs, model, cfg: [model if x in ('ledger', 'tool') else cfg if x.startswith('{') else x for x in xs]
         assert swap(args, 'M', 'C') == swap(b2, 'M', 'C'), (args, b2)

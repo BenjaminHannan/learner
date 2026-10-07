@@ -150,13 +150,14 @@ def can_donor(model):
     return getattr(model, 'supports_donor', lambda: False)()
 
 
-def eval_all(model, dev_dir=DEFAULT_DATA, max_per_split=None, lesion=None, batch_size=128, device=None, donor=False):
+def eval_all(model, dev_dir=DEFAULT_DATA, max_per_split=None, lesion=None, batch_size=128, device=None, donor=False, return_preds=False):
     """Evaluate the six dev splits -> {split: evaluate(...)}. dev_dir is the data root or its dev/ folder.
-    donor=True and a model with state/talk: each split's result also gets 'donor': donor_eval(...) (no lesion applies)."""
+    donor=True and a model with state/talk: each split's result also gets 'donor': donor_eval(...) (no lesion applies).
+    return_preds: each split's result also has 'preds' {row id: prediction}."""
     res = {}
     for s in DEV_SPLITS:
         rows = _dev_rows(dev_dir, s, max_per_split)
-        res[s] = evaluate(model, rows, batch_size, device, lesion)
+        res[s] = evaluate(model, rows, batch_size, device, lesion, return_preds)
         if donor and can_donor(model):
             res[s]['donor'] = donor_eval(model, rows, batch_size, device)
     return res

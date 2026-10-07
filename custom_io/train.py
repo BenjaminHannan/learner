@@ -7,6 +7,9 @@ from custom_io.data import DEFAULT_DATA, CharVocab, Dataset, load_rows, to_devic
 from custom_io.evalx import can_donor, chain_panel, donor_all, eval_all, evaluate, short, subsample, _dev_rows, is_hit
 from custom_io.models import NAMES, build
 
+PLAIN_TF_S = 3244544                                                     # plain_tf S, the size every 3M design is matched to
+SIZE_BAND = (round(PLAIN_TF_S * 0.97), round(PLAIN_TF_S * 1.03))        # the sealed +-3% band: 3,147,208 .. 3,341,880
+
 
 def lr_at(step, steps, warmup, base, elapsed=0.0, cap=None):
     """Linear warmup, then cosine to 10% of base. Progress = max(step/steps, elapsed/cap) so a --minutes
@@ -66,7 +69,13 @@ def final_eval(model, args, device, amp):
     runs = {}
     for lesion in [None] + names:
         with amp():
-            runs[lesion] = eval_all(model, args.data, args.eval_max, lesion, args.eval_batch, device)
+            runs[lesion] = eval_all(model, args.data, args.eval_max, lesion, args.eval_batch, device, return_preds=lesion is None and args.save_preds)
+        if lesion is None and args.save_preds:      # per-row intact dev predictions of all 6 splits -> PREDS.json beside RESULT.json
+            preds = {s: r.pop('preds') for s, r in runs[None].items()}
+            if args.out:
+                os.makedirs(args.out, exist_ok=True)
+                json.dump(preds, open(os.path.join(args.out, 'PREDS.json'), 'w'))
+            jprint(event='preds', n={s: len(p) for s, p in preds.items()})
         jprint(event='eval', lesion=lesion, **short(runs[lesion]))
     if can_donor(model):
         with amp():
@@ -113,6 +122,7 @@ def main(argv=None):
     ap.add_argument('--english-eval', help='dir of the four English eval sets: with --final-eval run english.eval_english (needs DATA/dev/in_dist.jsonl, vocab of 108) instead of eval_all, chain-5 and extra_evals')
     ap.add_argument('--max-ans', type=int, default=8, help='answer chars before EOS (data.set_max_ans); a model with a smaller max_ans is refused')
     ap.add_argument('--eval-max', type=int, help='cap rows per dev split in the final eval')
+    ap.add_argument('--save-preds', action='store_true', help='with --final-eval: write the intact per-row dev predictions of all 6 splits to OUT/PREDS.json')
     ap.add_argument('--eval-batch', type=int, default=128)
     ap.add_argument('--minutes', type=float, help='wall-clock cap on training; still evals afterwards')
     ap.add_argument('--out', help='dir for RESULT.json and checkpoint.pt')
@@ -140,6 +150,8 @@ def main(argv=None):
     opt = torch.optim.AdamW([{'params': decay, 'weight_decay': 0.1}, {'params': no_decay, 'weight_decay': 0.0}],
                             lr=args.lr, betas=(0.9, 0.95), fused=device.type == 'cuda')
     jprint(event='start', model=args.model, cfg=cfg, n_params=model.n_params(), device=str(device), vocab=len(vocab), rows=len(rows))
+    n, (lo, hi) = model.n_params(), SIZE_BAND
+    jprint(event='size', n_params=n, band=[lo, hi], inside=lo <= n <= hi, headroom_to_top=hi - n, vs_plain_tf_pct=round(100 * (n / PLAIN_TF_S - 1), 2))
 
     cap = args.minutes * 60 if args.minutes else None
     t0, eval_s, step, run_loss, run_n, last_loss, status = time.time(), 0.0, 0, 0.0, 0, None, 'ok'

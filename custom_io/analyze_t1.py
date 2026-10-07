@@ -2,7 +2,8 @@
 judged exactly as written: T1 (model 'tool') against q33's plain B2 of the same seed (inside, not retrained).
 python3 -m custom_io.analyze_t1 --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-pc-t1-screen [--out custom_io/results/T1-ANALYSIS.json]
 Screen (200, 201): pooled-5 T1 - B2 >= -2.0 and chain-5 >= 95 on both; tightening (addendum 17): write_copy operand and answer copy >= 99 on both.
-Confirm (200-205): (1) 95% CI of the pooled-5 difference inside +-1.0; (2) chain-5 mean within 1.0 of B2's and >= 99 on 5 of 6 seeds; (3) tool off
+Confirm (200-205): (1) parity, re-sealed before any run (Amendment 2): mean T1 - B2 >= -1.0, its 95% CI lower bound >= -2.0, and T1 >= B2 - 1.0
+on at least 5 of 6 seeds (the old "CI inside +-1.0" could not pass at the observed seed spread); (2) chain-5 mean within 1.0 of B2's and >= 99 on 5 of 6 seeds; (3) tool off
 (noexec program set) < 5 on every seed; (4) loops:0 and donor in_dist <= 5 on every seed (B2's beside); (5) opswap swap_match >= 99 on every seed;
 (6) no dev split's 6-seed mean drops > 2.0. Proved wrong: mean < -2.0 or chain-5 mean < 95; between: not shown. "Every seed" in (3) and (5) is
 this file's stricter reading. A run counts only if status ok, the q33 recipe and the right size; a missing or invalid run: NOT JUDGED."""
@@ -88,8 +89,10 @@ def confirm(runs):
     h = T975[n - 1] * sd / math.sqrt(n)
     c5, c5b = [f['t1_chain5'] for f in F.values()], [f['b2_chain5'] for f in F.values()]
     dspl = {sp: sum(f['d_split'][sp] for f in F.values()) / n for sp in DEV_SPLITS}
-    m = {'1 95% CI of pooled-5 T1 - B2 inside +-1.0': dict(value=dict(mean=mean, sd=sd, ci=[mean - h, mean + h], per_seed={s: f['d_pooled5'] for s, f in F.items()}),
-                                                          ok=mean - h >= -1.0 and mean + h <= 1.0),
+    near = sum(f['d_pooled5'] >= -1.0 for f in F.values())
+    m = {'1 parity (Amendment 2): mean T1 - B2 >= -1.0, 95% CI lower >= -2.0, T1 >= B2 - 1.0 on >= 5 of 6 seeds': dict(
+             value=dict(mean=mean, sd=sd, ci=[mean - h, mean + h], seeds_within_1=near, per_seed={s: f['d_pooled5'] for s, f in F.items()}),
+             ok=mean >= -1.0 and mean - h >= -2.0 and near >= 5),
          '2 chain-5 mean within 1.0 of B2 and >= 99 on 5 of 6 seeds': dict(value=dict(t1_mean=sum(c5) / n, b2_mean=sum(c5b) / n, per_seed={s: f['t1_chain5'] for s, f in F.items()}),
                                                                           ok=abs(sum(c5) / n - sum(c5b) / n) <= 1.0 and sum(x >= 99 for x in c5) >= 5),
          '3 tool off: noexec program set < 5 on every seed': dict(value={s: f['tool_off'] for s, f in F.items()}, ok=all(f['tool_off'] is not None and f['tool_off'] < 5 for f in F.values())),
