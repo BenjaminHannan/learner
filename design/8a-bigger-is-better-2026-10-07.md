@@ -317,6 +317,11 @@ answers". The no-hard-coding plan made it a standing rule (PLAN section 2, b3832
   step targets (`MAX_POS`, `CAP`), the LLM arm's context, and B2's program steps, prompt numbers and words (`N_RES`,
   `N_NUM`, `W_MAX` in `progparse.py:8`). No arm has an answer-only fallback. Today these B2 caps are fixed constants
   (7 steps, 16 numbers, 64 words), so this needs code (build list).
+- **E1b. Generator caps count too** (no-hard-coding thread, 2:12 PM ET, relayed): the skills generator silently drops any
+  question over MAX_TOKENS_EST = 62 estimated tokens (`core.py:22`, `build.py:29-32, 48-58`), with no saved reject
+  count, and q33's data has that filter. The 8a own-text pools must not inherit it: the data-pool thread checks own72
+  and regenerates the skills part without the filter if needed, and every new build records its rejects. The cap report
+  (E3) lists generator-side filters and their reject counts beside the model caps.
 - **E2. Addendum B2 is withdrawn.** Cloze rows go back to section 4's sizes (chunks up to 280 letters, one 3-12 letter
   word) and the caps rise to fit them.
 - **E3. Reported with every rung:** the caps used, and the number of training and dev rows any cap touches (target 0).
