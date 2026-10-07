@@ -302,4 +302,5 @@ No 8a run has started; nothing here uses an 8a result.
 - **D2. Near-repeats in our own text.** The data-pool thread measured 23% of own-text rows at 22.8M as the same problem
   with new numbers (target was 10% or less; it cannot drop without new kinds of questions). Accepted for 8a: every arm
   and rung sees the same mix, so it does not favour any arm. It can cap the gain from size, which the quarter-pool
-  diagnostic (section 7) checks. The rate is reported per rung, including at 72M for 30M.
+  diagnostic (section 7) checks. The rate is reported per rung: 20% at the 7.6M prefix, 23% at 22.8M (3M and 10M
+  rungs), 26% at 72M (30M rung) (data-pool thread, shown).
