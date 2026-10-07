@@ -61,7 +61,10 @@ def get_caps(a, pdir):
     dev = [os.path.join(pdir, 'dev')] + ([a.big_data] if a.big_data and os.path.isdir(a.big_data) else [])
     own72 = a.own72 or (os.path.join(a.data8a, 'own72') if a.data8a else None)
     web30 = a.web30 or (os.path.join(a.data8a, 'web', 'slice_rung30.jsonl') if a.data8a else None)
-    if own72 and web30 and os.path.exists(web30) and a.scale == 1.0:
+    pinned = a.caps_file or (os.path.join(os.path.dirname(os.path.abspath(__file__)), 'caps_g.json') if not a.recompute_caps else None)
+    if pinned and a.scale == 1.0:       # addendum G: one set of caps for every rung and every box; a pool row that does not fit stops the job (checked below), nothing is cut
+        caps = json.load(open(pinned))
+    elif own72 and web30 and os.path.exists(web30) and a.scale == 1.0:
         gf = os.path.join(a.work, 'caps-global.json')
         _locked(gf + '.lock')
         try:
@@ -77,7 +80,7 @@ def get_caps(a, pdir):
     else:       # dry run: the pool's own longest cases
         caps = CP.compute([os.path.join(pdir, 'train.jsonl')] + dev)
     paths = [os.path.join(pdir, 'train.jsonl')] + dev
-    rep = CP.report(caps, paths, progs=False)       # own rows' program steps were measured once in the global pass
+    rep = CP.report(caps, paths, progs=True)        # program steps too: a few minutes per pool, against hours of training
     rep_dev = CP.report(caps, dev, progs=True)
     rep['rows_over_caps_dev_with_programs'] = rep_dev['rows_over_caps']
     json.dump(caps, open(f, 'w'))
@@ -150,6 +153,8 @@ def main(argv=None):
     ap.add_argument('--data8a', help='get_data.py output dir (own72/ and web/); gives --own72 and --web')
     ap.add_argument('--own72', help='data_pool own72 dir (overrides --data8a)')
     ap.add_argument('--own-extra', nargs='*', default=[], help='without own72: more own-row files PATH:WEIGHT')
+    ap.add_argument('--caps-file', help='pinned caps json (default: g8a/caps_g.json, the addendum G caps)')
+    ap.add_argument('--recompute-caps', action='store_true', help='size the caps from own72 + the rung30 slice instead of using the pinned file (needs a dated addendum first)')
     ap.add_argument('--web30', help='web slice of the 30M rung (default DATA8A/web/slice_rung30.jsonl): the global caps are sized from it')
     ap.add_argument('--web', help='web slice jsonl (default: DATA8A/web/slice_<rung slice>.jsonl)')
     ap.add_argument('--big-data')
