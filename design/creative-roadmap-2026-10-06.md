@@ -480,6 +480,42 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
     runs as written, its claim now "climbs from stepping stones". SS beating P by 5 or more points of reach@32 labels
     the help as the stepping stones rather than more practice (reported). If SS misses on either parent, C2 retires at
     cold start with its test never read, and wall 1 stands confirmed on B2; any other pattern comes back here.
+  - **Stepping-stone result (10-07, Mac job 5, commit 05f1efb36; shown, DEV):** the warm-up took (fresh add/mult:
+    reach@32 61% and 57%, first try 27% and 20%). Best-temperature reach@32, s100 / s101: N 5.1% / 9.8%, placebo P
+    4.3% / 5.1%, SS 25.4% / 19.5%, PC (full-difficulty pool programs, report only) 63% / 68%; floor 4.8%, gate 14.5%.
+    **SS passes on both parents and C2 goes on.** Read with four limits:
+    - It passes only at the hottest temperatures (s100 at 2.0 and 3.0, s101 at 3.0 only), still rising at the top of
+      the grid; at 1.4 and below it misses on both parents. SS minus P at matched temperature: +8.6 / +7.8 at 1.4,
+      +21.1 / +16.0 at 3.0, so the stepping stones help at every temperature.
+    - The gain is mostly square (reach@32 82% / 71% at 3.0, from 18% / 39% for N), whose whole program is the first
+      step of the sq_plus stepping stones; then last_digit (31% / 8%, mod with a new constant); double_add moves at
+      low temperature (N 4-14% to SS 22-29% at 0.7-1.4); affine and sq_plus stay near 0.
+    - Greedy first try fits 1.6% / 0.8% of DEV questions: hits come from sampling wide, not from choosing well.
+    - Even PC, trained on full-difficulty programs of the held-out kinds themselves, writes first answers for square
+      (94%) and last_digit (100%) but sq_plus 18%, double_add 6% and affine 0% (s100): B2 learns one-step rules
+      readily and the 3-5-step ones barely.
+  - **Next: C2b DEV pilot on s100 and s101 (decided 10-07).** C2b runs as written from the SS parent (its N), on DEV
+    only, with C1's lessons built in:
+    1. Pool temperature: chosen on DEV by reach@32 among temperatures passing sameness; 3.0 is the grid edge, so the
+       grid widens once to 4.0 and 6.0 (standing rule).
+    2. Arms on the 1,024 pool questions, 32 plain samples each: W (tries that fit every example, at most 2 distinct
+       per question), R (tries that fail the example check, matched questions and counts), H (tries relabelled with
+       what they compute on the shown examples, same count), PC (solver programs for W's questions, same count).
+    3. Sleep: learning rate and visits chosen on DEV with the PC arm (lr 3e-4 or 1e-3; visits 4, 8, 16), skills harm
+       at most 2 points, then frozen; every arm sees each record the same number of times.
+    4. Measured on DEV: greedy first try (fits and right) per kind and pooled, reach@4 and reach@32 with repeats,
+       the practised-kind check and skills harm.
+    5. PC feasibility gate before anything is sealed (C1's lesson): PC - N greedy first try on DEV >= +15 points
+       pooled on both parents, the size of W's mark; if PC misses, the mark is out of reach by design and C2 comes
+       back here.
+    6. Night 2 (report only): sample the pool again with W's parent, sleep again on the new hits, and report per-kind
+       reach@32 and first try. This asks whether the loop climbs (sq_plus after square, affine after double_add)
+       rather than only copying what the stepping stones showed.
+    7. Labels for the real C2b, fixed now (the marks do not move): gains are reported per kind; if the pooled pass is
+       carried by square and last_digit alone (affine, sq_plus and double_add each within 2 points of N), the verdict
+       reads "PASS, near-copy kinds only".
+    The real C2b waits for B2's six confirm parents (warm-up, stepping stones, then the arms on each); its test stays
+    sealed until then.
 - **C2b, the creative test.** On held-out rule kinds, with no answer keys: 32 tries per question, keep tries that fit
   every example, sleep. Arms N, W, R (fits no example check, matched count), H (each try relabelled with the rule it
   actually computes on the examples). Comparison nets: a same-size plain transformer and a fresh net, each given k
@@ -600,3 +636,8 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   Per the pre-set rule, stepping stones come next (section 7): easier variants of the held-out kinds made by code,
   against matched add/mult practice, with full-difficulty solver programs as a report-only ceiling. C2 retires only if
   the stepping-stone parent also misses the gate.
+- **C2 stepping stones (10-07):** SS passed the cold-start gate on both parents (25.4% and 19.5% against 14.5%;
+  placebo 4.3% and 5.1%), but only at the hottest temperatures and mostly on square, whose program is the first step
+  of a stepping stone; first answers stayed near 0. Decided: run C2b's DEV pilot from the SS parent with a PC
+  feasibility gate, a report-only second night to see whether the loop climbs to the multi-step kinds, and a
+  pre-set "near-copy kinds only" label for a pass carried by square and last_digit.
