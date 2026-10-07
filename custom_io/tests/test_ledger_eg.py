@@ -327,12 +327,14 @@ def test_egw_box_jobs():
     for sub, seeds in every.items():
         d = os.path.join(here, 'queue', sub)
         jobs = sorted(f for f in os.listdir(d) if f.endswith('.sh'))
-        assert len(jobs) == {'egwA': 3, 'egwB': 4, 'egwC': 4, 'egwD': 1}[sub], jobs
+        assert len(jobs) == {'egwA': 3, 'egwB': 4, 'egwC': 4, 'egwD': 2}[sub], jobs
         texts = [open(os.path.join(d, j)).read() for j in jobs]
         assert '--env "TFVER=5.19.0 EG=1 MAXH=7.5 IDLE_EXIT=3600 END_SLEEP=600 FAIL_SLEEP=1800"' in texts[0], (sub, jobs)
         assert all(t.startswith('# MEM ') and '\n# PAR ' in t for t in texts), jobs
         runs = {sh[1]: sh[2:] for t in texts for sh in (shlex.split(ln) for ln in t.splitlines() if ln.startswith('run '))
                 if not (sub == 'egwB' and sh[1] == 'EGE_s201')}     # job 47 was stopped with box B and moved to box C's job 49 (addendum 13)
+        if sub == 'egwD':       # job 52 repeats job 51 exactly (addendum 14, retry note)
+            assert [ln for ln in texts[0].splitlines() if ln.startswith('run ')] == [ln for ln in texts[1].splitlines() if ln.startswith('run ')]
         assert sorted(runs) == sorted(f'{a}_s{seed}' for seed, arms in seeds for a in arms), runs.keys()
         for name, args in runs.items():
             args = args[:-1] if args[-1] == '&' else args

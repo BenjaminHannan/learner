@@ -356,3 +356,7 @@ absolute). A pass is "better than B2" by mark 1 and goes to the 6-seed confirm a
 (the thinker does not turn EmbeddingGemma's meaning into better programs at this recipe).
 **Read only:** EGK minus EGE per split, per family and at loops:0; the prediction that EGK's loops:0 in_dist is within 1.0 of B2V's.
 **Size rule** as in addendum 4: a 274.5M model, so a pass is a B2-internal result.
+**Retry note (about 05:05 UTC 10-07, 1:05 AM ET, before any EGK score existed):** EGK_s201 (box D, job 51) hit a non-finite loss at update
+3,000 (logged loss 0.418 at 2,500, NaN at 3,000; status `nonfinite_loss`), the first non-finite run in this project; EGE_s201 on the same seed
+passed update 3,000 normally and EGK_s200 is training normally. A run that is not status `ok` is not judged, so EGK_s201 runs once more,
+identical (job 52, box D). If the retry is also non-finite, EGK fails (unstable at this recipe) and stops; it is not retried again.
