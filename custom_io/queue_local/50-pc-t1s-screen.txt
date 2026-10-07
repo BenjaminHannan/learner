@@ -1,0 +1,7 @@
+# T1S re-screen: T1 + span copy, the one link fix after the T1 screen (MARKS-D0-T1-2026-10-07.md Amendment 3, PASS-MARKS.md addendum 22).
+# T1S = model 'tool' cfg {"span_copy": true} (3,311,060 params). Queue 40's T1 lines with only the name and cfg changed; seeds 200 and 201.
+# Ran on the two rented RTX 5090s that ran T1 (custom_io/queue/t1a|t1b/50-t1s-*.sh). Judge:
+#   python -m custom_io.analyze_t1s --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-vast-t1 custom_io/results/50-vast-t1s
+# MEM 6000
+T1S_s200 --model tool --cfg '{"span_copy": true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval --save-preds
+T1S_s201 --model tool --cfg '{"span_copy": true}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval --save-preds
