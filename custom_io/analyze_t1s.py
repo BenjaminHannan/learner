@@ -1,0 +1,139 @@
+"""T1S = T1 + span copy, the one link fix after the T1 screen (MARKS-D0-T1-2026-10-07.md Amendment 3, PASS-MARKS.md addendum 22), judged
+exactly as sealed: T1S (model 'tool', cfg {"span_copy": true}) on seeds 200 and 201, against q33's plain B2 and q40's T1 of the same seed.
+python3 -m custom_io.analyze_t1s --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-vast-t1 custom_io/results/50-vast-t1s
+R1 write_copy exact copy >= 99 for operand AND answer at EACH length 1-9 separately, both seeds (a cell with no rows cannot pass).
+R2 pooled-5 T1S - B2 >= -2.0 on both seeds. R3 chain-5 >= 95 on both seeds, and no length 1-3 write_copy cell below T1's of the same seed.
+R4 tool off (noexec program set) < 5 and call accuracy free run >= 98, both seeds.
+Pass = R1-R4: then the 6-seed confirm with marks 1-6 as amended (Amendment 2; analyze_t1's confirm, T1S in T1's place) and H1 on these
+checkpoints. Proved wrong for this fix: any length 4-9 cell below 90 on either seed. Otherwise (some cell 90-99, or R2-R4): not shown.
+A run counts only if status ok, the q33 recipe and the right size; a missing or invalid run: NOT JUDGED."""
+import argparse, json, os
+from custom_io import analyze_t1 as A
+from custom_io.analyze import P5, C5, g, load, sub
+
+SEEDS = [200, 201]
+LENS = range(1, 10)
+ARMS = {'T1S': ('tool', {'span_copy': True}, 3311060), 'T1': A.ARMS['T1'], 'B2': A.ARMS['B2']}
+
+
+def valid(r, arm):
+    model, cfg, n = ARMS[arm]
+    c = g(r, 'config') or {}
+    bad = [f'{k}={c.get(k)!r} (want {v!r})' for k, v in A.RECIPE.items() if c.get(k) != v]
+    if c.get('model') != model or (c.get('cfg') or {}) != cfg:
+        bad.append(f"model {c.get('model')} cfg {c.get('cfg')} (want {model} {cfg})")
+    if r.get('steps') != A.RECIPE['steps']:
+        bad.append(f"trained {r.get('steps')} steps")
+    if r.get('n_params') != n:
+        bad.append(f"n_params {r.get('n_params')} (want {n})")
+    return bad
+
+
+def cells(r):
+    """write_copy exact copy by length -> {'operand': {L: (pct or None, n)}, 'answer': {...}} for L = 1..9."""
+    wc = g(r, 'extra', 'write_copy') or {}
+    out = {}
+    for side, key in (('operand', 'op_by_len'), ('answer', 'ans_by_len')):
+        by = wc.get(key) or {}
+        out[side] = {L: ((100 * by[str(L)][1] / by[str(L)][0]) if by.get(str(L)) and by[str(L)][0] else None, (by.get(str(L)) or [0])[0]) for L in LENS}
+    return out
+
+
+def screen(runs):
+    probs, F = {}, {}
+    for s in SEEDS:
+        a, t1, b2 = runs.get(('T1S', s)), runs.get(('T1', s)), runs.get(('B2', s))
+        p = []
+        for arm, r in (('T1S', a), ('T1', t1), ('B2', b2)):
+            p += [f'{arm} missing'] if r is None else [f'{arm}: {x}' for x in valid(r, arm)]
+        probs[s] = p
+        if p:
+            continue
+        ex = g(a, 'extra') or {}
+        F[s] = dict(d_pooled5=sub(P5(a), P5(b2)), t1s_pooled5=P5(a), t1_pooled5=P5(t1), b2_pooled5=P5(b2), chain5=C5(a), t1_chain5=C5(t1),
+                    copy=cells(a), t1_copy=cells(t1), tool_off=g(ex, 'noexec', 'program_families'), call_free=g(ex, 'op_acc', 'free_run', 'call'),
+                    call_tf=g(ex, 'op_acc', 'teacher_forced', 'call'), free_program=g(ex, 'op_acc', 'free_run', 'program'),
+                    span_use=ex.get('span_use'), swap_match=g(ex, 'opswap', 'swap_match'),
+                    write_copy_n=dict(path_changed=g(ex, 'write_copy', 'path_changed'), too_long=g(ex, 'write_copy', 'too_long')))
+    out = dict(seeds=SEEDS, problems=probs, judged=len(F) == len(SEEDS))
+    if not out['judged']:
+        out['verdict'] = 'NOT JUDGED'
+        return out
+    ok_cell = lambda c, lo: c[0] is not None and c[0] >= lo
+    r1 = {s: {side: {L: f['copy'][side][L][0] for L in LENS} for side in ('operand', 'answer')} for s, f in F.items()}
+    r3_cells = {s: {side: {L: dict(T1S=f['copy'][side][L][0], T1=f['t1_copy'][side][L][0]) for L in (1, 2, 3)} for side in ('operand', 'answer')}
+                for s, f in F.items()}
+    m = {'R1 write_copy exact copy >= 99, operand AND answer, EACH length 1-9, both seeds': dict(
+             value=r1, ok=all(ok_cell(f['copy'][side][L], 99) for f in F.values() for side in ('operand', 'answer') for L in LENS)),
+         'R2 pooled-5 T1S - B2 >= -2.0 on both seeds': dict(value={s: f['d_pooled5'] for s, f in F.items()},
+                                                             ok=all(f['d_pooled5'] is not None and f['d_pooled5'] >= -2.0 for f in F.values())),
+         'R3 chain-5 >= 95 on both seeds, and no length 1-3 write_copy cell below T1\'s (same seed)': dict(
+             value=dict(chain5={s: f['chain5'] for s, f in F.items()}, cells=r3_cells),
+             ok=all(f['chain5'] is not None and f['chain5'] >= 95 for f in F.values()) and all(
+                 f['copy'][side][L][0] is not None and (f['t1_copy'][side][L][0] is None or f['copy'][side][L][0] >= f['t1_copy'][side][L][0])
+                 for f in F.values() for side in ('operand', 'answer') for L in (1, 2, 3))),
+         'R4 tool off < 5 and call accuracy free run >= 98, both seeds': dict(
+             value={s: dict(tool_off=f['tool_off'], call_free=f['call_free']) for s, f in F.items()},
+             ok=all(f['tool_off'] is not None and f['tool_off'] < 5 and f['call_free'] is not None and f['call_free'] >= 98 for f in F.values()))}
+    low = [(s, side, L, f['copy'][side][L][0]) for s, f in F.items() for side in ('operand', 'answer') for L in range(4, 10)
+           if not ok_cell(f['copy'][side][L], 90)]
+    out.update(marks=m, facts=F, proved_wrong=bool(low), proved_wrong_cells=low)
+    if all(x['ok'] for x in m.values()):
+        out['verdict'] = 'PASS: run the 6-seed confirm (marks 1-6 as amended) and H1 on these checkpoints'
+    elif low:
+        out['verdict'] = 'PROVED WRONG: span copy stands falsified; next = the diagnostic fine-tune on 4-9 digit rows'
+    else:
+        out['verdict'] = 'NOT SHOWN: one more change, named from the per-length table'
+    return out
+
+
+def confirm(runs):
+    """Marks 1-6 as amended (Amendment 2), analyze_t1's own code with T1S in T1's place."""
+    rr = {('T1', s): r for (arm, s), r in runs.items() if arm == 'T1S'}
+    rr.update({k: r for k, r in runs.items() if k[0] == 'B2'})
+    keep = A.ARMS['T1']
+    A.ARMS['T1'] = ARMS['T1S']
+    try:
+        return A.confirm(rr)
+    finally:
+        A.ARMS['T1'] = keep
+
+
+def fmt(v):
+    return '-' if v is None else f'{v:.1f}' if isinstance(v, float) else str(v)
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--results', nargs='+', required=True)
+    ap.add_argument('--out', default='custom_io/results/T1S-ANALYSIS.json')
+    a = ap.parse_args(argv)
+    runs, skipped = load(a.results)
+    res = dict(screen=screen(runs), confirm=confirm(runs), skipped=skipped)
+    os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
+    json.dump(res, open(a.out, 'w'), indent=1, default=str)
+    sc = res['screen']
+    L = ['# T1S: T1 + span copy (Amendment 3, PASS-MARKS.md addendum 22)', '', f"## Re-screen, seeds 200-201: {sc['verdict']}", '']
+    if not sc['judged']:
+        L += [f"- missing or invalid: {({s: p for s, p in sc['problems'].items() if p})}"]
+    else:
+        L += [f"- {k}: {'pass' if x['ok'] else 'FAIL'}" for k, x in sc['marks'].items()]
+        L += [f"- proved-wrong cells (length 4-9 below 90): {sc['proved_wrong_cells'] or 'none'}", '']
+        for s, f in sc['facts'].items():
+            L += [f'### Seed {s}: pooled-5 T1S {fmt(f["t1s_pooled5"])} vs B2 {fmt(f["b2_pooled5"])} ({f["d_pooled5"]:+.2f}), T1 {fmt(f["t1_pooled5"])}; '
+                  f'chain-5 {fmt(f["chain5"])} (T1 {fmt(f["t1_chain5"])}); tool off {fmt(f["tool_off"])}; call acc free {fmt(f["call_free"])} '
+                  f'(teacher-forced {fmt(f["call_tf"])}); span use {f["span_use"]}', '',
+                  '| digits | ' + ' | '.join(str(x) for x in LENS) + ' |', '|---|' + '---|' * len(LENS)]
+            for side in ('operand', 'answer'):
+                L += [f'| {side} T1S | ' + ' | '.join(f"{fmt(f['copy'][side][x][0])} ({f['copy'][side][x][1]})" for x in LENS) + ' |',
+                      f'| {side} T1 | ' + ' | '.join(fmt(f['t1_copy'][side][x][0]) for x in LENS) + ' |']
+            L += ['']
+    L += [f"## 6-seed confirm (marks 1-6 as amended): {res['confirm']['verdict']}", '']
+    md = os.path.join(os.path.dirname(a.out) or '.', 'RESULTS-T1S.md')
+    open(md, 'w').write('\n'.join(L) + '\n')
+    print('\n'.join(L))
+    return res
+
+
+if __name__ == '__main__':
+    main()

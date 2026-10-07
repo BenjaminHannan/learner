@@ -577,3 +577,29 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   same seed is below 50%, vs the other cells (`extra.h1.split_family`, combined by `analyze_h1.py`).
 - **Named risk, as sealed:** early in training every round is wrong, so "settled" labels "stop at round 1" everywhere and may bias the head to stop
   early; H-c and H-a catch a collapse (proved wrong on those lines). The named next change then is a disclosed warm-up before the stop loss.
+
+## Addendum 22: T1S, T1 + span copy, the one link fix (written 2026-10-07 about 21:45 UTC, 5:45 PM ET, before any T1S run)
+- **Source, mirrored as sealed:** /mnt/project-files/architecture/MARKS-D0-T1-2026-10-07.md Amendment 3 (the architecture thread, about
+  5:25 PM ET), after the T1 screen was NOT SHOWN (S3 write_copy 29-42%: exact copy 85-98% at 1-3 digits, 14% / 59% at 4, about 0 at 5+).
+- **The change (one, nothing else):** model 'tool' with cfg `{"span_copy": true}` (custom_io/models/tool.py; 3,311,060 params, +2.2% vs
+  3.24M, inside the +-3% band). Each writer (both call operands, and the answer) can copy a whole number already in the context: a pointer
+  picks one char, the copy advances by itself one char at a time, and a learned stop head ends it. No code gives it a length. T1's cells and
+  GEN registers stay, with their losses unchanged, for numbers the writer composes itself. Plain T1 (no cfg) is bit-identical to before
+  (tested on the T1_s200 checkpoint: same answers, calls and losses under four lesions).
+- **Disclosed details (build thread's choices inside the sealed fix):**
+  - Direction: T1's writers write units first, so the pointer picks the number's units digit and the copy runs toward its front (the writers'
+    own order). "Start" and "forward" in Amendment 3 are read in that order.
+  - Stop head: one logit per source (prompt text vs calculator entry) on the char about to be copied, read from the char table (detached,
+    parameter-free layer norm). It ends the copy before that char; the copy also ends at the edge of its string (nothing is there). Ceiling
+    40 chars (an entry's length), never reached by a number.
+  - Gate: per operand, span (sigmoid >= 0.5) or T1's cells. The answer: mode 0 (B2's NUM slot, which T1 did not use) = copy the span the
+    answer pointer picks, over the current prompt and the state's tape. A span answer has no 8-char register limit, so write_copy's answer
+    copy now counts 9-digit strings too (T1's excluded them as too long).
+  - Training labels (targets only, never inputs): number tokens are the prompt-number regex (digit runs, as Amendment 2 already discloses)
+    on the prompt and signed digit runs on the entries; the gate is span iff the gold string is a number token of the visible context;
+    the pointer loss marginalises over every visible occurrence; NUM rows whose answer is such a token get mode 0 (and keep T1's GEN targets).
+- **Marks:** R1-R4 and the proved-wrong line exactly as Amendment 3 (judge below). Pass: the 6-seed confirm with marks 1-6 as amended
+  (Amendment 2), then H1 on these checkpoints.
+- **Run:** seeds 200 and 201, the queue 40 recipe (24k steps, batch 256, lr 1e-3, bf16, q33's data file 010af671), on the two rented RTX 5090s
+  that ran T1. Queue `50-pc-t1s-screen.txt`, box jobs custom_io/queue/t1a|t1b/50-t1s-*.sh.
+- **Judge:** `python -m custom_io.analyze_t1s --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-vast-t1 custom_io/results/50-vast-t1s`.

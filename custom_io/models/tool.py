@@ -25,12 +25,33 @@ text calc() returns for them, tested), revealed one round at a time, and the cal
 Lesions: noexec (calc returns `?` for every call: tool off), opswap (calc swaps add and sub), nocopy, nowordc, shuffle / zero state, loops:K,
 donor; ctl27 (test only). extra_evals: call accuracy, tool-off on the noexec program set, chain-5 lesions, opswap swap_match by replaying the
 model's own calls, write_copy (D0 writing: every calc result replaced by a random 1-9 digit string; exact copy into the next call / the answer).
-Size (vocab 108, S cfg): 3,277,393 (B2 3,302,481; -0.76%)."""
+Size (vocab 108, S cfg): 3,277,393 (B2 3,302,481; -0.76%).
+
+span_copy=True (T1S; MARKS-D0-T1-2026-10-07.md Amendment 3, PASS-MARKS.md addendum 22; default False = exactly T1): the one link fix after the T1
+screen (write_copy failed at 4+ digits: each cell copied by its place row, and rows 4+ were almost never trained). Each writer can now also copy a
+whole number already in the context (a prompt number or any number in an entry written so far) as a span:
+- a pointer (q_s, k_s; fp32, B2's ptr) picks one char of the context: the number's units digit (T1's writers write units first, so the span
+  starts at the units digit and the copy runs toward the number's front, the writers' own order);
+- the copy then advances by itself one char at a time (to the next char on the left, in the same string) and a learned stop head ends it
+  (stop_s on the char about to be copied, read from the char table (detached, parameter-free layer norm), one logit for prompt text and
+  one for entries: in the prompt a '-' never belongs to a number (the prompt-number regex is unsigned), in an entry the calculator writes
+  signs). No code gives a length; the only bounds are the end of the string (there is nothing to copy there) and a ceiling of SPAN_MAX = LE
+  chars;
+- operand k: gate g_s(W_k(z)) chooses span (>= 0.5) or T1's 11 cells (kept for numbers the writer composes itself, e.g. a constant that is
+  not in the text); the answer: mode 0 (B2's NUM slot, unused by T1) = copy the span the answer pointer q_s(ln_z(control 1)) picks, over the
+  CURRENT prompt and the state's tape, as GEN does. A span answer has no 8-char register limit.
+Training (additive: T1's losses are unchanged, so cells and GEN still learn every target): gate BCE (span iff the gold string is a number token
+of the visible context), pointer -log sum p over every visible occurrence's units digit (either order for ADD MUL MIN MAX, as lcall), the same
+for the answer on NUM rows whose answer is a number token of the context (their mode label becomes 0; they keep T1's GEN targets), and the
+stop head's BCE on every number token of the context (go on inside the token, stop at the char left of it). Number tokens for these labels:
+the prompt-number regex (digit runs, unsigned; the regex Amendment 2 already discloses) on the prompt and signed digit runs on the
+calculator's entries; they label training targets only and never reach the model at test time. New modules are created last (every T1 weight starts as in T1 at the same seed).
+Size (vocab 108, S cfg): 3,277,393 + 33,667 = 3,311,060 (+2.2% vs 3.24M)."""
 import math, re
 import numpy as np
 import torch
 import torch.nn as nn
-from custom_io.data import EOS, PAD, word_spans
+from custom_io.data import EOS, PAD, UNK, word_spans
 from custom_io.models import progparse as pp
 from custom_io.models.ledger import Ledger, COMM, GEN_MAX, N_CTRL, N_NUM, N_RES, OPS, R0, W_MAX, BIG
 
@@ -38,6 +59,8 @@ CELLS = 11          # operand cells: up to 9 digits and a sign, then EOS
 LE = 40             # chars per tape entry
 NAMES = [o.lower() for o in OPS]
 INT_RE = re.compile(r'-?\d+')
+ENT_NUM = re.compile(r'-?\d+')       # number tokens of an entry (the calculator's own text): span-copy training labels only
+SPAN_MAX = LE                         # span copy ceiling: the longest string the tape holds (the stop is learned)
 
 
 def calc(op, a, b, swap=False):
@@ -65,7 +88,7 @@ def rand_digits(rng, lo=1, hi=9):
 class Tool(Ledger):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap', 'nocopy', 'nowordc']
 
-    def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, **kw):
+    def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, span_copy=False, **kw):
         assert not kw.get('eg_embed') and not kw.get('eg_teach') and not kw.get('span') and not kw.get('round_readout'), 'T1 is B2 + one change'
         kw.pop('copy', None)
         super().__init__(vocab, d=d, n_heads=n_heads, reader_layers=reader_layers, blocks=blocks, n_loops=n_loops, mlp=mlp, dk=dk,
@@ -79,6 +102,12 @@ class Tool(Ledger):
             if getattr(m, 'bias', None) is not None:
                 nn.init.zeros_(m.bias)
         self._gold, self._full_tape = {}, False
+        self.span_copy = bool(span_copy)
+        if self.span_copy:      # T1S: created after every T1 module, so every T1 weight starts identical at the same seed
+            self.q_s, self.k_s, self.g_s, self.stop_s = nn.Linear(d, dk), nn.Linear(d, dk), nn.Linear(d, 1), nn.Linear(d, 2)
+            for m in (self.q_s, self.k_s, self.g_s, self.stop_s):
+                nn.init.normal_(m.weight, std=0.02)
+                nn.init.zeros_(m.bias)
 
     # ---- the tape ----
     def read_texts(self, texts, dev, le=LE):
@@ -115,6 +144,86 @@ class Tool(Ledger):
     def decode_cells(self, p):
         ids = p.argmax(-1).tolist()
         return [(self.vocab.decode(r[:CELLS])[::-1], self.vocab.decode(r[CELLS:])[::-1]) for r in ids]
+
+    # ---- span copy (T1S) ----
+    def stop_logit(self, c, tape):
+        """c [n] char ids, tape [n] bool (the char is in an entry, not the prompt) -> [n] stop logits (>= 0: the copy ends before this char)."""
+        import torch.nn.functional as F
+        with torch.autocast(c.device.type, enabled=False):
+            e = self.reader.tok.weight.detach().float()[c]
+            lg = self.stop_s(F.layer_norm(e, e.shape[-1:]))
+        return lg.gather(-1, tape.long()[..., None])[..., 0]
+
+    @staticmethod
+    def seg_of(T, le, n, dev):
+        """[n]: the first position of the string each context position is in (0 for the prompt [0, T), T + k*le for entry k)."""
+        pos = torch.arange(n, device=dev)
+        return torch.where(pos < T, torch.zeros_like(pos), T + (pos - T).div(le, rounding_mode='floor') * le)
+
+    def span_read(self, logits, ids, mask, T, le):
+        """Greedy span copy -> texts in reading order. logits [B, N]: the pointer over the context (prompt [0, T), then entries of le chars);
+        the copy starts at its argmax and steps one char left at a time while the char is in the same string, visible, and the stop head goes on."""
+        B, N = ids.shape
+        p0 = logits.argmax(-1)
+        lo = self.seg_of(T, le, N, ids.device)[p0]
+        out, alive = [ids.gather(1, p0[:, None])[:, 0]], torch.ones(B, dtype=torch.bool, device=ids.device)
+        for i in range(1, SPAN_MAX):
+            p = p0 - i
+            pc = p.clamp(min=0)
+            c = ids.gather(1, pc[:, None])[:, 0]
+            alive = alive & (p >= lo) & mask.gather(1, pc[:, None])[:, 0] & (self.stop_logit(c, pc >= T) < 0)
+            if not alive.any():
+                break
+            out.append(torch.where(alive, c, torch.full_like(c, PAD)))
+        return [self.vocab.decode([x for x in r if x != PAD])[::-1] for r in torch.stack(out, 1).tolist()]
+
+    def written(self, st):
+        """One call round's writer output -> [(a, b)] operand strings: T1's cells, or (T1S) the span where that side's gate chose it."""
+        cells = self.decode_cells(st[1])
+        if len(st) < 3:
+            return cells
+        sp = st[2]
+        sa, sb = (self.span_read(sp[k], sp['ids'], sp['m'], sp['T'], sp['le']) for k in ('la', 'lb'))
+        ga, gb = (sp['ga'] >= 0).tolist(), (sp['gb'] >= 0).tolist()
+        return [(sa[i] if ga[i] else a, sb[i] if gb[i] else b) for i, (a, b) in enumerate(cells)]
+
+    def num_tokens(self, prompt, tape, T=None):
+        """Span-copy labels -> ([(string index, start, end, text)] number tokens, [(text, regex, is entry)] strings): string 0 = the prompt
+        (`\\d+`, a token kept only if it ends within T), string k + 1 = entry k (`-?\\d+`)."""
+        strs = [(prompt, pp.NUM_RE, False)] + [(x, ENT_NUM, True) for x in tape]
+        toks = [(j, m.start(), m.end(), m.group()) for j, (x, rx, _) in enumerate(strs) for m in rx.finditer(x) if j or T is None or m.end() <= T]
+        return toks, strs
+
+    def span_gold(self, rows, T, le, K):
+        """-> Ma, Mb [B, N_RES, N] (units-digit positions of every visible occurrence of each call's gold operand strings; entry k is visible
+        from call k + 1), Mn [B, N] (the answer's, on mode-0 rows), and stop samples (char ids, in an entry, label: 0 go on / 1 stop)."""
+        B, N = len(rows), T + K * le
+        Ma, Mb, Mn = np.zeros((B, N_RES, N), bool), np.zeros((B, N_RES, N), bool), np.zeros((B, N), bool)
+        cs, ts, ys, enc = [], [], [], self.vocab.stoi
+        for i, r in enumerate(rows):
+            ops, opd, tape, md, _ = self.row_gold(r)
+            toks, strs = self.num_tokens(r['prompt'], tape[:min(len(ops), K)], T)
+            pos = lambda j, e: e - 1 if j == 0 else T + (j - 1) * le + e - 1
+            for j, a, e, _ in toks:
+                x, _, ent = strs[j]
+                for q in range(a, e - 1):
+                    cs.append(enc.get(x[q], UNK)); ts.append(ent); ys.append(0.0)
+                if a > 0:
+                    cs.append(enc.get(x[a - 1], UNK)); ts.append(ent); ys.append(1.0)
+
+            def mark(M, want, upto):
+                for j, a, e, x in toks:
+                    if x == want and j <= upto:
+                        M[pos(j, e)] = True
+            for k, (sa, sb) in enumerate(opd):
+                mark(Ma[i, k], sa, k)
+                mark(Mb[i, k], sb, k)
+            if md == 0:
+                mark(Mn[i], r['answer'], len(ops))
+        return Ma, Mb, Mn, (cs, ts, ys)
+
+    def state_of(self, o):
+        return (o['R'],) + o['tape'] + (o['lmode'], o['lword']) + ((o['qn'],) if self.span_copy else ())
 
     # ---- reasoner ----
     def think(self, Z, kvs, kvx, mask, t):
@@ -171,14 +280,20 @@ class Tool(Ledger):
                 lop = self.op_head(z)
                 p, _ = self.gen_copy(self.cells(z), torch.cat([X, Xt], 1), torch.cat([xm, vis], 1), torch.cat([batch['prompt_ids'], idt], 1),
                                      lesion == 'nocopy')
-                steps.append((lop, p))
+                st = (lop, p)
+                if self.span_copy:
+                    mc = torch.cat([xm, vis], 1)
+                    ks, wa, wb = self.k_s(torch.cat([X, Xt], 1)), self.W_a(z), self.W_b(z)
+                    st = st + (dict(la=self.ptr(self.q_s(wa), ks, mc), lb=self.ptr(self.q_s(wb), ks, mc), ga=self.g_s(wa)[:, 0].float(),
+                                    gb=self.g_s(wb)[:, 0].float(), ids=torch.cat([batch['prompt_ids'], idt], 1), m=mc, T=T, le=le),)
+                steps.append(st)
                 k = t - 1
                 if gold is not None:
                     shown[:, k] = gold['op'][:, k] > 0
                 else:
                     op = lop.argmax(-1).tolist()
                     new = list(texts[i][k] for i in range(B))
-                    for i, (sa, sb) in enumerate(self.decode_cells(p)):
+                    for i, (sa, sb) in enumerate(self.written(st)):
                         if op[i] == 0:
                             continue
                         if oracle is not None:
@@ -203,30 +318,39 @@ class Tool(Ledger):
         zf = self.ln_z(Z[:, 1])
         out = dict(R=Z[:, N_CTRL:], lmode=self.mode_head(zf), lword=self.ptr(self.q_word(zf), Kw, wvalid), wvalid=wvalid, steps=steps,
                    X=torch.cat([X, Xt], 1), xm=torch.cat([xm, vis], 1), ids=torch.cat([batch['prompt_ids'], idt], 1),
-                   tape=(Xt, idt, vis), calls=calls)
+                   tape=(Xt, idt, vis), calls=calls, le=le, K=K)
+        if self.span_copy:
+            out['qn'] = self.q_s(zf)
         return out
 
     def state(self, batch, loops=None, lesion=None, oracle=None):
-        o = self.run(batch, loops, lesion=lesion, oracle=oracle)
-        return (o['R'],) + o['tape'] + (o['lmode'], o['lword'])
+        return self.state_of(self.run(batch, loops, lesion=lesion, oracle=oracle))
 
     # ---- talker ----
     def talk(self, state, batch, lesion=None, return_modes=False):
         """GEN copies from the CURRENT rows' prompt and the state's tape (the tape is the reasoner's own work, so a donor's tape comes with its
-        state); WORD copies word k of the CURRENT row. Mode NUM is not used by T1 (decoded as GEN)."""
-        R, Xt, idt, vis, lmode, lword = state
+        state); WORD copies word k of the CURRENT row. Mode NUM is not used by T1 (decoded as GEN); T1S: mode 0 = the span the answer pointer picks,
+        over the same context as GEN (the state's tape is the free-run layout: 7 entries of LE chars)."""
+        R, Xt, idt, vis, lmode, lword = state[:6]
         X, xm = self.read(batch, talker=True)
-        p, _ = self.gen_copy(R, torch.cat([X, Xt.to(X.dtype)], 1), torch.cat([xm, vis.bool()], 1), torch.cat([batch['prompt_ids'], idt.long()], 1),
-                             lesion == 'nocopy')
-        out, modes = self.answers(p.argmax(-1).tolist(), lmode.argmax(-1).tolist(), lword.argmax(-1).tolist(), batch['rows'])
+        Xc, mc, idc = torch.cat([X, Xt.to(X.dtype)], 1), torch.cat([xm, vis.bool()], 1), torch.cat([batch['prompt_ids'], idt.long()], 1)
+        p, _ = self.gen_copy(R, Xc, mc, idc, lesion == 'nocopy')
+        span = None
+        if self.span_copy:
+            assert Xt.shape[1] % N_RES == 0
+            span = self.span_read(self.ptr(state[6], self.k_s(Xc), mc), idc, mc, X.shape[1], Xt.shape[1] // N_RES)
+        out, modes = self.answers(p.argmax(-1).tolist(), lmode.argmax(-1).tolist(), lword.argmax(-1).tolist(), batch['rows'], span=span)
         return (out, modes) if return_modes else out
 
-    def answers(self, gen_ids, mode, w, rows, spans=None):
-        """Greedy readout -> (answer texts, modes): WORD (mode 1) copies word w of the row's prompt, anything else is the GEN text."""
+    def answers(self, gen_ids, mode, w, rows, spans=None, span=None):
+        """Greedy readout -> (answer texts, modes): WORD (mode 1) copies word w of the row's prompt, T1S mode 0 is the span copy `span[i]`,
+        anything else is the GEN text."""
         out, modes = [], []
         for i, row in enumerate(rows):
             sp = spans[i] if spans is not None else word_spans(row['prompt'])[:W_MAX]
-            if mode[i] == 1 and w[i] < len(sp):
+            if span is not None and mode[i] == 0:
+                out.append(span[i]); modes.append(0)
+            elif mode[i] == 1 and w[i] < len(sp):
                 out.append(row['prompt'][sp[w[i]][0]:sp[w[i]][1]]); modes.append(1)
             else:
                 out.append(self.vocab.decode(gen_ids[i])[::-1]); modes.append(2)
@@ -256,7 +380,10 @@ class Tool(Ledger):
                 sa, sb = str(vals[ca[0]]), str(vals[cb[0]])
                 ops.append(o); opd.append((sa, sb))
                 tape[s] = entry(NAMES[o], sa, sb, str(v))
-            hit = self._gold[key] = (ops, opd, tape, 1 if t['mode'] == 1 else 2, t['word'])
+            md = 1 if t['mode'] == 1 else 2
+            if self.span_copy and t['mode'] == 0 and r['answer'] in {x for *_, x in self.num_tokens(r['prompt'], tape[:len(ops)])[0]}:
+                md = 0          # T1S: a NUM row whose answer is a number token of the context answers by span copy (it keeps T1's GEN targets)
+            hit = self._gold[key] = (ops, opd, tape, md, t['word'])
         return hit
 
     def cell_ids(self, s):
@@ -274,7 +401,7 @@ class Tool(Ledger):
             for s, (o, (sa, sb)) in enumerate(zip(ops, opd)):
                 op[i, s], ca[i, s], cb[i, s] = o, self.cell_ids(sa), self.cell_ids(sb)
             mode[i], word[i, list(wd)] = md, True
-            if md == 2:
+            if md != 1:
                 ids = self.vocab.encode(r['answer'][:GEN_MAX][::-1]) + [EOS]
                 gen[i, :len(ids)] = ids
             tape.append(list(tp))
@@ -296,11 +423,43 @@ class Tool(Ledger):
         p, gate = self.gen_copy(o['R'], o['X'], o['xm'], o['ids'])
         tg = g['gen']
         ce = -torch.log(p.gather(2, tg.clamp(min=0)[..., None])[..., 0] + 1e-6).masked_fill(tg < 0, 0.0)
-        lgen = (ce.sum(1) / n_t).mul(g['mode'] == 2).sum() / B
-        tm = (tg >= 0) & (tg != EOS) & (g['mode'] == 2)[:, None]
+        lgen = (ce.sum(1) / n_t).mul(g['mode'] != 1).sum() / B
+        tm = (tg >= 0) & (tg != EOS) & (g['mode'] != 1)[:, None]
         aux = dict(prog=lop + lcall, op_acc=hits / tot.clamp(min=1), call=lcall, mode=lmode, word=lword, gen=lgen,
                    copy_share=((1 - gate[..., 0]) * tm).sum() / tm.sum().clamp(min=1))
-        return lop + lcall + lmode + lword + lgen, {k: v.detach() if torch.is_tensor(v) else v for k, v in aux.items()}
+        total = lop + lcall + lmode + lword + lgen
+        if self.span_copy:
+            ls = self.span_loss(o, g, batch, B)
+            total = total + ls['span_call'] + ls['span_ans'] + ls['stop']
+            aux.update(ls)
+        return total, {k: v.detach() if torch.is_tensor(v) else v for k, v in aux.items()}
+
+    def span_loss(self, o, g, batch, B):
+        """T1S losses: call spans (gate + pointer, either order for ADD MUL MIN MAX), answer span (mode-0 rows) and the stop head."""
+        import torch.nn.functional as F
+        dev, T = batch['prompt_ids'].device, batch['prompt_ids'].shape[1]
+        Ma, Mb, Mn, (cs, ts, ys) = self.span_gold(batch['rows'], T, o['le'], o['K'])
+        Ma, Mb, Mn = (torch.from_numpy(x).to(dev) for x in (Ma, Mb, Mn))
+        lse = lambda lg, M: torch.logsumexp(lg.masked_fill(~M, -1e9), -1) - torch.logsumexp(lg, -1)
+        side = lambda lg, gl, M: torch.where(M.any(-1), F.logsigmoid(gl) + lse(lg, M), F.logsigmoid(-gl))
+        comm = torch.isin(g['op'], torch.tensor(COMM, device=dev))
+        lsc, n_span, n_side = 0.0, 0, 0
+        for s, st in enumerate(o['steps']):
+            sp, ma, mb, on = st[2], Ma[:, s], Mb[:, s], g['op'][:, s] > 0
+            lab = side(sp['la'], sp['ga'], ma) + side(sp['lb'], sp['gb'], mb)
+            lba = side(sp['la'], sp['ga'], mb) + side(sp['lb'], sp['gb'], ma)
+            nll = -torch.where(comm[:, s] & (ma != mb).any(-1), torch.logaddexp(lab, lba), lab)     # same string twice: one order
+            lsc = lsc + (nll * on).sum() / B
+            n_span += int((ma.any(-1) & on).sum() + (mb.any(-1) & on).sum()); n_side += 2 * int(on.sum())
+        ln = self.ptr(o['qn'], self.k_s(o['X']), o['xm'])
+        sel = (g['mode'] == 0) & Mn.any(-1)
+        lsn = torch.where(sel, -lse(ln, Mn), torch.zeros_like(ln[:, 0])).sum() / B
+        if cs:
+            lstop = F.binary_cross_entropy_with_logits(self.stop_logit(torch.tensor(cs, device=dev), torch.tensor(ts, device=dev)),
+                                                       torch.tensor(ys, device=dev))
+        else:
+            lstop = torch.zeros((), device=dev)
+        return dict(span_call=lsc, span_ans=lsn, stop=lstop, span_share=n_span / max(n_side, 1))
 
     def call_loss(self, steps, g, B):
         """The call writer's losses over the call rounds: op CE (NOOP rows weighted w_noop) and -log p of the gold operand strings."""
@@ -311,8 +470,8 @@ class Tool(Ledger):
         lop = lcall = 0.0
         hits = tot = 0
         sc = lambda lp, tg: (lp.gather(2, tg.clamp(min=0)[..., None])[..., 0] * (tg >= 0)).sum(1)
-        for s, (lg, p) in enumerate(steps):
-            lg = lg.float()
+        for s, st in enumerate(steps):
+            lg, p = st[0].float(), st[1]
             lop = lop + (F.cross_entropy(lg, g['op'][:, s], reduction='none') * w_row).mean()
             lp = torch.log(p + 1e-6)
             la, lb = lp[:, :CELLS], lp[:, CELLS:]
@@ -374,6 +533,7 @@ class Tool(Ledger):
         # call accuracy: teacher-forced (gold tape) vs free run; a call is right when the op and both operand strings are the gold ones
         sl = subsample(prows, 400)
         acc = {m: dict(ops=0, steps=0, calls=0, n_calls=0, prog=0) for m in ('teacher_forced', 'free_run')}
+        su = dict(sides=0, span=0, rows=0, ans_span=0)
         fr_ans = 0
         for b in batches(sl):
             g = self.gold(b['rows'], dev)
@@ -382,10 +542,13 @@ class Tool(Ledger):
                     o = self.run(b, gold=gd)
                 a = acc[m]
                 okrow = torch.ones(len(b['rows']), dtype=torch.bool, device=dev)
-                for s, (lg, p) in enumerate(o['steps']):
-                    op = lg.argmax(-1)
+                for s, st in enumerate(o['steps']):
+                    op = st[0].argmax(-1)
                     okop = op == g['op'][:, s]
-                    wr = self.decode_cells(p)
+                    wr = self.written(st)
+                    if m == 'free_run' and self.span_copy:
+                        on = op > 0
+                        su['sides'] += 2 * int(on.sum()); su['span'] += int(((st[2]['ga'] >= 0) & on).sum() + ((st[2]['gb'] >= 0) & on).sum())
                     for i, r in enumerate(b['rows']):
                         ops, opd = self.row_gold(r)[:2]
                         if s < len(ops):
@@ -400,11 +563,14 @@ class Tool(Ledger):
                 if m == 'free_run':
                     with amp():
                         fr_ans += sum(is_hit(p_, r) for p_, r in zip(self.generate(b), b['rows']))
+                    su['rows'] += len(b['rows']); su['ans_span'] += int((o['lmode'].argmax(-1) == 0).sum())
         n = len(sl)
         pc = lambda x, d: 100 * x / max(d, 1)
         out['op_acc'] = {m: dict(op=pc(a['ops'], a['steps']), call=pc(a['calls'], a['n_calls']), program=pc(a['prog'], n)) for m, a in acc.items()}
         out['op_acc']['n'] = n
         out['op_acc']['free_run']['answer'] = pc(fr_ans, n)
+        if self.span_copy:      # free run on the call-accuracy rows: share of written operands that took the span path, of answers in mode 0
+            out['span_use'] = dict(operand=pc(su['span'], su['sides']), answer=pc(su['ans_span'], su['rows']), n_sides=su['sides'], n_rows=su['rows'])
         # tool off (mark 3): the B2 noexec set (NUM rows whose gold answer slots are all result slots), calculator returns '?'
         tg = {r['id']: pp.row_targets(r) for r in rows}
         fr_rows = subsample([r for r in rows if r['family'] in fams], 3000)
@@ -434,8 +600,7 @@ class Tool(Ledger):
             for b in batches(rs):
                 with amp():
                     o = self.run(b, lesion=lesion, oracle=None if oracle is None else (lambda i, t, c, _b=b: oracle(_b['rows'][i], t, c)))
-                    st = (o['R'],) + o['tape'] + (o['lmode'], o['lword'])
-                    ans = self.talk(st, b)
+                    ans = self.talk(self.state_of(o), b)
                 for i, r in enumerate(b['rows']):
                     res.append((r, o['calls'][i], ans[i]))
             return res
@@ -466,7 +631,8 @@ class Tool(Ledger):
 
         # write_copy (D0 writing, on these checkpoints): every result becomes a random 1-9 digit string (fixed per row and round);
         # operand copy = a later call whose operand (in the intact run) was an earlier result now writes that random string exactly;
-        # answer copy = rows whose intact answer was a call result now answer that call's random string (1-8 digits only: GEN holds 8 chars)
+        # answer copy = rows whose intact answer was a call result now answer that call's random string (1-8 digits only: GEN holds 8 chars;
+        # T1S: 1-9, a span answer has no register limit)
         def oracle(r, t, c):
             return rand_digits(random.Random(f"{r['id']}|{t}"), 1, 9)
         base = {r['id']: (calls, ans) for r, calls, ans in run_rows(prows if len(prows) <= 3000 else subsample(prows, 3000))}
@@ -489,7 +655,7 @@ class Tool(Ledger):
             ks = [k for k in range(len(c0)) if c0[k][4] == a0]
             if ks and is_hit(a0, r):
                 want = calls[ks[-1]][4]
-                if len(want) > GEN_MAX:
+                if len(want) > GEN_MAX and not self.span_copy:
                     wc['too_long'] += 1
                     continue
                 d = wc['ans_by_len'].setdefault(str(len(want)), [0, 0])

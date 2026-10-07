@@ -52,6 +52,7 @@ class ToolH1(Tool):
     def __init__(self, vocab, label='right', **kw):
         assert label in LABELS, label
         super().__init__(vocab, **kw)
+        assert not self.span_copy, 'H1 on T1S: adapt round_state / run / loss to the span state first'
         self.label, self.cap = label, CAP
         self.stop = nn.Linear(self.d, 1)                                  # created last: every T1 weight starts as in T1
         nn.init.normal_(self.stop.weight, std=0.02)
