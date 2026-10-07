@@ -30,3 +30,30 @@ are reported but not marked.
 - **FAIL:** harm > 2.0 on any parent.
 
 No re-runs and no alternative slices. If it fails, the failing parents and families are reported as they are.
+
+## Result (3:19 AM ET 10-07): PASS
+
+| Parent | N exact | M exact | Harm (points) |
+|---|---|---|---|
+| s100 | 84.67 | 85.03 | -0.36 |
+| s101 | 86.66 | 86.93 | -0.28 |
+| s200 | 86.19 | 86.53 | -0.34 |
+| s201 | 86.52 | 86.93 | -0.41 |
+| s202 | 85.62 | 86.03 | -0.41 |
+| s203 | 85.78 | 86.10 | -0.33 |
+| s204 | 85.86 | 86.17 | -0.31 |
+| s205 | 86.03 | 86.41 | -0.38 |
+
+Harm is at most 2.0 on all eight parents, so the check passes. M scored slightly better than N on every parent.
+
+- 28 of the 29 families are unchanged on every parent.
+- The one family that moved is `fewshot_number_rule`, a rule-from-examples family close to C2. There M is 8 to 12 points better than N.
+- The step gates fired on 2.2-2.7% of step decisions (874-1,100 of 40,600). The answer note never fired (theta_ans = inf).
+
+Raw numbers are in each parent's `harmcheck.json` and in `harmcheck-REPORT.json`.
+
+**Disclosure.** The first launch, at 3:05 AM ET, ran with a code bug. In `m_knn`, the answer-memory tuple shadowed the `ans` flag, so the
+answer note stayed ON. Two parents finished, and their JSON writes failed on a tensor. I stopped that launch at 3:08 AM ET, deleted its two
+partial files and used nothing from it. Then I fixed the shadowing, checked that `theta_ans` is inf with `ans` 0, and relaunched at
+3:09 AM ET. The table above is that relaunch, the first run of the frozen setting. The bug did not affect the earlier answer-note-off
+diagnosis, because that set `theta_ans` directly.
