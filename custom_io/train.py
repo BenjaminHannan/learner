@@ -26,10 +26,10 @@ def jprint(**kw):
 
 
 def lesion_names(model):
-    """Every generate() lesion final_eval runs: the model's own (not loops) + loops:K for K in {0,1,2,2n}."""
+    """Every generate() lesion final_eval runs: the model's own (not loops) + loops:K for K in {0,1,2,2n} (or the model's LOOP_SWEEP)."""
     names = [l for l in model.LESIONS if l.split(':')[0] != 'loops']
     if getattr(model, 'n_loops', 1) > 1:    # a 1-loop model's sweep is only a format check (loops:1 = intact); skip it
-        names += [f'loops:{k}' for k in sorted({0, 1, 2, 2 * model.n_loops})]
+        names += [f'loops:{k}' for k in (getattr(model, 'LOOP_SWEEP', None) or sorted({0, 1, 2, 2 * model.n_loops}))]
     return names
 
 

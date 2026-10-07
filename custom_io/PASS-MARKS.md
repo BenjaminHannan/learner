@@ -527,3 +527,43 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
 - **Judge:** `python -m custom_io.analyze_gain --results custom_io/results/33-pc-confirm-b2 custom_io/results/43-pc-c0`. Queue `43-pc-c0.txt`.
 - **Note on U0:** U0 (addendum 18) is already staged on plain_tf_steps at the 64-char cap; it is a prompt-side change, so the cap is the same on
   both of its arms. If C0 replaces plain_tf_steps, U0's verdict stands as measured and any later word-piece test uses C0.
+
+## Addendum 21: H1, the model picks how many thinking rounds a turn gets (written 2026-10-07 about 19:20 UTC, 3:20 PM ET, before any H1 run)
+- **Source, mirrored as sealed:** `/mnt/project-files/architecture/redesign-ideas-2026-10-07.md` section 8b (sealed 2:55 PM ET). Required for
+  B3 by Ben's rule 0 (the deployed model decides how long to think). A rung on T1: queue 49 runs only after the T1 screen (queue 40) and only if
+  analyze_t1 does not say PROVED WRONG. Seeds 200 and 201 on BensPC, each against T1 on the same seed. Model `tool_h1`, cfg `{}`, 3,277,650
+  params (T1 + 257, inside the band).
+- **Build, as disclosed in `custom_io/models/tool_h1.py`:**
+  - A turn = answering one question; rounds = T1's controller iterations. Rounds 1..7 write T1's calls exactly as in T1; rounds 8..32 only
+    think (T1's tape holds 7 entries; K1 lifts that later). The round embedding stays at T1's last one after round 8, as T1's loops:K does.
+  - Per-round readout: after every round the answer heads (mode, word pointer, GEN with the copy path over the prompt and the entries written
+    so far) read the state with T1's normal losses; each row's mean over its rounds t >= L (L = gold calls, so its calls are on the tape) is the
+    answer loss, weight 1.0. The call heads keep T1's rounds and losses.
+  - Stop head: Linear(256, 1) on ln_z(control 1), input detached (the stop loss cannot move the loop; tested). Label = the model's own greedy
+    readout after that round equals the target answer (teacher-forced tape, the model's own heads). BCE over every trained round.
+  - Run rule: stop after the first round with sigmoid >= 0.5, at least 1 round, cap 32. Rows in a batch are independent; the batch runs until
+    every row has stopped and each row keeps its own stop round's state, tape and calls (tested against forced runs of the same length).
+  - Training rounds: K drawn per batch from {4, 8, 16, 32}; the batch runs n = max(K, longest gold program + 1) rounds, so every row's program
+    and answer are trained in every batch as in T1 (K = 4 then mostly runs 8). Measured on CPU: about 1.9x T1's step time on average; saved
+    activations about 1.0x T1's (rounds 9..32 and the per-round heads are gradient-checkpointed; same values).
+  - loops:K = exactly K rounds with the stop ignored; K = 8 reproduces T1 exactly (tested on lesions and outputs). final_eval's loop sweep for
+    H1 is loops:{0, 1, 2, 8, 16, 32} (loops:32 gives H-a).
+- **Marks (screen, both seeds against T1 on the same seed), as sealed:**
+  - H-a stability: pooled-5 at loops:32 minus pooled-5 at the model's own stop >= -0.3 on both seeds.
+  - H-b parity: pooled-5 H1 - T1 >= -1.0 on both seeds; chain-5 >= 99.0 on both; no dev split's 2-seed mean of H1 - T1 below -2.0 (the six
+    dev splits; this split line fails 22% of the time with no change in the q33 null check).
+  - H-c adaptive: mean rounds on chain-5 turns minus the mean on one-step turns (arith_bare, div_exact, story_addsub), both on the big build's
+    in_dist, >= 2.0 on both seeds. Proved wrong on this line: the 2-seed mean gap within 0.5 of zero.
+  - H-d cap: pooled-5 turns that reach 32 rounds <= 1%, and their median rounds < 16, on both seeds.
+  - H-e leaks: loops:0 and donor in_dist <= 5 on both seeds, T1's and B2's values printed beside.
+  - H-f audit: the result records p_stop 0.5 and cap 32; `generate()` has no other threshold (code: P_STOP and CAP are the only ones).
+  - Pass = H-a to H-f. Proved wrong: pooled-5 H1 - T1 2-seed mean < -2.0, or H-c's line, or H-a < -1.0 on either seed. Between: not shown.
+- **Reported, not judged:** rounds per split and family, by gold program length, for right vs wrong turns; pooled-5 at loops:8 and loops:16;
+  per-row rounds for the pooled-5 and big in_dist rows (`extra.h1.rows`); the training stop-label rate.
+- **Risk, flagged before the run (suggested, not shown):** the sealed label "already right" never fires on a turn the model cannot get right,
+  so a calibrated stop head keeps thinking to the cap on those turns. In q33's plain B2, 25% of pooled-5 rows sit in split-family cells below
+  50% (mostly the variant split), so H-d's 1% cap line may fail for that reason alone. An alternative label is built and tested but NOT sealed:
+  cfg `{"label": "settled"}` (right now, or no later round of the turn is right), which gives up early on turns more rounds will not fix. The
+  architecture thread chooses before the run; the queue uses the sealed label.
+- **Judge:** `python -m custom_io.analyze_h1 --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-pc-t1-screen custom_io/results/49-pc-h1-screen`.
+  Queue `49-pc-h1-screen.txt` (45-48 are the 8a queues).

@@ -10,6 +10,7 @@ LAZY = {
     'ledger': 'custom_io.models.ledger:Ledger',                         # B (Ledger-lite)
     'plain_tf_steps': 'custom_io.models.plain_tf_steps:PlainTFSteps',   # writes steps then ' # ' answer; C1' decode
     'tool': 'custom_io.models.tool:Tool',                               # T1: B2 with the calculator outside (talker writes calls)
+    'tool_h1': 'custom_io.models.tool_h1:ToolH1',                       # H1: T1 where a learned stop head picks the rounds per turn (cap 32)
 }
 NAMES = sorted(set(MODELS) | set(LAZY))
 

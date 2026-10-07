@@ -117,8 +117,15 @@ class Tool(Ledger):
         return [(self.vocab.decode(r[:CELLS])[::-1], self.vocab.decode(r[CELLS:])[::-1]) for r in ids]
 
     # ---- reasoner ----
-    def run(self, batch, loops=None, gold=None, lesion=None, rounds=False, oracle=None):
+    def think(self, Z, kvs, kvx, mask, t):
+        """One controller iteration through the core blocks (H1 overrides this to checkpoint its extra training rounds)."""
+        for b, kx, ks in zip(self.core, kvx, kvs):
+            Z = b(Z, ks, kx, mask)
+        return Z
+
+    def run(self, batch, loops=None, gold=None, lesion=None, rounds=False, oracle=None, each=None):
         """gold (training): teacher-forced ops and tape. oracle: per-row function (row index, round, call) -> result string (write_copy eval).
+        each (H1): called after every iteration t as each(t, state dict) once that iteration's call is written; a True return ends the loop.
         -> dict(R, lmode, lword, wvalid, steps [(op logits, cell probs [B,2*CELLS,V])], X / xm / ids (context: prompt then tape), tape (X, ids, mask),
         calls [B][(t, op, a, b, result)] (free run))."""
         assert not rounds
@@ -149,48 +156,49 @@ class Tool(Ledger):
         Z = torch.cat([self.ctrl.weight, self.reader.place.weight[:9]]).expand(B, -1, -1)
         steps, calls, n = [], [[] for _ in range(B)], self.n_loops if loops is None else loops
         shown = torch.zeros(B, N_RES, dtype=torch.bool, device=dev)     # entries the thinker may see now
+        kvs_of = None
         for t in range(n):
             ts = min(t, self.n_loops - 1)
             vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
-            kvs = [torch.cat([a, c], 3) for a, c in zip(kvs0, kvt)]
+            if kvs_of is not kvt:                                       # rebuilt only when the tape changed (same values either way)
+                kvs, kvs_of = [torch.cat([a, c], 3) for a, c in zip(kvs0, kvt)], kvt
             mask = torch.cat([valid, vis, xm], 1)
-            Z = Z + self.step_emb.weight[ts]
-            for b, kx, ks in zip(self.core, kvx, kvs):
-                Z = b(Z, ks, kx, mask)
+            Z = self.think(Z + self.step_emb.weight[ts], kvs, kvx, mask, t)
             if lesion == 'ctl27':
                 Z = torch.cat([Z[:, :2], torch.zeros_like(Z[:, 2:N_CTRL]), Z[:, N_CTRL:]], 1)
-            if not 1 <= t <= N_RES:
-                continue
-            z = self.ln_z(Z[:, 0])
-            lop = self.op_head(z)
-            p, _ = self.gen_copy(self.cells(z), torch.cat([X, Xt], 1), torch.cat([xm, vis], 1), torch.cat([batch['prompt_ids'], idt], 1),
-                                 lesion == 'nocopy')
-            steps.append((lop, p))
-            k = t - 1
-            if gold is not None:
-                shown[:, k] = gold['op'][:, k] > 0
-                continue
-            op = lop.argmax(-1).tolist()
-            new = list(texts[i][k] for i in range(B))
-            for i, (sa, sb) in enumerate(self.decode_cells(p)):
-                if op[i] == 0:
-                    continue
-                if oracle is not None:
-                    r = oracle(i, t, (NAMES[op[i]], sa, sb))
+            if 1 <= t <= N_RES:
+                z = self.ln_z(Z[:, 0])
+                lop = self.op_head(z)
+                p, _ = self.gen_copy(self.cells(z), torch.cat([X, Xt], 1), torch.cat([xm, vis], 1), torch.cat([batch['prompt_ids'], idt], 1),
+                                     lesion == 'nocopy')
+                steps.append((lop, p))
+                k = t - 1
+                if gold is not None:
+                    shown[:, k] = gold['op'][:, k] > 0
                 else:
-                    r = '?' if lesion == 'noexec' else calc(NAMES[op[i]], sa, sb, swap=lesion == 'opswap')
-                new[i] = entry(NAMES[op[i]], sa, sb, r)
-                calls[i].append((t, NAMES[op[i]], sa, sb, r))
-            if any(new):
-                for i in range(B):
-                    texts[i][k] = new[i]
-                Xk, ik, mk = self.read_texts(new, dev, le)
-                Xk = (Xk + self.tape_emb.weight[k].to(Xk.dtype)) * mk[..., None]
-                sl = slice(k * le, (k + 1) * le)
-                Xt, idt, mt = Xt.clone(), idt.clone(), mt.clone()
-                Xt[:, sl], idt[:, sl], mt[:, sl] = Xk.to(Xt.dtype), ik, mk
-                kvt = [b.kv_of(Xt + self.src.weight[1]) for b in self.core]
-                shown[:, k] = torch.tensor([o > 0 for o in op], device=dev)
+                    op = lop.argmax(-1).tolist()
+                    new = list(texts[i][k] for i in range(B))
+                    for i, (sa, sb) in enumerate(self.decode_cells(p)):
+                        if op[i] == 0:
+                            continue
+                        if oracle is not None:
+                            r = oracle(i, t, (NAMES[op[i]], sa, sb))
+                        else:
+                            r = '?' if lesion == 'noexec' else calc(NAMES[op[i]], sa, sb, swap=lesion == 'opswap')
+                        new[i] = entry(NAMES[op[i]], sa, sb, r)
+                        calls[i].append((t, NAMES[op[i]], sa, sb, r))
+                    if any(new):
+                        for i in range(B):
+                            texts[i][k] = new[i]
+                        Xk, ik, mk = self.read_texts(new, dev, le)
+                        Xk = (Xk + self.tape_emb.weight[k].to(Xk.dtype)) * mk[..., None]
+                        sl = slice(k * le, (k + 1) * le)
+                        Xt, idt, mt = Xt.clone(), idt.clone(), mt.clone()
+                        Xt[:, sl], idt[:, sl], mt[:, sl] = Xk.to(Xt.dtype), ik, mk
+                        kvt = [b.kv_of(Xt + self.src.weight[1]) for b in self.core]
+                        shown[:, k] = torch.tensor([o > 0 for o in op], device=dev)
+            if each is not None and each(t, dict(Z=Z, X=X, xm=xm, Xt=Xt, idt=idt, mt=mt, shown=shown, ent=ent, K=K, Kw=Kw, wvalid=wvalid)):
+                break
         vis = mt & shown[:, :K].gather(1, ent.expand(B, -1))
         zf = self.ln_z(Z[:, 1])
         out = dict(R=Z[:, N_CTRL:], lmode=self.mode_head(zf), lword=self.ptr(self.q_word(zf), Kw, wvalid), wvalid=wvalid, steps=steps,
@@ -210,16 +218,19 @@ class Tool(Ledger):
         X, xm = self.read(batch, talker=True)
         p, _ = self.gen_copy(R, torch.cat([X, Xt.to(X.dtype)], 1), torch.cat([xm, vis.bool()], 1), torch.cat([batch['prompt_ids'], idt.long()], 1),
                              lesion == 'nocopy')
-        gen = [self.vocab.decode(r)[::-1] for r in p.argmax(-1).tolist()]
-        mode, w = lmode.argmax(-1).tolist(), lword.argmax(-1).tolist()
+        out, modes = self.answers(p.argmax(-1).tolist(), lmode.argmax(-1).tolist(), lword.argmax(-1).tolist(), batch['rows'])
+        return (out, modes) if return_modes else out
+
+    def answers(self, gen_ids, mode, w, rows, spans=None):
+        """Greedy readout -> (answer texts, modes): WORD (mode 1) copies word w of the row's prompt, anything else is the GEN text."""
         out, modes = [], []
-        for i, row in enumerate(batch['rows']):
-            sp = word_spans(row['prompt'])[:W_MAX]
+        for i, row in enumerate(rows):
+            sp = spans[i] if spans is not None else word_spans(row['prompt'])[:W_MAX]
             if mode[i] == 1 and w[i] < len(sp):
                 out.append(row['prompt'][sp[w[i]][0]:sp[w[i]][1]]); modes.append(1)
             else:
-                out.append(gen[i]); modes.append(2)
-        return (out, modes) if return_modes else out
+                out.append(self.vocab.decode(gen_ids[i])[::-1]); modes.append(2)
+        return out, modes
 
     @torch.no_grad()
     def generate(self, batch, lesion=None):
@@ -277,22 +288,7 @@ class Tool(Ledger):
         dev, B = batch['prompt_ids'].device, len(batch['rows'])
         g = self.gold(batch['rows'], dev)
         o = self.run(batch, gold=g)
-        w_row = torch.where(g['has'], 1.0, self.w_noop)
-        comm = torch.isin(g['op'], torch.tensor(COMM, device=dev))
-        lop = lcall = 0.0
-        hits = tot = 0
-        sc = lambda lp, tg: (lp.gather(2, tg.clamp(min=0)[..., None])[..., 0] * (tg >= 0)).sum(1)
-        for s, (lg, p) in enumerate(o['steps']):
-            lg = lg.float()
-            lop = lop + (F.cross_entropy(lg, g['op'][:, s], reduction='none') * w_row).mean()
-            lp = torch.log(p + 1e-6)
-            la, lb = lp[:, :CELLS], lp[:, CELLS:]
-            ta, tb = g['ca'][:, s], g['cb'][:, s]
-            lab, lba = sc(la, ta) + sc(lb, tb), sc(la, tb) + sc(lb, ta)
-            nll = -torch.where(comm[:, s], torch.logaddexp(lab, lba), lab)
-            lcall = lcall + (nll * (g['op'][:, s] > 0)).sum() / B
-            hits += ((lg.argmax(-1) == g['op'][:, s]) & g['has']).sum()
-            tot += g['has'].sum()
+        lop, lcall, hits, tot = self.call_loss(o['steps'], g, B)
         marg = lambda lg, m, sel: torch.where(sel, -(torch.logsumexp(lg.masked_fill(~m, -1e9), -1) - torch.logsumexp(lg, -1)), torch.zeros_like(lg[:, 0])).sum() / B
         lmode = F.cross_entropy(o['lmode'].float(), g['mode'])
         lword = marg(o['lword'], g['word'], g['mode'] == 1)
@@ -305,6 +301,28 @@ class Tool(Ledger):
         aux = dict(prog=lop + lcall, op_acc=hits / tot.clamp(min=1), call=lcall, mode=lmode, word=lword, gen=lgen,
                    copy_share=((1 - gate[..., 0]) * tm).sum() / tm.sum().clamp(min=1))
         return lop + lcall + lmode + lword + lgen, {k: v.detach() if torch.is_tensor(v) else v for k, v in aux.items()}
+
+    def call_loss(self, steps, g, B):
+        """The call writer's losses over the call rounds: op CE (NOOP rows weighted w_noop) and -log p of the gold operand strings."""
+        import torch.nn.functional as F
+        dev = g['op'].device
+        w_row = torch.where(g['has'], 1.0, self.w_noop)
+        comm = torch.isin(g['op'], torch.tensor(COMM, device=dev))
+        lop = lcall = 0.0
+        hits = tot = 0
+        sc = lambda lp, tg: (lp.gather(2, tg.clamp(min=0)[..., None])[..., 0] * (tg >= 0)).sum(1)
+        for s, (lg, p) in enumerate(steps):
+            lg = lg.float()
+            lop = lop + (F.cross_entropy(lg, g['op'][:, s], reduction='none') * w_row).mean()
+            lp = torch.log(p + 1e-6)
+            la, lb = lp[:, :CELLS], lp[:, CELLS:]
+            ta, tb = g['ca'][:, s], g['cb'][:, s]
+            lab, lba = sc(la, ta) + sc(lb, tb), sc(la, tb) + sc(lb, ta)
+            nll = -torch.where(comm[:, s], torch.logaddexp(lab, lba), lab)
+            lcall = lcall + (nll * (g['op'][:, s] > 0)).sum() / B
+            hits += ((lg.argmax(-1) == g['op'][:, s]) & g['has']).sum()
+            tot += g['has'].sum()
+        return lop, lcall, hits, tot
 
     # ---- replay of the model's own calls (opswap, write_copy) ----
     @staticmethod
