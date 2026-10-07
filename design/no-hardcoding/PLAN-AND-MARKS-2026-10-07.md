@@ -83,6 +83,16 @@ Label each wrong row by its FIRST wrong link, comparing the written text with th
 
 Pool both seeds (about 70 failed rows in all: C1' chain-5 is 96.2-96.6). Report (h)-(j) separately and leave them out of the call. If copying, (a)+(d)+(e), holds at least half of the remaining rows, T1's risk is the copy path; if choosing, (b)+(c), holds at least half, T1's risk is the thinker's state; otherwise "mixed". No paper the helpers opened measures where a small text-plus-calculator model loses (papers file, tools section, gaps).
 
+**D0b result (10-07, 1:48 PM ET, shown; `D0b-RESULT-2026-10-07.md`, repo `custom_io/results/d0/D0b.md` at dd4976508):** call "mixed". 58 of the 72 wrong rows (81%) are (h): 4-5 step var_chain rows trained answer-only because steps plus answer pass the 64-char cap, so the model writes a bare number and the calculator never runs. Copy errors (a, d, e): 0 of 2,000 rows. Choosing (b, c): 3. Without (h) the baseline would miss about 14 of 2,000 (99.3). So T1's copy path is not the expected risk; the choosing set and story_chain3's final word are. It also shows the text baseline is handicapped by its own cap, which C0 below fixes before it is used as the LLM-recipe yardstick again.
+
+### 3.1 C0: a fair LLM-recipe baseline (added after D0b, before any run of it)
+plain_tf_steps writes its worked steps only when steps plus answer fit in 64 chars (`plain_tf_steps.py:15, 21-27`); longer rows are trained answer-only. That is a handicap in the yardstick, not a property of the LLM recipe.
+- **One change:** raise CAP so that no step-family training row falls back to answer-only (the build thread measures the longest steps-plus-answer target on train and uses that, disclosed), with MAX_POS raised to fit prompt plus target (e.g. 288 -> 400: +28,672 params, still inside the size band). Nothing else changes. Its C1' calculator lesion is scored too.
+- Seeds 200 and 201 on the PC, against q33's plain_tf_steps on the same seeds.
+- Reported: pooled-5, chain-5 with and without the calculator, and B2 - C0 per seed.
+- Pre-registered prediction (from D0b, suggested): C0 with the calculator reaches chain-5 >= 98.5 on both seeds. Proved wrong: below 97.5 on both.
+- **Consequence (fixed now):** if C0's pooled-5 2-seed mean is at or above plain_tf_steps', C0 replaces plain_tf_steps everywhere it is the yardstick: B3 mark 2, U0's base model, and the LLM-recipe arm of the roadmap's growth ladder. A stronger yardstick only tightens marks. If B2 - C0 is more than 3.0 below today's +6.9, the "+6.9 over the LLM recipe" claim is withdrawn until a 6-seed C0 confirm restates it.
+
 ### 3a. Every parity rung (O1, N1, P1), 2-seed screen
 - **S1** pooled-5: (rung - previous rung) >= -2.0 AND (rung - q33 B2) >= -2.0, same seed, on both seeds. The second clause stops losses adding up rung by rung.
 - **S2** chain-5 >= 99.0 on both seeds (B2 reads 99.4-99.8; the chain-5 paired SD is 0.22-0.33).
@@ -110,7 +120,7 @@ Today's vocab is exactly 13 specials + the 95 printable ASCII chars (108 ids, `d
 
 ### 3c. B3 confirm, 6 paired seeds (200-205) against q33's B2 and plain_tf_steps, on the PC
 1. **Parity with B2:** T1's sealed parity mark, word for word, whatever the architecture thread seals before T1's first run. Today it reads "the 6-seed 95% CI of the difference lies inside +-1.0". **Noise problem, raised with the architecture thread:** the CI half-width is t(5) x SD / sqrt(6) = 1.05 x SD, so at SD 0.94 the mean must sit within about +-0.01 to pass, and at SD 1.33 it cannot pass at all. Suggested re-seal before any run (not mine to make): mean(B3 - B2) >= -1.0, CI lower bound >= -2.0, and B3 >= B2 - 1.0 on at least 5 of 6 seeds. B3 never uses a looser parity mark than T1.
-2. **Still beats its size:** mean(B3 - plain_tf_steps) >= +3.0 with CI lower bound > 0 (B2 is +6.9, paired SD 1.33, shown).
+2. **Still beats its size:** mean(B3 - plain_tf_steps) >= +3.0 with CI lower bound > 0 (B2 is +6.9, paired SD 1.33, shown). If C0 (3.1) replaces plain_tf_steps, this mark is read against C0.
 3. **Chains:** chain-5 6-seed mean within 1.0 of B2's (99.57) and >= 99.0 on at least 5 of 6 seeds (T1's sealed mark 2).
 4. **Tool off,** exactly as T1 defines it: program questions (the noexec set) < 5% (B2 with its executor removed reads 0.8%).
 5. **Swap:** with add and subtract swapped inside the tool, >= 99% of affected chain rows follow the swapped value. "Affected" = rows whose intact call log contains an add or a subtract, found by replaying the intact log with the swapped tool (B2's own count: 826 of 1,000, `opswap`). Needs new code: the multi-turn version of `ledger.py:610-640`.
