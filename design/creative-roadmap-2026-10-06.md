@@ -569,6 +569,15 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
        Build readings, confirmed 10-07: night 2 continues from the night-1 model and resamples the pool with it; N'
        skills harm is measured against the warmed parent and later models against N'; each parent stops on its own
        parts or feasibility miss (Mac job 7, commit a3f09b033).
+       Partial, relayed 12:45 AM ET 10-07, before night 2 (shown, not yet pushed): parts kept (N' fresh add/mult
+       61.7% / 61.3%; cold start 23.4% / 28.1%; harm +0.2 / -0.1); dose lr 1e-3 x 32 visits; feasibility PASS (PC' - N'
+       multi-step first try +26.6 [19.5, 33.8] / +34.4 [27.3, 42.2]); W' night 1 multi-step first try only 0.6% / 1.9%.
+       Reading fixed now, before the night-2 numbers: feasibility passing rules out explanation (b), since B2 does learn
+       these kinds from right answers once the parts are kept (so job 5's weak PC was suggested to be partly the lost
+       parts). If the climb misses or meets the proved-wrong line, the climb claim retires for this loop as specified
+       (32 tries, one pool pass per night), and the cause is labelled (c): too few multi-step finds to learn from, a
+       search limit rather than a learning or forgetting limit. Item 5's "explanation (b)" is corrected to (c) for
+       that case. The next step then changes only the search, chosen from the per-kind records and reach@32.
   - **Memory sleep, ruled 10-07 (fast-sleep thread, PR #48; RESULTS in the project folder under fast-sleep/).** Shown on
     a 2-parent DEV screen, with s101 untuned: a notebook of the night's W records plus 512 warm add/mult programs, read
     by top-16 cosine votes on the op and slot heads with no weight change, matches the fine-tune's W first-try gain
