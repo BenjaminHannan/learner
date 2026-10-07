@@ -5,10 +5,11 @@ Candidates, in this fixed order (fn over int x): 1 sq_minus x*x-B (B 3..9); 2 tr
 Questions are rules_real.make_questions' own format and filters (3 examples + query, DOMAIN inputs, outputs >= 0, no example output in {1, 2, 10, 100}) and the examples must pin the query among
 ALL rules: rules_real.ALL_RULES (C2 + practised), stones.SS_PARAMS (mod and the other stepping stones) and every candidate's parameters. Salt 'knew-v1', seed 0; DEV = 64 per candidate (tag kdev).
 A candidate qualifies when ALL THREE hold on its DEV: (a) representable: a reference program within 7 steps (fewshot.find_reference on a canonical row, checked on the whole DOMAIN; parameters
-not shown representable are dropped, a kind with none is dropped); (b) blind search with the checker (blind_baseline.search_fits, BFS) at the test's guess budget: a fitting candidate among the first 32 candidates
-examined on <= 20% of its DEV questions (the roadmap's rule for finding tests: blind search with the checker fails at the test's guess budget; S1 gives
-the model 32 tries). --blind-rule fits applies blind_baseline's other reading (right within the first 32 FITTING candidates of 50,000 examined), under
-which no candidate qualifies (10-07: 34-100%); both numbers are always reported; (c) the parent N' (untrained adapter = N' itself) at T 3.0, 32 plain samples (legal.raw_samples): reach@32 (a fitting try whose answer is in `accepted`; the key only scores)
+not shown representable are dropped, a kind with none is dropped); (b) blind search with the checker (blind_baseline.search_fits, BFS) at the test's guess budget B: a fitting candidate among the first B candidates
+examined on <= 20% of its DEV questions (the roadmap's rule for finding tests: blind search with the checker fails at the test's guess budget). B = --budget:
+32 at first; 512 by roadmap ruling 71050e463c (the creative part's real day budget: 32 tries, then 480 where none fits), set after seeing the 32-try (c) and
+before any sleep. --blind-rule fits applies blind_baseline's other reading (right within the first 32 FITTING candidates of 50,000 examined), under which
+no candidate qualifies (10-07: 34-100%); both numbers are always reported; (c) the parent N' (untrained adapter = N' itself) at T 3.0, B plain samples (legal.raw_samples): reach@B (a fitting try whose answer is in `accepted`; the key only scores)
 between 2% and 40% on BOTH parents. The first four in list order that qualify are K_new; fewer than four = report and stop. Writes (dev.jsonl: the four kinds' DEV, 256 rows; test.jsonl: 128 per kind,
 tag ktest, avoiding every DEV key, GENERATED AND WRITTEN ONLY: its sha256 is taken from the bytes written and nothing here ever reads it back or scores it; MANIFEST.json; report.json; candidates_dev.jsonl)."""
 import argparse, hashlib, json, os, random, time
@@ -24,9 +25,9 @@ PARAMS = dict(sq_minus=[(b,) for b in range(3, 10)], triple_add=[(b,) for b in r
 N_DEV, N_TEST, N_PICK = 64, 128, 4
 BLIND_MAX, REACH_LO, REACH_HI, T_POOL, N_SAMPLES = 0.20, 0.02, 0.40, 3.0, 32
 BLIND_GUESSES = 32
-RULES = dict(examined='(b) blind search with the checker fits within the first 32 candidates examined on <= 20% of DEV',
+RULES = dict(examined='(b) blind search with the checker fits within the first %d candidates examined on <= 20%% of DEV',
              fits='(b) blind search right within the first 32 fitting candidates (50,000 examined) on <= 20% of DEV')
-RULE = ('first 4 candidates in list order with (a) a representable parameter, %s, (c) N\' creative-mode reach@32 in [2%%, 40%%] on both parents')
+RULE = ('first 4 candidates in list order with (a) a representable parameter, %s, (c) N\' creative-mode reach@%d in [2%%, 40%%] on both parents')
 
 
 def fn(kind, p):
@@ -126,7 +127,7 @@ def _interleave(by_kind, kinds):
 
 
 # ---- (b) blind search
-def blind_conditions(rows, workers=2, cache=None):
+def blind_conditions(rows, workers=2, cache=None, budget=BLIND_GUESSES):
     """Blind BFS per DEV row (cached by id). -> blind_baseline.summarize(rows, fits)."""
     c = json.load(open(cache)) if cache and os.path.exists(cache) else {}
     todo = [r for r in rows if r['id'] not in c]
@@ -143,8 +144,9 @@ def blind_conditions(rows, workers=2, cache=None):
     out = blind_baseline.summarize(rows, fits)
     for k in out['by_kind']:
         ix = [i for i, r in enumerate(rows) if r['kind'] == k]
-        out['by_kind'][k]['fit_within_32_examined'] = sum(any(e <= BLIND_GUESSES for e, _ in fits[i]) for i in ix) / len(ix)
-        out['by_kind'][k]['right_within_32_examined'] = sum(any(e <= BLIND_GUESSES and ok for e, ok in fits[i]) for i in ix) / len(ix)
+        for g in sorted({BLIND_GUESSES, budget}):
+            out['by_kind'][k][f'fit_within_{g}_examined'] = sum(any(e <= g for e, _ in fits[i]) for i in ix) / len(ix)
+            out['by_kind'][k][f'right_within_{g}_examined'] = sum(any(e <= g and ok for e, ok in fits[i]) for i in ix) / len(ix)
         first = sorted(next((e for e, ok in fits[i] if ok), None) for i in ix if any(ok for _, ok in fits[i]))
         out['by_kind'][k]['examined_to_first_right'] = dict(share_with_right_fit=len(first) / len(ix), median=first[len(first) // 2] if first else None,
                                                           mean=sum(first) / len(first) if first else None, min=first[0] if first else None, max=first[-1] if first else None)
@@ -153,14 +155,17 @@ def blind_conditions(rows, workers=2, cache=None):
 
 # ---- (c) the parents in creative mode (untrained adapter = N' itself)
 def parent_reach(nprime, rows, T=T_POOL, n=N_SAMPLES, seed=0, device='cpu'):
-    """N' at T, n plain samples per row (legal.raw_samples): per kind reach@32 = a fitting try whose answer is in `accepted`. -> {kind: dict(n, reach32, fit32)}."""
+    """N' at T, n plain samples per row (legal.raw_samples): per kind reach@n = a fitting try whose answer is in `accepted` (fit@n: any fitting try), plus reach@32 and the
+    1-based index of the first right fit when n > 32. -> {kind: dict(n, n_samples, reach, fit, reach32, fit32, first_right_median)}."""
     from creative import c2_stones, legal, sleep, sleep7d
     m, vocab, _ = sleep.load_parent(nprime, device)
     m.eval()
     rows = c2_stones._with_nums(rows)
     smp = legal.raw_samples(m, rows, vocab, device, n=n, temperature=T, level=0, seed=seed)
-    per = sleep7d.score_rows(rows, smp)
-    return {k: dict(n=len(q), reach32=sum(d['right'] for d in q) / len(q), fit32=sum(d['fit'] for d in q) / len(q))
+    per = sleep7d.score_rows(rows, smp, ks=sorted({32, n}))
+    med = lambda xs: sorted(xs)[len(xs) // 2] if xs else None
+    return {k: dict(n=len(q), n_samples=n, reach=sum(d['right'] for d in q) / len(q), fit=sum(d['fit'] for d in q) / len(q), reach32=sum(d['right32'] for d in q) / len(q),
+                    fit32=sum(d['fit32'] for d in q) / len(q), first_right_median=med([d['first_right'] for d in q if d['first_right']]))
             for k in sorted({r['kind'] for r in rows}) for q in [[d for d in per if d['kind'] == k]]}
 
 
@@ -203,7 +208,7 @@ def write_data(out_dir, chosen, usable, dev_by_kind, cond, rule, nprime=None, sm
     return man
 
 
-def run_conditions(out, nprimes=(), workers=2, limit=None, log=None, device='cpu', blind_rule='examined'):
+def run_conditions(out, nprimes=(), workers=2, limit=None, log=None, device='cpu', blind_rule='examined', budget=BLIND_GUESSES):
     """All ten candidates: DEV rows, (a), (b), (c). -> (cond {kind: dict}, usable {kind: [params]}, dev_by_kind). Caches (a) and (b) in `out`."""
     log = log or (lambda *a: print(time.strftime('%H:%M:%S'), *a, flush=True))
     os.makedirs(out, exist_ok=True)
@@ -227,36 +232,36 @@ def run_conditions(out, nprimes=(), workers=2, limit=None, log=None, device='cpu
                        a=dict(passes=bool(usable[k]), representable_params=f'{len(usable[k])}/{len(PARAMS[k])}'))
     t0 = time.time()
     use_rows = [r for k in CAND for r in dev_by_kind.get(k, [])[:limit]]
-    bsum = blind_conditions(use_rows, workers, os.path.join(out, 'cache_b.json') if not limit else None)
+    bsum = blind_conditions(use_rows, workers, os.path.join(out, 'cache_b.json') if not limit else None, budget)
     for k in dev_by_kind:
         b = bsum['by_kind'][k]
-        key = 'fit_within_32_examined' if blind_rule == 'examined' else 'right_within_32_guesses'
-        cond[k]['b'] = dict(passes=b[key] <= BLIND_MAX, rule=RULES[blind_rule], **b)
-    log('(b) blind search', blind_rule, {k: (round(cond[k]['b']['fit_within_32_examined'], 3), round(cond[k]['b']['right_within_32_guesses'], 3)) for k in dev_by_kind},
-        '(fit within 32 examined, right within 32 fitting)', round(time.time() - t0))
+        key = f'fit_within_{budget}_examined' if blind_rule == 'examined' else 'right_within_32_guesses'
+        cond[k]['b'] = dict(passes=b[key] <= BLIND_MAX, rule=RULES[blind_rule] % budget if blind_rule == 'examined' else RULES[blind_rule], budget=budget, **b)
+    log('(b) blind search', blind_rule, budget, {k: (round(cond[k]['b'][f'fit_within_{budget}_examined'], 3), round(cond[k]['b']['right_within_32_guesses'], 3)) for k in dev_by_kind},
+        f'(fit within {budget} examined, right within 32 fitting)', round(time.time() - t0))
     for p in nprimes:
         t0 = time.time()
-        pr = parent_reach(p, use_rows, device=device)
+        pr = parent_reach(p, use_rows, n=budget, device=device)
         for k, v in pr.items():
-            cond[k].setdefault('c', dict(parents={}))['parents'][p] = v
-        log('(c) reach@32', p, {k: round(v['reach32'], 3) for k, v in pr.items()}, round(time.time() - t0))
+            cond[k].setdefault('c', dict(parents={}, budget=budget))['parents'][p] = v
+        log(f'(c) reach@{budget}', p, {k: (round(v['reach'], 3), round(v['reach32'], 3)) for k, v in pr.items()}, f'(reach@{budget}, reach@32)', round(time.time() - t0))
     for k in CAND:
         c = cond[k].get('c')
         if c:
-            c['passes'] = len(c['parents']) == len(nprimes) and all(REACH_LO <= v['reach32'] <= REACH_HI for v in c['parents'].values())
+            c['passes'] = len(c['parents']) == len(nprimes) and all(REACH_LO <= v['reach'] <= REACH_HI for v in c['parents'].values())
         cond[k]['qualifies'] = all(cond[k].get(x, {}).get('passes') for x in 'abc')
     return cond, usable, dev_by_kind
 
 
-def run(out, nprimes=(), workers=2, limit=None, force=None, log=None, device='cpu', blind_rule='examined'):
+def run(out, nprimes=(), workers=2, limit=None, force=None, log=None, device='cpu', blind_rule='examined', budget=BLIND_GUESSES):
     log = log or (lambda *a: print(time.strftime('%H:%M:%S'), *a, flush=True))
-    cond, usable, dev_by_kind = run_conditions(out, nprimes, workers, limit, log, device, blind_rule)
-    rule_text = RULE % RULES[blind_rule]
+    cond, usable, dev_by_kind = run_conditions(out, nprimes, workers, limit, log, device, blind_rule, budget)
+    rule_text = RULE % ((RULES[blind_rule] % budget) if blind_rule == 'examined' else RULES[blind_rule], budget)
     with open(os.path.join(out, 'candidates_dev.jsonl'), 'w') as f:
         for k in CAND:
             for r in dev_by_kind.get(k, []):
                 f.write(json.dumps(r, sort_keys=True) + '\n')
-    rep = dict(spec=__doc__.split('\n')[0], rule=rule_text, blind_rule=blind_rule, salt=SALT, candidates_hash=candidates_hash(), nprime=list(nprimes), limit=limit, conditions=cond,
+    rep = dict(spec=__doc__.split('\n')[0], rule=rule_text, blind_rule=blind_rule, budget=budget, salt=SALT, candidates_hash=candidates_hash(), nprime=list(nprimes), limit=limit, conditions=cond,
                note='conditions (b) and (c) are over the first `limit` DEV questions per kind when limit is set (smoke); nothing is written then' if limit else '')
     qual = [k for k in CAND if cond[k]['qualifies']]
     rep['qualifying'] = qual
@@ -286,8 +291,9 @@ if __name__ == '__main__':
     a.add_argument('--workers', type=int, default=2); a.add_argument('--limit', type=int, help='smoke: conditions on the first N DEV questions per kind, write nothing')
     a.add_argument('--force-kinds', help='SMOKE ONLY: comma list of kinds to write without the conditions (the MANIFEST says so)'); a.add_argument('--threads', type=int)
     a.add_argument('--blind-rule', choices=sorted(RULES), default='examined', help='reading of condition (b); both numbers are always reported')
+    a.add_argument('--budget', type=int, default=BLIND_GUESSES, help='guess budget of (b) and (c) (32 at first; 512 by roadmap ruling 71050e463c)')
     a = a.parse_args()
     if a.threads:
         import torch
         torch.set_num_threads(a.threads)
-    run(a.out, tuple(os.path.expanduser(p) for p in a.nprime), a.workers, a.limit, a.force_kinds.split(',') if a.force_kinds else None, blind_rule=a.blind_rule)
+    run(a.out, tuple(os.path.expanduser(p) for p in a.nprime), a.workers, a.limit, a.force_kinds.split(',') if a.force_kinds else None, blind_rule=a.blind_rule, budget=a.budget)

@@ -397,13 +397,14 @@ def pick_setting(model, init, kept, stuck_rows, vocab, device, T, seed, lrs=(1e-
 
 
 # ---------------------------------------------------------------- measures
-def score_rows(rows, samples):
-    """Per row, over its plain samples in sampling order: fits (example check), right (fits and the answer is in `accepted`: the key only scores), first = 1-based index of the first
-    fit, distinct = distinct fitting programs (score_samples' distinct_accepted: result_key of the answer cone). -> list of dicts."""
+def score_rows(rows, samples, ks=(32,)):
+    """Per row, over its plain samples in sampling order: fits (example check), right (a fitting try whose answer is in `accepted`: the key only scores), first = 1-based index of the
+    first fit, first_right = of the first right fit, distinct = distinct fitting programs (score_samples' distinct_accepted: result_key of the answer cone); right{k} / fit{k} = within the
+    first k samples, for k in ks. -> list of dicts."""
     out = []
     for row, tr in zip(rows, samples):
         p = fewshot.parse(row['prompt'])
-        fit, right, keys, first = 0, False, set(), None
+        fit, right, keys, first, first_right = 0, False, set(), None, None
         for j, rec in enumerate(tr):
             if not pyfit(p, rec.t):
                 continue
@@ -412,19 +413,30 @@ def score_rows(rows, samples):
                 continue
             fit += 1
             first = j + 1 if first is None else first
-            right = right or str(v[2]) in row['accepted']
+            if str(v[2]) in row['accepted']:
+                right = True
+                first_right = j + 1 if first_right is None else first_right
             keys.add(result_key(rec.t, run(p['nums'], rec.t)[1]))
-        out.append(dict(id=row['id'], kind=row['kind'], n=len(tr), n_fit=fit, fit=fit > 0, right=right, first=first, distinct=len(keys)))
+        d = dict(id=row['id'], kind=row['kind'], n=len(tr), n_fit=fit, fit=fit > 0, right=right, first=first, first_right=first_right, distinct=len(keys))
+        for k in ks:
+            d[f'right{k}'] = first_right is not None and first_right <= k
+            d[f'fit{k}'] = first is not None and first <= k
+        out.append(d)
     return out
 
 
 def summarize(per):
-    """Pooled aggregates of score_rows: reach32 (a fitting try that is right), fit32 (any fitting try), rows with a fit, mean 1-based index of the first fit among rows with a fit,
-    mean distinct fitting programs per row (all rows)."""
+    """Pooled aggregates of score_rows: reach{k} (a right fitting try within the first k samples) and fit{k} for every k scored, reach_all / fit_all over all samples, rows with a fit,
+    mean 1-based index of the first fit among rows with a fit, mean distinct fitting programs per row (all rows, all samples)."""
     n = max(len(per), 1)
     fi = [d['first'] for d in per if d['first'] is not None]
-    return dict(n=len(per), reach32=sum(d['right'] for d in per) / n, fit32=sum(d['fit'] for d in per) / n, rows_with_fit=len(fi),
-                tries_to_first_fit=sum(fi) / len(fi) if fi else None, distinct_fitting=sum(d['distinct'] for d in per) / n)
+    ks = sorted({int(k[5:]) for d in per[:1] for k in d if k.startswith('right') and k[5:].isdigit()})
+    out = dict(n=len(per), n_samples=max((d['n'] for d in per), default=0), reach_all=sum(d['right'] for d in per) / n, fit_all=sum(d['fit'] for d in per) / n,
+               rows_with_fit=len(fi), tries_to_first_fit=sum(fi) / len(fi) if fi else None, distinct_fitting=sum(d['distinct'] for d in per) / n)
+    for k in ks:
+        out[f'reach{k}'] = sum(d[f'right{k}'] for d in per) / n
+        out[f'fit{k}'] = sum(d[f'fit{k}'] for d in per) / n
+    return out
 
 
 def summarize_by_kind(per):
@@ -432,10 +444,10 @@ def summarize_by_kind(per):
 
 
 def measure(model, rows, vocab, device, T, n, seed):
-    """Creative mode (adapter as loaded, on): n plain samples per row at T. -> (summary dict pooled + per kind, per-row list)."""
+    """Creative mode (adapter as loaded, on): n plain samples per row at T, scored at 32 and at n tries. -> (summary dict pooled + per kind, per-row list)."""
     with creative(model, True):
         smp = legal.raw_samples(model, rows, vocab, device, n=n, temperature=T, level=0, seed=seed)
-    per = score_rows(rows, smp)
+    per = score_rows(rows, smp, ks=sorted({32, n}))
     return summarize_by_kind(per), per
 
 
@@ -449,7 +461,7 @@ def _log(*a):
 
 
 # ---------------------------------------------------------------- 6. S1
-def s1_parent(nprime, out, pool_limit=None, dev_limit=None, n1=32, n2=480, seed=0, T=T_POOL, lrs=(1e-3, 3e-3), passes=(1, 2, 4), kl=0.1, n=32, device='cpu',
+def s1_parent(nprime, out, pool_limit=None, dev_limit=None, n1=32, n2=480, seed=0, T=T_POOL, lrs=(1e-3, 3e-3), passes=(1, 2, 4), kl=0.1, n=32, n_eval=512, device='cpu',
               knew_dir=KNEW, name=None, resume=True, log=_log, allres=None):
     """One parent's S1. After every stage DIR/s1.json (all parents so far, `allres`) and DIR/<name>/s1.json are written; the day is cached (DIR/<name>/day.pkl) when the same arguments come back."""
     from creative import knew
@@ -457,7 +469,7 @@ def s1_parent(nprime, out, pool_limit=None, dev_limit=None, n1=32, n2=480, seed=
     pdir = os.path.join(out, name)
     os.makedirs(pdir, exist_ok=True)
     t00, secs = time.time(), {}
-    res = dict(nprime=nprime, name=name, seed=seed, T=T, n_samples=n, spec=__doc__.split('\n')[0],
+    res = dict(nprime=nprime, name=name, seed=seed, T=T, n_pick=n, n_eval=n_eval, spec=__doc__.split('\n')[0],
                args=dict(pool_limit=pool_limit, dev_limit=dev_limit, n1=n1, n2=n2, lrs=list(lrs), passes=list(passes), kl=kl),
                note='C2 DEV, C2 pool and K_new DEV only; test / labelled / K_new test never opened; keys score, never pick (the setting pick and the records use the example check only)')
     allres = {} if allres is None else allres
@@ -536,20 +548,22 @@ def s1_parent(nprime, out, pool_limit=None, dev_limit=None, n1=32, n2=480, seed=
     t0 = time.time()
     for arm, st in states.items():
         load_adapter_state(model, st)
-        kn, kp = measure(model, kdev, vocab, device, T, n, mseed)
-        c2, cp = measure(model, dev, vocab, device, T, n, mseed)
+        kn, kp = measure(model, kdev, vocab, device, T, n_eval, mseed)
+        c2, cp = measure(model, dev, vocab, device, T, n_eval, mseed)
         res['arms'][arm] = dict(knew=kn, c2_dev=c2)
         per[arm] = dict(knew=kp, c2_dev=cp)
-        log('arm', arm, 'K_new', {k: kn['pooled'][k] for k in ('reach32', 'fit32', 'tries_to_first_fit', 'distinct_fitting')},
-            'C2 DEV', {k: c2['pooled'][k] for k in ('reach32', 'fit32', 'tries_to_first_fit', 'distinct_fitting')})
+        show = ('reach32', f'reach{n_eval}', f'fit{n_eval}', 'tries_to_first_fit', 'distinct_fitting')
+        log('arm', arm, 'K_new', {k: kn['pooled'].get(k) for k in show}, 'C2 DEV', {k: c2['pooled'].get(k) for k in show})
         res['seconds'] = secs
         save()
     secs['measure'] = time.time() - t0
     json.dump({arm: {ds: [{k: v for k, v in x.items() if k != 'kind'} for x in rows] for ds, rows in d_.items()} for arm, d_ in per.items()}, open(os.path.join(pdir, 'per_row.json'), 'w'))
-    # paired bootstrap per-row reach@32
-    vec = lambda arm, ds: [float(x['right']) for x in per[arm][ds]]
-    bt = lambda a, b, ds: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(vec(a, ds), vec(b, ds))))
-    res['boot'] = dict(knew_C_minus_U=bt('C', 'U', 'knew'), knew_C_minus_S=bt('C', 'S', 'knew'), c2_dev_C_minus_U=bt('C', 'U', 'c2_dev'))
+    # paired bootstrap per row: K_new reach@n_eval (the primary measure, roadmap ruling 71050e463c), reach@32 reported; C2 DEV reach@32 (the in-kind mark) and reach@n_eval
+    vec = lambda arm, ds, k: [float(x[f'right{k}']) for x in per[arm][ds]]
+    bt = lambda a, b, ds, k: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(vec(a, ds, k), vec(b, ds, k))))
+    E = n_eval
+    res['boot'] = dict(knew_C_minus_U=bt('C', 'U', 'knew', E), knew_C_minus_S=bt('C', 'S', 'knew', E), knew32_C_minus_U=bt('C', 'U', 'knew', 32),
+                       knew32_C_minus_S=bt('C', 'S', 'knew', 32), c2_dev_C_minus_U=bt('C', 'U', 'c2_dev', 32), c2_dev_at_eval_C_minus_U=bt('C', 'U', 'c2_dev', E))
     log('boot', res['boot'])
     # 6. the worker-untouched test again, with each trained adapter loaded (flag off)
     after = {}
@@ -564,12 +578,13 @@ def s1_parent(nprime, out, pool_limit=None, dev_limit=None, n1=32, n2=480, seed=
     b = res['boot']
     res['marks'] = dict(
         transfer=dict(C_minus_U_points=b['knew_C_minus_U']['points'], C_minus_S_points=b['knew_C_minus_S']['points'],
-                      passes=b['knew_C_minus_U']['points'] >= 5.0 and b['knew_C_minus_S']['points'] >= 3.0, rule='K_new reach@32: C - U >= +5 and C - S >= +3 points'),
-        variety=dict(C=kC['distinct_fitting'], U=kU['distinct_fitting'], passes=kC['distinct_fitting'] >= 0.8 * kU['distinct_fitting'], rule='K_new distinct fitting programs per row: C >= 0.8 x U'),
+                      passes=b['knew_C_minus_U']['points'] >= 5.0 and b['knew_C_minus_S']['points'] >= 3.0, rule=f'K_new reach@{E}: C - U >= +5 and C - S >= +3 points'),
+        variety=dict(C=kC['distinct_fitting'], U=kU['distinct_fitting'], passes=kC['distinct_fitting'] >= 0.8 * kU['distinct_fitting'],
+                     rule=f'K_new distinct fitting programs per row over {E} tries: C >= 0.8 x U'),
         in_kind=dict(C=a['C']['c2_dev']['pooled']['reach32'], U=a['U']['c2_dev']['pooled']['reach32'], passes=a['C']['c2_dev']['pooled']['reach32'] >= a['U']['c2_dev']['pooled']['reach32'],
                      rule='C2 DEV reach@32: C >= U'),
         unit_test=dict(passes=bool(ut['passes'] and all(x['passes'] for x in after.values()))),
-        proved_wrong=dict(flag=b['knew_C_minus_S']['hi'] < 1.0, rule='C - S upper end of the paired 95% interval < +1 point'))
+        proved_wrong=dict(flag=b['knew_C_minus_S']['hi'] < 1.0, rule=f'K_new reach@{E}: C - S upper end of the paired 95% interval < +1 point'))
     secs['total'] = time.time() - t00
     res['seconds'] = secs
     save()
@@ -820,7 +835,7 @@ if __name__ == '__main__':
         s.add_argument('--device', default='cpu'); s.add_argument('--threads', type=int); s.add_argument('--no-resume', action='store_true')
         if c == 's1':
             s.add_argument('--knew', default=KNEW); s.add_argument('--lrs', type=_floats, default=(1e-3, 3e-3)); s.add_argument('--passes', type=_ints, default=(1, 2, 4))
-            s.add_argument('--kl', type=float, default=0.1)
+            s.add_argument('--kl', type=float, default=0.1); s.add_argument('--n-eval', type=int, default=512, help='tries per row in the arm measures (roadmap ruling 71050e463c: 512)')
         else:
             s.add_argument('--skills-train'); s.add_argument('--skills-data'); s.add_argument('--replay-n', type=int)
             s.add_argument('--day-from', help="an S1 output dir: W1's search tries come from S1's day on the same parent when its key matches")
@@ -828,7 +843,7 @@ if __name__ == '__main__':
     if a.threads:
         torch.set_num_threads(a.threads)
     if a.cmd == 's1':
-        s1(a.nprime, a.out, pool_limit=a.pool_limit, dev_limit=a.dev_limit, n1=a.n1, n2=a.n2, seed=a.seed, lrs=a.lrs, passes=a.passes, kl=a.kl, device=a.device,
+        s1(a.nprime, a.out, pool_limit=a.pool_limit, dev_limit=a.dev_limit, n1=a.n1, n2=a.n2, seed=a.seed, lrs=a.lrs, passes=a.passes, kl=a.kl, n_eval=a.n_eval, device=a.device,
            knew_dir=a.knew, resume=not a.no_resume)
     else:
         s3(a.nprime, a.out, skills_train=a.skills_train, skills_data=a.skills_data, pool_limit=a.pool_limit, dev_limit=a.dev_limit, n1=a.n1, n2=a.n2, seed=a.seed,
