@@ -23,13 +23,13 @@ little (bigger position and place tables); box.json records both.
 Inputs (git checkouts under `WORK/8a-inputs/`): `data-pool` = branch `claude/data-pool-8b`, `own-data` = branch `claude/8a-own-data`. `WORK/data` and `WORK/data_big` are the
 skills builds `local_runner setup` already makes.
 
-    python -m custom_io.local_runner run --work WORK --queue custom_io\queue_local\41-pc-8a-speed.txt --device cuda --par 1 --busy C:\Users\benja\GPU-BUSY.txt
-    python -m custom_io.local_runner run --work WORK --queue custom_io\queue_local\42-pc-8a-3m.txt   --device cuda --par 2 --busy ...   # data rebuild first, then 6 seeds
-    python -m custom_io.local_runner run --work WORK --queue custom_io\queue_local\43-pc-8a-10m.txt  --device cuda --par 1 --busy ...   # only if mark 4 held
-    python -m custom_io.local_runner run --work WORK --queue custom_io\queue_local\44-pc-8a-30m.txt  --device cuda --par 1 --busy ...   # only if 10M >= 3M
-    python -m custom_io.analyze_8a --results WORK\results\42-pc-8a-3m WORK\results\43-pc-8a-10m WORK\results\44-pc-8a-30m --out 8a-marks.json
+    python -m custom_io.local_runner run --work WORK --queue custom_io\queue_local\45-pc-8a-speed.txt --device cuda --par 1 --busy C:\Users\benja\GPU-BUSY.txt
+    python -m custom_io.local_runner run --work WORK --queue custom_io\queue_local\46-pc-8a-3m.txt   --device cuda --par 2 --busy ...   # data rebuild first, then 6 seeds
+    python -m custom_io.local_runner run --work WORK --queue custom_io\queue_local\47-pc-8a-10m.txt  --device cuda --par 1 --busy ...   # only if mark 4 held
+    python -m custom_io.local_runner run --work WORK --queue custom_io\queue_local\48-pc-8a-30m.txt  --device cuda --par 1 --busy ...   # only if 10M >= 3M
+    python -m custom_io.analyze_8a --results WORK\results\46-pc-8a-3m WORK\results\47-pc-8a-10m WORK\results\48-pc-8a-30m --out 8a-marks.json
 
 Queue line kinds added to `local_runner`: `g8a:` (job), `g8a-speed:` (probe), `g8a-data:` (data rebuild). Jobs wait for `WORK/data8a/READY.json`. The speed probe's
-accumulation counts are read from `results/41-pc-8a-speed/8a-speed/speed.json` by every job.
+accumulation counts are read from `results/45-pc-8a-speed/8a-speed/speed.json` by every job.
 
 Not built: an EmbeddingGemma front for the plain arms (needed only if the reader pick is EGE; the job refuses `eg_embed`).

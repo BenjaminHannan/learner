@@ -2,6 +2,6 @@
 # 8a growth ladder (whole-model-roadmap/8A-SPEC-2026-10-07.md, addenda A-E, sealed before any run). Code: custom_io/g8a/README.md.
 # 200 timed updates of 256 rows per arm at the 3M / 10M / 30M shapes (B2, PT, LLM) + pythia-31m, with caps sized as the real jobs size them. Reads
 # WORK/data (the skills build); needs no web data. Writes speed.json: seconds per update, peak GPU memory, the gradient-accumulation count that fits 15 GB, hours per run.
-#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\41-pc-8a-speed.txt --device cuda --par 1 --busy C:\Users\benja\GPU-BUSY.txt
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\45-pc-8a-speed.txt --device cuda --par 1 --busy C:\Users\benja\GPU-BUSY.txt
 # MEM 12000
 g8a-speed: 8a-speed --public pythia31m --mem-gb 15 --updates 200

@@ -150,11 +150,15 @@ def main(argv=None):
         arm_dir = lambda arm: os.path.join(base, '%s-%s' % (tag, arm))
         emit_on = not a.no_emit
     os.makedirs(base, exist_ok=True)
+    if a.data8a and not a.own72 and os.path.exists(os.path.join(a.data8a, 'REFUSED.txt')):
+        sys.exit('the 8a data step refused to run: ' + open(os.path.join(a.data8a, 'REFUSED.txt')).read().strip())
     if a.data8a and not a.own72 and not os.path.exists(os.path.join(a.data8a, 'READY.json')):      # the queue's first line (g8a-data:) is still building it
         print('waiting for', os.path.join(a.data8a, 'READY.json'), flush=True)
         t_wait = time.time()
         while not os.path.exists(os.path.join(a.data8a, 'READY.json')):
             assert time.time() - t_wait < 8 * 3600, 'the 8a data was never ready'
+            if os.path.exists(os.path.join(a.data8a, 'REFUSED.txt')):
+                sys.exit('the 8a data step refused to run: ' + open(os.path.join(a.data8a, 'REFUSED.txt')).read().strip())
             time.sleep(30)
     pdir, man = get_pool(a, base)
     caps = get_caps(pdir, a.big_data)

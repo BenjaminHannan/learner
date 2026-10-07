@@ -134,12 +134,21 @@ def main(argv=None):
     ap.add_argument('--work', required=True)
     ap.add_argument('--data-pool', required=True)
     ap.add_argument('--own-xz')
+    ap.add_argument('--expect-manifest-sha', help='sha256 of data_pool/built/own72_MANIFEST.json that this run must see; anything else (or PENDING) refuses to run, so stale own text cannot be used')
     ap.add_argument('--out', help='dir for RESULT.json (local_runner counts the line as done when it exists)')
     ap.add_argument('--rungs', nargs='+', default=['rung3', 'rung10', 'rung30'])
     a = ap.parse_args(argv)
     work = Path(a.work) / 'data8a'
     work.mkdir(parents=True, exist_ok=True)
     built = Path(a.data_pool) / 'data_pool' / 'built'
+    if a.expect_manifest_sha is not None:
+        got = sha256(built / 'own72_MANIFEST.json')
+        if got != a.expect_manifest_sha:
+            msg = f'own72_MANIFEST.json sha256 is {got}, expected {a.expect_manifest_sha}: the own text is not the approved build; refusing to run'
+            (work / 'REFUSED.txt').write_text(msg + '\n')
+            (work / 'READY.json').unlink(missing_ok=True)
+            sys.exit(msg)
+    (work / 'REFUSED.txt').unlink(missing_ok=True)
     with Lock(work / 'LOCK'):
         own = json.load(open(built / 'own72_MANIFEST.json'))
         web = json.load(open(built / 'web_slices_8a_MANIFEST.json'))

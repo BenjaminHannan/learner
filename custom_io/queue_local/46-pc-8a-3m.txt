@@ -1,0 +1,16 @@
+# BensPC RTX 5070 Ti (cuda): 8a rung 1 of 3: 3M (B2 3,302,481 params), seeds 400-405, arms B2 PT LLM
+# 8a growth ladder (whole-model-roadmap/8A-SPEC-2026-10-07.md, addenda A-E, sealed before any run). Code: custom_io/g8a/README.md.
+# Needs the 8a data first: the first line rebuilds the own text (hash-checked) and the FineWeb-Edu web slices (shard 0, hash-checked against the data-pool manifests); jobs wait for it.
+# Inputs (git checkouts, staged by the Mac session): {WORK}\8a-inputs\data-pool = branch claude/data-pool-8b, {WORK}\8a-inputs\own-data = branch claude/8a-own-data.
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\46-pc-8a-3m.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+# HOLD: PENDING below must be replaced by the sha256 of the NEW own72_MANIFEST.json (no-cut own text, filters off) before this queue runs; until then line 1 refuses and every job fails fast.
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha PENDING
+# MEM 5000
+g8a: 8a-3M-s400 --rung 3M --seed 400 --speed-json {WORK}/results/45-pc-8a-speed/8a-speed/speed.json
+g8a: 8a-3M-s401 --rung 3M --seed 401 --speed-json {WORK}/results/45-pc-8a-speed/8a-speed/speed.json
+g8a: 8a-3M-s402 --rung 3M --seed 402 --speed-json {WORK}/results/45-pc-8a-speed/8a-speed/speed.json
+g8a: 8a-3M-s403 --rung 3M --seed 403 --speed-json {WORK}/results/45-pc-8a-speed/8a-speed/speed.json
+g8a: 8a-3M-s404 --rung 3M --seed 404 --speed-json {WORK}/results/45-pc-8a-speed/8a-speed/speed.json
+g8a: 8a-3M-s405 --rung 3M --seed 405 --speed-json {WORK}/results/45-pc-8a-speed/8a-speed/speed.json
+# Mark 4 reads it first: B2 pooled-5 >= 72.0, else stop before 10M. Judge all rungs: python -m custom_io.analyze_8a --results WORK\results\46-pc-8a-3m ...
