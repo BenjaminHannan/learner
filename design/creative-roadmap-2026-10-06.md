@@ -49,10 +49,15 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   against a 1.6x bar fixed in advance), so C1's sealed test was never opened. C2 then needed easier
   versions of its new rules before any try fitted (10-06/07), and its trial run (10-07) passed only on the two rules
   that need one fixed program (x times x, last digit); the rules that need a number read off the examples did not move
-  and a second night did not climb. Next is one fix: keep the old add and multiply skills alive during every sleep,
-  since the stepping stones wiped them and every harder rule is built from them. Its sealed test
-  waits for B2's 6-run confirm. Every sleep test now scores better
-  first answers separately from better search (GPT-6 Pro's main point), and C2 passes only on first answers.
+  and a second night did not climb. Keeping the old add and multiply skills alive fixed the forgetting but not the
+  climb. Giving stuck questions many more tries did: the harder rules climbed for the first time (about +10 points on
+  both trial copies, one question short of the mark on one). The real test on six copies (job 9) is running; its
+  sealed questions are opened once, after every arm is trained. Every sleep test scores better first answers
+  separately from better search (GPT-6 Pro's main point), and C2 passes only on first answers.
+- **No hard-coding (Ben, 10-07):** three creative parts are hand code acting on the model's choices: the "used
+  numbers greyed out" rule (C1 only, retired with it), the notebook's on/off switch (the nightly recall step), and the
+  example checker. Each now has a learned or tool replacement with marks fixed first (section 7b). Job 9 runs as it
+  is; the notebook's hand switch is not used after it.
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
   when the model runs into trouble on a problem it is trying to solve. Gift and plan ideas are out of scope.
 
@@ -737,6 +742,170 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   rule rows and the held-out sealing are its next step, started 10-06 alongside C1's last DEV check because C1's
   plumbing works: PC sleep taught first answers on B2).
 
+## 7b. No hard-coding: learned replacements for the creative hand parts (marks sealed 10-07)
+
+Ben's rule (10-07): everything the model does is learned, and hand-written code runs only inside tools the model calls.
+Teaching material, tests and scoring may stay hand-written. The "No hard-coding" thread listed every creative hand part
+(`/mnt/project-files/no-hardcoding/INVENTORY-2026-10-07.md`, section D) and proposed replacements in section 4 of
+`PLAN-AND-MARKS-2026-10-07.md`; this section seals their marks. Checked against the code (shown, branch
+`claude/project-thread-2zeaoc`):
+- **The used-number mask (D1)** acts only in C1 (`creative/legal.py`). C2 and C2b sample with `level=0` everywhere
+  (`c2b.py:217, 280, 282`; `c2_stuck.py:45, 50`). C1 is retired, so nothing live uses the mask.
+- **The notebook gate (D6)** is live: job 9's reported arm M and the loop's nightly recall step use `MEMORY_C2B`
+  (`fastsleep.py:538`): a vote fires when the best similarity is at least theta (0.9, raised to the 0.99 quantile of
+  skills TRAIN similarity), and then adds 50 x votes to the op and slot logits.
+- **The example checker (D3)** runs at night (which tries become records, which questions get 480 more tries) and in
+  scoring. The greedy first try never uses it, and the loop calls it, not the model.
+
+Ruled:
+1. **Job 9 runs unchanged.** Its sealed test cannot change mid-run. Arm M is reported as "hand-gated notebook".
+2. **After job 9, the creative loop's nightly recall step is not used again** until a learned gate passes the marks
+   below.
+3. **No test uses the used-number mask again** unless a learned replacement passed the marks below first. B3 removes
+   it by construction: the puzzle becomes a tool that refuses a used number.
+4. **Settings and tests stay as they are** (try budgets, temperature grids, the harm switch, checkers, the blind
+   baseline), and the solver's programs stay as disclosed teaching material.
+5. **None of these runs is required now.** The learned gate is the only one that unblocks something (the nightly
+   recall step). It runs on DEV only, on a cloud CPU or a free machine, and never touches job 9.
+
+### Used-number mask (D1): learned bookkeeping on B2, one change at a time
+
+- **Setting, the same for every candidate:**
+  - C1 DEV (128 puzzles), parents s100 and s101, T 0.21.
+  - C1's 1,500-rung warm-up with skills replay, re-made with the candidate in place. Each candidate starts at zero or
+    with its added term near zero, so the parent is unchanged before warm-up.
+  - Counting: 32 raw samples per puzzle (no branching, no dedup, repeats counted; C1's rule since pilot 3), plus the
+    greedy first try.
+  - The ruler is the old parent with the level-4 mask, and the plain baseline is the old parent without it. Both are
+    re-measured with this counting in the same run, because the probe's 0.29 legal share counted kept tries with
+    branching.
+  - This is a 2-parent screen. A 6-parent confirm (s200-s205) runs only if a candidate is ever used in a live test.
+- **Where illegal tries come from** (shown, legal-probe report, kept tries at T 0.21):
+
+  | first rule break | share of tries |
+  |---|---|
+  | step 2 reads a number step 1 used | 46-51% |
+  | step 1 picks the same number twice | 16-19% |
+  | step 2 reads the same slot twice | 2-3.5% |
+  | inexact division | 1.4-2.2% |
+
+  A mark passed between steps can only fix the first row. The two pointer heads are sampled independently, so nothing
+  stops a same-number pick inside one step. So each candidate gets a mark on the cause it targets, and the replacement
+  as a whole gets one end mark.
+- **Candidates, in this order:**
+  1. **1a, read marks.** A learned "read" embedding is added to every slot an earlier step read, starting at zero, so
+     step 2 can see what step 1 used. This is information, not a rule.
+  2. **1b, 1a plus See et al.'s coverage loss.** The loss weight is 1.0, applied over the last 25% of warm-up updates
+     (fixed now). It runs only if 1a misses its own mark, which would mean the input is there but unused.
+  3. **1c, b reads a.** The slot pointer a picked is fed into b's query (learned, starting at zero). It runs only if
+     the end mark misses on same-number picks inside a step. This is added here; the proposal had no fix for the
+     16-19%.
+  4. **2, legality head**, tested alone on the plain parent as the other route. A small head is trained on the
+     executor's used/illegal labels for the model's own sampled steps, and its log-probability is added to the joint
+     of (op, a, b). There is no threshold.
+     - Prediction (suggested): weak. Nothing in B2's state records which slots a step read (shown, `ledger.py` run and
+       `sampler.py` sample_run), so a head reading that state has the same blind spot.
+- **Marks, on both parents:**
+  1. Own cause:
+     - 1a and 1b: step-2 re-reads of a used number are at most 5% of raw samples (from about half).
+     - 1c: same-number picks inside a step are at most 2%.
+     - 2: every cause is reported.
+  2. End mark (the mask can go): legal share without the mask is at least 0.90.
+  3. What the mask bought: luck without the mask is at least 0.9x the ruler's luck. Greedy first try is reported
+     beside the ruler's (18.8% / 20.3% in the probe). One puzzle is 0.78 points, too coarse to gate on two parents.
+  4. Aim kept: own-target luck is at least 2x twin-target luck without the mask (ruler 2.9x / 3.2x).
+  5. Skills harm (the chain-5 rows of skills dev in_dist, job 6's measure) is at most 2 points against the plain
+     warmed parent.
+  6. The trainable count is printed and sits inside B2's ±3% band.
+- **Proved wrong:**
+  - 1a: step-2 re-reads still at or above 40% on both parents. Go to 1b.
+  - 1b: the same, with the loss on. Bookkeeping from input plus loss fails at this size. Go to 2.
+  - 2: legal share below 0.50 on both parents.
+  - If 1a, 1b and 2 are all proved wrong, the mask stays retired, and use-once puzzles wait for B3's puzzle tool.
+  - Anything between the pass and proved-wrong lines is "not shown" and comes back here.
+- **Changed from the proposal, and why:**
+  - "Accuracy within 0.5 of the masked model" is narrower than one DEV puzzle (0.78 points). It is the job-6 label
+    mistake again.
+  - "Proved wrong if more than 1% of steps are illegal" overlaps the 0.90 pass zone. A model with 92% legal tries has
+    about 3-4% illegal steps, so it could pass and be proved wrong at once.
+- **B3's puzzle tool:**
+  - The tool replies "error: 5 already used" and lists the numbers left.
+  - Teaching rows "bad move, the tool's error text, corrected move" are made by our tool from the model's own failed
+    moves, never written by Claude.
+  - Mark, when built: after an error, the next move differs from the rejected one at least 95% of the time. Illegal
+    moves reach an answer 0% of the time, by construction.
+  - Proved wrong: the rejected move is repeated after its error more than 20% of the time.
+
+### Notebook gate (D6): a learned gate, DEV only
+
+- **The one change:** per write step, the hand gate and boost (theta, the 0.99 quantile, c = 50) are replaced by a
+  tiny learned gate.
+  - Input: the 16 top similarities (sorted), the vote share of the top op and of the top a and b slots, and the step
+    number.
+  - Output: a non-negative weight on the votes. There is no threshold and no fixed boost.
+  - Training: the head loss of the boosted op and slot logits, with the base weights frozen, on two sets:
+    - the night's records, each queried with itself left out of the notebook;
+    - as many skills TRAIN rows as records, with their gold steps (the rows the hand gate is calibrated on).
+  - Never trained on DEV.
+  - This replaces the proposal's yes/no label: one loss learns both when to trust a note and how much, with no extra
+    rule.
+  - Everything else is as in arm M: answer note off, 512 old notes, k 16, tau 0.05.
+- **Screen:** s100 and s101, job 8's N' and its night-1 W records (rebuilt by the same code if not saved). Scored on
+  C2 DEV and on two skills sets from skills dev in_dist: the 1,000 chain-5 rows (the nightly guard) and the 5,800
+  non-chain rows (the fresh harm check's slice). Three models share the same weights:
+  - none: N' alone;
+  - H: today's gate;
+  - L: the learned gate.
+- **Terms:**
+  - The notebook changed an answer when it differs from the "none" model's answer on the same row.
+  - Coverage is the share of rows it changed.
+  - Helped means wrong to right; hurt means right to wrong.
+  - Hurt is the proposal's "confident-wrong", made exact: a boosted answer that was already wrong without the notebook
+    is not harm.
+- **Marks, on both parents:**
+  1. Gain kept: C2 DEV pooled first try, L - none, is at least 0.9 x (H - none).
+  2. No more harm: L's hurt rows on the two skills sets (6,800 rows) are at most H's + 7 (0.1%). Harm against none is
+     at most 2.0 points on each set (the nightly guard's limit).
+  3. Practised recall: L's practised reach@32 is at least H's - 2 points.
+  4. Audit: a unit test shows no hand constant compared with a similarity and no fixed boost on the gate's path.
+- **Proved wrong:** on both parents, L keeps under 0.5x of H's gain and its hurt count is not below H's. The
+  similarities and vote shares then don't carry when to trust a note. The next change is adding the thinker state to
+  the gate's input (one change).
+- **Confirm**, after a screen pass and only after job 9's test is scored:
+  - s200-s205, with job 9's N' and W night-1 records, on DEV and the same skills sets;
+  - the same marks on at least 5 of 6 parents, with the pooled L - none gain interval above 0.
+  - The nightly recall step then uses L.
+- **Later (B3):** the notebook becomes a recall tool that replies with stored programs as text the model can adapt.
+  Today's notebook replays slot ids, so 3x+7 cannot become 5x+2 (affine 0%, shown). Its marks come with its build.
+
+### Example-checker tool (D3): marks sealed now, run when B3's tool loop exists
+
+- **Today (shown):** the checker re-runs a try on the examples in Python (`fewshot.py:34-103`). It decides which
+  tries become records and where the extra tries go (`c2_stuck.py`), and it scores.
+  - Choosing training data and scoring may stay hand-written under Ben's rule.
+  - It must become a tool when the model settles its own answer by testing tries: creative mode when stuck (C9).
+- **Needs:** T1's call grammar and the tool loop, so it waits for T1's 6-seed confirm.
+  - The tool takes `check <program>` and replies one line per example: "pass" or "fail: got 17, want 19".
+  - The number parser (D4) moves inside the tool.
+- **Test set:** job 9 opens C2's sealed test once. This test needs a fresh sealed C2 split (a new generator seed,
+  with its hash recorded before any run), with DEV for every choice.
+- **Marks:**
+  1. Fidelity: the tool's replies match the Python checker on 10,000 fuzzed tries (100%, unit test).
+  2. It uses the reply:
+     - after a "fail", the next checked program differs from every program already rejected on that question at
+       least 95% of the time;
+     - after an all-pass reply, it answers with that program's query output at least 99% of the time.
+  3. Better than blind search at equal checks: at budgets of 4 and 32 check calls, right answers minus blind
+     breadth-first search with the same checker at the same number of guesses (job 9's report item 8) is at least
+     +10 points pooled over 6 parents, with the interval above 0, at both budgets.
+  4. No luck lost: with the tool switched off, the first try is at most 2 points below the same model trained
+     without tool rows.
+  5. Teaching rows "bad try, the tool's reply, next try" are made by our tool from the model's own failed tries,
+     never written or judged by Claude. They are counted and disclosed.
+- **Proved wrong:** after a "fail", the model repeats a rejected program more than 20% of the time, or at 32 checks
+  the gain over blind search has its upper end below +3. Either way it is not using the checker's answers, only
+  sampling.
+
 ## 8. How it fits the other work
 
 - **Plan B test B1** (teacher-made variety for a 10.8M B2) runs first. C1 does not need its data. If B1 passes, C2 onward
@@ -848,3 +1017,12 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   61% / 57% to 11% after the stepping-stone sleep. Ruled "PASS, near-copy kinds only" (the 2-point band was narrower
   than one question; replaced by a pooled multi-step interval, the fifth post-hoc change). Decided: Mac job 7 replays
   the add/mult rows in every sleep, with a PC' feasibility gate and a night-2 climb mark on the multi-step kinds.
+- **Jobs 7 and 8 (10-07):** keeping the parts worked (add/mult kept, PC' feasibility passed except affine), but the
+  climb did not come until stuck questions got 480 more tries (job 8: multi-step first try +10.4 / +9.7, s101 one
+  question short of +10). Ruled not a pass as written; the real C2b (job 9) goes ahead on s200-s205 (the seventh
+  post-hoc decision), with the blind-search baseline reported beside it.
+- **No hard-coding marks (10-07):** Ben's rule that every part is learned and hand code lives only in tools. Sealed
+  marks for the learned used-number bookkeeping (1a read marks, 1b coverage loss, 1c b reads a, 2 legality head), a
+  learned notebook gate, and the example checker as a tool (section 7b). Two proposed marks were replaced: one was
+  narrower than a single DEV puzzle, and the other overlapped the pass zone. Job 9 unchanged; the hand notebook gate
+  is not used after it.
