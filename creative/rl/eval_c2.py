@@ -26,6 +26,7 @@ PARENTS = ['s200', 's201', 's202', 's203', 's204', 's205', 's100', 's101']
 PARENT_DIR = os.environ.get('RL_PARENTS', os.path.expanduser('~/rl/parents'))
 SKILLS_TRAIN = os.environ.get('RL_SKILLS_TRAIN', os.path.expanduser('~/work/data/train.jsonl'))
 SKILLS_DATA = os.environ.get('RL_SKILLS_DATA', os.path.expanduser('~/work/data_big'))
+DEVICE = os.environ.get('RL_DEVICE', 'cpu')
 NIGHT_TF = 25.5          # 32 tries x 1,024 pool questions, torch-counted on s205 (1.59 TF for 64 questions, scaled); fast-sleep research 10-07
 HIDDEN = ('answer', 'accepted', 'kind', 'params')
 
@@ -58,7 +59,7 @@ class Ctx:
         self.charged[why] = tf
 
 
-def run(split, seed, ref=None, device='cpu'):
+def run(split, seed, ref=None, device=DEVICE):
     torch.manual_seed(seed)
     ctx = Ctx(seed, device)
     if ref:
@@ -78,7 +79,7 @@ def run(split, seed, ref=None, device='cpu'):
     m.eval()
     d, _ = fs.dev_eval(m, rows, ctx.vocab, device)
     harm = 100 * (fs.skills5(ctx._N, SKILLS_DATA, device) - fs.skills5(m, SKILLS_DATA, device))
-    out = dict(split=split, seed=seed, parent=ctx.parent, ref=ref, c2_right=100 * d['right'], chain5_harm=round(harm, 6), flops_tf=flops_tf,
+    out = dict(split=split, seed=seed, parent=ctx.parent, ref=ref, device=device, c2_right=100 * d['right'], chain5_harm=round(harm, 6), flops_tf=flops_tf,
                method_seconds=round(secs, 1), charged=ctx.charged, by_kind=d['by_kind'])
     print(json.dumps(out), flush=True)
     for k, v in sorted(d['by_kind'].items()):
