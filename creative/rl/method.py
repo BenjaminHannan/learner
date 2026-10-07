@@ -1,15 +1,17 @@
 """The C2 research loop's editable learner (creative/rl/eval_c2.py scores it; see its docstring for what a method may see).
 
-Start (10-07): the fast-sleep pilot BC. The night's W, plus chain records for the pool questions W missed (shortest P2(P1(x)) of two library programs
-that fits the 3 examples), fine-tuned with job 6's settings and job 6's number of updates.
-Trial H3 (tune): 48 visits per W record instead of 16 (3x the updates; the reader's place ids are pre-filled with numpy for speed, same values).
-Trial H14 (bold): a much bigger sleep. Every W and chain record also gets 3 replayed prompts (its program run on fresh inputs, generic filters only, so
-the mix of rules stays the pool's), and the fine-tune runs at batch 1024 for about 9x the record rows of H3 (40 visits per record).
-Trial 6 (tune): 80 visits per record (2x the updates).
+Segment 1 (10-07, closed): BC pilot -> H3 train longer -> H14 per-record replay + batch-1024 sleep -> 80 visits (72.7% dev, 72.7% holdout on 2 seeds).
+That recipe broke Ben's rule (10-07: everything must run on its own while deployed) in three places: the cached night used a temperature tuned on DEV,
+and replay used C2's input range and format rules.
+
+Segment 2 (compliant base): the same sleep, with
+  - the night run by the model itself at a temperature it picks from its own tries (m/selfnight.py), instead of the cached DEV-tuned night;
+  - replay inputs, output range and prompt text taken from the day's questions (m/replay.py).
+Chain search (two stored programs chained to fit the examples) and the executor are tools the sleep calls itself.
 """
 from creative import fastsleep as fs, fewshot
 from creative import nightchain as NC
-from creative.rl.m import fast, replay
+from creative.rl.m import fast, replay, selfnight
 
 
 def chain_records(W, pool):
@@ -26,10 +28,12 @@ def chain_records(W, pool):
 
 
 def train(ctx):
-    W = ctx.night()
-    C = chain_records(W, ctx.pool)
-    recs = W + C + replay.replay_per_record(W + C, 3, ctx.seed)
     N = ctx.N
-    fast.prefill(N, recs + ctx.replay)
+    fast.prefill(N, ctx.pool + ctx.replay)
+    W, _ = selfnight.night(N, ctx)
+    C = chain_records(W, ctx.pool)
+    inputs, lo, hi = replay.experience(ctx.pool)
+    recs = W + C + replay.replay_per_record(W + C, 3, ctx.seed, inputs, lo, hi)
+    fast.prefill(N, recs)
     m, _ = fs.m_ft(N, recs, ctx.replay, ctx.vocab, ctx.device, len(recs), lr=1e-3, visits=80, seed=ctx.seed, batch=1024)
     return m

@@ -10,6 +10,8 @@ What a method may see (the context `ctx`): the parent N (a private copy), its vo
 params), the parent's cached night W records (params stripped; using them charges the night's 32 tries per pool question), the warm split's practised
 add/mult solver records, skills TRAIN replay rows, the parent's pool temperature, and the seed. It must never open dev, holdout, labelled or test, must
 return a model of the parent's own class, and must not add test-time search or executor calls inside the model.
+Since 10-07 (Ben: everything must run on its own while deployed) a method may NOT use the cached night or the parent's pool temperature: both were set
+with DEV answers. It runs its own night on ctx.N (the sampling FLOPs are counted). References keep both.
 
 Seeds: 0..7 -> parents s200..s205, s100, s101; a seed >= 100000 (the harness's fresh seeds) -> one of s202..s205, s100, s101 by seed % 6. The seed is also
 the method's own random seed.
@@ -36,10 +38,10 @@ def parent_of(seed):
 
 
 class Ctx:
-    def __init__(self, seed, device='cpu'):
-        self.seed, self.device, self.parent = seed, device, parent_of(seed)
+    def __init__(self, seed, device='cpu', deploy=False):
+        self.seed, self.device, self.parent, self.deploy = seed, device, parent_of(seed), deploy
         self._N, self.vocab, self.meta, s = fs.load_setup(os.path.join(PARENT_DIR, self.parent), device)
-        self.T = s['T']
+        self._T = s['T']
         self._W = [{k: v for k, v in r.items() if k != 'params'} for r in s['records']['W']]
         self.pool = [{'id': r['id'], 'prompt': r['prompt'], 'nums': r['nums']} for r in c2_stones._with_nums(R.load_split(fs.DATA, 'pool'))]
         self.warm = R.warm_records(R.load_split(fs.DATA, 'warm'))
@@ -50,8 +52,16 @@ class Ctx:
     def N(self):
         return copy.deepcopy(self._N)
 
+    @property
+    def T(self):
+        if self.deploy:
+            raise AttributeError('a method may not use the parent pool temperature (picked with DEV answers; deployed-autonomy rule 10-07)')
+        return self._T
+
     def night(self):
         """The parent's cached night (32 tries per pool question at its pool temperature, W = up to 2 tries per question that fit all examples)."""
+        if self.deploy:
+            raise RuntimeError('a method may not use the cached night (its temperature was picked with DEV answers; deployed-autonomy rule 10-07)')
         self.charge(NIGHT_TF, 'night tries (cached)')
         return [dict(r) for r in self._W]
 
@@ -61,7 +71,7 @@ class Ctx:
 
 def run(split, seed, ref=None, device=DEVICE):
     torch.manual_seed(seed)
-    ctx = Ctx(seed, device)
+    ctx = Ctx(seed, device, deploy=ref is None)
     if ref:
         from creative.rl import refs
         fn = getattr(refs, ref)
