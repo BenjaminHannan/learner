@@ -618,6 +618,13 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
        item 4) does not trigger. M with the answer note off becomes the nightly recall step only after a fresh harm
        check on a skills slice no fast-sleep run has scored, with harm <= 2 points on every parent, written before it
        runs.
+    3. **Fresh harm check: PASS (3:19 AM ET 10-07; mark committed first, 66af4b28d; result a0e740492).** 5,800 rows
+       of skills dev in_dist, 29 non-chain families never scored by a fast-sleep run; harm -0.28 to -0.41 on all 8
+       parents (M slightly better, all of it fewshot_number_rule, +8 to +12); the answer note never fired. So M with
+       the answer note off is now the creative loop's nightly recall step. One limit: the slice leaves out the chain
+       families where s205's harm was found, and chain-5 harm with the answer note off is known only from the
+       diagnosis set (0.0 on 6 parents). So every nightly use reports chain-5 harm too, and recall switches off for
+       that night's model if it exceeds 2 points.
   - **Memory sleep, ruled 10-07 (fast-sleep thread, PR #48; RESULTS in the project folder under fast-sleep/).** Shown on
     a 2-parent DEV screen, with s101 untuned: a notebook of the night's W records plus 512 warm add/mult programs, read
     by top-16 cosine votes on the op and slot heads with no weight change, matches the fine-tune's W first-try gain
