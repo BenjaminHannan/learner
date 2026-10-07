@@ -79,6 +79,6 @@ These sit in `tools/`, outside the model. They are the "outside world" the model
 | E2 | Call grammar | T1's own (`add 12 5`), unchanged in B3 |
 | E3 | The tool's operations | Today's 9-op list (`progparse.py:11`), including MIN, MAX, CMP and MOD; the text baseline's calculator does only + - * / (`plain_tf_steps.py:43-53`) |
 | E4 | Reply format | Digits, minus sign, "error", the exact-division rule |
-| E5 | Safety caps | 12 calls per question, 48 bytes per write, a position table of about 400 bytes. Marks: call cap hit on <= 1% of dev rows, write cap on <= 0.1% |
+| E5 | Safety caps | 16 calls per question (after K1; T1 keeps 7), 48 bytes per write, a position table of about 400 bytes. Marks: call cap hit on <= 1% of dev rows, write cap on <= 0.1% |
 | E6 | Fixed 8 rounds per turn | Depth, as in T1; H1 would make it learned |
 | E7 | Trace builder for teaching (from B1-B4) | Teaching only; never runs when the model answers |

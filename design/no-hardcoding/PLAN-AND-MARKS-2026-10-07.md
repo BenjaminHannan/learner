@@ -31,7 +31,7 @@ turn 3   reader -> thinker -> writer writes                    answer 10      (s
 | Numbers in | regex -> int64 -> exact digit code in 16 slots | only the bytes; nothing parses a number before the model |
 | Thinking | 2 blocks x 8 fixed rounds, picks 1 of 9 ops + 2 slots | same looped blocks and state vectors, cross-attending to the reader; no slots; 8 rounds per turn |
 | Arithmetic | Python executor inside the forward pass | calculator tool; the model writes a one-operation call, the tool returns text |
-| Steps | at most 7, fixed schedule | as many calls as needed (safety cap 12); stops by writing an answer |
+| Steps | at most 7, fixed schedule | as many calls as needed (safety cap 16); stops by writing an answer |
 | Output | 3 hand renderers: `str()`, word slicing, 8 reversed registers | one learned byte writer with copy attention over question + transcript |
 | Training | teacher-forced slot programs from a hand parser | teacher-forced traces (calls + tool replies + answer); the tool's real reply is inserted, never the label's |
 
@@ -54,11 +54,12 @@ Every rung is one change on top of the previous rung, paired by seed. Recipe as 
 | D0 | no training: can the reader carry digits, can the talker copy them; plus Amendment 1's control (the same probe on a reader trained for digits only) | none (diagnosis) | B2 checkpoints | architecture thread, sealed |
 | D0b | no training: on the text baseline with its calculator (C1'), classify every failed chain-5 row by its first wrong link | none (diagnosis) | existing plain_tf_steps checkpoints | this file |
 | T1 | calculator outside: the model writes a one-operation call, the reply returns as text; no value codes, no result slots | A2, A5 (result cap), A6, A7, A8 (step schedule), A13 for results, A17; A4 dropped or given learned per-constant embeddings (disclosed) | D0 | architecture thread, sealed (screen and 6-seed confirm) |
-| O1 | final answers go through T1's writer; delete whichever of A10-A15 T1 kept (see 3a) | A10 (output use), A11-A15 as left by T1 | T1 passed its 6-seed confirm | this file |
+| K1 | lift the 7-call limit T1 inherits from the hand teacher (progparse caps at 7 steps, B2's 7 result slots): up to 16 calls, tape 16, about +2,300 params. It binds on 528 train rows (list_stats with 5-6 numbers, 9-11 steps), which today get no calls | A5 (step cap, last part) | T1 passed its 6-seed confirm | this file (build thread's proposal, 10-07) |
+| O1 | final answers go through T1's writer; delete whichever of A10-A15 T1 kept (see 3a) | A10 (output use), A11-A15 as left by T1 | K1 | this file |
 | N1 | delete the number machinery T1 kept: regex spans, number slots, any constants left (skipped if T1 kept none) | A1, A3, A4, A5 (16-number cap) | O1 | this file |
 | P1 | delete the place input term (the 9 place rows stay as the register tokens' own learned init) | A9, A10 (last use) | N1 | this file |
 | V1 | raw bytes instead of the hand-built vocab, applied right before B3 | A16 | P1 | this file (no screen, see 3b) |
-| B3 | 6-seed confirm of the result vs B2 and plain_tf_steps | | T1, O1, N1, P1, V1 | this file |
+| B3 | 6-seed confirm of the result vs B2 and plain_tf_steps | | T1, K1, O1, N1, P1, V1 | this file |
 
 Not required for B3: **H1** (learned rounds per turn). Fixed rounds per turn are depth, not a hand rule on values. It stays with the roadmap (2d) and the architecture thread. A note for them: Popescu 2026 (2607.20519, abstract) found a jointly trained halt gate distorts the loop, and supervising every round and stopping on a confidence readout often matched or beat it; in B3 the stop is already supervised, since the trace says when to answer.
 
@@ -105,6 +106,7 @@ plain_tf_steps writes its worked steps only when steps plus answer fit in 64 cha
 Family scores in the link checks are pooled over every split the family appears in (copy_word and div_exact: 5 splits; arith_bare: 4; cipher_map: 3; chain_ops from the chain-5 panel), 2-seed mean.
 
 Link checks and named fixes:
+- **K1.** list_stats (pooled over its splits, 2-seed mean) at or above T1's, and the cap-16 limit hit on <= 1% of dev rows. Named fix: none needed beyond the cap; if list_stats does not move, the traces for those rows are checked first.
 - **O1.** What O1 is depends on what T1 built (the build thread reports which case applies before O1 is coded):
   - T1 already writes every answer with its call writer: O1 is empty; record "A11-A15 removed in T1" and screen N1 against T1.
   - T1 has a call writer but keeps the mode head for final answers: O1 routes final answers through that writer and deletes the mode head and renderers (one change).
@@ -127,7 +129,7 @@ Today's vocab is exactly 13 specials + the 95 printable ASCII chars (108 ids, `d
 6. **Leaks:** zero-round and donor in_dist <= 5 on every seed, T1's definitions, with B2's value on that seed printed next to it (B2 itself misses on s201, 10.8, and s203, 5.7).
 7. **No split** down by more than 2.0 against B2 (6-seed mean).
 8. **Audit:** `generate()` on 200 dev rows with `re`, `int` and `str` patched to raise when called from outside `tools/`; the tool loop lives in `tools/`; the model's only input tensor is byte ids. Training and scoring code are out of scope. Fails = not B3.
-9. **Caps:** the 12-call cap is hit on <= 1% of dev rows and the 48-byte write cap on <= 0.1%.
+9. **Caps:** the 16-call cap is hit on <= 1% of dev rows and the 48-byte write cap on <= 0.1%.
 - **Pass** = 1-9. **Proved wrong** (T1's thresholds, no looser) = mean(B3 - B2) below -2.0, or chain-5 mean below 95, or B3 not ahead of plain_tf_steps on the mean. Then, at 3M and this data, the hand-written parts were worth more than learning recovers; the finding goes to the roadmap's bigger rungs, and B3 stays the base anyway (Ben's rule).
 - Noise, for reading the verdicts: SD 0.94 is B2 - plain_tf (the direct-answer baseline) across the 6 q33 seeds; B2 - plain_tf_steps is 1.33; B2 alone is 0.63 (`results/CONFIRM-ANALYSIS.json`, shown). The B3 - B2 paired SD is unknown until B3 runs; the build thread prints it next to each verdict.
 
@@ -154,10 +156,10 @@ Parts D1-D10 are in section D of the inventory. Papers: `no-hardcoding-papers.md
 1. D0 with its Amendment-1 control, and D0b, now, on CPU, by the build thread (no GPU).
 2. T1 build, with a speed probe first; T1's screen on the PC after q39 (expected about 9 PM to midnight ET tonight).
 3. T1's sealed 6-seed confirm (seeds 200-205) if the screen passes. O1 starts only after T1 passes it. If T1 is "not shown", the named link fix runs first and the ladder waits.
-4. O1 (if not empty), N1, P1 in that order, then V1, then the B3 confirm.
+4. K1, then O1 (if not empty), N1, P1 in that order, then V1, then the B3 confirm.
 5. W1, U0 and U2 screens whenever a machine is free; they don't wait for T1.
 
-Rough cost (untested estimate): the q33 B2 runs took 1.0-4.2 h on the PC (median 1.5 h; 0.7-1.2 h on the rented 5090s), depending on how many jobs shared the GPU. A T1 chain row needs about 5-6 reader-plus-8-round passes instead of one, so T1's cost per run is unknown until the speed probe. The ladder is about 18 runs (T1: 6, O1/N1/P1: 2 each, B3: 6) plus 6 for the gain tests. At 3x B2's median that is roughly 80 GPU-hours for the ladder, about 3-4 PC days run one at a time, less with 2-3 sharing the GPU. Rented 5090s would need the B2 baseline re-run on the same box for each comparison (same-machine rule), roughly doubling those runs; Vast credit is $5.22 and any spend needs Ben's OK.
+Rough cost (untested estimate): the q33 B2 runs took 1.0-4.2 h on the PC (median 1.5 h; 0.7-1.2 h on the rented 5090s), depending on how many jobs shared the GPU. A T1 chain row needs about 5-6 reader-plus-8-round passes instead of one, so T1's cost per run is unknown until the speed probe. The ladder is about 20 runs (T1: 6, K1/O1/N1/P1: 2 each, B3: 6) plus 6 for the gain tests. At 3x B2's median that is roughly 80 GPU-hours for the ladder, about 3-4 PC days run one at a time, less with 2-3 sharing the GPU. Rented 5090s would need the B2 baseline re-run on the same box for each comparison (same-machine rule), roughly doubling those runs; Vast credit is $5.22 and any spend needs Ben's OK.
 
 ## 6. What would change this plan
 
