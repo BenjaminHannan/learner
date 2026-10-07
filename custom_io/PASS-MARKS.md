@@ -511,3 +511,19 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   - Everything else in addendum 19 is unchanged: pooled-5 >= +1.0 on both seeds, the split mark, chain-5 >= 99.0, the leak lines, proved wrong.
 - **F2 computed now on q33 (shown):** F1 fails in 22.2% of the 360 no-change draws (q33 B2 in_dist on the four families: 81.25, 83.75, 80.62,
   81.25, 77.5, 78.75), at the 25% limit's safe side, so F1 is judged. W1 may queue (42-pc-gain-w1.txt) after U0.
+
+## Addendum 20: C0, a fair LLM-recipe baseline (written 2026-10-07 about 18:00 UTC, 2:00 PM ET, before any C0 run)
+- **Source, mirrored as sealed:** `/mnt/project-files/no-hardcoding/PLAN-AND-MARKS-2026-10-07.md` section 3.1 (added after D0b). One change on
+  plain_tf_steps: the steps-plus-answer cap goes from 64 chars to the longest step-family target on train, **107 chars** (measured on the 200,000
+  train rows: 54,095 step rows, median 20, 99th percentile 71; at 64, 840 var_chain rows were trained answer-only, at 107 none are). Generation
+  gets 119 new chars and the position table 288 -> 329 rows (the plan's "e.g. 400" was an upper estimate). `cap` is a cfg flag of
+  plain_tf_steps, so any depth can use it (for example a 13-layer PT: `{"cap":107,"n_layers":13}`). Every other weight starts identical to
+  plain_tf_steps at the same seed. Size 3,271,424 (+10,496; inside the band). Seeds 200 and 201 on BensPC against q33's plain_tf_steps.
+- **Reported:** pooled-5 and chain-5 with and without the C1' calculator, and B2 - C0 per seed (q33's B2).
+- **Prediction, as sealed:** C0 with the calculator reaches chain-5 >= 98.5 on both seeds. Proved wrong: below 97.5 on both. Between: not shown.
+- **Consequence, as sealed:** if C0's pooled-5 2-seed mean is at or above plain_tf_steps', C0 replaces plain_tf_steps everywhere it is the
+  yardstick (B3 mark 2, U0's base model, the LLM-recipe arm of the growth ladder). If B2 - C0 (2-seed mean) is more than 3.0 below today's +6.9,
+  the "+6.9 over the LLM recipe" claim is withdrawn until a 6-seed C0 confirm restates it.
+- **Judge:** `python -m custom_io.analyze_gain --results custom_io/results/33-pc-confirm-b2 custom_io/results/43-pc-c0`. Queue `43-pc-c0.txt`.
+- **Note on U0:** U0 (addendum 18) is already staged on plain_tf_steps at the 64-char cap; it is a prompt-side change, so the cap is the same on
+  both of its arms. If C0 replaces plain_tf_steps, U0's verdict stands as measured and any later word-piece test uses C0.

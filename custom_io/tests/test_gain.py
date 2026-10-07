@@ -41,7 +41,13 @@ def test_sizes_and_init():
     assert (n_train(b), n_train(w)) == (3302481, 3336113), (n_train(b), n_train(w))
     assert all(k.startswith('reader.glob.') for k in new) and len(new) == 10, new
     assert all(BAND[0] <= n <= BAND[1] for n in (n_train(u), n_train(w)))
-    print('ok sizes', n_train(u), n_train(w))
+    v = vocab()
+    torch.manual_seed(200); a = build('plain_tf_steps', v)
+    torch.manual_seed(200); c = build('plain_tf_steps', v, cap=107)
+    sa, sc = a.state_dict(), c.state_dict()
+    assert n_train(c) == 3271424 and c.pos.num_embeddings == 329 and c.max_new == 119 and (a.pos.num_embeddings, a.max_new) == (288, 76)
+    assert all(torch.equal(sa[k], sc[k]) for k in sa if k != 'pos.weight') and BAND[0] <= n_train(c) <= BAND[1]
+    print('ok sizes', n_train(u), n_train(w), n_train(c))
 
 
 def test_bpe():
@@ -114,11 +120,32 @@ def test_w1_runs():
     print('ok w1')
 
 
+def test_c0_cap():
+    from custom_io.models.plain_tf_steps import STEP_FAMILIES, target_text
+    rs = [r for r in load_rows(os.path.join(DEFAULT_DATA, 'train.jsonl'), keep=('prompt', 'answer', 'family', 'steps'))
+          if r.get('family') in STEP_FAMILIES and r.get('steps')]
+    longest = max(len('; '.join(r['steps']) + ' # ' + r['answer']) for r in rs)
+    assert longest == 107, longest                                                # the cap is the longest step target on train
+    assert all(target_text(r, 107) != r['answer'] for r in rs)                    # no step row falls back to the answer alone
+    assert sum(target_text(r) == r['answer'] for r in rs) == 840                  # 840 var_chain rows did at the old 64
+    v = vocab()
+    torch.manual_seed(0)
+    m = build('plain_tf_steps', v, cap=107)
+    m._name, m._cfg = 'plain_tf_steps', {'cap': 107}
+    long = [r for r in rs if len(target_text(r, 107)) > 100][:8]
+    b = batch(v, long)
+    ids, _ = m._targets(b)
+    assert ids.shape[1] == max(len(target_text(r, 107)) for r in long) + 1      # whole target + EOS, nothing cut
+    check_model(m, v, long)
+    print('ok c0')
+
+
 def test_queues():
     from custom_io.local_runner import parse_queue
     q33 = {r[0]: r[2] for r in parse_queue(os.path.join(HERE, 'queue_local', '33-pc-confirm-b2.txt'))}
     for qf, arm, base, model, cfg in (('41-pc-gain-u0.txt', 'U0', 'tfsteps', 'plain_tf_steps', {'bpe': 308}),
-                                      ('42-pc-gain-w1.txt', 'W1', 'B2', 'ledger', {'copy': True, 'gattn': 32})):
+                                      ('42-pc-gain-w1.txt', 'W1', 'B2', 'ledger', {'copy': True, 'gattn': 32}),
+                                      ('43-pc-c0.txt', 'C0', 'tfsteps', 'plain_tf_steps', {'cap': 107})):
         q = parse_queue(os.path.join(HERE, 'queue_local', qf))
         assert [r[0] for r in q] == [f'{arm}_s200', f'{arm}_s201'], q
         for name, _, args, _ in q:

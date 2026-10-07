@@ -1,0 +1,251 @@
+{
+ "what": "D0 control: a reader of B2 shape trained for digits only, then frozen; diag_d0 reading protocol",
+ "train_steps": 800,
+ "batch": 64,
+ "n_train_prompts": 25992,
+ "train_log": [
+  {
+   "step": 100,
+   "loss": 0.0121,
+   "train_place_acc": 100.0
+  },
+  {
+   "step": 200,
+   "loss": 0.0043,
+   "train_place_acc": 100.0
+  },
+  {
+   "step": 300,
+   "loss": 0.0016,
+   "train_place_acc": 100.0
+  },
+  {
+   "step": 400,
+   "loss": 0.0013,
+   "train_place_acc": 100.0
+  },
+  {
+   "step": 500,
+   "loss": 0.0012,
+   "train_place_acc": 100.0
+  },
+  {
+   "step": 600,
+   "loss": 0.0006,
+   "train_place_acc": 100.0
+  },
+  {
+   "step": 700,
+   "loss": 0.0006,
+   "train_place_acc": 100.0
+  },
+  {
+   "step": 800,
+   "loss": 0.0004,
+   "train_place_acc": 100.0
+  }
+ ],
+ "copies": 8,
+ "n_dev_prompts": 6027,
+ "reading": {
+  "n_numbers": {
+   "train": 99983,
+   "test_sub": 29539,
+   "test_real": 3696
+  },
+  "n_prompts": {
+   "train": 29949,
+   "test": 9887
+  },
+  "window": {
+   "place1": {
+    "test_sub": 100.0,
+    "test_real": 100.0,
+    "none_rows_test": null,
+    "n_test_sub": 29539,
+    "n_test_real": 3696,
+    "train_fit": 100.0
+   },
+   "place2": {
+    "test_sub": 100.0,
+    "test_real": 100.0,
+    "none_rows_test": 100.0,
+    "n_test_sub": 26252,
+    "n_test_real": 2320,
+    "train_fit": 100.0
+   },
+   "place3": {
+    "test_sub": 100.0,
+    "test_real": 100.0,
+    "none_rows_test": 100.0,
+    "n_test_sub": 23016,
+    "n_test_real": 320,
+    "train_fit": 100.0
+   },
+   "place4": {
+    "test_sub": 100.0,
+    "test_real": 100.0,
+    "none_rows_test": 100.0,
+    "n_test_sub": 19688,
+    "n_test_real": 28,
+    "train_fit": 100.0
+   },
+   "place5": {
+    "test_sub": 100.0,
+    "test_real": null,
+    "none_rows_test": 100.0,
+    "n_test_sub": 16371,
+    "n_test_real": 0,
+    "train_fit": 100.0
+   },
+   "place6": {
+    "test_sub": 100.0,
+    "test_real": null,
+    "none_rows_test": 100.0,
+    "n_test_sub": 13167,
+    "n_test_real": 0,
+    "train_fit": 100.0
+   },
+   "place7": {
+    "test_sub": 100.0,
+    "test_real": null,
+    "none_rows_test": 100.0,
+    "n_test_sub": 9845,
+    "n_test_real": 0,
+    "train_fit": 100.0
+   },
+   "place8": {
+    "test_sub": 100.0,
+    "test_real": null,
+    "none_rows_test": 100.0,
+    "n_test_sub": 6524,
+    "n_test_real": 0,
+    "train_fit": 100.0
+   },
+   "place9": {
+    "test_sub": 100.0,
+    "test_real": null,
+    "none_rows_test": 99.993,
+    "n_test_sub": 3211,
+    "n_test_real": 0,
+    "train_fit": 100.0
+   },
+   "count": {
+    "test_sub": 100.0,
+    "test_real": 100.0
+   }
+  },
+  "pool": {
+   "place1": {
+    "test_sub": 99.885,
+    "test_real": 100.0,
+    "none_rows_test": null,
+    "n_test_sub": 29539,
+    "n_test_real": 3696
+   },
+   "place2": {
+    "test_sub": 99.516,
+    "test_real": 99.871,
+    "none_rows_test": 99.893,
+    "n_test_sub": 26252,
+    "n_test_real": 2320
+   },
+   "place3": {
+    "test_sub": 89.664,
+    "test_real": 98.438,
+    "none_rows_test": 99.99,
+    "n_test_sub": 23016,
+    "n_test_real": 320
+   },
+   "place4": {
+    "test_sub": 84.061,
+    "test_real": 96.429,
+    "none_rows_test": 99.97,
+    "n_test_sub": 19688,
+    "n_test_real": 28
+   },
+   "place5": {
+    "test_sub": 82.591,
+    "test_real": null,
+    "none_rows_test": 99.905,
+    "n_test_sub": 16371,
+    "n_test_real": 0
+   },
+   "place6": {
+    "test_sub": 81.059,
+    "test_real": null,
+    "none_rows_test": 99.855,
+    "n_test_sub": 13167,
+    "n_test_real": 0
+   },
+   "place7": {
+    "test_sub": 74.159,
+    "test_real": null,
+    "none_rows_test": 99.654,
+    "n_test_sub": 9845,
+    "n_test_real": 0
+   },
+   "place8": {
+    "test_sub": 81.101,
+    "test_real": null,
+    "none_rows_test": 99.311,
+    "n_test_sub": 6524,
+    "n_test_real": 0
+   },
+   "place9": {
+    "test_sub": 93.834,
+    "test_real": null,
+    "none_rows_test": 99.85,
+    "n_test_sub": 3211,
+    "n_test_real": 0
+   },
+   "count": {
+    "test_sub": 99.99,
+    "test_real": 100.0
+   }
+  },
+  "own_char": {
+   "place1": {
+    "test_sub": 100.0,
+    "test_real": 100.0
+   },
+   "place2": {
+    "test_sub": 100.0,
+    "test_real": 100.0
+   },
+   "place3": {
+    "test_sub": 100.0,
+    "test_real": 100.0
+   },
+   "place4": {
+    "test_sub": 100.0,
+    "test_real": 100.0
+   },
+   "place5": {
+    "test_sub": 100.0,
+    "test_real": null
+   },
+   "place6": {
+    "test_sub": 100.0,
+    "test_real": null
+   },
+   "place7": {
+    "test_sub": 100.0,
+    "test_real": null
+   },
+   "place8": {
+    "test_sub": 100.0,
+    "test_real": null
+   },
+   "place9": {
+    "test_sub": 100.0,
+    "test_real": null
+   }
+  },
+  "mark": {
+   "min_place_or_count": 100.0,
+   "pass": true
+  }
+ },
+ "seconds": 2672.3
+}

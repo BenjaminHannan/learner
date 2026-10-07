@@ -1,5 +1,5 @@
-"""Gain tests beside the no-hard-coding ladder (PASS-MARKS.md addenda 18 and 19), judged exactly as written, 2-seed screens (200, 201).
-python3 -m custom_io.analyze_gain --results custom_io/results/33-pc-confirm-b2 custom_io/results/41-pc-gain-u0 custom_io/results/42-pc-gain-w1 [--out custom_io/results/GAIN-ANALYSIS.json]
+"""Gain tests beside the no-hard-coding ladder (PASS-MARKS.md addenda 18-20), judged exactly as written, 2-seed screens (200, 201).
+python3 -m custom_io.analyze_gain --results custom_io/results/33-pc-confirm-b2 custom_io/results/41-pc-gain-u0 custom_io/results/42-pc-gain-w1 custom_io/results/43-pc-c0 [--out custom_io/results/GAIN-ANALYSIS.json]
 U0 (INPUT-UNITS-2026-10-07.md): plain_tf_steps with the prompt in byte-level BPE (cfg bpe 308, 416 ids) minus q33's plain_tf_steps, same seed.
   "Ben right": pooled-5 >= +2.0 on both seeds; "letters fine": <= +1.0 on both; else tie. The pre-registered prediction (letters fine,
   cipher_map falls by 10 or more, arithmetic falls, frame and vocab move less than 2) is proved wrong if cipher_map pooled over its 3 splits
@@ -12,13 +12,17 @@ W1 (redesign-ideas-2026-10-07.md sec. 8, family line re-sealed in sec. 8a): B2 w
   F2: F1's failure rate with no change (two plain q33 B2 runs of different seeds, 2-seed means, all 360 ordered choices of 4 of the 6 seeds) is
   printed with every verdict; above 25% F1 is reported, not judged (then only the cipher_map >= 95 line and the split mark apply).
   F3: every other family (rows pooled over the five pooled splits) is reported beside its null spread, never judged.
+C0 (no-hardcoding PLAN 3.1): plain_tf_steps with the steps cap raised from 64 to 107 chars (cfg cap 107) minus q33's plain_tf_steps.
+  Report: pooled-5 and chain-5 with and without the calculator (C1'), B2 - C0 per seed. Prediction: calculator-on chain-5 >= 98.5 on both seeds;
+  proved wrong below 97.5 on both. Consequences: C0's pooled-5 2-seed mean >= plain_tf_steps' -> C0 replaces plain_tf_steps as the yardstick;
+  B2 - C0 (2-seed mean) more than 3.0 below +6.9 -> the "+6.9 over the LLM recipe" claim is withdrawn until a 6-seed C0 confirm.
 A run counts only with status ok, the q33 recipe and the right size; a missing or invalid run: NOT JUDGED."""
 import argparse, itertools, json, os
 from custom_io.analyze import C5, P5, POOL, SPL, g, load, sub
 
 SEEDS = [200, 201]
 RECIPE = dict(steps=24000, batch=256, lr=1e-3, bf16=True)
-ARMS = {'U0': ('plain_tf_steps', {'bpe': 308}, 3339776), 'tfsteps': ('plain_tf_steps', {}, 3260928),
+ARMS = {'U0': ('plain_tf_steps', {'bpe': 308}, 3339776), 'tfsteps': ('plain_tf_steps', {}, 3260928), 'C0': ('plain_tf_steps', {'cap': 107}, 3271424),
         'W1': ('ledger', {'copy': True, 'gattn': 32}, 3336113), 'B2': ('ledger', {'copy': True}, 3302481)}
 CIPHER3 = ['in_dist', 'answer', 'frame']
 F1 = ['cipher_map', 'fewshot_number_rule', 'group_induct', 'seq_cycle']     # sec. 8a: the four lookup-style families, pooled on in_dist
@@ -106,6 +110,32 @@ def u0(runs):
     return out
 
 
+def c0(runs):
+    probs, pairs = pairs_for(runs, 'C0', 'tfsteps')
+    out = dict(test='C0 plain_tf_steps with no steps cap (107 chars) minus plain_tf_steps (64)', problems=probs, judged=len(pairs) == len(SEEDS))
+    if not out['judged']:
+        out['verdict'] = 'NOT JUDGED'
+        return out
+    b2 = {s: runs.get(('B2', s)) for s in SEEDS}
+    b2 = {s: r for s, r in b2.items() if r is not None and not valid(r, 'B2')}
+    cc5 = {s: C5(a, 'calc') for s, (a, _) in pairs.items()}
+    p5 = {s: dict(C0=P5(a), tfsteps=P5(b), C0_calc=P5(a, 'calc'), tfsteps_calc=P5(b, 'calc')) for s, (a, b) in pairs.items()}
+    c5 = {s: dict(C0=C5(a), tfsteps=C5(b), C0_calc=C5(a, 'calc'), tfsteps_calc=C5(b, 'calc')) for s, (a, b) in pairs.items()}
+    b2_c0 = {s: sub(P5(b2[s]), P5(a)) for s, (a, _) in pairs.items() if s in b2}
+    b2_tf = {s: sub(P5(b2[s]), P5(b)) for s, (_, b) in pairs.items() if s in b2}
+    pred = ('shown' if all(v is not None and v >= 98.5 for v in cc5.values()) else
+            'proved wrong' if all(v is not None and v < 97.5 for v in cc5.values()) else 'not shown')
+    replaces = mean(v['C0'] for v in p5.values()) >= mean(v['tfsteps'] for v in p5.values())
+    withdraw = len(b2_c0) == len(SEEDS) and mean(b2_c0.values()) < 6.9 - 3.0
+    out.update(pooled5=p5, chain5=c5, d_pooled5={s: sub(P5(a), P5(b)) for s, (a, b) in pairs.items()}, b2_minus_c0=b2_c0, b2_minus_tfsteps=b2_tf,
+               d_split_2seed={sp: mean(sub(SPL(sp)(a), SPL(sp)(b)) for a, b in pairs.values()) for sp in POOL + ['family']},
+               prediction=dict(calc_chain5=cc5, verdict=pred), c0_replaces_tfsteps=replaces,
+               plus_6_9_claim='withdrawn until a 6-seed C0 confirm' if withdraw else 'stands' if len(b2_c0) == len(SEEDS) else 'B2 runs missing')
+    out['verdict'] = (f"prediction {pred}; C0 {'replaces' if replaces else 'does not replace'} plain_tf_steps as the yardstick; "
+                      f"+6.9 claim {out['plus_6_9_claim']}")
+    return out
+
+
 def w1(runs, null):
     probs, pairs = pairs_for(runs, 'W1', 'B2')
     out = dict(test='W1 global attention in the reader minus B2', problems=probs, judged=len(pairs) == len(SEEDS))
@@ -173,12 +203,12 @@ def main(argv=None):
     a = ap.parse_args(argv)
     runs, skipped = load(a.results)
     null = null_check(runs)
-    res = dict(U0=u0(runs), W1=w1(runs, null), w1_null_check=null, skipped=skipped)
+    res = dict(U0=u0(runs), C0=c0(runs), W1=w1(runs, null), w1_null_check=null, skipped=skipped)
     os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
     json.dump(res, open(a.out, 'w'), indent=1, default=str)
     f = lambda v: f'{v:+.2f}' if isinstance(v, float) else json.dumps(v, default=str) if isinstance(v, (dict, list, tuple)) else str(v)
-    L = ['# Gain tests U0 and W1 (PASS-MARKS.md addenda 18 and 19)', '']
-    for k in ('U0', 'W1'):
+    L = ['# Gain tests U0, C0 and W1 (PASS-MARKS.md addenda 18-20)', '']
+    for k in ('U0', 'C0', 'W1'):
         r = res[k]
         L += [f"## {k}: {r['verdict']}", '', f"{r['test']}.", '']
         if not r['judged']:
@@ -189,6 +219,9 @@ def main(argv=None):
                   f"- prediction proved wrong: {r['prediction']['proved_wrong']} ({f(r['prediction']['cipher_map_2seed_rows'])})",
                   f"- split changes (2-seed mean): {f(r['d_split_2seed'])}", f"- arithmetic families (2-seed mean): {f(r['d_arith_family_2seed'])}",
                   f"- calculator on: {f(r['calc_on'])}", '']
+        elif k == 'C0':
+            L += [f"- pooled-5: {f(r['pooled5'])}", f"- chain-5: {f(r['chain5'])}", f"- B2 - C0: {f(r['b2_minus_c0'])}; B2 - plain_tf_steps: {f(r['b2_minus_tfsteps'])}",
+                  f"- split changes C0 - plain_tf_steps (2-seed mean): {f(r['d_split_2seed'])}", '']
         else:
             L += [f"- {m}: {f(x['value'])} -> {x['ok']}" + ('' if r['f2']['f1_judged'] or not m.startswith('F1') else ' (reported, not judged: F2)')
                   for m, x in r['marks'].items()] + [f"- proved wrong: {f(r['proved_wrong'])}",

@@ -21,7 +21,7 @@ import torch
 from custom_io.data import BOS, EOS, N_SPECIAL, PAD, SEP, Dataset, collate, load_rows
 from custom_io.evalx import CHAIN5, is_hit
 from custom_io.models import load_model
-from custom_io.models.plain_tf_steps import MAX_NEW, calc_fill, final_answer, target_text
+from custom_io.models.plain_tf_steps import CAP, calc_fill, final_answer, target_text
 from custom_io.models.progparse import NUM_RE
 
 LABELS = dict(a='operand digits copied wrong', b='wrong number chosen', c='wrong operation', d='tool result copied wrong into a later step',
@@ -36,13 +36,13 @@ def write(m, batch):
     """PlainTFSteps.generate(batch, 'calc') with the record kept -> [(text, [(char index, fill)], ended with EOS)] per row."""
     p, lens = batch['prompt_ids'], batch['prompt_mask'].sum(1)
     B, T = p.shape
-    seq = p.new_full((B, T + 2 + MAX_NEW), PAD)
+    seq = p.new_full((B, T + 2 + m.max_new), PAD)
     seq[:, 0], seq[:, 1:1 + T] = BOS, p
     r = torch.arange(B, device=p.device)
     seq[r, 1 + lens] = SEP
     pl = m.place_seq(batch, seq.shape[1])
     txt, queue, done, fills = [''] * B, [[] for _ in range(B)], [False] * B, [[] for _ in range(B)]
-    for t in range(MAX_NEW):
+    for t in range(m.max_new):
         n = int((2 + lens).max()) + t
         h = m.hidden_upto(seq, n, None, pl)[r, 1 + lens + t]
         nxt = m.logits(h).argmax(-1)
@@ -102,9 +102,9 @@ def is_int(s):
     return re.fullmatch(r'-?\d+', s or '') is not None
 
 
-def label(row, text, fills, eos):
+def label(row, text, fills, eos, cap=CAP):
     """-> (label, detail) for the row's first wrong link (the row is known to be wrong)."""
-    if target_text(row) == row['answer']:
+    if target_text(row, cap) == row['answer']:
         return 'h', 'training target is the answer alone'
     gold = [parse(s) for s in row['steps']]
     body, has_hash = (text.rsplit('#', 1)[0], True) if '#' in text else (text, False)
@@ -175,11 +175,11 @@ def run(ckpt, rows, bs):
         text, fills, eos = out[i]
         if is_hit(final_answer(text), r):
             continue
-        lb, det = label(r, text, fills, eos)
+        lb, det = label(r, text, fills, eos, m.cap)
         fam[r['family']] += 1
-        wrong.append(dict(id=r['id'], family=r['family'], label=lb, detail=det, prompt=r['prompt'], gold=target_text(r), gold_steps=r['steps'],
+        wrong.append(dict(id=r['id'], family=r['family'], label=lb, detail=det, prompt=r['prompt'], gold=target_text(r, m.cap), gold_steps=r['steps'],
                           written=text, fills=fills, ended=eos))
-    return dict(ckpt=ckpt, n=len(rows), exact=100 * (len(rows) - len(wrong)) / len(rows), wrong_by_family=dict(fam),
+    return dict(ckpt=ckpt, cap=m.cap, n=len(rows), exact=100 * (len(rows) - len(wrong)) / len(rows), wrong_by_family=dict(fam),
                 labels=dict(collections.Counter(w['label'] for w in wrong)), wrong=wrong)
 
 
