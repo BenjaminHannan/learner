@@ -12,16 +12,15 @@ Seeds [200, 201], each arm minus plain B2 on the same seed.
   - plain B2 on the same seeds (read only): 200: loops0: 1.40, donor: 3.46, 201: loops0: 4.34, donor: 3.68
 - read only: family split change 200: -0.62, 201: -1.25; size {200: {'trainable': 3500881, 'discarded': 0, 'frozen_borrowed': 271002624, 'shipped_trainable': 3500881, 'whole': 274503505}, 201: {'trainable': 3500881, 'discarded': 0, 'frozen_borrowed': 271002624, 'shipped_trainable': 3500881, 'whole': 274503505}}
 
-## EGT: NOT JUDGED
+## EGT: FAIL (stop this arm)
 
-- problems: {200: ['missing'], 201: ['missing']}
-- 1 pooled-5 gain >= +1.0 on both seeds:  -> n/a
-- 2 variant gain >= +3.0, 2-seed mean: None -> n/a
-- 3 no dev split drops more than 2.0 (2-seed mean): in_dist: None, answer: None, frame: None, vocab: None, variant: None -> n/a
-- 4 chain-5 >= 99.0 on both seeds:  -> n/a
-- 5 loops:0 in_dist <= 5 and donor in_dist <= 5 on both seeds:  -> n/a
-  - plain B2 on the same seeds (read only): 
-- read only: family split change ; size {}
+- 1 pooled-5 gain >= +1.0 on both seeds: 200: +0.18, 201: +0.61 -> False
+- 2 variant gain >= +3.0, 2-seed mean: +2.54 -> False
+- 3 no dev split drops more than 2.0 (2-seed mean): in_dist: -0.44, answer: -1.08, frame: -0.22, vocab: +1.56, variant: +2.54 -> True
+- 4 chain-5 >= 99.0 on both seeds: 200: 99.50, 201: 99.50 -> True
+- 5 loops:0 in_dist <= 5 and donor in_dist <= 5 on both seeds: 200: loops0: 2.50, donor: 3.53, 201: loops0: 3.82, donor: 3.82 -> True
+  - plain B2 on the same seeds (read only): 200: loops0: 0.00, donor: 3.24, 201: loops0: 10.81, donor: 3.31
+- read only: family split change 200: +0.00, 201: +0.62; size {200: {'trainable': 3368785, 'discarded': 66304, 'frozen_borrowed': 0, 'shipped_trainable': 3302481, 'whole': 3302481}, 201: {'trainable': 3368785, 'discarded': 66304, 'frozen_borrowed': 0, 'shipped_trainable': 3302481, 'whole': 3302481}}
 
 ## LR: FAIL (stop this arm)
 

@@ -147,6 +147,12 @@ Per-run numbers: `custom_io/results/RESULTS-SCREEN.md` and `SCREEN-ANALYSIS.json
    mean (frame +3.6, vocab +2.7) and keeps cipher_map (97.5 / 95), but fails 2 of addendum 4's 5 marks (variant +1.70 vs +3.0; loops:0 18.09
    on seed 200 vs 5). EGK (EmbeddingGemma into the thinker only, addendum 14) went non-finite twice on seed 201. A fresh 6-seed confirm of EGE
    (addendum 15, seeds 202-207) is staged as queue 39 on the PC, pending Ben's answer.
+   EGT (EmbeddingGemma as a training-only meaning teacher, ships at 3.3M, on the PC against queue 33's B2) fails: pooled-5 +0.18 / +0.61
+   (needs +1.0 on both), variant +2.54 (needs +3.0); every other mark holds.
+   **Test B1 students (addendum 3, queue 35, seeds 300-301, `results/RESULTS-B1.md`, shown):** B1-a is **proved wrong** (b2t - b2g on new
+   kinds pooled +0.78, below the +5 line; short-answer rows only +0.15) and B1-c fails (b2t - tft -2.73). B1-b is uninformative (b2t's
+   intact new-kinds score 11.2 < 20). B2-M trained on the 1.2B teacher's data does no better on new kinds than B2-M on generator data,
+   and much worse on FRESH (22.9 vs 49.0). By addendum 3, way B at this size is dead; the source's next single change is a ~100M student.
 5. **Looped-LM ideas (Amazon's ALoDLM):** a no-training probe of the two saved B2 checkpoints (`design/LOOPS-probe.md`, gates fixed first)
    found every program question right by round 8, the hidden state growing only 3-4x, and the loss in the no-program families, whose answers
    drift across rounds (answering at 16 rounds costs about 1 point). Test LR (addendum 5, queue 37): a readout loss at every round after the
