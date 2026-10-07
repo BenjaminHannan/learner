@@ -567,3 +567,13 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   architecture thread chooses before the run; the queue uses the sealed label.
 - **Judge:** `python -m custom_io.analyze_h1 --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-pc-t1-screen custom_io/results/49-pc-h1-screen`.
   Queue `49-pc-h1-screen.txt` (45-48 are the 8a queues).
+
+## Addendum 21, amendment 1 (written 2026-10-07 about 19:35 UTC, 3:35 PM ET, before any H1 run)
+- **Source, mirrored as sealed:** spec section 8c ("H1 amendment 1", 3:30 PM ET), the architecture thread's ruling on the label question above.
+- **Change:** the H1 screen uses the stop label `settled` (right now, or no later round of this turn is right); queue 49's cfg is now
+  `{"label":"settled"}` and the judge accepts only that cfg (H-f also checks the recorded label). Marks H-a to H-f are unchanged, H-d stays 1%.
+- **Reported, not judged (new):** (i) pooled-5 rounds on turns right vs wrong at the end; (ii) the stops that fired with the turn already
+  right vs settled as wrong vs reaching the cap; (iii) rounds, cap share and accuracy on the pooled-5 split x family cells where q33's B2 of the
+  same seed is below 50%, vs the other cells (`extra.h1.split_family`, combined by `analyze_h1.py`).
+- **Named risk, as sealed:** early in training every round is wrong, so "settled" labels "stop at round 1" everywhere and may bias the head to stop
+  early; H-c and H-a catch a collapse (proved wrong on those lines). The named next change then is a disclosed warm-up before the stop loss.

@@ -172,8 +172,9 @@ def test_lesion_names_and_queue():
     for name, _, args, _ in q:
         ref = q40[name.replace('H1', 'T1')]
         i = args.index('--model')
-        assert args[i + 1] == 'tool_h1' and json.loads(args[args.index('--cfg') + 1]) == {}
-        swap = lambda xs: [('tool' if x == 'tool_h1' else x) for x in xs]
+        j = args.index('--cfg')
+        assert args[i + 1] == 'tool_h1' and json.loads(args[j + 1]) == {'label': 'settled'}          # amendment 1 (spec section 8c)
+        swap = lambda xs: [('tool' if x == 'tool_h1' else '{}' if k == j + 1 else x) for k, x in enumerate(xs)]
         assert swap(args) == ref, (args, ref)
     print('ok lesion names and queue 49')
 

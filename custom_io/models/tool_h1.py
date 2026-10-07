@@ -8,8 +8,9 @@ A turn = answering one question. Rounds = T1's controller iterations: round t (t
   written so far) read the state, each with T1's normal loss; each row's mean over its rounds t >= L (L = the row's gold calls, so its calls
   are on the tape) is the answer loss, weight 1.0. The call heads keep T1's rounds 1..7 and losses.
 - Stop head (spec (b)): stop = Linear(d, 1) (257 params) on ln_z(control 1) after each round (the state the mode and word heads read), trained by
-  BCE on a label from the model's OWN readout: label 'right' (the sealed spec, default) = this round's greedy answer equals the target answer;
-  label 'settled' (cfg {"label": "settled"}, offered, not sealed) = right now, or no later round of this turn is right. The stop head's input is
+  BCE on a label from the model's OWN readout: label 'right' (the first sealed spec, the default) = this round's greedy answer equals the target
+  answer; label 'settled' (cfg {"label": "settled"}, SEALED for the H1 screen by amendment 1, section 8c) = right now, or no later round of this
+  turn is right, so the model also learns to stop when more rounds will not help. The stop head's input is
   detached, so the stop loss never moves the loop (the spec's note on jointly trained halt gates).
 - Run rule (inference, `generate()` with no loops lesion): the turn ends after the first round with sigmoid(stop) >= 0.5 (P_STOP, fixed), at
   least 1 round, hard cap 32 (CAP). No other threshold exists. The batch keeps running until every row has stopped (rows are independent, so
@@ -196,8 +197,9 @@ class ToolH1(Tool):
 
     @torch.no_grad()
     def h1_evals(self, ctx):
-        """Rounds used at the model's own stop: per dev split (the small build's 6 splits) and per family / per gold program length on the
-        big build's in_dist (chain-5 vs one-step = H-c), with per-row rounds for the pooled-5 rows."""
+        """Rounds used at the model's own stop: per dev split (the small build's 6 splits) and per split x family cell, per family / per gold
+        program length on the big build's in_dist (chain-5 vs one-step = H-c), with per-row rounds for the pooled-5 rows. Each stats block also
+        splits the stops into already right / settled as wrong / at the cap (amendment 1, 8c reporting)."""
         import os, statistics
         from custom_io.data import DEV_SPLITS, collate, Dataset, to_device
         from custom_io.evalx import CHAIN5, ONE_STEP, _dev_rows, is_hit
@@ -222,14 +224,21 @@ class ToolH1(Tool):
                 return dict(n=0)
             hit = [u for _, u, h in res if h]
             miss = [u for _, u, h in res if not h]
+            early = [h for _, u, h in res if u < self.cap]           # stops the head made (before the cap): already right vs settled as wrong
             return dict(n=len(us), mean=sum(us) / len(us), median=statistics.median(us), at_cap=100 * sum(u >= self.cap for u in us) / len(us),
                         hist={str(k): us.count(k) for k in sorted(set(us))}, mean_right=sum(hit) / len(hit) if hit else None,
-                        mean_wrong=sum(miss) / len(miss) if miss else None, exact=100 * sum(h for _, _, h in res) / len(res))
+                        mean_wrong=sum(miss) / len(miss) if miss else None, exact=100 * sum(h for _, _, h in res) / len(res),
+                        stops=dict(right=sum(early), wrong=len(early) - sum(early), cap=len(us) - len(early),
+                                   right_share=100 * sum(early) / len(early) if early else None))
         out = dict(cap=self.cap, p_stop=P_STOP, label=self.label, splits={}, rows={})
         pooled = []
         for sp in DEV_SPLITS:
             res = rounds_of(_dev_rows(ctx['data'], sp, None))
             out['splits'][sp] = stats(res)
+            cells = {}
+            for x in res:
+                cells.setdefault(x[0]['family'], []).append(x)
+            out.setdefault('split_family', {})[sp] = {f: stats(v) for f, v in sorted(cells.items())}
             if sp != 'family':
                 out['rows'][sp] = {r['id']: u for r, u, _ in res}
                 pooled += res
