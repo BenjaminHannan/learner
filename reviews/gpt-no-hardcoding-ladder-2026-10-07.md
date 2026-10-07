@@ -6,7 +6,7 @@ I am a high-school senior building this with AI help. Please end with a plain-la
 
 ## 1. The model today ("B2", about 3.3M trainable parameters, trained from scratch)
 
-Questions are short English with numbers, up to 208 ASCII characters (median about 80), from a synthetic curriculum: arithmetic chains, missing-operand equations, ciphers, rule application, few-shot number rules, lookups, short stories. About 200k training rows, about 12M word pieces in total. Answers are short (a number, a copied word, or up to 8 characters).
+Questions are short English with numbers, up to 208 ASCII characters (median about 80), from a synthetic curriculum: arithmetic chains, missing-operand equations, ciphers, rule application, few-shot number rules, lookups, short stories. About 200k training rows, about 5.4M word pieces in total, each row seen about 30 times. Answers are short (a number, a copied word, or up to 8 characters).
 
 - **Reader:** each character gets a learned embedding + learned position + a hand-computed "place" code (the character's index from the right end of its word, so the units digit is 0). Then 2 residual 1-D conv blocks, kernel 5 (each character sees about 4 neighbours each side). No attention.
 - **Workspace:** 27 slots. 16 slots hold the question's numbers: a regex `\d+` finds them and Python turns each into an exact code (9 one-hot digits, sign, valid flag, log size). 4 slots hold the constants 1, 2, 10, 100. 7 slots hold results.
@@ -21,12 +21,12 @@ Questions are short English with numbers, up to 208 ASCII characters (median abo
 | B2 (6 seeds) | 3.30M | 74.0 | 99.4-99.8 |
 | Plain causal character transformer, answer only (6 seeds) | 3.24M | 53.7 | 34 |
 | Same, writes the worked steps as text then the answer (6 seeds) | 3.26M | 67.1 | 94 |
-| Same, with a calculator forcing each step's result in when the text ends with "a op b =" (2 seeds, older run) | 3.26M | 68.9 (vs 67.7 without, same run) | 96 |
+| Same, with a calculator forcing each step's result in when the text ends with "a op b =" (6 seeds) | 3.26M | about 68 | 96.2-96.6 |
 
 Other shown facts:
 - B2 vs the step-writing transformer: paired difference +6.9 over 6 seeds (SD of the paired difference about 0.94).
-- Removing the conv window costs 6.3-6.8 pooled-5 and the cipher family falls from about 97 to about 4.
-- Adding a frozen pretrained sentence encoder's per-token states (270M, subword) on top of the letters: +1.6 / +2.1 (2 seeds), mostly on held-out wording (+3.6 and +2.7 on two splits). Replacing the letters with it: every version lost, ciphers collapsed to 2.5-10.
+- Removing the conv window costs 6.3-6.8 pooled-5 and the cipher family falls from about 97 to about 4 (letters still in). The step-writing transformer above, which attends over the whole question with no window, reads ciphers at 64 (6-seed range 38-93).
+- Adding a frozen pretrained sentence encoder's per-token states (270M, subword) on top of the letters and window: +1.6 / +2.1 (2 seeds), mostly on held-out wording (+3.6 and +2.7 on two splits), but it failed its pre-registered screen (variant split +1.7 against +3.0 needed; a zero-round leak of 18% on one seed) and lost on some letter-pattern families. Four versions without the window (with or without letters) all lost, ciphers 0-10. A 6-seed confirm on fresh seeds is running.
 - The place code alone changed plain transformers by +0.8 and -0.8 (noise).
 - B2 misses 66% of the "variant" split (new layouts and new kinds of computation) and about 10-25% of the others. Families with no worked steps in the data (few-shot number rules, lookups) are its weakest.
 - Lesions: with the executor removed, program families fall to about 1%; swapping ADD and SUB inside the executor makes 99.9% of answers follow the swapped program; with zero thinker rounds B2 still answers 0-6.8% (a copy-path leak).
@@ -37,25 +37,30 @@ Everything the model does must be learned. Hand-written code is allowed only ins
 
 ## 4. The proposed end state ("B3") and ladder
 
-B3: raw bytes in, the same window reader plus (if it passes) global self-attention; the same looped thinker; no workspace slots; one small autoregressive byte writer with copy attention over the question and transcript. The writer writes either `CALL <expression>` (an external calculator parses it and replies with a string that is appended to the context, and the reader re-reads everything) or `ANSWER <text>` (stop). Training: teacher forcing on traces built from the worked steps, with the tool's real reply inserted.
+B3: raw bytes in, the same window reader (plus global self-attention only if that passes its own test); the same looped thinker; no workspace slots; one small autoregressive byte writer with copy attention over the question and transcript. Each turn the writer writes either a one-operation call such as `sub 12 5` (an external calculator parses it and replies with a string that is appended to the context, `sub 12 5 = 7`, and the reader re-reads everything) or `answer <text>` (stop). Training: teacher forcing on traces built from the worked steps, with the tool's real reply inserted. The tool loop, call grammar, the tool's op list and safety caps (12 calls, 48 bytes per write) are hand code inside the tool, which the rule allows.
 
-Ladder, one change at a time, each screened on 2 seeds against the previous rung:
-1. **D0** (no training): probes on today's checkpoints: can digits be read back from the reader output; can the talker copy a 1-9 digit string.
-2. **T1**: calculator outside (call written as text, reply read as text, no exact value codes, no result slots).
-3. **O1**: one learned writer for every answer (delete the three hand renderers).
-4. **N1**: delete any remaining regex number slots and constants.
-5. **P1**: delete the hand place code.
-6. **V1**: bytes instead of the hand-built character list (identical for ASCII).
-7. **B3 confirm**, 6 seeds.
+Ladder, one change at a time; each 2-seed screen is against the previous rung, same seed, same machine:
+1. **D0** (no training): probes on today's checkpoints: can digits be read back from the reader output; can the talker copy a 1-9 digit string. Plus a control: the same probe on a reader trained only to read digits.
+2. **D0b** (no training): on the step-writing transformer with its calculator, label each failed chain row by its first wrong link (operand copied wrong, wrong operand chosen, wrong operation, tool result copied wrong, final answer copied wrong, calculator did not fire, stopped early).
+3. **T1**: calculator outside (call written as text, reply read as text, no exact value codes, no result slots). Its own screen, then its own 6-seed confirm before anything is stacked on it.
+4. **O1**: final answers go through T1's writer; delete the three hand renderers (empty if T1 already did this).
+5. **N1**: delete any remaining regex number slots and constants.
+6. **P1**: delete the hand place code.
+7. **V1**: bytes instead of the hand-built character list (identical symbols for ASCII).
+8. **B3 confirm**, 6 seeds.
 
-Marks fixed in advance: each rung's screen passes if pooled-5 is no more than 2.0 below the previous rung on both seeds, chain-5 >= 95, cipher >= 90, no split down more than 4, plus a link check (digit probe >= 99% per place; exact answer-string copy >= 99%). B3 passes if, over 6 seeds, mean(B3 - B2) >= -1.0 with the 95% CI lower bound >= -2.0, mean(B3 - step-writing transformer) >= +3.0, chain-5 >= 99 on 5 of 6 seeds, tool-off program families < 5%, swap-inside-the-tool >= 99% followed, and no split down more than 2. Proved wrong: mean(B3 - B2) below -3.0, or B3 not ahead of the step-writing transformer.
+Size band: within +-3% of 3.24M for every rung (B2 is 3.30M, so about 39k parameters of headroom).
+
+Screen marks for O1, N1, P1 (fixed in advance): pooled-5 no more than 2.0 below the previous rung AND no more than 2.0 below B2 on both seeds; chain-5 >= 99.0; cipher (120 rows) >= 92.5; no split down more than 3.0 on the 2-seed mean; zero-round leak <= max(5, B2 on that seed + 1); plus a link check (among number answers, rows whose right digits were available but written wrong <= 1%; specific families within 3.0 of the previous rung). Proved wrong: 2-seed mean more than 4.0 below the previous rung, or chain-5 below 95 on both.
+
+B3 confirm (6 seeds, paired SD of B2 vs the direct-answer transformer 0.94, vs the step-writing transformer 1.33, B2 alone 0.63): parity uses T1's sealed wording, which today reads "the 95% CI of (B3 - B2) lies inside +-1.0" (I think that cannot be passed at this noise, see question 3); mean(B3 - step-writing transformer) >= +3.0 with CI lower bound > 0; chain-5 mean within 1.0 of B2 and >= 99.0 on 5 of 6 seeds; tool off: program families < 5%; + and - swapped inside the tool: >= 99% of affected chain rows follow the swap; leaks <= 5 per seed (B2 itself misses this on 2 of 6 seeds); no split down more than 2.0; an audit that no regex, int() or str() of a number runs outside the tool; call cap hit on <= 1% of rows. Proved wrong: mean(B3 - B2) below -2.0, chain-5 mean below 95, or B3 not ahead of the step-writing transformer.
 
 ## 5. What I want from you
 
 1. Which link is most likely to break first (reading digits, choosing operands, writing calls, re-reading results, stopping), and the cheapest pre-registered test that would show it, with its pass mark and the result that would prove you wrong.
 2. Is the ladder order right? Would you move P1 (place code) or W1 (global attention) earlier, or merge any rungs? Keep to one change at a time.
-3. Are the marks sensible for 2-seed screens and a 6-seed confirm with a paired SD near 0.94? Too strict, too loose, or missing a check?
+3. Are the marks sensible for 2-seed screens and a 6-seed confirm with paired SDs of 0.9-1.3? In particular, the parity mark "6-seed 95% CI inside +-1.0": its half-width is about 1.05 x SD, so I think it is unpassable at this noise. What parity mark would you seal instead, and how many seeds would an equivalence test need?
 4. The step-writing transformer with a regex-triggered calculator already exists and gets 96 on chains vs B2's 99.7. What does that gap most likely come from, and how would you test that before building B3?
-5. On input units: given the evidence above, is there any reason to expect subword tokens, learned byte patches (BLT, H-Net) or a pretrained encoder to beat letters plus a deeper reader at this size? One test you would run, with pass marks.
+5. On input units: given the evidence above (note that every cipher collapse happened when the window was removed, with or without letters), is there any reason to expect subword tokens, learned byte patches (BLT, H-Net) or a pretrained encoder to beat letters plus a deeper reader at this size? One test you would run, with pass marks.
 6. Keep the small synthetic curriculum and any larger "village" or world model separate; this question is only about the small curriculum model.
 7. A plain-language summary for me (a high-school senior): what the plan is, what is most likely to go wrong, and what you would do first.
