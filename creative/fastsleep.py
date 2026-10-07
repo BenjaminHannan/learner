@@ -240,9 +240,10 @@ class Memory:
         self.n_ops, self.n_slots, self.k, self.tau, self.theta, self.c = n_ops, n_slots, k, tau, theta, c
         self.t, self.pending, self.fired = 0, [], [0, 0]
         self.theta_t, self.theta_ans = [theta] * len(self.steps), theta
+        self.agree, self.row_fired = False, None      # agree: the answer note may fire only on rows where a step note fired in the same pass
 
     def reset(self, *_):
-        self.t, self.pending = 0, []
+        self.t, self.pending, self.row_fired = 0, [], None
 
     def _nbrs(self, z, keys, theta=None):
         sim = F.normalize(z.float(), dim=-1) @ keys.T
@@ -266,11 +267,14 @@ class Memory:
         self.t += 1
         w, ix, gate = self._nbrs(z, e['keys'], self.theta_t[t])
         self.fired[0] += int(gate.sum()); self.fired[1] += gate.numel()
+        self.row_fired = gate.bool() if self.row_fired is None or self.row_fired.shape != gate.shape else (self.row_fired | gate.bool())
         self.pending = [self._vote(e['a'], w, ix, gate, self.n_slots), self._vote(e['b'], w, ix, gate, self.n_slots)]
         return self._vote(e['op'], w, ix, gate, self.n_ops).to(z.dtype)
 
     def ans_hook(self, mod, inp):
         w, ix, gate = self._nbrs(inp[0], self.ans['keys'], self.theta_ans)
+        if self.agree:
+            gate = gate * (self.row_fired.float() if self.row_fired is not None and self.row_fired.shape == gate.shape else 0.0)
         self.pending = [self._vote(self.ans['slot'], w, ix, gate, self.n_slots)]
 
     def wrap_ptr(self, ptr):
@@ -298,7 +302,8 @@ def m_knn(N, recs, replay, vocab, device, n_w, k=16, tau=0.05, theta=0.9, c=20.0
     """cal > 0: gate thresholds calibrated on as many skills replay rows as records (one forward each, counted), quantile `cal` (added after the first screen).
     old > 0: the memory also holds `old` practised-kind solver records (the warm split's add/mult reference programs), so a practised question finds its
     own kind's entries (added after the old-parts check; their forward passes are counted here, though with frozen weights they are made once per parent).
-    ans = 0: the answer note never fires (C2b's frozen arm M, roadmap 10-07: the answer note caused s205's skills harm in the confirm)."""
+    ans = 0: the answer note never fires (C2b's frozen arm M, roadmap 10-07: the answer note caused s205's skills harm in the confirm).
+    ans = 2: the answer note fires only on rows where a step note fired in the same pass (agreement gate; fast-sleep research 10-07)."""
     m = copy.deepcopy(N)
     n_cal = len(recs)
     if old:
@@ -311,6 +316,8 @@ def m_knn(N, recs, replay, vocab, device, n_w, k=16, tau=0.05, theta=0.9, c=20.0
         mem.calibrate(head_inputs(m, random.Random(seed).sample(replay, n_cal), vocab, device), cal)
     if not ans:
         mem.theta_ans = float('inf')
+    elif ans == 2:
+        mem.agree = True
     m.reader.register_forward_pre_hook(mem.reset)
     m.q_ans.register_forward_pre_hook(mem.ans_hook)
     m.op_head = _MemOp(m.op_head, mem)
