@@ -242,8 +242,8 @@ Changes:
   per seed, from the 60M pool (about 3.9 passes, estimate), and the 3M-to-10M step changes only size. If the measured
   passes exceed 4, the floor wins at 3M and 10M and the count is reported (q33 itself made about 30 passes).
   The 3M rung now needs the 22.8M own-text prefix. 30M stays at 20 per parameter (about 600M, 190M pool).
-- **B2. Rows fit B2.** Cloze chunks are at most 200 letters including the blank mark; the blanked word has 3-8
-  letters. Every other section 4 rule stays.
+- **B2. Rows fit B2.** ~~Cloze chunks are at most 200 letters including the blank mark; the blanked word has 3-8
+  letters.~~ Withdrawn by addendum E2: the caps rise to fit the data instead. Every other section 4 rule stays.
 - **B3. Speed first.** Before the 3M rung, one rented 5090 times 200 updates of each arm at the 3M, 10M and 30M shapes
   (about $0.20, reported). The 3M cap per box becomes $2.50 (MAXH 5 h); the rung is expected near $10 at $0.49/h. The
   10M and 30M caps are set from the timing. If the ladder's total would pass $50 (Ben's card: about $30-50), Ben gets the
@@ -304,3 +304,24 @@ No 8a run has started; nothing here uses an 8a result.
   and rung sees the same mix, so it does not favour any arm. It can cap the gain from size, which the quarter-pool
   diagnostic (section 7) checks. The rate is reported per rung: 20% at the 7.6M prefix, 23% at 22.8M (3M and 10M
   rungs), 26% at 72M (30M rung) (data-pool thread, shown).
+
+## 15. Addendum E: no caps that cut long answers (2026-10-07, 2:07 PM ET, before any 8a run)
+
+No 8a run has started; nothing here uses an 8a result.
+
+Ask this answers: Ben, 2:04 PM ET 10-07 (no-hard-coding thread, relayed): "I don't think you should have it cut off long
+answers". The no-hard-coding plan made it a standing rule (PLAN section 2, b3832445e5).
+
+- **E1. Caps fit the data, never the other way round.** In every 8a arm, every length cap is set to the longest case in
+  that rung's training data: prompt letters and answer letters (`MAX_PROMPT`, `MAX_ANS`), plain arms' positions and
+  step targets (`MAX_POS`, `CAP`), the LLM arm's context, and B2's program steps, prompt numbers and words (`N_RES`,
+  `N_NUM`, `W_MAX` in `progparse.py:8`). No arm has an answer-only fallback. Today these B2 caps are fixed constants
+  (7 steps, 16 numbers, 64 words), so this needs code (build list).
+- **E2. Addendum B2 is withdrawn.** Cloze rows go back to section 4's sizes (chunks up to 280 letters, one 3-12 letter
+  word) and the caps rise to fit them.
+- **E3. Reported with every rung:** the caps used, and the number of training and dev rows any cap touches (target 0).
+  Raising caps can change B2-S's parameter count slightly; the 3M rung reports it beside q33's 3,302,481, and mark 4
+  still reads against q33's 74.0 (disclosed).
+- **First look:** it keeps q33's exact recipe, caps included, so that size is its only change from q33. PT13-C0 already
+  sets its cap to its longest target (107). The B2 rows that q33's caps touch (programs over 7 steps, prompts with over
+  16 numbers or 64 words) are counted and reported with it.
