@@ -1047,6 +1047,30 @@ it should also get faster at its own tasks. Written here before any training; th
     one shared piece rather than from better search.
   - Disclosed: the budget was changed after seeing reach@32 for these candidates, and before any sleep.
 
+- **K_new at 512 tries: one kind qualifies (10-07, fast-sleep 9a1b3e37d; shown, DEV, 64 per kind).**
+  - The six 4-5 step kinds pass blind search's check at 512 (0% fit).
+  - Their N' reach@512 on s100 / s101 is at most 2 of 64 questions: sq_minus 0 / 1.6, triple_add 1.6 / 3.1,
+    mult_sub 3.1 / 3.1, and the other three 0 / 0.
+  - The 2-step kinds are search-easy (98-100%).
+  - So on new multi-step kinds N' is at cold start even with its full day budget. That is wall 1 again, and a
+    transfer mark cannot be read from a floor of 0-2 questions.
+- **Ruled (before any loop-1 training):** S1 tests Ben's own wording: the creative part gets better at the problems
+  it has been stuck on.
+  - Primary measure: C2 DEV reach@32 in creative mode (fresh questions of the kinds from the day's episodes), pooled.
+    This was mark 3; it now carries the pass.
+  - Pass, on both parents:
+    1. C - U at least +5 and C - S at least +3;
+    2. variety (distinct fits per question on C2 DEV) at least 0.8x U's;
+    3. worker untouched.
+  - Label: "beyond near-copy" only if the multi-step C - U paired interval, pooled over both parents, is above 0.
+  - Proved wrong: C - S upper end below +1 on both parents.
+  - Transfer is report-only: reach@512 on sq_minus, triple_add and mult_sub (the three new kinds N' reached at all;
+    192 DEV questions), C - U and C - S with paired intervals.
+  - A pass is worded "the creative part finds answers faster on the kinds it was stuck on", never "more creative in
+    general". The general claim waits for kinds where the parent has a foothold, which is C6's job (the model's own
+    stepping stones).
+  - Disclosed: changed after seeing K_new's N' numbers, and before any sleep.
+
 **Test S1, loop 1 alone** (screen: s100 and s101, DEV, one night):
 - Day: job 8's N' on the 1,024 C2 pool questions. Stuck questions get job 8's search with the adapter on: 32 tries,
   then 480 more where none fits.
