@@ -141,6 +141,12 @@ Per-run numbers: `custom_io/results/RESULTS-SCREEN.md` and `SCREEN-ANALYSIS.json
    EGM, EGO on the PC; EGR, R0, EGE and EGT are in queue 38. EGW ran at 0.75 updates/s on the PC and filled its card, so it moved to two rented
    5090s, each also training plain B2 on its seed so EGW is judged against B2 from the same machine (addendum 10, same recipe). There it runs
    4x faster, so EGM and EGO joined it on the same boxes (addendum 11) and queue 36 on the PC is retired.
+   **Results (10-06/07, rented 5090s, each arm against plain B2 on its seed; `results/RESULTS-EG2.md`, shown):** EGW, EGM, EGO and EGR fail;
+   all four lack the window and lose cipher_map (100 to 2.5-10), and R0 shows the window is what cipher_map needs (B2 minus R0 +6.8 / +6.3,
+   cipher_map 12.5 / 2.5). EGE (EmbeddingGemma added before the window) gains +1.59 / +2.12 on pooled-5 with every split up on the 2-seed
+   mean (frame +3.6, vocab +2.7) and keeps cipher_map (97.5 / 95), but fails 2 of addendum 4's 5 marks (variant +1.70 vs +3.0; loops:0 18.09
+   on seed 200 vs 5). EGK (EmbeddingGemma into the thinker only, addendum 14) went non-finite twice on seed 201. A fresh 6-seed confirm of EGE
+   (addendum 15, seeds 202-207) is staged as queue 39 on the PC, pending Ben's answer.
 5. **Looped-LM ideas (Amazon's ALoDLM):** a no-training probe of the two saved B2 checkpoints (`design/LOOPS-probe.md`, gates fixed first)
    found every program question right by round 8, the hidden state growing only 3-4x, and the loss in the no-program families, whose answers
    drift across rounds (answering at 16 rounds costs about 1 point). Test LR (addendum 5, queue 37): a readout loss at every round after the

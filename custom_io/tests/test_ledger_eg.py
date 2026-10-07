@@ -303,7 +303,8 @@ def test_bf16_states_without_autocast_and_queue_env():
     assert X.dtype == torch.float32 and torch.isfinite(X).all()
     qd = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'queue_local')
     for name, runs in (('36-pc-eg2.txt', []),
-                       ('38-pc-eg-teacher.txt', ['EGT_s200', 'EGT_s201'])):
+                       ('38-pc-eg-teacher.txt', ['EGT_s200', 'EGT_s201']),
+                       ('39-pc-ege-confirm.txt', [f'EGE_s{s}' for s in (202, 203, 204, 205)] + ['B2_s206', 'B2_s207', 'EGE_s206', 'EGE_s207'])):
         q = os.path.join(qd, name)
         env = queue_env(q)
         assert set(env) == {'PYTHONPATH', 'CUSTOM_IO_EG2'} and env['PYTHONPATH'].startswith('C:\\Users\\benja\\eg_site;'), env
@@ -343,6 +344,37 @@ def test_egw_box_jobs():
             assert cfg(args) == ({'copy': True} if arm == 'B2V' else ARMS[arm]), name
     assert cfg(q33['B2_s200']) == {'copy': True}
     print('ok egw_box_jobs')
+
+
+def test_confirm_ege_judge():
+    """Addendum 15: the 6-seed confirm judge on synthetic EGE runs (queue 33's plain B2 results with every split's correct count shifted), paired
+    with plain B2 of the same seed and machine: +2 per split on all seeds passes; a run missing or an arm behind on 3 seeds does not."""
+    import copy
+    from custom_io.analyze import load
+    from custom_io.analyze_eg import confirm_ege
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    runs, _ = load([os.path.join(here, 'results', '33-pc-confirm-b2')])
+    seeds = [200, 201, 202, 203, 204, 205]
+    if not all(('B2', s) in runs for s in seeds):
+        print('  skipped: queue 33 results missing'); return
+    def fake(s, shift):
+        r = copy.deepcopy(runs[('B2', s)])
+        r['config']['cfg'], r['n_params'] = {'copy': True, 'eg_embed': True}, 3500881
+        for sp in ('in_dist', 'answer', 'frame', 'vocab', 'variant'):
+            x = r['final_eval'][sp]
+            x['correct'] = x['correct'] + round(shift * x['n'] / 100)
+            x['exact'] = 100 * x['correct'] / x['n']
+        return r
+    good = {**runs, **{('EGE', s): fake(s, 2.0) for s in seeds}}
+    res = confirm_ege(good, seeds)
+    assert res['verdict'].startswith('PASS') and not res['proved_wrong'], res
+    assert all(n == 'B2' for n in res['base'].values())
+    bad = {**good, **{('EGE', s): fake(s, -0.5) for s in seeds[:3]}}
+    res = confirm_ege(bad, seeds)
+    assert res['verdict'] == 'FAIL' and res['proved_wrong'], res['marks']
+    gone = dict(good); gone.pop(('EGE', 205))
+    assert confirm_ege(gone, seeds)['verdict'] == 'NOT JUDGED'
+    print('ok confirm_ege_judge')
 
 
 def test_round_readout():

@@ -172,6 +172,47 @@ def arm_minus(runs, x, y):
     return out
 
 
+CONFIRM_SEEDS = [202, 203, 204, 205, 206, 207]
+
+
+def confirm_ege(runs, seeds=CONFIRM_SEEDS):
+    """Addendum 15: EGE against plain B2 on fresh seeds 202-207, each pair on one machine (base_for). Marks 1-4 and 'proved wrong' as written."""
+    probs, pairs = {}, {}
+    for s in seeds:
+        a = runs.get(('EGE', s))
+        n, b = base_for(runs, a, s)
+        p = (['missing'] if a is None else valid(a, ARMS['EGE'], 'EGE')) + (['base missing'] if b is None else [f'base: {x}' for x in valid(b, {'copy': True}, 'B2')])
+        if a is not None and b is not None:
+            p += [f"arm and base differ in config.{k}" for k in ('device', 'data') if g(a, 'config', k) != g(b, 'config', k)]
+        probs[s] = p
+        if not p:
+            pairs[s] = (a, b, n)
+    out = dict(seeds=seeds, problems=probs, judged=len(pairs) == len(seeds), base={s: n for s, (_, _, n) in pairs.items()})
+    if not out['judged']:
+        out['verdict'] = 'NOT JUDGED'
+        return out
+    mean = lambda dd: sum(dd.values()) / len(dd)
+    dp5 = {s: sub(P5(a), P5(b)) for s, (a, b, _) in pairs.items()}
+    dspl = {sp: mean({s: sub(SPL(sp)(a), SPL(sp)(b)) for s, (a, b, _) in pairs.items()}) for sp in POOL}
+    c5 = {s: C5(a) for s, (a, _, _) in pairs.items()}
+    lk, lkb = {s: leak(a) for s, (a, _, _) in pairs.items()}, {s: leak(b) for s, (_, b, _) in pairs.items()}
+    ahead, behind = sum(v > 0 for v in dp5.values()), sum(v < 0 for v in dp5.values())
+    l0, l0b = mean({s: v['loops0'] for s, v in lk.items()}), mean({s: v['loops0'] for s, v in lkb.items()})
+    m = {'1 pooled-5 gain >= +1.0 on the 6-seed mean and ahead on >= 5 of 6 seeds': dict(value=dict(mean=mean(dp5), ahead=ahead, per_seed=dp5),
+                                                                                        ok=mean(dp5) >= 1.0 and ahead >= 5),
+         '2 no dev split drops more than 2.0 (6-seed mean)': dict(value=dspl, ok=all(v >= -2.0 for v in dspl.values())),
+         '3 chain-5 >= 99.0 on every seed': dict(value=c5, ok=all(v >= 99.0 for v in c5.values())),
+         '4 mean loops:0 in_dist <= plain B2 mean + 1.0 and donor in_dist <= 5 on every seed': dict(
+             value=dict(loops0_mean=l0, plain_b2_loops0_mean=l0b, donor={s: v['donor'] for s, v in lk.items()}),
+             ok=l0 <= l0b + 1.0 and all(v['donor'] <= 5 for v in lk.values()))}
+    out['marks'] = m
+    out['verdict'] = 'PASS: the Gemma version of B2 beats B2' if all(x['ok'] for x in m.values()) else 'FAIL'
+    out['proved_wrong'] = mean(dp5) < 0.5 or behind >= 3
+    out['read_only'] = dict(variant_gain_mean=dspl['variant'], loops0=lk, plain_b2_loops0=lkb,
+                            per_family={f: mean({s: sub(fam_in(a, f), fam_in(b, f)) for s, (a, b, _) in pairs.items()}) for f in LETTER_FAMS + ['order_chain', 'table_calc', 'list_index']})
+    return out
+
+
 def fam_in(r, f):
     x = g(r, 'final_eval', 'in_dist', 'by_family', f)
     return None if not x or not x.get('n') else 100 * x['correct'] / x['n']
@@ -212,7 +253,12 @@ def main(argv=None):
     res['egm_minus_ego_read_only'] = arm_minus(runs, 'EGM', 'EGO')
     res['egw_minus_egm_read_only'] = arm_minus(runs, 'EGW', 'EGM')
     res['egk_minus_ege_read_only'] = arm_minus(runs, 'EGK', 'EGE')      # addendum 14
+    for s in SEEDS:     # addendum 14 retry note: a second non-finite run on one seed fails EGK as unstable (it is not retried again)
+        bad = [r for r, why in skipped if os.path.basename(r) == f'EGK_s{s}' and why == 'status nonfinite_loss']
+        if len(bad) >= 2 and (('EGK', s) not in runs):
+            res['arms']['EGK']['verdict'] = f'FAIL (unstable: non-finite loss in both runs of seed {s}, addendum 14 retry note)'
     res['diagnosis_checks_read_only'] = checks(runs)
+    res['ege_confirm'] = confirm_ege(runs)      # addendum 15
     # addendum 10: plain B2 on the rented box minus plain B2 on the PC, same seed (read only); over 3 points on a seed = EGW machine-sensitive
     dev = {s: sub(P5(runs[('B2V', s)]), P5(runs[(BASE, s)])) for s in SEEDS if ('B2V', s) in runs and (BASE, s) in runs}
     res['b2v_minus_b2_pooled5_read_only'] = dev
@@ -248,6 +294,12 @@ def main(argv=None):
                        ('egw_minus_egm_read_only', 'EGW minus EGM (read only, addendum 9)'), ('egk_minus_ege_read_only', 'EGK minus EGE (read only, addendum 14)')):
         if res[key]:
             L += [f'## {title}', '', f"- {fmt(res[key])}", '']
+    cf = res['ege_confirm']
+    L += [f"## EGE 6-seed confirm, seeds {CONFIRM_SEEDS[0]}-{CONFIRM_SEEDS[-1]} (addendum 15): {cf['verdict']}", '']
+    if not cf['judged']:
+        L += [f"- missing or invalid: {', '.join(str(s) for s, p in cf['problems'].items() if p)}", '']
+    else:
+        L += [f'- {k}: {fmt(x["value"], k[0] in "12")} -> {x["ok"]}' for k, x in cf['marks'].items()] + [f"- proved wrong: {cf['proved_wrong']}", '']
     dc = res['diagnosis_checks_read_only']
     L += ['## Diagnosis checks (read only, addenda 12 and 13)', '', f"- cipher_map in_dist, EGR: {fmt(dc['egr_cipher_map'], False)} -> {dc['letter_check_addendum12']}",
           f"- cipher_map in_dist, R0: {fmt(dc['r0_cipher_map'], False)}; EGE: {fmt(dc['ege_cipher_map'], False)} -> {dc['window_check_addendum13']}", '']

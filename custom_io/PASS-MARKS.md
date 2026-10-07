@@ -360,3 +360,30 @@ absolute). A pass is "better than B2" by mark 1 and goes to the 6-seed confirm a
 3,000 (logged loss 0.418 at 2,500, NaN at 3,000; status `nonfinite_loss`), the first non-finite run in this project; EGE_s201 on the same seed
 passed update 3,000 normally and EGK_s200 is training normally. A run that is not status `ok` is not judged, so EGK_s201 runs once more,
 identical (job 52, box D). If the retry is also non-finite, EGK fails (unstable at this recipe) and stops; it is not retried again.
+**EGK result (about 05:45 UTC):** the retry also went non-finite (update 4,500), so EGK **fails as unstable**. Read only, seed 200 (status ok):
+pooled-5 +0.98 against B2V_s200 (EGE +1.59), loops:0 in_dist **13.68**. EmbeddingGemma cannot reach EGK's talker at loops:0
+(test_thinker_only), yet the zero-round score stays high, so the explanation written above (EGE's talker reads EmbeddingGemma directly)
+is **wrong** as the cause of EGE's loops:0 score. Shown instead: the loops:0 score varies widely across runs that share the talker design
+(plain B2: 1.40, 4.34, and 6.76 on screen seed 101; EGE 18.09 and 4.49; EGK 13.68).
+
+## Addendum 15: EGE 6-seed confirm against plain B2 (written 2026-10-07 about 05:40 UTC, 1:40 AM ET, before any run of seeds 202-207 with EmbeddingGemma)
+**Screen result (addendum 4 marks, 2 seeds, against B2V on the rented boxes):** EGE **FAILS**. Mark 1 holds (pooled-5 +1.59 / +2.12), mark 3
+holds (every split up on the 2-seed mean: in_dist +1.18, answer +0.25, frame +3.60, vocab +2.69, variant +1.70), mark 4 holds (chain-5 99.9 /
+100.0); mark 2 misses (variant +1.70, needs +3.0) and mark 5 misses on seed 200 (loops:0 in_dist 18.09, limit 5; seed 201 4.49, plain B2
+4.34). By addendum 4 the arm stops. EGK (addendum 14), the fix for the leak, failed as unstable.
+**Why a confirm anyway, and who decides:** the variant +3.0 mark was the meaning-teacher test's own target (it came with EGT's source marks),
+and the absolute loops:0 <= 5 mark is one plain B2 itself misses (6.76 on screen seed 101). Ben's goal is a Gemma version that beats plain B2.
+Running this confirm despite the failed screen is **Ben's call**; it is staged on the PC behind queue 38 so it costs nothing until he
+answers, and it is removed if he says stop. It is a new test on fresh seeds with its marks fixed here, not a re-judging of seeds 200-201.
+**Runs:** fresh seeds 202-207, EGE exactly as in addendum 4 and plain B2 with queue 33's flags, each seed's pair on one machine:
+on the PC (queue 39) plain B2_s202..s205 are queue 33's runs and B2_s206, B2_s207 are new. If Ben picks rented 5090s instead, each box trains
+EGE and plain B2 (B2V) of its seed.
+**Pass (all must hold):**
+1. pooled-5 gain >= +1.0 on the 6-seed mean, and EGE ahead of plain B2 on at least 5 of the 6 seeds.
+2. No dev split (in_dist, answer, frame, vocab, variant) drops more than 2.0 on the 6-seed mean.
+3. chain-5 >= 99.0 on every seed.
+4. Leak: the 6-seed mean of loops:0 in_dist is no more than plain B2's 6-seed mean + 1.0, and donor in_dist <= 5 on every seed.
+**Proved wrong:** pooled-5 gain < +0.5 on the 6-seed mean, or EGE behind plain B2 on 3 or more seeds.
+**Size rule** as in addendum 4: EGE is a 274.5M model with EmbeddingGemma counted, so a pass is a B2-internal result ("the Gemma version of B2
+beats B2"), not a claim against other models of its size. **Read only:** the variant gain, per-family changes, loops:0 per seed, and every
+seed's sign.
