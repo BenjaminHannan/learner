@@ -10,7 +10,9 @@ R1 write_copy exact copy >= 99 for operand AND answer at EACH length 1-9 separat
 R2 pooled-5 T1S - B2 >= -2.0 on both seeds. R3 chain-5 >= 95 on both seeds, and no length 1-3 write_copy cell below T1's of the same seed.
 R4 tool off (noexec program set) < 5 and call accuracy free run >= 98, both seeds.
 Pass = R1-R4: then the 6-seed confirm with marks 1-6 as amended (Amendment 2; analyze_t1's confirm, T1S in T1's place) and H1 on these
-checkpoints. Proved wrong for this fix: any length 4-9 cell below 90 on either seed. Otherwise (some cell 90-99, or R2-R4): not shown.
+checkpoints. Proved wrong for this fix (Amendment 5, 6:50 PM ET, read by path): an OPERAND cell at 4-9 digits below 90 on either seed. Operand
+cells all >= 90 but an answer cell at 4-9 below 90: "NOT SHOWN: answer selection" (the next single change, sealed: a learned entry-index signal
+on the span pointer's keys). Otherwise (some cell 90-99, or R2-R4): not shown.
 A run counts only if status ok, the q33 recipe and the right size; a missing or invalid run: NOT JUDGED."""
 import argparse, json, os, re
 from custom_io import analyze_t1 as A
@@ -122,11 +124,14 @@ def screen(runs, wcs):
              ok=all(f['tool_off'] is not None and f['tool_off'] < 5 and f['call_free'] is not None and f['call_free'] >= 98 for f in F.values()))}
     low = [(s, side, L, f['copy'][side][L][0]) for s, f in F.items() for side in ('operand', 'answer') for L in range(4, 10)
            if f['copy'][side][L][1] >= MIN_N and f['copy'][side][L][0] < 90]
-    out.update(marks=m, facts=F, proved_wrong=bool(low), proved_wrong_cells=low, short_cells=short)
+    low_op = [x for x in low if x[1] == 'operand']
+    out.update(marks=m, facts=F, proved_wrong=bool(low_op), proved_wrong_cells=low_op, below_90_cells=low, short_cells=short)
     if all(x['ok'] for x in m.values()):
         out['verdict'] = 'PASS: run the 6-seed confirm (marks 1-6 as amended) and H1 on these checkpoints'
-    elif low:
+    elif low_op:
         out['verdict'] = 'PROVED WRONG: span copy stands falsified; next = the diagnostic fine-tune on 4-9 digit rows'
+    elif low:
+        out['verdict'] = 'NOT SHOWN: answer selection (operand copy holds >= 90; next = the learned entry-index signal on the span keys, Amendment 5)'
     elif short:
         out['verdict'] = f'NOT JUDGED on R1/R3: {len(short)} cells below n = {MIN_N} (add test rows of those lengths)'
     else:
@@ -166,7 +171,8 @@ def main(argv=None):
         L += [f"- missing or invalid: {({s: p for s, p in sc['problems'].items() if p})}"]
     else:
         L += [f"- {k}: {'pass' if x['ok'] else 'FAIL'}" for k, x in sc['marks'].items()]
-        L += [f"- proved-wrong cells (length 4-9 below 90, n >= {MIN_N}): {sc['proved_wrong_cells'] or 'none'}",
+        L += [f"- proved-wrong cells (operand, length 4-9 below 90, n >= {MIN_N}): {sc['proved_wrong_cells'] or 'none'}",
+              f"- every cell at 4-9 digits below 90 (operand or answer): {sc['below_90_cells'] or 'none'}",
               f"- cells below n = {MIN_N} (cannot pass or fail by themselves): {sc['short_cells'] or 'none'}", '']
         for s, f in sc['facts'].items():
             L += [f'### Seed {s}: pooled-5 T1S {fmt(f["t1s_pooled5"])} vs B2 {fmt(f["b2_pooled5"])} ({f["d_pooled5"]:+.2f}), T1 {fmt(f["t1_pooled5"])}; '

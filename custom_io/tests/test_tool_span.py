@@ -262,7 +262,8 @@ def test_judge():
         return J.screen(runs, wcs)
     v = verdict()
     assert v['verdict'].startswith('PASS'), (v['verdict'], {k: x['ok'] for k, x in v['marks'].items()})
-    assert verdict(cell=('answer', 7, 89.0, 250))['verdict'].startswith('PROVED WRONG')
+    assert verdict(cell=('operand', 7, 89.0, 250))['verdict'].startswith('PROVED WRONG')
+    assert verdict(cell=('answer', 7, 89.0, 250))['verdict'].startswith('NOT SHOWN: answer selection')     # Amendment 5: read by path
     assert verdict(cell=('operand', 5, 95.0, 250))['verdict'].startswith('NOT SHOWN')
     assert verdict(cell=('operand', 2, 95.0, 250))['verdict'].startswith('NOT SHOWN')         # a 1-3 cell 90-99: not shown, not proved wrong
     assert verdict(cell=('operand', 6, 50.0, 150))['verdict'].startswith('NOT JUDGED on R1')   # short cell: cannot fail by itself

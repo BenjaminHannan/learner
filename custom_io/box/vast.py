@@ -109,11 +109,15 @@ def tail(a):
 
 
 def collect(a):
-    text = log_text(a.id)
+    """Result tarballs printed in the last --tail log lines (a big log's 20000-line read can time out: pass e.g. --tail 800). Checkpoint parts
+    (7-field RBEGIN lines, collectck's job) are skipped."""
+    text = log_text(a.id, tail=a.tail if a.tail != 9000 else 20000)
     out = Path(a.out)
     blocks, cur = {}, None
     for ln in text.splitlines():
-        if ln.startswith('RBEGIN|'):
+        if ln.startswith('RBEGIN|') and ln.count('|') != 3:
+            cur = None
+        elif ln.startswith('RBEGIN|'):
             _, name, h, size = ln.split('|')
             cur = name
             blocks[name] = {'sha': h, 'size': int(size), 'parts': []}
