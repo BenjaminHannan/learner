@@ -30,3 +30,21 @@ All eight kept parents: s100, s101 and s200-s205. Each uses its own W records.
 - **Proved wrong:** M2 chain-5 harm > 2 on any parent. The agreement gate then does not stop the harm.
 
 No re-runs and no other slices. A failing parent is reported as it is.
+
+## Result (10:15 AM ET 10-07): harm PASS, gain mark missed by 0.02 points, so the answer note stays off
+
+| Parent | M DEV gain | M2 DEV gain | M2 minus M | Frame harm M / M2 | Frame chain-5 harm M / M2 |
+|---|---|---|---|---|---|
+| s100 | 33.98 | 34.38 | +0.39 | -0.26 / -0.26 | 0.00 / 0.00 |
+| s101 | 28.12 | 28.52 | +0.39 | -0.35 / -0.35 | 0.00 / 0.00 |
+| s200 | 31.25 | 32.03 | +0.78 | -0.28 / -0.29 | 0.00 / 0.00 |
+| s201 | 37.50 | 37.50 | 0.00 | -0.21 / -0.22 | 0.00 / 0.00 |
+| s202 | 16.41 | 21.48 | +5.08 | -0.22 / -0.22 | 0.00 / 0.00 |
+| s203 | 28.91 | 28.91 | 0.00 | -0.15 / -0.13 | 0.00 / 0.00 |
+| s204 | 40.62 | 40.62 | 0.00 | -0.19 / -0.21 | 0.00 / 0.00 |
+| s205 | 32.03 | 32.03 | 0.00 | -0.41 / -0.41 | 0.00 / 0.00 |
+
+- **Harm pass: PASS.** M2's harm is at most 2 points on all eight parents, on the whole frame slice and on its chain-5 rows. Every harm value is 0 or slightly negative, including s205, the parent the answer note hurt in the confirm.
+- **Worth bringing back: FAIL, narrowly.** Pooled over the 6 confirm parents, M2 is 32.10 against M's 31.12, a gain of +0.98. The mark needed +1.0. Over all 8 parents it is +0.83. Most of the gain is one parent, s202 (+5.1). Four parents show no change.
+- **Proved wrong: no.** The agreement gate did stop the harm.
+- **Decision by the marks:** do not adopt M2. C2b's arm M keeps the answer note off.

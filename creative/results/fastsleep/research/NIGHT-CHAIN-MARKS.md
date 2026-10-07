@@ -56,3 +56,36 @@ Only the records written in differ:
 - **Proved wrong:** MC minus M pooled < +1 point.
 
 DEV is the tuning split. The fresh test of any adopted change is C2b's sealed split, run by the roadmap thread.
+
+## Result (10:08 AM ET 10-07): PROVED WRONG
+
+| Parent | M | MC | MB | MC minus M | MC minus MB | MC chain-5 harm | MC memory TF | B dose TF | MC / B |
+|---|---|---|---|---|---|---|---|---|---|
+| s100 | 34.0 | 25.8 | 29.7 | -8.2 | -3.9 | 0.0 | 2.42 | 34.2 | 0.071 |
+| s101 | 28.1 | 36.3 | 36.7 | +8.2 | -0.4 | 0.0 | 2.29 | 19.7 | 0.116 |
+| s200 | 31.2 | 36.3 | 38.7 | +5.1 | -2.3 | 0.0 | 2.42 | 39.4 | 0.061 |
+| s201 | 37.5 | 36.3 | 36.7 | -1.2 | -0.4 | 0.0 | 2.36 | 32.3 | 0.073 |
+| s202 | 16.4 | 18.0 | 19.1 | +1.6 | -1.2 | 0.0 | 2.29 | 19.3 | 0.119 |
+| s203 | 28.9 | 27.3 | 25.8 | -1.6 | +1.6 | 0.0 | 2.37 | 33.4 | 0.071 |
+| s204 | 40.6 | 35.9 | 32.4 | -4.7 | +3.5 | 0.0 | 2.30 | 30.4 | 0.076 |
+| s205 | 32.0 | 38.3 | 35.2 | +6.2 | +3.1 | 0.0 | 2.31 | 30.2 | 0.076 |
+| **Pooled** | **31.1** | **31.8** | **31.8** | **+0.7** | **0.0** | | | | |
+
+The columns M, MC and MB are DEV gain in points over N.
+
+DEV right by kind, mean over the 8 parents (%):
+
+| Arm | affine | square | sq_plus | last_digit | double_add |
+|---|---|---|---|---|---|
+| N | 1.0 | 0.0 | 0.0 | 0.0 | 4.4 |
+| M | 0.0 | 83.6 | 0.0 | 73.0 | 4.9 |
+| MC | 0.2 | 61.0 | 9.3 | 71.6 | 22.8 |
+| MB | 0.2 | 73.8 | 3.9 | 73.5 | 13.5 |
+
+- **Records.** The chain search found a fitting program for every unsolved pool question on every parent: 701-843 questions, about 200 affine and 200 sq_plus each, in 13-22 seconds of CPU. The blind search found 409-551 of them in about 17 seconds.
+- **Mark 1, notebook grows usefully: FAIL.** MC minus M is +0.7 pooled, against +5 needed. MC is ahead on 4 of 8 parents, against 6 needed.
+- **Mark 2, learning, not just search: FAIL.** MC minus MB is 0.0 pooled.
+- **Mark 3, safe: PASS.** Chain-5 harm is 0 on every parent.
+- **Mark 4, cheap: FAIL on 2 parents.** MC's memory cost is 0.116 of B on s101 and 0.119 on s202, against at most 0.1. The cost grows with the number of records, which roughly triples here.
+- **Proved wrong:** MC minus M is below +1 point, so night chaining is proved wrong as written.
+- **What happened:** the extra records lift sq_plus (0 to 9%) and double_add (5 to 23%), but square drops from 84% to 61%. Affine stays at 0% even with about 200 correct affine records per parent. A notebook replays a stored program with its own constants, and a new affine question needs different constants, so its records cannot be reused.
