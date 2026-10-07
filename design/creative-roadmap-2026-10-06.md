@@ -578,6 +578,35 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
        (32 tries, one pool pass per night), and the cause is labelled (c): too few multi-step finds to learn from, a
        search limit rather than a learning or forgetting limit. Item 5's "explanation (b)" is corrected to (c) for
        that case. The next step then changes only the search, chosen from the per-kind records and reach@32.
+  - **Job 7 result (10-07, commit f08bb3d22; shown, DEV, s100 / s101): between the marks; the climb as specified
+    retires, cause (c).** Parts kept through night 2 (fresh add/mult 95.3% / 96.5%; skills harm +0.6 / +1.3).
+    Multi-step first try W'(night 2) - N' +0.6 [-1.3, +3.2] / +3.2 [0.0, +6.5], night 1 0.0 / +1.3; per kind
+    W'(night 2) - N': affine -1.9 / -1.9, sq_plus +3.9 / +2.0, double_add 0.0 / +9.8 (square +94 / +94, last_digit
+    +69 / +94). Pass missed; the proved-wrong line not met. By the reading fixed before night 2, the climb claim retires
+    for this loop as specified, and the cause is search:
+    - N' finds few multi-step answers (DEV reach@32 on the multi-step kinds 1.9% / 5.2%), so W' slept on 25 / 30
+      multi-step records in night 1 and 33 / 60 in night 2, against PC''s 614 (both copies).
+    - Gains track finds: the one kind that moved (double_add on s101, +9.8) had the most records (17, then 46).
+    - PC' shows the kinds are learnable except affine: first try sq_plus 53% / 61%, double_add 27% / 41%, affine 2% /
+      4%, at the top corner of the dose grid (lr 1e-3, 32 visits), still rising, so feasibility may be understated.
+  - **Next: Mac job 8, "more tries where it's stuck" (decided 10-07; DEV only, s100 and s101).** One change to the
+    search, blind to rule kind (it uses only the example check, the signal a stuck model really has, and Ben's scope:
+    creativity is for when it is stuck): each night samples every pool question 32 times as before, then gives every
+    question with no example-fitting try 480 more tries (512 in all); questions already solved get nothing more.
+    Everything else is frozen from job 7: start from job 7's N' checkpoint, pool temperature 3.0, dose lr 1e-3 x 32
+    visits, add/mult and skills replay, at most 2 distinct fitting tries per question, night 2 from the night-1 model.
+    1. Parts kept, as in job 7 (fresh add/mult reach@32 >= 50% after each night, skills harm <= 2 against N').
+    2. Search check (the change must do its job): multi-step records in night 1 at least 3x job 7's (>= 75 on s100,
+       >= 90 on s101). If it fails on either parent, more tries do not reach these answers from N', and the next step
+       is bridging stones (back here).
+    3. Climb, the same mark as job 7: multi-step first try W(night 2) - N' >= +10 with the paired 95% interval above
+       0, on both parents. Affine stays in the pool of 154 (PC' says it is barely learnable; reported per kind).
+    4. Proved wrong: the search check passes and the multi-step upper end is below +3 on both parents. Finds then do
+       not turn into first answers, and the climb claim retires on B2 for this sleep.
+    5. Anything else comes back here. Reported: per kind first try, reach@4, reach@32, records and questions with a
+       find, per night; samples drawn per night; practised check and skills harm per night.
+    If the climb passes, the real C2b uses replay plus this search. If it retires, the real C2b carries only the
+    near-copy claim.
   - **Memory sleep, ruled 10-07 (fast-sleep thread, PR #48; RESULTS in the project folder under fast-sleep/).** Shown on
     a 2-parent DEV screen, with s101 untuned: a notebook of the night's W records plus 512 warm add/mult programs, read
     by top-16 cosine votes on the op and slot heads with no weight change, matches the fine-tune's W first-try gain
