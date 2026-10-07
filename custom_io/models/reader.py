@@ -51,6 +51,20 @@ class ConvBlock(nn.Module):
         return (x + self.conv(h.transpose(1, 2)).transpose(1, 2)) * mask[..., None]
 
 
+class GlobalAttn(nn.Module):
+    """W1 (redesign-ideas sec. 8): one low-rank global self-attention block over the whole prompt, inner width r, one head, with the conv
+    blocks' pre-LayerNorm residual pattern: x + O(attn(Q h, K h, V h)), h = LN x; padding is masked as keys and zeroed in the output."""
+    def __init__(self, d, r=32):
+        super().__init__()
+        self.ln = nn.LayerNorm(d)
+        self.q, self.k, self.v, self.o = nn.Linear(d, r), nn.Linear(d, r), nn.Linear(d, r), nn.Linear(r, d)
+
+    def forward(self, x, mask):
+        h = self.ln(x)
+        a = F.scaled_dot_product_attention(self.q(h)[:, None], self.k(h)[:, None], self.v(h)[:, None], attn_mask=mask[:, None, None, :])
+        return (x + self.o(a[:, 0])) * mask[..., None]
+
+
 class CharReader(nn.Module):
     def __init__(self, n_vocab, d, layers=2, k=5, letters=True):
         super().__init__()
@@ -58,6 +72,7 @@ class CharReader(nn.Module):
         self.tok, self.pos, self.place = nn.Embedding(n_vocab, d), nn.Embedding(MAX_PROMPT, d), nn.Embedding(N_PLACE, d)
         self.blocks = nn.ModuleList(ConvBlock(d, k) for _ in range(layers))
         self.ln = nn.LayerNorm(d)
+        self.glob = None            # W1: a GlobalAttn after the conv blocks, set by the owner after its own init (no RNG draw here)
         self._cache = {}
 
     def places(self, batch):
@@ -76,4 +91,6 @@ class CharReader(nn.Module):
         x = x * mask[..., None]
         for blk in self.blocks:
             x = blk(x, mask)
+        if self.glob is not None:
+            x = self.glob(x, mask)
         return self.ln(x) * mask[..., None], mask

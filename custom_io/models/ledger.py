@@ -128,7 +128,7 @@ class Ledger(Model):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap']
 
     def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, copy=False, span=False, span_max=12,
-                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True, eg_adapter='linear', eg_thinker=False):
+                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True, eg_adapter='linear', eg_thinker=False, gattn=0):
         super().__init__(vocab)
         self.d, self.n_loops, self.dk, self.w_noop, self.wpos, self.copy = d, n_loops, dk, w_noop, wpos, copy
         self.span, self.span_max = span, span_max
@@ -189,6 +189,12 @@ class Ledger(Model):
             self.ln_mt, self.mt_head = nn.LayerNorm(d), nn.Linear(d, MT_DIM)
             nn.init.normal_(self.mt_head.weight, std=0.02)
             nn.init.zeros_(self.mt_head.bias)
+        if gattn:       # W1: global attention in the reader, created after every other module, so every B2 weight starts identical at the same seed
+            from custom_io.models.reader import GlobalAttn
+            self.reader.glob = GlobalAttn(d, int(gattn))
+            for m in (self.reader.glob.q, self.reader.glob.k, self.reader.glob.v, self.reader.glob.o):
+                nn.init.normal_(m.weight, std=0.02)
+                nn.init.zeros_(m.bias)
 
     # ---- hand-written number / word tokenizer (prompt text only; cached per prompt) ----
     def spans(self, prompt):

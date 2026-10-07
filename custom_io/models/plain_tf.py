@@ -83,8 +83,11 @@ class PlainTF(Model):
         """hidden() on the first n columns of seq (and of the place tensor, when there is one)."""
         return self.hidden(seq[:, :n], loops) if pl is None else self.hidden(seq[:, :n], loops, pl[:, :n])
 
+    def embed(self, ids):
+        return self.tok(ids)
+
     def hidden(self, ids, loops=None, place=None):
-        x = self.tok(ids) + self.pos(torch.arange(ids.shape[1], device=ids.device))
+        x = self.embed(ids) + self.pos(torch.arange(ids.shape[1], device=ids.device))
         if place is not None:
             x = x + self.place(place.clamp(min=0)) * (place >= 0)[..., None]
         for _ in range(self.n_loops if loops is None else loops):

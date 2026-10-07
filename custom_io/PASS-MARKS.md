@@ -463,3 +463,39 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   64,487 below the top).
 - **Replace, not alongside (Amendment 2):** T1 already removes the executor, the value codes and the result slots; the regex-found spans of the
   question's numbers stay in T1 (disclosed) and the N1 rung removes them.
+
+## Addendum 18: U0, letters vs word pieces in the all-learned text baseline (written 2026-10-07 about 17:30 UTC, 1:30 PM ET, before any U0 run)
+- **Source, mirrored as sealed:** `/mnt/project-files/no-hardcoding/INPUT-UNITS-2026-10-07.md`, U0. Report-first, 2 runs, BensPC, seeds 200 and 201
+  against q33's plain_tf_steps on the same seeds (not retrained).
+- **The one change:** `plain_tf_steps` with `bpe: 308`. The prompt is read as byte-level BPE ids (`custom_io/bpe.py`): the 95 printable ASCII
+  characters are the base symbols with their char-vocab ids, merges are learned GPT-2 style on the 200,000 train prompts only (train.jsonl
+  sha256 010af671...; GPT-2's pre-tokenizer pattern in ASCII form; ties broken by the pair's text), until 308 new tokens exist: 13 + 95 + 308
+  = 416 ids. The merges are fixed in `custom_io/models/bpe_prompt.json` before any run. The 308 merged tokens get their own input table, created
+  last, so every other weight starts identical to plain_tf_steps at the same seed; steps and answer stay letters and the tied readout stays the
+  letter table. Size 3,339,776 (+2.94% over plain_tf, inside the band, 2,104 below the top).
+- **Disclosed, from the merges (not a result):** at 308 merges a prompt token averages 2.31 letters (not the ~4 of large tokenizers), and digits
+  stay almost one per token (only a leading space joins some single digits, " 1", " 2" ...). Prompts are about 2.3x shorter, so less compute per row.
+- **Marks, as sealed:** "Ben right": pooled-5 (U0 - letters) >= +2.0 on both seeds. "Letters fine": <= +1.0 on both. Anything else: tie.
+  Letters fine or tie: letters stay ("no evidence word pieces help at this size"). Ben right: the next gain test is a from-scratch word-piece side
+  channel next to the letters in B2. Pre-registered prediction: letters fine; cipher_map falls by 10 or more; arithmetic families fall; frame and
+  vocab move less than 2. Prediction proved wrong: cipher_map pooled over in_dist, answer and frame (120 rows, 2-seed mean, in rows) is at or
+  above letters - 5 for word pieces (q33's plain_tf_steps ranges 45-112 of 120 across its 6 seeds, so this check is noisy).
+- **Judge:** `python -m custom_io.analyze_gain --results custom_io/results/33-pc-confirm-b2 custom_io/results/41-pc-gain-u0`. pooled-5 is the
+  intact score (as q33 reports plain_tf_steps); the calculator-on (C1') numbers are printed beside it, report only.
+
+## Addendum 19: W1, global attention in the reader (written 2026-10-07 about 17:30 UTC, 1:30 PM ET, before any W1 run)
+- **Source, mirrored as sealed:** `/mnt/project-files/architecture/redesign-ideas-2026-10-07.md` section 8 (revised 12:55 PM ET). One change on
+  B2: `ledger` with `copy: true, gattn: 32`, one low-rank global self-attention block (one head, inner width 32; pre-LayerNorm residual, padding
+  masked) after the +-4 conv window, before the reader's final LayerNorm, created last so every B2 weight starts identical at the same seed.
+  Size 3,336,113 (+33,632; 5,767 below the band top). 2-seed screen (200, 201) against q33's B2 on BensPC, then a 6-seed confirm if it passes.
+- **Marks, as sealed (2-seed means where stated):** pooled-5 W1 - B2 >= +1.0 on both seeds; cipher_map in_dist >= 95 (2-seed mean) and no other
+  family down more than 2.0 (2-seed mean); no dev split (in_dist, answer, frame, vocab, variant) down more than 2.0 (2-seed mean); chain-5 >= 99.0
+  on both seeds; loops:0 in_dist <= B2's on the same seed + 1.0 and donor in_dist <= 5. Proved wrong: pooled-5 mean below 0, or cipher_map in_dist
+  (2-seed mean) down more than 2.0.
+- **Reading fixed here (the source does not say):** a "family" is its rows pooled over the five pooled dev splits (about 120-200 rows), the
+  least noisy reading.
+- **Null check (shown, from q33, no mark changed):** with no change at all (one plain B2 seed standing in for W1 against another, 2-seed means over
+  every ordered choice of 4 of the 6 q33 seeds, 360 cases), "no other family down more than 2.0" fails in 100% of cases (median worst family
+  -6.6; -10.0 if read on in_dist alone), "no dev split down more than 2.0" fails in 22%, and the cipher_map proved-wrong line fires in 6.7%.
+  So the family mark cannot pass as written. Sent to the architecture thread to re-seal before any W1 run; W1 is staged in its own queue and
+  does not run until then. `analyze_gain` prints this null check with every W1 verdict.

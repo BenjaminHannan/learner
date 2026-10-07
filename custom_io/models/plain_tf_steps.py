@@ -1,6 +1,9 @@
 """plain_tf_steps: PlainTF trained to write the worked steps, then ' # ', then the answer (arithmetic families only).
 Scored on the text after the last '#'. Lesion 'calc' (C1'): same weights, but whenever the decoded text ends with
-'a op b =' the exact result is forced in as tokens (integer division only when exact)."""
+'a op b =' the exact result is forced in as tokens (integer division only when exact).
+bpe=N (U0, INPUT-UNITS-2026-10-07.md): the PROMPT is read as byte-level BPE ids (custom_io/bpe.py, models/bpe_prompt.json, learned on train
+prompts only); the letters keep their ids and the N merged tokens get their own input table, created last so every other weight starts
+identical at the same seed. Steps and answer stay letters, and the tied readout stays the letter table (a merged token is never written)."""
 import re
 import torch
 import torch.nn as nn
@@ -63,12 +66,38 @@ def final_answer(text):
 class PlainTFSteps(PlainTF):
     LESIONS = ['calc']
 
-    def __init__(self, vocab, d_model=256, n_layers=4, n_heads=4, n_loops=1, place=False):
+    def __init__(self, vocab, d_model=256, n_layers=4, n_heads=4, n_loops=1, place=False, bpe=0):
         super().__init__(vocab, d_model, n_layers, n_heads, n_loops)
         self.pos = nn.Embedding(MAX_POS, d_model)
         nn.init.normal_(self.pos.weight, std=0.02)
         if place:                   # last, after pos is replaced, so no other weight's init moves (see PlainTF._add_place)
             self._add_place()
+        self.bpe = None
+        if bpe:                     # U0: created after everything else, so every plain_tf_steps weight starts identical at the same seed
+            assert not place, 'U0 has no place term'
+            from custom_io.bpe import BPE
+            self.bpe = BPE(vocab)
+            assert self.bpe.n_new == bpe, f'models/bpe_prompt.json makes {self.bpe.n_new} new tokens, cfg says {bpe}'
+            self.tok_m = nn.Embedding(bpe, d_model)
+            self._init(self.tok_m)
+
+    def embed(self, ids):
+        if self.bpe is None:
+            return self.tok(ids)
+        V = self.tok.num_embeddings
+        new = ids >= V
+        return torch.where(new[..., None], self.tok_m((ids - V).clamp(min=0)), self.tok(ids.clamp(max=V - 1)))
+
+    def _prompt(self, batch):
+        """U0: the batch with its prompt as BPE ids, right-padded with PAD (the char ids otherwise)."""
+        if self.bpe is None:
+            return batch
+        enc = [self.bpe.encode(r['prompt']) for r in batch['rows']]
+        ids = torch.full((len(enc), max(map(len, enc))), PAD, dtype=torch.long)
+        for i, e in enumerate(enc):
+            ids[i, :len(e)] = torch.tensor(e)
+        dev = batch['prompt_ids'].device
+        return dict(batch, prompt_ids=ids.to(dev), prompt_mask=(ids != PAD).to(dev))
 
     def _targets(self, batch):
         """-> ids [B, A] (target chars + EOS, PAD after), mask [B, A]."""
@@ -80,6 +109,7 @@ class PlainTFSteps(PlainTF):
         return ids.to(dev), (ids != PAD).to(dev)
 
     def loss(self, batch):
+        batch = self._prompt(batch)
         p, lens = batch['prompt_ids'], batch['prompt_mask'].sum(1)
         a, am = self._targets(batch)
         B, T, A = p.shape[0], p.shape[1], a.shape[1]
@@ -99,6 +129,7 @@ class PlainTFSteps(PlainTF):
     def generate(self, batch, lesion=None):
         name, arg = self.check_lesion(lesion)
         loops, calc = (arg if name == 'loops' else None), name == 'calc'
+        batch = self._prompt(batch)
         p, lens = batch['prompt_ids'], batch['prompt_mask'].sum(1)
         B, T = p.shape
         seq = p.new_full((B, T + 2 + MAX_NEW), PAD)
