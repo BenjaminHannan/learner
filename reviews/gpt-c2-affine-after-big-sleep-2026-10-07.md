@@ -40,8 +40,10 @@ Inputs are 3..29. The score is **first try**: the model writes one program, gree
 | + answer key's own programs instead (512 questions, same budget) | 2 | 92 | 24 | 100 | 6 | 45.7 |
 | W + chain + replay, 40 visits | 6 | 94-96 | 69 | 92-96 | 55-67 | 64.6 |
 | same, without replay (same updates) | 8 | 98 | 31 | 96 | 16 | 49.6 |
-| same with replay, **80 visits** | 12-21 | 92-100 | 73-82 | 86-100 | 63-80 | **72.7** (holdout 72.7, 2 seeds) |
+| same with replay, **80 visits** (used a temperature tuned on DEV answers and the test generator's input range) | 12-21 | 92-100 | 73-82 | 86-100 | 63-80 | **72.7** (holdout 72.7, 2 seeds) |
 | 40 visits + "top-up": every program with < 32 records gets replays up to 32 | 25-31 | 90-98 | 63-69 | 82-92 | 53-57 | 65.8 |
+| final version, fully on its own (its own night and temperature; replay inputs only from the day's questions), 80 visits; **holdout, 6 seeds** | 15.5 | 98.7 | 76.6 | 93.1 | 72.5 | **71.3 +/- 2.5** |
+| final version + top-up, DEV 2 seeds | 21-25 | 96 | 80-86 | 80-84 | 69-71 | 70.7 |
 
 Facts:
 - Among the chain records for a·x+b there are 48 distinct programs over 202 records (about 4 per rule). x²+k and 2(x+k) have 7 programs each, with about 30 records per rule.
