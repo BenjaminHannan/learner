@@ -74,8 +74,9 @@ def test_verdict_reading():
     assert S.verdict_parent(False, True, (0, 0, 0)).startswith('parts not kept')
     assert S.verdict_parent(True, True, (12.0, 3.0, 20.0)).startswith('climb pass')
     assert S.verdict_parent(True, True, (0.6, -1.0, 2.5)).startswith('proved wrong')
-    assert S.verdict_parent(True, False, (0.6, -1.0, 2.5)).startswith('between')
-    assert S.verdict_parent(True, True, (3.2, 0.0, 6.5)).startswith('between')
+    assert 'search check missed' in S.verdict_parent(True, False, (0.6, -1.0, 2.5))
+    assert 'not run' in S.verdict_parent(True, None, (0.6, -1.0, 2.5))
+    assert 'search check passed' in S.verdict_parent(True, True, (3.2, 0.0, 6.5))
 
 
 if __name__ == '__main__':

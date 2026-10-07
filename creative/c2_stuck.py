@@ -76,7 +76,8 @@ def verdict_parent(parts_kept, search_ok, climb):
         return 'climb pass (this parent)' + ('' if search_ok else '; search check missed')
     if search_ok and hi < 3.0:
         return 'proved wrong (this parent): search check passed, no climb'
-    return 'between the marks / search check missed (comes back to the roadmap thread)'
+    check = {True: 'search check passed', False: 'search check missed'}.get(search_ok, 'search check not run')
+    return 'between the marks (%s; comes back to the roadmap thread)' % check
 
 
 def run(nprime, out, skills_train=None, skills_data=None, ckpt=None, warmed=None, device='cpu', seed=0, limit=None, pool_limit=None, search_min=None, n1=N1, n2=N2,
@@ -192,7 +193,7 @@ def run(nprime, out, skills_train=None, skills_data=None, ckpt=None, warmed=None
     search_ok = None if smin is None else n1rec >= smin
     c = res['night2']['multi_W_minus_Nprime']
     res['search_check'] = dict(night1_multi_step_records=n1rec, required=smin, passes=search_ok)
-    res['verdict'] = verdict_parent(True, bool(search_ok), (c['points'], c['lo'], c['hi']))
+    res['verdict'] = verdict_parent(True, search_ok, (c['points'], c['lo'], c['hi']))
     res['marks'] = dict(climb='multi-step first try W(night 2) - N >= +10 with the paired 95% interval above 0, both parents', proved_wrong='search check passes and the night-2 upper end < +3, both parents')
     res['seconds']['total'] = time.time() - t00
     save()
