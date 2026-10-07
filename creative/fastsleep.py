@@ -3,7 +3,8 @@ Question (Ben): the sleep step must learn quickly, with few FLOPs. "Fast" = DEV 
 per sleep FLOP, against job 6's plain fine-tune (fresh AdamW on every weight, half skills replay, lr {3e-4, 1e-3} x visits {4, 8, 16}).
 
   python3 -m creative.fastsleep setup  --ckpt B2_s100.pt --out DIR --skills-train train.jsonl --skills-data data_big [--floors dev_floors.json]
-  python3 -m creative.fastsleep screen --out DIR --skills-train train.jsonl --skills-data data_big --methods ft,heads,knn
+  python3 -m creative.fastsleep screen --out DIR --skills-train train.jsonl --skills-data data_big --tag T --sets PC,W --plan 'knn:c=50,cal=0.99,old=512;ft:lr=0.0003,visits=16'
+  python3 -m creative.fastsleep posteval --out DIR --skills-train train.jsonl --tag T2 --sets W --plan '...'   (old-parts check + DEV search)
 
 setup = job 6 steps 0-2 exactly (c2_pilot's own functions): N = raw B2 -> warm-up -> stepping-stone sleep; pool temperature on DEV; N samples the pool
 32 times; arms W (fits every example, <= 2 per question) and PC (reference programs, same count). Saved to DIR/setup.pt with the target cache entries.
@@ -15,8 +16,11 @@ Methods (all from the same N; nothing changes job 6):
   heads  "fast weights on the decision heads": freeze the reader and the looped thinker, cache the head inputs of each record under teacher forcing
          (ONE forward pass per record), then fit only the heads that read them (op, both operand queries, slot keys, answer query, mode) for many
          epochs on the cache. Exact: with the thinker frozen the head inputs do not depend on the heads (the forced op and operand values are fixed).
-  knn    an episodic memory the heads read: keys = the thinker state at each forced step, values = the forced op and the key vector of the forced
-         operand slot. No gradient at all; a gate keeps it silent when the state is far from every memory.
+  knn    an episodic memory the heads read (v2): keys = the thinker state at each forced step, values = the forced op and the slot ids of both
+         operands (plus an answer note); top-k cosine vote added to the op / slot logits. No gradient at all; a per-step gate (calibrated on
+         skills TRAIN replay rows when cal > 0) keeps it silent on states far from every note. old = N also writes that many warm-split
+         add/mult solver programs (keeps old parts). Results and marks: creative/results/fastsleep/.
+  lora   rank-r adapters on the core linears and heads (written, not screened).
 """
 import argparse, copy, json, math, os, random, time
 import torch
@@ -284,19 +288,29 @@ def build_memory(m, recs, vocab, device):
     return steps, (f['zf'][has], first(f['ans'][has]))
 
 
-def m_knn(N, recs, replay, vocab, device, n_w, k=16, tau=0.05, theta=0.9, c=20.0, cal=0.0, seed=0):
-    """cal > 0: gate thresholds calibrated on as many skills replay rows as records (one forward each, counted), quantile `cal` (added after the first screen)."""
+_WARM = {}
+
+
+def m_knn(N, recs, replay, vocab, device, n_w, k=16, tau=0.05, theta=0.9, c=20.0, cal=0.0, seed=0, old=0):
+    """cal > 0: gate thresholds calibrated on as many skills replay rows as records (one forward each, counted), quantile `cal` (added after the first screen).
+    old > 0: the memory also holds `old` practised-kind solver records (the warm split's add/mult reference programs), so a practised question finds its
+    own kind's entries (added after the old-parts check; their forward passes are counted here, though with frozen weights they are made once per parent)."""
     m = copy.deepcopy(N)
+    n_cal = len(recs)
+    if old:
+        if 'w' not in _WARM:
+            _WARM['w'] = R.warm_records(R.load_split(DATA, 'warm'))
+        recs = list(recs) + _WARM['w'][:old]
     steps, ans = build_memory(m, recs, vocab, device)
     mem = Memory(steps, ans, m.op_head.out_features, pp.M, k, tau, theta, c)
     if cal:
-        mem.calibrate(head_inputs(m, random.Random(seed).sample(replay, len(recs)), vocab, device), cal)
+        mem.calibrate(head_inputs(m, random.Random(seed).sample(replay, n_cal), vocab, device), cal)
     m.reader.register_forward_pre_hook(mem.reset)
     m.q_ans.register_forward_pre_hook(mem.ans_hook)
     m.op_head = _MemOp(m.op_head, mem)
     m.ptr = mem.wrap_ptr(m.ptr)
     m._mem = mem
-    return m, dict(memory=int(ans[0].shape[0]), k=k, tau=tau, theta=theta, c=c, version=2, cal=cal, theta_t=[round(x, 4) for x in mem.theta_t], theta_ans=round(mem.theta_ans, 4))
+    return m, dict(memory=int(ans[0].shape[0]), k=k, tau=tau, theta=theta, c=c, version=2, cal=cal, old=old, theta_t=[round(x, 4) for x in mem.theta_t], theta_ans=round(mem.theta_ans, 4))
 
 
 # ---------------------------------------------------------------- method: lora (low-rank adapters on the thinker, everything else frozen)
@@ -379,6 +393,47 @@ def screen(out, skills_data, skills_train, plan, device='cpu', seed=0, tag='scre
     return res
 
 
+def practised_and_reach(m, vocab, device, dev, T, fresh, n=32, seed=0):
+    """Old-parts check (job 6's `practised`: 256 fresh add/mult questions, 32 plain samples at T = 1.0, reach@32 and first sample; plus greedy first try
+    fits-and-right) and DEV search (reach@4 / reach@32 over 32 plain samples at the pool temperature T, repeats counted)."""
+    m.eval()
+    out = {}
+    smp = legal.raw_samples(m, fresh, vocab, device, n=n, temperature=1.0, level=0, seed=seed)
+    sc = fewshot.score_samples(fresh, smp, ks=(1, 4, 32))
+    g = c2_pilot.greedy_eval(m, fresh, vocab, device)
+    out['practised'] = dict(reach32=sc['reach32'], first_sample=sc['reach1'], greedy_right=g['right'])
+    smp = legal.raw_samples(m, dev, vocab, device, n=n, temperature=T, level=0, seed=seed)
+    sc = fewshot.score_samples(dev, smp, ks=(4, 32))
+    out['dev_search'] = dict(reach4=sc['reach4'], reach32=sc['reach32'], luck=sc['luck'])
+    return out
+
+
+def posteval(out, skills_train, plan, device='cpu', seed=0, tag='posteval', sets=('W',)):
+    """Re-make each (deterministic) slept model of `plan` and add the old-parts check and DEV search to it; N first."""
+    N, vocab, meta, s = load_setup(out, device)
+    recs, n_w = s['records'], len(s['records']['W'])
+    replay = sleep.load_replay(skills_train, None, seed)
+    dev = c2_stones._with_nums(R.load_split(DATA, 'dev'))
+    fresh = c2_stones._with_nums(stones.fresh_practised(256, 1, 'fresh-check')[0])
+    path = os.path.join(out, f'{tag}.json')
+    res = json.load(open(path)) if os.path.exists(path) else dict(runs=[])
+    if 'N' not in res:
+        res['N'] = practised_and_reach(N, vocab, device, dev, s['T'], fresh, seed=seed)
+        json.dump(res, open(path, 'w'), indent=1)
+        log('N', res['N'])
+    done = {(r['set'], r['method'], json.dumps(r['kw'], sort_keys=True)) for r in res['runs']}
+    for set_name in sets:
+        for name, kw in plan:
+            if (set_name, name, json.dumps(kw, sort_keys=True)) in done:
+                continue
+            m, info = METHODS[name](N, recs[set_name], replay, vocab, device, n_w, **kw)
+            r = dict(set=set_name, method=name, kw=kw, **practised_and_reach(m, vocab, device, dev, s['T'], fresh, seed=seed))
+            res['runs'].append(r)
+            json.dump(res, open(path, 'w'), indent=1)
+            log(set_name, name, kw, r['practised'], r['dev_search'])
+    return res
+
+
 def parse_plan(text):
     """'ft:lr=3e-4,visits=4;heads:epochs=30' -> [(name, kw)]"""
     out = []
@@ -394,12 +449,14 @@ def parse_plan(text):
 
 if __name__ == '__main__':
     a = argparse.ArgumentParser()
-    a.add_argument('cmd', choices=['setup', 'screen'])
+    a.add_argument('cmd', choices=['setup', 'screen', 'posteval'])
     a.add_argument('--ckpt'); a.add_argument('--out', required=True); a.add_argument('--skills-train'); a.add_argument('--skills-data'); a.add_argument('--floors')
     a.add_argument('--plan', default='ft:lr=0.0003,visits=4'); a.add_argument('--tag', default='screen'); a.add_argument('--sets', default='PC,W')
     a.add_argument('--T', type=float); a.add_argument('--device', default='cpu'); a.add_argument('--seed', type=int, default=0)
     a = a.parse_args()
     if a.cmd == 'setup':
         setup(a.ckpt, a.out, a.skills_train, a.skills_data, a.floors, a.device, a.seed, T=a.T)
+    elif a.cmd == 'posteval':
+        posteval(a.out, a.skills_train, parse_plan(a.plan), a.device, a.seed, a.tag, tuple(a.sets.split(',')))
     else:
         screen(a.out, a.skills_data, a.skills_train, parse_plan(a.plan), a.device, a.seed, a.tag, tuple(a.sets.split(',')))
