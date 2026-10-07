@@ -231,6 +231,46 @@ def test_queue50():
     print('ok queue50')
 
 
+def fake_wc(name, cfg, n_params, exact=100.0, n=250, cell=None):
+    """A WC.json (rescore_wc) with every unambiguous cell at `exact` (cell = (side, L, exact, n) overrides one)."""
+    u = {side: {str(L): dict(n=n, exact=exact) for L in range(1, 10)} for side in ('operand', 'answer')}
+    u.update(operand_ambiguous={}, answer_ambiguous={}, passes=1, min_n=200)
+    if cell:
+        u[cell[0]][str(cell[1])] = dict(exact=cell[2], n=cell[3])
+    return dict(write_copy_u=u, name=name, cfg=cfg, n_params=n_params, step=24000)
+
+
+def test_judge():
+    """analyze_t1s reads the sealed R1-R4 and Amendment 4 as written, on fake T1S runs built from q40's T1 results."""
+    import copy
+    from custom_io import analyze_t1s as J
+    from custom_io.analyze import load
+    runs, _ = load(['custom_io/results/33-pc-confirm-b2', 'custom_io/results/40-vast-t1'])
+    for s in J.SEEDS:
+        r = copy.deepcopy(runs[('T1', s)])
+        r['config'] = dict(r['config'], cfg={'span_copy': True})
+        r['n_params'] = T1S_PARAMS
+        r['extra']['noexec']['program_families'] = 1.0
+        r['extra']['op_acc']['free_run']['call'] = 99.0
+        runs[('T1S', s)] = r
+
+    def verdict(cell=None, t1=99.0, **kw):
+        wcs = {}
+        for s in J.SEEDS:
+            wcs[('T1S', s)] = fake_wc('tool', {'span_copy': True}, T1S_PARAMS, cell=cell if s == 201 else None, **kw)
+            wcs[('T1', s)] = fake_wc('tool', {}, T1_PARAMS, exact=t1)
+        return J.screen(runs, wcs)
+    v = verdict()
+    assert v['verdict'].startswith('PASS'), (v['verdict'], {k: x['ok'] for k, x in v['marks'].items()})
+    assert verdict(cell=('answer', 7, 89.0, 250))['verdict'].startswith('PROVED WRONG')
+    assert verdict(cell=('operand', 5, 95.0, 250))['verdict'].startswith('NOT SHOWN')
+    assert verdict(cell=('operand', 2, 95.0, 250))['verdict'].startswith('NOT SHOWN')         # a 1-3 cell 90-99: not shown, not proved wrong
+    assert verdict(cell=('operand', 6, 50.0, 150))['verdict'].startswith('NOT JUDGED on R1')   # short cell: cannot fail by itself
+    assert verdict(t1=100.0, exact=99.5)['verdict'].startswith('NOT SHOWN')                    # R3: a 1-3 cell below T1's re-scored value
+    assert J.screen(runs, {})['verdict'] == 'NOT JUDGED'
+    print('ok judge')
+
+
 if __name__ == '__main__':
     import sys
     want = sys.argv[1:]

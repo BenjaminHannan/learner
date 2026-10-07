@@ -603,3 +603,21 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
 - **Run:** seeds 200 and 201, the queue 40 recipe (24k steps, batch 256, lr 1e-3, bf16, q33's data file 010af671), on the two rented RTX 5090s
   that ran T1. Queue `50-pc-t1s-screen.txt`, box jobs custom_io/queue/t1a|t1b/50-t1s-*.sh.
 - **Judge:** `python -m custom_io.analyze_t1s --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-vast-t1 custom_io/results/50-vast-t1s`.
+
+## Addendum 22, amendment 1 (written 2026-10-07 about 22:30 UTC, 6:30 PM ET, before any T1S result is read)
+- **Source, mirrored as sealed:** MARKS-D0-T1-2026-10-07.md Amendment 4 (6:10 PM ET; the idea swarm's finding via the coordinator), copied into
+  the repo as custom_io/design/MARKS-D0-T1-2026-10-07.md.
+- **Step 1, the disclosure check (data only, done):** custom_io/results/WC-LABELS.md (`python -m custom_io.diag_wc_labels`). On the big
+  build's in_dist (2,793 program rows), of the gold operands write_copy's text rule called copies, a prompt number or constant also holds the
+  value for 213 of 388 at 1 digit (55%), 671 of 2,145 at 2 (31%), 233 of 473 at 3 (49%), 0 of 31 at 4 and 0 of 11 at 5. The new rule's
+  unambiguous set agrees with the gold slots in every case.
+- **Scorer (Tool.write_copy_u, custom_io/rescore_wc.py):** the same rows, oracle and copy events as write_copy; an operand counts only if its
+  intact-run text equals exactly one earlier result and no prompt number or constant (an answer: exactly one call result, no prompt number
+  or constant); the rest are reported apart. Pass 0 is write_copy's own random draw; while any unambiguous length 1-9 cell (operand or
+  answer) has n < 200, another pass re-draws every random string on the same rows (seed + "|pass"), at most 8 passes. The rule reads only
+  texts and n, never whether the model was right.
+- **Where it runs:** on the two boxes, same dev file, eval batch 128 and bf16 as the final eval: T1's queue 40 checkpoints first (jobs 51,
+  started before any T1S result exists), then T1S's checkpoints once each run has finished (jobs 52). Judge:
+  `python -m custom_io.analyze_t1s --results ...33 ...40-vast-t1 ...50-vast-t1s --wc ...51-vast-wc-t1 ...52-vast-wc-t1s`; R1, R3 and the
+  proved-wrong line read the unambiguous cells; a cell with n < 200 is reported and cannot pass or fail by itself; the old numbers are printed
+  beside. Marks unchanged.
