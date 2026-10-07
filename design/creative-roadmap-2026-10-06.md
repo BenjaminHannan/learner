@@ -58,6 +58,10 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   numbers greyed out" rule (C1 only, retired with it), the notebook's on/off switch (the nightly recall step), and the
   example checker. Each now has a learned or tool replacement with marks fixed first (section 7b). Job 9 runs as it
   is; the notebook's hand switch is not used after it.
+- **The model must be able to do it all itself (Ben, 2:45 PM ET 10-07; section 7c).** Job 9's main arm needs no
+  outside help to sleep on its own checked tries, but two parts are still ours. We wrote its practice "stepping
+  stones" for the new rules, and a fixed script decides when it is stuck, how many tries it gets and when it sleeps.
+  Job 9's report will say so. From now on the model makes its own stepping stones.
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
   when the model runs into trouble on a problem it is trying to solve. Gift and plan ideas are out of scope.
 
@@ -216,7 +220,7 @@ sealed in their own spec before running.
 
 | Step | One change | Pass (provisional) | Proves it wrong |
 |---|---|---|---|
-| **C6** stepping stones | Easier variants of fresh, sealed new kinds, made program first (short verified programs, then their examples, then the 1.2B's wording), never from their tests; the loop climbs one step at a time (Lee 2025, Ben's "reframing"). Placebo: matched unrelated practice; positive control: full-difficulty solver programs. Only kinds B2's language can express (checked first); not P0's four kinds | New kinds: reach@32 >= 25% and >= the value-blind floor + 15, first try >= 10% and >= placebo + 10, examples-to-learn at least halved against the plain net | Reach@32 < 10%, or no better than the placebo |
+| **C6** stepping stones | Easier variants of fresh, sealed new kinds, made by the model itself (Ben's autonomy rule, 10-07, section 7c; variants made by our code or a teacher are only a positive control), never from their tests; the loop climbs one step at a time (Lee 2025, Ben's "reframing"). Placebo: matched unrelated practice; positive control: full-difficulty solver programs. Only kinds B2's language can express (checked first); not P0's four kinds | New kinds: reach@32 >= 25% and >= the value-blind floor + 15, first try >= 10% and >= placebo + 10, examples-to-learn at least halved against the plain net | Reach@32 < 10%, or no better than the placebo |
 | **C7** pieces library | Repeated sub-programs (from training solutions only) become new named operations the thinker can call (Stitch, DreamCoder); a piece counts only if reused in 2 or more kinds. Placebo: type-correct random pieces of matched size and count; also a no-library reference; equal checker calls | New-kind reach >= both the placebo and no library + 5, every parent, also at equal wall-clock; >= 30% of new solutions use a counted piece. Shorter programs alone count as a speed win, not more reach | Reuse < 5%, or reach no better than random pieces |
 | **C8** beyond the teacher | Checkable problems the 1.2B gets wrong with the same 32 tries, the same checker and tools, on a sealed set; budgets named in the spec | Solves >= 20% of the teacher's failures | < 5% |
 
@@ -665,6 +669,9 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
        build thread, c8dbdb61e4). So C2 tests turning search into first answers (Ben's "next time it doesn't need
        luck"), not finding answers no search could find. A C2b pass is reported under that name, with the guesses
        blind search needed for the same questions beside it. C2 cannot support a claim about finding answers.
+    9. Autonomy labels, added 10-07 before the test is opened (Ben's autonomy rule, section 7c): every arm's result
+       carries the label in 7c's table. A pass reads "sleeping on its own checked tries works without outside help;
+       the parent was given stepping stones we wrote for these kinds, and the loop is a fixed script".
   - **Fast-sleep research, ruled 10-07 (RESEARCH-2026-10-07.md in the project folder; shown on DEV):**
     - Answer note behind an agreement gate: no harm on 8 parents, gain +0.98 against +1.0 needed. M keeps it off.
     - Chaining stored programs into the notebook at night: proved wrong (+0.7 against +5; no better than blind
@@ -906,10 +913,59 @@ Ruled:
   the gain over blind search has its upper end below +3. Either way it is not using the checker's answers, only
   sampling.
 
+## 7c. Autonomy rule (Ben, 2:45 PM ET 10-07): the model must be able to do it all itself
+
+Ben: "everything that you do should be able to be done by the model autonomously while it's deployed." How it applies
+here:
+- **Covered:** everything that shapes what the model does or learns when it meets a new problem:
+  - noticing it is stuck and deciding to search;
+  - how many tries, checking them, choosing what to sleep on, when to sleep, and recall;
+  - any practice material made for the new problem, such as stepping stones.
+- **Not covered:** tests, scoring, controls and marks. They measure the model and are never part of it (as in 7b).
+  Training before deployment on general material (the add/mult warm-up, the skills rows) is how the model is built.
+  It counts as help only where it was made for the test's own new kinds.
+- **Two labels for every arm of every test from now on:**
+  - **No outside help:** at run time it needs no person, no Claude, no answer key, no knowledge of which kind a
+    question is, and nothing made for the specific new kinds. A setting fixed before deployment is allowed. A setting
+    re-picked for each new kind is allowed only if it uses the example check alone.
+  - **Own choices:** every decision in the loop is the model's own, or a tool it calls (7b's rule). This needs B3's
+    tool loop.
+  - An arm that meets both is "autonomous".
+
+**Job 9's arms, labelled before the test is opened** (shown from `c2b.py`, `c2_dev.py`, `c2_stuck.py`):
+
+| arm | no outside help | own choices | why |
+|---|---|---|---|
+| N' (parent) | no | no | Its stepping stones were written by us, in code, for exactly the five held-out kinds. A deployed model meeting a new kind would get none, and without them 32 tries found almost nothing (cold start 3.9% / 6.3% against a 4.8% floor). |
+| W | yes, given N' | no | Uses only its own tries, the example check, its own old data as replay, and settings fixed in advance. Its temperature is picked on DEV by example fits alone; `c2_dev.py` reads answer keys only to report. Its dose was fixed in job 6. But the loop is a fixed script: 32 tries, 480 more where none fits, sleep every night. |
+| M | yes, given N' | no | As W, plus the hand-set notebook switch (7b). |
+| R, H | controls | controls | They exist only to test W and are never deployed. |
+
+Reading, fixed now:
+- What job 9 measures, W - N' (sleeping on its own checked tries), needs no outside help. A pass supports "this
+  step can run without us", not "the model runs the loop by itself".
+- No later test uses stepping stones, curricula or settings made by us for its held-out kinds. The model makes its own
+  stones (C6, changed in section 5), or there are none. Stones written by us or a teacher are allowed only as a positive
+  control, like PC.
+
+**Choices we still make that the model must make itself one day** (the creative rows of the no-hard-coding plan's
+section 2a, PR #49 545dc4a2ad, plus the stones; untested; each becomes its own one-change test with marks fixed at its
+build, and until then the fixed recipe is disclosed):
+
+| our choice today | where | becomes |
+|---|---|---|
+| Stepping stones written for the held-out kinds | C2 parent (N') | the model makes its own easier versions (C6) |
+| Try budget: 32, then 480 more where none fits | C2b (D5) | it keeps trying until its check tool says right, or decides to stop; a learned "I can't do this yet" signal from its own failed checks (C9) |
+| Sampling temperature picked on a DEV grid | C1, C2b (D2, D5) | learned, or set by the model per question |
+| Example checker run by the loop | C2b (D3) | a tool it calls (7b's marks) |
+| Notebook switch (theta, 0.99 quantile, c = 50) | memory sleep (D6) | the learned gate (7b), then a recall tool |
+| Warm-up programs from our breadth-first solver | C2 warm-up (D9) | its own search, which C2 shows is easy for these kinds |
+| When to sleep, what to keep, data mix, sleep learning rate, nightly harm check | fast sleep, C2b (D8) | its own choice (the fast-sleep thread owns these) |
+
 ## 8. How it fits the other work
 
 - **Plan B test B1** (teacher-made variety for a 10.8M B2) runs first. C1 does not need its data. If B1 passes, C2 onward
-  use the bigger student, and the 1.2B also writes C6's stepping stones.
+  use the bigger student. (C6's stones are now made by the model itself, section 7c.)
 - **The B2 6-seed confirm** gates C1 and C2 (D7); its leak check (loops:0) is now a creative lesion too.
 - The swarm result (members all miss the same questions) says more copies of one model are not a variety source; D4 and
   C3b make variety inside one model.
@@ -1026,3 +1082,7 @@ Ruled:
   learned notebook gate, and the example checker as a tool (section 7b). Two proposed marks were replaced: one was
   narrower than a single DEV puzzle, and the other overlapped the pass zone. Job 9 unchanged; the hand notebook gate
   is not used after it.
+- **Autonomy rule (10-07):** Ben's rule that everything we do must be doable by the deployed model on its own.
+  Recorded as section 7c, with job 9's arms labelled before the test is opened (W and M need no outside help given
+  their parent, but the parent's stones are ours and the loop is a fixed script; R and H are controls) and C6
+  changed so the model makes its own stones.
