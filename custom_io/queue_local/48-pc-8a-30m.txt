@@ -4,7 +4,7 @@
 # Inputs (git checkouts, staged by the Mac session): {WORK}\8a-inputs\data-pool = branch claude/data-pool-8b, {WORK}\8a-inputs\own-data = branch claude/8a-own-data.
 #   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\48-pc-8a-30m.txt --device cuda --par 1 --busy C:\Users\benja\GPU-BUSY.txt
 # MEM 3000
-g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data --expect-manifest-sha e8f32daf44d562910db6700bd73b64c720beb6e5c1c5a9a115e8c8880f0763b0
 # MEM 13000
 g8a: 8a-30M-s400 --rung 30M --seed 400 --speed-json {WORK}/results/45-pc-8a-speed/8a-speed/speed.json --public pythia31m
 g8a: 8a-30M-s401 --rung 30M --seed 401 --speed-json {WORK}/results/45-pc-8a-speed/8a-speed/speed.json --public pythia31m
