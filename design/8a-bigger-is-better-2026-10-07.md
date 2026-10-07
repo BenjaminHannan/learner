@@ -1,6 +1,6 @@
 # Stage 8a: is bigger better for our design? Spec and pass marks
 
-Sealed before any 8a run (written 2026-10-07, about 1:30 PM ET). Changing a mark after the first run needs a dated
+Sealed before any 8a run (written 2026-10-07, about 1:15 PM ET). Changing a mark after the first run needs a dated
 addendum that says why, and it cannot use any 8a result.
 
 Labels: **shown** = measured in this repo; **suggested** = reasoned; **untested** = a plan or guess.
@@ -153,7 +153,7 @@ The LLM arm gains most on FRESH and new kinds, where wording matters.
 - Box launcher: one box per seed per rung, arms in sequence, MAXH self-stop, collect, destroy.
 - `analyze_8a.py`: section 7's marks, written and tested on fake numbers before any run.
 
-## 11. Addendum A: good enough, start now, and the B3 switch (2026-10-07, 1:35 PM ET, before any 8a run)
+## 11. Addendum A: good enough, start now, and the B3 switch (2026-10-07, 1:31 PM ET, before any 8a run)
 
 No 8a run has started, so these add marks rather than change them, and nothing here uses an 8a result.
 
@@ -215,7 +215,7 @@ to about $53; expected about $30. With the letter reader, caps are unchanged.
 - Box launcher: the public-model arm at the 30M rung; the HF weights pinned by revision in the run manifest.
 - `analyze_8a.py`: marks 4 and 5 and the good-enough proved-wrong line, tested on fake numbers before any run.
 
-## 12. Addendum B: enough training, rows that fit, speed first (2026-10-07, 2:10 PM ET, before any 8a run)
+## 12. Addendum B: enough training, rows that fit, speed first (2026-10-07, 1:40 PM ET, before any 8a run)
 
 No 8a run has started; nothing here uses an 8a result.
 
@@ -253,10 +253,10 @@ Changes:
   first run; mark 5's public model is then pythia-31m). If EGE passes q39, it is checked inside 8a as one extra reported
   arm at the 10M rung (B2 with EGE, 2 seeds, same rows), which informs 8c's reader. Disclosed.
 
-Vast credit at 2:05 PM ET: $8.92, with one box from another thread running (not ours). The speed check and the 3M rung
+Vast credit at 1:37 PM ET: $8.92, with one box from another thread running (not ours). The speed check and the 3M rung
 (cap $15) need Ben's top-up.
 
-## 13. Addendum C: run 8a on the home PC (2026-10-07, 2:30 PM ET, before any 8a run)
+## 13. Addendum C: run 8a on the home PC (2026-10-07, 1:45 PM ET, before any 8a run)
 
 No 8a run has started; nothing here uses an 8a result.
 
@@ -285,3 +285,21 @@ Changes (they replace section 6 and the money lines in addenda A2, B3 and B4):
     if the public model is SmolLM2-360M (its 6 fine-tunes). Before 30M starts, Ben gets the measured PC time and
     decides: run it on the PC, or rent for that rung only.
 - **Stop rule unchanged:** no 30M if B2's 10M-minus-3M pooled-5 mean is below 0.
+
+## 14. Addendum D: a fair plain baseline, and near-repeats in our own text (2026-10-07, 1:53 PM ET, before any 8a run)
+
+No 8a run has started; nothing here uses an 8a result.
+
+- **Why:** D0b (no-hard-coding thread, `/mnt/project-files/no-hardcoding/D0b-RESULT-2026-10-07.md`, shown) found that
+  plain_tf_steps writes its steps only when steps plus answer fit in 64 characters (`plain_tf_steps.py:15, 21-27`).
+  Longer rows are trained answer-only, which caused 58 of its 72 chain-5 misses. That handicaps the yardstick, not the
+  plain recipe. The no-hard-coding plan's C0 (section 3.1, sealed) removes the cap (MAX_POS raised to fit), on seeds
+  200 and 201 on the PC, right after q39.
+- **D1. The PT arm follows C0's sealed consequence.** If C0's 2-seed pooled-5 mean is at or above plain_tf_steps', PT at
+  every 8a rung is plain_tf_steps with C0's uncapped settings, and the LLM arm's question rows use the same uncapped
+  steps target. Otherwise PT stays as written. Either way, the stronger yardstick is used, which only tightens marks 2
+  and 3. C0's own runs are the 3M pair for the first look, so there is one fair plain run, not two.
+- **D2. Near-repeats in our own text.** The data-pool thread measured 23% of own-text rows at 22.8M as the same problem
+  with new numbers (target was 10% or less; it cannot drop without new kinds of questions). Accepted for 8a: every arm
+  and rung sees the same mix, so it does not favour any arm. It can cap the gain from size, which the quarter-pool
+  diagnostic (section 7) checks. The rate is reported per rung, including at 72M for 30M.
