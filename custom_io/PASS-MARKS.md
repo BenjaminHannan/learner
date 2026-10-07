@@ -334,3 +334,25 @@ alone (step 5,500 after 36 min), so it would end about 04:50 UTC, past box B's 7
 destroyed now (all its finished jobs, 41, 43 and 45, are collected) and EGE_s201 restarts from scratch on box C as job 49, after jobs 46 and 48,
 with B2V_s201 from box B as its base. Both EGE seeds are therefore paired across boxes (same GPU model, image and data), as are both R0 seeds.
 No mark, recipe or flag changes; any EGE pass still needs the 6-seed confirm, which will pair each seed on one machine.
+
+## Addendum 14: EGK, EmbeddingGemma feeds only the thinker (written 2026-10-07 about 03:20 UTC, 11:20 PM ET 10-06, before any EGK run; EGE_s201 and R0_s201 not yet scored)
+**What we know (seed 200, read only):** R0 (window removed) lost 6.65 on pooled-5 and cipher_map fell to 12.5, so the window, not
+EmbeddingGemma, is what cipher_map needs. EGE (window kept, EmbeddingGemma added before the window) gained +1.63 on pooled-5 against B2V_s200
+(frame +4.26, vocab +2.75, variant +1.44) and kept cipher_map at 97.5, but read 18.09 at loops:0 in_dist (mark 5 limit 5; B2V 1.40), so EGE
+already misses mark 5 on seed 200. At loops:0 the controller does nothing, so those answers come from the talker reading the reader output
+directly: the WORD content keys, the number-slot pools and the GEN copy keys all take the reader output, which in EGE carries EmbeddingGemma
+(EGE loops:0 hits: copy_word 85, prop_eval 70, kin_chain 55, object_track 52.5, story_chain3 42.5).
+**EGK** (`{"copy":true,"eg_embed":true,"eg_thinker":true}`, `models/ledger.py`): one change from EGE. The reader runs twice with the same
+weights; the run with the EmbeddingGemma term feeds only the controller's cross-attention to the reader output, and the number slots, the WORD
+content keys and the GEN copy keys take B2's own reader output, without EmbeddingGemma. No new parameters: trainable 3,500,881, whole
+274,503,505 (EmbeddingGemma counted). At step 0 it computes exactly what B2 and EGE compute (eg_proj is zero; tested in test_thinker_only).
+**Runs:** seeds 200 and 201, the B2 recipe and flags of queue 38 (24,000 updates, batch 256, lr 1e-3, bf16), on rented RTX 5090s (the PC is
+busy with queue 35): EGK_s200 on box C (job 50), EGK_s201 on a new box D (job 51, same image and env). Bases: B2V_s200 (box A) and B2V_s201
+(box B), the cross-box pairing disclosed in addendum 13.
+**Pass:** exactly addendum 4's five marks, unchanged (1 pooled-5 gain >= +1.0 on both seeds; 2 variant gain >= +3.0, 2-seed mean; 3 no dev
+split drops more than 2.0, 2-seed mean; 4 chain-5 >= 99.0 on both seeds; 5 loops:0 in_dist <= 5 and donor in_dist <= 5 on both seeds,
+absolute). A pass is "better than B2" by mark 1 and goes to the 6-seed confirm at the same marks, each seed's arm and plain B2 on one machine.
+**Proved wrong:** EGK's 2-seed mean pooled-5 gain < +0.5 means EGE's gain needed the talker's direct view of EmbeddingGemma, not the thinker's
+(the thinker does not turn EmbeddingGemma's meaning into better programs at this recipe).
+**Read only:** EGK minus EGE per split, per family and at loops:0; the prediction that EGK's loops:0 in_dist is within 1.0 of B2V's.
+**Size rule** as in addendum 4: a 274.5M model, so a pass is a B2-internal result.

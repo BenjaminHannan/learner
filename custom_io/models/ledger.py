@@ -44,7 +44,10 @@ uses it as its output alphabet (the GEN readout is tied to it). Same parameters 
 eg_adapter='mlp' (PASS-MARKS.md addendum 8, EGM; default 'linear' = the arms above): the adapter between EmbeddingGemma and the reader input is
 LayerNorm -> Linear(768, d) -> GELU -> Linear(d, d) (the last one zero-initialised) instead of LayerNorm -> Linear(768, d); +65,792 params at d = 256.
 eg_adapter='none' (addendum 9, EGW; needs d = 768): no adapter. The thinker is built at EmbeddingGemma's width, so each char's input is
-LayerNorm(EmbeddingGemma state) + position + place code, then the reader's final LayerNorm; the thinker's own first layers do the adapting."""
+LayerNorm(EmbeddingGemma state) + position + place code, then the reader's final LayerNorm; the thinker's own first layers do the adapting.
+eg_thinker=True (PASS-MARKS.md addendum 14, EGK; needs eg_embed with the linear adapter; default False = EGE): the reader runs twice with the same weights.
+The run with the EmbeddingGemma term feeds only the controller's cross-attention to the reader output; the number slots, the WORD content keys and the
+GEN copy keys (everything the talker reads, and the workspace) take B2's own reader output, without EmbeddingGemma. No new parameters (EGE's 3,500,881)."""
 import math
 import numpy as np
 import torch
@@ -125,13 +128,15 @@ class Ledger(Model):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap']
 
     def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, copy=False, span=False, span_max=12,
-                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True, eg_adapter='linear'):
+                 eg_embed=False, eg_teach=0.0, eg_path=None, round_readout=0.0, letters_in=True, eg_adapter='linear', eg_thinker=False):
         super().__init__(vocab)
         self.d, self.n_loops, self.dk, self.w_noop, self.wpos, self.copy = d, n_loops, dk, w_noop, wpos, copy
         self.span, self.span_max = span, span_max
         self.eg_embed, self.eg_teach = bool(eg_embed), float(eg_teach)
         assert eg_adapter in ('linear', 'mlp', 'none'), eg_adapter
         self.eg_adapter = eg_adapter
+        self.eg_thinker = bool(eg_thinker)
+        assert not self.eg_thinker or (self.eg_embed and eg_adapter == 'linear' and letters_in), 'eg_thinker needs eg_embed, the linear adapter and letters'
         self.round_readout = float(round_readout)
         assert letters_in or eg_embed, 'letters_in=False needs eg_embed (the reader input would carry no content)'
         self.reader = CharReader(len(vocab), d, reader_layers, letters=bool(letters_in))
@@ -241,10 +246,10 @@ class Ledger(Model):
     def eg(self):
         return self._eg[0]
 
-    def read(self, batch):
+    def read(self, batch, talker=False):
         """The reader on `batch` -> (X [B,T,d], mask). eg_embed: the input embedding also gets eg_proj(ln_eg(H)), H = EmbeddingGemma's state of the
-        token holding each char of THIS batch's prompts."""
-        if not self.eg_embed:
+        token holding each char of THIS batch's prompts. talker=True with eg_thinker: B2's own reader output, without EmbeddingGemma."""
+        if not self.eg_embed or (talker and self.eg_thinker):
             return self.reader(batch)
         ids = batch['prompt_ids']
         H, _ = self.eg().encode([r['prompt'] for r in batch['rows']], ids.shape[1], ids.device)
@@ -269,7 +274,8 @@ class Ledger(Model):
         -> dict(R registers [B,9,d], vals [B,M] int64, valid, lmode, lans, lword, steps [(op, a, b logits)], prog (ops, a, b [B,L]);
         copy=True adds X [B,T,d] and xm [B,T] (reader output and prompt mask) so that loss() does not run the reader twice).
         rounds=True (round_readout training) adds 'rounds' [(t, Z[:,1], registers, Rs, valid) after iterations 1..n-2], S0 and Kw."""
-        X, xm = self.read(batch)
+        X, xm = self.read(batch, talker=True)
+        Xt = self.read(batch)[0] if self.eg_thinker else X       # eg_thinker: only the controller's cross-attention sees EmbeddingGemma
         ns, ne, nv, ws, we = self.tokenize(batch)
         B, T, dev = X.shape[0], X.shape[1], X.device
         t_ix = torch.arange(T, device=dev)
@@ -286,7 +292,7 @@ class Ledger(Model):
         Kw, wvalid = self.word_keys(ws, we), we > ws
         if self.copy and lesion != 'nowordc':
             Kw = Kw + self.word_content(X, ws, we)
-        kvx = [b.kv_of(X + self.src.weight[1]) for b in self.core]
+        kvx = [b.kv_of(Xt + self.src.weight[1]) for b in self.core]
         P = self.reader.place.weight[:N_REG]
         Z = torch.cat([self.ctrl.weight, P]).expand(B, -1, -1)
         steps, prog, snaps = [], [], []
@@ -368,7 +374,7 @@ class Ledger(Model):
         return_modes: also the decoded mode of every row (0 NUM, 1 WORD / SPAN, 2 GEN; GEN also when a NUM / WORD pointer is invalid)."""
         R, vals, valid, lmode, lans, lword, *rest = state
         if self.copy:
-            X, xm = self.read(batch)
+            X, xm = self.read(batch, talker=True)
             ids = self.gen_copy(R, X, xm, batch['prompt_ids'], lesion == 'nocopy')[0].argmax(-1)
         else:
             ids = self.readout(R).argmax(-1)

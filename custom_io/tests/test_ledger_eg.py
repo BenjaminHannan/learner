@@ -204,6 +204,47 @@ def test_wide_no_adapter():
     print('ok wide_no_adapter')
 
 
+def test_thinker_only():
+    """EGK (eg_thinker, addendum 14): the same keys and weights as EGE at the same seed (no new parameter), the same loss at step 0; once eg_proj is
+    non-zero, the talker side (number slots, WORD keys, GEN copy keys, so every loops:0 output) and the X that loss() hands the copy path no longer
+    depend on the EmbeddingGemma states, while EGE's do, and EGK's full-loop outputs still do (the controller reads them)."""
+    v, rows = vocab(), train_rows(48, 4)
+    e, k = seeded(SMALL, 7, v, copy=True, eg_embed=True), seeded(SMALL, 7, v, copy=True, eg_embed=True, eg_thinker=True)
+    se, sk = e.state_dict(), k.state_dict()
+    assert list(se) == list(sk) and all(torch.equal(se[x], sk[x]) for x in se) and e.n_params() == k.n_params()
+    b = batch_of(rows, v)
+    le, _ = e.loss(b)
+    lk, _ = k.loss(b)
+    assert torch.equal(le, lk), (le.item(), lk.item())
+    torch.manual_seed(3)
+    w = torch.randn_like(e.eg_proj.weight) * 0.05
+    for m in (e, k):
+        m.eval()
+        with torch.no_grad():
+            m.eg_proj.weight.copy_(w)
+    zero = lambda m: (lambda f: lambda p, T, d, chars=True: (lambda r: (r[0] * 0 if r[0] is not None else None, r[1]))(f(p, T, d, chars)))(m.eg().encode)
+    keys = ('lmode', 'lans', 'lword', 'X')
+    with torch.no_grad():
+        o0 = {n: m.run(b, loops=0) for n, m in (('e', e), ('k', k))}
+        f8 = {n: m.run(b) for n, m in (('e', e), ('k', k))}
+        assert torch.equal(o0['k']['X'], k.reader(b)[0]) and torch.equal(k.read(b, talker=True)[0], k.reader(b)[0])
+        for m in (e, k):
+            m.eg().encode = zero(m)
+        z0 = {n: m.run(b, loops=0) for n, m in (('e', e), ('k', k))}
+        z8 = {n: m.run(b) for n, m in (('e', e), ('k', k))}
+    assert all(torch.equal(o0['k'][x], z0['k'][x]) for x in keys), 'EmbeddingGemma reached the EGK talker'
+    assert not all(torch.equal(o0['e'][x], z0['e'][x]) for x in keys), 'the EGE talker does not see EmbeddingGemma (the test proves nothing)'
+    assert not torch.allclose(f8['k']['R'], z8['k']['R']), 'the EGK controller does not see EmbeddingGemma'
+    assert seeded(S_CFG, 0, v, copy=True, eg_embed=True, eg_thinker=True).size() == seeded(S_CFG, 0, v, copy=True, eg_embed=True).size()
+    for bad in (dict(eg_embed=False), dict(eg_embed=True, eg_adapter='mlp'), dict(eg_embed=True, reader_layers=0, letters_in=False)):
+        try:
+            seeded(SMALL, 0, v, copy=True, eg_thinker=True, **bad)
+        except AssertionError:
+            continue
+        raise AssertionError(f'eg_thinker accepted {bad}')
+    print('ok thinker_only')
+
+
 def test_teach_loss_and_never_at_eval():
     """eg_teach: keys = B2's + ln_mt + mt_head; B2 weights identical at the same seed; loss = B2 loss + w * meaning (B2 aux unchanged); answers equal
     B2's (the head never touches inference); the teacher embeds only the loss batch's prompts, never anything in generate / lesions / donor."""
@@ -271,7 +312,7 @@ def test_bf16_states_without_autocast_and_queue_env():
 
 
 def test_egw_box_jobs():
-    """Addenda 10-13: the rented boxes train EGW, EGM, EGO, EGR, R0, EGE and plain B2 (B2V), each box on one seed, with queue 33's B2 flags exactly
+    """Addenda 10-14: the rented boxes train EGW, EGM, EGO, EGR, R0, EGE, EGK and plain B2 (B2V), with queue 33's B2 flags exactly
     (only the name and the cfg differ), and each box's first job names the env that fetches and checks EmbeddingGemma. Box C (addendum 13) has no
     B2V: its R0_s200 and EGE_s200 use box A's B2V_s200."""
     import shlex
@@ -282,11 +323,11 @@ def test_egw_box_jobs():
     flags = lambda args: [x for i, x in enumerate(args) if x != '--cfg' and (i == 0 or args[i - 1] != '--cfg')]
     cfg = lambda args: json.loads(args[args.index('--cfg') + 1])
     every = {'egwA': [(200, ['B2V', 'EGM', 'EGO', 'EGR', 'EGW'])], 'egwB': [(201, ['B2V', 'EGM', 'EGO', 'EGR', 'EGW'])],
-             'egwC': [(200, ['EGE', 'R0']), (201, ['EGE', 'R0'])]}
+             'egwC': [(200, ['EGE', 'EGK', 'R0']), (201, ['EGE', 'R0'])], 'egwD': [(201, ['EGK'])]}
     for sub, seeds in every.items():
         d = os.path.join(here, 'queue', sub)
         jobs = sorted(f for f in os.listdir(d) if f.endswith('.sh'))
-        assert len(jobs) == {'egwA': 3, 'egwB': 4, 'egwC': 3}[sub], jobs
+        assert len(jobs) == {'egwA': 3, 'egwB': 4, 'egwC': 4, 'egwD': 1}[sub], jobs
         texts = [open(os.path.join(d, j)).read() for j in jobs]
         assert '--env "TFVER=5.19.0 EG=1 MAXH=7.5 IDLE_EXIT=3600 END_SLEEP=600 FAIL_SLEEP=1800"' in texts[0], (sub, jobs)
         assert all(t.startswith('# MEM ') and '\n# PAR ' in t for t in texts), jobs

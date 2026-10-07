@@ -14,9 +14,10 @@ ARMS = {'EGE': {'copy': True, 'eg_embed': True}, 'EGT': {'copy': True, 'eg_teach
         'EGR': {'copy': True, 'eg_embed': True, 'reader_layers': 0}, 'R0': {'copy': True, 'reader_layers': 0},
         'EGO': {'copy': True, 'eg_embed': True, 'reader_layers': 0, 'letters_in': False},
         'EGM': {'copy': True, 'eg_embed': True, 'reader_layers': 0, 'letters_in': False, 'eg_adapter': 'mlp'},
-        'EGW': {'copy': True, 'd': 768, 'n_heads': 12, 'eg_embed': True, 'reader_layers': 0, 'letters_in': False, 'eg_adapter': 'none'}}
+        'EGW': {'copy': True, 'd': 768, 'n_heads': 12, 'eg_embed': True, 'reader_layers': 0, 'letters_in': False, 'eg_adapter': 'none'},
+        'EGK': {'copy': True, 'eg_embed': True, 'eg_thinker': True}}
 RECIPE = dict(steps=24000, batch=256, lr=1e-3, bf16=True)
-SIZES = {'B2': 3302481, 'EGE': 3500881, 'EGT': 3368785, 'LR': 3302481, 'EGR': 2843985, 'R0': 2645585, 'EGO': 2843985, 'EGM': 2909777, 'EGW': 22164357}
+SIZES = {'B2': 3302481, 'EGE': 3500881, 'EGT': 3368785, 'LR': 3302481, 'EGR': 2843985, 'R0': 2645585, 'EGO': 2843985, 'EGM': 2909777, 'EGW': 22164357, 'EGK': 3500881}
 
 
 def valid(r, cfg, arm):
@@ -106,6 +107,8 @@ def judge(runs, arm):
         m = {k: m[k] for k in sorted(m)}
         out['proved_wrong'] = dict(pooled5_mean_below_0=None if mean(dp5) is None else mean(dp5) < 0,
                                    stability_missed_both=None if not full(stab) else all(v is not None and v < -0.3 for v in stab.values()))
+    if arm == 'EGK':        # addendum 14: the gain needs the talker's direct view of EmbeddingGemma
+        out['proved_wrong'] = dict(pooled5_mean_gain_below_0_5=None if mean(dp5) is None else mean(dp5) < 0.5)
     out['marks'] = m
     oks = [x['ok'] for x in m.values()]
     out['verdict'] = 'NOT JUDGED' if not out['judged'] or 'n/a' in oks else ('PASS' if all(x is True for x in oks) else 'FAIL (stop this arm)')
@@ -169,6 +172,27 @@ def arm_minus(runs, x, y):
     return out
 
 
+def fam_in(r, f):
+    x = g(r, 'final_eval', 'in_dist', 'by_family', f)
+    return None if not x or not x.get('n') else 100 * x['correct'] / x['n']
+
+
+def checks(runs):
+    """Read-only diagnosis checks written before their runs: addendum 12 (EGR cipher_map in_dist >= 50 on both seeds, else the letter explanation is
+    wrong) and addendum 13 (the window is what cipher_map needs: R0 < 50 and EGE >= 90 on both seeds; R0 >= 50 on either seed: not the window)."""
+    cm = lambda arm: {s: fam_in(runs[(arm, s)], 'cipher_map') for s in SEEDS if (arm, s) in runs and not valid(runs[(arm, s)], ARMS[arm], arm)}
+    egr, r0, ege = cm('EGR'), cm('R0'), cm('EGE')
+    letter = ('NOT JUDGED' if not egr else 'letter explanation wrong' if any(v < 50 for v in egr.values())
+              else 'consistent with the letter explanation' if len(egr) == len(SEEDS) else 'NOT JUDGED')
+    if any(v >= 50 for v in r0.values()):
+        window = 'not the window'
+    elif len(r0) == len(SEEDS) and len(ege) == len(SEEDS):
+        window = 'the window is what cipher_map needs' if all(v < 50 for v in r0.values()) and all(v >= 90 for v in ege.values()) else 'unclear'
+    else:
+        window = 'NOT JUDGED'
+    return dict(egr_cipher_map=egr, letter_check_addendum12=letter, r0_cipher_map=r0, ege_cipher_map=ege, window_check_addendum13=window)
+
+
 def fmt(v, signed=True):
     if isinstance(v, float):
         return f'{v:+.2f}' if signed and abs(v) < 50 else f'{v:.2f}'
@@ -187,6 +211,8 @@ def main(argv=None):
     res['ego_minus_egr_read_only'] = arm_minus(runs, 'EGO', 'EGR')
     res['egm_minus_ego_read_only'] = arm_minus(runs, 'EGM', 'EGO')
     res['egw_minus_egm_read_only'] = arm_minus(runs, 'EGW', 'EGM')
+    res['egk_minus_ege_read_only'] = arm_minus(runs, 'EGK', 'EGE')      # addendum 14
+    res['diagnosis_checks_read_only'] = checks(runs)
     # addendum 10: plain B2 on the rented box minus plain B2 on the PC, same seed (read only); over 3 points on a seed = EGW machine-sensitive
     dev = {s: sub(P5(runs[('B2V', s)]), P5(runs[(BASE, s)])) for s in SEEDS if ('B2V', s) in runs and (BASE, s) in runs}
     res['b2v_minus_b2_pooled5_read_only'] = dev
@@ -219,9 +245,12 @@ def main(argv=None):
             L += [f'- proved wrong: {r["proved_wrong"]}']
         L += [f'- read only: family split change {fmt(r["read_only"]["family_split"])}; size {r["read_only"]["size"]}', '']
     for key, title in (('ego_minus_egr_read_only', 'EGO minus EGR (read only, addendum 7)'), ('egm_minus_ego_read_only', 'EGM minus EGO (read only, addendum 8)'),
-                       ('egw_minus_egm_read_only', 'EGW minus EGM (read only, addendum 9)')):
+                       ('egw_minus_egm_read_only', 'EGW minus EGM (read only, addendum 9)'), ('egk_minus_ege_read_only', 'EGK minus EGE (read only, addendum 14)')):
         if res[key]:
             L += [f'## {title}', '', f"- {fmt(res[key])}", '']
+    dc = res['diagnosis_checks_read_only']
+    L += ['## Diagnosis checks (read only, addenda 12 and 13)', '', f"- cipher_map in_dist, EGR: {fmt(dc['egr_cipher_map'], False)} -> {dc['letter_check_addendum12']}",
+          f"- cipher_map in_dist, R0: {fmt(dc['r0_cipher_map'], False)}; EGE: {fmt(dc['ege_cipher_map'], False)} -> {dc['window_check_addendum13']}", '']
     if dev:
         L += ['## Device check (read only, addendum 10)', '', f"- plain B2 on the rented 5090 minus plain B2 on the PC, pooled-5: {fmt(dev)}"
               + (' -> rented-box results machine-sensitive' if res['egw_machine_sensitive'] else ''), '']
