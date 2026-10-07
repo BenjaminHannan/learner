@@ -1029,6 +1029,24 @@ it should also get faster at its own tasks. Written here before any training; th
   - The N' used is job 8's N', rebuilt on CPU exactly as `c2_keep.py` builds it (seed 0), not the Mac's file.
     Disclosed; it is a DEV screen.
 
+- **K_new at 32 tries found no kinds (10-07, fast-sleep 91fda2267; shown, DEV, 64 per kind).** N' with 32 tries reached
+  only the 2-step kinds: x²+x 48 / 41%, 2x² 20 / 53%, x³ 1.6 / 0%. Every 4-5 step kind scored 0 on both parents, as
+  C2's multi-step kinds did (1.9-5.2%). So no candidate fell in the 2-40% band.
+- **Ruled (before any loop-1 training):** K_new and S1 use the creative part's real day budget, 512 tries per stuck
+  question (32, then 480), instead of 32.
+  - Conditions (b) and (c) are re-run at 512: blind search fits within its first 512 candidates examined on at most
+    20% of DEV, and N' reach@512 is 2-40% on both parents.
+  - The same 10 candidates in the same order; no new candidates, and the band is unchanged.
+  - S1's primary measure becomes K_new reach@512, with the same marks (C - U at least +5, C - S at least +3, variety
+    at least 0.8x U's). Reach@32 and tries to first fit are reported.
+  - Fewer than 4 kinds qualifying means stop and report again.
+  - Why 512: it is the budget the creative part really uses each day (Ben's "the workflows that have been
+    happening"). The 4-5 step kinds, where blind search needs a median of 3,500-25,600 candidates, are the ones that
+    test search.
+  - Not chosen: adding 2-3 step kinds. They share the x*x first step with C2's square, so a gain could come from that
+    one shared piece rather than from better search.
+  - Disclosed: the budget was changed after seeing reach@32 for these candidates, and before any sleep.
+
 **Test S1, loop 1 alone** (screen: s100 and s101, DEV, one night):
 - Day: job 8's N' on the 1,024 C2 pool questions. Stuck questions get job 8's search with the adapter on: 32 tries,
   then 480 more where none fits.
