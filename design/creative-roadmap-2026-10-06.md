@@ -607,6 +607,17 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
        find, per night; samples drawn per night; practised check and skills harm per night.
     If the climb passes, the real C2b uses replay plus this search. If it retires, the real C2b carries only the
     near-copy claim.
+  - **Memory sleep 6-seed confirm (fast-sleep thread, ~3 AM ET 10-07; shown): FAIL by its written marks, not proved
+    wrong.** FLOPs 25-34x fewer; pooled W gain +32.1 against B's +37.0 (0.87x); recall of stored add/mult programs
+    above N on 6 of 6; R-notebook placebo -1.0; skills harm fails on s205 (3.9 points). Post-hoc diagnosis (labelled):
+    the answer note caused it; with it off, harm is 0.0 on all 6 and the gain is 0.84x B. Ruled:
+    1. C2b's reported arm M is frozen now as memory + 512 old notes with the answer note OFF (sixth post-hoc change,
+       chosen on the confirm parents to remove a harm, at a small cost in gain). Its harm in C2b is reported as
+       "setting chosen on these parents' harm set". What C2b tests fresh is its gain on the sealed test questions.
+    2. The confirm stays a FAIL, so the conditional adoption of memory as the loop's nightly sleep (ruling of 10-07,
+       item 4) does not trigger. M with the answer note off becomes the nightly recall step only after a fresh harm
+       check on a skills slice no fast-sleep run has scored, with harm <= 2 points on every parent, written before it
+       runs.
   - **Memory sleep, ruled 10-07 (fast-sleep thread, PR #48; RESULTS in the project folder under fast-sleep/).** Shown on
     a 2-parent DEV screen, with s101 untuned: a notebook of the night's W records plus 512 warm add/mult programs, read
     by top-16 cosine votes on the op and slot heads with no weight change, matches the fine-tune's W first-try gain
