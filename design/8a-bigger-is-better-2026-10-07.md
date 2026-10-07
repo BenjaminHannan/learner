@@ -353,3 +353,31 @@ No 8a run has started; nothing here uses an 8a result. The build is PR #51 (`cla
 - **F5. Web data on the PC.** The PC rebuild fetches exactly the FineWeb-Edu shards that the data-pool thread's
   manifests list (shard 1 too if they use it) and must reproduce those manifests' hashes. A short or mismatched pool
   stops the rung (as built).
+
+## 17. Addendum G: B2's bigger shape under the no-cut caps; no skip filter (2026-10-07, 2:45 PM ET, before any 8a run)
+
+No 8a run has started; nothing here uses an 8a result. Build commit b3d48f22e2 computes F4's global caps from the old
+own72 plus the 30M web slice: prompts up to 280 letters, answers up to 35, 91 numbers and 208 words per prompt, 11
+program steps, plain target 109. B2 then has 12 rounds, 36 answer registers and a 106-slot workspace (91 numbers, 4
+constants, 11 results), on every row. B2-3M counts 3,346,513 (+1.3% from q33's, inside F3); PT 3,297,536 (1.5% below
+B2, inside F3's 2%). The 91 numbers and 208 words come from rare web chunks (number lists, punctuation-heavy text); the
+11 steps and the 35-letter answers come from own text.
+
+- **G1. The caps stand. No filter that skips chunks B2's workspace can't hold.** Under E1b, a filter that drops rows
+  because one model's shape can't take them is a cap. It would also change every arm's data to suit one arm. The rows
+  stay and B2's shape grows.
+- **G2. Allowed speed-up (the build thread's call, not required): size the number and word slots per batch**, to that
+  batch's longest row, instead of 91 and 208 on every row. Empty slots are already inert: S0 is multiplied by `valid`,
+  and the cross-attention and pointers are masked by `valid` / `wvalid` (`ledger.py` 223, 287-291, 305 at b3d48f22e2).
+  So this should change no math, but result-slot indices move when the number slots shrink and must be remapped. Used
+  only if a test on real pool batches shows the full and per-batch versions give the same loss and gradients (largest
+  relative difference 1e-5 or less, fp32) and the same predictions on 1,000 dev rows. The 36 registers and 12 rounds
+  can't be trimmed this way (registers attend to each other without a mask), so they stay on every row.
+- **G3. Time.** The bigger shape makes B2 slower per update than q33's: the controller carries 44 tokens instead of 17
+  (8 control + 36 registers), does 12 rounds instead of 8, and reads up to 280 letters instead of 208. How much slower
+  is untested; q45 measures it at these caps. Addendum C's "3M about 9 hours" is probably low (suggested). If q45 puts
+  the 3M rung (6 seeds, all arms) above 24 hours on the PC, Ben gets the time and the rent option before it starts;
+  otherwise it runs as queued.
+- **G4. The regenerated own72** (E1b, without the 62-token filter) gets its caps recomputed by F4's rule before rung 46.
+  If any cap rises more than 10%, B2-3M's speed probe is rerun at the new caps before rung 46 starts.
+- **G5. Disclosed beside mark 4:** 8a's B2-3M has 12 rounds, 36 registers and 106 slots; q33's had 8, 9 and 27.
