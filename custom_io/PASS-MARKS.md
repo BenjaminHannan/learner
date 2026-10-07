@@ -329,3 +329,8 @@ EmbeddingGemma (then EGE should lose cipher_map too). Any other pattern is "uncl
 runs slower than planned (EGR_s201 ends about 02:45 UTC), and R0_s201 plus EGE_s201 side by side would end at about box B's 7.5-hour cap
 (04:20 UTC). So box B's job 47 is now EGE_s201 alone (PAR 1, base B2V_s201 on the same box), and R0_s201 runs on box C as job 48 after job 46,
 with B2V_s201 from box B as its base (the same weaker pairing as box C's seed-200 runs). No mark, recipe or flag changes.
+**Second timing note (about 03:05 UTC 10-07, 11:05 PM ET 10-06, before any EGE score existed):** box B trains EGE_s201 at only 2.8 updates/s
+alone (step 5,500 after 36 min), so it would end about 04:50 UTC, past box B's 7.5-hour cap (about 04:20 UTC), which kills every job. Box B is
+destroyed now (all its finished jobs, 41, 43 and 45, are collected) and EGE_s201 restarts from scratch on box C as job 49, after jobs 46 and 48,
+with B2V_s201 from box B as its base. Both EGE seeds are therefore paired across boxes (same GPU model, image and data), as are both R0 seeds.
+No mark, recipe or flag changes; any EGE pass still needs the 6-seed confirm, which will pair each seed on one machine.
