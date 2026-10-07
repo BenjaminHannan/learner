@@ -226,3 +226,42 @@ overall but the short-answer-only gap (TEACH minus GEN) is below +10, the verdic
 per-kind and per-type scores for both arms.
 
 Nothing here touches GOLD-PRIVATE, reserved or blind panels.
+
+## 7. Test B1 result (2026-10-07, 2 seeds) and the recommended next step
+
+Source: `custom_io/results/RESULTS-B1.md` at e10ea0232 on `claude/custom-reader-talker-4x309r` (queue 35, BensPC 5070 Ti,
+seeds 300-301, marks from `custom_io/PASS-MARKS.md` addendum 3). All numbers below are shown, read from that file.
+
+| | b2t (B2-M, TEACH) | b2g (B2-M, GEN) | tft (plain_tf-M, TEACH) |
+|---|---|---|---|
+| New kinds pooled (384) | 11.20 | 10.42 | 13.93 |
+| short-answer rows only (340) | 7.65 | 7.50 | 8.53 |
+| FRESH-EN-R3 (practised kinds, human wording) | 22.92 | 48.96 | 17.71 |
+| Held-out rows from its own training mix | 91.19 | 96.47 | 92.19 |
+
+- **B1-a: PROVED WRONG.** b2t - b2g = +0.78 (seeds -0.52, +2.08); the line was +5. Short-answer-only +0.15.
+- **B1-c: FAIL.** b2t - tft = -2.73.
+- **B1-b: uninformative.** b2t's intact new-kinds score (11.2) is too low for a donor test to mean anything.
+- Every student fits its own training mix (91-96% on held-out rows of it; b2t's final training loss 0.012) and gets about
+  11% on new kinds, whichever data or shape. Even b2g, at 96% on its generator's own held-out rows, drops to 49% on the
+  same 6 kinds in human wording.
+
+Reading (suggested, not tested): the students learn the wording of their practice, not English. Each arm had 187,667
+training rows seen about 22 times (16,000 updates x 256). The teacher's 60 kinds did not change that; 94,831 short
+one-sentence questions are far too little English for any reader to learn from. The roadmap's own rule (no row seen
+more than 4 times; about 20 word pieces per trained number) says the same data supports only about 2M trained numbers.
+
+**Next step: do not run the ~100M student on this data.** Section 6 pre-wrote "a larger student (about 100M), then way
+A". Way A was rejected by Ben (7:44 PM ET 10-05), and a 100M student on the same 94,831 rows would have about 10 times
+more weights for the same words, so it would most likely memorise faster, not read better (suggested). Rough cost
+(estimate, not measured): about a day of the PC for 3 arms x 2 seeds after queue 39 finishes, with memory work to fit
+16 GB; Vast credit is $5.22 (read 4:10 AM ET 10-07), too little above the $1 floor for it.
+
+Recommended instead (it changes nothing that is staged): Plan B continues as the whole-model roadmap's stage 8a (the
+bigger-is-better check: our thinker at about 3M, 10M and 30M, with plain human-written web text added, which Ben
+approved at 8:57 PM ET 10-06). It already scores B1's 12 new kinds. Suggested for 8a's owner to seal: report b2t
+(11.20 new kinds pooled, 10.9M) as the same-size, TEACH-only baseline for the 10M rung. The ~100M student is the
+roadmap's 8c and waits for 8a to pass. The 1.2B teacher's data stays usable as one part of the 8b pool; it is not a
+reason to run a new teacher (Ben, 3:11 PM ET 10-06).
+
+Nothing here touches GOLD-PRIVATE, reserved or blind panels.
