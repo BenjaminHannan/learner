@@ -87,6 +87,8 @@ size), and every arm that is compared with B2 gets the same frozen front.
 
 ## 6. Machines and money (Ben's "Rent GPUs", 1:08 PM ET)
 
+**Replaced by addendum C (Ben, 1:35 PM ET: run on the home PC). Kept for the record.**
+
 - One rented 5090 per seed per rung. Each box runs B2, PT and LLM in sequence, then is collected and destroyed
   (`custom_io/box/vast.py collect` then destroy). Never touch boxes this stage did not start.
 - **Caps per box (self-stop by hours; 3M changed by addendum B3 to $2.50, MAXH 5 h):** 3M $0.60 (MAXH 1 h); 10M $1.50 (MAXH 3 h); 30M $5.00 (MAXH 9 h).
@@ -253,3 +255,32 @@ Changes:
 
 Vast credit at 2:05 PM ET: $8.92, with one box from another thread running (not ours). The speed check and the 3M rung
 (cap $15) need Ben's top-up.
+
+## 13. Addendum C: run 8a on the home PC (2026-10-07, 2:30 PM ET, before any 8a run)
+
+No 8a run has started; nothing here uses an 8a result.
+
+Ask this answers: Ben, 1:35 PM ET 10-07 (project chat, relayed): "can you just use the home gpu for this?"
+
+Changes (they replace section 6 and the money lines in addenda A2, B3 and B4):
+- **Machine.** Every 8a run is on BensPC (RTX 5070 Ti, 16 GB), through `custom_io/local_runner.py` queue files
+  (`custom_io/queue_local/`, `# MEM` lines, `{WORK}` paths). No Vast unless Ben asks again. All arms and seeds of a rung
+  run on the PC, so pairs share a device. The Mac runs only the report-only 8-shot public-model evals (SmolLM2-360M,
+  Qwen3-0.6B), once.
+- **Data on the PC.** The PC cannot read the project's shared files. It rebuilds the pools with the same scripts
+  (`web_slice.py` on FineWeb-Edu shards 0-1, the generators for own text, `cloze.py`) and checks every manifest hash
+  against the data-pool thread's manifests before training. A mismatch stops the rung.
+- **Speed check on the PC (replaces B3's rented box).** The first job when the PC is free: 200 updates of each arm at
+  the 3M, 10M and 30M shapes, printing seconds per update and peak GPU memory (about 20 minutes, our estimate).
+- **16 GB at 30M.** If an arm's peak memory at batch 256 is above 15 GB, its batch is split into equal pieces with
+  gradients added up before each update: the same 256 rows and the same number of updates, only slower (disclosed).
+- **Order (default; the coordinator can move it):** speed check right after q39, then q40 (T1 screen) and U0 (short),
+  then 8a 3M, then 8a 10M, then the T1 confirm if T1's screen passes. 30M waits for Ben (next point).
+- **Time, estimated (suggested; the speed check replaces these):**
+  - 3M, 6 seeds, all arms: about 9 hours. q33 ran the same 18-run shape at 3.3M on this PC, 3 at a time (shown).
+  - 10M: about a day. B2-M (10.9M, 3 blocks at width 384) ran 16,000 updates in 39 to 44 minutes on this PC, 2 at a
+    time (queue 35, shown); a deep 10M runs about 11 blocks 8 times each, so it is likely 2-3x slower per update.
+  - 30M: about 4 to 5 days (about 62,000 updates at 20 word pieces per parameter, 15 or so blocks), plus about 2 days
+    if the public model is SmolLM2-360M (its 6 fine-tunes). Before 30M starts, Ben gets the measured PC time and
+    decides: run it on the PC, or rent for that rung only.
+- **Stop rule unchanged:** no 30M if B2's 10M-minus-3M pooled-5 mean is below 0.
