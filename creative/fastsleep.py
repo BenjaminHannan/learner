@@ -5,6 +5,8 @@ per sleep FLOP, against job 6's plain fine-tune (fresh AdamW on every weight, ha
   python3 -m creative.fastsleep setup  --ckpt B2_s100.pt --out DIR --skills-train train.jsonl --skills-data data_big [--floors dev_floors.json]
   python3 -m creative.fastsleep screen --out DIR --skills-train train.jsonl --skills-data data_big --tag T --sets PC,W --plan 'knn:c=50,cal=0.99,old=512;ft:lr=0.0003,visits=16'
   python3 -m creative.fastsleep posteval --out DIR --skills-train train.jsonl --tag T2 --sets W --plan '...'   (old-parts check + DEV search)
+  python3 -m creative.fastsleep confirm --ckpt B2_s200.pt --out ROOT/s200 --skills-train train.jsonl --skills-data data_big --floors dev_floors.json
+  python3 -m creative.fastsleep report --out ROOT                                                               (6-seed confirm marks)
 
 setup = job 6 steps 0-2 exactly (c2_pilot's own functions): N = raw B2 -> warm-up -> stepping-stone sleep; pool temperature on DEV; N samples the pool
 32 times; arms W (fits every example, <= 2 per question) and PC (reference programs, same count). Saved to DIR/setup.pt with the target cache entries.
@@ -50,6 +52,7 @@ def setup(ckpt, out, skills_train, skills_data, floors_path=None, device='cpu', 
     t0 = time.time()
     m0, vocab, meta, w = c2_stones._warm(ckpt, R.warm_records(R.load_split(DATA, 'warm')), replay, 4, 3e-4, seed, device)
     log('warm', w, round(time.time() - t0))
+    sleep.save_parent(m0, meta['name'], meta['cfg'], vocab, os.path.join(out, 'warm.pt'), step=(meta['step'] or 0), warmup=True)
     ss_rows, ss_info = stones.make_stone_rows(2048, seed)
     N, ss = c2_stones._arm(m0, stones.solver_records(ss_rows), replay, vocab, 4, 3e-4, seed, device)
     log('N built', ss, round(time.time() - t0))
@@ -434,6 +437,86 @@ def posteval(out, skills_train, plan, device='cpu', seed=0, tag='posteval', sets
     return res
 
 
+# ---------------------------------------------------------------- 6-seed confirm (marks: results/fastsleep/RESULTS-2026-10-06.md, "Confirm marks")
+MEMORY_OLD = ('knn', dict(c=50.0, theta=0.9, cal=0.99, old=512))
+B_GRID = [('ft', dict(lr=0.0003, visits=16)), ('ft', dict(lr=0.001, visits=16))]
+_key = lambda kw: json.dumps(kw, sort_keys=True)
+
+
+def dev_reach4(m, vocab, device, dev, T, n=32, seed=0):
+    m.eval()
+    smp = legal.raw_samples(m, dev, vocab, device, n=n, temperature=T, level=0, seed=seed)
+    return fewshot.score_samples(dev, smp, ks=(4,))['reach4']
+
+
+def confirm(ckpt, out, skills_train, skills_data, floors_path=None, device='cpu', seed=0):
+    """One parent of the confirm, resumable: setup (keeps warm.pt and N_ss.pt for C2b) -> B = job 6's rule over B_GRID on PC (best DEV first
+    try within 2 points of harm, then DEV reach@4) -> memory+old and B on W -> memory+old on R (placebo) -> old-parts check of both on W."""
+    if not os.path.exists(os.path.join(out, 'setup.pt')):
+        setup(ckpt, out, skills_train, skills_data, floors_path, device, seed)
+    res = screen(out, skills_data, skills_train, B_GRID, device, seed, 'confirm', ('PC',))
+    path = os.path.join(out, 'confirm.json')
+    if 'B' not in res:
+        pc = {_key(r['kw']): r for r in res['runs'] if r['set'] == 'PC' and r['method'] == 'ft'}
+        ok = [kw for _, kw in B_GRID if pc[_key(kw)]['skills_harm_points'] <= 2] or [min((kw for _, kw in B_GRID), key=lambda kw: pc[_key(kw)]['skills_harm_points'])]
+        best = max(pc[_key(kw)]['dev']['right'] for kw in ok)
+        tied = [kw for kw in ok if pc[_key(kw)]['dev']['right'] == best]
+        r4 = {}
+        if len(tied) > 1:
+            N, vocab, meta, s = load_setup(out, device)
+            replay = sleep.load_replay(skills_train, None, seed)
+            dev = c2_stones._with_nums(R.load_split(DATA, 'dev'))
+            for kw in tied:
+                m, _ = m_ft(N, s['records']['PC'], replay, vocab, device, len(s['records']['W']), **kw)
+                r4[_key(kw)] = dev_reach4(m, vocab, device, dev, s['T'], seed=seed)
+        kw = max(tied, key=lambda kw: r4.get(_key(kw), 0.0))
+        res = json.load(open(path))
+        res['B'] = dict(method='ft', kw=kw, within_harm=bool(pc[_key(kw)]['skills_harm_points'] <= 2), tie_reach4=r4)
+        json.dump(res, open(path, 'w'), indent=1)
+        log('B', res['B'])
+    B = (res['B']['method'], res['B']['kw'])
+    screen(out, skills_data, skills_train, [MEMORY_OLD, B], device, seed, 'confirm', ('W',))
+    screen(out, skills_data, skills_train, [MEMORY_OLD], device, seed, 'confirm', ('R',))
+    posteval(out, skills_train, [MEMORY_OLD, B], device, seed, 'confirm-old', ('W',))
+    log('CONFIRM PARENT DONE', out)
+
+
+def confirm_report(root):
+    """Pool the parents under root/s* against the confirm marks. Mark 4 is reported as recall of stored programs (the old notes), not as parts
+    kept in the weights (roadmap ruling 10-06)."""
+    rows = []
+    for d in sorted(os.path.join(root, x) for x in os.listdir(root) if x.startswith('s')):
+        try:
+            c, o = json.load(open(os.path.join(d, 'confirm.json'))), json.load(open(os.path.join(d, 'confirm-old.json')))
+        except (OSError, ValueError):
+            continue
+        get = lambda st, m, kw: next((r for r in c['runs'] if r['set'] == st and r['method'] == m and _key(r['kw']) == _key(kw)), None)
+        getp = lambda m, kw: next((r for r in o['runs'] if r['method'] == m and _key(r['kw']) == _key(kw)), None)
+        mem, b, plc = get('W', *MEMORY_OLD), get('W', c['B']['method'], c['B']['kw']), get('R', *MEMORY_OLD)
+        pm, pb = getp(*MEMORY_OLD), getp(c['B']['method'], c['B']['kw'])
+        if not (mem and b and plc and pm and pb):
+            continue
+        rows.append(dict(parent=os.path.basename(d), B=c['B']['kw'], B_tflops=b['sleep_tflops'], B_gain=b['gain_points'], B_harm=b['skills_harm_points'],
+                         M_tflops=mem['sleep_tflops'], M_gain=mem['gain_points'], M_harm=mem['skills_harm_points'], placebo_gain=plc['gain_points'],
+                         recall_N=o['N']['practised']['reach32'], recall_M=pm['practised']['reach32'], recall_B=pb['practised']['reach32'],
+                         reach4_N=o['N']['dev_search']['reach4'], reach4_M=pm['dev_search']['reach4'], reach4_B=pb['dev_search']['reach4']))
+    n = len(rows)
+    if not n:
+        return dict(n=0)
+    mean = lambda k: sum(r[k] for r in rows) / n
+    marks = {'1 FLOPs <= B/10 on every parent': all(r['M_tflops'] <= r['B_tflops'] / 10 for r in rows),
+             '2 pooled W gain >= 0.8 x B': mean('M_gain') >= 0.8 * mean('B_gain'),
+             '3 harm <= 2 on every parent': all(r['M_harm'] <= 2 for r in rows),
+             '4 recall of stored programs (practised reach@32) >= N on 5 of 6': sum(r['recall_M'] >= r['recall_N'] for r in rows) >= 5,
+             'placebo (R) pooled gain <= +3': mean('placebo_gain') <= 3}
+    wrong = mean('M_gain') < 0.5 * mean('B_gain') or sum(r['M_harm'] > 2 for r in rows) >= 2
+    rep = dict(n=n, rows=rows, pooled=dict(M_gain=mean('M_gain'), B_gain=mean('B_gain'), ratio=mean('M_gain') / mean('B_gain') if mean('B_gain') else None,
+               placebo_gain=mean('placebo_gain')), marks=marks, proved_wrong=wrong,
+               verdict=('PROVED WRONG' if wrong else 'PASS' if (n >= 6 and all(marks.values())) else 'FAIL' if n >= 6 else f'incomplete ({n} of 6)'))
+    json.dump(rep, open(os.path.join(root, 'REPORT.json'), 'w'), indent=1)
+    return rep
+
+
 def parse_plan(text):
     """'ft:lr=3e-4,visits=4;heads:epochs=30' -> [(name, kw)]"""
     out = []
@@ -449,13 +532,17 @@ def parse_plan(text):
 
 if __name__ == '__main__':
     a = argparse.ArgumentParser()
-    a.add_argument('cmd', choices=['setup', 'screen', 'posteval'])
+    a.add_argument('cmd', choices=['setup', 'screen', 'posteval', 'confirm', 'report'])
     a.add_argument('--ckpt'); a.add_argument('--out', required=True); a.add_argument('--skills-train'); a.add_argument('--skills-data'); a.add_argument('--floors')
     a.add_argument('--plan', default='ft:lr=0.0003,visits=4'); a.add_argument('--tag', default='screen'); a.add_argument('--sets', default='PC,W')
     a.add_argument('--T', type=float); a.add_argument('--device', default='cpu'); a.add_argument('--seed', type=int, default=0)
     a = a.parse_args()
     if a.cmd == 'setup':
         setup(a.ckpt, a.out, a.skills_train, a.skills_data, a.floors, a.device, a.seed, T=a.T)
+    elif a.cmd == 'confirm':
+        confirm(a.ckpt, a.out, a.skills_train, a.skills_data, a.floors, a.device, a.seed)
+    elif a.cmd == 'report':
+        print(json.dumps(confirm_report(a.out), indent=1))
     elif a.cmd == 'posteval':
         posteval(a.out, a.skills_train, parse_plan(a.plan), a.device, a.seed, a.tag, tuple(a.sets.split(',')))
     else:
