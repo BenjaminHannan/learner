@@ -46,7 +46,11 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   programs, keeps the ones that reproduce every example (no answer key needed), and sleeps on them. The cheap
   machinery check before it (C1, make-the-target puzzles) was closed on 10-06: practice on right answers made B2's
   first answers better on both trial copies, but its right tries rose enough on only one of the two (1.66x and 1.29x
-  against a 1.6x bar fixed in advance), so C1's sealed test was never opened. C2 is being built now; its sealed test
+  against a 1.6x bar fixed in advance), so C1's sealed test was never opened. C2 then needed easier
+  versions of its new rules before any try fitted (10-06/07), and its trial run (10-07) passed only on the two rules
+  that need one fixed program (x times x, last digit); the rules that need a number read off the examples did not move
+  and a second night did not climb. Next is one fix: keep the old add and multiply skills alive during every sleep,
+  since the stepping stones wiped them and every harder rule is built from them. Its sealed test
   waits for B2's 6-run confirm. Every sleep test now scores better
   first answers separately from better search (GPT-6 Pro's main point), and C2 passes only on first answers.
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
@@ -516,6 +520,60 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
        reads "PASS, near-copy kinds only".
     The real C2b waits for B2's six confirm parents (warm-up, stepping stones, then the arms on each); its test stays
     sealed until then.
+  - **C2b DEV pilot result (10-07, Mac job 6, commit 95df4f6d9; shown, DEV, s100 / s101).** Pool temperature 3.0 /
+    4.0; dose frozen at 16 visits (lr 1e-3 / 3e-4; the grid is nearly flat, first try 0.39-0.42 everywhere); the
+    corrupt-every-key test passes. PC - N first try +40.2 / +41.8 (gate +15). Greedy first try right: W 35.9% / 27.3%,
+    N 1.2% / 0.4%, R 1.2% / 0.4%, H 0 / 0, so W - N = W - R = +34.8 [28.9, 40.6] / +27.0 [21.5, 32.8]; reach@4 W - N
+    +21.1 / +5.1; skills harm 1.7 / -0.1. Tries that fail the example check (R), and the same tries relabelled to fit
+    (H), teach nothing: the check is what makes the sleep work.
+    - **Ruling: "PASS, near-copy kinds only."** Per kind W - N: square +96 / +94, last_digit +78 / +39, affine +4 / -2,
+      sq_plus +2 / 0, double_add -6 / +4 points. The gain is 89 / 68 DEV questions, all of them square and last_digit;
+      the three multi-step kinds net 0 / +1 of their 154 questions. The label as written (each multi-step kind within
+      2 points of N) prints "beyond the near-copy kinds", because a 2-point band is narrower than one question (1.9-2.0
+      points at 51-52 questions per kind), so wobbles of 1-3 questions, one of them a drop, tripped it. That band was
+      my design error, and the less favourable reading stands. Replacement, fixed now before any C2b test number
+      (fifth post-hoc change, toward the stricter label): a pass reads "beyond the near-copy kinds" only if W - N on
+      the three multi-step kinds pooled has a paired 95% interval above 0; otherwise "near-copy kinds only".
+    - Square and last_digit have one fixed program for every question (no parameter), so W's gain there is learning
+      one program per kind that the stepping stones put within reach, not reading a new rule's parameter off its
+      examples.
+    - **No climbing (night 2, report only):** first try after night 2 on affine 4% / 0%, sq_plus 2% / 2%, double_add
+      2% / 8%; only last_digit grows (78% to 82%, 39% to 65%). W's sleep records were 257 / 149 square and 87 / 39
+      last_digit; the multi-step kinds gave 21 / 22 of 365 / 210.
+    - **Practised-kind guard missed:** fresh add/mult reach@32 W - N -3.9 / -3.5 against "within 2" (noise about +-3).
+      The larger loss came earlier, at a point my stage design never measured: the stepping-stone sleep took the same
+      check from 61% / 57% (warmed parent) to 11% / 11% (N). Night 2 leaves 1.6% / 10%. Pooled-5 skills harm stays
+      small, so the loss is in this question format.
+  - **Next: Mac job 7, "keep the parts" (decided 10-07; DEV only, s100 and s101).** Every multi-step kind is a part
+    the warm-up taught plus a part the stones taught: sq_plus = square then add B, double_add = add B then times 2,
+    affine = times A then add B. The add B and times A parts are what the stepping-stone sleep wiped. Two explanations
+    fit the missing climb (both suggested): (a) the parts were forgotten, so the loop had nothing to combine; (b) B2
+    cannot learn programs of 3-5 steps that build a parameter out of its four constants, even when shown them (job 5's
+    PC on 2,048 full-difficulty programs reached first try affine 0% / 4%, double_add 6% / 12%, sq_plus 18% / 14%).
+    Job 7 makes one change and tells them apart:
+    1. The change: every sleep (stepping stones, PC', each night) replays the 2,048 warm add/mult solver rows. The
+       replay half of each batch is split evenly between the skills replay and these rows. Everything else as in jobs
+       5 and 6: same seeds, rows, pool, temperature rule and dose rule, with visits widened once to 32 because 16 was
+       the top of the grid (standing rule).
+    2. Parts kept (if this fails, the job reports and stops): fresh add/mult reach@32 >= 50% for the stepping-stone
+       parent with replay (N') and after each night; N' still passes the cold-start gate (reach@32 >= 14.5% with
+       sameness at its best temperature); skills harm <= 2.
+    3. Feasibility gate (C1's lesson): PC' = reference programs for every multi-step pool question (affine, sq_plus,
+       double_add), at the dose chosen on DEV with PC' (now picked on the multi-step first try, then reach@4).
+       PC' - N' greedy first try on the 154 multi-step DEV questions >= +10 points on both parents. A miss means B2
+       cannot learn these kinds even from right answers, so the climb mark is out of reach by design: explanation (b),
+       and the climb claim retires on B2.
+    4. Climb, the main mark: W' night 1 and night 2 from N' at the frozen dose, each night sleeping on its own
+       example-checked tries. Pass: multi-step first try W'(night 2) - N' >= +10 points with the paired 95% interval
+       above 0, on both parents. Reported per kind, with night 1, reach@32 and records per kind.
+    5. Proved wrong: parts kept and W'(night 2) - N' on the multi-step kinds with its upper end below +3 on both
+       parents. The parts were there and the loop still did not combine them: explanation (b), and the climb claim
+       retires on B2.
+    6. Anything else (a split between parents, or a result between the marks) comes back here.
+    If the climb passes, the real C2b runs on B2's six confirm parents with the replay and the stricter label. If the
+    climb retires, the real C2b runs on the six parents only for the near-copy claim (sleeping on checked tries turns
+    lucky finds into first answers on new kinds that need one fixed program), and combining parts moves to Floor B's
+    next step (C7, the pieces library). Its test stays sealed either way until then.
 - **C2b, the creative test.** On held-out rule kinds, with no answer keys: 32 tries per question, keep tries that fit
   every example, sleep. Arms N, W, R (fits no example check, matched count), H (each try relabelled with the rule it
   actually computes on the examples). Comparison nets: a same-size plain transformer and a fresh net, each given k
@@ -641,3 +699,8 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
   of a stepping stone; first answers stayed near 0. Decided: run C2b's DEV pilot from the SS parent with a PC
   feasibility gate, a report-only second night to see whether the loop climbs to the multi-step kinds, and a
   pre-set "near-copy kinds only" label for a pass carried by square and last_digit.
+- **C2b DEV pilot (10-07):** pooled marks met on both parents (W - N +34.8 / +27.0, W - R the same, R and H at 0), but
+  the gain is square and last_digit only, night 2 did not climb, and the practised-kind check had already fallen from
+  61% / 57% to 11% after the stepping-stone sleep. Ruled "PASS, near-copy kinds only" (the 2-point band was narrower
+  than one question; replaced by a pooled multi-step interval, the fifth post-hoc change). Decided: Mac job 7 replays
+  the add/mult rows in every sleep, with a PC' feasibility gate and a night-2 climb mark on the multi-step kinds.
