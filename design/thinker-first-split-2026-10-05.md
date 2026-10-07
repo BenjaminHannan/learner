@@ -249,7 +249,8 @@ seeds 300-301, marks from `custom_io/PASS-MARKS.md` addendum 3). All numbers bel
 Reading (suggested, not tested): the students learn the wording of their practice, not English. Each arm had 187,667
 training rows seen about 22 times (16,000 updates x 256). The teacher's 60 kinds did not change that; 94,831 short
 one-sentence questions are far too little English for any reader to learn from. The roadmap's own rule (no row seen
-more than 4 times; about 20 word pieces per trained number) says the same data supports only about 2M trained numbers.
+more than 4 times; about 20 word pieces per trained number) says all our question data together (about 12M word pieces)
+supports only about 2M trained numbers, and this arm had much less than that.
 
 **Next step: do not run the ~100M student on this data.** Section 6 pre-wrote "a larger student (about 100M), then way
 A". Way A was rejected by Ben (7:44 PM ET 10-05), and a 100M student on the same 94,831 rows would have about 10 times
