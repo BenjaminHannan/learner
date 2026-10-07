@@ -294,10 +294,11 @@ def build_memory(m, recs, vocab, device):
 _WARM = {}
 
 
-def m_knn(N, recs, replay, vocab, device, n_w, k=16, tau=0.05, theta=0.9, c=20.0, cal=0.0, seed=0, old=0):
+def m_knn(N, recs, replay, vocab, device, n_w, k=16, tau=0.05, theta=0.9, c=20.0, cal=0.0, seed=0, old=0, ans=1):
     """cal > 0: gate thresholds calibrated on as many skills replay rows as records (one forward each, counted), quantile `cal` (added after the first screen).
     old > 0: the memory also holds `old` practised-kind solver records (the warm split's add/mult reference programs), so a practised question finds its
-    own kind's entries (added after the old-parts check; their forward passes are counted here, though with frozen weights they are made once per parent)."""
+    own kind's entries (added after the old-parts check; their forward passes are counted here, though with frozen weights they are made once per parent).
+    ans = 0: the answer note never fires (C2b's frozen arm M, roadmap 10-07: the answer note caused s205's skills harm in the confirm)."""
     m = copy.deepcopy(N)
     n_cal = len(recs)
     if old:
@@ -308,12 +309,14 @@ def m_knn(N, recs, replay, vocab, device, n_w, k=16, tau=0.05, theta=0.9, c=20.0
     mem = Memory(steps, ans, m.op_head.out_features, pp.M, k, tau, theta, c)
     if cal:
         mem.calibrate(head_inputs(m, random.Random(seed).sample(replay, n_cal), vocab, device), cal)
+    if not ans:
+        mem.theta_ans = float('inf')
     m.reader.register_forward_pre_hook(mem.reset)
     m.q_ans.register_forward_pre_hook(mem.ans_hook)
     m.op_head = _MemOp(m.op_head, mem)
     m.ptr = mem.wrap_ptr(m.ptr)
     m._mem = mem
-    return m, dict(memory=int(ans[0].shape[0]), k=k, tau=tau, theta=theta, c=c, version=2, cal=cal, old=old, theta_t=[round(x, 4) for x in mem.theta_t], theta_ans=round(mem.theta_ans, 4))
+    return m, dict(memory=int(ans[0].shape[0]), k=k, tau=tau, theta=theta, c=c, version=2, cal=cal, old=old, ans=ans, theta_t=[round(x, 4) for x in mem.theta_t], theta_ans=round(mem.theta_ans, 4))
 
 
 # ---------------------------------------------------------------- method: lora (low-rank adapters on the thinker, everything else frozen)
@@ -531,6 +534,36 @@ def confirm_report(root):
     return rep
 
 
+# ---------------------------------------------------------------- fresh harm check for C2b's arm M (marks: /mnt/project-files/fast-sleep/HARM-CHECK-MARKS.md)
+MEMORY_C2B = ('knn', dict(c=50.0, theta=0.9, cal=0.99, old=512, ans=0))
+
+
+def harm_check(out, skills_train, skills_data, device='cpu', seed=0):
+    """N vs M (MEMORY_C2B) exact on data_big dev/in_dist rows OUTSIDE the chain-5 families (never scored by a fast-sleep run). -> DIR/harmcheck.json"""
+    path = os.path.join(out, 'harmcheck.json')
+    if os.path.exists(path):
+        return json.load(open(path))
+    N, vocab, meta, s = load_setup(out, device)
+    replay = sleep.load_replay(skills_train, None, seed)
+    rows = [r for r in load_rows(os.path.join(skills_data, 'dev', 'in_dist.jsonl')) if r['family'] not in CHAIN5]
+    m, info = m_knn(N, s['records']['W'], replay, vocab, device, len(s['records']['W']), **MEMORY_C2B[1])
+    rn, rm = evaluate(N, rows, 256, device), evaluate(m, rows, 256, device)
+    fam = {f: round(100 * (rn['by_family'][f]['correct'] - rm['by_family'][f]['correct']) / rn['by_family'][f]['n'], 2) for f in rn['by_family']}
+    res = dict(parent=os.path.basename(out.rstrip('/')), n=len(rows), families=len(fam), N_exact=rn['exact'], M_exact=rm['exact'],
+               harm_points=rn['exact'] - rm['exact'], drop_by_family=fam, info=info, answer_fired=m._mem.fired)
+    json.dump(res, open(path, 'w'), indent=1)
+    log('HARMCHECK', res['parent'], {k: res[k] for k in ('n', 'N_exact', 'M_exact', 'harm_points')})
+    return res
+
+
+def harm_report(dirs):
+    rows = [json.load(open(os.path.join(d, 'harmcheck.json'))) for d in dirs if os.path.exists(os.path.join(d, 'harmcheck.json'))]
+    ok = len(rows) == len(dirs) and all(r['harm_points'] <= 2.0 for r in rows)
+    return dict(n=len(rows), of=len(dirs), verdict='PASS' if ok else ('FAIL' if len(rows) == len(dirs) else 'incomplete'),
+                harm={r['parent']: round(r['harm_points'], 2) for r in rows},
+                worst_families={r['parent']: sorted(r['drop_by_family'].items(), key=lambda kv: -kv[1])[:3] for r in rows})
+
+
 def parse_plan(text):
     """'ft:lr=3e-4,visits=4;heads:epochs=30' -> [(name, kw)]"""
     out = []
@@ -546,7 +579,7 @@ def parse_plan(text):
 
 if __name__ == '__main__':
     a = argparse.ArgumentParser()
-    a.add_argument('cmd', choices=['setup', 'screen', 'posteval', 'confirm', 'report'])
+    a.add_argument('cmd', choices=['setup', 'screen', 'posteval', 'confirm', 'report', 'harmcheck', 'harmreport'])
     a.add_argument('--ckpt'); a.add_argument('--out', required=True); a.add_argument('--skills-train'); a.add_argument('--skills-data'); a.add_argument('--floors')
     a.add_argument('--plan', default='ft:lr=0.0003,visits=4'); a.add_argument('--tag', default='screen'); a.add_argument('--sets', default='PC,W')
     a.add_argument('--T', type=float); a.add_argument('--device', default='cpu'); a.add_argument('--seed', type=int, default=0)
@@ -556,6 +589,11 @@ if __name__ == '__main__':
         setup(a.ckpt, a.out, a.skills_train, a.skills_data, a.floors, a.device, a.seed, T=a.T)
     elif a.cmd == 'confirm':
         confirm(a.ckpt, a.out, a.skills_train, a.skills_data, a.floors, a.device, a.seed, a.stage)
+    elif a.cmd == 'harmcheck':
+        harm_check(a.out, a.skills_train, a.skills_data, a.device, a.seed)
+    elif a.cmd == 'harmreport':
+        rep = harm_report(a.out.split(','))
+        print(json.dumps(rep, indent=1))
     elif a.cmd == 'report':
         print(json.dumps(confirm_report(a.out), indent=1))
     elif a.cmd == 'posteval':
