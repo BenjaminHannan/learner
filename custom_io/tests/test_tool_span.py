@@ -162,6 +162,40 @@ def test_extra_evals():
     print('ok extra_evals', ex['span_use'], 'write_copy_u passes', wu['passes'])
 
 
+def test_span_idx():
+    """Amendment 5's next change (cfg span_idx): one zero table on the span keys; every T1S weight starts the same, so outputs match T1S."""
+    v = vocab()
+    torch.manual_seed(0)
+    m = Tool(v, span_copy=True, span_idx=True, **S_CFG)
+    t1s = seeded(S_CFG, v=v)
+    assert m.n_params() == T1S_PARAMS + (1 + N_RES) * 64 == 3311572 and abs(m.n_params() / 3.24e6 - 1) <= 0.03, m.n_params()
+    s1, s2 = m.state_dict(), t1s.state_dict()
+    assert set(s1) - set(s2) == {'e_s.weight'} and all(torch.equal(s1[k], s2[k]) for k in s2)
+    m, t1s = seeded(SMALL, 5, v), seeded(SMALL, 5, v)
+    torch.manual_seed(5)
+    mi = Tool(v, span_copy=True, span_idx=True, **SMALL)
+    mi.load_state_dict(dict(m.state_dict(), **{'e_s.weight': mi.e_s.weight.detach().clone()}))
+    rows = train_rows(32, 6)
+    b = batch_of(rows, v)
+    mi.eval(); m.eval()
+    with torch.no_grad():
+        assert mi.generate(b) == m.generate(b)
+        l1, _ = mi.loss(b); l0, _ = m.loss(b)
+        assert torch.allclose(l1, l0), (l1, l0)
+    mi.train()
+    loss, _ = mi.loss(b)
+    loss.backward()
+    assert mi.e_s.weight.grad is not None and mi.e_s.weight.grad.abs().sum() > 0
+    with torch.no_grad():       # the index is the string a char sits in: 0 = prompt, 1 + k = entry k
+        mi.e_s.weight.copy_(torch.arange(1 + N_RES, dtype=torch.float)[:, None].expand(-1, mi.e_s.weight.shape[1]))
+        T, le = 5, 4
+        Xc = torch.zeros(1, T + N_RES * le, mi.d)
+        ks = mi.span_keys(Xc, T, le) - mi.k_s(Xc)
+        want = [0] * T + [1 + k for k in range(N_RES) for _ in range(le)]
+        assert ks[0, :, 0].tolist() == want, ks[0, :, 0].tolist()
+    print('ok span_idx', 3311572)
+
+
 # ---- the mechanism: trained on 1-3 digit numbers, copying 1-9 digit results ------------------------------------------------------
 MECH_STEPS = 1500
 

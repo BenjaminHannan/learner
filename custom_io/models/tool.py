@@ -46,7 +46,13 @@ for the answer on NUM rows whose answer is a number token of the context (their 
 stop head's BCE on every number token of the context (go on inside the token, stop at the char left of it). Number tokens for these labels:
 the prompt-number regex (digit runs, unsigned; the regex Amendment 2 already discloses) on the prompt and signed digit runs on the
 calculator's entries; they label training targets only and never reach the model at test time. New modules are created last (every T1 weight starts as in T1 at the same seed).
-Size (vocab 108, S cfg): 3,277,393 + 33,667 = 3,311,060 (+2.2% vs 3.24M)."""
+Size (vocab 108, S cfg): 3,277,393 + 33,667 = 3,311,060 (+2.2% vs 3.24M).
+
+span_idx=True (needs span_copy; Amendment 5's single next change, used only if T1S's re-screen reads "NOT SHOWN: answer selection"): a
+learned entry-index term on the span pointer's keys, e_s[string] (0 = the prompt, 1 + k = entry k; zero at init, so the model starts as T1S).
+Disclosure: the index comes from the text layout (which string a char sits in, the same fact seg_of uses to keep a copy inside one string);
+the keys already see tape_emb[k] through k_s, but that table is shared with the thinker; e_s is the pointer's own. No rule picks an entry.
+Size: 3,311,060 + 8 x 64 = 3,311,572."""
 import math, re
 import numpy as np
 import torch
@@ -88,7 +94,8 @@ def rand_digits(rng, lo=1, hi=9):
 class Tool(Ledger):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap', 'nocopy', 'nowordc']
 
-    def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, span_copy=False, **kw):
+    def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, span_copy=False,
+                 span_idx=False, **kw):
         assert not kw.get('eg_embed') and not kw.get('eg_teach') and not kw.get('span') and not kw.get('round_readout'), 'T1 is B2 + one change'
         kw.pop('copy', None)
         super().__init__(vocab, d=d, n_heads=n_heads, reader_layers=reader_layers, blocks=blocks, n_loops=n_loops, mlp=mlp, dk=dk,
@@ -108,6 +115,11 @@ class Tool(Ledger):
             for m in (self.q_s, self.k_s, self.g_s, self.stop_s):
                 nn.init.normal_(m.weight, std=0.02)
                 nn.init.zeros_(m.bias)
+        self.span_idx = bool(span_idx)
+        assert self.span_copy or not self.span_idx, 'span_idx is a term of the span pointer keys'
+        if self.span_idx:       # Amendment 5's single next change: created after every T1S module, zero (T1S at step 0)
+            self.e_s = nn.Embedding(1 + N_RES, dk)
+            nn.init.zeros_(self.e_s.weight)
 
     # ---- the tape ----
     def read_texts(self, texts, dev, le=LE):
@@ -159,6 +171,15 @@ class Tool(Ledger):
         """[n]: the first position of the string each context position is in (0 for the prompt [0, T), T + k*le for entry k)."""
         pos = torch.arange(n, device=dev)
         return torch.where(pos < T, torch.zeros_like(pos), T + (pos - T).div(le, rounding_mode='floor') * le)
+
+    def span_keys(self, Xc, T, le):
+        """[B, N, dk] the span pointer's keys over the context (prompt [0, T), then entries of le chars): k_s of each char; span_idx adds
+        e_s[which string the char is in] (0 = the prompt, 1 + k = entry k), a fact of the text layout, the same one seg_of uses."""
+        ks = self.k_s(Xc)
+        if self.span_idx:
+            pos = torch.arange(Xc.shape[1], device=Xc.device)
+            ks = ks + self.e_s(torch.where(pos < T, torch.zeros_like(pos), 1 + (pos - T).div(le, rounding_mode='floor')))
+        return ks
 
     def span_read(self, logits, ids, mask, T, le):
         """Greedy span copy -> texts in reading order. logits [B, N]: the pointer over the context (prompt [0, T), then entries of le chars);
@@ -283,7 +304,7 @@ class Tool(Ledger):
                 st = (lop, p)
                 if self.span_copy:
                     mc = torch.cat([xm, vis], 1)
-                    ks, wa, wb = self.k_s(torch.cat([X, Xt], 1)), self.W_a(z), self.W_b(z)
+                    ks, wa, wb = self.span_keys(torch.cat([X, Xt], 1), T, le), self.W_a(z), self.W_b(z)
                     st = st + (dict(la=self.ptr(self.q_s(wa), ks, mc), lb=self.ptr(self.q_s(wb), ks, mc), ga=self.g_s(wa)[:, 0].float(),
                                     gb=self.g_s(wb)[:, 0].float(), ids=torch.cat([batch['prompt_ids'], idt], 1), m=mc, T=T, le=le),)
                 steps.append(st)
@@ -338,7 +359,8 @@ class Tool(Ledger):
         span = None
         if self.span_copy:
             assert Xt.shape[1] % N_RES == 0
-            span = self.span_read(self.ptr(state[6], self.k_s(Xc), mc), idc, mc, X.shape[1], Xt.shape[1] // N_RES)
+            T, le = X.shape[1], Xt.shape[1] // N_RES
+            span = self.span_read(self.ptr(state[6], self.span_keys(Xc, T, le), mc), idc, mc, T, le)
         out, modes = self.answers(p.argmax(-1).tolist(), lmode.argmax(-1).tolist(), lword.argmax(-1).tolist(), batch['rows'], span=span)
         return (out, modes) if return_modes else out
 
@@ -451,7 +473,7 @@ class Tool(Ledger):
             nll = -torch.where(comm[:, s] & (ma != mb).any(-1), torch.logaddexp(lab, lba), lab)     # same string twice: one order
             lsc = lsc + (nll * on).sum() / B
             n_span += int((ma.any(-1) & on).sum() + (mb.any(-1) & on).sum()); n_side += 2 * int(on.sum())
-        ln = self.ptr(o['qn'], self.k_s(o['X']), o['xm'])
+        ln = self.ptr(o['qn'], self.span_keys(o['X'], T, o['le']), o['xm'])
         sel = (g['mode'] == 0) & Mn.any(-1)
         lsn = torch.where(sel, -lse(ln, Mn), torch.zeros_like(ln[:, 0])).sum() / B
         if cs:
