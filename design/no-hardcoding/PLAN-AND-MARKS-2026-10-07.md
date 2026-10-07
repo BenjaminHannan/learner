@@ -123,6 +123,8 @@ Today's vocab is exactly 13 specials + the 95 printable ASCII chars (108 ids, `d
 
 ## 4. Creative and sleep (specs for the creative roadmap thread)
 
+**Superseded by the creative roadmap thread (10-07, about 1 PM ET):** it sealed these items in its section 7b (`/mnt/project-files/creative-roadmap/creative-roadmap-2026-10-06.md`). Its marks replace the proposals below wherever they differ. In short: the used-number mask runs only in C1, which is retired (C2 and C2b use level 0), and is never used again unless a learned replacement passes; the order is 1a, then 1b only if 1a misses, a new 1c only if same-number picks inside a step remain, then 2. The live hand part is the notebook gate (`fastsleep.py:538`): job 9's arm M is reported as "hand-gated notebook", and nightly recall is not used again until a learned gate passes. The D3 example-checker tool waits for T1's 6-seed confirm. The text below is kept as the reasoning it started from.
+
 Parts D1-D10 are in section D of the inventory. Papers: `no-hardcoding-papers.md`, section "Learned legality and learned memory gates" and its supplement (abstracts, plus a few numbers a helper read in paper bodies; every result there is RL or a large model, the smallest 250M, nothing at 3M). The creative roadmap thread owns these marks; the ones below are proposals for it to seal or tighten. Proposed replacements (untested):
 
 - **The used-number mask (D1, `creative/legal.py`).** In B3 it goes away by construction: the puzzle becomes a tool (the model writes a move; the tool applies it or replies "error: 5 already used"), which is the world's rules, like Minecraft refusing a block, and allowed. On B2 before that, three changes, tested one at a time:
