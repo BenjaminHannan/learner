@@ -1,5 +1,5 @@
 """D0b (no-hard-coding plan, section 3.0; report only, no pass mark): where the text baseline with its calculator (C1') loses chain-5.
-python3 -m custom_io.diag_c1_links --ckpt CK/tfsteps_s100/checkpoint.pt CK/tfsteps_s101/checkpoint.pt --big BIG_DATA [--out custom_io/results/d0/D0b_c1_links.json]
+python3 -m custom_io.diag_c1_links --ckpt CK/tfsteps_s100/checkpoint.pt CK/tfsteps_s101/checkpoint.pt --big BIG_DATA [--out custom_io/results/d0/D0b_c1_links.json] [--relabel]
 PlainTFSteps.generate returns only the final answer, so this re-generates the 1,000 chain-5 rows with lesion 'calc' (the same loop, CPU, fp32) and
 keeps the written text and where the calculator filled in. Each wrong row gets the label of its FIRST wrong link against the row's gold steps:
   a  an operand's digits copied wrong (not any prompt number or earlier result, at most 1 digit from the gold operand)
@@ -7,10 +7,11 @@ keeps the written text and where the calculator filled in. Each wrong row gets t
   c  a wrong operation (or a wrong number of operands in the step)
   d  a tool result copied wrong into a later step (the gold operand is an earlier result, the written one is not a known number)
   e  the final answer copied wrong (every step right)
-  f  a step format the calculator did not fire on, with its own result wrong (or an operand that is not a number)
+  f  a step format the calculator did not fire on, with its own result wrong (or an operand that is not a number, or the answer written
+     alone with no steps on a row whose target has steps)
   g  stopped early or ran too long
   h  a row whose training target is the answer alone (steps plus answer over 64 chars, plain_tf_steps.CAP)
-  i  its own arithmetic wrong on a step the calculator never fires on (state_update arrows like '+5 -> 17')
+  i  its own arithmetic wrong on a step the calculator never fires on (state_update arrows like '+5 -> 17', or a closing '2 + 13' with no '=')
   j  a wrong name (story_chain3 answers are names)
   x  none of these (printed in full)
 Pooled over the seeds; (h)-(j) are reported apart and left out of the call: copying (a+d+e) >= half of the rest -> the copy path,
@@ -118,7 +119,10 @@ def label(row, text, fills, eos):
         wk = parse(ws)
         fired = any(sp[0] <= at <= sp[1] + 1 for at, _ in fills)
         if wk[0] != gk[0]:
-            return ('f' if wk[0] == '?' else 'c'), f'step {k + 1}: wrote {ws!r} for {row["steps"][k]!r}'
+            if wk[0] == '?':
+                alone = is_int(ws) and len(wsteps) == 1
+                return 'f', f'step {k + 1}: wrote {ws!r} for {row["steps"][k]!r}' + (' (the answer alone: no steps, so the calculator never fired)' if alone else '')
+            return 'c', f'step {k + 1}: wrote {ws!r} for {row["steps"][k]!r}'
         seq_w = [x for pair in zip(wk[1], wk[2] + ['']) for x in pair][:-1] if wk[2] or wk[1] else []
         seq_g = [x for pair in zip(gk[1], gk[2] + ['']) for x in pair][:-1] if gk[2] or gk[1] else []
         if gk[0] == 'arrow':
@@ -151,6 +155,9 @@ def label(row, text, fills, eos):
             results.append(int(gk[3]))
     if len(wsteps) != len(gold) or not has_hash or not eos:
         return 'g', f'{len(wsteps)} steps written for {len(gold)}' + ('' if has_hash else ', no #') + ('' if eos else ', no end')
+    last = row['steps'][-1]
+    if gold[-1][0] == '?' and re.search(r'\d\s*[-+*/x]\s*\d', last):       # e.g. state_update's closing '2 + 13': no '=', the model adds it up
+        return 'i', f'last step {last!r} has no "=", so the calculator never fires; answer {final_answer(text)!r} for {row["answer"]!r}'
     return ('e' if is_int(row['answer']) else 'j'), f'answer {final_answer(text)!r} for {row["answer"]!r}'
 
 
@@ -176,6 +183,21 @@ def run(ckpt, rows, bs):
                 labels=dict(collections.Counter(w['label'] for w in wrong)), wrong=wrong)
 
 
+def relabel(path, big):
+    """Re-apply label() to the rows a saved run wrote (no generation): the written text, fills and end flag are kept per row."""
+    res = json.load(open(path))
+    gold = {r['id']: r for r in load_rows(os.path.join(big, 'dev', 'in_dist.jsonl')) if r['family'] in CHAIN5}
+    per = collections.defaultdict(collections.Counter)
+    for w in res['rows']:
+        w['label'], w['detail'] = label(gold[w['id']], w['written'], [tuple(f) for f in w['fills']], w['ended'])
+        per[w['seed_ckpt']][w['label']] += 1
+    for sd in res['seeds']:
+        sd['labels'] = dict(per[sd['ckpt']])
+    pooled = collections.Counter(w['label'] for w in res['rows'])
+    res.update(pooled=dict(pooled), call=call(pooled))
+    return res
+
+
 def call(counts):
     rest = {k: v for k, v in counts.items() if k not in APART}
     n = sum(rest.values())
@@ -186,11 +208,17 @@ def call(counts):
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument('--ckpt', nargs='+', required=True)
+    ap.add_argument('--ckpt', nargs='+')
     ap.add_argument('--big', required=True, help='the big build (200 per cell dev/in_dist.jsonl)')
     ap.add_argument('--batch', type=int, default=100)
     ap.add_argument('--out', default='custom_io/results/d0/D0b_c1_links.json')
+    ap.add_argument('--relabel', action='store_true', help='re-label the rows already in --out (no generation)')
     a = ap.parse_args(argv)
+    if a.relabel:
+        res = relabel(a.out, a.big)
+        json.dump(res, open(a.out, 'w'), indent=1)
+        print(json.dumps(dict(seeds=[sd['labels'] for sd in res['seeds']], pooled=res['pooled'], call=res['call'])))
+        return res
     torch.set_num_threads(max(1, (os.cpu_count() or 2) // 2))
     rows = [r for r in load_rows(os.path.join(a.big, 'dev', 'in_dist.jsonl')) if r['family'] in CHAIN5]
     per = [run(c, rows, a.batch) for c in a.ckpt]
