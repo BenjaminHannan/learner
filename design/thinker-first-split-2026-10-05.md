@@ -265,4 +265,7 @@ approved at 8:57 PM ET 10-06). It already scores B1's 12 new kinds. Suggested fo
 roadmap's 8c and waits for 8a to pass. The 1.2B teacher's data stays usable as one part of the 8b pool; it is not a
 reason to run a new teacher (Ben, 3:11 PM ET 10-06).
 
+**Decided (Ben tapped "Wait for web text", 9:32 AM ET 10-07):** no ~100M student on the B1 data. Plan B's next result
+comes from stage 8a's 10M rung, read against b2t.
+
 Nothing here touches GOLD-PRIVATE, reserved or blind panels.
