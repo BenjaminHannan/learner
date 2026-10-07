@@ -566,7 +566,7 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
     4. Climb, the main mark: W' night 1 and night 2 from N' at the frozen dose, each night sleeping on its own
        example-checked tries. Pass: multi-step first try W'(night 2) - N' >= +10 points with the paired 95% interval
        above 0, on both parents. Reported per kind, with night 1, reach@32 and records per kind.
-       Build readings, confirmed 10-07: night 2 continues from the night-1 model and resamples the pool with it; N's
+       Build readings, confirmed 10-07: night 2 continues from the night-1 model and resamples the pool with it; N'
        skills harm is measured against the warmed parent and later models against N'; each parent stops on its own
        parts or feasibility miss (Mac job 7, commit a3f09b033).
     5. Proved wrong: parts kept and W'(night 2) - N' on the multi-step kinds with its upper end below +3 on both
