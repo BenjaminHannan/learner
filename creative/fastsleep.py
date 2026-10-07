@@ -449,9 +449,21 @@ def dev_reach4(m, vocab, device, dev, T, n=32, seed=0):
     return fewshot.score_samples(dev, smp, ks=(4,))['reach4']
 
 
-def confirm(ckpt, out, skills_train, skills_data, floors_path=None, device='cpu', seed=0):
+def confirm(ckpt, out, skills_train, skills_data, floors_path=None, device='cpu', seed=0, stage='all'):
     """One parent of the confirm, resumable: setup (keeps warm.pt and N_ss.pt for C2b) -> B = job 6's rule over B_GRID on PC (best DEV first
-    try within 2 points of harm, then DEV reach@4) -> memory+old and B on W -> memory+old on R (placebo) -> old-parts check of both on W."""
+    try within 2 points of harm, then DEV reach@4) -> memory+old and B on W -> memory+old on R (placebo) -> old-parts check of both on W.
+    stage = base | W | R | old runs one step (one process per step keeps memory flat: a whole parent in one process grew to 7 GB); all = every step."""
+    if stage not in ('all', 'base'):
+        res = json.load(open(os.path.join(out, 'confirm.json')))
+        B = (res['B']['method'], res['B']['kw'])
+        if stage == 'W':
+            screen(out, skills_data, skills_train, [MEMORY_OLD, B], device, seed, 'confirm', ('W',))
+        elif stage == 'R':
+            screen(out, skills_data, skills_train, [MEMORY_OLD], device, seed, 'confirm', ('R',))
+        else:
+            posteval(out, skills_train, [MEMORY_OLD, B], device, seed, 'confirm-old', ('W',))
+            log('CONFIRM PARENT DONE', out)
+        return
     if not os.path.exists(os.path.join(out, 'setup.pt')):
         setup(ckpt, out, skills_train, skills_data, floors_path, device, seed)
     res = screen(out, skills_data, skills_train, B_GRID, device, seed, 'confirm', ('PC',))
@@ -474,6 +486,8 @@ def confirm(ckpt, out, skills_train, skills_data, floors_path=None, device='cpu'
         res['B'] = dict(method='ft', kw=kw, within_harm=bool(pc[_key(kw)]['skills_harm_points'] <= 2), tie_reach4=r4)
         json.dump(res, open(path, 'w'), indent=1)
         log('B', res['B'])
+    if stage == 'base':
+        return
     B = (res['B']['method'], res['B']['kw'])
     screen(out, skills_data, skills_train, [MEMORY_OLD, B], device, seed, 'confirm', ('W',))
     screen(out, skills_data, skills_train, [MEMORY_OLD], device, seed, 'confirm', ('R',))
@@ -536,11 +550,12 @@ if __name__ == '__main__':
     a.add_argument('--ckpt'); a.add_argument('--out', required=True); a.add_argument('--skills-train'); a.add_argument('--skills-data'); a.add_argument('--floors')
     a.add_argument('--plan', default='ft:lr=0.0003,visits=4'); a.add_argument('--tag', default='screen'); a.add_argument('--sets', default='PC,W')
     a.add_argument('--T', type=float); a.add_argument('--device', default='cpu'); a.add_argument('--seed', type=int, default=0)
+    a.add_argument('--stage', default='all', choices=['all', 'base', 'W', 'R', 'old'])
     a = a.parse_args()
     if a.cmd == 'setup':
         setup(a.ckpt, a.out, a.skills_train, a.skills_data, a.floors, a.device, a.seed, T=a.T)
     elif a.cmd == 'confirm':
-        confirm(a.ckpt, a.out, a.skills_train, a.skills_data, a.floors, a.device, a.seed)
+        confirm(a.ckpt, a.out, a.skills_train, a.skills_data, a.floors, a.device, a.seed, a.stage)
     elif a.cmd == 'report':
         print(json.dumps(confirm_report(a.out), indent=1))
     elif a.cmd == 'posteval':
