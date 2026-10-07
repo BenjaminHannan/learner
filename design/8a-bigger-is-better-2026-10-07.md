@@ -381,3 +381,22 @@ B2, inside F3's 2%). The 91 numbers and 208 words come from rare web chunks (num
 - **G4. The regenerated own72** (E1b, without the 62-token filter) gets its caps recomputed by F4's rule before rung 46.
   If any cap rises more than 10%, B2-3M's speed probe is rerun at the new caps before rung 46 starts.
 - **G5. Disclosed beside mark 4:** 8a's B2-3M has 12 rounds, 36 registers and 106 slots; q33's had 8, 9 and 27.
+
+## 18. Addendum H: the 3M rung and the speed check move to rented 5090s (2026-10-07, 3:10 PM ET, before any 8a run)
+
+Asks this answers: Ben, 3:00 PM ET 10-07 (relayed): "go ahead. With using VAST", for important runs while the PC and
+the Mac are busy; and 3:02 PM ET: "The vast refills btw". This replaces addendum C's "home PC" for the speed check and
+the 3M rung. 10M follows on rented 5090s if mark 4 holds; 30M still goes to Ben with its measured time and cost first.
+
+- **Boxes.** One RTX 5090 per seed (400-405), all three arms of a seed on that box (same-machine rule), run by
+  `custom_io.g8a.job` in its Vast mode at build commit 50ee171632. Each box rebuilds the skills data (q33's build,
+  hash-checked) and the 8a own text and web slices with `custom_io.g8a.get_data` (own72 manifest e8f32daf, the
+  no-length-filter build; web slices checked against their manifest). A bad hash stops the box before any training.
+- **Caps.** Computed on each box by F4's rule from the regenerated own72 and the 30M web slice (G4). They are recorded
+  with the results. If any is more than 10% above addendum G's values, the cap report says so beside mark 4.
+- **Speed check.** A seventh 5090 runs the probe alone (clean timings for the 10M and 30M costs); the 3M rung does not
+  wait for it, because a 5090 has 32 GB and 3M needs no gradient accumulation.
+- **Cost caps.** Each 3M box kills its runs after 6.5 hours of uptime, and the job starts no new arm after 5 hours
+  (at most about $3.30 a box, about $20 for the rung); the speed box stops at 2 hours. Boxes are destroyed once their
+  results are collected. Expected (suggested): about 3-4 hours a box, about $11 in all.
+- **Unchanged:** the marks, seeds, arms, data mix, update floor, caps rule and the stop before 10M if mark 4 fails.
