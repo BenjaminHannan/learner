@@ -281,23 +281,22 @@ def test_egw_box_jobs():
     q33 = {r[0]: r[2] for r in parse_queue(os.path.join(here, 'queue_local', '33-pc-confirm-b2.txt'))}
     flags = lambda args: [x for i, x in enumerate(args) if x != '--cfg' and (i == 0 or args[i - 1] != '--cfg')]
     cfg = lambda args: json.loads(args[args.index('--cfg') + 1])
-    every = {'egwA': (200, ['B2V', 'EGM', 'EGO', 'EGR', 'EGW']), 'egwB': (201, ['B2V', 'EGE', 'EGM', 'EGO', 'EGR', 'EGW', 'R0']),
-             'egwC': (200, ['EGE', 'R0'])}
-    for sub, (seed, arms) in every.items():
+    every = {'egwA': [(200, ['B2V', 'EGM', 'EGO', 'EGR', 'EGW'])], 'egwB': [(201, ['B2V', 'EGE', 'EGM', 'EGO', 'EGR', 'EGW'])],
+             'egwC': [(200, ['EGE', 'R0']), (201, ['R0'])]}
+    for sub, seeds in every.items():
         d = os.path.join(here, 'queue', sub)
         jobs = sorted(f for f in os.listdir(d) if f.endswith('.sh'))
-        assert len(jobs) == {'egwA': 3, 'egwB': 4, 'egwC': 1}[sub], jobs
+        assert len(jobs) == {'egwA': 3, 'egwB': 4, 'egwC': 2}[sub], jobs
         texts = [open(os.path.join(d, j)).read() for j in jobs]
         assert '--env "TFVER=5.19.0 EG=1 MAXH=7.5 IDLE_EXIT=3600 END_SLEEP=600 FAIL_SLEEP=1800"' in texts[0], (sub, jobs)
         assert all(t.startswith('# MEM ') and '\n# PAR ' in t for t in texts), jobs
         runs = {sh[1]: sh[2:] for t in texts for sh in (shlex.split(ln) for ln in t.splitlines() if ln.startswith('run '))}
-        assert sorted(runs) == sorted(f'{a}_s{seed}' for a in arms), runs.keys()
-        base = [x for x in q33[f'B2_s{seed}']]
+        assert sorted(runs) == sorted(f'{a}_s{seed}' for seed, arms in seeds for a in arms), runs.keys()
         for name, args in runs.items():
             args = args[:-1] if args[-1] == '&' else args
-            assert flags(args) == flags(base), (name, args)
-        for arm in arms:
-            assert cfg(runs[f'{arm}_s{seed}']) == ({'copy': True} if arm == 'B2V' else ARMS[arm]), arm
+            arm, seed = name.split('_s')
+            assert flags(args) == flags(q33[f'B2_s{seed}']), (name, args)
+            assert cfg(args) == ({'copy': True} if arm == 'B2V' else ARMS[arm]), name
     assert cfg(q33['B2_s200']) == {'copy': True}
     print('ok egw_box_jobs')
 

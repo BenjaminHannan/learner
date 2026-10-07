@@ -325,3 +325,7 @@ diagnostic verdict.
 **Window check (read only, not a mark):** "the window is what cipher_map needs" predicts R0 cipher_map in_dist < 50 on both seeds and EGE
 cipher_map in_dist >= 90 on both seeds. R0 >= 50 on either seed means removing the window is not the cause, and the cause is adding
 EmbeddingGemma (then EGE should lose cipher_map too). Any other pattern is "unclear".
+**Timing note (about 02:25 UTC 10-07, 10:25 PM ET 10-06, before EGE_s201 or R0_s201 started; R0_s200 had just finished and was seen):** box B
+runs slower than planned (EGR_s201 ends about 02:45 UTC), and R0_s201 plus EGE_s201 side by side would end at about box B's 7.5-hour cap
+(04:20 UTC). So box B's job 47 is now EGE_s201 alone (PAR 1, base B2V_s201 on the same box), and R0_s201 runs on box C as job 48 after job 46,
+with B2V_s201 from box B as its base (the same weaker pairing as box C's seed-200 runs). No mark, recipe or flag changes.
