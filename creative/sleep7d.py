@@ -1,10 +1,12 @@
 """Roadmap 7d, the creative part of sleep (screens S1 and S3). CPU, DEV and pool only: C2 test / labelled and K_new test are never opened.
   python3 -m creative.sleep7d s1 --nprime ~/c7d/s100/Nprime.pt ~/c7d/s101/Nprime.pt --out DIR [--pool-limit N --dev-limit N --n2 480 --seed 0]
+  python3 -m creative.sleep7d s1report --out DIR --parents s100 s101          (the verdict over both parents)
   python3 -m creative.sleep7d s3 --nprime ... --out DIR --skills-train train.jsonl --skills-data data_big
 Pieces: a switchable low-rank adapter ("creative mode") on top of N' (adapter OFF = N' bit for bit, the worker); logp_tries (a teacher-forced copy of
 sampler.sample_run's loop with gradients on); the day (worker first try = greedy with the adapter off, the example check says pass or fail, creative mode
 searches the stuck rows only); loop 1 (reward sleep on the adapter only: fitting tries up, failing tries down, KL to the pre-night adapter);
-S1 = does a night's reward sleep make creative mode better at NEW rule kinds (K_new) than an untrained adapter (U) or a reward-shuffled one (S);
+S1 = does a night's reward sleep make creative mode find answers faster on the kinds it was stuck on (C2 DEV reach@32, roadmap ruling 13f4b987eb) than an untrained
+adapter (U) or a reward-shuffled one (S); transfer to new kinds (the K_new candidates N' reached at 512 tries) is report-only;
 S3 = does sleeping the worker on its own shaky passes (P) beat sleeping it on replay only (Z). Answer keys score; they never pick a record or a setting."""
 import argparse, contextlib, copy, hashlib, json, math, os, pickle, random, time
 import torch
@@ -22,6 +24,8 @@ T_POOL = 3.0
 LORA_LAYERS = ('q', 'kv', 'o', 'qkv', 'p', 'fc', 'out')          # per core block, as fastsleep.m_lora
 LORA_HEADS = ('op_head', 'q_a', 'q_b', 'q_ans')
 HEADS = ('lop', 'la', 'lb', 'lans')
+GROUPS = dict(near_copy=c2_pilot.COPY_KINDS, multi_step=c2_pilot.HARD_KINDS)
+TRANSFER_KINDS = ('sq_minus', 'triple_add', 'mult_sub')        # report-only transfer set: the K_new candidates N' reached at all at 512 tries (roadmap 13f4b987eb)
 
 
 # ---------------------------------------------------------------- the example check (job 8's functions, copied: that file is not on this branch)
@@ -405,7 +409,11 @@ def score_rows(rows, samples, ks=(32,)):
     for row, tr in zip(rows, samples):
         p = fewshot.parse(row['prompt'])
         fit, right, keys, first, first_right = 0, False, set(), None, None
+        keys_at = {}
         for j, rec in enumerate(tr):
+            for k in ks:
+                if j == k:
+                    keys_at[k] = set(keys)
             if not pyfit(p, rec.t):
                 continue
             v = fewshot.verdict(p, rec.t)
@@ -421,6 +429,7 @@ def score_rows(rows, samples, ks=(32,)):
         for k in ks:
             d[f'right{k}'] = first_right is not None and first_right <= k
             d[f'fit{k}'] = first is not None and first <= k
+            d[f'distinct{k}'] = len(keys_at[k]) if k < len(tr) else len(keys)
         out.append(d)
     return out
 
@@ -436,6 +445,7 @@ def summarize(per):
     for k in ks:
         out[f'reach{k}'] = sum(d[f'right{k}'] for d in per) / n
         out[f'fit{k}'] = sum(d[f'fit{k}'] for d in per) / n
+        out[f'distinct{k}'] = sum(d.get(f'distinct{k}', 0) for d in per) / n
     return out
 
 
@@ -462,7 +472,7 @@ def _log(*a):
 
 # ---------------------------------------------------------------- 6. S1
 def s1_parent(nprime, out, pool_limit=None, dev_limit=None, n1=32, n2=480, seed=0, T=T_POOL, lrs=(1e-3, 3e-3), passes=(1, 2, 4), kl=0.1, n=32, n_eval=512, device='cpu',
-              knew_dir=KNEW, name=None, resume=True, log=_log, allres=None):
+              knew_dir=KNEW, transfer_kinds=TRANSFER_KINDS, name=None, resume=True, log=_log, allres=None):
     """One parent's S1. After every stage DIR/s1.json (all parents so far, `allres`) and DIR/<name>/s1.json are written; the day is cached (DIR/<name>/day.pkl) when the same arguments come back."""
     from creative import knew
     name = name or os.path.basename(os.path.dirname(os.path.abspath(nprime)))
@@ -482,7 +492,11 @@ def s1_parent(nprime, out, pool_limit=None, dev_limit=None, n1=32, n2=480, seed=
     init = adapter_state(model)
     pool = c2_stones._with_nums(_limit(R.load_split(DATA, 'pool'), pool_limit))
     dev = c2_stones._with_nums(_limit(R.load_split(DATA, 'dev'), dev_limit))
-    kdev = c2_stones._with_nums(_limit(knew.load_dev(knew_dir), dev_limit))
+    cpath = os.path.join(knew_dir, 'candidates_dev.jsonl')
+    raw = open(cpath, 'rb').read()
+    kdev = c2_stones._with_nums(_limit([r for r in map(json.loads, raw.decode().splitlines()) if r['kind'] in transfer_kinds], dev_limit))
+    res['transfer_source'] = dict(path=cpath, sha256=hashlib.sha256(raw).hexdigest(), kinds=list(transfer_kinds),
+                                  note='report-only transfer set (roadmap ruling 13f4b987eb): the K_new candidates N\' reached at all at 512 tries; DEV rows only, no K_new set written or sealed')
     res['sizes'] = dict(pool=len(pool), c2_dev=len(dev), knew_dev=len(kdev), knew_kinds=sorted({r['kind'] for r in kdev}))
     # 1. the worker-untouched test, once
     t0 = time.time()
@@ -557,13 +571,16 @@ def s1_parent(nprime, out, pool_limit=None, dev_limit=None, n1=32, n2=480, seed=
         res['seconds'] = secs
         save()
     secs['measure'] = time.time() - t0
-    json.dump({arm: {ds: [{k: v for k, v in x.items() if k != 'kind'} for x in rows] for ds, rows in d_.items()} for arm, d_ in per.items()}, open(os.path.join(pdir, 'per_row.json'), 'w'))
-    # paired bootstrap per row: K_new reach@n_eval (the primary measure, roadmap ruling 71050e463c), reach@32 reported; C2 DEV reach@32 (the in-kind mark) and reach@n_eval
-    vec = lambda arm, ds, k: [float(x[f'right{k}']) for x in per[arm][ds]]
-    bt = lambda a, b, ds, k: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(vec(a, ds, k), vec(b, ds, k))))
+    json.dump(per, open(os.path.join(pdir, 'per_row.json'), 'w'))
+    # paired bootstrap per row (roadmap ruling 13f4b987eb): primary = C2 DEV reach@32 in creative mode; reach@n_eval beside it; transfer (K_new subset) report-only at n_eval
+    vec = lambda arm, ds, k, kinds=None: [float(x[f'right{k}']) for x in per[arm][ds] if kinds is None or x['kind'] in kinds]
+    bt = lambda a, b, ds, k, kinds=None: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(vec(a, ds, k, kinds), vec(b, ds, k, kinds))))
     E = n_eval
-    res['boot'] = dict(knew_C_minus_U=bt('C', 'U', 'knew', E), knew_C_minus_S=bt('C', 'S', 'knew', E), knew32_C_minus_U=bt('C', 'U', 'knew', 32),
-                       knew32_C_minus_S=bt('C', 'S', 'knew', 32), c2_dev_C_minus_U=bt('C', 'U', 'c2_dev', 32), c2_dev_at_eval_C_minus_U=bt('C', 'U', 'c2_dev', E))
+    res['boot'] = dict(c2_C_minus_U=bt('C', 'U', 'c2_dev', 32), c2_C_minus_S=bt('C', 'S', 'c2_dev', 32),
+                       c2_at_eval_C_minus_U=bt('C', 'U', 'c2_dev', E), c2_at_eval_C_minus_S=bt('C', 'S', 'c2_dev', E),
+                       groups={g: dict(C_minus_U=bt('C', 'U', 'c2_dev', 32, ks), C_minus_S=bt('C', 'S', 'c2_dev', 32, ks)) for g, ks in GROUPS.items()},
+                       transfer_C_minus_U=bt('C', 'U', 'knew', E), transfer_C_minus_S=bt('C', 'S', 'knew', E),
+                       transfer32_C_minus_U=bt('C', 'U', 'knew', 32), transfer32_C_minus_S=bt('C', 'S', 'knew', 32))
     log('boot', res['boot'])
     # 6. the worker-untouched test again, with each trained adapter loaded (flag off)
     after = {}
@@ -572,19 +589,18 @@ def s1_parent(nprime, out, pool_limit=None, dev_limit=None, n1=32, n2=480, seed=
         after[arm] = worker_untouched(model, ref, dev[:64], vocab, device, perturb=False)
     res['unit_test_after'] = after
     log('worker-untouched after training', after)
-    # 7. marks
+    # 7. marks (roadmap ruling 13f4b987eb). The 'beyond near-copy' label pools both parents: `s1report`.
     a = res['arms']
-    kC, kU, kS = (a[x]['knew']['pooled'] for x in 'CUS')
+    cC, cU = (a[x]['c2_dev']['pooled'] for x in 'CU')
     b = res['boot']
     res['marks'] = dict(
-        transfer=dict(C_minus_U_points=b['knew_C_minus_U']['points'], C_minus_S_points=b['knew_C_minus_S']['points'],
-                      passes=b['knew_C_minus_U']['points'] >= 5.0 and b['knew_C_minus_S']['points'] >= 3.0, rule=f'K_new reach@{E}: C - U >= +5 and C - S >= +3 points'),
-        variety=dict(C=kC['distinct_fitting'], U=kU['distinct_fitting'], passes=kC['distinct_fitting'] >= 0.8 * kU['distinct_fitting'],
-                     rule=f'K_new distinct fitting programs per row over {E} tries: C >= 0.8 x U'),
-        in_kind=dict(C=a['C']['c2_dev']['pooled']['reach32'], U=a['U']['c2_dev']['pooled']['reach32'], passes=a['C']['c2_dev']['pooled']['reach32'] >= a['U']['c2_dev']['pooled']['reach32'],
-                     rule='C2 DEV reach@32: C >= U'),
+        primary=dict(C_minus_U_points=b['c2_C_minus_U']['points'], C_minus_S_points=b['c2_C_minus_S']['points'],
+                     passes=b['c2_C_minus_U']['points'] >= 5.0 and b['c2_C_minus_S']['points'] >= 3.0, rule='C2 DEV reach@32 in creative mode, pooled: C - U >= +5 and C - S >= +3 points'),
+        variety=dict(C=cC['distinct32'], U=cU['distinct32'], passes=cC['distinct32'] >= 0.8 * cU['distinct32'], rule='C2 DEV distinct fitting programs per question within 32 tries: C >= 0.8 x U'),
         unit_test=dict(passes=bool(ut['passes'] and all(x['passes'] for x in after.values()))),
-        proved_wrong=dict(flag=b['knew_C_minus_S']['hi'] < 1.0, rule=f'K_new reach@{E}: C - S upper end of the paired 95% interval < +1 point'))
+        proved_wrong=dict(flag=b['c2_C_minus_S']['hi'] < 1.0, rule='C2 DEV reach@32: C - S upper end of the paired 95% interval < +1 point (both parents needed)'),
+        transfer_report_only=dict(C_minus_U=b['transfer_C_minus_U'], C_minus_S=b['transfer_C_minus_S'], rule=f'K_new subset reach@{E} (report only)'))
+    res['marks']['passes'] = all(res['marks'][k]['passes'] for k in ('primary', 'variety', 'unit_test'))
     secs['total'] = time.time() - t00
     res['seconds'] = secs
     save()
@@ -600,8 +616,23 @@ def s1(nprimes, out, **kw):
     return allres
 
 
+def s1report(out, parents=('s100', 's101')):
+    """S1 verdict over both parents (roadmap ruling 13f4b987eb): pass = every parent passes primary, variety and the unit test; label 'beyond near-copy' only if the multi-step C - U
+    paired interval (C2 DEV reach@32), pooled over both parents' rows, is above 0; proved wrong = C - S upper end < +1 on both parents. -> dict, also DIR/s1-report.json."""
+    res = {p: json.load(open(os.path.join(out, p, 's1.json'))) for p in parents}
+    per = {p: json.load(open(os.path.join(out, p, 'per_row.json'))) for p in parents}
+    pooled = lambda arm: [float(x['right32']) for p in parents for x in per[p][arm]['c2_dev'] if x['kind'] in c2_pilot.HARD_KINDS]
+    multi = dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(pooled('C'), pooled('U'))))
+    rep = dict(parents=list(parents), per_parent={p: dict(marks=res[p].get('marks'), groups=res[p].get('boot', {}).get('groups')) for p in parents},
+               passes=all((res[p].get('marks') or {}).get('passes') for p in parents),
+               multi_step_pooled_C_minus_U=multi, label='beyond near-copy' if multi['lo'] > 0 else 'near-copy only (multi-step interval not above 0)',
+               proved_wrong=all((res[p].get('marks') or {}).get('proved_wrong', {}).get('flag') for p in parents),
+               wording='a pass reads "finds answers faster on the kinds it was stuck on", never "more creative in general" (roadmap 13f4b987eb)')
+    json.dump(rep, open(os.path.join(out, 's1-report.json'), 'w'), indent=1)
+    return rep
+
+
 # ---------------------------------------------------------------- 7. S3
-GROUPS = dict(near_copy=c2_pilot.COPY_KINDS, multi_step=c2_pilot.HARD_KINDS)
 
 
 def sleep_on(base, recs, vocab, replay, warm_rows, lr, visits, seed, device):
@@ -827,6 +858,7 @@ def _ints(s):
 if __name__ == '__main__':
     a = argparse.ArgumentParser()
     sub = a.add_subparsers(dest='cmd', required=True)
+    r = sub.add_parser('s1report'); r.add_argument('--out', required=True); r.add_argument('--parents', nargs='+', default=['s100', 's101'])
     for c in ('s1', 's3'):
         s = sub.add_parser(c)
         s.add_argument('--nprime', nargs='+', required=True); s.add_argument('--out', required=True)
@@ -840,9 +872,11 @@ if __name__ == '__main__':
             s.add_argument('--skills-train'); s.add_argument('--skills-data'); s.add_argument('--replay-n', type=int)
             s.add_argument('--day-from', help="an S1 output dir: W1's search tries come from S1's day on the same parent when its key matches")
     a = a.parse_args()
-    if a.threads:
+    if getattr(a, 'threads', None):
         torch.set_num_threads(a.threads)
-    if a.cmd == 's1':
+    if a.cmd == 's1report':
+        print(json.dumps(s1report(a.out, tuple(a.parents)), indent=1))
+    elif a.cmd == 's1':
         s1(a.nprime, a.out, pool_limit=a.pool_limit, dev_limit=a.dev_limit, n1=a.n1, n2=a.n2, seed=a.seed, lrs=a.lrs, passes=a.passes, kl=a.kl, n_eval=a.n_eval, device=a.device,
            knew_dir=a.knew, resume=not a.no_resume)
     else:
