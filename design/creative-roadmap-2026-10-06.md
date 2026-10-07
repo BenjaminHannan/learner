@@ -62,6 +62,13 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   outside help to sleep on its own checked tries, but two parts are still ours. We wrote its practice "stepping
   stones" for the new rules, and a fixed script decides when it is stuck, how many tries it gets and when it sleeps.
   Job 9's report will say so. From now on the model makes its own stepping stones.
+- **Sleep teaches both parts (Ben, 3:41 PM ET 10-07; section 7d).** Each night:
+  1. The creative part (a small add-on used only when the worker is stuck) is rewarded for tries that worked and
+     pushed away from ones that didn't.
+  2. The worker learns the creative part's ideas that helped it.
+  3. The worker practises its own tasks.
+  Each is tested alone first. The creative part counts as "better at being creative" only if it finds answers
+  faster on kinds of problems it never slept on.
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
   when the model runs into trouble on a problem it is trying to solve. Gift and plan ideas are out of scope.
 
@@ -962,6 +969,118 @@ build, and until then the fixed recipe is disclosed):
 | Warm-up programs from our breadth-first solver | C2 warm-up (D9) | its own search, which C2 shows is easy for these kinds |
 | When to sleep, what to keep, data mix, sleep learning rate, nightly harm check | fast sleep, C2b (D8) | its own choice (the fast-sleep thread owns these) |
 
+## 7d. Sleep that teaches both the creative part and the worker (Ben, 3:41 PM ET 10-07; joint spec with the fast-sleep thread)
+
+Ben: during sleep the creative part should learn to be creative better, keeping what worked and punishing what didn't,
+especially from what actually happened that day. The worker should learn the creative part's ideas that helped it, and
+it should also get faster at its own tasks. Written here before any training; the fast-sleep thread builds and runs it.
+
+**One day and night** (creativity only when stuck; all of it from that day's own episodes, nothing made by us):
+- **Day:**
+  1. The worker answers each question: one greedy try, with the creative part off.
+  2. The example check (a tool, no answer key) says pass or fail.
+  3. A fail means stuck. Only then does the creative part try, up to the try budget, and each try is checked.
+- **The creative part** is a small adapter on the thinker (rank 4, `fastsleep.py`'s LoRA design). It starts at zero
+  and is switched on only in creative mode. So the worker with it off is exactly the worker before.
+- **Night, loop 1: the creative part learns to search better.** Only the adapter trains.
+  - For each stuck question, each try's reward is 1 if it fits every example, else 0.
+  - Its advantage is that reward minus the question's mean reward.
+  - Loss: minus the advantage times the try's log-probability, plus a pull (KL, weight 0.1) toward the pre-night
+    creative part.
+  - So tries that worked become more likely, and failed tries on questions where something worked become less likely
+    (Ben's "punish").
+  - A question where nothing fit gives no signal. Punishing every try equally would only flatten the sampler.
+  - At most 8 fitting and 8 failing tries are kept per question.
+- **Night, loop 2: the worker learns ideas it didn't have.** The worker's weights (adapter off) sleep on the creative
+  part's fitting tries for questions the worker failed. This is C2b's W arm. From here on its recipe is the fast-sleep
+  thread's current compliant base.
+- **Night, loop 3: the worker practises its own tasks.**
+  - The worker sleeps on its own passing first tries, keeping the ones it was unsure of by its own measure: its pass
+    rate on 8 of its own samples is between 1/8 and 7/8.
+  - "Faster" on B2 means fewer stuck questions and fewer tries, because B2 always thinks for 8 rounds. Once learned
+    halting exists (H1, B3), it also means fewer thinking rounds and tool calls.
+- **Night order:** loop 1 first, on the weights that made the tries. Then loops 2 and 3 together, with the usual
+  add/mult and skills replay. Recall (the notebook) stays separate (7b).
+- **Autonomy (7c):**
+  - No outside help: yes. The check is the world's reply, the data is the model's own day, nothing is made for the
+    new kinds, and settings are fixed or picked by example fits alone.
+  - Own choices: not yet. A fixed night script runs it, and what to replay is a fixed rule over the model's own
+    statistics. C9 later lets the model pick.
+
+**Fresh kinds for loop 1 (K_new).** "Better at being creative" has to show on problems it never slept on.
+- 4 fresh rule kinds, never used in any warm-up, stones, pool, DEV or test.
+- Chosen on their own DEV (64 questions per kind) before any sleep, by three conditions:
+  - B2's language can write them in at most 7 steps (solver check);
+  - blind breadth-first search with the example check at 32 guesses fits at most 20% of their DEV questions (the
+    rule for finding tests, section 7);
+  - N' in creative mode (adapter untrained) reaches a right fit within 32 tries on 2-40% of them.
+- Listed with their hashes before any sleep. Their 512-question TEST is sealed and opened once, at the confirm.
+
+**Test S1, loop 1 alone** (screen: s100 and s101, DEV, one night):
+- Day: job 8's N' on the 1,024 C2 pool questions. Stuck questions get job 8's search with the adapter on: 32 tries,
+  then 480 more where none fits.
+- Arms, on the same day's tries with the same number of updates:
+  - U: adapter untrained;
+  - C: loop 1;
+  - S: loop 1 with rewards shuffled among all kept tries (placebo: the same updates with no success signal).
+- Settings, picked on C2 DEV by example fits only (no key): learning rate {1e-3, 3e-3} x passes {1, 2, 4}.
+- Measures, in creative mode at the pool temperature with 32 tries:
+  - reach@32 (fits and right; the key is read only to score);
+  - tries to first fit;
+  - distinct fitting programs per question.
+  These are measured on K_new DEV (transfer) and on C2 DEV (in-kind).
+- Marks, on both parents:
+  1. Transfer: on K_new DEV reach@32, C - U is at least +5 and C - S is at least +3.
+  2. Variety: distinct fitting programs per question on K_new are at least 0.8x U's.
+  3. In-kind: C2 DEV reach@32, C is at least U (the gain is reported).
+  4. Worker untouched: with the adapter off, outputs are bit-identical to N' (unit test). So the worker's first try
+     and its skills cannot change.
+- Proved wrong: C - S on K_new has its paired 95% interval's upper end below +1 on both parents. The success
+  signal then teaches today's kinds only, not how to search.
+- Confirm (after a screen pass, and after job 9 is scored): s200-s205, with K_new TEST opened once. C - U at least
+  +5 and C - S at least +3 pooled, intervals above 0, and C - U positive on at least 5 of 6 parents.
+
+**Loop 2:** job 9's W arm, with its sealed marks (section 7), is loop 2's test. Nothing new to build.
+
+**Test S3, loop 3 alone** (screen: s100 and s101, DEV):
+- It starts after one loop-2 night (W1), so there are kinds the worker solves only sometimes. One day and night
+  follow.
+- Arms:
+  - P: loop 3;
+  - Z: the same number of updates on replay rows only (controls for the extra updates).
+- Measures, next day, on fresh C2 DEV questions:
+  - stuck rate (the share where the worker's first try fails the check);
+  - first try right per kind group (near-copy, multi-step, practised);
+  - program steps per right answer;
+  - skills harm.
+- Marks, on both parents:
+  1. Stuck rate: P at most Z - 3 points.
+  2. No kind group's first try is more than 2 points below Z's.
+  3. Skills harm at most 2.
+  4. Steps per right answer are reported. They are gated only once learned halting exists: then thinking rounds per
+     right answer must be at least 20% fewer, with accuracy within 1 point.
+- Proved wrong: Z - P on stuck rate has its interval's upper end below +1 on both parents.
+
+**Test J, all three loops together** (only after S1 and S3 pass their screens): two days and nights from N', against
+loop 2 alone (W). Screened on s100/s101 DEV, then confirmed on s200-s205 with a fresh sealed C2 split (job 9 uses up
+C2's test) and K_new TEST.
+- Marks:
+  1. Next-day stuck rate on C2: J at most W - 3.
+  2. K_new creative reach@32: J at least W + 5.
+  3. C2 first try: J at least W - 2.
+  4. Skills harm at most 2.
+- Proved wrong: J no better than W on both stuck rate and K_new reach (upper ends below +1).
+
+**Later, one change each:**
+- the worker is also pushed down on its own failed first tries;
+- the model picks what to replay (C9);
+- speed in thinking rounds, once halting exists.
+
+**Owner and machines:**
+- The fast-sleep thread builds S1, S3 and J in a new file, importing the creative code without editing it (as
+  `fastsleep.py` does). That includes K_new and its blind-search check.
+- Screens are CPU and DEV only. Confirms run on Ben's machines after job 9 is scored. No spend.
+
 ## 8. How it fits the other work
 
 - **Plan B test B1** (teacher-made variety for a 10.8M B2) runs first. C1 does not need its data. If B1 passes, C2 onward
@@ -1086,3 +1205,11 @@ build, and until then the fixed recipe is disclosed):
   Recorded as section 7c, with job 9's arms labelled before the test is opened (W and M need no outside help given
   their parent, but the parent's stones are ours and the loop is a fixed script; R and H are controls) and C6
   changed so the model makes its own stones.
+- **Sleep teaches both parts (10-07):** Ben's direction that sleep should make the creative part more creative
+  (reward what worked, punish what didn't), teach the worker the ideas that helped it, and make the worker faster at
+  its own tasks. Written as section 7d before any training:
+  - loop 1 is a creative-only adapter trained by reward on the day's stuck episodes, judged on fresh kinds it never
+    slept on, against a shuffled-reward placebo;
+  - loop 2 is job 9's W arm;
+  - loop 3 is practice on its own unsure successes, judged by next-day stuck rate.
+  The fast-sleep thread builds them.
