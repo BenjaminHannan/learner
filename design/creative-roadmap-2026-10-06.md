@@ -1016,6 +1016,19 @@ it should also get faster at its own tasks. Written here before any training; th
   - N' in creative mode (adapter untrained) reaches a right fit within 32 tries on 2-40% of them.
 - Listed with their hashes before any sleep. Their 512-question TEST is sealed and opened once, at the confirm.
 
+- **Ruled 10-07, after the fast-sleep build (07abf1eea), before any model number on K_new:** condition (b) counts
+  candidates examined.
+  - A kind passes if blind search's first 32 checked candidates fit at most 20% of its DEV questions. That is the same
+    budget as the model's 32 checked tries, which is what "fails at the test's guess budget" means.
+  - Under this reading all 10 candidates score 0%, so (b) does not separate them. It only shows that a win at 32 tries
+    is not brute force at equal cost.
+  - The other reading (right within blind search's first 32 fits, up to 50,000 examined) rules out every candidate
+    (34-100%). Breadth-first search finds every kind B2 can write in 5 steps or fewer.
+  - So S1 can claim "searches more efficiently", never "finds what search can't". For each kind, the report shows how
+    many candidates blind search examined before its first right fit.
+  - The N' used is job 8's N', rebuilt on CPU exactly as `c2_keep.py` builds it (seed 0), not the Mac's file.
+    Disclosed; it is a DEV screen.
+
 **Test S1, loop 1 alone** (screen: s100 and s101, DEV, one night):
 - Day: job 8's N' on the 1,024 C2 pool questions. Stuck questions get job 8's search with the adapter on: 32 tries,
   then 480 more where none fits.
