@@ -664,9 +664,77 @@ class Tool(Ledger):
         wc['operand_copy'] = pc(wc['op_ok'], wc['op_n'])
         wc['answer_copy'] = pc(wc['ans_ok'], wc['ans_n'])
         out['write_copy'] = wc
+        out['write_copy_u'] = self.write_copy_u(ctx)
         out['copy_gate'] = self.copy_gate_eval(rows, ctx)
         self.train(was)
         return out
+
+    @torch.no_grad()
+    def write_copy_u(self, ctx, min_n=200, max_passes=8):
+        """write_copy as amended (MARKS-D0-T1-2026-10-07.md Amendment 4): the same rows, oracle and copy events as write_copy, each scored only
+        when UNAMBIGUOUS: the operand's text (in the intact run) equals exactly one earlier call result and no prompt number or constant (an
+        answer: exactly one call result, no prompt number or constant); the others are counted apart as ambiguous. Pass 0 is write_copy's own
+        oracle draw; while an unambiguous cell (operand or answer, length 1-9) has n < min_n, another pass re-draws every random string on
+        the same rows (oracle seed + '|pass'), up to max_passes. The rule reads only texts and n, never whether the model was right."""
+        import os, random
+        from custom_io.data import collate, Dataset, load_rows, to_device
+        from custom_io.evalx import is_hit, subsample
+        was = self.training
+        self.eval()
+        root = ctx.get('big') or ctx['data']
+        rows = load_rows(os.path.join(root, 'dev', 'in_dist.jsonl'))
+        prows = [r for r in rows if pp.row_targets(r)['prog']]
+        rs = prows if len(prows) <= 3000 else subsample(prows, 3000)
+        dev, bs, amp = ctx['device'], ctx['batch_size'], ctx['amp']
+        consts = {str(c) for c in pp.CONSTS}
+
+        def run_rows(oracle=None):
+            res = []
+            for s0 in range(0, len(rs), bs):
+                b = to_device(collate([Dataset(rs[s0:s0 + bs], self.vocab, strict=False)[i] for i in range(len(rs[s0:s0 + bs]))]), dev)
+                with amp():
+                    o = self.run(b, oracle=None if oracle is None else (lambda i, t, c, _b=b: oracle(_b['rows'][i], t, c)))
+                    ans = self.talk(self.state_of(o), b)
+                res += [(r, o['calls'][i], ans[i]) for i, r in enumerate(b['rows'])]
+            return res
+        base = {r['id']: (calls, ans) for r, calls, ans in run_rows()}
+        cells = {k: {} for k in ('operand', 'operand_ambiguous', 'answer', 'answer_ambiguous')}
+
+        def add(key, want, ok):
+            d = cells[key].setdefault(str(len(want)), [0, 0])
+            d[0] += 1; d[1] += ok
+        unamb = lambda x, res, pn: sum(y == x for y in res) == 1 and x not in pn and x not in consts
+        passes, path_changed, too_long = 0, 0, 0
+        while passes < max_passes:
+            tag = '' if passes == 0 else f'|{passes}'
+            for r, calls, ans in run_rows(lambda r, t, c: rand_digits(random.Random(f"{r['id']}|{t}{tag}"), 1, 9)):
+                c0, a0 = base[r['id']]
+                if [c[:2] for c in calls[:len(c0)]] != [c[:2] for c in c0]:
+                    path_changed += 1
+                    continue
+                pn = {m.group() for m in pp.NUM_RE.finditer(r['prompt'])}
+                for j in range(len(c0)):
+                    earlier = [c0[k][4] for k in range(j)]
+                    for side in (0, 1):
+                        x = c0[j][2 + side]
+                        if x in earlier:            # write_copy's own copy event (its text label)
+                            k = max(k for k in range(j) if c0[k][4] == x)
+                            add('operand' if unamb(x, earlier, pn) else 'operand_ambiguous', calls[k][4], calls[j][2 + side] == calls[k][4])
+                res = [c[4] for c in c0]
+                ks = [k for k in range(len(c0)) if c0[k][4] == a0]
+                if ks and is_hit(a0, r):
+                    want = calls[ks[-1]][4]
+                    if len(want) > GEN_MAX and not self.span_copy:
+                        too_long += 1
+                        continue
+                    add('answer' if unamb(a0, res, pn) else 'answer_ambiguous', want, ans == want)
+            passes += 1
+            if all(cells[k].get(str(L), [0])[0] >= min_n for k in ('operand', 'answer') for L in range(1, 10)):
+                break
+        self.train(was)
+        pc = lambda d: {L: dict(n=v[0], exact=100 * v[1] / v[0]) for L, v in sorted(d.items(), key=lambda x: int(x[0]))}
+        return dict({k: pc(v) for k, v in cells.items()}, counts=cells, passes=passes, min_n=min_n, path_changed=path_changed, too_long=too_long,
+                    n_rows=len(rs))
 
     @torch.no_grad()
     def copy_gate_eval(self, rows, ctx):

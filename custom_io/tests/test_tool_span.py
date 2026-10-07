@@ -153,8 +153,13 @@ def test_extra_evals():
             f.write(json.dumps(r) + '\n')
     ex = m.extra_evals(dict(data=tmp, big=None, device=torch.device('cpu'), batch_size=64, amp=contextlib.nullcontext))
     json.dumps(ex)
-    assert {'write_copy', 'op_acc', 'noexec', 'opswap', 'span_use'} <= set(ex) and set(ex['span_use']) == {'operand', 'answer', 'n_sides', 'n_rows'}
-    print('ok extra_evals', ex['span_use'])
+    assert {'write_copy', 'write_copy_u', 'op_acc', 'noexec', 'opswap', 'span_use'} <= set(ex) and set(ex['span_use']) == {'operand', 'answer', 'n_sides', 'n_rows'}
+    wu, wc = ex['write_copy_u'], ex['write_copy']
+    assert {'operand', 'operand_ambiguous', 'answer', 'answer_ambiguous', 'passes', 'counts'} <= set(wu) and 1 <= wu['passes'] <= 8
+    if wu['passes'] == 1:       # pass 0 is write_copy's own draw: its events split into unambiguous + ambiguous
+        n = lambda d: sum(v[0] for v in d.values())
+        assert n(wu['counts']['operand']) + n(wu['counts']['operand_ambiguous']) == wc['op_n']
+    print('ok extra_evals', ex['span_use'], 'write_copy_u passes', wu['passes'])
 
 
 # ---- the mechanism: trained on 1-3 digit numbers, copying 1-9 digit results ------------------------------------------------------
