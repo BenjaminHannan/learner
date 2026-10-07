@@ -622,7 +622,7 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   proved-wrong line read the unambiguous cells; a cell with n < 200 is reported and cannot pass or fail by itself; the old numbers are printed
   beside. Marks unchanged.
 
-## Addendum 22, amendment 2 (written 2026-10-07 about 22:55 UTC, 6:55 PM ET, before any T1S result is read)
+## Addendum 22, amendment 2 (written 2026-10-07 about 22:35 UTC, 6:35 PM ET, before any T1S result is read)
 - **Source, mirrored as sealed:** MARKS-D0-T1-2026-10-07.md Amendment 5 (6:50 PM ET), after this thread named the CPU proxy's answer-selection
   risk. Pass unchanged (R1: operand AND answer >= 99 at every length 1-9, unambiguous set, both seeds).
 - **Proved wrong is read by path:** an operand cell at 4-9 digits below 90 on either seed = span copy proved wrong (both paths below 90 too).
