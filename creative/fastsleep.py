@@ -473,7 +473,7 @@ def confirm(ckpt, out, skills_train, skills_data, floors_path=None, device='cpu'
     path = os.path.join(out, 'confirm.json')
     if 'B' not in res:
         pc = {_key(r['kw']): r for r in res['runs'] if r['set'] == 'PC' and r['method'] == 'ft'}
-        ok = [kw for _, kw in B_GRID if pc[_key(kw)]['skills_harm_points'] <= 2] or [min((kw for _, kw in B_GRID), key=lambda kw: pc[_key(kw)]['skills_harm_points'])]
+        ok = [kw for _, kw in B_GRID if round(pc[_key(kw)]['skills_harm_points'], 6) <= 2] or [min((kw for _, kw in B_GRID), key=lambda kw: pc[_key(kw)]['skills_harm_points'])]
         best = max(pc[_key(kw)]['dev']['right'] for kw in ok)
         tied = [kw for kw in ok if pc[_key(kw)]['dev']['right'] == best]
         r4 = {}
@@ -486,7 +486,7 @@ def confirm(ckpt, out, skills_train, skills_data, floors_path=None, device='cpu'
                 r4[_key(kw)] = dev_reach4(m, vocab, device, dev, s['T'], seed=seed)
         kw = max(tied, key=lambda kw: r4.get(_key(kw), 0.0))
         res = json.load(open(path))
-        res['B'] = dict(method='ft', kw=kw, within_harm=bool(pc[_key(kw)]['skills_harm_points'] <= 2), tie_reach4=r4)
+        res['B'] = dict(method='ft', kw=kw, within_harm=bool(round(pc[_key(kw)]['skills_harm_points'], 6) <= 2), tie_reach4=r4)
         json.dump(res, open(path, 'w'), indent=1)
         log('B', res['B'])
     if stage == 'base':
@@ -523,10 +523,10 @@ def confirm_report(root):
     mean = lambda k: sum(r[k] for r in rows) / n
     marks = {'1 FLOPs <= B/10 on every parent': all(r['M_tflops'] <= r['B_tflops'] / 10 for r in rows),
              '2 pooled W gain >= 0.8 x B': mean('M_gain') >= 0.8 * mean('B_gain'),
-             '3 harm <= 2 on every parent': all(r['M_harm'] <= 2 for r in rows),
+             '3 harm <= 2 on every parent': all(round(r['M_harm'], 6) <= 2 for r in rows),
              '4 recall of stored programs (practised reach@32) >= N on 5 of 6': sum(r['recall_M'] >= r['recall_N'] for r in rows) >= 5,
              'placebo (R) pooled gain <= +3': mean('placebo_gain') <= 3}
-    wrong = mean('M_gain') < 0.5 * mean('B_gain') or sum(r['M_harm'] > 2 for r in rows) >= 2
+    wrong = mean('M_gain') < 0.5 * mean('B_gain') or sum(round(r['M_harm'], 6) > 2 for r in rows) >= 2
     rep = dict(n=n, rows=rows, pooled=dict(M_gain=mean('M_gain'), B_gain=mean('B_gain'), ratio=mean('M_gain') / mean('B_gain') if mean('B_gain') else None,
                placebo_gain=mean('placebo_gain')), marks=marks, proved_wrong=wrong,
                verdict=('PROVED WRONG' if wrong else 'PASS' if (n >= 6 and all(marks.values())) else 'FAIL' if n >= 6 else f'incomplete ({n} of 6)'))
@@ -556,9 +556,25 @@ def harm_check(out, skills_train, skills_data, device='cpu', seed=0):
     return res
 
 
+def nightly_recall(N, records, replay, vocab, device, skills_data, base5=None, setting=MEMORY_C2B, limit=2.0, seed=0, log_fn=log):
+    """The creative loop's nightly recall step (roadmap df21af2830): build arm M from tonight's records on the frozen weights N, then measure chain-5
+    skills harm (pooled-5, the confirm's harm set) every night. Harm > limit points -> recall is switched off for that night's model (N is returned
+    unchanged). Weight sleep still decides climbing; call this on whatever weights the night ends with, and rebuild after any weight sleep.
+    -> (model, report). base5 = N's pooled-5 if already known (saves one eval)."""
+    if base5 is None:
+        base5 = skills5(N, skills_data, device)
+    name, kw = setting
+    m, info = METHODS[name](N, records, replay, vocab, device, len(records), seed=seed, **kw)
+    harm = round(100 * (base5 - skills5(m, skills_data, device)), 6)     # rounded: 0.991 - 0.971 is 2.0000000000000018 points in floats
+    on = harm <= limit
+    rep = dict(recall_on=on, chain5_harm_points=round(harm, 2), limit=limit, base5=base5, records=len(records), setting=dict(method=name, **kw), info=info)
+    log_fn('nightly recall', 'ON' if on else f'OFF (chain-5 harm {harm:.1f} > {limit})', {k: rep[k] for k in ('chain5_harm_points', 'records')})
+    return (m if on else N), rep
+
+
 def harm_report(dirs):
     rows = [json.load(open(os.path.join(d, 'harmcheck.json'))) for d in dirs if os.path.exists(os.path.join(d, 'harmcheck.json'))]
-    ok = len(rows) == len(dirs) and all(r['harm_points'] <= 2.0 for r in rows)
+    ok = len(rows) == len(dirs) and all(round(r['harm_points'], 6) <= 2.0 for r in rows)
     return dict(n=len(rows), of=len(dirs), verdict='PASS' if ok else ('FAIL' if len(rows) == len(dirs) else 'incomplete'),
                 harm={r['parent']: round(r['harm_points'], 2) for r in rows},
                 worst_families={r['parent']: sorted(r['drop_by_family'].items(), key=lambda kv: -kv[1])[:3] for r in rows})
