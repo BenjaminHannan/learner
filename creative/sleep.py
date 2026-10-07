@@ -72,9 +72,10 @@ def check_visits(n_records, cfg, replay=True):
                          f'(> {cfg.max_visits} visits each); at most {cfg.max_visits * n_records // per} updates fit')
 
 
-def sleep(model, records, replay_rows, vocab, cfg, device='cpu', amp=None, log=None):
+def sleep(model, records, replay_rows, vocab, cfg, device='cpu', amp=None, log=None, replay_extra=None):
     """Fresh AdamW, cfg.updates updates. records = puzzle rows (targets registered); replay_rows = skills rows (may be empty: then the whole
-    batch is records). No records = no sleep (arm N): returns immediately. -> dict(loss, visits, updates)."""
+    batch is records). No records = no sleep (arm N): returns immediately. replay_extra (job 7): more replay rows (the warm add/mult solver rows);
+    the replay half of each batch is then split evenly between replay_rows and replay_extra. -> dict(loss, visits, updates)."""
     import contextlib
     amp = amp or contextlib.nullcontext
     if not records:
@@ -87,7 +88,10 @@ def sleep(model, records, replay_rows, vocab, cfg, device='cpu', amp=None, log=N
     rng = random.Random(cfg.seed)
     torch.manual_seed(cfg.seed)
     rec_order = _order(len(records), draws, rng)
-    rep_order = _order(len(replay_rows), cfg.updates * (cfg.batch - half), rng) if replay_rows else []
+    nrep = cfg.batch - half
+    n_extra = nrep // 2 if (replay_rows and replay_extra) else 0
+    rep_order = _order(len(replay_rows), cfg.updates * (nrep - n_extra), rng) if replay_rows else []
+    ext_order = _order(len(replay_extra), cfg.updates * n_extra, rng) if n_extra else []
     emb = {id(m.weight) for m in model.modules() if isinstance(m, torch.nn.Embedding)}
     decay = [p for p in model.parameters() if p.requires_grad and p.ndim >= 2 and id(p) not in emb]
     no_decay = [p for p in model.parameters() if p.requires_grad and (p.ndim < 2 or id(p) in emb)]
@@ -97,7 +101,9 @@ def sleep(model, records, replay_rows, vocab, cfg, device='cpu', amp=None, log=N
     model.train()
     for step in range(cfg.updates):
         rows = [records[i] for i in rec_order[step * half:(step + 1) * half]]
-        rows += [replay_rows[i] for i in rep_order[step * (cfg.batch - half):(step + 1) * (cfg.batch - half)]]
+        k = nrep - n_extra
+        rows += [replay_rows[i] for i in rep_order[step * k:(step + 1) * k]]
+        rows += [replay_extra[i] for i in ext_order[step * n_extra:(step + 1) * n_extra]]
         for r in rows[:half]:
             visits[r['id']] = visits.get(r['id'], 0) + 1
         ds = Dataset(rows, vocab, strict=False)
