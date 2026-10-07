@@ -330,3 +330,26 @@ answers". The no-hard-coding plan made it a standing rule (PLAN section 2, b3832
 - **First look:** it keeps q33's exact recipe, caps included, so that size is its only change from q33. PT13-C0 already
   sets its cap to its longest target (107). The B2 rows that q33's caps touch (programs over 7 steps, prompts with over
   16 numbers or 64 words) are counted and reported with it.
+
+## 16. Addendum F: rulings on the build's open questions (2026-10-07, 2:29 PM ET, before any 8a run)
+
+No 8a run has started; nothing here uses an 8a result. The build is PR #51 (`claude/project-thread-f1to6a`, 8be9c2b6cf).
+
+- **F1. Reader: the letter reader at every rung, whatever q39 picks (extends B4).** Reasons:
+  - The plain arms cannot take EGE without more build, and section 3 requires the same reader front for B2 and PT.
+  - EGE runs B2 at about half the speed: 3.65 updates/s beside R0's 7.24 in the same queue (queue 46), and 3.04 in
+    queue 49 (shown).
+  - EGE would make the public model SmolLM2-360M, whose fine-tunes the build estimates well above the spec's cost.
+  - If EGE passes q39, it is tested inside 8a as one extra reported arm at the 10M rung (B2 with EGE, 2 seeds, same
+    rows), which informs 8c's reader. Mark 5's public model is pythia-31m (A2's letter-reader case).
+- **F2. Public model:** pythia-31m only, so the speed probe timing pythia-31m is enough. SmolLM2-360M and Qwen3-0.6B
+  stay as the report-only 8-shot evals on the Mac.
+- **F3. B2's size at 3M** may move up to 3% from 3,302,481 because the caps fit the data (E1). Accepted. The 3M rung
+  reports its count, the plain arms match B2's actual count within 2%, and mark 4 still reads against q33's 74.0.
+- **F4. Same caps at every rung (amends E1).** Caps are set once from the largest pool (the 30M rung's, which contains
+  the smaller ones), so every rung shares the same caps, and size stays the only change between rungs. If programs run
+  past 7 steps, B2's result slots and rounds follow its existing rule (rounds = result slots + 1; today 8 = 7 + 1). That
+  makes every rung's B2 do more rounds than q33's B2; disclosed beside mark 4.
+- **F5. Web data on the PC.** The PC rebuild fetches exactly the FineWeb-Edu shards that the data-pool thread's
+  manifests list (shard 1 too if they use it) and must reproduce those manifests' hashes. A short or mismatched pool
+  stops the rung (as built).
