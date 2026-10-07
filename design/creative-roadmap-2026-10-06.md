@@ -655,6 +655,11 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
        same test questions at 1, 4 and 32 guesses (matched to first try, reach@4, reach@32) and at 1k, 6k and 50k
        (DEV: 64.5%, 77.3%, 94.9% at 1k/6k/50k). First try does not check candidates, so it stays a test of the model.
        Any reach@k or test-time-checking claim is read against blind search at the same number of guesses.
+       How job 9 is read, fixed before the test is opened (10-07): blind search with the example check already finds
+       most C2 answers given enough guesses (on 40 DEV questions its first fit was right 90% of the time, affine 50%;
+       build thread, c8dbdb61e4). So C2 tests turning search into first answers (Ben's "next time it doesn't need
+       luck"), not finding answers no search could find. A C2b pass is reported under that name, with the guesses
+       blind search needed for the same questions beside it. C2 cannot support a claim about finding answers.
   - **Fast-sleep research, ruled 10-07 (RESEARCH-2026-10-07.md in the project folder; shown on DEV):**
     - Answer note behind an agreement gate: no harm on 8 parents, gain +0.98 against +1.0 needed. M keeps it off.
     - Chaining stored programs into the notebook at night: proved wrong (+0.7 against +5; no better than blind
@@ -666,6 +671,9 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
     - Lead for C7 (suggested): library-level chaining of a W program with an old "+k" or "times k" note, checked
       against the examples, reaches 100% of DEV on every kind and parent. That is search over reusable pieces, the
       C7 idea, and C7's placebo (random pieces) and blind-search baseline would have to be beaten at equal guesses.
+      C7, and any later "finding" test, uses task kinds chosen first by measuring blind search: kinds where blind
+      search with the checker fails at the test's guess budget (longer programs or a larger op and constant space),
+      so a win can't be search alone.
     - The night's 32 tries cost about 25 TFLOP, about 95% of a memory-sleep night. Letting the notebook answer first
       and sampling only where it fails is a later cost lever (untested).
   - **Memory sleep 6-seed confirm (fast-sleep thread, ~3 AM ET 10-07; shown): FAIL by its written marks, not proved
