@@ -47,6 +47,19 @@ class T(unittest.TestCase):
         r = run("index", "--spec", str(self.d / "s2.json"), "--out", str(self.d / "x.npz"))
         self.assertNotEqual(r.returncode, 0); self.assertIn("REFUSED", r.stderr)
 
+    def test_owner_hash_only_matches_and_prints_no_text(self):
+        d = self.d / "blind_dir"; d.mkdir()
+        (d / "blind_panel.json").write_text(json.dumps({"items": [{"q": "the quick brown fox jumps over one lazy dog today", "gold": "SECRETGOLDQQ"}]}))
+        (d / "x.jsonl").write_text(json.dumps({"a": ["Maya handed the red cup to Tom after the long walk home from the market on Tuesday evening."]}) + "\n")
+        r = run("index", "--owner-hash-only", "--out", str(self.d / "o.npz"), str(d))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        for bad in ("quick", "Maya", "SECRETGOLDQQ", "blind_panel"):
+            self.assertNotIn(bad, r.stdout)
+        self.assertNotIn(b"SECRETGOLDQQ", (self.d / "o.npz").read_bytes())
+        self.idx = str(self.d / "o.npz")
+        rep = self.scan([{"id": "a", "text": "so the quick brown fox jumps over one lazy dog today ok"}, {"id": "b", "text": "nothing here at all"}])
+        self.assertEqual(rep["dropped_ids"], ["a"])
+
     def test_medium_panel_text_whole_match(self):
         (self.d / "p2.json").write_text(json.dumps({"examples": [{"s": "the quick brown fox jumps over one lazy dog"}]}))
         (self.d / "s3.json").write_text(json.dumps({"panels": [{"name": "m", "path": "p2.json", "format": "json_examples", "text_fields": ["s"]}]}))

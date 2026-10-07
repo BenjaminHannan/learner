@@ -13,6 +13,7 @@ Protected panels (GOLD-PRIVATE*, reserved*, blind*) are refused by `index`; thei
 side with the same spec format and hands over only the .npz of hashes (`--panel-hash-only` files are merged by `merge`).
 
   python3 overlap13.py index --spec panels.json --out panels.npz
+  python3 overlap13.py index --owner-hash-only --out theirs.npz PATH [PATH ...]   # protected panels, run by their owner only
   python3 overlap13.py scan  --index panels.npz --input pool.jsonl --text-field text --id-field id --out clean.jsonl --report report.json
   python3 overlap13.py merge --out all.npz a.npz b.npz
 """
@@ -62,6 +63,8 @@ def get_path(obj, path):
 def load_records(path, fmt):
     if fmt == "json_examples":
         yield from json.load(open(path))["examples"]
+    elif fmt == "whole_json":
+        yield json.load(open(path))
     elif fmt == "jsonl":
         for line in open(path):
             if line.strip():
@@ -70,12 +73,47 @@ def load_records(path, fmt):
         raise SystemExit(f"unknown format {fmt}")
 
 
+def all_strings(o):
+    """Every string anywhere in a JSON value (keys are not read). Used only by --owner-hash-only."""
+    if isinstance(o, dict):
+        for v in o.values(): yield from all_strings(v)
+    elif isinstance(o, list):
+        for v in o: yield from all_strings(v)
+    elif isinstance(o, str):
+        yield o
+
+
 def pack(pairs):
     arr = np.array(sorted(pairs), dtype=np.uint64) if pairs else np.zeros((0, 2), dtype=np.uint64)
     return arr
 
 
+def cmd_owner_hash_only(a):
+    """The panel's OWNER runs this on their own machine. No spec, no field names: every string in every .json/.jsonl under the paths is
+    hashed (answers included, which only makes the check stricter). Prints counts only; writes only the .npz of hashes."""
+    files = []
+    for p in a.paths:
+        pp = Path(p)
+        files += sorted(str(f) for f in pp.rglob("*") if f.suffix in (".json", ".jsonl")) if pp.is_dir() else [str(pp)]
+    allp, per = set(), []
+    for f in files:
+        texts = ign = 0
+        try:
+            recs = list(load_records(f, "jsonl" if f.endswith(".jsonl") else "whole_json"))
+        except Exception as e:
+            per.append({"file_sha8": hashlib.sha256(f.encode()).hexdigest()[:8], "error": type(e).__name__}); continue
+        for rec in recs:
+            for t in all_strings(rec):
+                s, skipped = panel_hashes(t); texts += 1; ign += skipped; allp |= s
+        per.append({"file_sha8": hashlib.sha256(f.encode()).hexdigest()[:8], "texts": texts, "ignored_short": ign})
+    arr = np.array([(L, x) for L, x in sorted(allp)], dtype=np.uint64).reshape(-1, 2)
+    np.savez(a.out, grams=arr, stats=np.array(json.dumps(per)))
+    print(json.dumps({"files": len(files), "hashes": int(len(arr)), "per_file": per}))
+
+
 def cmd_index(a):
+    if a.owner_hash_only:
+        return cmd_owner_hash_only(a)
     spec = json.load(open(a.spec))
     base = Path(a.spec).resolve().parent
     allp, stats = set(), []
@@ -148,7 +186,9 @@ def cmd_merge(a):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); sp = ap.add_subparsers(dest="c", required=True)
-    i = sp.add_parser("index"); i.add_argument("--spec", required=True); i.add_argument("--out", required=True); i.set_defaults(f=cmd_index)
+    i = sp.add_parser("index"); i.add_argument("--spec"); i.add_argument("--out", required=True)
+    i.add_argument("--owner-hash-only", action="store_true", help="for protected panels, run by their owner: hash every string, print counts only")
+    i.add_argument("paths", nargs="*"); i.set_defaults(f=cmd_index)
     s = sp.add_parser("scan"); s.add_argument("--index", required=True); s.add_argument("--input", required=True)
     s.add_argument("--text-field", default="text"); s.add_argument("--id-field", default="id"); s.add_argument("--out"); s.add_argument("--report")
     s.set_defaults(f=cmd_scan)
