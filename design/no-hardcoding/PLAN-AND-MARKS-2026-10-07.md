@@ -5,8 +5,9 @@ Labels: **shown** = read in code or result files, **suggested** = reasoned, **un
 
 ## 0. Ben's rule, as I apply it
 
+0. **Key rule, above all the others (Ben, 2:45 PM ET 10-07):** "everything that you do should be able to be done by the model autonomously while it's deployed." Reading (disclosed; Ben can correct it): building the first model (its design and its first training run) is ours. Everything after that is the deployed model's own: reading, deciding how long to think, which tool to call, when to stop, learning a new kind of question from plain examples, deciding when to practise or sleep and what to keep. A step that needs a researcher's hand-picked choice at run time is not finished until the model does it itself, or calls a tool for it. Section 2a lists every such step in this plan.
 1. Nothing hand-written may run between the question and the answer except inside a tool. A tool is something the model calls by writing text; its reply comes back as text the model reads like the question. The tool loop itself (inventory section E) is part of the tool.
-2. Teaching material may be hand-written (labels, worked steps, traces), the way a teacher writes worked examples. It never runs when the model answers. Disclosed; a backlog rung L1 (inventory section B) would remove the one piece of hand algebra in it.
+2. Teaching material may be hand-written (labels, worked steps, traces) for the first training run, the way a teacher writes worked examples. It never runs when the model answers. Under rule 0, though, a deployed model gets no hand-made traces for a new kind, so two rungs below (L1, ST1) make it learn without them.
 3. Tests and scoring may be hand-written.
 4. If removing a hand-written part costs points, the fix is in the learned link that broke, never putting the part back (Ben 10:35 AM ET, for the calculator; I apply it to every part).
 5. Your message answers the architecture thread's open question: the outside calculator **replaces** the in-forward executor, the value codes and the result slots; it does not sit alongside them (T1, as sealed). T1 may keep regex-found spans for the question's numbers, without value codes (the sealed file leaves that to the build thread, disclosed); N1 then removes them. Nothing hand-written stays at the end.
@@ -71,9 +72,32 @@ Every rung is one change on top of the previous rung, paired by seed. Recipe as 
 | N1 | delete the number machinery T1 kept: regex spans, number slots, any constants left (skipped if T1 kept none) | A1, A3, A4, A5 (16-number cap) | O1 | this file |
 | P1 | delete the place input term (the 9 place rows stay as the register tokens' own learned init) | A9, A10 (last use) | N1 | this file |
 | V1 | raw bytes instead of the hand-built vocab, applied right before B3 | A16 | P1 | this file (no screen, see 3b) |
-| B3 | 6-seed confirm of the result vs B2 and plain_tf_steps | | T1, K1, O1, N1, P1, V1 | this file |
+| H1 | learned number of thinking rounds per turn (today fixed at 8) | A8 (rounds) | T1 | roadmap 2d / architecture thread |
+| L1 | teach from the worked steps exactly as written: no hand algebra in the traces (today "? + 5 = 12" is rewritten to SUB(12, 5) by `progparse.py:42-51`); the model must find the inverse call itself | B2 (inventory) | T1 | this file |
+| ST1 | self-taught traces: on kinds held out of all trace teaching, the model gets only question-and-answer pairs, writes its own calls, and keeps for training only the traces whose answer checks out (TALM / STaR style) | B1-B4 for new kinds | L1 | this file (the fast-sleep and creative threads already do this for B2; ST1 ports it to the call-writing model) |
+| B3 | 6-seed confirm of the result vs B2 and plain_tf_steps | | T1, K1, O1, N1, P1, V1, H1, L1, ST1 | this file |
 
-Not required for B3: **H1** (learned rounds per turn). Fixed rounds per turn are depth, not a hand rule on values. It stays with the roadmap (2d) and the architecture thread. A note for them: Popescu 2026 (2607.20519, abstract) found a jointly trained halt gate distorts the loop, and supervising every round and stopping on a confidence readout often matched or beat it; in B3 the stop is already supervised, since the trace says when to answer.
+**H1 is now required** (rule 0: the model decides how long to think). It stays with the roadmap (2d) and the architecture thread. A note for them: Popescu 2026 (2607.20519, abstract) found a jointly trained halt gate distorts the loop, and supervising every round and stopping on a confidence readout often matched or beat it; in B3 the stop between calls is already supervised, since the trace says when to answer.
+
+**Marks for L1 and ST1** (fixed now, before any run; 2-seed screens on the PC):
+- L1: the 3a marks against the previous rung, plus missing-operand rows (the families that used the inverse-op rewrite), pooled, 2-seed mean, within 3.0 of the previous rung. Proved wrong: those rows more than 10 below.
+- ST1: pick 3 kinds before the run (the build thread names them from the variant split, sealed in the queue file), held out of all trace teaching. The model gets 2,000 question-and-answer pairs per kind and no steps; it writes calls, the tool runs them, and traces whose answer matches are kept and trained on, for up to 3 rounds. Pass: accuracy on fresh held-out rows of those kinds up by >= +20 over the same model before ST1, on both seeds, with pooled-5 not down more than 1.0. Proved wrong: < +5 on both seeds. The answer check is the only hand part, and at deployment it is the world's feedback (or a check tool the model calls).
+
+## 2a. Steps that still need a researcher's choice at run time (rule 0)
+
+| Step | Where today | Who owns the fix | Becomes |
+|---|---|---|---|
+| Fixed 8 thinking rounds | B2, T1 (A8, E6) | roadmap / architecture (H1) | learned halting, required for B3 |
+| Hand-made worked traces and the inverse-op rewrite | progparse (B1-B4) | this file (L1, ST1) | learned from steps as written, then self-taught from Q/A pairs |
+| Try budgets and how many extra tries where stuck (32 + 480) | C2 / C2b (D5) | creative roadmap | the model keeps trying until its check tool says right, or it decides to stop |
+| Sampling temperature picked on a DEV grid | C1, C2b (D2, D5) | creative roadmap | learned, or set by the model per question |
+| Notebook gate thresholds (theta 0.9 / 0.99 quantile, c = 50) | memory sleep (D6) | creative roadmap 7b (learned gate) | learned gate, then a recall tool |
+| When to sleep, what to keep, nightly harm check | fast sleep (D8) | fast-sleep thread | the model decides when to practise and checks its own harm on held practice |
+| Breadth-first solver for warm-up programmes | creative (D9) | creative roadmap | the model's own search (C2 already shows search is easy for these kinds) |
+| Which kinds to practise, data mix, learning rate during sleep | fast sleep, C2b | fast-sleep thread | the model's own choice; a fixed recipe is disclosed until then |
+| Tool-side safety caps (16 calls, 48 bytes) | B3 tool (E5) | this file | kept as the world's limits, like a game's rules; the model decides to stop well before them (mark: hit on <= 1% of rows) |
+
+Not on this list (ours by the reading above): the model's design, its first training run, tests, scoring and pass marks.
 
 **Gain tests beside the ladder** (they do not depend on it): W1 (global attention in the reader; architecture thread's spec), U0 (letters vs word pieces in the all-learned text baseline), U2 (learned letter groups), EGE (q39, running). See `INPUT-UNITS-2026-10-07.md`. A winner enters the ladder as its own rung on the current rung, screened with S1-S5 below plus its own gain mark, never bundled with a removal.
 
@@ -168,7 +192,7 @@ Parts D1-D10 are in section D of the inventory. Papers: `no-hardcoding-papers.md
 1. D0 with its Amendment-1 control, and D0b, now, on CPU, by the build thread (no GPU).
 2. T1 build, with a speed probe first; T1's screen on the PC after q39 (expected about 9 PM to midnight ET tonight).
 3. T1's sealed 6-seed confirm (seeds 200-205) if the screen passes. O1 starts only after T1 passes it. If T1 is "not shown", the named link fix runs first and the ladder waits.
-4. K1, then O1 (if not empty), N1, P1 in that order, then V1, then the B3 confirm.
+4. K1, then O1 (if not empty), N1, P1 in that order, then V1, L1 and ST1 (H1 when the roadmap has it), then the B3 confirm.
 5. W1, U0 and U2 screens whenever a machine is free; they don't wait for T1.
 
 Rough cost (untested estimate): the q33 B2 runs took 1.0-4.2 h on the PC (median 1.5 h; 0.7-1.2 h on the rented 5090s), depending on how many jobs shared the GPU. A T1 chain row needs about 5-6 reader-plus-8-round passes instead of one, so T1's cost per run is unknown until the speed probe. The ladder is about 20 runs (T1: 6, K1/O1/N1/P1: 2 each, B3: 6) plus 6 for the gain tests. At 3x B2's median that is roughly 80 GPU-hours for the ladder, about 3-4 PC days run one at a time, less with 2-3 sharing the GPU. Rented 5090s would need the B2 baseline re-run on the same box for each comparison (same-machine rule), roughly doubling those runs; Vast credit is $5.22 and any spend needs Ben's OK.
