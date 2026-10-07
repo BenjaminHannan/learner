@@ -650,6 +650,24 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
     6. Proved wrong: W - R upper end below +3.
     7. Report only, not blocking: examples to learn (plain transformer and fresh net with k labelled examples, k in
        {0, 8, 32, 128}, from the labelled split), when built.
+    8. Report only, added 10-07 before the test is opened (fast-sleep research, PR #48 eb6d5d901): a blind
+       breadth-first search over x and 1/2/10/100 that takes the first program fitting the 3 examples, scored on the
+       same test questions at 1, 4 and 32 guesses (matched to first try, reach@4, reach@32) and at 1k, 6k and 50k
+       (DEV: 64.5%, 77.3%, 94.9% at 1k/6k/50k). First try does not check candidates, so it stays a test of the model.
+       Any reach@k or test-time-checking claim is read against blind search at the same number of guesses.
+  - **Fast-sleep research, ruled 10-07 (RESEARCH-2026-10-07.md in the project folder; shown on DEV):**
+    - Answer note behind an agreement gate: no harm on 8 parents, gain +0.98 against +1.0 needed. M keeps it off.
+    - Chaining stored programs into the notebook at night: proved wrong (+0.7 against +5; no better than blind
+      search). Not adopted.
+    - Fine-tune on W plus chained search records (2-parent pilot, between its marks: sq_plus 0-2% to 20-27%, affine
+      2-4%): not run as a separate rung. The real C2b's W arm (two nights of weight sleep on stuck-first search
+      records, 6 parents, fixed marks) already tests consolidating search records into weights; revisit only if it
+      fails.
+    - Lead for C7 (suggested): library-level chaining of a W program with an old "+k" or "times k" note, checked
+      against the examples, reaches 100% of DEV on every kind and parent. That is search over reusable pieces, the
+      C7 idea, and C7's placebo (random pieces) and blind-search baseline would have to be beaten at equal guesses.
+    - The night's 32 tries cost about 25 TFLOP, about 95% of a memory-sleep night. Letting the notebook answer first
+      and sampling only where it fails is a later cost lever (untested).
   - **Memory sleep 6-seed confirm (fast-sleep thread, ~3 AM ET 10-07; shown): FAIL by its written marks, not proved
     wrong.** FLOPs 25-34x fewer; pooled W gain +32.1 against B's +37.0 (0.87x); recall of stored add/mult programs
     above N on 6 of 6; R-notebook placebo -1.0; skills harm fails on s205 (3.9 points). Post-hoc diagnosis (labelled):
