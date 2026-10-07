@@ -72,7 +72,7 @@ Every rung is one change on top of the previous rung, paired by seed. Recipe as 
 | N1 | delete the number machinery T1 kept: regex spans, number slots, any constants left (skipped if T1 kept none) | A1, A3, A4, A5 (16-number cap) | O1 | this file |
 | P1 | delete the place input term (the 9 place rows stay as the register tokens' own learned init) | A9, A10 (last use) | N1 | this file |
 | V1 | raw bytes instead of the hand-built vocab, applied right before B3 | A16 | P1 | this file (no screen, see 3b) |
-| H1 | learned number of thinking rounds per turn (today fixed at 8) | A8 (rounds) | T1 | roadmap 2d / architecture thread |
+| H1 | learned number of thinking rounds per turn (today fixed at 8) | A8 (rounds) | T1 | architecture thread, sealed as required (`redesign-ideas-2026-10-07.md` sec. 8b) |
 | L1 | teach from the worked steps exactly as written: no hand algebra in the traces (today "? + 5 = 12" is rewritten to SUB(12, 5) by `progparse.py:42-51`); the model must find the inverse call itself | B2 (inventory) | T1 | this file |
 | ST1 | self-taught traces: on kinds held out of all trace teaching, the model gets only question-and-answer pairs, writes its own calls, and keeps for training only the traces whose answer checks out (TALM / STaR style) | B1-B4 for new kinds | L1 | this file (the fast-sleep and creative threads already do this for B2; ST1 ports it to the call-writing model) |
 | B3 | 6-seed confirm of the result vs B2 and plain_tf_steps | | T1, K1, O1, N1, P1, V1, H1, L1, ST1 | this file |
@@ -157,7 +157,7 @@ Link checks and named fixes:
 Today's vocab is exactly 13 specials + the 95 printable ASCII chars (108 ids, `data.py:20-24, 55`), so every train and dev char is printable ASCII and keeps its symbol under bytes. V1 changes the table size, every id (today 13 + (ord - 32)) and, through the random draw order, every initial weight; the tied embedding and output table and its bias grow by 161 rows (+41,377 params, +1.25%). That alone is past the 39k headroom above B2, so V1 is applied after T1, O1, N1 and P1 have freed parameters (each prints its count), or names what it shrinks. Mark: a unit test confirms every row is ASCII before the switch; behaviour on ASCII data should match within seed noise, and the effect is read in the B3 confirm. If any row is not ASCII, V1 gets a normal 3a screen instead.
 
 ### 3c. B3 confirm, 6 paired seeds (200-205) against q33's B2 and plain_tf_steps, on the PC
-1. **Parity with B2:** T1's sealed parity mark, word for word, whatever the architecture thread seals before T1's first run. Today it reads "the 6-seed 95% CI of the difference lies inside +-1.0". **Noise problem, raised with the architecture thread:** the CI half-width is t(5) x SD / sqrt(6) = 1.05 x SD, so at SD 0.94 the mean must sit within about +-0.01 to pass, and at SD 1.33 it cannot pass at all. Suggested re-seal before any run (not mine to make): mean(B3 - B2) >= -1.0, CI lower bound >= -2.0, and B3 >= B2 - 1.0 on at least 5 of 6 seeds. B3 never uses a looser parity mark than T1.
+1. **Parity with B2:** T1's sealed parity mark, word for word (MARKS-D0-T1 Amendment 2, re-sealed 12:55 PM ET before any run, after the noise problem was raised: the old "CI inside +-1.0" needed the mean within about 0.01 of zero): 1a mean(B3 - B2) pooled-5 >= -1.0; 1b the lower bound of its 6-seed 95% CI >= -2.0; 1c B3 >= B2 - 1.0 on at least 5 of 6 seeds. B3 never uses a looser parity mark than T1.
 2. **Still beats its size:** mean(B3 - plain_tf_steps) >= +3.0 with CI lower bound > 0 (B2 is +6.9, paired SD 1.33, shown). If C0 (3.1) replaces plain_tf_steps, this mark is read against C0.
 3. **Chains:** chain-5 6-seed mean within 1.0 of B2's (99.57) and >= 99.0 on at least 5 of 6 seeds (T1's sealed mark 2).
 4. **Tool off,** exactly as T1 defines it: program questions (the noexec set) < 5% (B2 with its executor removed reads 0.8%).
@@ -201,5 +201,5 @@ Rough cost (untested estimate): the q33 B2 runs took 1.0-4.2 h on the PC (median
 
 - **D0 reading below 99%:** reported as the baseline (Amendment 1), with its control; whether T1 waits is Ben's call. **D0 writing below 99%** stops T1 as sealed, unless the writing check moves to T1's screen, which the sealed file allows if it needs the T1 build.
 - **T1 proved wrong** (more than 2.0 below B2, or chain-5 mean below 95): fix the named link first; the rest of the ladder waits.
-- **The architecture thread does not re-seal T1's parity mark:** T1 almost certainly cannot pass its own confirm on noise alone (3c.1), and the ladder stops at T1 on a mark, not on a finding. That needs settling before T1's first run.
+- **T1's parity mark** was near-unpassable; the architecture thread re-sealed it before any run (Amendment 2, 12:55 PM ET), so this risk is closed.
 - **U0 shows word pieces beat letters by >= 2 on both seeds:** add a learned word-piece side channel next to the bytes (like EGE, from scratch), as a gain test.
