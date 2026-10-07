@@ -12,6 +12,7 @@ plus a public model (pythia-31m) at 30M. Seeds 400-405. Everything runs on the h
 | `configs.py` | rung shapes, trained-parameter counter and bands, every arm's `train.py` command (`python -m custom_io.g8a.configs` prints the table) |
 | `job.py` | one rung x seed: pool, caps, arms one after another, box.json (`--local` for the PC) |
 | `speed.py` | speed probe: seconds per update, peak memory, accumulation that fits 15 GB, hours and dollars per rung |
+| `gh_fetch.py` | no-git fetch of code and data through the GitHub contents API (Vast fallback; needs GITHUB_TOKEN, the repo is private) |
 | `get_data.py` | rebuilds the own text (xz files, hash-checked) and the web slices (FineWeb-Edu shard 0, hash-checked) on a machine without the project files |
 | `../analyze_8a.py` | marks 1-5, guard, proved-wrong lines, stop rules, reported items; tested on fake numbers (`python -m custom_io.tests.test_g8a`) |
 | `../models/plain_lm.py`, `plain_tf_steps_g` | the LLM arm and the depth-scalable plain arm (default shape = plain_tf_steps exactly) |
@@ -33,3 +34,5 @@ Queue line kinds added to `local_runner`: `g8a:` (job), `g8a-speed:` (probe), `g
 accumulation counts are read from `results/45-pc-8a-speed/8a-speed/speed.json` by every job.
 
 Not built: an EmbeddingGemma front for the plain arms (needed only if the reader pick is EGE; the job refuses `eg_embed`).
+
+Web slices: 3M and 10M read `slice_rung30.jsonl`, whose first documents are exactly `slice_rung10.jsonl` (byte-checked); the pool builder stops at its piece budget. The slices yield 95.5% of their token budget as cloze pieces, so a pool up to 6% short of its web budget is accepted and disclosed in its manifest (30M: web about 61% instead of 62%); more than that refuses to build.

@@ -33,6 +33,7 @@ from custom_io.g8a.configs import BATCH, OWN_SHARE, RUNGS, UPDATE_FLOOR, WEB_SHA
 
 OWN_CHARS_PER_PIECE = {'skills': 3.12, 'english': 3.90, 'teach': 3.76, 'rows': 3.13}
 MAX_REUSE = 4
+MAX_WEB_SHORT = 0.06       # the rung slices yield 95.5% of their token budget as cloze pieces (measured on the rung30 slice: 112.45M of 117.8M)
 HYGIENE_PROMPT, HYGIENE_ANS = 400, 64       # data hygiene only (a prompt or answer this long is a broken row); the model caps are sized from the data (g8a/caps.py)
 DEVIATIONS = [
     'cloze prompt <= %d chars incl. the blank, blanked word %d..%d letters (the spec sizes, addendum E); model caps sized from the data (caps.json)' % (Z.CHUNK_MAX + 1, Z.WORD_MIN, Z.WORD_MAX),
@@ -193,8 +194,10 @@ def build(a):
         short['web'] = web_short
     if short and not (a.allow_short or a.keep_mix):
         sys.exit('SHORTFALL (pieces): %s. The mix would not be the spec\'s; fix the sources or pass --keep-mix / --allow-short.' % json.dumps({k: round(v) for k, v in short.items()}))
-    if 'web' in short:
-        sys.exit('the web slice ran out %d pieces short of the %d the mix needs: cut a bigger slice (data_pool/web_slice.py)' % (web_short, web_budget))
+    if web_short > MAX_WEB_SHORT * web_budget:
+        sys.exit('the web slice ran out %d pieces short of the %d the mix needs (more than %.0f%%): cut a bigger slice (data_pool/web_slice.py)' % (web_short, web_budget, 100 * MAX_WEB_SHORT))
+    if web_short > 0.005 * web_budget:      # a few percent short is accepted and disclosed: the slice budgets count tokens, the cloze rows use 95.5% of them (chunks under 60 letters etc. are not used)
+        DEVIATIONS.append('web fill-in rows %.1f%% short of the budget (%d of %d pieces): web share %.1f%% instead of %d%%' % (100 * web_short / web_budget, web_short, web_budget, 100 * web['pieces'] / max(pieces, 1), 100 * WEB_SHARE))
     sched = schedule(a.rung, pieces / max(n_rows, 1), n_rows, a.scale)
     if not sched['ok_reuse']:
         sys.exit('a row would be drawn %d times (> %d): %s' % (sched['max_row_draws'], MAX_REUSE, json.dumps(sched)))

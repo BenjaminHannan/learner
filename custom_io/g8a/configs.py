@@ -21,9 +21,12 @@ B2_S = dict(d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, cop
 B2_S_PARAMS = 3_302_481
 # rung -> width, heads, today's mlp ratio at that width, target trained params, band as a fraction, pool word pieces, seen word pieces (20 per trained
 # param), lr, and which nested pieces of the data pool it reads (addendum B1: 3M and 10M share the 60M pool, so they see the same rows in the same order)
+# web: the slice file the pool reads (slice_<web>.jsonl). 3M and 10M read slice_rung30.jsonl, whose first documents ARE slice_rung10.jsonl (prefix, checked byte for
+# byte) because the rung10 slice yields only 35.46M cloze pieces against the pool's 37.2M budget; the builder stops at the budget, so the rows are the rung10 ones plus the
+# few documents needed to fill it.
 RUNGS = {
-    '3M': dict(width=256, heads=4, mlp=4.8, target=B2_S_PARAMS, band=0.0, pool=60e6, seen=66e6, lr=1e-3, own_rung=10, web='rung10'),
-    '10M': dict(width=256, heads=4, mlp=4.8, target=10.0e6, band=0.05, pool=60e6, seen=200e6, lr=1e-3, own_rung=10, web='rung10'),
+    '3M': dict(width=256, heads=4, mlp=4.8, target=B2_S_PARAMS, band=0.0, pool=60e6, seen=66e6, lr=1e-3, own_rung=10, web='rung30'),
+    '10M': dict(width=256, heads=4, mlp=4.8, target=10.0e6, band=0.05, pool=60e6, seen=200e6, lr=1e-3, own_rung=10, web='rung30'),
     '30M': dict(width=384, heads=6, mlp=6.0, target=30.0e6, band=0.05, pool=190e6, seen=600e6, lr=1e-3 * 256 / 384, own_rung=30, web='rung30'),
 }
 UPDATE_FLOOR = 24000        # addendum B1: every arm at every rung trains at least q33's 24,000 updates of 256 rows
