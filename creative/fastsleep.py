@@ -550,7 +550,7 @@ def harm_check(out, skills_train, skills_data, device='cpu', seed=0):
     rn, rm = evaluate(N, rows, 256, device), evaluate(m, rows, 256, device)
     fam = {f: round(100 * (rn['by_family'][f]['correct'] - rm['by_family'][f]['correct']) / rn['by_family'][f]['n'], 2) for f in rn['by_family']}
     res = dict(parent=os.path.basename(out.rstrip('/')), n=len(rows), families=len(fam), N_exact=rn['exact'], M_exact=rm['exact'],
-               harm_points=rn['exact'] - rm['exact'], drop_by_family=fam, info=info, answer_fired=m._mem.fired)
+               harm_points=rn['exact'] - rm['exact'], drop_by_family=fam, info=info, memory_fired=m._mem.fired)
     json.dump(res, open(path, 'w'), indent=1)
     log('HARMCHECK', res['parent'], {k: res[k] for k in ('n', 'N_exact', 'M_exact', 'harm_points')})
     return res
