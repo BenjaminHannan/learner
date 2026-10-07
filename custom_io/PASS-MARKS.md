@@ -304,3 +304,24 @@ the PC drops its two EGR lines. Cost about $2 more; credit before these runs $5.
 **Diagnosis check (read only, not a mark; added about 00:15 UTC 10-07, 8:15 PM ET, while EGR_s200 and EGR_s201 were at their first updates and
 before any EGR score existed):** EGO, EGM and EGW all lost cipher_map (seed 200: 100 to 10, 2.5, 2.5). If missing letters are the cause, EGR's
 cipher_map in_dist is >= 50 on both seeds. Below 50 on either seed means the letter explanation is wrong.
+
+## Addendum 13: R0 and EGE move to the rented boxes (written 2026-10-07 about 01:10 UTC, 9:10 PM ET 10-06, before any R0 or EGE run)
+**EGR_s200 result (box A, against B2V_s200):** pooled-5 -0.26, chain-5 98.8, loops:0 in_dist 11.54 (B2V 1.40). Its cipher_map in_dist is
+**5.0** (B2V 100), so addendum 12's diagnosis check already fails on seed 200: giving the thinker each letter's own code back does not bring
+cipher_map back, and the explanation "EmbeddingGemma hides the letters, so the thinker cannot do letter tasks" is **wrong as stated**. The
+probe facts (diag_eg.py: a linear read gets 23% of letters from EmbeddingGemma's states vs 99.9% from B2's reader) still stand; what fails is
+the step from them to the cipher losses. EGR's full verdict waits for EGR_s201 (box B).
+**What every losing arm shares:** EGO, EGM, EGW and EGR all have `reader_layers: 0`, so none has B2's +-4-character window, and all have
+EmbeddingGemma. Two arms already written in addenda 4 and 6 separate these: **R0** (window removed, nothing added) and **EGE** (window kept,
+EmbeddingGemma added). They were waiting in queue 38 behind queue 35 on the PC, hours away, so they run now on rented 5090s:
+- **Box B** (54540404, which trained B2V_s201): job 47, R0_s201 and EGE_s201 side by side, after EGR_s201. Base: B2V_s201 (same box).
+- **Box C** (new, `--qsub /egwC`, same image and env as boxes A and B): job 46, R0_s200 and EGE_s200 side by side. Base: B2V_s200 from box A
+  (54539753, destroyed after its jobs). Box C is a different RTX 5090 with the same image, software pins and data; base_for() pairs runs by
+  config.device and config.data, which match. This is disclosed as a weaker pairing than same-box; no plain B2 re-run is bought for it.
+Same recipe and flags as queue 38's lines. Queue 38 on the PC drops its R0 and EGE lines and keeps EGT. Cost about $1.50 more; credit $9.29
+before these runs, and the 1-hour idle exit and MAXH 7.5 keep it above $1.
+**Marks:** unchanged. EGE: addendum 4 (the "better than B2" test is EGE's mark 1, pooled-5 gain >= +1.0 on both seeds). R0: addendum 6's
+diagnostic verdict.
+**Window check (read only, not a mark):** "the window is what cipher_map needs" predicts R0 cipher_map in_dist < 50 on both seeds and EGE
+cipher_map in_dist >= 90 on both seeds. R0 >= 50 on either seed means removing the window is not the cause, and the cause is adding
+EmbeddingGemma (then EGE should lose cipher_map too). Any other pattern is "unclear".
