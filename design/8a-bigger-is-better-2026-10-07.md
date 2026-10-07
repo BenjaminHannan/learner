@@ -400,3 +400,29 @@ the 3M rung. 10M follows on rented 5090s if mark 4 holds; 30M still goes to Ben 
   (at most about $3.30 a box, about $20 for the rung); the speed box stops at 2 hours. Boxes are destroyed once their
   results are collected. Expected (suggested): about 3-4 hours a box, about $11 in all.
 - **Unchanged:** the marks, seeds, arms, data mix, update floor, caps rule and the stop before 10M if mark 4 fails.
+
+## 19. Addendum I: measured speed, and where the web rows come from (2026-10-07, 4:35 PM ET, during the 3M rung, before any 3M result)
+
+Nothing here changes a mark, an arm, a seed or the data mix. It records two facts found while starting the boxes.
+
+- **I1. Web rows come from the 30M slice.** The 10M web slice's cloze rows come out 1,738,828 pieces short of the
+  37.2M web budget the 38/62 mix needs at the 60M pool, so the pool builder stopped (shown, first try on the boxes).
+  The slices are nested (the 10M slice is the first part of the 30M slice), so every 3M and 10M box passes
+  `--web slice_rung30.jsonl` and takes the same first rows the 10M slice would have given, plus enough of the next
+  ones to fill the budget. Each box printed 1,418,702 rows, 60,008,319 pieces, own share 0.38, no shortfall (shown).
+  The global caps came out identical to addendum G on every box (shown).
+- **I2. Measured speed on one RTX 5090** (q45's probe, 200 updates of 256 rows each, at addendum G's caps, memory limit
+  15 GB to mirror the PC; shown). Seconds per update, with gradient accumulation where 15 GB forced it:
+
+  | rung | B2 | PT | plain LLM | hours a seed, all arms (15 GB) |
+  |---|---|---|---|---|
+  | 3M | 0.092 (6.3 GB) | 0.023 | 0.032 | 1.0 |
+  | 10M | 0.327 (2 parts; 0.272 in one part at 21 GB) | 0.070 | 0.077 | 3.2 |
+  | 30M, 58,594 updates | 0.679 (4 parts; 0.503 in 2 parts at 18.5 GB) | 0.148 | 0.154 | 16.0 |
+
+  pythia-31m (mark 5's public model): 0.046 s an update, 12.3 GB. Gradient accumulation keeps 256 rows per update, so
+  it changes time, not the recipe.
+- **I3. What that means for the next rungs (suggested; training time only, add about half an hour a box for data).**
+  On a 5090's 32 GB, 10M runs every arm in one part: about 2.8 hours a seed, about $1.40 a box. 30M runs B2 in two
+  parts: about 13 hours a seed plus about 0.75 hour for pythia-31m, so about 14 hours and about $7 a box, about $42 for
+  six seeds in parallel. 30M still goes to Ben with these numbers before it starts.
