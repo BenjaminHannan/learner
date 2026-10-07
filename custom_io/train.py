@@ -21,6 +21,13 @@ def lr_at(step, steps, warmup, base, elapsed=0.0, cap=None):
     return base * (0.1 + 0.45 * (1 + math.cos(math.pi * p)))
 
 
+def split_batch(batch, k):
+    """k row-slices of a collated batch (every tensor is cut along dim 0, `rows` along with it); the padded width is kept, so micro-batches line up with the full batch."""
+    n = len(batch['rows'])
+    cuts = [round(i * n / k) for i in range(k + 1)]
+    return [{key: (v[a:b] if torch.is_tensor(v) or isinstance(v, list) else v) for key, v in batch.items()} for a, b in zip(cuts, cuts[1:]) if b > a]
+
+
 def jprint(**kw):
     print(json.dumps(kw), flush=True)
 
@@ -109,6 +116,7 @@ def main(argv=None):
     ap.add_argument('--vocab', help='vocab json (default: DATA/charvocab.json, built from DATA/train.jsonl if absent)')
     ap.add_argument('--steps', type=int, default=3000)
     ap.add_argument('--batch', type=int, default=64)
+    ap.add_argument('--accum', type=int, default=1, help='gradient accumulation: split every batch into this many micro-batches (same 256 rows per update; the loss is the mean of the micro-batch losses, so a token-mean loss differs slightly from the full-batch one)')
     ap.add_argument('--lr', type=float, default=1e-3)
     ap.add_argument('--warmup', type=int, default=300)
     ap.add_argument('--grad-clip', type=float, default=1.0)
@@ -121,6 +129,7 @@ def main(argv=None):
     ap.add_argument('--final-eval', action='store_true')
     ap.add_argument('--english-eval', help='dir of the four English eval sets: with --final-eval run english.eval_english (needs DATA/dev/in_dist.jsonl, vocab of 108) instead of eval_all, chain-5 and extra_evals')
     ap.add_argument('--max-ans', type=int, default=8, help='answer chars before EOS (data.set_max_ans); a model with a smaller max_ans is refused')
+    ap.add_argument('--caps', help='caps.json from custom_io.g8a.caps: sizes the prompt / answer / workspace / target caps from the data (8A addendum E); applied before any data or model is built')
     ap.add_argument('--eval-max', type=int, help='cap rows per dev split in the final eval')
     ap.add_argument('--save-preds', action='store_true', help='with --final-eval: write the intact per-row dev predictions of all 6 splits to OUT/PREDS.json')
     ap.add_argument('--eval-batch', type=int, default=128)
@@ -133,12 +142,19 @@ def main(argv=None):
     random.seed(args.seed); np.random.seed(args.seed); torch.manual_seed(args.seed); torch.cuda.manual_seed_all(args.seed)
     t_start = time.time()
     D.set_max_ans(args.max_ans)         # before any data or model is built
+    if args.caps:
+        from custom_io.g8a import caps as _caps
+        _c = _caps.apply(json.load(open(args.caps)))
+        args.max_ans = _c['max_ans']
+        jprint(event='caps', **_c)
 
     rows = load_rows(os.path.join(args.data, 'train.jsonl'))
     vocab = CharVocab.get(args.data, args.vocab, rows)
     batches = train_batches(Dataset(rows, vocab), args.batch, args.order, args.seed)
     dev = subsample(load_rows(os.path.join(args.data, 'dev', 'in_dist.jsonl')), 200)
     model = build(args.model, vocab, **cfg).to(device)
+    if args.caps and hasattr(model, '_targets'):    # plain_tf_steps family: its answer slots are the steps+answer target (caps plain_target), not max_ans
+        model.max_ans = args.max_ans
     if getattr(model, 'max_ans', args.max_ans) < args.max_ans:
         sys.exit(f'--max-ans {args.max_ans} but the model has max_ans {model.max_ans}: its answer slots cannot hold the targets')
     if args.english_eval and args.final_eval:
@@ -165,10 +181,22 @@ def main(argv=None):
         for g in opt.param_groups:
             g['lr'] = lr
         batch = to_device(next(batches), device)
-        with amp():
-            out = model.loss(batch)
-        loss, aux = out if isinstance(out, tuple) else (out, {})
-        loss.backward()
+        if args.accum > 1:
+            parts = split_batch(batch, args.accum)
+            loss, aux = 0.0, {}
+            for mb in parts:
+                with amp():
+                    out = model.loss(mb)
+                l_i, a_i = out if isinstance(out, tuple) else (out, {})
+                (l_i / len(parts)).backward()
+                loss = loss + l_i.detach() / len(parts)
+                for k_, v_ in a_i.items():
+                    aux[k_] = aux.get(k_, 0.0) + v_.detach() / len(parts) if torch.is_tensor(v_) else aux.get(k_, 0.0) + v_ / len(parts)
+        else:
+            with amp():
+                out = model.loss(batch)
+            loss, aux = out if isinstance(out, tuple) else (out, {})
+            loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip)
         opt.step(); opt.zero_grad(set_to_none=True)
         step += 1

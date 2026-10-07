@@ -1,0 +1,15 @@
+# BensPC RTX 5070 Ti (cuda): 8a rung 2 of 3: 10M (B2 10,254,105 params), seeds 400-405, arms B2 PT LLM
+# 8a growth ladder (whole-model-roadmap/8A-SPEC-2026-10-07.md, addenda A-E, sealed before any run). Code: custom_io/g8a/README.md.
+# Needs the 8a data first: the first line rebuilds the own text (hash-checked) and the FineWeb-Edu web slices (shard 0, hash-checked against the data-pool manifests); jobs wait for it.
+# Inputs (git checkouts, staged by the Mac session): {WORK}\8a-inputs\data-pool = branch claude/data-pool-8b, {WORK}\8a-inputs\own-data = branch claude/8a-own-data.
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\43-pc-8a-10m.txt --device cuda --par 1 --busy C:\Users\benja\GPU-BUSY.txt
+# MEM 3000
+g8a-data: 8a-data --data-pool {WORK}/8a-inputs/data-pool --own-xz {WORK}/8a-inputs/own-data
+# MEM 9000
+g8a: 8a-10M-s400 --rung 10M --seed 400 --speed-json {WORK}/results/41-pc-8a-speed/8a-speed/speed.json
+g8a: 8a-10M-s401 --rung 10M --seed 401 --speed-json {WORK}/results/41-pc-8a-speed/8a-speed/speed.json
+g8a: 8a-10M-s402 --rung 10M --seed 402 --speed-json {WORK}/results/41-pc-8a-speed/8a-speed/speed.json
+g8a: 8a-10M-s403 --rung 10M --seed 403 --speed-json {WORK}/results/41-pc-8a-speed/8a-speed/speed.json
+g8a: 8a-10M-s404 --rung 10M --seed 404 --speed-json {WORK}/results/41-pc-8a-speed/8a-speed/speed.json
+g8a: 8a-10M-s405 --rung 10M --seed 405 --speed-json {WORK}/results/41-pc-8a-speed/8a-speed/speed.json
+# Start only if mark 4 held at 3M. Reuses the 60M pool of the 3M rung (same rows, same order).

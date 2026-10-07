@@ -9,6 +9,8 @@ LAZY = {
     'register_loop': 'custom_io.models.register_loop:RegisterLoop',     # A (steps=True) and A0 (steps=False)
     'ledger': 'custom_io.models.ledger:Ledger',                         # B (Ledger-lite)
     'plain_tf_steps': 'custom_io.models.plain_tf_steps:PlainTFSteps',   # writes steps then ' # ' answer; C1' decode
+    'plain_tf_steps_g': 'custom_io.models.plain_lm:PlainStepsG',        # 8a: plain_tf_steps with a free feed-forward width
+    'plain_lm': 'custom_io.models.plain_lm:PlainLM',                    # 8a: the plain LLM recipe arm (next-char loss on web text + question rows)
     'tool': 'custom_io.models.tool:Tool',                               # T1: B2 with the calculator outside (talker writes calls)
 }
 NAMES = sorted(set(MODELS) | set(LAZY))
