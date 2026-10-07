@@ -68,6 +68,8 @@ size), and every arm that is compared with B2 gets the same frozen front.
   B2-vs-PT comparison sees identical rows in the same order per seed.
 - **Web text into LLM:** the same chunks as raw text with a next-word loss.
 - **Seen:** 20 word pieces per trained parameter: 66M / 200M / 600M, about 3.3 passes; no row more than 4 times.
+  (Changed by addendum B1: at least 24,000 updates of 256 rows; 3M and 10M share the 60M pool and rows. Cloze sizes
+  changed by B2.)
 - **Overlap gate:** every web document passes `overlap13.py scan` against all panels, the protected panels' hashes
   included, before it enters a pool (changed by addendum A1: the protected panels may join the index after 8a starts).
   Generator rows rely on their existing hold-out splits; their 13-gram result is
@@ -87,7 +89,7 @@ size), and every arm that is compared with B2 gets the same frozen front.
 
 - One rented 5090 per seed per rung. Each box runs B2, PT and LLM in sequence, then is collected and destroyed
   (`custom_io/box/vast.py collect` then destroy). Never touch boxes this stage did not start.
-- **Caps per box (self-stop by hours):** 3M $0.60 (MAXH 1 h); 10M $1.50 (MAXH 3 h); 30M $5.00 (MAXH 9 h).
+- **Caps per box (self-stop by hours; 3M changed by addendum B3 to $2.50, MAXH 5 h):** 3M $0.60 (MAXH 1 h); 10M $1.50 (MAXH 3 h); 30M $5.00 (MAXH 9 h).
   The depth check adds about $1.
 - **Total cap: about $43** for the 18 boxes; expected about $25 (our estimate, could be off 2x; the 3M rung measures
   real speed and the 10M and 30M caps are re-set from it before they launch). Keep the balance at $1 or more.
@@ -210,3 +212,44 @@ to about $53; expected about $30. With the letter reader, caps are unchanged.
 - `hf_baseline.py`: a steps target (plain_tf_steps' `target_text`, scored after the last '#') and the calc variant.
 - Box launcher: the public-model arm at the 30M rung; the HF weights pinned by revision in the run manifest.
 - `analyze_8a.py`: marks 4 and 5 and the good-enough proved-wrong line, tested on fake numbers before any run.
+
+## 12. Addendum B: enough training, rows that fit, speed first (2026-10-07, 2:10 PM ET, before any 8a run)
+
+No 8a run has started; nothing here uses an 8a result.
+
+Asks this answers:
+- Ben, 1:27 PM ET 10-07 (project chat, relayed): "demonstrate ability to improve with scalability and you can spend the
+  gpu money".
+- Coordinator (relayed): if the reader pick is the only thing holding the 3M rung, start it on plain B2 and disclose it.
+
+Why: checking the spec against the code and today's runs found three things that would have spoiled the test.
+1. **Too little training at 3M.** Section 4's 20 word pieces per parameter gives the 3M rung about 7,000 updates of 256
+   rows (estimate: mean row about 38 word pieces), against q33's 24,000. Short training hides size: at 8,000 updates
+   the 10.8M plain transformer scored below the 3.2M one (pooled-5 45.5 vs 47.0), and at 24,000 it scored above
+   (54.9 vs 52.7) (`custom_io/CALIBRATION.md`, `results/01-calib`, `02-calib-long`, one seed, shown). Mark 4 compares
+   with q33's B2, which had 24,000.
+2. **Rows that do not fit.** B2's data code asserts prompts of at most 208 letters and answers of at most 8
+   (`custom_io/data.py:107-109`, `MAX_PROMPT, MAX_ANS = 208, 8`). Section 4 allowed 280-letter chunks and 12-letter words.
+3. **Cost.** q33's B2 took 3.66 h for 24,000 updates on the PC, 7.8x slower per update than plain_tf_steps (0.47 h)
+   (shown). A deep B2 runs every block 8 times, so the deep rungs are likely far slower per update than section 6's
+   estimate assumed (suggested; untested until timed).
+
+Changes:
+- **B1. Update floor.** Every arm at every rung trains for at least 24,000 updates of 256 rows (q33's recipe). Seen =
+  the larger of that and 20 word pieces per parameter. So the 3M and 10M rungs train on the same rows in the same order
+  per seed, from the 60M pool (about 3.9 passes, estimate), and the 3M-to-10M step changes only size. If the measured
+  passes exceed 4, the floor wins at 3M and 10M and the count is reported (q33 itself made about 30 passes).
+  The 3M rung now needs the 22.8M own-text prefix. 30M stays at 20 per parameter (about 600M, 190M pool).
+- **B2. Rows fit B2.** Cloze chunks are at most 200 letters including the blank mark; the blanked word has 3-8
+  letters. Every other section 4 rule stays.
+- **B3. Speed first.** Before the 3M rung, one rented 5090 times 200 updates of each arm at the 3M, 10M and 30M shapes
+  (about $0.20, reported). The 3M cap per box becomes $2.50 (MAXH 5 h); the rung is expected near $10 at $0.49/h. The
+  10M and 30M caps are set from the timing. If the ladder's total would pass $50 (Ben's card: about $30-50), Ben gets the
+  measured cost and the options before those rungs start.
+- **B4. If the reader pick is the only wait.** If the code, web slices and own text are ready before q39 reports, the 3M
+  rung starts on the letter reader, and 8a keeps the letter reader at every rung (recorded in the manifest before the
+  first run; mark 5's public model is then pythia-31m). If EGE passes q39, it is checked inside 8a as one extra reported
+  arm at the 10M rung (B2 with EGE, 2 seeds, same rows), which informs 8c's reader. Disclosed.
+
+Vast credit at 2:05 PM ET: $8.92, with one box from another thread running (not ours). The speed check and the 3M rung
+(cap $15) need Ben's top-up.
