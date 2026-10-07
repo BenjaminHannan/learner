@@ -31,6 +31,7 @@ Then the same for 202+203 and 204+205 (or start the next parent in a free slot a
 Check progress any time (opens nothing): `python3 -m creative.c2b check --root ~/creative/c2b`
 
 ## 3. Score the sealed test split (ONCE, only when all 6 parents x 4 arms exist)
+First `git fetch origin claude/project-thread-2zeaoc && git merge --ff-only FETCH_HEAD` (training code is unchanged; this adds the report-only blind-search baseline to the scoring step: blind BFS over x and 1/2/10/100, no model, about 10 min, written to `test/blind.json` and into REPORT.json). Running training processes are not affected.
 ```
 OMP_NUM_THREADS=8 python3 -m creative.c2b score --root ~/creative/c2b \
   --skills-train ~/custom-io/work/data/train.jsonl --skills-data ~/custom-io/work/data_big --device cpu

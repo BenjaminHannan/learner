@@ -22,7 +22,7 @@ The json carries numbers and per-parent readings only; the roadmap thread gives 
 import argparse, copy, json, math, os, random, time
 import numpy as np
 import torch
-from creative import c2_dev, c2_pilot, c2_stones, c2_stuck, fastsleep, fewshot, legal, rules_real as R, sleep, stones
+from creative import blind_baseline, c2_dev, c2_pilot, c2_stones, c2_stuck, fastsleep, fewshot, legal, rules_real as R, sleep, stones
 from creative.c2_keep import MULTI
 from creative.pilot import skills_eval
 from custom_io.models import progparse as pp
@@ -336,8 +336,16 @@ def score_test(root, skills_train=None, skills_data=None, device='cpu', seed=0, 
         json.dump(dict(opened=time.strftime('%Y-%m-%d %H:%M:%S'), parents=list(parents)), open(sentinel, 'w'))
     test = c2_stones._with_nums(R.load_split(DATA, 'test')[:test_limit])
     fresh = c2_stones._with_nums(stones.fresh_practised(256, 1, 'fresh-check')[0])
+    blind_path = os.path.join(root, 'test', 'blind.json')
+    if os.path.exists(blind_path):
+        blind = json.load(open(blind_path))
+    else:                                                # report-only: blind BFS, no model (roadmap 4e50f8cf85); runs once with the test scoring
+        blind = blind_baseline.score_rows(test, workers=min(4, os.cpu_count() or 1))
+        os.makedirs(os.path.dirname(blind_path), exist_ok=True)
+        json.dump(blind, open(blind_path, 'w'), indent=1)
     per = [score_parent(root, p, skills_train, skills_data, test, fresh, device, seed) for p in parents]
     rep = report(per, test)
+    rep['blind_baseline'] = blind
     json.dump(rep, open(rep_path, 'w'), indent=1)
     return rep
 

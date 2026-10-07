@@ -111,6 +111,20 @@ def test_report_readings():
     assert not C.report(per2, test)['readings']['pooled first try W-N >= +15 with the interval above 0']
 
 
+def test_blind_baseline():
+    from creative import blind_baseline as B
+    rows = c2_stones._with_nums(R.load_split('creative/data/c2', 'dev')[:12])
+    fits = [B.search_fits(r, budget=3000) for r in rows]
+    # blind to keys and kinds: corrupt every key, scramble kinds -> identical candidates and fit order
+    bad = [dict(r, answer='-7', accepted=['-7'], kind='x', params=[]) for r in rows]
+    assert fits == [B.search_fits(r, budget=3000) for r in bad]
+    for f in fits:
+        assert [e for e, _ in f] == sorted(e for e, _ in f)
+    s = B.summarize(rows, [[(5, True), (9, False)], [(7, False), (8, True)]] + [[] for _ in rows[2:]])
+    assert s['pooled']['right_within_1_guesses'] == 1 / 12 and s['pooled']['right_within_4_guesses'] == 2 / 12
+    assert s['pooled']['first_fit_right_within_1000'] == 1 / 12 and s['pooled']['any_right_fit_within_1000'] == 2 / 12
+
+
 if __name__ == '__main__':
     for k, v in list(globals().items()):
         if k.startswith('test_'):
