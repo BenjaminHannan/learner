@@ -1,10 +1,10 @@
 # MEM 6000
 # PAR 1
-# q40 T1 screen, T1_s200: the same line as custom_io/queue_local, code pinned to 68e2cd5f58 (the commit the PC chain would have used).
+# q40 T1 screen, T1_s200: the same line as custom_io/queue_local, code pinned to 2b1cbd4d7b (the PC chain's commit; 68e2cd5f5's train.py has no --save-preds).
 # Rented RTX 5090 (Ben's Vast OK, 3:00 PM ET 10-07: PC and Mac both busy). Data = the box's seed-1 200k build (train.jsonl sha256 010af671..., the same file as q33's).
 # Box: python3 custom_io/box/vast.py create --offer ID --label cio-t1a --maxpar 2 --qsub /t1a --env "MAXH=12 IDLE_EXIT=5400 END_SLEEP=600 FAIL_SLEEP=1800"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-SHA=68e2cd5f580321858eb671454b987df489517d10
+SHA=2b1cbd4d7b50921dee52c3993b9fddd1a9a194d2
 P=$J/pin/$JOB; rm -rf $P
 git clone -q --depth 1 --filter=blob:none --no-checkout --sparse -b claude/custom-reader-talker-4x309r https://github.com/BenjaminHannan/learner $P \
   && git -C $P fetch -q --depth 1 --filter=blob:none origin $SHA && git -C $P sparse-checkout set custom_io && git -C $P checkout -q $SHA || { echo "PIN-FAIL $SHA"; exit 3; }
