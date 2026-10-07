@@ -569,6 +569,22 @@ Built on creative prototype v2 (five Opus review passes, 10-03), moved to B2 and
        Build readings, confirmed 10-07: night 2 continues from the night-1 model and resamples the pool with it; N'
        skills harm is measured against the warmed parent and later models against N'; each parent stops on its own
        parts or feasibility miss (Mac job 7, commit a3f09b033).
+  - **Memory sleep, ruled 10-07 (fast-sleep thread, PR #48; RESULTS in the project folder under fast-sleep/).** Shown on
+    a 2-parent DEV screen, with s101 untuned: a notebook of the night's W records plus 512 warm add/mult programs, read
+    by top-16 cosine votes on the op and slot heads with no weight change, matches the fine-tune's W first-try gain
+    (0.95x / 1.04x) at 25-32x fewer FLOPs. Skills harm is 0, and R/H notebooks gain nothing. Per kind it is the same
+    near-copy gain (square, last_digit); the multi-step kinds stay near 0 for every method. Decided:
+    1. Mac job 7 runs unchanged. It asks whether parts kept in the weights let the loop combine them, and a
+       nearest-neighbour notebook cannot compose by design, so it is not mixed in.
+    2. The real C2b keeps W (weight sleep) as the arm its marks are written for, and adds memory as a reported second arm
+       M: the setting frozen by the fast-sleep 6-seed confirm, the same old notes, an R-notebook placebo, the same marks
+       and the stricter label. M can carry the near-copy claim. Only a sleep that lifts multi-step first try can carry
+       the climb claim.
+    3. M's practised score is recall, not kept parts: its old notes are warm-split add/mult programs over the same 35
+       parameter values the practised check asks. It is reported under that name.
+    4. For the creative loop's nightly design: if the confirm passes and job 7's climb passes with weights, memory does
+       nightly recall and weight sleep does the climbing, and how often weight sleep runs is set by the climb results,
+       not by FLOPs. If job 7's climb retires, memory alone is the loop's nightly sleep for near-copy kinds.
     5. Proved wrong: parts kept and W'(night 2) - N' on the multi-step kinds with its upper end below +3 on both
        parents. The parts were there and the loop still did not combine them: explanation (b), and the climb claim
        retires on B2.
