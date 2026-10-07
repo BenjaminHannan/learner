@@ -499,3 +499,15 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   -6.6; -10.0 if read on in_dist alone), "no dev split down more than 2.0" fails in 22%, and the cipher_map proved-wrong line fires in 6.7%.
   So the family mark cannot pass as written. Sent to the architecture thread to re-seal before any W1 run; W1 is staged in its own queue and
   does not run until then. `analyze_gain` prints this null check with every W1 verdict.
+
+## Addendum 19, amendment 1 (written 2026-10-07 about 17:50 UTC, 1:50 PM ET, before any W1 run)
+- **Family mark re-sealed by the architecture thread (redesign-ideas-2026-10-07.md section 8a, 1:45 PM ET), mirrored here:** the line "no other
+  family down more than 2.0" and this addendum's "family" reading for it are deleted.
+  - **F1.** cipher_map, fewshot_number_rule, group_induct and seq_cycle pooled as one number on in_dist (rows summed); 2-seed mean of W1 minus plain
+    B2 not down more than 2.0. cipher_map alone must still be >= 95 (2-seed mean).
+  - **F2.** `analyze_gain` prints F1's no-change failure rate on the same 360 draws with every W1 verdict. Above 25%, F1 is reported, not judged,
+    and only the cipher_map >= 95 line and the split mark apply.
+  - **F3.** Every other family's change (rows pooled over the five pooled splits) is reported beside its no-change 5th-95th percentile, never judged.
+  - Everything else in addendum 19 is unchanged: pooled-5 >= +1.0 on both seeds, the split mark, chain-5 >= 99.0, the leak lines, proved wrong.
+- **F2 computed now on q33 (shown):** F1 fails in 22.2% of the 360 no-change draws (q33 B2 in_dist on the four families: 81.25, 83.75, 80.62,
+  81.25, 77.5, 78.75), at the 25% limit's safe side, so F1 is judged. W1 may queue (42-pc-gain-w1.txt) after U0.
