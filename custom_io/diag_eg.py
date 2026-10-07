@@ -6,7 +6,9 @@ Needs $CUSTOM_IO_EG2 (local EmbeddingGemma 2) and transformers >= 5.19. CPU, fp3
      EG state alone (linear); EG state + the char's offset in its word piece + the piece's length (2-layer MLP, the generous one);
      B2's trained reader output (linear). Split by chars in 1-char pieces vs chars inside longer pieces, and on cipher_map rows.
   P2 sameness: within a prompt, is the same word at two places more alike (cosine of the mean state over its chars) than two different
-     words? AUC over all word pairs, and match@1: a repeated word's nearest earlier word is the same word. EG raw states vs B2's reader."""
+     words? AUC over all word pairs, and match@1: a repeated word's nearest earlier word is the same word. EG raw states vs B2's reader.
+  P3 layers (--layers): P1's linear read (alone and with the offset in the piece) and P2's AUC on EmbeddingGemma's hidden state after each
+     listed layer (0 = its input embedding; 512-d inside the model, the final 768-d output is P1/P2's "eg")."""
 import argparse, collections, json, os, random, re
 import numpy as np
 import torch
@@ -58,6 +60,57 @@ def b2_states(m, rows, bs=64):
         for k, r in enumerate(rs):
             out.append(X[k, :len(r['prompt'])].float().numpy())
     return out
+
+
+@torch.no_grad()
+def eg_layer_states(eg, rows, layers, bs=16):
+    """-> {layer: [per-row [len(prompt), 512] float32]}: the model's hidden state after each listed layer, gathered per char like encode()."""
+    out = {l: [] for l in layers}
+    for s in range(0, len(rows), bs):
+        rs = rows[s:s + bs]
+        al = [eg.align(r['prompt']) for r in rs]
+        L = max(len(a[0]) for a in al)
+        ids = np.full((len(rs), L), eg.tok.pad_token_id, np.int64)
+        am = np.zeros((len(rs), L), np.int64)
+        for b, (t, _) in enumerate(al):
+            ids[b, :len(t)], am[b, :len(t)] = t, 1
+        hs = eg.m(input_ids=torch.from_numpy(ids), attention_mask=torch.from_numpy(am), output_hidden_states=True).hidden_states
+        for l in layers:
+            for b, (r, (_, c2t)) in enumerate(zip(rs, al)):
+                out[l].append(hs[l][b, torch.from_numpy(c2t.astype(np.int64))].float().numpy())
+    return out
+
+
+def p3(rows, E, layer_states, train_ids):
+    """per layer: linear letter read alone / with the offset in the piece, and the same-word AUC."""
+    res = {}
+    for l, S in layer_states.items():
+        E2 = [(S[k], E[k][1], E[k][2]) for k in range(len(rows))]
+        chars = sorted({c for r in rows for c in r['prompt']})
+        cid = {c: i for i, c in enumerate(chars)}
+        tr = [k for k in range(len(rows)) if k in train_ids]
+        te = [k for k in range(len(rows)) if k not in train_ids]
+        def feats(ks, off):
+            X = []
+            for k in ks:
+                H, o, ln = E2[k]
+                if off:
+                    oh = np.zeros((len(o), 32), np.float32)
+                    oh[np.arange(len(o)), np.minimum(o, 15)] = 1
+                    oh[np.arange(len(ln)), 16 + np.minimum(ln, 16) - 1] = 1
+                    H = np.concatenate([H, oh], 1)
+                X.append(H)
+            return np.concatenate(X).astype(np.float32)
+        y = lambda ks: np.concatenate([[cid[c] for c in rows[k]['prompt']] for k in ks])
+        letter = np.concatenate([[c.isalpha() for c in rows[k]['prompt']] for k in te])
+        out = {}
+        for name, off in (('linear', False), ('linear_plus_offset', True)):
+            hit = probe(feats(tr, off), y(tr), feats(te, off), y(te), len(chars))
+            out[name] = round(100 * float(hit[letter].mean()), 2)
+        out['same_word_auc'] = p2(rows, S)['auc']
+        res[l] = out
+        print(json.dumps({l: out}), flush=True)
+    return res
 
 
 def wiring(eg, rows):
@@ -149,6 +202,7 @@ def main(argv=None):
     ap.add_argument('--ckpt', required=True)
     ap.add_argument('--per-family', type=int, default=60)
     ap.add_argument('--out', default='custom_io/results/eg-diag/DIAG.json')
+    ap.add_argument('--layers', default='', help='P3 only (skips P1/P2): comma list of layers, e.g. 0,3,6,9,12,15,18,21,24')
     a = ap.parse_args(argv)
     torch.set_num_threads(max(1, os.cpu_count() or 1))
     rows = sample(a.per_family)
@@ -156,6 +210,12 @@ def main(argv=None):
     out = dict(rows=len(rows), per_family=a.per_family, ckpt=a.ckpt, wiring=wiring(eg, rows))
     print(json.dumps(out), flush=True)
     E = eg_states(eg, rows)
+    if a.layers:
+        layers = [int(x) for x in a.layers.split(',')]
+        out['P3_layers'] = p3(rows, E, eg_layer_states(eg, rows, layers), set(range(int(0.75 * len(rows)))))
+        os.makedirs(os.path.dirname(a.out), exist_ok=True)
+        json.dump(out, open(a.out, 'w'), indent=1)
+        return
     m = load_model(a.ckpt, torch.device('cpu')).eval()
     B = b2_states(m, rows)
     train_ids = set(range(int(0.75 * len(rows))))
