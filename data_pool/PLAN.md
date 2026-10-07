@@ -164,3 +164,6 @@ Files: `data_pool/` on branch `claude/data-pool-8b`: `PLAN.md`, `overlap13.py`, 
 - Protected-panel hashes are not merged yet (Ben chose "start now" for 8a; the check must pass before 8c).
 
 - **Length filters (corrected 1:20 PM ET, Ben's no-cut-off rule).** The first own72 dropped skills items over 62 estimated tokens without counting them (as `skills_curriculum.build` does). Rebuilt with that filter and `verify`'s length check OFF (every other verify check still must pass, 0 failures): 11,864 over-cap items kept and counted (10,886 in the final 72M set, 0.6% of skills rows; each row carries `est_tokens`). `gen_english.fits` (48-token cap) is also off: it would have dropped 1 of 572,000 draws. Other rejects, all recorded in the manifest: held-out flags 5,572,497, duplicate prompts 648,186, equal to a dev prompt 31,703. Check the longest row against the reader's prompt cap in the 8a build.
+
+### 10.x rung30 enlarged (2026-10-07, 8a request)
+Rung30 rebuilt with budget 123.35M tokens (= 117.8M / 0.955) so cloze chunking still reaches 117.8M. Same shard 0, same filters. Rung3 and rung10 are byte-identical to the earlier cut (sha 59c70dc5e2c3..., 5a5f23e70f8f...) and exact prefixes/subsets of the new rung30 (sha 442a93647acf...; 120,994 docs). Archive web_slices_8a.tgz sha256 90b3559e96b65886a23c07802d4d817b7b22b8894f69e2f0c71a1093f21d0949.
