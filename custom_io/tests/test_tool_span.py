@@ -303,6 +303,21 @@ def test_judge():
     assert verdict(cell=('operand', 6, 50.0, 150))['verdict'].startswith('NOT JUDGED on R1')   # short cell: cannot fail by itself
     assert verdict(t1=100.0, exact=99.5)['verdict'].startswith('NOT SHOWN')                    # R3: a 1-3 cell below T1's re-scored value
     assert J.screen(runs, {})['verdict'] == 'NOT JUDGED'
+    # --arm T1SI (Amendment 5's next change): T1SI's runs and WC.json judged in T1S's slot, a T1S run must not stand in for it
+    spec, keep = J.NEXT['T1SI'], dict(J.ARMS)
+    try:
+        J.ARMS['T1S'] = spec
+        ri = {(a, s): r for (a, s), r in runs.items() if a != 'T1S'}
+        for s in J.SEEDS:
+            r = copy.deepcopy(runs[('T1S', s)])
+            r['config'] = dict(r['config'], cfg=spec[1]); r['n_params'] = spec[2]
+            ri[('T1SI', s)] = r
+        wi = {('T1', s): fake_wc('tool', {}, T1_PARAMS, exact=99.0) for s in J.SEEDS}
+        wi.update({('T1SI', s): fake_wc('tool', spec[1], spec[2]) for s in J.SEEDS})
+        assert J.screen(J.as_t1s(ri, 'T1SI'), J.as_t1s(wi, 'T1SI'))['verdict'].startswith('PASS')
+        assert J.screen(J.as_t1s(runs, 'T1SI'), J.as_t1s(wi, 'T1SI'))['verdict'] == 'NOT JUDGED'     # T1S's own run: wrong cfg/size
+    finally:
+        J.ARMS.clear(); J.ARMS.update(keep)
     print('ok judge')
 
 

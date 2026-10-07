@@ -22,6 +22,13 @@ SEEDS = [200, 201]
 LENS = range(1, 10)
 MIN_N = 200
 ARMS = {'T1S': ('tool', {'span_copy': True}, 3311060), 'T1': A.ARMS['T1'], 'B2': A.ARMS['B2']}
+# --arm T1SI: Amendment 5's single next change (T1S + the entry-index term on the span keys), judged in T1S's place with R1-R4 unchanged
+NEXT = {'T1SI': ('tool', {'span_copy': True, 'span_idx': True}, 3311572)}
+
+
+def as_t1s(d, arm):
+    """{(arm, seed): x} with `arm`'s entries in T1S's slot (the arm judged), every other T1S entry dropped."""
+    return {(('T1S' if a == arm else a), s): x for (a, s), x in d.items() if a != 'T1S' or arm == 'T1S'}
 
 
 def valid(r, arm):
@@ -159,14 +166,21 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--results', nargs='+', required=True)
     ap.add_argument('--wc', nargs='+', default=[], help='dirs holding <arm>_s<seed>/WC.json from custom_io/rescore_wc.py (Amendment 4)')
-    ap.add_argument('--out', default='custom_io/results/T1S-ANALYSIS.json')
+    ap.add_argument('--arm', default='T1S', choices=['T1S'] + sorted(NEXT))
+    ap.add_argument('--out', default=None, help='default custom_io/results/<arm>-ANALYSIS.json')
     a = ap.parse_args(argv)
+    a.out = a.out or f'custom_io/results/{a.arm}-ANALYSIS.json'
+    if a.arm != 'T1S':
+        ARMS['T1S'] = NEXT[a.arm]
     runs, skipped = load(a.results)
-    res = dict(screen=screen(runs, load_wc(a.wc)), confirm=confirm(runs), skipped=skipped)
+    runs = as_t1s(runs, a.arm)
+    res = dict(arm=a.arm, arm_spec=ARMS['T1S'], screen=screen(runs, as_t1s(load_wc(a.wc), a.arm)), confirm=confirm(runs), skipped=skipped)
     os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
     json.dump(res, open(a.out, 'w'), indent=1, default=str)
     sc = res['screen']
-    L = ['# T1S: T1 + span copy (Amendment 3, PASS-MARKS.md addendum 22)', '', f"## Re-screen, seeds 200-201: {sc['verdict']}", '']
+    head = ('# T1S: T1 + span copy (Amendment 3, PASS-MARKS.md addendum 22)' if a.arm == 'T1S' else
+            f'# {a.arm}: T1S + the entry-index term on the span keys (Amendment 5; judged in the T1S columns below, R1-R4 unchanged)')
+    L = [head, '', f"## Re-screen, seeds 200-201: {sc['verdict']}", '']
     if not sc['judged']:
         L += [f"- missing or invalid: {({s: p for s, p in sc['problems'].items() if p})}"]
     else:
@@ -187,7 +201,7 @@ def main(argv=None):
                       f'| {side} T1 old scorer | ' + ' | '.join(fmt(f['t1_old_copy'][side][x][0]) for x in LENS) + ' |']
             L += [f"Scorer passes: {f['passes']}", '']
     L += [f"## 6-seed confirm (marks 1-6 as amended): {res['confirm']['verdict']}", '']
-    md = os.path.join(os.path.dirname(a.out) or '.', 'RESULTS-T1S.md')
+    md = os.path.join(os.path.dirname(a.out) or '.', f'RESULTS-{a.arm}.md')
     open(md, 'w').write('\n'.join(L) + '\n')
     print('\n'.join(L))
     return res
