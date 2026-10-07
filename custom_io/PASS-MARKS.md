@@ -301,3 +301,6 @@ how much spelling EmbeddingGemma's states keep). EGR (addendum 6: EmbeddingGemma
 it runs now on the two boxes, which are free once EGO ends: **box A trains EGR_s200, box B EGR_s201** (custom_io/queue/egwA/44, egwB/45), same
 recipe and flags as queue 38. **Base:** B2V of the same seed on the same box (the same-machine rule). Marks: exactly addendum 6's. Queue 38 on
 the PC drops its two EGR lines. Cost about $2 more; credit before these runs $5.30, and each box's 1-hour idle exit keeps it above $1.
+**Diagnosis check (read only, not a mark; added about 00:15 UTC 10-07, 8:15 PM ET, while EGR_s200 and EGR_s201 were at their first updates and
+before any EGR score existed):** EGO, EGM and EGW all lost cipher_map (seed 200: 100 to 10, 2.5, 2.5). If missing letters are the cause, EGR's
+cipher_map in_dist is >= 50 on both seeds. Below 50 on either seed means the letter explanation is wrong.
