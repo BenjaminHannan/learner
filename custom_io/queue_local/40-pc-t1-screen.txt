@@ -1,0 +1,8 @@
+# BensPC RTX 5070 Ti (cuda): T1 screen, the calculator outside the model (PASS-MARKS.md addendum 17, written before any T1 run). Runs after queue 39.
+# T1 = model 'tool' (3,277,393 params): the talker writes each calculator call as text, a plain Python calculator answers, the reader reads the answer.
+# Inside = queue 33's plain B2 (same PC, same flags), not retrained. Seeds 200 and 201 only; the 6-seed confirm (202-205) waits on the screen.
+# No EmbeddingGemma, so no ENV lines. Judge: python -m custom_io.analyze_t1 --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-pc-t1-screen
+#   python -m custom_io.local_runner run --work C:\Users\benja\custom-io\work --queue custom_io\queue_local\40-pc-t1-screen.txt --device cuda --par 2 --busy C:\Users\benja\GPU-BUSY.txt
+# MEM 6000
+T1_s200 --model tool --cfg '{}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 200 --log-every 500 --final-eval
+T1_s201 --model tool --cfg '{}' --steps 24000 --batch 256 --lr 1e-3 --bf16 --seed 201 --log-every 500 --final-eval

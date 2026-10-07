@@ -387,3 +387,65 @@ EGE and plain B2 (B2V) of its seed.
 **Size rule** as in addendum 4: EGE is a 274.5M model with EmbeddingGemma counted, so a pass is a B2-internal result ("the Gemma version of B2
 beats B2"), not a claim against other models of its size. **Read only:** the variant gain, per-family changes, loops:0 per seed, and every
 seed's sign.
+
+## Addendum 16: D0, the digit check before T1 (written 2026-10-07 about 15:55 UTC, 11:55 AM ET, before any D0 run)
+Marks are the architecture thread's, sealed in `/mnt/project-files/architecture/MARKS-D0-T1-2026-10-07.md` (D0 section and Amendment 1).
+This addendum only fixes how this thread reads them; where it chooses, it chooses the stricter reading. No training; CPU; the six q33 B2
+checkpoints (branch `claude/b2-confirm-checkpoints` f41d0f7d5, sha256-checked), code `custom_io/diag_d0.py`.
+- **Prompts:** the five pooled dev splits (in_dist, answer, frame, vocab, variant), deduplicated. Dev numbers are mostly 1-3 digits, so
+  every place up to the 9th gets data from copies of each prompt in which every number is replaced by a random number with 1-9 digits
+  (length uniform 1-9, no leading zero; 8 copies per prompt, fixed seed; copies over 208 chars dropped). The prompt-level split is
+  75% train / 25% held out, fixed and the same for every seed; all copies of a prompt sit on the same side.
+- **Official reading probe:** for each number (every `\d+` run of 1-9 digits), the reader output X at the 9 characters ending at the
+  number's last digit (zeros before the prompt start), concatenated -> one linear classifier per place p = 1..9 (the digit, or "no digit
+  here") and one for the digit count. Trained on the train prompts, scored on held-out prompts. Per-place accuracy is scored only on
+  numbers that have that place (the "no digit" rows are reported apart, since they would pad the score).
+- **Mark (stricter reading):** reading passes only if every place 1-9 and the digit count are >= 99.0% on held-out prompts on EVERY seed
+  200-205. The architecture file's own mark does not say "every seed"; this is a tightening.
+- **Read only, no mark:** (a) the same probe scored on the real dev numbers (held-out prompts, unsubstituted); (b) the digit from the X of
+  that digit's own character alone; (c) the digit from the mean of X over the number's span (what B2's number slots add to the exact value
+  code), to show what the pooled path keeps.
+- **Writing:** B2's talker has no learned digit writer (NUM prints `str(value)` and the 8-letter GEN path never trained on digits,
+  Amendment 1), so a copy test on these checkpoints would need training. Per the D0 text ("if that needs the T1 build, run it on the T1
+  screen instead and say so"), writing exact-copy >= 99% is scored on the T1 screen checkpoints, not here.
+- **Digits-only reader control** (Amendment 1): run only if B2's reader misses the reading mark. If B2's own reader passes, the control
+  cannot change the reading verdict and is not run (disclosed).
+- **Free check from the coordinator, read only:** controls 2-7 of the thinker state are never read by a head. Lesion `ctl27` sets
+  Z[:, 2:8] to zero after every controller iteration at test time; report pooled-5, chain-5 and per-split changes against intact B2 on
+  seeds 200-205 (dev splits only).
+- **Seed SD recheck (from q33 RESULT.json, shown):** B2's own pooled-5 SD across seeds 200-205 is 0.63 (73.00, 74.27, 74.74, 74.02,
+  73.63, 74.47). The 0.94 in the T1 marks is the SD of the paired difference B2 minus plain_tf (CONFIRM-ANALYSIS.json), not B2's own
+  spread. Reported to the architecture thread; no T1 mark is changed here.
+
+## Addendum 17: T1, the calculator outside the model (written 2026-10-07 about 16:15 UTC, 12:15 PM ET, before any T1 run)
+Marks are the architecture thread's, sealed in `/mnt/project-files/architecture/MARKS-D0-T1-2026-10-07.md` (Ben 10:49 and 11:35 AM ET 10-07:
+the calculator is a tool the talker calls; if it only works inside, a link is broken, and the fix is that link, never moving it back in).
+Build: `custom_io/models/tool.py` (model name `tool`, cfg `{}`), 3,277,393 params (B2 3,302,481, -0.76%; inside +-3% of 3.24M). Every weight it
+shares with B2 starts identical at the same seed (tested). Same recipe as q33's B2: 24k updates, batch 256, lr 1e-3, bf16, 8 fixed loops.
+- **What the talker writes:** at rounds 1-7, an op word (B2's op head; NOOP = no call) and two operand strings written cell by cell, units
+  first, by B2's own pointer-generator (the vocabulary or a copy of any context char). `calc()` is plain Python over that text and returns the
+  result string or `?`. The entry `op a b = r` (the call is echoed, Ben's "any other necessary information") is read by the reader as its own
+  string (positions from 0, at most 40 chars) plus a learned entry-order vector, and the thinker sees it from the next round on.
+- **Disclosed choices:** (1) the 16 workspace slots for the PROMPT numbers stay, each the reader's mean over the number's digits + ordinal + type,
+  with NO value code (the regex only says where a number is); the 4 constant slots and 7 result slots are gone (constants are written from the
+  vocabulary). (2) B2's NUM mode (Python `str()` of a slot value) is gone: those rows are GEN rows and the 9 registers write the answer, copying
+  from the prompt and the entries. WORD is B2's. (3) Teacher forcing: the gold calls and their results are the entries (the same text `calc()`
+  returns for them: 0 mismatches on 2,053 training calls, tested); the call writer is trained by -log p of the gold operand strings, either order
+  for ADD MUL MIN MAX. (4) Lesions keep B2's names: `noexec` = the calculator returns `?` for every call (tool off), `opswap` = the calculator
+  swaps add and sub, `nocopy` = no copy in calls or answers.
+- **Pairing:** inside = q33's plain B2 (BensPC, seeds 200-205), not retrained. T1 runs on BensPC after q39; if a run lands elsewhere, the
+  cross-machine pairing is disclosed with its result.
+- **Screen (s200, s201), as sealed:** pooled-5 T1 minus B2 >= -2.0 on both seeds, and chain-5 >= 95 on both. **Tightening:** the D0 writing
+  check is scored here (addendum 16): `write_copy` operand copy and answer copy (every calculator result replaced by a random 1-9 digit string;
+  the answer part only 1-8 digits, the GEN limit) must be >= 99.0 on both seeds too. Any miss: no 6-seed run; the report names the link
+  (input digits, step choice, call writing, result reading) from call accuracy, write_copy, tool-off and the lesions, and the fix is one change
+  to that link, re-screened.
+- **6-seed confirm, as sealed:** (1) the 95% CI of T1 minus B2 on pooled-5 inside +-1.0; (2) chain-5 mean within 1.0 of B2 and >= 99.0 on 5 of 6
+  seeds; (3) tool off: the noexec program set (NUM rows whose gold answer slots are all result slots, B2's `noexec.program_families`) < 5%;
+  (4) loops:0 in_dist <= 5 and donor in_dist <= 5 on every seed (B2's values shown beside them); (5) opswap: >= 99% of the affected chain-5 rows
+  give the swapped value (affected = right when intact, the answer is a call result, and the replay of the model's own calls with add and sub
+  swapped changes it; sources are matched by text, the latest earlier result first); (6) no dev split mean drop > 2.0. Proved wrong: mean
+  < -2.0 or chain-5 mean < 95. Between: not shown.
+- **SD note (shown, reported, no mark changed):** the 0.94 is the SD of the paired difference B2 minus plain_tf; B2's own seed SD is 0.63. With
+  a paired SD near 0.94 the CI half-width is 2.571 x 0.94 / sqrt(6) = 0.99, so mark (1) passes only if the mean difference is within about
+  +-0.01 of zero; with SD 0.63, within about +-0.34. Sent to the architecture thread to decide before the 6-seed run; never loosened here.

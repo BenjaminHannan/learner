@@ -270,7 +270,8 @@ class Ledger(Model):
 
     # ---- reasoner ----
     def run(self, batch, loops=None, gold=None, lesion=None, rounds=False):
-        """One pass. gold (training) = dict(op [B,L], a/b [B,L,M] bool) teacher-forces every written step. lesion: 'noexec' / 'opswap' / 'nowordc'.
+        """One pass. gold (training) = dict(op [B,L], a/b [B,L,M] bool) teacher-forces every written step. lesion: 'noexec' / 'opswap' / 'nowordc' / 'ctl27'
+        (test only, not in LESIONS: zero controls 2-7 after every iteration).
         -> dict(R registers [B,9,d], vals [B,M] int64, valid, lmode, lans, lword, steps [(op, a, b logits)], prog (ops, a, b [B,L]);
         copy=True adds X [B,T,d] and xm [B,T] (reader output and prompt mask) so that loss() does not run the reader twice).
         rounds=True (round_readout training) adds 'rounds' [(t, Z[:,1], registers, Rs, valid) after iterations 1..n-2], S0 and Kw."""
@@ -305,6 +306,8 @@ class Ledger(Model):
             Z = Z + self.step_emb.weight[ts]
             for b, kx, ks in zip(self.core, kvx, kvs):
                 Z = b(Z, ks, kx, mask)
+            if lesion == 'ctl27':         # read-only test lesion: controls 2-7 (read by no head) carry nothing between iterations
+                Z = torch.cat([Z[:, :2], torch.zeros_like(Z[:, 2:N_CTRL]), Z[:, N_CTRL:]], 1)
             if t == 1 and self.eg_teach:
                 z1 = Z[:, :N_CTRL].mean(1)       # the meaning teacher's input: the 8 control tokens after iteration t = 1
             if not 1 <= t <= N_RES:
@@ -398,7 +401,7 @@ class Ledger(Model):
 
     @torch.no_grad()
     def generate(self, batch, lesion=None):
-        if lesion in ('noexec', 'opswap') or (self.copy and lesion == 'nowordc'):
+        if lesion in ('noexec', 'opswap', 'ctl27') or (self.copy and lesion == 'nowordc'):
             return self.talk(self.state(batch, lesion=lesion), batch)
         if self.copy and lesion == 'nocopy':
             return self.talk(self.state(batch), batch, lesion=lesion)
