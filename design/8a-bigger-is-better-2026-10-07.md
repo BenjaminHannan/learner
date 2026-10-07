@@ -279,7 +279,8 @@ Changes (they replace section 6 and the money lines in addenda A2, B3 and B4):
 - **Time, estimated (suggested; the speed check replaces these):**
   - 3M, 6 seeds, all arms: about 9 hours. q33 ran the same 18-run shape at 3.3M on this PC, 3 at a time (shown).
   - 10M: about a day. B2-M (10.9M, 3 blocks at width 384) ran 16,000 updates in 39 to 44 minutes on this PC, 2 at a
-    time (queue 35, shown); a deep 10M runs about 11 blocks 8 times each, so it is likely 2-3x slower per update.
+    time (queue 35, shown); the deep 10M is 8 blocks at width 256 (10,254,105 with the copy talker, counted at 085431a7f;
+    the plain match is 13 layers, 10,368,768), each run 8 times, so it is likely 2-3x slower per update.
   - 30M: about 4 to 5 days (about 62,000 updates at 20 word pieces per parameter, 15 or so blocks), plus about 2 days
     if the public model is SmolLM2-360M (its 6 fine-tunes). Before 30M starts, Ben gets the measured PC time and
     decides: run it on the PC, or rent for that rung only.
