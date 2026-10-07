@@ -6,7 +6,7 @@ manifests (PR #47, branch claude/data-pool-8b: data_pool/built/own72_MANIFEST.js
   --data-pool DIR   a checkout of branch claude/data-pool-8b (data_pool/web_slice.py, overlap13.py, panels/panel_hashes_all.npz, built/*_MANIFEST.json).
   --own-xz DIR      the three own-text files compressed: skills.jsonl.xz english.jsonl.xz teach.jsonl.xz (branch claude/8a-own-data: they are generator output
                     that cannot be re-made on the PC, TEACH being 171,940 rows the 1.2B wrote on the PC GPU, so they travel in git, 83 MB in all).
-  WEB (rebuilt)     FineWeb-Edu sample-10BT shard 0 (2.15 GB, downloaded from the Hugging Face hub, resumable), then data_pool/web_slice.py with the manifest's own
+  WEB (rebuilt)     the FineWeb-Edu sample-10BT shards the manifest lists (shard 0 is 2.15 GB; downloaded from the Hugging Face hub, resumable), then data_pool/web_slice.py with the manifest's own
                     arguments (fk-max 12, budgets rung3 / rung10 / rung30, the panel hash index in the checkout). The slices must hash to the manifest's sha256: the
                     rebuild was checked once in the cloud (rung3 and rung10 hashes equal), so a mismatch means a different shard revision or index, and nothing is used.
 Outputs WORK/data8a/{own72/*.jsonl, web/slice_rung*.jsonl, READY.json}. Re-running skips every file whose sha256 already matches. A lock file (WORK/data8a/LOCK)
@@ -74,15 +74,15 @@ def own_text(work, xz_dir, manifest):
     return {n: w for n, w in manifest['sha256'].items()}
 
 
-def download_shard(dst):
+def download_shard(dst, hub_file=SHARD_FILE):
     dst.parent.mkdir(parents=True, exist_ok=True)
     try:
         from huggingface_hub import hf_hub_download
-        p = hf_hub_download(SHARD_REPO, SHARD_FILE, repo_type='dataset', local_dir=str(dst.parent / 'hub'))
+        p = hf_hub_download(SHARD_REPO, hub_file, repo_type='dataset', local_dir=str(dst.parent / 'hub'))
         return Path(p)
     except ImportError:
         pass
-    url = f'https://huggingface.co/datasets/{SHARD_REPO}/resolve/main/{SHARD_FILE}'
+    url = f'https://huggingface.co/datasets/{SHARD_REPO}/resolve/main/{hub_file}'
     have = dst.stat().st_size if dst.exists() else 0
     req = urllib.request.Request(url, headers={'Range': f'bytes={have}-'} if have else {})
     with urllib.request.urlopen(req, timeout=120) as r, open(dst, 'ab' if have and r.status == 206 else 'wb') as f:
@@ -97,12 +97,16 @@ def web_slices(work, data_pool, manifest, rungs):
     if all((out / n).exists() and sha256(out / n) == h for n, h in want.items()):
         say('web slices ok (already there)', sorted(want))
         return want
-    shard = work / 'shard' / '000_00000.parquet'
-    if not shard.exists():
-        say('downloading FineWeb-Edu shard 0 (2.15 GB)')
-        got = download_shard(shard)
-        if Path(got) != shard:
-            shutil.copy2(got, shard)
+    shards = []                     # exactly the shards the manifest lists, in its order (shard 1 too if the data-pool thread used it)
+    for sh in manifest.get('shards') or ['shard/000_00000.parquet']:
+        name = os.path.basename(sh)
+        dst = work / 'shard' / name
+        if not dst.exists():
+            say('downloading FineWeb-Edu', name)
+            got = download_shard(dst, 'sample/10BT/' + name)
+            if Path(got) != dst:
+                shutil.copy2(got, dst)
+        shards.append(str(dst))
     # the data-pool code needs numpy and pyarrow
     for mod in ('numpy', 'pyarrow'):
         try:
@@ -113,7 +117,7 @@ def web_slices(work, data_pool, manifest, rungs):
     shutil.rmtree(tmp, ignore_errors=True)
     budgets = ','.join(f'{k}={v:g}' for k, v in manifest['budgets'].items())
     say('building web slices:', budgets)
-    subprocess.check_call([sys.executable, str(Path(data_pool) / 'data_pool' / 'web_slice.py'), '--shards', str(shard), '--index',
+    subprocess.check_call([sys.executable, str(Path(data_pool) / 'data_pool' / 'web_slice.py'), '--shards', *shards, '--index',
                            str(Path(data_pool) / 'data_pool' / 'panels' / 'panel_hashes_all.npz'), '--out', str(tmp), '--fk-max', str(manifest['fk_max']),
                            '--plain-fk', str(manifest['plain_fk']), '--budgets', budgets])
     bad = []

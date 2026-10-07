@@ -76,6 +76,33 @@ def compute_rows(rows, progs=True):
     return mx
 
 
+def compute_global(own72, web_slice, dev_paths, max_ans, seed=400, say=print):
+    """Caps for the whole ladder (addendum F d): the longest case in the LARGEST pool = all of own72 (the 30M rung's own rows contain the smaller rungs')
+    plus every cloze row of the 30M web slice plus the dev splits. Every rung then uses these same caps, so N_RES, n_loops and the tables are identical."""
+    from custom_io.g8a import cloze as Z, pool as P
+    mx, n = dict(TODAY), 0
+    def take(r, progs):
+        for k, v in measure(r, progs).items():
+            if v > mx[k]:
+                mx[k] = v
+    st = {s_: P._newstat() for s_ in ('skills', 'english', 'teach')}
+    for line, _, _ in P.own72_iter(own72, 30, max_ans, set(), st):
+        take(json.loads(line), True)
+        n += 1
+        if n % 200000 == 0:
+            say('own rows measured', n, {k: mx[k] for k in TODAY})
+    own_n = n
+    for r in Z.cloze_rows(Z.read_slice(web_slice), seed):
+        take(r, False)
+        n += 1
+    for r in _rows(dev_paths):
+        take(r, True)
+        n += 1
+    mx['n_reg'] = max(mx['n_reg'], mx['max_ans'] + 1)
+    mx.update(rows=n, own_rows=own_n, source='largest pool: own72 (rung <= 30) + rung30 web slice (cloze seed %d) + dev' % seed)
+    return mx
+
+
 def report(caps, paths, progs=True):
     """Rows over each cap (today's and the given one) and the longest value seen. Target 0 under the given caps."""
     over_today, over, seen, n = {k: 0 for k in TODAY}, {k: 0 for k in TODAY}, {k: 0 for k in TODAY}, 0

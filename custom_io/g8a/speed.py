@@ -2,7 +2,7 @@
 Prints seconds per update, torch.cuda.max_memory_allocated and, when an arm's peak passes --mem-gb (15), how many gradient-accumulation micro-batches
 make it fit (train.py --accum; still 256 rows per update). Then the hours and dollars each rung's schedule would take at those speeds.
 
-  python -m custom_io.g8a.speed --data WORK/data --out OUT [--rungs 3M 10M 30M] [--arms B2 PT LLM] [--updates 200] [--mem-gb 15] [--dph 0] [--public pythia31m smollm360]
+  python -m custom_io.g8a.speed --data WORK/data --out OUT [--rungs 3M 10M 30M] [--arms B2 PT LLM] [--updates 200] [--mem-gb 15] [--dph 0] [--public pythia31m]
 
 Rows: needs no web data. Half the rows (by count; 38% by word pieces) are real skills rows from DATA/train.jsonl, half are cloze rows made by g8a.cloze from
 pseudo-documents (concatenated skills prompts), so the row lengths and the copy-heavy cloze shape are those of the real pool; content does not matter for speed.
@@ -111,13 +111,18 @@ def main(argv=None):
     ap.add_argument('--max-accum', type=int, default=16)
     ap.add_argument('--dph', type=float, default=0.0, help='dollars per hour, for the cost lines only (0 = home GPU)')
     ap.add_argument('--seeds', type=int, default=6)
+    ap.add_argument('--caps', help='caps-global.json of the ladder (default: the worst cases measured on the old own72 + rung30 slice)')
     ap.add_argument('--device', default='auto')
     a = ap.parse_args(argv)
     device = torch.device('cuda' if a.device == 'auto' and torch.cuda.is_available() else 'cpu' if a.device == 'auto' else a.device)
     os.makedirs(a.out, exist_ok=True)
     rows = probe_rows(a.data)
-    caps = CP.compute_rows(rows)                    # sized from the probe rows, at least the spec's worst cases (cloze prompt 280, answers to 32 chars), as the real jobs size theirs
-    caps = CP.apply(dict(caps, max_prompt=max(caps['max_prompt'], 280), max_ans=max(caps['max_ans'], 32), n_reg=max(caps['n_reg'], 33)))
+    caps = CP.compute_rows(rows)                    # the probe rows' own longest cases, raised to the worst cases measured on the old own72 + rung30 web slice (or --caps FILE = the real global caps)
+    if a.caps:
+        caps = json.load(open(a.caps))
+    else:
+        caps = {k: max(caps[k], v) for k, v in dict(max_prompt=280, max_ans=35, n_num=91, w_max=208, n_res=11, n_reg=36, plain_target=109).items()}
+    caps = CP.apply(caps)
     b2_extra = dict(n_loops=CP.n_loops_needed(caps)) if CP.n_loops_needed(caps) > 8 else None
     mean_chars = sum(len(r['prompt']) + len(r['answer']) + 1 for r in rows) / len(rows)
     gpu = torch.cuda.get_device_name(0) if device.type == 'cuda' else str(device)

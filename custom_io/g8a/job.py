@@ -39,15 +39,53 @@ def emit(work_w, name):
     print('REND|' + name, flush=True)
 
 
-def get_caps(pdir, big_data=None):
-    """caps.json of a pool dir (computed once from its train.jsonl and dev/, plus the big-data dev when given): the model caps sized from the data."""
+def _locked(path, wait=30, stale=6 * 3600):
+    """O_EXCL lock file; returns when we hold it (the caller removes it)."""
+    while True:
+        try:
+            os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+            return
+        except FileExistsError:
+            if time.time() - os.path.getmtime(path) > stale:
+                os.remove(path)
+                continue
+            time.sleep(wait)
+
+
+def get_caps(a, pdir):
+    """The caps of the whole ladder (addendum F d: set once from the largest pool, the same at every rung), written to the pool dir beside a report of the rows
+    of THIS pool and the dev splits that any cap touches (target 0; a run with a touched row stops instead of cutting it)."""
     f = os.path.join(pdir, 'caps.json')
     if os.path.exists(f):
         return json.load(open(f))
-    paths = [os.path.join(pdir, 'train.jsonl'), os.path.join(pdir, 'dev')] + ([big_data] if big_data and os.path.isdir(big_data) else [])
-    caps = CP.compute(paths)
+    dev = [os.path.join(pdir, 'dev')] + ([a.big_data] if a.big_data and os.path.isdir(a.big_data) else [])
+    own72 = a.own72 or (os.path.join(a.data8a, 'own72') if a.data8a else None)
+    web30 = a.web30 or (os.path.join(a.data8a, 'web', 'slice_rung30.jsonl') if a.data8a else None)
+    if own72 and web30 and os.path.exists(web30) and a.scale == 1.0:
+        gf = os.path.join(a.work, 'caps-global.json')
+        _locked(gf + '.lock')
+        try:
+            if not os.path.exists(gf):
+                t = time.time()
+                caps = CP.compute_global(own72, web30, dev, a.max_ans)
+                caps['compute_s'] = round(time.time() - t)
+                json.dump(caps, open(gf, 'w'), indent=1)
+                print('global caps', json.dumps(caps), flush=True)
+            caps = json.load(open(gf))
+        finally:
+            os.remove(gf + '.lock')
+    else:       # dry run: the pool's own longest cases
+        caps = CP.compute([os.path.join(pdir, 'train.jsonl')] + dev)
+    paths = [os.path.join(pdir, 'train.jsonl')] + dev
+    rep = CP.report(caps, paths, progs=False)       # own rows' program steps were measured once in the global pass
+    rep_dev = CP.report(caps, dev, progs=True)
+    rep['rows_over_caps_dev_with_programs'] = rep_dev['rows_over_caps']
     json.dump(caps, open(f, 'w'))
-    json.dump(CP.report(caps, paths), open(os.path.join(pdir, 'caps_report.json'), 'w'), indent=1)
+    json.dump(rep, open(os.path.join(pdir, 'caps_report.json'), 'w'), indent=1)
+    bad = {k: max(rep['rows_over_caps'][k], rep_dev['rows_over_caps'][k]) for k in rep['rows_over_caps'] if rep['rows_over_caps'][k] or rep_dev['rows_over_caps'][k]}
+    if bad:
+        os.remove(f)
+        sys.exit('rows touch the global caps (a cap would cut them): ' + json.dumps(bad) + ' -> recompute caps-global.json from the larger pool')
     return caps
 
 
@@ -112,6 +150,7 @@ def main(argv=None):
     ap.add_argument('--data8a', help='get_data.py output dir (own72/ and web/); gives --own72 and --web')
     ap.add_argument('--own72', help='data_pool own72 dir (overrides --data8a)')
     ap.add_argument('--own-extra', nargs='*', default=[], help='without own72: more own-row files PATH:WEIGHT')
+    ap.add_argument('--web30', help='web slice of the 30M rung (default DATA8A/web/slice_rung30.jsonl): the global caps are sized from it')
     ap.add_argument('--web', help='web slice jsonl (default: DATA8A/web/slice_<rung slice>.jsonl)')
     ap.add_argument('--big-data')
     ap.add_argument('--arms', nargs='+', default=list(C.ARMS), choices=list(C.ARMS))
@@ -161,7 +200,7 @@ def main(argv=None):
                 sys.exit('the 8a data step refused to run: ' + open(os.path.join(a.data8a, 'REFUSED.txt')).read().strip())
             time.sleep(30)
     pdir, man = get_pool(a, base)
-    caps = get_caps(pdir, a.big_data)
+    caps = get_caps(a, pdir)
     CP.apply(caps)                                  # in this process too, so the parameter counts below include the sized position / place tables
     b2_extra = dict(b2_extra, n_loops=CP.n_loops_needed(caps)) if CP.n_loops_needed(caps) > 8 else b2_extra
     cfgs, counts = C.sizes(a.rung, b2_extra)

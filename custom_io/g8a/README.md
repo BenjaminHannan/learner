@@ -20,7 +20,7 @@ Trained sizes (default caps): 3M B2 3,302,481 (q33's) / PT and LLM 3,260,928; 10
 little (bigger position and place tables); box.json records both.
 
 ## On the PC
-Inputs (git checkouts under `WORK/8a-inputs/`): `data-pool` = branch `claude/data-pool-8b`, `own-data` = branch `claude/8a-own-data`. `WORK/data` and `WORK/data_big` are the
+Inputs (git checkouts under `WORK/8a-inputs/`): `data-pool` = branch `claude/data-pool-8b`, SPARSE (the branch is 2.2 GB; the rebuild needs only ~9 MB: `git clone --depth 1 --filter=blob:none --sparse --branch claude/data-pool-8b https://github.com/BenjaminHannan/learner data-pool` then `git -C data-pool sparse-checkout set data_pool/built data_pool/panels`, which also keeps the files directly in `data_pool/`), `own-data` = branch `claude/8a-own-data` (80 MB). `WORK/data` and `WORK/data_big` are the
 skills builds `local_runner setup` already makes.
 
     python -m custom_io.local_runner run --work WORK --queue custom_io\queue_local\45-pc-8a-speed.txt --device cuda --par 1 --busy C:\Users\benja\GPU-BUSY.txt

@@ -30,11 +30,10 @@ UPDATE_FLOOR = 24000        # addendum B1: every arm at every rung trains at lea
 OWN_SHARE, WEB_SHARE = 0.38, 0.62
 PUB_ARM = 'PUB'
 # 8A spec addendum A2 / A4: the public model of mark 5 (30M rung only), pinned by hub revision (resolved 2026-10-07 via huggingface.co/api/models/<id>).
-# letter reader -> pythia-31m; EGE -> SmolLM2-360M. Fine-tuned on the same question rows (no web fill-in rows), default lr 1e-4, batch 256, no calculator
+# letter reader at every rung (addendum F) -> pythia-31m only (SmolLM2-360M stays a report-only 8-shot on the Mac). Fine-tuned on the same question rows (no web fill-in rows), default lr 1e-4, batch 256, no calculator
 # (the `calc` variant is the same weights with exact results forced in, reported beside).
 PUBLIC = {
     'pythia31m': dict(hf_id='EleutherAI/pythia-31m', revision='e556ace21b489575e94e9d50b6dad2fcc7419679', lr=1e-4, batch=256),
-    'smollm360': dict(hf_id='HuggingFaceTB/SmolLM2-360M', revision='f8027fd0eaeea54caa13c31d31b9fdc459c38b49', lr=1e-4, batch=256),
 }
 BATCH, PLAIN_BAND, PLAIN_TRIM = 256, 0.02, 0.003
 
@@ -97,7 +96,7 @@ def plain_cfg(rung, b2=None, extra=None):
 def sizes(rung, b2_extra=None):
     """{'B2': cfg, 'PT': cfg, 'LLM': cfg} and the counts."""
     b2 = b2_cfg(rung, b2_extra)
-    pc = plain_cfg(rung, b2_cfg(rung))
+    pc = plain_cfg(rung, b2)           # matched to B2's actual count (n_loops raised by the caps included), within 2%
     cfgs = {B2_ARM: b2, PT_ARM: pc, LLM_ARM: dict(pc)}
     return cfgs, {a: n(MODEL_OF[a], c) for a, c in cfgs.items()}
 
