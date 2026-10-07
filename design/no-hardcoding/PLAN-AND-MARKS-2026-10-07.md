@@ -49,6 +49,17 @@ Every rung is one change on top of the previous rung, paired by seed. Recipe as 
 - **Saved outputs:** every rung saves per-row dev predictions for all 6 dev splits (`evaluate(..., return_preds=True)`) and exports its checkpoint, because the link checks below need both.
 - **Scores:** pooled-5 (in_dist, answer, frame, vocab, variant; 6,040 rows) and chain-5 (1,000 rows), as in `REPORT.md`. "Zero-round" and "donor" leak checks use T1's own definitions, which the build thread fixes before T1's first run (for example: zero thinker rounds on every turn with the tool live; donor state on every turn).
 
+- **Nothing is cut off (Ben, 2:04 PM ET 10-07: "I don't think you should have it cut off long answers"; standing rule):** no training target in any arm (B2, T1 and later rungs, C0, the growth-ladder arms, the LLM-recipe baselines) is truncated or falls back to answer-only. Every remaining length or count limit is listed below with the rows it touches; a new limit that touches a training row is a bug to fix, not a setting.
+
+| Limit (shown in code at 2b1cbd4d7b) | Where | Rows touched | Status |
+|---|---|---|---|
+| Worked steps only if steps + answer <= 64 chars, else answer-only | `plain_tf_steps.py:21, 27` | 840 var_chain train rows | C0 raises it to 107 (longest on train): none left. Runs tonight |
+| At most 7 program steps, else no program at all | `progparse.py:8, 199` (N_RES); B2's 7 result slots; T1's 7 calls | 528 train rows (list_stats, 9-11 steps) | K1 lifts it to 16 for T1. B2 itself keeps it: the growth-ladder B2 arms should size N_RES to the longest program on train |
+| Answers of at most 8 chars | `data.py:11, 116` (MAX_ANS); B2's 8 GEN registers (`ledger.py:63`) | Train: none (asserted). Dev: the "family" split (not in pooled-5) has answers up to 12 chars, cut to 8 and unanswerable | B3's writer cap is 48. Growth-ladder arms set the answer cap to the longest answer in their data |
+| First 16 numbers per question get slots | `progparse.py:8, 18` (N_NUM) | to be counted by the build thread | N1 removes the slots |
+| First 64 words can be pointed at | `progparse.py:8`, `ledger.py:209` (W_MAX) | to be counted | O1 removes word pointing |
+| Questions of at most 208 chars | `data.py:11, 107` (MAX_PROMPT) | Train: none (asserted; the data was built to fit) | Growth-ladder arms with web text size it to their data |
+
 | Rung | One change | Removes (INVENTORY ids) | Depends on | Owner of spec |
 |---|---|---|---|---|
 | D0 | no training: can the reader carry digits, can the talker copy them; plus Amendment 1's control (the same probe on a reader trained for digits only) | none (diagnosis) | B2 checkpoints | architecture thread, sealed |
