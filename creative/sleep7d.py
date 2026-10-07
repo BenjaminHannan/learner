@@ -654,14 +654,38 @@ def s3_measures(dev_per, fresh_per):
         n_right=dict(dev=sum(d['right'] for d in dev_per), practised=sum(d['right'] for d in fresh_per)))
 
 
+def w1_tries_from_day(day_path, key, N, pool, vocab, device, seed, T, n1, n2):
+    """W1's search tries taken from S1's day on the same parent (roadmap ruling b69b136446): that day is N' with an untrained adapter (= N'), job 8's search at the same T, n1, n2
+    and seed, run on the rows whose greedy try fails the check. The rows whose greedy try passes got no samples there, so they get job 8's two-pass search here (seed + 2000),
+    as job 8 gives every pool row. -> (tries per pool row, fit1, fit, drawn, note) or None when the day's key differs."""
+    c = pickle.load(open(day_path, 'rb'))
+    if c['key'] != key:
+        return None
+    d = c['day']
+    tries, fit1 = [None] * len(pool), [False] * len(pool)
+    for i in d['stuck']:
+        tries[i], fit1[i] = list(d['tries'][i]), d['fit1'][i]
+    rest = [i for i in range(len(pool)) if tries[i] is None]
+    extra = dict(pass1=0, pass2=0, stuck_questions=0)
+    if rest:
+        t2, f1, _, extra = search(N, [pool[i] for i in rest], vocab, device, seed + 2000, T, n1, n2)
+        for i, t, f in zip(rest, t2, f1):
+            tries[i], fit1[i] = t, f
+    fit = has_fit(pool, tries)
+    drawn = dict(pass1=d['drawn']['pass1'] + extra['pass1'], pass2=d['drawn']['pass2'] + extra['pass2'], stuck_questions=d['drawn']['pass2_rows'] + extra['stuck_questions'])
+    note = f'from S1 day {day_path} ({len(d["stuck"])} rows); {len(rest)} greedy-passing rows searched here (seed {seed + 2000})'
+    return tries, fit1, fit, drawn, note
+
+
 def s3_parent(nprime, out, skills_train=None, skills_data=None, pool_limit=None, dev_limit=None, n1=32, n2=480, seed=0, T=T_POOL, lr=1e-3, visits=32, replay_n=None, device='cpu',
-              name=None, resume=True, log=_log, allres=None):
-    """One parent's S3. After every stage DIR/s3.json (all parents so far, `allres`) and DIR/<name>/s3.json are written; W1 is cached (DIR/<name>/W1.pt) when the same arguments come back."""
+              name=None, resume=True, log=_log, allres=None, day_from=None):
+    """One parent's S3. After every stage DIR/s3.json (all parents so far, `allres`) and DIR/<name>/s3.json are written; W1 is cached (DIR/<name>/W1.pt) when the same arguments come back.
+    day_from = an S1 output dir: W1's records come from S1's day on this parent when its key matches (else W1 runs its own search; s3.json says which)."""
     name = name or os.path.basename(os.path.dirname(os.path.abspath(nprime)))
     pdir = os.path.join(out, name)
     os.makedirs(pdir, exist_ok=True)
     t00, secs = time.time(), {}
-    args = dict(pool_limit=pool_limit, dev_limit=dev_limit, n1=n1, n2=n2, lr=lr, visits=visits, replay_n=replay_n)
+    args = dict(pool_limit=pool_limit, dev_limit=dev_limit, n1=n1, n2=n2, lr=lr, visits=visits, replay_n=replay_n, day_from=day_from)
     res = dict(nprime=nprime, name=name, seed=seed, T=T, spec=__doc__.split('\n')[0], args=args,
                note='C2 DEV and C2 pool only; test / labelled never opened; no kind label and no key touches an allocation or a record (the example check only)')
     allres = {} if allres is None else allres
@@ -685,10 +709,19 @@ def s3_parent(nprime, out, skills_train=None, skills_data=None, pool_limit=None,
         log('W1: loaded', wpath)
     else:
         t0 = time.time()
-        tries, fit1, fit, drawn = search(N, pool, vocab, device, seed + 10, T, n1, n2)
+        got, source = None, 'own search (seed %d)' % (seed + 10)
+        dp = os.path.join(day_from, name, 'day.pkl') if day_from else None
+        if dp and os.path.exists(dp):
+            got = w1_tries_from_day(dp, (os.path.abspath(nprime), pool_limit, n1, n2, seed, T), N, pool, vocab, device, seed, T, n1, n2)
+            if got is None:
+                source = 'own search (seed %d): S1 day key differs' % (seed + 10)
+        if got is not None:
+            tries, fit1, fit, drawn, source = got
+        else:
+            tries, fit1, fit, drawn = search(N, pool, vocab, device, seed + 10, T, n1, n2)
         recs, counts = w_records(pool, tries, seed + 1)
         kind_of = {r['id']: r['kind'] for r in pool}
-        info = dict(samples=drawn, records=len(recs), records_by_kind={k: sum(c for i, c in counts.items() if kind_of[i] == k) for k in sorted(set(kind_of.values()))},
+        info = dict(source=source, samples=drawn, records=len(recs), records_by_kind={k: sum(c for i, c in counts.items() if kind_of[i] == k) for k in sorted(set(kind_of.values()))},
                     pool_with_fit_pass1=sum(fit1), pool_with_fit_final=sum(fit))
         log('W1 search', info)
         secs['W1_search'] = time.time() - t0
@@ -790,6 +823,7 @@ if __name__ == '__main__':
             s.add_argument('--kl', type=float, default=0.1)
         else:
             s.add_argument('--skills-train'); s.add_argument('--skills-data'); s.add_argument('--replay-n', type=int)
+            s.add_argument('--day-from', help="an S1 output dir: W1's search tries come from S1's day on the same parent when its key matches")
     a = a.parse_args()
     if a.threads:
         torch.set_num_threads(a.threads)
@@ -798,4 +832,4 @@ if __name__ == '__main__':
            knew_dir=a.knew, resume=not a.no_resume)
     else:
         s3(a.nprime, a.out, skills_train=a.skills_train, skills_data=a.skills_data, pool_limit=a.pool_limit, dev_limit=a.dev_limit, n1=a.n1, n2=a.n2, seed=a.seed,
-           replay_n=a.replay_n, device=a.device, resume=not a.no_resume)
+           replay_n=a.replay_n, device=a.device, resume=not a.no_resume, day_from=os.path.expanduser(a.day_from) if a.day_from else None)

@@ -145,6 +145,9 @@ def blind_conditions(rows, workers=2, cache=None):
         ix = [i for i, r in enumerate(rows) if r['kind'] == k]
         out['by_kind'][k]['fit_within_32_examined'] = sum(any(e <= BLIND_GUESSES for e, _ in fits[i]) for i in ix) / len(ix)
         out['by_kind'][k]['right_within_32_examined'] = sum(any(e <= BLIND_GUESSES and ok for e, ok in fits[i]) for i in ix) / len(ix)
+        first = sorted(next((e for e, ok in fits[i] if ok), None) for i in ix if any(ok for _, ok in fits[i]))
+        out['by_kind'][k]['examined_to_first_right'] = dict(share_with_right_fit=len(first) / len(ix), median=first[len(first) // 2] if first else None,
+                                                          mean=sum(first) / len(first) if first else None, min=first[0] if first else None, max=first[-1] if first else None)
     return out
 
 
