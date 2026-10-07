@@ -1,10 +1,15 @@
 # Gain tests U0, C0 and W1 (PASS-MARKS.md addenda 18-20)
 
-## U0: NOT JUDGED
+## U0: Letters fine: no evidence word pieces help at this size
 
 U0 word pieces (BPE prompt) minus letters, plain_tf_steps.
 
-- missing or invalid: {"200": ["U0 missing"], "201": ["U0 missing"]}
+- pooled-5 U0 - letters: {"200": -3.1291390728476856, "201": -5.364238410596023}
+- cipher_map rows of 120: {"200": {"U0": 90, "letters": 95}, "201": {"U0": 57, "letters": 59}}
+- prediction proved wrong: True ({"U0": 73.5, "letters": 77.0, "drop": 3.5})
+- split changes (2-seed mean): {"in_dist": -1.397058823529413, "answer": -3.0416666666666643, "frame": -10.845588235294116, "vocab": -6.5625, "variant": -0.07575757575757613, "family": 1.25}
+- arithmetic families (2-seed mean): {"arith_bare": 3.125, "div_exact": -2.0, "story_addsub": -1.25, "distance_units": 0.25, "chain_ops": 1.5, "chain_story2": 0.25, "story_chain3": -1.25, "var_chain": -5.9375, "state_update": -2.0, "percent_rate": 1.0}
+- calculator on: {"d_pooled5": {"200": -3.1788079470198767, "201": -5.413907284768207}, "chain5": {"200": {"U0": 96.6, "letters": 96.4}, "201": {"U0": 96.6, "letters": 96.4}}}
 
 ## C0: prediction shown; C0 replaces plain_tf_steps as the yardstick; +6.9 claim stands
 
