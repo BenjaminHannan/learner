@@ -1,0 +1,24 @@
+diff --git a/creative/rl/method.py b/creative/rl/method.py
+index d727db78a..abf274d22 100644
+--- a/creative/rl/method.py
++++ b/creative/rl/method.py
+@@ -8,7 +8,7 @@ the mix of rules stays the pool's), and the fine-tune runs at batch 1024 for abo
+ """
+ from creative import fastsleep as fs, fewshot
+ from creative import nightchain as NC
+-from creative.rl.m import fast, replay
++from creative.rl.m import fast
+ 
+ 
+ def chain_records(W, pool):
+@@ -27,8 +27,7 @@ def chain_records(W, pool):
+ def train(ctx):
+     W = ctx.night()
+     C = chain_records(W, ctx.pool)
+-    recs = W + C + replay.replay_per_record(W + C, 3, ctx.seed)
+     N = ctx.N
+-    fast.prefill(N, recs + ctx.replay)
+-    m, _ = fs.m_ft(N, recs, ctx.replay, ctx.vocab, ctx.device, len(recs), lr=1e-3, visits=40, seed=ctx.seed, batch=1024)
++    fast.prefill(N, W + C + ctx.replay)
++    m, _ = fs.m_ft(N, W + C, ctx.replay, ctx.vocab, ctx.device, len(W + C), lr=1e-3, visits=160, seed=ctx.seed, batch=1024)
+     return m

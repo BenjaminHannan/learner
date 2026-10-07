@@ -1,0 +1,19 @@
+diff --git a/creative/rl/method.py b/creative/rl/method.py
+index d727db78a..ca04db98d 100644
+--- a/creative/rl/method.py
++++ b/creative/rl/method.py
+@@ -5,6 +5,7 @@ that fits the 3 examples), fine-tuned with job 6's settings and job 6's number o
+ Trial H3 (tune): 48 visits per W record instead of 16 (3x the updates; the reader's place ids are pre-filled with numpy for speed, same values).
+ Trial H14 (bold): a much bigger sleep. Every W and chain record also gets 3 replayed prompts (its program run on fresh inputs, generic filters only, so
+ the mix of rules stays the pool's), and the fine-tune runs at batch 1024 for about 9x the record rows of H3 (40 visits per record).
++Trial 6 (tune): 80 visits per record (2x the updates).
+ """
+ from creative import fastsleep as fs, fewshot
+ from creative import nightchain as NC
+@@ -30,5 +31,5 @@ def train(ctx):
+     recs = W + C + replay.replay_per_record(W + C, 3, ctx.seed)
+     N = ctx.N
+     fast.prefill(N, recs + ctx.replay)
+-    m, _ = fs.m_ft(N, recs, ctx.replay, ctx.vocab, ctx.device, len(recs), lr=1e-3, visits=40, seed=ctx.seed, batch=1024)
++    m, _ = fs.m_ft(N, recs, ctx.replay, ctx.vocab, ctx.device, len(recs), lr=1e-3, visits=80, seed=ctx.seed, batch=1024)
+     return m

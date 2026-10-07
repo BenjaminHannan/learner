@@ -1,0 +1,47 @@
+diff --git a/creative/rl/m/replay.py b/creative/rl/m/replay.py
+index d2bf77e2c..b12e1a1e3 100644
+--- a/creative/rl/m/replay.py
++++ b/creative/rl/m/replay.py
+@@ -61,3 +61,21 @@ def replay_per_record(records, k, seed, inputs, lo, hi, arm='Y', tries=40):
+             out.append(fewshot._record(row, t, arm, len(out)))
+             made += 1
+     return out
++
++
++def top_up(records, m_min, seed, inputs, lo, hi, arm='Z', tries=40):
++    """Fresh prompts for every distinct found program with fewer than m_min records, up to m_min (rarely found rules get more example sets)."""
++    rng = random.Random(f'topup|{seed}')
++    count, first = {}, {}
++    for r in records:
++        tf = P.train_form(fewshot.record_try(r))
++        if tf is None:
++            continue
++        key = (tuple(tf[0]), tf[1])
++        count[key] = count.get(key, 0) + 1
++        first.setdefault(key, r)
++    out = []
++    for key, n in count.items():
++        r = first[key]
++        out += replay_per_record([r], m_min - n, f'{seed}|{len(out)}', inputs, lo, hi, arm=arm, tries=tries) if n < m_min else []
++    return out
+diff --git a/creative/rl/method.py b/creative/rl/method.py
+index 4cb87b916..e0e4b261d 100644
+--- a/creative/rl/method.py
++++ b/creative/rl/method.py
+@@ -8,6 +8,8 @@ Segment 2 (compliant base): the same sleep, with
+   - the night run by the model itself at a temperature it picks from its own tries (m/selfnight.py), instead of the cached DEV-tuned night;
+   - replay inputs, output range and prompt text taken from the day's questions (m/replay.py).
+ Chain search (two stored programs chained to fit the examples) and the executor are tools the sleep calls itself.
++Trial (combine, segment 1's near-miss #5): every distinct found program with fewer than 32 records gets replayed prompts up to 32, so rarely found
++rules (mostly a*x+b) are not drowned out; at 80 visits the common rules should no longer pay for it.
+ """
+ from creative import fastsleep as fs, fewshot
+ from creative import nightchain as NC
+@@ -34,6 +36,7 @@ def train(ctx):
+     C = chain_records(W, ctx.pool)
+     inputs, lo, hi = replay.experience(ctx.pool)
+     recs = W + C + replay.replay_per_record(W + C, 3, ctx.seed, inputs, lo, hi)
++    recs += replay.top_up(recs, 32, ctx.seed, inputs, lo, hi)
+     fast.prefill(N, recs)
+     m, _ = fs.m_ft(N, recs, ctx.replay, ctx.vocab, ctx.device, len(recs), lr=1e-3, visits=80, seed=ctx.seed, batch=1024)
+     return m

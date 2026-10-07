@@ -1,0 +1,52 @@
+diff --git a/creative/rl/m/night2.py b/creative/rl/m/night2.py
+new file mode 100644
+index 000000000..9b49cf95f
+--- /dev/null
++++ b/creative/rl/m/night2.py
+@@ -0,0 +1,17 @@
++"""Second night (expert iteration round 2): the slept model tries every pool question again; tries that fit all 3 examples become new records."""
++import random
++from creative import fewshot, legal
++
++
++def night_records(m, ctx, n=32, temperature=1.0, per_cap=2, arm='W2'):
++    m.eval()
++    rows = [dict(r, answer='0') for r in ctx.pool]          # make_batch wants an answer field; sampling never reads it (not the key)
++    smp = legal.raw_samples(m, rows, ctx.vocab, ctx.device, n=n, temperature=temperature, level=0, seed=ctx.seed + 17)
++    rng = random.Random(f'night2|{ctx.seed}')
++    out = []
++    for row, tr in zip(ctx.pool, smp):
++        p = fewshot.parse(row['prompt'])
++        for k, t in enumerate(fewshot._distinct(p, tr, rng, per_cap, lambda rules, full: full[0] == 'accept')):
++            out.append(fewshot._record(dict(row), t, arm, k))
++    m.train()
++    return out
+diff --git a/creative/rl/method.py b/creative/rl/method.py
+index ca04db98d..3f80ab3df 100644
+--- a/creative/rl/method.py
++++ b/creative/rl/method.py
+@@ -6,10 +6,13 @@ Trial H3 (tune): 48 visits per W record instead of 16 (3x the updates; the reade
+ Trial H14 (bold): a much bigger sleep. Every W and chain record also gets 3 replayed prompts (its program run on fresh inputs, generic filters only, so
+ the mix of rules stays the pool's), and the fine-tune runs at batch 1024 for about 9x the record rows of H3 (40 visits per record).
+ Trial 6 (tune): 80 visits per record (2x the updates).
++Trial H6 (bold): a second night. The slept model tries every pool question 32 times (temperature 1); tries that fit all 3 examples become new
++records (W2, up to 2 per question) with 3 replayed prompts each, and a second, shorter fine-tune (20 visits, lr 5e-4) continues from the slept model on
++everything. Expert iteration: the model's own successful programs, in its own style, turn its 32-try successes into first tries.
+ """
+ from creative import fastsleep as fs, fewshot
+ from creative import nightchain as NC
+-from creative.rl.m import fast, replay
++from creative.rl.m import fast, night2, replay
+ 
+ 
+ def chain_records(W, pool):
+@@ -32,4 +35,8 @@ def train(ctx):
+     N = ctx.N
+     fast.prefill(N, recs + ctx.replay)
+     m, _ = fs.m_ft(N, recs, ctx.replay, ctx.vocab, ctx.device, len(recs), lr=1e-3, visits=80, seed=ctx.seed, batch=1024)
+-    return m
++    W2 = night2.night_records(m, ctx, n=32, temperature=1.0)
++    recs2 = recs + W2 + replay.replay_per_record(W2, 3, ctx.seed)
++    fast.prefill(m, recs2)
++    m2, _ = fs.m_ft(m, recs2, ctx.replay, ctx.vocab, ctx.device, len(recs2), lr=5e-4, visits=20, seed=ctx.seed + 1, batch=1024)
++    return m2

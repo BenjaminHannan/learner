@@ -1,0 +1,60 @@
+diff --git a/creative/rl/m/replay.py b/creative/rl/m/replay.py
+index 0af8564b2..a5dcb8758 100644
+--- a/creative/rl/m/replay.py
++++ b/creative/rl/m/replay.py
+@@ -76,3 +76,34 @@ def replay_per_record(records, k, seed, arm='Y', tries=40):
+             out.append(fewshot._record(row, t, arm, len(out)))
+             made += 1
+     return out
++
++
++def top_up(records, m_min, seed, arm='Z', tries=40):
++    """Fresh prompts for every distinct found program that has fewer than m_min records, up to m_min (rules seen rarely get more example sets)."""
++    rng = random.Random(f'topup|{seed}')
++    count, first = {}, {}
++    for r in records:
++        tf = P.train_form(fewshot.record_try(r))
++        if tf is None:
++            continue
++        key = (tuple(tf[0]), tf[1])
++        count[key] = count.get(key, 0) + 1
++        first.setdefault(key, (tf, r['id']))
++    out = []
++    for key, n in count.items():
++        tf, src = first[key]
++        t = P.Try.make(*tf)
++        need, made = m_min - n, 0
++        for _ in range(tries * max(need, 0)):
++            if made >= need:
++                break
++            xs = rng.sample(DOMAIN, 4)
++            ys = [_value(t, x) for x in xs]
++            if None in ys or min(ys) < 0 or len(set(ys)) == 1 or any(y in CONST_VALUES for y in ys[:3]) or max(ys) >= 10 ** 6:
++                continue
++            row = {'id': f'{src}:t{made}', 'prompt': prompt_of(xs[:3], ys[:3], xs[3])}
++            if not fewshot.structure(fewshot.parse(row['prompt']), t)[0]:
++                continue
++            out.append(fewshot._record(row, t, arm, len(out)))
++            made += 1
++    return out
+diff --git a/creative/rl/method.py b/creative/rl/method.py
+index d727db78a..b9733d8f0 100644
+--- a/creative/rl/method.py
++++ b/creative/rl/method.py
+@@ -5,6 +5,8 @@ that fits the 3 examples), fine-tuned with job 6's settings and job 6's number o
+ Trial H3 (tune): 48 visits per W record instead of 16 (3x the updates; the reader's place ids are pre-filled with numpy for speed, same values).
+ Trial H14 (bold): a much bigger sleep. Every W and chain record also gets 3 replayed prompts (its program run on fresh inputs, generic filters only, so
+ the mix of rules stays the pool's), and the fine-tune runs at batch 1024 for about 9x the record rows of H3 (40 visits per record).
++Trial 5 (combine trial 1 with H14): every distinct found program with fewer than 32 records gets fresh replayed prompts up to 32, so rarely found rules
++are not drowned out (trial 1's per-program balance, without starving the common rules).
+ """
+ from creative import fastsleep as fs, fewshot
+ from creative import nightchain as NC
+@@ -28,6 +30,7 @@ def train(ctx):
+     W = ctx.night()
+     C = chain_records(W, ctx.pool)
+     recs = W + C + replay.replay_per_record(W + C, 3, ctx.seed)
++    recs += replay.top_up(recs, 32, ctx.seed)
+     N = ctx.N
+     fast.prefill(N, recs + ctx.replay)
+     m, _ = fs.m_ft(N, recs, ctx.replay, ctx.vocab, ctx.device, len(recs), lr=1e-3, visits=40, seed=ctx.seed, batch=1024)

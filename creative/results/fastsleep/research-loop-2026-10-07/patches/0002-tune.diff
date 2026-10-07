@@ -1,0 +1,52 @@
+diff --git a/creative/rl/m/fast.py b/creative/rl/m/fast.py
+new file mode 100644
+index 000000000..03773aa3c
+--- /dev/null
++++ b/creative/rl/m/fast.py
+@@ -0,0 +1,21 @@
++"""Speed only, no change to what is computed: fill the reader's per-prompt place-id cache with numpy instead of the reader's own per-row torch calls.
++The values are the same as custom_io.models.reader.place_ids (integer bookkeeping, zero FLOPs either way); under the eval's FLOP counter each tiny torch
++call costs Python dispatch time, and those calls were about two thirds of a fine-tune update's wall time."""
++import numpy as np
++from custom_io.data import word_spans
++from custom_io.models.reader import PLACE_NONE
++
++
++def place_row(p):
++    v = np.full(len(p), PLACE_NONE, np.int8)
++    for a, e in word_spans(p):
++        v[a:e] = np.minimum(np.arange(e - a - 1, -1, -1), PLACE_NONE - 1)
++    return v
++
++
++def prefill(m, rows):
++    cache = m.reader._cache
++    for r in rows:
++        p = r['prompt']
++        if p not in cache:
++            cache[p] = place_row(p)
+diff --git a/creative/rl/method.py b/creative/rl/method.py
+index 3108124bb..33763b69c 100644
+--- a/creative/rl/method.py
++++ b/creative/rl/method.py
+@@ -2,9 +2,11 @@
+ 
+ Start (10-07): the fast-sleep pilot BC. The night's W, plus chain records for the pool questions W missed (shortest P2(P1(x)) of two library programs
+ that fits the 3 examples), fine-tuned with job 6's settings and job 6's number of updates.
++Trial H3 (tune): 48 visits per W record instead of 16 (3x the updates; the reader's place ids are pre-filled with numpy for speed, same values).
+ """
+ from creative import fastsleep as fs, fewshot
+ from creative import nightchain as NC
++from creative.rl.m import fast
+ 
+ 
+ def chain_records(W, pool):
+@@ -23,5 +25,7 @@ def chain_records(W, pool):
+ def train(ctx):
+     W = ctx.night()
+     C = chain_records(W, ctx.pool)
+-    m, _ = fs.m_ft(ctx.N, W + C, ctx.replay, ctx.vocab, ctx.device, len(W), lr=1e-3, visits=16, seed=ctx.seed)
++    N = ctx.N
++    fast.prefill(N, W + C + ctx.replay)
++    m, _ = fs.m_ft(N, W + C, ctx.replay, ctx.vocab, ctx.device, len(W), lr=1e-3, visits=48, seed=ctx.seed)
+     return m

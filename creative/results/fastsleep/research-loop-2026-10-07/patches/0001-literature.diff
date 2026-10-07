@@ -1,0 +1,116 @@
+diff --git a/creative/rl/m/fast.py b/creative/rl/m/fast.py
+new file mode 100644
+index 000000000..03773aa3c
+--- /dev/null
++++ b/creative/rl/m/fast.py
+@@ -0,0 +1,21 @@
++"""Speed only, no change to what is computed: fill the reader's per-prompt place-id cache with numpy instead of the reader's own per-row torch calls.
++The values are the same as custom_io.models.reader.place_ids (integer bookkeeping, zero FLOPs either way); under the eval's FLOP counter each tiny torch
++call costs Python dispatch time, and those calls were about two thirds of a fine-tune update's wall time."""
++import numpy as np
++from custom_io.data import word_spans
++from custom_io.models.reader import PLACE_NONE
++
++
++def place_row(p):
++    v = np.full(len(p), PLACE_NONE, np.int8)
++    for a, e in word_spans(p):
++        v[a:e] = np.minimum(np.arange(e - a - 1, -1, -1), PLACE_NONE - 1)
++    return v
++
++
++def prefill(m, rows):
++    cache = m.reader._cache
++    for r in rows:
++        p = r['prompt']
++        if p not in cache:
++            cache[p] = place_row(p)
+diff --git a/creative/rl/m/replay.py b/creative/rl/m/replay.py
+new file mode 100644
+index 000000000..bf594a241
+--- /dev/null
++++ b/creative/rl/m/replay.py
+@@ -0,0 +1,52 @@
++"""Execution replay (H1): run each found program on fresh inputs to make new prompts of the same rule. Generic filters only: the program runs, its
++output depends on x, outputs are non-negative, and no shown number equals a constant slot (C2's prompt format). No rule table is consulted."""
++import random
++from creative import fewshot
++from creative import programs as P
++from creative.rules_real import DOMAIN, prompt_of
++
++X = 6
++CONST_VALUES = (1, 2, 10, 100)
++
++
++def _value(t, x):
++    nums = [0] * P.N_NUM
++    nums[X] = x
++    vals, valid = P.run(nums, t)
++    return vals[t.ans] if valid[t.ans] else None
++
++
++def programs_of(records):
++    """Distinct found programs (train form) with the source question of their first record."""
++    seen, out = set(), []
++    for r in records:
++        tf = P.train_form(fewshot.record_try(r))
++        if tf is None:
++            continue
++        key = (tuple(tf[0]), tf[1])
++        if key not in seen:
++            seen.add(key)
++            out.append((tf, r.get('source', r['id'])))
++    return out
++
++
++def replay_records(records, k, seed, arm='X', tries=40):
++    rng = random.Random(f'replay|{seed}')
++    out = []
++    for tf, src in programs_of(records):
++        t = P.Try.make(*tf)
++        made = 0
++        for _ in range(tries * k):
++            if made >= k:
++                break
++            xs = rng.sample(DOMAIN, 4)
++            ys = [_value(t, x) for x in xs]
++            if None in ys or min(ys) < 0 or len(set(ys)) == 1 or any(y in CONST_VALUES for y in ys[:3]) or max(ys) >= 10 ** 6:
++                continue
++            row = {'id': f'{src}:{made}', 'prompt': prompt_of(xs[:3], ys[:3], xs[3])}
++            p = fewshot.parse(row['prompt'])
++            if not fewshot.structure(p, t)[0]:
++                continue
++            out.append(fewshot._record(row, t, arm, len(out)))
++            made += 1
++    return out
+diff --git a/creative/rl/method.py b/creative/rl/method.py
+index 3108124bb..7077c7d17 100644
+--- a/creative/rl/method.py
++++ b/creative/rl/method.py
+@@ -2,9 +2,15 @@
+ 
+ Start (10-07): the fast-sleep pilot BC. The night's W, plus chain records for the pool questions W missed (shortest P2(P1(x)) of two library programs
+ that fits the 3 examples), fine-tuned with job 6's settings and job 6's number of updates.
++Trial H1: execution replay. Each distinct program found (W + chain) is run on fresh inputs to make new prompts of the same rule (generic filters only),
++so every found rule is seen with many example sets; the fine-tune keeps 16 visits per record over the larger set (batch 512 for speed; the reader's
++place ids are pre-filled with numpy, same values, see m/fast.py).
+ """
+ from creative import fastsleep as fs, fewshot
+ from creative import nightchain as NC
++from creative.rl.m import fast, replay
++
++REPLAY_K = 24
+ 
+ 
+ def chain_records(W, pool):
+@@ -23,5 +29,9 @@ def chain_records(W, pool):
+ def train(ctx):
+     W = ctx.night()
+     C = chain_records(W, ctx.pool)
+-    m, _ = fs.m_ft(ctx.N, W + C, ctx.replay, ctx.vocab, ctx.device, len(W), lr=1e-3, visits=16, seed=ctx.seed)
++    X = replay.replay_records(W + C, REPLAY_K, ctx.seed)
++    recs = W + C + X
++    N = ctx.N
++    fast.prefill(N, recs + ctx.replay)
++    m, _ = fs.m_ft(N, recs, ctx.replay, ctx.vocab, ctx.device, len(recs), lr=1e-3, visits=16, seed=ctx.seed, batch=512)
+     return m
