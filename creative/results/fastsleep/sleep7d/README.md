@@ -31,6 +31,24 @@ How to read it:
 - *Caveat:* the setting was picked on the same C2 DEV questions it is measured on, with different samples. The pick beat 5 other settings by a wide margin on s100, but tied with lr 1e-3 / 2 passes on s101. The pick can inflate C a little, and S (trained at the same setting) does not cancel that inflation.
 - Wording, per the ruling: "finds answers faster on the kinds it was stuck on", never "more creative in general".
 
-## S3
+## S3 (finished 04:42 UTC 10-08 = 12:42 AM ET)
 
-Pending (`s3/`).
+W1 is one C2b W night from N'. Its search tries come from S1's day on the same parent; the few rows where the greedy try passed get their own search. W1 then has a day on the pool. P sleeps on its shaky passes, the questions where the greedy try fits and 1-7 of 8 samples at T=1 fit (255 and 228 records). Z is the control: the same dose, made of a seeded half-skills, half-warm-row draw. All three arms get the same sleep replay. Next day: greedy first try on C2 DEV (256 q) and on 256 fresh practised (add/mult) rows, plus the skills check.
+
+| | s100 | s101 |
+|---|---|---|
+| stuck rate (C2 DEV greedy fails the check): W1 / P / Z | 68.4 / 66.0 / 98.0 | 65.6 / 62.9 / 89.5 |
+| **Z - P** (mark >= +3) | **+32.0** [26.2, 37.9] pass | **+26.6** [21.1, 32.4] pass |
+| first try right P - Z: near-copy / multi-step / practised (mark: none below -2) | +71.6 / +5.2 / **-10.2** fail | +59.8 / +4.5 / **-7.0** fail |
+| skills harm vs W1 (mark <= 2): P / Z | 0.2 pass / 0.8 | **3.1** fail / 3.1 |
+| P - W1 (no mark): stuck / multi-step first try / pooled DEV first try | -2.3 / +2.6 / +2.3 | -2.7 / +2.6 / +2.7 |
+| written steps per right answer, DEV: W1 / P / Z | 1.51 / 1.76 / 1.60 | 1.16 / 1.22 / 1.52 |
+
+Verdict: **S3 fails as written.** The groups mark fails on both parents, and harm fails on s101. It is not proved wrong, because the lower end of Z - P is far above +1.
+
+How to read it:
+- *Shown:* the control Z is not a "no practice" control. It makes the worker forget C2: near-copy first try falls from 74-81% (W1) to 4-25%. Most of Z - P is the forgetting P avoids, not something P learns. The stuck pass therefore does not show that practice helps.
+- *Suggested (points only, no interval: per-row next-day scores and the P/Z models were not kept):* P against W1 is about -2.5 stuck and +2.6 multi-step first try on both parents. That is short of a -3 bar if the bar were measured against W1.
+- *Shown:* Z beats P on the practised add/mult rows (85% vs 75% and 86% vs 79%) because Z trains on warm rows. That is why the groups mark fails.
+- *Shown:* the s101 harm (3.1) is the same for P and Z, so it comes from a second night on top of W1, not from practising.
+- *Not shown:* "faster". Written steps per right answer go up a little with P, because P gets more multi-step rows right.
