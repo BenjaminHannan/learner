@@ -1316,13 +1316,46 @@ first two points together: does a creative part that learns from its successes h
 - Changed 10-08 after S3', before J was built: loop 3 dropped from J; mark 5 measured against W, because S3' showed
   that any second night on s101 costs skills in both arms, which is not loop 1's doing.
 
+- **J result (fast-sleep 73ab733c7, finished 6:55 AM ET 10-08; DEV, two parents, no repair): FAIL, not proved wrong.**
+  Night 1 shared (J's night-1 add-on = S1's C exactly).
+  - Mark 1, stuck W - J: +7.8 [3.1, 12.9] and +1.2 [-2.3, 5.1] (fails on s101).
+  - Mark 2, creative reach@32 J - W: -6.3 [-10.9, -1.6] and +0.4 [-3.1, 4.3] (fails on both).
+  - Mark 3, new-kind reach@512 J - W: -2.1 [-6.3, 2.1] and +2.1 [-1.6, 6.3] (fails on s100).
+  - Mark 4, C2 first try J - W: +7.8 [3.1, 12.9] and +1.6 [-2.0, 5.1] (passes).
+  - Mark 5, harm J vs W: passes on s100; fails on s101 (word_filter fires). Against N' both arms lose 3.1-3.8 in_dist
+    with 7-9 families firing.
+- **Ruled:**
+  - The fail stands. Shown: the add-on trained against one worker does not survive that worker's sleep. On day 2
+    its 32 tries on W1 found fewer fits than plain sampling (506 vs 566 and 548 vs 586 pool questions), and after
+    night 2 its gain was gone (-6.3 and +0.4, against S1's +16 to +18 on N'). Most of the loss is sq_plus.
+  - Suggested, s100 only: J's worker gained on near-copy first try (+26.5 [17.6, 35.3]), with fewer last_digit
+    records (218 vs 382). s101 has the same sign but crosses 0 (+4.9). Not used.
+  - Next, one change: the night order. The worker sleeps first (loop 2), then loop 1 trains the add-on on the slept
+    worker from the day's kept tries, so the add-on is always fitted to the worker it rides on. Rewards are facts
+    about the questions, so the day's tries stay valid; they are off-policy for the new worker, as tries 33-512
+    already were.
+
+**Test S1w, loop 1 on a slept worker** (checks the order change before a second J; screen s100 and s101, DEV, one
+night, CPU):
+- Loop 1 trains the add-on on W1 (not N') from day 1's kept tries, at S1's settings (learning rate 1e-3, one pass,
+  KL 0.1, no grid). U is W1 with the untrained add-on. Measured on W1 in creative mode.
+- Marks, on both parents:
+  1. C2 DEV creative reach@32: C - U at least +5.
+  2. New-kind reach@512 in F mode: F - U at least -1 point.
+  3. Worker untouched (unit test).
+- Proved wrong: C - U upper end below +1 on both parents. The add-on then cannot be fitted to a slept worker from
+  the day's tries, and the next change is a few fresh add-on tries drawn at night on the slept worker.
+- If S1w passes: J2 is J with the new night order and the same marks, after R reports (if R passes, both arms use
+  the repair).
+- Autonomy label unchanged: no outside help, not own choices.
+
 **Later, one change each:**
 - the worker is also pushed down on its own failed first tries;
 - the model picks what to replay (C9);
 - speed in thinking rounds, once halting exists.
 
 **Owner and machines:**
-- The fast-sleep thread builds S1, S1b, S3, S3' and J in a new file, importing the creative code without editing it (as
+- The fast-sleep thread builds S1, S1b, S3, S3', J, R, S1w and J2 in a new file, importing the creative code without editing it (as
   `fastsleep.py` does). That includes K_new and its blind-search check.
 - Screens are CPU and DEV only. Confirms run on Ben's machines after job 9 is scored. No spend.
 
@@ -1478,3 +1511,6 @@ first two points together: does a creative part that learns from its successes h
   (B2 to night 2 -7.7 / -8.9), mostly on rule-from-examples families, while the pooled-5 guard barely moved. New
   measure for all sleep tests (in_dist above 1.5 or a family above 5 with its interval below 0); Test R (the model's
   own repair pass) before J; job 9 report item 10 added before opening; marks unchanged.
+- **J fails (10-08):** with loops 1 and 2 together, the creative add-on trained on the parent stopped helping once the
+  worker slept (creative reach@32 J - W -6.3 / +0.4). Added Test S1w (loop 1 trained on the slept worker) before a
+  second J with the night order swapped.
