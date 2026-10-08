@@ -700,3 +700,21 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
 - **Run and judge:** box jobs custom_io/queue/t1r1|t1r2 (70 train, 71 re-score with `--min-n 1000`, 72 checkpoint export);
   `python -m custom_io.analyze_t1s --arm T1SDR --results ...33-pc-confirm-b2 ...40-vast-t1 ...60-vast-t1sd ...70-vast-t1sdr
   --wc ...51-vast-wc-t1 ...71-vast-wc-t1sdr --dev <the seed-1 dev-per-cell-40 build>`.
+
+## Addendum 22, amendment 6 (written 2026-10-08 about 14:35 UTC, 10:35 AM ET, before any seed 202-205 run)
+- **T1SDR read (custom_io/results/RESULTS-T1SDR.md, d62325b59):** NOT SHOWN on R4 alone under Amendment 8 (seed 200 free-run call accuracy
+  97.89, 17 wrong of 806 where the mark allows 16; seed 201 98.64); every other mark passed on both seeds, answers 100.0 at every length.
+- **Ruling (MARKS Amendment 10 and Note 10a, architecture thread, on Ben's own words at 10:16 and 10:17 AM ET):** a screen mark missed by
+  <= 0.5 point (or one case in 800) on one seed, everything else passing and the miss disclosed, counts as PASS; the proved-wrong lines and
+  the 6-seed confirm marks get no tolerance. T1SDR passes its screen on that tolerance and on Ben's word ("that's good enough"); the
+  disclosed miss is seed 200's call accuracy, 97.89 vs 98.0. Amendment 9's extra screen seeds are cancelled.
+- **Next, T1SDR as built, nothing changed:** the 6-seed confirm, seeds 200-205, paired with q33's B2 on the same seeds. Seeds 200/201 are
+  queue 70's runs; seeds 202-205 train now with queue 70's exact line (pin f6d724cffc, only the seed differs). Marks 1-6 as amended in
+  Amendment 2, judged by analyze_t1's own confirm code with T1SDR in T1's place (`analyze_t1s --arm T1SDR`, "6-seed confirm" section):
+  1 parity (mean T1SDR - B2 on pooled-5 >= -1.0, its 95% CI lower bound >= -2.0, T1SDR >= B2 - 1.0 on >= 5 of 6 seeds); 2 chain-5 mean within
+  1.0 of B2's and >= 99 on >= 5 of 6 seeds; 3 tool off < 5 on every seed; 4 loops:0 and donor in_dist <= 5 on every seed (B2's printed
+  beside); 5 opswap >= 99 on every seed; 6 no dev split's 6-seed mean below -2.0. Pass = 1-6. Proved wrong: pooled-5 mean below -2.0 or
+  chain-5 mean below 95. Else not shown. write_copy re-scores (n >= 1000) are printed beside, not marks.
+- **Run:** two rented RTX 5090s, two seeds each in parallel (custom_io/queue/t1c1: 202, 203; t1c2: 204, 205; 80 train, 81 re-score,
+  82 checkpoint export). Queue_local record: custom_io/queue_local/80-pc-t1sdr-confirm.txt. H1 on the T1SDR checkpoints runs alongside
+  (Amendment 10 item 2b; its code change and pin are disclosed under addendum 21 before it runs).
