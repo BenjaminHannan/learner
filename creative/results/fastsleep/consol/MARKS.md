@@ -34,8 +34,10 @@ through transfer. Code: `creative/consol.py`. Literature and the three candidate
   self-check in_dist is at most 1.0 point below N's. No training.
 - `fdw` (candidate 3): `fd` with the replay half weighted by family, weight = (own held-slice loss now / at the start of the night)^2, at least 1,
   re-measured every 16 updates. Run only if `fd` (and `scale`) leave harm.
-- `ro`: replay-only control, the same updates with both halves skills replay. It separates "old skills improve because of the new skill" from
-  "old skills improve because the night is also more practice".
+- `rp` (transfer control; replaces `ro`, amended below): the learner's exact skills replay rows (same rows, same order, 512 per update), the
+  day half removed: batch 512, same updates and schedule. It separates "old skills improve because of the new skill" from "because the night
+  is also skills practice". `ro` (both halves skills replay, twice the replay rows) is dropped: it was never run, and it would have made
+  "learner - control > 0" a much stronger bar than transfer.
 
 ## Screen A: fresh dreams vs re-read rows (s201, s202; DEV only)
 
@@ -44,11 +46,14 @@ Amended 10-08 12:05 PM ET, before any Screen A run: parents s201 and s202 instea
 
 Amended 10-08 11:40 AM ET, before any sleep run: one update takes about 80 CPU-seconds, so Screen A stops at 128 updates.
 `rlc` and `fd` with a 128-update schedule, saved and measured at 32, 64 and 128 updates (the 32 and 64 snapshots are mid-schedule, at a higher
-lr than a 32- or 64-update sleep would end on); `ro` at 128.
+lr than a 32- or 64-update sleep would end on); `rp` at 128 (batch 512).
 
 - A1 (re-reading is the cause): at 64 and 128 updates, `fd`'s in_dist drop vs N is at least 1.0 point smaller than `rlc`'s, on both parents.
 - A2 (no loss of learning): at the same updates, `fd`'s C2 DEV first try is no more than 2 points below `rlc`'s (point estimate), on both parents.
 - **Screen A passes = A1 and A2.**
+- If `rlc` itself shows little harm (its in_dist drop is under 2.0 points at 128 updates on either parent), A1 cannot be tested. Then Screen A
+  is "not testable", not "proved wrong", and the confirm uses `fd` if `fd` passes harm_measure on both parents and its C2 DEV first try is
+  within 2 points of `rlc`'s at 128 updates (point estimate); otherwise `rlc`.
 - Proved wrong (fresh rows don't help): at every saved step, on both parents, `fd`'s in_dist drop is not smaller than `rlc`'s.
 - Update cap for the confirm, fixed now: U* = the smallest saved step at which `fd`'s two-parent mean C2 DEV first try is at least 71.2 (the research
   loop's DEV mean) and harm_measure passes on both parents. If no step up to 128 qualifies, `fd` is rerun with a 256-update schedule (saves at 192,
@@ -68,7 +73,7 @@ lr than a 32- or 64-update sleep would end on); `ro` at 128.
 ## Confirm (six parents s200-s205; the winning recipe; the model stops itself)
 
 The recipe = the passing screens' pieces, run with the model's own stop: it checks its held practice fit rate every 16 updates, stops when two
-checks in a row do not beat its best, and keeps its best checkpoint; never more than U* updates. Plus `ro` at the same number of updates as the
+checks in a row do not beat its best, and keeps its best checkpoint; never more than U* updates. Plus `rp` at the same number of updates as the
 recipe used on that parent.
 
 1. **C2 (a): six-parent mean holdout first try at least 71.3%** (the research-loop sleep's holdout mean, 6 parents).
@@ -76,13 +81,22 @@ recipe used on that parent.
    (its updates = 80 x records / 512; reported per parent).
 3. **No harm (b): harm_measure vs N passes on every parent.**
 4. **Old skills improve (c): skills DEV in_dist, learner - N, pooled over six parents: point above 0 and paired 95% interval above 0.**
-   Labelled "through transfer" only if learner - `ro` (pooled) is also above 0 with its interval above 0; otherwise "improved, not shown to come
+   Labelled "through transfer" only if learner - `rp` (pooled) is also above 0 with its interval above 0; otherwise "improved, not shown to come
    from the new skill".
 - Claims: (a) needs 1 and 2; (b) needs 3; (c) needs 4.
 - Proved wrong (the recipe does not avoid harm): harm_measure fails on at least 3 of 6 parents.
 
 ## Report only (no mark)
 
+- Harm of every learner against the raw B2 parent as well as against N (the build costs about 2.7 in_dist points; harm_measure vs B2).
+- The research-loop sleep run on the same rebuilt N (`creative/rl/rescore_harm.py`): its C2 and its harm_measure with the new rule, as the paired
+  baseline for the 71.3% bar. Needs a GPU or about 7 CPU-hours per parent.
 - The research-loop sleep itself (`creative/rl/method.py`, full budget, unchanged) re-measured with harm_measure on s200 and s201 (DEV),
   if the CPU has room: its real harm, which the pooled-5 guard never measured.
 - Compute per night: updates, rows, CPU seconds; held-check curves.
+
+## Amendments after Screen A started (10-08 about 1:30 PM ET; no `ro`, `rp` or DEV snapshot had been read)
+
+- `ro` replaced by `rp` (above); the fall-back rule for a harmless `rlc` (above); harm vs B2 and the research-loop re-score are report-only.
+- Memory, not a mark: dream targets are dropped from the target cache after each update, and runs are capped at three at once (cgroup limit
+  13.4 GiB). Neither changes any computed value.

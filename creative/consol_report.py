@@ -63,12 +63,10 @@ def screen_a(root, parents, steps=(32, 64, 128), last=128, a1_steps=(64, 128), d
             sd, slo, shi = c2_pilot.boot(b['hits'], a['hits'])
             pr['steps'][k] = dict(rlc={x: a[x] for x in ('c2', 'in_dist', 'drop', 'fired', 'passes')}, fd={x: b[x] for x in ('c2', 'in_dist', 'drop', 'fired', 'passes')},
                                   fd_minus_rlc_c2=[d, lo, hi], fd_minus_rlc_in_dist=[sd, slo, shi])
-        rp = os.path.join(out, 'ro', 'result.json')
-        if os.path.exists(rp):
-            ro = point(out, 'ro', last, last)
-            fd = point(out, 'fd', last, last)
-            pr['ro'] = dict(c2=ro['c2'], in_dist=ro['in_dist'], drop=ro['drop'], fired=ro['fired'], fd_minus_ro_in_dist=list(c2_pilot.boot(fd['hits'], ro['hits'])),
-                            ro_minus_N_in_dist=list(c2_pilot.boot(ro['hits'], nm['skills']['hits'])), fd_minus_N_in_dist=list(c2_pilot.boot(fd['hits'], nm['skills']['hits'])))
+        if os.path.exists(os.path.join(out, 'rp', 'result.json')):
+            rp, fd = point(out, 'rp', last, last), point(out, 'fd', last, last)
+            pr['rp'] = dict(c2=rp['c2'], in_dist=rp['in_dist'], drop=rp['drop'], fired=rp['fired'], fd_minus_rp_in_dist=list(c2_pilot.boot(fd['hits'], rp['hits'])),
+                            rp_minus_N_in_dist=list(c2_pilot.boot(rp['hits'], nm['skills']['hits'])), fd_minus_N_in_dist=list(c2_pilot.boot(fd['hits'], nm['skills']['hits'])))
         for arm in ('rlc', 'fd'):
             r = json.load(open(os.path.join(out, arm, 'result.json')))
             pr[arm + '_run'] = dict(finds=r.get('finds'), visits=r['sleep']['record_visits'], updates=r['sleep']['updates_done'], seconds=r['seconds'], checks=[{x: c[x] for x in ('step', 'held_fits', 'in_dist')} for c in r.get('checks', [])])

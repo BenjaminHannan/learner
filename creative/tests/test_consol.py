@@ -269,6 +269,25 @@ def test_trim_replay():
         assert [r['id'] for r in a.draw(100)] == [r['id'] for r in b.draw(100)]
 
 
+def test_rp_rows_and_dream_cache():
+    """rp = fd's replay rows with the C2 half removed (batch 4 of replay = fd batch 8's replay half), and a dream's target is dropped after its update."""
+    from custom_io.models import progparse as pp
+    recs, day = _finds(3)
+    inputs, lo, hi = replay.experience(day)
+    _, _, seen_fd = _run(C.dream_stream(recs, 0, inputs, lo, hi), batch=8, replay_ordered=False)
+    m, vocab = _model()
+    rows = C.trim_replay(_skills(), 0, 3 * 4)
+    seen = []
+    orig, C.Dataset = C.Dataset, _spy_dataset(seen)
+    try:
+        C.sleep_mixed(m, None, rows, vocab, 3, batch=4, seed=0, replay_ordered=True)
+    finally:
+        C.Dataset = orig
+    assert [[r['id'] for r in b] for b in seen] == [[r['id'] for r in b[4:]] for b in seen_fd]
+    ids = [r['id'] for b in seen_fd for r in b[:4]]
+    assert all(i.startswith('D:') for i in ids) and not any(i in pp._CACHE for i in ids)
+
+
 if __name__ == '__main__':
     for k, v in list(globals().items()):
         if k.startswith('test_'):

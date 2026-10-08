@@ -165,17 +165,21 @@ def quota(weights, n):
 def sleep_mixed(model, rec_source, replay_rows, vocab, updates, batch=1024, lr=1e-3, warmup=None, seed=0, device='cpu', check_every=0, check_fn=None,
                 replay_weight_fn=None, log=None, save_at=(), save_fn=None, micro=None, replay_ordered=False):
     """sleep.sleep's fresh AdamW, lr schedule and clip, with each update half record rows, half skills replay rows (batch // 2 each).
-    rec_source: a list (rows drawn with sleep._order: balanced reuse) or an iterator (dream_stream: the next batch // 2 rows). replay_rows: drawn without
+    rec_source: None (the whole batch is replay), a list (rows drawn with sleep._order: balanced reuse) or an iterator (dream_stream: the next batch // 2 rows). replay_rows: drawn without
     repetition (raises when used up). replay_weight_fn(model, step) -> {family: weight}, called at step 0 and every check_every steps (model in eval mode): the replay
     half is then split over families by those weights. check_fn(model, step) after updates check_every, 2 * check_every, ... and the last (eval mode);
     returning 'stop' ends the sleep. save_fn(model, step) after the updates in save_at.
     replay_ordered: replay_rows are already in draw order (see trim_replay).
     micro: rows per backward pass (gradient accumulation, row-weighted; CPU memory: a 1,024-row pass needs ~9 GB). None = the whole batch at once. -> dict(updates_done, rows_seen, record_visits, loss, checks, weights)."""
     half = batch // 2
+    nrec = 0 if rec_source is None else half       # rec_source None: every row is skills replay (arm rp)
+    nrep = batch - nrec
     warmup = min(20, max(1, updates // 5)) if warmup is None else warmup
     rng = random.Random(seed)
     torch.manual_seed(seed)
-    if isinstance(rec_source, (list, tuple)):
+    if rec_source is None:
+        next_records = lambda s: []
+    elif isinstance(rec_source, (list, tuple)):
         if not rec_source or len({r['id'] for r in rec_source}) != len(rec_source):
             raise ValueError('records must be non-empty with unique ids (the target cache is keyed by id)')
         order = sleep._order(len(rec_source), updates * half, rng)
@@ -186,9 +190,10 @@ def sleep_mixed(model, rec_source, replay_rows, vocab, updates, batch=1024, lr=1
             if len(rs) < half:
                 raise ValueError('record stream ran dry')
             return rs
-    if replay_weight_fn is None and updates * half > len(replay_rows):
-        raise ValueError(f'{updates} updates draw {updates * half} replay rows without repetition from {len(replay_rows)}')
+    if replay_weight_fn is None and updates * nrep > len(replay_rows):
+        raise ValueError(f'{updates} updates draw {updates * nrep} replay rows without repetition from {len(replay_rows)}')
     rep = _Replay(replay_rows, seed, replay_ordered)
+    stream = rec_source is not None and not isinstance(rec_source, (list, tuple))
     emb = {id(m.weight) for m in model.modules() if isinstance(m, torch.nn.Embedding)}
     decay = [p for p in model.parameters() if p.requires_grad and p.ndim >= 2 and id(p) not in emb]
     no_decay = [p for p in model.parameters() if p.requires_grad and (p.ndim < 2 or id(p) in emb)]
@@ -203,7 +208,7 @@ def sleep_mixed(model, rec_source, replay_rows, vocab, updates, batch=1024, lr=1
             model.train()
             wlog.append((step, dict(weights)))
         recs = next_records(step)
-        rows = recs + rep.draw(half, weights)
+        rows = recs + rep.draw(nrep, weights)
         for r in recs:
             visits[r['id']] = visits.get(r['id'], 0) + 1
         fast.prefill(model, rows)
@@ -221,6 +226,9 @@ def sleep_mixed(model, rec_source, replay_rows, vocab, updates, batch=1024, lr=1
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         opt.step()
         opt.zero_grad(set_to_none=True)
+        if stream:
+            for r in recs:
+                pp._CACHE.pop(r['id'], None)        # a dream id never recurs; drop its target once the update has used it
         losses.append(float(loss.detach()))
         done = step + 1
         if log and done % 10 == 0:
@@ -421,7 +429,11 @@ def cmd_run(a):
     save()
     rng = random.Random(f'consol|{a.seed}')
     rec_source, wfn, ordered = None, None, False
-    if a.arm == 'ro':
+    if a.arm == 'rp':       # transfer control: fd's exact replay rows (same draw order, 512 per update), the C2 half removed; run with --batch 512
+        replay_rows, ordered = trim_replay(rest, a.seed, a.updates * a.batch), True
+        del rest
+        import gc; gc.collect()
+    elif a.arm == 'ro':
         mix = list(rest)
         rng.shuffle(mix)
         replay_rows, rec_source = mix[:a.updates * half], mix[a.updates * half:]
@@ -516,7 +528,7 @@ def main(argv=None):
     sub = p.add_subparsers(dest='cmd', required=True)
     for name in ('run', 'scale'):
         s = sub.add_parser(name)
-        s.add_argument('--parent-dir', required=True); s.add_argument('--out', required=True); s.add_argument('--arm', required=True, choices=('rlc', 'fd', 'fdw', 'ro'))
+        s.add_argument('--parent-dir', required=True); s.add_argument('--out', required=True); s.add_argument('--arm', required=True, choices=('rlc', 'fd', 'fdw', 'ro', 'rp'))
         s.add_argument('--seed', type=int, default=0); s.add_argument('--n-held', type=int, default=128)
         s.add_argument('--skills-train', default=SKILLS_TRAIN); s.add_argument('--skills-data', default=SKILLS_DATA)
         s.add_argument('--threads', type=int, default=4); s.add_argument('--device', default='cpu')
