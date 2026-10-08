@@ -1,0 +1,106 @@
+"""Consolidation sleep: measure saved snapshots and score the marks in creative/results/fastsleep/consol/MARKS.md. MEASURE only (C2 DEV, skills DEV).
+
+  python3 -m creative.consol_report snaps --out ~/consol/A/s200 --arms rlc fd --steps 32 64 [--threads 1]
+  python3 -m creative.consol_report screenA --root ~/consol/A --parents s200 s201
+
+snaps: each DIR/<arm>/learner_s<k>.pt -> DIR/<arm>/snap_s<k>.json (C2 DEV right, by kind, per-question list; skills in_dist, pooled-5, harm_measure vs N
+per row). The last saved step equals learner.pt, which `consol run` already measured (result.json / hits.json)."""
+import argparse, json, os
+import torch
+from creative import c2_pilot, sleep
+from creative.consol import SKILLS_DATA, _dump, measure
+from creative.harm_look import harm_measure
+
+
+def _nm(out):
+    return json.load(open(os.path.join(out, 'N_measure.json')))['value']
+
+
+def _harm(nm, hits, fams):
+    return harm_measure(nm['skills']['hits'], hits, [{'family': f} for f in fams])
+
+
+def snaps(out, arms, steps, skills_data=SKILLS_DATA, device='cpu'):
+    nm = _nm(out)
+    for arm in arms:
+        for k in steps:
+            p, sp = os.path.join(out, arm, f'learner_s{k}.pt'), os.path.join(out, arm, f'snap_s{k}.json')
+            if os.path.exists(sp) or not os.path.exists(p):
+                continue
+            m, vocab, _ = sleep.load_parent(p, device)
+            m.eval()
+            lm = measure(m, vocab, device, skills_data)
+            h = _harm(nm, lm['skills']['hits'], lm['skills']['families'])
+            _dump(dict(step=k, c2_right=lm['c2']['right'], by_kind=lm['c2']['by_kind'], per_q_right=lm['c2']['per_q_right'], in_dist=lm['skills']['in_dist'],
+                       pooled5=lm['skills']['pooled5'], hits=lm['skills']['hits'], harm_vs_N={x: h[x] for x in ('in_dist_a', 'in_dist_b', 'in_dist_drop', 'fired', 'passes')}), sp)
+            print(out, arm, k, 'c2', round(lm['c2']['right'], 2), 'in_dist', round(lm['skills']['in_dist'], 2), 'drop', round(h['in_dist_drop'], 2), h['fired'], flush=True)
+
+
+def point(out, arm, k, last):
+    """-> dict(c2, per_q, in_dist, drop, fired, passes, hits) for arm at step k (snapshot, or the final learner when k == last)."""
+    nm = _nm(out)
+    if k == last:
+        r = json.load(open(os.path.join(out, arm, 'result.json')))
+        hj = json.load(open(os.path.join(out, arm, 'hits.json')))
+        h = _harm(nm, hj['learner'], hj['families'])
+        return dict(c2=r['learner']['c2_right'], per_q=r['learner']['per_q_right'], in_dist=h['in_dist_b'], drop=h['in_dist_drop'], fired=h['fired'], passes=h['passes'],
+                    hits=hj['learner'], updates_done=r['sleep']['updates_done'], visits=r['sleep']['record_visits'], finds=r.get('finds'))
+    s = json.load(open(os.path.join(out, arm, f'snap_s{k}.json')))
+    hv = s['harm_vs_N']
+    return dict(c2=s['c2_right'], per_q=s['per_q_right'], in_dist=hv['in_dist_b'], drop=hv['in_dist_drop'], fired=hv['fired'], passes=hv['passes'], hits=s['hits'])
+
+
+def screen_a(root, parents, steps=(32, 64, 128), last=128, a1_steps=(64, 128), dev_bar=71.2):
+    """Screen A's marks, exactly as MARKS.md states them."""
+    res = dict(parents={}, marks={})
+    for p in parents:
+        out = os.path.join(root, p)
+        nm = _nm(out)
+        pr = dict(N=dict(c2=nm['c2']['right'], in_dist=nm['skills']['in_dist']), steps={})
+        for k in steps:
+            a, b = point(out, 'rlc', k, last), point(out, 'fd', k, last)
+            d, lo, hi = c2_pilot.boot(b['per_q'], a['per_q'])
+            sd, slo, shi = c2_pilot.boot(b['hits'], a['hits'])
+            pr['steps'][k] = dict(rlc={x: a[x] for x in ('c2', 'in_dist', 'drop', 'fired', 'passes')}, fd={x: b[x] for x in ('c2', 'in_dist', 'drop', 'fired', 'passes')},
+                                  fd_minus_rlc_c2=[d, lo, hi], fd_minus_rlc_in_dist=[sd, slo, shi])
+        rp = os.path.join(out, 'ro', 'result.json')
+        if os.path.exists(rp):
+            ro = point(out, 'ro', last, last)
+            fd = point(out, 'fd', last, last)
+            pr['ro'] = dict(c2=ro['c2'], in_dist=ro['in_dist'], drop=ro['drop'], fired=ro['fired'], fd_minus_ro_in_dist=list(c2_pilot.boot(fd['hits'], ro['hits'])),
+                            ro_minus_N_in_dist=list(c2_pilot.boot(ro['hits'], nm['skills']['hits'])), fd_minus_N_in_dist=list(c2_pilot.boot(fd['hits'], nm['skills']['hits'])))
+        for arm in ('rlc', 'fd'):
+            r = json.load(open(os.path.join(out, arm, 'result.json')))
+            pr[arm + '_run'] = dict(finds=r.get('finds'), visits=r['sleep']['record_visits'], updates=r['sleep']['updates_done'], seconds=r['seconds'], checks=[{x: c[x] for x in ('step', 'held_fits', 'in_dist')} for c in r.get('checks', [])])
+        res['parents'][p] = pr
+    P = res['parents']
+    a1 = all(P[p]['steps'][k]['fd']['drop'] <= P[p]['steps'][k]['rlc']['drop'] - 1.0 for p in parents for k in a1_steps)
+    a2 = all(P[p]['steps'][k]['fd']['c2'] >= P[p]['steps'][k]['rlc']['c2'] - 2.0 for p in parents for k in a1_steps)
+    wrong = all(P[p]['steps'][k]['fd']['drop'] >= P[p]['steps'][k]['rlc']['drop'] for p in parents for k in steps)
+    ustar = None
+    for k in steps:
+        if sum(P[p]['steps'][k]['fd']['c2'] for p in parents) / len(parents) >= dev_bar and all(P[p]['steps'][k]['fd']['passes'] for p in parents):
+            ustar = k
+            break
+    res['marks'] = dict(A1=a1, A2=a2, passes=a1 and a2, proved_wrong=wrong, U_star=ustar,
+                        rule='A1: fd in_dist drop <= rlc drop - 1.0 at 64 and 128 on both parents; A2: fd C2 >= rlc C2 - 2 there; wrong: fd drop >= rlc drop at every step on both; '
+                             'U*: smallest step with two-parent mean fd C2 DEV >= 71.2 and harm passes on both (None -> rerun fd at 256)')
+    return res
+
+
+if __name__ == '__main__':
+    a = argparse.ArgumentParser()
+    a.add_argument('cmd', choices=('snaps', 'screenA'))
+    a.add_argument('--out'); a.add_argument('--arms', nargs='+', default=['rlc', 'fd']); a.add_argument('--steps', nargs='+', type=int, default=[32, 64])
+    a.add_argument('--root'); a.add_argument('--parents', nargs='+', default=['s200', 's201']); a.add_argument('--threads', type=int, default=1)
+    a = a.parse_args()
+    torch.set_num_threads(a.threads)
+    if a.cmd == 'snaps':
+        snaps(os.path.expanduser(a.out), a.arms, a.steps)
+    else:
+        r = screen_a(os.path.expanduser(a.root), a.parents)
+        _dump(r, os.path.join(os.path.expanduser(a.root), 'screenA.json'))
+        print(json.dumps(r['marks'], indent=1))
+        for p, pr in r['parents'].items():
+            for k, s in pr['steps'].items():
+                print(p, k, 'rlc c2 %.1f drop %.2f %s | fd c2 %.1f drop %.2f %s' % (s['rlc']['c2'], s['rlc']['drop'], s['rlc']['fired'], s['fd']['c2'], s['fd']['drop'], s['fd']['fired']))
