@@ -70,7 +70,7 @@ def b2_cfg(rung, extra=None):
     if rung == '3M':
         cfg = dict(B2_S)
     else:
-        base = dict(d=r['width'], n_heads=r['heads'], reader_layers=2, n_loops=8, mlp=r['mlp'], copy=True, **(extra or {}))      # extras (eg_embed: the adapter) are counted in the block choice
+        base = dict(dict(d=r['width'], n_heads=r['heads'], reader_layers=2, n_loops=8, mlp=r['mlp'], copy=True), **(extra or {}))      # extras (eg_embed: the adapter) are counted in the block choice
         c1, per = n('ledger', dict(base, blocks=1)), _per_unit('ledger', base, 'blocks', 1)
         best = min(range(1, 41), key=lambda b: abs(c1 + (b - 1) * per - r['target']))
         cfg = dict(base, blocks=best)

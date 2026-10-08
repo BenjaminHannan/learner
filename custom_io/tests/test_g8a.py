@@ -106,6 +106,12 @@ def test_gemma_front_is_plain_at_step_0():
     assert b.size()['frozen_borrowed'] == 271_002_624 and a.size()['frozen_borrowed'] == 0
 
 
+def test_sizes_with_loops_in_extra():
+    for ex in ({'eg_embed': True, 'n_loops': 12}, {'n_loops': 12}):
+        z = C.sizes('10M', ex)
+        assert z, ex
+
+
 def test_plain_lm_refuses_the_front():
     from custom_io.models import build
     try:
