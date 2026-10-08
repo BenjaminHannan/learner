@@ -253,9 +253,10 @@ def screen8(runs, wcs, preds, rows):
     """Amendment 8 for T1SDR (T1SD + drawn-result drills), in T1S's slot: R1 per Clarification 7a, R2, R3 as Amendment 7, R4, S2 (screen7's
     code), and R5: the drill-free natural check, per seed, exact on the in_dist rows whose gold answer is a number drops <= 1.0 vs T1SD of
     the same seed (all rows and the per-length cells printed beside, not marks). Proved wrong: any operand or answer cell at 4-9 digits < 90
-    on either seed. A hair miss (R1 the only failing mark, every cell >= 97, each failing mean in 98.5-99): seeds 202-203 of the same recipe."""
+    on either seed. A hair miss (R1 the only failing mark, every cell >= 97, each failing mean in 98.5-99) or R5 the only failing mark
+    (Clarification 8a): seeds 202-203 of the same recipe."""
     out = screen7(runs, wcs)
-    out['marks_source'] = 'Amendment 8 (R1 per Clarification 7a; R3 as Amendment 7; new R5 against T1SD)'
+    out['marks_source'] = 'Amendment 8 + Clarification 8a (R1 per Clarification 7a; R3 as Amendment 7; new R5 against T1SD)'
     nat = {s: dict(T1SDR=natural(preds.get(('T1S', s)), rows), T1SD=natural(preds.get(('T1SD', s)), rows)) for s in SEEDS}
     refbad = {s: (['T1SD missing'] if runs.get(('T1SD', s)) is None else [f'T1SD: {x}' for x in valid(runs[('T1SD', s)], 'T1SD')])
               + [f'{k} PREDS do not cover the in_dist rows' for k, v in nat[s].items() if v is None] for s in SEEDS}
@@ -264,8 +265,8 @@ def screen8(runs, wcs, preds, rows):
         out.update(judged=False, verdict='NOT JUDGED')
         return out
     d = {s: round(nat[s]['T1SDR']['numbers']['exact'] - nat[s]['T1SD']['numbers']['exact'], 2) for s in SEEDS}
-    out['marks']['R5 natural (drill-free) in_dist number-answer exact, T1SDR - T1SD >= -1.0 on both seeds'] = dict(
-        value=d, ok=all(x >= -1.0 for x in d.values()))
+    r5k = 'R5 natural (drill-free) in_dist number-answer exact, T1SDR - T1SD >= -1.0 on both seeds'
+    out['marks'][r5k] = dict(value=d, ok=all(x >= -1.0 for x in d.values()))
     out['natural'] = nat
     m, low, short = out['marks'], out['proved_wrong_cells'], out['short_cells']
     r1k = next(k for k in m if k.startswith('R1'))
@@ -282,6 +283,9 @@ def screen8(runs, wcs, preds, rows):
     elif hair:
         out['verdict'] = ('NOT SHOWN by a hair (R1 only: every cell >= 97, a mean in 98.5-99): run seeds 202-203 of the same recipe '
                           '(Amendment 8 item 7), no new change, no mark moves')
+    elif fails == [r5k]:
+        out['verdict'] = ('NOT SHOWN on R5 alone (Clarification 8a; R5 can fail on noise): run seeds 202-203 of the same recipe, '
+                          'no stacked change, no mark moves')
     else:
         out['verdict'] = ('NOT SHOWN: a miss breakdown first, then at most one more change (the entries-back table on the answer keys is the '
                           'only one named)')

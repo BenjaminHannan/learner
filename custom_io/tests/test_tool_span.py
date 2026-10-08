@@ -517,7 +517,8 @@ def test_judge():
             return J.screen8(r8, wd, pr, rows)
         assert v8()['verdict'].startswith('PASS'), v8()['verdict']
         assert v8(wrong=4)['verdict'].startswith('PASS')                                # 4 of 400 number rows: -1.0, allowed
-        assert v8(wrong=5)['verdict'].startswith('NOT SHOWN: a miss breakdown')         # -1.25 on seed 201
+        assert v8(wrong=5)['verdict'].startswith('NOT SHOWN on R5 alone')               # -1.25 on seed 201, every other mark passes (8a)
+        assert v8(wrong=5, cells=[('answer', 8, 96.5, 1100)])['verdict'].startswith('NOT SHOWN: a miss breakdown')   # R5 and R1
         assert v8(wrong_text=30)['verdict'].startswith('PASS')                          # text answers are not R5's rows
         assert v8(cells=[('answer', L, 98.0, 1100) for L in (6, 7, 8, 9)])['verdict'].startswith('PASS')               # mean 99.11
         assert v8(cells=[('answer', L, 98.0, 1100) for L in (5, 6, 7, 8, 9)])['verdict'].startswith('NOT SHOWN by a hair')  # mean 98.89
