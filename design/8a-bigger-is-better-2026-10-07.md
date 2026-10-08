@@ -427,7 +427,7 @@ Nothing here changes a mark, an arm, a seed or the data mix. It records two fact
   parts: about 13 hours a seed plus about 0.75 hour for pythia-31m, so about 14 hours and about $7 a box, about $42 for
   six seeds in parallel. 30M still goes to Ben with these numbers before it starts.
 
-## 20. Addendum J: where should B2's extra size go? A two-seed shape probe at 10M (2026-10-08, 12:55 AM ET, before any probe run)
+## 20. Addendum J: where should B2's extra size go? A two-seed shape probe at 10M (2026-10-08, 12:40 AM ET, before any probe run)
 
 Why: at 10M, B2 has not grown. Over five seeds so far, 10M minus 3M is +0.44 pooled-5 (range -1.11 to +2.48), while the
 plain step model gained +3.77 and the plain LLM +15.77 (shown, 5 of 6 seeds). Mark 1 (+3.0 per step) therefore fails
