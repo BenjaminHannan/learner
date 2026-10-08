@@ -1,0 +1,87 @@
+{
+ "parents": [
+  "s100",
+  "s101"
+ ],
+ "passes": false,
+ "proved_wrong": false,
+ "per_parent": {
+  "s100": {
+   "primary": {
+    "C_minus_U_points": 2.734375,
+    "passes": false,
+    "rule": "C2 DEV creative reach@32 on W1: C - U >= +5 points"
+   },
+   "variety": {
+    "C": 1.5703125,
+    "U": 1.46875,
+    "passes": true,
+    "rule": "C2 DEV distinct fitting programs per question within 32 tries: C >= 0.8 x U"
+   },
+   "new_kind_guard": {
+    "C_F_minus_U_points": 0.5208333333333334,
+    "passes": true,
+    "rule": "K_new DEV reach@512 (F mode) on W1: C - U >= -1 point (point estimate)"
+   },
+   "unit_test": {
+    "passes": true
+   },
+   "proved_wrong_here": {
+    "flag": false,
+    "rule": "C2 DEV creative reach@32: C - U upper end of the paired 95% interval < +1 point (both parents needed; loop 1 is then parked)"
+   },
+   "passes": false
+  },
+  "s101": {
+   "primary": {
+    "C_minus_U_points": -0.390625,
+    "passes": false,
+    "rule": "C2 DEV creative reach@32 on W1: C - U >= +5 points"
+   },
+   "variety": {
+    "C": 1.4140625,
+    "U": 1.38671875,
+    "passes": true,
+    "rule": "C2 DEV distinct fitting programs per question within 32 tries: C >= 0.8 x U"
+   },
+   "new_kind_guard": {
+    "C_F_minus_U_points": 0.0,
+    "passes": true,
+    "rule": "K_new DEV reach@512 (F mode) on W1: C - U >= -1 point (point estimate)"
+   },
+   "unit_test": {
+    "passes": true
+   },
+   "proved_wrong_here": {
+    "flag": true,
+    "rule": "C2 DEV creative reach@32: C - U upper end of the paired 95% interval < +1 point (both parents needed; loop 1 is then parked)"
+   },
+   "passes": false
+  }
+ },
+ "night_cost": {
+  "s100": {
+   "rows": 1024,
+   "samples": 19168,
+   "greedy": 1024,
+   "night": 18144,
+   "stuck_rows": 567,
+   "wall_seconds": 291.6305732727051,
+   "cpu_seconds": 533.38225606,
+   "cpu_seconds_per_sample": 0.027826703675918198,
+   "stuck_with_fit_in_draw": 128
+  },
+  "s101": {
+   "rows": 1024,
+   "samples": 16800,
+   "greedy": 1024,
+   "night": 15776,
+   "stuck_rows": 493,
+   "wall_seconds": 254.95310711860657,
+   "cpu_seconds": 466.192525555,
+   "cpu_seconds_per_sample": 0.02774955509255952,
+   "stuck_with_fit_in_draw": 75
+  }
+ },
+ "rule": "passes: primary (C2 DEV reach@32 C - U >= +5), variety (distinct32 C >= 0.8 U), new-kind guard (K_new reach@512 F mode >= -1) and unit test on every parent; proved wrong: C - U upper end < +1 on every parent"
+}

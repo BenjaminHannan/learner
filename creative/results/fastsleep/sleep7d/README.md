@@ -212,3 +212,26 @@ How to read it:
 - *Shown:* a separate effect. Any 256 replay-only updates at lr 1e-3 erase night 1's C2 gain (first try down to 0-3%), whether the rows are reused or fresh. At lr 1e-4 most of the C2 gain survives (-3.5 to -7.0).
 - *Suggested:* the night's own records are a small set seen 32 times at lr 1e-3, the same pattern as the damaging cell. Against that, night 2 uses the same recipe and adds no skills harm, while night 1 does. So the cost may belong to the first big move onto C2, not to reuse as such.
 - *Suggested:* a fresh-row replay pass at lr 1e-4 after a night trades about 2 DEV skills points back for about 4-7 points of C2 first try. As it stands, that misses a "C2 within 2 points" mark.
+
+## Test S1f (finished 14:53 UTC 10-08 = 10:53 AM ET; roadmap 377df3fc2c, `s1f/`)
+
+Loop 1 on W1 from **fresh on-policy night tries**. W1's greedy try is checked on all 1,024 pool questions. On the questions it still fails, 32 tries each are drawn with the adapter on in its untrained state (so these are plain W1 samples at T 3.0), one round. Loop 1 then runs at S1's setting (lr 1e-3, 1 pass, KL 0.1). U = W1 untrained. W (report only) = S1w's adapter. U and W reuse S1w's cached measures (same draws), so only C is new.
+
+| | s100 | s101 |
+|---|---|---|
+| night draw: still-stuck questions / with a fit in 32 / samples / CPU s (wall s) | 567 / 128 / 19,168 / 533 (292) | 493 / 75 / 16,800 / 466 (255) |
+| kept tries (rows) / loop-1 updates / KL to W1 at end | 1,535 (128) / 24 / 0.47 | 860 (75) / 14 / 0.10 |
+| (1) C2 DEV creative reach@32: U / C; C - U (mark >= +5) | 46.9 / 49.6; **+2.7** [0.8, 5.1] fail | 48.0 / 47.7; -0.4 [-1.2, 0.0] fail |
+| C - U multi-step | **+4.5** [1.3, 8.4] (sq_plus 16 -> 20, double_add 22 -> 31) | -0.6 [-1.9, 0.0] |
+| (2) variety, distinct fits in 32: U / C (mark C >= 0.8 x U) | 1.47 / 1.57 pass | 1.39 / 1.41 pass |
+| (3) new-kind reach@512 F mode, C - U (mark >= -1) | +0.5 pass | 0.0 pass |
+| (4) worker untouched | pass | pass |
+| C - W (S1w's adapter, report) | +5.5 [2.0, 9.0] | +3.1 [0.0, 7.0] |
+
+Verdict: **S1f fails on both parents and is NOT proved wrong**. The rule is C - U upper end < +1 on both parents; s101 meets it (0.0) but s100 does not (+5.1).
+
+How to read it:
+- *Shown:* on-policy tries fix what S1w broke. Variety holds or rises (S1w cut it to 0.7-1.1), sq_plus no longer collapses, and C beats S1w's adapter on both parents.
+- *Shown:* the training signal is small. Only 13-23% of the questions W1 still fails get a fit in 32 tries, giving 128 / 75 kept rows and 24 / 14 updates (S1 on N' had 550 rows and 97 updates). The adapter hardly moves (KL 0.47 / 0.10). s100 shows a real but small gain, mostly multi-step; s101 shows none.
+- *Suggested:* the limit is how many fits the night finds, not the method. The single change that builds on this is more night tries per still-stuck question.
+- J2 does not run, because its gate was S1f passing.
