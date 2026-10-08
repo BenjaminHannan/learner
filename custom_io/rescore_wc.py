@@ -15,12 +15,14 @@ def main(argv=None):
     ap.add_argument('--device', default='cuda' if torch.cuda.is_available() else 'cpu')
     ap.add_argument('--bf16', action='store_true')
     ap.add_argument('--eval-batch', type=int, default=128)
+    ap.add_argument('--min-n', type=int, default=200, help='unambiguous events per cell before the scorer stops re-drawing (Amendment 7: 1000)')
+    ap.add_argument('--max-passes', type=int, default=8)
     a = ap.parse_args(argv)
     dev = torch.device(a.device)
     m = load_model(a.ck, dev)
     amp = (lambda: torch.autocast(dev.type, dtype=torch.bfloat16)) if a.bf16 and dev.type == 'cuda' else contextlib.nullcontext
     t0 = time.time()
-    wc = m.write_copy_u(dict(data=a.data, big=a.big_data, device=dev, batch_size=a.eval_batch, amp=amp))
+    wc = m.write_copy_u(dict(data=a.data, big=a.big_data, device=dev, batch_size=a.eval_batch, amp=amp), min_n=a.min_n, max_passes=a.max_passes)
     ck = torch.load(a.ck, map_location='cpu', weights_only=False)
     path = os.path.join(a.big_data or a.data, 'dev', 'in_dist.jsonl')
     out = dict(write_copy_u=wc, checkpoint=a.ck, ck_sha256=hashlib.sha256(open(a.ck, 'rb').read()).hexdigest(), name=ck['name'], cfg=ck['cfg'],

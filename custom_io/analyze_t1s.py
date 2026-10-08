@@ -23,7 +23,10 @@ LENS = range(1, 10)
 MIN_N = 200
 ARMS = {'T1S': ('tool', {'span_copy': True}, 3311060), 'T1': A.ARMS['T1'], 'B2': A.ARMS['B2']}
 # --arm T1SI: Amendment 5's single next change (T1S + the entry-index term on the span keys), judged in T1S's place with R1-R4 unchanged
-NEXT = {'T1SI': ('tool', {'span_copy': True, 'span_idx': True}, 3311572)}
+NEXT = {'T1SI': ('tool', {'span_copy': True, 'span_idx': True}, 3311572),
+        # --arm T1SD: Amendment 7's start-pointer change (T1SI + the distance-from-end table), judged by Amendment 7's marks (screen7)
+        'T1SD': ('tool', {'span_copy': True, 'span_idx': True, 'span_end': True}, 3314132)}
+MIN_N7 = 1000
 
 
 def as_t1s(d, arm):
@@ -72,7 +75,7 @@ def load_wc(dirs):
     return out
 
 
-def wc_problems(w, arm, run):
+def wc_problems(w, arm, run, min_n=MIN_N):
     """A WC.json counts only if it scored this arm's checkpoint (same name, cfg, size and step as its run) with the Amendment 4 scorer."""
     if w is None:
         return [f'{arm} WC.json missing']
@@ -82,7 +85,7 @@ def wc_problems(w, arm, run):
         bad.append(f"{arm} WC.json: model {w.get('name')} cfg {w.get('cfg')} n_params {w.get('n_params')}")
     if w.get('step') != run.get('steps'):
         bad.append(f"{arm} WC.json: checkpoint step {w.get('step')} vs run {run.get('steps')}")
-    if (w.get('write_copy_u') or {}).get('min_n') != MIN_N:
+    if (w.get('write_copy_u') or {}).get('min_n') != min_n:
         bad.append(f"{arm} WC.json: min_n {(w.get('write_copy_u') or {}).get('min_n')}")
     return bad
 
@@ -146,6 +149,77 @@ def screen(runs, wcs):
     return out
 
 
+def screen7(runs, wcs):
+    """Amendment 7 (+ Clarification 7a) for T1SD, in T1S's slot: R1 per side and seed, the unweighted mean of the nine length cells >= 99 AND
+    every cell >= 97, n >= 1000 per cell (reading (a), all nine >= 99, printed beside, not a mark); R2 pooled-5 - B2 >= -2.0; R3 1-3 digit
+    operand and answer cells >= 99 and no more than 1.0 below T1's Amendment 4 re-score; R4 tool off < 5 and free-run call accuracy >= 98;
+    S2 chain-5 >= 95. Proved wrong: any operand or answer cell at 4-9 digits < 90 on either seed."""
+    probs, F = {}, {}
+    for s in SEEDS:
+        a, t1, b2 = runs.get(('T1S', s)), runs.get(('T1', s)), runs.get(('B2', s))
+        p = []
+        for arm, r in (('T1S', a), ('T1', t1), ('B2', b2)):
+            p += [f'{arm} missing'] if r is None else [f'{arm}: {x}' for x in valid(r, arm)]
+        if not p:
+            p += wc_problems(wcs.get(('T1S', s)), 'T1S', a, MIN_N7) + wc_problems(wcs.get(('T1', s)), 'T1', t1)
+        probs[s] = p
+        if p:
+            continue
+        ex = g(a, 'extra') or {}
+        F[s] = dict(d_pooled5=sub(P5(a), P5(b2)), t1s_pooled5=P5(a), t1_pooled5=P5(t1), b2_pooled5=P5(b2), chain5=C5(a), t1_chain5=C5(t1),
+                    copy=wc_cells(wcs[('T1S', s)]), t1_copy=wc_cells(wcs[('T1', s)]), copy_ambiguous=wc_cells(wcs[('T1S', s)], True),
+                    old_copy=old_cells(a), t1_old_copy=old_cells(t1),
+                    passes=dict(T1S=wcs[('T1S', s)]['write_copy_u']['passes'], T1=wcs[('T1', s)]['write_copy_u']['passes']),
+                    tool_off=g(ex, 'noexec', 'program_families'), call_free=g(ex, 'op_acc', 'free_run', 'call'),
+                    call_tf=g(ex, 'op_acc', 'teacher_forced', 'call'), span_use=ex.get('span_use'))
+    out = dict(seeds=SEEDS, problems=probs, judged=len(F) == len(SEEDS), marks_source='Amendment 7 + Clarification 7a')
+    if not out['judged']:
+        out['verdict'] = 'NOT JUDGED'
+        return out
+    sides = ('operand', 'answer')
+    short = [(s, side, L, f['copy'][side][L][1]) for s, f in F.items() for side in sides for L in LENS
+             if f['copy'][side][L][0] is None or f['copy'][side][L][1] < MIN_N7]
+    r1 = {}
+    for s, f in F.items():
+        for side in sides:
+            v = [f['copy'][side][L][0] for L in LENS]
+            full = all(x is not None for x in v)
+            r1[(s, side)] = dict(mean=sum(v) / len(v) if full else None, worst=min(v) if full else None,
+                                 all_99=full and min(v) >= 99, ok=full and sum(v) / len(v) >= 99 and min(v) >= 97)
+    r3 = {(s, side, L): dict(T1SD=f['copy'][side][L][0], T1=f['t1_copy'][side][L][0],
+                             ok=f['copy'][side][L][0] is not None and f['copy'][side][L][0] >= 99
+                             and (f['t1_copy'][side][L][0] is None or f['copy'][side][L][0] >= f['t1_copy'][side][L][0] - 1.0))
+          for s, f in F.items() for side in sides for L in (1, 2, 3)}
+    key = lambda d: {f'{k[0]} {" ".join(str(x) for x in k[1:])}': v for k, v in d.items()}
+    m = {'R1 per side and seed: mean of the nine length cells >= 99 and every cell >= 97 (n >= 1000 per cell)': dict(
+             value=key(r1), ok=not short and all(x['ok'] for x in r1.values())),
+         'R2 pooled-5 T1SD - B2 >= -2.0 on both seeds': dict(value={s: f['d_pooled5'] for s, f in F.items()},
+                                                              ok=all(f['d_pooled5'] is not None and f['d_pooled5'] >= -2.0 for f in F.values())),
+         'R3 1-3 digit operand and answer cells >= 99 and no more than 1.0 below T1\'s re-score': dict(
+             value=key(r3), ok=not short and all(x['ok'] for x in r3.values())),
+         'R4 tool off < 5 and call accuracy free run >= 98, both seeds': dict(
+             value={s: dict(tool_off=f['tool_off'], call_free=f['call_free']) for s, f in F.items()},
+             ok=all(f['tool_off'] is not None and f['tool_off'] < 5 and f['call_free'] is not None and f['call_free'] >= 98 for f in F.values())),
+         'S2 chain-5 >= 95 on both seeds': dict(value={s: f['chain5'] for s, f in F.items()},
+                                                ok=all(f['chain5'] is not None and f['chain5'] >= 95 for f in F.values()))}
+    low = [(s, side, L, f['copy'][side][L][0]) for s, f in F.items() for side in sides for L in range(4, 10)
+           if f['copy'][side][L][0] is not None and f['copy'][side][L][1] >= MIN_N7 and f['copy'][side][L][0] < 90]
+    out.update(marks=m, facts=F, reading_a_all_cells_99=key({k: v['all_99'] for k, v in r1.items()}), proved_wrong=bool(low),
+               proved_wrong_cells=low, below_90_cells=low, short_cells=short)
+    if all(x['ok'] for x in m.values()):
+        out['verdict'] = 'PASS: the 6-seed confirm (marks 1-6, Amendment 2) runs on T1SD; H1 queues behind that pass'
+    elif low and any(x[:3] == (201, 'operand', 8) for x in low):
+        out['verdict'] = ('PROVED WRONG on the same s201 8-digit operand cell again: next = two more seeds of the unchanged T1SI recipe '
+                          '(is s201 an outlier?), before touching the design')
+    elif low:
+        out['verdict'] = 'PROVED WRONG: a 4-9 digit cell below 90 (Amendment 7)'
+    elif short:
+        out['verdict'] = f'NOT JUDGED on R1/R3: {len(short)} cells below n = {MIN_N7} (more scorer passes)'
+    else:
+        out['verdict'] = 'NOT SHOWN: one more change, named from a miss breakdown of the failing cell, run before building it'
+    return out
+
+
 def confirm(runs):
     """Marks 1-6 as amended (Amendment 2), analyze_t1's own code with T1S in T1's place."""
     rr = {('T1', s): r for (arm, s), r in runs.items() if arm == 'T1S'}
@@ -174,20 +248,29 @@ def main(argv=None):
         ARMS['T1S'] = NEXT[a.arm]
     runs, skipped = load(a.results)
     runs = as_t1s(runs, a.arm)
-    res = dict(arm=a.arm, arm_spec=ARMS['T1S'], screen=screen(runs, as_t1s(load_wc(a.wc), a.arm)), confirm=confirm(runs), skipped=skipped)
+    judge = screen7 if a.arm == 'T1SD' else screen
+    res = dict(arm=a.arm, arm_spec=ARMS['T1S'], screen=judge(runs, as_t1s(load_wc(a.wc), a.arm)), confirm=confirm(runs), skipped=skipped)
     os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
     json.dump(res, open(a.out, 'w'), indent=1, default=str)
     sc = res['screen']
-    head = ('# T1S: T1 + span copy (Amendment 3, PASS-MARKS.md addendum 22)' if a.arm == 'T1S' else
-            f'# {a.arm}: T1S + the entry-index term on the span keys (Amendment 5; judged in the T1S columns below, R1-R4 unchanged)')
+    head = {'T1S': '# T1S: T1 + span copy (Amendment 3, PASS-MARKS.md addendum 22)',
+            'T1SI': '# T1SI: T1S + the entry-index term on the span keys (Amendment 5; judged in the T1S columns below, R1-R4 unchanged)',
+            'T1SD': '# T1SD: T1SI + the distance-from-end table on the span keys (Amendment 7 marks + Clarification 7a; T1SD in the T1S columns below)'}[a.arm]
+    mn = MIN_N7 if a.arm == 'T1SD' else MIN_N
     L = [head, '', f"## Re-screen, seeds 200-201: {sc['verdict']}", '']
     if not sc['judged']:
         L += [f"- missing or invalid: {({s: p for s, p in sc['problems'].items() if p})}"]
     else:
         L += [f"- {k}: {'pass' if x['ok'] else 'FAIL'}" for k, x in sc['marks'].items()]
-        L += [f"- proved-wrong cells (operand, length 4-9 below 90, n >= {MIN_N}): {sc['proved_wrong_cells'] or 'none'}",
-              f"- every cell at 4-9 digits below 90 (operand or answer): {sc['below_90_cells'] or 'none'}",
-              f"- cells below n = {MIN_N} (cannot pass or fail by themselves): {sc['short_cells'] or 'none'}", '']
+        if a.arm == 'T1SD':
+            r1 = next(x for k, x in sc['marks'].items() if k.startswith('R1'))['value']
+            L += [f"- R1 per side and seed: " + '; '.join(f"{k}: mean {fmt(v['mean'])}, worst {fmt(v['worst'])}" for k, v in r1.items()),
+                  f"- reading (a), all nine cells >= 99 (printed beside, not a mark): {sc['reading_a_all_cells_99']}",
+                  f"- proved-wrong cells (operand or answer, length 4-9 below 90, n >= {mn}): {sc['proved_wrong_cells'] or 'none'}"]
+        else:
+            L += [f"- proved-wrong cells (operand, length 4-9 below 90, n >= {mn}): {sc['proved_wrong_cells'] or 'none'}",
+                  f"- every cell at 4-9 digits below 90 (operand or answer): {sc['below_90_cells'] or 'none'}"]
+        L += [f"- cells below n = {mn} (cannot pass or fail by themselves): {sc['short_cells'] or 'none'}", '']
         for s, f in sc['facts'].items():
             L += [f'### Seed {s}: pooled-5 T1S {fmt(f["t1s_pooled5"])} vs B2 {fmt(f["b2_pooled5"])} ({f["d_pooled5"]:+.2f}), T1 {fmt(f["t1_pooled5"])}; '
                   f'chain-5 {fmt(f["chain5"])} (T1 {fmt(f["t1_chain5"])}); tool off {fmt(f["tool_off"])}; call acc free {fmt(f["call_free"])} '
@@ -199,6 +282,7 @@ def main(argv=None):
                       f'| {side} T1S ambiguous, not counted | ' + ' | '.join(f"{fmt(f['copy_ambiguous'][side][x][0])} ({f['copy_ambiguous'][side][x][1]})" for x in LENS) + ' |',
                       f'| {side} T1S old scorer | ' + ' | '.join(fmt(f['old_copy'][side][x][0]) for x in LENS) + ' |',
                       f'| {side} T1 old scorer | ' + ' | '.join(fmt(f['t1_old_copy'][side][x][0]) for x in LENS) + ' |']
+                L = L if a.arm != 'T1SD' else [x.replace(f'| {side} T1S ', f'| {side} T1SD ') for x in L]
             L += [f"Scorer passes: {f['passes']}", '']
     L += [f"## 6-seed confirm (marks 1-6 as amended): {res['confirm']['verdict']}", '']
     md = os.path.join(os.path.dirname(a.out) or '.', f'RESULTS-{a.arm}.md')

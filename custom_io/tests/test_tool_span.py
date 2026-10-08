@@ -196,6 +196,42 @@ def test_span_idx():
     print('ok span_idx', 3311572)
 
 
+def test_span_end():
+    """Amendment 7's change (cfg span_end): one zero table e_e[distance from the end of the char's string] on the span keys, on top of T1SI."""
+    v = vocab()
+    torch.manual_seed(0)
+    m = Tool(v, span_copy=True, span_idx=True, span_end=True, **S_CFG)
+    torch.manual_seed(0)
+    t1si = Tool(v, span_copy=True, span_idx=True, **S_CFG)
+    assert m.n_params() == 3311572 + LE * 64 == 3314132 and abs(m.n_params() / 3311572 - 1) <= 0.03, m.n_params()
+    s1, s2 = m.state_dict(), t1si.state_dict()
+    assert set(s1) - set(s2) == {'e_e.weight'} and all(torch.equal(s1[k], s2[k]) for k in s2)
+    torch.manual_seed(7)
+    mi = Tool(v, span_copy=True, span_idx=True, **SMALL)
+    me = Tool(v, span_copy=True, span_idx=True, span_end=True, **SMALL)
+    me.load_state_dict(dict(mi.state_dict(), **{'e_e.weight': me.e_e.weight.detach().clone()}))
+    rows = train_rows(32, 8)
+    b = batch_of(rows, v)
+    mi.eval(); me.eval()
+    with torch.no_grad():
+        assert me.generate(b) == mi.generate(b)
+        l1, _ = me.loss(b); l0, _ = mi.loss(b)
+        assert torch.allclose(l1, l0), (l1, l0)
+    me.train()
+    loss, _ = me.loss(b)
+    loss.backward()
+    assert me.e_e.weight.grad is not None and me.e_e.weight.grad.abs().sum() > 0
+    with torch.no_grad():       # d = distance from the end of the char's own string (prompt or entry k), from which chars exist
+        me.e_s.weight.zero_()
+        me.e_e.weight.copy_(torch.arange(LE, dtype=torch.float)[:, None].expand(-1, me.e_e.weight.shape[1]))
+        ids, mask, T = text_ctx(v, 'ab 123', ['add 1 2 = 3', 'mul 30 4 = 120'], T=8, le=16)
+        Xc = torch.zeros(1, ids.shape[1], me.d)
+        d = (me.span_keys(Xc, T, 16, mask) - me.k_s(Xc))[0, :, 0]
+        assert d[:6].tolist() == [5, 4, 3, 2, 1, 0], d[:8]                                   # prompt 'ab 123': '3' is its last char
+        assert d[8:19].tolist() == list(range(10, -1, -1)) and d[24:38].tolist() == list(range(13, -1, -1)), d[8:40]
+    print('ok span_end', 3314132)
+
+
 # ---- the mechanism: trained on 1-3 digit numbers, copying 1-9 digit results ------------------------------------------------------
 MECH_STEPS = 1500
 
@@ -265,12 +301,12 @@ def test_queue50():
     print('ok queue50')
 
 
-def fake_wc(name, cfg, n_params, exact=100.0, n=250, cell=None):
-    """A WC.json (rescore_wc) with every unambiguous cell at `exact` (cell = (side, L, exact, n) overrides one)."""
+def fake_wc(name, cfg, n_params, exact=100.0, n=250, cell=None, min_n=200, cells=()):
+    """A WC.json (rescore_wc) with every unambiguous cell at `exact` (cell = (side, L, exact, n) overrides one; cells: several)."""
     u = {side: {str(L): dict(n=n, exact=exact) for L in range(1, 10)} for side in ('operand', 'answer')}
-    u.update(operand_ambiguous={}, answer_ambiguous={}, passes=1, min_n=200)
-    if cell:
-        u[cell[0]][str(cell[1])] = dict(exact=cell[2], n=cell[3])
+    u.update(operand_ambiguous={}, answer_ambiguous={}, passes=1, min_n=min_n)
+    for c in ([cell] if cell else []) + list(cells):
+        u[c[0]][str(c[1])] = dict(exact=c[2], n=c[3])
     return dict(write_copy_u=u, name=name, cfg=cfg, n_params=n_params, step=24000)
 
 
@@ -316,6 +352,32 @@ def test_judge():
         wi.update({('T1SI', s): fake_wc('tool', spec[1], spec[2]) for s in J.SEEDS})
         assert J.screen(J.as_t1s(ri, 'T1SI'), J.as_t1s(wi, 'T1SI'))['verdict'].startswith('PASS')
         assert J.screen(J.as_t1s(runs, 'T1SI'), J.as_t1s(wi, 'T1SI'))['verdict'] == 'NOT JUDGED'     # T1S's own run: wrong cfg/size
+    finally:
+        J.ARMS.clear(); J.ARMS.update(keep)
+    # --arm T1SD: Amendment 7 + Clarification 7a (screen7)
+    spec = J.NEXT['T1SD']
+    try:
+        J.ARMS['T1S'] = spec
+        rd = {(a, s): r for (a, s), r in runs.items() if a != 'T1S'}
+        for s in J.SEEDS:
+            r = copy.deepcopy(runs[('T1S', s)])
+            r['config'] = dict(r['config'], cfg=spec[1]); r['n_params'] = spec[2]
+            rd[('T1S', s)] = r
+
+        def v7(cells=(), t1=98.0, n=1100, min_n=1000):
+            wd = {('T1', s): fake_wc('tool', {}, T1_PARAMS, exact=t1) for s in J.SEEDS}
+            wd.update({('T1S', s): fake_wc('tool', spec[1], spec[2], n=n, min_n=min_n, cells=cells if s == 201 else ()) for s in J.SEEDS})
+            return J.screen7(rd, wd)['verdict']
+        assert v7().startswith('PASS'), v7()
+        assert v7(cells=[('operand', 7, 97.5, 1100)]).startswith('PASS')              # 7a: mean >= 99 and worst >= 97
+        assert v7(cells=[('operand', 7, 96.9, 1100)]).startswith('NOT SHOWN')          # a cell below 97
+        assert v7(cells=[('operand', L, 98.0, 1100) for L in (4, 5, 6, 7, 8, 9)]).startswith('NOT SHOWN')   # mean 98.7 < 99
+        assert v7(cells=[('answer', 5, 89.0, 1100)]).startswith('PROVED WRONG: a 4-9')  # answers count for proved wrong now
+        assert v7(cells=[('operand', 8, 88.0, 1100)]).startswith('PROVED WRONG on the same s201')
+        assert v7(cells=[('operand', 2, 98.9, 1100)]).startswith('NOT SHOWN')          # R3: a 1-3 cell below 99
+        assert v7(t1=100.0, cells=[('answer', 1, 99.0, 1100)]).startswith('PASS')       # R3: exactly 1.0 below T1's re-score is allowed
+        assert v7(cells=[('operand', 3, 99.5, 900)]).startswith('NOT JUDGED on R1/R3')  # n < 1000
+        assert v7(min_n=200) == 'NOT JUDGED'                                           # scored with the old n
     finally:
         J.ARMS.clear(); J.ARMS.update(keep)
     print('ok judge')

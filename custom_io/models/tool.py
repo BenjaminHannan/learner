@@ -52,7 +52,14 @@ span_idx=True (needs span_copy; Amendment 5's single next change, used only if T
 learned entry-index term on the span pointer's keys, e_s[string] (0 = the prompt, 1 + k = entry k; zero at init, so the model starts as T1S).
 Disclosure: the index comes from the text layout (which string a char sits in, the same fact seg_of uses to keep a copy inside one string);
 the keys already see tape_emb[k] through k_s, but that table is shared with the thinker; e_s is the pointer's own. No rule picks an entry.
-Size: 3,311,060 + 8 x 64 = 3,311,572."""
+Size: 3,311,060 + 8 x 64 = 3,311,572.
+
+span_end=True (needs span_idx; T1SD, Amendment 7's one start-pointer change after T1SI's miss breakdown: 56 of s201's 58 missed 8-digit
+operands started on the wrong char inside the right entry, 0 were stop-head misses): a learned distance-from-the-end-of-its-string term on
+the span pointer's keys, e_e[d] (d = 0 for a string's last char, 0..39; zero at init, so the model starts as T1SI). Disclosure: like the entry
+index, d comes from the text layout (which chars exist in the char's string, i.e. the string's length); a result's units digit is its entry's
+last char (d = 0) at every length, so that entry of the table is trained in every row. No rule picks the start, no length is given.
+Size: 3,311,572 + 40 x 64 = 3,314,132."""
 import math, re
 import numpy as np
 import torch
@@ -95,7 +102,7 @@ class Tool(Ledger):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap', 'nocopy', 'nowordc']
 
     def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, span_copy=False,
-                 span_idx=False, **kw):
+                 span_idx=False, span_end=False, **kw):
         assert not kw.get('eg_embed') and not kw.get('eg_teach') and not kw.get('span') and not kw.get('round_readout'), 'T1 is B2 + one change'
         kw.pop('copy', None)
         super().__init__(vocab, d=d, n_heads=n_heads, reader_layers=reader_layers, blocks=blocks, n_loops=n_loops, mlp=mlp, dk=dk,
@@ -120,6 +127,11 @@ class Tool(Ledger):
         if self.span_idx:       # Amendment 5's single next change: created after every T1S module, zero (T1S at step 0)
             self.e_s = nn.Embedding(1 + N_RES, dk)
             nn.init.zeros_(self.e_s.weight)
+        self.span_end = bool(span_end)
+        assert self.span_idx or not self.span_end, 'span_end is T1SI (span_copy + span_idx) + one table'
+        if self.span_end:       # Amendment 7's change: created after every T1SI module, zero (T1SI at step 0)
+            self.e_e = nn.Embedding(LE, dk)
+            nn.init.zeros_(self.e_e.weight)
 
     # ---- the tape ----
     def read_texts(self, texts, dev, le=LE):
@@ -172,13 +184,21 @@ class Tool(Ledger):
         pos = torch.arange(n, device=dev)
         return torch.where(pos < T, torch.zeros_like(pos), T + (pos - T).div(le, rounding_mode='floor') * le)
 
-    def span_keys(self, Xc, T, le):
+    def span_keys(self, Xc, T, le, mask=None):
         """[B, N, dk] the span pointer's keys over the context (prompt [0, T), then entries of le chars): k_s of each char; span_idx adds
-        e_s[which string the char is in] (0 = the prompt, 1 + k = entry k), a fact of the text layout, the same one seg_of uses."""
+        e_s[which string the char is in] (0 = the prompt, 1 + k = entry k), a fact of the text layout, the same one seg_of uses; span_end adds
+        e_e[the char's distance from the end of its string] (0 = its last char; mask [B, N] = the chars that exist), another layout fact."""
         ks = self.k_s(Xc)
         if self.span_idx:
             pos = torch.arange(Xc.shape[1], device=Xc.device)
-            ks = ks + self.e_s(torch.where(pos < T, torch.zeros_like(pos), 1 + (pos - T).div(le, rounding_mode='floor')))
+            sid = torch.where(pos < T, torch.zeros_like(pos), 1 + (pos - T).div(le, rounding_mode='floor'))
+            ks = ks + self.e_s(sid)
+            if self.span_end:
+                m = mask.long()
+                n = torch.zeros(m.shape[0], int(sid.max()) + 1, dtype=torch.long, device=m.device).scatter_add_(1, sid.expand_as(m), m)
+                lo = torch.where(pos < T, torch.zeros_like(pos), T + (sid - 1) * le)
+                dist = (n.gather(1, sid.expand_as(m)) - 1 - (pos - lo)).clamp(0, LE - 1)
+                ks = ks + self.e_e(dist)
         return ks
 
     def span_read(self, logits, ids, mask, T, le):
@@ -304,7 +324,7 @@ class Tool(Ledger):
                 st = (lop, p)
                 if self.span_copy:
                     mc = torch.cat([xm, vis], 1)
-                    ks, wa, wb = self.span_keys(torch.cat([X, Xt], 1), T, le), self.W_a(z), self.W_b(z)
+                    ks, wa, wb = self.span_keys(torch.cat([X, Xt], 1), T, le, mc), self.W_a(z), self.W_b(z)
                     st = st + (dict(la=self.ptr(self.q_s(wa), ks, mc), lb=self.ptr(self.q_s(wb), ks, mc), ga=self.g_s(wa)[:, 0].float(),
                                     gb=self.g_s(wb)[:, 0].float(), ids=torch.cat([batch['prompt_ids'], idt], 1), m=mc, T=T, le=le),)
                 steps.append(st)
@@ -360,7 +380,7 @@ class Tool(Ledger):
         if self.span_copy:
             assert Xt.shape[1] % N_RES == 0
             T, le = X.shape[1], Xt.shape[1] // N_RES
-            span = self.span_read(self.ptr(state[6], self.span_keys(Xc, T, le), mc), idc, mc, T, le)
+            span = self.span_read(self.ptr(state[6], self.span_keys(Xc, T, le, mc), mc), idc, mc, T, le)
         out, modes = self.answers(p.argmax(-1).tolist(), lmode.argmax(-1).tolist(), lword.argmax(-1).tolist(), batch['rows'], span=span)
         return (out, modes) if return_modes else out
 
@@ -473,7 +493,7 @@ class Tool(Ledger):
             nll = -torch.where(comm[:, s] & (ma != mb).any(-1), torch.logaddexp(lab, lba), lab)     # same string twice: one order
             lsc = lsc + (nll * on).sum() / B
             n_span += int((ma.any(-1) & on).sum() + (mb.any(-1) & on).sum()); n_side += 2 * int(on.sum())
-        ln = self.ptr(o['qn'], self.span_keys(o['X'], T, o['le']), o['xm'])
+        ln = self.ptr(o['qn'], self.span_keys(o['X'], T, o['le'], o['xm']), o['xm'])
         sel = (g['mode'] == 0) & Mn.any(-1)
         lsn = torch.where(sel, -lse(ln, Mn), torch.zeros_like(ln[:, 0])).sum() / B
         if cs:
