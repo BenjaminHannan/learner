@@ -85,7 +85,9 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   (re-practising old skills after each night) made things worse and is dropped. A check (10-08) traced the loss to
   re-reading the same small set of records many times at a high learning rate. **Fix found for the first night
   (10-08, Test VL):** a 10x lower learning rate costs no skills (old skills even rise slightly) and keeps nearly all
-  of the night's gain on the new rules. Next: two nights at the lower rate, to check the new rules still climb.
+  of the night's gain on the new rules. Two nights at the lower rate (Test L2) also cost no skills, but the new
+  rules climbed only about half as much and the search did not widen. More practice per night at the lower rate is
+  being tested (L64).
   Building the practice parent still costs about 2-3 points; that parent goes away once the model makes its own
   stepping stones.
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
@@ -1380,6 +1382,29 @@ families x 200, two parents).**
     (C6), and C6's nights will use the rate L2 settles. The research loop's sleep rate is its owner's call; passed
     on via the coordinator.
   - Autonomy label: not own choices (the learning rate is ours; 7c table). Job 9 is not changed.
+- **L2 result (fast-sleep 5b74064b4b, 1:09 PM ET 10-08; shown, DEV, s100 / s101): mark 1 passes, mark 2 fails on
+  both parents, not proved wrong.**
+  - Harm: L2 against N' -0.4 / -0.8 (in_dist rises), nothing fires. Night 2's own cost (L2 against L) 0.4 / -0.2.
+    in_dist drop against B2, N' / W2 / L2: 2.7 / 6.5 / 2.3 and 2.8 / 5.8 / 2.0.
+  - Multi-step first try (154 DEV questions), L2 - W2: -4.5 [-9.7, +0.6] and -3.2 [-7.8, +0.6]. The upper ends are
+    above 0, so the proved-wrong line is not met. L2 - N' +3.9 [0.6, 7.8] and +3.2 [0.0, 6.5]: about half of W2's
+    climb over N'.
+  - Multi-step reach@32, W1 / W2 / L / L2: 13.0 / 31.8 / 6.5 / 9.1 and 14.3 / 24.7 / 7.1 / 9.1. The lr 1e-3 nights
+    widen search on the multi-step kinds; the 1e-4 nights barely do. Pooled first try L2 - W2 -0.4 / -9.4 (on s101
+    L2 fell below L).
+  - Shown: at lr 1e-4 two nights keep skills, and the climb is small. Suggested (fast-sleep, and V supports it): what
+    costs skills at 1e-3 is partly what drives the climb. V's harm (8 visits, 208 updates) matched W1's (32 visits,
+    835 updates), so at 1e-3 the night's cost comes early and does not grow with re-reading. That revises the 2 x 2
+    reading for nights (replay-only, where reuse was the cause): a night's cost looks more like moving fast onto C2.
+    Suggested, not shown.
+- **Ruled (10-08): L64 runs, as fixed before L2.** Both nights at lr 1e-4 with each record seen 64 times, nothing else
+  changed; L2's marks and proved-wrong line. Added before any L64 result: it is also proved wrong if L64 - L2
+  multi-step first try is below +1.0 point on both parents (more practice at the low rate does not add climb).
+  Report only: L64 against L2 for harm, reach@32 and first try.
+  - If L64 misses mark 2, the next single change is a middle rate, lr 3e-4 with 32 visits on both nights, with the
+    same marks. If that misses too, the trade-off goes to an outside opinion (a prompt under reviews/) before more
+    screens.
+  - Job 9 is not changed.
 
 **Test J, loops 1 and 2 together** (changed 10-08 after S3': loop 3 is parked): two days and nights from N', loop 1
 (creative mode F) plus loop 2, against loop 2 alone (W). One change: the creative part's own sleep. It asks Ben's
@@ -1492,7 +1517,7 @@ CPU):
 - speed in thinking rounds, once halting exists.
 
 **Owner and machines:**
-- The fast-sleep thread builds S1, S1b, S3, S3', J, R, S1w, S1f, J2, VL and L2 in new files, importing the creative code without editing it (as
+- The fast-sleep thread builds S1, S1b, S3, S3', J, R, S1w, S1f, J2, VL, L2 and L64 in new files, importing the creative code without editing it (as
   `fastsleep.py` does). That includes K_new and its blind-search check.
 - Screens are CPU and DEV only. Confirms run on Ben's machines after job 9 is scored. No spend.
 
@@ -1671,3 +1696,6 @@ CPU):
   first-try miss on s100 is one question, good enough under Ben's 10:17 AM ET rule), V proved wrong. Accepted Test
   L2 (both nights at 1e-4 against W1 then W2, judged on the night-2 climb and the harm measure); fast-sleep's L64
   held as the follow-up if L2 misses its climb mark. Section 0 updated.
+- **10-08, 1:15 PM ET:** L2 ruled (fast-sleep 5b74064b4b): skills kept over two nights at lr 1e-4, multi-step climb
+  missed on both parents (about half of W2's), not proved wrong. L64 runs as fixed before; added a second
+  proved-wrong line (L64 - L2 below +1.0 on both) before its results, and lr 3e-4 as the next change if it misses.
