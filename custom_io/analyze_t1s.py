@@ -287,8 +287,8 @@ def screen8(runs, wcs, preds, rows):
         out['verdict'] = ('NOT SHOWN on R5 alone (Clarification 8a; R5 can fail on noise): run seeds 202-203 of the same recipe, '
                           'no stacked change, no mark moves')
     else:
-        out['verdict'] = ('NOT SHOWN: a miss breakdown first, then at most one more change (the entries-back table on the answer keys is the '
-                          'only one named)')
+        out['verdict'] = (f"NOT SHOWN (failing: {', '.join(k.split()[0] for k in fails)}): a miss breakdown first, then at most one more change "
+                          '(the entries-back table on the answer keys is the only one named)')
     return out
 
 

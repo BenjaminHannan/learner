@@ -518,15 +518,15 @@ def test_judge():
         assert v8()['verdict'].startswith('PASS'), v8()['verdict']
         assert v8(wrong=4)['verdict'].startswith('PASS')                                # 4 of 400 number rows: -1.0, allowed
         assert v8(wrong=5)['verdict'].startswith('NOT SHOWN on R5 alone')               # -1.25 on seed 201, every other mark passes (8a)
-        assert v8(wrong=5, cells=[('answer', 8, 96.5, 1100)])['verdict'].startswith('NOT SHOWN: a miss breakdown')   # R5 and R1
+        assert v8(wrong=5, cells=[('answer', 8, 96.5, 1100)])['verdict'].startswith('NOT SHOWN (failing: R1, R5)')   # R5 and R1
         assert v8(wrong_text=30)['verdict'].startswith('PASS')                          # text answers are not R5's rows
         assert v8(cells=[('answer', L, 98.0, 1100) for L in (6, 7, 8, 9)])['verdict'].startswith('PASS')               # mean 99.11
         assert v8(cells=[('answer', L, 98.0, 1100) for L in (5, 6, 7, 8, 9)])['verdict'].startswith('NOT SHOWN by a hair')  # mean 98.89
         assert v8(cells=[('answer', L, 97.5, 1100) for L in (5, 6, 7, 8, 9)])['verdict'].startswith('NOT SHOWN by a hair')  # mean 98.6
-        assert v8(cells=[('answer', L, 97.0, 1100) for L in range(1, 10)])['verdict'].startswith('NOT SHOWN: a miss')   # mean 97 < 98.5
-        assert v8(cells=[('answer', 8, 96.5, 1100)])['verdict'].startswith('NOT SHOWN: a miss')       # a cell below 97: not a hair
+        assert v8(cells=[('answer', L, 97.0, 1100) for L in range(1, 10)])['verdict'].startswith('NOT SHOWN (failing: ')   # mean 97 < 98.5
+        assert v8(cells=[('answer', 8, 96.5, 1100)])['verdict'].startswith('NOT SHOWN (failing: ')       # a cell below 97: not a hair
         assert v8(cells=[('answer', 5, 98.0, 1100)] * 1 + [('answer', L, 97.5, 1100) for L in (6, 7, 8, 9)], wrong=5)['verdict'].startswith(
-            'NOT SHOWN: a miss')                                                        # R5 fails too: not a hair
+            'NOT SHOWN (failing: R1, R5)')                                                      # R5 fails too: not a hair
         assert v8(cells=[('operand', 8, 88.0, 1100)])['verdict'].startswith('PROVED WRONG: a 4-9')    # any cell < 90 (no s201 special case)
         assert v8(cells=[('operand', 3, 99.5, 900)])['verdict'].startswith('NOT JUDGED on R1/R3')
         assert v8(ref={})['verdict'] == 'NOT JUDGED'                                    # T1SD's predictions missing
