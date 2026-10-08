@@ -219,7 +219,7 @@ at 21.5 GB plus EmbeddingGemma). Screen: about 2.6 h + 5 h of box time, about $3
   total about $26; if every box hit its cap, about $40.
 - Nothing in sections 3, 5 or 6's marks or readout changes.
 
-## 8. Addendum D (2026-10-08, 2:45 PM ET, no 8b result exists): the screen was killed when Vast credit ran out; marks unchanged
+## 8. Addendum D (2026-10-08, 2:35 PM ET, no 8b result exists): the screen was killed when Vast credit ran out; marks unchanged
 
 - **What happened (shown, Vast account at 2:27 PM ET):** all eight screen boxes (and the roadmap thread's five) were `exited`, credit 0, balance
   -$0.71. Credit was $3.68 at 12:55 PM with about 13 boxes up (about $8/h). I launched 8 boxes without checking that the balance covered
