@@ -1,0 +1,273 @@
+{
+ "nprime": "/root/c7d/s101/Nprime.pt",
+ "name": "s101",
+ "seed": 0,
+ "T": 3.0,
+ "spec": "Roadmap 7d, the creative part of sleep (screens S1 and S3). CPU, DEV and pool only: C2 test / labelled and K_new test are never opened.",
+ "args": {
+  "pool_limit": null,
+  "dev_limit": null,
+  "n1": 32,
+  "n2": 480,
+  "lr": 0.001,
+  "visits": 32,
+  "replay_n": null,
+  "day_from": "/root/c7d/s1"
+ },
+ "note": "C2 DEV and C2 pool only; test / labelled never opened; no kind label and no key touches an allocation or a record (the example check only)",
+ "sizes": {
+  "pool": 1024,
+  "c2_dev": 256,
+  "fresh_practised": 256,
+  "replay": 200000,
+  "warm_rows": 2048
+ },
+ "control": {
+  "arm": "Z'",
+  "kind": "w1",
+  "w1_from": "/root/c7d/s3",
+  "rule": "Z' = seeded draw of W1's own previous-night records (roadmap 36d3fc2d14)"
+ },
+ "W1_night": {
+  "source": "from S1 day /root/c7d/s1/s101/day.pkl (1018 rows); 6 greedy-passing rows searched here (seed 2000)",
+  "samples": {
+   "pass1": 32768,
+   "pass2": 359520,
+   "stuck_questions": 749
+  },
+  "records": 808,
+  "records_by_kind": {
+   "affine": 19,
+   "double_add": 172,
+   "last_digit": 293,
+   "sq_plus": 25,
+   "square": 299
+  },
+  "pool_with_fit_pass1": 275,
+  "pool_with_fit_final": 571,
+  "sleep": {
+   "updates": 808,
+   "records": 808,
+   "visits_per_record": 32.0,
+   "last_loss": 0.4607446253299713
+  }
+ },
+ "W1_from": "/root/c7d/s3/s101/W1.pt",
+ "seconds": {
+  "shaky": 50.80220603942871,
+  "sleep_PZ": 865.5495760440826,
+  "measure": 208.31727981567383,
+  "total": 1147.7618582248688
+ },
+ "P_records": {
+  "pool_rows": 1024,
+  "passing_greedy": 531,
+  "rate_histogram": {
+   "0/8": 0,
+   "1/8": 7,
+   "2/8": 15,
+   "3/8": 22,
+   "4/8": 25,
+   "5/8": 25,
+   "6/8": 45,
+   "7/8": 89,
+   "8/8": 303
+  },
+  "records": 228,
+  "records_by_kind": {
+   "double_add": 84,
+   "last_digit": 98,
+   "square": 23,
+   "affine": 11,
+   "sq_plus": 12
+  }
+ },
+ "W1_records_rebuilt": {
+  "records": 808,
+  "same_counts_as_W1_night": true
+ },
+ "P_sleep": {
+  "updates": 228,
+  "records": 228,
+  "visits_per_record": 32.0,
+  "last_loss": 0.005216291733086109
+ },
+ "Z_sleep": {
+  "updates": 228,
+  "records": 228,
+  "visits_per_record": 32.0,
+  "last_loss": 0.07075643290299923
+ },
+ "arms": {
+  "W1": {
+   "stuck_rate": 0.65625,
+   "first_try_right": {
+    "near_copy": 0.8137254901960784,
+    "multi_step": 0.032467532467532464,
+    "practised": 0.78125,
+    "pooled_dev": 0.34375
+   },
+   "written_steps_per_right": {
+    "dev": 1.1590909090909092,
+    "practised": 2.565
+   },
+   "cone_steps_per_right": {
+    "dev": 1.1590909090909092,
+    "practised": 2.565
+   },
+   "n_right": {
+    "dev": 88,
+    "practised": 200
+   },
+   "skills": {
+    "pooled5": 0.98,
+    "n5": 1000,
+    "in_dist": 0.8419117647058824,
+    "n_in_dist": 6800
+   },
+   "skills_harm_vs_W1_points": 0.0
+  },
+  "P": {
+   "stuck_rate": 0.62890625,
+   "first_try_right": {
+    "near_copy": 0.8431372549019608,
+    "multi_step": 0.05844155844155844,
+    "practised": 0.79296875,
+    "pooled_dev": 0.37109375
+   },
+   "written_steps_per_right": {
+    "dev": 1.2210526315789474,
+    "practised": 2.5517241379310347
+   },
+   "cone_steps_per_right": {
+    "dev": 1.2210526315789474,
+    "practised": 2.5517241379310347
+   },
+   "n_right": {
+    "dev": 95,
+    "practised": 203
+   },
+   "skills": {
+    "pooled5": 0.9490000000000001,
+    "n5": 1000,
+    "in_dist": 0.816764705882353,
+    "n_in_dist": 6800
+   },
+   "skills_harm_vs_W1_points": 3.0999999999999917
+  },
+  "Z": {
+   "stuck_rate": 0.62890625,
+   "first_try_right": {
+    "near_copy": 0.8627450980392157,
+    "multi_step": 0.045454545454545456,
+    "practised": 0.8203125,
+    "pooled_dev": 0.37109375
+   },
+   "written_steps_per_right": {
+    "dev": 1.368421052631579,
+    "practised": 2.552380952380952
+   },
+   "cone_steps_per_right": {
+    "dev": 1.3578947368421053,
+    "practised": 2.552380952380952
+   },
+   "n_right": {
+    "dev": 95,
+    "practised": 210
+   },
+   "skills": {
+    "pooled5": 0.9420000000000001,
+    "n5": 1000,
+    "in_dist": 0.8182352941176471,
+    "n_in_dist": 6800
+   },
+   "skills_harm_vs_W1_points": 3.7999999999999923
+  }
+ },
+ "boot": {
+  "stuck_Z_minus_P": {
+   "points": 0.0,
+   "lo": -3.515625,
+   "hi": 3.515625
+  },
+  "stuck_W1_minus_P": {
+   "points": 2.734375,
+   "lo": -0.78125,
+   "hi": 6.640625
+  },
+  "first_try_P_minus_W1": {
+   "near_copy": {
+    "points": 2.9411764705882355,
+    "lo": -3.9215686274509802,
+    "hi": 10.784313725490197
+   },
+   "multi_step": {
+    "points": 2.5974025974025974,
+    "lo": -1.2987012987012987,
+    "hi": 6.493506493506493
+   },
+   "practised": {
+    "points": 1.171875,
+    "lo": -4.296875,
+    "hi": 6.25
+   },
+   "pooled_dev": {
+    "points": 2.734375,
+    "lo": -0.78125,
+    "hi": 6.640625
+   }
+  },
+  "first_try_P_minus_Z": {
+   "near_copy": {
+    "points": -1.9607843137254901,
+    "lo": -8.823529411764707,
+    "hi": 4.901960784313726
+   },
+   "multi_step": {
+    "points": 1.2987012987012987,
+    "lo": -2.5974025974025974,
+    "hi": 4.545454545454546
+   },
+   "practised": {
+    "points": -2.734375,
+    "lo": -7.8125,
+    "hi": 2.34375
+   }
+  },
+  "written_steps_P_minus_W1_on_rows_both_right": {
+   "rows": 79,
+   "mean_x100": 0.0,
+   "lo_x100": -5.063291139240507,
+   "hi_x100": 6.329113924050633
+  }
+ },
+ "marks": {
+  "stuck": {
+   "Z_minus_P_points": 0.0,
+   "passes": false,
+   "rule": "P stuck rate <= Z' stuck rate - 3 points (C2 DEV greedy try fails the example check)"
+  },
+  "groups": {
+   "P_minus_Z_first_try_points": {
+    "near_copy": -1.9607843137254943,
+    "multi_step": 1.2987012987012985,
+    "practised": -2.734375
+   },
+   "passes": false,
+   "rule": "no group more than 2 points below Z' on first try right"
+  },
+  "harm": {
+   "P_points": 3.0999999999999917,
+   "Z_points": 3.7999999999999923,
+   "passes": false,
+   "rule": "P skills harm vs W1 <= 2 points (100 x pooled-5 drop); if P > 2 but within 0.5 of Z''s: 'practice passes; second-night harm is a separate blocker' (roadmap 36d3fc2d14)",
+   "second_night_harm": false
+  },
+  "proved_wrong": {
+   "flag": false,
+   "rule": "Z' - P stuck-rate upper end of the paired 95% interval < +1 point"
+  },
+  "passes": false,
+  "ruling": "fails"
+ }
+}

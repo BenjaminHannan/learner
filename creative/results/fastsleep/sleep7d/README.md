@@ -69,3 +69,26 @@ No training. F = the trained adapter (C) for tries 1-32, then the untrained one 
 Verdict: **PASS on both parents**, not proved wrong: F still reaches the new kinds (2.1% on both), where C reached 0.
 
 *Shown:* switching the trained creative part off after 32 tries keeps its 32-try gain (+16 to +18) and gives back what C lost. New-kind reach returns to U's level, within one question on s101, and in-kind reach@512 is no lower than U's.
+
+## S3' (finished 06:51 UTC 10-08 = 2:51 AM ET; roadmap 36d3fc2d14)
+
+One change from S3: the control. Z' sleeps on a seeded draw of W1's own previous-night records, with the same dose (the same number of updates) as P. W1 is S3's W1.pt. W1's records were rebuilt from the same day and seeds, and their counts match W1's night (835 / 808). P was redrawn and its numbers are identical to S3's P. Per-row next-day scores and P.pt / Z.pt are kept (`~/c7d/s3p/<parent>/`, `/mnt/project-files/fast-sleep/sleep7d/s3p/`).
+
+| | s100 | s101 |
+|---|---|---|
+| stuck rate: W1 / P / Z' | 68.4 / 66.0 / 65.2 | 65.6 / 62.9 / 62.9 |
+| **(1) Z' - P** (mark >= +3) | **-0.8** [-5.5, 3.5] fail | **0.0** [-3.5, 3.5] fail |
+| (2) first try P - Z': near-copy / multi-step / practised (none below -2) | **-4.9** / +1.3 / **-4.3** fail | -2.0 / +1.3 / **-2.7** fail |
+| (3) skills harm vs W1: P / Z' (mark P <= 2; or P > 2 within 0.5 of Z') | 0.2 / 0.1 pass | **3.1 / 3.8** fail (0.7 apart) |
+| P - W1 stuck reduction | +2.3 [-2.7, 7.4] | +2.7 [-0.8, 6.6] |
+| P - W1 first try: multi-step / practised / pooled DEV | +2.6 [0.0, 5.8] / +7.8 [3.1, 12.9] / +2.3 [-2.3, 7.4] | +2.6 [-1.3, 6.5] / +1.2 [-4.3, 6.3] / +2.7 [-0.8, 6.6] |
+| written steps per right answer, DEV: W1 / P / Z' | 1.51 / 1.76 / 1.49 | 1.16 / 1.22 / 1.37 |
+| P - W1 written steps on rows both get right | +0.21 [0.10, 0.34] (62 rows) | 0.00 [-0.05, 0.06] (79 rows) |
+
+Verdict: **S3' fails.** Marks 1 and 2 fail on both parents, and harm fails on s101. It is **not proved wrong**: the upper end of Z' - P is +3.5 on both parents, not below +1.
+
+How to read it:
+- *Shown:* practising the shaky passes does no better than sleeping again on the previous night's records. The point estimates are -0.8 and 0.0. The intervals are wide (about +/-4.5 points on 256 questions), so a 3-point effect cannot be ruled out either way.
+- *Suggested:* any second night helps a little. Against W1, P is about 2.5 less stuck, but neither interval clears 0. The intervals for Z' are not computed here.
+- *Shown:* on s101 every second night costs skills: P 3.1, Z 3.1, Z' 3.8 points of pooled-5 against W1, which itself is only 0.9 below N'. On s100 the second night costs nothing (0.1-0.8).
+- *Shown:* P does not make answers shorter. On rows both models get right, P writes the same number of steps or more.
