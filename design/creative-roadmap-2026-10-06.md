@@ -73,6 +73,9 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   trained add-on for the first 32 tries only, then search with the untrained one (Test S1b, no training needed).
   That fix worked (2:30 AM ET 10-08): the trained add-on for 32 tries, then the untrained search, keeps the faster
   answers and gets the new-kind answers back.
+  Part 3 failed its fair re-run too: practising its own shaky wins did no better than one more ordinary night, and it
+  did not make answers shorter. It is parked. Parts 1 and 2 are tested together next, once a skills drop that every
+  second night causes on one trial copy is understood.
   Part 3's first test (10-08) was unfair: the copy it was compared with forgot the new rules, so its win counts for
   nothing. It is re-run against a fair copy that sleeps on the same finds again (Test S3').
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
@@ -1214,22 +1217,47 @@ it should also get faster at its own tasks. Written here before any training; th
   nothing over more loop-2 sleep, and J runs loops 1 and 2 only.
 - Disclosed: the control changed after S3's numbers. The marks did not change.
 - Runs on CPU after S1b.
+- **S3' result (fast-sleep 3799d8f7a, finished 2:51 AM ET 10-08; DEV, two parents): FAIL, not proved wrong.** W1's
+  records rebuilt with W1's counts (835 / 808); P identical to S3's P.
+  - Stuck rate, W1 / P / Z': 68.4 / 66.0 / 65.2 and 65.6 / 62.9 / 62.9. Z' - P -0.8 [-5.5, 3.5] and 0.0 [-3.5, 3.5]
+    (mark 1 fails).
+  - First try P - Z', near-copy / multi-step / practised: -4.9 / +1.3 / -4.3 and -2.0 / +1.3 / -2.7 (mark 2 fails).
+  - Harm vs W1, P / Z': 0.2 / 0.1 and 3.1 / 3.8 (mark 3 fails on s101; 0.7 apart, so the within-0.5 rule does not
+    apply).
+  - P - W1: stuck -2.3 [-7.4, 2.7] and -2.7 [-6.6, 0.8]; written steps on rows both get right +0.21 [0.10, 0.34] and
+    0.00 [-0.05, 0.06].
+- **Ruled:**
+  - Loop 3 as built is parked. Practising its own shaky passes did no better than one more night on the creative
+    part's finds (shown, points -0.8 and 0.0). The intervals (about 4.5 points each way on 256 questions) cannot rule
+    out a 3-point effect, but with point estimates at 0 a bigger run of the same loop is not worth it.
+  - "Faster" is not shown: P writes the same number of steps or more.
+  - Loop 3 comes back only as one change at a time from the list below: speed in thinking rounds once learned halting
+    exists, or the worker also pushed down on its own failed first tries.
+  - Harm (shown): every second night on s101 costs 3.1-3.8 points of pooled-5 against W1, and night 1 already drops
+    in_dist about 3.6-3.8 on both parents. The fast-sleep thread is looking at which skills drop and whether it grows
+    with nights. It reports before changing the sleep.
+  - J becomes loops 1 and 2 (below).
 
-
-**Test J, all three loops together** (only after S1b and S3' pass their screens): two days and nights from N', against
-loop 2 alone (W). J's creative mode is S1b's F. Screened on s100/s101 DEV, then confirmed on s200-s205 with a fresh
-sealed C2 split (job 9 uses up C2's test) and a sealed split of the three new kinds (`knew.py`'s writer, 128 per kind,
-hash only, written before J runs and opened once).
+**Test J, loops 1 and 2 together** (changed 10-08 after S3': loop 3 is parked): two days and nights from N', loop 1
+(creative mode F) plus loop 2, against loop 2 alone (W). One change: the creative part's own sleep. It asks Ben's
+first two points together: does a creative part that learns from its successes hand the worker better finds?
+- J waits for the fast-sleep thread's harm look. If that changes the sleep recipe, both arms use the changed recipe.
+- Screened on s100/s101 DEV, then confirmed on s200-s205 with a fresh sealed C2 split (job 9 uses up C2's test) and a
+  sealed split of the three new kinds (`knew.py`'s writer, 128 per kind, hash only, written before J runs and opened
+  once).
 - Marks:
   1. Next-day stuck rate on C2: J at most W - 3.
   2. Creative reach@32 on fresh C2 questions (creative mode run on every question, so both arms use the same set): J
      at least W + 5.
   3. New-kind guard: reach@512 on sq_minus, triple_add and mult_sub, J at least W - 1 point.
   4. C2 first try: J at least W - 2.
-  5. Skills harm at most 2.
+  5. Skills harm from loop 1: J at most W + 2. Harm against N' is reported for both arms; it belongs to the nightly
+     harm check, which must pass before anything ships.
 - Proved wrong: J no better than W on both stuck rate and creative reach@32 (upper ends below +1).
 - Changed 10-08 after S1, before J was built: K_new TEST was never written (fewer than four kinds qualified), so the
   old mark "K_new creative reach@32 at least W + 5" became mark 2 (in-kind) plus the new-kind guard (mark 3).
+- Changed 10-08 after S3', before J was built: loop 3 dropped from J; mark 5 measured against W, because S3' showed
+  that any second night on s101 costs skills in both arms, which is not loop 1's doing.
 
 **Later, one change each:**
 - the worker is also pushed down on its own failed first tries;
@@ -1385,3 +1413,7 @@ hash only, written before J runs and opened once).
 - **S1b passes (10-08):** the trained add-on for the first 32 tries, then the untrained one, kept S1's 32-try gain
   (+18.0 / +16.0) and gave back U's reach at 512 tries, on new kinds too (2.1 vs 2.1 and 2.1 vs 2.6). F becomes the
   creative mode for J and for S1's confirm.
+- **S3' fails; loop 3 parked (10-08):** with a fair control, practising shaky passes equals one more night on the
+  creative part's finds (Z' - P -0.8 / 0.0), with no shorter answers. Not proved wrong (upper ends +3.5), but parked.
+  J becomes loops 1 and 2 against loop 2 alone, waits for the nightly harm look (any second night costs s101 3.1-3.8
+  pooled-5 points), and its harm mark is measured against W.
