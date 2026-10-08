@@ -257,3 +257,27 @@ How to read it:
 - *Shown:* night 1 at lr 1e-4 costs no skills at all. in_dist ends up 0.6-0.8 above N', no family fires, and pooled-5 rises. It keeps nearly all of night 1's C2 gain (28.9 / 33.6 against W1's 31.2 / 34.4, from N' at 0.4).
 - *Shown:* fewer visits at lr 1e-3 (V) keeps the C2 gain but not the skills. Its harm matches W1's.
 - *Suggested:* together with the 2 x 2, the night's lr is what sets the skills cost. At lr 1e-3, reusing a small set (the records, 32 visits) overfits. At 1e-4, the same reuse is harmless. N' itself came from an lr 1e-3 stepping-stone night (N' vs B2 in_dist -2.2 to -2.7), and so did the research loop's sleep. Both are worth re-checking under a lower lr.
+
+## Test L2 (finished 17:07 UTC 10-08 = 1:07 PM ET; roadmap 7c8041caa3, `night7d.py l2`, `l2/`)
+
+Both nights at lr 1e-4, compared with the standard two nights at lr 1e-3 (W1 then W2, job 8's recipe). Night 1 is VL's L. Day 2 from L uses the same two-pass search and seeds as W's day 2 (2,864 / 2,715 s on 2 threads). Night 2 = L's own day-2 records at lr 1e-4, 32 visits. On DEV, the multi-step set is the 154 HARD_KINDS questions.
+
+| | s100 | s101 |
+|---|---|---|
+| skills in_dist: N' / W1 / W2 / L / L2 (B2) | 86.7 / 82.9 / 82.9 / 87.5 / **87.1** (89.4) | 87.8 / 84.2 / 84.7 / 88.3 / **88.6** (90.5) |
+| (1) harm L2 vs N' | -0.4 (better), nothing fires, **pass** | -0.8 (better), nothing fires, **pass** |
+| night 2's own cost (L2 vs L) | 0.4, nothing fires | -0.2, nothing fires |
+| (2) multi-step first try L2 - W2 (mark >= -2) | **-4.5** [-9.7, +0.6] fail | **-3.2** [-7.8, +0.6] fail |
+| multi-step first try L2 - N' (report; job 8's climb mark +10) | +3.9 [0.6, 7.8] | +3.2 [0.0, 6.5] |
+| pooled C2 first try: W1 / W2 / L / L2 | 31.2 / 34.0 / 28.9 / 33.6 (L2 - W2 -0.4 [-5.5, 4.7]) | 34.4 / 39.5 / 33.6 / 30.1 (**-9.4** [-14.1, -4.7]) |
+| multi-step reach@32 (plain sampling): W1 / W2 / L / L2 | 13.0 / 31.8 / 6.5 / 9.1 (L2 - W2 **-22.7** [-29.9, -16.2]) | 14.3 / 24.7 / 7.1 / 9.1 (**-15.6** [-22.7, -9.1]) |
+| night-2 records: W2 / L2 (sq_plus) | 1,187 / 1,046 (136 / 103) | 1,118 / 1,048 (68 / 61) |
+| skills drop vs B2: N' / W1 / W2 / L / L2 | 2.7 / 6.5 / 6.5 / 1.9 / 2.3 | 2.8 / 6.3 / 5.8 / 2.2 / 2.0 |
+
+Verdict: **L2 fails mark 2 on both parents and is not proved wrong** (the upper ends are +0.6, not below 0). By the pre-set rule, L64 (both nights at lr 1e-4 with 64 visits) is the next single change.
+
+How to read it:
+- *Shown:* at lr 1e-4 the skills cost stays at zero across two nights. Neither night costs skills against the night before or against N'.
+- *Shown:* the C2 climb is much smaller. Multi-step first try rises only +3-4 over N' (the climb mark is +10), and trails W2 by 3-5. Pooled first try matches W2 on s100 but trails by 9 on s101, where L2 even fell from L (33.6 to 30.1).
+- *Shown:* the lr 1e-3 nights widen the worker's sampling on multi-step kinds (reach@32 13 -> 32 and 14 -> 25 across night 2). The lr 1e-4 nights don't (6.5 -> 9.1, 7.1 -> 9.1, below W1). The low lr also finds fewer night-2 records (1,046 vs 1,187 on s100).
+- *Suggested:* part of what costs skills at lr 1e-3 is also what drives the multi-step search climb. More visits at lr 1e-4 (L64) tests whether the climb can be bought back without the cost.
