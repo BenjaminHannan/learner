@@ -250,7 +250,7 @@ is not dropped, only put behind this step. It needs Vast credit first (credit 0,
   `ACCUM=2` at 10M, MAXH 6 / 9.5, the `PROG` lines on. `d = pooled-5(10M) - pooled-5(3M)`. 8a references on seed 400 (shown):
   B2 +0.03, PT +3.08, LLM +15.03.
 - **Readout (computed by `SEEDS=400 python g8b/analysis/screen_readout.py results/8b/EGA36 <8a-ladder>`):**
-  - **Grows (go on):** `d - d_B2 >= +3.0` and `d - d_PT >= +1.0` (d at least +3.03 and +4.08... i.e. d >= +4.08).
+  - **Grows (go on):** `d - d_B2 >= +3.0` and `d - d_PT >= +1.0` (the B2 line needs d >= +3.03, the PT line d >= +4.08, so both need d >= +4.08).
   - **Flat (stop):** `d - d_B2 < +1.0`, i.e. d < +1.03. No more money goes to this fix, and I report that the Gemma input plus the letter writer
     does not make B2 grow, as a one-seed screen.
   - **Unclear:** anything between: one more seed (401) of EGA36 (about $7) before any other spend.
