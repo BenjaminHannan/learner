@@ -281,3 +281,29 @@ How to read it:
 - *Shown:* the C2 climb is much smaller. Multi-step first try rises only +3-4 over N' (the climb mark is +10), and trails W2 by 3-5. Pooled first try matches W2 on s100 but trails by 9 on s101, where L2 even fell from L (33.6 to 30.1).
 - *Shown:* the lr 1e-3 nights widen the worker's sampling on multi-step kinds (reach@32 13 -> 32 and 14 -> 25 across night 2). The lr 1e-4 nights don't (6.5 -> 9.1, 7.1 -> 9.1, below W1). The low lr also finds fewer night-2 records (1,046 vs 1,187 on s100).
 - *Suggested:* part of what costs skills at lr 1e-3 is also what drives the multi-step search climb. More visits at lr 1e-4 (L64) tests whether the climb can be bought back without the cost.
+
+## Test L64 (finished 19:53 UTC 10-08 = 3:53 PM ET; roadmap 7c8041caa3, `night7d.py l2 --visits 64`, `l64/`)
+
+L2 with 64 visits per record on both nights instead of 32 (lr 1e-4 on both). Everything else is L2's recipe: same records on night 1 (835 / 808), same day-2 search and seeds from the new night-1 model, then night 2 on its own day-2 records. Marks are L2's, plus one pre-set proved-wrong rule: "more practice at the low lr adds no climb" if L64 - L2 on multi-step first try is below +1.0 on both parents. In the table, L1 / L64 are this run's night-1 / night-2 models.
+
+| | s100 | s101 |
+|---|---|---|
+| skills in_dist: N' / W2 / L2 / L1 / **L64** (B2) | 86.7 / 82.9 / 87.1 / 87.6 / **87.6** (89.4) | 87.8 / 84.7 / 88.6 / 88.5 / **88.9** (90.5) |
+| (1) harm L64 vs N' | -0.9 (better), but **table_calc fires**: 62.5 -> 56.0 (-6.5 [-11.5, -1.0]); **fail** | -1.2 (better), nothing fires, **pass** |
+| (2) multi-step first try L64 - W2 (mark >= -2) | **-2.6** [-7.8, +2.6] fail | **-2.6** [-7.1, +1.9] fail |
+| proved wrong? (vs W2 upper end < 0 on both; L64 - L2 multi-step < +1.0 on both) | no (+2.6); no (+1.9) | no (+1.9); yes (+0.6) |
+| multi-step first try L64 - N' (report; job 8's climb mark +10) | +5.8 [1.9, 10.4] | +3.9 [0.6, 7.8] |
+| pooled C2 first try: W1 / W2 / L2 / L1 / L64 | 31.2 / 34.0 / 33.6 / 28.5 / 35.2 (L64 - W2 +1.2 [-3.9, 6.3]) | 34.4 / 39.5 / 30.1 / 34.0 / 35.2 (-4.3 [-8.6, 0.0]) |
+| multi-step reach@32: W1 / W2 / L2 / L1 / L64 | 13.0 / 31.8 / 9.1 / 10.4 / 18.2 (L64 - W2 **-13.6** [-21.4, -5.8]) | 14.3 / 24.7 / 9.1 / 11.0 / 13.0 (**-11.7** [-18.2, -5.2]) |
+| L64 - L2 (report): multi-step first try / pooled first try / multi-step reach@32 | +1.9 [-2.6, 6.5] / +1.6 [-3.1, 6.6] / **+9.1** [3.2, 14.9] | +0.6 [-3.2, 4.5] / **+5.1** [0.8, 9.4] / +3.9 [-1.9, 9.1] |
+| night 1 at 64 vs 32 visits (VL's L): skills in_dist / C2 first try | 87.6 vs 87.5 / 28.5 vs 28.9 | 88.5 vs 88.3 / 34.0 vs 33.6 |
+| night-2 records: W2 / L2 / L64 (sq_plus) | 1,187 / 1,046 / 1,107 (136 / 103 / 94) | 1,118 / 1,048 / 1,046 (68 / 61 / 53) |
+| CPU seconds: night 1 / day 2 / night 2 | 2,579 / 2,269 / 3,770 | 2,522 / 2,237 / 3,530 |
+
+Verdict: **L64 fails on both parents and is not proved wrong.** Mark 2 misses by one question on each parent: on 154 questions one question is 0.65 points, so -2.6 is 4 questions behind W2 where the mark allows 3. On s100 the harm mark also fails on one family. The no-climb rule holds only on s101, and the vs-W2 upper ends are above 0, so neither proved-wrong rule is met.
+
+How to read it:
+- *Shown:* doubling the visits on night 1 changes nothing (skills and C2 first try within 0.4 of VL's L). The gain is on night 2: reach@32 on multi-step recovers part of the lr 1e-3 nights' widening (+9.1 and +3.9 over L2), and pooled first try rises.
+- *Shown:* the skills cost stays near zero overall (in_dist is above N' on both parents), but 64 visits on night 2 starts to cost one family on s100. table_calc was 62.0 after L2 and is 56.0 after L64 (-6.0 [-10.5, -1.5]); night 1 at 64 visits left it within its interval.
+- *Shown:* multi-step first try still trails W2 by 4 questions on both parents, and the climb over N' (+5.8 / +3.9) is still below the +10 mark.
+- *Suggested:* more visits at lr 1e-4 buy back sampling breadth faster than first-try accuracy, and the first family cost appears at 64 visits. That puts the lever between lr 1e-4 and 1e-3 rather than in more visits. The pre-set next step (lr 3e-4) is held under the one-big-run rule (3:27 PM ET 10-08), so nothing more runs here unless the big-run thread asks for it.

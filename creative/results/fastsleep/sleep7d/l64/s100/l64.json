@@ -1,0 +1,425 @@
+{
+ "nprime": "/root/c7d/s100/Nprime.pt",
+ "name": "s100",
+ "spec": "Roadmap 7526d614e5, Test VL: does night 1 hurt skills less with each record seen fewer times (arm V) or at a lower lr (arm L)? CPU. Reads the skills TRAIN file (replay), C2 pool / warm rows (night records),",
+ "label": "L64",
+ "models": {
+  "L": "L1v64",
+  "L2": "L2v64"
+ },
+ "marks_rules": {
+  "harm": "(1) harm_measure(N' DEV hits, L2 DEV hits) passes: in_dist drop <= 1.5 and no family fires",
+  "multi_step": "(2) C2 DEV first try on the multi-step kinds (c2_pilot.HARD_KINDS, 154 questions): c2_pilot.boot(L2 right, W2 right) point >= -2.0",
+  "passes": "passes = (1) and (2) on a parent; the verdict needs both parents",
+  "proved_wrong": "the L2 - W2 multi-step first-try paired 95% interval has its upper end < 0 on BOTH parents (decided in the report)",
+  "proved_wrong_no_climb": "L64 only: night-2 model minus L2 multi-step first try (paired point, 154 HARD_KINDS) < +1.0 point on BOTH parents (\"more practice at the low rate adds no climb\"); proved_wrong = either rule"
+ },
+ "next": "if L2 passes: lr 1e-4 becomes the night dose for new runs (6-parent confirm waits for job 9's scoring); if it misses mark 2: L64 on both nights is the next single change",
+ "secs": {
+  "records1": 19.60851240158081,
+  "day2_L": 2269.4234573841095,
+  "night2_L2": 3770.472359418869,
+  "measure_N": 0.011851072311401367,
+  "measure_W1": 0.010382652282714844,
+  "measure_W2": 0.009025335311889648,
+  "measure_L": 48.339006185531616,
+  "measure_L2": 47.6812858581543,
+  "reach32_W1": 0.0007271766662597656,
+  "reach32_W2": 0.0006940364837646484,
+  "reach32_L": 106.2700548171997,
+  "reach32_L2": 106.42684078216553,
+  "total": 8999.031809806824
+ },
+ "args": {
+  "seed": 0,
+  "day2_seed": 1,
+  "measure_seed": 777,
+  "T": 3.0,
+  "n1": 32,
+  "n2": 480,
+  "lr": 0.0001,
+  "visits": 64,
+  "label": "L64",
+  "pool_limit": null,
+  "dev_limit": null,
+  "skills_limit": null,
+  "max_records": null,
+  "b2": "/root/fs/B2_s100.pt",
+  "s3": "/root/c7d/s3",
+  "j": "/root/c7d/j",
+  "r": "/root/c7d/r",
+  "vl": "/root/c7d/vl",
+  "s1w": "/root/c7d/s1w",
+  "skills_train": "/root/work/data/train.jsonl",
+  "skills_data": "/root/work/data_big"
+ },
+ "note": "C2 pool / warm rows / DEV and skills train / DEV only; test / labelled / K_new never opened",
+ "night1": {
+  "records": {
+   "rebuilt": 835,
+   "W1_night": 835,
+   "equal": true,
+   "night_seed": 0,
+   "source": "from S1 day /root/c7d/s1/s100/day.pkl (1023 rows); 1 greedy-passing rows searched here (seed 2000)"
+  },
+  "sleep": {
+   "updates": 1670,
+   "records": 835,
+   "visits_per_record": 64.0,
+   "last_loss": 0.9728244841098785,
+   "seconds": 2579.098016023636
+  },
+  "lr": 0.0001,
+  "visits": 64,
+  "L_path": "/root/c7d/l64/s100/L1v64.pt",
+  "L_sha256": "1839295c45433ec75dd18f3e0d84e726e2dcde5cb0483625435428ee40f5c242"
+ },
+ "day2": {
+  "drawn": {
+   "greedy": 1024,
+   "pass1": 32768,
+   "pass2": 241440,
+   "pass2_rows": 503
+  },
+  "greedy_pass": 0.42578125,
+  "pool_with_fit_pass1": 521,
+  "pool_with_fit_final": 660,
+  "pool_rows": 1024,
+  "seconds": 2269.4234573841095,
+  "seconds_per_pool_row": 2.2162338451016694
+ },
+ "night2_records": {
+  "records": 1107,
+  "records_by_kind": {
+   "affine": 23,
+   "double_add": 222,
+   "last_digit": 366,
+   "sq_plus": 94,
+   "square": 402
+  },
+  "W2_records": 1187,
+  "W2_records_by_kind": {
+   "affine": 27,
+   "double_add": 236,
+   "last_digit": 382,
+   "sq_plus": 136,
+   "square": 406
+  }
+ },
+ "night2": {
+  "updates": 2214,
+  "records": 1107,
+  "visits_per_record": 64.0,
+  "last_loss": 0.5373867869377136,
+  "seconds": 3770.4434530735016,
+  "lr": 0.0001,
+  "visits": 64
+ },
+ "skills": {
+  "N": {
+   "pooled5": 98.1,
+   "in_dist": 86.69117647058823,
+   "n": 6800
+  },
+  "W1": {
+   "pooled5": 97.4,
+   "in_dist": 82.88235294117646,
+   "n": 6800
+  },
+  "W2": {
+   "pooled5": 98.1,
+   "in_dist": 82.8970588235294,
+   "n": 6800
+  },
+  "L": {
+   "pooled5": 98.6,
+   "in_dist": 87.58823529411765,
+   "n": 6800
+  },
+  "L2": {
+   "pooled5": 99.1,
+   "in_dist": 87.6029411764706,
+   "n": 6800
+  },
+  "B2": {
+   "pooled5": 99.7,
+   "in_dist": 89.3529411764706,
+   "n": 6800
+  }
+ },
+ "c2_dev": {
+  "N": {
+   "first_try_right": 0.00390625,
+   "stuck_rate": 0.99609375,
+   "n": 256
+  },
+  "W1": {
+   "first_try_right": 0.3125,
+   "stuck_rate": 0.68359375,
+   "n": 256
+  },
+  "W2": {
+   "first_try_right": 0.33984375,
+   "stuck_rate": 0.66015625,
+   "n": 256
+  },
+  "L": {
+   "first_try_right": 0.28515625,
+   "stuck_rate": 0.71484375,
+   "n": 256
+  },
+  "L2": {
+   "first_try_right": 0.3515625,
+   "stuck_rate": 0.6484375,
+   "n": 256
+  }
+ },
+ "reach32": {
+  "W1": {
+   "pooled": 46.875,
+   "multi_step": 12.987012987012987,
+   "source": "reused /root/c7d/s1w/s100/measure_U.pkl"
+  },
+  "W2": {
+   "pooled": 58.59375,
+   "multi_step": 31.818181818181817,
+   "source": "reused /root/c7d/j/s100/measure_W.pkl"
+  },
+  "L": {
+   "pooled": 44.921875,
+   "multi_step": 10.38961038961039,
+   "source": "computed"
+  },
+  "L2": {
+   "pooled": 50.0,
+   "multi_step": 18.181818181818183,
+   "source": "computed"
+  }
+ },
+ "multi_step_n": 154,
+ "marks": {
+  "harm": false,
+  "multi_step": false,
+  "passes": false,
+  "proved_wrong": false,
+  "proved_wrong_no_climb": false,
+  "in_dist_drop_vs_N": -0.9117647058823621,
+  "fired_vs_N": [
+   "table_calc"
+  ],
+  "pooled5": 99.1,
+  "multi_step_first_try_L2_minus_W2": {
+   "points": -2.5974025974025974,
+   "lo": -7.792207792207792,
+   "hi": 2.5974025974025974
+  },
+  "multi_step_n": 154,
+  "rules": {
+   "harm": "(1) harm_measure(N' DEV hits, L2 DEV hits) passes: in_dist drop <= 1.5 and no family fires",
+   "multi_step": "(2) C2 DEV first try on the multi-step kinds (c2_pilot.HARD_KINDS, 154 questions): c2_pilot.boot(L2 right, W2 right) point >= -2.0",
+   "passes": "passes = (1) and (2) on a parent; the verdict needs both parents",
+   "proved_wrong": "the L2 - W2 multi-step first-try paired 95% interval has its upper end < 0 on BOTH parents (decided in the report)",
+   "proved_wrong_no_climb": "L64 only: night-2 model minus L2 multi-step first try (paired point, 154 HARD_KINDS) < +1.0 point on BOTH parents (\"more practice at the low rate adds no climb\"); proved_wrong = either rule"
+  }
+ },
+ "report_only": {
+  "multi_step_first_try_L2_minus_N": {
+   "points": 5.8441558441558445,
+   "lo": 1.948051948051948,
+   "hi": 10.38961038961039
+  },
+  "climb_mark": "job 8: +10 points",
+  "pooled_first_try": {
+   "N": 0.390625,
+   "W1": 31.25,
+   "W2": 33.984375,
+   "L": 28.515625,
+   "L2": 35.15625
+  },
+  "pooled_first_try_L2_minus_W2": {
+   "points": 1.171875,
+   "lo": -3.90625,
+   "hi": 6.25
+  },
+  "reach32": {
+   "W1": {
+    "pooled": 46.875,
+    "multi_step": 12.987012987012987,
+    "source": "reused /root/c7d/s1w/s100/measure_U.pkl"
+   },
+   "W2": {
+    "pooled": 58.59375,
+    "multi_step": 31.818181818181817,
+    "source": "reused /root/c7d/j/s100/measure_W.pkl"
+   },
+   "L": {
+    "pooled": 44.921875,
+    "multi_step": 10.38961038961039,
+    "source": "computed"
+   },
+   "L2": {
+    "pooled": 50.0,
+    "multi_step": 18.181818181818183,
+    "source": "computed"
+   }
+  },
+  "reach32_multi_step_L2_minus_W2": {
+   "points": -13.636363636363637,
+   "lo": -21.428571428571427,
+   "hi": -5.844155844155844
+  },
+  "harm_vs_B2": {
+   "N": {
+    "in_dist_a": 89.3529411764706,
+    "in_dist_b": 86.69117647058823,
+    "in_dist_drop": 2.661764705882362,
+    "fired": [
+     "cipher_map",
+     "digits_parity",
+     "odd_one_out",
+     "rule_apply",
+     "seq_next"
+    ],
+    "passes": false,
+    "rule": "in_dist drop <= 1.5 and no family with drop > 5.0 and paired 95% interval below 0"
+   },
+   "W1": {
+    "in_dist_a": 89.3529411764706,
+    "in_dist_b": 82.88235294117646,
+    "in_dist_drop": 6.47058823529413,
+    "fired": [
+     "cipher_map",
+     "digits_parity",
+     "list_index",
+     "list_stats",
+     "object_track",
+     "odd_one_out",
+     "order_chain",
+     "passage_qa",
+     "rule_apply",
+     "seq_cycle",
+     "seq_next",
+     "state_update"
+    ],
+    "passes": false,
+    "rule": "in_dist drop <= 1.5 and no family with drop > 5.0 and paired 95% interval below 0"
+   },
+   "W2": {
+    "in_dist_a": 89.3529411764706,
+    "in_dist_b": 82.8970588235294,
+    "in_dist_drop": 6.455882352941188,
+    "fired": [
+     "cipher_map",
+     "digits_parity",
+     "list_stats",
+     "object_track",
+     "odd_one_out",
+     "order_chain",
+     "passage_qa",
+     "rule_apply",
+     "seq_next",
+     "state_update",
+     "verify_claim",
+     "word_filter"
+    ],
+    "passes": false,
+    "rule": "in_dist drop <= 1.5 and no family with drop > 5.0 and paired 95% interval below 0"
+   },
+   "L": {
+    "in_dist_a": 89.3529411764706,
+    "in_dist_b": 87.58823529411765,
+    "in_dist_drop": 1.764705882352942,
+    "fired": [
+     "passage_qa",
+     "rule_apply",
+     "seq_next"
+    ],
+    "passes": false,
+    "rule": "in_dist drop <= 1.5 and no family with drop > 5.0 and paired 95% interval below 0"
+   },
+   "L2": {
+    "in_dist_a": 89.3529411764706,
+    "in_dist_b": 87.6029411764706,
+    "in_dist_drop": 1.75,
+    "fired": [
+     "cipher_map",
+     "passage_qa",
+     "rule_apply",
+     "seq_next"
+    ],
+    "passes": false,
+    "rule": "in_dist drop <= 1.5 and no family with drop > 5.0 and paired 95% interval below 0"
+   }
+  },
+  "night2_own_cost_L2_vs_L": {
+   "in_dist_a": 87.58823529411765,
+   "in_dist_b": 87.6029411764706,
+   "in_dist_drop": -0.014705882352942012,
+   "fired": [],
+   "passes": true,
+   "rule": "in_dist drop <= 1.5 and no family with drop > 5.0 and paired 95% interval below 0"
+  },
+  "night2_records": {
+   "records": 1107,
+   "records_by_kind": {
+    "affine": 23,
+    "double_add": 222,
+    "last_digit": 366,
+    "sq_plus": 94,
+    "square": 402
+   },
+   "W2_records": 1187,
+   "W2_records_by_kind": {
+    "affine": 27,
+    "double_add": 236,
+    "last_digit": 382,
+    "sq_plus": 136,
+    "square": 406
+   }
+  },
+  "vs_L2_and_VL": {
+   "note": "this run minus the lr 1e-4 / 32-visit chain; unavailable parts are None (limits differ from the caches)",
+   "L2_night2": {
+    "source": "/root/c7d/l2/s100",
+    "skills_in_dist": 87.05882352941177,
+    "c2_first_try": 33.59375
+   },
+   "night2_minus_L2_multi_step_first_try": {
+    "points": 1.948051948051948,
+    "lo": -2.5974025974025974,
+    "hi": 6.493506493506493
+   },
+   "night2_minus_L2_pooled_first_try": {
+    "points": 1.5625,
+    "lo": -3.125,
+    "hi": 6.640625
+   },
+   "harm_L2_vs_night2": {
+    "in_dist_a": 87.05882352941177,
+    "in_dist_b": 87.6029411764706,
+    "in_dist_drop": -0.544117647058826,
+    "fired": [
+     "table_calc"
+    ],
+    "passes": false,
+    "rule": "in_dist drop <= 1.5 and no family with drop > 5.0 and paired 95% interval below 0"
+   },
+   "night2_minus_L2_reach32_pooled": {
+    "points": 6.25,
+    "lo": 2.734375,
+    "hi": 10.15625
+   },
+   "night2_minus_L2_reach32_multi_step": {
+    "points": 9.090909090909092,
+    "lo": 3.2467532467532463,
+    "hi": 14.935064935064934
+   },
+   "night1_vs_VL_L": {
+    "VL_L_in_dist": 87.48529411764706,
+    "night1_in_dist": 87.58823529411765,
+    "VL_L_c2_first_try": 28.90625,
+    "night1_c2_first_try": 28.515625
+   }
+  }
+ }
+}
