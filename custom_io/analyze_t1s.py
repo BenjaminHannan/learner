@@ -25,8 +25,11 @@ ARMS = {'T1S': ('tool', {'span_copy': True}, 3311060), 'T1': A.ARMS['T1'], 'B2':
 # --arm T1SI: Amendment 5's single next change (T1S + the entry-index term on the span keys), judged in T1S's place with R1-R4 unchanged
 NEXT = {'T1SI': ('tool', {'span_copy': True, 'span_idx': True}, 3311572),
         # --arm T1SD: Amendment 7's start-pointer change (T1SI + the distance-from-end table), judged by Amendment 7's marks (screen7)
-        'T1SD': ('tool', {'span_copy': True, 'span_idx': True, 'span_end': True}, 3314132)}
+        'T1SD': ('tool', {'span_copy': True, 'span_idx': True, 'span_end': True}, 3314132),
+        # --arm T1SDR: Amendment 8's change (T1SD + drawn-result drills, ans_drill 0.25), judged by Amendment 8's marks (screen8), R5 against T1SD
+        'T1SDR': ('tool', {'span_copy': True, 'span_idx': True, 'span_end': True, 'ans_drill': 0.25}, 3314132)}
 MIN_N7 = 1000
+NUM = re.compile(r'-?\d+')
 
 
 def as_t1s(d, arm):
@@ -220,6 +223,71 @@ def screen7(runs, wcs):
     return out
 
 
+def load_preds(dirs, split='in_dist'):
+    """{(arm, seed): {row id: prediction}} from <arm>_s<seed>/PREDS.json under dirs."""
+    out = {}
+    for d in dirs:
+        for root, _, fs in os.walk(d):
+            m = re.match(r'^(.+)_s(\d+)$', os.path.basename(root))
+            if m and 'PREDS.json' in fs:
+                out[(m.group(1), int(m.group(2)))] = json.load(open(os.path.join(root, 'PREDS.json'))).get(split) or {}
+    return out
+
+
+def natural(preds, rows):
+    """The drill-free check's numbers on the natural in_dist set: exact on rows whose gold answer is a number (R5's reading), on every row,
+    and per answer length (printed beside) -> dict, or None when the predictions do not cover the rows."""
+    from custom_io.evalx import is_hit
+    if not preds or set(preds) != set(rows):
+        return None
+    pc = lambda v: dict(n=len(v), exact=round(100 * sum(v) / len(v), 2) if v else None)
+    hit = {i: is_hit(p, rows[i]) for i, p in preds.items()}
+    num = [i for i in rows if NUM.fullmatch(rows[i]['answer'])]
+    by = {}
+    for i in num:
+        by.setdefault(len(rows[i]['answer'].lstrip('-')), []).append(hit[i])
+    return dict(numbers=pc([hit[i] for i in num]), all=pc(list(hit.values())), by_length={str(k): pc(v) for k, v in sorted(by.items())})
+
+
+def screen8(runs, wcs, preds, rows):
+    """Amendment 8 for T1SDR (T1SD + drawn-result drills), in T1S's slot: R1 per Clarification 7a, R2, R3 as Amendment 7, R4, S2 (screen7's
+    code), and R5: the drill-free natural check, per seed, exact on the in_dist rows whose gold answer is a number drops <= 1.0 vs T1SD of
+    the same seed (all rows and the per-length cells printed beside, not marks). Proved wrong: any operand or answer cell at 4-9 digits < 90
+    on either seed. A hair miss (R1 the only failing mark, every cell >= 97, each failing mean in 98.5-99): seeds 202-203 of the same recipe."""
+    out = screen7(runs, wcs)
+    out['marks_source'] = 'Amendment 8 (R1 per Clarification 7a; R3 as Amendment 7; new R5 against T1SD)'
+    nat = {s: dict(T1SDR=natural(preds.get(('T1S', s)), rows), T1SD=natural(preds.get(('T1SD', s)), rows)) for s in SEEDS}
+    refbad = {s: (['T1SD missing'] if runs.get(('T1SD', s)) is None else [f'T1SD: {x}' for x in valid(runs[('T1SD', s)], 'T1SD')])
+              + [f'{k} PREDS do not cover the in_dist rows' for k, v in nat[s].items() if v is None] for s in SEEDS}
+    out['problems'] = {s: out['problems'].get(s, []) + refbad[s] for s in SEEDS}
+    if not out['judged'] or any(refbad.values()):
+        out.update(judged=False, verdict='NOT JUDGED')
+        return out
+    d = {s: round(nat[s]['T1SDR']['numbers']['exact'] - nat[s]['T1SD']['numbers']['exact'], 2) for s in SEEDS}
+    out['marks']['R5 natural (drill-free) in_dist number-answer exact, T1SDR - T1SD >= -1.0 on both seeds'] = dict(
+        value=d, ok=all(x >= -1.0 for x in d.values()))
+    out['natural'] = nat
+    m, low, short = out['marks'], out['proved_wrong_cells'], out['short_cells']
+    r1k = next(k for k in m if k.startswith('R1'))
+    fails = [k for k, x in m.items() if not x['ok']]
+    r1 = m[r1k]['value']
+    hair = (fails == [r1k] and not short and all(v['worst'] is not None and v['worst'] >= 97 for v in r1.values())
+            and all(v['mean'] >= 98.5 for v in r1.values() if not v['ok']))
+    if not fails:
+        out['verdict'] = 'PASS: the 6-seed confirm (marks 1-6, Amendment 2) runs on T1SDR; H1 queues behind that pass'
+    elif low:
+        out['verdict'] = 'PROVED WRONG: a 4-9 digit cell below 90 (Amendment 8)'
+    elif short:
+        out['verdict'] = f'NOT JUDGED on R1/R3: {len(short)} cells below n = {MIN_N7} (more scorer passes)'
+    elif hair:
+        out['verdict'] = ('NOT SHOWN by a hair (R1 only: every cell >= 97, a mean in 98.5-99): run seeds 202-203 of the same recipe '
+                          '(Amendment 8 item 7), no new change, no mark moves')
+    else:
+        out['verdict'] = ('NOT SHOWN: a miss breakdown first, then at most one more change (the entries-back table on the answer keys is the '
+                          'only one named)')
+    return out
+
+
 def confirm(runs):
     """Marks 1-6 as amended (Amendment 2), analyze_t1's own code with T1S in T1's place."""
     rr = {('T1', s): r for (arm, s), r in runs.items() if arm == 'T1S'}
@@ -242,31 +310,46 @@ def main(argv=None):
     ap.add_argument('--wc', nargs='+', default=[], help='dirs holding <arm>_s<seed>/WC.json from custom_io/rescore_wc.py (Amendment 4)')
     ap.add_argument('--arm', default='T1S', choices=['T1S'] + sorted(NEXT))
     ap.add_argument('--out', default=None, help='default custom_io/results/<arm>-ANALYSIS.json')
+    ap.add_argument('--dev', default=None, help='T1SDR (R5): the dev set the runs were evaluated on (its dev/in_dist.jsonl)')
     a = ap.parse_args(argv)
     a.out = a.out or f'custom_io/results/{a.arm}-ANALYSIS.json'
     if a.arm != 'T1S':
         ARMS['T1S'] = NEXT[a.arm]
     runs, skipped = load(a.results)
     runs = as_t1s(runs, a.arm)
-    judge = screen7 if a.arm == 'T1SD' else screen
-    res = dict(arm=a.arm, arm_spec=ARMS['T1S'], screen=judge(runs, as_t1s(load_wc(a.wc), a.arm)), confirm=confirm(runs), skipped=skipped)
+    wcs = as_t1s(load_wc(a.wc), a.arm)
+    if a.arm == 'T1SDR':
+        from custom_io.data import load_rows
+        ARMS['T1SD'] = NEXT['T1SD']
+        rows = {r['id']: r for r in load_rows(os.path.join(a.dev, 'dev', 'in_dist.jsonl'))} if a.dev else {}
+        sc = screen8(runs, wcs, as_t1s(load_preds(a.results), a.arm), rows)
+    else:
+        sc = (screen7 if a.arm == 'T1SD' else screen)(runs, wcs)
+    res = dict(arm=a.arm, arm_spec=ARMS['T1S'], screen=sc, confirm=confirm(runs), skipped=skipped)
     os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
     json.dump(res, open(a.out, 'w'), indent=1, default=str)
     sc = res['screen']
     head = {'T1S': '# T1S: T1 + span copy (Amendment 3, PASS-MARKS.md addendum 22)',
             'T1SI': '# T1SI: T1S + the entry-index term on the span keys (Amendment 5; judged in the T1S columns below, R1-R4 unchanged)',
-            'T1SD': '# T1SD: T1SI + the distance-from-end table on the span keys (Amendment 7 marks + Clarification 7a; T1SD in the T1S columns below)'}[a.arm]
-    mn = MIN_N7 if a.arm == 'T1SD' else MIN_N
+            'T1SD': '# T1SD: T1SI + the distance-from-end table on the span keys (Amendment 7 marks + Clarification 7a; T1SD in the T1S columns below)',
+            'T1SDR': '# T1SDR: T1SD + drawn-result drills, ans_drill 0.25 (Amendment 8 marks; T1SDR in the T1S columns below)'}[a.arm]
+    new7 = a.arm in ('T1SD', 'T1SDR')
+    mn = MIN_N7 if new7 else MIN_N
     L = [head, '', f"## Re-screen, seeds 200-201: {sc['verdict']}", '']
     if not sc['judged']:
         L += [f"- missing or invalid: {({s: p for s, p in sc['problems'].items() if p})}"]
     else:
         L += [f"- {k}: {'pass' if x['ok'] else 'FAIL'}" for k, x in sc['marks'].items()]
-        if a.arm == 'T1SD':
+        if new7:
             r1 = next(x for k, x in sc['marks'].items() if k.startswith('R1'))['value']
             L += [f"- R1 per side and seed: " + '; '.join(f"{k}: mean {fmt(v['mean'])}, worst {fmt(v['worst'])}" for k, v in r1.items()),
                   f"- reading (a), all nine cells >= 99 (printed beside, not a mark): {sc['reading_a_all_cells_99']}",
                   f"- proved-wrong cells (operand or answer, length 4-9 below 90, n >= {mn}): {sc['proved_wrong_cells'] or 'none'}"]
+            for s, x in (sc.get('natural') or {}).items():
+                L += [f"- natural in_dist, seed {s} (R5 = number answers; all rows and per-length cells beside, not marks): "
+                      f"T1SDR {x['T1SDR']['numbers']['exact']} vs T1SD {x['T1SD']['numbers']['exact']} (n {x['T1SD']['numbers']['n']}); all rows "
+                      f"{x['T1SDR']['all']['exact']} vs {x['T1SD']['all']['exact']}; by length " + ', '.join(
+                          f"{k}: {v['exact']} vs {x['T1SD']['by_length'][k]['exact']} (n {v['n']})" for k, v in x['T1SDR']['by_length'].items())]
         else:
             L += [f"- proved-wrong cells (operand, length 4-9 below 90, n >= {mn}): {sc['proved_wrong_cells'] or 'none'}",
                   f"- every cell at 4-9 digits below 90 (operand or answer): {sc['below_90_cells'] or 'none'}"]
@@ -282,7 +365,7 @@ def main(argv=None):
                       f'| {side} T1S ambiguous, not counted | ' + ' | '.join(f"{fmt(f['copy_ambiguous'][side][x][0])} ({f['copy_ambiguous'][side][x][1]})" for x in LENS) + ' |',
                       f'| {side} T1S old scorer | ' + ' | '.join(fmt(f['old_copy'][side][x][0]) for x in LENS) + ' |',
                       f'| {side} T1 old scorer | ' + ' | '.join(fmt(f['t1_old_copy'][side][x][0]) for x in LENS) + ' |']
-                L = L if a.arm != 'T1SD' else [x.replace(f'| {side} T1S ', f'| {side} T1SD ') for x in L]
+                L = L if not new7 else [x.replace(f'| {side} T1S ', f'| {side} {a.arm} ') for x in L]
             L += [f"Scorer passes: {f['passes']}", '']
     L += [f"## 6-seed confirm (marks 1-6 as amended): {res['confirm']['verdict']}", '']
     md = os.path.join(os.path.dirname(a.out) or '.', f'RESULTS-{a.arm}.md')

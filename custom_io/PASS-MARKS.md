@@ -670,3 +670,33 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   change named from a miss breakdown of the failing cell. Pass: the 6-seed confirm (marks 1-6, Amendment 2) on T1SD, H1 queued behind it.
 - **Run and judge:** box jobs custom_io/queue/t1d1|t1d2 (60 train, 61 re-score with `--min-n 1000`, 62 checkpoint export);
   `python -m custom_io.analyze_t1s --arm T1SD --results ...33-pc-confirm-b2 ...40-vast-t1 ...60-vast-t1sd --wc ...51-vast-wc-t1 ...61-vast-wc-t1sd`.
+
+## Addendum 22, amendment 5 (written 2026-10-08 about 06:40 UTC, 2:40 AM ET, before any T1SDR run)
+- **T1SD read (custom_io/results/RESULTS-T1SD.md):** NOT SHOWN. R1 failed only on seed 200's answers (mean of nine 98.96 vs 99; 7-9 digit
+  cells 97.9/97.6/97.6, all above the 97 floor); R2-R4 and S2 passed; no cell below 90. The breakdown (MARKS Amendment 7's step;
+  custom_io/results/WC-MISSES-T1SD.md): 80 of 81 missed 7-9 digit answers picked a wrong, shorter number (the previous entry's result 45, an
+  operand of the right entry 21, a prompt number 13); no stop-head or length errors; a fresh draw gives a mean of 98.86. Training answers
+  are 1-3 digits (4 digits 0.5%, 5+ none).
+- **T1SDR, the one change sealed as MARKS Amendment 8:** model 'tool' cfg {"span_copy": true, "span_idx": true, "span_end": true,
+  "ans_drill": 0.25}, 3,314,132 params (unchanged: no new weight, the same init as T1SD at the same seed). A change to the training signal
+  only, no new data and nothing at test time: each training row whose answer is the result of one of its calls is, with probability 0.25,
+  a drawn-result drill. Every call's result is replaced by a random digit string, the teacher-forced tape carries those strings, an operand
+  that was an earlier result is that call's drawn string, and the answer target is the drawn string of the latest call whose real result
+  was the answer. All the usual losses apply to these targets. A drill answer longer than GEN's 8 registers gets no GEN target (never a cut
+  one); a drill whose entries would not fit in 40 chars is not used (none did on 30,000 training rows).
+- **Disclosure (Amendment 8 item 4):** the drill fraction is 0.25 of the eligible rows, one fixed number chosen before any run and not tuned.
+  On the first 30,000 curriculum training rows 15.8% are eligible, so about 4% of training rows are drills. Drill strings are 1-10 digits,
+  uniform in length, drawn from the model's own random stream seeded from the training seed (no torch, numpy or data-order draw changes).
+  write_copy's evaluation draws use other seeds (`row id | round | pass`) and another length mix (1-9 digits), so the scorer's draws are
+  not the training draws, but write_copy's question is now in-distribution for training.
+- **Marks (MARKS Amendment 8), seeds 200/201, T1SD's recipe otherwise, two rented RTX 5090s:** R1 per Clarification 7a; R2 pooled-5 - B2
+  >= -2.0; R3 as Amendment 7; R4 tool off < 5, free-run call accuracy >= 98; S2 chain-5 >= 95. New R5, the drill-free check: the natural
+  in_dist set (final eval, no write_copy), exact on the rows whose gold answer is a number, drops <= 1.0 vs T1SD of the same seed (T1SD:
+  s200 87.27, s201 89.21, n 825; all rows and per-length cells printed beside, not marks). This is the judge's reading of "the answer cells
+  on the natural test set"; per-length cells (n 6-507) are too small for a 1.0 mark. Proved wrong: any operand or answer cell at 4-9 digits
+  < 90 on either seed. A hair miss (R1 the only failing mark, every cell >= 97, a failing mean in 98.5-99): seeds 202-203 of the same
+  recipe, no new change. Otherwise between: not shown, a miss breakdown, then at most one more change (the entries-back table on the
+  answer keys is the only one named). Pass: the 6-seed confirm (marks 1-6, Amendment 2) on T1SDR, H1 queued behind it.
+- **Run and judge:** box jobs custom_io/queue/t1r1|t1r2 (70 train, 71 re-score with `--min-n 1000`, 72 checkpoint export);
+  `python -m custom_io.analyze_t1s --arm T1SDR --results ...33-pc-confirm-b2 ...40-vast-t1 ...60-vast-t1sd ...70-vast-t1sdr
+  --wc ...51-vast-wc-t1 ...71-vast-wc-t1sdr --dev <the seed-1 dev-per-cell-40 build>`.

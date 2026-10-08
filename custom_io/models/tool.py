@@ -59,8 +59,21 @@ operands started on the wrong char inside the right entry, 0 were stop-head miss
 the span pointer's keys, e_e[d] (d = 0 for a string's last char, 0..39; zero at init, so the model starts as T1SI). Disclosure: like the entry
 index, d comes from the text layout (which chars exist in the char's string, i.e. the string's length); a result's units digit is its entry's
 last char (d = 0) at every length, so that entry of the table is trained in every row. No rule picks the start, no length is given.
-Size: 3,311,572 + 40 x 64 = 3,314,132."""
-import math, re
+Size: 3,311,572 + 40 x 64 = 3,314,132.
+
+ans_drill=p (needs span_copy; T1SDR = T1SD + ans_drill 0.25, Amendment 8's one change after T1SD's answer-miss breakdown: 80 of seed 200's 81
+missed 7-9 digit answers picked a wrong, shorter number, and training answers are 1-3 digits): drawn-result drills, a change to the training
+signal only (no new parameters, no new data, nothing at test time). Each training row whose answer is the result of one of its calls is,
+with probability p (one fixed number, chosen before any run, not tuned), a drill: every call's result is replaced by a random digit string
+(length uniform 1-10, the same form as write_copy's strings), the teacher-forced tape carries those strings (`add 12 5 = 80417`), an operand
+that was an earlier call's result is that call's drawn string, and the answer target is the drawn string of the latest call whose real
+result was the answer (as write_copy scores it). Every loss is the usual one on these targets (ops, cells, gate and pointer, answer span and
+mode 0, stop head); a drill answer longer than GEN's 8 registers gets no GEN target (never a cut one), and a drill whose entries would not
+fit in LE chars is not used (that row keeps its real targets). The drills are self-supervised (random digits, target = what was drawn), so a
+deployed model can make them itself. The draws come from the model's own stream (random.Random seeded from the training seed): no torch,
+numpy or data-order draw changes, and write_copy's evaluation draws use other seeds (`row id | round | pass`) and another length mix (1-9).
+Size: 3,314,132 (unchanged)."""
+import math, random, re
 import numpy as np
 import torch
 import torch.nn as nn
@@ -74,6 +87,7 @@ NAMES = [o.lower() for o in OPS]
 INT_RE = re.compile(r'-?\d+')
 ENT_NUM = re.compile(r'-?\d+')       # number tokens of an entry (the calculator's own text): span-copy training labels only
 SPAN_MAX = LE                         # span copy ceiling: the longest string the tape holds (the stop is learned)
+DRILL_LEN = (1, 10)                   # ans_drill: drawn result lengths (write_copy's evaluation draws use 1-9)
 
 
 def calc(op, a, b, swap=False):
@@ -102,7 +116,7 @@ class Tool(Ledger):
     LESIONS = ['shuffle_state', 'zero_state', 'noexec', 'opswap', 'nocopy', 'nowordc']
 
     def __init__(self, vocab, d=256, n_heads=4, reader_layers=2, blocks=2, n_loops=8, mlp=4.8, dk=64, w_noop=0.1, wpos=True, span_copy=False,
-                 span_idx=False, span_end=False, **kw):
+                 span_idx=False, span_end=False, ans_drill=0.0, **kw):
         assert not kw.get('eg_embed') and not kw.get('eg_teach') and not kw.get('span') and not kw.get('round_readout'), 'T1 is B2 + one change'
         kw.pop('copy', None)
         super().__init__(vocab, d=d, n_heads=n_heads, reader_layers=reader_layers, blocks=blocks, n_loops=n_loops, mlp=mlp, dk=dk,
@@ -132,6 +146,10 @@ class Tool(Ledger):
         if self.span_end:       # Amendment 7's change: created after every T1SI module, zero (T1SI at step 0)
             self.e_e = nn.Embedding(LE, dk)
             nn.init.zeros_(self.e_e.weight)
+        self.ans_drill = float(ans_drill)
+        assert 0.0 <= self.ans_drill <= 1.0 and (self.span_copy or not self.ans_drill), 'ans_drill trains the span answer pointer'
+        self._drill_rng = random.Random(f'ans_drill|{torch.initial_seed()}')       # its own stream (train.py seeds torch first)
+        self.drill_stats = dict(rows=0, eligible=0, drilled=0, too_long=0)
 
     # ---- the tape ----
     def read_texts(self, texts, dev, le=LE):
@@ -235,14 +253,15 @@ class Tool(Ledger):
         toks = [(j, m.start(), m.end(), m.group()) for j, (x, rx, _) in enumerate(strs) for m in rx.finditer(x) if j or T is None or m.end() <= T]
         return toks, strs
 
-    def span_gold(self, rows, T, le, K):
+    def span_gold(self, rows, T, le, K, golds=None):
         """-> Ma, Mb [B, N_RES, N] (units-digit positions of every visible occurrence of each call's gold operand strings; entry k is visible
-        from call k + 1), Mn [B, N] (the answer's, on mode-0 rows), and stop samples (char ids, in an entry, label: 0 go on / 1 stop)."""
+        from call k + 1), Mn [B, N] (the answer's, on mode-0 rows), and stop samples (char ids, in an entry, label: 0 go on / 1 stop).
+        golds: train_golds' per-row targets (ans_drill), else row_gold's."""
         B, N = len(rows), T + K * le
         Ma, Mb, Mn = np.zeros((B, N_RES, N), bool), np.zeros((B, N_RES, N), bool), np.zeros((B, N), bool)
         cs, ts, ys, enc = [], [], [], self.vocab.stoi
         for i, r in enumerate(rows):
-            ops, opd, tape, md, _ = self.row_gold(r)
+            ops, opd, tape, md, _, ans, _ = golds[i] if golds else self.row_gold(r) + (r['answer'], False)
             toks, strs = self.num_tokens(r['prompt'], tape[:min(len(ops), K)], T)
             pos = lambda j, e: e - 1 if j == 0 else T + (j - 1) * le + e - 1
             for j, a, e, _ in toks:
@@ -260,7 +279,7 @@ class Tool(Ledger):
                 mark(Ma[i, k], sa, k)
                 mark(Mb[i, k], sb, k)
             if md == 0:
-                mark(Mn[i], r['answer'], len(ops))
+                mark(Mn[i], ans, len(ops))
         return Ma, Mb, Mn, (cs, ts, ys)
 
     def state_of(self, o):
@@ -432,30 +451,75 @@ class Tool(Ledger):
         e = self.vocab.encode(s[::-1][:CELLS - 1]) + [EOS]
         return e + [-100] * (CELLS - len(e))
 
-    def gold(self, rows, dev):
+    def drill_gold(self, r, rng):
+        """ans_drill: one drawn-result drill of row r -> (ops, operand strings, tape, mode 0, (), answer, True), 'too_long', or None (the row's
+        answer is not a call result)."""
+        t, res = pp.row_targets(r), self.drill_slots(r)
+        if not res:
+            return None
+        nums = pp.prompt_numbers(r['prompt'])
+        vals = nums + [None] * (N_NUM - len(nums)) + pp.CONSTS
+        d = [rand_digits(rng, *DRILL_LEN) for _ in t['prog']]
+        val = lambda i: d[i - R0] if i >= R0 else str(vals[i])
+        ops, opd, tape = [], [], [''] * N_RES
+        for s, (o, ca, cb, _) in enumerate(t['prog']):
+            sa, sb = val(ca[0]), val(cb[0])
+            if len(f'{NAMES[o]} {sa} {sb} = {d[s]}') > LE:
+                return 'too_long'
+            ops.append(o); opd.append((sa, sb)); tape[s] = entry(NAMES[o], sa, sb, d[s])
+        return ops, opd, tape, 0, (), d[max(res)], True
+
+    @staticmethod
+    def drill_slots(r):
+        """-> the calls whose real result is the row's answer (empty: the row is not drill-eligible)."""
+        t = pp.row_targets(r)
+        return [i - R0 for i in t['ans'] if i >= R0] if t['prog'] and t['mode'] == 0 else []
+
+    def train_golds(self, rows):
+        """Per-row targets (ops, operand strings, tape, mode, word targets, answer, drill?): row_gold, or in training with ans_drill a drill
+        for a row whose answer is a call result, with probability ans_drill."""
+        out = []
+        for r in rows:
+            g = None
+            if self.ans_drill and self.training and self.drill_slots(r):
+                self.drill_stats['eligible'] += 1
+                if self._drill_rng.random() < self.ans_drill:
+                    g = self.drill_gold(r, self._drill_rng)
+                    if g == 'too_long':
+                        self.drill_stats['too_long'] += 1
+                        g = None
+                    else:
+                        self.drill_stats['drilled'] += 1
+            self.drill_stats['rows'] += 1
+            out.append(g or self.row_gold(r) + (r['answer'], False))
+        return out
+
+    def gold(self, rows, dev, golds=None):
         B, L = len(rows), N_RES
         op = np.zeros((B, L), np.int64)
         ca, cb = np.full((B, L, CELLS), -100, np.int64), np.full((B, L, CELLS), -100, np.int64)
         mode, word, gen = np.zeros(B, np.int64), np.zeros((B, W_MAX), bool), np.full((B, 9), -100, np.int64)
         tape = []
+        golds = golds or [self.row_gold(r) + (r['answer'], False) for r in rows]
         for i, r in enumerate(rows):
-            ops, opd, tp, md, wd = self.row_gold(r)
+            ops, opd, tp, md, wd, ans, dr = golds[i]
             for s, (o, (sa, sb)) in enumerate(zip(ops, opd)):
                 op[i, s], ca[i, s], cb[i, s] = o, self.cell_ids(sa), self.cell_ids(sb)
             mode[i], word[i, list(wd)] = md, True
-            if md != 1:
-                ids = self.vocab.encode(r['answer'][:GEN_MAX][::-1]) + [EOS]
+            if md != 1 and not (dr and len(ans) > GEN_MAX):     # a drill answer longer than GEN's registers: no GEN target, never a cut one
+                ids = self.vocab.encode(ans[:GEN_MAX][::-1]) + [EOS]
                 gen[i, :len(ids)] = ids
             tape.append(list(tp))
         g = {k: torch.from_numpy(v).to(dev) for k, v in dict(op=op, ca=ca, cb=cb, mode=mode, word=word, gen=gen).items()}
         g['has'] = (g['op'] > 0).any(1)
         g['tape'] = tape
+        g['rowg'] = golds
         return g
 
     def loss(self, batch):
         import torch.nn.functional as F
         dev, B = batch['prompt_ids'].device, len(batch['rows'])
-        g = self.gold(batch['rows'], dev)
+        g = self.gold(batch['rows'], dev, self.train_golds(batch['rows']) if self.ans_drill else None)
         o = self.run(batch, gold=g)
         lop, lcall, hits, tot = self.call_loss(o['steps'], g, B)
         marg = lambda lg, m, sel: torch.where(sel, -(torch.logsumexp(lg.masked_fill(~m, -1e9), -1) - torch.logsumexp(lg, -1)), torch.zeros_like(lg[:, 0])).sum() / B
@@ -470,6 +534,8 @@ class Tool(Ledger):
         aux = dict(prog=lop + lcall, op_acc=hits / tot.clamp(min=1), call=lcall, mode=lmode, word=lword, gen=lgen,
                    copy_share=((1 - gate[..., 0]) * tm).sum() / tm.sum().clamp(min=1))
         total = lop + lcall + lmode + lword + lgen
+        if self.ans_drill:
+            aux['drill_share'] = sum(x[6] for x in g['rowg']) / B
         if self.span_copy:
             ls = self.span_loss(o, g, batch, B)
             total = total + ls['span_call'] + ls['span_ans'] + ls['stop']
@@ -480,7 +546,7 @@ class Tool(Ledger):
         """T1S losses: call spans (gate + pointer, either order for ADD MUL MIN MAX), answer span (mode-0 rows) and the stop head."""
         import torch.nn.functional as F
         dev, T = batch['prompt_ids'].device, batch['prompt_ids'].shape[1]
-        Ma, Mb, Mn, (cs, ts, ys) = self.span_gold(batch['rows'], T, o['le'], o['K'])
+        Ma, Mb, Mn, (cs, ts, ys) = self.span_gold(batch['rows'], T, o['le'], o['K'], g.get('rowg'))
         Ma, Mb, Mn = (torch.from_numpy(x).to(dev) for x in (Ma, Mb, Mn))
         lse = lambda lg, M: torch.logsumexp(lg.masked_fill(~M, -1e9), -1) - torch.logsumexp(lg, -1)
         side = lambda lg, gl, M: torch.where(M.any(-1), F.logsigmoid(gl) + lse(lg, M), F.logsigmoid(-gl))

@@ -232,6 +232,92 @@ def test_span_end():
     print('ok span_end', 3314132)
 
 
+def test_ans_drill():
+    """Amendment 8's change (cfg ans_drill, T1SDR = T1SD + ans_drill 0.25): drawn-result drills in training only. No new weight (T1SD's size and
+    init); off in eval and at 0; a drill's tape, operands, answer, mode and GEN targets follow the drawn strings (lengths 1-10, nothing cut);
+    other rows keep their real targets; the share is p of the eligible rows; the draws touch no torch / python-global random state."""
+    from custom_io.models import progparse as pp
+    from custom_io.models.tool import DRILL_LEN, GEN_MAX, R0
+    v = vocab()
+    torch.manual_seed(0)
+    m = Tool(v, span_copy=True, span_idx=True, span_end=True, ans_drill=0.25, **S_CFG)
+    torch.manual_seed(0)
+    t1sd = Tool(v, span_copy=True, span_idx=True, span_end=True, **S_CFG)
+    assert m.n_params() == t1sd.n_params() == 3314132
+    s1, s2 = m.state_dict(), t1sd.state_dict()
+    assert set(s1) == set(s2) and all(torch.equal(s1[k], s2[k]) for k in s2)
+    rows = prog_rows(96, 2, 7) + train_rows(96, 8)
+    nat = t1sd.gold(rows, 'cpu')
+    m.eval()
+    assert m.train_golds(rows) == [m.row_gold(r) + (r['answer'], False) for r in rows] and m.drill_stats['eligible'] == 0, 'a drill in eval'
+    torch.manual_seed(11)
+    m1 = Tool(v, span_copy=True, span_idx=True, span_end=True, ans_drill=1.0, **SMALL)
+    m1.train()
+    ts, ps = torch.get_rng_state(), random.getstate()
+    golds = m1.train_golds(rows)
+    assert torch.equal(ts, torch.get_rng_state()) and ps == random.getstate(), 'the drills drew from a shared random stream'
+    g = m1.gold(rows, 'cpu', golds)
+    b = batch_of(rows, v)
+    with torch.no_grad():
+        o = m1.run(b, gold=g)
+    T, le, K = b['prompt_ids'].shape[1], o['le'], o['K']
+    Ma, Mb, Mn, _ = m1.span_gold(rows, T, le, K, golds)
+    n_dr, lens = 0, set()
+    for i, r in enumerate(rows):
+        ops, opd, tape, md, wd, ans, dr = golds[i]
+        if not m1.drill_slots(r):
+            assert not dr and golds[i][:5] == m1.row_gold(r) and ans == r['answer'], r['id']
+            assert torch.equal(g['gen'][i], nat['gen'][i]) and torch.equal(g['ca'][i], nat['ca'][i]) and g['mode'][i] == nat['mode'][i]
+            continue
+        if not dr:                      # p = 1: only an entry that would not fit in LE chars keeps the real targets
+            assert m1.drill_gold(r, random.Random(0)) is not None
+            continue
+        n_dr += 1
+        t = pp.row_targets(r)
+        d = [x.split(' = ')[1] for x in tape[:len(ops)]]
+        lens |= {len(x) for x in d}
+        assert all(DRILL_LEN[0] <= len(x) <= DRILL_LEN[1] and x.isdigit() and (len(x) == 1 or x[0] != '0') for x in d), d
+        assert all(len(x) <= LE for x in tape) and md == 0 and wd == () and ans == d[max(m1.drill_slots(r))]
+        for s_, (o_, ca, cb, _) in enumerate(t['prog']):
+            for slot, got in ((ca[0], opd[s_][0]), (cb[0], opd[s_][1])):
+                if slot >= R0:
+                    assert got == d[slot - R0], (r['id'], got, d)
+                else:
+                    assert got == m1.row_gold(r)[1][s_][0 if slot == ca[0] else 1], r['id']
+            assert tape[s_] == f"{o_ and pp.OPS[o_].lower()} {opd[s_][0]} {opd[s_][1]} = {d[s_]}"
+            for side, x in ((g['ca'], opd[s_][0]), (g['cb'], opd[s_][1])):       # cell targets: the whole string, reversed, then EOS
+                c = [k for k in side[i, s_].tolist() if k >= 0]
+                assert v.decode(c[:-1])[::-1] == x, (x, c)
+        gen = [k for k in g['gen'][i].tolist() if k >= 0]
+        assert (v.decode(gen[:-1])[::-1] == ans) if len(ans) <= GEN_MAX else not gen, (ans, gen)
+        assert Mn[i].any() and g['mode'][i] == 0
+        ids = torch.cat([b['prompt_ids'], o['tape'][1]], 1)[i, :T + K * le]
+        for p_ in Mn[i].nonzero()[0]:
+            q, txt = int(p_), ''
+            while q >= 0 and v.itos[int(ids[q])].isdigit():
+                txt, q = v.itos[int(ids[q])] + txt, q - 1
+            assert txt == ans and (int(p_) + 1 == len(ids) or not v.itos[int(ids[int(p_) + 1])].isdigit()), (txt, ans)
+    assert n_dr >= 40 and lens == set(range(1, 11)), (n_dr, lens)
+    # p = 0.25: about a quarter of the eligible rows, over many draws
+    m.train(); m.drill_stats.update(rows=0, eligible=0, drilled=0, too_long=0)
+    for _ in range(20):
+        m.train_golds(rows)
+    st = m.drill_stats
+    share = (st['drilled'] + st['too_long']) / st['eligible']
+    assert st['eligible'] > 1000 and abs(share - 0.25) < 0.04 and st['too_long'] <= 0.02 * st['eligible'], st
+    # the loss trains on them, and ans_drill 0 is T1SD exactly
+    loss, aux = m1.loss(b)
+    loss.backward()
+    assert torch.isfinite(loss) and aux['drill_share'] > 0.3 and m1.q_s.weight.grad.abs().sum() > 0
+    m0 = Tool(v, span_copy=True, span_idx=True, span_end=True, **SMALL)
+    m0.load_state_dict(m1.state_dict()); m0.train()
+    m1.ans_drill = 0.0
+    torch.manual_seed(3); l1, _ = m1.loss(b)
+    torch.manual_seed(3); l0, _ = m0.loss(b)
+    assert torch.allclose(l1, l0) and 'drill_share' not in _
+    print(f'ok ans_drill ({n_dr} drilled rows, share {share:.3f} at p 0.25, too long {st["too_long"]})')
+
+
 # ---- the mechanism: trained on 1-3 digit numbers, copying 1-9 digit results ------------------------------------------------------
 MECH_STEPS = 1500
 
@@ -299,6 +385,34 @@ def test_queue50():
         box = open(os.path.join(here, 'queue', 't1a' if name.endswith('200') else 't1b', f"50-t1s-s{name[-3:]}.sh")).read()
         assert f"run {name} " + ' '.join(a if not a.startswith('{') else f"'{a}'" for a in args) in box, name
     print('ok queue50')
+
+
+def test_queue70():
+    """Queue 70 (T1SDR) = queue 60's T1SD lines with only the name and the cfg changed; the box jobs run the same lines, re-score the
+    T1SDR checkpoints at n >= 1000 and export them; nothing else differs from queue 60's box jobs but the pin and the export pace."""
+    from custom_io.local_runner import parse_queue
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    q60 = {r[0]: r[2] for r in parse_queue(os.path.join(here, 'queue_local', '60-pc-t1sd-screen.txt'))}
+    q70 = parse_queue(os.path.join(here, 'queue_local', '70-pc-t1sdr-screen.txt'))
+    assert [r[0] for r in q70] == ['T1SDR_s200', 'T1SDR_s201']
+    for name, _, args, mem in q70:
+        s = name[-3:]
+        old = q60[f'T1SD_s{s}']
+        i = args.index('--cfg')
+        assert json.loads(args[i + 1]) == {'span_copy': True, 'span_idx': True, 'span_end': True, 'ans_drill': 0.25}
+        assert args[:i + 1] + args[i + 2:] == old[:i + 1] + old[i + 2:], (args, old)
+        q, oq = ('t1r1', 't1d1') if s == '200' else ('t1r2', 't1d2')
+        rd = lambda d, f: open(os.path.join(here, 'queue', d, f)).read()
+        box = rd(q, f'70-t1sdr-s{s}.sh')
+        assert f"run {name} " + ' '.join(a if not a.startswith('{') else f"'{a}'" for a in args) in box, name
+        pin = [x for x in box.splitlines() if x.startswith('SHA=')]
+        assert len(pin) == 1 and len(pin[0]) == 44 and pin[0] in rd(q, f'71-wc-t1sdr-s{s}.sh'), pin
+        wc, ck = rd(q, f'71-wc-t1sdr-s{s}.sh'), rd(q, f'72-ck-t1sdr-s{s}.sh')
+        assert f'--ck $J/w/70-t1sdr-s{s}/T1SDR_s{s}/checkpoint.pt' in wc and '--min-n 1000 --max-passes 12' in wc
+        assert f'queue/{q}/CKGO' in ck and f'GLOB="$J/w/70-t1sdr-s{s}/*/checkpoint.pt"' in ck and 'PACE=200' in ck
+        strip = lambda t: [x for x in t.splitlines() if not x.startswith('#') and not x.startswith('SHA=')]
+        assert [x.replace('T1SDR_s', 'T1SD_s').replace(', "ans_drill": 0.25', '') for x in strip(box)] == strip(rd(oq, f'60-t1sd-s{s}.sh'))
+    print('ok queue70')
 
 
 def fake_wc(name, cfg, n_params, exact=100.0, n=250, cell=None, min_n=200, cells=()):
@@ -378,6 +492,45 @@ def test_judge():
         assert v7(t1=100.0, cells=[('answer', 1, 99.0, 1100)]).startswith('PASS')       # R3: exactly 1.0 below T1's re-score is allowed
         assert v7(cells=[('operand', 3, 99.5, 900)]).startswith('NOT JUDGED on R1/R3')  # n < 1000
         assert v7(min_n=200) == 'NOT JUDGED'                                           # scored with the old n
+        # --arm T1SDR: Amendment 8 (screen8): screen7's R1-R4 + S2, R5 natural number-answer exact vs T1SD, the hair rule
+        J.ARMS['T1SD'] = spec
+        s8 = J.NEXT['T1SDR']
+        J.ARMS['T1S'] = s8
+        r8 = {k: r for k, r in rd.items() if k[0] != 'T1S'}
+        for s in J.SEEDS:
+            r = copy.deepcopy(rd[('T1S', s)])
+            r['config'] = dict(r['config'], cfg=s8[1])
+            r8[('T1S', s)], r8[('T1SD', s)] = r, rd[('T1S', s)]
+        rows = {f'n{i}': dict(id=f'n{i}', answer=str(i), accepted=[str(i)]) for i in range(400)}
+        rows.update({f't{i}': dict(id=f't{i}', answer='cat', accepted=['cat']) for i in range(100)})
+
+        def v8(cells=(), wrong=0, wrong_text=0, ref=None, n=1100):
+            wd = {('T1', s): fake_wc('tool', {}, T1_PARAMS, exact=98.0) for s in J.SEEDS}
+            wd.update({('T1S', s): fake_wc('tool', s8[1], s8[2], n=n, min_n=1000, cells=cells if s == 201 else ()) for s in J.SEEDS})
+            pr = {}
+            for s in J.SEEDS:
+                pr[('T1SD', s)] = {i: r['answer'] for i, r in rows.items()}
+                pr[('T1S', s)] = {i: ('x' if (i.startswith('n') and int(i[1:]) < (wrong if s == 201 else 0)) or
+                                      (i.startswith('t') and int(i[1:]) < wrong_text) else r['answer']) for i, r in rows.items()}
+            if ref is not None:
+                pr[('T1SD', 201)] = ref
+            return J.screen8(r8, wd, pr, rows)
+        assert v8()['verdict'].startswith('PASS'), v8()['verdict']
+        assert v8(wrong=4)['verdict'].startswith('PASS')                                # 4 of 400 number rows: -1.0, allowed
+        assert v8(wrong=5)['verdict'].startswith('NOT SHOWN: a miss breakdown')         # -1.25 on seed 201
+        assert v8(wrong_text=30)['verdict'].startswith('PASS')                          # text answers are not R5's rows
+        assert v8(cells=[('answer', L, 98.0, 1100) for L in (6, 7, 8, 9)])['verdict'].startswith('PASS')               # mean 99.11
+        assert v8(cells=[('answer', L, 98.0, 1100) for L in (5, 6, 7, 8, 9)])['verdict'].startswith('NOT SHOWN by a hair')  # mean 98.89
+        assert v8(cells=[('answer', L, 97.5, 1100) for L in (5, 6, 7, 8, 9)])['verdict'].startswith('NOT SHOWN by a hair')  # mean 98.6
+        assert v8(cells=[('answer', L, 97.0, 1100) for L in range(1, 10)])['verdict'].startswith('NOT SHOWN: a miss')   # mean 97 < 98.5
+        assert v8(cells=[('answer', 8, 96.5, 1100)])['verdict'].startswith('NOT SHOWN: a miss')       # a cell below 97: not a hair
+        assert v8(cells=[('answer', 5, 98.0, 1100)] * 1 + [('answer', L, 97.5, 1100) for L in (6, 7, 8, 9)], wrong=5)['verdict'].startswith(
+            'NOT SHOWN: a miss')                                                        # R5 fails too: not a hair
+        assert v8(cells=[('operand', 8, 88.0, 1100)])['verdict'].startswith('PROVED WRONG: a 4-9')    # any cell < 90 (no s201 special case)
+        assert v8(cells=[('operand', 3, 99.5, 900)])['verdict'].startswith('NOT JUDGED on R1/R3')
+        assert v8(ref={})['verdict'] == 'NOT JUDGED'                                    # T1SD's predictions missing
+        r8b = dict(r8); del r8b[('T1SD', 200)]
+        assert J.screen8(r8b, {}, {}, rows)['verdict'] == 'NOT JUDGED'
     finally:
         J.ARMS.clear(); J.ARMS.update(keep)
     print('ok judge')
