@@ -647,3 +647,23 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
 - **Run and judge:** same recipe, seeds 200/201, on the same two boxes (custom_io/queue/t1a|t1b/53-t1si-*.sh, re-scored by 54-wc-t1si-*.sh
   with the Amendment 4 scorer). R1-R4 and the path-read proved-wrong line unchanged; R3 compares against the same T1 re-scored values:
   `python -m custom_io.analyze_t1s --arm T1SI --results ...33-pc-confirm-b2 ...40-vast-t1 ...53-vast-t1si --wc ...51-vast-wc-t1 ...54-vast-wc-t1si`.
+
+## Addendum 22, amendment 4 (written 2026-10-08 about 02:45 UTC, 10:45 PM ET 10-07, before any T1SD run)
+- **T1SI read (custom_io/results/RESULTS-T1SI.md):** PROVED WRONG by the Amendment 3 line on one cell, s201 operand at 8 digits 88.0 (n 483).
+  Answers became 95.9-100 at every length (answer selection fixed). The CPU checks (MARKS Amendment 6; custom_io/results/WC-MISSES-T1SI.md)
+  found 56 of the 58 misses started on the wrong char inside the right entry, 0 were stop-head misses; a fresh draw (n >= 1000) gives
+  s201 7/8/9 digits 97.7/91.6/93.2.
+- **T1SD, the one change sealed as MARKS Amendment 7:** model 'tool' cfg {"span_copy": true, "span_idx": true, "span_end": true}, 3,314,132
+  params (+2,560 vs T1SI; code 9ea8b6c0c). One table e_e[d] (dk wide, zero at init, so the model starts as T1SI) is added to every span key;
+  d = the char's distance from the end of its own string (0 = its last char, 0..39).
+- **Disclosure:** like the entry index, d comes from the text layout (which chars exist in the char's string, i.e. its length). A result's
+  units digit is its entry's last char (d = 0) at every length. No rule picks the start, no length is given, nothing else changes.
+  The small CPU proxy (one seed, trained on 1-3 digits) is suggestive only and decides nothing (Amendment 7).
+- **Marks (MARKS Amendment 7 + Clarification 7a), seeds 200/201, T1SI's recipe, rented RTX 5090s:** R1 per side (operand, answer) and seed:
+  the unweighted mean of the nine length cells >= 99 and every cell >= 97, n >= 1000 per cell, unambiguous set (reading (a), all nine >= 99,
+  printed beside, not a mark). R2 pooled-5 - B2 >= -2.0. R3 1-3 digit cells >= 99 and no more than 1.0 below T1's Amendment 4 re-score.
+  R4 tool off < 5, free-run call accuracy >= 98. S2 chain-5 >= 95. Proved wrong: any operand or answer cell at 4-9 digits < 90 on either
+  seed; if it is the same s201 8-digit operand cell again, the next step is two more seeds of unchanged T1SI. Between: not shown, one more
+  change named from a miss breakdown of the failing cell. Pass: the 6-seed confirm (marks 1-6, Amendment 2) on T1SD, H1 queued behind it.
+- **Run and judge:** box jobs custom_io/queue/t1d1|t1d2 (60 train, 61 re-score with `--min-n 1000`, 62 checkpoint export);
+  `python -m custom_io.analyze_t1s --arm T1SD --results ...33-pc-confirm-b2 ...40-vast-t1 ...60-vast-t1sd --wc ...51-vast-wc-t1 ...61-vast-wc-t1sd`.
