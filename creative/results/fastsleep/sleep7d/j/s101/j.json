@@ -1,0 +1,2039 @@
+{
+ "nprime": "/root/c7d/s101/Nprime.pt",
+ "name": "s101",
+ "seed": 0,
+ "T": 3.0,
+ "day2_seed": 1,
+ "measure_seed": 777,
+ "spec": "Roadmap 7d, the creative part of sleep (screens S1 and S3). CPU, DEV and pool only: C2 test / labelled and K_new test are never opened.",
+ "args": {
+  "pool_limit": null,
+  "dev_limit": null,
+  "n1": 32,
+  "n2": 480,
+  "lr": 0.001,
+  "visits": 32,
+  "replay_n": null,
+  "day_from": "/root/c7d/s1",
+  "lr1": 0.001,
+  "passes1": 1,
+  "kl": 0.1,
+  "n_eval": 512,
+  "k": 32,
+  "s1": "/root/c7d/s1",
+  "s3": "/root/c7d/s3",
+  "b2": "/root/fs/B2_s101.pt"
+ },
+ "note": "C2 DEV, C2 pool and K_new DEV only; test / labelled / K_new test never opened; keys score, never pick (records and kept tries use the example check only)",
+ "transfer_source": {
+  "path": "creative/data/knew/candidates_dev.jsonl",
+  "sha256": "1f978e0598c75d3d8c45c8a5548a88fe1beb8b08eb76340b8b78b2abc99a67e3",
+  "kinds": [
+   "sq_minus",
+   "triple_add",
+   "mult_sub"
+  ]
+ },
+ "sizes": {
+  "pool": 1024,
+  "c2_dev": 256,
+  "knew_dev": 192,
+  "replay": 200000,
+  "warm_rows": 2048
+ },
+ "night1": {
+  "W1_night": {
+   "source": "from S1 day /root/c7d/s1/s101/day.pkl (1018 rows); 6 greedy-passing rows searched here (seed 2000)",
+   "samples": {
+    "pass1": 32768,
+    "pass2": 359520,
+    "stuck_questions": 749
+   },
+   "records": 808,
+   "records_by_kind": {
+    "affine": 19,
+    "double_add": 172,
+    "last_digit": 293,
+    "sq_plus": 25,
+    "square": 299
+   },
+   "pool_with_fit_pass1": 275,
+   "pool_with_fit_final": 571,
+   "sleep": {
+    "updates": 808,
+    "records": 808,
+    "visits_per_record": 32.0,
+    "last_loss": 0.4607446253299713
+   }
+  },
+  "W1_sha256": "12f26ec8df80b1f9a24a9b70f824519a80b5edffd1ff005b99c4c49f87ff71cb",
+  "C1": {
+   "info": {
+    "updates": 100,
+    "last_loss": -2.101525068283081,
+    "kl_end": 7.766765594482422
+   },
+   "kept": {
+    "rows_stuck": 1018,
+    "rows_kept": 565,
+    "dropped_no_fit": 453,
+    "dropped_no_fail": 0,
+    "n_fit": 1867.0,
+    "n_fail": 4520.0
+   },
+   "n_tries": 6387,
+   "vs_S1_C": {
+    "compared": true,
+    "max_abs_diff": 0.0,
+    "equal": true
+   }
+  }
+ },
+ "day2": {
+  "W": {
+   "drawn": {
+    "greedy": 1024,
+    "pass1": 32768,
+    "pass2": 210240,
+    "pass2_rows": 438
+   },
+   "greedy_pass": 0.5185546875,
+   "pool_with_fit_pass1": 586,
+   "pool_with_fit_final": 668
+  },
+  "J": {
+   "drawn": {
+    "greedy": 1024,
+    "pass1": 32768,
+    "pass2": 228480,
+    "pass2_rows": 476
+   },
+   "greedy_pass": 0.5185546875,
+   "pool_with_fit_pass1": 548,
+   "pool_with_fit_final": 669
+  }
+ },
+ "night2": {
+  "W": {
+   "records": 1118,
+   "records_by_kind": {
+    "affine": 30,
+    "double_add": 244,
+    "last_digit": 368,
+    "sq_plus": 68,
+    "square": 408
+   },
+   "sleep": {
+    "updates": 1118,
+    "records": 1118,
+    "visits_per_record": 32.0,
+    "last_loss": 0.3580312609672546
+   }
+  },
+  "J": {
+   "kept_origin": {
+    "kept_rows": 138,
+    "rows_fit_only_from_pass2": 74,
+    "share_rows_fit_only_from_pass2": 0.5362318840579711,
+    "kept_tries": 1762,
+    "tries_from_pass2": 840,
+    "share_tries_from_pass2": 0.4767309875141884
+   },
+   "loop1": {
+    "updates": 28,
+    "last_loss": -2.294517993927002,
+    "kl_end": 2.2526609897613525,
+    "kept": {
+     "rows_stuck": 493,
+     "rows_kept": 138,
+     "dropped_no_fit": 355,
+     "dropped_no_fail": 0,
+     "n_fit": 658.0,
+     "n_fail": 1104.0
+    },
+    "n_tries": 1762
+   },
+   "records": 1078,
+   "records_by_kind": {
+    "affine": 32,
+    "double_add": 247,
+    "last_digit": 320,
+    "sq_plus": 83,
+    "square": 396
+   },
+   "sleep": {
+    "updates": 1078,
+    "records": 1078,
+    "visits_per_record": 32.0,
+    "last_loss": 0.3116105407476425
+   }
+  }
+ },
+ "arms": {
+  "W": {
+   "stuck_rate": 0.6015625,
+   "first_try_right": {
+    "near_copy": 0.8823529411764706,
+    "multi_step": 0.07142857142857142,
+    "practised": null,
+    "pooled_dev": 0.39453125
+   },
+   "creative": {
+    "pooled": {
+     "n": 256,
+     "n_samples": 32,
+     "reach_all": 0.546875,
+     "fit_all": 0.546875,
+     "rows_with_fit": 140,
+     "tries_to_first_fit": 5.8,
+     "distinct_fitting": 1.96484375,
+     "reach32": 0.546875,
+     "fit32": 0.546875,
+     "distinct32": 1.96484375
+    },
+    "by_kind": {
+     "affine": {
+      "n": 52,
+      "n_samples": 32,
+      "reach_all": 0.038461538461538464,
+      "fit_all": 0.038461538461538464,
+      "rows_with_fit": 2,
+      "tries_to_first_fit": 10.0,
+      "distinct_fitting": 0.038461538461538464,
+      "reach32": 0.038461538461538464,
+      "fit32": 0.038461538461538464,
+      "distinct32": 0.038461538461538464
+     },
+     "double_add": {
+      "n": 51,
+      "n_samples": 32,
+      "reach_all": 0.45098039215686275,
+      "fit_all": 0.45098039215686275,
+      "rows_with_fit": 23,
+      "tries_to_first_fit": 11.956521739130435,
+      "distinct_fitting": 0.6862745098039216,
+      "reach32": 0.45098039215686275,
+      "fit32": 0.45098039215686275,
+      "distinct32": 0.6862745098039216
+     },
+     "last_digit": {
+      "n": 51,
+      "n_samples": 32,
+      "reach_all": 1.0,
+      "fit_all": 1.0,
+      "rows_with_fit": 51,
+      "tries_to_first_fit": 4.607843137254902,
+      "distinct_fitting": 3.392156862745098,
+      "reach32": 1.0,
+      "fit32": 1.0,
+      "distinct32": 3.392156862745098
+     },
+     "sq_plus": {
+      "n": 51,
+      "n_samples": 32,
+      "reach_all": 0.2549019607843137,
+      "fit_all": 0.2549019607843137,
+      "rows_with_fit": 13,
+      "tries_to_first_fit": 13.076923076923077,
+      "distinct_fitting": 0.3137254901960784,
+      "reach32": 0.2549019607843137,
+      "fit32": 0.2549019607843137,
+      "distinct32": 0.3137254901960784
+     },
+     "square": {
+      "n": 51,
+      "n_samples": 32,
+      "reach_all": 1.0,
+      "fit_all": 1.0,
+      "rows_with_fit": 51,
+      "tries_to_first_fit": 2.196078431372549,
+      "distinct_fitting": 5.431372549019608,
+      "reach32": 1.0,
+      "fit32": 1.0,
+      "distinct32": 5.431372549019608
+     }
+    }
+   },
+   "knew": {
+    "pooled": {
+     "n": 192,
+     "n_samples": 512,
+     "reach_all": 0.041666666666666664,
+     "fit_all": 0.041666666666666664,
+     "rows_with_fit": 8,
+     "tries_to_first_fit": 225.25,
+     "distinct_fitting": 0.052083333333333336,
+     "reach32": 0.005208333333333333,
+     "fit32": 0.005208333333333333,
+     "distinct32": 0.005208333333333333,
+     "reach512": 0.041666666666666664,
+     "fit512": 0.041666666666666664,
+     "distinct512": 0.052083333333333336
+    },
+    "by_kind": {
+     "mult_sub": {
+      "n": 64,
+      "n_samples": 512,
+      "reach_all": 0.0,
+      "fit_all": 0.0,
+      "rows_with_fit": 0,
+      "tries_to_first_fit": null,
+      "distinct_fitting": 0.0,
+      "reach32": 0.0,
+      "fit32": 0.0,
+      "distinct32": 0.0,
+      "reach512": 0.0,
+      "fit512": 0.0,
+      "distinct512": 0.0
+     },
+     "sq_minus": {
+      "n": 64,
+      "n_samples": 512,
+      "reach_all": 0.125,
+      "fit_all": 0.125,
+      "rows_with_fit": 8,
+      "tries_to_first_fit": 225.25,
+      "distinct_fitting": 0.15625,
+      "reach32": 0.015625,
+      "fit32": 0.015625,
+      "distinct32": 0.015625,
+      "reach512": 0.125,
+      "fit512": 0.125,
+      "distinct512": 0.15625
+     },
+     "triple_add": {
+      "n": 64,
+      "n_samples": 512,
+      "reach_all": 0.0,
+      "fit_all": 0.0,
+      "rows_with_fit": 0,
+      "tries_to_first_fit": null,
+      "distinct_fitting": 0.0,
+      "reach32": 0.0,
+      "fit32": 0.0,
+      "distinct32": 0.0,
+      "reach512": 0.0,
+      "fit512": 0.0,
+      "distinct512": 0.0
+     }
+    }
+   },
+   "skills": {
+    "pooled5": 98.9,
+    "in_dist": 84.69117647058823
+   }
+  },
+  "J": {
+   "stuck_rate": 0.58984375,
+   "first_try_right": {
+    "near_copy": 0.9313725490196079,
+    "multi_step": 0.06493506493506493,
+    "practised": null,
+    "pooled_dev": 0.41015625
+   },
+   "creative": {
+    "pooled": {
+     "n": 256,
+     "n_samples": 32,
+     "reach_all": 0.55078125,
+     "fit_all": 0.55078125,
+     "rows_with_fit": 141,
+     "tries_to_first_fit": 4.25531914893617,
+     "distinct_fitting": 1.4140625,
+     "reach32": 0.55078125,
+     "fit32": 0.55078125,
+     "distinct32": 1.4140625
+    },
+    "by_kind": {
+     "affine": {
+      "n": 52,
+      "n_samples": 32,
+      "reach_all": 0.0,
+      "fit_all": 0.0,
+      "rows_with_fit": 0,
+      "tries_to_first_fit": null,
+      "distinct_fitting": 0.0,
+      "reach32": 0.0,
+      "fit32": 0.0,
+      "distinct32": 0.0
+     },
+     "double_add": {
+      "n": 51,
+      "n_samples": 32,
+      "reach_all": 0.6274509803921569,
+      "fit_all": 0.6274509803921569,
+      "rows_with_fit": 32,
+      "tries_to_first_fit": 9.96875,
+      "distinct_fitting": 1.0588235294117647,
+      "reach32": 0.6274509803921569,
+      "fit32": 0.6274509803921569,
+      "distinct32": 1.0588235294117647
+     },
+     "last_digit": {
+      "n": 51,
+      "n_samples": 32,
+      "reach_all": 1.0,
+      "fit_all": 1.0,
+      "rows_with_fit": 51,
+      "tries_to_first_fit": 1.3725490196078431,
+      "distinct_fitting": 2.3137254901960786,
+      "reach32": 1.0,
+      "fit32": 1.0,
+      "distinct32": 2.3137254901960786
+     },
+     "sq_plus": {
+      "n": 51,
+      "n_samples": 32,
+      "reach_all": 0.1568627450980392,
+      "fit_all": 0.1568627450980392,
+      "rows_with_fit": 8,
+      "tries_to_first_fit": 18.0,
+      "distinct_fitting": 0.23529411764705882,
+      "reach32": 0.1568627450980392,
+      "fit32": 0.1568627450980392,
+      "distinct32": 0.23529411764705882
+     },
+     "square": {
+      "n": 51,
+      "n_samples": 32,
+      "reach_all": 0.9803921568627451,
+      "fit_all": 0.9803921568627451,
+      "rows_with_fit": 50,
+      "tries_to_first_fit": 1.34,
+      "distinct_fitting": 3.4901960784313726,
+      "reach32": 0.9803921568627451,
+      "fit32": 0.9803921568627451,
+      "distinct32": 3.4901960784313726
+     }
+    }
+   },
+   "knew": {
+    "pooled": {
+     "n": 192,
+     "n_samples": 512,
+     "reach_all": 0.0625,
+     "fit_all": 0.0625,
+     "rows_with_fit": 12,
+     "tries_to_first_fit": 229.33333333333334,
+     "distinct_fitting": 0.08333333333333333,
+     "reach32": 0.010416666666666666,
+     "fit32": 0.010416666666666666,
+     "distinct32": 0.010416666666666666,
+     "reach512": 0.0625,
+     "fit512": 0.0625,
+     "distinct512": 0.08333333333333333
+    },
+    "by_kind": {
+     "mult_sub": {
+      "n": 64,
+      "n_samples": 512,
+      "reach_all": 0.03125,
+      "fit_all": 0.03125,
+      "rows_with_fit": 2,
+      "tries_to_first_fit": 313.0,
+      "distinct_fitting": 0.046875,
+      "reach32": 0.0,
+      "fit32": 0.0,
+      "distinct32": 0.0,
+      "reach512": 0.03125,
+      "fit512": 0.03125,
+      "distinct512": 0.046875
+     },
+     "sq_minus": {
+      "n": 64,
+      "n_samples": 512,
+      "reach_all": 0.140625,
+      "fit_all": 0.140625,
+      "rows_with_fit": 9,
+      "tries_to_first_fit": 193.88888888888889,
+      "distinct_fitting": 0.1875,
+      "reach32": 0.03125,
+      "fit32": 0.03125,
+      "distinct32": 0.03125,
+      "reach512": 0.140625,
+      "fit512": 0.140625,
+      "distinct512": 0.1875
+     },
+     "triple_add": {
+      "n": 64,
+      "n_samples": 512,
+      "reach_all": 0.015625,
+      "fit_all": 0.015625,
+      "rows_with_fit": 1,
+      "tries_to_first_fit": 381.0,
+      "distinct_fitting": 0.015625,
+      "reach32": 0.0,
+      "fit32": 0.0,
+      "distinct32": 0.0,
+      "reach512": 0.015625,
+      "fit512": 0.015625,
+      "distinct512": 0.015625
+     }
+    }
+   },
+   "skills": {
+    "pooled5": 97.4,
+    "in_dist": 84.3529411764706
+   }
+  }
+ },
+ "skills": {
+  "N": {
+   "pooled5": 98.9,
+   "in_dist": 87.77941176470588
+  },
+  "W1": {
+   "pooled5": 98.0,
+   "in_dist": 84.19117647058823
+  },
+  "B2": {
+   "pooled5": 99.8,
+   "in_dist": 90.52941176470588
+  }
+ },
+ "boot": {
+  "stuck_W_minus_J": {
+   "points": 1.171875,
+   "lo": -2.34375,
+   "hi": 5.078125
+  },
+  "creative32_J_minus_W": {
+   "points": 0.390625,
+   "lo": -3.125,
+   "hi": 4.296875
+  },
+  "knew_reach_J_minus_W": {
+   "points": 2.0833333333333335,
+   "lo": -1.5625,
+   "hi": 6.25
+  },
+  "first_try_J_minus_W": {
+   "pooled": {
+    "points": 1.5625,
+    "lo": -1.953125,
+    "hi": 5.078125
+   },
+   "near_copy": {
+    "points": 4.901960784313726,
+    "lo": -0.9803921568627451,
+    "hi": 10.784313725490197
+   },
+   "multi_step": {
+    "points": -0.6493506493506493,
+    "lo": -4.545454545454546,
+    "hi": 3.2467532467532463
+   }
+  }
+ },
+ "marks": {
+  "stuck": {
+   "W_minus_J_points": 1.171875,
+   "passes": false,
+   "rule": "C2 DEV stuck rate (adapter-off greedy try fails the example check): W - J >= +3 points"
+  },
+  "creative32": {
+   "J_minus_W_points": 0.390625,
+   "passes": false,
+   "rule": "C2 DEV creative reach@32 (F mode): J - W >= +5 points"
+  },
+  "new_kind_guard": {
+   "J_minus_W_points": 2.0833333333333335,
+   "passes": true,
+   "rule": "K_new DEV reach@512 (F mode): J - W >= -1 point (point estimate)"
+  },
+  "first_try": {
+   "J_minus_W_points": 1.5625,
+   "passes": true,
+   "rule": "C2 DEV first try right (adapter off, pooled): J - W >= -2 points"
+  },
+  "harm": {
+   "detail": {
+    "J_vs_W": {
+     "in_dist_a": 84.69117647058823,
+     "in_dist_b": 84.3529411764706,
+     "in_dist_drop": 0.33823529411763786,
+     "families": {
+      "arith_bare": {
+       "a": 99.5,
+       "b": 99.0,
+       "drop": 0.5,
+       "lo": -2.5,
+       "hi": 1.0,
+       "fires": false
+      },
+      "backward_solve": {
+       "a": 100.0,
+       "b": 100.0,
+       "drop": -0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "fires": false
+      },
+      "chain_ops": {
+       "a": 99.0,
+       "b": 97.5,
+       "drop": 1.5,
+       "lo": -3.5000000000000004,
+       "hi": 0.0,
+       "fires": false
+      },
+      "chain_story2": {
+       "a": 99.5,
+       "b": 99.5,
+       "drop": -0.0,
+       "lo": -1.5,
+       "hi": 1.5,
+       "fires": false
+      },
+      "cipher_map": {
+       "a": 71.5,
+       "b": 76.0,
+       "drop": -4.5,
+       "lo": -4.0,
+       "hi": 12.5,
+       "fires": false
+      },
+      "compare_numbers": {
+       "a": 99.0,
+       "b": 100.0,
+       "drop": -1.0,
+       "lo": 0.0,
+       "hi": 2.5,
+       "fires": false
+      },
+      "copy_word": {
+       "a": 100.0,
+       "b": 100.0,
+       "drop": -0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "fires": false
+      },
+      "digits_parity": {
+       "a": 79.0,
+       "b": 79.5,
+       "drop": -0.5,
+       "lo": -3.5000000000000004,
+       "hi": 5.0,
+       "fires": false
+      },
+      "distance_units": {
+       "a": 100.0,
+       "b": 100.0,
+       "drop": -0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "fires": false
+      },
+      "div_exact": {
+       "a": 99.5,
+       "b": 100.0,
+       "drop": -0.5,
+       "lo": 0.0,
+       "hi": 1.5,
+       "fires": false
+      },
+      "fewshot_number_rule": {
+       "a": 40.5,
+       "b": 44.5,
+       "drop": -4.0,
+       "lo": -2.0,
+       "hi": 9.5,
+       "fires": false
+      },
+      "group_induct": {
+       "a": 87.5,
+       "b": 93.0,
+       "drop": -5.5,
+       "lo": 1.5,
+       "hi": 10.0,
+       "fires": false
+      },
+      "kin_chain": {
+       "a": 68.0,
+       "b": 70.5,
+       "drop": -2.5,
+       "lo": -3.5000000000000004,
+       "hi": 9.0,
+       "fires": false
+      },
+      "letter_ops": {
+       "a": 94.0,
+       "b": 94.5,
+       "drop": -0.5,
+       "lo": -3.0,
+       "hi": 4.0,
+       "fires": false
+      },
+      "list_index": {
+       "a": 72.0,
+       "b": 71.0,
+       "drop": 1.0,
+       "lo": -6.0,
+       "hi": 4.0,
+       "fires": false
+      },
+      "list_stats": {
+       "a": 82.0,
+       "b": 80.0,
+       "drop": 2.0,
+       "lo": -6.5,
+       "hi": 2.0,
+       "fires": false
+      },
+      "object_track": {
+       "a": 87.0,
+       "b": 87.5,
+       "drop": -0.5,
+       "lo": -4.0,
+       "hi": 5.0,
+       "fires": false
+      },
+      "odd_one_out": {
+       "a": 92.0,
+       "b": 90.0,
+       "drop": 2.0,
+       "lo": -6.0,
+       "hi": 2.0,
+       "fires": false
+      },
+      "order_chain": {
+       "a": 51.5,
+       "b": 52.0,
+       "drop": -0.5,
+       "lo": -6.5,
+       "hi": 8.0,
+       "fires": false
+      },
+      "passage_qa": {
+       "a": 83.5,
+       "b": 83.5,
+       "drop": -0.0,
+       "lo": -5.0,
+       "hi": 5.0,
+       "fires": false
+      },
+      "percent_rate": {
+       "a": 100.0,
+       "b": 100.0,
+       "drop": -0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "fires": false
+      },
+      "prop_eval": {
+       "a": 97.5,
+       "b": 96.5,
+       "drop": 1.0,
+       "lo": -3.5000000000000004,
+       "hi": 1.5,
+       "fires": false
+      },
+      "rule_apply": {
+       "a": 64.0,
+       "b": 57.5,
+       "drop": 6.5,
+       "lo": -13.0,
+       "hi": 1.0,
+       "fires": false
+      },
+      "seq_cycle": {
+       "a": 89.0,
+       "b": 85.0,
+       "drop": 4.0,
+       "lo": -8.5,
+       "hi": 0.5,
+       "fires": false
+      },
+      "seq_next": {
+       "a": 41.5,
+       "b": 43.0,
+       "drop": -1.5,
+       "lo": -5.5,
+       "hi": 9.0,
+       "fires": false
+      },
+      "state_update": {
+       "a": 96.5,
+       "b": 93.5,
+       "drop": 3.0,
+       "lo": -6.5,
+       "hi": 0.5,
+       "fires": false
+      },
+      "story_addsub": {
+       "a": 99.5,
+       "b": 100.0,
+       "drop": -0.5,
+       "lo": 0.0,
+       "hi": 1.5,
+       "fires": false
+      },
+      "story_chain3": {
+       "a": 99.5,
+       "b": 99.0,
+       "drop": 0.5,
+       "lo": -1.5,
+       "hi": 0.0,
+       "fires": false
+      },
+      "syllogism": {
+       "a": 100.0,
+       "b": 100.0,
+       "drop": -0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "fires": false
+      },
+      "table_calc": {
+       "a": 71.0,
+       "b": 72.0,
+       "drop": -1.0,
+       "lo": -5.5,
+       "hi": 7.5,
+       "fires": false
+      },
+      "table_lookup": {
+       "a": 30.0,
+       "b": 30.0,
+       "drop": -0.0,
+       "lo": -4.5,
+       "hi": 4.0,
+       "fires": false
+      },
+      "var_chain": {
+       "a": 100.0,
+       "b": 97.5,
+       "drop": 2.5,
+       "lo": -5.0,
+       "hi": -0.5,
+       "fires": false
+      },
+      "verify_claim": {
+       "a": 91.5,
+       "b": 87.5,
+       "drop": 4.0,
+       "lo": -8.0,
+       "hi": 0.0,
+       "fires": false
+      },
+      "word_filter": {
+       "a": 94.5,
+       "b": 88.5,
+       "drop": 6.0,
+       "lo": -10.0,
+       "hi": -2.5,
+       "fires": true
+      }
+     },
+     "fired": [
+      "word_filter"
+     ],
+     "passes": false,
+     "rule": "in_dist drop <= 1.5 and no family with drop > 5.0 and paired 95% interval below 0"
+    },
+    "pooled5_points": {
+     "N": 98.9,
+     "W": 98.9,
+     "J": 97.4,
+     "B2": 99.8
+    },
+    "pooled5_harm_vs_N": {
+     "W": 0.0,
+     "J": 1.5
+    },
+    "pooled5_J_minus_W_harm": 1.5,
+    "report_only": {
+     "W_vs_N": {
+      "in_dist_a": 87.77941176470588,
+      "in_dist_b": 84.69117647058823,
+      "in_dist_drop": 3.088235294117652,
+      "families": {
+       "arith_bare": {
+        "a": 98.0,
+        "b": 99.5,
+        "drop": -1.5,
+        "lo": -0.5,
+        "hi": 4.0,
+        "fires": false
+       },
+       "backward_solve": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "chain_ops": {
+        "a": 98.5,
+        "b": 99.0,
+        "drop": -0.5,
+        "lo": -1.0,
+        "hi": 2.5,
+        "fires": false
+       },
+       "chain_story2": {
+        "a": 99.5,
+        "b": 99.5,
+        "drop": -0.0,
+        "lo": -1.5,
+        "hi": 1.5,
+        "fires": false
+       },
+       "cipher_map": {
+        "a": 89.0,
+        "b": 71.5,
+        "drop": 17.5,
+        "lo": -25.5,
+        "hi": -9.5,
+        "fires": true
+       },
+       "compare_numbers": {
+        "a": 100.0,
+        "b": 99.0,
+        "drop": 1.0,
+        "lo": -2.5,
+        "hi": 0.0,
+        "fires": false
+       },
+       "copy_word": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "digits_parity": {
+        "a": 85.5,
+        "b": 79.0,
+        "drop": 6.5,
+        "lo": -11.5,
+        "hi": -1.5,
+        "fires": true
+       },
+       "distance_units": {
+        "a": 99.5,
+        "b": 100.0,
+        "drop": -0.5,
+        "lo": 0.0,
+        "hi": 1.5,
+        "fires": false
+       },
+       "div_exact": {
+        "a": 99.5,
+        "b": 99.5,
+        "drop": -0.0,
+        "lo": -1.5,
+        "hi": 1.5,
+        "fires": false
+       },
+       "fewshot_number_rule": {
+        "a": 31.5,
+        "b": 40.5,
+        "drop": -9.0,
+        "lo": 1.0,
+        "hi": 17.0,
+        "fires": false
+       },
+       "group_induct": {
+        "a": 87.5,
+        "b": 87.5,
+        "drop": -0.0,
+        "lo": -4.5,
+        "hi": 4.5,
+        "fires": false
+       },
+       "kin_chain": {
+        "a": 77.5,
+        "b": 68.0,
+        "drop": 9.5,
+        "lo": -16.0,
+        "hi": -3.5000000000000004,
+        "fires": true
+       },
+       "letter_ops": {
+        "a": 94.5,
+        "b": 94.0,
+        "drop": 0.5,
+        "lo": -4.0,
+        "hi": 3.0,
+        "fires": false
+       },
+       "list_index": {
+        "a": 75.0,
+        "b": 72.0,
+        "drop": 3.0,
+        "lo": -8.5,
+        "hi": 3.0,
+        "fires": false
+       },
+       "list_stats": {
+        "a": 86.0,
+        "b": 82.0,
+        "drop": 4.0,
+        "lo": -8.0,
+        "hi": -0.5,
+        "fires": false
+       },
+       "object_track": {
+        "a": 92.0,
+        "b": 87.0,
+        "drop": 5.0,
+        "lo": -9.5,
+        "hi": -0.5,
+        "fires": false
+       },
+       "odd_one_out": {
+        "a": 92.5,
+        "b": 92.0,
+        "drop": 0.5,
+        "lo": -4.0,
+        "hi": 3.5000000000000004,
+        "fires": false
+       },
+       "order_chain": {
+        "a": 59.5,
+        "b": 51.5,
+        "drop": 8.0,
+        "lo": -16.0,
+        "hi": -0.5,
+        "fires": true
+       },
+       "passage_qa": {
+        "a": 90.5,
+        "b": 83.5,
+        "drop": 7.0,
+        "lo": -12.5,
+        "hi": -2.0,
+        "fires": true
+       },
+       "percent_rate": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "prop_eval": {
+        "a": 98.5,
+        "b": 97.5,
+        "drop": 1.0,
+        "lo": -4.0,
+        "hi": 1.5,
+        "fires": false
+       },
+       "rule_apply": {
+        "a": 85.0,
+        "b": 64.0,
+        "drop": 21.0,
+        "lo": -28.499999999999996,
+        "hi": -13.5,
+        "fires": true
+       },
+       "seq_cycle": {
+        "a": 92.5,
+        "b": 89.0,
+        "drop": 3.5,
+        "lo": -8.5,
+        "hi": 1.0,
+        "fires": false
+       },
+       "seq_next": {
+        "a": 66.5,
+        "b": 41.5,
+        "drop": 25.0,
+        "lo": -33.0,
+        "hi": -17.5,
+        "fires": true
+       },
+       "state_update": {
+        "a": 97.5,
+        "b": 96.5,
+        "drop": 1.0,
+        "lo": -4.5,
+        "hi": 2.5,
+        "fires": false
+       },
+       "story_addsub": {
+        "a": 99.5,
+        "b": 99.5,
+        "drop": -0.0,
+        "lo": -1.5,
+        "hi": 1.5,
+        "fires": false
+       },
+       "story_chain3": {
+        "a": 99.0,
+        "b": 99.5,
+        "drop": -0.5,
+        "lo": 0.0,
+        "hi": 1.5,
+        "fires": false
+       },
+       "syllogism": {
+        "a": 99.0,
+        "b": 100.0,
+        "drop": -1.0,
+        "lo": 0.0,
+        "hi": 2.5,
+        "fires": false
+       },
+       "table_calc": {
+        "a": 74.0,
+        "b": 71.0,
+        "drop": 3.0,
+        "lo": -8.5,
+        "hi": 2.5,
+        "fires": false
+       },
+       "table_lookup": {
+        "a": 29.5,
+        "b": 30.0,
+        "drop": -0.5,
+        "lo": -4.0,
+        "hi": 5.0,
+        "fires": false
+       },
+       "var_chain": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "verify_claim": {
+        "a": 92.5,
+        "b": 91.5,
+        "drop": 1.0,
+        "lo": -5.5,
+        "hi": 3.5000000000000004,
+        "fires": false
+       },
+       "word_filter": {
+        "a": 95.0,
+        "b": 94.5,
+        "drop": 0.5,
+        "lo": -4.0,
+        "hi": 3.0,
+        "fires": false
+       }
+      },
+      "fired": [
+       "cipher_map",
+       "digits_parity",
+       "kin_chain",
+       "order_chain",
+       "passage_qa",
+       "rule_apply",
+       "seq_next"
+      ],
+      "passes": false,
+      "rule": "in_dist drop <= 1.5 and no family with drop > 5.0 and paired 95% interval below 0"
+     },
+     "J_vs_N": {
+      "in_dist_a": 87.77941176470588,
+      "in_dist_b": 84.3529411764706,
+      "in_dist_drop": 3.42647058823529,
+      "families": {
+       "arith_bare": {
+        "a": 98.0,
+        "b": 99.0,
+        "drop": -1.0,
+        "lo": -1.5,
+        "hi": 3.5000000000000004,
+        "fires": false
+       },
+       "backward_solve": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "chain_ops": {
+        "a": 98.5,
+        "b": 97.5,
+        "drop": 1.0,
+        "lo": -3.5000000000000004,
+        "hi": 1.0,
+        "fires": false
+       },
+       "chain_story2": {
+        "a": 99.5,
+        "b": 99.5,
+        "drop": -0.0,
+        "lo": -1.5,
+        "hi": 1.5,
+        "fires": false
+       },
+       "cipher_map": {
+        "a": 89.0,
+        "b": 76.0,
+        "drop": 13.0,
+        "lo": -19.5,
+        "hi": -6.0,
+        "fires": true
+       },
+       "compare_numbers": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "copy_word": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "digits_parity": {
+        "a": 85.5,
+        "b": 79.5,
+        "drop": 6.0,
+        "lo": -11.5,
+        "hi": -0.5,
+        "fires": true
+       },
+       "distance_units": {
+        "a": 99.5,
+        "b": 100.0,
+        "drop": -0.5,
+        "lo": 0.0,
+        "hi": 1.5,
+        "fires": false
+       },
+       "div_exact": {
+        "a": 99.5,
+        "b": 100.0,
+        "drop": -0.5,
+        "lo": 0.0,
+        "hi": 1.5,
+        "fires": false
+       },
+       "fewshot_number_rule": {
+        "a": 31.5,
+        "b": 44.5,
+        "drop": -13.0,
+        "lo": 5.0,
+        "hi": 21.0,
+        "fires": false
+       },
+       "group_induct": {
+        "a": 87.5,
+        "b": 93.0,
+        "drop": -5.5,
+        "lo": 1.5,
+        "hi": 10.0,
+        "fires": false
+       },
+       "kin_chain": {
+        "a": 77.5,
+        "b": 70.5,
+        "drop": 7.0,
+        "lo": -13.5,
+        "hi": -0.5,
+        "fires": true
+       },
+       "letter_ops": {
+        "a": 94.5,
+        "b": 94.5,
+        "drop": -0.0,
+        "lo": -3.5000000000000004,
+        "hi": 3.5000000000000004,
+        "fires": false
+       },
+       "list_index": {
+        "a": 75.0,
+        "b": 71.0,
+        "drop": 4.0,
+        "lo": -9.5,
+        "hi": 2.0,
+        "fires": false
+       },
+       "list_stats": {
+        "a": 86.0,
+        "b": 80.0,
+        "drop": 6.0,
+        "lo": -10.0,
+        "hi": -2.5,
+        "fires": true
+       },
+       "object_track": {
+        "a": 92.0,
+        "b": 87.5,
+        "drop": 4.5,
+        "lo": -9.5,
+        "hi": 0.0,
+        "fires": false
+       },
+       "odd_one_out": {
+        "a": 92.5,
+        "b": 90.0,
+        "drop": 2.5,
+        "lo": -6.5,
+        "hi": 1.0,
+        "fires": false
+       },
+       "order_chain": {
+        "a": 59.5,
+        "b": 52.0,
+        "drop": 7.5,
+        "lo": -15.5,
+        "hi": 0.0,
+        "fires": false
+       },
+       "passage_qa": {
+        "a": 90.5,
+        "b": 83.5,
+        "drop": 7.0,
+        "lo": -12.5,
+        "hi": -1.5,
+        "fires": true
+       },
+       "percent_rate": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "prop_eval": {
+        "a": 98.5,
+        "b": 96.5,
+        "drop": 2.0,
+        "lo": -4.5,
+        "hi": 0.0,
+        "fires": false
+       },
+       "rule_apply": {
+        "a": 85.0,
+        "b": 57.5,
+        "drop": 27.5,
+        "lo": -34.5,
+        "hi": -20.0,
+        "fires": true
+       },
+       "seq_cycle": {
+        "a": 92.5,
+        "b": 85.0,
+        "drop": 7.5,
+        "lo": -13.0,
+        "hi": -2.5,
+        "fires": true
+       },
+       "seq_next": {
+        "a": 66.5,
+        "b": 43.0,
+        "drop": 23.5,
+        "lo": -31.5,
+        "hi": -15.0,
+        "fires": true
+       },
+       "state_update": {
+        "a": 97.5,
+        "b": 93.5,
+        "drop": 4.0,
+        "lo": -8.0,
+        "hi": -0.5,
+        "fires": false
+       },
+       "story_addsub": {
+        "a": 99.5,
+        "b": 100.0,
+        "drop": -0.5,
+        "lo": 0.0,
+        "hi": 1.5,
+        "fires": false
+       },
+       "story_chain3": {
+        "a": 99.0,
+        "b": 99.0,
+        "drop": -0.0,
+        "lo": -1.5,
+        "hi": 1.5,
+        "fires": false
+       },
+       "syllogism": {
+        "a": 99.0,
+        "b": 100.0,
+        "drop": -1.0,
+        "lo": 0.0,
+        "hi": 2.5,
+        "fires": false
+       },
+       "table_calc": {
+        "a": 74.0,
+        "b": 72.0,
+        "drop": 2.0,
+        "lo": -9.0,
+        "hi": 4.5,
+        "fires": false
+       },
+       "table_lookup": {
+        "a": 29.5,
+        "b": 30.0,
+        "drop": -0.5,
+        "lo": -4.5,
+        "hi": 5.5,
+        "fires": false
+       },
+       "var_chain": {
+        "a": 100.0,
+        "b": 97.5,
+        "drop": 2.5,
+        "lo": -5.0,
+        "hi": -0.5,
+        "fires": false
+       },
+       "verify_claim": {
+        "a": 92.5,
+        "b": 87.5,
+        "drop": 5.0,
+        "lo": -9.5,
+        "hi": -0.5,
+        "fires": false
+       },
+       "word_filter": {
+        "a": 95.0,
+        "b": 88.5,
+        "drop": 6.5,
+        "lo": -10.5,
+        "hi": -2.5,
+        "fires": true
+       }
+      },
+      "fired": [
+       "cipher_map",
+       "digits_parity",
+       "kin_chain",
+       "list_stats",
+       "passage_qa",
+       "rule_apply",
+       "seq_cycle",
+       "seq_next",
+       "word_filter"
+      ],
+      "passes": false,
+      "rule": "in_dist drop <= 1.5 and no family with drop > 5.0 and paired 95% interval below 0"
+     },
+     "W_vs_B2": {
+      "in_dist_a": 90.52941176470588,
+      "in_dist_b": 84.69117647058823,
+      "in_dist_drop": 5.838235294117652,
+      "families": {
+       "arith_bare": {
+        "a": 100.0,
+        "b": 99.5,
+        "drop": 0.5,
+        "lo": -1.5,
+        "hi": 0.0,
+        "fires": false
+       },
+       "backward_solve": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "chain_ops": {
+        "a": 100.0,
+        "b": 99.0,
+        "drop": 1.0,
+        "lo": -2.5,
+        "hi": 0.0,
+        "fires": false
+       },
+       "chain_story2": {
+        "a": 100.0,
+        "b": 99.5,
+        "drop": 0.5,
+        "lo": -1.5,
+        "hi": 0.0,
+        "fires": false
+       },
+       "cipher_map": {
+        "a": 99.5,
+        "b": 71.5,
+        "drop": 28.0,
+        "lo": -34.5,
+        "hi": -21.5,
+        "fires": true
+       },
+       "compare_numbers": {
+        "a": 100.0,
+        "b": 99.0,
+        "drop": 1.0,
+        "lo": -2.5,
+        "hi": 0.0,
+        "fires": false
+       },
+       "copy_word": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "digits_parity": {
+        "a": 95.5,
+        "b": 79.0,
+        "drop": 16.5,
+        "lo": -22.5,
+        "hi": -11.5,
+        "fires": true
+       },
+       "distance_units": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "div_exact": {
+        "a": 100.0,
+        "b": 99.5,
+        "drop": 0.5,
+        "lo": -1.5,
+        "hi": 0.0,
+        "fires": false
+       },
+       "fewshot_number_rule": {
+        "a": 32.0,
+        "b": 40.5,
+        "drop": -8.5,
+        "lo": -1.5,
+        "hi": 18.5,
+        "fires": false
+       },
+       "group_induct": {
+        "a": 90.5,
+        "b": 87.5,
+        "drop": 3.0,
+        "lo": -7.5,
+        "hi": 1.0,
+        "fires": false
+       },
+       "kin_chain": {
+        "a": 80.0,
+        "b": 68.0,
+        "drop": 12.0,
+        "lo": -18.5,
+        "hi": -5.5,
+        "fires": true
+       },
+       "letter_ops": {
+        "a": 98.0,
+        "b": 94.0,
+        "drop": 4.0,
+        "lo": -7.000000000000001,
+        "hi": -1.0,
+        "fires": false
+       },
+       "list_index": {
+        "a": 75.0,
+        "b": 72.0,
+        "drop": 3.0,
+        "lo": -8.0,
+        "hi": 2.5,
+        "fires": false
+       },
+       "list_stats": {
+        "a": 88.0,
+        "b": 82.0,
+        "drop": 6.0,
+        "lo": -10.0,
+        "hi": -2.5,
+        "fires": true
+       },
+       "object_track": {
+        "a": 94.0,
+        "b": 87.0,
+        "drop": 7.0,
+        "lo": -11.5,
+        "hi": -2.5,
+        "fires": true
+       },
+       "odd_one_out": {
+        "a": 95.0,
+        "b": 92.0,
+        "drop": 3.0,
+        "lo": -6.5,
+        "hi": 1.0,
+        "fires": false
+       },
+       "order_chain": {
+        "a": 60.0,
+        "b": 51.5,
+        "drop": 8.5,
+        "lo": -16.5,
+        "hi": -0.5,
+        "fires": true
+       },
+       "passage_qa": {
+        "a": 95.5,
+        "b": 83.5,
+        "drop": 12.0,
+        "lo": -17.5,
+        "hi": -6.5,
+        "fires": true
+       },
+       "percent_rate": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "prop_eval": {
+        "a": 99.5,
+        "b": 97.5,
+        "drop": 2.0,
+        "lo": -4.5,
+        "hi": 0.0,
+        "fires": false
+       },
+       "rule_apply": {
+        "a": 92.5,
+        "b": 64.0,
+        "drop": 28.5,
+        "lo": -36.0,
+        "hi": -21.5,
+        "fires": true
+       },
+       "seq_cycle": {
+        "a": 92.5,
+        "b": 89.0,
+        "drop": 3.5,
+        "lo": -8.0,
+        "hi": 0.5,
+        "fires": false
+       },
+       "seq_next": {
+        "a": 88.5,
+        "b": 41.5,
+        "drop": 47.0,
+        "lo": -54.50000000000001,
+        "hi": -39.5,
+        "fires": true
+       },
+       "state_update": {
+        "a": 99.5,
+        "b": 96.5,
+        "drop": 3.0,
+        "lo": -6.0,
+        "hi": -0.5,
+        "fires": false
+       },
+       "story_addsub": {
+        "a": 100.0,
+        "b": 99.5,
+        "drop": 0.5,
+        "lo": -1.5,
+        "hi": 0.0,
+        "fires": false
+       },
+       "story_chain3": {
+        "a": 99.5,
+        "b": 99.5,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "syllogism": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "table_calc": {
+        "a": 79.5,
+        "b": 71.0,
+        "drop": 8.5,
+        "lo": -14.499999999999998,
+        "hi": -2.5,
+        "fires": true
+       },
+       "table_lookup": {
+        "a": 30.0,
+        "b": 30.0,
+        "drop": -0.0,
+        "lo": -4.0,
+        "hi": 4.0,
+        "fires": false
+       },
+       "var_chain": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "verify_claim": {
+        "a": 97.5,
+        "b": 91.5,
+        "drop": 6.0,
+        "lo": -10.0,
+        "hi": -2.5,
+        "fires": true
+       },
+       "word_filter": {
+        "a": 96.0,
+        "b": 94.5,
+        "drop": 1.5,
+        "lo": -4.5,
+        "hi": 1.5,
+        "fires": false
+       }
+      },
+      "fired": [
+       "cipher_map",
+       "digits_parity",
+       "kin_chain",
+       "list_stats",
+       "object_track",
+       "order_chain",
+       "passage_qa",
+       "rule_apply",
+       "seq_next",
+       "table_calc",
+       "verify_claim"
+      ],
+      "passes": false,
+      "rule": "in_dist drop <= 1.5 and no family with drop > 5.0 and paired 95% interval below 0"
+     },
+     "J_vs_B2": {
+      "in_dist_a": 90.52941176470588,
+      "in_dist_b": 84.3529411764706,
+      "in_dist_drop": 6.17647058823529,
+      "families": {
+       "arith_bare": {
+        "a": 100.0,
+        "b": 99.0,
+        "drop": 1.0,
+        "lo": -2.5,
+        "hi": 0.0,
+        "fires": false
+       },
+       "backward_solve": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "chain_ops": {
+        "a": 100.0,
+        "b": 97.5,
+        "drop": 2.5,
+        "lo": -5.0,
+        "hi": -0.5,
+        "fires": false
+       },
+       "chain_story2": {
+        "a": 100.0,
+        "b": 99.5,
+        "drop": 0.5,
+        "lo": -2.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "cipher_map": {
+        "a": 99.5,
+        "b": 76.0,
+        "drop": 23.5,
+        "lo": -29.5,
+        "hi": -17.5,
+        "fires": true
+       },
+       "compare_numbers": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "copy_word": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "digits_parity": {
+        "a": 95.5,
+        "b": 79.5,
+        "drop": 16.0,
+        "lo": -21.0,
+        "hi": -11.0,
+        "fires": true
+       },
+       "distance_units": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "div_exact": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "fewshot_number_rule": {
+        "a": 32.0,
+        "b": 44.5,
+        "drop": -12.5,
+        "lo": 3.0,
+        "hi": 22.0,
+        "fires": false
+       },
+       "group_induct": {
+        "a": 90.5,
+        "b": 93.0,
+        "drop": -2.5,
+        "lo": -1.0,
+        "hi": 6.0,
+        "fires": false
+       },
+       "kin_chain": {
+        "a": 80.0,
+        "b": 70.5,
+        "drop": 9.5,
+        "lo": -16.0,
+        "hi": -3.0,
+        "fires": true
+       },
+       "letter_ops": {
+        "a": 98.0,
+        "b": 94.5,
+        "drop": 3.5,
+        "lo": -7.000000000000001,
+        "hi": 0.0,
+        "fires": false
+       },
+       "list_index": {
+        "a": 75.0,
+        "b": 71.0,
+        "drop": 4.0,
+        "lo": -9.5,
+        "hi": 1.0,
+        "fires": false
+       },
+       "list_stats": {
+        "a": 88.0,
+        "b": 80.0,
+        "drop": 8.0,
+        "lo": -12.0,
+        "hi": -4.0,
+        "fires": true
+       },
+       "object_track": {
+        "a": 94.0,
+        "b": 87.5,
+        "drop": 6.5,
+        "lo": -11.0,
+        "hi": -2.0,
+        "fires": true
+       },
+       "odd_one_out": {
+        "a": 95.0,
+        "b": 90.0,
+        "drop": 5.0,
+        "lo": -9.0,
+        "hi": -1.0,
+        "fires": false
+       },
+       "order_chain": {
+        "a": 60.0,
+        "b": 52.0,
+        "drop": 8.0,
+        "lo": -15.5,
+        "hi": 0.0,
+        "fires": false
+       },
+       "passage_qa": {
+        "a": 95.5,
+        "b": 83.5,
+        "drop": 12.0,
+        "lo": -17.5,
+        "hi": -6.5,
+        "fires": true
+       },
+       "percent_rate": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "prop_eval": {
+        "a": 99.5,
+        "b": 96.5,
+        "drop": 3.0,
+        "lo": -5.5,
+        "hi": -1.0,
+        "fires": false
+       },
+       "rule_apply": {
+        "a": 92.5,
+        "b": 57.5,
+        "drop": 35.0,
+        "lo": -42.0,
+        "hi": -28.000000000000004,
+        "fires": true
+       },
+       "seq_cycle": {
+        "a": 92.5,
+        "b": 85.0,
+        "drop": 7.5,
+        "lo": -12.5,
+        "hi": -2.5,
+        "fires": true
+       },
+       "seq_next": {
+        "a": 88.5,
+        "b": 43.0,
+        "drop": 45.5,
+        "lo": -52.5,
+        "hi": -38.5,
+        "fires": true
+       },
+       "state_update": {
+        "a": 99.5,
+        "b": 93.5,
+        "drop": 6.0,
+        "lo": -9.5,
+        "hi": -3.0,
+        "fires": true
+       },
+       "story_addsub": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "story_chain3": {
+        "a": 99.5,
+        "b": 99.0,
+        "drop": 0.5,
+        "lo": -1.5,
+        "hi": 0.0,
+        "fires": false
+       },
+       "syllogism": {
+        "a": 100.0,
+        "b": 100.0,
+        "drop": -0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "fires": false
+       },
+       "table_calc": {
+        "a": 79.5,
+        "b": 72.0,
+        "drop": 7.5,
+        "lo": -13.5,
+        "hi": -2.0,
+        "fires": true
+       },
+       "table_lookup": {
+        "a": 30.0,
+        "b": 30.0,
+        "drop": -0.0,
+        "lo": -4.5,
+        "hi": 4.5,
+        "fires": false
+       },
+       "var_chain": {
+        "a": 100.0,
+        "b": 97.5,
+        "drop": 2.5,
+        "lo": -5.0,
+        "hi": -0.5,
+        "fires": false
+       },
+       "verify_claim": {
+        "a": 97.5,
+        "b": 87.5,
+        "drop": 10.0,
+        "lo": -15.0,
+        "hi": -5.5,
+        "fires": true
+       },
+       "word_filter": {
+        "a": 96.0,
+        "b": 88.5,
+        "drop": 7.5,
+        "lo": -11.5,
+        "hi": -3.5000000000000004,
+        "fires": true
+       }
+      },
+      "fired": [
+       "cipher_map",
+       "digits_parity",
+       "kin_chain",
+       "list_stats",
+       "object_track",
+       "passage_qa",
+       "rule_apply",
+       "seq_cycle",
+       "seq_next",
+       "state_update",
+       "table_calc",
+       "verify_claim",
+       "word_filter"
+      ],
+      "passes": false,
+      "rule": "in_dist drop <= 1.5 and no family with drop > 5.0 and paired 95% interval below 0"
+     }
+    }
+   },
+   "passes": false,
+   "rule": "J in_dist exact at most 1.5 points below W AND no skills family fires against W (a family fires when its exact drops > 5 points and the paired 95% interval of J - W over its rows has hi < 0); W and J against N' and B2, and pooled-5, are report only"
+  },
+  "proved_wrong_here": {
+   "flag": false,
+   "rule": "stuck W - J upper end < +1 and creative reach@32 J - W upper end < +1 (paired 95% intervals; both parents needed)"
+  },
+  "passes": false
+ },
+ "seconds": {
+  "C1": 182.59270071983337,
+  "day2_W": 2940.984900712967,
+  "day2_J": 2800.0892305374146,
+  "night2": 4215.1884329319,
+  "measure_W": 1097.1990549564362,
+  "measure_J": 1115.26544547081,
+  "total": 12558.160880088806
+ }
+}

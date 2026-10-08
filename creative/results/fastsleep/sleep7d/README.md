@@ -114,3 +114,28 @@ What it shows:
 - *Shown:* the nightly guard (pooled-5 = the five chain families) is nearly blind to this. It moved 2.5 points (s100) while in_dist lost 7.7 and seq_next lost 50. On s101 it only fired on night 2, because night 2 finally reached story_chain3 and state_update.
 - *Shown:* half of every sleep batch is skills replay over all 34 families, and that does not protect these families.
 - *Untested:* the research loop's "harm none" (71.3% C2 holdout) used the same pooled-5 guard (`creative/rl/eval_c2.py` chain5_harm), so its in_dist harm was never measured.
+
+## Test J (finished 10:55 UTC 10-08 = 6:55 AM ET; roadmap a27faa485b)
+
+Loops 1 + 2 (J) against loop 2 alone (W), two days and nights from N'. Night 1 is shared: W1 = S3's W1, and J's adapter C1 equals S1's C exactly (max abs difference 0 on both parents). Day 2 uses the same 1,024 pool questions, seed+1. W searches with no trained adapter; J searches in F mode (adapter on for pass 1's 32 tries, off for pass 2). Night 2: J runs loop 1 first, then both arms sleep the worker on their own records. Measures use one sampling seed for both arms. No repair in either arm.
+
+| | s100 | s101 |
+|---|---|---|
+| (1) stuck W / J, W - J (mark >= +3) | 66.0 / 58.2, **+7.8** [3.1, 12.9] pass | 60.2 / 59.0, +1.2 [-2.3, 5.1] fail |
+| (2) creative reach@32 (F) W / J, J - W (mark >= +5) | 58.6 / 52.3, **-6.3** [-10.9, -1.6] fail | 54.7 / 55.1, +0.4 [-3.1, 4.3] fail |
+| (3) new-kind reach@512 (F) W / J, J - W (mark >= -1) | 7.3 / 5.2, -2.1 [-6.3, 2.1] fail | 4.2 / 6.2, +2.1 [-1.6, 6.3] pass |
+| (4) C2 first try W / J, J - W (mark >= -2) | 34.0 / 41.8, +7.8 [3.1, 12.9] pass | 39.5 / 41.0, +1.6 [-2.0, 5.1] pass |
+| first try J - W: near-copy / multi-step | +26.5 [17.6, 35.3] / -4.5 [-9.7, 0.0] | +4.9 [-1.0, 10.8] / -0.6 [-4.5, 3.2] |
+| (5) harm J vs W (new measure) | in_dist +0.2 better, nothing fires, pass | in_dist -0.3, word_filter fires, **fail** |
+| harm vs N' (report): W / J in_dist drop, families firing | 3.8 / 3.6; 7 / 8 families | 3.1 / 3.4; 7 / 9 families |
+| harm vs B2 (report): W / J in_dist drop | 6.5 / 6.3 | 5.8 / 6.2 |
+| day 2: pool questions with a fit in pass 1, W / J | 566 / 506 | 586 / 548 |
+| night 2: records W / J; J's loop-1 kept rows (share whose fits all came from tries 33+) | 1187 / 1038; 249 (53%) | 1118 / 1078; 138 (54%) |
+
+Verdict: **J fails on both parents.** Mark 2 fails on both; s100 also fails mark 3, and s101 fails marks 1 and 5. It is not proved wrong, because s100's stuck interval reaches +12.9.
+
+How to read it:
+- *Shown:* the creative part's night-1 training does not carry over to the slept worker. On day 2, J's adapter (trained on N') finds FEWER fits in its 32 tries than plain sampling on W1 (506 vs 566, 548 vs 586). After night 2, J's creative reach@32 is no better than W's: -6.3 and +0.4, against S1's +16 to +18 on N'. Most of the loss is on sq_plus (18 vs 41, 16 vs 25).
+- *Suggested:* the adapter is trained on one worker and then used on the next one, after that worker has slept. Night 2's loop 1 is also half off-policy (53-54% of kept rows had fits only from adapter-off tries).
+- *Shown, s100 only:* J's worker gets better on near-copy first try (+26.5). J's day-2 records hold far fewer last_digit programs (218 vs 382). *Suggested:* fewer, more consistent programs per question teach x mod 10 better. s101 shows the same sign but much smaller (+4.9, interval crosses 0).
+- *Shown:* both arms carry the per-night skills harm (vs N': in_dist -3.1 to -3.8, 7-9 families firing). J adds none on s100 and a little on s101 (word_filter; pooled-5 97.4 vs 98.9).
