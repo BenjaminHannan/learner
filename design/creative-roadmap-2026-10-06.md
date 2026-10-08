@@ -67,8 +67,10 @@ that work, and the model learns from them in sleep so next time it doesn't need 
      pushed away from ones that didn't.
   2. The worker learns the creative part's ideas that helped it.
   3. The worker practises its own tasks.
-  Each is tested alone first. The creative part counts as "better at being creative" only if it finds answers
-  faster on kinds of problems it never slept on.
+  Each is tested alone first. First result (1, on trial copies): the creative part now finds answers about three
+  times sooner on the kinds it was stuck on (42-43% of fresh questions within 32 tries, from 24-27%). It finds
+  nothing it could not find before, and on brand-new kinds it lost the few answers it used to find. Next: use the
+  trained add-on for the first 32 tries only, then search with the untrained one (Test S1b, no training needed).
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
   when the model runs into trouble on a problem it is trying to solve. Gift and plan ideas are out of scope.
 
@@ -968,6 +970,7 @@ build, and until then the fixed recipe is disclosed):
 | Notebook switch (theta, 0.99 quantile, c = 50) | memory sleep (D6) | the learned gate (7b), then a recall tool |
 | Warm-up programs from our breadth-first solver | C2 warm-up (D9) | its own search, which C2 shows is easy for these kinds |
 | When to sleep, what to keep, data mix, sleep learning rate, nightly harm check | fast sleep, C2b (D8) | its own choice (the fast-sleep thread owns these) |
+| Creative add-on on for the first 32 tries, off after (S1b) | 7d loop 1 | the model decides when to widen its search, from its own failed checks |
 
 ## 7d. Sleep that teaches both the creative part and the worker (Ben, 3:41 PM ET 10-07; joint spec with the fast-sleep thread)
 
@@ -1095,6 +1098,48 @@ it should also get faster at its own tasks. Written here before any training; th
 - Confirm (after a screen pass, and after job 9 is scored): s200-s205, with K_new TEST opened once. C - U at least
   +5 and C - S at least +3 pooled, intervals above 0, and C - U positive on at least 5 of 6 parents.
 
+- **S1 result (fast-sleep 1478f86f8, finished 11:56 PM ET 10-07; shown, DEV, two parents): PASS.** One sampling
+  seed for every arm, 512 tries per question at T 3 in creative mode, paired 95% intervals per question.
+  - C2 DEV reach@32, U / S / C: s100 24.2 / 25.0 / 42.2; s101 27.3 / 25.0 / 43.4. C - U +18.0 [13.3, 22.7] and
+    +16.0 [11.3, 21.1]; C - S +17.2 [12.1, 21.9] and +18.4 [13.7, 23.4].
+  - Variety (distinct fits within 32 tries), C vs U: 0.79 vs 0.33 and 0.52 vs 0.36. Worker untouched: unit test passes.
+  - Tries to first fit, U / C: 90 / 31 and 79 / 34.
+  - Label "beyond near-copy", narrowly: multi-step C - U pooled +3.2 [0.6, 6.2] (per parent +3.2 [-0.6, 7.1] and
+    +3.2 [-0.6, 7.8]). Near-copy kinds carry most of the gain (+40.2 and +35.3).
+  - Setup: the worker failed 1,023 and 1,018 of the 1,024 pool questions; 550 and 565 were kept for loop 1. The grid
+    picked learning rate 1e-3 with one pass; the larger settings collapsed (KL 30-66).
+- **What the pass does not cover (shown, DEV):**
+  - Nothing new at the full day budget: C2 DEV reach@512 C - U -0.8 [-5.1, 3.5] and -0.8 [-3.9, 2.3].
+  - New kinds got worse (report-only): reach@512 on sq_minus, triple_add and mult_sub, C - U -2.1 [-4.2, -0.5] and
+    -2.6 [-4.7, -0.5]. U reached 2-3% of those 192 questions; C reached none.
+  - Caveat: the settings grid was picked on example fits at 32 tries on the same DEV questions (other samples), and it
+    tied on s101. C may be a little high. The confirm on a fresh split settles it.
+- **Ruled:** S1 passes its screen as written, and is worded "the creative part finds answers about three times sooner
+  on the kinds it was stuck on; it finds nothing it could not find before, and on new kinds it lost the little it
+  found." Not "more creative". Loop 1 sharpened the creative part's habits (suggested: the "memorises today's kinds"
+  side of the GPT question in `reviews/gpt-creative-sleep-loops-2026-10-07.md`). Loop 1 does not enter Test J as it
+  is, because J's new-kind guard (below) would fail on this result. Test S1b comes first.
+
+**Test S1b, "fast first, wide second"** (one change; no training; screen: s100 and s101, DEV, the S1 adapters):
+- Change: in creative mode the trained adapter is on for the first 32 tries and off for the other 480. Off is U
+  (the adapter starts at zero, so off is N' exactly).
+- Why this change: it keeps loop 1's speed and gives the long search back the untrained spread. It also tells where
+  the loss sits. If F gets the new-kind answers back, the loss was in the extra tries; if not, it was in the first 32.
+- Arm F is measured from the S1 arms' per-try records if they were kept: C's tries 1-32 plus U's tries 33-512. Tries
+  are independent draws per question, so that is a fair draw of F, paired with U. Otherwise one fresh run with the S1
+  sampling seed, disclosed.
+- Marks, on both parents:
+  1. Sanity: C2 DEV reach@32 for F equals C's.
+  2. New kinds: reach@512 on sq_minus, triple_add and mult_sub (192 DEV questions), F at least U - 1 point.
+  3. C2 DEV reach@512: F at least U - 2 points.
+  4. Reported: tries to first fit; distinct fits within 512; paired intervals for marks 2 and 3.
+- Proved wrong: F's new-kind reach@512 is 0 on both parents while U's is above 1%. The loss then sits in the first 32
+  tries, and the next change is to loop 1's training (a variety reward, or a larger KL), one at a time.
+- Autonomy label: no outside help, not own choices. The switch at try 32 is a fixed rule like the try budget; the
+  model choosing when to switch joins the 7c table.
+- If F passes, F is the creative mode for Test J and for S1's confirm. The confirm needs a fresh sealed C2 split, so
+  it waits until job 9 is scored.
+
 **Loop 2:** job 9's W arm, with its sealed marks (section 7), is loop 2's test. Nothing new to build.
 
 **Test S3, loop 3 alone** (screen: s100 and s101, DEV):
@@ -1116,15 +1161,20 @@ it should also get faster at its own tasks. Written here before any training; th
      right answer must be at least 20% fewer, with accuracy within 1 point.
 - Proved wrong: Z - P on stuck rate has its interval's upper end below +1 on both parents.
 
-**Test J, all three loops together** (only after S1 and S3 pass their screens): two days and nights from N', against
-loop 2 alone (W). Screened on s100/s101 DEV, then confirmed on s200-s205 with a fresh sealed C2 split (job 9 uses up
-C2's test) and K_new TEST.
+**Test J, all three loops together** (only after S1b and S3 pass their screens): two days and nights from N', against
+loop 2 alone (W). J's creative mode is S1b's F. Screened on s100/s101 DEV, then confirmed on s200-s205 with a fresh
+sealed C2 split (job 9 uses up C2's test) and a sealed split of the three new kinds (`knew.py`'s writer, 128 per kind,
+hash only, written before J runs and opened once).
 - Marks:
   1. Next-day stuck rate on C2: J at most W - 3.
-  2. K_new creative reach@32: J at least W + 5.
-  3. C2 first try: J at least W - 2.
-  4. Skills harm at most 2.
-- Proved wrong: J no better than W on both stuck rate and K_new reach (upper ends below +1).
+  2. Creative reach@32 on fresh C2 questions (creative mode run on every question, so both arms use the same set): J
+     at least W + 5.
+  3. New-kind guard: reach@512 on sq_minus, triple_add and mult_sub, J at least W - 1 point.
+  4. C2 first try: J at least W - 2.
+  5. Skills harm at most 2.
+- Proved wrong: J no better than W on both stuck rate and creative reach@32 (upper ends below +1).
+- Changed 10-08 after S1, before J was built: K_new TEST was never written (fewer than four kinds qualified), so the
+  old mark "K_new creative reach@32 at least W + 5" became mark 2 (in-kind) plus the new-kind guard (mark 3).
 
 **Later, one change each:**
 - the worker is also pushed down on its own failed first tries;
@@ -1132,7 +1182,7 @@ C2's test) and K_new TEST.
 - speed in thinking rounds, once halting exists.
 
 **Owner and machines:**
-- The fast-sleep thread builds S1, S3 and J in a new file, importing the creative code without editing it (as
+- The fast-sleep thread builds S1, S1b, S3 and J in a new file, importing the creative code without editing it (as
   `fastsleep.py` does). That includes K_new and its blind-search check.
 - Screens are CPU and DEV only. Confirms run on Ben's machines after job 9 is scored. No spend.
 
@@ -1268,3 +1318,8 @@ C2's test) and K_new TEST.
   - loop 2 is job 9's W arm;
   - loop 3 is practice on its own unsure successes, judged by next-day stuck rate.
   The fast-sleep thread builds them.
+- **S1 passes, with a cost (10-08):** loop 1 alone met its marks on both trial parents (creative reach@32 +18.0 and
+  +16.0 over the untrained add-on, +17.2 and +18.4 over the shuffled placebo; "beyond near-copy" narrowly). But reach
+  at 512 tries did not move and the new kinds fell from 2-3% to 0, so it sharpened habits rather than widened search.
+  Added Test S1b (trained add-on for the first 32 tries only, no training) and rewrote Test J's marks: K_new TEST was
+  never written, so J gets an in-kind creative mark and a new-kind guard at 512 tries.
