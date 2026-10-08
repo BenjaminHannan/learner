@@ -75,6 +75,10 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   answers and gets the new-kind answers back.
   Part 3 failed its fair re-run too: practising its own shaky wins did no better than one more ordinary night, and it
   did not make answers shorter. It is parked.
+  Parts 1 and 2 together (10-08) did not add up: one night of the worker learning the day's finds already gives it
+  what the trained creative add-on gave, and an add-on trained after that night only narrowed the search. One last
+  pre-set check (fresh tries at night) runs; if it fails, the creative add-on's sleep is parked and "learning to be
+  more creative" moves to variety and the model making its own easier versions of hard problems.
 - **Sleep has been quietly costing other skills (found 10-08).** Each weight-changing night costs about 1-4 points
   over all 34 old skill families, mostly on the find-the-rule-from-examples ones (one fell from 81% to 31% over two
   nights), and our nightly check only watched five other families. The check now covers all 34. A repair step
@@ -1380,13 +1384,43 @@ night, CPU):
   the repair).
 - Autonomy label unchanged: no outside help, not own choices.
 
+- **S1w result (fast-sleep 11f3717fb, finished 9:41 AM ET 10-08; DEV, two parents): FAIL, proved wrong.**
+  - Mark 1, creative reach@32 C - U on W1: -2.7 [-6.2, 0.8] and -3.5 [-7.4, -0.4] (U / C 46.9 / 44.1 and 48.0 /
+    44.5).
+  - Mark 2, new-kind reach@512 F - U: +4.7 [2.1, 7.8] and 0.0 (passes). Mark 3, worker untouched: passes.
+  - Variety within 32 tries, U / C: 1.47 / 1.07 and 1.39 / 0.70. sq_plus fell 16 to 6 and 10 to 0.
+  - W1 alone (U, 47-48) already beats what S1's add-on reached on N' (42-43).
+- **Ruled:**
+  - J2 does not run.
+  - Shown: one night of loop 2 already gives the worker what loop 1 gave the add-on. The worker that slept on the
+    day's finds reaches more within 32 tries than N' with S1's trained add-on. On top of it, loop 1 trained on
+    day-1 tries only narrows the search and loses rare programs (sq_plus).
+  - Suggested: the day-1 tries are off-policy for W1, and loop 1 has no correction for that.
+  - The pre-set next change runs as one screen, S1f, because it is cheap and was fixed before this result. If S1f
+    fails too, loop 1 is parked like loop 3. "The creative part learns to be more creative" then moves to what loop 2
+    cannot teach: variety (C3) and its own stepping stones (C6).
+
+**Test S1f, fresh tries at night** (one change from S1w: where loop 1's tries come from; screen s100 and s101, DEV,
+CPU):
+- After night 1 the model draws fresh tries on W1, in creative mode with the add-on, on the pool questions W1's
+  greedy try still fails: 32 tries each, one round. These are on-policy for W1. Loop 1 then trains on them at S1's
+  settings (learning rate 1e-3, one pass, KL 0.1, no grid). U is W1 with the untrained add-on; S1w's C is reported.
+- Marks, on both parents:
+  1. C2 DEV creative reach@32: C - U at least +5.
+  2. Variety (distinct fits within 32 tries) at least 0.8x U's.
+  3. New-kind reach@512 in F mode: F - U at least -1.
+  4. Worker untouched.
+- Proved wrong: C - U upper end below +1 on both parents. Loop 1 is then parked.
+- Disclosed: the night tries are extra samples, drawn by the model itself. The cost is reported (samples, CPU time).
+- If S1f passes: J2 with fresh night tries, the same J marks, no repair.
+
 **Later, one change each:**
 - the worker is also pushed down on its own failed first tries;
 - the model picks what to replay (C9);
 - speed in thinking rounds, once halting exists.
 
 **Owner and machines:**
-- The fast-sleep thread builds S1, S1b, S3, S3', J, R, S1w and J2 in a new file, importing the creative code without editing it (as
+- The fast-sleep thread builds S1, S1b, S3, S3', J, R, S1w, S1f and J2 in a new file, importing the creative code without editing it (as
   `fastsleep.py` does). That includes K_new and its blind-search check.
 - Screens are CPU and DEV only. Confirms run on Ben's machines after job 9 is scored. No spend.
 
@@ -1549,3 +1583,8 @@ night, CPU):
 - **Test R proved wrong (10-08):** the self-repair pass (replay-only updates on its own skills rows) deepened the harm
   (in_dist 9.4 / 7.9 below N') and wiped C2 first try. Dropped. Night 2 alone adds no harm; the cost is the
   stepping-stone build plus night 1. Next: the fast-sleep thread's 2 x 2 on learning rate and row reuse.
+
+- **S1w proved wrong (10-08):** training the creative add-on on the slept worker from the day's tries made it worse
+  (C - U -2.7 / -3.5), and the slept worker alone already beat S1's add-on on N'. Loop 2 gives the worker what loop 1
+  gave the add-on. J2 cancelled; one last pre-set screen, S1f (fresh on-policy tries at night); if it fails, loop 1 is
+  parked and creative learning moves to variety and own stepping stones.
