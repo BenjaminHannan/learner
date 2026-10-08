@@ -26,3 +26,17 @@ def test_pick():
     assert N.pick({'s100': _p(V=(False, True, 4.0), L=(False, True, 3.0))})[1] is None
     mixed = {'s100': _p(V=(True, False, 2.0), L=(False, False, 1.0)), 's101': _p(V=(True, False, 2.0), L=(True, False, 1.0))}
     assert N.pick(mixed)[1] == 'V'                                          # L fails on one parent
+
+
+def test_l2_marks_and_verdict():
+    m = N.l2_marks(True, -1.9, 3.0)
+    assert m['passes'] and not m['proved_wrong']
+    assert not N.l2_marks(True, -2.1, 3.0)['passes']                       # multi-step first try too low
+    assert not N.l2_marks(False, 5.0, 8.0)['passes']                       # harm fails
+    assert N.l2_marks(True, -6.0, -0.1)['proved_wrong'] and not N.l2_marks(True, -6.0, 0.0)['proved_wrong']
+    a, b = N.l2_marks(True, 0.0, 2.0), N.l2_marks(True, -8.0, -1.0)
+    v = N.l2_verdict({'s100': a, 's101': b})
+    assert not v['passes'] and not v['proved_wrong'] and 'passes' in v['disagree']
+    v = N.l2_verdict({'s100': a, 's101': a})
+    assert v['passes'] and not v['disagree'] and 'L64' in v['next']
+    assert N.l2_verdict({'s100': b, 's101': b})['proved_wrong']
