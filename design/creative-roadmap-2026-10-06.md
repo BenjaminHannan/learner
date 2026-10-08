@@ -91,6 +91,9 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   step, Test SC: at the fast rate, the model picks which old skills to re-practise during the night, by checking
   which ones it is starting to forget. Ben's follow-up (2:54 PM ET): keep every past training example. Old skills rows
   are already mixed into every night; past nights' own finds are not, so Test AP keeps them.
+  **On hold (Ben, 3:27 PM ET 10-08):** big money goes only on one training run that demonstrably works, not a pile
+  of little tests. L64 finishes; SC, AP and the lr 3e-4 follow-up wait until the "One big proven training run"
+  thread says which checks gate that run.
   Building the practice parent still costs about 2-3 points; that parent goes away once the model makes its own
   stepping stones.
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
@@ -1459,6 +1462,11 @@ families x 200, two parents).**
     change later). Uniform sampling first; model-picked records later.
   - Runs after SC. Job 9 is not changed. Autonomy: the pool rule is ours, the records are the model's own checked
     finds.
+- **HOLD (Ben, 3:27 PM ET 10-08, relayed by the coordinator): "I only want large amounts of money being spent on a
+  training run that demonstrably works... instead of doing a bunch of little tests."** L64, already running on the
+  fast-sleep CPU, finishes and is ruled. SC and AP (built, fast-sleep c29a9b9bd / 3c6a98f11) do not start. The lr
+  3e-4 follow-up and any new 7d test wait for the "One big proven training run" thread to name the checks that gate
+  that run; a held test runs only if that thread asks for it. Job 9 is not changed.
 
 **Test J, loops 1 and 2 together** (changed 10-08 after S3': loop 3 is parked): two days and nights from N', loop 1
 (creative mode F) plus loop 2, against loop 2 alone (W). One change: the creative part's own sleep. It asks Ben's
@@ -1761,3 +1769,5 @@ CPU):
   night; past nights' finds are not. Accepted Test AP: night 2 on night 1's plus night 2's records at W2's update
   budget, against W2. Marks: pooled first try +2, multi-step first try within 2, night-2 harm passes; proved wrong if
   the pooled gain's upper end is below +1 on both parents.
+- **10-08, 3:30 PM ET:** Ben's rule (one proven big run, not many little tests): SC, AP and the lr 3e-4 follow-up
+  held; L64 finishes and is ruled; new 7d tests only if the "One big proven training run" thread asks.
