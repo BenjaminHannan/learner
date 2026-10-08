@@ -118,3 +118,10 @@ can express. What would prove that prediction wrong: G-B2 passes the screen with
 - **Hours:** set from the first PC run's speed. Our guess before timing (suggested): about two days of PC time for the screen, more while the
   reader/talker jobs hold the GPU. Seeds 402-405, if the screen says go on or unclear, also run on the PC unless credit returns.
 - Marks, arms and the screen readout are unchanged.
+
+## 8. Addendum C (2026-10-08, 3:28 PM ET): on hold
+
+- Ben, 3:27 PM ET 10-08: "I only want large amounts of money being spent on a training run that demonstrably works. Can you do that instead of
+  doing a bunch of little tests?" The coordinator's reading: only runs already in progress on free machines finish; no new tests start.
+- The PC screen had not started (the PC was offline), so it is held, not run. The queue and code stay staged on the PC. The thread "One big proven
+  training run" decides whether this check gates its run. Box 54861956 stays stopped (no credit is spent on it). Marks unchanged.
