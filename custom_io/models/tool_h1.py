@@ -19,7 +19,14 @@ A turn = answering one question. Rounds = T1's controller iterations: round t (t
   rounds, so every row's program and answer are trained in every batch, as in T1 (disclosed: K = 4 then mostly runs 8). Rounds 9..32 are
   gradient-checkpointed (same values, less memory); answer heads are checkpointed every round.
 - loops:K (lesion and forced runs) = exactly K rounds with the stop head ignored; loops:8 is T1's own computation (tested).
-Size (vocab 108, S cfg): T1's 3,277,393 + 257 = 3,277,650."""
+Size (vocab 108, S cfg): T1's 3,277,393 + 257 = 3,277,650.
+
+H1R (H1 on T1SDR, cfg {"label": "settled", "span_copy": true, "span_idx": true, "span_end": true, "ans_drill": 0.25}; 3,314,132 + 257 = 3,314,389):
+everything not H1 is T1SDR (the stop head is still created last). The span answer is read every round too: the round state also carries qn =
+q_s(ln_z(control 1)), kept at each row's own stop round; the per-round answer loss adds the span answer term (the answer pointer over the prompt and
+the tape visible that round) and GEN covers every non-WORD row, as in T1SDR; the call-writing span losses (calls and the span stop head) are T1SDR's,
+once. Stop labels read each round's greedy answer including the span (mode 0), against the row's own target (a drill row's drawn answer). With
+span_copy, H1's stop loss is logged as 'halt' ('stop' is the span stop head's)."""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -52,7 +59,6 @@ class ToolH1(Tool):
     def __init__(self, vocab, label='right', **kw):
         assert label in LABELS, label
         super().__init__(vocab, **kw)
-        assert not self.span_copy, 'H1 on T1S: adapt round_state / run / loss to the span state first'
         self.label, self.cap = label, CAP
         self.stop = nn.Linear(self.d, 1)                                  # created last: every T1 weight starts as in T1
         nn.init.normal_(self.stop.weight, std=0.02)
@@ -69,13 +75,21 @@ class ToolH1(Tool):
         Z = st['Z']
         vis = st['mt'] & st['shown'][:, :st['K']].gather(1, st['ent'].expand(Z.shape[0], -1))
         zf = self.ln_z(Z[:, 1])
-        return zf, (Z[:, N_CTRL:], st['Xt'], st['idt'], vis, self.mode_head(zf), self.ptr(self.q_word(zf), st['Kw'], st['wvalid']))
+        s = (Z[:, N_CTRL:], st['Xt'], st['idt'], vis, self.mode_head(zf), self.ptr(self.q_word(zf), st['Kw'], st['wvalid']))
+        return zf, s + ((self.q_s(zf),) if self.span_copy else ())            # H1R: + qn, the answer pointer's query (Tool.state_of's state[6])
 
-    def noop_step(self, B, dev):
-        """(op logits that pick NOOP, empty cells) for a call a stopped row never makes."""
+    def noop_step(self, B, dev, ref=None):
+        """(op logits that pick NOOP, empty cells) for a call a stopped row never makes; H1R: + a span dict that copies nothing (gates off).
+        ref = the run's output, for the span layout."""
         lop = torch.full((B, self.op_head.out_features), -1e4, device=dev)
         lop[:, 0] = 1e4
-        return lop, torch.zeros(B, 2 * CELLS, self.reader.tok.weight.shape[0], device=dev)
+        st = (lop, torch.zeros(B, 2 * CELLS, self.reader.tok.weight.shape[0], device=dev))
+        if self.span_copy and ref is not None:
+            T, le = ref['ids'].shape[1] - N_RES * ref['le'], ref['le']
+            st += (dict(la=torch.zeros(B, T + N_RES * le, device=dev), lb=torch.zeros(B, T + N_RES * le, device=dev), ga=torch.full((B,), -1e4, device=dev),
+                        gb=torch.full((B,), -1e4, device=dev), ids=torch.zeros(B, T + N_RES * le, dtype=torch.long, device=dev),
+                        m=torch.zeros(B, T + N_RES * le, dtype=torch.bool, device=dev), T=T, le=le),)
+        return st
 
     def p_stop(self, zf):
         return torch.sigmoid(self.stop(zf).float())[:, 0]
@@ -103,19 +117,20 @@ class ToolH1(Tool):
             return bool((used > 0).all())
 
         o = super().run(batch, self.cap, None, lesion, rounds, oracle, stop_here)
-        R, Xt, idt, vis, lmode, lword = keep
+        R, Xt, idt, vis, lmode, lword, *qn = keep
         u = used.tolist()
         T = batch['prompt_ids'].shape[1]
         steps = []
         for k in range(N_RES):            # call k is written at iteration k + 1: it counts only for rows still running then (used > k + 1)
-            lop, p = o['steps'][k] if k < len(o['steps']) else self.noop_step(B, dev)
+            st = o['steps'][k] if k < len(o['steps']) else self.noop_step(B, dev, o)
+            lop = st[0]
             off = used <= k + 1
             if off.any():
                 lop = lop.clone()
-                lop[off] = self.noop_step(1, dev)[0].to(lop.dtype)
-            steps.append((lop, p))
+                lop[off] = self.noop_step(1, dev, o)[0].to(lop.dtype)
+            steps.append((lop,) + tuple(st[1:]))
         self.last_rounds = u
-        return dict(o, R=R, lmode=lmode, lword=lword, X=torch.cat([o['X'][:, :T], Xt.to(o['X'].dtype)], 1), xm=torch.cat([o['xm'][:, :T], vis], 1),
+        return dict(o, **({'qn': qn[0]} if qn else {}), R=R, lmode=lmode, lword=lword, X=torch.cat([o['X'][:, :T], Xt.to(o['X'].dtype)], 1), xm=torch.cat([o['xm'][:, :T], vis], 1),
                     ids=torch.cat([batch['prompt_ids'], idt], 1), tape=(Xt, idt, vis), steps=steps,
                     calls=[[c for c in cs if c[0] < u[i]] for i, cs in enumerate(o['calls'])], rounds=u)
 
@@ -123,7 +138,8 @@ class ToolH1(Tool):
     def loss(self, batch):
         dev, B = batch['prompt_ids'].device, len(batch['rows'])
         rows = batch['rows']
-        g = self.gold(rows, dev)
+        sc = self.span_copy
+        g = self.gold(rows, dev, self.train_golds(rows) if self.ans_drill else None)
         L = (g['op'] > 0).sum(1)
         K = KS[int(torch.randint(len(KS), (1,)))]
         n = max(K, int(L.max()) + 1)
@@ -141,44 +157,63 @@ class ToolH1(Tool):
         xmp = o['xm'][:, :T]
         n_t = (g['gen'] >= 0).sum(1).clamp(min=1)
         tg = g['gen']
+        gmode = (g['mode'] != 1) if sc else (g['mode'] == 2)                   # GEN's rows: T1SDR's rule (mode 0 rows keep GEN targets) / plain T1's
+        if sc:
+            ls, Mn = self.span_terms(o, g, batch, B)
+            selw = (g['mode'] == 0) & Mn.any(-1)
+            le = o['le']
 
         def heads(R, zf, vis, Kw, wvalid):
             p, gate = self.gen_copy(R, Xc, torch.cat([xmp, vis], 1), idc)
-            return p, gate, self.mode_head(zf), self.ptr(self.q_word(zf), Kw, wvalid)
+            out = (p, gate, self.mode_head(zf), self.ptr(self.q_word(zf), Kw, wvalid))
+            if sc:
+                m = torch.cat([xmp, vis], 1)
+                out += (self.ptr(self.q_s(zf), self.span_keys(Xc, T, le, m), m),)
+            return out
 
         acc = torch.zeros(B, device=dev)
+        asp = torch.zeros(B, device=dev)
         cnt = torch.zeros(B, device=dev)
-        zs, picks = [], []
+        zs, picks, spk = [], [], []
         share = None
         for t, Z, vis, Kw, wvalid in per:
             zf = self.ln_z(Z[:, 1])
-            p, gate, lmode, lword = checkpoint(heads, Z[:, N_CTRL:], zf, vis, Kw, wvalid, use_reentrant=False)
+            r = checkpoint(heads, Z[:, N_CTRL:], zf, vis, Kw, wvalid, use_reentrant=False)
+            p, gate, lmode, lword = r[:4]
             lm = F.cross_entropy(lmode.float(), g['mode'], reduction='none')
             lw = torch.where(g['mode'] == 1, -(torch.logsumexp(lword.masked_fill(~g['word'], -1e9), -1) - torch.logsumexp(lword, -1)), torch.zeros_like(lm))
             ce = -torch.log(p.gather(2, tg.clamp(min=0)[..., None])[..., 0] + 1e-6).masked_fill(tg < 0, 0.0)
-            lg = (ce.sum(1) / n_t) * (g['mode'] == 2)
+            lg = (ce.sum(1) / n_t) * gmode
             ok = (t >= L).float()
-            acc = acc + (lm + lw + lg) * ok
+            row = lm + lw + lg
+            if sc:
+                ln = r[4]
+                lsn = torch.where(selw, -(torch.logsumexp(ln.masked_fill(~Mn, -1e9), -1) - torch.logsumexp(ln, -1)), torch.zeros_like(lm))
+                row = row + lsn
+                asp = asp + lsn * ok
+                with torch.no_grad():                                          # the greedy span this round reads, for the stop labels
+                    spk.append(self.span_read(ln.detach(), idc, torch.cat([xmp, vis], 1), T, le))
+            acc = acc + row * ok
             cnt = cnt + ok
             zs.append(zf.detach())
             picks.append(torch.cat([p.detach().argmax(-1), lmode.detach().argmax(-1)[:, None], lword.detach().argmax(-1)[:, None]], 1))
             if t == n - 1:
-                tm = (tg >= 0) & (tg != EOS) & (g['mode'] == 2)[:, None]
+                tm = (tg >= 0) & (tg != EOS) & gmode[:, None]
                 share = ((1 - gate.detach()[..., 0]) * tm).sum() / tm.sum().clamp(min=1)
         lans = (acc / cnt.clamp(min=1)).sum() / B
-        # the stop head's labels: the model's own greedy readout after each round, against the target answer
+        # the stop head's labels: the model's own greedy readout after each round, against the target answer (a drill row's own drawn answer)
         picks = torch.stack(picks).tolist()                                    # [n][B][9 + 2]
         spans = [word_spans(r['prompt'])[:W_MAX] for r in rows]
-        want = [norm(r['answer']) for r in rows]
+        want = [norm(g['rowg'][i][5] if sc and g['rowg'][i][6] else r['answer']) for i, r in enumerate(rows)]
         right = torch.zeros(n, B, dtype=torch.bool)
         memo = {}
         for t in range(n):
             for i in range(B):
-                key = (i, tuple(picks[t][i]))
+                key = (i, tuple(picks[t][i]), spk[t][i] if sc else None)
                 hit = memo.get(key)
                 if hit is None:
                     c = picks[t][i]
-                    txt = self.answers([c[:-2]], [c[-2]], [c[-1]], [rows[i]], [spans[i]])[0][0]
+                    txt = self.answers([c[:-2]], [c[-2]], [c[-1]], [rows[i]], [spans[i]], span=[spk[t][i]] if sc else None)[0][0]
                     hit = memo[key] = norm(txt) == want[i]
                 right[t, i] = hit
         y = (settled(right) if self.label == 'settled' else right).to(dev).float()
@@ -187,6 +222,11 @@ class ToolH1(Tool):
         total = lop + lcall + lans + lstop
         aux = dict(prog=lop + lcall, op_acc=hits / tot.clamp(min=1), call=lcall, ans=lans, stop=lstop, stop_y=y.mean(), stop_acc=((logit >= 0).float() == y).float().mean(),
                    right_last=right[-1].float().mean(), rounds=float(n), copy_share=share)
+        if sc:                      # 'stop' is T1S's span stop head there: H1's own loss is logged as 'halt'
+            total = total + ls['span_call'] + ls['stop']
+            aux.update(halt=lstop, span_call=ls['span_call'], span_ans=(asp / cnt.clamp(min=1)).sum() / B, stop=ls['stop'], span_share=ls['span_share'])
+            if self.ans_drill:
+                aux['drill_share'] = sum(x[6] for x in g['rowg']) / B
         return total, {k: v.detach() if torch.is_tensor(v) else v for k, v in aux.items()}
 
     # ---- extra evals ----

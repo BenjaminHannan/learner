@@ -1,14 +1,16 @@
 """python3 -m custom_io.tests.test_tool_h1   (CPU; needs the skills data at data.DEFAULT_DATA / $CUSTOM_IO_DATA)
 H1 (learned rounds on T1, PASS-MARKS.md addendum 21): size and same-seed init, K = 8 with the stop head ignored reproduces T1 exactly (forced
 loops:8 and the adaptive loop with cap 8 and a stop that never fires), each row's state is the one at its own stop round, the training loss
-and its stop labels, the checkpoint round trip, the loop sweep and the queue file."""
+and its stop labels, the checkpoint round trip, the loop sweep and the queue file.
+H1R (H1 on T1SDR, cfg SDR below): the same checks on the span path (size, init, K = 8 incl. qn, own stop round incl. qn, the loss with drills and
+its stop labels, the checkpoint round trip, the extra evals)."""
 import json, os, tempfile
 import torch
 import torch.nn as nn
 from custom_io.data import DEFAULT_DATA, CharVocab, Dataset, collate, load_rows
 from custom_io.models import build, load_model
 from custom_io.models import tool_h1 as H
-from custom_io.models.tool import Tool
+from custom_io.models.tool import N_RES, Tool
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BAND = (3147208, 3341880)
@@ -157,6 +159,177 @@ def test_stop_loss_does_not_move_the_loop():
     finally:
         H.KS = ks
     print('ok the stop loss reaches only the stop head')
+
+
+# ---- H1R: H1 on T1SDR ----
+SDR = {"span_copy": True, "span_idx": True, "span_end": True, "ans_drill": 0.25}
+H1R = dict(SDR, label='settled')
+
+
+def setup_sdr(k=40, seed=0, steps=2):
+    v = CharVocab.get(DEFAULT_DATA)
+    rows = load_rows(os.path.join(DEFAULT_DATA, 'train.jsonl'), limit=4000)[::97][:k]
+    b = collate([Dataset(rows, v, strict=False)[i] for i in range(len(rows))])
+    torch.manual_seed(seed)
+    t1 = Tool(v, **SDR)
+    opt = torch.optim.Adam(t1.parameters(), lr=1e-3)
+    for _ in range(steps):
+        l, _ = t1.loss(b)
+        opt.zero_grad(); l.backward(); opt.step()
+    with torch.no_grad():
+        t1.mode_head.bias[0] += 20.0                     # a barely trained model: make sure the span answer (mode 0) is what is read out
+    t1.eval()
+    h = H.ToolH1(v, **H1R)
+    missing, extra = h.load_state_dict(t1.state_dict(), strict=False)
+    assert sorted(missing) == ['stop.bias', 'stop.weight'] and not extra
+    h.eval()
+    return v, rows, b, t1, h
+
+
+def same_sdr(o1, o2):
+    ok = same(o1, o2) and torch.equal(o1['qn'], o2['qn'])
+    for (a1, p1, s1), (a2, p2, s2) in zip(o1['steps'], o2['steps']):
+        ok = ok and torch.equal(a1, a2) and torch.equal(p1, p2) and all(torch.equal(s1[k], s2[k]) for k in ('la', 'lb', 'ga', 'gb', 'ids', 'm'))
+    return ok and len(o1['steps']) == len(o2['steps'])
+
+
+def test_sdr_size_and_init():
+    v = CharVocab.get(DEFAULT_DATA)
+    torch.manual_seed(200); a = Tool(v, **SDR)
+    torch.manual_seed(200); h = H.ToolH1(v, **H1R)
+    sa, sh = a.state_dict(), h.state_dict()
+    assert all(torch.equal(sa[k], sh[k]) for k in sa), 'a T1SDR weight starts differently at the same seed'
+    assert sorted(set(sh) - set(sa)) == ['stop.bias', 'stop.weight']
+    assert (n_train(a), n_train(h)) == (3314132, 3314389), (n_train(a), n_train(h))
+    print('ok sdr size', n_train(h))
+
+
+def test_sdr_k8_is_t1sdr():
+    v, rows, b, t1, h = setup_sdr()
+    torch.set_grad_enabled(False)
+    for les in (None, 'noexec', 'opswap', 'nocopy', 'nowordc'):
+        assert same_sdr(t1.run(b, lesion=les), h.run(b, loops=8, lesion=les)), les
+    for les in ('loops:0', 'loops:1', 'loops:16'):
+        assert t1.generate(b, les) == h.generate(b, les), les
+    assert t1.generate(b) == h.generate(b, 'loops:8')
+    h.cap = 8
+    nn.init.constant_(h.stop.bias, -1e4); nn.init.zeros_(h.stop.weight)
+    o1, o2 = t1.run(b), h.run(b)
+    assert same_sdr(o1, o2) and h.last_rounds == [8] * len(rows)
+    for les in (None, 'noexec', 'opswap', 'nocopy', 'nowordc', 'zero_state', 'shuffle_state'):
+        assert t1.generate(b, les) == h.generate(b, les), les
+    assert any(m == 0 for m in t1.talk(t1.state(b), b, return_modes=True)[1]), 'no mode-0 span answer in the test batch'
+    torch.set_grad_enabled(True)
+    print('ok sdr K=8 with the stop ignored reproduces T1SDR (qn, span steps, answers)')
+
+
+def test_sdr_own_stop_round():
+    v, rows, b, t1, h = setup_sdr()
+    torch.set_grad_enabled(False)
+    h.stop = FakeStop(len(rows))
+    o = h.run(b)
+    u = h.last_rounds
+    assert u == [i % 6 + 1 for i in range(len(rows))] and o['rounds'] == u
+    assert len(o['steps']) == N_RES and all(len(st) == 3 for st in o['steps'])
+    assert o['qn'].shape == t1.run(b, loops=1)['qn'].shape
+    h.stop = FakeStop(len(rows))
+    ans = h.generate(b)
+    for k in sorted(set(u)):
+        f = t1.run(b, loops=k)
+        fa = t1.generate(b, f'loops:{k}')
+        for i in [i for i in range(len(rows)) if u[i] == k]:
+            for key in ('R', 'lmode', 'lword', 'X', 'xm', 'ids', 'qn'):
+                assert torch.equal(o[key][i], f[key][i]), (key, i, k)
+            assert o['calls'][i] == f['calls'][i] and ans[i] == fa[i], (i, k)
+    for s, st in enumerate(o['steps']):
+        stopped = torch.tensor([x <= s + 1 for x in u])
+        assert (st[0][stopped].argmax(-1) == 0).all()
+    torch.set_grad_enabled(True)
+    print('ok sdr each row keeps its own stop round and qn', sorted(set(u)))
+
+
+def test_sdr_loss_drills_and_roundtrip():
+    v = CharVocab.get(DEFAULT_DATA)
+    allr = load_rows(os.path.join(DEFAULT_DATA, 'train.jsonl'), limit=17200)
+    rows = allr[:4000:167][:24] + [r for r in allr[16600:] if Tool.drill_slots(r)][:24]     # a mix; the drill-eligible rows (answer = a call result) come late in the file
+    assert sum(bool(Tool.drill_slots(r)) for r in rows) >= 20
+    b = collate([Dataset(rows, v, strict=False)[i] for i in range(len(rows))])
+    torch.manual_seed(0)
+    m = build('tool_h1', v, **H1R)
+    m._name, m._cfg = 'tool_h1', dict(H1R)
+    opt = torch.optim.Adam(m.parameters(), lr=1e-3)
+    m.train()
+    shares = []
+    for _ in range(3):
+        l, aux = m.loss(b)
+        assert torch.isfinite(l) and {'halt', 'stop', 'span_call', 'span_ans', 'span_share', 'drill_share', 'stop_y'} <= set(aux), set(aux)
+        assert torch.isfinite(aux['halt']) and torch.isfinite(aux['stop'])
+        shares.append(float(aux['drill_share']))
+        opt.zero_grad(); l.backward()
+        assert all(p.grad is not None for n_, p in m.named_parameters() if n_.startswith(('stop.', 'q_s.', 'k_s.', 'stop_s.', 'e_s.')))
+        opt.step()
+    assert max(shares) > 0, shares
+    # the stop labels read the drill answer for a drill row: make the greedy readout say exactly the target and every label must be 'right'
+    orig = m.train_golds
+    m.ans_drill = 1.0
+    tgt = {}
+    real_answers = m.answers
+    def answers(gen_ids, mode, w, rs, spans=None, span=None):
+        r = rs[0]
+        return [tgt[r['id']]], [0]
+    m.answers = answers
+    for r in rows:
+        tgt[r['id']] = r['answer']
+    # the drill answers are only known once train_golds has run: run it first through a probe of the same stream state
+    state = m._drill_rng.getstate()
+    probe = orig(rows)
+    m._drill_rng.setstate(state)
+    drills = [i for i, x in enumerate(probe) if x[6]]
+    assert drills and any(probe[i][5] != rows[i]['answer'] for i in drills)
+    for i in drills:
+        tgt[rows[i]['id']] = probe[i][5]
+    m._drill_rng.setstate(state)
+    l, aux = m.loss(b)
+    assert float(aux['stop_y']) == 1.0 and float(aux['right_last']) == 1.0, (float(aux['stop_y']), float(aux['right_last']))
+    assert float(aux['drill_share']) == len(drills) / len(rows)
+    m.answers = real_answers
+    # no drills in eval
+    m.eval()
+    d0 = dict(m.drill_stats)
+    l, aux = m.loss(b)
+    assert float(aux['drill_share']) == 0.0 and m.drill_stats['drilled'] == d0['drilled'] and torch.isfinite(l)
+    out = m.generate(b)
+    assert len(out) == len(rows) and all(1 <= u <= 32 for u in m.last_rounds)
+    with tempfile.TemporaryDirectory() as d:
+        p = os.path.join(d, 'checkpoint.pt')
+        torch.save(dict(name=m._name, chars=v.chars, cfg=m._cfg, model=m.state_dict()), p)
+        m2 = load_model(p)
+        assert m2.span_copy and m2.span_idx and m2.span_end and m2.ans_drill == 0.25
+        assert m2.generate(b) == out and m2.last_rounds == m.last_rounds and m2.label == 'settled'
+    print('ok sdr loss, drills, stop labels and round trip', shares)
+
+
+def test_sdr_evals():
+    import contextlib, random
+    v = CharVocab.get(DEFAULT_DATA)
+    torch.manual_seed(5)
+    m = build('tool_h1', v, **H1R).eval()
+    tmp = tempfile.mkdtemp()
+    os.makedirs(tmp + '/dev')
+    from custom_io.data import DEV_SPLITS
+    for sp in DEV_SPLITS:
+        dev = load_rows(os.path.join(DEFAULT_DATA, 'dev', sp + '.jsonl'))
+        with open(tmp + f'/dev/{sp}.jsonl', 'w') as f:
+            for r in random.Random(1).sample(dev, 60 if sp != 'in_dist' else 120):
+                f.write(json.dumps(r) + '\n')
+    ctx = dict(data=tmp, big=None, device=torch.device('cpu'), batch_size=60, amp=contextlib.nullcontext)
+    ex = m.extra_evals(ctx)
+    json.dumps(ex)
+    assert {'op_acc', 'span_use', 'write_copy', 'write_copy_u', 'noexec', 'opswap', 'h1'} <= set(ex) and 'chain5_lesions' in ex
+    assert ex['h1']['pooled5']['n'] > 0 and ex['h1']['label'] == 'settled'
+    forced = m.run(__import__('custom_io.data', fromlist=['x']).to_device(collate([Dataset(dev[:8], v, strict=False)[i] for i in range(8)]), 'cpu'), loops=3)
+    assert forced['qn'].shape[0] == 8 and m.last_rounds == [3] * 8
+    print('ok sdr extra_evals and h1_evals run (adaptive)')
 
 
 def test_lesion_names_and_queue():

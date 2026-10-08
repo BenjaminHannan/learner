@@ -2,6 +2,9 @@
 judged exactly as written: H1 (model 'tool_h1') against T1 (queue 40) of the same seed; q33's plain B2 only printed beside the leak values.
 python3 -m custom_io.analyze_h1 --results custom_io/results/33-pc-confirm-b2 custom_io/results/40-pc-t1-screen custom_io/results/49-pc-h1-screen
     [--out custom_io/results/H1-ANALYSIS.json]
+--base T1SDR: H1R, the same H1 on T1SDR (models/tool_h1.py cfg {"label": "settled", "span_copy": true, "span_idx": true, "span_end": true,
+"ans_drill": 0.25}, runs H1R_s<seed>, 3,314,389 params) against T1SDR (model 'tool', the same span cfg without the label, runs T1SDR_s<seed>,
+3,314,132); the marks and verdicts are the ones below, unchanged; output H1R-ANALYSIS.json / RESULTS-H1R.md. Without --base nothing changes.
 Screen, seeds 200 and 201, each H1 seed against T1 on the same seed:
   H-a stability: pooled-5 at loops:32 (forced, stop ignored) - pooled-5 at the model's own stop >= -0.3 on both seeds.
   H-b parity: pooled-5 H1 - T1 >= -1.0 on both seeds; chain-5 >= 99.0 on both; no dev split's 2-seed mean of H1 - T1 below -2.0.
@@ -22,6 +25,12 @@ SCREEN = [200, 201]
 RECIPE = dict(steps=24000, batch=256, lr=1e-3, bf16=True)
 ARMS = {'H1': ('tool_h1', ({'label': 'settled'},), 3277650),     # the stop label sealed by the spec's amendment 1 (section 8c)
         'T1': ('tool', ({},), 3277393), 'B2': ('ledger', ({'copy': True},), 3302481)}
+SDR = {'span_copy': True, 'span_idx': True, 'span_end': True, 'ans_drill': 0.25}
+ARMS['H1R'] = ('tool_h1', (dict(SDR, label='settled'),), 3314389)
+ARMS['T1SDR'] = ('tool', (dict(SDR),), 3314132)
+BASES = {None: dict(h='H1', t='T1', out='custom_io/results/H1-ANALYSIS.json', md='RESULTS-H1.md', title='H1: learned rounds on T1', sub='H1 minus queue 40 T1'),
+         'T1SDR': dict(h='H1R', t='T1SDR', out='custom_io/results/H1R-ANALYSIS.json', md='RESULTS-H1R.md', title='H1R: learned rounds on T1SDR',
+                       sub='H1R minus the T1SDR baseline')}
 
 
 def valid(r, arm):
@@ -72,13 +81,14 @@ def facts(h, t, b):
                 leak=lk(h), t1_leak=lk(t), b2_leak=lk(b), machine_differs=[k for k in ('device', 'data') if g(h, 'config', k) != g(t, 'config', k)])
 
 
-def screen(runs):
+def screen(runs, base=None):
+    hn, tn = BASES[base]['h'], BASES[base]['t']
     probs, F = {}, {}
     for s in SCREEN:
-        h, t, b = runs.get(('H1', s)), runs.get(('T1', s)), runs.get(('B2', s))
-        p = (['H1 missing'] if h is None else valid(h, 'H1')) + (['T1 missing'] if t is None else [f'T1: {x}' for x in valid(t, 'T1')])
+        h, t, b = runs.get((hn, s)), runs.get((tn, s)), runs.get(('B2', s))
+        p = ([f'{hn} missing'] if h is None else valid(h, hn)) + ([f'{tn} missing'] if t is None else [f'{tn}: {x}' for x in valid(t, tn)])
         if h is not None and not g(h, 'extra', 'h1'):
-            p.append('H1 has no extra.h1 (extra_evals failed: see extra_error)')
+            p.append(f'{hn} has no extra.h1 (extra_evals failed: see extra_error)')
         probs[s] = p
         if not p:
             F[s] = facts(h, t, None if b is None or valid(b, 'B2') else b)
@@ -120,14 +130,17 @@ def screen(runs):
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--results', nargs='+', required=True)
-    ap.add_argument('--out', default='custom_io/results/H1-ANALYSIS.json')
+    ap.add_argument('--base', choices=['T1SDR'], default=None, help='H1R on T1SDR instead of H1 on T1')
+    ap.add_argument('--out', default=None)
     a = ap.parse_args(argv)
+    B = BASES[a.base]
+    a.out = a.out or B['out']
     runs, skipped = load(a.results)
-    res = dict(screen=screen(runs), skipped=skipped)
+    res = dict(screen=screen(runs, a.base), skipped=skipped)
     os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
     json.dump(res, open(a.out, 'w'), indent=1, default=str)
     r = res['screen']
-    L = ['# H1: learned rounds on T1 (PASS-MARKS.md addendum 21)', '', 'H1 minus queue 40 T1 on the same seed.', '',
+    L = [f"# {B['title']} (PASS-MARKS.md addendum 21)", '', f"{B['sub']} on the same seed.", '',
          f'## Screen, seeds 200-201: {r["verdict"]}', '']
     if not r['judged']:
         L += [f"- missing or invalid: {fmt({s: p for s, p in r['problems'].items() if p})}"]
@@ -140,7 +153,7 @@ def main(argv=None):
             L += [f"- seed {s_}: pooled-5 rounds right {fmt(rp['rounds_right'])} vs wrong {fmt(rp['rounds_wrong'])}; stops {fmt(rp['stops'])}; "
                   f"q33 B2 cells below 50% ({len(lc.get('cells', []))} cells): {fmt(lc.get('low'))} vs the rest {fmt(lc.get('rest'))}"]
         L += ['',
-              '| seed | pooled-5 H1 / T1 | forced 8 / 16 / 32 | rounds mean / median / at 32 (pooled-5) | chain-5 / one-step rounds | rounds by program length | label | machine differs |',
+              '| seed | pooled-5 H1 / baseline | forced 8 / 16 / 32 | rounds mean / median / at 32 (pooled-5) | chain-5 / one-step rounds | rounds by program length | label | machine differs |',
               '|---|---|---|---|---|---|---|---|']
         for s, f in r['facts'].items():
             p = f['rounds']['pooled5'] or {}
@@ -148,7 +161,7 @@ def main(argv=None):
                   f"{fmt(p.get('mean'))} / {p.get('median')} / {fmt(p.get('at_cap'))}% | {fmt(f['rounds']['chain5'])} / {fmt(f['rounds']['one_step'])} | "
                   f"{fmt({k: v[0] for k, v in f['rounds']['by_program_len'].items()})} | {f['audit']['label']} | {f['machine_differs'] or '-'} |"]
     L += ['']
-    md = os.path.join(os.path.dirname(a.out) or '.', 'RESULTS-H1.md')
+    md = os.path.join(os.path.dirname(a.out) or '.', B['md'])
     open(md, 'w').write('\n'.join(L) + '\n')
     print('\n'.join(L))
     return res

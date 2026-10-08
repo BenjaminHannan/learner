@@ -542,8 +542,9 @@ class Tool(Ledger):
             aux.update(ls)
         return total, {k: v.detach() if torch.is_tensor(v) else v for k, v in aux.items()}
 
-    def span_loss(self, o, g, batch, B):
-        """T1S losses: call spans (gate + pointer, either order for ADD MUL MIN MAX), answer span (mode-0 rows) and the stop head."""
+    def span_terms(self, o, g, batch, B):
+        """The call-writing span losses, without the answer term (H1R trains the answer per round): -> (dict(span_call, stop, span_share), Mn
+        [B, N] torch bool, the answer span's units-digit positions on mode-0 rows)."""
         import torch.nn.functional as F
         dev, T = batch['prompt_ids'].device, batch['prompt_ids'].shape[1]
         Ma, Mb, Mn, (cs, ts, ys) = self.span_gold(batch['rows'], T, o['le'], o['K'], g.get('rowg'))
@@ -559,15 +560,22 @@ class Tool(Ledger):
             nll = -torch.where(comm[:, s] & (ma != mb).any(-1), torch.logaddexp(lab, lba), lab)     # same string twice: one order
             lsc = lsc + (nll * on).sum() / B
             n_span += int((ma.any(-1) & on).sum() + (mb.any(-1) & on).sum()); n_side += 2 * int(on.sum())
-        ln = self.ptr(o['qn'], self.span_keys(o['X'], T, o['le'], o['xm']), o['xm'])
-        sel = (g['mode'] == 0) & Mn.any(-1)
-        lsn = torch.where(sel, -lse(ln, Mn), torch.zeros_like(ln[:, 0])).sum() / B
         if cs:
             lstop = F.binary_cross_entropy_with_logits(self.stop_logit(torch.tensor(cs, device=dev), torch.tensor(ts, device=dev)),
                                                        torch.tensor(ys, device=dev))
         else:
             lstop = torch.zeros((), device=dev)
-        return dict(span_call=lsc, span_ans=lsn, stop=lstop, span_share=n_span / max(n_side, 1))
+        return dict(span_call=lsc, stop=lstop, span_share=n_span / max(n_side, 1)), Mn
+
+    def span_loss(self, o, g, batch, B):
+        """T1S losses: call spans (gate + pointer, either order for ADD MUL MIN MAX), answer span (mode-0 rows) and the stop head."""
+        T = batch['prompt_ids'].shape[1]
+        ls, Mn = self.span_terms(o, g, batch, B)
+        lse = lambda lg, M: torch.logsumexp(lg.masked_fill(~M, -1e9), -1) - torch.logsumexp(lg, -1)
+        ln = self.ptr(o['qn'], self.span_keys(o['X'], T, o['le'], o['xm']), o['xm'])
+        sel = (g['mode'] == 0) & Mn.any(-1)
+        lsn = torch.where(sel, -lse(ln, Mn), torch.zeros_like(ln[:, 0])).sum() / B
+        return dict(span_call=ls['span_call'], span_ans=lsn, stop=ls['stop'], span_share=ls['span_share'])
 
     def call_loss(self, steps, g, B):
         """The call writer's losses over the call rounds: op CE (NOOP rows weighted w_noop) and -log p of the gold operand strings."""
