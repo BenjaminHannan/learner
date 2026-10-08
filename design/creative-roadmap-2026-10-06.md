@@ -89,7 +89,8 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   rules climbed only about half as much and the search did not widen. More practice per night at the lower rate is
   being tested (L64). Ben asked (2:50 PM ET 10-08) what happens if the model chooses its own training set. First
   step, Test SC: at the fast rate, the model picks which old skills to re-practise during the night, by checking
-  which ones it is starting to forget.
+  which ones it is starting to forget. Ben's follow-up (2:54 PM ET): keep every past training example. Old skills rows
+  are already mixed into every night; past nights' own finds are not, so Test AP keeps them.
   Building the practice parent still costs about 2-3 points; that parent goes away once the model makes its own
   stepping stones.
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
@@ -1433,6 +1434,31 @@ families x 200, two parents).**
     signal is high). Choosing which new records to sleep on comes after that.
   - Runs after L64 on the fast-sleep CPU, or on a free PC or Mac slot or Vast per the compute rule; CPU, DEV only.
     Job 9 is not changed.
+- **Ruled (10-08, Ben's follow-up at 2:54 PM ET: "what if the training examples are only appended? so old training
+  examples are also used?"): Test AP, an append-only pool of the night's own finds.**
+  - Already true: every night's batch is half old rows (16 skills rows drawn fresh from the full 200k skills TRAIN
+    set, 16 warm add/mult rows), so original training examples are used every night.
+  - Not true yet: night 2 trains only on day 2's finds (`w_records` on the day-2 tries); night 1's records are dropped.
+    Job 9's arm M is notebook recall, not training on them. In job 8, last_digit, learned on night 1, fell on night 2
+    (78 to 57 and 73 to 63). That is the forgetting an append-only pool should stop.
+  - Not expected to fix the skills cost: V showed that re-reading each record less does not cut it at 1e-3. That is
+    SC's job.
+  - Arm AP: night 2 from W1 at W2's recipe (lr 1e-3, day-2 records from J's W arm, same seed and replay), with one
+    change. The record half of each batch is drawn uniformly from night 1's plus night 2's records (835 + 1,187 and
+    808 + 1,118). The update count is W2's, so it is the same budget with each record seen about 19 times instead of
+    32. Control: W2. DEV, s100 and s101.
+  - Marks, on both parents:
+    1. Pooled C2 first try AP - W2 at least +2 points (paired point estimate).
+    2. Multi-step first try AP - W2 at least -2 points (the climb is kept).
+    3. Night 2's own cost, AP against W1, passes the 10-08 harm measure.
+  - Proved wrong: AP - W2 pooled first try with its paired interval's upper end below +1 on both parents (keeping old
+    finds does not help).
+  - Report only: per-kind first try W1 / W2 / AP (last_digit above all), multi-step reach@32, and harm against N' and
+    B2.
+  - If AP passes, the pool becomes append-only in new runs, and SC's model-picked sampling can draw from it (one
+    change later). Uniform sampling first; model-picked records later.
+  - Runs after SC. Job 9 is not changed. Autonomy: the pool rule is ours, the records are the model's own checked
+    finds.
 
 **Test J, loops 1 and 2 together** (changed 10-08 after S3': loop 3 is parked): two days and nights from N', loop 1
 (creative mode F) plus loop 2, against loop 2 alone (W). One change: the creative part's own sleep. It asks Ben's
@@ -1545,7 +1571,7 @@ CPU):
 - speed in thinking rounds, once halting exists.
 
 **Owner and machines:**
-- The fast-sleep thread builds S1, S1b, S3, S3', J, R, S1w, S1f, J2, VL, L2, L64 and SC in new files, importing the creative code without editing it (as
+- The fast-sleep thread builds S1, S1b, S3, S3', J, R, S1w, S1f, J2, VL, L2, L64, SC and AP in new files, importing the creative code without editing it (as
   `fastsleep.py` does). That includes K_new and its blind-search check.
 - Screens are CPU and DEV only. Confirms run on Ben's machines after job 9 is scored. No spend.
 
@@ -1731,3 +1757,7 @@ CPU):
   coordinator). Accepted Test SC: on the fast-rate night, the model picks its skills replay rows by its own loss
   rise against a frozen pre-night copy. Marks: harm passes, C2 first try within 2 of W1, multi-step reach@32 within
   3 of W1; proved wrong if the drop is not 1.0 below W1's on both parents. Section 0 updated.
+- **10-08, 3:00 PM ET:** Ben asked about append-only training examples. Original rows are already replayed every
+  night; past nights' finds are not. Accepted Test AP: night 2 on night 1's plus night 2's records at W2's update
+  budget, against W2. Marks: pooled first try +2, multi-step first try within 2, night-2 harm passes; proved wrong if
+  the pooled gain's upper end is below +1 on both parents.
