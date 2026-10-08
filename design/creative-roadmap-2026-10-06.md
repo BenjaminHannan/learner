@@ -1308,7 +1308,8 @@ families x 200, two parents).**
 - Suggested (fast-sleep), untested: the optimiser, not the data. Every night and every repair round starts a fresh
   AdamW at learning rate 1e-3, which is B2's own pretraining peak. The rival explanation is overfitting a small reused
   row set.
-- Accepted as the next check, owned by the fast-sleep thread with its marks fixed before the run: a 2 x 2 on N',
+- Accepted as the next check, owned by the fast-sleep thread with its marks fixed before the run: a 2 x 2 on W1
+  (changed from N' before the run, because N' gets C2 first try ~0.4%; drops are measured against W1),
   learning rate {1e-3, 1e-4} x {1,024 rows reused, fresh rows each step}, 256 replay-only updates.
   - Drift is confirmed if both 1e-4 cells drop at most 1.0 on the held check while 1e-3 with fresh rows drops at
     least 3.
