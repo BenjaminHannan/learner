@@ -68,3 +68,12 @@ Then:
 "Check out `claude/nice-lamport-al1gwo`, read `g8b/HANDOFF.md` and `design/8b-gemma-growth-2026-10-08.md`, and finish the 8b screen as
 the handoff says. My Vast key is in VAST_API_KEY (don't print it). Don't change any mark; destroy each box after collecting it; ask
 me before any spend that would take the 8b total over $40."
+
+## UPDATE 2:35 PM ET: all eight screen runs were killed by Vast (credit ran out)
+
+At 2:27 PM ET every box showed `exited`, Vast credit was 0 and the balance -$0.71 (`balance_threshold` -0.01). Credit was $3.68 at 12:55 PM
+with about 13 boxes up (my 8 at ~$0.6/h plus the roadmap thread's 8a-G boxes), so it ran out within roughly an hour. Vast stopped the roadmap
+thread's boxes too (g8G-3M-s400/s401, g8G-10M-s400/s401, cio-t1c2). Nothing from the screen was saved: `train.py` writes a checkpoint only
+at the end and the result only after the run, so a restart means step 0. The table above is void; every box is `exited` and not yet destroyed.
+To redo the screen: top up Vast credit (the account's autobill did not trigger), then relaunch the eight jobs from `g8b/boxes.json`
+with the same commit and env (3M: MAXH 6; 10M: ACCUM=2, MAXH 9.5), about $26. **Check `credit` before launching and again every hour.**
