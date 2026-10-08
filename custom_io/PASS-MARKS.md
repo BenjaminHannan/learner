@@ -648,7 +648,7 @@ shares with B2 starts identical at the same seed (tested). Same recipe as q33's 
   with the Amendment 4 scorer). R1-R4 and the path-read proved-wrong line unchanged; R3 compares against the same T1 re-scored values:
   `python -m custom_io.analyze_t1s --arm T1SI --results ...33-pc-confirm-b2 ...40-vast-t1 ...53-vast-t1si --wc ...51-vast-wc-t1 ...54-vast-wc-t1si`.
 
-## Addendum 22, amendment 4 (written 2026-10-08 about 02:45 UTC, 10:45 PM ET 10-07, before any T1SD run)
+## Addendum 22, amendment 4 (written 2026-10-08 about 02:20 UTC, 10:20 PM ET 10-07, before any T1SD run)
 - **T1SI read (custom_io/results/RESULTS-T1SI.md):** PROVED WRONG by the Amendment 3 line on one cell, s201 operand at 8 digits 88.0 (n 483).
   Answers became 95.9-100 at every length (answer selection fixed). The CPU checks (MARKS Amendment 6; custom_io/results/WC-MISSES-T1SI.md)
   found 56 of the 58 misses started on the wrong char inside the right entry, 0 were stop-head misses; a fresh draw (n >= 1000) gives
