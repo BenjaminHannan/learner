@@ -71,6 +71,8 @@ that work, and the model learns from them in sleep so next time it doesn't need 
   times sooner on the kinds it was stuck on (42-43% of fresh questions within 32 tries, from 24-27%). It finds
   nothing it could not find before, and on brand-new kinds it lost the few answers it used to find. Next: use the
   trained add-on for the first 32 tries only, then search with the untrained one (Test S1b, no training needed).
+  That fix worked (2:30 AM ET 10-08): the trained add-on for 32 tries, then the untrained search, keeps the faster
+  answers and gets the new-kind answers back.
   Part 3's first test (10-08) was unfair: the copy it was compared with forgot the new rules, so its win counts for
   nothing. It is re-run against a fair copy that sleeps on the same finds again (Test S3').
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
@@ -1141,6 +1143,19 @@ it should also get faster at its own tasks. Written here before any training; th
   model choosing when to switch joins the 7c table.
 - If F passes, F is the creative mode for Test J and for S1's confirm. The confirm needs a fresh sealed C2 split, so
   it waits until job 9 is scored.
+- **S1b result (fast-sleep 78a28f0a2, finished 2:30 AM ET 10-08; shown, DEV, two parents): PASS, not proved
+  wrong.** The redraws matched S1 row for row (0 rows differ), so F is C's S1 tries 1-32 plus U's S1 tries 33-512.
+  - Mark 1: C2 DEV reach@32, F = C: 42.2 and 43.4 (F - U +18.0 [13.3, 22.7] and +16.0 [11.3, 21.1]).
+  - Mark 2: new-kind reach@512, F - U 0.0 [0.0, 0.0] (2.1 vs 2.1) and -0.5 [-1.6, 0.0] (2.1 vs 2.6, one question).
+  - Mark 3: C2 DEV reach@512, F - U +0.8 [0.0, 2.0] and +0.8 [0.0, 2.0] (53.1 vs 52.3; 55.1 vs 54.3).
+  - Reported: tries to first fit U / C / F 90 / 31 / 51 and 79 / 34 / 49 (F's mean includes rows only U's later
+    tries find); distinct fits within 512 U / C / F 1.87 / 1.85 / 1.96 and 1.49 / 1.25 / 1.50.
+- **Ruled:** S1b passes. F is the creative mode from now on: J uses it, and so does S1's confirm on s200-s205 after
+  job 9 is scored. Wording: "the trained creative part finds answers on the kinds it was stuck on about three times
+  sooner, and handing over to the untrained search after 32 tries keeps everything the untrained search used to find."
+  The new-kind loss sat in the extra tries (shown). Still not "more creative in general", and on new kinds F only
+  matches U, it does not beat it. The switch at try 32 is ours (7c table).
+
 
 **Loop 2:** job 9's W arm, with its sealed marks (section 7), is loop 2's test. Nothing new to build.
 
@@ -1367,3 +1382,6 @@ hash only, written before J runs and opened once).
   pass (+32.0 / +26.6) does not count, because the matched-updates control (half skills, half warm rows) forgot C2;
   the spec had not said the control must keep it. Added Test S3': same P and marks, against a control that re-sleeps on
   W1's own records. s101's harm comes from any second night and goes to the nightly harm check before J.
+- **S1b passes (10-08):** the trained add-on for the first 32 tries, then the untrained one, kept S1's 32-try gain
+  (+18.0 / +16.0) and gave back U's reach at 512 tries, on new kinds too (2.1 vs 2.1 and 2.1 vs 2.6). F becomes the
+  creative mode for J and for S1's confirm.
