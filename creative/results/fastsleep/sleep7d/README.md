@@ -92,3 +92,25 @@ How to read it:
 - *Suggested:* any second night helps a little. Against W1, P is about 2.5 less stuck, but neither interval clears 0. The intervals for Z' are not computed here.
 - *Shown:* on s101 every second night costs skills: P 3.1, Z 3.1, Z' 3.8 points of pooled-5 against W1, which itself is only 0.9 below N'. On s100 the second night costs nothing (0.1-0.8).
 - *Shown:* P does not make answers shorter. On rows both models get right, P writes the same number of steps or more.
+
+## Skills harm by family (first look, 3:15 AM ET 10-08; `creative/harm_look.py`, `harm/`)
+
+No training. Greedy answers on skills DEV in_dist (34 families x 200 = 6,800 rows) for B2, N', W1 (night 1), P and Z' (night 2), with row flips between every pair.
+
+| exact % | seq_next | rule_apply | cipher_map | digits_parity | passage_qa | order_chain | story_chain3 | in_dist (34) | pooled-5 (the guard) |
+|---|---|---|---|---|---|---|---|---|---|
+| s100 B2 | 81.0 | 89.5 | 97.0 | 94.0 | 95.0 | 66.0 | 100.0 | 89.4 | 99.7 |
+| s100 N' | 62.0 | 77.5 | 90.0 | 87.0 | 90.0 | 63.5 | 99.0 | 86.7 | 98.1 |
+| s100 W1 | 43.0 | 50.0 | 71.5 | 83.0 | 84.0 | 56.0 | 99.5 | 82.9 | 97.4 |
+| s100 P / Z' | 30.5 / 32.5 | 47.5 / 48.0 | 61.5 / 63.5 | 80.0 / 78.5 | 82.5 / 81.5 | 51.5 / 53.5 | 99.0 / 99.0 | 81.7 / 81.7 | 97.2 / 97.3 |
+| s101 B2 | 88.5 | 92.5 | 99.5 | 95.5 | 95.5 | 60.0 | 99.5 | 90.5 | 99.8 |
+| s101 N' | 66.5 | 85.0 | 89.0 | 85.5 | 90.5 | 59.5 | 99.0 | 87.8 | 98.9 |
+| s101 W1 | 42.5 | 64.0 | 72.5 | 79.0 | 79.0 | 53.5 | 99.5 | 84.2 | 98.0 |
+| s101 P / Z' | 30.0 / 34.5 | 54.5 / 56.0 | 58.5 / 56.5 | 79.0 / 73.0 | 78.0 / 74.5 | 51.5 / 49.0 | 91.0 / 87.5 | 81.7 / 81.8 | 94.9 / 94.2 |
+
+What it shows:
+- *Shown:* the harm is not a second-night quirk. Every step costs skills: the stepping-stone build (B2 to N') costs about 2.7 in_dist points, night 1 about 3.7, night 2 about 1.2 (s100) and 2.4 (s101). From B2 to night 2 that is 7.7 and 8.9 points.
+- *Shown:* the same few families take most of it, on both parents and in every step: seq_next (81 to 31, 89 to 30), rule_apply, cipher_map, digits_parity, passage_qa and order_chain. These are mostly induce-a-rule-from-examples families, the nearest in format to C2.
+- *Shown:* the nightly guard (pooled-5 = the five chain families) is nearly blind to this. It moved 2.5 points (s100) while in_dist lost 7.7 and seq_next lost 50. On s101 it only fired on night 2, because night 2 finally reached story_chain3 and state_update.
+- *Shown:* half of every sleep batch is skills replay over all 34 families, and that does not protect these families.
+- *Untested:* the research loop's "harm none" (71.3% C2 holdout) used the same pooled-5 guard (`creative/rl/eval_c2.py` chain5_harm), so its in_dist harm was never measured.
