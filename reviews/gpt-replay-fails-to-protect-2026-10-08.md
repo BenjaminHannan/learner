@@ -56,6 +56,19 @@ Also shown: night 2 by itself adds no skills harm (night 2 vs night 1: 0.0 and -
 
 Facts about the optimiser that may matter: B2 was pre-trained with AdamW (betas 0.9/0.95, weight decay 0.1 on matrices), lr 1e-3, linear warmup then cosine to 1e-4, batch 64. Every night and every repair round starts a **fresh** AdamW at peak lr 1e-3 (the same peak as pre-training), with warmup 20 (night) or 10 (repair), then cosine to 1e-4. The night's replay rows are drawn fresh from all 200k training rows (each seen about once). The repair's rows are a small set reused several times.
 
+## 3c. A 2 x 2 check (shown, 10:27 AM ET 10-08): reuse hurts skills; any lr 1e-3 pass erases the new task
+
+Starting from night 1's model, 256 replay-only updates on its own skills training rows, all 34 families. lr 1e-3 or 1e-4, crossed with "reused" (1,024 rows, each seen 16 times) or "fresh" (16,384 distinct rows, each seen once). Parent A / parent B:
+
+| cell | skills DEV all-34 exact (night-1 model: 82.9 / 84.2; N': 86.7 / 87.8) | C2 first try (night-1 model: 31.2 / 34.4) |
+|---|---|---|
+| lr 1e-3, reused | 79.1 / 80.1 | 2.0 / 2.7 |
+| lr 1e-3, fresh | **84.7 / 86.5** | 0.0 / 2.3 |
+| lr 1e-4, reused | 82.9 / 84.5 | 24.6 / 30.9 |
+| lr 1e-4, fresh | **84.5 / 86.2** | 24.2 / 30.1 |
+
+So reusing a small row set causes the skills damage, and fresh rows help at either lr. But at lr 1e-3, the new C2 skill is erased by any replay-only pass, reused or fresh. The night's C2 records are themselves a small set seen 32 times at lr 1e-3. Yet night 2 uses the same recipe and adds no skills harm, while night 1 costs about 3.7 points.
+
 ## 4. My candidate explanations (all untested)
 
 1. **Format interference:** C2 records teach "few examples → write a rule program" on prompts that look like seq_next/rule_apply/cipher_map. The update moves exactly the representations those families use. Uniform replay gives each family about 1/34 of half a batch (about 1 row per update), against 32 C2 rows. (Against this: fewshot_number_rule, the most C2-like family, improves.)
@@ -69,7 +82,7 @@ Facts about the optimiser that may matter: B2 was pre-trained with AdamW (betas 
 ## 5. Questions
 
 1. Rank these explanations (or better ones). For each, give the cheapest diagnostic using only what I have: the checkpoints B2, N', night 1 and night 2; the records; the replay rows; CPU only; no new data.
-2. What is the single best next change? It must keep every step autonomous (the deployed model must be able to do it alone, with no hand-picked families or hand-tuned values). Options I'm considering:
+2. Given 3b and 3c, what is the single best next change? It must keep every step autonomous (the deployed model must be able to do it alone, with no hand-picked families or hand-tuned values). Options I'm considering:
    - (a) a repair pass after each night: the model checks itself on a held slice of its own training rows and does replay-only updates on families that dropped (**tested, section 3b: made it worse**; say whether a different version of it could work, and why);
    - (b) more replay overall;
    - (c) replay weighted toward rows whose loss rose most during the night;
