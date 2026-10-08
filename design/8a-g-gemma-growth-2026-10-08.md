@@ -165,4 +165,8 @@ can express. What would prove that prediction wrong: G-B2 passes the screen with
   byte sha (and the MANIFEST sha) differ from the Vast boxes even when every row is the same. The check is on content: sha256 of `train.jsonl`
   with `\r\n` read as `\n` must equal 8a's pool `train_sha256` for that seed (s400 b90ff7d7..., s401 910485f1...) with 1,418,702 rows. A
   mismatch stops the queue.
+- 6:30 PM ET: the relaunch stopped again in the data step, still before any training. The web slices that `data_pool/web_slice.py` builds
+  on Windows also come out with `\r\n`. Shown on the PC: with `\r\n` read as `\n`, the rung3 and rung10 slices match the manifest's sha256
+  exactly (12,345 and 36,132 lines). The slices are converted to `\n`, checked against the manifest, and placed where the data step looks first.
+  Nothing in the content changes.
 - Marks, arms and readout unchanged.
