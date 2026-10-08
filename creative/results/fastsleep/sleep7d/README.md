@@ -109,7 +109,7 @@ No training. Greedy answers on skills DEV in_dist (34 families x 200 = 6,800 row
 | s101 P / Z' | 30.0 / 34.5 | 54.5 / 56.0 | 58.5 / 56.5 | 79.0 / 73.0 | 78.0 / 74.5 | 51.5 / 49.0 | 91.0 / 87.5 | 81.7 / 81.8 | 94.9 / 94.2 |
 
 What it shows:
-- *Shown:* the harm is not a second-night quirk. Every step costs skills: the stepping-stone build (B2 to N') costs about 2.7 in_dist points, night 1 about 3.7, night 2 about 1.2 (s100) and 2.4 (s101). From B2 to night 2 that is 7.7 and 8.9 points.
+- *Shown:* the harm is not a second-night quirk. Every step costs skills: the stepping-stone build (B2 to N') costs about 2.7 in_dist points, night 1 about 3.7, night 2 about 1.2 (s100) and 2.5 (s101). From B2 to night 2 that is 7.7 and 8.9 points.
 - *Shown:* the same few families take most of it, on both parents and in every step: seq_next (81 to 31, 89 to 30), rule_apply, cipher_map, digits_parity, passage_qa and order_chain. These are mostly induce-a-rule-from-examples families, the nearest in format to C2.
 - *Shown:* the nightly guard (pooled-5 = the five chain families) is nearly blind to this. It moved 2.5 points (s100) while in_dist lost 7.7 and seq_next lost 50. On s101 it only fired on night 2, because night 2 finally reached story_chain3 and state_update.
 - *Shown:* half of every sleep batch is skills replay over all 34 families, and that does not protect these families.
