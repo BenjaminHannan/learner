@@ -85,3 +85,16 @@ can express. What would prove that prediction wrong: G-B2 passes the screen with
   done; checkpoints exported (one collector at a time).
 - **Not in this test:** 30M; the learned stop (H1); the calculator as a tool (T1/2c2). Those belong to B3, which must
   pass this same bar at 3M -> 10M before the 8c ship build.
+
+## 6. Addendum A (2026-10-08, 10:33 AM ET, before any run): build check and speed
+
+- **Build:** commit 2a46cb17d0 (PR #51). Checked by the roadmap thread on CPU. The plain step model's front is zero-initialised and added only at the
+  real prompt positions, in both training and answer writing. The 3M sizes under the addendum G caps are G-B2 3,544,913 and G-PT 3,495,936 (1.4%
+  apart). Letter-reader counts are unchanged from 8a.
+- **Bug found, fix requested:** at 10M the job crashes before training, because `configs.b2_cfg` gets `n_loops` twice. The one-line fix gives
+  G-B2 10M = blocks 8, 10,496,537 (+4.97%, in band) and G-PT 13 layers, 10,603,776. The 10M boxes wait for that fix commit. The 3M boxes run on
+  2a46cb17d0, because the 3M path does not touch that code (disclosed).
+- **Speed check folded into the screen:** the speed probe has no Gemma option. Each screen box's own timing therefore sets the caps for seeds 402-405,
+  and the screen boxes self-stop at 8 hours (MAXH 8, about $4.50 a box at most). Marks, arms and readout are unchanged.
+- **Pool check:** every 8a-G box must build the same pool as 8a for its seed. Its pool MANIFEST sha must equal the 8a box's for that seed and rung,
+  or the box's results do not count.
