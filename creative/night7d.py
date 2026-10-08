@@ -47,6 +47,18 @@ def _peek(path, key):
     return None
 
 
+def _w1_records(nprime, name, s1dir, s3, pool, N, vocab, device):
+    """W1's exact night-1 records, rebuilt as sleep7d.s3_parent does when it reuses W1 (S1's day, S3's seeds), checked against W1_night's count. `pool` = the full C2 pool of S3's args. -> (records, info)."""
+    a3 = s3['args']
+    seed, T, n1, n2 = s3['seed'], s3['T'], a3['n1'], a3['n2']
+    got = w1_tries_from_day(os.path.join(s1dir, name, 'day.pkl'), (os.path.abspath(nprime), a3['pool_limit'], n1, n2, seed, T), N, pool, vocab, device, seed, T, n1, n2)
+    assert got is not None, 'S1 day key differs: cannot rebuild W1 records'
+    recs, _ = w_records(pool, got[0], seed + 1)
+    want = s3['W1_night']['records']
+    assert len(recs) == want, f'rebuilt {len(recs)} records, W1_night has {want}'
+    return recs, dict(rebuilt=len(recs), W1_night=want, equal=True, night_seed=seed, source=got[4])
+
+
 def vl_parent(nprime, out, s1dir, s3dir, rdir, skills_train, skills_data, seed=0, pool_limit=None, dev_limit=None, skills_limit=None, device='cpu', name=None, resume=True, log=_log,
               max_records=None, drift_dir=None):
     """One parent's Test VL. DIR/<name>/vl.json is written after every stage; each arm is cached (<arm>.pt + .pkl). max_records = smoke only: truncates the night-1 records (recorded)."""
@@ -75,13 +87,8 @@ def vl_parent(nprime, out, s1dir, s3dir, rdir, skills_train, skills_data, seed=0
     sha = dict(N=_sha_file(nprime), W1=_sha_file(w1p))
     # 1. W1's records, rebuilt from S1's day and S3's seeds
     t0 = time.time()
-    got = w1_tries_from_day(os.path.join(s1dir, name, 'day.pkl'), (os.path.abspath(nprime), a3['pool_limit'], n1, n2, seed, T), N, pool, vocab, device, seed, T, n1, n2)
-    assert got is not None, 'S1 day key differs: cannot rebuild W1 records'
-    tries, source = got[0], got[4]
-    recs, _ = w_records(pool, tries, seed + 1)
-    want = s3['W1_night']['records']
-    assert len(recs) == want, f'rebuilt {len(recs)} records, W1_night has {want}'
-    res['records'] = dict(rebuilt=len(recs), W1_night=want, equal=True, night_seed=seed, source=source)
+    recs, res['records'] = _w1_records(nprime, name, s1dir, s3, pool, N, vocab, device)
+    want = res['records']['W1_night']
     secs['records'] = time.time() - t0
     if max_records:
         recs = recs[:max_records]
@@ -163,21 +170,26 @@ def vlreport(out, parents):
 L2_MARKS = dict(harm="(1) harm_measure(N' DEV hits, L2 DEV hits) passes: in_dist drop <= 1.5 and no family fires",
                 multi_step='(2) C2 DEV first try on the multi-step kinds (c2_pilot.HARD_KINDS, 154 questions): c2_pilot.boot(L2 right, W2 right) point >= -2.0',
                 passes='passes = (1) and (2) on a parent; the verdict needs both parents',
-                proved_wrong='the L2 - W2 multi-step first-try paired 95% interval has its upper end < 0 on BOTH parents (decided in the report)')
+                proved_wrong='the L2 - W2 multi-step first-try paired 95% interval has its upper end < 0 on BOTH parents (decided in the report)',
+                proved_wrong_no_climb='L64 only: night-2 model minus L2 multi-step first try (paired point, 154 HARD_KINDS) < +1.0 point on BOTH parents ("more practice at the low rate adds no climb"); proved_wrong = either rule')
 L2_NEXT = ('if L2 passes: lr 1e-4 becomes the night dose for new runs (6-parent confirm waits for job 9\'s scoring); '
            'if it misses mark 2: L64 on both nights is the next single change')
 
 
-def l2_marks(harm_passes, ms_point, ms_hi):
-    """Pure. -> the L2 marks on one parent: multi-step first try L2 - W2 (point, 95% upper end, in points)."""
+def l2_marks(harm_passes, ms_point, ms_hi, vs_l2_point=None):
+    """Pure. -> the L2 marks on one parent: multi-step first try L2 - W2 (point, 95% upper end, in points). proved_wrong = rule 1 (L2 - W2 upper end < 0). vs_l2_point (L64 only) = night-2 model minus L2
+    multi-step first try, point: proved_wrong_no_climb = it is below +1.0 ("more practice at the low rate adds no climb"; None when not given)."""
     ok2 = bool(ms_point >= -2.0)
-    return dict(harm=bool(harm_passes), multi_step=ok2, passes=bool(harm_passes and ok2), proved_wrong=bool(ms_hi < 0))
+    return dict(harm=bool(harm_passes), multi_step=ok2, passes=bool(harm_passes and ok2), proved_wrong=bool(ms_hi < 0), proved_wrong_no_climb=None if vs_l2_point is None else bool(vs_l2_point < 1.0))
 
 
 def l2_verdict(per_parent):
     """Pure. {parent: l2_marks dict} -> dict(passes on every parent, proved_wrong on every parent, next text)."""
-    return dict(passes=all(m['passes'] for m in per_parent.values()), proved_wrong=all(m['proved_wrong'] for m in per_parent.values()),
-                disagree=[k for k in ('harm', 'multi_step', 'passes', 'proved_wrong') if len({m[k] for m in per_parent.values()}) > 1], next=L2_NEXT)
+    nc = [m.get('proved_wrong_no_climb') for m in per_parent.values()]
+    no_climb = None if any(x is None for x in nc) else all(nc)
+    low = all(m['proved_wrong'] for m in per_parent.values())
+    return dict(passes=all(m['passes'] for m in per_parent.values()), proved_wrong_vs_W2=low, proved_wrong_no_climb=no_climb, proved_wrong=bool(low or no_climb),
+                disagree=[k for k in ('harm', 'multi_step', 'passes', 'proved_wrong', 'proved_wrong_no_climb') if len({m.get(k) for m in per_parent.values()}) > 1], next=L2_NEXT)
 
 
 def _skills_as_tuple(v):
@@ -185,43 +197,72 @@ def _skills_as_tuple(v):
 
 
 def l2_parent(nprime, out, s3dir, jdir, rdir, vldir, s1wdir, skills_train, skills_data, seed=0, pool_limit=None, dev_limit=None, skills_limit=None, device='cpu', name=None, resume=True,
-              log=_log, max_records=None, b2=None):
-    """One parent's Test L2. DIR/<name>/l2.json is written after every stage; day 2, night 2 and every measure are cached. Reuses (key-checked, read only): R's skills / c2 caches for N', W1, W2, VL's for L,
+              log=_log, max_records=None, b2=None, visits=32, s1dir=None, l2dir=None):
+    """One parent's Test L2 (visits=32, night 1 = VL's L) or L<visits> (visits != 32: night 1 is trained here from N' on W1's rebuilt records, stages L1v<visits> / L2v<visits>; needs s1dir; the field names
+    'L' / 'L2' then mean this run's night-1 / night-2 model, res['label'] and res['models'] say which; l2dir = the L2 outputs for a report-only comparison). DIR/<name>/l2.json (l<visits>.json) is written after every stage; day 2, night 2 and every measure are cached. Reuses (key-checked, read only): R's skills / c2 caches for N', W1, W2, VL's for L,
     J's skills_B2, S1w's measure_U (W1 reach@32) and J's measure_W (W2 reach@32). max_records = smoke only (recorded)."""
     nprime = os.path.expanduser(nprime)
     name = name or os.path.basename(os.path.dirname(os.path.abspath(nprime)))
     pdir, s3d, jd, rd, vd, s1wd = (os.path.join(d, name) for d in (out, s3dir, jdir, rdir, vldir, s1wdir))
     os.makedirs(pdir, exist_ok=True)
     t00, secs = time.time(), {}
+    std = visits == 32
+    label, f1, f2 = ('L2', 'L', 'L2') if std else (f'L{visits}', f'L1v{visits}', f'L2v{visits}')
+    tag = lambda a: {'L': f1, 'L2': f2}.get(a, a)
     jj = json.load(open(os.path.join(jd, 'j.json')))
     ja = jj['args']
     seed, T, s2, mseed, n1, n2 = jj['seed'], jj['T'], jj['day2_seed'], jj['measure_seed'], ja['n1'], ja['n2']
     assert s2 == seed + 1 and mseed == seed + 777 and ja['lr'] == 1e-3 and ja['visits'] == 32, 'J is not the standard two nights'
     pool_limit = ja['pool_limit'] if pool_limit is None else pool_limit
     b2 = os.path.expanduser(b2 or ja.get('b2') or '')
-    res = dict(nprime=nprime, name=name, spec=__doc__.split('\n')[0], marks_rules=L2_MARKS, next=L2_NEXT, secs=secs, args=dict(seed=seed, day2_seed=s2, measure_seed=mseed, T=T, n1=n1, n2=n2, lr=1e-4, visits=32,
+    res = dict(nprime=nprime, name=name, spec=__doc__.split('\n')[0], label=label, models=dict(L=f1, L2=f2), marks_rules=L2_MARKS, next=L2_NEXT, secs=secs, args=dict(seed=seed, day2_seed=s2, measure_seed=mseed, T=T, n1=n1, n2=n2, lr=1e-4, visits=visits, label=label,
                pool_limit=pool_limit, dev_limit=dev_limit, skills_limit=skills_limit, max_records=max_records, b2=b2, s3=s3dir, j=jdir, r=rdir, vl=vldir, s1w=s1wdir, skills_train=skills_train, skills_data=skills_data),
                note='C2 pool / warm rows / DEV and skills train / DEV only; test / labelled / K_new never opened')
-    save = lambda: json.dump(res, open(os.path.join(pdir, 'l2.json'), 'w'), indent=1)
+    save = lambda: json.dump(res, open(os.path.join(pdir, 'l2.json' if std else f'l{visits}.json'), 'w'), indent=1)
     replay = sleep.load_replay(skills_train, ja['replay_n'], seed) if skills_train else []
     warm_rows = R.warm_records(R.load_split(DATA, 'warm'))
     pool = c2_stones._with_nums(_limit(R.load_split(DATA, 'pool'), pool_limit))
     dev = c2_stones._with_nums(_limit(R.load_split(DATA, 'dev'), dev_limit))
     N, vocab, meta = sleep.load_parent(nprime, device)
     N.eval()
-    paths = dict(N=nprime, W1=os.path.join(s3d, 'W1.pt'), W2=os.path.join(jd, 'W2.pt'), L=os.path.join(vd, 'L.pt'))
-    sha = {a: _sha_file(p) for a, p in paths.items()}
-    res['night1'] = dict(L_path=paths['L'], L_sha256=sha['L'], vl_json_L=json.load(open(os.path.join(vd, 'vl.json')))['arms']['L'])
-    L, _, _ = sleep.load_parent(paths['L'], device)
-    L.eval()
+    paths = dict(N=nprime, W1=os.path.join(s3d, 'W1.pt'), W2=os.path.join(jd, 'W2.pt'), L=os.path.join(vd, 'L.pt') if std else os.path.join(pdir, f1 + '.pt'))
+    vl_L = os.path.join(vd, 'L.pt')
+    if std:
+        sha = {a: _sha_file(p) for a, p in paths.items()}
+        res['night1'] = dict(L_path=paths['L'], L_sha256=sha['L'], vl_json_L=json.load(open(os.path.join(vd, 'vl.json')))['arms']['L'])
+        L, _, _ = sleep.load_parent(paths['L'], device)
+        L.eval()
+    else:
+        assert s1dir, "visits != 32: night 1 is rebuilt from S1's day, pass s1dir"
+        s3 = json.load(open(os.path.join(s3d, 's3.json')))
+        assert s3['args']['lr'] == 1e-3 and s3['args']['visits'] == 32 and s3['seed'] == seed, 'W1 is not the standard night'
+        sha = {a: _sha_file(p) for a, p in paths.items() if a != 'L'}
+        t0 = time.time()
+        full_pool = c2_stones._with_nums(_limit(R.load_split(DATA, 'pool'), s3['args']['pool_limit']))
+        recs1, rinfo = _w1_records(nprime, name, s1dir, s3, full_pool, N, vocab, device)
+        if max_records:
+            recs1 = recs1[:max_records]
+            rinfo['smoke_truncated_to'] = len(recs1)
+        secs['records1'] = time.time() - t0
+
+        def night1():
+            t1 = time.time()
+            m, si = sleep_on(N, recs1, vocab, replay, warm_rows, 1e-4, visits, seed, device)
+            si['seconds'] = time.time() - t1
+            return m, si
+        L, i1, sha['L'] = _stage(pdir, f1, _h('l1v', sha['N'], 1e-4, visits, seed, len(recs1), rinfo['W1_night'], ja['replay_n'], bool(skills_train)), night1, meta, vocab, device, resume, log)
+        L.eval()
+        res['night1'] = dict(records=rinfo, sleep=i1, lr=1e-4, visits=visits, L_path=paths['L'], L_sha256=sha['L'])
+        log(f1, i1)
+    save()
     # 2. day 2 from L (j_parent's W arm: untrained adapter = plain two-pass search)
     m1 = copy.deepcopy(N)
     add_adapter(m1, seed=seed)
     init = adapter_state(m1)
     skey = (os.path.abspath(nprime), pool_limit, n1, n2, seed, T)
     t0 = time.time()
-    dkey = (skey, s2, sha['L'], _hstate(init), 'L')
-    day = _cached(os.path.join(pdir, 'day2_L.pkl'), dkey, lambda: day_f(_arm_model(L, init, seed), pool, vocab, device, T, n1, n2, s2), resume, log, 'day 2 L')
+    dkey = (skey, s2, sha['L'], _hstate(init), 'L' if std else f1)
+    day = _cached(os.path.join(pdir, f'day2_{f1}.pkl'), dkey, lambda: day_f(_arm_model(L, init, seed), pool, vocab, device, T, n1, n2, s2), resume, log, 'day 2 L')
     secs['day2_L'] = time.time() - t0
     res['day2'] = dict(drawn=day['drawn'], greedy_pass=sum(day['greedy_fit']) / len(pool), pool_with_fit_pass1=sum(day['fit1']), pool_with_fit_final=sum(day['fit_final']), pool_rows=len(pool),
                        seconds=secs['day2_L'], seconds_per_pool_row=secs['day2_L'] / len(pool))
@@ -238,13 +279,13 @@ def l2_parent(nprime, out, s3dir, jdir, rdir, vldir, s1wdir, skills_train, skill
 
     def night2():
         t1 = time.time()
-        m, si = sleep_on(L, recs, vocab, replay, warm_rows, 1e-4, 32, s2, device)
+        m, si = sleep_on(L, recs, vocab, replay, warm_rows, 1e-4, visits, s2, device)
         si['seconds'] = time.time() - t1
         return m, si
-    L2, si, sha['L2'] = _stage(pdir, 'L2', _h('l2', dkey, len(recs), 1e-4, 32, ja['replay_n'], bool(skills_train)), night2, meta, vocab, device, resume, log)
+    L2, si, sha['L2'] = _stage(pdir, f2, _h('l2', dkey, len(recs), 1e-4, visits, ja['replay_n'], bool(skills_train)), night2, meta, vocab, device, resume, log)
     secs['night2_L2'] = time.time() - t0
-    res['night2'] = dict(si, lr=1e-4, visits=32)
-    log('L2 night 2', si)
+    res['night2'] = dict(si, lr=1e-4, visits=visits)
+    log(label, 'night 2', si)
     save()
     # 4. measures
     models, getm = dict(N=N, L=L, L2=L2), {}
@@ -258,9 +299,9 @@ def l2_parent(nprime, out, s3dir, jdir, rdir, vldir, s1wdir, skills_train, skill
     for a in ('N', 'W1', 'W2', 'L', 'L2'):
         t0 = time.time()
         sk, ck = ('skills', sha[a], skills_data, skills_limit), ('c2', sha[a], dev_limit)
-        src = dict(N=rd, W1=rd, W2=rd, L=vd).get(a)
-        v = (src and _peek(os.path.join(src, f'skills_{a}.pkl'), sk)) or _cached(os.path.join(pdir, f'skills_{a}.pkl'), sk, lambda a=a: skills_dev(get(a), skills_data, device, skills_limit), resume, log, f'skills {a}')
-        c = (src and _peek(os.path.join(src, f'c2_{a}.pkl' if a != 'L' else 'c2_L.pkl'), ck)) or _cached(os.path.join(pdir, f'c2_{a}.pkl'), ck, lambda a=a: greedy_rows(get(a), dev, vocab, device), resume, log, f'c2 dev {a}')
+        src = dict(N=rd, W1=rd, W2=rd, **({'L': vd} if std else {})).get(a)
+        v = (src and _peek(os.path.join(src, f'skills_{a}.pkl'), sk)) or _cached(os.path.join(pdir, f'skills_{tag(a)}.pkl'), sk, lambda a=a: skills_dev(get(a), skills_data, device, skills_limit), resume, log, f'skills {a}')
+        c = (src and _peek(os.path.join(src, f'c2_{a}.pkl' if a != 'L' else 'c2_L.pkl'), ck)) or _cached(os.path.join(pdir, f'c2_{tag(a)}.pkl'), ck, lambda a=a: greedy_rows(get(a), dev, vocab, device), resume, log, f'c2 dev {a}')
         rows, hits[a] = v[0] if v[0] is not None else rows, v[1]
         c2[a] = c
         res['skills'][a] = dict(pooled5=v[2], in_dist=v[3], n=len(v[1]))
@@ -294,7 +335,7 @@ def l2_parent(nprime, out, s3dir, jdir, rdir, vldir, s1wdir, skills_train, skill
                 with creative(mm, True):
                     smp = legal.raw_samples(mm, dev, vocab, device, n=32, temperature=T, level=0, seed=mseed)
                 return score_rows(dev, smp, ks=(32,))
-            v = _cached(os.path.join(pdir, f'c32_{a}.pkl'), ('c32', sha[a], dev_limit, mseed, T, 32), fn, resume, log, f'reach32 {a}')
+            v = _cached(os.path.join(pdir, f'c32_{tag(a)}.pkl'), ('c32', sha[a], dev_limit, mseed, T, 32), fn, resume, log, f'reach32 {a}')
         c32[a] = v
         hard = [x['right32'] for x, r in zip(v, dev) if r['kind'] in c2_pilot.HARD_KINDS]
         res['reach32'][a] = dict(pooled=100 * sum(x['right32'] for x in v) / len(v), multi_step=100 * sum(hard) / max(len(hard), 1), source=how)
@@ -309,9 +350,11 @@ def l2_parent(nprime, out, s3dir, jdir, rdir, vldir, s1wdir, skills_train, skill
     right = lambda a, ix=None: [float(c2[a][i]['right']) for i in (range(len(dev)) if ix is None else ix)]
     bd = lambda x, y: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(x, y)))
     reach = lambda a, ix: [float(c32[a][i]['right32']) for i in ix]
+    vs_prior = _vs_prior(std, l2dir, vl_L, name, skills_data, skills_limit, dev_limit, mseed, T, dev, rows, hits, c2, c32, hard_ix, res)
+    vs_pt = ((vs_prior or {}).get('night2_minus_L2_multi_step_first_try') or {}).get('points')
     hN = harm_measure(hits['N'], hits['L2'], rows)
     ms = bd(right('L2', hard_ix), right('W2', hard_ix))
-    res['marks'] = dict(l2_marks(hN['passes'], ms['points'], ms['hi']), in_dist_drop_vs_N=hN['in_dist_drop'], fired_vs_N=hN['fired'], pooled5=res['skills']['L2']['pooled5'], multi_step_first_try_L2_minus_W2=ms,
+    res['marks'] = dict(l2_marks(hN['passes'], ms['points'], ms['hi'], vs_pt), in_dist_drop_vs_N=hN['in_dist_drop'], fired_vs_N=hN['fired'], pooled5=res['skills']['L2']['pooled5'], multi_step_first_try_L2_minus_W2=ms,
                         multi_step_n=len(hard_ix), rules=L2_MARKS)
     res['report_only'] = dict(
         multi_step_first_try_L2_minus_N=bd(right('L2', hard_ix), right('N', hard_ix)), climb_mark='job 8: +10 points', pooled_first_try={a: 100 * sum(right(a)) / len(dev) for a in c2},
@@ -319,10 +362,43 @@ def l2_parent(nprime, out, s3dir, jdir, rdir, vldir, s1wdir, skills_train, skill
         harm_vs_B2={a: {k: v for k, v in harm_measure(hits['B2'], hits[a], rows).items() if k != 'families'} for a in ('N', 'W1', 'W2', 'L', 'L2')} if 'B2' in hits else None,
         night2_own_cost_L2_vs_L={k: v for k, v in harm_measure(hits['L'], hits['L2'], rows).items() if k != 'families'},
         night2_records=res['night2_records'])
+    res['report_only']['vs_L2_and_VL'] = vs_prior
     secs['total'] = time.time() - t00
     save()
     log('MARKS', {k: res['marks'][k] for k in ('harm', 'multi_step', 'passes', 'proved_wrong')})
     return res
+
+
+def _vs_prior(std, l2dir, vl_L, name, skills_data, skills_limit, dev_limit, mseed, T, dev, rows, hits, c2, c32, hard_ix, res):
+    """Report only (visits != 32): this run's night-2 model against L2's (l2dir/<name>/ caches) and its night-1 model against VL's L. None for what the caches (limits) cannot give."""
+    if std:
+        return None
+    bd = lambda x, y: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(x, y)))
+    out = dict(note='this run minus the lr 1e-4 / 32-visit chain; unavailable parts are None (limits differ from the caches)')
+    l2p = os.path.join(l2dir, name) if l2dir else None
+    if l2p and os.path.exists(os.path.join(l2p, 'L2.pt')):
+        sh = _sha_file(os.path.join(l2p, 'L2.pt'))
+        sk = _peek(os.path.join(l2p, 'skills_L2.pkl'), ('skills', sh, skills_data, skills_limit))
+        c = _peek(os.path.join(l2p, 'c2_L2.pkl'), ('c2', sh, dev_limit))
+        r32 = _peek(os.path.join(l2p, 'c32_L2.pkl'), ('c32', sh, dev_limit, mseed, T, 32))
+        out['L2_night2'] = dict(source=l2p, skills_in_dist=sk and sk[3], c2_first_try=c and 100 * sum(d['right'] for d in c) / len(dev))
+        if c:
+            right = lambda m, ix: [float(m[i]['right']) for i in ix]
+            allix, hix = list(range(len(dev))), list(hard_ix)
+            out['night2_minus_L2_multi_step_first_try'] = bd(right(c2['L2'], hix), right(c, hix))
+            out['night2_minus_L2_pooled_first_try'] = bd(right(c2['L2'], allix), right(c, allix))
+        if sk:
+            out['harm_L2_vs_night2'] = {k: v for k, v in harm_measure(sk[1], hits['L2'], rows).items() if k != 'families'}
+        if r32:
+            out['night2_minus_L2_reach32_pooled'] = bd([float(x['right32']) for x in c32['L2']], [float(x['right32']) for x in r32])
+            out['night2_minus_L2_reach32_multi_step'] = bd([float(c32['L2'][i]['right32']) for i in hard_ix], [float(r32[i]['right32']) for i in hard_ix])
+    if os.path.exists(vl_L):
+        sh = _sha_file(vl_L)
+        sk = _peek(os.path.join(os.path.dirname(vl_L), 'skills_L.pkl'), ('skills', sh, skills_data, skills_limit))
+        c = _peek(os.path.join(os.path.dirname(vl_L), 'c2_L.pkl'), ('c2', sh, dev_limit))
+        out['night1_vs_VL_L'] = dict(VL_L_in_dist=sk and sk[3], night1_in_dist=res['skills']['L']['in_dist'], VL_L_c2_first_try=c and 100 * sum(d['right'] for d in c) / len(dev),
+                                     night1_c2_first_try=100 * res['c2_dev']['L']['first_try_right'])
+    return out
 
 
 def l2(nprimes, out, s3dir, jdir, rdir, vldir, s1wdir, **kw):
@@ -330,13 +406,13 @@ def l2(nprimes, out, s3dir, jdir, rdir, vldir, s1wdir, **kw):
     return {p: l2_parent(p, out, s3dir, jdir, rdir, vldir, s1wdir, **kw) for p in nprimes}
 
 
-def l2report(out, parents):
+def l2report(out, parents, file='l2.json', label='L2'):
     """-> DIR/l2-report.json: per-parent marks, the verdict (passes on both parents), proved_wrong (on both), and the next-step text."""
-    res = {p: json.load(open(os.path.join(out, p, 'l2.json'))) for p in parents}
-    pm = {p: {k: x['marks'][k] for k in ('harm', 'multi_step', 'passes', 'proved_wrong')} for p, x in res.items()}
-    rep = dict(parents=list(parents), per_parent=pm, verdict=l2_verdict(pm), rules=L2_MARKS, next=L2_NEXT,
-               tables={p: dict(skills=x['skills'], c2_dev=x['c2_dev'], reach32=x['reach32'], marks=x['marks'], report_only=x['report_only'], day2=x['day2'], night2=x['night2']) for p, x in res.items()})
-    json.dump(rep, open(os.path.join(out, 'l2-report.json'), 'w'), indent=1)
+    res = {p: json.load(open(os.path.join(out, p, file))) for p in parents}
+    pm = {p: {k: x['marks'].get(k) for k in ('harm', 'multi_step', 'passes', 'proved_wrong', 'proved_wrong_no_climb')} for p, x in res.items()}
+    rep = dict(parents=list(parents), label=label, per_parent=pm, verdict=l2_verdict(pm), rules=L2_MARKS, next=L2_NEXT,
+               tables={p: dict(skills=x['skills'], c2_dev=x['c2_dev'], reach32=x['reach32'], marks=x['marks'], report_only=x['report_only'], day2=x['day2'], night2=x['night2'], night1=x.get('night1')) for p, x in res.items()})
+    json.dump(rep, open(os.path.join(out, 'l2-report.json' if label == 'L2' else f'{label.lower()}-report.json'), 'w'), indent=1)
     return rep
 
 
@@ -350,20 +426,21 @@ if __name__ == '__main__':
     q = sub.add_parser('l2'); q.add_argument('--nprime', nargs='+', required=True)
     for f in ('s3', 'j', 'r', 'vl', 's1w'):
         q.add_argument('--' + f, required=True)
-    q.add_argument('--out', required=True); q.add_argument('--skills-train', required=True); q.add_argument('--skills-data', required=True); q.add_argument('--b2'); q.add_argument('--pool-limit', type=int)
+    q.add_argument('--out', required=True); q.add_argument('--skills-train', required=True); q.add_argument('--skills-data', required=True); q.add_argument('--b2'); q.add_argument('--visits', type=int, default=32); q.add_argument('--s1', help='needed when visits != 32'); q.add_argument('--l2', help='the L2 outputs, report-only comparison')
+    q.add_argument('--pool-limit', type=int)
     q.add_argument('--dev-limit', type=int); q.add_argument('--skills-limit', type=int); q.add_argument('--max-records', type=int, help='smoke only'); q.add_argument('--device', default='cpu')
     q.add_argument('--threads', type=int); q.add_argument('--no-resume', action='store_true')
-    q = sub.add_parser('l2report'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', default=['s100', 's101'])
+    q = sub.add_parser('l2report'); q.add_argument('--visits', type=int, default=32); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', default=['s100', 's101'])
     q = sub.add_parser('report'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', default=['s100', 's101'])
     a = a.parse_args()
     if getattr(a, 'threads', None):
         torch.set_num_threads(a.threads)
     if a.cmd == 'l2report':
-        print(json.dumps(l2report(a.out, tuple(a.parents)), indent=1))
+        print(json.dumps(l2report(a.out, tuple(a.parents), *(('l2.json', 'L2') if a.visits == 32 else (f'l{a.visits}.json', f'L{a.visits}'))), indent=1))
     elif a.cmd == 'l2':
         ex = os.path.expanduser
         l2(a.nprime, a.out, ex(a.s3), ex(a.j), ex(a.r), ex(a.vl), ex(a.s1w), skills_train=ex(a.skills_train), skills_data=ex(a.skills_data), pool_limit=a.pool_limit, dev_limit=a.dev_limit,
-           skills_limit=a.skills_limit, device=a.device, resume=not a.no_resume, max_records=a.max_records, b2=a.b2)
+           skills_limit=a.skills_limit, device=a.device, resume=not a.no_resume, max_records=a.max_records, b2=a.b2, visits=a.visits, s1dir=a.s1 and ex(a.s1), l2dir=a.l2 and ex(a.l2))
     elif a.cmd == 'report':
         print(json.dumps(vlreport(a.out, tuple(a.parents)), indent=1))
     else:

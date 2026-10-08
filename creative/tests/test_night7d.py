@@ -40,3 +40,17 @@ def test_l2_marks_and_verdict():
     v = N.l2_verdict({'s100': a, 's101': a})
     assert v['passes'] and not v['disagree'] and 'L64' in v['next']
     assert N.l2_verdict({'s100': b, 's101': b})['proved_wrong']
+
+
+def test_l64_no_climb_rule():
+    a = N.l2_marks(True, 0.0, 2.0, 1.0)                                    # exactly +1.0: not proved wrong by the no-climb rule
+    assert a['proved_wrong_no_climb'] is False and N.l2_marks(True, 0.0, 2.0, 0.99)['proved_wrong_no_climb'] is True
+    assert N.l2_marks(True, 0.0, 2.0)['proved_wrong_no_climb'] is None     # L2 itself: no comparison
+    lo, hi = N.l2_marks(True, 0.0, 2.0, 0.5), N.l2_marks(True, 0.0, 2.0, 3.0)
+    v = N.l2_verdict({'s100': lo, 's101': lo})
+    assert v['proved_wrong_no_climb'] and v['proved_wrong'] and not v['proved_wrong_vs_W2']
+    v = N.l2_verdict({'s100': lo, 's101': hi})                              # only one parent: not proved wrong
+    assert not v['proved_wrong_no_climb'] and not v['proved_wrong'] and 'proved_wrong_no_climb' in v['disagree']
+    v = N.l2_verdict({'s100': N.l2_marks(True, -6.0, -0.1, 3.0), 's101': N.l2_marks(True, -6.0, -0.1, 3.0)})   # rule 1 alone
+    assert v['proved_wrong_vs_W2'] and v['proved_wrong'] and v['proved_wrong_no_climb'] is False
+    assert N.l2_verdict({'s100': N.l2_marks(True, 0, 2), 's101': N.l2_marks(True, 0, 2)})['proved_wrong_no_climb'] is None
