@@ -302,6 +302,8 @@ L2 with 64 visits per record on both nights instead of 32 (lr 1e-4 on both). Eve
 
 Verdict: **L64 fails on both parents and is not proved wrong.** Mark 2 misses by one question on each parent: on 154 questions one question is 0.65 points, so -2.6 is 4 questions behind W2 where the mark allows 3. On s100 the harm mark also fails on one family. The no-climb rule holds only on s101, and the vs-W2 upper ends are above 0, so neither proved-wrong rule is met.
 
+Roadmap ruling (009028cd42, 3:57 PM ET): fails, not proved wrong. The blocker is s100's table_calc fire (3 rows past the line, a real fire). The one-question miss on mark 2 counts as met under Ben's near-miss rule. lr 3e-4 is the next single change and stays held; the 7d line pauses until the big-run thread asks.
+
 How to read it:
 - *Shown:* doubling the visits on night 1 changes nothing (skills and C2 first try within 0.4 of VL's L). The gain is on night 2: reach@32 on multi-step recovers part of the lr 1e-3 nights' widening (+9.1 and +3.9 over L2), and pooled first try rises.
 - *Shown:* the skills cost stays near zero overall (in_dist is above N' on both parents), but 64 visits on night 2 starts to cost one family on s100. table_calc was 62.0 after L2 and is 56.0 after L64 (-6.0 [-10.5, -1.5]); night 1 at 64 visits left it within its interval.
