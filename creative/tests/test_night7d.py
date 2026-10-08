@@ -93,3 +93,33 @@ def test_sleep_sc_hook_off_is_sleep_and_row_losses():
     batch = collate([Dataset(rows[:8], vocab, strict=False)[i] for i in range(8)])
     o = base.loss(batch)
     assert abs(sum(N.row_losses(base, rows[:8], vocab)) / 8 - float((o[0] if isinstance(o, tuple) else o))) < 1e-4
+
+
+def test_ap_marks_verdict_and_prefix():
+    m = N.ap_marks(2.0, -2.0, True, 4.0)
+    assert m['passes'] and not m['proved_wrong']                           # boundaries inclusive
+    assert not N.ap_marks(1.9, 0, True, 4.0)['passes'] and not N.ap_marks(5, -2.1, True, 4.0)['passes'] and not N.ap_marks(5, 0, False, 4.0)['passes']
+    assert N.ap_marks(0.0, 0, True, 0.99)['proved_wrong'] and not N.ap_marks(0.0, 0, True, 1.0)['proved_wrong']
+    w, g = N.ap_marks(0, 0, True, 0.5), N.ap_marks(3, 0, True, 5.0)
+    v = N.ap_verdict({'a': w, 'b': g})
+    assert not v['passes'] and not v['proved_wrong'] and 'proved_wrong' in v['disagree'] and N.ap_verdict({'a': w, 'b': w})['proved_wrong'] and N.ap_verdict({'a': g, 'b': g})['passes']
+    r = [{'id': 'W:x:0', 'prompt': 'p', 'answer': 'a'}, {'id': 'W:x:1', 'prompt': 'p', 'answer': 'b'}]
+    c = N.prefixed_copies(r, 'n1|', register=False)
+    assert [x['id'] for x in c] == ['n1|W:x:0', 'n1|W:x:1'] and r[0]['id'] == 'W:x:0' and c[0]['answer'] == 'a'
+
+
+def test_ap_check_prefixed_targets():
+    import os, pytest
+    from custom_io.data import load_rows
+    tr = os.path.expanduser('~/work/data/train.jsonl')
+    if not os.path.exists(tr):
+        pytest.skip('no train file')
+    rows = load_rows(tr)[::5000][:20]
+    from custom_io.models import progparse as pp
+    for r in rows:                                                          # stand-in for fewshot._record's registration
+        pp.row_targets(r)
+    out = N.check_prefixed(rows, 'n2|')
+    assert out['targets_equal'] and out['stale_entries'] == 0
+    import pytest
+    with pytest.raises(AssertionError):                                      # a second call finds the entries now there
+        N.check_prefixed(rows, 'n2|')

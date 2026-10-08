@@ -706,6 +706,211 @@ def screport(out, parents):
     return rep
 
 
+
+# ---------------------------------------------------------------- Test AP (roadmap a81b3bebd8): night 2 appends night 1's records
+AP_MARKS = dict(first_try='(1) pooled C2 DEV first try: c2_pilot.boot(AP right, W2 right) point >= +2.0',
+                multi_step='(2) multi-step first try (HARD_KINDS, 154 questions): AP - W2 point >= -2.0',
+                harm="(3) night 2's own cost: harm_measure(W1 DEV hits, AP DEV hits) passes (in_dist drop <= 1.5, no family fires)",
+                passes='passes = (1) and (2) and (3) on a parent; the verdict needs both parents',
+                proved_wrong='the AP - W2 pooled first-try paired 95% interval has its upper end < +1.0 on BOTH parents (decided in the report)')
+AP_RECIPE = ("night 2 from W1 on W2's exact recipe (J's W arm: day-2 records, lr 1e-3, W2's update count = number of night-2 records, seed s2, same skills replay and warm rows) with ONE change: the record half of "
+             "each batch is drawn from night 1's records PLUS night 2's records (ids prefixed n1| / n2| on copies)")
+
+
+def ap_marks(first_pt, ms_pt, harm_passes, first_hi):
+    """Pure. Points; first_* = pooled first try AP - W2 (point, 95% upper end), ms_pt = multi-step AP - W2 point."""
+    a, b = bool(first_pt >= 2.0), bool(ms_pt >= -2.0)
+    return dict(first_try=a, multi_step=b, harm=bool(harm_passes), passes=bool(a and b and harm_passes), proved_wrong=bool(first_hi < 1.0))
+
+
+def ap_verdict(per_parent):
+    """Pure. {parent: ap_marks} -> passes on every parent, proved_wrong on every parent, where the parents disagree."""
+    return dict(passes=all(m['passes'] for m in per_parent.values()), proved_wrong=all(m['proved_wrong'] for m in per_parent.values()),
+                disagree=[k for k in ('first_try', 'multi_step', 'harm', 'passes', 'proved_wrong') if len({m[k] for m in per_parent.values()}) > 1])
+
+
+def prefixed_copies(recs, prefix, register=True):
+    """Copies of the record dicts with id = prefix + original id (the target cache is keyed by id; night-1 and night-2 ids can collide). The records' targets are REGISTERED in progparse._CACHE under the
+    original id (fewshot._record), so with register=True each copy gets the same registered entry under its new id (the original's must exist)."""
+    from custom_io.models import progparse as pp
+    new = [dict(r, id=prefix + r['id']) for r in recs]
+    if register:
+        for r, n in zip(recs, new):
+            assert r['id'] in pp._CACHE, f'no registered targets for {r["id"]}'
+            pp._CACHE[n['id']] = pp._CACHE[r['id']]
+    return new
+
+
+def check_prefixed(recs, prefix, spot=8):
+    """Before the night: no stale target-cache entry for any new id (assert); then register the prefixed copies and check that every copy's targets equal its original's (all rows; `spot` of them also
+    through row_targets). -> dict for the log."""
+    from custom_io.models import progparse as pp
+    stale = [prefix + r['id'] for r in recs if prefix + r['id'] in pp._CACHE]
+    assert not stale, f'stale target cache entries for {stale[:3]}'
+    new = prefixed_copies(recs, prefix)
+    assert all(pp._CACHE[n['id']] == pp._CACHE[r['id']] for r, n in zip(recs, new)), 'registered targets differ'
+    idx = sorted({int(i * (len(recs) - 1) / max(spot - 1, 1)) for i in range(spot)}) if recs else []
+    assert all(pp.row_targets(recs[i]) == pp.row_targets(new[i]) for i in idx)
+    return dict(prefix=prefix, n=len(recs), spot_checked=len(idx), stale_entries=0, targets_equal=True)
+
+
+def ap_parent(nprime, out, s1dir, s3dir, jdir, rdir, s1wdir, skills_train, skills_data, seed=0, dev_limit=None, skills_limit=None, device='cpu', name=None, resume=True, log=_log, max_records=None, b2=None):
+    """One parent's Test AP. DIR/<name>/ap.json is written after every stage; AP.pt is a cached stage. Reuses (key-checked, read only): J's day2_W.pkl (key rebuilt as j_parent builds it), R's skills / c2 caches
+    for N', W1, W2, J's skills_B2, S1w's measure_U and J's measure_W (reach@32). max_records = smoke only: truncates BOTH record sets (recorded)."""
+    nprime = os.path.expanduser(nprime)
+    name = name or os.path.basename(os.path.dirname(os.path.abspath(nprime)))
+    pdir, s3d, jd, rd, s1wd = (os.path.join(d, name) for d in (out, s3dir, jdir, rdir, s1wdir))
+    os.makedirs(pdir, exist_ok=True)
+    t00, secs = time.time(), {}
+    jj = json.load(open(os.path.join(jd, 'j.json')))
+    ja = jj['args']
+    s3 = json.load(open(os.path.join(s3d, 's3.json')))
+    seed, T, s2, mseed, n1, n2 = jj['seed'], jj['T'], jj['day2_seed'], jj['measure_seed'], ja['n1'], ja['n2']
+    assert s2 == seed + 1 and mseed == seed + 777 and ja['lr'] == 1e-3 and ja['visits'] == 32 and ja['pool_limit'] == s3['args']['pool_limit'], 'J is not the standard two nights'
+    b2 = os.path.expanduser(b2 or ja.get('b2') or '')
+    res = dict(nprime=nprime, name=name, spec=__doc__.split('\n')[0], recipe=AP_RECIPE, marks_rules=AP_MARKS, secs=secs,
+               args=dict(seed=seed, day2_seed=s2, measure_seed=mseed, T=T, n1=n1, n2=n2, lr=1e-3, visits=32, dev_limit=dev_limit, skills_limit=skills_limit, max_records=max_records, b2=b2, s1=s1dir, s3=s3dir, j=jdir,
+                         r=rdir, s1w=s1wdir, skills_train=skills_train, skills_data=skills_data),
+               note='C2 pool / warm rows / DEV and skills train / DEV only; test / labelled / K_new never opened')
+    save = lambda: json.dump(res, open(os.path.join(pdir, 'ap.json'), 'w'), indent=1)
+    replay = sleep.load_replay(skills_train, ja['replay_n'], seed) if skills_train else []
+    warm_rows = R.warm_records(R.load_split(DATA, 'warm'))
+    pool = c2_stones._with_nums(_limit(R.load_split(DATA, 'pool'), ja['pool_limit']))
+    dev = c2_stones._with_nums(_limit(R.load_split(DATA, 'dev'), dev_limit))
+    N, vocab, meta = sleep.load_parent(nprime, device)
+    N.eval()
+    paths = dict(N=nprime, W1=os.path.join(s3d, 'W1.pt'), W2=os.path.join(jd, 'W2.pt'))
+    sha = {a: _sha_file(p) for a, p in paths.items()}
+    W1, _, _ = sleep.load_parent(paths['W1'], device)
+    W1.eval()
+    # night-1 records (W1's, rebuilt) and night-2 records (J's W arm day 2)
+    t0 = time.time()
+    recs1, res['records1'] = _w1_records(nprime, name, s1dir, s3, pool, N, vocab, device)
+    m1 = copy.deepcopy(N)
+    add_adapter(m1, seed=seed)
+    init = adapter_state(m1)
+    skey = (os.path.abspath(nprime), ja['pool_limit'], n1, n2, seed, T)
+    dp = os.path.join(jd, 'day2_W.pkl')
+    c = pickle.load(open(dp, 'rb'))
+    assert c['key'] == (skey, s2, sha['W1'], _hstate(init), 'W'), "J's day2_W.pkl key differs from the one j_parent builds"
+    recs2, cnt = w_records(pool, c['v']['tries'], s2 + 1)
+    want2 = jj['night2']['W']['records']
+    assert len(recs2) == want2, f'rebuilt {len(recs2)} night-2 records, J has {want2}'
+    res['records2'] = dict(rebuilt=len(recs2), J_night2=want2, equal=True, source=dp, records_by_kind=_by_kind(pool, cnt))
+    secs['records'] = time.time() - t0
+    if max_records:
+        recs1, recs2 = recs1[:max_records], recs2[:max_records]
+        res['records2']['smoke_truncated_to'] = len(recs2)
+        res['records1']['smoke_truncated_to'] = len(recs1)
+    u = len(recs2)                                  # W2's update count: 32 * len(recs2) // 32
+    mv = max(math.ceil(u * 32 / (len(recs1) + len(recs2))), 1)
+    res['ids'] = dict(n1=check_prefixed(recs1, 'n1|'), n2=check_prefixed(recs2, 'n2|'),
+                      original_id_overlap=len({r['id'] for r in recs1} & {r['id'] for r in recs2}), note='ids prefixed n1| / n2| on copies; no stale target-cache entry; targets of a prefixed copy equal the original\'s')
+    res['plan'] = dict(records1=len(recs1), records2=len(recs2), union=len(recs1) + len(recs2), updates=u, visits_per_record=u * 32 / (len(recs1) + len(recs2)), W2_visits_per_record=32.0, max_visits=mv)
+    log('AP plan', res['plan'], res['ids'])
+    save()
+
+    def night2():
+        t1 = time.time()
+        union = prefixed_copies(recs1, 'n1|') + prefixed_copies(recs2, 'n2|')       # targets registered by check_prefixed; registering again is idempotent
+        m = copy.deepcopy(W1)
+        so = sleep.sleep(m, union, replay, vocab, sleep.SleepCfg(updates=u, batch=64, lr=1e-3, warmup=20, seed=s2, max_visits=mv), device, replay_extra=warm_rows)
+        m.eval()
+        return m, dict(updates=u, records=len(union), visits_per_record=u * 32 / len(union), last_loss=sum(so['loss'][-10:]) / max(len(so['loss'][-10:]), 1) if so['loss'] else None, seconds=time.time() - t1)
+    AP, info, sha['AP'] = _stage(pdir, 'AP', _h('ap', sha['W1'], 1e-3, 32, s2, len(recs1), len(recs2), res['records1']['W1_night'], ja['replay_n'], bool(skills_train)), night2, meta, vocab, device, resume, log)
+    secs['AP'] = time.time() - t0
+    res['night2'] = info
+    log('AP night 2', info)
+    save()
+    # measures
+    allm = dict(N=N, W1=W1, AP=AP)
+    getm = lambda a: allm[a] if a in allm else allm.setdefault(a, sleep.load_parent(paths[a], device)[0].eval())
+    hits, c2, c32, res['skills'], res['c2_dev'], res['reach32'], rows = {}, {}, {}, {}, {}, {}, None
+    for a in ('N', 'W1', 'W2', 'AP'):
+        t0 = time.time()
+        sk, ck = ('skills', sha[a], skills_data, skills_limit), ('c2', sha[a], dev_limit)
+        v = (_peek(os.path.join(rd, f'skills_{a}.pkl'), sk) if a != 'AP' else None) or _cached(os.path.join(pdir, f'skills_{a}.pkl'), sk, lambda a=a: skills_dev(getm(a), skills_data, device, skills_limit), resume, log, f'skills {a}')
+        cc = (_peek(os.path.join(rd, f'c2_{a}.pkl'), ck) if a != 'AP' else None) or _cached(os.path.join(pdir, f'c2_{a}.pkl'), ck, lambda a=a: greedy_rows(getm(a), dev, vocab, device), resume, log, f'c2 dev {a}')
+        rows, hits[a] = v[0] if v[0] is not None else rows, v[1]
+        c2[a] = cc
+        res['skills'][a] = dict(pooled5=v[2], in_dist=v[3], n=len(v[1]))
+        res['c2_dev'][a] = dict(first_try_right=sum(d['right'] for d in cc) / len(dev), stuck_rate=1 - sum(d['fit'] for d in cc) / len(dev), n=len(dev))
+        secs[f'measure_{a}'] = time.time() - t0
+        log('measure', a, res['skills'][a], res['c2_dev'][a])
+        save()
+    if os.path.exists(b2):
+        bs = _sha_file(b2)
+        bj = _peek(os.path.join(jd, 'skills_B2.pkl'), ('B2', skills_data, bs)) if not skills_limit else None
+        bv = _skills_as_tuple(bj) if bj else _cached(os.path.join(pdir, 'skills_B2.pkl'), ('skills', bs, skills_data, skills_limit), lambda: skills_dev(sleep.load_parent(b2, device)[0].eval(), skills_data, device, skills_limit), resume, log, 'skills B2')
+        hits['B2'] = bv[1]
+        res['skills']['B2'] = dict(pooled5=bv[2], in_dist=bv[3], n=len(bv[1]))
+        save()
+    reuse = dict(W1=(os.path.join(s1wd, 'measure_U.pkl'), 'U'), W2=(os.path.join(jd, 'measure_W.pkl'), 'W'))
+    for a in ('W1', 'W2', 'AP'):
+        t0 = time.time()
+        v, how = None, 'computed'
+        if a in reuse and os.path.exists(reuse[a][0]):
+            c = pickle.load(open(reuse[a][0], 'rb'))
+            kk = c['key']
+            ok = kk[1] == reuse[a][1] and kk[3] == 32 and kk[4] == mseed and kk[6] == dev_limit and (a != 'W2' or kk[7] == skills_data) and len(c['v']['c32']) == len(dev)
+            ok = ok and all(x['kind'] == r['kind'] for x, r in zip(c['v']['c32'], dev))
+            if ok:
+                v, how = c['v']['c32'], f'reused {reuse[a][0]}'
+        if v is None:
+            def fn(a=a):
+                mm = _arm_model(getm(a), init, seed)
+                with creative(mm, True):
+                    smp = legal.raw_samples(mm, dev, vocab, device, n=32, temperature=T, level=0, seed=mseed)
+                return score_rows(dev, smp, ks=(32,))
+            v = _cached(os.path.join(pdir, f'c32_{a}.pkl'), ('c32', sha[a], dev_limit, mseed, T, 32), fn, resume, log, f'reach32 {a}')
+        c32[a] = v
+        hard = [x['right32'] for x, r in zip(v, dev) if r['kind'] in c2_pilot.HARD_KINDS]
+        res['reach32'][a] = dict(pooled=100 * sum(x['right32'] for x in v) / len(v), multi_step=100 * sum(hard) / max(len(hard), 1), source=how)
+        secs[f'reach32_{a}'] = time.time() - t0
+        log('reach32', a, res['reach32'][a])
+        save()
+    # marks and report-only
+    hard_ix = [i for i, r in enumerate(dev) if r['kind'] in c2_pilot.HARD_KINDS]
+    if not dev_limit:
+        assert len(hard_ix) == 154, f'{len(hard_ix)} multi-step DEV questions, expected 154'
+    bd = lambda x, y: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(x, y)))
+    right = lambda a, ix=None: [float(c2[a][i]['right']) for i in (range(len(dev)) if ix is None else ix)]
+    hm = lambda b, a: {k: v for k, v in harm_measure(hits[b], hits[a], rows).items() if k != 'families'}
+    ft, ms = bd(right('AP'), right('W2')), bd(right('AP', hard_ix), right('W2', hard_ix))
+    hW1 = harm_measure(hits['W1'], hits['AP'], rows)
+    res['marks'] = dict(ap_marks(ft['points'], ms['points'], hW1['passes'], ft['hi']), first_try_AP_minus_W2=ft, multi_step_first_try_AP_minus_W2=ms, multi_step_n=len(hard_ix),
+                        night2_in_dist_drop_vs_W1=hW1['in_dist_drop'], fired_vs_W1=hW1['fired'], rules=AP_MARKS)
+    kinds = sorted({r['kind'] for r in dev})
+    kix = {k: [i for i, r in enumerate(dev) if r['kind'] == k] for k in kinds}
+    res['report_only'] = dict(
+        per_kind_first_try={k: {a: 100 * sum(right(a, ix)) / len(ix) for a in ('W1', 'W2', 'AP')} for k, ix in kix.items()},
+        per_kind_AP_minus_W2={k: bd(right('AP', ix), right('W2', ix)) for k, ix in kix.items()},
+        reach32=res['reach32'], reach32_multi_step_AP_minus_W2=bd([float(c32['AP'][i]['right32']) for i in hard_ix], [float(c32['W2'][i]['right32']) for i in hard_ix]),
+        reach32_pooled_AP_minus_W2=bd([float(x['right32']) for x in c32['AP']], [float(x['right32']) for x in c32['W2']]),
+        harm_vs_N={a: hm('N', a) for a in ('W2', 'AP')}, harm_vs_B2={a: hm('B2', a) for a in ('W2', 'AP')} if 'B2' in hits else None, harm_AP_vs_W2=hm('W2', 'AP'),
+        records=res['plan'], cpu_seconds=dict(night2=info['seconds'], measures=sum(v for k, v in secs.items() if k.startswith(('measure_', 'reach32_')))))
+    res['report_only']['last_digit'] = dict(first_try=res['report_only']['per_kind_first_try'].get('last_digit'), AP_minus_W2=res['report_only']['per_kind_AP_minus_W2'].get('last_digit'), note='job 8 lost last_digit on night 2')
+    secs['total'] = time.time() - t00
+    save()
+    log('MARKS', {k: res['marks'][k] for k in ('first_try', 'multi_step', 'harm', 'passes', 'proved_wrong')})
+    return res
+
+
+def ap(nprimes, out, s1dir, s3dir, jdir, rdir, s1wdir, **kw):
+    os.makedirs(out, exist_ok=True)
+    return {p: ap_parent(p, out, s1dir, s3dir, jdir, rdir, s1wdir, **kw) for p in nprimes}
+
+
+def apreport(out, parents):
+    """-> DIR/ap-report.json: per-parent marks, the verdict (passes on both parents; proved_wrong on both), tables."""
+    res = {p: json.load(open(os.path.join(out, p, 'ap.json'))) for p in parents}
+    pm = {p: {k: x['marks'][k] for k in ('first_try', 'multi_step', 'harm', 'passes', 'proved_wrong')} for p, x in res.items()}
+    rep = dict(parents=list(parents), per_parent=pm, verdict=ap_verdict(pm), rules=AP_MARKS, recipe=AP_RECIPE,
+               tables={p: dict(skills=x['skills'], c2_dev=x['c2_dev'], reach32=x['reach32'], marks=x['marks'], report_only=x['report_only'], night2=x['night2'], ids=x['ids'], plan=x['plan']) for p, x in res.items()})
+    json.dump(rep, open(os.path.join(out, 'ap-report.json'), 'w'), indent=1)
+    return rep
+
+
 if __name__ == '__main__':
     a = argparse.ArgumentParser()
     sub = a.add_subparsers(dest='cmd', required=True)
@@ -719,6 +924,13 @@ if __name__ == '__main__':
     q.add_argument('--out', required=True); q.add_argument('--skills-train', required=True); q.add_argument('--skills-data', required=True); q.add_argument('--b2'); q.add_argument('--dev-limit', type=int)
     q.add_argument('--skills-limit', type=int); q.add_argument('--max-records', type=int, help='smoke only'); q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int); q.add_argument('--no-resume', action='store_true')
     q = sub.add_parser('screport'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', default=['s100', 's101'])
+    q = sub.add_parser('ap'); q.add_argument('--nprime', nargs='+', required=True)
+    for f in ('s1', 's3', 'j', 'r', 's1w'):
+        q.add_argument('--' + f, required=True)
+    q.add_argument('--out', required=True); q.add_argument('--skills-train', required=True); q.add_argument('--skills-data', required=True); q.add_argument('--b2'); q.add_argument('--dev-limit', type=int)
+    q.add_argument('--skills-limit', type=int); q.add_argument('--max-records', type=int, help='smoke only: truncates both record sets'); q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int)
+    q.add_argument('--no-resume', action='store_true')
+    q = sub.add_parser('apreport'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', default=['s100', 's101'])
     q = sub.add_parser('l2'); q.add_argument('--nprime', nargs='+', required=True)
     for f in ('s3', 'j', 'r', 'vl', 's1w'):
         q.add_argument('--' + f, required=True)
@@ -731,7 +943,13 @@ if __name__ == '__main__':
     a = a.parse_args()
     if getattr(a, 'threads', None):
         torch.set_num_threads(a.threads)
-    if a.cmd == 'screport':
+    if a.cmd == 'apreport':
+        print(json.dumps(apreport(a.out, tuple(a.parents)), indent=1))
+    elif a.cmd == 'ap':
+        ex = os.path.expanduser
+        ap(a.nprime, a.out, ex(a.s1), ex(a.s3), ex(a.j), ex(a.r), ex(a.s1w), skills_train=ex(a.skills_train), skills_data=ex(a.skills_data), dev_limit=a.dev_limit, skills_limit=a.skills_limit,
+           device=a.device, resume=not a.no_resume, max_records=a.max_records, b2=a.b2)
+    elif a.cmd == 'screport':
         print(json.dumps(screport(a.out, tuple(a.parents)), indent=1))
     elif a.cmd == 'sc':
         ex = os.path.expanduser
