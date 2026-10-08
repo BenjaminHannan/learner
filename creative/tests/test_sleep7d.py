@@ -398,6 +398,41 @@ def test_s1b_try_marks_match_score_rows():
     assert [x['right32'] for x in f] == [x['right32'] for x in a] and all(x['n_fit'] <= y['n_fit'] for x, y in zip(f, a))
     assert all(len(r['tries']) == 40 for r in S.switch_marks(pm, off, 32))
 
+def test_day_f_pass1_on_pass2_off():
+    m, ref, vocab = _fresh()
+    g = torch.Generator().manual_seed(7)
+    with torch.no_grad():
+        for _, w in S._wrappers(m):
+            w.B.copy_(torch.randn(w.B.shape, generator=g) * 0.5)                       # on != off
+    rows = _rows(8)
+    d = S.day_f(m, rows, vocab, 'cpu', 3.0, 4, 6, seed=5)
+    with S.creative(m, True):
+        on = S.legal.raw_samples(m, rows, vocab, 'cpu', n=4, temperature=3.0, level=0, seed=5)
+    with S.creative(m, False):
+        g_off = sampler.greedy_tries(m, rows, vocab, 'cpu')
+    assert d['greedy_fit'] == [S.fits(fewshot.parse(r['prompt']), t.t) for r, t in zip(rows, g_off)]
+    assert [[x.t for x in t[:4]] for t in d['tries']] == [[x.t for x in t] for t in on]                    # pass 1: adapter on, seed
+    more = [i for i, f in enumerate(d['fit1']) if not f]
+    assert more and d['drawn']['pass2_rows'] == len(more)
+    with S.creative(m, False):
+        off = S.legal.raw_samples(m, [rows[i] for i in more], vocab, 'cpu', n=6, temperature=3.0, level=0, seed=1005)
+    assert [[x.t for x in d['tries'][i][4:]] for i in more] == [[x.t for x in t] for t in off]            # pass 2: adapter off, seed + 1000
+    assert all(len(d['tries'][i]) == (4 if d['fit1'][i] else 10) and len(d['fit'][i]) == len(d['tries'][i]) for i in range(len(rows)))
+    assert d['fit_final'] == [any(f) for f in d['fit']] and m._creative.on is False
+
+
+def test_day_f_feeds_kept_tries():
+    m, ref, vocab = _fresh()
+    rows = _rows(8)
+    d = S.day_f(m, rows, vocab, 'cpu', 3.0, 4, 6, seed=3)
+    sd = S.stuck_day(d)
+    assert sd['stuck'] == [i for i, f in enumerate(d['greedy_fit']) if not f] and set(sd['tries']) == set(sd['fit']) == set(sd['stuck'])
+    kept = S.kept_tries(rows, sd, 0)
+    assert kept['rows_stuck'] == len(sd['stuck']) and all(it['i'] in sd['stuck'] for it in kept['items'])
+    o = S.kept_origin(kept, d['tries'], 4)
+    assert o['kept_tries'] == len(kept['items']) and 0 <= o['share_tries_from_pass2'] <= 1
+
+
 if __name__ == '__main__':
     for k, v in list(globals().items()):
         if k.startswith('test_'):

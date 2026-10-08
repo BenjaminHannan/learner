@@ -1046,6 +1046,327 @@ def s3(nprimes, out, **kw):
     return allres
 
 
+# ---------------------------------------------------------------- 8. Test J (roadmap 7d, 10-08): the creative part's own sleep. W = loop 2 alone (the worker sleeps on its search records); J = loop 1 + loop 2 (each night first trains the creative adapter on that day's kept tries); two days and nights from N', night 1 shared (S3's W1, S1's day), creative mode F (adapter on for tries 1-32, off after)
+def day_f(model, pool, vocab, device, T, n1, n2, seed, bs=2048):
+    """Day 2 on ALL pool rows (job 8's two-pass search, `search`'s shape): greedy first try with the adapter OFF (greedy_fit by the example check); pass 1 = n1 samples per row,
+    adapter ON (seed); pass 2 = n2 samples, adapter OFF (seed + 1000), only for rows with no fitting try in pass 1. With B = 0 on == off, so the worker's F is plain sampling.
+    -> dict(greedy_fit [bool per row], tries [list per row, sampling order], fit [bool per try, per row] (the example check), fit1 [pass 1 has a fit], fit_final, drawn)."""
+    with creative(model, False):
+        gt = sampler.greedy_tries(model, pool, vocab, device)
+    ps = [fewshot.parse(r['prompt']) for r in pool]
+    gf = [fits(p, t.t) for p, t in zip(ps, gt)]
+    with creative(model, True):
+        t1 = legal.raw_samples(model, pool, vocab, device, n=n1, temperature=T, level=0, seed=seed, bs=bs)
+    tries = [list(t) for t in t1]
+    fit = [[fits(p, x.t) for x in t] for p, t in zip(ps, tries)]
+    fit1 = [any(f) for f in fit]
+    more = [i for i, f in enumerate(fit1) if not f]
+    if more:
+        with creative(model, False):
+            t2 = legal.raw_samples(model, [pool[i] for i in more], vocab, device, n=n2, temperature=T, level=0, seed=seed + 1000, bs=bs)
+        for i, t in zip(more, t2):
+            tries[i] += t
+            fit[i] += [fits(ps[i], x.t) for x in t]
+    return dict(greedy_fit=gf, tries=tries, fit=fit, fit1=fit1, fit_final=[any(f) for f in fit],
+                drawn=dict(greedy=len(pool), pass1=n1 * len(pool), pass2=n2 * len(more), pass2_rows=len(more)))
+
+
+def stuck_day(d):
+    """A day_f result as kept_tries reads a day: stuck = the rows whose greedy try fails; tries and fit as dicts keyed by row index (those rows only)."""
+    st = [i for i, f in enumerate(d['greedy_fit']) if not f]
+    return dict(stuck=st, tries={i: d['tries'][i] for i in st}, fit={i: d['fit'][i] for i in st})
+
+
+def _h(*xs):
+    return hashlib.sha256(repr(xs).encode()).hexdigest()
+
+
+def _hstate(st):
+    h = hashlib.sha256()
+    for k in sorted(st):
+        h.update(k.encode()); h.update(st[k].numpy().tobytes())
+    return h.hexdigest()
+
+
+def _sha_file(p):
+    return hashlib.sha256(open(p, 'rb').read()).hexdigest()
+
+
+def _cached(path, key, fn, resume, log, what):
+    """pickle cache {key, v}: reload when the key matches (and resume), else compute and store."""
+    if resume and os.path.exists(path):
+        c = pickle.load(open(path, 'rb'))
+        if c['key'] == key:
+            log(what, 'loaded', path)
+            return c['v']
+    v = fn()
+    pickle.dump(dict(key=key, v=v), open(path, 'wb'))
+    return v
+
+
+def _arm_model(base, state, seed):
+    m = copy.deepcopy(base)
+    add_adapter(m, seed=seed)
+    load_adapter_state(m, state)
+    m.eval()
+    return m
+
+
+def _by_kind(pool, counts):
+    kind_of = {r['id']: r['kind'] for r in pool}
+    return {k: sum(c for i, c in counts.items() if kind_of[i] == k) for k in sorted(set(kind_of.values()))}
+
+
+def skills_look(m, skills_data, device):
+    """One greedy pass on skills DEV in_dist (harm_look.skills_hits). -> dict(hits [0/1 per in_dist row], pooled5 %, in_dist %); None without data."""
+    if not skills_data:
+        return None
+    from creative.harm_look import skills_hits
+    _, h, p5, ia = skills_hits(m, skills_data, device)
+    return dict(hits=h, pooled5=p5, in_dist=ia)
+
+
+def kept_origin(kept, tries, n1):
+    """Where a night's kept tries were drawn: share of kept rows whose kept FITTING tries all come from index >= n1 (pass 2, adapter off), and share of kept tries at index >= n1
+    (index = the try's first draw in the row's sampling order, found by raw_key). Report only."""
+    first, fit_late, rows, late, tot = {}, {}, set(), 0, 0
+    for it in kept['items']:
+        i = it['i']
+        if i not in first:
+            first[i] = {}
+            for j, rec in enumerate(tries[i]):
+                first[i].setdefault(raw_key(rec.t), j)
+        j = first[i][raw_key(it['t'])]
+        rows.add(i)
+        tot += 1
+        late += j >= n1
+        if it['r']:
+            fit_late[i] = fit_late.get(i, True) and j >= n1
+    return dict(kept_rows=len(rows), rows_fit_only_from_pass2=sum(fit_late.values()), share_rows_fit_only_from_pass2=sum(fit_late.values()) / max(len(rows), 1),
+                kept_tries=tot, tries_from_pass2=late, share_tries_from_pass2=late / max(tot, 1))
+
+
+def j_measure(m, dev, kdev, vocab, device, T, n_eval, k, mseed):
+    """One arm's next-day measures on its model (worker + adapter): greedy rows (adapter off); C2 DEV creative reach@k (adapter on, mseed); K_new F mode to n_eval (k on at mseed,
+    the rest off at mseed + 1000). -> dict(greedy, c32, knew) per-row lists."""
+    with creative(m, False):
+        g = greedy_rows(m, dev, vocab, device)
+    with creative(m, True):
+        s = legal.raw_samples(m, dev, vocab, device, n=k, temperature=T, level=0, seed=mseed)
+        on = legal.raw_samples(m, kdev, vocab, device, n=k, temperature=T, level=0, seed=mseed)
+    off = [[] for _ in kdev]
+    if n_eval > k:
+        with creative(m, False):
+            off = legal.raw_samples(m, kdev, vocab, device, n=n_eval - k, temperature=T, level=0, seed=mseed + 1000)
+    return dict(greedy=g, c32=score_rows(dev, s, ks=(k,)), knew=score_rows(kdev, [a + b for a, b in zip(on, off)], ks=sorted({k, n_eval})))
+
+
+def j_parent(nprime, out, s1dir, s3dir, skills_train=None, skills_data=None, pool_limit=None, dev_limit=None, n1=32, n2=480, seed=0, T=T_POOL, lr_w=1e-3, visits=32, replay_n=None,
+             lr1=1e-3, passes1=1, kl=0.1, n_eval=512, k=32, knew_dir=KNEW, transfer_kinds=TRANSFER_KINDS, device='cpu', name=None, resume=True, log=_log, b2=None):
+    """One parent's Test J (W = loop 2 alone, J = loop 1 + loop 2; two days and nights from N', night 1 reused from S1 / S3). DIR/<name>/j.json is written after every stage (b2 = the parent's B2 checkpoint, report-only harm comparison; no combined
+    file: parents run as parallel processes; `jreport` joins them). Day 2 and the measures are cached per arm (day2_{arm}.pkl, measure_{arm}.pkl); night 2 in W2.pt / J2.pt / adapters_j.pt."""
+    name = name or os.path.basename(os.path.dirname(os.path.abspath(nprime)))
+    pdir, s1d, s3d = os.path.join(out, name), os.path.join(s1dir, name), os.path.join(s3dir, name)
+    os.makedirs(pdir, exist_ok=True)
+    t00, secs, s2, mseed = time.time(), {}, seed + 1, seed + 777
+    args = dict(pool_limit=pool_limit, dev_limit=dev_limit, n1=n1, n2=n2, lr=lr_w, visits=visits, replay_n=replay_n, day_from=s1dir)
+    res = dict(nprime=nprime, name=name, seed=seed, T=T, day2_seed=s2, measure_seed=mseed, spec=__doc__.split('\n')[0], args=dict(args, lr1=lr1, passes1=passes1, kl=kl, n_eval=n_eval, k=k, s1=s1dir, s3=s3dir, b2=b2),
+               note='C2 DEV, C2 pool and K_new DEV only; test / labelled / K_new test never opened; keys score, never pick (records and kept tries use the example check only)')
+    save = lambda: json.dump(res, open(os.path.join(pdir, 'j.json'), 'w'), indent=1)
+    replay = sleep.load_replay(skills_train, replay_n, seed) if skills_train else []
+    warm_rows = R.warm_records(R.load_split(DATA, 'warm'))
+    pool = c2_stones._with_nums(_limit(R.load_split(DATA, 'pool'), pool_limit))
+    dev = c2_stones._with_nums(_limit(R.load_split(DATA, 'dev'), dev_limit))
+    cpath = os.path.join(knew_dir, 'candidates_dev.jsonl')
+    raw = open(cpath, 'rb').read()
+    kdev = c2_stones._with_nums(_limit([r for r in map(json.loads, raw.decode().splitlines()) if r['kind'] in transfer_kinds], dev_limit))
+    ksha = hashlib.sha256(raw).hexdigest()
+    res['transfer_source'] = dict(path=cpath, sha256=ksha, kinds=list(transfer_kinds))
+    res['sizes'] = dict(pool=len(pool), c2_dev=len(dev), knew_dev=len(kdev), replay=len(replay), warm_rows=len(warm_rows))
+    N, vocab, meta = sleep.load_parent(nprime, device)
+    N.eval()
+    # 1. night 1, shared: W1 from S3 (args checked as s3_parent's w1_from does), C1 = S1's day + loop 1 on N' + adapter
+    s3j = json.load(open(os.path.join(s3d, 's3.json')))
+    assert s3j.get('args') == args and 'W1_night' in s3j, f'S3 args {s3j.get("args")} differ from J\'s {args}: W1 is not the same night'
+    wpath = os.path.join(s3d, 'W1.pt')
+    assert os.path.exists(wpath), f'no {wpath}'
+    W1, _, _ = sleep.load_parent(wpath, device)
+    W1.eval()
+    w1sha = _sha_file(wpath)
+    log('W1: loaded', wpath)
+    m1 = copy.deepcopy(N)
+    add_adapter(m1, seed=seed)
+    init = adapter_state(m1)
+    dpath = os.path.join(s1d, 'day.pkl')
+    assert os.path.exists(dpath), f'no S1 day {dpath}'
+    c = pickle.load(open(dpath, 'rb'))
+    skey = (os.path.abspath(nprime), pool_limit, n1, n2, seed, T)
+    assert c['key'] == skey, f'S1 day key {c["key"]} != {skey}'
+    kept1 = kept_tries(pool, c['day'], seed)
+    t0 = time.time()
+    c1path, c1key = os.path.join(pdir, 'c1.pt'), _h(skey, lr1, passes1, kl, _hstate(init))
+    cc = torch.load(c1path, weights_only=False) if resume and os.path.exists(c1path) else None
+    if cc is not None and cc['key'] == c1key:
+        C1, i1 = cc['C1'], cc['info']
+        log('C1: loaded', c1path)
+    else:
+        i1 = loop1(m1, kept1, lr1, passes1, T, seed, kl=kl)
+        i1 = dict(updates=i1['updates'], last_loss=i1['loss'][-1] if i1['loss'] else None, kl_end=i1['kl'][-1] if i1['kl'] else None)
+        C1 = adapter_state(m1)
+        torch.save(dict(key=c1key, C1=C1, info=i1), c1path)
+    secs['C1'] = time.time() - t0
+    vs = dict(compared=False)
+    apath = os.path.join(s1d, 'adapters.pt')
+    if os.path.exists(apath):
+        ac = torch.load(apath, weights_only=False)
+        st = ac['setting']
+        if st['lr'] == lr1 and st['passes'] == passes1:
+            diff = max(float((C1[x] - ac['C'][x]).abs().max()) for x in C1)
+            vs = dict(compared=True, max_abs_diff=diff, equal=diff == 0.0)
+        else:
+            vs = dict(compared=False, s1_setting=dict(lr=st['lr'], passes=st['passes']))
+    res['night1'] = dict(W1_night=s3j['W1_night'], W1_sha256=w1sha, C1=dict(info=i1, kept={x: v for x, v in kept1.items() if x != 'items'}, n_tries=len(kept1['items']), vs_S1_C=vs))
+    log('night 1: C1', res['night1']['C1'])
+    save()
+    # 2. day 2 per arm (cached): W = W1 + untrained adapter, J = W1 + C1
+    states = dict(W=init, J=C1)
+    mods = {a: _arm_model(W1, st, seed) for a, st in states.items()}
+    days, dkeys = {}, {}
+    res['day2'] = {}
+    for a in ('W', 'J'):
+        t0 = time.time()
+        dkeys[a] = (skey, s2, w1sha, _hstate(states[a]), a)
+        days[a] = _cached(os.path.join(pdir, f'day2_{a}.pkl'), dkeys[a], lambda a=a: day_f(mods[a], pool, vocab, device, T, n1, n2, s2), resume, log, f'day 2 {a}')
+        d = days[a]
+        res['day2'][a] = dict(drawn=d['drawn'], greedy_pass=sum(d['greedy_fit']) / len(pool), pool_with_fit_pass1=sum(d['fit1']), pool_with_fit_final=sum(d['fit_final']))
+        secs[f'day2_{a}'] = time.time() - t0
+        log('day 2', a, res['day2'][a])
+        save()
+    # 3. night 2: W = sleep on its records; J = loop 1 on its day, then sleep on its records (both from the plain W1)
+    nkey = _h(dkeys, lr_w, visits, replay_n, skills_train, lr1, passes1, kl)
+    npath, files = os.path.join(pdir, 'night2.json'), {x: os.path.join(pdir, x) for x in ('W2.pt', 'J2.pt', 'adapters_j.pt')}
+    nj = json.load(open(npath)) if resume and os.path.exists(npath) else {}
+    if nj.get('key') == nkey and all(os.path.exists(p) for p in files.values()):
+        W2, _, _ = sleep.load_parent(files['W2.pt'], device)
+        J2, _, _ = sleep.load_parent(files['J2.pt'], device)
+        C2 = torch.load(files['adapters_j.pt'], weights_only=False)['C2']
+        res['night2'] = nj['info']
+        log('night 2: loaded', files)
+    else:
+        t0 = time.time()
+        info = {}
+        recs, cnt = w_records(pool, days['W']['tries'], s2 + 1)
+        if len(recs) < 1:
+            res['stop'] = 'W: no day-2 records'
+            save()
+            return res
+        W2, si = sleep_on(W1, recs, vocab, replay, warm_rows, lr_w, visits, s2, device)
+        info['W'] = dict(records=len(recs), records_by_kind=_by_kind(pool, cnt), sleep=si)
+        log('W night 2', info['W'])
+        kept2 = kept_tries(pool, stuck_day(days['J']), s2)
+        l1 = loop1(mods['J'], kept2, lr1, passes1, T, s2, kl=kl)
+        C2 = adapter_state(mods['J'])
+        recs, cnt = w_records(pool, days['J']['tries'], s2 + 1)
+        info['J'] = dict(kept_origin=kept_origin(kept2, days['J']['tries'], n1), loop1=dict(updates=l1['updates'], last_loss=l1['loss'][-1] if l1['loss'] else None, kl_end=l1['kl'][-1] if l1['kl'] else None,
+                                    kept={x: v for x, v in kept2.items() if x != 'items'}, n_tries=len(kept2['items'])), records=len(recs), records_by_kind=_by_kind(pool, cnt))
+        log('J loop 1', info['J']['loop1'])
+        if len(recs) < 1:
+            res['stop'] = 'J: no day-2 records'
+            res['night2'] = info
+            save()
+            return res
+        J2, si = sleep_on(W1, recs, vocab, replay, warm_rows, lr_w, visits, s2, device)
+        info['J']['sleep'] = si
+        log('J night 2', info['J']['records'], si)
+        for x, m in (('W2.pt', W2), ('J2.pt', J2)):
+            sleep.save_parent(m, meta['name'], meta['cfg'], vocab, files[x], step=(meta['step'] or 0), warmup=True)
+        torch.save(dict(C1=C1, C2=C2, init=init), files['adapters_j.pt'])
+        json.dump(dict(key=nkey, info=info), open(npath, 'w'))
+        res['night2'] = info
+        secs['night2'] = time.time() - t0
+    save()
+    # 4. measures per arm: W2 + adapter(init), J2 + adapter(C2); one sampling seed
+    plain = dict(W=W2, J=J2)
+    mstates = dict(W=init, J=C2)
+    sk = dict(N=_cached(os.path.join(pdir, 'skills_base.pkl'), ('N', skills_data, os.path.abspath(nprime)), lambda: skills_look(N, skills_data, device), resume, log, 'skills N\''),
+              W1=_cached(os.path.join(pdir, 'skills_W1.pkl'), ('W1', skills_data, w1sha), lambda: skills_look(W1, skills_data, device), resume, log, 'skills W1'))
+    if b2:
+        b2p = os.path.expanduser(b2)
+        B2, _, _ = sleep.load_parent(b2p, device)
+        B2.eval()
+        sk['B2'] = _cached(os.path.join(pdir, 'skills_B2.pkl'), ('B2', skills_data, _sha_file(b2p)), lambda: skills_look(B2, skills_data, device), resume, log, 'skills B2')
+        del B2
+    per, res['arms'] = {}, {}
+    for a in ('W', 'J'):
+        t0 = time.time()
+        mkey = (nkey, a, n_eval, k, mseed, ksha, dev_limit, skills_data)
+
+        def fn(a=a):
+            r = j_measure(_arm_model(plain[a], mstates[a], seed), dev, kdev, vocab, device, T, n_eval, k, mseed)
+            r['skills'] = skills_look(plain[a], skills_data, device)
+            return r
+        mm = _cached(os.path.join(pdir, f'measure_{a}.pkl'), mkey, fn, resume, log, f'measures {a}')
+        per[a] = mm
+        g = s3_measures(mm['greedy'], [])
+        res['arms'][a] = dict(stuck_rate=g['stuck_rate'], first_try_right=g['first_try_right'], creative=summarize_by_kind(mm['c32']), knew=summarize_by_kind(mm['knew']), skills=mm['skills'] and {y: z for y, z in mm['skills'].items() if y != 'hits'})
+        secs[f'measure_{a}'] = time.time() - t0
+        log('arm', a, dict(stuck=g['stuck_rate'], first=g['first_try_right']['pooled_dev'], reach32=res['arms'][a]['creative']['pooled'][f'reach{k}'],
+                           knew=res['arms'][a]['knew']['pooled'][f'reach{n_eval}']))
+        save()
+    res['skills'] = {x: v and {y: z for y, z in v.items() if y != 'hits'} for x, v in sk.items()}
+    json.dump(dict(dev_ids=[r['id'] for r in dev], knew_ids=[r['id'] for r in kdev], greedy={a: per[a]['greedy'] for a in per}, creative32={a: per[a]['c32'] for a in per},
+                   knew={a: per[a]['knew'] for a in per}), open(os.path.join(pdir, 'per_row.json'), 'w'))
+    # 5. paired bootstraps, J against W, same row order
+    bd = lambda x, y: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(x, y)))
+    stuck = lambda a: [0.0 if d['fit'] else 1.0 for d in per[a]['greedy']]
+    right = lambda a, kinds=None: [float(d['right']) for d in per[a]['greedy'] if kinds is None or d['kind'] in kinds]
+    reach = lambda a, ds, kk: [float(d[f'right{kk}']) for d in per[a][ds]]
+    res['boot'] = dict(stuck_W_minus_J=bd(stuck('W'), stuck('J')), creative32_J_minus_W=bd(reach('J', 'c32', k), reach('W', 'c32', k)),
+                       knew_reach_J_minus_W=bd(reach('J', 'knew', n_eval), reach('W', 'knew', n_eval)),
+                       first_try_J_minus_W=dict(pooled=bd(right('J'), right('W')), **{g: bd(right('J', ks), right('W', ks)) for g, ks in GROUPS.items()}))
+    log('boot', res['boot'])
+    # 6. marks (roadmap 7d, 10-08)
+    b, ar = res['boot'], res['arms']
+    harm = None
+    if sk['N'] and per['W']['skills'] and per['J']['skills']:
+        from creative.harm_look import harm_measure
+        from custom_io.data import load_rows
+        rows = load_rows(os.path.join(skills_data, 'dev', 'in_dist.jsonl'))
+        hit = dict(N=sk['N']['hits'], W=per['W']['skills']['hits'], J=per['J']['skills']['hits'], **({'B2': sk['B2']['hits']} if 'B2' in sk else {}))
+        p5 = dict(N=sk['N']['pooled5'], W=per['W']['skills']['pooled5'], J=per['J']['skills']['pooled5'], **({'B2': sk['B2']['pooled5']} if 'B2' in sk else {}))
+        harm = dict(J_vs_W=harm_measure(hit['W'], hit['J'], rows), pooled5_points={x: p5[x] for x in p5},
+                    pooled5_harm_vs_N={a: p5['N'] - p5[a] for a in ('W', 'J')}, pooled5_J_minus_W_harm=(p5['N'] - p5['J']) - (p5['N'] - p5['W']),
+                    report_only={f'{a}_vs_{r}': harm_measure(hit[r], hit[a], rows) for r in ('N', 'B2') if r in hit for a in ('W', 'J')})
+    res['marks'] = dict(
+        stuck=dict(W_minus_J_points=b['stuck_W_minus_J']['points'], passes=b['stuck_W_minus_J']['points'] >= 3.0, rule='C2 DEV stuck rate (adapter-off greedy try fails the example check): W - J >= +3 points'),
+        creative32=dict(J_minus_W_points=b['creative32_J_minus_W']['points'], passes=b['creative32_J_minus_W']['points'] >= 5.0, rule=f'C2 DEV creative reach@{k} (F mode): J - W >= +5 points'),
+        new_kind_guard=dict(J_minus_W_points=b['knew_reach_J_minus_W']['points'], passes=b['knew_reach_J_minus_W']['points'] >= -1.0, rule=f'K_new DEV reach@{n_eval} (F mode): J - W >= -1 point (point estimate)'),
+        first_try=dict(J_minus_W_points=b['first_try_J_minus_W']['pooled']['points'], passes=b['first_try_J_minus_W']['pooled']['points'] >= -2.0, rule='C2 DEV first try right (adapter off, pooled): J - W >= -2 points'),
+        harm=dict(detail=harm, passes=None if harm is None else harm['J_vs_W']['passes'], rule='J in_dist exact at most 1.5 points below W AND no skills family fires against W (a family fires when its exact drops > 5 points and the paired 95% interval of J - W over its rows has hi < 0); W and J against N\' and B2, and pooled-5, are report only'),
+        proved_wrong_here=dict(flag=b['stuck_W_minus_J']['hi'] < 1.0 and b['creative32_J_minus_W']['hi'] < 1.0, rule='stuck W - J upper end < +1 and creative reach@32 J - W upper end < +1 (paired 95% intervals; both parents needed)'))
+    res['marks']['passes'] = all(res['marks'][x]['passes'] is True for x in ('stuck', 'creative32', 'new_kind_guard', 'first_try', 'harm'))
+    secs['total'] = time.time() - t00
+    res['seconds'] = secs
+    save()
+    log('MARKS', {x: v.get('passes', v.get('flag')) for x, v in res['marks'].items() if isinstance(v, dict)}, res['marks']['passes'])
+    return res
+
+
+def j(nprimes, out, s1dir, s3dir, **kw):
+    os.makedirs(out, exist_ok=True)
+    return {p: j_parent(p, out, s1dir, s3dir, **kw) for p in nprimes}
+
+
+def jreport(out, parents):
+    """Test J verdict over the parents' DIR/<name>/j.json -> DIR/j-report.json: passes = every parent passes all five marks; proved_wrong = every parent's proved_wrong_here."""
+    res = {p: json.load(open(os.path.join(out, p, 'j.json'))) for p in parents}
+    mk = {p: r.get('marks') or {} for p, r in res.items()}
+    rep = dict(parents=list(parents), passes=all(m.get('passes') is True for m in mk.values()), proved_wrong=all(m.get('proved_wrong_here', {}).get('flag') is True for m in mk.values()), per_parent=mk,
+               rule='passes: all five marks on every parent; proved wrong: stuck and creative reach@32 upper ends < +1 on every parent')
+    json.dump(rep, open(os.path.join(out, 'j-report.json'), 'w'), indent=1)
+    return rep
+
+
 def _floats(s):
     return tuple(float(x) for x in s.split(','))
 
@@ -1060,6 +1381,11 @@ if __name__ == '__main__':
     r = sub.add_parser('s1report'); r.add_argument('--out', required=True); r.add_argument('--parents', nargs='+', default=['s100', 's101'])
     b = sub.add_parser('s1b'); b.add_argument('--nprime', nargs='+', required=True); b.add_argument('--s1', required=True); b.add_argument('--out', required=True)
     b.add_argument('--knew', default=KNEW); b.add_argument('--dev-limit', type=int); b.add_argument('--device', default='cpu'); b.add_argument('--threads', type=int); b.add_argument('--no-resume', action='store_true')
+    q = sub.add_parser('j'); q.add_argument('--nprime', nargs='+', required=True); q.add_argument('--out', required=True); q.add_argument('--s1', required=True); q.add_argument('--s3', required=True)
+    q.add_argument('--skills-train'); q.add_argument('--skills-data'); q.add_argument('--pool-limit', type=int); q.add_argument('--dev-limit', type=int); q.add_argument('--n1', type=int, default=32)
+    q.add_argument('--n2', type=int, default=480); q.add_argument('--seed', type=int, default=0); q.add_argument('--n-eval', type=int, default=512); q.add_argument('--replay-n', type=int); q.add_argument('--b2', help='the parent\'s B2 checkpoint (report-only harm comparison)')
+    q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int); q.add_argument('--no-resume', action='store_true')
+    q = sub.add_parser('jreport'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', required=True)
     for c in ('s1', 's3'):
         s = sub.add_parser(c)
         s.add_argument('--nprime', nargs='+', required=True); s.add_argument('--out', required=True)
@@ -1079,6 +1405,12 @@ if __name__ == '__main__':
         torch.set_num_threads(a.threads)
     if a.cmd == 's1report':
         print(json.dumps(s1report(a.out, tuple(a.parents)), indent=1))
+    elif a.cmd == 'jreport':
+        print(json.dumps(jreport(a.out, tuple(a.parents)), indent=1))
+    elif a.cmd == 'j':
+        ex = os.path.expanduser
+        j(a.nprime, a.out, ex(a.s1), ex(a.s3), skills_train=ex(a.skills_train) if a.skills_train else None, skills_data=ex(a.skills_data) if a.skills_data else None, pool_limit=a.pool_limit,
+          dev_limit=a.dev_limit, n1=a.n1, n2=a.n2, seed=a.seed, replay_n=a.replay_n, n_eval=a.n_eval, device=a.device, resume=not a.no_resume, b2=a.b2)
     elif a.cmd == 's1b':
         print(json.dumps(s1b(a.nprime, os.path.expanduser(a.s1), a.out, device=a.device, knew_dir=a.knew, dev_limit=a.dev_limit, resume=not a.no_resume)['verdict'], indent=1))
     elif a.cmd == 's1':
