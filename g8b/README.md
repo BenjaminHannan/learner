@@ -21,3 +21,17 @@ Spec, diagnosis and marks (written before any 8b run): `design/8b-gemma-growth-2
 Launch (one rung x seed per box, B2 arm only):
 `python g8b/vast8b.py create --offer ID --label 8b-EGA36-3M-s400 --env "OVL=<commit> RUNG=3M SEED=400 ARMS=B2 B2X=eg_embed:true,gen_ar:true MAXH=6 JOBH=5.5 DPH=0.6"`
 (EGE36: `B2X=eg_embed:true`), then `collect --id ID --out results/8b/EGA36` and `destroy --id ID`.
+
+## If this session stops: how to finish the screen (any session with this repo and the Vast connection)
+
+1. Boxes and jobs: `g8b/boxes.json` (live boxes have no `status`). Check one: `python g8b/vast8b.py tail --id ID --n 40`.
+   A job is done when its log shows `G8 DONE job` and an `RBEGIN|8a-<rung>-s<seed>-B2|...` block of more than ~2 KB
+   (a ~900-byte block means the run died: read `stdout.events.txt` after collecting).
+2. Collect each finished box, then destroy it (boxes keep billing until destroyed; MAXH only stops the runs):
+   `python g8b/vast8b.py collect --id ID --out results/8b/<ARM>` then `python g8b/vast8b.py destroy --id ID`.
+3. Readout (needs the 8a ladder results: `git archive origin/claude/project-thread-yha868 results | tar -x -C /tmp/r8a`):
+   `ARM=EGE36 python g8b/analysis/screen_readout.py results/8b/EGE36 /tmp/r8a/results/8a-ladder > g8b/analysis/readout-EGE36.txt`
+   `python g8b/analysis/screen_readout.py results/8b/EGA36 /tmp/r8a/results/8a-ladder --ctl results/8b/EGE36 > g8b/analysis/readout-EGA36.txt`
+   The go / stop rules are in `design/8b-gemma-growth-2026-10-08.md` sections 5-7; the script applies them.
+4. Commit `results/8b/` and the readouts to this branch and post the verdict on the PR. The 30M rung is recommended only if an
+   arm passes against PT on 6 seeds (section 3).
