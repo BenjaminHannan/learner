@@ -1277,8 +1277,11 @@ families x 200, two parents).**
    - Report only: the same number of extra updates spread evenly over all families, to tell targeting from more
      replay.
    - Autonomy label: no outside help (its own rows and its own check), not own choices (the thresholds are ours).
-4. **J waits for Test R.** J's mark 5 becomes: measure 1 passes for J on each night, and J's in_dist is at most 1.5
-   below W's with no family firing against W. If R passes, both arms use the repair.
+4. **J's harm mark is against W** (revised the same morning, before J ran, once the fast-sleep thread had started
+   building J): J's in_dist is at most 1.5 below W's, with no family firing against W. Harm against N' and B2 is
+   reported for both arms with the new measure. J screens loop 1's own effect and does not wait for R; nothing from
+   J or W is used in a later model until the new measure passes, and J's confirm on s200-s205 uses R's repair if R
+   passes.
 5. **Job 9: marks unchanged** (sealed; its harm mark is the chain-5 rows). Report item 10 is added before the test
    is opened (below). A W pass is reported with its in_dist cost beside it, and nothing from job 9 is used in a later
    model unless measure 1 passes, with or without the repair.
@@ -1289,7 +1292,13 @@ families x 200, two parents).**
 **Test J, loops 1 and 2 together** (changed 10-08 after S3': loop 3 is parked): two days and nights from N', loop 1
 (creative mode F) plus loop 2, against loop 2 alone (W). One change: the creative part's own sleep. It asks Ben's
 first two points together: does a creative part that learns from its successes hand the worker better finds?
-- J waits for Test R (the repair pass, above). If R passes, both arms use it.
+- The screen runs without the repair in either arm. If R passes, the confirm uses it in both arms.
+- Build defaults (fast-sleep, 10-08): day 1 and night 1 are the same in both arms (the adapter starts at zero, so F
+  is U), so W1 is S3's W1 and J's night-1 adapter is S1's C (hashes checked). Day 2 uses the same pool with seed + 1
+  in both arms. Each night runs loop 1 first on the worker that drew the tries, then loop 2. Loop 1 keeps S1's pick
+  (learning rate 1e-3, one pass, KL 0.1) with no grid inside J. On night 2, tries 33-512 come from the untrained
+  search, so they are off-policy for the adapter; they are used as in S1, and their share of loop 1's rows is
+  reported.
 - Screened on s100/s101 DEV, then confirmed on s200-s205 with a fresh sealed C2 split (job 9 uses up C2's test) and a
   sealed split of the three new kinds (`knew.py`'s writer, 128 per kind, hash only, written before J runs and opened
   once).
@@ -1299,8 +1308,8 @@ first two points together: does a creative part that learns from its successes h
      at least W + 5.
   3. New-kind guard: reach@512 on sq_minus, triple_add and mult_sub, J at least W - 1 point.
   4. C2 first try: J at least W - 2.
-  5. Skills harm: the 10-08 measure (in_dist and per family) passes for J on each night, and J's in_dist is at most
-     1.5 below W's with no family firing against W.
+  5. Skills harm from loop 1: J's in_dist is at most 1.5 below W's, with no family firing against W (the 10-08
+     measure). Harm against N' and B2 is reported for both arms.
 - Proved wrong: J no better than W on both stuck rate and creative reach@32 (upper ends below +1).
 - Changed 10-08 after S1, before J was built: K_new TEST was never written (fewer than four kinds qualified), so the
   old mark "K_new creative reach@32 at least W + 5" became mark 2 (in-kind) plus the new-kind guard (mark 3).
