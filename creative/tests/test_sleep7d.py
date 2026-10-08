@@ -446,6 +446,17 @@ def test_s1wreport_joins_parents():
     assert S.s1wreport(str(tmp_path), ('a',))['passes'] is True and json.load(open(tmp_path / 's1w-report.json'))['parents'] == ['a']
 
 
+def test_s1freport_joins_parents():
+    import json, pathlib, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp())
+    for n, p in (('a', True), ('b', False)):
+        (tmp / n).mkdir()
+        json.dump(dict(marks=dict(passes=p, proved_wrong_here=dict(flag=not p)), night_cost=dict(samples=10 + len(n))), open(tmp / n / 's1f.json', 'w'))
+    r = S.s1freport(str(tmp), ('a', 'b'))
+    assert r['passes'] is False and r['proved_wrong'] is False and r['night_cost']['a']['samples'] == 11
+    assert S.s1freport(str(tmp), ('a',))['passes'] is True and S.s1freport(str(tmp), ('b',))['proved_wrong'] is True
+
+
 if __name__ == '__main__':
     for k, v in list(globals().items()):
         if k.startswith('test_'):

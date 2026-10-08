@@ -1502,6 +1502,167 @@ def s1wreport(out, parents):
     return rep
 
 
+# ---- 10. Test S1f (roadmap 377df3fc2c): loop 1 on W1 from fresh on-policy night tries (32 per still-stuck pool question)
+def night_f(model, pool, vocab, device, T, n, seed, bs=2048):
+    """The night draw on W1: greedy try on every pool row with the adapter OFF (example check: fits); on the stuck rows only, n tries each with the adapter ON at its current state (seed); one round.
+    -> dict(stuck, tries, fit) as kept_tries reads a day, plus drawn (rows / samples) and cost (wall and CPU seconds)."""
+    t0, c0 = time.time(), time.process_time()
+    with creative(model, False):
+        gt = sampler.greedy_tries(model, pool, vocab, device)
+    stuck = [i for i, (r, t) in enumerate(zip(pool, gt)) if not fits(fewshot.parse(r['prompt']), t.t)]
+    tries, fit = {}, {}
+    if stuck:
+        with creative(model, True):
+            ts = legal.raw_samples(model, [pool[i] for i in stuck], vocab, device, n=n, temperature=T, level=0, seed=seed, bs=bs)
+        for i, t in zip(stuck, ts):
+            tries[i] = list(t)
+            fit[i] = [fits(fewshot.parse(pool[i]['prompt']), x.t) for x in t]
+    return dict(stuck=stuck, tries=tries, fit=fit, drawn=dict(rows=len(pool), samples=len(pool) + n * len(stuck), greedy=len(pool), night=n * len(stuck), stuck_rows=len(stuck)),
+                cost=dict(wall_seconds=time.time() - t0, cpu_seconds=time.process_time() - c0))
+
+
+def s1f_parent(nprime, out, s1wdir, s3dir, pool_limit=None, dev_limit=None, n_night=32, seed=0, T=T_POOL, lr1=1e-3, passes1=1, kl=0.1, n_eval=512, k=32,
+               knew_dir=KNEW, transfer_kinds=TRANSFER_KINDS, device='cpu', name=None, resume=True, log=_log):
+    """One parent's Test S1f (S1w with fresh on-policy tries: W1's own night draw, n_night tries per still-stuck pool question, replaces day 1's N'-drawn tries; loop 1 on W1 at S1's setting, no grid; arms U, C and report-only W = S1w's adapter, all on W1).
+    DIR/<name>/s1f.json is written after every stage (parents run as separate processes; `s1freport` joins them). Night draw in night_f.pkl, adapter in adapters_f.pt, measures in measure_{arm}.pkl (U and W reused from S1w's when they are the same measure)."""
+    name = name or os.path.basename(os.path.dirname(os.path.abspath(nprime)))
+    pdir, s1wd, s3d = os.path.join(out, name), os.path.join(s1wdir, name), os.path.join(s3dir, name)
+    os.makedirs(pdir, exist_ok=True)
+    t00, secs, mseed = time.time(), {}, seed + 777
+    res = dict(nprime=nprime, name=name, seed=seed, T=T, night_seed=seed + 2000, measure_seed=mseed, spec=__doc__.split('\n')[0],
+               args=dict(pool_limit=pool_limit, dev_limit=dev_limit, n_night=n_night, lr1=lr1, passes1=passes1, kl=kl, n_eval=n_eval, k=k, s1w=s1wdir, s3=s3dir),
+               note='C2 DEV, C2 pool and K_new DEV only; test / labelled / K_new test never opened; keys score, never pick (kept tries use the example check only)')
+    save = lambda: json.dump(res, open(os.path.join(pdir, 's1f.json'), 'w'), indent=1)
+    pool = c2_stones._with_nums(_limit(R.load_split(DATA, 'pool'), pool_limit))
+    dev = c2_stones._with_nums(_limit(R.load_split(DATA, 'dev'), dev_limit))
+    cpath = os.path.join(knew_dir, 'candidates_dev.jsonl')
+    raw = open(cpath, 'rb').read()
+    kdev = c2_stones._with_nums(_limit([r for r in map(json.loads, raw.decode().splitlines()) if r['kind'] in transfer_kinds], dev_limit))
+    ksha = hashlib.sha256(raw).hexdigest()
+    res['transfer_source'] = dict(path=cpath, sha256=ksha, kinds=list(transfer_kinds))
+    res['sizes'] = dict(pool=len(pool), c2_dev=len(dev), knew_dev=len(kdev))
+    wpath = os.path.join(s3d, 'W1.pt')
+    assert os.path.exists(wpath), f'no {wpath}'
+    W1, vocab, _ = sleep.load_parent(wpath, device)
+    W1.eval()
+    w1sha = _sha_file(wpath)
+    s3p = os.path.join(s3d, 's3.json')
+    res['W1'] = dict(path=wpath, sha256=w1sha, W1_night=json.load(open(s3p)).get('W1_night') if os.path.exists(s3p) else None)
+    m = copy.deepcopy(W1)
+    add_adapter(m, seed=seed)
+    init = adapter_state(m)
+    ut = worker_untouched(m, W1, dev[:64], vocab, device, perturb=True)
+    assert ut['passes'], f'worker-untouched test failed: {ut}'
+    res['unit_test_before'] = ut
+    # 1. the night draw on W1 (adapter at its untrained state), cached
+    t0 = time.time()
+    nkey = (w1sha, pool_limit, n_night, seed + 2000, T)
+    d = _cached(os.path.join(pdir, 'night_f.pkl'), nkey, lambda: night_f(m, pool, vocab, device, T, n_night, seed + 2000), resume, log, 'night draw')
+    kept = kept_tries(pool, d, seed)
+    res['night_cost'] = dict(d['drawn'], **d['cost'], cpu_seconds_per_sample=d['cost']['cpu_seconds'] / max(d['drawn']['samples'], 1), stuck_with_fit_in_draw=sum(any(f) for f in d['fit'].values()))
+    res['kept'] = dict({x: v for x, v in kept.items() if x != 'items'}, n_tries=len(kept['items']))
+    secs['night_draw'] = time.time() - t0
+    log('night', res['night_cost'], 'kept', res['kept'])
+    save()
+    if not kept['items']:
+        res['stop'] = 'no kept rows (no stuck row had both a fitting and a failing try)'
+        res['seconds'] = secs
+        save()
+        return res
+    # 2. loop 1 on W1 + zero adapter
+    t0 = time.time()
+    akey = _h(nkey, lr1, passes1, kl, _hstate(init))
+    apath = os.path.join(pdir, 'adapters_f.pt')
+    ac = torch.load(apath, weights_only=False) if resume and os.path.exists(apath) else None
+    if ac is not None and ac['key'] == akey:
+        C, info = ac['C'], ac['info']
+        log('C: loaded', apath)
+    else:
+        li = loop1(m, kept, lr1, passes1, T, seed, kl=kl)
+        info = dict(updates=li['updates'], last_loss=li['loss'][-1] if li['loss'] else None, kl_end=li['kl'][-1] if li['kl'] else None)
+        C = adapter_state(m)
+        torch.save(dict(key=akey, C=C, init=init, info=info), apath)
+    secs['loop1'] = time.time() - t0
+    res['loop1'] = info
+    log('loop 1 on W1 (fresh tries)', info)
+    load_adapter_state(m, C)
+    res['unit_test_after'] = worker_untouched(m, W1, dev[:64], vocab, device, perturb=False)
+    log('worker-untouched after', res['unit_test_after'])
+    save()
+    # 3. arms on W1: U, C, report-only W = S1w's adapter (U and W reuse S1w's measures when the same measure)
+    states = dict(U=init, C=C)
+    wp = os.path.join(s1wd, 'adapters_w.pt')
+    if os.path.exists(wp):
+        states['W'] = torch.load(wp, weights_only=False)['C']
+    else:
+        res['W_skipped'] = f'no {wp}'
+    s1wj = os.path.join(s1wd, 's1w.json')
+    w1_same = os.path.exists(s1wj) and (json.load(open(s1wj)).get('W1') or {}).get('sha256') == w1sha
+    reuse_src = dict(U='measure_U.pkl', W='measure_C.pkl')
+    per, res['arms'], res['reused'] = {}, {}, {}
+    for a, st in states.items():
+        t0 = time.time()
+        mm = None
+        if a in reuse_src and w1_same and os.path.exists(os.path.join(s1wd, reuse_src[a])):
+            c = pickle.load(open(os.path.join(s1wd, reuse_src[a]), 'rb'))
+            ky = c['key']
+            if isinstance(ky, tuple) and len(ky) == 8 and ky[2:7] == (n_eval, k, mseed, ksha, dev_limit) and ky[7] == _hstate(st):
+                mm = c['v']
+                res['reused'][a] = os.path.join(s1wd, reuse_src[a])
+                log('arm', a, 'reused from', res['reused'][a])
+        if mm is None:
+            mkey = (akey, a, n_eval, k, mseed, ksha, dev_limit, _hstate(st))
+            mm = _cached(os.path.join(pdir, f'measure_{a}.pkl'), mkey, lambda st=st: j_measure(_arm_model(W1, st, seed), dev, kdev, vocab, device, T, n_eval, k, mseed), resume, log, f'measures {a}')
+        per[a] = mm
+        g = s3_measures(mm['greedy'], [])
+        res['arms'][a] = dict(stuck_rate=g['stuck_rate'], first_try_right=g['first_try_right'], creative=summarize_by_kind(mm['c32']), knew=summarize_by_kind(mm['knew']))
+        secs[f'measure_{a}'] = time.time() - t0
+        log('arm', a, dict(reach32=res['arms'][a]['creative']['pooled'][f'reach{k}'], knew=res['arms'][a]['knew']['pooled'][f'reach{n_eval}']))
+        save()
+    res['greedy_equal_across_arms'] = all(per[a]['greedy'] == per['U']['greedy'] for a in per)
+    json.dump(dict(dev_ids=[r['id'] for r in dev], knew_ids=[r['id'] for r in kdev], creative32={a: per[a]['c32'] for a in per}, knew={a: per[a]['knew'] for a in per}), open(os.path.join(pdir, 'per_row.json'), 'w'))
+    # 4. paired bootstraps, same row order
+    bd = lambda x, y: dict(zip(('points', 'lo', 'hi'), c2_pilot.boot(x, y)))
+    reach = lambda a, ds, kk, kinds=None: [float(d[f'right{kk}']) for d in per[a][ds] if kinds is None or d['kind'] in kinds]
+    res['boot'] = dict(c2_C_minus_U=bd(reach('C', 'c32', k), reach('U', 'c32', k)),
+                       groups={g: bd(reach('C', 'c32', k, ks), reach('U', 'c32', k, ks)) for g, ks in GROUPS.items()},
+                       knew_F_minus_U=bd(reach('C', 'knew', n_eval), reach('U', 'knew', n_eval)), knew32_C_minus_U=bd(reach('C', 'knew', k), reach('U', 'knew', k)))
+    if 'W' in per:
+        res['boot']['c2_C_minus_W'] = bd(reach('C', 'c32', k), reach('W', 'c32', k))
+    log('boot', res['boot'])
+    # 5. marks (roadmap 377df3fc2c)
+    b, ar = res['boot'], res['arms']
+    dC, dU = (ar[x]['creative']['pooled'][f'distinct{k}'] for x in 'CU')
+    res['marks'] = dict(
+        primary=dict(C_minus_U_points=b['c2_C_minus_U']['points'], passes=b['c2_C_minus_U']['points'] >= 5.0, rule=f'C2 DEV creative reach@{k} on W1: C - U >= +5 points'),
+        variety=dict(C=dC, U=dU, passes=dC >= 0.8 * dU, rule=f'C2 DEV distinct fitting programs per question within {k} tries: C >= 0.8 x U'),
+        new_kind_guard=dict(C_F_minus_U_points=b['knew_F_minus_U']['points'], passes=b['knew_F_minus_U']['points'] >= -1.0, rule=f'K_new DEV reach@{n_eval} (F mode) on W1: C - U >= -1 point (point estimate)'),
+        unit_test=dict(passes=bool(res['unit_test_before']['passes'] and res['unit_test_after']['passes'])),
+        proved_wrong_here=dict(flag=b['c2_C_minus_U']['hi'] < 1.0, rule=f'C2 DEV creative reach@{k}: C - U upper end of the paired 95% interval < +1 point (both parents needed; loop 1 is then parked)'))
+    res['marks']['passes'] = all(res['marks'][x]['passes'] is True for x in ('primary', 'variety', 'new_kind_guard', 'unit_test'))
+    secs['total'] = time.time() - t00
+    res['seconds'] = secs
+    save()
+    log('MARKS', {x: v.get('passes', v.get('flag')) for x, v in res['marks'].items() if isinstance(v, dict)}, res['marks']['passes'])
+    return res
+
+
+def s1f(nprimes, out, s1wdir, s3dir, **kw):
+    os.makedirs(out, exist_ok=True)
+    return {p: s1f_parent(p, out, s1wdir, s3dir, **kw) for p in nprimes}
+
+
+def s1freport(out, parents):
+    """Test S1f verdict over the parents' DIR/<name>/s1f.json -> DIR/s1f-report.json: passes = every parent passes (primary, variety, new-kind guard, unit test); proved_wrong = every parent's proved_wrong_here; night_cost per parent."""
+    res = {p: json.load(open(os.path.join(out, p, 's1f.json'))) for p in parents}
+    mk = {p: r.get('marks') or {} for p, r in res.items()}
+    rep = dict(parents=list(parents), passes=all(m.get('passes') is True for m in mk.values()), proved_wrong=all(m.get('proved_wrong_here', {}).get('flag') is True for m in mk.values()), per_parent=mk,
+               night_cost={p: r.get('night_cost') for p, r in res.items()},
+               rule='passes: primary (C2 DEV reach@32 C - U >= +5), variety (distinct32 C >= 0.8 U), new-kind guard (K_new reach@512 F mode >= -1) and unit test on every parent; proved wrong: C - U upper end < +1 on every parent')
+    json.dump(rep, open(os.path.join(out, 's1f-report.json'), 'w'), indent=1)
+    return rep
+
+
 def _floats(s):
     return tuple(float(x) for x in s.split(','))
 
@@ -1525,6 +1686,10 @@ if __name__ == '__main__':
     q.add_argument('--pool-limit', type=int); q.add_argument('--dev-limit', type=int); q.add_argument('--n1', type=int, default=32); q.add_argument('--n2', type=int, default=480); q.add_argument('--seed', type=int, default=0)
     q.add_argument('--n-eval', type=int, default=512); q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int); q.add_argument('--no-resume', action='store_true')
     q = sub.add_parser('s1wreport'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', required=True)
+    q = sub.add_parser('s1f'); q.add_argument('--nprime', nargs='+', required=True); q.add_argument('--out', required=True); q.add_argument('--s1w', required=True); q.add_argument('--s3', required=True)
+    q.add_argument('--pool-limit', type=int); q.add_argument('--dev-limit', type=int); q.add_argument('--n-night', type=int, default=32); q.add_argument('--seed', type=int, default=0)
+    q.add_argument('--n-eval', type=int, default=512); q.add_argument('--device', default='cpu'); q.add_argument('--threads', type=int); q.add_argument('--no-resume', action='store_true')
+    q = sub.add_parser('s1freport'); q.add_argument('--out', required=True); q.add_argument('--parents', nargs='+', required=True)
     for c in ('s1', 's3'):
         s = sub.add_parser(c)
         s.add_argument('--nprime', nargs='+', required=True); s.add_argument('--out', required=True)
@@ -1548,6 +1713,11 @@ if __name__ == '__main__':
         print(json.dumps(jreport(a.out, tuple(a.parents)), indent=1))
     elif a.cmd == 's1wreport':
         print(json.dumps(s1wreport(a.out, tuple(a.parents)), indent=1))
+    elif a.cmd == 's1freport':
+        print(json.dumps(s1freport(a.out, tuple(a.parents)), indent=1))
+    elif a.cmd == 's1f':
+        ex = os.path.expanduser
+        s1f(a.nprime, a.out, ex(a.s1w), ex(a.s3), pool_limit=a.pool_limit, dev_limit=a.dev_limit, n_night=a.n_night, seed=a.seed, n_eval=a.n_eval, device=a.device, resume=not a.no_resume)
     elif a.cmd == 's1w':
         ex = os.path.expanduser
         s1w(a.nprime, a.out, ex(a.s1), ex(a.s3), pool_limit=a.pool_limit, dev_limit=a.dev_limit, n1=a.n1, n2=a.n2, seed=a.seed, n_eval=a.n_eval, device=a.device, resume=not a.no_resume)
