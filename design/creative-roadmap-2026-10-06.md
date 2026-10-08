@@ -82,12 +82,12 @@ that work, and the model learns from them in sleep so next time it doesn't need 
 - **Sleep has been quietly costing other skills (found 10-08).** Each weight-changing night costs about 1-4 points
   over all 34 old skill families, mostly on the find-the-rule-from-examples ones (one fell from 81% to 31% over two
   nights), and our nightly check only watched five other families. The check now covers all 34. A repair step
-  (re-practising old skills after each night) made things worse and is dropped. The suspect now is that each night
-  learns too fast. A check (10-08) pointed instead at re-reading the same small set of records too many times; two
-  fixes to the first night are being screened. Most of the loss comes from building the practice parent and
-  the first night; a second night adds little.
-  Part 3's first test (10-08) was unfair: the copy it was compared with forgot the new rules, so its win counts for
-  nothing. It is re-run against a fair copy that sleeps on the same finds again (Test S3').
+  (re-practising old skills after each night) made things worse and is dropped. A check (10-08) traced the loss to
+  re-reading the same small set of records many times at a high learning rate. **Fix found for the first night
+  (10-08, Test VL):** a 10x lower learning rate costs no skills (old skills even rise slightly) and keeps nearly all
+  of the night's gain on the new rules. Next: two nights at the lower rate, to check the new rules still climb.
+  Building the practice parent still costs about 2-3 points; that parent goes away once the model makes its own
+  stepping stones.
 - **Settled (Ben, 9:24 PM ET 10-05):** ideas like gifts or plans don't need a creative model. Creativity is only for
   when the model runs into trouble on a problem it is trying to solve. Gift and plan ideas are out of scope.
 
@@ -1349,6 +1349,37 @@ families x 200, two parents).**
     If neither passes but one is not proved wrong, the next single change builds on it.
   - Autonomy label: not own choices (visits and learning rate are ours; 7c table).
   - Job 9 is not changed: it uses the old recipe, and report item 10 shows its skills cost.
+- **VL result (fast-sleep b942bb26a, 11:31 AM ET 10-08; shown, DEV, s100 / s101): L passes, V is proved wrong.**
+  - Arm L (lr 1e-4, 32 visits): harm against N' -0.8 / -0.6 (in_dist rises), no family fires: mark 1 passes. C2
+    first try 28.9 / 33.6 against W1 31.2 / 34.4 (N' 0.4): L - W1 -2.3 [-7.0, 2.3] / -0.8 [-4.3, 2.3]. s100 misses
+    the -2 mark by one question of 256 (6 below W1 where 5 were allowed). Ruled a pass under Ben's 10:17 AM ET 10-08
+    rule that one-call near-misses are good enough; no extra seeds or screens to clear it.
+  - Arm V (8 visits, lr 1e-3): harm 3.7 / 2.9 with 9 / 8 families firing, about W1's 3.8 / 3.6. Proved wrong.
+  - Shown: at lr 1e-4 night 1 costs no skills and keeps most of its C2 gain. Suggested: with the 2 x 2, the night's
+    learning rate decides whether reusing its records overfits. N' (an lr 1e-3 stepping-stone night, in_dist 2.2-2.7
+    below B2) and the research loop's sleep used the same rate.
+- **Ruled (10-08): Test L2, both nights at lr 1e-4, against the standard two nights (W1 then W2, job 8's recipe).**
+  The C2 climb happens mostly on night 2 (job 8: multi-step first try over N' +3.9 / +4.5 after night 1, +10.4 /
+  +9.7 after night 2), and VL measured night 1 only, so this is the check that decides whether 1e-4 replaces the
+  frozen dose.
+  - One change: the night learning rate, 1e-4 on both nights. Night 2 continues from L and resamples the pool with
+    L, as job 8's night 2 did from W1. Everything else as job 8 (32 visits, replay, pool temperature, search). DEV,
+    s100 and s101, from N'.
+  - Marks, on both parents: (1) after night 2, harm against N' passes the 10-08 measure (in_dist drop at most 1.5, no
+    family fires); (2) multi-step first try (154 DEV questions) L2 - W2 at least -2 points (paired point estimate,
+    3 questions).
+  - Proved wrong: L2 - W2 multi-step first try with its paired interval's upper end below 0 on both parents (the
+    lower rate loses the climb).
+  - Report only: L2 - N' multi-step first try against job 8's +10 climb mark; pooled C2 first try; multi-step
+    reach@32 per night (does search still get easier each night); harm against B2 for the whole chain; harm of L2
+    against L.
+  - If L2 passes, lr 1e-4 becomes the night dose for new runs, and its confirm on six parents (s200-s205, job 9's N')
+    waits for job 9's scoring. If it misses mark 2, the next single change is fast-sleep's L64 (each record seen 64
+    times at 1e-4) on both nights. L64 is not run now: on night 1 it would only chase a one-question miss.
+  - A lower-rate N' is not tested: N' is our hand-written scaffold, to be replaced by the model's own stepping stones
+    (C6), and C6's nights will use the rate L2 settles. The research loop's sleep rate is its owner's call; passed
+    on via the coordinator.
+  - Autonomy label: not own choices (the learning rate is ours; 7c table). Job 9 is not changed.
 
 **Test J, loops 1 and 2 together** (changed 10-08 after S3': loop 3 is parked): two days and nights from N', loop 1
 (creative mode F) plus loop 2, against loop 2 alone (W). One change: the creative part's own sleep. It asks Ben's
@@ -1461,7 +1492,7 @@ CPU):
 - speed in thinking rounds, once halting exists.
 
 **Owner and machines:**
-- The fast-sleep thread builds S1, S1b, S3, S3', J, R, S1w, S1f and J2 in a new file, importing the creative code without editing it (as
+- The fast-sleep thread builds S1, S1b, S3, S3', J, R, S1w, S1f, J2, VL and L2 in new files, importing the creative code without editing it (as
   `fastsleep.py` does). That includes K_new and its blind-search check.
 - Screens are CPU and DEV only. Confirms run on Ben's machines after job 9 is scored. No spend.
 
@@ -1636,3 +1667,7 @@ CPU):
 - **Loop 1 parked (10-08):** S1f (fresh on-policy night tries) failed, not proved wrong: +2.7 on s100, -0.4 on s101,
   with variety and new kinds kept. As fixed before it ran, loop 1 is parked; 128 night tries is recorded for later
   with a matched worker control. Creative learning moves to C3 and C6 after job 9.
+- **10-08, 11:45 AM ET:** VL ruled (fast-sleep b942bb26a): L passes (night 1 at lr 1e-4 costs no skills; its one
+  first-try miss on s100 is one question, good enough under Ben's 10:17 AM ET rule), V proved wrong. Accepted Test
+  L2 (both nights at 1e-4 against W1 then W2, judged on the night-2 climb and the harm measure); fast-sleep's L64
+  held as the follow-up if L2 misses its climb mark. Section 0 updated.
