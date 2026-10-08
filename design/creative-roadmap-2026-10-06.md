@@ -1667,7 +1667,7 @@ CPU):
 - **Loop 1 parked (10-08):** S1f (fresh on-policy night tries) failed, not proved wrong: +2.7 on s100, -0.4 on s101,
   with variety and new kinds kept. As fixed before it ran, loop 1 is parked; 128 night tries is recorded for later
   with a matched worker control. Creative learning moves to C3 and C6 after job 9.
-- **10-08, 11:45 AM ET:** VL ruled (fast-sleep b942bb26a): L passes (night 1 at lr 1e-4 costs no skills; its one
+- **10-08, 11:36 AM ET:** VL ruled (fast-sleep b942bb26a): L passes (night 1 at lr 1e-4 costs no skills; its one
   first-try miss on s100 is one question, good enough under Ben's 10:17 AM ET rule), V proved wrong. Accepted Test
   L2 (both nights at 1e-4 against W1 then W2, judged on the night-2 climb and the harm measure); fast-sleep's L64
   held as the follow-up if L2 misses its climb mark. Section 0 updated.
