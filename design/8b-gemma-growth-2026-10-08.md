@@ -206,3 +206,15 @@ at 21.5 GB plus EmbeddingGemma). Screen: about 2.6 h + 5 h of box time, about $3
   - Reported: EGE36 minus 8a-G's EGE per rung and seed (what the 36 slots and uncut targets are worth).
 - **Prediction (written now):** EGE36 gains +0 to +2, EGA36 +1 to +4. Neither reaches the plain LLM's +15.
 - **Cost:** 8 boxes at about $0.56-0.68/h; expected about $22. Caps: MAXH 6 (3M) and 9 (10M), at most about $39.
+
+## 7. Addendum C (2026-10-08, 12:35 PM ET, after launch, before any 8b result): two launch failures, marks unchanged
+
+- The first 3M boxes refused to start: `configs.train_args` checks the size band too, on the full config, so EGE's 198,400-param
+  adapter put 3M 7.3% over. Fixed like `job.py` (band on the thinker's shape, adapter counted and reported): `ed8a8a6`.
+- The first 10M boxes ran out of GPU memory 18 s into training. With the caps fix the thinker carries 8 + 36 = 44 tokens instead of
+  17, and the 8a 10M B2 already peaked at 21.5 GB with 17. The 10M arms now train each 256-row update as 2 micro-batches of
+  128 (`--accum B2=2`, `8084eba`). B2's losses are per-row means over the batch, so the update is the same up to rounding. The 3M
+  arms fit in one batch.
+- Wasted box time is about 45 min on 4 boxes plus about 40 min on 4 boxes, about $4. Caps are now MAXH 9.5 at 10M. Expected
+  total about $26; if every box hit its cap, about $40.
+- Nothing in sections 3, 5 or 6's marks or readout changes.
