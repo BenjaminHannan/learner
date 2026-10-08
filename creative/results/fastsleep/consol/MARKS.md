@@ -8,6 +8,9 @@ through transfer. Code: `creative/consol.py`. Literature and the three candidate
 - Parents: the research loop's six, B2 s200-s205 (branch claude/b2-confirm-checkpoints, sha256 checked), each rebuilt into its N on this
   cloud CPU with `creative.fastsleep setup --T 3.0` (warm-up + stepping stones; T is only used for the setup's cached night, which no arm reads).
   The rebuild counts as correct when the warm-up and stepping-stone last losses equal `confirm/<parent>/setup.json` to 4 decimals.
+  Outcome (10-08): not met. s202 warm-up 1.4104 = 1.4104, but stepping stones 0.5141 vs 0.5151; s201 warm-up 1.2657 vs 1.2568, stones 0.4661 vs 0.4492.
+  The rebuilt N are close to, not equal to, the research loop's (single-batch losses after 256 updates on different CPUs and thread counts).
+  Every arm here shares the same rebuilt N, so the paired comparisons are unaffected; the comparison with the stored 71.3% is between near-copies.
 - The day: the model runs its own night on 896 of the 1,024 C2 pool questions (`creative/rl/m/selfnight.py`: it picks its temperature from its
   own tries, 32 tries per question, up to 2 fitting programs per question), plus chain search (an outside tool). The other 128 pool questions
   (seeded) are held back as the model's own practice check (fit-only, no answers). Every arm on a parent sleeps on the same finds.
@@ -34,7 +37,10 @@ through transfer. Code: `creative/consol.py`. Literature and the three candidate
 - `ro`: replay-only control, the same updates with both halves skills replay. It separates "old skills improve because of the new skill" from
   "old skills improve because the night is also more practice".
 
-## Screen A: fresh dreams vs re-read rows (s200, s201; DEV only)
+## Screen A: fresh dreams vs re-read rows (s201, s202; DEV only)
+
+Amended 10-08 12:05 PM ET, before any Screen A run: parents s201 and s202 instead of s200 and s201, because s200's rebuild stalled and was restarted
+(about 45 minutes behind). No result of any arm existed when this was changed.
 
 Amended 10-08 11:40 AM ET, before any sleep run: one update takes about 80 CPU-seconds, so Screen A stops at 128 updates.
 `rlc` and `fd` with a 128-update schedule, saved and measured at 32, 64 and 128 updates (the 32 and 64 snapshots are mid-schedule, at a higher
