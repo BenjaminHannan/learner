@@ -22,6 +22,11 @@ Launch (one rung x seed per box, B2 arm only):
 `python g8b/vast8b.py create --offer ID --label 8b-EGA36-3M-s400 --env "OVL=<commit> RUNG=3M SEED=400 ARMS=B2 B2X=eg_embed:true,gen_ar:true MAXH=6 JOBH=5.5 DPH=0.6"`
 (EGE36: `B2X=eg_embed:true`), then `collect --id ID --out results/8b/EGA36` and `destroy --id ID`.
 
+## Before launching anything: credit
+
+`python g8b/vast8b.py credit` must show enough to cover every live box on the account, other sessions' too (about $0.6/h each). The first screen was
+killed when it ran out (design doc addendum D). `create` refuses below `--need` dollars (default 10).
+
 ## If this session stops: how to finish the screen (any session with this repo and the Vast connection)
 
 1. Boxes and jobs: `g8b/boxes.json` (live boxes have no `status`). Check one: `python g8b/vast8b.py tail --id ID --n 40`.

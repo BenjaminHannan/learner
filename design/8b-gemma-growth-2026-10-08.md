@@ -218,3 +218,24 @@ at 21.5 GB plus EmbeddingGemma). Screen: about 2.6 h + 5 h of box time, about $3
 - Wasted box time is about 45 min on 4 boxes plus about 40 min on 4 boxes, about $4. Caps are now MAXH 9.5 at 10M. Expected
   total about $26; if every box hit its cap, about $40.
 - Nothing in sections 3, 5 or 6's marks or readout changes.
+
+## 8. Addendum D (2026-10-08, 2:45 PM ET, no 8b result exists): the screen was killed when Vast credit ran out; marks unchanged
+
+- **What happened (shown, Vast account at 2:27 PM ET):** all eight screen boxes (and the roadmap thread's five) were `exited`, credit 0, balance
+  -$0.71. Credit was $3.68 at 12:55 PM with about 13 boxes up (about $8/h). I launched 8 boxes without checking that the balance covered
+  them, and I did not watch it afterwards. No run finished and none saved anything: `train.py` writes its checkpoint and the
+  result only at the end, and the loss lines lived only on the boxes' disks. **No 8b result exists.** My estimate of the wasted spend
+  is about $8-9 across the 8b boxes since 11:03 AM (launch times x $0.5-0.8/h, including the two failed launch waves; Vast shows no
+  per-box cost, so its billing page has the exact figure).
+- **Why it wasn't "it refills":** the account's auto-billing threshold is $5.00, yet credit went from $3.68 to 0 with no charge, and
+  the balance went negative. Cause unknown (a failed or capped charge is a guess). Ben has to check Vast billing.
+- **The redo, if Ben funds it, is the same screen:** same two arms, same four jobs each, same marks (sections 3, 5, 6, 7), all eight
+  boxes from **one** commit (the first screen's 3M and 10M boxes were on two commits; the 3M ones differ only in `configs.py`, which
+  `job.py` also bypasses). About $26.
+- **New safeguards:** `box-g8b.sh` prints a `PROG` line per run every 5 minutes (latest train line plus the last line of the
+  run's `stdout.txt`), so speed shows by step ~500 and a kill keeps the partial loss curve. `vast8b.py create` refuses to launch unless
+  credit is at least `--need` dollars (default 10); set it to cover every live box on the account, other sessions' included.
+- **Untested speed risk:** EGA36's final eval decodes letters one at a time with no cache (`ar_decode`), and the final eval repeats that
+  under about a dozen lesions, plus the donor eval, each batch also running EmbeddingGemma. Neither EGE nor EGA has been timed at 10M with
+  `--accum 2`. At the first `PROG` lines, project training time plus the eval against MAXH 9.5 (a MAXH kill during the final
+  eval loses the whole run). If it doesn't fit, raise MAXH for that box and tell Ben the new worst-case cost.

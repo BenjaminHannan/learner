@@ -68,6 +68,12 @@ def search(a):
 
 
 def create(a):
+    d = call('GET', '/users/current/')       # 8b addendum D: never launch into a near-empty account (the first screen was killed when credit hit 0)
+    credit = d.get('credit') or 0
+    print(json.dumps({'credit': round(credit, 2), 'need': a.need}))
+    if credit < a.need:
+        print(json.dumps({'success': False, 'error': 'credit %.2f is below --need %.2f: top up Vast (or pass a lower --need) first' % (credit, a.need)}))
+        return
     script = BOX.read_text()
     env = a.env.split()
     assert all(e.split('=', 1)[0].isidentifier() and '=' in e and "'" not in e for e in env), env
@@ -258,6 +264,7 @@ def main():
     ap.add_argument('cmd', choices=['search', 'create', 'status', 'tail', 'collect', 'collectck', 'destroy', 'credit', 'waitfor'])
     ap.add_argument('--gpu', default='RTX 5090')
     ap.add_argument('--n', type=int, default=60)
+    ap.add_argument('--need', type=float, default=10.0, help='create: refuse unless Vast credit is at least this many dollars; set it to cover EVERY live box on the account, other sessions included')
     ap.add_argument('--offer')
     ap.add_argument('--label', default='claude-8b')
     ap.add_argument('--maxpar', type=int, default=5)

@@ -3,6 +3,7 @@
 #  2. EG=1 (default): transformers $TFVER (default 5.19.0), EmbeddingGemma 2 at its pinned revision into $J/eg2, `python -m custom_io.models.eg check cuda` must be ok.
 #  3. B2X values true/false become JSON booleans (B2X=eg_embed:true).
 #  4. CK=0 by default (no checkpoint printing: it keeps the box up for hours); END_SLEEP 1800.
+#  6. PROG lines every 5 min (see below).
 #  5. ACCUM=K: B2 trains each 256-row update as K micro-batches (36 register slots at 10M do not fit 32 GB in one).
 # Runs on a Vast GPU box as `bash -c "$(this file)" cio`.
 # MODE=job: one rung x seed (custom_io.g8a.job in Vast mode: pool, global caps, arms B2 PT LLM one after another; every folder is printed into the log
@@ -34,6 +35,13 @@ say "G8 START mode $MODE rung $RUNG seed $SEED"
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader; free -g | head -2; nproc; df -h $J | tail -1
 ( while sleep 60; do
     if [ $(( $(date +%s) - T0 )) -ge $(awk "BEGIN{print int($MAXH*3600)}") ]; then say "G8 MAXH $MAXH h reached: killing every run"; pkill -f '^[^ ]*python[0-9.]* -m custom_io'; break; fi
+  done ) &
+# progress signal (8b addendum D): every 5 min print each arm's latest train line and the last line of its stdout.txt into the log, so speed shows by
+# step ~500 and a kill keeps the partial loss curve ("PROG|run|train line|LAST|last line"; the last line shows when the final eval has started).
+( while sleep 300; do
+    for f in $J/g8a/w/8a-*/stdout.txt; do [ -f "$f" ] || continue
+      echo "PROG|$(basename $(dirname $f))|$(grep -a '"event": "train"' $f | tail -n 1 | cut -c1-260)|LAST|$(tail -n 1 $f | cut -c1-100)"
+    done
   done ) &
 cat > $J/fetch.py <<'PYEOF'
 # Download part of a public GitHub commit without git: the commit's tree from the API, then each file from raw.githubusercontent.com.

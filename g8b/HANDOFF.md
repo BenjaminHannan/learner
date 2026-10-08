@@ -74,6 +74,10 @@ me before any spend that would take the 8b total over $40."
 At 2:27 PM ET every box showed `exited`, Vast credit was 0 and the balance -$0.71 (`balance_threshold` -0.01). Credit was $3.68 at 12:55 PM
 with about 13 boxes up (my 8 at ~$0.6/h plus the roadmap thread's 8a-G boxes), so it ran out within roughly an hour. Vast stopped the roadmap
 thread's boxes too (g8G-3M-s400/s401, g8G-10M-s400/s401, cio-t1c2). Nothing from the screen was saved: `train.py` writes a checkpoint only
-at the end and the result only after the run, so a restart means step 0. The table above is void; every box is `exited` and not yet destroyed.
+at the end and the result only after the run, so a restart means step 0. The table above is void; I destroyed my eight stopped boxes at 2:40 PM ET. The roadmap thread's five (g8G-*, cio-t1c2) are still listed as `exited` on the account; they are not mine.
 To redo the screen: top up Vast credit (the account's autobill did not trigger), then relaunch the eight jobs from `g8b/boxes.json`
 with the same commit and env (3M: MAXH 6; 10M: ACCUM=2, MAXH 9.5), about $26. **Check `credit` before launching and again every hour.**
+
+Redo checklist (design doc addendum D): Ben funds Vast and says yes to about $26 -> check `credit` covers every live box -> pick one commit
+-> launch the eight jobs -> read the `PROG` lines at +15 min (speed, and whether training plus the final eval fits MAXH) -> poll credit
+hourly -> collect and destroy each box as it finishes.
