@@ -8,8 +8,8 @@ This is about the B2 skills model and the 8a size ladder only; keep the small ca
 
 - Spec and its addenda: `design/8a-bigger-is-better-2026-10-07.md` on branch `claude/project-thread-yha868` (PR #50).
   Section 7 has the marks; addenda I (section 19) and J (section 20) are the newest.
-- Results: `results/8a-ladder/` (3M rung, all 6 seeds; `analyze_8a-3M.json`; speed probe) and `results/8a-first-look-10m/`
-  (2-seed first look on the skills-only data) on the same branch. 10M results (5 of 6 seeds now) are in
+- Results: `results/8a-ladder/` (3M and 10M rungs; `analyze_8a-3M.json`, `analyze_8a-10M.json`; speed probe) and `results/8a-first-look-10m/`
+  (2-seed first look on the skills-only data) on the same branch. 10M results (all 6 B2 seeds; PT and LLM 5 seeds, seed 404's box hit its time cap) are in
   `/mnt/project-files/whole-model-roadmap/8a-results/8a-10M-s*-{B2,PT,LLM,box,pool}/` if you can read the shared folder;
   otherwise use the table in `reviews/gpt-diagnose-b2-no-growth-2026-10-08.md` (same numbers).
 - Code (build branch `claude/project-thread-f1to6a`, commit 50ee171632): `custom_io/models/ledger.py` (B2: reader ->
@@ -19,10 +19,13 @@ This is about the B2 skills model and the 8a size ladder only; keep the small ca
 
 ## The finding
 
-At 10M, B2 gains +0.44 pooled-5 over 3M (5 seeds: +0.03, +0.28, -1.11, +0.51, +2.48). The plain step model (PT) gains
-+3.77 and the plain LLM +15.77 on the same pool. B2's training loss hardly moves (1.232 -> 1.208, mostly the GEN part,
-0.844 -> 0.828). Mark 1 (+3.0 per step) fails at the first step. A two-seed probe is running (addendum J): R = reader
-grown to 23 conv layers with blocks 2; W = width 384, blocks 3, lr x 256/384.
+At 10M, B2 gains +0.49 pooled-5 over 3M (6 seeds: +0.03, +0.28, -1.11, +0.51, +0.73, +2.48; CI -0.74 to +1.72). The
+plain step model (PT) gains +3.77 and the plain LLM +15.77 on the same pool (5 seeds). B2's training loss hardly moves (1.232 -> 1.208, mostly the GEN part,
+0.844 -> 0.828). Mark 1 (+3.0 per step) fails at the first step. The two-seed shape probe (addendum J) is done; its results are in
+`results/8a-probe/` on the same branch and in `/mnt/project-files/whole-model-roadmap/8A-10M-RESULT-2026-10-08.md`
+section 4. R (reader grown to 23 conv layers, blocks 2): +0.73 / -1.46 vs 3M, flat, and cipher_map fell 97.9 -> 72.5.
+W (width 384, blocks 3, lr x 256/384): +1.57 / +0.46 vs 3M, +1.54 / +0.18 vs the deep 10M, "unclear"; its loops:0 leak
+rose to 10.9 / 12.4 (3M: 5.3 / 9.8).
 
 ## Questions
 
@@ -34,8 +37,8 @@ grown to 23 conv layers with blocks 2; W = width 384, blocks 3, lr x 256/384.
    logged, loss curves in `stdout.events.txt` (3M vs 10M), and the copy gate share.
 3. Rank the explanations (size in the wrong place; a ceiling in the test; the GEN head; optimisation; plain models only
    gain because they start lower; B2 saturated on its calculator families and unable to express the pattern / rule
-   families, see the per-family table in the GPT prompt; anything else you find), and predict W before its results land.
-   R's first seed (401) scored 71.75 (-1.46 vs its 3M B2), with the lowest training loss of the three.
+   families, see the per-family table in the GPT prompt; anything else you find), and say what the R and W results do to
+   each. Check whether W's small gain could come from the talker answering without the loop (its leak rose).
    For the rule families (fewshot_number_rule, seq_next, rule_apply, order_chain), trace in `ledger.py` exactly how B2
    would have to produce a correct answer (which mode, which ops), and say whether its op set and talker can express it.
 4. Propose the one next change to test, with pass marks fixed in advance and the result that would prove it wrong.

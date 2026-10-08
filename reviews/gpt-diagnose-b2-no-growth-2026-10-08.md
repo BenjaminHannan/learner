@@ -66,10 +66,12 @@ on every character (the blank filled back in); question rows as PT. No calculato
 | 401 | 73.21 | 73.49 | +0.28 | 66.23 | 70.48 | +4.25 | 47.91 | 63.11 | +15.20 |
 | 402 | 74.14 | 73.03 | -1.11 | 66.42 | 69.88 | +3.46 | 48.69 | 63.05 | +14.35 |
 | 403 | 71.51 | 72.02 | +0.51 | 65.51 | 69.88 | +4.37 | 48.00 | 61.77 | +13.77 |
-| 404 | 72.17 | (running) | - | 66.46 | (running) | - | 46.72 | (running) | - |
+| 404 | 72.17 | 72.90 | +0.73 | 66.46 | (cut by a cost cap) | - | 46.72 | (cut by a cost cap) | - |
 | 405 | 71.42 | 73.91 | +2.48 | 66.14 | 69.85 | +3.71 | 41.97 | 62.45 | +20.48 |
 
-Mean over the 5 finished seeds: B2 +0.44, PT +3.77, LLM +15.77. B2's lead over PT: 6.18 -> 2.85.
+Mean gain: B2 +0.49 over 6 seeds (95% CI -0.74 to +1.72); PT +3.77 and LLM +15.77 over 5 seeds (seed 404's box hit its
+time cap before its PT and LLM 10M arms ran). B2's lead over PT: 6.1 -> 2.9. Per-dev-file and per-family tables below
+use the 5 seeds with all arms.
 
 **Per dev file, mean 10M minus 3M over the 5 seeds:**
 
@@ -104,24 +106,23 @@ So B2 is at or near 100% on the families its calculator program covers, and flat
 the plain model does gain with size (shown). B2's calculator ops are add, subtract, multiply, divide, mod, min, max and compare over number slots, and its programs are learned only from rows whose worked steps parse into those ops;
 anything else has to be produced by WORD copy or the parallel GEN head.
 
-**First shape-probe result (seed 401 only):** R (reader grown to 23 conv layers, blocks 2) scored 71.75, i.e. -1.46 vs the
-same seed's 3M B2 and -1.74 vs its 10M depth-grown B2, although its training loss was the lowest of the three (1.156;
-GEN 0.776), so a wider reading window helps fit the web text but not the skill questions (one seed; suggested).
+**Shape probe (2 seeds, B2 only, 10M size; readout fixed before it ran).** Each arm is one change against the 10M B2
+above. **R:** blocks stay 2, reader grows from 2 to 23 conv layers (sees about 93 characters instead of 9; 10.24M
+params). **W:** width 256 -> 384, blocks 3, reader 2 conv layers, learning rate scaled by 256/384 (9.89M params).
+"Grows" = at least +3.0 over the same seed's 3M B2 on both seeds and at least +2.0 over the deep 10M B2; "flat" = under
++1.0 on both seeds; otherwise "unclear". "Leak" = score with the loop switched off (0 rounds).
 
-**Final training loss (mean of the last logged step, 5 seeds):**
-- B2 total 1.232 -> 1.208. Parts: GEN characters 0.844 -> 0.828, mode 0.206 -> 0.207, word pointer 0.159 -> 0.154,
-  program 0.009 -> 0.009, answer pointer 0.006 -> 0.006. (Most of B2's loss is GEN on the web fill-in rows.)
-- PT 0.365 -> 0.331 (-9%). LLM 1.080 -> 0.954 (-12%; different loss, includes every web character).
-- B2's calculator program stays near-perfect at both sizes: chain-5 check (5-step arithmetic chains) 99.9-100%.
+| arm | seed | pooled-5 | vs 3M B2 | vs deep 10M B2 | train loss (GEN part) | leak |
+|---|---|---|---|---|---|---|
+| 3M B2 | 400 / 401 | 71.59 / 73.21 | - | - | 1.228 / 1.229 (0.88 / 0.80) | 5.3 / 9.8 |
+| deep 10M B2 | 400 / 401 | 71.62 / 73.49 | +0.03 / +0.28 | - | 1.216 / 1.206 (0.87 / 0.78) | 0.6 / 0.1 |
+| R | 400 / 401 | 72.32 / 71.75 | +0.73 / -1.46 | +0.70 / -1.74 | 1.154 / 1.156 (0.88 / 0.78) | 0.0 / 0.0 |
+| W | 400 / 401 | 73.16 / 73.68 | +1.57 / +0.46 | +1.54 / +0.18 | 1.205 / 1.194 (0.87 / 0.76) | 10.9 / 12.4 |
 
-**An earlier exploratory run (2 seeds, a different data set: only the skill questions, 200k rows, no web text):** B2 grown
-the same way (blocks 2 -> 8) gained +1.42 and -0.28; a plain step model grown 4 -> 13 layers gained +2.73 and +2.19.
-There the bigger B2 fitted its training data about 3x tighter (loss 0.0128 -> 0.0039) without generalising better.
-
-**Running now (results in a few hours; readout fixed in advance):** two-seed probes at 10M, each one change against the
-10M B2 above. **R:** blocks stay 2, reader grows from 2 to 23 conv layers (sees about 93 characters instead of 9;
-10.24M params). **W:** width 256 -> 384, blocks 3, reader 2 conv layers, learning rate scaled by 256/384 (9.89M).
-"Grows" = at least +3.0 over the same seed's 3M B2 on both seeds and at least +2.0 over the 10M B2 above.
+So R is flat and W is "unclear" (slightly better than deep, far from +3). R broke the letter-code family (cipher_map
+97.9 -> 72.5, 2-seed mean), which needs the reader's narrow local window. W's 2-seed family means vs 3M B2 rose a little
+on the rule families (fewshot_number_rule 16.2 -> 20.6, seq_next 36.2 -> 40.0, order_chain 43.0 -> 47.5, rule_apply
+61.2 -> 66.5; 160-200 rows per family per seed, so within noise), and its leak rose too.
 
 ## 5. What I'd like from you
 
@@ -135,7 +136,8 @@ There the bigger B2 fitted its training data about 3x tighter (loss 0.0128 -> 0.
    so no amount of controller size helps there (the per-family table points this way). Also tell me what it means that
    B2 is near 100% on a third of the families: can pooled-5 still show scaling for it? (I don't want to switch to a
    test just because B2 looks better on it.)
-2. Predict the outcome of the R and W probes under your top explanations, before I see them.
+2. Say what the R and W probe results above do to each explanation (R flat, W slightly better than deep, neither close
+   to +3), and whether a wider-and-deeper B2 at 30M is worth trying.
 3. Propose the **one** next change you'd test (one change at a time), with pass marks fixed in advance and the result
    that would prove your explanation wrong. Keep it cheap: a 10M run costs me about $2-3 a seed.
 4. Tell me whether running the 30M size of the current B2 shape (about $42 for six seeds) could still tell me anything
