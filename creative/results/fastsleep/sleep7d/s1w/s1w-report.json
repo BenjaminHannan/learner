@@ -1,0 +1,51 @@
+{
+ "parents": [
+  "s100",
+  "s101"
+ ],
+ "passes": false,
+ "proved_wrong": true,
+ "per_parent": {
+  "s100": {
+   "primary": {
+    "C_minus_U_points": -2.734375,
+    "passes": false,
+    "rule": "C2 DEV creative reach@32 on W1: C - U >= +5 points"
+   },
+   "new_kind_guard": {
+    "C_F_minus_U_points": 4.6875,
+    "passes": true,
+    "rule": "K_new DEV reach@512 (F mode) on W1: C - U >= -1 point (point estimate)"
+   },
+   "unit_test": {
+    "passes": true
+   },
+   "proved_wrong_here": {
+    "flag": true,
+    "rule": "C2 DEV creative reach@32: C - U upper end of the paired 95% interval < +1 point (both parents needed)"
+   },
+   "passes": false
+  },
+  "s101": {
+   "primary": {
+    "C_minus_U_points": -3.515625,
+    "passes": false,
+    "rule": "C2 DEV creative reach@32 on W1: C - U >= +5 points"
+   },
+   "new_kind_guard": {
+    "C_F_minus_U_points": 0.0,
+    "passes": true,
+    "rule": "K_new DEV reach@512 (F mode) on W1: C - U >= -1 point (point estimate)"
+   },
+   "unit_test": {
+    "passes": true
+   },
+   "proved_wrong_here": {
+    "flag": true,
+    "rule": "C2 DEV creative reach@32: C - U upper end of the paired 95% interval < +1 point (both parents needed)"
+   },
+   "passes": false
+  }
+ },
+ "rule": "passes: primary (C2 DEV reach@32 C - U >= +5), new-kind guard (K_new reach@512 F mode >= -1) and unit test on every parent; proved wrong: C - U upper end < +1 on every parent"
+}

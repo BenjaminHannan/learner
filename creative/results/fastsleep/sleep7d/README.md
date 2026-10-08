@@ -165,3 +165,28 @@ How to read it:
 - *Shown:* night 2 (half C2 records, half replay drawn fresh from all 200k training rows) brings W1r back up to the unrepaired level (in_dist 82.9 / 84.8, C2 first try 38.7 / 40.2). So in the end, after two nights, the repair changed nothing (vs N' 3.8 / 3.0 against 3.8 / 3.1).
 - *Shown (J's W arm):* night 2 by itself adds no skills harm (W2 vs W1: 0.0 / -0.5, nothing fires). The cost comes from night 1 and from the N' stepping stone.
 - *Suggested, untested:* the cause is the optimiser, not the data. Each repair round starts a fresh AdamW at lr 1e-3, which is B2's own peak pretraining lr. On rows the model already fits, the gradients are mostly noise, and Adam scales noise up to full-size steps, so the weights drift. A second suspect is overfitting to small row sets: R visits each of its 1,024 rows 4 times per round, and E visits its 1,024 rows 16 times. In the night, by contrast, replay rows are fresh and seen about once each. A 2 x 2 check on N' (lr 1e-3 or 1e-4, by 1,024 rows reused or fresh rows each step, 256 replay-only updates, held check) would tell the two apart.
+
+## Test S1w (finished 13:41 UTC 10-08 = 9:41 AM ET; roadmap 7d 10-08, `s1w/`)
+
+S1 with the slept worker: loop 1 trains the creative adapter on **W1** (S3's night-1 worker) from day 1's kept tries (S1's day, drawn by N'), at S1's setting (lr 1e-3, 1 pass, KL 0.1, no grid). U = W1 with the untrained adapter. C = W1 with the adapter trained on W1. C1 (report only) = S1's adapter trained on N', loaded on W1 (the same adapter J used on day 2). All arms are measured on W1 with one sampling seed. Greedy first try is identical across arms (adapter off).
+
+| | s100 | s101 |
+|---|---|---|
+| kept tries (rows) / loop-1 updates / KL to W1 at end (S1 on N': 13.2 / 7.8) | 6,205 (550) / 97 / 21.2 | 6,387 (565) / 100 / 27.4 |
+| (1) C2 DEV creative reach@32: U / C / C1; C - U (mark >= +5) | 46.9 / 44.1 / 44.1; **-2.7** [-6.2, +0.8] fail | 48.0 / 44.5 / 47.3; **-3.5** [-7.4, -0.4] fail |
+| C - U near-copy / multi-step | -4.9 [-9.8, -1.0] / -1.3 [-6.5, 3.9] | 0.0 / -5.8 [-11.7, 0.0] |
+| C - C1 (report) | 0.0 [-3.5, 3.5] | -2.7 [-5.9, 0.0] |
+| reach@32 by kind U -> C (sq_plus, double_add, affine) | 16 -> 6, 22 -> 25, 2 -> 4 | 10 -> 0, 33 -> 24, 0 -> 2 |
+| distinct fitting programs per question in 32 tries: U / C / C1 | 1.47 / 1.07 / 1.12 | 1.39 / 0.70 / 0.99 |
+| (2) new-kind reach@512 in F mode: U / C; C - U (mark >= -1) | 5.7 / 10.4; **+4.7** [2.1, 7.8] pass (sq_minus 17 -> 31) | 6.2 / 6.2; 0.0 pass |
+| (3) worker untouched (before / after) | pass / pass | pass / pass |
+| for comparison, S1 on N': C - U | +18.0 [13.3, 22.7] (U 24.2) | +16.0 [11.3, 21.1] (U 27.3) |
+
+Verdict: **S1w fails on both parents and is proved wrong** (the rule fixed in advance: C - U upper end < +1 on both parents; it is +0.8 and -0.4).
+
+How to read it:
+- *Shown:* refitting the adapter on the slept worker from day 1's tries does not help. On W1 the adapter is no better than no adapter (-2.7, -3.5), and no better than the N'-trained one (0.0, -2.7). sq_plus, the multi-step kind S1 helped most on N', drops to 0-6%.
+- *Shown:* W1 alone already reaches what S1's adapter reached on N' (U 47-48 on W1 vs C 42-43 on N'). Night 1 slept on records from the same day, so the kept tries mostly teach W1 what it has already learned.
+- *Shown:* on W1 the adapter narrows the search. Distinct fitting programs per question fall from 1.4-1.5 to 0.7-1.1, below S1's variety bar (0.8 x U) on both parents. The KL to W1 ends 2-3x higher than S1's KL to N'.
+- *Suggested:* day 1's kept tries are off-policy for W1 (drawn by N', a broader worker). Loop 1 has no correction for that, so it sharpens W1 further onto programs it already favours, and loses the rare ones. This is the roadmap's stated next step: a few fresh adapter tries at night on the slept worker (on-policy for W1).
+- J2 (the swapped night order) does not run, because its gate was S1w passing.
